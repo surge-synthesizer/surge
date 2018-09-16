@@ -1,0 +1,10 @@
+byte
+0-3	'wavt'		as text/big-endian-
+the rest of the data is in little-endian types
+4-7	wave_size 	size of each wave, max: 1024 (v1.2)
+8-9	wave_count 	number of waves, max: 512 (v1.2)
+10-11	flags
+12-end	wave data in float32 format. 4*wave_size*wave_count bytes
+
+
+
