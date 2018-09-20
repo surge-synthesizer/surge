@@ -96,7 +96,7 @@ sub3_storage::sub3_storage()
 	// or kUserDomain
 	FSRefMakePath(&foundRef,(UInt8*)path,1024);
 	datapath = path;
-	datapath += "/Vember Audio/SURGE/";
+	datapath += "/Surge/";
 	 
 	// check if the directory exist in the user domain (if it doesn't, fall back to the local domain)
 	CFStringRef testpathCF = CFStringCreateWithCString ( 0, datapath.c_str(), kCFStringEncodingUTF8);
@@ -110,10 +110,10 @@ sub3_storage::sub3_storage()
 		OSErr err = FSFindFolder (kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
 		FSRefMakePath(&foundRef,(UInt8*)path,1024);
 		datapath = path;
-		datapath += "/Vember Audio/SURGE/";
+		datapath += "/Surge/";
 	}
 
-   userDataPath = "~/Documents/Vember Audio Surge";
+   userDataPath = "~/Documents/Surge";
 	
 #else	
    
@@ -121,11 +121,7 @@ sub3_storage::sub3_storage()
    if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &localAppData))
    {
       CHAR path[4096];
-#ifdef ISDEMO
-      wsprintf(path, "%S\\Vember Audio Surge Demo\\", localAppData);
-#else
-      wsprintf(path, "%S\\Vember Audio Surge\\", localAppData);
-#endif
+      wsprintf(path, "%S\\Surge\\", localAppData);
       datapath = path;
    }
 
@@ -133,7 +129,7 @@ sub3_storage::sub3_storage()
    if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &documentsFolder))
    {
       CHAR path[4096];
-      wsprintf(path, "%S\\Vember Audio Surge\\", documentsFolder);
+      wsprintf(path, "%S\\Surge\\", documentsFolder);
       userDataPath = path;
    }
    
@@ -143,7 +139,7 @@ sub3_storage::sub3_storage()
 	if(!snapshotloader.LoadFile(snapshotmenupath.c_str()))		// load snapshots (& config-stuff)	
 	{
 		#if !MAC
-		MessageBox(::GetActiveWindow(),"SURGE is not properly installed. Please reinstall.","Configuration not found",MB_OK | MB_ICONERROR);
+		MessageBox(::GetActiveWindow(),"Surge is not properly installed. Please reinstall.","Configuration not found",MB_OK | MB_ICONERROR);
 		#endif
 	}
 
