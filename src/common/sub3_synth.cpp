@@ -732,17 +732,22 @@ void sub3_synth::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int ms
 {
    if (lsbRPN == 0 && msbRPN == 0)  // PITCH BEND RANGE
    {
-      if (mpeEnabled)
+      if (channel == 1)
       {
-         if (channel == 1)
-         {
-            mpePitchBendRange = msbValue;
-         }
-         else if (channel == 0)
-         {
-            mpeGlobalPitchBendRange = msbValue;
-         }
+         mpePitchBendRange = msbValue;
       }
+      else if (channel == 0)
+      {
+         mpeGlobalPitchBendRange = msbValue;
+      }
+   }
+   else if (lsbRPN == 6 && msbRPN == 0) // MPE mode
+   {
+      mpeEnabled = msbValue > 0;
+      mpeVoices = msbValue & 0xF;
+      mpePitchBendRange = 48;
+      mpeGlobalPitchBendRange = 2;
+      return;
    }
 }
 
@@ -851,14 +856,7 @@ void sub3_synth::channel_controller(char channel, int cc, int value)
 	case 101:	// RPN MSB
 		channelState[channel].rpn[1] = value;
 		channelState[channel].nrpn_last = false;
-		return;	
-
-   case 127: // POLY ON
-      mpeEnabled = value > 0;
-      mpeVoices = value & 0xF;
-      mpePitchBendRange = 48;
-      mpeGlobalPitchBendRange = 2;
-      return;
+		return;
 	};
 
 	int cc_encoded = cc;

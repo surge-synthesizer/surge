@@ -7,10 +7,11 @@ It was originally released in 2005, and was one of my first bigger projects. The
 
 The codebase was migrated from before an unfinished 1.6 release which improves on the last released 1.5.3 in a number of ways:
 
-* Using a newer version of the VSTGUI framework
+* Using a newer version of the [VSTGUI](https://github.com/steinbergmedia/vstgui) framework
   * This has caused a lot of graphical bugs, with some that still need to be fixed
   * But will enable a port to both 64-bit macOS and Linux
-* Support for VST3
+* Support for [VST3](https://www.steinberg.net/en/company/technologies/vst3.html)
+* Support for [MPE](https://www.midi.org/articles-old/midi-polyphonic-expression-mpe)
 * New analog mode for the ADSR envelopes   
 
 It currently only builds on windows, but getting it to build on macOS again & Linux should be doable with moderate effort.
