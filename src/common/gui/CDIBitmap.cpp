@@ -1,4 +1,4 @@
-#include "cdibitmap.h"
+#include "CDIBitmap.h"
 #include "dsputils.h"
 
 

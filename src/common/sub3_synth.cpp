@@ -14,7 +14,7 @@
 #include "aulayer.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
 #elif TARGET_VST3
-#include "SurgeProcessor.h"
+#include "surgeprocessor.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
 #else
 #include "vstlayer.h"

@@ -18,7 +18,7 @@
 #include "CAboutBox.h"
 #include "vstcontrols.h"
 #include "surge_bitmap_keeper.h"
-#include "CParamEdit.h"
+#include "cparamedit.h"
 
 /*#if TARGET_AUDIOUNIT
 #include "aulayer.h"

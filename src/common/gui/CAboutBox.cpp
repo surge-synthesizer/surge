@@ -1,4 +1,4 @@
-#include "caboutbox.h"
+#include "CAboutBox.h"
 #include "resource.h"
 #include <stdio.h>
 
