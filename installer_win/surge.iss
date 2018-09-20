@@ -4,6 +4,7 @@
 #define MyAppPublisher "Vember Audio"
 #define MyAppURL "http://www.vemberaudio.se"
 #define MyAppName "Surge"
+#define MyAppVersion "1.6.0b1"
 #define MyID "650E559A-2F44-44FE-861F-4108AE4BC30E"
 
 [Setup]
@@ -20,24 +21,24 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={reg:HKLM\SOFTWARE\VST,VSTPluginsPath|{pf}\Steinberg\VSTPlugins}\
+DefaultDirName={localappdata}\Surge;
 DefaultGroupName=Vember Audio Surge
 DisableProgramGroupPage=yes
-LicenseFile=surge_license.txt
-OutputBaseFilename="Install {#MyAppName} {#MyAppVersion}"
+LicenseFile=..\LICENSE
+OutputBaseFilename="{#MyAppName}-{#MyAppVersion}-Setup"
 SetupIconFile=surge.ico
 Compression=lzma
 SolidCompression=yes
 
 [Components]
 Name: Data; Description: Data files; Types: full compact custom; Flags: fixed
-Name: VST; Description: VST Plug-in (64 bit); Types: full custom; Flags: checkablealone
+Name: VST2; Description: VST2 Plug-in (64 bit); Types: full custom; Flags: checkablealone
 Name: VST3; Description: VST3 Plug-in (64 bit); Types: full compact custom; Flags: checkablealone
 
 [Files]
-Source: ..\target\vst2\Release\Surge.dll; DestDir: {app}\; Components: VST
-Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3\Vember Audio; Components: VST3
-Source: surge\surgedata\*; DestDir: {localappdata}\Vember Audio Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.hg,demo*\*";
+Source: ..\target\vst2\Release\Surge.dll; DestDir: {cf}\VST2; Components: VST2
+Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3; Components: VST3
+Source: ..\resources\data\*; DestDir: {localappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

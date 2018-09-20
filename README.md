@@ -24,7 +24,7 @@ First you need to grab all submodules (needed to get the VST3DSK)
 git submodule update --init --recursive
 ```
 
-The [VST3SDK](https://github.com/steinbergmedia/vst3sdk) hosted by steinberg on github doesn't contain the VST2 SDK bits, so if you want to build the VST2 version you need to [download](https://www.steinberg.net/vst3sdk) that one manually and add those missing files, they have a script that copies the copying for you.
+The [VST3SDK](https://github.com/steinbergmedia/vst3sdk) hosted by Steinberg on github doesn't contain the VST2 SDK bits, so if you want to build the VST2 version you need to [download](https://www.steinberg.net/vst3sdk) that one manually and add those missing files, they have a script that copies the copying for you.
 
 ## Building - Windows
 
@@ -32,6 +32,7 @@ Prerequisites
 
 * [Premake 4](https://premake.github.io/download.html#v4) for generating project files
 * [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
+* [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
 To build on windows:
 
@@ -46,3 +47,5 @@ premake4 vs2012
 ```
 
 and open the visual studio solution which is generated.
+
+To build the installer open the file installer_win/surge.iss using Inno Setup.
