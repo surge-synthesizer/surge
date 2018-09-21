@@ -71,6 +71,8 @@ elseif (os.istarget("windows")) then
 		"USE_LIBPNG", 
 		"_CRT_SECURE_NO_WARNINGS" 
 	}
+
+	nuget { "libpng-msvc-x64:1.6.33.8807" }
    
    characterset "MBCS"
    buildoptions { "/MP" }
@@ -88,8 +90,6 @@ end
 
 includedirs {
     "libs/xml",
-    "libs/zlib",
-    "libs/libpng",
     "src/common/vt_dsp",
     "src/common/thread",
     "vst3sdk/vstgui4",
@@ -199,15 +199,7 @@ function plugincommon()
 			"shell32",
 			"user32",
 		}
-		
-		libdirs { "libs/libpng/x64" }
-	
-		configuration { "Debug" }   
-		links { "zlibd", "libpngd" }
-		configuration { "Release*" }
-		links { "zlib", "libpng" }
-		configuration { }
-	
+
 	end
 end
 

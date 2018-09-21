@@ -38,5 +38,11 @@ obj/
 *.vcxproj.filters
 *.vcxproj.user
 .vs/
+packages/
 target/
 *.pdb
+packages.config
+
+
+# IntelliJ IDEA
+.idea
