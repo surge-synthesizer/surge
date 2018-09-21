@@ -728,8 +728,8 @@ void sub3_patch::load_xml(const void *data, int datasize, bool is_preset)
 			if((p->QueryIntAttribute("absolute",&j) == TIXML_SUCCESS) && (j == 1)) param_ptr[i]->absolute = true;
 			else param_ptr[i]->absolute = false;				
 
-			int s_id = param_ptr[i]->scene;
-			int p_id = param_ptr[i]->param_id_in_scene;
+			int sceneId = param_ptr[i]->scene;
+			int paramIdInScene = param_ptr[i]->param_id_in_scene;
 			TiXmlElement *mr = p->FirstChild("modrouting")->ToElement();
 			while(mr)
 			{		
@@ -743,11 +743,12 @@ void sub3_patch::load_xml(const void *data, int datasize, bool is_preset)
 						// make room for ctrl8 in old patches
 					}
 
-					vector<modulation_routing> *modlist;							
-					if(s_id)
+					vector<modulation_routing> *modlist = nullptr;
+
+					if(sceneId != 0)
 					{
-						if(is_scenelevel(modsource)) modlist = &scene[s_id-1].modulation_scene;
-						else modlist = &scene[s_id-1].modulation_voice;
+						if(is_scenelevel(modsource)) modlist = &scene[sceneId -1].modulation_scene;
+						else modlist = &scene[sceneId -1].modulation_voice;
 					}
 					else
 					{
@@ -757,10 +758,12 @@ void sub3_patch::load_xml(const void *data, int datasize, bool is_preset)
 					modulation_routing t;
 					t.depth = (float)depth;
 					t.source_id = modsource;
-					if(s_id)
-						t.destination_id = p_id;
+
+					if(sceneId != 0)
+						t.destination_id = paramIdInScene;
 					else
 						t.destination_id = i;
+
 					modlist->push_back(t);
 				}
 				mr = mr->NextSibling("modrouting")->ToElement();

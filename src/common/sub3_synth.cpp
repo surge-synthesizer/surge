@@ -1933,10 +1933,10 @@ float sub3_synth::valueToNormalized(long index, float value)
 }
 
 #if MAC
-void *global_load_patch(void *sy)
+void *loadPatchInBackgroundThread(void *sy)
 {
 #else
-DWORD WINAPI global_load_patch( LPVOID lpParam ) 
+DWORD WINAPI loadPatchInBackgroundThread( LPVOID lpParam )
 {	
 	void *sy = lpParam;
 #endif
@@ -2128,18 +2128,18 @@ void sub3_synth::process()
 			/* setting the new scheduling param */
 			ret = pthread_attr_setschedparam (&attributes, &params);
 			
-			ret = pthread_create(&thread, &attributes, global_load_patch, this);
+			ret = pthread_create(&thread, &attributes, loadPatchInBackgroundThread, this);
 #else
 
 			DWORD dwThreadId;
 			HANDLE hThread = CreateThread(
 								NULL,                        // default security attributes 
 								0,                           // use default stack size  
-								global_load_patch,                  // thread function 
+                        loadPatchInBackgroundThread,                  // thread function 
 								this,                // argument to thread function 
 								0,                           // use default creation flags 
 								&dwThreadId);                // returns the thread identifier 
-			SetThreadPriority(hThread,THREAD_PRIORITY_BELOW_NORMAL);
+			SetThreadPriority(hThread,THREAD_PRIORITY_NORMAL);
 #endif
 			
 			clear_block(output[0],block_size_quad);
