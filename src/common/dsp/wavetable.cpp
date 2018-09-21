@@ -1,9 +1,9 @@
-#include "wavetable.h"
+#include "Wavetable.h"
 #include <assert.h>
-#include "dsputils.h"
+#include "DspUtilities.h"
 #include <vt_dsp/basic_dsp.h>
 #include <vt_dsp/endian.h>
-#include "storage.h"
+#include "SurgeStorage.h"
 
 #if WINDOWS
 #include <intrin.h>
@@ -77,7 +77,7 @@ int GetWTIndex(int WaveIdx, int WaveSize, int NumWaves, int MipMap, int Padding 
    return Index;
 }
 
-wavetable::wavetable()
+Wavetable::Wavetable()
 {
    memset(TableF32Data, 0, sizeof(TableF32Data));
    memset(TableI16Data, 0, sizeof(TableI16Data));
@@ -87,7 +87,7 @@ wavetable::wavetable()
    queue_id = -1;
 }
 
-void wavetable::Copy(wavetable* wt)
+void Wavetable::Copy(Wavetable* wt)
 {
    size = wt->size;
    size_po2 = wt->size_po2;
@@ -124,7 +124,7 @@ void wavetable::Copy(wavetable* wt)
    }
 }
 
-bool wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
+bool Wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
 {
    assert(wdata);
 
@@ -228,7 +228,7 @@ bool wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
    return true;
 }
 
-void wavetable::MipMapWT()
+void Wavetable::MipMapWT()
 {
    int levels = 1;
    while (((1 << levels) < size) & (levels < max_mipmap_levels))

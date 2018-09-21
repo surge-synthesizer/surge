@@ -1,8 +1,8 @@
 #include "globals.h"
-#include "dsputils.h"
+#include "DspUtilities.h"
 #include "CSnapshotMenu.h"
-#include "effect.h"
-#include "surge_bitmap_keeper.h"
+#include "effect/Effect.h"
+#include "SurgeBitmaps.h"
 
 extern CFontRef surge_minifont;
 
@@ -11,7 +11,7 @@ extern CFontRef surge_minifont;
 CSnapshotMenu::CSnapshotMenu(const CRect& size,
                              IControlListener* listener,
                              long tag,
-                             sub3_storage* storage)
+                             SurgeStorage* storage)
     : COptionMenu(size, listener, tag, 0)
 {
    this->storage = storage;
@@ -134,8 +134,11 @@ void CSnapshotMenu::populate()
 
 // COscMenu
 
-COscMenu::COscMenu(
-    const CRect& size, IControlListener* listener, long tag, sub3_storage* storage, sub3_osc* osc)
+COscMenu::COscMenu(const CRect& size,
+                   IControlListener* listener,
+                   long tag,
+                   SurgeStorage* storage,
+                   OscillatorStorage* osc)
     : CSnapshotMenu(size, listener, tag, storage)
 {
    strcpy(mtype, "osc");
@@ -195,9 +198,9 @@ const char fxslot_names[8][namechars] = {"A Insert 1", "A Insert 2", "B Insert 1
 CFxMenu::CFxMenu(const CRect& size,
                  IControlListener* listener,
                  long tag,
-                 sub3_storage* storage,
-                 sub3_fx* fx,
-                 sub3_fx* fxbuffer,
+                 SurgeStorage* storage,
+                 FxStorage* fx,
+                 FxStorage* fxbuffer,
                  int slot)
     : CSnapshotMenu(size, listener, tag, storage)
 {
@@ -259,7 +262,7 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e)
       fxbuffer->type.val.i = type;
       // storage->patch.update_controls();
 
-      baseeffect* t_fx = spawn_effect(type, storage, fxbuffer, 0);
+      Effect* t_fx = spawn_effect(type, storage, fxbuffer, 0);
       if (t_fx)
       {
          t_fx->init_ctrltypes();

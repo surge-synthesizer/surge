@@ -6,7 +6,7 @@
 #include "surgeprocessor.h"
 #include "surgecontroller.h"
 #include "surgecids.h"
-#include <plugin.h>
+#include <AbstractSynthesizer.h>
 
 #define stringPluginName "Surge"
 

@@ -1,5 +1,5 @@
 #include "CDIBitmap.h"
-#include "dsputils.h"
+#include "DspUtilities.h"
 
 /*HBITMAP CreateDIBSection(
   HDC hdc,                 // handle to DC

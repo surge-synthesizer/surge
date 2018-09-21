@@ -1,3 +1,5 @@
+#include <gui/SurgeGUIEditor.h>
+
 #include "surgeprocessor.h"
 #include "surgecids.h"
 
@@ -7,7 +9,7 @@
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/base/ustring.h"
 
-#include <gui/sub3_editor.h>
+using namespace Steinberg::Vst;
 
 #define CHECK_INITIALIZED                                                                          \
    if (!surgeInstance.get())                                                                       \
@@ -76,7 +78,7 @@ void SurgeProcessor::createSurge()
       return;
    }
 
-   surgeInstance.reset(new sub3_synth(this));
+   surgeInstance.reset(new SurgeSynthesizer(this));
 
    if (!surgeInstance.get())
    {
@@ -160,7 +162,9 @@ tresult PLUGIN_API SurgeProcessor::setState(IBStream* state)
    return (result == kResultOk) ? kResultOk : kInternalError;
 }
 
-void SurgeProcessor::processEvents(int sampleOffset, IEventList* events, int& eventIndex)
+void SurgeProcessor::processEvents(int sampleOffset,
+                                   Steinberg::Vst::IEventList* events,
+                                   int& eventIndex)
 {
    if (events)
    {
@@ -168,7 +172,7 @@ void SurgeProcessor::processEvents(int sampleOffset, IEventList* events, int& ev
 
       while (eventIndex < numEvents)
       {
-         Event e;
+         Steinberg::Vst::Event e;
          events->getEvent(eventIndex, e);
          if (e.sampleOffset < sampleOffset)
          {
@@ -359,7 +363,7 @@ tresult PLUGIN_API SurgeProcessor::process(ProcessData& data)
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setupProcessing(ProcessSetup& newSetup)
+tresult PLUGIN_API SurgeProcessor::setupProcessing(Steinberg::Vst::ProcessSetup& newSetup)
 {
    CHECK_INITIALIZED
 
@@ -367,9 +371,9 @@ tresult PLUGIN_API SurgeProcessor::setupProcessing(ProcessSetup& newSetup)
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setBusArrangements(SpeakerArrangement* inputs,
+tresult PLUGIN_API SurgeProcessor::setBusArrangements(Steinberg::Vst::SpeakerArrangement* inputs,
                                                       int32 numIns,
-                                                      SpeakerArrangement* outputs,
+                                                      Steinberg::Vst::SpeakerArrangement* outputs,
                                                       int32 numOuts)
 {
    CHECK_INITIALIZED
@@ -398,7 +402,7 @@ IPlugView* PLUGIN_API SurgeProcessor::createView(const char* name)
 
    if (ConstString(name) == ViewType::kEditor)
    {
-      sub3_editor* editor = new sub3_editor(this, surgeInstance.get());
+      SurgeGUIEditor* editor = new SurgeGUIEditor(this, surgeInstance.get());
 
       return editor;
    }
@@ -407,7 +411,7 @@ IPlugView* PLUGIN_API SurgeProcessor::createView(const char* name)
 
 void SurgeProcessor::editorAttached(EditorView* editor)
 {
-   sub3_editor* view = dynamic_cast<sub3_editor*>(editor);
+   SurgeGUIEditor* view = dynamic_cast<SurgeGUIEditor*>(editor);
    if (view)
    {
       addDependentView(view);
@@ -416,17 +420,17 @@ void SurgeProcessor::editorAttached(EditorView* editor)
 
 void SurgeProcessor::editorRemoved(EditorView* editor)
 {
-   sub3_editor* view = dynamic_cast<sub3_editor*>(editor);
+   SurgeGUIEditor* view = dynamic_cast<SurgeGUIEditor*>(editor);
    if (view)
    {
       removeDependentView(view);
    }
 }
 
-void SurgeProcessor::addDependentView(sub3_editor* view)
+void SurgeProcessor::addDependentView(SurgeGUIEditor* view)
 {}
 
-void SurgeProcessor::removeDependentView(sub3_editor* view)
+void SurgeProcessor::removeDependentView(SurgeGUIEditor* view)
 {}
 
 int32 PLUGIN_API SurgeProcessor::getParameterCount()
@@ -557,7 +561,7 @@ tresult PLUGIN_API SurgeProcessor::setParamNormalized(ParamID tag, ParamValue va
    return kResultOk;
 }
 
-sub3_synth* SurgeProcessor::getSurge()
+SurgeSynthesizer* SurgeProcessor::getSurge()
 {
    assert(surgeInstance.get() != NULL);
 

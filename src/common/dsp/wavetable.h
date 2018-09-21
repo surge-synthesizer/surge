@@ -14,11 +14,11 @@ struct wt_header
 };
 #pragma pack(pop)
 
-class wavetable
+class Wavetable
 {
 public:
-   wavetable();
-   void Copy(wavetable* wt);
+   Wavetable();
+   void Copy(Wavetable* wt);
    bool BuildWT(void* wdata, wt_header& wh, bool AppendSilence);
    void MipMapWT();
 
