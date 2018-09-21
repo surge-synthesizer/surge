@@ -43,6 +43,6 @@ public:
 	int _width=0,_height=0;
 protected:
 private:
-   OwningPointer<CBitmap> _bitmap;
-   OwningPointer<CBitmapPixelAccess> _bitmapAccess;
+    SharedPointer<CBitmap> _bitmap;
+    SharedPointer<CBitmapPixelAccess> _bitmapAccess;
 };

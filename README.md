@@ -30,7 +30,7 @@ The [VST3SDK](https://github.com/steinbergmedia/vst3sdk) hosted by Steinberg on 
 
 Prerequisites
 
-* [Premake 4](https://premake.github.io/download.html#v4) for generating project files
+* [Premake 5](https://premake.github.io/download.html#v5) for generating project files
 * [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
@@ -43,7 +43,7 @@ build.cmd
 Or you can just generate the project files using
 
 ```
-premake4 vs2012
+premake5 vs2017
 ```
 
 and open the visual studio solution which is generated.

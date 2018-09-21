@@ -10,8 +10,10 @@ VSTGUI = "vst3sdk/vstgui4/vstgui/";
 
 defines
 { 
-  "VSTGUI_ENABLE_DEPRECATED_METHODS=1"
+  "VSTGUI_ENABLE_DEPRECATED_METHODS=0"
 }
+
+floatingpoint "Fast"
 
 configuration { "Debug" }
 defines { "DEBUG=1", "RELEASE=0" }
@@ -19,14 +21,15 @@ targetdir "target/Debug"
 
 configuration { "Release*" }
 defines { "DEBUG=0", "RELEASE=1" }
-flags { "OptimizeSpeed" }
+optimize "Speed"
+symbols "On"
 targetdir "target/Release"
 
 configuration {}
 
-if (os.is("macosx")) then
+if (os.istarget("macosx")) then
 
-	flags { "EnableSSE2", "FloatFast", "StaticRuntime", "Symbols" }
+	flags { "EnableSSE2", "StaticRuntime" }
 	
 	defines
 	{ 
@@ -37,7 +40,6 @@ if (os.is("macosx")) then
 		"_aligned_free(x)=free(x)",
 		"stricmp=strcasecmp",
 		"SSE_VERSION=3",
-		"VSTGUI_ENABLE_DEPRECATED_METHODS=1",
 		"MAC_COCOA=1",
 		"COCOA=1"
     }
@@ -54,7 +56,7 @@ if (os.is("macosx")) then
 
    platforms { "x64" }
 
-elseif (os.is("windows")) then
+elseif (os.istarget("windows")) then
 
    toolset "v141"
    defines 
@@ -70,13 +72,14 @@ elseif (os.is("windows")) then
 		"_CRT_SECURE_NO_WARNINGS" 
 	}
    
+   characterset "MBCS"
    buildoptions { "/MP" }
    
    includedirs {
       "libs/wtl"
     }
 	
-   flags { "FloatFast", "StaticRuntime", "NoMinimalRebuild", "Symbols" }
+   flags { "StaticRuntime", "NoMinimalRebuild" }
 
    platforms { "x64" }
 
@@ -118,7 +121,7 @@ function plugincommon()
 	   "src/common/gui",
 	}
 
-	if (os.is("macosx")) then
+	if (os.istarget("macosx")) then
 
 		pchheader "src/common/precompiled.h"
 		pchsource "src/common/precompiled.cpp"
@@ -162,7 +165,7 @@ function plugincommon()
 			"QuartzCore.framework",
 		}
 
-	elseif (os.is("windows")) then
+	elseif (os.istarget("windows")) then
 
 		pchheader "precompiled.h"
 		pchsource "src/common/precompiled.cpp"
@@ -248,7 +251,7 @@ targetdir "target/vst2/Release"
 configuration {}
 
 
-if (os.is("macosx")) then
+if (os.istarget("macosx")) then
 
     targetname "Surge"
     targetprefix ""
@@ -259,7 +262,7 @@ if (os.is("macosx")) then
         "libs/vst/*.mm"
     }
 	
-elseif (os.is("windows")) then
+elseif (os.istarget("windows")) then
 
     linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
 
@@ -317,7 +320,7 @@ targetdir "target/vst3/Release"
 
 configuration {}
 
-if (os.is("macosx")) then
+if (os.istarget("macosx")) then
 
     postbuildcommands { "./package-vst3.sh" }
     
@@ -327,7 +330,7 @@ if (os.is("macosx")) then
        "vst3sdk/*.mm"
     }
 	
-elseif (os.is("windows")) then
+elseif (os.istarget("windows")) then
 
     linkoptions { "/DEF:resources\\windows-vst3\\surge.def" }
 	
@@ -342,7 +345,7 @@ end
 
 -- AUDIO UNIT PLUGIN --
 
-if (os.is("macosx")) then
+if (os.istarget("macosx")) then
 
 	project "surge-au"
 	kind "SharedLib"
