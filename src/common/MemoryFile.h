@@ -26,10 +26,10 @@ __forceinline unsigned int swap_endianDW(unsigned int x)
 }
 
 // class intended to parse memory mapped RIFF-files
-class memfile
+class MemoryFile
 {
 public:
-   memfile(void* data, int datasize)
+   MemoryFile(void* data, int datasize)
    {
       assert(data);
       assert(datasize);

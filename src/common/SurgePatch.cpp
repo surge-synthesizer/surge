@@ -6,7 +6,7 @@
 #include "CSurgeSlider.h"
 #include "effect/Effect.h"
 #include <list>
-#include "memfile.h"
+#include "MemoryFile.h"
 #include <vt_dsp/endian.h>
 
 const int hmargin = 6;
@@ -384,7 +384,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       }
       /*for(int f=0; f<2; f++)
       {
-              
+              
               //a->push_back(scene[sc].filterunit[f].keytrack.assign(p_id++,id_s++,"keytrack","keytrack",ct_percent_bidirectional,px,py,sc_id,4,f,true,kVertical|kWhite));
       }*/
 

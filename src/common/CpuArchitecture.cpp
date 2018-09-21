@@ -1,5 +1,5 @@
 #if !MAC
-#include "cpuarch.h"
+#include "CpuArchitecture.h"
 #include <string.h>
 
 extern "C" void __cpuid(int* CPUInfo, int InfoType);

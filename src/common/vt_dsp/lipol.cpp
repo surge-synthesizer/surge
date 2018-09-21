@@ -1,7 +1,5 @@
 #include "lipol.h"
 
-// TODO benchmarka pÂ PPC och unrolla efter vad som ‰r optimalt
-
 #if !PPC
 const __m128 two = _mm_set1_ps(2.f);
 const __m128 four = _mm_set1_ps(4.f);

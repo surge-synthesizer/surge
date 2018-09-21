@@ -1,7 +1,5 @@
 
-// CPU architecture enums
-
-enum cpu_architecture
+enum CpuArchitecture
 {
    ca_SSE = 0x1,
    ca_SSE2 = 0x2,

@@ -13,7 +13,7 @@
 // For Carbon, use CoreServices.h instead
 #include <CoreServices/CoreServices.h>
 #else
-#include "cpuarch.h"
+#include "CpuArchitecture.h"
 #endif
 
 #if MAC
@@ -361,7 +361,7 @@ bool vstlayer::getProgramNameIndexed (long category, long index, char *text)
         sub3_synth *s = (sub3_synth*) plugin_instance;
 
         if(index >= s->storage.patch_list.size()) return false;
-        
+        
         strncpy(text,s->storage.patch_list.at(index).name.c_str(),23);
         text[23] = 0;
         return true;
@@ -411,12 +411,12 @@ long vstlayer::getMidiProgramName (long channel, MidiProgramName* midiProgramNam
         int id = midiProgramName->thisProgramIndex;
         int n = s->storage.patch_list.size();
         if(id >= n) return n;
-        
+        
         midiProgramName->midiProgram = id & 0x7f;
         midiProgramName->midiBankLsb = (id>>7) & 0x7f;
         midiProgramName->midiBankMsb = (id>>14) & 0x7f;
         midiProgramName->flags = kMidiIsOmni;
-        
+        
         strncpy(midiProgramName->name,s->storage.patch_list.at(id).name.c_str(),63);
 midiProgramName->name[63] = 0; midiProgramName->parentCategoryIndex =
 s->storage.patch_list.at(id).category; return n;
@@ -543,7 +543,7 @@ long vstlayer::getNumCategories ()
 /*bool vstlayer::getParameterProperties (long index, VstParameterProperties *p)
 {
         return false; //disable
-        
+        
         if (!initialized) return false;
         sub3_synth *s = (sub3_synth*) plugin_instance;
         if (index<s->storage.getPatch().param_ptr.size())

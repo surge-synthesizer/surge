@@ -6,7 +6,7 @@
 #define SSE_STATE_FLAG 0x8040
 
 #if !MAC
-#include <cpuarch.h>
+#include <CpuArchitecture.h>
 
 int SSE_VERSION;
 
