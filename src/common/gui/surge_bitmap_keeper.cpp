@@ -54,7 +54,7 @@ surge_bitmap_keeper::surge_bitmap_keeper()
 }
 
 surge_bitmap_keeper::~surge_bitmap_keeper()
-{  
+{
    refCount--;
 
    if (refCount == 0)
@@ -63,7 +63,7 @@ surge_bitmap_keeper::~surge_bitmap_keeper()
 
       for (iter = bitmap_registry.begin(); iter != bitmap_registry.end(); ++iter)
       {
-           delete iter->second;
+         delete iter->second;
       }
       bitmap_registry.clear();
    }
@@ -76,8 +76,7 @@ void surge_bitmap_keeper::addEntry(int id)
    bitmap_registry[id] = bitmap;
 }
 
-
-VSTGUI::CBitmap* getSurgeBitmap( int id )
+VSTGUI::CBitmap* getSurgeBitmap(int id)
 {
    return bitmap_registry.at(id);
 }

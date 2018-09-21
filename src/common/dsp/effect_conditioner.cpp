@@ -8,248 +8,255 @@
 
 using namespace vt_dsp;
 
-conditioner::conditioner(sub3_storage *storage, sub3_fx *fxdata, pdata* pd) 
-: baseeffect(storage,fxdata,pd), band1(storage),band2(storage)
+conditioner::conditioner(sub3_storage* storage, sub3_fx* fxdata, pdata* pd)
+    : baseeffect(storage, fxdata, pd), band1(storage), band2(storage)
 {
-	bufpos = 0;
+   bufpos = 0;
 
-	ampL.set_blocksize(block_size);
-	ampR.set_blocksize(block_size);
-	width.set_blocksize(block_size);
-	postamp.set_blocksize(block_size);
+   ampL.set_blocksize(block_size);
+   ampR.set_blocksize(block_size);
+   width.set_blocksize(block_size);
+   postamp.set_blocksize(block_size);
 }
 
 conditioner::~conditioner()
-{
-}
+{}
 
 void conditioner::init()
 {
-	setvars(true);
-	ef = 0;
-	bufpos = 0;
-	filtered_lamax = 1.f;
-	filtered_lamax2 = 1.f;
-	gain = 1.f;
-	memset(lamax,0,sizeof(float)*(lookahead<<1));
-	memset(delayed[0],0,sizeof(float)*lookahead);
-	memset(delayed[1],0,sizeof(float)*lookahead);
-	
-	vu[0] = 0.f;
-	vu[1] = 0.f;
-	vu[2] = 1.f;
-	vu[4] = 0.f;
-	vu[5] = 0.f;
-	assert(KNumVuSlots >= 5);
+   setvars(true);
+   ef = 0;
+   bufpos = 0;
+   filtered_lamax = 1.f;
+   filtered_lamax2 = 1.f;
+   gain = 1.f;
+   memset(lamax, 0, sizeof(float) * (lookahead << 1));
+   memset(delayed[0], 0, sizeof(float) * lookahead);
+   memset(delayed[1], 0, sizeof(float) * lookahead);
+
+   vu[0] = 0.f;
+   vu[1] = 0.f;
+   vu[2] = 1.f;
+   vu[4] = 0.f;
+   vu[5] = 0.f;
+   assert(KNumVuSlots >= 5);
 }
 
 void conditioner::setvars(bool init)
 {
-	band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[0]);
-	band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[1]);	
-	if(init)
-	{
-		
-	}
+   band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[0]);
+   band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[1]);
+   if (init)
+   {
+   }
 }
 
 void conditioner::process_only_control()
 {
-	float am = 1.0f + 0.9f * *f[5];
-	float rm = 1.0f + 0.9f * *f[6];
-	float attack = 0.001f*am*am;
-	float release = 0.0001f * rm*rm;
+   float am = 1.0f + 0.9f * *f[5];
+   float rm = 1.0f + 0.9f * *f[6];
+   float attack = 0.001f * am * am;
+   float release = 0.0001f * rm * rm;
 
-	float a = storage->vu_falloff;
-	vu[0] = min(8.f,a*vu[0]);
-	vu[1] = min(8.f,a*vu[1]);
-	vu[4] = min(8.f,a*vu[4]);
-	vu[5] = min(8.f,a*vu[5]);
+   float a = storage->vu_falloff;
+   vu[0] = min(8.f, a * vu[0]);
+   vu[1] = min(8.f, a * vu[1]);
+   vu[4] = min(8.f, a * vu[4]);
+   vu[5] = min(8.f, a * vu[5]);
 
-	for(int k=0; k<block_size; k++)
-	{		
-		filtered_lamax = (1-attack)*filtered_lamax + attack;		
-		filtered_lamax2 = (1-release)*filtered_lamax2 + (release)*filtered_lamax;
-		if(filtered_lamax > filtered_lamax2) filtered_lamax2 = filtered_lamax;		
+   for (int k = 0; k < block_size; k++)
+   {
+      filtered_lamax = (1 - attack) * filtered_lamax + attack;
+      filtered_lamax2 = (1 - release) * filtered_lamax2 + (release)*filtered_lamax;
+      if (filtered_lamax > filtered_lamax2)
+         filtered_lamax2 = filtered_lamax;
 
-		gain = 1.f / filtered_lamax2;													
-	}
+      gain = 1.f / filtered_lamax2;
+   }
 
-	vu[2] = gain;	
+   vu[2] = gain;
 }
 
-void conditioner::process(float *dataL, float *dataR)
-{	
-	float am = 1.0f + 0.9f * *f[5];
-	float rm = 1.0f + 0.9f * *f[6];
-	float attack = 0.001f*am*am;
-	float release = 0.0001f * rm*rm;
-	
-	float a = storage->vu_falloff;
-	vu[0] = min(8.f,a*vu[0]);
-	vu[1] = min(8.f,a*vu[1]);
-	vu[4] = min(8.f,a*vu[4]);
-	vu[5] = min(8.f,a*vu[5]);
-	
-	setvars(false);
-	band1.process_block(dataL,dataR);
-	band2.process_block(dataL,dataR);	
-	float pregain = db_to_linear(-*f[4]);
-	ampL.set_target_smoothed(pregain*0.5f*clamp1bp(1 - *f[3]));
-	ampR.set_target_smoothed(pregain*0.5f*clamp1bp(1 + *f[3]));
-	width.set_target_smoothed(clamp1bp(*f[2]));	
-	postamp.set_target_smoothed(db_to_linear(*f[7]));	
+void conditioner::process(float* dataL, float* dataR)
+{
+   float am = 1.0f + 0.9f * *f[5];
+   float rm = 1.0f + 0.9f * *f[6];
+   float attack = 0.001f * am * am;
+   float release = 0.0001f * rm * rm;
 
-	// gör conditioner SSE-snäll
+   float a = storage->vu_falloff;
+   vu[0] = min(8.f, a * vu[0]);
+   vu[1] = min(8.f, a * vu[1]);
+   vu[4] = min(8.f, a * vu[4]);
+   vu[5] = min(8.f, a * vu[5]);
 
-	_MM_ALIGN16 float M[block_size],S[block_size];	// wb = write-buffer	
-	encodeMS(dataL,dataR,M,S,block_size_quad);
-	width.multiply_block(S,block_size_quad);
-	decodeMS(M,S,dataL,dataR,block_size_quad);
-	ampL.multiply_block(dataL,block_size_quad);
-	ampR.multiply_block(dataR,block_size_quad);
+   setvars(false);
+   band1.process_block(dataL, dataR);
+   band2.process_block(dataL, dataR);
+   float pregain = db_to_linear(-*f[4]);
+   ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *f[3]));
+   ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *f[3]));
+   width.set_target_smoothed(clamp1bp(*f[2]));
+   postamp.set_target_smoothed(db_to_linear(*f[7]));
 
-	vu[0] = max(vu[0], get_absmax(dataL,block_size_quad));
-	vu[1] = max(vu[1], get_absmax(dataR,block_size_quad));
+   // gör conditioner SSE-snäll
 
-	for(int k=0; k<block_size; k++)
-	{		
-		float dL = delayed[0][bufpos];
-		float dR = delayed[1][bufpos];
+   _MM_ALIGN16 float M[block_size], S[block_size]; // wb = write-buffer
+   encodeMS(dataL, dataR, M, S, block_size_quad);
+   width.multiply_block(S, block_size_quad);
+   decodeMS(M, S, dataL, dataR, block_size_quad);
+   ampL.multiply_block(dataL, block_size_quad);
+   ampR.multiply_block(dataR, block_size_quad);
 
-		//vu[0] = max(vu[0], dataL[k]);
-		//vu[1] = max(vu[1], dataR[k]);
-		
-		float la = lamax[lookahead-2];
+   vu[0] = max(vu[0], get_absmax(dataL, block_size_quad));
+   vu[1] = max(vu[1], get_absmax(dataR, block_size_quad));
 
-		la = sqrt(2.f*la);	// RMS test
+   for (int k = 0; k < block_size; k++)
+   {
+      float dL = delayed[0][bufpos];
+      float dR = delayed[1][bufpos];
 
-		la = max(1.f,la);// * outscale_inv);
-		filtered_lamax = (1-attack)*filtered_lamax + attack*la;		
-		filtered_lamax2 = (1-release)*filtered_lamax2 + (release)*filtered_lamax;
-		if(filtered_lamax > filtered_lamax2) filtered_lamax2 = filtered_lamax;		
+      // vu[0] = max(vu[0], dataL[k]);
+      // vu[1] = max(vu[1], dataR[k]);
 
-		gain = rcp(filtered_lamax2);
-				
-		delayed[0][bufpos] = dataL[k];
-		delayed[1][bufpos] = dataR[k];				
-				
-		lamax[bufpos] = max(fabsf(dataL[k]),fabsf(dataR[k]));	
-		lamax[bufpos] = lamax[bufpos]*lamax[bufpos];	// RMS testhack
-		
-		int of=0;
-		for(int i=0; i<(lookahead_bits); i++)
-		{
-			int nextof = of + (lookahead >> i);
-			lamax[nextof + (bufpos>>(i+1))] = max(lamax[of + (bufpos>>i)],lamax[of + ((bufpos>>i) ^ 0x1)]);
-			of = nextof;
-		}				
-		dataL[k] = (gain)*dL;
-		dataR[k] = (gain)*dR;
+      float la = lamax[lookahead - 2];
 
-		bufpos = (bufpos+1)&(lookahead-1);
-	}
-	
-	postamp.multiply_2_blocks(dataL,dataR,block_size_quad);
+      la = sqrt(2.f * la); // RMS test
 
-	vu[2] = gain;	
+      la = max(1.f, la); // * outscale_inv);
+      filtered_lamax = (1 - attack) * filtered_lamax + attack * la;
+      filtered_lamax2 = (1 - release) * filtered_lamax2 + (release)*filtered_lamax;
+      if (filtered_lamax > filtered_lamax2)
+         filtered_lamax2 = filtered_lamax;
 
-	vu[4] = max(vu[4], get_absmax(dataL,block_size_quad));
-	vu[5] = max(vu[5], get_absmax(dataR,block_size_quad));
+      gain = rcp(filtered_lamax2);
 
-/*	for(int i=0; i<block_size; i++)
-	{
-		vu[4] = max(vu[4], dataL[i]);
-		vu[5] = max(vu[5], dataR[i]);
-	}*/
+      delayed[0][bufpos] = dataL[k];
+      delayed[1][bufpos] = dataR[k];
+
+      lamax[bufpos] = max(fabsf(dataL[k]), fabsf(dataR[k]));
+      lamax[bufpos] = lamax[bufpos] * lamax[bufpos]; // RMS testhack
+
+      int of = 0;
+      for (int i = 0; i < (lookahead_bits); i++)
+      {
+         int nextof = of + (lookahead >> i);
+         lamax[nextof + (bufpos >> (i + 1))] =
+             max(lamax[of + (bufpos >> i)], lamax[of + ((bufpos >> i) ^ 0x1)]);
+         of = nextof;
+      }
+      dataL[k] = (gain)*dL;
+      dataR[k] = (gain)*dR;
+
+      bufpos = (bufpos + 1) & (lookahead - 1);
+   }
+
+   postamp.multiply_2_blocks(dataL, dataR, block_size_quad);
+
+   vu[2] = gain;
+
+   vu[4] = max(vu[4], get_absmax(dataL, block_size_quad));
+   vu[5] = max(vu[5], get_absmax(dataR, block_size_quad));
+
+   /*	for(int i=0; i<block_size; i++)
+           {
+                   vu[4] = max(vu[4], dataL[i]);
+                   vu[5] = max(vu[5], dataR[i]);
+           }*/
 }
 
 int conditioner::vu_type(int id)
 {
-	switch (id)
-	{
-	case 0:
-		return vut_vu_stereo;		
-	case 1:
-		return vut_gain_reduction;		
-	case 2:
-		return vut_vu_stereo;		
-	}
-	return 0;
+   switch (id)
+   {
+   case 0:
+      return vut_vu_stereo;
+   case 1:
+      return vut_gain_reduction;
+   case 2:
+      return vut_vu_stereo;
+   }
+   return 0;
 }
 
 int conditioner::vu_ypos(int id)
 {
-	switch (id)
-	{
-	case 0:
-		return 15;		
-	case 1:
-		return 17;		
-	case 2:
-		return 19;		
-	}
-	return 0;
+   switch (id)
+   {
+   case 0:
+      return 15;
+   case 1:
+      return 17;
+   case 2:
+      return 19;
+   }
+   return 0;
 }
 const char* conditioner::group_label(int id)
 {
-	switch (id)
-	{
-	case 0:
-		return "EQ";		
-	case 1:
-		return "Stereo";		
-	case 2:
-		return "Limiter";		
-	}
-	return 0;
+   switch (id)
+   {
+   case 0:
+      return "EQ";
+   case 1:
+      return "Stereo";
+   case 2:
+      return "Limiter";
+   }
+   return 0;
 }
 int conditioner::group_label_ypos(int id)
 {
-	switch (id)
-	{
-	case 0:
-		return 1;		
-	case 1:
-		return 7;		
-	case 2:
-		return 13;		
-	}
-	return 0;
+   switch (id)
+   {
+   case 0:
+      return 1;
+   case 1:
+      return 7;
+   case 2:
+      return 13;
+   }
+   return 0;
 }
 
 void conditioner::suspend()
-{ 
-	init();
+{
+   init();
 }
 
 void conditioner::init_ctrltypes()
 {
-	baseeffect::init_ctrltypes();
+   baseeffect::init_ctrltypes();
 
-	fxdata->p[0].set_name("Bass");		fxdata->p[0].set_type(ct_decibel_extra_narrow);
-	fxdata->p[1].set_name("Treble");		fxdata->p[1].set_type(ct_decibel_extra_narrow);
-	
-	fxdata->p[2].set_name("Width");		fxdata->p[2].set_type(ct_percent_bidirectional);
-	fxdata->p[3].set_name("Balance");	fxdata->p[3].set_type(ct_percent_bidirectional);	
+   fxdata->p[0].set_name("Bass");
+   fxdata->p[0].set_type(ct_decibel_extra_narrow);
+   fxdata->p[1].set_name("Treble");
+   fxdata->p[1].set_type(ct_decibel_extra_narrow);
 
-	fxdata->p[4].set_name("Threshold");			fxdata->p[4].set_type(ct_decibel_attenuation);
-	fxdata->p[5].set_name("A Rate");				fxdata->p[5].set_type(ct_percent_bidirectional);
-	fxdata->p[6].set_name("R Rate");				fxdata->p[6].set_type(ct_percent_bidirectional);
-	fxdata->p[7].set_name("Output");				fxdata->p[7].set_type(ct_decibel_attenuation);
+   fxdata->p[2].set_name("Width");
+   fxdata->p[2].set_type(ct_percent_bidirectional);
+   fxdata->p[3].set_name("Balance");
+   fxdata->p[3].set_type(ct_percent_bidirectional);
 
+   fxdata->p[4].set_name("Threshold");
+   fxdata->p[4].set_type(ct_decibel_attenuation);
+   fxdata->p[5].set_name("A Rate");
+   fxdata->p[5].set_type(ct_percent_bidirectional);
+   fxdata->p[6].set_name("R Rate");
+   fxdata->p[6].set_type(ct_percent_bidirectional);
+   fxdata->p[7].set_name("Output");
+   fxdata->p[7].set_type(ct_decibel_attenuation);
 
-	fxdata->p[0].posy_offset = 1;
-	fxdata->p[1].posy_offset = 1;
-	
-	fxdata->p[2].posy_offset = 3;
-	fxdata->p[3].posy_offset = 3;
-	
-	fxdata->p[4].posy_offset = 11;
-	fxdata->p[5].posy_offset = 11;
-	fxdata->p[6].posy_offset = 11;	
-	fxdata->p[7].posy_offset = 11;	
+   fxdata->p[0].posy_offset = 1;
+   fxdata->p[1].posy_offset = 1;
+
+   fxdata->p[2].posy_offset = 3;
+   fxdata->p[3].posy_offset = 3;
+
+   fxdata->p[4].posy_offset = 11;
+   fxdata->p[5].posy_offset = 11;
+   fxdata->p[6].posy_offset = 11;
+   fxdata->p[7].posy_offset = 11;
 }
 void conditioner::init_default_values()
-{
-}
+{}

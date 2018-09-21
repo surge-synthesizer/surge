@@ -9,15 +9,16 @@
 class c_sec
 {
 public:
-	c_sec();
-	~c_sec();
-	void enter();
-	void leave();
+   c_sec();
+   ~c_sec();
+   void enter();
+   void leave();
+
 protected:
-	#if MAC
-	MPCriticalRegionID cs;
-	#else
-	CRITICAL_SECTION cs;
-	#endif
-	int refcount;
+#if MAC
+   MPCriticalRegionID cs;
+#else
+   CRITICAL_SECTION cs;
+#endif
+   int refcount;
 };

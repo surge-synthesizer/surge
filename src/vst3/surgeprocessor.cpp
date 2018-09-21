@@ -9,29 +9,30 @@
 
 #include <gui/sub3_editor.h>
 
-#define CHECK_INITIALIZED \
-if (!surgeInstance.get()) \
-{ return kNotInitialized; }
+#define CHECK_INITIALIZED                                                                          \
+   if (!surgeInstance.get())                                                                       \
+   {                                                                                               \
+      return kNotInitialized;                                                                      \
+   }
 
-#define ABORT_IF_NOT_INITIALIZED \
-if (!surgeInstance.get()) \
-{ return 0; }
+#define ABORT_IF_NOT_INITIALIZED                                                                   \
+   if (!surgeInstance.get())                                                                       \
+   {                                                                                               \
+      return 0;                                                                                    \
+   }
 
-SurgeProcessor::SurgeProcessor ()
-   : blockpos(0)
-   , surgeInstance()
-{
-}
+SurgeProcessor::SurgeProcessor() : blockpos(0), surgeInstance()
+{}
 
-SurgeProcessor::~SurgeProcessor ()
+SurgeProcessor::~SurgeProcessor()
 {
    destroySurge();
 }
 
-tresult PLUGIN_API SurgeProcessor::initialize (FUnknown* context)
+tresult PLUGIN_API SurgeProcessor::initialize(FUnknown* context)
 {
    //---always initialize the parent-------
-   tresult result = SingleComponentEffect::initialize (context);
+   tresult result = SingleComponentEffect::initialize(context);
    // if everything Ok, continue
    if (result != kResultOk)
    {
@@ -40,13 +41,13 @@ tresult PLUGIN_API SurgeProcessor::initialize (FUnknown* context)
 
    //---create Audio In/Out busses------
    // we want a stereo Input and a Stereo Output
-   addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
-   addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
+   addAudioInput(STR16("Stereo In"), SpeakerArr::kStereo);
+   addAudioOutput(STR16("Stereo Out"), SpeakerArr::kStereo);
 
    //---create Event In/Out busses (1 bus with 16 channels)------
-   addEventInput (STR16 ("Note In"));
+   addEventInput(STR16("Note In"));
 
-   //addUnit(new Unit(USTRING ("Macro Parameters"), 1));
+   // addUnit(new Unit(USTRING ("Macro Parameters"), 1));
 
    /*      case 1: return L"Macro Parameters";
          case 2: return L"Global / FX";
@@ -77,11 +78,12 @@ void SurgeProcessor::createSurge()
 
    surgeInstance.reset(new sub3_synth(this));
 
-   if(!surgeInstance.get())
+   if (!surgeInstance.get())
    {
       // out of memory
 #if WIN32
-      MessageBoxW(::GetActiveWindow(), L"Could not allocate memory.", L"Out of memory", MB_OK | MB_ICONERROR);
+      MessageBoxW(::GetActiveWindow(), L"Could not allocate memory.", L"Out of memory",
+                  MB_OK | MB_ICONERROR);
 #endif
 
       return;
@@ -93,19 +95,19 @@ void SurgeProcessor::destroySurge()
    surgeInstance.reset();
 }
 
-tresult PLUGIN_API SurgeProcessor::terminate  ()
+tresult PLUGIN_API SurgeProcessor::terminate()
 {
    destroySurge();
 
-   return SingleComponentEffect::terminate ();
+   return SingleComponentEffect::terminate();
 }
 
-tresult PLUGIN_API SurgeProcessor::setActive (TBool state)
+tresult PLUGIN_API SurgeProcessor::setActive(TBool state)
 {
    CHECK_INITIALIZED
 
    // call our parent setActive
-   return SingleComponentEffect::setActive (state);
+   return SingleComponentEffect::setActive(state);
 }
 
 tresult PLUGIN_API SurgeProcessor::setProcessing(TBool state)
@@ -130,22 +132,22 @@ tresult PLUGIN_API SurgeProcessor::getState(IBStream* state)
 {
    CHECK_INITIALIZED
 
-   void* data = 0;   // surgeInstance keeps its data in an auto-ptr so we don't need to free it
+   void* data = 0; // surgeInstance keeps its data in an auto-ptr so we don't need to free it
    unsigned int stateSize = surgeInstance->save_raw(&data);
    state->write(data, stateSize);
 
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setState (IBStream* state)
+tresult PLUGIN_API SurgeProcessor::setState(IBStream* state)
 {
    CHECK_INITIALIZED
-   
+
    // HACK jsut allocate a meg just to be safe
-   const size_t maxsize = 4*1024*1024;
+   const size_t maxsize = 4 * 1024 * 1024;
    void* data = malloc(maxsize);
    int32 numBytes = 0;
-    
+
    tresult result = state->read(data, maxsize, &numBytes);
 
    if (result == kResultOk)
@@ -181,9 +183,9 @@ void SurgeProcessor::processEvents(int sampleOffset, IEventList* events, int& ev
    }
 }
 
-void SurgeProcessor::processEvent( const Event& e )
+void SurgeProcessor::processEvent(const Event& e)
 {
-   switch(e.type)
+   switch (e.type)
    {
    case Event::kNoteOnEvent:
       if (e.noteOn.velocity == 0.f)
@@ -192,7 +194,8 @@ void SurgeProcessor::processEvent( const Event& e )
       }
       else
       {
-         getSurge()->play_note(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity, e.noteOn.tuning);
+         getSurge()->play_note(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity,
+                               e.noteOn.tuning);
       }
       break;
 
@@ -201,13 +204,15 @@ void SurgeProcessor::processEvent( const Event& e )
       break;
 
    case Event::kPolyPressureEvent:
-      getSurge()->poly_aftertouch(e.polyPressure.channel, e.polyPressure.pitch, e.polyPressure.pressure);
+      getSurge()->poly_aftertouch(e.polyPressure.channel, e.polyPressure.pitch,
+                                  e.polyPressure.pressure);
       break;
    }
 }
 
-
-void SurgeProcessor::processParameterChanges(int sampleOffset, IParameterChanges* parameterChanges, int& eventIndex)
+void SurgeProcessor::processParameterChanges(int sampleOffset,
+                                             IParameterChanges* parameterChanges,
+                                             int& eventIndex)
 {
    if (parameterChanges)
    {
@@ -216,13 +221,13 @@ void SurgeProcessor::processParameterChanges(int sampleOffset, IParameterChanges
 
       for (int32 i = 0; i < numParamsChanged; i++)
       {
-         IParamValueQueue* paramQueue = parameterChanges->getParameterData (i);
+         IParamValueQueue* paramQueue = parameterChanges->getParameterData(i);
 
          if (paramQueue)
          {
             int32 offsetSamples;
             double value;
-            int32 numPoints = paramQueue->getPointCount ();
+            int32 numPoints = paramQueue->getPointCount();
             /*switch (paramQueue->getParameterId ())
             {
 
@@ -244,7 +249,8 @@ void SurgeProcessor::processParameterChanges(int sampleOffset, IParameterChanges
            {
            case kGainId:
               // we use in this example only the last point of the queue.
-              // in some wanted case for specific kind of parameter it makes sense to retrieve all points
+              // in some wanted case for specific kind of parameter it makes sense to retrieve all
+     points
               // and process the whole audio block in small blocks.
               if (paramQueue->getPoint (numPoints - 1,  offsetSamples, value) == kResultTrue)
               {
@@ -263,7 +269,7 @@ void SurgeProcessor::processParameterChanges(int sampleOffset, IParameterChanges
      }*/
 }
 
-tresult PLUGIN_API SurgeProcessor::process( ProcessData& data )
+tresult PLUGIN_API SurgeProcessor::process(ProcessData& data)
 {
    CHECK_INITIALIZED
 
@@ -280,7 +286,7 @@ tresult PLUGIN_API SurgeProcessor::process( ProcessData& data )
 
    surgeInstance->process_input = data.numInputs != 0;
 
-   float** in  = surgeInstance->process_input ? data.inputs[0].channelBuffers32 : 0;
+   float** in = surgeInstance->process_input ? data.inputs[0].channelBuffers32 : 0;
    float** out = data.outputs[0].channelBuffers32;
 
    int i;
@@ -294,9 +300,9 @@ tresult PLUGIN_API SurgeProcessor::process( ProcessData& data )
       surgeInstance->time_data.ppqPos = data.processContext->projectTimeMusic;
    }
 
-   for(i=0; i<numSamples; i++)
+   for (i = 0; i < numSamples; i++)
    {
-      if(blockpos == 0)
+      if (blockpos == 0)
       {
          if (data.processContext)
          {
@@ -308,9 +314,10 @@ tresult PLUGIN_API SurgeProcessor::process( ProcessData& data )
             }
 
             // move clock
-            timedata *td = &(surgeInstance->time_data);
+            timedata* td = &(surgeInstance->time_data);
             surgeInstance->time_data.tempo = tempo;
-            surgeInstance->time_data.ppqPos += (double) block_size * tempo / (60. * data.processContext->sampleRate);
+            surgeInstance->time_data.ppqPos +=
+                (double)block_size * tempo / (60. * data.processContext->sampleRate);
          }
 
          processEvents(i, data.inputEvents, noteEventIndex);
@@ -319,23 +326,24 @@ tresult PLUGIN_API SurgeProcessor::process( ProcessData& data )
          surgeInstance->process();
       }
 
-      if(surgeInstance->process_input)
+      if (surgeInstance->process_input)
       {
          int inp;
-         for(inp=0; inp<n_inputs; inp++)
+         for (inp = 0; inp < n_inputs; inp++)
          {
             surgeInstance->input[inp][blockpos] = in[inp][i];
          }
       }
 
       int outp;
-      for(outp=0; outp<n_outputs; outp++)
+      for (outp = 0; outp < n_outputs; outp++)
       {
          out[outp][i] = (float)surgeInstance->output[outp][blockpos];
       }
 
       blockpos++;
-      if(blockpos >= block_size) blockpos = 0;
+      if (blockpos >= block_size)
+         blockpos = 0;
    }
 
    // Make sure we iterated over all events
@@ -351,7 +359,7 @@ tresult PLUGIN_API SurgeProcessor::process( ProcessData& data )
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setupProcessing( ProcessSetup& newSetup )
+tresult PLUGIN_API SurgeProcessor::setupProcessing(ProcessSetup& newSetup)
 {
    CHECK_INITIALIZED
 
@@ -359,7 +367,10 @@ tresult PLUGIN_API SurgeProcessor::setupProcessing( ProcessSetup& newSetup )
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setBusArrangements( SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts )
+tresult PLUGIN_API SurgeProcessor::setBusArrangements(SpeakerArrangement* inputs,
+                                                      int32 numIns,
+                                                      SpeakerArrangement* outputs,
+                                                      int32 numOuts)
 {
    CHECK_INITIALIZED
 
@@ -372,7 +383,8 @@ tresult PLUGIN_API SurgeProcessor::setBusArrangements( SpeakerArrangement* input
    }
    else if (numIns == 1 && numOuts == 1)
    {
-      if ((SpeakerArr::getChannelCount(inputs[0]) == 2) && (SpeakerArr::getChannelCount(outputs[0]) == 2))
+      if ((SpeakerArr::getChannelCount(inputs[0]) == 2) &&
+          (SpeakerArr::getChannelCount(outputs[0]) == 2))
       {
          return kResultOk;
       }
@@ -380,11 +392,11 @@ tresult PLUGIN_API SurgeProcessor::setBusArrangements( SpeakerArrangement* input
    return kResultFalse;
 }
 
-IPlugView* PLUGIN_API SurgeProcessor::createView( const char* name )
+IPlugView* PLUGIN_API SurgeProcessor::createView(const char* name)
 {
    assert(surgeInstance.get());
 
-   if (ConstString (name) == ViewType::kEditor)
+   if (ConstString(name) == ViewType::kEditor)
    {
       sub3_editor* editor = new sub3_editor(this, surgeInstance.get());
 
@@ -393,49 +405,45 @@ IPlugView* PLUGIN_API SurgeProcessor::createView( const char* name )
    return 0;
 }
 
-void SurgeProcessor::editorAttached (EditorView* editor)
+void SurgeProcessor::editorAttached(EditorView* editor)
 {
-   sub3_editor* view = dynamic_cast<sub3_editor*> (editor);
+   sub3_editor* view = dynamic_cast<sub3_editor*>(editor);
    if (view)
    {
-      addDependentView (view);
+      addDependentView(view);
    }
 }
 
-void SurgeProcessor::editorRemoved (EditorView* editor)
+void SurgeProcessor::editorRemoved(EditorView* editor)
 {
-   sub3_editor* view = dynamic_cast<sub3_editor*> (editor);
+   sub3_editor* view = dynamic_cast<sub3_editor*>(editor);
    if (view)
    {
-      removeDependentView (view);
+      removeDependentView(view);
    }
 }
 
-void SurgeProcessor::addDependentView (sub3_editor* view)
-{
-}
+void SurgeProcessor::addDependentView(sub3_editor* view)
+{}
 
-void SurgeProcessor::removeDependentView (sub3_editor* view)
-{
-}
+void SurgeProcessor::removeDependentView(sub3_editor* view)
+{}
 
 int32 PLUGIN_API SurgeProcessor::getParameterCount()
 {
    if (exportAllMidiControllers())
    {
-      return getParameterCountWithoutMappings() + kCountCtrlNumber;       
+      return getParameterCountWithoutMappings() + kCountCtrlNumber;
    }
    return getParameterCountWithoutMappings();
 }
-
-
 
 int32 SurgeProcessor::getParameterCountWithoutMappings()
 {
    return n_total_params + num_metaparameters;
 }
 
-tresult PLUGIN_API SurgeProcessor::getParameterInfo( int32 paramIndex, ParameterInfo& info )
+tresult PLUGIN_API SurgeProcessor::getParameterInfo(int32 paramIndex, ParameterInfo& info)
 {
    CHECK_INITIALIZED
 
@@ -462,13 +470,15 @@ tresult PLUGIN_API SurgeProcessor::getParameterInfo( int32 paramIndex, Parameter
    surgeInstance->getParameterUnitW(id, info.units);
    info.stepCount = 0; // 1 = toggle,
    info.defaultNormalizedValue = meta.fdefault;
-   info.unitId = 0; //meta.clump;
+   info.unitId = 0; // meta.clump;
    info.flags = ParameterInfo::kCanAutomate;
 
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::getParamStringByValue( ParamID tag, ParamValue valueNormalized, String128 string )
+tresult PLUGIN_API SurgeProcessor::getParamStringByValue(ParamID tag,
+                                                         ParamValue valueNormalized,
+                                                         String128 string)
 {
    CHECK_INITIALIZED
 
@@ -482,7 +492,9 @@ tresult PLUGIN_API SurgeProcessor::getParamStringByValue( ParamID tag, ParamValu
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::getParamValueByString( ParamID tag, TChar* string, ParamValue& valueNormalized )
+tresult PLUGIN_API SurgeProcessor::getParamValueByString(ParamID tag,
+                                                         TChar* string,
+                                                         ParamValue& valueNormalized)
 {
    CHECK_INITIALIZED
 
@@ -494,7 +506,8 @@ tresult PLUGIN_API SurgeProcessor::getParamValueByString( ParamID tag, TChar* st
    return kResultFalse;
 }
 
-ParamValue PLUGIN_API SurgeProcessor::normalizedParamToPlain( ParamID tag, ParamValue valueNormalized )
+ParamValue PLUGIN_API SurgeProcessor::normalizedParamToPlain(ParamID tag,
+                                                             ParamValue valueNormalized)
 {
    ABORT_IF_NOT_INITIALIZED
 
@@ -506,7 +519,7 @@ ParamValue PLUGIN_API SurgeProcessor::normalizedParamToPlain( ParamID tag, Param
    return surgeInstance->normalizedToValue(tag, valueNormalized);
 }
 
-ParamValue PLUGIN_API SurgeProcessor::plainParamToNormalized( ParamID tag, ParamValue plainValue )
+ParamValue PLUGIN_API SurgeProcessor::plainParamToNormalized(ParamID tag, ParamValue plainValue)
 {
    ABORT_IF_NOT_INITIALIZED
 
@@ -518,7 +531,7 @@ ParamValue PLUGIN_API SurgeProcessor::plainParamToNormalized( ParamID tag, Param
    return surgeInstance->valueToNormalized(tag, plainValue);
 }
 
-ParamValue PLUGIN_API SurgeProcessor::getParamNormalized( ParamID tag )
+ParamValue PLUGIN_API SurgeProcessor::getParamNormalized(ParamID tag)
 {
    ABORT_IF_NOT_INITIALIZED
 
@@ -530,7 +543,7 @@ ParamValue PLUGIN_API SurgeProcessor::getParamNormalized( ParamID tag )
    return surgeInstance->getParameter01(surgeInstance->remapExternalApiToInternalId(tag));
 }
 
-tresult PLUGIN_API SurgeProcessor::setParamNormalized( ParamID tag, ParamValue value )
+tresult PLUGIN_API SurgeProcessor::setParamNormalized(ParamID tag, ParamValue value)
 {
    CHECK_INITIALIZED
 
@@ -551,7 +564,10 @@ sub3_synth* SurgeProcessor::getSurge()
    return surgeInstance.get();
 }
 
-tresult PLUGIN_API SurgeProcessor::getMidiControllerAssignment( int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id/*out*/ )
+tresult PLUGIN_API SurgeProcessor::getMidiControllerAssignment(int32 busIndex,
+                                                               int16 channel,
+                                                               CtrlNumber midiControllerNumber,
+                                                               ParamID& id /*out*/)
 {
    return kResultFalse;
 }
@@ -574,12 +590,12 @@ bool SurgeProcessor::isMidiMapController(int32 paramIndex)
 void SurgeProcessor::updateDisplay()
 {
    // needs IComponentHandler2
-   //setDirty(true);
+   // setDirty(true);
 }
 
-void SurgeProcessor::setParameterAutomated( int externalparam, float value )
+void SurgeProcessor::setParameterAutomated(int externalparam, float value)
 {
-   beginEdit(externalparam);  // TODO
+   beginEdit(externalparam); // TODO
    performEdit(externalparam, value);
    endEdit(externalparam);
 }

@@ -7,41 +7,44 @@
 class gui_fxconf : public CControl
 {
 public:
-	gui_fxconf (const CRect &size, IControlListener *listener, long tag, int current);
-	virtual void draw (CDrawContext*dc);
-   virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState& buttons);											///< called when a mouse down event occurs
-   virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState& buttons);											///< called when a mouse up event occurs
-   
-	int current;
-	CBitmap *bg,*labels;
-	int type[8],bypass,disabled;
+   gui_fxconf(const CRect& size, IControlListener* listener, long tag, int current);
+   virtual void draw(CDrawContext* dc);
+   virtual CMouseEventResult
+   onMouseDown(CPoint& where,
+               const CButtonState& buttons); ///< called when a mouse down event occurs
+   virtual CMouseEventResult
+   onMouseUp(CPoint& where, const CButtonState& buttons); ///< called when a mouse up event occurs
 
-	void set_type(int id, int t)
-	{
-		type[id] = t;
-		setDirty(true);
-	}
+   int current;
+   CBitmap *bg, *labels;
+   int type[8], bypass, disabled;
 
-	void set_bypass(int bid)
-	{
-		bypass = bid;		
-		invalid();
-	}
+   void set_type(int id, int t)
+   {
+      type[id] = t;
+      setDirty(true);
+   }
 
-	void set_disable(int did)
-	{
-		disabled = did;
-	}
+   void set_bypass(int bid)
+   {
+      bypass = bid;
+      invalid();
+   }
 
-	int get_disable()
-	{
-		return disabled;
-	}
+   void set_disable(int did)
+   {
+      disabled = did;
+   }
 
-	int get_current()
-	{
-		return current;
-	}
-	
-	CLASS_METHODS(gui_fxconf, CControl)	
+   int get_disable()
+   {
+      return disabled;
+   }
+
+   int get_current()
+   {
+      return current;
+   }
+
+   CLASS_METHODS(gui_fxconf, CControl)
 };

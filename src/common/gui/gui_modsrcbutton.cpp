@@ -8,16 +8,17 @@
 
 extern CFontRef surge_minifont;
 
-enum {
+enum
+{
    cs_none = 0,
    cs_drag = 1,
 };
 
 //------------------------------------------------------------------------------------------------
 
-gui_modsrcbutton::gui_modsrcbutton(const CRect& size, IControlListener* listener, long tag, int state, int msid)
-    : CCursorHidingControl(size, listener, tag, 0)
-    , OldValue(0.f)
+gui_modsrcbutton::gui_modsrcbutton(
+    const CRect& size, IControlListener* listener, long tag, int state, int msid)
+    : CCursorHidingControl(size, listener, tag, 0), OldValue(0.f)
 {
    this->state = state;
    this->msid = msid;
@@ -34,17 +35,16 @@ gui_modsrcbutton::gui_modsrcbutton(const CRect& size, IControlListener* listener
 //------------------------------------------------------------------------------------------------
 
 gui_modsrcbutton::~gui_modsrcbutton()
-{
-}
+{}
 
 //------------------------------------------------------------------------------------------------
 
 void gui_modsrcbutton::update_rt_vals(bool ntint, float fdispval, bool nused)
 {
    bool changed = (tint && !ntint) || (!tint && ntint) || (used && !nused) || (!used && nused);
-   //int new_dispval = max(0,fdispval * 45);
+   // int new_dispval = max(0,fdispval * 45);
    int new_dispval = (int)max(0.f, (float)(fdispval * 150.f));
-   //changed = changed || (new_dispval != dispval);
+   // changed = changed || (new_dispval != dispval);
 
    tint = ntint;
    used = nused;
@@ -77,7 +77,8 @@ void gui_modsrcbutton::setblink(bool nblink)
    bool changed = ((blink && !nblink) || (!blink && nblink)) && ((state & 3) == 2);
    blink = nblink;
 
-   if (changed) {
+   if (changed)
+   {
       invalid();
    }
 }
@@ -96,7 +97,7 @@ void gui_modsrcbutton::setlabel(const char* lbl)
 void gui_modsrcbutton::draw(CDrawContext* dc)
 {
    CRect sze = getViewSize();
-   //sze.offset(-size.left,-size.top);
+   // sze.offset(-size.left,-size.top);
 
    const CColor ColSelectedBG = CColor(0, 0, 0, 255);
    const CColor ColBG = CColor(18, 52, 99, 255);
@@ -108,13 +109,13 @@ void gui_modsrcbutton::draw(CDrawContext* dc)
 
    const int rh = 16;
 
-   /* 
-	state
-	0 - nothing
-	1 - selected modeditor
-	2 - selected modsource (locked)
-	4 [bit 2] - selected arrowbutton [0,1,2 -> 4,5,6]
-	*/
+   /*
+        state
+        0 - nothing
+        1 - selected modeditor
+        2 - selected modsource (locked)
+        4 [bit 2] - selected arrowbutton [0,1,2 -> 4,5,6]
+        */
 
    // source position in bitmap
 
@@ -128,15 +129,20 @@ void gui_modsrcbutton::draw(CDrawContext* dc)
    FillCol = ColBG;
    FrameCol = UsedOrActive ? ColEdge : ColSemiTint;
    FontCol = UsedOrActive ? ColEdge : ColSemiTint;
-   if (ActiveModSource) {
+   if (ActiveModSource)
+   {
       FrameCol = blink ? ColBlink : ColTint;
       FillCol = blink ? ColBlink : ColTint;
       FontCol = ColBG;
-   } else if (SelectedModSource) {
+   }
+   else if (SelectedModSource)
+   {
       FrameCol = ColTint;
       FillCol = ColTint;
       FontCol = ColBG;
-   } else if (tint) {
+   }
+   else if (tint)
+   {
       FrameCol = ColHover;
       FontCol = ColHover;
    }
@@ -158,7 +164,8 @@ void gui_modsrcbutton::draw(CDrawContext* dc)
    dc->drawRect(fillr, kDrawFilled);
    dc->drawString(label, txtbox, kCenterText, true);
 
-   if (is_metacontroller) {
+   if (is_metacontroller)
+   {
       MCRect = sze;
       MCRect.left++;
       MCRect.top++;
@@ -175,20 +182,26 @@ void gui_modsrcbutton::draw(CDrawContext* dc)
       int midx = brect.left + ((brect.getWidth() - 1) * 0.5);
       int barx = brect.left + (value * (float)brect.getWidth());
 
-      if (bipolar) {
+      if (bipolar)
+      {
          dc->setFillColor(ColTint);
          CRect bar(brect);
 
-         if (barx >= midx) {
+         if (barx >= midx)
+         {
             bar.left = midx;
             bar.right = barx + 1;
-         } else {
+         }
+         else
+         {
             bar.left = barx;
             bar.right = midx + 2;
          }
          bar.bound(brect);
          dc->drawRect(bar, kDrawFilled);
-      } else {
+      }
+      else
+      {
          CRect vr(brect);
          vr.right = barx + 1;
          vr.bound(brect);
@@ -198,7 +211,8 @@ void gui_modsrcbutton::draw(CDrawContext* dc)
       }
    }
 
-   if (msid >= ms_lfo1 && msid <= ms_slfo6) {
+   if (msid >= ms_lfo1 && msid <= ms_slfo6)
+   {
       CPoint where;
       where.x = 0;
       if (state >= 4)
@@ -224,27 +238,32 @@ CMouseEventResult gui_modsrcbutton::onMouseDown(CPoint& where, const CButtonStat
    CPoint loc(where);
    loc.offset(-size.left, -size.top);
 
-   if (controlstate) {
+   if (controlstate)
+   {
 #if MAC
 //		if(buttons & kRButton) statezoom = 0.1f;
 #endif
       return kMouseEventHandled;
    }
 
-   if (listener && buttons & (kAlt | kRButton | kMButton | kShift | kControl | kApple | kDoubleClick)) {
+   if (listener &&
+       buttons & (kAlt | kRButton | kMButton | kShift | kControl | kApple | kDoubleClick))
+   {
       if (listener->controlModifierClicked(this, buttons) != 0)
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if (is_metacontroller && MCRect.pointInside(where)
-       && (buttons & kLButton) && !controlstate) {
+   if (is_metacontroller && MCRect.pointInside(where) && (buttons & kLButton) && !controlstate)
+   {
       beginEdit();
       controlstate = cs_drag;
 
       detachCursor(where);
 
       return kMouseEventHandled;
-   } else if (buttons & kLButton) {
+   }
+   else if (buttons & kLButton)
+   {
       click_is_editpart = loc.x > 53;
       event_is_drag = false;
       if (listener)
@@ -261,7 +280,8 @@ CMouseEventResult gui_modsrcbutton::onMouseUp(CPoint& where, const CButtonState&
 {
    super::onMouseUp(where, buttons);
 
-   if (controlstate) {
+   if (controlstate)
+   {
       endEdit();
       controlstate = cs_none;
 
@@ -272,9 +292,13 @@ CMouseEventResult gui_modsrcbutton::onMouseUp(CPoint& where, const CButtonState&
 
 //------------------------------------------------------------------------------------------------
 
-void gui_modsrcbutton::onMouseMoveDelta(CPoint& where, const CButtonState& buttons, double dx, double dy)
+void gui_modsrcbutton::onMouseMoveDelta(CPoint& where,
+                                        const CButtonState& buttons,
+                                        double dx,
+                                        double dy)
 {
-   if ((controlstate) && (buttons & kLButton)) {
+   if ((controlstate) && (buttons & kLButton))
+   {
       value += dx / (double)(getWidth());
       value = limit_range(value, 0.f, 1.f);
       event_is_drag = true;

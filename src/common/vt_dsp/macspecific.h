@@ -8,4 +8,4 @@
  */
 #pragma once
 
-void strupr(char *c);
+void strupr(char* c);

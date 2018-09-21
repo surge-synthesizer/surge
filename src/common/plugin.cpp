@@ -15,7 +15,7 @@ int SSE_VERSION;
 
 void initDllGlobals()
 {
-#if !MAC  // intel macs always support SSE2
+#if !MAC // intel macs always support SSE2
    unsigned int arch = determine_support();
    // detect
    if (arch & ca_SSE3)
@@ -29,11 +29,14 @@ void initDllGlobals()
    else
    {
       SSE_VERSION = 0;
-      MessageBox(::GetActiveWindow(), "This plugin requires a CPU supporting the SSE2 instruction set.", "Surge: System requirements not met", MB_OK | MB_ICONERROR);
+      MessageBox(::GetActiveWindow(),
+                 "This plugin requires a CPU supporting the SSE2 instruction set.",
+                 "Surge: System requirements not met", MB_OK | MB_ICONERROR);
    }
    if (!(arch & ca_CMOV))
    {
-      MessageBox(::GetActiveWindow(), "This plugin requires a CPU supporting the CMOV instruction.", "Surge: System requirements not met", MB_OK | MB_ICONERROR);
+      MessageBox(::GetActiveWindow(), "This plugin requires a CPU supporting the CMOV instruction.",
+                 "Surge: System requirements not met", MB_OK | MB_ICONERROR);
    }
 #endif
 }

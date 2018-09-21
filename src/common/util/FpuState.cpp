@@ -2,11 +2,8 @@
 #include <emmintrin.h>
 #include <float.h>
 
-FpuState::FpuState()
-: _old_SSE_state(0)
-, _SSE_Flags(0x8040)
-{
-}
+FpuState::FpuState() : _old_SSE_state(0), _SSE_Flags(0x8040)
+{}
 
 void FpuState::set()
 {
@@ -15,7 +12,7 @@ void FpuState::set()
    _old_SSE_state = _mm_getcsr();
    if (fpuExceptions)
    {
-      _mm_setcsr(((_old_SSE_state & ~_MM_MASK_MASK)| _SSE_Flags) | _MM_EXCEPT_MASK); // all on
+      _mm_setcsr(((_old_SSE_state & ~_MM_MASK_MASK) | _SSE_Flags) | _MM_EXCEPT_MASK); // all on
    }
    else
    {

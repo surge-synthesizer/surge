@@ -1,2 +1,2 @@
-#define kComponentManuf		'VmbA'
-#define kVersionNumber		0x00010600
+#define kComponentManuf 'VmbA'
+#define kVersionNumber 0x00010600

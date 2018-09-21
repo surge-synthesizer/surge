@@ -1,4 +1,4 @@
-#define  _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
 #if 0
 #include <math.h>
 #include "biquadunit.h"

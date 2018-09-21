@@ -4,10 +4,12 @@
 #include <Windows.h>
 #endif
 
-CCursorHidingControl::CCursorHidingControl(const CRect & size, IControlListener * listener, int32_t tag, CBitmap * pBackground)
-   : CControl(size, listener, tag, pBackground)
-{
-}
+CCursorHidingControl::CCursorHidingControl(const CRect& size,
+                                           IControlListener* listener,
+                                           int32_t tag,
+                                           CBitmap* pBackground)
+    : CControl(size, listener, tag, pBackground)
+{}
 
 CCursorHidingControl::~CCursorHidingControl()
 {
@@ -20,7 +22,7 @@ CCursorHidingControl::~CCursorHidingControl()
 #endif*/
 }
 
-CMouseEventResult CCursorHidingControl::onMouseDown(CPoint & where, const CButtonState & buttons)
+CMouseEventResult CCursorHidingControl::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
    _lastPos = where;
    _sumDX = 0;
@@ -28,12 +30,12 @@ CMouseEventResult CCursorHidingControl::onMouseDown(CPoint & where, const CButto
    return kMouseEventHandled;
 }
 
-CMouseEventResult CCursorHidingControl::onMouseUp(CPoint & where, const CButtonState & buttons)
+CMouseEventResult CCursorHidingControl::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
    return kMouseEventHandled;
 }
 
-CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint & where, const CButtonState & buttons)
+CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
    double dx = where.x - _lastPos.x;
    double dy = where.y - _lastPos.y;
@@ -68,12 +70,12 @@ CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint & where, const CButt
    return kMouseEventHandled;
 }
 
-double CCursorHidingControl::getMouseDeltaScaling(CPoint & where, const CButtonState & buttons)
+double CCursorHidingControl::getMouseDeltaScaling(CPoint& where, const CButtonState& buttons)
 {
    return 1.0;
 }
 
-void CCursorHidingControl::detachCursor(CPoint &where)
+void CCursorHidingControl::detachCursor(CPoint& where)
 {
    if (!_isDetatched)
    {
@@ -89,14 +91,14 @@ void CCursorHidingControl::attachCursor()
    }
 }
 
-void CCursorHidingControl::doDetach(CPoint &where)
+void CCursorHidingControl::doDetach(CPoint& where)
 {
    _isDetatched = true;
    _detachPos = where;
-   
+
 #if WINDOWS
    ShowCursor(false);
-   
+
    POINT p;
    if (GetCursorPos(&p))
    {

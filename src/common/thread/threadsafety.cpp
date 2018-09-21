@@ -3,46 +3,46 @@
 
 c_sec::c_sec()
 {
-	refcount = 0;
+   refcount = 0;
 #if MAC
-	MPCreateCriticalRegion (&cs);
+   MPCreateCriticalRegion(&cs);
 #else
-	InitializeCriticalSection(&cs);
+   InitializeCriticalSection(&cs);
 #endif
 }
 
 c_sec::~c_sec()
 {
 #if MAC
-	MPDeleteCriticalRegion(cs);
+   MPDeleteCriticalRegion(cs);
 #else
-	DeleteCriticalSection(&cs);
+   DeleteCriticalSection(&cs);
 #endif
 }
 
 void c_sec::enter()
 {
 #if MAC
-	MPEnterCriticalRegion(cs,kDurationForever);
+   MPEnterCriticalRegion(cs, kDurationForever);
 #else
-	EnterCriticalSection(&cs);
+   EnterCriticalSection(&cs);
 #endif
-	refcount++;
-	assert(refcount>0);
-	assert(!(refcount>5));	// if its >5 there's some crazy *§%* going on ^^	
+   refcount++;
+   assert(refcount > 0);
+   assert(!(refcount > 5)); // if its >5 there's some crazy *§%* going on ^^
 }
 
 void c_sec::leave()
 {
-	refcount--;
-	if(refcount < 0)
-	{
-		int breakpointme=0;	
-	}
-	assert(refcount >= 0);	
+   refcount--;
+   if (refcount < 0)
+   {
+      int breakpointme = 0;
+   }
+   assert(refcount >= 0);
 #if MAC
-	MPExitCriticalRegion(cs);
+   MPExitCriticalRegion(cs);
 #else
-	LeaveCriticalSection(&cs);
+   LeaveCriticalSection(&cs);
 #endif
 }

@@ -3,7 +3,6 @@
  *
  */
 
-
 #if MAC
 // emulation of windows cursor handling
 //#include <CGRemoteOperation.h>
@@ -13,21 +12,19 @@ int x, y;
 };			*/
 
 static void ShowCursor(bool b)
+{}
+static void GetCursorPos(CPoint& p)
 {
-}
-static void GetCursorPos(CPoint &p)
-{
-	/*Point ptMouse;
-	GetMouse( &ptMouse );
-	p->x = ptMouse.v;
-	p->y = ptMouse.h;*/
-	p.x = 0;
-	p.y = 0;
-	// TODO VSTGUI4
+   /*Point ptMouse;
+   GetMouse( &ptMouse );
+   p->x = ptMouse.v;
+   p->y = ptMouse.h;*/
+   p.x = 0;
+   p.y = 0;
+   // TODO VSTGUI4
    // TODO COCOA
 }
 
 static void SetCursorPos(int x, int y)
-{
-}
+{}
 #endif

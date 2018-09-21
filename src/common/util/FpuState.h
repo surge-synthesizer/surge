@@ -3,7 +3,6 @@
 class FpuState
 {
 public:
-
    FpuState();
 
    void set();

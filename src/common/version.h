@@ -18,29 +18,30 @@
 #define BUILD_NUMBER_INT 100
 
 // Version with build number (example "1.0.3.342")
-#define FULL_VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR "." BUILD_NUMBER_STR
+#define FULL_VERSION_STR                                                                           \
+   MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR "." BUILD_NUMBER_STR
 
 // Version without build number (example "1.0.3")
 #define VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR
 
 #ifdef ISDEMO
-#define stringOriginalFilename	"surgedemo.vst3"
+#define stringOriginalFilename "surgedemo.vst3"
 #if PLATFORM_64
-#define stringFileDescription	"Vember Audio Surge Demo"
+#define stringFileDescription "Vember Audio Surge Demo"
 #else
-#define stringFileDescription	"Vember Audio Surge Demo"
+#define stringFileDescription "Vember Audio Surge Demo"
 #endif
 #else
-#define stringOriginalFilename	"surge.vst3"
+#define stringOriginalFilename "surge.vst3"
 #if PLATFORM_64
-#define stringFileDescription	"Vember Audio Surge"
+#define stringFileDescription "Vember Audio Surge"
 #else
-#define stringFileDescription	"Vember Audio Surge"
+#define stringFileDescription "Vember Audio Surge"
 #endif
 #endif
 
-#define stringCompanyName		"Vember Audio\0"
-#define stringLegalCopyright	"© 2017 Vember Audio"
-#define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"
+#define stringCompanyName "Vember Audio\0"
+#define stringLegalCopyright "© 2017 Vember Audio"
+#define stringLegalTrademarks "VST is a trademark of Steinberg Media Technologies GmbH"
 
 #endif //__version__

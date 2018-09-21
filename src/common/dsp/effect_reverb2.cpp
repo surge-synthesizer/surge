@@ -4,21 +4,21 @@
 /* allpass loop design */
 
 enum revparam
-{	
-	r2p_predelay = 0,
+{
+   r2p_predelay = 0,
    r2p_decay_time,
    r2p_diffusion,
    r2p_buildup,
    r2p_hf_damping,
    r2p_lf_damping,
    r2p_modulation,
-	r2p_mix,
+   r2p_mix,
    r2p_width,
    r2p_room_size,
    r2p_num_params,
 };
 
-const float db60 = powf(10.f,0.05f*-60.f);
+const float db60 = powf(10.f, 0.05f * -60.f);
 
 reverb2::allpass::allpass()
 {
@@ -35,7 +35,8 @@ void reverb2::allpass::setLen(int len)
 float reverb2::allpass::process(float in, float coeff)
 {
    _k++;
-   if (_k>=_len) _k = 0;
+   if (_k >= _len)
+      _k = 0;
    float delay_in = in - coeff * _data[_k];
    float result = _data[_k] + coeff * delay_in;
    _data[_k] = delay_in;
@@ -54,7 +55,8 @@ void reverb2::delay::setLen(int len)
    _len = len;
 }
 
-float reverb2::delay::process(float in, int tap1, float& tap_out1, int tap2, float& tap_out2, int modulation)
+float reverb2::delay::process(
+    float in, int tap1, float& tap_out1, int tap2, float& tap_out2, int modulation)
 {
    _k = (_k + 1) & DELAY_LEN_MASK;
 
@@ -70,7 +72,7 @@ float reverb2::delay::process(float in, int tap1, float& tap_out1, int tap2, flo
    const float multiplier = 1.f / (float)(DELAY_SUBSAMPLE_RANGE);
 
    float result = (d1 * (float)modulation_frac1 + d2 * (float)modulation_frac2) * multiplier;
-   _data[_k] = in;   
+   _data[_k] = in;
 
    return result;
 }
@@ -92,19 +94,18 @@ float reverb2::onepole_filter::process_highpass(float x, float c0)
    return x - a0;
 }
 
-reverb2::reverb2(sub3_storage *storage, sub3_fx *fxdata, pdata* pd) 
-: baseeffect(storage,fxdata,pd)
+reverb2::reverb2(sub3_storage* storage, sub3_fx* fxdata, pdata* pd)
+    : baseeffect(storage, fxdata, pd)
 {
    _state = 0.f;
 }
 
 reverb2::~reverb2()
-{
-}
+{}
 
 void reverb2::init()
-{		
-	setvars(true);
+{
+   setvars(true);
 }
 
 int msToSamples(float ms, float scale)
@@ -167,16 +168,16 @@ void reverb2::setvars(bool init)
    calc_size(1.f);
 }
 
-void reverb2::process(float *dataL, float *dataR)
+void reverb2::process(float* dataL, float* dataR)
 {
    float scale = powf(2.f, 1.f * *f[r2p_room_size]);
    calc_size(scale);
 
-   _MM_ALIGN16 float wetL[block_size],wetR[block_size];	
+   _MM_ALIGN16 float wetL[block_size], wetR[block_size];
 
    float loop_time_s = 0.5508 * scale;
-   float decay = powf(db60, loop_time_s / (4.f * (powf(2.f,*f[r2p_decay_time]))));
-   
+   float decay = powf(db60, loop_time_s / (4.f * (powf(2.f, *f[r2p_decay_time]))));
+
    _decay_multiply.newValue(decay);
    _diffusion.newValue(0.7f * *f[r2p_diffusion]);
    _buildup.newValue(0.7f * *f[r2p_buildup]);
@@ -184,12 +185,12 @@ void reverb2::process(float *dataL, float *dataR)
    _lf_damp_coefficent.newValue(0.008 * *f[r2p_lf_damping]);
    _modulation.newValue(*f[r2p_modulation] * samplerate * 0.001f * 5.f);
 
-   mix.set_target_smoothed(*f[r2p_mix]);		
+   mix.set_target_smoothed(*f[r2p_mix]);
    width.set_target_smoothed(*f[r2p_width]);
 
-   _lfo.set_rate(2.0*M_PI*powf(2,-2.f)*dsamplerate_inv);
+   _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * dsamplerate_inv);
 
-   for(int k=0; k<block_size; k++)
+   for (int k = 0; k < block_size; k++)
    {
       float in = (dataL[k] + dataR[k]) * 0.5f;
 
@@ -208,17 +209,17 @@ void reverb2::process(float *dataL, float *dataR)
       lfos[2] = -_lfo.r;
       lfos[3] = -_lfo.i;
 
-      for(int b=0; b<NUM_BLOCKS; b++)
+      for (int b = 0; b < NUM_BLOCKS; b++)
       {
          x = x + in;
-         for(int c=0; c<NUM_ALLPASSES_PER_BLOCK; c++)
+         for (int c = 0; c < NUM_ALLPASSES_PER_BLOCK; c++)
          {
             x = _allpass[b][c].process(x, _buildup.v);
          }
 
          x = _hf_damper[b].process_lowpass(x, _hf_damp_coefficent.v);
          x = _lf_damper[b].process_highpass(x, _lf_damp_coefficent.v);
-         
+
          int modulation = (int)(_modulation.v * lfos[b] * (float)DELAY_SUBSAMPLE_RANGE);
          float tap_outL = 0.f;
          float tap_outR = 0.f;
@@ -241,49 +242,59 @@ void reverb2::process(float *dataL, float *dataR)
    }
 
    // scale width
-   _MM_ALIGN16 float M[block_size],S[block_size];
-   encodeMS(wetL,wetR,M,S,block_size_quad);
-   width.multiply_block(S,block_size_quad);
-   decodeMS(M,S,wetL,wetR,block_size_quad);
+   _MM_ALIGN16 float M[block_size], S[block_size];
+   encodeMS(wetL, wetR, M, S, block_size_quad);
+   width.multiply_block(S, block_size_quad);
+   decodeMS(M, S, wetL, wetR, block_size_quad);
 
-	mix.fade_2_blocks_to(dataL,wetL,dataR,wetR,dataL,dataR, block_size_quad);
+   mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, block_size_quad);
 }
 
 void reverb2::suspend()
-{ 
-	init();
+{
+   init();
 }
 
 const char* reverb2::group_label(int id)
 {
-	return 0;
+   return 0;
 }
 int reverb2::group_label_ypos(int id)
 {
-	return 0;
+   return 0;
 }
 
 void reverb2::init_ctrltypes()
 {
-	baseeffect::init_ctrltypes();
+   baseeffect::init_ctrltypes();
 
-	fxdata->p[r2p_predelay].set_name("Pre-Delay");	   fxdata->p[r2p_predelay].set_type(ct_envtime);
-	fxdata->p[r2p_decay_time].set_name("Reverb Time");	fxdata->p[r2p_decay_time].set_type(ct_reverbtime);	
-   fxdata->p[r2p_diffusion].set_name("Diffusion");    fxdata->p[r2p_diffusion].set_type(ct_percent);
-	fxdata->p[r2p_buildup].set_name("Buildup");			fxdata->p[r2p_buildup].set_type(ct_percent);
-   fxdata->p[r2p_modulation].set_name("Modulation");	fxdata->p[r2p_modulation].set_type(ct_percent);   
-   fxdata->p[r2p_hf_damping].set_name("HF Damp");		fxdata->p[r2p_hf_damping].set_type(ct_percent);
-   fxdata->p[r2p_lf_damping].set_name("LF Damp");		fxdata->p[r2p_lf_damping].set_type(ct_percent);
-   fxdata->p[r2p_mix].set_name("Mix");				      fxdata->p[r2p_mix].set_type(ct_percent);
-   fxdata->p[r2p_width].set_name("Width");	         fxdata->p[r2p_width].set_type(ct_percent);
-   fxdata->p[r2p_room_size].set_name("Room Size");	   fxdata->p[r2p_room_size].set_type(ct_percent_bidirectional);
+   fxdata->p[r2p_predelay].set_name("Pre-Delay");
+   fxdata->p[r2p_predelay].set_type(ct_envtime);
+   fxdata->p[r2p_decay_time].set_name("Reverb Time");
+   fxdata->p[r2p_decay_time].set_type(ct_reverbtime);
+   fxdata->p[r2p_diffusion].set_name("Diffusion");
+   fxdata->p[r2p_diffusion].set_type(ct_percent);
+   fxdata->p[r2p_buildup].set_name("Buildup");
+   fxdata->p[r2p_buildup].set_type(ct_percent);
+   fxdata->p[r2p_modulation].set_name("Modulation");
+   fxdata->p[r2p_modulation].set_type(ct_percent);
+   fxdata->p[r2p_hf_damping].set_name("HF Damp");
+   fxdata->p[r2p_hf_damping].set_type(ct_percent);
+   fxdata->p[r2p_lf_damping].set_name("LF Damp");
+   fxdata->p[r2p_lf_damping].set_type(ct_percent);
+   fxdata->p[r2p_mix].set_name("Mix");
+   fxdata->p[r2p_mix].set_type(ct_percent);
+   fxdata->p[r2p_width].set_name("Width");
+   fxdata->p[r2p_width].set_type(ct_percent);
+   fxdata->p[r2p_room_size].set_name("Room Size");
+   fxdata->p[r2p_room_size].set_type(ct_percent_bidirectional);
 }
 
 void reverb2::init_default_values()
 {
-	fxdata->p[r2p_predelay].val.f = -4.f;
-	fxdata->p[r2p_decay_time].val.f = 0.75f;
-	fxdata->p[r2p_mix].val.f = 0.33f;
+   fxdata->p[r2p_predelay].val.f = -4.f;
+   fxdata->p[r2p_decay_time].val.f = 0.75f;
+   fxdata->p[r2p_mix].val.f = 0.33f;
    fxdata->p[r2p_width].val.f = 0.75f;
    fxdata->p[r2p_diffusion].val.f = 1.0f;
    fxdata->p[r2p_buildup].val.f = 1.0f;
