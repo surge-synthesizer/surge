@@ -122,6 +122,10 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    this->synth = synth;
 
    // ToolTipWnd = 0;
+
+#ifdef TARGET_VST3
+   _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
+#endif
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -1127,6 +1131,10 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    PlatformType platformType = kDefaultNative;
 #endif
 
+#ifdef TARGET_VST3
+   _idleTimer->start();
+#endif
+
    CRect wsize(0, 0, window_size_x, window_size_y);
    frame = new CFrame(wsize, this);
    frame->setBackground(getSurgeBitmap(IDB_BG));
@@ -1147,7 +1155,12 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 }
 
 void SurgeGUIEditor::close()
-{}
+{
+#ifdef TARGET_VST3
+   _idleTimer->stop();
+#endif
+}
+
 void SurgeGUIEditor::setParameter(long index, float value)
 {
    if (!frame)

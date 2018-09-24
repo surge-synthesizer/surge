@@ -111,4 +111,5 @@ private:
    float blinktimer = 0;
    bool blinkstate = false;
    void* _effect = 0;
+   CVSTGUITimer* _idleTimer = nullptr;
 };
