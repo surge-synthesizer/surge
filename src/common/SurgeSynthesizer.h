@@ -19,8 +19,8 @@ const int max_voices = 64;
 class aulayer;
 typedef aulayer PluginLayer;
 #elif TARGET_VST3
-class SurgeProcessor;
-typedef SurgeProcessor PluginLayer;
+class SurgeVst3Processor;
+typedef SurgeVst3Processor PluginLayer;
 #else
 class Vst2PluginInstance;
 typedef Vst2PluginInstance PluginLayer;

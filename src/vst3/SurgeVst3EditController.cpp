@@ -1,8 +1,8 @@
-#include "surgecontroller.h"
+#include "SurgeVst3EditController.h"
 
 #include "pluginterfaces/base/ustring.h"
 
-tresult PLUGIN_API SurgeController::initialize(FUnknown* context)
+tresult PLUGIN_API SurgeVst3EditController::initialize(FUnknown* context)
 {
    tresult result = EditControllerEx1::initialize(context);
    if (result != kResultOk)
@@ -43,7 +43,7 @@ tresult PLUGIN_API SurgeController::initialize(FUnknown* context)
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API SurgeController::terminate()
+tresult PLUGIN_API SurgeVst3EditController::terminate()
 {
    return EditControllerEx1::terminate();
 }

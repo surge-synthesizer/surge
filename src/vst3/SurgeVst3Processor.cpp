@@ -1,6 +1,6 @@
 #include <gui/SurgeGUIEditor.h>
 
-#include "surgeprocessor.h"
+#include "SurgeVst3Processor.h"
 #include "surgecids.h"
 
 #include "pluginterfaces/base/ibstream.h"
@@ -23,15 +23,15 @@ using namespace Steinberg::Vst;
       return 0;                                                                                    \
    }
 
-SurgeProcessor::SurgeProcessor() : blockpos(0), surgeInstance()
+SurgeVst3Processor::SurgeVst3Processor() : blockpos(0), surgeInstance()
 {}
 
-SurgeProcessor::~SurgeProcessor()
+SurgeVst3Processor::~SurgeVst3Processor()
 {
    destroySurge();
 }
 
-tresult PLUGIN_API SurgeProcessor::initialize(FUnknown* context)
+tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 {
    //---always initialize the parent-------
    tresult result = SingleComponentEffect::initialize(context);
@@ -71,7 +71,7 @@ tresult PLUGIN_API SurgeProcessor::initialize(FUnknown* context)
    return kResultOk;
 }
 
-void SurgeProcessor::createSurge()
+void SurgeVst3Processor::createSurge()
 {
    if (surgeInstance.get() != 0)
    {
@@ -92,19 +92,19 @@ void SurgeProcessor::createSurge()
    }
 }
 
-void SurgeProcessor::destroySurge()
+void SurgeVst3Processor::destroySurge()
 {
    surgeInstance.reset();
 }
 
-tresult PLUGIN_API SurgeProcessor::terminate()
+tresult PLUGIN_API SurgeVst3Processor::terminate()
 {
    destroySurge();
 
    return SingleComponentEffect::terminate();
 }
 
-tresult PLUGIN_API SurgeProcessor::setActive(TBool state)
+tresult PLUGIN_API SurgeVst3Processor::setActive(TBool state)
 {
    CHECK_INITIALIZED
 
@@ -112,7 +112,7 @@ tresult PLUGIN_API SurgeProcessor::setActive(TBool state)
    return SingleComponentEffect::setActive(state);
 }
 
-tresult PLUGIN_API SurgeProcessor::setProcessing(TBool state)
+tresult PLUGIN_API SurgeVst3Processor::setProcessing(TBool state)
 {
    CHECK_INITIALIZED
 
@@ -130,7 +130,7 @@ tresult PLUGIN_API SurgeProcessor::setProcessing(TBool state)
    return SingleComponentEffect::setProcessing(state);
 }
 
-tresult PLUGIN_API SurgeProcessor::getState(IBStream* state)
+tresult PLUGIN_API SurgeVst3Processor::getState(IBStream* state)
 {
    CHECK_INITIALIZED
 
@@ -141,7 +141,7 @@ tresult PLUGIN_API SurgeProcessor::getState(IBStream* state)
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setState(IBStream* state)
+tresult PLUGIN_API SurgeVst3Processor::setState(IBStream* state)
 {
    CHECK_INITIALIZED
 
@@ -162,9 +162,9 @@ tresult PLUGIN_API SurgeProcessor::setState(IBStream* state)
    return (result == kResultOk) ? kResultOk : kInternalError;
 }
 
-void SurgeProcessor::processEvents(int sampleOffset,
-                                   Steinberg::Vst::IEventList* events,
-                                   int& eventIndex)
+void SurgeVst3Processor::processEvents(int sampleOffset,
+                                       Steinberg::Vst::IEventList* events,
+                                       int& eventIndex)
 {
    if (events)
    {
@@ -187,7 +187,7 @@ void SurgeProcessor::processEvents(int sampleOffset,
    }
 }
 
-void SurgeProcessor::processEvent(const Event& e)
+void SurgeVst3Processor::processEvent(const Event& e)
 {
    switch (e.type)
    {
@@ -214,9 +214,9 @@ void SurgeProcessor::processEvent(const Event& e)
    }
 }
 
-void SurgeProcessor::processParameterChanges(int sampleOffset,
-                                             IParameterChanges* parameterChanges,
-                                             int& eventIndex)
+void SurgeVst3Processor::processParameterChanges(int sampleOffset,
+                                                 IParameterChanges* parameterChanges,
+                                                 int& eventIndex)
 {
    if (parameterChanges)
    {
@@ -273,7 +273,7 @@ void SurgeProcessor::processParameterChanges(int sampleOffset,
      }*/
 }
 
-tresult PLUGIN_API SurgeProcessor::process(ProcessData& data)
+tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 {
    CHECK_INITIALIZED
 
@@ -363,7 +363,7 @@ tresult PLUGIN_API SurgeProcessor::process(ProcessData& data)
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setupProcessing(Steinberg::Vst::ProcessSetup& newSetup)
+tresult PLUGIN_API SurgeVst3Processor::setupProcessing(Steinberg::Vst::ProcessSetup& newSetup)
 {
    CHECK_INITIALIZED
 
@@ -371,10 +371,11 @@ tresult PLUGIN_API SurgeProcessor::setupProcessing(Steinberg::Vst::ProcessSetup&
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::setBusArrangements(Steinberg::Vst::SpeakerArrangement* inputs,
-                                                      int32 numIns,
-                                                      Steinberg::Vst::SpeakerArrangement* outputs,
-                                                      int32 numOuts)
+tresult PLUGIN_API
+SurgeVst3Processor::setBusArrangements(Steinberg::Vst::SpeakerArrangement* inputs,
+                                       int32 numIns,
+                                       Steinberg::Vst::SpeakerArrangement* outputs,
+                                       int32 numOuts)
 {
    CHECK_INITIALIZED
 
@@ -396,7 +397,7 @@ tresult PLUGIN_API SurgeProcessor::setBusArrangements(Steinberg::Vst::SpeakerArr
    return kResultFalse;
 }
 
-IPlugView* PLUGIN_API SurgeProcessor::createView(const char* name)
+IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
 {
    assert(surgeInstance.get());
 
@@ -409,7 +410,7 @@ IPlugView* PLUGIN_API SurgeProcessor::createView(const char* name)
    return 0;
 }
 
-void SurgeProcessor::editorAttached(EditorView* editor)
+void SurgeVst3Processor::editorAttached(EditorView* editor)
 {
    SurgeGUIEditor* view = dynamic_cast<SurgeGUIEditor*>(editor);
    if (view)
@@ -418,7 +419,7 @@ void SurgeProcessor::editorAttached(EditorView* editor)
    }
 }
 
-void SurgeProcessor::editorRemoved(EditorView* editor)
+void SurgeVst3Processor::editorRemoved(EditorView* editor)
 {
    SurgeGUIEditor* view = dynamic_cast<SurgeGUIEditor*>(editor);
    if (view)
@@ -427,13 +428,13 @@ void SurgeProcessor::editorRemoved(EditorView* editor)
    }
 }
 
-void SurgeProcessor::addDependentView(SurgeGUIEditor* view)
+void SurgeVst3Processor::addDependentView(SurgeGUIEditor* view)
 {}
 
-void SurgeProcessor::removeDependentView(SurgeGUIEditor* view)
+void SurgeVst3Processor::removeDependentView(SurgeGUIEditor* view)
 {}
 
-int32 PLUGIN_API SurgeProcessor::getParameterCount()
+int32 PLUGIN_API SurgeVst3Processor::getParameterCount()
 {
    if (exportAllMidiControllers())
    {
@@ -442,12 +443,12 @@ int32 PLUGIN_API SurgeProcessor::getParameterCount()
    return getParameterCountWithoutMappings();
 }
 
-int32 SurgeProcessor::getParameterCountWithoutMappings()
+int32 SurgeVst3Processor::getParameterCountWithoutMappings()
 {
    return n_total_params + num_metaparameters;
 }
 
-tresult PLUGIN_API SurgeProcessor::getParameterInfo(int32 paramIndex, ParameterInfo& info)
+tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, ParameterInfo& info)
 {
    CHECK_INITIALIZED
 
@@ -480,9 +481,9 @@ tresult PLUGIN_API SurgeProcessor::getParameterInfo(int32 paramIndex, ParameterI
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::getParamStringByValue(ParamID tag,
-                                                         ParamValue valueNormalized,
-                                                         String128 string)
+tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
+                                                             ParamValue valueNormalized,
+                                                             String128 string)
 {
    CHECK_INITIALIZED
 
@@ -496,9 +497,9 @@ tresult PLUGIN_API SurgeProcessor::getParamStringByValue(ParamID tag,
    return kResultOk;
 }
 
-tresult PLUGIN_API SurgeProcessor::getParamValueByString(ParamID tag,
-                                                         TChar* string,
-                                                         ParamValue& valueNormalized)
+tresult PLUGIN_API SurgeVst3Processor::getParamValueByString(ParamID tag,
+                                                             TChar* string,
+                                                             ParamValue& valueNormalized)
 {
    CHECK_INITIALIZED
 
@@ -510,8 +511,8 @@ tresult PLUGIN_API SurgeProcessor::getParamValueByString(ParamID tag,
    return kResultFalse;
 }
 
-ParamValue PLUGIN_API SurgeProcessor::normalizedParamToPlain(ParamID tag,
-                                                             ParamValue valueNormalized)
+ParamValue PLUGIN_API SurgeVst3Processor::normalizedParamToPlain(ParamID tag,
+                                                                 ParamValue valueNormalized)
 {
    ABORT_IF_NOT_INITIALIZED
 
@@ -523,7 +524,7 @@ ParamValue PLUGIN_API SurgeProcessor::normalizedParamToPlain(ParamID tag,
    return surgeInstance->normalizedToValue(tag, valueNormalized);
 }
 
-ParamValue PLUGIN_API SurgeProcessor::plainParamToNormalized(ParamID tag, ParamValue plainValue)
+ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, ParamValue plainValue)
 {
    ABORT_IF_NOT_INITIALIZED
 
@@ -535,7 +536,7 @@ ParamValue PLUGIN_API SurgeProcessor::plainParamToNormalized(ParamID tag, ParamV
    return surgeInstance->valueToNormalized(tag, plainValue);
 }
 
-ParamValue PLUGIN_API SurgeProcessor::getParamNormalized(ParamID tag)
+ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 {
    ABORT_IF_NOT_INITIALIZED
 
@@ -547,7 +548,7 @@ ParamValue PLUGIN_API SurgeProcessor::getParamNormalized(ParamID tag)
    return surgeInstance->getParameter01(surgeInstance->remapExternalApiToInternalId(tag));
 }
 
-tresult PLUGIN_API SurgeProcessor::setParamNormalized(ParamID tag, ParamValue value)
+tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValue value)
 {
    CHECK_INITIALIZED
 
@@ -561,43 +562,43 @@ tresult PLUGIN_API SurgeProcessor::setParamNormalized(ParamID tag, ParamValue va
    return kResultOk;
 }
 
-SurgeSynthesizer* SurgeProcessor::getSurge()
+SurgeSynthesizer* SurgeVst3Processor::getSurge()
 {
    assert(surgeInstance.get() != NULL);
 
    return surgeInstance.get();
 }
 
-tresult PLUGIN_API SurgeProcessor::getMidiControllerAssignment(int32 busIndex,
-                                                               int16 channel,
-                                                               CtrlNumber midiControllerNumber,
-                                                               ParamID& id /*out*/)
+tresult PLUGIN_API SurgeVst3Processor::getMidiControllerAssignment(int32 busIndex,
+                                                                   int16 channel,
+                                                                   CtrlNumber midiControllerNumber,
+                                                                   ParamID& id /*out*/)
 {
    return kResultFalse;
 }
 
-bool SurgeProcessor::exportAllMidiControllers()
+bool SurgeVst3Processor::exportAllMidiControllers()
 {
    return false;
 }
 
-bool SurgeProcessor::isRegularController(int32 paramIndex)
+bool SurgeVst3Processor::isRegularController(int32 paramIndex)
 {
    return paramIndex > 0 && paramIndex < getParameterCountWithoutMappings();
 }
 
-bool SurgeProcessor::isMidiMapController(int32 paramIndex)
+bool SurgeVst3Processor::isMidiMapController(int32 paramIndex)
 {
    return paramIndex >= getParameterCountWithoutMappings() < getParameterCount();
 }
 
-void SurgeProcessor::updateDisplay()
+void SurgeVst3Processor::updateDisplay()
 {
    // needs IComponentHandler2
    // setDirty(true);
 }
 
-void SurgeProcessor::setParameterAutomated(int externalparam, float value)
+void SurgeVst3Processor::setParameterAutomated(int externalparam, float value)
 {
    beginEdit(externalparam); // TODO
    performEdit(externalparam, value);

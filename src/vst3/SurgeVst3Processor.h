@@ -12,11 +12,11 @@ class SurgeGUIEditor;
 class SurgeSynthesizer;
 
 // we need public EditController, public IAudioProcessor
-class SurgeProcessor : public Steinberg::Vst::SingleComponentEffect //, public IMidiMapping
+class SurgeVst3Processor : public Steinberg::Vst::SingleComponentEffect //, public IMidiMapping
 {
 public:
-   SurgeProcessor();
-   virtual ~SurgeProcessor(); // dont forget virtual here
+   SurgeVst3Processor();
+   virtual ~SurgeVst3Processor(); // dont forget virtual here
 
    //------------------------------------------------------------------------
    // create function required for Plug-in factory,
@@ -24,7 +24,7 @@ public:
    //------------------------------------------------------------------------
    static FUnknown* createInstance(void* context)
    {
-      return (Steinberg::Vst::IAudioProcessor*)new SurgeProcessor;
+      return (Steinberg::Vst::IAudioProcessor*)new SurgeVst3Processor;
    }
 
    //------------------------------------------------------------------------

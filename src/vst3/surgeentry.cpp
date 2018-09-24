@@ -3,8 +3,8 @@
 
 #include "public.sdk/source/main/pluginfactoryvst3.h"
 
-#include "surgeprocessor.h"
-#include "surgecontroller.h"
+#include "SurgeVst3Processor.h"
+#include "SurgeVst3EditController.h"
 #include "surgecids.h"
 #include <AbstractSynthesizer.h>
 
@@ -60,8 +60,8 @@ DEF_CLASS2(INLINE_UID_FROM_FUID(SurgeProcessorUID),
            "Instrument|Synth", // Subcategory for this Plug-in (to be changed)
            FULL_VERSION_STR,   // Plug-in version (to be changed)
            kVstVersionString,  // the VST 3 SDK version (dont changed this, use always this define)
-           SurgeProcessor::createInstance) // function pointer called when this component should be
-                                           // instanciated
+           SurgeVst3Processor::createInstance) // function pointer called when this component should
+                                               // be instanciated
 
 /*// its kVstComponentControllerClass component
 DEF_CLASS2 (INLINE_UID_FROM_FUID (SurgeControllerUID),

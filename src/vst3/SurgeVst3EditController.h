@@ -5,7 +5,7 @@ using namespace Steinberg::Vst;
 
 class SurgeEditorView;
 
-class SurgeController : public EditControllerEx1, public IMidiMapping
+class SurgeVst3EditController : public EditControllerEx1, public IMidiMapping
 {
 public:
    //------------------------------------------------------------------------

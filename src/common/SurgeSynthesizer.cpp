@@ -14,7 +14,7 @@
 #include "aulayer.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
 #elif TARGET_VST3
-#include "surgeprocessor.h"
+#include "SurgeVst3Processor.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
 #else
 #include "Vst2PluginInstance.h"
@@ -668,24 +668,24 @@ void SurgeSynthesizer::sysex(size_t size, unsigned char* data)
    /*if (data[0] == 0xF0 && data[1] == 0x7F)
    {
       // Universal Real Time SysEx header
-      
+      
       int deviceId = data[2]; // ignore
-      
+      
       int subId1 = data[3];
       int subId2 = data[4];
-      
+      
       if (subId1 == 0x08 && subId2 == 0x02)
       {
          // [SINGLE NOTE TUNING CHANGE (REAL-TIME)]
-         
+         
          if (size < 12) return;  // message shorter than this would either be invalid or useless
-         
+         
          int tuningProgram = data[5];
-         
+         
          int numChanges = data[6];
-            
+            
          int bytesLeft = size - 7;
-         
+         
          for(int k=0; k<numChanges; k++)
          {
             if (bytesLeft > 4)
@@ -694,11 +694,11 @@ void SurgeSynthesizer::sysex(size_t size, unsigned char* data)
                int semitone = data[8 + 4*k];
                int sub1 = data[9 + 4*k];
                int sub2 = data[10 + 4*k];
-               
+               
                float pitch = semitone + (float)((sub1 << 7) + sub2) * (1.f / 16384.f);
-               
+               
                setTuning(tuningProgram, key, pitch);
-               
+               
                bytesLeft -= 4;
             }
          }
@@ -707,20 +707,20 @@ void SurgeSynthesizer::sysex(size_t size, unsigned char* data)
       {
          // [UNIVERSAL REAL TIME SYSTEM EXCLUSIVE]
          // KEY-BASED INSTRUMENT CONTROL
-         
+         
          if (size < 10) return;  // message shorter than this would either be invalid or useless
-         
+         
          int channel = data[5];
          int key = data[6];
-         
+         
          int bytesLeft = size - 7;
          int numControllers = (bytesLeft - 1) / 2;
-         
+         
          for(int k=0; k<numControllers; k++)
          {
             int controller = data[7 + 2*k];
             int value = data[8 + 2*k];
-            
+            
             setKeyBasedController(channel, key, controller, value);
          }
       }
