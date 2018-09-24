@@ -216,7 +216,7 @@ void SurgeGUIEditor::idle()
                mod_editor = false;
             synth->patch_loaded = false;
 
-            open_editor();
+            openOrRecreateEditor();
          }
          if (patchname)
          {
@@ -441,7 +441,7 @@ CRect positionForModulationGrid(int entry)
    return r;
 }
 
-void SurgeGUIEditor::open_editor()
+void SurgeGUIEditor::openOrRecreateEditor()
 {
    if (!synth)
       return;
@@ -1141,7 +1141,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
            synth = (sub3_synth*)plug->plugin_instance;
    #endif*/
 
-   open_editor();
+   openOrRecreateEditor();
 
    return true;
 }

@@ -63,7 +63,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
           p_id++, 0, "volume_FX2", "FX2 Return", ct_amplitude, px, py, 0, 0, 0, true, kHorizontal));
       py += gui_hfader_dist;
 
-      // TODO ska inte sparas i patches
+      // TODO don't store in the patch ?
       param_ptr.push_back(volume.assign(p_id++, 0, "volume", "Master Volume",
                                         ct_decibel_attenuation, hmargin + gui_sec_width * 5,
                                         gui_mid_topbar_y + 12, 0, 0, 0, true, kHorizontal | kEasy));
@@ -81,7 +81,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    param_ptr.push_back(
        fx_disable.assign(p_id++, 0, "fx_disable", "FX Disable", ct_none, 0, 0, 0, 0, 0, false));
 
-   // ska inte sparas i patches
+   // shouldnt't be stored in the patch
    param_ptr.push_back(polylimit.assign(p_id++, 0, "polylimit", "Poly Limit", ct_polylimit, 8 + 91,
                                         gui_mid_topbar_y + 13, 0, 0, 0, false,
                                         kHorizontal | kNoPopup));
@@ -382,11 +382,6 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
              p_id++, id_s++, "keytrack", "Keytrack", ct_percent_bidirectional, px, py, sc_id, 4, f,
              true, kVertical | kWhite));
       }
-      /*for(int f=0; f<2; f++)
-      {
-              
-              //a->push_back(scene[sc].filterunit[f].keytrack.assign(p_id++,id_s++,"keytrack","keytrack",ct_percent_bidirectional,px,py,sc_id,4,f,true,kVertical|kWhite));
-      }*/
 
       // scene[sc].filterunit[0].type.val.i = 1;
       for (int e = 0; e < 2; e++)

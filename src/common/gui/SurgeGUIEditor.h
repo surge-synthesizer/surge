@@ -69,7 +69,7 @@ protected:
    void refresh_mod();
 
 private:
-   void open_editor();
+   void openOrRecreateEditor();
    void close_editor();
    bool is_visible(int subsec, int subsec_id);
    SurgeSynthesizer* synth = nullptr;

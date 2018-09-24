@@ -27,6 +27,7 @@ CDIBitmap::CDIBitmap(long width, long height) : _width(width), _height(height)
 
 void CDIBitmap::draw(CDrawContext* context, CRect& rect, const CPoint& offset)
 {
+   assert(_bitmapAccess == nullptr);
    // context->clearRect(rect);
    _bitmap->draw(context, rect, offset);
 }
@@ -61,6 +62,8 @@ void CDIBitmap::clear(CColor color)
 
 void CDIBitmap::fillRect(CRect r, unsigned int color)
 {
+   assert(_bitmapAccess != nullptr);
+
    long xs = limit_range((int)r.left, 0, _width - 1);
    long xe = limit_range((int)r.right, 0, _width);
    long ys = limit_range((int)r.top, 0, _height - 1);
@@ -77,6 +80,8 @@ void CDIBitmap::fillRect(CRect r, unsigned int color)
 
 void CDIBitmap::setPixel(int x, int y, unsigned int color)
 {
+   assert(_bitmapAccess != nullptr);
+
    if (_bitmapAccess->setPosition(x, y))
    {
       _bitmapAccess->setValue(color);
@@ -85,11 +90,16 @@ void CDIBitmap::setPixel(int x, int y, unsigned int color)
 
 void CDIBitmap::begin()
 {
+   assert(_bitmapAccess == nullptr);
    _bitmapAccess = CBitmapPixelAccess::create(_bitmap);
+   _bitmapAccess->forget(); // its referenced one time too many here
+   assert(_bitmapAccess->getNbReference() == 1);
+   assert(_bitmapAccess != nullptr);
 }
 
 void CDIBitmap::commit()
 {
+   assert(_bitmapAccess != nullptr);
    _bitmapAccess = nullptr;
 }
 
