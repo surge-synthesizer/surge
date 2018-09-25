@@ -63,7 +63,7 @@ SurgeBitmaps::~SurgeBitmaps()
 
       for (iter = bitmap_registry.begin(); iter != bitmap_registry.end(); ++iter)
       {
-         delete iter->second;
+         iter->second->forget();
       }
       bitmap_registry.clear();
    }
