@@ -29,7 +29,8 @@ configuration {}
 
 if (os.istarget("macosx")) then
 
-	flags { "EnableSSE2", "StaticRuntime" }
+	flags { "StaticRuntime" }
+	vectorextensions "SSE2"
 	
 	defines
 	{ 
@@ -51,6 +52,7 @@ if (os.istarget("macosx")) then
    defines { "MAC=1", "PPC=0", "WINDOWS=0",  }
    
    buildoptions { "-std=c++14", "-stdlib=libc++" }
+   links { "c++" }
    buildoptions { "-mmacosx-version-min=10.9" }
    linkoptions { "-mmacosx-version-min=10.9" }
 

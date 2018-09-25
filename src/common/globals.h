@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #if MAC
-#include <vt_dsp/macspecific.h>
+#include "vt_dsp/macspecific.h"
 #endif
 #if !PPC
 #include <xmmintrin.h>
@@ -29,7 +29,7 @@ const int ob_length = block_size_os << 1;
 const int ob_length_quad = ob_length >> 2;
 const float block_size_inv = (1.f / block_size);
 const float block_size_os_inv = (1.f / block_size_os);
-const int max_fb_comb = 2048; // måste vara 2^n
+const int max_fb_comb = 2048; // mï¿½ste vara 2^n
 #if !MAC
 extern int SSE_VERSION;
 #endif
