@@ -51,7 +51,7 @@ if (os.istarget("macosx")) then
 
    defines { "MAC=1", "PPC=0", "WINDOWS=0",  }
    
-   buildoptions { "-std=c++14", "-stdlib=libc++" }
+   buildoptions { "-std=c++17", "-stdlib=libc++" }
    links { "c++" }
    buildoptions { "-mmacosx-version-min=10.9" }
    linkoptions { "-mmacosx-version-min=10.9" }
@@ -95,7 +95,7 @@ includedirs {
     "src/common/vt_dsp",
     "src/common/thread",
     "vst3sdk/vstgui4",
-	 "libs/"
+	"libs/"
 }
 
 -- PLUGIN COMMON --
