@@ -31,6 +31,10 @@ public:
    /*virtual bool getProgramNameIndexed (long category, long index, char *text);
    virtual void setProgram (long program);
    virtual long getProgram ();*/
+
+   virtual void open();
+   virtual void close();
+
    virtual void resume();
    virtual void suspend();
    virtual VstInt32 stopProcess();

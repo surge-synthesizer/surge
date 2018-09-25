@@ -89,11 +89,8 @@ void Vst2PluginInstance::inputConnected(VstInt32 index, bool state)
    input_connected = (input_connected & (~(1 << index))) | (state ? (1 << index) : 0);
 }
 
-//-------------------------------------------------------------------------------------------------------
 Vst2PluginInstance::~Vst2PluginInstance()
 {
-   // write_log("vsti deconstructor");
-
    // delete objects
    if (plugin_instance)
    {
@@ -136,10 +133,8 @@ Vst2PluginInstance::vendorSpecific(VstInt32 lArg1, VstInt32 lArg2, void* ptrArg,
    }
 }
 
-//-------------------------------------------------------------------------------------------------------
 void Vst2PluginInstance::suspend()
 {
-   // write_log("suspend");
    if (initialized)
    {
       plugin_instance->all_notes_off();
@@ -153,8 +148,6 @@ VstInt32 Vst2PluginInstance::stopProcess()
       plugin_instance->all_notes_off();
    return 1;
 }
-//-------------------------------------------------------------------------------------------------------
-
 void Vst2PluginInstance::init()
 {
    char host[256], product[256];
@@ -162,7 +155,6 @@ void Vst2PluginInstance::init()
    getHostVendorString(host);
    getHostProductString(product);
    VstInt32 hostversion = getHostVendorVersion();
-   // write_log("init");
 
    SurgeSynthesizer* synth = (SurgeSynthesizer*)_aligned_malloc(sizeof(SurgeSynthesizer), 16);
    if (!synth)
@@ -186,15 +178,20 @@ void Vst2PluginInstance::init()
    // numPrograms = ((sub3_synth*)plugin_instance)->storage.patch_list.size();
 }
 
-//-------------------------------------------------------------------------------------------------------
-void Vst2PluginInstance::resume()
+void Vst2PluginInstance::open()
 {
-   // write_log("resume");
    if (!initialized)
    {
       init();
       updateDisplay();
    }
+}
+
+void Vst2PluginInstance::close()
+{}
+
+void Vst2PluginInstance::resume()
+{
 
    plugin_instance->set_samplerate(this->getSampleRate());
    plugin_instance->audio_processing_active = true;
@@ -202,8 +199,6 @@ void Vst2PluginInstance::resume()
    //	wantEvents ();
    AudioEffectX::resume();
 }
-
-//------------------------------------------------------------------------
 
 VstInt32 Vst2PluginInstance::canDo(char* text)
 {
@@ -234,13 +229,8 @@ VstInt32 Vst2PluginInstance::canDo(char* text)
    if (!strcmp(text, "MPE"))
       return 1;
 
-   // if (!strcmp (text, "LiveWithoutToolbar")) 	return 1;
-   // ganska cool i sx
-
    return -1;
 }
-
-//------------------------------------------------------------------------
 
 VstInt32 Vst2PluginInstance::processEvents(VstEvents* ev)
 {
@@ -272,8 +262,6 @@ VstInt32 Vst2PluginInstance::processEvents(VstEvents* ev)
    }
    return 1; // want more
 }
-
-//------------------------------------------------------------------------
 
 void Vst2PluginInstance::handleEvent(VstEvent* ev)
 {
@@ -328,12 +316,6 @@ void Vst2PluginInstance::handleEvent(VstEvent* ev)
       {
          plugin_instance->all_notes_off();
       }
-
-      // lägg till allnotesoff etc.. sno från pdroidmk2
-
-      // send a copy to the editor for MIDI-learn purposes
-      // if (editor)
-      // ((shortcircuit_editor*)editor)->sendMidiMsg(midiData[0],midiData[1],midiData[2]);
    }
    else if (ev->type == kVstSysExType)
    {
@@ -342,117 +324,16 @@ void Vst2PluginInstance::handleEvent(VstEvent* ev)
    }
 }
 
-//-------------------------------------------------------------------------------------------------------
 void Vst2PluginInstance::setProgramName(char* name)
 {
    strcpy(programName, name);
 }
 
-//-----------------------------------------------------------------------------------------
 void Vst2PluginInstance::getProgramName(char* name)
 {
    strcpy(name, programName);
 }
-/*
-bool vstlayer::getProgramNameIndexed (long category, long index, char *text)
-{
-        if (!initialized) init();
 
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-
-        if(index >= s->storage.patch_list.size()) return false;
-        
-        strncpy(text,s->storage.patch_list.at(index).name.c_str(),23);
-        text[23] = 0;
-        return true;
-}
-
-void vstlayer::setProgram (long program)
-{
-        if (!initialized) init();
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-        s->patchid_queue = program;
-}
-long vstlayer::getProgram ()
-{
-        if (!initialized) return 0;
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-        return s->patchid;
-}*/
-
-// disabled due to VST suckage
-/*
-long vstlayer::getCurrentMidiProgram (long channel, MidiProgramName* currentProgram)
-{
-        //if(channel) return 0;
-        if (!initialized) init();
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-        int id = s->patchid;
-        if(id<0) return 0;
-        if(id >= s->storage.patch_list.size()) return 0;
-        currentProgram->thisProgramIndex = id;
-        currentProgram->midiProgram = id & 0x7f;
-        currentProgram->midiBankLsb = (id>>7) & 0x7f;
-        currentProgram->midiBankMsb = (id>>14) & 0x7f;
-        currentProgram->flags = kMidiIsOmni;
-        currentProgram->parentCategoryIndex = s->storage.patch_list.at(id).category;
-        //strncpy(currentProgram->name,s->storage.getPatch().name.c_str(),63);
-currentProgram->name[63] = 0;
-        strncpy(currentProgram->name,s->storage.patch_list.at(id).name.c_str(),63);
-currentProgram->name[63] = 0; return id;
-}
-
-long vstlayer::getMidiProgramName (long channel, MidiProgramName* midiProgramName)
-{
-        if (!initialized) init();
-        //if(channel) return 0;
-
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-        int id = midiProgramName->thisProgramIndex;
-        int n = s->storage.patch_list.size();
-        if(id >= n) return n;
-        
-        midiProgramName->midiProgram = id & 0x7f;
-        midiProgramName->midiBankLsb = (id>>7) & 0x7f;
-        midiProgramName->midiBankMsb = (id>>14) & 0x7f;
-        midiProgramName->flags = kMidiIsOmni;
-        
-        strncpy(midiProgramName->name,s->storage.patch_list.at(id).name.c_str(),63);
-midiProgramName->name[63] = 0; midiProgramName->parentCategoryIndex =
-s->storage.patch_list.at(id).category; return n;
-}
-long vstlayer::getMidiProgramCategory(long channel,MidiProgramCategory *category)
-{
-        if (!initialized) init();
-        //if(channel) return 0;
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-
-        int id = category->thisCategoryIndex;
-        category->parentCategoryIndex = -1;
-        if((id >= 0)&&(id<s->storage.patch_category.size()))
-        {
-                strncpy(category->name,s->storage.patch_category.at(id).name.c_str(),63);
-category->name[63] = 0;
-        }
-        return s->storage.patch_category.size();
-}
-
-bool vstlayer::hasMidiProgramsChanged (long channel)
-{
-        return false;
-        if(channel != 0) return false;
-        if (!initialized) init();
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-
-        if(s->midiprogramshavechanged)
-        {
-                s->midiprogramshavechanged = false;
-                return true;
-        }
-        return false;
-}
-*/
-//-----------------------------------------------------------------------------------------
 void Vst2PluginInstance::setParameter(VstInt32 index, float value)
 {
    if (!initialized)
@@ -469,7 +350,6 @@ void Vst2PluginInstance::setParameter(VstInt32 index, float value)
    }*/
 }
 
-//-----------------------------------------------------------------------------------------
 float Vst2PluginInstance::getParameter(VstInt32 index)
 {
    if (!initialized)
@@ -477,7 +357,6 @@ float Vst2PluginInstance::getParameter(VstInt32 index)
    return plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(index));
 }
 
-//-----------------------------------------------------------------------------------------
 void Vst2PluginInstance::getParameterName(VstInt32 index, char* label)
 {
    if (!initialized)
@@ -485,7 +364,6 @@ void Vst2PluginInstance::getParameterName(VstInt32 index, char* label)
    plugin_instance->getParameterName(plugin_instance->remapExternalApiToInternalId(index), label);
 }
 
-//-----------------------------------------------------------------------------------------
 void Vst2PluginInstance::getParameterDisplay(VstInt32 index, char* text)
 {
    if (!initialized)
@@ -493,101 +371,28 @@ void Vst2PluginInstance::getParameterDisplay(VstInt32 index, char* text)
    plugin_instance->getParameterDisplay(plugin_instance->remapExternalApiToInternalId(index), text);
 }
 
-//-----------------------------------------------------------------------------------------
 void Vst2PluginInstance::getParameterLabel(VstInt32 index, char* label)
 {
    strcpy(label, "");
 }
-/*
-bool vstlayer::getProgramNameIndexed (long category, long index, char *text)
-{
-        if (!initialized) return false;
-        sub3_synth *s = (sub3_synth*) plugin_instance;
 
-        if(category < 0)
-        {
-                int n = s->storage.patch_list.size();
-                if(index < 0) return false;
-                if(index >= n) return false;
-                strncpy(text,s->storage.patch_list.at(index).name.c_str(),23);	text[23] = 0;
-                return true;
-        }
-        else
-        {
-                int n = s->storage.patch_list.size();
-                int id = 0;
-
-                for(int p = 0; p < n; p++)
-                {
-                        if(s->storage.patch_list[p].category == category)
-                        {
-                                if(id == index)
-                                {
-                                        strncpy(text,s->storage.patch_list.at(p).name.c_str(),23);
-text[23] = 0; return true;
-                                }
-                                else id++;
-                        }
-                }
-        }
-        return false;
-}
-
-long vstlayer::getNumCategories ()
-{
-        if (!initialized) return 1;
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-        return s->storage.patch_category.size();
-}*/
-
-/*bool vstlayer::getParameterProperties (long index, VstParameterProperties *p)
-{
-        return false; //disable
-        
-        if (!initialized) return false;
-        sub3_synth *s = (sub3_synth*) plugin_instance;
-        if (index<s->storage.getPatch().param_ptr.size())
-        {
-                parameter *prm = s->storage.getPatch().param_ptr.at(index);
-                //p->category = prm->ctrlgroup;
-                p->flags = 0;
-                if (prm->valtype == vt_bool) p->flags |= kVstParameterIsSwitch;
-                strncpy(p->label,prm->get_full_name(),63);
-                return true;
-        }
-        return false;
-}*/
-
-//------------------------------------------------------------------------
 bool Vst2PluginInstance::getEffectName(char* name)
 {
-#ifdef ISDEMO
-   strcpy(name, "Surge demo");
-#else
    strcpy(name, "Surge");
-#endif
    return true;
 }
 
-//------------------------------------------------------------------------
 bool Vst2PluginInstance::getProductString(char* name)
 {
-#ifdef ISDEMO
-   strcpy(name, "Surge demo");
-#else
    strcpy(name, "Surge");
-#endif
    return true;
 }
 
-//------------------------------------------------------------------------
 bool Vst2PluginInstance::getVendorString(char* text)
 {
    strcpy(text, "Vember Audio");
    return true;
 }
-
-//-----------------------------------------------------------------------------------------
 
 template <bool replacing>
 void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 sampleFrames)
@@ -678,19 +483,15 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
    _fpuState.restore();
 }
 
-//-----------------------------------------------------------------------------------------
 void Vst2PluginInstance::process(float** inputs, float** outputs, VstInt32 sampleFrames)
 {
    processT<false>(inputs, outputs, sampleFrames);
 }
 
-//-----------------------------------------------------------------------------------------
 void Vst2PluginInstance::processReplacing(float** inputs, float** outputs, VstInt32 sampleFrames)
 {
    processT<true>(inputs, outputs, sampleFrames);
 }
-
-//-----------------------------------------------------------------------------------------
 
 bool Vst2PluginInstance::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 {
@@ -715,8 +516,6 @@ bool Vst2PluginInstance::getInputProperties(VstInt32 index, VstPinProperties* pr
    return returnCode;
 }
 
-//-----------------------------------------------------------------------------------------
-
 void Vst2PluginInstance::setSampleRate(float sampleRate)
 {
    AudioEffectX::setSampleRate(sampleRate);
@@ -724,8 +523,6 @@ void Vst2PluginInstance::setSampleRate(float sampleRate)
    if (plugin_instance)
       plugin_instance->set_samplerate(sampleRate);
 }
-
-//-----------------------------------------------------------------------------------------
 
 const int dummydata = 'OMED';
 VstInt32 Vst2PluginInstance::getChunk(void** data, bool isPreset)
@@ -736,8 +533,6 @@ VstInt32 Vst2PluginInstance::getChunk(void** data, bool isPreset)
    return plugin_instance->save_raw(data);
    //#endif
 }
-
-//-----------------------------------------------------------------------------------------
 
 VstInt32 Vst2PluginInstance::setChunk(void* data, VstInt32 byteSize, bool isPreset)
 {
