@@ -73,7 +73,7 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 
 void SurgeVst3Processor::createSurge()
 {
-   if (surgeInstance.get() != 0)
+   if (surgeInstance != nullptr)
    {
       return;
    }
@@ -118,7 +118,7 @@ tresult PLUGIN_API SurgeVst3Processor::setProcessing(TBool state)
 
    if (!state)
    {
-      surgeInstance->all_notes_off();
+      surgeInstance->allNotesOff();
    }
    else
    {
@@ -134,8 +134,8 @@ tresult PLUGIN_API SurgeVst3Processor::getState(IBStream* state)
 {
    CHECK_INITIALIZED
 
-   void* data = 0; // surgeInstance keeps its data in an auto-ptr so we don't need to free it
-   unsigned int stateSize = surgeInstance->save_raw(&data);
+   void* data = nullptr; // surgeInstance keeps its data in an auto-ptr so we don't need to free it
+   unsigned int stateSize = surgeInstance->saveRaw(&data);
    state->write(data, stateSize);
 
    return kResultOk;
@@ -154,7 +154,7 @@ tresult PLUGIN_API SurgeVst3Processor::setState(IBStream* state)
 
    if (result == kResultOk)
    {
-      surgeInstance->load_raw(data, numBytes, false);
+      surgeInstance->loadRaw(data, numBytes, false);
    }
 
    free(data);
@@ -194,22 +194,21 @@ void SurgeVst3Processor::processEvent(const Event& e)
    case Event::kNoteOnEvent:
       if (e.noteOn.velocity == 0.f)
       {
-         getSurge()->release_note(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity);
+         getSurge()->releaseNote(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity);
       }
       else
       {
-         getSurge()->play_note(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity,
-                               e.noteOn.tuning);
+         getSurge()->playNote(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity, e.noteOn.tuning);
       }
       break;
 
    case Event::kNoteOffEvent:
-      getSurge()->release_note(e.noteOff.channel, e.noteOff.pitch, e.noteOff.velocity);
+      getSurge()->releaseNote(e.noteOff.channel, e.noteOff.pitch, e.noteOff.velocity);
       break;
 
    case Event::kPolyPressureEvent:
-      getSurge()->poly_aftertouch(e.polyPressure.channel, e.polyPressure.pitch,
-                                  e.polyPressure.pressure);
+      getSurge()->polyAftertouch(e.polyPressure.channel, e.polyPressure.pitch,
+                                 e.polyPressure.pressure);
       break;
    }
 }
@@ -290,7 +289,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    surgeInstance->process_input = data.numInputs != 0;
 
-   float** in = surgeInstance->process_input ? data.inputs[0].channelBuffers32 : 0;
+   float** in = surgeInstance->process_input ? data.inputs[0].channelBuffers32 : nullptr;
    float** out = data.outputs[0].channelBuffers32;
 
    int i;
@@ -367,7 +366,7 @@ tresult PLUGIN_API SurgeVst3Processor::setupProcessing(Steinberg::Vst::ProcessSe
 {
    CHECK_INITIALIZED
 
-   surgeInstance->set_samplerate(newSetup.sampleRate);
+   surgeInstance->setSamplerate(newSetup.sampleRate);
    return kResultOk;
 }
 
@@ -407,7 +406,7 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
 
       return editor;
    }
-   return 0;
+   return nullptr;
 }
 
 void SurgeVst3Processor::editorAttached(EditorView* editor)
@@ -564,7 +563,7 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
 
 SurgeSynthesizer* SurgeVst3Processor::getSurge()
 {
-   assert(surgeInstance.get() != NULL);
+   assert(surgeInstance.get() != nullptr);
 
    return surgeInstance.get();
 }

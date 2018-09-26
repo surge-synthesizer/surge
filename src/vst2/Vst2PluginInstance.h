@@ -85,9 +85,9 @@ protected:
    int blockpos;
 
 public:
-   SurgeSynthesizer* plugin_instance;
-   VstEvent* eventptr[MAX_EVENTS];
-   char eventbufferdata[EVENTBUFFER_SIZE];
+   SurgeSynthesizer* _instance;
+   VstEvent* _eventptr[MAX_EVENTS];
+   char _eventbufferdata[EVENTBUFFER_SIZE];
 
    int events_this_block, events_processed;
    bool initialized;

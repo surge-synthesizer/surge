@@ -70,7 +70,7 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
 
    initialized = false;
    // NULL objects
-   plugin_instance = NULL;
+   _instance = NULL;
    events_this_block = 0;
    events_processed = 0;
    oldblokkosize = 0;
@@ -92,10 +92,10 @@ void Vst2PluginInstance::inputConnected(VstInt32 index, bool state)
 Vst2PluginInstance::~Vst2PluginInstance()
 {
    // delete objects
-   if (plugin_instance)
+   if (_instance)
    {
-      plugin_instance->~SurgeSynthesizer();
-      _aligned_free(plugin_instance);
+      _instance->~SurgeSynthesizer();
+      _aligned_free(_instance);
    }
 }
 
@@ -137,15 +137,15 @@ void Vst2PluginInstance::suspend()
 {
    if (initialized)
    {
-      plugin_instance->all_notes_off();
-      plugin_instance->audio_processing_active = false;
+      _instance->allNotesOff();
+      _instance->audio_processing_active = false;
    }
 }
 
 VstInt32 Vst2PluginInstance::stopProcess()
 {
    if (initialized)
-      plugin_instance->all_notes_off();
+      _instance->allNotesOff();
    return 1;
 }
 void Vst2PluginInstance::init()
@@ -168,10 +168,10 @@ void Vst2PluginInstance::init()
       return;
    }
    new (synth) SurgeSynthesizer(this);
-   plugin_instance = (SurgeSynthesizer*)synth;
+   _instance = (SurgeSynthesizer*)synth;
 
-   plugin_instance->set_samplerate(this->getSampleRate());
-   editor = new SurgeGUIEditor(this, plugin_instance);
+   _instance->setSamplerate(this->getSampleRate());
+   editor = new SurgeGUIEditor(this, _instance);
 
    blockpos = 0;
    initialized = true;
@@ -193,8 +193,8 @@ void Vst2PluginInstance::close()
 void Vst2PluginInstance::resume()
 {
 
-   plugin_instance->set_samplerate(this->getSampleRate());
-   plugin_instance->audio_processing_active = true;
+   _instance->setSamplerate(this->getSampleRate());
+   _instance->audio_processing_active = true;
 
    //	wantEvents ();
    AudioEffectX::resume();
@@ -246,7 +246,7 @@ VstInt32 Vst2PluginInstance::processEvents(VstEvents* ev)
          VstEvent* inEvent = (ev->events[i]);
          size_t size = inEvent->byteSize + 2 * sizeof(VstInt32);
 
-         char* dst = eventbufferdata + of;
+         char* dst = _eventbufferdata + of;
 
          of += size;
 
@@ -257,7 +257,7 @@ VstInt32 Vst2PluginInstance::processEvents(VstEvents* ev)
          }
 
          memcpy(dst, inEvent, size);
-         eventptr[i] = (VstEvent*)dst;
+         _eventptr[i] = (VstEvent*)dst;
       }
    }
    return 1; // want more
@@ -272,55 +272,49 @@ void Vst2PluginInstance::handleEvent(VstEvent* ev)
    {
       VstMidiEvent* event = (VstMidiEvent*)ev;
       char* midiData = event->midiData;
-      int status = midiData[0] & 0xf0;      // ignoring channel
-      int channel = midiData[0] & 0x0f;     // force to channel 1
+      int status = midiData[0] & 0xf0;
+      int channel = midiData[0] & 0x0f;
       if (status == 0x90 || status == 0x80) // we only look at notes
       {
          int newnote = midiData[1] & 0x7f;
          int velo = midiData[2] & 0x7f;
          if ((status == 0x80) || (velo == 0))
          {
-            plugin_instance->release_note((char)channel, (char)newnote, (char)velo);
+            _instance->releaseNote((char)channel, (char)newnote, (char)velo);
          }
          else
          {
-            plugin_instance->play_note((char)channel, (char)newnote, (char)velo, event->detune);
+            _instance->playNote((char)channel, (char)newnote, (char)velo, event->detune);
          }
       }
       else if (status == 0xe0) // pitch bend
       {
          long value = (midiData[1] & 0x7f) + ((midiData[2] & 0x7f) << 7);
-         plugin_instance->pitch_bend((char)channel, value - 8192);
+         _instance->pitchBend((char)channel, value - 8192);
       }
       else if (status == 0xB0) // controller
       {
          if (midiData[1] == 0x7b || midiData[1] == 0x7e)
-            plugin_instance->all_notes_off(); // all notes off
+            _instance->allNotesOff(); // all notes off
          else
-            plugin_instance->channel_controller((char)channel, midiData[1] & 0x7f,
-                                                midiData[2] & 0x7f);
+            _instance->channelController((char)channel, midiData[1] & 0x7f, midiData[2] & 0x7f);
       }
       else if (status == 0xC0) // program change
       {
-         plugin_instance->program_change((char)channel, midiData[1] & 0x7f);
+         _instance->programChange((char)channel, midiData[1] & 0x7f);
       }
       else if (status == 0xD0) // channel aftertouch
       {
-         plugin_instance->channel_aftertouch((char)channel, midiData[1] & 0x7f);
+         _instance->channelAftertouch((char)channel, midiData[1] & 0x7f);
       }
       else if (status == 0xA0) // poly aftertouch
       {
-         plugin_instance->poly_aftertouch((char)channel, midiData[1] & 0x7f, midiData[2] & 0x7f);
+         _instance->polyAftertouch((char)channel, midiData[1] & 0x7f, midiData[2] & 0x7f);
       }
       else if ((status == 0xfc) || (status == 0xff)) //  MIDI STOP or reset
       {
-         plugin_instance->all_notes_off();
+         _instance->allNotesOff();
       }
-   }
-   else if (ev->type == kVstSysExType)
-   {
-      VstMidiSysexEvent* event = (VstMidiSysexEvent*)ev;
-      plugin_instance->sysex(event->dumpBytes, (unsigned char*)event->sysexDump);
    }
 }
 
@@ -339,8 +333,7 @@ void Vst2PluginInstance::setParameter(VstInt32 index, float value)
    if (!initialized)
       init();
 
-   plugin_instance->setParameter01(plugin_instance->remapExternalApiToInternalId(index), value,
-                                   true);
+   _instance->setParameter01(_instance->remapExternalApiToInternalId(index), value, true);
 
    // flyttat till sub3_synth
    /*if(editor)
@@ -354,21 +347,21 @@ float Vst2PluginInstance::getParameter(VstInt32 index)
 {
    if (!initialized)
       init();
-   return plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(index));
+   return _instance->getParameter01(_instance->remapExternalApiToInternalId(index));
 }
 
 void Vst2PluginInstance::getParameterName(VstInt32 index, char* label)
 {
    if (!initialized)
       init();
-   plugin_instance->getParameterName(plugin_instance->remapExternalApiToInternalId(index), label);
+   _instance->getParameterName(_instance->remapExternalApiToInternalId(index), label);
 }
 
 void Vst2PluginInstance::getParameterDisplay(VstInt32 index, char* text)
 {
    if (!initialized)
       init();
-   plugin_instance->getParameterDisplay(plugin_instance->remapExternalApiToInternalId(index), text);
+   _instance->getParameterDisplay(_instance->remapExternalApiToInternalId(index), text);
 }
 
 void Vst2PluginInstance::getParameterLabel(VstInt32 index, char* label)
@@ -402,7 +395,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
 
    _fpuState.set();
 
-   SurgeSynthesizer* s = (SurgeSynthesizer*)plugin_instance;
+   SurgeSynthesizer* s = (SurgeSynthesizer*)_instance;
    s->process_input = (!plug_is_synth || input_connected);
 
    // do each buffer
@@ -410,36 +403,36 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
    if (timeinfo)
    {
       if (timeinfo->flags & kVstTempoValid)
-         plugin_instance->time_data.tempo = timeinfo->tempo;
+         _instance->time_data.tempo = timeinfo->tempo;
       if (timeinfo->flags & kVstTransportPlaying)
       {
          if (timeinfo->flags & kVstPpqPosValid)
-            plugin_instance->time_data.ppqPos = timeinfo->ppqPos;
+            _instance->time_data.ppqPos = timeinfo->ppqPos;
       }
    }
    else
    {
-      plugin_instance->time_data.tempo = 120;
+      _instance->time_data.tempo = 120;
    }
 
    int i;
-   int n_outputs = plugin_instance->get_n_outputs();
-   int n_inputs = plugin_instance->get_n_inputs();
+   int n_outputs = _instance->getNumOutputs();
+   int n_inputs = _instance->getNumInputs();
    for (i = 0; i < sampleFrames; i++)
    {
       if (blockpos == 0)
       {
          // move clock
-         timedata* td = &(plugin_instance->time_data);
-         plugin_instance->time_data.ppqPos +=
-             (double)block_size * plugin_instance->time_data.tempo / (60. * sampleRate);
+         timedata* td = &(_instance->time_data);
+         _instance->time_data.ppqPos +=
+             (double)block_size * _instance->time_data.tempo / (60. * sampleRate);
 
          // process events for the current block
          while (events_processed < events_this_block)
          {
-            if (i >= eventptr[events_processed]->deltaFrames)
+            if (i >= _eventptr[events_processed]->deltaFrames)
             {
-               handleEvent(eventptr[events_processed]);
+               handleEvent(_eventptr[events_processed]);
                events_processed++;
             }
             else
@@ -447,7 +440,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
          }
 
          // run sampler engine for the current block
-         plugin_instance->process();
+         _instance->process();
       }
 
       if (s->process_input)
@@ -455,7 +448,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
          int inp;
          for (inp = 0; inp < n_inputs; inp++)
          {
-            plugin_instance->input[inp][blockpos] = inputs[inp][i];
+            _instance->input[inp][blockpos] = inputs[inp][i];
          }
       }
 
@@ -463,9 +456,9 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
       for (outp = 0; outp < n_outputs; outp++)
       {
          if (replacing)
-            outputs[outp][i] = (float)plugin_instance->output[outp][blockpos]; // replacing
+            outputs[outp][i] = (float)_instance->output[outp][blockpos]; // replacing
          else
-            outputs[outp][i] += (float)plugin_instance->output[outp][blockpos]; // adding
+            outputs[outp][i] += (float)_instance->output[outp][blockpos]; // adding
       }
 
       blockpos++;
@@ -476,7 +469,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
    // process out old events that didn't finish last block
    while (events_processed < events_this_block)
    {
-      handleEvent(eventptr[events_processed]);
+      handleEvent(_eventptr[events_processed]);
       events_processed++;
    }
 
@@ -520,8 +513,8 @@ void Vst2PluginInstance::setSampleRate(float sampleRate)
 {
    AudioEffectX::setSampleRate(sampleRate);
 
-   if (plugin_instance)
-      plugin_instance->set_samplerate(sampleRate);
+   if (_instance)
+      _instance->setSamplerate(sampleRate);
 }
 
 const int dummydata = 'OMED';
@@ -530,7 +523,7 @@ VstInt32 Vst2PluginInstance::getChunk(void** data, bool isPreset)
    if (!initialized)
       init();
 
-   return plugin_instance->save_raw(data);
+   return _instance->saveRaw(data);
    //#endif
 }
 
@@ -542,7 +535,7 @@ VstInt32 Vst2PluginInstance::setChunk(void* data, VstInt32 byteSize, bool isPres
    if (byteSize <= 4)
       return 0;
 
-   plugin_instance->load_raw(data, byteSize, false);
+   _instance->loadRaw(data, byteSize, false);
 
    return 1;
 }

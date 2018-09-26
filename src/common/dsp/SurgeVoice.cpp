@@ -372,15 +372,12 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
    if (((AdsrEnvelope*)modsources[ms_ampeg])->is_idle())
       state.keep_playing = false;
 
-   // TODO memcpy är bottleneck här
+   // TODO memcpy is bottleneck
    memcpy(localcopy, paramptr, sizeof(localcopy));
-   // egentligen behöver man inte kopiera alla parameters
-   // tex kan lfoerna ignoreras om dom inte är använda
-   // samma gäller fx & oscs
-   // även int-parameters kan ignoreras
-   // bygg upp en lista med nödvändiga parameters (I scene-processingen)
-   // samt konditionella parameters
-   // och kopiera bara de som behövs
+   // don't actually need to copy everything
+   // LFOs could be ignore when unused
+   // same for FX & OSCs
+   // also ignore int-parameters
 
    vector<ModulationRouting>::iterator iter;
    iter = scene->modulation_voice.begin();

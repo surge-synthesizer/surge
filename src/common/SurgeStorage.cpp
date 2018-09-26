@@ -131,7 +131,7 @@ SurgeStorage::SurgeStorage()
 #else
 
    PWSTR localAppData;
-   if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &localAppData))
+   if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
    {
       CHAR path[4096];
       wsprintf(path, "%S\\Surge\\", localAppData);
@@ -139,7 +139,7 @@ SurgeStorage::SurgeStorage()
    }
 
    PWSTR documentsFolder;
-   if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &documentsFolder))
+   if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
    {
       CHAR path[4096];
       wsprintf(path, "%S\\Surge\\", documentsFolder);
