@@ -3,6 +3,11 @@
 #include "macspecific.h"
 #endif
 
+#ifdef __linux__
+#include <immintrin.h>
+#endif
+
+
 #if !PPC
 
 inline float i2f_binary_cast(int i)

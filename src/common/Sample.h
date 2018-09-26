@@ -7,7 +7,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef MAC
+#if MAC || __linux__
 #else
 #include <windows.h>
 #include <mmreg.h>

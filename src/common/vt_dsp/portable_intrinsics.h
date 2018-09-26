@@ -45,6 +45,10 @@ forceinline float vSum(vFloat x)
 
 #else
 
+#ifdef __linux__
+#include <immintrin.h>
+#endif
+
 #define vFloat __m128
 
 #define vZero _mm_setzero_ps()

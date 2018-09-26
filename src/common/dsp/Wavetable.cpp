@@ -2,7 +2,7 @@
 #include <assert.h>
 #include "DspUtilities.h"
 #include <vt_dsp/basic_dsp.h>
-#include <vt_dsp/endian.h>
+#include <vt_dsp/vt_dsp_endian.h>
 #include "SurgeStorage.h"
 
 #if WINDOWS
@@ -36,7 +36,7 @@ const int HRFilterI16[64] = {
 
 int min_F32_tables = 3;
 
-#if MAC
+#if MAC || __linux__
 bool _BitScanReverse(unsigned int* result, unsigned int bits)
 {
    *result = __builtin_ctz(bits);

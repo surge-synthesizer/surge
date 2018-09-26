@@ -37,7 +37,7 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
    setNumInputs(2);  // stereo in
    setNumOutputs(2); // stereo out
 
-#if MAC
+#if MAC || __linux__
    isSynth();
    plug_is_synth = true;
    setUniqueID('cjs3'); // identify

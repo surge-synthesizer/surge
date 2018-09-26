@@ -1,5 +1,7 @@
 #include "FilterCoefficientMaker.h"
 #pragma once
+#include "globals.h"
+
 
 const int n_filter_registers = 5;
 

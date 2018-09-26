@@ -4,7 +4,7 @@
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
 #include <time.h>
-#if MAC
+#if MAC || __linux__
 #include <pthread.h>
 #else
 #include <windows.h>
@@ -2028,7 +2028,7 @@ float SurgeSynthesizer::valueToNormalized(long index, float value)
    return 0.f;
 }
 
-#if MAC
+#if MAC || __linux__
 void* loadPatchInBackgroundThread(void* sy)
 {
 #else
@@ -2219,7 +2219,7 @@ void SurgeSynthesizer::process()
          // spawn patch-loading thread
          halt_engine = true;
 
-#if MAC
+#if MAC || __linux__
          pthread_t thread;
          pthread_attr_t attributes;
          int ret;

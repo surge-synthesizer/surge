@@ -103,7 +103,7 @@ private:
    CControl* metaparam[n_customcontrollers] = {};
    CControl* lfodisplay = nullptr;
    CControl* filtersubtype[2] = {};
-#if MAC
+#if MAC || __linux__
 #else
    HWND ToolTipWnd;
 #endif

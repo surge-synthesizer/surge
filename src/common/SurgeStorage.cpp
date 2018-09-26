@@ -4,12 +4,13 @@
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
 #include <set>
-#include <vt_dsp/endian.h>
+#include <vt_dsp/vt_dsp_endian.h>
 #if MAC
 //#include <MoreFilesX.h>
 //#include <MacErrorHandling.h>
 #include <CoreFoundation/CFBundle.h>
 #include <CoreServices/CoreServices.h>
+#elif __linux__
 #else
 #include <windows.h>
 #include <Shellapi.h>
@@ -128,6 +129,10 @@ SurgeStorage::SurgeStorage()
 
    userDataPath = "~/Documents/Surge";
 
+#elif __linux__
+   
+   printf("Implement me, probably\n");
+   
 #else
 
    PWSTR localAppData;
@@ -151,7 +156,7 @@ SurgeStorage::SurgeStorage()
 
    if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
    {
-#if !MAC
+#if !MAC && !__linux__
       MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
                  "Configuration not found", MB_OK | MB_ICONERROR);
 #endif
