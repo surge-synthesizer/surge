@@ -384,16 +384,16 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
       toggle_mod_editing();
       return 1;
    case VKEY_LEFT:
-      synth->increment_patch(-1, 0);
+      synth->incrementPatch(-1, 0);
       return 1;
    case VKEY_RIGHT:
-      synth->increment_patch(1, 0);
+      synth->incrementPatch(1, 0);
       return 1;
    case VKEY_UP:
-      synth->increment_patch(0, -1);
+      synth->incrementPatch(0, -1);
       return 1;
    case VKEY_DOWN:
-      synth->increment_patch(0, 1);
+      synth->incrementPatch(0, 1);
       return 1;
    }
    return -1;
@@ -429,10 +429,10 @@ bool SurgeGUIEditor::is_visible(int subsec, int subsec_id)
 
 CRect positionForModulationGrid(int entry)
 {
-   const int width = is_customcontroller(entry) ? 75 : 64;
+   const int width = isCustomController(entry) ? 75 : 64;
    CRect r(2, 1, width, 14 + 1);
 
-   if (is_customcontroller(entry))
+   if (isCustomController(entry))
       r.bottom += 8;
    int gridX = modsource_grid_xy[entry][0];
    int gridY = modsource_grid_xy[entry][1];
@@ -1821,25 +1821,25 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       int id = ((CPatchBrowser*)control)->sel_id;
       // synth->load_patch(id);
       synth->patchid_queue = id;
-      synth->process_threadunsafe_operations();
+      synth->processThreadunsafeOperations();
       return;
    }
    break;
    case tag_mp_category:
    {
       if (control->getValue() > 0.5f)
-         synth->increment_patch(1, 0);
+         synth->incrementPatch(1, 0);
       else
-         synth->increment_patch(-1, 0);
+         synth->incrementPatch(-1, 0);
       return;
    }
    break;
    case tag_mp_patch:
    {
       if (control->getValue() > 0.5f)
-         synth->increment_patch(0, 1);
+         synth->incrementPatch(0, 1);
       else
-         synth->increment_patch(0, -1);
+         synth->incrementPatch(0, -1);
       return;
    }
    break;
@@ -1870,7 +1870,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       synth->switch_toggled_queued = true;
       queue_refresh = true;
-      synth->process_threadunsafe_operations();
+      synth->processThreadunsafeOperations();
       return;
    }
    break;
@@ -1879,7 +1879,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       synth->load_fx_needed = true;
       // queue_refresh = true;
       synth->fx_reload[current_fx & 7] = true;
-      synth->process_threadunsafe_operations();
+      synth->processThreadunsafeOperations();
       return;
    }
    case tag_about:
@@ -1942,7 +1942,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       synth->storage.getPatch().author = patchName->getText();
       synth->storage.getPatch().category = patchCategory->getText();
       synth->storage.getPatch().comment = patchComment->getText();
-      synth->save_patch();
+      synth->savePatch();
    }
    break;
    default:
@@ -1971,7 +1971,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
 
-            if (is_customcontroller(modsource))
+            if (isCustomController(modsource))
             {
                int ccid = modsource - ms_ctrl1;
                char* lbl = synth->storage.getPatch().CustomControllerLabel[ccid];

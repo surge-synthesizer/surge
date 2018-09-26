@@ -118,7 +118,7 @@ tresult PLUGIN_API SurgeVst3Processor::setProcessing(TBool state)
 
    if (!state)
    {
-      surgeInstance->all_notes_off();
+      surgeInstance->allNotesOff();
    }
    else
    {
@@ -135,7 +135,7 @@ tresult PLUGIN_API SurgeVst3Processor::getState(IBStream* state)
    CHECK_INITIALIZED
 
    void* data = 0; // surgeInstance keeps its data in an auto-ptr so we don't need to free it
-   unsigned int stateSize = surgeInstance->save_raw(&data);
+   unsigned int stateSize = surgeInstance->saveRaw(&data);
    state->write(data, stateSize);
 
    return kResultOk;
@@ -154,7 +154,7 @@ tresult PLUGIN_API SurgeVst3Processor::setState(IBStream* state)
 
    if (result == kResultOk)
    {
-      surgeInstance->load_raw(data, numBytes, false);
+      surgeInstance->loadRaw(data, numBytes, false);
    }
 
    free(data);
@@ -194,22 +194,21 @@ void SurgeVst3Processor::processEvent(const Event& e)
    case Event::kNoteOnEvent:
       if (e.noteOn.velocity == 0.f)
       {
-         getSurge()->release_note(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity);
+         getSurge()->releaseNote(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity);
       }
       else
       {
-         getSurge()->play_note(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity,
-                               e.noteOn.tuning);
+         getSurge()->playNote(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity, e.noteOn.tuning);
       }
       break;
 
    case Event::kNoteOffEvent:
-      getSurge()->release_note(e.noteOff.channel, e.noteOff.pitch, e.noteOff.velocity);
+      getSurge()->releaseNote(e.noteOff.channel, e.noteOff.pitch, e.noteOff.velocity);
       break;
 
    case Event::kPolyPressureEvent:
-      getSurge()->poly_aftertouch(e.polyPressure.channel, e.polyPressure.pitch,
-                                  e.polyPressure.pressure);
+      getSurge()->polyAftertouch(e.polyPressure.channel, e.polyPressure.pitch,
+                                 e.polyPressure.pressure);
       break;
    }
 }
@@ -367,7 +366,7 @@ tresult PLUGIN_API SurgeVst3Processor::setupProcessing(Steinberg::Vst::ProcessSe
 {
    CHECK_INITIALIZED
 
-   surgeInstance->set_samplerate(newSetup.sampleRate);
+   surgeInstance->setSamplerate(newSetup.sampleRate);
    return kResultOk;
 }
 

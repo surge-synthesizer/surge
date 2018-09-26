@@ -986,15 +986,14 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
                if (sceneId != 0)
                {
-                  if (is_scenelevel(modsource))
+                  if (isScenelevel(modsource))
                      modlist = &scene[sceneId - 1].modulation_scene;
                   else
                      modlist = &scene[sceneId - 1].modulation_voice;
                }
                else
                {
-                  if (is_scenelevel(modsource))
-                     modlist = &modulation_global;
+                  modlist = &modulation_global;
                }
 
                ModulationRouting t;

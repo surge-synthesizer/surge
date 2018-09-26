@@ -37,26 +37,25 @@ public:
 public:
    SurgeSynthesizer(PluginLayer* parent);
    virtual ~SurgeSynthesizer();
-   void play_note(char channel, char key, char velocity, char detune);
-   void release_note(char channel, char key, char velocity);
-   void release_note_postholdcheck(int scene, char channel, char key, char velocity);
-   void pitch_bend(char channel, int value);
-   void poly_aftertouch(char channel, int key, int value);
-   void channel_aftertouch(char channel, int value);
-   void channel_controller(char channel, int cc, int value);
-   void program_change(char channel, int value);
-   void sysex(size_t size, unsigned char* data);
-   void all_notes_off();
-   void set_samplerate(float sr);
-   int get_n_inputs()
+   void playNote(char channel, char key, char velocity, char detune);
+   void releaseNote(char channel, char key, char velocity);
+   void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity);
+   void pitchBend(char channel, int value);
+   void polyAftertouch(char channel, int key, int value);
+   void channelAftertouch(char channel, int value);
+   void channelController(char channel, int cc, int value);
+   void programChange(char channel, int value);
+   void allNotesOff();
+   void setSamplerate(float sr);
+   int getNumInputs()
    {
       return n_inputs;
    }
-   int get_n_outputs()
+   int getNumOutputs()
    {
       return n_outputs;
    }
-   int get_block_size()
+   int getBlockSize()
    {
       return block_size;
    }
@@ -70,21 +69,21 @@ public:
    void onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int msbValue);
    void onNRPN(int channel, int lsbNRPN, int msbNRPN, int lsbValue, int msbValue);
 
-   void process_control();
-   void process_threadunsafe_operations();
-   bool load_fx(bool initp, bool force_reload_all);
-   bool load_oscalgos();
+   void processControl();
+   void processThreadunsafeOperations();
+   bool loadFx(bool initp, bool force_reload_all);
+   bool loadOscalgos();
    bool load_fx_needed;
-   void play_voice(int scene, char channel, char key, char velocity, char detune);
-   void release_scene(int s);
-   int calc_channelmask(int channel, int key);
-   void softkill_voice(int scene);
-   void enforce_polylimit(int scene, int margin);
-   int get_non_ur_voices(int scene);
-   int get_non_released_voices(int scene);
+   void playVoice(int scene, char channel, char key, char velocity, char detune);
+   void releaseScene(int s);
+   int calculateChannelMask(int channel, int key);
+   void softkillVoice(int scene);
+   void enforcePolyphonyLimit(int scene, int margin);
+   int getNonUltrareleaseVoices(int scene);
+   int getNonReleasedVoices(int scene);
 
-   SurgeVoice* get_unused_voice(int scene);
-   void free_voice(SurgeVoice*);
+   SurgeVoice* getUnusedVoice(int scene);
+   void freeVoice(SurgeVoice*);
    SurgeVoice* voices_array[2][max_voices];
    unsigned int voices_usedby[2][max_voices]; // 0 indicates no user, 1 is scene A & 2 is scene B
 
@@ -121,17 +120,17 @@ public:
    void getParameterUnitW(long index, wchar_t* ptr);
    void getParameterStringW(long index, float value, wchar_t* ptr);
    //	unsigned int getParameterFlags (long index);
-   void load_raw(const void* data, int size, bool preset = false);
-   void load_patch(int id);
-   void increment_patch(int category, int patch);
+   void loadRaw(const void* data, int size, bool preset = false);
+   void loadPatch(int id);
+   void incrementPatch(int category, int patch);
 
    string getUserPatchDirectory();
    string getLegacyUserPatchDirectory();
 
-   void save_patch();
-   void update_usedstate();
-   void prepare_modsource_doprocess(int scenemask);
-   unsigned int save_raw(void** data);
+   void savePatch();
+   void updateUsedState();
+   void prepareModsourceDoProcess(int scenemask);
+   unsigned int saveRaw(void** data);
    // synth -> editor variables
    int polydisplay;
    bool refresh_editor, patch_loaded;
@@ -172,13 +171,13 @@ public:
    // hold pedal stuff
 
    list<int> holdbuffer[2];
-   void purge_holdbuffer(int scene);
+   void purgeHoldbuffer(int scene);
    quadr_osc sinus;
    int demo_counter = 0;
 
    QuadFilterChainState* FBQ[2];
 
-   // dessa måste kallas threadsafe, så låt private vara kvar
+   // these have to be thread-safe, so keep private
 private:
    PluginLayer* _parent = nullptr;
 

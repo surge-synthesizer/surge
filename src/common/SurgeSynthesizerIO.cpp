@@ -36,7 +36,7 @@ struct fxChunkSetCustom
    // char chunk[8]; // variable
 };
 
-void SurgeSynthesizer::increment_patch(int category, int patch)
+void SurgeSynthesizer::incrementPatch(int category, int patch)
 {
    if (category)
    {
@@ -56,7 +56,7 @@ void SurgeSynthesizer::increment_patch(int category, int patch)
          {
             // load_patch(i);
             patchid_queue = i;
-            process_threadunsafe_operations();
+            processThreadunsafeOperations();
             return;
          }
       }
@@ -67,12 +67,12 @@ void SurgeSynthesizer::increment_patch(int category, int patch)
       patchid_queue = patchid + patch;
       if (patchid_queue < 0)
          patchid_queue = storage.patch_list.size() - 1;
-      process_threadunsafe_operations();
+      processThreadunsafeOperations();
       return;
    }
 }
 
-void SurgeSynthesizer::load_patch(int id)
+void SurgeSynthesizer::loadPatch(int id)
 {
    if (id < 0)
       id = storage.patch_list.size() - 1;
@@ -110,7 +110,7 @@ void SurgeSynthesizer::load_patch(int id)
    current_category_id = e.category;
    storage.getPatch().name = e.name;
 
-   load_raw(data, cs, true);
+   loadRaw(data, cs, true);
    free(data);
 
    masterfade = 1.f;
@@ -124,10 +124,10 @@ void SurgeSynthesizer::load_patch(int id)
 #endif
 }
 
-void SurgeSynthesizer::load_raw(const void* data, int size, bool preset)
+void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
 {
    halt_engine = true;
-   all_notes_off();
+   allNotesOff();
    for (int s = 0; s < 2; s++)
       for (int i = 0; i < n_customcontrollers; i++)
          storage.getPatch().scene[s].modsources[ms_ctrl1 + i]->reset();
@@ -141,7 +141,7 @@ void SurgeSynthesizer::load_raw(const void* data, int size, bool preset)
       fx_reload[i] = true;
    }
 
-   load_fx(false, true);
+   loadFx(false, true);
 
    setParameter01(storage.getPatch().scene[0].f2_cutoff_is_offset.id,
                   storage.getPatch().scene[0].f2_cutoff_is_offset.get_value_f01());
@@ -190,7 +190,7 @@ bool askIfShouldOverwrite()
    return true;
 }
 
-void SurgeSynthesizer::save_patch()
+void SurgeSynthesizer::savePatch()
 {
    if (storage.getPatch().category.empty())
       storage.getPatch().category = "default";
@@ -262,7 +262,7 @@ void SurgeSynthesizer::save_patch()
    midiprogramshavechanged = true;
 }
 
-unsigned int SurgeSynthesizer::save_raw(void** data)
+unsigned int SurgeSynthesizer::saveRaw(void** data)
 {
    return storage.getPatch().save_patch(data);
 }
