@@ -1697,7 +1697,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
             ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, modsource));
             // control->setGhostValue(p->get_value_f01());
-            oscdisplay->setDirty();
+            oscdisplay->invalid();
             return 1;
          }
          else
@@ -1705,9 +1705,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             p->set_value_f01(p->get_default_value_f01());
             control->setValue(p->get_value_f01());
             if (oscdisplay && (p->ctrlgroup == 2))
-               oscdisplay->setDirty();
+               oscdisplay->invalid();
             if (lfodisplay && (p->ctrlgroup == 6))
-               lfodisplay->setDirty();
+               lfodisplay->invalid();
+            control->invalid();
             return 0;
          }
       }
