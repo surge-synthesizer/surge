@@ -35,7 +35,7 @@ private:
 public:
    SurgeGUIEditor(void* effect, SurgeSynthesizer* synth);
    virtual ~SurgeGUIEditor();
-   void idle() override;
+   void idle();
    bool queue_refresh;
    virtual void toggle_mod_editing();
 
@@ -76,7 +76,7 @@ private:
    int current_scene = 0, current_osc = 0, current_fx = 0;
    bool editor_open = false;
    bool mod_editor = false;
-   int modsource = 0, modsource_editor = 0;
+   modsources modsource = ms_original, modsource_editor = ms_original;
    unsigned int idleinc = 0;
    int fxbypass_tag = 0, resolink_tag = 0, f1resotag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0;

@@ -1365,7 +1365,7 @@ bool SurgeSynthesizer::loadOscalgos()
    return true;
 }
 
-bool SurgeSynthesizer::isValidModulation(long ptag, long modsource)
+bool SurgeSynthesizer::isValidModulation(long ptag, modsources modsource)
 {
    if (!modsource)
       return false;
@@ -1377,7 +1377,7 @@ bool SurgeSynthesizer::isValidModulation(long ptag, long modsource)
       return false;
    if (p->valtype != ((valtypes)vt_float))
       return false;
-   if (!p->per_voice_processing && !isScenelevel(modsource))
+   if (!p->per_voice_processing && !canModulateMonophonicTarget(modsource))
       return false;
    if ((modsource == ms_keytrack) && (p == &storage.getPatch().scene[0].pitch))
       return false;
@@ -1395,13 +1395,13 @@ bool SurgeSynthesizer::isValidModulation(long ptag, long modsource)
    return true;
 }
 
-ModulationRouting* SurgeSynthesizer::getModRouting(long ptag, long modsource)
+ModulationRouting* SurgeSynthesizer::getModRouting(long ptag, modsources modsource)
 {
    if (!isValidModulation(ptag, modsource))
       return 0;
 
    int scene = storage.getPatch().param_ptr[ptag]->scene;
-   vector<ModulationRouting>* modlist;
+   vector<ModulationRouting>* modlist = nullptr;
 
    if (!scene)
    {
@@ -1431,7 +1431,7 @@ ModulationRouting* SurgeSynthesizer::getModRouting(long ptag, long modsource)
    return 0;
 }
 
-float SurgeSynthesizer::getModDepth(long ptag, long modsource)
+float SurgeSynthesizer::getModDepth(long ptag, modsources modsource)
 {
    ModulationRouting* r = getModRouting(ptag, modsource);
    float d = 0.f;
@@ -1443,7 +1443,7 @@ float SurgeSynthesizer::getModDepth(long ptag, long modsource)
    return d;
 }
 
-bool SurgeSynthesizer::isActiveModulation(long ptag, long modsource)
+bool SurgeSynthesizer::isActiveModulation(long ptag, modsources modsource)
 {
    // if(!isValidModulation(ptag,modsource)) return false;
    if (getModRouting(ptag, modsource))
@@ -1566,13 +1566,13 @@ void SurgeSynthesizer::prepareModsourceDoProcess(int scenemask)
    }
 }
 
-bool SurgeSynthesizer::isModsourceUsed(long modsource)
+bool SurgeSynthesizer::isModsourceUsed(modsources modsource)
 {
    updateUsedState();
    return modsourceused[modsource];
 }
 
-float SurgeSynthesizer::getModulation(long ptag, long modsource)
+float SurgeSynthesizer::getModulation(long ptag, modsources modsource)
 {
    if (!isValidModulation(ptag, modsource))
       return 0.0f;
@@ -1613,7 +1613,7 @@ void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
    storage.CS_ModRouting.leave();
 }
 
-void SurgeSynthesizer::clearModulation(long ptag, long modsource)
+void SurgeSynthesizer::clearModulation(long ptag, modsources modsource)
 {
    if (!isValidModulation(ptag, modsource))
       return;
@@ -1623,10 +1623,7 @@ void SurgeSynthesizer::clearModulation(long ptag, long modsource)
 
    if (!scene)
    {
-      if (isScenelevel(modsource))
-         modlist = &storage.getPatch().modulation_global;
-      else
-         return;
+      modlist = &storage.getPatch().modulation_global;
    }
    else
    {
@@ -1653,7 +1650,7 @@ void SurgeSynthesizer::clearModulation(long ptag, long modsource)
    }
 }
 
-bool SurgeSynthesizer::setModulation(long ptag, long modsource, float val)
+bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
 {
    if (!isValidModulation(ptag, modsource))
       return false;
@@ -1664,10 +1661,7 @@ bool SurgeSynthesizer::setModulation(long ptag, long modsource, float val)
 
    if (!scene)
    {
-      if (isScenelevel(modsource))
-         modlist = &storage.getPatch().modulation_global;
-      else
-         return false;
+      modlist = &storage.getPatch().modulation_global;
    }
    else
    {
@@ -2063,8 +2057,8 @@ void SurgeSynthesizer::processControl()
       {
          if (storage.getPatch().scene[s].modsource_doprocess[ms_modwheel])
             storage.getPatch().scene[s].modsources[ms_modwheel]->process_block();
-         /*if(storage.getPatch().scene[s].modsource_doprocess[ms_aftertouch])
-                 storage.getPatch().scene[s].modsources[ms_aftertouch]->process_block();*/
+         if (storage.getPatch().scene[s].modsource_doprocess[ms_aftertouch])
+            storage.getPatch().scene[s].modsources[ms_aftertouch]->process_block();
          storage.getPatch().scene[s].modsources[ms_pitchbend]->process_block();
          for (int i = 0; i < n_customcontrollers; i++)
          {

@@ -156,11 +156,12 @@ void SurgeGUIEditor::idle()
          if (ptag >= 0)
          {
             synth->storage.CS_ModRouting.enter();
+
             for (int i = 1; i < n_modsources; i++)
             {
                ((CModulationSourceButton*)gui_modsrc[i])
-                   ->update_rt_vals(synth->isActiveModulation(ptag, i), 0,
-                                    synth->isModsourceUsed(i));
+                   ->update_rt_vals(synth->isActiveModulation(ptag, (modsources)i), 0,
+                                    synth->isModsourceUsed((modsources)i));
             }
             synth->storage.CS_ModRouting.leave();
          }
@@ -171,7 +172,7 @@ void SurgeGUIEditor::idle()
          for (int i = 1; i < n_modsources; i++)
          {
             ((CModulationSourceButton*)gui_modsrc[i])
-                ->update_rt_vals(false, 0, synth->isModsourceUsed(i));
+                ->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
          }
          synth->storage.CS_ModRouting.leave();
       }
@@ -428,7 +429,7 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
    return true; // visible by default
 }
 
-CRect positionForModulationGrid(int entry)
+CRect positionForModulationGrid(modsources entry)
 {
    const int width = isCustomController(entry) ? 75 : 64;
    CRect r(2, 1, width, 14 + 1);
@@ -487,33 +488,34 @@ void SurgeGUIEditor::openOrRecreateEditor()
    int rws = 15;
    for (int k = 1; k < n_modsources; k++)
    {
-      CRect r = positionForModulationGrid(k);
+      modsources ms = (modsources)k;
+      CRect r = positionForModulationGrid(ms);
 
       int state = 0;
-      if (k == modsource)
+      if (ms == modsource)
          state = mod_editor ? 2 : 1;
-      if (k == modsource_editor)
+      if (ms == modsource_editor)
          state |= 4;
 
-      gui_modsrc[k] = new CModulationSourceButton(r, this, tag_mod_source0 + k, state, k);
-      ((CModulationSourceButton*)gui_modsrc[k])
-          ->update_rt_vals(false, 0, synth->isModsourceUsed(k));
-      if ((k >= ms_ctrl1) && (k <= ms_ctrl8))
+      gui_modsrc[ms] = new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms);
+      ((CModulationSourceButton*)gui_modsrc[ms])
+          ->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
+      if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
       {
-         ((CModulationSourceButton*)gui_modsrc[k])
-             ->setlabel(synth->storage.getPatch().CustomControllerLabel[k - ms_ctrl1]);
-         ((CModulationSourceButton*)gui_modsrc[k])->set_ismeta(true);
-         ((CModulationSourceButton*)gui_modsrc[k])
-             ->setBipolar(synth->storage.getPatch().scene[0].modsources[k]->is_bipolar());
-         gui_modsrc[k]->setValue(
-             ((ControllerModulationSource*)synth->storage.getPatch().scene[0].modsources[k])
+         ((CModulationSourceButton*)gui_modsrc[ms])
+             ->setlabel(synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
+         ((CModulationSourceButton*)gui_modsrc[ms])->set_ismeta(true);
+         ((CModulationSourceButton*)gui_modsrc[ms])
+             ->setBipolar(synth->storage.getPatch().scene[0].modsources[ms]->is_bipolar());
+         gui_modsrc[ms]->setValue(
+             ((ControllerModulationSource*)synth->storage.getPatch().scene[0].modsources[ms])
                  ->get_target01());
       }
       else
       {
-         ((CModulationSourceButton*)gui_modsrc[k])->setlabel(modsource_abberations_button[k]);
+         ((CModulationSourceButton*)gui_modsrc[ms])->setlabel(modsource_abberations_button[ms]);
       }
-      frame->addView(gui_modsrc[k]);
+      frame->addView(gui_modsrc[ms]);
    }
 
    /*// Comments
@@ -1339,7 +1341,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
    {
-      int modsource = tag - tag_mod_source0;
+      modsources modsource = (modsources)(tag - tag_mod_source0);
 
       if (button & kRButton)
       {
@@ -1370,8 +1372,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          // ska borja pa 0, men borjade pa 1 innan.. kanske finns en anledning?
          for (int md = 0; md < n_total_md; md++)
          {
-            if (((md < n_global_params) || ((synth->storage.getPatch().param_ptr[md]->scene - 1) ==
-                                            synth->storage.getPatch().scene_active.val.i)) &&
+            auto activeScene = synth->storage.getPatch().scene_active.val.i;
+            Parameter* parameter = synth->storage.getPatch().param_ptr[md];
+
+            if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
                 synth->isActiveModulation(md, modsource))
             {
                if (first_destination)
@@ -1595,19 +1599,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int clear_ms[n_modsources];
          bool is_modulated = false;
          for (int ms = 1; ms < n_modsources; ms++)
-            if (synth->isActiveModulation(ptag, ms))
+            if (synth->isActiveModulation(ptag, (modsources)ms))
                n_ms++;
 
          if (n_ms)
          {
             contextMenu->addEntry("-", eid++);
-            for (int ms = 1; ms < n_modsources; ms++)
+            for (int k = 1; k < n_modsources; k++)
             {
+               modsources ms = (modsources)k;
                if (synth->isActiveModulation(ptag, ms))
                {
                   char tmptxt[256];
                   sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[ms],
-                          p->get_name(), synth->getModDepth(ptag, ms));
+                          p->get_name(), synth->getModDepth(ptag, (modsources)ms));
                   clear_ms[ms] = eid;
                   contextMenu->addEntry(tmptxt, eid++);
                }
@@ -1643,7 +1648,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             {
                for (int ms = 1; ms < n_modsources; ms++)
                {
-                  synth->clearModulation(ptag, ms);
+                  synth->clearModulation(ptag, (modsources)ms);
                }
                refresh_mod();
             }
@@ -1680,7 +1685,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                {
                   if (clear_ms[ms] == command)
                   {
-                     synth->clearModulation(ptag, ms);
+                     synth->clearModulation(ptag, (modsources)ms);
                      refresh_mod();
                   }
                }
@@ -1742,7 +1747,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       else
       {
          int state = ((CModulationSourceButton*)control)->get_state();
-         int newsource = tag - tag_mod_source0;
+         modsources newsource = (modsources)(tag - tag_mod_source0);
          long buttons = 0; // context->getMouseButtons(); // temp fix vstgui 3.5
          bool ciep =
              ((CModulationSourceButton*)control)->click_is_editpart && (newsource >= ms_lfo1);
@@ -2061,8 +2066,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
               fb_wide);
       param[i]->setDirty();
    }
-   if (tag ==
-       fxbypass_tag) // still do the normal operation, that's why it's outside the switch-statement
+   if (tag == fxbypass_tag) // still do the normal operation, that's why it's outside the
+                            // switch-statement
    {
       if (ccfxconf)
          ((CEffectSettings*)ccfxconf)->set_bypass(synth->storage.getPatch().fx_bypass.val.i);

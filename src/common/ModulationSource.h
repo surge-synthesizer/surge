@@ -108,40 +108,45 @@ const int modsource_grid_xy[n_modsources][2] = {
     {6, 4}                                                            // Timbre
 };
 
-inline bool isScenelevel(int ms)
+inline bool isScenelevel(modsources ms)
 {
    return ((ms <= ms_ctrl8) || ((ms >= ms_slfo1) && (ms <= ms_slfo6))) && (ms != ms_velocity) &&
           (ms != ms_keytrack) && (ms != ms_polyaftertouch) && (ms != ms_timbre) &&
           (ms != ms_aftertouch);
 }
 
-inline bool isCustomController(int ms)
+inline bool canModulateMonophonicTarget(modsources ms)
+{
+   return isScenelevel(ms) || ms == ms_aftertouch;
+}
+
+inline bool isCustomController(modsources ms)
 {
    return (ms >= ms_ctrl1) && (ms <= ms_ctrl8);
 }
 
-inline bool isEnvelope(int ms)
+inline bool isEnvelope(modsources ms)
 {
    return (ms == ms_ampeg) || (ms == ms_filtereg);
 }
 
-inline bool isLFO(int ms)
+inline bool isLFO(modsources ms)
 {
    return (ms >= ms_lfo1) && (ms <= ms_slfo6);
 }
 
-inline bool canModulateModulators(int ms)
+inline bool canModulateModulators(modsources ms)
 {
    return /*(ms <= ms_ctrl8)&&*/ (ms != ms_ampeg) &&
           (ms != ms_filtereg); //&&(ms!=ms_velocity)&&(ms!=ms_keytrack)&&(ms!=ms_polyaftertouch);
 }
 
-inline bool isVoiceModulator(int ms)
+inline bool isVoiceModulator(modsources ms)
 {
    return !((ms >= ms_slfo1) && (ms <= ms_slfo6));
 }
 
-inline bool canModulateVoiceModulators(int ms)
+inline bool canModulateVoiceModulators(modsources ms)
 {
    return (ms <= ms_ctrl8) || ms == ms_timbre;
 }

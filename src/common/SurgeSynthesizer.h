@@ -98,15 +98,15 @@ public:
    void updateDisplay();
    // bool setParameter (long index, float value);
    //	float getParameter (long index);
-   bool isValidModulation(long ptag, long modsource);
-   bool isActiveModulation(long ptag, long modsource);
-   bool isModsourceUsed(long modsource);
+   bool isValidModulation(long ptag, modsources modsource);
+   bool isActiveModulation(long ptag, modsources modsource);
+   bool isModsourceUsed(modsources modsource);
    bool isModDestUsed(long moddest);
-   ModulationRouting* getModRouting(long ptag, long modsource);
-   bool setModulation(long ptag, long modsource, float value);
-   float getModulation(long ptag, long modsource);
-   float getModDepth(long ptag, long modsource);
-   void clearModulation(long ptag, long modsource);
+   ModulationRouting* getModRouting(long ptag, modsources modsource);
+   bool setModulation(long ptag, modsources modsource, float value);
+   float getModulation(long ptag, modsources modsource);
+   float getModDepth(long ptag, modsources modsource);
+   void clearModulation(long ptag, modsources modsource);
    void clear_osc_modulation(
        int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
    int remapExternalApiToInternalId(unsigned int x) override;

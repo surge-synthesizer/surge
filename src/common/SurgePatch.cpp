@@ -1003,7 +1003,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
                if (sceneId != 0)
                {
-                  if (isScenelevel(modsource))
+                  if (isScenelevel((modsources)modsource))
                      modlist = &scene[sceneId - 1].modulation_scene;
                   else
                      modlist = &scene[sceneId - 1].modulation_voice;
