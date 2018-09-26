@@ -1265,7 +1265,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          frame->addView(contextMenu); // add to frame
          contextMenu->setDirty();
-         contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
+         contextMenu->popup();
          // pParent->looseFocus(pContext);
          int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
@@ -1316,8 +1316,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          frame->addView(contextMenu); // add to frame
          contextMenu->setDirty();
-         contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
-         // pParent->looseFocus(pContext);
+         contextMenu->popup();
          int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
@@ -1449,8 +1448,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          frame->addView(contextMenu); // add to frame
          contextMenu->setDirty();
-         contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
-         // pParent->looseFocus(pContext);
+         contextMenu->popup();
          int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
@@ -1623,10 +1621,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
 
          frame->addView(contextMenu); // add to frame
-         contextMenu->setDirty();
-         contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
-
-         // pParent->looseFocus(pContext);
+         contextMenu->popup();
 
          int command = contextMenu->getLastResult();
          if (command >= 0)
