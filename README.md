@@ -16,6 +16,8 @@ The codebase was migrated from before an unfinished 1.6 release which improves o
 
 It currently only builds on windows, but getting it to build on macOS again & Linux should be doable with moderate effort.
 
+[Releases are available here](https://github.com/kurasu/surge/releases)
+
 ## Preparation
 
 First you need to grab all submodules (needed to get the VST3SDK)
@@ -30,6 +32,7 @@ The [VST3SDK](https://github.com/steinbergmedia/vst3sdk) hosted by Steinberg on 
 
 Prerequisites
 
+* [Git](https://git-scm.com/downloads)
 * [Premake 5](https://premake.github.io/download.html#v5) for generating project files
 * [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
