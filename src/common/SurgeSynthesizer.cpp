@@ -41,7 +41,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    demo_counter = 10;
 
    memset(fx, 0, sizeof(void*) * 8);
-   srand((unsigned)time(NULL));
+   srand((unsigned)time(nullptr));
    memset(storage.getPatch().scenedata[0], 0, sizeof(pdata) * n_scene_params);
    memset(storage.getPatch().scenedata[1], 0, sizeof(pdata) * n_scene_params);
    memset(storage.getPatch().globaldata, 0, sizeof(pdata) * n_global_params);
@@ -1035,7 +1035,7 @@ ControllerModulationSource* SurgeSynthesizer::ControlInterpolator(int Id)
    int Index = GetControlInterpolatorIndex(Id);
 
    if (Index < 0)
-      return NULL;
+      return nullptr;
 
    return &mControlInterpolator[Index];
 }
@@ -1065,7 +1065,7 @@ ControllerModulationSource* SurgeSynthesizer::AddControlInterpolator(int Id, boo
       return &mControlInterpolator[Index];
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -2257,8 +2257,8 @@ void SurgeSynthesizer::process()
    }
 
    list<SurgeVoice*>::iterator iter;
-   play_scene[0] = (voices[0].size() > 0);
-   play_scene[1] = (voices[1].size() > 0);
+   play_scene[0] = (!voices[0].empty());
+   play_scene[1] = (!voices[1].empty());
 
    int FBentry[2];
    for (int s = 0; s < 2; s++)

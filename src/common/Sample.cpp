@@ -12,7 +12,7 @@
 Sample::Sample()
 {
    sample_loaded = false;
-   sample_data = 0;
+   sample_data = nullptr;
    refcount = 1;
 }
 

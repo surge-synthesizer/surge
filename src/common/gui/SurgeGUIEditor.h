@@ -30,12 +30,12 @@ using namespace std;
 class SurgeGUIEditor : public EditorType, public IControlListener, public IKeyboardHook
 {
 private:
-   typedef EditorType super;
+   using super = EditorType;
 
 public:
    SurgeGUIEditor(void* effect, SurgeSynthesizer* synth);
    virtual ~SurgeGUIEditor();
-   virtual void idle();
+   void idle() override;
    bool queue_refresh;
    virtual void toggle_mod_editing();
 
@@ -43,28 +43,28 @@ public:
    virtual void endEdit(long index);
 
 #if !TARGET_VST3
-   virtual bool open(void* parent);
+   bool open(void* parent) override;
 #else
    virtual bool PLUGIN_API open(void* parent, const PlatformType& platformType = kDefaultNative);
 #endif
 
-   virtual void close();
+   void close() override;
 
 protected:
-   virtual int32_t onKeyDown(const VstKeyCode& code,
-                             CFrame* frame); ///< should return 1 if no further key down processing
-                                             ///< should apply, otherwise -1
-   virtual int32_t onKeyUp(const VstKeyCode& code,
-                           CFrame* frame); ///< should return 1 if no further key up processing
-                                           ///< should apply, otherwise -1
+   int32_t onKeyDown(const VstKeyCode& code,
+                     CFrame* frame) override; ///< should return 1 if no further key down processing
+                                              ///< should apply, otherwise -1
+   int32_t onKeyUp(const VstKeyCode& code,
+                   CFrame* frame) override; ///< should return 1 if no further key up processing
+                                            ///< should apply, otherwise -1
 
    virtual void setParameter(long index, float value);
 
    // listener class
-   virtual void valueChanged(CControl* control);
-   virtual int32_t controlModifierClicked(CControl* pControl, CButtonState button);
-   virtual void controlBeginEdit(CControl* pControl);
-   virtual void controlEndEdit(CControl* pControl);
+   void valueChanged(CControl* control) override;
+   int32_t controlModifierClicked(CControl* pControl, CButtonState button) override;
+   void controlBeginEdit(CControl* pControl) override;
+   void controlEndEdit(CControl* pControl) override;
 
    void refresh_mod();
 
@@ -110,6 +110,6 @@ private:
    int clear_infoview_countdown = 0;
    float blinktimer = 0;
    bool blinkstate = false;
-   void* _effect = 0;
+   void* _effect = nullptr;
    CVSTGUITimer* _idleTimer = nullptr;
 };

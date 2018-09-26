@@ -31,60 +31,60 @@ public:
    // AudioEffect overrides:
    //------------------------------------------------------------------------
    /** Called at first after constructor */
-   tresult PLUGIN_API initialize(FUnknown* context);
+   tresult PLUGIN_API initialize(FUnknown* context) override;
 
    /** Called at the end before destructor */
-   tresult PLUGIN_API terminate();
+   tresult PLUGIN_API terminate() override;
 
    /** Switch the Plug-in on/off */
-   tresult PLUGIN_API setActive(TBool state);
+   tresult PLUGIN_API setActive(TBool state) override;
 
-   tresult PLUGIN_API setProcessing(TBool state);
+   tresult PLUGIN_API setProcessing(TBool state) override;
 
    /** Here we go...the process call */
-   tresult PLUGIN_API process(Steinberg::Vst::ProcessData& data);
+   tresult PLUGIN_API process(Steinberg::Vst::ProcessData& data) override;
 
    /** Will be called before any process call */
-   tresult PLUGIN_API setupProcessing(Steinberg::Vst::ProcessSetup& newSetup);
+   tresult PLUGIN_API setupProcessing(Steinberg::Vst::ProcessSetup& newSetup) override;
 
    /** Bus arrangement managing: in this example the 'again' will be mono for mono input/output and
     * stereo for other arrangements. */
    tresult PLUGIN_API setBusArrangements(Steinberg::Vst::SpeakerArrangement* inputs,
                                          int32 numIns,
                                          Steinberg::Vst::SpeakerArrangement* outputs,
-                                         int32 numOuts);
+                                         int32 numOuts) override;
 
    // Controller part
 
-   IPlugView* PLUGIN_API createView(const char* name);
+   IPlugView* PLUGIN_API createView(const char* name) override;
 
-   virtual void editorDestroyed(Steinberg::Vst::EditorView* editor)
+   void editorDestroyed(Steinberg::Vst::EditorView* editor) override
    {} // nothing to do here
-   virtual void editorAttached(Steinberg::Vst::EditorView* editor);
-   virtual void editorRemoved(Steinberg::Vst::EditorView* editor);
+   void editorAttached(Steinberg::Vst::EditorView* editor) override;
+   void editorRemoved(Steinberg::Vst::EditorView* editor) override;
 
    void addDependentView(SurgeGUIEditor* view);
    void removeDependentView(SurgeGUIEditor* view);
 
    // from IEditController
-   tresult PLUGIN_API setState(IBStream* state);
-   tresult PLUGIN_API getState(IBStream* state);
-   virtual int32 PLUGIN_API getParameterCount();
-   virtual tresult PLUGIN_API getParameterInfo(int32 paramIndex,
-                                               Steinberg::Vst::ParameterInfo& info);
-   virtual tresult PLUGIN_API getParamStringByValue(Steinberg::Vst::ParamID tag,
-                                                    Steinberg::Vst::ParamValue valueNormalized,
-                                                    Steinberg::Vst::String128 string);
-   virtual tresult PLUGIN_API getParamValueByString(Steinberg::Vst::ParamID tag,
-                                                    Steinberg::Vst::TChar* string,
-                                                    Steinberg::Vst::ParamValue& valueNormalized);
-   virtual Steinberg::Vst::ParamValue PLUGIN_API
-   normalizedParamToPlain(Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue valueNormalized);
-   virtual Steinberg::Vst::ParamValue PLUGIN_API
-   plainParamToNormalized(Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue plainValue);
-   virtual Steinberg::Vst::ParamValue PLUGIN_API getParamNormalized(Steinberg::Vst::ParamID tag);
-   virtual tresult PLUGIN_API setParamNormalized(Steinberg::Vst::ParamID tag,
-                                                 Steinberg::Vst::ParamValue value);
+   tresult PLUGIN_API setState(IBStream* state) override;
+   tresult PLUGIN_API getState(IBStream* state) override;
+   int32 PLUGIN_API getParameterCount() override;
+   tresult PLUGIN_API getParameterInfo(int32 paramIndex,
+                                       Steinberg::Vst::ParameterInfo& info) override;
+   tresult PLUGIN_API getParamStringByValue(Steinberg::Vst::ParamID tag,
+                                            Steinberg::Vst::ParamValue valueNormalized,
+                                            Steinberg::Vst::String128 string) override;
+   tresult PLUGIN_API getParamValueByString(Steinberg::Vst::ParamID tag,
+                                            Steinberg::Vst::TChar* string,
+                                            Steinberg::Vst::ParamValue& valueNormalized) override;
+   Steinberg::Vst::ParamValue PLUGIN_API normalizedParamToPlain(
+       Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue valueNormalized) override;
+   Steinberg::Vst::ParamValue PLUGIN_API plainParamToNormalized(
+       Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue plainValue) override;
+   Steinberg::Vst::ParamValue PLUGIN_API getParamNormalized(Steinberg::Vst::ParamID tag) override;
+   tresult PLUGIN_API setParamNormalized(Steinberg::Vst::ParamID tag,
+                                         Steinberg::Vst::ParamValue value) override;
 
    void processEvents(int sampleOffset, Steinberg::Vst::IEventList* noteEvents, int& eventIndex);
    void processEvent(const Steinberg::Vst::Event& e);

@@ -23,7 +23,7 @@ class SurgeVst3Processor;
 typedef SurgeVst3Processor PluginLayer;
 #else
 class Vst2PluginInstance;
-typedef Vst2PluginInstance PluginLayer;
+using PluginLayer = Vst2PluginInstance;
 #endif
 
 class SurgeSynthesizer : public AbstractSynthesizer
@@ -37,30 +37,30 @@ public:
 public:
    SurgeSynthesizer(PluginLayer* parent);
    virtual ~SurgeSynthesizer();
-   void playNote(char channel, char key, char velocity, char detune);
-   void releaseNote(char channel, char key, char velocity);
+   void playNote(char channel, char key, char velocity, char detune) override;
+   void releaseNote(char channel, char key, char velocity) override;
    void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity);
-   void pitchBend(char channel, int value);
-   void polyAftertouch(char channel, int key, int value);
-   void channelAftertouch(char channel, int value);
-   void channelController(char channel, int cc, int value);
-   void programChange(char channel, int value);
-   void allNotesOff();
-   void setSamplerate(float sr);
-   int getNumInputs()
+   void pitchBend(char channel, int value) override;
+   void polyAftertouch(char channel, int key, int value) override;
+   void channelAftertouch(char channel, int value) override;
+   void channelController(char channel, int cc, int value) override;
+   void programChange(char channel, int value) override;
+   void allNotesOff() override;
+   void setSamplerate(float sr) override;
+   int getNumInputs() override
    {
       return n_inputs;
    }
-   int getNumOutputs()
+   int getNumOutputs() override
    {
       return n_outputs;
    }
-   int getBlockSize()
+   int getBlockSize() override
    {
       return block_size;
    }
    int getMpeMainChannel(int voiceChannel, int key);
-   void process();
+   void process() override;
 
    PluginLayer* getParent();
 
@@ -109,18 +109,18 @@ public:
    void clearModulation(long ptag, long modsource);
    void clear_osc_modulation(
        int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
-   int remapExternalApiToInternalId(unsigned int x);
+   int remapExternalApiToInternalId(unsigned int x) override;
    int remapInternalToExternalApiId(unsigned int x);
-   void getParameterDisplay(long index, char* text);
-   void getParameterDisplay(long index, char* text, float x);
-   void getParameterName(long index, char* text);
-   void getParameterMeta(long index, parametermeta& pm);
+   void getParameterDisplay(long index, char* text) override;
+   void getParameterDisplay(long index, char* text, float x) override;
+   void getParameterName(long index, char* text) override;
+   void getParameterMeta(long index, parametermeta& pm) override;
    void getParameterNameW(long index, wchar_t* ptr);
    void getParameterShortNameW(long index, wchar_t* ptr);
    void getParameterUnitW(long index, wchar_t* ptr);
    void getParameterStringW(long index, float value, wchar_t* ptr);
    //	unsigned int getParameterFlags (long index);
-   void loadRaw(const void* data, int size, bool preset = false);
+   void loadRaw(const void* data, int size, bool preset = false) override;
    void loadPatch(int id);
    void incrementPatch(int category, int patch);
 
@@ -130,7 +130,7 @@ public:
    void savePatch();
    void updateUsedState();
    void prepareModsourceDoProcess(int scenemask);
-   unsigned int saveRaw(void** data);
+   unsigned int saveRaw(void** data) override;
    // synth -> editor variables
    int polydisplay;
    bool refresh_editor, patch_loaded;

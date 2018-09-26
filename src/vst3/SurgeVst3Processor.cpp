@@ -73,7 +73,7 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 
 void SurgeVst3Processor::createSurge()
 {
-   if (surgeInstance.get() != 0)
+   if (surgeInstance != nullptr)
    {
       return;
    }
@@ -134,7 +134,7 @@ tresult PLUGIN_API SurgeVst3Processor::getState(IBStream* state)
 {
    CHECK_INITIALIZED
 
-   void* data = 0; // surgeInstance keeps its data in an auto-ptr so we don't need to free it
+   void* data = nullptr; // surgeInstance keeps its data in an auto-ptr so we don't need to free it
    unsigned int stateSize = surgeInstance->saveRaw(&data);
    state->write(data, stateSize);
 
@@ -289,7 +289,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    surgeInstance->process_input = data.numInputs != 0;
 
-   float** in = surgeInstance->process_input ? data.inputs[0].channelBuffers32 : 0;
+   float** in = surgeInstance->process_input ? data.inputs[0].channelBuffers32 : nullptr;
    float** out = data.outputs[0].channelBuffers32;
 
    int i;
@@ -406,7 +406,7 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
 
       return editor;
    }
-   return 0;
+   return nullptr;
 }
 
 void SurgeVst3Processor::editorAttached(EditorView* editor)
@@ -563,7 +563,7 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
 
 SurgeSynthesizer* SurgeVst3Processor::getSurge()
 {
-   assert(surgeInstance.get() != NULL);
+   assert(surgeInstance.get() != nullptr);
 
    return surgeInstance.get();
 }

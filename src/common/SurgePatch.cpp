@@ -50,7 +50,7 @@ const int ff_revision = 10;
 SurgePatch::SurgePatch(SurgeStorage* storage)
 {
    this->storage = storage;
-   patchptr = 0;
+   patchptr = nullptr;
 
    int p_id = 0;
    {
@@ -555,15 +555,15 @@ void SurgePatch::init_default_values()
 
    for (int sc = 0; sc < 2; sc++)
    {
-      for (int osc = 0; osc < n_oscs; osc++)
+      for (auto& osc : scene[sc].osc)
       {
-         scene[sc].osc[osc].type.val.i = 0;
-         scene[sc].osc[osc].queue_xmldata = 0;
-         scene[sc].osc[osc].queue_type = -1;
-         scene[sc].osc[osc].keytrack.val.b = true;
-         scene[sc].osc[osc].retrigger.val.b = false;
-         scene[sc].osc[osc].wt.queue_id = 0;
-         scene[sc].osc[osc].wt.queue_filename[0] = 0;
+         osc.type.val.i = 0;
+         osc.queue_xmldata = 0;
+         osc.queue_type = -1;
+         osc.keytrack.val.b = true;
+         osc.retrigger.val.b = false;
+         osc.wt.queue_id = 0;
+         osc.wt.queue_filename[0] = 0;
       }
       scene[sc].fm_depth.val.f = -24.f;
       scene[sc].portamento.val.f = scene[sc].portamento.val_min.f;
@@ -693,18 +693,18 @@ void SurgePatch::update_controls(bool init,
                                  void* init_osc) // init_osc is the pointer to the data structure of
                                                  // a particular osc to be reinitialized
 {
-   for (int sc = 0; sc < 2; sc++)
+   for (auto& sc : scene)
    {
       for (int osc = 0; osc < n_oscs; osc++)
       {
          for (int i = 0; i < n_osc_params; i++)
-            scene[sc].osc[osc].p[i].set_type(ct_none);
+            sc.osc[osc].p[i].set_type(ct_none);
 
-         Oscillator* t_osc = spawn_osc(scene[sc].osc[osc].type.val.i, 0, &scene[sc].osc[osc], 0);
+         Oscillator* t_osc = spawn_osc(sc.osc[osc].type.val.i, nullptr, &sc.osc[osc], nullptr);
          if (t_osc)
          {
             t_osc->init_ctrltypes();
-            if (init || (init_osc == &scene[sc].osc[osc]))
+            if (init || (init_osc == &sc.osc[osc]))
                t_osc->init_default_values();
             _aligned_free(t_osc);
          }
@@ -876,7 +876,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       char* temp = (char*)malloc(datasize + 1);
       memcpy(temp, data, datasize);
       *(temp + datasize) = 0;
-      doc.Parse(temp, 0, TIXML_ENCODING_LEGACY);
+      doc.Parse(temp, nullptr, TIXML_ENCODING_LEGACY);
       free(temp);
    }
 
@@ -887,8 +887,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    scene[1].modulation_voice.clear();
    modulation_global.clear();
 
-   for (int i = 0; i < 8; i++)
-      fx[i].type.val.i = fxt_off;
+   for (auto& i : fx)
+      i.type.val.i = fxt_off;
 
    TiXmlElement* patch = doc.FirstChild("patch")->ToElement();
    if (!patch)
@@ -1063,21 +1063,21 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (revision < 3)
    {
-      for (int sc = 0; sc < 2; sc++)
+      for (auto& sc : scene)
       {
-         for (int u = 0; u < 2; u++)
+         for (auto& u : sc.filterunit)
          {
-            switch (scene[sc].filterunit[u].type.val.i)
+            switch (u.type.val.i)
             {
             case fut_lpmoog:
-               scene[sc].filterunit[u].subtype.val.i = 3;
+               u.subtype.val.i = 3;
                break;
             case fut_comb:
-               scene[sc].filterunit[u].subtype.val.i = 1;
+               u.subtype.val.i = 1;
                break;
             case fut_SNH: // SNH replaced comb_neg in rev 4
-               scene[sc].filterunit[u].type.val.i = fut_comb;
-               scene[sc].filterunit[u].subtype.val.i = 3;
+               u.type.val.i = fut_comb;
+               u.subtype.val.i = 3;
                break;
             }
          }
@@ -1086,14 +1086,14 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (revision == 3)
    {
-      for (int sc = 0; sc < 2; sc++)
+      for (auto& sc : scene)
       {
-         for (int u = 0; u < 2; u++)
+         for (auto& u : sc.filterunit)
          {
-            if (scene[sc].filterunit[u].type.val.i == fut_SNH) // misc replaced comb_neg in rev 4
+            if (u.type.val.i == fut_SNH) // misc replaced comb_neg in rev 4
             {
-               scene[sc].filterunit[u].type.val.i = fut_comb;
-               scene[sc].filterunit[u].subtype.val.i += 2;
+               u.type.val.i = fut_comb;
+               u.subtype.val.i += 2;
             }
          }
       }
@@ -1101,34 +1101,30 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (revision < 5)
    {
-      for (int sc = 0; sc < 2; sc++)
+      for (auto& sc : scene)
       {
-         if (scene[sc].filterblock_configuration.val.i == fb_stereo)
+         if (sc.filterblock_configuration.val.i == fb_stereo)
          {
-            scene[sc].pan.val.f = -1.f;
-            scene[sc].width.val.f = 1.f;
+            sc.pan.val.f = -1.f;
+            sc.width.val.f = 1.f;
          }
       }
    }
 
    if (revision < 6) // adjust resonance of older patches to match new range
    {
-      for (int sc = 0; sc < 2; sc++)
+      for (auto& sc : scene)
       {
-         for (int u = 0; u < 2; u++)
+         for (auto& u : sc.filterunit)
          {
-            if ((scene[sc].filterunit[u].type.val.i == fut_lp12) ||
-                (scene[sc].filterunit[u].type.val.i == fut_hp12) ||
-                (scene[sc].filterunit[u].type.val.i == fut_bp12))
+            if ((u.type.val.i == fut_lp12) || (u.type.val.i == fut_hp12) ||
+                (u.type.val.i == fut_bp12))
             {
-               scene[sc].filterunit[u].resonance.val.f =
-                   convert_v11_reso_to_v12_2P(scene[sc].filterunit[u].resonance.val.f);
+               u.resonance.val.f = convert_v11_reso_to_v12_2P(u.resonance.val.f);
             }
-            else if ((scene[sc].filterunit[u].type.val.i == fut_lp24) ||
-                     (scene[sc].filterunit[u].type.val.i == fut_hp24))
+            else if ((u.type.val.i == fut_lp24) || (u.type.val.i == fut_hp24))
             {
-               scene[sc].filterunit[u].resonance.val.f =
-                   convert_v11_reso_to_v12_4P(scene[sc].filterunit[u].resonance.val.f);
+               u.resonance.val.f = convert_v11_reso_to_v12_4P(u.resonance.val.f);
             }
          }
       }
@@ -1136,32 +1132,30 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (revision < 8)
    {
-      for (int sc = 0; sc < 2; sc++)
+      for (auto& sc : scene)
       {
          // set lp/hp filters to subtype 1
-         for (int u = 0; u < 2; u++)
+         for (auto& u : sc.filterunit)
          {
-            if ((scene[sc].filterunit[u].type.val.i == fut_lp12) ||
-                (scene[sc].filterunit[u].type.val.i == fut_hp12) ||
-                (scene[sc].filterunit[u].type.val.i == fut_bp12) ||
-                (scene[sc].filterunit[u].type.val.i == fut_lp24) ||
-                (scene[sc].filterunit[u].type.val.i == fut_hp24))
+            if ((u.type.val.i == fut_lp12) || (u.type.val.i == fut_hp12) ||
+                (u.type.val.i == fut_bp12) || (u.type.val.i == fut_lp24) ||
+                (u.type.val.i == fut_hp24))
             {
-               scene[sc].filterunit[u].subtype.val.i = (revision < 6) ? st_SVF : st_Rough;
+               u.subtype.val.i = (revision < 6) ? st_SVF : st_Rough;
             }
-            else if (scene[sc].filterunit[u].type.val.i == fut_br12)
+            else if (u.type.val.i == fut_br12)
             {
-               scene[sc].filterunit[u].subtype.val.i = 1;
+               u.subtype.val.i = 1;
             }
          }
 
          // convert pan2 to width
-         if (scene[sc].filterblock_configuration.val.i == fb_stereo)
+         if (sc.filterblock_configuration.val.i == fb_stereo)
          {
-            float pan1 = scene[sc].pan.val.f;
-            float pan2 = scene[sc].width.val.f;
-            scene[sc].pan.val.f = (pan1 + pan2) * 0.5f;
-            scene[sc].width.val.f = (pan2 - pan1) * 0.5f;
+            float pan1 = sc.pan.val.f;
+            float pan2 = sc.width.val.f;
+            sc.pan.val.f = (pan1 + pan2) * 0.5f;
+            sc.width.val.f = (pan2 - pan1) * 0.5f;
          }
       }
    }
@@ -1176,34 +1170,33 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    }
 
    // ensure that filtersubtype is a valid value
-   for (int sc = 0; sc < 2; sc++)
+   for (auto& sc : scene)
    {
       for (int u = 0; u < 2; u++)
       {
-         scene[sc].filterunit[0].subtype.val.i =
-             limit_range(scene[sc].filterunit[0].subtype.val.i, 0,
-                         max(0, fut_subcount[scene[sc].filterunit[0].type.val.i] - 1));
+         sc.filterunit[0].subtype.val.i =
+             limit_range(sc.filterunit[0].subtype.val.i, 0,
+                         max(0, fut_subcount[sc.filterunit[0].type.val.i] - 1));
       }
    }
 
    // reset stepsequences first
-   for (int sc = 0; sc < 2; sc++)
-      for (int l = 0; l < n_lfos; l++)
+   for (auto& stepsequence : stepsequences)
+      for (auto& l : stepsequence)
       {
          for (int i = 0; i < n_stepseqsteps; i++)
-
          {
-            stepsequences[sc][l].steps[i] = 0.f;
+            l.steps[i] = 0.f;
          }
-         stepsequences[sc][l].loop_start = 0;
-         stepsequences[sc][l].loop_end = 15;
-         stepsequences[sc][l].shuffle = 0.f;
+         l.loop_start = 0;
+         l.loop_end = 15;
+         l.shuffle = 0.f;
       }
    TiXmlElement* ss = patch->FirstChild("stepsequences")->ToElement();
    if (ss)
       p = ss->FirstChild("sequence")->ToElement();
    else
-      p = 0;
+      p = nullptr;
    while (p)
    {
       int sc, lfo;
@@ -1240,7 +1233,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    if (cc)
       p = cc->FirstChild("entry")->ToElement();
    else
-      p = 0;
+      p = nullptr;
    while (p)
    {
       int cont, sc;
