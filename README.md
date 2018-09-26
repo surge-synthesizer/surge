@@ -18,7 +18,7 @@ It currently only builds on windows, but getting it to build on macOS again & Li
 
 ## Preparation
 
-First you need to grab all submodules (needed to get the VST3DSK)
+First you need to grab all submodules (needed to get the VST3SDK)
 
 ```
 git submodule update --init --recursive
