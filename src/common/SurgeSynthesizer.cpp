@@ -1383,13 +1383,14 @@ bool SurgeSynthesizer::isValidModulation(long ptag, long modsource)
       return false;
    if ((modsource == ms_keytrack) && (p == &storage.getPatch().scene[1].pitch))
       return false;
-   if ((p->ctrlgroup == 6) && (p->ctrlgroup_entry >= ms_lfo1) && !canModulateModulators(modsource))
+   if ((p->ctrlgroup == cg_LFO) && (p->ctrlgroup_entry >= ms_lfo1) &&
+       !canModulateModulators(modsource))
       return false;
-   if ((p->ctrlgroup == 6) && (p->ctrlgroup_entry == modsource))
+   if ((p->ctrlgroup == cg_LFO) && (p->ctrlgroup_entry == modsource))
       return false;
-   if ((p->ctrlgroup == 6) && (p->ctrlgroup_entry >= ms_slfo1) && (!isScenelevel(modsource)))
+   if ((p->ctrlgroup == cg_LFO) && (p->ctrlgroup_entry >= ms_slfo1) && (!isScenelevel(modsource)))
       return false;
-   if ((p->ctrlgroup == 5) && !canModulateModulators(modsource))
+   if ((p->ctrlgroup == cg_ENV) && !canModulateModulators(modsource))
       return false;
    return true;
 }
@@ -1831,7 +1832,7 @@ void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t* ptr)
       int c = index - metaparam_offset;
       if (c >= num_metaparameters)
       {
-         swprintf(ptr, 128, L"C%i:ERROR");
+         swprintf(ptr, 128, L"C%i:ERROR", c + 1);
       }
       else
       {

@@ -86,9 +86,20 @@ enum ctrltypes
    num_ctrltypes,
 };
 
-enum ctrl_style
+enum ControlStyle
 {
    cs_off = 0,
+};
+
+enum ControlGroup
+{
+   cg_GLOBAL = 0,
+   cg_OSC = 2,
+   cg_MIX = 3,
+   cg_FILTER = 4,
+   cg_ENV = 5,
+   cg_LFO = 6,
+   cg_FX = 7,
 };
 
 class Parameter
@@ -103,7 +114,7 @@ public:
                      int posx,
                      int posy,
                      int scene = 0,
-                     int ctrlgroup = 0,
+                     ControlGroup ctrlgroup = cg_GLOBAL,
                      int ctrlgroup_entry = 0,
                      bool modulateable = true,
                      int ctrlstyle = cs_off);
@@ -140,10 +151,12 @@ public:
    int id;
    char name[namechars], dispname[namechars], name_storage[namechars], fullname[namechars];
    bool modulateable;
-   int valtype;
+   int valtype = 0;
    int scene; // 0 = patch, 1 = scene A, 2 = scene B
    int ctrltype, posx, posy, posy_offset;
-   int ctrlgroup, ctrlgroup_entry, ctrlstyle;
+   ControlGroup ctrlgroup = cg_GLOBAL;
+   int ctrlgroup_entry = 0;
+   int ctrlstyle = cs_off;
    int midictrl;
    int param_id_in_scene;
    bool affect_other_parameters;

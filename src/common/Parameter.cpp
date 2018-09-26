@@ -13,24 +13,24 @@ Parameter::Parameter()
    posy_offset = 0;
 }
 
-void get_prefix(char* txt, int ctrlgroup, int ctrlgroup_entry, int scene)
+void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
    char prefix[16];
    switch (ctrlgroup)
    {
-   case 2:
+   case cg_OSC:
       sprintf(prefix, "osc%i_", ctrlgroup_entry + 1);
       break;
-   case 4:
+   case cg_FILTER:
       sprintf(prefix, "filter%i_", ctrlgroup_entry + 1);
       break;
-   case 5:
+   case cg_ENV:
       sprintf(prefix, "env%i_", ctrlgroup_entry + 1);
       break;
    /*case 6:
            sprintf(prefix,"ms%i_",ctrlgroup_entry+1);
            break;*/
-   case 7:
+   case cg_FX:
       sprintf(prefix, "fx%i_", ctrlgroup_entry + 1);
       break;
    default:
@@ -45,25 +45,25 @@ void get_prefix(char* txt, int ctrlgroup, int ctrlgroup_entry, int scene)
       sprintf(txt, "%s", prefix);
 }
 
-void create_fullname(char* dn, char* fn, int ctrlgroup, int ctrlgroup_entry)
+void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_entry)
 {
    char prefix[16];
    bool useprefix = true;
    switch (ctrlgroup)
    {
-   case 2:
+   case cg_OSC:
       sprintf(prefix, "Osc%i", ctrlgroup_entry + 1);
       break;
-   case 4:
+   case cg_FILTER:
       sprintf(prefix, "F%i", ctrlgroup_entry + 1);
       break;
-   case 5:
+   case cg_ENV:
       if (ctrlgroup_entry)
          sprintf(prefix, "FEG");
       else
          sprintf(prefix, "AEG");
       break;
-   case 6:
+   case cg_LFO:
    {
       int a = ctrlgroup_entry + 1 - ms_lfo1;
       if (a > 6)
@@ -72,7 +72,7 @@ void create_fullname(char* dn, char* fn, int ctrlgroup, int ctrlgroup_entry)
          sprintf(prefix, "LFO%i", a);
    }
    break;
-   case 7:
+   case cg_FX:
       sprintf(prefix, "FX%i", ctrlgroup_entry + 1);
       break;
    default:
@@ -101,7 +101,7 @@ Parameter* Parameter::assign(int id,
                              int posx,
                              int posy,
                              int scene,
-                             int ctrlgroup,
+                             ControlGroup ctrlgroup,
                              int ctrlgroup_entry,
                              bool modulateable,
                              int ctrlstyle)
@@ -601,24 +601,19 @@ const char* Parameter::get_storage_name()
 
 char* Parameter::get_storage_value(char* str)
 {
-   switch (ctrltype)
+   switch (valtype)
    {
-      /*	case ct_amplitude:  // blir strul för effekter eftersom ctrltype inte är definierad
-         då värdet laddas sprintf(str,"%f",amp_to_db(val.f)); break;*/
-   default:
-      switch (valtype)
-      {
-      case vt_float:
-         sprintf(str, "%f", val.f);
-         break;
-      case vt_int:
-         sprintf(str, "%i", val.i);
-         break;
-      case vt_bool:
-         sprintf(str, "%i", val.b ? 1 : 0);
-         break;
-      };
-   }
+   case vt_float:
+      sprintf(str, "%f", val.f);
+      break;
+   case vt_int:
+      sprintf(str, "%i", val.i);
+      break;
+   case vt_bool:
+      sprintf(str, "%i", val.b ? 1 : 0);
+      break;
+   };
+
    return str;
 }
 

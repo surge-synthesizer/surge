@@ -71,7 +71,7 @@ protected:
 private:
    void openOrRecreateEditor();
    void close_editor();
-   bool is_visible(int subsec, int subsec_id);
+   bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
    SurgeSynthesizer* synth = nullptr;
    int current_scene = 0, current_osc = 0, current_fx = 0;
    bool editor_open = false;

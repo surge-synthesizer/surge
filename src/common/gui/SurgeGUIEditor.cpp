@@ -413,17 +413,18 @@ int32_t SurgeGUIEditor::onKeyUp(const VstKeyCode& keyCode, CFrame* frame)
    return -1;
 }
 
-bool SurgeGUIEditor::is_visible(int subsec, int subsec_id)
+bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGroupEntry)
 {
-   switch (subsec)
+   switch (controlGroup)
    {
-   case 2: // osc section, uses switching
-      return (subsec_id == current_osc);
-   case 6:
-      return (subsec_id == modsource_editor);
-   case 7:
-      return (subsec_id == current_fx);
+   case cg_OSC:
+      return (controlGroupEntry == current_osc);
+   case cg_LFO:
+      return (controlGroupEntry == modsource_editor);
+   case cg_FX:
+      return (controlGroupEntry == current_fx);
    }
+
    return true; // visible by default
 }
 
@@ -607,7 +608,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       Parameter* p = *iter;
 
       if ((p->posx != 0) && ((p->scene == (current_scene + 1)) || (p->scene == 0)) &&
-          is_visible(p->ctrlgroup, p->ctrlgroup_entry) && (p->ctrltype != ct_none))
+          isControlVisible(p->ctrlgroup, p->ctrlgroup_entry) && (p->ctrltype != ct_none))
       {
          long style = p->ctrlstyle;
          /*if(p->ctrlstyle == cs_hori) style = kHorizontal;
@@ -1704,9 +1705,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          {
             p->set_value_f01(p->get_default_value_f01());
             control->setValue(p->get_value_f01());
-            if (oscdisplay && (p->ctrlgroup == 2))
+            if (oscdisplay && (p->ctrlgroup == cg_OSC))
                oscdisplay->invalid();
-            if (lfodisplay && (p->ctrlgroup == 6))
+            if (lfodisplay && (p->ctrlgroup == cg_LFO))
                lfodisplay->invalid();
             control->invalid();
             return 0;
@@ -1955,9 +1956,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          char pname[256], pdisp[256], txt[256];
          bool modulate = false;
 
-         // if(modsource && mod_active && (p->valtype == (valtypes)vt_float) && !((p->ctrlgroup ==
-         // 6)&&(p->ctrlgroup_entry >= ms_lfo1)&&!can_modulate_modulators(modsource)) &&
-         // (p->modulateable))
          if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
              dynamic_cast<CSurgeSlider*>(control) != nullptr)
          {
@@ -2016,12 +2014,12 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                draw_infowindow(ptag, control, modulate);
             }
 
-            if (oscdisplay && ((p->ctrlgroup == 2) || (p->ctrltype == ct_character)))
+            if (oscdisplay && ((p->ctrlgroup == cg_OSC) || (p->ctrltype == ct_character)))
             {
                oscdisplay->setDirty();
                oscdisplay->invalid();
             }
-            if (lfodisplay && (p->ctrlgroup == 6))
+            if (lfodisplay && (p->ctrlgroup == cg_LFO))
             {
                lfodisplay->setDirty();
                lfodisplay->invalid();
