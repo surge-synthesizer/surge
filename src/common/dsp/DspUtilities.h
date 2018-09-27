@@ -2,6 +2,9 @@
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #pragma once
+
+#include <string.h>
+
 #include "globals.h"
 #include <vt_dsp/basic_dsp.h>
 #include <vt_dsp/halfratefilter.h>

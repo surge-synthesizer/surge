@@ -5,7 +5,7 @@
 
 #define SSE_STATE_FLAG 0x8040
 
-#if !MAC
+#if !MAC && !__linux__
 #include <CpuArchitecture.h>
 
 int SSE_VERSION;
@@ -15,7 +15,7 @@ int SSE_VERSION;
 
 void initDllGlobals()
 {
-#if !MAC // intel macs always support SSE2
+#if !MAC && !__linux__ // intel macs always support SSE2
    unsigned int arch = determine_support();
    // detect
    if (arch & ca_SSE3)

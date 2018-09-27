@@ -1,12 +1,17 @@
 #include "basic_dsp.h"
 #include <assert.h>
-#if MAC
+#include <math.h>
+#if MAC || __linux__
 #include <algorithm>
+#endif
+
+#if __linux__
+using namespace std;
 #endif
 
 int Min(int a, int b)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    return min(a, b);
 #else
    __asm
@@ -20,7 +25,7 @@ int Min(int a, int b)
 }
 int Max(int a, int b)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    return max(a, b);
 #else
    __asm
@@ -47,7 +52,7 @@ double Max(double a, double b)
 
 unsigned int Min(unsigned int a, unsigned int b)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    return min(a, b);
 #else
    __asm
@@ -61,7 +66,7 @@ unsigned int Min(unsigned int a, unsigned int b)
 }
 unsigned int Max(unsigned int a, unsigned int b)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    return max(a, b);
 #else
    __asm
@@ -76,7 +81,7 @@ unsigned int Max(unsigned int a, unsigned int b)
 
 int limit_range(int x, int l, int h)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    return max(min(x, h), l);
 #else
    __asm
@@ -94,7 +99,7 @@ int limit_range(int x, int l, int h)
 
 int Wrap(int x, int L, int H)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    // fattar inte vad den gör längre..
    // int diff = H - L;
    // if(x > H) x = x-H;
@@ -126,7 +131,7 @@ int Wrap(int x, int L, int H)
 
 int Sign(int x)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    return (x < 0) ? -1 : 1;
 #else
    __asm
@@ -142,7 +147,7 @@ int Sign(int x)
 
 unsigned int limit_range(unsigned int x, unsigned int l, unsigned int h)
 {
-#if _M_X64 || PPC
+#if _M_X64 || PPC || __linux__
    return max(min(x, h), l);
 #else
    __asm

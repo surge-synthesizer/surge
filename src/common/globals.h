@@ -16,6 +16,10 @@
 #include <xmmintrin.h>
 #endif
 
+#ifdef __linux__
+#include <immintrin.h>
+#endif
+
 using namespace std;
 
 const int namechars = 64;
@@ -30,6 +34,6 @@ const int ob_length_quad = ob_length >> 2;
 const float block_size_inv = (1.f / block_size);
 const float block_size_os_inv = (1.f / block_size_os);
 const int max_fb_comb = 2048; // m�ste vara 2^n
-#if !MAC
+#if !MAC && !__linux__
 extern int SSE_VERSION;
 #endif
