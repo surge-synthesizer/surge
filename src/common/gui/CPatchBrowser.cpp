@@ -52,7 +52,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
 
    CRect menurect(0, 0, 0, 0);
    menurect.offset(where.x, where.y);
-   COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, kNoDrawStyle);
+   COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, CParamDisplay::kNoDrawStyle);
 
    int main_e = 0;
    // if RMB is down, only show the current category
@@ -88,7 +88,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
                subMenu = contextMenu;
             else
             {
-               subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, kNoDrawStyle);
+               subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, CParamDisplay::kNoDrawStyle);
                subMenu->setNbItemsPerColumn(32);
             }
 
@@ -100,7 +100,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
                // sprintf(name,"%i. %s",p,storage->patch_list[p].name.c_str());
                sprintf(name, "%s", storage->patch_list[p].name.c_str());
 
-               auto actionItem = new CCommandMenuItem(name);
+               auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name,0));
                auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
 
                actionItem->setActions(action, nullptr);
