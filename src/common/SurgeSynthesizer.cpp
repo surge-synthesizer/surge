@@ -4,7 +4,7 @@
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
 #include <time.h>
-#if MAC
+#if MAC || __linux__
 #include <pthread.h>
 #else
 #include <windows.h>
@@ -726,8 +726,8 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
    int channelmask = ((channel == 0) ? 3 : 0) | ((channel == 1) ? 1 : 0) | ((channel == 2) ? 2 : 0);
 
    float fval = (float)value * (1.f / 127.f);
-   // spara all möjliga NRPN & RPN's i ett short-array.. blir endast 128kb eller nåt av av det
-   // ändå..
+   // spara all mï¿½jliga NRPN & RPN's i ett short-array.. blir endast 128kb eller nï¿½t av av det
+   // ï¿½ndï¿½..
    switch (cc)
    {
    case 0:
@@ -928,7 +928,7 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
          iter++;
    }
 
-   // note: måste remova entries när noter dödar sig själv auch
+   // note: mï¿½ste remova entries nï¿½r noter dï¿½dar sig sjï¿½lv auch
 }
 
 void SurgeSynthesizer::allNotesOff()
@@ -1903,7 +1903,7 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta& pm)
       pm.fdefault = 0.5f;
       pm.hide = false;
       pm.meta =
-          false; // ironiskt eftersom det Šr metaparameters, men dom pŒverkar inga andra sliders
+          false; // ironiskt eftersom det ï¿½r metaparameters, men dom pï¿½verkar inga andra sliders
       pm.expert = false;
       pm.clump = 1;
    }
@@ -1949,7 +1949,7 @@ float SurgeSynthesizer::valueToNormalized(long index, float value)
    return 0.f;
 }
 
-#if MAC
+#if MAC || __linux__
 void* loadPatchInBackgroundThread(void* sy)
 {
 #else
@@ -2140,7 +2140,7 @@ void SurgeSynthesizer::process()
          // spawn patch-loading thread
          halt_engine = true;
 
-#if MAC
+#if MAC || __linux__
          pthread_t thread;
          pthread_attr_t attributes;
          int ret;

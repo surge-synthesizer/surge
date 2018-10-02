@@ -1,5 +1,5 @@
 #pragma once
-#include <vt_dsp/endian.h>
+#include <vt_dsp/vt_dsp_endian.h>
 
 struct riffheader
 {
@@ -306,7 +306,7 @@ public:
 
    void invalid()
    {
-#if !MAC
+#if !MAC && !__linux__
       char txt[1024];
       sprintf(txt, "Invalid RIFF-structure.\n\nOffset: 0x%X", loc);
       MessageBox(::GetActiveWindow(), txt, "File I/O Error", MB_OK | MB_ICONERROR);

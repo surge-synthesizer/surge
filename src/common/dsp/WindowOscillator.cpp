@@ -2,8 +2,11 @@
 //	Copyright 2006 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #include "Oscillator.h"
-#if !MAC
+#if !MAC && !__linux__
 #include <intrin.h>
+#endif
+#ifdef __linux__
+#include <stdint.h>
 #endif
 
 /* wt2 osc */
@@ -96,6 +99,9 @@ __forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
 #elif _M_X64
    unsigned __int64 c = __emulu(a, b);
    return c >> 16;
+#elif __linux__
+   uint64_t c = (uint64_t)a * (uint64_t)b;
+   return c >> 16;
 #else
    unsigned int result;
    __asm
@@ -113,7 +119,7 @@ __forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
 #endif
 }
 
-#if MAC
+#if MAC || __linux__
 __forceinline bool _BitScanReverse(unsigned long* result, unsigned long bits)
 {
    *result = __builtin_ctz(bits);

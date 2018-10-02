@@ -176,7 +176,7 @@ void SurgeGUIEditor::idle()
          }
          synth->storage.CS_ModRouting.leave();
       }
-#if MAC
+#if MAC || __linux__
       idleinc++;
       if (idleinc > 15)
       {
@@ -1904,6 +1904,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                                      CFSTR("Saving patches isn't supported in the demo version of "
                                            "Surge. (including sequencer recall)"),
                                      CFSTR("Ok"), 0, 0, &responseFlags);
+#elif __linux__
+      printf("Implement me\n");
 #else
       MessageBox(::GetActiveWindow(),
                  L"Saving patches isn't supported in the demo version of Surge. (including "

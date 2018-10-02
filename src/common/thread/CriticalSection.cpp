@@ -1,4 +1,7 @@
 #include "CriticalSection.h"
+
+#if !__linux__
+
 #include "assert.h"
 
 CriticalSection::CriticalSection()
@@ -46,3 +49,5 @@ void CriticalSection::leave()
    LeaveCriticalSection(&cs);
 #endif
 }
+
+#endif

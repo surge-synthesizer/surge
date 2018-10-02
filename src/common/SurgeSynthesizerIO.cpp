@@ -4,8 +4,12 @@
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
 #include <time.h>
-#include <vt_dsp/endian.h>
+#include <vt_dsp/vt_dsp_endian.h>
+#ifdef __linux__
+#include <experimental/filesystem>
+#else
 #include <filesystem.h>
+#endif
 #include <fstream>
 #include <iterator>
 
@@ -153,7 +157,7 @@ void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
    refresh_editor = true;
 }
 
-#if MAC
+#if MAC || __linux__
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
@@ -164,7 +168,7 @@ string SurgeSynthesizer::getUserPatchDirectory()
 }
 string SurgeSynthesizer::getLegacyUserPatchDirectory()
 {
-#if MAC
+#if MAC || __linux__
    return storage.datapath + "patches_user/";
 #else
    return storage.datapath + "patches_user\\";
@@ -181,6 +185,8 @@ bool askIfShouldOverwrite()
                                   CFSTR("Yes"), CFSTR("No"), 0, &responseFlags);
    if ((responseFlags & 0x3) != kCFUserNotificationDefaultResponse)
       return false;
+#elif __linux__
+   printf("Implement me\n");
 #else
    if (MessageBox(::GetActiveWindow(), "The file already exist, do you wish to overwrite it?",
                   "Overwrite?", MB_YESNO | MB_ICONQUESTION) != IDYES)

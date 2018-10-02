@@ -17,7 +17,12 @@ using namespace std;
 #endif
 #include <tinyxml.h>
 
+#if __linux
+#include <experimental/filesystem>
+#else
 #include <filesystem.h>
+#endif
+
 #include <fstream>
 #include <iterator>
 

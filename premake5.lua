@@ -58,6 +58,36 @@ if (os.istarget("macosx")) then
 
    platforms { "x64" }
 
+elseif (os.istarget("linux")) then
+
+	flags { "StaticRuntime" }
+	vectorextensions "SSE2"
+	
+	defines
+	{ 
+		"_MM_ALIGN16=__attribute__((aligned(16)))",
+		"__forceinline=inline",
+        		"forceinline=inline",
+		"_aligned_malloc(x,a)=malloc(x)",
+		"_aligned_free(x)=free(x)",
+		"stricmp=strcasecmp",
+		"SSE_VERSION=3",
+                "__cdecl="
+        }
+    
+    links 
+	{
+	}
+
+   defines { "WINDOWS=0" }
+   
+   buildoptions { "-std=c++17", "-I/home/kjetil/SDKs/VST_SDK/VST2_SDK" }
+   links { }
+   buildoptions {  }
+   linkoptions {  }
+
+   platforms { "x64" }
+
 elseif (os.istarget("windows")) then
 
    toolset "v141"
@@ -174,6 +204,47 @@ function plugincommon()
 			"QuartzCore.framework",
 		}
 
+	elseif (os.istarget("linux")) then
+
+		-- pchheader "src/common/precompiled.h" --
+		-- pchsource "src/common/precompiled.cpp" --
+		
+		buildoptions {
+			"-Wno-unused-variable",
+                        "`pkg-config gtkmm-3.0 --cflags`",
+                        "-std=c++14"
+		}
+
+		files
+		{
+			"src/linux/*.mm",
+			"src/linux/**.cpp",
+			"src/linux/**.h",
+--			"libs/vst/*.mm", --
+			VSTGUI .. "vstgui_linux.cpp",
+--			VSTGUI .. "vstgui_uidescription_linux.cpp", --
+		}
+	
+		excludes {
+			VSTGUI .. "winfileselector.cpp",
+			VSTGUI .. "vstgui_ios.mm",
+			VSTGUI .. "vstgui_uidescription_ios.mm",
+		}
+	
+		includedirs 
+		{
+			
+		}
+
+	   links { 
+			"pthread",
+                        "stdc++fs"
+           
+		}
+
+           linkoptions {
+                        "`pkg-config gtkmm-3.0 --libs`",
+           }
 	elseif (os.istarget("windows")) then
 
 		pchheader "precompiled.h"
