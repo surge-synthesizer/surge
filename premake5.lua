@@ -112,6 +112,7 @@ function plugincommon()
 		"libs/xml/tinyxml.cpp",
 		"libs/xml/tinyxmlerror.cpp",
 		"libs/xml/tinyxmlparser.cpp",
+        "libs/filesystem/filesystem.cpp",
 		"src/common/vt_dsp/*.cpp",
 		"src/common/thread/*.cpp",
 		"vst3sdk/pluginterfaces/base/*.cpp",
@@ -131,6 +132,12 @@ function plugincommon()
 		buildoptions {
 			"-Wno-unused-variable"
 		}
+
+        sysincludedirs {
+            "src/**",
+            "libs/**",
+            "vst3sdk/vstgui4",
+        }
 
 		files
 		{
@@ -222,6 +229,7 @@ plugincommon()
 files {
     "src/vst2/**.cpp",
     "src/vst2/**.h",
+    "VST_SDK_2.4/public.sdk/source/vst2.x/**.cpp",
     "vst3sdk/public.sdk/source/vst2.x/**.cpp",
     VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
     }
@@ -232,6 +240,7 @@ excludes {
 
 includedirs {
    "src/vst2",
+   "VST_SDK_2.4",
    "vst3sdk"
 }
 

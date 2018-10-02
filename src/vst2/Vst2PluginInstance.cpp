@@ -7,7 +7,7 @@
 #include "SurgeGUIEditor.h"
 //#include "sub3_editor2.h"
 #include <float.h>
-#include <public.sdk/source/vst2.x/aeffeditor.h>
+#include "public.sdk/source/vst2.x/aeffeditor.h"
 
 #if PPC
 // For Carbon, use CoreServices.h instead
