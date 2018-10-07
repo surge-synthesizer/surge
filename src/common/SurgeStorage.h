@@ -19,6 +19,8 @@ using namespace std;
 
 #if __linux
 #include <experimental/filesystem>
+#elif __APPLE__
+#include <filesystem.h>
 #else
 #include <filesystem>
 #endif
