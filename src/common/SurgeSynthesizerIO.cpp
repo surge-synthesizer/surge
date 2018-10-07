@@ -7,8 +7,10 @@
 #include <vt_dsp/vt_dsp_endian.h>
 #ifdef __linux__
 #include <experimental/filesystem>
-#else
+#elif __APPLE__
 #include <filesystem.h>
+#else
+#include <filesystem>
 #endif
 #include <fstream>
 #include <iterator>

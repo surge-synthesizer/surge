@@ -19,8 +19,10 @@ using namespace std;
 
 #if __linux
 #include <experimental/filesystem>
-#else
+#elif __APPLE__
 #include <filesystem.h>
+#else
+#include <filesystem>
 #endif
 
 #include <fstream>
