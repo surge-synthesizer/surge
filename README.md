@@ -20,13 +20,11 @@ It currently only builds on windows, but getting it to build on macOS again & Li
 
 ## Preparation
 
-First you need to grab all submodules (needed to get the VST3SDK)
+First you need to grab all git submodules (needed to get the VST SDKs)
 
 ```
 git submodule update --init --recursive
 ```
-
-The [VST3SDK](https://github.com/steinbergmedia/vst3sdk) hosted by Steinberg on github doesn't contain the VST2 SDK bits, so if you want to build the VST2 version you need to [download](https://www.steinberg.net/vst3sdk) that one manually and add those missing files, they have a script that copies the copying for you.
 
 ## Building - Windows
 

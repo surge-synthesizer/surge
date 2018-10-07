@@ -1,6 +1,6 @@
 [submodule "vst3sdk"]
 	path = vst3sdk
 	url = https://github.com/steinbergmedia/vst3sdk.git
-[submodule "VST_SDK_2.4"]
-	path = VST_SDK_2.4
+[submodule "vst24sdk"]
+	path = vst24sdk
 	url = https://github.com/R-Tur/VST_SDK_2.4

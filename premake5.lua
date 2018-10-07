@@ -300,7 +300,7 @@ plugincommon()
 files {
     "src/vst2/**.cpp",
     "src/vst2/**.h",
-    "VST_SDK_2.4/public.sdk/source/vst2.x/**.cpp",
+    "vst24sdk/public.sdk/source/vst2.x/**.cpp",
     "vst3sdk/public.sdk/source/vst2.x/**.cpp",
     VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
     }
@@ -311,7 +311,7 @@ excludes {
 
 includedirs {
    "src/vst2",
-   "VST_SDK_2.4",
+   "vst24sdk",
    "vst3sdk"
 }
 
