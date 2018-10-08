@@ -3,7 +3,7 @@
 
 std::map<int, VSTGUI::CBitmap*> bitmap_registry;
 
-static int refCount = 0;
+static atomic<int> refCount = 0;
 
 SurgeBitmaps::SurgeBitmaps()
 {
@@ -38,7 +38,6 @@ SurgeBitmaps::SurgeBitmaps()
       addEntry(IDB_UNIPOLAR);
       addEntry(IDB_CHARACTER);
       addEntry(IDB_BUTTON_STORE);
-      addEntry(IDB_BUTTON_ABOUT);
       addEntry(IDB_MODSRC_BG);
       addEntry(IDB_FXCONF);
       addEntry(IDB_FXCONF_SYMBOLS);
@@ -71,8 +70,9 @@ SurgeBitmaps::~SurgeBitmaps()
 
 void SurgeBitmaps::addEntry(int id)
 {
-   VSTGUI::CBitmap* bitmap = new VSTGUI::CBitmap(CResourceDescription(id));
+   assert(bitmap_registry.find(id) == bitmap_registry.end());
 
+   VSTGUI::CBitmap* bitmap = new VSTGUI::CBitmap(CResourceDescription(id));
    bitmap_registry[id] = bitmap;
 }
 

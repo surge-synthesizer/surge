@@ -20,10 +20,9 @@ void ImageDataReleaseFunc(void* info, void* data, size_t size)
 }
 #endif
 
-CDIBitmap::CDIBitmap(long width, long height) : _width(width), _height(height)
-{
-   _bitmap = new CBitmap(width, height);
-}
+CDIBitmap::CDIBitmap(long width, long height)
+    : _bitmap(new CBitmap(width, height), false), _width(width), _height(height)
+{}
 
 void CDIBitmap::draw(CDrawContext* context, CRect& rect, const CPoint& offset)
 {

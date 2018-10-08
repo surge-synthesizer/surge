@@ -134,6 +134,7 @@ SurgeGUIEditor::~SurgeGUIEditor()
    {
       getFrame()->unregisterKeyboardHook(this);
       frame->removeAll(true);
+      frame->forget();
    }
 }
 
@@ -1065,7 +1066,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    frame->addView(infowindow);
 
    CRect wsize(0, 0, window_size_x, window_size_y);
-   aboutbox = new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint);
+   aboutbox = new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, getSurgeBitmap(IDB_ABOUT));
    frame->addView(aboutbox);
 
    CRect dialogSize(148, 8, 598, 8 + 182);
