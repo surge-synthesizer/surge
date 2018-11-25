@@ -20,6 +20,7 @@ It currently only builds on windows, but getting it to build on macOS again & Li
 [Releases are available here](https://github.com/kurasu/surge/releases)
 
 Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
+Development Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=33&t=511921)
 
 ## Preparation
 
@@ -58,7 +59,7 @@ To build the installer open the file installer_win/surge.iss using Inno Setup.
 
 Start by grabbing `premake5` from https://premake.github.io . 
 
-Copy `premake5` to `/usr/local/bin/premake5`
+Copy `premake5` to `/usr/local/bin`
 
 Clone the Surge repo by typing 
 
@@ -66,7 +67,7 @@ Clone the Surge repo by typing
 git clone https://github.com/kurasu/surge.git
 ```
 
-After that, get all the submodules referenced by the Surge repo by typing
+After that, go into the Surge folder and get all the submodules referenced by the Surge repo by typing
 
 ```
 git submodule update --init --recursive
@@ -76,3 +77,4 @@ Now, boot up Xcode and open the project. Let it do the indexing/processing.
 
 Choose `Update to recommended settings" for `surge-au`, `surge-vst2` and `surge-vst3`. Click on `Perform Changes`.
 
+After which "Here there be dragons" - Please, could anyone take this further?
