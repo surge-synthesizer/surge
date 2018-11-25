@@ -19,6 +19,8 @@ It currently only builds on windows, but getting it to build on macOS again & Li
 
 [Releases are available here](https://github.com/kurasu/surge/releases)
 
+Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
+
 ## Preparation
 
 First you need to grab all git submodules (needed to get the VST SDKs)
