@@ -81,7 +81,7 @@ elseif (os.istarget("linux")) then
 
    defines { "WINDOWS=0" }
    
-   buildoptions { "-std=c++17", "-I/home/kjetil/SDKs/VST_SDK/VST2_SDK" }
+   buildoptions { "-std=c++17" }
    links { }
    buildoptions {  }
    linkoptions {  }
