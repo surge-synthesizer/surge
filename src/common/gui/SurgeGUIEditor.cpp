@@ -1250,7 +1250,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          frame->localToFrame(where);
          menuRect.offset(where.x, where.y);
 
-         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, CParamDisplay::kNoDrawStyle);
          int eid = 0;
          int id_copy = -1, id_copymod = -1, id_paste = -1;
          char txt[256];
@@ -1303,7 +1303,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, 2);
          frame->localToFrame(where);
          menuRect.offset(where.x, where.y);
-         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, CParamDisplay::kNoDrawStyle);
          int eid = 0;
          int id_copy = -1, id_paste = -1;
          char txt[256];
@@ -1352,7 +1352,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          frame->localToFrame(where);
          menuRect.offset(where.x, where.y);
          COptionMenu* contextMenu =
-             new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
+             new COptionMenu(menuRect, 0, 0, 0, 0, CParamDisplay::kNoDrawStyle | COptionMenu::kMultipleCheckStyle);
          int eid = 0;
          int id_clearallmr = -1, id_learnctrl = -1, id_clearctrl = -1, id_bipolar = -1,
              id_copy = -1, id_paste = -1, id_rename = -1;
@@ -1545,7 +1545,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          menuRect.offset(where.x, where.y);
          frame->localToFrame(where);
          COptionMenu* contextMenu =
-             new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
+             new COptionMenu(menuRect, 0, 0, 0, 0, CParamDisplay::kNoDrawStyle | COptionMenu::kMultipleCheckStyle);
          int eid = 0;
          int id_temposync = -1, id_clearallmr = -1, id_extendrange = -1, id_learnctrl = -1,
              id_clearctrl = -1, id_absolute = -1;

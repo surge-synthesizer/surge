@@ -10,7 +10,7 @@ VSTGUI = "vst3sdk/vstgui4/vstgui/";
 
 defines
 { 
-  "VSTGUI_ENABLE_DEPRECATED_METHODS=0"
+  "VSTGUI_ENABLE_DEPRECATED_METHODS=1"
 }
 
 floatingpoint "Fast"
@@ -81,10 +81,15 @@ elseif (os.istarget("linux")) then
 
    defines { "WINDOWS=0" }
    
-   buildoptions { "-std=c++17" }
+   buildoptions {
+                "-std=c++17",
+                "`pkg-config --cflags freetype2 xcb xcb-cursor xkbcommon-x11 cairo`",
+                }
    links { }
    buildoptions {  }
-   linkoptions {  }
+   linkoptions {
+                "`pkg-config --libs freetype2 xcb xcb-cursor xkbcommon-x11 cairo`",
+   }
 
    platforms { "x64" }
 
@@ -211,8 +216,6 @@ function plugincommon()
 		
 		buildoptions {
 			"-Wno-unused-variable",
-                        "`pkg-config gtkmm-3.0 --cflags`",
-                        "-std=c++14"
 		}
 
 		files
@@ -243,7 +246,6 @@ function plugincommon()
 		}
 
            linkoptions {
-                        "`pkg-config gtkmm-3.0 --libs`",
            }
 	elseif (os.istarget("windows")) then
 
