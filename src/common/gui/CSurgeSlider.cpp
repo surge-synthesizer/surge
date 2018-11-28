@@ -45,7 +45,7 @@ CSurgeSlider::CSurgeSlider(
 
    CRect size;
 
-   if (style & CSlider::kHorizontal)
+   if (style & kHorizontal)
    {
       pTray = getSurgeBitmap(IDB_FADERH_BG);
       pHandle = getSurgeBitmap(IDB_FADERH_HANDLE);
@@ -61,8 +61,8 @@ CSurgeSlider::CSurgeSlider(
    }
    else
    {
-      if (!(style & CSlider::kTop))
-         style |= CSlider::kBottom; // CSlider::kBottom by default
+      if (!(style & kTop))
+         style |= kBottom; // kBottom by default
 
       pTray = getSurgeBitmap(IDB_FADERV_BG);
       pHandle = getSurgeBitmap(IDB_FADERV_HANDLE);
@@ -128,7 +128,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
    CRect size = getViewSize();
 
-   if (style & CSlider::kHorizontal)
+   if (style & kHorizontal)
    {
       if (style & kSemitone)
          typey = 2;
@@ -157,14 +157,14 @@ void CSurgeSlider::draw(CDrawContext* dc)
    {
       // CRect trect(0,0,pTray->getWidth(),pTray->getHeight());
       CRect trect;
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          trect = CRect(0, 0, 133, 14);
       else
          trect = CRect(0, 0, 16, 75);
 
       trect.offset(size.left, size.top);
 
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          trect.offset(2, 5);
       else
          trect.offset(2, 2);
@@ -176,7 +176,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          alpha = 0x80;
       }
 
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          pTray->draw(dc, trect, CPoint(133 * typex, 14 * typey), alpha);
       else
          pTray->draw(dc, trect, CPoint(16 * typex, 75 * typey), alpha);
@@ -185,12 +185,12 @@ void CSurgeSlider::draw(CDrawContext* dc)
       return;
 
    CRect headrect;
-   if (style & CSlider::kHorizontal)
+   if (style & kHorizontal)
       headrect = CRect(0, 0, 28, 24);
    else
       headrect = CRect(0, 0, 24, 28);
 
-   if (label[0] && (style & CSlider::kHorizontal))
+   if (label[0] && (style & kHorizontal))
    {
       CRect trect(0, 0, 111, 13);
       trect.offset(size.left, size.top);
@@ -217,15 +217,15 @@ void CSurgeSlider::draw(CDrawContext* dc)
       CRect hrect(headrect);
       handle_rect = handle_rect_orig;
       hrect.offset(size.left, size.top);
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          hrect.offset(0, 3);
 
       float dispv = limit_range(qdvalue, 0.f, 1.f);
-      if (style & CSlider::kRight || style & CSlider::kBottom)
+      if (style & kRight || style & kBottom)
          dispv = 1 - dispv;
       dispv *= range;
 
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
       {
          hrect.offset(dispv + 1, 0);
          handle_rect.offset(dispv + 1, 0);
@@ -236,7 +236,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          handle_rect.offset(1, dispv);
       }
 
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0x7f : 0xff);
       else
          pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0x7f : 0xff);
@@ -248,7 +248,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       CRect hrect(headrect);
       handle_rect = handle_rect_orig;
       hrect.offset(size.left, size.top);
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          hrect.offset(0, 3);
 
       float dispv;
@@ -257,11 +257,11 @@ void CSurgeSlider::draw(CDrawContext* dc)
       else
          dispv = limit_range(modval + value, 0.f, 1.f);
 
-      if (style & CSlider::kRight || style & CSlider::kBottom)
+      if (style & kRight || style & kBottom)
          dispv = 1 - dispv;
       dispv *= range;
 
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
       {
          hrect.offset(dispv + 1, 0);
          handle_rect.offset(dispv + 1, 0);
@@ -272,7 +272,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          handle_rect.offset(1, dispv);
       }
 
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), 0xff);
       else
          pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), 0xff);
@@ -384,12 +384,12 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
       CPoint p;
 
       double diff;
-      if (style & CSlider::kHorizontal)
+      if (style & kHorizontal)
          diff = dx;
       else
          diff = dy;
 
-      if (style & CSlider::kRight || style & CSlider::kBottom)
+      if (style & kRight || style & kBottom)
          diff = -diff;
 
       *edit_value += diff / (float)range;

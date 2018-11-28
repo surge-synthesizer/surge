@@ -257,12 +257,12 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
       {
          CRect menurect(0, 0, 0, 0);
          menurect.offset(where.x, where.y);
-         COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, CParamDisplay::kNoDrawStyle);
+         COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, kNoDrawStyle);
 
          for (int c = 0; c < storage->wt_category.size(); c++)
          {
             char name[namechars];
-            COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, CParamDisplay::kNoDrawStyle);
+            COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, kNoDrawStyle);
             subMenu->setNbItemsPerColumn(32);
             int sub = 0;
             int p;
@@ -271,7 +271,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
                if (storage->wt_list[p].category == c)
                {
                   sprintf(name, "%s", storage->wt_list[p].name.c_str());
-                  auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name, 0));
+                  auto actionItem = new CCommandMenuItem(name);
                   auto action = [this, p](CCommandMenuItem* item) { this->loadWavetable(p); };
 
                   actionItem->setActions(action, nullptr);
