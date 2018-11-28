@@ -11,26 +11,24 @@ CAboutBox::CAboutBox(const CRect& size,
                      long tag,
                      CBitmap* background,
                      CRect& toDisplay,
-                     CPoint& offset)
+                     CPoint& offset,
+                     CBitmap* aboutBitmap)
     : CControl(size, listener, tag, background), toDisplay(toDisplay), offset(offset)
 {
-   CBM_about = new CBitmap(CResourceDescription(IDB_ABOUT));
+   _aboutBitmap = aboutBitmap;
    boxHide(false);
 }
 
 //------------------------------------------------------------------------
 CAboutBox::~CAboutBox()
-{
-   CBM_about->forget();
-}
+{}
 
 //------------------------------------------------------------------------
 void CAboutBox::draw(CDrawContext* pContext)
 {
    if (value)
    {
-      // CBM_about->draw(pContext,size);
-      CBM_about->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
+      _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
    }
    else
    {
@@ -76,35 +74,7 @@ CAboutBox::onMouseDown(CPoint& where,
       return kMouseEventNotHandled;
 
    boxHide();
-   /*
-           CFrame *frame = getFrame();
-           if(!frame) return kMouseEventNotHandled;
 
-           value = !value;
-
-           if (value)
-           {
-                   if (frame->setModalView (this))
-                   {
-                           keepSize = size;
-                           size = toDisplay;
-                           mouseableArea = size;
-                           if (listener)
-                                   listener->valueChanged (this);
-                   }
-                   invalid();
-           }
-           else
-           {
-                   frame->setModalView (NULL);
-
-                   invalid();
-                   size = keepSize;
-                   mouseableArea = size;
-                   if (listener)
-                           listener->valueChanged (this);
-                                   
-           }*/
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
@@ -120,7 +90,6 @@ void CAboutBox::unSplash()
       if (getFrame()->getModalView() == this)
       {
          getFrame()->setModalView(NULL);
-         // ctnvg		getFrame ()->redraw ();
       }
    }
 }

@@ -117,7 +117,7 @@ protected:
 
    int32 getParameterCountWithoutMappings();
 
-   unique_ptr<SurgeSynthesizer> surgeInstance;
+   std::unique_ptr<SurgeSynthesizer> surgeInstance;
    std::vector<SurgeGUIEditor*> viewsArray;
    int blockpos;
 

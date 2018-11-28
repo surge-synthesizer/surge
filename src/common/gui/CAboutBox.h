@@ -18,7 +18,8 @@ public:
              long tag,
              CBitmap* background,
              CRect& toDisplay,
-             CPoint& offset);
+             CPoint& offset,
+             CBitmap* aboutBitmap);
    virtual ~CAboutBox();
 
    virtual void draw(CDrawContext*);
@@ -38,6 +39,6 @@ protected:
    CRect toDisplay;
    CRect keepSize;
    CPoint offset;
-   CBitmap* CBM_about;
+   SharedPointer<CBitmap> _aboutBitmap;
    bool bvalue;
 };

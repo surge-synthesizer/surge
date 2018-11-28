@@ -7,7 +7,8 @@
 #include "SurgeGUIEditor.h"
 //#include "sub3_editor2.h"
 #include <float.h>
-#include <public.sdk/source/vst2.x/aeffeditor.h>
+#include "public.sdk/source/vst2.x/aeffeditor.h"
+#include "public.sdk/source/vst2.x/audioeffectx.h"
 
 #if PPC
 // For Carbon, use CoreServices.h instead
@@ -25,10 +26,41 @@
 using namespace std;
 
 //-------------------------------------------------------------------------------------------------------
+
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
    return new Vst2PluginInstance(audioMaster);
 }
+
+AEffect* VSTPluginMain(audioMasterCallback audioMaster)
+{
+   // Get VST Version of the Host
+   if (!audioMaster(0, audioMasterVersion, 0, 0, 0, 0))
+      return 0; // old version
+
+   // Create the AudioEffect
+   AudioEffect* effect = createEffectInstance(audioMaster);
+   if (!effect)
+      return 0;
+
+   // Return the VST AEffect structure
+   return effect->getAeffect();
+}
+
+#if WIN32
+#include <windows.h>
+void* hInstance;
+
+extern "C" {
+BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
+{
+   hInstance = hInst;
+   return 1;
+}
+} // extern "C"
+#elif __linux__
+namespace VSTGUI { void* soHandle = nullptr; }
+#endif
 
 //-------------------------------------------------------------------------------------------------------
 Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)

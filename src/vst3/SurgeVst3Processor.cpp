@@ -469,9 +469,9 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
 
    info.id = id;
 
-   surgeInstance->getParameterNameW(id, info.title);
-   surgeInstance->getParameterShortNameW(id, info.shortTitle);
-   surgeInstance->getParameterUnitW(id, info.units);
+   surgeInstance->getParameterNameW(id, reinterpret_cast<wchar_t *>(info.title));
+   surgeInstance->getParameterShortNameW(id, reinterpret_cast<wchar_t *>(info.shortTitle));
+   surgeInstance->getParameterUnitW(id, reinterpret_cast<wchar_t *>(info.units));
    info.stepCount = 0; // 1 = toggle,
    info.defaultNormalizedValue = meta.fdefault;
    info.unitId = 0; // meta.clump;
@@ -491,7 +491,7 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
       return kInvalidArgument;
    }
 
-   surgeInstance->getParameterStringW(tag, valueNormalized, string);
+   surgeInstance->getParameterStringW(tag, valueNormalized, reinterpret_cast<wchar_t *>(string));
 
    return kResultOk;
 }
