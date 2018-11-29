@@ -286,60 +286,65 @@ end
 
 -- VST2 PLUGIN --
 
-project "surge-vst2"
-kind "SharedLib"
-uuid "007990D5-2B46-481D-B38C-D83037CDF54B"
+local VST24SDK = os.getenv("VST2SDK_DIR")
 
-defines 
-{
-	"TARGET_VST2=1",
-}
+if VST24SDK then
 
-plugincommon()
+    project "surge-vst2"
+    kind "SharedLib"
+    uuid "007990D5-2B46-481D-B38C-D83037CDF54B"
 
-files {
-    "src/vst2/**.cpp",
-    "src/vst2/**.h",
-    "vst24sdk/public.sdk/source/vst2.x/**.cpp",
-    "vst3sdk/public.sdk/source/vst2.x/**.cpp",
-    VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
-    }
-
-excludes {
-    VSTGUI .. "plugguieditor.cpp",
-}
-
-includedirs {
-   "src/vst2",
-   "vst24sdk",
-   "vst3sdk"
-}
-
-configuration { "Debug" }
-targetdir "target/vst2/Debug"
-targetsuffix "-Debug"
-
-configuration { "Release" }
-targetdir "target/vst2/Release"
-
-configuration {}
-
-
-if (os.istarget("macosx")) then
-
-    targetname "Surge"
-    targetprefix ""
-    postbuildcommands { "./package-vst.sh" }
-    
-    files
+    defines
     {
-        "libs/vst/*.mm"
+        "TARGET_VST2=1",
     }
-	
-elseif (os.istarget("windows")) then
 
-    linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
+    plugincommon()
 
+    files {
+        "src/vst2/**.cpp",
+        "src/vst2/**.h",
+        VST24SDK .. "/public.sdk/source/vst2.x/**.cpp",
+        "vst3sdk/public.sdk/source/vst2.x/**.cpp",
+        VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
+        }
+
+    excludes {
+        VSTGUI .. "plugguieditor.cpp",
+    }
+
+    includedirs {
+       "src/vst2",
+       VST24SDK,
+       "vst3sdk"
+    }
+
+    configuration { "Debug" }
+    targetdir "target/vst2/Debug"
+    targetsuffix "-Debug"
+
+    configuration { "Release" }
+    targetdir "target/vst2/Release"
+
+    configuration {}
+
+
+    if (os.istarget("macosx")) then
+
+        targetname "Surge"
+        targetprefix ""
+        postbuildcommands { "./package-vst.sh" }
+
+        files
+        {
+            "libs/vst/*.mm"
+        }
+
+    elseif (os.istarget("windows")) then
+
+        linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
+
+    end
 end
 
 -- VST3 PLUGIN --

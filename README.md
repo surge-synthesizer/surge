@@ -24,7 +24,7 @@ Development Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewto
 
 ## Preparation
 
-First you need to grab all git submodules (needed to get the VST SDKs)
+First you need to grab all git submodules (needed to get the VST3 SDK)
 
 ```
 git submodule update --init --recursive
@@ -78,3 +78,7 @@ Now, boot up Xcode and open the project. Let it do the indexing/processing.
 Choose `Update to recommended settings" for `surge-au`, `surge-vst2` and `surge-vst3`. Click on `Perform Changes`.
 
 After which "Here there be dragons" - Please, could anyone take this further?
+
+## Building - VST2
+
+If you want to build VST2 versions of the plug-in, set the environment variable VST24SDK to the location of the SDK prior to building.
