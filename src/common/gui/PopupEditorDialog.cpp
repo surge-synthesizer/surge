@@ -139,4 +139,14 @@ void spawn_miniedit_text(char* c, int maxchars)
       strncpy(c, me.textdata, maxchars);
    }
 }
+#elif __linux__
+
+#include <stdio.h>
+
+void spawn_miniedit_text(char* c, int maxchars)
+{
+   // FIXME: Implement text edit popup on Linux.
+   fprintf(stderr, "%s: text edit popup is not implemented.\n", __func__);
+}
+
 #endif
