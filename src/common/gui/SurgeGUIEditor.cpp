@@ -126,7 +126,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 
    // ToolTipWnd = 0;
 
-#ifdef TARGET_VST3
+#if TARGET_VST3
    _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
 #endif
    zoom_callback = [](SurgeGUIEditor* f) {};
@@ -1149,14 +1149,14 @@ bool SurgeGUIEditor::open(void* parent)
 bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformType)
 #endif
 {
-#ifndef TARGET_VST3
+#if !TARGET_VST3
    // !!! always call this !!!
    super::open(parent);
 
    PlatformType platformType = kDefaultNative;
 #endif
 
-#ifdef TARGET_VST3
+#if TARGET_VST3
    _idleTimer->start();
 #endif
 
@@ -1181,11 +1181,11 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
 void SurgeGUIEditor::close()
 {
-#ifndef TARGET_VST3
+#if !TARGET_VST3
    super::close();
 #endif
 
-#ifdef TARGET_VST3
+#if TARGET_VST3
    _idleTimer->stop();
 #endif
 }
