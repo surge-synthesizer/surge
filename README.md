@@ -57,27 +57,43 @@ To build the installer open the file installer_win/surge.iss using Inno Setup.
 
 ## Building - OSX
 
-Start by grabbing `premake5` from https://premake.github.io . 
+This process expects that you have Xcode and Xcode Command Line Utilities installed.
 
-Copy `premake5` to `/usr/local/bin`
+Install `premake5` by downloading it from  https://premake.github.io. Unzip the package.
 
-Clone the Surge repo by typing 
+Launch the Terminal in the folder where `premake5` has been unzipped into and copy it to `/usr/local/bin`.
+
+```
+cp premake5 /usr/local/bin
+```
+ 
+Clone the Surge repo to a path of your choice.
 
 ```
 git clone https://github.com/kurasu/surge.git
 ```
 
-After that, go into the Surge folder and get all the submodules referenced by the Surge repo by typing
+Enter the Surge folder and use the following command to grab all the submodules referenced by Surge.
 
 ```
 git submodule update --init --recursive
 ```
 
-Now, boot up Xcode and open the project. Let it do the indexing/processing.
+Execute the Surge build-script.
 
-Choose `Update to recommended settings` for `surge-au`, `surge-vst2` and `surge-vst3`. Click on `Perform Changes`.
+```
+./build-osx.sh
+```
 
-After which "Here there be dragons" - Please, could anyone take this further?
+If you got Xcode-Select issues or are missing the Command Line Utilities, grab them.
+
+After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which takes a while.
+
+The `surge-vst3 project` will now warn you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
+
+The `surge-au project` will also prompt to `Update to recommended settings` & `Perform Changes`, so, perform the changes.
+
+After this we've reached the situation of "Here there be dragons" - Please, could anyone take this further?
 
 ## Building - VST2
 
