@@ -89,9 +89,11 @@ If you got Xcode-Select issues or are missing the Command Line Utilities, grab t
 
 After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which takes a while.
 
-The first errors you see can be fixed by choosing to `Update to recommended settings` for `surge-au` and `surge-vst3`. Click on `Perform Changes`.
+The `surge-vst3 project` will now warn you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
 
-After which "Here there be dragons" - Please, could anyone take this further?
+The `surge-au project` will also prompt to `Update to recommended settings` & `Perform Changes`, so, perform the changes.
+
+After this we've reached the situation of "Here there be dragons" - Please, could anyone take this further?
 
 ## Building - VST2
 
