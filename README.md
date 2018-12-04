@@ -75,7 +75,7 @@ git submodule update --init --recursive
 
 Now, boot up Xcode and open the project. Let it do the indexing/processing.
 
-Choose `Update to recommended settings" for `surge-au`, `surge-vst2` and `surge-vst3`. Click on `Perform Changes`.
+Choose `Update to recommended settings` for `surge-au`, `surge-vst2` and `surge-vst3`. Click on `Perform Changes`.
 
 After which "Here there be dragons" - Please, could anyone take this further?
 
