@@ -725,7 +725,7 @@ void SurgePatch::do_morph()
 #pragma pack(push, 1)
 struct patch_header
 {
-   unsigned int tag;
+   char tag[4];
    unsigned int xmlsize, wtsize[2][3];
 };
 #pragma pack(pop)
@@ -740,7 +740,7 @@ void SurgePatch::load_patch(const void* data, int datasize, bool preset)
    patch_header* ph = (patch_header*)data;
    ph->xmlsize = vt_read_int32LE(ph->xmlsize);
 
-   if ((int)ph->tag == vt_read_int32BE('sub3'))
+   if (!memcmp(ph->tag, "sub3", 4))
    {
       char* dr = (char*)data + sizeof(patch_header);
       load_xml(dr, ph->xmlsize, preset);
@@ -784,7 +784,8 @@ unsigned int SurgePatch::save_patch(void** data)
    // void **xmldata = new void*();
    void* xmldata = 0;
    patch_header header;
-   header.tag = vt_write_int32BE('sub3');
+
+   memcpy(header.tag, "sub3", 4);
    size_t xmlsize = save_xml(&xmldata);
    header.xmlsize = vt_write_int32LE(xmlsize);
    wt_header wth[2][n_oscs];
