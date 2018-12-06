@@ -360,7 +360,7 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
       fprintf(stderr, "%s: reading the wavetable header failed.\n",
               __func__);
 
-   if (wh.tag != vt_read_int32BE('vawt'))
+   if (memcmp(wh.tag, "vawt", 4))
    {
       fclose(f);
       return;
