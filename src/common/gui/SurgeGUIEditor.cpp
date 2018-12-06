@@ -1422,7 +1422,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (synth->storage.controllers[ccid] >= 0)
             {
                id_clearctrl = eid;
-               char txt4[256];
+               char txt4[128];
                decode_controllerid(txt4, synth->storage.controllers[ccid]);
                sprintf(txt, "Clear controller [currently %s]", txt4);
                contextMenu->addEntry(txt, eid++);
@@ -1551,7 +1551,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
              id_clearctrl = -1, id_absolute = -1;
          contextMenu->addEntry((char*)p->get_name(), eid++);
          contextMenu->addEntry("-", eid++);
-         char txt[256], txt2[256];
+         char txt[256], txt2[512];
          p->get_display(txt);
          sprintf(txt2, "Value: %s", txt);
          contextMenu->addEntry(txt2, eid++);
@@ -1590,7 +1590,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          if (p->midictrl >= 0)
          {
             id_clearctrl = eid;
-            char txt4[256];
+            char txt4[128];
             decode_controllerid(txt4, p->midictrl);
             sprintf(txt, "Clear controller [currently %s]", txt4);
             contextMenu->addEntry(txt, eid++);
@@ -1961,7 +1961,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       {
          Parameter* p = synth->storage.getPatch().param_ptr[ptag];
 
-         char pname[256], pdisp[256], txt[256];
+         char pname[256], pdisp[128], txt[128];
          bool modulate = false;
 
          if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
