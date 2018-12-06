@@ -137,3 +137,7 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 ```export VST2SDK_DIR=~/programming/VST_SDK_2.4```
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
+
+## References
+
+* IRC channel #surgesynth @ irc.freenode.net
