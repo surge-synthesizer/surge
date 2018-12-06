@@ -15,7 +15,7 @@ Parameter::Parameter()
 
 void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
-   char prefix[16];
+   char prefix[19];
    switch (ctrlgroup)
    {
    case cg_OSC:
@@ -34,7 +34,7 @@ void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
       sprintf(prefix, "fx%i_", ctrlgroup_entry + 1);
       break;
    default:
-      sprintf(prefix, "");
+      prefix[0] = '\0';
       break;
    };
    if (scene == 2)
@@ -76,7 +76,7 @@ void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_e
       sprintf(prefix, "FX%i", ctrlgroup_entry + 1);
       break;
    default:
-      sprintf(prefix, "");
+      prefix[0] = '\0';
       useprefix = false;
       break;
    };
