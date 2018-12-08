@@ -449,6 +449,7 @@ if (os.istarget("macosx")) then
 	links
 	{
 		"AudioToolbox.framework",
+		"AudioUnit.framework",		
 	}
 
 	files
