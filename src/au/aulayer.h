@@ -3,6 +3,8 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+#ifdef BUILD_AU_LAYER_IN_DYLIB
+
 #include "plugin.h"
 // #include "MusicDeviceBase.h"
 #include "surge_auversion.h"
@@ -151,4 +153,6 @@ extern CFAUPresetRef CFAUPresetCreate(CFAllocatorRef inAllocator, SInt32 inPrese
 extern CFAUPresetRef CFAUPresetRetain(CFAUPresetRef inPreset);
 extern void CFAUPresetRelease(CFAUPresetRef inPreset);
 extern const CFArrayCallBacks kCFAUPresetArrayCallBacks;
+
+#endif
 

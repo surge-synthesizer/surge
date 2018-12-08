@@ -1,3 +1,5 @@
+#ifdef BUILD_AULAYER_IN_DYLIB
+
 #include "aulayer.h"
 #include <gui/SurgeGUIEditor.h>
 #include <AudioToolbox/AudioUnitUtilities.h>
@@ -799,3 +801,5 @@ COMPONENT_ENTRY(VSTGUIAUView);
 #endif
 
 AUDIOCOMPONENT_ENTRY(AUBaseFactory, aulayer);
+
+#endif

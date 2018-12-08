@@ -1,5 +1,7 @@
 #include "aulayer.h"
 
+#ifdef BUILD_AULAYER_IN_DYLIB
+
 //-----------------------------------------------------------------------------
 // The following defines and implements CoreFoundation-like handling of 
 // an AUPreset container object:  CFAUPreset
@@ -280,4 +282,6 @@ const CFArrayCallBacks kAUPresetCFArrayCallbacks = {
 
 
 */
+
+#endif
 
