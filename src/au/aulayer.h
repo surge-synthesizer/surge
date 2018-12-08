@@ -4,9 +4,9 @@
 #pragma once
 
 #include "plugin.h"
-#include "MusicDeviceBase.h"
+// #include "MusicDeviceBase.h"
 #include "surge_auversion.h"
-#include "storage.h"
+#include "SurgeStorage.h"
 
 //-------------------------------------------------------------------------------------------------------
 const CFStringRef rawchunkname = CFSTR("VmbA_chunk");
