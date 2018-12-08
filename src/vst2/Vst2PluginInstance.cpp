@@ -58,6 +58,8 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID lpvReserved)
    return 1;
 }
 } // extern "C"
+#elif __linux__
+namespace VSTGUI { void* soHandle = nullptr; }
 #endif
 
 //-------------------------------------------------------------------------------------------------------
