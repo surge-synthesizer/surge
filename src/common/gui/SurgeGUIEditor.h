@@ -35,7 +35,7 @@ private:
 public:
    SurgeGUIEditor(void* effect, SurgeSynthesizer* synth);
    virtual ~SurgeGUIEditor();
-   void idle();
+   void idle() override;
    bool queue_refresh;
    virtual void toggle_mod_editing();
 
