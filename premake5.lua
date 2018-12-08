@@ -126,6 +126,7 @@ includedirs {
     "src/common/vt_dsp",
     "src/common/thread",
     "vst3sdk/vstgui4",
+    "vst3sdk",
 	"libs/"
 }
 
@@ -144,6 +145,8 @@ function plugincommon()
 		"libs/xml/tinyxmlerror.cpp",
 		"libs/xml/tinyxmlparser.cpp",
         "libs/filesystem/filesystem.cpp",
+                "libs/AUPublic/*.cpp",
+                "libs/PublicUtility/*.cpp", 
 		"src/common/vt_dsp/*.cpp",
 		"src/common/thread/*.cpp",
 		"vst3sdk/pluginterfaces/base/*.cpp",
