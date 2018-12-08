@@ -1,9 +1,10 @@
-#ifdef BUILD_AULAYER_IN_DYLIB
 
 #include "aulayer.h"
 #include <gui/SurgeGUIEditor.h>
 #include <AudioToolbox/AudioUnitUtilities.h>
 #include <AudioUnit/AudioUnitCarbonView.h>
+
+typedef SurgeSynthesizer sub3_synth;
 
 //----------------------------------------------------------------------------------------------------
 
@@ -498,7 +499,7 @@ ComponentResult aulayer::RestoreState(CFPropertyListRef	plist)
 		const UInt8 *p;		
 		p = CFDataGetBytePtr(data);
 		size_t psize = CFDataGetLength(data);		
-		plugin_instance->load_raw(p,psize,false);
+        plugin_instance->loadRaw(p,psize,false);
 	}
 	return noErr;
 }
@@ -517,7 +518,7 @@ ComponentResult	aulayer::SaveState(CFPropertyListRef *	plist)
 	
 	CFMutableDictionaryRef dict = (CFMutableDictionaryRef)*plist;
 	void* data;
-	CFIndex size = plugin_instance->save_raw(&data);
+    CFIndex size = plugin_instance->saveRaw(&data);
 	CFDataRef dataref = CFDataCreateWithBytesNoCopy(NULL, (const UInt8*) data, size, kCFAllocatorNull);
 	CFDictionarySetValue(dict, rawchunkname, dataref);
 	CFRelease (dataref);
@@ -541,14 +542,19 @@ ComponentResult	aulayer::GetPresets (CFArrayRef *outData) const
 	if (outData == NULL)
 		return noErr;
 	
-	sub3_synth *s = (sub3_synth*)plugin_instance;
+    // FIX THIS WHOLE THING
+    
+	/* sub3_synth *s = (sub3_synth*)plugin_instance;
 	UInt32 n_presets = s->storage.patch_list.size();
 	
 	CFMutableArrayRef newArray = CFArrayCreateMutable(kCFAllocatorDefault, n_presets, &kCFAUPresetArrayCallBacks);
 	if (newArray == NULL)
 		return coreFoundationUnknownErr;
-	
-	for (long i=0; i < n_presets; i++)
+	*/
+    
+	/*
+     FIXME - get this link error back and working
+     for (long i=0; i < n_presets; i++)
 	{
 		CFAUPresetRef newPreset = CFAUPresetCreate(kCFAllocatorDefault, i, CFStringCreateWithCString(NULL,s->storage.patch_list[i].name.c_str(), kCFStringEncodingUTF8));
 		if (newPreset != NULL)
@@ -557,8 +563,9 @@ ComponentResult	aulayer::GetPresets (CFArrayRef *outData) const
 			CFAUPresetRelease(newPreset);
 		}
 	}
-	
-	*outData = (CFArrayRef)newArray;
+	*/
+    
+	//*outData = (CFArrayRef)newArray;
 	return noErr;	
 }
 
@@ -570,7 +577,7 @@ OSStatus aulayer::NewFactoryPresetSet (const AUPreset & inNewFactoryPreset)
 	if(inNewFactoryPreset.presetNumber<0) return false;
 	sub3_synth *s = (sub3_synth*)plugin_instance;
 	s->patchid_queue = inNewFactoryPreset.presetNumber;
-	s->process_threadunsafe_operations();
+    s->processThreadunsafeOperations();
 	return true;
 }
 
@@ -801,5 +808,3 @@ COMPONENT_ENTRY(VSTGUIAUView);
 #endif
 
 AUDIOCOMPONENT_ENTRY(AUBaseFactory, aulayer);
-
-#endif
