@@ -126,6 +126,7 @@ includedirs {
     "src/common/vt_dsp",
     "src/common/thread",
     "vst3sdk/vstgui4",
+	"vst3sdk",
 	"libs/"
 }
 
