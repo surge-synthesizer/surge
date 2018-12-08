@@ -26,6 +26,12 @@ distribution.
 #define TIXML_USE_STL 1
 #endif
 
+#if USE_THIS_AND
+#define THIS_AND THIS_AND 
+#else
+#define THIS_AND 
+#endif
+
 
 #ifndef TINYXML_INCLUDED
 #define TINYXML_INCLUDED
@@ -603,19 +609,19 @@ public:
 	/// Returns true if this node has no children.
 	bool NoChildren() const						{ return !firstChild; }
 
-	const TiXmlDocument* ToDocument()	const		{ return ( this && type == DOCUMENT ) ? (const TiXmlDocument*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	const TiXmlElement*  ToElement() const			{ return ( this && type == ELEMENT  ) ? (const TiXmlElement*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	const TiXmlComment*  ToComment() const			{ return ( this && type == COMMENT  ) ? (const TiXmlComment*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	const TiXmlUnknown*  ToUnknown() const			{ return ( this && type == UNKNOWN  ) ? (const TiXmlUnknown*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	const TiXmlText*	   ToText()    const		{ return ( this && type == TEXT     ) ? (const TiXmlText*)     this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	const TiXmlDeclaration* ToDeclaration() const	{ return ( this && type == DECLARATION ) ? (const TiXmlDeclaration*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	const TiXmlDocument* ToDocument()	const		{ return ( THIS_AND  type == DOCUMENT ) ? (const TiXmlDocument*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	const TiXmlElement*  ToElement() const			{ return ( THIS_AND  type == ELEMENT  ) ? (const TiXmlElement*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	const TiXmlComment*  ToComment() const			{ return ( THIS_AND  type == COMMENT  ) ? (const TiXmlComment*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	const TiXmlUnknown*  ToUnknown() const			{ return ( THIS_AND  type == UNKNOWN  ) ? (const TiXmlUnknown*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	const TiXmlText*	   ToText()    const		{ return ( THIS_AND  type == TEXT     ) ? (const TiXmlText*)     this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	const TiXmlDeclaration* ToDeclaration() const	{ return ( THIS_AND  type == DECLARATION ) ? (const TiXmlDeclaration*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
 
-	TiXmlDocument* ToDocument()			{ return ( this && type == DOCUMENT ) ? (TiXmlDocument*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	TiXmlElement*  ToElement()			{ return ( this && type == ELEMENT  ) ? (TiXmlElement*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	TiXmlComment*  ToComment()			{ return ( this && type == COMMENT  ) ? (TiXmlComment*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	TiXmlUnknown*  ToUnknown()			{ return ( this && type == UNKNOWN  ) ? (TiXmlUnknown*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	TiXmlText*	   ToText()   			{ return ( this && type == TEXT     ) ? (TiXmlText*)     this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
-	TiXmlDeclaration* ToDeclaration()	{ return ( this && type == DECLARATION ) ? (TiXmlDeclaration*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	TiXmlDocument* ToDocument()			{ return ( THIS_AND  type == DOCUMENT ) ? (TiXmlDocument*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	TiXmlElement*  ToElement()			{ return ( THIS_AND  type == ELEMENT  ) ? (TiXmlElement*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	TiXmlComment*  ToComment()			{ return ( THIS_AND  type == COMMENT  ) ? (TiXmlComment*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	TiXmlUnknown*  ToUnknown()			{ return ( THIS_AND  type == UNKNOWN  ) ? (TiXmlUnknown*)  this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	TiXmlText*	   ToText()   			{ return ( THIS_AND  type == TEXT     ) ? (TiXmlText*)     this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
+	TiXmlDeclaration* ToDeclaration()	{ return ( THIS_AND  type == DECLARATION ) ? (TiXmlDeclaration*) this : 0; } ///< Cast to a more defined type. Will return null not of the requested type.
 
 	/** Create an exact duplicate of this node and return it. The memory must be deleted
 		by the caller. 

@@ -339,7 +339,7 @@ const char* TiXmlBase::SkipWhiteSpace( const char* p, TiXmlEncoding encoding )
 	}
 	else
 	{
-		while ( *p && IsWhiteSpace( *p ) || *p == '\n' || *p =='\r' )
+		while ( *p && ( IsWhiteSpace( *p ) || *p == '\n' || *p =='\r' ) )
 			++p;
 	}
 
@@ -925,7 +925,7 @@ void TiXmlElement::StreamIn (TIXML_ISTREAM * in, TIXML_STRING * tag)
 			// We should be at a "<", regardless.
 			if ( !in->good() ) return;
 			assert( in->peek() == '<' );
-			int tagIndex = tag->length();
+			size_t tagIndex = tag->length();
 
 			bool closingTag = false;
 			bool firstCharFound = false;
