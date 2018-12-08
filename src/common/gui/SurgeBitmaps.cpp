@@ -3,7 +3,7 @@
 
 std::map<int, VSTGUI::CBitmap*> bitmap_registry;
 
-static atomic<int> refCount = 0;
+static std::atomic_int refCount(0);
 
 SurgeBitmaps::SurgeBitmaps()
 {

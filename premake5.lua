@@ -472,7 +472,7 @@ if (os.istarget("macosx")) then
 
 	includedirs
 	{
- 	  	"src/au",
+		"src/au",
 		"libs/",
 		"libs/AudioUnits/AUPublic",
 		"libs/AudioUnits/PublicUtility",
