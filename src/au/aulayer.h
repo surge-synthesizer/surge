@@ -8,6 +8,11 @@
 #include "surge_auversion.h"
 #include "SurgeStorage.h"
 
+
+class SurgeGUIEditor;
+class SurgeSynthesizer;
+typedef SurgeSynthesizer plugin;
+
 //-------------------------------------------------------------------------------------------------------
 const CFStringRef rawchunkname = CFSTR("VmbA_chunk");
 

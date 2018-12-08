@@ -14,11 +14,6 @@
 typedef OSStatus ComponentResult;
 typedef AudioStreamBasicDescription CAStreamBasicDescription;
 
-class plugin
-{
-
-};
-
 class MusicDeviceBase
 {
 
