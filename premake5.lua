@@ -42,7 +42,8 @@ if (os.istarget("macosx")) then
 		"stricmp=strcasecmp",
 		"SSE_VERSION=3",
 		"MAC_COCOA=1",
-		"COCOA=1"
+		"COCOA=1",
+                "OBJC_OLD_DISPATCH_PROTOTYPES=1"
     }
     
     links 
