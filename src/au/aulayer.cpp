@@ -104,7 +104,9 @@ CFURLRef aulayer::GetIconLocation ()
 void aulayer::InitializePlugin()
 {
 	if(!plugin_instance) 
-	{		
+	{
+        fprintf( stderr, "SURGE:>> Constructing new plugin\n" );
+        fprintf( stderr, "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
 		//sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
 		//new(synth) sub3_synth(this);
 		
