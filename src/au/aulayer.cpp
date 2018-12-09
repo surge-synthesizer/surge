@@ -105,13 +105,14 @@ void aulayer::InitializePlugin()
 {
 	if(!plugin_instance) 
 	{
-        fprintf( stderr, "SURGE:>> Constructing new plugin\n" );
-        fprintf( stderr, "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
-		//sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
-		//new(synth) sub3_synth(this);
-		
-        // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
-		plugin_instance = new SurgeSynthesizer( this );
+          fprintf( stderr, "SURGE:>> Constructing new plugin\n" );
+          fprintf( stderr, "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
+          //sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
+          //new(synth) sub3_synth(this);
+          
+          // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
+          plugin_instance = new SurgeSynthesizer( this );
+          fprintf( stderr, "SURGE:>> Plugin Created\n" );
 	}
 	assert(plugin_instance);
 }
@@ -531,6 +532,7 @@ ComponentResult	aulayer::SaveState(CFPropertyListRef *	plist)
 
 ComponentResult	aulayer::GetPresets (CFArrayRef *outData) const
 {
+  fprintf( stderr, "in ::GetPresets but bypassing\n" );
 	// kAudioUnitProperty_FactoryPresets
 
 	// Type: CFArrayRef containing AUPreset's
@@ -568,13 +570,14 @@ ComponentResult	aulayer::GetPresets (CFArrayRef *outData) const
 	*/
     
 	//*outData = (CFArrayRef)newArray;
-	return noErr;	
+	return coreFoundationUnknownErr; // this isn't OK so tell the host that	
 }
 
 //----------------------------------------------------------------------------------------------------
 
 OSStatus aulayer::NewFactoryPresetSet (const AUPreset & inNewFactoryPreset)
 {
+  fprintf( stderr, "NewFactoryPreset\n" );
 	if(!IsInitialized()) return false;	
 	if(inNewFactoryPreset.presetNumber<0) return false;
 	sub3_synth *s = (sub3_synth*)plugin_instance;
