@@ -102,11 +102,18 @@ namespace std::experimental::filesystem {
         struct dirent *dirp;
         if((dp  = opendir(p.c_str())) == NULL) {
 //            std::cout << "Error(" << errno << ") opening " << p.generic_string() << std::endl;
+          return files;
         }
         
+        // this needs to return the full path not just the relative path
         while ((dirp = readdir(dp)) != NULL) {
-            files.push_back(file(string(dirp->d_name)));
+          path newp = p;
+          newp.append( dirp->d_name );
+          file res( newp.c_str() );
+
+          files.push_back(res);
         }
+
         closedir(dp);
         
         return files;

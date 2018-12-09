@@ -26,6 +26,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
     //: halfband_AL(false),halfband_AR(false),halfband_BL(false),halfband_BR(false),
     : hpA(&storage), hpB(&storage), _parent(parent)
 {
+  fprintf( stderr, "Surge Synthesizer Constructor from %0x%08x\n", parent );
    halfbandA = (halfrate_stereo*)_aligned_malloc(sizeof(halfrate_stereo), 16);
    halfbandB = (halfrate_stereo*)_aligned_malloc(sizeof(halfrate_stereo), 16);
    halfbandIN = (halfrate_stereo*)_aligned_malloc(sizeof(halfrate_stereo), 16);

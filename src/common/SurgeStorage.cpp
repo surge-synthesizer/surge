@@ -83,6 +83,7 @@ SurgeStorage::SurgeStorage()
                getPatch().scene[s].osc[o].wt.TableF32WeakPointers[i][j] = 0;
                getPatch().scene[s].osc[o].wt.TableI16WeakPointers[i][j] = 0;
             }
+
    init_tables();
    pitch_bend = 0;
    last_key[0] = 60;
@@ -128,7 +129,6 @@ SurgeStorage::SurgeStorage()
    }
 
    userDataPath = "~/Documents/Surge";
-
 #elif __linux__
    
    printf("Implement me, probably\n");
@@ -162,7 +162,8 @@ SurgeStorage::SurgeStorage()
 #endif
    }
 
-   TiXmlElement* e = snapshotloader.FirstChild("autometa")->ToElement();
+   auto q = snapshotloader.FirstChild("autometa" );
+   TiXmlElement* e = q ? q->ToElement() : NULL;
    if (e)
    {
       defaultname = e->Attribute("name");
@@ -207,13 +208,15 @@ void SurgeStorage::refresh_patchlist()
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 {
    int category = patch_category.size();
-
+   fprintf( stderr, "Loading patches:: %s from %d\n", subdir.c_str(),category );
+   
    fs::path patchpath = (userDir ? userDataPath : datapath);
    if (!subdir.empty())
       patchpath.append(subdir);
 
    if (!fs::is_directory(patchpath))
    {
+     fprintf( stderr, "PatchPath is not a directory %s\n", patchpath.c_str() );
       return;
    }
 
@@ -291,7 +294,7 @@ void SurgeStorage::refresh_wtlist()
          category++;
       }
    }
-
+   
    if (wt_category.size() < 1 && wt_list.size() < 1)
    {
       errorbox("File IO Error: Couldn't locate wavetables on disk!\n\nPlease reinstall..");
