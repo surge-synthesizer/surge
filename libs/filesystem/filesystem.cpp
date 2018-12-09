@@ -89,7 +89,10 @@ namespace std::experimental::filesystem {
         if((dp  = opendir(p.c_str())) != NULL && readdir(dp) != NULL) {
             isDir = true;
         }
-        closedir(dp);
+        if( dp != NULL )
+        {
+            closedir(dp);
+        }
         return isDir;
     }
     
