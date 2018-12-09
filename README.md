@@ -93,7 +93,39 @@ The `surge-vst3 project` will now warn you to `Validate Project Settings`, meani
 
 The `surge-au project` will also prompt to `Update to recommended settings` & `Perform Changes`, so, perform the changes.
 
-After this we've reached the situation of "Here there be dragons" - Please, could anyone take this further?
+At this point you can build an audio unit which links and passes validation, and you can build a VST which links but honestly we aren't sure
+if it works. Help from someone who uses VST would be appreciated here!
+
+To try the audio unit you will need to install and validate it. If you don't know how to disable and revalidate audio units, be 
+a bit cautious here. You can slightly mess things up. To make it easy there's a script which allows you to do this from the command line
+
+```
+./installer-local-au.sh
+```
+
+This will update the build date, run a build, and if the build works, remove the version of surge in ~/Library/... and replace 
+it with the latest. It will then run auvaltool to make sure that the audio unit is properly installed (and so you should 
+see the build date and time on stderr in the auval output). Tips on how to develop 
+and debug using this are in
+[this issue](https://github.com/kurasu/surge/issues/58). If you see
+
+```
+--------------------------------------------------
+AU VALIDATION SUCCEEDED.
+--------------------------------------------------
+```
+
+then you have successfully built and installed the AU. 
+
+To use the AU in logic, mainstage, garageband, and so on, you need to do one more one-time step which is to invalidate your AU cache so Logic 
+rescans. The easiest way to do this is
+
+```
+mv ~/Library/Caches/AudioUnitCache ~/Desktop
+```
+
+Then restart logic. If everything works and starts up again you can delete the cache on your desktop. If it doesn't, well, then you have it.
+
 
 ## Building - VST2
 
