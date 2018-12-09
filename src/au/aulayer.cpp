@@ -807,4 +807,4 @@ COMPONENT_ENTRY(VSTGUIAUView);
 
 #endif
 
-AUDIOCOMPONENT_ENTRY(AUBaseFactory, aulayer);
+AUDIOCOMPONENT_ENTRY(AUMusicDeviceFactory, aulayer);
