@@ -742,7 +742,9 @@ OSStatus aulayer::HandleMidiEvent(UInt8 status, UInt8 channel, UInt8 data1, UInt
 }
 
 #if MAC_CARBON
-							
+
+SHAZBOT
+
 #include "AUCarbonViewBase.h"
 #include "plugguieditor.h"
 
@@ -807,8 +809,10 @@ COMPONENT_ENTRY(VSTGUIAUView);
 
 #elif MAC_COCOA
 
-// #error Not implemented
+// #error Implement the UI here, probably cribbing off of that AudioKit again
 // TODO AU
+
+
 
 #endif
 
