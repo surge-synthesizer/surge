@@ -2,7 +2,7 @@
 
 #include "pluginterfaces/base/ustring.h"
 
-#if 0
+#if !TARGET_AUDIOUNIT
 tresult PLUGIN_API SurgeVst3EditController::initialize(FUnknown* context)
 {
    tresult result = EditControllerEx1::initialize(context);

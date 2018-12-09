@@ -1,6 +1,5 @@
 #include "aulayer.h"
 
-#ifdef BUILD_AULAYER_IN_DYLIB
 
 //-----------------------------------------------------------------------------
 // The following defines and implements CoreFoundation-like handling of 
@@ -283,5 +282,5 @@ const CFArrayCallBacks kAUPresetCFArrayCallbacks = {
 
 */
 
-#endif
+
 

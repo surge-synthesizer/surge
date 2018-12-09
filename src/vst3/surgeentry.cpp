@@ -4,7 +4,7 @@
 #include "public.sdk/source/main/pluginfactoryvst3.h"
 
 #include "SurgeVst3Processor.h"
-// #include "SurgeVst3EditController.h"
+#include "SurgeVst3EditController.h"
 #include "surgecids.h"
 #include <AbstractSynthesizer.h>
 

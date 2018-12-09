@@ -532,52 +532,48 @@ ComponentResult	aulayer::SaveState(CFPropertyListRef *	plist)
 
 ComponentResult	aulayer::GetPresets (CFArrayRef *outData) const
 {
-  fprintf( stderr, "in ::GetPresets but bypassing\n" );
-	// kAudioUnitProperty_FactoryPresets
-
-	// Type: CFArrayRef containing AUPreset's
-	// Returns an array of AUPreset that contain a number and name for each of the presets. 
-	//The number of each preset must be greater (or equal to) zero, and the numbers need not be ordered or contiguous. 
-	//The name of each preset can be presented to the user as a means of identifying each preset. 
-	// The CFArrayRef should be released by the caller.		
-	
-	if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
-	
-	if (outData == NULL)
-		return noErr;
-	
-    // FIX THIS WHOLE THING
-    
-	/* sub3_synth *s = (sub3_synth*)plugin_instance;
-	UInt32 n_presets = s->storage.patch_list.size();
-	
-	CFMutableArrayRef newArray = CFArrayCreateMutable(kCFAllocatorDefault, n_presets, &kCFAUPresetArrayCallBacks);
-	if (newArray == NULL)
-		return coreFoundationUnknownErr;
-	*/
-    
-	/*
-     FIXME - get this link error back and working
-     for (long i=0; i < n_presets; i++)
-	{
-		CFAUPresetRef newPreset = CFAUPresetCreate(kCFAllocatorDefault, i, CFStringCreateWithCString(NULL,s->storage.patch_list[i].name.c_str(), kCFStringEncodingUTF8));
-		if (newPreset != NULL)
+  // kAudioUnitProperty_FactoryPresets
+  
+  // Type: CFArrayRef containing AUPreset's
+  // Returns an array of AUPreset that contain a number and name for each of the presets. 
+  //The number of each preset must be greater (or equal to) zero, and the numbers need not be ordered or contiguous. 
+  //The name of each preset can be presented to the user as a means of identifying each preset. 
+  // The CFArrayRef should be released by the caller.		
+  
+  if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
+  
+  if (outData == NULL)
+    return noErr;
+  
+  
+  sub3_synth *s = (sub3_synth*)plugin_instance;
+  UInt32 n_presets = s->storage.patch_list.size();
+  
+  CFMutableArrayRef newArray = CFArrayCreateMutable(kCFAllocatorDefault, n_presets, &kCFAUPresetArrayCallBacks);
+  if (newArray == NULL)
+    return coreFoundationUnknownErr;
+  
+  
+  
+  for (long i=0; i < n_presets; i++)
+    {
+      CFAUPresetRef newPreset = CFAUPresetCreate(kCFAllocatorDefault, i, CFStringCreateWithCString(NULL,s->storage.patch_list[i].name.c_str(), kCFStringEncodingUTF8));
+      if (newPreset != NULL)
 		{
-			CFArrayAppendValue(newArray, newPreset);
-			CFAUPresetRelease(newPreset);
+                  CFArrayAppendValue(newArray, newPreset);
+                  CFAUPresetRelease(newPreset);
 		}
-	}
-	*/
-    
-	//*outData = (CFArrayRef)newArray;
-	return coreFoundationUnknownErr; // this isn't OK so tell the host that	
+    }
+  
+  *outData = (CFArrayRef)newArray;
+  return noErr;
+  // return coreFoundationUnknownErr; // this isn't OK so tell the host that	
 }
 
 //----------------------------------------------------------------------------------------------------
 
 OSStatus aulayer::NewFactoryPresetSet (const AUPreset & inNewFactoryPreset)
 {
-  fprintf( stderr, "NewFactoryPreset\n" );
 	if(!IsInitialized()) return false;	
 	if(inNewFactoryPreset.presetNumber<0) return false;
 	sub3_synth *s = (sub3_synth*)plugin_instance;

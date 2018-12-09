@@ -351,6 +351,81 @@ if VST24SDK then
     end
 end
 
+-- VST3 PLUGIN --
+
+project "surge-vst3"
+kind "SharedLib"
+uuid "A87FBED5-3E7A-432F-8611-B2C61F40F4B8"
+targetextension ".vst3"
+
+defines 
+{
+	"TARGET_VST3=1"
+}
+
+plugincommon()
+
+files {
+    "src/vst3/**.cpp",
+    "src/vst3/**.h",
+    "vst3sdk/*.cpp",
+    "vst3sdk/base/source/*.cpp",
+    "vst3sdk/base/thread/source/*.cpp",
+    "vst3sdk/public.sdk/source/common/*.cpp",
+    "vst3sdk/public.sdk/source/main/pluginfactoryvst3.cpp",
+    "vst3sdk/public.sdk/source/vst/vstguieditor.cpp",
+    "vst3sdk/public.sdk/source/vst/vstinitiids.cpp",
+    "vst3sdk/public.sdk/source/vst/vstnoteexpressiontypes.cpp",
+    "vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp",
+    "vst3sdk/public.sdk/source/vst/vstaudioeffect.cpp",
+    "vst3sdk/public.sdk/source/vst/vstcomponent.cpp",
+    "vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp",
+    "vst3sdk/public.sdk/source/vst/vstcomponentbase.cpp",
+    "vst3sdk/public.sdk/source/vst/vstbus.cpp",
+    "vst3sdk/public.sdk/source/vst/vstparameters.cpp",
+    }
+
+excludes {
+    VSTGUI .. "aeffguieditor.cpp",
+}
+
+includedirs {
+   "src/vst3",
+   "vst3sdk"
+}
+
+configuration { "Debug" }
+targetdir "target/vst3/Debug"
+targetsuffix "-Debug"
+
+configuration { "Release" }
+targetdir "target/vst3/Release"
+
+configuration {}
+
+if (os.istarget("macosx")) then
+
+    postbuildcommands { "./package-vst3.sh" }
+    
+    files
+    {
+		"vst3sdk/public.sdk/source/main/macmain.cpp",
+       "vst3sdk/*.mm"
+    }
+	
+elseif (os.istarget("windows")) then
+
+    linkoptions { "/DEF:resources\\windows-vst3\\surge.def" }
+	
+	files
+	{
+		"vst3sdk/public.sdk/source/main/dllmain.cpp",
+	}
+	
+    flags { "NoImportLib" }
+    
+end
+
 -- AUDIO UNIT PLUGIN --
 
 if (os.istarget("macosx")) then
