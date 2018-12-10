@@ -3,6 +3,7 @@
 #include <gui/SurgeGUIEditor.h>
 #include <AudioToolbox/AudioUnitUtilities.h>
 #include <AudioUnit/AudioUnitCarbonView.h>
+#include "aulayer_cocoaui.h"
 
 typedef SurgeSynthesizer sub3_synth;
 
@@ -434,6 +435,44 @@ const char* getclamptxt(int id)
 
 ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iScope, AudioUnitElement iElem, void* pData)
 {
+  if( iScope == kAudioUnitScope_Global )
+    {
+      switch( iID )
+        {
+        case kAudioUnitProperty_CocoaUI:
+          fprintf( stderr, "Trying to construct COCOA UI and bailing sadly\n" );
+                SurgeAUGetPropertyCocoaDelegate(iID, iScope, iElem, pData );
+                break;
+        }
+    }
+#if 0
+    -       if(iID == kAudioUnitProperty_ParameterValueName)
+        -       {
+            -               if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
+            -               AudioUnitParameterValueName *aup = (AudioUnitParameterValueName*)pData;
+            -               char tmptxt[64];
+            -               float f;
+            -               if(aup->inValue) f = *(aup->inValue);
+            -               else f = plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(aup->inParamID));
+            -               plugin_instance->getParameterDisplay(plugin_instance->remapExternalApiToInternalId(aup->inParamID),tmptxt,f);
+            -               aup->outName = CFStringCreateWithCString(NULL,tmptxt,kCFStringEncodingUTF8);
+            -               return noErr;
+            -       }
+    -       else if(iID == kAudioUnitProperty_ParameterClumpName)
+        -       {
+            -               AudioUnitParameterNameInfo *aup = (AudioUnitParameterNameInfo*)pData;
+            -               aup->outName = CFStringCreateWithCString(NULL,getclamptxt(aup->inID),kCFStringEncodingUTF8);
+            -               return noErr;
+            -       }
+    -       else if(iID==kVmbAAudioUnitProperty_GetPluginCPPInstance)
+        -       {
+            -               void** pThis = (void**)(pData);
+            -               *pThis = (void*)plugin_instance;
+            -               return noErr;
+            -       }
+
+#endif
+    
   return AUInstrumentBase::GetProperty(iID, iScope, iElem, pData);
 }
 
@@ -446,10 +485,36 @@ ComponentResult aulayer::GetPropertyInfo(AudioUnitPropertyID iID, AudioUnitScope
   // 2: Switch these to be a switch
   // 3: Make Cocoa UI make the datasize the size of the view info. Take a look in juce_audio_plugin_client/AU/juce_AU_Wrapper.mm
   // 4: That will probably core out since the calss isn't defined. That's OK! MOve on from there.
-  if( iID == kAudioUnitProperty_CocoaUI )
+  if( iScope == kAudioUnitScope_Global )
     {
-      fprintf( stderr, "ASKING FOR THE COCOA UI! Wahey\n" );
+      switch( iID )
+        {
+        case kAudioUnitProperty_CocoaUI:
+          iSize = sizeof (AudioUnitCocoaViewInfo);
+          fWritable = true;
+          return noErr;
+          break;
+        }
     }
+    
+#if 0
+    -       if(iID == kAudioUnitProperty_ParameterValueName)
+        -       {
+            -               iSize=sizeof(AudioUnitParameterValueName);
+            -               return noErr;
+            -       }
+    -       else if(iID == kAudioUnitProperty_ParameterClumpName)
+        -       {
+            -               iSize=sizeof(AudioUnitParameterNameInfo);
+            -               return noErr;
+            -       }
+    -       else if (iID==kVmbAAudioUnitProperty_GetPluginCPPInstance)
+        -       {
+            -               iSize=sizeof(void*);
+            -               return noErr;
+            -       }
+#endif
+    
   return AUInstrumentBase::GetPropertyInfo(iID, iScope, iElem, iSize,fWritable);
 }
 

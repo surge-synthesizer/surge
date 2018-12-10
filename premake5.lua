@@ -460,6 +460,7 @@ if (os.istarget("macosx")) then
 	files 
 	{
 		"src/au/**.cpp",
+                "src/au/**.mm",        
 		"src/au/**.h",
 		"libs/AudioUnits/AUPublic/**.cpp",
 		"libs/AudioUnits/AUPublic/**.h",
