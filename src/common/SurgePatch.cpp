@@ -870,7 +870,6 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    TiXmlDocument doc;
    int j;
    double d;
-   fprintf( stderr, "SURGE: Parsing xml data size %d\n", datasize );
    if (datasize)
    {
       assert(datasize < (1 << 22)); // something is weird if the patch is this big
@@ -938,7 +937,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          parameters->RemoveChild(tp);
    }
 
-   TiXmlElement* p = 0;
+   TiXmlElement* p;
    for (int i = 0; i < n; i++)
    {
       if (!i)
@@ -946,23 +945,9 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       else
       {
          if (p)
-           {
-             auto q = p->NextSibling( param_ptr[ i ]->get_storage_name() );
-             if( q )
-               p = q->ToElement();
-             else
-               p = NULL;
-             // p = p->NextSibling(param_ptr[i]->get_storage_name())->ToElement();
-           }
+            p = p->NextSibling(param_ptr[i]->get_storage_name())->ToElement();
          if (!p)
-           {
-             auto q = parameters->FirstChild(param_ptr[i]->get_storage_name());
-             if( q )
-               p = q->ToElement();
-             else
-               p = NULL;
-             // p = parameters->FirstChild(param_ptr[i]->get_storage_name())->ToElement();
-           }
+            p = parameters->FirstChild(param_ptr[i]->get_storage_name())->ToElement();
       }
       if (p)
       {
@@ -1207,16 +1192,9 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          l.loop_end = 15;
          l.shuffle = 0.f;
       }
-
    TiXmlElement* ss = patch->FirstChild("stepsequences")->ToElement();
    if (ss)
-     {
-       auto q = ss->FirstChild( "sequence" );
-       if( q )
-         p = q->ToElement();
-       else
-         p = NULL;
-     }
+      p = ss->FirstChild("sequence")->ToElement();
    else
       p = nullptr;
    while (p)
