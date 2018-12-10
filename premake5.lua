@@ -17,12 +17,12 @@ floatingpoint "Fast"
 
 configuration { "Debug" }
 defines { "DEBUG=1", "RELEASE=0" }
+symbols "On"
 targetdir "target/Debug"
 
 configuration { "Release*" }
 defines { "DEBUG=0", "RELEASE=1" }
 optimize "Speed"
-symbols "On"
 targetdir "target/Release"
 
 configuration {}
