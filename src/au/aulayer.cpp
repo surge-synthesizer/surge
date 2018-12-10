@@ -8,7 +8,7 @@ typedef SurgeSynthesizer sub3_synth;
 
 //----------------------------------------------------------------------------------------------------
 
-aulayer::aulayer (AudioUnit au) : MusicDeviceBase (au,1,1)
+aulayer::aulayer (AudioUnit au) : AUInstrumentBase (au,1,1)
 {
 	plugin_instance = 0;
 }
@@ -147,7 +147,7 @@ ComponentResult aulayer::Initialize()
 		parameterIDlist_CFString[i] = 0;
 	}
 	
-	MusicDeviceBase::Initialize();
+	AUInstrumentBase::Initialize();
 	return noErr;
 }
 
@@ -155,7 +155,7 @@ ComponentResult aulayer::Initialize()
 
 void aulayer::Cleanup()	
 {	
-	MusicDeviceBase::Cleanup();
+	AUInstrumentBase::Cleanup();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -434,53 +434,23 @@ const char* getclamptxt(int id)
 
 ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iScope, AudioUnitElement iElem, void* pData)
 {
-	if(iID == kAudioUnitProperty_ParameterValueName)
-	{
-		if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
-		AudioUnitParameterValueName *aup = (AudioUnitParameterValueName*)pData;
-		char tmptxt[64];
-		float f;
-		if(aup->inValue) f = *(aup->inValue);		 
-		else f = plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(aup->inParamID));
-		plugin_instance->getParameterDisplay(plugin_instance->remapExternalApiToInternalId(aup->inParamID),tmptxt,f);
-		aup->outName = CFStringCreateWithCString(NULL,tmptxt,kCFStringEncodingUTF8);		
-		return noErr;
-	}
-	else if(iID == kAudioUnitProperty_ParameterClumpName)
-	{
-		AudioUnitParameterNameInfo *aup = (AudioUnitParameterNameInfo*)pData;		
-		aup->outName = CFStringCreateWithCString(NULL,getclamptxt(aup->inID),kCFStringEncodingUTF8);		
-		return noErr;
-	}
-	else if(iID==kVmbAAudioUnitProperty_GetPluginCPPInstance)
-	{
-		void** pThis = (void**)(pData);
-		*pThis = (void*)plugin_instance;
-		return noErr;
-	}
-	return MusicDeviceBase::GetProperty(iID, iScope, iElem, pData);
+  return AUInstrumentBase::GetProperty(iID, iScope, iElem, pData);
 }
 
 //----------------------------------------------------------------------------------------------------
 
 ComponentResult aulayer::GetPropertyInfo(AudioUnitPropertyID iID, AudioUnitScope iScope, AudioUnitElement iElem, UInt32& iSize, Boolean& fWritable)
-{	
-	if(iID == kAudioUnitProperty_ParameterValueName)
-	{
-		iSize=sizeof(AudioUnitParameterValueName);		
-		return noErr;
-	}
-	else if(iID == kAudioUnitProperty_ParameterClumpName)
-	{
-		iSize=sizeof(AudioUnitParameterNameInfo);		
-		return noErr;
-	}
-	else if (iID==kVmbAAudioUnitProperty_GetPluginCPPInstance)
-	{
-		iSize=sizeof(void*);
-		return noErr;
-	}
-	return MusicDeviceBase::GetPropertyInfo(iID, iScope, iElem, iSize,fWritable);
+{
+  // OK so big todo here and in GetProperty
+  // 1: Switch these all to have an inScope--kAudioUnitScope_Global guard
+  // 2: Switch these to be a switch
+  // 3: Make Cocoa UI make the datasize the size of the view info. Take a look in juce_audio_plugin_client/AU/juce_AU_Wrapper.mm
+  // 4: That will probably core out since the calss isn't defined. That's OK! MOve on from there.
+  if( iID == kAudioUnitProperty_CocoaUI )
+    {
+      fprintf( stderr, "ASKING FOR THE COCOA UI! Wahey\n" );
+    }
+  return AUInstrumentBase::GetPropertyInfo(iID, iScope, iElem, iSize,fWritable);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -591,7 +561,7 @@ ComponentResult aulayer::GetParameterList(AudioUnitScope inScope, AudioUnitParam
 		outNumParameters = 0;
 		return noErr;
 	}
-	
+
 	outNumParameters = n_total_params;
 	if(outParameterList) memcpy(outParameterList,parameterIDlist,sizeof(AudioUnitParameterID)*n_total_params);
 	return noErr;
@@ -602,8 +572,9 @@ ComponentResult aulayer::GetParameterList(AudioUnitScope inScope, AudioUnitParam
 ComponentResult aulayer::GetParameterInfo(
 	AudioUnitScope          inScope,
 	AudioUnitParameterID    inParameterID,
-   AudioUnitParameterInfo  &outParameterInfo)
+        AudioUnitParameterInfo  &outParameterInfo)
 {
+  //FIXME: I think this code can be a bit tighter and cleaner, but it works OK for now
 	outParameterInfo.unit = kAudioUnitParameterUnit_Generic;
 	outParameterInfo.minValue = 0.f;
 	outParameterInfo.maxValue = 1.f;
