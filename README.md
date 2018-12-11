@@ -2,7 +2,7 @@
 
 This is the synthesizer plug-in Surge which I previously sold as a commercial product as the company [vember audio](http://vemberaudio.se).
 
-As I'm too busy with [other](http://bitwig.com) projects and no longer want to put the effort into maintaining it myself across multiple platforms I have decided to give it new life as an open-source project.
+As I (@kurasu / Claes Johanson) am too busy with [other](http://bitwig.com) projects and no longer want to put the effort into maintaining it myself across multiple platforms I have decided to give it new life as an open-source project.
 
 It was originally released in 2005, and was one of my first bigger projects. The code could be cleaner, and at parts better explained but its reliable and sounds great. And beware, there might still be a few comments in Swedish.
 
@@ -85,7 +85,7 @@ Execute the Surge build-script.
 ./build-osx.sh
 ```
 
-If you got Xcode-Select issues or are missing the Command Line Utilities, grab them.
+If you got `Xcode-Select` issues or are missing the `Command Line Utilities`, grab them.
 
 After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which takes a while.
 
@@ -93,8 +93,9 @@ The `surge-vst3 project` will now warn you to `Validate Project Settings`, meani
 
 The `surge-au project` will also prompt to `Update to recommended settings` & `Perform Changes`, so, perform the changes.
 
-At this point you can build an audio unit which links and passes validation, and you can build a VST which links but honestly we aren't sure
-if it works. Help from someone who uses VST would be appreciated here!
+At this point you can build an audio unit which links and passes validation. 
+
+You can also build a VST which links but honestly we aren't sure if it works. Help from someone who uses VST would be appreciated here!
 
 To try the audio unit you will need to install and validate it. If you don't know how to disable and revalidate audio units, be 
 a bit cautious here. You can slightly mess things up. To make it easy there's a script which allows you to do this from the command line
@@ -103,11 +104,13 @@ a bit cautious here. You can slightly mess things up. To make it easy there's a 
 ./installer-local-au.sh
 ```
 
-This will update the build date, run a build, and if the build works, remove the version of surge in ~/Library/... and replace 
-it with the latest. It will then run auvaltool to make sure that the audio unit is properly installed (and so you should 
-see the build date and time on stderr in the auval output). Tips on how to develop 
-and debug using this are in
-[this issue](https://github.com/kurasu/surge/issues/58). If you see
+This will update the build date, run a build, and if the build works, remove the version of surge in `~/Library/...` 
+and replace it with the latest. It will then run auvaltool to make sure that the audio unit is properly installed 
+(and so you should see the build date and time on stderr in the auval output). 
+
+Tips on how to develop and debug using this are in [this issue](https://github.com/kurasu/surge/issues/58).
+
+If you see
 
 ```
 --------------------------------------------------
@@ -115,17 +118,15 @@ AU VALIDATION SUCCEEDED.
 --------------------------------------------------
 ```
 
-then you have successfully built and installed the AU. 
+Then you have successfully built and installed the AU. 
 
-To use the AU in logic, mainstage, garageband, and so on, you need to do one more one-time step which is to invalidate your AU cache so Logic 
-rescans. The easiest way to do this is
+To use the AU in Logic, Mainstage, GarageBand, and so on, you need to do one more one-time step which is to invalidate your AU cache so Logic rescans. The easiest way to do this is
 
 ```
 mv ~/Library/Caches/AudioUnitCache ~/Desktop
 ```
 
-Then restart logic. If everything works and starts up again you can delete the cache on your desktop. If it doesn't, well, then you have it.
-
+Then restart Logic. If everything works and starts up again you can delete the cache on your desktop. If it doesn't, well, then you have it.
 
 ## Building - VST2
 
