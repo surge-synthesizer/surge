@@ -10,9 +10,4 @@
 
 #import <AudioToolbox/AudioUnit.h>
 
-ComponentResult SurgeAUGetPropertyCocoaDelegate (AudioUnitPropertyID inID,
-                                                 AudioUnitScope inScope,
-                                                 AudioUnitElement inElement,
-                                                 void* outData);
-
 #endif /* aulayer_cocoaui_h */
