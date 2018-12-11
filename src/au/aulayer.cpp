@@ -1,7 +1,10 @@
+
 #include "aulayer.h"
-#include "sub3_editor.h"
+#include <gui/SurgeGUIEditor.h>
 #include <AudioToolbox/AudioUnitUtilities.h>
 #include <AudioUnit/AudioUnitCarbonView.h>
+
+typedef SurgeSynthesizer sub3_synth;
 
 //----------------------------------------------------------------------------------------------------
 
@@ -101,11 +104,15 @@ CFURLRef aulayer::GetIconLocation ()
 void aulayer::InitializePlugin()
 {
 	if(!plugin_instance) 
-	{		
-		sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
-		new(synth) sub3_synth(this);
-		
-		plugin_instance = (plugin*)synth;
+	{
+          fprintf( stderr, "SURGE:>> Constructing new plugin\n" );
+          fprintf( stderr, "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
+          //sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
+          //new(synth) sub3_synth(this);
+          
+          // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
+          plugin_instance = new SurgeSynthesizer( this );
+          fprintf( stderr, "SURGE:>> Plugin Created\n" );
 	}
 	assert(plugin_instance);
 }
@@ -127,9 +134,9 @@ ComponentResult aulayer::Initialize()
 	}
 	
 	double samplerate = GetOutput(0)->GetStreamFormat().mSampleRate;
-	plugin_instance->set_samplerate(samplerate);
+	plugin_instance->setSamplerate(samplerate);
 	plugin_instance->audio_processing_active = true;
-	plugin_instance->all_notes_off();
+	plugin_instance->allNotesOff();
 	
 	blockpos = 0;
 	events_this_block = 0;
@@ -170,7 +177,7 @@ ComponentResult		aulayer::ChangeStreamFormat(
 	double samplerate = inNewFormat.mSampleRate;
 	ComponentResult result = AUBase::ChangeStreamFormat(inScope,inElement,inPrevFormat,inNewFormat);
 
-	if(plugin_instance) plugin_instance->set_samplerate(samplerate);
+	if(plugin_instance) plugin_instance->setSamplerate(samplerate);
 	
 	return result;
 }
@@ -182,8 +189,8 @@ ComponentResult	aulayer::Reset(AudioUnitScope inScope, AudioUnitElement inElemen
 	if((inScope == kAudioUnitScope_Global) && (inElement == 0) && plugin_instance)
 	{
 		double samplerate = GetOutput(0)->GetStreamFormat().mSampleRate;
-		plugin_instance->set_samplerate(samplerate);
-		plugin_instance->all_notes_off();
+		plugin_instance->setSamplerate(samplerate);
+		plugin_instance->allNotesOff();
 	}
 	return noErr;
 }
@@ -238,7 +245,7 @@ ComponentResult aulayer::StopNote(
 
 OSStatus aulayer::HandleNoteOn(UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity, UInt32 inStartFrame)
 {
-	plugin_instance->play_note(inChannel,inNoteNumber,inVelocity,0);
+	plugin_instance->playNote(inChannel,inNoteNumber,inVelocity,0);
 	return noErr;
 }
 
@@ -246,7 +253,7 @@ OSStatus aulayer::HandleNoteOn(UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelo
 	
 OSStatus aulayer::HandleNoteOff(UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity, UInt32 inStartFrame)
 {
-	plugin_instance->release_note(inChannel,inNoteNumber,inVelocity);
+	plugin_instance->releaseNote(inChannel,inNoteNumber,inVelocity);
 	return noErr;
 }
 
@@ -254,7 +261,7 @@ OSStatus aulayer::HandleNoteOff(UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVel
 
 OSStatus aulayer::HandleControlChange(UInt8 inChannel, UInt8 inController,	UInt8 inValue, UInt32 inStartFrame)
 {
-	plugin_instance->channel_controller(inChannel,inController, inValue);
+	plugin_instance->channelController(inChannel,inController, inValue);
 	return noErr;
 }
 
@@ -262,7 +269,7 @@ OSStatus aulayer::HandleControlChange(UInt8 inChannel, UInt8 inController,	UInt8
 
 OSStatus aulayer::HandleChannelPressure(UInt8 inChannel, UInt8 inValue, UInt32 inStartFrame)
 {
-	plugin_instance->channel_aftertouch(inChannel,inValue);
+	plugin_instance->channelAftertouch(inChannel,inValue);
 	return noErr;
 }
 
@@ -271,7 +278,7 @@ OSStatus aulayer::HandleChannelPressure(UInt8 inChannel, UInt8 inValue, UInt32 i
 OSStatus aulayer::HandlePitchWheel(UInt8 inChannel, UInt8 inPitch1, UInt8 inPitch2, UInt32 inStartFrame)
 {
 	long value = (inPitch1 & 0x7f) + (	(inPitch2 & 0x7f) << 7);
-	plugin_instance->pitch_bend(inChannel,value-8192);
+	plugin_instance->pitchBend(inChannel,value-8192);
 	return noErr;
 }
 
@@ -279,7 +286,7 @@ OSStatus aulayer::HandlePitchWheel(UInt8 inChannel, UInt8 inPitch1, UInt8 inPitc
 
 OSStatus aulayer::HandlePolyPressure(UInt8 inChannel, UInt8 inKey, UInt8 inValue, UInt32 inStartFrame)
 {
-	plugin_instance->poly_aftertouch(inChannel,inKey,inValue);
+    plugin_instance->polyAftertouch(inChannel,inKey,inValue);
 	return noErr;
 }
 
@@ -287,7 +294,7 @@ OSStatus aulayer::HandlePolyPressure(UInt8 inChannel, UInt8 inKey, UInt8 inValue
 
 OSStatus aulayer::HandleProgramChange(UInt8 inChannel, UInt8 inValue)
 {
-	plugin_instance->program_change(inChannel,inValue);
+    plugin_instance->programChange(inChannel,inValue);
 	return noErr;
 }
 
@@ -297,7 +304,7 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 {
 	assert(IsPluginInitialized());
 	assert(IsInitialized());
-	sub3_synth *s = (sub3_synth*) plugin_instance;
+	SurgeSynthesizer *s = (SurgeSynthesizer*) plugin_instance;
 	s->process_input = 0;
 	
 	float sampleRate = 44100.f;
@@ -495,7 +502,7 @@ ComponentResult aulayer::RestoreState(CFPropertyListRef	plist)
 		const UInt8 *p;		
 		p = CFDataGetBytePtr(data);
 		size_t psize = CFDataGetLength(data);		
-		plugin_instance->load_raw(p,psize,false);
+        plugin_instance->loadRaw(p,psize,false);
 	}
 	return noErr;
 }
@@ -514,7 +521,7 @@ ComponentResult	aulayer::SaveState(CFPropertyListRef *	plist)
 	
 	CFMutableDictionaryRef dict = (CFMutableDictionaryRef)*plist;
 	void* data;
-	CFIndex size = plugin_instance->save_raw(&data);
+    CFIndex size = plugin_instance->saveRaw(&data);
 	CFDataRef dataref = CFDataCreateWithBytesNoCopy(NULL, (const UInt8*) data, size, kCFAllocatorNull);
 	CFDictionarySetValue(dict, rawchunkname, dataref);
 	CFRelease (dataref);
@@ -525,38 +532,42 @@ ComponentResult	aulayer::SaveState(CFPropertyListRef *	plist)
 
 ComponentResult	aulayer::GetPresets (CFArrayRef *outData) const
 {
-	// kAudioUnitProperty_FactoryPresets
-
-	// Type: CFArrayRef containing AUPreset's
-	// Returns an array of AUPreset that contain a number and name for each of the presets. 
-	//The number of each preset must be greater (or equal to) zero, and the numbers need not be ordered or contiguous. 
-	//The name of each preset can be presented to the user as a means of identifying each preset. 
-	// The CFArrayRef should be released by the caller.		
-	
-	if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
-	
-	if (outData == NULL)
-		return noErr;
-	
-	sub3_synth *s = (sub3_synth*)plugin_instance;
-	UInt32 n_presets = s->storage.patch_list.size();
-	
-	CFMutableArrayRef newArray = CFArrayCreateMutable(kCFAllocatorDefault, n_presets, &kCFAUPresetArrayCallBacks);
-	if (newArray == NULL)
-		return coreFoundationUnknownErr;
-	
-	for (long i=0; i < n_presets; i++)
-	{
-		CFAUPresetRef newPreset = CFAUPresetCreate(kCFAllocatorDefault, i, CFStringCreateWithCString(NULL,s->storage.patch_list[i].name.c_str(), kCFStringEncodingUTF8));
-		if (newPreset != NULL)
+  // kAudioUnitProperty_FactoryPresets
+  
+  // Type: CFArrayRef containing AUPreset's
+  // Returns an array of AUPreset that contain a number and name for each of the presets. 
+  //The number of each preset must be greater (or equal to) zero, and the numbers need not be ordered or contiguous. 
+  //The name of each preset can be presented to the user as a means of identifying each preset. 
+  // The CFArrayRef should be released by the caller.		
+  
+  if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
+  
+  if (outData == NULL)
+    return noErr;
+  
+  
+  sub3_synth *s = (sub3_synth*)plugin_instance;
+  UInt32 n_presets = s->storage.patch_list.size();
+  
+  CFMutableArrayRef newArray = CFArrayCreateMutable(kCFAllocatorDefault, n_presets, &kCFAUPresetArrayCallBacks);
+  if (newArray == NULL)
+    return coreFoundationUnknownErr;
+  
+  
+  
+  for (long i=0; i < n_presets; i++)
+    {
+      CFAUPresetRef newPreset = CFAUPresetCreate(kCFAllocatorDefault, i, CFStringCreateWithCString(NULL,s->storage.patch_list[i].name.c_str(), kCFStringEncodingUTF8));
+      if (newPreset != NULL)
 		{
-			CFArrayAppendValue(newArray, newPreset);
-			CFAUPresetRelease(newPreset);
+                  CFArrayAppendValue(newArray, newPreset);
+                  CFAUPresetRelease(newPreset);
 		}
-	}
-	
-	*outData = (CFArrayRef)newArray;
-	return noErr;	
+    }
+  
+  *outData = (CFArrayRef)newArray;
+  return noErr;
+  // return coreFoundationUnknownErr; // this isn't OK so tell the host that	
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -567,7 +578,7 @@ OSStatus aulayer::NewFactoryPresetSet (const AUPreset & inNewFactoryPreset)
 	if(inNewFactoryPreset.presetNumber<0) return false;
 	sub3_synth *s = (sub3_synth*)plugin_instance;
 	s->patchid_queue = inNewFactoryPreset.presetNumber;
-	s->process_threadunsafe_operations();
+    s->processThreadunsafeOperations();
 	return true;
 }
 
@@ -727,7 +738,9 @@ OSStatus aulayer::HandleMidiEvent(UInt8 status, UInt8 channel, UInt8 data1, UInt
 }
 
 #if MAC_CARBON
-							
+
+SHAZBOT
+
 #include "AUCarbonViewBase.h"
 #include "plugguieditor.h"
 
@@ -792,9 +805,11 @@ COMPONENT_ENTRY(VSTGUIAUView);
 
 #elif MAC_COCOA
 
-// #error Not implemented
+// #error Implement the UI here, probably cribbing off of that AudioKit again
 // TODO AU
+
+
 
 #endif
 
-AUDIOCOMPONENT_ENTRY(AUBaseFactory, aulayer);
+AUDIOCOMPONENT_ENTRY(AUMusicDeviceFactory, aulayer);

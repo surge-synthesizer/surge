@@ -3,10 +3,14 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "plugin.h"
 #include "MusicDeviceBase.h"
 #include "surge_auversion.h"
-#include "storage.h"
+#include "SurgeStorage.h"
+
+
+class SurgeGUIEditor;
+class SurgeSynthesizer;
+typedef SurgeSynthesizer plugin;
 
 //-------------------------------------------------------------------------------------------------------
 const CFStringRef rawchunkname = CFSTR("VmbA_chunk");

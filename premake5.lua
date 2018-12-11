@@ -17,12 +17,12 @@ floatingpoint "Fast"
 
 configuration { "Debug" }
 defines { "DEBUG=1", "RELEASE=0" }
+symbols "On"
 targetdir "target/Debug"
 
 configuration { "Release*" }
 defines { "DEBUG=0", "RELEASE=1" }
 optimize "Speed"
-symbols "On"
 targetdir "target/Release"
 
 configuration {}
@@ -42,19 +42,19 @@ if (os.istarget("macosx")) then
 		"stricmp=strcasecmp",
 		"SSE_VERSION=3",
 		"MAC_COCOA=1",
-		"COCOA=1"
-	}
-
-	links 
+		"OBJC_OLD_DISPATCH_PROTOTYPES=1"
+    }
+    
+    links 
 	{
 	}
 
-	defines { "MAC=1", "PPC=0", "WINDOWS=0",  }
-
-	buildoptions { "-std=c++17", "-stdlib=libc++" }
-	links { "c++" }
-	buildoptions { "-mmacosx-version-min=10.9" }
-	linkoptions { "-mmacosx-version-min=10.9" }
+   defines { "MAC=1", "PPC=0", "WINDOWS=0",  }
+   
+   buildoptions { "-std=c++17", "-stdlib=libc++", "-DOBJC_OLD_DISPATCH_PROTOTYPES=1" }
+   links { "c++" }
+   buildoptions { "-mmacosx-version-min=10.9" }
+   linkoptions { "-mmacosx-version-min=10.9" }
 
 	platforms { "x64" }
 
@@ -176,6 +176,8 @@ function plugincommon()
 			"src/mac/**.cpp",
 			"src/mac/**.h",
 			"libs/vst/*.mm",
+            "libs/AUPublic/*.cpp",
+            "libs/PublicUtility/*.cpp", 
 			VSTGUI .. "vstgui_mac.mm",
 			VSTGUI .. "vstgui_uidescription_mac.mm",
 		}

@@ -7,7 +7,7 @@
 
 #if TARGET_AUDIOUNIT
 //#include "vstkeycode.h"
-#include <plugin-bindings/plugguieditor.h>
+#include <vstgui/plugin-bindings/plugguieditor.h>
 typedef PluginGUIEditor EditorType;
 #elif TARGET_VST3
 #include "public.sdk/source/vst/vstguieditor.h"

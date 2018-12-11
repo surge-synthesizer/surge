@@ -1,11 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
+  <dict>
+    	<key>AudioComponents</key>
+	<array>
+		<dict>
+			<key>description</key>
+			<string>Surge</string>
+			<key>factoryFunction</key>
+			<string>aulayerFactory</string>
+			<key>manufacturer</key>
+			<string>VmbA</string>
+			<key>name</key>
+			<string>VmbA: Surge</string>
+			<key>subtype</key>
+			<string>Srge</string>
+			<key>type</key>
+			<string>aumu</string>
+			<key>version</key>
+			<integer>65536</integer>
+		</dict>
+	</array>
+	<key>BuildMachineOSBuild</key>
+	<string>17G65</string>
+	<key>CFBundleDisplayName</key>
+	<string>Surge</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>SURGE</string>
+	<string>Surge</string>
 	<key>CFBundleIconFile</key>
 	<string>surgeicon</string>
 	<key>CFBundleIdentifier</key>
@@ -20,5 +43,14 @@
 	<string>1.6.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
+        <key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>MacOSX</string>
+	</array>
+        <key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>2018</string>
+
 </dict>
 </plist>
