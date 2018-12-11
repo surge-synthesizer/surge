@@ -3,7 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "MusicDeviceBase.h"
+#include "AUInstrumentBase.h"
 #include "surge_auversion.h"
 #include "SurgeStorage.h"
 
@@ -27,7 +27,7 @@ struct AuMIDIEvent
 	long inStartFrame;
 };
 
-class aulayer : public MusicDeviceBase
+class aulayer : public AUInstrumentBase
 {
 public:
 	aulayer (AudioUnit au);
