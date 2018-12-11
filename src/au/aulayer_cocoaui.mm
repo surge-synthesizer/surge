@@ -22,6 +22,14 @@
                        withSize: (NSSize) inPreferredSize
 {
     fprintf( stderr, "uiViewForAudioUnit\n" );
+#if 0
+    // OK so here's what happens in VST land. Basically we get the controller pointer from the AU class and then wrap it in this thingy. Lots to unpick still.
+    Vst::IEditController* editController = 0;
+    UInt32 size = sizeof (Vst::IEditController*);
+    if (AudioUnitGetProperty (inAU, 64000, kAudioUnitScope_Global, 0, &editController, &size) != noErr)
+        return nil;
+    return [[[SMTGCocoa_NSViewWrapperForAU alloc] initWithEditController:editController audioUnit:inAU preferredSize:inPreferredSize] autorelease];
+#endif
     return nil;
 }
 
