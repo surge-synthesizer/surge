@@ -4,6 +4,7 @@ using namespace Steinberg;
 using namespace Steinberg::Vst;
 
 class SurgeEditorView;
+#if !TARGET_AUDIOUNIT
 
 class SurgeVst3EditController : public EditControllerEx1, public IMidiMapping
 {
@@ -46,8 +47,8 @@ public:
                                                   int16 channel,
                                                   CtrlNumber midiControllerNumber,
                                                   ParamID& tag);
-
    DELEGATE_REFCOUNT(EditController)
+
    tresult PLUGIN_API queryInterface(const char* iid, void** obj);
 
    //---Internal functions-------
@@ -58,6 +59,8 @@ public:
    TChar* getDefaultMessageText();
    //------------------------------------------------------------------------
 
+
 private:
    String128 defaultMessageText;
 };
+#endif

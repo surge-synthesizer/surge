@@ -42,7 +42,8 @@ if (os.istarget("macosx")) then
 		"stricmp=strcasecmp",
 		"SSE_VERSION=3",
 		"MAC_COCOA=1",
-		"COCOA=1"
+		"COCOA=1",
+                "OBJC_OLD_DISPATCH_PROTOTYPES=1"
     }
     
     links 
@@ -51,7 +52,7 @@ if (os.istarget("macosx")) then
 
    defines { "MAC=1", "PPC=0", "WINDOWS=0",  }
    
-   buildoptions { "-std=c++17", "-stdlib=libc++" }
+   buildoptions { "-std=c++17", "-stdlib=libc++", "-DOBJC_OLD_DISPATCH_PROTOTYPES=1" }
    links { "c++" }
    buildoptions { "-mmacosx-version-min=10.9" }
    linkoptions { "-mmacosx-version-min=10.9" }
@@ -125,6 +126,7 @@ includedirs {
     "src/common/vt_dsp",
     "src/common/thread",
     "vst3sdk/vstgui4",
+    "vst3sdk",
 	"libs/"
 }
 
@@ -175,6 +177,8 @@ function plugincommon()
 			"src/mac/**.cpp",
 			"src/mac/**.h",
 			"libs/vst/*.mm",
+            "libs/AUPublic/*.cpp",
+            "libs/PublicUtility/*.cpp", 
 			VSTGUI .. "vstgui_mac.mm",
 			VSTGUI .. "vstgui_uidescription_mac.mm",
 		}
@@ -434,7 +438,7 @@ if (os.istarget("macosx")) then
 	
 	configuration { "Debug" }
 	targetdir "target/au/Debug"
-    targetsuffix "-Debug"
+        targetsuffix "-Debug"
 
 	configuration { "Release" }
 	targetdir "target/au/Release"
