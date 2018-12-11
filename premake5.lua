@@ -145,8 +145,6 @@ function plugincommon()
 		"libs/xml/tinyxmlerror.cpp",
 		"libs/xml/tinyxmlparser.cpp",
         "libs/filesystem/filesystem.cpp",
-                "libs/AUPublic/*.cpp",
-                "libs/PublicUtility/*.cpp", 
 		"src/common/vt_dsp/*.cpp",
 		"src/common/thread/*.cpp",
 		"vst3sdk/pluginterfaces/base/*.cpp",
@@ -179,6 +177,8 @@ function plugincommon()
 			"src/mac/**.cpp",
 			"src/mac/**.h",
 			"libs/vst/*.mm",
+            "libs/AUPublic/*.cpp",
+            "libs/PublicUtility/*.cpp", 
 			VSTGUI .. "vstgui_mac.mm",
 			VSTGUI .. "vstgui_uidescription_mac.mm",
 		}
