@@ -129,4 +129,4 @@ Then restart logic. If everything works and starts up again you can delete the c
 
 ## Building - VST2
 
-If you want to build VST2 versions of the plug-in, set the environment variable VST24SDK to the location of the SDK prior to building.
+If you want to build VST2 versions of the plug-in, set the environment variable VST2SDK_DIR to the location of the SDK prior to building.
