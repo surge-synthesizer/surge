@@ -14,6 +14,7 @@ FILE* AULOG::lf = NULL;
 aulayer::aulayer (AudioUnit au) : AUInstrumentBase (au,1,1)
 {
 	plugin_instance = 0;
+    editor_instance = 0;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -116,7 +117,7 @@ void aulayer::InitializePlugin()
           // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
           plugin_instance = new SurgeSynthesizer( this );
           AULOG::log( "     :>> Plugin Created\n" );
-	}
+    }
 	assert(plugin_instance);
 }
 
@@ -450,11 +451,16 @@ ComponentResult aulayer::GetPropertyInfo(AudioUnitPropertyID iID, AudioUnitScope
     {
       switch( iID )
         {
-        case kAudioUnitProperty_CocoaUI:
-          iSize = sizeof (AudioUnitCocoaViewInfo);
-          fWritable = true;
-          return noErr;
-          break;
+            case kAudioUnitProperty_CocoaUI:
+                iSize = sizeof (AudioUnitCocoaViewInfo);
+                fWritable = true;
+                return noErr;
+                break;
+            case kVmbAAudioUnitProperty_GetEditPointer:
+                iSize = sizeof( SurgeGUIEditor *);
+                fWritable = true;
+                return noErr;
+                break;
         }
     }
     

@@ -45,6 +45,7 @@ const CFStringRef rawchunkname = CFSTR("VmbA_chunk");
 enum
 {
 	kVmbAAudioUnitProperty_GetPluginCPPInstance = 70000,
+    kVmbAAudioUnitProperty_GetEditPointer = 70001,
 };
 
 // event
@@ -140,7 +141,9 @@ public:
 	void InitializePlugin();
 	bool IsPluginInitialized();
 	
+    // FIXME: Move to std::unique_ptr<>
 	plugin *plugin_instance;
+    SurgeGUIEditor *editor_instance;
 protected:		
 	//void handleEvent(VstEvent*);
 	AuMIDIEvent eventbuffer[1024];

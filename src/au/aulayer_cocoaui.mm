@@ -10,13 +10,14 @@
 #import <AudioUnit/AUCocoaUIView.h>
 #include "aulayer.h"
 #include "aulayer_cocoaui.h"
+#include <gui/SurgeGUIEditor.h>
 
 @interface SurgeNSView : NSView
 {
-
+    SurgeGUIEditor *editController;
 }
 
-- (id) initWithSurge: (id) cont preferredSize: (NSSize) size;
+- (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
 @end
 
 @interface SurgeCocoaUI : NSObject<AUCocoaUIBase>
@@ -34,13 +35,15 @@
     AULOG::log( "uiViewForAudioUnit %s on %s\n", __TIME__, __DATE__ );
 #if 0
     // OK so here's what happens in VST land. Basically we get the controller pointer from the AU class and then wrap it in this thingy. Lots to unpick still.
-    Vst::IEditController* editController = 0;
-    UInt32 size = sizeof (Vst::IEditController*);
-    if (AudioUnitGetProperty (inAU, 64000, kAudioUnitScope_Global, 0, &editController, &size) != noErr)
-        return nil;
     return [[[SMTGCocoa_NSViewWrapperForAU alloc] initWithEditController:editController audioUnit:inAU preferredSize:inPreferredSize] autorelease];
 #endif
-    return [[[SurgeNSView alloc] initWithSurge:nil preferredSize:inPreferredSize] autorelease];
+    
+    SurgeGUIEditor* editController = 0;
+    UInt32 size = sizeof (SurgeGUIEditor *);
+    if (AudioUnitGetProperty (inAudioUnit, kVmbAAudioUnitProperty_GetEditPointer, kAudioUnitScope_Global, 0, &editController, &size) != noErr)
+        return nil;
+    
+    return [[[SurgeNSView alloc] initWithSurge:editController preferredSize:inPreferredSize] autorelease];
     // return nil;
 }
 
@@ -56,9 +59,47 @@
 @end
 
 @implementation SurgeNSView
-- (id) initWithSurge: (id) cont preferredSize: (NSSize) size
+- (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
     self = [super initWithFrame: NSMakeRect (0, 0, size.width, size.height)];
+    
+    if (self)
+    {
+        
+#if 0
+        editController = cont;
+        editController->addRef ();
+        audioUnit = au;
+        // WHAT WE ARE GETTING is a plugView not an editController
+        plugView = editController->createView (Vst::ViewType::kEditor);
+        if (!plugView || plugView->isPlatformTypeSupported (kPlatformTypeNSView) != kResultTrue)
+        {
+            [self dealloc];
+            return nil;
+        }
+     
+        plugFrame = NEW AUPlugFrame (self);
+        plugView->setFrame (plugFrame);
+        
+        if (plugView->attached (self, kPlatformTypeNSView) != kResultTrue)
+        {
+            [self dealloc];
+            return nil;
+        }
+        ViewRect vr;
+        if (plugView->getSize (&vr) == kResultTrue)
+        {
+            NSRect newSize = NSMakeRect (0, 0, vr.right - vr.left, vr.bottom - vr.top);
+            [self setFrame:newSize];
+        }
+        
+        isAttached = YES;
+        UInt32 size = sizeof (FObject*);
+        if (AudioUnitGetProperty (audioUnit, 64001, kAudioUnitScope_Global, 0, &dynlib, &size) == noErr)
+            dynlib->addRef ();
+#endif
+    }
+    
     return self;
 }
 
@@ -112,6 +153,14 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
 
                     return noErr;
                 }
+            case kVmbAAudioUnitProperty_GetEditPointer:
+                AULOG::log( "Asking for the edit pointer\n" );
+                if( editor_instance == NULL )
+                {
+                    editor_instance = new SurgeGUIEditor( this, plugin_instance );
+                }
+                outData = (void*)editor_instance;
+                return noErr;
         }
     }
 
