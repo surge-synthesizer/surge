@@ -12,6 +12,33 @@ class SurgeGUIEditor;
 class SurgeSynthesizer;
 typedef SurgeSynthesizer plugin;
 
+struct AULOG
+{
+  static FILE* lf;
+
+  static void log( const char* format, ... )
+  {
+      fprintf( stderr, "ENTERING WITH LF=%d\n", lf );
+      if( lf == NULL )
+      {
+          lf = fopen( "/Users/paul/Library/Logs/Surge.log", "a" );
+          fprintf( stderr, "LOG FILE IS %d\n", lf );
+      }
+    va_list args;
+    va_start( args, format );
+    vfprintf( stderr, format, args );
+    va_end( args );
+    if( lf != NULL )
+      {
+        va_start( args, format );
+        vfprintf( lf, format, args );
+        va_end( args );
+        fflush( lf );
+      }
+
+  }
+};
+
 //-------------------------------------------------------------------------------------------------------
 const CFStringRef rawchunkname = CFSTR("VmbA_chunk");
 

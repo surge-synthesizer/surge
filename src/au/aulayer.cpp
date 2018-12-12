@@ -7,6 +7,8 @@
 
 typedef SurgeSynthesizer sub3_synth;
 
+FILE* AULOG::lf = NULL;
+
 //----------------------------------------------------------------------------------------------------
 
 aulayer::aulayer (AudioUnit au) : AUInstrumentBase (au,1,1)
@@ -106,14 +108,14 @@ void aulayer::InitializePlugin()
 {
 	if(!plugin_instance) 
 	{
-          fprintf( stderr, "SURGE:>> Constructing new plugin\n" );
-          fprintf( stderr, "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
+          AULOG::log( "SURGE:>> Constructing new plugin\n" );
+          AULOG::log( "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
           //sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
           //new(synth) sub3_synth(this);
           
           // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
           plugin_instance = new SurgeSynthesizer( this );
-          fprintf( stderr, "SURGE:>> Plugin Created\n" );
+          AULOG::log( "     :>> Plugin Created\n" );
 	}
 	assert(plugin_instance);
 }
