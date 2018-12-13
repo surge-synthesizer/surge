@@ -120,7 +120,8 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
 
          // const __m128 scale = _mm_set1_ps(0.000030517578125);
 
-         // HACK för att testa sine(__m64)
+			// HACK fÃ¶r att testa sine(__m64)
+			// TRANSLATE: HACK for testing sine(__m64)
          // const __m64 rate = _mm_set1_pi16(0x0040);
 
          /*m64phase = _mm_add_pi16(m64phase,rate);
@@ -147,7 +148,8 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
 /* add controls:
 input L/R
 gain
-limiter?*/
+limiter?
+*/
 
 osc_audioinput::osc_audioinput(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy)
