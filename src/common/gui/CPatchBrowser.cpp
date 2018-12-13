@@ -128,6 +128,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    contextMenu->setDirty();
    contextMenu->popup();
    getFrame()->removeView(contextMenu, true); // remove from frame and forget
+
+   return kMouseEventHandled;
 }
 
 void CPatchBrowser::loadPatch(int id)

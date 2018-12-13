@@ -1,6 +1,7 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2006 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
+#include "CpuArchitecture.h"
 #include "Oscillator.h"
 #if !MAC && !__linux__
 #include <intrin.h>
@@ -212,7 +213,7 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
    }
 #else
 #if (!_M_X64 && !MAC)
-   if (SSE_VERSION >= 2)
+   if (CpuArchitecture & CaSSE2)
 #endif
    {
       // SSE2 path
@@ -427,7 +428,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
 #else
    __m128 scale = _mm_load1_ps(&OutAttenuation);
 #if (!_M_X64 && !MAC)
-   if (SSE_VERSION >= 2)
+   if (CpuArchitecture & CaSSE2)
 #endif
    {
       // SSE2 path
