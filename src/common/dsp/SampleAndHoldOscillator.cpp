@@ -7,10 +7,10 @@
 // const float integrator_hpf = 0.99999999f;
 // const float integrator_hpf = 0.9992144f;		// 44.1 kHz
 // const float integrator_hpf = 0.9964f;		// 44.1 kHz
-// const float integrator_hpf = 0.9982f;		// 44.1 kHz	 magisk moog freq
+// const float integrator_hpf = 0.9982f;		// 44.1 kHz	 Magic Moog freq
 const float integrator_hpf = 0.999f;
-// 290 samples för att falla 50% (british)  (är nog ett 2-pole hpf)
-// 202 samples (american)
+// 290 samples to fall 50% (British) (is probably a 2-pole HPF)
+// 202 samples (American)
 // const float integrator_hpf = 0.999f;
 // pow(ln(0.5)/(samplerate/50hz)
 const float hpf_cycle_loss = 0.995f;
@@ -38,7 +38,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
    bufpos = 0;
    dc = 0;
 
-   // init här
+   // init hÃ¤r
    id_shape = oscdata->p[0].param_id_in_scene;
    id_pw = oscdata->p[1].param_id_in_scene;
    id_smooth = oscdata->p[2].param_id_in_scene;
@@ -373,7 +373,9 @@ template <bool is_init> void SampleAndHoldOscillator::update_lagvals()
 
    float invt =
        4.f * min(1.0, (8.175798915 * note_to_pitch(pitch + l_sync.v)) * dsamplerate_os_inv);
-   float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt)); // ACHTUNG! gör lookup-table
+   float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt)); 
+    // ACHTUNG! gÃ¶r lookup-table
+    // ACHTUNG/WARNING! Make a lookup-table
 
    li_hpf.set_target(hpf2);
 
@@ -397,7 +399,8 @@ void SampleAndHoldOscillator::process_block(
    pitchmult_inv = max(1.0, dsamplerate_os * (1 / 8.175798915) * note_to_pitch_inv(pitch));
    pitchmult =
        1.f /
-       pitchmult_inv; // denna måste vara en riktig division, reciprocal-approx är inte precis nog
+       pitchmult_inv; 
+      // This must be a real division, reciprocal-approximation is not precise enough
    int k, l;
 
    // if (FM) FMdepth.newValue(depth);
