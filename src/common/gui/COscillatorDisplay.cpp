@@ -283,7 +283,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
             strncpy(name, storage->wt_category[c].name.c_str(), namechars);
             contextMenu->addEntry(subMenu, name);
 
-            subMenu->forget(); // viktigt, så att refcounter blir rätt
+            subMenu->forget(); // Important, so that the refcounter gets right
          }
 
          getFrame()->addView(contextMenu); // add to frame
