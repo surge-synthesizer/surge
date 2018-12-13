@@ -1,7 +1,7 @@
 #include "CpuArchitecture.h"
 #include <string.h>
 
-unsigned int CpuArchitecture;
+unsigned int CpuArchitecture = 0;
 
 extern "C" void __cpuid(int* CPUInfo, int InfoType);
 #pragma intrinsic(__cpuid)
@@ -16,7 +16,7 @@ void initCpuArchitecture()
    memcpy(&vendor[8], &CPUInfo[2], 4 * sizeof(char));
    memcpy(&vendor[4], &CPUInfo[3], 4 * sizeof(char));
    if (!CPUInfo[0])
-      return 0; // no additional instructions supported
+      return; // no additional instructions supported
 
    __cpuid(CPUInfo, 1);
    if ((1 << 15) & CPUInfo[3])
