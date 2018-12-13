@@ -67,6 +67,13 @@
     {
         AULOG::log( "About to poen with %d\n", cont );
         cont->open( self );
+        
+        ERect *vr;
+        if (cont->getRect(&vr))
+        {
+            NSRect newSize = NSMakeRect (0, 0, vr->right - vr->left, vr->bottom - vr->top);
+            [self setFrame:newSize];
+        }
 /*
         editController = cont;
         editController->addRef ();
