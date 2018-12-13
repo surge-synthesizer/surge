@@ -8,9 +8,10 @@ const int max_wtable_samples = 268000; // delay pops 4 uses the most
 #pragma pack(push, 1)
 struct wt_header
 {
-   unsigned int tag;
+   char tag[4];
    unsigned int n_samples;
-   unsigned short n_tables, flags;
+   unsigned short n_tables;
+   unsigned short flags;
 };
 #pragma pack(pop)
 

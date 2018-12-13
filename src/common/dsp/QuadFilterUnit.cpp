@@ -1,3 +1,4 @@
+#include "CpuArchitecture.h"
 #include "QuadFilterUnit.h"
 #include "SurgeStorage.h"
 #include <vt_dsp/basic_dsp.h>
@@ -1495,7 +1496,7 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       return COMBquad_PPC;
 #else
 #if !_M_X64
-      if (SSE_VERSION < 2)
+      if (!(CpuArchitecture & CaSSE2))
          return COMBquad_SSE1;
 #endif
       return COMBquad_SSE2;
@@ -1525,7 +1526,7 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
    {
    case wst_digi:
 #if !_M_X64
-      if (SSE_VERSION < 2)
+      if (!(CpuArchitecture & CaSSE2))
          return DIGI_SSE1;
 #endif
       return DIGI_SSE2;
@@ -1533,13 +1534,13 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
       return CLIP;
    case wst_sinus:
 #if !_M_X64
-      if (SSE_VERSION < 2)
+      if (!(CpuArchitecture & CaSSE2))
          return SINUS_SSE1;
 #endif
       return SINUS_SSE2;
    case wst_asym:
 #if !_M_X64
-      if (SSE_VERSION < 2)
+      if (!(CpuArchitecture & CaSSE2))
          return ASYM_SSE1;
 #endif
       return ASYM_SSE2;

@@ -1,13 +1,14 @@
-#if !MAC
 #include "CpuArchitecture.h"
 #include <string.h>
+
+unsigned int CpuArchitecture = 0;
 
 extern "C" void __cpuid(int* CPUInfo, int InfoType);
 #pragma intrinsic(__cpuid)
 
-unsigned int determine_support()
+void initCpuArchitecture()
 {
-   unsigned int arch = 0;
+#if WINDOWS
    int CPUInfo[4] = {-1};
    __cpuid(CPUInfo, 0);
    char vendor[12];
@@ -15,30 +16,18 @@ unsigned int determine_support()
    memcpy(&vendor[8], &CPUInfo[2], 4 * sizeof(char));
    memcpy(&vendor[4], &CPUInfo[3], 4 * sizeof(char));
    if (!CPUInfo[0])
-      return 0; // no additional instructions supported
+      return; // no additional instructions supported
 
    __cpuid(CPUInfo, 1);
    if ((1 << 15) & CPUInfo[3])
-      arch |= ca_CMOV;
-   if ((1 << 25) & CPUInfo[3])
-      arch |= ca_SSE;
+      CpuArchitecture |= CaCMOV;
    if ((1 << 26) & CPUInfo[3])
-      arch |= ca_SSE2;
-   if (CPUInfo[2] & 0x1)
-      arch |= ca_SSE3;
-
-   // get number of extended pages
-   __cpuid(CPUInfo, 0x80000000);
-   unsigned int extendedpages = CPUInfo[0];
-
-   // determine 3DNow! support
-   if (!strncmp("AuthenticAMD", vendor, 12) && (extendedpages >= 0x80000001))
-   {
-      __cpuid(CPUInfo, 0x80000001);
-      if (((1 << 30) & CPUInfo[3]) && ((1 << 31) & CPUInfo[3]))
-         arch |= ca_3DNOW;
-   }
-
-   return arch;
-}
+      CpuArchitecture |= CaSSE2;
+#else
+   __builtin_cpu_init();
+   if (__builtin_cpu_supports("sse2"))
+      CpuArchitecture |= CaSSE2;
+   if (__builtin_cpu_supports("cmov"))
+      CpuArchitecture |= CaCMOV;
 #endif
+}
