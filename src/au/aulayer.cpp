@@ -410,29 +410,6 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 	return noErr;
 }
 
-//----------------------------------------------------------------------------------------------------
-
-const char* getclamptxt(int id)
-{
-	switch(id)
-	{
-		case 1: return "Macro Parameters";
-		case 2: return "Global / FX";
-		case 3: return "Scene A Common";
-		case 4: return "Scene A Osc";
-		case 5: return "Scene A Osc Mixer";
-		case 6: return "Scene A Filters";
-		case 7: return "Scene A Envelopes";
-		case 8: return "Scene A LFOs";
-		case 9: return "Scene B Common";
-		case 10: return "Scene B Osc";
-		case 11: return "Scene B Osc Mixer";
-		case 12: return "Scene B Filters";
-		case 13: return "Scene B Envelopes";
-		case 14: return "Scene B LFOs";
-	}
-	return "";
-}
 
 //----------------------------------------------------------------------------------------------------
 
@@ -461,26 +438,20 @@ ComponentResult aulayer::GetPropertyInfo(AudioUnitPropertyID iID, AudioUnitScope
                 fWritable = true;
                 return noErr;
                 break;
+            case kAudioUnitProperty_ParameterValueName:
+                iSize = sizeof( AudioUnitParameterValueName );
+                return noErr;
+                break;
+            case kAudioUnitProperty_ParameterClumpName:
+                iSize = sizeof( AudioUnitParameterNameInfo );
+                return noErr;
+                break;
+            case kVmbAAudioUnitProperty_GetPluginCPPInstance:
+                iSize = sizeof( void* );
+                return noErr;
+                break;
         }
     }
-    
-#if 0
-    -       if(iID == kAudioUnitProperty_ParameterValueName)
-        -       {
-            -               iSize=sizeof(AudioUnitParameterValueName);
-            -               return noErr;
-            -       }
-    -       else if(iID == kAudioUnitProperty_ParameterClumpName)
-        -       {
-            -               iSize=sizeof(AudioUnitParameterNameInfo);
-            -               return noErr;
-            -       }
-    -       else if (iID==kVmbAAudioUnitProperty_GetPluginCPPInstance)
-        -       {
-            -               iSize=sizeof(void*);
-            -               return noErr;
-            -       }
-#endif
     
   return AUInstrumentBase::GetPropertyInfo(iID, iScope, iElem, iSize,fWritable);
 }

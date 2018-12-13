@@ -66,7 +66,7 @@
     if (self)
     {
         
-#if 0
+/*
         editController = cont;
         editController->addRef ();
         audioUnit = au;
@@ -97,7 +97,7 @@
         UInt32 size = sizeof (FObject*);
         if (AudioUnitGetProperty (audioUnit, 64001, kAudioUnitScope_Global, 0, &dynlib, &size) == noErr)
             dynlib->addRef ();
-#endif
+*/
     }
     
     return self;
@@ -128,6 +128,30 @@ static CFBundleRef GetBundleFromExecutable (const char* filepath)
     
 }
 
+//----------------------------------------------------------------------------------------------------
+
+const char* getclamptxt(int id)
+{
+    switch(id)
+    {
+        case 1: return "Macro Parameters";
+        case 2: return "Global / FX";
+        case 3: return "Scene A Common";
+        case 4: return "Scene A Osc";
+        case 5: return "Scene A Osc Mixer";
+        case 6: return "Scene A Filters";
+        case 7: return "Scene A Envelopes";
+        case 8: return "Scene A LFOs";
+        case 9: return "Scene B Common";
+        case 10: return "Scene B Osc";
+        case 11: return "Scene B Osc Mixer";
+        case 12: return "Scene B Filters";
+        case 13: return "Scene B Envelopes";
+        case 14: return "Scene B LFOs";
+    }
+    return "";
+}
+
 ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iScope, AudioUnitElement iElem, void* outData)
 {
     if( iScope == kAudioUnitScope_Global )
@@ -154,6 +178,7 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
                     return noErr;
                 }
             case kVmbAAudioUnitProperty_GetEditPointer:
+            {
                 AULOG::log( "Asking for the edit pointer\n" );
                 if( editor_instance == NULL )
                 {
@@ -161,6 +186,31 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
                 }
                 outData = (void*)editor_instance;
                 return noErr;
+            }
+            case kAudioUnitProperty_ParameterValueName:
+            {
+                if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
+                AudioUnitParameterValueName *aup = (AudioUnitParameterValueName*)outData;
+                char tmptxt[64];
+                float f;
+                if(aup->inValue) f = *(aup->inValue);
+                else f = plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(aup->inParamID));
+                plugin_instance->getParameterDisplay(plugin_instance->remapExternalApiToInternalId(aup->inParamID),tmptxt,f);
+                aup->outName = CFStringCreateWithCString(NULL,tmptxt,kCFStringEncodingUTF8);
+                return noErr;
+            }
+            case kAudioUnitProperty_ParameterClumpName:
+            {
+                AudioUnitParameterNameInfo *aupn = (AudioUnitParameterNameInfo*)outData;
+                aupn->outName = CFStringCreateWithCString(NULL,getclamptxt(aupn->inID),kCFStringEncodingUTF8);
+                return noErr;
+            }
+            case kVmbAAudioUnitProperty_GetPluginCPPInstance:
+            {
+                void** pThis = (void**)(outData);
+                *pThis = (void*)plugin_instance;
+                return noErr;
+            }
         }
     }
 
