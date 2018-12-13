@@ -15,10 +15,12 @@
 @interface SurgeNSView : NSView
 {
     SurgeGUIEditor *editController;
+    NSTimer *idleTimer;
 }
 
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
-- (void) runIdleThread;
+- (void) doIdle;
+- (void) drawRect:(NSRect)dirtyRect;
 
 @end
 
@@ -35,11 +37,8 @@
 {
     // Remember we end up being called here because that's what AUCocoaUIView does in the initiation collaboration with hosts
     AULOG::log( "uiViewForAudioUnit %s on %s\n", __TIME__, __DATE__ );
-#if 0
-    // OK so here's what happens in VST land. Basically we get the controller pointer from the AU class and then wrap it in this thingy. Lots to unpick still.
-    return [[[SMTGCocoa_NSViewWrapperForAU alloc] initWithEditController:editController audioUnit:inAU preferredSize:inPreferredSize] autorelease];
-#endif
-    
+    AULOG::log( "My thread is %d\n", pthread_self( ) );
+
     SurgeGUIEditor* editController = 0;
     UInt32 size = sizeof (SurgeGUIEditor *);
     if (AudioUnitGetProperty (inAudioUnit, kVmbAAudioUnitProperty_GetEditPointer, kAudioUnitScope_Global, 0, &editController, &size) != noErr)
@@ -60,6 +59,12 @@
 
 @end
 
+void timerCallback( CFRunLoopTimerRef timer, void *info )
+{
+    SurgeNSView *view = (SurgeNSView *)info;
+    [view doIdle];
+}
+
 @implementation SurgeNSView
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
@@ -77,8 +82,32 @@
             [self setFrame:newSize];
         }
         
+        AULOG::log( "Done resizing\n" );
+        
+        CFTimeInterval TIMER_INTERVAL = .05; // In SurgeGUISynthesizer.h it uses 50 ms
+        CFRunLoopTimerContext TimerContext = {0, self, NULL, NULL, NULL};
+        CFAbsoluteTime FireTime = CFAbsoluteTimeGetCurrent() + TIMER_INTERVAL;
+        auto mTimer = CFRunLoopTimerCreate(kCFAllocatorDefault,
+                                           FireTime,
+                                           TIMER_INTERVAL,
+                                           0, 0,
+                                           timerCallback,
+                                           &TimerContext);
+        if (mTimer)
+            CFRunLoopAddTimer (CFRunLoopGetMain (), mTimer, kCFRunLoopCommonModes);
+        AULOG::log( "Added timer on %d\n", self );
+        /*idleTimer = [NSTimer timerWithTimeInterval:1.0
+                                            target:self
+                                          selector:@selector(doIdle:)
+                                          userInfo:nil
+                                           repeats:YES
+                     ];*/
+        
+        //[[NSRunLoop currentRunLoop] addTime:idleTimer forMode:NSDefaultRunLoopMode];
+        
+        AULOG::log( "Timer made %d\n", [NSRunLoop currentRunLoop] );
         // Start the idle thread
-        // [NSThread detachNewThreadSelector:@selector(runIdle) toTarget:self withObject:nil];
+        //[NSThread detachNewThreadSelector:@selector(runIdle) toTarget:[self retain] withObject:nil];
 
 /*
  // What was this?
@@ -92,26 +121,19 @@
     return self;
 }
 
-- (void) runIdleThread
+- (void) doIdle
 {
-    // FIXME: Have a stop condition
-    while( true )
-    {
-        AULOG::log( "runIdleThread %d\n", editController );
-        //editController->idle();
-        [NSThread sleepForTimeInterval:1];
-    }
+    editController->idle();
 }
 
 // Just for now
 - (void) drawRect:(NSRect)dirtyRect {
-    [super drawRect:dirtyRect];
-    
     // This next line sets the the current fill color parameter of the Graphics Context
     [[NSColor redColor] setFill];
     // This next function fills a rect the same as dirtyRect with the current fill color of the Graphics Context.
     NSRectFill(dirtyRect);
     // You might want to use _bounds or self.bounds if you want to be sure to fill the entire bounds rect of the view.
+    [super drawRect:dirtyRect];
 }
 @end
 
@@ -176,7 +198,7 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
                 }
             case kVmbAAudioUnitProperty_GetEditPointer:
             {
-                AULOG::log( "Asking for the edit pointer\n" );
+                AULOG::log( "Asking for the edit pointer on %d\n", pthread_self() );
                 if( editor_instance == NULL )
                 {
                     editor_instance = new SurgeGUIEditor( this, plugin_instance );

@@ -627,7 +627,7 @@ ComponentResult aulayer::GetParameter(AudioUnitParameterID inID, AudioUnitScope 
 
 ComponentResult	aulayer::SetParameter(AudioUnitParameterID inID, AudioUnitScope inScope, AudioUnitElement inElement, Float32 inValue, UInt32 inBufferOffsetInFrames)
 {
-	if (inScope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidParameter;
+    if (inScope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidParameter;
 	if(inID >= n_total_params) return kAudioUnitErr_InvalidParameter;
 	if(!IsInitialized()) return kAudioUnitErr_Uninitialized;	
 	plugin_instance->setParameter01(plugin_instance->remapExternalApiToInternalId(inID),inValue,true);
