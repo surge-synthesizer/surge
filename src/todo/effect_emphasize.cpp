@@ -3,7 +3,7 @@
 
 using namespace vt_dsp;
 
-//görs bättre med fft
+//Done better with FFT (Do this better with FFT? Should be done better with FFT?) gÃ¶rs bÃ¤ttre med fft
 
 emphasize::emphasize(sub3_storage *storage, sub3_fx *fxdata, pdata* pd) 
 : baseeffect(storage,fxdata,pd), EQ(storage), pre(3,true), post(3,true)
@@ -54,7 +54,9 @@ void emphasize::process(float *dataL, float *dataR)
 	for(int k=0; k<block_size_os_quad; k++)
 	{
 		// y = x*x*(t + (1-t)*x)
-		// y = x*x*(t + x - t*x)			midre dependancies (noes, 1-t är precalc så det blir det inte alls
+		// y = x*x*(t + x - t*x) 
+		// midre dependancies (noes, 1-t Ã¤r precalc sÃ¥ det blir det inte alls
+		// TRANSLATE: Less dependencies (does, 1-t is precal so it will not be at all
 		__m128 L = _mm_load_ps(bL + (k<<2));
 		__m128 LL = _mm_mul_ps(L,L);
 		L = _mm_mul_ps(LL,_mm_sub_ps(_mm_add_ps(type,L), _mm_mul_ps(type,L)));
@@ -100,10 +102,10 @@ void emphasize::init_ctrltypes()
 {
 	baseeffect::init_ctrltypes();
 
-	fxdata->p[0].set_name("amount");		fxdata->p[0].set_type(ct_decibel);
+	fxdata->p[0].set_name("amount");	fxdata->p[0].set_type(ct_decibel);
 	fxdata->p[1].set_name("freq");		fxdata->p[1].set_type(ct_freq_audible);
-	fxdata->p[2].set_name("BW");			fxdata->p[2].set_type(ct_bandwidth);			
-	fxdata->p[3].set_name("type");			fxdata->p[3].set_type(ct_percent);
+	fxdata->p[2].set_name("BW");		fxdata->p[2].set_type(ct_bandwidth);			
+	fxdata->p[3].set_name("type");		fxdata->p[3].set_type(ct_percent);
 
 	fxdata->p[0].posy_offset = 1;
 	fxdata->p[1].posy_offset = 1;
