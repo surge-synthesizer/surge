@@ -1299,8 +1299,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                fx[s]->init_default_values();
             /*for(int j=0; j<n_fx_params; j++)
             {
-                    storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].f =
-            storage.getPatch().fx[s].p[j].val.f;
+		storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].f =
+		storage.getPatch().fx[s].p[j].val.f;
             }*/
 
             fx[s]->init();
@@ -1908,9 +1908,9 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta& pm)
       pm.fdefault = 0.5f;
       pm.hide = false;
       pm.meta =
-          false; // ironiskt eftersom det är metaparameters, men dom påverkar inga andra sliders
-	   			 // TRANSLATE:
-	   			 // ironic because it is metaparameters, but they don't affect any other sliders
+          false;// ironiskt eftersom det är metaparameters, men dom påverkar inga andra sliders
+	   	// TRANSLATE:
+	   	// ironic because it is metaparameters, but they don't affect any other sliders
       pm.expert = false;
       pm.clump = 1;
    }
@@ -2049,8 +2049,8 @@ void SurgeSynthesizer::processControl()
 
    storage.getPatch().copy_globaldata(
        storage.getPatch().globaldata); // suger ganska mkt cpu i debug mode
-									   // TRANSLATE:
-									   // Drains a great deal of CPU while in Debug mode
+					// TRANSLATE:
+					// Drains a great deal of CPU while in Debug mode
    if (playA)
       storage.getPatch().copy_scenedata(storage.getPatch().scenedata[0], 0); // -""-
    if (playB)
