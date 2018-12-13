@@ -22,7 +22,7 @@ void osc_wavetable2::init(float pitch, bool is_display)
 	osc_out = _mm_set1_ps(0.f);		
 	bufpos = 0;	
 	
-	// init här
+	// init hÃ¤r
 	id_shape = oscdata->p[0].param_id_in_scene;
 	id_vskew = oscdata->p[1].param_id_in_scene;	
 	id_clip = oscdata->p[2].param_id_in_scene;
@@ -46,7 +46,7 @@ void osc_wavetable2::init(float pitch, bool is_display)
 	if(is_display) n_unison = 1;
 	out_attenuation = 1.0f/sqrt((float)n_unison);
 
-	if(n_unison == 1)	// gör dynamic honk sen..
+	if(n_unison == 1)	// Make dynamic baskets (?) later... (gÃ¶r dynamic honk sen..)
 	{
 		detune_bias = 1;
 		detune_offset = 0;
@@ -101,11 +101,11 @@ void osc_wavetable2::init(float pitch, bool is_display)
 
 void osc_wavetable2::init_ctrltypes()
 {
-	oscdata->p[0].set_name("shape");		oscdata->p[0].set_type(ct_percent);
-	oscdata->p[1].set_name("skew v");		oscdata->p[1].set_type(ct_percent_bidirectional);
-	oscdata->p[2].set_name("saturate");		oscdata->p[2].set_type(ct_percent);
-	oscdata->p[3].set_name("formant");		oscdata->p[3].set_type(ct_syncpitch);
-	oscdata->p[4].set_name("skew h");		oscdata->p[4].set_type(ct_percent_bidirectional);	
+	oscdata->p[0].set_name("shape");	oscdata->p[0].set_type(ct_percent);
+	oscdata->p[1].set_name("skew v");	oscdata->p[1].set_type(ct_percent_bidirectional);
+	oscdata->p[2].set_name("saturate");	oscdata->p[2].set_type(ct_percent);
+	oscdata->p[3].set_name("formant");	oscdata->p[3].set_type(ct_syncpitch);
+	oscdata->p[4].set_name("skew h");	oscdata->p[4].set_type(ct_percent_bidirectional);	
 	oscdata->p[5].set_name("osc spread");	oscdata->p[5].set_type(ct_percent);	
 	oscdata->p[6].set_name("osc count");	oscdata->p[6].set_type(ct_osccount);	
 }
@@ -165,7 +165,7 @@ void osc_wavetable2::convolute(int voice, bool FM)
 				else 
 				{
 					tableid = oscdata->wt.n_tables-2; 
-					oscstate[voice] = 100000000000.f;	// rather large number
+					oscstate[voice] = 100000000000.f; // rather large number
 					return;
 				}
 			}
@@ -276,7 +276,7 @@ void osc_wavetable2::update_lagvals()
 	formant_t = max(0.f,localcopy[id_formant].f);
 	
 	float invt = min(1.0,(8.175798915 * storage->note_to_pitch(pitch_t)) / storage->dsamplerate_os);		
-	float hpf2 = min(integrator_hpf,powf(hpf_cycle_loss,4*invt));	// ACHTUNG! gör lookup-table
+	float hpf2 = min(integrator_hpf,powf(hpf_cycle_loss,4*invt));	// ACHTUNG!/WARNING! Make a lookup-table
 		
 	hpf_coeff.newValue(hpf2);
 	integrator_mult.newValue(invt);	
@@ -303,7 +303,7 @@ template<bool FM> void osc_wavetable2::process_blockT(float pitch0,float depth,f
 	pitch_last = pitch_t;
 	pitch_t = min(148.f,pitch0);
 	pitchmult_inv = max(1.0,storage->dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
-	pitchmult = 1.f / pitchmult_inv;	// try to hide the latency
+	pitchmult = 1.f / pitchmult_inv; // try to hide the latency
 	this->drift = drift;
 	int k,l;
 	
