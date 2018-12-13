@@ -18,6 +18,8 @@
 }
 
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
+- (void) runIdleThread;
+
 @end
 
 @interface SurgeCocoaUI : NSObject<AUCocoaUIBase>
@@ -62,7 +64,7 @@
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
     self = [super initWithFrame: NSMakeRect (0, 0, size.width / 2, size.height / 2)];
-    
+    editController = cont;
     if (self)
     {
         AULOG::log( "About to poen with %d\n", cont );
@@ -74,33 +76,12 @@
             NSRect newSize = NSMakeRect (0, 0, vr->right - vr->left, vr->bottom - vr->top);
             [self setFrame:newSize];
         }
+        
+        // Start the idle thread
+        // [NSThread detachNewThreadSelector:@selector(runIdle) toTarget:self withObject:nil];
+
 /*
-        editController = cont;
-        editController->addRef ();
-        audioUnit = au;
-        // WHAT WE ARE GETTING is a plugView not an editController
-        plugView = editController->createView (Vst::ViewType::kEditor);
-        if (!plugView || plugView->isPlatformTypeSupported (kPlatformTypeNSView) != kResultTrue)
-        {
-            [self dealloc];
-            return nil;
-        }
-     
-        plugFrame = NEW AUPlugFrame (self);
-        plugView->setFrame (plugFrame);
-        
-        if (plugView->attached (self, kPlatformTypeNSView) != kResultTrue)
-        {
-            [self dealloc];
-            return nil;
-        }
-        ViewRect vr;
-        if (plugView->getSize (&vr) == kResultTrue)
-        {
-            NSRect newSize = NSMakeRect (0, 0, vr.right - vr.left, vr.bottom - vr.top);
-            [self setFrame:newSize];
-        }
-        
+ // What was this?
         isAttached = YES;
         UInt32 size = sizeof (FObject*);
         if (AudioUnitGetProperty (audioUnit, 64001, kAudioUnitScope_Global, 0, &dynlib, &size) == noErr)
@@ -109,6 +90,17 @@
     }
     
     return self;
+}
+
+- (void) runIdleThread
+{
+    // FIXME: Have a stop condition
+    while( true )
+    {
+        AULOG::log( "runIdleThread %d\n", editController );
+        //editController->idle();
+        [NSThread sleepForTimeInterval:1];
+    }
 }
 
 // Just for now
@@ -167,20 +159,17 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
         switch( iID )
         {
             case kAudioUnitProperty_CocoaUI:
-                // FIXME - this autorelease over-releases so leak a little (we are infrequently called)
-                // but definitely come back and fix this!
-                //@autoreleasepool
                 {
-                    AULOG::log( "Asking for kAudioUnitProperty_CocoaUI\n" );
                     auto surgeclass = objc_getClass( "SurgeCocoaUI" );
                     const char* image = class_getImageName ( surgeclass );
                     CFBundleRef bundle = GetBundleFromExecutable (image);
                     CFURLRef url = CFBundleCopyBundleURL (bundle);
+                    CFRetain( url );
                     CFRelease (bundle);
 
                     
                     AudioUnitCocoaViewInfo* info = static_cast<AudioUnitCocoaViewInfo*> (outData);
-                    info->mCocoaAUViewClass[0] = (__bridge CFStringRef)NSStringFromClass( surgeclass );
+                    info->mCocoaAUViewClass[0] = CFStringCreateWithCString(kCFAllocatorDefault, class_getName(surgeclass), kCFStringEncodingUTF8);
                     info->mCocoaAUViewBundleLocation = url;
 
                     return noErr;
