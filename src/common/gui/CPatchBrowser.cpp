@@ -78,7 +78,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
             }
          }
 
-         // dela in kategorier med fler entries än splitcount i subkategorier ex. bass (1,2) etc etc
+         // Divide categories with more entries than splitcount into subcategories f.ex. bass (1,2) etc etc
          int n_subc = 1 + (max(2, (int)ctge.size()) - 1) / splitcount;
          for (int subc = 0; subc < n_subc; subc++)
          {
@@ -116,7 +116,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
             if (!single_category)
             {
                contextMenu->addEntry(subMenu, name);
-               subMenu->forget(); // viktigt, så att refcounter blir rätt
+               subMenu->forget(); // Important, so that the refcounter gets it right
             }
             main_e++;
          }
