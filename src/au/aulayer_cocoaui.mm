@@ -61,11 +61,12 @@
 @implementation SurgeNSView
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
-    self = [super initWithFrame: NSMakeRect (0, 0, size.width, size.height)];
+    self = [super initWithFrame: NSMakeRect (0, 0, size.width / 2, size.height / 2)];
     
     if (self)
     {
-        
+        AULOG::log( "About to poen with %d\n", cont );
+        cont->open( self );
 /*
         editController = cont;
         editController->addRef ();
@@ -184,7 +185,9 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
                 {
                     editor_instance = new SurgeGUIEditor( this, plugin_instance );
                 }
-                outData = (void*)editor_instance;
+                void** pThis = (void**)(outData);
+                *pThis = (void*)editor_instance;
+
                 return noErr;
             }
             case kAudioUnitProperty_ParameterValueName:
