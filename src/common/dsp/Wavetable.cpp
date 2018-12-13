@@ -44,7 +44,7 @@ bool _BitScanReverse(unsigned int* result, unsigned int bits)
 }
 #endif
 
-//! Calculate he worst-case scenario of the needed samples for a specific wavetable and see if it
+//! Calculate the worst-case scenario of the needed samples for a specific wavetable and see if it
 //! fits
 bool CheckRequiredWTSize(int TableSize, int TableCount)
 {
@@ -309,13 +309,8 @@ void Wavetable::MipMapWT()
 
 	// TRANSLATE:
 	// TODO I16 mipmaps end up out of phase
-    // The click/knot/bug probably results from the fact that there is no padding in the beginning, so it becomes out of phase
-    // at mipmapbyte - makes sense because it separates a whole sample at the exchange, which can not
-    // be explained by the semifinal filter
-	//
-	
-	
-	
-	
+	// The click/knot/bug probably results from the fact that there is no padding in the beginning, 
+	// so it becomes out of phase at mipmapbyte - makes sense because it separates a whole sample
+	// at the exchange, which can not be explained by the semifinal filter
 	
 }
