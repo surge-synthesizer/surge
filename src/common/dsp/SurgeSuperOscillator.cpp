@@ -7,10 +7,10 @@
 // const float integrator_hpf = 0.99999999f;
 // const float integrator_hpf = 0.9992144f;		// 44.1 kHz
 // const float integrator_hpf = 0.9964f;		// 44.1 kHz
-// const float integrator_hpf = 0.9982f;		// 44.1 kHz	 magisk moog freq
+// const float integrator_hpf = 0.9982f;		// 44.1 kHz	 Magical Moog frequency
 
-// 290 samples för att falla 50% (british)  (är nog ett 2-pole hpf)
-// 202 samples (american)
+// 290 samples to fall by 50% (British)  (Is probably a 2-pole HPF)
+// 202 samples (American)
 // const float integrator_hpf = 0.999f;
 // pow(ln(0.5)/(samplerate/50hz)
 const float hpf_cycle_loss = 0.995f;
@@ -114,7 +114,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
    bufpos = 0;
    dc = 0;
 
-   // init här
+   // Init here
    id_shape = oscdata->p[0].param_id_in_scene;
    id_pw = oscdata->p[1].param_id_in_scene;
    id_pw2 = oscdata->p[2].param_id_in_scene;
@@ -327,7 +327,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
       vFloat g128R = vec_loadAndSplatScalar(&gR);
       vFloat st[3];
       vFloat lipol128 = vec_loadAndSplatScalar(&flipol);
-      vector unsigned char mask, maskstore; // since both buffers are aligned and read the same
+      vector unsigned char mask, maskstore; // since both buffers are aligned and read (from) the same
                                             // position, the same mask can be used
 
       // load & align oscbuffer (left)
@@ -503,7 +503,7 @@ template <bool is_init> void SurgeSuperOscillator::update_lagvals()
 
    float invt =
        4.f * min(1.0, (8.175798915 * note_to_pitch(pitch + l_sync.v)) * dsamplerate_os_inv);
-   float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt)); // TODO ACHTUNG! gör lookup-table
+   float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt)); // TODO ACHTUNG/WARNING! Make a lookup table
 
    li_hpf.set_target(hpf2);
    // li_integratormult.set_target(invt);
@@ -531,7 +531,7 @@ void SurgeSuperOscillator::process_block(
 
    pitchmult =
        1.f /
-       pitchmult_inv; // denna måste vara en riktig division, reciprocal-approx är inte precis nog
+       pitchmult_inv; // This must be a real division, reciprocal-approximation is not precise enough
 
    int k, l;
 
@@ -558,9 +558,8 @@ void SurgeSuperOscillator::process_block(
             while (((l_sync.v > 0) && (syncstate[l] < a)) || (oscstate[l] < a))
             {
                FMmul_inv = rcp(fmmul);
-               // divisionen racar med ökningen av oscstate så att den aldrig kommer ur loopen
-               // detta blir unsafe fucka inte med oscstate utan gör divisionen inne i convolute
-               // istället
+               // The division races with the growth of the oscstate so that it never comes out of/gets out of the loop
+              // this becomes unsafe, don't fuck with the oscstate but make a division within the convolute instead.
                convolute<true>(l, stereo);
             }
 
