@@ -213,7 +213,8 @@ void BiquadFilter::coeff_orfanidisEQ(double omega, double BW, double G, double G
       double G01 = abs(G * G - G0 * G1);
       double G11 = abs(G * G - G1 * G1);
       double F01 = abs(GB * GB - G0 * G1);
-      double F11 = abs(GB * GB - G1 * G1); // blir wacko ?
+      double F11 = abs(GB * GB - G1 * G1);	// blir wacko ? 
+	   					// goes crazy (?)
       double W2 = sqrt(G11 / G00) * square(tan(w0 / 2));
       double w_lower = w0 * powf(2, -0.5 * BW);
       double w_upper =
