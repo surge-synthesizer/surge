@@ -56,7 +56,7 @@ void emphasize::process(float *dataL, float *dataR)
 		// y = x*x*(t + (1-t)*x)
 		// y = x*x*(t + x - t*x) 
 		// midre dependancies (noes, 1-t är precalc så det blir det inte alls
-		// TRANSLATE: Less dependencies (does, 1-t is precal so it will not be at all
+		// TRANSLATE: Less dependencies (does, 1-t is precalc so it will not be at all
 		__m128 L = _mm_load_ps(bL + (k<<2));
 		__m128 LL = _mm_mul_ps(L,L);
 		L = _mm_mul_ps(LL,_mm_sub_ps(_mm_add_ps(type,L), _mm_mul_ps(type,L)));
