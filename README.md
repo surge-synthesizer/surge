@@ -138,5 +138,4 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 ## References
 
   * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
-  * Development Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=33&t=511921)
   * IRC channel #surgesynth @ irc.freenode.net
