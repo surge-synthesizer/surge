@@ -41,6 +41,7 @@
 {
     SurgeGUIEditor *editController;
     CFRunLoopTimerRef idleTimer;
+    float lastScale;
 }
 
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
@@ -92,8 +93,10 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
     self = [super initWithFrame: NSMakeRect (0, 0, size.width / 2, size.height / 2)];
+
     idleTimer = nil;
     editController = cont;
+    lastScale = cont->getZoomFactor() / 100.0;
     if (self)
     {
         AULOG::log( "Opening new editor view\n" );
@@ -105,7 +108,27 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
             NSRect newSize = NSMakeRect (0, 0, vr->right - vr->left, vr->bottom - vr->top);
             [self setFrame:newSize];
         }
-        
+
+        cont->setZoomCallback( [cont,self]() {
+                AULOG::log( "In the Zoom Callback back in Cocoa to %d\n", cont->getZoomFactor() );
+                ERect *vr;
+                float zf = cont->getZoomFactor() / 100.0;
+                if (cont->getRect(&vr))
+                {
+                    NSRect newSize = NSMakeRect (0, 0,
+                                (int)( (vr->right - vr->left) * zf ),
+                                (int)( (vr->bottom - vr->top) * zf ) );
+                    AULOG::log( "Scalining display and unit square by %lf\n", zf );
+                    [self scaleUnitSquareToSize:NSMakeSize( zf / lastScale, zf / lastScale )];
+                    lastScale = zf;
+                    
+                    AULOG::log( "Resetting window size\n" );
+                    [self setFrame:newSize];
+                }
+
+                }
+        );
+
         CFTimeInterval      TIMER_INTERVAL = .05; // In SurgeGUISynthesizer.h it uses 50 ms
         CFRunLoopTimerContext TimerContext = {0, self, NULL, NULL, NULL};
         CFAbsoluteTime             FireTime = CFAbsoluteTimeGetCurrent() + TIMER_INTERVAL;

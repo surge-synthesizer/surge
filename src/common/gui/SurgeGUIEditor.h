@@ -86,6 +86,15 @@ private:
                              vector<patchlist_category>* patch_category,
                              int startcategory);
 
+   
+   void zoomInDir( int dir );
+   int zoomFactor;
+ public:
+   void setZoomCallback( std::function< void() > f ) { zoom_callback = f; }
+   int getZoomFactor() { return zoomFactor; }
+ private:
+   std::function< void() > zoom_callback;
+   
    SurgeBitmaps bitmap_keeper;
 
    CControl* vu[16];
