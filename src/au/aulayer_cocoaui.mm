@@ -15,12 +15,12 @@
 @interface SurgeNSView : NSView
 {
     SurgeGUIEditor *editController;
-    NSTimer *idleTimer;
+    CFRunLoopTimerRef idleTimer;
 }
 
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
 - (void) doIdle;
-- (void) drawRect:(NSRect)dirtyRect;
+- (void) dealloc;
 
 @end
 
@@ -69,6 +69,7 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
     self = [super initWithFrame: NSMakeRect (0, 0, size.width / 2, size.height / 2)];
+    idleTimer = nil;
     editController = cont;
     if (self)
     {
@@ -84,38 +85,18 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
         
         AULOG::log( "Done resizing\n" );
         
-        CFTimeInterval TIMER_INTERVAL = .05; // In SurgeGUISynthesizer.h it uses 50 ms
+        CFTimeInterval      TIMER_INTERVAL = .05; // In SurgeGUISynthesizer.h it uses 50 ms
         CFRunLoopTimerContext TimerContext = {0, self, NULL, NULL, NULL};
-        CFAbsoluteTime FireTime = CFAbsoluteTimeGetCurrent() + TIMER_INTERVAL;
-        auto mTimer = CFRunLoopTimerCreate(kCFAllocatorDefault,
-                                           FireTime,
-                                           TIMER_INTERVAL,
-                                           0, 0,
-                                           timerCallback,
-                                           &TimerContext);
-        if (mTimer)
-            CFRunLoopAddTimer (CFRunLoopGetMain (), mTimer, kCFRunLoopCommonModes);
+        CFAbsoluteTime             FireTime = CFAbsoluteTimeGetCurrent() + TIMER_INTERVAL;
+        idleTimer = CFRunLoopTimerCreate(kCFAllocatorDefault,
+                                              FireTime,
+                                              TIMER_INTERVAL,
+                                              0, 0,
+                                              timerCallback,
+                                              &TimerContext);
+        if (idleTimer)
+            CFRunLoopAddTimer (CFRunLoopGetMain (), idleTimer, kCFRunLoopCommonModes);
         AULOG::log( "Added timer on %d\n", self );
-        /*idleTimer = [NSTimer timerWithTimeInterval:1.0
-                                            target:self
-                                          selector:@selector(doIdle:)
-                                          userInfo:nil
-                                           repeats:YES
-                     ];*/
-        
-        //[[NSRunLoop currentRunLoop] addTime:idleTimer forMode:NSDefaultRunLoopMode];
-        
-        AULOG::log( "Timer made %d\n", [NSRunLoop currentRunLoop] );
-        // Start the idle thread
-        //[NSThread detachNewThreadSelector:@selector(runIdle) toTarget:[self retain] withObject:nil];
-
-/*
- // What was this?
-        isAttached = YES;
-        UInt32 size = sizeof (FObject*);
-        if (AudioUnitGetProperty (audioUnit, 64001, kAudioUnitScope_Global, 0, &dynlib, &size) == noErr)
-            dynlib->addRef ();
-*/
     }
     
     return self;
@@ -126,15 +107,19 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
     editController->idle();
 }
 
-// Just for now
-- (void) drawRect:(NSRect)dirtyRect {
-    // This next line sets the the current fill color parameter of the Graphics Context
-    [[NSColor redColor] setFill];
-    // This next function fills a rect the same as dirtyRect with the current fill color of the Graphics Context.
-    NSRectFill(dirtyRect);
-    // You might want to use _bounds or self.bounds if you want to be sure to fill the entire bounds rect of the view.
-    [super drawRect:dirtyRect];
+- (void) dealloc
+{
+    AULOG::log( "Shutting down SurgeNSView in dealloc\n" );
+    editController->close();
+    if( idleTimer )
+    {
+        AULOG::log( "Invadliated Timer\n" );
+        CFRunLoopTimerInvalidate( idleTimer );
+    }
+
+    [super dealloc];
 }
+
 @end
 
 

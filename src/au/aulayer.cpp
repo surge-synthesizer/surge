@@ -26,6 +26,11 @@ aulayer::~aulayer()
 		plugin_instance->~plugin();
 		_aligned_free(plugin_instance);
 	}
+    
+    if( editor_instance )
+    {
+        delete editor_instance;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------
