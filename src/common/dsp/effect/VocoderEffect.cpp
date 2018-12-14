@@ -1,9 +1,9 @@
 #include "effect_defs.h"
 #include <algorithm>
 
-/* vocoder	*/
+/* vocoder */
 
-// hz från http://www.sequencer.de/pix/moog/moog_vocoder_rack.jpg
+// HZ from http://www.sequencer.de/pix/moog/moog_vocoder_rack.jpg
 // const float vocoder_freq_moog[n_vocoder_bands-1] = {50, 158, 200, 252, 317, 400, 504, 635, 800,
 // 1008, 1270, 1600, 2016, 2504, 3200, 4032, 5080}; const float vocoder_freq[n_vocoder_bands] =
 // {100, 175, 230, 290, 360, 450, 580, 700, 900, 1100, 1400, 1800, 2300, 2800, 3600, 4700}; const
@@ -12,7 +12,7 @@
 // 400, 504, 635, 800, 1008, 1270, 1600, 2016, 2504, 3200, 4032, 5080};
 
 // const float vocoder_freq_vsm201[n_vocoder_bands-1] =
-//	{190, 290, 400, 510, 630, 760, 910, 1080, 1270, 1480, 1700, 2000, 2300, 2700, 3100, 3700,
+//{190, 290, 400, 510, 630, 760, 910, 1080, 1270, 1480, 1700, 2000, 2300, 2700, 3100, 3700,
 // 4400, 5200, 6600, 8000}; const float vocoder_freq_vsm201[n_vocoder_bands] = 	{170, 240, 340, 440,
 // 560, 680, 820, 970, 1150, 1370, 1605, 1850, 2150, 2500, 2900, 3400, 4050, 4850, 5850, 7500};
 
@@ -75,7 +75,7 @@ void VocoderEffect::setvars(bool init)
    }
 
    /*	mVoicedDetect.coeff_LP(biquadunit::calc_omega_from_Hz(1000.f), 0.707);
-           mUnvoicedDetect.coeff_HP(biquadunit::calc_omega_from_Hz(5000.f), 0.707);
+		mUnvoicedDetect.coeff_HP(biquadunit::calc_omega_from_Hz(5000.f), 0.707);
 
            if (init)
            {
@@ -105,7 +105,7 @@ void VocoderEffect::process(float* dataL, float* dataR)
 
    // Voiced / Unvoiced detection
    /*{
-           
+
            mVoicedDetect.process_block_to(modulator_in, modulator_tbuf);
            float a = min(4.f, get_squaremax(modulator_tbuf,block_size_quad));
            mVoicedLevel = mVoicedLevel * (1.f - rate) + a*rate;
