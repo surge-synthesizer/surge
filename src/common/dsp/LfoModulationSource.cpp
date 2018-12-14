@@ -94,10 +94,13 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 void LfoModulationSource::attack()
 {
    /*
-   // TODO lägg till scene LFO envelope release->attack blend om det går
-   // if !state så är det en scenelfo
-   // var inte så kul i verkligheten
-   
+   // TODO lÃ¤gg till scene LFO envelope release->attack blend om det gÃ¥r
+   // if !state sÃ¥ Ã¤r det en scenelfo
+   // var inte sÃ¥ kul i verkligheten
+	 // TRANSLATE
+	 // TODO Add Scene LFO Envelope Release -> Attack blend, if it is possible
+	 // If !state, then it is a SceneLFO - was not so nice in reality / messy
+   
    if(!state && (localcopy[idelay].f == lfo->delay.val_min.f))
    {
            env_state = lenv_attack;
@@ -134,7 +137,8 @@ void LfoModulationSource::attack()
    {
       float phaseslider;
       if (lfo->shape.val.i == ls_stepseq)
-         phaseslider = 0.f; // använd phase som shuffle-param istället
+         phaseslider = 0.f; 	// anvÃ¤nd phase som shuffle-param istÃ¤llet
+		 													// TRANSLATE: Use Phase as shuffle-parameter instead
       // else if(state) phaseslider = lfo->start_phase.val.f;
       else
          phaseslider = localcopy[startphase].f;
