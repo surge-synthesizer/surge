@@ -316,12 +316,15 @@ if VST24SDK then
 
 	plugincommon()
 
-	files {
-		"src/vst2/**.cpp",
-		"src/vst2/**.h",
-		VST24SDK .. "/public.sdk/source/vst2.x/**.cpp",
-		VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
-	}
+    files {
+        "src/vst2/**.cpp",
+        "src/vst2/**.h",
+        VST24SDK .. "/public.sdk/source/vst2.x/audioeffect.cpp",
+        VST24SDK .. "/public.sdk/source/vst2.x/audioeffectx.cpp",
+        VST24SDK .. "/public.sdk/source/vst2.x/vstplugmain.cpp",
+        "vst3sdk/public.sdk/source/vst2.x/**.cpp",
+        VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
+    }
 
 	excludes {
 		VSTGUI .. "plugguieditor.cpp",
