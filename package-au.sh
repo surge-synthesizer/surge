@@ -13,7 +13,7 @@ BUNDLE_NAME="Surge.component"
 BUNDLE_DIR="$OUTPUT_DIR/$BUNDLE_NAME"
 EXEC_TARGET_NAME="Surge"
 
-echo Creating VST Bundle...
+echo Creating AudioUnit (AU) Bundle...
 
 # create basic bundle structure
 
