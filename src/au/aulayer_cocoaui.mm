@@ -4,6 +4,29 @@
 //
 //  Created by Paul Walker on 12/10/18.
 //
+/*
+    OK so how do cocoa uis work in AU2? There's two things
+ 
+ 1: You return a valid AudioUnitViewInfo which contains basically a bundle URL and class name. You implement this in GetProperty in
+ response to kAudioUnitPropert_CocoaUI
+ 
+ 2: You make that class that you return match the AUCococUIBase protocol which requires it to be able to create a frame
+ 
+ Now the question is how does that frame get a reference to your audio unit? Well there's trick three, which is the uiForAudioUnit has to
+ use the property mechanism to get a reference to an editor. In this case I do that by sending the kVmBAudioUnitPropert_GetEditPointer
+ which I basically just made up. That returns (in this case) a pointer to a SurgeGUIEditor which uses a subset of the VST api
+ (only the public API) to give you a drawable element.
+ 
+ The other trick to make this all work is that Surge itself works by having parameter changes which imapct other parameter changes
+ (like when you change patch number it changes patch name) just update parameters and not redraw. This makes sense for all
+ the obvious reasons (thread locality; bunched drawing; etc...). You can see the refresh_param_quuee and refresh_control_queue
+ implementation which just keep getting stacked up. But to unstack them you need to call a redraw, basically, and that's what the
+ editor ::idle method does. So the final thing to make it all work is to spin up a CFRunLoopTimer (not an NSTImer, note; I tried and
+ that's not the way to go) to call ::idle every 50ms.
+ 
+ And that's what this code does.
+ 
+ */
 
 #include <objc/runtime.h>
 #import <CoreFoundation/CoreFoundation.h>
@@ -11,6 +34,8 @@
 #include "aulayer.h"
 #include "aulayer_cocoaui.h"
 #include <gui/SurgeGUIEditor.h>
+
+
 
 @interface SurgeNSView : NSView
 {
@@ -37,8 +62,7 @@
 {
     // Remember we end up being called here because that's what AUCocoaUIView does in the initiation collaboration with hosts
     AULOG::log( "uiViewForAudioUnit %s on %s\n", __TIME__, __DATE__ );
-    AULOG::log( "My thread is %d\n", pthread_self( ) );
-
+   
     SurgeGUIEditor* editController = 0;
     UInt32 size = sizeof (SurgeGUIEditor *);
     if (AudioUnitGetProperty (inAudioUnit, kVmbAAudioUnitProperty_GetEditPointer, kAudioUnitScope_Global, 0, &editController, &size) != noErr)
@@ -49,7 +73,6 @@
 }
 
 - (unsigned int)interfaceVersion {
-    AULOG::log( "interfaceVersion\n" );
     return 0;
 }
 
@@ -73,7 +96,7 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
     editController = cont;
     if (self)
     {
-        AULOG::log( "About to poen with %d\n", cont );
+        AULOG::log( "Opening new editor view\n" );
         cont->open( self );
         
         ERect *vr;
@@ -82,8 +105,6 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
             NSRect newSize = NSMakeRect (0, 0, vr->right - vr->left, vr->bottom - vr->top);
             [self setFrame:newSize];
         }
-        
-        AULOG::log( "Done resizing\n" );
         
         CFTimeInterval      TIMER_INTERVAL = .05; // In SurgeGUISynthesizer.h it uses 50 ms
         CFRunLoopTimerContext TimerContext = {0, self, NULL, NULL, NULL};
@@ -96,7 +117,6 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
                                               &TimerContext);
         if (idleTimer)
             CFRunLoopAddTimer (CFRunLoopGetMain (), idleTimer, kCFRunLoopCommonModes);
-        AULOG::log( "Added timer on %d\n", self );
     }
     
     return self;
@@ -109,11 +129,9 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
 
 - (void) dealloc
 {
-    AULOG::log( "Shutting down SurgeNSView in dealloc\n" );
     editController->close();
     if( idleTimer )
     {
-        AULOG::log( "Invadliated Timer\n" );
         CFRunLoopTimerInvalidate( idleTimer );
     }
 
@@ -183,7 +201,6 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
                 }
             case kVmbAAudioUnitProperty_GetEditPointer:
             {
-                AULOG::log( "Asking for the edit pointer on %d\n", pthread_self() );
                 if( editor_instance == NULL )
                 {
                     editor_instance = new SurgeGUIEditor( this, plugin_instance );

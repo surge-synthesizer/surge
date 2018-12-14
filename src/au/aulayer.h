@@ -14,29 +14,31 @@ typedef SurgeSynthesizer plugin;
 
 struct AULOG
 {
-  static FILE* lf;
-
-  static void log( const char* format, ... )
-  {
-      fprintf( stderr, "ENTERING WITH LF=%d\n", lf );
-      if( lf == NULL )
-      {
-          lf = fopen( "/Users/paul/Library/Logs/Surge.log", "a" );
-          fprintf( stderr, "LOG FILE IS %d\n", lf );
-      }
-    va_list args;
-    va_start( args, format );
-    vfprintf( stderr, format, args );
-    va_end( args );
-    if( lf != NULL )
-      {
+#ifdef GENERATE_AU_LOG
+    static FILE* lf;
+    
+    static void log( const char* format, ... )
+    {
+        if( lf == NULL )
+        {
+            lf = fopen( "/Users/paul/Library/Logs/Surge.log", "a" );
+        }
+        va_list args;
         va_start( args, format );
-        vfprintf( lf, format, args );
+        vfprintf( stderr, format, args );
         va_end( args );
-        fflush( lf );
-      }
-
-  }
+        if( lf != NULL )
+        {
+            va_start( args, format );
+            vfprintf( lf, format, args );
+            va_end( args );
+            fflush( lf );
+        }
+        
+    }
+#else
+    static void log( const char* format, ... ) { }
+#endif
 };
 
 //-------------------------------------------------------------------------------------------------------

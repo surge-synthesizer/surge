@@ -7,7 +7,9 @@
 
 typedef SurgeSynthesizer sub3_synth;
 
+#ifdef GENERATE_AU_LOG
 FILE* AULOG::lf = NULL;
+#endif
 
 //----------------------------------------------------------------------------------------------------
 
@@ -715,80 +717,5 @@ OSStatus aulayer::HandleMidiEvent(UInt8 status, UInt8 channel, UInt8 data1, UInt
 	
 	return noErr;
 }
-
-#if MAC_CARBON
-
-SHAZBOT
-
-#include "AUCarbonViewBase.h"
-#include "plugguieditor.h"
-
-class VSTGUIAUView : public AUCarbonViewBase 
-{
-public:
-	VSTGUIAUView (AudioUnitCarbonView auv) 
-	: AUCarbonViewBase (auv)
-	, editor (0)
-	, xOffset (0)
-	, yOffset (0)
-	{
-	}
-
-	virtual ~VSTGUIAUView ()
-	{
-		if (editor)
-		{
-			editor->close ();
-			delete editor;
-		}
-	}
-	
-	void RespondToEventTimer (EventLoopTimerRef inTimer) 
-	{
-		if (editor)
-			editor->doIdleStuff ();
-	}
-
-	virtual OSStatus CreateUI(Float32 xoffset, Float32 yoffset)
-	{
-		AudioUnit unit = GetEditAudioUnit ();
-		if (unit)
-		{
-			void* pluginAddr=0;
-			UInt32 dataSize = sizeof(pluginAddr);
-			ComponentResult err = AudioUnitGetProperty(mEditAudioUnit,kVmbAAudioUnitProperty_GetPluginCPPInstance, kAudioUnitScope_Global, 0, &pluginAddr, &dataSize);
-
-			editor = new sub3_editor (pluginAddr);
-			WindowRef window = GetCarbonWindow ();
-			editor->open (window);
-			HIViewRef platformControl = (HIViewRef)editor->getFrame()->getPlatformControl();
-//			HIViewMoveBy ((HIViewRef)editor->getFrame ()->getPlatformControl (), xoffset, yoffset);
-			EmbedControl (platformControl);
-			CRect fsize = editor->getFrame ()->getViewSize (fsize);
-			SizeControl (mCarbonPane, fsize.width (), fsize.height ());
-			// CreateEventLoopTimer verkar sno focus och göra så den tappar mouseup-events
-			CreateEventLoopTimer (kEventDurationSecond, kEventDurationSecond / 30);
-			HIViewSetVisible (platformControl, true);
-			HIViewSetNeedsDisplay (platformControl, true);
-			//SetMouseCoalescingEnabled(false,NULL);
-		}
-		return noErr;
-	}
-
-	Float32 xOffset, yOffset;
-protected:
-	sub3_editor* editor;
-};
-
-COMPONENT_ENTRY(VSTGUIAUView);
-
-#elif MAC_COCOA
-
-// #error Implement the UI here, probably cribbing off of that AudioKit again
-// TODO AU
-
-
-
-#endif
 
 AUDIOCOMPONENT_ENTRY(AUMusicDeviceFactory, aulayer);
