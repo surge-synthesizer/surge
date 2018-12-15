@@ -130,9 +130,9 @@ SurgeStorage::SurgeStorage()
    userDataPath = "~/Documents/Surge";
 
 #elif __linux__
-   
-   printf("Implement me, probably\n");
-   
+
+   userDataPath = "~/Documents/Surge";
+
 #else
 
    PWSTR localAppData;
