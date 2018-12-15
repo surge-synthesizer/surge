@@ -42,11 +42,13 @@
     SurgeGUIEditor *editController;
     CFRunLoopTimerRef idleTimer;
     float lastScale;
+    NSSize underlyingUISize;
 }
 
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
 - (void) doIdle;
 - (void) dealloc;
+- (void) setFrame:(NSRect)newSize;
 
 @end
 
@@ -63,6 +65,7 @@
 {
     // Remember we end up being called here because that's what AUCocoaUIView does in the initiation collaboration with hosts
     AULOG::log( "uiViewForAudioUnit %s on %s\n", __TIME__, __DATE__ );
+    AULOG::log( "prefSize is %f %f\n", inPreferredSize.width, inPreferredSize.height );
    
     SurgeGUIEditor* editController = 0;
     UInt32 size = sizeof (SurgeGUIEditor *);
@@ -99,35 +102,33 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
     lastScale = cont->getZoomFactor() / 100.0;
     if (self)
     {
-        AULOG::log( "Opening new editor view\n" );
         cont->open( self );
         
         ERect *vr;
         if (cont->getRect(&vr))
         {
+            float zf = cont->getZoomFactor() / 100.0;
             NSRect newSize = NSMakeRect (0, 0, vr->right - vr->left, vr->bottom - vr->top);
+            underlyingUISize = newSize.size;
             [self setFrame:newSize];
         }
 
         cont->setZoomCallback( [cont,self]() {
-                AULOG::log( "In the Zoom Callback back in Cocoa to %d\n", cont->getZoomFactor() );
-                ERect *vr;
-                float zf = cont->getZoomFactor() / 100.0;
-                if (cont->getRect(&vr))
-                {
-                    NSRect newSize = NSMakeRect (0, 0,
-                                (int)( (vr->right - vr->left) * zf ),
-                                (int)( (vr->bottom - vr->top) * zf ) );
-                    AULOG::log( "Scalining display and unit square by %lf\n", zf );
-                    [self scaleUnitSquareToSize:NSMakeSize( zf / lastScale, zf / lastScale )];
-                    lastScale = zf;
-                    
-                    AULOG::log( "Resetting window size\n" );
-                    [self setFrame:newSize];
-                }
-
-                }
-        );
+            ERect *vr;
+            float zf = cont->getZoomFactor() / 100.0;
+            if (cont->getRect(&vr))
+            {
+                NSRect newSize = NSMakeRect (0, 0,
+                                             (int)( (vr->right - vr->left) * zf ),
+                                             (int)( (vr->bottom - vr->top) * zf ) );
+                [self scaleUnitSquareToSize:NSMakeSize( zf / lastScale, zf / lastScale )];
+                lastScale = zf;
+                
+                [self setFrame:newSize];
+            }
+            
+        }
+                              );
 
         CFTimeInterval      TIMER_INTERVAL = .05; // In SurgeGUISynthesizer.h it uses 50 ms
         CFRunLoopTimerContext TimerContext = {0, self, NULL, NULL, NULL};
@@ -159,6 +160,27 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
     }
 
     [super dealloc];
+}
+
+- (void) setFrame: (NSRect) newSize
+{
+    /*
+     * I override setFrame because hosts have independent views of window sizes which are saved.
+     * this needs to be found when the host resizes after creation to set the zoomFactor properly.
+     * Teensy bit gross, but works. Seems AU Lab does this but Logic Pro does not.
+     *
+     * the other option is to make zoom a parameter but then its in a patch and that seems wrong.
+     */
+    NSSize targetSize = newSize.size;
+    
+    if( fabs( targetSize.width - underlyingUISize.width * lastScale ) > 2 )
+    {
+        // so what's my apparent ratio
+        float apparentZoom = targetSize.width / ( underlyingUISize.width * lastScale );
+        int azi = roundf( apparentZoom * 10 ) * 10; // this is a bit gross. I know the zoom is incremented by 10s
+        editController->setZoomFactor( azi );
+    }
+    [super setFrame:newSize];
 }
 
 @end

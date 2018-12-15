@@ -92,6 +92,7 @@ private:
  public:
    void setZoomCallback( std::function< void() > f ) { zoom_callback = f; }
    int getZoomFactor() { return zoomFactor; }
+    void setZoomFactor( int zf ) { zoomFactor = zf; zoom_callback(); }
  private:
    std::function< void() > zoom_callback;
    
