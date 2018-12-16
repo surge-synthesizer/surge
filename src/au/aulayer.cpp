@@ -3,14 +3,20 @@
 #include <gui/SurgeGUIEditor.h>
 #include <AudioToolbox/AudioUnitUtilities.h>
 #include <AudioUnit/AudioUnitCarbonView.h>
+#include "aulayer_cocoaui.h"
 
 typedef SurgeSynthesizer sub3_synth;
 
+#ifdef GENERATE_AU_LOG
+FILE* AULOG::lf = NULL;
+#endif
+
 //----------------------------------------------------------------------------------------------------
 
-aulayer::aulayer (AudioUnit au) : MusicDeviceBase (au,1,1)
+aulayer::aulayer (AudioUnit au) : AUInstrumentBase (au,1,1)
 {
 	plugin_instance = 0;
+    editor_instance = 0;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -22,6 +28,11 @@ aulayer::~aulayer()
 		plugin_instance->~plugin();
 		_aligned_free(plugin_instance);
 	}
+    
+    if( editor_instance )
+    {
+        delete editor_instance;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -105,15 +116,15 @@ void aulayer::InitializePlugin()
 {
 	if(!plugin_instance) 
 	{
-          fprintf( stderr, "SURGE:>> Constructing new plugin\n" );
-          fprintf( stderr, "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
+          AULOG::log( "SURGE:>> Constructing new plugin\n" );
+          AULOG::log( "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
           //sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
           //new(synth) sub3_synth(this);
           
           // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
           plugin_instance = new SurgeSynthesizer( this );
-          fprintf( stderr, "SURGE:>> Plugin Created\n" );
-	}
+          AULOG::log( "     :>> Plugin Created\n" );
+    }
 	assert(plugin_instance);
 }
 
@@ -147,7 +158,7 @@ ComponentResult aulayer::Initialize()
 		parameterIDlist_CFString[i] = 0;
 	}
 	
-	MusicDeviceBase::Initialize();
+	AUInstrumentBase::Initialize();
 	return noErr;
 }
 
@@ -155,7 +166,7 @@ ComponentResult aulayer::Initialize()
 
 void aulayer::Cleanup()	
 {	
-	MusicDeviceBase::Cleanup();
+	AUInstrumentBase::Cleanup();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -406,81 +417,50 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 	return noErr;
 }
 
-//----------------------------------------------------------------------------------------------------
-
-const char* getclamptxt(int id)
-{
-	switch(id)
-	{
-		case 1: return "Macro Parameters";
-		case 2: return "Global / FX";
-		case 3: return "Scene A Common";
-		case 4: return "Scene A Osc";
-		case 5: return "Scene A Osc Mixer";
-		case 6: return "Scene A Filters";
-		case 7: return "Scene A Envelopes";
-		case 8: return "Scene A LFOs";
-		case 9: return "Scene B Common";
-		case 10: return "Scene B Osc";
-		case 11: return "Scene B Osc Mixer";
-		case 12: return "Scene B Filters";
-		case 13: return "Scene B Envelopes";
-		case 14: return "Scene B LFOs";
-	}
-	return "";
-}
 
 //----------------------------------------------------------------------------------------------------
 
-ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iScope, AudioUnitElement iElem, void* pData)
-{
-	if(iID == kAudioUnitProperty_ParameterValueName)
-	{
-		if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
-		AudioUnitParameterValueName *aup = (AudioUnitParameterValueName*)pData;
-		char tmptxt[64];
-		float f;
-		if(aup->inValue) f = *(aup->inValue);		 
-		else f = plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(aup->inParamID));
-		plugin_instance->getParameterDisplay(plugin_instance->remapExternalApiToInternalId(aup->inParamID),tmptxt,f);
-		aup->outName = CFStringCreateWithCString(NULL,tmptxt,kCFStringEncodingUTF8);		
-		return noErr;
-	}
-	else if(iID == kAudioUnitProperty_ParameterClumpName)
-	{
-		AudioUnitParameterNameInfo *aup = (AudioUnitParameterNameInfo*)pData;		
-		aup->outName = CFStringCreateWithCString(NULL,getclamptxt(aup->inID),kCFStringEncodingUTF8);		
-		return noErr;
-	}
-	else if(iID==kVmbAAudioUnitProperty_GetPluginCPPInstance)
-	{
-		void** pThis = (void**)(pData);
-		*pThis = (void*)plugin_instance;
-		return noErr;
-	}
-	return MusicDeviceBase::GetProperty(iID, iScope, iElem, pData);
-}
+
 
 //----------------------------------------------------------------------------------------------------
 
 ComponentResult aulayer::GetPropertyInfo(AudioUnitPropertyID iID, AudioUnitScope iScope, AudioUnitElement iElem, UInt32& iSize, Boolean& fWritable)
-{	
-	if(iID == kAudioUnitProperty_ParameterValueName)
-	{
-		iSize=sizeof(AudioUnitParameterValueName);		
-		return noErr;
-	}
-	else if(iID == kAudioUnitProperty_ParameterClumpName)
-	{
-		iSize=sizeof(AudioUnitParameterNameInfo);		
-		return noErr;
-	}
-	else if (iID==kVmbAAudioUnitProperty_GetPluginCPPInstance)
-	{
-		iSize=sizeof(void*);
-		return noErr;
-	}
-	return MusicDeviceBase::GetPropertyInfo(iID, iScope, iElem, iSize,fWritable);
+{
+  // OK so big todo here and in GetProperty
+  // 1: Switch these all to have an inScope--kAudioUnitScope_Global guard
+  // 2: Switch these to be a switch
+  // 3: Make Cocoa UI make the datasize the size of the view info. Take a look in juce_audio_plugin_client/AU/juce_AU_Wrapper.mm
+  // 4: That will probably core out since the calss isn't defined. That's OK! MOve on from there.
+  if( iScope == kAudioUnitScope_Global )
+    {
+      switch( iID )
+        {
+            case kAudioUnitProperty_CocoaUI:
+                iSize = sizeof (AudioUnitCocoaViewInfo);
+                fWritable = true;
+                return noErr;
+                break;
+            case kVmbAAudioUnitProperty_GetEditPointer:
+                iSize = sizeof( SurgeGUIEditor *);
+                fWritable = true;
+                return noErr;
+                break;
+            case kAudioUnitProperty_ParameterValueName:
+                iSize = sizeof( AudioUnitParameterValueName );
+                return noErr;
+                break;
+            case kAudioUnitProperty_ParameterClumpName:
+                iSize = sizeof( AudioUnitParameterNameInfo );
+                return noErr;
+                break;
+            case kVmbAAudioUnitProperty_GetPluginCPPInstance:
+                iSize = sizeof( void* );
+                return noErr;
+                break;
+        }
+    }
+    
+  return AUInstrumentBase::GetPropertyInfo(iID, iScope, iElem, iSize,fWritable);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -591,7 +571,7 @@ ComponentResult aulayer::GetParameterList(AudioUnitScope inScope, AudioUnitParam
 		outNumParameters = 0;
 		return noErr;
 	}
-	
+
 	outNumParameters = n_total_params;
 	if(outParameterList) memcpy(outParameterList,parameterIDlist,sizeof(AudioUnitParameterID)*n_total_params);
 	return noErr;
@@ -602,8 +582,9 @@ ComponentResult aulayer::GetParameterList(AudioUnitScope inScope, AudioUnitParam
 ComponentResult aulayer::GetParameterInfo(
 	AudioUnitScope          inScope,
 	AudioUnitParameterID    inParameterID,
-   AudioUnitParameterInfo  &outParameterInfo)
+        AudioUnitParameterInfo  &outParameterInfo)
 {
+  //FIXME: I think this code can be a bit tighter and cleaner, but it works OK for now
 	outParameterInfo.unit = kAudioUnitParameterUnit_Generic;
 	outParameterInfo.minValue = 0.f;
 	outParameterInfo.maxValue = 1.f;
@@ -653,7 +634,7 @@ ComponentResult aulayer::GetParameter(AudioUnitParameterID inID, AudioUnitScope 
 
 ComponentResult	aulayer::SetParameter(AudioUnitParameterID inID, AudioUnitScope inScope, AudioUnitElement inElement, Float32 inValue, UInt32 inBufferOffsetInFrames)
 {
-	if (inScope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidParameter;
+    if (inScope != kAudioUnitScope_Global) return kAudioUnitErr_InvalidParameter;
 	if(inID >= n_total_params) return kAudioUnitErr_InvalidParameter;
 	if(!IsInitialized()) return kAudioUnitErr_Uninitialized;	
 	plugin_instance->setParameter01(plugin_instance->remapExternalApiToInternalId(inID),inValue,true);
@@ -736,80 +717,5 @@ OSStatus aulayer::HandleMidiEvent(UInt8 status, UInt8 channel, UInt8 data1, UInt
 	
 	return noErr;
 }
-
-#if MAC_CARBON
-
-SHAZBOT
-
-#include "AUCarbonViewBase.h"
-#include "plugguieditor.h"
-
-class VSTGUIAUView : public AUCarbonViewBase 
-{
-public:
-	VSTGUIAUView (AudioUnitCarbonView auv) 
-	: AUCarbonViewBase (auv)
-	, editor (0)
-	, xOffset (0)
-	, yOffset (0)
-	{
-	}
-
-	virtual ~VSTGUIAUView ()
-	{
-		if (editor)
-		{
-			editor->close ();
-			delete editor;
-		}
-	}
-	
-	void RespondToEventTimer (EventLoopTimerRef inTimer) 
-	{
-		if (editor)
-			editor->doIdleStuff ();
-	}
-
-	virtual OSStatus CreateUI(Float32 xoffset, Float32 yoffset)
-	{
-		AudioUnit unit = GetEditAudioUnit ();
-		if (unit)
-		{
-			void* pluginAddr=0;
-			UInt32 dataSize = sizeof(pluginAddr);
-			ComponentResult err = AudioUnitGetProperty(mEditAudioUnit,kVmbAAudioUnitProperty_GetPluginCPPInstance, kAudioUnitScope_Global, 0, &pluginAddr, &dataSize);
-
-			editor = new sub3_editor (pluginAddr);
-			WindowRef window = GetCarbonWindow ();
-			editor->open (window);
-			HIViewRef platformControl = (HIViewRef)editor->getFrame()->getPlatformControl();
-//			HIViewMoveBy ((HIViewRef)editor->getFrame ()->getPlatformControl (), xoffset, yoffset);
-			EmbedControl (platformControl);
-			CRect fsize = editor->getFrame ()->getViewSize (fsize);
-			SizeControl (mCarbonPane, fsize.width (), fsize.height ());
-			// CreateEventLoopTimer verkar sno focus och göra så den tappar mouseup-events
-			CreateEventLoopTimer (kEventDurationSecond, kEventDurationSecond / 30);
-			HIViewSetVisible (platformControl, true);
-			HIViewSetNeedsDisplay (platformControl, true);
-			//SetMouseCoalescingEnabled(false,NULL);
-		}
-		return noErr;
-	}
-
-	Float32 xOffset, yOffset;
-protected:
-	sub3_editor* editor;
-};
-
-COMPONENT_ENTRY(VSTGUIAUView);
-
-#elif MAC_COCOA
-
-// #error Implement the UI here, probably cribbing off of that AudioKit again
-// TODO AU
-
-
-
-#endif
 
 AUDIOCOMPONENT_ENTRY(AUMusicDeviceFactory, aulayer);

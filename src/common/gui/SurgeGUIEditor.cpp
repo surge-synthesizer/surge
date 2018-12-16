@@ -1160,6 +1160,10 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
 void SurgeGUIEditor::close()
 {
+#ifndef TARGET_VST3
+  super::close();
+#endif
+  
 #ifdef TARGET_VST3
    _idleTimer->stop();
 #endif
