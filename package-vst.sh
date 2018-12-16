@@ -33,6 +33,5 @@ cp $PACKAGE_SRC_LOCATION/* "$BUNDLE_DIR/Contents/"
 # copy bundle resources
 cp -R "$BUNDLE_RES_SRC_LOCATION" "$BUNDLE_DIR/Contents/Resources"
 cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
-mkdir -f 
 cp -rf resources/data "$BUNDLE_DIR/Contents/Data"
 
