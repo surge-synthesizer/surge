@@ -90,11 +90,11 @@ private:
    void zoomInDir( int dir );
    int zoomFactor;
  public:
-   void setZoomCallback( std::function< void() > f ) { zoom_callback = f; }
+   void setZoomCallback( std::function< void(SurgeGUIEditor *) > f ) { zoom_callback = f; }
    int getZoomFactor() { return zoomFactor; }
-    void setZoomFactor( int zf ) { zoomFactor = zf; zoom_callback(); }
+    void setZoomFactor( int zf ) { zoomFactor = zf; zoom_callback( this ); }
  private:
-   std::function< void() > zoom_callback;
+   std::function< void(SurgeGUIEditor *) > zoom_callback;
    
    SurgeBitmaps bitmap_keeper;
 

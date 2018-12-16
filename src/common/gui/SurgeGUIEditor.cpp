@@ -129,7 +129,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #ifdef TARGET_VST3
    _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
 #endif
-   zoom_callback = [](){ };
+   zoom_callback = [](SurgeGUIEditor *f){ };
    zoomFactor = 100;
 }
 
@@ -2264,7 +2264,7 @@ void SurgeGUIEditor::zoomInDir( int dir )
     }
   if( zoomFactor < 50 ) zoomFactor = 50;
   if( zoomFactor > 300 ) zoomFactor = 300;
-  zoom_callback();
+  zoom_callback( this );
 }
 
 //------------------------------------------------------------------------------------------------

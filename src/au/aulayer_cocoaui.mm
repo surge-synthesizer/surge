@@ -43,6 +43,8 @@
     CFRunLoopTimerRef idleTimer;
     float lastScale;
     NSSize underlyingUISize;
+    bool setSizeByZoom; // use this flag to see if resize comes from here or from external
+    
 }
 
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
@@ -108,15 +110,23 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
         if (cont->getRect(&vr))
         {
             float zf = cont->getZoomFactor() / 100.0;
-            NSRect newSize = NSMakeRect (0, 0, vr->right - vr->left, vr->bottom - vr->top);
+            NSRect newSize = NSMakeRect (0, 0,
+                                         vr->right - vr->left,
+                                         vr->bottom - vr->top ) ;
             underlyingUISize = newSize.size;
+            newSize = NSMakeRect (0, 0,
+                                  lastScale * ( vr->right - vr->left ),
+                                  lastScale * ( vr->bottom - vr->top ) ) ;
+            [self scaleUnitSquareToSize:NSMakeSize( lastScale, lastScale )];
+            setSizeByZoom = true;
             [self setFrame:newSize];
+            setSizeByZoom = false;
         }
 
-        cont->setZoomCallback( [cont,self]() {
+        cont->setZoomCallback( [self]( SurgeGUIEditor *ed ) {
             ERect *vr;
-            float zf = cont->getZoomFactor() / 100.0;
-            if (cont->getRect(&vr))
+            float zf = ed->getZoomFactor() / 100.0;
+            if (ed->getRect(&vr))
             {
                 NSRect newSize = NSMakeRect (0, 0,
                                              (int)( (vr->right - vr->left) * zf ),
@@ -124,7 +134,9 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
                 [self scaleUnitSquareToSize:NSMakeSize( zf / lastScale, zf / lastScale )];
                 lastScale = zf;
                 
+                setSizeByZoom = true;
                 [self setFrame:newSize];
+                setSizeByZoom = false;
             }
             
         }
@@ -172,14 +184,15 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
      * the other option is to make zoom a parameter but then its in a patch and that seems wrong.
      */
     NSSize targetSize = newSize.size;
-    
-    if( fabs( targetSize.width - underlyingUISize.width * lastScale ) > 2 )
+   
+    if( !setSizeByZoom && fabs( targetSize.width - underlyingUISize.width * lastScale ) > 2 )
     {
         // so what's my apparent ratio
         float apparentZoom = targetSize.width / ( underlyingUISize.width * lastScale );
         int azi = roundf( apparentZoom * 10 ) * 10; // this is a bit gross. I know the zoom is incremented by 10s
         editController->setZoomFactor( azi );
     }
+    
     [super setFrame:newSize];
 }
 
