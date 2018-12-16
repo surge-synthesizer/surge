@@ -160,6 +160,28 @@ SurgeStorage::SurgeStorage()
       MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
                  "Configuration not found", MB_OK | MB_ICONERROR);
 #endif
+#if MAC
+       SInt32 nRes = 0;
+       CFUserNotificationRef pDlg = NULL;
+       const void* keys[] = { kCFUserNotificationAlertHeaderKey,
+           kCFUserNotificationAlertMessageKey
+       };
+       const void* vals[] = {
+           CFSTR("Surge is not properly installed"),
+           CFSTR("Unable to open configuration.xml from ~/Library/Application Support/Surge")
+           
+       };
+       
+       CFDictionaryRef dict = CFDictionaryCreate(0, keys, vals,
+                                                 sizeof(keys)/sizeof(*keys),
+                                                 &kCFTypeDictionaryKeyCallBacks,
+                                                 &kCFTypeDictionaryValueCallBacks);
+       
+       pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0,
+                                       kCFUserNotificationStopAlertLevel,
+                                       &nRes, dict);
+#endif
+       
    }
 
    TiXmlElement* e = snapshotloader.FirstChild("autometa")->ToElement();
