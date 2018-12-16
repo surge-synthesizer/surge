@@ -3,11 +3,12 @@
 //-------------------------------------------------------------------------------------------------------
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
-#if WINDOWS
 
+#if WINDOWS
 #include <windows.h>
 #include <assert.h>
 #include <mmreg.h>
+#endif
 
 void error_msg(char* c)
 {} // add messagebox?
@@ -17,6 +18,7 @@ void error_msg(char* c)
 
 void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 {
+#if WINDOWS
    uint32 wave_channels = 0;
    uint32 wave_samplerate = 0;
    uint32 wave_blockalignment = 0;
@@ -292,9 +294,9 @@ abort:
 
    /* Close the file */
    mmioClose(hmmio, 0);
-}
 #else
-// FIXME: Implement WAV file loading for macOS and Linux.
-fprintf(stderr, "%s: WAV file loading is not implemented.\n",
-        __func__);
+    // FIXME: Implement WAV file loading for macOS and Linux.
+    fprintf(stderr, "%s: WAV file loading is not implemented.\n",
+            __func__);
 #endif
+}
