@@ -8,6 +8,8 @@
 #ifndef Filesystem_h
 #define Filesystem_h
 
+#include <functional>
+
 #ifdef __APPLE__
 #include "TargetConditionals.h"
 #ifdef TARGET_OS_MAC
@@ -17,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <fstream>
 
 namespace std::experimental::filesystem {
     class path {
@@ -33,7 +36,7 @@ namespace std::experimental::filesystem {
         
         const char* c_str();
         
-        std::string generic_string();
+        std::string generic_string() const;
         
         path filename();
         
@@ -48,7 +51,16 @@ namespace std::experimental::filesystem {
         
         operator path();
         
-        path path();
+        path path() const;
+    };
+    
+    class directory_entry {
+    public:
+        path p;
+
+        directory_entry(path p);
+
+        path path() const;
     };
     
     bool exists(path p);
@@ -58,6 +70,21 @@ namespace std::experimental::filesystem {
     bool is_directory(path p);
     
     std::vector<file> directory_iterator(path p);
+    
+    std::vector<directory_entry> recursive_directory_iterator(const path& src);
+    
+    path relative(const path& p, const path& root);
+    
+    enum copy_options {
+        overwrite_existing = 1
+    };
+    
+    void copy(const path& src, const path& dst, const copy_options options);
+
+    // Exras:
+    void copy_recursive(const path& src, const path& target, const std::function<bool(path)>& predicate) noexcept;
+
+    void copy_recursive(const path& src, const path& target) noexcept;
 }
 
 #endif
