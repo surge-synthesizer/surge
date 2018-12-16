@@ -28,6 +28,29 @@ float samplerate, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
 double dsamplerate_os, dsamplerate_os_inv;
 
+#if MAC
+#include <CoreFoundation/CoreFoundation.h>
+
+string getSelfLocation() {
+    char path[PATH_MAX];
+
+    CFStringRef selfName = CFSTR("com.vemberaudio.plugins.surge");
+    CFBundleRef mainBundle = CFBundleGetBundleWithIdentifier(selfName);
+    CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
+    CFStringRef str = CFURLCopyFileSystemPath( resourcesURL, kCFURLPOSIXPathStyle );
+    CFRelease(resourcesURL);
+    
+    CFStringGetCString( str, path, FILENAME_MAX, kCFStringEncodingASCII );
+    CFRelease(str);
+    
+    string out(path);
+    fprintf(stderr, path);
+    
+//    fileLocation = CFBundleCopyResourceURL(gameBundle, filename, fileExtension, subdirectory);
+    return out;
+}
+#endif
+
 SurgeStorage::SurgeStorage()
 {
    _patch.reset(new SurgePatch(this));
@@ -152,8 +175,11 @@ SurgeStorage::SurgeStorage()
    }
 
 #endif
+#if MAC
+    string snapshotmenupath = getSelfLocation() + "/Contents/Resources/configuration.xml";
+#else
    string snapshotmenupath = datapath + "configuration.xml";
-
+#endif
    if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
    {
 #if !MAC && !__linux__

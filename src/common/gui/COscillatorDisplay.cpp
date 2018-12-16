@@ -101,8 +101,8 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                else if (dimax < last_imin)
                   dimax = last_imin;
             }
-            dimin = limit_range(dimin, 0, h);
-            dimax = limit_range(dimax, 0, h);
+            dimin = limit_range(dimin, 0, h-1);
+            dimax = limit_range(dimax, 0, h-1);
 
             // int yp = (int)((float)(size.height() * (-osc->output[block_pos]*0.5+0.5)));
             // yp = limit_range(yp,0,h-1);
