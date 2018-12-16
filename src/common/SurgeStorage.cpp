@@ -160,6 +160,28 @@ SurgeStorage::SurgeStorage()
       MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
                  "Configuration not found", MB_OK | MB_ICONERROR);
 #endif
+#if MAC
+       SInt32 nRes = 0;
+       CFUserNotificationRef pDlg = NULL;
+       const void* keys[] = { kCFUserNotificationAlertHeaderKey,
+           kCFUserNotificationAlertMessageKey
+       };
+       const void* vals[] = {
+           CFSTR("Surge is not properly installed"),
+           CFSTR("Unable to open configuration.xml from ~/Library/Application Support/Surge")
+           
+       };
+       
+       CFDictionaryRef dict = CFDictionaryCreate(0, keys, vals,
+                                                 sizeof(keys)/sizeof(*keys),
+                                                 &kCFTypeDictionaryKeyCallBacks,
+                                                 &kCFTypeDictionaryValueCallBacks);
+       
+       pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0,
+                                       kCFUserNotificationStopAlertLevel,
+                                       &nRes, dict);
+#endif
+       
    }
 
    TiXmlElement* e = snapshotloader.FirstChild("autometa")->ToElement();
@@ -342,8 +364,10 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt)
       extension[i] = tolower(extension[i]);
    if (extension.compare(".wt") == 0)
       load_wt_wt(filename, wt);
+#if !MAC
    else if (extension.compare(".wav") == 0)
       load_wt_wav(filename, wt);
+#endif
 }
 
 void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
@@ -354,13 +378,8 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    wt_header wh;
    memset(&wh, 0, sizeof(wt_header));
 
-   // FIXME: Implement error handling when there is a convention to implement
-   // the error handling (e.g. return code or exception).
-   if (fread(&wh, sizeof(wt_header), 1, f) != 1)
-      fprintf(stderr, "%s: reading the wavetable header failed.\n",
-              __func__);
-
-   if (memcmp(wh.tag, "vawt", 4))
+   fread(&wh, sizeof(wt_header), 1, f);
+   if (wh.tag != vt_read_int32BE('vawt'))
    {
       fclose(f);
       return;
@@ -374,10 +393,7 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
       ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
 
    data = malloc(ds);
-   // FIXME: Implement error handling when there is a convention to implement
-   // the error handling (e.g. return code or exception).
-   if (fread(data, 1, ds, f) != ds)
-      fprintf(stderr, "%s: reading the wavetable data failed.\n", __func__);
+   fread(data, 1, ds, f);
    CS_WaveTableData.enter();
    wt->BuildWT(data, wh, false);
    CS_WaveTableData.leave();
