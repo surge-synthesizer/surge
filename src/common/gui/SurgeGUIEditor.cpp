@@ -20,8 +20,10 @@
 #include "SurgeBitmaps.h"
 #include "CNumberField.h"
 
-/*#if TARGET_AUDIOUNIT
+#if TARGET_AUDIOUNIT
 #include "aulayer.h"
+#endif
+/*
 #elif TARGET_VST3
 #include "surgeprocessor.h"
 #elif TARGET_VST2
@@ -63,6 +65,7 @@ enum special_tags
    tag_about,
    tag_mod_source0,
    tag_mod_source_end = tag_mod_source0 + n_modsources,
+   tag_mp_zoom,
    //	tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
@@ -126,11 +129,13 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #ifdef TARGET_VST3
    _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
 #endif
+   zoom_callback = [](){ };
+   zoomFactor = 100;
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
-   if (frame)
+  if (frame )
    {
       getFrame()->unregisterKeyboardHook(this);
       frame->removeAll(true);
@@ -1062,6 +1067,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                       getSurgeBitmap(IDB_BUTTON_ABOUT), nopoint, false);
    frame->addView(b_about);
 
+#if TARGET_AUDIOUNIT
+   // ZOOM CONTROL for now is only implemented in the Audio Unit host
+   CHSwitch2* mp_zoom =
+     new CHSwitch2(CRect( 892-77, 526, 892 - 40, 526 + 12 ), this, tag_mp_zoom, 2, 12, 1, 2,
+                     getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
+   frame->addView(mp_zoom);
+   CTextLabel *Comments = new
+     CTextLabel(CRect( 892-137, 526, 892 - 77, 526 + 12 ), "Zoom" );
+   
+   Comments->setTransparency(true);
+   Comments->setFont(minifont);
+   Comments->setFontColor( kBlackCColor );
+   Comments->setHoriAlign(kRightText);
+   frame->addView(Comments);
+   // END ZOOM CONTROL
+#endif
+   
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
    frame->addView(infowindow);
 
@@ -1854,6 +1876,16 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       return;
    }
    break;
+   case tag_mp_zoom:
+     {
+      if (control->getValue() > 0.5f)
+        zoomInDir( 1 );
+      else
+        zoomInDir( -1 );
+      return;
+
+     }
+     break;
    case tag_osc_select:
    {
       current_osc = (int)(control->getValue() * 2.f + 0.5f);
@@ -2218,6 +2250,21 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
    // frame->setModalView(saveDialog);
 
    return false;
+}
+
+void SurgeGUIEditor::zoomInDir( int dir )
+{
+  if( dir > 0 )
+    {
+      zoomFactor += 10;
+    }
+  else
+    {
+      zoomFactor -= 10;
+    }
+  if( zoomFactor < 50 ) zoomFactor = 50;
+  if( zoomFactor > 300 ) zoomFactor = 300;
+  zoom_callback();
 }
 
 //------------------------------------------------------------------------------------------------

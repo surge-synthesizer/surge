@@ -12,6 +12,7 @@ class SurgeGUIEditor;
 class SurgeSynthesizer;
 typedef SurgeSynthesizer plugin;
 
+#define GENERATE_AU_LOG
 struct AULOG
 {
 #ifdef GENERATE_AU_LOG
