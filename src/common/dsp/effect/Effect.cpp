@@ -98,14 +98,15 @@ void Effect::init_ctrltypes()
    }
 }
 
-/* eq3band			*/
+/* eq3band */
 
 Eq3BandEffect::Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), band3(storage)
 {
    gain.set_blocksize(block_size);
 
-   band1.setBlockSize(block_size * slowrate); // spelar ingen roll eftersom de är lagbaserade
+   band1.setBlockSize(block_size * slowrate); 	// spelar ingen roll eftersom de Ã¤r lagbaserade
+																// TRANSLATE: does not matter because they are team-based
    band2.setBlockSize(block_size * slowrate);
    band3.setBlockSize(block_size * slowrate);
 }
@@ -129,7 +130,9 @@ void Eq3BandEffect::setvars(bool init)
       gain.set_target(1.f); // db_to_linear(fxdata->p[9].val.f));
       gain.instantize();
       band1.coeff_peakEQ(band1.calc_omega(fxdata->p[1].val.f * (1.f / 12.f)), fxdata->p[2].val.f,
-                         1.f); // sätt banden till 0dB så fades eqn in
+                         1.f); 	// sÃ¤tt banden till 0dB sÃ¥ fades eqn in
+											// TRANSLATE1: put the bands to 0dB - then fade EQ
+											// TRANSLATE2: Set the bands to 0dB so the EQ fades in
       band2.coeff_peakEQ(band2.calc_omega(fxdata->p[4].val.f * (1.f / 12.f)), fxdata->p[5].val.f,
                          1.f);
       band3.coeff_peakEQ(band3.calc_omega(fxdata->p[7].val.f * (1.f / 12.f)), fxdata->p[8].val.f,
@@ -244,7 +247,7 @@ void Eq3BandEffect::init_default_values()
    fxdata->p[9].val.f = 0.f;
 }
 
-/* chorus			*/
+/* chorus */
 
 template <int v>
 ChorusEffect<v>::ChorusEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)

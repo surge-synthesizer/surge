@@ -283,12 +283,13 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
             strncpy(name, storage->wt_category[c].name.c_str(), namechars);
             contextMenu->addEntry(subMenu, name);
 
-            subMenu->forget(); // viktigt, så att refcounter blir rätt
+            subMenu->forget(); // Important, so that the refcounter gets right
          }
 
          getFrame()->addView(contextMenu); // add to frame
-         contextMenu->setDirty();
-         contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
+			contextMenu->setDirty();
+			contextMenu->popup();         
+			contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
          // getFrame()->looseFocus(pContext);
 
          getFrame()->removeView(contextMenu, true); // remove from frame and forget

@@ -8,10 +8,10 @@ const __int64 large = 0x10000000000;
 //const float integrator_hpf = 0.99999999f;
 //const float integrator_hpf = 0.9992144f;		// 44.1 kHz
 //const float integrator_hpf = 0.9964f;		// 44.1 kHz
-//const float integrator_hpf = 0.9982f;		// 44.1 kHz	 magisk moog freq
+//const float integrator_hpf = 0.9982f;		// 44.1 kHz	 Magic Moog Frequency
 const float integrator_hpf = 0.999f;
-// 290 samples för att falla 50% (british)  (är nog ett 2-pole hpf)
-// 202 samples (american)  
+// 290 samples to fall 50% (British) (is probably a 2-pole HPF)
+// 202 samples (American)  
 //const float integrator_hpf = 0.999f;
 //pow(ln(0.5)/(samplerate/50hz)
 const float hpf_cycle_loss = 0.90f;
@@ -36,7 +36,7 @@ void osc_dotwave::init(float pitch, bool is_display)
 	osc_out_2 = 0;
 	bufpos = 0;	
 	
-	// init här
+	// init hÃ¤r
 	id_shape = oscdata->p[0].param_id_in_scene;
 	id_vskew = oscdata->p[1].param_id_in_scene;	
 	id_hskew = oscdata->p[2].param_id_in_scene;
@@ -48,7 +48,7 @@ void osc_dotwave::init(float pitch, bool is_display)
 	if(is_display) n_unison = 1;
 	out_attenuation = 1.0f/sqrt((float)n_unison);
 
-	if(n_unison == 1)	// gör dynamic honk sen..
+	if(n_unison == 1)	// Make dynamic baskets (?) later.. (gÃ¶r dynamic honk sen..)
 	{
 		detune_bias = 1;
 		detune_offset = 0;
@@ -88,12 +88,12 @@ void osc_dotwave::init(float pitch, bool is_display)
 
 void osc_dotwave::init_ctrltypes()
 {
-	oscdata->p[0].set_name("shape");		oscdata->p[0].set_type(ct_percent);
-	oscdata->p[1].set_name("skew v");		oscdata->p[1].set_type(ct_percent_bidirectional);
-	oscdata->p[2].set_name("skew h");		oscdata->p[2].set_type(ct_percent_bidirectional);
-	oscdata->p[3].set_name("formant");		oscdata->p[3].set_type(ct_syncpitch);
-	oscdata->p[4].set_name("sync");			oscdata->p[4].set_type(ct_syncpitch);	
-	oscdata->p[5].set_name("detune");		oscdata->p[5].set_type(ct_percent);	
+	oscdata->p[0].set_name("shape");	oscdata->p[0].set_type(ct_percent);
+	oscdata->p[1].set_name("skew v");	oscdata->p[1].set_type(ct_percent_bidirectional);
+	oscdata->p[2].set_name("skew h");	oscdata->p[2].set_type(ct_percent_bidirectional);
+	oscdata->p[3].set_name("formant");	oscdata->p[3].set_type(ct_syncpitch);
+	oscdata->p[4].set_name("sync");		oscdata->p[4].set_type(ct_syncpitch);	
+	oscdata->p[5].set_name("detune");	oscdata->p[5].set_type(ct_percent);	
 	oscdata->p[6].set_name("osc count");	oscdata->p[6].set_type(ct_osccount);	
 }
 void osc_dotwave::init_default_values()
@@ -173,7 +173,7 @@ void osc_dotwave::convolute(int voice)
 			return;
 		}
 	}
-	dt = max(0.000001,dt);		// temp, så den inte hänger sig
+	dt = max(0.000001,dt);	// Temporary, so it doesn't hang/crash(?) (temp, sÃ¥ den inte hÃ¤nger sig)
 	
 	float newlevel = distort_level((1-shape)*dotwave[0][(state[voice]+1) % n_steps][1] + (shape)*dotwave[1][(state[voice]+1) % n_steps][1]);	
 	//float newlevel = distort_level((1-shape)*dotwave[0][(state[voice]) % n_steps][1] + (shape)*dotwave[1][(state[voice]) % n_steps][1]);	
@@ -215,8 +215,10 @@ void osc_dotwave::update_lagvals()
 	l_formant.newValue(max(0.f,localcopy[id_formant].f));
 	
 	float invt = min(1.0,(8.175798915 * storage->note_to_pitch(pitch + l_sync.v)) / storage->dsamplerate_os);		
-	float hpf2 = min(integrator_hpf,powf(hpf_cycle_loss,4*invt));	// ACHTUNG! gör lookup-table
-		
+	float hpf2 = min(integrator_hpf,powf(hpf_cycle_loss,4*invt));
+		// ACHTUNG! gÃ¶r lookup-table
+		// ACHTUNG!/WARNING!: Make a lookup table
+	
 	hpf_coeff.newValue(hpf2);
 	integrator_mult.newValue(invt);	
 

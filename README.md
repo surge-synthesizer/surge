@@ -19,9 +19,6 @@ It currently only builds on windows, but getting it to build on macOS again & Li
 
 [Releases are available here](https://github.com/kurasu/surge/releases)
 
-Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
-Development Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=33&t=511921)
-
 ## Preparation
 
 First you need to grab all git submodules (needed to get the VST3 SDK)
@@ -140,4 +137,5 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 
 ## References
 
-* IRC channel #surgesynth @ irc.freenode.net
+  * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
+  * IRC channel #surgesynth @ irc.freenode.net

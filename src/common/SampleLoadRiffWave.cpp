@@ -31,7 +31,7 @@ bool Sample::load_riff_wave_mk2(const char* fname)
 
    HMMIO hmmio;
 
-   /* Open the file for reading with buffered I/O. Let windows use its default internal buffer */
+   /* Open the file for reading with buffered I/O. Let Windows use its default internal buffer */
    hmmio = mmioOpen((LPSTR)filename, NULL, MMIO_READ | MMIO_ALLOCBUF);
    if (!hmmio)
    {
@@ -132,7 +132,7 @@ bool Sample::load_riff_wave_mk2(const char* fname)
    }
 
    if (mmioRead(hmmio, (HPSTR)loaddata, mmckinfoSubchunk.cksize) !=
-       (LRESULT)mmckinfoSubchunk.cksize) // ACHTUNG!! här händer något bad!
+       (LRESULT)mmckinfoSubchunk.cksize) // ACHTUNG/WARNING!! Something bad happens here! (hÃ¤r hÃ¤nder nÃ¥got bad!)
    {
       /* Oops! */
       write_log("file	io: error reading the data chunk!");
@@ -143,7 +143,8 @@ bool Sample::load_riff_wave_mk2(const char* fname)
 
    this->inst_present = false;
    /* does not seem to be in general use
-   
+   
+
    mmioAscend(hmmio, &mmckinfoSubchunk, 0);
    mmioSeek(hmmio,startpos,SEEK_SET);
    // read instrument chunk
@@ -154,11 +155,11 @@ bool Sample::load_riff_wave_mk2(const char* fname)
            this->inst_present = false;
    } else {
            this->inst_present = true;
-   
+   
            if (mmioRead(hmmio, (HPSTR)&inst_tag, mmckinfoSubchunk.cksize) !=
    (LRESULT)mmckinfoSubchunk.cksize)
            {
-   
+
                    write_log("file	io: error reading the inst chunk!");
                    mmioClose(hmmio, 0);
                    return false;
