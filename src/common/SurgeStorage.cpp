@@ -406,8 +406,9 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    wt_header wh;
    memset(&wh, 0, sizeof(wt_header));
 
-   fread(&wh, sizeof(wt_header), 1, f);
-   if (wh.tag != vt_read_int32BE('vawt'))
+   // fread(&wh, sizeof(wt_header), 1, f);
+   // if (wh.tag != vt_read_int32BE('vawt'))
+   if (fread(&wh, sizeof(wt_header), 1, f) != 1)
    {
       fclose(f);
       return;
