@@ -127,11 +127,11 @@ SurgeStorage::SurgeStorage()
       datapath += "/Surge/";
    }
 
-   userDataPath = "~/Documents/Surge";
+	userDataPath = "~/Documents/Surge";
 
 #elif __linux__
    
-   printf("Implement me, probably\n");
+	userDataPath = "~/Documents/Surge";
    
 #else
 
