@@ -1067,7 +1067,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                       getSurgeBitmap(IDB_BUTTON_ABOUT), nopoint, false);
    frame->addView(b_about);
 
-   // ZOOM CONTROL
+#if TARGET_AUDIOUNIT
+   // ZOOM CONTROL for now is only implemented in the Audio Unit host
    CHSwitch2* mp_zoom =
      new CHSwitch2(CRect( 892-77, 526, 892 - 40, 526 + 12 ), this, tag_mp_zoom, 2, 12, 1, 2,
                      getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
@@ -1080,8 +1081,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
    Comments->setFontColor( kBlackCColor );
    Comments->setHoriAlign(kRightText);
    frame->addView(Comments);
-
    // END ZOOM CONTROL
+#endif
    
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
    frame->addView(infowindow);
