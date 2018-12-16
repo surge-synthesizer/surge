@@ -49,6 +49,15 @@ string getSelfLocation() {
 
 SurgeStorage::SurgeStorage()
 {
+#if MAC
+    // Quick hack to install all the bundled surge data to user's local ~/Library/...
+    fs::path userSurgeDir(string(getenv("HOME")) + "/Library/Application Support/Surge");
+    if (!fs::is_directory(userSurgeDir)) {
+        fs::create_directories(userSurgeDir);
+        fs::copy_recursive(fs::path(getSelfLocation() + "/Contents/Data"), userSurgeDir);
+    }
+#endif
+
    _patch.reset(new SurgePatch(this));
 
    float cutoff = 0.455f;
@@ -175,15 +184,6 @@ SurgeStorage::SurgeStorage()
 
    if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
    {
-#if MAC
-       fs::path userSurgeDir(string(getenv("HOME")) + "/Library/Application Support/Surge");
-       // Quick hack to install all the bundled surge data to user's local ~/Library/...
-       fs::create_directories(userSurgeDir); // Okay if this already exists
-       
-       fs::copy_recursive(fs::path(getSelfLocation() + "/Contents/Data"), userSurgeDir);
-       
-       snapshotloader.LoadFile(snapshotmenupath.c_str());
-#endif
 #if !MAC && !__linux__
       MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
                  "Configuration not found", MB_OK | MB_ICONERROR);
