@@ -6,6 +6,8 @@
 #include <set>
 #include <vt_dsp/vt_dsp_endian.h>
 #if MAC
+#include <cstdlib>
+#include <sys/stat.h>
 //#include <MoreFilesX.h>
 //#include <MacErrorHandling.h>
 #include <CoreFoundation/CFBundle.h>
@@ -30,23 +32,17 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 #if MAC
 #include <CoreFoundation/CoreFoundation.h>
-
 string getSelfLocation() {
     char path[PATH_MAX];
-
+    // TODO: use a build-provided symbol
     CFStringRef selfName = CFSTR("com.vemberaudio.plugins.surge");
     CFBundleRef mainBundle = CFBundleGetBundleWithIdentifier(selfName);
     CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
     CFStringRef str = CFURLCopyFileSystemPath( resourcesURL, kCFURLPOSIXPathStyle );
     CFRelease(resourcesURL);
-    
     CFStringGetCString( str, path, FILENAME_MAX, kCFStringEncodingASCII );
     CFRelease(str);
-    
     string out(path);
-    fprintf(stderr, path);
-    
-//    fileLocation = CFBundleCopyResourceURL(gameBundle, filename, fileExtension, subdirectory);
     return out;
 }
 #endif
@@ -175,13 +171,19 @@ SurgeStorage::SurgeStorage()
    }
 
 #endif
-#if MAC
-    string snapshotmenupath = getSelfLocation() + "/Contents/Resources/configuration.xml";
-#else
    string snapshotmenupath = datapath + "configuration.xml";
-#endif
+
    if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
    {
+#if MAC
+       fs::path userSurgeDir(string(getenv("HOME")) + "/Library/Application Support/Surge");
+       // Quick hack to install all the bundled surge data to user's local ~/Library/...
+       fs::create_directories(userSurgeDir); // Okay if this already exists
+       
+       fs::copy_recursive(fs::path(getSelfLocation() + "/Contents/Data"), userSurgeDir);
+       
+       snapshotloader.LoadFile(snapshotmenupath.c_str());
+#endif
 #if !MAC && !__linux__
       MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
                  "Configuration not found", MB_OK | MB_ICONERROR);

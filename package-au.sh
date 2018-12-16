@@ -6,7 +6,7 @@ PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-au"
 BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
 EXEC_LOCATION="target/au/Release/Surge.dylib"
-EXEC_LOCATION="target/au/Debug/Surge-Debug.dylib"
+#EXEC_LOCATION="target/au/Debug/Surge-Debug.dylib"
 
 # output configs
 OUTPUT_DIR=products
@@ -33,5 +33,5 @@ cp $PACKAGE_SRC_LOCATION/* "$BUNDLE_DIR/Contents/"
 # copy bundle resources
 cp -R "$BUNDLE_RES_SRC_LOCATION" "$BUNDLE_DIR/Contents/Resources"
 cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
-cp resources/data/configuration.xml "$BUNDLE_DIR/Contents/Resources"
-
+mkdir -f
+cp -rf resources/data "$BUNDLE_DIR/Contents/Data"
