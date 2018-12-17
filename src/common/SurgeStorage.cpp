@@ -209,10 +209,6 @@ SurgeStorage::SurgeStorage()
 
    if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
    {
-#if !MAC && !__linux__
-      MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
-                 "Configuration not found", MB_OK | MB_ICONERROR);
-#endif
 #if MAC
       SInt32 nRes = 0;
       CFUserNotificationRef pDlg = NULL;
@@ -229,6 +225,12 @@ SurgeStorage::SurgeStorage()
 
       pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0, kCFUserNotificationStopAlertLevel,
                                       &nRes, dict);
+#elif __linux__
+      fprintf(stderr, "%s: Unable to load Surge configuration file \"%s\".\n",
+              __func__, snapshotmenupath.c_str());
+#else
+      MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
+                 "Configuration not found", MB_OK | MB_ICONERROR);
 #endif
    }
 
