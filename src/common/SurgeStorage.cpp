@@ -13,6 +13,7 @@
 #include <CoreFoundation/CFBundle.h>
 #include <CoreServices/CoreServices.h>
 #elif __linux__
+#include <stdlib.h>
 #else
 #include <windows.h>
 #include <Shellapi.h>
@@ -141,8 +142,8 @@ SurgeStorage::SurgeStorage()
 
    memset(&audio_in[0][0], 0, 2 * block_size_os * sizeof(float));
 
-   char path[1024];
 #if MAC
+   char path[1024];
    FSRef foundRef;
    OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &foundRef);
    // or kUserDomain
@@ -169,7 +170,21 @@ SurgeStorage::SurgeStorage()
 
 #elif __linux__
 
-   printf("Implement me, probably\n");
+   /*
+    * Even though Linux distinguishes between configuration and data folders,
+    * Surge's configuration.xml does not contain any user preferences that are
+    * modified through the interface, so it seems simplest to continue treating
+    * it as part of the data.
+    */
+
+   string home = string(getenv("HOME"));
+   char* data_home_cstr = getenv("XDG_DATA_HOME");
+   string data_home = (data_home_cstr) ? string(data_home_cstr)
+                                       : home + "/.local/share";
+
+   datapath = data_home + "/Surge/";
+
+   userDataPath = home + "/Documents/Surge";
 
 #else
 
