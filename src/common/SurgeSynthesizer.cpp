@@ -16,6 +16,9 @@
 #elif TARGET_VST3
 #include "SurgeVst3Processor.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
+#elif TARGET_APP
+#include "PluginLayer.h"
+#include "vstgui/plugin-bindings/plugguieditor.h"
 #else
 #include "Vst2PluginInstance.h"
 #include "vstgui/plugin-bindings/aeffguieditor.h"
@@ -676,6 +679,8 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
       // getParent()->ParameterUpdate(externalparam);
 #elif TARGET_VST3
       getParent()->setParameterAutomated(externalparam, value);
+#elif TARGET_APP
+      getParent()->sendParameterAutomation(externalparam, value);
 #else
       getParent()->setParameterAutomated(externalparam, value);
 #endif
