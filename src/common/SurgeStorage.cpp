@@ -52,6 +52,14 @@ SurgeStorage::SurgeStorage()
 #if MAC
     // Quick hack to install all the bundled surge data to user's local ~/Library/...
     fs::path userSurgeDir(string(getenv("HOME")) + "/Library/Application Support/Surge");
+    
+    // FIXME: currently, this only runs the first time you run Surge (e.g. when it's
+    // scanned by the host, so it doesn't run whenever surge instances are loaded but it
+    // also could fail to synchronize updates if the bundled resources change. It's unclear
+    // how to handle this in the face of users editing the `configuration.xml`. Perhaps
+    // a better approach is to leave a basic set of resources in the bundle and merge them
+    // with any user-provided things like waveforms in ~/Library/Application Support/Surge/...
+    // at least for now, this gets users up and running with presets, waveforms, effects, etc.
     if (!fs::is_directory(userSurgeDir)) {
         fs::create_directories(userSurgeDir);
         fs::copy_recursive(fs::path(getSelfLocation() + "/Contents/Data"), userSurgeDir);
