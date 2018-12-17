@@ -1453,6 +1453,26 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                contextMenu->addEntry(txt, eid++);
             }
 
+             // Construct submenus for expicit controller mapping
+             COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+             COptionMenu *currentSub;
+             for( int mc = 0; mc < 127; ++mc )
+             {
+                 if( mc % 10 == 0 )
+                 {
+                     currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, kNoDrawStyle );
+                     char name[ 256 ];
+                     sprintf( name, "CC %d -> %d", mc, min( mc+10, 127 ));
+                     midiSub->addEntry( currentSub, name );
+                 }
+                 
+                 char name[ 256 ];
+                 sprintf( name, "CC # %d", mc );
+                 currentSub->addEntry( name, eid++ );
+                 
+             }
+             contextMenu->addEntry( midiSub, "Set Contoller To..." );
+             
             contextMenu->addEntry("-", eid++);
             id_bipolar = eid;
             contextMenu->addEntry("Bipolar", eid++);
@@ -1609,7 +1629,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (cancellearn)
                contextMenu->addEntry("Abort learn controller", eid++);
             else
-               contextMenu->addEntry("Learn controller [MIDI]", eid++);
+                contextMenu->addEntry("Learn controller [MIDI]", eid++);
          }
 
          if (p->midictrl >= 0)
