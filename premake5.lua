@@ -183,8 +183,6 @@ function plugincommon()
 			"src/mac/**.cpp",
 			"src/mac/**.h",
 			"libs/vst/*.mm",
-            "libs/AUPublic/*.cpp",
-            "libs/PublicUtility/*.cpp", 
 			VSTGUI .. "vstgui_mac.mm",
 			VSTGUI .. "vstgui_uidescription_mac.mm",
 		}
@@ -467,9 +465,9 @@ if (os.istarget("macosx")) then
 		"src/au/**.cpp",
                 "src/au/**.mm",        
 		"src/au/**.h",
-		"libs/AudioUnits/AUPublic/**.cpp",
-		"libs/AudioUnits/AUPublic/**.h",
-		"libs/AudioUnits/PublicUtility/*.cpp",
+		"libs/AUPublic/**.cpp",
+		"libs/AUPublic/**.h",
+		"libs/PublicUtility/*.cpp",
 		VSTGUI .. "plugin-bindings/plugguieditor.cpp",
 	}
 

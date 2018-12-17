@@ -4,7 +4,7 @@ using namespace Steinberg;
 using namespace Steinberg::Vst;
 
 class SurgeEditorView;
-#if !TARGET_AUDIOUNIT
+#if !TARGET_AUDIOUNIT && !MAC
 
 class SurgeVst3EditController : public EditControllerEx1, public IMidiMapping
 {
