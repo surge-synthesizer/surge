@@ -22,7 +22,9 @@ struct AULOG
     {
         if( lf == NULL )
         {
-            lf = fopen( "/Users/paul/Library/Logs/Surge.log", "a" );
+	    char fname[ 1024 ];
+            sprintf( fname, "%s/Library/Logs/Surge.log", getenv( "HOME" ) );
+            lf = fopen( fname, "a" );
         }
         va_list args;
         va_start( args, format );
