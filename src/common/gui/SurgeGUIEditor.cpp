@@ -1609,7 +1609,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (cancellearn)
                contextMenu->addEntry("Abort learn controller", eid++);
             else
-               contextMenu->addEntry("Learn controller [midi]", eid++);
+               contextMenu->addEntry("Learn controller [MIDI]", eid++);
          }
 
          if (p->midictrl >= 0)
