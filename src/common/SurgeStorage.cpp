@@ -414,10 +414,12 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    wt_header wh;
    memset(&wh, 0, sizeof(wt_header));
 
-   // fread(&wh, sizeof(wt_header), 1, f);
+   size_t read = fread( &wh, sizeof( wt_header ), 1, f );
+   // I'm not sure why this ever worked but it is checking the 4 bytes against vawt so...
    // if (wh.tag != vt_read_int32BE('vawt'))
-   if (fread(&wh, sizeof(wt_header), 1, f) != 1)
+   if ( ! ( wh.tag[ 0 ] == 'v' && wh.tag[ 1 ] == 'a' && wh.tag[ 2 ] == 'w' && wh.tag[ 3 ] == 't' ) )
    {
+      // SOME sort of error reporting is appropriate
       fclose(f);
       return;
    }

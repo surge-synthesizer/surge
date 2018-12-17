@@ -52,7 +52,13 @@ if (os.istarget("macosx")) then
 
 	defines { "MAC=1", "PPC=0", "WINDOWS=0",  }
 
-	buildoptions { "-std=c++17", "-stdlib=libc++", "-DOBJC_OLD_DISPATCH_PROTOTYPES=1" }
+	buildoptions 
+        { 
+            "-std=c++17", "-stdlib=libc++", 
+            "-DOBJC_OLD_DISPATCH_PROTOTYPES=1",
+            "-Wno-deprecated-declarations",        -- Alas the AU V2 uses a whole bunch of deprecated stuff
+	    "-Wno-inconsistent-missing-override"   -- Surge was written before this was even a keyword! We do need to fix this though
+        }
 	links { "c++" }
 	buildoptions { "-mmacosx-version-min=10.9" }
 	linkoptions { "-mmacosx-version-min=10.9" }
@@ -177,8 +183,6 @@ function plugincommon()
 			"src/mac/**.cpp",
 			"src/mac/**.h",
 			"libs/vst/*.mm",
-            "libs/AUPublic/*.cpp",
-            "libs/PublicUtility/*.cpp", 
 			VSTGUI .. "vstgui_mac.mm",
 			VSTGUI .. "vstgui_uidescription_mac.mm",
 		}
@@ -461,9 +465,9 @@ if (os.istarget("macosx")) then
 		"src/au/**.cpp",
                 "src/au/**.mm",        
 		"src/au/**.h",
-		"libs/AudioUnits/AUPublic/**.cpp",
-		"libs/AudioUnits/AUPublic/**.h",
-		"libs/AudioUnits/PublicUtility/*.cpp",
+		"libs/AUPublic/**.cpp",
+		"libs/AUPublic/**.h",
+		"libs/PublicUtility/*.cpp",
 		VSTGUI .. "plugin-bindings/plugguieditor.cpp",
 	}
 
