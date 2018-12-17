@@ -243,9 +243,11 @@ function plugincommon()
 			
 		}
 
-	   links { 
+		links {
 			"pthread",
-			"stdc++fs"
+			"stdc++fs",
+			"gcc_s",
+			"gcc"
 		}
 
 		linkoptions {
