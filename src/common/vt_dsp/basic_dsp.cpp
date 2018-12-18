@@ -81,7 +81,7 @@ unsigned int Max(unsigned int a, unsigned int b)
 
 int limit_range(int x, int l, int h)
 {
-#if _M_X64 || PPC || __linux__
+#if _M_X64 || PPC || __linux__ || MAC
    return max(min(x, h), l);
 #else
    __asm

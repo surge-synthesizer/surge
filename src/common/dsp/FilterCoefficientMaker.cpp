@@ -356,7 +356,7 @@ void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
 {
    float dtime = (1.f / 440.f) * note_to_pitch(-freq);
    dtime = dtime * dsamplerate_os -
-           FIRoffset; // 1 sample f�r feedback, 1 f�r ett IIR-filter utan resonans
+           FIRoffset; // 1 sample for feedback, 1 sample for the IIR-filter without resonance
    dtime = limit_range(dtime, (float)FIRipol_N, (float)max_fb_comb - FIRipol_N);
    reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
 

@@ -4,7 +4,7 @@
 #include <ppc_intrinsics.h>
 #endif
 
-/* conditioner			*/
+/* conditioner */
 
 using namespace vt_dsp;
 
@@ -99,7 +99,8 @@ void ConditionerEffect::process(float* dataL, float* dataR)
    width.set_target_smoothed(clamp1bp(*f[2]));
    postamp.set_target_smoothed(db_to_linear(*f[7]));
 
-   // gör conditioner SSE-snäll
+	// gÃ¶r conditioner SSE-snÃ¤ll
+	// TRANSLATE: Make a condition(er?), SSE-kind (SSE-type?)
 
    _MM_ALIGN16 float M[block_size], S[block_size]; // wb = write-buffer
    encodeMS(dataL, dataR, M, S, block_size_quad);
@@ -158,7 +159,7 @@ void ConditionerEffect::process(float* dataL, float* dataR)
    vu[4] = max(vu[4], get_absmax(dataL, block_size_quad));
    vu[5] = max(vu[5], get_absmax(dataR, block_size_quad));
 
-   /*	for(int i=0; i<block_size; i++)
+   /* for(int i=0; i<block_size; i++)
            {
                    vu[4] = max(vu[4], dataL[i]);
                    vu[5] = max(vu[5], dataR[i]);

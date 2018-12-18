@@ -46,15 +46,21 @@
 template <int config, bool A, bool WS, bool B>
 void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* OutR)
 {
-   const __m128 hb_c = _mm_set1_ps(0.5f); // om denna ‰ndras frÂn 0.5, se till att ‰ndra i koden
-                                          // eftersom det antas att den ‰r h‰lften
+   const __m128 hb_c = _mm_set1_ps(0.5f); // om denna ändras från 0.5, se till att ändra i koden
+														// eftersom det antas att den är hälften
+														// TRANSLATE:
+														// If this is changed from 0.5, make sure to change 
+														// this in the code because it is assumed to be half
    const __m128 one = _mm_set1_ps(1.0f);
 
    switch (config)
    {
    case fb_serial: // no feedback at all  (saves CPU)
-      // TODO denna skulle nog kunna bli ‰nnu snabbare om den serialiseras (vilket ‰r l‰ttare nu)
-      // lite mer L1 v‰nlig, men latency-lalal blir nog detsamma
+      // TODO denna skulle nog kunna bli ännu snabbare om den serialiseras (vilket är lättare nu)
+      // lite mer L1 vänlig, men latency-lalal blir nog detsamma
+		// TRANSLATE: 
+		// TODO this might be even faster if it is serialized (which is now easier)
+		// a little more L1 friendly, but latency-lalal will probably be the same
       for (int k = 0; k < block_size_os; k++)
       {
          __m128 input = d.DL[k];

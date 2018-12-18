@@ -3,7 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "MusicDeviceBase.h"
+#include "AUInstrumentBase.h"
 #include "surge_auversion.h"
 #include "SurgeStorage.h"
 
@@ -12,12 +12,45 @@ class SurgeGUIEditor;
 class SurgeSynthesizer;
 typedef SurgeSynthesizer plugin;
 
+#define GENERATE_AU_LOG
+struct AULOG
+{
+#ifdef GENERATE_AU_LOG
+    static FILE* lf;
+    
+    static void log( const char* format, ... )
+    {
+        if( lf == NULL )
+        {
+	    char fname[ 1024 ];
+            sprintf( fname, "%s/Library/Logs/Surge.log", getenv( "HOME" ) );
+            lf = fopen( fname, "a" );
+        }
+        va_list args;
+        va_start( args, format );
+        vfprintf( stderr, format, args );
+        va_end( args );
+        if( lf != NULL )
+        {
+            va_start( args, format );
+            vfprintf( lf, format, args );
+            va_end( args );
+            fflush( lf );
+        }
+        
+    }
+#else
+    static void log( const char* format, ... ) { }
+#endif
+};
+
 //-------------------------------------------------------------------------------------------------------
 const CFStringRef rawchunkname = CFSTR("VmbA_chunk");
 
 enum
 {
 	kVmbAAudioUnitProperty_GetPluginCPPInstance = 70000,
+    kVmbAAudioUnitProperty_GetEditPointer = 70001,
 };
 
 // event
@@ -27,7 +60,7 @@ struct AuMIDIEvent
 	long inStartFrame;
 };
 
-class aulayer : public MusicDeviceBase
+class aulayer : public AUInstrumentBase
 {
 public:
 	aulayer (AudioUnit au);
@@ -113,7 +146,9 @@ public:
 	void InitializePlugin();
 	bool IsPluginInitialized();
 	
+    // FIXME: Move to std::unique_ptr<>
 	plugin *plugin_instance;
+    SurgeGUIEditor *editor_instance;
 protected:		
 	//void handleEvent(VstEvent*);
 	AuMIDIEvent eventbuffer[1024];

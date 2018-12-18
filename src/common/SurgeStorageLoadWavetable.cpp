@@ -27,7 +27,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 
    HMMIO hmmio;
 
-   /* Open the file for reading with buffered I/O. Let windows use its default internal buffer */
+   /* Open the file for reading with buffered I/O. Let Windows use its default internal buffer */
    hmmio = mmioOpen((LPSTR)filename.c_str(), NULL, MMIO_READ | MMIO_ALLOCBUF);
    if (!hmmio)
    {
@@ -131,7 +131,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
    }
 
    if (mmioRead(hmmio, (HPSTR)loaddata, mmckinfoSubchunk.cksize) !=
-       (LRESULT)mmckinfoSubchunk.cksize) // ACHTUNG!! h‰r h‰nder nÂgot bad!
+       (LRESULT)mmckinfoSubchunk.cksize) // ACHTUNG!! Something bad happens here! ("h√§r h√§nder n√•got bad!")
    {
       /* Oops! */
       error_msg("file	io: error reading the data chunk!");
@@ -142,7 +142,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 
    // this->inst_present = false;
    /* does not seem to be in general use
-   
+   
    mmioAscend(hmmio, &mmckinfoSubchunk, 0);
    mmioSeek(hmmio,startpos,SEEK_SET);
    // read instrument chunk
@@ -153,11 +153,11 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
            this->inst_present = false;
    } else {
            this->inst_present = true;
-   
+
            if (mmioRead(hmmio, (HPSTR)&inst_tag, mmckinfoSubchunk.cksize) !=
    (LRESULT)mmckinfoSubchunk.cksize)
            {
-   
+
                    error_msg("file	io: error reading the inst chunk!");
                    mmioClose(hmmio, 0);
                    return false;
@@ -200,8 +200,10 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
          loop_present = true;
          mmioRead(hmmio, (HPSTR)&smpl_loop, sizeof(smpl_loop));
 
-         // Dandruffs skumme wt-bug verkar vara h‰r?
+         // Dandruffs skumme wt-bug verkar vara h√§r?
+         // TRANSLATE: Dandruff's skim wt bug seems to be here?
          // hoppar in i malloc i callstack? wtf!?
+         // TRANSLATE: jumping into malloc in call stack? wtf!?
 
          smpl_loop.dwEnd++; // SC wants the loop end point to be the first sample AFTER the loop
       }
@@ -293,8 +295,8 @@ abort:
    /* Close the file */
    mmioClose(hmmio, 0);
 #else
-  // FIXME: Implement WAV file loading for macOS and Linux.
-  fprintf(stderr, "%s: WAV file loading is not implemented.\n",
-          __func__);
+    // FIXME: Implement WAV file loading for macOS and Linux.
+    fprintf(stderr, "%s: WAV file loading is not implemented.\n",
+            __func__);
 #endif
 }
