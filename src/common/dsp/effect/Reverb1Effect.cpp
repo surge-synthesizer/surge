@@ -53,10 +53,10 @@ void Reverb1Effect::init()
    modphase = 0;
    update_rsize();
    // mix.set_target(fxdata->p[rp_mix].val.f);
-   mix.set_target(1.f); // borde bli mest smooth
+   mix.set_target(1.f); // Should be the smoothest
    mix.instantize();
 
-   width.set_target(1.f); // borde bli mest smooth
+   width.set_target(1.f); // Should be the smoothest
    width.instantize();
 
    for (int t = 0; t < rev_taps; t++)

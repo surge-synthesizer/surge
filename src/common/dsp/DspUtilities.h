@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------------
-//	Copyright 2005 Claes Johanson & Vember Audio
+//    Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
@@ -238,7 +238,8 @@ inline float tanh_fast(float in)
            __m128 xx = _mm_mul_ss(x,x);
            __m128 denom = _mm_add_ss(_mm_add_ss(one,x),
    _mm_add_ss(xx,_mm_mul_ss(xx,_mm_mul_ss(_mm_load_ss(&a),x)));
-           
+
+
    #endif*/
 }
 
@@ -269,8 +270,8 @@ __forceinline float clamp1bp(float in)
    return in;
 }
 
-// använd custom format (x^3 ?) internt, men spara som decibel i xml-datan
-// bollocks to it
+// Use custom format (x^3) to represent gain internally, but save as decibel in XML-data
+
 inline float amp_to_linear(float x)
 {
    x = max(0.f, x);

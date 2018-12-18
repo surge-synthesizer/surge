@@ -519,7 +519,7 @@ __m128 IIR12WDFquad(QuadFilterUnitState* __restrict f, __m128 in)
 #if PPC
 __m128 IIR12CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
-   // state-space med clipgain (2nd order, direkt registerbegr‰nsning)
+   // State-space with clipgain (2nd order, limit within register)
 
    f->C[0] = vec_add(f->C[0], f->dC[0]); // ar
    f->C[1] = vec_add(f->C[1], f->dC[1]); // ai
@@ -545,7 +545,7 @@ __m128 IIR12CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 #else
 __m128 IIR12CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
-   // state-space med clipgain (2nd order, direkt registerbegr‰nsning)
+   // State-space with clipgain (2nd order, limit within register)
 
    f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // ar
    f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // ai
@@ -579,7 +579,7 @@ __m128 IIR12CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 #else
 __m128 IIR12CFLquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
-   // State-space med mjukare limiter
+   // State-space with softer limiter
 
    f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // (ar)
    f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // (ai)
@@ -621,7 +621,7 @@ __m128 IIR12CFLquad(QuadFilterUnitState* __restrict f, __m128 in)
 #if PPC
 __m128 IIR24CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
-   // state-space med clipgain (2nd order, direkt registerbegr‰nsning)
+   // State-space with clipgain (2nd order, limit within register)
 
    f->C[0] = vec_add(f->C[0], f->dC[0]); // ar
    f->C[1] = vec_add(f->C[1], f->dC[1]); // ai
@@ -654,7 +654,7 @@ __m128 IIR24CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 #else
 __m128 IIR24CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
-   // state-space med clipgain (2nd order, direkt registerbegr‰nsning)
+   // State-space with clipgain (2nd order, limit within register)
 
    f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // ar
    f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // ai
@@ -694,7 +694,7 @@ __m128 IIR24CFCquad(QuadFilterUnitState* __restrict f, __m128 in)
 #else
 __m128 IIR24CFLquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
-   // State-space med mjukare limiter
+   // State-space with softer limiter
 
    f->C[0] = _mm_add_ps(f->C[0], f->dC[0]); // (ar)
    f->C[1] = _mm_add_ps(f->C[1], f->dC[1]); // (ai)
@@ -1167,7 +1167,7 @@ __m128 TANH(__m128 in, __m128 drive)
 #else
 __m128 TANH(__m128 in, __m128 drive)
 {
-   // närmre idealet än TANH0
+   // Closer to ideal than TANH0
    // y = x * ( 27 + x * x ) / ( 27 + 9 * x * x );
    // y = clip(y)
 
@@ -1220,7 +1220,6 @@ __m128 SINUS_PPC(__m128 in, __m128 drive)
 #if !_M_X64
 __m128 SINUS_SSE1(__m128 in, __m128 drive)
 {
-   // TODO byta denna n‰r optimerad sine() ‰r redo
    const __m128 one = _mm_set1_ps(1.f);
    const __m128 m256 = _mm_set1_ps(256.f);
    const __m128 m512 = _mm_set1_ps(512.f);
@@ -1256,7 +1255,6 @@ __m128 SINUS_SSE1(__m128 in, __m128 drive)
 #endif
 __m128 SINUS_SSE2(__m128 in, __m128 drive)
 {
-   // TODO byta denna n‰r optimerad sine() ‰r redo
    const __m128 one = _mm_set1_ps(1.f);
    const __m128 m256 = _mm_set1_ps(256.f);
    const __m128 m512 = _mm_set1_ps(512.f);
@@ -1313,7 +1311,7 @@ __m128 ASYM_PPC(__m128 in, __m128 drive)
    vFloat a = vec_sub(x, vec_trunc(x));
    e.V = vec_max(vec_min(e.V, UB), LB);
 
-   // funkar inte med optimization ?
+   // Does not work with optimization?
 
    _MM_ALIGN16 float ws4[4], wsn4[4];
    ws4[0] = waveshapers[2][e.Int[0] & 0x3ff];

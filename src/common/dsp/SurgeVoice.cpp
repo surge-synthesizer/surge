@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------------
-//	Copyright 2005 Claes Johanson & Vember Audio
+//		Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #include "SurgeVoice.h"
 #include "DspUtilities.h"
@@ -277,7 +277,7 @@ void SurgeVoice::switch_toggled()
       set_path(use_osc1, use_osc2, use_osc3, FM, use_ring12, use_ring23, use_noise);
    }
 
-   // kolla filtertype
+   // Check the filtertype (kolla = check?)
    for (int u = 0; u < 2; u++)
    {
       if ((scene->filterunit[u].type.val.i != FBP.FU[u].type) ||
@@ -440,7 +440,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
        0.5f * amp_to_linear(localcopy[volume_id].f); // the *0.5 multiplication will be eliminated
                                                      // by the 2x gain of the halfband filter
 
-   // volymkorrigering (fb_stereo uppdaterad sedan v1.2.2
+   // Volume correcting/correction (fb_stereo updated since v1.2.2)
    if (scene->filterblock_configuration.val.i == fb_wide)
       amp *= 0.6666666f;
    else if (scene->filterblock_configuration.val.i == fb_stereo)
@@ -707,7 +707,7 @@ void SurgeVoice::set_path(
    this->noise = noise;
 }
 
-void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 betyder init
+void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ialise)
 {
    fbq = Q;
    fbqi = e;
@@ -800,8 +800,8 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 betyder init
             Q->FU[u].WP[e] = FBP.FU[u].WP;
             if (scene->filterunit[u].type.val.i == fut_lpmoog)
                Q->FU[u].WP[0] =
-                   scene->filterunit[u]
-                       .subtype.val.i; // lpmoog's output stage finns i WP[0] för hela quaden
+                   scene->filterunit[u].subtype.val.i; // LPMoog's output stage index is stored in
+                                                       // WP[0] for the entire quad
 
             if (scene->filterblock_configuration.val.i == fb_wide)
             {

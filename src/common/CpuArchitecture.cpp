@@ -23,6 +23,10 @@ void initCpuArchitecture()
       CpuArchitecture |= CaCMOV;
    if ((1 << 26) & CPUInfo[3])
       CpuArchitecture |= CaSSE2;
+#elif MAC
+    // intel macs always support
+    CpuArchitecture |= CaCMOV;
+    CpuArchitecture |= CaSSE2;
 #else
    __builtin_cpu_init();
    if (__builtin_cpu_supports("sse2"))

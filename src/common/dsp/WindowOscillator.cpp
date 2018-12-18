@@ -113,7 +113,7 @@ __forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
 		shl edx, 16
 		shr eax, 16
 		or eax,edx
-         // TODO fixa return för gcc asm
+         // TODO: Fix return for GCC ASM
 		mov result, eax
    }
    return result;
@@ -151,8 +151,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
       unsigned int MipMapA = 0;
       unsigned int MipMapB = 0;
       if (Sub.Table[so] >= oscdata->wt.n_tables)
-         Sub.Table[so] = Table; // TableID kanske inte ‰r valid l‰ngre om en ny wavetable laddats
-
+         Sub.Table[so] = Table;
+      // TableID may not be valid anymore if a new wavetable is loaded
       unsigned long MSBpos;
       unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
       if (_BitScanReverse(&MSBpos, bs))
@@ -224,7 +224,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
          unsigned int MipMapA = 0;
          unsigned int MipMapB = 0;
          if (Sub.Table[so] >= oscdata->wt.n_tables)
-            Sub.Table[so] = Table; // TableID kanske inte ar valid langre om en ny wavetable laddats
+            Sub.Table[so] = Table;
+         // TableID may not be valid anymore if a new wavetable is loaded
 
          unsigned long MSBpos;
          unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
@@ -304,7 +305,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
          unsigned int MipMapA = 0;
          unsigned int MipMapB = 0;
          if (Sub.Table[so] >= oscdata->wt.n_tables)
-            Sub.Table[so] = Table; // TableID kanske inte ‰r valid l‰ngre om en ny wavetable laddats
+            Sub.Table[so] = Table;
+         // TableID may not be valid anymore if a new wavetable is loaded
 
          unsigned long MSBpos;
 
@@ -383,18 +385,11 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
       float f = note_to_pitch((pitch - 57.f) + drift * Sub.DriftLFO[l][0] +
                               Detune * (DetuneOffset + DetuneBias * (float)l));
       int Ratio = Float2Int(220.f * 32768.f * f * (float)(storage->WindowWT.size) *
-                            samplerate_inv); // (65536.f*0.5f), 0.5 fˆr oversampling
+                            samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
       Sub.Ratio[l] = Ratio;
    }
 
    ProcessSubOscs(stereo);
-
-   // TODO idÈ: coupla tvÂ subvoices sÂ dom kan alternera window med varandra
-   // ( hÂll window i 180-phasediff)
-   // borde ge bra formant-trixning utan mellanrum
-   // kan ha en parameter som fadar vikten av den alternerande mellan -1 till +1
-
-   // TODO idÈ: free-run mode d‰r en omstart av fˆnstret inte Âterstartar oscillatorn?
 
    // int32 -> float conversion
 #if PPC

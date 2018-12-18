@@ -18,7 +18,7 @@
 #define BUILD_NUMBER_INT 100
 
 // Version with build number (example "1.0.3.342")
-#define FULL_VERSION_STR                                                                           \
+#define FULL_VERSION_STR																							\
    MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR "." BUILD_NUMBER_STR
 
 // Version without build number (example "1.0.3")
@@ -41,7 +41,7 @@
 #endif
 
 #define stringCompanyName "Vember Audio\0"
-#define stringLegalCopyright "© 2017 Vember Audio"
+#define stringLegalCopyright "Â© 2017 Vember Audio"
 #define stringLegalTrademarks "VST is a trademark of Steinberg Media Technologies GmbH"
 
 #endif //__version__

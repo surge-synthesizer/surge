@@ -45,7 +45,11 @@ void CLFOGui::draw(CDrawContext* dc)
    maindisp.bottom -= 1;
 
    cdisurf->begin();
+#if MAC
+    cdisurf->clear(0x0090ffff);
+#else
    cdisurf->clear(0xffff9000);
+#endif
    int w = cdisurf->getWidth();
    int h = cdisurf->getHeight();
 

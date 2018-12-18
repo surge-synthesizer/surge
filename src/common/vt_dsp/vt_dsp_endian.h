@@ -12,7 +12,7 @@ __forceinline int swap_endian(int t)
    return ((t << 24) & 0xff000000) | ((t << 8) & 0x00ff0000) | ((t >> 8) & 0x0000ff00) |
           ((t >> 24) & 0x000000ff);
 #else
-   // gcc verkar inte respektera att eax måste stämma när den returneras.. lägg till: ret eax?
+   // GCC does not seem to respect that eax must be correct when it returns. Add: ret eax?
    __asm
    {
 		mov		eax, t

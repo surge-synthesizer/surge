@@ -5,8 +5,8 @@
 #include "globals.h"
 #include <complex>
 
-// dessa är långsammare än motsvarande x87-variant
-// använd icke förrän codeanal har fått leka lite
+// these were slower than the corresponding x87 variant (2006)
+// do not use until profiled to be quicker
 
 void biquadunit::process_block_SSE2(double *data)
 {	
@@ -77,7 +77,7 @@ void biquadunit::process_block_SSE2(float *dataL,float *dataR)
 		__m128 vl = _mm_load_ps(dataL + k);
 		__m128 vr = _mm_load_ps(dataR + k);
 		__m128 v0 = _mm_unpacklo_ps(vl,vr);
-		
+
 		// first
 		__m128d input = _mm_cvtps_pd(v0);
 		v0 = _mm_movehl_ps(v0,v0);		
@@ -87,14 +87,12 @@ void biquadunit::process_block_SSE2(float *dataL,float *dataR)
 		reg0.v = _mm_sub_pd(_mm_add_pd(_mm_mul_pd(b1.v.v, input), reg1.v), _mm_mul_pd(a1.v.v, op0));
 		reg1.v = _mm_sub_pd(_mm_mul_pd(b2.v.v, input), _mm_mul_pd(a2.v.v, op0));
 
-		
 		// second
 		input = _mm_cvtps_pd(v0);
 		a1.process_SSE2();	a2.process_SSE2();	b0.process_SSE2();	b1.process_SSE2();	b2.process_SSE2();
 		__m128d op1 = _mm_add_pd(reg0.v,_mm_mul_pd(b0.v.v, input));
 		reg0.v = _mm_sub_pd(_mm_add_pd(_mm_mul_pd(b1.v.v, input), reg1.v), _mm_mul_pd(a1.v.v, op1));
 		reg1.v = _mm_sub_pd(_mm_mul_pd(b2.v.v, input), _mm_mul_pd(a2.v.v, op1));
-
 
 		// third
 		v0 = _mm_unpackhi_ps(vl,vr);
@@ -133,7 +131,7 @@ void biquadunit::process_block_slowlag_SSE2(float *dataL,float *dataR)
 		__m128 vl = _mm_load_ps(dataL + k);
 		__m128 vr = _mm_load_ps(dataR + k);
 		__m128 v0 = _mm_unpacklo_ps(vl,vr);
-		
+
 		// first
 		__m128d input = _mm_cvtps_pd(v0);
 		v0 = _mm_movehl_ps(v0,v0);				
@@ -142,13 +140,11 @@ void biquadunit::process_block_slowlag_SSE2(float *dataL,float *dataR)
 		reg0.v = _mm_sub_pd(_mm_add_pd(_mm_mul_pd(b1.v.v, input), reg1.v), _mm_mul_pd(a1.v.v, op0));
 		reg1.v = _mm_sub_pd(_mm_mul_pd(b2.v.v, input), _mm_mul_pd(a2.v.v, op0));
 
-		
 		// second
 		input = _mm_cvtps_pd(v0);		
 		__m128d op1 = _mm_add_pd(reg0.v,_mm_mul_pd(b0.v.v, input));
 		reg0.v = _mm_sub_pd(_mm_add_pd(_mm_mul_pd(b1.v.v, input), reg1.v), _mm_mul_pd(a1.v.v, op1));
 		reg1.v = _mm_sub_pd(_mm_mul_pd(b2.v.v, input), _mm_mul_pd(a2.v.v, op1));
-
 
 		// third
 		v0 = _mm_unpackhi_ps(vl,vr);
@@ -183,7 +179,7 @@ void biquadunit::process_block_to_SSE2(float *dataL,float *dataR, float *dstL,fl
 		__m128 vl = _mm_load_ps(dataL + k);
 		__m128 vr = _mm_load_ps(dataR + k);
 		__m128 v0 = _mm_unpacklo_ps(vl,vr);
-		
+
 		// first
 		__m128d input = _mm_cvtps_pd(v0);
 		v0 = _mm_movehl_ps(v0,v0);		
@@ -193,14 +189,12 @@ void biquadunit::process_block_to_SSE2(float *dataL,float *dataR, float *dstL,fl
 		reg0.v = _mm_sub_pd(_mm_add_pd(_mm_mul_pd(b1.v.v, input), reg1.v), _mm_mul_pd(a1.v.v, op0));
 		reg1.v = _mm_sub_pd(_mm_mul_pd(b2.v.v, input), _mm_mul_pd(a2.v.v, op0));
 
-		
 		// second
 		input = _mm_cvtps_pd(v0);
 		a1.process_SSE2();	a2.process_SSE2();	b0.process_SSE2();	b1.process_SSE2();	b2.process_SSE2();
 		__m128d op1 = _mm_add_pd(reg0.v,_mm_mul_pd(b0.v.v, input));
 		reg0.v = _mm_sub_pd(_mm_add_pd(_mm_mul_pd(b1.v.v, input), reg1.v), _mm_mul_pd(a1.v.v, op1));
 		reg1.v = _mm_sub_pd(_mm_mul_pd(b2.v.v, input), _mm_mul_pd(a2.v.v, op1));
-
 
 		// third
 		v0 = _mm_unpackhi_ps(vl,vr);

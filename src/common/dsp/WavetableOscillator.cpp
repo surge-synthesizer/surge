@@ -453,8 +453,7 @@ template <bool is_init> void WavetableOscillator::update_lagvals()
    formant_t = max(0.f, localcopy[id_formant].f);
 
    float invt = min(1.0, (8.175798915 * note_to_pitch(pitch_t)) * dsamplerate_os_inv);
-   float hpf2 =
-       min(integrator_hpf, powf(hpf_cycle_loss, 4 * invt)); // TODO !!! ACHTUNG! gör lookup-table
+   float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, 4 * invt)); // TODO Make a lookup table
 
    hpf_coeff.newValue(hpf2);
    integrator_mult.newValue(invt);
@@ -480,9 +479,8 @@ void WavetableOscillator::process_block(
    pitch_last = pitch_t;
    pitch_t = min(148.f, pitch0);
    pitchmult_inv = max(1.0, dsamplerate_os * (1 / 8.175798915) * note_to_pitch_inv(pitch_t));
-   pitchmult =
-       1.f /
-       pitchmult_inv; // denna måste vara en riktig division, reciprocal-approx är inte precis nog
+   pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal-approximation is not
+                                    // precise enough
    this->drift = drift;
    int k, l;
 
@@ -493,7 +491,8 @@ void WavetableOscillator::process_block(
    l_clip.process();
 
    if ((oscdata->wt.n_tables == 1) ||
-       (tableid >= oscdata->wt.n_tables)) // tableid-range kan ha ändrats under tiden, gör koll
+       (tableid >=
+        oscdata->wt.n_tables)) // TableID-range may have changed in the meantime, check it!
    {
       tableipol = 0.f;
       tableid = 0;

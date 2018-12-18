@@ -44,7 +44,7 @@ bool _BitScanReverse(unsigned int* result, unsigned int bits)
 }
 #endif
 
-//! Calculate he worst-case scenario of the needed samples for a specific wavetable and see if it
+//! Calculate the worst-case scenario of the needed samples for a specific wavetable and see if it
 //! fits
 bool CheckRequiredWTSize(int TableSize, int TableCount)
 {
@@ -160,7 +160,7 @@ bool Wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
    {
       for (int j = 0; j < max_subtables; j++)
       {
-         // TODO ACHTUNG crash här vid patchbyte!
+         // TODO WARNING: Crashes here with patchbyte!
          /*free(wt->TableF32WeakPointers[i][j]);
          free(wt->TableI16WeakPointers[i][j]);
          wt->TableF32WeakPointers[i][j] = 0;
@@ -209,7 +209,7 @@ bool Wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
       }
    }
 
-   // clear any appended tables (not read, but inlcuded in table for post-silence)
+   // clear any appended tables (not read, but included in table for post-silence)
    for (int j = wdata_tables; j < this->n_tables; j++)
    {
       memset(this->TableF32WeakPointers[0][j], 0, this->size * sizeof(float));
@@ -301,8 +301,8 @@ void Wavetable::MipMapWT()
    }
    // fclose(F);
 
-   // TODO I16 mipmaps hamnar ur fas
-   // knäppen kommer antagligen från att det inte är någon padding i början så att det blir ur fas
-   // vid mipmapbyte makes sense eftersom den skilde en hel sample vid bytet, vilket inte kan
-   // förklaras av halfratefiltret
+   // TODO I16 mipmaps end up out of phase
+   // The click/knot/bug probably results from the fact that there is no padding in the beginning,
+   // so it becomes out of phase at mipmap switch - makes sense because as they were off by a whole
+   // sample at the mipmap switch, which can not be explained by the halfrate filter
 }

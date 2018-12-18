@@ -265,7 +265,7 @@ void SurgeSynthesizer::softkillVoice(int s)
       (*max_playing)->uber_release();
 }
 
-// only allow 'margin' number of voices to be softkilled simultainously
+// only allow 'margin' number of voices to be softkilled simultaneously
 void SurgeSynthesizer::enforcePolyphonyLimit(int s, int margin)
 {
    list<SurgeVoice*>::iterator iter;
@@ -672,8 +672,8 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
    if (externalparam >= 0)
    {
 #if TARGET_AU
-       // FIXME!
-      //getParent()->ParameterUpdate(externalparam);
+      // FIXME!
+      // getParent()->ParameterUpdate(externalparam);
 #elif TARGET_VST3
       getParent()->setParameterAutomated(externalparam, value);
 #else
@@ -727,8 +727,8 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
    int channelmask = ((channel == 0) ? 3 : 0) | ((channel == 1) ? 1 : 0) | ((channel == 2) ? 2 : 0);
 
    float fval = (float)value * (1.f / 127.f);
-   // spara all m�jliga NRPN & RPN's i ett short-array.. blir endast 128kb eller n�t av av det
-   // �nd�..
+   // store all possible NRPN & RPNs in a short array .. just amounts for 128kb or thereabouts
+   // anyway
    switch (cc)
    {
    case 0:
@@ -929,7 +929,7 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
          iter++;
    }
 
-   // note: m�ste remova entries n�r noter d�dar sig sj�lv auch
+   // note: Must remove entries when notes kill themselves as well
 }
 
 void SurgeSynthesizer::allNotesOff()
@@ -1295,8 +1295,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                fx[s]->init_default_values();
             /*for(int j=0; j<n_fx_params; j++)
             {
-                    storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].f =
-            storage.getPatch().fx[s].p[j].val.f;
+                storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].f =
+                storage.getPatch().fx[s].p[j].val.f;
             }*/
 
             fx[s]->init();
@@ -1494,7 +1494,7 @@ bool SurgeSynthesizer::isModDestUsed(long ptag)
 
 void SurgeSynthesizer::updateUsedState()
 {
-   // intended for gui only
+   // intended for GUI only
    for (int i = 0; i < n_modsources; i++)
       modsourceused[i] = false;
 
@@ -1903,8 +1903,7 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta& pm)
       pm.fmax = 1.f;
       pm.fdefault = 0.5f;
       pm.hide = false;
-      pm.meta =
-          false; // ironiskt eftersom det �r metaparameters, men dom p�verkar inga andra sliders
+      pm.meta = false; // ironic as they are metaparameters, but they don't affect any other sliders
       pm.expert = false;
       pm.clump = 1;
    }
@@ -2042,7 +2041,7 @@ void SurgeSynthesizer::processControl()
    }
 
    storage.getPatch().copy_globaldata(
-       storage.getPatch().globaldata); // suger ganska mkt cpu i debug mode
+       storage.getPatch().globaldata); // Drains a great deal of CPU while in Debug mode.. optimize?
    if (playA)
       storage.getPatch().copy_scenedata(storage.getPatch().scenedata[0], 0); // -""-
    if (playB)

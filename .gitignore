@@ -43,6 +43,12 @@ target/
 *.pdb
 packages.config
 
+# XCode
+Surge.xcworkspace/
+surge-au.xcodeproj/
+surge-vst2.xcodeproj/
+surge-vst3.xcodeproj/
+products/
 
 # IntelliJ IDEA
 .idea

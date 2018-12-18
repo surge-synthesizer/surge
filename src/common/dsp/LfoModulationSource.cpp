@@ -93,33 +93,20 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 
 void LfoModulationSource::attack()
 {
-   /*
-   // TODO lägg till scene LFO envelope release->attack blend om det går
-   // if !state så är det en scenelfo
-   // var inte så kul i verkligheten
-   
-   if(!state && (localcopy[idelay].f == lfo->delay.val_min.f))
-   {
-           env_state = lenv_attack;
-           env_phase = env_val;
-   }
-   else*/
-   {
-      env_state = lenv_delay;
+   env_state = lenv_delay;
 
-      env_val = 0.f;
-      env_phase = 0;
+   env_val = 0.f;
+   env_phase = 0;
 
-      if (localcopy[idelay].f == lfo->delay.val_min.f)
+   if (localcopy[idelay].f == lfo->delay.val_min.f)
+   {
+      env_state = lenv_attack;
+      if (localcopy[iattack].f == lfo->attack.val_min.f)
       {
-         env_state = lenv_attack;
-         if (localcopy[iattack].f == lfo->attack.val_min.f)
-         {
-            env_state = lenv_hold;
-            env_val = 1.f;
-            if (localcopy[ihold].f == lfo->hold.val_min.f)
-               env_state = lenv_decay;
-         }
+         env_state = lenv_hold;
+         env_val = 1.f;
+         if (localcopy[ihold].f == lfo->hold.val_min.f)
+            env_state = lenv_decay;
       }
    }
 
@@ -134,7 +121,7 @@ void LfoModulationSource::attack()
    {
       float phaseslider;
       if (lfo->shape.val.i == ls_stepseq)
-         phaseslider = 0.f; // använd phase som shuffle-param istället
+         phaseslider = 0.f; // Use Phase as shuffle-parameter instead
       // else if(state) phaseslider = lfo->start_phase.val.f;
       else
          phaseslider = localcopy[startphase].f;

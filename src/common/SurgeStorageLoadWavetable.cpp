@@ -27,7 +27,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 
    HMMIO hmmio;
 
-   /* Open the file for reading with buffered I/O. Let windows use its default internal buffer */
+   /* Open the file for reading with buffered I/O. Let Windows use its default internal buffer */
    hmmio = mmioOpen((LPSTR)filename.c_str(), NULL, MMIO_READ | MMIO_ALLOCBUF);
    if (!hmmio)
    {
@@ -131,7 +131,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
    }
 
    if (mmioRead(hmmio, (HPSTR)loaddata, mmckinfoSubchunk.cksize) !=
-       (LRESULT)mmckinfoSubchunk.cksize) // ACHTUNG!! här händer något bad!
+       (LRESULT)mmckinfoSubchunk.cksize)
    {
       /* Oops! */
       error_msg("file	io: error reading the data chunk!");
@@ -142,7 +142,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 
    // this->inst_present = false;
    /* does not seem to be in general use
-   
+   
    mmioAscend(hmmio, &mmckinfoSubchunk, 0);
    mmioSeek(hmmio,startpos,SEEK_SET);
    // read instrument chunk
@@ -153,11 +153,11 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
            this->inst_present = false;
    } else {
            this->inst_present = true;
-   
+
            if (mmioRead(hmmio, (HPSTR)&inst_tag, mmckinfoSubchunk.cksize) !=
    (LRESULT)mmckinfoSubchunk.cksize)
            {
-   
+
                    error_msg("file	io: error reading the inst chunk!");
                    mmioClose(hmmio, 0);
                    return false;
@@ -199,11 +199,9 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
       {
          loop_present = true;
          mmioRead(hmmio, (HPSTR)&smpl_loop, sizeof(smpl_loop));
+         // Dandruff's weird wavetable bug seems to be related to this?
 
-         // Dandruffs skumme wt-bug verkar vara här?
-         // hoppar in i malloc i callstack? wtf!?
-
-         smpl_loop.dwEnd++; // SC wants the loop end point to be the first sample AFTER the loop
+         smpl_loop.dwEnd++; // We want the loop end point to be the first sample AFTER the loop
       }
       else
       {
@@ -293,8 +291,7 @@ abort:
    /* Close the file */
    mmioClose(hmmio, 0);
 #else
-  // FIXME: Implement WAV file loading for macOS and Linux.
-  fprintf(stderr, "%s: WAV file loading is not implemented.\n",
-          __func__);
+   // FIXME: Implement WAV file loading for macOS and Linux.
+   fprintf(stderr, "%s: WAV file loading is not implemented.\n", __func__);
 #endif
 }

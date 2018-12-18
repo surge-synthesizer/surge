@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------------
-//	Copyright 2005 Claes Johanson & Vember Audio
+//			Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #include "SurgeStorage.h"
 #include "Parameter.h"
@@ -369,7 +369,7 @@ void Parameter::set_type(int ctrltype)
       val_min.i = 0;
       val_default.i = 0;
       val_max.i = num_fxtypes - 1;
-      // affect_other_parameters = true;	// kan inte addas förrän den har en custom
+      // affect_other_parameters = true;	// Can not be added, before it has a custom
       // controltype
       break;
    case ct_fxbypass:
@@ -763,7 +763,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.1f cents", f * 100.f);
          break;
       case ct_stereowidth:
-         sprintf(txt, "%.1fº", f);
+         sprintf(txt, "%.1fÂº", f);
          break;
       case ct_freq_hpf:
       case ct_freq_audible:
@@ -1008,8 +1008,8 @@ pdata Parameter::morph(Parameter* b, float x)
         }
         else
         {
-                if (x>0.5)
-                        memcpy(this,b,sizeof(parameter));
+                                        if (x>0.5)
+                                                memcpy(this,b,sizeof(parameter));
         }
 }*/
 

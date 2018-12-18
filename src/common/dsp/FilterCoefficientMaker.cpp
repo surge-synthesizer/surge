@@ -196,7 +196,7 @@ void FilterCoefficientMaker::Coeff_LP12(float freq, float reso, int subtype)
           a1 = -2 * cosi, a2 = 1 - alpha, a0inv = 1 / a0;
 
    // double sq = a1*a1 - 4.0*a2;
-   // m�ste vara negativ
+   // must be negative
    // dvs a2 > 0.25*a1*a1
    // 1-alpha / (1+alpha) > 0.25*(-2*cosi/(1+alpha))^2
    // 1-alpha > 0.25*(-2*cosi)^2 / (1+alpha)
@@ -356,7 +356,7 @@ void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
 {
    float dtime = (1.f / 440.f) * note_to_pitch(-freq);
    dtime = dtime * dsamplerate_os -
-           FIRoffset; // 1 sample f�r feedback, 1 f�r ett IIR-filter utan resonans
+           FIRoffset; // 1 sample for feedback, 1 sample for the IIR-filter without resonance
    dtime = limit_range(dtime, (float)FIRipol_N, (float)max_fb_comb - FIRipol_N);
    reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
 
