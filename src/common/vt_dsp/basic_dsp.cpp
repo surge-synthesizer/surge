@@ -100,7 +100,7 @@ int limit_range(int x, int l, int h)
 int Wrap(int x, int L, int H)
 {
 #if _M_X64 || PPC || __linux__
-   // fattar inte vad den gör längre..
+   // don't remember what this was anymore...
    // int diff = H - L;
    // if(x > H) x = x-H;
    assert(0);
@@ -291,7 +291,7 @@ void softclip_block(float* in, unsigned int nquads)
       vec_st(x, i, in);
    }
 #else
-   // y = x - (4/27)*x^3,  x Ä [-1.5 .. 1.5]
+   // y = x - (4/27)*x^3,  x [-1.5 .. 1.5]
    const __m128 a = _mm_set1_ps(-4.f / 27.f);
 
    const __m128 x_min = _mm_set1_ps(-1.5f);
@@ -710,23 +710,6 @@ void copy_block_USUD(float* __restrict src, float* __restrict dst, unsigned int 
       _mm_storeu_ps(&fdst[i + 20], _mm_loadu_ps(&fsrc[i + 20]));
       _mm_storeu_ps(&fdst[i + 24], _mm_loadu_ps(&fsrc[i + 24]));
       _mm_storeu_ps(&fdst[i + 28], _mm_loadu_ps(&fsrc[i + 28]));
-   }
-#endif
-}
-
-void sum_ps_to_ss_block(__m128* xb, unsigned int nquads)
-{
-#if PPC
-   assert(0);
-#else
-   // finns en snabbare variant pÂ sidan 227 i AMDs optimization manual
-   for (unsigned int i = 0; i < nquads; i++)
-   {
-      __m128 x = xb[i];
-      __m128 a = _mm_add_ss(x, _mm_shuffle_ps(x, x, _MM_SHUFFLE(0, 0, 0, 1)));
-      __m128 b = _mm_add_ss(_mm_shuffle_ps(x, x, _MM_SHUFFLE(0, 0, 0, 2)),
-                            _mm_shuffle_ps(x, x, _MM_SHUFFLE(0, 0, 0, 3)));
-      xb[i] = _mm_add_ss(a, b);
    }
 #endif
 }

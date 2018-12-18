@@ -39,21 +39,6 @@ void lipol_ps::multiply_block(float* src, unsigned int nquads)
 #if PPC
    const vFloat zero = (vFloat)0.f;
 
-   // 256-272 före y1/y2 unroll
-   // 208/224 efter
-   /*
-    vFloat y1,y2,dy;
-    initblock(y1,dy);
-    y2 = vec_add(y1,dy);
-    dy = vec_add(dy,dy);
-    for(unsigned int i=0; i<(nquads<<4); i+=32)
-   {
-           vec_st(vec_madd(vec_ld(i,src),y1,zero),i,src);
-           y1 = vec_add(y1,dy);
-           vec_st(vec_madd(vec_ld(i+16,src),y2,zero),i+16,src);
-           y2 = vec_add(y2,dy);
-   }*/
-
    vFloat y1, y2, dy;
    initblock(y1, dy);
    y2 = vec_add(y1, dy);

@@ -132,7 +132,7 @@ bool Sample::load_riff_wave_mk2(const char* fname)
    }
 
    if (mmioRead(hmmio, (HPSTR)loaddata, mmckinfoSubchunk.cksize) !=
-       (LRESULT)mmckinfoSubchunk.cksize) // ACHTUNG/WARNING!! Something bad happens here! (här händer något bad!)
+       (LRESULT)mmckinfoSubchunk.cksize)
    {
       /* Oops! */
       write_log("file	io: error reading the data chunk!");
@@ -143,8 +143,7 @@ bool Sample::load_riff_wave_mk2(const char* fname)
 
    this->inst_present = false;
    /* does not seem to be in general use
-   
-
+   
    mmioAscend(hmmio, &mmckinfoSubchunk, 0);
    mmioSeek(hmmio,startpos,SEEK_SET);
    // read instrument chunk
@@ -155,7 +154,7 @@ bool Sample::load_riff_wave_mk2(const char* fname)
            this->inst_present = false;
    } else {
            this->inst_present = true;
-   
+   
            if (mmioRead(hmmio, (HPSTR)&inst_tag, mmckinfoSubchunk.cksize) !=
    (LRESULT)mmckinfoSubchunk.cksize)
            {

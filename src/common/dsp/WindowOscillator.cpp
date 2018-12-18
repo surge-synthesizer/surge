@@ -113,7 +113,6 @@ __forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
 		shl edx, 16
 		shr eax, 16
 		or eax,edx
-         // TODO fixa return för gcc asm
          // TODO: Fix return for GCC ASM
 		mov result, eax
    }

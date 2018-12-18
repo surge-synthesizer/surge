@@ -196,7 +196,7 @@ void FilterCoefficientMaker::Coeff_LP12(float freq, float reso, int subtype)
           a1 = -2 * cosi, a2 = 1 - alpha, a0inv = 1 / a0;
 
    // double sq = a1*a1 - 4.0*a2;
-   // m�ste vara negativ
+   // must be negative
    // dvs a2 > 0.25*a1*a1
    // 1-alpha / (1+alpha) > 0.25*(-2*cosi/(1+alpha))^2
    // 1-alpha > 0.25*(-2*cosi)^2 / (1+alpha)

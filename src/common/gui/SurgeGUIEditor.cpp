@@ -129,13 +129,13 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #ifdef TARGET_VST3
    _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
 #endif
-   zoom_callback = [](SurgeGUIEditor *f){ };
+   zoom_callback = [](SurgeGUIEditor* f) {};
    zoomFactor = 100;
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
-  if (frame )
+   if (frame)
    {
       getFrame()->unregisterKeyboardHook(this);
       frame->removeAll(true);
@@ -1070,20 +1070,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
 #if TARGET_AUDIOUNIT
    // ZOOM CONTROL for now is only implemented in the Audio Unit host
    CHSwitch2* mp_zoom =
-     new CHSwitch2(CRect( 892-77, 526, 892 - 40, 526 + 12 ), this, tag_mp_zoom, 2, 12, 1, 2,
+       new CHSwitch2(CRect(892 - 77, 526, 892 - 40, 526 + 12), this, tag_mp_zoom, 2, 12, 1, 2,
                      getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
    frame->addView(mp_zoom);
-   CTextLabel *Comments = new
-     CTextLabel(CRect( 892-137, 526, 892 - 77, 526 + 12 ), "Zoom" );
-   
+   CTextLabel* Comments = new CTextLabel(CRect(892 - 137, 526, 892 - 77, 526 + 12), "Zoom");
+
    Comments->setTransparency(true);
    Comments->setFont(minifont);
-   Comments->setFontColor( kBlackCColor );
+   Comments->setFontColor(kBlackCColor);
    Comments->setHoriAlign(kRightText);
    frame->addView(Comments);
    // END ZOOM CONTROL
 #endif
-   
+
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
    frame->addView(infowindow);
 
@@ -1183,9 +1182,9 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 void SurgeGUIEditor::close()
 {
 #ifndef TARGET_VST3
-  super::close();
+   super::close();
 #endif
-  
+
 #ifdef TARGET_VST3
    _idleTimer->stop();
 #endif
@@ -1396,7 +1395,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          bool first_destination = true;
 
-         // ska borja pa 0, men borjade pa 1 innan.. kanske finns en anledning?
+         // should start at 0, but started at 1 before.. might be a reason but don't remember why...
          for (int md = 0; md < n_total_md; md++)
          {
             auto activeScene = synth->storage.getPatch().scene_active.val.i;
@@ -1877,15 +1876,14 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    }
    break;
    case tag_mp_zoom:
-     {
+   {
       if (control->getValue() > 0.5f)
-        zoomInDir( 1 );
+         zoomInDir(1);
       else
-        zoomInDir( -1 );
+         zoomInDir(-1);
       return;
-
-     }
-     break;
+   }
+   break;
    case tag_osc_select:
    {
       current_osc = (int)(control->getValue() * 2.f + 0.5f);
@@ -2252,19 +2250,21 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
    return false;
 }
 
-void SurgeGUIEditor::zoomInDir( int dir )
+void SurgeGUIEditor::zoomInDir(int dir)
 {
-  if( dir > 0 )
-    {
+   if (dir > 0)
+   {
       zoomFactor += 10;
-    }
-  else
-    {
+   }
+   else
+   {
       zoomFactor -= 10;
-    }
-  if( zoomFactor < 50 ) zoomFactor = 50;
-  if( zoomFactor > 300 ) zoomFactor = 300;
-  zoom_callback( this );
+   }
+   if (zoomFactor < 50)
+      zoomFactor = 50;
+   if (zoomFactor > 300)
+      zoomFactor = 300;
+   zoom_callback(this);
 }
 
 //------------------------------------------------------------------------------------------------

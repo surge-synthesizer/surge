@@ -38,7 +38,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
    bufpos = 0;
    dc = 0;
 
-   // init här
+   // init here
    id_shape = oscdata->p[0].param_id_in_scene;
    id_pw = oscdata->p[1].param_id_in_scene;
    id_smooth = oscdata->p[2].param_id_in_scene;
@@ -373,9 +373,8 @@ template <bool is_init> void SampleAndHoldOscillator::update_lagvals()
 
    float invt =
        4.f * min(1.0, (8.175798915 * note_to_pitch(pitch + l_sync.v)) * dsamplerate_os_inv);
-   float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt)); 
-    // ACHTUNG! gör lookup-table
-    // ACHTUNG/WARNING! Make a lookup-table
+   float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt));
+   // TODO Make a lookup-table
 
    li_hpf.set_target(hpf2);
 
@@ -397,10 +396,8 @@ void SampleAndHoldOscillator::process_block(
    this->pitch = min(148.f, pitch0);
    this->drift = drift;
    pitchmult_inv = max(1.0, dsamplerate_os * (1 / 8.175798915) * note_to_pitch_inv(pitch));
-   pitchmult =
-       1.f /
-       pitchmult_inv; 
-      // This must be a real division, reciprocal-approximation is not precise enough
+   pitchmult = 1.f / pitchmult_inv;
+   // This must be a real division, reciprocal-approximation is not precise enough
    int k, l;
 
    // if (FM) FMdepth.newValue(depth);

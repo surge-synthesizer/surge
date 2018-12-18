@@ -131,8 +131,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
    }
 
    if (mmioRead(hmmio, (HPSTR)loaddata, mmckinfoSubchunk.cksize) !=
-       (LRESULT)mmckinfoSubchunk
-           .cksize) // ACHTUNG!! Something bad happens here! ("här händer något bad!")
+       (LRESULT)mmckinfoSubchunk.cksize)
    {
       /* Oops! */
       error_msg("file	io: error reading the data chunk!");
@@ -143,7 +142,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 
    // this->inst_present = false;
    /* does not seem to be in general use
-   
+   
    mmioAscend(hmmio, &mmckinfoSubchunk, 0);
    mmioSeek(hmmio,startpos,SEEK_SET);
    // read instrument chunk

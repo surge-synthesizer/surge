@@ -59,8 +59,8 @@ template <int v> class ChorusEffect : public Effect
 {
    _MM_ALIGN16 lipol_ps feedback, mix, width;
    _MM_ALIGN16 __m128 voicepanL4[v], voicepanR4[v];
-   _MM_ALIGN16 float
-       buffer[max_delay_length + FIRipol_N]; // s� kan den interpoleras med SSE utan wrap
+   _MM_ALIGN16 float buffer[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE
+                                                           // interpolation without wrapping
 public:
    ChorusEffect<v>(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~ChorusEffect();

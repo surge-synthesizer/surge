@@ -121,8 +121,7 @@ void LfoModulationSource::attack()
    {
       float phaseslider;
       if (lfo->shape.val.i == ls_stepseq)
-         phaseslider = 0.f; // använd phase som shuffle-param istället
-                            // TRANSLATE: Use Phase as shuffle-parameter instead
+         phaseslider = 0.f; // Use Phase as shuffle-parameter instead
       // else if(state) phaseslider = lfo->start_phase.val.f;
       else
          phaseslider = localcopy[startphase].f;

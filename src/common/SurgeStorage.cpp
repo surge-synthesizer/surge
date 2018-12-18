@@ -32,38 +32,40 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 #if MAC
 #include <CoreFoundation/CoreFoundation.h>
-string getSelfLocation() {
-    char path[PATH_MAX];
-    // TODO: use a build-provided symbol
-    CFStringRef selfName = CFSTR("com.vemberaudio.plugins.surge");
-    CFBundleRef mainBundle = CFBundleGetBundleWithIdentifier(selfName);
-    CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
-    CFStringRef str = CFURLCopyFileSystemPath( resourcesURL, kCFURLPOSIXPathStyle );
-    CFRelease(resourcesURL);
-    CFStringGetCString( str, path, FILENAME_MAX, kCFStringEncodingASCII );
-    CFRelease(str);
-    string out(path);
-    return out;
+string getSelfLocation()
+{
+   char path[PATH_MAX];
+   // TODO: use a build-provided symbol
+   CFStringRef selfName = CFSTR("com.vemberaudio.plugins.surge");
+   CFBundleRef mainBundle = CFBundleGetBundleWithIdentifier(selfName);
+   CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
+   CFStringRef str = CFURLCopyFileSystemPath(resourcesURL, kCFURLPOSIXPathStyle);
+   CFRelease(resourcesURL);
+   CFStringGetCString(str, path, FILENAME_MAX, kCFStringEncodingASCII);
+   CFRelease(str);
+   string out(path);
+   return out;
 }
 #endif
 
 SurgeStorage::SurgeStorage()
 {
 #if MAC
-    // Quick hack to install all the bundled surge data to user's local ~/Library/...
-    fs::path userSurgeDir(string(getenv("HOME")) + "/Library/Application Support/Surge");
-    
-    // FIXME: currently, this only runs the first time you run Surge (e.g. when it's
-    // scanned by the host, so it doesn't run whenever surge instances are loaded but it
-    // also could fail to synchronize updates if the bundled resources change. It's unclear
-    // how to handle this in the face of users editing the `configuration.xml`. Perhaps
-    // a better approach is to leave a basic set of resources in the bundle and merge them
-    // with any user-provided things like waveforms in ~/Library/Application Support/Surge/...
-    // at least for now, this gets users up and running with presets, waveforms, effects, etc.
-    if (!fs::is_directory(userSurgeDir)) {
-        fs::create_directories(userSurgeDir);
-        fs::copy_recursive(fs::path(getSelfLocation() + "/Contents/Data"), userSurgeDir);
-    }
+   // Quick hack to install all the bundled surge data to user's local ~/Library/...
+   fs::path userSurgeDir(string(getenv("HOME")) + "/Library/Application Support/Surge");
+
+   // FIXME: currently, this only runs the first time you run Surge (e.g. when it's
+   // scanned by the host, so it doesn't run whenever surge instances are loaded but it
+   // also could fail to synchronize updates if the bundled resources change. It's unclear
+   // how to handle this in the face of users editing the `configuration.xml`. Perhaps
+   // a better approach is to leave a basic set of resources in the bundle and merge them
+   // with any user-provided things like waveforms in ~/Library/Application Support/Surge/...
+   // at least for now, this gets users up and running with presets, waveforms, effects, etc.
+   if (!fs::is_directory(userSurgeDir))
+   {
+      fs::create_directories(userSurgeDir);
+      fs::copy_recursive(fs::path(getSelfLocation() + "/Contents/Data"), userSurgeDir);
+   }
 #endif
 
    _patch.reset(new SurgePatch(this));
@@ -166,9 +168,9 @@ SurgeStorage::SurgeStorage()
    userDataPath = "~/Documents/Surge";
 
 #elif __linux__
-   
+
    printf("Implement me, probably\n");
-   
+
 #else
 
    PWSTR localAppData;
@@ -197,27 +199,22 @@ SurgeStorage::SurgeStorage()
                  "Configuration not found", MB_OK | MB_ICONERROR);
 #endif
 #if MAC
-       SInt32 nRes = 0;
-       CFUserNotificationRef pDlg = NULL;
-       const void* keys[] = { kCFUserNotificationAlertHeaderKey,
-           kCFUserNotificationAlertMessageKey
-       };
-       const void* vals[] = {
-           CFSTR("Surge is not properly installed"),
-           CFSTR("Unable to open configuration.xml from ~/Library/Application Support/Surge")
-           
-       };
-       
-       CFDictionaryRef dict = CFDictionaryCreate(0, keys, vals,
-                                                 sizeof(keys)/sizeof(*keys),
-                                                 &kCFTypeDictionaryKeyCallBacks,
-                                                 &kCFTypeDictionaryValueCallBacks);
-       
-       pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0,
-                                       kCFUserNotificationStopAlertLevel,
-                                       &nRes, dict);
+      SInt32 nRes = 0;
+      CFUserNotificationRef pDlg = NULL;
+      const void* keys[] = {kCFUserNotificationAlertHeaderKey, kCFUserNotificationAlertMessageKey};
+      const void* vals[] = {
+          CFSTR("Surge is not properly installed"),
+          CFSTR("Unable to open configuration.xml from ~/Library/Application Support/Surge")
+
+      };
+
+      CFDictionaryRef dict =
+          CFDictionaryCreate(0, keys, vals, sizeof(keys) / sizeof(*keys),
+                             &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+      pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0, kCFUserNotificationStopAlertLevel,
+                                      &nRes, dict);
 #endif
-       
    }
 
    TiXmlElement* e = snapshotloader.FirstChild("autometa")->ToElement();
@@ -414,10 +411,10 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    wt_header wh;
    memset(&wh, 0, sizeof(wt_header));
 
-   size_t read = fread( &wh, sizeof( wt_header ), 1, f );
+   size_t read = fread(&wh, sizeof(wt_header), 1, f);
    // I'm not sure why this ever worked but it is checking the 4 bytes against vawt so...
    // if (wh.tag != vt_read_int32BE('vawt'))
-   if ( ! ( wh.tag[ 0 ] == 'v' && wh.tag[ 1 ] == 'a' && wh.tag[ 2 ] == 'w' && wh.tag[ 3 ] == 't' ) )
+   if (!(wh.tag[0] == 'v' && wh.tag[1] == 'a' && wh.tag[2] == 'w' && wh.tag[3] == 't'))
    {
       // SOME sort of error reporting is appropriate
       fclose(f);
@@ -814,7 +811,7 @@ void SurgeStorage::init_tables()
            table_sin[i] = sin(x);
            table_sin_offset[i] = sin(x+(2.0*M_PI/512.0))-sin(x);
    }*/
-   // fr�n 1.2.2
+   // from 1.2.2
    // nyquist_pitch = (float)12.f*log((0.49999*M_PI) / (dsamplerate_os_inv *
    // 2*M_PI*440.0))/log(2.0);	// include some margin for error (and to avoid denormals in IIR
    // filter clamping)
