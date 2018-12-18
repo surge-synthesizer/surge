@@ -5,11 +5,11 @@ RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst2"
 BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
-EXEC_LOCATION="target/vst2/Release/Surge.dylib"
+EXEC_LOCATION="target/vst3/Release/Surge.dylib"
 
 # output configs
 OUTPUT_DIR=products
-BUNDLE_NAME="Surge.vst"
+BUNDLE_NAME="Surge.vst3"
 BUNDLE_DIR="$OUTPUT_DIR/$BUNDLE_NAME"
 EXEC_TARGET_NAME="Surge"
 
@@ -33,5 +33,5 @@ cp $PACKAGE_SRC_LOCATION/* "$BUNDLE_DIR/Contents/"
 cp -R "$BUNDLE_RES_SRC_LOCATION" "$BUNDLE_DIR/Contents/Resources"
 cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
 mkdir -p "$BUNDLE_DIR/Contents/Data"
-cp -rf resources/data "$BUNDLE_DIR/Contents/Data"
+cp -rf resources/data/* "$BUNDLE_DIR/Contents/Data"
 
