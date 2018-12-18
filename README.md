@@ -135,6 +135,19 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
 
+## Building with XCode9
+
+Use homebrew to install llvm
+
+```brew install llvm```
+
+and set environment variable `XCODE9` to "true", eg:
+
+```export XCODE9="true"```
+
+***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
+
+
 ## References
 
   * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)

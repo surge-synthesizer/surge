@@ -294,6 +294,7 @@ end
 -- VST2 PLUGIN --
 
 local VST24SDK = os.getenv("VST2SDK_DIR")
+local XCODE9 = os.getenv("XCODE9")
 
 if VST24SDK then
 
@@ -336,6 +337,15 @@ if VST24SDK then
 	configuration {}
 
 	if (os.istarget("macosx")) then
+
+		if XCODE9 then
+			xcodebuildsettings
+			{
+				["CC"] = "/usr/local/opt/llvm/bin/clang";
+				["CLANG_LINK_OBJC_RUNTIME"] = "NO";
+				["COMPILER_INDEX_STORE_ENABLE"] = "NO";
+			}
+		end
 
 		targetname "Surge"
 		targetprefix ""
@@ -407,6 +417,15 @@ configuration {}
 
 if (os.istarget("macosx")) then
 
+	if XCODE9 then
+		xcodebuildsettings
+		{
+			["CC"] = "/usr/local/opt/llvm/bin/clang";
+			["CLANG_LINK_OBJC_RUNTIME"] = "NO";
+			["COMPILER_INDEX_STORE_ENABLE"] = "NO";
+		}
+	end
+
 	postbuildcommands { "./package-vst3.sh" }
 
 	files
@@ -447,6 +466,15 @@ if (os.istarget("macosx")) then
 
 	configuration {}
 	
+	if XCODE9 then
+		xcodebuildsettings
+		{
+			["CC"] = "/usr/local/opt/llvm/bin/clang";
+			["CLANG_LINK_OBJC_RUNTIME"] = "NO";
+			["COMPILER_INDEX_STORE_ENABLE"] = "NO";
+		}
+	end
+
 	defines
 	{
 		"TARGET_AUDIOUNIT=1",

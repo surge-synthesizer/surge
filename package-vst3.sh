@@ -9,7 +9,7 @@ EXEC_LOCATION="target/vst2/Release/Surge.dylib"
 
 # output configs
 OUTPUT_DIR=products
-BUNDLE_NAME="Surge.vst"
+BUNDLE_NAME="Surge.vst3"
 BUNDLE_DIR="$OUTPUT_DIR/$BUNDLE_NAME"
 EXEC_TARGET_NAME="Surge"
 
