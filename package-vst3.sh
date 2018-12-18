@@ -5,7 +5,7 @@ RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst2"
 BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
-EXEC_LOCATION="target/vst2/Release/Surge.dylib"
+EXEC_LOCATION="target/vst3/Release/Surge.dylib"
 
 # output configs
 OUTPUT_DIR=products
