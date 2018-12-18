@@ -25,6 +25,10 @@
 
 using namespace std;
 
+#if __linux__
+namespace VSTGUI { void* soHandle = nullptr; }
+#endif
+
 //-------------------------------------------------------------------------------------------------------
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
