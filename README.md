@@ -147,6 +147,17 @@ and set environment variable `XCODE9` to "true", eg:
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
 
+## Building macOS Installer
+
+Prerequisites
+[Packages](http://s.sudre.free.fr/Software/Packages/about.html)
+
+After successfully building (`products` directory will contain `Surge.component`, `Surge.vst` and `Surge.vst3`) build the installer with
+
+```packagesbuild installer_osx/installer_osx.pkgproj```
+
+The resulting installer binary will be deposited in `installer_osx/build`.
+As it is an unsigned installer package, GateKeeper will block it.  Go to `System Preferences -> Security` to allow installation.
 
 ## References
 
