@@ -105,8 +105,7 @@ Eq3BandEffect::Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd
 {
    gain.set_blocksize(block_size);
 
-   band1.setBlockSize(block_size * slowrate); 	// spelar ingen roll eftersom de är lagbaserade
-																// TRANSLATE: does not matter because they are team-based
+   band1.setBlockSize(block_size * slowrate); // does not matter ATM as tey're smoothed
    band2.setBlockSize(block_size * slowrate);
    band3.setBlockSize(block_size * slowrate);
 }
@@ -130,9 +129,7 @@ void Eq3BandEffect::setvars(bool init)
       gain.set_target(1.f); // db_to_linear(fxdata->p[9].val.f));
       gain.instantize();
       band1.coeff_peakEQ(band1.calc_omega(fxdata->p[1].val.f * (1.f / 12.f)), fxdata->p[2].val.f,
-                         1.f); 	// sätt banden till 0dB så fades eqn in
-											// TRANSLATE1: put the bands to 0dB - then fade EQ
-											// TRANSLATE2: Set the bands to 0dB so the EQ fades in
+                         1.f); // Set the bands to 0dB so the EQ fades in initiallt
       band2.coeff_peakEQ(band2.calc_omega(fxdata->p[4].val.f * (1.f / 12.f)), fxdata->p[5].val.f,
                          1.f);
       band3.coeff_peakEQ(band3.calc_omega(fxdata->p[7].val.f * (1.f / 12.f)), fxdata->p[8].val.f,

@@ -160,12 +160,11 @@ bool Wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
    {
       for (int j = 0; j < max_subtables; j++)
       {
-		// TODO ACHTUNG crash här vid patchbyte!
-		// TODO ACHTUNG/WARNING: Crashes here with patchbyte!
-		/*free(wt->TableF32WeakPointers[i][j]);
-		free(wt->TableI16WeakPointers[i][j]);
-		wt->TableF32WeakPointers[i][j] = 0;
-		wt->TableI16WeakPointers[i][j] = 0;*/
+         // TODO WARNING: Crashes here with patchbyte!
+         /*free(wt->TableF32WeakPointers[i][j]);
+         free(wt->TableI16WeakPointers[i][j]);
+         wt->TableF32WeakPointers[i][j] = 0;
+         wt->TableI16WeakPointers[i][j] = 0;*/
       }
    }
    for (int j = 0; j < this->n_tables; j++)
@@ -300,17 +299,10 @@ void Wavetable::MipMapWT()
       }
       // fwrite(this->TableI16WeakPointers[l][0],lsize*sizeof(short),1,F);
    }
-	// fclose(F);
+   // fclose(F);
 
-	// TODO I16 mipmaps hamnar ur fas
-	// knäppen kommer antagligen från att det inte är någon padding i början så att det blir ur fas
-	// vid mipmapbyte makes sense eftersom den skilde en hel sample vid bytet, vilket inte kan
-	// förklaras av halfratefiltret
-
-	// TRANSLATE:
-	// TODO I16 mipmaps end up out of phase
-	// The click/knot/bug probably results from the fact that there is no padding in the beginning, 
-	// so it becomes out of phase at mipmapbyte - makes sense because it separates a whole sample
-	// at the exchange, which can not be explained by the semifinal filter
-	
+   // TODO I16 mipmaps end up out of phase
+   // The click/knot/bug probably results from the fact that there is no padding in the beginning,
+   // so it becomes out of phase at mipmap switch - makes sense because as they were off by a whole
+   // sample at the mipmap switch, which can not be explained by the halfrate filter
 }

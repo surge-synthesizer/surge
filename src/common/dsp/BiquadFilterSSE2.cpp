@@ -5,15 +5,8 @@
 #include "globals.h"
 #include <complex>
 
-// dessa är lĺngsammare än motsvarande x87-variant
-// använd icke förrän codeanal har fĺtt leka lite
-
-// TRANSLATE1: 
-// these are slower than the corresponding x87 variant
-// do not use until codeanal has been playing a little
-// TRANSLATE2:
-// these are more common than the corresponding x87 variant
-// do not use until codeanal has been playing a little
+// these were slower than the corresponding x87 variant (2006)
+// do not use until profiled to be quicker
 
 void biquadunit::process_block_SSE2(double *data)
 {	

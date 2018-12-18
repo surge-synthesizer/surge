@@ -672,8 +672,8 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
    if (externalparam >= 0)
    {
 #if TARGET_AU
-       // FIXME!
-      //getParent()->ParameterUpdate(externalparam);
+      // FIXME!
+      // getParent()->ParameterUpdate(externalparam);
 #elif TARGET_VST3
       getParent()->setParameterAutomated(externalparam, value);
 #else
@@ -727,10 +727,8 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
    int channelmask = ((channel == 0) ? 3 : 0) | ((channel == 1) ? 1 : 0) | ((channel == 2) ? 2 : 0);
 
    float fval = (float)value * (1.f / 127.f);
-	// spara all möjliga NRPN & RPN's i ett short-array.. blir endast 128kb eller nåt av av det
-	// ändå..
-	// TRANSLATE:
-	// save all possible NRPN & RPNs in a short array .. just gets/only amounts for 128kb or something off of it anyway
+   // store all possible NRPN & RPNs in a short array .. just amounts for 128kb or thereabouts
+   // anyway
    switch (cc)
    {
    case 0:
@@ -931,9 +929,7 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
          iter++;
    }
 
-	// note: måste remova entries när noter dödar sig själv auch
-	// TRANSLATE:
-	// note: Must remove entries when notes kill themselves (ouch!)
+   // note: Must remove entries when notes kill themselves as well
 }
 
 void SurgeSynthesizer::allNotesOff()
@@ -1299,8 +1295,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                fx[s]->init_default_values();
             /*for(int j=0; j<n_fx_params; j++)
             {
-		storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].f =
-		storage.getPatch().fx[s].p[j].val.f;
+                storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].f =
+                storage.getPatch().fx[s].p[j].val.f;
             }*/
 
             fx[s]->init();
@@ -1907,10 +1903,7 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta& pm)
       pm.fmax = 1.f;
       pm.fdefault = 0.5f;
       pm.hide = false;
-      pm.meta =
-          false;// ironiskt eftersom det är metaparameters, men dom påverkar inga andra sliders
-	   	// TRANSLATE:
-	   	// ironic because it is metaparameters, but they don't affect any other sliders
+      pm.meta = false; // ironic as they are metaparameters, but they don't affect any other sliders
       pm.expert = false;
       pm.clump = 1;
    }
@@ -2048,9 +2041,7 @@ void SurgeSynthesizer::processControl()
    }
 
    storage.getPatch().copy_globaldata(
-       storage.getPatch().globaldata); // suger ganska mkt cpu i debug mode
-					// TRANSLATE:
-					// Drains a great deal of CPU while in Debug mode
+       storage.getPatch().globaldata); // Drains a great deal of CPU while in Debug mode.. optimize?
    if (playA)
       storage.getPatch().copy_scenedata(storage.getPatch().scenedata[0], 0); // -""-
    if (playB)

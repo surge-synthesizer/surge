@@ -99,9 +99,6 @@ void ConditionerEffect::process(float* dataL, float* dataR)
    width.set_target_smoothed(clamp1bp(*f[2]));
    postamp.set_target_smoothed(db_to_linear(*f[7]));
 
-	// gör conditioner SSE-snäll
-	// TRANSLATE: Make a condition(er?), SSE-kind (SSE-type?)
-
    _MM_ALIGN16 float M[block_size], S[block_size]; // wb = write-buffer
    encodeMS(dataL, dataR, M, S, block_size_quad);
    width.multiply_block(S, block_size_quad);
@@ -116,9 +113,6 @@ void ConditionerEffect::process(float* dataL, float* dataR)
    {
       float dL = delayed[0][bufpos];
       float dR = delayed[1][bufpos];
-
-      // vu[0] = max(vu[0], dataL[k]);
-      // vu[1] = max(vu[1], dataR[k]);
 
       float la = lamax[lookahead - 2];
 
@@ -136,7 +130,7 @@ void ConditionerEffect::process(float* dataL, float* dataR)
       delayed[1][bufpos] = dataR[k];
 
       lamax[bufpos] = max(fabsf(dataL[k]), fabsf(dataR[k]));
-      lamax[bufpos] = lamax[bufpos] * lamax[bufpos]; // RMS testhack
+      lamax[bufpos] = lamax[bufpos] * lamax[bufpos]; // RMS
 
       int of = 0;
       for (int i = 0; i < (lookahead_bits); i++)
@@ -158,12 +152,6 @@ void ConditionerEffect::process(float* dataL, float* dataR)
 
    vu[4] = max(vu[4], get_absmax(dataL, block_size_quad));
    vu[5] = max(vu[5], get_absmax(dataR, block_size_quad));
-
-   /* for(int i=0; i<block_size; i++)
-           {
-                   vu[4] = max(vu[4], dataL[i]);
-                   vu[5] = max(vu[5], dataR[i]);
-           }*/
 }
 
 int ConditionerEffect::vu_type(int id)

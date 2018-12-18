@@ -113,8 +113,8 @@ __forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
 		shl edx, 16
 		shr eax, 16
 		or eax,edx
-	// TODO fixa return för gcc asm
-	// TODO: Fix return for GCC ASM
+         // TODO fixa return för gcc asm
+         // TODO: Fix return for GCC ASM
 		mov result, eax
    }
    return result;
@@ -152,9 +152,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
       unsigned int MipMapA = 0;
       unsigned int MipMapB = 0;
       if (Sub.Table[so] >= oscdata->wt.n_tables)
-         Sub.Table[so] = Table; 
-		// TableID kanske inte är valid längre om en ny wavetable laddats
-		// Translate: TableID may not be valid anymore if a new wavetable is loaded
+         Sub.Table[so] = Table;
+      // TableID may not be valid anymore if a new wavetable is loaded
       unsigned long MSBpos;
       unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
       if (_BitScanReverse(&MSBpos, bs))
@@ -226,9 +225,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
          unsigned int MipMapA = 0;
          unsigned int MipMapB = 0;
          if (Sub.Table[so] >= oscdata->wt.n_tables)
-            Sub.Table[so] = Table; 
-		// TableID kanske inte är valid längre om en ny wavetable laddats
-		// Translate: TableID may not be valid anymore if a new wavetable is loaded	      
+            Sub.Table[so] = Table;
+         // TableID may not be valid anymore if a new wavetable is loaded
 
          unsigned long MSBpos;
          unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
@@ -309,9 +307,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
          unsigned int MipMapB = 0;
          if (Sub.Table[so] >= oscdata->wt.n_tables)
             Sub.Table[so] = Table;
-		// TableID kanske inte är valid längre om en ny wavetable laddats
-		// Translate: TableID may not be valid anymore if a new wavetable is loaded
-	      
+         // TableID may not be valid anymore if a new wavetable is loaded
+
          unsigned long MSBpos;
 
          unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
@@ -395,20 +392,6 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
 
    ProcessSubOscs(stereo);
 
-	// TODO idé: coupla två subvoices så dom kan alternera window med varandra
-	// ( håll window i 180-phasediff)
-	// TRANSLATE: TODO Idea: Couple two subvoices so they can alternate windows with
-	// eachother ( hold the 180-phase difference? 180-phase window?
-	
-	// borde ge bra formant-trixning utan mellanrum
-	// kan ha en parameter som fadar vikten av den alternerande mellan -1 till +1
-	// TRANSLATE: should provide good formant trim without space
-	// may have a parameter that fades the weight of the alternate between -1 to +1
-	
-	// TODO idé: free-run mode där en omstart av fönstret inte återstartar oscillatorn?
-	// TRANSLATE: TODO Idea: free-run mode where a restart of the window does not restart the oscillator?
-	
-	
    // int32 -> float conversion
 #if PPC
    vFloat scale = (vFloat)OutAttenuation;
