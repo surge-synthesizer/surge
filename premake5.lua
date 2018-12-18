@@ -153,7 +153,6 @@ function plugincommon()
 		"libs/filesystem/filesystem.cpp",
 		"src/common/vt_dsp/*.cpp",
 		"src/common/thread/*.cpp",
-		"vst3sdk/pluginterfaces/base/*.cpp",
 		}
 
 	includedirs {
@@ -312,7 +311,6 @@ if VST24SDK then
 		"src/vst2/**.cpp",
 		"src/vst2/**.h",
 		VST24SDK .. "/public.sdk/source/vst2.x/**.cpp",
-		"vst3sdk/public.sdk/source/vst2.x/**.cpp",
 		VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
 	}
 
@@ -323,7 +321,6 @@ if VST24SDK then
 	includedirs {
 		"src/vst2",
 		VST24SDK,
-		"vst3sdk"
 	}
 
 	configuration { "Debug" }
@@ -385,6 +382,7 @@ files {
 	"vst3sdk/public.sdk/source/vst/vstcomponentbase.cpp",
 	"vst3sdk/public.sdk/source/vst/vstbus.cpp",
 	"vst3sdk/public.sdk/source/vst/vstparameters.cpp",
+	"vst3sdk/pluginterfaces/base/*.cpp",
 	}
 
 excludes {
