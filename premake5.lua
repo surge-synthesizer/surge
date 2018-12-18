@@ -371,7 +371,6 @@ end
 project "surge-vst3"
 kind "SharedLib"
 uuid "A87FBED5-3E7A-432F-8611-B2C61F40F4B8"
-targetextension ".vst3"
 
 defines 
 {
