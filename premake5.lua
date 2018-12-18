@@ -494,3 +494,39 @@ if (os.istarget("macosx")) then
 	postbuildcommands { "./package-au.sh" }
 	
 end
+
+if (os.istarget("linux")) then
+    project "surge-app"
+    kind "WindowedApp"
+
+    defines
+    {
+        "TARGET_APP=1"
+    }
+
+    plugincommon()
+
+    files {
+        "src/app/main.cpp",
+        "src/app/PluginLayer.cpp",
+        VSTGUI .. "plugin-bindings/plugguieditor.cpp",
+    }
+
+    includedirs {
+        "src/app"
+    }
+
+    links {
+        "dl",
+        "freetype",
+        "fontconfig",
+        "X11",
+    }
+
+    configuration { "Debug" }
+    targetdir "target/app/Debug"
+    targetsuffix "-Debug"
+
+    configuration { "Release" }
+    targetdir "target/app/Release"
+end

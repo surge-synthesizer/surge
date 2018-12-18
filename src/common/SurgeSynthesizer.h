@@ -21,9 +21,11 @@ typedef aulayer PluginLayer;
 #elif TARGET_VST3
 class SurgeVst3Processor;
 typedef SurgeVst3Processor PluginLayer;
-#else
+#elif TARGET_VST2
 class Vst2PluginInstance;
 using PluginLayer = Vst2PluginInstance;
+#else
+class PluginLayer;
 #endif
 
 class SurgeSynthesizer : public AbstractSynthesizer
