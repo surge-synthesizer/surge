@@ -101,7 +101,6 @@ forceinline float limit_range(float x, float low, float high)
    return result;
 }
 
-void sum_ps_to_ss_block(__m128* x, unsigned int nquads); // must be a multiple of 4 quads
 forceinline __m128 sum_ps_to_ss(__m128 x)
 {
    /*__m128 a = _mm_add_ss(x,_mm_shuffle_ps(x,x,_MM_SHUFFLE(0,0,0,1)));

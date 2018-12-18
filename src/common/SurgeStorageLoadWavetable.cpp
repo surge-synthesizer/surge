@@ -131,7 +131,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
    }
 
    if (mmioRead(hmmio, (HPSTR)loaddata, mmckinfoSubchunk.cksize) !=
-       (LRESULT)mmckinfoSubchunk.cksize) // ACHTUNG!! Something bad happens here! ("här händer något bad!")
+       (LRESULT)mmckinfoSubchunk.cksize)
    {
       /* Oops! */
       error_msg("file	io: error reading the data chunk!");
@@ -142,7 +142,7 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 
    // this->inst_present = false;
    /* does not seem to be in general use
-   
+   
    mmioAscend(hmmio, &mmckinfoSubchunk, 0);
    mmioSeek(hmmio,startpos,SEEK_SET);
    // read instrument chunk
@@ -199,13 +199,9 @@ void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
       {
          loop_present = true;
          mmioRead(hmmio, (HPSTR)&smpl_loop, sizeof(smpl_loop));
+         // Dandruff's weird wavetable bug seems to be related to this?
 
-         // Dandruffs skumme wt-bug verkar vara här?
-         // TRANSLATE: Dandruff's skim wt bug seems to be here?
-         // hoppar in i malloc i callstack? wtf!?
-         // TRANSLATE: jumping into malloc in call stack? wtf!?
-
-         smpl_loop.dwEnd++; // SC wants the loop end point to be the first sample AFTER the loop
+         smpl_loop.dwEnd++; // We want the loop end point to be the first sample AFTER the loop
       }
       else
       {
@@ -295,8 +291,7 @@ abort:
    /* Close the file */
    mmioClose(hmmio, 0);
 #else
-    // FIXME: Implement WAV file loading for macOS and Linux.
-    fprintf(stderr, "%s: WAV file loading is not implemented.\n",
-            __func__);
+   // FIXME: Implement WAV file loading for macOS and Linux.
+   fprintf(stderr, "%s: WAV file loading is not implemented.\n", __func__);
 #endif
 }

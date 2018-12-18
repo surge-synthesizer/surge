@@ -438,9 +438,9 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
        localcopy[pan_id].f + state.voiceChannelState->pan + state.mainChannelState->pan, -1.f, 1.f);
    float amp =
        0.5f * amp_to_linear(localcopy[volume_id].f); // the *0.5 multiplication will be eliminated
-																	// by the 2x gain of the halfband filter
+                                                     // by the 2x gain of the halfband filter
 
-	// Volume correcting/correction (fb_stereo updated since v1.2.2)
+   // Volume correcting/correction (fb_stereo updated since v1.2.2)
    if (scene->filterblock_configuration.val.i == fb_wide)
       amp *= 0.6666666f;
    else if (scene->filterblock_configuration.val.i == fb_stereo)
@@ -800,9 +800,8 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
             Q->FU[u].WP[e] = FBP.FU[u].WP;
             if (scene->filterunit[u].type.val.i == fut_lpmoog)
                Q->FU[u].WP[0] =
-                   scene->filterunit[u]
-                       .subtype.val.i; // lpmoog's output stage finns i WP[0] för hela quaden
-													// LPMoog's output stage is/exists/can be found in WP[0] for the whole/entire quad
+                   scene->filterunit[u].subtype.val.i; // LPMoog's output stage index is stored in
+                                                       // WP[0] for the entire quad
 
             if (scene->filterblock_configuration.val.i == fb_wide)
             {

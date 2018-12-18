@@ -270,11 +270,7 @@ __forceinline float clamp1bp(float in)
    return in;
 }
 
-// använd custom format (x^3 ?) internt, men spara som decibel i xml-datan
-// bollocks to it
-// TRANSLATE
-// Use custom format (x^3 ?) internally, but save as decibel in XML-data
-// bollocks to it
+// Use custom format (x^3) to represent gain internally, but save as decibel in XML-data
 
 inline float amp_to_linear(float x)
 {
