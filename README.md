@@ -2,32 +2,32 @@
 
 This is the synthesizer plug-in Surge which I previously sold as a commercial product as the company [vember audio](http://vemberaudio.se).
 
-As I (@kurasu / Claes Johanson) am too busy with [other](http://bitwig.com) projects and no longer want to put the effort into maintaining it myself across multiple platforms I have decided to give it new life as an open-source project.
+As I (@kurasu / Claes Johanson) am too busy with [other](http://bitwig.com) projects and no longer want to put the effort into maintaining it myself across multiple platforms, I have decided to give it new life as an open-source project.
 
-It was originally released in 2005, and was one of my first bigger projects. The code could be cleaner, and at parts better explained but its reliable and sounds great. And beware, there might still be a few comments in Swedish.
+It was originally released in 2005, and was one of my first bigger projects. The code could be cleaner, and certain parts better explained, but it is reliable and sounds great.
 
-The codebase was migrated from before an unfinished 1.6 release which improves on the last released 1.5.3 in a number of ways:
+The codebase was migrated from before an unfinished 1.6 release, which improves on the last released 1.5.3 in a number of ways:
 
-* Using a newer version of the [VSTGUI](https://github.com/steinbergmedia/vstgui) framework
-  * This has caused a lot of graphical bugs, with some that still need to be fixed
-  * But will enable a port to both 64-bit macOS and Linux
+* It uses a newer version of the [VSTGUI](https://github.com/steinbergmedia/vstgui) framework
+  * This has caused a lot of graphical bugs, with some still needing to be fixed
+  * But it will enable the creation of a port for both 64-bit macOS and Linux
 * Support for [VST3](https://www.steinberg.net/en/company/technologies/vst3.html)
 * Support for [MPE](https://www.midi.org/articles-old/midi-polyphonic-expression-mpe)
 * New analog mode for the ADSR envelopes   
 
-It currently only builds on windows, but getting it to build on macOS again & Linux should be doable with moderate effort.
+Surge currently builds with Windows and macOS (AudioUnit,VST2), and getting it to build on Linux again should be doable with some effort.
 
-[Releases are available here](https://github.com/kurasu/surge/releases)
+[Releases available here](https://github.com/kurasu/surge/releases) - this page currently has Windows builds only.
 
 ## Preparation
 
-First you need to grab all git submodules (needed to get the VST3 SDK)
+First you need to grab all of the git submodules (these are needed to get the VST3 SDK)
 
 ```
 git submodule update --init --recursive
 ```
 
-## Building - Windows
+## Building with Windows
 
 Prerequisites
 
@@ -36,25 +36,25 @@ Prerequisites
 * [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
-To build on windows:
+To build with Windows, run
 
 ```
 build.cmd
 ```
 
-Or you can just generate the project files using
+Or you can just generate the project files by using
 
 ```
 premake5 vs2017
 ```
 
-and open the visual studio solution which is generated.
+After which you can open the Visual Studio solution which has been generated.
 
-To build the installer open the file installer_win/surge.iss using Inno Setup.
+To build the installer, open the file `installer_win/surge.iss` using `Inno Setup`.
 
-## Building - OSX
+## Building a Surge.component (Audio Unit) with OSX/macOS
 
-This process expects that you have Xcode and Xcode Command Line Utilities installed.
+This process expects that you have both `Xcode` and `Xcode Command Line Utilities` installed.
 
 Install `premake5` by downloading it from  https://premake.github.io. Unzip the package.
 
@@ -76,38 +76,34 @@ Enter the Surge folder and use the following command to grab all the submodules 
 git submodule update --init --recursive
 ```
 
-Execute the Surge build-script.
+Execute the Surge build script.
 
 ```
 ./build-osx.sh
 ```
 
-If you got `Xcode-Select` issues or are missing the `Command Line Utilities`, grab them.
+If you see any issues with `Xcode-Select`, or you get told that you are missing the `Command Line Utilities`, grab them. The error itself should list the commands required.
 
-After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which takes a while.
+After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which will take a while.
 
-The `surge-vst3 project` will now warn you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
+All of the three projects (`surge-vst3`, `surge-vst2`, `surge-au`) will recommend you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
 
-The `surge-au project` will also prompt to `Update to recommended settings` & `Perform Changes`, so, perform the changes.
+At this point you can build an Audio Unit, and it will link and pass validation.
 
-At this point you can build an audio unit which links and passes validation. 
-
-You can also build a VST which links but honestly we aren't sure if it works. Help from someone who uses VST would be appreciated here!
-
-To try the audio unit you will need to install and validate it. If you don't know how to disable and revalidate audio units, be 
-a bit cautious here. You can slightly mess things up. To make it easy there's a script which allows you to do this from the command line
+To try the Audio Unit you will need to install and validate it. If you don't know how to disable and revalidate audio units, be 
+a bit cautious here. You can slightly mess things up. To make it easy there's a script which will allow you to do this from the command line:
 
 ```
 ./installer-local-au.sh
 ```
 
-This will update the build date, run a build, and if the build works, remove the version of surge in `~/Library/...` 
-and replace it with the latest. It will then run auvaltool to make sure that the audio unit is properly installed 
-(and so you should see the build date and time on stderr in the auval output). 
+This will update the build date, run a build, and if the build works, remove the version of surge in `/Library/Audio/Plug-ins`, replacing it with the latest AudioUnit. 
+After that, the script will run `auvaltool` to make sure that the Audio Unit is properly installed.
+You should be able to see the build date and time on `stderr` in the `auval` output.
 
 Tips on how to develop and debug using this are in [this issue](https://github.com/kurasu/surge/issues/58).
 
-If you see
+You have successfully built and installed the AU if you see:
 
 ```
 --------------------------------------------------
@@ -115,23 +111,47 @@ AU VALIDATION SUCCEEDED.
 --------------------------------------------------
 ```
 
-Then you have successfully built and installed the AU. 
-
-To use the AU in Logic, Mainstage, GarageBand, and so on, you need to do one more one-time step which is to invalidate your AU cache so Logic rescans. The easiest way to do this is
+To use the AU in Logic, Mainstage, GarageBand, and so on, you need to do one more one-time step which is to invalidate your AU cache so that you force Logic to rescan. The easiest way to do this is to move the AudioUnitCache away from it's location by typing in:
 
 ```
 mv ~/Library/Caches/AudioUnitCache ~/Desktop
 ```
 
-Then restart Logic. If everything works and starts up again you can delete the cache on your desktop. If it doesn't, well, then you have it.
+After this, launch Logic. If everything works and starts up again, you can delete the cache from your desktop. If this doesn't succeed, you can always put it back again.
 
-## Building - VST2
+## Building a Surge.vst (VST2) with OSX/macOS
 
 If you want to build VST2 versions of the plug-in, set the environment variable VST2SDK_DIR to the location of the SDK prior to building.
 
 An example of setting the environment variable `VST2SDK_DIR` would be:
 
 ```export VST2SDK_DIR=~/programming/VST_SDK_2.4```
+
+***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
+
+## Building a Surge.vst3 (VST3) with OSX/macOS
+
+Here there be dragons
+
+## Building a Surge.vst (VST2) with Linux
+
+Some discussion at https://github.com/kurasu/surge/issues/19
+
+## Building a Surge.vst3 (VST3) with Linux
+
+Some discussion at https://github.com/kurasu/surge/issues/19
+
+## Building with an XCode that doesn't support C++17
+
+If XCode refuses to build immediately with `error: invalid value 'c++17' in '-std=c++17'` then you can install Homebrew llvm to solve the problem.
+
+Use [homebrew](https://brew.sh/) to install llvm
+
+```brew install llvm```
+
+and set environment variable `BREWBUILD` to "true", eg:
+
+```export BREWBUILD="true"```
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
 

@@ -14,7 +14,7 @@ BUNDLE_NAME="Surge.vst3"
 BUNDLE_DIR="$OUTPUT_DIR/$BUNDLE_NAME"
 EXEC_TARGET_NAME="Surge"
 
-echo "Creating VST 3 Bundle..."
+echo "Creating VST3 Bundle..."
 
 # create basic bundle structure
 
