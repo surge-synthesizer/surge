@@ -160,7 +160,7 @@ cd installer_osx
 ./make_installer.sh <version number>
 ```
 
-`<version number>` can be something like `1.0.0` or `1.0.6b4`.  The installer package will include whichever plugins are available, the resulting `.pkg` will be at `installer_osx/installer/Install Surge.pkg`
+`<version number>` can be something like `1.0.0` or `1.0.6b4`.  The installer package will include whichever plugins are available, the resulting `.pkg` will be at `installer_osx/installer/Install Surge <version>.pkg`
 
 If you wish to also create a `.dmg` of the installer bundle, add `--dmg` to the the `make_installer.sh` command, eg:
 
@@ -168,7 +168,7 @@ If you wish to also create a `.dmg` of the installer bundle, add `--dmg` to the 
 ./make_installer.sh 1.0.7 --dmg
 ```
 
-the resulting `Surge.dmg` can be found in `installer_osx`.
+the resulting `Install_Surge_<version>.dmg` can be found in `installer_osx`.
 
 # Linux
 
