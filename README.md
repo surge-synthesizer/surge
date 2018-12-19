@@ -27,6 +27,8 @@ First you need to grab all of the git submodules (these are needed to get the VS
 git submodule update --init --recursive
 ```
 
+# Windows
+
 ## Building with Windows
 
 Prerequisites
@@ -51,6 +53,8 @@ premake5 vs2017
 After which you can open the Visual Studio solution which has been generated.
 
 To build the installer, open the file `installer_win/surge.iss` using `Inno Setup`.
+
+# macOS/OSX
 
 ## Building a Surge.component (Audio Unit) with OSX/macOS
 
@@ -133,14 +137,6 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 
 Surge VST3 builds cleanly from the xcode project and results in a `Surge.vst3` asset deposited in the `product` directory.
 
-## Building a Surge.vst (VST2) with Linux
-
-Some discussion at https://github.com/kurasu/surge/issues/19
-
-## Building a Surge.vst3 (VST3) with Linux
-
-Some discussion at https://github.com/kurasu/surge/issues/19
-
 ## Building with an XCode that doesn't support C++17
 
 If XCode refuses to build immediately with `error: invalid value 'c++17' in '-std=c++17'` then you can install Homebrew llvm to solve the problem.
@@ -154,6 +150,16 @@ and set environment variable `BREWBUILD` to "true", eg:
 ```export BREWBUILD="true"```
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
+
+# Linux
+
+## Building a Surge.vst (VST2) with Linux
+
+Some discussion at https://github.com/kurasu/surge/issues/19
+
+## Building a Surge.vst3 (VST3) with Linux
+
+Some discussion at https://github.com/kurasu/surge/issues/19
 
 ## References
 
