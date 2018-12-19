@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# preflight check
+
+if [[ ! -f ./make_installer.sh ]]; then
+	echo "You must run this script from within the installer_osx directory!"
+	exit 1
+fi
+
 # version and locations
 
 VERSION="$1"
