@@ -135,15 +135,17 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
 
-## Building with XCode9.2
+## Building with an XCode that doesn't support C++17
+
+If XCode refuses to build immediately with `error: invalid value 'c++17' in '-std=c++17'` then you can install Homebrew llvm to solve the problem.
 
 Use [homebrew](https://brew.sh/) to install llvm
 
 ```brew install llvm```
 
-and set environment variable `XCODE92` to "true", eg:
+and set environment variable `BREWBUILD` to "true", eg:
 
-```export XCODE92="true"```
+```export BREWBUILD="true"```
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
 

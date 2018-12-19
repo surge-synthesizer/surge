@@ -290,7 +290,7 @@ function plugincommon()
 	end
 end
 
-function xcode92buildsettings()
+function xcodebrewbuildsettings()
 	xcodebuildsettings
 	{
 		["CC"] = "/usr/local/opt/llvm/bin/clang";
@@ -302,7 +302,7 @@ end
 -- VST2 PLUGIN --
 
 local VST24SDK = os.getenv("VST2SDK_DIR")
-local XCODE92 = os.getenv("XCODE92")
+local BREWBUILD = os.getenv("BREWBUILD")
 
 if VST24SDK then
 
@@ -355,8 +355,8 @@ if VST24SDK then
 		"libs/vst/*.mm"
 		}
 
-		if XCODE92 then
-			xcode92buildsettings()
+		if BREWBUILD then
+			xcodebrewbuildsettings()
 		end
 
 	elseif (os.istarget("windows")) then
@@ -427,8 +427,8 @@ if (os.istarget("macosx")) then
 		"vst3sdk/*.mm"
 	}
 
-	if XCODE92 then
-		xcode92buildsettings()
+	if BREWBUILD then
+		xcodebrewbuildsettings()
 	end
 	
 elseif (os.istarget("windows")) then
@@ -509,8 +509,8 @@ if (os.istarget("macosx")) then
 	
 	postbuildcommands { "./package-au.sh" }
 
-	if XCODE92 then
-		xcode92buildsettings()
+	if BREWBUILD then
+		xcodebrewbuildsettings()
 	end
 
 end
