@@ -131,7 +131,7 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 
 ## Building a Surge.vst3 (VST3) with OSX/macOS
 
-Here there be dragons
+Surge VST3 builds cleanly from the xcode project and results in a `Surge.vst3` asset deposited in the `product` directory.
 
 ## Building a Surge.vst (VST2) with Linux
 
