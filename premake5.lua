@@ -54,7 +54,7 @@ if (os.istarget("macosx")) then
 
 	buildoptions 
         { 
-            "-std=c++14", "-stdlib=libc++", 
+            "-std=c++17", "-stdlib=libc++", 
             "-DOBJC_OLD_DISPATCH_PROTOTYPES=1",
             "-Wno-deprecated-declarations",        -- Alas the AU V2 uses a whole bunch of deprecated stuff
 	    "-Wno-inconsistent-missing-override"   -- Surge was written before this was even a keyword! We do need to fix this though
