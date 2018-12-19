@@ -21,19 +21,11 @@ if [[ $1 == "" ]]; then
 	exit 1
 fi
 
-# empty strings for the package arguments
-# will set them to something if the package is present
-
-VST2_arg=""
-VST3_arg=""
-AU_arg=""
-
 # try to build VST2 package
 
 if [[ -d $VST2 ]]; then
 	pkgbuild --analyze --root "$VST2" Surge_VST2.plist
 	pkgbuild --root "$VST2" --component-plist Surge_VST2.plist --identifier "com.vemberaudio.vst2.pkg" --version $VERSION --install-location "/Library/Audio/Plug-Ins/VST/Surge.vst" Surge_VST2.pkg
-	VST2_arg="--package Surge_VST2.pkg"
 	rm Surge_VST2.plist
 fi
 
@@ -42,7 +34,6 @@ fi
 if [[ -d $VST3 ]]; then
 	pkgbuild --analyze --root "$VST3" Surge_VST3.plist
 	pkgbuild --root "$VST3" --component-plist Surge_VST3.plist --identifier "com.vemberaudio.vst3.pkg" --version $VERSION --install-location "/Library/Audio/Plug-Ins/VST3/Surge.vst3" Surge_VST3.pkg
-	VST3_arg="--package Surge_VST3.pkg"
 	rm Surge_VST3.plist
 fi
 
@@ -51,7 +42,6 @@ fi
 if [[ -d $AU ]]; then
 	pkgbuild --analyze --root "$AU" Surge_AU.plist
 	pkgbuild --root "$AU" --component-plist Surge_AU.plist --identifier "com.vemberaudio.au.pkg" --version $VERSION --install-location "/Library/Audio/Plug-Ins/Components/Surge.component" Surge_AU.pkg
-	AU_arg="--package Surge_AU.pkg"
 	rm Surge_AU.plist
 fi
 
