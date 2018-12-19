@@ -290,10 +290,19 @@ function plugincommon()
 	end
 end
 
+function xcodebrewbuildsettings()
+	xcodebuildsettings
+	{
+		["CC"] = "/usr/local/opt/llvm/bin/clang";
+		["CLANG_LINK_OBJC_RUNTIME"] = "NO";
+		["COMPILER_INDEX_STORE_ENABLE"] = "NO";
+	}
+end
 
 -- VST2 PLUGIN --
 
 local VST24SDK = os.getenv("VST2SDK_DIR")
+local BREWBUILD = os.getenv("BREWBUILD")
 
 if VST24SDK then
 
@@ -346,6 +355,10 @@ if VST24SDK then
 		"libs/vst/*.mm"
 		}
 
+		if BREWBUILD then
+			xcodebrewbuildsettings()
+		end
+
 	elseif (os.istarget("windows")) then
 
 		linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
@@ -358,7 +371,6 @@ end
 project "surge-vst3"
 kind "SharedLib"
 uuid "A87FBED5-3E7A-432F-8611-B2C61F40F4B8"
-targetextension ".vst3"
 
 defines 
 {
@@ -414,6 +426,10 @@ if (os.istarget("macosx")) then
 		"vst3sdk/public.sdk/source/main/macmain.cpp",
 		"vst3sdk/*.mm"
 	}
+
+	if BREWBUILD then
+		xcodebrewbuildsettings()
+	end
 	
 elseif (os.istarget("windows")) then
 
@@ -492,7 +508,11 @@ if (os.istarget("macosx")) then
 	}
 	
 	postbuildcommands { "./package-au.sh" }
-	
+
+	if BREWBUILD then
+		xcodebrewbuildsettings()
+	end
+
 end
 
 if (os.istarget("linux")) then
