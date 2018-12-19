@@ -54,9 +54,9 @@ After which you can open the Visual Studio solution which has been generated.
 
 To build the installer, open the file `installer_win/surge.iss` using `Inno Setup`.
 
-# macOS/OSX
+# macOS
 
-## Building a Surge.component (Audio Unit) with OSX/macOS
+## Building a Surge.component (Audio Unit) with macOS
 
 This process expects that you have both `Xcode` and `Xcode Command Line Utilities` installed.
 
@@ -123,7 +123,7 @@ mv ~/Library/Caches/AudioUnitCache ~/Desktop
 
 After this, launch Logic. If everything works and starts up again, you can delete the cache from your desktop. If this doesn't succeed, you can always put it back again.
 
-## Building a Surge.vst (VST2) with OSX/macOS
+## Building a Surge.vst (VST2) with macOS
 
 If you want to build VST2 versions of the plug-in, set the environment variable VST2SDK_DIR to the location of the SDK prior to building.
 
@@ -133,7 +133,7 @@ An example of setting the environment variable `VST2SDK_DIR` would be:
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
 
-## Building a Surge.vst3 (VST3) with OSX/macOS
+## Building a Surge.vst3 (VST3) with macOS
 
 Surge VST3 builds cleanly from the xcode project and results in a `Surge.vst3` asset deposited in the `product` directory.
 
@@ -150,6 +150,25 @@ and set environment variable `BREWBUILD` to "true", eg:
 ```export BREWBUILD="true"```
 
 ***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
+
+## Building macOS installer package
+
+After successfully building one or more plugins, from the command line:
+
+```
+cd installer_osx
+./make_installer.sh <version number>
+```
+
+`<version number>` can be something like `1.0.0` or `1.0.6b4`.  The installer package will include whichever plugins are available, the resulting `.pkg` will be at `installer_osx/installer/Install Surge.pkg`
+
+If you wish to also create a `.dmg` of the installer bundle, add `--dmg` to the the `make_installer.sh` command, eg:
+
+```
+./make_installer.sh 1.0.7 --dmg
+```
+
+the resulting `Surge.dmg` can be found in `installer_osx`.
 
 # Linux
 
