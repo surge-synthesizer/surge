@@ -114,12 +114,17 @@ echo '</installer-gui-script>' >> distribution.xml
 
 # build installation bundle
 
-mkdir installer
+if [[ ! -d installer ]]; then
+	mkdir installer
+fi
 productbuild --distribution distribution.xml --package-path "./" --resources Resources "installer/Install Surge.pkg"
 
 # create a DMG if required
 
 if [[ $2 == "--dmg" ]]; then
+	if [[ -f Surge.dmg ]]; then
+		rm Surge.dmg
+	fi
 	hdiutil create /tmp/tmp.dmg -ov -volname "Install Surge" -fs HFS+ -srcfolder "./installer/" 
 	hdiutil convert /tmp/tmp.dmg -format UDZO -o Surge.dmg
 fi
