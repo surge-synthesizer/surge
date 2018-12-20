@@ -95,10 +95,10 @@ All of the three projects (`surge-vst3`, `surge-vst2`, `surge-au`) will recommen
 At this point you can build an Audio Unit, and it will link and pass validation.
 
 To try the Audio Unit you will need to install and validate it. If you don't know how to disable and revalidate audio units, be 
-a bit cautious here. You can slightly mess things up. To make it easy there's a script which will allow you to do this from the command line:
+a bit cautious here. You can slightly mess things up. To make it easy there's a build-osx option which will do it for you.
 
 ```
-./installer-local-au.sh
+./build-osx.sh --build-validate-au
 ```
 
 This will update the build date, run a build, and if the build works, remove the version of surge in `/Library/Audio/Plug-ins`, replacing it with the latest AudioUnit. 
