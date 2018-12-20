@@ -349,7 +349,7 @@ if VST24SDK then
 
 		targetname "Surge"
 		targetprefix ""
-		postbuildcommands { "./package-vst.sh" }
+		postbuildcommands { "./scripts/macOS/package-vst.sh" }
 
 		files
 		{
@@ -421,7 +421,7 @@ configuration {}
 
 if (os.istarget("macosx")) then
 
-	postbuildcommands { "./package-vst3.sh" }
+	postbuildcommands { "./scripts/macOS/package-vst3.sh" }
 
 	files
 	{
@@ -509,7 +509,7 @@ if (os.istarget("macosx")) then
 		VSTGUI .. "winfileselector.cpp",
 	}
 	
-	postbuildcommands { "./package-au.sh" }
+	postbuildcommands { "./scripts/macOS/package-au.sh" }
 
 	if BREWBUILD then
 		xcodebrewbuildsettings()
