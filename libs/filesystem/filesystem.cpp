@@ -10,8 +10,6 @@
 #ifdef TARGET_OS_MAC
 
 #include "filesystem.h"
-#include <cstring>
-#include <cstdio>
 
 namespace std::experimental::filesystem {
     // path class:
