@@ -48,16 +48,30 @@ Environment variables are:
 EOHELP
 }
 
+RED=`tput setaf 1`
+GREEN=`tput setaf 2`
+NC=`tput init`
 
 prerequisite_check()
 {
     if [ ! -f vst3sdk/LICENSE.txt ]; then
-        echo You have not gotten the submodules required to build Surge. Run the following command to get them.
+        echo
+        echo ${RED}ERROR: You have not gotten the submodules required to build Surge. Run the following command to get them.${NC}
+        echo
         echo git submodule update --init --recursive
+        echo
         exit 1
     fi
 
     # TODO: Check premake is installed
+    if [ ! $(which premake5) ]; then
+        echo
+        echo ${RED}ERROR: You do not have premake5 on your path${NC}
+        echo
+        echo Please download and install premake from https://premake.github.io per the Surge README.md
+        echo
+        exit 1
+    fi
 }
 
 run_premake()
@@ -82,15 +96,31 @@ run_clean()
 run_build()
 {
     flavor=$1
-    xcodebuild build -configuration Release -project surge-${flavor}.xcodeproj
+    mkdir -p build_logs
+
+    echo
+    echo Building surge-${flavor} with output in build_logs/build_${flavor}.log
+    xcodebuild build -configuration Release -project surge-${flavor}.xcodeproj > build_logs/build_${flavor}.log
+    build_suc=$?
+    if [[ $build_suc = 0 ]]; then
+        echo ${GREEN}Build of surge-${flavor} succeeded${NC}
+    else
+        echo
+        echo ${RED}** Build of ${flavor} failed**${NC}
+        grep -i error build_logs/build_${flavor}.log
+        echo
+        echo Complete information is in build_logs/build_${flavor}.log
+
+        exit 2
+    fi
 }
 
 default_action()
 {
     run_premake
-    if [ -n "$VST2SDK_DIR" ]; then
-        run_clean "vst"
-        run_build "vst"
+    if [ -d "surge-vst2.xcodeproj" ]; then
+        run_clean "vst2"
+        run_build "vst2"
     fi
 
     run_clean "vst3"
@@ -103,8 +133,8 @@ default_action()
 run_all_builds()
 {
     run_premake_if
-    if [ -n "$VST2SDK_DIR" ]; then
-        run_build "vst"
+    if [ -d "surge-vst2.xcodeproj" ]; then
+        run_build "vst2"
     fi
 
     run_build "vst3"
@@ -115,7 +145,7 @@ run_install_local()
 {
     rsync -r "resources/data/" "$HOME/Library/Application Support/Surge/"
 
-    if [ -n "$VST2SDK_DIR" ]; then
+    if [ -d "surge-vst2.xcodeproj" ]; then
         rsync -r --delete "products/Surge.vst/" ~/Library/Audio/Plug-Ins/VST/Surge.vst/
     fi
     
@@ -137,8 +167,8 @@ run_build_validate_au()
 run_clean_builds()
 {
     run_premake_if
-    if [ -n "$VST2SDK_DIR" ]; then
-        run_clean "vst"
+    if [ -d "surge-vst2.xcodeproj" ]; then
+        run_clean "vst2"
     fi
 
     run_clean "vst3"
@@ -148,7 +178,7 @@ run_clean_builds()
 run_clean_all()
 {
     run_clean_builds
-    rm -rf Surge.xcworkspace *xcodeproj target product
+    rm -rf Surge.xcworkspace *xcodeproj target products build_logs
 }
 
 run_uninstall_surge()
