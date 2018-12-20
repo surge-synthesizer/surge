@@ -166,8 +166,10 @@ SurgeStorage::SurgeStorage()
       datapath += "/Surge/";
    }
 
-   userDataPath = "~/Documents/Surge";
-
+   // ~/Documents/Surge in full name
+   sprintf( path, "%s/Documents/Surge", getenv( "HOME" ) );
+   userDataPath = path;
+   
 #elif __linux__
 
    /*
