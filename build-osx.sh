@@ -178,7 +178,7 @@ run_clean_builds()
 run_clean_all()
 {
     run_clean_builds
-    rm -rf Surge.xcworkspace *xcodeproj target products build_logs
+    rm -rf Surge.xcworkspace *xcodeproj target products build_logs obj
 }
 
 run_uninstall_surge()
