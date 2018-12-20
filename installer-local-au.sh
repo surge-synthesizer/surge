@@ -3,8 +3,8 @@
 #touch src/au/aulayer.cpp
 xcodebuild build -configuration Release -project surge-au.xcodeproj || exit 1
 ./package-au.sh
-rm -rf ~/Library/Audio/Plug-Ins/Components/Surge.component
-mv products/Surge.component ~/Library/Audio/Plug-Ins/Components
+rm -rf /Library/Audio/Plug-Ins/Components/Surge.component
+mv products/Surge.component /Library/Audio/Plug-Ins/Components
 
 mkdir -p ~/Library/Application\ Support/Surge
 
