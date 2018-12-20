@@ -85,12 +85,27 @@ namespace std::experimental::filesystem {
     }
     
     void create_directories(path p) {
-        mode_t nMode = 0733; // UNIX style permissions
+        mode_t nMode = 0755; // UNIX style permissions
         int nError = 0;
 #if defined(_WIN32)
         nError = _mkdir(p.c_str()); // can be used on Windows
 #else
-        nError = mkdir(p.c_str(), nMode); // can be used on non-Windows
+        // create_directories is recursive so this solution
+        // nError = mkdir(p.c_str(), nMode); // can be used on non-Windows
+        // doesn't work if you are creating two or 3 layers.
+        // From: https://stackoverflow.com/questions/2336242/recursive-mkdir-system-call-on-unix
+        char* pos;
+        char file_path[PATH_MAX];
+        sprintf( file_path, "%s", p.c_str() ); // I need a non-const char* so have to copy
+        for (pos=strchr(file_path+1, '/'); pos; pos=strchr(pos+1, '/')) {
+            *pos='\0';
+            if (mkdir(file_path, nMode)==-1) {
+                if (errno!=EEXIST) { *pos='/'; return; }
+            }
+            *pos='/';
+        }
+        // and clean up the end
+        nError = mkdir(file_path, nMode );
 #endif
         if (nError != 0) {
             // handle your error here
