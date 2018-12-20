@@ -1,4 +1,11 @@
 #!/bin/sh
+
+if [ ! -f vst3sdk/LICENSE.txt ]; then
+  echo You have not gotten the submodules required to build Surge. Run the following command to get them.
+  echo git submodule update --init --recursive
+  exit
+fi
+
 premake5 xcode4
 if [ -n "$VST2SDK_DIR" ]; then
 	xcodebuild clean -project surge-vst2.xcodeproj
