@@ -1515,7 +1515,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
-         if (command >= 0)
+         if (command >= 0 && ! handled )
          {
             if (command == id_clearallmr)
             {
