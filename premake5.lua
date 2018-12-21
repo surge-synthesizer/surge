@@ -405,6 +405,7 @@ files {
 
 excludes {
 	VSTGUI .. "aeffguieditor.cpp",
+	"src/vst3/SurgeVst3EditController.*"
 }
 
 includedirs {
