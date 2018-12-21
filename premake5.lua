@@ -446,6 +446,13 @@ elseif (os.istarget("windows")) then
 	
 	flags { "NoImportLib" }
 
+elseif (os.istarget("linux")) then
+
+	files
+	{
+		"vst3sdk/public.sdk/source/main/linuxmain.cpp",
+	}
+
 end
 
 -- AUDIO UNIT PLUGIN --
