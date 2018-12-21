@@ -1430,6 +1430,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
          int ccid = 0;
          int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, 1);
+          bool handled = false;
          if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
          {
             ccid = modsource - ms_ctrl1;
@@ -1453,6 +1454,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                contextMenu->addEntry(txt, eid++);
             }
 
+         
+            contextMenu->addEntry("-", eid++);
+            id_bipolar = eid;
+            contextMenu->addEntry("Bipolar", eid++);
+            contextMenu->checkEntry(
+                id_bipolar,
+                synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar());
+            id_rename = eid;
+            contextMenu->addEntry("Rename", eid++);
+         
+             
+             contextMenu->addEntry("-", eid++);
+             
              // Construct submenus for expicit controller mapping
              COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
              COptionMenu *currentSub;
@@ -1468,19 +1482,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                  
                  char name[ 256 ];
                  sprintf( name, "CC # %d", mc );
-                 currentSub->addEntry( name, eid++ );
+                 CCommandMenuItem *cmd = new CCommandMenuItem( name );
+                 cmd->setActions( [this,ccid,mc,&handled](CCommandMenuItem *men) {
+                     handled = true;
+                     synth->storage.controllers[ccid] = mc;
+                     synth->storage.save_midi_controllers();
+                 });
+                 currentSub->addEntry( cmd );
                  
              }
              contextMenu->addEntry( midiSub, "Set Contoller To..." );
              
-            contextMenu->addEntry("-", eid++);
-            id_bipolar = eid;
-            contextMenu->addEntry("Bipolar", eid++);
-            contextMenu->checkEntry(
-                id_bipolar,
-                synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar());
-            id_rename = eid;
-            contextMenu->addEntry("Rename", eid++);
          }
 
          int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
