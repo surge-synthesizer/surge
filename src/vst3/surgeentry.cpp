@@ -30,16 +30,6 @@ bool DeinitModule()
    return true;
 }
 
-bool InitDll()
-{
-   return InitModule();
-}
-
-bool ExitDll()
-{
-   return DeinitModule();
-}
-
 //------------------------------------------------------------------------
 //  VST Plug-in Entry
 //------------------------------------------------------------------------
