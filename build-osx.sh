@@ -23,7 +23,11 @@ To do a simple local build which is not installed do
 
    ./build-osx.sh
 
-Options are:
+Other usages take the form of
+
+   ./build-osx.sh <command> <options?>
+
+Commands are:
 
         --help                   Show this message
         --premake                Run premake only
@@ -39,6 +43,9 @@ Options are:
         --uninstall-surge        Uninstall surge both from user and system areas. Be very careful!
 
 The default behaviour without arguments is to clean and rebuild everything.
+
+Options are:
+        --verbose                Verbose output
 
 Environment variables are:
 
@@ -100,7 +107,12 @@ run_build()
 
     echo
     echo Building surge-${flavor} with output in build_logs/build_${flavor}.log
-    xcodebuild build -configuration Release -project surge-${flavor}.xcodeproj > build_logs/build_${flavor}.log
+    if [[ -z "$OPTION_verbose" ]]; then
+    	xcodebuild build -configuration Release -project surge-${flavor}.xcodeproj > build_logs/build_${flavor}.log
+    else
+    	xcodebuild build -configuration Release -project surge-${flavor}.xcodeproj | tee build_logs/build_${flavor}.log
+    fi
+
     build_suc=$?
     if [[ $build_suc = 0 ]]; then
         echo ${GREEN}Build of surge-${flavor} succeeded${NC}
@@ -194,6 +206,11 @@ run_uninstall_surge()
 
 # This is the main section of the script
 command="$1"
+
+for option in ${@:2}
+do
+	eval OPTION_${option//-}="true"
+done
 
 # put help up here so it runs even without the prerequisite check
 if [ "$command" = "--help" ]; then
