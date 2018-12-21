@@ -1629,11 +1629,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (cancellearn)
                contextMenu->addEntry("Abort learn controller", eid++);
             else
-<<<<<<< HEAD
-                contextMenu->addEntry("Learn controller [MIDI]",  eid++);
-=======
                 contextMenu->addEntry("Learn controller [MIDI]", eid++);
->>>>>>> Add the submenus for controller assignment but they don't work yet.
          }
 
          if (p->midictrl >= 0)
