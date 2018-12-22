@@ -225,54 +225,6 @@ void Reverb1Effect::process(float* dataL, float* dataR)
    int pdtime = (int)(float)samplerate * note_to_pitch(12 * *f[rp_predelay]) *
                 (fxdata->p[rp_predelay].temposync ? storage->temposyncratio_inv : 1.f);
 
-#if PPC
-   const vFloat zero = (vFloat)0.f;
-
-   for (int k = 0; k < block_size; k++)
-   {
-      for (int t = 0; t < rev_taps; t++)
-      {
-         int dp = (delay_pos - (delay_time[t] >> 8));
-         float newa = delay[t + ((dp & (max_rev_dly - 1)) << rev_tap_bits)];
-         out_tap[t] = *f[rp_damping] * out_tap[t] + (1 - *f[rp_damping]) * newa;
-      }
-
-      float fb = 0;
-      for (int t = 0; t < rev_taps; t += 4)
-      {
-         fb += out_tap[t] + out_tap[t + 1] + out_tap[t + 2] + out_tap[t + 3];
-      }
-
-      const float ca = -2.f / rev_taps;
-
-      fb = ca * fb + predelay[(delay_pos - pdtime) & (max_rev_dly - 1)];
-
-      delay_pos = (delay_pos + 1) & (max_rev_dly - 1);
-
-      predelay[delay_pos] = 0.5f * (dataL[k] + dataR[k]);
-
-      vFloat fb4 = (vFloat)(fb);
-
-      vFloat L = (vFloat)(0.0), R = (vFloat)(0.0);
-
-      for (int t = 0; t < rev_taps; t += 4)
-      {
-         vFloat ot = vec_ld(t << 2, out_tap);
-         vFloat dfb = vec_ld(t << 2, delay_fb);
-         vFloat a = vec_madd(dfb, vec_add(fb4, ot), zero);
-         vec_st(a, ((delay_pos << rev_tap_bits) + t) << 2, delay);
-         L = vec_madd(ot, vec_ld(t << 2, delay_pan_L), L);
-         R = vec_madd(ot, vec_ld(t << 2, delay_pan_R), R);
-      }
-      L = vec_add(L, vec_sld(L, L, 8));
-      L = vec_add(L, vec_sld(L, L, 4));
-      vec_ste(L, k << 2, wetL);
-      R = vec_add(R, vec_sld(R, R, 8));
-      R = vec_add(R, vec_sld(R, R, 4));
-      vec_ste(R, k << 2, wetR);
-   }
-
-#else
    const __m128 one4 = _mm_set1_ps(1.f);
    __m128 damp4 = _mm_load1_ps(f[rp_damping]);
    __m128 damp4m1 = _mm_sub_ps(one4, damp4);
@@ -334,7 +286,6 @@ void Reverb1Effect::process(float* dataL, float* dataR)
       _mm_store_ss(&wetL[k], L);
       _mm_store_ss(&wetR[k], R);
    }
-#endif
    locut.process_block_slowlag(wetL, wetR);
    band1.process_block_slowlag(wetL, wetR);
    hicut.process_block_slowlag(wetL, wetR);

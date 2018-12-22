@@ -95,9 +95,7 @@ void WindowOscillator::init_default_values()
 __forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
 {
    // 64-bit unsigned multiply with right shift by 16 bits
-#if PPC
-   return (__mulhw(a, b) << 16) | ((a * b) >> 16);
-#elif _M_X64
+#if _M_X64
    unsigned __int64 c = __emulu(a, b);
    return c >> 16;
 #elif __linux__
@@ -142,76 +140,6 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
    int FormantMul =
        (int)(float)(65536.f * note_to_pitch(localcopy[oscdata->p[1].param_id_in_scene].f));
    FormantMul = max(FormantMul >> WindowVsWavePO2, 1);
-#if PPC
-   // Altivec path
-   for (unsigned int so = 0; so < ActiveSubOscs; so++)
-   {
-      unsigned int Pos = Sub.Pos[so];
-      unsigned int RatioA = Sub.Ratio[so];
-      unsigned int MipMapA = 0;
-      unsigned int MipMapB = 0;
-      if (Sub.Table[so] >= oscdata->wt.n_tables)
-         Sub.Table[so] = Table;
-      // TableID may not be valid anymore if a new wavetable is loaded
-      unsigned long MSBpos;
-      unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
-      if (_BitScanReverse(&MSBpos, bs))
-         MipMapB = limit_range((int)MSBpos - 17, 0, oscdata->wt.size_po2 - 1);
-
-      if (_BitScanReverse(&MSBpos, 3 * RatioA))
-         MipMapA = limit_range((int)MSBpos - 17, 0, storage->WindowWT.size_po2 - 1);
-
-      short* WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Sub.Table[so]];
-      short* WinAdr = storage->WindowWT.TableI16WeakPointers[MipMapA][Window];
-
-      vSInt32 i0 = vec_splat_s32(0);
-
-      for (int i = 0; i < block_size_os; i++)
-      {
-         Pos += RatioA;
-         if (Pos & ~SizeMaskWin)
-         {
-            Sub.FormantMul[so] = FormantMul;
-            Sub.Table[so] = Table;
-            WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Table];
-            Pos = Pos & SizeMaskWin;
-         }
-
-         unsigned int WinPos = Pos >> (16 + MipMapA);
-         unsigned int WinSPos = (Pos >> (4 + MipMapA)) & 0xFF0;
-
-         unsigned int FPos = BigMULr16(Sub.FormantMul[so], Pos) & SizeMask;
-
-         unsigned int MPos = FPos >> (16 + MipMapB);
-         unsigned int MSPos = ((FPos >> (4 + MipMapB)) & 0xFF0);
-
-         short* WLp = &WaveAdr[MPos];
-         vSInt16 WL = vec_perm(vec_ld(0, WLp), vec_ld(15, WLp), vec_lvsl(0, WLp));
-         vSInt32 Wave = vec_msum(vec_ld(MSPos, sinctableI16), WL, i0);
-
-         short* WiLp = &WinAdr[WinPos];
-         vSInt16 WiL = vec_perm(vec_ld(0, WiLp), vec_ld(15, WiLp), vec_lvsl(0, WiLp));
-         vSInt32 Win = vec_msum(vec_ld(WinSPos, sinctableI16), WiL, i0);
-
-         // Sum
-         int iWin, iWave, s4[4];
-         vec_st(vec_sums(Win, i0), 0, s4);
-         iWin = s4[3];
-         vec_st(vec_sums(Wave, i0), 0, s4);
-         iWave = s4[3];
-
-         if (stereo)
-         {
-            int Out = ((iWin >> 13) * (iWave >> 13)) >> 7;
-            IOutputL[i] += (Out * (int)Sub.Gain[so][0]) >> 6;
-            IOutputR[i] += (Out * (int)Sub.Gain[so][1]) >> 6;
-         }
-         else
-            IOutputL[i] += ((iWin >> 13) * (iWave >> 13)) >> 6;
-      }
-      Sub.Pos[so] = Pos;
-   }
-#else
 #if (!_M_X64 && !MAC)
    if (CpuArchitecture & CaSSE2)
 #endif
@@ -369,7 +297,6 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
       _mm_empty();
    }
 #endif
-#endif
 }
 
 void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
@@ -392,35 +319,6 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
    ProcessSubOscs(stereo);
 
    // int32 -> float conversion
-#if PPC
-   vFloat scale = (vFloat)OutAttenuation;
-   const vFloat m0 = (vFloat)0.f;
-
-   if (stereo)
-   {
-      for (int i = 0; i < block_size_os; i += 8)
-      {
-         vFloat a = vec_ctf(vec_ld(0, &IOutputL[i]), 0);
-         vFloat b = vec_ctf(vec_ld(0, &IOutputL[i + 4]), 0);
-         vFloat c = vec_ctf(vec_ld(0, &IOutputR[i]), 0);
-         vFloat d = vec_ctf(vec_ld(0, &IOutputR[i + 4]), 0);
-         vec_st(vec_madd(a, scale, m0), 0, &output[i]);
-         vec_st(vec_madd(b, scale, m0), 0, &output[i + 4]);
-         vec_st(vec_madd(c, scale, m0), 0, &outputR[i]);
-         vec_st(vec_madd(d, scale, m0), 0, &outputR[i + 4]);
-      }
-   }
-   else
-   {
-      for (int i = 0; i < block_size_os; i += 8)
-      {
-         vFloat a = vec_ctf(vec_ld(0, &IOutputL[i]), 0);
-         vFloat b = vec_ctf(vec_ld(0, &IOutputL[i + 4]), 0);
-         vec_st(vec_madd(a, scale, m0), 0, &output[i]);
-         vec_st(vec_madd(b, scale, m0), 0, &output[i + 4]);
-      }
-   }
-#else
    __m128 scale = _mm_load1_ps(&OutAttenuation);
 #if (!_M_X64 && !MAC)
    if (CpuArchitecture & CaSSE2)
@@ -470,7 +368,5 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
       }
       _mm_empty();
    }
-#endif
-
 #endif
 }

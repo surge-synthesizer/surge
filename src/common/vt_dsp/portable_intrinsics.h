@@ -1,50 +1,3 @@
-#if PPC
-
-#define vFloat vector float
-
-#define vAlign _MM_ALIGN16
-
-#define vZero ((vector float)(0.f))
-
-#define vAdd vec_add
-#define vSub vec_sub
-#define vMul(a, b) vec_madd(a, b, vZero)
-#define vMAdd vec_madd
-#define vNMSub vec_nmsub
-
-#define vAnd vec_and
-#define vOr vec_or
-
-#define vCmpGE vec_cmpge
-
-#define vMax vec_max
-#define vMin vec_min
-
-forceinline vFloat vLoad1(float Value)
-{
-   vAlign float f = Value;
-   return vec_splat(vec_lde(0, &f), 0);
-}
-
-forceinline vFloat vLoad(float* f)
-{
-   return vec_ld(0, f);
-}
-
-forceinline vFloat vSqrtFast(vFloat v)
-{
-   return vec_re(vec_rsqrte(v));
-}
-
-forceinline float vSum(vFloat x)
-{
-   vAlign float f[4];
-   vec_st(x, 0, &f);
-   return (f[0] + f[1]) + (f[2] + f[3]);
-}
-
-#else
-
 #ifdef __linux__
 #include <immintrin.h>
 #endif
@@ -90,5 +43,3 @@ forceinline float vSum(vFloat x)
 }
 
 #define vAlign _MM_ALIGN16
-
-#endif

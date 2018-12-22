@@ -3,22 +3,6 @@
 #include <vt_dsp/basic_dsp.h>
 #include <vt_dsp/portable_intrinsics.h>
 
-#if PPC
-#define _mm_set1_ps(x) (vFloat)(x)
-
-#define _mm_add_ps(x, y) vec_add(x, y)
-#define _mm_sub_ps(x, y) vec_sub(x, y)
-#define _mm_mul_ps vMul
-#define _mm_and_ps(x, y) vec_and(x, y)
-#define softclip_ps vec_softclip
-#define _mm_load_ps(x) vec_ld(0, x)
-
-#define _mm_add_ss(a, b) ((a) + (b))
-#define sum_ps_to_ss(x) vec_hsum(x)
-#define _mm_store_ss(adr, d) (*(adr) = (d))
-#define _mm_load_ss(adr) (*(adr))
-#endif
-
 #define MWriteOutputs(x)                                                                           \
    d.OutL = _mm_add_ps(d.OutL, d.dOutL);                                                           \
    d.OutR = _mm_add_ps(d.OutR, d.dOutR);                                                           \

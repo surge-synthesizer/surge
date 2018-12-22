@@ -4,13 +4,6 @@
 #define SGI 0
 #define MOTIF 0
 #define BEBOX 0
-#if __ppc__
-#define PPC 1
-#endif
-
-#if PPC && !AU
-#define VST_FORCE_DEPRECATED 0
-#endif
 
 #define USE_NAMESPACE 1
 
@@ -40,9 +33,5 @@
 #define _aligned_malloc(x, y) malloc(x)
 #define _aligned_free(x) free(x)
 
-#if PPC
-#define __m128 vFloat
-#else
 #define SSE_VERSION 3
 #include <emmintrin.h>
-#endif

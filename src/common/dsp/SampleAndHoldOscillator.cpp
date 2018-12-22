@@ -28,13 +28,8 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
 {
    assert(storage);
    first_run = true;
-#if PPC
-   osc_out = 0.f;
-   osc_outR = 0.f;
-#else
    osc_out = _mm_set1_ps(0.f);
    osc_outR = _mm_set1_ps(0.f);
-#endif
    bufpos = 0;
    dc = 0;
 
@@ -159,12 +154,8 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
       delay = FMdelay;
    unsigned int m = ((ipos >> 16) & 0xff) * (FIRipol_N << 1);
    unsigned int lipolui16 = (ipos & 0xffff);
-#if PPC
-   float flipol = ((float)((unsigned int)(lipolui16)));
-#else
    __m128 lipol128 = _mm_cvtsi32_ss(lipol128, lipolui16);
    lipol128 = _mm_shuffle_ps(lipol128, lipol128, _MM_SHUFFLE(0, 0, 0, 0));
-#endif
 
    int k;
    const float s = 0.99952f;
@@ -198,117 +189,6 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
       gR = g * panR[voice];
       g *= panL[voice];
    }
-
-#if PPC
-
-   if (stereo)
-   {
-      vFloat ob_inL[3], abufL[4], edgesL;
-      vFloat ob_inR[3], abufR[4], edgesR;
-      vFloat g128L = vec_loadAndSplatScalar(&g);
-      vFloat g128R = vec_loadAndSplatScalar(&gR);
-      vFloat st[3];
-      vFloat lipol128 = vec_loadAndSplatScalar(&flipol);
-      vector unsigned char mask, maskstore; // since both buffers are aligned and read the same
-                                            // position, the same mask can be used
-
-      // load & align oscbuffer (left)
-      float* targetL = &oscbuffer[bufpos + delay];
-      abufL[0] = vec_ld(0, targetL);
-      abufL[1] = vec_ld(16, targetL);
-      abufL[2] = vec_ld(32, targetL);
-      abufL[3] = vec_ld(48, targetL);
-      mask = vec_lvsl(0, targetL);
-      maskstore = vec_lvsr(0, targetL);
-      ob_inL[0] = vec_perm(abufL[0], abufL[1], mask);
-      ob_inL[1] = vec_perm(abufL[1], abufL[2], mask);
-      ob_inL[2] = vec_perm(abufL[2], abufL[3], mask);
-      edgesL = vec_perm(abufL[3], abufL[0], mask);
-      // (right)
-      float* targetR = &oscbufferR[bufpos + delay];
-      abufR[0] = vec_ld(0, targetR);
-      abufR[1] = vec_ld(16, targetR);
-      abufR[2] = vec_ld(32, targetR);
-      abufR[3] = vec_ld(48, targetR);
-      ob_inR[0] = vec_perm(abufR[0], abufR[1], mask);
-      ob_inR[1] = vec_perm(abufR[1], abufR[2], mask);
-      ob_inR[2] = vec_perm(abufR[2], abufR[3], mask);
-      edgesR = vec_perm(abufR[3], abufR[0], mask);
-
-      float* target2 = &sinctable[m];
-      st[0] = vec_madd(lipol128, vec_ld(48, target2), vec_ld(0, target2));
-      st[1] = vec_madd(lipol128, vec_ld(64, target2), vec_ld(16, target2));
-      st[2] = vec_madd(lipol128, vec_ld(80, target2), vec_ld(32, target2));
-
-      ob_inL[0] = vec_madd(g128L, st[0], ob_inL[0]);
-      ob_inL[1] = vec_madd(g128L, st[1], ob_inL[1]);
-      ob_inL[2] = vec_madd(g128L, st[2], ob_inL[2]);
-
-      ob_inR[0] = vec_madd(g128R, st[0], ob_inR[0]);
-      ob_inR[1] = vec_madd(g128R, st[1], ob_inR[1]);
-      ob_inR[2] = vec_madd(g128R, st[2], ob_inR[2]);
-
-      // re-unalign oscbuffer and store (left)
-      abufL[0] = vec_perm(edgesL, ob_inL[0], maskstore);
-      abufL[1] = vec_perm(ob_inL[0], ob_inL[1], maskstore);
-      abufL[2] = vec_perm(ob_inL[1], ob_inL[2], maskstore);
-      abufL[3] = vec_perm(ob_inL[2], edgesL, maskstore);
-      vec_st(abufL[0], 0, targetL);
-      vec_st(abufL[1], 16, targetL);
-      vec_st(abufL[2], 32, targetL);
-      vec_st(abufL[3], 48, targetL);
-
-      // re-unalign oscbuffer and store (right)
-      abufR[0] = vec_perm(edgesR, ob_inR[0], maskstore);
-      abufR[1] = vec_perm(ob_inR[0], ob_inR[1], maskstore);
-      abufR[2] = vec_perm(ob_inR[1], ob_inR[2], maskstore);
-      abufR[3] = vec_perm(ob_inR[2], edgesR, maskstore);
-      vec_st(abufR[0], 0, targetR);
-      vec_st(abufR[1], 16, targetR);
-      vec_st(abufR[2], 32, targetR);
-      vec_st(abufR[3], 48, targetR);
-   }
-   else
-   {
-      vFloat ob_in[3], abuf[4], st[3], edges;
-      vFloat g128 = vec_loadAndSplatScalar(&g);
-      vFloat lipol128 = vec_loadAndSplatScalar(&flipol);
-      vector unsigned char mask, maskstore;
-
-      // load & align oscbuffer
-      float* target = &oscbuffer[bufpos + delay];
-      abuf[0] = vec_ld(0, target);
-      abuf[1] = vec_ld(16, target);
-      abuf[2] = vec_ld(32, target);
-      abuf[3] = vec_ld(48, target);
-      mask = vec_lvsl(0, target);
-      maskstore = vec_lvsr(0, target);
-      ob_in[0] = vec_perm(abuf[0], abuf[1], mask);
-      ob_in[1] = vec_perm(abuf[1], abuf[2], mask);
-      ob_in[2] = vec_perm(abuf[2], abuf[3], mask);
-      edges = vec_perm(abuf[3], abuf[0], mask);
-
-      float* target2 = &sinctable[m];
-      st[0] = vec_madd(lipol128, vec_ld(48, target2), vec_ld(0, target2));
-      st[1] = vec_madd(lipol128, vec_ld(64, target2), vec_ld(16, target2));
-      st[2] = vec_madd(lipol128, vec_ld(80, target2), vec_ld(32, target2));
-
-      ob_in[0] = vec_madd(g128, st[0], ob_in[0]);
-      ob_in[1] = vec_madd(g128, st[1], ob_in[1]);
-      ob_in[2] = vec_madd(g128, st[2], ob_in[2]);
-
-      // re-unalign oscbuffer and store
-      abuf[0] = vec_perm(edges, ob_in[0], maskstore);
-      abuf[1] = vec_perm(ob_in[0], ob_in[1], maskstore);
-      abuf[2] = vec_perm(ob_in[1], ob_in[2], maskstore);
-      abuf[3] = vec_perm(ob_in[2], edges, maskstore);
-      vec_st(abuf[0], 0, target);
-      vec_st(abuf[1], 16, target);
-      vec_st(abuf[2], 32, target);
-      vec_st(abuf[3], 48, target);
-   }
-
-#else
 
    if (stereo)
    {
@@ -351,7 +231,6 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
          _mm_storeu_ps(obf, ob);
       }
    }
-#endif
 
    if (state[voice] & 1)
       rate[voice] = t * (1.0 - pwidth[voice]);
@@ -453,23 +332,6 @@ void SampleAndHoldOscillator::process_block(
    _MM_ALIGN16 float hpfblock[block_size_os];
    li_hpf.store_block(hpfblock, block_size_os_quad);
 
-#if PPC
-   float oa = out_attenuation * pitchmult;
-   for (k = 0; k < block_size_os; k++)
-   {
-      float ob = oscbuffer[bufpos + k] - oa * dc;
-      osc_out = osc_out * hpfblock[k] + ob;
-      output[k] = osc_out;
-
-      if (stereo)
-      {
-         float obR = oscbufferR[bufpos + k] - oa * dc;
-         osc_outR = osc_outR * hpfblock[k] + obR;
-         outputR[k] = osc_outR;
-      }
-   }
-#else
-
    __m128 mdc = _mm_load_ss(&dc);
    __m128 oa = _mm_load_ss(&out_attenuation);
    oa = _mm_mul_ss(oa, _mm_load_ss(&pitchmult));
@@ -495,8 +357,6 @@ void SampleAndHoldOscillator::process_block(
    }
    _mm_store_ss(&dc, mdc);
 
-#endif
-
    clear_block(&oscbuffer[bufpos], block_size_os_quad);
    if (stereo)
       clear_block(&oscbufferR[bufpos], block_size_os_quad);
@@ -509,27 +369,6 @@ void SampleAndHoldOscillator::process_block(
 
    if (!bufpos) // only needed if the new bufpos == 0
    {
-#if PPC
-      vFloat overlap, dcoverlap, overlapR;
-      const vFloat zero = (vFloat)0.f;
-      for (k = 0; k < (FIRipol_N); k += 4)
-      {
-         overlap = vec_ld((ob_length + k) << 2, oscbuffer);
-         vec_st(overlap, (k) << 2, oscbuffer);
-         vec_st(zero, (ob_length + k) << 2, oscbuffer);
-
-         dcoverlap = vec_ld((ob_length + k) << 2, dcbuffer);
-         vec_st(dcoverlap, (k) << 2, dcbuffer);
-         vec_st(zero, (ob_length + k) << 2, dcbuffer);
-
-         if (stereo)
-         {
-            overlapR = vec_ld((ob_length + k) << 2, oscbufferR);
-            vec_st(overlapR, (k) << 2, oscbufferR);
-            vec_st(zero, (ob_length + k) << 2, oscbufferR);
-         }
-      }
-#else
       __m128 overlap[FIRipol_N >> 2], overlapR[FIRipol_N >> 2];
       const __m128 zero = _mm_setzero_ps();
       for (k = 0; k < (FIRipol_N); k += 4)
@@ -544,6 +383,5 @@ void SampleAndHoldOscillator::process_block(
             _mm_store_ps(&oscbufferR[ob_length + k], zero);
          }
       }
-#endif
    }
 }

@@ -10,12 +10,7 @@
 #include "public.sdk/source/vst2.x/aeffeditor.h"
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 
-#if PPC
-// For Carbon, use CoreServices.h instead
-#include <CoreServices/CoreServices.h>
-#else
 #include "CpuArchitecture.h"
-#endif
 
 #if MAC
 #include <fenv.h>
