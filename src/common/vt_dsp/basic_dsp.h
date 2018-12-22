@@ -1,10 +1,6 @@
 #pragma once
 #include "shared.h"
 
-#if PPC
-#include <ppc_intrinsics.h>
-#endif
-
 int Min(int a, int b);
 int Max(int a, int b);
 double Max(double a, double b);
@@ -46,52 +42,6 @@ void i152float_block(short*, float*, int);
 
 float sine_ss(unsigned int x);
 int sine(int x);
-
-#if PPC
-
-forceinline float rcp(float x)
-{
-   return __fres(x);
-}
-
-forceinline float vec_hsum(vFloat X)
-{
-   _MM_ALIGN16 float x[4];
-   vec_st(X, 0, &x);
-   return (x[0] + x[1]) + (x[2] + x[3]);
-}
-
-forceinline vFloat vec_softclip8(vFloat in)
-{
-   const vFloat a = (vFloat)(-0.00028935185185f);
-
-   const vFloat x_min = (vFloat)(-12.f);
-   const vFloat x_max = (vFloat)(12.f);
-   const vFloat zero = (vFloat)(0.f);
-
-   vFloat x = vec_max(vec_min(in, x_max), x_min);
-   vFloat xx = vec_madd(x, x, zero);
-   vFloat t = vec_madd(x, a, zero);
-   t = vec_madd(t, xx, x);
-   return t;
-}
-
-forceinline vector float vec_softclip(vector float in)
-{
-   const vFloat a = (vFloat)(-4.f / 27.f);
-
-   const vFloat x_min = (vFloat)(-1.5f);
-   const vFloat x_max = (vFloat)(1.5f);
-   const vFloat zero = (vFloat)(0.f);
-
-   vFloat x = vec_max(vec_min(in, x_max), x_min);
-   vFloat xx = vec_madd(x, x, zero);
-   vFloat t = vec_madd(x, a, zero);
-   t = vec_madd(t, xx, x);
-   return t;
-}
-
-#else
 
 forceinline float limit_range(float x, float low, float high)
 {
@@ -239,7 +189,6 @@ forceinline __m128 softclip8_ps(__m128 in)
    t = _mm_add_ps(t, x);
    return t;
 }
-#endif
 
 forceinline double tanh7_double(double x)
 {

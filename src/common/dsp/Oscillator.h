@@ -3,10 +3,6 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-#if PPC
-vector float vec_loadAndSplatScalar(float* scalarPtr);
-#endif
-
 class Oscillator
 {
 public:
@@ -112,11 +108,7 @@ protected:
    _MM_ALIGN16 float oscbuffer[ob_length + FIRipol_N];
    _MM_ALIGN16 float oscbufferR[ob_length + FIRipol_N];
    _MM_ALIGN16 float dcbuffer[ob_length + FIRipol_N];
-#if PPC
-   float osc_out, osc_out2, osc_outR, osc_out2R;
-#else
    __m128 osc_out, osc_out2, osc_outR, osc_out2R;
-#endif
    void prepare_unison(int voices);
    float integrator_hpf;
    float pitchmult, pitchmult_inv;

@@ -34,7 +34,6 @@ if (os.istarget("macosx")) then
 	
 	defines
 	{
-		"PPC=0",
 		"_MM_ALIGN16=__attribute__((aligned(16)))",
 		"__forceinline=inline",
 		"_aligned_malloc(x,a)=malloc(x)",
@@ -50,7 +49,7 @@ if (os.istarget("macosx")) then
 	{
 	}
 
-	defines { "MAC=1", "PPC=0", "WINDOWS=0",  }
+	defines { "MAC=1", "WINDOWS=0",  }
 
 	buildoptions 
         { 

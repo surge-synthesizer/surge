@@ -273,12 +273,8 @@ template <int v> void ChorusEffect<v>::init()
       x = 2.f * x - 1.f;
       voicepan[i][0] = sqrt(0.5 - 0.5 * x) * gainscale;
       voicepan[i][1] = sqrt(0.5 + 0.5 * x) * gainscale;
-#if PPC
-
-#else
       voicepanL4[i] = _mm_set1_ps(voicepan[i][0]);
       voicepanR4[i] = _mm_set1_ps(voicepan[i][1]);
-#endif
    }
 
    setvars(true);
@@ -329,30 +325,6 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
 
    clear_block(tbufferL, block_size_quad);
    clear_block(tbufferR, block_size_quad);
-#if PPC
-   for (k = 0; k < block_size; k++)
-   {
-      tbufferL[k] = 0;
-      tbufferR[k] = 0;
-      for (int j = 0; j < v; j++)
-      {
-         time[j].process();
-         float vtime = time[j].v;
-         int i_dtime = max(block_size, min((int)vtime, max_delay_length - FIRipol_N - 1));
-         int rp = ((wpos - i_dtime + k) - FIRipol_N) & (max_delay_length - 1);
-         int sinc = FIRipol_N *
-                    limit_range((int)(FIRipol_M * (float(i_dtime + 1) - vtime)), 0, FIRipol_M - 1);
-
-         float vo = 0.f;
-         for (int i = 0; i < FIRipol_N; i++)
-         {
-            vo += buffer[(rp - i) & (max_delay_length - 1)] * sinctable1X[sinc + FIRipol_N - i - 1];
-         }
-         tbufferL[k] += vo * voicepan[j][0];
-         tbufferR[k] += vo * voicepan[j][1];
-      }
-   }
-#else
    for (k = 0; k < block_size; k++)
    {
       __m128 L = _mm_setzero_ps(), R = _mm_setzero_ps();
@@ -381,7 +353,6 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
       _mm_store_ss(&tbufferL[k], L);
       _mm_store_ss(&tbufferR[k], R);
    }
-#endif
 
    lp.process_block(tbufferL, tbufferR);
    hp.process_block(tbufferL, tbufferR);

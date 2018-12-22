@@ -131,49 +131,6 @@ void DualDelayEffect::process(float* dataL, float* dataR)
       int sincR = FIRipol_N *
                   limit_range((int)(FIRipol_M * (float(i_dtimeR + 1) - timeR.v)), 0, FIRipol_M - 1);
 
-#if PPC
-      const vFloat zero = (vFloat)0.f;
-      vFloat L, R, buf_in[3], abuf[4];
-      vector unsigned char mask;
-
-      float* target = &buffer[0][rpL];
-      abuf[0] = vec_ld(0, target);
-      abuf[1] = vec_ld(16, target);
-      abuf[2] = vec_ld(32, target);
-      abuf[3] = vec_ld(47, target);
-      mask = vec_lvsl(0, target);
-      buf_in[0] = vec_perm(abuf[0], abuf[1], mask);
-      buf_in[1] = vec_perm(abuf[1], abuf[2], mask);
-      buf_in[2] = vec_perm(abuf[2], abuf[3], mask);
-
-      L = vec_madd(vec_ld(0, &sinctable1X[sincL]), buf_in[0], zero);
-      L = vec_madd(vec_ld(0, &sinctable1X[sincL + 4]), buf_in[1], L);
-      L = vec_madd(vec_ld(0, &sinctable1X[sincL + 8]), buf_in[2], L);
-
-      target = &buffer[0][rpR];
-      abuf[0] = vec_ld(0, target);
-      abuf[1] = vec_ld(16, target);
-      abuf[2] = vec_ld(32, target);
-      abuf[3] = vec_ld(48, target);
-      mask = vec_lvsl(0, target);
-      buf_in[0] = vec_perm(abuf[0], abuf[1], mask);
-      buf_in[1] = vec_perm(abuf[1], abuf[2], mask);
-      buf_in[2] = vec_perm(abuf[2], abuf[3], mask);
-
-      R = vec_madd(vec_ld(0, &sinctable1X[sincR]), buf_in[0], zero);
-      R = vec_madd(vec_ld(0, &sinctable1X[sincR + 4]), buf_in[1], R);
-      R = vec_madd(vec_ld(0, &sinctable1X[sincR + 8]), buf_in[2], R);
-
-      // summera ner vector till scalar och spara
-
-      L = vec_add(L, vec_sld(L, L, 8));
-      L = vec_add(L, vec_sld(L, L, 4));
-      vec_ste(L, k << 2, tbufferL);
-      R = vec_add(R, vec_sld(R, R, 8));
-      R = vec_add(R, vec_sld(R, R, 4));
-      vec_ste(R, k << 2, tbufferR);
-
-#else
       __m128 L, R;
       L = _mm_mul_ps(_mm_load_ps(&sinctable1X[sincL]), _mm_loadu_ps(&buffer[0][rpL]));
       L = _mm_add_ps(
@@ -189,7 +146,6 @@ void DualDelayEffect::process(float* dataL, float* dataR)
       R = sum_ps_to_ss(R);
       _mm_store_ss(&tbufferL[k], L);
       _mm_store_ss(&tbufferR[k], R);
-#endif
    }
 
    softclip_block(tbufferL, block_size_quad);

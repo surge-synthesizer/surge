@@ -678,13 +678,8 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
 
    for (int i = 0; i < block_size_os; i++)
    {
-#if PPC
-      *(((float*)&Q.DL[i]) + Qe) = output[0][i];
-      *(((float*)&Q.DR[i]) + Qe) = output[1][i];
-#else
       _mm_store_ss(((float*)&Q.DL[i] + Qe), _mm_load_ss(&output[0][i]));
       _mm_store_ss(((float*)&Q.DR[i] + Qe), _mm_load_ss(&output[1][i]));
-#endif
    }
    SetQFB(&Q, Qe);
 

@@ -1,8 +1,5 @@
 #include "effect_defs.h"
 #include <vt_dsp/basic_dsp.h>
-#if PPC
-#include <ppc_intrinsics.h>
-#endif
 
 /* conditioner */
 

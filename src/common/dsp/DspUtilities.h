@@ -219,28 +219,11 @@ inline double tanh_fast(double in)
 inline float tanh_fast(float in)
 {
    const float a = 2 / 3;
-   //#if PPC
    float x = fabs(in);
    float xx = x * x;
    float denom = 1 + x + xx + a * x * xx;
-#if PPC
-   return ((in > 0.f) ? 1.f : -1.f) * (1.f - 1.f / denom);
-#else
    _mm_store_ss(&denom, _mm_rcp_ss(_mm_load_ss(&denom)));
    return ((in > 0.f) ? 1.f : -1.f) * (1.f - denom);
-#endif
-   /*#else
-           int sign = 0x80000000;
-           int mask = 0x7fffffff;
-           __m128 one = _mm_load_ss(1.f);
-           __m128 xin = _mm_load_ss(&in);
-           __m128 x = _mm_and_ss(xin,_mm_load_ss((float*)&mask));
-           __m128 xx = _mm_mul_ss(x,x);
-           __m128 denom = _mm_add_ss(_mm_add_ss(one,x),
-   _mm_add_ss(xx,_mm_mul_ss(xx,_mm_mul_ss(_mm_load_ss(&a),x)));
-
-
-   #endif*/
 }
 
 __forceinline double tanh_faster1(double x)

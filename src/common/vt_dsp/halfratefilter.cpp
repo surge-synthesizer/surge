@@ -1,4 +1,3 @@
-#if !PPC
 #include "halfratefilter.h"
 #include "assert.h"
 
@@ -526,5 +525,3 @@ void halfrate_stereo::load_coefficients()
       }
    }
 }
-
-#endif
