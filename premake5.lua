@@ -243,9 +243,11 @@ function plugincommon()
 			
 		}
 
-	   links { 
+		links {
 			"pthread",
-			"stdc++fs"
+			"stdc++fs",
+			"gcc_s",
+			"gcc"
 		}
 
 		linkoptions {
@@ -403,6 +405,7 @@ files {
 
 excludes {
 	VSTGUI .. "aeffguieditor.cpp",
+	"src/vst3/SurgeVst3EditController.*"
 }
 
 includedirs {
@@ -443,6 +446,13 @@ elseif (os.istarget("windows")) then
 	}
 	
 	flags { "NoImportLib" }
+
+elseif (os.istarget("linux")) then
+
+	files
+	{
+		"vst3sdk/public.sdk/source/main/linuxmain.cpp",
+	}
 
 end
 
