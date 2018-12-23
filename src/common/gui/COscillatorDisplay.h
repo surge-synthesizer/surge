@@ -59,7 +59,13 @@ public:
                          0, 255);
          unsigned int a = 0xff;
 
-         coltable[i] = r | (g << 8) | (b << 16) | (a << 24);
+#if MAC
+          // MAC uses a different raw pixel byte order than windows
+          coltable[ i ] = ( b << 8 ) | ( g << 16 ) | ( r << 24 ) | a;
+#else
+          coltable[i] = r | (g << 8) | (b << 16) | (a << 24);
+#endif
+
       }
    }
    virtual ~COscillatorDisplay()
