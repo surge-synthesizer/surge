@@ -57,7 +57,7 @@ void CLFOGui::draw(CDrawContext* dc)
    {
        // I know I could do the math to convert these colors but I would rather leave them as literals for the compiler
        // so we don't have to shift them at runtime. See issue #141 in surge github
-#ifdef MAC
+#if MAC
 #define PIX_COL( a, b ) b
 #else
 #define PIX_COL( a, b ) a
