@@ -24,20 +24,11 @@
 // Version without build number (example "1.0.3")
 #define VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR
 
-#ifdef ISDEMO
-#define stringOriginalFilename "surgedemo.vst3"
-#if PLATFORM_64
-#define stringFileDescription "Vember Audio Surge Demo"
-#else
-#define stringFileDescription "Vember Audio Surge Demo"
-#endif
-#else
 #define stringOriginalFilename "surge.vst3"
 #if PLATFORM_64
 #define stringFileDescription "Vember Audio Surge"
 #else
 #define stringFileDescription "Vember Audio Surge"
-#endif
 #endif
 
 #define stringCompanyName "Vember Audio\0"

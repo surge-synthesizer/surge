@@ -1963,23 +1963,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_store:
    {
-#ifdef ISDEMO
-#if MAC
-      CFOptionFlags responseFlags;
-      CFUserNotificationDisplayAlert(0, kCFUserNotificationPlainAlertLevel, 0, 0, 0,
-                                     CFSTR("Demo limitation"),
-                                     CFSTR("Saving patches isn't supported in the demo version of "
-                                           "Surge. (including sequencer recall)"),
-                                     CFSTR("Ok"), 0, 0, &responseFlags);
-#elif __linux__
-      printf("Implement me\n");
-#else
-      MessageBox(::GetActiveWindow(),
-                 L"Saving patches isn't supported in the demo version of Surge. (including "
-                 L"sequencer recall)",
-                 L"Demo limitation", MB_OK | MB_ICONWARNING);
-#endif
-#else
       patchdata p;
       p.name = synth->storage.getPatch().name;
       p.category = synth->storage.getPatch().category;
@@ -1997,7 +1980,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       showPatchStoreDialog(&p, &synth->storage.patch_category,
                            synth->storage.patch_category_split[1]);
-#endif
    }
    break;
    case tag_store_cancel:

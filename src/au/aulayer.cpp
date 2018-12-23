@@ -57,11 +57,7 @@ UInt32 aulayer::SupportedNumChannels (const AUChannelInfo** outInfo)
 
 //----------------------------------------------------------------------------------------------------
 
-#ifdef ISDEMO
-#define kComponentSubType	'SrgD'
-#else
 #define kComponentSubType	'Srge'
-#endif
 
 //----------------------------------------------------------------------------------------------------
 
