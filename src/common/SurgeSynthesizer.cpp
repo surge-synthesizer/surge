@@ -2448,24 +2448,6 @@ void SurgeSynthesizer::process()
    amp.multiply_2_blocks(output[0], output[1], block_size_quad);
    amp_mute.multiply_2_blocks(output[0], output[1], block_size_quad);
 
-#ifdef ISDEMO
-   demo_counter--;
-   if (demo_counter < 2000)
-   {
-      for (int i = 0; i < block_size; i++)
-      {
-         sinus.process();
-         output[0][i] *= sinus.r;
-         output[1][i] *= sinus.r;
-      }
-   }
-   if (demo_counter < 0)
-   {
-      float r = (float)rand() / RAND_MAX;
-      demo_counter = (int)(float)(samplerate * block_size_inv * (20.f + 20.f * r));
-   }
-#endif
-
    // VU
    // falloff
    float a = storage.vu_falloff;
