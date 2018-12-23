@@ -183,4 +183,4 @@ Some discussion at https://github.com/kurasu/surge/issues/19
 ## References
 
   * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
-  * IRC channel #surgesynth @ irc.freenode.net
+  * The official IRC channel is #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
