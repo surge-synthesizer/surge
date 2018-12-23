@@ -55,6 +55,22 @@ void CLFOGui::draw(CDrawContext* dc)
 
    if (ss && lfodata->shape.val.i == ls_stepseq)
    {
+       // I know I could do the math to convert these colors but I would rather leave them as literals for the compiler
+       // so we don't have to shift them at runtime. See issue #141 in surge github
+#ifdef MAC
+#define PIX_COL( a, b ) b
+#else
+#define PIX_COL( a, b ) a
+#endif
+       // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and mac is 0xAABBGGRR
+       int stepMarker = PIX_COL( 0xff000000, 0x000000ff);
+       int loopRegionHi = PIX_COL( 0xffc6e9c4, 0xc4e9c6ff);
+       int loopRegionLo = PIX_COL( 0xffb6d9b4, 0xb4d9b6ff );
+       int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
+       int noLoopLo = PIX_COL( 0xffcfcfcf, 0xcfcfcfff );
+       int grabMarker = PIX_COL( 0x00087f00, 0x007f08ff ); // Surely you can't mean this to be fully transparent?
+       // But leave non-mac unch
+       
       for (int i = 0; i < n_stepseqsteps; i++)
       {
          CRect rstep(maindisp), gstep;
@@ -74,16 +90,16 @@ void CLFOGui::draw(CDrawContext* dc)
             gaterect[i].offset(size.left + splitpoint, size.top);
 
             if (ss->trigmask & (1 << i))
-               cdisurf->fillRect(gstep, 0xff000000);
+               cdisurf->fillRect(gstep, stepMarker);
             else if ((i >= ss->loop_start) && (i <= ss->loop_end))
-               cdisurf->fillRect(gstep, (i & 3) ? 0xffc6e9c4 : 0xffb6d9b4);
+               cdisurf->fillRect(gstep, (i & 3) ? loopRegionHi : loopRegionLo);
             else
-               cdisurf->fillRect(gstep, (i & 3) ? 0xffdfdfdf : 0xffcfcfcf);
+               cdisurf->fillRect(gstep, (i & 3) ? noLoopHi : noLoopLo);
          }
          if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            cdisurf->fillRect(rstep, (i & 3) ? 0xffc6e9c4 : 0xffb6d9b4);
+            cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
          else
-            cdisurf->fillRect(rstep, (i & 3) ? 0xffdfdfdf : 0xffcfcfcf);
+            cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
          steprect[i] = rstep;
          steprect[i].offset(size.left + splitpoint, size.top);
          CRect v(rstep);
@@ -100,7 +116,7 @@ void CLFOGui::draw(CDrawContext* dc)
             v.bottom = max(p1, p2) + 1;
          }
          // if (p1 == p2) p2++;
-         cdisurf->fillRect(v, 0xff000000);
+         cdisurf->fillRect(v, stepMarker);
       }
 
       rect_steps = steprect[0];
@@ -118,16 +134,16 @@ void CLFOGui::draw(CDrawContext* dc)
       rect_le.right = rect_le.left + scale * (ss->loop_end + 1);
       rect_le.left = rect_le.right - margin2;
 
-      cdisurf->fillRect(rect_ls, 0x00087f00);
-      cdisurf->fillRect(rect_le, 0x00087f00);
+      cdisurf->fillRect(rect_ls, grabMarker);
+      cdisurf->fillRect(rect_le, grabMarker);
       CRect linerect(rect_ls);
       linerect.top = maindisp.top - size.top;
       linerect.right = linerect.left + 1;
-      cdisurf->fillRect(linerect, 0x00087f00);
+      cdisurf->fillRect(linerect, grabMarker);
       linerect = rect_le;
       linerect.top = maindisp.top - size.top;
       linerect.left = linerect.right - 1;
-      cdisurf->fillRect(linerect, 0x00087f00);
+      cdisurf->fillRect(linerect, grabMarker);
 
       rect_ls.offset(size.left + splitpoint, size.top);
       rect_le.offset(size.left + splitpoint, size.top);
