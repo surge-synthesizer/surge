@@ -68,7 +68,7 @@ void CLFOGui::draw(CDrawContext* dc)
        int loopRegionLo = PIX_COL( 0xffb6d9b4, 0xb4d9b6ff );
        int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
        int noLoopLo = PIX_COL( 0xffcfcfcf, 0xcfcfcfff );
-       int grabMarker = PIX_COL( grabMarker, 0x007f08ff ); // Surely you can't mean this to be fully transparent?
+       int grabMarker = PIX_COL( 0x00087f00, 0x007f08ff ); // Surely you can't mean this to be fully transparent?
        // But leave non-mac unch
        
       for (int i = 0; i < n_stepseqsteps; i++)
