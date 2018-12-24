@@ -1,4 +1,5 @@
 
+#include "SurgeLogger.h"
 #include "aulayer.h"
 #include <gui/SurgeGUIEditor.h>
 #include <AudioToolbox/AudioUnitUtilities.h>
@@ -6,10 +7,6 @@
 #include "aulayer_cocoaui.h"
 
 typedef SurgeSynthesizer sub3_synth;
-
-#ifdef GENERATE_AU_LOG
-FILE* AULOG::lf = NULL;
-#endif
 
 //----------------------------------------------------------------------------------------------------
 
@@ -112,14 +109,11 @@ void aulayer::InitializePlugin()
 {
 	if(!plugin_instance) 
 	{
-          AULOG::log( "SURGE:>> Constructing new plugin\n" );
-          AULOG::log( "     :>> BUILD %s on %s\n", __TIME__, __DATE__ );
-          //sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
-          //new(synth) sub3_synth(this);
+          spdlog::info( "Constructing new Surge AU Instance" );
+          spdlog::info( "     built {0} on {1}", __TIME__, __DATE__ );
           
           // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
           plugin_instance = new SurgeSynthesizer( this );
-          AULOG::log( "     :>> Plugin Created\n" );
     }
 	assert(plugin_instance);
 }

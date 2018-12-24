@@ -66,9 +66,6 @@
                        withSize: (NSSize) inPreferredSize
 {
     // Remember we end up being called here because that's what AUCocoaUIView does in the initiation collaboration with hosts
-    AULOG::log( "uiViewForAudioUnit %s on %s\n", __TIME__, __DATE__ );
-    AULOG::log( "prefSize is %f %f\n", inPreferredSize.width, inPreferredSize.height );
-   
     SurgeGUIEditor* editController = 0;
     UInt32 size = sizeof (SurgeGUIEditor *);
     if (AudioUnitGetProperty (inAudioUnit, kVmbAAudioUnitProperty_GetEditPointer, kAudioUnitScope_Global, 0, &editController, &size) != noErr)

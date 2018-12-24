@@ -132,6 +132,7 @@ includedirs {
 	"src/common/thread",
 	"vst3sdk/vstgui4",
 	"vst3sdk",
+	"spdlog/include",
 	"libs/"
 	}
 

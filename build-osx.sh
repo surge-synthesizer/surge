@@ -61,7 +61,7 @@ NC=`tput init`
 
 prerequisite_check()
 {
-    if [ ! -f vst3sdk/LICENSE.txt ]; then
+    if [ ! -f vst3sdk/LICENSE.txt ] || [ ! -f spdlog/LICENSE ]; then
         echo
         echo ${RED}ERROR: You have not gotten the submodules required to build Surge. Run the following command to get them.${NC}
         echo
@@ -248,8 +248,11 @@ case $command in
     --uninstall-surge)
         run_uninstall_surge
         ;;
-    *)
+    "")
         default_action
+        ;;
+    *)
+        help_message
         ;;
 esac
 
