@@ -92,9 +92,12 @@ void spawn_miniedit_text(char* c, int maxchars)
 }
 #elif MAC_COCOA
 
+#include "cocoa_utils.h"
+
 void spawn_miniedit_text(char* c, int maxchars)
 {
-   // TODO
+  // Bounce this over to objective C by using the CocoaUtils class
+  CocoaUtils::miniedit_text_impl( c, maxchars );
 }
 
 #elif WIN32
