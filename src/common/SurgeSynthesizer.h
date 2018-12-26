@@ -15,7 +15,7 @@ using namespace std;
 
 const int max_voices = 64;
 
-#if TARGET_AU
+#if TARGET_AUDIOUNIT
 class aulayer;
 typedef aulayer PluginLayer;
 #elif TARGET_VST3
