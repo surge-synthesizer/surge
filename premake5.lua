@@ -474,7 +474,6 @@ if (os.istarget("macosx")) then
 	defines
 	{
 		"TARGET_AUDIOUNIT=1",
-		"TARGET_AU=1",
 		"PLUGGUI=1",
 	}
 	
