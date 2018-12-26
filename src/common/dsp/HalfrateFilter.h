@@ -35,7 +35,7 @@ public:
    {
       memset(filter_regs, 0, SHR_NSEC * 2 * sizeof(double));
    }
-   __forceinline double process(double x)
+   inline double process(double x)
    {
       double filter_in = x;
       double y;

@@ -22,17 +22,17 @@
 
 #define vLoad _mm_load_ps
 
-forceinline vFloat vLoad1(float f)
+inline vFloat vLoad1(float f)
 {
    return _mm_load1_ps(&f);
 }
 
-forceinline vFloat vSqrtFast(vFloat v)
+inline vFloat vSqrtFast(vFloat v)
 {
    return _mm_rcp_ps(_mm_rsqrt_ps(v));
 }
 
-forceinline float vSum(vFloat x)
+inline float vSum(vFloat x)
 {
    __m128 a = _mm_add_ps(x, _mm_movehl_ps(x, x));
    a = _mm_add_ss(a, _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 0, 0, 1)));

@@ -204,7 +204,7 @@ public:
 private:
    void convolute(int voice, bool FM, bool stereo);
    template <bool is_init> void update_lagvals();
-   __forceinline float distort_level(float);
+   inline float distort_level(float);
    bool first_run;
    float oscpitch[max_unison];
    float dc, dc_uni[max_unison], last_level[max_unison];

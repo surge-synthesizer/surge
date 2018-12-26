@@ -92,7 +92,7 @@ void WindowOscillator::init_default_values()
    oscdata->p[6].val.i = 1;
 }
 
-__forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
+inline unsigned int BigMULr16(unsigned int a, unsigned int b)
 {
    // 64-bit unsigned multiply with right shift by 16 bits
 #if _M_X64
@@ -119,7 +119,7 @@ __forceinline unsigned int BigMULr16(unsigned int a, unsigned int b)
 }
 
 #if MAC || __linux__
-__forceinline bool _BitScanReverse(unsigned long* result, unsigned long bits)
+inline bool _BitScanReverse(unsigned long* result, unsigned long bits)
 {
    *result = __builtin_ctz(bits);
    return true;

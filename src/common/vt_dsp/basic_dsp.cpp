@@ -598,7 +598,7 @@ void subtract_block(float* __restrict src1,
 
 // Snabba sin(x) substitut
 // work in progress
-__forceinline float sine_float_nowrap(float x)
+inline float sine_float_nowrap(float x)
 {
    // http://www.devmaster.net/forums/showthread.php?t=5784
    const float B = 4.f / M_PI;
@@ -613,7 +613,7 @@ __forceinline float sine_float_nowrap(float x)
    return P * (y * fabs(y) - y) + y; // Q * y + P * y * abs(y)
 }
 
-__forceinline __m128 sine_ps_nowrap(__m128 x)
+inline __m128 sine_ps_nowrap(__m128 x)
 {
    const __m128 B = _mm_set1_ps(4.f / M_PI);
    const __m128 C = _mm_set1_ps(-4.f / (M_PI * M_PI));
@@ -631,7 +631,7 @@ __forceinline __m128 sine_ps_nowrap(__m128 x)
                      y);
 }
 
-__forceinline __m128 sine_xpi_ps_SSE2(__m128 x) // sin(x*pi)
+inline __m128 sine_xpi_ps_SSE2(__m128 x) // sin(x*pi)
 {
    const __m128 B = _mm_set1_ps(4.f);
    const __m128 premul = _mm_set1_ps(16777216.f);

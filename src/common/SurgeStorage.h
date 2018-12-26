@@ -131,7 +131,7 @@ const char window_abberations[9][16] = {"Triangular", "Cosine",       "Blend 1",
                                         "Blend 2",    "Blend 3",      "Ramp",
                                         "Sine Cycle", "Square Cycle", "Rectangular"};
 
-__forceinline bool uses_wavetabledata(int i)
+inline bool uses_wavetabledata(int i)
 {
    switch (i)
    {
