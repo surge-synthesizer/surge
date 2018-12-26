@@ -16,17 +16,17 @@ enum lag_entries
    le_pfg,
 };
 
-__forceinline void set1f(__m128& m, int i, float f)
+inline void set1f(__m128& m, int i, float f)
 {
    *((float*)&m + i) = f;
 }
 
-__forceinline void set1i(__m128& m, int e, int i)
+inline void set1i(__m128& m, int e, int i)
 {
    *((int*)&m + e) = i;
 }
 
-__forceinline float get1f(__m128 m, int i)
+inline float get1f(__m128 m, int i)
 {
    return *((float*)&m + i);
 }

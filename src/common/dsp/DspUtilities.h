@@ -226,7 +226,7 @@ inline float tanh_fast(float in)
    return ((in > 0.f) ? 1.f : -1.f) * (1.f - denom);
 }
 
-__forceinline double tanh_faster1(double x)
+inline double tanh_faster1(double x)
 {
    const double a = -1 / 3, b = 2 / 15;
    // return tanh(x);
@@ -235,7 +235,7 @@ __forceinline double tanh_faster1(double x)
    return y * x;
 }
 
-__forceinline float clamp01(float in)
+inline float clamp01(float in)
 {
    if (in > 1.0f)
       return 1.0f;
@@ -244,7 +244,7 @@ __forceinline float clamp01(float in)
    return in;
 }
 
-__forceinline float clamp1bp(float in)
+inline float clamp1bp(float in)
 {
    if (in > 1.0f)
       return 1.0f;

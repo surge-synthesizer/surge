@@ -13,7 +13,7 @@ public:
 
    void CopyCoeff(const VectorizedSvfFilter& SVF);
 
-   forceinline vFloat CalcBPF(vFloat In)
+   inline vFloat CalcBPF(vFloat In)
    {
       L1 = vMAdd(F1, B1, L1);
       vFloat H1 = vNMSub(Q, B1, vSub(vMul(In, Q), L1));

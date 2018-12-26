@@ -12,23 +12,23 @@ public:
 
    lipol_ps();
 
-   forceinline void set_target(float t)
+   inline void set_target(float t)
    {
       currentval = target;
       target = _mm_set_ss(t);
    }
 
-   forceinline void set_target(__m128 t)
+   inline void set_target(__m128 t)
    {
       currentval = target;
       target = t;
    }
-   forceinline void set_target_instantize(float t)
+   inline void set_target_instantize(float t)
    {
       target = _mm_set_ss(t);
       currentval = target;
    }
-   forceinline void set_target_smoothed(float t)
+   inline void set_target_smoothed(float t)
    {
       currentval = target;
       __m128 p1 = _mm_mul_ss(coef, _mm_set_ss(t));
@@ -38,7 +38,7 @@ public:
    void set_blocksize(int bs);
 
    // inline void set_target(__m128 t) { currentval = target; target = t; }
-   forceinline void instantize()
+   inline void instantize()
    {
       currentval = target;
    }

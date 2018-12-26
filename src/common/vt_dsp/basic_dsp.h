@@ -43,7 +43,7 @@ void i152float_block(short*, float*, int);
 float sine_ss(unsigned int x);
 int sine(int x);
 
-forceinline float limit_range(float x, float low, float high)
+inline float limit_range(float x, float low, float high)
 {
    float result;
    _mm_store_ss(&result,
@@ -51,7 +51,7 @@ forceinline float limit_range(float x, float low, float high)
    return result;
 }
 
-forceinline __m128 sum_ps_to_ss(__m128 x)
+inline __m128 sum_ps_to_ss(__m128 x)
 {
    /*__m128 a = _mm_add_ss(x,_mm_shuffle_ps(x,x,_MM_SHUFFLE(0,0,0,1)));
    __m128 b =
@@ -61,7 +61,7 @@ forceinline __m128 sum_ps_to_ss(__m128 x)
    return _mm_add_ss(a, _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 0, 0, 1)));
 }
 
-forceinline __m128 max_ps_to_ss(__m128 x)
+inline __m128 max_ps_to_ss(__m128 x)
 {
    __m128 a = _mm_max_ss(x, _mm_shuffle_ps(x, x, _MM_SHUFFLE(0, 0, 0, 1)));
    __m128 b = _mm_max_ss(_mm_shuffle_ps(x, x, _MM_SHUFFLE(0, 0, 0, 2)),
@@ -76,7 +76,7 @@ inline __m128 hardclip_ss(__m128 x)
    return _mm_max_ss(_mm_min_ss(x, x_max), x_min);
 }
 
-forceinline float rcp(float x)
+inline float rcp(float x)
 {
    _mm_store_ss(&x, _mm_rcp_ss(_mm_load_ss(&x)));
    return x;
@@ -89,14 +89,14 @@ inline __m128d hardclip8_sd(__m128d x)
    return _mm_max_sd(_mm_min_sd(x, x_max), x_min);
 }
 
-forceinline __m128 hardclip_ps(__m128 x)
+inline __m128 hardclip_ps(__m128 x)
 {
    const __m128 x_min = _mm_set1_ps(-1.0f);
    const __m128 x_max = _mm_set1_ps(1.0f);
    return _mm_max_ps(_mm_min_ps(x, x_max), x_min);
 }
 
-forceinline float saturate(float f)
+inline float saturate(float f)
 {
    __m128 x = _mm_load_ss(&f);
    const __m128 x_min = _mm_set_ss(-1.0f);
@@ -106,7 +106,7 @@ forceinline float saturate(float f)
    return f;
 }
 
-forceinline __m128 softclip_ss(__m128 in)
+inline __m128 softclip_ss(__m128 in)
 {
    // y = x - (4/27)*x^3,  x € [-1.5 .. 1.5]
    const __m128 a = _mm_set_ss(-4.f / 27.f);
@@ -123,7 +123,7 @@ forceinline __m128 softclip_ss(__m128 in)
    return t;
 }
 
-forceinline __m128 softclip_ps(__m128 in)
+inline __m128 softclip_ps(__m128 in)
 {
    // y = x - (4/27)*x^3,  x € [-1.5 .. 1.5]
    const __m128 a = _mm_set1_ps(-4.f / 27.f);
@@ -140,7 +140,7 @@ forceinline __m128 softclip_ps(__m128 in)
    return t;
 }
 
-forceinline __m128 tanh7_ps(__m128 x)
+inline __m128 tanh7_ps(__m128 x)
 {
    const __m128 a = _mm_set1_ps(-1.f / 3.f);
    const __m128 b = _mm_set1_ps(2.f / 15.f);
@@ -155,7 +155,7 @@ forceinline __m128 tanh7_ps(__m128 x)
    return _mm_mul_ps(y, x);
 }
 
-forceinline __m128 tanh7_ss(__m128 x)
+inline __m128 tanh7_ss(__m128 x)
 {
    const __m128 a = _mm_set1_ps(-1.f / 3.f);
    const __m128 b = _mm_set1_ps(2.f / 15.f);
@@ -170,12 +170,12 @@ forceinline __m128 tanh7_ss(__m128 x)
    return _mm_mul_ss(y, x);
 }
 
-forceinline __m128 abs_ps(__m128 x)
+inline __m128 abs_ps(__m128 x)
 {
    return _mm_and_ps(x, m128_mask_absval);
 }
 
-forceinline __m128 softclip8_ps(__m128 in)
+inline __m128 softclip8_ps(__m128 in)
 {
    const __m128 a = _mm_set1_ps(-0.00028935185185f);
 
@@ -190,7 +190,7 @@ forceinline __m128 softclip8_ps(__m128 in)
    return t;
 }
 
-forceinline double tanh7_double(double x)
+inline double tanh7_double(double x)
 {
    const double a = -1 / 3, b = 2 / 15, c = -17 / 315;
    // return tanh(x);
@@ -208,7 +208,7 @@ forceinline double tanh7_double(double x)
    return y * x;
 }
 
-forceinline double softclip_double(double in)
+inline double softclip_double(double in)
 {
    const double c0 = (4.0 / 27.0);
    double x = (in > -1.5f) ? in : -1.5;
@@ -218,7 +218,7 @@ forceinline double softclip_double(double in)
    return x - ax * xx;
 }
 
-forceinline double softclip4_double(double in)
+inline double softclip4_double(double in)
 {
    double x = (in > -6.0) ? in : -6.0;
    x = (x < 6.0) ? x : 6.0;
@@ -227,7 +227,7 @@ forceinline double softclip4_double(double in)
    return x - ax * xx;
 }
 
-forceinline double softclip8_double(double in)
+inline double softclip8_double(double in)
 {
    double x = (in > -12.0) ? in : -12.0;
    x = (x < 12.0) ? x : 12.0;
@@ -236,7 +236,7 @@ forceinline double softclip8_double(double in)
    return x - ax * xx;
 }
 
-forceinline double softclip2_double(double in)
+inline double softclip2_double(double in)
 {
    double x = (in > -3.0) ? in : -3.0;
    x = (x < 3.0) ? x : 3.0;
@@ -245,7 +245,7 @@ forceinline double softclip2_double(double in)
    return x - ax * xx;
 }
 
-forceinline float megapanL(float pos) // valid range -2 .. 2 (> +- 1 is inverted phase)
+inline float megapanL(float pos) // valid range -2 .. 2 (> +- 1 is inverted phase)
 {
    if (pos > 2.f)
       pos = 2.f;
@@ -254,7 +254,7 @@ forceinline float megapanL(float pos) // valid range -2 .. 2 (> +- 1 is inverted
    return (1 - 0.75f * pos - 0.25f * pos * pos);
 }
 
-forceinline float megapanR(float pos)
+inline float megapanR(float pos)
 {
    if (pos > 2.f)
       pos = 2.f;

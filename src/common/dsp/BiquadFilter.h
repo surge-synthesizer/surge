@@ -98,7 +98,7 @@ public:
    void process_block(double* data);
    // void process_block_SSE2(double *data);
 
-   __forceinline float process_sample(float input)
+   inline float process_sample(float input)
    {
       a1.process();
       a2.process();
@@ -115,7 +115,7 @@ public:
       return (float)op;
    }
 
-   __forceinline void process_sample_nolag(float& L, float& R)
+   inline void process_sample_nolag(float& L, float& R)
    {
       double op;
 
@@ -130,7 +130,7 @@ public:
       R = (float)op;
    }
 
-   __forceinline void process_sample_nolag(float& L, float& R, float& Lout, float& Rout)
+   inline void process_sample_nolag(float& L, float& R, float& Lout, float& Rout)
    {
       double op;
 
@@ -145,7 +145,7 @@ public:
       Rout = (float)op;
    }
 
-   __forceinline void process_sample_nolag_noinput(float& Lout, float& Rout)
+   inline void process_sample_nolag_noinput(float& Lout, float& Rout)
    {
       double op;
 
