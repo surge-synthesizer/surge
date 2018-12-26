@@ -248,11 +248,8 @@ case $command in
     --uninstall-surge)
         run_uninstall_surge
         ;;
-    "")
-        default_action
-        ;;
     *)
-        help_message
+        default_action
         ;;
 esac
 
