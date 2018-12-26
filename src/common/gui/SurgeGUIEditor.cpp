@@ -1574,6 +1574,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid], 16);
                ((CModulationSourceButton*)control)
                    ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                control->setDirty();
+                control->invalid();
                //((gui_slider*)metaparam[ccid])->setLabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
                synth->updateDisplay();
             }
