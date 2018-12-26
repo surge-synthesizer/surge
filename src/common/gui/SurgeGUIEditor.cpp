@@ -1058,7 +1058,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
    {
       i = synth->storage.getPatch().scene[current_scene].width.id;
       if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
-         ((CSurgeSlider*)param[i])->disabled = true;
+        {
+          bool curr = ((CSurgeSlider*)param[i])->disabled;
+          ((CSurgeSlider*)param[i])->disabled = true;
+          if( ! curr )
+            {
+              param[i]->setDirty();
+              param[i]->invalid();
+            }
+        }
    }
 
    CRect aboutbrect(892 - 37, 526, 892, 526 + 12);
@@ -2115,7 +2123,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
               fb_stereo) &&
              (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
               fb_wide);
+      
       param[i]->setDirty();
+      param[i]->invalid();
    }
    if (tag == fxbypass_tag) // still do the normal operation, that's why it's outside the
                             // switch-statement
