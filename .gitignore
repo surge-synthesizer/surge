@@ -52,6 +52,7 @@ products/
 installer_osx/installer
 installer_osx/Install_Surge_*.dmg
 build_logs/
+.DS_Store
 
 # IntelliJ IDEA
 .idea
