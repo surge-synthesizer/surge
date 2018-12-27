@@ -581,7 +581,8 @@ __m128 COMBquad_SSE2(QuadFilterUnitState* __restrict f, __m128 in)
 
    __m128 a = _mm_mul_ps(f->C[0], m256);
    __m128i e = _mm_cvtps_epi32(a);
-   _MM_ALIGN16 int DTi[4], SEi[4];
+   int DTi alignas(16)[4],
+       SEi alignas(16)[4];
    __m128i DT = _mm_srli_epi32(e, 8);
    _mm_store_si128((__m128i*)DTi, DT);
    __m128i SE = _mm_and_si128(e, m0xff);
@@ -743,14 +744,14 @@ __m128 SINUS_SSE2(__m128 in, __m128 drive)
 #if MAC
    // this should be very fast on C2D/C1D (and there are no macs with K8's)
    // GCC seems to optimize around the XMM -> int transfers so this is needed here
-   _MM_ALIGN16 int e4[4];
+   int e4 alignas(16)[4];
    e4[0] = _mm_cvtsi128_si32(e);
    e4[1] = _mm_cvtsi128_si32(_mm_shufflelo_epi16(e, _MM_SHUFFLE(1, 1, 1, 1)));
    e4[2] = _mm_cvtsi128_si32(_mm_shufflelo_epi16(e, _MM_SHUFFLE(2, 2, 2, 2)));
    e4[3] = _mm_cvtsi128_si32(_mm_shufflelo_epi16(e, _MM_SHUFFLE(3, 3, 3, 3)));
 #else
    // on PC write to memory & back as XMM -> GPR is slow on K8
-   _MM_ALIGN16 short e4[8];
+   short e4 alignas(16)[8];
    _mm_store_si128((__m128i*)&e4, e);
 #endif
 
@@ -830,7 +831,7 @@ __m128 ASYM_SSE2(__m128 in, __m128 drive)
 
 #if MAC
    // this should be very fast on C2D/C1D (and there are no macs with K8's)
-   _MM_ALIGN16 int e4[4];
+   int e4 alignas(16)[4];
    e4[0] = _mm_cvtsi128_si32(e);
    e4[1] = _mm_cvtsi128_si32(_mm_shufflelo_epi16(e, _MM_SHUFFLE(1, 1, 1, 1)));
    e4[2] = _mm_cvtsi128_si32(_mm_shufflelo_epi16(e, _MM_SHUFFLE(2, 2, 2, 2)));
@@ -838,7 +839,7 @@ __m128 ASYM_SSE2(__m128 in, __m128 drive)
 
 #else
    // on PC write to memory & back as XMM -> GPR is slow on K8
-   _MM_ALIGN16 short e4[8];
+   short e4 alignas(16)[8];
    _mm_store_si128((__m128i*)&e4, e);
 #endif
 

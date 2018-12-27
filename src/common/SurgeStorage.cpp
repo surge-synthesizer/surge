@@ -22,7 +22,7 @@
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
-_MM_ALIGN16 short sinctableI16[(FIRipol_M + 1) * FIRipolI16_N];
+short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
 float table_dB alignas(16)[512],
       table_pitch alignas(16)[512],
       table_pitch_inv alignas(16)[512],

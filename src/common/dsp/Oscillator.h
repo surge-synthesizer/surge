@@ -228,8 +228,8 @@ const int wt2_suboscs = 8;
 class WindowOscillator : public Oscillator
 {
 private:
-   _MM_ALIGN16 int IOutputL[block_size_os];
-   _MM_ALIGN16 int IOutputR[block_size_os];
+   int IOutputL alignas(16)[block_size_os];
+   int IOutputR alignas(16)[block_size_os];
    _MM_ALIGN16 struct
    {
       unsigned int Pos[wt2_suboscs];

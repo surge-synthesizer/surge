@@ -392,7 +392,7 @@ class Reverb1Effect : public Effect
    float delay alignas(16)[rev_taps * max_rev_dly];
    float out_tap alignas(16)[rev_taps];
    float predelay alignas(16)[max_rev_dly];
-   _MM_ALIGN16 int delay_time[rev_taps];
+   int delay_time alignas(16)[rev_taps];
    _MM_ALIGN16 lipol_ps mix, width;
 
 public:

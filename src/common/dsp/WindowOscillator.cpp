@@ -192,7 +192,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
                                          _mm_loadu_si128((__m128i*)&WinAdr[WinPos]));
 
             // Sum
-            _MM_ALIGN16 int iWin[4], iWave[4];
+            int iWin alignas(16)[4],
+                iWave alignas(16)[4];
 #if MAC
             // this should be very fast on C2D/C1D (and there are no macs with K8's)
             iWin[0] = _mm_cvtsi128_si32(Win);
