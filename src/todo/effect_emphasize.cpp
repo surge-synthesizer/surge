@@ -42,8 +42,8 @@ void emphasize::process(float *dataL, float *dataR)
 	bi = (bi+1) & slowrate_m1;	
 	outgain.set_target(storage->db_to_linear(*f[0]));
 
-	_MM_ALIGN16 float bL[block_size << 1];
-	_MM_ALIGN16 float bR[block_size << 1];
+	float bL alignas(16)[block_size << 1];
+	float bR alignas(16)[block_size << 1];
 
 	EQ.process_block_to(dataL,dataR,bL,bR);	
 	

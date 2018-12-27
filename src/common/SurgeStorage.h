@@ -51,13 +51,16 @@ const int FIRoffset = FIRipol_N >> 1;
 const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
-extern _MM_ALIGN16 float sinctable[(FIRipol_M + 1) * FIRipol_N * 2];
-extern _MM_ALIGN16 float sinctable1X[(FIRipol_M + 1) * FIRipol_N];
+extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
+extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 extern _MM_ALIGN16 short sinctableI16[(FIRipol_M + 1) * FIRipolI16_N];
-extern _MM_ALIGN16 float table_dB[512], table_pitch[512], table_pitch_inv[512],
-    table_envrate_lpf[512], table_envrate_linear[512];
-extern _MM_ALIGN16 float table_note_omega[2][512];
-extern _MM_ALIGN16 float waveshapers[8][1024];
+extern float table_dB alignas(16)[512],
+             table_pitch alignas(16)[512],
+             table_pitch_inv alignas(16)[512],
+             table_envrate_lpf alignas(16)[512],
+             table_envrate_linear alignas(16)[512];
+extern float table_note_omega alignas(16)[2][512];
+extern float waveshapers alignas(16)[8][1024];
 extern float samplerate, samplerate_inv;
 extern double dsamplerate, dsamplerate_inv;
 extern double dsamplerate_os, dsamplerate_os_inv;
@@ -460,9 +463,9 @@ enum sub3_copysource
 class SurgeStorage
 {
 public:
-   _MM_ALIGN16 float audio_in[2][block_size_os];
-   _MM_ALIGN16 float audio_in_nonOS[2][block_size];
-   //	_MM_ALIGN16 float sincoffset[(FIRipol_M)*FIRipol_N];	// deprecated
+   float audio_in alignas(16)[2][block_size_os];
+   float audio_in_nonOS alignas(16)[2][block_size];
+   //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
    SurgeStorage();
    ~SurgeStorage();

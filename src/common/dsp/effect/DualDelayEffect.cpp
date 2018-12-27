@@ -111,8 +111,10 @@ void DualDelayEffect::process(float* dataL, float* dataR)
 {
    setvars(false);
 
-   _MM_ALIGN16 float tbufferL[block_size], wbL[block_size]; // wb = write-buffer
-   _MM_ALIGN16 float tbufferR[block_size], wbR[block_size];
+   float tbufferL alignas(16)[block_size],
+         wbL alignas(16)[block_size]; // wb = write-buffer
+   float tbufferR alignas(16)[block_size],
+         wbR alignas(16)[block_size];
    int k;
 
    for (k = 0; k < block_size; k++)
@@ -184,7 +186,8 @@ void DualDelayEffect::process(float* dataL, float* dataR)
    }
 
    // scale width
-   _MM_ALIGN16 float M[block_size], S[block_size];
+   float M alignas(16)[block_size],
+         S alignas(16)[block_size];
    encodeMS(tbufferL, tbufferR, M, S, block_size_quad);
    width.multiply_block(S, block_size_quad);
    decodeMS(M, S, tbufferL, tbufferR, block_size_quad);

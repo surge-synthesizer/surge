@@ -22,7 +22,7 @@ const int slowrate_m1 = slowrate - 1;
 class DualDelayEffect : public Effect
 {
    _MM_ALIGN16 lipol_ps feedback, crossfeed, pan, mix, width;
-   _MM_ALIGN16 float buffer[2][max_delay_length + FIRipol_N];
+   float buffer alignas(16)[2][max_delay_length + FIRipol_N];
 
 public:
    DualDelayEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -59,7 +59,7 @@ template <int v> class ChorusEffect : public Effect
 {
    _MM_ALIGN16 lipol_ps feedback, mix, width;
    _MM_ALIGN16 __m128 voicepanL4[v], voicepanR4[v];
-   _MM_ALIGN16 float buffer[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE
+   float buffer alignas(16)[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE
                                                            // interpolation without wrapping
 public:
    ChorusEffect<v>(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -152,7 +152,8 @@ private:
 class PhaserEffect : public Effect
 {
    _MM_ALIGN16 lipol_ps mix;
-   _MM_ALIGN16 float L[block_size], R[block_size];
+   float L alignas(16)[block_size],
+         R alignas(16)[block_size];
 
 public:
    PhaserEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -385,11 +386,12 @@ const int rev_taps = 1 << rev_tap_bits;
 
 class Reverb1Effect : public Effect
 {
-   _MM_ALIGN16 float delay_pan_L[rev_taps], delay_pan_R[rev_taps];
-   _MM_ALIGN16 float delay_fb[rev_taps];
-   _MM_ALIGN16 float delay[rev_taps * max_rev_dly];
-   _MM_ALIGN16 float out_tap[rev_taps];
-   _MM_ALIGN16 float predelay[max_rev_dly];
+   float delay_pan_L alignas(16)[rev_taps],
+         delay_pan_R alignas(16)[rev_taps];
+   float delay_fb alignas(16)[rev_taps];
+   float delay alignas(16)[rev_taps * max_rev_dly];
+   float out_tap alignas(16)[rev_taps];
+   float predelay alignas(16)[max_rev_dly];
    _MM_ALIGN16 int delay_time[rev_taps];
    _MM_ALIGN16 lipol_ps mix, width;
 

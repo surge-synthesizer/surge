@@ -395,7 +395,7 @@ template<bool FM> void osc_wavetable2::process_blockT(float pitch0,float depth,f
 		//li_DC.set_target(dc);	
 	}	
 		
-	_MM_ALIGN16 float hpfblock[block_size_os];			
+	float hpfblock alignas(16)[block_size_os];
 	li_hpf.store_block(hpfblock,block_size_os_quad);		
 
 	for(k=0; k<block_size_os; k++)

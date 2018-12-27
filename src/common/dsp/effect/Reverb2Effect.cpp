@@ -173,7 +173,8 @@ void Reverb2Effect::process(float* dataL, float* dataR)
    float scale = powf(2.f, 1.f * *f[r2p_room_size]);
    calc_size(scale);
 
-   _MM_ALIGN16 float wetL[block_size], wetR[block_size];
+   float wetL alignas(16)[block_size],
+         wetR alignas(16)[block_size];
 
    float loop_time_s = 0.5508 * scale;
    float decay = powf(db60, loop_time_s / (4.f * (powf(2.f, *f[r2p_decay_time]))));
@@ -242,7 +243,8 @@ void Reverb2Effect::process(float* dataL, float* dataR)
    }
 
    // scale width
-   _MM_ALIGN16 float M[block_size], S[block_size];
+   float M alignas(16)[block_size],
+         S alignas(16)[block_size];
    encodeMS(wetL, wetR, M, S, block_size_quad);
    width.multiply_block(S, block_size_quad);
    decodeMS(M, S, wetL, wetR, block_size_quad);

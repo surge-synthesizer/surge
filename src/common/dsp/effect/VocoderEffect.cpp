@@ -95,7 +95,7 @@ void VocoderEffect::process(float* dataL, float* dataR)
       setvars(false);
    }
 
-   _MM_ALIGN16 float modulator_in[block_size];
+   float modulator_in alignas(16)[block_size];
 
    add_block(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_in, block_size_quad);
 

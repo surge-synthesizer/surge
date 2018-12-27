@@ -66,8 +66,8 @@ public:
    virtual unsigned int saveRaw(void** data) = 0;
 
 public:
-   _MM_ALIGN16 float output[n_outputs][block_size];
-   _MM_ALIGN16 float input[n_inputs][block_size];
+   float output alignas(16)[n_outputs][block_size];
+   float input alignas(16)[n_inputs][block_size];
    timedata time_data;
    bool audio_processing_active;
 };

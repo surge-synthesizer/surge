@@ -200,7 +200,8 @@ void Reverb1Effect::update_rsize()
 
 void Reverb1Effect::process(float* dataL, float* dataR)
 {
-   _MM_ALIGN16 float wetL[block_size], wetR[block_size];
+   float wetL alignas(16)[block_size],
+         wetR alignas(16)[block_size];
 
    if (fxdata->p[rp_shape].val.i != shape)
       loadpreset(fxdata->p[rp_shape].val.i);
@@ -291,7 +292,8 @@ void Reverb1Effect::process(float* dataL, float* dataR)
    hicut.process_block_slowlag(wetL, wetR);
 
    // scale width
-   _MM_ALIGN16 float M[block_size], S[block_size];
+   float M alignas(16)[block_size],
+         S alignas(16)[block_size];
    encodeMS(wetL, wetR, M, S, block_size_quad);
    width.multiply_block(S, block_size_quad);
    decodeMS(M, S, wetL, wetR, block_size_quad);

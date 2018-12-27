@@ -318,9 +318,9 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
 {
    setvars(false);
 
-   _MM_ALIGN16 float tbufferL[block_size];
-   _MM_ALIGN16 float tbufferR[block_size];
-   _MM_ALIGN16 float fbblock[block_size];
+   float tbufferL alignas(16)[block_size];
+   float tbufferR alignas(16)[block_size];
+   float fbblock alignas(16)[block_size];
    int k;
 
    clear_block(tbufferL, block_size_quad);
@@ -383,7 +383,8 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
          buffer[k + max_delay_length] = buffer[k]; // copy buffer so FIR-core doesn't have to wrap
 
    // scale width
-   _MM_ALIGN16 float M[block_size], S[block_size];
+   float M alignas(16)[block_size],
+         S alignas(16)[block_size];
    encodeMS(tbufferL, tbufferR, M, S, block_size_quad);
    width.multiply_block(S, block_size_quad);
    decodeMS(M, S, tbufferL, tbufferR, block_size_quad);

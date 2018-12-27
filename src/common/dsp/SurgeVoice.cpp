@@ -484,7 +484,8 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    calc_ctrldata<0>(&Q, Qe);
 
    bool is_wide = scene->filterblock_configuration.val.i == fb_wide;
-   _MM_ALIGN16 float tblock[block_size_os], tblock2[block_size_os];
+   float tblock alignas(16)[block_size_os],
+         tblock2 alignas(16)[block_size_os];
    float* tblockR = is_wide ? tblock2 : tblock;
 
    // float ktrkroot = (float)scene->keytrack_root.val.i;

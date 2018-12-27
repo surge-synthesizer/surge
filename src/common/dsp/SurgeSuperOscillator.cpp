@@ -458,7 +458,7 @@ void SurgeSuperOscillator::process_block(
       }
    }
 
-   _MM_ALIGN16 float hpfblock[block_size_os];
+   float hpfblock alignas(16)[block_size_os];
    li_hpf.store_block(hpfblock, block_size_os_quad);
 
    __m128 mdc = _mm_load_ss(&dc);
