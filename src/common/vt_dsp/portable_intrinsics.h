@@ -41,5 +41,3 @@ inline float vSum(vFloat x)
 
    return f;
 }
-
-#define vAlign _MM_ALIGN16

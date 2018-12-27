@@ -21,7 +21,12 @@ const int slowrate_m1 = slowrate - 1;
 
 class DualDelayEffect : public Effect
 {
-   _MM_ALIGN16 lipol_ps feedback, crossfeed, pan, mix, width;
+   lipol_ps feedback alignas(16),
+            crossfeed alignas(16),
+            aligpan alignas(16),
+            pan alignas(16),
+            mix alignas(16),
+            width alignas(16);
    float buffer alignas(16)[2][max_delay_length + FIRipol_N];
 
 public:
@@ -57,8 +62,11 @@ private:
 
 template <int v> class ChorusEffect : public Effect
 {
-   _MM_ALIGN16 lipol_ps feedback, mix, width;
-   _MM_ALIGN16 __m128 voicepanL4[v], voicepanR4[v];
+   lipol_ps feedback alignas(16),
+            mix alignas(16),
+            width alignas(16);
+   __m128 voicepanL4 alignas(16)[v],
+          voicepanR4 alignas(16)[v];
    float buffer alignas(16)[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE
                                                            // interpolation without wrapping
 public:
@@ -89,8 +97,9 @@ private:
 class FreqshiftEffect : public Effect
 {
 public:
-   _MM_ALIGN16 halfrate_stereo fr, fi;
-   _MM_ALIGN16 lipol_ps mix;
+   halfrate_stereo fr alignas(16),
+                   fi alignas(16);
+   lipol_ps mix alignas(16);
    FreqshiftEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~FreqshiftEffect();
    virtual const char* get_effectname()
@@ -122,7 +131,7 @@ private:
 
 class Eq3BandEffect : public Effect
 {
-   _MM_ALIGN16 lipol_ps gain;
+   lipol_ps gain alignas(16);
 
 public:
    Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -151,7 +160,7 @@ private:
 
 class PhaserEffect : public Effect
 {
-   _MM_ALIGN16 lipol_ps mix;
+   lipol_ps mix alignas(16);
    float L alignas(16)[block_size],
          R alignas(16)[block_size];
 
@@ -225,8 +234,10 @@ protected:
 
 class DistortionEffect : public Effect
 {
-   _MM_ALIGN16 halfrate_stereo hr_a, hr_b;
-   _MM_ALIGN16 lipol_ps drive, outgain;
+   halfrate_stereo hr_a alignas(16),
+                   hr_b alignas(16);
+   lipol_ps drive alignas(16),
+            outgain alignas(16);
 
 public:
    DistortionEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -290,11 +301,11 @@ public:
    virtual int group_label_ypos(int id);
 
 private:
-   _MM_ALIGN16 VectorizedSvfFilter mCarrierL[NVocoderVec];
-   _MM_ALIGN16 VectorizedSvfFilter mCarrierR[NVocoderVec];
-   _MM_ALIGN16 VectorizedSvfFilter mModulator[NVocoderVec];
-   _MM_ALIGN16 vFloat mEnvF[NVocoderVec];
-   _MM_ALIGN16 lipol_ps mGain;
+   VectorizedSvfFilter mCarrierL alignas(16)[NVocoderVec];
+   VectorizedSvfFilter mCarrierR alignas(16)[NVocoderVec];
+   VectorizedSvfFilter mModulator alignas(16)[NVocoderVec];
+   vFloat mEnvF alignas(16)[NVocoderVec];
+   lipol_ps mGain alignas(16);
 
    int mBI; // block increment (to keep track of events not occurring every n blocks)
 
@@ -310,8 +321,10 @@ private:
 
 class emphasize : public Effect
 {
-   _MM_ALIGN16 halfrate_stereo pre, post;
-   _MM_ALIGN16 lipol_ps type, outgain;
+   halfrate_stereo pre alignas(16),
+                   post alignas(16);
+   lipol_ps type alignas(16),
+            outgain alignas(16);
 
 public:
    emphasize(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -344,7 +357,10 @@ const int lookahead = 1 << 7;
 
 class ConditionerEffect : public Effect
 {
-   _MM_ALIGN16 lipol_ps ampL, ampR, width, postamp;
+   lipol_ps ampL alignas(16),
+            ampR alignas(16),
+            width alignas(16),
+            postamp alignas(16);
 
 public:
    ConditionerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -393,7 +409,8 @@ class Reverb1Effect : public Effect
    float out_tap alignas(16)[rev_taps];
    float predelay alignas(16)[max_rev_dly];
    int delay_time alignas(16)[rev_taps];
-   _MM_ALIGN16 lipol_ps mix, width;
+   lipol_ps mix alignas(16),
+            width alignas(16);
 
 public:
    Reverb1Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -484,7 +501,8 @@ class Reverb2Effect : public Effect
       float a0;
    };
 
-   _MM_ALIGN16 lipol_ps mix, width;
+   lipol_ps mix alignas(16),
+            width alignas(16);
 
 public:
    Reverb2Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);

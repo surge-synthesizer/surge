@@ -32,8 +32,12 @@ class SurgeSynthesizer : public AbstractSynthesizer
 {
 public:
    // aligned stuff
-   _MM_ALIGN16 SurgeStorage storage;
-   _MM_ALIGN16 lipol_ps FX1, FX2, amp, amp_mute, send[2][2];
+   SurgeStorage storage alignas(16);
+   lipol_ps FX1 alignas(16),
+            FX2 alignas(16),
+            amp alignas(16),
+            amp_mute alignas(16),
+            send alignas(16)[2][2];
 
    // methods
 public:

@@ -34,7 +34,6 @@ if (os.istarget("macosx")) then
 	
 	defines
 	{
-		"_MM_ALIGN16=__attribute__((aligned(16)))",
 		"_aligned_malloc(x,a)=malloc(x)",
 		"_aligned_free(x)=free(x)",
 		"stricmp=strcasecmp",
@@ -70,7 +69,6 @@ elseif (os.istarget("linux")) then
 	
 	defines
 	{ 
-		"_MM_ALIGN16=__attribute__((aligned(16)))",
 		"_aligned_malloc(x,a)=malloc(x)",
 		"_aligned_free(x)=free(x)",
 		"stricmp=strcasecmp",

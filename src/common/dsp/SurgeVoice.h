@@ -17,8 +17,8 @@ class SurgeVoice
 {
 public:
    float output alignas(16)[2][block_size_os];
-   _MM_ALIGN16 lipol_ps osclevels[7];
-   _MM_ALIGN16 pdata localcopy[n_scene_params];
+   lipol_ps osclevels alignas(16)[7];
+   pdata localcopy alignas(16)[n_scene_params];
    float fmbuffer alignas(16)[block_size_os];
    // used for the 2>1<3 FM-mode (Needs the pointer earlier)
 

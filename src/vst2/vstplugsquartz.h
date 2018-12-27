@@ -27,7 +27,6 @@
 #include <vstgui/vstgui.h>
 #include "globals.h"
 
-#define _MM_ALIGN16 __attribute__((aligned(16)))
 #define stricmp strcmp
 #define _aligned_malloc(x, y) malloc(x)
 #define _aligned_free(x) free(x)

@@ -230,7 +230,7 @@ class WindowOscillator : public Oscillator
 private:
    int IOutputL alignas(16)[block_size_os];
    int IOutputR alignas(16)[block_size_os];
-   _MM_ALIGN16 struct
+   struct
    {
       unsigned int Pos[wt2_suboscs];
       unsigned int SubPos[wt2_suboscs];
@@ -241,7 +241,7 @@ private:
                                                // per-sample scheduling)
       unsigned char Gain[wt2_suboscs][2];
       float DriftLFO[wt2_suboscs][2];
-   } Sub;
+   } Sub alignas(16);
 
 public:
    WindowOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
