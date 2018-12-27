@@ -113,7 +113,10 @@ void aulayer::InitializePlugin()
           
           // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
           plugin_instance = new SurgeSynthesizer( this );
-    }
+
+          // This allows us standalone performance mode. See issue #146 and comment below tagged with issue number
+          plugin_instance->time_data.ppqPos = 0;
+  }
 	assert(plugin_instance);
 }
 
@@ -335,13 +338,39 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 		}
 	}
 
+    // Get the transport status
+    Boolean isPlaying;
+
+    if(CallHostTransportState( &isPlaying,
+                               NULL, // &isTransportStateChanged,
+                               NULL, // &currentSampleInTimeline,
+                               NULL, // &isCycling,
+                               NULL, // &cycleStartBeat,
+                               NULL // &cycleEndBeat
+           ) < 0 )
+    {
+        isPlaying = false;
+    }
+        
+
 
 	// do each buffer
 	Float64 CurrentBeat,CurrentTempo; 
 	if(CallHostBeatAndTempo (&CurrentBeat, &CurrentTempo) >= 0)
 	{
 		plugin_instance->time_data.tempo = CurrentTempo;
-		plugin_instance->time_data.ppqPos = CurrentBeat;
+
+        // If the engine isn't playing, so CurrentBeat is a constant, then result here is
+        // resetting time_data.ppqPos to the same thing over and over. That means the lfo_freerun
+        // mode basically acts like keypress mode since time_data.ppqPos - which maps to songpos
+        // is always reset to zero or a frame or so beyond. If instead we only reset it when
+        // playing then exactly what we want occurs. In playback mode we get perfectly predictable
+        // oscillator start and stop; but in performance mode we get freerun working off the internal clock
+        // which we synthesize by running the "move clock" block below.
+        // 
+        // See github issue #146
+        if( isPlaying )
+            plugin_instance->time_data.ppqPos = CurrentBeat;
 	}
 	else
 	{
