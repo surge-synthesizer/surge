@@ -116,7 +116,7 @@ void aulayer::InitializePlugin()
 
           // This allows us standalone performance mode. See issue #146 and comment below tagged with issue number
           plugin_instance->time_data.ppqPos = 0;
-    }
+  }
 	assert(plugin_instance);
 }
 
