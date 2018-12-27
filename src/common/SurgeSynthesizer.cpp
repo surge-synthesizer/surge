@@ -2235,8 +2235,8 @@ void SurgeSynthesizer::process()
       clear_block_antidenormalnoise(storage.audio_in_nonOS[1], block_size_quad);
    }
 
-   _MM_ALIGN16 float sceneout[2][2][block_size_os];
-   _MM_ALIGN16 float fxsendout[2][2][block_size];
+   float sceneout alignas(16)[2][2][block_size_os];
+   float fxsendout alignas(16)[2][2][block_size];
    bool play_scene[2];
    polydisplay = 0;
 

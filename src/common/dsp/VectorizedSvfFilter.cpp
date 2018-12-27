@@ -29,9 +29,9 @@ void VectorizedSvfFilter::Reset()
 
 void VectorizedSvfFilter::SetCoeff(float pOmega[4], float QVal, float Spread)
 {
-   vAlign float Freq1[4];
-   vAlign float Freq2[4];
-   vAlign float Quality[4];
+   float Freq1 alignas(16)[4];
+   float Freq2 alignas(16)[4];
+   float Quality alignas(16)[4];
 
    QVal = CalcQ(QVal);
 

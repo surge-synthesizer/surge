@@ -88,8 +88,12 @@ void FreqshiftEffect::process(float* dataL, float* dataR)
    setvars(false);
 
    int k;
-   _MM_ALIGN16 float L[block_size], R[block_size], Li[block_size], Ri[block_size], Lr[block_size],
-       Rr[block_size];
+   float L alignas(16)[block_size],
+         R alignas(16)[block_size],
+         Li alignas(16)[block_size],
+         Ri alignas(16)[block_size],
+         Lr alignas(16)[block_size],
+         Rr alignas(16)[block_size];
 
    for (k = 0; k < block_size; k++)
    {

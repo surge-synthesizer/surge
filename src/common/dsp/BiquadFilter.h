@@ -20,7 +20,8 @@ union vdouble
 class vlag
 {
 public:
-   _MM_ALIGN16 vdouble v, target_v;
+   vdouble v alignas(16),
+           target_v alignas(16);
    vlag()
    {}
    void init_x87()
@@ -63,10 +64,15 @@ public:
 
 class BiquadFilter
 {
-   //_MM_ALIGN16 lag<double,false> a1,a2,b0,b1,b2;
-   _MM_ALIGN16 vlag a1, a2, b0, b1, b2;
-   _MM_ALIGN16 vdouble reg0, reg1;
-   //_MM_ALIGN16 double reg0R,reg1R;
+   //alignas(16) lag<double,false> a1,a2,b0,b1,b2;
+   vlag a1 alignas(16),
+        a2 alignas(16),
+        b0 alignas(16),
+        b1 alignas(16),
+        b2 alignas(16);
+   vdouble reg0 alignas(16),
+           reg1 alignas(16);
+   //alignas(16) double reg0R,reg1R;
 public:
    BiquadFilter();
    BiquadFilter(SurgeStorage* storage);

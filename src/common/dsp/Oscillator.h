@@ -6,7 +6,8 @@
 class Oscillator
 {
 public:
-   _MM_ALIGN16 float output[block_size_os], outputR[block_size_os];
+   float output alignas(16)[block_size_os],
+         outputR alignas(16)[block_size_os];
    Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual ~Oscillator();
    virtual void init(float pitch, bool is_display = false){};
@@ -105,9 +106,9 @@ public:
    AbstractBlitOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
 
 protected:
-   _MM_ALIGN16 float oscbuffer[ob_length + FIRipol_N];
-   _MM_ALIGN16 float oscbufferR[ob_length + FIRipol_N];
-   _MM_ALIGN16 float dcbuffer[ob_length + FIRipol_N];
+   float oscbuffer alignas(16)[ob_length + FIRipol_N];
+   float oscbufferR alignas(16)[ob_length + FIRipol_N];
+   float dcbuffer alignas(16)[ob_length + FIRipol_N];
    __m128 osc_out, osc_out2, osc_outR, osc_out2R;
    void prepare_unison(int voices);
    float integrator_hpf;
@@ -125,7 +126,7 @@ class SurgeSuperOscillator : public AbstractBlitOscillator
 {
 private:
    lipol_ps li_hpf, li_DC, li_integratormult;
-   _MM_ALIGN16 float FMphase[block_size_os + 4];
+   float FMphase alignas(16)[block_size_os + 4];
 
 public:
    SurgeSuperOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
@@ -227,9 +228,9 @@ const int wt2_suboscs = 8;
 class WindowOscillator : public Oscillator
 {
 private:
-   _MM_ALIGN16 int IOutputL[block_size_os];
-   _MM_ALIGN16 int IOutputR[block_size_os];
-   _MM_ALIGN16 struct
+   int IOutputL alignas(16)[block_size_os];
+   int IOutputR alignas(16)[block_size_os];
+   struct
    {
       unsigned int Pos[wt2_suboscs];
       unsigned int SubPos[wt2_suboscs];
@@ -240,7 +241,7 @@ private:
                                                // per-sample scheduling)
       unsigned char Gain[wt2_suboscs][2];
       float DriftLFO[wt2_suboscs][2];
-   } Sub;
+   } Sub alignas(16);
 
 public:
    WindowOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);

@@ -67,8 +67,8 @@ void DistortionEffect::process(float* dataL, float* dataR)
    outgain.set_target_smoothed(db_to_linear(*f[10]));
    float fb = *f[5];
 
-   _MM_ALIGN16 float bL[block_size << dist_OS_bits];
-   _MM_ALIGN16 float bR[block_size << dist_OS_bits];
+   float bL alignas(16)[block_size << dist_OS_bits];
+   float bR alignas(16)[block_size << dist_OS_bits];
    assert(dist_OS_bits == 2);
 
    drive.multiply_2_blocks(dataL, dataR, block_size_quad);

@@ -96,7 +96,8 @@ void ConditionerEffect::process(float* dataL, float* dataR)
    width.set_target_smoothed(clamp1bp(*f[2]));
    postamp.set_target_smoothed(db_to_linear(*f[7]));
 
-   _MM_ALIGN16 float M[block_size], S[block_size]; // wb = write-buffer
+   float M alignas(16)[block_size],
+         S alignas(16)[block_size]; // wb = write-buffer
    encodeMS(dataL, dataR, M, S, block_size_quad);
    width.multiply_block(S, block_size_quad);
    decodeMS(M, S, dataL, dataR, block_size_quad);
