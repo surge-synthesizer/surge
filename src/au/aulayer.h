@@ -12,37 +12,6 @@ class SurgeGUIEditor;
 class SurgeSynthesizer;
 typedef SurgeSynthesizer plugin;
 
-#define GENERATE_AU_LOG
-struct AULOG
-{
-#ifdef GENERATE_AU_LOG
-    static FILE* lf;
-    
-    static void log( const char* format, ... )
-    {
-        if( lf == NULL )
-        {
-	    char fname[ 1024 ];
-            sprintf( fname, "%s/Library/Logs/Surge.log", getenv( "HOME" ) );
-            lf = fopen( fname, "a" );
-        }
-        va_list args;
-        va_start( args, format );
-        vfprintf( stderr, format, args );
-        va_end( args );
-        if( lf != NULL )
-        {
-            va_start( args, format );
-            vfprintf( lf, format, args );
-            va_end( args );
-            fflush( lf );
-        }
-        
-    }
-#else
-    static void log( const char* format, ... ) { }
-#endif
-};
 
 //-------------------------------------------------------------------------------------------------------
 const CFStringRef rawchunkname = CFSTR("VmbA_chunk");
