@@ -97,6 +97,8 @@ run_premake_if()
 run_clean()
 {
     flavor=$1
+    echo
+    echo "Cleaning build - $flavor"
     xcodebuild clean -configuration Release -project surge-${flavor}.xcodeproj
 }
 
@@ -178,7 +180,13 @@ run_build_validate_au()
 
 run_clean_builds()
 {
-    run_premake_if
+    if [ ! -d "Surge.xcworkspace" ]; then
+        echo "No surge workspace; no builds to clean"
+        return 0
+    else
+        echo "Clean build on all flavors"
+    fi
+       
     if [ -d "surge-vst2.xcodeproj" ]; then
         run_clean "vst2"
     fi
@@ -190,6 +198,8 @@ run_clean_builds()
 run_clean_all()
 {
     run_clean_builds
+
+    echo "Cleaning additional assets (directories, XCode, etc)"
     rm -rf Surge.xcworkspace *xcodeproj target products build_logs obj
 }
 
