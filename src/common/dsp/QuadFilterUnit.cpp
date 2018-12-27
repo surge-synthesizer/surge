@@ -726,7 +726,7 @@ __m128 SINUS_SSE1(__m128 in, __m128 drive)
 
    return x;
 }
-
+#endif
 __m128 SINUS_SSE2(__m128 in, __m128 drive)
 {
    const __m128 one = _mm_set1_ps(1.f);
@@ -769,7 +769,6 @@ __m128 SINUS_SSE2(__m128 in, __m128 drive)
 
    return x;
 }
-#endif
 
 #if !_M_X64
 __m128 ASYM_SSE1(__m128 in, __m128 drive)
