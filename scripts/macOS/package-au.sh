@@ -33,4 +33,3 @@ cp $PACKAGE_SRC_LOCATION/* "$BUNDLE_DIR/Contents/"
 # copy bundle resources
 cp -R "$BUNDLE_RES_SRC_LOCATION" "$BUNDLE_DIR/Contents/Resources"
 cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
-rsync -r --delete resources/data/ "$BUNDLE_DIR/Contents/Data/"

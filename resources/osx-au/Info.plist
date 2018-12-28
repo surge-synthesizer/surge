@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-  <dict>
-    	<key>AudioComponents</key>
+<dict>
+	<key>AudioComponents</key>
 	<array>
 		<dict>
 			<key>description</key>
@@ -32,7 +32,7 @@
 	<key>CFBundleIconFile</key>
 	<string>surgeicon</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.vemberaudio.plugins.surge</string>
+	<string>com.vemberaudio.au.surge</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -43,14 +43,13 @@
 	<string>1.6.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
-        <key>CFBundleSupportedPlatforms</key>
+	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
 	</array>
-        <key>NSHighResolutionCapable</key>
+	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>2018</string>
-
 </dict>
 </plist>

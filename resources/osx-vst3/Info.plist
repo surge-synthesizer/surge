@@ -9,7 +9,7 @@
 	<key>CFBundleIconFile</key>
 	<string>surgeicon.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.vemberaudio.vst.surge</string>
+	<string>com.vemberaudio.vst3.surge</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>

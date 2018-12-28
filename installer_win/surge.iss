@@ -4,7 +4,7 @@
 #define MyAppPublisher "Vember Audio"
 #define MyAppURL "http://www.vemberaudio.se"
 #define MyAppName "Surge"
-#define MyAppVersion "1.6.0b4"
+#define MyAppVersion GetEnv('SURGE_VERSION')
 #define MyID "650E559A-2F44-44FE-861F-4108AE4BC30E"
 
 [Setup]
