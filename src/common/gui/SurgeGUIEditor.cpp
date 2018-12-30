@@ -309,6 +309,32 @@ void SurgeGUIEditor::idle()
                         .modsources[ms_ctrl1 + i])
                        ->get_target01());
             }
+            else if((j < n_total_params) && nonmod_param[j])
+            {
+                /*
+                ** What the heck is this NONMOD_PARAM thing?
+                **
+                ** There are a set of params - like discrete things like
+                ** octave and filter type - which are not LFO modulatable
+                ** and aren't in the params[] array. But they are exposed
+                ** properties, so you can control them from a DAW. The
+                ** DAW control works - everything up to this path (as described
+                ** in #160) works fine and sets the value but since there's
+                ** no CControl in param the above bails out. But ading 
+                ** all these controls to param[] would have the unintended
+                ** side effect of giving them all the other param[] behaviours.
+                ** So have a second array and drop select items in here so we
+                ** can actually get them redrawing when an external param set occurs.
+                */
+                CControl *cc = nonmod_param[ j ];
+                cc->setValue(synth->getParameter01(j));
+                cc->setDirty();
+                cc->invalid();
+            }
+            else
+            {
+                printf( "Bailing out of all possible refreshes on %d\n", j );
+            }
          }
       }
       for (int i = 0; i < n_customcontrollers; i++)
@@ -607,7 +633,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                       1, getSurgeBitmap(IDB_BUTTON_STORE), nopoint, false);
    frame->addView(b_store);
 
-   memset(param, 0, 512 * sizeof(void*));
+   memset(param, 0, 1024 * sizeof(void*)); // see the correct size in SurgeGUIEditor.h
+   memset(nonmod_param, 0, 1024 * sizeof(void*));
    int i = 0;
    vector<Parameter*>::iterator iter;
    for (iter = synth->storage.getPatch().param_ptr.begin();
@@ -646,6 +673,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setMouseableArea(rect);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_filtersubtype:
@@ -752,6 +780,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                           getSurgeBitmap(IDB_LFOTRIGGER), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_bool_mute:
@@ -885,6 +914,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setMouseableArea(rect);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_fbconfig:
@@ -934,6 +964,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                    &synth->storage.getPatch().stepsequences[current_scene][lfo_id]);
                lfodisplay = slfo;
                frame->addView(slfo);
+               nonmod_param[i] = slfo;
             }
          }
          break;
