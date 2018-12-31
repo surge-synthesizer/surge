@@ -66,7 +66,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       if ((!single_category) || (c == last_category))
       {
          if (!single_category &&
-             ((c == storage->patch_category_split[0]) || (c == storage->patch_category_split[1])))
+             ((c == storage->firstThirdPartyCategory) ||
+              (c == storage->firstUserCategory)))
             contextMenu->addEntry("-");
 
          vector<int> ctge;

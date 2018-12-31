@@ -505,8 +505,9 @@ public:
    void errorbox(string message);
 
    vector<patchlist_category> patch_category, wt_category;
+   int firstThirdPartyCategory;
+   int firstUserCategory;
    vector<patchlist_entry> patch_list, wt_list;
-   int patch_category_split[2];
    string wtpath;
    string datapath;
    string userDataPath;
