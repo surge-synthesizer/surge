@@ -46,7 +46,7 @@ bool Sample::load(const char* file_name)
       *comma = 0;
    }
 
-   if (!stricmp(extension, "wav"))
+   if (!_stricmp(extension, "wav"))
    {
       bool result = this->load_riff_wave_mk2(filename);
       return result;

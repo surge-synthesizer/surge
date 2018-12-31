@@ -97,7 +97,7 @@ CSurgeSlider::~CSurgeSlider()
 
 void CSurgeSlider::setLabel(const char* txt)
 {
-   if (!stricmp(txt, "filter balance"))
+   if (!_stricmp(txt, "filter balance"))
    {
       strcpy(label, "F2");
       strcpy(leftlabel, "F1");
