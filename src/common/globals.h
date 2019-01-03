@@ -14,7 +14,7 @@
 #endif
 #include <xmmintrin.h>
 
-#ifdef __linux__
+#if __linux__
 #include <immintrin.h>
 #endif
 
