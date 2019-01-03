@@ -7,7 +7,7 @@
 #include <vt_dsp/vt_dsp_endian.h>
 #if __linux__
 #include <experimental/filesystem>
-#elif __APPLE__
+#elif MAC
 #include <filesystem.h>
 #else
 #include <filesystem>

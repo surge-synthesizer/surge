@@ -19,7 +19,7 @@ using namespace std;
 
 #if __linux__
 #include <experimental/filesystem>
-#elif __APPLE__
+#elif MAC
 #include <filesystem.h>
 #else
 #include <filesystem>

@@ -4,7 +4,7 @@
 static float env_phasemulti = 1000 / 44100.f;
 static float lfo_range = 1000;
 
-#ifdef MAC
+#if MAC
 #define min(x, y) std::min(x, y)
 #define max(x, y) std::max(x, y)
 #endif
