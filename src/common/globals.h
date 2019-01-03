@@ -12,9 +12,7 @@
 #if MAC
 #include "vt_dsp/macspecific.h"
 #endif
-#if !PPC
 #include <xmmintrin.h>
-#endif
 
 #ifdef __linux__
 #include <immintrin.h>
