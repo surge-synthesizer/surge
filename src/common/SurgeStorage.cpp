@@ -304,7 +304,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 
          for (auto& f : fs::directory_iterator(p))
          {
-            if (_stricmp(f.path().extension().c_str(), ".fxp") == 0)
+            if (_stricmp(f.path().extension().generic_string().c_str(), ".fxp") == 0)
             {
                patchlist_entry e;
                e.category = category;
@@ -345,7 +345,7 @@ void SurgeStorage::refresh_wtlist()
 
          for (auto& f : fs::directory_iterator(p))
          {
-            if (_stricmp(f.path().extension().c_str(),".wt") == 0)
+            if (_stricmp(f.path().extension().generic_string().c_str(), ".wt") == 0)
             {
                patchlist_entry e;
                e.category = category;
@@ -354,7 +354,7 @@ void SurgeStorage::refresh_wtlist()
                e.name = e.name.substr(0, e.name.size() - 3);
                wt_list.push_back(e);
             }
-            else if (_stricmp(f.path().extension().c_str(),".wav") == 0)
+            else if (_stricmp(f.path().extension().generic_string().c_str(), ".wav") == 0)
             {
                patchlist_entry e;
                e.category = category;

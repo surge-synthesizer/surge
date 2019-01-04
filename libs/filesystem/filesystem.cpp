@@ -44,9 +44,10 @@ namespace std::experimental::filesystem {
         return p;
     }
     
-    std::string path::extension() {
+    path path::extension() {
         auto idx = this->p.find_last_of(".");
-        return p.substr(idx);
+        path res(p.substr(idx));
+        return res;
     }
     // emd path class
 
