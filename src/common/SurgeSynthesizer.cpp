@@ -1250,7 +1250,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       }
       break;
       case ct_envmode:
-         need_refresh = true;
+         need_refresh = true; // See github issue #160
          break;
       case ct_bool_link_switch:
          need_refresh = true;
@@ -1271,7 +1271,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             }
          }
          switch_toggled_queued = true;
-         need_refresh = true;
+         // need_refresh = true; See github issue #160
          break;
       };
    }

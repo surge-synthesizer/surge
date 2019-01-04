@@ -333,7 +333,8 @@ void SurgeGUIEditor::idle()
             }
             else
             {
-                printf( "Bailing out of all possible refreshes on %d\n", j );
+                // printf( "Bailing out of all possible refreshes on %d\n", j );
+                // This is not really a problem
             }
          }
       }
@@ -716,6 +717,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                getSurgeBitmap(IDB_SWITCH_KTRK));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_bool_retrigger:
@@ -726,6 +728,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                getSurgeBitmap(IDB_SWITCH_RETRIGGER));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_oscroute:
@@ -736,6 +739,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                           getSurgeBitmap(IDB_OSCROUTE), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_envshape:
@@ -758,6 +762,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hsw->imgoffset = 6;
 
                frame->addView(hsw);
+               nonmod_param[i] = hsw;
             }
          }
          break;
@@ -770,6 +775,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setValue(p->get_value_f01());
 
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_lfotrigmode:
@@ -791,6 +797,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                getSurgeBitmap(IDB_SWITCH_MUTE));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_bool_solo:
@@ -801,6 +808,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                getSurgeBitmap(IDB_SWITCH_SOLO));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_bool_unipolar:
@@ -811,6 +819,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                getSurgeBitmap(IDB_UNIPOLAR));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_bool_relative_switch:
@@ -874,6 +883,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setMouseableArea(rect);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_polymode:
@@ -887,6 +897,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setMouseableArea(rect);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_fxbypass:
@@ -901,6 +912,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setMouseableArea(rect);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_pitch_octave:
@@ -925,6 +937,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                           getSurgeBitmap(IDB_FBCONFIG), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
             filterblock_tag = p->id + start_paramtags;
          }
          break;
@@ -936,6 +949,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                           getSurgeBitmap(IDB_FMCONFIG), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_scenemode:
@@ -949,6 +963,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setMouseableArea(rect);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_lfoshape:
@@ -989,6 +1004,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                           getSurgeBitmap(IDB_CHARACTER), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
+            nonmod_param[i] = hsw;
          }
          break;
          case ct_midikey:
@@ -1000,6 +1016,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             // key->altlook = true;
             key->setValue(p->get_value_f01());
             frame->addView(key);
+            nonmod_param[i] = key;
          }
          break;
          case ct_pbdepth:
