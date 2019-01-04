@@ -2,6 +2,8 @@
 #include "resource.h"
 #include <stdio.h>
 
+SharedPointer<CFontDesc> CAboutBox::infoFont;
+
 //------------------------------------------------------------------------
 // CAboutBox
 //------------------------------------------------------------------------
@@ -17,6 +19,10 @@ CAboutBox::CAboutBox(const CRect& size,
 {
    _aboutBitmap = aboutBitmap;
    boxHide(false);
+   if (infoFont == NULL)
+   {
+       infoFont = kNormalFont;
+   }
 }
 
 //------------------------------------------------------------------------
@@ -29,6 +35,26 @@ void CAboutBox::draw(CDrawContext* pContext)
    if (value)
    {
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
+
+      int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
+      std::vector< std::string > msgs = { {
+              std::string( "Version 1.6.0 beta (build: " ) + __DATE__ + " " + __TIME__ + ")",
+              "Released under the GNU General Public License, v3",
+              "Copyright 2005-2019 by individual contributors",
+              "Source, contributors and other information at https://github.com/kurasu/surge",
+              "VST Plug-in technology by Steinberg, AU Plugin Technology by Apple Computer"
+          } };
+
+      int yMargin = 5;
+      int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
+      int xPos = strHeight;
+      pContext->setFontColor(kWhiteCColor);
+      pContext->setFont(infoFont);
+      for (auto s : msgs)
+      {
+          pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
+          yPos += strHeight + yMargin;
+      }
    }
    else
    {
