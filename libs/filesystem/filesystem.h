@@ -40,7 +40,7 @@ namespace std::experimental::filesystem {
         
         path filename();
         
-        std::string extension();
+        path extension();
     };
     
     class file {
