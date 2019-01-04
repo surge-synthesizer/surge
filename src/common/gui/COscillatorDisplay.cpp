@@ -5,6 +5,14 @@
 #include "Oscillator.h"
 #include <time.h>
 #include "unitconversion.h"
+#include "UserInteractions.h"
+#if MAC
+#include "filesystem.h"
+#else
+#include "filesystem"
+#endif
+
+namespace fs = std::experimental::filesystem;
 
 const float disp_pitch = 90.15f - 48.f;
 const int wtbheight = 12;
@@ -210,17 +218,34 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
 bool COscillatorDisplay::onDrop(IDataPackage* drag, const CPoint& where)
 {
-   /*long size,type;
-   char *filename = (char*)drag->first(size,type);
-   //while(filename)
-   if(filename)
+   uint32_t ct = drag->getCount();
+   if (ct == 1)
    {
-           if(type == CDragContainer::kFile)
+       IDataPackage::Type t = drag->getDataType( 0 );
+       if (t == IDataPackage::kFilePath)
+       {
+           const void* fn;
+           drag->getData(0, fn, t);
+           const char* fName = static_cast<const char*>(fn);
+           fs::path fPath(fName);
+           if (_stricmp(fPath.extension().generic_string().c_str(),".wt")!=0)
            {
-                   strncpy(oscdata->wt.queue_filename, filename, 255);
+               Surge::UserInteractions::promptError(std::string( "Surge only supports drag-and-drop of .wt wavetables onto the oscillator. " )
+                                                    + "You dropped a file with extension " + fPath.extension().generic_string(),
+                                                    "Please drag a valid file type");
            }
-//		filename = (char*)drag->next(size,type);
-   }*/
+           else
+           {
+               strncpy(oscdata->wt.queue_filename, fName, 255);
+           }
+       }
+       else
+       {
+           Surge::UserInteractions::promptError("Surge only supports drag-and-drop of files onto the oscillator",
+                                                "Please Drag a File");
+       }
+   }
+
    return true;
 }
 

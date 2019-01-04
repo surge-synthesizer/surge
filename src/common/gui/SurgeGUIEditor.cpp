@@ -1206,7 +1206,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    queue_refresh = false;
    frame->setDirty();
    frame->invalid();
-   // frame->setDropActive(true); // TODO VSTGUI4
 }
 
 void SurgeGUIEditor::close_editor()
