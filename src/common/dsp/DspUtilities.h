@@ -372,12 +372,7 @@ inline bool is_yes(const char* str)
 {
    if (!str)
       return 0;
-#if WINDOWS
    if (_stricmp(str, "yes") == 0)
       return 1;
-#else
-   if (strcasecmp(str, "yes") == 0)
-      return 1;
-#endif
    return 0;
 }

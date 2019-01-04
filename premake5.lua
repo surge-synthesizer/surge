@@ -36,8 +36,6 @@ if (os.istarget("macosx")) then
 	{
 		"_aligned_malloc(x,a)=malloc(x)",
 		"_aligned_free(x)=free(x)",
-		"stricmp=strcasecmp",
-		"SSE_VERSION=3",
 		"MAC_COCOA=1",
 		"COCOA=1",
 		"OBJC_OLD_DISPATCH_PROTOTYPES=1"
@@ -71,9 +69,6 @@ elseif (os.istarget("linux")) then
 	{ 
 		"_aligned_malloc(x,a)=malloc(x)",
 		"_aligned_free(x)=free(x)",
-		"stricmp=strcasecmp",
-		"SSE_VERSION=3",
-		"__cdecl="
 	}
 
 	links
