@@ -2020,7 +2020,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       patchComment->setText(p.comments.c_str());
 
       showPatchStoreDialog(&p, &synth->storage.patch_category,
-                           synth->storage.patch_category_split[1]);
+                           synth->storage.firstUserCategory);
    }
    break;
    case tag_store_cancel:

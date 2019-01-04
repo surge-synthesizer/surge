@@ -275,9 +275,9 @@ void SurgeStorage::refresh_patchlist()
    patch_list.clear();
 
    refreshPatchlistAddDir(false, "patches_factory");
-   patch_category_split[0] = patch_category.size();
+   firstThirdPartyCategory = patch_category.size();
    refreshPatchlistAddDir(false, "patches_3rdparty");
-   patch_category_split[1] = patch_category.size();
+   firstUserCategory = patch_category.size();
    refreshPatchlistAddDir(true, "");
 }
 
