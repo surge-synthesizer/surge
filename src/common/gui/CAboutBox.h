@@ -41,4 +41,6 @@ protected:
    CPoint offset;
    SharedPointer<CBitmap> _aboutBitmap;
    bool bvalue;
+
+   static SharedPointer<CFontDesc> infoFont;
 };
