@@ -2037,7 +2037,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       frame->setDirty();
 
       synth->storage.getPatch().name = patchName->getText();
-      synth->storage.getPatch().author = patchName->getText();
+      synth->storage.getPatch().author = patchCreator->getText();
       synth->storage.getPatch().category = patchCategory->getText();
       synth->storage.getPatch().comment = patchComment->getText();
       synth->savePatch();
