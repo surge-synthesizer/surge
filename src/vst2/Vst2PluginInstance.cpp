@@ -24,10 +24,13 @@ using namespace std;
 namespace VSTGUI { void* soHandle = nullptr; }
 #endif
 
+#include "CpuArchitecture.h"
+
 //-------------------------------------------------------------------------------------------------------
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
+   initCpuArchitecture();
    return new Vst2PluginInstance(audioMaster);
 }
 
