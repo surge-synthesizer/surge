@@ -24,13 +24,13 @@ using namespace std;
 namespace VSTGUI { void* soHandle = nullptr; }
 #endif
 
-#include "CpuArchitecture.h"
+#include "AbstractSynthesizer.h"
 
 //-------------------------------------------------------------------------------------------------------
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
-   initCpuArchitecture();
+   initDllGlobals(); // this is a slightly misnamed function since only windows has dlls; it does all setup stuff for globals
    return new Vst2PluginInstance(audioMaster);
 }
 
