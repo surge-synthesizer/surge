@@ -49,8 +49,9 @@ Options are:
 
 Environment variables are:
 
-   VST2SDK_DIR=path      If this points at a valid VST2 SDK, VST2 assets will be built
-   BREWBUILD=TRUE        Uses LLVM clang rather than xcode. If you are XCode < 9.4 you will need this
+   VST2SDK_DIR=path            If this points at a valid VST2 SDK, VST2 assets will be built
+   BREWBUILD=TRUE              Uses LLVM clang rather than xcode. If you are XCode < 9.4 you will need this
+   SURGE_USE_VECTOR_SKIN=True  Uses the new vector skins in assets/classic-vector in built asset.
 
 EOHELP
 }
