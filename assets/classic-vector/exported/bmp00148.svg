@@ -23,6 +23,6 @@
         </g>
     </g>
     <defs>
-        <linearGradient id="_Linear2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1.6183e-15,26.4289,-26.4289,1.6183e-15,2394.5,209.25)"><stop offset="0" style="stop-color:rgb(204,204,204);stop-opacity:1"/><stop offset="1" style="stop-color:rgb(173,173,173);stop-opacity:1"/></linearGradient>
+        <linearGradient id="_Linear2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1.6183e-15,26.4289,-26.4289,1.6183e-15,2394.5,209.25)"><stop offset="0" style="stop-color:rgb(230,230,230);stop-opacity:1"/><stop offset="1" style="stop-color:rgb(193,193,193);stop-opacity:1"/></linearGradient>
     </defs>
 </svg>
