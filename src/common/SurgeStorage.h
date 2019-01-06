@@ -508,6 +508,8 @@ public:
    int firstThirdPartyCategory;
    int firstUserCategory;
    vector<patchlist_entry> patch_list, wt_list;
+   std::vector<int> patchOrdering;
+   std::vector<int> patchCategoryOrdering;
    string wtpath;
    string datapath;
    string userDataPath;

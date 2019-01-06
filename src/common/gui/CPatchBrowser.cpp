@@ -61,17 +61,22 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    if (single_category)
       contextMenu->setNbItemsPerColumn(32);
 
-   for (int c = 0; c < storage->patch_category.size(); c++)
+   for (int i = 0; i < storage->patch_category.size(); i++)
    {
-      if ((!single_category) || (c == last_category))
+      if ((!single_category) || (i == last_category))
       {
          if (!single_category &&
-             ((c == storage->firstThirdPartyCategory) ||
-              (c == storage->firstUserCategory)))
+             ((i == storage->firstThirdPartyCategory) ||
+              (i == storage->firstUserCategory)))
             contextMenu->addEntry("-");
 
+         // Remap index to the corresponding category in alphabetical order.
+         int c = storage->patchCategoryOrdering[i];
+
+         // Go through the whole patch list in alphabetical order and filter
+         // out only the patches that belong to the current category.
          vector<int> ctge;
-         for (int p = 0; p < storage->patch_list.size(); p++)
+         for (auto p : storage->patchOrdering)
          {
             if (storage->patch_list[p].category == c)
             {
