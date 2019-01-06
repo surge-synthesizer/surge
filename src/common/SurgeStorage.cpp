@@ -404,7 +404,31 @@ void SurgeStorage::refresh_wtlist()
    {
       errorbox("File IO Error: Couldn't locate wavetables on disk!\n\nPlease reinstall..");
    }
-   //	sort(wt_list.begin(), wt_list.end()-1, PEComparer());
+
+   wtOrdering = std::vector<int>(wt_list.size());
+   std::iota(wtOrdering.begin(), wtOrdering.end(), 0);
+
+   auto wtCompare =
+      [this](const int &i1, const int &i2) -> bool
+      {
+         return _stricmp(wt_list[i1].name.c_str(),
+                         wt_list[i2].name.c_str()) < 0;
+      };
+
+   std::sort(wtOrdering.begin(), wtOrdering.end(), wtCompare);
+
+   wtCategoryOrdering = std::vector<int>(wt_category.size());
+   std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
+
+   auto categoryCompare =
+      [this](const int &i1, const int &i2) -> bool
+      {
+         return _stricmp(wt_category[i1].name.c_str(),
+                         wt_category[i2].name.c_str()) < 0;
+      };
+
+   std::sort(wtCategoryOrdering.begin(), wtCategoryOrdering.end(),
+             categoryCompare);
 }
 
 void SurgeStorage::perform_queued_wtloads()

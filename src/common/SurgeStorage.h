@@ -515,6 +515,8 @@ public:
    // The in-memory wavetable database.
    std::vector<patchlist_entry> wt_list;
    std::vector<patchlist_category> wt_category;
+   std::vector<int> wtOrdering;
+   std::vector<int> wtCategoryOrdering;
 
    string wtpath;
    string datapath;

@@ -259,14 +259,14 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
          menurect.offset(where.x, where.y);
          COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, kNoDrawStyle);
 
-         for (int c = 0; c < storage->wt_category.size(); c++)
+         for (auto c : storage->wtCategoryOrdering)
          {
             char name[namechars];
             COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, kNoDrawStyle);
             subMenu->setNbItemsPerColumn(32);
             int sub = 0;
             int p;
-            for (p = 0; p < storage->wt_list.size(); p++)
+            for (auto p : storage->wtOrdering)
             {
                if (storage->wt_list[p].category == c)
                {
