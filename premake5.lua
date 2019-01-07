@@ -103,7 +103,7 @@ elseif (os.istarget("windows")) then
 	nuget { "libpng-msvc-x64:1.6.33.8807" }
 
 	characterset "MBCS"
-	buildoptions { "/MP" }
+	buildoptions { "/MP /Zc:alignedNew" }
 
 	includedirs {
 		"libs/wtl"
