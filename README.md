@@ -35,7 +35,7 @@ Prerequisites
 
 * [Git](https://git-scm.com/downloads)
 * [Premake 5](https://premake.github.io/download.html#v5) for generating project files
-* [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
+* [Visual Studio 15.5 (at least)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
 To build with Windows, run
