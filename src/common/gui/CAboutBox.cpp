@@ -1,4 +1,5 @@
 #include "CAboutBox.h"
+#include "globals.h"
 #include "resource.h"
 #include <stdio.h>
 
@@ -38,7 +39,8 @@ void CAboutBox::draw(CDrawContext* pContext)
 
       int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
       std::vector< std::string > msgs = { {
-              std::string( "Version 1.6.0 beta (build: " ) + __DATE__ + " " + __TIME__ + ")",
+              std::string() + "Version " + SURGE_STR(SURGE_VERSION) + " (build: " +
+              __DATE__ + " " + __TIME__ + ")",
               "Released under the GNU General Public License, v3",
               "Copyright 2005-2019 by individual contributors",
               "Source, contributors and other information at https://github.com/kurasu/surge",

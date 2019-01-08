@@ -31,6 +31,9 @@ static inline int _stricmp(const char *s1, const char *s2)
 }
 #endif
 
+#define _SURGE_STR(x) #x
+#define SURGE_STR(x) _SURGE_STR(x)
+
 const int namechars = 64;
 const int block_size = 32;
 const int osc_oversampling = 2;

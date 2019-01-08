@@ -10,7 +10,8 @@ VSTGUI = "vst3sdk/vstgui4/vstgui/";
 
 defines
 {
-	"VSTGUI_ENABLE_DEPRECATED_METHODS=0"
+    "VSTGUI_ENABLE_DEPRECATED_METHODS=0",
+    "SURGE_VERSION=" .. string.gsub(io.readfile("VERSION"), "\n$", "")
 }
 
 floatingpoint "Fast"
