@@ -327,6 +327,10 @@ if VST24SDK then
 		VST24SDK,
 	}
 
+	sysincludedirs {
+		VST24SDK,
+	}
+
 	configuration { "Debug" }
 	targetdir "target/vst2/Debug"
 	targetsuffix "-Debug"

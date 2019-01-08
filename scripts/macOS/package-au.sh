@@ -41,4 +41,3 @@ else
     cp $VECTOR_BITMAP_SRC_LOCATION/bmp?????.png "$BUNDLE_DIR/Contents/Resources/"
 fi
 
-rsync -r --delete resources/data/ "$BUNDLE_DIR/Contents/Data/"

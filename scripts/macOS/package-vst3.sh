@@ -2,7 +2,7 @@
 
 # input config
 RES_SRC_LOCATION="resources"
-PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst2"
+PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst3"
 BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
 VECTOR_BITMAP_SRC_LOCATION="assets/classic-vector/exported"
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
@@ -41,4 +41,3 @@ else
     cp $VECTOR_BITMAP_SRC_LOCATION/bmp?????.png "$BUNDLE_DIR/Contents/Resources/"
 fi
 
-rsync -r --delete resources/data/ "$BUNDLE_DIR/Contents/Data/"

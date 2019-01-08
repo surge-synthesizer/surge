@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Documentation for pkgbuild and productbuild: https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html
+
 # preflight check
 
 if [[ ! -f ./make_installer.sh ]]; then
@@ -7,19 +9,29 @@ if [[ ! -f ./make_installer.sh ]]; then
 	exit 1
 fi
 
-# version and locations
+# version
 
-VERSION="$1"
+if [ "$SURGE_VERSION" != "" ]; then
+    VERSION="$SURGE_VERSION"
+elif [ "$1" != "" ]; then
+    VERSION="$1"
+fi
+
+if [ "$VERSION" == "" ]; then
+    echo "You must specify the version you are packaging!"
+    echo "eg: ./make_installer.sh 1.0.6b4"
+    exit 1
+fi
+
+# locations
+
 VST2="../products/Surge.vst"
 VST3="../products/Surge.vst3"
 AU="../products/Surge.component"
 RSRCS="../resources/data"
 
-if [[ $1 == "" ]]; then
-	echo "You must specify the version you are packaging!"
-	echo "eg: ./make_installer.sh 1.0.6b4"
-	exit 1
-fi
+OUTPUT_BASE_FILENAME="Surge-$VERSION-Setup"
+
 
 # try to build VST2 package
 
@@ -65,19 +77,19 @@ rm "$RSRCS/BuildInfo.txt"
 # create distribution.xml
 
 if [[ -d $VST2 ]]; then
-	VST2_PKG_REF='<pkg-ref id="com.vemberaudio.vst2.pkg"/>'
-	VST2_CHOICE='<line choice="com.vemberaudio.vst2.pkg"/>'
-	VST2_CHOICE_DEF="<choice id=\"com.vemberaudio.vst2.pkg\" visible=\"true\" title=\"Install VST2\"><pkg-ref id=\"com.vemberaudio.vst2.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst2.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST2.pkg</pkg-ref>"
+	VST2_PKG_REF='<pkg-ref id="com.vemberaudio.vst.pkg"/>'
+	VST2_CHOICE='<line choice="com.vemberaudio.vst.pkg"/>'
+	VST2_CHOICE_DEF="<choice id=\"com.vemberaudio.vst.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST\"><pkg-ref id=\"com.vemberaudio.vst.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST2.pkg</pkg-ref>"
 fi
 if [[ -d $VST3 ]]; then
 	VST3_PKG_REF='<pkg-ref id="com.vemberaudio.vst3.pkg"/>'
 	VST3_CHOICE='<line choice="com.vemberaudio.vst3.pkg"/>'
-	VST3_CHOICE_DEF="<choice id=\"com.vemberaudio.vst3.pkg\" visible=\"true\" title=\"Install VST3\"><pkg-ref id=\"com.vemberaudio.vst3.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST3.pkg</pkg-ref>"
+	VST3_CHOICE_DEF="<choice id=\"com.vemberaudio.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST3\"><pkg-ref id=\"com.vemberaudio.vst3.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST3.pkg</pkg-ref>"
 fi
 if [[ -d $AU ]]; then
 	AU_PKG_REF='<pkg-ref id="com.vemberaudio.au.pkg"/>'
 	AU_CHOICE='<line choice="com.vemberaudio.au.pkg"/>'
-	AU_CHOICE_DEF="<choice id=\"com.vemberaudio.au.pkg\" visible=\"true\" title=\"Install Audio Unit\"><pkg-ref id=\"com.vemberaudio.au.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.au.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_AU.pkg</pkg-ref>"
+	AU_CHOICE_DEF="<choice id=\"com.vemberaudio.au.pkg\" visible=\"true\" start_selected=\"true\" title=\"Audio Unit\"><pkg-ref id=\"com.vemberaudio.au.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.au.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_AU.pkg</pkg-ref>"
 fi
 
 cat > distribution.xml << XMLEND
@@ -89,7 +101,7 @@ cat > distribution.xml << XMLEND
     ${VST3_PKG_REF}
     ${AU_PKG_REF}
     <pkg-ref id="com.vemberaudio.resources.pkg"/>
-    <options require-scripts="false"/>
+    <options require-scripts="false" customize="always" />
     <choices-outline>
         ${VST2_CHOICE}
         ${VST3_CHOICE}
@@ -99,7 +111,7 @@ cat > distribution.xml << XMLEND
     ${VST2_CHOICE_DEF}
     ${VST3_CHOICE_DEF}
     ${AU_CHOICE_DEF}
-    <choice id="com.vemberaudio.resources.pkg" visible="false" title="Install resources">
+    <choice id="com.vemberaudio.resources.pkg" visible="true" enabled="false" selected="true" title="Install resources">
         <pkg-ref id="com.vemberaudio.resources.pkg"/>
     </choice>
     <pkg-ref id="com.vemberaudio.resources.pkg" version="${VERSION}" onConclusion="none">Surge_Resources.pkg</pkg-ref>
@@ -111,16 +123,16 @@ XMLEND
 if [[ ! -d installer ]]; then
 	mkdir installer
 fi
-productbuild --distribution distribution.xml --package-path "./" --resources Resources "installer/Install Surge $VERSION.pkg"
+productbuild --distribution distribution.xml --package-path "./" --resources Resources "installer/$OUTPUT_BASE_FILENAME.pkg"
 
 # create a DMG if required
 
 if [[ $2 == "--dmg" ]]; then
-	if [[ -f "Install_Surge_$VERSION.dmg" ]]; then
-		rm "Install_Surge_$VERSION.dmg"
+	if [[ -f "$OUTPUT_BASE_FILENAME.dmg" ]]; then
+		rm "$OUTPUT_BASE_FILENAME.dmg"
 	fi
-	hdiutil create /tmp/tmp.dmg -ov -volname "Install Surge $VERSION" -fs HFS+ -srcfolder "./installer/" 
-	hdiutil convert /tmp/tmp.dmg -format UDZO -o "Install_Surge_$VERSION.dmg"
+	hdiutil create /tmp/tmp.dmg -ov -volname "$OUTPUT_BASE_FILENAME" -fs HFS+ -srcfolder "./installer/"
+	hdiutil convert /tmp/tmp.dmg -format UDZO -o "$OUTPUT_BASE_FILENAME.dmg"
 fi
 
 # clean up
