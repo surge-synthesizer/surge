@@ -1,6 +1,14 @@
 #include "SurgeBitmaps.h"
 #include <map>
 
+#if MAC && TARGET_AUDIOUNIT // for now
+#define USE_SCALABLE_BITMAPS 1
+#endif
+
+#ifdef USE_SCALABLE_BITMAPS
+#include "CScalableBitmap.h"
+#endif
+
 std::map<int, VSTGUI::CBitmap*> bitmap_registry;
 
 static std::atomic_int refCount(0);
@@ -13,7 +21,7 @@ SurgeBitmaps::SurgeBitmaps()
       addEntry(IDB_BUTTON_ABOUT);
       addEntry(IDB_ABOUT);
       addEntry(IDB_FILTERBUTTONS);
-      addEntry(IDB_OSCSWITCH);
+      addEntry(IDB_OSCSWITCH); 
       addEntry(IDB_FILTERSUBTYPE);
       addEntry(IDB_RELATIVE_TOGGLE);
       addEntry(IDB_OSCSELECT);
@@ -72,7 +80,11 @@ void SurgeBitmaps::addEntry(int id)
 {
    assert(bitmap_registry.find(id) == bitmap_registry.end());
 
+#ifdef USE_SCALABLE_BITMAPS
+   VSTGUI::CBitmap *bitmap = new CScalableBitmap(CResourceDescription(id));
+#else
    VSTGUI::CBitmap* bitmap = new VSTGUI::CBitmap(CResourceDescription(id));
+#endif
    bitmap_registry[id] = bitmap;
 }
 

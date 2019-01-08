@@ -37,7 +37,9 @@ cp -R "$BUNDLE_RES_SRC_LOCATION" "$BUNDLE_DIR/Contents/Resources"
 if [[ -z "$SURGE_USE_VECTOR_SKIN" ]]; then
     cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
 else
-    rm "$BUNDLE_DIR/Contents/Resources/bmp?????.png"
+    rm "$BUNDLE_DIR/Contents/Resources/bmp*.png"
     cp $VECTOR_BITMAP_SRC_LOCATION/bmp?????.png "$BUNDLE_DIR/Contents/Resources/"
+    mkdir "$BUNDLE_DIR/Contents/Resources/scalable"
+    cp $VECTOR_BITMAP_SRC_LOCATION/*png "$BUNDLE_DIR/Contents/Resources/scalable"
 fi
 
