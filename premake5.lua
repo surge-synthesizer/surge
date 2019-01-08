@@ -439,6 +439,7 @@ elseif (os.istarget("windows")) then
 	}
 	
 	flags { "NoImportLib" }
+	targetextension ".vst3"
 
 elseif (os.istarget("linux")) then
 
