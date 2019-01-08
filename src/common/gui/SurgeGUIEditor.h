@@ -112,6 +112,7 @@ private:
    CControl* polydisp = nullptr;
    CControl* oscdisplay = nullptr;
    CControl* param[1024] = {};
+   CControl* nonmod_param[1024] = {}; 
    CControl* gui_modsrc[n_modsources] = {};
    CControl* metaparam[n_customcontrollers] = {};
    CControl* lfodisplay = nullptr;

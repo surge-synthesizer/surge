@@ -54,6 +54,14 @@ After which you can open the Visual Studio solution which has been generated.
 
 To build the installer, open the file `installer_win/surge.iss` using `Inno Setup`.
 
+As of Jan 2019, Microsoft is making free Windows 10 VM's available which contain their development tooling 
+and are capable of building Surge
+at [this Microsoft page](https://developer.microsoft.com/en-us/windows/downloads/virtual-machines).
+To setup, after starting the VM for the first time
+run visual studio installer, update, and then
+make sure the desktop C++ kit, including optional CLI support, Windows 8.1 SDK, and vc2015 toolset for desktop is installed. 
+Then proceed as above.
+
 # macOS
 
 ## Building a Surge.component (Audio Unit) with macOS
@@ -184,3 +192,4 @@ Some discussion at https://github.com/kurasu/surge/issues/19
 
   * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
   * The official IRC channel is #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
+  * Some folks are on the SurgeSynth slack [which you can join here](https://join.slack.com/t/surgeteamworkspace/shared_invite/enQtNTE3NDIyMDc2ODgzLTU1MzZmMWZlYjkwMjk4NDY4ZjI3NDliMTFhMTZiM2ZmNjgxNjYzNGI0NGMxNTk2ZWJjNzgyMDcxODc2ZjZmY2Q)

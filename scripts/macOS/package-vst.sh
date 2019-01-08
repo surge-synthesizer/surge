@@ -4,6 +4,7 @@
 RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst2"
 BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
+VECTOR_BITMAP_SRC_LOCATION="assets/classic-vector/exported"
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
 EXEC_LOCATION="target/vst2/Release/Surge.dylib"
 #EXEC_LOCATION="target/vst2/Debug/Surge-Debug.dylib"
@@ -32,4 +33,11 @@ cp $PACKAGE_SRC_LOCATION/* "$BUNDLE_DIR/Contents/"
 
 # copy bundle resources
 cp -R "$BUNDLE_RES_SRC_LOCATION" "$BUNDLE_DIR/Contents/Resources"
-cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
+
+if [[ -z "$SURGE_USE_VECTOR_SKIN" ]]; then
+    cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
+else
+    rm "$BUNDLE_DIR/Contents/Resources/bmp?????.png"
+    cp $VECTOR_BITMAP_SRC_LOCATION/bmp?????.png "$BUNDLE_DIR/Contents/Resources/"
+fi
+

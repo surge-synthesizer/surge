@@ -4,6 +4,7 @@
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
 #include <set>
+#include <numeric>
 #include <vt_dsp/vt_dsp_endian.h>
 #if MAC
 #include <cstdlib>
@@ -275,10 +276,40 @@ void SurgeStorage::refresh_patchlist()
    patch_list.clear();
 
    refreshPatchlistAddDir(false, "patches_factory");
-   patch_category_split[0] = patch_category.size();
+   firstThirdPartyCategory = patch_category.size();
    refreshPatchlistAddDir(false, "patches_3rdparty");
-   patch_category_split[1] = patch_category.size();
+   firstUserCategory = patch_category.size();
    refreshPatchlistAddDir(true, "");
+
+   patchOrdering = std::vector<int>(patch_list.size());
+   std::iota(patchOrdering.begin(), patchOrdering.end(), 0);
+
+   auto patchCompare =
+      [this](const int &i1, const int &i2) -> bool
+      {
+         return _stricmp(patch_list[i1].name.c_str(),
+                         patch_list[i2].name.c_str()) < 0;
+      };
+
+   std::sort(patchOrdering.begin(), patchOrdering.end(), patchCompare);
+
+   patchCategoryOrdering = std::vector<int>(patch_category.size());
+   std::iota(patchCategoryOrdering.begin(), patchCategoryOrdering.end(), 0);
+
+   auto categoryCompare =
+      [this](const int &i1, const int &i2) -> bool
+      {
+         return _stricmp(patch_category[i1].name.c_str(),
+                         patch_category[i2].name.c_str()) < 0;
+      };
+
+   int groups[4] = {0, firstThirdPartyCategory, firstUserCategory,
+                    (int)patch_category.size()};
+
+   for (int i = 0; i < 3; i++)
+      std::sort(std::next(patchCategoryOrdering.begin(), groups[i]),
+                std::next(patchCategoryOrdering.begin(), groups[i + 1]),
+                categoryCompare);
 }
 
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
@@ -304,7 +335,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 
          for (auto& f : fs::directory_iterator(p))
          {
-            if (f.path().extension() == ".fxp")
+            if (_stricmp(f.path().extension().generic_string().c_str(), ".fxp") == 0)
             {
                patchlist_entry e;
                e.category = category;
@@ -345,7 +376,7 @@ void SurgeStorage::refresh_wtlist()
 
          for (auto& f : fs::directory_iterator(p))
          {
-            if (f.path().extension() == ".wt")
+            if (_stricmp(f.path().extension().generic_string().c_str(), ".wt") == 0)
             {
                patchlist_entry e;
                e.category = category;
@@ -354,7 +385,7 @@ void SurgeStorage::refresh_wtlist()
                e.name = e.name.substr(0, e.name.size() - 3);
                wt_list.push_back(e);
             }
-            else if (f.path().extension() == ".wav")
+            else if (_stricmp(f.path().extension().generic_string().c_str(), ".wav") == 0)
             {
                patchlist_entry e;
                e.category = category;
@@ -373,7 +404,31 @@ void SurgeStorage::refresh_wtlist()
    {
       errorbox("File IO Error: Couldn't locate wavetables on disk!\n\nPlease reinstall..");
    }
-   //	sort(wt_list.begin(), wt_list.end()-1, PEComparer());
+
+   wtOrdering = std::vector<int>(wt_list.size());
+   std::iota(wtOrdering.begin(), wtOrdering.end(), 0);
+
+   auto wtCompare =
+      [this](const int &i1, const int &i2) -> bool
+      {
+         return _stricmp(wt_list[i1].name.c_str(),
+                         wt_list[i2].name.c_str()) < 0;
+      };
+
+   std::sort(wtOrdering.begin(), wtOrdering.end(), wtCompare);
+
+   wtCategoryOrdering = std::vector<int>(wt_category.size());
+   std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
+
+   auto categoryCompare =
+      [this](const int &i1, const int &i2) -> bool
+      {
+         return _stricmp(wt_category[i1].name.c_str(),
+                         wt_category[i2].name.c_str()) < 0;
+      };
+
+   std::sort(wtCategoryOrdering.begin(), wtCategoryOrdering.end(),
+             categoryCompare);
 }
 
 void SurgeStorage::perform_queued_wtloads()

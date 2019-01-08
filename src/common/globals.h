@@ -22,6 +22,15 @@
 
 using namespace std;
 
+#if MAC || __linux__
+#include <strings.h>
+
+static inline int _stricmp(const char *s1, const char *s2)
+{
+   return strcasecmp(s1, s2);
+}
+#endif
+
 const int namechars = 64;
 const int block_size = 32;
 const int osc_oversampling = 2;
