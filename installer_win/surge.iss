@@ -7,6 +7,10 @@
 #define MyAppVersion GetEnv('SURGE_VERSION')
 #define MyID "650E559A-2F44-44FE-861F-4108AE4BC30E"
 
+#if MyAppVersion == ""
+#define MyAppVersion "0.0.0"
+#endif
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
