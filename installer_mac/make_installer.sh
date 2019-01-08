@@ -25,36 +25,58 @@ fi
 
 # locations
 
-VST2="../products/Surge.vst"
-VST3="../products/Surge.vst3"
-AU="../products/Surge.component"
+PRODUCTS="../products/"
+
+VST2="Surge.vst"
+VST3="Surge.vst3"
+AU="Surge.component"
+
 RSRCS="../resources/data"
 
 OUTPUT_BASE_FILENAME="Surge-$VERSION-Setup"
 
+build_flavor()
+{
+    TMPDIR=installer/tmp-pkg
+    flavor=$1
+    flavorprod=$2
+    ident=$3
+    loc=$4
+
+    echo --- BUILDING Surge_${flavor}.pkg ---
+    
+    # In the past we would pkgbuild --analyze first to make a plist file, but we are perfectly fine with the
+    # defaults, so we skip that step here. http://thegreyblog.blogspot.com/2014/06/os-x-creating-packages-from-command_2.html
+    # was pretty handy in figuring that out and man pkgbuild convinced us to not do it, as did testing.
+    #
+    # The defaults only work if a component is a sole entry in a staging directory though, so synthesize that
+    # by moving the product to a tmp dir
+
+    mkdir $TMPDIR
+    mv $PRODUCTS/$flavorprod $TMPDIR
+
+    pkgbuild --root $TMPDIR --identifier $ident --version $VERSION --install-location $loc Surge_${flavor}.pkg || exit 1
+
+    mv $TMPDIR/${flavorprod} $PRODUCTS
+    rmdir $TMPDIR
+}
 
 # try to build VST2 package
 
-if [[ -d $VST2 ]]; then
-	pkgbuild --analyze --root "$VST2" Surge_VST2.plist
-	pkgbuild --root "$VST2" --component-plist Surge_VST2.plist --identifier "com.vemberaudio.vst2.pkg" --version $VERSION --install-location "/Library/Audio/Plug-Ins/VST/Surge.vst" Surge_VST2.pkg
-	rm Surge_VST2.plist
+if [[ -d $PRODUCTS/$VST2 ]]; then
+    build_flavor "VST2" $VST2 "com.vemberaudio.vst2.pkg" "/Library/Audio/Plug-Ins/VST"
 fi
 
 # try to build VST3 package
 
-if [[ -d $VST3 ]]; then
-	pkgbuild --analyze --root "$VST3" Surge_VST3.plist
-	pkgbuild --root "$VST3" --component-plist Surge_VST3.plist --identifier "com.vemberaudio.vst3.pkg" --version $VERSION --install-location "/Library/Audio/Plug-Ins/VST3/Surge.vst3" Surge_VST3.pkg
-	rm Surge_VST3.plist
+if [[ -d $PRODUCTS/$VST3 ]]; then
+    build_flavor "VST3" $VST3 "com.vemberaudio.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
 fi
 
 # try to build AU package
 
-if [[ -d $AU ]]; then
-	pkgbuild --analyze --root "$AU" Surge_AU.plist
-	pkgbuild --root "$AU" --component-plist Surge_AU.plist --identifier "com.vemberaudio.au.pkg" --version $VERSION --install-location "/Library/Audio/Plug-Ins/Components/Surge.component" Surge_AU.pkg
-	rm Surge_AU.plist
+if [[ -d $PRODUCTS/$AU ]]; then
+    build_flavor "AU" $AU "com.vemberaudio.au.pkg" "/Library/Audio/Plug-Ins/Components"
 fi
 
 # write build info to resources folder
@@ -76,17 +98,17 @@ rm "$RSRCS/BuildInfo.txt"
 
 # create distribution.xml
 
-if [[ -d $VST2 ]]; then
-	VST2_PKG_REF='<pkg-ref id="com.vemberaudio.vst.pkg"/>'
-	VST2_CHOICE='<line choice="com.vemberaudio.vst.pkg"/>'
-	VST2_CHOICE_DEF="<choice id=\"com.vemberaudio.vst.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST\"><pkg-ref id=\"com.vemberaudio.vst.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST2.pkg</pkg-ref>"
+if [[ -d $PRODUCTS/$VST2 ]]; then
+	VST2_PKG_REF='<pkg-ref id="com.vemberaudio.vst2.pkg"/>'
+	VST2_CHOICE='<line choice="com.vemberaudio.vst2.pkg"/>'
+	VST2_CHOICE_DEF="<choice id=\"com.vemberaudio.vst2.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST\"><pkg-ref id=\"com.vemberaudio.vst2.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst2.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST2.pkg</pkg-ref>"
 fi
-if [[ -d $VST3 ]]; then
+if [[ -d $PRODUCTS/$VST3 ]]; then
 	VST3_PKG_REF='<pkg-ref id="com.vemberaudio.vst3.pkg"/>'
 	VST3_CHOICE='<line choice="com.vemberaudio.vst3.pkg"/>'
 	VST3_CHOICE_DEF="<choice id=\"com.vemberaudio.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST3\"><pkg-ref id=\"com.vemberaudio.vst3.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST3.pkg</pkg-ref>"
 fi
-if [[ -d $AU ]]; then
+if [[ -d $PRODUCTS/$AU ]]; then
 	AU_PKG_REF='<pkg-ref id="com.vemberaudio.au.pkg"/>'
 	AU_CHOICE='<line choice="com.vemberaudio.au.pkg"/>'
 	AU_CHOICE_DEF="<choice id=\"com.vemberaudio.au.pkg\" visible=\"true\" start_selected=\"true\" title=\"Audio Unit\"><pkg-ref id=\"com.vemberaudio.au.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.au.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_AU.pkg</pkg-ref>"
@@ -95,7 +117,7 @@ fi
 cat > distribution.xml << XMLEND
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="1">
-    <title>Install Surge ${VERSION}</title>
+    <title>Surge ${VERSION}</title>
     <license file="License.txt" />
     ${VST2_PKG_REF}
     ${VST3_PKG_REF}
