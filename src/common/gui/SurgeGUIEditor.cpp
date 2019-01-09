@@ -213,7 +213,11 @@ void SurgeGUIEditor::idle()
 
       if (polydisp)
       {
-         ((CNumberField*)polydisp)->setPoly(synth->polydisplay);
+         CNumberField *cnpd = static_cast< CNumberField* >( polydisp );
+         int prior = cnpd->getPoly();
+         cnpd->setPoly( synth->polydisplay );
+         if( prior != synth->polydisplay )
+             cnpd->invalid();
       }
 
       if (queue_refresh || synth->refresh_editor)
