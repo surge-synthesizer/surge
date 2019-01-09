@@ -1,9 +1,7 @@
 #include "lipol.h"
 
-#if !PPC
 const __m128 two = _mm_set1_ps(2.f);
 const __m128 four = _mm_set1_ps(4.f);
-#endif
 
 lipol_ps::lipol_ps()
 {

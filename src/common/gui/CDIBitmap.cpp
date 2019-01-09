@@ -34,16 +34,6 @@ void CDIBitmap::draw(CDrawContext* context, CRect& rect, const CPoint& offset)
 CDIBitmap::~CDIBitmap()
 {}
 
-unsigned int RGB2BGR(unsigned int x)
-{
-#if MAC && !PPC
-   // return ((x&0xFF00) << 16) | (x&0xFF0000) | ((x&0xFF000000) >> 16) | (x&0xFF);
-   return ((x & 0xFF) << 16) | (x & 0xFF00) | ((x & 0xFF0000) >> 16) | (x & 0xFF000000);
-#else
-   return x;
-#endif
-}
-
 void CDIBitmap::clear(unsigned int color)
 {
    CRect r;

@@ -6,7 +6,7 @@
 #if !MAC && !__linux__
 #include <intrin.h>
 #endif
-#ifdef __linux__
+#if __linux__
 #include <stdint.h>
 #endif
 

@@ -17,9 +17,9 @@ using namespace std;
 #endif
 #include <tinyxml.h>
 
-#if __linux
+#if __linux__
 #include <experimental/filesystem>
-#elif __APPLE__
+#elif MAC
 #include <filesystem.h>
 #else
 #include <filesystem>

@@ -2,7 +2,7 @@
 
 #if MAC
 #include <CoreServices/CoreServices.h>
-#elif __linux
+#elif __linux__
 #else
 #include "windows.h"
 #endif

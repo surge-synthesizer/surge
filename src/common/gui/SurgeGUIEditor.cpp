@@ -34,7 +34,7 @@
 const int window_size_x = 904, window_size_y = 542;
 const int yofs = 10;
 
-#ifdef MAC
+#if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
 #else

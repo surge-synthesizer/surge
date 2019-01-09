@@ -1,6 +1,4 @@
-#if !PPC
 #include <emmintrin.h>
-#endif
 
 #include "globals.h"
 

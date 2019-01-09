@@ -5,9 +5,9 @@
 #include "DspUtilities.h"
 #include <time.h>
 #include <vt_dsp/vt_dsp_endian.h>
-#ifdef __linux__
+#if __linux__
 #include <experimental/filesystem>
-#elif __APPLE__
+#elif MAC
 #include <filesystem.h>
 #else
 #include <filesystem>
