@@ -172,6 +172,7 @@ public:
          setDirty(true);
       }
    }
+   int getPoly() { return i_poly; }
 
    void setIntMin(int value)
    {
