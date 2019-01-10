@@ -5,6 +5,7 @@ CSurgeVuMeter::CSurgeVuMeter(const CRect& size) : CControl(size, 0, 0, 0)
 {
    stereo = true;
    valueR = 0.0;
+   setMax( 2.0 ); // since this can clip values are above 1 sometimes
 }
 
 float scale(float x)
