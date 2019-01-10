@@ -52,7 +52,7 @@ build_flavor()
     # The defaults only work if a component is a sole entry in a staging directory though, so synthesize that
     # by moving the product to a tmp dir
 
-    mkdir $TMPDIR
+    mkdir -p $TMPDIR
     mv $PRODUCTS/$flavorprod $TMPDIR
 
     pkgbuild --root $TMPDIR --identifier $ident --version $VERSION --install-location $loc Surge_${flavor}.pkg || exit 1
