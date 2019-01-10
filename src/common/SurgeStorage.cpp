@@ -1,8 +1,9 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005-2006 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
-#include "SurgeStorage.h"
 #include "DspUtilities.h"
+#include "SurgeError.h"
+#include "SurgeStorage.h"
 #include <set>
 #include <numeric>
 #include <vt_dsp/vt_dsp_endian.h>
@@ -214,8 +215,7 @@ SurgeStorage::SurgeStorage()
       pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0, kCFUserNotificationStopAlertLevel,
                                       &nRes, dict);
 #elif __linux__
-      fprintf(stderr, "%s: Unable to load Surge configuration file \"%s\".\n",
-              __func__, snapshotmenupath.c_str());
+      throw SurgeError("configuration.xml was not found from " + snapshotmenupath);
 #else
       MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
                  "Configuration not found", MB_OK | MB_ICONERROR);
