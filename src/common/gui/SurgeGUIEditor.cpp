@@ -1582,6 +1582,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                for (int md = 1; md < n_total_md; md++)
                   synth->clearModulation(md, modsource);
                refresh_mod();
+
+               // Also blank out the name and rebuild the UI
+               synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+               synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+               ((CModulationSourceButton*)control)
+                   ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+
+               control->setDirty();
+               control->invalid();
+
+               synth->updateDisplay();
             }
             else if (command == id_learnctrl)
             {
