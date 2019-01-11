@@ -88,15 +88,21 @@ protected:
    int blockpos;
 
 public:
+   enum State {
+      UNINITIALIZED  = 0,
+      INITIALIZED    = 1,
+      DEAD           = 2,
+   };
+
    SurgeSynthesizer* _instance;
    VstEvent* _eventptr[MAX_EVENTS];
    char _eventbufferdata[EVENTBUFFER_SIZE];
-
    int events_this_block, events_processed;
-   bool initialized;
-   void init();
+   enum State state;
    char programName[32];
    bool plug_is_synth;
    int input_connected;
    FpuState _fpuState;
+
+   bool tryInit();
 };
