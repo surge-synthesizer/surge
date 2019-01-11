@@ -2356,4 +2356,9 @@ void SurgeGUIEditor::zoomInDir(int dir)
    zoom_callback(this);
 }
 
+long SurgeGUIEditor::applyParameterOffset(long id)
+{
+    return id-start_paramtags;
+}
+
 //------------------------------------------------------------------------------------------------

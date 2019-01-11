@@ -69,6 +69,9 @@ public:
    virtual VstInt32 getChunk(void** data, bool isPreset = false);
    virtual VstInt32 setChunk(void* data, VstInt32 byteSize, bool isPreset = false);
 
+   virtual bool beginEdit( VstInt32 index );
+   virtual bool endEdit( VstInt32 index );
+   
    virtual VstInt32 getNumMidiInputChannels()
    {
       return 3;
