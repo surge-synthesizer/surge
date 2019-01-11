@@ -1551,7 +1551,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                  currentSub->addEntry( cmd );
                  
              }
-             contextMenu->addEntry( midiSub, "Set Contoller To..." );
+             contextMenu->addEntry( midiSub, "Set Controller To..." );
              
          }
 
