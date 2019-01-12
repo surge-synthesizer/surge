@@ -1168,6 +1168,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
    patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
 
+   /*
+    * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac hosts.
+    * This leads to the odd behaviour when you click out of a box that in some hosts - Logic Pro for 
+    * instance - there is no looseFocus event and so the value doesn't update. We could fix that
+    * a variety of ways I imagine, but since we don't really mind the value being updated as we
+    * go, we can just set the editors to immediate and correct the problem.
+    *
+    * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan 2019.
+    */
+   patchName->setImmediateTextChange( true );
+   patchCategory->setImmediateTextChange( true );
+   patchCreator->setImmediateTextChange( true );
+   patchComment->setImmediateTextChange( true );
+   
    patchName->setBackColor(kWhiteCColor);
    patchCategory->setBackColor(kWhiteCColor);
    patchCreator->setBackColor(kWhiteCColor);
