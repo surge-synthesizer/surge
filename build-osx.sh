@@ -49,9 +49,15 @@ Options are:
 
 Environment variables are:
 
-   VST2SDK_DIR=path            If this points at a valid VST2 SDK, VST2 assets will be built
-   BREWBUILD=TRUE              Uses LLVM clang rather than xcode. If you are XCode < 9.4 you will need this
-   SURGE_USE_VECTOR_SKIN=True  Uses the new vector skins in assets/classic-vector in built asset.
+   VST2SDK_DIR=path             If this points at a valid VST2 SDK, VST2 assets will be built
+   BREWBUILD=TRUE               Uses LLVM clang rather than xcode. If you are XCode < 9.4 you will need this
+   SURGE_USE_VECTOR_SKIN={skin} Uses the new vector skins in assets/classic-vector in built asset.
+
+      For SURGE_USE_VECTOR_SKIN you need to give the name of a subdirectory in assets. For instance
+
+            SURGE_USE_VECTOR_SKIN=original-vector ./build-osx.sh --build-validate-au
+
+      will use the 'original-vector' skin and locally build an AU
 
 EOHELP
 }
@@ -77,6 +83,16 @@ prerequisite_check()
         echo ${RED}ERROR: You do not have premake5 on your path${NC}
         echo
         echo Please download and install premake from https://premake.github.io per the Surge README.md
+        echo
+        exit 1
+    fi
+
+    if [[ ( ! -z $SURGE_USE_VECTOR_SKIN ) && ( ! -d assets/${SURGE_USE_VECTOR_SKIN}/exported ) ]]; then
+        echo
+        echo ${RED}SURGE_USE_VECTOR_SKIN does not point to assets${NC}
+        echo
+        echo SURGE_USE_VECTOR_SKIN should be the name of an asset sub-dir which contains the directory
+        echo exported. Example values are 'original-vector' or 'classic-vector'
         echo
         exit 1
     fi
