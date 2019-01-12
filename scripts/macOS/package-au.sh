@@ -4,7 +4,7 @@
 RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-au"
 BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
-VECTOR_BITMAP_SRC_LOCATION="assets/classic-vector/exported"
+VECTOR_BITMAP_SRC_LOCATION="assets/${SURGE_USE_VECTOR_SKIN}/exported"
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
 EXEC_LOCATION="target/au/Release/Surge.dylib"
 #EXEC_LOCATION="target/au/Debug/Surge-Debug.dylib"
