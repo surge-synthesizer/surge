@@ -25,8 +25,8 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
     {
         auto postfix = scaleFilePostfixes[sc];
 
-        char filename [PATH_MAX];
-        sprintf (filename, "scalable/bmp%05d%s.png", id, postfix.c_str());
+        char filename [1024];
+        snprintf (filename, 1024, "scalable/bmp%05d%s.png", id, postfix.c_str());
             
         CBitmap *tmp = new CBitmap(CResourceDescription( filename ));
 
