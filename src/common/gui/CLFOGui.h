@@ -67,7 +67,7 @@ public:
              255);
          unsigned int a = 0xff;
 
-#if MAC && !PPC
+#if MAC
           // MAC uses a different raw pixel byte order than windows
           coltable[ i ] = ( b << 8 ) | ( g << 16 ) | ( r << 24 ) | a;
 #else

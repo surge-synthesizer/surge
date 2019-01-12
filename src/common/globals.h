@@ -12,11 +12,9 @@
 #if MAC
 #include "vt_dsp/macspecific.h"
 #endif
-#if !PPC
 #include <xmmintrin.h>
-#endif
 
-#ifdef __linux__
+#if __linux__
 #include <immintrin.h>
 #endif
 
@@ -30,6 +28,9 @@ static inline int _stricmp(const char *s1, const char *s2)
    return strcasecmp(s1, s2);
 }
 #endif
+
+#define _SURGE_STR(x) #x
+#define SURGE_STR(x) _SURGE_STR(x)
 
 const int namechars = 64;
 const int block_size = 32;

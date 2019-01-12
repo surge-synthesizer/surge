@@ -34,7 +34,7 @@
 const int window_size_x = 904, window_size_y = 542;
 const int yofs = 10;
 
-#ifdef MAC
+#if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
 #else
@@ -213,7 +213,11 @@ void SurgeGUIEditor::idle()
 
       if (polydisp)
       {
-         ((CNumberField*)polydisp)->setPoly(synth->polydisplay);
+         CNumberField *cnpd = static_cast< CNumberField* >( polydisp );
+         int prior = cnpd->getPoly();
+         cnpd->setPoly( synth->polydisplay );
+         if( prior != synth->polydisplay )
+             cnpd->invalid();
       }
 
       if (queue_refresh || synth->refresh_editor)
@@ -1164,6 +1168,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
    patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
 
+   /*
+    * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac hosts.
+    * This leads to the odd behaviour when you click out of a box that in some hosts - Logic Pro for 
+    * instance - there is no looseFocus event and so the value doesn't update. We could fix that
+    * a variety of ways I imagine, but since we don't really mind the value being updated as we
+    * go, we can just set the editors to immediate and correct the problem.
+    *
+    * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan 2019.
+    */
+   patchName->setImmediateTextChange( true );
+   patchCategory->setImmediateTextChange( true );
+   patchCreator->setImmediateTextChange( true );
+   patchComment->setImmediateTextChange( true );
+   
    patchName->setBackColor(kWhiteCColor);
    patchCategory->setBackColor(kWhiteCColor);
    patchCreator->setBackColor(kWhiteCColor);
@@ -1547,7 +1565,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                  currentSub->addEntry( cmd );
                  
              }
-             contextMenu->addEntry( midiSub, "Set Contoller To..." );
+             contextMenu->addEntry( midiSub, "Set Controller To..." );
              
          }
 
@@ -1578,6 +1596,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                for (int md = 1; md < n_total_md; md++)
                   synth->clearModulation(md, modsource);
                refresh_mod();
+
+               // Also blank out the name and rebuild the UI
+               synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+               synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+               ((CModulationSourceButton*)control)
+                   ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+
+               control->setDirty();
+               control->invalid();
+
+               synth->updateDisplay();
             }
             else if (command == id_learnctrl)
             {

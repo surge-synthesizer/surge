@@ -5,9 +5,9 @@
 #include "DspUtilities.h"
 #include <time.h>
 #include <vt_dsp/vt_dsp_endian.h>
-#ifdef __linux__
+#if __linux__
 #include <experimental/filesystem>
-#elif __APPLE__
+#elif MAC
 #include <filesystem.h>
 #else
 #include <filesystem>
@@ -183,14 +183,14 @@ bool askIfShouldOverwrite()
    CFOptionFlags responseFlags;
    CFUserNotificationDisplayAlert(0, kCFUserNotificationPlainAlertLevel, 0, 0, 0,
                                   CFSTR("Overwrite?"),
-                                  CFSTR("The file already exist, do you wish to overwrite it?"),
+                                  CFSTR("The file already exists, do you wish to overwrite it?"),
                                   CFSTR("Yes"), CFSTR("No"), 0, &responseFlags);
    if ((responseFlags & 0x3) != kCFUserNotificationDefaultResponse)
       return false;
 #elif __linux__
    printf("Implement me\n");
 #else
-   if (MessageBox(::GetActiveWindow(), "The file already exist, do you wish to overwrite it?",
+   if (MessageBox(::GetActiveWindow(), "The file already exists, do you wish to overwrite it?",
                   "Overwrite?", MB_YESNO | MB_ICONQUESTION) != IDYES)
       return false;
 #endif

@@ -11,6 +11,7 @@
 struct QuadFilterChainState;
 
 #include <list>
+#include <atomic>
 using namespace std;
 
 const int max_voices = 64;
@@ -138,7 +139,7 @@ public:
    void prepareModsourceDoProcess(int scenemask);
    unsigned int saveRaw(void** data) override;
    // synth -> editor variables
-   int polydisplay;
+   std::atomic<int> polydisplay; // updated in audio thread, read from ui, so have assignments be atomic
    bool refresh_editor, patch_loaded;
    int learn_param, learn_custom;
    int refresh_ctrl_queue[8];

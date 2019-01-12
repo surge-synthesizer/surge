@@ -15,7 +15,7 @@ void CocoaUtils::miniedit_text_impl( char *c, int maxchars )
         [msg addButtonWithTitle:@"OK"];
         [msg addButtonWithTitle:@"Cancel"];
         
-        [msg setMessageText:@"Please Provide the Value"];
+        [msg setMessageText:@"Please provide the value"];
         
         NSTextField *txt = [[NSTextField alloc] init];
         [txt setFrame: NSMakeRect(0, 0, 200, 24 )];
@@ -27,6 +27,7 @@ void CocoaUtils::miniedit_text_impl( char *c, int maxchars )
         
         if (response == NSAlertFirstButtonReturn) {
             strncpy( c, [[txt stringValue] UTF8String], maxchars );
+            c[maxchars - 1] = 0;
         }
     }
 }

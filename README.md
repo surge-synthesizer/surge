@@ -35,7 +35,7 @@ Prerequisites
 
 * [Git](https://git-scm.com/downloads)
 * [Premake 5](https://premake.github.io/download.html#v5) for generating project files
-* [Visual Studio 2017](https://visualstudio.microsoft.com/downloads/)
+* [Visual Studio 15.5 (at least)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
 To build with Windows, run
@@ -192,3 +192,4 @@ Some discussion at https://github.com/kurasu/surge/issues/19
 
   * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
   * The official IRC channel is #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
+  * Some folks are on the SurgeSynth slack [which you can join here](https://join.slack.com/t/surgeteamworkspace/shared_invite/enQtNTE3NDIyMDc2ODgzLTU1MzZmMWZlYjkwMjk4NDY4ZjI3NDliMTFhMTZiM2ZmNjgxNjYzNGI0NGMxNTk2ZWJjNzgyMDcxODc2ZjZmY2Q)

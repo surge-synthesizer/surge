@@ -4,8 +4,12 @@
 #define MyAppPublisher "Vember Audio"
 #define MyAppURL "http://www.vemberaudio.se"
 #define MyAppName "Surge"
-#define MyAppVersion "1.6.0b4"
+#define MyAppVersion GetEnv('SURGE_VERSION')
 #define MyID "650E559A-2F44-44FE-861F-4108AE4BC30E"
+
+#if MyAppVersion == ""
+#define MyAppVersion "0.0.0"
+#endif
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -38,7 +42,7 @@ Name: VST3; Description: VST3 Plug-in (64 bit); Types: full compact custom; Flag
 
 [Files]
 Source: ..\target\vst2\Release\Surge.dll; DestDir: {app}; Components: VST2; Flags: ignoreversion
-Source: ..\target\vst3\Release\Surge.dll; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
+Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
 Source: ..\resources\data\*; DestDir: {localappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 
 [Languages]

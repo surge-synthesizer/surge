@@ -10,7 +10,8 @@ VSTGUI = "vst3sdk/vstgui4/vstgui/";
 
 defines
 {
-	"VSTGUI_ENABLE_DEPRECATED_METHODS=0"
+    "VSTGUI_ENABLE_DEPRECATED_METHODS=0",
+    "SURGE_VERSION=" .. string.gsub(io.readfile("VERSION"), "\n$", "")
 }
 
 floatingpoint "Fast"
@@ -103,7 +104,7 @@ elseif (os.istarget("windows")) then
 	nuget { "libpng-msvc-x64:1.6.33.8807" }
 
 	characterset "MBCS"
-	buildoptions { "/MP" }
+	buildoptions { "/MP /Zc:alignedNew" }
 
 	includedirs {
 		"libs/wtl"
@@ -327,6 +328,10 @@ if VST24SDK then
 		VST24SDK,
 	}
 
+	sysincludedirs {
+		VST24SDK,
+	}
+
 	configuration { "Debug" }
 	targetdir "target/vst2/Debug"
 	targetsuffix "-Debug"
@@ -435,6 +440,7 @@ elseif (os.istarget("windows")) then
 	}
 	
 	flags { "NoImportLib" }
+	targetextension ".vst3"
 
 elseif (os.istarget("linux")) then
 

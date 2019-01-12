@@ -17,9 +17,9 @@ using namespace std;
 #endif
 #include <tinyxml.h>
 
-#if __linux
+#if __linux__
 #include <experimental/filesystem>
-#elif __APPLE__
+#elif MAC
 #include <filesystem.h>
 #else
 #include <filesystem>
@@ -504,10 +504,20 @@ public:
 
    void errorbox(string message);
 
-   vector<patchlist_category> patch_category, wt_category;
+   // The in-memory patch database.
+   std::vector<patchlist_entry> patch_list;
+   std::vector<patchlist_category> patch_category;
    int firstThirdPartyCategory;
    int firstUserCategory;
-   vector<patchlist_entry> patch_list, wt_list;
+   std::vector<int> patchOrdering;
+   std::vector<int> patchCategoryOrdering;
+
+   // The in-memory wavetable database.
+   std::vector<patchlist_entry> wt_list;
+   std::vector<patchlist_category> wt_category;
+   std::vector<int> wtOrdering;
+   std::vector<int> wtCategoryOrdering;
+
    string wtpath;
    string datapath;
    string userDataPath;
