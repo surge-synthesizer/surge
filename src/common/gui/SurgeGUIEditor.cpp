@@ -2220,7 +2220,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
 void SurgeGUIEditor::beginEdit(long index)
 {
-#if !AU
    if (index < start_paramtags)
    {
       return;
@@ -2232,14 +2231,12 @@ void SurgeGUIEditor::beginEdit(long index)
    {
       super::beginEdit(externalparam);
    }
-#endif
 }
 
 //------------------------------------------------------------------------------------------------
 
 void SurgeGUIEditor::endEdit(long index)
 {
-#if !AU
    if (index < start_paramtags)
    {
       return;
@@ -2251,14 +2248,13 @@ void SurgeGUIEditor::endEdit(long index)
    {
       super::endEdit(externalparam);
    }
-#endif
 }
 
 //------------------------------------------------------------------------------------------------
 
 void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
 {
-#if AU
+#if TARGET_AUDIOUNIT
    long tag = control->getTag();
    int ptag = tag - start_paramtags;
    if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
@@ -2266,7 +2262,7 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
       int externalparam = synth->remapInternalToExternalApiId(ptag);
       if (externalparam >= 0)
       {
-         ((aulayer*)synth->parent)->ParameterBeginEdit(externalparam);
+          synth->getParent()->ParameterBeginEdit(externalparam);
       }
    }
 #endif
@@ -2276,7 +2272,7 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
 
 void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
 {
-#if AU
+#if TARGET_AUDIOUNIT
    long tag = control->getTag();
    int ptag = tag - start_paramtags;
    if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
@@ -2284,7 +2280,7 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
       int externalparam = synth->remapInternalToExternalApiId(ptag);
       if (externalparam >= 0)
       {
-         ((aulayer*)synth->parent)->ParameterEndEdit(externalparam);
+         synth->getParent()->ParameterEndEdit(externalparam);
       }
    }
 #endif
