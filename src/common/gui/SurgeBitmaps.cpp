@@ -1,7 +1,7 @@
 #include "SurgeBitmaps.h"
 #include <map>
 
-#if MAC && TARGET_AUDIOUNIT // for now
+#if MAC  
 #define USE_SCALABLE_BITMAPS 1
 #endif
 
