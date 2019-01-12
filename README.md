@@ -17,7 +17,7 @@ The codebase was migrated from before an unfinished 1.6 release, which improves 
 
 Surge currently builds with Windows and macOS (AudioUnit,VST2), and getting it to build on Linux again should be doable with some effort.
 
-[Releases available here](https://github.com/kurasu/surge/releases) - this page currently has Windows builds only.
+[Releases available here](https://kzantow.github.io/surge/) - this page currently has 64-bit Windows (VST,VST3), 64-bit macOS (VST,VST3,AU) builds.
 
 ## Preparation
 
