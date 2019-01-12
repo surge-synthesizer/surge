@@ -27,6 +27,7 @@ void CocoaUtils::miniedit_text_impl( char *c, int maxchars )
         
         if (response == NSAlertFirstButtonReturn) {
             strncpy( c, [[txt stringValue] UTF8String], maxchars );
+            c[maxchars - 1] = 0;
         }
     }
 }
