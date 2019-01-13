@@ -46,6 +46,9 @@ namespace std::experimental::filesystem {
     
     path path::extension() {
         auto idx = this->p.find_last_of(".");
+        if( idx == std::string::npos )
+            return path( "" );
+
         path res(p.substr(idx));
         return res;
     }

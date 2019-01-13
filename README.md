@@ -64,119 +64,105 @@ Then proceed as above.
 
 # macOS
 
-## Building a Surge.component (Audio Unit) with macOS
+## Build Pre-requisites
 
 This process expects that you have both `Xcode` and `Xcode Command Line Utilities` installed.
 
-Install `premake5` by downloading it from  https://premake.github.io. Unzip the package.
-
-Launch the Terminal in the folder where `premake5` has been unzipped into and copy it to `/usr/local/bin`.
+Install `premake5` by downloading it from  https://premake.github.io. Unzip the package. Install it
+in /usr/local/bin or elsewhere in your path.
 
 ```
 cp premake5 /usr/local/bin
 ```
- 
-Clone the Surge repo to a path of your choice.
+
+Clone the Surge repo to a path of your choice, and init submodules
 
 ```
 git clone https://github.com/kurasu/surge.git
-```
-
-Enter the Surge folder and use the following command to grab all the submodules referenced by Surge.
-
-```
+cd surge
 git submodule update --init --recursive
 ```
 
-Execute the Surge build script.
+
+
+## Building with build-osx.sh
+
+`build-osx.sh` has all the commands you need to build, test, locally install, validate, and package Surge on mac.
+It's what the primary mac developers use day to day. The simplest approach is to build everything
 
 ```
 ./build-osx.sh
 ```
 
-If you see any issues with `Xcode-Select`, or you get told that you are missing the `Command Line Utilities`, grab them. The error itself should list the commands required.
+this command will build, but not install, the VST3 and AU components. It has a variety of options which
+are documented in the `./build-osx.sh --help` screen but a few key ones are:
+
+* `./build-osx.sh --build-validate-au` will build the audio unit, correctly install it locally in `~/Library`
+and run au-val on it. Running any of the installing options of `./build-osx` will install assets on your
+system. If you are not comfortable removing an audio unit by hand and the like, please exercise caution.
+
+* `./build-osx.sh --build-and-install` will build all assets and install them locally
+
+* `./build-osx.sh --clean-all` will clean your work area of all assets
+
+* `./build-osx.sh --clean-and-package` will do a complete clean, thena complete build, then build
+a mac installer package which will be deposited in products.
+
+`./build-osx.sh` is also impacted by a couple of environment variables.
+
+* `VST2SDK_DIR` points to a vst2sdk. If this is set vst2 will build. If you set it after having
+done a run without vst2, you will need to `./build-osx.sh --clean-all` to pick up vst2 consistently
+
+* `BREWBUILD=TRUE` will use homebrew clang. If XCode refuses to build immediately with `error: invalid value 'c++17' in '-std=c++17'` 
+and you do not want to upgrade XCode to a more recent version, use [homebrew](https://brew.sh/) to install llvm and set this variable.
+ 
+
+## Using xcode
+
+`premake xcode4` builds xcode assets so if you would rather just use xcode, you can open the solutions created after running premake yourself
+or having `./build-osx.sh` run it.
 
 After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which will take a while.
 
 All of the three projects (`surge-vst3`, `surge-vst2`, `surge-au`) will recommend you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
 
-At this point you can build an Audio Unit, and it will link and pass validation.
+XCode will result in built assets in `products/` but will not install them and will not install the ancilliary assets. To do that you can either `./build-osx.sh --install-local` or
+`./build-osx.sh --package` and run the resulting pkg file to install in `/Library`.
 
-To try the Audio Unit you will need to install and validate it. If you don't know how to disable and revalidate audio units, be 
-a bit cautious here. You can slightly mess things up. To make it easy there's a build-osx option which will do it for you.
+## Using the built assets
 
-```
-./build-osx.sh --build-validate-au
-```
+Once you have underaken the install options above, the AU and VSTs should just work. Launch your favorite host, get it to load the plugin, and have fun!
 
-This will update the build date, run a build, and if the build works, remove the version of surge in `/Library/Audio/Plug-ins`, replacing it with the latest AudioUnit. 
-After that, the script will run `auvaltool` to make sure that the Audio Unit is properly installed.
-You should be able to see the build date and time on `stderr` in the `auval` output.
-
-Tips on how to develop and debug using this are in [this issue](https://github.com/kurasu/surge/issues/58).
-
-You have successfully built and installed the AU if you see:
-
-```
---------------------------------------------------
-AU VALIDATION SUCCEEDED.
---------------------------------------------------
-```
-
-To use the AU in Logic, Mainstage, GarageBand, and so on, you need to do one more one-time step which is to invalidate your AU cache so that you force Logic to rescan. The easiest way to do this is to move the AudioUnitCache away from it's location by typing in:
+To use the AU in Logic, Mainstage, GarageBand, and so on, you need to do one more one-time step which is to invalidate your AU cache so that you force 
+Logic to rescan. The easiest way to do this is to move the AudioUnitCache away from it's location by typing in:
 
 ```
 mv ~/Library/Caches/AudioUnitCache ~/Desktop
 ```
 
-After this, launch Logic. If everything works and starts up again, you can delete the cache from your desktop. If this doesn't succeed, you can always put it back again.
+then restart Logic and rescan. If the rescan succeeds you can remove the cache from `~/Desktop`.
 
-## Building a Surge.vst (VST2) with macOS
-
-If you want to build VST2 versions of the plug-in, set the environment variable VST2SDK_DIR to the location of the SDK prior to building.
-
-An example of setting the environment variable `VST2SDK_DIR` would be:
-
-```export VST2SDK_DIR=~/programming/VST_SDK_2.4```
-
-***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
-
-## Building a Surge.vst3 (VST3) with macOS
-
-Surge VST3 builds cleanly from the xcode project and results in a `Surge.vst3` asset deposited in the `product` directory.
-
-## Building with an XCode that doesn't support C++17
-
-If XCode refuses to build immediately with `error: invalid value 'c++17' in '-std=c++17'` then you can install Homebrew llvm to solve the problem.
-
-Use [homebrew](https://brew.sh/) to install llvm
-
-```brew install llvm```
-
-and set environment variable `BREWBUILD` to "true", eg:
-
-```export BREWBUILD="true"```
-
-***NOTE***: This environment variable needs to be set _before_ running `premake5 xcode4` - which generates projects / and is part of the `build-osx.sh` script.
-
-## Building macOS installer package
-
-After successfully building one or more plugins, from the command line:
+Finally, the mac devs can't recomment [hosting au](http://ju-x.com/hostingau.html) highly enough for development. Open it once, open surge, and save that
+configuration to your desktop. You will quickly find that
 
 ```
-cd installer_osx
-./make_installer.sh <version number>
+./build-osx.sh --build-validate-au && /Applications/Hosting\ AU.app/Contents/MacOS/Hosting\ AU ~/Desktop/Surge.hosting 
 ```
 
-`<version number>` can be something like `1.0.0` or `1.0.6b4`.  The installer package will include whichever plugins are available, the resulting `.pkg` will be at `installer_osx/installer/Install Surge <version>.pkg`
+is a super fast way to do a build and pop up Surge with stdout and stderr attached to your terminal.
 
-If you wish to also create a `.dmg` of the installer bundle, add `--dmg` to the the `make_installer.sh` command, eg:
+
+## Packaging an installer
+
+`./build-osx.sh --package` will create a `.pkg` file with a reasonable name. If you would like to use an alternate version number, though, the packaging script is in `installer_mac`.
 
 ```
-./make_installer.sh 1.0.7 --dmg
+cd installer_mac
+./make_installer.sh myPeculiarVersion
+mv installer/Surge-myPeculiar-Version-Setup.pkg wherever-youwant
 ```
 
-the resulting `Install_Surge_<version>.dmg` can be found in `installer_osx`.
+is an available option.
 
 # Linux
 
