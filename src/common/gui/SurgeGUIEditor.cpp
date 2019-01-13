@@ -1334,6 +1334,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    }
    long tag = control->getTag();
 
+   int firstEIDForFirstClear = -1;
+   std::vector< std::string > clearControlTargetNames;
+   
    if (button & kDoubleClick)
       button |= kControl;
 
@@ -1489,8 +1492,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                        synth->storage.getPatch().param_ptr[md]->get_full_name(),
                        synth->getModDepth(md, modsource));
                clear_md[md] = eid;
-               contextMenu->addEntry(tmptxt, eid++);
+               if (firstEIDForFirstClear < 0)
+                   firstEIDForFirstClear = eid;
+               clearControlTargetNames.push_back(synth->storage.getPatch().param_ptr[md]->get_name());
 
+               contextMenu->addEntry(tmptxt, eid++);
                n_md++;
             }
          }
@@ -1598,15 +1604,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                refresh_mod();
 
                // Also blank out the name and rebuild the UI
-               synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
-               synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
-               ((CModulationSourceButton*)control)
-                   ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+               if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
+               {
+                   synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+                   synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+                   ((CModulationSourceButton*)control)
+                       ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                   control->setDirty();
+                   control->invalid();
 
-               control->setDirty();
-               control->invalid();
-
-               synth->updateDisplay();
+                   synth->updateDisplay();
+               }
             }
             else if (command == id_learnctrl)
             {
@@ -1658,10 +1666,47 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
             for (int md = 0; md < n_total_md; md++)
             {
+               /* In the case where you have modulations like "Attack", "Pitch" and "Release" the default name
+                  of the modulation will be "Attack". So if you clear "Attack" you and you haven't renamed
+                  you want to change the name to "Pitch". But you have to do quite a bit of work to recreate what
+                  the next parameter short name is and comapre it in the same way it is done. So that's
+                  what this splat of code does.
+               */
                if (clear_md[md] == command)
                {
+                  bool resetName = false; // Should I reset the name?
+                  std::string newName = ""; // And to what?
+
+                  if (clear_md[md]==firstEIDForFirstClear)
+                  {
+                      if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
+                                  clearControlTargetNames[0].c_str(),
+                                  15) == 0 )
+                      {
+                          // So my modulator is named after my short name. I haven't been renamed. So I want to
+                          // reset at least to "-" unless someone is after me
+                          resetName = true;
+                          newName = "-";
+                          if (clearControlTargetNames.size() > 1)
+                              newName = clearControlTargetNames[1];
+                      }
+                  }
+
                   synth->clearModulation(md, modsource);
                   refresh_mod();
+                  
+                  if (resetName)
+                  {
+                     // And this is where we apply the name refresh, of course.
+                     strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], newName.c_str(), 15);
+                     synth->storage.getPatch().CustomControllerLabel[ccid][ 15 ] = 0;
+                     ((CModulationSourceButton*)control)
+                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                     control->setDirty();
+                     control->invalid();
+                     synth->updateDisplay();
+                  }
+                  
                }
             }
          }
