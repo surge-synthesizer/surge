@@ -90,9 +90,7 @@ echo "Commit: $(git rev-parse HEAD)" >> "$RSRCS/BuildInfo.txt"
 
 # build resources package
 
-pkgbuild --analyze --root "$RSRCS" Surge_Resources.plist
-pkgbuild --root "$RSRCS" --component-plist Surge_Resources.plist --identifier "com.vemberaudio.resources.pkg" --version $VERSION --scripts ResourcesPackageScript --install-location "/tmp/Surge" Surge_Resources.pkg
-rm Surge_Resources.plist
+pkgbuild --root "$RSRCS" --identifier "com.vemberaudio.resources.pkg" --version $VERSION --scripts ResourcesPackageScript --install-location "/tmp/Surge" Surge_Resources.pkg
 
 # remove build info from resource folder
 

@@ -37,6 +37,10 @@ Commands are:
         --build-and-install      Build and install the assets
         --build-validate-au      Build and install the audio unit then validate it
 
+        --package                Creates a .pkg file from current built state in products
+        --clean-and-package      Cleans everything; runs all the builds; makes an installer; drops it in products
+                                 Equivalent of running --clean-all then --build then --package
+
         --clean                  Clean all the builds
         --clean-all              Clean all the builds and remove the xcode files and target directories
 
@@ -231,6 +235,25 @@ run_uninstall_surge()
     sudo rm -rf ~/Library/Application\ Support/Surge
 }
 
+run_package()
+{
+    pkgver=`cat VERSION`beta-`(date +%Y-%m-%d-%H%M)`
+    echo "Building with version [${pkgver}]"
+    cd installer_mac/
+    ./make_installer.sh ${pkgver}
+    cd ..
+
+    mv installer_mac/installer/*${pkgver}*.pkg products/
+
+    echo
+    echo "Package completed and in products/ directory"
+    echo
+    ls -l products/*${pkgver}*.pkg
+    echo
+    echo "Have a lovely day!"
+    echo
+}
+
 # This is the main section of the script
 command="$1"
 
@@ -271,6 +294,14 @@ case $command in
         ;;
     --clean-all)
         run_clean_all
+        ;;
+    --clean-and-package)
+        run_clean_all
+        run_all_builds
+        run_package
+        ;;
+    --package)
+        run_package
         ;;
     --uninstall-surge)
         run_uninstall_surge
