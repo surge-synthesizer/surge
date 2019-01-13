@@ -422,16 +422,16 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
       toggle_mod_editing();
       return 1;
    case VKEY_LEFT:
-      synth->incrementPatch(-1, 0);
+      synth->incrementCategory(false);
       return 1;
    case VKEY_RIGHT:
-      synth->incrementPatch(1, 0);
+      synth->incrementCategory(true);
       return 1;
    case VKEY_UP:
-      synth->incrementPatch(0, -1);
+      synth->incrementPatch(false);
       return 1;
    case VKEY_DOWN:
-      synth->incrementPatch(0, 1);
+      synth->incrementPatch(true);
       return 1;
    }
    return -1;
@@ -2024,18 +2024,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    case tag_mp_category:
    {
       if (control->getValue() > 0.5f)
-         synth->incrementPatch(1, 0);
+         synth->incrementCategory(true);
       else
-         synth->incrementPatch(-1, 0);
+         synth->incrementCategory(false);
       return;
    }
    break;
    case tag_mp_patch:
    {
       if (control->getValue() > 0.5f)
-         synth->incrementPatch(0, 1);
+         synth->incrementPatch(true);
       else
-         synth->incrementPatch(0, -1);
+         synth->incrementPatch(false);
       return;
    }
    break;

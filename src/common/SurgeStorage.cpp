@@ -278,6 +278,9 @@ void SurgeStorage::refresh_patchlist()
    patchCategoryOrdering = std::vector<int>(patch_category.size());
    std::iota(patchCategoryOrdering.begin(), patchCategoryOrdering.end(), 0);
 
+   for (int i = 0; i < patch_list.size(); i++)
+      patch_list[patchOrdering[i]].order = i;
+
    auto categoryCompare =
       [this](const int &i1, const int &i2) -> bool
       {
@@ -292,6 +295,9 @@ void SurgeStorage::refresh_patchlist()
       std::sort(std::next(patchCategoryOrdering.begin(), groups[i]),
                 std::next(patchCategoryOrdering.begin(), groups[i + 1]),
                 categoryCompare);
+
+   for (int i = 0; i < patch_category.size(); i++)
+      patch_category[patchCategoryOrdering[i]].order = i;
 }
 
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
