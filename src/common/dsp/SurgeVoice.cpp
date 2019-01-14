@@ -171,10 +171,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
 SurgeVoice::~SurgeVoice()
 {
    for (int i = 0; i < n_oscs; i++)
-   {
-      osc[i]->~Oscillator();
-      _aligned_free(osc[i]);
-   }
+      delete osc[i];
    // for(int i=0; i<6; i++) delete lfo[i];
    delete modsources[ms_velocity];
    delete modsources[ms_keytrack];
@@ -220,7 +217,7 @@ void SurgeVoice::switch_toggled()
    {
       if (osctype[i] != scene->osc[i].type.val.i)
       {
-         _aligned_free(osc[i]);
+         delete osc[i];
          osc[i] = spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy);
          if (osc[i])
             osc[i]->init(state.pitch);

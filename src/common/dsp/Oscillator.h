@@ -3,11 +3,15 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-class Oscillator
+class alignas(16) Oscillator
 {
 public:
-   float output alignas(16)[block_size_os],
-         outputR alignas(16)[block_size_os];
+   // The data blocks processed by the SIMD instructions (e.g. SSE2), which must
+   // always be before any other variables in the class, in order to be properly
+   // aligned to 16 bytes.
+   float output alignas(16)[block_size_os];
+   float outputR alignas(16)[block_size_os];
+
    Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual ~Oscillator();
    virtual void init(float pitch, bool is_display = false){};
