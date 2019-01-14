@@ -42,51 +42,61 @@ struct fxChunkSetCustom
    // char chunk[8]; // variable
 };
 
-void SurgeSynthesizer::incrementPatch(int category, int patch)
+void SurgeSynthesizer::incrementPatch(bool nextPrev)
 {
-   if (category)
-   {
-      int n = storage.patch_category.size();
-      if (!n)
-         return;
-      current_category_id += category;
-      if (current_category_id >= n)
-         current_category_id = 0;
-      else if (current_category_id < 0)
-         current_category_id = n - 1;
-      n = storage.patch_list.size();
-      for (int i = 0; i < n; i++)
-      {
-         if (storage.patch_list[i].category ==
-             current_category_id) // find the first patch within the new category
-         {
-            // load_patch(i);
-            patchid_queue = i;
-            processThreadunsafeOperations();
-            return;
-         }
-      }
-   }
-   else
-   {
-      // load_patch(patchid + patch);
-      patchid_queue = patchid + patch;
-      if (patchid_queue < 0)
-         patchid_queue = storage.patch_list.size() - 1;
-      processThreadunsafeOperations();
+   int n = storage.patch_list.size();
+   if (!n)
       return;
+
+   int order = storage.patch_list[patchid].order;
+   int category = storage.patch_list[patchid].category;
+
+   if (nextPrev) {
+      do {
+         order = (order == (n - 1)) ? 0 : order + 1;
+      } while (storage.patch_list[storage.patchOrdering[order]].category !=
+               category);
+   } else {
+      do {
+         order = (order == 0) ? n - 1 : order - 1;
+      } while (storage.patch_list[storage.patchOrdering[order]].category !=
+               category);
+   }
+
+   patchid_queue = storage.patchOrdering[order];
+   processThreadunsafeOperations();
+   return;
+}
+
+void SurgeSynthesizer::incrementCategory(bool nextPrev)
+{
+   int n = storage.patch_category.size();
+   if (!n)
+      return;
+
+   int order = storage.patch_category[current_category_id].order;
+   if (nextPrev)
+      order = (order == (n - 1)) ? 0 : order + 1;
+   else
+      order = (order == 0) ? n - 1 : order - 1;
+
+   current_category_id = storage.patchCategoryOrdering[order];
+
+   // Find the first patch within the category.
+   for (auto p : storage.patchOrdering)
+   {
+      if (storage.patch_list[p].category == current_category_id)
+      {
+         patchid_queue = p;
+         processThreadunsafeOperations();
+         return;
+      }
    }
 }
 
 void SurgeSynthesizer::loadPatch(int id)
 {
-   if (id < 0)
-      id = storage.patch_list.size() - 1;
-   else if (id >= storage.patch_list.size())
-      id = 0;
    patchid = id;
-   if (id >= storage.patch_list.size())
-      return;
    patchlist_entry e = storage.patch_list[id];
 
    FILE* f = fopen(e.path.generic_string().c_str(), "rb");

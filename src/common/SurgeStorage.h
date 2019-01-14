@@ -440,12 +440,14 @@ struct patchlist_entry
    string name;
    fs::path path;
    int category;
+   int order;
    bool fav;
 };
 
 struct patchlist_category
 {
    string name;
+   int order;
 };
 
 enum sub3_copysource

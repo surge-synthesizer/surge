@@ -129,7 +129,8 @@ public:
    //	unsigned int getParameterFlags (long index);
    void loadRaw(const void* data, int size, bool preset = false) override;
    void loadPatch(int id);
-   void incrementPatch(int category, int patch);
+   void incrementPatch(bool nextPrev);
+   void incrementCategory(bool nextPrev);
 
    string getUserPatchDirectory();
    string getLegacyUserPatchDirectory();
