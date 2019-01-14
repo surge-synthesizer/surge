@@ -5,6 +5,7 @@
 #include "Vst2PluginInstance.h"
 #include "SurgeSynthesizer.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeError.h"
 //#include "sub3_editor2.h"
 #include <float.h>
 #include "public.sdk/source/vst2.x/aeffeditor.h"
@@ -72,7 +73,7 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
 
    strcpy(programName, "Default"); // default program name
 
-   initialized = false;
+   state = UNINITIALIZED;
    // NULL objects
    _instance = NULL;
    events_this_block = 0;
@@ -139,7 +140,7 @@ Vst2PluginInstance::vendorSpecific(VstInt32 lArg1, VstInt32 lArg2, void* ptrArg,
 
 void Vst2PluginInstance::suspend()
 {
-   if (initialized)
+   if (state == INITIALIZED)
    {
       _instance->allNotesOff();
       _instance->audio_processing_active = false;
@@ -148,47 +149,17 @@ void Vst2PluginInstance::suspend()
 
 VstInt32 Vst2PluginInstance::stopProcess()
 {
-   if (initialized)
+   if (state == INITIALIZED)
       _instance->allNotesOff();
    return 1;
-}
-void Vst2PluginInstance::init()
-{
-   char host[256], product[256];
-
-   getHostVendorString(host);
-   getHostProductString(product);
-   VstInt32 hostversion = getHostVendorVersion();
-
-   SurgeSynthesizer* synth = (SurgeSynthesizer*)_aligned_malloc(sizeof(SurgeSynthesizer), 16);
-   if (!synth)
-   {
-      // out of memory
-#if WIN32
-      MessageBox(::GetActiveWindow(), "Could not allocate memory.", "Out of memory",
-                 MB_OK | MB_ICONERROR);
-#endif
-
-      return;
-   }
-   new (synth) SurgeSynthesizer(this);
-   _instance = (SurgeSynthesizer*)synth;
-
-   _instance->setSamplerate(this->getSampleRate());
-   editor = new SurgeGUIEditor(this, _instance);
-
-   blockpos = 0;
-   initialized = true;
-   // numPrograms = ((sub3_synth*)plugin_instance)->storage.patch_list.size();
 }
 
 void Vst2PluginInstance::open()
 {
-   if (!initialized)
-   {
-      init();
-      updateDisplay();
-   }
+   if (!tryInit())
+      return;
+
+   updateDisplay();
 }
 
 void Vst2PluginInstance::close()
@@ -238,7 +209,7 @@ VstInt32 Vst2PluginInstance::canDo(char* text)
 
 VstInt32 Vst2PluginInstance::processEvents(VstEvents* ev)
 {
-   if (initialized)
+   if (state == INITIALIZED)
    {
       events_this_block = min<int>((int)(ev->numEvents), MAX_EVENTS);
       events_processed = 0;
@@ -269,7 +240,7 @@ VstInt32 Vst2PluginInstance::processEvents(VstEvents* ev)
 
 void Vst2PluginInstance::handleEvent(VstEvent* ev)
 {
-   if (!initialized)
+   if (state != INITIALIZED)
       return;
 
    if (ev->type == kVstMidiType)
@@ -334,8 +305,8 @@ void Vst2PluginInstance::getProgramName(char* name)
 
 void Vst2PluginInstance::setParameter(VstInt32 index, float value)
 {
-   if (!initialized)
-      init();
+   if (!tryInit())
+      return;
 
    _instance->setParameter01(_instance->remapExternalApiToInternalId(index), value, true);
 
@@ -349,22 +320,25 @@ void Vst2PluginInstance::setParameter(VstInt32 index, float value)
 
 float Vst2PluginInstance::getParameter(VstInt32 index)
 {
-   if (!initialized)
-      init();
+   if (!tryInit())
+      return 0;
+
    return _instance->getParameter01(_instance->remapExternalApiToInternalId(index));
 }
 
 void Vst2PluginInstance::getParameterName(VstInt32 index, char* label)
 {
-   if (!initialized)
-      init();
+   if (!tryInit())
+      return;
+
    _instance->getParameterName(_instance->remapExternalApiToInternalId(index), label);
 }
 
 void Vst2PluginInstance::getParameterDisplay(VstInt32 index, char* text)
 {
-   if (!initialized)
-      init();
+   if (!tryInit())
+      return;
+
    _instance->getParameterDisplay(_instance->remapExternalApiToInternalId(index), text);
 }
 
@@ -394,7 +368,7 @@ bool Vst2PluginInstance::getVendorString(char* text)
 template <bool replacing>
 void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 sampleFrames)
 {
-   if (!initialized)
+   if (!tryInit())
       return;
 
    _fpuState.set();
@@ -524,8 +498,8 @@ void Vst2PluginInstance::setSampleRate(float sampleRate)
 const int dummydata = 'OMED';
 VstInt32 Vst2PluginInstance::getChunk(void** data, bool isPreset)
 {
-   if (!initialized)
-      init();
+   if (!tryInit())
+      return 0;
 
    return _instance->saveRaw(data);
    //#endif
@@ -533,8 +507,8 @@ VstInt32 Vst2PluginInstance::getChunk(void** data, bool isPreset)
 
 VstInt32 Vst2PluginInstance::setChunk(void* data, VstInt32 byteSize, bool isPreset)
 {
-   if (!initialized)
-      init();
+   if (!tryInit())
+      return 0;
 
    if (byteSize <= 4)
       return 0;
@@ -544,8 +518,6 @@ VstInt32 Vst2PluginInstance::setChunk(void* data, VstInt32 byteSize, bool isPres
    return 1;
 }
 
-
-
 bool Vst2PluginInstance::beginEdit( VstInt32 index )
 {
     return AudioEffectX::beginEdit( ((SurgeGUIEditor *)editor)->applyParameterOffset( _instance->remapExternalApiToInternalId(index ) ) );
@@ -554,4 +526,47 @@ bool Vst2PluginInstance::beginEdit( VstInt32 index )
 bool Vst2PluginInstance::endEdit( VstInt32 index )
 {
     return AudioEffectX::endEdit( ((SurgeGUIEditor *)editor)->applyParameterOffset( _instance->remapExternalApiToInternalId(index)));
+}
+
+bool Vst2PluginInstance::tryInit()
+{
+   char host[256], product[256];
+
+   if (state == DEAD)
+      return false;
+
+   if (state == INITIALIZED)
+      return true;
+
+   getHostVendorString(host);
+   getHostProductString(product);
+   VstInt32 hostversion = getHostVendorVersion();
+
+   SurgeSynthesizer* synth = (SurgeSynthesizer*)_aligned_malloc(sizeof(SurgeSynthesizer), 16);
+   if (!synth)
+   {
+#if WIN32
+      MessageBox(::GetActiveWindow(), "Could not allocate memory.", "Out of memory",
+                 MB_OK | MB_ICONERROR);
+#endif
+      state = DEAD;
+      return false;
+   }
+
+   try {
+      new (synth) SurgeSynthesizer(this);
+   } catch (SurgeError err) {
+      std::cerr << err.getMessage() << std::endl;
+      _aligned_free(synth);
+      state = DEAD;
+      return false;
+   }
+   _instance = (SurgeSynthesizer*)synth;
+
+   _instance->setSamplerate(this->getSampleRate());
+   editor = new SurgeGUIEditor(this, _instance);
+
+   blockpos = 0;
+   state = INITIALIZED;
+   return true;
 }
