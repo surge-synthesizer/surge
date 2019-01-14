@@ -45,6 +45,8 @@ public:
    virtual void beginEdit(long index);
    virtual void endEdit(long index);
 
+   virtual long applyParameterOffset(long index);
+   
 #if !TARGET_VST3
    bool open(void* parent) override;
 #else
