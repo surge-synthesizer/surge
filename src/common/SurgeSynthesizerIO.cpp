@@ -192,15 +192,15 @@ bool askIfShouldOverwrite()
 #if MAC
    CFOptionFlags responseFlags;
    CFUserNotificationDisplayAlert(0, kCFUserNotificationPlainAlertLevel, 0, 0, 0,
-                                  CFSTR("Overwrite?"),
-                                  CFSTR("The file already exists, do you wish to overwrite it?"),
+                                  CFSTR("Overwrite a patch with the same name?"),
+                                  CFSTR("A patch by this name already exists, do you wish to overwrite it?"),
                                   CFSTR("Yes"), CFSTR("No"), 0, &responseFlags);
    if ((responseFlags & 0x3) != kCFUserNotificationDefaultResponse)
       return false;
 #elif __linux__
    printf("Implement me\n");
 #else
-   if (MessageBox(::GetActiveWindow(), "The file already exists, do you wish to overwrite it?",
+   if (MessageBox(::GetActiveWindow(), "A patch by this name already exists, do you wish to overwrite it?",
                   "Overwrite?", MB_YESNO | MB_ICONQUESTION) != IDYES)
       return false;
 #endif
