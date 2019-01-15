@@ -246,7 +246,7 @@ SurgePatch& SurgeStorage::getPatch()
 
 struct PEComparer
 {
-   bool operator()(const patchlist_entry& a, const patchlist_entry& b)
+   bool operator()(const Patch& a, const Patch& b)
    {
       return a.name.compare(b.name) < 0;
    }
@@ -317,7 +317,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
    {
       if (fs::is_directory(p))
       {
-         patchlist_category c;
+         PatchCategory c;
          c.name = p.path().filename().generic_string();
          patch_category.push_back(c);
 
@@ -325,7 +325,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
          {
             if (_stricmp(f.path().extension().generic_string().c_str(), ".fxp") == 0)
             {
-               patchlist_entry e;
+               Patch e;
                e.category = category;
                e.path = f.path();
                e.name = f.path().filename().generic_string();
@@ -358,7 +358,7 @@ void SurgeStorage::refresh_wtlist()
    {
       if (fs::is_directory(p))
       {
-         patchlist_category c;
+         PatchCategory c;
          c.name = p.path().filename().generic_string();
          wt_category.push_back(c);
 
@@ -366,7 +366,7 @@ void SurgeStorage::refresh_wtlist()
          {
             if (_stricmp(f.path().extension().generic_string().c_str(), ".wt") == 0)
             {
-               patchlist_entry e;
+               Patch e;
                e.category = category;
                e.path = f.path();
                e.name = f.path().filename().generic_string();
@@ -375,7 +375,7 @@ void SurgeStorage::refresh_wtlist()
             }
             else if (_stricmp(f.path().extension().generic_string().c_str(), ".wav") == 0)
             {
-               patchlist_entry e;
+               Patch e;
                e.category = category;
                e.path = f.path();
                e.name = f.path().filename().generic_string();
