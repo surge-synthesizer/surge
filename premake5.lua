@@ -136,7 +136,6 @@ function plugincommon()
 	files {
 		"src/common/**.cpp",
 		"src/common/**.h",
-		"bitmaps/**.png",
 		"libs/xml/tinyxml.cpp",
 		"libs/xml/tinyxmlerror.cpp",
 		"libs/xml/tinyxmlparser.cpp",
