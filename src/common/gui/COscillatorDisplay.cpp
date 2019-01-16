@@ -239,19 +239,14 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
    }
    else if (uses_wavetabledata(oscdata->type.val.i))
    {
-      int diff = 0;
-      if (rprev.pointInside(where))
-      {
-         diff = -1;
-      }
-      else if (rnext.pointInside(where))
-      {
-         diff = 1;
-      }
-      if (diff)
-      {
-         oscdata->wt.queue_id =
-             (oscdata->wt.current_id + diff + storage->wt_list.size()) % storage->wt_list.size();
+      if (rprev.pointInside(where)) {
+         int id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
+         if (id >= 0)
+            oscdata->wt.queue_id = id;
+      } else if (rnext.pointInside(where)) {
+         int id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
+         if (id >= 0)
+            oscdata->wt.queue_id = id;
       }
       else if (rmenu.pointInside(where))
       {

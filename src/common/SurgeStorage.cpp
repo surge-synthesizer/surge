@@ -246,7 +246,7 @@ SurgePatch& SurgeStorage::getPatch()
 
 struct PEComparer
 {
-   bool operator()(const patchlist_entry& a, const patchlist_entry& b)
+   bool operator()(const Patch& a, const Patch& b)
    {
       return a.name.compare(b.name) < 0;
    }
@@ -317,7 +317,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
    {
       if (fs::is_directory(p))
       {
-         patchlist_category c;
+         PatchCategory c;
          c.name = p.path().filename().generic_string();
          patch_category.push_back(c);
 
@@ -325,7 +325,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
          {
             if (_stricmp(f.path().extension().generic_string().c_str(), ".fxp") == 0)
             {
-               patchlist_entry e;
+               Patch e;
                e.category = category;
                e.path = f.path();
                e.name = f.path().filename().generic_string();
@@ -358,7 +358,7 @@ void SurgeStorage::refresh_wtlist()
    {
       if (fs::is_directory(p))
       {
-         patchlist_category c;
+         PatchCategory c;
          c.name = p.path().filename().generic_string();
          wt_category.push_back(c);
 
@@ -366,7 +366,7 @@ void SurgeStorage::refresh_wtlist()
          {
             if (_stricmp(f.path().extension().generic_string().c_str(), ".wt") == 0)
             {
-               patchlist_entry e;
+               Patch e;
                e.category = category;
                e.path = f.path();
                e.name = f.path().filename().generic_string();
@@ -375,7 +375,7 @@ void SurgeStorage::refresh_wtlist()
             }
             else if (_stricmp(f.path().extension().generic_string().c_str(), ".wav") == 0)
             {
-               patchlist_entry e;
+               Patch e;
                e.category = category;
                e.path = f.path();
                e.name = f.path().filename().generic_string();
@@ -393,18 +393,6 @@ void SurgeStorage::refresh_wtlist()
       errorbox("File IO Error: Couldn't locate wavetables on disk!\n\nPlease reinstall..");
    }
 
-   wtOrdering = std::vector<int>(wt_list.size());
-   std::iota(wtOrdering.begin(), wtOrdering.end(), 0);
-
-   auto wtCompare =
-      [this](const int &i1, const int &i2) -> bool
-      {
-         return _stricmp(wt_list[i1].name.c_str(),
-                         wt_list[i2].name.c_str()) < 0;
-      };
-
-   std::sort(wtOrdering.begin(), wtOrdering.end(), wtCompare);
-
    wtCategoryOrdering = std::vector<int>(wt_category.size());
    std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
 
@@ -417,6 +405,35 @@ void SurgeStorage::refresh_wtlist()
 
    std::sort(wtCategoryOrdering.begin(), wtCategoryOrdering.end(),
              categoryCompare);
+
+   for (int i = 0; i < wt_category.size(); i++)
+      wt_category[wtCategoryOrdering[i]].order = i;
+
+   wtOrdering = std::vector<int>();
+
+   auto wtCompare =
+      [this](const int &i1, const int &i2) -> bool
+      {
+         return _stricmp(wt_list[i1].name.c_str(),
+                         wt_list[i2].name.c_str()) < 0;
+      };
+
+   // Sort wavetables per category in the category order.
+   for (auto c : wtCategoryOrdering) {
+      int start = wtOrdering.size();
+
+      for (int i = 0; i < wt_list.size(); i++)
+         if (wt_list[i].category == c)
+            wtOrdering.push_back(i);
+
+      int end = wtOrdering.size();
+
+      std::sort(std::next(wtOrdering.begin(), start),
+                std::next(wtOrdering.begin(), end), wtCompare);
+   }
+
+   for (int i = 0; i < wt_list.size(); i++)
+      wt_list[wtOrdering[i]].order = i;
 }
 
 void SurgeStorage::perform_queued_wtloads()
@@ -514,6 +531,22 @@ void SurgeStorage::errorbox(string message)
 #elif MAC
    // TODO add error dialog
 #endif
+}
+
+int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev)
+{
+   int n = wt_list.size();
+   if (!n)
+      return -1;
+
+   int order = wt_list[id].order;
+
+   if (nextPrev)
+      order = (order == (n - 1)) ? 0 : order + 1;
+   else
+      order = (order == 0) ? n - 1 : order - 1;
+
+   return wtOrdering[order];
 }
 
 void SurgeStorage::clipboard_copy(int type, int scene, int entry)

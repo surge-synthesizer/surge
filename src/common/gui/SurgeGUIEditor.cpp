@@ -2385,7 +2385,7 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
 }
 
 bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
-                                          vector<patchlist_category>* patch_category,
+                                          std::vector<PatchCategory>* patch_category,
                                           int startcategory)
 {
    saveDialog->setVisible(true);

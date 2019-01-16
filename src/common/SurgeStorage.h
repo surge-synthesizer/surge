@@ -435,7 +435,7 @@ public:
    char CustomControllerLabel[n_customcontrollers][16];
 };
 
-struct patchlist_entry
+struct Patch
 {
    string name;
    fs::path path;
@@ -444,7 +444,7 @@ struct patchlist_entry
    bool fav;
 };
 
-struct patchlist_category
+struct PatchCategory
 {
    string name;
    int order;
@@ -506,17 +506,19 @@ public:
 
    void errorbox(string message);
 
+   int getAdjacentWaveTable(int id, bool nextPrev);
+
    // The in-memory patch database.
-   std::vector<patchlist_entry> patch_list;
-   std::vector<patchlist_category> patch_category;
+   std::vector<Patch> patch_list;
+   std::vector<PatchCategory> patch_category;
    int firstThirdPartyCategory;
    int firstUserCategory;
    std::vector<int> patchOrdering;
    std::vector<int> patchCategoryOrdering;
 
    // The in-memory wavetable database.
-   std::vector<patchlist_entry> wt_list;
-   std::vector<patchlist_category> wt_category;
+   std::vector<Patch> wt_list;
+   std::vector<PatchCategory> wt_category;
    std::vector<int> wtOrdering;
    std::vector<int> wtCategoryOrdering;
 

@@ -88,7 +88,7 @@ private:
    void draw_infowindow(int ptag, CControl* control, bool modulate, bool forceMB = false);
 
    bool showPatchStoreDialog(patchdata* p,
-                             vector<patchlist_category>* patch_category,
+                             std::vector<PatchCategory>* patch_category,
                              int startcategory);
 
    
