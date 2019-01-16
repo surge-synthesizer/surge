@@ -1,19 +1,110 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
+# Surge synth build script
 # https://aka.ms/yaml
 
 trigger:
 - master
+- releases/*
 
-pool:
-  vmImage: 'Ubuntu-16.04'
+pr:
+- master
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+jobs:
+- job: Build
+  strategy:
+    matrix:
+      mac:
+        imageName: 'macos-10.13'
+        isMac: true
+      windows:
+        imageName: 'vs2017-win2016'
+        isWindows: true
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  pool:
+    vmImage: $(imageName)
+
+  steps:
+  - checkout: self
+    fetchDepth: 1
+    # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
+
+  - bash: |
+      # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
+      git submodule update --init --recursive
+
+      export SURGE_VERSION=$(cat VERSION)
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
+    displayName: Submodule init
+
+  - bash: |
+      pushd $AGENT_TEMPDIRECTORY
+      export PREMAKE_MAC=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-macosx.tar.gz
+      curl -L $PREMAKE_MAC --output premake5.tar.gz
+      tar zxvf premake5.tar.gz
+      popd
+
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      ./build-osx.sh --build --verbose
+      ls -alFh target
+      ls -alFh products
+    condition: variables.isMac
+    displayName: Build macOS releases
+
+  - task: NuGetToolInstaller@0
+    condition: variables.isWindows
+    displayName: NuGet
+
+  - bash: |
+      pushd $AGENT_TEMPDIRECTORY
+      export PREMAKE_WINDOWS=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip
+      curl -L $PREMAKE_WINDOWS --output premake5.zip
+      unzip premake5.zip
+      popd
+
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      premake5 vs2017
+      ls -alFh
+
+      # need this because MSBuild.restoreNugetPackages: true fails
+      nuget restore .
+    condition: variables.isWindows
+    displayName: Setup Windows Project
+
+  - task: MSBuild@1
+    inputs:
+      solution: 'buildtask.xml'
+      maximumCpuCount: true
+      # restoreNugetPackages: true
+    condition: variables.isWindows
+    displayName: Build Windows
+
+  - bash: |
+      nuget install chocolatey
+      choco install innosetup version=5.6.1 -y
+      iscc installer_win/surge.iss
+    condition: variables.isWindows
+    displayName: Make Windows installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_WIN_EXE'
+      targetPath: 'installer_win/Output'
+    condition: variables.isWindows
+    displayName: Publish Windows installer
+
+  - bash: |
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      pushd installer_mac
+      ./make_installer.sh "" --dmg
+      rm *.pkg
+      popd
+    condition: variables.isMac
+    displayName: Make macOS installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_MAC_DMG'
+      targetPath: 'installer_mac'
+    condition: variables.isMac
+    displayName: Publish macOS DMG
+
