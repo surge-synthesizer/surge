@@ -41,7 +41,7 @@ Name: VST2; Description: VST2 Plug-in (64 bit); Types: full custom; Flags: check
 Name: VST3; Description: VST3 Plug-in (64 bit); Types: full compact custom; Flags: checkablealone
 
 [Files]
-Source: ..\target\vst2\Release\Surge.dll; DestDir: {app}; Components: VST2; Flags: ignoreversion
+Source: ..\target\vst2\Release\Surge.dll; DestDir: {app}; Components: VST2; Flags: ignoreversion skipifsourcedoesntexist
 Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
 Source: ..\resources\data\*; DestDir: {localappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 
