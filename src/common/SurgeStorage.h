@@ -506,6 +506,8 @@ public:
 
    void errorbox(string message);
 
+   int getAdjacentWaveTable(int id, bool nextPrev);
+
    // The in-memory patch database.
    std::vector<Patch> patch_list;
    std::vector<PatchCategory> patch_category;
