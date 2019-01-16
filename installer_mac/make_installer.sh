@@ -35,9 +35,11 @@ RSRCS="../resources/data"
 
 OUTPUT_BASE_FILENAME="Surge-$VERSION-Setup"
 
+TARGET_DIR="installer";
+
 build_flavor()
 {
-    TMPDIR=installer/tmp-pkg
+    TMPDIR=${TARGET_DIR}/tmp-pkg
     flavor=$1
     flavorprod=$2
     ident=$3
@@ -88,9 +90,7 @@ echo "Commit: $(git rev-parse HEAD)" >> "$RSRCS/BuildInfo.txt"
 
 # build resources package
 
-pkgbuild --analyze --root "$RSRCS" Surge_Resources.plist
-pkgbuild --root "$RSRCS" --component-plist Surge_Resources.plist --identifier "com.vemberaudio.resources.pkg" --version $VERSION --scripts ResourcesPackageScript --install-location "/tmp/Surge" Surge_Resources.pkg
-rm Surge_Resources.plist
+pkgbuild --root "$RSRCS" --identifier "com.vemberaudio.resources.pkg" --version $VERSION --scripts ResourcesPackageScript --install-location "/tmp/Surge" Surge_Resources.pkg
 
 # remove build info from resource folder
 
@@ -142,19 +142,19 @@ XMLEND
 
 # build installation bundle
 
-if [[ ! -d installer ]]; then
-	mkdir installer
+if [[ ! -d ${TARGET_DIR} ]]; then
+	mkdir ${TARGET_DIR}
 fi
-productbuild --distribution distribution.xml --package-path "./" --resources Resources "installer/$OUTPUT_BASE_FILENAME.pkg"
+productbuild --distribution distribution.xml --package-path "./" --resources Resources "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.pkg"
 
 # create a DMG if required
 
 if [[ $2 == "--dmg" ]]; then
-	if [[ -f "$OUTPUT_BASE_FILENAME.dmg" ]]; then
-		rm "$OUTPUT_BASE_FILENAME.dmg"
+	if [[ -f "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg" ]]; then
+		rm "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
 	fi
-	hdiutil create /tmp/tmp.dmg -ov -volname "$OUTPUT_BASE_FILENAME" -fs HFS+ -srcfolder "./installer/"
-	hdiutil convert /tmp/tmp.dmg -format UDZO -o "$OUTPUT_BASE_FILENAME.dmg"
+	hdiutil create /tmp/tmp.dmg -ov -volname "$OUTPUT_BASE_FILENAME" -fs HFS+ -srcfolder "./${TARGET_DIR}/"
+	hdiutil convert /tmp/tmp.dmg -format UDZO -o "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
 fi
 
 # clean up

@@ -131,7 +131,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
             cdisurf->setPixel(x, y, coltable[min((unsigned int)255, (column[y] >> aa_bs))]);
          }
       }
-      _aligned_free(osc);
+      delete osc;
       // srand( (unsigned)time( NULL ) );
    }
    cdisurf->commit();

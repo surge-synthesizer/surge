@@ -705,7 +705,7 @@ void SurgePatch::update_controls(bool init,
             t_osc->init_ctrltypes();
             if (init || (init_osc == &sc.osc[osc]))
                t_osc->init_default_values();
-            _aligned_free(t_osc);
+            delete t_osc;
          }
       }
    }

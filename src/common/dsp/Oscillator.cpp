@@ -11,38 +11,22 @@ spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata*
    switch (osctype)
    {
    case ot_classic:
-      osc = (Oscillator*)_aligned_malloc(sizeof(SurgeSuperOscillator), 16);
-      new (osc) SurgeSuperOscillator(storage, oscdata, localcopy);
-      break;
+      return new SurgeSuperOscillator(storage, oscdata, localcopy);
+   case ot_wavetable:
+      return new WavetableOscillator(storage, oscdata, localcopy);
+   case ot_WT2:
+      return new WindowOscillator(storage, oscdata, localcopy);
+   case ot_shnoise:
+      return new SampleAndHoldOscillator(storage, oscdata, localcopy);
+   case ot_audioinput:
+      return new osc_audioinput(storage, oscdata, localcopy);
+   case ot_FM:
+      return new FMOscillator(storage, oscdata, localcopy);
+   case ot_FM2:
+      return new FM2Oscillator(storage, oscdata, localcopy);
    case ot_sinus:
    default:
-      osc = (Oscillator*)_aligned_malloc(sizeof(osc_sine), 16);
-      new (osc) osc_sine(storage, oscdata, localcopy);
-      break;
-   case ot_wavetable:
-      osc = (Oscillator*)_aligned_malloc(sizeof(WavetableOscillator), 16);
-      new (osc) WavetableOscillator(storage, oscdata, localcopy);
-      break;
-   case ot_WT2:
-      osc = (Oscillator*)_aligned_malloc(sizeof(WindowOscillator), 16);
-      new (osc) WindowOscillator(storage, oscdata, localcopy);
-      break;
-   case ot_shnoise:
-      osc = (Oscillator*)_aligned_malloc(sizeof(SampleAndHoldOscillator), 16);
-      new (osc) SampleAndHoldOscillator(storage, oscdata, localcopy);
-      break;
-   case ot_audioinput:
-      osc = (Oscillator*)_aligned_malloc(sizeof(osc_audioinput), 16);
-      new (osc) osc_audioinput(storage, oscdata, localcopy);
-      break;
-   case ot_FM:
-      osc = (Oscillator*)_aligned_malloc(sizeof(FMOscillator), 16);
-      new (osc) FMOscillator(storage, oscdata, localcopy);
-      break;
-   case ot_FM2:
-      osc = (Oscillator*)_aligned_malloc(sizeof(FM2Oscillator), 16);
-      new (osc) FM2Oscillator(storage, oscdata, localcopy);
-      break;
+      return new osc_sine(storage, oscdata, localcopy);
    }
    return osc;
 }

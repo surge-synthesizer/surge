@@ -69,6 +69,9 @@ public:
    virtual VstInt32 getChunk(void** data, bool isPreset = false);
    virtual VstInt32 setChunk(void* data, VstInt32 byteSize, bool isPreset = false);
 
+   virtual bool beginEdit( VstInt32 index );
+   virtual bool endEdit( VstInt32 index );
+   
    virtual VstInt32 getNumMidiInputChannels()
    {
       return 3;
@@ -85,15 +88,21 @@ protected:
    int blockpos;
 
 public:
+   enum State {
+      UNINITIALIZED  = 0,
+      INITIALIZED    = 1,
+      DEAD           = 2,
+   };
+
    SurgeSynthesizer* _instance;
    VstEvent* _eventptr[MAX_EVENTS];
    char _eventbufferdata[EVENTBUFFER_SIZE];
-
    int events_this_block, events_processed;
-   bool initialized;
-   void init();
+   enum State state;
    char programName[32];
    bool plug_is_synth;
    int input_connected;
    FpuState _fpuState;
+
+   bool tryInit();
 };

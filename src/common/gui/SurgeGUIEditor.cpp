@@ -422,16 +422,16 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
       toggle_mod_editing();
       return 1;
    case VKEY_LEFT:
-      synth->incrementPatch(-1, 0);
+      synth->incrementCategory(false);
       return 1;
    case VKEY_RIGHT:
-      synth->incrementPatch(1, 0);
+      synth->incrementCategory(true);
       return 1;
    case VKEY_UP:
-      synth->incrementPatch(0, -1);
+      synth->incrementPatch(false);
       return 1;
    case VKEY_DOWN:
-      synth->incrementPatch(0, 1);
+      synth->incrementPatch(true);
       return 1;
    }
    return -1;
@@ -1168,6 +1168,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
    patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
 
+   /*
+    * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac hosts.
+    * This leads to the odd behaviour when you click out of a box that in some hosts - Logic Pro for 
+    * instance - there is no looseFocus event and so the value doesn't update. We could fix that
+    * a variety of ways I imagine, but since we don't really mind the value being updated as we
+    * go, we can just set the editors to immediate and correct the problem.
+    *
+    * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan 2019.
+    */
+   patchName->setImmediateTextChange( true );
+   patchCategory->setImmediateTextChange( true );
+   patchCreator->setImmediateTextChange( true );
+   patchComment->setImmediateTextChange( true );
+   
    patchName->setBackColor(kWhiteCColor);
    patchCategory->setBackColor(kWhiteCColor);
    patchCreator->setBackColor(kWhiteCColor);
@@ -1320,6 +1334,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    }
    long tag = control->getTag();
 
+   int firstEIDForFirstClear = -1;
+   std::vector< std::string > clearControlTargetNames;
+   
    if (button & kDoubleClick)
       button |= kControl;
 
@@ -1475,8 +1492,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                        synth->storage.getPatch().param_ptr[md]->get_full_name(),
                        synth->getModDepth(md, modsource));
                clear_md[md] = eid;
-               contextMenu->addEntry(tmptxt, eid++);
+               if (firstEIDForFirstClear < 0)
+                   firstEIDForFirstClear = eid;
+               clearControlTargetNames.push_back(synth->storage.getPatch().param_ptr[md]->get_name());
 
+               contextMenu->addEntry(tmptxt, eid++);
                n_md++;
             }
          }
@@ -1551,7 +1571,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                  currentSub->addEntry( cmd );
                  
              }
-             contextMenu->addEntry( midiSub, "Set Contoller To..." );
+             contextMenu->addEntry( midiSub, "Set Controller To..." );
              
          }
 
@@ -1582,6 +1602,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                for (int md = 1; md < n_total_md; md++)
                   synth->clearModulation(md, modsource);
                refresh_mod();
+
+               // Also blank out the name and rebuild the UI
+               if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
+               {
+                   synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+                   synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+                   ((CModulationSourceButton*)control)
+                       ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                   control->setDirty();
+                   control->invalid();
+
+                   synth->updateDisplay();
+               }
             }
             else if (command == id_learnctrl)
             {
@@ -1633,10 +1666,47 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
             for (int md = 0; md < n_total_md; md++)
             {
+               /* In the case where you have modulations like "Attack", "Pitch" and "Release" the default name
+                  of the modulation will be "Attack". So if you clear "Attack" you and you haven't renamed
+                  you want to change the name to "Pitch". But you have to do quite a bit of work to recreate what
+                  the next parameter short name is and comapre it in the same way it is done. So that's
+                  what this splat of code does.
+               */
                if (clear_md[md] == command)
                {
+                  bool resetName = false; // Should I reset the name?
+                  std::string newName = ""; // And to what?
+
+                  if (clear_md[md]==firstEIDForFirstClear)
+                  {
+                      if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
+                                  clearControlTargetNames[0].c_str(),
+                                  15) == 0 )
+                      {
+                          // So my modulator is named after my short name. I haven't been renamed. So I want to
+                          // reset at least to "-" unless someone is after me
+                          resetName = true;
+                          newName = "-";
+                          if (clearControlTargetNames.size() > 1)
+                              newName = clearControlTargetNames[1];
+                      }
+                  }
+
                   synth->clearModulation(md, modsource);
                   refresh_mod();
+                  
+                  if (resetName)
+                  {
+                     // And this is where we apply the name refresh, of course.
+                     strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], newName.c_str(), 15);
+                     synth->storage.getPatch().CustomControllerLabel[ccid][ 15 ] = 0;
+                     ((CModulationSourceButton*)control)
+                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                     control->setDirty();
+                     control->invalid();
+                     synth->updateDisplay();
+                  }
+                  
                }
             }
          }
@@ -1954,18 +2024,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    case tag_mp_category:
    {
       if (control->getValue() > 0.5f)
-         synth->incrementPatch(1, 0);
+         synth->incrementCategory(true);
       else
-         synth->incrementPatch(-1, 0);
+         synth->incrementCategory(false);
       return;
    }
    break;
    case tag_mp_patch:
    {
       if (control->getValue() > 0.5f)
-         synth->incrementPatch(0, 1);
+         synth->incrementPatch(true);
       else
-         synth->incrementPatch(0, -1);
+         synth->incrementPatch(false);
       return;
    }
    break;
@@ -2209,7 +2279,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
 void SurgeGUIEditor::beginEdit(long index)
 {
-#if !AU
    if (index < start_paramtags)
    {
       return;
@@ -2221,14 +2290,12 @@ void SurgeGUIEditor::beginEdit(long index)
    {
       super::beginEdit(externalparam);
    }
-#endif
 }
 
 //------------------------------------------------------------------------------------------------
 
 void SurgeGUIEditor::endEdit(long index)
 {
-#if !AU
    if (index < start_paramtags)
    {
       return;
@@ -2240,14 +2307,13 @@ void SurgeGUIEditor::endEdit(long index)
    {
       super::endEdit(externalparam);
    }
-#endif
 }
 
 //------------------------------------------------------------------------------------------------
 
 void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
 {
-#if AU
+#if TARGET_AUDIOUNIT
    long tag = control->getTag();
    int ptag = tag - start_paramtags;
    if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
@@ -2255,7 +2321,7 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
       int externalparam = synth->remapInternalToExternalApiId(ptag);
       if (externalparam >= 0)
       {
-         ((aulayer*)synth->parent)->ParameterBeginEdit(externalparam);
+          synth->getParent()->ParameterBeginEdit(externalparam);
       }
    }
 #endif
@@ -2265,7 +2331,7 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
 
 void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
 {
-#if AU
+#if TARGET_AUDIOUNIT
    long tag = control->getTag();
    int ptag = tag - start_paramtags;
    if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
@@ -2273,7 +2339,7 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
       int externalparam = synth->remapInternalToExternalApiId(ptag);
       if (externalparam >= 0)
       {
-         ((aulayer*)synth->parent)->ParameterEndEdit(externalparam);
+         synth->getParent()->ParameterEndEdit(externalparam);
       }
    }
 #endif
@@ -2343,6 +2409,11 @@ void SurgeGUIEditor::zoomInDir(int dir)
    if (zoomFactor > 300)
       zoomFactor = 300;
    zoom_callback(this);
+}
+
+long SurgeGUIEditor::applyParameterOffset(long id)
+{
+    return id-start_paramtags;
 }
 
 //------------------------------------------------------------------------------------------------

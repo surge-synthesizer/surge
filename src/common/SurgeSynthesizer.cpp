@@ -2238,7 +2238,6 @@ void SurgeSynthesizer::process()
    float sceneout alignas(16)[2][2][block_size_os];
    float fxsendout alignas(16)[2][2][block_size];
    bool play_scene[2];
-   polydisplay = 0;
 
    {
       clear_block_antidenormalnoise(sceneout[0][0], block_size_os_quad);
@@ -2296,6 +2295,7 @@ void SurgeSynthesizer::process()
    play_scene[1] = (!voices[1].empty());
 
    int FBentry[2];
+   int vcount = 0;
    for (int s = 0; s < 2; s++)
    {
       FBentry[s] = 0;
@@ -2307,7 +2307,7 @@ void SurgeSynthesizer::process()
          bool resume = v->process_block(FBQ[s][FBentry[s] >> 2], FBentry[s] & 3);
          FBentry[s]++;
 
-         polydisplay++;
+         vcount ++;
 
          if (!resume)
          {
@@ -2320,6 +2320,7 @@ void SurgeSynthesizer::process()
             iter++;
       }
    }
+   polydisplay = vcount;
 
    // CS LEAVE
    storage.CS_ModRouting.leave();

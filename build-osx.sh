@@ -37,6 +37,10 @@ Commands are:
         --build-and-install      Build and install the assets
         --build-validate-au      Build and install the audio unit then validate it
 
+        --package                Creates a .pkg file from current built state in products
+        --clean-and-package      Cleans everything; runs all the builds; makes an installer; drops it in products
+                                 Equivalent of running --clean-all then --build then --package
+
         --clean                  Clean all the builds
         --clean-all              Clean all the builds and remove the xcode files and target directories
 
@@ -49,9 +53,15 @@ Options are:
 
 Environment variables are:
 
-   VST2SDK_DIR=path            If this points at a valid VST2 SDK, VST2 assets will be built
-   BREWBUILD=TRUE              Uses LLVM clang rather than xcode. If you are XCode < 9.4 you will need this
-   SURGE_USE_VECTOR_SKIN=True  Uses the new vector skins in assets/classic-vector in built asset.
+   VST2SDK_DIR=path             If this points at a valid VST2 SDK, VST2 assets will be built
+   BREWBUILD=TRUE               Uses LLVM clang rather than xcode. If you are XCode < 9.4 you will need this
+   SURGE_USE_VECTOR_SKIN={skin} Uses the new vector skins in assets/classic-vector in built asset.
+
+      For SURGE_USE_VECTOR_SKIN you need to give the name of a subdirectory in assets. For instance
+
+            SURGE_USE_VECTOR_SKIN=original-vector ./build-osx.sh --build-validate-au
+
+      will use the 'original-vector' skin and locally build an AU
 
 EOHELP
 }
@@ -77,6 +87,16 @@ prerequisite_check()
         echo ${RED}ERROR: You do not have premake5 on your path${NC}
         echo
         echo Please download and install premake from https://premake.github.io per the Surge README.md
+        echo
+        exit 1
+    fi
+
+    if [[ ( ! -z $SURGE_USE_VECTOR_SKIN ) && ( ! -d assets/${SURGE_USE_VECTOR_SKIN}/exported ) ]]; then
+        echo
+        echo ${RED}SURGE_USE_VECTOR_SKIN does not point to assets${NC}
+        echo
+        echo SURGE_USE_VECTOR_SKIN should be the name of an asset sub-dir which contains the directory
+        echo exported. Example values are 'original-vector' or 'classic-vector'
         echo
         exit 1
     fi
@@ -215,6 +235,25 @@ run_uninstall_surge()
     sudo rm -rf ~/Library/Application\ Support/Surge
 }
 
+run_package()
+{
+    pkgver=`cat VERSION`beta-`(date +%Y-%m-%d-%H%M)`
+    echo "Building with version [${pkgver}]"
+    cd installer_mac/
+    ./make_installer.sh ${pkgver}
+    cd ..
+
+    mv installer_mac/installer/*${pkgver}*.pkg products/
+
+    echo
+    echo "Package completed and in products/ directory"
+    echo
+    ls -l products/*${pkgver}*.pkg
+    echo
+    echo "Have a lovely day!"
+    echo
+}
+
 # This is the main section of the script
 command="$1"
 
@@ -255,6 +294,14 @@ case $command in
         ;;
     --clean-all)
         run_clean_all
+        ;;
+    --clean-and-package)
+        run_clean_all
+        run_all_builds
+        run_package
+        ;;
+    --package)
+        run_package
         ;;
     --uninstall-surge)
         run_uninstall_surge
