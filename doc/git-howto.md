@@ -16,17 +16,17 @@ hey maybe use that energy to close a bug instead! And with that said, onwards!
 
 ## Basics
 
-Make a github account, fork [kurasu/surge](https://www.github.com/kurasu/surge), and check it out onto your machine. Do a build.
+Make a github account, fork [surge-synthesizer/surge](https://www.github.com/surge-synthesizer/surge), and check it out onto your machine. Do a build.
 Does it work? If so, great you are started! You also have git working properly (and presumably have it in your path in windows or
 are using git-bash there).
 
 ## Update your fork with master
 
-Often something will be changed in `kurasu/surge` and you will also want that in your copy. To do this you need to merge
+Often something will be changed in `surge-synthesizer/surge` and you will also want that in your copy. To do this you need to merge
 your upstream into the master. [Github has good documentation on this](https://help.github.com/articles/syncing-a-fork/#platform-all)
 but here's the steps
 
-### Onetime only - add kurasu/surge as an upstream remote
+### Onetime only - add surge-synthesizer/surge as an upstream remote
 
 git works on the concept of "remotes", other places where you can get or push commits. When you check out you get a remote
 called "origin" which is the copy on github.com of the git repo now on your hard drive. You can add lots of other remotes also.
@@ -37,7 +37,7 @@ and `push` which push all the diffs from you to a remote.
 You need to configure these remotes one time per remote. So do this:
 
 ```
-git remte add upstream https://github.com/kurasu/surge
+git remte add upstream https://github.com/surge-synthesizer/surge
 git remote -v
 ```
 
@@ -46,8 +46,8 @@ and you should see something like
 ```
 origin	git@github.com:baconpaul/surge.git (fetch)
 origin	git@github.com:baconpaul/surge.git (push)
-upstream	https://github.com/kurasu/surge (fetch)
-upstream	https://github.com/kurasu/surge (push)
+upstream	https://github.com/surge-synthesizer/surge (fetch)
+upstream	https://github.com/surge-synthesizer/surge (push)
 ```
 
 ### Every time you want to update
@@ -55,7 +55,7 @@ upstream	https://github.com/kurasu/surge (push)
 Your actions are to fetch upstream, merge that upstream into your master, and then push that out to your github.
 
 ```
-git fetch upstream   # You now have the diffs in kurasu/surge
+git fetch upstream   # You now have the diffs in surge-synthesizer/surge
 git checkout master  # you now are on your copy of master
 git merge upstream/master # you now have integrated the upstream diffs into your copy 
 git push origin master # you now have pushed your updated master back to github
