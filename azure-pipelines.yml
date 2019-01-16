@@ -27,16 +27,6 @@ jobs:
     fetchDepth: 1
     # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
 
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: get-vst2.sh
-
-  - bash: |
-      ls -alFh $AGENT_TEMPDIRECTORY
-      . $AGENT_TEMPDIRECTORY/get-vst2.sh
-      echo "VST2SDK_DIR=$VST2SDK_DIR"
-    displayName: Get VST 2 SDK
-
   - bash: |
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
       git submodule update --init --recursive
@@ -103,11 +93,10 @@ jobs:
     displayName: Publish Windows installer
 
   - bash: |
-      echo "VST2SDK_DIR=$VST2SDK_DIR"
       echo "SURGE_VERSION=$SURGE_VERSION"
       pushd installer_mac
-      ./make_installer.sh
       ./make_installer.sh "" --dmg
+      rm *.pkg
       popd
     condition: variables.isMac
     displayName: Make macOS installer
@@ -119,26 +108,3 @@ jobs:
     condition: variables.isMac
     displayName: Publish macOS DMG
 
-- job: Release
-  dependsOn: Build
-  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/'))
-  steps:
-    - checkout: none
-      fetchDepth: 1
-
-    - task: DownloadPipelineArtifact@0
-      inputs:
-        artifactName: 'INSTALLER_MAC_DMG'
-        targetPath: $(System.DefaultWorkingDirectory)
-
-    - task: DownloadPipelineArtifact@0
-      inputs:
-        artifactName: 'INSTALLER_WIN_EXE'
-        targetPath: $(System.DefaultWorkingDirectory)
-
-    - bash: |
-        ls -alFh
-        find . -name '*'
-
-        echo "Release $BUILD_SOURCEBRANCH"
-      displayName: Perform Release
