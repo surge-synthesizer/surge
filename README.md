@@ -21,13 +21,16 @@ Daily macOS (64-bit, AU/VST2/VST3) builds available on the [Slack](https://join.
 
 There is currently work going on to create an official release-page with installers for Windows 64-bit, macOS 64-bit and other formats.
 
-## Preparation
+# Locations
+## macOS
 
-First you need to grab all of the git submodules (these are needed to get the VST3 SDK)
+For user-made presets, the folder is `~/Documents/Surge`
+For Surge factory presets, wavetables and preferences, the folder is `/Library/Application Support/Surge`
 
-```
-git submodule update --init --recursive
-```
+## Windows
+
+For user-made presets, the location is `c:\Users\<yourusername>\Documents\Surge`
+For Surge factory presets, wavetables and preferences, the folder is: `C:\Users\<yourusername>\AppData\Local\Surge`
 
 # Windows
 
@@ -40,28 +43,43 @@ Prerequisites
 * [Visual Studio 15.5 (at least)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
-To build with Windows, run
+Install Git, Premake5, Visual Studio 2017 and Inno Setup.
+
+While Visual Studio 2017 is being installed, remember to select `C++` and `Windows 8.1 SDK` in the installer.
+
+After all this is done, clone the repo and get the required submodules with the following commands.
+
+```
+git clone https://github.com/surge-synthesizer/surge.git
+cd surge
+git submodule update --init --recursive
+```
+
+Build with Windows by running
 
 ```
 build.cmd
 ```
 
-Or you can just generate the project files by using
+You can also, instead of running `build.cmd`, generate the project files by using
 
 ```
 premake5 vs2017
 ```
 
-After which you can open the Visual Studio solution which has been generated.
+After which you can open the freshly generated Visual Studio solution `Surge.sln` - If you had the `VST2.4SDK` folder specified prior to running `premake5`, you will have `surge-vst2.vcxproj` and `surge-vst3.vcxproj` in your Surge folder.
 
-To build the installer, open the file `installer_win/surge.iss` using `Inno Setup`.
+Now, to build the installer, open the file `installer_win/surge.iss` by using `Inno Setup`.
+
+`Inno Setup` will bake an installer and place it in `installer_win/Output/`
 
 As of Jan 2019, Microsoft is making free Windows 10 VM's available which contain their development tooling 
 and are capable of building Surge
 at [this Microsoft page](https://developer.microsoft.com/en-us/windows/downloads/virtual-machines).
-To setup, after starting the VM for the first time
-run visual studio installer, update, and then
-make sure the desktop C++ kit, including optional CLI support, Windows 8.1 SDK, and vc2015 toolset for desktop is installed. 
+
+To setup, after starting the VM for the first time:
+Run Visual Studio installer, update, and then
+make sure the `desktop C++ kit`, including `optional CLI support`, `Windows 8.1 SDK`, and `VC2015 toolset for desktop` is installed. 
 Then proceed as above.
 
 # macOS
@@ -77,7 +95,7 @@ in /usr/local/bin or elsewhere in your path.
 cp premake5 /usr/local/bin
 ```
 
-Clone the Surge repo to a path of your choice, and init submodules
+Clone the Surge repo to a path of your choice, enter it, and grab the submodules.
 
 ```
 git clone https://github.com/surge-synthesizer/surge.git
@@ -125,7 +143,7 @@ After the build runs, be it successful or not, you can now launch Xcode and open
 
 All of the three projects (`surge-vst3`, `surge-vst2`, `surge-au`) will recommend you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
 
-XCode will result in built assets in `products/` but will not install them and will not install the ancilliary assets. To do that you can either `./build-osx.sh --install-local` or
+Xcode will result in built assets in `products/` but will not install them and will not install the ancilliary assets. To do that you can either `./build-osx.sh --install-local` or
 `./build-osx.sh --package` and run the resulting pkg file to install in `/Library`.
 
 ## Using the built assets
@@ -158,7 +176,7 @@ is a super fast way to do a build and pop up Surge with stdout and stderr attach
 ```
 cd installer_mac
 ./make_installer.sh myPeculiarVersion
-mv installer/Surge-myPeculiar-Version-Setup.pkg wherever-youwant
+open .
 ```
 
 is an available option.
