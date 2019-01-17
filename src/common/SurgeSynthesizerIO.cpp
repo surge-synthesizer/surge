@@ -48,22 +48,46 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev)
    if (!n)
       return;
 
-   int order = storage.patch_list[patchid].order;
-   int category = storage.patch_list[patchid].category;
+   /*
+   ** Ideally we would never call this with an out
+   ** of range patchid, but the init case where we
+   ** have a non-loaded in memory patch proves that
+   ** false, as may some other cases. So add this
+   ** defensive approach. See #319
+   */
+   if( patchid < 0 || patchid > n-1 )
+   {
+       // Find patch 0 category 0 and select it
+       int ccid = storage.patchCategoryOrdering[0];
 
-   if (nextPrev) {
-      do {
-         order = (order == (n - 1)) ? 0 : order + 1;
-      } while (storage.patch_list[storage.patchOrdering[order]].category !=
-               category);
-   } else {
-      do {
-         order = (order == 0) ? n - 1 : order - 1;
-      } while (storage.patch_list[storage.patchOrdering[order]].category !=
-               category);
+       int target = n+1;
+       for(auto &patch : storage.patch_list)
+       {
+           if(patch.category == ccid && patch.order < target)
+               target = patch.order;
+       }
+       
+       patchid_queue = storage.patchOrdering[target];
+       current_category_id = ccid;
    }
-
-   patchid_queue = storage.patchOrdering[order];
+   else
+   {
+       int order = storage.patch_list[patchid].order;
+       int category = storage.patch_list[patchid].category;
+       
+       if (nextPrev) {
+           do {
+               order = (order >= (n - 1)) ? 0 : order + 1;
+           } while (storage.patch_list[storage.patchOrdering[order]].category !=
+                    category);
+       } else {
+           do {
+               order = (order <= 0) ? n - 1 : order - 1;
+           } while (storage.patch_list[storage.patchOrdering[order]].category !=
+                    category);
+       }
+       patchid_queue = storage.patchOrdering[order];
+   }
    processThreadunsafeOperations();
    return;
 }
@@ -74,22 +98,30 @@ void SurgeSynthesizer::incrementCategory(bool nextPrev)
    if (!n)
       return;
 
-   int order = storage.patch_category[current_category_id].order;
-   if (nextPrev)
-      order = (order == (n - 1)) ? 0 : order + 1;
+   // See comment above and #319
+   if(current_category_id < 0 || current_category_id > n-1 )
+   {
+       current_category_id = storage.patchCategoryOrdering[0];
+   }
    else
-      order = (order == 0) ? n - 1 : order - 1;
-
-   current_category_id = storage.patchCategoryOrdering[order];
-
+   {
+       int order = storage.patch_category[current_category_id].order;
+       if (nextPrev)
+           order = (order >= (n - 1)) ? 0 : order + 1;
+       else
+           order = (order <= 0) ? n - 1 : order - 1;
+       
+       current_category_id = storage.patchCategoryOrdering[order];
+   }
+   
    // Find the first patch within the category.
    for (auto p : storage.patchOrdering)
    {
-      if (storage.patch_list[p].category == current_category_id)
-      {
-         patchid_queue = p;
-         processThreadunsafeOperations();
-         return;
+       if (storage.patch_list[p].category == current_category_id)
+       {
+           patchid_queue = p;
+           processThreadunsafeOperations();
+           return;
       }
    }
 }

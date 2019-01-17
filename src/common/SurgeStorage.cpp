@@ -539,14 +539,22 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev)
    if (!n)
       return -1;
 
-   int order = wt_list[id].order;
-
-   if (nextPrev)
-      order = (order == (n - 1)) ? 0 : order + 1;
+   // See comment in SurgeSynthesizerIO::incrementPatch and #319
+   if( id < 0 || id > n-1 )
+   {
+       return wtOrdering[0];
+   }
    else
-      order = (order == 0) ? n - 1 : order - 1;
-
-   return wtOrdering[order];
+   {
+       int order = wt_list[id].order;
+       
+       if (nextPrev)
+           order = (order >= (n - 1)) ? 0 : order + 1; // see comment in incrementPatch for that >= vs ==
+       else
+           order = (order <= 0) ? n - 1 : order - 1;
+       
+       return wtOrdering[order];
+   }
 }
 
 void SurgeStorage::clipboard_copy(int type, int scene, int entry)
