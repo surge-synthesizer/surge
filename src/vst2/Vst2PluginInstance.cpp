@@ -26,12 +26,14 @@ namespace VSTGUI { void* soHandle = nullptr; }
 #endif
 
 #include "AbstractSynthesizer.h"
+#include "UserInteractions.h"
 
 //-------------------------------------------------------------------------------------------------------
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
    initDllGlobals(); // this is a slightly misnamed function since only windows has dlls; it does all setup stuff for globals
+
    return new Vst2PluginInstance(audioMaster);
 }
 
@@ -555,8 +557,8 @@ bool Vst2PluginInstance::tryInit()
 
    try {
       new (synth) SurgeSynthesizer(this);
-   } catch (SurgeError err) {
-      std::cerr << err.getMessage() << std::endl;
+   } catch (Surge::Error err) {
+      Surge::UserInteractions::promptError(err);
       _aligned_free(synth);
       state = DEAD;
       return false;

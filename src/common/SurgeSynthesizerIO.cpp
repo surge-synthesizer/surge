@@ -14,6 +14,7 @@
 #endif
 #include <fstream>
 #include <iterator>
+#include "UserInteractions.h"
 
 namespace fs = std::experimental::filesystem;
 
@@ -187,26 +188,6 @@ string SurgeSynthesizer::getLegacyUserPatchDirectory()
 #endif
 }
 
-bool askIfShouldOverwrite()
-{
-#if MAC
-   CFOptionFlags responseFlags;
-   CFUserNotificationDisplayAlert(0, kCFUserNotificationPlainAlertLevel, 0, 0, 0,
-                                  CFSTR("Overwrite?"),
-                                  CFSTR("The file already exists, do you wish to overwrite it?"),
-                                  CFSTR("Yes"), CFSTR("No"), 0, &responseFlags);
-   if ((responseFlags & 0x3) != kCFUserNotificationDefaultResponse)
-      return false;
-#elif __linux__
-   printf("Implement me\n");
-#else
-   if (MessageBox(::GetActiveWindow(), "The file already exists, do you wish to overwrite it?",
-                  "Overwrite?", MB_YESNO | MB_ICONQUESTION) != IDYES)
-      return false;
-#endif
-
-   return true;
-}
 
 void SurgeSynthesizer::savePatch()
 {
@@ -246,8 +227,11 @@ void SurgeSynthesizer::savePatch()
 
    if (fs::exists(filename))
    {
-      if (!askIfShouldOverwrite())
-         return;
+       if( Surge::UserInteractions::promptOKCancel(std::string( "The patch '" + storage.getPatch().name + "' already exists in '" + storage.getPatch().category
+                                                                + "'. Are you sure you want to overwrite it?" ),
+                                                   std::string( "Overwrite patch" )) ==
+           Surge::UserInteractions::CANCEL )
+           return;
    }
 
    std::ofstream f(filename, std::ios::out | std::ios::binary);

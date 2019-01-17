@@ -4,6 +4,7 @@
 #include "DspUtilities.h"
 #include "SurgeError.h"
 #include "SurgeStorage.h"
+#include "UserInteractions.h"
 #include <set>
 #include <numeric>
 #include <vt_dsp/vt_dsp_endian.h>
@@ -198,27 +199,12 @@ SurgeStorage::SurgeStorage()
 
    if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
    {
-#if MAC
-      SInt32 nRes = 0;
-      CFUserNotificationRef pDlg = NULL;
-      const void* keys[] = {kCFUserNotificationAlertHeaderKey, kCFUserNotificationAlertMessageKey};
-      const void* vals[] = {
-          CFSTR("Surge is not properly installed"),
-          CFSTR("Unable to open configuration.xml from ~/Library/Application Support/Surge")
-
-      };
-
-      CFDictionaryRef dict =
-          CFDictionaryCreate(0, keys, vals, sizeof(keys) / sizeof(*keys),
-                             &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
-      pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0, kCFUserNotificationStopAlertLevel,
-                                      &nRes, dict);
-#elif __linux__
-      throw SurgeError("configuration.xml was not found from " + snapshotmenupath);
+      Surge::Error exc("Cannot find 'configuration.xml' in path '" + datapath + "'. Please reinstall surge.",
+                       "Surge is not properly installed.");
+#if __linux__
+      throw exc;
 #else
-      MessageBox(::GetActiveWindow(), "Surge is not properly installed. Please reinstall.",
-                 "Configuration not found", MB_OK | MB_ICONERROR);
+      Surge::UserInteractions::promptError(exc);
 #endif
    }
 
