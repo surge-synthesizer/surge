@@ -26,6 +26,9 @@ There is currently work going on to create an official release-page with install
 
 For user-made presets, the folder is `~/Documents/Surge`
 For Surge factory presets, wavetables and preferences, the folder is `/Library/Application Support/Surge`
+if you install globally (with the installer) or `~/Library/Application Support/Surge` if you install locally
+(with `./build-osx.sh`). The plugins are installed in `/Library/Audio/Plug-Ins` or `~/Library/Audio/Plug-Ins` again 
+depending whether you install globally or locally. 
 
 ## Windows
 
