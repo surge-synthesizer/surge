@@ -38,7 +38,7 @@ void WavetableOscillator::init(float pitch, bool is_display)
    l_vskew.setRate(rate);
    l_hskew.setRate(rate);
 
-   n_unison = limit_range(oscdata->p[6].val.i, 1, max_unison);
+   n_unison = limit_range(oscdata->p[6].val.i, 1, MAX_UNISON);
    if (oscdata->wt.flags & wtf_is_sample)
    {
       sampleloop = n_unison;
@@ -49,9 +49,9 @@ void WavetableOscillator::init(float pitch, bool is_display)
 
    prepare_unison(n_unison);
 
-   memset(oscbuffer, 0, sizeof(float) * (ob_length + FIRipol_N));
-   memset(oscbufferR, 0, sizeof(float) * (ob_length + FIRipol_N));
-   memset(last_level, 0, max_unison * sizeof(float));
+   memset(oscbuffer, 0, sizeof(float) * (OB_LENGTH + FIRipol_N));
+   memset(oscbufferR, 0, sizeof(float) * (OB_LENGTH + FIRipol_N));
+   memset(last_level, 0, MAX_UNISON * sizeof(float));
 
    pitch_last = pitch;
    pitch_t = pitch;
@@ -139,7 +139,7 @@ float WavetableOscillator::distort_level(float x)
 
 void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 {
-   float block_pos = oscstate[voice] * block_size_os_inv * pitchmult_inv;
+   float block_pos = oscstate[voice] * BLOCK_SIZE_OS_INV * pitchmult_inv;
 
    double detune = drift * driftlfo[voice];
    if (n_unison > 1)
@@ -425,11 +425,11 @@ void WavetableOscillator::process_block(
    {
       /*FMfilter.coeff_HP(FMfilter.calc_omega(pitch_t - 24.f - 48.f *
       oscdata->p[id_detune].val.f),0.707); FMfilter.process_block(&master_osc[0]);
-      FMfilter.process_block(&master_osc[block_size]);*/
+      FMfilter.process_block(&master_osc[BLOCK_SIZE]);*/
 
       for (l = 0; l < n_unison; l++)
          driftlfo[l] = drift_noise(driftlfo2[l]);
-      for (int s = 0; s < block_size_os; s++)
+      for (int s = 0; s < BLOCK_SIZE_OS; s++)
       {
          float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
          float a = pitchmult * fmmul;
@@ -449,7 +449,7 @@ void WavetableOscillator::process_block(
    }
    else
    {
-      float a = (float)block_size_os * pitchmult;
+      float a = (float)BLOCK_SIZE_OS * pitchmult;
       for (l = 0; l < n_unison; l++)
       {
          driftlfo[l] = drift_noise(driftlfo2[l]);
@@ -460,10 +460,10 @@ void WavetableOscillator::process_block(
       // li_DC.set_target(dc);
    }
 
-   float hpfblock alignas(16)[block_size_os];
-   li_hpf.store_block(hpfblock, block_size_os_quad);
+   float hpfblock alignas(16)[BLOCK_SIZE_OS];
+   li_hpf.store_block(hpfblock, BLOCK_SIZE_OS_QUAD);
 
-   for (k = 0; k < block_size_os; k++)
+   for (k = 0; k < BLOCK_SIZE_OS; k++)
    {
       __m128 hpf = _mm_load_ss(&hpfblock[k]);
       __m128 ob = _mm_load_ss(&oscbuffer[bufpos + k]);
@@ -479,11 +479,11 @@ void WavetableOscillator::process_block(
       }
    }
 
-   clear_block(&oscbuffer[bufpos], block_size_os_quad);
+   clear_block(&oscbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
    if (stereo)
-      clear_block(&oscbufferR[bufpos], block_size_os_quad);
+      clear_block(&oscbufferR[bufpos], BLOCK_SIZE_OS_QUAD);
 
-   bufpos = (bufpos + block_size_os) & (ob_length - 1);
+   bufpos = (bufpos + BLOCK_SIZE_OS) & (OB_LENGTH - 1);
 
    // each block overlap FIRipol_N samples into the next (due to impulses not being wrapped around
    // the block edges copy the overlapping samples to the new block position
@@ -494,14 +494,14 @@ void WavetableOscillator::process_block(
       const __m128 zero = _mm_setzero_ps();
       for (k = 0; k < (FIRipol_N); k += 4)
       {
-         overlap[k >> 2] = _mm_load_ps(&oscbuffer[ob_length + k]);
+         overlap[k >> 2] = _mm_load_ps(&oscbuffer[OB_LENGTH + k]);
          _mm_store_ps(&oscbuffer[k], overlap[k >> 2]);
-         _mm_store_ps(&oscbuffer[ob_length + k], zero);
+         _mm_store_ps(&oscbuffer[OB_LENGTH + k], zero);
          if (stereo)
          {
-            overlapR[k >> 2] = _mm_load_ps(&oscbufferR[ob_length + k]);
+            overlapR[k >> 2] = _mm_load_ps(&oscbufferR[OB_LENGTH + k]);
             _mm_store_ps(&oscbufferR[k], overlapR[k >> 2]);
-            _mm_store_ps(&oscbufferR[ob_length + k], zero);
+            _mm_store_ps(&oscbufferR[OB_LENGTH + k], zero);
          }
       }
    }

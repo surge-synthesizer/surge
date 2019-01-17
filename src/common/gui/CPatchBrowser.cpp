@@ -117,7 +117,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
             if (n_subc > 1)
                sprintf(name, "%s - %i", storage->patch_category[c].name.c_str(), subc + 1);
             else
-               strncpy(name, storage->patch_category[c].name.c_str(), namechars);
+               strncpy(name, storage->patch_category[c].name.c_str(), NAMECHARS);
 
             if (!single_category)
             {

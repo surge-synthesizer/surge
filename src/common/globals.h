@@ -32,15 +32,15 @@ static inline int _stricmp(const char *s1, const char *s2)
 #define _SURGE_STR(x) #x
 #define SURGE_STR(x) _SURGE_STR(x)
 
-const int namechars = 64;
-const int block_size = 32;
-const int osc_oversampling = 2;
-const int block_size_os = osc_oversampling * block_size;
-const int block_size_quad = block_size >> 2;
-const int block_size_os_quad = block_size_os >> 2;
-const int max_unison = 16;
-const int ob_length = block_size_os << 1;
-const int ob_length_quad = ob_length >> 2;
-const float block_size_inv = (1.f / block_size);
-const float block_size_os_inv = (1.f / block_size_os);
-const int max_fb_comb = 2048; // must be 2^n
+const int NAMECHARS = 64;
+const int BLOCK_SIZE = 32;
+const int OSC_OVERSAMPLING = 2;
+const int BLOCK_SIZE_OS = OSC_OVERSAMPLING * BLOCK_SIZE;
+const int BLOCK_SIZE_QUAD = BLOCK_SIZE >> 2;
+const int BLOCK_SIZE_OS_QUAD = BLOCK_SIZE_OS >> 2;
+const int MAX_UNISON = 16;
+const int OB_LENGTH = BLOCK_SIZE_OS << 1;
+const int OB_LENGTH_QUAD = OB_LENGTH >> 2;
+const float BLOCK_SIZE_INV = (1.f / BLOCK_SIZE);
+const float BLOCK_SIZE_OS_INV = (1.f / BLOCK_SIZE_OS);
+const int MAX_FB_COMB = 2048; // must be 2^n

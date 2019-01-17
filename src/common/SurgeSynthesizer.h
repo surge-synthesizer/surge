@@ -64,7 +64,7 @@ public:
    }
    int getBlockSize() override
    {
-      return block_size;
+      return BLOCK_SIZE;
    }
    int getMpeMainChannel(int voiceChannel, int key);
    void process() override;

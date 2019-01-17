@@ -1,7 +1,7 @@
 #include "halfratefilter.h"
 #include "assert.h"
 
-const unsigned int hr_block_size = 256;
+const unsigned int hr_BLOCK_SIZE = 256;
 const __m128 half = _mm_set_ps1(0.5f);
 
 halfrate_stereo::halfrate_stereo(int M, bool steep)
@@ -17,7 +17,7 @@ void halfrate_stereo::process_block(float* __restrict floatL, float* __restrict 
 {
    __m128* __restrict L = (__m128*)floatL;
    __m128* __restrict R = (__m128*)floatR;
-   __m128 o[hr_block_size];
+   __m128 o[hr_BLOCK_SIZE];
    // fill the buffer with interleaved stereo samples
    for (int k = 0; k < N; k += 4)
    {
@@ -145,7 +145,7 @@ void halfrate_stereo::process_block_D2(
 {
    __m128* L = (__m128*)floatL;
    __m128* R = (__m128*)floatR;
-   __m128 o[hr_block_size];
+   __m128 o[hr_BLOCK_SIZE];
    // fill the buffer with interleaved stereo samples
    for (int k = 0; k < nsamples; k += 4)
    {
@@ -277,7 +277,7 @@ void halfrate_stereo::process_block_U2(
    __m128* L_in = (__m128*)floatL_in;
    __m128* R_in = (__m128*)floatR_in;
 
-   __m128 o[hr_block_size];
+   __m128 o[hr_BLOCK_SIZE];
    // fill the buffer with interleaved stereo samples
    for (int k = 0; k < nsamples; k += 8)
    {

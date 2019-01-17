@@ -285,7 +285,7 @@ void BiquadFilter::process_block(float* data)
    else*/
    {
       int k;
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          a1.process();
          a2.process();
@@ -313,7 +313,7 @@ void BiquadFilter::process_block_to(float* __restrict data, float* __restrict da
    else*/
    {
       int k;
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          a1.process();
          a2.process();
@@ -347,7 +347,7 @@ void BiquadFilter::process_block_slowlag(float* __restrict dataL, float* __restr
       b2.process();
 
       int k;
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          double input = dataL[k];
          double op;
@@ -378,7 +378,7 @@ void BiquadFilter::process_block(float* dataL, float* dataR)
    else*/
    {
       int k;
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          a1.process();
          a2.process();
@@ -415,7 +415,7 @@ void BiquadFilter::process_block_to(float* dataL, float* dataR, float* dstL, flo
    else*/
    {
       int k;
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          a1.process();
          a2.process();
@@ -452,7 +452,7 @@ void BiquadFilter::process_block(double* data)
    else*/
    {
       int k;
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          a1.process();
          a2.process();

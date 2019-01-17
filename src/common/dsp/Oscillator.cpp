@@ -73,7 +73,7 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
       double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
       FMdepth.newValue(fmdepth);
 
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          output[k] = sin(phase);
          phase += omega + master_osc[k] * FMdepth.v;
@@ -85,7 +85,7 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
       driftlfo = drift_noise(driftlfo2);
       sinus.set_rate(min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo)));
 
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          sinus.process();
          output[k] = sinus.r;
@@ -110,7 +110,7 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
    }
    if (stereo)
    {
-      memcpy(outputR, output, sizeof(float) * block_size_os);
+      memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
    }
 }
 
@@ -155,7 +155,7 @@ void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool F
       float a = g * (1.f - inp);
       float b = g * (1.f + inp);
 
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          output[k] = a * storage->audio_in[0][k];
          outputR[k] = b * storage->audio_in[1][k];
@@ -169,7 +169,7 @@ void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool F
       float a = g * (1.f - inp);
       float b = g * (1.f + inp);
 
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          output[k] = a * storage->audio_in[0][k] + b * storage->audio_in[1][k];
       }

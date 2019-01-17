@@ -103,11 +103,11 @@ void Effect::init_ctrltypes()
 Eq3BandEffect::Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), band3(storage)
 {
-   gain.set_blocksize(block_size);
+   gain.set_blocksize(BLOCK_SIZE);
 
-   band1.setBlockSize(block_size * slowrate); // does not matter ATM as tey're smoothed
-   band2.setBlockSize(block_size * slowrate);
-   band3.setBlockSize(block_size * slowrate);
+   band1.setBlockSize(BLOCK_SIZE * slowrate); // does not matter ATM as tey're smoothed
+   band2.setBlockSize(BLOCK_SIZE * slowrate);
+   band3.setBlockSize(BLOCK_SIZE * slowrate);
 }
 
 Eq3BandEffect::~Eq3BandEffect()
@@ -157,7 +157,7 @@ void Eq3BandEffect::process(float* dataL, float* dataR)
    band3.process_block(dataL, dataR);
 
    gain.set_target_smoothed(db_to_linear(*f[9]));
-   gain.multiply_2_blocks(dataL, dataR, block_size_quad);
+   gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
 void Eq3BandEffect::suspend()
@@ -250,8 +250,8 @@ template <int v>
 ChorusEffect<v>::ChorusEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd), lp(storage), hp(storage)
 {
-   mix.set_blocksize(block_size);
-   feedback.set_blocksize(block_size);
+   mix.set_blocksize(BLOCK_SIZE);
+   feedback.set_blocksize(BLOCK_SIZE);
 }
 
 template <int v> ChorusEffect<v>::~ChorusEffect()
@@ -318,14 +318,14 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
 {
    setvars(false);
 
-   float tbufferL alignas(16)[block_size];
-   float tbufferR alignas(16)[block_size];
-   float fbblock alignas(16)[block_size];
+   float tbufferL alignas(16)[BLOCK_SIZE];
+   float tbufferR alignas(16)[BLOCK_SIZE];
+   float fbblock alignas(16)[BLOCK_SIZE];
    int k;
 
-   clear_block(tbufferL, block_size_quad);
-   clear_block(tbufferR, block_size_quad);
-   for (k = 0; k < block_size; k++)
+   clear_block(tbufferL, BLOCK_SIZE_QUAD);
+   clear_block(tbufferR, BLOCK_SIZE_QUAD);
+   for (k = 0; k < BLOCK_SIZE; k++)
    {
       __m128 L = _mm_setzero_ps(), R = _mm_setzero_ps();
 
@@ -333,7 +333,7 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
       {
          time[j].process();
          float vtime = time[j].v;
-         int i_dtime = max(block_size, min((int)vtime, max_delay_length - FIRipol_N - 1));
+         int i_dtime = max(BLOCK_SIZE, min((int)vtime, max_delay_length - FIRipol_N - 1));
          int rp = ((wpos - i_dtime + k) - FIRipol_N) & (max_delay_length - 1);
          int sinc = FIRipol_N *
                     limit_range((int)(FIRipol_M * (float(i_dtime + 1) - vtime)), 0, FIRipol_M - 1);
@@ -356,26 +356,26 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
 
    lp.process_block(tbufferL, tbufferR);
    hp.process_block(tbufferL, tbufferR);
-   add_block(tbufferL, tbufferR, fbblock, block_size_quad);
-   feedback.multiply_block(fbblock, block_size_quad);
-   hardclip_block(fbblock, block_size_quad);
-   accumulate_block(dataL, fbblock, block_size_quad);
-   accumulate_block(dataR, fbblock, block_size_quad);
+   add_block(tbufferL, tbufferR, fbblock, BLOCK_SIZE_QUAD);
+   feedback.multiply_block(fbblock, BLOCK_SIZE_QUAD);
+   hardclip_block(fbblock, BLOCK_SIZE_QUAD);
+   accumulate_block(dataL, fbblock, BLOCK_SIZE_QUAD);
+   accumulate_block(dataR, fbblock, BLOCK_SIZE_QUAD);
 
-   if (wpos + block_size >= max_delay_length)
+   if (wpos + BLOCK_SIZE >= max_delay_length)
    {
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          buffer[(wpos + k) & (max_delay_length - 1)] = fbblock[k];
       }
    }
    else
    {
-      /*for(k=0; k<block_size; k++)
+      /*for(k=0; k<BLOCK_SIZE; k++)
       {
               buffer[wpos+k] = fbblock[k];
       }*/
-      copy_block(fbblock, &buffer[wpos], block_size_quad);
+      copy_block(fbblock, &buffer[wpos], BLOCK_SIZE_QUAD);
    }
 
    if (wpos == 0)
@@ -383,15 +383,15 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
          buffer[k + max_delay_length] = buffer[k]; // copy buffer so FIR-core doesn't have to wrap
 
    // scale width
-   float M alignas(16)[block_size],
-         S alignas(16)[block_size];
-   encodeMS(tbufferL, tbufferR, M, S, block_size_quad);
-   width.multiply_block(S, block_size_quad);
-   decodeMS(M, S, tbufferL, tbufferR, block_size_quad);
+   float M alignas(16)[BLOCK_SIZE],
+         S alignas(16)[BLOCK_SIZE];
+   encodeMS(tbufferL, tbufferR, M, S, BLOCK_SIZE_QUAD);
+   width.multiply_block(S, BLOCK_SIZE_QUAD);
+   decodeMS(M, S, tbufferL, tbufferR, BLOCK_SIZE_QUAD);
 
-   mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, block_size_quad);
+   mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, BLOCK_SIZE_QUAD);
 
-   wpos += block_size;
+   wpos += BLOCK_SIZE;
    wpos = wpos & (max_delay_length - 1);
 }
 

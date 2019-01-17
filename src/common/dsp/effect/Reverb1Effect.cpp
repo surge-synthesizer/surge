@@ -184,7 +184,7 @@ void Reverb1Effect::update_rtime()
       max_dt = max(max_dt, delay_time[t]);
    }
    lastf[rp_decaytime] = *f[rp_decaytime];
-   float t = block_size_inv * ((float)(max_dt >> 8) + samplerate * powf(2.f, *f[rp_decaytime]) *
+   float t = BLOCK_SIZE_INV * ((float)(max_dt >> 8) + samplerate * powf(2.f, *f[rp_decaytime]) *
                                                           2.f); // *2 is to get the db120 time
    ringout_time = (int)t;
 }
@@ -200,8 +200,8 @@ void Reverb1Effect::update_rsize()
 
 void Reverb1Effect::process(float* dataL, float* dataR)
 {
-   float wetL alignas(16)[block_size],
-         wetR alignas(16)[block_size];
+   float wetL alignas(16)[BLOCK_SIZE],
+         wetR alignas(16)[BLOCK_SIZE];
 
    if (fxdata->p[rp_shape].val.i != shape)
       loadpreset(fxdata->p[rp_shape].val.i);
@@ -230,7 +230,7 @@ void Reverb1Effect::process(float* dataL, float* dataR)
    __m128 damp4 = _mm_load1_ps(f[rp_damping]);
    __m128 damp4m1 = _mm_sub_ps(one4, damp4);
 
-   for (int k = 0; k < block_size; k++)
+   for (int k = 0; k < BLOCK_SIZE; k++)
    {
       for (int t = 0; t < rev_taps; t += 4)
       {
@@ -292,13 +292,13 @@ void Reverb1Effect::process(float* dataL, float* dataR)
    hicut.process_block_slowlag(wetL, wetR);
 
    // scale width
-   float M alignas(16)[block_size],
-         S alignas(16)[block_size];
-   encodeMS(wetL, wetR, M, S, block_size_quad);
-   width.multiply_block(S, block_size_quad);
-   decodeMS(M, S, wetL, wetR, block_size_quad);
+   float M alignas(16)[BLOCK_SIZE],
+         S alignas(16)[BLOCK_SIZE];
+   encodeMS(wetL, wetR, M, S, BLOCK_SIZE_QUAD);
+   width.multiply_block(S, BLOCK_SIZE_QUAD);
+   decodeMS(M, S, wetL, wetR, BLOCK_SIZE_QUAD);
 
-   mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, block_size_quad);
+   mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
 void Reverb1Effect::suspend()

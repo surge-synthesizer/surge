@@ -387,7 +387,7 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 		if(blockpos == 0)
 		{
 			// move clock						
-			plugin_instance->time_data.ppqPos += (double) block_size * plugin_instance->time_data.tempo/(60. * sampleRate);			
+			plugin_instance->time_data.ppqPos += (double) BLOCK_SIZE * plugin_instance->time_data.tempo/(60. * sampleRate);			
 			
 			// process events for the current block
 			while(events_processed < events_this_block)
@@ -422,7 +422,7 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 		}
 		
 		blockpos++;
-		if(blockpos>=block_size) blockpos = 0;
+		if(blockpos>=BLOCK_SIZE) blockpos = 0;
     }
 	
 	// process remaining events (there shouldn't be any)

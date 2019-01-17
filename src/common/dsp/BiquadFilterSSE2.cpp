@@ -10,7 +10,7 @@
 
 void biquadunit::process_block_SSE2(double *data)
 {	
-	for(int k=0; k<block_size; k+=2)
+	for(int k=0; k<BLOCK_SIZE; k+=2)
 	{		
 		__m128d input = _mm_load_sd(data+k);
 		a1.process_SSE2();	a2.process_SSE2();	b0.process_SSE2();	b1.process_SSE2();	b2.process_SSE2();
@@ -30,7 +30,7 @@ void biquadunit::process_block_SSE2(double *data)
 
 void biquadunit::process_block_SSE2(float *data)
 {	
-	for(int k=0; k<block_size; k+=4)
+	for(int k=0; k<BLOCK_SIZE; k+=4)
 	{
 		// load
 		__m128 vl = _mm_load_ps(data + k);						
@@ -71,7 +71,7 @@ void biquadunit::process_block_SSE2(float *data)
 
 void biquadunit::process_block_SSE2(float *dataL,float *dataR)
 {	
-	for(int k=0; k<block_size; k+=4)
+	for(int k=0; k<BLOCK_SIZE; k+=4)
 	{
 		// load
 		__m128 vl = _mm_load_ps(dataL + k);
@@ -125,7 +125,7 @@ void biquadunit::process_block_slowlag_SSE2(float *dataL,float *dataR)
 {	
 	a1.process_SSE2();	a2.process_SSE2();	b0.process_SSE2();	b1.process_SSE2();	b2.process_SSE2();
 
-	for(int k=0; k<block_size; k+=4)
+	for(int k=0; k<BLOCK_SIZE; k+=4)
 	{
 		// load
 		__m128 vl = _mm_load_ps(dataL + k);
@@ -173,7 +173,7 @@ void biquadunit::process_block_slowlag_SSE2(float *dataL,float *dataR)
 
 void biquadunit::process_block_to_SSE2(float *dataL,float *dataR, float *dstL,float *dstR)
 {	
-	for(int k=0; k<block_size; k+=4)
+	for(int k=0; k<BLOCK_SIZE; k+=4)
 	{
 		// load
 		__m128 vl = _mm_load_ps(dataL + k);

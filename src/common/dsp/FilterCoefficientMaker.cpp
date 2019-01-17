@@ -357,7 +357,7 @@ void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
    float dtime = (1.f / 440.f) * note_to_pitch(-freq);
    dtime = dtime * dsamplerate_os -
            FIRoffset; // 1 sample for feedback, 1 sample for the IIR-filter without resonance
-   dtime = limit_range(dtime, (float)FIRipol_N, (float)max_fb_comb - FIRipol_N);
+   dtime = limit_range(dtime, (float)FIRipol_N, (float)MAX_FB_COMB - FIRipol_N);
    reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
 
    float c[n_cm_coeffs];
@@ -396,7 +396,7 @@ void FilterCoefficientMaker::FromDirect(float N[n_cm_coeffs])
       for (int i = 0; i < n_cm_coeffs; i++)
       {
          tC[i] = (1.f - smooth) * tC[i] + smooth * N[i];
-         dC[i] = (tC[i] - C[i]) * block_size_os_inv;
+         dC[i] = (tC[i] - C[i]) * BLOCK_SIZE_OS_INV;
       }
    }
 }

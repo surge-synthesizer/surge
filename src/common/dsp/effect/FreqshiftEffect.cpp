@@ -73,7 +73,7 @@ void FreqshiftEffect::setvars(bool init)
    float maxfb = max(db96, feedback.v);
    if (maxfb < 1.f)
    {
-      float f = block_size_inv * time.v * (1.f + log(db96) / log(maxfb));
+      float f = BLOCK_SIZE_INV * time.v * (1.f + log(db96) / log(maxfb));
       ringout_time = (int)f;
    }
    else
@@ -88,18 +88,18 @@ void FreqshiftEffect::process(float* dataL, float* dataR)
    setvars(false);
 
    int k;
-   float L alignas(16)[block_size],
-         R alignas(16)[block_size],
-         Li alignas(16)[block_size],
-         Ri alignas(16)[block_size],
-         Lr alignas(16)[block_size],
-         Rr alignas(16)[block_size];
+   float L alignas(16)[BLOCK_SIZE],
+         R alignas(16)[BLOCK_SIZE],
+         Li alignas(16)[BLOCK_SIZE],
+         Ri alignas(16)[BLOCK_SIZE],
+         Lr alignas(16)[BLOCK_SIZE],
+         Rr alignas(16)[BLOCK_SIZE];
 
-   for (k = 0; k < block_size; k++)
+   for (k = 0; k < BLOCK_SIZE; k++)
    {
       time.process();
 
-      int i_dtime = max(FIRipol_N + block_size, min((int)time.v, max_delay_length - FIRipol_N - 1));
+      int i_dtime = max(FIRipol_N + BLOCK_SIZE, min((int)time.v, max_delay_length - FIRipol_N - 1));
 
       int rp = (wpos - i_dtime + k);
 
@@ -123,8 +123,8 @@ void FreqshiftEffect::process(float* dataL, float* dataR)
       Ri[k] = R[k] * o1R.i;
    }
 
-   fr.process_block(Lr, Rr, block_size);
-   fi.process_block(Li, Ri, block_size);
+   fr.process_block(Lr, Rr, BLOCK_SIZE);
+   fi.process_block(Li, Ri, BLOCK_SIZE);
 
    // do freqshift
    /*{
@@ -156,7 +156,7 @@ void FreqshiftEffect::process(float* dataL, float* dataR)
            R = 2*(r+i);
    }*/
 
-   for (k = 0; k < block_size; k++)
+   for (k = 0; k < BLOCK_SIZE; k++)
    {
       o2L.process();
       Lr[k] *= o2L.r;
@@ -176,9 +176,9 @@ void FreqshiftEffect::process(float* dataL, float* dataR)
       buffer[1][wp] = dataR[k] + (float)lookup_waveshape(0, (R[k] * feedback.v));
    }
 
-   mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, block_size_quad);
+   mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 
-   wpos += block_size;
+   wpos += BLOCK_SIZE;
    wpos = wpos & (max_delay_length - 1);
 }
 

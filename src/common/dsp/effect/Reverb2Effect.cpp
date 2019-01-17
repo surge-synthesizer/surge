@@ -173,8 +173,8 @@ void Reverb2Effect::process(float* dataL, float* dataR)
    float scale = powf(2.f, 1.f * *f[r2p_room_size]);
    calc_size(scale);
 
-   float wetL alignas(16)[block_size],
-         wetR alignas(16)[block_size];
+   float wetL alignas(16)[BLOCK_SIZE],
+         wetR alignas(16)[BLOCK_SIZE];
 
    float loop_time_s = 0.5508 * scale;
    float decay = powf(db60, loop_time_s / (4.f * (powf(2.f, *f[r2p_decay_time]))));
@@ -191,7 +191,7 @@ void Reverb2Effect::process(float* dataL, float* dataR)
 
    _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * dsamplerate_inv);
 
-   for (int k = 0; k < block_size; k++)
+   for (int k = 0; k < BLOCK_SIZE; k++)
    {
       float in = (dataL[k] + dataR[k]) * 0.5f;
 
@@ -243,13 +243,13 @@ void Reverb2Effect::process(float* dataL, float* dataR)
    }
 
    // scale width
-   float M alignas(16)[block_size],
-         S alignas(16)[block_size];
-   encodeMS(wetL, wetR, M, S, block_size_quad);
-   width.multiply_block(S, block_size_quad);
-   decodeMS(M, S, wetL, wetR, block_size_quad);
+   float M alignas(16)[BLOCK_SIZE],
+         S alignas(16)[BLOCK_SIZE];
+   encodeMS(wetL, wetR, M, S, BLOCK_SIZE_QUAD);
+   width.multiply_block(S, BLOCK_SIZE_QUAD);
+   decodeMS(M, S, wetL, wetR, BLOCK_SIZE_QUAD);
 
-   mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, block_size_quad);
+   mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
 void Reverb2Effect::suspend()

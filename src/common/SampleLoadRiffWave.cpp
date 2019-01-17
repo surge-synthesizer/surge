@@ -216,7 +216,7 @@ bool Sample::load_riff_wave_mk2(const char* fname)
    //	this->sample_start = 0;
    this->channels = (unsigned char)waveFormat.Format.nChannels;
 
-   unsigned int samplesizewithmargin = WaveDataSamples + 2 * FIRipol_N + block_size + FIRoffset;
+   unsigned int samplesizewithmargin = WaveDataSamples + 2 * FIRipol_N + BLOCK_SIZE + FIRoffset;
    sample_data = new float[samplesizewithmargin];
    unsigned int i;
    for (i = 0; i < samplesizewithmargin; i++)

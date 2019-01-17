@@ -162,7 +162,7 @@ public:
          // calculate coefficients for envelope
          const float shortest = 6.f;
          const float longest = -2.f;
-         const float coeff_offset = 2.f - log(samplerate / block_size) / log(2.f);
+         const float coeff_offset = 2.f - log(samplerate / BLOCK_SIZE) / log(2.f);
 
          float coef_A =
              powf(2.f, min(0.f, coeff_offset -

@@ -61,7 +61,7 @@ public:
       new_v = 0;
       v = 0;
       dv = 0;
-      setBlockSize(block_size);
+      setBlockSize(BLOCK_SIZE);
    }
    inline void newValue(T f)
    {

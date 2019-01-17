@@ -403,7 +403,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
          // move clock
          timedata* td = &(_instance->time_data);
          _instance->time_data.ppqPos +=
-             (double)block_size * _instance->time_data.tempo / (60. * sampleRate);
+             (double)BLOCK_SIZE * _instance->time_data.tempo / (60. * sampleRate);
 
          // process events for the current block
          while (events_processed < events_this_block)
@@ -440,7 +440,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
       }
 
       blockpos++;
-      if (blockpos >= block_size)
+      if (blockpos >= BLOCK_SIZE)
          blockpos = 0;
    }
 

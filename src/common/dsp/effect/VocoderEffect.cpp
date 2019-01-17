@@ -32,7 +32,7 @@ VocoderEffect::VocoderEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd
    mVoicedLevel = 0.f;
    mUnvoicedLevel = 0.f;*/
 
-   mGain.set_blocksize(block_size);
+   mGain.set_blocksize(BLOCK_SIZE);
 
    for (int i = 0; i < NVocoderVec; i++)
    {
@@ -95,23 +95,23 @@ void VocoderEffect::process(float* dataL, float* dataR)
       setvars(false);
    }
 
-   float modulator_in alignas(16)[block_size];
+   float modulator_in alignas(16)[BLOCK_SIZE];
 
-   add_block(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_in, block_size_quad);
+   add_block(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_in, BLOCK_SIZE_QUAD);
 
    float Gain = *f[KGain] + 24.f;
    mGain.set_target_smoothed(db_to_linear(Gain));
-   mGain.multiply_block(modulator_in, block_size_quad);
+   mGain.multiply_block(modulator_in, BLOCK_SIZE_QUAD);
 
    // Voiced / Unvoiced detection
    /*{
 
            mVoicedDetect.process_block_to(modulator_in, modulator_tbuf);
-           float a = min(4.f, get_squaremax(modulator_tbuf,block_size_quad));
+           float a = min(4.f, get_squaremax(modulator_tbuf,BLOCK_SIZE_QUAD));
            mVoicedLevel = mVoicedLevel * (1.f - rate) + a*rate;
 
            mUnvoicedDetect.process_block_to(modulator_in, modulator_tbuf);
-           a = min(4.f, get_squaremax(modulator_tbuf,block_size_quad));
+           a = min(4.f, get_squaremax(modulator_tbuf,BLOCK_SIZE_QUAD));
            mUnvoicedLevel = mUnvoicedLevel * (1.f - rate) + a*rate;
 
            float Ratio = db_to_linear(*f[KUnvoicedThreshold]);
@@ -119,7 +119,7 @@ void VocoderEffect::process(float* dataL, float* dataR)
            if (mUnvoicedLevel > (mVoicedLevel * Ratio))
            {
                    // mix carrier with noise
-                   for(int i=0; i<block_size; i++)
+                   for(int i=0; i<BLOCK_SIZE; i++)
                    {
                            float rand11 = (((float) rand()/RAND_MAX)*2.f - 1.f);
                            dataL[i] = rand11;
@@ -138,7 +138,7 @@ void VocoderEffect::process(float* dataL, float* dataR)
    float Gate = db_to_linear(*f[KGateLevel] + Gain);
    vFloat GateLevel = vLoad1(Gate * Gate);
 
-   for (int k = 0; k < block_size; k++)
+   for (int k = 0; k < BLOCK_SIZE; k++)
    {
       vFloat In = vLoad1(modulator_in[k]);
       vFloat Left = vLoad1(dataL[k]);

@@ -44,7 +44,7 @@ void osc_dotwave::init(float pitch, bool is_display)
 	id_sync = oscdata->p[4].param_id_in_scene;	
 	id_detune = oscdata->p[5].param_id_in_scene;
 
-	n_unison = limit_range(oscdata->p[6].val.i,1,max_unison);	
+	n_unison = limit_range(oscdata->p[6].val.i,1,MAX_UNISON);	
 	if(is_display) n_unison = 1;
 	out_attenuation = 1.0f/sqrt((float)n_unison);
 
@@ -56,9 +56,9 @@ void osc_dotwave::init(float pitch, bool is_display)
 		detune_bias = (float)2/(n_unison);
 		detune_offset = -1;
 	}	
-	memset(oscbuffer,0,sizeof(float)*ob_length);	
-	memset(last_level,0,max_unison*sizeof(float));
-	memset(last_level2,0,max_unison*sizeof(float));
+	memset(oscbuffer,0,sizeof(float)*OB_LENGTH);	
+	memset(last_level,0,MAX_UNISON*sizeof(float));
+	memset(last_level2,0,MAX_UNISON*sizeof(float));
 
 	this->pitch = pitch;
 	update_lagvals<true>();
@@ -195,7 +195,7 @@ void osc_dotwave::convolute(int voice)
 	for(k=0; k<FIRipol_N; k++)
 	{
 		a = storage->sinctable[m+k] + lipol*storage->sincoffset[m+k];		
-		oscbuffer[bufpos+k&(ob_length-1)] += a*g2;
+		oscbuffer[bufpos+k&(OB_LENGTH-1)] += a*g2;
 	//	s += a;	
 	}	
 		
@@ -254,7 +254,7 @@ template<bool FM> void osc_dotwave::process_blockT(float pitch,float depth)
 	__int64 largeFM;
 	double FMmult;	 	
 	
-	for(k=0; k<block_size_os; k++)
+	for(k=0; k<BLOCK_SIZE_OS; k++)
 	{	
 		hpf_coeff.process();
 		integrator_mult.process();
@@ -301,6 +301,6 @@ template<bool FM> void osc_dotwave::process_blockT(float pitch,float depth)
 		oscbuffer[bufpos] = 0.f;
 		
 		bufpos++;
-		bufpos = bufpos&(ob_length-1);			
+		bufpos = bufpos&(OB_LENGTH-1);			
 	}	
 }

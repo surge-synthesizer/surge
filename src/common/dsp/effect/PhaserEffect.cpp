@@ -33,8 +33,8 @@ PhaserEffect::PhaserEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
       memset(biquad[i], 0, sizeof(BiquadFilter));
       new (biquad[i]) BiquadFilter(storage);
    }
-   mix.set_blocksize(block_size);
-   feedback.setBlockSize(block_size * slowrate);
+   mix.set_blocksize(BLOCK_SIZE);
+   feedback.setBlockSize(BLOCK_SIZE * slowrate);
    bi = 0;
 }
 
@@ -53,8 +53,8 @@ void PhaserEffect::init()
       // notch[i]->coeff_LP(1.0,1.0);
       biquad[i]->suspend();
    }
-   clear_block(L, block_size_quad);
-   clear_block(R, block_size_quad);
+   clear_block(L, BLOCK_SIZE_QUAD);
+   clear_block(R, BLOCK_SIZE_QUAD);
    mix.set_target(1.f);
    mix.instantize();
    bi = 0;
@@ -109,10 +109,10 @@ void PhaserEffect::process(float* dataL, float* dataR)
    if (bi == 0)
       setvars();
    bi = (bi + 1) & slowrate_m1;
-   // feedback.multiply_2_blocks((__m128*)L,(__m128*)R, block_size_quad);
-   // accumulate_block((__m128*)dataL, (__m128*)L, block_size_quad);
-   // accumulate_block((__m128*)dataR, (__m128*)R, block_size_quad);
-   for (int i = 0; i < block_size; i++)
+   // feedback.multiply_2_blocks((__m128*)L,(__m128*)R, BLOCK_SIZE_QUAD);
+   // accumulate_block((__m128*)dataL, (__m128*)L, BLOCK_SIZE_QUAD);
+   // accumulate_block((__m128*)dataR, (__m128*)R, BLOCK_SIZE_QUAD);
+   for (int i = 0; i < BLOCK_SIZE; i++)
    {
       feedback.process();
       dL = dataL[i] + dL * feedback.v;
@@ -132,7 +132,7 @@ void PhaserEffect::process(float* dataL, float* dataR)
    }
 
    mix.set_target_smoothed(limit_range(*f[pp_mix], 0.f, 1.f));
-   mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, block_size_quad);
+   mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
 void PhaserEffect::suspend()

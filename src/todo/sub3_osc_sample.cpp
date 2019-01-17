@@ -55,7 +55,7 @@ template<bool FM> void osc_sample::process_blockT(float pitch,float depth)
 
 	update_lagvals<false>();
 
-	for(int k=0; k<block_size_os; k++)
+	for(int k=0; k<BLOCK_SIZE_OS; k++)
 	{	
 		uint32 m0 =	((sample_subpos>>16)&0xff)*FIRipol_N;
 		float lipol0 = (float)((uint32)(sample_subpos&0xffff));				

@@ -149,7 +149,7 @@ public:
    void bound_value(bool force_integer = false);
    pdata val, val_default, val_min, val_max;
    int id;
-   char name[namechars], dispname[namechars], name_storage[namechars], fullname[namechars];
+   char name[NAMECHARS], dispname[NAMECHARS], name_storage[NAMECHARS], fullname[NAMECHARS];
    bool modulateable;
    int valtype = 0;
    int scene; // 0 = patch, 1 = scene A, 2 = scene B
