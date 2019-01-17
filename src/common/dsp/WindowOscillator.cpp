@@ -166,7 +166,7 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
          short* WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Sub.Table[so]];
          short* WinAdr = storage->WindowWT.TableI16WeakPointers[MipMapA][Window];
 
-         for (int i = 0; i < block_size_os; i++)
+         for (int i = 0; i < BLOCK_SIZE_OS; i++)
          {
             Pos += RatioA;
             if (Pos & ~SizeMaskWin)
@@ -249,7 +249,7 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
          short* WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Sub.Table[so]];
          short* WinAdr = storage->WindowWT.TableI16WeakPointers[MipMapA][Window];
 
-         for (int i = 0; i < block_size_os; i++)
+         for (int i = 0; i < BLOCK_SIZE_OS; i++)
          {
             Pos += RatioA;
             if (Pos & ~SizeMaskWin)
@@ -302,9 +302,9 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
 
 void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
-   memset(IOutputL, 0, block_size_os * sizeof(int));
+   memset(IOutputL, 0, BLOCK_SIZE_OS * sizeof(int));
    if (stereo)
-      memset(IOutputR, 0, block_size_os * sizeof(int));
+      memset(IOutputR, 0, BLOCK_SIZE_OS * sizeof(int));
 
    float Detune = localcopy[oscdata->p[5].param_id_in_scene].f;
    for (int l = 0; l < ActiveSubOscs; l++)
@@ -328,7 +328,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
       // SSE2 path
       if (stereo)
       {
-         for (int i = 0; i < block_size_os; i += 4)
+         for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
          {
             _mm_store_ps(&output[i], _mm_mul_ps(_mm_cvtepi32_ps(*(__m128i*)&IOutputL[i]), scale));
             _mm_store_ps(&outputR[i], _mm_mul_ps(_mm_cvtepi32_ps(*(__m128i*)&IOutputR[i]), scale));
@@ -336,7 +336,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
       }
       else
       {
-         for (int i = 0; i < block_size_os; i += 4)
+         for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
          {
             _mm_store_ps(&output[i], _mm_mul_ps(_mm_cvtepi32_ps(*(__m128i*)&IOutputL[i]), scale));
          }
@@ -348,7 +348,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
       // MMX/SSE1 path
       if (stereo)
       {
-         for (int i = 0; i < block_size_os; i += 4)
+         for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
          {
             _mm_store_ps(&output[i], _mm_mul_ps(_mm_cvtpi32x2_ps(*(__m64*)&IOutputL[i],
                                                                  *(__m64*)&IOutputL[i + 2]),
@@ -360,7 +360,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
       }
       else
       {
-         for (int i = 0; i < block_size_os; i += 4)
+         for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
          {
             _mm_store_ps(&output[i], _mm_mul_ps(_mm_cvtpi32x2_ps(*(__m64*)&IOutputL[i],
                                                                  *(__m64*)&IOutputL[i + 2]),

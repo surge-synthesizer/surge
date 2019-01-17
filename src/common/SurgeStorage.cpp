@@ -128,7 +128,7 @@ SurgeStorage::SurgeStorage()
       for (int cc = 0; cc < 128; cc++)
          poly_aftertouch[s][cc] = 0.f;
 
-   memset(&audio_in[0][0], 0, 2 * block_size_os * sizeof(float));
+   memset(&audio_in[0][0], 0, 2 * BLOCK_SIZE_OS * sizeof(float));
 
 #if MAC
    char path[1024];
@@ -872,7 +872,7 @@ void SurgeStorage::init_tables()
           (float)sin(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
       table_note_omega[1][i] =
           (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
-      double k = dsamplerate_os * pow(2.0, (((double)i - 256.0) / 16.0)) / (double)block_size_os;
+      double k = dsamplerate_os * pow(2.0, (((double)i - 256.0) / 16.0)) / (double)BLOCK_SIZE_OS;
       table_envrate_lpf[i] = (float)(1.f - exp(log(db60) / k));
       table_envrate_linear[i] = (float)1.f / k;
    }

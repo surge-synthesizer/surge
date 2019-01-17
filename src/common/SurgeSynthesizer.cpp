@@ -98,13 +98,13 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
           storage.getPatch().scene[0].modsources[ms_ctrl1 + i];
    }
 
-   amp.set_blocksize(block_size);
-   FX1.set_blocksize(block_size);
-   FX2.set_blocksize(block_size);
-   send[0][0].set_blocksize(block_size);
-   send[0][1].set_blocksize(block_size);
-   send[1][0].set_blocksize(block_size);
-   send[1][1].set_blocksize(block_size);
+   amp.set_blocksize(BLOCK_SIZE);
+   FX1.set_blocksize(BLOCK_SIZE);
+   FX2.set_blocksize(BLOCK_SIZE);
+   send[0][0].set_blocksize(BLOCK_SIZE);
+   send[0][1].set_blocksize(BLOCK_SIZE);
+   send[1][0].set_blocksize(BLOCK_SIZE);
+   send[1][1].set_blocksize(BLOCK_SIZE);
 
    polydisplay = 0;
    refresh_editor = false;
@@ -115,7 +115,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    storage.getPatch().author = "";
    midiprogramshavechanged = false;
 
-   for (int i = 0; i < block_size; i++)
+   for (int i = 0; i < BLOCK_SIZE; i++)
    {
       input[0][i] = 0.f;
       input[1][i] = 0.f;
@@ -1023,7 +1023,7 @@ void SurgeSynthesizer::setSamplerate(float sr)
    dsamplerate = sr;
    samplerate_inv = 1.0 / sr;
    dsamplerate_inv = 1.0 / sr;
-   dsamplerate_os = dsamplerate * osc_oversampling;
+   dsamplerate_os = dsamplerate * OSC_OVERSAMPLING;
    dsamplerate_os_inv = 1.0 / dsamplerate_os;
    storage.init_tables();
    sinus.set_rate(1000.0 * dsamplerate_inv);
@@ -2163,13 +2163,13 @@ void SurgeSynthesizer::process()
 
    if (halt_engine)
    {
-      /*for(int k=0; k<block_size; k++)
+      /*for(int k=0; k<BLOCK_SIZE; k++)
       {
               output[0][k] = 0;
               output[1][k] = 0;
       }*/
-      clear_block(output[0], block_size_quad);
-      clear_block(output[1], block_size_quad);
+      clear_block(output[0], BLOCK_SIZE_QUAD);
+      clear_block(output[1], BLOCK_SIZE_QUAD);
       return;
    }
    else if (patchid_queue >= 0)
@@ -2212,8 +2212,8 @@ void SurgeSynthesizer::process()
          SetThreadPriority(hThread, THREAD_PRIORITY_NORMAL);
 #endif
 
-         clear_block(output[0], block_size_quad);
-         clear_block(output[1], block_size_quad);
+         clear_block(output[0], BLOCK_SIZE_QUAD);
+         clear_block(output[1], BLOCK_SIZE_QUAD);
          return;
       }
    }
@@ -2221,34 +2221,34 @@ void SurgeSynthesizer::process()
    // process inputs (upsample & halfrate)
    if (process_input)
    {
-      hardclip_block8(input[0], block_size_quad);
-      hardclip_block8(input[1], block_size_quad);
-      copy_block(input[0], storage.audio_in_nonOS[0], block_size_quad);
-      copy_block(input[1], storage.audio_in_nonOS[1], block_size_quad);
+      hardclip_block8(input[0], BLOCK_SIZE_QUAD);
+      hardclip_block8(input[1], BLOCK_SIZE_QUAD);
+      copy_block(input[0], storage.audio_in_nonOS[0], BLOCK_SIZE_QUAD);
+      copy_block(input[1], storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
       halfbandIN->process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1]);
    }
    else
    {
-      clear_block_antidenormalnoise(storage.audio_in[0], block_size_os_quad);
-      clear_block_antidenormalnoise(storage.audio_in[1], block_size_os_quad);
-      clear_block_antidenormalnoise(storage.audio_in_nonOS[1], block_size_quad);
-      clear_block_antidenormalnoise(storage.audio_in_nonOS[1], block_size_quad);
+      clear_block_antidenormalnoise(storage.audio_in[0], BLOCK_SIZE_OS_QUAD);
+      clear_block_antidenormalnoise(storage.audio_in[1], BLOCK_SIZE_OS_QUAD);
+      clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+      clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
    }
 
-   float sceneout alignas(16)[2][2][block_size_os];
-   float fxsendout alignas(16)[2][2][block_size];
+   float sceneout alignas(16)[2][2][BLOCK_SIZE_OS];
+   float fxsendout alignas(16)[2][2][BLOCK_SIZE];
    bool play_scene[2];
 
    {
-      clear_block_antidenormalnoise(sceneout[0][0], block_size_os_quad);
-      clear_block_antidenormalnoise(sceneout[0][1], block_size_os_quad);
-      clear_block_antidenormalnoise(sceneout[1][0], block_size_os_quad);
-      clear_block_antidenormalnoise(sceneout[1][1], block_size_os_quad);
+      clear_block_antidenormalnoise(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+      clear_block_antidenormalnoise(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+      clear_block_antidenormalnoise(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+      clear_block_antidenormalnoise(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
 
-      clear_block_antidenormalnoise(fxsendout[0][0], block_size_quad);
-      clear_block_antidenormalnoise(fxsendout[0][1], block_size_quad);
-      clear_block_antidenormalnoise(fxsendout[1][0], block_size_quad);
-      clear_block_antidenormalnoise(fxsendout[1][1], block_size_quad);
+      clear_block_antidenormalnoise(fxsendout[0][0], BLOCK_SIZE_QUAD);
+      clear_block_antidenormalnoise(fxsendout[0][1], BLOCK_SIZE_QUAD);
+      clear_block_antidenormalnoise(fxsendout[1][0], BLOCK_SIZE_QUAD);
+      clear_block_antidenormalnoise(fxsendout[1][1], BLOCK_SIZE_QUAD);
    }
 
    // CS ENTER
@@ -2363,15 +2363,15 @@ void SurgeSynthesizer::process()
 
    if (play_scene[0])
    {
-      hardclip_block8(sceneout[0][0], block_size_os_quad);
-      hardclip_block8(sceneout[0][1], block_size_os_quad);
+      hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+      hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
       halfbandA->process_block_D2(sceneout[0][0], sceneout[0][1]);
    }
 
    if (play_scene[1])
    {
-      hardclip_block8(sceneout[1][0], block_size_os_quad);
-      hardclip_block8(sceneout[1][1], block_size_os_quad);
+      hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+      hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
       halfbandB->process_block_D2(sceneout[1][0], sceneout[1][1]);
    }
 
@@ -2405,10 +2405,10 @@ void SurgeSynthesizer::process()
    }
 
    // sum scenes
-   copy_block(sceneout[0][0], output[0], block_size_quad);
-   copy_block(sceneout[0][1], output[1], block_size_quad);
-   accumulate_block(sceneout[1][0], output[0], block_size_quad);
-   accumulate_block(sceneout[1][1], output[1], block_size_quad);
+   copy_block(sceneout[0][0], output[0], BLOCK_SIZE_QUAD);
+   copy_block(sceneout[0][1], output[1], BLOCK_SIZE_QUAD);
+   accumulate_block(sceneout[1][0], output[0], BLOCK_SIZE_QUAD);
+   accumulate_block(sceneout[1][1], output[1], BLOCK_SIZE_QUAD);
 
    bool send1 = false, send2 = false;
    // add send effects
@@ -2417,22 +2417,22 @@ void SurgeSynthesizer::process()
       if (fx[4] && !(storage.getPatch().fx_disable.val.i & (1 << 4)))
       {
          send[0][0].MAC_2_blocks_to(sceneout[0][0], sceneout[0][1], fxsendout[0][0],
-                                    fxsendout[0][1], block_size_quad);
+                                    fxsendout[0][1], BLOCK_SIZE_QUAD);
          send[0][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[0][0],
-                                    fxsendout[0][1], block_size_quad);
+                                    fxsendout[0][1], BLOCK_SIZE_QUAD);
          send1 = fx[4]->process_ringout(fxsendout[0][0], fxsendout[0][1], sc_a || sc_b);
          FX1.MAC_2_blocks_to(fxsendout[0][0], fxsendout[0][1], output[0], output[1],
-                             block_size_quad);
+                             BLOCK_SIZE_QUAD);
       }
       if (fx[5] && !(storage.getPatch().fx_disable.val.i & (1 << 5)))
       {
          send[1][0].MAC_2_blocks_to(sceneout[0][0], sceneout[0][1], fxsendout[1][0],
-                                    fxsendout[1][1], block_size_quad);
+                                    fxsendout[1][1], BLOCK_SIZE_QUAD);
          send[1][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[1][0],
-                                    fxsendout[1][1], block_size_quad);
+                                    fxsendout[1][1], BLOCK_SIZE_QUAD);
          send2 = fx[5]->process_ringout(fxsendout[1][0], fxsendout[1][1], sc_a || sc_b);
          FX2.MAC_2_blocks_to(fxsendout[1][0], fxsendout[1][1], output[0], output[1],
-                             block_size_quad);
+                             BLOCK_SIZE_QUAD);
       }
    }
 
@@ -2446,24 +2446,24 @@ void SurgeSynthesizer::process()
          glob = fx[7]->process_ringout(output[0], output[1], glob);
    }
 
-   amp.multiply_2_blocks(output[0], output[1], block_size_quad);
-   amp_mute.multiply_2_blocks(output[0], output[1], block_size_quad);
+   amp.multiply_2_blocks(output[0], output[1], BLOCK_SIZE_QUAD);
+   amp_mute.multiply_2_blocks(output[0], output[1], BLOCK_SIZE_QUAD);
 
    // VU
    // falloff
    float a = storage.vu_falloff;
    vu_peak[0] = min(2.f, a * vu_peak[0]);
    vu_peak[1] = min(2.f, a * vu_peak[1]);
-   /*for(int i=0; i<block_size; i++)
+   /*for(int i=0; i<BLOCK_SIZE; i++)
    {
            vu_peak[0] = max(vu_peak[0], output[0][i]);
            vu_peak[1] = max(vu_peak[1], output[1][i]);
    }*/
-   vu_peak[0] = max(vu_peak[0], get_absmax(output[0], block_size_quad));
-   vu_peak[1] = max(vu_peak[1], get_absmax(output[1], block_size_quad));
+   vu_peak[0] = max(vu_peak[0], get_absmax(output[0], BLOCK_SIZE_QUAD));
+   vu_peak[1] = max(vu_peak[1], get_absmax(output[1], BLOCK_SIZE_QUAD));
 
-   hardclip_block8(output[0], block_size_quad);
-   hardclip_block8(output[1], block_size_quad);
+   hardclip_block8(output[0], BLOCK_SIZE_QUAD);
+   hardclip_block8(output[1], BLOCK_SIZE_QUAD);
 }
 
 PluginLayer* SurgeSynthesizer::getParent()

@@ -109,10 +109,10 @@ void CSnapshotMenu::populate()
          }
          else
          {
-            char name[namechars];
+            char name[NAMECHARS];
             sprintf(name, "default");
 
-            spawn_miniedit_text(name, namechars);
+            spawn_miniedit_text(name, NAMECHARS);
             save_snapshot(sect, name);
             storage->save_snapshots();
             do_nothing = true;
@@ -192,7 +192,7 @@ j;
 
 // CFxMenu
 
-const char fxslot_names[8][namechars] = {"A Insert 1", "A Insert 2", "B Insert 1", "B Insert 2",
+const char fxslot_names[8][NAMECHARS] = {"A Insert 1", "A Insert 2", "B Insert 1", "B Insert 2",
                                          "Send FX 1",  "Send FX 2",  "Master 1",   "Master 2"};
 
 CFxMenu::CFxMenu(const CRect& size,
@@ -233,7 +233,7 @@ void CFxMenu::draw(CDrawContext* dc)
    txtbox.top--;
    txtbox.bottom += 2;
    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
-   char fxname[namechars];
+   char fxname[NAMECHARS];
    sprintf(fxname, "%s", fxtype_abberations[fx->type.val.i]);
    dc->drawString(fxname, txtbox, kRightText, true);
 

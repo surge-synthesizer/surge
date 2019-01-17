@@ -129,8 +129,8 @@ void RotarySpeakerEffect::init_ctrltypes()
 
 void RotarySpeakerEffect::process_only_control()
 {
-   lfo.set_rate(2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * block_size);
-   lf_lfo.set_rate(0.7 * 2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * block_size);
+   lfo.set_rate(2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * BLOCK_SIZE);
+   lf_lfo.set_rate(0.7 * 2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * BLOCK_SIZE);
 
    lfo.process();
    lf_lfo.process();
@@ -138,7 +138,7 @@ void RotarySpeakerEffect::process_only_control()
 
 void RotarySpeakerEffect::process(float* dataL, float* dataR)
 {
-   lfo.set_rate(2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * block_size);
+   lfo.set_rate(2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * BLOCK_SIZE);
    lf_lfo.set_rate(0.7 * 2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv);
 
    float precalc0 = (-2 - (float)lfo.i);
@@ -159,15 +159,15 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
 
    lfo.process();
 
-   float upper[block_size];
-   float lower[block_size];
-   float lower_sub[block_size];
-   float tbufferL[block_size];
-   float tbufferR[block_size];
+   float upper[BLOCK_SIZE];
+   float lower[BLOCK_SIZE];
+   float lower_sub[BLOCK_SIZE];
+   float tbufferL[BLOCK_SIZE];
+   float tbufferR[BLOCK_SIZE];
 
    int k;
 
-   for (k = 0; k < block_size; k++)
+   for (k = 0; k < BLOCK_SIZE; k++)
    {
       // float input = (float)tanh_fast(0.5f*dataL[k]+dataR[k]*drive.v);
       float input = 0.5f * (dataL[k] + dataR[k]);
@@ -179,7 +179,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    xover.process_block(lower);
    // xover->process(lower,0);
 
-   for (k = 0; k < block_size; k++)
+   for (k = 0; k < BLOCK_SIZE; k++)
    {
       // feed delay input
       int wp = (wpos + k) & (max_delay_length - 1);
@@ -187,13 +187,13 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
       upper[k] -= lower[k];
       buffer[wp] = upper[k];
 
-      /*int i_dtL = max(block_size,min((int)dL.v,max_delay_length-1)),
-              i_dtR = max(block_size,min((int)dR.v,max_delay_length-1)),
+      /*int i_dtL = max(BLOCK_SIZE,min((int)dL.v,max_delay_length-1)),
+              i_dtR = max(BLOCK_SIZE,min((int)dR.v,max_delay_length-1)),
               sincL = FIRipol_N*(int)(FIRipol_M*(ceil(dL.v)-dL.v)),
               sincR = FIRipol_N*(int)(FIRipol_M*(ceil(dR.v)-dR.v));*/
 
-      int i_dtimeL = max(block_size, min((int)dL.v, max_delay_length - FIRipol_N - 1));
-      int i_dtimeR = max(block_size, min((int)dR.v, max_delay_length - FIRipol_N - 1));
+      int i_dtimeL = max(BLOCK_SIZE, min((int)dL.v, max_delay_length - FIRipol_N - 1));
+      int i_dtimeR = max(BLOCK_SIZE, min((int)dR.v, max_delay_length - FIRipol_N - 1));
 
       int rpL = (wpos - i_dtimeL + k);
       int rpR = (wpos - i_dtimeR + k);
@@ -225,7 +225,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    // lowbass->process(lower_sub,0);
    lowbass.process_block(lower_sub);
 
-   for (k = 0; k < block_size; k++)
+   for (k = 0; k < BLOCK_SIZE; k++)
    {
       lower[k] -= lower_sub[k];
 
@@ -238,6 +238,6 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
       hornamp[1].process();
    }
 
-   wpos += block_size;
+   wpos += BLOCK_SIZE;
    wpos = wpos & (max_delay_length - 1);
 }

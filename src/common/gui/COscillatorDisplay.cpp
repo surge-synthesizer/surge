@@ -45,7 +45,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       bool use_display = osc->allow_display();
       if (use_display)
          osc->init(disp_pitch_rs, true);
-      int block_pos = block_size_os;
+      int block_pos = BLOCK_SIZE_OS;
       for (int y = 0; y < h2; y++)
          column_d[y] = 0;
 
@@ -55,7 +55,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
             column[y] = 0;
          for (int s = 0; s < aa_samples; s++)
          {
-            if (use_display && (block_pos >= block_size_os))
+            if (use_display && (block_pos >= BLOCK_SIZE_OS))
             {
                if (uses_wavetabledata(oscdata->type.val.i))
                {
@@ -256,7 +256,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
 
          for (auto c : storage->wtCategoryOrdering)
          {
-            char name[namechars];
+            char name[NAMECHARS];
             COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, kNoDrawStyle);
             subMenu->setNbItemsPerColumn(32);
             int sub = 0;
@@ -275,7 +275,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
                   sub++;
                }
             }
-            strncpy(name, storage->wt_category[c].name.c_str(), namechars);
+            strncpy(name, storage->wt_category[c].name.c_str(), NAMECHARS);
             contextMenu->addEntry(subMenu, name);
 
             subMenu->forget(); // Important, so that the refcounter gets right

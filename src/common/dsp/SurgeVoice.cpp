@@ -453,9 +453,9 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
       if (Q)
       {
          set1f(Q->Out2L, e, FBP.Out2L);
-         set1f(Q->dOut2L, e, (amp2L - FBP.Out2L) * block_size_os_inv);
+         set1f(Q->dOut2L, e, (amp2L - FBP.Out2L) * BLOCK_SIZE_OS_INV);
          set1f(Q->Out2R, e, FBP.Out2R);
-         set1f(Q->dOut2R, e, (amp2R - FBP.Out2R) * block_size_os_inv);
+         set1f(Q->dOut2R, e, (amp2R - FBP.Out2R) * BLOCK_SIZE_OS_INV);
       }
       FBP.Out2L = amp2L;
       FBP.Out2R = amp2R;
@@ -467,9 +467,9 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
    if (Q)
    {
       set1f(Q->OutL, e, FBP.OutL);
-      set1f(Q->dOutL, e, (ampL - FBP.OutL) * block_size_os_inv);
+      set1f(Q->dOutL, e, (ampL - FBP.OutL) * BLOCK_SIZE_OS_INV);
       set1f(Q->OutR, e, FBP.OutR);
-      set1f(Q->dOutR, e, (ampR - FBP.OutR) * block_size_os_inv);
+      set1f(Q->dOutR, e, (ampR - FBP.OutR) * BLOCK_SIZE_OS_INV);
    }
 
    FBP.OutL = ampL;
@@ -481,8 +481,8 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    calc_ctrldata<0>(&Q, Qe);
 
    bool is_wide = scene->filterblock_configuration.val.i == fb_wide;
-   float tblock alignas(16)[block_size_os],
-         tblock2 alignas(16)[block_size_os];
+   float tblock alignas(16)[BLOCK_SIZE_OS],
+         tblock2 alignas(16)[BLOCK_SIZE_OS];
    float* tblockR = is_wide ? tblock2 : tblock;
 
    // float ktrkroot = (float)scene->keytrack_root.val.i;
@@ -490,8 +490,8 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    float drift = localcopy[scene->drift.param_id_in_scene].f;
 
    // clear output
-   clear_block(output[0], block_size_os_quad);
-   clear_block(output[1], block_size_os_quad);
+   clear_block(output[0], BLOCK_SIZE_OS_QUAD);
+   clear_block(output[1], BLOCK_SIZE_OS_QUAD);
 
    if (osc3 || ring23 || ((osc1 || osc2) && (FMmode == fm_3to2to1)) ||
        (osc1 && (FMmode == fm_2and3to1)))
@@ -507,16 +507,16 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
          if (is_wide)
          {
             osclevels[le_osc3].multiply_2_blocks_to(osc[2]->output, osc[2]->outputR, tblock,
-                                                    tblockR, block_size_os_quad);
+                                                    tblockR, BLOCK_SIZE_OS_QUAD);
          }
          else
          {
-            osclevels[le_osc3].multiply_block_to(osc[2]->output, tblock, block_size_os_quad);
+            osclevels[le_osc3].multiply_block_to(osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
          }
          if (route[2] < 2)
-            accumulate_block(tblock, output[0], block_size_os_quad);
+            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
          if (route[2] > 0)
-            accumulate_block(tblockR, output[1], block_size_os_quad);
+            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
       }
    }
 
@@ -544,17 +544,17 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
          if (is_wide)
          {
             osclevels[le_osc2].multiply_2_blocks_to(osc[1]->output, osc[1]->outputR, tblock,
-                                                    tblockR, block_size_os_quad);
+                                                    tblockR, BLOCK_SIZE_OS_QUAD);
          }
          else
          {
-            osclevels[le_osc2].multiply_block_to(osc[1]->output, tblock, block_size_os_quad);
+            osclevels[le_osc2].multiply_block_to(osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
          }
 
          if (route[1] < 2)
-            accumulate_block(tblock, output[0], block_size_os_quad);
+            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
          if (route[1] > 0)
-            accumulate_block(tblockR, output[1], block_size_os_quad);
+            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
       }
    }
 
@@ -562,7 +562,7 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    {
       if (FMmode == fm_2and3to1)
       {
-         add_block(osc[1]->output, osc[2]->output, fmbuffer, block_size_os_quad);
+         add_block(osc[1]->output, osc[2]->output, fmbuffer, BLOCK_SIZE_OS_QUAD);
          osc[0]->process_block((scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot) +
                                    localcopy[scene->osc[0].pitch.param_id_in_scene].f *
                                        (scene->osc[0].pitch.extend_range ? 12.f : 1.f) +
@@ -592,16 +592,16 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
          if (is_wide)
          {
             osclevels[le_osc1].multiply_2_blocks_to(osc[0]->output, osc[0]->outputR, tblock,
-                                                    tblockR, block_size_os_quad);
+                                                    tblockR, BLOCK_SIZE_OS_QUAD);
          }
          else
          {
-            osclevels[le_osc1].multiply_block_to(osc[0]->output, tblock, block_size_os_quad);
+            osclevels[le_osc1].multiply_block_to(osc[0]->output, tblock, BLOCK_SIZE_OS_QUAD);
          }
          if (route[0] < 2)
-            accumulate_block(tblock, output[0], block_size_os_quad);
+            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
          if (route[0] > 0)
-            accumulate_block(tblockR, output[1], block_size_os_quad);
+            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
       }
    }
 
@@ -609,45 +609,45 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    {
       if (is_wide)
       {
-         mul_block(osc[0]->output, osc[1]->output, tblock, block_size_os_quad);
-         mul_block(osc[0]->outputR, osc[1]->outputR, tblockR, block_size_os_quad);
-         osclevels[le_ring12].multiply_2_blocks(tblock, tblockR, block_size_os_quad);
+         mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+         mul_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+         osclevels[le_ring12].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
       }
       else
       {
-         mul_block(osc[0]->output, osc[1]->output, tblock, block_size_os_quad);
-         osclevels[le_ring12].multiply_block(tblock, block_size_os_quad);
+         mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+         osclevels[le_ring12].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
       }
       if (route[3] < 2)
-         accumulate_block(tblock, output[0], block_size_os_quad);
+         accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
       if (route[3] > 0)
-         accumulate_block(tblockR, output[1], block_size_os_quad);
+         accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
    }
 
    if (ring23)
    {
       if (is_wide)
       {
-         mul_block(osc[1]->output, osc[2]->output, tblock, block_size_os_quad);
-         mul_block(osc[1]->outputR, osc[2]->outputR, tblockR, block_size_os_quad);
-         osclevels[le_ring23].multiply_2_blocks(tblock, tblockR, block_size_os_quad);
+         mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+         mul_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+         osclevels[le_ring23].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
       }
       else
       {
-         mul_block(osc[1]->output, osc[2]->output, tblock, block_size_os_quad);
-         osclevels[le_ring23].multiply_block(tblock, block_size_os_quad);
+         mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+         osclevels[le_ring23].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
       }
 
       if (route[4] < 2)
-         accumulate_block(tblock, output[0], block_size_os_quad);
+         accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
       if (route[4] > 0)
-         accumulate_block(tblockR, output[1], block_size_os_quad);
+         accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
    }
 
    if (noise)
    {
       float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
-      for (int i = 0; i < block_size_os; i += 2)
+      for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
       {
          ((float*)tblock)[i] = correlated_noise_o2mk2(noisegenL[0], noisegenL[1], noisecol);
          ((float*)tblock)[i + 1] = ((float*)tblock)[i];
@@ -659,22 +659,22 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       }
       if (is_wide)
       {
-         osclevels[le_noise].multiply_2_blocks(tblock, tblockR, block_size_os_quad);
+         osclevels[le_noise].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
       }
       else
       {
-         osclevels[le_noise].multiply_block(tblock, block_size_os_quad);
+         osclevels[le_noise].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
       }
       if (route[5] < 2)
-         accumulate_block(tblock, output[0], block_size_os_quad);
+         accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
       if (route[5] > 0)
-         accumulate_block(tblockR, output[1], block_size_os_quad);
+         accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
    }
 
    // PFG
-   osclevels[le_pfg].multiply_2_blocks(output[0], output[1], block_size_os_quad);
+   osclevels[le_pfg].multiply_2_blocks(output[0], output[1], BLOCK_SIZE_OS_QUAD);
 
-   for (int i = 0; i < block_size_os; i++)
+   for (int i = 0; i < BLOCK_SIZE_OS; i++)
    {
       _mm_store_ss(((float*)&Q.DL[i] + Qe), _mm_load_ss(&output[0][i]));
       _mm_store_ss(((float*)&Q.DR[i] + Qe), _mm_load_ss(&output[1][i]));
@@ -730,15 +730,15 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
    if (Q)
    {
       set1f(Q->Gain, e, FBP.Gain);
-      set1f(Q->dGain, e, (Gain - FBP.Gain) * block_size_os_inv);
+      set1f(Q->dGain, e, (Gain - FBP.Gain) * BLOCK_SIZE_OS_INV);
       set1f(Q->Drive, e, FBP.Drive);
-      set1f(Q->dDrive, e, (Drive - FBP.Drive) * block_size_os_inv);
+      set1f(Q->dDrive, e, (Drive - FBP.Drive) * BLOCK_SIZE_OS_INV);
       set1f(Q->FB, e, FBP.FB);
-      set1f(Q->dFB, e, (FB - FBP.FB) * block_size_os_inv);
+      set1f(Q->dFB, e, (FB - FBP.FB) * BLOCK_SIZE_OS_INV);
       set1f(Q->Mix1, e, FBP.Mix1);
-      set1f(Q->dMix1, e, (FMix1 - FBP.Mix1) * block_size_os_inv);
+      set1f(Q->dMix1, e, (FMix1 - FBP.Mix1) * BLOCK_SIZE_OS_INV);
       set1f(Q->Mix2, e, FBP.Mix2);
-      set1f(Q->dMix2, e, (FMix2 - FBP.Mix2) * block_size_os_inv);
+      set1f(Q->dMix2, e, (FMix2 - FBP.Mix2) * BLOCK_SIZE_OS_INV);
    }
 
    FBP.Gain = Gain;

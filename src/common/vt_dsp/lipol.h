@@ -6,7 +6,7 @@ class lipol_ps
 {
 public:
    __m128 target, currentval, coef, coef_m1;
-   __m128 lipol_block_size;
+   __m128 lipol_BLOCK_SIZE;
    __m128 m128_lipolstarter;
    __m128 m128_bs4_inv;
 

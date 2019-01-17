@@ -15,8 +15,8 @@ lipol_ps::lipol_ps()
 
 void lipol_ps::set_blocksize(int bs)
 {
-   lipol_block_size = _mm_cvt_si2ss(m128_zero, bs);
-   m128_bs4_inv = _mm_div_ss(m128_four, lipol_block_size);
+   lipol_BLOCK_SIZE = _mm_cvt_si2ss(m128_zero, bs);
+   m128_bs4_inv = _mm_div_ss(m128_four, lipol_BLOCK_SIZE);
 }
 
 void lipol_ps::multiply_block(float* src, unsigned int nquads)

@@ -42,16 +42,16 @@ void emphasize::process(float *dataL, float *dataR)
 	bi = (bi+1) & slowrate_m1;	
 	outgain.set_target(storage->db_to_linear(*f[0]));
 
-	float bL alignas(16)[block_size << 1];
-	float bR alignas(16)[block_size << 1];
+	float bL alignas(16)[BLOCK_SIZE << 1];
+	float bR alignas(16)[BLOCK_SIZE << 1];
 
 	EQ.process_block_to(dataL,dataR,bL,bR);	
 	
-	pre.process_block_U2((__m128*)bL,(__m128*)bR,(__m128*)bL,(__m128*)bR,block_size_os);	
+	pre.process_block_U2((__m128*)bL,(__m128*)bR,(__m128*)bL,(__m128*)bR,BLOCK_SIZE_OS);	
 
 	__m128 type = _mm_load1_ps(f[3]);
 	__m128 typem1 = _mm_sub_ps(m128_one,type);
-	for(int k=0; k<block_size_os_quad; k++)
+	for(int k=0; k<BLOCK_SIZE_OS_QUAD; k++)
 	{
 		// y = x*x*(t + (1-t)*x)
 		// y = x*x*(t + x - t*x) 
@@ -68,9 +68,9 @@ void emphasize::process(float *dataL, float *dataR)
 		_mm_store_ps(bR + (k<<2), R);
 	}		
 
-	post.process_block_D2((__m128*)bL,(__m128*)bR,block_size_os);		
+	post.process_block_D2((__m128*)bL,(__m128*)bR,BLOCK_SIZE_OS);		
 
-	outgain.MAC_2_blocks_to((__m128*)bL,(__m128*)bR,(__m128*)dataL,(__m128*)dataR,block_size_quad);
+	outgain.MAC_2_blocks_to((__m128*)bL,(__m128*)bR,(__m128*)dataL,(__m128*)dataR,BLOCK_SIZE_QUAD);
 
 }
 

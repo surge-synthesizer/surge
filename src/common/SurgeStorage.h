@@ -410,7 +410,7 @@ public:
    // data
    SurgeSceneStorage scene[2], morphscene;
    FxStorage fx[8];
-   // char name[namechars];
+   // char name[NAMECHARS];
    int scene_start[2], scene_size;
    Parameter scene_active, scenemode, scenemorph, splitkey;
    Parameter volume;
@@ -465,8 +465,8 @@ enum sub3_copysource
 class SurgeStorage
 {
 public:
-   float audio_in alignas(16)[2][block_size_os];
-   float audio_in_nonOS alignas(16)[2][block_size];
+   float audio_in alignas(16)[2][BLOCK_SIZE_OS];
+   float audio_in_nonOS alignas(16)[2][BLOCK_SIZE];
    //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
    SurgeStorage();

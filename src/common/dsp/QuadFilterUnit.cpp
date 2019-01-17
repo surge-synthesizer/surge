@@ -530,7 +530,7 @@ __m128 COMBquad_SSE1(QuadFilterUnitState* __restrict f, __m128 in)
          int DT = e >> 8;
          int SE = (0xff - (e & 0xff)) * (FIRipol_N << 1);
 
-         int RP = (f->WP[i] - DT - FIRoffset) & (max_fb_comb - 1);
+         int RP = (f->WP[i] - DT - FIRoffset) & (MAX_FB_COMB - 1);
 
          // SINC interpolation (12 samples)
          __m128 a = _mm_loadu_ps(&f->DB[i][RP]);
@@ -560,10 +560,10 @@ __m128 COMBquad_SSE1(QuadFilterUnitState* __restrict f, __m128 in)
          __m128 t = _mm_load_ss((float*)&d + i);
          _mm_store_ss(&f->DB[i][f->WP[i]], t);
          if (f->WP[i] < FIRipol_N)
-            _mm_store_ss(&f->DB[i][f->WP[i] + max_fb_comb], t);
+            _mm_store_ss(&f->DB[i][f->WP[i] + MAX_FB_COMB], t);
 
          // Increment write position
-         f->WP[i] = (f->WP[i] + 1) & (max_fb_comb - 1);
+         f->WP[i] = (f->WP[i] + 1) & (MAX_FB_COMB - 1);
       }
    }
    return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
@@ -594,7 +594,7 @@ __m128 COMBquad_SSE2(QuadFilterUnitState* __restrict f, __m128 in)
    {
       if (f->active[i])
       {
-         int RP = (f->WP[i] - DTi[i] - FIRoffset) & (max_fb_comb - 1);
+         int RP = (f->WP[i] - DTi[i] - FIRoffset) & (MAX_FB_COMB - 1);
 
          // SINC interpolation (12 samples)
          __m128 a = _mm_loadu_ps(&f->DB[i][RP]);
@@ -625,10 +625,10 @@ __m128 COMBquad_SSE2(QuadFilterUnitState* __restrict f, __m128 in)
          __m128 t = _mm_load_ss((float*)&d + i);
          _mm_store_ss(&f->DB[i][f->WP[i]], t);
          if (f->WP[i] < FIRipol_N)
-            _mm_store_ss(&f->DB[i][f->WP[i] + max_fb_comb], t);
+            _mm_store_ss(&f->DB[i][f->WP[i] + MAX_FB_COMB], t);
 
          // Increment write position
-         f->WP[i] = (f->WP[i] + 1) & (max_fb_comb - 1);
+         f->WP[i] = (f->WP[i] + 1) & (MAX_FB_COMB - 1);
       }
    }
    return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));

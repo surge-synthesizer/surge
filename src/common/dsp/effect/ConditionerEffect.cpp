@@ -10,10 +10,10 @@ ConditionerEffect::ConditionerEffect(SurgeStorage* storage, FxStorage* fxdata, p
 {
    bufpos = 0;
 
-   ampL.set_blocksize(block_size);
-   ampR.set_blocksize(block_size);
-   width.set_blocksize(block_size);
-   postamp.set_blocksize(block_size);
+   ampL.set_blocksize(BLOCK_SIZE);
+   ampR.set_blocksize(BLOCK_SIZE);
+   width.set_blocksize(BLOCK_SIZE);
+   postamp.set_blocksize(BLOCK_SIZE);
 }
 
 ConditionerEffect::~ConditionerEffect()
@@ -61,7 +61,7 @@ void ConditionerEffect::process_only_control()
    vu[4] = min(8.f, a * vu[4]);
    vu[5] = min(8.f, a * vu[5]);
 
-   for (int k = 0; k < block_size; k++)
+   for (int k = 0; k < BLOCK_SIZE; k++)
    {
       filtered_lamax = (1 - attack) * filtered_lamax + attack;
       filtered_lamax2 = (1 - release) * filtered_lamax2 + (release)*filtered_lamax;
@@ -96,18 +96,18 @@ void ConditionerEffect::process(float* dataL, float* dataR)
    width.set_target_smoothed(clamp1bp(*f[2]));
    postamp.set_target_smoothed(db_to_linear(*f[7]));
 
-   float M alignas(16)[block_size],
-         S alignas(16)[block_size]; // wb = write-buffer
-   encodeMS(dataL, dataR, M, S, block_size_quad);
-   width.multiply_block(S, block_size_quad);
-   decodeMS(M, S, dataL, dataR, block_size_quad);
-   ampL.multiply_block(dataL, block_size_quad);
-   ampR.multiply_block(dataR, block_size_quad);
+   float M alignas(16)[BLOCK_SIZE],
+         S alignas(16)[BLOCK_SIZE]; // wb = write-buffer
+   encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
+   width.multiply_block(S, BLOCK_SIZE_QUAD);
+   decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
+   ampL.multiply_block(dataL, BLOCK_SIZE_QUAD);
+   ampR.multiply_block(dataR, BLOCK_SIZE_QUAD);
 
-   vu[0] = max(vu[0], get_absmax(dataL, block_size_quad));
-   vu[1] = max(vu[1], get_absmax(dataR, block_size_quad));
+   vu[0] = max(vu[0], get_absmax(dataL, BLOCK_SIZE_QUAD));
+   vu[1] = max(vu[1], get_absmax(dataR, BLOCK_SIZE_QUAD));
 
-   for (int k = 0; k < block_size; k++)
+   for (int k = 0; k < BLOCK_SIZE; k++)
    {
       float dL = delayed[0][bufpos];
       float dR = delayed[1][bufpos];
@@ -144,12 +144,12 @@ void ConditionerEffect::process(float* dataL, float* dataR)
       bufpos = (bufpos + 1) & (lookahead - 1);
    }
 
-   postamp.multiply_2_blocks(dataL, dataR, block_size_quad);
+   postamp.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
    vu[2] = gain;
 
-   vu[4] = max(vu[4], get_absmax(dataL, block_size_quad));
-   vu[5] = max(vu[5], get_absmax(dataR, block_size_quad));
+   vu[4] = max(vu[4], get_absmax(dataL, BLOCK_SIZE_QUAD));
+   vu[5] = max(vu[5], get_absmax(dataR, BLOCK_SIZE_QUAD));
 }
 
 int ConditionerEffect::vu_type(int id)

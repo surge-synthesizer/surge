@@ -161,8 +161,8 @@ private:
 class PhaserEffect : public Effect
 {
    lipol_ps mix alignas(16);
-   float L alignas(16)[block_size],
-         R alignas(16)[block_size];
+   float L alignas(16)[BLOCK_SIZE],
+         R alignas(16)[BLOCK_SIZE];
 
 public:
    PhaserEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);

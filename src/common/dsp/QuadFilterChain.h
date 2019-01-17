@@ -10,7 +10,7 @@ struct QuadFilterChainState
 
    __m128 wsLPF, FBlineL, FBlineR;
 
-   __m128 DL[block_size_os], DR[block_size_os]; // wavedata
+   __m128 DL[BLOCK_SIZE_OS], DR[BLOCK_SIZE_OS]; // wavedata
 
    __m128 OutL, OutR, dOutL, dOutR;
    __m128 Out2L, Out2R, dOut2L, dOut2R; // fb_stereo only

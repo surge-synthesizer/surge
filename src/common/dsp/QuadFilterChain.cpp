@@ -37,7 +37,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
    switch (config)
    {
    case fb_serial: // no feedback at all  (saves CPU)
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          __m128 input = d.DL[k];
          __m128 x = input, y = d.DR[k];
@@ -73,7 +73,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       }
       break;
    case fb_serial2:
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 input = vMul(d.FB, d.FBlineL);
@@ -113,7 +113,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       break;
    case fb_serial3: // filter 2 is only heard in the feedback path, good for physical modelling with
                     // comb as f2
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 input = vMul(d.FB, d.FBlineL);
@@ -154,7 +154,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       }
       break;
    case fb_dual:
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
@@ -187,7 +187,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       }
       break;
    case fb_dual2:
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
@@ -220,7 +220,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       }
       break;
    case fb_ring:
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
@@ -255,7 +255,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       }
       break;
    case fb_stereo:
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
@@ -292,7 +292,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       }
       break;
    case fb_wide:
-      for (int k = 0; k < block_size_os; k++)
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 fbL = _mm_mul_ps(d.FB, d.FBlineL);

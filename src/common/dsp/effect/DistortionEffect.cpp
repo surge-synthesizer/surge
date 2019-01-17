@@ -12,10 +12,10 @@ DistortionEffect::DistortionEffect(SurgeStorage* storage, FxStorage* fxdata, pda
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), lp1(storage), lp2(storage),
       hr_a(3, false), hr_b(3, true)
 {
-   lp1.setBlockSize(block_size * distortion_OS);
-   lp2.setBlockSize(block_size * distortion_OS);
-   drive.set_blocksize(block_size);
-   outgain.set_blocksize(block_size);
+   lp1.setBlockSize(BLOCK_SIZE * distortion_OS);
+   lp2.setBlockSize(BLOCK_SIZE * distortion_OS);
+   drive.set_blocksize(BLOCK_SIZE);
+   outgain.set_blocksize(BLOCK_SIZE);
 }
 
 DistortionEffect::~DistortionEffect()
@@ -67,13 +67,13 @@ void DistortionEffect::process(float* dataL, float* dataR)
    outgain.set_target_smoothed(db_to_linear(*f[10]));
    float fb = *f[5];
 
-   float bL alignas(16)[block_size << dist_OS_bits];
-   float bR alignas(16)[block_size << dist_OS_bits];
+   float bL alignas(16)[BLOCK_SIZE << dist_OS_bits];
+   float bR alignas(16)[BLOCK_SIZE << dist_OS_bits];
    assert(dist_OS_bits == 2);
 
-   drive.multiply_2_blocks(dataL, dataR, block_size_quad);
+   drive.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
-   for (int k = 0; k < block_size; k++)
+   for (int k = 0; k < BLOCK_SIZE; k++)
    {
       float a = (k & 16) ? 0.00000001 : -0.00000001; // denormal thingy
       float Lin = dataL[k];
@@ -95,7 +95,7 @@ void DistortionEffect::process(float* dataL, float* dataR)
       // dataR[k] = R*outgain;
    }
 
-   /*for(int k=0; k<block_size; k++)
+   /*for(int k=0; k<BLOCK_SIZE; k++)
    {
            int kOS = k<<dist_OS_bits;
            //dataL[k] *= drive;
@@ -110,13 +110,13 @@ void DistortionEffect::process(float* dataL, float* dataR)
            //lp1.process_sample_nolag_noinput(L[kOS+7],R[kOS+7]);
    }
 
-   tanh7_block(L,block_size_quad << dist_OS_bits);
-   tanh7_block(R,block_size_quad << dist_OS_bits);*/
+   tanh7_block(L,BLOCK_SIZE_QUAD << dist_OS_bits);
+   tanh7_block(R,BLOCK_SIZE_QUAD << dist_OS_bits);*/
 
    hr_a.process_block_D2(bL, bR, 128);
    hr_b.process_block_D2(bL, bR, 64);
 
-   outgain.multiply_2_blocks_to(bL, bR, dataL, dataR, block_size_quad);
+   outgain.multiply_2_blocks_to(bL, bR, dataL, dataR, BLOCK_SIZE_QUAD);
 
    // lp2.process_block(dataL,dataR);
 

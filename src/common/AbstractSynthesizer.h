@@ -59,15 +59,15 @@ public:
    }
    virtual int getBlockSize()
    {
-      return block_size;
+      return BLOCK_SIZE;
    }
    virtual void process() = 0;
    virtual void loadRaw(const void* data, int size, bool preset = false) = 0;
    virtual unsigned int saveRaw(void** data) = 0;
 
 public:
-   float output alignas(16)[n_outputs][block_size];
-   float input alignas(16)[n_inputs][block_size];
+   float output alignas(16)[n_outputs][BLOCK_SIZE];
+   float input alignas(16)[n_inputs][BLOCK_SIZE];
    timedata time_data;
    bool audio_processing_active;
 };

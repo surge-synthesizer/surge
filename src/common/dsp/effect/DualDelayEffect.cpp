@@ -5,10 +5,10 @@
 DualDelayEffect::DualDelayEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd), timeL(0.0001), timeR(0.0001), lp(storage), hp(storage)
 {
-   mix.set_blocksize(block_size);
-   pan.set_blocksize(block_size);
-   feedback.set_blocksize(block_size);
-   crossfeed.set_blocksize(block_size);
+   mix.set_blocksize(BLOCK_SIZE);
+   pan.set_blocksize(BLOCK_SIZE);
+   feedback.set_blocksize(BLOCK_SIZE);
+   crossfeed.set_blocksize(BLOCK_SIZE);
 }
 
 DualDelayEffect::~DualDelayEffect()
@@ -46,7 +46,7 @@ void DualDelayEffect::setvars(bool init)
       LFOdirection = !LFOdirection;
    }
 
-   float lfo_increment = (0.00000000001f + powf(2, *f[7] * (1.f / 12.f)) - 1.f) * block_size;
+   float lfo_increment = (0.00000000001f + powf(2, *f[7] * (1.f / 12.f)) - 1.f) * BLOCK_SIZE;
    // small bias to avoid denormals
 
    const float ca = 0.99f;
@@ -78,7 +78,7 @@ void DualDelayEffect::setvars(bool init)
    float maxfb = max(db96, fb + cf);
    if (maxfb < 1.f)
    {
-      float f = block_size_inv * max(timeL.v, timeR.v) * (1.f + log(db96) / log(maxfb));
+      float f = BLOCK_SIZE_INV * max(timeL.v, timeR.v) * (1.f + log(db96) / log(maxfb));
       ringout_time = (int)f;
    }
    else
@@ -111,19 +111,19 @@ void DualDelayEffect::process(float* dataL, float* dataR)
 {
    setvars(false);
 
-   float tbufferL alignas(16)[block_size],
-         wbL alignas(16)[block_size]; // wb = write-buffer
-   float tbufferR alignas(16)[block_size],
-         wbR alignas(16)[block_size];
+   float tbufferL alignas(16)[BLOCK_SIZE],
+         wbL alignas(16)[BLOCK_SIZE]; // wb = write-buffer
+   float tbufferR alignas(16)[BLOCK_SIZE],
+         wbR alignas(16)[BLOCK_SIZE];
    int k;
 
-   for (k = 0; k < block_size; k++)
+   for (k = 0; k < BLOCK_SIZE; k++)
    {
       timeL.process();
       timeR.process();
 
-      int i_dtimeL = max(block_size, min((int)timeL.v, max_delay_length - FIRipol_N - 1));
-      int i_dtimeR = max(block_size, min((int)timeR.v, max_delay_length - FIRipol_N - 1));
+      int i_dtimeL = max(BLOCK_SIZE, min((int)timeL.v, max_delay_length - FIRipol_N - 1));
+      int i_dtimeR = max(BLOCK_SIZE, min((int)timeR.v, max_delay_length - FIRipol_N - 1));
 
       int rpL = ((wpos - i_dtimeL + k) - FIRipol_N) & (max_delay_length - 1);
       int rpR = ((wpos - i_dtimeR + k) - FIRipol_N) & (max_delay_length - 1);
@@ -150,20 +150,20 @@ void DualDelayEffect::process(float* dataL, float* dataR)
       _mm_store_ss(&tbufferR[k], R);
    }
 
-   softclip_block(tbufferL, block_size_quad);
-   softclip_block(tbufferR, block_size_quad);
+   softclip_block(tbufferL, BLOCK_SIZE_QUAD);
+   softclip_block(tbufferR, BLOCK_SIZE_QUAD);
 
    lp.process_block(tbufferL, tbufferR);
    hp.process_block(tbufferL, tbufferR);
 
-   pan.trixpan_blocks(dataL, dataR, wbL, wbR, block_size_quad);
+   pan.trixpan_blocks(dataL, dataR, wbL, wbR, BLOCK_SIZE_QUAD);
 
-   feedback.MAC_2_blocks_to(tbufferL, tbufferR, wbL, wbR, block_size_quad);
-   crossfeed.MAC_2_blocks_to(tbufferL, tbufferR, wbR, wbL, block_size_quad);
+   feedback.MAC_2_blocks_to(tbufferL, tbufferR, wbL, wbR, BLOCK_SIZE_QUAD);
+   crossfeed.MAC_2_blocks_to(tbufferL, tbufferR, wbR, wbL, BLOCK_SIZE_QUAD);
 
-   if (wpos + block_size >= max_delay_length)
+   if (wpos + BLOCK_SIZE >= max_delay_length)
    {
-      for (k = 0; k < block_size; k++)
+      for (k = 0; k < BLOCK_SIZE; k++)
       {
          buffer[0][(wpos + k) & (max_delay_length - 1)] = wbL[k];
          buffer[1][(wpos + k) & (max_delay_length - 1)] = wbR[k];
@@ -171,8 +171,8 @@ void DualDelayEffect::process(float* dataL, float* dataR)
    }
    else
    {
-      copy_block(wbL, &buffer[0][wpos], block_size_quad);
-      copy_block(wbR, &buffer[1][wpos], block_size_quad);
+      copy_block(wbL, &buffer[0][wpos], BLOCK_SIZE_QUAD);
+      copy_block(wbR, &buffer[1][wpos], BLOCK_SIZE_QUAD);
    }
 
    if (wpos == 0)
@@ -186,15 +186,15 @@ void DualDelayEffect::process(float* dataL, float* dataR)
    }
 
    // scale width
-   float M alignas(16)[block_size],
-         S alignas(16)[block_size];
-   encodeMS(tbufferL, tbufferR, M, S, block_size_quad);
-   width.multiply_block(S, block_size_quad);
-   decodeMS(M, S, tbufferL, tbufferR, block_size_quad);
+   float M alignas(16)[BLOCK_SIZE],
+         S alignas(16)[BLOCK_SIZE];
+   encodeMS(tbufferL, tbufferR, M, S, BLOCK_SIZE_QUAD);
+   width.multiply_block(S, BLOCK_SIZE_QUAD);
+   decodeMS(M, S, tbufferL, tbufferR, BLOCK_SIZE_QUAD);
 
-   mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, block_size_quad);
+   mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, BLOCK_SIZE_QUAD);
 
-   wpos += block_size;
+   wpos += BLOCK_SIZE;
    wpos = wpos & (max_delay_length - 1);
 }
 

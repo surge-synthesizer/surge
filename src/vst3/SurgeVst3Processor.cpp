@@ -320,7 +320,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
             timedata* td = &(surgeInstance->time_data);
             surgeInstance->time_data.tempo = tempo;
             surgeInstance->time_data.ppqPos +=
-                (double)block_size * tempo / (60. * data.processContext->sampleRate);
+                (double)BLOCK_SIZE * tempo / (60. * data.processContext->sampleRate);
          }
 
          processEvents(i, data.inputEvents, noteEventIndex);
@@ -345,7 +345,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       }
 
       blockpos++;
-      if (blockpos >= block_size)
+      if (blockpos >= BLOCK_SIZE)
          blockpos = 0;
    }
 

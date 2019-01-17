@@ -89,7 +89,7 @@ void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_e
 
 void Parameter::set_name(const char* n)
 {
-   strncpy(dispname, n, namechars);
+   strncpy(dispname, n, NAMECHARS);
    create_fullname(dispname, fullname, ctrlgroup, ctrlgroup_entry);
 }
 
@@ -116,7 +116,7 @@ Parameter* Parameter::assign(int id,
    this->scene = scene;
    this->ctrlstyle = ctrlstyle;
 
-   strncpy(this->name, name, namechars);
+   strncpy(this->name, name, NAMECHARS);
    set_name(dispname);
    char prefix[16];
    get_prefix(prefix, ctrlgroup, ctrlgroup_entry, scene);

@@ -16,10 +16,10 @@ struct QuadFilterChainState;
 class SurgeVoice
 {
 public:
-   float output alignas(16)[2][block_size_os];
+   float output alignas(16)[2][BLOCK_SIZE_OS];
    lipol_ps osclevels alignas(16)[7];
    pdata localcopy alignas(16)[n_scene_params];
-   float fmbuffer alignas(16)[block_size_os];
+   float fmbuffer alignas(16)[BLOCK_SIZE_OS];
    // used for the 2>1<3 FM-mode (Needs the pointer earlier)
 
    SurgeVoice(SurgeStorage* storage,
@@ -62,7 +62,7 @@ private:
    struct
    {
       float Gain, FB, Mix1, Mix2, OutL, OutR, Out2L, Out2R, Drive, wsLPF, FBlineL, FBlineR;
-      float Delay[4][max_fb_comb + FIRipol_N];
+      float Delay[4][MAX_FB_COMB + FIRipol_N];
       struct
       {
          float C[n_cm_coeffs], R[n_filter_registers];

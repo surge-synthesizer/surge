@@ -44,7 +44,7 @@ void FMOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
       FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
    FeedbackDepth.newValue(localcopy[oscdata->p[6].param_id_in_scene].f);
 
-   for (int k = 0; k < block_size_os; k++)
+   for (int k = 0; k < BLOCK_SIZE_OS; k++)
    {
       RM1.process();
       RM2.process();
@@ -65,7 +65,7 @@ void FMOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
    }
    if (stereo)
    {
-      memcpy(outputR, output, sizeof(float) * block_size_os);
+      memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
    }
 }
 
@@ -149,7 +149,7 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
    FeedbackDepth.newValue(localcopy[oscdata->p[6].param_id_in_scene].f);
    PhaseOffset.newValue(2.0 * M_PI * localcopy[oscdata->p[5].param_id_in_scene].f);
 
-   for (int k = 0; k < block_size_os; k++)
+   for (int k = 0; k < BLOCK_SIZE_OS; k++)
    {
       RM1.process();
       RM2.process();
@@ -169,7 +169,7 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
    }
    if (stereo)
    {
-      memcpy(outputR, output, sizeof(float) * block_size_os);
+      memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
    }
 }
 void FM2Oscillator::init_ctrltypes()
