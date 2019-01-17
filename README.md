@@ -15,9 +15,11 @@ The codebase was migrated from before an unfinished 1.6 release, which improves 
 * Support for [MPE](https://www.midi.org/articles-old/midi-polyphonic-expression-mpe)
 * New analog mode for the ADSR envelopes   
 
-Surge currently builds with Windows and macOS (AudioUnit,VST2), and getting it to build on Linux again should be doable with some effort.
+Surge currently builds with Windows and macOS (AudioUnit,VST2,VST3), and getting it to build on Linux again should be doable with some effort.
 
-[Releases available here](https://github.com/kurasu/surge/releases) - this page currently has Windows builds only.
+Daily macOS (64-bit, AU/VST2/VST3) builds available on the [Slack](https://join.slack.com/t/surgeteamworkspace/shared_invite/enQtNTE3NDIyMDc2ODgzLTU1MzZmMWZlYjkwMjk4NDY4ZjI3NDliMTFhMTZiM2ZmNjgxNjYzNGI0NGMxNTk2ZWJjNzgyMDcxODc2ZjZmY2Q)
+
+There is currently work going on to create an official release-page with installers for Windows 64-bit, macOS 64-bit and other formats.
 
 ## Preparation
 
@@ -78,12 +80,10 @@ cp premake5 /usr/local/bin
 Clone the Surge repo to a path of your choice, and init submodules
 
 ```
-git clone https://github.com/kurasu/surge.git
+git clone https://github.com/surge-synthesizer/surge.git
 cd surge
 git submodule update --init --recursive
 ```
-
-
 
 ## Building with build-osx.sh
 
@@ -116,8 +116,7 @@ done a run without vst2, you will need to `./build-osx.sh --clean-all` to pick u
 * `BREWBUILD=TRUE` will use homebrew clang. If XCode refuses to build immediately with `error: invalid value 'c++17' in '-std=c++17'` 
 and you do not want to upgrade XCode to a more recent version, use [homebrew](https://brew.sh/) to install llvm and set this variable.
  
-
-## Using xcode
+## Using Xcode
 
 `premake xcode4` builds xcode assets so if you would rather just use xcode, you can open the solutions created after running premake yourself
 or having `./build-osx.sh` run it.
@@ -168,11 +167,11 @@ is an available option.
 
 ## Building a Surge.vst (VST2) with Linux
 
-Some discussion at https://github.com/kurasu/surge/issues/19
+Some discussion at https://github.com/surge-synthesizer/surge/issues/19
 
 ## Building a Surge.vst3 (VST3) with Linux
 
-Some discussion at https://github.com/kurasu/surge/issues/19
+Some discussion at https://github.com/surge-synthesizer/surge/issues/19
 
 ## References
 
