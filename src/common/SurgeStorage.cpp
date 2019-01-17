@@ -542,9 +542,9 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev)
    int order = wt_list[id].order;
 
    if (nextPrev)
-      order = (order == (n - 1)) ? 0 : order + 1;
+       order = (order >= (n - 1)) ? 0 : order + 1; // see comment in incrementPatch for that >= vs ==
    else
-      order = (order == 0) ? n - 1 : order - 1;
+      order = (order <= 0) ? n - 1 : order - 1;
 
    return wtOrdering[order];
 }

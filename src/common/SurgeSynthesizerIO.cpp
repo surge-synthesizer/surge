@@ -51,14 +51,22 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev)
    int order = storage.patch_list[patchid].order;
    int category = storage.patch_list[patchid].category;
 
+   /*
+   ** Ideally these comparisons would be strict == and
+   ** the system would never setup a patch with a range
+   ** outside the list of patches. But the init patch and
+   ** (maybe) some others don't have a valid order set.
+   ** so be defensive and reset all values outside the range with
+   ** >= n-1 and <= 0 rather than ==
+   */
    if (nextPrev) {
       do {
-         order = (order == (n - 1)) ? 0 : order + 1;
+         order = (order >= (n - 1)) ? 0 : order + 1;
       } while (storage.patch_list[storage.patchOrdering[order]].category !=
                category);
    } else {
       do {
-         order = (order == 0) ? n - 1 : order - 1;
+         order = (order <= 0) ? n - 1 : order - 1;
       } while (storage.patch_list[storage.patchOrdering[order]].category !=
                category);
    }
@@ -76,9 +84,9 @@ void SurgeSynthesizer::incrementCategory(bool nextPrev)
 
    int order = storage.patch_category[current_category_id].order;
    if (nextPrev)
-      order = (order == (n - 1)) ? 0 : order + 1;
+      order = (order >= (n - 1)) ? 0 : order + 1;
    else
-      order = (order == 0) ? n - 1 : order - 1;
+      order = (order <= 0) ? n - 1 : order - 1;
 
    current_category_id = storage.patchCategoryOrdering[order];
 
