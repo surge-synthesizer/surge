@@ -376,7 +376,9 @@ void SurgeStorage::refresh_wtlist()
 
    if (wt_category.size() < 1 && wt_list.size() < 1)
    {
-      errorbox("File IO Error: Couldn't locate wavetables on disk!\n\nPlease reinstall..");
+       Surge::UserInteractions::promptError(std::string("Surge was unable to load wavetables from disk. ") +
+                                            "Please reinstall using the surge installer.",
+                                            "Surge Installation Error" );
    }
 
    wtCategoryOrdering = std::vector<int>(wt_category.size());
@@ -508,15 +510,6 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
 int SurgeStorage::get_clipboard_type()
 {
    return clipboard_type;
-}
-
-void SurgeStorage::errorbox(string message)
-{
-#if WIN32
-   MessageBox(::GetActiveWindow(), message.c_str(), "ERROR", MB_OK | MB_ICONERROR);
-#elif MAC
-   // TODO add error dialog
-#endif
 }
 
 int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev)

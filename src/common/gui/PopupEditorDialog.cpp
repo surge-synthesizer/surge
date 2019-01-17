@@ -144,12 +144,12 @@ void spawn_miniedit_text(char* c, int maxchars)
 }
 #elif __linux__
 
-#include <stdio.h>
+#include "UserInteractions.h"
 
 void spawn_miniedit_text(char* c, int maxchars)
 {
    // FIXME: Implement text edit popup on Linux.
-   fprintf(stderr, "%s: text edit popup is not implemented.\n", __func__);
+   Surge::UserInteractions::promptError( "miniedit_text is not implemented on linux", "Unimplemented Feature" );
 }
 
 #endif

@@ -547,10 +547,8 @@ bool Vst2PluginInstance::tryInit()
    SurgeSynthesizer* synth = (SurgeSynthesizer*)_aligned_malloc(sizeof(SurgeSynthesizer), 16);
    if (!synth)
    {
-#if WIN32
-      MessageBox(::GetActiveWindow(), "Could not allocate memory.", "Out of memory",
-                 MB_OK | MB_ICONERROR);
-#endif
+      Surge::UserInteractions::promptError("Unable to allocate SurgeSynthesizer",
+                                           "Out of memory");
       state = DEAD;
       return false;
    }

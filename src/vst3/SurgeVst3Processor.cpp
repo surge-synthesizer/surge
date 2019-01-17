@@ -2,6 +2,7 @@
 
 #include "SurgeVst3Processor.h"
 #include "surgecids.h"
+#include "UserInteractions.h"
 
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
@@ -82,11 +83,8 @@ void SurgeVst3Processor::createSurge()
 
    if (!surgeInstance.get())
    {
-      // out of memory
-#if WIN32
-      MessageBoxW(::GetActiveWindow(), L"Could not allocate memory.", L"Out of memory",
-                  MB_OK | MB_ICONERROR);
-#endif
+      Surge::UserInteractions::promptError("Unable to allocate SurgeSynthesizer",
+                                           "Out of memory");
 
       return;
    }
