@@ -504,8 +504,6 @@ public:
    void clipboard_paste(int type, int scene, int entry);
    int get_clipboard_type();
 
-   void errorbox(string message);
-
    int getAdjacentWaveTable(int id, bool nextPrev);
 
    // The in-memory patch database.

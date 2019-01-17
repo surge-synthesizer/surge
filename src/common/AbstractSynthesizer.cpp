@@ -2,9 +2,7 @@
 //	Copyright 2005 Claes Johanson & vember|audio
 //-------------------------------------------------------------------------------------------------------
 #include "AbstractSynthesizer.h"
-#if WINDOWS
-#include <Windows.h>
-#endif
+#include "UserInteractions.h"
 
 #include <CpuArchitecture.h>
 
@@ -19,20 +17,10 @@ void initDllGlobals()
 
    if (!(CpuArchitecture & CaSSE2))
    {
-#if WINDOWS
-      MessageBox(::GetActiveWindow(), SSE2ErrorText,
-                 "Surge: System requirements not met", MB_OK | MB_ICONERROR);
-#else
-      fprintf(stderr, "%s: %s", __func__, SSE2ErrorText);
-#endif
+       Surge::UserInteractions::promptError( SSE2ErrorText, "Surge System Requirements not met" );
    }
    if (!(CpuArchitecture & CaCMOV))
    {
-#if WINDOWS
-      MessageBox(::GetActiveWindow(), CMOVErrorText,
-                 "Surge: System requirements not met", MB_OK | MB_ICONERROR);
-#else
-      fprintf(stderr, "%s: %s", __func__, CMOVErrorText);
-#endif
+       Surge::UserInteractions::promptError( CMOVErrorText, "Surge System Requirements not met" );
    }
 }
