@@ -21,7 +21,7 @@ const int n_inputs = 2;
 
 void initDllGlobals();
 
-class AbstractSynthesizer
+class alignas(16) AbstractSynthesizer
 {
 public:
    virtual void playNote(char channel, char key, char velocity, char detune) = 0;

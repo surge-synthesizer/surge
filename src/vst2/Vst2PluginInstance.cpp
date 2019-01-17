@@ -98,12 +98,7 @@ void Vst2PluginInstance::inputConnected(VstInt32 index, bool state)
 
 Vst2PluginInstance::~Vst2PluginInstance()
 {
-   // delete objects
-   if (_instance)
-   {
-      _instance->~SurgeSynthesizer();
-      _aligned_free(_instance);
-   }
+   delete _instance;
 }
 
 VstInt32
@@ -544,27 +539,23 @@ bool Vst2PluginInstance::tryInit()
    getHostProductString(product);
    VstInt32 hostversion = getHostVendorVersion();
 
-   SurgeSynthesizer* synth = (SurgeSynthesizer*)_aligned_malloc(sizeof(SurgeSynthesizer), 16);
-   if (!synth)
-   {
-      Surge::UserInteractions::promptError("Unable to allocate SurgeSynthesizer",
-                                           "Out of memory");
+   try {
+      std::unique_ptr<SurgeSynthesizer> synthTmp(new SurgeSynthesizer(this));
+      synthTmp->setSamplerate(this->getSampleRate());
+
+      std::unique_ptr<SurgeGUIEditor> editorTmp(new SurgeGUIEditor(this, synthTmp.get()));
+
+      _instance = synthTmp.release();
+      editor = editorTmp.release();
+   } catch (std::bad_alloc err) {
+      Surge::UserInteractions::promptError(err.what(), "Out of memory");
       state = DEAD;
       return false;
-   }
-
-   try {
-      new (synth) SurgeSynthesizer(this);
    } catch (Surge::Error err) {
       Surge::UserInteractions::promptError(err);
-      _aligned_free(synth);
       state = DEAD;
       return false;
    }
-   _instance = (SurgeSynthesizer*)synth;
-
-   _instance->setSamplerate(this->getSampleRate());
-   editor = new SurgeGUIEditor(this, _instance);
 
    blockpos = 0;
    state = INITIALIZED;
