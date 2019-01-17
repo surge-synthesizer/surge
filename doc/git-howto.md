@@ -2,7 +2,7 @@
 
 ## Disclaimer
 
-git is a powerful and multifaceted tool. The ability to move chunks of commits around, to label them as branches, and to
+Git is a powerful and multifaceted tool. The ability to move chunks of commits around, to label them as branches, and to
 have repositories in various states of sync and not, give you amazing flexilibity. They also result in it being a tool
 where there is way more than one way to do something. So this document is not a depositive guide to git.
 
@@ -98,24 +98,24 @@ and different branch for each pull request.
 
 ### I would like to try some other developers branch
 
-Lets say that a developer says in slack something like "I've fixed this, but it is on my someuser this-fix-923 branch"
-where someuser is their git id and that's the branch name. 
+Lets say, that a developer says on Slack something to the tone of "I've fixed (this issue), but it is on my example-user example-branch branch".
+In this case, the `example-user` will be their actual git id, and `example-branch` will be the branch-name that they have the fix in. 
 
-Well to do this, you just need someuser as another remote, just like upstream became. So one time do
-
-```
-git remote add someuser https://www.github.com/someuser/surge
-```
-
-then when you want their feature do
+Well, to do this, you just need to add `example-user` as another remote, just like upstream was. So, do this:
 
 ```
-git fetch someuser
-git checkout someuser/this-fix-923
+git remote add example-user https://www.github.com/example-user/surge
 ```
 
-this will give you a 'detatched HEAD' message. Don't wory about that. It's beyond the scope of this exercise.
-And of course, to go back to your version you can just `git checkout master`.
+then, when you want their branch, write
+
+```
+git fetch example-user
+git checkout example-user/example-branch
+```
+
+This will give you a 'detached HEAD' message. Don't wory about that. It's beyond the scope of this exercise.
+And of course, to go back to your version you can just type `git checkout master`.
 
 
 ### I broke the golden rule and developed in master. Help me fix it
