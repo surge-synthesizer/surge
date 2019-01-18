@@ -50,8 +50,9 @@ Prerequisites
 * [Premake 5](https://premake.github.io/download.html#v5) for generating project files
 * [Visual Studio 15.5 (at least)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
+* [nuget](https://www.nuget.org/downloads) for installing Nuget
 
-Install Git, Premake5, Visual Studio 2017 and Inno Setup.
+Install Git, Premake5, Visual Studio 2017, Inno Setup and nuget. 
 
 While Visual Studio 2017 is being installed, remember to select `C++` and `Windows 8.1 SDK` in the installer.
 
