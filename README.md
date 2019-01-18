@@ -94,7 +94,11 @@ Then proceed as above.
 
 ## Build Pre-requisites
 
-This process expects that you have both `Xcode` and `Xcode Command Line Utilities` installed.
+This process expects that you have both `Xcode` and `Xcode Command Line Utilities` installed. The commandline to install the `Xcode Command Line Utilities` is 
+
+```
+xcode-select --install
+```
 
 Install `premake5` by downloading it from  https://premake.github.io. Unzip the package. Install it
 in /usr/local/bin or elsewhere in your path.
