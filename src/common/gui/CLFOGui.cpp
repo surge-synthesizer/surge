@@ -7,6 +7,19 @@
 extern CFontRef surge_minifont;
 extern CFontRef surge_patchfont;
 
+// At a later date, fix this along with the other font issues between platforms. Keep this
+// in this unit only.
+// See github issue #295. The minifont is 1pt too big so shrink it by 1 px.
+// Ideally we would shift all fonts to a bundled lato but that requires us
+// to resolve github issue #214
+#if MAC
+SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("Lucida Grande", 8); // one smaller than minifont
+#else
+SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("Microsoft Sans Serif", 8);
+#endif
+
+CFontRef surge_lfoLabelFont = lfoLabelFont;
+
 void drawtri(CRect r, CDrawContext* context, int orientation)
 {
    int m = 2;
@@ -302,7 +315,7 @@ void CLFOGui::draw(CDrawContext* dc)
    CColor cselected = {0xfe, 0x98, 0x15, 0xff};
    // CColor blackColor (0, 0, 0, 0);
    dc->setFrameColor(cskugga);
-   dc->setFont(surge_minifont);
+   dc->setFont(surge_lfoLabelFont);
 
    rect_shapes = leftpanel;
    for (int i = 0; i < n_lfoshapes; i++)
@@ -314,7 +327,7 @@ void CLFOGui::draw(CDrawContext* dc)
       {
          CRect tb2(tb);
          tb2.left++;
-         tb2.top++;
+         tb2.top += 0.5;
          tb2.inset(2, 1);
          tb2.offset(0, 1);
          dc->setFillColor(cselected);
@@ -325,6 +338,7 @@ void CLFOGui::draw(CDrawContext* dc)
       shaperect[i] = tb;
       // tb.offset(0,-1);
       dc->setFontColor(kBlackCColor);
+      tb.top += 1.6; // now the font is smaller and the box is square, smidge down the text
       dc->drawString(ls_abberations[i], tb);
    }
 
