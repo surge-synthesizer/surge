@@ -25,14 +25,19 @@ There is currently work going on to create an official release-page with install
 ## macOS
 
 For user-made presets, the folder is `~/Documents/Surge`
+
 For Surge factory presets, wavetables and preferences, the folder is `/Library/Application Support/Surge`
-if you install globally (with the installer) or `~/Library/Application Support/Surge` if you install locally
-(with `./build-osx.sh`). The plugins are installed in `/Library/Audio/Plug-Ins` or `~/Library/Audio/Plug-Ins` again 
-depending whether you install globally or locally. 
+
+When installing globally (with the installer), the plugins will get installed into `/Library/Audio/Plug-Ins`.
+
+If you install locally (with `./build-osx.sh`), the plugins will get installed into `~/Library/Audio/Plug-Ins`.
+
+Having the same name plugin in both locations can cause conflicts, so do remember to wipe all `Surge.component`, `Surge.vst` and `Surge.vst3` instances from each path when reinstalling (globally) or when re-baking with `./build-osx.sh` (locally).
 
 ## Windows
 
-For user-made presets, the location is `c:\Users\<yourusername>\Documents\Surge`
+For user-made presets, the location is `C:\Users\<yourusername>\Documents\Surge`
+
 For Surge factory presets, wavetables and preferences, the folder is: `C:\Users\<yourusername>\AppData\Local\Surge`
 
 # Windows
@@ -45,8 +50,9 @@ Prerequisites
 * [Premake 5](https://premake.github.io/download.html#v5) for generating project files
 * [Visual Studio 15.5 (at least)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
+* [nuget](https://www.nuget.org/downloads) for installing Nuget
 
-Install Git, Premake5, Visual Studio 2017 and Inno Setup.
+Install Git, Premake5, Visual Studio 2017, Inno Setup and nuget. 
 
 While Visual Studio 2017 is being installed, remember to select `C++` and `Windows 8.1 SDK` in the installer.
 
@@ -89,7 +95,11 @@ Then proceed as above.
 
 ## Build Pre-requisites
 
-This process expects that you have both `Xcode` and `Xcode Command Line Utilities` installed.
+This process expects that you have both `Xcode` and `Xcode Command Line Utilities` installed. The commandline to install the `Xcode Command Line Utilities` is 
+
+```
+xcode-select --install
+```
 
 Install `premake5` by downloading it from  https://premake.github.io. Unzip the package. Install it
 in /usr/local/bin or elsewhere in your path.
