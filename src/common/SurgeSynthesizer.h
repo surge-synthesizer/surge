@@ -14,8 +14,6 @@ struct QuadFilterChainState;
 #include <atomic>
 using namespace std;
 
-const int max_voices = 64;
-
 #if TARGET_AUDIOUNIT
 class aulayer;
 typedef aulayer PluginLayer;
@@ -91,8 +89,8 @@ public:
 
    SurgeVoice* getUnusedVoice(int scene);
    void freeVoice(SurgeVoice*);
-   SurgeVoice* voices_array[2][max_voices];
-   unsigned int voices_usedby[2][max_voices]; // 0 indicates no user, 1 is scene A & 2 is scene B
+   SurgeVoice* voices_array[2][MAX_VOICES];
+   unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A & 2 is scene B
 
    bool
    setParameter01(long index, float value, bool external = false, bool force_integer = false) final;

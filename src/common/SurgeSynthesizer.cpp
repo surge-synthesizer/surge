@@ -55,7 +55,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
 
    allNotesOff();
 
-   for (int i = 0; i < max_voices; i++)
+   for (int i = 0; i < MAX_VOICES; i++)
    {
       voices_usedby[0][i] = 0;
       voices_usedby[1][i] = 0;
@@ -64,9 +64,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    }
 
    FBQ[0] =
-       (QuadFilterChainState*)_aligned_malloc((max_voices >> 2) * sizeof(QuadFilterChainState), 16);
+       (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
    FBQ[1] =
-       (QuadFilterChainState*)_aligned_malloc((max_voices >> 2) * sizeof(QuadFilterChainState), 16);
+       (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
 
    storage.getPatch().polylimit.val.i = 8;
    for (int sc = 0; sc < 2; sc++)
@@ -158,7 +158,7 @@ SurgeSynthesizer::~SurgeSynthesizer()
    _aligned_free(FBQ[0]);
    _aligned_free(FBQ[1]);
 
-   for (int i = 0; i < max_voices; i++)
+   for (int i = 0; i < MAX_VOICES; i++)
    {
       _aligned_free(voices_array[0][i]);
       _aligned_free(voices_array[1][i]);
@@ -328,7 +328,7 @@ int SurgeSynthesizer::getNonReleasedVoices(int s)
 
 SurgeVoice* SurgeSynthesizer::getUnusedVoice(int scene)
 {
-   for (int i = 0; i < max_voices; i++)
+   for (int i = 0; i < MAX_VOICES; i++)
    {
       if (!voices_usedby[scene][i])
       {
@@ -341,7 +341,7 @@ SurgeVoice* SurgeSynthesizer::getUnusedVoice(int scene)
 
 void SurgeSynthesizer::freeVoice(SurgeVoice* v)
 {
-   for (int i = 0; i < max_voices; i++)
+   for (int i = 0; i < MAX_VOICES; i++)
    {
       if (voices_usedby[0][i] && (v == voices_array[0][i]))
       {
