@@ -5,6 +5,7 @@
 #include <AudioUnit/AudioUnitCarbonView.h>
 #include "aulayer_cocoaui.h"
 #include "AbstractSynthesizer.h"
+#include "CpuArchitecture.h"
 
 typedef SurgeSynthesizer sub3_synth;
 
@@ -109,16 +110,17 @@ void aulayer::InitializePlugin()
 {
 	if(!plugin_instance) 
 	{
-          //sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
-          //new(synth) sub3_synth(this);
-          initDllGlobals(); // this is a slightly misnamed function since only windows has dlls; it does all setup stuff for globals
-          
-          // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
-          plugin_instance = new SurgeSynthesizer( this );
+      //sub3_synth* synth = (sub3_synth*)_aligned_malloc(sizeof(sub3_synth),16);
+      //new(synth) sub3_synth(this);
+      initCpuArchitecture();
 
-          // This allows us standalone performance mode. See issue #146 and comment below tagged with issue number
-          plugin_instance->time_data.ppqPos = 0;
-  }
+      // FIXME: The VST uses a std::unique_ptr<> and we probably should here also
+      plugin_instance = new SurgeSynthesizer( this );
+
+      // This allows us standalone performance mode. See issue #146 and comment below tagged with issue number
+      plugin_instance->time_data.ppqPos = 0;
+   }
+
 	assert(plugin_instance);
 }
 

@@ -6,6 +6,7 @@
 #include "SurgeSynthesizer.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeError.h"
+#include "CpuArchitecture.h"
 //#include "sub3_editor2.h"
 #include <float.h>
 #include "public.sdk/source/vst2.x/aeffeditor.h"
@@ -32,7 +33,7 @@ namespace VSTGUI { void* soHandle = nullptr; }
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
-   initDllGlobals(); // this is a slightly misnamed function since only windows has dlls; it does all setup stuff for globals
+   initCpuArchitecture();
 
    return new Vst2PluginInstance(audioMaster);
 }

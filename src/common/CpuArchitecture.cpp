@@ -1,5 +1,11 @@
 #include "CpuArchitecture.h"
+#include "UserInteractions.h"
 #include <string.h>
+
+static const char *SSE2ErrorText =
+   "This plugin requires a CPU supporting the SSE2 instruction set.";
+static const char *CMOVErrorText =
+   "This plugin requires a CPU supporting the CMOV instruction.";
 
 unsigned int CpuArchitecture = 0;
 
@@ -34,4 +40,10 @@ void initCpuArchitecture()
    if (__builtin_cpu_supports("cmov"))
       CpuArchitecture |= CaCMOV;
 #endif
+
+   if (!(CpuArchitecture & CaSSE2))
+       Surge::UserInteractions::promptError(SSE2ErrorText, "Surge System Requirements not met");
+
+   if (!(CpuArchitecture & CaCMOV))
+       Surge::UserInteractions::promptError(CMOVErrorText, "Surge System Requirements not met");
 }

@@ -1,11 +1,9 @@
-
 #include "version.h" // for versioning
-
 #include "public.sdk/source/main/pluginfactoryvst3.h"
-
 #include "SurgeVst3Processor.h"
 //#include "SurgeVst3EditController.h"
 #include "surgecids.h"
+#include "CpuArchitecture.h"
 #include <AbstractSynthesizer.h>
 
 #define stringPluginName "Surge"
@@ -18,7 +16,7 @@
 // called after library was loaded
 bool InitModule()
 {
-   initDllGlobals();
+   initCpuArchitecture();
 
    return true;
 }
