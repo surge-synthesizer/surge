@@ -97,8 +97,8 @@ private:
 class FreqshiftEffect : public Effect
 {
 public:
-   halfrate_stereo fr alignas(16),
-                   fi alignas(16);
+   HalfRateFilter fr alignas(16),
+                  fi alignas(16);
    lipol_ps mix alignas(16);
    FreqshiftEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~FreqshiftEffect();
@@ -234,8 +234,8 @@ protected:
 
 class DistortionEffect : public Effect
 {
-   halfrate_stereo hr_a alignas(16),
-                   hr_b alignas(16);
+   HalfRateFilter hr_a alignas(16),
+                  hr_b alignas(16);
    lipol_ps drive alignas(16),
             outgain alignas(16);
 
@@ -321,8 +321,8 @@ private:
 
 class emphasize : public Effect
 {
-   halfrate_stereo pre alignas(16),
-                   post alignas(16);
+   HalfRateFilter pre alignas(16),
+                  post alignas(16);
    lipol_ps type alignas(16),
             outgain alignas(16);
 

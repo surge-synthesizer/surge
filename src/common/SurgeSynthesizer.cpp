@@ -29,12 +29,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
     //: halfband_AL(false),halfband_AR(false),halfband_BL(false),halfband_BR(false),
     : hpA(&storage), hpB(&storage), _parent(parent)
 {
-   halfbandA = (halfrate_stereo*)_aligned_malloc(sizeof(halfrate_stereo), 16);
-   halfbandB = (halfrate_stereo*)_aligned_malloc(sizeof(halfrate_stereo), 16);
-   halfbandIN = (halfrate_stereo*)_aligned_malloc(sizeof(halfrate_stereo), 16);
-   new (halfbandA) halfrate_stereo(6, true);
-   new (halfbandB) halfrate_stereo(6, true);
-   new (halfbandIN) halfrate_stereo(6, true);
+   halfbandA = new HalfRateFilter(6, true);
+   halfbandB = new HalfRateFilter(6, true);
+   halfbandIN = new HalfRateFilter(6, true);
 
    switch_toggled_queued = false;
    halt_engine = false;
@@ -154,12 +151,9 @@ SurgeSynthesizer::~SurgeSynthesizer()
 {
    allNotesOff();
 
-   halfbandA->~halfrate_stereo();
-   _aligned_free(halfbandA);
-   halfbandB->~halfrate_stereo();
-   _aligned_free(halfbandB);
-   halfbandIN->~halfrate_stereo();
-   _aligned_free(halfbandIN);
+   delete halfbandA;
+   delete halfbandB;
+   delete halfbandIN;
 
    _aligned_free(FBQ[0]);
    _aligned_free(FBQ[1]);

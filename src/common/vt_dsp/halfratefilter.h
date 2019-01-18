@@ -3,9 +3,8 @@
 
 const unsigned int halfrate_max_M = 6;
 
-class halfrate_stereo
+class alignas(16) HalfRateFilter
 {
-   // must be aligned
 private:
    __m128 va[halfrate_max_M];
    __m128 vx0[halfrate_max_M];
@@ -17,7 +16,7 @@ private:
    __m128 oldout;
 
 public:
-   halfrate_stereo(int M, bool steep);
+   HalfRateFilter(int M, bool steep);
    void process_block(float* L, float* R, int nsamples = 64);
    void process_block_D2(float* L,
                          float* R,
