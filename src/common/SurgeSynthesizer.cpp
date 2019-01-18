@@ -61,8 +61,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    {
       voices_usedby[0][i] = 0;
       voices_usedby[1][i] = 0;
-      voices_array[0][i] = (SurgeVoice*)_aligned_malloc(sizeof(SurgeVoice), 16);
-      voices_array[1][i] = (SurgeVoice*)_aligned_malloc(sizeof(SurgeVoice), 16);
+      voices_array[0][i] = new SurgeVoice();
+      voices_array[1][i] = new SurgeVoice();
    }
 
    FBQ[0] =
@@ -162,8 +162,8 @@ SurgeSynthesizer::~SurgeSynthesizer()
 
    for (int i = 0; i < MAX_VOICES; i++)
    {
-      _aligned_free(voices_array[0][i]);
-      _aligned_free(voices_array[1][i]);
+      delete voices_array[0][i];
+      delete voices_array[1][i];
    }
 
    for (int sc = 0; sc < 2; sc++)

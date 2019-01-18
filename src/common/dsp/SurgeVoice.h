@@ -13,7 +13,7 @@
 
 struct QuadFilterChainState;
 
-class SurgeVoice
+class alignas(16) SurgeVoice
 {
 public:
    float output alignas(16)[2][BLOCK_SIZE_OS];
@@ -22,6 +22,7 @@ public:
    float fmbuffer alignas(16)[BLOCK_SIZE_OS];
    // used for the 2>1<3 FM-mode (Needs the pointer earlier)
 
+   SurgeVoice();
    SurgeVoice(SurgeStorage* storage,
               SurgeSceneStorage* scene,
               pdata* params,

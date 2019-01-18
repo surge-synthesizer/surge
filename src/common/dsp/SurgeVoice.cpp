@@ -39,6 +39,10 @@ float SurgeVoiceState::getPitch()
           detune;
 }
 
+SurgeVoice::SurgeVoice()
+{
+}
+
 SurgeVoice::SurgeVoice(SurgeStorage* storage,
                        SurgeSceneStorage* oscene,
                        pdata* params,
