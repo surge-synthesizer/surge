@@ -32,9 +32,11 @@ When installing globally (with the installer), the plugins will get installed in
 
 If you install locally (with `./build-osx.sh`), the plugins will get installed into `~/Library/Audio/Plug-Ins`.
 
+Having the same name plugin in both locations can cause conflicts, so do remember to wipe all `Surge.component`, `Surge.vst` and `Surge.vst3` instances from each path when reinstalling (globally) or when re-baking with `./build-osx.sh` (locally).
+
 ## Windows
 
-For user-made presets, the location is `c:\Users\<yourusername>\Documents\Surge`
+For user-made presets, the location is `C:\Users\<yourusername>\Documents\Surge`
 
 For Surge factory presets, wavetables and preferences, the folder is: `C:\Users\<yourusername>\AppData\Local\Surge`
 
