@@ -7,6 +7,7 @@
 #include "UserInteractions.h"
 #include <set>
 #include <numeric>
+#include <cctype>
 #include <vt_dsp/vt_dsp_endian.h>
 #if MAC
 #include <cstdlib>
@@ -999,4 +1000,24 @@ float envelope_rate_linear(float x)
    float a = x - (float)e;
 
    return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
+}
+
+namespace Surge
+{
+    namespace Storage
+    {
+        bool isValidName(const std::string &patchName)
+        {
+            bool valid = false;
+            
+            // No need to validate size separately as an empty string won't have visible characters.
+            for (const char &c : patchName)
+                if (std::isalnum(c) || std::ispunct(c))
+                    valid = true;
+                else if (c != ' ')
+                    return false;
+
+            return valid;
+        }
+    }
 }

@@ -545,3 +545,11 @@ float lookup_waveshape(int, float);
 float lookup_waveshape_warp(int, float);
 float envelope_rate_lpf(float);
 float envelope_rate_linear(float);
+
+namespace Surge
+{
+namespace Storage
+{
+    bool isValidName(const std::string &name);
+}
+}

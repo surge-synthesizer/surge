@@ -19,6 +19,7 @@
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
 #include "CNumberField.h"
+#include "UserInteractions.h"
 
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
@@ -2127,11 +2128,35 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       // frame->setModalView(nullptr);
       frame->setDirty();
 
-      synth->storage.getPatch().name = patchName->getText();
-      synth->storage.getPatch().author = patchCreator->getText();
-      synth->storage.getPatch().category = patchCategory->getText();
-      synth->storage.getPatch().comment = patchComment->getText();
-      synth->savePatch();
+      /*
+      ** Don't allow a blank patch
+      */
+      std::string whatIsBlank = "";
+      bool haveBlanks = false;
+
+      if (! Surge::Storage::isValidName(patchName->getText().getString()))
+      {
+          whatIsBlank = "name"; haveBlanks = true;
+      }
+      if (! Surge::Storage::isValidName(patchCategory->getText().getString()))
+      {
+          whatIsBlank = whatIsBlank + (haveBlanks? " and category" : "category"); haveBlanks = true;
+      }
+      if (haveBlanks)
+      {
+          Surge::UserInteractions::promptError(std::string("Unable to store a patch due to invalid ") +
+                                               whatIsBlank + ". Please save again and provide a complete " +
+                                               whatIsBlank + ".",
+                                               "Error saving patch");
+      }
+      else
+      {
+          synth->storage.getPatch().name = patchName->getText();
+          synth->storage.getPatch().author = patchCreator->getText();
+          synth->storage.getPatch().category = patchCategory->getText();
+          synth->storage.getPatch().comment = patchComment->getText();
+          synth->savePatch();
+      }
    }
    break;
    default:
