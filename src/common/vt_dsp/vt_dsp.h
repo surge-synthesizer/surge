@@ -4,5 +4,5 @@
 namespace vt_dsp
 {
 class lipol_ps;
-class halfrate_stereo;
+class HalfRateFilter;
 } // namespace vt_dsp

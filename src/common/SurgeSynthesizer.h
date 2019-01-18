@@ -154,7 +154,7 @@ public:
 public:
    int CC0, PCH, patchid;
    float masterfade = 0;
-   halfrate_stereo *halfbandA, *halfbandB, *halfbandIN;
+   HalfRateFilter *halfbandA, *halfbandB, *halfbandIN;
    list<SurgeVoice*> voices[2];
    Effect* fx[8];
    bool halt_engine = false;

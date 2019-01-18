@@ -4,7 +4,7 @@
 const unsigned int hr_BLOCK_SIZE = 256;
 const __m128 half = _mm_set_ps1(0.5f);
 
-halfrate_stereo::halfrate_stereo(int M, bool steep)
+HalfRateFilter::HalfRateFilter(int M, bool steep)
 {
    assert(!(M > halfrate_max_M));
    this->M = M;
@@ -13,7 +13,7 @@ halfrate_stereo::halfrate_stereo(int M, bool steep)
    reset();
 }
 
-void halfrate_stereo::process_block(float* __restrict floatL, float* __restrict floatR, int N)
+void HalfRateFilter::process_block(float* __restrict floatL, float* __restrict floatR, int N)
 {
    __m128* __restrict L = (__m128*)floatL;
    __m128* __restrict R = (__m128*)floatR;
@@ -117,7 +117,7 @@ void halfrate_stereo::process_block(float* __restrict floatL, float* __restrict 
 // Software pipelining.. Nice idea, but the compiler does not like it one bit
 // The non-pipelined implementation is quite okay, because ty0 is not used until 2 samples later, therefore the latency dependency
 // is divided by 3
-void halfrate_stereo::process_block(float * __restrict floatL, float * __restrict floatR, int N)
+void HalfRateFilter::process_block(float * __restrict floatL, float * __restrict floatR, int N)
 {		
 	int NM1 = N + M - 1;
 	for(int k = 0; k<NM1; k++)
@@ -140,7 +140,7 @@ void halfrate_stereo::process_block(float * __restrict floatL, float * __restric
 }
 #endif
 
-void halfrate_stereo::process_block_D2(
+void HalfRateFilter::process_block_D2(
     float* floatL, float* floatR, int nsamples, float* outL, float* outR)
 {
    __m128* L = (__m128*)floatL;
@@ -269,7 +269,7 @@ void halfrate_stereo::process_block_D2(
    }
 }
 
-void halfrate_stereo::process_block_U2(
+void HalfRateFilter::process_block_U2(
     float* floatL_in, float* floatR_in, float* floatL, float* floatR, int nsamples)
 {
    __m128* L = (__m128*)floatL;
@@ -380,7 +380,7 @@ void halfrate_stereo::process_block_U2(
    }		*/
 }
 
-void halfrate_stereo::reset()
+void HalfRateFilter::reset()
 {
    for (int i = 0; i < M; i++)
    {
@@ -394,7 +394,7 @@ void halfrate_stereo::reset()
    oldout = _mm_setzero_ps();
 }
 
-void halfrate_stereo::set_coefficients(float* cA, float* cB)
+void HalfRateFilter::set_coefficients(float* cA, float* cB)
 {
    for (int i = 0; i < M; i++)
    {
@@ -403,7 +403,7 @@ void halfrate_stereo::set_coefficients(float* cA, float* cB)
    }
 }
 
-void halfrate_stereo::load_coefficients()
+void HalfRateFilter::load_coefficients()
 {
    int order = M << 1;
    if (steep)
