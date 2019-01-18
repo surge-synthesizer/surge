@@ -32,7 +32,6 @@
 #endif*/
 
 //#include <commctrl.h>
-const int window_size_x = 904, window_size_y = 542;
 const int yofs = 10;
 
 #if MAC
@@ -96,8 +95,8 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    // init the size of the plugin
    rect.left = 0;
    rect.top = 0;
-   rect.right = window_size_x;
-   rect.bottom = window_size_y;
+   rect.right = WINDOW_SIZE_X;
+   rect.bottom = WINDOW_SIZE_Y;
    editor_open = false;
    queue_refresh = false;
    memset(param, 0, 1024 * sizeof(void*));
@@ -558,7 +557,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    /*// Comments
    {
-           CRect CommentsRect(6 + 150*4,528, window_size_x, window_size_y);
+           CRect CommentsRect(6 + 150*4,528, WINDOW_SIZE_X, WINDOW_SIZE_Y);
            CTextLabel *Comments = new
    CTextLabel(CommentsRect,synth->storage.getPatch().comment.c_str());
            Comments->setTransparency(true);
@@ -1147,7 +1146,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
    frame->addView(infowindow);
 
-   CRect wsize(0, 0, window_size_x, window_size_y);
+   CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
    aboutbox = new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, getSurgeBitmap(IDB_ABOUT));
    frame->addView(aboutbox);
 
@@ -1235,7 +1234,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    _idleTimer->start();
 #endif
 
-   CRect wsize(0, 0, window_size_x, window_size_y);
+   CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
    frame = new CFrame(wsize, this);
    frame->setBackground(getSurgeBitmap(IDB_BG));
    frame->open(parent, platformType);
@@ -2391,8 +2390,8 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    r.offset((r2.left / 150) * 150, r2.bottom);
 
    int ao = 0;
-   if (r.bottom > window_size_y)
-      ao = (window_size_y - r.bottom);
+   if (r.bottom > WINDOW_SIZE_Y)
+      ao = (WINDOW_SIZE_Y - r.bottom);
    r.offset(0, ao);
 
    if (buttons || forceMB)
