@@ -16,15 +16,23 @@ hey maybe use that energy to close a bug instead! And with that said, onwards!
 
 ## Basics
 
-Make a github account, fork [surge-synthesizer/surge](https://www.github.com/surge-synthesizer/surge), and check it out onto your machine. Do a build.
-Does it work? If so, great you are started! You also have git working properly (and presumably have it in your path in windows or
-are using git-bash there).
+Register a new GitHub account, log in with your new account and go to [https://github.com/surge-synthesizer/surge](https://github.com/surge-synthesizer/surge). On the top right corner you will see a bunch of buttons, one of which says `Fork`. When you click on this, you will create a new fork of Surge onto your GitHub account.
+
+This means that you can create a new `branch` in your `fork`, `push` some changes into the branch and later make a `Pull Request` (PR) out of it (towards `surge-synthesizer/surge`), which the Surge-maintainers can review, and, when approved, it will become a part of the actual Surge codebase.
+
+Now that you have clicked on `Fork` - a brand new fork of the Surge repository is in existence. In your case, replace the `example-user` in the following addresses with your actual GitHub account name. `example-user/surge` does not exist and will not exist. Use `<yourusernamehere>/surge`, and throw out the `<` and the `<`. 
+
+Your fork will live in this URL: http://github.com/example-user/surge
+
+The .git file that you can clone, if you so choose, is http://github.com/example-user/surge.git.
+
+However, since you have already cloned the `surge-synthesizer/surge` onto your device, you can just add it as a remote. So type in `git remote add example-user https://github.com/example-user/surge.git` - again, please be sure to **replace** the `example-user` in both portions of that commandline entry with **your** username. After this, you can do a `git remote -vv` and, if you like type `git fetch example-user` (again remembering to **replace** `example-user` with **your** username.
 
 ## Update your fork with master
 
-Often something will be changed in `surge-synthesizer/surge` and you will also want that in your copy. To do this you need to merge
+Often something will be changed in `surge-synthesizer/surge` and you will also want that in your local copy. To do this you need to merge
 your upstream into the master. [Github has good documentation on this](https://help.github.com/articles/syncing-a-fork/#platform-all)
-but here's the steps
+but here are the steps
 
 ### Onetime only - add surge-synthesizer/surge as an upstream remote
 
