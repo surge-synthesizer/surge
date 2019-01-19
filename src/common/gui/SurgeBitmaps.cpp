@@ -56,6 +56,7 @@ SurgeBitmaps::SurgeBitmaps()
       addEntry(IDB_FADERV_HANDLE);
       addEntry(IDB_ENVMODE);
       addEntry(IDB_STOREPATCH);
+      addEntry(IDB_BUTTON_MENU);
    }
    refCount++;
 }

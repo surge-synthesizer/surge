@@ -1,6 +1,7 @@
 #include "UserInteractions.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 namespace Surge
 {
@@ -53,8 +54,17 @@ namespace Surge
             return UserInteractions::OK;
         }
 
-        void openURL(const std::string &url)
+        void openURL(const std::string &url_str)
         {
+            CFURLRef url = CFURLCreateWithBytes (
+                NULL,                        // allocator
+                (UInt8*)url_str.c_str(),     // URLBytes
+                url_str.length(),            // length
+                kCFStringEncodingASCII,      // encoding
+                NULL                         // baseURL
+                );
+            LSOpenCFURLRef(url,0);
+            CFRelease(url);
         }
     };
 };

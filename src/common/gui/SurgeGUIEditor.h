@@ -91,6 +91,8 @@ private:
                              std::vector<PatchCategory>* patch_category,
                              int startcategory);
 
+
+   void showSettingsMenu(CRect &menuRect);
    
    void zoomInDir( int dir );
    int zoomFactor;
