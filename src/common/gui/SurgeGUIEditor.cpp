@@ -18,6 +18,7 @@
 #include "CAboutBox.h"
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
+#include "CScalableBitmap.h"
 #include "CNumberField.h"
 #include "UserInteractions.h"
 
@@ -64,7 +65,6 @@ enum special_tags
    tag_store_comments,
    tag_mod_source0,
    tag_mod_source_end = tag_mod_source0 + n_modsources,
-   tag_mp_zoom,
    tag_settingsmenu,
    //	tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
@@ -130,7 +130,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
 #endif
    zoom_callback = [](SurgeGUIEditor* f) {};
-   zoomFactor = 100;
+   setZoomFactor(100);
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -1127,22 +1127,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                              getSurgeBitmap(IDB_BUTTON_MENU), nopoint, false);
    frame->addView(b_settingsMenu);
 
-#if TARGET_AUDIOUNIT
-   // ZOOM CONTROL for now is only implemented in the Audio Unit host
-   CHSwitch2* mp_zoom =
-       new CHSwitch2(CRect(892 - 77, 526, 892 - 40, 526 + 12), this, tag_mp_zoom, 2, 12, 1, 2,
-                     getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
-   frame->addView(mp_zoom);
-   CTextLabel* Comments = new CTextLabel(CRect(892 - 137, 526, 892 - 77, 526 + 12), "Zoom");
-
-   Comments->setTransparency(true);
-   Comments->setFont(minifont);
-   Comments->setFontColor(kBlackCColor);
-   Comments->setHoriAlign(kRightText);
-   frame->addView(Comments);
-   // END ZOOM CONTROL
-#endif
-
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
    frame->addView(infowindow);
 
@@ -2038,15 +2022,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       return;
    }
    break;
-   case tag_mp_zoom:
-   {
-      if (control->getValue() > 0.5f)
-         zoomInDir(1);
-      else
-         zoomInDir(-1);
-      return;
-   }
-   break;
    case tag_settingsmenu:
    {
       CRect r = control->getViewSize();
@@ -2423,26 +2398,24 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
    return false;
 }
 
-void SurgeGUIEditor::zoomInDir(int dir)
-{
-   if (dir > 0)
-   {
-      zoomFactor += 10;
-   }
-   else
-   {
-      zoomFactor -= 10;
-   }
-   if (zoomFactor < 50)
-      zoomFactor = 50;
-   if (zoomFactor > 300)
-      zoomFactor = 300;
-   zoom_callback(this);
-}
-
 long SurgeGUIEditor::applyParameterOffset(long id)
 {
     return id-start_paramtags;
+}
+
+void SurgeGUIEditor::setZoomFactor(int zf)
+{
+   int dbs = getDisplayBackingScale();
+   zoomFactor = zf;
+   zoom_callback(this);
+
+   int fullPhysicalZoomFactor = (int)(zf * (dbs / 100.0)); // soo 150 and 200 gets you 300 not 30000!
+   CScalableBitmap::setPhysicalZoomFactor(fullPhysicalZoomFactor);
+}
+
+int SurgeGUIEditor::getDisplayBackingScale()
+{
+    return 200; // hardwire to retina for a moment
 }
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
@@ -2450,6 +2423,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     COptionMenu* settingsMenu =
         new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
     int eid = 0;
+    bool handled = false;
 
     int id_about = eid;
     settingsMenu->addEntry("About", eid++);
@@ -2457,6 +2431,46 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     int id_openmanual = eid;
     settingsMenu->addEntry("Surge Manual", eid++);
 
+#if SUPPORTS_ZOOM    
+    // Zoom submenus
+    COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+
+    int zid = 0;
+    for(auto s : { 100, 125, 150, 200, 300 }) // These are somewhat arbitrary reasonable defaults
+    {
+        std::ostringstream lab;
+        lab << "Zoom to " << s << "%";
+        CCommandMenuItem *zcmd = new CCommandMenuItem(lab.str());
+        zcmd->setActions([this,s,&handled](CCommandMenuItem *m) {
+                setZoomFactor(s);
+                handled = true;
+            }
+            );
+        zoomSubMenu->addEntry(zcmd); zid++;
+    }
+
+    zoomSubMenu->addEntry( "-", zid++ );
+    
+    for(auto jog : { -25, -10, 10, 25 } ) // These are somewhat arbitrary reasonable defaults also
+    {
+        std::ostringstream lab;
+        if( jog > 0 )
+            lab << "Grow by " << jog << "%";
+        else
+            lab << "Shrink by " << -jog << "%";
+        
+        CCommandMenuItem *zcmd = new CCommandMenuItem(lab.str());
+        zcmd->setActions([this,jog,&handled](CCommandMenuItem *m) {
+                setZoomFactor(getZoomFactor() + jog);
+                handled = true;
+            }
+            );
+        zoomSubMenu->addEntry(zcmd); zid++;
+    }
+
+    settingsMenu->addEntry(zoomSubMenu, "Zoom");
+#endif // Supports Zoom
+    
     frame->addView(settingsMenu); // add to frame
     settingsMenu->setDirty();
     settingsMenu->popup();
@@ -2464,15 +2478,20 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     int command = settingsMenu->getLastResult();
     frame->removeView(settingsMenu, true);
 
-    if(command == id_about)
+    if( handled )
+    {
+        // Someone else got it
+    }
+    else if(command == id_about)
     {
        if (aboutbox)
            ((CAboutBox*)aboutbox)->boxShow();
     }
     else if(command == id_openmanual)
     {
-        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/surge-manual/Surge.html");
+        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/surge-manual/");
     }
+
 }
 
 //------------------------------------------------------------------------------------------------

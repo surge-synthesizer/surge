@@ -93,14 +93,35 @@ private:
 
 
    void showSettingsMenu(CRect &menuRect);
+
+   /*
+   ** Zoom Implementation 
+   ** 
+   ** Zoom works by the system maintaining a zoom factor (created by user actions)
+   **
+   ** All zoom factors are set in units of percentages as ints. So no zoom is "100",
+   ** and double size is "200"
+   */
    
-   void zoomInDir( int dir );
    int zoomFactor;
  public:
-   void setZoomCallback( std::function< void(SurgeGUIEditor *) > f ) { zoom_callback = f; }
-   int getZoomFactor() { return zoomFactor; }
-    void setZoomFactor( int zf ) { zoomFactor = zf; zoom_callback( this ); }
- private:
+   void setZoomCallback(std::function< void(SurgeGUIEditor *) > f) {
+       zoom_callback = f;
+       setZoomFactor(getZoomFactor()); // notify the new callback
+   }
+   int  getZoomFactor() { return zoomFactor; }
+   void setZoomFactor(int zf);
+
+   /* 
+   ** Display backing scale is very OS dependent, so is implemented in src/(mac|win|linux)/(Mac|Win|Linux)SurgeGuiEditor.(cpp|mm) and so on
+   ** 'BackignScale' is the term for the difference between a logical and physical pixel. So on a mac retina display it woudl be '2.0'
+   ** then scaled up to an integer to be '200'.
+   ** 
+   ** As of the current state, this is just a function which returns '200' and the above implementation is not yet in place.
+   */
+   int getDisplayBackingScale();
+
+private:
    std::function< void(SurgeGUIEditor *) > zoom_callback;
    
    SurgeBitmaps bitmap_keeper;
@@ -131,3 +152,7 @@ private:
    void* _effect = nullptr;
    CVSTGUITimer* _idleTimer = nullptr;
 };
+
+#if TARGET_AUDIOUNIT && MAC
+#define SUPPORTS_ZOOM 1
+#endif
