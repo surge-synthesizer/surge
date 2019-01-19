@@ -8,6 +8,8 @@
 #include "UserInteractions.h"
 #if MAC
 #include "filesystem.h"
+#elif __linux__
+#include "experimental/filesystem"
 #else
 #include "filesystem"
 #endif
