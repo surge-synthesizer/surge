@@ -74,7 +74,7 @@ CMouseEventResult CHSwitch2::onMouseUp(CPoint& where, const CButtonState& button
 }
 CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
-   if (dragable && buttons != 0)
+   if (dragable && (buttons & kShift))
    {
       auto mouseableArea = getMouseableArea();
       double coefX, coefY;

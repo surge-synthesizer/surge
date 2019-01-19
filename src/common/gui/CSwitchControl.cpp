@@ -95,7 +95,13 @@ void gui_switch::mouse (CPoint &where, long button)
         // check if default value wanted
         if (checkDefaultValue (button))
                 return;
-        
+        
+
+
+
+
+
+
 
         if(is_itype)
         {
