@@ -62,10 +62,10 @@ enum special_tags
    tag_store_category,
    tag_store_creator,
    tag_store_comments,
-   tag_about,
    tag_mod_source0,
    tag_mod_source_end = tag_mod_source0 + n_modsources,
    tag_mp_zoom,
+   tag_settingsmenu,
    //	tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
@@ -1123,9 +1123,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    CRect aboutbrect(892 - 37, 526, 892, 526 + 12);
 
-   CHSwitch2* b_about = new CHSwitch2(aboutbrect, this, tag_about, 1, 27, 1, 1,
-                                      getSurgeBitmap(IDB_BUTTON_ABOUT), nopoint, false);
-   frame->addView(b_about);
+   CHSwitch2* b_settingsMenu = new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
+                                             getSurgeBitmap(IDB_BUTTON_MENU), nopoint, false);
+   frame->addView(b_settingsMenu);
 
 #if TARGET_AUDIOUNIT
    // ZOOM CONTROL for now is only implemented in the Audio Unit host
@@ -2047,6 +2047,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       return;
    }
    break;
+   case tag_settingsmenu:
+   {
+      CRect r = control->getViewSize();
+      CRect menuRect;
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+      menuRect.offset(where.x, where.y);
+
+      showSettingsMenu(menuRect);
+   }
+   break;
    case tag_osc_select:
    {
       current_osc = (int)(control->getValue() * 2.f + 0.5f);
@@ -2086,12 +2098,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       synth->processThreadunsafeOperations();
       return;
    }
-   case tag_about:
-   {
-      if (aboutbox)
-         ((CAboutBox*)aboutbox)->boxShow();
-   }
-   break;
    case tag_store:
    {
       patchdata p;
@@ -2437,6 +2443,36 @@ void SurgeGUIEditor::zoomInDir(int dir)
 long SurgeGUIEditor::applyParameterOffset(long id)
 {
     return id-start_paramtags;
+}
+
+void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
+{
+    COptionMenu* settingsMenu =
+        new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
+    int eid = 0;
+
+    int id_about = eid;
+    settingsMenu->addEntry("About", eid++);
+
+    int id_openmanual = eid;
+    settingsMenu->addEntry("Surge Manual", eid++);
+
+    frame->addView(settingsMenu); // add to frame
+    settingsMenu->setDirty();
+    settingsMenu->popup();
+
+    int command = settingsMenu->getLastResult();
+    frame->removeView(settingsMenu, true);
+
+    if(command == id_about)
+    {
+       if (aboutbox)
+           ((CAboutBox*)aboutbox)->boxShow();
+    }
+    else if(command == id_openmanual)
+    {
+        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/surge-manual/Surge.html");
+    }
 }
 
 //------------------------------------------------------------------------------------------------

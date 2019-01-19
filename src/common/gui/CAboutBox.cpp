@@ -43,7 +43,7 @@ void CAboutBox::draw(CDrawContext* pContext)
               __DATE__ + " " + __TIME__ + ")",
               "Released under the GNU General Public License, v3",
               "Copyright 2005-2019 by individual contributors",
-              "Source, contributors and other information at https://github.com/kurasu/surge",
+              "Source, contributors and other information at https://github.com/surge-synthesizer/surge",
               "VST Plug-in technology by Steinberg, AU Plugin Technology by Apple Computer"
           } };
 

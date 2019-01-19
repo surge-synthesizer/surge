@@ -35,6 +35,7 @@ namespace Surge
 
         void openURL(const std::string &url)
         {
+            ShellExecute(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
         }
     };
 };
