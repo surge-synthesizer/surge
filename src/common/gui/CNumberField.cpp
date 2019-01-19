@@ -565,7 +565,7 @@ void CNumberField::bounceValue()
         if (listener)
                 listener->valueChanged (pContext, this);
         setDirty();
-        
+        
         return true;
 }*/
 
@@ -691,9 +691,9 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
                         return;
                 }
         }
-        
+        
         long button = pContext->getMouseButtons ();
-        
+        
         // allow left mousebutton only
         if ((button & kLButton)&&(drawsize.pointInside(where)))
         {
@@ -709,14 +709,14 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
                 delta = where.h;
                 // begin of edit parameter
                 beginEdit ();
-                
+                
                 int oldvalue = i_value;
                 float old_fvalue = value;
                 long  oldButton = button;
 
                 int lastvalue = i_value;
                 float last_fvalue = value;
-                
+                
                 while (1)
                 {
                         button = pContext->getMouseButtons ();
@@ -741,19 +741,19 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
                                         oldButton = button;
                                 }
                         }
-                        
+                        
                         if (button & (kShift|kRButton))
                         {
                                 i_value = oldvalue + ((where.h - delta)/15)*i_stepsize;
                                 //value = old_fvalue + (float)(where.h - delta)*0.05f*f_movespeed;
-                                
+                                
                         }
                         else
                         {
                                 i_value = oldvalue + ((where.h - delta)/3)*i_stepsize;
                                 //value = old_fvalue + (float)(where.h - delta)*f_movespeed;
                         }
-                        
+                        
                         value = 0.005 + 0.99*((float)(i_value-i_min))/((float)(i_max - i_min));
                         bounceValue ();
 

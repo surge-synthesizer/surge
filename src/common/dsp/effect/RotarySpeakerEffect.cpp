@@ -23,7 +23,7 @@ RotarySpeakerEffect::RotarySpeakerEffect(SurgeStorage* storage, FxStorage* fxdat
         strcpy(ctrllabel[2], "drive");		ctrlmode[2] = cm_decibel;
 
         buffer = new float[chtemp];
-        
+        
         bufferlength = chtemp;
 
         memset(buffer,chtemp,chtemp*sizeof(float));
@@ -37,7 +37,7 @@ RotarySpeakerEffect::RotarySpeakerEffect(SurgeStorage* storage, FxStorage* fxdat
 
         f_rotor_lp[0][1] = 0;
         f_rotor_lp[1][1] = 0;
-        
+        
         xover = new LP2A(f_xover);
         lowbass = new LP2A(f_lowbass);
         rotor_lp[0] = new LP2A(f_rotor_lp[0]);

@@ -66,7 +66,7 @@ public:
          {
                  int width = dc->getStringWidth(label[1]);
                  shrink = limit_range(150 - width,0,75);
-                 
+                 
          }
          //smaller.inset(shrink>>1,0);'
          smaller.x += shrink;*/
