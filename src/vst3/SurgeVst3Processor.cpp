@@ -330,14 +330,14 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       if (surgeInstance->process_input)
       {
          int inp;
-         for (inp = 0; inp < n_inputs; inp++)
+         for (inp = 0; inp < N_INPUTS; inp++)
          {
             surgeInstance->input[inp][blockpos] = in[inp][i];
          }
       }
 
       int outp;
-      for (outp = 0; outp < n_outputs; outp++)
+      for (outp = 0; outp < N_OUTPUTS; outp++)
       {
          out[outp][i] = (float)surgeInstance->output[outp][blockpos];
       }

@@ -6,7 +6,6 @@
 #include "SurgeVst3Processor.h"
 //#include "SurgeVst3EditController.h"
 #include "surgecids.h"
-#include <AbstractSynthesizer.h>
 
 #define stringPluginName "Surge"
 
@@ -18,8 +17,6 @@
 // called after library was loaded
 bool InitModule()
 {
-   initDllGlobals();
-
    return true;
 }
 

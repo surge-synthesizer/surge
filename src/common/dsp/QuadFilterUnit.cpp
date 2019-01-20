@@ -1,4 +1,3 @@
-#include "CpuArchitecture.h"
 #include "QuadFilterUnit.h"
 #include "SurgeStorage.h"
 #include <vt_dsp/basic_dsp.h>
@@ -918,10 +917,6 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
    case fut_SNH:
       return SNHquad;
    case fut_comb:
-#if !_M_X64
-      if (!(CpuArchitecture & CaSSE2))
-         return COMBquad_SSE1;
-#endif
       return COMBquad_SSE2;
    }
    return 0;
@@ -932,24 +927,12 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
    switch (type)
    {
    case wst_digi:
-#if !_M_X64
-      if (!(CpuArchitecture & CaSSE2))
-         return DIGI_SSE1;
-#endif
       return DIGI_SSE2;
    case wst_hard:
       return CLIP;
    case wst_sinus:
-#if !_M_X64
-      if (!(CpuArchitecture & CaSSE2))
-         return SINUS_SSE1;
-#endif
       return SINUS_SSE2;
    case wst_asym:
-#if !_M_X64
-      if (!(CpuArchitecture & CaSSE2))
-         return ASYM_SSE1;
-#endif
       return ASYM_SSE2;
    case wst_tanh:
       return TANH;
