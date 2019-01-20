@@ -201,13 +201,25 @@ is an available option.
 
 # Linux
 
-## Building a Surge.vst (VST2) with Linux
+## Building a Surge.vst (VST2) & Surge.vst3 (VST3) with Linux
 
-Some discussion at https://github.com/surge-synthesizer/surge/issues/19
+Install `Premake5`
 
-## Building a Surge.vst3 (VST3) with Linux
+Run `apt-get install libgtkmm-3.0-dev`
 
-Some discussion at https://github.com/surge-synthesizer/surge/issues/19
+```
+git clone https://github.com/surge-synthesizer/surge.git`
+cd surge
+git submodule update --init --recursive
+```
+
+Run `premake gmake2`
+
+Run `./build-linux.sh --clean`
+
+Run `./build-linux.sh --build`
+
+Some further discussion is at https://github.com/surge-synthesizer/surge/issues/19
 
 ## References
 
