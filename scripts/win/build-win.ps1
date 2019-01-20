@@ -7,6 +7,7 @@
 # is not production build infrastructure at all.
 
 Param(
+    [switch]$help,
     [switch]$clean,
     [switch]$cleanall,
     [switch]$build,
@@ -16,6 +17,29 @@ Param(
     [switch]$cbi # clean build and install
 )
 
+function Show-Help
+{
+    Write-Host @"
+build-win.ps1 is a powershell script to control builds and do installs. It takes several arguments
+
+    -help       Show this screen
+    -clean      Clean builds
+    -cleanall   Clean builds and remove visual studio files
+    -build      Build
+    -install    Install vst2 and 3. Will prompt for permissions
+    -bi         buid + install
+    -cb         clean + build
+    -cbi        clean + build + install
+
+It does not run premake yet. 
+
+You need to onetime do
+
+    Set-ExecutionPolicy -scope CurrentUser RemoteSigned 
+
+to use this.
+"@
+}
 
 $msBuildExe = "c:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe"
 $surgeSln = ".\surge.sln"
@@ -54,8 +78,8 @@ function Install-Surge
     }
     Copy-Item "target\vst2\Release\Surge.dll" -Destination $vst2Dir -Force 
 
-    # TODO: VST3 install with runAs
-
+    Write-Host "Start-Process -Verb runAs -WorkingDirectory $PSScriptRoot powershell -argumentlist install-vst3.ps1"
+    Start-Process -Verb runAs   "powershell" -argumentlist "$PSScriptRoot\install-vst3.ps1"
 }
 
 if( $bi )
@@ -98,4 +122,9 @@ if( $install )
 {
     Write-Host "Install"
     Install-Surge
+}
+
+if( $help )
+{
+    Show-Help
 }
