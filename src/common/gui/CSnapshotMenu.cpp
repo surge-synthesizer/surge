@@ -267,7 +267,7 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e)
       {
          t_fx->init_ctrltypes();
          t_fx->init_default_values();
-         _aligned_free(t_fx);
+         delete t_fx;
       }
 
       for (int i = 0; i < n_fx_params; i++)

@@ -2,62 +2,33 @@
 
 Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
 {
-   Effect* t = 0;
    switch (id)
    {
    case fxt_delay:
-      t = (Effect*)_aligned_malloc(sizeof(DualDelayEffect), 16);
-      new (t) DualDelayEffect(storage, fxdata, pd);
-      break;
+      return new DualDelayEffect(storage, fxdata, pd);
    case fxt_eq:
-      t = (Effect*)_aligned_malloc(sizeof(Eq3BandEffect), 16);
-      new (t) Eq3BandEffect(storage, fxdata, pd);
-      break;
+      return new Eq3BandEffect(storage, fxdata, pd);
    case fxt_phaser:
-      t = (Effect*)_aligned_malloc(sizeof(PhaserEffect), 16);
-      new (t) PhaserEffect(storage, fxdata, pd);
-      break;
+      return new PhaserEffect(storage, fxdata, pd);
    case fxt_rotaryspeaker:
-      t = (Effect*)_aligned_malloc(sizeof(RotarySpeakerEffect), 16);
-      new (t) RotarySpeakerEffect(storage, fxdata, pd);
-      break;
+      return new RotarySpeakerEffect(storage, fxdata, pd);
    case fxt_distortion:
-      t = (Effect*)_aligned_malloc(sizeof(DistortionEffect), 16);
-      new (t) DistortionEffect(storage, fxdata, pd);
-      break;
+      return new DistortionEffect(storage, fxdata, pd);
    case fxt_reverb:
-      t = (Effect*)_aligned_malloc(sizeof(Reverb1Effect), 16);
-      new (t) Reverb1Effect(storage, fxdata, pd);
-      break;
+      return new Reverb1Effect(storage, fxdata, pd);
    case fxt_reverb2:
-      t = (Effect*)_aligned_malloc(sizeof(Reverb2Effect), 16);
-      new (t) Reverb2Effect(storage, fxdata, pd);
-      break;
+      return new Reverb2Effect(storage, fxdata, pd);
    case fxt_freqshift:
-      t = (Effect*)_aligned_malloc(sizeof(FreqshiftEffect), 16);
-      new (t) FreqshiftEffect(storage, fxdata, pd);
-      break;
+      return new FreqshiftEffect(storage, fxdata, pd);
    case fxt_conditioner:
-      t = (Effect*)_aligned_malloc(sizeof(ConditionerEffect), 16);
-      new (t) ConditionerEffect(storage, fxdata, pd);
-      break;
+      return new ConditionerEffect(storage, fxdata, pd);
    case fxt_chorus4:
-      t = (Effect*)_aligned_malloc(sizeof(ChorusEffect<4>), 16);
-      new (t) ChorusEffect<4>(storage, fxdata, pd);
-      break;
+      return new ChorusEffect<4>(storage, fxdata, pd);
    case fxt_vocoder:
-      t = (Effect*)_aligned_malloc(sizeof(VocoderEffect), 16);
-      new (t) VocoderEffect(storage, fxdata, pd);
-      break;
-   /*case fxt_emphasize:
-           t = (baseeffect*) _aligned_malloc(sizeof(emphasize),16);
-           new(t) emphasize(storage,fxdata,pd);
-           break;*/
+      return new VocoderEffect(storage, fxdata, pd);
    default:
-      t = 0;
-      break;
+      return 0;
    };
-   return t;
 }
 
 Effect::Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)

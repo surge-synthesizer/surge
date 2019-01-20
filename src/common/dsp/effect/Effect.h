@@ -8,7 +8,7 @@
 
 /*	base class			*/
 
-class Effect
+class alignas(16) Effect
 {
 public:
    enum
