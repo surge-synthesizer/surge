@@ -4,7 +4,6 @@
 #include <AudioToolbox/AudioUnitUtilities.h>
 #include <AudioUnit/AudioUnitCarbonView.h>
 #include "aulayer_cocoaui.h"
-#include "AbstractSynthesizer.h"
 
 typedef SurgeSynthesizer sub3_synth;
 
@@ -311,8 +310,8 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 	s->process_input = 0;
 	
 	float sampleRate = 44100.f;
-	float* outputs[n_outputs];
-	float* inputs[n_inputs];
+	float* outputs[N_OUTPUTS];
+	float* inputs[N_INPUTS];
 	
 	AudioUnitRenderActionFlags xflags = 0;
 	if(HasInput(0))
@@ -321,17 +320,17 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 		
 		if(result == noErr)
 		{
-			for (long i=0; i<n_inputs; i++){
+			for (long i=0; i<N_INPUTS; i++){
 				inputs[i]=GetInput(0)->GetChannelData(i);
 			}
 			s->process_input = inputs[0] != 0;
 		}
 	}
 	// Get output buffer list and extract the i/o buffer pointers.
-	//if (n_outputs>0)
+	//if (N_OUTPUTS>0)
 	{
 		AudioBufferList& asOutBufs=GetOutput(0)->GetBufferList();
-		for (long o=0; o<n_outputs; ++o){
+		for (long o=0; o<N_OUTPUTS; ++o){
 			outputs[o]=(float*)(asOutBufs.mBuffers[o].mData);
 			if(asOutBufs.mBuffers[o].mDataByteSize<=0 || o>=asOutBufs.mNumberBuffers)
 				outputs[o]=nil;
@@ -407,14 +406,14 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 		if(s->process_input)
 		{
 			int inp;
-			for(inp=0; inp<n_inputs; inp++)		
+			for(inp=0; inp<N_INPUTS; inp++)
 			{
 				plugin_instance->input[inp][blockpos] = inputs[inp][i]; 
 			}
 		}
 
 		int outp;
-		for(outp=0; outp<n_outputs; outp++)		
+		for(outp=0; outp<N_OUTPUTS; outp++)
 		{
 			outputs[outp][i] = (float)plugin_instance->output[outp][blockpos];    // replacing
 		}

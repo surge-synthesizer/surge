@@ -23,7 +23,6 @@ using namespace std;
 namespace VSTGUI { void* soHandle = nullptr; }
 #endif
 
-#include "AbstractSynthesizer.h"
 #include "UserInteractions.h"
 
 //-------------------------------------------------------------------------------------------------------

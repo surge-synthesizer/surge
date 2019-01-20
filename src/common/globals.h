@@ -47,3 +47,5 @@ const float BLOCK_SIZE_OS_INV = (1.f / BLOCK_SIZE_OS);
 const int MAX_FB_COMB = 2048; // must be 2^n
 const int MAX_VOICES = 64;
 const int MAX_UNISON = 16;
+const int N_OUTPUTS = 2;
+const int N_INPUTS = 2;

@@ -2,7 +2,6 @@
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #pragma once
-#include "AbstractSynthesizer.h"
 #include "SurgeStorage.h"
 #include "SurgeVoice.h"
 #include "effect/Effect.h"
@@ -27,9 +26,26 @@ using PluginLayer = Vst2PluginInstance;
 class PluginLayer;
 #endif
 
-class SurgeSynthesizer : public AbstractSynthesizer
+struct timedata
+{
+   double ppqPos, tempo;
+};
+
+struct parametermeta
+{
+   float fmin, fmax, fdefault;
+   unsigned int flags, clump;
+   bool hide, expert, meta;
+};
+
+class alignas(16) SurgeSynthesizer
 {
 public:
+   float output alignas(16)[N_OUTPUTS][BLOCK_SIZE];
+   float input alignas(16)[N_INPUTS][BLOCK_SIZE];
+   timedata time_data;
+   bool audio_processing_active;
+
    // aligned stuff
    SurgeStorage storage alignas(16);
    lipol_ps FX1 alignas(16),
@@ -42,30 +58,30 @@ public:
 public:
    SurgeSynthesizer(PluginLayer* parent);
    virtual ~SurgeSynthesizer();
-   void playNote(char channel, char key, char velocity, char detune) override;
-   void releaseNote(char channel, char key, char velocity) override;
+   void playNote(char channel, char key, char velocity, char detune);
+   void releaseNote(char channel, char key, char velocity);
    void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity);
-   void pitchBend(char channel, int value) override;
-   void polyAftertouch(char channel, int key, int value) override;
-   void channelAftertouch(char channel, int value) override;
-   void channelController(char channel, int cc, int value) override;
-   void programChange(char channel, int value) override;
-   void allNotesOff() override;
-   void setSamplerate(float sr) override;
-   int getNumInputs() override
+   void pitchBend(char channel, int value);
+   void polyAftertouch(char channel, int key, int value);
+   void channelAftertouch(char channel, int value);
+   void channelController(char channel, int cc, int value);
+   void programChange(char channel, int value);
+   void allNotesOff();
+   void setSamplerate(float sr);
+   int getNumInputs()
    {
-      return n_inputs;
+      return N_INPUTS;
    }
-   int getNumOutputs() override
+   int getNumOutputs()
    {
-      return n_outputs;
+      return N_OUTPUTS;
    }
-   int getBlockSize() override
+   int getBlockSize()
    {
       return BLOCK_SIZE;
    }
    int getMpeMainChannel(int voiceChannel, int key);
-   void process() override;
+   void process();
 
    PluginLayer* getParent();
 
@@ -93,9 +109,9 @@ public:
    unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A & 2 is scene B
 
    bool
-   setParameter01(long index, float value, bool external = false, bool force_integer = false) final;
+   setParameter01(long index, float value, bool external = false, bool force_integer = false);
    void sendParameterAutomation(long index, float value);
-   float getParameter01(long index) final;
+   float getParameter01(long index);
    float getParameter(long index);
    float normalizedToValue(long parameterIndex, float value);
    float valueToNormalized(long parameterIndex, float value);
@@ -114,18 +130,18 @@ public:
    void clearModulation(long ptag, modsources modsource);
    void clear_osc_modulation(
        int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
-   int remapExternalApiToInternalId(unsigned int x) override;
+   int remapExternalApiToInternalId(unsigned int x);
    int remapInternalToExternalApiId(unsigned int x);
-   void getParameterDisplay(long index, char* text) override;
-   void getParameterDisplay(long index, char* text, float x) override;
-   void getParameterName(long index, char* text) override;
-   void getParameterMeta(long index, parametermeta& pm) override;
+   void getParameterDisplay(long index, char* text);
+   void getParameterDisplay(long index, char* text, float x);
+   void getParameterName(long index, char* text);
+   void getParameterMeta(long index, parametermeta& pm);
    void getParameterNameW(long index, wchar_t* ptr);
    void getParameterShortNameW(long index, wchar_t* ptr);
    void getParameterUnitW(long index, wchar_t* ptr);
    void getParameterStringW(long index, float value, wchar_t* ptr);
    //	unsigned int getParameterFlags (long index);
-   void loadRaw(const void* data, int size, bool preset = false) override;
+   void loadRaw(const void* data, int size, bool preset = false);
    void loadPatch(int id);
    void incrementPatch(bool nextPrev);
    void incrementCategory(bool nextPrev);
@@ -136,7 +152,7 @@ public:
    void savePatch();
    void updateUsedState();
    void prepareModsourceDoProcess(int scenemask);
-   unsigned int saveRaw(void** data) override;
+   unsigned int saveRaw(void** data);
    // synth -> editor variables
    std::atomic<int> polydisplay; // updated in audio thread, read from ui, so have assignments be atomic
    bool refresh_editor, patch_loaded;
