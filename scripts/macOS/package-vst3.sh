@@ -1,5 +1,10 @@
 #!/bin/bash          
 
+# If no vectors are specified, use the original-vector by default
+if [[ -z "$SURGE_USE_VECTOR_SKIN" ]]; then
+    SURGE_USE_VECTOR_SKIN=original-vector
+fi
+
 # input config
 RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst3"
