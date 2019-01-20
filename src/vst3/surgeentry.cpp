@@ -18,8 +18,6 @@
 // called after library was loaded
 bool InitModule()
 {
-   initDllGlobals();
-
    return true;
 }
 

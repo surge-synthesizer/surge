@@ -21,6 +21,11 @@ Daily macOS (64-bit, AU/VST2/VST3) builds available on the [Slack](https://join.
 
 There is currently work going on to create an official release-page with installers for Windows 64-bit, macOS 64-bit and other formats.
 
+# System requirements
+
+* At least Pentium 4 CPU.
+* 64-bit Windows or macOS.
+
 # Locations
 ## macOS
 

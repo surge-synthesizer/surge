@@ -185,8 +185,6 @@ function plugincommon()
         "src/common/vt_dsp/halfratefilter.cpp",
         "src/common/vt_dsp/lipol.cpp",
         "src/common/vt_dsp/macspecific.cpp",
-        "src/common/AbstractSynthesizer.cpp",
-        "src/common/CpuArchitecture.cpp",
         "src/common/Parameter.cpp",
         "src/common/precompiled.cpp",
         "src/common/Sample.cpp",

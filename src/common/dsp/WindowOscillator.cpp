@@ -1,7 +1,6 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2006 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
-#include "CpuArchitecture.h"
 #include "Oscillator.h"
 #if !MAC && !__linux__
 #include <intrin.h>
@@ -140,9 +139,6 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
    int FormantMul =
        (int)(float)(65536.f * note_to_pitch(localcopy[oscdata->p[1].param_id_in_scene].f));
    FormantMul = max(FormantMul >> WindowVsWavePO2, 1);
-#if (!_M_X64 && !MAC)
-   if (CpuArchitecture & CaSSE2)
-#endif
    {
       // SSE2 path
       for (int so = 0; so < ActiveSubOscs; so++)
@@ -223,81 +219,6 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
          Sub.Pos[so] = Pos;
       }
    }
-#if (!_M_X64 && !MAC)
-   else
-   {
-      // MMX path
-      for (unsigned int so = 0; so < ActiveSubOscs; so++)
-      {
-         unsigned int Pos = Sub.Pos[so];
-         unsigned int RatioA = Sub.Ratio[so];
-         unsigned int MipMapA = 0;
-         unsigned int MipMapB = 0;
-         if (Sub.Table[so] >= oscdata->wt.n_tables)
-            Sub.Table[so] = Table;
-         // TableID may not be valid anymore if a new wavetable is loaded
-
-         unsigned long MSBpos;
-
-         unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
-         if (_BitScanReverse(&MSBpos, bs))
-            MipMapB = limit_range((int)MSBpos - 17, 0, oscdata->wt.size_po2 - 1);
-
-         if (_BitScanReverse(&MSBpos, 3 * RatioA))
-            MipMapA = limit_range((int)MSBpos - 17, 0, storage->WindowWT.size_po2 - 1);
-
-         short* WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Sub.Table[so]];
-         short* WinAdr = storage->WindowWT.TableI16WeakPointers[MipMapA][Window];
-
-         for (int i = 0; i < BLOCK_SIZE_OS; i++)
-         {
-            Pos += RatioA;
-            if (Pos & ~SizeMaskWin)
-            {
-               Sub.FormantMul[so] = FormantMul;
-               Sub.Table[so] = Table;
-               WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Table];
-               Pos = Pos & SizeMaskWin;
-            }
-
-            unsigned int WinPos = Pos >> (16 + MipMapA);
-            unsigned int WinSPos = (Pos >> (8 + MipMapA)) & 0xFF;
-
-            unsigned int FPos = BigMULr16(Sub.FormantMul[so], Pos) & SizeMask;
-
-            unsigned int MPos = FPos >> (16 + MipMapB);
-            unsigned int MSPos = ((FPos >> (8 + MipMapB)) & 0xFF);
-
-            __m64* WaveSincPtr = (__m64*)sinctableI16 + (MSPos << 1);
-            __m64* WavePtr = (__m64*)&WaveAdr[MPos];
-            __m64 Wave = _mm_add_pi32(_mm_madd_pi16(*WaveSincPtr, *WavePtr),
-                                      _mm_madd_pi16(*(WaveSincPtr + 1), *(WavePtr + 1)));
-
-            __m64* WinSincPtr = (__m64*)sinctableI16 + (WinSPos << 1);
-            __m64* WinPtr = (__m64*)&WinAdr[WinPos];
-            __m64 Win = _mm_add_pi32(_mm_madd_pi16(*WinSincPtr, *WinPtr),
-                                     _mm_madd_pi16(*(WinSincPtr + 1), *(WinPtr + 1)));
-
-            // Sum
-            int iWin, iWave;
-
-            iWin = (*(int*)&Win + *((int*)&Win + 1)) >> 13;
-            iWave = (*(int*)&Wave + *((int*)&Wave + 1)) >> 13;
-
-            if (stereo)
-            {
-               int Out = (iWin * iWave) >> 7;
-               IOutputL[i] += (Out * (int)Sub.Gain[so][0]) >> 6;
-               IOutputR[i] += (Out * (int)Sub.Gain[so][1]) >> 6;
-            }
-            else
-               IOutputL[i] += (iWin * iWave) >> 6;
-         }
-         Sub.Pos[so] = Pos;
-      }
-      _mm_empty();
-   }
-#endif
 }
 
 void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
@@ -321,9 +242,6 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
 
    // int32 -> float conversion
    __m128 scale = _mm_load1_ps(&OutAttenuation);
-#if (!_M_X64 && !MAC)
-   if (CpuArchitecture & CaSSE2)
-#endif
    {
       // SSE2 path
       if (stereo)
@@ -342,32 +260,4 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
          }
       }
    }
-#if (!_M_X64 && !MAC)
-   else
-   {
-      // MMX/SSE1 path
-      if (stereo)
-      {
-         for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
-         {
-            _mm_store_ps(&output[i], _mm_mul_ps(_mm_cvtpi32x2_ps(*(__m64*)&IOutputL[i],
-                                                                 *(__m64*)&IOutputL[i + 2]),
-                                                scale));
-            _mm_store_ps(&outputR[i], _mm_mul_ps(_mm_cvtpi32x2_ps(*(__m64*)&IOutputR[i],
-                                                                  *(__m64*)&IOutputR[i + 2]),
-                                                 scale));
-         }
-      }
-      else
-      {
-         for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
-         {
-            _mm_store_ps(&output[i], _mm_mul_ps(_mm_cvtpi32x2_ps(*(__m64*)&IOutputL[i],
-                                                                 *(__m64*)&IOutputL[i + 2]),
-                                                scale));
-         }
-      }
-      _mm_empty();
-   }
-#endif
 }

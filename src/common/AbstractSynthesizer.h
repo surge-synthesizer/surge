@@ -19,8 +19,6 @@ struct parametermeta
 const int n_outputs = 2;
 const int n_inputs = 2;
 
-void initDllGlobals();
-
 class alignas(16) AbstractSynthesizer
 {
 public:

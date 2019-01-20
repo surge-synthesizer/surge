@@ -1,5 +1,4 @@
 #include "globals.h"
-#include "CpuArchitecture.h"
 #include "SurgeSynthesizer.h"
 #include <float.h>
 

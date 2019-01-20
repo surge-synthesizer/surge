@@ -11,8 +11,6 @@
 #include "public.sdk/source/vst2.x/aeffeditor.h"
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 
-#include "CpuArchitecture.h"
-
 #if MAC
 #include <fenv.h>
 #include <AvailabilityMacros.h>
@@ -32,8 +30,6 @@ namespace VSTGUI { void* soHandle = nullptr; }
 
 AudioEffect* createEffectInstance(audioMasterCallback audioMaster)
 {
-   initDllGlobals(); // this is a slightly misnamed function since only windows has dlls; it does all setup stuff for globals
-
    return new Vst2PluginInstance(audioMaster);
 }
 
