@@ -13,4 +13,4 @@ protected:
    void addEntry(int id);
 };
 
-VSTGUI::CBitmap* getSurgeBitmap(int id);
+VSTGUI::CBitmap* getSurgeBitmap(int id, bool newInstance = false);

@@ -49,6 +49,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
         
     }
     lastSeenZoom = currentPhysicalZoomFactor;
+    additionalZoom = 100;
 }
 
 
@@ -76,7 +77,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
         // Seems like you would do this backwards; but the TF shrinks and the invtf regrows for positioning
         // but it is easier to calculate the grow one since it is at our scale
         CGraphicsTransform invtf = CGraphicsTransform().scale( bestFitScaleGroup / 100.0, bestFitScaleGroup / 100.0 );
-        CGraphicsTransform tf = invtf.inverse();
+        CGraphicsTransform tf = invtf.inverse().scale( additionalZoom / 100.0, additionalZoom / 100.0 );
         
         CDrawContext::Transform tr(*context, tf);
 
@@ -91,7 +92,9 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
     }
     else
     {
-        // and if not, fall back to the default bitmap
+        // and if not, fall back to the default bitmap but still apply the additional zoom
+        CGraphicsTransform tf = CGraphicsTransform().scale( additionalZoom / 100.0, additionalZoom / 100.0 );
+        CDrawContext::Transform tr(*context, tf);
         CBitmap::draw(context, rect, offset, alpha);
     }
 }

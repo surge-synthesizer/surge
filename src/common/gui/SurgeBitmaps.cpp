@@ -1,7 +1,8 @@
 #include "SurgeBitmaps.h"
+#include "UserInteractions.h"
 #include <map>
 
-#if MAC  
+#if MAC  || WINDOWS
 #define USE_SCALABLE_BITMAPS 1
 #endif
 
@@ -89,7 +90,34 @@ void SurgeBitmaps::addEntry(int id)
    bitmap_registry[id] = bitmap;
 }
 
-VSTGUI::CBitmap* getSurgeBitmap(int id)
+VSTGUI::CBitmap* getSurgeBitmap(int id, bool newInstance)
 {
-   return bitmap_registry.at(id);
+   if( newInstance )
+   {
+#ifdef USE_SCALABLE_BITMAPS
+      /*
+      ** Background images are specially handled by the frame object with scaling and so each needs
+      ** to maintain an independent 'additional zoom'. For now handle that by allowing the construction of
+      ** a distinct bitmap. 
+      **
+      ** When the arity issues with scalable bitmaps get solved (github issue #356) this code will 
+      ** not be needed any more. Until then it is, but just for the BG image.
+      */
+      if( id != IDB_BG )
+      {
+          // This should never happen.
+          Surge::UserInteractions::promptError(std::string() +
+                                               "You requested a new Instance bitmap with for something other than the BG. Why?",
+                                               "Software Error" );
+      }
+      return new CScalableBitmap(CResourceDescription(id));
+#else
+      return bitmap_registry.at(id);
+#endif
+       
+   }
+   else
+   {
+       return bitmap_registry.at(id);
+   }
 }

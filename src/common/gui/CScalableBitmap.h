@@ -28,11 +28,19 @@ public:
     */
     static void setPhysicalZoomFactor (int zoomFactor); // See comment on zoom factor units in SurgeGUIEditor.h
 
+    /*
+    ** VST2 has an error where the background doesn't zoom with the frame. Everything else
+    ** does though. So we need to hand scale the background and only the background image
+    ** when we draw it. We do that, simply, by having this class have an additionalZoom
+    ** which we apply to the BG Bitmap in Vst2PluginInstance::handleZoom.
+    */
+    void setAdditionalZoom (int a) { additionalZoom = a; }
+    
 private:
     std::vector< int > scales;  // 100, 150, 200, 300 etc... - int percentages
     std::map< int, VSTGUI::CBitmap * > scaledBitmaps;
     std::map< int, std::string > scaleFilePostfixes;
-    int lastSeenZoom, bestFitScaleGroup;
+    int lastSeenZoom, bestFitScaleGroup, additionalZoom;
 
     static int currentPhysicalZoomFactor;
 };

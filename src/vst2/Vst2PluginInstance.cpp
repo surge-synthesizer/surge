@@ -24,6 +24,7 @@ namespace VSTGUI { void* soHandle = nullptr; }
 #endif
 
 #include "UserInteractions.h"
+#include "CScalableBitmap.h"
 
 //-------------------------------------------------------------------------------------------------------
 
@@ -195,6 +196,9 @@ VstInt32 Vst2PluginInstance::canDo(char* text)
 
    if (!strcmp(text, "MPE"))
       return 1;
+
+   if (!strcmp(text, "sizeWindow"))
+       return 1;
 
    return -1;
 }
@@ -552,7 +556,46 @@ bool Vst2PluginInstance::tryInit()
       return false;
    }
 
+   static_cast<SurgeGUIEditor *>(editor)->setZoomCallback( [this](SurgeGUIEditor *e) { handleZoom(e); } );
+   
    blockpos = 0;
    state = INITIALIZED;
    return true;
+}
+
+void Vst2PluginInstance::handleZoom(SurgeGUIEditor *e)
+{
+    ERect *vr;
+    if (e->getRect(&vr))
+    {
+        float fzf = e->getZoomFactor() / 100.0;
+        int newW = (vr->right - vr->left) * fzf;
+        int newH = (vr->bottom - vr->top) * fzf;
+        sizeWindow( newW, newH );
+    }
+
+    VSTGUI::CFrame *frame = e->getFrame();
+    if(frame)
+    {
+        frame->setZoom( e->getZoomFactor() / 100.0 );
+        
+        /*
+        ** VST2 has an error which is that the background bitmap doesn't get the frame transform
+        ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
+        ** scale up using a backdoor API.
+        */
+       
+        VSTGUI::CBitmap *bg = frame->getBackground();
+        if(bg != NULL)
+        {
+            CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+            if (sbm)
+            {
+               sbm->setAdditionalZoom( e->getZoomFactor() );
+            }
+        }
+
+        frame->setDirty( true );
+        frame->invalid();
+    }
 }

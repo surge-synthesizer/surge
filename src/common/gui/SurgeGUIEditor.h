@@ -73,6 +73,8 @@ protected:
 
    void refresh_mod();
 
+   CPoint getCorrectlyScaledMouseLocation();
+
 private:
    void openOrRecreateEditor();
    void close_editor();
@@ -144,6 +146,6 @@ private:
    CVSTGUITimer* _idleTimer = nullptr;
 };
 
-#if TARGET_AUDIOUNIT && MAC
+#if ( MAC && ( TARGET_AUDIOUNIT || TARGET_VST2 )  ) || (WINDOWS && TARGET_VST2 )
 #define HOST_SUPPORTS_ZOOM 1
 #endif
