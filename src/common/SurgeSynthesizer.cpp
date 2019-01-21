@@ -175,7 +175,7 @@ SurgeSynthesizer::~SurgeSynthesizer()
    for (int i = 0; i < n_customcontrollers; i++)
       delete storage.getPatch().scene[0].modsources[ms_ctrl1 + i];
    for (int i = 0; i < 8; i++)
-      _aligned_free(fx[i]);
+      delete fx[i];
 }
 
 int SurgeSynthesizer::calculateChannelMask(int channel, int key)
@@ -1306,7 +1306,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
       {
          fx_reload[s] = false;
 
-         _aligned_free(fx[s]);
+         delete fx[s];
          /*if (!force_reload_all)*/ storage.getPatch().fx[s].type.val.i = fxsync[s].type.val.i;
          // else fxsync[s].type.val.i = storage.getPatch().fx[s].type.val.i;
 
