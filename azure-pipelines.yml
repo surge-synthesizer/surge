@@ -18,6 +18,9 @@ jobs:
       windows:
         imageName: 'vs2017-win2016'
         isWindows: true
+      linux:
+        imageName: 'ubuntu-16.04'
+        isLinux: true
 
   pool:
     vmImage: $(imageName)
@@ -77,6 +80,23 @@ jobs:
       # restoreNugetPackages: true
     condition: variables.isWindows
     displayName: Build Windows
+
+  - bash: |
+      set -x
+      pushd $AGENT_TEMPDIRECTORY
+      export PREMAKE_LINUX=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-linux.tar.gz
+      curl -L $PREMAKE_LINUX --output premake5.tar.gz
+      tar zxvf premake5.tar.gz
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      popd
+
+      sudo apt-get install -y libgtkmm-3.0-dev
+
+      ./build-linux.sh --build
+
+      find  . -name '*'
+    condition: variables.isLinux
+    displayName: Build Linux
 
   - bash: |
       nuget install chocolatey
