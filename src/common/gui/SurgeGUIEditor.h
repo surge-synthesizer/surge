@@ -112,15 +112,6 @@ private:
    int  getZoomFactor() { return zoomFactor; }
    void setZoomFactor(int zf);
 
-   /* 
-   ** Display backing scale is very OS dependent, so is implemented in src/(mac|win|linux)/(Mac|Win|Linux)SurgeGuiEditor.(cpp|mm) and so on
-   ** 'BackignScale' is the term for the difference between a logical and physical pixel. So on a mac retina display it woudl be '2.0'
-   ** then scaled up to an integer to be '200'.
-   ** 
-   ** As of the current state, this is just a function which returns '200' and the above implementation is not yet in place.
-   */
-   int getDisplayBackingScale();
-
 private:
    std::function< void(SurgeGUIEditor *) > zoom_callback;
    
@@ -154,5 +145,5 @@ private:
 };
 
 #if TARGET_AUDIOUNIT && MAC
-#define SUPPORTS_ZOOM 1
+#define HOST_SUPPORTS_ZOOM 1
 #endif

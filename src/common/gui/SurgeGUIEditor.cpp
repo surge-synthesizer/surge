@@ -21,6 +21,7 @@
 #include "CScalableBitmap.h"
 #include "CNumberField.h"
 #include "UserInteractions.h"
+#include "DisplayInfo.h"
 
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
@@ -2405,17 +2406,46 @@ long SurgeGUIEditor::applyParameterOffset(long id)
 
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
-   int dbs = getDisplayBackingScale();
-   zoomFactor = zf;
+#if HOST_SUPPORTS_ZOOM    
+   CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
+   ERect *baseUISize;
+   getRect (&baseUISize);
+
+   float baseW = (baseUISize->right - baseUISize->left);
+   float baseH = (baseUISize->top - baseUISize->bottom);
+
+   // Leave enough room for window decoration with that .95
+   if (zf != 100.0 && (
+           (baseW * zf / 100.0) > 0.95 * screenDim.getWidth() ||
+           (baseH * zf / 100.0) > 0.95 * screenDim.getHeight()
+           )
+       )
+   {
+       std::ostringstream msg;
+       msg << "You attempted to resize Surge to a size larger than your screen. "
+           << "Your screen is " << screenDim.getWidth() << "x" << screenDim.getHeight() 
+           << " and your zoom of " << zf << "% would make your surge "
+           <<  baseW * zf / 100.0 << "x" << baseH * zf / 100.0 << "\n\n"
+           << "Retaining current zoom of " << zoomFactor << "%.";
+       Surge::UserInteractions::promptError(msg.str(),
+                                            "Screen too small for Zoom");
+   }
+   else
+   {
+       zoomFactor = zf;
+   }
+   
    zoom_callback(this);
 
-   int fullPhysicalZoomFactor = (int)(zf * (dbs / 100.0)); // soo 150 and 200 gets you 300 not 30000!
+   float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
+   int fullPhysicalZoomFactor = (int)(zf * dbs);
    CScalableBitmap::setPhysicalZoomFactor(fullPhysicalZoomFactor);
-}
-
-int SurgeGUIEditor::getDisplayBackingScale()
-{
-    return 200; // hardwire to retina for a moment
+#else
+   /*
+   ** I don't support zoom, but lets at least keep my internal state consistent in case this gets called
+   */
+   zoomFactor = zf;
+#endif
 }
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
@@ -2431,7 +2461,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     int id_openmanual = eid;
     settingsMenu->addEntry("Surge Manual", eid++);
 
-#if SUPPORTS_ZOOM    
+#if HOST_SUPPORTS_ZOOM    
     // Zoom submenus
     COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
 
