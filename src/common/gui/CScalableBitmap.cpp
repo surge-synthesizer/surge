@@ -3,6 +3,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#include "resource.h"
+
 // Remember this is user zoom * display zoom. See comment in CScalableBitmap.h
 int  CScalableBitmap::currentPhysicalZoomFactor = 100;
 void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)
@@ -23,22 +25,44 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
     */
     
     scales = {{ 100, 150, 200, 300, 400 }}; // This is the collection of sizes we currently ask skins to export.
+
+    std::map< int, std::string > scaleFilePostfixes;
     scaleFilePostfixes[ 100 ] = "";
     scaleFilePostfixes[ 150 ] = "@15x";
     scaleFilePostfixes[ 200 ] = "@2x";
     scaleFilePostfixes[ 300 ] = "@3x";
     scaleFilePostfixes[ 400 ] = "@4x";
 
+    std::map< int, int > scaleIDOffsets;
+    scaleIDOffsets[ 100 ] = SCALABLE_100_OFFSET;
+    scaleIDOffsets[ 150 ] = SCALABLE_150_OFFSET;
+    scaleIDOffsets[ 200 ] = SCALABLE_200_OFFSET;
+    scaleIDOffsets[ 300 ] = SCALABLE_300_OFFSET;
+    scaleIDOffsets[ 400 ] = SCALABLE_400_OFFSET;
+    
     for(auto sc : scales)
     {
+/*
+** Macintosh addresses resources by path name; Windows addresses them by .rc file ID
+** This fundamental difference means we need to create distinct names for our bitmaps.
+**
+** The mapping of filename to id + offset on windows is automatically generated
+** by the script scripts/win/emit-vector-rc.py
+*/
+#if MAC  
         auto postfix = scaleFilePostfixes[sc];
 
         char filename [1024];
         snprintf (filename, 1024, "scalable/bmp%05d%s.png", id, postfix.c_str());
             
         CBitmap *tmp = new CBitmap(CResourceDescription( filename ));
-
-        if(tmp->getWidth() > 0)
+#elif WINDOWS
+        CBitmap *tmp = new CBitmap(CResourceDescription(id + scaleIDOffsets[ sc ] ) );
+#else
+        CBitmap *tmp = NULL;
+#endif
+        
+        if(tmp && tmp->getWidth() > 0)
         {
             scaledBitmaps[sc] = tmp;
         }

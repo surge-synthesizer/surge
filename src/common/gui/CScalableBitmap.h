@@ -39,7 +39,6 @@ public:
 private:
     std::vector< int > scales;  // 100, 150, 200, 300 etc... - int percentages
     std::map< int, VSTGUI::CBitmap * > scaledBitmaps;
-    std::map< int, std::string > scaleFilePostfixes;
     int lastSeenZoom, bestFitScaleGroup, additionalZoom;
 
     static int currentPhysicalZoomFactor;
