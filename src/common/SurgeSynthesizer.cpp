@@ -1,6 +1,11 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
+
+THIS WILL NEVER COMPILE
+*#@!
+I MEAN IT IS NOT MEANT TO
+
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
 #include <time.h>
