@@ -130,6 +130,9 @@ run_build()
 
     echo
     echo Building surge-${flavor} with output in build_logs/build_${flavor}.log
+
+    # Don't let TEE eat my return status
+    set -o pipefail
     if [[ -z "$OPTION_verbose" ]]; then
     	xcodebuild build -configuration Release -project surge-${flavor}.xcodeproj > build_logs/build_${flavor}.log
     else
@@ -137,6 +140,8 @@ run_build()
     fi
 
     build_suc=$?
+    set +o pipefail
+
     if [[ $build_suc = 0 ]]; then
         echo ${GREEN}Build of surge-${flavor} succeeded${NC}
     else

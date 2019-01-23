@@ -107,6 +107,8 @@ run_build()
 
     echo
     echo Building surge-${flavor} with output in build_logs/build_${flavor}.log
+    # Since these are piped we lose status from the tee and get wrong return code so
+    set -o pipefail
     if [[ -z "$OPTION_verbose" ]]; then
         make config=release_x64 2>&1 | tee build_logs/build_${flavor}.log
     else
@@ -114,6 +116,7 @@ run_build()
     fi
 
     build_suc=$?
+    set +o pipefail
     if [[ $build_suc = 0 ]]; then
         echo ${GREEN}Build of surge-${flavor} succeeded${NC}
     else
@@ -121,6 +124,7 @@ run_build()
         echo ${RED}** Build of ${flavor} failed**${NC}
         grep -i error build_logs/build_${flavor}.log
         echo
+        echo ${RED}** Exiting failed ${flavor} build**${NC}
         echo Complete information is in build_logs/build_${flavor}.log
 
         exit 2
