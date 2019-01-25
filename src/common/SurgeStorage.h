@@ -448,6 +448,8 @@ struct PatchCategory
 {
    string name;
    int order;
+   std::vector<PatchCategory> children;
+   bool isRoot;
 };
 
 enum sub3_copysource

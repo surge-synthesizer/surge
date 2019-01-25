@@ -48,7 +48,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 
    char txt[256];
-   int splitcount = 256;
 
    CRect menurect(0, 0, 0, 0);
    menurect.offset(where.x, where.y);
@@ -73,59 +72,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
          // Remap index to the corresponding category in alphabetical order.
          int c = storage->patchCategoryOrdering[i];
 
-         // Go through the whole patch list in alphabetical order and filter
-         // out only the patches that belong to the current category.
-         vector<int> ctge;
-         for (auto p : storage->patchOrdering)
-         {
-            if (storage->patch_list[p].category == c)
-            {
-               ctge.push_back(p);
-            }
-         }
-
-         // Divide categories with more entries than splitcount into subcategories f.ex. bass (1,2) etc etc
-         int n_subc = 1 + (max(2, (int)ctge.size()) - 1) / splitcount;
-         for (int subc = 0; subc < n_subc; subc++)
-         {
-            char name[256];
-            COptionMenu* subMenu;
-            if (single_category)
-               subMenu = contextMenu;
-            else
-            {
-               subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, kNoDrawStyle);
-               subMenu->setNbItemsPerColumn(32);
-            }
-
-            int sub = 0;
-
-            for (int i = subc * splitcount; i < min((subc + 1) * splitcount, (int)ctge.size()); i++)
-            {
-               int p = ctge[i];
-               // sprintf(name,"%i. %s",p,storage->patch_list[p].name.c_str());
-               sprintf(name, "%s", storage->patch_list[p].name.c_str());
-
-               auto actionItem = new CCommandMenuItem(name);
-               auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
-
-               actionItem->setActions(action, nullptr);
-               subMenu->addEntry(actionItem);
-               sub++;
-            }
-
-            if (n_subc > 1)
-               sprintf(name, "%s - %i", storage->patch_category[c].name.c_str(), subc + 1);
-            else
-               strncpy(name, storage->patch_category[c].name.c_str(), NAMECHARS);
-
-            if (!single_category)
-            {
-               contextMenu->addEntry(subMenu, name);
-               subMenu->forget(); // Important, so that the refcounter gets it right
-            }
-            main_e++;
-         }
+         populatePatchMenuForCategory( c, contextMenu, single_category, main_e, true );
       }
    }
    // contextMenu->addEntry("refresh list");
@@ -136,6 +83,83 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    getFrame()->removeView(contextMenu, true); // remove from frame and forget
 
    return kMouseEventHandled;
+}
+
+void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall )
+{
+    PatchCategory cat = storage->patch_category[ c ];
+    if (rootCall && ! cat.isRoot) return; // stop it going in the top menu which is a straight iteration
+    
+    int splitcount = 256;
+    // Go through the whole patch list in alphabetical order and filter
+    // out only the patches that belong to the current category.
+    vector<int> ctge;
+    for (auto p : storage->patchOrdering)
+    {
+        if (storage->patch_list[p].category == c)
+        {
+            ctge.push_back(p);
+        }
+    }
+    
+    // Divide categories with more entries than splitcount into subcategories f.ex. bass (1,2) etc etc
+    int n_subc = 1 + (max(2, (int)ctge.size()) - 1) / splitcount;
+    for (int subc = 0; subc < n_subc; subc++)
+    {
+        char name[256];
+        COptionMenu* subMenu;
+        if (single_category)
+            subMenu = contextMenu;
+        else
+        {
+            subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, kNoDrawStyle);
+            subMenu->setNbItemsPerColumn(32);
+        }
+        
+        int sub = 0;
+        
+        for (int i = subc * splitcount; i < min((subc + 1) * splitcount, (int)ctge.size()); i++)
+        {
+            int p = ctge[i];
+            // sprintf(name,"%i. %s",p,storage->patch_list[p].name.c_str());
+            sprintf(name, "%s", storage->patch_list[p].name.c_str());
+            
+            auto actionItem = new CCommandMenuItem(name);
+            auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
+            
+            actionItem->setActions(action, nullptr);
+            subMenu->addEntry(actionItem);
+            sub++;
+        }
+
+        for (auto &childcat : cat.children)
+        {
+            // this isn't the best approach but it works 
+            int idx = 0;
+            for (auto &cc : storage->patch_category)
+            {
+                if (cc.name == childcat.name) break;
+                idx++;
+            }
+            populatePatchMenuForCategory( idx, subMenu, false, main_e, false );
+        }
+        
+        std::string menuName = storage->patch_category[c].name;
+        if (menuName.find_last_of("/") != string::npos)
+            menuName = menuName.substr(menuName.find_last_of("/") + 1);
+        
+        if (n_subc > 1)
+            sprintf(name, "%s - %i", menuName.c_str(), subc + 1);
+        else
+            strncpy(name, menuName.c_str(), NAMECHARS);
+        
+        if (!single_category)
+        {
+            contextMenu->addEntry(subMenu, name);
+            subMenu->forget(); // Important, so that the refcounter gets it right
+        }
+        main_e++;
+    }
 }
 
 void CPatchBrowser::loadPatch(int id)

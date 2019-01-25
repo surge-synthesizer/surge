@@ -64,5 +64,7 @@ protected:
    int current_category = 0, current_patch = 0;
    SurgeStorage* storage = nullptr;
 
+   void populatePatchMenuForCategory (int index, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall);
+   
    CLASS_METHODS(CPatchBrowser, CControl)
 };

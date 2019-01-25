@@ -8,6 +8,8 @@
 #include <set>
 #include <numeric>
 #include <cctype>
+#include <map>
+#include <queue>
 #include <vt_dsp/vt_dsp_endian.h>
 #if MAC
 #include <cstdlib>
@@ -300,30 +302,92 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
       return;
    }
 
-   for (auto& p : fs::directory_iterator(patchpath))
+   /*
+   ** std::filesystem has a recursive_directory_iterator, but between the 
+   ** hand rolled ipmmlementation on mac, expermiental on windows, and 
+   ** ostensibly standard on linux it isn't consistent enough to warrant
+   ** using yet, so build my own recursive directory traversal with a simple
+   ** stack
+   */
+   std::vector<fs::path> alldirs;
+   std::deque<fs::path> workStack;
+   workStack.push_back( patchpath );
+   while (!workStack.empty())
    {
-      if (fs::is_directory(p))
-      {
-         PatchCategory c;
-         c.name = p.path().filename().generic_string();
-         patch_category.push_back(c);
-
-         for (auto& f : fs::directory_iterator(p))
-         {
-            if (_stricmp(f.path().extension().generic_string().c_str(), ".fxp") == 0)
-            {
-               Patch e;
-               e.category = category;
-               e.path = f.path();
-               e.name = f.path().filename().generic_string();
-               e.name = e.name.substr(0, e.name.size() - 4);
-               patch_list.push_back(e);
-            }
-         }
-
-         category++;
-      }
+       auto top = workStack.front();
+       workStack.pop_front();
+       for (auto &d : fs::directory_iterator( top ))
+       {
+           if (fs::is_directory(d))
+           {
+               alldirs.push_back(d);
+               workStack.push_back(d);
+           }
+       }
    }
+
+   /*
+   ** We want to remove parent directory /user/foo or c:\\users\\bar\\ 
+   ** with a substr in the main loop, so get the length once
+   */
+   std::vector<PatchCategory> local_patch_category;
+   int patchpathSubstrLength= patchpath.generic_string().size() + 1;
+   if (patchpath.generic_string().back() == '/' || patchpath.generic_string().back() == '\\')
+       patchpathSubstrLength --;
+   
+   for (auto &p : alldirs )
+   {
+      PatchCategory c;
+      c.name = p.generic_string().substr(patchpathSubstrLength);
+      local_patch_category.push_back(c);
+      
+      for (auto& f : fs::directory_iterator(p))
+      {
+          if (_stricmp(f.path().extension().generic_string().c_str(), ".fxp") == 0)
+          {
+              Patch e;
+              e.category = category;
+              e.path = f.path();
+              e.name = f.path().filename().generic_string();
+              e.name = e.name.substr(0, e.name.size() - 4);
+              patch_list.push_back(e);
+          }
+      }
+      
+      category++;
+   }
+
+   /*
+   ** Now establish parent child relationships between patch categories. Do this by
+   ** scanning for names; setting the 'root' to everything without a slash
+   ** and finding the parent in the name map for everything with a slash
+   */
+   std::map<std::string,int> nameToLocalIndex;
+   int idx=0;
+   for (auto &pc : local_patch_category)
+       nameToLocalIndex[ pc.name ] = idx++;
+   for (auto &pc : local_patch_category)
+   {
+       if (pc.name.find("/") == std::string::npos)
+       {
+           pc.isRoot = true;
+       }
+       else
+       {
+           pc.isRoot = false;
+           std::string parent = pc.name.substr(0, pc.name.find_last_of("/") );
+           local_patch_category[ nameToLocalIndex[ parent ] ].children.push_back( pc );
+       }
+   }
+
+   /*
+   ** Then copy our local patch category onto the member and be done
+   */
+   for (auto &pc : local_patch_category)
+   {
+       patch_category.push_back(pc);
+   }
+   
 }
 
 void SurgeStorage::refresh_wtlist()
