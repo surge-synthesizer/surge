@@ -128,7 +128,7 @@ jobs:
     condition: variables.isMac
     displayName: Publish macOS DMG
 
-- job: Notify Releases
+- job: NotifyReleases
   dependsOn: Build
   condition: succeeded()
 
