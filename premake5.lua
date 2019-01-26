@@ -309,8 +309,10 @@ function plugincommon()
 		{
 			"src/windows/**.cpp",
 			"src/windows/**.h",
-			"src/windows/**.rc",
+			"src/windows/surge.rc",
+            "src/windows/scalableui.rc", 
 			"resources/bitmaps/*.png",
+            "assets/original-vector/exported/*.png",  
 			VSTGUI .. "vstgui_win32.cpp",
 			VSTGUI .. "vstgui_uidescription_win32.cpp",
 		}

@@ -1220,7 +1220,22 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
    CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
    frame = new CFrame(wsize, this);
-   frame->setBackground(getSurgeBitmap(IDB_BG));
+
+   /*
+   ** vstgui contains an error where setting the scale on the
+   ** frame does not set the scale on the frames getBacground
+   ** image. As a result we need to adjust the background in
+   ** vst2 and 3 with the 'additionalZoom' parameter, but also
+   ** we cannot use a shared instance of the background bitmap.
+   ** As such, create our own isntance of the background in these
+   ** cases.
+   */
+   bool myOwnBg = false;
+#if TARGET_VST2
+   myOwnBg = true;
+#endif
+   
+   frame->setBackground(getSurgeBitmap(IDB_BG, myOwnBg));
    frame->open(parent, platformType);
    /*#if TARGET_AUDIOUNIT
            synth = (sub3_synth*)_effect;
@@ -1330,10 +1345,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       {
          CRect r = control->getViewSize();
          CRect menuRect;
-         CPoint where;
-         frame->getCurrentMouseLocation(where);
+
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
          int a = limit_range((int)((3 * (where.x - r.left)) / r.getWidth()), 0, 2);
-         frame->localToFrame(where);
          menuRect.offset(where.x, where.y);
 
          COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
@@ -1384,11 +1398,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       {
          CRect r = control->getViewSize();
          CRect menuRect;
-         CPoint where;
-         frame->getCurrentMouseLocation(where);
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         
          int a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, 2);
-         frame->localToFrame(where);
          menuRect.offset(where.x, where.y);
+
          COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
          int eid = 0;
          int id_copy = -1, id_paste = -1;
@@ -1433,9 +1447,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if (button & kRButton)
       {
          CRect menuRect;
-         CPoint where;
-         frame->getCurrentMouseLocation(where);
-         frame->localToFrame(where);
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         
          menuRect.offset(where.x, where.y);
          COptionMenu* contextMenu =
              new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
@@ -1713,10 +1726,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if ((button & kRButton) && (p->valtype == vt_float))
       {
          CRect menuRect;
-         CPoint where;
-         frame->getCurrentMouseLocation(where);
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+
          menuRect.offset(where.x, where.y);
-         frame->localToFrame(where);
+
          COptionMenu* contextMenu =
              new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
          int eid = 0;
@@ -2027,9 +2040,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       CRect r = control->getViewSize();
       CRect menuRect;
-      CPoint where;
-      frame->getCurrentMouseLocation(where);
-      frame->localToFrame(where);
+      CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();;
       menuRect.offset(where.x, where.y);
 
       showSettingsMenu(menuRect);
@@ -2407,6 +2418,17 @@ long SurgeGUIEditor::applyParameterOffset(long id)
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
 #if HOST_SUPPORTS_ZOOM    
+
+#if TARGET_VST2 || TARGET_VST3
+   /*
+   ** The current version of the vstgui API scaling code appears to have additional bugs
+   ** with shrinking scales. We need to find and address these bugs but for now, simply
+   ** don't allow users to shrink the UI below 100%
+   */
+   if (zf < 100)
+       zf = 100;
+#endif
+
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
    ERect *baseUISize;
    getRect (&baseUISize);
@@ -2414,10 +2436,10 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    float baseW = (baseUISize->right - baseUISize->left);
    float baseH = (baseUISize->top - baseUISize->bottom);
 
-   // Leave enough room for window decoration with that .95
+   // Leave enough room for window decoration with that .9. (You can probably do .95 on mac)
    if (zf != 100.0 && (
-           (baseW * zf / 100.0) > 0.95 * screenDim.getWidth() ||
-           (baseH * zf / 100.0) > 0.95 * screenDim.getHeight()
+           (baseW * zf / 100.0) > 0.9 * screenDim.getWidth() ||
+           (baseH * zf / 100.0) > 0.9 * screenDim.getHeight()
            )
        )
    {
@@ -2440,6 +2462,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
    int fullPhysicalZoomFactor = (int)(zf * dbs);
    CScalableBitmap::setPhysicalZoomFactor(fullPhysicalZoomFactor);
+
 #else
    /*
    ** I don't support zoom, but lets at least keep my internal state consistent in case this gets called
@@ -2522,6 +2545,31 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/surge-manual/");
     }
 
+}
+
+CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
+{
+    /*
+    ** Please see github issue 356 for discussion on this.
+    **
+    ** vstgui has several bugs around zoom handling. A particular one is the fuction frame->getCurrentMouseLocation() applies the transform incorrectly.
+    ** Rather than applying it forward and backwards, it applies it forward twice. This means using it to pop menus when you are scaled does exactly the wrong thing.
+    ** 
+    ** Our zoom on AU uses a different path, so doesn't need remediating. So we need to conditionally inject code until this bug is fixed and
+    ** make it clear where that is injected. This macro - USE_VST2_MOUSE_LOCATION_FIX(rectname) does that.
+    */
+
+    CPoint where;
+    frame->getCurrentMouseLocation(where);
+    where = frame->localToFrame(where);
+
+#if TARGET_VST2 && HOST_SUPPORTS_ZOOM
+    CGraphicsTransform vstfix = frame->getTransform().inverse();
+    vstfix.transform(where);
+    vstfix.transform(where);
+#endif
+    
+    return where;
 }
 
 //------------------------------------------------------------------------------------------------

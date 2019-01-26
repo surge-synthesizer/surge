@@ -7,6 +7,8 @@
 #include "SurgeSynthesizer.h"
 #include <util/FpuState.h>
 
+class SurgeGUIEditor;
+
 //-------------------------------------------------------------------------------------------------------
 class Vst2PluginInstance : public AudioEffectX
 {
@@ -87,6 +89,8 @@ protected:
    int oldblokkosize;
    int blockpos;
 
+   void handleZoom(SurgeGUIEditor *e);
+   
 public:
    enum State {
       UNINITIALIZED  = 0,
