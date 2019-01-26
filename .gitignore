@@ -58,3 +58,8 @@ build_logs/
 
 # IntelliJ IDEA
 .idea
+
+# linux
+Makefile
+surge-*.make
+premake-stamp

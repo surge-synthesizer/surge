@@ -186,7 +186,7 @@ run_clean_all()
     run_clean_builds
 
     echo "Cleaning additional assets"
-    rm -rf Makefile surge-vst2.make surge-vst3.make surge-app.make build_logs
+    rm -rf Makefile surge-vst2.make surge-vst3.make surge-app.make build_logs target obj premake-stamp
 }
 
 run_uninstall()
