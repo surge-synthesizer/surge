@@ -418,6 +418,18 @@ if VST24SDK then
 
 		linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
 
+	elseif (os.istarget("linux")) then
+	--[[
+		Ideally we wouldn't define __cdecl on linux. It's not needed
+		Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
+		it so without __cdecl blank defined on linux vst2, we don't get
+		reliable builds. We considered defining it just where used but
+		it is used also, indirectly, by the vst3 sdk, so the smallest
+		change is this diff plus this comment.
+	--]]
+		defines {
+			"__cdecl=",
+		}
 	end
 end
 
