@@ -53,7 +53,7 @@ public:
    virtual bool PLUGIN_API open(void* parent, const PlatformType& platformType = kDefaultNative);
 #endif
 
-   void close() override;
+   virtual void close() override;
 
 protected:
    int32_t onKeyDown(const VstKeyCode& code,

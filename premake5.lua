@@ -112,7 +112,7 @@ elseif (os.istarget("windows")) then
 	
 	flags { "StaticRuntime", "NoMinimalRebuild" }
 
-	platforms { "x64" }
+	platforms { "x86", "x64" }
 
 	configuration {}
 end
