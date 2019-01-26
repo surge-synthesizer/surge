@@ -591,11 +591,11 @@ void Vst2PluginInstance::handleZoom(SurgeGUIEditor *e)
             CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
             if (sbm)
             {
-               sbm->setAdditionalZoom( e->getZoomFactor() );
+               sbm->setExtraScaleFactor(e->getZoomFactor());
             }
         }
 
-        frame->setDirty( true );
+        frame->setDirty(true);
         frame->invalid();
     }
 }

@@ -31,15 +31,16 @@ public:
     /*
     ** VST2 has an error where the background doesn't zoom with the frame. Everything else
     ** does though. So we need to hand scale the background and only the background image
-    ** when we draw it. We do that, simply, by having this class have an additionalZoom
+    ** when we draw it. We do that, simply, by having this class have an extra scale factor
     ** which we apply to the BG Bitmap in Vst2PluginInstance::handleZoom.
     */
-    void setAdditionalZoom (int a) { additionalZoom = a; }
+    void setExtraScaleFactor (int a) { extraScaleFactor = a; }
     
 private:
     std::vector< int > scales;  // 100, 150, 200, 300 etc... - int percentages
     std::map< int, VSTGUI::CBitmap * > scaledBitmaps;
-    int lastSeenZoom, bestFitScaleGroup, additionalZoom;
+    int lastSeenZoom, bestFitScaleGroup;
+    int extraScaleFactor;
 
     static int currentPhysicalZoomFactor;
 };

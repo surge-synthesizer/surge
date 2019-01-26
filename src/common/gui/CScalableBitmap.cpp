@@ -19,7 +19,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
         id = (int32_t)desc.u.id;
 
     /*
-    ** Remember, Scales are the percentage scale in units of percents. So 100 is 1x.
+    ** Scales are the percentage scale in units of percents. So 100 is 1x.
     ** This integerification allows us to hash on the scale values and still support
     ** things like a 1.25 bitmap set.
     */
@@ -42,13 +42,13 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
     
     for(auto sc : scales)
     {
-/*
-** Macintosh addresses resources by path name; Windows addresses them by .rc file ID
-** This fundamental difference means we need to create distinct names for our bitmaps.
-**
-** The mapping of filename to id + offset on windows is automatically generated
-** by the script scripts/win/emit-vector-rc.py
-*/
+        /*
+        ** Macintosh addresses resources by path name; Windows addresses them by .rc file ID
+        ** This fundamental difference means we need to create distinct names for our bitmaps.
+        **
+        ** The mapping of filename to id + offset on windows is automatically generated
+        ** by the script scripts/win/emit-vector-rc.py
+        */
 #if MAC  
         auto postfix = scaleFilePostfixes[sc];
 
@@ -73,7 +73,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
         
     }
     lastSeenZoom = currentPhysicalZoomFactor;
-    additionalZoom = 100;
+    extraScaleFactor = 100;
 }
 
 
@@ -101,7 +101,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
         // Seems like you would do this backwards; but the TF shrinks and the invtf regrows for positioning
         // but it is easier to calculate the grow one since it is at our scale
         CGraphicsTransform invtf = CGraphicsTransform().scale( bestFitScaleGroup / 100.0, bestFitScaleGroup / 100.0 );
-        CGraphicsTransform tf = invtf.inverse().scale( additionalZoom / 100.0, additionalZoom / 100.0 );
+        CGraphicsTransform tf = invtf.inverse().scale(extraScaleFactor / 100.0, extraScaleFactor / 100.0);
         
         CDrawContext::Transform tr(*context, tf);
 
@@ -116,8 +116,14 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
     }
     else
     {
-        // and if not, fall back to the default bitmap but still apply the additional zoom
-        CGraphicsTransform tf = CGraphicsTransform().scale( additionalZoom / 100.0, additionalZoom / 100.0 );
+        /*
+        ** We have not found an asset at this scale, so we will draw the base class
+        ** asset (which as configured is the original set of PNGs). There are a few
+        ** cases mostly involving zoom before vector asset implementation in vst2
+        ** where you are in this situation but still need to apply an additional
+        ** zoom to handle background scaling
+        */
+        CGraphicsTransform tf = CGraphicsTransform().scale(extraScaleFactor / 100.0, extraScaleFactor / 100.0);
         CDrawContext::Transform tr(*context, tf);
         CBitmap::draw(context, rect, offset, alpha);
     }

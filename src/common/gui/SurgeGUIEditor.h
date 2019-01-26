@@ -73,7 +73,14 @@ protected:
 
    void refresh_mod();
 
-   CPoint getCorrectlyScaledMouseLocation();
+   /**
+    * getCurrentMouseLocationCorrectedForVSTGUIBugs
+    *
+    * This function gets the current mouse location for the frame
+    * but adds, in necessary cases, workarounds for bugs in the
+    * vstgui framework. Use it in place of frame->getCurrentMouseLocation
+    */
+   CPoint getCurrentMouseLocationCorrectedForVSTGUIBugs();
 
 private:
    void openOrRecreateEditor();

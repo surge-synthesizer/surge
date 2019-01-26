@@ -1221,6 +1221,15 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
    frame = new CFrame(wsize, this);
 
+   /*
+   ** vstgui contains an error where setting the scale on the
+   ** frame does not set the scale on the frames getBacground
+   ** image. As a result we need to adjust the background in
+   ** vst2 and 3 with the 'additionalZoom' parameter, but also
+   ** we cannot use a shared instance of the background bitmap.
+   ** As such, create our own isntance of the background in these
+   ** cases.
+   */
    bool myOwnBg = false;
 #if TARGET_VST2
    myOwnBg = true;
@@ -1337,7 +1346,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          CRect r = control->getViewSize();
          CRect menuRect;
 
-         CPoint where = getCorrectlyScaledMouseLocation();
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
          int a = limit_range((int)((3 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
 
@@ -1389,7 +1398,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       {
          CRect r = control->getViewSize();
          CRect menuRect;
-         CPoint where = getCorrectlyScaledMouseLocation();
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
          
          int a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
@@ -1438,7 +1447,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if (button & kRButton)
       {
          CRect menuRect;
-         CPoint where = getCorrectlyScaledMouseLocation();
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
          
          menuRect.offset(where.x, where.y);
          COptionMenu* contextMenu =
@@ -1717,7 +1726,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if ((button & kRButton) && (p->valtype == vt_float))
       {
          CRect menuRect;
-         CPoint where = getCorrectlyScaledMouseLocation();
+         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
 
          menuRect.offset(where.x, where.y);
 
@@ -2031,7 +2040,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       CRect r = control->getViewSize();
       CRect menuRect;
-      CPoint where = getCorrectlyScaledMouseLocation();;
+      CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();;
       menuRect.offset(where.x, where.y);
 
       showSettingsMenu(menuRect);
@@ -2411,8 +2420,12 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 #if HOST_SUPPORTS_ZOOM    
 
 #if TARGET_VST2 || TARGET_VST3
-   // vstgui zoom is very unreliable shrinking with backgrounds.
-   if( zf < 100 )
+   /*
+   ** The current version of the vstgui API scaling code appears to have additional bugs
+   ** with shrinking scales. We need to find and address these bugs but for now, simply
+   ** don't allow users to shrink the UI below 100%
+   */
+   if (zf < 100)
        zf = 100;
 #endif
 
@@ -2534,7 +2547,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
 }
 
-CPoint SurgeGUIEditor::getCorrectlyScaledMouseLocation()
+CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
 {
     /*
     ** Please see github issue 356 for discussion on this.
