@@ -1,6 +1,8 @@
 #include "CSurgeVuMeter.h"
 #include "DspUtilities.h"
 
+using namespace VSTGUI;
+
 CSurgeVuMeter::CSurgeVuMeter(const CRect& size) : CControl(size, 0, 0, 0)
 {
    stereo = true;

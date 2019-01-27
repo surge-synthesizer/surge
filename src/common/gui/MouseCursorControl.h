@@ -13,7 +13,7 @@ int x, y;
 
 static void ShowCursor(bool b)
 {}
-static void GetCursorPos(CPoint& p)
+static void GetCursorPos(VSTGUI::CPoint& p)
 {
    /*Point ptMouse;
    GetMouse( &ptMouse );

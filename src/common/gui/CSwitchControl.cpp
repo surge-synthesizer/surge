@@ -1,5 +1,7 @@
 #include "CSwitchControl.h"
 
+using namespace VSTGUI;
+
 CSwitchControl::CSwitchControl(const CRect& size,
                                IControlListener* listener,
                                long tag,

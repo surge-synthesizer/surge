@@ -51,6 +51,7 @@ if (os.istarget("macosx")) then
 	buildoptions 
         { 
             "-std=c++17", "-stdlib=libc++", 
+	    "-ferror-limit=0",
             "-DOBJC_OLD_DISPATCH_PROTOTYPES=1",
             "-Wno-deprecated-declarations",        -- Alas the AU V2 uses a whole bunch of deprecated stuff
 	    "-Wno-inconsistent-missing-override"   -- Surge was written before this was even a keyword! We do need to fix this though
@@ -98,7 +99,8 @@ elseif (os.istarget("windows")) then
 		"VA_SUBTRACTIVE_EXPORTS", 
 		"TIXML_USE_STL", 
 		"USE_LIBPNG", 
-		"_CRT_SECURE_NO_WARNINGS" 
+		"_CRT_SECURE_NO_WARNINGS",
+        "NOMINMAX=1" -- Jan 2019 update to vst3sdk required this to disambiguoaute std::numeric_limits. See #373
 	}
 
 	nuget { "libpng-msvc-x64:1.6.33.8807" }
@@ -274,7 +276,7 @@ function plugincommon()
 			"src/linux/**.cpp",
 			"src/linux/**.h",
 --			"libs/vst/*.mm", --
-			VSTGUI .. "vstgui_linux.cpp",
+--			VSTGUI .. "vstgui_linux.cpp", -- with the Jan 19 pointer upgrade this is no longer needed nor works
 --			VSTGUI .. "vstgui_uidescription_linux.cpp", --
 		}
 	

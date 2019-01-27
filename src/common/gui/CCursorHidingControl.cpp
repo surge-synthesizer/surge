@@ -4,6 +4,8 @@
 #include <Windows.h>
 #endif
 
+using namespace VSTGUI;
+
 CCursorHidingControl::CCursorHidingControl(const CRect& size,
                                            IControlListener* listener,
                                            int32_t tag,

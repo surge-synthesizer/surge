@@ -19,24 +19,24 @@ enum CControlEnum_turbodeluxe
 class CSurgeSlider : public CCursorHidingControl
 {
 public:
-   CSurgeSlider(const CPoint& loc,
+   CSurgeSlider(const VSTGUI::CPoint& loc,
                 long style,
-                IControlListener* listener = 0,
+                VSTGUI::IControlListener* listener = 0,
                 long tag = 0,
                 bool is_mod = false);
    ~CSurgeSlider();
-   virtual void draw(CDrawContext*);
-   // virtual void mouse (CDrawContext *pContext, CPoint &where, long buttons = -1);
-   // virtual bool onWheel (CDrawContext *pContext, const CPoint &where, float distance);
+   virtual void draw(VSTGUI::CDrawContext*);
+   // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
+   // virtual bool onWheel (VSTGUI::CDrawContext *pContext, const VSTGUI::CPoint &where, float distance);
 
-   virtual CMouseEventResult
-   onMouseDown(CPoint& where,
-               const CButtonState& buttons); ///< called when a mouse down event occurs
-   virtual CMouseEventResult
-   onMouseUp(CPoint& where, const CButtonState& buttons); ///< called when a mouse up event occurs
+   virtual VSTGUI::CMouseEventResult
+   onMouseDown(VSTGUI::CPoint& where,
+               const VSTGUI::CButtonState& buttons); ///< called when a mouse down event occurs
+   virtual VSTGUI::CMouseEventResult
+   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons); ///< called when a mouse up event occurs
 
-   virtual double getMouseDeltaScaling(CPoint& where, const CButtonState& buttons);
-   virtual void onMouseMoveDelta(CPoint& where, const CButtonState& buttons, double dx, double dy);
+   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
 
    virtual void setLabel(const char* txt);
    virtual void setModValue(float val);
@@ -76,9 +76,9 @@ public:
    bool disabled;
 
 private:
-   CBitmap *pHandle, *pTray, *pModHandle;
-   CRect handle_rect, handle_rect_orig;
-   CPoint offsetHandle;
+   VSTGUI::CBitmap *pHandle, *pTray, *pModHandle;
+   VSTGUI::CRect handle_rect, handle_rect_orig;
+   VSTGUI::CPoint offsetHandle;
    int range;
    int controlstate;
    long style;
@@ -89,7 +89,7 @@ private:
    int typex, typey;
    int typehx, typehy;
    bool has_modulation, has_modulation_current;
-   CPoint lastpoint, sourcepoint;
+   VSTGUI::CPoint lastpoint, sourcepoint;
    float oldVal, *edit_value;
    int drawcount_debug;
 };

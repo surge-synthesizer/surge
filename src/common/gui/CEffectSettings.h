@@ -4,19 +4,19 @@
 #pragma once
 #include "vstcontrols.h"
 
-class CEffectSettings : public CControl
+class CEffectSettings : public VSTGUI::CControl
 {
 public:
-   CEffectSettings(const CRect& size, IControlListener* listener, long tag, int current);
-   virtual void draw(CDrawContext* dc);
-   virtual CMouseEventResult
-   onMouseDown(CPoint& where,
-               const CButtonState& buttons); ///< called when a mouse down event occurs
-   virtual CMouseEventResult
-   onMouseUp(CPoint& where, const CButtonState& buttons); ///< called when a mouse up event occurs
+   CEffectSettings(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, int current);
+   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual VSTGUI::CMouseEventResult
+   onMouseDown(VSTGUI::CPoint& where,
+               const VSTGUI::CButtonState& buttons); ///< called when a mouse down event occurs
+   virtual VSTGUI::CMouseEventResult
+   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons); ///< called when a mouse up event occurs
 
    int current;
-   CBitmap *bg, *labels;
+   VSTGUI::CBitmap *bg, *labels;
    int type[8], bypass, disabled;
 
    void set_type(int id, int t)
@@ -46,5 +46,5 @@ public:
       return current;
    }
 
-   CLASS_METHODS(CEffectSettings, CControl)
+   CLASS_METHODS(CEffectSettings, VSTGUI::CControl)
 };

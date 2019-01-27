@@ -12,6 +12,8 @@
 #include <math.h>
 #include "unitconversion.h"
 
+using namespace VSTGUI;
+
 const int width = 62, margin = 6, height = 8, vmargin = 1;
 extern CFontRef surge_minifont;
 

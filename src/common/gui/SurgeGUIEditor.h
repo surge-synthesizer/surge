@@ -8,16 +8,16 @@
 #if TARGET_AUDIOUNIT
 //#include "vstkeycode.h"
 #include <vstgui/plugin-bindings/plugguieditor.h>
-typedef PluginGUIEditor EditorType;
+typedef VSTGUI::PluginGUIEditor EditorType;
 #elif TARGET_VST3
 #include "public.sdk/source/vst/vstguieditor.h"
 typedef Steinberg::Vst::VSTGUIEditor EditorType;
 #elif TARGET_VST2
 #include <vstgui/plugin-bindings/aeffguieditor.h>
-typedef AEffGUIEditor EditorType;
+typedef VSTGUI::AEffGUIEditor EditorType;
 #else
 #include <vstgui/plugin-bindings/plugguieditor.h>
-typedef PluginGUIEditor EditorType;
+typedef VSTGUI::PluginGUIEditor EditorType;
 #endif
 
 #include "SurgeStorage.h"
@@ -30,7 +30,7 @@ typedef PluginGUIEditor EditorType;
 #include <vector>
 using namespace std;
 
-class SurgeGUIEditor : public EditorType, public IControlListener, public IKeyboardHook
+class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
 {
 private:
    using super = EditorType;
@@ -50,26 +50,26 @@ public:
 #if !TARGET_VST3
    bool open(void* parent) override;
 #else
-   virtual bool PLUGIN_API open(void* parent, const PlatformType& platformType = kDefaultNative);
+   virtual bool PLUGIN_API open(void* parent, const VSTGUI::PlatformType& platformType = VSTGUI::kDefaultNative);
 #endif
 
    void close() override;
 
 protected:
    int32_t onKeyDown(const VstKeyCode& code,
-                     CFrame* frame) override; ///< should return 1 if no further key down processing
+                     VSTGUI::CFrame* frame) override; ///< should return 1 if no further key down processing
                                               ///< should apply, otherwise -1
    int32_t onKeyUp(const VstKeyCode& code,
-                   CFrame* frame) override; ///< should return 1 if no further key up processing
+                   VSTGUI::CFrame* frame) override; ///< should return 1 if no further key up processing
                                             ///< should apply, otherwise -1
 
    virtual void setParameter(long index, float value);
 
    // listener class
-   void valueChanged(CControl* control) override;
-   int32_t controlModifierClicked(CControl* pControl, CButtonState button) override;
-   void controlBeginEdit(CControl* pControl) override;
-   void controlEndEdit(CControl* pControl) override;
+   void valueChanged(VSTGUI::CControl* control) override;
+   int32_t controlModifierClicked(VSTGUI::CControl* pControl, VSTGUI::CButtonState button) override;
+   void controlBeginEdit(VSTGUI::CControl* pControl) override;
+   void controlEndEdit(VSTGUI::CControl* pControl) override;
 
    void refresh_mod();
 
@@ -80,7 +80,7 @@ protected:
     * but adds, in necessary cases, workarounds for bugs in the
     * vstgui framework. Use it in place of frame->getCurrentMouseLocation
     */
-   CPoint getCurrentMouseLocationCorrectedForVSTGUIBugs();
+   VSTGUI::CPoint getCurrentMouseLocationCorrectedForVSTGUIBugs();
 
 private:
    void openOrRecreateEditor();
@@ -94,14 +94,14 @@ private:
    unsigned int idleinc = 0;
    int fxbypass_tag = 0, resolink_tag = 0, f1resotag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0;
-   void draw_infowindow(int ptag, CControl* control, bool modulate, bool forceMB = false);
+   void draw_infowindow(int ptag, VSTGUI::CControl* control, bool modulate, bool forceMB = false);
 
    bool showPatchStoreDialog(patchdata* p,
                              std::vector<PatchCategory>* patch_category,
                              int startcategory);
 
 
-   void showSettingsMenu(CRect &menuRect);
+   void showSettingsMenu(VSTGUI::CRect &menuRect);
 
    /*
    ** Zoom Implementation 
@@ -126,22 +126,22 @@ private:
    
    SurgeBitmaps bitmap_keeper;
 
-   CControl* vu[16];
-   CControl *infowindow, *patchname, *ccfxconf = nullptr;
-   CControl* aboutbox = nullptr;
-   CViewContainer* saveDialog = nullptr;
-   CTextEdit* patchName = nullptr;
-   CTextEdit* patchCategory = nullptr;
-   CTextEdit* patchCreator = nullptr;
-   CTextEdit* patchComment = nullptr;
-   CControl* polydisp = nullptr;
-   CControl* oscdisplay = nullptr;
-   CControl* param[1024] = {};
-   CControl* nonmod_param[1024] = {}; 
-   CControl* gui_modsrc[n_modsources] = {};
-   CControl* metaparam[n_customcontrollers] = {};
-   CControl* lfodisplay = nullptr;
-   CControl* filtersubtype[2] = {};
+   VSTGUI::CControl* vu[16];
+   VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
+   VSTGUI::CControl* aboutbox = nullptr;
+   VSTGUI::CViewContainer* saveDialog = nullptr;
+   VSTGUI::CTextEdit* patchName = nullptr;
+   VSTGUI::CTextEdit* patchCategory = nullptr;
+   VSTGUI::CTextEdit* patchCreator = nullptr;
+   VSTGUI::CTextEdit* patchComment = nullptr;
+   VSTGUI::CControl* polydisp = nullptr;
+   VSTGUI::CControl* oscdisplay = nullptr;
+   VSTGUI::CControl* param[1024] = {};
+   VSTGUI::CControl* nonmod_param[1024] = {}; 
+   VSTGUI::CControl* gui_modsrc[n_modsources] = {};
+   VSTGUI::CControl* metaparam[n_customcontrollers] = {};
+   VSTGUI::CControl* lfodisplay = nullptr;
+   VSTGUI::CControl* filtersubtype[2] = {};
 #if MAC || __linux__
 #else
    HWND ToolTipWnd;
@@ -150,7 +150,7 @@ private:
    float blinktimer = 0;
    bool blinkstate = false;
    void* _effect = nullptr;
-   CVSTGUITimer* _idleTimer = nullptr;
+   VSTGUI::CVSTGUITimer* _idleTimer = nullptr;
 };
 
 #if ( MAC && ( TARGET_AUDIOUNIT || TARGET_VST2 )  ) || (WINDOWS && TARGET_VST2 )

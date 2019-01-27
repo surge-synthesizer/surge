@@ -1,6 +1,8 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 
+using namespace VSTGUI;
+
 /*HBITMAP CreateDIBSection(
   HDC hdc,                 // handle to DC
   CONST BITMAPINFO *pbmi,  // bitmap data

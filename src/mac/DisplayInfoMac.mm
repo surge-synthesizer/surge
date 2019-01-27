@@ -2,6 +2,7 @@
 #include "UserInteractions.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <Cocoa/Cocoa.h>
+#include <vstgui/vstgui.h>
 #include "vstgui/lib/platform/mac/cocoa/nsviewframe.h"
 
 namespace Surge
@@ -9,10 +10,12 @@ namespace Surge
 namespace GUI
 {
 
+using namespace VSTGUI;
+    
 NSView *getViewFromFrame(CFrame *f)
 {
     IPlatformFrame *pf = f->getPlatformFrame();
-    VSTGUI::NSViewFrame *nf = dynamic_cast<VSTGUI::NSViewFrame*>(pf);
+    NSViewFrame *nf = dynamic_cast<NSViewFrame*>(pf);
     if (!nf)
     {
         Surge::UserInteractions::promptError("Platform frame is not an NSViewFrame. Please report this issue to developers.",

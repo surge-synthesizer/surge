@@ -14,6 +14,8 @@
 #include "filesystem"
 #endif
 
+using namespace VSTGUI;
+
 namespace fs = std::experimental::filesystem;
 
 const float disp_pitch = 90.15f - 48.f;
@@ -279,12 +281,12 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
       {
          CRect menurect(0, 0, 0, 0);
          menurect.offset(where.x, where.y);
-         COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, kNoDrawStyle);
+         COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kNoDrawStyle);
 
          for (auto c : storage->wtCategoryOrdering)
          {
             char name[NAMECHARS];
-            COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, kNoDrawStyle);
+            COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, COptionMenu::kNoDrawStyle);
             subMenu->setNbItemsPerColumn(32);
             int sub = 0;
             int p;
@@ -293,7 +295,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
                if (storage->wt_list[p].category == c)
                {
                   sprintf(name, "%s", storage->wt_list[p].name.c_str());
-                  auto actionItem = new CCommandMenuItem(name);
+                  auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name));
                   auto action = [this, p](CCommandMenuItem* item) { this->loadWavetable(p); };
 
                   actionItem->setActions(action, nullptr);

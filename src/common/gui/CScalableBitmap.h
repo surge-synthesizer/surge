@@ -10,10 +10,11 @@
 
 class CScalableBitmap : public VSTGUI::CBitmap
 {
+    
 public:
-    CScalableBitmap( CResourceDescription d );
+    CScalableBitmap(VSTGUI::CResourceDescription d);
 
-    virtual void draw (CDrawContext* context, const CRect& rect, const CPoint& offset, float alpha);
+    virtual void draw (VSTGUI::CDrawContext* context, const VSTGUI::CRect& rect, const VSTGUI::CPoint& offset, float alpha);
 
     /*
     ** The 'zoom factor' is set statically across all bitmaps since it is a

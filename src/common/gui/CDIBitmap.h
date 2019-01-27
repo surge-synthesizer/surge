@@ -24,15 +24,15 @@ public:
    CDIBitmap(long width, long height);
    virtual ~CDIBitmap();
 
-   void draw(CDrawContext* pContext, CRect& rect, const CPoint& offset = CPoint(0, 0));
+   void draw(VSTGUI::CDrawContext* pContext, VSTGUI::CRect& rect, const VSTGUI::CPoint& offset = VSTGUI::CPoint(0, 0));
 
-   void clear(CColor color);
-   unsigned int ccol_to_int(CColor col);
-   CColor int_to_ccol(unsigned int col);
+   void clear(VSTGUI::CColor color);
+   unsigned int ccol_to_int(VSTGUI::CColor col);
+   VSTGUI::CColor int_to_ccol(unsigned int col);
 
    void clear(unsigned int color);
 
-   void fillRect(CRect r, unsigned int color);
+   void fillRect(VSTGUI::CRect r, unsigned int color);
    void setPixel(int x, int y, unsigned int color);
 
    inline int getWidth()
@@ -51,6 +51,6 @@ public:
 
 protected:
 private:
-   SharedPointer<CBitmap> _bitmap;
-   SharedPointer<CBitmapPixelAccess> _bitmapAccess;
+   VSTGUI::SharedPointer<VSTGUI::CBitmap> _bitmap;
+   VSTGUI::SharedPointer<VSTGUI::CBitmapPixelAccess> _bitmapAccess;
 };

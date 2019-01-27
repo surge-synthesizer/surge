@@ -4,18 +4,18 @@
 #pragma once
 #include "vstcontrols.h"
 
-class CHSwitch2 : public CHorizontalSwitch
+class CHSwitch2 : public VSTGUI::CHorizontalSwitch
 {
 public:
-   CHSwitch2(const CRect& size,
-             IControlListener* listener,
+   CHSwitch2(const VSTGUI::CRect& size,
+             VSTGUI::IControlListener* listener,
              long tag,
              long subPixmaps,       // number of subPixmaps
              long heightOfOneImage, // pixel
              long rows,
              long columns,
-             CBitmap* background,
-             CPoint& offset,
+             VSTGUI::CBitmap* background,
+             VSTGUI::CPoint& offset,
              bool dragable = false)
        : CHorizontalSwitch(
              size, listener, tag, subPixmaps, heightOfOneImage, subPixmaps, background, offset)
@@ -30,14 +30,14 @@ public:
    int imgoffset;
    bool dragable;
 
-   virtual void draw(CDrawContext* dc);
-   virtual CMouseEventResult
-   onMouseDown(CPoint& where,
-               const CButtonState& buttons); ///< called when a mouse down event occurs
-   virtual CMouseEventResult
-   onMouseUp(CPoint& where, const CButtonState& buttons); ///< called when a mouse up event occurs
-   virtual CMouseEventResult
-   onMouseMoved(CPoint& where,
-                const CButtonState& buttons); ///< called when a mouse move event occurs
-   CLASS_METHODS(CHSwitch2, CControl)
+   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual VSTGUI::CMouseEventResult
+   onMouseDown(VSTGUI::CPoint& where,
+               const VSTGUI::CButtonState& buttons); ///< called when a mouse down event occurs
+   virtual VSTGUI::CMouseEventResult
+   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons); ///< called when a mouse up event occurs
+   virtual VSTGUI::CMouseEventResult
+   onMouseMoved(VSTGUI::CPoint& where,
+                const VSTGUI::CButtonState& buttons); ///< called when a mouse move event occurs
+   CLASS_METHODS(CHSwitch2, VSTGUI::CControl)
 };

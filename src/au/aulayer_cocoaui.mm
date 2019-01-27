@@ -35,7 +35,7 @@
 #include "aulayer_cocoaui.h"
 #include <gui/SurgeGUIEditor.h>
 
-
+using namespace VSTGUI;
 
 @interface SurgeNSView : NSView
 {

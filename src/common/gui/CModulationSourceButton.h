@@ -11,7 +11,7 @@ private:
 
 public:
    CModulationSourceButton(
-       const CRect& size, IControlListener* listener, long tag, int state, int msid);
+       const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, int state, int msid);
    ~CModulationSourceButton();
 
    virtual void setValue(float val)
@@ -21,8 +21,8 @@ public:
       value = val;
    }
 
-   virtual void onMouseMoveDelta(CPoint& where, const CButtonState& buttons, double dx, double dy);
-   virtual double getMouseDeltaScaling(CPoint& where, const CButtonState& buttons);
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
+   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
    int state, msid, controlstate;
 
@@ -30,9 +30,9 @@ public:
    int dispval;
    bool click_is_editpart, event_is_drag, is_metacontroller, bipolar;
    char label[16];
-   CRect MCRect;
-   CPoint LastPoint;
-   CPoint SourcePoint;
+   VSTGUI::CRect  MCRect;
+   VSTGUI::CPoint LastPoint;
+   VSTGUI::CPoint SourcePoint;
    float OldValue;
 
    void setblink(bool state);
@@ -44,9 +44,9 @@ public:
    {
       return state;
    }
-   virtual void draw(CDrawContext* dc);
-   // virtual void mouse (CDrawContext *pContext, CPoint &where, long button = -1);
-   virtual CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons);
-   CLASS_METHODS(CModulationSourceButton, CControl)
+   virtual void draw(VSTGUI::CDrawContext* dc);
+   // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };

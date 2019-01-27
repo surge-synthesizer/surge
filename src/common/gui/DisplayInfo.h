@@ -5,7 +5,7 @@
 ** are in src/(mac|win|linux)/(Mac|Win|Linux)DisplayInformation.cpp
 **
 ** Most of these APIs will require a reference to a UI object of some form
-** so make each of the functions take a CFrame *
+** so make each of the functions take a VSTGUI::CFrame *
 */
 
 #pragma once
@@ -25,11 +25,11 @@ namespace GUI
 ** We retain this value as a float and do not scale it by 100, like we do with
 ** user specified scales, to better match the OS API
 */    
-float  getDisplayBackingScaleFactor(CFrame *); 
+float  getDisplayBackingScaleFactor(VSTGUI::CFrame *); 
 
 /*
 ** Return the screen dimensions of the best screen containing this frame
 */
-CRect  getScreenDimensions(CFrame *);
+VSTGUI::CRect  getScreenDimensions(VSTGUI::CFrame *);
 }
 }
