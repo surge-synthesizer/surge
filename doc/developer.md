@@ -30,6 +30,24 @@ could be squashed with `git rebase`. If you don't know how to do this, ask on sl
 put in the PR with your commits and we can squash at merge
 * Try to avoid trivial or unrelated diffs. Your diffs should be "about" the same size as your
 change.
+* Your commit message matters. Good commit messages have a short first line then a description.
+They can also refer to the issue being closed. For instance here is the commit message from
+[8a769c](https://github.com/surge-synthesizer/surge/commit/8a769c87220959997633a32baabe76a2887d6d18)
+which @baconpaul rewrote after a review from @jsakkine:
+```
+Documents Patches with SubFolders
+
+Surge loads patches from several documents folders in a single
+function and uses the directory name as a category. Prior to this
+change, only one level directory was used and that was the single
+category name. So "<dir>/foo/x.fxp" made patch x in category foo.
+This change recurses directories so "<dir>/foo/bar/x.fxp" makes patch
+x have category "foo/bar" which shows up as a sub-menu in the
+UI (even though the category is sitll a single flat category named
+"foo/bar"). This works at retrive time and also at save time (so
+saving a category "foo/bar" creates a subdir and so on). Addresses
+part of issue #288
+```
 
 ## Code Basics
 
