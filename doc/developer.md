@@ -128,4 +128,6 @@ than that, perhaps toss in a comment.
 
 Prefer `std::ostringstream` and so on to `sprintf` and so on.
 
+`#pragma once`, while not [really standard](https://en.wikipedia.org/wiki/Pragma_once), is used in 
+most of the code, so we are continuing to use it rather than ifdef guards.
 
