@@ -294,9 +294,24 @@ void Vst2PluginInstance::setProgramName(char* name)
    strcpy(programName, name);
 }
 
+//void Vst2PluginInstance::getProgramName(char* name)
+//{
+//   strcpy(name, programName);
+//}
 void Vst2PluginInstance::getProgramName(char* name)
 {
-   strcpy(name, programName);
+//   strcpy(name, programName);
+	getProgramNameIndexed(0, 0, name);
+}
+bool Vst2PluginInstance::getProgramNameIndexed (VstInt32 category, VstInt32 index, char* text)
+{//JS:
+   if (tryInit())
+   {
+ 
+    SurgeSynthesizer* s = (SurgeSynthesizer*)_instance;
+	strncpy(text, s->storage.getPatch().name.c_str(), 63);
+	}
+   return true;
 }
 
 void Vst2PluginInstance::setParameter(VstInt32 index, float value)
