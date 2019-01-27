@@ -224,5 +224,4 @@ Some further discussion is at https://github.com/surge-synthesizer/surge/issues/
 ## References
 
   * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
-  * The official IRC channel is #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
-  * Some folks are on the SurgeSynth slack [which you can join here](https://join.slack.com/t/surgeteamworkspace/shared_invite/enQtNTE3NDIyMDc2ODgzLTU1MzZmMWZlYjkwMjk4NDY4ZjI3NDliMTFhMTZiM2ZmNjgxNjYzNGI0NGMxNTk2ZWJjNzgyMDcxODc2ZjZmY2Q)
+  * Most Surge-related conversation on the Surge Synth Slack. [You can join via this link](https://join.slack.com/t/surgeteamworkspace/shared_invite/enQtNTE3NDIyMDc2ODgzLTU1MzZmMWZlYjkwMjk4NDY4ZjI3NDliMTFhMTZiM2ZmNjgxNjYzNGI0NGMxNTk2ZWJjNzgyMDcxODc2ZjZmY2Q)
