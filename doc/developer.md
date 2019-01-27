@@ -107,6 +107,25 @@ Use single line comments sparingly, but where appropriate, feel free.
 
 Generally: Comment your code. Someone coming after you will thank you. And that someone may be you!
 
+## Commit messages
+
+Format:
+
+```
+<Short summary putting the change into nutshell less than 80 characters>
+
+<Multi-paragraph (often just one) long description describing what the change does>
+```
+
+Optionally after the long description:
+
+```
+Fixes: #<issue 1>
+Fixes: #<issue 2>
+...
+Fixes: #<issue n>
+```
+
 ## Miscellany
 
 Occasionally code needs an `#if MAC` but if you have entire classes with parallel implementations
