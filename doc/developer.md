@@ -53,6 +53,9 @@ part of issue #288
 
 * Obey the 'campground rule' that code you change should get better. Cleaner, better names,
 better indents, more comments.
+* But at the same time obey the 'small change' rule, which is most of the time the smallest
+change is the best change. So editing a function with a variable name you don't love is OK
+if that variable name is in 30 other places.
 * Use spaces, not tabs
 * The code is mostly formatted with 3 space tab width, which is odd. If you are in a 3-space
 section stick to 3 spaces. If you are writing new code we are OK with 3 or 4. But code should align
