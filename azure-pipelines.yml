@@ -140,7 +140,7 @@ jobs:
       secureFile: notify-releases.sh
 
   - bash: |
-      echo "Notifying releases: 
+      echo "Notifying releases..."
 
       cat $AGENT_TEMPDIRECTORY/notify-releases.sh
     displayName: Notify Releases
