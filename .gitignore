@@ -63,3 +63,4 @@ build_logs/
 Makefile
 surge-*.make
 premake-stamp
+/Debug

@@ -53,7 +53,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
 
    CRect menurect(0, 0, 0, 0);
    menurect.offset(where.x, where.y);
-   COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kNoDrawStyle);
+   COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
 
    int main_e = 0;
    // if RMB is down, only show the current category
@@ -114,7 +114,7 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
             subMenu = contextMenu;
         else
         {
-            subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, COptionMenu::kNoDrawStyle);
+            subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, COptionMenu::kMultipleCheckStyle);
             subMenu->setNbItemsPerColumn(32);
         }
         
@@ -129,6 +129,8 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
             auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name));
             auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
             
+            if (p == current_patch)
+                actionItem->setChecked(true);
             actionItem->setActions(action, nullptr);
             subMenu->addEntry(actionItem);
             sub++;
@@ -157,7 +159,9 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         
         if (!single_category)
         {
-            contextMenu->addEntry(subMenu, name);
+            CMenuItem *entry = contextMenu->addEntry(subMenu, name);
+            if (c == current_category)
+                entry->setChecked(true);
             subMenu->forget(); // Important, so that the refcounter gets it right
         }
         main_e++;

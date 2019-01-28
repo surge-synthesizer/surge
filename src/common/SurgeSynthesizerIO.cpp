@@ -171,6 +171,10 @@ void SurgeSynthesizer::loadPatch(int id)
       kCFStringEncodingUTF8);
            ((aulayer*)parent)->SetAFactoryPresetAsCurrent(preset);*/
 #endif
+   /*
+   ** Notify the host display that the patch name has changed
+   */
+   updateDisplay();
 }
 
 void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
@@ -200,6 +204,28 @@ void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
    halt_engine = false;
    patch_loaded = true;
    refresh_editor = true;
+
+   if (patchid < 0)	
+   {
+      /*
+      ** new patch just loaded so I look up and set the current category and patch.
+      ** This is used to draw checkmarks in the menu. If for some reason we don't
+      ** find one, nothing will break
+      */
+      int cnt = storage.patch_list.size();
+      string name = storage.getPatch().name;
+      string cat = storage.getPatch().category;
+      for (int p = 0; p < cnt; ++p)
+      {
+         if (storage.patch_list[p].name == name &&
+            storage.patch_category[storage.patch_list[p].category].name == cat)
+         {
+            current_category_id = storage.patch_list[p].category;
+            patchid = p;
+            break;
+         }
+      }
+   }
 }
 
 #if MAC || __linux__

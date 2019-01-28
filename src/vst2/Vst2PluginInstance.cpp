@@ -296,7 +296,19 @@ void Vst2PluginInstance::setProgramName(char* name)
 
 void Vst2PluginInstance::getProgramName(char* name)
 {
-   strcpy(name, programName);
+   getProgramNameIndexed(0, 0, name);
+}
+bool Vst2PluginInstance::getProgramNameIndexed (VstInt32 category, VstInt32 index, char* text)
+{
+   if (tryInit())
+   {
+       SurgeSynthesizer* s = (SurgeSynthesizer*)_instance;
+       /*
+       ** The original surge had this 63. Presume it is documented somewhere in vst land.
+       */
+       strncpy(text, s->storage.getPatch().name.c_str(), 63);
+   }
+   return true;
 }
 
 void Vst2PluginInstance::setParameter(VstInt32 index, float value)

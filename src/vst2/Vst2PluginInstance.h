@@ -28,6 +28,7 @@ public:
    virtual VstInt32 processEvents(VstEvents* ev);
 
    // Host->Client calls
+   virtual bool getProgramNameIndexed(VstInt32 category, VstInt32 index, char* text);
    virtual void setProgramName(char* name);
    virtual void getProgramName(char* name);
    /*virtual bool getProgramNameIndexed (long category, long index, char *text);
