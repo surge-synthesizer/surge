@@ -3,6 +3,8 @@
 #include "resource.h"
 #include <stdio.h>
 
+using namespace VSTGUI;
+
 SharedPointer<CFontDesc> CAboutBox::infoFont;
 
 //------------------------------------------------------------------------
@@ -117,7 +119,9 @@ void CAboutBox::unSplash()
    {
       if (getFrame()->getModalView() == this)
       {
-         getFrame()->setModalView(NULL);
+          // the modal view is never set anywhere. Replace this with the new vstgui
+          // modal view session eventually
+          // getFrame()->setModalView(NULL);
       }
    }
 }

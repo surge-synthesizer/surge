@@ -4,6 +4,8 @@
 #include "CHSwitch2.h"
 #include <vt_dsp/basic_dsp.h>
 
+using namespace VSTGUI;
+
 void CHSwitch2::draw(CDrawContext* dc)
 {
    if (getBackground())

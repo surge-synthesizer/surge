@@ -102,35 +102,35 @@ enum label_placement
    lp_above
 };
 
-class CNumberField : public CControl
+class CNumberField : public VSTGUI::CControl
 {
 public:
-   CNumberField(const CRect& size,
-                IControlListener* listener = 0,
+   CNumberField(const VSTGUI::CRect& size,
+                VSTGUI::IControlListener* listener = 0,
                 long tag = 0,
-                CBitmap* pBackground = 0);
+                VSTGUI::CBitmap* pBackground = 0);
    ~CNumberField();
 
-   virtual void setFontColor(CColor color);
-   CColor getFontColor()
+   virtual void setFontColor(VSTGUI::CColor color);
+   VSTGUI::CColor getFontColor()
    {
       return fontColor;
    }
 
-   virtual void setBackColor(CColor color);
-   CColor getBackColor()
+   virtual void setBackColor(VSTGUI::CColor color);
+   VSTGUI::CColor getBackColor()
    {
       return backColor;
    }
 
-   virtual void setLineColor(CColor color);
-   CColor getLineColor()
+   virtual void setLineColor(VSTGUI::CColor color);
+   VSTGUI::CColor getLineColor()
    {
       return lineColor;
    }
 
-   // virtual void setTxtFace (CTxtFace val);
-   CTxtFace getTxtFace()
+   // virtual void setTxtFace (VSTGUI::CTxtFace val);
+   VSTGUI::CTxtFace getTxtFace()
    {
       return txtFace;
    }
@@ -138,7 +138,7 @@ public:
    /*virtual void setFont (CFont fontID);
    CFont getFont () { return fontID; }*/
 
-   void setBgcolor(CColor bgcol)
+   void setBgcolor(VSTGUI::CColor bgcol)
    {
       envColor = bgcol;
    }
@@ -218,21 +218,21 @@ public:
    virtual void setLabel(char* newlabel);
    virtual void setLabelPlacement(int placement);
 
-   virtual void draw(CDrawContext*);
-   // virtual void mouse (CDrawContext *pContext, CPoint &where, long buttons = -1);
-   virtual CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons);
-   // virtual bool onWheel (CDrawContext *pContext, const CPoint &where, float distance);
+   virtual void draw(VSTGUI::CDrawContext*);
+   // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   // virtual bool onWheel (VSTGUI::CDrawContext *pContext, const VSTGUI::CPoint &where, float distance);
    bool altlook;
 
 private:
-   CColor fontColor;
-   CColor backColor;
-   CColor lineColor;
-   CColor envColor;
+   VSTGUI::CColor fontColor;
+   VSTGUI::CColor backColor;
+   VSTGUI::CColor lineColor;
+   VSTGUI::CColor envColor;
    //	CFont   fontID;
-   CTxtFace txtFace;
+   VSTGUI::CTxtFace txtFace;
    int controlmode, controlstate;
    int i_min, i_max, i_stepsize;
    float f_movespeed;
@@ -242,8 +242,8 @@ private:
    int i_poly;
    char label[32];
    int labelplacement;
-   CRect drawsize;
-   CPoint lastmousepos;
+   VSTGUI::CRect drawsize;
+   VSTGUI::CPoint lastmousepos;
 
-   CLASS_METHODS(CNumberField, CControl)
+   CLASS_METHODS(CNumberField, VSTGUI::CControl)
 };

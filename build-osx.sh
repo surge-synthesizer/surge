@@ -148,7 +148,7 @@ run_build()
     else
         echo
         echo ${RED}** Build of ${flavor} failed**${NC}
-        grep -i error build_logs/build_${flavor}.log
+        grep -i ": error" build_logs/build_${flavor}.log
         echo
         echo Complete information is in build_logs/build_${flavor}.log
 

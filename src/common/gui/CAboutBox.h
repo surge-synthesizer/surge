@@ -10,37 +10,37 @@
 
 #include "vstcontrols.h"
 
-class CAboutBox : public CControl
+class CAboutBox : public VSTGUI::CControl
 {
 public:
-   CAboutBox(const CRect& size,
-             IControlListener* listener,
+   CAboutBox(const VSTGUI::CRect& size,
+             VSTGUI::IControlListener* listener,
              long tag,
-             CBitmap* background,
-             CRect& toDisplay,
-             CPoint& offset,
-             CBitmap* aboutBitmap);
+             VSTGUI::CBitmap* background,
+             VSTGUI::CRect& toDisplay,
+             VSTGUI::CPoint& offset,
+             VSTGUI::CBitmap* aboutBitmap);
    virtual ~CAboutBox();
 
-   virtual void draw(CDrawContext*);
-   virtual bool hitTest(const CPoint& where, const CButtonState& buttons = -1);
-   // virtual void mouse (CDrawContext *pContext, CPoint &where, long button = -1);
-   virtual CMouseEventResult
-   onMouseDown(CPoint& where,
-               const CButtonState& buttons); ///< called when a mouse down event occurs
+   virtual void draw(VSTGUI::CDrawContext*);
+   virtual bool hitTest(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons = -1);
+   // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
+   virtual VSTGUI::CMouseEventResult
+   onMouseDown(VSTGUI::CPoint& where,
+               const VSTGUI::CButtonState& buttons); ///< called when a mouse down event occurs
    virtual void unSplash();
 
    void boxShow();
    void boxHide(bool invalidateframe = true);
 
-   CLASS_METHODS(CAboutBox, CControl)
+   CLASS_METHODS(CAboutBox, VSTGUI::CControl)
 
 protected:
-   CRect toDisplay;
-   CRect keepSize;
-   CPoint offset;
-   SharedPointer<CBitmap> _aboutBitmap;
+   VSTGUI::CRect toDisplay;
+   VSTGUI::CRect keepSize;
+   VSTGUI::CPoint offset;
+   VSTGUI::SharedPointer<VSTGUI::CBitmap> _aboutBitmap;
    bool bvalue;
 
-   static SharedPointer<CFontDesc> infoFont;
+   static VSTGUI::SharedPointer<VSTGUI::CFontDesc> infoFont;
 };

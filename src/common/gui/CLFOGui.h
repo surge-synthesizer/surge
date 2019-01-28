@@ -7,7 +7,7 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 
-class CLFOGui : public CControl
+class CLFOGui : public VSTGUI::CControl
 {
 public:
    const static int margin = 2;
@@ -18,14 +18,14 @@ public:
    const static int skugga = 0xff5d5d5d;
    const static int splitpoint = lpsize + 20;
 
-   CLFOGui(const CRect& size,
+   CLFOGui(const VSTGUI::CRect& size,
            bool trigmaskedit,
-           IControlListener* listener = 0,
+           VSTGUI::IControlListener* listener = 0,
            long tag = 0,
            LFOStorage* lfodata = 0,
            SurgeStorage* storage = 0,
            StepSequencerStorage* ss = 0)
-       : CControl(size, listener, tag, 0)
+       : VSTGUI::CControl(size, listener, tag, 0)
    {
       this->lfodata = lfodata;
       this->storage = storage;
@@ -75,16 +75,16 @@ public:
 #endif
        }
    }
-   // virtual void mouse (CDrawContext *pContext, CPoint &where, long buttons = -1);
-   virtual CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons);
+   // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
    virtual ~CLFOGui()
    {
       delete cdisurf;
    }
-   virtual void draw(CDrawContext* dc);
+   virtual void draw(VSTGUI::CDrawContext* dc);
 
 protected:
    LFOStorage* lfodata;
@@ -92,13 +92,13 @@ protected:
    SurgeStorage* storage;
    unsigned int coltable[256];
    CDIBitmap* cdisurf;
-   CRect shaperect[n_lfoshapes];
-   CRect steprect[n_stepseqsteps];
-   CRect gaterect[n_stepseqsteps];
-   CRect rect_ls, rect_le, rect_shapes, rect_steps, rect_steps_retrig;
-   CRect ss_shift_left, ss_shift_right;
+   VSTGUI::CRect shaperect[n_lfoshapes];
+   VSTGUI::CRect steprect[n_stepseqsteps];
+   VSTGUI::CRect gaterect[n_stepseqsteps];
+   VSTGUI::CRect rect_ls, rect_le, rect_shapes, rect_steps, rect_steps_retrig;
+   VSTGUI::CRect ss_shift_left, ss_shift_right;
    bool edit_trigmask;
    int controlstate;
 
-   CLASS_METHODS(CLFOGui, CControl)
+   CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };

@@ -4,10 +4,10 @@
 #pragma once
 #include "vstcontrols.h"
 
-class CParameterTooltip : public CControl
+class CParameterTooltip : public VSTGUI::CControl
 {
 public:
-   CParameterTooltip(const CRect& size) : CControl(size, 0, 0, 0)
+   CParameterTooltip(const VSTGUI::CRect& size) : VSTGUI::CControl(size, 0, 0, 0)
    {
       label[0][0] = 0;
       label[1][0] = 0;
@@ -51,16 +51,16 @@ public:
       return visible;
    }
 
-   virtual void draw(CDrawContext* dc)
+   virtual void draw(VSTGUI::CDrawContext* dc)
    {
       if (visible)
       {
          // COffscreenContext *dc =
          // COffscreenContext::create(getFrame(),size.width(),size.height());
 
-         dc->setFont(kNormalFontSmall);
+          dc->setFont(VSTGUI::kNormalFontSmall);
 
-         CRect smaller = getViewSize();
+         VSTGUI::CRect smaller = getViewSize();
          int shrink = 0;
          /*if(!label[0][0])
          {
@@ -72,24 +72,24 @@ public:
          smaller.x += shrink;*/
 
          auto size = getViewSize();
-         dc->setFrameColor(kBlackCColor);
+         dc->setFrameColor(VSTGUI::kBlackCColor);
          dc->drawRect(size);
-         CRect sizem1(size);
+         VSTGUI::CRect sizem1(size);
          sizem1.inset(1, 1);
-         dc->setFillColor(kWhiteCColor);
-         dc->drawRect(sizem1, kDrawFilled);
-         dc->setFontColor(kBlackCColor);
-         CRect trect(size);
+         dc->setFillColor(VSTGUI::kWhiteCColor);
+         dc->drawRect(sizem1, VSTGUI::kDrawFilled);
+         dc->setFontColor(VSTGUI::kBlackCColor);
+         VSTGUI::CRect trect(size);
          trect.inset(4, 1);
          trect.right -= shrink;
-         CRect tupper(trect), tlower(trect);
+         VSTGUI::CRect tupper(trect), tlower(trect);
          tupper.bottom = tupper.top + 13;
          tlower.top = tlower.bottom - 15;
 
          if (label[0][0])
-            dc->drawString(label[0], tupper, kLeftText, true);
+             dc->drawString(label[0], tupper, VSTGUI::kLeftText, true);
          // dc->drawString(label[1],tlower,false,label[0][0]?kRightText:kCenterText);
-         dc->drawString(label[1], tlower, kRightText, true);
+         dc->drawString(label[1], tlower, VSTGUI::kRightText, true);
          // dc->copyFrom(dc1,smaller);
          // dc->forget();
       }
@@ -101,5 +101,5 @@ protected:
    bool visible;
    int last_tag;
 
-   CLASS_METHODS(CParameterTooltip, CControl)
+   CLASS_METHODS(CParameterTooltip, VSTGUI::CControl)
 };

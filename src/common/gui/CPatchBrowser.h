@@ -5,11 +5,11 @@
 #include "vstcontrols.h"
 #include "SurgeStorage.h"
 
-class CPatchBrowser : public CControl
+class CPatchBrowser : public VSTGUI::CControl
 {
 public:
-   CPatchBrowser(const CRect& size, IControlListener* listener, long tag, SurgeStorage* storage)
-       : CControl(size, listener, tag, 0)
+   CPatchBrowser(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage)
+       : VSTGUI::CControl(size, listener, tag, 0)
    {
       setLabel("Init");
       setCategory("Init");
@@ -52,8 +52,8 @@ public:
          author = "";
       setDirty(true);
    }
-   virtual void draw(CDrawContext* dc);
-   CMouseEventResult onMouseDown(CPoint& where, const CButtonState& button);
+   virtual void draw(VSTGUI::CDrawContext* dc);
+   VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button);
    void loadPatch(int id);
    int sel_id = 0;
 
@@ -64,7 +64,7 @@ protected:
    int current_category = 0, current_patch = 0;
    SurgeStorage* storage = nullptr;
 
-   void populatePatchMenuForCategory (int index, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall);
+   void populatePatchMenuForCategory (int index, VSTGUI::COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall);
    
-   CLASS_METHODS(CPatchBrowser, CControl)
+   CLASS_METHODS(CPatchBrowser, VSTGUI::CControl)
 };

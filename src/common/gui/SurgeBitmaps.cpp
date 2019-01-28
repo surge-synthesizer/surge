@@ -10,6 +10,8 @@
 #include "CScalableBitmap.h"
 #endif
 
+using namespace VSTGUI;
+
 std::map<int, VSTGUI::CBitmap*> bitmap_registry;
 
 static std::atomic_int refCount(0);

@@ -4,31 +4,31 @@
 #pragma once
 #include "vstcontrols.h"
 
-class CCursorHidingControl : public CControl
+class CCursorHidingControl : public VSTGUI::CControl
 {
 protected:
-   CCursorHidingControl(const CRect& size,
-                        IControlListener* listener,
+   CCursorHidingControl(const VSTGUI::CRect& size,
+                        VSTGUI::IControlListener* listener,
                         int32_t tag,
-                        CBitmap* pBackground);
+                        VSTGUI::CBitmap* pBackground);
    virtual ~CCursorHidingControl();
 
-   virtual CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
    virtual void
-   onMouseMoveDelta(CPoint& where, const CButtonState& buttons, double dx, double dy) = 0;
-   virtual double getMouseDeltaScaling(CPoint& where, const CButtonState& buttons);
+   onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) = 0;
+   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
-   void detachCursor(CPoint& where);
+   void detachCursor(VSTGUI::CPoint& where);
    void attachCursor();
 
 private:
-   void doDetach(CPoint& where);
+   void doDetach(VSTGUI::CPoint& where);
    void doAttach();
 
-   CPoint _lastPos, _detachPos;
+   VSTGUI::CPoint _lastPos, _detachPos;
    bool _isDetatched = false;
 
    // OS specific (screen-space)

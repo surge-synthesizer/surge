@@ -3,6 +3,8 @@
 #include "CEffectSettings.h"
 #include "SurgeBitmaps.h"
 
+using namespace VSTGUI;
+
 const int blocks[8][2] = {{18, 1},  {44, 1},  {18, 41}, {44, 41},
                           {18, 21}, {44, 21}, {89, 11}, {89, 31}};
 

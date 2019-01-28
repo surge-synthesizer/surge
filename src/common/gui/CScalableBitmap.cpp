@@ -5,6 +5,8 @@
 
 #include "resource.h"
 
+using namespace VSTGUI;
+
 // Remember this is user zoom * display zoom. See comment in CScalableBitmap.h
 int  CScalableBitmap::currentPhysicalZoomFactor = 100;
 void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)

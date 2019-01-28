@@ -6,6 +6,8 @@ namespace Surge
 namespace GUI
 {
 
+using namespace VSTGUI;
+    
 float getDisplayBackingScaleFactor(CFrame *)
 {
     Surge::UserInteractions::promptError("getDisplayBackingScaleFactor not implemented yet on linux.",

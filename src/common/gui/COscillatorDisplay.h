@@ -7,11 +7,11 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 
-class COscillatorDisplay : public CControl
+class COscillatorDisplay : public VSTGUI::CControl
 {
 public:
-   COscillatorDisplay(const CRect& size, OscillatorStorage* oscdata, SurgeStorage* storage)
-       : CControl(size, 0, 0, 0)
+   COscillatorDisplay(const VSTGUI::CRect& size, OscillatorStorage* oscdata, SurgeStorage* storage)
+       : VSTGUI::CControl(size, 0, 0, 0)
    {
       this->oscdata = oscdata;
       this->storage = storage;
@@ -72,22 +72,22 @@ public:
    {
       delete cdisurf;
    }
-   virtual void draw(CDrawContext* dc);
-   virtual bool onDrop(IDataPackage* drag, const CPoint& where);
+   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual bool onDrop(VSTGUI::IDataPackage* drag, const VSTGUI::CPoint& where);
 
    void loadWavetable(int id);
 
-   // virtual void mouse (CDrawContext *pContext, CPoint &where, long button = -1);
-   virtual CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseUp(CPoint& where, const CButtonState& buttons);
-   virtual CMouseEventResult onMouseMoved(CPoint& where, const CButtonState& buttons);
+   // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
 protected:
    OscillatorStorage* oscdata;
    SurgeStorage* storage;
    unsigned int coltable[256], controlstate;
    CDIBitmap* cdisurf;
-   CRect rnext, rprev, rmenu;
-   CPoint lastpos;
-   CLASS_METHODS(COscillatorDisplay, CControl)
+   VSTGUI::CRect rnext, rprev, rmenu;
+   VSTGUI::CPoint lastpos;
+   CLASS_METHODS(COscillatorDisplay, VSTGUI::CControl)
 };

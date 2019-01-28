@@ -9,6 +9,8 @@ namespace Surge
 namespace GUI
 {
 
+using namespace VSTGUI;
+    
 float getDisplayBackingScaleFactor(CFrame *f)
 {
     /*

@@ -36,6 +36,8 @@
 //#include <commctrl.h>
 const int yofs = 10;
 
+using namespace VSTGUI;
+
 #if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
@@ -46,6 +48,7 @@ SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
 
 CFontRef surge_minifont = minifont;
 CFontRef surge_patchfont = patchfont;
+
 
 enum special_tags
 {
@@ -1350,7 +1353,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int a = limit_range((int)((3 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
 
-         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
          int eid = 0;
          int id_copy = -1, id_copymod = -1, id_paste = -1;
          char txt[256];
@@ -1403,7 +1406,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
 
-         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+         COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
          int eid = 0;
          int id_copy = -1, id_paste = -1;
          char txt[256];
@@ -1451,7 +1454,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          
          menuRect.offset(where.x, where.y);
          COptionMenu* contextMenu =
-             new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
+             new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
          int eid = 0;
          int id_clearallmr = -1, id_learnctrl = -1, id_clearctrl = -1, id_bipolar = -1,
              id_copy = -1, id_paste = -1, id_rename = -1;
@@ -1545,13 +1548,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
              contextMenu->addEntry("-", eid++);
              
              // Construct submenus for expicit controller mapping
-             COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+             COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
              COptionMenu *currentSub;
              for( int mc = 0; mc < 127; ++mc )
              {
                  if( mc % 10 == 0 )
                  {
-                     currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, kNoDrawStyle );
+                     currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle );
                      char name[ 256 ];
                      sprintf( name, "CC %d -> %d", mc, min( mc+10, 127 ));
                      midiSub->addEntry( currentSub, name );
@@ -1559,7 +1562,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                  
                  char name[ 256 ];
                  sprintf( name, "CC # %d", mc );
-                 CCommandMenuItem *cmd = new CCommandMenuItem( name );
+                 CCommandMenuItem *cmd = new CCommandMenuItem( CCommandMenuItem::Desc( name ) );
                  cmd->setActions( [this,ccid,mc,&handled](CCommandMenuItem *men) {
                      handled = true;
                      synth->storage.controllers[ccid] = mc;
@@ -1731,7 +1734,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          menuRect.offset(where.x, where.y);
 
          COptionMenu* contextMenu =
-             new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
+             new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
          int eid = 0;
          int id_temposync = -1, id_clearallmr = -1, id_extendrange = -1, id_learnctrl = -1,
              id_clearctrl = -1, id_absolute = -1;
@@ -2474,7 +2477,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 {
     COptionMenu* settingsMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle | kMultipleCheckStyle);
+        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
     int eid = 0;
     bool handled = false;
 
@@ -2486,14 +2489,14 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
 #if HOST_SUPPORTS_ZOOM    
     // Zoom submenus
-    COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, kNoDrawStyle);
+    COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
 
     int zid = 0;
     for(auto s : { 100, 125, 150, 200, 300 }) // These are somewhat arbitrary reasonable defaults
     {
         std::ostringstream lab;
         lab << "Zoom to " << s << "%";
-        CCommandMenuItem *zcmd = new CCommandMenuItem(lab.str());
+        CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
         zcmd->setActions([this,s,&handled](CCommandMenuItem *m) {
                 setZoomFactor(s);
                 handled = true;
@@ -2512,7 +2515,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         else
             lab << "Shrink by " << -jog << "%";
         
-        CCommandMenuItem *zcmd = new CCommandMenuItem(lab.str());
+        CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
         zcmd->setActions([this,jog,&handled](CCommandMenuItem *m) {
                 setZoomFactor(getZoomFactor() + jog);
                 handled = true;

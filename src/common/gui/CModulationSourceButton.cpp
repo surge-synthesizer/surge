@@ -6,6 +6,8 @@
 #include "SurgeBitmaps.h"
 #include <vt_dsp/basic_dsp.h>
 
+using namespace VSTGUI;
+
 extern CFontRef surge_minifont;
 
 enum

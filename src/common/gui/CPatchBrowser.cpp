@@ -5,6 +5,8 @@
 
 #include <vector>
 
+using namespace VSTGUI;
+
 extern CFontRef surge_minifont;
 extern CFontRef surge_patchfont;
 
@@ -51,7 +53,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
 
    CRect menurect(0, 0, 0, 0);
    menurect.offset(where.x, where.y);
-   COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, kNoDrawStyle);
+   COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kNoDrawStyle);
 
    int main_e = 0;
    // if RMB is down, only show the current category
@@ -112,7 +114,7 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
             subMenu = contextMenu;
         else
         {
-            subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, kNoDrawStyle);
+            subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0, COptionMenu::kNoDrawStyle);
             subMenu->setNbItemsPerColumn(32);
         }
         
@@ -124,7 +126,7 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
             // sprintf(name,"%i. %s",p,storage->patch_list[p].name.c_str());
             sprintf(name, "%s", storage->patch_list[p].name.c_str());
             
-            auto actionItem = new CCommandMenuItem(name);
+            auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name));
             auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
             
             actionItem->setActions(action, nullptr);
