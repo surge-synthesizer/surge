@@ -29,12 +29,13 @@ using namespace std;
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
     //: halfband_AL(false),halfband_AR(false),halfband_BL(false),halfband_BR(false),
-    : hpA(&storage), hpB(&storage), _parent(parent)
+    : hpA(&storage)
+   , hpB(&storage)
+   , _parent(parent)
+   , halfbandA(6, true)
+   , halfbandB(6, true)
+   , halfbandIN(6, true)
 {
-   halfbandA = new HalfRateFilter(6, true);
-   halfbandB = new HalfRateFilter(6, true);
-   halfbandIN = new HalfRateFilter(6, true);
-
    switch_toggled_queued = false;
    halt_engine = false;
 
@@ -61,8 +62,6 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    {
       voices_usedby[0][i] = 0;
       voices_usedby[1][i] = 0;
-      voices_array[0][i] = new SurgeVoice();
-      voices_array[1][i] = new SurgeVoice();
    }
 
    FBQ[0] =
@@ -70,31 +69,33 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    FBQ[1] =
        (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
 
-   storage.getPatch().polylimit.val.i = 8;
+   SurgePatch& patch = storage.getPatch();
+
+   patch.polylimit.val.i = 8;
    for (int sc = 0; sc < 2; sc++)
    {
-
-      storage.getPatch().scene[sc].modsources.resize(n_modsources);
+      SurgeSceneStorage& scene = patch.scene[sc];
+      scene.modsources.resize(n_modsources);
       for (int i = 0; i < n_modsources; i++)
-         storage.getPatch().scene[sc].modsources[i] = 0;
-      storage.getPatch().scene[sc].modsources[ms_modwheel] = new ControllerModulationSource();
-      storage.getPatch().scene[sc].modsources[ms_aftertouch] = new ControllerModulationSource();
-      storage.getPatch().scene[sc].modsources[ms_pitchbend] = new ControllerModulationSource();
+         scene.modsources[i] = 0;
+      scene.modsources[ms_modwheel] = new ControllerModulationSource();
+      scene.modsources[ms_aftertouch] = new ControllerModulationSource();
+      scene.modsources[ms_pitchbend] = new ControllerModulationSource();
 
       for (int l = 0; l < n_lfos_scene; l++)
       {
-         storage.getPatch().scene[sc].modsources[ms_slfo1 + l] = new LfoModulationSource();
-         ((LfoModulationSource*)storage.getPatch().scene[sc].modsources[ms_slfo1 + l])
-             ->assign(&storage, &storage.getPatch().scene[sc].lfo[n_lfos_voice + l],
-                      storage.getPatch().scenedata[sc], 0,
-                      &storage.getPatch().stepsequences[sc][n_lfos_voice + l]);
+         scene.modsources[ms_slfo1 + l] = new LfoModulationSource();
+         ((LfoModulationSource*)scene.modsources[ms_slfo1 + l])
+            ->assign(&storage, &scene.lfo[n_lfos_voice + l],
+            storage.getPatch().scenedata[sc], 0,
+            &patch.stepsequences[sc][n_lfos_voice + l]);
       }
    }
    for (int i = 0; i < n_customcontrollers; i++)
    {
-      storage.getPatch().scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource();
-      storage.getPatch().scene[1].modsources[ms_ctrl1 + i] =
-          storage.getPatch().scene[0].modsources[ms_ctrl1 + i];
+      patch.scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource();
+      patch.scene[1].modsources[ms_ctrl1 + i] =
+         patch.scene[0].modsources[ms_ctrl1 + i];
    }
 
    amp.set_blocksize(BLOCK_SIZE);
@@ -153,18 +154,8 @@ SurgeSynthesizer::~SurgeSynthesizer()
 {
    allNotesOff();
 
-   delete halfbandA;
-   delete halfbandB;
-   delete halfbandIN;
-
    _aligned_free(FBQ[0]);
    _aligned_free(FBQ[1]);
-
-   for (int i = 0; i < MAX_VOICES; i++)
-   {
-      delete voices_array[0][i];
-      delete voices_array[1][i];
-   }
 
    for (int sc = 0; sc < 2; sc++)
    {
@@ -176,8 +167,6 @@ SurgeSynthesizer::~SurgeSynthesizer()
    }
    for (int i = 0; i < n_customcontrollers; i++)
       delete storage.getPatch().scene[0].modsources[ms_ctrl1 + i];
-   for (int i = 0; i < 8; i++)
-      delete fx[i];
 }
 
 int SurgeSynthesizer::calculateChannelMask(int channel, int key)
@@ -335,7 +324,7 @@ SurgeVoice* SurgeSynthesizer::getUnusedVoice(int scene)
       if (!voices_usedby[scene][i])
       {
          voices_usedby[scene][i] = scene + 1;
-         return voices_array[scene][i];
+         return &voices_array[scene][i];
       }
    }
    return 0;
@@ -345,11 +334,11 @@ void SurgeSynthesizer::freeVoice(SurgeVoice* v)
 {
    for (int i = 0; i < MAX_VOICES; i++)
    {
-      if (voices_usedby[0][i] && (v == voices_array[0][i]))
+      if (voices_usedby[0][i] && (v == &voices_array[0][i]))
       {
          voices_usedby[0][i] = 0;
       }
-      if (voices_usedby[1][i] && (v == voices_array[1][i]))
+      if (voices_usedby[1][i] && (v == &voices_array[1][i]))
       {
          voices_usedby[1][i] = 0;
       }
@@ -481,7 +470,6 @@ void SurgeSynthesizer::releaseScene(int s)
    list<SurgeVoice*>::const_iterator iter;
    for (iter = voices[s].begin(); iter != voices[s].end(); iter++)
    {
-      (*iter)->~SurgeVoice();
       //_aligned_free(*iter);
       freeVoice(*iter);
    }
@@ -987,7 +975,6 @@ void SurgeSynthesizer::allNotesOff()
       list<SurgeVoice*>::const_iterator iter;
       for (iter = voices[s].begin(); iter != voices[s].end(); iter++)
       {
-         (*iter)->~SurgeVoice();
          //_aligned_free(*iter);
          freeVoice(*iter);
       }
@@ -995,9 +982,9 @@ void SurgeSynthesizer::allNotesOff()
    }
    holdbuffer[0].clear();
    holdbuffer[1].clear();
-   halfbandA->reset();
-   halfbandB->reset();
-   halfbandIN->reset();
+   halfbandA.reset();
+   halfbandB.reset();
+   halfbandIN.reset();
 
    hpA.suspend();
    hpB.suspend();
@@ -1308,7 +1295,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
       {
          fx_reload[s] = false;
 
-         delete fx[s];
+         fx[s].reset();
          /*if (!force_reload_all)*/ storage.getPatch().fx[s].type.val.i = fxsync[s].type.val.i;
          // else fxsync[s].type.val.i = storage.getPatch().fx[s].type.val.i;
 
@@ -1322,8 +1309,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
          if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
             memcpy(&storage.getPatch().fx[s].p, &fxsync[s].p, sizeof(Parameter) * n_fx_params);
 
-         fx[s] = spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
-                              &storage.getPatch().fx[s], storage.getPatch().globaldata);
+         fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
+                              &storage.getPatch().fx[s], storage.getPatch().globaldata));
 
          if (fx[s])
          {
@@ -2221,7 +2208,7 @@ void SurgeSynthesizer::process()
       hardclip_block8(input[1], BLOCK_SIZE_QUAD);
       copy_block(input[0], storage.audio_in_nonOS[0], BLOCK_SIZE_QUAD);
       copy_block(input[1], storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
-      halfbandIN->process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1]);
+      halfbandIN.process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1]);
    }
    else
    {
@@ -2307,7 +2294,6 @@ void SurgeSynthesizer::process()
 
          if (!resume)
          {
-            v->~SurgeVoice();
             //_aligned_free(v);
             freeVoice(v);
             iter = voices[s].erase(iter);
@@ -2361,14 +2347,14 @@ void SurgeSynthesizer::process()
    {
       hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
       hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
-      halfbandA->process_block_D2(sceneout[0][0], sceneout[0][1]);
+      halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1]);
    }
 
    if (play_scene[1])
    {
       hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
       hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
-      halfbandB->process_block_D2(sceneout[1][0], sceneout[1][1]);
+      halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
    }
 
    hpA.coeff_HP(

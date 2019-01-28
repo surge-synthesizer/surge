@@ -27,7 +27,11 @@ const float db60 = powf(10.f, 0.05f * -60.f);
 class AdsrEnvelope : public ModulationSource
 {
 public:
-   AdsrEnvelope(SurgeStorage* storage, ADSRStorage* adsr, pdata* localcopy, SurgeVoiceState* state)
+   AdsrEnvelope()
+   {
+   }
+
+   void init(SurgeStorage* storage, ADSRStorage* adsr, pdata* localcopy, SurgeVoiceState* state)
    {
       this->storage = storage;
       this->adsr = adsr;
@@ -56,13 +60,13 @@ public:
       _discharge = 0.f;
    }
 
-   virtual void retrigger()
+   void retrigger()
    {
       if (envstate < s_release)
          attack();
    }
 
-   virtual void attack()
+   void attack()
    {
       phase = 0;
       output = 0;
@@ -95,7 +99,7 @@ public:
       return false;
    }
 
-   virtual void release()
+   void release()
    {
       /*if(envstate == s_attack)
       {
@@ -303,18 +307,18 @@ public:
    }
 
 private:
-   ADSRStorage* adsr;
-   SurgeVoiceState* state;
-   SurgeStorage* storage;
-   float phase;
-   float sustain;
-   float scalestage;
-   int idlecount;
-   int envstate;
-   pdata* lc;
-   int a, d, s, r, a_s, d_s, r_s, mode;
+   ADSRStorage* adsr = nullptr;
+   SurgeVoiceState* state = nullptr;
+   SurgeStorage* storage = nullptr;
+   float phase = 0.f;
+   float sustain = 0.f;
+   float scalestage = 0.f;
+   int idlecount = 0;
+   int envstate = 0;
+   pdata* lc = nullptr;
+   int a = 0, d = 0, s = 0, r = 0, a_s = 0, d_s = 0, r_s = 0, mode = 0;
 
-   float _v_c1;
-   float _v_c1_delayed;
-   float _discharge;
+   float _v_c1 = 0.f;
+   float _v_c1_delayed = 0.f;
+   float _discharge = 0.f;
 };
