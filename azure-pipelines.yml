@@ -128,3 +128,24 @@ jobs:
     condition: variables.isMac
     displayName: Publish macOS DMG
 
+- job: NotifyReleases
+  dependsOn: Build
+  condition: succeeded()
+
+  steps:
+  - checkout: none
+
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: notify-releases.sh
+
+  - bash: |
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+        exit
+      fi
+
+      echo "Notifying releases..."
+
+      sh $AGENT_TEMPDIRECTORY/notify-releases.sh
+    displayName: Notify Releases
+
