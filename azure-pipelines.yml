@@ -152,6 +152,6 @@ jobs:
 
       echo "Notifying releases..."
 
-      $AGENT_TEMPDIRECTORY/notify-releases.sh
+      bash $AGENT_TEMPDIRECTORY/notify-releases.sh
     displayName: Notify Releases
 
