@@ -142,6 +142,10 @@ jobs:
   - bash: |
       echo "Notifying releases..."
 
+      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+        exit
+      fi
+
       sh $AGENT_TEMPDIRECTORY/notify-releases.sh
     displayName: Notify Releases
 
