@@ -37,6 +37,7 @@ Commands are:
         --build-and-install      Build and install the assets
         --build-validate-au      Build and install the audio unit then validate it
         --build-install-vst2     Build and install only the VST2
+        --build-install-vst3     Build and install only the VST3
 
         --package                Creates a .pkg file from current built state in products
         --clean-and-package      Cleans everything; runs all the builds; makes an installer; drops it in products
@@ -214,6 +215,15 @@ run_build_install_vst2()
     rsync -r --delete "products/Surge.vst/" ~/Library/Audio/Plug-Ins/VST/Surge.vst/
 }
 
+run_build_install_vst3()
+{
+    run_premake_if
+    run_build "vst3"
+
+    rsync -r "resources/data/" "$HOME/Library/Application Support/Surge/"
+    rsync -r --delete "products/Surge.vst3/" ~/Library/Audio/Plug-Ins/VST3/Surge.vst3/
+}
+
 run_clean_builds()
 {
     if [ ! -d "Surge.xcworkspace" ]; then
@@ -306,6 +316,9 @@ case $command in
         ;;
     --build-install-vst2)
         run_build_install_vst2
+        ;;
+    --build-install-vst3)
+        run_build_install_vst3
         ;;
     --clean)
         run_clean_builds
