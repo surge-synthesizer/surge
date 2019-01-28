@@ -146,7 +146,7 @@ jobs:
       secureFile: notify-releases.sh
 
   - bash: |
-      if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
+      if ! [[ $BUILD_SOURCEBRANCHNAME =~ ^(master|release/.+)$ ]]; then
         exit
       fi
 
