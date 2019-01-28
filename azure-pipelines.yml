@@ -140,11 +140,11 @@ jobs:
       secureFile: notify-releases.sh
 
   - bash: |
-      echo "Notifying releases..."
-
       if ! [[ $SURGE_BRANCH =~ ^(master|release/.+)$ ]]; then
         exit
       fi
+
+      echo "Notifying releases..."
 
       sh $AGENT_TEMPDIRECTORY/notify-releases.sh
     displayName: Notify Releases
