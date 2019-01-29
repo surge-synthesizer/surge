@@ -491,21 +491,22 @@ void SurgeStorage::refresh_wtlist()
 
 void SurgeStorage::perform_queued_wtloads()
 {
+   SurgePatch& patch = getPatch();  //Change here is for performance and ease of debugging, simply not calling getPatch so many times. Code should behave identically.
    for (int sc = 0; sc < 2; sc++)
    {
       for (int o = 0; o < n_oscs; o++)
       {
-         if (getPatch().scene[sc].osc[o].wt.queue_id != -1)
+         if (patch.scene[sc].osc[o].wt.queue_id != -1)
          {
-            load_wt(getPatch().scene[sc].osc[o].wt.queue_id, &getPatch().scene[sc].osc[o].wt);
-            getPatch().scene[sc].osc[o].wt.refresh_display = true;
+            load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt);
+            patch.scene[sc].osc[o].wt.refresh_display = true;
          }
-         else if (getPatch().scene[sc].osc[o].wt.queue_filename[0])
+         else if (patch.scene[sc].osc[o].wt.queue_filename[0])
          {
-            getPatch().scene[sc].osc[o].queue_type = ot_wavetable;
-            getPatch().scene[sc].osc[o].wt.current_id = -1;
-            load_wt(getPatch().scene[sc].osc[o].wt.queue_filename, &getPatch().scene[sc].osc[o].wt);
-            getPatch().scene[sc].osc[o].wt.refresh_display = true;
+            patch.scene[sc].osc[o].queue_type = ot_wavetable;
+            patch.scene[sc].osc[o].wt.current_id = -1;
+            load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt);
+            patch.scene[sc].osc[o].wt.refresh_display = true;
          }
       }
    }
