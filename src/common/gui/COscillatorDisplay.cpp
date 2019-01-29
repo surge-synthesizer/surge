@@ -34,7 +34,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    cdisurf->begin();
    cdisurf->clear(0xffffffff);
 
-   int w = cdisurf->getWidth();
    int h2 = cdisurf->getHeight();
    int h = h2;
    assert(h < 512);
@@ -268,12 +267,13 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
    }
    else if (uses_wavetabledata(oscdata->type.val.i))
    {
+      int id = oscdata->wt.current_id;
       if (rprev.pointInside(where)) {
-         int id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
+         id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
          if (id >= 0)
             oscdata->wt.queue_id = id;
       } else if (rnext.pointInside(where)) {
-         int id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
+         id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
          if (id >= 0)
             oscdata->wt.queue_id = id;
       }
@@ -281,15 +281,15 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
       {
          CRect menurect(0, 0, 0, 0);
          menurect.offset(where.x, where.y);
-         COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kNoDrawStyle);
+         COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
 
          for (auto c : storage->wtCategoryOrdering)
          {
             char name[NAMECHARS];
-            COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, COptionMenu::kNoDrawStyle);
+            COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, COptionMenu::kMultipleCheckStyle);
             subMenu->setNbItemsPerColumn(32);
             int sub = 0;
-            int p;
+
             for (auto p : storage->wtOrdering)
             {
                if (storage->wt_list[p].category == c)
@@ -298,6 +298,8 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
                   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name));
                   auto action = [this, p](CCommandMenuItem* item) { this->loadWavetable(p); };
 
+                  if (p == id)
+                     actionItem->setChecked(true);
                   actionItem->setActions(action, nullptr);
                   subMenu->addEntry(actionItem);
 
@@ -305,7 +307,9 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
                }
             }
             strncpy(name, storage->wt_category[c].name.c_str(), NAMECHARS);
-            contextMenu->addEntry(subMenu, name);
+            CMenuItem *submenuItem = contextMenu->addEntry(subMenu, name);
+            if (id >= 0 && storage->wt_list[id].category == c)
+                  submenuItem->setChecked(true);
 
             subMenu->forget(); // Important, so that the refcounter gets right
          }
