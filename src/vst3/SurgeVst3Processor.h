@@ -121,5 +121,7 @@ protected:
    std::vector<SurgeGUIEditor*> viewsArray;
    int blockpos;
 
+   void handleZoom(SurgeGUIEditor *e);
+   
    FpuState _fpuState;
 };

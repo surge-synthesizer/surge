@@ -10,6 +10,8 @@
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/base/ustring.h"
 
+#include "CScalableBitmap.h"
+
 using namespace Steinberg::Vst;
 
 #define CHECK_INITIALIZED                                                                          \
@@ -402,6 +404,8 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
    {
       SurgeGUIEditor* editor = new SurgeGUIEditor(this, surgeInstance.get());
 
+      editor->setZoomCallback( [this](SurgeGUIEditor *e) { handleZoom(e); } );
+      
       return editor;
    }
    return nullptr;
@@ -600,4 +604,50 @@ void SurgeVst3Processor::setParameterAutomated(int externalparam, float value)
    beginEdit(externalparam); // TODO
    performEdit(externalparam, value);
    endEdit(externalparam);
+}
+
+void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
+{
+    float fzf = e->getZoomFactor() / 100.0;
+    int newW = WINDOW_SIZE_X * fzf;
+    int newH = WINDOW_SIZE_Y * fzf;
+
+
+    VSTGUI::CFrame *frame = e->getFrame();
+    if(frame)
+    {
+        frame->setZoom( e->getZoomFactor() / 100.0 );
+
+        /*
+        ** rather than calling setSize on myself as in vst2, I have to
+        ** inform the plugin frame that I have resized wiht a reference
+        ** to a view (which is the editor). This collaborates with
+        ** the host to resize once the content is scaled
+        */
+        Steinberg::IPlugFrame *ipf = e->getIPlugFrame();
+        if (ipf)
+        {
+            Steinberg::ViewRect vr( 0, 0, newW, newH );
+            ipf->resizeView( e, &vr );
+        }
+            
+        /*
+        ** VSTGUI has an error which is that the background bitmap doesn't get the frame transform
+        ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
+        ** scale up using a backdoor API.
+        */
+        
+        VSTGUI::CBitmap *bg = frame->getBackground();
+        if(bg != NULL)
+        {
+            CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+            if (sbm)
+            {
+                sbm->setExtraScaleFactor( e->getZoomFactor() );
+            }
+        }
+        
+        frame->setDirty( true );
+        frame->invalid();
+    }
 }

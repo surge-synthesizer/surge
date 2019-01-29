@@ -82,6 +82,19 @@ protected:
     */
    VSTGUI::CPoint getCurrentMouseLocationCorrectedForVSTGUIBugs();
 
+#if TARGET_VST3
+public:
+   /**
+    * getIPlugFrame
+    *
+    * Amazingly, IPlugView has a setFrame( IPlugFrame ) method but
+    * no getter. It does, however, store the value as a protected
+    * variable. To collaborate for zoom, we need this reference
+    * in the VST Processor, so expose this function
+    */
+   Steinberg::IPlugFrame *getIPlugFrame() { return plugFrame; }
+#endif
+   
 private:
    void openOrRecreateEditor();
    void close_editor();
@@ -153,6 +166,6 @@ private:
    VSTGUI::CVSTGUITimer* _idleTimer = nullptr;
 };
 
-#if ( MAC && ( TARGET_AUDIOUNIT || TARGET_VST2 )  ) || (WINDOWS && TARGET_VST2 )
+#if MAC || WINDOWS
 #define HOST_SUPPORTS_ZOOM 1
 #endif

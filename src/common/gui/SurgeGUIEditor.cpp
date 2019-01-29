@@ -2433,12 +2433,21 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 #endif
 
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
+
+#if TARGET_VST3
+   /*
+   ** VST3 doesn't have this API available to it, so just assume for now
+   */
+   float baseW = WINDOW_SIZE_X;
+   float baseH = WINDOW_SIZE_Y;
+#else
    ERect *baseUISize;
    getRect (&baseUISize);
 
    float baseW = (baseUISize->right - baseUISize->left);
    float baseH = (baseUISize->top - baseUISize->bottom);
-
+#endif
+   
    // Leave enough room for window decoration with that .9. (You can probably do .95 on mac)
    if (zf != 100.0 && (
            (baseW * zf / 100.0) > 0.9 * screenDim.getWidth() ||
@@ -2566,7 +2575,7 @@ CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
     frame->getCurrentMouseLocation(where);
     where = frame->localToFrame(where);
 
-#if TARGET_VST2 && HOST_SUPPORTS_ZOOM
+#if ( TARGET_VST2 || TARGET_VST3 ) && HOST_SUPPORTS_ZOOM
     CGraphicsTransform vstfix = frame->getTransform().inverse();
     vstfix.transform(where);
     vstfix.transform(where);
