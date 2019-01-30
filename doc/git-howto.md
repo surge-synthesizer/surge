@@ -45,7 +45,7 @@ and `push` which push all the diffs from you to a remote.
 You need to configure these remotes one time per remote. So do this:
 
 ```
-git remte add upstream https://github.com/surge-synthesizer/surge
+git remote add upstream https://github.com/surge-synthesizer/surge
 git remote -v
 ```
 
