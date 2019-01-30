@@ -587,7 +587,7 @@ void SurgePatch::init_default_values()
       scene[sc].route_noise.val.i = 1;
       scene[sc].pbrange_up.val.i = 2.f;
       scene[sc].pbrange_dn.val.i = 2.f;
-      scene[sc].lowcut.val.f = -36; // scene[sc].lowcut.val_min.f;
+      scene[sc].lowcut.val.f = scene[sc].lowcut.val_min.f;
       scene[sc].lowcut.per_voice_processing = false;
 
       scene[sc].adsr[0].a.val.f = scene[sc].adsr[0].a.val_min.f;
