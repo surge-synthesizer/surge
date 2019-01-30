@@ -81,7 +81,8 @@ elseif (os.istarget("linux")) then
 
 	buildoptions { "-std=c++17" }
 	links { }
-	buildoptions {  }
+
+    buildoptions {  }
 	linkoptions {  }
 
 	platforms { "x64" }
@@ -275,9 +276,12 @@ function plugincommon()
 			"src/linux/*.mm",
 			"src/linux/**.cpp",
 			"src/linux/**.h",
---			"libs/vst/*.mm", --
---			VSTGUI .. "vstgui_linux.cpp", -- with the Jan 19 pointer upgrade this is no longer needed nor works
---			VSTGUI .. "vstgui_uidescription_linux.cpp", --
+            
+            VSTGUI .. "vstgui.cpp",
+            VSTGUI .. "lib/platform/linux/**.cpp",
+            VSTGUI .. "lib/platform/common/genericoptionmenu.cpp",
+            VSTGUI .. "lib/platform/common/generictextedit.cpp",     
+
 		}
 	
 		excludes {
@@ -295,7 +299,19 @@ function plugincommon()
 			"pthread",
 			"stdc++fs",
 			"gcc_s",
-			"gcc"
+			"gcc",
+
+            "xcb",
+            "xcb-xkb",
+            "xcb-cursor", 
+            "X11-xcb", 
+            "xcb-util", 
+            "xcb-keysyms",
+            
+            "xkbcommon",
+            "xkbcommon-x11",
+            
+            "X11",
 		}
 
 		linkoptions {
