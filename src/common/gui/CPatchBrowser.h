@@ -52,6 +52,23 @@ public:
          author = "";
       setDirty(true);
    }
+   void setComment(std::string l)
+   {
+       /*
+       ** the patch comment displays as a tooltip if there is one.
+       */
+       if(l.length())
+       {
+           comment = "Comment: " + l;
+           setAttribute(VSTGUI::kCViewTooltipAttribute, comment.length() + 1, comment.c_str());
+       }
+       else
+       {
+           comment = "";
+           setAttribute(VSTGUI::kCViewTooltipAttribute, 0, NULL );
+       }
+       setDirty(true);
+   }
    virtual void draw(VSTGUI::CDrawContext* dc);
    VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button);
    void loadPatch(int id);
@@ -61,6 +78,8 @@ protected:
    std::string pname;
    std::string category;
    std::string author;
+   std::string comment;
+
    int current_category = 0, current_patch = 0;
    SurgeStorage* storage = nullptr;
 

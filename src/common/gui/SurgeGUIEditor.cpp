@@ -496,6 +496,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    assert(frame);
 
    getFrame()->registerKeyboardHook(this);
+   getFrame()->enableTooltips(true);
 
    if (editor_open)
       close_editor();
@@ -628,6 +629,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ((CPatchBrowser*)patchname)->setCategory(synth->storage.getPatch().category);
    ((CPatchBrowser*)patchname)->setIDs(synth->current_category_id, synth->patchid);
    ((CPatchBrowser*)patchname)->setAuthor(synth->storage.getPatch().author);
+   ((CPatchBrowser*)patchname)->setComment(synth->storage.getPatch().comment);
    frame->addView(patchname);
 
    CHSwitch2* mp_cat =
@@ -1065,8 +1067,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->setValue(p->get_value_f01());
                hs->setLabel(p->get_name());
                hs->setMoveRate(p->moverate);
+
                frame->addView(hs);
                param[i] = hs;
+
+               /*
+               ** Once I'm added to the frame, I need to set my initial tooltip. These get reset when changed
+               ** in ::valueChanged below
+               */
+               char txt[256];
+               p->get_display(txt);
+               hs->setAttribute(kCViewTooltipAttribute, strlen(txt)+1, txt);
             }
             else
             {
@@ -1076,8 +1087,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->setDefaultValue(p->get_default_value_f01());
                hs->setLabel(p->get_name());
                hs->setMoveRate(p->moverate);
+
                frame->addView(hs);
                param[i] = hs;
+
+               char txt[256];
+               p->get_display(txt);
+               hs->setAttribute(kCViewTooltipAttribute, strlen(txt)+1, txt);
+
 
                /*						if(p->can_temposync() && (style &
                kHorizontal))
@@ -2164,6 +2181,14 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          char pname[256], pdisp[128], txt[128];
          bool modulate = false;
 
+         if(dynamic_cast<CSurgeSlider*>(control) != nullptr)
+         {
+             // set the tooltip to my value. This 256 is apparently the API required size.
+             char txt[256];
+             p->get_display(txt);
+             control->setAttribute(kCViewTooltipAttribute, strlen(txt)+1, txt);
+         }
+         
          if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
              dynamic_cast<CSurgeSlider*>(control) != nullptr)
          {
