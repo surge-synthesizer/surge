@@ -4,6 +4,8 @@
 #include "Oscillator.h"
 #include "DspUtilities.h"
 
+using namespace std;
+
 // const float integrator_hpf = 0.99999999f;
 // const float integrator_hpf = 0.9992144f;		// 44.1 kHz
 // const float integrator_hpf = 0.9964f;		// 44.1 kHz

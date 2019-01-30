@@ -23,12 +23,12 @@ public:
       current_category = category;
       current_patch = patch;
    }
-   void setLabel(string l)
+   void setLabel(std::string l)
    {
       pname = l;
       setDirty(true);
    }
-   void setCategory(string l)
+   void setCategory(std::string l)
    {
       if (l.length())
       {
@@ -40,7 +40,7 @@ public:
          category = "";
       setDirty(true);
    }
-   void setAuthor(string l)
+   void setAuthor(std::string l)
    {
       if (l.length())
       {
@@ -58,9 +58,9 @@ public:
    int sel_id = 0;
 
 protected:
-   string pname;
-   string category;
-   string author;
+   std::string pname;
+   std::string category;
+   std::string author;
    int current_category = 0, current_patch = 0;
    SurgeStorage* storage = nullptr;
 

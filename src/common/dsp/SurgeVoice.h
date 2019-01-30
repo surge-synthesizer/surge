@@ -83,7 +83,7 @@ private:
    int FMmode;
    float noisegenL[2], noisegenR[2];
    Oscillator* osc[3];
-   vector<ModulationSource*> modsources;
+   std::vector<ModulationSource*> modsources;
    // filterblock stuff
    int id_cfa, id_cfb, id_kta, id_ktb, id_emoda, id_emodb, id_resoa, id_resob, id_drive, id_vca,
        id_vcavel, id_fbalance, id_feedback;

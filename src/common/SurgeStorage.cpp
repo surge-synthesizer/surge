@@ -40,6 +40,8 @@ float samplerate, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
 double dsamplerate_os, dsamplerate_os_inv;
 
+using namespace std;
+
 #if MAC
 #include <CoreFoundation/CoreFoundation.h>
 string getSelfLocation()

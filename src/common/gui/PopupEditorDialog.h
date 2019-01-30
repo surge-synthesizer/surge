@@ -11,6 +11,7 @@
 
 #include <atlctrls.h>
 #include <atlCRACK.h>
+#include <algorithm>
 
 class PopupEditorDialog : public CDialogImpl<PopupEditorDialog>
 {
@@ -81,7 +82,7 @@ public:
       ce.Detach();
       if (irange > 0) // try to convert string to integer
       {
-         ivalue = min(irange - 1, atoi(textdata));
+         ivalue = std::min(irange - 1, atoi(textdata));
       }
       fvalue = (float)atof(textdata);
 

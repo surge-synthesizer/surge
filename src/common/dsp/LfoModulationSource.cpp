@@ -1,5 +1,7 @@
 #include "LfoModulationSource.h"
 
+using namespace std;
+
 LfoModulationSource::LfoModulationSource()
 {}
 

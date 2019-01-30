@@ -28,7 +28,6 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "SurgeSynthesizer.h"
 
 #include <vector>
-using namespace std;
 
 class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
 {
