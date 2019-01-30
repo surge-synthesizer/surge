@@ -1,6 +1,8 @@
 #include "effect_defs.h"
 #include <vt_dsp/basic_dsp.h>
 
+using namespace std;
+
 /* conditioner */
 
 using namespace vt_dsp;

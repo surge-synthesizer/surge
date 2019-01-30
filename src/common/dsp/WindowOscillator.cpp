@@ -138,7 +138,7 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
        (int)oscdata->wt.n_tables - 1);
    int FormantMul =
        (int)(float)(65536.f * note_to_pitch(localcopy[oscdata->p[1].param_id_in_scene].f));
-   FormantMul = max(FormantMul >> WindowVsWavePO2, 1);
+   FormantMul = std::max(FormantMul >> WindowVsWavePO2, 1);
    {
       // SSE2 path
       for (int so = 0; so < ActiveSubOscs; so++)

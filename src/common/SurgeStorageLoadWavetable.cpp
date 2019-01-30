@@ -16,6 +16,8 @@ void error_msg(char* c)
 #define uint32 unsigned int
 #define int32 int
 
+using namespace std;
+
 void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 {
 #if WINDOWS

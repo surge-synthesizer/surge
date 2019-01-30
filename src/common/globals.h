@@ -18,8 +18,6 @@
 #include <immintrin.h>
 #endif
 
-using namespace std;
-
 #if MAC || __linux__
 #include <strings.h>
 

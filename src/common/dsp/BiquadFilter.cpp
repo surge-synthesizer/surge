@@ -4,6 +4,8 @@
 #include "globals.h"
 #include <complex>
 
+using namespace std;
+
 inline double square(double x)
 {
    return x * x;

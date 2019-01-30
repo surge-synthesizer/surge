@@ -1,5 +1,7 @@
 #include "effect_defs.h"
 
+using namespace std;
+
 /* dualdelay			*/
 
 DualDelayEffect::DualDelayEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)

@@ -1,5 +1,7 @@
 #include "effect_defs.h"
 
+using namespace std;
+
 /* freqshift			*/
 
 enum freqshiftparams

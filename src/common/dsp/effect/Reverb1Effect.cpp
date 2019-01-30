@@ -1,5 +1,7 @@
 #include "effect_defs.h"
 
+using namespace std;
+
 /* reverb			*/
 
 const float db60 = powf(10.f, 0.05f * -60.f);
