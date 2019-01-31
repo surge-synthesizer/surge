@@ -3,6 +3,8 @@
 //-------------------------------------------------------------------------------------------------------
 #include "Oscillator.h"
 
+using namespace std;
+
 /* FM osc */
 
 FMOscillator::FMOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)

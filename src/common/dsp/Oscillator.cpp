@@ -4,6 +4,8 @@
 #include "Oscillator.h"
 #include "DspUtilities.h"
 
+using namespace std;
+
 Oscillator*
 spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
 {

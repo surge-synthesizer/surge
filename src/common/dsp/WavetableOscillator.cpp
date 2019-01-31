@@ -4,6 +4,8 @@
 #include "Oscillator.h"
 #include "DspUtilities.h"
 
+using namespace std;
+
 const float hpf_cycle_loss = 0.99f;
 
 WavetableOscillator::WavetableOscillator(SurgeStorage* storage,

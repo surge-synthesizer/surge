@@ -2,6 +2,8 @@
 #include "SurgeStorage.h"
 #include <vt_dsp/basic_dsp.h>
 
+using namespace std;
+
 const float smooth = 0.2f;
 
 FilterCoefficientMaker::FilterCoefficientMaker()

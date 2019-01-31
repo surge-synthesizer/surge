@@ -43,6 +43,8 @@
 //   AtlCreateSimpleToolBar()
 
 
+#include <algorithm>
+
 namespace WTL
 {
 
@@ -537,9 +539,9 @@ public:
 		}
 
 		::SendMessage(hWnd, TB_ADDBUTTONS, nItems, (LPARAM)pTBBtn);
-		::SendMessage(hWnd, TB_SETBITMAPSIZE, 0, MAKELONG(pData->wWidth, max(pData->wHeight, cyFontHeight)));
+		::SendMessage(hWnd, TB_SETBITMAPSIZE, 0, MAKELONG(pData->wWidth, std::max(pData->wHeight, cyFontHeight)));
 		const int cxyButtonMargin = 7;
-		::SendMessage(hWnd, TB_SETBUTTONSIZE, 0, MAKELONG(pData->wWidth + cxyButtonMargin, max(pData->wHeight, cyFontHeight) + cxyButtonMargin));
+		::SendMessage(hWnd, TB_SETBUTTONSIZE, 0, MAKELONG(pData->wWidth + cxyButtonMargin, std::max(pData->wHeight, cyFontHeight) + cxyButtonMargin));
 
 		return hWnd;
 	}
@@ -3418,10 +3420,10 @@ public:
 				int j = 1;
 				for(j = 1; j < nGroupCount; j++)
 				{
-					rectGroup.left = min(rectGroup.left, m_arrData[i + j].m_rect.left);
-					rectGroup.top = min(rectGroup.top, m_arrData[i + j].m_rect.top);
-					rectGroup.right = max(rectGroup.right, m_arrData[i + j].m_rect.right);
-					rectGroup.bottom = max(rectGroup.bottom, m_arrData[i + j].m_rect.bottom);
+					rectGroup.left = std::min(rectGroup.left, m_arrData[i + j].m_rect.left);
+					rectGroup.top = std::min(rectGroup.top, m_arrData[i + j].m_rect.top);
+					rectGroup.right = std::max(rectGroup.right, m_arrData[i + j].m_rect.right);
+					rectGroup.bottom = std::max(rectGroup.bottom, m_arrData[i + j].m_rect.bottom);
 				}
 
 				for(j = 0; j < nGroupCount; j++)

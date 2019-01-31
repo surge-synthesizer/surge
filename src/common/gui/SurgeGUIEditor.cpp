@@ -37,6 +37,7 @@
 const int yofs = 10;
 
 using namespace VSTGUI;
+using namespace std;
 
 #if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);

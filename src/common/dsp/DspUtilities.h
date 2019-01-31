@@ -257,7 +257,7 @@ inline float clamp1bp(float in)
 
 inline float amp_to_linear(float x)
 {
-   x = max(0.f, x);
+   x = std::max(0.f, x);
    return x * x * x;
 }
 inline float linear_to_amp(float x)

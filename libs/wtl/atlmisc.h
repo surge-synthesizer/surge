@@ -9,6 +9,19 @@
 // the terms of this license. You must not remove this notice, or
 // any other, from this software.
 
+/*
+** MODIFICATION
+** ALAS this uses a raw 'max' so this is a slightly modified version of
+** this library to not require using namespace std above it and allow
+** us to run with -DNOMINMAX, a combination which is required by 
+** c++-17 and vstgui recent on windows.
+*/
+#include <algorithm>
+/*
+** END MODIFICATION
+*/
+
+
 #ifndef __ATLMISC_H__
 #define __ATLMISC_H__
 
@@ -1783,7 +1796,7 @@ public:
 				else
 				{
 					nItemLen = lstrlen(pstrNextArg);
-					nItemLen = max(1, nItemLen);
+					nItemLen = std::max(1, nItemLen);
 				}
 				break;
 			}
@@ -1799,7 +1812,7 @@ public:
 				else
 				{
 					nItemLen = (int)wcslen(pstrNextArg);
-					nItemLen = max(1, nItemLen);
+					nItemLen = std::max(1, nItemLen);
 				}
 #else // _UNICODE
 				LPCSTR pstrNextArg = va_arg(argList, LPCSTR);
@@ -1814,7 +1827,7 @@ public:
 #else
 					nItemLen = lstrlenA(pstrNextArg);
 #endif
-					nItemLen = max(1, nItemLen);
+					nItemLen = std::max(1, nItemLen);
 				}
 #endif // _UNICODE
 				break;
@@ -1835,7 +1848,7 @@ public:
 #else
 					nItemLen = lstrlenA(pstrNextArg);
 #endif
-					nItemLen = max(1, nItemLen);
+					nItemLen = std::max(1, nItemLen);
 				}
 				break;
 			}
@@ -1851,7 +1864,7 @@ public:
 				else
 				{
 					nItemLen = (int)wcslen(pstrNextArg);
-					nItemLen = max(1, nItemLen);
+					nItemLen = std::max(1, nItemLen);
 				}
 				break;
 			}
@@ -1860,9 +1873,9 @@ public:
 			// adjust nItemLen for strings
 			if (nItemLen != 0)
 			{
-				nItemLen = max(nItemLen, nWidth);
+				nItemLen = std::max(nItemLen, nWidth);
 				if (nPrecision != 0)
-					nItemLen = min(nItemLen, nPrecision);
+					nItemLen = std::min(nItemLen, nPrecision);
 			}
 			else
 			{
@@ -1880,7 +1893,7 @@ public:
 					else
 						va_arg(argList, int);
 					nItemLen = 32;
-					nItemLen = max(nItemLen, nWidth + nPrecision);
+					nItemLen = std::max(nItemLen, nWidth + nPrecision);
 					break;
 
 #ifndef _ATL_USE_CSTRING_FLOAT
@@ -1906,7 +1919,7 @@ public:
 				case _T('G'):
 					va_arg(argList, double);
 					nItemLen = 128;
-					nItemLen = max(nItemLen, nWidth + nPrecision);
+					nItemLen = std::max(nItemLen, nWidth + nPrecision);
 					break;
 				case _T('f'):
 					{
@@ -1915,7 +1928,7 @@ public:
 						// 309 zeroes == max precision of a double
 						// 6 == adjustment in case precision is not specified,
 						//   which means that the precision defaults to 6
-						int cchLen = max(nWidth, 312 + nPrecision + 6);
+						int cchLen = std::max(nWidth, 312 + nPrecision + 6);
 						CTempBuffer<TCHAR, _WTL_STACK_ALLOC_THRESHOLD> buff;
 						LPTSTR pszTemp = buff.Allocate(cchLen);
 						if(pszTemp != NULL)
@@ -1934,7 +1947,7 @@ public:
 				case _T('p'):
 					va_arg(argList, void*);
 					nItemLen = 32;
-					nItemLen = max(nItemLen, nWidth + nPrecision);
+					nItemLen = std::max(nItemLen, nWidth + nPrecision);
 					break;
 
 				// no output

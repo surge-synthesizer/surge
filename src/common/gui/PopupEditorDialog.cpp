@@ -109,6 +109,8 @@ void spawn_miniedit_text(char* c, int maxchars)
 
 #include "PopupEditorDialog.h"
 
+using namespace std;
+
 extern CAppModule _Module;
 
 float spawn_miniedit_float(float f, int ctype)

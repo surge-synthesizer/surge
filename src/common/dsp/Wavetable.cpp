@@ -9,6 +9,8 @@
 #include <intrin.h>
 #endif
 
+using namespace std;
+
 const float hrfilter[63] = {
     -9.637663112e-008f, -2.216513622e-006f, -1.200509132e-006f, 1.79627641e-005f,
     1.773084477e-005f,  -5.898886593e-005f, -8.980041457e-005f, 0.0001233910152f,

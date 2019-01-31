@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # build-osx.sh is the master script we use to control the multi-step build processes
 #
