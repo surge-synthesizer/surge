@@ -2459,7 +2459,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
        std::ostringstream msg;
        msg << "You attempted to resize Surge to a size larger than your screen. "
            << "Your screen is " << screenDim.getWidth() << "x" << screenDim.getHeight() 
-           << " and your zoom of " << zf << "% would make your surge "
+           << " and your zoom of " << zf << "% would make your Surge "
            <<  baseW * zf / 100.0 << "x" << baseH * zf / 100.0 << "\n\n"
            << "Retaining current zoom of " << zoomFactor << "%.";
        Surge::UserInteractions::promptError(msg.str(),
