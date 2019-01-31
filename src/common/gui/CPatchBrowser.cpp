@@ -60,23 +60,52 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    // if RMB is down, only show the current category
    bool single_category = button & (kRButton | kControl);
    int last_category = current_category;
+
    if (single_category)
+   {
       contextMenu->setNbItemsPerColumn(32);
 
-   for (int i = 0; i < storage->patch_category.size(); i++)
-   {
-      if ((!single_category) || (i == last_category))
+      /*
+      ** in the init scenario we don't have a category yet. Our two choices are 
+      ** don't pop up the menu or pick one. I choose to pick one. If I can
+      ** find the one called "Init" use that. Otherwise pick 0.
+      */
+      int rightMouseCategory = current_category;
+      if (current_category < 0)
       {
-         if (!single_category &&
-             ((i == storage->firstThirdPartyCategory) ||
-              (i == storage->firstUserCategory)))
-            contextMenu->addEntry("-");
+          for (auto c : storage->patchCategoryOrdering)
+          {
+              if (_stricmp(storage->patch_category[c].name.c_str(),"init")==0)
+              {
+                  rightMouseCategory = c;;
+              }
 
-         // Remap index to the corresponding category in alphabetical order.
-         int c = storage->patchCategoryOrdering[i];
-
-         populatePatchMenuForCategory( c, contextMenu, single_category, main_e, true );
+          }
+          if (rightMouseCategory<0)
+          {
+              rightMouseCategory = storage->patchCategoryOrdering[0];
+          }
       }
+
+      populatePatchMenuForCategory(rightMouseCategory,contextMenu,single_category,main_e,true);
+   }
+   else
+   {
+       for (int i = 0; i < storage->patch_category.size(); i++)
+       {
+           if ((!single_category) || (i == last_category))
+           {
+               if (!single_category &&
+                   ((i == storage->firstThirdPartyCategory) ||
+                    (i == storage->firstUserCategory)))
+                   contextMenu->addEntry("-");
+
+               // Remap index to the corresponding category in alphabetical order.
+               int c = storage->patchCategoryOrdering[i];
+
+               populatePatchMenuForCategory( c, contextMenu, single_category, main_e, true );
+           }
+       }
    }
    // contextMenu->addEntry("refresh list");
 
