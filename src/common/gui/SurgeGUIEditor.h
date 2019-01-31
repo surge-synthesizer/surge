@@ -48,11 +48,12 @@ public:
    
 #if !TARGET_VST3
    bool open(void* parent) override;
+   void close() override;
 #else
    virtual bool PLUGIN_API open(void* parent, const VSTGUI::PlatformType& platformType = VSTGUI::kDefaultNative);
+   virtual void PLUGIN_API close() override;
 #endif
 
-   void close() override;
 
 protected:
    int32_t onKeyDown(const VstKeyCode& code,
