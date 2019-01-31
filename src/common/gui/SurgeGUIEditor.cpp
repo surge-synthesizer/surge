@@ -2555,7 +2555,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     }
     else if(command == id_openmanual)
     {
-        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/surge-manual/");
+        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
     }
 
 }
