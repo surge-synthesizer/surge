@@ -88,10 +88,11 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    return kMouseEventHandled;
 }
 
-void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall )
+bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall )
 {
+    bool amIChecked = false;
     PatchCategory cat = storage->patch_category[ c ];
-    if (rootCall && ! cat.isRoot) return; // stop it going in the top menu which is a straight iteration
+    if (rootCall && ! cat.isRoot) return false; // stop it going in the top menu which is a straight iteration
     
     int splitcount = 256;
     // Go through the whole patch list in alphabetical order and filter
@@ -131,7 +132,10 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
             auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
             
             if (p == current_patch)
+            {
                 actionItem->setChecked(true);
+                amIChecked = true;
+            }
             actionItem->setActions(action, nullptr);
             subMenu->addEntry(actionItem);
             sub++;
@@ -146,7 +150,11 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
                 if (cc.name == childcat.name) break;
                 idx++;
             }
-            populatePatchMenuForCategory( idx, subMenu, false, main_e, false );
+            bool checkedKid = populatePatchMenuForCategory( idx, subMenu, false, main_e, false );
+            if(checkedKid)
+            {
+                amIChecked=true;
+            }
         }
         
         std::string menuName = storage->patch_category[c].name;
@@ -161,12 +169,13 @@ void CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         if (!single_category)
         {
             CMenuItem *entry = contextMenu->addEntry(subMenu, name);
-            if (c == current_category)
+            if (c == current_category || amIChecked)
                 entry->setChecked(true);
             subMenu->forget(); // Important, so that the refcounter gets it right
         }
         main_e++;
     }
+    return amIChecked;
 }
 
 void CPatchBrowser::loadPatch(int id)

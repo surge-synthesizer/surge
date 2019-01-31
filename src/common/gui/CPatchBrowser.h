@@ -64,7 +64,13 @@ protected:
    int current_category = 0, current_patch = 0;
    SurgeStorage* storage = nullptr;
 
-   void populatePatchMenuForCategory (int index, VSTGUI::COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall);
+   /**
+    * populatePatchMenuForCategory
+    *
+    * recursively builds the nexted patch menu. In the event that one of my childrenis checked, return true so I too can be checked.
+    * otherwise, return false.
+    */
+   bool populatePatchMenuForCategory (int index, VSTGUI::COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall);
    
    CLASS_METHODS(CPatchBrowser, VSTGUI::CControl)
 };
