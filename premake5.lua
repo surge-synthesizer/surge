@@ -107,7 +107,7 @@ elseif (os.istarget("windows")) then
 	nuget { "libpng-msvc-x64:1.6.33.8807" }
 
 	characterset "MBCS"
-	buildoptions { "/MP /Zc:alignedNew /std:c++17" }
+	buildoptions { "/MP /Zc:alignedNew /std:c++17 /bigobj" }
 
 	includedirs {
 		"libs/wtl"
@@ -115,7 +115,7 @@ elseif (os.istarget("windows")) then
 	
 	flags { "StaticRuntime", "NoMinimalRebuild" }
 
-	platforms { "x64" }
+	platforms { "x64", "x86" }
 
 	configuration {}
 end
