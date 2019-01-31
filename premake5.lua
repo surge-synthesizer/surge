@@ -546,6 +546,12 @@ elseif (os.istarget("linux")) then
 		"vst3sdk/public.sdk/source/main/linuxmain.cpp",
 	}
 
+    excludes {
+        -- This is both deprecated and, on linux, ejects a non-linkable symbol. So exclude it.
+        "vst3sdk/base/source/timer.cpp"
+    }
+
+
 end
 
 -- AUDIO UNIT PLUGIN --
