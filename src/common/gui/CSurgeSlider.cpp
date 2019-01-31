@@ -8,6 +8,7 @@
 #include "SurgeBitmaps.h"
 
 using namespace VSTGUI;
+using namespace std;
 
 extern CFontRef surge_minifont;
 

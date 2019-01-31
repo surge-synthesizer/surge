@@ -5,6 +5,8 @@
 #include "DspUtilities.h"
 #include "QuadFilterChain.h"
 
+using namespace std;
+
 enum lag_entries
 {
    le_osc1,

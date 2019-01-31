@@ -1638,7 +1638,7 @@ public:
 	}
 
 // COM Server methods
-	LONG Unlock()
+	LONG Unlock() noexcept // MODIFICATION added noexcept to compile c++17
 	{
 		LONG lRet = CComModule::Unlock();
 		if(lRet == 0)

@@ -1,5 +1,7 @@
 #include "effect_defs.h"
 
+using namespace std;
+
 Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
 {
    switch (id)

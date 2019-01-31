@@ -22,6 +22,8 @@ namespace fs = std::experimental::filesystem;
 #include "aulayer.h"
 #endif
 
+using namespace std;
+
 // seems to be missing from VST2.3, so it's copied from the VST list instead
 //--------------------------------------------------------------------
 // For Preset (Program) (.fxp) with chunk (magic = 'FPCh')

@@ -165,15 +165,15 @@ public:
          const float coeff_offset = 2.f - log(samplerate / BLOCK_SIZE) / log(2.f);
 
          float coef_A =
-             powf(2.f, min(0.f, coeff_offset -
+             powf(2.f, std::min(0.f, coeff_offset -
                                     lc[a].f * (adsr->a.temposync ? storage->temposyncratio : 1.f)));
          float coef_D =
-             powf(2.f, min(0.f, coeff_offset -
+             powf(2.f, std::min(0.f, coeff_offset -
                                     lc[d].f * (adsr->d.temposync ? storage->temposyncratio : 1.f)));
          float coef_R =
              envstate == s_uberrelease
                  ? 6.f
-                 : powf(2.f, min(0.f, coeff_offset -
+                 : powf(2.f, std::min(0.f, coeff_offset -
                                           lc[r].f *
                                               (adsr->r.temposync ? storage->temposyncratio : 1.f)));
 
