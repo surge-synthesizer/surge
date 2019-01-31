@@ -68,8 +68,6 @@ jobs:
       premake5 vs2017
       ls -alFh
 
-      # need this because MSBuild.restoreNugetPackages: true fails
-      nuget restore .
     condition: variables.isWindows
     displayName: Setup Windows Project
 
@@ -77,7 +75,6 @@ jobs:
     inputs:
       solution: 'buildtask.xml'
       maximumCpuCount: true
-      # restoreNugetPackages: true
     condition: variables.isWindows
     displayName: Build Windows
 

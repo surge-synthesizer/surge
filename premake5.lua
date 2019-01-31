@@ -104,18 +104,27 @@ elseif (os.istarget("windows")) then
         "NOMINMAX=1" -- Jan 2019 update to vst3sdk required this to disambiguoaute std::numeric_limits. See #373
 	}
 
-	nuget { "libpng-msvc-x64:1.6.33.8807" }
-
 	characterset "MBCS"
+
 	buildoptions { "/MP /Zc:alignedNew /std:c++17 /bigobj" }
 
 	includedirs {
-		"libs/wtl"
+		"libs/wtl",
+		"libs/libpng/win/include"
 	}
 	
 	flags { "StaticRuntime", "NoMinimalRebuild" }
 
-	platforms { "x64", "x86" }
+  platforms { "x64", "x86" }
+
+	configuration { "Debug" }
+	links { 
+		"libs/libpng/win/x64/lib/libpng16_staticd.lib"
+	}
+	configuration { "Release*" }
+	links { 
+		"libs/libpng/win/x64/lib/libpng16_static.lib"
+	}
 
 	configuration {}
 end
