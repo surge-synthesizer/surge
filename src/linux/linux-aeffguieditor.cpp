@@ -77,8 +77,15 @@ bool LinuxRunLoop::registerEventHandler (int fd, IEventHandler* handler)
 bool LinuxRunLoop::unregisterEventHandler (IEventHandler* handler)
 {
 	printf("%s %p\n", __func__, handler);
-	// TODO
-	return true;
+	for (auto it = eventHandlers.begin(); it != eventHandlers.end(); it++)
+	{
+		if (it->eventHandler == handler)
+		{
+			eventHandlers.erase(it);
+			return true;
+		}
+	}
+	return false;
 }
 
 //------------------------------------------------------------------------
@@ -95,8 +102,15 @@ bool LinuxRunLoop::registerTimer (uint64_t interval, ITimerHandler* handler)
 bool LinuxRunLoop::unregisterTimer (ITimerHandler* handler)
 {
 	printf("%s %p\n", __func__, handler);
-	// TODO
-	return true;
+	for (auto it = timerHandlers.begin(); it != timerHandlers.end(); it++)
+	{
+		if (it->timerHandler == handler)
+		{
+			timerHandlers.erase(it);
+			return true;
+		}
+	}
+	return false;
 }
 
 //------------------------------------------------------------------------
