@@ -276,7 +276,7 @@ function plugincommon()
 		
 		buildoptions {
 			"-Wno-unused-variable",
-			"`pkg-config gtkmm-3.0 --cflags`",
+			"`pkg-config --cflags cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
 			"-std=c++14"
 		}
 
@@ -309,22 +309,12 @@ function plugincommon()
 			"stdc++fs",
 			"gcc_s",
 			"gcc",
-
-            "xcb",
-            "xcb-xkb",
-            "xcb-cursor", 
-            "X11-xcb", 
-            "xcb-util", 
-            "xcb-keysyms",
-            
-            "xkbcommon",
-            "xkbcommon-x11",
-            
-            "X11",
+			"dl",
 		}
 
 		linkoptions {
-			"`pkg-config gtkmm-3.0 --libs`",
+			"`pkg-config --libs cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
+			"-Wl,--no-undefined",
 		}
 	elseif (os.istarget("windows")) then
 
