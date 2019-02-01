@@ -2,6 +2,8 @@
 
 /* rotary_speaker	*/
 
+using namespace std;
+
 enum rsparams
 {
    rsp_rate = 0,

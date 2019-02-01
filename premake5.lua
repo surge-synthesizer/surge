@@ -81,7 +81,8 @@ elseif (os.istarget("linux")) then
 
 	buildoptions { "-std=c++17" }
 	links { }
-	buildoptions {  }
+
+    buildoptions {  }
 	linkoptions {  }
 
 	platforms { "x64" }
@@ -103,18 +104,27 @@ elseif (os.istarget("windows")) then
         "NOMINMAX=1" -- Jan 2019 update to vst3sdk required this to disambiguoaute std::numeric_limits. See #373
 	}
 
-	nuget { "libpng-msvc-x64:1.6.33.8807" }
-
 	characterset "MBCS"
-	buildoptions { "/MP /Zc:alignedNew" }
+
+	buildoptions { "/MP /Zc:alignedNew /std:c++17 /bigobj" }
 
 	includedirs {
-		"libs/wtl"
+		"libs/wtl",
+		"libs/libpng/win/include"
 	}
 	
 	flags { "StaticRuntime", "NoMinimalRebuild" }
 
-	platforms { "x64" }
+  platforms { "x64", "x86" }
+
+	configuration { "Debug" }
+	links { 
+		"libs/libpng/win/x64/lib/libpng16_staticd.lib"
+	}
+	configuration { "Release*" }
+	links { 
+		"libs/libpng/win/x64/lib/libpng16_static.lib"
+	}
 
 	configuration {}
 end
@@ -275,9 +285,12 @@ function plugincommon()
 			"src/linux/*.mm",
 			"src/linux/**.cpp",
 			"src/linux/**.h",
---			"libs/vst/*.mm", --
---			VSTGUI .. "vstgui_linux.cpp", -- with the Jan 19 pointer upgrade this is no longer needed nor works
---			VSTGUI .. "vstgui_uidescription_linux.cpp", --
+            
+            VSTGUI .. "vstgui.cpp",
+            VSTGUI .. "lib/platform/linux/**.cpp",
+            VSTGUI .. "lib/platform/common/genericoptionmenu.cpp",
+            VSTGUI .. "lib/platform/common/generictextedit.cpp",     
+
 		}
 	
 		excludes {
@@ -295,7 +308,19 @@ function plugincommon()
 			"pthread",
 			"stdc++fs",
 			"gcc_s",
-			"gcc"
+			"gcc",
+
+            "xcb",
+            "xcb-xkb",
+            "xcb-cursor", 
+            "X11-xcb", 
+            "xcb-util", 
+            "xcb-keysyms",
+            
+            "xkbcommon",
+            "xkbcommon-x11",
+            
+            "X11",
 		}
 
 		linkoptions {
@@ -520,6 +545,12 @@ elseif (os.istarget("linux")) then
 	{
 		"vst3sdk/public.sdk/source/main/linuxmain.cpp",
 	}
+
+    excludes {
+        -- This is both deprecated and, on linux, ejects a non-linkable symbol. So exclude it.
+        "vst3sdk/base/source/timer.cpp"
+    }
+
 
 end
 

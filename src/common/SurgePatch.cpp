@@ -8,6 +8,8 @@
 #include <list>
 #include <vt_dsp/vt_dsp_endian.h>
 
+using namespace std;
+
 const int hmargin = 6;
 // const int gui_topbar = 44;
 const int gui_topbar = 64;

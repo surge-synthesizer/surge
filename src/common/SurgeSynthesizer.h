@@ -11,7 +11,6 @@ struct QuadFilterChainState;
 
 #include <list>
 #include <atomic>
-using namespace std;
 
 #if TARGET_AUDIOUNIT
 class aulayer;
@@ -146,8 +145,8 @@ public:
    void incrementPatch(bool nextPrev);
    void incrementCategory(bool nextPrev);
 
-   string getUserPatchDirectory();
-   string getLegacyUserPatchDirectory();
+   std::string getUserPatchDirectory();
+   std::string getLegacyUserPatchDirectory();
 
    void savePatch();
    void updateUsedState();
@@ -169,7 +168,7 @@ public:
    int CC0, PCH, patchid;
    float masterfade = 0;
    HalfRateFilter *halfbandA, *halfbandB, *halfbandIN;
-   list<SurgeVoice*> voices[2];
+   std::list<SurgeVoice*> voices[2];
    Effect* fx[8];
    bool halt_engine = false;
    MidiChannelState channelState[16];
@@ -192,7 +191,7 @@ public:
 
    // hold pedal stuff
 
-   list<int> holdbuffer[2];
+   std::list<int> holdbuffer[2];
    void purgeHoldbuffer(int scene);
    quadr_osc sinus;
    int demo_counter = 0;

@@ -7,6 +7,7 @@
 #include <vt_dsp/basic_dsp.h>
 
 using namespace VSTGUI;
+using namespace std;
 
 extern CFontRef surge_minifont;
 

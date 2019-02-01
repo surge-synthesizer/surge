@@ -25,6 +25,8 @@
 #endif
 #include "CSurgeSlider.h"
 
+using namespace std;
+
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
     //: halfband_AL(false),halfband_AR(false),halfband_BL(false),halfband_BR(false),
     : hpA(&storage), hpB(&storage), _parent(parent)

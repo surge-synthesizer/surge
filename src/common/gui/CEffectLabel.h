@@ -26,13 +26,13 @@ public:
       dc->drawString(label.c_str(), size, VSTGUI::kLeftText, false);
       setDirty(false);
    }
-   void setLabel(string s)
+   void setLabel(std::string s)
    {
       label = s;
    }
 
 private:
-   string label;
+   std::string label;
 
    CLASS_METHODS(CEffectLabel, VSTGUI::CControl)
 };

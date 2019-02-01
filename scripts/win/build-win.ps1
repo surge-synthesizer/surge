@@ -14,7 +14,8 @@ Param(
     [switch]$install,
     [switch]$bi, # build and install
     [switch]$cb, # Clean and Build
-    [switch]$cbi # clean build and install
+    [switch]$cbi, # clean build and install
+    [switch]$w32
 )
 
 function Show-Help
@@ -31,6 +32,8 @@ build-win.ps1 is a powershell script to control builds and do installs. It takes
     -cb         clean + build
     -cbi        clean + build + install
 
+    -w32        Build 32 bit
+
 It does not run premake yet. 
 
 You need to onetime do
@@ -45,6 +48,14 @@ $msBuildExe = "c:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSB
 $surgeSln = ".\surge.sln"
 $userDir = $($env:HOMEDRIVE) + $($env:HOMEPATH)
 $vst2Dir = "${userDir}\VST2"
+$platform = "/p:Platform=x64"
+
+if( $w32 )
+{
+    Write-Host "Building 32 bit windows"
+    $platform = "/p:Platform=Win32"
+}
+
 
 If( -Not ( Test-Path .\Surge.sln ) )
 {
@@ -55,13 +66,13 @@ If( -Not ( Test-Path .\Surge.sln ) )
 function Build-Surge
 {
     Write-Host "Building"
-    & "$($msBuildExe)" "$($surgeSln)" /t:Build /m /p:Configuration=Release
+    & "$($msBuildExe)" "$($surgeSln)" /t:Build /m /p:Configuration=Release "$($platform)"
 }
 
 function Clean-Surge
 {
     Write-Host "Cleaning"
-    & "$($msBuildExe)" "$($surgeSln)" /t:Clean /m /p:Configuration=Release
+    & "$($msBuildExe)" "$($surgeSln)" /t:Clean /m /p:Configuration=Release "$($platform)"
 }
 
 function Install-Surge
