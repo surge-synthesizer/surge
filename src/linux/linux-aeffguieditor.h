@@ -2,6 +2,8 @@
 // in the LICENSE file found in the top-level directory of this
 // distribution and at http://github.com/steinbergmedia/vstgui/LICENSE
 
+#if TARGET_VST2
+
 #ifndef __linux_aeffguieditor__
 #define __linux_aeffguieditor__
 
@@ -66,4 +68,6 @@ private:
 
 } // VSTGUI
 
-#endif
+#endif // include guard
+
+#endif // TARGET VST2
