@@ -43,5 +43,12 @@ private:
     int lastSeenZoom, bestFitScaleGroup;
     int extraScaleFactor;
 
+    int id;
+
+#if __linux__
+    VSTGUI::SharedPointer<VSTGUI::IPlatformBitmap> originalPlatformBitmapForID(int id);
+    VSTGUI::SharedPointer<VSTGUI::IPlatformBitmap> scalablePlatformBitmapForIDAndScale(int id, std::string scale);
+#endif
+
     static int currentPhysicalZoomFactor;
 };
