@@ -32,8 +32,7 @@ Commands are:
         --premake                Run premake only
 
         --build                  Run the builds without cleans
-        --install                Once assets are built, install them locally
-        --build-and-install      Build and install the assets
+        --install-local          Once assets are built, install them locally
 
         --clean                  Clean all the builds
         --clean-all              Clean all the builds and remove generated files
@@ -155,15 +154,18 @@ run_all_builds()
 
 run_install_local()
 {
-    echo "Installing configuration.xml"
+    echo "Installing local configuration.xml"
     rsync -r "resources/data/configuration.xml" "$HOME/.local/share/Surge/"
 
+    echo "Installing local presets"
+    rsync -r --delete "resources/data/" "$HOME/.local/share/Surge"
+
     if [ -e "surge-vst2.make" ]; then
-        echo "Installing VST2"
+        echo "Installing local VST2"
         rsync -r -delete "target/vst2/Release/Surge.so" $HOME/.vst/
     fi
 
-    echo "Installing VST3"
+    echo "Installing local VST3"
     rsync -r --delete "target/vst3/Release/Surge.so" $HOME/.vst3/
 }
 
@@ -218,15 +220,8 @@ case $command in
     --build)
         run_all_builds
         ;;
-    --install)
+    --install-local)
         run_install_local
-        ;;
-    --build-and-install)
-        run_all_builds
-        run_install_local
-        ;;
-    --build-validate-au)
-        run_build_validate_au
         ;;
     --clean)
         run_clean_builds
