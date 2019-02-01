@@ -33,7 +33,7 @@ public :
 	virtual void setParameter (VstInt32 index, float value) {}
 	bool getRect (ERect** ppRect) override;
 	bool open (void* ptr) override;
-	void idle () override;
+	bool idle2 ();
 
 	#if VST_2_1_EXTENSIONS
 	bool onKeyDown (VstKeyCode& keyCode) override;

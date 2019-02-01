@@ -77,8 +77,15 @@ bool LinuxRunLoop::registerEventHandler (int fd, IEventHandler* handler)
 bool LinuxRunLoop::unregisterEventHandler (IEventHandler* handler)
 {
 	printf("%s %p\n", __func__, handler);
-	// TODO
-	return true;
+	for (auto it = eventHandlers.begin(); it != eventHandlers.end(); it++)
+	{
+		if (it->eventHandler == handler)
+		{
+			eventHandlers.erase(it);
+			return true;
+		}
+	}
+	return false;
 }
 
 //------------------------------------------------------------------------
@@ -95,8 +102,15 @@ bool LinuxRunLoop::registerTimer (uint64_t interval, ITimerHandler* handler)
 bool LinuxRunLoop::unregisterTimer (ITimerHandler* handler)
 {
 	printf("%s %p\n", __func__, handler);
-	// TODO
-	return true;
+	for (auto it = timerHandlers.begin(); it != timerHandlers.end(); it++)
+	{
+		if (it->timerHandler == handler)
+		{
+			timerHandlers.erase(it);
+			return true;
+		}
+	}
+	return false;
 }
 
 //------------------------------------------------------------------------
@@ -160,12 +174,12 @@ bool LinuxAEffGUIEditor::open (void* ptr)
 }
 
 //-----------------------------------------------------------------------------
-void LinuxAEffGUIEditor::idle ()
+bool LinuxAEffGUIEditor::idle2 ()
 {
 	if (inIdle)
 	{
 		fprintf(stderr, "%s: Caught recursive idle call\n", __func__);
-		return;
+		return false;
 	}
 
 	inIdle = true;
@@ -177,6 +191,7 @@ void LinuxAEffGUIEditor::idle ()
 	LinuxRunLoop::instance().idle();
 
 	inIdle = false;
+	return true;
 }
 
 //-----------------------------------------------------------------------------

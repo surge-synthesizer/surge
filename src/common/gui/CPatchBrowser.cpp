@@ -73,6 +73,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       int rightMouseCategory = current_category;
       if (current_category < 0)
       {
+          if (storage->patchCategoryOrdering.size() == 0)
+              return kMouseEventHandled;
           for (auto c : storage->patchCategoryOrdering)
           {
               if (_stricmp(storage->patch_category[c].name.c_str(),"init")==0)
