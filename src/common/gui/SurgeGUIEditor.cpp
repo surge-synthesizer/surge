@@ -150,6 +150,9 @@ SurgeGUIEditor::~SurgeGUIEditor()
 
 void SurgeGUIEditor::idle()
 {
+#if TARGET_VST2 && __linux__
+   super::idle();
+#endif
    if (!synth)
       return;
    if (editor_open && frame && !synth->halt_engine)

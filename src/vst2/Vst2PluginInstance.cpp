@@ -160,9 +160,11 @@ void Vst2PluginInstance::close()
 
 void Vst2PluginInstance::resume()
 {
-
-   _instance->setSamplerate(this->getSampleRate());
-   _instance->audio_processing_active = true;
+   if (_instance)
+   {
+       _instance->setSamplerate(this->getSampleRate());
+       _instance->audio_processing_active = true;
+   }
 
    //	wantEvents ();
    AudioEffectX::resume();

@@ -13,8 +13,13 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "public.sdk/source/vst/vstguieditor.h"
 typedef Steinberg::Vst::VSTGUIEditor EditorType;
 #elif TARGET_VST2
+#if __linux__
+#include "../linux/linux-aeffguieditor.h"
+typedef VSTGUI::LinuxAEffGUIEditor EditorType;
+#else
 #include <vstgui/plugin-bindings/aeffguieditor.h>
 typedef VSTGUI::AEffGUIEditor EditorType;
+#endif
 #else
 #include <vstgui/plugin-bindings/plugguieditor.h>
 typedef VSTGUI::PluginGUIEditor EditorType;
