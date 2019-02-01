@@ -87,8 +87,9 @@ void SurgeBitmaps::addEntry(int id)
 #ifdef USE_SCALABLE_BITMAPS
    VSTGUI::CBitmap *bitmap = new CScalableBitmap(CResourceDescription(id));
 #elif __linux__
+   // FIXME use scalable bitmaps, and load stuff from memory
    char filename [1024];
-   snprintf (filename, 1024, "./resources/bitmaps/bmp%05d.png", id);
+   snprintf (filename, 1024, "/usr/share/surge/bitmaps/bmp%05d.png", id);
    filename[1023] = '\0';
    VSTGUI::CBitmap* bitmap = new VSTGUI::CBitmap(IPlatformBitmap::createFromPath( filename ));
 #else
