@@ -74,6 +74,11 @@ public:
           coltable[i] = r | (g << 8) | (b << 16) | (a << 24);
 #endif
        }
+#if MAC      
+      coltable[0] = 0x0090ffff;
+#else
+      coltable[0] = 0xffff9000;
+#endif
    }
    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
