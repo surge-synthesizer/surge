@@ -51,9 +51,19 @@ void CAboutBox::draw(CDrawContext* pContext)
 #else
       std::string flavor = "NON-PLUGIN"; // for linux app
 #endif      
-      
+
+#if MAC
+      std::string platform = "macOS";
+#elif WINDOWS
+      std::string platform = "windows";
+#elif __linux__
+      std::string platform = "linux";
+#else
+      std::string platform = "orac or skynet or something";
+#endif      
+
       std::vector< std::string > msgs = { {
-              std::string() + "Version " + SURGE_STR(SURGE_VERSION) + " (" + bittiness + " " + flavor + ". Built " +
+              std::string() + "Version " + SURGE_STR(SURGE_VERSION) + " (" + bittiness + " " + platform + " " + flavor + ". Built " +
               __DATE__ + " " + __TIME__ + ")",
               "Released under the GNU General Public License, v3",
               "Copyright 2005-2019 by individual contributors",

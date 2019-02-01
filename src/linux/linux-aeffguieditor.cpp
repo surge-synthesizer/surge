@@ -2,6 +2,8 @@
 // in the LICENSE file found in the top-level directory of this
 // distribution and at http://github.com/steinbergmedia/vstgui/LICENSE
 
+#if TARGET_VST2
+
 #include "linux-aeffguieditor.h"
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 #include "vstgui/lib/platform/platform_x11.h"
@@ -211,3 +213,5 @@ bool LinuxAEffGUIEditor::beforeSizeChange (const CRect& newSize, const CRect& ol
 }
 
 } // VSTGUI
+
+#endif // TARGET_VST guard
