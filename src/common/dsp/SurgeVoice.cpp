@@ -39,6 +39,10 @@ float SurgeVoiceState::getPitch()
           detune;
 }
 
+SurgeVoice::SurgeVoice()
+{
+}
+
 SurgeVoice::SurgeVoice(SurgeStorage* storage,
                        SurgeSceneStorage* oscene,
                        pdata* params,
@@ -94,7 +98,6 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    for (int i = 0; i < n_oscs; i++)
    {
       osctype[i] = -1;
-      osc[i] = 0;
    }
    memset(&FBP, 0, sizeof(FBP));
 
@@ -112,28 +115,28 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    pitch_id = scene->pitch.param_id_in_scene;
    octave_id = scene->octave.param_id_in_scene;
 
-   modsources.resize(n_modsources);
    for (int i = 0; i < 6; i++)
    {
       lfo[i].assign(storage, &scene->lfo[i], localcopy, &state,
                     &storage->getPatch().stepsequences[state.scene_id][i]);
       modsources[ms_lfo1 + i] = &lfo[i];
    }
-   modsources[ms_velocity] = new ModulationSource();
-   modsources[ms_keytrack] = new ModulationSource();
-   modsources[ms_polyaftertouch] = new ControllerModulationSource();
-   ((ControllerModulationSource*)modsources[ms_polyaftertouch])
-       ->init(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
-   modsources[ms_velocity]->output = state.fvel;
-   modsources[ms_keytrack]->output = 0;
-   modsources[ms_ampeg] = new AdsrEnvelope(storage, &scene->adsr[0], localcopy, &state);
-   modsources[ms_filtereg] = new AdsrEnvelope(storage, &scene->adsr[1], localcopy, &state);
+   modsources[ms_velocity] = &velocitySource;
+   modsources[ms_keytrack] = &keytrackSource;
+   modsources[ms_polyaftertouch] = &polyAftertouchSource;
+   polyAftertouchSource.init(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
+   velocitySource.output = state.fvel;
+   keytrackSource.output = 0;
+   ampEGSource.init(storage, &scene->adsr[0], localcopy, &state);
+   filterEGSource.init(storage, &scene->adsr[1], localcopy, &state);
+   modsources[ms_ampeg] = &ampEGSource;
+   modsources[ms_filtereg] = &filterEGSource;
 
    modsources[ms_modwheel] = oscene->modsources[ms_modwheel];
-   modsources[ms_aftertouch] = new ModulationSource();
-   modsources[ms_aftertouch]->output = state.voiceChannelState->pressure;
-   modsources[ms_timbre] = new ModulationSource();
-   modsources[ms_timbre]->output = state.voiceChannelState->timbre;
+   modsources[ms_aftertouch] = &monoAftertouchSource;
+   monoAftertouchSource.output = state.voiceChannelState->pressure;
+   modsources[ms_timbre] = &timbreSource;
+   timbreSource.output = state.voiceChannelState->timbre;
    modsources[ms_pitchbend] = oscene->modsources[ms_pitchbend];
    for (int i = 0; i < n_customcontrollers; i++)
       modsources[ms_ctrl1 + i] = oscene->modsources[ms_ctrl1 + i];
@@ -159,8 +162,8 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    id_feedback = scene->feedback.param_id_in_scene;
 
    switch_toggled();
-   modsources[ms_ampeg]->attack();
-   modsources[ms_filtereg]->attack();
+   ampEGSource.attack();
+   filterEGSource.attack();
 
    calc_ctrldata<true>(0, 0); // init interpolators
 
@@ -172,16 +175,6 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
 
 SurgeVoice::~SurgeVoice()
 {
-   for (int i = 0; i < n_oscs; i++)
-      delete osc[i];
-   // for(int i=0; i<6; i++) delete lfo[i];
-   delete modsources[ms_velocity];
-   delete modsources[ms_keytrack];
-   delete modsources[ms_polyaftertouch];
-   delete modsources[ms_ampeg];
-   delete modsources[ms_filtereg];
-   delete modsources[ms_aftertouch];
-   delete modsources[ms_timbre];
 }
 
 void SurgeVoice::legato(int key, int velocity, char detune)
@@ -219,8 +212,7 @@ void SurgeVoice::switch_toggled()
    {
       if (osctype[i] != scene->osc[i].type.val.i)
       {
-         delete osc[i];
-         osc[i] = spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy);
+         osc[i].reset(spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy));
          if (osc[i])
             osc[i]->init(state.pitch);
          osctype[i] = scene->osc[i].type.val.i;
@@ -300,8 +292,8 @@ void SurgeVoice::switch_toggled()
 
 void SurgeVoice::release()
 {
-   modsources[ms_ampeg]->release();
-   modsources[ms_filtereg]->release();
+   ampEGSource.release();
+   filterEGSource.release();
 
    for (int i = 0; i < 6; i++)
       lfo[i].release();
@@ -311,7 +303,7 @@ void SurgeVoice::release()
 
 void SurgeVoice::uber_release()
 {
-   ((AdsrEnvelope*)modsources[ms_ampeg])->uber_release();
+   ampEGSource.uber_release();
    state.gate = false;
    state.uberrelease = true;
 }
