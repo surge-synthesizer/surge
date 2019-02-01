@@ -2,13 +2,7 @@
 #include "UserInteractions.h"
 #include <map>
 
-#if MAC  || WINDOWS
-#define USE_SCALABLE_BITMAPS 1
-#endif
-
-#ifdef USE_SCALABLE_BITMAPS
 #include "CScalableBitmap.h"
-#endif
 
 using namespace VSTGUI;
 
@@ -84,11 +78,8 @@ void SurgeBitmaps::addEntry(int id)
 {
    assert(bitmap_registry.find(id) == bitmap_registry.end());
 
-#ifdef USE_SCALABLE_BITMAPS
    VSTGUI::CBitmap *bitmap = new CScalableBitmap(CResourceDescription(id));
-#else
-   VSTGUI::CBitmap* bitmap = new VSTGUI::CBitmap(CResourceDescription(id));
-#endif
+
    bitmap_registry[id] = bitmap;
 }
 
@@ -96,7 +87,6 @@ VSTGUI::CBitmap* getSurgeBitmap(int id, bool newInstance)
 {
    if( newInstance )
    {
-#ifdef USE_SCALABLE_BITMAPS
       /*
       ** Background images are specially handled by the frame object with scaling and so each needs
       ** to maintain an independent 'additional zoom'. For now handle that by allowing the construction of
@@ -113,10 +103,6 @@ VSTGUI::CBitmap* getSurgeBitmap(int id, bool newInstance)
                                                "Software Error" );
       }
       return new CScalableBitmap(CResourceDescription(id));
-#else
-      return bitmap_registry.at(id);
-#endif
-       
    }
    else
    {

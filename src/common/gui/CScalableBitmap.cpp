@@ -7,6 +7,8 @@
 
 using namespace VSTGUI;
 
+
+
 // Remember this is user zoom * display zoom. See comment in CScalableBitmap.h
 int  CScalableBitmap::currentPhysicalZoomFactor = 100;
 void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)
@@ -14,7 +16,13 @@ void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)
     currentPhysicalZoomFactor = zoomFactor;
 }
 
-CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
+#if __linux__
+CScalableBitmap::CScalableBitmap(CResourceDescription desc)
+    : CBitmap(originalPlatformBitmapForID(desc.u.id))
+#else
+CScalableBitmap::CScalableBitmap(CResourceDescription desc) 
+    : CBitmap(desc)
+#endif
 {
     int id = 0;
     if(desc.type == CResourceDescription::kIntegerType)
@@ -60,6 +68,13 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
         CBitmap *tmp = new CBitmap(CResourceDescription( filename ));
 #elif WINDOWS
         CBitmap *tmp = new CBitmap(CResourceDescription(id + scaleIDOffsets[ sc ] ) );
+#elif __linux__
+        auto sbm = scalablePlatformBitmapForIDAndScale(id,scaleFilePostfixes[sc]);
+        CBitmap *tmp = new CBitmap(sbm);
+        if(tmp==NULL)
+        {
+            fprintf( stderr, "Unexpected null tmp from %d / %s with bitmap %ld\n", id, scaleFilePostfixes[sc].c_str(), (size_t)(sbm.get()));
+        }
 #else
         CBitmap *tmp = NULL;
 #endif
@@ -74,7 +89,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc) : CBitmap(desc)
         }
         
     }
-    lastSeenZoom = currentPhysicalZoomFactor;
+    lastSeenZoom = -1; // we haven't seen a zoom yet!
     extraScaleFactor = 100;
 }
 
@@ -131,3 +146,24 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
     }
 }
 
+
+#if __linux__
+VSTGUI::SharedPointer<VSTGUI::IPlatformBitmap> CScalableBitmap::originalPlatformBitmapForID(int id)
+{
+    char filename [1024];
+    snprintf (filename, 1024, "./resources/bitmaps/bmp%05d.png", id);
+    auto res = IPlatformBitmap::createFromPath(filename);
+    //fprintf( stderr, "RES=%d\n", res.get() );
+    return res;
+}
+
+VSTGUI::SharedPointer<VSTGUI::IPlatformBitmap> CScalableBitmap::scalablePlatformBitmapForIDAndScale(int id, std::string scale)
+{
+    char filename [1024];
+    snprintf (filename, 1024, "./assets/original-vector/exported/bmp%05d%s.png", id, scale.c_str());
+    auto res = IPlatformBitmap::createFromPath(filename);
+    //fprintf( stderr, "RES=%d\n", res.get() );
+    return res;
+}
+
+#endif
