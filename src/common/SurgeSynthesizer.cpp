@@ -21,7 +21,11 @@
 #include "vstgui/plugin-bindings/plugguieditor.h"
 #else
 #include "Vst2PluginInstance.h"
+#if __linux__
+#include "../linux/linux-aeffguieditor.h"
+#else
 #include "vstgui/plugin-bindings/aeffguieditor.h"
+#endif
 #endif
 #include "CSurgeSlider.h"
 
