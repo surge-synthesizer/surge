@@ -174,12 +174,12 @@ bool LinuxAEffGUIEditor::open (void* ptr)
 }
 
 //-----------------------------------------------------------------------------
-void LinuxAEffGUIEditor::idle ()
+bool LinuxAEffGUIEditor::idle2 ()
 {
 	if (inIdle)
 	{
 		fprintf(stderr, "%s: Caught recursive idle call\n", __func__);
-		return;
+		return false;
 	}
 
 	inIdle = true;
@@ -191,6 +191,7 @@ void LinuxAEffGUIEditor::idle ()
 	LinuxRunLoop::instance().idle();
 
 	inIdle = false;
+	return true;
 }
 
 //-----------------------------------------------------------------------------
