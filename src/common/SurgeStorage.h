@@ -554,3 +554,10 @@ namespace Storage
     bool isValidName(const std::string &name);
 }
 }
+
+/*
+** ToElement does a this && check to check nulls. (As does ToDocument and so on).
+** gcc -O3 on linux optimizes that away giving crashes. So do this instead
+** See github issue #469
+*/
+#define TINYXML_SAFE_TO_ELEMENT(expr) ((expr)?(expr)->ToElement():NULL)

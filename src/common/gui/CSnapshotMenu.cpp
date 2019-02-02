@@ -3,6 +3,7 @@
 #include "CSnapshotMenu.h"
 #include "effect/Effect.h"
 #include "SurgeBitmaps.h"
+#include "SurgeStorage.h" // for TINYXML macro
 
 using namespace VSTGUI;
 
@@ -41,7 +42,7 @@ void CSnapshotMenu::populate()
    TiXmlElement* sect = storage->getSnapshotSection(mtype);
    if (sect)
    {
-      TiXmlElement* type = sect->FirstChild("type")->ToElement();
+      TiXmlElement* type = TINYXML_SAFE_TO_ELEMENT(sect->FirstChild("type"));
 
       while (type)
       {
@@ -49,7 +50,7 @@ void CSnapshotMenu::populate()
          type->Attribute("i", &type_id);
          sub = 0;
          COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, main, 0, 0, kNoDrawStyle);
-         TiXmlElement* snapshot = type->FirstChild("snapshot")->ToElement();
+         TiXmlElement* snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
          while (snapshot)
          {
             strcpy(txt, snapshot->Attribute("name"));
@@ -62,7 +63,7 @@ void CSnapshotMenu::populate()
             actionItem->setActions(action, nullptr);
             subMenu->addEntry(actionItem);
 
-            snapshot = snapshot->NextSibling("snapshot")->ToElement();
+            snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
             sub++;
             if (sub >= max_sub)
                break;
@@ -85,7 +86,7 @@ void CSnapshotMenu::populate()
          }
          subMenu->forget();
 
-         type = type->NextSibling("type")->ToElement();
+         type = TINYXML_SAFE_TO_ELEMENT(type->NextSibling("type"));
          main++;
          if (main >= max_main)
             break;
@@ -258,7 +259,7 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e)
       fxbuffer->type.val.i = type;
    if (e)
    {
-      TiXmlElement* p = e->Parent()->ToElement();
+      TiXmlElement* p = TINYXML_SAFE_TO_ELEMENT(e->Parent());
       p->QueryIntAttribute("i", &type);
       assert(within_range(0, type, num_fxtypes));
       fxbuffer->type.val.i = type;
@@ -302,14 +303,14 @@ void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
 {
    if (fx->type.val.i == 0)
       return;
-   TiXmlElement* t = e->FirstChild("type")->ToElement();
+   TiXmlElement* t = TINYXML_SAFE_TO_ELEMENT(e->FirstChild("type"));
    while (t)
    {
       int ii;
       if ((t->QueryIntAttribute("i", &ii) == TIXML_SUCCESS) && (ii == fx->type.val.i))
       {
          // if name already exists, delete old entry
-         TiXmlElement* sn = t->FirstChild("snapshot")->ToElement();
+         TiXmlElement* sn = TINYXML_SAFE_TO_ELEMENT(t->FirstChild("snapshot"));
          while (sn)
          {
             if (sn->Attribute("name") && !strcmp(sn->Attribute("name"), name))
@@ -317,7 +318,7 @@ void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
                t->RemoveChild(sn);
                break;
             }
-            sn = sn->NextSibling("snapshot")->ToElement();
+            sn = TINYXML_SAFE_TO_ELEMENT(sn->NextSibling("snapshot"));
          }
 
          TiXmlElement neu("snapshot");
@@ -346,6 +347,6 @@ void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
          t->InsertEndChild(neu);
          return;
       }
-      t = t->NextSibling("type")->ToElement();
+      t = TINYXML_SAFE_TO_ELEMENT(t->NextSibling("type"));
    }
 }

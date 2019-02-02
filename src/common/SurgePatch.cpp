@@ -892,14 +892,14 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    for (auto& i : fx)
       i.type.val.i = fxt_off;
 
-   TiXmlElement* patch = doc.FirstChild("patch")->ToElement();
+   TiXmlElement* patch = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("patch"));
    if (!patch)
       return;
 
    int revision = 0;
    patch->QueryIntAttribute("revision", &revision);
 
-   TiXmlElement* meta = patch->FirstChild("meta")->ToElement();
+   TiXmlElement* meta =  TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));
    if (meta)
    {
       const char* s;
@@ -921,20 +921,20 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          author = s;
    }
 
-   TiXmlElement* parameters = patch->FirstChild("parameters")->ToElement();
+   TiXmlElement* parameters =  TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("parameters"));
    assert(parameters);
    int n = param_ptr.size();
 
    // delete volume & fx_bypass if it's a preset. Those settings should stick
    if (is_preset)
    {
-      TiXmlElement* tp = parameters->FirstChild("volume")->ToElement();
+      TiXmlElement* tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("volume"));
       if (tp)
          parameters->RemoveChild(tp);
-      tp = parameters->FirstChild("fx_bypass")->ToElement();
+      tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("fx_bypass"));
       if (tp)
          parameters->RemoveChild(tp);
-      tp = parameters->FirstChild("polylimit")->ToElement();
+      tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("polylimit"));
       if (tp)
          parameters->RemoveChild(tp);
    }
@@ -943,13 +943,13 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    for (int i = 0; i < n; i++)
    {
       if (!i)
-         p = parameters->FirstChild(param_ptr[i]->get_storage_name())->ToElement();
+         p = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild(param_ptr[i]->get_storage_name()));
       else
       {
          if (p)
-            p = p->NextSibling(param_ptr[i]->get_storage_name())->ToElement();
+            p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling(param_ptr[i]->get_storage_name()));
          if (!p)
-            p = parameters->FirstChild(param_ptr[i]->get_storage_name())->ToElement();
+            p = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild(param_ptr[i]->get_storage_name()));
       }
       if (p)
       {
@@ -986,7 +986,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
          int sceneId = param_ptr[i]->scene;
          int paramIdInScene = param_ptr[i]->param_id_in_scene;
-         TiXmlElement* mr = p->FirstChild("modrouting")->ToElement();
+         TiXmlElement* mr = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("modrouting"));
          while (mr)
          {
             int modsource;
@@ -1026,7 +1026,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
                modlist->push_back(t);
             }
-            mr = mr->NextSibling("modrouting")->ToElement();
+            mr = TINYXML_SAFE_TO_ELEMENT(mr->NextSibling("modrouting"));
          }
       }
    }
@@ -1194,9 +1194,9 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          l.loop_end = 15;
          l.shuffle = 0.f;
       }
-   TiXmlElement* ss = patch->FirstChild("stepsequences")->ToElement();
+   TiXmlElement* ss = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("stepsequences"));
    if (ss)
-      p = ss->FirstChild("sequence")->ToElement();
+      p = TINYXML_SAFE_TO_ELEMENT(ss->FirstChild("sequence"));
    else
       p = nullptr;
    while (p)
@@ -1225,15 +1225,15 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                stepsequences[sc][lfo].steps[s] = 0.f;
          }
       }
-      p = p->NextSibling("sequence")->ToElement();
+      p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("sequence"));
    }
 
    for (int i = 0; i < n_customcontrollers; i++)
       scene[0].modsources[ms_ctrl1 + i]->reset();
 
-   TiXmlElement* cc = patch->FirstChild("customcontroller")->ToElement();
+   TiXmlElement* cc = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("customcontroller"));
    if (cc)
-      p = cc->FirstChild("entry")->ToElement();
+      p = TINYXML_SAFE_TO_ELEMENT(cc->FirstChild("entry"));
    else
       p = nullptr;
    while (p)
@@ -1257,11 +1257,11 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             CustomControllerLabel[cont][15] = 0;
          }
       }
-      p = p->NextSibling("entry")->ToElement();
+      p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("entry"));
    }
    if (!is_preset)
    {
-      TiXmlElement* mw = patch->FirstChild("modwheel")->ToElement();
+      TiXmlElement* mw = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("modwheel"));
       if (mw)
       {
          if (mw->QueryDoubleAttribute("s0", &d) == TIXML_SUCCESS)
