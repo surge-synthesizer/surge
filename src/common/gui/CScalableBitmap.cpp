@@ -56,13 +56,16 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc)
     scaleFilePostfixes[ 300 ] = "@3x";
     scaleFilePostfixes[ 400 ] = "@4x";
 
+#if WINDOWS
+    // Only windows uses this integer indexing and knows these offsets
     std::map< int, int > scaleIDOffsets;
     scaleIDOffsets[ 100 ] = SCALABLE_100_OFFSET;
     scaleIDOffsets[ 150 ] = SCALABLE_150_OFFSET;
     scaleIDOffsets[ 200 ] = SCALABLE_200_OFFSET;
     scaleIDOffsets[ 300 ] = SCALABLE_300_OFFSET;
     scaleIDOffsets[ 400 ] = SCALABLE_400_OFFSET;
-
+#endif
+    
     for(auto sc : scales)
     {
         CBitmap *scBmp = NULL;
