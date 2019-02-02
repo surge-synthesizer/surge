@@ -51,13 +51,6 @@ inline float seconds_to_envtime(float in) // ff rev2
    return v;
 }
 
-#ifndef WINDOWS
-inline float log2(float x)
-{
-   return log(x) / log(2.f);
-}
-#endif
-
 inline char* get_notename(char* s, int i_value)
 {
    int octave = (i_value / 12) - 2;

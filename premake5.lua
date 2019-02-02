@@ -46,7 +46,7 @@ if (os.istarget("macosx")) then
     {
     }
 
-    defines { "MAC=1", "WINDOWS=0",  }
+    defines { "MAC=1" }
 
     buildoptions
         {
