@@ -77,7 +77,7 @@ jobs:
       maximumCpuCount: true
       platform: 'x64'
     condition: variables.isWindows
-    displayName: Build Windows
+    displayName: Build Windows x64
 
   - task: MSBuild@1
     inputs:
@@ -85,7 +85,7 @@ jobs:
       maximumCpuCount: true
       platform: 'Win32'
     condition: variables.isWindows
-    displayName: Build Windows
+    displayName: Build Windows x86
 
   - bash: |
       set -x
