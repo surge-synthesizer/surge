@@ -68,7 +68,7 @@ with open( "src\\common\\resource.h", "r" ) as r:
             scaleToOffset[ matchscale.group( 1 ) ] = int( matchscale.group( 2 ) )
 
 
-subRes = open( "src\\common\\scalableresource.h", "w" )
+subRes = open( "src\\windows\\scalableresource.h", "w" )
 subRes.write( """
 /*
 ** THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT
