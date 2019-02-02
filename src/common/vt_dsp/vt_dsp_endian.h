@@ -18,7 +18,7 @@ inline float vt_write_float32LE(float f)
 
 inline int vt_write_int32BE(int t)
 {
-#if (__linux__ || MAC || _M_X64)
+#if (LINUX || MAC || _M_X64)
    // this was `swap_endian`:
    return ((t << 24) & 0xff000000) | ((t << 8) & 0x00ff0000) | ((t >> 8) & 0x0000ff00) |
           ((t >> 24) & 0x000000ff);

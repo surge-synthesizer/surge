@@ -56,7 +56,7 @@ void CAboutBox::draw(CDrawContext* pContext)
       std::string platform = "macOS";
 #elif WINDOWS
       std::string platform = "windows";
-#elif __linux__
+#elif LINUX
       std::string platform = "linux";
 #else
       std::string platform = "orac or skynet or something";

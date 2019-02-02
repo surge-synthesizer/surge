@@ -2,12 +2,12 @@
 
 #if MAC
 #include <CoreServices/CoreServices.h>
-#elif __linux__
+#elif LINUX
 #else
 #include "windows.h"
 #endif
 
-#if __linux__
+#if LINUX
 
 #include <stdio.h>
 #include <pthread.h>

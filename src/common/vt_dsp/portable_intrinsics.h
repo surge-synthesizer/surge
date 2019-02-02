@@ -1,4 +1,4 @@
-#if __linux__
+#if LINUX
 #include <immintrin.h>
 #endif
 

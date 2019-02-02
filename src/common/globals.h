@@ -14,11 +14,11 @@
 #endif
 #include <xmmintrin.h>
 
-#if __linux__
+#if LINUX
 #include <immintrin.h>
 #endif
 
-#if MAC || __linux__
+#if MAC || LINUX
 #include <strings.h>
 
 static inline int _stricmp(const char *s1, const char *s2)

@@ -150,7 +150,7 @@ SurgeGUIEditor::~SurgeGUIEditor()
 
 void SurgeGUIEditor::idle()
 {
-#if TARGET_VST2 && __linux__
+#if TARGET_VST2 && LINUX
    if (!super::idle2())
        return;
 #endif
@@ -191,7 +191,7 @@ void SurgeGUIEditor::idle()
          }
          synth->storage.CS_ModRouting.leave();
       }
-#if MAC || __linux__
+#if MAC || LINUX
       idleinc++;
       if (idleinc > 15)
       {

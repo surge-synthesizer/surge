@@ -16,7 +16,7 @@
 #endif
 #include <tinyxml.h>
 
-#if __linux__
+#if LINUX
 #include <experimental/filesystem>
 #elif MAC
 #include <filesystem.h>

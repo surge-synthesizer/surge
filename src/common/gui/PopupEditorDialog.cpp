@@ -144,7 +144,7 @@ void spawn_miniedit_text(char* c, int maxchars)
       strncpy(c, me.textdata, maxchars);
    }
 }
-#elif __linux__
+#elif LINUX
 
 #include "UserInteractions.h"
 

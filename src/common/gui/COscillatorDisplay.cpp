@@ -8,7 +8,7 @@
 #include "UserInteractions.h"
 #if MAC
 #include "filesystem.h"
-#elif __linux__
+#elif LINUX
 #include "experimental/filesystem"
 #else
 #include "filesystem"

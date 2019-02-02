@@ -18,7 +18,7 @@
 //#include <MacErrorHandling.h>
 #include <CoreFoundation/CFBundle.h>
 #include <CoreServices/CoreServices.h>
-#elif __linux__
+#elif LINUX
 #include <stdlib.h>
 #else
 #include <windows.h>
@@ -163,7 +163,7 @@ SurgeStorage::SurgeStorage()
    sprintf( path, "%s/Documents/Surge", getenv( "HOME" ) );
    userDataPath = path;
    
-#elif __linux__
+#elif LINUX
 
    /*
     * Even though Linux distinguishes between configuration and data folders,
@@ -206,7 +206,7 @@ SurgeStorage::SurgeStorage()
    {
       Surge::Error exc("Cannot find 'configuration.xml' in path '" + datapath + "'. Please reinstall surge.",
                        "Surge is not properly installed.");
-#if __linux__
+#if LINUX
       throw exc;
 #else
       Surge::UserInteractions::promptError(exc);
