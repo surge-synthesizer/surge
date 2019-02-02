@@ -87,6 +87,16 @@ elseif (os.istarget("linux")) then
 
 	platforms { "x64" }
 
+    files
+    {
+        "src/linux/ScalablePiggy.S"
+    }
+
+    includedirs
+    {
+        "src/linux"
+    }
+
 elseif (os.istarget("windows")) then
 
 	toolset "v141"
