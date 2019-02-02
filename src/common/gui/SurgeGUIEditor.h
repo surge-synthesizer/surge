@@ -13,7 +13,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "public.sdk/source/vst/vstguieditor.h"
 typedef Steinberg::Vst::VSTGUIEditor EditorType;
 #elif TARGET_VST2
-#if __linux__
+#if LINUX
 #include "../linux/linux-aeffguieditor.h"
 typedef VSTGUI::LinuxAEffGUIEditor EditorType;
 #else
@@ -160,7 +160,7 @@ private:
    VSTGUI::CControl* metaparam[n_customcontrollers] = {};
    VSTGUI::CControl* lfodisplay = nullptr;
    VSTGUI::CControl* filtersubtype[2] = {};
-#if MAC || __linux__
+#if MAC || LINUX
 #else
    HWND ToolTipWnd;
 #endif

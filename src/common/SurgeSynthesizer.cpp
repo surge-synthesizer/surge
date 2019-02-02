@@ -4,7 +4,7 @@
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
 #include <time.h>
-#if MAC || __linux__
+#if MAC || LINUX
 #include <pthread.h>
 #else
 #include <windows.h>
@@ -21,7 +21,7 @@
 #include "vstgui/plugin-bindings/plugguieditor.h"
 #else
 #include "Vst2PluginInstance.h"
-#if __linux__
+#if LINUX
 #include "../linux/linux-aeffguieditor.h"
 #else
 #include "vstgui/plugin-bindings/aeffguieditor.h"
@@ -1977,7 +1977,7 @@ float SurgeSynthesizer::valueToNormalized(long index, float value)
    return 0.f;
 }
 
-#if MAC || __linux__
+#if MAC || LINUX
 void* loadPatchInBackgroundThread(void* sy)
 {
 #else
@@ -2168,7 +2168,7 @@ void SurgeSynthesizer::process()
          // spawn patch-loading thread
          halt_engine = true;
 
-#if MAC || __linux__
+#if MAC || LINUX
          pthread_t thread;
          pthread_attr_t attributes;
          int ret;

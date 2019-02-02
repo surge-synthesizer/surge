@@ -7,7 +7,7 @@
 #if MAC
 #include <CoreFoundation/CoreFoundation.h>
 #endif
-#if __linux__
+#if LINUX
 #include "ScalablePiggy.h"
 #endif
 
@@ -15,7 +15,7 @@
 
 using namespace VSTGUI;
 
-#if __linux__
+#if LINUX
 static const struct MemoryBitmap *findMemoryBitmap(const std::string& filename)
 {
     for (const struct MemoryBitmap *bmp = &memoryBitmapList[0];
@@ -67,7 +67,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc)
     {
         CBitmap *scBmp = NULL;
 
-#if MAC || __linux__
+#if MAC || LINUX
         std::stringstream filename;
         auto postfix = scaleFilePostfixes[sc];
         filename << "scalable/bmp" << std::setw(5) << std::setfill('0') << id
@@ -85,7 +85,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc)
 
 #if MAC
         scBmp = new CBitmap(CResourceDescription(filename.str().c_str()));
-#elif __linux__
+#elif LINUX
         try {
             const MemoryBitmap *memBmp = findMemoryBitmap(filename.str());
             auto platBmp = IPlatformBitmap::createFromMemory(

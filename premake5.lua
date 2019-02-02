@@ -77,7 +77,10 @@ elseif (os.istarget("linux")) then
     {
     }
 
-    defines { "WINDOWS=0" }
+    defines
+    {
+        "LINUX=1",
+    }
 
     buildoptions { "-std=c++17" }
     links { }

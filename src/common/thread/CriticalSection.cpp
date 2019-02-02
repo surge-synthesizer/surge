@@ -1,6 +1,6 @@
 #include "CriticalSection.h"
 
-#if !__linux__
+#if !LINUX
 
 #include "assert.h"
 

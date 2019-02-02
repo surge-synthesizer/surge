@@ -5,7 +5,7 @@
 #include "DspUtilities.h"
 #include <time.h>
 #include <vt_dsp/vt_dsp_endian.h>
-#if __linux__
+#if LINUX
 #include <experimental/filesystem>
 #elif MAC
 #include <filesystem.h>
@@ -230,7 +230,7 @@ void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
    }
 }
 
-#if MAC || __linux__
+#if MAC || LINUX
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
@@ -241,7 +241,7 @@ string SurgeSynthesizer::getUserPatchDirectory()
 }
 string SurgeSynthesizer::getLegacyUserPatchDirectory()
 {
-#if MAC || __linux__
+#if MAC || LINUX
    return storage.datapath + "patches_user/";
 #else
    return storage.datapath + "patches_user\\";

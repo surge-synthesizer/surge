@@ -38,7 +38,7 @@ const int HRFilterI16[64] = {
 
 int min_F32_tables = 3;
 
-#if MAC || __linux__
+#if MAC || LINUX
 bool _BitScanReverse(unsigned int* result, unsigned int bits)
 {
    *result = __builtin_ctz(bits);
