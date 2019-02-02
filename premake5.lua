@@ -30,62 +30,62 @@ configuration {}
 
 if (os.istarget("macosx")) then
 
-	flags { "StaticRuntime" }
-	vectorextensions "SSE2"
-	
-	defines
-	{
-		"_aligned_malloc(x,a)=malloc(x)",
-		"_aligned_free(x)=free(x)",
-		"MAC_COCOA=1",
-		"COCOA=1",
-		"OBJC_OLD_DISPATCH_PROTOTYPES=1"
-	}
+    flags { "StaticRuntime" }
+    vectorextensions "SSE2"
 
-	links 
-	{
-	}
+    defines
+    {
+        "_aligned_malloc(x,a)=malloc(x)",
+        "_aligned_free(x)=free(x)",
+        "MAC_COCOA=1",
+        "COCOA=1",
+        "OBJC_OLD_DISPATCH_PROTOTYPES=1"
+    }
 
-	defines { "MAC=1", "WINDOWS=0",  }
+    links
+    {
+    }
 
-	buildoptions 
-        { 
-            "-std=c++17", "-stdlib=libc++", 
-	    "-ferror-limit=0",
+    defines { "MAC=1", "WINDOWS=0",  }
+
+    buildoptions
+        {
+            "-std=c++17", "-stdlib=libc++",
+        "-ferror-limit=0",
             "-DOBJC_OLD_DISPATCH_PROTOTYPES=1",
             "-Wno-deprecated-declarations",        -- Alas the AU V2 uses a whole bunch of deprecated stuff
-	    "-Wno-inconsistent-missing-override"   -- Surge was written before this was even a keyword! We do need to fix this though
+        "-Wno-inconsistent-missing-override"   -- Surge was written before this was even a keyword! We do need to fix this though
         }
-	links { "c++" }
-	buildoptions { "-mmacosx-version-min=10.9" }
-	linkoptions { "-mmacosx-version-min=10.9" }
+    links { "c++" }
+    buildoptions { "-mmacosx-version-min=10.9" }
+    linkoptions { "-mmacosx-version-min=10.9" }
 
-	platforms { "x64" }
+    platforms { "x64" }
 
 elseif (os.istarget("linux")) then
 
-	flags { "StaticRuntime" }
-	vectorextensions "SSE2"
-	
-	defines
-	{ 
-		"_aligned_malloc(x,a)=malloc(x)",
-		"_aligned_free(x)=free(x)",
-	}
+    flags { "StaticRuntime" }
+    vectorextensions "SSE2"
 
-	links
-	{
-	}
+    defines
+    {
+        "_aligned_malloc(x,a)=malloc(x)",
+        "_aligned_free(x)=free(x)",
+    }
 
-	defines { "WINDOWS=0" }
+    links
+    {
+    }
 
-	buildoptions { "-std=c++17" }
-	links { }
+    defines { "WINDOWS=0" }
+
+    buildoptions { "-std=c++17" }
+    links { }
 
     buildoptions {  }
-	linkoptions {  }
+    linkoptions {  }
 
-	platforms { "x64" }
+    platforms { "x64" }
 
     files
     {
@@ -99,61 +99,61 @@ elseif (os.istarget("linux")) then
 
 elseif (os.istarget("windows")) then
 
-	toolset "v141"
-	defines
-	{
-		"WINDOWS=1",
-		"WIN32", 
-		"_WINDOWS", 
-		"_WIN32_WINNT=0x0601", 
-		"_USRDLL", 
-		"VA_SUBTRACTIVE_EXPORTS", 
-		"TIXML_USE_STL", 
-		"USE_LIBPNG", 
-		"_CRT_SECURE_NO_WARNINGS",
+    toolset "v141"
+    defines
+    {
+        "WINDOWS=1",
+        "WIN32",
+        "_WINDOWS",
+        "_WIN32_WINNT=0x0601",
+        "_USRDLL",
+        "VA_SUBTRACTIVE_EXPORTS",
+        "TIXML_USE_STL",
+        "USE_LIBPNG",
+        "_CRT_SECURE_NO_WARNINGS",
         "NOMINMAX=1" -- Jan 2019 update to vst3sdk required this to disambiguoaute std::numeric_limits. See #373
-	}
+    }
 
-	characterset "MBCS"
+    characterset "MBCS"
 
-	buildoptions { "/MP /Zc:alignedNew /std:c++17 /bigobj" }
+    buildoptions { "/MP /Zc:alignedNew /std:c++17 /bigobj" }
 
-	includedirs {
-		"libs/wtl",
-		"libs/libpng/win/include"
-	}
-	
-	flags { "StaticRuntime", "NoMinimalRebuild" }
+    includedirs {
+        "libs/wtl",
+        "libs/libpng/win/include"
+    }
+
+    flags { "StaticRuntime", "NoMinimalRebuild" }
 
   platforms { "x64", "x86" }
 
-	configuration { "Debug" }
-	links { 
-		"libs/libpng/win/x64/lib/libpng16_staticd.lib"
-	}
-	configuration { "Release*" }
-	links { 
-		"libs/libpng/win/x64/lib/libpng16_static.lib"
-	}
+    configuration { "Debug" }
+    links {
+        "libs/libpng/win/x64/lib/libpng16_staticd.lib"
+    }
+    configuration { "Release*" }
+    links {
+        "libs/libpng/win/x64/lib/libpng16_static.lib"
+    }
 
-	configuration {}
+    configuration {}
 end
 
 includedirs {
-	"libs/xml",
-	"src/common/vt_dsp",
-	"src/common/thread",
-	"vst3sdk/vstgui4",
-	"vst3sdk",
-	"libs/"
-	}
+    "libs/xml",
+    "src/common/vt_dsp",
+    "src/common/thread",
+    "vst3sdk/vstgui4",
+    "vst3sdk",
+    "libs/"
+    }
 
 -- PLUGIN COMMON --
 
 function plugincommon()
 
-	targetprefix ""
-	targetname "Surge"
+    targetprefix ""
+    targetname "Surge"
 
     files {
         "src/common/dsp/effect/ConditionerEffect.cpp",
@@ -223,156 +223,156 @@ function plugincommon()
         "libs/filesystem/filesystem.cpp",
     }
 
-	includedirs {
-		"src/common",
-		"src/common/dsp",
-		"src/common/gui",
-	}
+    includedirs {
+        "src/common",
+        "src/common/dsp",
+        "src/common/gui",
+    }
 
-	if (os.istarget("macosx")) then
+    if (os.istarget("macosx")) then
 
-		pchheader "src/common/precompiled.h"
-		pchsource "src/common/precompiled.cpp"
-		
-		buildoptions {
-			"-Wno-unused-variable"
-		}
+        pchheader "src/common/precompiled.h"
+        pchsource "src/common/precompiled.cpp"
 
-		sysincludedirs {
-			"src/**",
-			"libs/**",
-			"vst3sdk/vstgui4",
-		}
+        buildoptions {
+            "-Wno-unused-variable"
+        }
 
-		files
-		{
-			"src/mac/**.mm",
-			"src/mac/**.cpp",
-			"src/mac/**.h",
-			"libs/vst/*.mm",
-			VSTGUI .. "vstgui_mac.mm",
-			VSTGUI .. "vstgui_uidescription_mac.mm",
-		}
-	
-		excludes {
-			VSTGUI .. "winfileselector.cpp",
-			VSTGUI .. "vstgui_ios.mm",
-			VSTGUI .. "vstgui_uidescription_ios.mm",
-		}
-	
-		includedirs 
-		{
-			"src/mac"
-		}
+        sysincludedirs {
+            "src/**",
+            "libs/**",
+            "vst3sdk/vstgui4",
+        }
 
-		links { 
-			"Accelerate.framework",
-			"ApplicationServices.framework",
-			"AudioUnit.framework",
-			"Carbon.framework",
-			"CoreAudio.framework",
-			"CoreAudioKit.framework",
-			"CoreServices.framework",
-			"Cocoa.framework", 
-			"CoreFoundation.framework",
-			"OpenGL.framework",
-			"QuartzCore.framework",
-		}
+        files
+        {
+            "src/mac/**.mm",
+            "src/mac/**.cpp",
+            "src/mac/**.h",
+            "libs/vst/*.mm",
+            VSTGUI .. "vstgui_mac.mm",
+            VSTGUI .. "vstgui_uidescription_mac.mm",
+        }
 
-	elseif (os.istarget("linux")) then
+        excludes {
+            VSTGUI .. "winfileselector.cpp",
+            VSTGUI .. "vstgui_ios.mm",
+            VSTGUI .. "vstgui_uidescription_ios.mm",
+        }
 
-		-- pchheader "src/common/precompiled.h" --
-		-- pchsource "src/common/precompiled.cpp" --
-		
-		buildoptions {
-			"-Wno-unused-variable",
-			"`pkg-config --cflags cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
-			"-std=c++14"
-		}
+        includedirs
+        {
+            "src/mac"
+        }
 
-		files
-		{
-			"src/linux/*.mm",
-			"src/linux/**.cpp",
-			"src/linux/**.h",
-            
+        links {
+            "Accelerate.framework",
+            "ApplicationServices.framework",
+            "AudioUnit.framework",
+            "Carbon.framework",
+            "CoreAudio.framework",
+            "CoreAudioKit.framework",
+            "CoreServices.framework",
+            "Cocoa.framework",
+            "CoreFoundation.framework",
+            "OpenGL.framework",
+            "QuartzCore.framework",
+        }
+
+    elseif (os.istarget("linux")) then
+
+        -- pchheader "src/common/precompiled.h" --
+        -- pchsource "src/common/precompiled.cpp" --
+
+        buildoptions {
+            "-Wno-unused-variable",
+            "`pkg-config --cflags cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
+            "-std=c++14"
+        }
+
+        files
+        {
+            "src/linux/*.mm",
+            "src/linux/**.cpp",
+            "src/linux/**.h",
+
             VSTGUI .. "vstgui.cpp",
             VSTGUI .. "lib/platform/linux/**.cpp",
             VSTGUI .. "lib/platform/common/genericoptionmenu.cpp",
-            VSTGUI .. "lib/platform/common/generictextedit.cpp",     
+            VSTGUI .. "lib/platform/common/generictextedit.cpp",
 
-		}
-	
-		excludes {
-			VSTGUI .. "winfileselector.cpp",
-			VSTGUI .. "vstgui_ios.mm",
-			VSTGUI .. "vstgui_uidescription_ios.mm",
-		}
-	
-		includedirs 
-		{
-			
-		}
+        }
 
-		links {
-			"pthread",
-			"stdc++fs",
-			"gcc_s",
-			"gcc",
-			"dl",
-		}
+        excludes {
+            VSTGUI .. "winfileselector.cpp",
+            VSTGUI .. "vstgui_ios.mm",
+            VSTGUI .. "vstgui_uidescription_ios.mm",
+        }
 
-		linkoptions {
-			"`pkg-config --libs cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
-			"-Wl,--no-undefined",
-		}
-	elseif (os.istarget("windows")) then
+        includedirs
+        {
 
-		pchheader "precompiled.h"
-		pchsource "src/common/precompiled.cpp"
-		buildoptions { "/FI precompiled.h", "/wd\"4244\"" }
-	
-		files
-		{
-			"src/windows/**.cpp",
-			"src/windows/**.h",
-			"src/windows/surge.rc",
-            "src/windows/scalableui.rc", 
-			"resources/bitmaps/*.png",
-            "assets/original-vector/exported/*.png",  
-			VSTGUI .. "vstgui_win32.cpp",
-			VSTGUI .. "vstgui_uidescription_win32.cpp",
-		}
-		
-		includedirs {
-			"src/windows",
-		}
+        }
 
-		linkoptions { 
-			"/ignore:4996,4244,4267"
-		}
+        links {
+            "pthread",
+            "stdc++fs",
+            "gcc_s",
+            "gcc",
+            "dl",
+        }
 
-		links 
-		{
-			"Winmm",
-			"gdi32",
-			"gdiplus",
-			"ComDlg32",
-			"ComCtl32",
-			"shell32",
-			"user32",
-		}
+        linkoptions {
+            "`pkg-config --libs cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
+            "-Wl,--no-undefined",
+        }
+    elseif (os.istarget("windows")) then
 
-	end
+        pchheader "precompiled.h"
+        pchsource "src/common/precompiled.cpp"
+        buildoptions { "/FI precompiled.h", "/wd\"4244\"" }
+
+        files
+        {
+            "src/windows/**.cpp",
+            "src/windows/**.h",
+            "src/windows/surge.rc",
+            "src/windows/scalableui.rc",
+            "resources/bitmaps/*.png",
+            "assets/original-vector/exported/*.png",
+            VSTGUI .. "vstgui_win32.cpp",
+            VSTGUI .. "vstgui_uidescription_win32.cpp",
+        }
+
+        includedirs {
+            "src/windows",
+        }
+
+        linkoptions {
+            "/ignore:4996,4244,4267"
+        }
+
+        links
+        {
+            "Winmm",
+            "gdi32",
+            "gdiplus",
+            "ComDlg32",
+            "ComCtl32",
+            "shell32",
+            "user32",
+        }
+
+    end
 end
 
 function xcodebrewbuildsettings()
-	xcodebuildsettings
-	{
-		["CC"] = "/usr/local/opt/llvm/bin/clang";
-		["CLANG_LINK_OBJC_RUNTIME"] = "NO";
-		["COMPILER_INDEX_STORE_ENABLE"] = "NO";
-	}
+    xcodebuildsettings
+    {
+        ["CC"] = "/usr/local/opt/llvm/bin/clang";
+        ["CLANG_LINK_OBJC_RUNTIME"] = "NO";
+        ["COMPILER_INDEX_STORE_ENABLE"] = "NO";
+    }
 end
 
 -- VST2 PLUGIN --
@@ -382,16 +382,16 @@ local BREWBUILD = os.getenv("BREWBUILD")
 
 if VST24SDK then
 
-	project "surge-vst2"
-	kind "SharedLib"
-	uuid "007990D5-2B46-481D-B38C-D83037CDF54B"
+    project "surge-vst2"
+    kind "SharedLib"
+    uuid "007990D5-2B46-481D-B38C-D83037CDF54B"
 
-	defines
-	{
-		"TARGET_VST2=1",
-	}
+    defines
+    {
+        "TARGET_VST2=1",
+    }
 
-	plugincommon()
+    plugincommon()
 
     files {
         "src/vst2/**.cpp",
@@ -404,60 +404,60 @@ if VST24SDK then
         VSTGUI .. "plugin-bindings/aeffguieditor.cpp",
     }
 
-	excludes {
-		VSTGUI .. "plugguieditor.cpp",
-	}
+    excludes {
+        VSTGUI .. "plugguieditor.cpp",
+    }
 
-	includedirs {
-		"src/vst2",
-		VST24SDK,
-	}
+    includedirs {
+        "src/vst2",
+        VST24SDK,
+    }
 
-	sysincludedirs {
-		VST24SDK,
-	}
+    sysincludedirs {
+        VST24SDK,
+    }
 
-	configuration { "Debug" }
-	targetdir "target/vst2/Debug"
-	targetsuffix "-Debug"
+    configuration { "Debug" }
+    targetdir "target/vst2/Debug"
+    targetsuffix "-Debug"
 
-	configuration { "Release" }
-	targetdir "target/vst2/Release"
+    configuration { "Release" }
+    targetdir "target/vst2/Release"
 
-	configuration {}
+    configuration {}
 
-	if (os.istarget("macosx")) then
+    if (os.istarget("macosx")) then
 
-		targetname "Surge"
-		targetprefix ""
-		postbuildcommands { "./scripts/macOS/package-vst.sh" }
+        targetname "Surge"
+        targetprefix ""
+        postbuildcommands { "./scripts/macOS/package-vst.sh" }
 
-		files
-		{
-		"libs/vst/*.mm"
-		}
+        files
+        {
+        "libs/vst/*.mm"
+        }
 
-		if BREWBUILD then
-			xcodebrewbuildsettings()
-		end
+        if BREWBUILD then
+            xcodebrewbuildsettings()
+        end
 
-	elseif (os.istarget("windows")) then
+    elseif (os.istarget("windows")) then
 
-		linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
+        linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
 
-	elseif (os.istarget("linux")) then
-	--[[
-		Ideally we wouldn't define __cdecl on linux. It's not needed
-		Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
-		it so without __cdecl blank defined on linux vst2, we don't get
-		reliable builds. We considered defining it just where used but
-		it is used also, indirectly, by the vst3 sdk, so the smallest
-		change is this diff plus this comment.
-	--]]
-		defines {
-			"__cdecl=",
-		}
-	end
+    elseif (os.istarget("linux")) then
+    --[[
+        Ideally we wouldn't define __cdecl on linux. It's not needed
+        Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
+        it so without __cdecl blank defined on linux vst2, we don't get
+        reliable builds. We considered defining it just where used but
+        it is used also, indirectly, by the vst3 sdk, so the smallest
+        change is this diff plus this comment.
+    --]]
+        defines {
+            "__cdecl=",
+        }
+    end
 end
 
 -- VST3 PLUGIN --
@@ -466,42 +466,42 @@ project "surge-vst3"
 kind "SharedLib"
 uuid "A87FBED5-3E7A-432F-8611-B2C61F40F4B8"
 
-defines 
+defines
 {
-	"TARGET_VST3=1"
+    "TARGET_VST3=1"
 }
 
 plugincommon()
 
 files {
-	"src/vst3/**.cpp",
-	"src/vst3/**.h",
-	"vst3sdk/*.cpp",
-	"vst3sdk/base/source/*.cpp",
-	"vst3sdk/base/thread/source/*.cpp",
-	"vst3sdk/public.sdk/source/common/*.cpp",
-	"vst3sdk/public.sdk/source/main/pluginfactoryvst3.cpp",
-	"vst3sdk/public.sdk/source/vst/vstguieditor.cpp",
-	"vst3sdk/public.sdk/source/vst/vstinitiids.cpp",
-	"vst3sdk/public.sdk/source/vst/vstnoteexpressiontypes.cpp",
-	"vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp",
-	"vst3sdk/public.sdk/source/vst/vstaudioeffect.cpp",
-	"vst3sdk/public.sdk/source/vst/vstcomponent.cpp",
-	"vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp",
-	"vst3sdk/public.sdk/source/vst/vstcomponentbase.cpp",
-	"vst3sdk/public.sdk/source/vst/vstbus.cpp",
-	"vst3sdk/public.sdk/source/vst/vstparameters.cpp",
-	"vst3sdk/pluginterfaces/base/*.cpp",
-	}
+    "src/vst3/**.cpp",
+    "src/vst3/**.h",
+    "vst3sdk/*.cpp",
+    "vst3sdk/base/source/*.cpp",
+    "vst3sdk/base/thread/source/*.cpp",
+    "vst3sdk/public.sdk/source/common/*.cpp",
+    "vst3sdk/public.sdk/source/main/pluginfactoryvst3.cpp",
+    "vst3sdk/public.sdk/source/vst/vstguieditor.cpp",
+    "vst3sdk/public.sdk/source/vst/vstinitiids.cpp",
+    "vst3sdk/public.sdk/source/vst/vstnoteexpressiontypes.cpp",
+    "vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp",
+    "vst3sdk/public.sdk/source/vst/vstaudioeffect.cpp",
+    "vst3sdk/public.sdk/source/vst/vstcomponent.cpp",
+    "vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp",
+    "vst3sdk/public.sdk/source/vst/vstcomponentbase.cpp",
+    "vst3sdk/public.sdk/source/vst/vstbus.cpp",
+    "vst3sdk/public.sdk/source/vst/vstparameters.cpp",
+    "vst3sdk/pluginterfaces/base/*.cpp",
+    }
 
 excludes {
-	VSTGUI .. "aeffguieditor.cpp",
-	"src/vst3/SurgeVst3EditController.*"
+    VSTGUI .. "aeffguieditor.cpp",
+    "src/vst3/SurgeVst3EditController.*"
 }
 
 includedirs {
-	"src/vst3",
-	"vst3sdk"
+    "src/vst3",
+    "vst3sdk"
 }
 
 configuration { "Debug" }
@@ -515,36 +515,36 @@ configuration {}
 
 if (os.istarget("macosx")) then
 
-	postbuildcommands { "./scripts/macOS/package-vst3.sh" }
+    postbuildcommands { "./scripts/macOS/package-vst3.sh" }
 
-	files
-	{
-		"vst3sdk/public.sdk/source/main/macmain.cpp",
-		"vst3sdk/*.mm"
-	}
+    files
+    {
+        "vst3sdk/public.sdk/source/main/macmain.cpp",
+        "vst3sdk/*.mm"
+    }
 
-	if BREWBUILD then
-		xcodebrewbuildsettings()
-	end
-	
+    if BREWBUILD then
+        xcodebrewbuildsettings()
+    end
+
 elseif (os.istarget("windows")) then
 
-	linkoptions { "/DEF:resources\\windows-vst3\\surge.def" }
-	
-	files
-	{
-		"vst3sdk/public.sdk/source/main/dllmain.cpp",
-	}
-	
-	flags { "NoImportLib" }
-	targetextension ".vst3"
+    linkoptions { "/DEF:resources\\windows-vst3\\surge.def" }
+
+    files
+    {
+        "vst3sdk/public.sdk/source/main/dllmain.cpp",
+    }
+
+    flags { "NoImportLib" }
+    targetextension ".vst3"
 
 elseif (os.istarget("linux")) then
 
-	files
-	{
-		"vst3sdk/public.sdk/source/main/linuxmain.cpp",
-	}
+    files
+    {
+        "vst3sdk/public.sdk/source/main/linuxmain.cpp",
+    }
 
     excludes {
         -- This is both deprecated and, on linux, ejects a non-linkable symbol. So exclude it.
@@ -558,69 +558,69 @@ end
 
 if (os.istarget("macosx")) then
 
-	project "surge-au"
-	kind "SharedLib"
-	uuid "f6acbb60-3601-11e4-8c21-0800200c9a66"
+    project "surge-au"
+    kind "SharedLib"
+    uuid "f6acbb60-3601-11e4-8c21-0800200c9a66"
 
-	plugincommon()
-	
-	configuration { "Debug" }
-	targetdir "target/au/Debug"
-	targetsuffix "-Debug"
+    plugincommon()
 
-	configuration { "Release" }
-	targetdir "target/au/Release"
+    configuration { "Debug" }
+    targetdir "target/au/Debug"
+    targetsuffix "-Debug"
 
-	configuration {}
-	
-	defines
-	{
-		"TARGET_AUDIOUNIT=1",
-		"PLUGGUI=1",
-	}
-	
-	links
-	{
-		"AudioToolbox.framework",
-		"AudioUnit.framework",		
-	}
+    configuration { "Release" }
+    targetdir "target/au/Release"
 
-	files
-	{
-		"src/au/**.cpp",
-                "src/au/**.mm",        
-		"src/au/**.h",
-		"libs/AUPublic/**.cpp",
-		"libs/AUPublic/**.h",
-		"libs/PublicUtility/*.cpp",
-		VSTGUI .. "plugin-bindings/plugguieditor.cpp",
-	}
+    configuration {}
 
-	excludes
-	{	
-		"libs/AudioUnits/AUPublic/AUCarbonViewBase/**",
-		"libs/AudioUnits/AUPublic/OtherBases/AUPannerBase.*",
-		"libs/AudioUnits/PublicUtility/CASpectralProcessor.cpp",
-	}
+    defines
+    {
+        "TARGET_AUDIOUNIT=1",
+        "PLUGGUI=1",
+    }
 
-	includedirs
-	{
-		"src/au",
-		"libs/",
-		"libs/AudioUnits/AUPublic",
-		"libs/AudioUnits/PublicUtility",
-	}
-	
-	excludes
-	{
-		VSTGUI .. "winfileselector.cpp",
-	}
-	
-	postbuildcommands { "./scripts/macOS/package-au.sh" }
+    links
+    {
+        "AudioToolbox.framework",
+        "AudioUnit.framework",
+    }
 
-	if BREWBUILD then
-		xcodebrewbuildsettings()
-	end
+    files
+    {
+        "src/au/**.cpp",
+                "src/au/**.mm",
+        "src/au/**.h",
+        "libs/AUPublic/**.cpp",
+        "libs/AUPublic/**.h",
+        "libs/PublicUtility/*.cpp",
+        VSTGUI .. "plugin-bindings/plugguieditor.cpp",
+    }
+
+    excludes
+    {
+        "libs/AudioUnits/AUPublic/AUCarbonViewBase/**",
+        "libs/AudioUnits/AUPublic/OtherBases/AUPannerBase.*",
+        "libs/AudioUnits/PublicUtility/CASpectralProcessor.cpp",
+    }
+
+    includedirs
+    {
+        "src/au",
+        "libs/",
+        "libs/AudioUnits/AUPublic",
+        "libs/AudioUnits/PublicUtility",
+    }
+
+    excludes
+    {
+        VSTGUI .. "winfileselector.cpp",
+    }
+
+    postbuildcommands { "./scripts/macOS/package-au.sh" }
+
+    if BREWBUILD then
+        xcodebrewbuildsettings()
+    end
 
 end
 
