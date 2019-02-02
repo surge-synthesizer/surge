@@ -125,7 +125,13 @@ elseif (os.istarget("windows")) then
 
     flags { "StaticRuntime", "NoMinimalRebuild" }
 
-  platforms { "x64", "x86" }
+    platforms { "x64", "x86" }
+
+    filter "platforms:x86"
+        targetsuffix "32"
+    filter "platforms:x64"
+        targetsuffix ""
+    filter {}
 
     configuration { "Debug" }
     links {
