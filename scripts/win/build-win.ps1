@@ -88,6 +88,7 @@ function Install-Surge
         New-Item -ItemType Directory -Force -Path $vst2Dir
     }
     Copy-Item "target\vst2\Release\Surge.dll" -Destination $vst2Dir -Force 
+    Copy-Item "target\vst2\Release\Surge32.dll" -Destination $vst2Dir -Force 
 
     Write-Host "Start-Process -Verb runAs -WorkingDirectory $PSScriptRoot powershell -argumentlist install-vst3.ps1"
     Start-Process -Verb runAs   "powershell" -argumentlist "$PSScriptRoot\install-vst3.ps1"
@@ -123,6 +124,8 @@ if( $cleanall )
     Write-Host "Delete the visual studio files also"
     Remove-Item -path .\*vcxproj*
     Remove-Item -path .\Surge.sln
+    Remove-Item -path .\target -recurse
+    Remove-Item -path .\obj -recurse  
 }
 if( $build )
 {
