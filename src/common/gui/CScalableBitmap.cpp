@@ -136,12 +136,25 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
         // but it is easier to calculate the grow one since it is at our scale
         CGraphicsTransform invtf = CGraphicsTransform().scale( bestFitScaleGroup / 100.0, bestFitScaleGroup / 100.0 );
         CGraphicsTransform tf = invtf.inverse().scale(extraScaleFactor / 100.0, extraScaleFactor / 100.0);
+
         
         CDrawContext::Transform tr(*context, tf);
 
         // Have to de-const these to do the transform alas
         CRect ncrect = rect;
         CRect nr = invtf.transform(ncrect);
+        if(extraScaleFactor<100)
+        {
+            /*
+            ** VSTGUI has lots of bugs. One of them is with scaling backgrounds. It never grows a background. 
+            ** and it never shrinks a background. Hence the extraScaleFactor. But it does shrink (and only shrink)
+            ** the draw rectangle for the background. So when we are at scales < 1 we have over-shrunk the 
+            ** extra scale factor. So undo that here. Obviously not great.
+            */
+            CGraphicsTransform upExtra = CGraphicsTransform().scale( 100.0/extraScaleFactor,100.0/extraScaleFactor);
+            nr = upExtra.transform(nr);
+        }
+
 
         CPoint ncoff = offset;
         CPoint no = invtf.transform(ncoff);
