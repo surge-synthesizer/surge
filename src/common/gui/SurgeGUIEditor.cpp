@@ -2427,15 +2427,14 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 {
 #if HOST_SUPPORTS_ZOOM    
 
-#if TARGET_VST2 || TARGET_VST3
-   /*
-   ** The current version of the vstgui API scaling code appears to have additional bugs
-   ** with shrinking scales. We need to find and address these bugs but for now, simply
-   ** don't allow users to shrink the UI below 100%
-   */
-   if (zf < 100)
-       zf = 100;
-#endif
+   int minZoom = 50;
+   if (zf < minZoom)
+   {
+       Surge::UserInteractions::promptError("Minimum zoom size is 50%. I'm sorry, you cant make surge any smaller.",
+                                            "No Teensy Surge for You");
+       zf = minZoom;
+   }
+
 
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
