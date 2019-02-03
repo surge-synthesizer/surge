@@ -176,6 +176,11 @@ while true ; do
     esac
 done
 
+if [[ ! -z "$OPTION_verbose" ]]; then
+    help_message
+    exit 0
+fi
+
 case $1 in
     premake)
         run_premake
