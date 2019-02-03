@@ -20,6 +20,7 @@
 #include <CoreServices/CoreServices.h>
 #elif LINUX
 #include <stdlib.h>
+#include "ConfigurationXml.h"
 #else
 #include <windows.h>
 #include <Shellapi.h>
@@ -162,27 +163,7 @@ SurgeStorage::SurgeStorage()
    // ~/Documents/Surge in full name
    sprintf( path, "%s/Documents/Surge", getenv( "HOME" ) );
    userDataPath = path;
-   
-#elif LINUX
-
-   /*
-    * Even though Linux distinguishes between configuration and data folders,
-    * Surge's configuration.xml does not contain any user preferences that are
-    * modified through the interface, so it seems simplest to continue treating
-    * it as part of the data.
-    */
-
-   string home = string(getenv("HOME"));
-   char* data_home_cstr = getenv("XDG_DATA_HOME");
-   string data_home = (data_home_cstr) ? string(data_home_cstr)
-                                       : home + "/.local/share";
-
-   datapath = data_home + "/Surge/";
-
-   userDataPath = home + "/Documents/Surge";
-
-#else
-
+#elif WINDOWS
    PWSTR localAppData;
    if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
    {
@@ -198,20 +179,25 @@ SurgeStorage::SurgeStorage()
       wsprintf(path, "%S\\Surge\\", documentsFolder);
       userDataPath = path;
    }
-
 #endif
+
+#if LINUX
+   if (!snapshotloader.Parse((const char*)&configurationXmlStart, 0,
+                             TIXML_ENCODING_UTF8)) {
+
+      throw Surge::Error("Failed to parse the configuration",
+                         "Surge failed to initialize");
+   }
+#else
    string snapshotmenupath = datapath + "configuration.xml";
 
    if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
    {
       Surge::Error exc("Cannot find 'configuration.xml' in path '" + datapath + "'. Please reinstall surge.",
                        "Surge is not properly installed.");
-#if LINUX
-      throw exc;
-#else
       Surge::UserInteractions::promptError(exc);
-#endif
    }
+#endif
 
    TiXmlElement* e = TINYXML_SAFE_TO_ELEMENT(snapshotloader.FirstChild("autometa"));
    if (e)

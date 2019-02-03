@@ -80,7 +80,8 @@ elseif (os.istarget("linux")) then
 
     files
     {
-        "src/linux/ScalablePiggy.S"
+        "src/linux/ConfigurationXml.S",
+        "src/linux/ScalablePiggy.S",
     }
 
     includedirs
