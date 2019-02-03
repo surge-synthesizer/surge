@@ -213,7 +213,7 @@ SurgeStorage::SurgeStorage()
 #endif
    }
 
-   TiXmlElement* e = snapshotloader.FirstChild("autometa")->ToElement();
+   TiXmlElement* e = TINYXML_SAFE_TO_ELEMENT(snapshotloader.FirstChild("autometa"));
    if (e)
    {
       defaultname = e->Attribute("name");
@@ -837,14 +837,14 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
 
 TiXmlElement* SurgeStorage::getSnapshotSection(const char* name)
 {
-   TiXmlElement* e = snapshotloader.FirstChild(name)->ToElement();
+   TiXmlElement* e = TINYXML_SAFE_TO_ELEMENT(snapshotloader.FirstChild(name));
    if (e)
       return e;
 
    // ok, create a new one then
    TiXmlElement ne(name);
    snapshotloader.InsertEndChild(ne);
-   return snapshotloader.FirstChild(name)->ToElement();
+   return TINYXML_SAFE_TO_ELEMENT(snapshotloader.FirstChild(name));
 }
 
 void SurgeStorage::save_snapshots()
@@ -891,7 +891,7 @@ void SurgeStorage::load_midi_controllers()
    TiXmlElement* mc = getSnapshotSection("midictrl");
    assert(mc);
 
-   TiXmlElement* entry = mc->FirstChild("entry")->ToElement();
+   TiXmlElement* entry = TINYXML_SAFE_TO_ELEMENT(mc->FirstChild("entry"));
    while (entry)
    {
       int id, ctrl;
@@ -902,13 +902,13 @@ void SurgeStorage::load_midi_controllers()
          if (id >= n_global_params)
             getPatch().param_ptr[id + n_scene_params]->midictrl = ctrl;
       }
-      entry = entry->NextSibling("entry")->ToElement();
+      entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
    }
 
    TiXmlElement* cc = getSnapshotSection("customctrl");
    assert(cc);
 
-   entry = cc->FirstChild("entry")->ToElement();
+   entry = TINYXML_SAFE_TO_ELEMENT(cc->FirstChild("entry"));
    while (entry)
    {
       int id, ctrl;
@@ -917,7 +917,7 @@ void SurgeStorage::load_midi_controllers()
       {
          controllers[id] = ctrl;
       }
-      entry = entry->NextSibling("entry")->ToElement();
+      entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
    }
 }
 
