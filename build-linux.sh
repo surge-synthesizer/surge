@@ -2,53 +2,29 @@
 #
 # build-linux.sh is the master script we use to control the multi-step build
 # processes.
-#
-# To understand what it does, run
-#
-# ./build-linux.sh --help
 
 help_message()
 {
     cat << EOHELP
+Usage: $0 [options] <command>
 
-build-linux.sh is the master script that we use to control the multi-step
-build processes.
+Commands:
 
-To see this message run
+    help            Show this message
+    premake         Run premake only
 
-   ./build-linux.sh --help
+    build           Run the builds without cleans
+    install-local   Once assets are built, install them locally
 
-To do a simple local build which is not installed do
+    clean           Clean all the builds
+    clean-all       Clean all the builds and remove generated files
 
-   ./build-linux.sh
+    uninstall       Uninstall Surge
 
-Other usages take the form of
+Options:
 
-   ./build-linux.sh <command> <options?>
-
-Commands are:
-
-        --help                   Show this message
-        --premake                Run premake only
-
-        --build                  Run the builds without cleans
-        --install-local          Once assets are built, install them locally
-
-        --clean                  Clean all the builds
-        --clean-all              Clean all the builds and remove generated files
-
-        --uninstall              Uninstall Surge
-
-The default behaviour without arguments is to clean and rebuild everything.
-
-Options are:
-        --verbose                Verbose output
-
-Environment variables are:
-
-   VST2SDK_DIR=path             If this points at a valid VST2 SDK, VST2 assets
-                                will be built
-
+    -h, --help      Show help
+    -v, --verbose   Verbose output
 EOHELP
 }
 
@@ -130,18 +106,6 @@ run_build()
     fi
 }
 
-default_action()
-{
-    run_premake
-    if [ -e "surge-vst2.make" ]; then
-        run_clean "vst2"
-        run_build "vst2"
-    fi
-
-    run_clean "vst3"
-    run_build "vst3"
-}
-
 run_all_builds()
 {
     run_premake_if
@@ -198,44 +162,41 @@ run_uninstall()
     rm -vf ~/.vst3/Surge.so
 }
 
-command="$1"
-
-for option in ${@:2}
-do
-	eval OPTION_${option//-}="true"
-done
-
-# Put help up here so it runs even without the prerequisite check.
-if [ "$command" = "--help" ]; then
-    help_message
-    exit 0
-fi
-
 prerequisite_check
 
-case $command in
-    --premake)
+ARGS=$(getopt -o hv --long help,verbose -n "$0" -- "$@")
+eval set -- "$ARGS"
+
+while true ; do
+    case "$1" in
+        -h|--help) OPTION_help=1 ; shift ;;
+        -v|--verbose) OPTION_verbose=1 ; shift ;;
+        --) shift ; break ;;
+        *) break ;;
+    esac
+done
+
+case $1 in
+    premake)
         run_premake
         ;;
-    --build)
+    build)
         run_all_builds
         ;;
-    --install-local)
+    install-local)
         run_install_local
         ;;
-    --clean)
+    clean)
         run_clean_builds
         ;;
-    --clean-all)
+    clean-all)
         run_clean_all
         ;;
-    --uninstall)
+    uninstall)
         run_uninstall
         ;;
-    "")
-        default_action
-        ;;
     *)
-        help_message
+        echo $0: missing operand
+        echo Try \'$0 --help\' for more information.
         ;;
 esac

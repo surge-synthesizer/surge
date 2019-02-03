@@ -69,24 +69,12 @@ elseif (os.istarget("linux")) then
 
     defines
     {
+        "LINUX=1",
         "_aligned_malloc(x,a)=malloc(x)",
         "_aligned_free(x)=free(x)",
     }
 
-    links
-    {
-    }
-
-    defines
-    {
-        "LINUX=1",
-    }
-
     buildoptions { "-std=c++17" }
-    links { }
-
-    buildoptions {  }
-    linkoptions {  }
 
     platforms { "x64" }
 
@@ -98,6 +86,11 @@ elseif (os.istarget("linux")) then
     includedirs
     {
         "src/linux"
+    }
+
+    prebuildcommands
+    {
+        "python scripts/linux/emit-vector-piggy.py"
     }
 
 elseif (os.istarget("windows")) then

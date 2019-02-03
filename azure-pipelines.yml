@@ -104,7 +104,7 @@ jobs:
       sudo apt-get install -y libxkbcommon-dev
       sudo apt-get install -y libxkbcommon-x11-dev
 
-      ./build-linux.sh --build
+      ./build-linux.sh clean && ./build-linux.sh build
 
       find  . -name '*'
     condition: variables.isLinux
