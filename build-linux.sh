@@ -214,22 +214,22 @@ fi
 prerequisite_check
 
 case $command in
-    --premake)
+    premake)
         run_premake
         ;;
-    --build)
+    build)
         run_all_builds
         ;;
-    --install-local)
+    install-local)
         run_install_local
         ;;
-    --clean)
+    clean)
         run_clean_builds
         ;;
-    --clean-all)
+    clean-all)
         run_clean_all
         ;;
-    --uninstall)
+    uninstall)
         run_uninstall
         ;;
     "")
