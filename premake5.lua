@@ -449,14 +449,12 @@ if VST24SDK then
         linkoptions { "/DEF:resources\\windows-vst2\\surge.def" }
 
     elseif (os.istarget("linux")) then
-    --[[
-        Ideally we wouldn't define __cdecl on linux. It's not needed
-        Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
-        it so without __cdecl blank defined on linux vst2, we don't get
-        reliable builds. We considered defining it just where used but
-        it is used also, indirectly, by the vst3 sdk, so the smallest
-        change is this diff plus this comment.
-    --]]
+       -- Ideally we wouldn't define __cdecl on linux. It's not needed
+       -- Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
+       -- it so without __cdecl blank defined on linux vst2, we don't get
+       -- reliable builds. We considered defining it just where used but
+       -- it is used also, indirectly, by the vst3 sdk, so the smallest
+       -- change is this diff plus this comment.
         defines {
             "__cdecl=",
         }
@@ -661,4 +659,75 @@ if (os.istarget("linux")) then
 
     configuration { "Release" }
     targetdir "target/app/Release"
+end
+
+-- HEADLESS APP
+
+project "surge-headless"
+kind "ConsoleApp"
+
+defines
+{
+   "TARGET_HEADLESS=1"
+}
+
+plugincommon()
+
+files
+{
+   "src/headless/main.cpp",
+   "src/headless/DisplayInfoHeadless.cpp",
+   "src/headless/UserInteractionsHeadless.cpp",
+   "src/headless/LinkFixesHeadless.cpp"
+}
+
+excludes
+{
+   "src/common/gui/*"
+}
+
+includedirs
+{
+   "src/headless"
+}
+
+configuration { "Debug" }
+targetdir "target/headless/Debug"
+targetsuffix "-Debug"
+
+configuration { "Release" }
+targetdir "target/headless/Release"
+
+configuration {}
+
+if (os.istarget("macosx")) then
+   excludes
+   {
+      VSTGUI .. "vstgui_mac.mm",
+      VSTGUI .. "vstgui_uidescription_mac.mm",
+      "src/mac/DisplayInfoMac.mm",
+      "src/mac/UserInteractionsMac.cpp",
+   }
+end
+
+if (os.istarget("windows")) then
+   excludes
+   {
+      VSTGUI .. "vstgui_win32.cpp",
+      VSTGUI .. "vstgui_uidescription_win32.cpp",
+      "src/windows/DisplayInfoWin.cpp",
+      "src/windows/UserInteractionsWin.cpp",
+   }
+end
+
+if (os.istarget("linux")) then
+   excludes
+   {
+      VSTGUI .. "vstgui.cpp",
+      VSTGUI .. "lib/platform/linux/**.cpp",
+      VSTGUI .. "lib/platform/common/genericoptionmenu.cpp",
+      VSTGUI .. "lib/platform/common/generictextedit.cpp",
+      "src/linux/DisplayInfoLinux.cpp",
+      "src/linux/UserInteractionsLinux.cpp",
+   }
 end

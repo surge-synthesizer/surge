@@ -21,6 +21,9 @@ typedef SurgeVst3Processor PluginLayer;
 #elif TARGET_VST2
 class Vst2PluginInstance;
 using PluginLayer = Vst2PluginInstance;
+#elif TARGET_HEADLESS
+class HeadlessPluginLayerProxy;
+using PluginLayer = HeadlessPluginLayerProxy;
 #else
 class PluginLayer;
 #endif

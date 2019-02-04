@@ -38,6 +38,7 @@ Commands are:
         --build-validate-au      Build and install the audio unit then validate it
         --build-install-vst2     Build and install only the VST2
         --build-install-vst3     Build and install only the VST3
+        --build-headless         Build the headless application
 
         --package                Creates a .pkg file from current built state in products
         --clean-and-package      Cleans everything; runs all the builds; makes an installer; drops it in products
@@ -181,6 +182,7 @@ run_all_builds()
 
     run_build "vst3"
     run_build "au"
+    run_build "headless"
 }
 
 run_install_local()
@@ -239,6 +241,7 @@ run_clean_builds()
 
     run_clean "vst3"
     run_clean "au"
+    run_clean "headless"
 }
 
 run_clean_all()
@@ -319,6 +322,10 @@ case $command in
         ;;
     --build-install-vst3)
         run_build_install_vst3
+        ;;
+    --build-headless)
+        run_premake_if
+        run_build "headless"
         ;;
     --clean)
         run_clean_builds
