@@ -205,17 +205,17 @@ is an available option.
 
 Download `premake5` from https://premake.github.io/download.html#v5
 
-Untar the package, and move it to `~/bin/` so the install script can find it.
+Untar the package, and move it to `~/bin/` or elsewhere in your path 
+so the install script can find it.
 
 For VST2, you will need the `VST2 SDK` - unzip it to a folder of your choice
-
-and set an environment variable like this:
+and set `VST2SDK_DIR` to point to it.
 
 ```
-export VST2SDK_DIR="/your/path/to/VST2SDK
+export VST2SDK_DIR="/your/path/to/VST2SDK"
 ```
 
-Do remember to install the dependencies
+You will need to install a set of dependencies.
 
 - build-essential
 - libcairo-dev
@@ -225,7 +225,7 @@ Do remember to install the dependencies
 - libxcb-keysyms1-dev
 - libxcb-util-dev
 
-Run `apt-get install libgtkmm-3.0-dev`
+Then `git clone` surge and update the submodules:
 
 ```
 git clone https://github.com/surge-synthesizer/surge.git
@@ -233,13 +233,22 @@ cd surge
 git submodule update --init --recursive
 ```
 
-Run `premake gmake2`
+You can now build with the command
 
-Run `./build-linux.sh clean`
+```
+./build-linux.sh build
+```
 
-Run `./build-linux.sh build`
+which will run premake and build the asset.
 
-Some further discussion is at https://github.com/surge-synthesizer/surge/issues/19
+To use the VST, you need to install it locally along with supporting files. You can do this manually
+if you desire, but the build script will also do it.
+
+```
+./build-linux.sh install-local
+```
+
+For other options, you can do `./build-linux.sh --help`.
 
 ## References
 
