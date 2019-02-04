@@ -419,44 +419,44 @@ void SurgeGUIEditor::refresh_mod()
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
 {
-   switch (code.character)
-   {
-   case VKEY_ALT:
-      // modsource = modsource_editor;
-      // queue_refresh = true;
-      mod_editor = true;
-      refresh_mod();
-      return 1;
-   case VKEY_TAB:
-      toggle_mod_editing();
-      return 1;
-   case VKEY_LEFT:
-      synth->incrementCategory(false);
-      return 1;
-   case VKEY_RIGHT:
-      synth->incrementCategory(true);
-      return 1;
-   case VKEY_UP:
-      synth->incrementPatch(false);
-      return 1;
-   case VKEY_DOWN:
-      synth->incrementPatch(true);
-      return 1;
-   }
-   return -1;
+    if(code.character == 0 )
+    {
+        switch (code.virt)
+        {
+        case VKEY_TAB:
+            toggle_mod_editing();
+            return 1;
+        case VKEY_LEFT:
+            synth->incrementCategory(false);
+            return 1;
+        case VKEY_RIGHT:
+            synth->incrementCategory(true);
+            return 1;
+        case VKEY_UP:
+            synth->incrementPatch(false);
+            return 1;
+        case VKEY_DOWN:
+            synth->incrementPatch(true);
+            return 1;
+        }
+    }
+    else
+    {
+        switch(code.character)
+        {
+        case '+':
+            setZoomFactor(getZoomFactor()+10);
+            return 1;
+        case '-':
+            setZoomFactor(getZoomFactor()-10);
+            return 1;
+        }
+    }
+    return -1;
 }
 
 int32_t SurgeGUIEditor::onKeyUp(const VstKeyCode& keyCode, CFrame* frame)
 {
-   switch (keyCode.character)
-   {
-   case VKEY_ALT:
-      // modsource = 0;
-      // queue_refresh = true;
-      mod_editor = false;
-      refresh_mod();
-      return 1;
-   }
    return -1;
 }
 
@@ -498,8 +498,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    if (!synth)
       return;
    assert(frame);
-
-   getFrame()->registerKeyboardHook(this);
 
    if (editor_open)
       close_editor();
@@ -1255,6 +1253,10 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
            synth = (sub3_synth*)plug->plugin_instance;
    #endif*/
 
+   /*
+   ** Register only once (when we open)
+   */
+   frame->registerKeyboardHook(this);
    openOrRecreateEditor();
 
    return true;
