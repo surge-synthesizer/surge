@@ -203,7 +203,27 @@ is an available option.
 
 ## Building a Surge.vst (VST2) & Surge.vst3 (VST3) with Linux
 
-Install `Premake5`
+Download `premake5` from https://premake.github.io/download.html#v5
+
+Untar the package, and move it to `~/bin/` so the install script can find it.
+
+For VST2, you will need the `VST2 SDK` - unzip it to a folder of your choice
+
+and set an environment variable like this:
+
+```
+export VST2SDK_DIR="/your/path/to/VST2SDK
+```
+
+Do remember to install the dependencies
+
+- build-essential
+- libcairo-dev
+- libxkbcommon-x11-dev
+- libxkbcommon-dev
+- libxcb-cursor-dev
+- libxcb-keysyms1-dev
+- libxcb-util-dev
 
 Run `apt-get install libgtkmm-3.0-dev`
 
