@@ -23,6 +23,10 @@
 #include "UserInteractions.h"
 #include "DisplayInfo.h"
 
+#include <iostream>
+#include <iomanip>
+#include <strstream>
+
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
 #endif
@@ -2427,8 +2431,6 @@ long SurgeGUIEditor::applyParameterOffset(long id)
 
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
-#if HOST_SUPPORTS_ZOOM    
-
    int minZoom = 50;
    if (zf < minZoom)
    {
@@ -2453,22 +2455,36 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    float baseW = (baseUISize->right - baseUISize->left);
    float baseH = (baseUISize->top - baseUISize->bottom);
 #endif
-   
-   // Leave enough room for window decoration with that .9. (You can probably do .95 on mac)
-   if (zf != 100.0 && (
-           (baseW * zf / 100.0) > 0.9 * screenDim.getWidth() ||
-           (baseH * zf / 100.0) > 0.9 * screenDim.getHeight()
+
+   /*
+   ** Window decoration takes up some of the screen so don't zoom to full screen dimensions.
+   ** This heuristic seems to work on windows 10 and macos 10.14 weel enough.
+   ** Keep these as integers to be consistent wiht the other zoom factors, and to make
+   ** the error message cleaner.
+   */
+#ifdef WINDOWS
+   int maxScreenUsage = 90;
+#else
+   int maxScreenUsage = 95;
+#endif
+
+   if (zf != 100.0 && zf > 100 && (
+           (baseW * zf / 100.0) > maxScreenUsage * screenDim.getWidth() / 100.0 ||
+           (baseH * zf / 100.0) > maxScreenUsage * screenDim.getHeight() / 100.0
            )
        )
    {
+       int newZF = findLargestFittingZoomBetween(100.0 , zf, 5, maxScreenUsage, baseW, baseH);
+       zoomFactor = newZF;
+       
        std::ostringstream msg;
-       msg << "You attempted to resize Surge to a size larger than your screen. "
-           << "Your screen is " << screenDim.getWidth() << "x" << screenDim.getHeight() 
-           << " and your zoom of " << zf << "% would make your Surge "
-           <<  baseW * zf / 100.0 << "x" << baseH * zf / 100.0 << "\n\n"
-           << "Retaining current zoom of " << zoomFactor << "%.";
+       msg << "Surge limits zoom levels so as not to grow Surge larger than your available screen. "
+           << "Your screen size is " << screenDim.getWidth() << "x" << screenDim.getHeight() << " "
+           << "and your target zoom of " << zf << "% would be too large."
+           << std::endl << std::endl
+           << "Surge is choosing the largest fitting zoom " << zoomFactor << "%.";
        Surge::UserInteractions::promptError(msg.str(),
-                                            "Screen too small for Zoom");
+                                            "Limiting Zoom by Screen Size");
    }
    else
    {
@@ -2481,12 +2497,6 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    int fullPhysicalZoomFactor = (int)(zf * dbs);
    CScalableBitmap::setPhysicalZoomFactor(fullPhysicalZoomFactor);
 
-#else
-   /*
-   ** I don't support zoom, but lets at least keep my internal state consistent in case this gets called
-   */
-   zoomFactor = zf;
-#endif
 }
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
@@ -2496,13 +2506,6 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     int eid = 0;
     bool handled = false;
 
-    int id_about = eid;
-    settingsMenu->addEntry("About", eid++);
-
-    int id_openmanual = eid;
-    settingsMenu->addEntry("Surge Manual", eid++);
-
-#if HOST_SUPPORTS_ZOOM    
     // Zoom submenus
     COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
 
@@ -2539,8 +2542,15 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         zoomSubMenu->addEntry(zcmd); zid++;
     }
 
-    settingsMenu->addEntry(zoomSubMenu, "Zoom");
-#endif // Supports Zoom
+    settingsMenu->addEntry(zoomSubMenu, "Zoom"); eid++;
+
+    settingsMenu->addSeparator(eid++);
+    
+    int id_openmanual = eid;
+    settingsMenu->addEntry("Surge Manual", eid++);
+
+    int id_about = eid;
+    settingsMenu->addEntry("About", eid++);
     
     frame->addView(settingsMenu); // add to frame
     settingsMenu->setDirty();
@@ -2581,7 +2591,7 @@ CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
     frame->getCurrentMouseLocation(where);
     where = frame->localToFrame(where);
 
-#if ( TARGET_VST2 || TARGET_VST3 ) && HOST_SUPPORTS_ZOOM
+#if ( TARGET_VST2 || TARGET_VST3 )
     CGraphicsTransform vstfix = frame->getTransform().inverse();
     vstfix.transform(where);
     vstfix.transform(where);
@@ -2590,4 +2600,30 @@ CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
     return where;
 }
 
+int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of range
+                                                  int zoomHigh, // top of range
+                                                  int zoomQuanta, // step size
+                                                  int percentageOfScreenAvailable, // How much to shrink actual screen
+                                                  float baseW,
+                                                  float baseH
+    )
+{
+    // Here is a very crude implementation
+    int result = zoomHigh;
+    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
+    float sx = screenDim.getWidth() * percentageOfScreenAvailable / 100.0;
+    float sy = screenDim.getHeight() * percentageOfScreenAvailable / 100.0;
+
+    while(result > zoomLow)
+    {
+        if(result * baseW / 100.0 <= sx &&
+            result * baseH / 100.0 <= sy)
+            break;
+        result -= zoomQuanta;
+    }
+    if(result < zoomLow)
+        result = zoomLow;
+
+    return result;
+}
 //------------------------------------------------------------------------------------------------
