@@ -136,6 +136,13 @@ SurgeStorage::SurgeStorage()
 
    memset(&audio_in[0][0], 0, 2 * BLOCK_SIZE_OS * sizeof(float));
 
+#if MAC || LINUX
+   const char* homePath = getenv("HOME");
+   if (!homePath)
+      throw Surge::Error("The environment variable HOME does not exist",
+                         "Surge failed to initialize");
+#endif
+
 #if MAC
    char path[1024];
    FSRef foundRef;
@@ -161,8 +168,16 @@ SurgeStorage::SurgeStorage()
    }
 
    // ~/Documents/Surge in full name
-   sprintf( path, "%s/Documents/Surge", getenv( "HOME" ) );
+   sprintf(path, "%s/Documents/Surge", homePath);
    userDataPath = path;
+#elif LINUX
+   const char* xdgDataPath = getenv("XDG_DATA_HOME");
+   if (xdgDataPath)
+      datapath = std::string(xdgDataPath) + "/Surge/";
+   else
+      datapath = std::string(homePath) + "/.local/share/Surge/";
+
+   userDataPath = std::string(homePath) + "/Documents/Surge";
 #elif WINDOWS
    PWSTR localAppData;
    if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
