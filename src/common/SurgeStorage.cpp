@@ -365,6 +365,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
    ** scanning for names; setting the 'root' to everything without a slash
    ** and finding the parent in the name map for everything with a slash
    */
+
    std::map<std::string,int> nameToLocalIndex;
    int idx=0;
    for (auto &pc : local_patch_category)
@@ -382,6 +383,23 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
            local_patch_category[ nameToLocalIndex[ parent ] ].children.push_back( pc );
        }
    }
+
+   /*
+   ** We need to sort the local patch category child to make sure subfolders remain
+   ** sorted when displayed using the child data structure in the menu view.
+   */
+   
+   auto catCompare =
+       [this](const PatchCategory &c1, const PatchCategory &c2) -> bool
+       {
+           return _stricmp(c1.name.c_str(),c2.name.c_str()) < 0;
+       };
+   for (auto &pc : local_patch_category)
+   {
+       std::sort(pc.children.begin(), pc.children.end(), catCompare);
+   }
+
+
 
    /*
    ** Then copy our local patch category onto the member and be done
