@@ -208,16 +208,16 @@ Install `Premake5`
 Run `apt-get install libgtkmm-3.0-dev`
 
 ```
-git clone https://github.com/surge-synthesizer/surge.git`
+git clone https://github.com/surge-synthesizer/surge.git
 cd surge
 git submodule update --init --recursive
 ```
 
 Run `premake gmake2`
 
-Run `./build-linux.sh --clean`
+Run `./build-linux.sh clean`
 
-Run `./build-linux.sh --build`
+Run `./build-linux.sh build`
 
 Some further discussion is at https://github.com/surge-synthesizer/surge/issues/19
 
