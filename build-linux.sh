@@ -10,7 +10,6 @@ Usage: $0 [options] <command>
 
 Commands:
 
-    help            Show this message
     premake         Run premake only
 
     build           Run the builds without cleans
@@ -176,7 +175,7 @@ while true ; do
     esac
 done
 
-if [[ ! -z "$OPTION_verbose" ]]; then
+if [[ ! -z "$OPTION_help" ]]; then
     help_message
     exit 0
 fi
