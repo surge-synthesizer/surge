@@ -64,3 +64,4 @@ Makefile
 surge-*.make
 premake-stamp
 /Debug
+src/linux/ScalablePiggy*

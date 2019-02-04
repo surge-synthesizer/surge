@@ -17,9 +17,9 @@ float getDisplayBackingScaleFactor(CFrame *)
     
 CRect getScreenDimensions(CFrame *)
 {
-    Surge::UserInteractions::promptError("getScreenDimensions not implemented yet on linux.",
+    Surge::UserInteractions::promptError("getScreenDimensions not implemented yet on linux. Returning 1400x1050",
                                          "Software Error");
-    return CRect(CPoint(0,0), CPoint(1024,768));
+    return CRect(CPoint(0,0), CPoint(1400,1050)); // a typical mid-range 15" laptop
 }
 
 }
