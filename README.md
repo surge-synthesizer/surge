@@ -237,7 +237,7 @@ if you desire, but the build script will also do it.
 ./build-linux.sh install-local
 ```
 
-For other options, you can do `./build-linux.sh help`.
+For other options, you can do `./build-linux.sh --help`.
 
 ## References
 
