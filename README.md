@@ -15,9 +15,7 @@ The codebase was migrated from before an unfinished 1.6 release, which improves 
 * Support for [MPE](https://www.midi.org/articles-old/midi-polyphonic-expression-mpe)
 * New analog mode for the ADSR envelopes   
 
-Surge currently builds with Windows and macOS (AudioUnit,VST2,VST3), and getting it to build on Linux again should be doable with some effort.
-
-Daily macOS (64-bit, AU/VST2/VST3) builds available on the [Slack](https://join.slack.com/t/surgeteamworkspace/shared_invite/enQtNTE3NDIyMDc2ODgzLTU1MzZmMWZlYjkwMjk4NDY4ZjI3NDliMTFhMTZiM2ZmNjgxNjYzNGI0NGMxNTk2ZWJjNzgyMDcxODc2ZjZmY2Q)
+Surge currently builds with Windows and macOS (AudioUnit, VST2, VST3), and getting it to function with Linux is under way but still requires some further effort.
 
 There is currently work going on to create an official release-page with installers for Windows 64-bit, macOS 64-bit and other formats.
 
@@ -87,13 +85,11 @@ Now, to build the installer, open the file `installer_win/surge.iss` by using `I
 
 `Inno Setup` will bake an installer and place it in `installer_win/Output/`
 
-As of Jan 2019, Microsoft is making free Windows 10 VM's available which contain their development tooling 
-and are capable of building Surge
-at [this Microsoft page](https://developer.microsoft.com/en-us/windows/downloads/virtual-machines).
+As of Jan 2019, Microsoft is making free Windows 10 VM's available which contain their development tooling and are capable of building Surge at [this Microsoft page](https://developer.microsoft.com/en-us/windows/downloads/virtual-machines).
 
 To setup, after starting the VM for the first time:
-Run Visual Studio installer, update, and then
-make sure the `desktop C++ kit`, including `optional CLI support`, `Windows 8.1 SDK`, and `VC2015 toolset for desktop` is installed. 
+Run Visual Studio installer, update, and then make sure the `desktop C++ kit`, including `optional CLI support`, `Windows 8.1 SDK`, and `VC2015 toolset for desktop` is installed. 
+
 Then proceed as above.
 
 # macOS
@@ -106,8 +102,7 @@ This process expects that you have both `Xcode` and `Xcode Command Line Utilitie
 xcode-select --install
 ```
 
-Install `premake5` by downloading it from  https://premake.github.io. Unzip the package. Install it
-in /usr/local/bin or elsewhere in your path.
+Install `premake5` by downloading it from  https://premake.github.io. Unzip the package. Install it into /usr/local/bin or elsewhere in your path.
 
 ```
 cp premake5 /usr/local/bin
@@ -123,8 +118,8 @@ git submodule update --init --recursive
 
 ## Building with build-osx.sh
 
-`build-osx.sh` has all the commands you need to build, test, locally install, validate, and package Surge on mac.
-It's what the primary mac developers use day to day. The simplest approach is to build everything
+`build-osx.sh` has all the commands you need to build, test, locally install, validate, and package Surge on Mac.
+It's what the primary Mac developers use day to day. The simplest approach is to build everything with
 
 ```
 ./build-osx.sh
@@ -154,22 +149,19 @@ and you do not want to upgrade XCode to a more recent version, use [homebrew](ht
  
 ## Using Xcode
 
-`premake xcode4` builds xcode assets so if you would rather just use xcode, you can open the solutions created after running premake yourself
-or having `./build-osx.sh` run it.
+`premake xcode4` builds xcode assets so if you would rather just use xcode, you can open the solutions created after running premake yourself or having `./build-osx.sh` run it.
 
 After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which will take a while.
 
 All of the three projects (`surge-vst3`, `surge-vst2`, `surge-au`) will recommend you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
 
-Xcode will result in built assets in `products/` but will not install them and will not install the ancilliary assets. To do that you can either `./build-osx.sh --install-local` or
-`./build-osx.sh --package` and run the resulting pkg file to install in `/Library`.
+Xcode will result in built assets in `products/` but will not install them and will not install the ancilliary assets. To do that you can either `./build-osx.sh --install-local` or `./build-osx.sh --package` and run the resulting pkg file to install in `/Library`.
 
 ## Using the built assets
 
 Once you have underaken the install options above, the AU and VSTs should just work. Launch your favorite host, get it to load the plugin, and have fun!
 
-To use the AU in Logic, Mainstage, GarageBand, and so on, you need to do one more one-time step which is to invalidate your AU cache so that you force 
-Logic to rescan. The easiest way to do this is to move the AudioUnitCache away from it's location by typing in:
+To use the AU in Logic, Mainstage, GarageBand, and so on, you need to do one more one-time step which is to invalidate your AU cache so that you force Logic to rescan. The easiest way to do this is to move the AudioUnitCache away from it's location by typing in:
 
 ```
 mv ~/Library/Caches/AudioUnitCache ~/Desktop
@@ -177,8 +169,7 @@ mv ~/Library/Caches/AudioUnitCache ~/Desktop
 
 then restart Logic and rescan. If the rescan succeeds you can remove the cache from `~/Desktop`.
 
-Finally, the mac devs can't recomment [hosting au](http://ju-x.com/hostingau.html) highly enough for development. Open it once, open surge, and save that
-configuration to your desktop. You will quickly find that
+Finally, the mac devs can't recomment [hosting au](http://ju-x.com/hostingau.html) highly enough for development. Open it once, open surge, and save that configuration to your desktop. You will quickly find that
 
 ```
 ./build-osx.sh --build-validate-au && /Applications/Hosting\ AU.app/Contents/MacOS/Hosting\ AU ~/Desktop/Surge.hosting 
@@ -205,11 +196,9 @@ is an available option.
 
 Download `premake5` from https://premake.github.io/download.html#v5
 
-Untar the package, and move it to `~/bin/` or elsewhere in your path 
-so the install script can find it.
+Untar the package, and move it to `~/bin/` or elsewhere in your path so the install script can find it.
 
-For VST2, you will need the `VST2 SDK` - unzip it to a folder of your choice
-and set `VST2SDK_DIR` to point to it.
+For VST2, you will need the `VST2 SDK` - unzip it to a folder of your choice and set `VST2SDK_DIR` to point to it.
 
 ```
 export VST2SDK_DIR="/your/path/to/VST2SDK"
@@ -252,6 +241,6 @@ For other options, you can do `./build-linux.sh --help`.
 
 ## References
 
-  * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
   * Most Surge-related conversation on the Surge Synth Slack. [You can join via this link](https://join.slack.com/t/surgeteamworkspace/shared_invite/enQtNTE3NDIyMDc2ODgzLTU1MzZmMWZlYjkwMjk4NDY4ZjI3NDliMTFhMTZiM2ZmNjgxNjYzNGI0NGMxNTk2ZWJjNzgyMDcxODc2ZjZmY2Q)
   * IRC channel at #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
+  * Discussion at KVR-Forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
