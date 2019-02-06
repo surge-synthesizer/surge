@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <process.h>
 #endif
+
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
@@ -19,8 +20,11 @@
 #elif TARGET_APP
 #include "PluginLayer.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
+#elif TARGET_HEADLESS
+#include "HeadlessPluginLayerProxy.h"
 #else
 #include "Vst2PluginInstance.h"
+
 #if LINUX
 #include "../linux/linux-aeffguieditor.h"
 #else
@@ -667,8 +671,8 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
       // getParent()->ParameterUpdate(externalparam);
 #elif TARGET_VST3
       getParent()->setParameterAutomated(externalparam, value);
-#elif TARGET_APP
-      getParent()->sendParameterAutomation(externalparam, value);
+#elif TARGET_HEADLESS || TARGET_APP
+      // NO OP
 #else
       getParent()->setParameterAutomated(externalparam, value);
 #endif
