@@ -6,7 +6,14 @@ language "C++"
 
 -- GLOBAL STUFF --
 
-VSTGUI = "vst3sdk/vstgui4/vstgui/";
+local VSTGUI_DIR = os.getenv("VSTGUI_DIR")
+
+if VSTGUI_DIR then
+   VSTGUI = VSTGUI_DIR .. "/vstgui/"
+else
+   VSTGUI = "vstgui.surge/vstgui/"
+   -- VSTGUI = "vst3sdk/vstgui4/vstgui/";
+end
 
 defines
 {
