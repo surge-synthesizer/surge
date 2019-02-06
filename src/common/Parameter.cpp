@@ -527,6 +527,8 @@ void Parameter::set_type(int ctrltype)
       sprintf(dispname, "-");
       valtype = vt_int;
 
+      val_min.i = std::numeric_limits<int>::min();
+      val_max.i = std::numeric_limits<int>::max();
       val_default.i = 0;
       break;
    }
