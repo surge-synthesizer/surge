@@ -33,6 +33,7 @@ CModulationSourceButton::CModulationSourceButton(
    dispval = 0;
    controlstate = cs_none;
    label[0] = 0;
+   blink = 0;
 }
 
 //------------------------------------------------------------------------------------------------

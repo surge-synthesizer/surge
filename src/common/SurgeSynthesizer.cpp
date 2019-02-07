@@ -46,6 +46,11 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
 {
    switch_toggled_queued = false;
    halt_engine = false;
+   release_if_latched[0] = true;
+   release_if_latched[1] = true;
+   release_anyway[0] = false;
+   release_anyway[1] = false;
+   load_fx_needed = true;
 
    fx_suspend_bitmask = 0;
 

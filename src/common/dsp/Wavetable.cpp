@@ -87,6 +87,7 @@ Wavetable::Wavetable()
    memset(TableI16WeakPointers, 0, sizeof(TableI16WeakPointers));
    current_id = -1;
    queue_id = -1;
+   refresh_display = true; // I have never been drawn so assume I need refresh if asked
 }
 
 void Wavetable::Copy(Wavetable* wt)
