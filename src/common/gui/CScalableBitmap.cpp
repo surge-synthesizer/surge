@@ -159,6 +159,19 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
         CPoint ncoff = offset;
         CPoint no = invtf.transform(ncoff);
         
+#if LINUX
+        /*
+        ** For some reason alpha = 255 inbound to this function on linux (and maybe on
+        ** mac and windows) but unlike mac and windows that misscaling actually causes
+        ** draw errors on linux because of the comparison in cairocontext.cpp at line
+        ** 396 (the (if (alpha != 1.f )) so hand-rescale it here for now
+        **
+        ** FIXME: Find out why alpha = 255 inbound here in VSTGUI Linux.
+        */
+        if (alpha==255)
+            alpha = 1.0f;
+#endif
+
         scaledBitmaps[ bestFitScaleGroup ]->draw(context, nr, no, alpha);
     }
     else
