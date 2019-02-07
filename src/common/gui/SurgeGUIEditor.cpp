@@ -2595,7 +2595,20 @@ CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
     CGraphicsTransform vstfix = frame->getTransform().inverse();
     vstfix.transform(where);
     vstfix.transform(where);
+
+#if LINUX
+    /*
+    ** FIXME: For some reason, linux is even one more transform broken than Mac and Windows.
+    ** There is a vstgui bug here we need to find, but for now, if you have a hammer, the whole
+    ** world looks like a nail, as they say.
+    **
+    ** This change still leaves menus near the edge of the window mis-clipped in zoom.
+    */
+    vstfix.transform(where);
 #endif
+
+#endif
+
     
     return where;
 }
