@@ -49,8 +49,9 @@ section stick to 3 spaces. If you are writing new code we are OK with 3 or 4. Bu
 * `class HaveCamelcaseNames`
 * `void functionsAreCamelCaseWithLowerFirst`
 * We are not using `s_` or `m_` or equivalent notations for members or statics
-* Full namespaces are generally prefered over usings. Even though the code has a `using std` in globals.h we are trying to use
+* Full namespaces are generally prefered over usings. We are trying to use
 `std::vector` over `vector` in the code. 
+* Don't `using namespace` in header files. Don't `using namespace std` in new code (but it is in some existing code).
 * Use namespaces not classes to group functions. Check out how we implemented `UserInteractions.h`
 * Long and descriptive names are good. `userMessageDeliveryPipe` is better than `umdp`. 
 
