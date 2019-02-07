@@ -449,6 +449,8 @@ struct PatchCategory
    int order;
    std::vector<PatchCategory> children;
    bool isRoot;
+
+   int numberOfPatchesInCatgory;
 };
 
 enum sub3_copysource

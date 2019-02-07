@@ -342,7 +342,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
    {
       PatchCategory c;
       c.name = p.generic_string().substr(patchpathSubstrLength);
-      local_patch_category.push_back(c);
+      c.numberOfPatchesInCatgory = 0;
       
       for (auto& f : fs::directory_iterator(p))
       {
@@ -354,9 +354,12 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
               e.name = f.path().filename().generic_string();
               e.name = e.name.substr(0, e.name.size() - 4);
               patch_list.push_back(e);
+
+              c.numberOfPatchesInCatgory ++;
           }
       }
       
+      local_patch_category.push_back(c);
       category++;
    }
 
