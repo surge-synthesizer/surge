@@ -549,6 +549,7 @@ void Parameter::bound_value(bool force_integer)
       if (b > 1.41f)
       {
          b = log(1.5f) / log(2.f);
+          
       }
       else if (b > 1.167f)
       {
@@ -695,8 +696,10 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   sprintf(txt, "%.3f / 4th", 2.0f * powf(2.0f, f));
                else if (f > -3)
                   sprintf(txt, "%.3f / 16th", 8.0f * powf(2.0f, f));
-               else
+               else if (f > -5)
                   sprintf(txt, "%.3f / 64th", 32.0f * powf(2.0f, f));
+                else
+                  sprintf(txt, "%.3f / 128th", 64.0f * powf(2.0f, f));
             }
             else if (f == val_min.f)
             {
@@ -711,7 +714,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_lforate:
          if (temposync)
          {
-            if (f > 4)
+            if (f > 5)
+                sprintf(txt, "%.3f / 128th", 64.f * powf(2.0, -f));
+            else if (f > 4)
                sprintf(txt, "%.3f / 64th", 32.f * powf(2.0f, -f));
             else if (f > 3)
                sprintf(txt, "%.3f / 32th", 16.f * powf(2.0f, -f));
