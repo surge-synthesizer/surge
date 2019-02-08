@@ -60,6 +60,8 @@
 #define IDC_AUTHOR 1004
 #define IDC_TEDIT 1024
 
+#define IDR_LATO_FONT 501
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
@@ -87,4 +89,5 @@
 #define SCALABLE_400_OFFSET 74000
 
 #include "scalableresource.h" // found in src/windows
+
 #endif
