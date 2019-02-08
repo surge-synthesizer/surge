@@ -674,7 +674,9 @@ if (not os.istarget("macosx")) then
       "src/headless/main.cpp",
       "src/headless/DisplayInfoHeadless.cpp",
       "src/headless/UserInteractionsHeadless.cpp",
-      "src/headless/LinkFixesHeadless.cpp"
+      "src/headless/LinkFixesHeadless.cpp",
+      "src/headless/HeadlessApps.cpp",
+      "src/headless/HeadlessTools.cpp"
    }
    
    excludes

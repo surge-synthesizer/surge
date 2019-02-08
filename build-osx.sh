@@ -39,6 +39,7 @@ Commands are:
         --build-install-vst2     Build and install only the VST2
         --build-install-vst3     Build and install only the VST3
         --build-headless         Build the headless application
+        --run-headless           Build and run the headless application
 
         --package                Creates a .pkg file from current built state in products
         --clean-and-package      Cleans everything; runs all the builds; makes an installer; drops it in products
@@ -369,8 +370,11 @@ case $command in
         run_build_install_vst3
         ;;
     --build-headless)
-        run_premake_if
         run_build_headless
+        ;;
+    --run-headless)
+        run_build_headless
+        ./build/Release/surge-headless
         ;;
     --clean)
         run_clean_builds
