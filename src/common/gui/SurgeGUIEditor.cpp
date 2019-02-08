@@ -27,6 +27,10 @@
 #include <iomanip>
 #include <strstream>
 
+#if MAC
+#include "cocoa_utils.h"
+#endif
+
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
 #endif
@@ -44,6 +48,17 @@ using namespace VSTGUI;
 using namespace std;
 
 #if MAC
+#define USE_RUNTIME_LOADED_FONTS 1
+#else
+#define USE_RUNTIME_LOADED_FONTS 0
+#endif
+
+#if USE_RUNTIME_LOADED_FONTS
+CFontRef surge_minifont = NULL;
+CFontRef surge_patchfont = NULL;
+#else
+
+#if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
 #elif LINUX
@@ -56,6 +71,7 @@ SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
 
 CFontRef surge_minifont = minifont;
 CFontRef surge_patchfont = patchfont;
+#endif
 
 
 enum special_tags
@@ -143,6 +159,23 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #endif
    zoom_callback = [](SurgeGUIEditor* f) {};
    setZoomFactor(100);
+
+
+#if USE_RUNTIME_LOADED_FONTS
+
+#if MAC
+   CocoaUtils::registerBundleFonts();
+#endif
+
+   if (surge_minifont == NULL)
+   {
+       SharedPointer<CFontDesc> minifont = new CFontDesc("Lato", 9);
+       SharedPointer<CFontDesc> patchfont = new CFontDesc("Lato", 14);
+       surge_minifont = minifont;
+       surge_patchfont = patchfont;
+   }
+
+#endif
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()

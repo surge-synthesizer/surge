@@ -283,6 +283,7 @@ function plugincommon()
             "CoreAudio.framework",
             "CoreAudioKit.framework",
             "CoreServices.framework",
+            "CoreText.framework",
             "Cocoa.framework",
             "CoreFoundation.framework",
             "OpenGL.framework",
@@ -596,7 +597,7 @@ if (os.istarget("macosx")) then
     files
     {
         "src/au/**.cpp",
-                "src/au/**.mm",
+        "src/au/**.mm",
         "src/au/**.h",
         "libs/AUPublic/**.cpp",
         "libs/AUPublic/**.h",
@@ -714,6 +715,7 @@ if (os.istarget("macosx")) then
       VSTGUI .. "vstgui_uidescription_mac.mm",
       "src/mac/DisplayInfoMac.mm",
       "src/mac/UserInteractionsMac.cpp",
+      "src/mac/cocoa_utils.mm"
    }
 end
 

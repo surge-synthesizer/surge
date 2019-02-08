@@ -1,5 +1,11 @@
 #include <Cocoa/Cocoa.h>
 #include "cocoa_utils.h"
+#include <iostream>
+#include <iomanip>
+
+#include <CoreText/CoreText.h>
+#include "vstgui/lib/platform/mac/macglobals.h"
+#include "UserInteractions.h"
 
 double CocoaUtils::getDoubleClickInterval()
 {
@@ -31,3 +37,24 @@ void CocoaUtils::miniedit_text_impl( char *c, int maxchars )
         }
     }
 }
+
+void CocoaUtils::registerBundleFonts()
+{
+    /*
+    ** MacFonts use the CoreText registry so we can just find them in the bundle
+    ** and register them using the CoreText Font Manager API
+    */
+    CFURLRef url = nullptr;
+    url = CFBundleCopyResourceURL(VSTGUI::getBundleRef(), CFSTR("Lato-Regular"), CFSTR("ttf"), CFSTR("fonts"));
+    if (url)
+    {
+        CTFontManagerRegisterFontsForURL(url, kCTFontManagerScopeProcess, NULL );
+        CFRelease(url);
+    }
+    else
+    {
+        Surge::UserInteractions::promptError("Cannot load lato font from bundle", "Software Error");
+    }
+}
+
+
