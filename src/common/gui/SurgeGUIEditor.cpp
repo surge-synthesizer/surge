@@ -46,6 +46,9 @@ using namespace std;
 #if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
+#elif LINUX
+SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
+SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
 #else
 SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
