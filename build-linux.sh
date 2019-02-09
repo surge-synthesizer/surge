@@ -10,20 +10,24 @@ Usage: $0 [options] <command>
 
 Commands:
 
-    premake         Run premake only
+    premake         Run premake only.
 
-    build           Run the builds without cleans
-    install-local   Once assets are built, install them locally
+    build           Run the builds without cleans.
+    install         Install built assets.
 
-    clean           Clean all the builds
-    clean-all       Clean all the builds and remove generated files
+    clean           Clean all the builds.
+    clean-all       Clean all the builds and remove generated files.
 
-    uninstall       Uninstall Surge
+    uninstall       Uninstall Surge.
 
 Options:
 
-    -h, --help      Show help
-    -v, --verbose   Verbose output
+    -h, --help              Show help.
+    -v, --verbose           Verbose output.
+    -p, --project=PROJECT   Select a specific PROJECT. Can be either vst2 or vst3.
+    -d, --debug             Use a debug version.
+    -l, --local             Install/uninstall built assets under /home instead
+                            of /usr
 EOHELP
 }
 
@@ -42,7 +46,6 @@ prerequisite_check()
         exit 1
     fi
 
-    # TODO: Check premake is installed
     if [ ! $(which premake5) ]; then
         echo
         echo ${RED}ERROR: You do not have premake5 on your path${NC}
@@ -68,38 +71,40 @@ run_premake_if()
 
 run_clean()
 {
-    flavor=$1
+    project=$1
     echo
-    echo "Cleaning build - $flavor"
+    echo "Cleaning build - $project"
     make clean
 }
 
 run_build()
 {
-    flavor=$1
+    project=$1
     mkdir -p build_logs
 
     echo
-    echo Building surge-${flavor} with output in build_logs/build_${flavor}.log
+    echo Building surge-${project} with output in build_logs/build_${project}.log
+
     # Since these are piped we lose status from the tee and get wrong return code so
     set -o pipefail
+
     if [[ -z "$OPTION_verbose" ]]; then
-        make config=release_x64 2>&1 | tee build_logs/build_${flavor}.log
+        make ${OPTION_config} surge-${project} 2>&1 | tee build_logs/build_${project}.log
     else
-    	make config=release_x64 verbose=1 2>&1 | tee build_logs/build_${flavor}.log
+        make ${OPTION_config} surge-${project} verbose=1 2>&1 | tee build_logs/build_${project}.log
     fi
 
     build_suc=$?
     set +o pipefail
     if [[ $build_suc = 0 ]]; then
-        echo ${GREEN}Build of surge-${flavor} succeeded${NC}
+        echo ${GREEN}Build of surge-${project} succeeded${NC}
     else
         echo
-        echo ${RED}** Build of ${flavor} failed**${NC}
-        grep -i error build_logs/build_${flavor}.log
+        echo ${RED}** Build of ${project} failed**${NC}
+        grep -i error build_logs/build_${project}.log
         echo
-        echo ${RED}** Exiting failed ${flavor} build**${NC}
-        echo Complete information is in build_logs/build_${flavor}.log
+        echo ${RED}** Exiting failed ${project} build**${NC}
+        echo Complete information is in build_logs/build_${project}.log
 
         exit 2
     fi
@@ -108,28 +113,30 @@ run_build()
 run_all_builds()
 {
     run_premake_if
-    if [ -e "surge-vst2.make" ]; then
+
+    if [ ! -z "$OPTION_vst2" ]; then
         run_build "vst2"
     fi
 
-    run_build "vst3"
+    if [ ! -z "$OPTION_vst3" ]; then
+        run_build "vst3"
+    fi
 }
 
-run_install_local()
+run_install()
 {
-    echo "Installing local configuration.xml"
-    rsync -r "resources/data/configuration.xml" "$HOME/.local/share/Surge/"
+    echo "Installing presets"
+    rsync -r --delete "resources/data/" $OPTION_data_path
 
-    echo "Installing local presets"
-    rsync -r --delete "resources/data/" "$HOME/.local/share/Surge"
-
-    if [ -e "surge-vst2.make" ]; then
-        echo "Installing local VST2"
-        rsync -r -delete "target/vst2/Release/Surge.so" $HOME/.vst/
+    if [ ! -z "$OPTION_vst2" ]; then
+        echo "Installing VST2"
+        rsync -r -delete $OPTION_vst2_src_path $OPTION_vst2_dest_path
     fi
 
-    echo "Installing local VST3"
-    rsync -r --delete "target/vst3/Release/Surge.so" $HOME/.vst3/
+    if [ ! -z "$OPTION_vst3" ]; then
+        echo "Installing VST3"
+        rsync -r --delete $OPTION_vst2_src_path $OPTION_vst3_dest_path
+    fi
 }
 
 run_clean_builds()
@@ -139,11 +146,13 @@ run_clean_builds()
         return 0
     fi
 
-    if [ -e "surge-vst2.make" ]; then
+    if [ ! -z "$OPTION_vst2" ]; then
         run_clean "vst2"
     fi
 
-    run_clean "vst3"
+    if [ ! -z "$OPTION_vst3" ]; then
+        run_clean "vst3"
+    fi
 }
 
 run_clean_all()
@@ -156,20 +165,34 @@ run_clean_all()
 
 run_uninstall()
 {
-    rm -vf ~/.local/share/Surge/configuration.xml
-    rm -vf ~/.vst/Surge.so
-    rm -vf ~/.vst3/Surge.so
+    rm -rvf $OPTION_data_path
+
+    if [ ! -z "$OPTION_vst2" ]; then
+        rm -vf $OPTION_vst2_dest_path
+    fi
+
+    if [ ! -z "$OPTION_vst3" ]; then
+        rm -vf $OPTION_vst3_dest_path
+    fi
 }
 
 prerequisite_check
 
-ARGS=$(getopt -o hv --long help,verbose -n "$0" -- "$@")
+ARGS=$(getopt -o hvp:dl --long help,verbose,project:,debug,local -n "$0" -- "$@") \
+    || exit 1
 eval set -- "$ARGS"
 
 while true ; do
     case "$1" in
         -h|--help) OPTION_help=1 ; shift ;;
         -v|--verbose) OPTION_verbose=1 ; shift ;;
+        -p|--project)
+            case "$2" in
+                "") shift 2 ;;
+                *) OPTION_project=$2 ; shift 2 ;;
+            esac ;;
+        -d|--debug) OPTION_debug=1 ; shift ;;
+        -l|--local) OPTION_local=1 ; shift ;;
         --) shift ; break ;;
         *) break ;;
     esac
@@ -180,6 +203,36 @@ if [[ ! -z "$OPTION_help" ]]; then
     exit 0
 fi
 
+if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "vst2" ]; then
+    if [ -e "surge-vst2.make" ]; then
+        OPTION_vst2=1
+    fi
+fi
+
+if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "vst3" ]; then
+    OPTION_vst3=1
+fi
+
+if [ -z "$OPTION_debug" ]; then
+    OPTION_config="config=release_x64"
+    OPTION_vst2_src_path="target/vst2/Release/Surge.so"
+    OPTION_vst3_src_path="target/vst3/Release/Surge.so"
+else
+    OPTION_config="config=debug_x64"
+    OPTION_vst2_src_path="target/vst2/Debug/Surge-Debug.so"
+    OPTION_vst3_src_path="target/vst3/Debug/Surge-Debug.so"
+fi
+
+if [[ ! -z "$OPTION_local" ]]; then
+    OPTION_vst2_dest_path="$HOME/.vst/"
+    OPTION_vst3_dest_path="$HOME/.vst3/"
+    OPTION_data_path="$HOME/.local/share/Surge"
+else
+    OPTION_vst2_dest_path="/usr/lib/vst/"
+    OPTION_vst3_dest_path="/usr/lib/vst3/"
+    OPTION_data_path="/usr/share/Surge"
+fi
+
 case $1 in
     premake)
         run_premake
@@ -187,8 +240,8 @@ case $1 in
     build)
         run_all_builds
         ;;
-    install-local)
-        run_install_local
+    install)
+        run_install
         ;;
     clean)
         run_clean_builds
