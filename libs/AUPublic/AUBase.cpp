@@ -735,7 +735,7 @@ OSStatus			AUBase::DispatchGetProperty(	AudioUnitPropertyID 			inID,
 			{
 				result = CopyClumpName(inScope, ioClumpInfo->inID, ioClumpInfo->inDesiredLength, &ioClumpInfo->outName);
 					
-					// this is provided for compatbility with existing implementations that don't know
+					// this is provided for compatibility with existing implementations that don't know
 					// about this new mechanism
 				if (result == kAudioUnitErr_InvalidProperty)
 					result = GetProperty (inID, inScope, inElement, outData);
@@ -1404,7 +1404,7 @@ OSStatus			AUBase::DoRender(		AudioUnitRenderActionFlags &	ioActionFlags,
 		}
 		ca_require (!UsesFixedBlockSize() || inFramesToProcess == GetMaxFramesPerSlice(), ParamErr);
 
-		AUOutputElement *output = GetOutput(inBusNumber);	// will throw if non-existant
+		AUOutputElement *output = GetOutput(inBusNumber);	// will throw if non-existent
 		if (output->GetStreamFormat().NumberChannelStreams() != ioData.mNumberBuffers) {
 			DebugMessageN4("%s:%d ioData.mNumberBuffers=%u, output->GetStreamFormat().NumberChannelStreams()=%u; kAudio_ParamError",
 				__FILE__, __LINE__, (unsigned)ioData.mNumberBuffers, (unsigned)output->GetStreamFormat().NumberChannelStreams());
@@ -1522,7 +1522,7 @@ OSStatus	AUBase::DoProcess (	AudioUnitRenderActionFlags  &		ioActionFlags,
 			ca_require(inFramesToProcess <= mMaxFramesPerSlice, TooManyFrames);
 			ca_require(!UsesFixedBlockSize() || inFramesToProcess == GetMaxFramesPerSlice(), ParamErr);
 
-			AUInputElement *input = GetInput(0);	// will throw if non-existant
+			AUInputElement *input = GetInput(0);	// will throw if non-existent
 			if (input->GetStreamFormat().NumberChannelStreams() != ioData.mNumberBuffers) {
 				DebugMessageN4("%s:%d ioData.mNumberBuffers=%u, input->GetStreamFormat().NumberChannelStreams()=%u; kAudio_ParamError",
 					__FILE__, __LINE__, (unsigned)ioData.mNumberBuffers, (unsigned)input->GetStreamFormat().NumberChannelStreams());
@@ -1608,7 +1608,7 @@ OSStatus	AUBase::DoProcessMultiple (	AudioUnitRenderActionFlags  & ioActionFlags
 			
 			for (unsigned ibl = 0; ibl < inNumberInputBufferLists; ++ibl) {
 				if (inInputBufferLists[ibl] != NULL) {
-					AUInputElement *input = GetInput(ibl);	// will throw if non-existant
+					AUInputElement *input = GetInput(ibl);	// will throw if non-existent
 					unsigned expectedBufferByteSize = inFramesToProcess * input->GetStreamFormat().mBytesPerFrame;
 					
 					if (input->GetStreamFormat().NumberChannelStreams() != inInputBufferLists[ibl]->mNumberBuffers) {
@@ -1638,7 +1638,7 @@ OSStatus	AUBase::DoProcessMultiple (	AudioUnitRenderActionFlags  & ioActionFlags
 			
 			for (unsigned obl = 0; obl < inNumberOutputBufferLists; ++obl) {
 				if (ioOutputBufferLists[obl] != NULL) {
-					AUOutputElement *output = GetOutput(obl);	// will throw if non-existant
+					AUOutputElement *output = GetOutput(obl);	// will throw if non-existent
 					unsigned expectedBufferByteSize = inFramesToProcess * output->GetStreamFormat().mBytesPerFrame;
 
 					if (output->GetStreamFormat().NumberChannelStreams() != ioOutputBufferLists[obl]->mNumberBuffers) {
