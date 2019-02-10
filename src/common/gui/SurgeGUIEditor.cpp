@@ -1683,7 +1683,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                /* In the case where you have modulations like "Attack", "Pitch" and "Release" the default name
                   of the modulation will be "Attack". So if you clear "Attack" you and you haven't renamed
                   you want to change the name to "Pitch". But you have to do quite a bit of work to recreate what
-                  the next parameter short name is and comapre it in the same way it is done. So that's
+                  the next parameter short name is and compare it in the same way it is done. So that's
                   what this splat of code does.
                */
                if (clear_md[md] == command)
