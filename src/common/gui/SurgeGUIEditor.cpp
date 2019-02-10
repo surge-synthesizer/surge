@@ -1564,7 +1564,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
              // Construct submenus for explicit controller mapping
              COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
              COptionMenu *currentSub;
-             for( int mc = 0; mc < 128; ++mc )
+             for( int mc = 0; mc < 128; mc++ )
              {
                  if( mc % 20 == 0 )
                  {
@@ -1575,17 +1575,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                  }
                  
                  char name[256];
-                 sprintf(name, "CC # %d", mc );
+                 sprintf(name, "CC # %d", mc);
                  CCommandMenuItem *cmd = new CCommandMenuItem( CCommandMenuItem::Desc( name ) );
-                 cmd->setActions( [this,ccid,mc,&handled](CCommandMenuItem *men) {
+                 cmd->setActions([this,ccid,mc,&handled](CCommandMenuItem *men) {
                      handled = true;
                      synth->storage.controllers[ccid] = mc;
                      synth->storage.save_midi_controllers();
                  });
-                 currentSub->addEntry( cmd );
+                 currentSub->addEntry(cmd);
                  
              }
-             contextMenu->addEntry( midiSub, "Set Controller To..." );
+             contextMenu->addEntry(midiSub, "Set Controller To...");
              
          }
 
@@ -1609,7 +1609,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
-         if (command >= 0 && ! handled )
+         if (command >= 0 && ! handled)
          {
             if (command == id_clearallmr)
             {
@@ -1784,7 +1784,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      synth->storage.controllers[ccid] = mc;
                      synth->storage.save_midi_controllers();
                  });
-                 currentSub->addEntry( cmd );
+                 currentSub->addEntry(cmd);
                  
              }
              contextMenu->addEntry( midiSub, "Set Controller To..." );
