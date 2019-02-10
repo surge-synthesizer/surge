@@ -1561,7 +1561,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
              
              contextMenu->addEntry("-", eid++);
              
-             // Construct submenus for expicit controller mapping
+             // Construct submenus for explicit controller mapping
              COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
              COptionMenu *currentSub;
              for( int mc = 0; mc < 128; ++mc )
