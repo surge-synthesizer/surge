@@ -116,7 +116,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    contextMenu->popup();
    getFrame()->removeView(contextMenu, true); // remove from frame and forget
 
-   return kMouseEventHandled;
+   return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
 bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall )
