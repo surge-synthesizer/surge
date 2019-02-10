@@ -1569,12 +1569,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                  if( mc % 20 == 0 )
                  {
                      currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle );
-                     char name[ 256 ];
+                     char name[256];
                      sprintf( name, "CC %d -> %d", mc, min( mc+20, 127 ));
                      midiSub->addEntry( currentSub, name );
                  }
                  
-                 char name[ 256 ];
+                 char name[256];
                  sprintf( name, "CC # %d", mc );
                  CCommandMenuItem *cmd = new CCommandMenuItem( CCommandMenuItem::Desc( name ) );
                  cmd->setActions( [this,ccid,mc,&handled](CCommandMenuItem *men) {
@@ -1760,24 +1760,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          contextMenu->addEntry(txt2, eid++);
          bool cancellearn = false;
          int ccid = 0;
-          bool handled = false;
-
-            ccid = modsource - ms_ctrl1;
-            contextMenu->addEntry("-", eid++);
+         bool handled = false;
+         ccid = modsource - ms_ctrl1;
+         contextMenu->addEntry("-", eid++);
             // Construct submenus for explicit controller mapping
              COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
              COptionMenu *currentSub;
-             for( int mc = 0; mc < 128; ++mc )
+             for (int mc = 0; mc < 128; mc++ )
              {
-                 if( mc % 20 == 0 )
+                 if(mc % 20 == 0 )
                  {
                      currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle );
-                     char name[ 256 ];
+                     char name[256];
                      sprintf( name, "CC %d -> %d", mc, min( mc+20, 127 ));
                      midiSub->addEntry( currentSub, name );
                  }
                  
-                 char name[ 256 ];
+                 char name[256];
                  sprintf( name, "CC # %d", mc );
                  CCommandMenuItem *cmd = new CCommandMenuItem( CCommandMenuItem::Desc( name ) );
                  cmd->setActions( [this,ccid,mc,&handled](CCommandMenuItem *men) {
