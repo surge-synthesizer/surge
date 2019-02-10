@@ -96,19 +96,14 @@ Generally: Comment your code. Someone coming after you will thank you. And that 
 Format:
 
 ```
-<Short summary putting the change into nutshell less than 80 characters>
+<short summary one-line summary>
 
-<Multi-paragraph (often just one) long description describing what the change does>
+<long description describing the change in detail:
+
+<optional tag>
 ```
 
-Optionally after the long description:
-
-```
-Fixes: #<issue 1>
-Fixes: #<issue 2>
-...
-Fixes: #<issue n>
-```
+A tag can be either `Related: <issue>` or `Closed: <issue>`.
 
 A good example is the commit message from
 [8a769c](https://github.com/surge-synthesizer/surge/commit/8a769c87220959997633a32baabe76a2887d6d18)
