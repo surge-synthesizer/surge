@@ -341,8 +341,26 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
    for (auto &p : alldirs )
    {
       PatchCategory c;
+#if WINDOWS
+      /*
+      ** Windows filesystem names are properly wstrings which, if we want them to 
+      ** display properly in vstgui, need to be converted to UTF8 using the 
+      ** windows widechar API. Linux and Mac do not require this.
+      */
+      std::wstring str = p.wstring().substr(patchpathSubstrLength);
+      std::string ret;
+      int len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0, NULL, NULL);
+      if (len > 0)
+      {
+          ret.resize(len);
+          WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len, NULL, NULL);
+      }
+
+      c.name = ret;
+#else
       c.name = p.generic_string().substr(patchpathSubstrLength);
       c.numberOfPatchesInCatgory = 0;
+#endif
       
       for (auto& f : fs::directory_iterator(p))
       {
@@ -351,8 +369,21 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
               Patch e;
               e.category = category;
               e.path = f.path();
+#if WINDOWS
+              std::wstring str = f.path().filename().wstring();
+              str = str.substr(0, str.size()-4);
+              std::string ret;
+              int len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0, NULL, NULL);
+              if (len > 0)
+              {
+                  ret.resize(len);
+                  WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len, NULL, NULL);
+              }
+              e.name = ret;
+#else
               e.name = f.path().filename().generic_string();
               e.name = e.name.substr(0, e.name.size() - 4);
+#endif              
               patch_list.push_back(e);
 
               c.numberOfPatchesInCatgory ++;
