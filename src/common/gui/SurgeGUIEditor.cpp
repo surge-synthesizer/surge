@@ -1564,13 +1564,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
              // Construct submenus for expicit controller mapping
              COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
              COptionMenu *currentSub;
-             for( int mc = 0; mc < 127; ++mc )
+             for( int mc = 0; mc < 128; ++mc )
              {
-                 if( mc % 10 == 0 )
+                 if( mc % 20 == 0 )
                  {
                      currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle );
                      char name[ 256 ];
-                     sprintf( name, "CC %d -> %d", mc, min( mc+10, 127 ));
+                     sprintf( name, "CC %d -> %d", mc, min( mc+20, 127 ));
                      midiSub->addEntry( currentSub, name );
                  }
                  
