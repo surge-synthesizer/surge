@@ -229,10 +229,10 @@ void SurgeGUIEditor::idle()
 
       if (polydisp)
       {
-         CNumberField *cnpd = static_cast< CNumberField* >( polydisp );
+         CNumberField *cnpd = static_cast< CNumberField* >(polydisp);
          int prior = cnpd->getPoly();
-         cnpd->setPoly( synth->polydisplay );
-         if( prior != synth->polydisplay )
+         cnpd->setPoly(synth->polydisplay);
+         if(prior != synth->polydisplay)
              cnpd->invalid();
       }
 
@@ -346,14 +346,14 @@ void SurgeGUIEditor::idle()
                 ** So have a second array and drop select items in here so we
                 ** can actually get them redrawing when an external param set occurs.
                 */
-                CControl *cc = nonmod_param[ j ];
+                CControl *cc = nonmod_param[j];
                 cc->setValue(synth->getParameter01(j));
                 cc->setDirty();
                 cc->invalid();
             }
             else
             {
-                // printf( "Bailing out of all possible refreshes on %d\n", j );
+                // printf( "Bailing out of all possible refreshes on %d\n", j);
                 // This is not really a problem
             }
          }
@@ -426,7 +426,7 @@ void SurgeGUIEditor::refresh_mod()
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
 {
-    if(code.virt != 0 )
+    if(code.virt != 0)
     {
         switch (code.virt)
         {
@@ -1127,7 +1127,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
           bool curr = ((CSurgeSlider*)param[i])->disabled;
           ((CSurgeSlider*)param[i])->disabled = true;
-          if( ! curr )
+          if(! curr)
             {
               param[i]->setDirty();
               param[i]->invalid();
@@ -1175,10 +1175,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
     *
     * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan 2019.
     */
-   patchName->setImmediateTextChange( true );
-   patchCategory->setImmediateTextChange( true );
-   patchCreator->setImmediateTextChange( true );
-   patchComment->setImmediateTextChange( true );
+   patchName->setImmediateTextChange(true);
+   patchCategory->setImmediateTextChange(true);
+   patchCreator->setImmediateTextChange(true);
+   patchComment->setImmediateTextChange(true);
    
    patchName->setBackColor(kWhiteCColor);
    patchCategory->setBackColor(kWhiteCColor);
@@ -1564,28 +1564,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
              // Construct submenus for expicit controller mapping
              COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
              COptionMenu *currentSub;
-             for( int mc = 0; mc < 127; ++mc )
+             for(int mc = 0; mc < 128; mc++)
              {
-                 if( mc % 10 == 0 )
+                 if(mc % 20 == 0)
                  {
-                     currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle );
-                     char name[ 256 ];
-                     sprintf( name, "CC %d -> %d", mc, min( mc+10, 127 ));
-                     midiSub->addEntry( currentSub, name );
+                     currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                     char name[256];
+                     sprintf(name, "CC %d -> %d", mc, min( mc+20, 127));
+                     midiSub->addEntry(currentSub, name);
                  }
                  
-                 char name[ 256 ];
-                 sprintf( name, "CC # %d", mc );
-                 CCommandMenuItem *cmd = new CCommandMenuItem( CCommandMenuItem::Desc( name ) );
-                 cmd->setActions( [this,ccid,mc,&handled](CCommandMenuItem *men) {
+                 char name[256];
+                 sprintf(name, "CC # %d", mc);
+                 CCommandMenuItem *cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+                 cmd->setActions([this,ccid,mc,&handled](CCommandMenuItem *men) {
                      handled = true;
                      synth->storage.controllers[ccid] = mc;
                      synth->storage.save_midi_controllers();
                  });
-                 currentSub->addEntry( cmd );
+                 currentSub->addEntry(cmd);
                  
              }
-             contextMenu->addEntry( midiSub, "Set Controller To..." );
+             contextMenu->addEntry(midiSub, "Set Controller To...");
              
          }
 
@@ -1609,7 +1609,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
-         if (command >= 0 && ! handled )
+         if (command >= 0 && ! handled)
          {
             if (command == id_clearallmr)
             {
@@ -1695,7 +1695,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   {
                       if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
                                   clearControlTargetNames[0].c_str(),
-                                  15) == 0 )
+                                  15) == 0)
                       {
                           // So my modulator is named after my short name. I haven't been renamed. So I want to
                           // reset at least to "-" unless someone is after me
@@ -1713,7 +1713,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   {
                      // And this is where we apply the name refresh, of course.
                      strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], newName.c_str(), 15);
-                     synth->storage.getPatch().CustomControllerLabel[ccid][ 15 ] = 0;
+                     synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
                      ((CModulationSourceButton*)control)
                          ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
                      control->setDirty();
@@ -2526,12 +2526,12 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         zoomSubMenu->addEntry(zcmd); zid++;
     }
 
-    zoomSubMenu->addEntry( "-", zid++ );
+    zoomSubMenu->addEntry("-", zid++);
     
-    for(auto jog : { -25, -10, 10, 25 } ) // These are somewhat arbitrary reasonable defaults also
+    for(auto jog : { -25, -10, 10, 25 }) // These are somewhat arbitrary reasonable defaults also
     {
         std::ostringstream lab;
-        if( jog > 0 )
+        if( jog > 0)
             lab << "Grow by " << jog << "%";
         else
             lab << "Shrink by " << -jog << "%";
@@ -2562,7 +2562,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     int command = settingsMenu->getLastResult();
     frame->removeView(settingsMenu, true);
 
-    if( handled )
+    if(handled)
     {
         // Someone else got it
     }
@@ -2594,7 +2594,7 @@ CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
     frame->getCurrentMouseLocation(where);
     where = frame->localToFrame(where);
 
-#if ( TARGET_VST2 || TARGET_VST3 )
+#if (TARGET_VST2 || TARGET_VST3)
     CGraphicsTransform vstfix = frame->getTransform().inverse();
     vstfix.transform(where);
     vstfix.transform(where);
