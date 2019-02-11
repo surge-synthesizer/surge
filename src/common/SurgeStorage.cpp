@@ -43,24 +43,6 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 using namespace std;
 
-#if MAC
-#include <CoreFoundation/CoreFoundation.h>
-string getSelfLocation()
-{
-   char path[PATH_MAX];
-   // TODO: use a build-provided symbol
-   CFStringRef selfName = CFSTR("com.vemberaudio.plugins.surge");
-   CFBundleRef mainBundle = CFBundleGetBundleWithIdentifier(selfName);
-   CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
-   CFStringRef str = CFURLCopyFileSystemPath(resourcesURL, kCFURLPOSIXPathStyle);
-   CFRelease(resourcesURL);
-   CFStringGetCString(str, path, FILENAME_MAX, kCFStringEncodingASCII);
-   CFRelease(str);
-   string out(path);
-   return out;
-}
-#endif
-
 SurgeStorage::SurgeStorage()
 {
    _patch.reset(new SurgePatch(this));
