@@ -1,10 +1,10 @@
 # Developer Guide
 
-As we've done several pull requests and reviews, a group of developers have convened on this set of 
-sort of standards for developing with surge. None of these are set in stone but PR reviewers will
-have an easier time if you skew close to them.
+## Introduction
 
-And hop on slack anytime if you have questions. Asking before you start is welcome.
+This document contains the guidelines that we use in Surge development. Please
+follow them whenever possible. If you have further questions look at README.md
+for an up to date list of Surge communication channels.
 
 ## Code Review Culture
 
