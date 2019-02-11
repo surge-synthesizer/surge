@@ -1,4 +1,4 @@
-# Some tips for developing on Surge
+# Developer Guide
 
 As we've done several pull requests and reviews, a group of developers have convened on this set of 
 sort of standards for developing with surge. None of these are set in stone but PR reviewers will
@@ -111,6 +111,8 @@ which @baconpaul rewrote after a review from @jsakkine.
 
 If you want to change your commit message before doing a PR, you can do `git commit --amend` as documented
 [here](https://www.atlassian.com/git/tutorials/rewriting-history) and elsewhere.
+
+
 
 ## Miscellany
 
