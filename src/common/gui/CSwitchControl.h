@@ -23,6 +23,7 @@ public:
 
 private:
    bool down;
+   float heightOfSingleImage;
 
    CLASS_METHODS(CSwitchControl, VSTGUI::CControl)
 };
