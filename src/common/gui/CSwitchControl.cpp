@@ -10,7 +10,8 @@ CSwitchControl::CSwitchControl(const CRect& size,
 {
    down = false;
    is_itype = false;
-}
+   heightOfSingleImage = size.getHeight(); 
+ }
 
 void CSwitchControl::draw(CDrawContext* dc)
 {
@@ -26,7 +27,7 @@ void CSwitchControl::draw(CDrawContext* dc)
       }
       else
       {
-         CPoint where(0, (down ? (pBackground->getHeight() / 2) : 0));
+         CPoint where(0, (down ? heightOfSingleImage : 0));
          pBackground->draw(dc, size, where, 0xff);
       }
    }
