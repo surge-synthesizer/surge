@@ -227,6 +227,7 @@ function plugincommon()
         "src/common/SurgeStorageLoadWavetable.cpp",
         "src/common/SurgeSynthesizer.cpp",
         "src/common/SurgeSynthesizerIO.cpp",
+        "src/common/UserDefaults.cpp",
         "libs/xml/tinyxml.cpp",
         "libs/xml/tinyxmlerror.cpp",
         "libs/xml/tinyxmlparser.cpp",

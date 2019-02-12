@@ -150,6 +150,7 @@ private:
    
 private:
    std::function< void(SurgeGUIEditor *) > zoom_callback;
+   bool zoomInvalid;
    
    SurgeBitmaps bitmap_keeper;
 

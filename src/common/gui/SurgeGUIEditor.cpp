@@ -22,6 +22,7 @@
 #include "CNumberField.h"
 #include "UserInteractions.h"
 #include "DisplayInfo.h"
+#include "UserDefaults.h"
 
 #include <iostream>
 #include <iomanip>
@@ -152,8 +153,9 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
 #endif
    zoom_callback = [](SurgeGUIEditor* f) {};
-   setZoomFactor(100);
-
+   int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
+   setZoomFactor(userDefaultZoomFactor);
+   zoomInvalid = (userDefaultZoomFactor != 100);
 
 #if USE_RUNTIME_LOADED_FONTS
    /*
@@ -207,6 +209,11 @@ SurgeGUIEditor::~SurgeGUIEditor()
 
 void SurgeGUIEditor::idle()
 {
+    if(zoomInvalid)
+    {
+        setZoomFactor(getZoomFactor());
+        zoomInvalid = false;
+    }
 #if TARGET_VST2 && LINUX
    if (!super::idle2())
        return;
@@ -1323,6 +1330,9 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    */
    frame->registerKeyboardHook(this);
    openOrRecreateEditor();
+
+   if(getZoomFactor() != 100)
+       zoomInvalid = true;
 
    return true;
 }
@@ -2625,7 +2635,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                                  handled = true;
                              }
         );
-    zoomSubMenu->addEntry(biggestZ);
+    zoomSubMenu->addEntry(biggestZ); zid++;
 
     CCommandMenuItem *smallestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Smallest"));
     smallestZ->setActions([this, &handled](CCommandMenuItem *m)
@@ -2634,7 +2644,19 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                                  handled = true;
                              }
         );
-    zoomSubMenu->addEntry(smallestZ);
+    zoomSubMenu->addEntry(smallestZ); zid++;
+
+    zoomSubMenu->addEntry("-", zid++);
+    std::ostringstream zss;
+    zss << "Set " << zoomFactor << "% as default";
+    CCommandMenuItem *defaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(zss.str().c_str()));
+    defaultZ->setActions([this, &handled](CCommandMenuItem *m)
+                             {
+                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", this->zoomFactor);
+                                 handled = true;
+                             }
+        );
+    zoomSubMenu->addEntry(defaultZ); zid++;
 
     settingsMenu->addEntry(zoomSubMenu, "Zoom"); eid++;
 
