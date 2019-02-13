@@ -130,12 +130,14 @@ run_install()
 
     if [ ! -z "$OPTION_vst2" ]; then
         echo "Installing VST2"
-        rsync -r -delete $OPTION_vst2_src_path $OPTION_vst2_dest_path
+        rsync -r -delete $OPTION_vst2_src_path \
+                         $OPTION_vst2_dest_path/$OPTION_dest_plugin_name
     fi
 
     if [ ! -z "$OPTION_vst3" ]; then
         echo "Installing VST3"
-        rsync -r --delete $OPTION_vst2_src_path $OPTION_vst3_dest_path
+        rsync -r --delete $OPTION_vst2_src_path \
+                          $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
     fi
 }
 
@@ -168,11 +170,11 @@ run_uninstall()
     rm -rvf $OPTION_data_path
 
     if [ ! -z "$OPTION_vst2" ]; then
-        rm -vf $OPTION_vst2_dest_path
+        rm -vf $OPTION_vst2_dest_path/$OPTION_dest_plugin_name
     fi
 
     if [ ! -z "$OPTION_vst3" ]; then
-        rm -vf $OPTION_vst3_dest_path
+        rm -vf $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
     fi
 }
 
@@ -217,19 +219,21 @@ if [ -z "$OPTION_debug" ]; then
     OPTION_config="config=release_x64"
     OPTION_vst2_src_path="target/vst2/Release/Surge.so"
     OPTION_vst3_src_path="target/vst3/Release/Surge.so"
+    OPTION_dest_plugin_name="Surge.so"
 else
     OPTION_config="config=debug_x64"
     OPTION_vst2_src_path="target/vst2/Debug/Surge-Debug.so"
     OPTION_vst3_src_path="target/vst3/Debug/Surge-Debug.so"
+    OPTION_dest_plugin_name="Surge-Debug.so"
 fi
 
 if [[ ! -z "$OPTION_local" ]]; then
-    OPTION_vst2_dest_path="$HOME/.vst/"
-    OPTION_vst3_dest_path="$HOME/.vst3/"
+    OPTION_vst2_dest_path="$HOME/.vst"
+    OPTION_vst3_dest_path="$HOME/.vst3"
     OPTION_data_path="$HOME/.local/share/Surge"
 else
-    OPTION_vst2_dest_path="/usr/lib/vst/"
-    OPTION_vst3_dest_path="/usr/lib/vst3/"
+    OPTION_vst2_dest_path="/usr/lib/vst"
+    OPTION_vst3_dest_path="/usr/lib/vst3"
     OPTION_data_path="/usr/share/Surge"
 fi
 
