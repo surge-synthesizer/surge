@@ -2613,6 +2613,14 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     settingsMenu->addSeparator(eid++);
 
+    addCallbackMenu(settingsMenu, "Open User Data Folder", [this]() {
+       Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
+    });
+
+    addCallbackMenu(settingsMenu, "Open Factory Data Folder", [this]() {
+       Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath);
+    });
+
     addCallbackMenu(settingsMenu, "SurgeManual", []() {
        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
     });

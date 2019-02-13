@@ -124,7 +124,9 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
     bool amIChecked = false;
     PatchCategory cat = storage->patch_category[ c ];
     if (rootCall && ! cat.isRoot) return false; // stop it going in the top menu which is a straight iteration
-    
+    if (cat.numberOfPatchesInCategoryAndChildren == 0)
+       return false; // Don't do empty categories
+
     int splitcount = 256;
     // Go through the whole patch list in alphabetical order and filter
     // out only the patches that belong to the current category.
@@ -199,8 +201,10 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         if (n_subc > 1)
             sprintf(name, "%s - %i", menuName.c_str(), subc + 1);
         else
-            strncpy(name, menuName.c_str(), NAMECHARS);
-        
+        {
+           strncpy(name, menuName.c_str(), NAMECHARS);
+        }
+
         if (!single_category)
         {
             CMenuItem *entry = contextMenu->addEntry(subMenu, name);

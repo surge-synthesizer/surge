@@ -26,6 +26,7 @@
 
 #include <fstream>
 #include <iterator>
+#include <functional>
 
 namespace fs = std::experimental::filesystem;
 
@@ -451,6 +452,7 @@ struct PatchCategory
    bool isRoot;
 
    int numberOfPatchesInCatgory;
+   int numberOfPatchesInCategoryAndChildren;
 };
 
 enum sub3_copysource
@@ -495,8 +497,16 @@ public:
    float poly_aftertouch[2][128];
    float modsource_vu[n_modsources];
    void refresh_wtlist();
+   void refresh_wtlistAddDir(bool userDir, std::string subdir);
    void refresh_patchlist();
    void refreshPatchlistAddDir(bool userDir, std::string subdir);
+
+   void refreshPatchOrWTListAddDir(bool userDir,
+                                   std::string subdir,
+                                   std::function<bool(std::string)> filterOp,
+                                   std::vector<Patch>& items,
+                                   std::vector<PatchCategory>& categories);
+
    void perform_queued_wtloads();
 
    void load_wt(int id, Wavetable* wt);
@@ -520,6 +530,8 @@ public:
    // The in-memory wavetable database.
    std::vector<Patch> wt_list;
    std::vector<PatchCategory> wt_category;
+   int firstThirdPartyWTCategory;
+   int firstUserWTCategory;
    std::vector<int> wtOrdering;
    std::vector<int> wtCategoryOrdering;
 

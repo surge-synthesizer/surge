@@ -37,6 +37,12 @@ namespace Surge
         {
             ShellExecute(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
         }
+
+        void openFolderInFileBrowser(const std::string& folder)
+        {
+           std::string url = "file://" + folder;
+           UserInteractions::openURL(url);
+        }
     };
 };
 
