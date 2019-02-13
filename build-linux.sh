@@ -24,7 +24,8 @@ Options:
 
     -h, --help              Show help.
     -v, --verbose           Verbose output.
-    -p, --project=PROJECT   Select a specific PROJECT. Can be either vst2 or vst3.
+    -p, --project=PROJECT   Select a specific PROJECT, which can be either
+                            vst2, vst3 or headless.
     -d, --debug             Use a debug version.
     -l, --local             Install/uninstall built assets under /home instead
                             of /usr
@@ -121,6 +122,10 @@ run_all_builds()
     if [ ! -z "$OPTION_vst3" ]; then
         run_build "vst3"
     fi
+
+    if [ ! -z "$OPTION_headless" ]; then
+        run_build "headless"
+    fi
 }
 
 run_install()
@@ -213,6 +218,10 @@ fi
 
 if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "vst3" ]; then
     OPTION_vst3=1
+fi
+
+if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "headless" ]; then
+    OPTION_headless=1
 fi
 
 if [ -z "$OPTION_debug" ]; then
