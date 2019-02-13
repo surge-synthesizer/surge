@@ -144,6 +144,12 @@ run_install()
         rsync -r --delete $OPTION_vst3_src_path \
                           $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
     fi
+
+    if [ ! -z "$OPTION_headless" ]; then
+        echo "Installing Headless"
+        rsync -r --delete $OPTION_headless_src_path \
+                          $OPTION_headless_dest_path/$OPTION_dest_headless_name
+    fi
 }
 
 run_clean_builds()
@@ -180,6 +186,10 @@ run_uninstall()
 
     if [ ! -z "$OPTION_vst3" ]; then
         rm -vf $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
+    fi
+
+    if [ ! -z "$OPTION_headless" ]; then
+        rm -vf $OPTION_headless_dest_path/$OPTION_dest_headless_name
     fi
 }
 
@@ -228,21 +238,27 @@ if [ -z "$OPTION_debug" ]; then
     OPTION_config="config=release_x64"
     OPTION_vst2_src_path="target/vst2/Release/Surge.so"
     OPTION_vst3_src_path="target/vst3/Release/Surge.so"
+    OPTION_headless_src_path="target/headless/Release/Surge"
     OPTION_dest_plugin_name="Surge.so"
+    OPTION_dest_headless_name="Surge-Headless"
 else
     OPTION_config="config=debug_x64"
     OPTION_vst2_src_path="target/vst2/Debug/Surge-Debug.so"
     OPTION_vst3_src_path="target/vst3/Debug/Surge-Debug.so"
+    OPTION_headless_src_path="target/headless/Release/Surge-Debug"
     OPTION_dest_plugin_name="Surge-Debug.so"
+    OPTION_dest_headless_name="Surge-Headless-Debug"
 fi
 
 if [[ ! -z "$OPTION_local" ]]; then
     OPTION_vst2_dest_path="$HOME/.vst"
     OPTION_vst3_dest_path="$HOME/.vst3"
+    OPTION_headless_dest_path="$HOME/bin"
     OPTION_data_path="$HOME/.local/share/Surge"
 else
     OPTION_vst2_dest_path="/usr/lib/vst"
     OPTION_vst3_dest_path="/usr/lib/vst3"
+    OPTION_headless_dest_path="/usr/bin"
     OPTION_data_path="/usr/share/Surge"
 fi
 
