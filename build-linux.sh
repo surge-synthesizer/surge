@@ -136,7 +136,7 @@ run_install()
 
     if [ ! -z "$OPTION_vst3" ]; then
         echo "Installing VST3"
-        rsync -r --delete $OPTION_vst2_src_path \
+        rsync -r --delete $OPTION_vst3_src_path \
                           $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
     fi
 }
