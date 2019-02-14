@@ -1363,7 +1363,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          CRect r = control->getViewSize();
          CRect menuRect;
 
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
          int a = limit_range((int)((3 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
 
@@ -1415,7 +1418,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       {
          CRect r = control->getViewSize();
          CRect menuRect;
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
          
          int a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
@@ -1464,7 +1470,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if (button & kRButton)
       {
          CRect menuRect;
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
          
          menuRect.offset(where.x, where.y);
          COptionMenu* contextMenu =
@@ -1743,7 +1752,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if ((button & kRButton) && (p->valtype == vt_float))
       {
          CRect menuRect;
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
 
          menuRect.offset(where.x, where.y);
 
@@ -2057,7 +2069,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       CRect r = control->getViewSize();
       CRect menuRect;
-      CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();;
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+         
       menuRect.offset(where.x, where.y);
 
       showSettingsMenu(menuRect);
@@ -2576,44 +2591,6 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
     }
 
-}
-
-CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
-{
-    /*
-    ** Please see github issue 356 for discussion on this.
-    **
-    ** vstgui has several bugs around zoom handling. A particular one is the fuction frame->getCurrentMouseLocation() applies the transform incorrectly.
-    ** Rather than applying it forward and backwards, it applies it forward twice. This means using it to pop menus when you are scaled does exactly the wrong thing.
-    ** 
-    ** Our zoom on AU uses a different path, so doesn't need remediating. So we need to conditionally inject code until this bug is fixed and
-    ** make it clear where that is injected. This macro - USE_VST2_MOUSE_LOCATION_FIX(rectname) does that.
-    */
-
-    CPoint where;
-    frame->getCurrentMouseLocation(where);
-    where = frame->localToFrame(where);
-
-#if ( TARGET_VST2 || TARGET_VST3 )
-    CGraphicsTransform vstfix = frame->getTransform().inverse();
-    vstfix.transform(where);
-    vstfix.transform(where);
-
-#if LINUX
-    /*
-    ** FIXME: For some reason, linux is even one more transform broken than Mac and Windows.
-    ** There is a vstgui bug here we need to find, but for now, if you have a hammer, the whole
-    ** world looks like a nail, as they say.
-    **
-    ** This change still leaves menus near the edge of the window mis-clipped in zoom.
-    */
-    vstfix.transform(where);
-#endif
-
-#endif
-
-    
-    return where;
 }
 
 int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of range
