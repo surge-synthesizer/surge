@@ -81,10 +81,11 @@
 ** This is windows only. Mac and Linux use different resource approaches
 */
 #define SCALABLE_100_OFFSET 70000
-#define SCALABLE_150_OFFSET 71000
-#define SCALABLE_200_OFFSET 72000
-#define SCALABLE_300_OFFSET 73000
-#define SCALABLE_400_OFFSET 74000
+#define SCALABLE_125_OFFSET 71000
+#define SCALABLE_150_OFFSET 72000
+#define SCALABLE_200_OFFSET 73000
+#define SCALABLE_300_OFFSET 74000
+#define SCALABLE_400_OFFSET 75000
 
 #include "scalableresource.h" // found in src/windows
 #endif
