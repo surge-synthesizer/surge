@@ -27,6 +27,8 @@
 #include <Shlobj.h>
 #endif
 
+#include <sstream>
+
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
@@ -233,6 +235,23 @@ void SurgeStorage::refresh_patchlist()
 
    refreshPatchlistAddDir(false, "patches_factory");
    firstThirdPartyCategory = patch_category.size();
+
+   /*
+   ** Do a quick sanity check here - if there are no patches in factory we are mis-installed
+   */
+   int totalFactory = 0;
+   for(auto &cat : patch_category)
+       totalFactory += cat.numberOfPatchesInCatgory;
+   if(totalFactory == 0)
+   {
+      std::ostringstream ss;
+      ss << "Surge was unable to load factory patches from '" << datapath
+         << "'. Surge found 0 factory patches. Please reinstall using the Surge installer.";
+      Surge::UserInteractions::promptError(ss.str(),
+                                           "Surge Installation Error");
+
+   }
+
    refreshPatchlistAddDir(false, "patches_3rdparty");
    firstUserCategory = patch_category.size();
    refreshPatchlistAddDir(true, "");
@@ -330,15 +349,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
       ** windows widechar API. Linux and Mac do not require this.
       */
       std::wstring str = p.wstring().substr(patchpathSubstrLength);
-      std::string ret;
-      int len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0, NULL, NULL);
-      if (len > 0)
-      {
-          ret.resize(len);
-          WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len, NULL, NULL);
-      }
-
-      c.name = ret;
+      c.name = Surge::Storage::wstringToUTF8(str);
 #else
       c.name = p.generic_string().substr(patchpathSubstrLength);
       c.numberOfPatchesInCatgory = 0;
@@ -354,14 +365,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 #if WINDOWS
               std::wstring str = f.path().filename().wstring();
               str = str.substr(0, str.size()-4);
-              std::string ret;
-              int len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0, NULL, NULL);
-              if (len > 0)
-              {
-                  ret.resize(len);
-                  WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len, NULL, NULL);
-              }
-              e.name = ret;
+              e.name = Surge::Storage::wstringToUTF8(str);
 #else
               e.name = f.path().filename().generic_string();
               e.name = e.name.substr(0, e.name.size() - 4);
@@ -386,16 +390,22 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
    int idx=0;
    for (auto &pc : local_patch_category)
        nameToLocalIndex[ pc.name ] = idx++;
+
+   std::string pathSep = "/";
+#if WINDOWS
+   pathSep = "\\";
+#endif
+
    for (auto &pc : local_patch_category)
    {
-       if (pc.name.find("/") == std::string::npos)
+       if (pc.name.find(pathSep) == std::string::npos)
        {
            pc.isRoot = true;
        }
        else
        {
            pc.isRoot = false;
-           std::string parent = pc.name.substr(0, pc.name.find_last_of("/") );
+           std::string parent = pc.name.substr(0, pc.name.find_last_of(pathSep) );
            local_patch_category[ nameToLocalIndex[ parent ] ].children.push_back( pc );
        }
    }
@@ -439,36 +449,50 @@ void SurgeStorage::refresh_wtlist()
 
    if (!fs::is_directory(patchpath))
    {
+      std::ostringstream ss;
+      ss << "Surge was unable to load wavetables from '" << patchpath.generic_string()
+         << "'. The directory does not exist. Please reinstall using the Surge installer.";
+      Surge::UserInteractions::promptError(ss.str(),
+                                           "Surge Installation Error");
+
       return;
    }
+
+   std::vector<std::string> supportedTableFileTypes;
+   supportedTableFileTypes.push_back(".wt");
+   supportedTableFileTypes.push_back(".wav");
 
    for (auto& p : fs::directory_iterator(patchpath))
    {
       if (fs::is_directory(p))
       {
          PatchCategory c;
+#if WINDOWS
+         std::wstring str = p.path().filename().wstring();
+         c.name = Surge::Storage::wstringToUTF8(str);
+#else
          c.name = p.path().filename().generic_string();
+#endif
          wt_category.push_back(c);
 
          for (auto& f : fs::directory_iterator(p))
          {
-            if (_stricmp(f.path().extension().generic_string().c_str(), ".wt") == 0)
+            for(auto &ft : supportedTableFileTypes )
             {
-               Patch e;
-               e.category = category;
-               e.path = f.path();
-               e.name = f.path().filename().generic_string();
-               e.name = e.name.substr(0, e.name.size() - 3);
-               wt_list.push_back(e);
-            }
-            else if (_stricmp(f.path().extension().generic_string().c_str(), ".wav") == 0)
-            {
-               Patch e;
-               e.category = category;
-               e.path = f.path();
-               e.name = f.path().filename().generic_string();
-               e.name = e.name.substr(0, e.name.size() - 4);
-               wt_list.push_back(e);
+                if (_stricmp(f.path().extension().generic_string().c_str(), ft.c_str()) == 0)
+                {
+                    Patch e;
+                    e.category = category;
+                    e.path = f.path();
+#if WINDOWS
+                    std::wstring str = f.path().filename().wstring();
+                    e.name = Surge::Storage::wstringToUTF8(str.substr(0, str.size() - ft.size()));
+#else
+                    e.name = f.path().filename().generic_string();
+                    e.name = e.name.substr(0, e.name.size() - ft.size());
+#endif 
+                    wt_list.push_back(e);
+                }
             }
          }
 
@@ -476,11 +500,13 @@ void SurgeStorage::refresh_wtlist()
       }
    }
 
-   if (wt_category.size() < 1 && wt_list.size() < 1)
+   if (wt_category.size() == 0 || wt_list.size() == 0)
    {
-       Surge::UserInteractions::promptError(std::string("Surge was unable to load wavetables from disk. ") +
-                                            "Please reinstall using the surge installer.",
-                                            "Surge Installation Error" );
+      std::ostringstream ss;
+      ss << "Surge was unable to load wavetables from '" << patchpath.generic_string()
+         << "'. The directory contains no wavetables. Please reinstall using the Surge installer.";
+      Surge::UserInteractions::promptError(ss.str(),
+                                           "Surge Installation Error" );
    }
 
    wtCategoryOrdering = std::vector<int>(wt_category.size());
@@ -1106,20 +1132,36 @@ float envelope_rate_linear(float x)
 
 namespace Surge
 {
-    namespace Storage
-    {
-        bool isValidName(const std::string &patchName)
-        {
-            bool valid = false;
-            
-            // No need to validate size separately as an empty string won't have visible characters.
-            for (const char &c : patchName)
-                if (std::isalnum(c) || std::ispunct(c))
-                    valid = true;
-                else if (c != ' ')
-                    return false;
+namespace Storage
+{
+bool isValidName(const std::string &patchName)
+{
+    bool valid = false;
 
-            return valid;
-        }
-    }
+    // No need to validate size separately as an empty string won't have visible characters.
+    for (const char &c : patchName)
+        if (std::isalnum(c) || std::ispunct(c))
+            valid = true;
+        else if (c != ' ')
+            return false;
+
+    return valid;
 }
+
+#if WINDOWS
+std::string wstringToUTF8(const std::wstring &str)
+{
+    std::string ret;
+    int len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0, NULL, NULL);
+    if (len > 0)
+    {
+        ret.resize(len);
+        WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len, NULL, NULL);
+    }
+    return ret;
+}
+#endif    
+    
+} // end ns Surge::Storage
+} // end ns Surge
+

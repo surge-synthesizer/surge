@@ -538,6 +538,7 @@ private:
    StepSequencerStorage clipboard_stepsequences[n_lfos];
    std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice;
    Wavetable clipboard_wt[n_oscs];
+
 };
 
 float note_to_pitch(float);
@@ -553,7 +554,16 @@ namespace Surge
 {
 namespace Storage
 {
-    bool isValidName(const std::string &name);
+bool isValidName(const std::string &name);
+
+#if WINDOWS
+/*
+** Windows filesystem names are properly wstrings which, if we want them to
+** display properly in vstgui, need to be converted to UTF8 using the
+** windows widechar API. Linux and Mac do not require this.
+*/
+std::string wstringToUTF8(const std::wstring &ws);
+#endif
 }
 }
 
