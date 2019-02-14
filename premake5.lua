@@ -296,7 +296,7 @@ function plugincommon()
 
         buildoptions {
             "-Wno-unused-variable",
-            "`pkg-config --cflags cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
+            "`pkg-config --cflags cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util x11`",
             "-std=c++14"
         }
 
@@ -333,7 +333,7 @@ function plugincommon()
         }
 
         linkoptions {
-            "`pkg-config --libs cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util`",
+            "`pkg-config --libs cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util x11`",
             "-Wl,--no-undefined",
         }
     elseif (os.istarget("windows")) then
