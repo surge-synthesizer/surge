@@ -54,6 +54,11 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       // srand(2);
       float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
       bool use_display = osc->allow_display();
+
+      // Mis-install check #2
+      if (uses_wavetabledata(oscdata->type.val.i) && storage->wt_list.size() == 0)
+          use_display = false;
+
       if (use_display)
          osc->init(disp_pitch_rs, true);
       int block_pos = BLOCK_SIZE_OS;
