@@ -433,6 +433,13 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
         case VKEY_TAB:
             toggle_mod_editing();
             return 1;
+#if !LINUX
+            /* 
+            ** On linux the arrow keys navigate menus but do it in the same window as the
+            ** UI, so this eating of the key causes core dumps and makes menus non-navigable.
+            ** (On Mac and Win menus are separate parent windows so have a different 
+            ** event loop)
+            */
         case VKEY_LEFT:
             synth->incrementCategory(false);
             return 1;
@@ -445,6 +452,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
         case VKEY_DOWN:
             synth->incrementPatch(true);
             return 1;
+#endif
         }
     }
     else
