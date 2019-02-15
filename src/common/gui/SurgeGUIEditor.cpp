@@ -30,18 +30,27 @@
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
 #endif
-/*
-#elif TARGET_VST3
-#include "surgeprocessor.h"
-#elif TARGET_VST2
-#include "vstlayer.h"
-#endif*/
 
-//#include <commctrl.h>
+#if MAC || WINDOWS
+#define USE_RUNTIME_LOADED_FONTS 1
+#else
+#define USE_RUNTIME_LOADED_FONTS 0
+#endif
+
+#if USE_RUNTIME_LOADED_FONTS
+#include "RuntimeFont.h"
+#endif
+
 const int yofs = 10;
 
 using namespace VSTGUI;
 using namespace std;
+
+
+#if USE_RUNTIME_LOADED_FONTS
+CFontRef surge_minifont = NULL;
+CFontRef surge_patchfont = NULL;
+#else
 
 #if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
@@ -56,6 +65,7 @@ SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
 
 CFontRef surge_minifont = minifont;
 CFontRef surge_patchfont = patchfont;
+#endif
 
 
 enum special_tags
@@ -143,6 +153,46 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #endif
    zoom_callback = [](SurgeGUIEditor* f) {};
    setZoomFactor(100);
+
+
+#if USE_RUNTIME_LOADED_FONTS
+   /*
+   ** As documented in RuntimeFonts.h, the contract of this function is to side-effect
+   ** onto globals surge_minifont and surge_patchfont with valid fonts from the runtime
+   ** distribution
+   */
+   Surge::GUI::initializeRuntimeFont();
+
+   if (surge_minifont == NULL)
+   {
+       /*
+       ** OK the runtime load didn't work. Fall back to
+       ** the old defaults
+       **
+       ** FIXME: One day we will be confident enough in
+       ** our dyna loader to make this a Surge::UserInteraction::promptError
+       ** warning also.
+       ** 
+       ** For now, copy the defaults from above. (Don't factor this into
+       ** a function since the above defaults are initialized as dll
+       ** statics if we are not runtime).
+       */
+#if MAC
+       SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
+       SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
+#elif LINUX
+       SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
+       SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
+#else
+       SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
+       SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
+#endif
+
+       surge_minifont = minifont;
+       surge_patchfont = patchfont;
+
+   }
+#endif
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()

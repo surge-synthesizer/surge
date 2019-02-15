@@ -68,6 +68,9 @@ LANGUAGE LANG_NEUTRAL,
 
 #include "scalableui.rc"
 
+
+     IDR_LATO_FONT BINARY "resources/fonts/Lato-SemiBold.ttf"
+     
     /////////////////////////////////////////////////////////////////////////////
     //
     // Dialog

@@ -283,6 +283,7 @@ function plugincommon()
             "CoreAudio.framework",
             "CoreAudioKit.framework",
             "CoreServices.framework",
+            "CoreText.framework",
             "Cocoa.framework",
             "CoreFoundation.framework",
             "OpenGL.framework",
@@ -350,6 +351,7 @@ function plugincommon()
             "src/windows/scalableui.rc",
             "resources/bitmaps/*.png",
             "assets/original-vector/exported/*.png",
+            "resources/fonts/**.ttf",
             VSTGUI .. "vstgui_win32.cpp",
             VSTGUI .. "vstgui_uidescription_win32.cpp",
         }
@@ -596,7 +598,7 @@ if (os.istarget("macosx")) then
     files
     {
         "src/au/**.cpp",
-                "src/au/**.mm",
+        "src/au/**.mm",
         "src/au/**.h",
         "libs/AUPublic/**.cpp",
         "libs/AUPublic/**.h",
@@ -714,6 +716,8 @@ if (os.istarget("macosx")) then
       VSTGUI .. "vstgui_uidescription_mac.mm",
       "src/mac/DisplayInfoMac.mm",
       "src/mac/UserInteractionsMac.cpp",
+      "src/mac/cocoa_utils.mm",
+      "src/mac/RuntimeFontMac.cpp"
    }
 end
 
@@ -724,6 +728,7 @@ if (os.istarget("windows")) then
       VSTGUI .. "vstgui_uidescription_win32.cpp",
       "src/windows/DisplayInfoWin.cpp",
       "src/windows/UserInteractionsWin.cpp",
+      "src/windows/RuntimeFontWin.cpp"
    }
 end
 

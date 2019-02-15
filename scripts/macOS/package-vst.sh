@@ -10,6 +10,7 @@ RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst2"
 BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
 VECTOR_BITMAP_SRC_LOCATION="assets/${SURGE_USE_VECTOR_SKIN}/exported"
+FONT_SRC_LOCATION="$RES_SRC_LOCATION/fonts"
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
 EXEC_LOCATION="target/vst2/Release/Surge.dylib"
 #EXEC_LOCATION="target/vst2/Debug/Surge-Debug.dylib"
@@ -48,4 +49,6 @@ else
     cp $VECTOR_BITMAP_SRC_LOCATION/*png "$BUNDLE_DIR/Contents/Resources/scalable"
 fi
 
+mkdir "$BUNDLE_DIR/Contents/Resources/fonts";
+cp $FONT_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/fonts";
 
