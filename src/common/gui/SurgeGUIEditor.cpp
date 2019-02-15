@@ -2523,11 +2523,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    ** Keep these as integers to be consistent wiht the other zoom factors, and to make
    ** the error message cleaner.
    */
-#ifdef WINDOWS
    int maxScreenUsage = 90;
-#else
-   int maxScreenUsage = 95;
-#endif
 
    if (zf != 100.0 && zf > 100 && (
            (baseW * zf / 100.0) > maxScreenUsage * screenDim.getWidth() / 100.0 ||
@@ -2602,6 +2598,28 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
             );
         zoomSubMenu->addEntry(zcmd); zid++;
     }
+
+    zoomSubMenu->addEntry("-", zid++);
+    CCommandMenuItem *biggestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Largest"));
+    biggestZ->setActions([this, &handled](CCommandMenuItem *m)
+                             {
+                                 int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
+                                                                           90, // See comment in setZoomFactor
+                                                                           WINDOW_SIZE_X, WINDOW_SIZE_Y );
+                                 setZoomFactor(newZF);
+                                 handled = true;
+                             }
+        );
+    zoomSubMenu->addEntry(biggestZ);
+
+    CCommandMenuItem *smallestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Smallest"));
+    smallestZ->setActions([this, &handled](CCommandMenuItem *m)
+                             {
+                                 setZoomFactor(50); // This is the 'minZoom' value from setZoomFactor
+                                 handled = true;
+                             }
+        );
+    zoomSubMenu->addEntry(smallestZ);
 
     settingsMenu->addEntry(zoomSubMenu, "Zoom"); eid++;
 
