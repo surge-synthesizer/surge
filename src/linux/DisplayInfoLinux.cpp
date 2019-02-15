@@ -1,6 +1,10 @@
 #include "DisplayInfo.h"
 #include "UserInteractions.h"
 
+#include <X11/Xlib.h>
+#include <iostream>
+#include <iomanip>
+
 namespace Surge
 {
 namespace GUI
@@ -10,16 +14,46 @@ using namespace VSTGUI;
     
 float getDisplayBackingScaleFactor(CFrame *)
 {
-    Surge::UserInteractions::promptError("getDisplayBackingScaleFactor not implemented yet on linux.",
-                                         "Software Error");
+    std::cerr << "BackingDisplayFactor is not implemented on linux. Returning 1.0" << std::endl;
     return 1.0;
 }
+
+
+/*
+** We make a static single screen assumption for now so cache the screen size and only
+** query Xlib for it once.
+*/    
+int dispinfoScreenW = -1;
+int dispinfoScreenH = -1;
     
 CRect getScreenDimensions(CFrame *)
 {
-    Surge::UserInteractions::promptError("getScreenDimensions not implemented yet on linux. Returning 1400x1050",
-                                         "Software Error");
-    return CRect(CPoint(0,0), CPoint(1400,1050)); // a typical mid-range 15" laptop
+    if(dispinfoScreenW < 0 || dispinfoScreenH < 0 )
+    {
+        /*
+        ** For now make the assumption of single screen to at least avoid
+        ** clip and bound errors like shown in #594
+        **
+        ** FIXME: Deal with multi-display linux
+        */
+        Display* d = XOpenDisplay(nullptr);
+        if(d)
+        {
+            Screen*  s = DefaultScreenOfDisplay(d);
+            dispinfoScreenW = s->width;
+            dispinfoScreenH = s->height;
+            XCloseDisplay(d);
+        }
+        else
+        {
+            std::cerr << "Linux Screen Size: Falling back to defaut mid sized laptop screen since no display available" << std::endl;
+            dispinfoScreenW = 1440;
+            dispinfoScreenH = 1050;
+        }
+
+    }
+        
+    return CRect(CPoint(0,0), CPoint(dispinfoScreenW, dispinfoScreenH)); 
 }
 
 }
