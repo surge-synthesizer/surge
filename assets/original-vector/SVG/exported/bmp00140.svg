@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="36px" viewBox="0 0 12 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient x1="50%" y1="27.7099609%" x2="74.9153453%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#E48626" offset="0%"></stop>
+            <stop stop-color="#FFA244" offset="54.2590286%"></stop>
+            <stop stop-color="#FFA74C" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="bmp00140" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Rectangle" stroke="#919191" fill="#E3E3E3" x="0.5" y="1.5" width="9" height="12" rx="4.5"></rect>
+        <rect id="Rectangle" stroke="#BD6404" fill="url(#linearGradient-1)" x="0.5" y="19.5" width="9" height="12" rx="4.5"></rect>
+        <polygon id="L" fill="#252525" fill-rule="nonzero" points="6.486 9.4295 6.486 10 3.6405 10 3.6405 4.9845 4.316 4.9845 4.316 9.4295"></polygon>
+        <polygon id="L" fill="#252525" fill-rule="nonzero" points="6.486 27.4295 6.486 28 3.6405 28 3.6405 22.9845 4.316 22.9845 4.316 27.4295"></polygon>
+    </g>
+</svg>

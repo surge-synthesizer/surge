@@ -3,11 +3,16 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
+#include "SurgeBitmaps.h"
 
 class CEffectSettings : public VSTGUI::CControl
 {
 public:
-   CEffectSettings(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, int current);
+   CEffectSettings(const VSTGUI::CRect& size,
+                   VSTGUI::IControlListener* listener,
+                   long tag,
+                   int current,
+                   std::shared_ptr<SurgeBitmaps> bitmapStore);
    virtual void draw(VSTGUI::CDrawContext* dc);
    virtual VSTGUI::CMouseEventResult
    onMouseDown(VSTGUI::CPoint& where,

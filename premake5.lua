@@ -154,6 +154,7 @@ end
 
 includedirs {
     "libs/xml",
+    "libs/nanosvg/src",
     "src/common/vt_dsp",
     "src/common/thread",
     "vst3sdk/vstgui4",
@@ -375,6 +376,7 @@ function plugincommon()
             "src/windows/scalableui.rc",
             "resources/bitmaps/*.png",
             "assets/original-vector/exported/*.png",
+	    "assets/original-vector/SVG/exported/*.svg",
             VSTGUI .. "vstgui_win32.cpp",
             VSTGUI .. "vstgui_uidescription_win32.cpp",
         }

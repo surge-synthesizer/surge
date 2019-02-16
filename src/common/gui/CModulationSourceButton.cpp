@@ -19,8 +19,12 @@ enum
 
 //------------------------------------------------------------------------------------------------
 
-CModulationSourceButton::CModulationSourceButton(
-    const CRect& size, IControlListener* listener, long tag, int state, int msid)
+CModulationSourceButton::CModulationSourceButton(const CRect& size,
+                                                 IControlListener* listener,
+                                                 long tag,
+                                                 int state,
+                                                 int msid,
+                                                 std::shared_ptr<SurgeBitmaps> bitmapStore)
     : CCursorHidingControl(size, listener, tag, 0), OldValue(0.f)
 {
    this->state = state;
@@ -34,6 +38,7 @@ CModulationSourceButton::CModulationSourceButton(
    controlstate = cs_none;
    label[0] = 0;
    blink = 0;
+   bmp = bitmapStore->getBitmap(IDB_MODSRC_BG);
 }
 
 //------------------------------------------------------------------------------------------------
@@ -223,7 +228,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
          where.y = 8 * rh;
       else
          where.y = 7 * rh;
-      getSurgeBitmap(IDB_MODSRC_BG)->draw(dc, sze, where, 0xff);
+      bmp->draw(dc, sze, where, 0xff);
    }
 
    setDirty(false);

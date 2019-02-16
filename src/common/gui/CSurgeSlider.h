@@ -3,7 +3,9 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
+#include "SurgeBitmaps.h"
 
+// FIXME: This enum being here and being included in SurgePatch means SurgePatch pulls in vstgui
 enum CControlEnum_turbodeluxe
 {
    kBipolar = 1 << 15,
@@ -21,9 +23,10 @@ class CSurgeSlider : public CCursorHidingControl
 public:
    CSurgeSlider(const VSTGUI::CPoint& loc,
                 long style,
-                VSTGUI::IControlListener* listener = 0,
-                long tag = 0,
-                bool is_mod = false);
+                VSTGUI::IControlListener* listener,
+                long tag,
+                bool is_mod,
+                std::shared_ptr<SurgeBitmaps> bitmapStore);
    ~CSurgeSlider();
    virtual void draw(VSTGUI::CDrawContext*);
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);

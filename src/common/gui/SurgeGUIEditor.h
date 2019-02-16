@@ -154,7 +154,7 @@ private:
    bool zoomInvalid;
    int minimumZoom;
 
-   SurgeBitmaps bitmap_keeper;
+   std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
 
    VSTGUI::CControl* vu[16];
    VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;

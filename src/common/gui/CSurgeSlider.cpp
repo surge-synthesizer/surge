@@ -20,8 +20,12 @@ enum
 
 CSurgeSlider::MoveRateState CSurgeSlider::sliderMoveRateState = kUnInitialized;
 
-CSurgeSlider::CSurgeSlider(
-    const CPoint& loc, long stylee, IControlListener* listener, long tag, bool is_mod)
+CSurgeSlider::CSurgeSlider(const CPoint& loc,
+                           long stylee,
+                           IControlListener* listener,
+                           long tag,
+                           bool is_mod,
+                           std::shared_ptr<SurgeBitmaps> bitmapStore)
     : CCursorHidingControl(CRect(loc, CPoint(1, 1)), listener, tag, 0)
 {
    this->style = stylee;
@@ -55,8 +59,8 @@ CSurgeSlider::CSurgeSlider(
 
    if (style & CSlider::kHorizontal)
    {
-      pTray = getSurgeBitmap(IDB_FADERH_BG);
-      pHandle = getSurgeBitmap(IDB_FADERH_HANDLE);
+      pTray = bitmapStore->getBitmap(IDB_FADERH_BG);
+      pHandle = bitmapStore->getBitmap(IDB_FADERH_HANDLE);
 
       if (style & kWhite)
          typehy = 1;
@@ -72,8 +76,8 @@ CSurgeSlider::CSurgeSlider(
       if (!(style & CSlider::kTop))
          style |= CSlider::kBottom; // CSlider::kBottom by default
 
-      pTray = getSurgeBitmap(IDB_FADERV_BG);
-      pHandle = getSurgeBitmap(IDB_FADERV_HANDLE);
+      pTray = bitmapStore->getBitmap(IDB_FADERV_BG);
+      pHandle = bitmapStore->getBitmap(IDB_FADERV_HANDLE);
 
       if (style & kWhite)
          typehy = 0;

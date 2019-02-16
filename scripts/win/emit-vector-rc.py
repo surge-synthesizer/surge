@@ -42,20 +42,20 @@
 import os, re
 
 assetdir = "assets/original-vector/exported"
+svgassetdir = "assets/original-vector/SVG/exported"
 
 IDBs=[]
 digitToIDB = {}
 IDBtoDigit = {}
 scaleToOffset = {}
 
-scales = [ "100", "125", "150", "200", "300", "400" ]
+scales = [ "100", "125", "150", "200", "300", "400", "SVG" ]
 xtnToPostfix = { "":       "_SCALE_100",
                  "@125x":  "_SCALE_125",
                  "@15x":   "_SCALE_150",
                  "@2x":    "_SCALE_200",
                  "@3x":    "_SCALE_300",
                  "@4x":    "_SCALE_400" }
-
 
 
 with open( "src\\common\\resource.h", "r" ) as r:
@@ -65,7 +65,7 @@ with open( "src\\common\\resource.h", "r" ) as r:
             IDBs.append( matches.group(1) )
             digitToIDB[ matches.group( 2 ) ] = matches.group( 1 )
             IDBtoDigit[ matches.group( 1 ) ] = int( matches.group( 2 ) )
-        matchscale = re.match( '#define SCALABLE_(\\d+)_OFFSET\\s+(\\d+)', line )
+        matchscale = re.match( '#define SCALABLE_(\\S+)_OFFSET\\s+(\\d+)', line )
         if( matchscale ):
             scaleToOffset[ matchscale.group( 1 ) ] = int( matchscale.group( 2 ) )
 
@@ -131,4 +131,32 @@ for file in os.listdir( assetdir ):
             subrc.write( base + ofst + " PNG \"" + assetdir + "/" + file + "\"\n" )
 
 
+# Create the SVG rc file
+subrc = open( "src\\windows\\svgresources.rc", "w" );
+subrc.write( """
+/*
+** THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT
+**
+** If you need to modify this file, please read the comment
+** in scripts/win/emit-vector-rc.py
+**
+** This file imports the appropriate scaled SVG files
+** for each of the identifiers in scalableresource.h.
+**
+** You can address these items as IDB_BG_SCALE_SVG or
+** IDB_BG + SCALE_OFFSET_SVG in your non-rc code.
+*/
+
+""")
+
+lastBase = ""
+for file in os.listdir( svgassetdir ):
+    if file.endswith(".svg"):
+        fn = os.path.join(svgassetdir, file )
+        matches = re.match( 'bmp00(.*).svg', file );
+        if( matches ):
+            base = digitToIDB[matches.group(1)]
+            subrc.write( base + "_SCALE_SVG DATA \"" + svgassetdir + "/" + file + "\"\n" )
+
+            
 

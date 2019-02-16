@@ -586,7 +586,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       CRect rect(0, 0, 75, 13);
       rect.offset(104 - 36, 69);
       CControl* oscswitch = new CHSwitch2(rect, this, tag_osc_select, 3, 13, 1, 3,
-                                          getSurgeBitmap(IDB_OSCSELECT), nopoint);
+                                          bitmapStore->getBitmap(IDB_OSCSELECT), nopoint);
       oscswitch->setValue((float)current_osc / 2.0f);
       frame->addView(oscswitch);
    }
@@ -594,7 +594,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    {
       CRect rect(0, 0, 119, 51);
       rect.offset(764 + 3, 71);
-      CEffectSettings* fc = new CEffectSettings(rect, this, tag_fx_select, current_fx);
+      CEffectSettings* fc = new CEffectSettings(rect, this, tag_fx_select, current_fx, bitmapStore);
       ccfxconf = fc;
       for (int i = 0; i < 8; i++)
       {
@@ -617,7 +617,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
       if (ms == modsource_editor)
          state |= 4;
 
-      gui_modsrc[ms] = new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms);
+      gui_modsrc[ms] =
+          new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms, bitmapStore);
       ((CModulationSourceButton*)gui_modsrc[ms])
           ->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
       if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
@@ -710,17 +711,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    CHSwitch2* mp_cat =
        new CHSwitch2(CRect(157, 41, 157 + 37, 41 + 12), this, tag_mp_category, 2, 12, 1, 2,
-                     getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
+                     bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
    mp_cat->setUsesMouseWheel(false); // mousewheel on category and patch buttons is undesirable     
    frame->addView(mp_cat);
 
-   CHSwitch2* mp_patch = new CHSwitch2(CRect(242, 41, 242 + 37, 41 + 12), this, tag_mp_patch, 2, 12,
-                                       1, 2, getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
+   CHSwitch2* mp_patch =
+       new CHSwitch2(CRect(242, 41, 242 + 37, 41 + 12), this, tag_mp_patch, 2, 12, 1, 2,
+                     bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
    mp_patch->setUsesMouseWheel(false);// mousewheel on category and patch buttons is undesirable                                
    frame->addView(mp_patch);
 
    CHSwitch2* b_store = new CHSwitch2(CRect(591 - 37, 41, 591, 41 + 12), this, tag_store, 1, 12, 1,
-                                      1, getSurgeBitmap(IDB_BUTTON_STORE), nopoint, false);
+                                      1, bitmapStore->getBitmap(IDB_BUTTON_STORE), nopoint, false);
    frame->addView(b_store);
 
    memset(param, 0, 1024 * sizeof(void*)); // see the correct size in SurgeGUIEditor.h
@@ -757,7 +759,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 129, 18);
             rect.offset(p->posx - 2, p->posy + 1);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 10, 18, 1, 10,
-                                          getSurgeBitmap(IDB_FILTERBUTTONS), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_FILTERBUTTONS), nopoint, true);
             rect(3, 0, 124, 14);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
@@ -771,7 +773,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 12, 18);
             rect.offset(p->posx + 129, p->posy + 1);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_FILTERSUBTYPE));
+                                               bitmapStore->getBitmap(IDB_FILTERSUBTYPE));
             rect(1, 1, 9, 14);
             ((CSwitchControl*)hsw)->is_itype = true;
             ((CSwitchControl*)hsw)->imax = 3;
@@ -803,7 +805,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 43, 7);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_SWITCH_KTRK));
+                                               bitmapStore->getBitmap(IDB_SWITCH_KTRK));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -814,7 +816,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 43, 7);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_SWITCH_RETRIGGER));
+                                               bitmapStore->getBitmap(IDB_SWITCH_RETRIGGER));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -825,7 +827,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 22, 15);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 15, 1, 3,
-                                          getSurgeBitmap(IDB_OSCROUTE), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_OSCROUTE), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -843,7 +845,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                CRect rect(0, 0, 20, 14);
                rect.offset(p->posx, p->posy);
                CHSwitch2* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 14, 1, 3,
-                                              getSurgeBitmap(IDB_ENVSHAPE), nopoint, true);
+                                              bitmapStore->getBitmap(IDB_ENVSHAPE), nopoint, true);
                hsw->setValue(p->get_value_f01());
                if (p->name[0] == 'd')
                   hsw->imgoffset = 3;
@@ -860,7 +862,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 34, 15);
             rect.offset(p->posx, p->posy);
             CHSwitch2* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 2, 15, 2, 1,
-                                           getSurgeBitmap(IDB_ENVMODE), nopoint, false);
+                                           bitmapStore->getBitmap(IDB_ENVMODE), nopoint, false);
             hsw->setValue(p->get_value_f01());
 
             frame->addView(hsw);
@@ -872,7 +874,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 51, 39);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 39, 3, 1,
-                                          getSurgeBitmap(IDB_LFOTRIGGER), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_LFOTRIGGER), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -883,7 +885,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 22, 15);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_SWITCH_MUTE));
+                                               bitmapStore->getBitmap(IDB_SWITCH_MUTE));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -894,7 +896,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 22, 15);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_SWITCH_SOLO));
+                                               bitmapStore->getBitmap(IDB_SWITCH_SOLO));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -905,7 +907,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 51, 15);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_UNIPOLAR));
+                                               bitmapStore->getBitmap(IDB_UNIPOLAR));
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -916,7 +918,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 12, 18);
             rect.offset(p->posx + 129, p->posy + 5);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_RELATIVE_TOGGLE));
+                                               bitmapStore->getBitmap(IDB_RELATIVE_TOGGLE));
             rect(1, 1, 9, 14);
             rect.offset(p->posx + 129, p->posy + 5);
             hsw->setMouseableArea(rect);
@@ -929,7 +931,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 12, 18);
             rect.offset(p->posx + 129, p->posy + 5);
             CControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               getSurgeBitmap(IDB_SWITCH_LINK));
+                                               bitmapStore->getBitmap(IDB_SWITCH_LINK));
             rect(1, 1, 9, 14);
             rect.offset(p->posx + 129, p->posy + 5);
             hsw->setMouseableArea(rect);
@@ -941,9 +943,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 41, 18);
             rect.offset(p->posx + 96, p->posy + 1);
-            CControl* hsw =
-                new COscMenu(rect, this, tag_osc_menu, &synth->storage,
-                             &synth->storage.getPatch().scene[current_scene].osc[current_osc]);
+            CControl* hsw = new COscMenu(
+                rect, this, tag_osc_menu, &synth->storage,
+                &synth->storage.getPatch().scene[current_scene].osc[current_osc], bitmapStore);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
          }
@@ -966,7 +968,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 28, 47);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 6, 47, 6, 1,
-                                          getSurgeBitmap(IDB_WAVESHAPER), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_WAVESHAPER), nopoint, true);
             rect(0, 0, 28, 47);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
@@ -980,7 +982,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 50, 47);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 6, 47, 6, 1,
-                                          getSurgeBitmap(IDB_POLYMODE), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_POLYMODE), nopoint, true);
             rect(0, 0, 50, 47);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
@@ -994,7 +996,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 135, 27);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 27, 1, 4,
-                                          getSurgeBitmap(IDB_FXBYPASS), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_FXBYPASS), nopoint, true);
             fxbypass_tag = p->id + start_paramtags;
             rect(2, 2, 133, 25);
             rect.offset(p->posx, p->posy);
@@ -1009,7 +1011,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 96, 18);
             rect.offset(p->posx, p->posy + 1);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 7, 18, 1, 7,
-                                          getSurgeBitmap(IDB_OCTAVES), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_OCTAVES), nopoint, true);
             rect(1, 0, 91, 14);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
@@ -1023,7 +1025,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 134, 52);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 8, 52, 1, 8,
-                                          getSurgeBitmap(IDB_FBCONFIG), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_FBCONFIG), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -1035,7 +1037,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 134, 52);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 52, 1, 4,
-                                          getSurgeBitmap(IDB_FMCONFIG), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_FMCONFIG), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -1046,7 +1048,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 36, 27);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 27, 3, 1,
-                                          getSurgeBitmap(IDB_SCENEMODE), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_SCENEMODE), nopoint, true);
             rect(1, 1, 35, 27);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
@@ -1077,7 +1079,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 51, 27);
             rect.offset(p->posx, p->posy);
             CControl* sceneswitch = new CHSwitch2(rect, this, tag_scene_select, 2, 27, 1, 2,
-                                                  getSurgeBitmap(IDB_SCENESWITCH), nopoint);
+                                                  bitmapStore->getBitmap(IDB_SCENESWITCH), nopoint);
             sceneswitch->setValue(p->get_value_f01());
             rect(1, 1, 50, 26);
             rect.offset(p->posx, p->posy);
@@ -1090,7 +1092,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 135, 12);
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 12, 1, 3,
-                                          getSurgeBitmap(IDB_CHARACTER), nopoint, true);
+                                          bitmapStore->getBitmap(IDB_CHARACTER), nopoint, true);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
             nonmod_param[i] = hsw;
@@ -1136,8 +1138,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             if (synth->isValidModulation(p->id, modsource))
             {
-               CSurgeSlider* hs = new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs),
-                                                   style, this, p->id + start_paramtags, true);
+               CSurgeSlider* hs =
+                   new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs), style, this,
+                                    p->id + start_paramtags, true, bitmapStore);
                hs->setModMode(mod_editor ? 1 : 0);
                hs->setModValue(synth->getModulation(p->id, modsource));
                hs->setModPresent(synth->isModDestUsed(p->id));
@@ -1150,8 +1153,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
             else
             {
-               CSurgeSlider* hs = new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs),
-                                                   style, this, p->id + start_paramtags);
+               CSurgeSlider* hs =
+                   new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs), style, this,
+                                    p->id + start_paramtags, false, bitmapStore);
                hs->setValue(p->get_value_f01());
                hs->setDefaultValue(p->get_default_value_f01());
                hs->setLabel(p->get_name());
@@ -1208,20 +1212,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    CRect aboutbrect(892 - 37, 526, 892, 526 + 12);
 
-   CHSwitch2* b_settingsMenu = new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
-                                             getSurgeBitmap(IDB_BUTTON_MENU), nopoint, false);
+   CHSwitch2* b_settingsMenu =
+       new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
+                     bitmapStore->getBitmap(IDB_BUTTON_MENU), nopoint, false);
    frame->addView(b_settingsMenu);
 
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
    frame->addView(infowindow);
 
    CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
-   aboutbox = new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, getSurgeBitmap(IDB_ABOUT));
+   aboutbox =
+       new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
    frame->addView(aboutbox);
 
    CRect dialogSize(148, 8, 598, 8 + 182);
    saveDialog = new CViewContainer(dialogSize);
-   saveDialog->setBackground(getSurgeBitmap(IDB_STOREPATCH));
+   saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
    saveDialog->setVisible(false);
    frame->addView(saveDialog);
 
@@ -1311,6 +1317,9 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
    frame = new CFrame(wsize, this);
 
+   bitmapStore.reset(new SurgeBitmaps());
+   bitmapStore->setupBitmapsForFrame(frame);
+
    /*
    ** vstgui contains an error where setting the scale on the
    ** frame does not set the scale on the frames getBacground
@@ -1324,8 +1333,8 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 #if TARGET_VST2
    myOwnBg = true;
 #endif
-   
-   frame->setBackground(getSurgeBitmap(IDB_BG, myOwnBg));
+
+   frame->setBackground(bitmapStore->getBitmap(IDB_BG));
    frame->open(parent, platformType);
    /*#if TARGET_AUDIOUNIT
            synth = (sub3_synth*)_effect;
@@ -2548,8 +2557,8 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 
    float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
    int fullPhysicalZoomFactor = (int)(zf * dbs);
-   CScalableBitmap::setPhysicalZoomFactor(fullPhysicalZoomFactor);
-
+   if (bitmapStore != nullptr)
+      bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
 }
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)

@@ -8,9 +8,10 @@ fi
 # input config
 RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst3"
-BITMAP_SRC_LOCATION="$RES_SRC_LOCATION/bitmaps"
+
 FONT_SRC_LOCATION="$RES_SRC_LOCATION/fonts"
-VECTOR_BITMAP_SRC_LOCATION="assets/${SURGE_USE_VECTOR_SKIN}/exported"
+SVG_SRC_LOCATION="assets/${SURGE_USE_VECTOR_SKIN}/SVG/exported"
+
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
 EXEC_LOCATION="target/vst3/Release/Surge.dylib"
 #EXEC_LOCATION="target/vst3/Debug/Surge-Debug.dylib"
@@ -40,14 +41,8 @@ cp $PACKAGE_SRC_LOCATION/* "$BUNDLE_DIR/Contents/"
 # copy bundle resources
 cp -R "$BUNDLE_RES_SRC_LOCATION" "$BUNDLE_DIR/Contents/Resources"
 
-if [[ -z "$SURGE_USE_VECTOR_SKIN" ]]; then
-    cp $BITMAP_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/"
-else
-    rm "$BUNDLE_DIR/Contents/Resources/bmp*.png"
-    cp $VECTOR_BITMAP_SRC_LOCATION/bmp?????.png "$BUNDLE_DIR/Contents/Resources/"
-    mkdir "$BUNDLE_DIR/Contents/Resources/scalable"
-    cp $VECTOR_BITMAP_SRC_LOCATION/*png "$BUNDLE_DIR/Contents/Resources/scalable"
-fi
+mkdir "$BUNDLE_DIR/Contents/Resources/svg"
+cp $SVG_SRC_LOCATION/*svg "$BUNDLE_DIR/Contents/Resources/svg"
 
 mkdir "$BUNDLE_DIR/Contents/Resources/fonts";
 cp $FONT_SRC_LOCATION/* "$BUNDLE_DIR/Contents/Resources/fonts";

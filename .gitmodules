@@ -8,3 +8,6 @@
 [submodule "libs/midifile"]
 	path = libs/midifile
 	url = https://github.com/craigsapp/midifile.git
+[submodule "libs/nanosvg"]
+	path = libs/nanosvg
+	url = https://github.com/memononen/nanosvg.git
