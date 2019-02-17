@@ -107,3 +107,11 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
    }
    return kMouseEventNotHandled;
 }
+bool CHSwitch2::onWheel(const CPoint& where, const float& distance, const CButtonState& buttons)
+{
+   float newVal=value;
+   newVal += (getRange() / 10) * distance;
+   value = newVal;
+   bounceValue();
+   setValue(value);
+}

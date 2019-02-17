@@ -435,3 +435,32 @@ void CSurgeSlider::setBipolar(bool b)
 
    setDirty();
 }
+
+bool CSurgeSlider::onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons)
+{
+   double rate = 0.1 * moverate;
+   if (buttons & kRButton)
+      rate *= 0.05;
+   if (buttons & kShift)
+      rate *= 0.05;
+   
+   edit_value = modmode ? &modval : &value;
+   oldVal = *edit_value;
+   
+   beginEdit();
+   *edit_value += rate * distance;
+   bounceValue();
+   if (modmode)
+   {
+      setModValue(*edit_value);
+   }
+   else
+   {
+      setValue(value);
+   }
+   setDirty();
+   if (isDirty() && listener)
+         listener->valueChanged(this);
+   //endEdit();
+   edit_value = nullptr;   
+}

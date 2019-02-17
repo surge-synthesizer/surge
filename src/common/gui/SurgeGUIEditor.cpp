@@ -2478,6 +2478,21 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
 
    if (buttons || forceMB)
    {
+      if (buttons || forceMB)
+      {
+         if (((CParameterTooltip*)infowindow)->isVisible())
+         {
+            ((CParameterTooltip*)infowindow)->Hide();
+            ((CParameterTooltip*)infowindow)->invalid();
+         }
+             
+      ((CParameterTooltip*)infowindow)->setViewSize(r);
+      ((CParameterTooltip*)infowindow)->Show();
+      infowindow->invalid();
+      clear_infoview_countdown = 40;
+   }
+   else
+
       ((CParameterTooltip*)infowindow)->setViewSize(r);
       ((CParameterTooltip*)infowindow)->Show();
       infowindow->invalid();
