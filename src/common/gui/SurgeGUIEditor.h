@@ -78,15 +78,6 @@ protected:
 
    void refresh_mod();
 
-   /**
-    * getCurrentMouseLocationCorrectedForVSTGUIBugs
-    *
-    * This function gets the current mouse location for the frame
-    * but adds, in necessary cases, workarounds for bugs in the
-    * vstgui framework. Use it in place of frame->getCurrentMouseLocation
-    */
-   VSTGUI::CPoint getCurrentMouseLocationCorrectedForVSTGUIBugs();
-
 #if TARGET_VST3
 public:
    /**

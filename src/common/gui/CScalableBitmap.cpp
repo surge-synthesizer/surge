@@ -47,10 +47,11 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc)
     ** things like a 1.25 bitmap set.
     */
     
-    scales = {{ 100, 150, 200, 300, 400 }}; // This is the collection of sizes we currently ask skins to export.
+    scales = {{ 100, /* 125, */ 150, 200, 300, 400 }}; // This is the collection of sizes we currently ask skins to export.
 
     std::map< int, std::string > scaleFilePostfixes;
     scaleFilePostfixes[ 100 ] = "";
+    // scaleFilePostfixes[ 125 ] = "@125x";
     scaleFilePostfixes[ 150 ] = "@15x";
     scaleFilePostfixes[ 200 ] = "@2x";
     scaleFilePostfixes[ 300 ] = "@3x";
@@ -60,6 +61,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc)
     // Only windows uses this integer indexing and knows these offsets
     std::map< int, int > scaleIDOffsets;
     scaleIDOffsets[ 100 ] = SCALABLE_100_OFFSET;
+    // scaleIDOffsets[ 125 ] = SCALABLE_125_OFFSET;
     scaleIDOffsets[ 150 ] = SCALABLE_150_OFFSET;
     scaleIDOffsets[ 200 ] = SCALABLE_200_OFFSET;
     scaleIDOffsets[ 300 ] = SCALABLE_300_OFFSET;

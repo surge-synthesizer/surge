@@ -19,6 +19,7 @@ public:
    virtual bool canSave();
 
 protected:
+   void populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub);
    SurgeStorage* storage = nullptr;
    char mtype[16] = {0};
 };

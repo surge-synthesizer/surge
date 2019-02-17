@@ -30,18 +30,27 @@
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
 #endif
-/*
-#elif TARGET_VST3
-#include "surgeprocessor.h"
-#elif TARGET_VST2
-#include "vstlayer.h"
-#endif*/
 
-//#include <commctrl.h>
+#if MAC || WINDOWS
+#define USE_RUNTIME_LOADED_FONTS 1
+#else
+#define USE_RUNTIME_LOADED_FONTS 0
+#endif
+
+#if USE_RUNTIME_LOADED_FONTS
+#include "RuntimeFont.h"
+#endif
+
 const int yofs = 10;
 
 using namespace VSTGUI;
 using namespace std;
+
+
+#if USE_RUNTIME_LOADED_FONTS
+CFontRef surge_minifont = NULL;
+CFontRef surge_patchfont = NULL;
+#else
 
 #if MAC
 SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
@@ -56,6 +65,7 @@ SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
 
 CFontRef surge_minifont = minifont;
 CFontRef surge_patchfont = patchfont;
+#endif
 
 
 enum special_tags
@@ -143,6 +153,46 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #endif
    zoom_callback = [](SurgeGUIEditor* f) {};
    setZoomFactor(100);
+
+
+#if USE_RUNTIME_LOADED_FONTS
+   /*
+   ** As documented in RuntimeFonts.h, the contract of this function is to side-effect
+   ** onto globals surge_minifont and surge_patchfont with valid fonts from the runtime
+   ** distribution
+   */
+   Surge::GUI::initializeRuntimeFont();
+
+   if (surge_minifont == NULL)
+   {
+       /*
+       ** OK the runtime load didn't work. Fall back to
+       ** the old defaults
+       **
+       ** FIXME: One day we will be confident enough in
+       ** our dyna loader to make this a Surge::UserInteraction::promptError
+       ** warning also.
+       ** 
+       ** For now, copy the defaults from above. (Don't factor this into
+       ** a function since the above defaults are initialized as dll
+       ** statics if we are not runtime).
+       */
+#if MAC
+       SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
+       SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
+#elif LINUX
+       SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
+       SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
+#else
+       SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
+       SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
+#endif
+
+       surge_minifont = minifont;
+       surge_patchfont = patchfont;
+
+   }
+#endif
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -433,6 +483,13 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
         case VKEY_TAB:
             toggle_mod_editing();
             return 1;
+#if !LINUX
+            /* 
+            ** On linux the arrow keys navigate menus but do it in the same window as the
+            ** UI, so this eating of the key causes core dumps and makes menus non-navigable.
+            ** (On Mac and Win menus are separate parent windows so have a different 
+            ** event loop)
+            */
         case VKEY_LEFT:
             synth->incrementCategory(false);
             return 1;
@@ -445,6 +502,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
         case VKEY_DOWN:
             synth->incrementPatch(true);
             return 1;
+#endif
         }
     }
     else
@@ -1363,7 +1421,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          CRect r = control->getViewSize();
          CRect menuRect;
 
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
          int a = limit_range((int)((3 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
 
@@ -1415,7 +1476,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       {
          CRect r = control->getViewSize();
          CRect menuRect;
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
          
          int a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, 2);
          menuRect.offset(where.x, where.y);
@@ -1464,7 +1528,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if (button & kRButton)
       {
          CRect menuRect;
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
          
          menuRect.offset(where.x, where.y);
          COptionMenu* contextMenu =
@@ -1743,7 +1810,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if ((button & kRButton) && (p->valtype == vt_float))
       {
          CRect menuRect;
-         CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+         
 
          menuRect.offset(where.x, where.y);
 
@@ -2057,7 +2127,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       CRect r = control->getViewSize();
       CRect menuRect;
-      CPoint where = getCurrentMouseLocationCorrectedForVSTGUIBugs();;
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+         
       menuRect.offset(where.x, where.y);
 
       showSettingsMenu(menuRect);
@@ -2465,11 +2538,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    ** Keep these as integers to be consistent wiht the other zoom factors, and to make
    ** the error message cleaner.
    */
-#ifdef WINDOWS
    int maxScreenUsage = 90;
-#else
-   int maxScreenUsage = 95;
-#endif
 
    if (zf != 100.0 && zf > 100 && (
            (baseW * zf / 100.0) > maxScreenUsage * screenDim.getWidth() / 100.0 ||
@@ -2545,6 +2614,28 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         zoomSubMenu->addEntry(zcmd); zid++;
     }
 
+    zoomSubMenu->addEntry("-", zid++);
+    CCommandMenuItem *biggestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Largest"));
+    biggestZ->setActions([this, &handled](CCommandMenuItem *m)
+                             {
+                                 int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
+                                                                           90, // See comment in setZoomFactor
+                                                                           WINDOW_SIZE_X, WINDOW_SIZE_Y );
+                                 setZoomFactor(newZF);
+                                 handled = true;
+                             }
+        );
+    zoomSubMenu->addEntry(biggestZ);
+
+    CCommandMenuItem *smallestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Smallest"));
+    smallestZ->setActions([this, &handled](CCommandMenuItem *m)
+                             {
+                                 setZoomFactor(50); // This is the 'minZoom' value from setZoomFactor
+                                 handled = true;
+                             }
+        );
+    zoomSubMenu->addEntry(smallestZ);
+
     settingsMenu->addEntry(zoomSubMenu, "Zoom"); eid++;
 
     settingsMenu->addSeparator(eid++);
@@ -2576,44 +2667,6 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
     }
 
-}
-
-CPoint SurgeGUIEditor::getCurrentMouseLocationCorrectedForVSTGUIBugs()
-{
-    /*
-    ** Please see github issue 356 for discussion on this.
-    **
-    ** vstgui has several bugs around zoom handling. A particular one is the fuction frame->getCurrentMouseLocation() applies the transform incorrectly.
-    ** Rather than applying it forward and backwards, it applies it forward twice. This means using it to pop menus when you are scaled does exactly the wrong thing.
-    ** 
-    ** Our zoom on AU uses a different path, so doesn't need remediating. So we need to conditionally inject code until this bug is fixed and
-    ** make it clear where that is injected. This macro - USE_VST2_MOUSE_LOCATION_FIX(rectname) does that.
-    */
-
-    CPoint where;
-    frame->getCurrentMouseLocation(where);
-    where = frame->localToFrame(where);
-
-#if ( TARGET_VST2 || TARGET_VST3 )
-    CGraphicsTransform vstfix = frame->getTransform().inverse();
-    vstfix.transform(where);
-    vstfix.transform(where);
-
-#if LINUX
-    /*
-    ** FIXME: For some reason, linux is even one more transform broken than Mac and Windows.
-    ** There is a vstgui bug here we need to find, but for now, if you have a hammer, the whole
-    ** world looks like a nail, as they say.
-    **
-    ** This change still leaves menus near the edge of the window mis-clipped in zoom.
-    */
-    vstfix.transform(where);
-#endif
-
-#endif
-
-    
-    return where;
 }
 
 int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of range

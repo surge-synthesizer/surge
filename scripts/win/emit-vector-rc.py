@@ -48,7 +48,9 @@ digitToIDB = {}
 IDBtoDigit = {}
 scaleToOffset = {}
 
+scales = [ "100", "125", "150", "200", "300", "400" ]
 xtnToPostfix = { "":       "_SCALE_100",
+                 "@125x":  "_SCALE_125",
                  "@15x":   "_SCALE_150",
                  "@2x":    "_SCALE_200",
                  "@3x":    "_SCALE_300",
@@ -87,7 +89,7 @@ subRes.write( """
 """)
 for idb in IDBs:
     subRes.write( "\n// Offset {0} by SCALABLE_100_OFFSET value and so on\n".format( idb ) )
-    for sc in [ "100", "150", "200", "300", "400" ]:
+    for sc in scales:
         line = "#define {0}_SCALE_{1} {2} \n".format(
             idb, sc, (IDBtoDigit[ idb ] + scaleToOffset[ sc ] ) )
         subRes.write( line )

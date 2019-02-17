@@ -189,8 +189,12 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         }
         
         std::string menuName = storage->patch_category[c].name;
-        if (menuName.find_last_of("/") != string::npos)
-            menuName = menuName.substr(menuName.find_last_of("/") + 1);
+        std::string pathSep = "/";
+#if WINDOWS
+        pathSep = "\\";
+#endif
+        if (menuName.find_last_of(pathSep) != string::npos)
+            menuName = menuName.substr(menuName.find_last_of(pathSep) + 1);
         
         if (n_subc > 1)
             sprintf(name, "%s - %i", menuName.c_str(), subc + 1);
