@@ -24,7 +24,8 @@ Options:
 
     -h, --help              Show help.
     -v, --verbose           Verbose output.
-    -p, --project=PROJECT   Select a specific PROJECT. Can be either vst2 or vst3.
+    -p, --project=PROJECT   Select a specific PROJECT, which can be either
+                            vst2, vst3 or headless.
     -d, --debug             Use a debug version.
     -l, --local             Install/uninstall built assets under /home instead
                             of /usr
@@ -121,6 +122,10 @@ run_all_builds()
     if [ ! -z "$OPTION_vst3" ]; then
         run_build "vst3"
     fi
+
+    if [ ! -z "$OPTION_headless" ]; then
+        run_build "headless"
+    fi
 }
 
 run_install()
@@ -130,12 +135,20 @@ run_install()
 
     if [ ! -z "$OPTION_vst2" ]; then
         echo "Installing VST2"
-        rsync -r -delete $OPTION_vst2_src_path $OPTION_vst2_dest_path
+        rsync -r -delete $OPTION_vst2_src_path \
+                         $OPTION_vst2_dest_path/$OPTION_dest_plugin_name
     fi
 
     if [ ! -z "$OPTION_vst3" ]; then
         echo "Installing VST3"
-        rsync -r --delete $OPTION_vst2_src_path $OPTION_vst3_dest_path
+        rsync -r --delete $OPTION_vst3_src_path \
+                          $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
+    fi
+
+    if [ ! -z "$OPTION_headless" ]; then
+        echo "Installing Headless"
+        rsync -r --delete $OPTION_headless_src_path \
+                          $OPTION_headless_dest_path/$OPTION_dest_headless_name
     fi
 }
 
@@ -168,11 +181,15 @@ run_uninstall()
     rm -rvf $OPTION_data_path
 
     if [ ! -z "$OPTION_vst2" ]; then
-        rm -vf $OPTION_vst2_dest_path
+        rm -vf $OPTION_vst2_dest_path/$OPTION_dest_plugin_name
     fi
 
     if [ ! -z "$OPTION_vst3" ]; then
-        rm -vf $OPTION_vst3_dest_path
+        rm -vf $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
+    fi
+
+    if [ ! -z "$OPTION_headless" ]; then
+        rm -vf $OPTION_headless_dest_path/$OPTION_dest_headless_name
     fi
 }
 
@@ -213,23 +230,35 @@ if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "vst3" ]; then
     OPTION_vst3=1
 fi
 
+if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "headless" ]; then
+    OPTION_headless=1
+fi
+
 if [ -z "$OPTION_debug" ]; then
     OPTION_config="config=release_x64"
     OPTION_vst2_src_path="target/vst2/Release/Surge.so"
     OPTION_vst3_src_path="target/vst3/Release/Surge.so"
+    OPTION_headless_src_path="target/headless/Release/Surge"
+    OPTION_dest_plugin_name="Surge.so"
+    OPTION_dest_headless_name="Surge-Headless"
 else
     OPTION_config="config=debug_x64"
     OPTION_vst2_src_path="target/vst2/Debug/Surge-Debug.so"
     OPTION_vst3_src_path="target/vst3/Debug/Surge-Debug.so"
+    OPTION_headless_src_path="target/headless/Release/Surge-Debug"
+    OPTION_dest_plugin_name="Surge-Debug.so"
+    OPTION_dest_headless_name="Surge-Headless-Debug"
 fi
 
 if [[ ! -z "$OPTION_local" ]]; then
-    OPTION_vst2_dest_path="$HOME/.vst/"
-    OPTION_vst3_dest_path="$HOME/.vst3/"
+    OPTION_vst2_dest_path="$HOME/.vst"
+    OPTION_vst3_dest_path="$HOME/.vst3"
+    OPTION_headless_dest_path="$HOME/bin"
     OPTION_data_path="$HOME/.local/share/Surge"
 else
-    OPTION_vst2_dest_path="/usr/lib/vst/"
-    OPTION_vst3_dest_path="/usr/lib/vst3/"
+    OPTION_vst2_dest_path="/usr/lib/vst"
+    OPTION_vst3_dest_path="/usr/lib/vst3"
+    OPTION_headless_dest_path="/usr/bin"
     OPTION_data_path="/usr/share/Surge"
 fi
 
