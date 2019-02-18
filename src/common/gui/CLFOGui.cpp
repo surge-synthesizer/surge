@@ -17,6 +17,8 @@ extern CFontRef surge_patchfont;
 // to resolve github issue #214
 #if MAC
 SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("Lucida Grande", 8); // one smaller than minifont
+#elif LINUX
+SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("sans-serif", 8);
 #else
 SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("Microsoft Sans Serif", 8);
 #endif
