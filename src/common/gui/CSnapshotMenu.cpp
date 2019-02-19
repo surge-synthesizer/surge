@@ -125,11 +125,12 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
       addEntry("Store Current");
       }*/
     /*
-      int32_t sel_id = contextMenu->getLastResult();
+      int32_t sel_id = contextMenu->get Last Result();
+      this is commented so put in spaces so my grep to kill all these doesn't flag it PW
       int32_t sub_id, main_id;
       COptionMenu *b = contextMenu->getLastItemMenu(sub_id);
       if (b) main_id = b->getTag();
-      
+
       if ((sel_id >= 0) && (sel_id < contextMenu->getNbEntries()))
       {
       if (sel_id < main)
@@ -141,7 +142,7 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
       {
       char name[NAMECHARS];
       sprintf(name, "default");
-      
+
       spawn_miniedit_text(name, NAMECHARS);
       save_snapshot(sect, name);
       storage->save_snapshots();
@@ -154,12 +155,11 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
       {
       int type_id = 0; xpp[main_id&(max_main - 1)]->Attribute("i", &type_id);		//
       get "i" value from xmldata
-      
+
       load_snapshot(type_id, xp[main_id][sub_id]);
       }
       }
       else do_nothing = true;*/
-    
 }
 
 // COscMenu
