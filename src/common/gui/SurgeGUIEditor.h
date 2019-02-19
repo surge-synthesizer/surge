@@ -151,7 +151,8 @@ private:
 private:
    std::function< void(SurgeGUIEditor *) > zoom_callback;
    bool zoomInvalid;
-   
+   int minimumZoom;
+
    SurgeBitmaps bitmap_keeper;
 
    VSTGUI::CControl* vu[16];

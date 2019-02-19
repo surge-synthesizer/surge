@@ -156,6 +156,10 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
    setZoomFactor(userDefaultZoomFactor);
    zoomInvalid = (userDefaultZoomFactor != 100);
+   minimumZoom = 50;
+#if LINUX
+   minimumZoom = 100; // See github issue #628
+#endif
 
 #if USE_RUNTIME_LOADED_FONTS
    /*
@@ -2517,12 +2521,13 @@ long SurgeGUIEditor::applyParameterOffset(long id)
 
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
-   int minZoom = 50;
-   if (zf < minZoom)
+   if (zf < minimumZoom)
    {
-       Surge::UserInteractions::promptError("Minimum zoom size is 50%. I'm sorry, you cant make surge any smaller.",
-                                            "No Teensy Surge for You");
-       zf = minZoom;
+      std::ostringstream oss;
+      oss << "The smallest zoom on your platform is " << minimumZoom
+          << "%. Sorry, you can't make surge any smaller.";
+      Surge::UserInteractions::promptError(oss.str(), "No Teensy Surge for You");
+      zf = minimumZoom;
    }
 
 
@@ -2638,12 +2643,10 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     zoomSubMenu->addEntry(biggestZ); zid++;
 
     CCommandMenuItem *smallestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Smallest"));
-    smallestZ->setActions([this, &handled](CCommandMenuItem *m)
-                             {
-                                 setZoomFactor(50); // This is the 'minZoom' value from setZoomFactor
-                                 handled = true;
-                             }
-        );
+    smallestZ->setActions([this, &handled](CCommandMenuItem* m) {
+       setZoomFactor(minimumZoom);
+       handled = true;
+    });
     zoomSubMenu->addEntry(smallestZ); zid++;
 
     zoomSubMenu->addEntry("-", zid++);
