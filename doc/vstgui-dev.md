@@ -39,22 +39,65 @@ There's a couple of ways for you to develop changes but the basic idea is as fol
 This is a bit tricky. If you are doing this for the first time, probably best to ask
 on slack or IRC.
 
+* Has steinberg fixed this in `develop`? Check first! If so, pull that diff. If this doesn't make sense
+  uhh ask @baconpaul on slack for now.
 * Fork your own copy of https://github.com/surge-synthesizer/vstgui or work directly in the repo. *Do not fork the 
 steinberg repository. You want a fork of our repository (so a fork-of-a-fork)*.
 * Clone either the repo or your fork on your filesystem and set the environment variable `VSTGUI_DIR` to point at it. Clean and run premake in `surge`.
 * Checkout the surge branch in your vstgui
 * From there, make a feature branch. So 'git checkout -b my-change' on top of 'surge' not 'master'
-* Make your change, commit, push as normal. Since VSTGUI_DIR points to your copy your builds will pick up your changes
-* At this point we want to do two things
-  * Take your branch as a PR to steinberg. Do this using standard methods.
-  * Integrate your branch into the surge repository and move the submodule pointer
-  * That last step is a bit tricky. Really best to ask on Slack or IRC if you are
-    doing this for the first time. Or just let one of the maintainers know and we
-    can do the git shenanigans.
+* Make your change, commit, push as normal. Since VSTGUI_DIR points to your copy your builds will pick up your changes.
+  * Please note that vstgui uses a different code formatting convention than surge
+  * vstgui uses tabs, not spaces; uses space after keywords and before parens
+  * there is a .clang-format in the top dir
+  
+Now you have two more steps. Uhh really if you are doing this ask @baconpaul OK? This is not user self service level documentation.
 
-This documentation could be more fulsome obviously. Really the first person other than @baconpaul to
-go through the process, if they could document it, we can update this doc then.
+### Move the surge pointer to include your change
 
+* This is something the maintainers will do. Basically just push your branch to someplace where the maintainers can see it.
+* Mainters: Do this
+  * in `vstgui`
+    * `git checkout surge`
+    * `git merge other-persons-branch` and resolve anything that comes up
+    * `git cherry -v master` - make sure all the commits between master and surge make sense
+    * `git push origin surge` - now surge is up on surge-synthesizer
+  * in `surge`
+    * add a feature branch 
+    * `cd vstgui.surge`
+    * `git fetch origin`
+    * `git checkout surge`
+    * `git pull surge`
+    * `cd ..`
+    * `git status` should show vstgui.surge as modified so
+    * `git add vstgui.surge`
+    * then commit and send PR as normal
+    
+### Submit the change to vstgui upstream
+
+This is a bit tricky, and it's a bit tricky because we develop against `master` and arne takes diffs against `develop`. So:
+
+* `git checkout upstream/develop`
+* `git checkout -b feature-branch-against-develop`
+* `git merge feature-branch`
+
+basically. Here's an actual session where I moved linux-fonts to linux-fonts-vs-develop and pushed it so I could submit
+to steinberg
+
+```
+ 2886  git fetch upstream
+ 2887  git checkout upstream/develop
+ 2888  git checkout -b linux-fonts-vs-develop
+
+ 2891  git checkout linux-fonts
+ 2892  git cherry -v surge
+ 2893  git checkout linux-fongs-vs-develop
+
+ 2895  git cherry-pick 711772715fe66bbab4e02f9fad08c9bff3356d13
+ 2896  git cherry -v upstream/develop
+ 2897  git diff upstream/develop
+ 2898  git push origin linux-fonts-vs-develop
+```
 
 ## Historical Record: How I set up the thing in the first place
 
