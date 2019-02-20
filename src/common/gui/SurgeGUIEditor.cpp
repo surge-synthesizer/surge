@@ -152,14 +152,16 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #if TARGET_VST3
    _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
 #endif
-   zoom_callback = [](SurgeGUIEditor* f) {};
-   int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
-   setZoomFactor(userDefaultZoomFactor);
-   zoomInvalid = (userDefaultZoomFactor != 100);
+   
    minimumZoom = 50;
 #if LINUX
    minimumZoom = 100; // See github issue #628
 #endif
+
+   zoom_callback = [](SurgeGUIEditor* f) {};
+   int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
+   setZoomFactor(userDefaultZoomFactor);
+   zoomInvalid = (userDefaultZoomFactor != 100);
 
 #if USE_RUNTIME_LOADED_FONTS
    /*
