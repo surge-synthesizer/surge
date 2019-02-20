@@ -28,7 +28,9 @@ namespace GUI
 float  getDisplayBackingScaleFactor(VSTGUI::CFrame *); 
 
 /*
-** Return the screen dimensions of the best screen containing this frame
+** Return the screen dimensions of the best screen containing this frame. If the
+** frame is not valid or has not yet been shown or so on, return a screen of
+** size 0x0 at position 0,0.
 */
 VSTGUI::CRect  getScreenDimensions(VSTGUI::CFrame *);
 }

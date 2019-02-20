@@ -49,8 +49,7 @@ float getDisplayBackingScaleFactor(CFrame *f)
 
 CRect getScreenDimensions(CFrame *f)
 {
-    // This default is a 15" macbooc pro with scaling at half size
-    CRect defaultDimension(CPoint(0,0),CPoint(1440,900)); 
+    CRect defaultDimension(CPoint(0,0),CPoint(0,0)); 
     
     if (!f)
     {
