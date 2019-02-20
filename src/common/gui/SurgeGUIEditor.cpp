@@ -1424,7 +1424,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    }
    long tag = control->getTag();
 
-   int firstEIDForFirstClear = -1;
    std::vector< std::string > clearControlTargetNames;
    
    if (button & kDoubleClick)
@@ -1446,45 +1445,35 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
          int eid = 0;
-         int id_copy = -1, id_copymod = -1, id_paste = -1;
+
          char txt[256];
          sprintf(txt, "Osc %i", a + 1);
          contextMenu->addEntry(txt, eid++);
          contextMenu->addEntry("-", eid++);
-         id_copy = eid;
-         contextMenu->addEntry("Copy", eid++);
-         id_copymod = eid;
-         contextMenu->addEntry("Copy (with modulation)", eid++);
+         addCallbackMenu(contextMenu, "Copy",
+                         [this]() { synth->storage.clipboard_copy(cp_osc, current_scene, 0); });
+         eid++;
+
+         addCallbackMenu(contextMenu, "Copy (with modulation)", [this, a]() {
+            synth->storage.clipboard_copy(cp_oscmod, current_scene, a);
+         });
+         eid++;
+
          if (synth->storage.get_clipboard_type() == cp_osc)
          {
-            id_paste = eid;
-            contextMenu->addEntry("Paste", eid++);
+            addCallbackMenu(contextMenu, "Paste", [this, a]() {
+               synth->clear_osc_modulation(current_scene, a);
+               synth->storage.clipboard_paste(cp_osc, current_scene, a);
+               queue_refresh = true;
+            });
+            eid++;
          }
 
          frame->addView(contextMenu); // add to frame
          contextMenu->setDirty();
          contextMenu->popup();
-         // pParent->looseFocus(pContext);
-         int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
-         if (command >= 0)
-         {
-            if (command == id_copy)
-            {
-               synth->storage.clipboard_copy(cp_osc, current_scene, a);
-            }
-            else if (command == id_copymod)
-            {
-               synth->storage.clipboard_copy(cp_oscmod, current_scene, a);
-            }
-            else if (command == id_paste)
-            {
-               synth->clear_osc_modulation(current_scene, a);
-               synth->storage.clipboard_paste(cp_osc, current_scene, a);
-               queue_refresh = true;
-            }
-         }
          return 1;
       }
 
@@ -1502,37 +1491,29 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
          int eid = 0;
-         int id_copy = -1, id_paste = -1;
+
          char txt[256];
          sprintf(txt, "Scene %c", 'A' + a);
          contextMenu->addEntry(txt, eid++);
          contextMenu->addEntry("-", eid++);
-         id_copy = eid;
-         contextMenu->addEntry("Copy", eid++);
+
+         addCallbackMenu(contextMenu, "Copy",
+                         [this, a]() { synth->storage.clipboard_copy(cp_scene, a, -1); });
+         eid++;
          if (synth->storage.get_clipboard_type() == cp_scene)
          {
-            id_paste = eid;
-            contextMenu->addEntry("Paste", eid++);
+            addCallbackMenu(contextMenu, "Paste", [this, a]() {
+               synth->storage.clipboard_paste(cp_scene, a, -1);
+               queue_refresh = true;
+            });
+            eid++;
          }
 
          frame->addView(contextMenu); // add to frame
          contextMenu->setDirty();
          contextMenu->popup();
-         int command = contextMenu->getLastResult();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
-         if (command >= 0)
-         {
-            if (command == id_copy)
-            {
-               synth->storage.clipboard_copy(cp_scene, a, -1);
-            }
-            else if (command == id_paste)
-            {
-               synth->storage.clipboard_paste(cp_scene, a, -1);
-               queue_refresh = true;
-            }
-         }
          return 1;
       }
    }
@@ -1563,11 +1544,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          const int max_md = 4096;
          assert(max_md >= n_total_md);
 
-         int clear_md[max_md];
-         for (int md = 0; md < n_total_md; md++)
-            clear_md[md] = -1;
-
          bool first_destination = true;
+         bool cancellearn = false;
+         int ccid = 0;
 
          // should start at 0, but started at 1 before.. might be a reason but don't remember why...
          for (int md = 0; md < n_total_md; md++)
@@ -1578,36 +1557,92 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
                 synth->isActiveModulation(md, modsource))
             {
+               char tmptxt[256];
+               sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[modsource],
+                       synth->storage.getPatch().param_ptr[md]->get_full_name(),
+                       synth->getModDepth(md, modsource));
+
+               auto clearOp = [this, first_destination, md, n_total_md, modsource, control]() {
+                  bool resetName = false;   // Should I reset the name?
+                  std::string newName = ""; // And to what?
+                  int ccid = modsource - ms_ctrl1;
+
+                  if (first_destination)
+                  {
+                     if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
+                                 synth->storage.getPatch().param_ptr[md]->get_name(), 15) == 0)
+                     {
+                        // So my modulator is named after my short name. I haven't been renamed. So
+                        // I want to reset at least to "-" unless someone is after me
+                        resetName = true;
+                        newName = "-";
+
+                        // Now we have to find if there's another modulation below me
+                        int nextmd = md + 1;
+                        while (nextmd < n_total_md && !synth->isActiveModulation(nextmd, modsource))
+                           nextmd++;
+                        if (nextmd < n_total_md &&
+                            strlen(synth->storage.getPatch().param_ptr[nextmd]->get_name()) > 1)
+                           newName = synth->storage.getPatch().param_ptr[nextmd]->get_name();
+                     }
+                  }
+
+                  synth->clearModulation(md, modsource);
+                  refresh_mod();
+
+                  if (resetName)
+                  {
+                     // And this is where we apply the name refresh, of course.
+                     strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], newName.c_str(),
+                             15);
+                     synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
+                     ((CModulationSourceButton*)control)
+                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                     control->setDirty();
+                     control->invalid();
+                     synth->updateDisplay();
+                  }
+               };
+
                if (first_destination)
                {
                   contextMenu->addEntry("-", eid++);
                   first_destination = false;
                }
 
-               char tmptxt[256];
-               sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[modsource],
-                       synth->storage.getPatch().param_ptr[md]->get_full_name(),
-                       synth->getModDepth(md, modsource));
-               clear_md[md] = eid;
-               if (firstEIDForFirstClear < 0)
-                   firstEIDForFirstClear = eid;
-               clearControlTargetNames.push_back(synth->storage.getPatch().param_ptr[md]->get_name());
+               addCallbackMenu(contextMenu, tmptxt, clearOp);
+               eid++;
 
-               contextMenu->addEntry(tmptxt, eid++);
                n_md++;
             }
          }
 
-         bool cancellearn = false;
-
          if (n_md)
          {
-            id_clearallmr = eid;
-            contextMenu->addEntry("Clear all routings", eid++);
+            addCallbackMenu(
+                contextMenu, "Clear all routings", [this, n_total_md, modsource, control]() {
+                   for (int md = 1; md < n_total_md; md++)
+                      synth->clearModulation(md, modsource);
+                   refresh_mod();
+
+                   // Also blank out the name and rebuild the UI
+                   if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
+                   {
+                      int ccid = modsource - ms_ctrl1;
+
+                      synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+                      synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+                      ((CModulationSourceButton*)control)
+                          ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                      control->setDirty();
+                      control->invalid();
+
+                      synth->updateDisplay();
+                   }
+                });
+            eid++;
          }
-         int ccid = 0;
          int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, 1);
-          bool handled = false;
          if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
          {
             ccid = modsource - ms_ctrl1;
@@ -1616,117 +1651,33 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             if (synth->learn_custom > -1)
                cancellearn = true;
-            id_learnctrl = eid;
-            if (cancellearn)
-               contextMenu->addEntry("Abort learn controller", eid++);
-            else
-               contextMenu->addEntry("Learn controller [MIDI]", eid++);
+
+            std::string learnTag =
+                cancellearn ? "Abort learn controller" : "Learn controller [MIDI]";
+            addCallbackMenu(contextMenu, learnTag, [this, cancellearn, ccid] {
+               if (cancellearn)
+                  synth->learn_param = -1;
+               else
+                  synth->learn_param = ccid;
+            });
+            eid++;
 
             if (synth->storage.controllers[ccid] >= 0)
             {
-               id_clearctrl = eid;
                char txt4[128];
                decode_controllerid(txt4, synth->storage.controllers[ccid]);
                sprintf(txt, "Clear controller [currently %s]", txt4);
-               contextMenu->addEntry(txt, eid++);
+               addCallbackMenu(contextMenu, txt, [this, ccid]() {
+                  synth->storage.controllers[ccid] = -1;
+                  synth->storage.save_midi_controllers();
+               });
+               eid++;
             }
 
          
             contextMenu->addEntry("-", eid++);
-            id_bipolar = eid;
-            contextMenu->addEntry("Bipolar", eid++);
-            contextMenu->checkEntry(
-                id_bipolar,
-                synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar());
-            id_rename = eid;
-            contextMenu->addEntry("Rename", eid++);
-         
-             
-             contextMenu->addEntry("-", eid++);
-             
-             // Construct submenus for expicit controller mapping
-             COptionMenu *midiSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-             COptionMenu *currentSub;
-             for( int mc = 0; mc < 127; ++mc )
-             {
-                 if( mc % 10 == 0 )
-                 {
-                     currentSub = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle );
-                     char name[ 256 ];
-                     sprintf( name, "CC %d -> %d", mc, min( mc+10, 127 ));
-                     midiSub->addEntry( currentSub, name );
-                 }
-                 
-                 char name[ 256 ];
-                 sprintf( name, "CC # %d", mc );
-                 CCommandMenuItem *cmd = new CCommandMenuItem( CCommandMenuItem::Desc( name ) );
-                 cmd->setActions( [this,ccid,mc,&handled](CCommandMenuItem *men) {
-                     handled = true;
-                     synth->storage.controllers[ccid] = mc;
-                     synth->storage.save_midi_controllers();
-                 });
-                 currentSub->addEntry( cmd );
-                 
-             }
-             contextMenu->addEntry( midiSub, "Set Controller To..." );
-             
-         }
 
-         int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
-
-         if (lfo_id >= 0)
-         {
-            contextMenu->addEntry("-", eid++);
-            id_copy = eid;
-            contextMenu->addEntry("Copy", eid++);
-            if (synth->storage.get_clipboard_type() == cp_lfo)
-            {
-               id_paste = eid;
-               contextMenu->addEntry("Paste", eid++);
-            }
-         }
-
-         frame->addView(contextMenu); // add to frame
-         contextMenu->setDirty();
-         contextMenu->popup();
-         int command = contextMenu->getLastResult();
-         frame->removeView(contextMenu, true); // remove from frame and forget
-
-         if (command >= 0 && ! handled )
-         {
-            if (command == id_clearallmr)
-            {
-               for (int md = 1; md < n_total_md; md++)
-                  synth->clearModulation(md, modsource);
-               refresh_mod();
-
-               // Also blank out the name and rebuild the UI
-               if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
-               {
-                   synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
-                   synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
-                   ((CModulationSourceButton*)control)
-                       ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                   control->setDirty();
-                   control->invalid();
-
-                   synth->updateDisplay();
-               }
-            }
-            else if (command == id_learnctrl)
-            {
-               if (cancellearn)
-                  synth->learn_custom = -1;
-               else
-                  synth->learn_custom = ccid;
-            }
-            else if (command == id_clearctrl)
-            {
-               synth->storage.controllers[ccid] = -1;
-               synth->storage.save_midi_controllers();
-            }
-            else if (command == id_bipolar)
-            {
+            addCallbackMenu(contextMenu, "Bipolar", [this, control, ccid]() {
                bool bp =
                    !synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar();
                synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->set_bipolar(bp);
@@ -1735,79 +1686,77 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->get_output01();
                control->setValue(f);
                ((CModulationSourceButton*)control)->setBipolar(bp);
-               /*((gui_slider*)metaparam[ccid])->setValue(f);
-               ((gui_slider*)metaparam[ccid])->SetQuantitizedDispValue(f);
-               ((gui_slider*)metaparam[ccid])->setBipolar(synth->storage.getPatch().scene[0].modsources[ms_ctrl1+ccid]->is_bipolar());
-             */
-            }
-            else if (command == id_copy)
-            {
-               if (lfo_id >= 0)
-                  synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
-            }
-            else if (command == id_paste)
-            {
-               if (lfo_id >= 0)
-                  synth->storage.clipboard_paste(cp_lfo, sc, lfo_id);
-               queue_refresh = true;
-            }
-            else if (command == id_rename)
-            {
+            });
+            contextMenu->checkEntry(
+                eid, synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar());
+            eid++;
+
+            addCallbackMenu(contextMenu, "Rename", [this, control, ccid]() {
                spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid], 16);
                ((CModulationSourceButton*)control)
                    ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                control->setDirty();
-                control->invalid();
-               //((gui_slider*)metaparam[ccid])->setLabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+               control->setDirty();
+               control->invalid();
                synth->updateDisplay();
-            }
-            for (int md = 0; md < n_total_md; md++)
+            });
+            eid++;
+
+            contextMenu->addEntry("-", eid++);
+
+            // Construct submenus for expicit controller mapping
+            COptionMenu* midiSub =
+                new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+            COptionMenu* currentSub;
+            for (int mc = 0; mc < 127; ++mc)
             {
-               /* In the case where you have modulations like "Attack", "Pitch" and "Release" the default name
-                  of the modulation will be "Attack". So if you clear "Attack" you and you haven't renamed
-                  you want to change the name to "Pitch". But you have to do quite a bit of work to recreate what
-                  the next parameter short name is and comapre it in the same way it is done. So that's
-                  what this splat of code does.
-               */
-               if (clear_md[md] == command)
+               if (mc % 10 == 0)
                {
-                  bool resetName = false; // Should I reset the name?
-                  std::string newName = ""; // And to what?
-
-                  if (clear_md[md]==firstEIDForFirstClear)
-                  {
-                      if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
-                                  clearControlTargetNames[0].c_str(),
-                                  15) == 0 )
-                      {
-                          // So my modulator is named after my short name. I haven't been renamed. So I want to
-                          // reset at least to "-" unless someone is after me
-                          resetName = true;
-                          newName = "-";
-                          if (clearControlTargetNames.size() > 1)
-                              newName = clearControlTargetNames[1];
-                      }
-                  }
-
-                  synth->clearModulation(md, modsource);
-                  refresh_mod();
-                  
-                  if (resetName)
-                  {
-                     // And this is where we apply the name refresh, of course.
-                     strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], newName.c_str(), 15);
-                     synth->storage.getPatch().CustomControllerLabel[ccid][ 15 ] = 0;
-                     ((CModulationSourceButton*)control)
-                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                     control->setDirty();
-                     control->invalid();
-                     synth->updateDisplay();
-                  }
-                  
+                  currentSub =
+                      new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                  char name[256];
+                  sprintf(name, "CC %d -> %d", mc, min(mc + 10, 127));
+                  midiSub->addEntry(currentSub, name);
                }
+
+               char name[256];
+               sprintf(name, "CC # %d", mc);
+               CCommandMenuItem* cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+               cmd->setActions([this, ccid, mc](CCommandMenuItem* men) {
+                  synth->storage.controllers[ccid] = mc;
+                  synth->storage.save_midi_controllers();
+               });
+               currentSub->addEntry(cmd);
+            }
+            contextMenu->addEntry(midiSub, "Set Controller To...");
+         }
+
+         int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
+
+         if (lfo_id >= 0)
+         {
+            contextMenu->addEntry("-", eid++);
+            addCallbackMenu(contextMenu, "Copy", [this, sc, lfo_id]() {
+               if (lfo_id >= 0)
+                  synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
+            });
+            eid++;
+
+            if (synth->storage.get_clipboard_type() == cp_lfo)
+            {
+               addCallbackMenu(contextMenu, "Paste", [this, sc, lfo_id]() {
+                  if (lfo_id >= 0)
+                     synth->storage.clipboard_paste(cp_lfo, sc, lfo_id);
+                  queue_refresh = true;
+               });
+               eid++;
             }
          }
-         // remove from frame and forget
+
+         frame->addView(contextMenu); // add to frame
+         contextMenu->setDirty();
+         contextMenu->popup();
+         frame->removeView(contextMenu, true); // remove from frame and forget
+
          return 1;
       }
       return 0;
@@ -1836,8 +1785,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          COptionMenu* contextMenu =
              new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
          int eid = 0;
-         int id_temposync = -1, id_clearallmr = -1, id_extendrange = -1, id_learnctrl = -1,
-             id_clearctrl = -1, id_absolute = -1;
+
          contextMenu->addEntry((char*)p->get_name(), eid++);
          contextMenu->addEntry("-", eid++);
          char txt[256], txt2[512];
@@ -1849,109 +1797,45 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          // if(p->can_temposync() || p->can_extend_range())	contextMenu->addEntry("-",eid++);
          if (p->can_temposync())
          {
-            id_temposync = eid;
-            contextMenu->addEntry("Temposync", eid++);
-            contextMenu->checkEntry(id_temposync, p->temposync);
+            addCallbackMenu(contextMenu, "Temposync",
+                            [this, p]() { p->temposync = !p->temposync; });
+            contextMenu->checkEntry(eid, p->temposync);
+            eid++;
          }
          if (p->can_extend_range())
          {
-            id_extendrange = eid;
-            contextMenu->addEntry("Extend range", eid++);
-            contextMenu->checkEntry(id_extendrange, p->extend_range);
+            addCallbackMenu(contextMenu, "Extend range",
+                            [this, p]() { p->extend_range = !p->extend_range; });
+            contextMenu->checkEntry(eid, p->extend_range);
+            eid++;
          }
          if (p->can_be_absolute())
          {
-            id_absolute = eid;
-            contextMenu->addEntry("Absolute", eid++);
-            contextMenu->checkEntry(id_absolute, p->absolute);
+            addCallbackMenu(contextMenu, "Absolute", [this, p]() { p->absolute = !p->absolute; });
+            contextMenu->checkEntry(eid, p->absolute);
+            eid++;
          }
 
          {
-            id_learnctrl = eid;
             if (synth->learn_param > -1)
                cancellearn = true;
-            if (cancellearn)
-               contextMenu->addEntry("Abort learn controller", eid++);
-            else
-                contextMenu->addEntry("Learn controller [MIDI]", eid++);
-         }
-
-         if (p->midictrl >= 0)
-         {
-            id_clearctrl = eid;
-            char txt4[128];
-            decode_controllerid(txt4, p->midictrl);
-            sprintf(txt, "Clear controller [currently %s]", txt4);
-            contextMenu->addEntry(txt, eid++);
-         }
-
-         int n_ms = 0;
-         int clear_ms[n_modsources];
-         bool is_modulated = false;
-         for (int ms = 1; ms < n_modsources; ms++)
-            if (synth->isActiveModulation(ptag, (modsources)ms))
-               n_ms++;
-
-         if (n_ms)
-         {
-            contextMenu->addEntry("-", eid++);
-            for (int k = 1; k < n_modsources; k++)
-            {
-               modsources ms = (modsources)k;
-               if (synth->isActiveModulation(ptag, ms))
-               {
-                  char tmptxt[256];
-                  sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[ms],
-                          p->get_name(), synth->getModDepth(ptag, (modsources)ms));
-                  clear_ms[ms] = eid;
-                  contextMenu->addEntry(tmptxt, eid++);
-               }
-               else
-                  clear_ms[ms] = -1;
-            }
-            if (n_ms > 1)
-            {
-               id_clearallmr = eid;
-               contextMenu->addEntry("Clear all", eid++);
-            }
-         }
-
-         frame->addView(contextMenu); // add to frame
-         contextMenu->popup();
-
-         int command = contextMenu->getLastResult();
-         if (command >= 0)
-         {
-            if (command == id_temposync)
-            {
-               p->temposync = !p->temposync;
-            }
-            else if (command == id_extendrange)
-            {
-               p->extend_range = !p->extend_range;
-            }
-            else if (command == id_absolute)
-            {
-               p->absolute = !p->absolute;
-            }
-            else if (command == id_clearallmr)
-            {
-               for (int ms = 1; ms < n_modsources; ms++)
-               {
-                  synth->clearModulation(ptag, (modsources)ms);
-               }
-               refresh_mod();
-            }
-            else if (command == id_learnctrl)
-            {
+            std::string learnTag =
+                cancellearn ? "Abort learn controller" : "Learn controller [MIDI]";
+            addCallbackMenu(contextMenu, learnTag, [this, cancellearn, p] {
                if (cancellearn)
                   synth->learn_param = -1;
                else
                   synth->learn_param = p->id;
-            }
-            else if (command == id_clearctrl)
-            {
+            });
+            eid++;
+         }
 
+         if (p->midictrl >= 0)
+         {
+            char txt4[128];
+            decode_controllerid(txt4, p->midictrl);
+            sprintf(txt, "Clear controller [currently %s]", txt4);
+            addCallbackMenu(contextMenu, txt, [this, p, ptag]() {
                // p->midictrl = -1;
                // TODO add so parameter for both scenes are cleared!
                if (ptag < n_global_params)
@@ -1969,18 +1853,50 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
                   synth->storage.save_midi_controllers();
                }
-            }
+            });
+         }
+
+         int n_ms = 0;
+         // int clear_ms[n_modsources];
+         bool is_modulated = false;
+         for (int ms = 1; ms < n_modsources; ms++)
+            if (synth->isActiveModulation(ptag, (modsources)ms))
+               n_ms++;
+
+         if (n_ms)
+         {
+            contextMenu->addEntry("-", eid++);
+            for (int k = 1; k < n_modsources; k++)
             {
-               for (int ms = 1; ms < n_modsources; ms++)
+               modsources ms = (modsources)k;
+               if (synth->isActiveModulation(ptag, ms))
                {
-                  if (clear_ms[ms] == command)
-                  {
+                  char tmptxt[256];
+                  sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[ms],
+                          p->get_name(), synth->getModDepth(ptag, (modsources)ms));
+                  // clear_ms[ms] = eid;
+                  // contextMenu->addEntry(tmptxt, eid++);
+                  addCallbackMenu(contextMenu, tmptxt, [this, ms, ptag]() {
                      synth->clearModulation(ptag, (modsources)ms);
                      refresh_mod();
-                  }
+                  });
+                  eid++;
                }
             }
+            if (n_ms > 1)
+            {
+               addCallbackMenu(contextMenu, "Clear All", [this, ptag]() {
+                  for (int ms = 1; ms < n_modsources; ms++)
+                  {
+                     synth->clearModulation(ptag, (modsources)ms);
+                  }
+                  refresh_mod();
+               });
+            }
          }
+
+         frame->addView(contextMenu); // add to frame
+         contextMenu->popup();
          frame->removeView(contextMenu, true); // remove from frame and forget
          return 1;
       }
@@ -2593,7 +2509,6 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     COptionMenu* settingsMenu =
         new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
     int eid = 0;
-    bool handled = false;
 
     // Zoom submenus
     COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
@@ -2604,11 +2519,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
         std::ostringstream lab;
         lab << "Zoom to " << s << "%";
         CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-        zcmd->setActions([this,s,&handled](CCommandMenuItem *m) {
-                setZoomFactor(s);
-                handled = true;
-            }
-            );
+        zcmd->setActions([this, s](CCommandMenuItem* m) { setZoomFactor(s); });
         zoomSubMenu->addEntry(zcmd); zid++;
     }
 
@@ -2623,31 +2534,24 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
             lab << "Shrink by " << -jog << "%";
         
         CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-        zcmd->setActions([this,jog,&handled](CCommandMenuItem *m) {
-                setZoomFactor(getZoomFactor() + jog);
-                handled = true;
-            }
-            );
+        zcmd->setActions(
+            [this, jog](CCommandMenuItem* m) { setZoomFactor(getZoomFactor() + jog); });
         zoomSubMenu->addEntry(zcmd); zid++;
     }
 
     zoomSubMenu->addEntry("-", zid++);
     CCommandMenuItem *biggestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Largest"));
-    biggestZ->setActions([this, &handled](CCommandMenuItem *m)
-                             {
-                                 int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
-                                                                           90, // See comment in setZoomFactor
-                                                                           WINDOW_SIZE_X, WINDOW_SIZE_Y );
-                                 setZoomFactor(newZF);
-                                 handled = true;
-                             }
-        );
+    biggestZ->setActions([this](CCommandMenuItem* m) {
+       int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
+                                                 90, // See comment in setZoomFactor
+                                                 WINDOW_SIZE_X, WINDOW_SIZE_Y);
+       setZoomFactor(newZF);
+    });
     zoomSubMenu->addEntry(biggestZ); zid++;
 
     CCommandMenuItem *smallestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Smallest"));
-    smallestZ->setActions([this, &handled](CCommandMenuItem* m) {
+    smallestZ->setActions([this](CCommandMenuItem* m) {
        setZoomFactor(minimumZoom);
-       handled = true;
     });
     zoomSubMenu->addEntry(smallestZ); zid++;
 
@@ -2655,45 +2559,30 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     std::ostringstream zss;
     zss << "Set " << zoomFactor << "% as default";
     CCommandMenuItem *defaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(zss.str().c_str()));
-    defaultZ->setActions([this, &handled](CCommandMenuItem *m)
-                             {
-                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", this->zoomFactor);
-                                 handled = true;
-                             }
-        );
+    defaultZ->setActions([this](CCommandMenuItem* m) {
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom",
+                                              this->zoomFactor);
+    });
     zoomSubMenu->addEntry(defaultZ); zid++;
 
     settingsMenu->addEntry(zoomSubMenu, "Zoom"); eid++;
 
     settingsMenu->addSeparator(eid++);
-    
-    int id_openmanual = eid;
-    settingsMenu->addEntry("Surge Manual", eid++);
 
-    int id_about = eid;
-    settingsMenu->addEntry("About", eid++);
-    
-    frame->addView(settingsMenu); // add to frame
+    addCallbackMenu(settingsMenu, "SurgeManual", []() {
+       Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
+    });
+    eid++;
+    addCallbackMenu(settingsMenu, "About", [this]() {
+       if (aboutbox)
+          ((CAboutBox*)aboutbox)->boxShow();
+    });
+    eid++;
+
+    frame->addView(settingsMenu);
     settingsMenu->setDirty();
     settingsMenu->popup();
-
-    int command = settingsMenu->getLastResult();
     frame->removeView(settingsMenu, true);
-
-    if( handled )
-    {
-        // Someone else got it
-    }
-    else if(command == id_about)
-    {
-       if (aboutbox)
-           ((CAboutBox*)aboutbox)->boxShow();
-    }
-    else if(command == id_openmanual)
-    {
-        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
-    }
-
 }
 
 int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of range
@@ -2722,4 +2611,14 @@ int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of rang
 
     return result;
 }
+
+void SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* toThis,
+                                     std::string label,
+                                     std::function<void()> op)
+{
+   CCommandMenuItem* menu = new CCommandMenuItem(CCommandMenuItem::Desc(label.c_str()));
+   menu->setActions([op](CCommandMenuItem* m) { op(); });
+   toThis->addEntry(menu);
+}
+
 //------------------------------------------------------------------------------------------------
