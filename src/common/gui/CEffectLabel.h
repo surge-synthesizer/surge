@@ -4,7 +4,7 @@
 #pragma once
 #include "vstcontrols.h"
 
-extern VSTGUI::CFontRef surge_minifont;
+extern VSTGUI::CFontRef displayFont;
 
 class CEffectLabel : public VSTGUI::CControl
 {
@@ -22,7 +22,7 @@ public:
       dc->drawRect(bl, VSTGUI::kDrawFilled);
       dc->setFontColor(gray);
       // dc->setFont(kNormalFontSmaller,8,kBoldFace);
-      dc->setFont(surge_minifont);
+      dc->setFont(displayFont);
       dc->drawString(label.c_str(), size, VSTGUI::kLeftText, false);
       setDirty(false);
    }

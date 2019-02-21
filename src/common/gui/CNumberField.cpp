@@ -15,7 +15,7 @@
 using namespace VSTGUI;
 
 const int width = 62, margin = 6, height = 8, vmargin = 1;
-extern CFontRef surge_minifont;
+extern CFontRef displayFont;
 
 using namespace std;
 
@@ -273,7 +273,7 @@ void CNumberField::draw(CDrawContext* pContext)
 
    pContext->setFrameColor(lineColor);
 
-   pContext->setFont(surge_minifont);
+   pContext->setFont(displayFont);
    // tempContext->fillRect(sze);
    /*if(!altlook)
    {

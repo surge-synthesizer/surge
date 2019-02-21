@@ -7,9 +7,9 @@
 using namespace VSTGUI;
 using namespace std;
 
-extern CFontRef surge_minifont;
-extern CFontRef surge_patchfont;
-extern CFontRef surge_lfofont;
+extern CFontRef displayFont;
+extern CFontRef patchNameFont;
+extern CFontRef lfoTypeFont;
 
 void drawtri(CRect r, CDrawContext* context, int orientation)
 {
@@ -297,7 +297,7 @@ void CLFOGui::draw(CDrawContext* dc)
            tr.y2 = tr.y + 50;
            CColor ctext = {224,126,0,0xff};
            dc->setFontColor(ctext);
-           dc->setFont(surge_patchfont);
+           dc->setFont(patchNameFont);
            dc->drawString("LFO 1",tr,false,kCenterText);
    }*/
 
@@ -306,7 +306,7 @@ void CLFOGui::draw(CDrawContext* dc)
    CColor cselected = {0xfe, 0x98, 0x15, 0xff};
    // CColor blackColor (0, 0, 0, 0);
    dc->setFrameColor(cskugga);
-   dc->setFont(surge_lfofont);
+   dc->setFont(lfoTypeFont);
 
    rect_shapes = leftpanel;
    for (int i = 0; i < n_lfoshapes; i++)

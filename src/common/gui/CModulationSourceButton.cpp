@@ -9,7 +9,7 @@
 using namespace VSTGUI;
 using namespace std;
 
-extern CFontRef surge_minifont;
+extern CFontRef displayFont;
 
 enum
 {
@@ -154,7 +154,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    CRect framer(sze);
    CRect fillr(framer);
    fillr.inset(1, 1);
-   dc->setFont(surge_minifont);
+   dc->setFont(displayFont);
    dc->setFontColor(FontCol);
    dc->setFrameColor(FrameCol);
    dc->setFillColor(FillCol);

@@ -10,7 +10,7 @@
 using namespace VSTGUI;
 using namespace std;
 
-extern CFontRef surge_minifont;
+extern CFontRef displayFont;
 
 enum
 {
@@ -205,7 +205,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          dc->setFontColor(kWhiteCColor);
       else
          dc->setFontColor(kBlackCColor);
-      dc->setFont(surge_minifont);
+      dc->setFont(displayFont);
 
       //		int a = 'a' + (rand()&31);
       //		label[1] = a;
