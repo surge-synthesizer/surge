@@ -1,6 +1,8 @@
 #include "UserInteractions.h"
 #include <iostream>
 #include <iomanip>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace Surge
 {
@@ -31,6 +33,13 @@ namespace Surge
 
         void openURL(const std::string &url)
         {
+           if (vfork()==0)
+           {
+              if (execlp("xdg-open", "xdg-open", url.c_str(), (char*)nullptr) < 0)
+              {
+                 exit(0);
+              }
+           }
         }
     };
 };
