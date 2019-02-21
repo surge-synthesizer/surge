@@ -21,7 +21,7 @@ namespace fs = std::experimental::filesystem;
 const float disp_pitch = 90.15f - 48.f;
 const int wtbheight = 12;
 
-extern CFontRef surge_minifont;
+extern CFontRef displayFont;
 
 void COscillatorDisplay::draw(CDrawContext* dc)
 {
@@ -189,7 +189,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       dc->setFillColor(fgcol);
       dc->drawRect(rmenu, kDrawFilled);
       dc->setFontColor(kBlackCColor);
-      dc->setFont(surge_minifont);
+      dc->setFont(displayFont);
       // strupr(wttxt);
       dc->drawString(wttxt, rmenu, kCenterText, false);
 

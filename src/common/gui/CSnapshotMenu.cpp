@@ -10,7 +10,7 @@
 
 using namespace VSTGUI;
 
-extern CFontRef surge_minifont;
+extern CFontRef displayFont;
 
 // CSnapshotMenu
 
@@ -253,7 +253,7 @@ void CFxMenu::draw(CDrawContext* dc)
    // dc->fillRect(f1); dc->fillRect(f2);
 
    dc->setFontColor(kBlackCColor);
-   dc->setFont(surge_minifont);
+   dc->setFont(displayFont);
    CRect txtbox(lbox);
    txtbox.inset(2, 2);
    dc->setFillColor(kWhiteCColor);

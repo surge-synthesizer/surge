@@ -49,9 +49,9 @@ using namespace std;
 
 
 #if USE_RUNTIME_LOADED_FONTS
-CFontRef surge_minifont = NULL;
-CFontRef surge_patchfont = NULL;
-CFontRef surge_lfofont = NULL;
+CFontRef displayFont = NULL;
+CFontRef patchNameFont = NULL;
+CFontRef lfoTypeFont = NULL;
 #else
 
 #if LINUX
@@ -60,9 +60,9 @@ SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
 SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
 #endif
 
-CFontRef surge_minifont = minifont;
-CFontRef surge_patchfont = patchfont;
-CFontRef surge_lfofont = lfofont;
+CFontRef displayFont = minifont;
+CFontRef patchNameFont = patchfont;
+CFontRef lfoTypeFont = lfofont;
 #endif
 
 
@@ -163,12 +163,12 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #if USE_RUNTIME_LOADED_FONTS
    /*
    ** As documented in RuntimeFonts.h, the contract of this function is to side-effect
-   ** onto globals surge_minifont and surge_patchfont with valid fonts from the runtime
+   ** onto globals displayFont and patchNameFont with valid fonts from the runtime
    ** distribution
    */
    Surge::GUI::initializeRuntimeFont();
 
-   if (surge_minifont == NULL)
+   if (displayFont == NULL)
    {
        /*
        ** OK the runtime load didn't work. Fall back to
@@ -193,8 +193,8 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
        SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
 #endif
 
-       surge_minifont = minifont;
-       surge_patchfont = patchfont;
+       displayFont = minifont;
+       patchNameFont = patchfont;
 
    }
 #endif
@@ -644,7 +644,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
            CTextLabel *Comments = new
    CTextLabel(CommentsRect,synth->storage.getPatch().comment.c_str());
            Comments->setTransparency(true);
-           Comments->setFont(surge_minifont);
+           Comments->setFont(displayFont);
            Comments->setHoriAlign(kMultiLineCenterText);
            frame->addView(Comments);
    }*/

@@ -8,8 +8,8 @@
 using namespace VSTGUI;
 using namespace std;
 
-extern CFontRef surge_minifont;
-extern CFontRef surge_patchfont;
+extern CFontRef displayFont;
+extern CFontRef patchNameFont;
 
 void CPatchBrowser::draw(CDrawContext* dc)
 {
@@ -34,10 +34,10 @@ void CPatchBrowser::draw(CDrawContext* dc)
    // al.top += 2;
    al.bottom = al.top + 12;
    dc->setFontColor(kBlackCColor);
-   dc->setFont(surge_patchfont);
+   dc->setFont(patchNameFont);
    dc->drawString(pname.c_str(), ar, kCenterText, true);
 
-   dc->setFont(surge_minifont);
+   dc->setFont(displayFont);
    dc->drawString(category.c_str(), al, kLeftText, true);
    al.offset(0, 12);
    dc->drawString(author.c_str(), al, kLeftText, true);
