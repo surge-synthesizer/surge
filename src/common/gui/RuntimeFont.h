@@ -31,3 +31,4 @@ void initializeRuntimeFont();
 */
 extern VSTGUI::CFontRef surge_minifont;
 extern VSTGUI::CFontRef surge_patchfont;
+extern VSTGUI::CFontRef surge_lfofont;
