@@ -51,21 +51,18 @@ using namespace std;
 #if USE_RUNTIME_LOADED_FONTS
 CFontRef surge_minifont = NULL;
 CFontRef surge_patchfont = NULL;
+CFontRef surge_lfofont = NULL;
 #else
 
-#if MAC
-SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
-SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
-#elif LINUX
+#if LINUX
 SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
-#else
-SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
-SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
+SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
 #endif
 
 CFontRef surge_minifont = minifont;
 CFontRef surge_patchfont = patchfont;
+CFontRef surge_lfofont = lfofont;
 #endif
 
 

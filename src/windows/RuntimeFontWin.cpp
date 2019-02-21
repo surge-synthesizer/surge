@@ -102,9 +102,10 @@ void initializeRuntimeFont()
     */
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> minifont = new VSTGUI::CFontDesc("Lato", 9);
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> patchfont = new VSTGUI::CFontDesc("Lato", 14);
+    VSTGUI::SharedPointer<VSTGUI::CFontDesc> lfofont = new VSTGUI::CFontDesc("Lato", 8);
     surge_minifont = minifont;
     surge_patchfont = patchfont;
-
+    surge_lfofont = lfofont;
 }
 
 }

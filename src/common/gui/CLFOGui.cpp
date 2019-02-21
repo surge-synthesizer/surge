@@ -9,21 +9,7 @@ using namespace std;
 
 extern CFontRef surge_minifont;
 extern CFontRef surge_patchfont;
-
-// At a later date, fix this along with the other font issues between platforms. Keep this
-// in this unit only.
-// See github issue #295. The minifont is 1pt too big so shrink it by 1 px.
-// Ideally we would shift all fonts to a bundled lato but that requires us
-// to resolve github issue #214
-#if MAC
-SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("Lucida Grande", 8); // one smaller than minifont
-#elif LINUX
-SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("sans-serif", 8);
-#else
-SharedPointer<CFontDesc> lfoLabelFont = new CFontDesc("Microsoft Sans Serif", 8);
-#endif
-
-CFontRef surge_lfoLabelFont = lfoLabelFont;
+extern CFontRef surge_lfofont;
 
 void drawtri(CRect r, CDrawContext* context, int orientation)
 {
@@ -320,7 +306,7 @@ void CLFOGui::draw(CDrawContext* dc)
    CColor cselected = {0xfe, 0x98, 0x15, 0xff};
    // CColor blackColor (0, 0, 0, 0);
    dc->setFrameColor(cskugga);
-   dc->setFont(surge_lfoLabelFont);
+   dc->setFont(surge_lfofont);
 
    rect_shapes = leftpanel;
    for (int i = 0; i < n_lfoshapes; i++)
