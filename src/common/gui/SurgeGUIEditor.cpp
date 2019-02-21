@@ -215,11 +215,6 @@ SurgeGUIEditor::~SurgeGUIEditor()
 
 void SurgeGUIEditor::idle()
 {
-    if(zoomInvalid)
-    {
-        setZoomFactor(getZoomFactor());
-        zoomInvalid = false;
-    }
 #if TARGET_VST2 && LINUX
    if (!super::idle2())
        return;
@@ -228,6 +223,12 @@ void SurgeGUIEditor::idle()
       return;
    if (editor_open && frame && !synth->halt_engine)
    {
+      if(zoomInvalid)
+      {
+         setZoomFactor(getZoomFactor());
+         zoomInvalid = false;
+      }
+      
       if (aboutbox && (aboutbox->getValue() > 0.5f))
          return;
       /*static CDrawContext drawContext
@@ -2451,6 +2452,16 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
+   /*
+   ** If getScreenDimensions() can't determine a size on all paltforms it now
+   ** returns a size 0 screen. In that case we will skip the min check but
+   ** need to remember the zoom is invalid
+   */
+   if (screenDim.getWidth() == 0 || screenDim.getHeight() == 0)
+   {
+      zoomInvalid = true;
+   }
+   
 #if TARGET_VST3
    /*
    ** VST3 doesn't have this API available to it, so just assume for now
@@ -2473,7 +2484,13 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    */
    int maxScreenUsage = 90;
 
-   if (zf != 100.0 && zf > 100 && (
+   /*
+   ** In the startup path we may not have a clean window yet to give us a trustworthy
+   ** screen dimension; so allow callers to supress this check with an optional
+   ** variable and set it only in the constructor of SurgeGUIEditor
+   */
+   if (zf != 100.0 && zf > 100 &&
+       screenDim.getHeight() > 0 && screenDim.getWidth() > 0 && (
            (baseW * zf / 100.0) > maxScreenUsage * screenDim.getWidth() / 100.0 ||
            (baseH * zf / 100.0) > maxScreenUsage * screenDim.getHeight() / 100.0
            )

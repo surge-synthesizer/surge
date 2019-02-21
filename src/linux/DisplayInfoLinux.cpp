@@ -46,11 +46,9 @@ CRect getScreenDimensions(CFrame *)
         }
         else
         {
-            std::cerr << "Linux Screen Size: Falling back to defaut mid sized laptop screen since no display available" << std::endl;
-            dispinfoScreenW = 1440;
-            dispinfoScreenH = 1050;
+            dispinfoScreenW = 0;
+            dispinfoScreenH = 0;
         }
-
     }
         
     return CRect(CPoint(0,0), CPoint(dispinfoScreenW, dispinfoScreenH)); 
