@@ -221,7 +221,7 @@ if [[ ! -z "$OPTION_help" ]]; then
 fi
 
 if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "vst2" ]; then
-    if [ -e "surge-vst2.make" ]; then
+    if [ -e "surge-vst2.make" ] || [ ! -z "$VST2SDK_DIR" ]; then
         OPTION_vst2=1
     fi
 fi
