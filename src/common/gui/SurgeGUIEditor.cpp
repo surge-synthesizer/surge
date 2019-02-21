@@ -495,6 +495,13 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
         switch (code.virt)
         {
         case VKEY_TAB:
+            if (saveDialog && saveDialog->isVisible())
+            {
+               /* 
+               ** SaveDialog gets access to the tab key to switch between fields if it is open
+               */
+               return -1;
+            }
             toggle_mod_editing();
             return 1;
 #if !LINUX
