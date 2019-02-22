@@ -141,8 +141,9 @@ run_install()
 
     if [ ! -z "$OPTION_vst3" ]; then
         echo "Installing VST3"
+        # No dest plugin name here since we are a bundle
         rsync -r --delete $OPTION_vst3_src_path \
-                          $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
+                          $OPTION_vst3_dest_path
     fi
 
     if [ ! -z "$OPTION_headless" ]; then
@@ -237,7 +238,7 @@ fi
 if [ -z "$OPTION_debug" ]; then
     OPTION_config="config=release_x64"
     OPTION_vst2_src_path="target/vst2/Release/Surge.so"
-    OPTION_vst3_src_path="target/vst3/Release/Surge.so"
+    OPTION_vst3_src_path="products/Surge.vst3"
     OPTION_headless_src_path="target/headless/Release/Surge"
     OPTION_dest_plugin_name="Surge.so"
     OPTION_dest_headless_name="Surge-Headless"

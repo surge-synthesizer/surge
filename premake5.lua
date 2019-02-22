@@ -551,6 +551,7 @@ elseif (os.istarget("windows")) then
     targetextension ".vst3"
 
 elseif (os.istarget("linux")) then
+    postbuildcommands { "./scripts/linux/package-vst3.sh" }
 
     files
     {
