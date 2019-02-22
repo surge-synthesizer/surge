@@ -150,7 +150,9 @@ private:
    
 private:
    std::function< void(SurgeGUIEditor *) > zoom_callback;
-   
+   bool zoomInvalid;
+   int minimumZoom;
+
    SurgeBitmaps bitmap_keeper;
 
    VSTGUI::CControl* vu[16];
@@ -178,5 +180,10 @@ private:
    bool blinkstate = false;
    void* _effect = nullptr;
    VSTGUI::CVSTGUITimer* _idleTimer = nullptr;
+
+   /*
+   ** Utility Function
+   */
+   void addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
 };
 

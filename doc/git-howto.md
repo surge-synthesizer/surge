@@ -141,4 +141,28 @@ git push origin master --force
 More than enough people who end up in this situation also find [this stackoverflow answer](https://stackoverflow.com/questions/1628088/reset-local-repository-branch-to-be-just-like-remote-repository-head)
 to be very useful.
 
+## Squashing commits
+
+Often the number of commits you do in a branch is more than the number of actual changes. For instance a typical 
+pattern would be develop on mac, do a commit, then test it on windows and linux. On linux if you find an error you 
+make a one line change and commit that. Now your change, which is still "one thing" has two commits.
+
+Or perhaps you develop your code over a week committing regularly and all those intermediate work commits
+aren't ones you wnat to make visibile. Or perhaps you develop then format as a last step and have changes.
+
+In any case, as maintainers, we would sooner have a small number of git commits in our Pull Requests.
+
+To accomplish this you can squash your commits into a single commit and write a good message. To do this
+you use `git rebase` which is generally a terrifying command, but in interactive mode, is not as bad.
+
+The easiest approach is, with your branch checked out and committed, to run `git rebase -i master`. This will
+popup a first editor with all your commits. Have one set as "pick" (usually the first one) and set the rest to
+"squash". (There are other settings of course, but a use case of flatten to one commit is best done this way).
+Change the others to "squash" by just editing and writing the file. Then you get a change to restate your commit
+message with the default being the union of commit messages. Rewrite and save as normal.
+
+Then `git push origin my-branch --force` will send your newly based branch up to github. Do a pull request and you
+should see one commit with your lovely new message.
+
+
 

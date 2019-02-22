@@ -227,6 +227,7 @@ function plugincommon()
         "src/common/SurgeStorageLoadWavetable.cpp",
         "src/common/SurgeSynthesizer.cpp",
         "src/common/SurgeSynthesizerIO.cpp",
+        "src/common/UserDefaults.cpp",
         "libs/xml/tinyxml.cpp",
         "libs/xml/tinyxmlerror.cpp",
         "libs/xml/tinyxmlparser.cpp",
@@ -550,6 +551,7 @@ elseif (os.istarget("windows")) then
     targetextension ".vst3"
 
 elseif (os.istarget("linux")) then
+    postbuildcommands { "./scripts/linux/package-vst3.sh" }
 
     files
     {

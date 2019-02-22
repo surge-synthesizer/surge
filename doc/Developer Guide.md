@@ -109,6 +109,23 @@ Use single line comments sparingly, but where appropriate, feel free.
 
 Generally: Comment your code. Someone coming after you will thank you. And that someone may be you!
 
+### Format your code properly with clang-format
+
+Surge ships with a `.clang-format` file which makes choices about how to format code. You can
+use this to make sure your diffs are formatted properly. Here's how
+
+* install `clang-format` and `git-clang-format`. On macOS this can be done with
+  `brew install clang-format`. On linux and windows it is left as an exercise to the reader.
+  If you complete that exercise, please update this doc!
+* Develop and so on as you normally would following the prescription in our
+  [git howto](git-howto.md)
+* Format the code at one of two development points:
+  * Before you commit but after you add, do a `git clang-format` and it will correct your code
+  * Add a series of commits on your branch (because you are on branch of course to develop)
+    then at the very end, `git clang-format master` will reformat all your changes from master.
+    Commit and squash that commit.
+
+
 ### Miscellany
 
 Occasionally code needs an `#if MAC` but if you have entire classes with parallel implementations
