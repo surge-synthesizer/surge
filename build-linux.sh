@@ -255,12 +255,12 @@ if [[ ! -z "$OPTION_local" ]]; then
     OPTION_vst2_dest_path="$HOME/.vst"
     OPTION_vst3_dest_path="$HOME/.vst3"
     OPTION_headless_dest_path="$HOME/bin"
-    OPTION_data_path="$HOME/.local/share/Surge"
+    OPTION_data_path="$HOME/.local/share/surge-synthesizer"
 else
     OPTION_vst2_dest_path="/usr/lib/vst"
     OPTION_vst3_dest_path="/usr/lib/vst3"
     OPTION_headless_dest_path="/usr/bin"
-    OPTION_data_path="/usr/share/Surge"
+    OPTION_data_path="/usr/share/surge-synthesizer"
 fi
 
 case $1 in

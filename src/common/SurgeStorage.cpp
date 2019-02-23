@@ -157,9 +157,9 @@ SurgeStorage::SurgeStorage()
 #elif LINUX
    const char* xdgDataPath = getenv("XDG_DATA_HOME");
    if (xdgDataPath)
-      datapath = std::string(xdgDataPath) + "/Surge/";
+      datapath = std::string(xdgDataPath) + "/surge-synthesizer/";
    else
-      datapath = std::string(homePath) + "/.local/share/Surge/";
+      datapath = std::string(homePath) + "/.local/share/surge-synthesizer/";
 
    userDataPath = std::string(homePath) + "/Documents/Surge";
 #elif WINDOWS
