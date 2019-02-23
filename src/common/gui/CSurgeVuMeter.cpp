@@ -53,15 +53,19 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
    CRect size = getViewSize();
    CRect lbox(size);
 
-   dc->setFrameColor(kBlackCColor);
-   CRect f1(lbox), f2(lbox);
-   f1.inset(1, 1);
-   f2.inset(0, 2);
-   dc->drawRect(f1);
-   dc->drawRect(f2);
+   VSTGUI::CDrawMode origMode = dc->getDrawMode();
+   VSTGUI::CDrawMode newMode(VSTGUI::kAntiAliasing);
+   dc->setDrawMode(newMode);
 
-   lbox.right--;
-   lbox.bottom--;
+   dc->setFillColor(VSTGUI::CColor(0xCD, 0xCE, 0xD4)); // The light gray from origina-vector skin
+   dc->drawRect(size, VSTGUI::kDrawFilled);
+
+   CRect rectBox = lbox;
+   rectBox.inset(1, 1);
+   VSTGUI::CGraphicsPath* path = dc->createRoundRectGraphicsPath(rectBox, 2);
+
+   dc->setFillColor(kBlackCColor);
+   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathFilled);
 
    CRect bar(lbox);
    bar.inset(2, 2);
@@ -104,15 +108,15 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
 
       barblack.left = bar.right - 1;
       barblack.right++;
-      dc->setFillColor(kBlackCColor);
-      dc->drawRect(barblack, kDrawFilled);
 
       if (stereo)
       {
          CRect midline(lbox);
          midline.inset(0, 4);
-         midline.left++;
-         midline.top++;
+         midline.left+=2;
+         midline.right-=2;
+         midline.top+=2;
+         midline.bottom --;
          // midline.bottom = midline.top+2;
          bar.offset(0, 3);
          barblack.offset(0, 3);
@@ -124,9 +128,16 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
 
          barblack.left = bar.right - 1;
          dc->setFillColor(kBlackCColor);
-         dc->drawRect(barblack, kDrawFilled);
          dc->drawRect(midline, kDrawFilled);
       }
    }
+
+   dc->setFrameColor(VSTGUI::CColor(0xA1, 0xA4, 0xB7)); // the dark gray from original vector skin
+   dc->setLineWidth(1);
+   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathStroked);
+
+   path->forget();
+   dc->setDrawMode(origMode);
+
    setDirty(false);
 }

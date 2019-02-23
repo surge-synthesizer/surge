@@ -21,6 +21,10 @@ public:
    void setType(int vutype);
    // void setSecondaryValue(float v);
    void setValueR(float f);
+   float getValueR()
+   {
+      return valueR;
+   }
    bool stereo;
 
 private:

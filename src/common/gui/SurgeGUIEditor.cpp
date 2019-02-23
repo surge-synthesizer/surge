@@ -321,9 +321,20 @@ void SurgeGUIEditor::idle()
          }
       }
 
-      vu[0]->setValue(synth->vu_peak[0]);
-      ((CSurgeVuMeter*)vu[0])->setValueR(synth->vu_peak[1]);
-      vu[0]->invalid();
+      bool vuInvalid = false;
+      if (synth->vu_peak[0] != vu[0]->getValue())
+      {
+         vuInvalid = true;
+         vu[0]->setValue(synth->vu_peak[0]);
+      }
+      if (synth->vu_peak[1] != ((CSurgeVuMeter*)vu[0])->getValueR())
+      {
+         ((CSurgeVuMeter*)vu[0])->setValueR(synth->vu_peak[1]);
+         vuInvalid = true;
+      }
+      if (vuInvalid)
+         vu[0]->invalid();
+
       for (int i = 0; i < 8; i++)
       {
          assert(i + 1 < Effect::KNumVuSlots);

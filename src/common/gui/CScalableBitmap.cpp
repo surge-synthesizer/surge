@@ -115,6 +115,32 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc)
 
 void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoint& offset, float alpha )
 {
+    /*
+    ** CViewContainer, in the ::drawRect method, no matter what invalidates, calls a drawBackground
+    ** on the entire background with a clip rectangle applied. This is not normally a problem when
+    ** you invalidate infrequently or just have a constant color background. But in Surge we have
+    ** a drawn background on our frame and we invalidate part of our UI every frame because of the
+    ** vu meter. So every cycle we redraw our entire background into a vu meter sized clip rectangle
+    ** which is immediately overwritten by a vu meter which fills its entire space.
+    **
+    ** There's no good way out of this. We can't subclass CFrame since it is final (yuch).
+    ** We cant have the vu meter not invalidate. So we make the bitmap smart.
+    **
+    ** Well, smart. We make it so that if we are redrawing a rectangle which is positioned relative
+    ** to the background at the same point as the VU Meter. That is, a draw at 763+14 on a background
+    ** of size 904x542 (ratioed for scaling) gets background supressed.
+    **
+    ** Am I particularly proud of this? No. But it does supress all those draws.
+    */
+    VSTGUI::CRect cl;
+    context->getClipRect(cl);
+    float p1 = cl.getTopLeft().x / rect.getWidth();
+    float p2 = cl.getTopLeft().y / rect.getHeight();
+    if (fabs(p1 - 763.0 / 904.4) < 0.01 && fabs(p2 - 14.0 / 542.0) < 0.01)
+    {
+       return;
+    }
+
     if (lastSeenZoom != currentPhysicalZoomFactor)
     {
         int ns = -1;
