@@ -2411,10 +2411,22 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
 
    if (buttons || forceMB)
    {
+      // make sure an infowindow doesn't appear twice
+      if (((CParameterTooltip*)infowindow)->isVisible())
+      {
+         ((CParameterTooltip*)infowindow)->Hide();
+         ((CParameterTooltip*)infowindow)->invalid();
+      }
+
       ((CParameterTooltip*)infowindow)->setViewSize(r);
       ((CParameterTooltip*)infowindow)->Show();
       infowindow->invalid();
+      // on Linux the infoview closes too soon
+      #if LINUX
+      clear_infoview_countdown = 100;
+      #else
       clear_infoview_countdown = 40;
+      #endif
    }
    else
    {

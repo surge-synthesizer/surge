@@ -39,5 +39,7 @@ public:
    virtual VSTGUI::CMouseEventResult
    onMouseMoved(VSTGUI::CPoint& where,
                 const VSTGUI::CButtonState& buttons); ///< called when a mouse move event occurs
+   virtual bool
+   onWheel (const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons); ///< called when scrollwheel events occurs    
    CLASS_METHODS(CHSwitch2, VSTGUI::CControl)
 };

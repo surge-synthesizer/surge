@@ -435,3 +435,36 @@ void CSurgeSlider::setBipolar(bool b)
 
    setDirty();
 }
+bool CSurgeSlider::onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons)
+{
+   // shift + scrollwheel for fine control
+   double rate = 0.1 * moverate;
+   if (buttons & kShift)
+      rate *= 0.05;
+   
+   edit_value = modmode ? &modval : &value;
+   oldVal = *edit_value;
+   
+   beginEdit();
+   *edit_value += rate * distance;
+   bounceValue();
+   if (modmode)
+   {
+      setModValue(*edit_value);
+   }
+   else
+   {
+      setValue(value);
+   }
+   setDirty();
+   if (isDirty() && listener)
+      listener->valueChanged(this);
+   //endEdit();
+   /*
+   ** No need to call endEdit since the timer in SurgeGUIEditor will close the
+   ** info window, and  SurgeGUIEditor will make sure a window
+   ** doesn't appear twice
+   */
+   edit_value = nullptr;
+   return true;   
+}

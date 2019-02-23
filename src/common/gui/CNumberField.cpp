@@ -657,7 +657,21 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
    }
    return kMouseEventHandled;
 }
-
+bool CNumberField::onWheel(const CPoint& where, const float& distance, const CButtonState& buttons)
+{
+   beginEdit();
+   i_value += int(distance);
+   int steps = i_max - i_min;
+   int offset = i_value - i_min;
+   float multiplier = 1.0f / (float) steps;
+   value = (float) offset * multiplier;
+   setIntValue(i_value); // also does bounceValue for i_value and value ..and setDirty
+   setValue(value);
+   if (isDirty() && listener)
+         listener->valueChanged(this);
+   endEdit();
+   return true;
+}
 //------------------------------------------------------------------------
 /*void CParamEdit::mouse (CDrawContext *pContext, CPoint &where, long buttons)
 {
