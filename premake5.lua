@@ -302,6 +302,15 @@ function plugincommon()
             "-std=c++14"
         }
 
+        configuration { "Release*" }
+        buildoptions {
+            "-fvisibility=hidden",
+            "-fvisibility-inlines-hidden",
+            "-fdata-sections",
+            "-ffunction-sections",
+        }
+        configuration {}
+
         files
         {
             "src/linux/*.mm",
@@ -338,6 +347,17 @@ function plugincommon()
             "`pkg-config --libs cairo fontconfig freetype2 xkbcommon-x11 xcb-cursor xcb-keysyms xcb-xkb xcb-util x11`",
             "-Wl,--no-undefined",
         }
+
+        configuration ("Release")
+        linkoptions {
+            "-fdata-sections",
+            "-ffunction-sections",
+            "-Wl,-O1",
+            "-Wl,--as-needed",
+            "-Wl,--gc-sections",
+            "-Wl,--strip-all",
+        }
+        configuration()
     elseif (os.istarget("windows")) then
 
         pchheader "precompiled.h"
