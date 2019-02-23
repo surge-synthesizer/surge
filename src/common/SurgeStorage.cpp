@@ -161,6 +161,16 @@ SurgeStorage::SurgeStorage()
    else
       datapath = std::string(homePath) + "/.local/share/Surge/";
 
+   /*
+   ** If local directory doesn't exists - we probably came here through an installer -
+   ** use /usr/share/Surge as our last guess
+   */
+   if (! fs::is_directory(datapath))
+   {
+      datapath = "/usr/share/Surge/";
+   }
+      
+   
    userDataPath = std::string(homePath) + "/Documents/Surge";
 #elif WINDOWS
    PWSTR localAppData;
