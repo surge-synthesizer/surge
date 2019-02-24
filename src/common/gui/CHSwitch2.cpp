@@ -107,3 +107,26 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
    }
    return kMouseEventNotHandled;
 }
+bool CHSwitch2::onWheel(const CPoint& where, const float& distance, const CButtonState& buttons)
+{
+   float newVal=value;
+   float rate = 1.0f;
+   float range = getRange();
+   if (columns >1)
+   {
+      rate = range / (float)columns;
+      newVal += rate * distance;
+   }
+   else
+   {
+      rate = range / (float)rows;
+      newVal += rate * -distance; // flip distance (==direction) because it makes more sense when wheeling
+   }
+   beginEdit();
+   value = newVal;
+   bounceValue();
+   if (listener)
+      listener->valueChanged(this);
+   setValue(value);
+   return true;
+}
