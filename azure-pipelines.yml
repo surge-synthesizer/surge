@@ -168,11 +168,13 @@ jobs:
       secureFile: notify-releases.sh
 
   - bash: |
-      echo "Notifying releases for branch: $BUILD_SOURCEBRANCHNAME"
+      echo "Notifying releases for branch: $BUILD_SOURCEBRANCH"
 
-      if ! [[ $BUILD_SOURCEBRANCHNAME =~ ^(master|release/.+|refs/heads/release/.+)$ ]]; then
+      # remove refs/heads/
+      export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
+      if ! [[ $BRANCH =~ ^(master|release/.+)$ ]]; then
         exit
       fi
 
-      bash $AGENT_TEMPDIRECTORY/notify-releases.sh
+      . $AGENT_TEMPDIRECTORY/notify-releases.sh $BRANCH
     displayName: Notify Releases
