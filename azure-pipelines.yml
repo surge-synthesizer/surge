@@ -3,7 +3,7 @@
 
 trigger:
 - master
-- releases/*
+- release/*
 
 pr:
 - master
@@ -103,6 +103,7 @@ jobs:
       sudo apt-get install -y libxcb-keysyms1-dev
       sudo apt-get install -y libxkbcommon-dev
       sudo apt-get install -y libxkbcommon-x11-dev
+      sudo apt-get install -y devscripts
 
       ./build-linux.sh clean && ./build-linux.sh build
 
@@ -140,6 +141,21 @@ jobs:
     condition: variables.isMac
     displayName: Publish macOS DMG
 
+  - bash: |
+      echo "SURGE_VERSION=$SURGE_VERSION"
+      pushd installer_linux
+      ./make_deb.sh 
+      popd
+    condition: variables.isLinux
+    displayName: Make Linux deb installer
+
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'INSTALLER_LINUX_DEB'
+      targetPath: 'installer_linux/product'
+    condition: variables.isLinux
+    displayName: Publish Linux deb installer
+
 - job: NotifyReleases
   dependsOn: Build
   condition: succeeded()
@@ -152,12 +168,13 @@ jobs:
       secureFile: notify-releases.sh
 
   - bash: |
-      if ! [[ $BUILD_SOURCEBRANCHNAME =~ ^(master|release/.+)$ ]]; then
+      echo "Notifying releases for branch: $BUILD_SOURCEBRANCH"
+
+      # remove refs/heads/
+      export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
+      if ! [[ $BRANCH =~ ^(master|release/.+)$ ]]; then
         exit
       fi
 
-      echo "Notifying releases..."
-
-      bash $AGENT_TEMPDIRECTORY/notify-releases.sh
+      . $AGENT_TEMPDIRECTORY/notify-releases.sh $BRANCH
     displayName: Notify Releases
-

@@ -49,23 +49,20 @@ using namespace std;
 
 
 #if USE_RUNTIME_LOADED_FONTS
-CFontRef surge_minifont = NULL;
-CFontRef surge_patchfont = NULL;
+CFontRef displayFont = NULL;
+CFontRef patchNameFont = NULL;
+CFontRef lfoTypeFont = NULL;
 #else
 
-#if MAC
-SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
-SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
-#elif LINUX
+#if LINUX
 SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
 SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
-#else
-SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
-SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
+SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
 #endif
 
-CFontRef surge_minifont = minifont;
-CFontRef surge_patchfont = patchfont;
+CFontRef displayFont = minifont;
+CFontRef patchNameFont = patchfont;
+CFontRef lfoTypeFont = lfofont;
 #endif
 
 
@@ -166,12 +163,12 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #if USE_RUNTIME_LOADED_FONTS
    /*
    ** As documented in RuntimeFonts.h, the contract of this function is to side-effect
-   ** onto globals surge_minifont and surge_patchfont with valid fonts from the runtime
+   ** onto globals displayFont and patchNameFont with valid fonts from the runtime
    ** distribution
    */
    Surge::GUI::initializeRuntimeFont();
 
-   if (surge_minifont == NULL)
+   if (displayFont == NULL)
    {
        /*
        ** OK the runtime load didn't work. Fall back to
@@ -196,8 +193,8 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
        SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
 #endif
 
-       surge_minifont = minifont;
-       surge_patchfont = patchfont;
+       displayFont = minifont;
+       patchNameFont = patchfont;
 
    }
 #endif
@@ -321,9 +318,20 @@ void SurgeGUIEditor::idle()
          }
       }
 
-      vu[0]->setValue(synth->vu_peak[0]);
-      ((CSurgeVuMeter*)vu[0])->setValueR(synth->vu_peak[1]);
-      vu[0]->invalid();
+      bool vuInvalid = false;
+      if (synth->vu_peak[0] != vu[0]->getValue())
+      {
+         vuInvalid = true;
+         vu[0]->setValue(synth->vu_peak[0]);
+      }
+      if (synth->vu_peak[1] != ((CSurgeVuMeter*)vu[0])->getValueR())
+      {
+         ((CSurgeVuMeter*)vu[0])->setValueR(synth->vu_peak[1]);
+         vuInvalid = true;
+      }
+      if (vuInvalid)
+         vu[0]->invalid();
+
       for (int i = 0; i < 8; i++)
       {
          assert(i + 1 < Effect::KNumVuSlots);
@@ -495,6 +503,13 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
         switch (code.virt)
         {
         case VKEY_TAB:
+            if (saveDialog && saveDialog->isVisible())
+            {
+               /* 
+               ** SaveDialog gets access to the tab key to switch between fields if it is open
+               */
+               return -1;
+            }
             toggle_mod_editing();
             return 1;
 #if !LINUX
@@ -647,7 +662,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
            CTextLabel *Comments = new
    CTextLabel(CommentsRect,synth->storage.getPatch().comment.c_str());
            Comments->setTransparency(true);
-           Comments->setFont(surge_minifont);
+           Comments->setFont(displayFont);
            Comments->setHoriAlign(kMultiLineCenterText);
            frame->addView(Comments);
    }*/

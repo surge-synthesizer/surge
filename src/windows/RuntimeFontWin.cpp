@@ -51,7 +51,7 @@ void initializeRuntimeFont()
     /*
     ** Someone may have already initialized the globals. Don't do it twice
     */
-    if (surge_minifont != NULL || surge_patchfont != NULL)
+    if (displayFont != NULL || patchNameFont != NULL)
         return;
 
     /*
@@ -102,9 +102,10 @@ void initializeRuntimeFont()
     */
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> minifont = new VSTGUI::CFontDesc("Lato", 9);
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> patchfont = new VSTGUI::CFontDesc("Lato", 14);
-    surge_minifont = minifont;
-    surge_patchfont = patchfont;
-
+    VSTGUI::SharedPointer<VSTGUI::CFontDesc> lfofont = new VSTGUI::CFontDesc("Lato", 8);
+    displayFont = minifont;
+    patchNameFont = patchfont;
+    lfoTypeFont = lfofont;
 }
 
 }
