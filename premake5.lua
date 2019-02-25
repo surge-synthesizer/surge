@@ -348,7 +348,7 @@ function plugincommon()
             "-Wl,--no-undefined",
         }
 
-        configuration ("Release")
+        configuration {"Release*"}
         linkoptions {
             "-fdata-sections",
             "-ffunction-sections",
@@ -357,7 +357,7 @@ function plugincommon()
             "-Wl,--gc-sections",
             "-Wl,--strip-all",
         }
-        configuration()
+        configuration{}
     elseif (os.istarget("windows")) then
 
         pchheader "precompiled.h"

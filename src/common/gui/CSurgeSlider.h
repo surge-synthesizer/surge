@@ -28,6 +28,8 @@ public:
    virtual void draw(VSTGUI::CDrawContext*);
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    // virtual bool onWheel (VSTGUI::CDrawContext *pContext, const VSTGUI::CPoint &where, float distance);
+   virtual bool 
+   onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons);
 
    virtual VSTGUI::CMouseEventResult
    onMouseDown(VSTGUI::CPoint& where,
