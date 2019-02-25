@@ -139,6 +139,7 @@ ComponentResult aulayer::Initialize()
 	plugin_instance->setSamplerate(samplerate);
 	plugin_instance->audio_processing_active = true;
 	plugin_instance->allNotesOff();
+   sampleRateCache = samplerate;
 	
 	blockpos = 0;
 	events_this_block = 0;
@@ -180,7 +181,8 @@ ComponentResult		aulayer::ChangeStreamFormat(
 	ComponentResult result = AUBase::ChangeStreamFormat(inScope,inElement,inPrevFormat,inNewFormat);
 
 	if(plugin_instance) plugin_instance->setSamplerate(samplerate);
-	
+	sampleRateCache = samplerate;
+   
 	return result;
 }
 
@@ -193,6 +195,7 @@ ComponentResult	aulayer::Reset(AudioUnitScope inScope, AudioUnitElement inElemen
 		double samplerate = GetOutput(0)->GetStreamFormat().mSampleRate;
 		plugin_instance->setSamplerate(samplerate);
 		plugin_instance->allNotesOff();
+      sampleRateCache == samplerate;
 	}
 	return noErr;
 }
@@ -309,7 +312,7 @@ ComponentResult aulayer::Render( AudioUnitRenderActionFlags & ioActionFlags, con
 	SurgeSynthesizer *s = (SurgeSynthesizer*) plugin_instance;
 	s->process_input = 0;
 	
-	float sampleRate = 44100.f;
+	float sampleRate = sampleRateCache;
 	float* outputs[N_OUTPUTS];
 	float* inputs[N_INPUTS];
 	
