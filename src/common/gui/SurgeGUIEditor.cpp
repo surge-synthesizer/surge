@@ -259,9 +259,14 @@ void SurgeGUIEditor::idle()
          }
          synth->storage.CS_ModRouting.leave();
       }
-#if MAC || LINUX
+#if MAC
       idleinc++;
       if (idleinc > 15)
+      {
+         idleinc = 0;
+#elif LINUX // slow down the blinking on linux a bit
+      idleinc++;
+      if (idleinc > 50)
       {
          idleinc = 0;
 #else
