@@ -734,10 +734,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
    CHSwitch2* mp_cat =
        new CHSwitch2(CRect(157, 41, 157 + 37, 41 + 12), this, tag_mp_category, 2, 12, 1, 2,
                      getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
+   mp_cat->setUsesMouseWheel(false); // mousewheel on category and patch buttons is undesirable     
    frame->addView(mp_cat);
 
    CHSwitch2* mp_patch = new CHSwitch2(CRect(242, 41, 242 + 37, 41 + 12), this, tag_mp_patch, 2, 12,
                                        1, 2, getSurgeBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
+   mp_patch->setUsesMouseWheel(false);// mousewheel on category and patch buttons is undesirable                                
    frame->addView(mp_patch);
 
    CHSwitch2* b_store = new CHSwitch2(CRect(591 - 37, 41, 591, 41 + 12), this, tag_store, 1, 12, 1,

@@ -24,11 +24,13 @@ public:
       this->columns = columns;
       this->dragable = dragable;
       imgoffset = 0;
+      usesMouseWheel = true; // use mousewheel by default
    }
 
    int rows, columns;
    int imgoffset;
    bool dragable;
+   bool usesMouseWheel;
 
    virtual void draw(VSTGUI::CDrawContext* dc);
    virtual VSTGUI::CMouseEventResult
@@ -42,4 +44,5 @@ public:
    virtual bool
    onWheel (const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons); ///< called when scrollwheel events occurs    
    CLASS_METHODS(CHSwitch2, VSTGUI::CControl)
+   void setUsesMouseWheel(bool wheel);
 };
