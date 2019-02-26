@@ -205,8 +205,7 @@ SurgeGUIEditor::~SurgeGUIEditor()
    if (frame)
    {
       getFrame()->unregisterKeyboardHook(this);
-      frame->removeAll(true);
-      frame->forget();
+      frame->close();
    }
 }
 
