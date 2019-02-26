@@ -125,6 +125,7 @@ protected:
 	AUChannelInfo cinfo[2]; // stored output configs
 	AudioUnitParameterID parameterIDlist[n_total_params];
 	CFStringRef parameterIDlist_CFString[n_total_params];
+   float sampleRateCache;
 };
 
 struct CFAUPreset
