@@ -6,7 +6,7 @@
 ** but for the meantime lets add this file to patch the link
 ** errors
 */
-#if LINUX
+#if LINUX || MAC
 namespace VSTGUI
 {
 void doAssert(const char*, const char*, const char*)
