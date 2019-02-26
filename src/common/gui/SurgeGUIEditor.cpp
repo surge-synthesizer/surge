@@ -546,6 +546,18 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
         case '+':
             setZoomFactor(getZoomFactor()+10);
             return 1;
+        case '=':
+           /*
+           ** This is a bit unsatisfying. The '+' key on linux with a US standard
+           ** keyboard delivers as = with a shift modifier. I dislike hardcoding keyboard
+           ** layouts but I don't see an API and this is a commonly used feature
+           */
+           if (code.modifier == VstModifierKey::MODIFIER_SHIFT)
+           {
+              setZoomFactor(getZoomFactor()+10);
+              return 1;
+           }
+           break;
         case '-':
             setZoomFactor(getZoomFactor()-10);
             return 1;
