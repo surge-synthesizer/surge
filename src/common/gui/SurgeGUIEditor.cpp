@@ -185,16 +185,20 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #if MAC
        SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
        SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
+       SharedPointer<CFontDesc> lfofont = new CFontDesc("Lucida Grande", 8);
 #elif LINUX
        SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
        SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
+       SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
 #else
        SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
        SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
+       SharedPointer<CFontDesc> lfofont = new CFontDesc("Microsoft Sans Serif", 8 );
 #endif
 
        displayFont = minifont;
        patchNameFont = patchfont;
+       lfoTypeFont = lfofont;
 
    }
 #endif

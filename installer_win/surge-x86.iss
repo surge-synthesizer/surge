@@ -44,6 +44,7 @@ Name: VST3; Description: VST3 Plug-in (32 bit); Types: full compact custom; Flag
 Source: ..\target\vst2\Release\Surge32.dll; DestDir: {app}; Components: VST2; Flags: ignoreversion skipifsourcedoesntexist
 Source: ..\target\vst3\Release\Surge32.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
 Source: ..\resources\data\*; DestDir: {localappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
+Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

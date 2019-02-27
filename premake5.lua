@@ -372,7 +372,6 @@ function plugincommon()
             "src/windows/scalableui.rc",
             "resources/bitmaps/*.png",
             "assets/original-vector/exported/*.png",
-            "resources/fonts/**.ttf",
             VSTGUI .. "vstgui_win32.cpp",
             VSTGUI .. "vstgui_uidescription_win32.cpp",
         }
