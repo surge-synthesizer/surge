@@ -1,8 +1,6 @@
 #pragma once
 
-#if LINUX
-#include <immintrin.h>
-#endif
+#include "globals.h"
 
 inline float i2f_binary_cast(int i)
 {

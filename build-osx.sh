@@ -126,6 +126,13 @@ run_clean()
     xcodebuild clean -configuration Release -project surge-${flavor}.xcodeproj
 }
 
+run_clean_headless()
+{
+    echo
+    echo "Cleaning build - headless"
+    xcodebuild clean -configuration Release -project build/Surge.xcodeproj
+}
+
 run_build()
 {
     flavor=$1
@@ -158,6 +165,44 @@ run_build()
     fi
 }
 
+run_build_headless()
+{
+    mkdir -p build_logs
+
+    echo
+    echo Building surge-headless with output in build_logs/build_headless.log
+
+    mkdir build
+    cmake -GXcode -Bbuild
+
+    # Don't let TEE eat my return status
+    set -o pipefail
+    if [[ -z "$OPTION_verbose" ]]; then
+        xcodebuild build -configuration Release \
+                         -project build/Surge.xcodeproj > \
+                         build_logs/build_headless.log
+    else
+        xcodebuild build -configuration Release \
+                         -project build/Surge.xcodeproj | \
+                         tee build_logs/build_headless.log
+    fi
+
+    build_suc=$?
+    set +o pipefail
+
+    if [[ $build_suc = 0 ]]; then
+        echo ${GREEN}Build of surge-headless succeeded${NC}
+    else
+        echo
+        echo ${RED}** Build of headless failed**${NC}
+        grep -i ": error" build_logs/build_headless.log
+        echo
+        echo Complete information is in build_logs/build_headless.log
+
+        exit 2
+    fi
+}
+
 default_action()
 {
     run_premake
@@ -182,7 +227,7 @@ run_all_builds()
 
     run_build "vst3"
     run_build "au"
-    run_build "headless"
+    run_build_headless
 }
 
 run_install_local()
@@ -241,7 +286,7 @@ run_clean_builds()
 
     run_clean "vst3"
     run_clean "au"
-    run_clean "headless"
+    run_clean_headless
 }
 
 run_clean_all()
@@ -325,7 +370,7 @@ case $command in
         ;;
     --build-headless)
         run_premake_if
-        run_build "headless"
+        run_build_headless
         ;;
     --clean)
         run_clean_builds

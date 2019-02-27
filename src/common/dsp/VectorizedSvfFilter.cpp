@@ -1,7 +1,7 @@
 #include <math.h>
 
+#include "globals.h"
 #include "VectorizedSvfFilter.h"
-
 
 //================================================================================================
 
