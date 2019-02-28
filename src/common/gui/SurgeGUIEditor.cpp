@@ -32,15 +32,8 @@
 #include "aulayer.h"
 #endif
 
-#if MAC || WINDOWS
-#define USE_RUNTIME_LOADED_FONTS 1
-#else
-#define USE_RUNTIME_LOADED_FONTS 0
-#endif
 
-#if USE_RUNTIME_LOADED_FONTS
 #include "RuntimeFont.h"
-#endif
 
 const int yofs = 10;
 
@@ -48,22 +41,9 @@ using namespace VSTGUI;
 using namespace std;
 
 
-#if USE_RUNTIME_LOADED_FONTS
 CFontRef displayFont = NULL;
 CFontRef patchNameFont = NULL;
 CFontRef lfoTypeFont = NULL;
-#else
-
-#if LINUX
-SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
-SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
-SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
-#endif
-
-CFontRef displayFont = minifont;
-CFontRef patchNameFont = patchfont;
-CFontRef lfoTypeFont = lfofont;
-#endif
 
 
 enum special_tags
@@ -160,7 +140,6 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    setZoomFactor(userDefaultZoomFactor);
    zoomInvalid = (userDefaultZoomFactor != 100);
 
-#if USE_RUNTIME_LOADED_FONTS
    /*
    ** As documented in RuntimeFonts.h, the contract of this function is to side-effect
    ** onto globals displayFont and patchNameFont with valid fonts from the runtime
@@ -201,7 +180,6 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
        lfoTypeFont = lfofont;
 
    }
-#endif
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
