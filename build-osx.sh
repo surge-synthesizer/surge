@@ -294,7 +294,7 @@ run_clean_all()
     run_clean_builds
 
     echo "Cleaning additional assets (directories, XCode, etc)"
-    rm -rf Surge.xcworkspace *xcodeproj target products build_logs obj
+    rm -rf Surge.xcworkspace *xcodeproj target products build_logs obj build
 }
 
 run_uninstall_surge()

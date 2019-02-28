@@ -693,74 +693,66 @@ end
 
 -- HEADLESS APP
 
-project "surge-headless"
-kind "ConsoleApp"
+if (not os.istarget("macosx")) then
 
-defines
-{
-   "TARGET_HEADLESS=1"
-}
-
-plugincommon()
-
-files
-{
-   "src/headless/main.cpp",
-   "src/headless/DisplayInfoHeadless.cpp",
-   "src/headless/UserInteractionsHeadless.cpp",
-   "src/headless/LinkFixesHeadless.cpp"
-}
-
-excludes
-{
-   "src/common/gui/*"
-}
-
-includedirs
-{
-   "src/headless"
-}
-
-configuration { "Debug" }
-targetdir "target/headless/Debug"
-targetsuffix "-Debug"
-
-configuration { "Release" }
-targetdir "target/headless/Release"
-
-configuration {}
-
-if (os.istarget("macosx")) then
+   project "surge-headless"
+   kind "ConsoleApp"
+   
+   defines
+   {
+      "TARGET_HEADLESS=1"
+   }
+   
+   plugincommon()
+   
+   files
+   {
+      "src/headless/main.cpp",
+      "src/headless/DisplayInfoHeadless.cpp",
+      "src/headless/UserInteractionsHeadless.cpp",
+      "src/headless/LinkFixesHeadless.cpp"
+   }
+   
    excludes
    {
-      VSTGUI .. "vstgui_mac.mm",
-      VSTGUI .. "vstgui_uidescription_mac.mm",
-      "src/mac/DisplayInfoMac.mm",
-      "src/mac/UserInteractionsMac.cpp",
-      "src/mac/cocoa_utils.mm",
-      "src/mac/RuntimeFontMac.cpp"
+      "src/common/gui/*"
    }
-end
-
-if (os.istarget("windows")) then
-   excludes
+   
+   includedirs
    {
-      VSTGUI .. "vstgui_win32.cpp",
-      VSTGUI .. "vstgui_uidescription_win32.cpp",
-      "src/windows/DisplayInfoWin.cpp",
-      "src/windows/UserInteractionsWin.cpp",
-      "src/windows/RuntimeFontWin.cpp"
+      "src/headless"
    }
-end
+   
+   configuration { "Debug" }
+   targetdir "target/headless/Debug"
+   targetsuffix "-Debug"
+   
+   configuration { "Release" }
+   targetdir "target/headless/Release"
+   
+   configuration {}
+   
 
-if (os.istarget("linux")) then
-   excludes
-   {
-      VSTGUI .. "vstgui.cpp",
-      VSTGUI .. "lib/platform/linux/**.cpp",
-      VSTGUI .. "lib/platform/common/genericoptionmenu.cpp",
-      VSTGUI .. "lib/platform/common/generictextedit.cpp",
-      "src/linux/DisplayInfoLinux.cpp",
-      "src/linux/UserInteractionsLinux.cpp",
-   }
+   if (os.istarget("windows")) then
+      excludes
+      {
+         VSTGUI .. "vstgui_win32.cpp",
+         VSTGUI .. "vstgui_uidescription_win32.cpp",
+         "src/windows/DisplayInfoWin.cpp",
+         "src/windows/UserInteractionsWin.cpp",
+         "src/windows/RuntimeFontWin.cpp"
+      }
+   end
+   
+   if (os.istarget("linux")) then
+      excludes
+      {
+         VSTGUI .. "vstgui.cpp",
+         VSTGUI .. "lib/platform/linux/**.cpp",
+         VSTGUI .. "lib/platform/common/genericoptionmenu.cpp",
+         VSTGUI .. "lib/platform/common/generictextedit.cpp",
+         "src/linux/DisplayInfoLinux.cpp",
+         "src/linux/UserInteractionsLinux.cpp",
+      }
+   end
 end
