@@ -700,8 +700,10 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   sprintf(txt, "%.3f / 16th", 8.0f * powf(2.0f, f));
                else if (f > -5)
                   sprintf(txt, "%.3f / 64th", 32.0f * powf(2.0f, f));
-                else
+               else if (f > -7)
                   sprintf(txt, "%.3f / 128th", 64.0f * powf(2.0f, f));
+               else
+                  sprintf(txt, "%.3f / 256th", 128.0f * powf(2.0f, f));
             }
             else if (f == val_min.f)
             {
@@ -716,7 +718,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_lforate:
          if (temposync)
          {
-            if (f > 5)
+            if (f > 6 )
+                sprintf(txt, "%.3f / 256th", 128.f * powf(2.0, -f));
+            else if (f > 5)
                 sprintf(txt, "%.3f / 128th", 64.f * powf(2.0, -f));
             else if (f > 4)
                sprintf(txt, "%.3f / 64th", 32.f * powf(2.0f, -f));
