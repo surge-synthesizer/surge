@@ -42,7 +42,6 @@ rm -rf ${PACKAGE_NAME} product
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
 mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
-mkdir -p ${PACKAGE_NAME}/usr/share/fonts/truetype/lato
 mkdir -p ${PACKAGE_NAME}/DEBIAN
 
 # build control file
@@ -56,7 +55,7 @@ Package: ${PACKAGE_NAME}
 Version: $DEB_VERSION
 Architecture: amd64
 Maintainer: surgeteam
-Depends:libcairo2, libxkbcommon-x11-0, libxcb-util1, libxcb-cursor0
+Depends: libc6 (>= 2.17), libcairo2 (>= 1.6.4-5~), libfontconfig1 (>= 2.11.94), libfreetype6 (>= 2.2.1), libgcc1 (>= 1:3.0), libstdc++6 (>= 5.2), libxcb-cursor0 (>= 0.0.99), libxcb-util1 (>= 0.4.0) | libxcb-util (>=0.3.8-3), libxcb-xkb1, libxcb1, libxkbcommon-x11-0 (>= 0.5.0), libxkbcommon0 (>= 0.5.0) fonts-lato (>=2.0-1)
 Provides: vst-plugin
 Section: sound
 Priority: optional
@@ -79,7 +78,6 @@ EOT
 cp ../LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
 cp ../target/vst2/Release/Surge.so ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
-cp ../resources/fonts/Lato-Regular.ttf ${PACKAGE_NAME}/usr/share/fonts/truetype/lato
 
 # Once VST3 works, this will be ../products/vst3
 # cp ../target/vst3/Release/Surge.so ${PACKAGE_NAME}/usr/lib/vst3/${SURGE_NAME}.so
