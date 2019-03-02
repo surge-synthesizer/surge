@@ -72,7 +72,7 @@ run_premake_if()
 
 run_clean()
 {
-    project=$1
+    local project=$1
     echo
     echo "Cleaning build - $project"
     make clean
@@ -80,7 +80,7 @@ run_clean()
 
 run_build()
 {
-    project=$1
+    local project=$1
     mkdir -p build_logs
 
     echo
@@ -89,10 +89,10 @@ run_build()
     # Since these are piped we lose status from the tee and get wrong return code so
     set -o pipefail
 
-    if [[ -z "$OPTION_verbose" ]]; then
-        make ${OPTION_config} surge-${project} 2>&1 | tee build_logs/build_${project}.log
+    if [[ -z "$option_verbose" ]]; then
+        make ${config} surge-${project} 2>&1 | tee build_logs/build_${project}.log
     else
-        make ${OPTION_config} surge-${project} verbose=1 2>&1 | tee build_logs/build_${project}.log
+        make ${config} surge-${project} verbose=1 2>&1 | tee build_logs/build_${project}.log
     fi
 
     build_suc=$?
@@ -115,15 +115,15 @@ run_all_builds()
 {
     run_premake_if
 
-    if [ ! -z "$OPTION_vst2" ]; then
+    if [ ! -z "$option_vst2" ]; then
         run_build "vst2"
     fi
 
-    if [ ! -z "$OPTION_vst3" ]; then
+    if [ ! -z "$option_vst3" ]; then
         run_build "vst3"
     fi
 
-    if [ ! -z "$OPTION_headless" ]; then
+    if [ ! -z "$option_headless" ]; then
         run_build "headless"
     fi
 }
@@ -131,25 +131,25 @@ run_all_builds()
 run_install()
 {
     echo "Installing presets"
-    rsync -r --delete "resources/data/" $OPTION_data_path
+    rsync -r --delete "resources/data/" $data_path
 
-    if [ ! -z "$OPTION_vst2" ]; then
+    if [ ! -z "$option_vst2" ]; then
         echo "Installing VST2"
-        rsync -r -delete $OPTION_vst2_src_path \
-                         $OPTION_vst2_dest_path/$OPTION_dest_plugin_name
+        rsync -r -delete $vst2_src_path \
+                         $vst2_dest_path/$dest_plugin_name
     fi
 
-    if [ ! -z "$OPTION_vst3" ]; then
+    if [ ! -z "$option_vst3" ]; then
         echo "Installing VST3"
         # No dest plugin name here since we are a bundle
-        rsync -r --delete $OPTION_vst3_src_path \
-                          $OPTION_vst3_dest_path
+        rsync -r --delete $vst3_src_path \
+                          $vst3_dest_path
     fi
 
-    if [ ! -z "$OPTION_headless" ]; then
+    if [ ! -z "$option_headless" ]; then
         echo "Installing Headless"
-        rsync -r --delete $OPTION_headless_src_path \
-                          $OPTION_headless_dest_path/$OPTION_dest_headless_name
+        rsync -r --delete $headless_src_path \
+                          $headless_dest_path/$dest_headless_name
     fi
 }
 
@@ -160,11 +160,11 @@ run_clean_builds()
         return 0
     fi
 
-    if [ ! -z "$OPTION_vst2" ]; then
+    if [ ! -z "$option_vst2" ]; then
         run_clean "vst2"
     fi
 
-    if [ ! -z "$OPTION_vst3" ]; then
+    if [ ! -z "$option_vst3" ]; then
         run_clean "vst3"
     fi
 }
@@ -179,18 +179,18 @@ run_clean_all()
 
 run_uninstall()
 {
-    rm -rvf $OPTION_data_path
+    rm -rvf $data_path
 
-    if [ ! -z "$OPTION_vst2" ]; then
-        rm -vf $OPTION_vst2_dest_path/$OPTION_dest_plugin_name
+    if [ ! -z "$option_vst2" ]; then
+        rm -vf $vst2_dest_path/$dest_plugin_name
     fi
 
-    if [ ! -z "$OPTION_vst3" ]; then
-        rm -vf $OPTION_vst3_dest_path/$OPTION_dest_plugin_name
+    if [ ! -z "$option_vst3" ]; then
+        rm -vf $vst3_dest_path/$dest_plugin_name
     fi
 
-    if [ ! -z "$OPTION_headless" ]; then
-        rm -vf $OPTION_headless_dest_path/$OPTION_dest_headless_name
+    if [ ! -z "$option_headless" ]; then
+        rm -vf $headless_dest_path/$dest_headless_name
     fi
 }
 
@@ -202,65 +202,65 @@ eval set -- "$ARGS"
 
 while true ; do
     case "$1" in
-        -h|--help) OPTION_help=1 ; shift ;;
-        -v|--verbose) OPTION_verbose=1 ; shift ;;
+        -h|--help) option_help=1 ; shift ;;
+        -v|--verbose) option_verbose=1 ; shift ;;
         -p|--project)
             case "$2" in
                 "") shift 2 ;;
-                *) OPTION_project=$2 ; shift 2 ;;
+                *) option_project=$2 ; shift 2 ;;
             esac ;;
-        -d|--debug) OPTION_debug=1 ; shift ;;
-        -l|--local) OPTION_local=1 ; shift ;;
+        -d|--debug) option_debug=1 ; shift ;;
+        -l|--local) option_local=1 ; shift ;;
         --) shift ; break ;;
         *) break ;;
     esac
 done
 
-if [[ ! -z "$OPTION_help" ]]; then
+if [[ ! -z "$option_help" ]]; then
     help_message
     exit 0
 fi
 
-if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "vst2" ]; then
+if [ -z "$option_project" ] || [ "$option_project" == "vst2" ]; then
     if [ -e "surge-vst2.make" ] || [ ! -z "$VST2SDK_DIR" ]; then
-        OPTION_vst2=1
+        option_vst2=1
     fi
 fi
 
-if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "vst3" ]; then
-    OPTION_vst3=1
+if [ -z "$option_project" ] || [ "$option_project" == "vst3" ]; then
+    option_vst3=1
 fi
 
-if [ -z "$OPTION_project" ] || [ "$OPTION_project" == "headless" ]; then
-    OPTION_headless=1
+if [ -z "$option_project" ] || [ "$option_project" == "headless" ]; then
+    option_headless=1
 fi
 
-if [ -z "$OPTION_debug" ]; then
-    OPTION_config="config=release_x64"
-    OPTION_vst2_src_path="target/vst2/Release/Surge.so"
-    OPTION_vst3_src_path="products/Surge.vst3"
-    OPTION_headless_src_path="target/headless/Release/Surge"
-    OPTION_dest_plugin_name="Surge.so"
-    OPTION_dest_headless_name="Surge-Headless"
+if [ -z "$option_debug" ]; then
+    config="config=release_x64"
+    vst2_src_path="target/vst2/Release/Surge.so"
+    vst3_src_path="products/Surge.vst3"
+    headless_src_path="target/headless/Release/Surge"
+    dest_plugin_name="Surge.so"
+    dest_headless_name="Surge-Headless"
 else
-    OPTION_config="config=debug_x64"
-    OPTION_vst2_src_path="target/vst2/Debug/Surge-Debug.so"
-    OPTION_vst3_src_path="target/vst3/Debug/Surge-Debug.so"
-    OPTION_headless_src_path="target/headless/Debug/Surge-Debug"
-    OPTION_dest_plugin_name="Surge-Debug.so"
-    OPTION_dest_headless_name="Surge-Headless-Debug"
+    config="config=debug_x64"
+    vst2_src_path="target/vst2/Debug/Surge-Debug.so"
+    vst3_src_path="target/vst3/Debug/Surge-Debug.so"
+    headless_src_path="target/headless/Debug/Surge-Debug"
+    dest_plugin_name="Surge-Debug.so"
+    dest_headless_name="Surge-Headless-Debug"
 fi
 
-if [[ ! -z "$OPTION_local" ]]; then
-    OPTION_vst2_dest_path="$HOME/.vst"
-    OPTION_vst3_dest_path="$HOME/.vst3"
-    OPTION_headless_dest_path="$HOME/bin"
-    OPTION_data_path="$HOME/.local/share/Surge"
+if [[ ! -z "$option_local" ]]; then
+    vst2_dest_path="$HOME/.vst"
+    vst3_dest_path="$HOME/.vst3"
+    headless_dest_path="$HOME/bin"
+    data_path="$HOME/.local/share/Surge"
 else
-    OPTION_vst2_dest_path="/usr/lib/vst"
-    OPTION_vst3_dest_path="/usr/lib/vst3"
-    OPTION_headless_dest_path="/usr/bin"
-    OPTION_data_path="/usr/share/Surge"
+    vst2_dest_path="/usr/lib/vst"
+    vst3_dest_path="/usr/lib/vst3"
+    headless_dest_path="/usr/bin"
+    data_path="/usr/share/Surge"
 fi
 
 case $1 in
