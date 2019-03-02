@@ -74,6 +74,7 @@ add_executable(surge-headless
 
    src/headless/HeadlessApps.cpp
    src/headless/HeadlessTools.cpp
+   src/headless/HeadlessPlayer.cpp
 )
 
 target_compile_features(surge-headless

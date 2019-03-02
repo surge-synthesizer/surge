@@ -1,5 +1,6 @@
 #include "HeadlessApps.h"
 #include "HeadlessTools.h"
+#include "HeadlessPlayer.h"
 #include <iostream>
 #include <iomanip>
 
@@ -77,7 +78,7 @@ void scanAllPresets(SurgeSynthesizer* surge)
    int nPresets = surge->storage.patch_list.size();
    int nCats = surge->storage.patch_category.size();
 
-   for (auto c = 0; c < nCats; ++c)
+   for (auto c : surge->storage.patchCategoryOrdering)
    {
       for (auto i = 0; i < nPresets; ++i)
       {
@@ -87,15 +88,25 @@ void scanAllPresets(SurgeSynthesizer* surge)
          {
             PatchCategory pc = surge->storage.patch_category[p.category];
 
-            std::cout << "idx= " << std::setw(4) << i << "; cat = '" << pc.name << "'; patch = '"
-                      << p.name << "'" << std::endl;
+            std::cout << "idx= " << std::right << std::setw(4) << i << "; cat = " << std::left
+                      << std::setw(30) << pc.name << "; patch = " << std::left << std::setw(30)
+                      << p.name << "";
 
             loadPatchByIndex(surge, i);
 
             /*
             ** So lets play some notes and gather some waveforms
-            ** FIXME
             */
+            std::vector<float> data;
+            Surge::Headless::Player::play120BPMCMajorQuarterNoteScale(surge, data);
+            if (data.size() > 0)
+            {
+               const auto [mind, maxd] = std::minmax_element(begin(data), end(data));
+
+               std::cout << "; data = [" << std::setw(12) << *mind << ", " << std::setw(12) << *maxd
+                         << "] in " << data.size() << " samples";
+            }
+            std::cout << std::endl;
          }
       }
    }
