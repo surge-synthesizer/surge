@@ -369,8 +369,11 @@ case $command in
         run_build_install_vst3
         ;;
     --build-headless)
-        run_premake_if
         run_build_headless
+        ;;
+    --run-headless)
+        run_build_headless
+        ./build/Release/surge-headless 
         ;;
     --clean)
         run_clean_builds
