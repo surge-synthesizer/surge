@@ -111,20 +111,55 @@ run_build()
     fi
 }
 
-run_all_builds()
+run_build_headless()
 {
-    run_premake_if
+    mkdir -p build_logs
 
+    echo
+    echo Building surge-headless with output in build_logs/build_headless.log
+
+    mkdir build
+    cmake . -Bbuild
+
+    # Since these are piped we lose status from the tee and get wrong return code so
+    set -o pipefail
+
+    if [[ -z "$option_verbose" ]]; then
+        make surge-headless -C build 2>&1 | tee build_logs/build_headless.log
+    else
+        make surge-headless verbose=1 -C build 2>&1 | tee build_logs/build_headless.log
+    fi
+
+    build_suc=$?
+    set +o pipefail
+    if [[ $build_suc = 0 ]]; then
+        echo ${GREEN}Build of surge-headless succeeded${NC}
+    else
+        echo
+        echo ${RED}** Build of headless failed**${NC}
+        grep -i error build_logs/build_headless.log
+        echo
+        echo ${RED}** Exiting failed headless build**${NC}
+        echo Complete information is in build_logs/build_headless.log
+
+        exit 2
+    fi
+}
+
+run_builds()
+{
     if [ ! -z "$option_vst2" ]; then
+        run_premake_if
         run_build "vst2"
     fi
 
     if [ ! -z "$option_vst3" ]; then
+        run_premake_if
         run_build "vst3"
     fi
 
     if [ ! -z "$option_headless" ]; then
-        run_build "headless"
+        run_build_headless
     fi
 }
 
@@ -268,7 +303,7 @@ case $1 in
         run_premake
         ;;
     build)
-        run_all_builds
+        run_builds
         ;;
     install)
         run_install

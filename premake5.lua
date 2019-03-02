@@ -98,7 +98,7 @@ elseif (os.istarget("linux")) then
 
     prebuildcommands
     {
-        "python scripts/linux/emit-vector-piggy.py"
+        "python scripts/linux/emit-vector-piggy.py ."
     }
 
 elseif (os.istarget("windows")) then
@@ -657,66 +657,50 @@ end
 
 -- HEADLESS APP
 
-if (not os.istarget("macosx")) then
+if (os.istarget("windows")) then
+    project "surge-headless"
+    kind "ConsoleApp"
 
-   project "surge-headless"
-   kind "ConsoleApp"
-   
-   defines
-   {
-      "TARGET_HEADLESS=1"
-   }
-   
-   plugincommon()
-   
-   files
-   {
-      "src/headless/main.cpp",
-      "src/headless/DisplayInfoHeadless.cpp",
-      "src/headless/UserInteractionsHeadless.cpp",
-      "src/headless/LinkFixesHeadless.cpp"
-   }
-   
-   excludes
-   {
-      "src/common/gui/*"
-   }
-   
-   includedirs
-   {
-      "src/headless"
-   }
-   
-   configuration { "Debug" }
-   targetdir "target/headless/Debug"
-   targetsuffix "-Debug"
-   
-   configuration { "Release" }
-   targetdir "target/headless/Release"
-   
-   configuration {}
-   
+    defines
+    {
+        "TARGET_HEADLESS=1"
+    }
 
-   if (os.istarget("windows")) then
-      excludes
-      {
+    plugincommon()
+
+    files
+    {
+        "src/headless/main.cpp",
+        "src/headless/DisplayInfoHeadless.cpp",
+        "src/headless/UserInteractionsHeadless.cpp",
+        "src/headless/LinkFixesHeadless.cpp"
+    }
+
+    excludes
+    {
+        "src/common/gui/*"
+    }
+
+    includedirs
+    {
+        "src/headless"
+    }
+
+    configuration { "Debug" }
+    targetdir "target/headless/Debug"
+    targetsuffix "-Debug"
+
+    configuration { "Release" }
+    targetdir "target/headless/Release"
+
+    configuration {}
+
+    excludes
+    {
          VSTGUI .. "vstgui_win32.cpp",
          VSTGUI .. "vstgui_uidescription_win32.cpp",
          "src/windows/DisplayInfoWin.cpp",
          "src/windows/UserInteractionsWin.cpp",
          "src/windows/RuntimeFontWin.cpp"
-      }
-   end
-   
-   if (os.istarget("linux")) then
-      excludes
-      {
-         VSTGUI .. "vstgui.cpp",
-         VSTGUI .. "lib/platform/linux/**.cpp",
-         VSTGUI .. "lib/platform/common/genericoptionmenu.cpp",
-         VSTGUI .. "lib/platform/common/generictextedit.cpp",
-         "src/linux/DisplayInfoLinux.cpp",
-         "src/linux/UserInteractionsLinux.cpp",
-      }
-   end
+    }
 end
