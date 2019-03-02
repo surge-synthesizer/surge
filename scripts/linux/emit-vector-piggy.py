@@ -11,10 +11,11 @@
 
 import os
 import re
+import sys
 
 assets_path = "assets/original-vector/exported"
 
-source_file = open("src/linux/ScalablePiggy.S", "w")
+source_file = open(sys.argv[1] + "/src/linux/ScalablePiggy.S", "w")
 source_file.write("""# THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
 #
 # If you need to modify this file, please read the comment
@@ -27,7 +28,7 @@ memoryBitmapListStart:
 
 """)
 
-header_file = open("src/linux/ScalablePiggy.h", "w")
+header_file = open(sys.argv[1] + "/src/linux/ScalablePiggy.h", "w")
 header_file.write("""/*
 ** THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
 **
@@ -48,12 +49,12 @@ static const struct MemoryBitmap memoryBitmapList[] = {
 
 offset = 0
 
-for name in os.listdir(assets_path):
+for name in os.listdir(sys.argv[1] + "/" + assets_path):
     if not re.match('bmp00(\\d+)(.*).png', name):
         continue
 
     path = os.path.join(assets_path, name)
-    size = os.stat(path).st_size;
+    size = os.stat(sys.argv[1] + "/" + path).st_size;
 
     source_file.write('    .incbin "../../' + path + '"' + os.linesep)
     header_file.write('     {"scalable/' + name + '", ' + str(size) + ', ' +

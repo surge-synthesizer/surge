@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(Surge VERSION 1.0.0 LANGUAGES CXX)
+project(Surge VERSION 1.0.0 LANGUAGES CXX ASM)
 
 set(SURGE_COMMON_SOURCES
     src/common/dsp/effect/ConditionerEffect.cpp
@@ -80,7 +80,7 @@ target_compile_features(surge-headless
 
 target_compile_definitions(surge-headless
     PRIVATE
-	    TARGET_HEADLESS=1
+        TARGET_HEADLESS=1
 )
 
 target_include_directories(surge-headless
@@ -89,6 +89,17 @@ target_include_directories(surge-headless
         src/headless
 )
 
+# *NIX
+if (UNIX)
+    target_compile_options(surge-headless
+        PRIVATE
+            -msse2
+            "-D_aligned_malloc(x,a)=malloc(x)"
+            "-D_aligned_free(x)=free(x)"
+    )
+endif()
+
+# macOS
 if (APPLE)
     target_compile_definitions(surge-headless
         PRIVATE
@@ -98,21 +109,52 @@ if (APPLE)
             OBJC_OLD_DISPATCH_PROTOTYPES=1
     )
 
-    target_compile_options(surge-headless
-        PRIVATE
-            -msse2
-            "-D_aligned_malloc(x,a)=malloc(x)"
-            "-D_aligned_free(x)=free(x)"
-    )
-
     target_include_directories(surge-headless
         PRIVATE
-            ${SURGE_COMMON_INCLUDES}
             src/mac
     )
 
     target_link_libraries(surge-headless
         "-framework ApplicationServices"
         "-framework CoreFoundation"
+    )
+endif()
+
+# Linux
+if (UNIX AND NOT APPLE)
+    find_package(Threads REQUIRED)
+
+    add_custom_target(
+        scalable-piggy ALL
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/linux/_ScalablePiggy.S
+    )
+
+    add_custom_command(
+        OUTPUT
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/linux/_ScalablePiggy.S
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/linux/ScalablePiggy.S
+
+            COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+    target_compile_definitions(surge-headless
+        PRIVATE
+            LINUX=1
+    )
+
+    target_sources(surge-headless
+        PRIVATE
+            src/linux/ConfigurationXml.S
+            src/linux/ScalablePiggy.S
+    )
+
+    target_include_directories(surge-headless
+        PRIVATE
+            src/linux
+    )
+
+    target_link_libraries(surge-headless
+        stdc++fs
+        Threads::Threads
     )
 endif()
