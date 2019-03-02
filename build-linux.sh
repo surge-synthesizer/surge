@@ -246,7 +246,7 @@ else
     OPTION_config="config=debug_x64"
     OPTION_vst2_src_path="target/vst2/Debug/Surge-Debug.so"
     OPTION_vst3_src_path="target/vst3/Debug/Surge-Debug.so"
-    OPTION_headless_src_path="target/headless/Release/Surge-Debug"
+    OPTION_headless_src_path="target/headless/Debug/Surge-Debug"
     OPTION_dest_plugin_name="Surge-Debug.so"
     OPTION_dest_headless_name="Surge-Headless-Debug"
 fi
