@@ -305,7 +305,18 @@ void SurgeStorage::refresh_patchlist()
 
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 {
-   int category = patch_category.size();
+   refreshPatchOrWTListAddDir(
+       userDir, subdir, [](std::string s) -> bool { return _stricmp(s.c_str(), ".fxp") == 0; },
+       patch_list, patch_category);
+}
+
+void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
+                                              string subdir,
+                                              std::function<bool(std::string)> filterOp,
+                                              std::vector<Patch>& items,
+                                              std::vector<PatchCategory>& categories)
+{
+   int category = categories.size();
 
    fs::path patchpath = (userDir ? userDataPath : datapath);
    if (!subdir.empty())
@@ -344,7 +355,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
    ** We want to remove parent directory /user/foo or c:\\users\\bar\\ 
    ** with a substr in the main loop, so get the length once
    */
-   std::vector<PatchCategory> local_patch_category;
+   std::vector<PatchCategory> local_categories;
    int patchpathSubstrLength= patchpath.generic_string().size() + 1;
    if (patchpath.generic_string().back() == '/' || patchpath.generic_string().back() == '\\')
        patchpathSubstrLength --;
@@ -362,31 +373,33 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
       c.name = Surge::Storage::wstringToUTF8(str);
 #else
       c.name = p.generic_string().substr(patchpathSubstrLength);
-      c.numberOfPatchesInCatgory = 0;
 #endif
-      
+
+      c.numberOfPatchesInCatgory = 0;
       for (auto& f : fs::directory_iterator(p))
       {
-          if (_stricmp(f.path().extension().generic_string().c_str(), ".fxp") == 0)
-          {
-              Patch e;
-              e.category = category;
-              e.path = f.path();
+         std::string xtn = f.path().extension().generic_string();
+         if (filterOp(xtn))
+         {
+            Patch e;
+            e.category = category;
+            e.path = f.path();
 #if WINDOWS
               std::wstring str = f.path().filename().wstring();
-              str = str.substr(0, str.size()-4);
+              str = str.substr(0, str.size() - xtn.length());
               e.name = Surge::Storage::wstringToUTF8(str);
 #else
               e.name = f.path().filename().generic_string();
-              e.name = e.name.substr(0, e.name.size() - 4);
-#endif              
-              patch_list.push_back(e);
+              e.name = e.name.substr(0, e.name.size() - xtn.length());
+#endif
+              items.push_back(e);
 
               c.numberOfPatchesInCatgory ++;
-          }
+         }
       }
-      
-      local_patch_category.push_back(c);
+
+      c.numberOfPatchesInCategoryAndChildren = c.numberOfPatchesInCatgory;
+      local_categories.push_back(c);
       category++;
    }
 
@@ -398,15 +411,15 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 
    std::map<std::string,int> nameToLocalIndex;
    int idx=0;
-   for (auto &pc : local_patch_category)
-       nameToLocalIndex[ pc.name ] = idx++;
+   for (auto& pc : local_categories)
+      nameToLocalIndex[pc.name] = idx++;
 
    std::string pathSep = "/";
 #if WINDOWS
    pathSep = "\\";
 #endif
 
-   for (auto &pc : local_patch_category)
+   for (auto& pc : local_categories)
    {
        if (pc.name.find(pathSep) == std::string::npos)
        {
@@ -416,7 +429,7 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
        {
            pc.isRoot = false;
            std::string parent = pc.name.substr(0, pc.name.find_last_of(pathSep) );
-           local_patch_category[ nameToLocalIndex[ parent ] ].children.push_back( pc );
+           local_categories[nameToLocalIndex[parent]].children.push_back(pc);
        }
    }
 
@@ -430,21 +443,47 @@ void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
        {
            return _stricmp(c1.name.c_str(),c2.name.c_str()) < 0;
        };
-   for (auto &pc : local_patch_category)
+   for (auto& pc : local_categories)
    {
        std::sort(pc.children.begin(), pc.children.end(), catCompare);
    }
 
+   /*
+   ** Now we need to prune categories with nothing in their children.
+   ** Start by updating the numberOfPatchesInCatgoryAndChildren from the root.
+   ** This is complicated because the child list is a copy of values which
+   ** I should fix one day. FIXME fix that to avoid this sort of double copy
+   ** nonsense. But this keeps it consistent. At a price. Sorry!
+   */
+   std::function<void(PatchCategory&)> recCorrect = [&recCorrect, &nameToLocalIndex,
+                                                     &local_categories](PatchCategory& c) {
+      local_categories[nameToLocalIndex[c.name]].numberOfPatchesInCategoryAndChildren = c.numberOfPatchesInCatgory;
+      for (auto& ckid : c.children)
+      {
+         recCorrect(local_categories[nameToLocalIndex[ckid.name]]);
+         ckid.numberOfPatchesInCategoryAndChildren = local_categories[nameToLocalIndex[ckid.name]].numberOfPatchesInCategoryAndChildren;
 
+         local_categories[nameToLocalIndex[c.name]].numberOfPatchesInCategoryAndChildren +=
+             local_categories[nameToLocalIndex[ckid.name]].numberOfPatchesInCategoryAndChildren;
+      }
+      c.numberOfPatchesInCategoryAndChildren = local_categories[nameToLocalIndex[c.name]].numberOfPatchesInCategoryAndChildren;
+   };
+
+   for (auto& c : local_categories)
+   {
+      if (c.isRoot)
+      {
+         recCorrect(c);
+      }
+   }
 
    /*
    ** Then copy our local patch category onto the member and be done
    */
-   for (auto &pc : local_patch_category)
+   for (auto& pc : local_categories)
    {
-       patch_category.push_back(pc);
+      categories.push_back(pc);
    }
-   
 }
 
 void SurgeStorage::refresh_wtlist()
@@ -452,100 +491,47 @@ void SurgeStorage::refresh_wtlist()
    wt_category.clear();
    wt_list.clear();
 
-   int category = 0;
-
-   fs::path patchpath = datapath;
-   patchpath.append("wavetables");
-
-   if (!fs::is_directory(patchpath))
-   {
-      std::ostringstream ss;
-      ss << "Surge was unable to load wavetables from '" << patchpath.generic_string()
-         << "'. The directory does not exist. Please reinstall using the Surge installer.";
-      Surge::UserInteractions::promptError(ss.str(),
-                                           "Surge Installation Error");
-
-      return;
-   }
-
-   std::vector<std::string> supportedTableFileTypes;
-   supportedTableFileTypes.push_back(".wt");
-   supportedTableFileTypes.push_back(".wav");
-
-   for (auto& p : fs::directory_iterator(patchpath))
-   {
-      if (fs::is_directory(p))
-      {
-         PatchCategory c;
-#if WINDOWS
-         std::wstring str = p.path().filename().wstring();
-         c.name = Surge::Storage::wstringToUTF8(str);
-#else
-         c.name = p.path().filename().generic_string();
-#endif
-         wt_category.push_back(c);
-
-         for (auto& f : fs::directory_iterator(p))
-         {
-            for(auto &ft : supportedTableFileTypes )
-            {
-                if (_stricmp(f.path().extension().generic_string().c_str(), ft.c_str()) == 0)
-                {
-                    Patch e;
-                    e.category = category;
-                    e.path = f.path();
-#if WINDOWS
-                    std::wstring str = f.path().filename().wstring();
-                    e.name = Surge::Storage::wstringToUTF8(str.substr(0, str.size() - ft.size()));
-#else
-                    e.name = f.path().filename().generic_string();
-                    e.name = e.name.substr(0, e.name.size() - ft.size());
-#endif 
-                    wt_list.push_back(e);
-                }
-            }
-         }
-
-         category++;
-      }
-   }
+   refresh_wtlistAddDir(false, "wavetables");
 
    if (wt_category.size() == 0 || wt_list.size() == 0)
    {
       std::ostringstream ss;
-      ss << "Surge was unable to load wavetables from '" << patchpath.generic_string()
+      ss << "Surge was unable to load wavetables from '" << datapath
          << "'. The directory contains no wavetables. Please reinstall using the Surge installer.";
       Surge::UserInteractions::promptError(ss.str(),
                                            "Surge Installation Error" );
    }
 
+   firstThirdPartyWTCategory = wt_category.size();
+   refresh_wtlistAddDir(false, "wavetables_3rdparty");
+   firstUserWTCategory = wt_category.size();
+   refresh_wtlistAddDir(true, "");
+
    wtCategoryOrdering = std::vector<int>(wt_category.size());
    std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
 
-   auto categoryCompare =
-      [this](const int &i1, const int &i2) -> bool
-      {
-         return _stricmp(wt_category[i1].name.c_str(),
-                         wt_category[i2].name.c_str()) < 0;
-      };
+   auto categoryCompare = [this](const int& i1, const int& i2) -> bool {
+      return _stricmp(wt_category[i1].name.c_str(), wt_category[i2].name.c_str()) < 0;
+   };
 
-   std::sort(wtCategoryOrdering.begin(), wtCategoryOrdering.end(),
-             categoryCompare);
+   int groups[4] = {0, firstThirdPartyWTCategory, firstUserWTCategory, (int)wt_category.size()};
+
+   for (int i = 0; i < 3; i++)
+      std::sort(std::next(wtCategoryOrdering.begin(), groups[i]),
+                std::next(wtCategoryOrdering.begin(), groups[i + 1]), categoryCompare);
 
    for (int i = 0; i < wt_category.size(); i++)
       wt_category[wtCategoryOrdering[i]].order = i;
 
    wtOrdering = std::vector<int>();
 
-   auto wtCompare =
-      [this](const int &i1, const int &i2) -> bool
-      {
-         return _stricmp(wt_list[i1].name.c_str(),
-                         wt_list[i2].name.c_str()) < 0;
-      };
+   auto wtCompare = [this](const int& i1, const int& i2) -> bool {
+      return _stricmp(wt_list[i1].name.c_str(), wt_list[i2].name.c_str()) < 0;
+   };
 
    // Sort wavetables per category in the category order.
-   for (auto c : wtCategoryOrdering) {
+   for (auto c : wtCategoryOrdering)
+   {
       int start = wtOrdering.size();
 
       for (int i = 0; i < wt_list.size(); i++)
@@ -554,12 +540,33 @@ void SurgeStorage::refresh_wtlist()
 
       int end = wtOrdering.size();
 
-      std::sort(std::next(wtOrdering.begin(), start),
-                std::next(wtOrdering.begin(), end), wtCompare);
+      std::sort(std::next(wtOrdering.begin(), start), std::next(wtOrdering.begin(), end),
+                wtCompare);
    }
 
    for (int i = 0; i < wt_list.size(); i++)
       wt_list[wtOrdering[i]].order = i;
+}
+
+void SurgeStorage::refresh_wtlistAddDir(bool userDir, std::string subdir)
+{
+   std::vector<std::string> supportedTableFileTypes;
+   supportedTableFileTypes.push_back(".wt");
+#if WINDOWS
+   supportedTableFileTypes.push_back(".wav");
+#endif
+
+   refreshPatchOrWTListAddDir(
+       userDir, subdir,
+       [supportedTableFileTypes](std::string in) -> bool {
+          for (auto q : supportedTableFileTypes)
+          {
+             if (_stricmp(q.c_str(), in.c_str()) == 0)
+                return true;
+          }
+          return false;
+       },
+       wt_list, wt_category);
 }
 
 void SurgeStorage::perform_queued_wtloads()

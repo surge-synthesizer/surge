@@ -83,6 +83,9 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
 protected:
+   void populateMenu(VSTGUI::COptionMenu* m, int selectedItem);
+   bool populateMenuForCategory(VSTGUI::COptionMenu* parent, int categoryId, int selectedItem);
+
    OscillatorStorage* oscdata;
    SurgeStorage* storage;
    unsigned int coltable[256], controlstate;

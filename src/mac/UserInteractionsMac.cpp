@@ -66,6 +66,12 @@ namespace Surge
             LSOpenCFURLRef(url,0);
             CFRelease(url);
         }
+
+        void openFolderInFileBrowser(const std::string& folder)
+        {
+           std::string url = "file://" + folder;
+           UserInteractions::openURL(url);
+        }
     };
 };
 

@@ -41,6 +41,12 @@ namespace Surge
               }
            }
         }
+
+        void openFolderInFileBrowser(const std::string& folder)
+        {
+           std::string url = "file://" + folder;
+           UserInteractions::openURL(url);
+        }
     };
 };
 

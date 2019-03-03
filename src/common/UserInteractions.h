@@ -36,6 +36,10 @@ namespace Surge
 
         // Open a URL in a user-appropriate fashion
         void openURL(const std::string &url);
+
+        // Open a folder in the system appropriate file browser (finder on macOS, explorer on win,
+        // etc)
+        void openFolderInFileBrowser(const std::string& folder);
     };
 };
 

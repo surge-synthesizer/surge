@@ -288,36 +288,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
          menurect.offset(where.x, where.y);
          COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
 
-         for (auto c : storage->wtCategoryOrdering)
-         {
-            char name[NAMECHARS];
-            COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, c, 0, 0, COptionMenu::kMultipleCheckStyle);
-            subMenu->setNbItemsPerColumn(32);
-            int sub = 0;
-
-            for (auto p : storage->wtOrdering)
-            {
-               if (storage->wt_list[p].category == c)
-               {
-                  sprintf(name, "%s", storage->wt_list[p].name.c_str());
-                  auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name));
-                  auto action = [this, p](CCommandMenuItem* item) { this->loadWavetable(p); };
-
-                  if (p == id)
-                     actionItem->setChecked(true);
-                  actionItem->setActions(action, nullptr);
-                  subMenu->addEntry(actionItem);
-
-                  sub++;
-               }
-            }
-            strncpy(name, storage->wt_category[c].name.c_str(), NAMECHARS);
-            CMenuItem *submenuItem = contextMenu->addEntry(subMenu, name);
-            if (id >= 0 && storage->wt_list[id].category == c)
-                  submenuItem->setChecked(true);
-
-            subMenu->forget(); // Important, so that the refcounter gets right
-         }
+         populateMenu(contextMenu, id);
 
          getFrame()->addView(contextMenu); // add to frame
          contextMenu->setDirty();
@@ -329,6 +300,117 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
       }
    }
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+}
+
+void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem)
+{
+   int idx = 0;
+   bool needToAddSep = false;
+   for (auto c : storage->wtCategoryOrdering)
+   {
+      if (idx == storage->firstThirdPartyWTCategory ||
+          (idx == storage->firstUserWTCategory &&
+           storage->firstUserWTCategory != storage->wt_category.size()))
+      {
+         needToAddSep = true; // only add if there's actually data coming so defer the add
+      }
+
+      idx++;
+
+      PatchCategory cat = storage->wt_category[c];
+      if (cat.numberOfPatchesInCategoryAndChildren == 0)
+         continue;
+
+      if (cat.isRoot)
+      {
+         if (needToAddSep)
+         {
+            contextMenu->addEntry("-");
+            needToAddSep = false;
+         }
+         populateMenuForCategory(contextMenu, c, selectedItem);
+      }
+   }
+}
+
+bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
+                                                 int categoryId,
+                                                 int selectedItem)
+{
+   char name[NAMECHARS];
+   COptionMenu* subMenu =
+       new COptionMenu(getViewSize(), 0, categoryId, 0, 0, COptionMenu::kMultipleCheckStyle);
+   subMenu->setNbItemsPerColumn(32);
+   int sub = 0;
+
+   PatchCategory cat = storage->wt_category[categoryId];
+
+   for (auto p : storage->wtOrdering)
+   {
+      if (storage->wt_list[p].category == categoryId)
+      {
+         sprintf(name, "%s", storage->wt_list[p].name.c_str());
+         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+         auto action = [this, p](CCommandMenuItem* item) { this->loadWavetable(p); };
+
+         if (p == selectedItem)
+            actionItem->setChecked(true);
+         actionItem->setActions(action, nullptr);
+         subMenu->addEntry(actionItem);
+
+         sub++;
+      }
+   }
+
+   bool selected = false;
+
+   for (auto child : cat.children)
+   {
+      if (child.numberOfPatchesInCategoryAndChildren > 0)
+      {
+         // this isn't the best approach but it works
+         int cidx = 0;
+         for (auto& cc : storage->wt_category)
+         {
+            if (cc.name == child.name)
+               break;
+            cidx++;
+         }
+
+         selected = selected || populateMenuForCategory(subMenu, cidx, selectedItem);
+      }
+   }
+
+   if (!cat.isRoot)
+   {
+#if WINDOWS
+      std::string pathSep = "\\";
+#else
+      std::string pathSep = "/";
+#endif
+      std::string catName = storage->wt_category[categoryId].name;
+      std::size_t sepPos = catName.find_last_of(pathSep);
+      if (sepPos != std::string::npos)
+      {
+         catName = catName.substr(sepPos + 1);
+      }
+      strncpy(name, catName.c_str(), NAMECHARS);
+   }
+   else
+   {
+      strncpy(name, storage->wt_category[categoryId].name.c_str(), NAMECHARS);
+   }
+
+   CMenuItem* submenuItem = contextMenu->addEntry(subMenu, name);
+
+   if (selected || (selectedItem >= 0 && storage->wt_list[selectedItem].category == categoryId))
+   {
+      selected = true;
+      submenuItem->setChecked(true);
+   }
+
+   subMenu->forget(); // Important, so that the refcounter gets right
+   return selected;
 }
 
 void COscillatorDisplay::loadWavetable(int id)
