@@ -47,15 +47,26 @@ void statsFromPlayingEveryPatch()
 
    auto callBack = [](const Patch& p, const PatchCategory& pc, const float* data, int nSamples,
                       int nChannels) -> void {
-      std::cout << "cat = " << std::left << std::setw(30) << pc.name << "; patch = " << std::left
-                << std::setw(30) << p.name << "";
+      std::cout << "cat/patch = " <<  pc.name << " / " << std::left << std::setw(30) << p.name;
 
       if (nSamples * nChannels > 0)
       {
          const auto [mind, maxd] = std::minmax_element(data, data + nSamples * nChannels);
 
-         std::cout << "; data = [" << std::setw(10) << std::fixed << *mind << ", " << std::setw(10)
-                   << std::fixed << *maxd << "] in " << nSamples << " samples";
+         float rms=0, L1=0;
+         for( int i=0; i<nSamples*nChannels; ++i)
+         {
+            rms += data[i]*data[i];
+            L1 += fabs(data[i]);
+         }
+         L1 = L1 / (nChannels*nSamples);
+         rms = sqrt(rms / nChannels / nSamples );
+         
+         std::cout << "  range = [" << std::setw(10)
+                   << std::fixed << *mind << ", " << std::setw(10) << std::fixed << *maxd << "]"
+                   << " L1=" << L1
+                   << " rms=" << rms
+                   << " samp=" << nSamples << " chan=" << nChannels;
       }
       std::cout << std::endl;
    };
