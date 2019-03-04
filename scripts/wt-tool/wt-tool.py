@@ -136,13 +136,26 @@ def main():
 
     act = options.action
     if act == "create":
-        create(options.file, options.wav_dir)
+        if(options.file is None or options.wav_dir is None):
+            parser.print_help()
+            print("\nYou must specify a file and wav_dir for create")
+        else:
+            create(options.file, options.wav_dir)
     elif act == "explode":
-        explode(options.file, options.wav_dir)
+        if(options.file is None or options.wav_dir is None):
+            parser.print_help()
+            print("\nYou must specify a file and wav_dir for explode")
+        else:
+            explode(options.file, options.wav_dir)
     elif act == "info":
-        info(options.file)
+        if(options.file is None):
+            parser.print_help()
+            print("\nYou must specify a file for info")
+        else:
+            info(options.file)
     else:
-        print("Unknown action")
+        parser.print_help()
+        print("\nUnknown action '{0}'".format(act))
 
 
 if __name__ == "__main__":
