@@ -580,11 +580,12 @@ bool Vst2PluginInstance::tryInit()
 void Vst2PluginInstance::handleZoom(SurgeGUIEditor *e)
 {
     ERect *vr;
+    int newW, newH;
     if (e->getRect(&vr))
     {
         float fzf = e->getZoomFactor() / 100.0;
-        int newW = (vr->right - vr->left) * fzf;
-        int newH = (vr->bottom - vr->top) * fzf;
+        newW = (vr->right - vr->left) * fzf;
+        newH = (vr->bottom - vr->top) * fzf;
         sizeWindow( newW, newH );
     }
 
@@ -592,6 +593,12 @@ void Vst2PluginInstance::handleZoom(SurgeGUIEditor *e)
     if(frame)
     {
         frame->setZoom( e->getZoomFactor() / 100.0 );
+        /*
+        ** cframe::setZoom uses prior size and integer math which means repeated resets drift
+        ** look at the "oroginWidth" math around in CFrame::setZoom. So rather than let those
+        ** drifts accumulate, just reset the size here since we know it
+        */
+        frame->setSize(newW, newH);
         
         /*
         ** VST2 has an error which is that the background bitmap doesn't get the frame transform

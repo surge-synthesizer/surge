@@ -617,7 +617,7 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
     if(frame)
     {
         frame->setZoom( e->getZoomFactor() / 100.0 );
-
+        frame->setSize(newW, newH);
         /*
         ** rather than calling setSize on myself as in vst2, I have to
         ** inform the plugin frame that I have resized wiht a reference
