@@ -54,7 +54,7 @@ Given a directory containing a set of `.wav` files with mono 16bit integer power
 explode does is a good idea. The mechanism to make the input `.wav` files is an exercise left to the reader.
 
 ```
-$ python3 ./scripts/wt-tool/wt-tool.py --action=create --wav_dir=/tmp/cello --file=newC.wt
+$ python3 ./scripts/wt-tool/wt-tool.py --action=create --file=newC.wt --wav_dir=/tmp/cello
 Creating 'newC.wt' with 45 tables of length 128
 ```
 
