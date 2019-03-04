@@ -33,7 +33,9 @@
 #import <AudioUnit/AUCocoaUIView.h>
 #include "aulayer.h"
 #include "aulayer_cocoaui.h"
+
 #include <gui/SurgeGUIEditor.h>
+#include <gui/CScalableBitmap.h>
 
 using namespace VSTGUI;
 
@@ -114,10 +116,26 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
             newSize = NSMakeRect (0, 0,
                                   lastScale * ( vr->right - vr->left ),
                                   lastScale * ( vr->bottom - vr->top ) ) ;
-            [self scaleUnitSquareToSize:NSMakeSize( lastScale, lastScale )];
             setSizeByZoom = true;
             [self setFrame:newSize];
             setSizeByZoom = false;
+
+            VSTGUI::CFrame *frame = cont->getFrame();
+            if(frame)
+            {
+               frame->setZoom( zf );
+               VSTGUI::CBitmap *bg = frame->getBackground();
+               if(bg != NULL)
+               {
+                  CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+                  if (sbm)
+                  {
+                     sbm->setExtraScaleFactor(cont->getZoomFactor());
+                  }
+               }
+               frame->setDirty(true);
+               frame->invalid();
+            }
         }
 
         cont->setZoomCallback( [self]( SurgeGUIEditor *ed ) {
@@ -125,15 +143,33 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
             float zf = ed->getZoomFactor() / 100.0;
             if (ed->getRect(&vr))
             {
-                NSRect newSize = NSMakeRect (0, 0,
-                                             (int)( (vr->right - vr->left) * zf ),
-                                             (int)( (vr->bottom - vr->top) * zf ) );
-                [self scaleUnitSquareToSize:NSMakeSize( zf / lastScale, zf / lastScale )];
+                int newW = (int)( (vr->right - vr->left) * zf );
+                int newH = (int)( (vr->bottom - vr->top) * zf );
+                NSRect newSize = NSMakeRect (0, 0, newW, newH );
                 lastScale = zf;
-                
+
                 setSizeByZoom = true;
                 [self setFrame:newSize];
                 setSizeByZoom = false;
+
+                VSTGUI::CFrame *frame = ed->getFrame();
+                if(frame)
+                {
+                   frame->setZoom( zf );
+                   frame->setSize(newW, newH);
+                   VSTGUI::CBitmap *bg = frame->getBackground();
+                   if(bg != NULL)
+                   {
+                      CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+                      if (sbm)
+                      {
+                         sbm->setExtraScaleFactor(ed->getZoomFactor());
+                      }
+                   }
+                   frame->setDirty(true);
+                   frame->invalid();
+                }
+
             }
             
         }
