@@ -67,3 +67,6 @@ premake-stamp
 /Debug
 src/linux/ScalablePiggy*
 *.deb
+
+# cmake
+build/
