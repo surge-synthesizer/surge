@@ -12,6 +12,8 @@
 
 #include "CScalableBitmap.h"
 
+#include <algorithm>
+
 using namespace Steinberg::Vst;
 
 #define CHECK_INITIALIZED                                                                          \
@@ -198,7 +200,8 @@ void SurgeVst3Processor::processEvent(const Event& e)
       }
       else
       {
-         getSurge()->playNote(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity, e.noteOn.tuning);
+         char cVel = std::min((char)(e.noteOn.velocity * 128.0), (char)127); // Why oh why is this a float in VST3?
+         getSurge()->playNote(e.noteOn.channel, e.noteOn.pitch, cVel, e.noteOn.tuning);
       }
       break;
 
