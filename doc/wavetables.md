@@ -35,7 +35,7 @@ WT :'resources/data/wavetables/sampled/cello.wt'
 
 ## Extract a .wt file into constituent .wav files
 
-A .wt file contains a number of wave samples. You can extract those into numbered wav files 
+A `.wt` file contains a number of wave samples. You can extract those into numbered `.wav` files 
 
 ```
 $ python3 ./scripts/wt-tool/wt-tool.py --action=explode --wav_dir=/tmp/cello --file=resources/data/wavetables/sampled/cello.wt 
