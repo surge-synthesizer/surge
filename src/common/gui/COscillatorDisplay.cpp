@@ -294,6 +294,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
          contextMenu->setDirty();
          contextMenu->popup();
          contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
+         contextMenu->onMouseDown(where, kRButton); // <-- modal menu loop is here         
          // getFrame()->looseFocus(pContext);
 
          getFrame()->removeView(contextMenu, true); // remove from frame and forget
