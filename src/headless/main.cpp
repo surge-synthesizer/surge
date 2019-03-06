@@ -51,7 +51,9 @@ void statsFromPlayingEveryPatch()
 
       if (nSamples * nChannels > 0)
       {
-         const auto [mind, maxd] = std::minmax_element(data, data + nSamples * nChannels);
+         const auto minmaxres = std::minmax_element(data, data + nSamples * nChannels);
+         auto mind = minmaxres.first;
+         auto maxd = minmaxres.first;
 
          float rms=0, L1=0;
          for( int i=0; i<nSamples*nChannels; ++i)
