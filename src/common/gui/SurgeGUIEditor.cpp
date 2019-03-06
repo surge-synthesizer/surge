@@ -498,54 +498,6 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
             }
             toggle_mod_editing();
             return 1;
-#if !LINUX
-            /* 
-            ** On linux the arrow keys navigate menus but do it in the same window as the
-            ** UI, so this eating of the key causes core dumps and makes menus non-navigable.
-            ** (On Mac and Win menus are separate parent windows so have a different 
-            ** event loop)
-            */
-        case VKEY_LEFT:
-            if (saveDialog && saveDialog->isVisible())
-            {
-               /* 
-               ** SaveDialog gets access to the cursor keys if it is open
-               */
-               return -1;
-            }
-            synth->incrementCategory(false);
-            return 1;
-        case VKEY_RIGHT:
-            if (saveDialog && saveDialog->isVisible())
-            {
-               /* 
-               ** SaveDialog gets access to the cursor keys if it is open
-               */
-               return -1;
-            }
-            synth->incrementCategory(true);
-            return 1;
-        case VKEY_UP:
-            if (saveDialog && saveDialog->isVisible())
-            {
-               /* 
-               ** SaveDialog gets access to the cursor keys if it is open
-               */
-               return -1;
-            }
-            synth->incrementPatch(false);
-            return 1;
-        case VKEY_DOWN:
-            if (saveDialog && saveDialog->isVisible())
-            {
-               /* 
-               ** SaveDialog gets access to the cursor keys if it is open
-               */
-               return -1;
-            }
-            synth->incrementPatch(true);
-            return 1;
-#endif
         }
     }
     else
