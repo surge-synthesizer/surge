@@ -498,14 +498,6 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
             }
             toggle_mod_editing();
             return 1;
-#if !LINUX
-            /* 
-            ** On linux the arrow keys navigate menus but do it in the same window as the
-            ** UI, so this eating of the key causes core dumps and makes menus non-navigable.
-            ** (On Mac and Win menus are separate parent windows so have a different 
-            ** event loop)
-            */
-#endif
         }
     }
     else
