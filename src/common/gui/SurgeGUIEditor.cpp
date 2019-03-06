@@ -2591,6 +2591,33 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     settingsMenu->addEntry(zoomSubMenu, "Zoom"); eid++;
 
+    COptionMenu* mpeSubMenu =
+        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+    std::string endis = "Enable MPE";
+    if (synth->mpeEnabled)
+       endis = "Disable MPE";
+    addCallbackMenu(mpeSubMenu, endis.c_str(),
+                    [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
+
+    std::ostringstream oss;
+    oss << "Change default pitch bend range (" << synth->mpePitchBendRange << ")";
+    addCallbackMenu(mpeSubMenu, oss.str().c_str(), [this]() {
+       // FIXME! This won't work on linux
+       char c[256];
+       snprintf(c, 256, "%d", synth->mpePitchBendRange);
+       spawn_miniedit_text(c, 16);
+       int newVal = ::atoi(c);
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
+       this->synth->mpePitchBendRange = newVal;
+    });
+
+    std::string mpeMenuName = "MPE (disabled)";
+    if (synth->mpeEnabled)
+       mpeMenuName = "MPE (enabled)";
+    settingsMenu->addEntry(mpeSubMenu, mpeMenuName.c_str());
+    eid++;
+    mpeSubMenu->forget();
+
     settingsMenu->addSeparator(eid++);
 
     addCallbackMenu(settingsMenu, "Open User Data Folder", [this]() {
