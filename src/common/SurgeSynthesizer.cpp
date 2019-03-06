@@ -33,6 +33,8 @@
 #endif
 #include "CSurgeSlider.h"
 
+#include "UserDefaults.h"
+
 using namespace std;
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
@@ -157,7 +159,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
 
    mpeEnabled = false;
    mpeVoices = 0;
-   mpePitchBendRange = 48;
+   mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
    mpeGlobalPitchBendRange = 2;
 
    //	load_patch(0);
@@ -728,7 +730,7 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
    {
       mpeEnabled = msbValue > 0;
       mpeVoices = msbValue & 0xF;
-      mpePitchBendRange = 48;
+      mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
       mpeGlobalPitchBendRange = 2;
       return;
    }
@@ -737,7 +739,7 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
        // This is the invalid message which the ROLI sends. Rather than have the Roli not work
        mpeEnabled = true;
        mpeVoices = msbValue & 0xF;
-       mpePitchBendRange = 48;
+       mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
        mpeGlobalPitchBendRange = 2;
        return;
    }
