@@ -132,7 +132,7 @@ elseif (os.istarget("windows")) then
     platforms { "x64", "x86" }
 
     filter "platforms:x86"
-        targetsuffix "32"
+        targetsuffix "_x86"
     filter "platforms:x64"
         targetsuffix ""
     filter {}
