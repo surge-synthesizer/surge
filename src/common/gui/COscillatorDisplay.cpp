@@ -259,7 +259,7 @@ bool COscillatorDisplay::onDrop(IDataPackage* drag, const CPoint& where)
 
 CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonState& button)
 {
-   if (!(button & kLButton))
+   if (!((button & kLButton) || (button & kRButton)))
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 
    assert(oscdata);
