@@ -628,11 +628,11 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    memset(&wh, 0, sizeof(wt_header));
 
    size_t read = fread(&wh, sizeof(wt_header), 1, f);
-   // I'm not sure why this ever worked but it is checking the 4 bytes against vawt so...
-   // if (wh.tag != vt_read_int32BE('vawt'))
-   if (!(wh.tag[0] == 'v' && wh.tag[1] == 'a' && wh.tag[2] == 'w' && wh.tag[3] == 't'))
+   if (strcmp(wh.tag, "twav"))
    {
-      // SOME sort of error reporting is appropriate
+      // FIXME: Fix the fallback. Right now this code path causes Ableton 10 on
+      // macOS to crash if exercised. This could easily happen because of data
+      // corruption in the wt file.
       fclose(f);
       return;
    }
@@ -646,6 +646,8 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
 
    data = malloc(ds);
    fread(data, 1, ds, f);
+   // FIXME: Validate that the data size in the header matches the amount of
+   // data read. The mismatch could happen because of data corruption.
    CS_WaveTableData.enter();
    wt->BuildWT(data, wh, false);
    CS_WaveTableData.leave();
