@@ -23,11 +23,11 @@ distribution.
 */
 
 #include <ctype.h>
+#include <clocale>
+#include <iomanip>
+#include <sstream>
 #include "tinyxml.h"
 
-#ifdef TIXML_USE_STL
-#include <sstream>
-#endif
 
 
 bool TiXmlBase::condenseWhiteSpace = true;
@@ -722,9 +722,15 @@ void TiXmlElement::SetAttribute( const char * name, int val )
 
 void TiXmlElement::SetDoubleAttribute( const char * name, double val )
 {	
-	char buf[128];
-	sprintf( buf, "%f", val );
-	SetAttribute( name, buf );
+	char buf[64];
+	std::stringstream sst;
+	sst.imbue(std::locale::classic());
+	sst << std::fixed;
+	sst << std::showpoint;
+	sst << std::setprecision(6);
+	sst << val;
+	strncpy( buf, sst.str().c_str(), 63 );
+	SetAttribute( name, buf);
 }
 
 
@@ -1126,7 +1132,10 @@ int TiXmlAttribute::QueryIntValue( int* ival ) const
 
 int TiXmlAttribute::QueryDoubleValue( double* dval ) const
 {
-	if ( sscanf( value.c_str(), "%lf", dval ) == 1 )
+	std::stringstream sst;
+	sst.imbue(std::locale::classic());
+	sst << value.c_str();
+	if ( sst >> *dval )
 		return TIXML_SUCCESS;
 	return TIXML_WRONG_TYPE;
 }
@@ -1141,7 +1150,13 @@ void TiXmlAttribute::SetIntValue( int _value )
 void TiXmlAttribute::SetDoubleValue( double _value )
 {
 	char buf [64];
-	sprintf (buf, "%lf", _value);
+	std::stringstream sst;
+	sst.imbue(std::locale::classic());
+	sst << std::fixed;
+	sst << std::showpoint;
+	sst << std::setprecision(6);
+	sst << _value;
+	strncpy( buf, sst.str().c_str(), 63 );
 	SetValue (buf);
 }
 
