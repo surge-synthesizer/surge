@@ -6,6 +6,8 @@
 #include "DspUtilities.h"
 #include <string.h>
 #include <math.h>
+#include <iomanip>
+#include <sstream>
 
 Parameter::Parameter()
 {
@@ -606,14 +608,20 @@ char* Parameter::get_storage_value(char* str)
 {
    switch (valtype)
    {
-   case vt_float:
-      sprintf(str, "%f", val.f);
-      break;
    case vt_int:
       sprintf(str, "%i", val.i);
       break;
    case vt_bool:
       sprintf(str, "%i", val.b ? 1 : 0);
+      break;
+   case vt_float:
+      std::stringstream sst;
+      sst.imbue(std::locale::classic());
+      sst << std::fixed;
+      sst << std::showpoint;
+      sst << std::setprecision(6);
+      sst << val.f;
+      strncpy(str, sst.str().c_str(),15);
       break;
    };
 
