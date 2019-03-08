@@ -234,8 +234,9 @@ To use the VST, you need to install it locally along with supporting files. You 
 if you desire, but the build script will also do it.
 
 ```
-./build-linux.sh install-local
+./build-linux.sh install --local
 ```
+Script will install vst2 to $HOME/.vst dir. To change this, edit vst2_dest_path to taste. Without --local files will be installed to system locations (needs sudo).
 
 For other options, you can do `./build-linux.sh --help`.
 
