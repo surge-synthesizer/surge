@@ -452,6 +452,16 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
          {
             v->legato(key, velocity, detune);
             found_one = true;
+            if (mpeEnabled)
+            {
+               /*
+               ** This voice was created on a channel but is being legato held to another channel
+               ** so it needs to borrow the channel and channelState. Obviously this can only
+               ** happen in MPE mode.
+               */
+               v->state.channel = channel;
+               v->state.voiceChannelState = &channelState[channel];
+            }
             break;
          }
          else
@@ -543,15 +553,49 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
          case pm_mono_fp:
          case pm_latch:
          {
+            /*
+            ** In these modes, our job when we release a note is to see if
+            ** any ohter note is held.
+            **
+            ** In normal midi mode, that means scanning the keystate of our
+            ** channel looking for another note.
+            **
+            ** In MPE mode, where each note is per channel, that means
+            ** scanning all non-main channels rather than ourself for the
+            ** highest note
+            */
             if ((v->state.key == key) && (v->state.channel == channel))
             {
+               int activateVoiceKey, activateVoiceChannel;
+
                // v->release();
-               for (k = hikey; k >= lowkey; k--) // search downwards
+               if (!mpeEnabled)
                {
-                  if (channelState[channel].keyState[k].keystate)
+                  for (k = hikey; k >= lowkey && !do_switch; k--) // search downwards
                   {
-                     do_switch = true;
-                     break;
+                     if (channelState[channel].keyState[k].keystate)
+                     {
+                        do_switch = true;
+                        activateVoiceKey = k;
+                        activateVoiceChannel = channel;
+                        break;
+                     }
+                  }
+               }
+               else
+               {
+                  for (k = hikey; k >= lowkey && !do_switch; k--)
+                  {
+                     for (int mpeChan = 1; mpeChan < 16; ++mpeChan)
+                     {
+                        if (mpeChan != channel && channelState[mpeChan].keyState[k].keystate)
+                        {
+                           do_switch = true;
+                           activateVoiceChannel = mpeChan;
+                           activateVoiceKey = k;
+                           break;
+                        }
+                     }
                   }
                }
                if (!do_switch)
@@ -564,8 +608,10 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                   // confirm that no notes are active
                   v->uber_release();
                   if (getNonUltrareleaseVoices(scene) == 0)
-                     playVoice(scene, channel, k, velocity,
-                               channelState[channel].keyState[k].lastdetune);
+                  {
+                     playVoice(scene, activateVoiceChannel, activateVoiceKey, velocity,
+                               channelState[activateVoiceChannel].keyState[k].lastdetune);
+                  }
                }
             }
          }
@@ -573,18 +619,50 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
          case pm_mono_st:
          case pm_mono_st_fp:
          {
-            if ((v->state.key == key) && (v->state.channel == channel))
+            /*
+            ** In these modes the note will collide on the main channel
+            */
+            int stateChannel = getMpeMainChannel(v->state.channel, v->state.key);
+            int noteChannel = getMpeMainChannel(channel, key);
+
+            if ((v->state.key == key) && (stateChannel == noteChannel))
             {
                bool do_release = true;
-               for (k = hikey; k >= lowkey; k--) // search downwards
+               /*
+               ** Again the note I need to legato to is on my channel in non MPE and
+               ** is on another channel in MPE mode
+               */
+               if (!mpeEnabled)
                {
-                  if (channelState[channel].keyState[k].keystate)
+                  for (k = hikey; k >= lowkey && do_release; k--) // search downwards
                   {
-                     v->legato(k, velocity, channelState[channel].keyState[k].lastdetune);
-                     do_release = false;
-                     break;
+                     if (channelState[channel].keyState[k].keystate)
+                     {
+                        v->legato(k, velocity, channelState[channel].keyState[k].lastdetune);
+                        do_release = false;
+                        break;
+                     }
                   }
                }
+               else
+               {
+                  for (k = hikey; k >= lowkey && do_release; k--) // search downwards
+                  {
+                     for (int mpeChan = 1; mpeChan < 16; ++mpeChan)
+                     {
+                        if (mpeChan != channel && channelState[mpeChan].keyState[k].keystate)
+                        {
+                           v->legato(k, velocity, channelState[mpeChan].keyState[k].lastdetune);
+                           do_release = false;
+                           // See the comment above at the other _st legato spot
+                           v->state.channel = mpeChan;
+                           v->state.voiceChannelState = &channelState[mpeChan];
+                           break;
+                        }
+                     }
+                  }
+               }
+
                if (do_release)
                   v->release();
             }
