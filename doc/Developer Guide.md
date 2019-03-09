@@ -140,3 +140,87 @@ Prefer `std::ostringstream` and so on to `sprintf` and so on.
 
 `#pragma once`, while not [really standard](https://en.wikipedia.org/wiki/Pragma_once), is used in 
 most of the code, so we are continuing to use it rather than ifdef guards.
+
+## Tips for developing on particular platforms
+
+First and foremost: Do what works for you. These are just some collected tips from those
+of us who have been working on surge. They may or may not work for you. If you have good 
+ideas to help developers, please add em here!
+
+### Macintosh
+
+The easiest way to debug on macintosh that @baconpaul found is to make it so you
+can run the plugin in a host and see stdout.
+
+To use the AU in Logic, Mainstage, GarageBand, and so on, the very first time you need to
+do one more one-time step which is to invalidate your AU cache so that you force Logic to rescan.
+The easiest way to do this is to move the AudioUnitCache away from it's location by typing in:
+
+```
+mv ~/Library/Caches/AudioUnitCache ~/Desktop
+```
+
+For the AU Host, the easiest way to do this is with (Hosting AU)[http://ju-x.com/hostingau.html].
+Install it and set up a single track containing a surge instance. Save that Hosting AU
+configuration as (say) `~/Desktop/Surge.hosting` then run:
+
+```
+/Applications/Hosting\ AU.app/Contents/MacOS/Hosting\ AU ~/Desktop/Surge.hosting
+```
+
+You can route midi to that, play it with the keyboard using Hosting AU keyboard driver, and so on.
+
+You can similarly capture stdout from logic (or other programs) by running the appropriate command
+for the inside of the app from terminal. For instance `/Applications/Logic\ Pro\ X.app/Contents/MacOS/Logic\ Pro\ X ` will run 
+Logic and show you stdout.
+
+For VST2, [carla](https://kxstudio.linuxaudio.org/Applications:Carla) provides a super light weight VST2 wraparound. 
+I just unpacked it into `~/Desktop/Carla`. You also need to install jack so:
+
+```
+brew install jack
+jackd -d coreaudio
+```
+
+and then after a build you can load the VST2 into a single host with 
+
+```
+~/Desktop/Carla/carla.lv2/carla-bridge-native vst2 products/Surge.vst/ 'none' '(0)'
+```
+
+Finally, bitwig is an excellent host for development since you don't have to restart
+it between builds, but capturing stdout is something I haven't figured out yet. If you do
+please update this document!
+
+### Linux
+
+You can get a very clean debugging environment using Carla and surge where you can
+play notes on an onscreen keyboard and route them to the VST2 with stdout visible.
+Everything here is documented for Ubuntu 18.04 LTS. Different packages have different
+things of course.
+
+To do that you first need to install a bunch of jack code.
+
+```
+sudo apt-get install jack
+sudo apt-get install jack-keyboard
+sudo apt-get install ajmidid
+```
+
+The run jac and ajmidid in separate terminals
+
+```
+jack -d alsa -X alsa_midi
+ajmidid -e
+```
+
+Now start surge with carla-single
+
+```
+~/Carla_2.0-RC3-linux64/carla/carla-bridge-native vst2 ./target/vst2/Release/Surge.so  '(none)' '0'
+```
+
+and then in a fourth keyboard start `jack-keyboard`. The connect-to option should have
+Surge as an endpoint. Pick it and you can play the GUI keyboard and hear and watch the
+stdout go by.
+
