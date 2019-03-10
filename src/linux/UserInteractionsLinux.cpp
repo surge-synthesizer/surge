@@ -27,8 +27,8 @@ namespace Surge
             std::cerr << "Surge OkCancel\n"
                       << title << "\n"
                       << message << "\n" 
-                      << "Returning CANCEL" << std::flush;
-            return UserInteractions::CANCEL;
+                      << "Returning OK" << std::flush;
+            return UserInteractions::OK;
         }
 
         void openURL(const std::string &url)
