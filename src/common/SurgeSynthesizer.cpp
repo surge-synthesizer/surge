@@ -1913,7 +1913,8 @@ void SurgeSynthesizer::getParameterNameW(long index, wchar_t* ptr)
 {
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
-      swprintf(ptr, 128, L"%S", storage.getPatch().param_ptr[index]->get_full_name());
+      // the input is not wide so don't use %S
+      swprintf(ptr, 128, L"%s", storage.getPatch().param_ptr[index]->get_full_name());
    }
    else if (index >= metaparam_offset)
    {
@@ -1924,7 +1925,7 @@ void SurgeSynthesizer::getParameterNameW(long index, wchar_t* ptr)
       }
       else
       {
-         swprintf(ptr, 128, L"C%i:%S", c + 1, storage.getPatch().CustomControllerLabel[c]);
+         swprintf(ptr, 128, L"C%i:%s", c + 1, storage.getPatch().CustomControllerLabel[c]);
       }
    }
    else
@@ -1937,7 +1938,7 @@ void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t* ptr)
 {
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
-      swprintf(ptr, 128, L"%S", storage.getPatch().param_ptr[index]->get_name());
+      swprintf(ptr, 128, L"%s", storage.getPatch().param_ptr[index]->get_name());
    }
    else if (index >= metaparam_offset)
    {
@@ -1948,7 +1949,7 @@ void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t* ptr)
       }
       else
       {
-         swprintf(ptr, 128, L"C%i:%S", c + 1, storage.getPatch().CustomControllerLabel[c]);
+         swprintf(ptr, 128, L"C%i:%s", c + 1, storage.getPatch().CustomControllerLabel[c]);
       }
    }
    else
@@ -1976,7 +1977,7 @@ void SurgeSynthesizer::getParameterStringW(long index, float value, wchar_t* ptr
       char text[128];
       storage.getPatch().param_ptr[index]->get_display(text);
 
-      swprintf(ptr, 128, L"%S", text);
+      swprintf(ptr, 128, L"%s", text);
    }
    else if (index >= metaparam_offset)
    {
