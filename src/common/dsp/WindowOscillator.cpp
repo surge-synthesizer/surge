@@ -70,7 +70,7 @@ WindowOscillator::~WindowOscillator()
 
 void WindowOscillator::init_ctrltypes()
 {
-   oscdata->p[0].set_name("Shape");
+   oscdata->p[0].set_name("Morph");
    oscdata->p[0].set_type(ct_percent);
    oscdata->p[1].set_name("Formant");
    oscdata->p[1].set_type(ct_pitch);
