@@ -38,9 +38,11 @@ void initializeRuntimeFont()
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> minifont = new VSTGUI::CFontDesc("Lato", 9);
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> patchfont = new VSTGUI::CFontDesc("Lato", 14);
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> lfofont = new VSTGUI::CFontDesc("Lato", 8);
+    VSTGUI::SharedPointer<VSTGUI::CFontDesc> aboutfont = new VSTGUI::CFontDesc("Lato", 12);
     displayFont = minifont;
     patchNameFont = patchfont;
     lfoTypeFont = lfofont;
+    aboutFont = aboutfont;
 }
 
 }
