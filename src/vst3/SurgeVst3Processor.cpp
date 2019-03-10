@@ -13,6 +13,12 @@
 #include "CScalableBitmap.h"
 
 #include <algorithm>
+#include <cwchar>
+#include <codecvt>
+#include <string.h>
+
+#define MIDI_CONTROLLER_0 20000
+#define MIDI_CONTROLLER_MAX 24096
 
 using namespace Steinberg::Vst;
 
@@ -52,7 +58,7 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
    addAudioOutput(STR16("Stereo Out"), SpeakerArr::kStereo);
 
    //---create Event In/Out busses (1 bus with 16 channels)------
-   addEventInput(STR16("Note In"));
+   addEventInput(USTRING("MIDI In"));
 
    // addUnit(new Unit(USTRING ("Macro Parameters"), 1));
 
@@ -232,47 +238,68 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
          if (paramQueue)
          {
             int32 offsetSamples;
-            double value;
+            double value = 0;
+            ;
             int32 numPoints = paramQueue->getPointCount();
-            /*switch (paramQueue->getParameterId ())
-            {
 
-            }*/
+            int id = paramQueue->getParameterId();
+
+            if (id >= MIDI_CONTROLLER_0 && id <= MIDI_CONTROLLER_MAX)
+            {
+               int chancont = id - MIDI_CONTROLLER_0;
+               int channel = chancont & 0xF;
+               int cont = chancont >> 4;
+
+               for (int i = 0; i < numPoints; ++i)
+               {
+                  paramQueue->getPoint(0, offsetSamples, value);
+                  if (cont < 128)
+                  {
+                     if (cont == ControllerNumbers::kCtrlAllSoundsOff ||
+                         cont == ControllerNumbers::kCtrlAllNotesOff)
+                     {
+                        surgeInstance->allNotesOff();
+                     }
+                     else
+                     {
+                        surgeInstance->channelController(channel, cont, (int)(value * 128));
+                     }
+                  }
+                  else
+                     switch (cont)
+                     {
+                     case kAfterTouch:
+                        surgeInstance->channelAftertouch(channel, (int)(value * 127.f));
+                        break;
+                     case kPitchBend:
+                        surgeInstance->pitchBend(channel, (int)(value * 8192.f));
+                        break;
+                     case kCtrlProgramChange:
+                        break;
+                     case kCtrlPolyPressure:
+                        break;
+                     default:
+                        break;
+                     }
+               }
+            }
+            else
+            {
+               int id = paramQueue->getParameterId();
+
+               if (numPoints == 1)
+               {
+                  paramQueue->getPoint(0, offsetSamples, value);
+                  surgeInstance->setParameter01(id, value, true);
+               }
+               else
+               {
+                  // Unclear what to do here
+               }
+            }
          }
       }
    }
-   /*int32 numParamsChanged = paramChanges->getParameterCount ();
-     // for each parameter which are some changes in this audio block:
-     for (int32 i = 0; i < numParamsChanged; i++)
-     {
-        IParamValueQueue* paramQueue = paramChanges->getParameterData (i);
-        if (paramQueue)
-        {
-           int32 offsetSamples;
-           double value;
-           int32 numPoints = paramQueue->getPointCount ();
-           switch (paramQueue->getParameterId ())
-           {
-           case kGainId:
-              // we use in this example only the last point of the queue.
-              // in some wanted case for specific kind of parameter it makes sense to retrieve all
-     points
-              // and process the whole audio block in small blocks.
-              if (paramQueue->getPoint (numPoints - 1,  offsetSamples, value) == kResultTrue)
-              {
-                 fGain = (float)value;
-              }
-              break;
-
-           case kBypassId:
-              if (paramQueue->getPoint (numPoints - 1,  offsetSamples, value) == kResultTrue)
-              {
-                 bBypass = (value > 0.5f);
-              }
-              break;
-           }
-        }
-     }*/
 }
 
 tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
@@ -414,6 +441,27 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
    return nullptr;
 }
 
+tresult SurgeVst3Processor::beginEdit(ParamID id)
+{
+   int mappedId =
+       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+   return Steinberg::Vst::SingleComponentEffect::beginEdit(mappedId);
+}
+
+tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue valueNormalized)
+{
+   int mappedId =
+       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+   return Steinberg::Vst::SingleComponentEffect::performEdit(mappedId, valueNormalized);
+}
+
+tresult SurgeVst3Processor::endEdit(ParamID id)
+{
+   int mappedId =
+       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+   return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
+}
+
 void SurgeVst3Processor::editorAttached(EditorView* editor)
 {
    SurgeGUIEditor* view = dynamic_cast<SurgeGUIEditor*>(editor);
@@ -433,10 +481,14 @@ void SurgeVst3Processor::editorRemoved(EditorView* editor)
 }
 
 void SurgeVst3Processor::addDependentView(SurgeGUIEditor* view)
-{}
+{
+   viewsSet.insert(view);
+}
 
 void SurgeVst3Processor::removeDependentView(SurgeGUIEditor* view)
-{}
+{
+   viewsSet.erase(view);
+}
 
 int32 PLUGIN_API SurgeVst3Processor::getParameterCount()
 {
@@ -474,9 +526,35 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
 
    info.id = id;
 
-   surgeInstance->getParameterNameW(id, reinterpret_cast<wchar_t *>(info.title));
-   surgeInstance->getParameterShortNameW(id, reinterpret_cast<wchar_t *>(info.shortTitle));
-   surgeInstance->getParameterUnitW(id, reinterpret_cast<wchar_t *>(info.units));
+   /*
+   ** String128 is a TChar[128] is a char16[128]. On mac, wchar is a char32 so
+   ** the original reinrpret cast didn't work well.
+   **
+   ** I thought a lot about using std::wstring_convert<std::codecvt_utf8<wchar_t>> here
+   ** but in the end decided to just copy the bytes
+   */
+   wchar_t tmpwchar[512];
+   surgeInstance->getParameterNameW(id, tmpwchar);
+#if MAC
+   std::copy(tmpwchar, tmpwchar + 128, info.title);
+#else
+   swprintf(reinterpret_cast<wchar_t *>(info.title), 128, L"%S", tmpwchar);
+#endif   
+
+   surgeInstance->getParameterShortNameW(id, tmpwchar);
+#if MAC
+   std::copy(tmpwchar, tmpwchar + 128, info.shortTitle);
+#else
+   swprintf(reinterpret_cast<wchar_t *>(info.shortTitle), 128, L"%S", tmpwchar);
+#endif   
+
+   surgeInstance->getParameterUnitW(id, tmpwchar);
+#if MAC
+   std::copy(tmpwchar, tmpwchar + 128, info.units);
+#else
+   swprintf(reinterpret_cast<wchar_t *>(info.units), 128, L"%S", tmpwchar);
+#endif   
+
    info.stepCount = 0; // 1 = toggle,
    info.defaultNormalizedValue = meta.fdefault;
    info.unitId = 0; // meta.clump;
@@ -496,7 +574,14 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
       return kInvalidArgument;
    }
 
-   surgeInstance->getParameterStringW(tag, valueNormalized, reinterpret_cast<wchar_t *>(string));
+   
+   wchar_t tmpwchar[ 512 ];
+   surgeInstance->getParameterStringW(tag, valueNormalized, tmpwchar);
+#if MAC
+   std::copy(string, string+128, tmpwchar);
+#else
+   swprintf(reinterpret_cast<wchar_t *>(string), 128, L"%S", tmpwchar);
+#endif   
 
    return kResultOk;
 }
@@ -578,7 +663,14 @@ tresult PLUGIN_API SurgeVst3Processor::getMidiControllerAssignment(int32 busInde
                                                                    CtrlNumber midiControllerNumber,
                                                                    ParamID& id /*out*/)
 {
-   return kResultFalse;
+   /*
+   ** Alrighty dighty. What VST3 wants us to do here is, for the controller number,
+   ** tell it a parameter to map to. We alas don't have a parameter to map to because
+   ** that's not how surge works. But... we can map to parameter id of MIDI_CONTROLLER_0 + id
+   ** and test that elsewhere
+   */
+   id = MIDI_CONTROLLER_0 + midiControllerNumber * 16 + channel;
+   return kResultTrue;
 }
 
 bool SurgeVst3Processor::exportAllMidiControllers()
@@ -602,9 +694,12 @@ void SurgeVst3Processor::updateDisplay()
    // setDirty(true);
 }
 
-void SurgeVst3Processor::setParameterAutomated(int externalparam, float value)
+void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
 {
-   beginEdit(externalparam); // TODO
+   int externalparam = SurgeGUIEditor::unapplyParameterOffset(
+       surgeInstance->remapExternalApiToInternalId(inputParam));
+
+   beginEdit(externalparam);
    performEdit(externalparam, value);
    endEdit(externalparam);
 }
