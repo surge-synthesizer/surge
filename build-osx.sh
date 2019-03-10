@@ -94,6 +94,15 @@ prerequisite_check()
         exit 1
     fi
 
+    if [ ! $(which cmake) ]; then
+        echo
+        echo ${RED}ERROR: You do not have cmake on your path${NC}
+        echo
+	echo Please install cmake. "brew install cmake" or visit https://cmake.org
+        echo
+        exit 1
+    fi
+
     if [[ ( ! -z $SURGE_USE_VECTOR_SKIN ) && ( ! -d assets/${SURGE_USE_VECTOR_SKIN}/exported ) ]]; then
         echo
         echo ${RED}SURGE_USE_VECTOR_SKIN does not point to assets${NC}
