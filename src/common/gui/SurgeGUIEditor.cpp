@@ -44,6 +44,7 @@ using namespace std;
 CFontRef displayFont = NULL;
 CFontRef patchNameFont = NULL;
 CFontRef lfoTypeFont = NULL;
+CFontRef aboutFont = NULL;
 
 
 enum special_tags
@@ -165,19 +166,23 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
        SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
        SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
        SharedPointer<CFontDesc> lfofont = new CFontDesc("Lucida Grande", 8);
+       SharedPointer<CFontDesc> aboutfont = new CFontDesc("Lucida Grande", 10);
 #elif LINUX
        SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
        SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
        SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
+       SharedPointer<CFontDesc> aboutfont = new CFontDesc("sans-serif", 10);
 #else
        SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
        SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
        SharedPointer<CFontDesc> lfofont = new CFontDesc("Microsoft Sans Serif", 8 );
+       SharedPointer<CFontDesc> aboutfont = new CFontDesc("Microsoft Sans Serif", 10 );
 #endif
 
        displayFont = minifont;
        patchNameFont = patchfont;
        lfoTypeFont = lfofont;
+       aboutFont = aboutfont;
 
    }
 }

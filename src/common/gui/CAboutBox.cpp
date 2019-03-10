@@ -1,6 +1,7 @@
 #include "CAboutBox.h"
 #include "globals.h"
 #include "resource.h"
+#include "RuntimeFont.h"
 #include <stdio.h>
 
 using namespace VSTGUI;
@@ -24,7 +25,7 @@ CAboutBox::CAboutBox(const CRect& size,
    boxHide(false);
    if (infoFont == NULL)
    {
-       infoFont = kNormalFont;
+       infoFont = aboutFont;
    }
 }
 

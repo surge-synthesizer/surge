@@ -32,3 +32,4 @@ void initializeRuntimeFont();
 extern VSTGUI::CFontRef displayFont;
 extern VSTGUI::CFontRef patchNameFont;
 extern VSTGUI::CFontRef lfoTypeFont;
+extern VSTGUI::CFontRef aboutFont;
