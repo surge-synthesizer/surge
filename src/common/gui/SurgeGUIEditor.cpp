@@ -40,7 +40,6 @@ const int yofs = 10;
 using namespace VSTGUI;
 using namespace std;
 
-
 CFontRef displayFont = NULL;
 CFontRef patchNameFont = NULL;
 CFontRef lfoTypeFont = NULL;
@@ -2448,6 +2447,11 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
 long SurgeGUIEditor::applyParameterOffset(long id)
 {
     return id-start_paramtags;
+}
+
+long SurgeGUIEditor::unapplyParameterOffset(long id)
+{
+   return id + start_paramtags;
 }
 
 void SurgeGUIEditor::setZoomFactor(int zf)

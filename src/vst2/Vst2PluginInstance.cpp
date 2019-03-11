@@ -530,12 +530,14 @@ VstInt32 Vst2PluginInstance::setChunk(void* data, VstInt32 byteSize, bool isPres
 
 bool Vst2PluginInstance::beginEdit( VstInt32 index )
 {
-    return AudioEffectX::beginEdit( ((SurgeGUIEditor *)editor)->applyParameterOffset( _instance->remapExternalApiToInternalId(index ) ) );
+   return AudioEffectX::beginEdit(
+       SurgeGUIEditor::applyParameterOffset(_instance->remapExternalApiToInternalId(index)));
 }
 
 bool Vst2PluginInstance::endEdit( VstInt32 index )
 {
-    return AudioEffectX::endEdit( ((SurgeGUIEditor *)editor)->applyParameterOffset( _instance->remapExternalApiToInternalId(index)));
+   return AudioEffectX::endEdit(
+       SurgeGUIEditor::applyParameterOffset(_instance->remapExternalApiToInternalId(index)));
 }
 
 bool Vst2PluginInstance::tryInit()

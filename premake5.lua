@@ -133,6 +133,9 @@ elseif (os.istarget("windows")) then
 
     filter "platforms:x86"
         targetsuffix "_x86"
+        defines { 
+           "WIN_X86=1"
+        }
     filter "platforms:x64"
         targetsuffix ""
     filter {}

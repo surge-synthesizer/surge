@@ -5,6 +5,7 @@
 #include "pluginterfaces/vst/ivstevents.h"
 #include <util/FpuState.h>
 #include <memory>
+#include <set>
 
 using namespace Steinberg;
 
@@ -12,7 +13,8 @@ class SurgeGUIEditor;
 class SurgeSynthesizer;
 
 // we need public EditController, public IAudioProcessor
-class SurgeVst3Processor : public Steinberg::Vst::SingleComponentEffect //, public IMidiMapping
+class SurgeVst3Processor : public Steinberg::Vst::SingleComponentEffect,
+                           public Steinberg::Vst::IMidiMapping
 {
 public:
    SurgeVst3Processor();
@@ -99,7 +101,7 @@ public:
    getMidiControllerAssignment(int32 busIndex,
                                int16 channel,
                                Steinberg::Vst::CtrlNumber midiControllerNumber,
-                               Steinberg::Vst::ParamID& id /*out*/);
+                               Steinberg::Vst::ParamID& id /*out*/) override;
 
    //! when true, surge exports all normal 128 CC parameters, aftertouch and pitch bend as
    //! parameters (but not automatable)
@@ -108,6 +110,20 @@ public:
    void updateDisplay();
    void setParameterAutomated(int externalparam, float value);
 
+#if WIN_X86
+   // For some undebuggable reason, 32 bit windows doesn't like hte PLUGIN_API
+   // 32 bit vst3 is worth 0 time debugging; this fix makes it work. 
+   virtual tresult beginEdit(Steinberg::Vst::ParamID id);
+   virtual tresult performEdit(Steinberg::Vst::ParamID id,
+                               Steinberg::Vst::ParamValue valueNormalized);
+   virtual tresult endEdit(Steinberg::Vst::ParamID id);
+#else
+   virtual tresult PLUGIN_API beginEdit(Steinberg::Vst::ParamID id);
+   virtual tresult PLUGIN_API performEdit(Steinberg::Vst::ParamID id,
+                               Steinberg::Vst::ParamValue valueNormalized);
+   virtual tresult PLUGIN_API endEdit(Steinberg::Vst::ParamID id);
+#endif
+    
 protected:
    void createSurge();
    void destroySurge();
@@ -118,10 +134,17 @@ protected:
    int32 getParameterCountWithoutMappings();
 
    std::unique_ptr<SurgeSynthesizer> surgeInstance;
-   std::vector<SurgeGUIEditor*> viewsArray;
+   std::set<SurgeGUIEditor*> viewsSet;
    int blockpos;
 
    void handleZoom(SurgeGUIEditor *e);
    
    FpuState _fpuState;
+
+public:
+   OBJ_METHODS(SurgeVst3Processor, Steinberg::Vst::SingleComponentEffect)
+   DEFINE_INTERFACES
+   DEF_INTERFACE(Steinberg::Vst::IMidiMapping)
+   END_DEFINE_INTERFACES(Steinberg::Vst::SingleComponentEffect)
+   REFCOUNT_METHODS(Steinberg::Vst::SingleComponentEffect)
 };
