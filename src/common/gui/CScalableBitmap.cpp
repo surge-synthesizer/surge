@@ -194,15 +194,17 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
         
 #if LINUX
         /*
-        ** For some reason alpha = 255 inbound to this function on linux (and maybe on
-        ** mac and windows) but unlike mac and windows that misscaling actually causes
-        ** draw errors on linux because of the comparison in cairocontext.cpp at line
-        ** 396 (the (if (alpha != 1.f )) so hand-rescale it here for now
-        **
-        ** FIXME: Find out why alpha = 255 inbound here in VSTGUI Linux.
+        ** There's a bug in VSTGUI where images drawn with an alpha other than 1.0
+        ** clip other images. The original fix - turn all 255 into 1.0 - is how we got
+        ** linux working but in modulation mode Surge draws some elements - slider backgrounds
+        ** especialy - with alpha 0x7f.
+        ** 
+        ** The correct fix is to figure out what's wrong with cairo_paint_with_alpha inside
+        ** the alpha != 1.f at line 407 of vstgui.surge/vstgui/lib/platform/linux/cairocontext.cpp
+        ** but an expedient approach is to just disable transparency on bitmaps on linux
+        ** for now so at least elements don't dissapear.
         */
-        if (alpha==255)
-            alpha = 1.0f;
+        alpha = 1.0f;
 #endif
 
         scaledBitmaps[ bestFitScaleGroup ]->draw(context, nr, no, alpha);
