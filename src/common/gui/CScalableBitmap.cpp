@@ -128,7 +128,9 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
     **
     ** Well, smart. We make it so that if we are redrawing a rectangle which is positioned relative
     ** to the background at the same point as the VU Meter. That is, a draw at 763+14 on a background
-    ** of size 904x542 (ratioed for scaling) gets background supressed.
+    ** of size 904x542 (ratioed for scaling) gets background supressed. Also turns out you need to
+    ** make sure the size is OK since the entire effect panel draws BG starting at the same point
+    ** just with bigger clip, causing #716.
     **
     ** Am I particularly proud of this? No. But it does supress all those draws.
     */
@@ -136,7 +138,10 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
     context->getClipRect(cl);
     float p1 = cl.getTopLeft().x / rect.getWidth();
     float p2 = cl.getTopLeft().y / rect.getHeight();
-    if (fabs(p1 - 763.0 / 904.4) < 0.01 && fabs(p2 - 14.0 / 542.0) < 0.01)
+    float d1 = cl.getWidth() / rect.getWidth();
+    float d2 = cl.getHeight() / rect.getHeight();
+    if (fabs(p1 - 763.0 / 904.0) < 0.01 && fabs(p2 - 14.0 / 542.0) < 0.01 && // this is the x-y position
+        fabs(d1 - 123.0 / 904.0) < 0.01 && fabs(d2 - 13.0 / 542.0) < 0.01) // this makes sure I am just in the vu-only clip rect 
     {
        return;
     }
