@@ -1914,14 +1914,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
          else
          {
-            p->set_value_f01(p->get_default_value_f01());
-            control->setValue(p->get_value_f01());
-            if (oscdisplay && (p->ctrlgroup == cg_OSC))
-               oscdisplay->invalid();
-            if (lfodisplay && (p->ctrlgroup == cg_LFO))
-               lfodisplay->invalid();
-            control->invalid();
-            return 0;
+            /*
+            ** This code resets you to default if you double click or ctrl click
+            ** but on the lfoshape UI this is undesirable; it means if you accidentally
+            ** control click on step sequencer, say, you go back to sin and lose your
+            ** edits. So supress
+            */
+            if (p->ctrltype != ct_lfoshape)
+            {
+               p->set_value_f01(p->get_default_value_f01());
+               control->setValue(p->get_value_f01());
+               if (oscdisplay && (p->ctrlgroup == cg_OSC))
+                  oscdisplay->invalid();
+               if (lfodisplay && (p->ctrlgroup == cg_LFO))
+                  lfodisplay->invalid();
+               control->invalid();
+               return 0;
+            }
          }
       }
       else
