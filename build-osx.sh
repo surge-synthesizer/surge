@@ -137,9 +137,11 @@ run_clean()
 
 run_clean_headless()
 {
-    echo
-    echo "Cleaning build - headless"
-    xcodebuild clean -configuration Release -project build/Surge.xcodeproj
+    if [ -d "build/Surge.xcodeproj" ]; then
+        echo
+        echo "Cleaning build - headless"
+        xcodebuild clean -configuration Release -project build/Surge.xcodeproj
+    fi
 }
 
 run_build()
@@ -181,7 +183,7 @@ run_build_headless()
     echo
     echo Building surge-headless with output in build_logs/build_headless.log
 
-    mkdir build
+    mkdir -p build
     cmake -GXcode -Bbuild
 
     # Don't let TEE eat my return status
