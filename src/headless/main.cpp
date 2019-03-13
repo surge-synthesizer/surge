@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #include "HeadlessUtils.h"
 #include "Player.h"
@@ -47,6 +48,7 @@ void statsFromPlayingEveryPatch()
 
    auto callBack = [](const Patch& p, const PatchCategory& pc, const float* data, int nSamples,
                       int nChannels) -> void {
+      bool writeWav = false; // toggle this to true to write each sample to a wav file
       std::cout << "cat/patch = " <<  pc.name << " / " << std::left << std::setw(30) << p.name;
 
       if (nSamples * nChannels > 0)
@@ -69,6 +71,12 @@ void statsFromPlayingEveryPatch()
                    << " L1=" << L1
                    << " rms=" << rms
                    << " samp=" << nSamples << " chan=" << nChannels;
+         if (writeWav)
+         {
+            std::ostringstream oss;
+            oss << "headless " << pc.name << " " << p.name << ".wav";
+            Surge::Headless::writeToWav(data, nSamples, nChannels, 44100, oss.str());
+         }
       }
       std::cout << std::endl;
    };
