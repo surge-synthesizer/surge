@@ -71,10 +71,16 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
     while (snapshot)
     {
         strcpy(txt, snapshot->Attribute("name"));
+        int snapshotTypeID = type_id;
+        int tmpI;
+        if (snapshot->Attribute("i", &tmpI) != nullptr)
+        {
+           snapshotTypeID = tmpI;
+        }
 
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt));
-        auto action = [this, snapshot, type_id](CCommandMenuItem* item) {
-            this->loadSnapshot(type_id, snapshot);
+        auto action = [this, snapshot, snapshotTypeID](CCommandMenuItem* item) {
+            this->loadSnapshot(snapshotTypeID, snapshot);
         };
 
         actionItem->setActions(action, nullptr);
@@ -286,9 +292,6 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e)
       fxbuffer->type.val.i = type;
    if (e)
    {
-      TiXmlElement* p = TINYXML_SAFE_TO_ELEMENT(e->Parent());
-      p->QueryIntAttribute("i", &type);
-      assert(within_range(0, type, num_fxtypes));
       fxbuffer->type.val.i = type;
       // storage->patch.update_controls();
 
