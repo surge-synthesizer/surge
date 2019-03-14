@@ -128,7 +128,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
 
     for (auto &el : defaultsFileContents)
     {
-        dFile << "  <default key=\"" << el.first << "\" value=\"" << el.second.value << "\" type=\"" << (int)el.second.type << "\">\n";
+        dFile << "  <default key=\"" << el.first << "\" value=\"" << el.second.value << "\" type=\"" << (int)el.second.type << "\"/>\n";
     }
 
     dFile << "</defaults>" << std::endl;
