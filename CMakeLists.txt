@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(Surge VERSION 1.0.0 LANGUAGES CXX ASM)
 
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
+
 set(SURGE_COMMON_SOURCES
     src/common/dsp/effect/ConditionerEffect.cpp
     src/common/dsp/effect/DistortionEffect.cpp
@@ -90,6 +92,19 @@ target_include_directories(surge-headless
         ${SURGE_COMMON_INCLUDES}
         src/headless
 )
+
+find_package(LibSndFile ${PACKAGE_OPTION})
+if(NOT LIBSNDFILE_FOUND)
+    message(WARNING "LibSndFile not installed; building without wav support")
+    message(WARNING "You can 'brew install libsndfile' or 'apt-get install libsndfile1-dev'")
+else()
+    target_compile_definitions(surge-headless
+        PRIVATE
+            LIBSNDFILE=1
+    )
+    target_link_libraries(surge-headless ${LIBSNDFILE_LIBRARIES})
+    include_directories(surge-headless ${LIBSNDFILE_INCLUDE_DIRS})
+endif()
 
 # *NIX
 if (UNIX)
