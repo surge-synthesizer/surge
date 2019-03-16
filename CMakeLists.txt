@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(Surge VERSION 1.0.0 LANGUAGES CXX ASM)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
+find_package(LibMidiFile ${PACKAGE_OPTIONS})
+
 
 set(SURGE_COMMON_SOURCES
     src/common/dsp/effect/ConditionerEffect.cpp
@@ -69,6 +71,7 @@ set(SURGE_COMMON_INCLUDES
 
 add_executable(surge-headless
     ${SURGE_COMMON_SOURCES}
+    ${LIB_MIDIFILE_SOURCES}
    src/headless/main.cpp
    src/headless/DisplayInfoHeadless.cpp
    src/headless/UserInteractionsHeadless.cpp
@@ -85,11 +88,13 @@ target_compile_features(surge-headless
 target_compile_definitions(surge-headless
     PRIVATE
         TARGET_HEADLESS=1
+        LIBMIDIFILE=1
 )
 
 target_include_directories(surge-headless
     PRIVATE
         ${SURGE_COMMON_INCLUDES}
+        ${LIB_MIDIFILE_INCLUDES}
         src/headless
 )
 

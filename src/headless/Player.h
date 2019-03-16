@@ -87,5 +87,27 @@ void playOnEveryPatch(
         const Patch& p, const PatchCategory& c, const float* data, int nSamples, int nChannels)>
         completedCallback);
 
+/**
+ * playMidiFile
+ *
+ * Given a SurgeSynthesizer and a MidiFile Name, play the midi file on the current
+ * configuration of the synth. Rather than generate a mass of data, this calls you
+ * back with a pointer to the data every (n) samples
+ */
+void playMidiFile(SurgeSynthesizer* synth,
+                  std::string midiFileName,
+                  long callBackEvery,
+                  std::function<void(float* data, int nSamples, int nChannels)> dataCB);
+
+/**
+ * renderMidiFileToWav
+ *
+ * Given a surge synthesizer and MidiFile name, create a Wav file which results
+ * from playing that midi file.
+ */
+void renderMidiFileToWav(SurgeSynthesizer* synth,
+                         std::string midiFileName,
+                         std::string outputWavFile);
+
 } // namespace Headless
 } // namespace Surge
