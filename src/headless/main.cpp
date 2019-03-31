@@ -84,14 +84,45 @@ void statsFromPlayingEveryPatch()
    Surge::Headless::playOnEveryPatch(surge, scale, callBack);
 }
 
+void playSomeBach()
+{ 
+   SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
+
+   std::string tmpdir = "/tmp";
+   std::string fname = tmpdir + "/988-v05.mid";
+
+   FILE* tf = fopen(fname.c_str(), "r");
+   if (!tf)
+   {
+      std::string cmd = "curl -o " + fname + " http://www.jsbach.net/midi/bwv988/988-v05.mid";
+      system(cmd.c_str()); 
+   }
+   else
+      fclose(tf);
+
+   std::string otp = "DX EP 1";
+   for (int i = 0; i < surge->storage.patch_list.size(); ++i)
+   {
+      Patch p = surge->storage.patch_list[i];
+      if (p.name == otp)
+      {
+         std::cout << "Found '" << otp << "' patch @" << i << std::endl;
+         surge->loadPatch(i);
+         break;
+      }
+   }
+   Surge::Headless::renderMidiFileToWav(surge, fname, fname + ".wav");
+}
+
 /*
 ** This is a simple main that, for now, you make call out to the application
 ** stub of your choosing. We have two in Applications and we call them both
 */
 int main(int argc, char** argv)
 {
-   simpleOscillatorToStdOut();
-   statsFromPlayingEveryPatch();
+   // simpleOscillatorToStdOut();
+   // statsFromPlayingEveryPatch();
+   playSomeBach();
 
    return 0;
 }

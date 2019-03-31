@@ -5,3 +5,6 @@
 	path = vstgui.surge
 	url = https://github.com/surge-synthesizer/vstgui.git
 	branch = surge
+[submodule "libs/midifile"]
+	path = libs/midifile
+	url = https://github.com/craigsapp/midifile.git
