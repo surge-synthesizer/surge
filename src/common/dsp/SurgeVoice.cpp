@@ -843,3 +843,12 @@ void SurgeVoice::GetQFB()
    FBP.FBlineR = get1f(fbq->FBlineR, fbqi);
    FBP.wsLPF = get1f(fbq->wsLPF, fbqi);
 }
+
+void SurgeVoice::freeAllocatedElements()
+{
+   for(int i=0;i<3;++i)
+   {
+      osc[i].reset(nullptr);
+      osctype[i] = -1;
+   }
+}

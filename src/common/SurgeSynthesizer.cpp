@@ -53,7 +53,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    release_anyway[0] = false;
    release_anyway[1] = false;
    load_fx_needed = true;
-
+   process_input = false; // hosts set this if there are input busses
+   
    fx_suspend_bitmask = 0;
 
    demo_counter = 10;
@@ -365,6 +366,7 @@ void SurgeSynthesizer::freeVoice(SurgeVoice* v)
          voices_usedby[1][i] = 0;
       }
    }
+   v->freeAllocatedElements();
 }
 
 int SurgeSynthesizer::getMpeMainChannel(int voiceChannel, int key)
