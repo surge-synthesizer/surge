@@ -44,6 +44,7 @@ public:
    void GetQFB(); // Get the updated registers from the QuadFB
    void legato(int key, int velocity, char detune);
    void switch_toggled();
+   void freeAllocatedElements();
    int osctype[n_oscs];
    SurgeVoiceState state;
    int age, age_release;
