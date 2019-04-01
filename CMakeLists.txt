@@ -78,6 +78,7 @@ add_executable(surge-headless
    src/headless/LinkFixesHeadless.cpp
    src/headless/HeadlessUtils.cpp
    src/headless/Player.cpp
+   src/headless/Stress.cpp   
 )
 
 target_compile_features(surge-headless

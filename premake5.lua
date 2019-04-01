@@ -678,8 +678,8 @@ if (os.istarget("windows")) then
         "src/headless/UserInteractionsHeadless.cpp",
         "src/headless/LinkFixesHeadless.cpp",
         "src/headless/HeadlessUtils.cpp",
-        "src/headless/Player.cpp"
-        
+        "src/headless/Player.cpp",
+        "src/headless/Stress.cpp"
     }
 
     excludes

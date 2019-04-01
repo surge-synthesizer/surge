@@ -84,6 +84,13 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
    FBQ[1] =
        (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
 
+   for(int i=0; i<(MAX_VOICES >> 2); ++i)
+   {
+       FBQ[0][i].initToZero();
+       FBQ[1][i].initToZero();
+   }
+
+
    SurgePatch& patch = storage.getPatch();
 
    patch.polylimit.val.i = 8;
