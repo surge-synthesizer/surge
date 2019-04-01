@@ -16,31 +16,38 @@
 #include <atomic>
 #include "SurgeError.h"
 
+class SurgeGUIEditor;
+
 namespace Surge
 {
-    namespace UserInteractions
-    {
-        // Show the user an error dialog with an OK button; and wait for them to press it
-        void promptError(const std::string &message, const std::string &title);
 
-        // And a convenience version which does the same from a Surge::Error
-        void promptError(const Surge::Error &e);
+namespace UserInteractions
+{
 
-        // Prompt the user with an OK/Cance
-        typedef enum MessageResult
-        {
-            OK,
-            CANCEL
-        } MessageResult;
-        MessageResult promptOKCancel(const std::string &message, const std::string &title);
+// Show the user an error dialog with an OK button; and wait for them to press it
+void promptError(const std::string &message, const std::string &title,
+                 SurgeGUIEditor *guiEditor = nullptr);
 
-        // Open a URL in a user-appropriate fashion
-        void openURL(const std::string &url);
+// And a convenience version which does the same from a Surge::Error
+void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor = nullptr);
 
-        // Open a folder in the system appropriate file browser (finder on macOS, explorer on win,
-        // etc)
-        void openFolderInFileBrowser(const std::string& folder);
-    };
+// Prompt the user with an OK/Cance
+typedef enum MessageResult
+{
+    OK,
+    CANCEL
+} MessageResult;
+
+MessageResult promptOKCancel(const std::string &message, const std::string &title,
+                             SurgeGUIEditor *guiEditor = nullptr);
+
+// Open a URL in a user-appropriate fashion
+void openURL(const std::string &url);
+
+// Open a folder in the system appropriate file browser (finder on macOS, explorer on win,
+// etc)
+void openFolderInFileBrowser(const std::string& folder);
+
 };
 
-
+};
