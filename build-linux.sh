@@ -134,6 +134,8 @@ run_build_headless()
     set +o pipefail
     if [[ $build_suc = 0 ]]; then
         echo ${GREEN}Build of surge-headless succeeded${NC}
+        mkdir -p "$headless_src_path"
+        cp build/surge-headless "${headless_src_path}/${dest_headless_name}"
     else
         echo
         echo ${RED}** Build of headless failed**${NC}
@@ -181,7 +183,7 @@ run_install()
                           $vst3_dest_path
     fi
 
-    if [ ! -z "$option_headless" ]; then
+    if [ ! -z "$option_headless" ] && [ -d "$headless_dest_path" ]; then
         echo "Installing Headless"
         rsync -r --delete $headless_src_path \
                           $headless_dest_path/$dest_headless_name
