@@ -405,6 +405,11 @@ void HalfRateFilter::set_coefficients(float* cA, float* cB)
 
 void HalfRateFilter::load_coefficients()
 {
+   for (int i = 0; i < M; i++)
+   {
+     va[i] = _mm_setzero_ps();
+   }
+
    int order = M << 1;
    if (steep)
    {
