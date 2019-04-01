@@ -43,6 +43,7 @@ mkdir -p ${PACKAGE_NAME}/usr/lib/vst
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
 mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 mkdir -p ${PACKAGE_NAME}/DEBIAN
+chmod -R 0755 ${PACKAGE_NAME}
 
 # build control file
 
