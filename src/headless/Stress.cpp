@@ -32,8 +32,17 @@ void Surge::Headless::createAndDestroyWithScaleAndRandomPatch(int timesToTry)
       auto mind = minmaxres.first;
       auto maxd = minmaxres.second;
 
-      std::cout << "   Range: [" << *mind << ", " << *maxd << "]" << std::endl;
-      if (fabs(*mind) > 5 || fabs(*maxd) > 5)
+      float rms=0, L1=0;
+      for( int i=0; i<nSamples*nChannels; ++i)
+      {
+          rms += data[i]*data[i];
+          L1 += fabs(data[i]);
+      }
+      L1 = L1 / (nChannels*nSamples);
+      rms = sqrt(rms / nChannels / nSamples );
+
+      std::cout << "   Range: [" << *mind << ", " << *maxd << "] RMS=" << rms << " RMS/MAX=" << rms / *maxd << "  L1=" << L1 << std::endl;
+      if ((fabs(*mind) > 5 || fabs(*maxd) > 5) && (rms / *maxd) < 0.5 / 8.0)
       {
          std::cout << " **** FAULT " << faultCount << " **** " << std::endl;
          for( int j=0; j<nSamples*nChannels; ++j )
@@ -48,6 +57,11 @@ void Surge::Headless::createAndDestroyWithScaleAndRandomPatch(int timesToTry)
              of << j << "," << data[j * nChannels ] << ", " << data[ j*nChannels + 1 ] << std::endl;
          }
          of.close();
+
+         std::ostringstream woss;
+         woss << "faultWav" << faultCount << ".wav";
+         Surge::Headless::writeToWav(data, nSamples, nChannels, 44100, woss.str());
+
          faultCount ++;
       }
 
