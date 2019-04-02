@@ -411,3 +411,36 @@ FBQFPtr GetFBQPointer(int config, bool A, bool WS, bool B)
    }
    return 0;
 }
+
+void InitQuadFilterChainStateToZero(QuadFilterChainState *Q)
+{
+    Q->Gain = _mm_setzero_ps();
+    Q->FB = _mm_setzero_ps();
+    Q->Mix1 = _mm_setzero_ps();
+    Q->Mix2 = _mm_setzero_ps();
+    Q->Drive = _mm_setzero_ps();
+    Q->dGain = _mm_setzero_ps();
+    Q->dFB = _mm_setzero_ps();
+    Q->dMix1 = _mm_setzero_ps();
+    Q->dMix2 = _mm_setzero_ps();
+    Q->dDrive = _mm_setzero_ps();
+    
+    Q->wsLPF = _mm_setzero_ps();
+    Q->FBlineL = _mm_setzero_ps();
+    Q->FBlineR = _mm_setzero_ps();
+    
+    for(auto i=0; i<BLOCK_SIZE_OS; ++i)
+    {
+        Q->DL[i] = _mm_setzero_ps();
+        Q->DR[i] = _mm_setzero_ps();
+    }
+    
+    Q->OutL = _mm_setzero_ps();
+    Q->OutR = _mm_setzero_ps();
+    Q->dOutL = _mm_setzero_ps();
+    Q->dOutR = _mm_setzero_ps();
+    Q->Out2L = _mm_setzero_ps();
+    Q->Out2R = _mm_setzero_ps();
+    Q->dOut2L = _mm_setzero_ps();
+    Q->dOut2R = _mm_setzero_ps();
+}
