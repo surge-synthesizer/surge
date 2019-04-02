@@ -160,7 +160,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       wtlbl.right -= 1;
       wtlbl.top = wtlbl.bottom - wtbheight;
       rmenu = wtlbl;
-      rmenu.inset(12, 0);
+      rmenu.inset(14, 0);
       char wttxt[256];
 
       storage->CS_WaveTableData.enter();
