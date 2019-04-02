@@ -87,8 +87,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
 
    for(int i=0; i<(MAX_VOICES >> 2); ++i)
    {
-       FBQ[0][i].initToZero();
-       FBQ[1][i].initToZero();
+       InitQuadFilterChainStateToZero(&(FBQ[0][i]));
+       InitQuadFilterChainStateToZero(&(FBQ[1][i]));
    }
 
 

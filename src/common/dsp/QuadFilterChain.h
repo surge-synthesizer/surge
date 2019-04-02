@@ -15,39 +15,14 @@ struct QuadFilterChainState
    __m128 OutL, OutR, dOutL, dOutR;
    __m128 Out2L, Out2R, dOut2L, dOut2R; // fb_stereo only
 
-   void initToZero()
-   {
-       Gain = _mm_setzero_ps();
-       FB = _mm_setzero_ps();
-       Mix1 = _mm_setzero_ps();
-       Mix2 = _mm_setzero_ps();
-       Drive = _mm_setzero_ps();
-       dGain = _mm_setzero_ps();
-       dFB = _mm_setzero_ps();
-       dMix1 = _mm_setzero_ps();
-       dMix2 = _mm_setzero_ps();
-       dDrive = _mm_setzero_ps();
-
-       wsLPF = _mm_setzero_ps();
-       FBlineL = _mm_setzero_ps();
-       FBlineR = _mm_setzero_ps();
-
-       for(auto i=0; i<BLOCK_SIZE_OS; ++i)
-       {
-           DL[i] = _mm_setzero_ps();
-           DR[i] = _mm_setzero_ps();
-       }
-
-       OutL = _mm_setzero_ps();
-       OutR = _mm_setzero_ps();
-       dOutL = _mm_setzero_ps();
-       dOutR = _mm_setzero_ps();
-       Out2L = _mm_setzero_ps();
-       Out2R = _mm_setzero_ps();
-       dOut2L = _mm_setzero_ps();
-       dOut2R = _mm_setzero_ps();
-   }
 };
+
+/*
+** I originally had this as a member but since moved it out of line so as to
+** not run any risk of alignment problems in QuadFilterChainState where
+** only the head of the array is __align_malloced
+*/
+void InitQuadFilterChainStateToZero(QuadFilterChainState *Q);
 
 struct fbq_global
 {
