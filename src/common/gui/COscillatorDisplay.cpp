@@ -57,7 +57,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
       // Mis-install check #2
       if (uses_wavetabledata(oscdata->type.val.i) && storage->wt_list.size() == 0)
-          use_display = false;
+         use_display = false;
 
       if (use_display)
          osc->init(disp_pitch_rs, true);
@@ -117,8 +117,8 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                else if (dimax < last_imin)
                   dimax = last_imin;
             }
-            dimin = limit_range(dimin, 0, h-1);
-            dimax = limit_range(dimax, 0, h-1);
+            dimin = limit_range(dimin, 0, h - 1);
+            dimax = limit_range(dimax, 0, h - 1);
 
             // int yp = (int)((float)(size.height() * (-osc->output[block_pos]*0.5+0.5)));
             // yp = limit_range(yp,0,h-1);
@@ -160,7 +160,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       wtlbl.right -= 1;
       wtlbl.top = wtlbl.bottom - wtbheight;
       rmenu = wtlbl;
-      rmenu.inset(12, 0);
+      rmenu.inset(14, 0);
       char wttxt[256];
 
       storage->CS_WaveTableData.enter();
@@ -207,18 +207,27 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       dc->drawRect(rprev, kDrawFilled);
       dc->drawRect(rnext, kDrawFilled);
       dc->setFrameColor(kBlackCColor);
-      for (int a = 0; a < 4; a++)
-      {
-         CPoint p1(rprev.left + 4 + a, rprev.top + (rprev.getHeight() * 0.5) - a);
-         CPoint p2 = p1;
-         p2.y += (a << 1) + 1;
-         dc->drawLine(p1, p2);
 
-         CPoint p3(rnext.right - 4 - a, rnext.top + (rnext.getHeight() * 0.5) - a);
-         CPoint p4 = p3;
-         p4.y += (a << 1) + 1;
-         dc->drawLine(p3, p4);
-      }
+      dc->saveGlobalState();
+
+      dc->setDrawMode(kAntiAliasing);
+      dc->setFillColor(kBlackCColor);
+      VSTGUI::CDrawContext::PointList trinext;
+
+      trinext.push_back(VSTGUI::CPoint(134, 170));
+      trinext.push_back(VSTGUI::CPoint(139, 174));
+      trinext.push_back(VSTGUI::CPoint(134, 178));
+      dc->drawPolygon(trinext, kDrawFilled);
+
+      VSTGUI::CDrawContext::PointList triprev;
+
+      triprev.push_back(VSTGUI::CPoint(13, 170));
+      triprev.push_back(VSTGUI::CPoint(8, 174));
+      triprev.push_back(VSTGUI::CPoint(13, 178));
+
+      dc->drawPolygon(triprev, kDrawFilled);
+
+      dc->restoreGlobalState();
    }
 
    setDirty(false);
@@ -229,29 +238,32 @@ bool COscillatorDisplay::onDrop(IDataPackage* drag, const CPoint& where)
    uint32_t ct = drag->getCount();
    if (ct == 1)
    {
-       IDataPackage::Type t = drag->getDataType( 0 );
-       if (t == IDataPackage::kFilePath)
-       {
-           const void* fn;
-           drag->getData(0, fn, t);
-           const char* fName = static_cast<const char*>(fn);
-           fs::path fPath(fName);
-           if (_stricmp(fPath.extension().generic_string().c_str(),".wt")!=0)
-           {
-               Surge::UserInteractions::promptError(std::string( "Surge only supports drag-and-drop of .wt wavetables onto the oscillator. " )
-                                                    + "You dropped a file with extension " + fPath.extension().generic_string(),
-                                                    "Please drag a valid file type");
-           }
-           else
-           {
-               strncpy(oscdata->wt.queue_filename, fName, 255);
-           }
-       }
-       else
-       {
-           Surge::UserInteractions::promptError("Surge only supports drag-and-drop of files onto the oscillator",
-                                                "Please Drag a File");
-       }
+      IDataPackage::Type t = drag->getDataType(0);
+      if (t == IDataPackage::kFilePath)
+      {
+         const void* fn;
+         drag->getData(0, fn, t);
+         const char* fName = static_cast<const char*>(fn);
+         fs::path fPath(fName);
+         if (_stricmp(fPath.extension().generic_string().c_str(), ".wt") != 0)
+         {
+            Surge::UserInteractions::promptError(
+                std::string(
+                    "Surge only supports drag-and-drop of .wt wavetables onto the oscillator. ") +
+                    "You dropped a file with extension " + fPath.extension().generic_string(),
+                "Please drag a valid file type");
+         }
+         else
+         {
+            strncpy(oscdata->wt.queue_filename, fName, 255);
+         }
+      }
+      else
+      {
+         Surge::UserInteractions::promptError(
+             "Surge only supports drag-and-drop of files onto the oscillator",
+             "Please Drag a File");
+      }
    }
 
    return true;
@@ -273,11 +285,14 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
    else if (uses_wavetabledata(oscdata->type.val.i))
    {
       int id = oscdata->wt.current_id;
-      if (rprev.pointInside(where)) {
+      if (rprev.pointInside(where))
+      {
          id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
          if (id >= 0)
             oscdata->wt.queue_id = id;
-      } else if (rnext.pointInside(where)) {
+      }
+      else if (rnext.pointInside(where))
+      {
          id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
          if (id >= 0)
             oscdata->wt.queue_id = id;
@@ -286,7 +301,8 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
       {
          CRect menurect(0, 0, 0, 0);
          menurect.offset(where.x, where.y);
-         COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
+         COptionMenu* contextMenu =
+             new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
 
          populateMenu(contextMenu, id);
 
