@@ -5,6 +5,31 @@
 #include <iomanip>
 #include <sstream>
 
+void Surge::Headless::pullInitSamplesWithNoNotes(int sampleCount)
+{
+   SurgeSynthesizer* synth = Surge::Headless::createSurge(44100);
+   Surge::Headless::playerEvents_t events;
+   Surge::Headless::Event on;
+   on.type = Surge::Headless::Event::NO_EVENT;
+   on.atSample = sampleCount;
+   events.push_back(on);
+
+   float *data;
+   int nSamples, nChannels;
+   Surge::Headless::playAsConfigured(synth, events, &data, &nSamples, &nChannels);
+
+   float sumAbs = 0;
+   for(int i=0;i<nSamples*nChannels; ++i )
+   {
+       sumAbs += fabs(data[i]);
+       std::cout << i << " " << data[i] << std::endl;
+   }
+   std::cout << "Sum of Absolute Value of play is " << sumAbs << std::endl;
+   
+   delete[] data;
+   delete synth;
+}
+
 void Surge::Headless::createAndDestroyWithScaleAndRandomPatch(int timesToTry)
 {
    SurgeSynthesizer* synth = Surge::Headless::createSurge(44100);
