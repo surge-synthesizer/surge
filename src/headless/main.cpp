@@ -123,8 +123,9 @@ int main(int argc, char** argv)
 {
    // simpleOscillatorToStdOut();
    // statsFromPlayingEveryPatch();
-   playSomeBach();
-   Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
+   //playSomeBach();
+   //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
+    Surge::Headless::pullInitSamplesWithNoNotes(1000);
 
    return 0;
 }
