@@ -78,12 +78,14 @@ void playAsConfigured(SurgeSynthesizer* surge,
       return;
 
    int desiredSamples = events.back().atSample;
-   int blockCount = desiredSamples / BLOCK_SIZE;
+   int blockCount = desiredSamples / BLOCK_SIZE + 1;
    int currEvt = 0;
 
    *nChannels = 2;
-   *nSamples = desiredSamples;
-   float* ldata = new float[desiredSamples * 2];
+   *nSamples = blockCount * BLOCK_SIZE;
+   size_t dataSize = *nChannels * *nSamples;
+   float* ldata = new float[dataSize];
+   memset(ldata, 0, dataSize);
    *data = ldata;
 
    size_t flidx = 0;
@@ -91,7 +93,7 @@ void playAsConfigured(SurgeSynthesizer* surge,
    for (auto i = 0; i < blockCount; ++i)
    {
       int cs = i * BLOCK_SIZE;
-      while (events[currEvt].atSample <= cs + BLOCK_SIZE - 1 && currEvt < events.size())
+      while (currEvt < events.size() && events[currEvt].atSample <= cs + BLOCK_SIZE - 1)
       {
          Event e = events[currEvt];
          if (e.type == Event::NOTE_ON)
