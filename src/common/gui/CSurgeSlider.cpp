@@ -18,7 +18,7 @@ enum
    cs_drag = 1,
 };
 
-MoveRateState CSurgeSlider::sliderMoveRateState = kUnInitialized;
+CSurgeSlider::MoveRateState CSurgeSlider::sliderMoveRateState = kUnInitialized;
 
 CSurgeSlider::CSurgeSlider(
     const CPoint& loc, long stylee, IControlListener* listener, long tag, bool is_mod)
