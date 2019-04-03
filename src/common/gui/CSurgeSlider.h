@@ -16,6 +16,15 @@ enum CControlEnum_turbodeluxe
    kNoPopup = 1 << 22,
 };
 
+typedef enum MoveRateState
+{
+   kUnInitialized = 0,
+   kClassic,
+   kSlow,
+   kMedium,
+   kExact
+} MoveRateState;
+
 class CSurgeSlider : public CCursorHidingControl
 {
 public:
@@ -76,6 +85,8 @@ public:
 
    bool is_mod;
    bool disabled;
+
+   static MoveRateState sliderMoveRateState;
 
 private:
    VSTGUI::CBitmap *pHandle, *pTray, *pModHandle;

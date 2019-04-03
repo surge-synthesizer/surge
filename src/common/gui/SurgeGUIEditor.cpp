@@ -1237,6 +1237,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
    patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
 
+   // Mouse behavior
+   if (CSurgeSlider::sliderMoveRateState == MoveRateState::kUnInitialized)
+      CSurgeSlider::sliderMoveRateState = (MoveRateState)Surge::Storage::getUserDefaultValue(
+          &(synth->storage), "sliderMoveRateState", (int)MoveRateState::kClassic);
+
    /*
     * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac hosts.
     * This leads to the odd behaviour when you click out of a box that in some hosts - Logic Pro for 
@@ -2635,6 +2640,72 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->addEntry(mpeSubMenu, mpeMenuName.c_str());
     eid++;
     mpeSubMenu->forget();
+
+    // Mouse behavior
+
+    int mid = 0;
+
+    COptionMenu* mouseSubMenu =
+        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+
+    std::string mouseClassic = "Classic";
+    std::string mouseSlow = "Slow";
+    std::string mouseMedium = "Medium";
+    std::string mouseExact = "Exact";
+
+    addCallbackMenu(mouseSubMenu, mouseClassic.c_str(), [this]() {
+       CSurgeSlider::sliderMoveRateState = MoveRateState::kClassic;
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                              CSurgeSlider::sliderMoveRateState);
+    });
+    mid++;
+
+    addCallbackMenu(mouseSubMenu, mouseSlow.c_str(), [this]() {
+       CSurgeSlider::sliderMoveRateState = MoveRateState::kSlow;
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                              CSurgeSlider::sliderMoveRateState);
+    });
+    mid++;
+
+    addCallbackMenu(mouseSubMenu, mouseMedium.c_str(), [this]() {
+       CSurgeSlider::sliderMoveRateState = MoveRateState::kMedium;
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                              CSurgeSlider::sliderMoveRateState);
+    });
+    mid++;
+
+    addCallbackMenu(mouseSubMenu, mouseExact.c_str(), [this]() {
+       CSurgeSlider::sliderMoveRateState = MoveRateState::kExact;
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                              CSurgeSlider::sliderMoveRateState);
+    });
+    mid++;
+
+    std::string mouseMenuName = "Mouse Behavior ";
+
+    switch (CSurgeSlider::sliderMoveRateState)
+    {
+    case MoveRateState::kClassic:
+       mouseMenuName.append("(Classic)");
+       break;
+    case MoveRateState::kSlow:
+       mouseMenuName.append("(Slow)");
+       break;
+    case MoveRateState::kMedium:
+       mouseMenuName.append("(Medium)");
+       break;
+    case MoveRateState::kExact:
+       mouseMenuName.append("(Exact)");
+       break;
+    default:
+       break;
+    }
+
+    settingsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
+    eid++;
+    mouseSubMenu->forget();
+
+    // End Mouse behavior
 
     settingsMenu->addSeparator(eid++);
 
