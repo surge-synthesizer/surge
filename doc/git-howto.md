@@ -165,4 +165,77 @@ Then `git push origin my-branch --force` will send your newly based branch up to
 should see one commit with your lovely new message.
 
 
+### An explicit example: Squashing Commits for Code Review Feedback
 
+Lets imagine you have developed a branch and pushed it up and made a pull request and you get code review feedback.
+You would like to integrate that feedback but that's going to make another commit. Do you need a new branch and a new 
+pull request? No absolutely not! You can update in place and keep one clean commit. Here's how you do it.
+
+As a starting point, we have our branch we have submitted for a pull request with one commit. You want to integrate your
+concerns so you check out the branch again. At the outset you should see this:
+
+```
+paul:~/dev/music/surge$ git checkout update-git-howto
+Already on 'update-git-howto'
+paul:~/dev/music/surge$ git cherry -v master
++ 452b43d5e78119af80c68d0b2bf2ab47291ae3fd Add a section on code review rebase
+paul:~/dev/music/surge$ git status
+On branch update-git-howto
+```
+
+One commit on a branch. Great now you go ahead and make your changes. Code, test, etc... and then your changes are
+ready to commit. 
+
+```
+paul:~/dev/music/surge$ git add doc/
+paul:~/dev/music/surge$ git commit -m "Integrate Code Review Comments from @user"
+[update-git-howto d41af35] Integrate Code Review Comments from @user
+ 1 file changed, 14 insertions(+)
+paul:~/dev/music/surge$ git cherry -v master
++ 452b43d5e78119af80c68d0b2bf2ab47291ae3fd Add a section on code review rebase
++ d41af35a0e4e9658a3bca6c593b5ec33c0b4848f Integrate Code Review Comments from @user
+```
+
+Now at this point you could push your branch (`git push origin update-git-howto`) and the PR would update
+and would have two commits in it. The continous integration woudl run and voila. But the maintainers would probably
+squash those commits and rewrite your commit message. So you may want to squash down to one commit. Here's how you do it.
+
+First rebase interactively with `git rebase -i master`. You will see an editor which looks like this:
+
+
+```
+pick 452b43d Add a section on code review rebase
+pick d41af35 Integrate Code Review Comments from @user
+
+# Rebase fdf935b..d41af35 onto fdf935b (2 commands)
+#
+```
+
+What rebase is going to do is to collapse or drop commits in the path. You want to keep the first commit and
+squash the second (which will mean you get one commit containing the changes of both). Change the file to say this
+
+```
+pick 452b43d Add a section on code review rebase
+squash d41af35 Integrate Code Review Comments from @user
+
+# Rebase fdf935b..d41af35 onto fdf935b (2 commands)
+#
+```
+
+And then save it. You will then get an opportunity to rewrite your commit message. The default message will be
+the union of the message of the two commits. But edit and save and you should see
+
+```
+paul:~/dev/music/surge$ git cherry -v master
++ c9ccb49e8c7972457a22a67ee3b799bb7a55f420 Add a section on code review rebase
+```
+
+Note the commit id (here c9cc and so on) is a new id which wasn't in the prior commit. That makes sense. Git has made a 
+completely new transaction for the branch which is the union. So now you just need to update your branch. Since the commit
+history has changed you need to force. So
+
+```
+git push origin my-branch-name --force
+```
+
+and the PR page will say "@user force pushed branch" and everything can proceed.
