@@ -90,6 +90,8 @@ void playAsConfigured(SurgeSynthesizer* surge,
 
    size_t flidx = 0;
 
+   surge->process();
+   
    for (auto i = 0; i < blockCount; ++i)
    {
       int cs = i * BLOCK_SIZE;

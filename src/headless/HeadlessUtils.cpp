@@ -19,6 +19,8 @@ SurgeSynthesizer* createSurge(int sr)
       parent.reset(new HeadlessPluginLayerProxy());
    SurgeSynthesizer* surge = new SurgeSynthesizer(parent.get());
    surge->setSamplerate(sr);
+   surge->time_data.tempo = 120;
+   surge->time_data.ppqPos = 0;
    return surge;
 }
 

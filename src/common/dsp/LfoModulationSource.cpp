@@ -25,6 +25,7 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    env_state = lenv_delay;
    env_val = 0.f;
    env_phase = 0;
+   shuffle_id = 0;
    ratemult = 1.f;
    retrigger_EG = false;
 
