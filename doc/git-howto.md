@@ -60,12 +60,12 @@ upstream	https://github.com/surge-synthesizer/surge (push)
 
 ### Every time you want to update
 
-Your actions are to fetch upstream, merge that upstream into your master, and then push that out to your github.
+Your actions are to fetch upstream, reset your master to match upstream, and then push that out to your github.
 
 ```
 git fetch upstream   # You now have the diffs in surge-synthesizer/surge
 git checkout master  # you now are on your copy of master
-git merge upstream/master # you now have integrated the upstream diffs into your copy 
+git reset upstream/master --hard # you now have integrated the upstream diffs into your copy 
 git push origin master # you now have pushed your updated master back to github
 ```
 
