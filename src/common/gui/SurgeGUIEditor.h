@@ -185,6 +185,7 @@ private:
    /*
    ** Utility Function
    */
-   void addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
+   VSTGUI::CCommandMenuItem*
+   addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
 };
 

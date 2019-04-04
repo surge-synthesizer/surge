@@ -68,5 +68,8 @@ premake-stamp
 src/linux/ScalablePiggy*
 *.deb
 
+# Qt Creator
+*.txt.user
+
 # cmake
 build/

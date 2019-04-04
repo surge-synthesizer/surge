@@ -77,6 +77,17 @@ public:
    bool is_mod;
    bool disabled;
 
+   enum MoveRateState
+   {
+      kUnInitialized = 0,
+      kClassic,
+      kSlow,
+      kMedium,
+      kExact
+   };
+
+   static MoveRateState sliderMoveRateState;
+
 private:
    VSTGUI::CBitmap *pHandle, *pTray, *pModHandle;
    VSTGUI::CRect handle_rect, handle_rect_orig;

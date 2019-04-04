@@ -18,6 +18,8 @@ enum
    cs_drag = 1,
 };
 
+CSurgeSlider::MoveRateState CSurgeSlider::sliderMoveRateState = kUnInitialized;
+
 CSurgeSlider::CSurgeSlider(
     const CPoint& loc, long stylee, IControlListener* listener, long tag, bool is_mod)
     : CCursorHidingControl(CRect(loc, CPoint(1, 1)), listener, tag, 0)
@@ -363,7 +365,24 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 
 double CSurgeSlider::getMouseDeltaScaling(CPoint& where, const CButtonState& buttons)
 {
-   double rate = 0.3 * moverate;
+   double rate;
+
+   switch (CSurgeSlider::sliderMoveRateState)
+   {
+   case kSlow:
+      rate = 0.3;
+      break;
+   case kMedium:
+      rate = 0.7;
+      break;
+   case kExact:
+      rate = 1.0;
+      break;
+   case kClassic:
+   default:
+      rate = 0.3 * moverate;
+      break;
+   }
 
    if (buttons & kRButton)
       rate *= 0.1;
@@ -466,5 +485,5 @@ bool CSurgeSlider::onWheel(const VSTGUI::CPoint& where, const float &distance, c
    ** doesn't appear twice
    */
    edit_value = nullptr;
-   return true;   
+   return true;
 }
