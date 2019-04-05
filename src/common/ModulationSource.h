@@ -111,8 +111,7 @@ const int modsource_grid_xy[n_modsources][2] = {
 inline bool isScenelevel(modsources ms)
 {
    return ((ms <= ms_ctrl8) || ((ms >= ms_slfo1) && (ms <= ms_slfo6))) && (ms != ms_velocity) &&
-          (ms != ms_keytrack) && (ms != ms_polyaftertouch) && (ms != ms_timbre) &&
-          (ms != ms_aftertouch);
+          (ms != ms_keytrack) && (ms != ms_polyaftertouch) && (ms != ms_timbre);
 }
 
 inline bool canModulateMonophonicTarget(modsources ms)
