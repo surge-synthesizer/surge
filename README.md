@@ -21,7 +21,7 @@ This README serves as the root of developer documentation for the project.
 
 We welcome developers. Our workflow revolves around github issues in this github repo
 and conversations in our slack and IRC chatrooms. You can read our developer guidelines
-in [our develoepr guide doc.](doc/Developer Guide.md).
+in [our developer guide doc](doc/Developer%20Guide.md).
 
 The developer guide also contains information about testing and debugging in particular hosts
 on particular platforms.
