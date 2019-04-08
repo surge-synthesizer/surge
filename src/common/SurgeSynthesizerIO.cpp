@@ -137,7 +137,13 @@ void SurgeSynthesizer::incrementCategory(bool nextPrev)
 
 void SurgeSynthesizer::loadPatch(int id)
 {
+   if (id < 0)
+      id = 0;
+   if (id >= storage.patch_list.size())
+      id = id % storage.patch_list.size();
+
    patchid = id;
+
    Patch e = storage.patch_list[id];
 
    FILE* f = fopen(e.path.generic_string().c_str(), "rb");
