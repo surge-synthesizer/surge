@@ -63,7 +63,7 @@ public:
       has_modulation_current = b;
       invalid();
    } // - " " - for the currently selected modsource
-   virtual void bounceValue();
+   virtual void bounceValue(const bool keeprest = false);
 
    virtual bool isInMouseInteraction();
 
@@ -105,4 +105,6 @@ private:
    VSTGUI::CPoint lastpoint, sourcepoint;
    float oldVal, *edit_value;
    int drawcount_debug;
+
+   float restvalue, restmodval;
 };
