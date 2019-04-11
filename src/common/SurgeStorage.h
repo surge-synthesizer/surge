@@ -28,6 +28,8 @@
 #include <iterator>
 #include <functional>
 
+#include "Tunings.h"
+
 namespace fs = std::experimental::filesystem;
 
 #if WINDOWS
@@ -467,14 +469,19 @@ enum sub3_copysource
 
 /* STORAGE layer			*/
 
-class SurgeStorage
+class alignas(16) SurgeStorage
 {
 public:
    float audio_in alignas(16)[2][BLOCK_SIZE_OS];
    float audio_in_nonOS alignas(16)[2][BLOCK_SIZE];
    //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
+
    SurgeStorage(std::string suppliedDataPath="");
+   float table_pitch alignas(16)[512];
+   float table_pitch_inv alignas(16)[512];
+   float table_note_omega alignas(16)[2][512];
+
    ~SurgeStorage();
 
    std::unique_ptr<SurgePatch> _patch;
@@ -543,6 +550,11 @@ public:
    CriticalSection CS_WaveTableData, CS_ModRouting;
    Wavetable WindowWT;
 
+   float note_to_pitch(float x);
+   float note_to_pitch_inv(float x);
+   void note_to_omega(float, float&, float&);
+   void retuneToScale(const Surge::Storage::Scale& s);
+
 private:
    TiXmlDocument snapshotloader;
    std::vector<Parameter> clipboard_p;
@@ -553,9 +565,6 @@ private:
 
 };
 
-float note_to_pitch(float);
-float note_to_pitch_inv(float);
-void note_to_omega(float, float&, float&);
 float db_to_linear(float);
 float lookup_waveshape(int, float);
 float lookup_waveshape_warp(int, float);

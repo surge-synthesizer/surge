@@ -27,6 +27,8 @@
 #include <shlobj.h>
 #endif
 
+#include <iostream>
+#include <iomanip>
 #include <sstream>
 
 
@@ -34,11 +36,8 @@ float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
 float table_dB alignas(16)[512],
-      table_pitch alignas(16)[512],
-      table_pitch_inv alignas(16)[512],
       table_envrate_lpf alignas(16)[512],
       table_envrate_linear alignas(16)[512];
-float table_note_omega alignas(16)[2][512];
 float waveshapers alignas(16)[8][1024];
 float samplerate, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
@@ -1095,7 +1094,7 @@ void SurgeStorage::init_tables()
    vu_falloff = 0.997f; // TODO should be samplerate-dependent (this is per 32-sample block at 44.1)
 }
 
-float note_to_pitch(float x)
+float SurgeStorage::note_to_pitch(float x)
 {
    x += 256;
    int e = (int)x;
@@ -1107,7 +1106,7 @@ float note_to_pitch(float x)
    return (1 - a) * table_pitch[e & 0x1ff] + a * table_pitch[(e + 1) & 0x1ff];
 }
 
-float note_to_pitch_inv(float x)
+float SurgeStorage::note_to_pitch_inv(float x)
 {
    x += 256;
    int e = (int)x;
@@ -1119,7 +1118,7 @@ float note_to_pitch_inv(float x)
    return (1 - a) * table_pitch_inv[e & 0x1ff] + a * table_pitch_inv[(e + 1) & 0x1ff];
 }
 
-void note_to_omega(float x, float& sinu, float& cosi)
+void SurgeStorage::note_to_omega(float x, float& sinu, float& cosi)
 {
    x += 256;
    int e = (int)x;
@@ -1187,6 +1186,54 @@ float envelope_rate_linear(float x)
    float a = x - (float)e;
 
    return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
+}
+
+void SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
+{
+   int scale0 = 48; 
+   float value0 = 16; 
+   
+   for (int i = 0; i < 512; ++i)
+   {
+      int noteBase = i - 256;
+      int distanceFromScale0 = noteBase - scale0 - 1;
+      int turns = 0;
+      float baseValue = value0;
+      while (distanceFromScale0 < 0)
+      {
+         distanceFromScale0 += s.count;
+         baseValue /= 2;
+      }
+      while (distanceFromScale0 >= s.count)
+      {
+         distanceFromScale0 -= s.count;
+         baseValue *= 2;
+      }
+#if DEBUG_SCALE      
+      if ((i>= 254 && i <=258) || ( i >= 302 && i <= 308))
+          std::cout << i << " " << std::setw(5) << noteBase << " or " << i << " D0=" << std::setw(3) << distanceFromScale0
+                    << " PP=" << std::setw(10) << table_pitch[i] 
+                    << " bv=" << std::setw(5) << baseValue
+                    << " sc=" << std::setw(10) << s.tones[distanceFromScale0].floatValue
+                    << " exp=" << std::setw(10) << pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f)
+                    << " sc*bv=" << std::setw(10) << pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f) * baseValue
+                    << " diff=" << std::setw(10) << pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f) * baseValue - table_pitch[i]
+              ;
+#endif
+
+      table_pitch[i] = pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f) * baseValue;
+
+#if DEBUG_SCALE      
+      if ((i>= 254 && i <=258) || ( i >= 302 && i <= 308))
+         std::cout << " NEWP=" << table_pitch[i] << std::endl;
+#endif
+      
+      table_pitch_inv[i] = 1.f / table_pitch[i];
+      table_note_omega[0][i] =
+          (float)sin(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
+      table_note_omega[1][i] =
+          (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
+   }
 }
 
 namespace Surge

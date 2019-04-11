@@ -137,7 +137,7 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
        (int)(float)(oscdata->wt.n_tables * localcopy[oscdata->p[0].param_id_in_scene].f), 0,
        (int)oscdata->wt.n_tables - 1);
    int FormantMul =
-       (int)(float)(65536.f * note_to_pitch(localcopy[oscdata->p[1].param_id_in_scene].f));
+       (int)(float)(65536.f * storage->note_to_pitch(localcopy[oscdata->p[1].param_id_in_scene].f));
    FormantMul = std::max(FormantMul >> WindowVsWavePO2, 1);
    {
       // SSE2 path
@@ -231,8 +231,8 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
    for (int l = 0; l < ActiveSubOscs; l++)
    {
       Sub.DriftLFO[l][0] = drift_noise(Sub.DriftLFO[l][1]);
-      float f = note_to_pitch((pitch - 57.f) + drift * Sub.DriftLFO[l][0] +
-                              Detune * (DetuneOffset + DetuneBias * (float)l));
+      float f = storage->note_to_pitch((pitch - 57.f) + drift * Sub.DriftLFO[l][0] +
+                                       Detune * (DetuneOffset + DetuneBias * (float)l));
       int Ratio = Float2Int(220.f * 32768.f * f * (float)(storage->WindowWT.size) *
                             samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
       Sub.Ratio[l] = Ratio;

@@ -43,11 +43,11 @@ void FreqshiftEffect::setvars(bool init)
 
    if (init)
       time.newValue((fxdata->p[fsp_delay].temposync ? storage->temposyncratio_inv : 1.f) *
-                        samplerate * note_to_pitch(12 * fxdata->p[fsp_delay].val.f) -
+                        samplerate * storage->note_to_pitch(12 * fxdata->p[fsp_delay].val.f) -
                     FIRoffset);
    else
       time.newValue((fxdata->p[fsp_delay].temposync ? storage->temposyncratio_inv : 1.f) *
-                        samplerate * note_to_pitch(12 * *f[fsp_delay]) -
+                        samplerate * storage->note_to_pitch(12 * *f[fsp_delay]) -
                     FIRoffset);
    mix.set_target_smoothed(*f[fsp_mix]);
 
