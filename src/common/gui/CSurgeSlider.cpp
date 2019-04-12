@@ -48,6 +48,9 @@ CSurgeSlider::CSurgeSlider(
    has_modulation = false;
    has_modulation_current = false;
 
+   restvalue = 0.0f;
+   restmodval = 0.0f;
+
    CRect size;
 
    if (style & CSlider::kHorizontal)
@@ -286,17 +289,36 @@ void CSurgeSlider::draw(CDrawContext* dc)
    setDirty(false);
 }
 
-void CSurgeSlider::bounceValue()
+void CSurgeSlider::bounceValue(const bool keeprest)
 {
-   if (value > vmax)
-      value = vmax;
-   else if (value < vmin)
-      value = vmin;
+    if (keeprest) {
+        if (restvalue!=0.0f) {
+            value += restvalue;
+            restvalue = 0.0f;
+        }
+        if (restmodval!=0.0f) {
+            modval += restmodval;
+            restmodval = 0.0f;
+        }
+    }
 
-   if (modval > 1.f)
-      modval = 1.f;
-   if (modval < -1.f)
-      modval = -1.f;
+   if (value > vmax) {
+      restvalue = value - vmax;
+      value = vmax;
+   }
+   else if (value < vmin) {
+      restvalue = value - vmin;
+      value = vmin;
+   }
+
+   if (modval > 1.f) {
+       restmodval = modval - 1.f;
+       modval = 1.f;
+   }
+   if (modval < -1.f) {
+       restmodval = 1.f - modval;
+       modval = -1.f;
+   }
 }
 
 bool CSurgeSlider::isInMouseInteraction()
@@ -333,6 +355,9 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 
       edit_value = modmode ? &modval : &value;
       oldVal = *edit_value;
+
+      restvalue = 0.f;
+      restmodval = 0.f;
 
       detachCursor(where);
       return kMouseEventHandled;
@@ -416,7 +441,7 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
 
       *edit_value += diff / (float)range;
 
-      bounceValue();
+      bounceValue(!(sliderMoveRateState==MoveRateState::kClassic));
 
       setDirty();
 
