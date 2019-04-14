@@ -14,6 +14,7 @@
 
 #include <string>
 #include <atomic>
+#include <functional>
 #include "SurgeError.h"
 
 class SurgeGUIEditor;
@@ -48,6 +49,11 @@ void openURL(const std::string &url);
 // etc)
 void openFolderInFileBrowser(const std::string& folder);
 
+// Prompt for a file to open; call the callback if you pick one
+void promptFileOpenDialog(const std::string& initialDirectory,
+                          const std::string& filterSuffix,
+                          std::function<void(std::string)> callbackOnOpen,
+                          SurgeGUIEditor* guiEditor = nullptr);
 };
 
 };
