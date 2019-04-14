@@ -34,6 +34,14 @@ void openURL(const std::string &url)
 {
 }
 
+void promptFileOpenDialog(const std::string& initialDirectory,
+                          const std::string& filterSuffix,
+                          std::function<void(std::string)> callbackOnOpen,
+                          SurgeGUIEditor* guiEditor)
+{
+   UserInteractions::promptError("OpenFileDialog is unimplemented in this version of Surge. Sorry!",
+                                 "Unimplemented Function", guiEditor);
+}
 };
 
 };
