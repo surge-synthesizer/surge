@@ -3,7 +3,8 @@
 #include "resource.h"
 #include <vstgui/vstgui.h>
 #include <map>
-#include "CScalableBitmap.h"
+
+class CScalableBitmap;
 
 class SurgeBitmaps
 {

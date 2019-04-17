@@ -3,6 +3,7 @@
 #include "MouseCursorControl.h"
 #include "globals.h"
 #include "ModulationSource.h"
+#include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include <vt_dsp/basic_dsp.h>
 

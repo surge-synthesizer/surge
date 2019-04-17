@@ -5,6 +5,7 @@
 #include "resource.h"
 #include "DspUtilities.h"
 #include "MouseCursorControl.h"
+#include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 
 using namespace VSTGUI;
