@@ -2,6 +2,7 @@
 #include "DspUtilities.h"
 #include "CSnapshotMenu.h"
 #include "effect/Effect.h"
+#include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h" // for TINYXML macro
 

@@ -1,6 +1,7 @@
 #include "globals.h"
 #include "SurgeStorage.h"
 #include "CEffectSettings.h"
+#include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 
 using namespace VSTGUI;
