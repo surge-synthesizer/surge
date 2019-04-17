@@ -28,7 +28,7 @@ LANGUAGE LANG_NEUTRAL,
         //
         // PNG
         //
-
+#if INCLUDE_PNG_WHICH_WE_DONT
         IDB_FILTERBUTTONS PNG
     "resources/bitmaps/bmp00108.png" IDB_FBCONFIG PNG
     "resources/bitmaps/bmp00112.png" IDB_SCENESWITCH PNG
@@ -65,9 +65,10 @@ LANGUAGE LANG_NEUTRAL,
     "resources/bitmaps/bmp00161.png" IDB_ENVMODE PNG
     "resources/bitmaps/bmp00162.png" IDB_STOREPATCH PNG "resources/bitmaps/bmp00163.png"
      IDB_BUTTON_MENU PNG "resources/bitmaps/bmp00164.png"    
-
 #include "scalableui.rc"
 
+#endif 
+#include "svgresources.rc"
 
     /////////////////////////////////////////////////////////////////////////////
     //

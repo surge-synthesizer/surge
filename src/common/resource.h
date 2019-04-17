@@ -88,6 +88,7 @@
 #define SCALABLE_200_OFFSET 73000
 #define SCALABLE_300_OFFSET 74000
 #define SCALABLE_400_OFFSET 75000
+#define SCALABLE_SVG_OFFSET 80000
 
 #include "scalableresource.h" // found in src/windows
 

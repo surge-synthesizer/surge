@@ -13,7 +13,7 @@ import os
 import re
 import sys
 
-assets_path = "assets/original-vector/exported"
+assets_path = "assets/original-vector/SVG/exported"
 
 source_file = open(sys.argv[1] + "/src/linux/ScalablePiggy.S", "w")
 source_file.write("""# THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
@@ -23,8 +23,8 @@ source_file.write("""# THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
 
     .section ".rodata", "a"
 
-memoryBitmapListStart:
-    .globl memoryBitmapListStart
+memorySVGListStart:
+    .globl memorySVGListStart
 
 """)
 
@@ -36,28 +36,28 @@ header_file.write("""/*
 ** in scripts/linux/emit-vector-piggy.py
 */
 
-struct MemoryBitmap {
+struct MemorySVG {
     const char *name;
     unsigned long size;
     unsigned long offset;
 };
 
-extern unsigned char memoryBitmapListStart[];
+extern unsigned char memorySVGListStart[];
 
-static const struct MemoryBitmap memoryBitmapList[] = {
+static const struct MemorySVG memorySVGList[] = {
 """)
 
 offset = 0
 
 for name in os.listdir(sys.argv[1] + "/" + assets_path):
-    if not re.match('bmp00(\\d+)(.*).png', name):
+    if not re.match('bmp00(\\d+)(.*).svg', name):
         continue
 
     path = os.path.join(assets_path, name)
     size = os.stat(sys.argv[1] + "/" + path).st_size;
 
     source_file.write('    .incbin "../../' + path + '"' + os.linesep)
-    header_file.write('     {"scalable/' + name + '", ' + str(size) + ', ' +
+    header_file.write('     {"svg/' + name + '", ' + str(size) + ', ' +
                       str(offset) + '},' + os.linesep)
 
     offset += size

@@ -1,111 +1,86 @@
 #include "SurgeBitmaps.h"
 #include "UserInteractions.h"
-#include <map>
 
 #include "CScalableBitmap.h"
+#include <iostream>
 
 using namespace VSTGUI;
 
-std::map<int, VSTGUI::CBitmap*> bitmap_registry;
-
-static std::atomic_int refCount(0);
-
 SurgeBitmaps::SurgeBitmaps()
 {
-   if (refCount == 0)
-   {
-      addEntry(IDB_BG);
-      addEntry(IDB_BUTTON_ABOUT);
-      addEntry(IDB_ABOUT);
-      addEntry(IDB_FILTERBUTTONS);
-      addEntry(IDB_OSCSWITCH); 
-      addEntry(IDB_FILTERSUBTYPE);
-      addEntry(IDB_RELATIVE_TOGGLE);
-      addEntry(IDB_OSCSELECT);
-      addEntry(IDB_FBCONFIG);
-      addEntry(IDB_SCENESWITCH);
-      addEntry(IDB_SCENEMODE);
-      addEntry(IDB_OCTAVES);
-      addEntry(IDB_WAVESHAPER);
-      addEntry(IDB_POLYMODE);
-      addEntry(IDB_SWITCH_RETRIGGER);
-      addEntry(IDB_SWITCH_KTRK);
-      addEntry(IDB_SWITCH_MUTE);
-      addEntry(IDB_SWITCH_SOLO);
-      addEntry(IDB_FMCONFIG);
-      addEntry(IDB_SWITCH_LINK);
-      addEntry(IDB_OSCROUTE);
-      addEntry(IDB_ENVSHAPE);
-      addEntry(IDB_FXBYPASS);
-      addEntry(IDB_LFOTRIGGER);
-      addEntry(IDB_BUTTON_CHECK);
-      addEntry(IDB_BUTTON_MINUSPLUS);
-      addEntry(IDB_UNIPOLAR);
-      addEntry(IDB_CHARACTER);
-      addEntry(IDB_BUTTON_STORE);
-      addEntry(IDB_MODSRC_BG);
-      addEntry(IDB_FXCONF);
-      addEntry(IDB_FXCONF_SYMBOLS);
-      addEntry(IDB_OSCMENU);
-      addEntry(IDB_FADERH_BG);
-      addEntry(IDB_FADERV_BG);
-      addEntry(IDB_FADERH_HANDLE);
-      addEntry(IDB_FADERV_HANDLE);
-      addEntry(IDB_ENVMODE);
-      addEntry(IDB_STOREPATCH);
-      addEntry(IDB_BUTTON_MENU);
-   }
-   refCount++;
+   std::cout << "Constructing a registry" << std::endl;
 }
 
 SurgeBitmaps::~SurgeBitmaps()
 {
-   refCount--;
-
-   if (refCount == 0)
+   std::cout << "Destroying a registry" << std::endl;
+   for (auto pair : bitmap_registry)
    {
-      std::map<int, VSTGUI::CBitmap*>::iterator iter;
-
-      for (iter = bitmap_registry.begin(); iter != bitmap_registry.end(); ++iter)
-      {
-         iter->second->forget();
-      }
-      bitmap_registry.clear();
+      pair.second->forget();
    }
+   bitmap_registry.clear();
 }
 
-void SurgeBitmaps::addEntry(int id)
+void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
+{
+   addEntry(IDB_BG, f);
+   addEntry(IDB_BUTTON_ABOUT, f);
+   addEntry(IDB_ABOUT, f);
+   addEntry(IDB_FILTERBUTTONS, f);
+   addEntry(IDB_OSCSWITCH, f);
+   addEntry(IDB_FILTERSUBTYPE, f);
+   addEntry(IDB_RELATIVE_TOGGLE, f);
+   addEntry(IDB_OSCSELECT, f);
+   addEntry(IDB_FBCONFIG, f);
+   addEntry(IDB_SCENESWITCH, f);
+   addEntry(IDB_SCENEMODE, f);
+   addEntry(IDB_OCTAVES, f);
+   addEntry(IDB_WAVESHAPER, f);
+   addEntry(IDB_POLYMODE, f);
+   addEntry(IDB_SWITCH_RETRIGGER, f);
+   addEntry(IDB_SWITCH_KTRK, f);
+   addEntry(IDB_SWITCH_MUTE, f);
+   addEntry(IDB_SWITCH_SOLO, f);
+   addEntry(IDB_FMCONFIG, f);
+   addEntry(IDB_SWITCH_LINK, f);
+   addEntry(IDB_OSCROUTE, f);
+   addEntry(IDB_ENVSHAPE, f);
+   addEntry(IDB_FXBYPASS, f);
+   addEntry(IDB_LFOTRIGGER, f);
+   addEntry(IDB_BUTTON_CHECK, f);
+   addEntry(IDB_BUTTON_MINUSPLUS, f);
+   addEntry(IDB_UNIPOLAR, f);
+   addEntry(IDB_CHARACTER, f);
+   addEntry(IDB_BUTTON_STORE, f);
+   addEntry(IDB_MODSRC_BG, f);
+   addEntry(IDB_FXCONF, f);
+   addEntry(IDB_FXCONF_SYMBOLS, f);
+   addEntry(IDB_OSCMENU, f);
+   addEntry(IDB_FADERH_BG, f);
+   addEntry(IDB_FADERV_BG, f);
+   addEntry(IDB_FADERH_HANDLE, f);
+   addEntry(IDB_FADERV_HANDLE, f);
+   addEntry(IDB_ENVMODE, f);
+   addEntry(IDB_STOREPATCH, f);
+   addEntry(IDB_BUTTON_MENU, f);
+}
+
+void SurgeBitmaps::addEntry(int id, VSTGUI::CFrame* f)
 {
    assert(bitmap_registry.find(id) == bitmap_registry.end());
 
-   VSTGUI::CBitmap *bitmap = new CScalableBitmap(CResourceDescription(id));
+   CScalableBitmap* bitmap = new CScalableBitmap(VSTGUI::CResourceDescription(id), f);
 
    bitmap_registry[id] = bitmap;
 }
 
-VSTGUI::CBitmap* getSurgeBitmap(int id, bool newInstance)
+CScalableBitmap* SurgeBitmaps::getBitmap(int id)
 {
-   if( newInstance )
-   {
-      /*
-      ** Background images are specially handled by the frame object with scaling and so each needs
-      ** to maintain an independent 'additional zoom'. For now handle that by allowing the construction of
-      ** a distinct bitmap. 
-      **
-      ** When the arity issues with scalable bitmaps get solved (github issue #356) this code will 
-      ** not be needed any more. Until then it is, but just for the BG image.
-      */
-      if( id != IDB_BG )
-      {
-          // This should never happen.
-          Surge::UserInteractions::promptError(std::string() +
-                                               "You requested a new Instance bitmap with for something other than the BG. Why?",
-                                               "Software Error" );
-      }
-      return new CScalableBitmap(CResourceDescription(id));
-   }
-   else
-   {
-       return bitmap_registry.at(id);
-   }
+   return bitmap_registry.at(id);
+}
+
+void SurgeBitmaps::setPhysicalZoomFactor(int pzf)
+{
+   for (auto pair : bitmap_registry)
+      pair.second->setPhysicalZoomFactor(pzf);
 }

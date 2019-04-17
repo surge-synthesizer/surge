@@ -174,11 +174,13 @@ COscMenu::COscMenu(const CRect& size,
                    IControlListener* listener,
                    long tag,
                    SurgeStorage* storage,
-                   OscillatorStorage* osc)
+                   OscillatorStorage* osc,
+                   std::shared_ptr<SurgeBitmaps> bitmapStore)
     : CSnapshotMenu(size, listener, tag, storage)
 {
    strcpy(mtype, "osc");
    this->osc = osc;
+   bmp = bitmapStore->getBitmap(IDB_OSCMENU);
    populate();
 }
 
@@ -187,7 +189,8 @@ void COscMenu::draw(CDrawContext* dc)
    CRect size = getViewSize();
    int i = osc->type.val.i;
    int y = i * size.getHeight();
-   getSurgeBitmap(IDB_OSCMENU)->draw(dc, size, CPoint(0, y), 0xff);
+   if (bmp)
+      bmp->draw(dc, size, CPoint(0, y), 0xff);
 
    setDirty(false);
 }

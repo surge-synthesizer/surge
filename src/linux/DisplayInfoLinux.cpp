@@ -14,7 +14,6 @@ using namespace VSTGUI;
     
 float getDisplayBackingScaleFactor(CFrame *)
 {
-    std::cerr << "BackingDisplayFactor is not implemented on linux. Returning 1.0" << std::endl;
     return 1.0;
 }
 

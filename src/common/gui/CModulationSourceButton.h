@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
+#include "SurgeBitmaps.h"
 
 class CModulationSourceButton : public CCursorHidingControl
 {
@@ -10,8 +11,12 @@ private:
    typedef CCursorHidingControl super;
 
 public:
-   CModulationSourceButton(
-       const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, int state, int msid);
+   CModulationSourceButton(const VSTGUI::CRect& size,
+                           VSTGUI::IControlListener* listener,
+                           long tag,
+                           int state,
+                           int msid,
+                           std::shared_ptr<SurgeBitmaps> bitmapStore);
    ~CModulationSourceButton();
 
    virtual void setValue(float val)
@@ -34,6 +39,8 @@ public:
    VSTGUI::CPoint LastPoint;
    VSTGUI::CPoint SourcePoint;
    float OldValue;
+
+   VSTGUI::CBitmap* bmp = nullptr;
 
    void setblink(bool state);
    void setlabel(const char*);

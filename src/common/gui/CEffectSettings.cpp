@@ -42,12 +42,13 @@ int get_fxtype(int id)
 CEffectSettings::CEffectSettings(const CRect& size,
                                  IControlListener* listener,
                                  long tag,
-                                 int current)
+                                 int current,
+                                 std::shared_ptr<SurgeBitmaps> bitmapStore)
     : CControl(size, listener, tag, 0)
 {
    this->current = current;
-   bg = getSurgeBitmap(IDB_FXCONF);
-   labels = getSurgeBitmap(IDB_FXCONF_SYMBOLS);
+   bg = bitmapStore->getBitmap(IDB_FXCONF);
+   labels = bitmapStore->getBitmap(IDB_FXCONF_SYMBOLS);
    disabled = 0;
 }
 

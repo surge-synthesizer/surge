@@ -5,6 +5,7 @@
 #include "vstcontrols.h"
 #include "SurgeStorage.h"
 #include "PopupEditorSpawner.h"
+#include "SurgeBitmaps.h"
 
 class CSnapshotMenu : public VSTGUI::COptionMenu
 {
@@ -31,12 +32,14 @@ public:
             VSTGUI::IControlListener* listener,
             long tag,
             SurgeStorage* storage,
-            OscillatorStorage* osc);
+            OscillatorStorage* osc,
+            std::shared_ptr<SurgeBitmaps>);
    virtual void draw(VSTGUI::CDrawContext* dc);
    virtual void loadSnapshot(int type, TiXmlElement* e);
 
 protected:
    OscillatorStorage* osc = nullptr;
+   VSTGUI::CBitmap* bmp = nullptr;
 
    CLASS_METHODS(COscMenu, VSTGUI::CControl)
 };

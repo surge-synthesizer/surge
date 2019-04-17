@@ -32,13 +32,13 @@ public:
    {
       visible = true;
       invalid();
-      // setDirty();
+      setDirty(true);
    }
    void Hide()
    {
       visible = false;
       invalid();
-      //	setDirty();
+      setDirty(true);
    }
    bool isNewTag(long tag)
    {
@@ -72,6 +72,7 @@ public:
          smaller.x += shrink;*/
 
          auto size = getViewSize();
+         size = size.inset(0.75, 0.75);
          dc->setFrameColor(VSTGUI::kBlackCColor);
          dc->drawRect(size);
          VSTGUI::CRect sizem1(size);
