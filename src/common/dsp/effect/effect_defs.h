@@ -7,7 +7,6 @@
 #include "BiquadFilter.h"
 #include "DspUtilities.h"
 #include "AllpassFilter.h"
-#include "CSurgeVuMeter.h"
 
 #include "VectorizedSvfFilter.h"
 

@@ -3,15 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
-
-enum vutypes
-{
-   vut_off,
-   vut_vu,
-   vut_vu_stereo,
-   vut_gain_reduction,
-   n_vut,
-};
+#include "SurgeParamConfig.h"
 
 class CSurgeVuMeter : public VSTGUI::CControl
 {

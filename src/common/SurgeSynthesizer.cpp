@@ -31,7 +31,7 @@
 #include "vstgui/plugin-bindings/aeffguieditor.h"
 #endif
 #endif
-#include "CSurgeSlider.h"
+#include "SurgeParamConfig.h"
 
 #include "UserDefaults.h"
 
