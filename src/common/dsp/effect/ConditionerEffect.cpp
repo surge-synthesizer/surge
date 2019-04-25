@@ -1,5 +1,6 @@
 #include "effect_defs.h"
 #include <vt_dsp/basic_dsp.h>
+#include "SurgeParamConfig.h"
 
 using namespace std;
 

@@ -64,18 +64,14 @@ set(SURGE_COMMON_INCLUDES
     libs/xml
     src/common
     src/common/dsp
-    src/common/gui
     src/common/thread
     src/common/vt_dsp
-    vst3sdk
-    vstgui.surge
 )
 
 add_executable(surge-headless
     ${SURGE_COMMON_SOURCES}
     ${LIB_MIDIFILE_SOURCES}
    src/headless/main.cpp
-   src/headless/DisplayInfoHeadless.cpp
    src/headless/UserInteractionsHeadless.cpp
    src/headless/LinkFixesHeadless.cpp
    src/headless/HeadlessUtils.cpp

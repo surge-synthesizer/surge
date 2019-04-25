@@ -184,6 +184,16 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
        aboutFont = aboutfont;
 
    }
+
+   /*
+   ** See the comment in SurgeParamConfig.h
+   */
+   if(Surge::ParamConfig::kHorizontal != VSTGUI::CSlider::kHorizontal ||
+      Surge::ParamConfig::kVertical != VSTGUI::CSlider::kVertical
+       )
+   {
+       throw new Surge::Error("Software Error: Param MisMaptch" );
+   }
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()

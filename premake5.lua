@@ -676,7 +676,6 @@ if (os.istarget("windows")) then
     files
     {
         "src/headless/main.cpp",
-        "src/headless/DisplayInfoHeadless.cpp",
         "src/headless/UserInteractionsHeadless.cpp",
         "src/headless/LinkFixesHeadless.cpp",
         "src/headless/HeadlessUtils.cpp",

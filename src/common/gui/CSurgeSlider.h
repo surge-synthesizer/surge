@@ -4,19 +4,7 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
-
-// FIXME: This enum being here and being included in SurgePatch means SurgePatch pulls in vstgui
-enum CControlEnum_turbodeluxe
-{
-   kBipolar = 1 << 15,
-   kWhite = 1 << 16,
-   kSemitone = 1 << 17,
-   kMini = 1 << 18,
-   kMeta = 1 << 19,
-   kEasy = 1 << 20,
-   kHide = 1 << 21,
-   kNoPopup = 1 << 22,
-};
+#include "SurgeParamConfig.h"
 
 class CSurgeSlider : public CCursorHidingControl
 {
