@@ -97,7 +97,7 @@ inline unsigned int BigMULr16(unsigned int a, unsigned int b)
 #if _M_X64
    unsigned __int64 c = __emulu(a, b);
    return c >> 16;
-#elif LINUX
+#elif LINUX || TARGET_RACK
    uint64_t c = (uint64_t)a * (uint64_t)b;
    return c >> 16;
 #else
