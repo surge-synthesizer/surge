@@ -11,7 +11,7 @@
 #include "SurgeStorage.h"
 #include <assert.h>
 
-#if WINDOWS
+#if WINDOWS && !TARGET_RACK
 
 #include <windows.h>
 #include <mmreg.h>

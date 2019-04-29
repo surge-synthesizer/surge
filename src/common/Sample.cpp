@@ -5,7 +5,7 @@
 //	Copyright 2004 Claes Johanson
 //
 //-------------------------------------------------------------------------------------------------------
-#if WINDOWS
+#if WINDOWS && ! TARGET_RACK
 #include "Sample.h"
 #include <assert.h>
 

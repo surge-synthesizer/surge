@@ -20,7 +20,7 @@ using namespace std;
 
 void SurgeStorage::load_wt_wav(string filename, Wavetable* wt)
 {
-#if WINDOWS
+#if WINDOWS && !TARGET_RACK
    uint32 wave_channels = 0;
    uint32 wave_samplerate = 0;
    uint32 wave_blockalignment = 0;
