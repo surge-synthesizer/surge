@@ -18,7 +18,7 @@
 
 namespace fs = std::experimental::filesystem;
 
-#if TARGET_RACK
+#if TARGET_RACK && WINDOWS
 #define generic_string string
 #endif
 
