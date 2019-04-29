@@ -29,6 +29,10 @@
 
 #include <sstream>
 
+#if TARGET_RACK
+#define generic_string string
+#endif
+
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
@@ -173,6 +177,9 @@ SurgeStorage::SurgeStorage()
    
    userDataPath = std::string(homePath) + "/Documents/Surge";
 #elif WINDOWS
+#if TARGET_RACK
+   Surge::UserInteractions::promptError("Need to implement in-res paths for rack", "SoftwareError" );
+#else
    PWSTR localAppData;
    if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
    {
@@ -188,6 +195,7 @@ SurgeStorage::SurgeStorage()
       wsprintf(path, "%S\\Surge\\", documentsFolder);
       userDataPath = path;
    }
+#endif
 #endif
 
 #if LINUX

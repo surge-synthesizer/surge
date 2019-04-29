@@ -94,7 +94,7 @@ void WindowOscillator::init_default_values()
 inline unsigned int BigMULr16(unsigned int a, unsigned int b)
 {
    // 64-bit unsigned multiply with right shift by 16 bits
-#if _M_X64
+#if _M_X64 && ! TARGET_RACK
    unsigned __int64 c = __emulu(a, b);
    return c >> 16;
 #elif LINUX || TARGET_RACK

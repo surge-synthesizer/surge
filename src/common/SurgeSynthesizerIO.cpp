@@ -18,6 +18,10 @@
 
 namespace fs = std::experimental::filesystem;
 
+#if TARGET_RACK
+#define generic_string string
+#endif
+
 #if AU
 #include "aulayer.h"
 #endif
@@ -306,7 +310,11 @@ void SurgeSynthesizer::savePatch()
            return;
    }
 
+#if WINDOWS && TARGET_RACK
+   std::ofstream f(filename.c_str(), std::ios::out | std::ios::binary);
+#else
    std::ofstream f(filename, std::ios::out | std::ios::binary);
+#endif
 
    if (!f)
       return;
