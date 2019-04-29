@@ -11,7 +11,7 @@
 
 #if LINUX
 #include <experimental/filesystem>
-#elif MAC
+#elif MAC || TARGET_RACK
 #include <filesystem.h>
 #else
 #include <filesystem>

@@ -10,9 +10,12 @@
 
 #include <functional>
 
+#if defined(__APPLE__) || TARGET_RACK
 #ifdef __APPLE__
 #include "TargetConditionals.h"
-#ifdef TARGET_OS_MAC
+#endif
+
+#if defined(TARGET_OS_MAC) || TARGET_RACK
 
 #include <string>
 #include <vector>

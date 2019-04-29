@@ -5,10 +5,13 @@
 //  Created by Keith Zantow on 10/2/18.
 //
 
+#if defined(__APPLE__) || TARGET_RACK
 #ifdef __APPLE__
 #include "TargetConditionals.h"
-#ifdef TARGET_OS_MAC
+#endif
+#if defined(TARGET_OS_MAC) || TARGET_RACK
 
+#include <sys/stat.h>
 #include "filesystem.h"
 
 namespace std::experimental::filesystem {
@@ -91,7 +94,9 @@ namespace std::experimental::filesystem {
     void create_directories(path p) {
         mode_t nMode = 0755; // UNIX style permissions
         int nError = 0;
-#if defined(_WIN32)
+#if ! TARGET_RACK
+	// FIX THAT
+#if defined(_WIN32) 
         nError = _mkdir(p.c_str()); // can be used on Windows
 #else
         // create_directories is recursive so this solution
@@ -110,6 +115,7 @@ namespace std::experimental::filesystem {
         }
         // and clean up the end
         nError = mkdir(file_path, nMode );
+#endif
 #endif
         if (nError != 0) {
             // handle your error here

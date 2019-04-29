@@ -29,9 +29,6 @@
 
 #include <sstream>
 
-#if TARGET_RACK && WINDOWS
-#define generic_string string
-#endif
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -371,7 +368,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
    for (auto &p : alldirs )
    {
       PatchCategory c;
-#if WINDOWS
+#if WINDOWS && ! TARGET_RACK
       /*
       ** Windows filesystem names are properly wstrings which, if we want them to 
       ** display properly in vstgui, need to be converted to UTF8 using the 
@@ -392,7 +389,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
             Patch e;
             e.category = category;
             e.path = f.path();
-#if WINDOWS
+#if WINDOWS && ! TARGET_RACK
               std::wstring str = f.path().filename().wstring();
               str = str.substr(0, str.size() - xtn.length());
               e.name = Surge::Storage::wstringToUTF8(str);
