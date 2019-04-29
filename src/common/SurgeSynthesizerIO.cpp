@@ -7,7 +7,7 @@
 #include <vt_dsp/vt_dsp_endian.h>
 #if LINUX
 #include <experimental/filesystem>
-#elif MAC
+#elif MAC || TARGET_RACK
 #include <filesystem.h>
 #else
 #include <filesystem>
@@ -17,10 +17,6 @@
 #include "UserInteractions.h"
 
 namespace fs = std::experimental::filesystem;
-
-#if TARGET_RACK && WINDOWS
-#define generic_string string
-#endif
 
 #if AU
 #include "aulayer.h"

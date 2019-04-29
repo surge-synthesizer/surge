@@ -16,9 +16,9 @@
 #endif
 #include <tinyxml.h>
 
-#if LINUX || ( WINDOWS && TARGET_RACK )
+#if LINUX 
 #include <experimental/filesystem>
-#elif MAC
+#elif MAC || (WINDOWS && TARGET_RACK)
 #include <filesystem.h>
 #else
 #include <filesystem>
