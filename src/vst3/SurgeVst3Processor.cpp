@@ -272,7 +272,10 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                         surgeInstance->channelAftertouch(channel, (int)(value * 127.f));
                         break;
                      case kPitchBend:
-                        surgeInstance->pitchBend(channel, (int)(value * 8192.f));
+                        /*
+                        ** VST3 float value is between 0 and 1, pitch bend is between -1 and 1. Center it
+                        */
+                        surgeInstance->pitchBend(channel, (int)((value-0.5)*2 * 8192.f));
                         break;
                      case kCtrlProgramChange:
                         break;
