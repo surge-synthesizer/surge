@@ -58,6 +58,21 @@ public:
 #else
    virtual bool PLUGIN_API open(void* parent, const VSTGUI::PlatformType& platformType = VSTGUI::kDefaultNative);
    virtual void PLUGIN_API close() override;
+
+   virtual Steinberg::tresult PLUGIN_API onWheel( float distance ) override
+   {
+     /*
+     ** in VST3 the VstGuiEditorBase we have - even if the OS has handled it
+     ** a call to the VSTGUIEditor::onWheel (trust me; I put in stack traces
+     ** and prints). That's probably wrong. But when you use VSTGUI Zoom 
+     ** and frame->getCurrentPosition gets screwed up because VSTGUI has transform
+     ** bugs it is definitely wrong. So the mouse wheel event gets mistakenly
+     ** delivered twice (OK) but to the wrong spot (not OK!).
+     ** 
+     ** So stop the superclass from doing that by just making this do nothing.
+     */
+     return Steinberg::kResultFalse;
+   } 
 #endif
 
 
