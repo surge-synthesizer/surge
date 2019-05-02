@@ -474,7 +474,7 @@ public:
    float audio_in_nonOS alignas(16)[2][BLOCK_SIZE];
    //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
-   SurgeStorage();
+   SurgeStorage(std::string suppliedDataPath="");
    ~SurgeStorage();
 
    std::unique_ptr<SurgePatch> _patch;
