@@ -46,7 +46,7 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 using namespace std;
 
-SurgeStorage::SurgeStorage()
+SurgeStorage::SurgeStorage(std::string suppliedDataPath)
 {
    _patch.reset(new SurgePatch(this));
 
@@ -121,6 +121,12 @@ SurgeStorage::SurgeStorage()
 
    memset(&audio_in[0][0], 0, 2 * BLOCK_SIZE_OS * sizeof(float));
 
+   bool hasSuppliedDataPath = false;
+   if(suppliedDataPath.size() != 0)
+   {
+       hasSuppliedDataPath = true;
+   }
+   
 #if MAC || LINUX
    const char* homePath = getenv("HOME");
    if (!homePath)
@@ -130,52 +136,65 @@ SurgeStorage::SurgeStorage()
 
 #if MAC
    char path[1024];
-   FSRef foundRef;
-   OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &foundRef);
-   // or kUserDomain
-   FSRefMakePath(&foundRef, (UInt8*)path, 1024);
-   datapath = path;
-   datapath += "/Surge/";
-
-   // check if the directory exist in the user domain (if it doesn't, fall back to the local domain)
-   CFStringRef testpathCF = CFStringCreateWithCString(0, datapath.c_str(), kCFStringEncodingUTF8);
-   CFURLRef testCat = CFURLCreateWithFileSystemPath(0, testpathCF, kCFURLPOSIXPathStyle, true);
-   CFRelease(testpathCF);
-   FSRef myfsRef;
-   Boolean works = CFURLGetFSRef(testCat, &myfsRef);
-   CFRelease(testCat); // don't need it anymore?!?
-   if (!works)
+   if (!hasSuppliedDataPath)
    {
-      OSErr err = FSFindFolder(kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
-      FSRefMakePath(&foundRef, (UInt8*)path, 1024);
-      datapath = path;
-      datapath += "/Surge/";
+       FSRef foundRef;
+       OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &foundRef);
+       // or kUserDomain
+       FSRefMakePath(&foundRef, (UInt8*)path, 1024);
+       datapath = path;
+       datapath += "/Surge/";
+       
+       // check if the directory exist in the user domain (if it doesn't, fall back to the local domain)
+       CFStringRef testpathCF = CFStringCreateWithCString(0, datapath.c_str(), kCFStringEncodingUTF8);
+       CFURLRef testCat = CFURLCreateWithFileSystemPath(0, testpathCF, kCFURLPOSIXPathStyle, true);
+       CFRelease(testpathCF);
+       FSRef myfsRef;
+       Boolean works = CFURLGetFSRef(testCat, &myfsRef);
+       CFRelease(testCat); // don't need it anymore?!?
+       if (!works)
+       {
+           OSErr err = FSFindFolder(kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
+           FSRefMakePath(&foundRef, (UInt8*)path, 1024);
+           datapath = path;
+           datapath += "/Surge/";
+       }
    }
-
+   else
+   {
+       datapath = suppliedDataPath;
+   }
+   
    // ~/Documents/Surge in full name
    sprintf(path, "%s/Documents/Surge", homePath);
    userDataPath = path;
 #elif LINUX
-   const char* xdgDataPath = getenv("XDG_DATA_HOME");
-   if (xdgDataPath)
-      datapath = std::string(xdgDataPath) + "/Surge/";
-   else
-      datapath = std::string(homePath) + "/.local/share/Surge/";
-
-   /*
-   ** If local directory doesn't exists - we probably came here through an installer -
-   ** use /usr/share/Surge as our last guess
-   */
-   if (! fs::is_directory(datapath))
+   if(!hasSuppliedDataPath)
    {
-      datapath = "/usr/share/Surge/";
+       const char* xdgDataPath = getenv("XDG_DATA_HOME");
+       if (xdgDataPath)
+           datapath = std::string(xdgDataPath) + "/Surge/";
+       else
+           datapath = std::string(homePath) + "/.local/share/Surge/";
+       
+       /*
+       ** If local directory doesn't exists - we probably came here through an installer -
+       ** use /usr/share/Surge as our last guess
+       */
+       if (! fs::is_directory(datapath))
+       {
+           datapath = "/usr/share/Surge/";
+       }
    }
-      
+   else
+   {
+       datapath = suppliedDataPath;
+   }
    
    userDataPath = std::string(homePath) + "/Documents/Surge";
 #elif WINDOWS
 #if TARGET_RACK
-   Surge::UserInteractions::promptError("Need to implement in-res paths for rack", "SoftwareError" );
+   datapath = suppliedDataPath;
 #else
    PWSTR localAppData;
    if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
@@ -222,7 +241,11 @@ SurgeStorage::SurgeStorage()
 
    load_midi_controllers();
    refresh_wtlist();
+
+#if !TARGET_RACK   
    refresh_patchlist();
+#endif
+   
    getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
    load_wt(0, &getPatch().scene[0].osc[0].wt);
 
