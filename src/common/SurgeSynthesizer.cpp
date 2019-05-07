@@ -218,6 +218,14 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
          break;
       }
    }
+   else if(storage.getPatch().scenemode.val.i == sm_single)
+   {
+       if (storage.getPatch().scene_active.val.i == 1)
+           channelmask = 2;
+       else
+           channelmask = 1;
+   }
+
    return channelmask;
 }
 
