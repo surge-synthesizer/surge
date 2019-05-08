@@ -27,7 +27,6 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_BUTTON_ABOUT, f);
    addEntry(IDB_ABOUT, f);
    addEntry(IDB_FILTERBUTTONS, f);
-   addEntry(IDB_OSCSWITCH, f);
    addEntry(IDB_FILTERSUBTYPE, f);
    addEntry(IDB_RELATIVE_TOGGLE, f);
    addEntry(IDB_OSCSELECT, f);
@@ -47,7 +46,6 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_ENVSHAPE, f);
    addEntry(IDB_FXBYPASS, f);
    addEntry(IDB_LFOTRIGGER, f);
-   addEntry(IDB_BUTTON_CHECK, f);
    addEntry(IDB_BUTTON_MINUSPLUS, f);
    addEntry(IDB_UNIPOLAR, f);
    addEntry(IDB_CHARACTER, f);
