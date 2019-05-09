@@ -7,6 +7,7 @@
 #if MAC
 #include <CoreFoundation/CoreFoundation.h>
 #include "vstgui/lib/platform/mac/macglobals.h"
+#include <strstream>
 #endif
 #if LINUX
 #include "ScalablePiggy.h"
@@ -51,6 +52,7 @@ static const std::string svgFullFileNameFromBundle(const std::string& filename)
 
    return "";
 }
+
 #endif
 
 #if LINUX
@@ -87,6 +89,7 @@ void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)
     currentPhysicalZoomFactor = zoomFactor;
 }
 
+
 CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
     : CBitmap(desc), svgImage(nullptr), frame(f)
 {
@@ -102,6 +105,26 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
 #if MAC
     std::string fullFileName = svgFullFileNameFromBundle(filename.str());
     svgImage = nsvgParseFromFile(fullFileName.c_str(), "px", 96);
+
+    /*
+    ** Some older versions of live are reported to not set the bundle identity
+    ** properly. There are all sorts of complicated ways to deal with this. Here 
+    ** though is one which isn't great but gives those users a bit of hope
+    */
+    if (!svgImage)
+    {
+        std::ostringstream fn2;
+#if TARGET_AUDIOUNIT
+        fn2 << "/Library/Audio/Plug-Ins/Components/Surge.component/Contents/Resources/" << filename.str();
+#elif TARGET_VST2
+        fn2 << "/Library/Audio/Plug-Ins/VST/Surge.vst/Contents/Resources/" << filename.str();
+#elif TARGET_VST3
+        fn2 << "/Library/Audio/Plug-Ins/VST3/Surge.vst3/Contents/Resources/" << filename.str();
+#endif
+        
+        std::cout << "FailBack from bad module SVG path to best guess: [" << fn2.str() << "]" << std::endl;
+        svgImage = nsvgParseFromFile(fn2.str().c_str(), "px", 96);
+    }
 #endif
 
 #if WINDOWS
