@@ -675,10 +675,23 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    data = malloc(ds);
    fread(data, 1, ds, f);
    CS_WaveTableData.enter();
-   wt->BuildWT(data, wh, false);
+   bool wasBuilt = wt->BuildWT(data, wh, false);
    CS_WaveTableData.leave();
    free(data);
 
+   if (!wasBuilt)
+   {
+       std::ostringstream oss;
+       oss << "Your wavetable was unable to build. This often means that it has too many samples or tables."
+           << " You provided " << wh.n_tables << " tables of size " << wh.n_samples << " vs max limits of "
+           << max_subtables << " tables and " << max_wtable_size << " samples."
+           << " In some cases, Surge detects this situation inconsistently leading to this message. Surge is now"
+           << " in a potentially inconsistent state. We recommend you restart Surge and do not load the wavetable again."
+           << " If you would like, please attach the wavetable which caused this message to a new github issue at "
+           << " https://github.com/surge-synthesizer/surge/";
+       Surge::UserInteractions::promptError( oss.str(),
+                                             "Software Error on WT Load" );
+   }
    fclose(f);
 }
 int SurgeStorage::get_clipboard_type()
