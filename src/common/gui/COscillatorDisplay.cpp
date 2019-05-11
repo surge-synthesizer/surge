@@ -393,7 +393,8 @@ bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
             cidx++;
          }
 
-         selected = selected || populateMenuForCategory(subMenu, cidx, selectedItem);
+         bool subSel = populateMenuForCategory(subMenu, cidx, selectedItem);
+         selected = selected || subSel;
       }
    }
 
