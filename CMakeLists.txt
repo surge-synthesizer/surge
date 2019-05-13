@@ -2,10 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(Surge VERSION 1.0.0 LANGUAGES CXX ASM)
 #set(CMAKE_BUILD_TYPE Debug)
 
-
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 find_package(LibMidiFile ${PACKAGE_OPTIONS})
-
 
 set(SURGE_COMMON_SOURCES
     src/common/dsp/effect/ConditionerEffect.cpp
@@ -178,4 +176,22 @@ if (UNIX AND NOT APPLE)
         stdc++fs
         Threads::Threads
     )
+endif()
+
+if (WIN32)
+    target_compile_definitions(surge-headless
+        PRIVATE
+            WINDOWS=1
+            NOMINMAX=1
+    )
+
+    target_compile_options(surge-headless
+        PRIVATE
+            /arch:SSE2
+            "/FI precompiled.h"
+            /Zc:alignedNew
+            /bigobj
+    )
+
+    target_link_libraries(surge-headless winmm.lib)
 endif()
