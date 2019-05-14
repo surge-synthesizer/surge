@@ -1,6 +1,4 @@
-#if LINUX
-#include <immintrin.h>
-#endif
+#include "SIMD.h"
 
 #define vFloat __m128
 

@@ -108,14 +108,27 @@ else()
     include_directories(surge-headless ${LIBSNDFILE_INCLUDE_DIRS})
 endif()
 
+if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "aarch64")
+    target_include_directories(surge-headless
+        PRIVATE
+            libs/sse2neon
+    )
+endif()
+
 # *NIX
 if (UNIX)
     target_compile_options(surge-headless
         PRIVATE
-            -msse2
             "-D_aligned_malloc(x,a)=malloc(x)"
             "-D_aligned_free(x)=free(x)"
     )
+
+    if(NOT "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "aarch64")
+        target_compile_options(surge-headless
+            PRIVATE
+                -msse2
+        )
+    endif()
 endif()
 
 # macOS

@@ -12,11 +12,8 @@
 #if MAC
 #include "vt_dsp/macspecific.h"
 #endif
-#include <xmmintrin.h>
 
-#if LINUX
-#include <immintrin.h>
-#endif
+#include "SIMD.h"
 
 #if MAC || LINUX
 #include <strings.h>

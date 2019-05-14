@@ -1,5 +1,5 @@
 #include "FpuState.h"
-#include <emmintrin.h>
+#include "SIMD.h"
 #include <float.h>
 
 FpuState::FpuState() : _old_SSE_state(0), _SSE_Flags(0x8040)

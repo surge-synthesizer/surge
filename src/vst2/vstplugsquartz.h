@@ -32,4 +32,4 @@
 #define _aligned_free(x) free(x)
 
 #define SSE_VERSION 3
-#include <emmintrin.h>
+#include "SIMD.h"

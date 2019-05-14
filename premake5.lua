@@ -239,6 +239,7 @@ function plugincommon()
     }
 
     includedirs {
+        "libs/sse2neon",
         "src/common",
         "src/common/dsp",
         "src/common/gui",
