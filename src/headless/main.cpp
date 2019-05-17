@@ -5,6 +5,7 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 #include "Stress.h"
+#include "SurgeError.h"
 
 void simpleOscillatorToStdOut()
 {
@@ -121,11 +122,19 @@ void playSomeBach()
 */
 int main(int argc, char** argv)
 {
-   // simpleOscillatorToStdOut();
-   // statsFromPlayingEveryPatch();
-   //playSomeBach();
-   //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
-    Surge::Headless::pullInitSamplesWithNoNotes(1000);
+   try 
+   {
+      // simpleOscillatorToStdOut();
+      statsFromPlayingEveryPatch();
+      //playSomeBach();
+      //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
+      // Surge::Headless::pullInitSamplesWithNoNotes(1000);
+   }
+   catch( Surge::Error &e )
+   {
+	std::cout << "SurgeError: " << e.getTitle() << "\n" << e.getMessage() << "\n";
+	return 1;
+   }
 
    return 0;
 }
