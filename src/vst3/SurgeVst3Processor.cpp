@@ -239,7 +239,6 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
          {
             int32 offsetSamples;
             double value = 0;
-            ;
             int32 numPoints = paramQueue->getPointCount();
 
             int id = paramQueue->getParameterId();
@@ -289,10 +288,10 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
             else
             {
                int id = paramQueue->getParameterId();
-
                if (numPoints == 1)
                {
                   paramQueue->getPoint(0, offsetSamples, value);
+
                   surgeInstance->setParameter01(id, value, true);
                }
                else
@@ -649,7 +648,16 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
       return kInvalidArgument;
    }
 
-   surgeInstance->setParameter01(surgeInstance->remapExternalApiToInternalId(tag), value);
+   /*
+   ** Priod code had this:
+   **
+   ** surgeInstance->setParameter01(surgeInstance->remapExternalApiToInternalId(tag), value);
+   **
+   ** which remaps "control 0" -> 2048. I think that's right for the VST2 but for the VST3 where
+   ** we are specially dealing with midi controls it is the wrong thing to do; it makes the FX
+   ** control and the control 0 the same. So here just pass the tag on directly.
+   */
+   surgeInstance->setParameter01(tag, value);
 
    return kResultOk;
 }

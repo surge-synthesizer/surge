@@ -1,0 +1,30 @@
+This file contains fragments of code Paul ends up pasting into stuff often to debug. You can ignore it.
+It's just so he can keep it around.
+
+---
+
+FILE *logfp = NULL;
+FILE *lfp() {
+    if( logfp == NULL )
+        logfp = fopen( "/tmp/surgevst3.log", "w" );
+    return logfp;
+}
+#define V2LF(fmt, ...) { fprintf( lfp(),"[%s/%d]" fmt "\n", strrchr("/" __FILE__, '/') + 1, __LINE__, __VA_ARGS__ ); fflush(lfp()); }
+
+---
+#if MAC
+#include <execinfo.h>
+#endif
+
+void stackToInfo()
+{
+#if MAC
+    void* callstack[128];
+    int i, frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (i = 0; i < frames; ++i) {
+        printf( "[SurgeRack] StackTrace[%3d]: %s", i, strs[i] );
+    }
+    free(strs);
+#endif
+}
