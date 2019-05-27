@@ -2490,6 +2490,9 @@ long SurgeGUIEditor::unapplyParameterOffset(long id)
 
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
+   if (!zoomEnabled)
+      zf = 100.0;
+
    if (zf < minimumZoom)
    {
       std::ostringstream oss;
@@ -2578,61 +2581,70 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     int eid = 0;
 
     // Zoom submenus
-    COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-
-    int zid = 0;
-    for(auto s : { 100, 125, 150, 200, 300 }) // These are somewhat arbitrary reasonable defaults
+    if (zoomEnabled)
     {
-        std::ostringstream lab;
-        lab << "Zoom to " << s << "%";
-        CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-        zcmd->setActions([this, s](CCommandMenuItem* m) { setZoomFactor(s); });
-        zoomSubMenu->addEntry(zcmd); zid++;
+       COptionMenu* zoomSubMenu =
+           new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+
+       int zid = 0;
+       for (auto s : {100, 125, 150, 200, 300}) // These are somewhat arbitrary reasonable defaults
+       {
+          std::ostringstream lab;
+          lab << "Zoom to " << s << "%";
+          CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+          zcmd->setActions([this, s](CCommandMenuItem* m) { setZoomFactor(s); });
+          zoomSubMenu->addEntry(zcmd);
+          zid++;
+       }
+
+       zoomSubMenu->addEntry("-", zid++);
+
+       for (auto jog : {-25, -10, 10, 25}) // These are somewhat arbitrary reasonable defaults also
+       {
+          std::ostringstream lab;
+          if (jog > 0)
+             lab << "Grow by " << jog << "%";
+          else
+             lab << "Shrink by " << -jog << "%";
+
+          CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+          zcmd->setActions(
+              [this, jog](CCommandMenuItem* m) { setZoomFactor(getZoomFactor() + jog); });
+          zoomSubMenu->addEntry(zcmd);
+          zid++;
+       }
+
+       zoomSubMenu->addEntry("-", zid++);
+       CCommandMenuItem* biggestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Largest"));
+       biggestZ->setActions([this](CCommandMenuItem* m) {
+          int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
+                                                    90, // See comment in setZoomFactor
+                                                    WINDOW_SIZE_X, WINDOW_SIZE_Y);
+          setZoomFactor(newZF);
+       });
+       zoomSubMenu->addEntry(biggestZ);
+       zid++;
+
+       CCommandMenuItem* smallestZ =
+           new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Smallest"));
+       smallestZ->setActions([this](CCommandMenuItem* m) { setZoomFactor(minimumZoom); });
+       zoomSubMenu->addEntry(smallestZ);
+       zid++;
+
+       zoomSubMenu->addEntry("-", zid++);
+       std::ostringstream zss;
+       zss << "Set " << zoomFactor << "% as default";
+       CCommandMenuItem* defaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(zss.str().c_str()));
+       defaultZ->setActions([this](CCommandMenuItem* m) {
+          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom",
+                                                 this->zoomFactor);
+       });
+       zoomSubMenu->addEntry(defaultZ);
+       zid++;
+
+       settingsMenu->addEntry(zoomSubMenu, "Zoom");
+       eid++;
     }
-
-    zoomSubMenu->addEntry( "-", zid++ );
-    
-    for(auto jog : { -25, -10, 10, 25 } ) // These are somewhat arbitrary reasonable defaults also
-    {
-        std::ostringstream lab;
-        if( jog > 0 )
-            lab << "Grow by " << jog << "%";
-        else
-            lab << "Shrink by " << -jog << "%";
-        
-        CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-        zcmd->setActions(
-            [this, jog](CCommandMenuItem* m) { setZoomFactor(getZoomFactor() + jog); });
-        zoomSubMenu->addEntry(zcmd); zid++;
-    }
-
-    zoomSubMenu->addEntry("-", zid++);
-    CCommandMenuItem *biggestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Largest"));
-    biggestZ->setActions([this](CCommandMenuItem* m) {
-       int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
-                                                 90, // See comment in setZoomFactor
-                                                 WINDOW_SIZE_X, WINDOW_SIZE_Y);
-       setZoomFactor(newZF);
-    });
-    zoomSubMenu->addEntry(biggestZ); zid++;
-
-    CCommandMenuItem *smallestZ = new CCommandMenuItem(CCommandMenuItem::Desc("Zoom to Smallest"));
-    smallestZ->setActions([this](CCommandMenuItem* m) {
-       setZoomFactor(minimumZoom);
-    });
-    zoomSubMenu->addEntry(smallestZ); zid++;
-
-    zoomSubMenu->addEntry("-", zid++);
-    std::ostringstream zss;
-    zss << "Set " << zoomFactor << "% as default";
-    CCommandMenuItem *defaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(zss.str().c_str()));
-    defaultZ->setActions([this](CCommandMenuItem* m) {
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom",
-                                              this->zoomFactor);
-    });
-    zoomSubMenu->addEntry(defaultZ); zid++;
-
-    settingsMenu->addEntry(zoomSubMenu, "Zoom"); eid++;
 
     COptionMenu* mpeSubMenu =
         new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
@@ -2791,5 +2803,13 @@ VSTGUI::CCommandMenuItem* SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* t
    toThis->addEntry(menu);
    return menu;
 }
+
+#if TARGET_VST3
+Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
+{
+   return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
+}
+
+#endif
 
 //------------------------------------------------------------------------------------------------

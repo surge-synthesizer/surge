@@ -72,7 +72,14 @@ public:
      ** So stop the superclass from doing that by just making this do nothing.
      */
      return Steinberg::kResultFalse;
-   } 
+   }
+
+   virtual Steinberg::tresult PLUGIN_API canResize() override
+   {
+      return Steinberg::kResultTrue;
+   }
+
+   virtual Steinberg::tresult PLUGIN_API onSize(Steinberg::ViewRect* newSize) override;
 #endif
 
 
@@ -138,13 +145,20 @@ private:
    */
    
    int zoomFactor;
- public:
+   bool zoomEnabled = true;
+
+public:
    void setZoomCallback(std::function< void(SurgeGUIEditor *) > f) {
        zoom_callback = f;
        setZoomFactor(getZoomFactor()); // notify the new callback
    }
    int  getZoomFactor() { return zoomFactor; }
    void setZoomFactor(int zf);
+   void disableZoom()
+   {
+      zoomEnabled = false;
+      setZoomFactor(100);
+   }
 
 private:
    /**
