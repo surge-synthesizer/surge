@@ -137,6 +137,7 @@ protected:
    std::set<SurgeGUIEditor*> viewsSet;
    int blockpos;
 
+   bool disableZoom;
    void handleZoom(SurgeGUIEditor *e);
    
    FpuState _fpuState;

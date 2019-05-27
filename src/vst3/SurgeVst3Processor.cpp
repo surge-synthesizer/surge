@@ -52,6 +52,21 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
       return result;
    }
 
+#if WINDOWS
+   Steinberg::FUnknownPtr<Steinberg::Vst::IHostApplication> hostApplication(context);
+   if (hostApplication)
+   {
+      String128 hostName;
+      hostApplication->getName(hostName);
+      char szString[256];
+      size_t nNumCharConverted;
+      wcstombs_s(&nNumCharConverted, szString, 256, hostName, 128);
+      std::string s(szString);
+      if (s == "Cakewalk")
+         disableZoom = true;
+   }
+#endif
+
    //---create Audio In/Out busses------
    // we want a stereo Input and a Stereo Output
    addAudioInput(STR16("Stereo In"), SpeakerArr::kStereo);
@@ -436,6 +451,9 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
    {
       SurgeGUIEditor* editor = new SurgeGUIEditor(this, surgeInstance.get());
 
+      if (disableZoom)
+         editor->disableZoom();
+
       editor->setZoomCallback( [this](SurgeGUIEditor *e) { handleZoom(e); } );
       
       return editor;
@@ -737,7 +755,9 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
         if (ipf)
         {
             Steinberg::ViewRect vr( 0, 0, newW, newH );
-            ipf->resizeView( e, &vr );
+            Steinberg::tresult res = ipf->resizeView(e, &vr);
+            if (res != Steinberg::kResultTrue)
+               Surge::UserInteractions::promptError("Your host failed to zoom VST3", "Host Error");
         }
             
         /*
