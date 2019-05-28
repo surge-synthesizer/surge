@@ -131,8 +131,9 @@ void RotarySpeakerEffect::init_ctrltypes()
 
 void RotarySpeakerEffect::process_only_control()
 {
-   lfo.set_rate(2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * BLOCK_SIZE);
-   lf_lfo.set_rate(0.7 * 2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * BLOCK_SIZE);
+   float frate = *f[rsp_rate] * (fxdata->p[rsp_rate].temposync ? storage->temposyncratio : 1.f);
+   lfo.set_rate(2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
+   lf_lfo.set_rate(0.7 * 2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
 
    lfo.process();
    lf_lfo.process();
@@ -140,8 +141,9 @@ void RotarySpeakerEffect::process_only_control()
 
 void RotarySpeakerEffect::process(float* dataL, float* dataR)
 {
-   lfo.set_rate(2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv * BLOCK_SIZE);
-   lf_lfo.set_rate(0.7 * 2 * M_PI * powf(2, *f[rsp_rate]) * dsamplerate_inv);
+   float frate = *f[rsp_rate] * (fxdata->p[rsp_rate].temposync ? storage->temposyncratio : 1.f);
+   lfo.set_rate(2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
+   lf_lfo.set_rate(0.7 * 2 * M_PI * powf(2, frate) * dsamplerate_inv);
 
    float precalc0 = (-2 - (float)lfo.i);
    float precalc1 = (-1 - (float)lfo.r);
