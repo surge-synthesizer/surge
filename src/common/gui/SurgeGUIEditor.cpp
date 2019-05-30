@@ -304,7 +304,11 @@ void SurgeGUIEditor::idle()
              cnpd->invalid();
       }
 
-      if (queue_refresh || synth->refresh_editor)
+      bool patchChanged = false;
+      if (patchname)
+          patchChanged = ((CPatchBrowser *)patchname)->sel_id != synth->patchid;
+
+      if (queue_refresh || synth->refresh_editor || patchChanged)
       {
          queue_refresh = false;
          synth->refresh_editor = false;
@@ -319,9 +323,11 @@ void SurgeGUIEditor::idle()
          }
          if (patchname)
          {
+            ((CPatchBrowser*)patchname)->sel_id = synth->patchid;
             ((CPatchBrowser*)patchname)->setLabel(synth->storage.getPatch().name);
             ((CPatchBrowser*)patchname)->setCategory(synth->storage.getPatch().category);
             ((CPatchBrowser*)patchname)->setAuthor(synth->storage.getPatch().author);
+            patchname->invalid();
          }
       }
 
