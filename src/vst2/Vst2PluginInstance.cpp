@@ -582,14 +582,10 @@ bool Vst2PluginInstance::tryInit()
 void Vst2PluginInstance::handleZoom(SurgeGUIEditor *e)
 {
     ERect *vr;
-    int newW, newH;
-    if (e->getRect(&vr))
-    {
-        float fzf = e->getZoomFactor() / 100.0;
-        newW = (vr->right - vr->left) * fzf;
-        newH = (vr->bottom - vr->top) * fzf;
-        sizeWindow( newW, newH );
-    }
+    float fzf = e->getZoomFactor() / 100.0;
+    int newW = WINDOW_SIZE_X * fzf;
+    int newH = WINDOW_SIZE_Y * fzf;
+    sizeWindow( newW, newH );
 
     VSTGUI::CFrame *frame = e->getFrame();
     if(frame)

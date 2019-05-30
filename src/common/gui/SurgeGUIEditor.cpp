@@ -93,10 +93,18 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    mod_editor = false;
 
    // init the size of the plugin
+   int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
+   float zf = userDefaultZoomFactor / 100.0;
+   
    rect.left = 0;
    rect.top = 0;
+#if TARGET_VST2 || TARGET_VST3   
+   rect.right = WINDOW_SIZE_X * zf;
+   rect.bottom = WINDOW_SIZE_Y * zf;
+#else
    rect.right = WINDOW_SIZE_X;
    rect.bottom = WINDOW_SIZE_Y;
+#endif   
    editor_open = false;
    queue_refresh = false;
    memset(param, 0, 1024 * sizeof(void*));
@@ -136,7 +144,6 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #endif
 
    zoom_callback = [](SurgeGUIEditor* f) {};
-   int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
    setZoomFactor(userDefaultZoomFactor);
    zoomInvalid = (userDefaultZoomFactor != 100);
 
@@ -1324,27 +1331,24 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    _idleTimer->start();
 #endif
 
-   CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
-   frame = new CFrame(wsize, this);
+   float fzf = getZoomFactor() / 100.0;
+#if TARGET_VST2   
+   CRect wsize(0, 0, WINDOW_SIZE_X * fzf, WINDOW_SIZE_Y * fzf);
+#else
+   CRect wsize( 0, 0, WINDOW_SIZE_Y, WINDOW_SIZE_Y );
+#endif
+   
+   CFrame *nframe = new CFrame(wsize, this);
 
    bitmapStore.reset(new SurgeBitmaps());
-   bitmapStore->setupBitmapsForFrame(frame);
+   bitmapStore->setupBitmapsForFrame(nframe);
 
-   /*
-   ** vstgui contains an error where setting the scale on the
-   ** frame does not set the scale on the frames getBacground
-   ** image. As a result we need to adjust the background in
-   ** vst2 and 3 with the 'additionalZoom' parameter, but also
-   ** we cannot use a shared instance of the background bitmap.
-   ** As such, create our own isntance of the background in these
-   ** cases.
-   */
-   bool myOwnBg = false;
-#if TARGET_VST2
-   myOwnBg = true;
-#endif
+   nframe->setZoom(fzf);
+   CScalableBitmap *cbm = bitmapStore->getBitmap(IDB_BG);
+   cbm->setExtraScaleFactor(getZoomFactor());
+   nframe->setBackground(cbm);
 
-   frame->setBackground(bitmapStore->getBitmap(IDB_BG));
+   frame = nframe;
    frame->open(parent, platformType);
    /*#if TARGET_AUDIOUNIT
            synth = (sub3_synth*)_effect;
@@ -1363,7 +1367,10 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    openOrRecreateEditor();
 
    if(getZoomFactor() != 100)
+   {
+       zoom_callback(this);
        zoomInvalid = true;
+   }
 
    return true;
 }
@@ -2515,19 +2522,8 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       zoomInvalid = true;
    }
    
-#if TARGET_VST3
-   /*
-   ** VST3 doesn't have this API available to it, so just assume for now
-   */
    float baseW = WINDOW_SIZE_X;
    float baseH = WINDOW_SIZE_Y;
-#else
-   ERect *baseUISize;
-   getRect (&baseUISize);
-
-   float baseW = (baseUISize->right - baseUISize->left);
-   float baseH = (baseUISize->top - baseUISize->bottom);
-#endif
 
    /*
    ** Window decoration takes up some of the screen so don't zoom to full screen dimensions.
