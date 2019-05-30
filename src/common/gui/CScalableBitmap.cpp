@@ -122,7 +122,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
         fn2 << "/Library/Audio/Plug-Ins/VST3/Surge.vst3/Contents/Resources/" << filename.str();
 #endif
         
-        std::cout << "FailBack from bad module SVG path to best guess: [" << fn2.str() << "]" << std::endl;
+        // std::cout << "FailBack from bad module SVG path to best guess: [" << fn2.str() << "]" << std::endl;
         svgImage = nsvgParseFromFile(fn2.str().c_str(), "px", 96);
     }
 #endif
