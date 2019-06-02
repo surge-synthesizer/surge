@@ -32,19 +32,19 @@ public:
    float bend1(float x);
    float bend2(float x);
    float bend3(float x);
-   virtual void attack();
-   virtual void release();
-   virtual void process_block();
+   virtual void attack() override;
+   virtual void release() override;
+   virtual void process_block() override;
 
-   virtual const char* get_title()
+   virtual const char* get_title() override
    {
       return "LFO";
    }
-   virtual int get_type()
+   virtual int get_type() override
    {
       return mst_lfo;
    }
-   virtual bool is_bipolar()
+   virtual bool is_bipolar() override
    {
       return true;
    }

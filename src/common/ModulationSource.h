@@ -177,7 +177,7 @@ public:
    virtual void attack(){};
    virtual void release(){};
    virtual void reset(){};
-   virtual float get_output()
+   virtual float get_output() 
    {
       return output;
    }
@@ -234,7 +234,7 @@ public:
          changed = true;
    }
 
-   virtual float get_output01()
+   virtual float get_output01() override
    {
       if (bipolar)
          return 0.5f + 0.5f * output;
@@ -259,13 +259,13 @@ public:
       return false;
    }
 
-   virtual void reset()
+   virtual void reset() override
    {
       target = 0.f;
       output = 0.f;
       bipolar = false;
    }
-   virtual void process_block()
+   virtual void process_block() override
    {
       float b = fabs(target - output);
       float a = 0.4f * b;
@@ -285,11 +285,11 @@ public:
       return true; // continue
    }
 
-   virtual bool is_bipolar()
+   virtual bool is_bipolar() override
    {
       return bipolar;
    }
-   virtual void set_bipolar(bool b)
+   virtual void set_bipolar(bool b) override
    {
       bipolar = b;
    }

@@ -66,7 +66,7 @@ public:
          attack();
    }
 
-   void attack()
+   virtual void attack() override
    {
       phase = 0;
       output = 0;
@@ -82,24 +82,24 @@ public:
       }
    }
 
-   virtual const char* get_title()
+   virtual const char* get_title() override
    {
       return "envelope";
    }
-   virtual int get_type()
+   virtual int get_type() override
    {
       return mst_adsr;
    }
-   virtual bool per_voice()
+   virtual bool per_voice() override
    {
       return true;
    }
-   virtual bool is_bipolar()
+   virtual bool is_bipolar() override
    {
       return false;
    }
 
-   void release()
+   void release() override
    {
       /*if(envstate == s_attack)
       {
@@ -135,7 +135,7 @@ public:
    {
       return (envstate == s_idle) && (idlecount > 0);
    }
-   virtual void process_block()
+   virtual void process_block() override
    {
       if (lc[mode].b)
       {

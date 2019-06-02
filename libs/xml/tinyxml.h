@@ -698,8 +698,8 @@ public:
 
 	const char*		Name()  const		{ return name.c_str (); }		///< Return the name of this attribute.
 	const char*		Value() const		{ return value.c_str (); }		///< Return the value of this attribute.
-	const int       IntValue() const;									///< Return the value of this attribute, converted to an integer.
-	const double	DoubleValue() const;								///< Return the value of this attribute, converted to a double.
+	int       IntValue() const;									///< Return the value of this attribute, converted to an integer.
+	double	DoubleValue() const;								///< Return the value of this attribute, converted to a double.
 
 	/** QueryIntValue examines the value string. It is an alternative to the
 		IntValue() method with richer error checking.
@@ -749,12 +749,12 @@ public:
 	/*	Attribute parsing starts: first letter of the name
 						 returns: the next char after the value end quote
 	*/
-	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding );
+	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
 	// Prints this Attribute to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const;
+	virtual void Print( FILE* cfile, int depth ) const override;
 
-	virtual void StreamOut( TIXML_OSTREAM * out ) const;
+	virtual void StreamOut( TIXML_OSTREAM * out ) const override;
 	// [internal use]
 	// Set the document pointer so the attribute can report errors.
 	void SetDocument( TiXmlDocument* doc )	{ document = doc; }
@@ -922,14 +922,14 @@ public:
 	TiXmlAttribute* LastAttribute()					{ return attributeSet.Last(); }
 
 	/// Creates a new Element and returns it - the returned element is a copy.
-	virtual TiXmlNode* Clone() const;
+	virtual TiXmlNode* Clone() const override;
 	// Print the Element to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const;
+	virtual void Print( FILE* cfile, int depth ) const override;
 
 	/*	Attribtue parsing starts: next char past '<'
 						 returns: next char past '>'
 	*/
-	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding );
+	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
 protected:
 
@@ -938,9 +938,9 @@ protected:
 
 	// Used to be public [internal use]
 	#ifdef TIXML_USE_STL
-	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag );
+	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag ) override;
 	#endif
-	virtual void StreamOut( TIXML_OSTREAM * out ) const;
+	virtual void StreamOut( TIXML_OSTREAM * out ) const override;
 
 	/*	[internal use]
 		Reads the "value" of the element -- another element, or text.
@@ -967,23 +967,23 @@ public:
 	virtual ~TiXmlComment()	{}
 
 	/// Returns a copy of this Comment.
-	virtual TiXmlNode* Clone() const;
+	virtual TiXmlNode* Clone() const override;
 	/// Write this Comment to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const;
+	virtual void Print( FILE* cfile, int depth ) const override;
 
 	/*	Attribtue parsing starts: at the ! of the !--
 						 returns: next char past '>'
 	*/
-	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding );
+	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
 protected:
 	void CopyTo( TiXmlComment* target ) const;
 
 	// used to be public
 	#ifdef TIXML_USE_STL
-	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag );
+	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag ) override;
 	#endif
-	virtual void StreamOut( TIXML_OSTREAM * out ) const;
+	virtual void StreamOut( TIXML_OSTREAM * out ) const override;
 
 private:
 
@@ -1015,20 +1015,20 @@ public:
 	void operator=( const TiXmlText& base )							 	{ base.CopyTo( this ); }
 
 	/// Write this text object to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const;
+	virtual void Print( FILE* cfile, int depth ) const override;
 
-	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding );
+	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
 protected :
 	///  [internal use] Creates a new Element and returns it.
-	virtual TiXmlNode* Clone() const;
+	virtual TiXmlNode* Clone() const override;
 	void CopyTo( TiXmlText* target ) const;
 
-	virtual void StreamOut ( TIXML_OSTREAM * out ) const;
+	virtual void StreamOut ( TIXML_OSTREAM * out ) const override;
 	bool Blank() const;	// returns true if all white space and new lines
 	// [internal use]
 	#ifdef TIXML_USE_STL
-	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag );
+	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag ) override;
 	#endif
 
 private:
@@ -1079,19 +1079,19 @@ public:
 	const char *Standalone() const		{ return standalone.c_str (); }
 
 	/// Creates a copy of this Declaration and returns it.
-	virtual TiXmlNode* Clone() const;
+	virtual TiXmlNode* Clone() const override;
 	/// Print this declaration to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const;
+	virtual void Print( FILE* cfile, int depth ) const override;
 
-	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding );
+	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
 protected:
 	void CopyTo( TiXmlDeclaration* target ) const;
 	// used to be public
 	#ifdef TIXML_USE_STL
-	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag );
+	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag ) override;
 	#endif
-	virtual void StreamOut ( TIXML_OSTREAM * out) const;
+	virtual void StreamOut ( TIXML_OSTREAM * out) const override;
 
 private:
 
@@ -1118,19 +1118,19 @@ public:
 	void operator=( const TiXmlUnknown& copy )										{ copy.CopyTo( this ); }
 
 	/// Creates a copy of this Unknown and returns it.
-	virtual TiXmlNode* Clone() const;
+	virtual TiXmlNode* Clone() const override;
 	/// Print this Unknown to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const;
+	virtual void Print( FILE* cfile, int depth ) const override;
 
-	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding );
+	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
 protected:
 	void CopyTo( TiXmlUnknown* target ) const;
 
 	#ifdef TIXML_USE_STL
-	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag );
+	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag ) override;
 	#endif
-	virtual void StreamOut ( TIXML_OSTREAM * out ) const;
+	virtual void StreamOut ( TIXML_OSTREAM * out ) const override;
 
 private:
 
@@ -1188,7 +1188,7 @@ public:
 		method (either TIXML_ENCODING_LEGACY or TIXML_ENCODING_UTF8 will force TinyXml
 		to use that encoding, regardless of what TinyXml might otherwise try to detect.
 	*/
-	virtual const char* Parse( const char* p, TiXmlParsingData* data = 0, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
+	virtual const char* Parse( const char* p, TiXmlParsingData* data = 0, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING ) override;
 
 	/** Get the root element -- the only top level element -- of the document.
 		In well formed XML, there should only be one. TinyXml is tolerant of
@@ -1210,7 +1210,7 @@ public:
 	/** Generally, you probably want the error string ( ErrorDesc() ). But if you
 		prefer the ErrorId, this function will fetch it.
 	*/
-	const int ErrorId()	const				{ return errorId; }
+	int ErrorId()	const				{ return errorId; }
 
 	/** Returns the location (if known) of the error. The first column is column 1, 
 		and the first row is row 1. A value of 0 means the row and column wasn't applicable
@@ -1260,16 +1260,16 @@ public:
 	void Print() const						{ Print( stdout, 0 ); }
 
 	/// Print this Document to a FILE stream.
-	virtual void Print( FILE* cfile, int depth = 0 ) const;
+	virtual void Print( FILE* cfile, int depth = 0 ) const override;
 	// [internal use]
 	void SetError( int err, const char* errorLocation, TiXmlParsingData* prevData, TiXmlEncoding encoding );
 
 protected :
-	virtual void StreamOut ( TIXML_OSTREAM * out) const;
+	virtual void StreamOut ( TIXML_OSTREAM * out) const override;
 	// [internal use]
-	virtual TiXmlNode* Clone() const;
+	virtual TiXmlNode* Clone() const override;
 	#ifdef TIXML_USE_STL
-	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag );
+	    virtual void StreamIn( TIXML_ISTREAM * in, TIXML_STRING * tag ) override;
 	#endif
 
 private:
