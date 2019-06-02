@@ -255,7 +255,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
       t = note_to_pitch_inv(detune + sync);
 
    float t_inv = rcp(t);
-   float g, gR;
+   float g = 0.0, gR = 0.0;
 
    switch (state[voice])
    {

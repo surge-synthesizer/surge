@@ -31,19 +31,19 @@ class DualDelayEffect : public Effect
 public:
    DualDelayEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~DualDelayEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "dualdelay";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
-   virtual int get_ringout_decay()
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
+   virtual int get_ringout_decay() override
    {
       return ringout_time;
    }
@@ -71,18 +71,18 @@ template <int v> class ChorusEffect : public Effect
 public:
    ChorusEffect<v>(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~ChorusEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "chorus";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
 
 private:
    lag<float, true> time[v];
@@ -101,19 +101,19 @@ public:
    lipol_ps mix alignas(16);
    FreqshiftEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~FreqshiftEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "freqshift";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
-   virtual int get_ringout_decay()
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
+   virtual int get_ringout_decay() override
    {
       return ringout_time;
    }
@@ -135,22 +135,22 @@ class Eq3BandEffect : public Effect
 public:
    Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~Eq3BandEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "EQ";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual int get_ringout_decay()
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual int get_ringout_decay() override
    {
       return 500;
    }
-   virtual void suspend();
+   virtual void suspend() override;
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override; 
+   virtual int group_label_ypos(int id) override;
 
 private:
    BiquadFilter band1, band2, band3;
@@ -166,23 +166,23 @@ class PhaserEffect : public Effect
 public:
    PhaserEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~PhaserEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "phaser";
    }
-   virtual void init();
-   virtual void process_only_control();
-   virtual void process(float* dataL, float* dataR);
-   virtual int get_ringout_decay()
+   virtual void init() override;
+   virtual void process_only_control() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual int get_ringout_decay() override
    {
       return 1000;
    }
-   virtual void suspend();
+   virtual void suspend() override;
    void setvars();
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
 
 private:
    lipol<float, true> feedback;
@@ -200,22 +200,22 @@ class RotarySpeakerEffect : public Effect
 public:
    RotarySpeakerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~RotarySpeakerEffect();
-   virtual void process_only_control();
-   virtual const char* get_effectname()
+   virtual void process_only_control() override;
+   virtual const char* get_effectname() override
    {
       return "rotary";
    }
-   virtual void process(float* dataL, float* dataR);
-   virtual int get_ringout_decay()
+   virtual void process(float* dataL, float* dataR) override;
+   virtual int get_ringout_decay() override
    {
       return max_delay_length >> 5;
    }
-   virtual void suspend();
-   virtual void init();
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void suspend() override;
+   virtual void init() override;
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
 
 protected:
    float buffer[max_delay_length];
@@ -241,22 +241,22 @@ class DistortionEffect : public Effect
 public:
    DistortionEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~DistortionEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "distortion";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
-   virtual int get_ringout_decay()
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
+   virtual int get_ringout_decay() override
    {
       return 1000;
    }
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
 
 private:
    BiquadFilter band1, band2, lp1, lp2;
@@ -282,22 +282,22 @@ public:
 
    VocoderEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~VocoderEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "vocoder";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
-   virtual int get_ringout_decay()
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override; 
+   virtual void suspend() override;
+   virtual int get_ringout_decay() override
    {
       return 500;
    }
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
 
 private:
    VectorizedSvfFilter mCarrierL alignas(16)[NVocoderVec];
@@ -328,22 +328,22 @@ class emphasize : public Effect
 public:
    emphasize(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~emphasize();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "emphasize";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
-   virtual int get_ringout_decay()
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
+   virtual int get_ringout_decay() override
    {
       return 50;
    }
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
 
 private:
    BiquadFilter EQ;
@@ -364,25 +364,25 @@ class ConditionerEffect : public Effect
 public:
    ConditionerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~ConditionerEffect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "conditioner";
    }
-   virtual void init();
-   virtual void process_only_control();
-   virtual void process(float* dataL, float* dataR);
-   virtual int get_ringout_decay()
+   virtual void init() override;
+   virtual void process_only_control() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual int get_ringout_decay() override
    {
       return 100;
    }
-   virtual void suspend();
+   virtual void suspend() override;
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual int vu_type(int id);
-   virtual int vu_ypos(int id);
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual int vu_type(int id) override;
+   virtual int vu_ypos(int id) override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
 
 private:
    BiquadFilter band1, band2;
@@ -414,19 +414,19 @@ class Reverb1Effect : public Effect
 public:
    Reverb1Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~Reverb1Effect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "reverb";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
    void setvars(bool init);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
-   virtual int get_ringout_decay()
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
+   virtual int get_ringout_decay() override
    {
       return ringout_time;
    }
@@ -506,20 +506,20 @@ class Reverb2Effect : public Effect
 public:
    Reverb2Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~Reverb2Effect();
-   virtual const char* get_effectname()
+   virtual const char* get_effectname() override
    {
       return "reverb2";
    }
-   virtual void init();
-   virtual void process(float* dataL, float* dataR);
-   virtual void suspend();
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
    void setvars(bool init);
    void calc_size(float scale);
-   virtual void init_ctrltypes();
-   virtual void init_default_values();
-   virtual const char* group_label(int id);
-   virtual int group_label_ypos(int id);
-   virtual int get_ringout_decay()
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
+   virtual int get_ringout_decay() override
    {
       return ringout_time;
    }

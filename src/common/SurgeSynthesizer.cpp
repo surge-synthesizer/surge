@@ -583,7 +583,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
             */
             if ((v->state.key == key) && (v->state.channel == channel))
             {
-               int activateVoiceKey, activateVoiceChannel;
+	       int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overriden
 
                // v->release();
                if (!mpeEnabled)
