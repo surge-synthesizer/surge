@@ -50,10 +50,17 @@ public:
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
    virtual ~osc_sine();
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+
    quadr_osc sinus;
    double phase;
    float driftlfo, driftlfo2;
    lag<double> FMdepth;
+
+   int id_mode;
+
+   float valueFromSinAndCos(float svalue, float cvalue);
 };
 
 class FMOscillator : public Oscillator
