@@ -524,6 +524,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 1;
       break;
+   case ct_sineoscmode:
+      val_min.i = 0;
+      val_max.i = 8;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
    default:
    case ct_none:
       sprintf(dispname, "-");
@@ -847,6 +853,10 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_character:
          sprintf(txt, "%s", character_abberations[limit_range(i, 0, (int)n_charactermodes - 1)]);
+         break;
+      case ct_sineoscmode:
+         // FIXME - do better than this of course
+         sprintf(txt, "%d", i);
          break;
       case ct_oscroute:
          switch (i)

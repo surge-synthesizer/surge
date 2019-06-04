@@ -83,6 +83,7 @@ enum ctrltypes
    ct_stereowidth,
    ct_bool_fm,
    ct_character,
+   ct_sineoscmode,
    num_ctrltypes,
 };
 
