@@ -22,9 +22,12 @@ class Wavetable
 {
 public:
    Wavetable();
+   ~Wavetable();
    void Copy(Wavetable* wt);
    bool BuildWT(void* wdata, wt_header& wh, bool AppendSilence);
    void MipMapWT();
+
+   void allocPointers(size_t newSize);
 
 public:
    int size;
@@ -34,8 +37,11 @@ public:
    float dt;
    float* TableF32WeakPointers[max_mipmap_levels][max_subtables];
    short* TableI16WeakPointers[max_mipmap_levels][max_subtables];
-   float TableF32Data[max_wtable_samples];
-   short TableI16Data[max_wtable_samples];
+
+   size_t dataSizes;
+   float *TableF32Data;
+   short *TableI16Data;
+   
    int current_id, queue_id;
    bool refresh_display;
    char queue_filename[256];
