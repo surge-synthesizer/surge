@@ -1341,7 +1341,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 #if TARGET_VST2   
    CRect wsize(0, 0, WINDOW_SIZE_X * fzf, WINDOW_SIZE_Y * fzf);
 #else
-   CRect wsize( 0, 0, WINDOW_SIZE_Y, WINDOW_SIZE_Y );
+   CRect wsize( 0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y );
 #endif
    
    CFrame *nframe = new CFrame(wsize, this);
