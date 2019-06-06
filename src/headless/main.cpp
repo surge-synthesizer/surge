@@ -84,6 +84,7 @@ void statsFromPlayingEveryPatch()
    };
 
    Surge::Headless::playOnEveryPatch(surge, scale, callBack);
+   delete surge;
 }
 
 void playSomeBach()

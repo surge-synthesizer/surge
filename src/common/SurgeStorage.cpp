@@ -249,7 +249,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
    load_wt(0, &getPatch().scene[0].osc[0].wt);
 
-   memset(&WindowWT, 0, sizeof(WindowWT));
+   // WindowWT is a WaveTable which now has a constructor so don't do this
+   // memset(&WindowWT, 0, sizeof(WindowWT));
    load_wt_wt(datapath + "windows.wt", &WindowWT);
 }
 
