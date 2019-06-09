@@ -96,6 +96,7 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
 @implementation SurgeNSView
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
+    cont->setZoomCallback( []( SurgeGUIEditor *ed ) {} );
     self = [super initWithFrame: NSMakeRect (0, 0, size.width / 2, size.height / 2)];
 
     idleTimer = nil;
