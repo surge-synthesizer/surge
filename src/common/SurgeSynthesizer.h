@@ -58,7 +58,7 @@ public:
 
    // methods
 public:
-   SurgeSynthesizer(PluginLayer* parent);
+   SurgeSynthesizer(PluginLayer* parent, std::string suppliedDataPath="");
    virtual ~SurgeSynthesizer();
    void playNote(char channel, char key, char velocity, char detune);
    void releaseNote(char channel, char key, char velocity);
