@@ -37,9 +37,10 @@
 
 using namespace std;
 
-SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent)
+SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedDataPath)
     //: halfband_AL(false),halfband_AR(false),halfband_BL(false),halfband_BR(false),
-    : hpA(&storage)
+    : storage(suppliedDataPath)
+    , hpA(&storage)
    , hpB(&storage)
    , _parent(parent)
    , halfbandA(6, true)
