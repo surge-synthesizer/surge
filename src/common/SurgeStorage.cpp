@@ -23,8 +23,8 @@
 #include "ConfigurationXml.h"
 #else
 #include <windows.h>
-#include <Shellapi.h>
-#include <Shlobj.h>
+#include <shellapi.h>
+#include <shlobj.h>
 #endif
 
 #include <sstream>
