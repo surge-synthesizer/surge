@@ -138,6 +138,8 @@ protected:
    int blockpos;
 
    bool disableZoom;
+   bool haveZoomed = false;
+   int lastZoom = -1;
    void handleZoom(SurgeGUIEditor *e);
    
    FpuState _fpuState;
