@@ -2676,7 +2676,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     mpeSubMenu->forget();
 
     // Mouse behavior
-
+    // Mouse behavior
     int mid = 0;
 
     COptionMenu* mouseSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
@@ -2733,7 +2733,51 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     mouseSubMenu->forget();
 
     // End Mouse behavior
+    settingsMenu->addSeparator(eid++);
+    
 
+    int tid=0;
+    COptionMenu *tuningSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                 VSTGUI::COptionMenu::kNoDrawStyle |
+                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+    addCallbackMenu(tuningSubMenu, "Set to Standard Tuning",
+                    [this]()
+                    {
+                        this->synth->storage.init_tables();
+                    }
+        );
+    tid++;
+
+    addCallbackMenu(tuningSubMenu, "Apply .scl file tuning",
+                    [this]()
+                    {
+                        auto cb = [this](std::string sf)
+                        {
+                            auto sc = Surge::Storage::readSCLFile(sf);
+                            this->synth->storage.retuneToScale(sc);
+                        };
+                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
+                                                                      ".scl",
+                                                                      cb);
+                    }
+        );
+    tid++;
+    tuningSubMenu->addSeparator(tid++);
+    
+    addCallbackMenu(tuningSubMenu, "Apply .kbm file mapping",
+                    [this]()
+                    {
+                        Surge::UserInteractions::promptError("KBM File Mappings are not yet supported in Surge",
+                                                             "Unsupported",
+                                                             this);
+                    }
+        );
+
+    settingsMenu->addEntry(tuningSubMenu, "Tunings (experimental)");
+    eid++;
+    tuningSubMenu->forget();
+    
     settingsMenu->addSeparator(eid++);
 
     addCallbackMenu(settingsMenu, "Open User Data Folder", [this]() {

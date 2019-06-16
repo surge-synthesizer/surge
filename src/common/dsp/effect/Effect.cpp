@@ -268,8 +268,8 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
       feedback.set_target_smoothed(0.5f * amp_to_linear(*f[3]));
       float rate =
           envelope_rate_linear(-*f[1]) * (fxdata->p[1].temposync ? storage->temposyncratio : 1.f);
-      float tm =
-          note_to_pitch(12 * *f[0]) * (fxdata->p[0].temposync ? storage->temposyncratio_inv : 1.f);
+      float tm = storage->note_to_pitch(12 * *f[0]) *
+                 (fxdata->p[0].temposync ? storage->temposyncratio_inv : 1.f);
       for (int i = 0; i < v; i++)
       {
          lfophase[i] += rate;

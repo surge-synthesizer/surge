@@ -225,7 +225,7 @@ void Reverb1Effect::process(float* dataL, float* dataR)
    mix.set_target_smoothed(*f[rp_mix]);
    width.set_target_smoothed(db_to_linear(*f[rp_width]));
 
-   int pdtime = (int)(float)samplerate * note_to_pitch(12 * *f[rp_predelay]) *
+   int pdtime = (int)(float)samplerate * storage->note_to_pitch(12 * *f[rp_predelay]) *
                 (fxdata->p[rp_predelay].temposync ? storage->temposyncratio_inv : 1.f);
 
    const __m128 one4 = _mm_set1_ps(1.f);

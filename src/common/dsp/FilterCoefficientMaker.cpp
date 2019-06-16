@@ -11,8 +11,10 @@ FilterCoefficientMaker::FilterCoefficientMaker()
    Reset();
 }
 
-void FilterCoefficientMaker::MakeCoeffs(float Freq, float Reso, int Type, int SubType)
+void FilterCoefficientMaker::MakeCoeffs(
+    float Freq, float Reso, int Type, int SubType, SurgeStorage* storageI)
 {
+   storage = storageI;
    switch (Type)
    {
    case fut_lp12:
@@ -153,7 +155,7 @@ double resoscale4Pole(double reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_SVF(float Freq, float Reso, bool FourPole)
 {
-   double f = 440.f * note_to_pitch(Freq);
+   double f = 440.f * storage->note_to_pitch(Freq);
    double F1 = 2.0 * sin(M_PI * min(0.11, f * (0.25 * samplerate_inv))); // 4x oversampling
    // double Q1 = 2.0 - Reso*2.0;
 
@@ -188,7 +190,7 @@ void FilterCoefficientMaker::Coeff_LP12(float freq, float reso, int subtype)
 
        float cosi,
        sinu;
-   note_to_omega(freq, sinu, cosi);
+   storage->note_to_omega(freq, sinu, cosi);
 
    double alpha = sinu * Map2PoleResonance(reso, freq, subtype);
    if (subtype != st_Smooth)
@@ -225,7 +227,7 @@ void FilterCoefficientMaker::Coeff_LP24(float freq, float reso, int subtype)
 
        double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
    float cosi, sinu;
-   note_to_omega(freq, sinu, cosi);
+   storage->note_to_omega(freq, sinu, cosi);
 
    double alpha = sinu * Q2inv;
    if (subtype != st_Smooth)
@@ -248,7 +250,7 @@ void FilterCoefficientMaker::Coeff_HP12(float freq, float reso, int subtype)
 
        double Q2inv = Map2PoleResonance(reso, freq, subtype);
    float cosi, sinu;
-   note_to_omega(freq, sinu, cosi);
+   storage->note_to_omega(freq, sinu, cosi);
 
    double alpha = sinu * Q2inv;
    if (subtype != 0)
@@ -271,7 +273,7 @@ void FilterCoefficientMaker::Coeff_HP24(float freq, float reso, int subtype)
 
        double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
    float cosi, sinu;
-   note_to_omega(freq, sinu, cosi);
+   storage->note_to_omega(freq, sinu, cosi);
 
    double alpha = sinu * Q2inv;
    if (subtype != 0)
@@ -297,7 +299,7 @@ void FilterCoefficientMaker::Coeff_BP12(float freq, float reso, int subtype)
        double Q2inv = Map2PoleResonance(reso, freq, subtype);
    double Q = 0.5 / Q2inv;
    float cosi, sinu;
-   note_to_omega(freq, sinu, cosi);
+   storage->note_to_omega(freq, sinu, cosi);
 
    double alpha = sinu * Q2inv;
    if (subtype != 0)
@@ -329,7 +331,7 @@ void FilterCoefficientMaker::Coeff_BR12(float freq, float reso, int subtype)
       Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
 
    float cosi, sinu;
-   note_to_omega(freq, sinu, cosi);
+   storage->note_to_omega(freq, sinu, cosi);
 
    double alpha = sinu * Q2inv, b0 = 1, b1 = -2 * cosi, b2 = 1, a0 = 1 + alpha, a1 = -2 * cosi,
           a2 = 1 - alpha, a0inv = 1 / a0;
@@ -339,8 +341,8 @@ void FilterCoefficientMaker::Coeff_BR12(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_LP4L(float freq, float reso, int subtype)
 {
-   double gg =
-       limit_range(((double)440 * note_to_pitch(freq) * dsamplerate_os_inv), 0.0, 0.187); // gg
+   double gg = limit_range(((double)440 * storage->note_to_pitch(freq) * dsamplerate_os_inv), 0.0,
+                           0.187); // gg
 
    float t_b1 = 1.f - exp(-2 * M_PI * gg);
    float q = min(2.15f * limit_range(reso, 0.f, 1.f), 0.5f / (t_b1 * t_b1 * t_b1 * t_b1));
@@ -356,7 +358,7 @@ void FilterCoefficientMaker::Coeff_LP4L(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
 {
-   float dtime = (1.f / 440.f) * note_to_pitch(-freq);
+   float dtime = (1.f / 440.f) * storage->note_to_pitch(-freq);
    dtime = dtime * dsamplerate_os -
            FIRoffset; // 1 sample for feedback, 1 sample for the IIR-filter without resonance
    dtime = limit_range(dtime, (float)FIRipol_N, (float)MAX_FB_COMB - FIRipol_N);
@@ -373,7 +375,7 @@ void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_SNH(float freq, float reso, int subtype)
 {
-   float dtime = (1.f / 440.f) * note_to_pitch(-freq) * dsamplerate_os;
+   float dtime = (1.f / 440.f) * storage->note_to_pitch(-freq) * dsamplerate_os;
    double v1 = 1.0 / dtime;
 
    float c[n_cm_coeffs];
@@ -484,4 +486,6 @@ void FilterCoefficientMaker::Reset()
    memset(C, 0, sizeof(float) * n_cm_coeffs);
    memset(dC, 0, sizeof(float) * n_cm_coeffs);
    memset(tC, 0, sizeof(float) * n_cm_coeffs);
+
+   storage = nullptr;
 }

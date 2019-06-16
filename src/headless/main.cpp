@@ -7,6 +7,8 @@
 #include "Stress.h"
 #include "SurgeError.h"
 
+#include "Tunings.h"
+
 void simpleOscillatorToStdOut()
 {
    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
@@ -87,6 +89,32 @@ void statsFromPlayingEveryPatch()
    delete surge;
 }
 
+void testTuning()
+{
+   SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
+
+   Surge::Storage::Scale s = Surge::Storage::readSCLFile("/Users/paul/dev/music/scl/05-22.scl");
+    std::cout << s;
+
+    auto n2f = [surge](int n)
+        {
+            std::cout << "N2F " << n
+            << " " << surge->storage.note_to_pitch(n)
+            << " " << surge->storage.note_to_pitch(n) * 16.35159783
+            << std::endl;
+        };
+   //auto s = Surge::Storage::readSCLFile( "/Users/paul/tmp/scl/temp12k4.scl" );
+   //auto s = Surge::Storage::readSCLFile( "/Users/paul/dev/music/surge/flat.scl" );
+   //auto s = Surge::Storage::readSCLFile("/Users/paul/tmp/scl/lumma_12_strangeion.scl");
+   
+   std::cout << "BEFORE\n";
+   n2f(0); n2f(24); n2f(25); n2f(60); n2f(57); n2f(48);
+   surge->storage.retuneToScale(s);
+
+   std::cout << "AFTER\n";
+   n2f(0); n2f(24); n2f(25);  n2f(60); n2f(57); n2f(48);
+}
+
 void playSomeBach()
 { 
    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
@@ -126,16 +154,19 @@ int main(int argc, char** argv)
    try 
    {
       // simpleOscillatorToStdOut();
-      statsFromPlayingEveryPatch();
+       //statsFromPlayingEveryPatch();
       //playSomeBach();
       //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
       // Surge::Headless::pullInitSamplesWithNoNotes(1000);
+       testTuning();
    }
    catch( Surge::Error &e )
    {
 	std::cout << "SurgeError: " << e.getTitle() << "\n" << e.getMessage() << "\n";
 	return 1;
    }
+
+   // playSomeBach();
 
    return 0;
 }
