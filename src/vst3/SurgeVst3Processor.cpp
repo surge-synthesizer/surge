@@ -456,6 +456,9 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
          editor->disableZoom();
 
       editor->setZoomCallback( [this](SurgeGUIEditor *e) { handleZoom(e); } );
+
+      if( haveZoomed )
+          editor->setZoomFactor(lastZoom);
       
       return editor;
    }
@@ -779,5 +782,8 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
         
         frame->setDirty( true );
         frame->invalid();
+
+        haveZoomed = true;
+        lastZoom = e->getZoomFactor();
     }
 }
