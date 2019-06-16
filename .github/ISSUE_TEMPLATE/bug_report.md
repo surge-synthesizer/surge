@@ -1,11 +1,21 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a bug report to help us improve
+title: ''
+labels: ''
+assignees: ''
 
 ---
 
 **Describe the bug**
 A clear and concise description of what the bug is.
+
+**Please let us know your surge version**
+This information is all in the menu/about screen
+
+* Surge Version: 
+* Plugin type (VST2, 3 or AU)
+* Bits (32/64)
 
 **To Reproduce**
 Steps to reproduce the behavior:
