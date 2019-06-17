@@ -147,11 +147,27 @@ void spawn_miniedit_text(char* c, int maxchars)
 #elif LINUX
 
 #include "UserInteractions.h"
+#include <string.h>
 
 void spawn_miniedit_text(char* c, int maxchars)
 {
    // FIXME: Implement text edit popup on Linux.
-   Surge::UserInteractions::promptError( "miniedit_text is not implemented on linux", "Unimplemented Feature" );
+   char cmd[1024];
+   snprintf(cmd, 1024, "zenity --entry --entry-text \"%s\"", c );
+   FILE *z = popen( cmd, "r" );
+   if( ! z )
+   {
+      return;
+   }
+   char buffer[ 1024 ];
+   if (!fscanf(z, "%1024s", buffer))
+   {
+      return;
+   }
+   pclose(z);
+
+   strncpy( c, buffer, maxchars);
+
 }
 
 #endif
