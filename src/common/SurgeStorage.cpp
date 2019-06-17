@@ -1190,11 +1190,9 @@ float envelope_rate_linear(float x)
 
 void SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
 {
-   int scale0 = 48;  // This is the 1.0 point
-   float value0 = 16; 
-
    float pitches[512];
-   int pos0 = 256 + scale0;
+   int pos0 = 256 + scaleConstantNote();
+   float pitchMod = log(scaleConstantPitch())/log(2) - 1;
    pitches[pos0] = 1.0;
    for (int i=0; i<512; ++i)
    {
@@ -1216,7 +1214,7 @@ void SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
            float mul = pow( s.tones[s.count-1].floatValue, rounds);
            pitches[i] = s.tones[thisRound].floatValue + rounds * (s.tones[s.count - 1].floatValue - 1.0);
            float otp = table_pitch[i];
-           table_pitch[i] = pow( 2.0, pitches[i] + 3 );
+           table_pitch[i] = pow( 2.0, pitches[i] + pitchMod );
 
 #if DEBUG_SCALES
            if( i > 296 && i < 340 )
