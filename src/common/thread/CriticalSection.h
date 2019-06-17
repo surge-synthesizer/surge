@@ -30,7 +30,7 @@ public:
     pthread_mutex_lock(&mutex);
     refcount++;
     assert(refcount > 0);
-    assert(!(refcount > 5)); // if its >5 there's some crazy *§%* going on ^^
+    assert(!(refcount > 10)); // if its >10 there's some crazy *§%* going on ^^
   }
   void leave(){
     refcount--;
