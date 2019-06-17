@@ -3,7 +3,18 @@
 #include <iomanip>
 #include <sys/types.h>
 #include <unistd.h>
+#include <thread>
 
+/*
+** In June 2019, @baconpaul chose to implement these with an attempt
+** to fork/exec a zenity. (He also did this for mini edit). This is not
+** ideal. Properly you would somehow asynchronously interact with 
+** vstgui and so on, which @jjs started. But we kinda gotta do something.
+**
+** If you want to come along and rip out these zenity calls and replace them
+** with vstgui, please do so! This is purely tactical stuff to get us
+** not silently failing.
+*/
 namespace Surge
 {
 
@@ -13,6 +24,17 @@ namespace UserInteractions
 void promptError(const std::string &message, const std::string &title,
                  SurgeGUIEditor *guiEditor)
 {
+   if (vfork()==0)
+   {
+      if (execlp("zenity", "zenity",
+                 "--error",
+                 "--text", message.c_str(),
+                 "--title", title.c_str(),
+                 (char*)nullptr) < 0)
+      {
+         exit(0);
+      }
+   }
     std::cerr << "Surge Error\n"
               << title << "\n"
               << message << "\n" << std::flush;
@@ -55,8 +77,22 @@ void promptFileOpenDialog(const std::string& initialDirectory,
                           std::function<void(std::string)> callbackOnOpen,
                           SurgeGUIEditor* guiEditor)
 {
-   UserInteractions::promptError("OpenFileDialog is unimplemented in this version of Surge. Sorry!",
-                                 "Unimplemented Function", guiEditor);
+   /*
+   ** This is a blocking model which will cause us problems I am sure
+   */
+   FILE *z = popen( "zenity --file-selection", "r" );
+   if( ! z )
+   {
+      return;
+   }
+   char buffer[ 1024 ];
+   if (!fscanf(z, "%1024s", buffer))
+   {
+      return;
+   }
+   pclose(z);
+
+   callbackOnOpen(buffer);
 }
 };
 

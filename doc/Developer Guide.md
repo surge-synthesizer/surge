@@ -210,8 +210,8 @@ sudo apt-get install ajmidid
 The run jac and ajmidid in separate terminals
 
 ```
-jack -d alsa -X alsa_midi
-ajmidid -e
+jackd -d alsa -X alsa_midi
+a2jmidid -e
 ```
 
 Now start surge with carla-single
