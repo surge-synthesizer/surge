@@ -250,9 +250,11 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    float sync = min((float)l_sync.v, (12 + 72 + 72) - pitch);
    float t;
    if (oscdata->p[5].absolute)
-      t = storage->note_to_pitch_inv(detune * pitchmult_inv * (1.f / 440.f) + sync);
+      t = storage->note_to_pitch_inv(detune * pitchmult_inv * (1.f / 440.f) + sync + storage->scaleConstantNote()) *
+          storage->scaleConstantPitch();
    else
-      t = storage->note_to_pitch_inv(detune + sync);
+      t = storage->note_to_pitch_inv(detune + sync + storage->scaleConstantNote()) *
+          storage->scaleConstantPitch();
 
    float t_inv = rcp(t);
    float g = 0.0, gR = 0.0;

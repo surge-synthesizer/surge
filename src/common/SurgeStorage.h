@@ -553,8 +553,11 @@ public:
    float note_to_pitch(float x);
    float note_to_pitch_inv(float x);
    void note_to_omega(float, float&, float&);
-   void retuneToScale(const Surge::Storage::Scale& s);
 
+   void retuneToScale(const Surge::Storage::Scale& s);
+   inline int scaleConstantNote() { return 48; }
+   inline float scaleConstantPitch() { return 16.0; }
+   
 private:
    TiXmlDocument snapshotloader;
    std::vector<Parameter> clipboard_p;
