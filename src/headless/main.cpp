@@ -93,7 +93,8 @@ void testTuning()
 {
    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
 
-   Surge::Storage::Scale s = Surge::Storage::readSCLFile("/Users/paul/dev/music/scl/05-22.scl");
+   //Surge::Storage::Scale s = Surge::Storage::readSCLFile("/Users/paul/dev/music/test_scl/Q4.scl" );
+   Surge::Storage::Scale s = Surge::Storage::readSCLFile("/Users/paul/dev/music/test_scl/12-flat.scl" );
     std::cout << s;
 
     auto n2f = [surge](int n)
@@ -108,11 +109,11 @@ void testTuning()
    //auto s = Surge::Storage::readSCLFile("/Users/paul/tmp/scl/lumma_12_strangeion.scl");
    
    std::cout << "BEFORE\n";
-   n2f(0); n2f(24); n2f(25); n2f(60); n2f(57); n2f(48);
+   //n2f(0); n2f(24); n2f(25); n2f(60); n2f(57); n2f(48);
    surge->storage.retuneToScale(s);
 
-   std::cout << "AFTER\n";
-   n2f(0); n2f(24); n2f(25);  n2f(60); n2f(57); n2f(48);
+   //std::cout << "AFTER\n";
+   //n2f(0); n2f(24); n2f(25);  n2f(60); n2f(57); n2f(48);
 }
 
 void playSomeBach()

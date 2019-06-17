@@ -1190,49 +1190,58 @@ float envelope_rate_linear(float x)
 
 void SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
 {
-   int scale0 = 48; 
+   int scale0 = 48;  // This is the 1.0 point
    float value0 = 16; 
-   
-   for (int i = 0; i < 512; ++i)
+
+   float pitches[512];
+   int pos0 = 256 + scale0;
+   pitches[pos0] = 1.0;
+   for (int i=0; i<512; ++i)
    {
-      int noteBase = i - 256;
-      int distanceFromScale0 = noteBase - scale0 - 1;
-      int turns = 0;
-      float baseValue = value0;
-      while (distanceFromScale0 < 0)
-      {
-         distanceFromScale0 += s.count;
-         baseValue /= 2;
-      }
-      while (distanceFromScale0 >= s.count)
-      {
-         distanceFromScale0 -= s.count;
-         baseValue *= 2;
-      }
-#if DEBUG_SCALE      
-      if ((i>= 254 && i <=258) || ( i >= 302 && i <= 308))
-          std::cout << i << " " << std::setw(5) << noteBase << " or " << i << " D0=" << std::setw(3) << distanceFromScale0
-                    << " PP=" << std::setw(10) << table_pitch[i] 
-                    << " bv=" << std::setw(5) << baseValue
-                    << " sc=" << std::setw(10) << s.tones[distanceFromScale0].floatValue
-                    << " exp=" << std::setw(10) << pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f)
-                    << " sc*bv=" << std::setw(10) << pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f) * baseValue
-                    << " diff=" << std::setw(10) << pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f) * baseValue - table_pitch[i]
-              ;
-#endif
+       int distanceFromScale0 = i - pos0;
+       
+       if( distanceFromScale0 == 0 )
+       {
+       }
+       else 
+       {
+           int rounds = (distanceFromScale0-1) / s.count;
+           int thisRound = (distanceFromScale0-1) % s.count;
 
-      table_pitch[i] = pow( 2.0f, s.tones[distanceFromScale0].floatValue - 1.0f) * baseValue;
+           if( thisRound < 0 )
+           {
+               thisRound += s.count;
+               rounds -= 1;
+           }
+           float mul = pow( s.tones[s.count-1].floatValue, rounds);
+           pitches[i] = s.tones[thisRound].floatValue + rounds * (s.tones[s.count - 1].floatValue - 1.0);
+           float otp = table_pitch[i];
+           table_pitch[i] = pow( 2.0, pitches[i] + 3 );
 
-#if DEBUG_SCALE      
-      if ((i>= 254 && i <=258) || ( i >= 302 && i <= 308))
-         std::cout << " NEWP=" << table_pitch[i] << std::endl;
-#endif
-      
+#if DEBUG_SCALES
+           if( i > 296 && i < 340 )
+               std::cout << "PITCH: i=" << i << " n=" << i - 256 << " r=" << rounds << " t=" << thisRound
+                         << " p=" << pitches[i]
+                         << " t=" << s.tones[thisRound].floatValue
+                         << " tp=" << table_pitch[i]
+                         << " otp=" << otp
+                         << " diff=" << table_pitch[i] - otp
+                         
+                   //<< " l2p=" << log(otp)/log(2.0)
+                   //<< " l2p-p=" << log(otp)/log(2.0) - pitches[i] - rounds - 3
+                         << std::endl;
+#endif           
+       }
+   }
+   
+   for( int i=0; i<512; ++i )
+   {
       table_pitch_inv[i] = 1.f / table_pitch[i];
       table_note_omega[0][i] =
           (float)sin(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
       table_note_omega[1][i] =
           (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
+
    }
 }
 

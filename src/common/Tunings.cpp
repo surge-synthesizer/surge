@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <math.h>
 
 /*
  From: http://huygens-fokker.org/scala/scl_format.html
@@ -67,7 +68,6 @@ Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
          {
             t.type = Tone::kToneCents;
             t.cents = atof(line.c_str());
-            t.floatValue = t.cents / 1200.0 + 1.0;
          }
          else
          {
@@ -75,16 +75,21 @@ Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
             auto slashPos = line.find("/");
             if (slashPos == std::string::npos)
             {
-               t.ratio_d = atoi(line.c_str());
-               t.ratio_n = 1;
+               t.ratio_n = atoi(line.c_str());
+               t.ratio_d = 1;
             }
             else
             {
                t.ratio_n = atoi(line.substr(0, slashPos).c_str());
                t.ratio_d = atoi(line.substr(slashPos + 1).c_str());
             }
-            t.floatValue = 1.0 * t.ratio_n / t.ratio_d;
+
+            // 2^(cents/1200) = n/d
+            // cents = 1200 * log(n/d) / log(2)
+            
+            t.cents = 1200 * log(1.0 * t.ratio_n/t.ratio_d) / log(2.0);
          }
+         t.floatValue = t.cents / 1200.0 + 1.0;
          res.tones.push_back(t);
 
          break;
@@ -101,7 +106,7 @@ std::ostream& Surge::Storage::operator<<(std::ostream& os, const Surge::Storage:
       os << t.cents;
    else
       os << t.ratio_n << " / " << t.ratio_d;
-   os << "  (" << t.floatValue << ")";
+   os << "  (f=" << t.floatValue << " c=" << t.cents << ")";
    return os;
 }
 

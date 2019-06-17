@@ -2754,6 +2754,15 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                     {
                         auto cb = [this](std::string sf)
                         {
+                            std::string sfx = ".scl";
+                            if( sf.length() >= sfx.length())
+                            {
+                                if( sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0 )
+                                {
+                                    Surge::UserInteractions::promptError( "Please only select .scl files", "Invalid Choice" );
+                                    return;
+                                }
+                            }
                             auto sc = Surge::Storage::readSCLFile(sf);
                             this->synth->storage.retuneToScale(sc);
                         };
