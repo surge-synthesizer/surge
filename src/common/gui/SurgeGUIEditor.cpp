@@ -2760,6 +2760,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                                 if( sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0 )
                                 {
                                     Surge::UserInteractions::promptError( "Please only select .scl files", "Invalid Choice" );
+                                    std::cout << "FILE is [" << sf << "]" << std::endl;
                                     return;
                                 }
                             }
