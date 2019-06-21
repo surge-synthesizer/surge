@@ -86,10 +86,14 @@ void promptFileOpenDialog(const std::string& initialDirectory,
       return;
    }
    char buffer[ 1024 ];
-   if (!fscanf(z, "%1024s", buffer))
+   if (fgets(buffer, sizeof(buffer), z) == NULL)
    {
       return;
    }
+   for( int i=0; i<1024; ++i )
+      if( buffer[i] == '\n' )
+         buffer[i] = 0;
+   
    pclose(z);
 
    callbackOnOpen(buffer);
