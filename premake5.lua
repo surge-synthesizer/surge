@@ -374,7 +374,6 @@ function plugincommon()
             "src/windows/**.cpp",
             "src/windows/**.h",
             "src/windows/surge.rc",
-            "src/windows/scalableui.rc",
             "resources/bitmaps/*.png",
             "assets/original-vector/exported/*.png",
 	    "assets/original-vector/SVG/exported/*.svg",

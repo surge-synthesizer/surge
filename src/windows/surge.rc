@@ -65,7 +65,6 @@ LANGUAGE LANG_NEUTRAL,
     "resources/bitmaps/bmp00161.png" IDB_ENVMODE PNG
     "resources/bitmaps/bmp00162.png" IDB_STOREPATCH PNG "resources/bitmaps/bmp00163.png"
      IDB_BUTTON_MENU PNG "resources/bitmaps/bmp00164.png"    
-#include "scalableui.rc"
 
 #endif 
 #include "svgresources.rc"
