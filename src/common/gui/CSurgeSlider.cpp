@@ -321,7 +321,7 @@ void CSurgeSlider::bounceValue(const bool keeprest)
        modval = 1.f;
    }
    if (modval < -1.f) {
-       restmodval = 1.f - modval;
+       restmodval = modval - (-1.f);
        modval = -1.f;
    }
 }
