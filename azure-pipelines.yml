@@ -14,13 +14,18 @@ jobs:
     matrix:
       mac:
         imageName: 'macos-10.13'
-        isMac: true
+        isMac: True
       windows:
         imageName: 'vs2017-win2016'
-        isWindows: true
+        isWindows: True
+        is64Bit: True
+      windows-x86:
+        imageName: 'vs2017-win2016'
+        isWindows: True
+        is32Bit: True
       linux:
         imageName: 'ubuntu-16.04'
-        isLinux: true
+        isLinux: True
 
   pool:
     vmImage: $(imageName)
@@ -30,6 +35,11 @@ jobs:
     fetchDepth: 1
     # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
 
+  - bash: |
+     echo "BUILD REASON = " $BUILD_REASON
+     echo "MAKE ASSETS = " $MAKEASSETS     
+    displayName: Details on build
+    
   - bash: |
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
       git submodule update --init --recursive
@@ -76,7 +86,7 @@ jobs:
       solution: 'buildtask.xml'
       maximumCpuCount: true
       platform: 'x64'
-    condition: variables.isWindows
+    condition: and(variables.isWindows,variables.is64Bit)
     displayName: Build Windows x64
 
   - task: MSBuild@1
@@ -84,7 +94,7 @@ jobs:
       solution: 'buildtask.xml'
       maximumCpuCount: true
       platform: 'Win32'
-    condition: variables.isWindows
+    condition: and(variables.isWindows,variables.is32Bit)
     displayName: Build Windows x86
 
   - bash: |
@@ -96,7 +106,6 @@ jobs:
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
       popd
 
-      sudo apt-get install -y libgtkmm-3.0-dev
       sudo apt-get install -y xcb
       sudo apt-get install -y libxcb-util-dev
       sudo apt-get install -y libxcb-cursor-dev
@@ -111,50 +120,6 @@ jobs:
     condition: variables.isLinux
     displayName: Build Linux
 
-  - bash: |
-      nuget install chocolatey
-      choco install innosetup version=5.6.1 -y
-      iscc installer_win/surge.iss
-    condition: variables.isWindows
-    displayName: Make Windows installer
-
-  - task: PublishPipelineArtifact@0
-    inputs:
-      artifactName: 'INSTALLER_WIN_EXE'
-      targetPath: 'installer_win/Output'
-    condition: variables.isWindows
-    displayName: Publish Windows installer
-
-  - bash: |
-      echo "SURGE_VERSION=$SURGE_VERSION"
-      pushd installer_mac
-      ./make_installer.sh "" --dmg
-      rm *.pkg
-      popd
-    condition: variables.isMac
-    displayName: Make macOS installer
-
-  - task: PublishPipelineArtifact@0
-    inputs:
-      artifactName: 'INSTALLER_MAC_DMG'
-      targetPath: 'installer_mac'
-    condition: variables.isMac
-    displayName: Publish macOS DMG
-
-  - bash: |
-      echo "SURGE_VERSION=$SURGE_VERSION"
-      pushd installer_linux
-      ./make_deb.sh 
-      popd
-    condition: variables.isLinux
-    displayName: Make Linux deb installer
-
-  - task: PublishPipelineArtifact@0
-    inputs:
-      artifactName: 'INSTALLER_LINUX_DEB'
-      targetPath: 'installer_linux/product'
-    condition: variables.isLinux
-    displayName: Publish Linux deb installer
 
 - job: NotifyReleases
   dependsOn: Build
