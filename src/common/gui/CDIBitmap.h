@@ -7,7 +7,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include <vstgui/vstgui.h>
+#include "vstgui/vstgui.h"
 
 union rgbpixel
 {

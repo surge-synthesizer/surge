@@ -5,7 +5,7 @@
 ** load bitmaps at multiple resolutions and draw them scaled accordingly
 */
 
-#include <vstgui/vstgui.h>
+#include "vstgui/vstgui.h"
 
 #include <vector>
 #include <map>

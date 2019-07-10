@@ -24,7 +24,7 @@
 
 #include <Carbon/Carbon.h>
 #include <Accelerate/Accelerate.h>
-#include <vstgui/vstgui.h>
+#include "vstgui/vstgui.h"
 #include "globals.h"
 
 #define stricmp strcmp
