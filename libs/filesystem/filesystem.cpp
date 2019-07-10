@@ -138,16 +138,16 @@ namespace std::experimental::filesystem {
     std::vector<file> directory_iterator(path p) {
         std::vector<file> files;
         DIR *dp;
-        struct dirent *dirp;
         if((dp  = opendir(p.c_str())) == NULL) {
 //            std::cout << "Error(" << errno << ") opening " << p.generic_string() << std::endl;
           return files;
         }
         
         // this needs to return the full path not just the relative path
-        while ((dirp = readdir(dp)) != NULL) {
-          string fname(dirp->d_name);
-            // Skip . and .. : https://github.com/kurasu/surge/issues/77
+        struct dirent dirp, *entry;
+        while ( (readdir_r(dp, &dirp, &entry) == 0) && entry != NULL) {
+          string fname(dirp.d_name);
+          // Skip . and .. : https://github.com/kurasu/surge/issues/77
           if (fname.compare(".") == 0 || fname.compare("..") == 0) {
               continue;
           }
