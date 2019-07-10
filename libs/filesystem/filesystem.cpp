@@ -144,9 +144,17 @@ namespace std::experimental::filesystem {
         }
         
         // this needs to return the full path not just the relative path
+#if WINDOWS
+        // This code is only used in WINDOWS on Rack; and on Rack mingw is using a posix impl
+        // without readdir_r. So do the old fashioned way
+        struct dirent *dirp;
+        while( (dirp = readdir(dp)) != NULL ) {
+          string fname(dirp->d_name);
+#else
         struct dirent dirp, *entry;
         while ( (readdir_r(dp, &dirp, &entry) == 0) && entry != NULL) {
           string fname(dirp.d_name);
+#endif
           // Skip . and .. : https://github.com/kurasu/surge/issues/77
           if (fname.compare(".") == 0 || fname.compare("..") == 0) {
               continue;
