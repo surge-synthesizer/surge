@@ -157,7 +157,7 @@ includedirs {
     "libs/nanosvg/src",
     "src/common/vt_dsp",
     "src/common/thread",
-    "vst3sdk/vstgui4",
+    "vstgui.surge",
     "vst3sdk",
     "libs/"
     }

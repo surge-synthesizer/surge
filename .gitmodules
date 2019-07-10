@@ -1,6 +1,6 @@
 [submodule "vst3sdk"]
 	path = vst3sdk
-	url = https://github.com/steinbergmedia/vst3sdk.git
+	url = https://github.com/surge-synthesizer/vst3sdk.git
 [submodule "vstgui.surge"]
 	path = vstgui.surge
 	url = https://github.com/surge-synthesizer/vstgui.git

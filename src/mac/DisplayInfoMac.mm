@@ -2,7 +2,7 @@
 #include "UserInteractions.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <Cocoa/Cocoa.h>
-#include <vstgui/vstgui.h>
+#include "vstgui/vstgui.h"
 #include "vstgui/lib/platform/mac/cocoa/nsviewframe.h"
 
 namespace Surge

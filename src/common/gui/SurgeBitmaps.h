@@ -1,7 +1,7 @@
 #pragma once
 
 #include "resource.h"
-#include <vstgui/vstgui.h>
+#include "vstgui/vstgui.h"
 #include <map>
 
 class CScalableBitmap;

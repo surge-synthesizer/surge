@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <vstgui/vstgui.h>
+#include "vstgui/vstgui.h"
 
 const VSTGUI::CColor col_plain_std = VSTGUI::CColor(214, 209, 198, 255);
 const VSTGUI::CColor col_plain_shadow = VSTGUI::CColor(192, 188, 175, 255);
