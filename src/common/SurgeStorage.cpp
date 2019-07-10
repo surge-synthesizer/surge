@@ -239,9 +239,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    }
 
    load_midi_controllers();
-   refresh_wtlist();
 
 #if !TARGET_RACK   
+   refresh_wtlist();
    refresh_patchlist();
 #endif
    
