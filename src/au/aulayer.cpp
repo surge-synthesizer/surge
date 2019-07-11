@@ -753,17 +753,13 @@ bool aulayer::ParameterEndEdit(int p)
 
 bool aulayer::ParameterUpdate(int p)
 {
-   // AUParameterChange_TellListeners(GetComponentInstance(), p);
-   // set up an AudioUnitParameter structure with all of the necessary values
-   AudioUnitParameter dirtyParam;
-   memset(&dirtyParam, 0, sizeof(dirtyParam)); // zero out the struct
-   dirtyParam.mAudioUnit = GetComponentInstance();
-   dirtyParam.mParameterID = p;
-   dirtyParam.mScope = kAudioUnitScope_Global;
-   dirtyParam.mElement = 0;
-
-   AUParameterListenerNotify(NULL, NULL, &dirtyParam);
-
+   AudioUnitEvent event;
+   event.mEventType = kAudioUnitEvent_ParameterValueChange;
+   event.mArgument.mParameter.mAudioUnit = GetComponentInstance();
+   event.mArgument.mParameter.mParameterID = p;
+   event.mArgument.mParameter.mScope = kAudioUnitScope_Global;
+   event.mArgument.mParameter.mElement = 0;
+   AUEventListenerNotify(NULL, NULL, &event);
    return true;
 }
 
