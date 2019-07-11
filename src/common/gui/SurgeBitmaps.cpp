@@ -8,12 +8,10 @@ using namespace VSTGUI;
 
 SurgeBitmaps::SurgeBitmaps()
 {
-   std::cout << "Constructing a registry" << std::endl;
 }
 
 SurgeBitmaps::~SurgeBitmaps()
 {
-   std::cout << "Destroying a registry" << std::endl;
    for (auto pair : bitmap_registry)
    {
       pair.second->forget();
