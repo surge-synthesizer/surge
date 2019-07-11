@@ -235,6 +235,8 @@ j;
 const char fxslot_names[8][NAMECHARS] = {"A Insert 1", "A Insert 2", "B Insert 1", "B Insert 2",
                                          "Send FX 1",  "Send FX 2",  "Master 1",   "Master 2"};
 
+std::vector<float> CFxMenu::fxCopyPaste;
+
 CFxMenu::CFxMenu(const CRect& size,
                  IControlListener* listener,
                  long tag,
@@ -383,4 +385,99 @@ void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
       }
       t = TINYXML_SAFE_TO_ELEMENT(t->NextSibling("type"));
    }
+}
+
+void CFxMenu::populate()
+{
+    CSnapshotMenu::populate();
+
+    this->addSeparator();
+
+    auto copyItem = new CCommandMenuItem(CCommandMenuItem::Desc("Copy"));
+    auto copy = [this](CCommandMenuItem* item) {
+        this->copyFX();
+    };
+    copyItem->setActions(copy, nullptr);
+    this->addEntry(copyItem);
+
+    auto pasteItem = new CCommandMenuItem(CCommandMenuItem::Desc("Paste"));
+    auto paste = [this](CCommandMenuItem* item) {
+        this->pasteFX();
+    };
+    pasteItem->setActions(paste, nullptr);
+    this->addEntry(pasteItem);
+}
+
+
+void CFxMenu::copyFX()
+{
+    /*
+    ** This is a junky implementation until I figure out save and load which will require me to stream this
+    */
+    if( fxCopyPaste.size() == 0 )
+    {
+        fxCopyPaste.resize( n_fx_params * 3 + 1 ); // type then (val; ts; extend)
+    }
+
+    fxCopyPaste[0] = fx->type.val.i;
+    for( int i=0; i<n_fx_params; ++i )
+    {
+        int vp = i * 3 + 1;
+        int tp = i * 3 + 2;
+        int xp = i * 3 + 3;
+
+        switch( fx->p[i].valtype )
+        {
+        case vt_float:
+            fxCopyPaste[vp] = fx->p[i].val.f;
+            break;
+        case vt_int:
+            fxCopyPaste[vp] = fx->p[i].val.i;
+            break;
+        }
+
+        fxCopyPaste[tp] = fx->p[i].temposync;
+        fxCopyPaste[xp] = fx->p[i].extend_range;
+    }
+    memcpy(fxbuffer,fx,sizeof(FxStorage));
+    
+}
+
+void CFxMenu::pasteFX()
+{
+    if( fxCopyPaste.size() == 0 )
+    {
+        return;
+    }
+
+    fxbuffer->type.val.i = (int)fxCopyPaste[0];
+
+    Effect* t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
+    if (t_fx)
+    {
+        t_fx->init_ctrltypes();
+        t_fx->init_default_values();
+        delete t_fx;
+    }
+
+    for (int i = 0; i < n_fx_params; i++)
+    {
+        int vp = i * 3 + 1;
+        int tp = i * 3 + 2;
+        int xp = i * 3 + 3;
+        
+        switch( fxbuffer->p[i].valtype )
+        {
+        case vt_float:
+            fxbuffer->p[i].val.f = fxCopyPaste[vp];
+            break;
+        case vt_int:
+            fxbuffer->p[i].val.i = (int)fxCopyPaste[vp];
+            break;
+        default:
+            break;
+        }
+        fxbuffer->p[i].temposync = (int)fxCopyPaste[tp];
+        fxbuffer->p[i].extend_range = (int)fxCopyPaste[xp];
+    }
 }

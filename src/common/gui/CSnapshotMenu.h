@@ -14,7 +14,7 @@ public:
    virtual ~CSnapshotMenu();
    virtual void draw(VSTGUI::CDrawContext* dc);
    // virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   void populate();
+   virtual void populate();
    virtual void loadSnapshot(int type, TiXmlElement* e){};
    virtual void saveSnapshot(TiXmlElement* e, const char* name){};
    virtual bool canSave();
@@ -61,10 +61,15 @@ public:
    }
    virtual void loadSnapshot(int type, TiXmlElement* e);
    virtual void saveSnapshot(TiXmlElement* e, const char* name);
-
+   virtual void populate() override;
+   
 protected:
    FxStorage *fx = nullptr, *fxbuffer = nullptr;
+   static std::vector<float> fxCopyPaste; // OK this is a crap data structure for now. See the code.
    int slot = 0;
+
+   void copyFX();
+   void pasteFX();
 
    CLASS_METHODS(CFxMenu, VSTGUI::CControl)
 };
