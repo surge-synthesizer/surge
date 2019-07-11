@@ -162,6 +162,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
 
     extraScaleFactor = 100;
     currentPhysicalZoomFactor = 100;
+    lastSeenZoom = -1;
 }
 
 #define DUMPR(r)                                                                                   \
@@ -222,8 +223,8 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
           lastSeenZoom = currentPhysicalZoomFactor;
        }
 
-       CGraphicsTransform tf =
-           CGraphicsTransform().scale(lastSeenZoom / 100.0, lastSeenZoom / 100.0);
+       CGraphicsTransform tf = CGraphicsTransform().scale(lastSeenZoom / 100.0, lastSeenZoom / 100.0);
+       
        /*
        ** VSTGUI has this wierdo bug where it shrinks backgrounds properly but doesn't grow them. Sigh.
        ** So asymmetrically treat the extra factor here and only here.
@@ -233,6 +234,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
            CGraphicsTransform().scale(exs / 100.0, exs / 100.0);
        CGraphicsTransform itf = tf.inverse();
        CGraphicsTransform ixtf = xtf.inverse();
+
 
        if (offscreenCache.find(offset) == offscreenCache.end())
        {
