@@ -1364,7 +1364,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             }
          }
          switch_toggled_queued = true;
-         // need_refresh = true; See github issue #160
+         need_refresh = true; 
          break;
       };
    }
