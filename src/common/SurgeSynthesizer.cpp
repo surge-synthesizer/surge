@@ -770,8 +770,7 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
    if (externalparam >= 0)
    {
 #if TARGET_AUDIOUNIT
-      // FIXME!
-      // getParent()->ParameterUpdate(externalparam);
+      getParent()->ParameterUpdate(externalparam);
 #elif TARGET_VST3
       getParent()->setParameterAutomated(externalparam, value);
 #elif TARGET_HEADLESS || TARGET_APP
