@@ -56,10 +56,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 extern short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
-extern float table_dB alignas(16)[512],
-             table_pitch alignas(16)[512],
-             table_pitch_inv alignas(16)[512],
-             table_envrate_lpf alignas(16)[512],
+extern float table_envrate_lpf alignas(16)[512],
              table_envrate_linear alignas(16)[512];
 extern float table_note_omega alignas(16)[2][512];
 extern float waveshapers alignas(16)[8][1024];
