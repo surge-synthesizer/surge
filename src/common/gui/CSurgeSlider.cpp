@@ -346,7 +346,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    }
 
    if (listener &&
-       buttons & (kAlt | kRButton | kMButton | kShift | kControl | kApple | kDoubleClick))
+       buttons & (kAlt | kRButton | kMButton | kButton4 | kButton5 | kShift | kControl | kApple | kDoubleClick))
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
          return kMouseEventHandled;
