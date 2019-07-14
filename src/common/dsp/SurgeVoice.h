@@ -50,6 +50,77 @@ public:
    SurgeVoiceState state;
    int age, age_release;
 
+   /*
+   ** Given a note0 and an oscilator this returns the appropriate note.
+   ** This is a pretty easy calculation in non-absolute mode. Just add.
+   ** But in absolute mode you need to find the virtual note which would
+   ** map to that frequency shift.
+   */
+   inline float noteShiftFromPitchParam( float note0 /* the key + octave */, int oscNum /* The osc for pitch diffs */)
+   {
+       if( scene->osc[oscNum].pitch.absolute )
+       {
+           // remember note_to_pitch is linear interpolation on storage->table_pitch from
+           // position note + 256 % 512
+           bool debug = false;
+           // OK so now what we are searching for is the pair which surrounds us plus the pitch drift... so
+           float fqShift = 10 * localcopy[scene->osc[oscNum].pitch.param_id_in_scene].f *
+               (scene->osc[oscNum].pitch.extend_range ? 12.f : 1.f);
+           float tableNote0 = note0 + 256;
+
+           int tableIdx = (int)tableNote0;
+           if( tableIdx > 0x1fe )
+               tableIdx = 0x1fe;
+
+           // so just iterate up. Deal with negative also of course. Since we will always be close just
+           // do it brute force for now but later we can do a binary or some such.
+           float pitch0 = storage->table_pitch[tableIdx];
+           float targetPitch = pitch0 + fqShift * 32.0 / 261.626;
+           
+           if( fqShift > 0 )
+           {
+               while( tableIdx < 0x1fe )
+               {
+                   float pitch1 = storage->table_pitch[tableIdx + 1];
+                   if( pitch0 <= targetPitch && pitch1 > targetPitch )
+                   {
+                       break;
+                   }
+                   pitch0 = pitch1;
+                   tableIdx ++;
+               }
+           }
+           else
+           {
+               while( tableIdx > 0 )
+               {
+                   float pitch1 = storage->table_pitch[tableIdx - 1];
+                   if( pitch0 >= targetPitch && pitch1 < targetPitch )
+                   {
+                       tableIdx --;
+                       break;
+                   }
+                   pitch0 = pitch1;
+                   tableIdx --;
+               }
+           }
+
+           // So what's the frac
+           // (1-x) * [tableIdx] + x * [tableIdx+1] = targetPitch
+           // Or: x = ( target - table) / ( [ table+1 ] - [table] );
+           float frac = (targetPitch - storage->table_pitch[tableIdx]) /
+               ( storage->table_pitch[tableIdx + 1] - storage->table_pitch[tableIdx] );
+           // frac = 1 -> targetpitch = +1; frac = 0 -> targetPitch
+           
+           return tableIdx + frac - 256;
+       }
+       else
+       {
+           return note0 + localcopy[scene->osc[oscNum].pitch.param_id_in_scene].f *
+               (scene->osc[oscNum].pitch.extend_range ? 12.f : 1.f);
+       }
+   }
+   
 private:
    template <bool first> void calc_ctrldata(QuadFilterChainState*, int);
    void update_portamento();

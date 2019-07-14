@@ -490,10 +490,9 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    if (osc3 || ring23 || ((osc1 || osc2) && (FMmode == fm_3to2to1)) ||
        (osc1 && (FMmode == fm_2and3to1)))
    {
-      osc[2]->process_block((scene->osc[2].keytrack.val.b ? state.pitch : ktrkroot) +
-                                localcopy[scene->osc[2].pitch.param_id_in_scene].f *
-                                    (scene->osc[2].pitch.extend_range ? 12.f : 1.f) +
-                                12 * scene->osc[2].octave.val.i,
+       osc[2]->process_block(noteShiftFromPitchParam( (scene->osc[2].keytrack.val.b ? state.pitch : ktrkroot) +
+                                                      12 * scene->osc[2].octave.val.i,
+                                                      2 ),
                             drift, is_wide);
 
       if (osc3)
@@ -518,19 +517,18 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    {
       if (FMmode == fm_3to2to1)
       {
-         osc[1]->process_block((scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot) +
-                                   localcopy[scene->osc[1].pitch.param_id_in_scene].f *
-                                       (scene->osc[1].pitch.extend_range ? 12.f : 1.f) +
-                                   12 * scene->osc[1].octave.val.i,
+          osc[1]->process_block(noteShiftFromPitchParam((scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot) +
+                                                        12 * scene->osc[1].octave.val.i,
+                                                        1 ),
+                               
                                drift, is_wide, true,
                                db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
       }
       else
       {
-         osc[1]->process_block((scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot) +
-                                   localcopy[scene->osc[1].pitch.param_id_in_scene].f *
-                                       (scene->osc[1].pitch.extend_range ? 12.f : 1.f) +
-                                   12 * scene->osc[1].octave.val.i,
+          osc[1]->process_block(noteShiftFromPitchParam((scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot) +
+                                                        12 * scene->osc[1].octave.val.i,
+                                                        1),
                                drift, is_wide);
       }
       if (osc2)
@@ -557,28 +555,25 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       if (FMmode == fm_2and3to1)
       {
          add_block(osc[1]->output, osc[2]->output, fmbuffer, BLOCK_SIZE_OS_QUAD);
-         osc[0]->process_block((scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot) +
-                                   localcopy[scene->osc[0].pitch.param_id_in_scene].f *
-                                       (scene->osc[0].pitch.extend_range ? 12.f : 1.f) +
-                                   12 * scene->osc[0].octave.val.i,
+         osc[0]->process_block(noteShiftFromPitchParam((scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot) +
+                                                       12 * scene->osc[0].octave.val.i, 0 ),
                                drift, is_wide, true,
                                db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
       }
       else if (FMmode)
       {
-         osc[0]->process_block((scene->osc[0].keytrack.val.b ? state.pitch : 60) +
-                                   localcopy[scene->osc[0].pitch.param_id_in_scene].f *
-                                       (scene->osc[0].pitch.extend_range ? 12.f : 1.f) +
-                                   12 * scene->osc[0].octave.val.i,
+          osc[0]->process_block(noteShiftFromPitchParam((scene->osc[0].keytrack.val.b ? state.pitch : 60) +
+                                                        12 * scene->osc[0].octave.val.i,
+                                                        0),
+
                                drift, is_wide, true,
                                db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
       }
       else
       {
-         osc[0]->process_block((scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot) +
-                                   localcopy[scene->osc[0].pitch.param_id_in_scene].f *
-                                       (scene->osc[0].pitch.extend_range ? 12.f : 1.f) +
-                                   12 * scene->osc[0].octave.val.i,
+         osc[0]->process_block(noteShiftFromPitchParam((scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot) +
+                                                       12 * scene->osc[0].octave.val.i,
+                                                       0),
                                drift, is_wide);
       }
       if (osc1)

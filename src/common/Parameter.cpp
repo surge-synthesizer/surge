@@ -175,6 +175,7 @@ bool Parameter::can_be_absolute()
    switch (ctrltype)
    {
    case ct_oscspread:
+   case ct_pitch_semi7bp:
       return true;
    }
    return false;
@@ -798,7 +799,10 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.2f semitones", f);
          break;
       case ct_pitch_semi7bp:
-         sprintf(txt, "%.2f", get_extended(f));
+         if(absolute)
+             sprintf(txt, "%.1f Hz", 10 * get_extended(f));
+         else
+             sprintf(txt, "%.2f", get_extended(f));
          break;
       default:
          sprintf(txt, "%.2f", f);
