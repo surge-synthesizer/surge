@@ -2806,12 +2806,13 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-    addCallbackMenu(tuningSubMenu, "Set to Standard Tuning",
+    auto *st = addCallbackMenu(tuningSubMenu, "Set to Standard Tuning",
                     [this]()
                     {
                         this->synth->storage.init_tables();
                     }
         );
+    st->setEnabled(! this->synth->storage.isStandardTuning);
     tid++;
 
     addCallbackMenu(tuningSubMenu, "Apply .scl file tuning",
@@ -2838,6 +2839,17 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                     }
         );
     tid++;
+
+    auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning",
+                    [this]()
+                    {
+                        // Surge::UserInteractions::promptOKCancel( "Surge tuning is NONstandard tuning", "Tuning Info" );
+                        Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml() );
+                    }
+        );
+    sct->setEnabled(! this->synth->storage.isStandardTuning );
+
+    /*
     tuningSubMenu->addSeparator(tid++);
     
     addCallbackMenu(tuningSubMenu, "Apply .kbm file mapping",
@@ -2848,8 +2860,9 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                                                              this);
                     }
         );
+    */
 
-    settingsMenu->addEntry(tuningSubMenu, "Tunings (experimental)");
+    settingsMenu->addEntry(tuningSubMenu, "Tuning" );
     eid++;
     tuningSubMenu->forget();
 

@@ -33,6 +33,10 @@ MessageResult promptOKCancel(const std::string &message, const std::string &titl
 void openURL(const std::string &url)
 {
 }
+void showHTML( const std::string &html)
+{
+    std::cerr << "SURGE HTML: " << html << std::endl;
+}
 
 void promptFileOpenDialog(const std::string& initialDirectory,
                           const std::string& filterSuffix,

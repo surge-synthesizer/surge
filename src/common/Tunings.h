@@ -30,12 +30,15 @@ struct Scale
 {
    std::string name;
    std::string description;
+   std::string rawText;
    int count;
    std::vector<Tone> tones;
 
-   Scale() : name("empty scale"), description(""), count(0)
+   Scale() : name("empty scale"), description(""), rawText(""), count(0)
    {
    }
+
+   std::string toHtml();
 };
 
 std::ostream& operator<<(std::ostream& os, const Tone& sc);

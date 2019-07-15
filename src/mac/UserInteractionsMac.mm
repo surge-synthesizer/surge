@@ -4,6 +4,10 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <AppKit/AppKit.h>
 
+#include <iostream>
+#include <sstream>
+#include <unistd.h>
+
 namespace Surge
 {
 
@@ -68,6 +72,22 @@ void openURL(const std::string& url_str)
    );
    LSOpenCFURLRef(url, 0);
    CFRelease(url);
+}
+
+void showHTML( const std::string &html )
+{
+    // Why does mktemp crash on macos I wonder?
+    std::ostringstream fns;
+    fns << "/var/tmp/surge-tuning." << rand() << ".html";
+
+    FILE *f = fopen(fns.str().c_str(), "w" );
+    if( f )
+    {
+        fprintf( f, "%s", html.c_str());
+        fclose(f);
+        std::string url = std::string("file://") + fns.str();
+        openURL(url);
+    }
 }
 
 void openFolderInFileBrowser(const std::string& folder)

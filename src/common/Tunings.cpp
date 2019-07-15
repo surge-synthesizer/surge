@@ -5,6 +5,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <math.h>
+#include <sstream>
 
 /*
  From: http://huygens-fokker.org/scala/scl_format.html
@@ -45,8 +46,10 @@ Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
 
    Scale res;
    res.name = fname;
+   std::ostringstream rawOSS;
    while (std::getline(inf, line))
    {
+      rawOSS << line << "\n";
       if (line[0] == '!')
       {
          continue;
@@ -96,6 +99,7 @@ Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
       }
    }
 
+   res.rawText = rawOSS.str();
    return res;
 }
 
@@ -117,4 +121,94 @@ std::ostream& Surge::Storage::operator<<(std::ostream& os, const Surge::Storage:
    for (auto t : sc.tones)
       os << "    - " << t << "\n";
    return os;
+}
+
+std::string Surge::Storage::Scale::toHtml()
+{
+    std::ostringstream htmls;
+
+    htmls << 
+        R"HTML(
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+    <style>
+table {
+  border-collapse: collapse;
+}
+
+td {
+  border: 1px solid #CDCED4;
+  padding: 2pt;
+}
+
+th {
+  padding: 4pt;
+  color: #123463;
+  background: #CDCED4;
+  border: 1px solid #123463;
+}
+</style>
+  </head>
+  <body style="margin: 0pt; background: #CDCED4;">
+    <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+      <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+        Surge Tuning
+      </div>
+      <div style="font-size: 12pt; font-family: Lato; padding: 2pt;">
+    )HTML" 
+       << description << 
+    R"HTML(
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+        Tuning Information
+      </div>
+
+      <div style="font-size: 12pt; font-family: Lato;">
+        <div style="padding-bottom: 10pt;">
+        )HTML" << count << " tones" <<
+R"HTML(
+    </div>
+        <table>
+          <tr>
+            <th>#</th><th>Datum</th><th>Cents</th><th>Float</th>
+          </tr>
+          <tr>
+            <td>1</td><td>1</td><td>0</td><td>1</td>
+          </tr>
+    )HTML";
+
+    int ct = 2;
+    for( auto & t : tones )
+    {
+       htmls << "<tr><td> " << ct++ << "</td><td>";
+       if (t.type == Tone::kToneCents)
+          htmls << t.cents;
+       else
+          htmls << t.ratio_n << " / " << t.ratio_d;
+
+       htmls << "</td><td>" << t.cents << "</td><td>" << t.floatValue << "</td></tr>\n";
+    };
+
+       htmls << R"HTML(
+        </table>
+      </div>
+
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+        Raw File:
+           )HTML" << name << "</div>\n<pre>\n" << rawText << R"HTML(
+      </pre>
+    </div>
+  </body>
+</html>
+      )HTML";
+ 
+  return htmls.str();
+
 }
