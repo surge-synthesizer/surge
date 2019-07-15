@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "globals.h"
+#include <string>
 
 union pdata
 {
@@ -148,6 +149,8 @@ public:
    float set_modulation_f01(float v); // used by the gui to set the modulation to match the position
                                       // of the modulated handle
    void bound_value(bool force_integer = false);
+   std::string tempoSyncNotationValue(float f);
+   
    pdata val, val_default, val_min, val_max;
    int id;
    char name[NAMECHARS], dispname[NAMECHARS], name_storage[NAMECHARS], fullname[NAMECHARS];
