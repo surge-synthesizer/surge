@@ -711,6 +711,8 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   sprintf(txt, "%.3f bars", 0.5f * powf(2.0f, f));
                else if (f > -1)
                   sprintf(txt, "%.3f / 4th", 2.0f * powf(2.0f, f));
+               else if (f > -2)
+                  sprintf(txt, "%.3f / 8th", 4.0f * powf(2.0f, f));
                else if (f > -3)
                   sprintf(txt, "%.3f / 16th", 8.0f * powf(2.0f, f));
                else if (f > -5)
