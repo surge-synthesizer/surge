@@ -8,6 +8,7 @@
 #include <math.h>
 #include <iomanip>
 #include <sstream>
+#include <string>
 
 Parameter::Parameter()
 {
@@ -673,6 +674,90 @@ float Parameter::get_extended(float f)
    }
 }
 
+std::string Parameter::tempoSyncNotationValue(float f)
+{
+    float a, b = modf(f, &a);
+    
+    if (b >= 0)
+    {
+        b -= 1.0;
+        a += 1.0;
+    }
+
+    float d, q;
+    std::string nn, t;
+    char tmp[1024];
+    
+    if(f >= 1)
+    {
+        q = pow(2.0, f - 1);
+        nn = "whole";
+        if(q >= 3)
+        {
+            snprintf(tmp, 1024, "%.2f whole notes", q);
+            std::string res = tmp;
+            return res;
+        }
+        else if(q >= 2)
+        {
+            nn = "double whole";
+            q /= 2;
+        }
+
+        if(q < 1.3)
+        {
+            t = "note";
+        }
+        else if(q < 1.4)
+        {
+            t = "triplet";
+            if (nn == "whole")
+            {
+                nn = "1/2";
+            }
+            else
+            {
+                nn = "whole";
+            }
+        }
+        else
+        {
+            t = "dotted";
+        }
+    }
+    else
+    {
+        d = pow(2.0, -(a - 2));
+        q = pow(2.0, (b+1));
+        if (q < 1.3)
+        {
+            t = "note";
+        }
+        else if(q < 1.4)
+        {
+            t = "triplet";
+            d = d / 2;
+        }
+        else
+        {
+            t = "dotted";
+        }
+        if ( d == 1 )
+        {
+            nn = "whole";
+        }
+        else
+        {
+            char tmp[1024];
+            snprintf(tmp, 1024, "1/%0.d", (int)d, d );
+            nn = tmp;
+        }
+    }
+    std::string res = nn + " " + t;
+
+    return res;
+}
+
 void Parameter::get_display(char* txt, bool external, float ef)
 {
    if (ctrltype == ct_none)
@@ -707,20 +792,8 @@ void Parameter::get_display(char* txt, bool external, float ef)
          {
             if (temposync)
             {
-               if (f > 1)
-                  sprintf(txt, "%.3f bars", 0.5f * powf(2.0f, f));
-               else if (f > -1)
-                  sprintf(txt, "%.3f / 4th", 2.0f * powf(2.0f, f));
-               else if (f > -2)
-                  sprintf(txt, "%.3f / 8th", 4.0f * powf(2.0f, f));
-               else if (f > -3)
-                  sprintf(txt, "%.3f / 16th", 8.0f * powf(2.0f, f));
-               else if (f > -5)
-                  sprintf(txt, "%.3f / 64th", 32.0f * powf(2.0f, f));
-               else if (f > -7)
-                  sprintf(txt, "%.3f / 128th", 64.0f * powf(2.0f, f));
-               else
-                  sprintf(txt, "%.3f / 256th", 128.0f * powf(2.0f, f));
+               std::string res = tempoSyncNotationValue(f);
+               sprintf( txt, "%s", res.c_str() );
             }
             else if (f == val_min.f)
             {
@@ -735,24 +808,8 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_lforate:
          if (temposync)
          {
-            if (f > 6 )
-                sprintf(txt, "%.3f / 256th", 128.f * powf(2.0, -f));
-            else if (f > 5)
-                sprintf(txt, "%.3f / 128th", 64.f * powf(2.0, -f));
-            else if (f > 4)
-               sprintf(txt, "%.3f / 64th", 32.f * powf(2.0f, -f));
-            else if (f > 3)
-               sprintf(txt, "%.3f / 32th", 16.f * powf(2.0f, -f));
-            else if (f > 2)
-               sprintf(txt, "%.3f / 16th", 8.f * powf(2.0f, -f));
-            else if (f > 1)
-               sprintf(txt, "%.3f / 8th", 4.f * powf(2.0f, -f));
-            else if (f > 0)
-               sprintf(txt, "%.3f / 4th", 2.f * powf(2.0f, -f));
-            else if (f > -1)
-               sprintf(txt, "%.3f / 2th", 1.f * powf(2.0f, -f));
-            else
-               sprintf(txt, "%.3f bars", 0.5f * powf(2.0f, -f));
+            std::string res = tempoSyncNotationValue(-f);
+            sprintf(txt, "%s", res.c_str() );
          }
          else
             sprintf(txt, "%.3f Hz", powf(2.0f, f));
