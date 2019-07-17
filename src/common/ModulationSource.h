@@ -57,7 +57,7 @@ const int n_customcontrollers = 8; // TODO remove this one
 const int num_metaparameters = n_customcontrollers;
 
 const char modsource_abberations_button[n_modsources][32] = {
-    "Off",       "Velocity", "Keytrack", "Poly AT", "Chan. AT", "Pitchbend", "Modwheel", "Ctrl 1",
+    "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitchbend", "Modwheel", "Ctrl 1",
     "Ctrl 2",    "Ctrl 3",   "Ctrl 4",   "Ctrl 5",  "Ctrl 6",   "Ctrl 7",    "Ctrl 8",   "Amp EG",
     "Filter EG", "LFO 1",    "LFO 2",    "LFO 3",   "LFO 4",    "LFO 5",     "LFO 6",    "SLFO 1",
     "SLFO 2",    "SLFO 3",   "SLFO 4",   "SLFO 5",  "SLFO 6",   "Timbre" /*,"Arpeggio"*/};
