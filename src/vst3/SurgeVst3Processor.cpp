@@ -63,8 +63,8 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
       wcstombs_s(&nNumCharConverted, szString, 256, hostName, 128);
       std::string s(szString);
       disableZoom = false;
-      if (s == "Cakewalk")
-         disableZoom = true;
+      //if (s == "Cakewalk")
+      //   disableZoom = true;
    }
 #endif
 
