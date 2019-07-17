@@ -17,13 +17,15 @@ public:
       VSTGUI::CRect size = getViewSize();
       VSTGUI::CRect bl(size);
       bl.top = bl.bottom - 2;
+
       VSTGUI::CColor gray = {106, 106, 106, 255};
       dc->setFillColor(gray);
       dc->drawRect(bl, VSTGUI::kDrawFilled);
-      dc->setFontColor(gray);
-      // dc->setFont(kNormalFontSmaller,8,kBoldFace);
+
+      dc->setFontColor(VSTGUI::kBlackCColor);
       dc->setFont(displayFont);
-      dc->drawString(label.c_str(), size, VSTGUI::kLeftText, false);
+      dc->drawString(label.c_str(), size, VSTGUI::kLeftText, true);
+
       setDirty(false);
    }
    void setLabel(std::string s)

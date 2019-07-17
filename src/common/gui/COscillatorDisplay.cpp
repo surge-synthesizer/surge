@@ -191,7 +191,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       dc->setFontColor(kBlackCColor);
       dc->setFont(displayFont);
       // strupr(wttxt);
-      dc->drawString(wttxt, rmenu, kCenterText, false);
+      dc->drawString(wttxt, rmenu, kCenterText, true);
 
       /*CRect wtlbl_status(size);
       wtlbl_status.bottom = wtlbl_status.top + wtbheight;
