@@ -2732,10 +2732,6 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     mouseSubMenu->forget();
 
-    // End Mouse behavior
-    settingsMenu->addSeparator(eid++);
-    
-
     int tid=0;
     COptionMenu *tuningSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
@@ -2787,30 +2783,57 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->addEntry(tuningSubMenu, "Tunings (experimental)");
     eid++;
     tuningSubMenu->forget();
-    
-    settingsMenu->addSeparator(eid++);
 
-    addCallbackMenu(settingsMenu, "Open User Data Folder", [this]() {
+    int did=0;
+    COptionMenu *dataSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                               VSTGUI::COptionMenu::kNoDrawStyle |
+                                               VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+
+    addCallbackMenu(dataSubMenu, "Open User Data Folder", [this]() {
        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
     });
-    eid++;
-
-    addCallbackMenu(settingsMenu, "Open Factory Data Folder", [this]() {
+    did++;
+    
+    addCallbackMenu(dataSubMenu, "Open Factory Data Folder", [this]() {
        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath);
     });
-    eid++;
+    did++;
 
-    addCallbackMenu(settingsMenu, "Rescan All Data Folders", [this]() {
+    addCallbackMenu(dataSubMenu, "Rescan All Data Folders", [this]() {
        this->synth->storage.refresh_wtlist();
        this->synth->storage.refresh_patchlist();
     });
+
+    settingsMenu->addEntry( dataSubMenu, "Data and Patches");
     eid++;
+    dataSubMenu->forget();
+
     settingsMenu->addSeparator(eid++);
 
-    addCallbackMenu(settingsMenu, "SurgeManual", []() {
+
+    addCallbackMenu(settingsMenu, "Reach the Developers", []() {
+            Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/feedback");
+        });
+    eid++;
+    
+    addCallbackMenu(settingsMenu, "Read the Code", []() {
+            Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge/");
+        });
+    eid++;
+    
+    addCallbackMenu(settingsMenu, "Surge Website", []() {
+            Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/");
+        });
+    eid++;
+    
+    addCallbackMenu(settingsMenu, "Surge Manual", []() {
        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
     });
     eid++;
+    
+    settingsMenu->addSeparator(eid++);
+
     addCallbackMenu(settingsMenu, "About", [this]() {
        if (aboutbox)
           ((CAboutBox*)aboutbox)->boxShow();
