@@ -31,27 +31,22 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       tp[oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
    Oscillator* osc = spawn_osc(oscdata->type.val.i, storage, oscdata, tp);
 
-   cdisurf->begin();
-   cdisurf->clear(0xffffffff);
-
-   int h2 = cdisurf->getHeight();
-   int h = h2;
-   assert(h < 512);
+   int h = getHeight();
    if (uses_wavetabledata(oscdata->type.val.i))
       h -= wtbheight;
 
-   unsigned int column[512];
-   int column_d[512];
-   float lastval = 0;
    int midline = h >> 1;
    int topline = midline - 0.4f * h;
    int bottomline = midline + 0.4f * h;
-   const int aa_bs = 4;
-   const int aa_samples = 1 << aa_bs;
-   int last_imax = -1, last_imin = -1;
+
+
+   CGraphicsPath *path = dc->createGraphicsPath();
+   int totalSamples = ( 1 << 4 ) * (int)getWidth();
+   int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be an integer multiple of it
+
+   float valScale = 100.0f;
    if (osc)
    {
-      // srand(2);
       float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
       bool use_display = osc->allow_display();
 
@@ -61,99 +56,89 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
       if (use_display)
          osc->init(disp_pitch_rs, true);
+      
       int block_pos = BLOCK_SIZE_OS;
-      for (int y = 0; y < h2; y++)
-         column_d[y] = 0;
-
-      for (int x = 0; x < getWidth(); x++)
+      for( int i=0; i<totalSamples; i += averagingWindow )
       {
-         for (int y = 0; y < h2; y++)
-            column[y] = 0;
-         for (int s = 0; s < aa_samples; s++)
-         {
-            if (use_display && (block_pos >= BLOCK_SIZE_OS))
-            {
-               if (uses_wavetabledata(oscdata->type.val.i))
-               {
+          if (use_display && (block_pos >= BLOCK_SIZE_OS))
+          {
+              if (uses_wavetabledata(oscdata->type.val.i))
+              {
                   storage->CS_WaveTableData.enter();
                   osc->process_block(disp_pitch_rs);
                   block_pos = 0;
                   storage->CS_WaveTableData.leave();
-               }
-               else
-               {
+              }
+              else
+              {
                   osc->process_block(disp_pitch_rs);
                   block_pos = 0;
-               }
-            }
+              }
+          }
 
-            float val = 0.f;
-            if (use_display)
-               val = -osc->output[block_pos];
-
-            val = (float)((0.5f + 0.4f * val) * h);
-            lastval = val;
-            float v_min = val;
-            float v_max = val;
-
-            v_min = val - 0.5f;
-            v_max = val + 0.5f;
-            int imin = (int)v_min;
-            int imax = (int)v_max;
-            float imax_frac = (v_max - imax);
-            float imin_frac = 1 - (v_min - imin);
-
-            if (imax == imin)
-               imax++;
-
-            if (imin < 0)
-               imin = 0;
-            int dimax = imax, dimin = imin;
-
-            if ((x > 0) || (s > 0))
-            {
-               if (dimin > last_imax)
-                  dimin = last_imax;
-               else if (dimax < last_imin)
-                  dimax = last_imin;
-            }
-            dimin = limit_range(dimin, 0, h - 1);
-            dimax = limit_range(dimax, 0, h - 1);
-
-            // int yp = (int)((float)(size.height() * (-osc->output[block_pos]*0.5+0.5)));
-            // yp = limit_range(yp,0,h-1);
-
-            column[dimin] += ((int)((float)imin_frac * 255.f));
-            column[dimax + 1] += ((int)((float)imax_frac * 255.f));
-            for (int b = (dimin + 1); b < (dimax + 1); b++)
-            {
-               column_d[b & 511] = aa_samples;
-            }
-            last_imax = imax;
-            last_imin = imin;
-            block_pos++;
-            for (int y = 0; y < h; y++)
-            {
-               if (column_d[y] > 0)
-                  column[y] += 256;
-               column_d[y]--;
-            }
-         }
-         column[midline] = max((unsigned int)64 << aa_bs, column[midline]);
-         column[topline] = max((unsigned int)32 << aa_bs, column[topline]);
-         column[bottomline] = max((unsigned int)32 << aa_bs, column[bottomline]);
-         for (int y = 0; y < h2; y++)
-         {
-            cdisurf->setPixel(x, y, coltable[min((unsigned int)255, (column[y] >> aa_bs))]);
-         }
+          float val = 0.f;
+          if (use_display)
+          {
+              for( int j=0; j<averagingWindow; ++j ) {
+                  val += osc->output[block_pos];
+                  block_pos ++;
+              }
+              val = val / averagingWindow;
+              val = ( (-val+1.0f) * 0.5f * 0.8 + 0.1 ) * valScale;
+          }
+          block_pos++;
+          float xc = valScale * i / totalSamples;
+          
+          // OK so val is now a value between 0 and valScale, and xc is a value between 0 and valScale
+          if( i == 0 )
+          {
+              path->beginSubpath(xc, val);
+          }
+          else
+          {
+              path->addLine(xc, val);
+          }
       }
       delete osc;
       // srand( (unsigned)time( NULL ) );
    }
-   cdisurf->commit();
-   auto size = getViewSize();
-   cdisurf->draw(dc, size);
 
+   // OK so now we need to figure out how to transfer the box with is [0,valscale] x [0,valscale] to our coords.
+   // So scale then position
+   auto size = getViewSize();
+   VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
+       .scale(getWidth()/valScale, h / valScale )
+       .translate(size.getTopLeft().x, size.getTopLeft().y );
+
+   dc->saveGlobalState();
+
+   // OK so draw the rules
+   CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
+   CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
+   CPoint bot0(0, valScale * 0.1), bot1(valScale,valScale * 0.1);
+   tf.transform(mid0);
+   tf.transform(mid1);
+   tf.transform(top0);
+   tf.transform(top1);
+   tf.transform(bot0);
+   tf.transform(bot1);
+   dc->setDrawMode(VSTGUI::kAntiAliasing);
+
+   dc->setLineWidth(1.0);
+   dc->setFrameColor(VSTGUI::CColor(90,90,90));
+   dc->drawLine(mid0, mid1);
+
+   dc->setLineWidth(1.0);
+   dc->setFrameColor(VSTGUI::CColor(70,70,70));
+   dc->drawLine(top0, top1);
+   dc->drawLine(bot0, bot1);
+
+   dc->setLineWidth(1.3);
+   dc->setFrameColor(VSTGUI::CColor(0xFF, 0x90, 0, 0xFF));
+   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
+   dc->restoreGlobalState();
+   path->forget();
+   
    if (uses_wavetabledata(oscdata->type.val.i))
    {
       CRect wtlbl(size);
