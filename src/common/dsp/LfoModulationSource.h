@@ -49,6 +49,7 @@ public:
       return true;
    }
    float env_val;
+   int env_state;
    bool retrigger_EG;
 
 private:
@@ -63,7 +64,7 @@ private:
    float iout;
    float wf_history[4];
    bool is_display;
-   int env_state, step, shuffle_id;
+   int step, shuffle_id;
    int magn, rate, iattack, idecay, idelay, ihold, isustain, irelease, startphase, ideform;
    quadr_osc sinus;
 };
