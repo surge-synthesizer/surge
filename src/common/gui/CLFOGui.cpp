@@ -202,7 +202,11 @@ void CLFOGui::draw(CDrawContext* dc)
       while( drawnTime / averagingWindow > 3.0 ) // subsample at longer times
           averagingWindow ++;
 
+#if LINUX
+      float valScale = 10000.0;
+#else
       float valScale = 100.0;
+#endif
       int susCountdown = -1;
       
       for (int i=0; i<totalSamples; i += averagingWindow )
@@ -255,6 +259,17 @@ void CLFOGui::draw(CDrawContext* dc)
           .translate(boxo.getTopLeft().x, boxo.getTopLeft().y )
           .translate(maindisp.getTopLeft().x, maindisp.getTopLeft().y );
 
+#if LINUX
+      auto xdisp = maindisp;
+      dc->getCurrentTransform().transform(xdisp);
+      VSTGUI::CGraphicsTransform tfpath = VSTGUI::CGraphicsTransform()
+          .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
+          .translate(boxo.getTopLeft().x, boxo.getTopLeft().y )
+          .translate(xdisp.getTopLeft().x, xdisp.getTopLeft().y );
+#else
+      auto tfpath = tf;
+#endif
+
       dc->saveGlobalState();
 
       // find time delta
@@ -276,6 +291,9 @@ void CLFOGui::draw(CDrawContext* dc)
       {
           float xp = dx * l;
           float yp = valScale * 0.9;
+#if LINUX
+          yp = valScale * 0.95;
+#endif 
           CRect tp(CPoint(xp + 1,yp), CPoint(10,10));
           tf.transform(tp);
           dc->setFontColor(VSTGUI::kBlackCColor);
@@ -317,14 +335,22 @@ void CLFOGui::draw(CDrawContext* dc)
       dc->drawLine(top0, top1);
       dc->drawLine(bot0, bot1);
       
+#if LINUX
+      dc->setLineWidth(100.0);
+#else
       dc->setLineWidth(1.3);
+#endif
       dc->setFrameColor(VSTGUI::CColor(0x00, 0x00, 0, 0xFF));
-      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
+      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
+#if LINUX
+      dc->setLineWidth(100.0);
+#else
       dc->setLineWidth(1.0);
+#endif
       dc->setFrameColor(VSTGUI::CColor(0xB0, 0x60, 0x00, 0xFF));
-      dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
-      dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
+      dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+      dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       dc->restoreGlobalState();
       path->forget();
       eupath->forget();

@@ -66,7 +66,7 @@ LinuxRunLoop& LinuxRunLoop::instance ()
 //------------------------------------------------------------------------
 bool LinuxRunLoop::registerEventHandler (int fd, IEventHandler* handler)
 {
-	printf("%s %i %p\n", __func__, fd, handler);
+	// printf("%s %i %p\n", __func__, fd, handler);
 	if (handler == nullptr)
 		return false;
 	eventHandlers.push_back({ handler, fd });
@@ -76,7 +76,7 @@ bool LinuxRunLoop::registerEventHandler (int fd, IEventHandler* handler)
 //------------------------------------------------------------------------
 bool LinuxRunLoop::unregisterEventHandler (IEventHandler* handler)
 {
-	printf("%s %p\n", __func__, handler);
+	// printf("%s %p\n", __func__, handler);
 	for (auto it = eventHandlers.begin(); it != eventHandlers.end(); it++)
 	{
 		if (it->eventHandler == handler)
@@ -91,7 +91,7 @@ bool LinuxRunLoop::unregisterEventHandler (IEventHandler* handler)
 //------------------------------------------------------------------------
 bool LinuxRunLoop::registerTimer (uint64_t interval, ITimerHandler* handler)
 {
-	printf("%s %lu %p\n", __func__, static_cast<unsigned long>(interval), handler);
+	// printf("%s %lu %p\n", __func__, static_cast<unsigned long>(interval), handler);
 	if (handler == nullptr)
 		return false;
 	timerHandlers.push_back({ handler, interval });
@@ -101,7 +101,7 @@ bool LinuxRunLoop::registerTimer (uint64_t interval, ITimerHandler* handler)
 //------------------------------------------------------------------------
 bool LinuxRunLoop::unregisterTimer (ITimerHandler* handler)
 {
-	printf("%s %p\n", __func__, handler);
+	// printf("%s %p\n", __func__, handler);
 	for (auto it = timerHandlers.begin(); it != timerHandlers.end(); it++)
 	{
 		if (it->timerHandler == handler)
@@ -166,7 +166,7 @@ bool LinuxAEffGUIEditor::open (void* ptr)
 	x11config.runLoop = &LinuxRunLoop::instance();
 	config = &x11config;
 
-    printf("%s %p %p\n", __func__, frame, ptr);
+    // printf("%s %p %p\n", __func__, frame, ptr);
 	getFrame ()->open (ptr, kDefaultNative, config);
 
 	systemWindow = ptr;
