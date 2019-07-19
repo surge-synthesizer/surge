@@ -48,17 +48,17 @@ void CLFOGui::draw(CDrawContext* dc)
    maindisp.top += 1;
    maindisp.bottom -= 1;
 
-   cdisurf->begin();
-#if MAC
-    cdisurf->clear(0x0090ffff);
-#else
-   cdisurf->clear(0xffff9000);
-#endif
-   int w = cdisurf->getWidth();
-   int h = cdisurf->getHeight();
-
    if (ss && lfodata->shape.val.i == ls_stepseq)
    {
+       cdisurf->begin();
+#if MAC
+       cdisurf->clear(0x0090ffff);
+#else
+       cdisurf->clear(0xffff9000);
+#endif
+       int w = cdisurf->getWidth();
+       int h = cdisurf->getHeight();
+
        // I know I could do the math to convert these colors but I would rather leave them as literals for the compiler
        // so we don't have to shift them at runtime. See issue #141 in surge github
 #if MAC
@@ -151,9 +151,19 @@ void CLFOGui::draw(CDrawContext* dc)
 
       rect_ls.offset(size.left + splitpoint, size.top);
       rect_le.offset(size.left + splitpoint, size.top);
+
+      
+      CPoint sp(0, 0);
+      CRect sr(size.left + splitpoint, size.top, size.right, size.bottom);
+      cdisurf->commit();
+      cdisurf->draw(dc, sr, sp);
    }
    else
    {
+      CGraphicsPath *path = dc->createGraphicsPath();
+      CGraphicsPath *eupath = dc->createGraphicsPath();
+      CGraphicsPath *edpath = dc->createGraphicsPath();
+
       pdata tp[n_scene_params];
       {
          tp[lfodata->delay.param_id_in_scene].i = lfodata->delay.val.i;
@@ -176,130 +186,86 @@ void CLFOGui::draw(CDrawContext* dc)
       tlfo->attack();
       CRect boxo(maindisp);
       boxo.offset(-size.left - splitpoint, -size.top);
-
-      unsigned int column[512];
-      int column_d[512];
-      int h2 = cdisurf->getHeight();
-      assert(h < 512);
-      float lastval = 0;
-
-      int midline = (int)((float)((0.5f + 0.4f * 0.f) * h));
-      int topline = (int)((float)((0.5f + 0.4f * 1.f) * h));
-      int bottomline = (int)((float)((0.5f + 0.4f * -1.f) * h)) + 1;
-      const int aa_bs = 3;
-      const int aa_samples = 1 << aa_bs;
-      int last_imax = -1, last_imin = -1;
-
-      for (int y = 0; y < h2; y++)
-         column_d[y] = 0;
-
-      for (int x = boxo.left; x < boxo.right; x++)
+      
+      int totalSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
+      int averagingWindow = 1;
+      float valScale = 100.0;
+      
+      for (int i=0; i<totalSamples; i += averagingWindow )
       {
-         for (int y = 0; y < h2; y++)
-            column[y] = 0;
-
-         /*for(int i=0; i<16; i++) tlfo->process_block();
-         int p = h - (int)((float)0.5f + h * (0.5f + 0.5f*tlfo->output));
-         cdisurf->setPixel(x,p,0x00000000);*/
-
-         for (int s = 0; s < aa_samples; s++)
+         float val = 0;
+         float eval = 0;
+         for (int s = 0; s < averagingWindow; s++)
          {
             tlfo->process_block();
 
-            float val = -tlfo->output;
-            val = (float)((0.5f + 0.4f * val) * h);
-            lastval = val;
-            float v_min = val;
-            float v_max = val;
-
-            v_min = val - 0.5f;
-            v_max = val + 0.5f;
-            int imin = (int)v_min;
-            int imax = (int)v_max;
-            float imax_frac = (v_max - imax);
-            float imin_frac = 1 - (v_min - imin);
-
-            // envelope outline
-            float eval = tlfo->env_val * lfodata->magnitude.val.f;
-            unsigned int ieval1 = (int)((float)((0.5f + 0.4f * eval) * h * 128));
-            unsigned int ieval2 = (int)((float)((0.5f - 0.4f * eval) * h * 128));
-
-            if ((ieval1 >> 7) < (h - 1))
-            {
-               column[ieval1 >> 7] += 128 - (ieval1 & 127);
-               column[(ieval1 >> 7) + 1] += ieval1 & 127;
-            }
-
-            if ((ieval2 >> 7) < (h - 1))
-            {
-               column[ieval2 >> 7] += 128 - (ieval2 & 127);
-               column[(ieval2 >> 7) + 1] += ieval2 & 127;
-            }
-
-            if (imax == imin)
-               imax++;
-
-            if (imin < 0)
-               imin = 0;
-            int dimax = imax, dimin = imin;
-
-            if ((x > boxo.left) || (s > 0))
-            {
-               if (dimin > last_imax)
-                  dimin = last_imax;
-               else if (dimax < last_imin)
-                  dimax = last_imin;
-            }
-            dimin = limit_range(dimin, 0, h);
-            dimax = limit_range(dimax, 0, h);
-
-            // int yp = (int)((float)(size.height() * (-osc->output[block_pos]*0.5+0.5)));
-            // yp = limit_range(yp,0,h-1);
-
-            column[dimin] += ((int)((float)imin_frac * 255.f));
-            column[dimax + 1] += ((int)((float)imax_frac * 255.f));
-            for (int b = (dimin + 1); b < (dimax + 1); b++)
-            {
-               column_d[b & 511] = aa_samples;
-            }
-            last_imax = imax;
-            last_imin = imin;
-
-            for (int y = 0; y < h; y++)
-            {
-               if (column_d[y] > 0)
-                  column[y] += 256;
-               column_d[y]--;
-            }
+            val  += tlfo->output;
+            eval += tlfo->env_val * lfodata->magnitude.val.f;
          }
-         column[midline] = max((unsigned int)128 << aa_bs, column[midline]);
-         column[topline] = max((unsigned int)32 << aa_bs, column[topline]);
-         column[bottomline] = max((unsigned int)32 << aa_bs, column[bottomline]);
+         val = val / averagingWindow;
+         eval = eval / averagingWindow;
+         val  = ( ( - val + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
+         float euval = ( ( - eval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
+         float edval = ( ( eval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
+      
+         float xc = valScale * i / totalSamples;
 
-         for (int y = 0; y < h2; y++)
+         if( i == 0 )
          {
-            cdisurf->setPixel(x, y,
-                              coltable[min((unsigned int)255, /*(y>>1) +*/ (column[y] >> aa_bs))]);
+             path->beginSubpath(xc, val );
+             eupath->beginSubpath(xc, euval);
+             edpath->beginSubpath(xc, edval);
+         }
+         else
+         {
+             path->addLine(xc, val );
+             eupath->addLine(xc, euval);
+             edpath->addLine(xc, edval);
          }
       }
       delete tlfo;
+
+      VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
+          .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
+          .translate(boxo.getTopLeft().x, boxo.getTopLeft().y )
+          .translate(maindisp.getTopLeft().x, maindisp.getTopLeft().y );
+
+      dc->saveGlobalState();
+
+      // OK so draw the rules
+      CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
+      CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
+      CPoint bot0(0, valScale * 0.1), bot1(valScale,valScale * 0.1);
+      tf.transform(mid0);
+      tf.transform(mid1);
+      tf.transform(top0);
+      tf.transform(top1);
+      tf.transform(bot0);
+      tf.transform(bot1);
+      dc->setDrawMode(VSTGUI::kAntiAliasing);
+
+      dc->setLineWidth(1.0);
+      dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
+      dc->drawLine(mid0, mid1);
+      
+      dc->setLineWidth(1.0);
+      dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
+      dc->drawLine(top0, top1);
+      dc->drawLine(bot0, bot1);
+      
+      dc->setLineWidth(1.3);
+      dc->setFrameColor(VSTGUI::CColor(0x00, 0x00, 0, 0xFF));
+      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
+
+      dc->setLineWidth(1.0);
+      dc->setFrameColor(VSTGUI::CColor(0xB0, 0x60, 0x00, 0xFF));
+      dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
+      dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
+      dc->restoreGlobalState();
+      path->forget();
+      eupath->forget();
+      edpath->forget();
    }
-
-   CPoint sp(0, 0);
-   CRect sr(size.left + splitpoint, size.top, size.right, size.bottom);
-   cdisurf->commit();
-   cdisurf->draw(dc, sr, sp);
-
-   /*if(lfodata->shape.val.i != ls_stepseq)
-   {
-           CRect tr(size);
-           tr.x = tr.x2 - 60;
-           tr.y2 = tr.y + 50;
-           CColor ctext = {224,126,0,0xff};
-           dc->setFontColor(ctext);
-           dc->setFont(patchNameFont);
-           dc->drawString("LFO 1",tr,false,kCenterText);
-   }*/
 
    CColor cskugga = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cgray = {0x97, 0x98, 0x9a, 0xff};
