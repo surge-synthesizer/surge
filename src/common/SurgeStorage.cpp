@@ -190,7 +190,37 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
        datapath = suppliedDataPath;
    }
    
-   userDataPath = std::string(homePath) + "/Documents/Surge";
+   /* 
+   ** See the discussion in github issue #930. Basically
+   ** if ~/Documents/Surge exists use that
+   ** else if ~/.Surge exists use that
+   ** else if ~/.Documents exists, use ~/Documents/Surge
+   ** else use ~/.Surge
+   ** Compensating for whether your distro makes you a ~/Documents or not
+   */
+
+   std::string documentsSurge = std::string(homePath) + "/Documents/Surge";
+   std::string dotSurge = std::string(homePath) + "/.Surge";
+   std::string documents = std::string(homePath) + "/Documents/";
+
+   if( fs::is_directory(documentsSurge) )
+   { 
+      userDataPath = documentsSurge;
+   }
+   else if( fs::is_directory(dotSurge) )
+   {
+      userDataPath = dotSurge;
+   }
+   else if( fs::is_directory(documents) )
+   {
+      userDataPath = documentsSurge;
+   }
+   else
+   {
+      userDataPath = dotSurge;
+   }
+   std::cout << "UserDataPath is " << userDataPath << std::endl;
+  
 #elif WINDOWS
 #if TARGET_RACK
    datapath = suppliedDataPath;
