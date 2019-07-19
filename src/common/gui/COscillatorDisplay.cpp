@@ -44,7 +44,11 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    int totalSamples = ( 1 << 4 ) * (int)getWidth();
    int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be an integer multiple of it
 
+#if LINUX
+   float valScale = 10000.0f;
+#else
    float valScale = 100.0f;
+#endif
    if (osc)
    {
       float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
@@ -109,6 +113,15 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
        .scale(getWidth()/valScale, h / valScale )
        .translate(size.getTopLeft().x, size.getTopLeft().y );
+#if LINUX
+   auto tmps = size;
+   dc->getCurrentTransform().transform(tmps);
+   VSTGUI::CGraphicsTransform tpath = VSTGUI::CGraphicsTransform()
+       .scale(getWidth()/valScale, h / valScale )
+       .translate(tmps.getTopLeft().x, tmps.getTopLeft().y );
+#else
+   auto tpath = tf;
+#endif
 
    dc->saveGlobalState();
 
@@ -133,9 +146,13 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    dc->drawLine(top0, top1);
    dc->drawLine(bot0, bot1);
 
+#if LINUX
+   dc->setLineWidth(130);
+#else
    dc->setLineWidth(1.3);
+#endif
    dc->setFrameColor(VSTGUI::CColor(0xFF, 0x90, 0, 0xFF));
-   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tf );
+   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath );
    dc->restoreGlobalState();
    path->forget();
    
