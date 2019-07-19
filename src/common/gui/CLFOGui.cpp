@@ -199,6 +199,9 @@ void CLFOGui::draw(CDrawContext* dc)
       int totalSamples = std::max( (int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE) );
       float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
       int averagingWindow = 1;
+      while( drawnTime / averagingWindow > 3.0 ) // subsample at longer times
+          averagingWindow ++;
+
       float valScale = 100.0;
       int susCountdown = -1;
       
