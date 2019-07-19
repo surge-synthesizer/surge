@@ -181,15 +181,26 @@ void CLFOGui::draw(CDrawContext* dc)
          tp[lfodata->trigmode.param_id_in_scene].i = lm_keytrigger;
       }
 
+      float susTime = 0.5;
+      float totalEnvTime =  pow(2.0f,lfodata->delay.val.f) +
+          pow(2.0f,lfodata->attack.val.f) +
+          pow(2.0f,lfodata->hold.val.f) +
+          pow(2.0f,lfodata->decay.val.f) +
+          std::min(pow(2.0f,lfodata->release.val.f), 4.f) +
+          susTime;
+
       LfoModulationSource* tlfo = new LfoModulationSource();
       tlfo->assign(storage, lfodata, tp, 0, ss, true);
       tlfo->attack();
       CRect boxo(maindisp);
       boxo.offset(-size.left - splitpoint, -size.top);
       
-      int totalSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
+      int minSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
+      int totalSamples = std::max( (int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE) );
+      float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
       int averagingWindow = 1;
       float valScale = 100.0;
+      int susCountdown = -1;
       
       for (int i=0; i<totalSamples; i += averagingWindow )
       {
@@ -198,7 +209,18 @@ void CLFOGui::draw(CDrawContext* dc)
          for (int s = 0; s < averagingWindow; s++)
          {
             tlfo->process_block();
-
+            if( susCountdown < 0 && tlfo->env_state == lenv_stuck )
+            {
+                susCountdown = susTime * samplerate / BLOCK_SIZE;
+            }
+            else if( susCountdown == 0 && tlfo->env_state == lenv_stuck ) {
+                tlfo->release();
+            }
+            else if( susCountdown > 0 )
+            {
+                susCountdown --;
+            }
+            
             val  += tlfo->output;
             eval += tlfo->env_val * lfodata->magnitude.val.f;
          }
@@ -232,6 +254,45 @@ void CLFOGui::draw(CDrawContext* dc)
 
       dc->saveGlobalState();
 
+      // find time delta
+      int maxNumLabels = 5;
+      std::vector<float> timeDeltas = { 0.5, 1.0, 2.5, 5.0, 10.0 };
+      auto currDelta = timeDeltas.begin();
+      while( currDelta != timeDeltas.end() && ( drawnTime / *currDelta ) > maxNumLabels )
+      {
+          currDelta ++;
+      }
+      float delta = timeDeltas.back();
+      if( currDelta != timeDeltas.end() )
+          delta = *currDelta;
+
+      int nLabels = (int)(drawnTime / delta) + 1;
+      float dx = delta / drawnTime * valScale;
+
+      for( int l=0; l<nLabels; ++l )
+      {
+          float xp = dx * l;
+          float yp = valScale * 0.9;
+          CRect tp(CPoint(xp + 1,yp), CPoint(10,10));
+          tf.transform(tp);
+          dc->setFontColor(VSTGUI::kBlackCColor);
+          dc->setFont(lfoTypeFont);
+          char txt[256];
+          float tv = delta * l;
+          if( fabs(roundf(tv) - tv) < 0.05 )
+              snprintf(txt, 256, "%d s", (int)round(delta * l) );
+          else
+              snprintf(txt, 256, "%.1f s", delta * l );
+          dc->drawString(txt, tp, VSTGUI::kLeftText, true );
+
+          CPoint sp(xp, valScale * 0.95), ep(xp, valScale * 0.85 );
+          tf.transform(sp);
+          tf.transform(ep);
+          dc->setLineWidth(1.0);
+          dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
+          dc->drawLine(sp,ep);
+      }
+      
       // OK so draw the rules
       CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
       CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
