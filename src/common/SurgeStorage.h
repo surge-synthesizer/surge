@@ -544,7 +544,7 @@ public:
    std::string userDataPath;
    std::string defaultsig, defaultname;
    // float table_sin[512],table_sin_offset[512];
-   CriticalSection CS_WaveTableData, CS_ModRouting;
+   Surge::CriticalSection CS_WaveTableData, CS_ModRouting;
    Wavetable WindowWT;
 
    float note_to_pitch(float x);
