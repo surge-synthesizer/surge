@@ -4,6 +4,7 @@
     <title>bmp00162</title>
     <desc>Created with Sketch.</desc>
     <g id="bmp00162" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#000000" x="0" y="0" width="34" height="30"></rect>
         <g id="Analog" transform="translate(0.000000, 23.000000)" fill="#FF9915">
             <rect id="Rectangle" x="0" y="0" width="34" height="7"></rect>
         </g>

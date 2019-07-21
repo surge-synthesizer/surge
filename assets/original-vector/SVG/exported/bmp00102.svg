@@ -236,7 +236,7 @@
         </g>
         <g id="Group-6" transform="translate(300.000000, 262.000000)">
             <rect id="Rectangle" stroke="#4B515D" fill="#434650" x="0.5" y="0.5" width="147" height="133.5" rx="2.5"></rect>
-            <path d="M86,21 L139,21 C141.209139,21 143,22.790861 143,25 L143,125 C143,127.209139 141.209139,129 139,129 L86,129 C83.790861,129 82,127.209139 82,125 L82,25 C82,22.790861 83.790861,21 86,21 Z M87,50 L87,99 L117,99 L117,50 L87,50 Z" id="Combined-Shape" fill-opacity="0.15" fill="#FFFFFF"></path>
+            <path d="M86,21 L139,21 C141.209139,21 143,22.790861 143,25 L143,125 C143,127.209139 141.209139,129 139,129 L86,129 C83.790861,129 82,127.209139 82,125 L82,25 C82,22.790861 83.790861,21 86,21 Z M87,50 L87,99 L117,99 L117,50 L87,50 Z" id="Combined-Shape" fill="#FFFFFF" opacity="0.2"></path>
             <g id="Group-17" filter="url(#filter-7)" transform="translate(124.000000, 114.000000)">
                 <rect id="Rectangle" fill="#B06D34" x="0.5" y="5" width="10" height="1"></rect>
                 <rect id="Rectangle" fill="#B06D34" transform="translate(5.500000, 5.500000) rotate(-90.000000) translate(-5.500000, -5.500000) " x="0.5" y="5" width="10" height="1"></rect>
