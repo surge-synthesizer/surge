@@ -40,6 +40,9 @@ Commands are:
         --build-install-vst3     Build and install only the VST3
         --build-headless         Build the headless application
 
+        --get-and-build-fx       Get and build the surge-fx project. This is only needed if you
+                                 want to make a release with that asset included
+
         --package                Creates a .pkg file from current built state in products
         --clean-and-package      Cleans everything; runs all the builds; makes an installer; drops it in products
                                  Equivalent of running --clean-all then --build then --package
@@ -305,7 +308,7 @@ run_clean_all()
     run_clean_builds
 
     echo "Cleaning additional assets (directories, XCode, etc)"
-    rm -rf Surge.xcworkspace *xcodeproj target products build_logs obj build
+    rm -rf Surge.xcworkspace *xcodeproj target products build_logs obj build fxbuild
 }
 
 run_uninstall_surge()
@@ -336,6 +339,21 @@ run_package()
     echo
     echo "Have a lovely day!"
     echo
+}
+
+get_and_build_fx()
+{
+    set -x
+    mkdir -p fxbuild
+    mkdir -p products
+    cd fxbuild
+    git clone https://github.com/surge-synthesizer/surge-fx
+    cd surge-fx
+    git submodule update --init --recursive
+    make build
+    cd Builds/MacOSX/build/Release
+    tar cf - surge-fx.component/* | ( cd ../../../../../../products ; tar xf - )
+	tar cf - surge-fx.vst3/* | ( cd   ../../../../../../products ; tar xf - )
 }
 
 # This is the main section of the script
@@ -402,6 +420,9 @@ case $command in
         ;;
     --uninstall-surge)
         run_uninstall_surge
+        ;;
+    --get-and-build-fx)
+        get_and_build_fx
         ;;
     "")
         default_action
