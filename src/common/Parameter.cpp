@@ -676,7 +676,7 @@ float Parameter::get_extended(float f)
 
 std::string Parameter::tempoSyncNotationValue(float f)
 {
-    float a, b = modf(f, &a);
+    float a, b = modff(f, &a);
     
     if (b >= 0)
     {
