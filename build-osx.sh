@@ -350,7 +350,7 @@ get_and_build_fx()
     git clone https://github.com/surge-synthesizer/surge-fx
     cd surge-fx
     git submodule update --init --recursive
-    make build
+    make -f Makefile.mac build
     cd Builds/MacOSX/build/Release
     tar cf - surge-fx.component/* | ( cd ../../../../../../products ; tar xf - )
 	tar cf - surge-fx.vst3/* | ( cd   ../../../../../../products ; tar xf - )
