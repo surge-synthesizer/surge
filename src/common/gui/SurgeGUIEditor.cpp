@@ -32,6 +32,8 @@
 #include "aulayer.h"
 #endif
 
+#include "vstgui/lib/platform/platform_x11.h"
+#include "vstgui/lib/platform/linux/x11platform.h"
 
 #include "RuntimeFont.h"
 
@@ -1320,12 +1322,28 @@ void SurgeGUIEditor::close_editor()
    setzero(param);
 }
 
+#if LINUX && TARGET_VST3
+extern void LinuxVST3Init(Steinberg::Linux::IRunLoop* pf);
+extern void LinuxVST3FrameOpen(CFrame* that, void*, const VSTGUI::PlatformType& pt);
+#endif
+
 #if !TARGET_VST3
 bool SurgeGUIEditor::open(void* parent)
 #else
 bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformType)
 #endif
 {
+   if (samplerate == 0)
+   {
+      std::cout << "SampleRate never set when editor opened. Setting to 44.1k" << std::endl;
+
+      /*
+      ** The oscillator displays need a sample rate; some test hosts don't call
+      ** setSampleRate so if we are in this state make the bad but reasonable
+      ** default choice
+      */
+      synth->setSamplerate(44100);
+   }
 #if !TARGET_VST3
    // !!! always call this !!!
    super::open(parent);
@@ -1334,6 +1352,23 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 #endif
 
 #if TARGET_VST3
+#if LINUX
+   Steinberg::Linux::IRunLoop* l = nullptr;
+   if (getIPlugFrame()->queryInterface(Steinberg::Linux::IRunLoop::iid, (void**)&l) ==
+       Steinberg::kResultOk)
+   {
+      std::cout << "IPlugFrame is a runloop " << l << std::endl;
+   }
+   else
+   {
+      std::cout << "IPlogFrame is not a runloop " << l << std::endl;
+   }
+   if (l == nullptr)
+   {
+      Surge::UserInteractions::promptError("Starting VST3 with null runloop", "Software Error");
+   }
+   LinuxVST3Init(l);
+#endif
    _idleTimer->start();
 #endif
 
@@ -1355,7 +1390,11 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    nframe->setBackground(cbm);
 
    frame = nframe;
+#if LINUX && TARGET_VST3
+   LinuxVST3FrameOpen(frame, parent, platformType);
+#else
    frame->open(parent, platformType);
+#endif
    /*#if TARGET_AUDIOUNIT
            synth = (sub3_synth*)_effect;
    #elif TARGET_VST3
