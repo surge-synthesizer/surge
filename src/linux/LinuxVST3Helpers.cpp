@@ -2,6 +2,7 @@
 ** The various things we need to help with VST3 Linux
 */
 
+#if TARGET_VST3
 #include <iostream>
 #include <pthread.h>
 #include <unistd.h>
@@ -218,3 +219,4 @@ void LinuxVST3FrameOpen(VSTGUI::CFrame* that, void* parent, const VSTGUI::Platfo
 
    IdleUpdateHandler::start();
 }
+#endif
