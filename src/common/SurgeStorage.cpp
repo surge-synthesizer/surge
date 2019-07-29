@@ -39,7 +39,7 @@ float table_dB alignas(16)[512],
       table_envrate_lpf alignas(16)[512],
       table_envrate_linear alignas(16)[512];
 float waveshapers alignas(16)[8][1024];
-float samplerate, samplerate_inv;
+float samplerate = 0, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
 double dsamplerate_os, dsamplerate_os_inv;
 

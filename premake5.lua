@@ -580,6 +580,7 @@ elseif (os.istarget("linux")) then
     files
     {
         "vst3sdk/public.sdk/source/main/linuxmain.cpp",
+	"src/linux/LinuxVST3Helpers.cpp"
     }
 
     excludes {
