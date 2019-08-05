@@ -6,6 +6,7 @@
 //
 //-------------------------------------------------------------------------------------------------------
 
+
 #include "Sample.h"
 #include "globals.h"
 #include "SurgeStorage.h"
@@ -294,3 +295,4 @@ bool Sample::load_riff_wave_mk2(const char* fname)
 }
 
 #endif
+

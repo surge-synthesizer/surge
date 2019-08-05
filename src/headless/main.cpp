@@ -146,6 +146,18 @@ void playSomeBach()
    Surge::Headless::renderMidiFileToWav(surge, fname, fname + ".wav");
 }
 
+void portableWt()
+{
+    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
+    
+    surge->storage.load_wt_wav_portable("/users/Paul/tmp/Wavetable Example/Wavetable.wav", nullptr);
+    surge->storage.load_wt_wav_portable("/Users/paul/tmp/SerumWT/Korg MS-2000/SQUARE-C2.wav", nullptr);
+    surge->storage.load_wt_wav_portable("/Users/paul/tmp/SerumWT/Classic Synths/05_BELL.WAV", nullptr);
+    surge->storage.load_wt_wav_portable("/Users/paul/tmp/SerumWT/Adventure Kid Serum/pluckalgo.wav", nullptr);
+
+    delete surge;
+}
+
 /*
 ** This is a simple main that, for now, you make call out to the application
 ** stub of your choosing. We have two in Applications and we call them both
@@ -159,7 +171,8 @@ int main(int argc, char** argv)
       //playSomeBach();
       //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
       // Surge::Headless::pullInitSamplesWithNoNotes(1000);
-       testTuning();
+       // testTuning();
+       portableWt();
    }
    catch( Surge::Error &e )
    {

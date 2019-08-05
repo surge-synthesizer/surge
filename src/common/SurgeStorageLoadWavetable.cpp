@@ -1,6 +1,8 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
+#if 0
+
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
 
@@ -297,3 +299,5 @@ abort:
    fprintf(stderr, "%s: WAV file loading is not implemented.\n", __func__);
 #endif
 }
+
+#endif
