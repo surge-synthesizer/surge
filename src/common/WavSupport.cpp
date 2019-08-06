@@ -54,19 +54,24 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     }
 
     char riff[4], szd[4], wav[4];
-    if( ! (fread(riff,1,4,fp) +
-           fread(szd,1,4,fp) +
-           fread(wav,1,4,fp) == 12 ) )
+    auto hds = fread(riff, 1, 4, fp);
+    hds += fread(szd, 1, 4, fp);
+    hds += fread(wav, 1, 4, fp);
+    if (hds != 12)
     {
-        return;
+       Surge::UserInteractions::promptError("File does not contain valid RIFF header chunk",
+                                            "Wavetable Error");
+       return;
     }
 
     if( ! four_chars(riff, 'R', 'I', 'F', 'F' ) &&
         ! four_chars(wav,  'W', 'A', 'V', 'E' ) )
     {
-        Surge::UserInteractions::promptError("File is not a standard RIFF/WAVE file",
-                                             "WaveTable Error" );
-        return;
+       std::ostringstream oss;
+       oss << "File is not a standard RIFF/WAVE file. Header is: [" << riff[0] << riff[1] << riff[2]
+           << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ".";
+       Surge::UserInteractions::promptError(oss.str(), "WaveTable Error");
+       return;
     }
     
     // WAV HEADER
