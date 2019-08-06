@@ -79,9 +79,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     }
     
     // WAV HEADER
-    short audioFormat, numChannels;
-    int sampleRate, byteRate;
-    short blockAlign, bitsPerSample;
+    unsigned short audioFormat, numChannels;
+    unsigned int sampleRate, byteRate;
+    unsigned short blockAlign, bitsPerSample;
 
     // Result of data read
     bool hasSMPL = false;
@@ -314,8 +314,11 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     if( wh.flags & wtf_is_sample )
     {
-        wh.n_samples = 1024;
-        wh.n_tables = (int)( sample_length / 1024 );
+        auto windowSize = 1024;
+        while( windowSize * 4 > sample_length && windowSize > 8 )
+            windowSize = windowSize / 2;
+        wh.n_samples = windowSize;
+        wh.n_tables = (int)( sample_length / windowSize );
     }
     
     int channels = 1;
