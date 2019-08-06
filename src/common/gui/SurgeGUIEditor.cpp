@@ -1892,6 +1892,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             contextMenu->checkEntry(eid, p->absolute);
             eid++;
          }
+         if (p->can_snap())
+         {
+            addCallbackMenu(contextMenu, "Snap", [this, p]() { p->snap = !p->snap; });
+            contextMenu->checkEntry(eid, p->snap);
+            eid++;
+         }
 
          {
             if (synth->learn_param > -1)

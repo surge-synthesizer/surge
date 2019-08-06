@@ -145,6 +145,7 @@ void Parameter::clear_flags()
    temposync = false;
    extend_range = false;
    absolute = false;
+   snap = false;
 }
 
 bool Parameter::can_temposync()
@@ -182,6 +183,37 @@ bool Parameter::can_be_absolute()
    return false;
 }
 
+bool Parameter::can_snap()
+{
+   switch (ctrltype)
+   {
+   case ct_countedset_percent:
+      return true;
+   }
+   return false;
+}
+
+void Parameter::set_user_data(ParamUserData* ud)
+{
+   switch (ctrltype)
+   {
+   case ct_countedset_percent:
+      if (dynamic_cast<CountedSetUserData*>(ud))
+      {
+         user_data = ud;
+      }
+      else
+      {
+         user_data = nullptr;
+      }
+      break;
+   default:
+      std::cerr << "Setting userdata on a non-supporting param ignored" << std::endl;
+      user_data = nullptr;
+      break;
+   }
+}
+
 void Parameter::set_type(int ctrltype)
 {
    this->ctrltype = ctrltype;
@@ -189,6 +221,7 @@ void Parameter::set_type(int ctrltype)
    this->moverate = 1.f;
 
    affect_other_parameters = false;
+   user_data = nullptr;
    switch (ctrltype)
    {
    case ct_pitch:
@@ -532,6 +565,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 0;
       break;
+   case ct_countedset_percent:
+      val_min.f = 0;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
    default:
    case ct_none:
       sprintf(dispname, "-");
@@ -579,6 +618,16 @@ void Parameter::bound_value(bool force_integer)
    if (force_integer && (valtype == vt_float))
    {
       val.f = floor(val.f + 0.5f);
+   }
+
+   if (snap && ctrltype == ct_countedset_percent && user_data)
+   {
+      CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
+      auto count = cs->getCountedSetSize();
+      // OK so now val.f is between 0 and 1. So
+      auto fraccount = val.f * count;
+      auto intcount = (int)fraccount;
+      val.f = 1.0 * intcount / count;
    }
 
    switch (valtype)
@@ -837,6 +886,21 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_percent:
       case ct_percent_bidirectional:
          sprintf(txt, "%.1f %c", f * 100.f, '%');
+         break;
+      case ct_countedset_percent:
+         if (user_data == nullptr)
+         {
+            sprintf(txt, "%.1f %c", f * 100.f, '%');
+         }
+         else
+         {
+            // We check when set so the reinterpret cast is safe and fast
+            CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
+            auto count = cs->getCountedSetSize();
+            auto tl = count * f;
+            sprintf(txt, "%.1f%% (%.1f / %d)", f * 100.f, tl, count);
+         }
+
          break;
       case ct_oscspread:
          if (absolute)
