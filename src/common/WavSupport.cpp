@@ -130,7 +130,25 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
             std::cout << "     FMT=" << audioFormat << " x " << numChannels << " at " << bitsPerSample << " bits" << std::endl;
             
-            free(data);           
+            free(data);
+
+            // Do a format check here to bail out
+            if (! ( numChannels == 1 &&
+                    ( (audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16) ) ||
+                    ( (audioFormat == 3 /* IEEE_FLOAT */ ) && (bitsPerSample == 32) ) ) )
+            {
+                std::string fname = "Neither";
+                if( audioFormat == 1 ) fname = "PCM";
+                if( audioFormat == 3 ) fname = "IEEE";
+                std::ostringstream oss;
+                oss << "Sorry, Surge only supports 16-bit PCM or 32-bit IEEE float mono (single channel) wav files. "
+                    << " You provided a wav with format=" << audioFormat << " (" << fname << ") "
+                    << " bitsPerSample=" << bitsPerSample
+                    << " and channels=" << numChannels;
+                
+                Surge::UserInteractions::promptError( oss.str(), uitag );
+                return;
+            }
         }
         else if( four_chars(chunkType, 'c', 'l', 'm', ' '))
         {
