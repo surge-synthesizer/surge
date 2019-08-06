@@ -6,12 +6,15 @@
 **
 **  1: The `smpl` block
 **  2: the `clm ` block - indicates a serum file
+**  3: the 'cue' block which apparently NI uses
 **
 ** I read them in this order
 **
-**  1. If there is a clm block that wins, we ignore the smpl block, and you get your 2048 wt
-**  2. If there is no smpl block and you have a smpl block if you have a power of 2 sample length
-**     we interpret you as a wt otherwise as a one shot
+**  1. If there is a clm block that wins, we ignore the smpl and cue block, and you get your 2048 wt
+**  2. If there is a cue block and no clm, use the offsets if they are power of 2 and regular
+**  3. Else if there is no smpl block and you have a smpl block if you have a power of 2 sample length
+**     we interpret you as a wt 
+**  4. otherwise as a one shot or - right now-  an error
 */
 
 
@@ -41,6 +44,7 @@ bool four_chars(char *v, char a, char b, char c, char d)
 
 void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 {
+    std::string uitag = "Wav File Load Error";
     std::cout << "Loading wt_wav_portable" << std::endl;
     std::cout << "  fn='" << fn << "'" << std::endl;
 
@@ -49,7 +53,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     {
         std::ostringstream oss;
         oss << "Unable to open file '" << fn << "'";
-        Surge::UserInteractions::promptError(oss.str(), "WaveTable Error" );
+        Surge::UserInteractions::promptError(oss.str(), uitag );
         return;
     }
 
@@ -60,7 +64,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if (hds != 12)
     {
        Surge::UserInteractions::promptError("File does not contain valid RIFF header chunk",
-                                            "Wavetable Error");
+                                            uitag );
        return;
     }
 
@@ -70,7 +74,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
        std::ostringstream oss;
        oss << "File is not a standard RIFF/WAVE file. Header is: [" << riff[0] << riff[1] << riff[2]
            << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ".";
-       Surge::UserInteractions::promptError(oss.str(), "WaveTable Error");
+       Surge::UserInteractions::promptError(oss.str(), uitag );
        return;
     }
     
@@ -82,8 +86,10 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     // Result of data read
     bool hasSMPL = false;
     bool hasCLM = false;;
+    bool hasCUE = false;
     int clmLEN = 0;
     int smplLEN = 0;
+    int cueLEN = 0;
     
     // Now start reading chunks
     int tbr = 4;
@@ -122,6 +128,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             blockAlign = pl_short(dp); dp += 2;
             bitsPerSample = pl_short(dp); dp += 2;
 
+            std::cout << "     FMT=" << audioFormat << " x " << numChannels << " at " << bitsPerSample << " bits" << std::endl;
+            
             free(data);           
         }
         else if( four_chars(chunkType, 'c', 'l', 'm', ' '))
@@ -134,6 +142,49 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
                 hasCLM = true;
                 clmLEN = 2048;
             }
+            free(data);
+        }
+        else if( four_chars(chunkType, 'c', 'u', 'e', ' ' ))
+        {
+            char *dp = data;
+            int numCues = pl_int(dp); dp += 4;
+            std::cout << "    `cue ` block count: " << numCues << std::endl;
+            std::vector<int> chunkStarts;
+            for( int i=0; i<numCues; ++i )
+            {
+                for( int j=0; j<6; ++j )
+                {
+                    auto d = pl_int(dp);
+                    if( j == 5 )
+                        chunkStarts.push_back(d);
+
+                    dp += 4;
+                }
+            }
+            for( auto x : chunkStarts )
+                std::cout << "      cue at " << x << std::endl;
+
+            // Now are my chunkstarts regular
+            int d = -1;
+            bool regular = true;
+            for( auto i=1; i<chunkStarts.size(); ++i )
+            {
+                if( d == -1 )
+                    d = chunkStarts[i] - chunkStarts[i-1];
+                else
+                {
+                    if( d != chunkStarts[i] - chunkStarts[i-1] )
+                        regular = false;
+                }
+            }
+
+            if( regular )
+            {
+                std::cout << "      cue blocks are regular" << std::endl;
+                hasCUE = true;
+                cueLEN = d;
+            }
+            
             free(data);
         }
         else if( four_chars(chunkType, 'd', 'a', 't', 'a' ))
@@ -152,10 +203,12 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             }
             unsigned int nloops = samplechunk[7];
             unsigned int sdsz = samplechunk[8];
-
+            std::cout << "   SMPL: " << nloops << " " << sdsz << std::endl;
+            
             if( nloops != 1 )
             {
                 // We don't support this. Indicate somehow.
+                // FIXME
             }
             
             for( int i=0; i<nloops && i < 1; ++i )
@@ -164,6 +217,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
                 for( int j=0; j<6; ++j )
                 {
                     loopdata[j] = pl_int(dp); dp += 4;
+                    std::cout << "      loopdata[" << j << "] = " << loopdata[j] << std::endl;
                 }
                 hasSMPL = true;
                 smplLEN = loopdata[3] - loopdata[2] + 1;
@@ -176,13 +230,15 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     }
 
 
+    std::cout << "  hasCLM =" << hasCLM << " / " << clmLEN << std::endl;
+    std::cout << "  hasCUE =" << hasCUE << " / " << cueLEN << std::endl;
+    std::cout << "  hasSMPL=" << hasSMPL << "/" << smplLEN << std::endl;
+
     bool loopData = hasSMPL || hasCLM;
-    int loopLen = hasCLM ? clmLEN : smplLEN;
+    int loopLen = hasCLM ? clmLEN :
+        ( hasCUE ? cueLEN :
+          (hasSMPL ? smplLEN : -1 ) );
     int loopCount = datasamples / loopLen;
-    if( loopCount * loopLen != datasz )
-    {
-        // Do somethign about this error state where loops are not integer
-    }
 
     std::cout << "  samples=" << datasamples << " loopLen=" << loopLen << " loopCount=" << loopCount << std::endl;
     
@@ -234,23 +290,33 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             sh = 1;
             break;
         default:
+            std::cout << "Setting style to sample" << std::endl;
             wh.flags = wtf_is_sample;
             break;
         }
     }
 
-    if( sh == 0 )
+    if( loopLen != -1 && ( sh == 0 || loopCount < 3 ) )
     {
-        Surge::UserInteractions::promptError( "Sorry we only can read power of 2 wavetables right now but sample support coming soon!q",
-                                              "Error loading WAV" );
+        std::ostringstream oss;
+        oss << "Sorry, Surge only supports power-of-2-samplecount wavetables up to 4096 with at least 3 loops at this time. "
+            << " You provided a wavetable with " << loopCount << " loops of " << loopLen << " samples.";
+        Surge::UserInteractions::promptError( oss.str(), uitag );
+                                              
+        if (wavdata) free(wavdata);
+        return;
     }
-    
+
     wh.n_samples = 1 << sh;
     int mask = wt->size - 1;
-    
     int sample_length = std::min(datasamples, max_wtable_size * max_subtables);
-    
     wh.n_tables = std::min(max_subtables, (sample_length >> sh));
+
+    if( wh.flags & wtf_is_sample )
+    {
+        wh.n_samples = 1024;
+        wh.n_tables = (int)( sample_length / 1024 );
+    }
     
     int channels = 1;
 
@@ -259,7 +325,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         (bitsPerSample == 16) &&
         numChannels == 1)
     {
-        assert(wh.n_samples * wh.n_tables * 2 <= datasz);
+        // assert(wh.n_samples * wh.n_tables * 2 <= datasz);
         wh.flags |= wtf_int16;
     }
     else if ((audioFormat == 3 /* WAVE_FORMAT_IEEE_FLOAT */) &&
@@ -267,12 +333,18 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
              numChannels == 1
         )
     {
-        assert(wh.n_samples * wh.n_tables * 4 <= datasz);
+        // assert(wh.n_samples * wh.n_tables * 4 <= datasz);
     }
     else
     {
-        Surge::UserInteractions::promptError( "Sorry, we only support 16 bit mono PCM and 32 bit IEEE float",
-                                              "Wav File Error" );
+        std::ostringstream oss;
+        oss << "Sorry, Surge only supports 16-bit PCM or 32-bit IEEE float mono wav files. "
+            << " You provided a wav with format=" << audioFormat
+            << " bitsPerSample=" << bitsPerSample
+            << " and numChannels=" << numChannels;
+
+        Surge::UserInteractions::promptError( oss.str(), uitag );
+                                              
         if( wavdata ) free( wavdata );
         return;
     }
