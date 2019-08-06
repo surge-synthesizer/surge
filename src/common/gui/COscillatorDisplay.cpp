@@ -247,12 +247,13 @@ bool COscillatorDisplay::onDrop(IDataPackage* drag, const CPoint& where)
          drag->getData(0, fn, t);
          const char* fName = static_cast<const char*>(fn);
          fs::path fPath(fName);
-         if (_stricmp(fPath.extension().generic_string().c_str(), ".wt") != 0)
+         if ((_stricmp(fPath.extension().generic_string().c_str(), ".wt") != 0) && 
+             (_stricmp(fPath.extension().generic_string().c_str(), ".wav") != 0))
          {
             Surge::UserInteractions::promptError(
                 std::string(
-                    "Surge only supports drag-and-drop of .wt wavetables onto the oscillator. ") +
-                    "You dropped a file with extension " + fPath.extension().generic_string(),
+                    "Surge only supports drag-and-drop of .wt or .wav wavetables onto the oscillator. ") +
+                "You dropped a file with extension " + fPath.extension().generic_string(),
                 "Please drag a valid file type");
          }
          else
