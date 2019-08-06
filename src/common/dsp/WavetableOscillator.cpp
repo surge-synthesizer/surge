@@ -101,7 +101,10 @@ void WavetableOscillator::init(float pitch, bool is_display)
 void WavetableOscillator::init_ctrltypes()
 {
    oscdata->p[0].set_name("Morph");
-   oscdata->p[0].set_type(ct_percent);
+   oscdata->p[0].set_type(ct_countedset_percent);
+   oscdata->p[0].set_user_data(oscdata);
+   oscdata->p[0].snap = false;
+
    oscdata->p[1].set_name("Skew V");
    oscdata->p[1].set_type(ct_percent_bidirectional);
    oscdata->p[2].set_name("Saturate");

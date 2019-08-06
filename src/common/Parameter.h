@@ -85,6 +85,7 @@ enum ctrltypes
    ct_bool_fm,
    ct_character,
    ct_sineoscmode,
+   ct_countedset_percent, // what % through a counted set are you
    num_ctrltypes,
 };
 
@@ -102,6 +103,17 @@ enum ControlGroup
    cg_ENV = 5,
    cg_LFO = 6,
    cg_FX = 7,
+};
+
+struct ParamUserData
+{
+   virtual ~ParamUserData()
+   {}
+};
+
+struct CountedSetUserData : public ParamUserData
+{
+   virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
 };
 
 class Parameter
@@ -123,6 +135,7 @@ public:
    bool can_temposync();
    bool can_extend_range();
    bool can_be_absolute();
+   bool can_snap();
    void clear_flags();
    void set_type(int ctrltype);
    void morph(Parameter* a, Parameter* b, float x);
@@ -166,5 +179,8 @@ public:
    bool affect_other_parameters;
    float moverate;
    bool per_voice_processing;
-   bool temposync, extend_range, absolute;
+   bool temposync, extend_range, absolute, snap;
+
+   ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
+   void set_user_data(ParamUserData* ud); // I take a shallow copy and assume i am referencable
 };

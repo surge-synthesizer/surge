@@ -293,7 +293,7 @@ struct MidiChannelState
    float timbre;
 };
 
-struct OscillatorStorage
+struct OscillatorStorage : public CountedSetUserData // The counted set is the wt tables
 {
    Parameter type;
    Parameter pitch, octave;
@@ -302,6 +302,11 @@ struct OscillatorStorage
    Wavetable wt;
    void* queue_xmldata;
    int queue_type;
+
+   virtual int getCountedSetSize()
+   {
+      return wt.n_tables;
+   }
 };
 
 struct FilterStorage
