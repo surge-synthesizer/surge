@@ -235,8 +235,14 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    setDirty(false);
 }
 
-bool COscillatorDisplay::onDrop(IDataPackage* drag, const CPoint& where)
+bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
 {
+   doingDrag = false;
+   /* invalid();
+      setDirty(true); */
+
+   auto drag = data.drag;
+   auto where = data.pos;
    uint32_t ct = drag->getCount();
    if (ct == 1)
    {

@@ -7,7 +7,7 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 
-class COscillatorDisplay : public VSTGUI::CControl
+class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget
 {
 public:
    COscillatorDisplay(const VSTGUI::CRect& size, OscillatorStorage* oscdata, SurgeStorage* storage)
@@ -21,7 +21,28 @@ public:
    {
    }
    virtual void draw(VSTGUI::CDrawContext* dc);
-   virtual bool onDrop(VSTGUI::IDataPackage* drag, const VSTGUI::CPoint& where);
+   
+   virtual VSTGUI::DragOperation onDragEnter(VSTGUI::DragEventData data) override
+   {
+       doingDrag = true;
+       /* invalid();
+          setDirty(true); */
+
+       return VSTGUI::DragOperation::Copy;
+   }
+   virtual VSTGUI::DragOperation onDragMove(VSTGUI::DragEventData data) override
+   {
+       return VSTGUI::DragOperation::Copy;
+   }
+   virtual void onDragLeave(VSTGUI::DragEventData data) override
+   {
+       doingDrag = false;
+       /* invalid();
+          setDirty(true); */
+   }
+   virtual bool onDrop(VSTGUI::DragEventData data) override;
+   
+   virtual VSTGUI::SharedPointer<VSTGUI::IDropTarget> getDropTarget () override { return this; }
 
    void loadWavetable(int id);
    void loadWavetableFromFile();
@@ -39,6 +60,7 @@ protected:
    SurgeStorage* storage;
    unsigned controlstate;
 
+   bool doingDrag = false;
    VSTGUI::CRect rnext, rprev, rmenu;
    VSTGUI::CPoint lastpos;
    CLASS_METHODS(COscillatorDisplay, VSTGUI::CControl)
