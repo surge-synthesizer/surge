@@ -162,6 +162,14 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             }
             free(data);
         }
+        else if( four_chars(chunkType, 'u', 'h', 'W', 'T'))
+        {
+            // This is HIVE metadata so treat it just like CLM / Serum
+            hasCLM = true;
+            clmLEN = 2048;
+
+            free(data);
+        }
         else if( four_chars(chunkType, 'c', 'u', 'e', ' ' ))
         {
             char *dp = data;
@@ -221,9 +229,16 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             }
             unsigned int nloops = samplechunk[7];
             unsigned int sdsz = samplechunk[8];
-            std::cout << "   SMPL: " << nloops << " " << sdsz << std::endl;
+            std::cout << "   SMPL: nloops=" << nloops << " " << sdsz << std::endl;
+
+            if( nloops == 0 )
+            {
+                // It seems RAPID uses a smpl block with no samples to indicate a 2048.
+                hasSMPL = true;
+                smplLEN = 2048;
+            }
             
-            if( nloops != 1 )
+            if( nloops > 1 )
             {
                 // We don't support this. Indicate somehow.
                 // FIXME
@@ -243,6 +258,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         }
         else
         {
+            /*std::cout << "Default Dump\n";
+            for( int i=0; i<cs; ++i ) std::cout << data[i];
+            std::cout << std::endl; */
             free(data);
         }
     }
