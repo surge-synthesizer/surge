@@ -233,6 +233,7 @@ function plugincommon()
         "src/common/SurgeSynthesizerIO.cpp",
         "src/common/Tunings.cpp",
         "src/common/UserDefaults.cpp",
+        "src/common/WavSupport.cpp",
         "libs/xml/tinyxml.cpp",
         "libs/xml/tinyxmlerror.cpp",
         "libs/xml/tinyxmlparser.cpp",

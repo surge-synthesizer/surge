@@ -516,7 +516,8 @@ public:
    void load_wt(int id, Wavetable* wt);
    void load_wt(std::string filename, Wavetable* wt);
    void load_wt_wt(std::string filename, Wavetable* wt);
-   void load_wt_wav(std::string filename, Wavetable* wt);
+   // void load_wt_wav(std::string filename, Wavetable* wt);
+   void load_wt_wav_portable(std::string filename, Wavetable *wt);
    void clipboard_copy(int type, int scene, int entry);
    void clipboard_paste(int type, int scene, int entry);
    int get_clipboard_type();

@@ -24,6 +24,7 @@ public:
    virtual bool onDrop(VSTGUI::IDataPackage* drag, const VSTGUI::CPoint& where);
 
    void loadWavetable(int id);
+   void loadWavetableFromFile();
 
    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);

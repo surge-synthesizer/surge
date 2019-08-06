@@ -349,6 +349,13 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
          populateMenuForCategory(contextMenu, c, selectedItem);
       }
    }
+
+   // Add direct open here
+   contextMenu->addSeparator();
+   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc("Open Wave Table from File"));
+   auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
+   actionItem->setActions(action, nullptr);
+   contextMenu->addEntry(actionItem);
 }
 
 bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
@@ -438,6 +445,15 @@ void COscillatorDisplay::loadWavetable(int id)
    {
       oscdata->wt.queue_id = id;
    }
+}
+
+void COscillatorDisplay::loadWavetableFromFile()
+{
+    Surge::UserInteractions::promptFileOpenDialog( "", "", [this](std::string s) {
+            std::cout << "Gonna try and open '" << s << "'" << std::endl;
+            strncpy(this->oscdata->wt.queue_filename, s.c_str(), 255);
+
+        } );
 }
 
 CMouseEventResult COscillatorDisplay::onMouseUp(CPoint& where, const CButtonState& buttons)

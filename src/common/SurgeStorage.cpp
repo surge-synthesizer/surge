@@ -610,9 +610,7 @@ void SurgeStorage::refresh_wtlistAddDir(bool userDir, std::string subdir)
 {
    std::vector<std::string> supportedTableFileTypes;
    supportedTableFileTypes.push_back(".wt");
-#if WINDOWS
    supportedTableFileTypes.push_back(".wav");
-#endif
 
    refreshPatchOrWTListAddDir(
        userDir, subdir,
@@ -671,10 +669,8 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt)
       extension[i] = tolower(extension[i]);
    if (extension.compare(".wt") == 0)
       load_wt_wt(filename, wt);
-#if !MAC
    else if (extension.compare(".wav") == 0)
-      load_wt_wav(filename, wt);
-#endif
+      load_wt_wav_portable(filename, wt);
 }
 
 void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
