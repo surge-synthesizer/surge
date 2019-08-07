@@ -52,6 +52,16 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
+   void setIsMod(bool b)
+   {
+      is_mod = b;
+      mod_time = 0;
+   }
+   void tickModTime()
+   {
+      mod_time += 1.0 / 30.0;
+   }
+
 protected:
    void populateMenu(VSTGUI::COptionMenu* m, int selectedItem);
    bool populateMenuForCategory(VSTGUI::COptionMenu* parent, int categoryId, int selectedItem);
@@ -61,6 +71,8 @@ protected:
    unsigned controlstate;
 
    bool doingDrag = false;
+   bool is_mod = false;
+   float mod_time = 0;
    VSTGUI::CRect rnext, rprev, rmenu;
    VSTGUI::CPoint lastpos;
    CLASS_METHODS(COscillatorDisplay, VSTGUI::CControl)

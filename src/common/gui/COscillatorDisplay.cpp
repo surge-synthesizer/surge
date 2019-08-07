@@ -25,11 +25,42 @@ extern CFontRef displayFont;
 
 void COscillatorDisplay::draw(CDrawContext* dc)
 {
-   pdata tp[n_scene_params];
-   tp[oscdata->pitch.param_id_in_scene].f = 0;
-   for (int i = 0; i < n_osc_params; i++)
-      tp[oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
-   Oscillator* osc = spawn_osc(oscdata->type.val.i, storage, oscdata, tp);
+   pdata tp[3][n_scene_params];
+   Oscillator* osces[3];
+   for (int c = 0; c < 3; ++c)
+   {
+      osces[c] = nullptr;
+      if (!is_mod && c != 2)
+         continue;
+
+      if (c == 1)
+         continue;
+
+      double smt = sin(M_PI * mod_time);
+
+      tp[c][oscdata->pitch.param_id_in_scene].f = 0;
+      for (int i = 0; i < n_osc_params; i++)
+         tp[c][oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
+
+      if (c != 2)
+      {
+         auto modOut = (c == 0 ? 1.0 : -1.0);
+         auto activeScene = storage->getPatch().scene_active.val.i;
+         auto* scene = &(storage->getPatch().scene[activeScene]);
+         auto iter = scene->modulation_voice.begin();
+
+         while (iter != scene->modulation_voice.end())
+         {
+            int src_id = iter->source_id;
+            int dst_id = iter->destination_id;
+            float depth = iter->depth;
+            tp[c][dst_id].f += depth * modOut * smt;
+            iter++;
+         }
+      }
+
+      osces[c] = spawn_osc(oscdata->type.val.i, storage, oscdata, tp[c]);
+   }
 
    int h = getHeight();
    if (uses_wavetabledata(oscdata->type.val.i))
@@ -40,7 +71,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    int bottomline = midline + 0.4f * h;
 
 
-   CGraphicsPath *path = dc->createGraphicsPath();
    int totalSamples = ( 1 << 4 ) * (int)getWidth();
    int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be an integer multiple of it
 
@@ -49,113 +79,132 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 #else
    float valScale = 100.0f;
 #endif
-   if (osc)
+
+   auto size = getViewSize();
+
+   for (int c = 0; c < 3; ++c)
    {
-      float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
-      bool use_display = osc->allow_display();
-
-      // Mis-install check #2
-      if (uses_wavetabledata(oscdata->type.val.i) && storage->wt_list.size() == 0)
-         use_display = false;
-
-      if (use_display)
-         osc->init(disp_pitch_rs, true);
-      
-      int block_pos = BLOCK_SIZE_OS;
-      for( int i=0; i<totalSamples; i += averagingWindow )
+      Oscillator* osc = osces[c];
+      CGraphicsPath* path = dc->createGraphicsPath();
+      if (osc)
       {
-          if (use_display && (block_pos >= BLOCK_SIZE_OS))
-          {
-              if (uses_wavetabledata(oscdata->type.val.i))
-              {
+         float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
+         bool use_display = osc->allow_display();
+
+         // Mis-install check #2
+         if (uses_wavetabledata(oscdata->type.val.i) && storage->wt_list.size() == 0)
+            use_display = false;
+
+         if (use_display)
+            osc->init(disp_pitch_rs, true);
+
+         int block_pos = BLOCK_SIZE_OS;
+         for (int i = 0; i < totalSamples; i += averagingWindow)
+         {
+            if (use_display && (block_pos >= BLOCK_SIZE_OS))
+            {
+               if (uses_wavetabledata(oscdata->type.val.i))
+               {
                   storage->CS_WaveTableData.enter();
                   osc->process_block(disp_pitch_rs);
                   block_pos = 0;
                   storage->CS_WaveTableData.leave();
-              }
-              else
-              {
+               }
+               else
+               {
                   osc->process_block(disp_pitch_rs);
                   block_pos = 0;
-              }
-          }
+               }
+            }
 
-          float val = 0.f;
-          if (use_display)
-          {
-              for( int j=0; j<averagingWindow; ++j ) {
+            float val = 0.f;
+            if (use_display)
+            {
+               for (int j = 0; j < averagingWindow; ++j)
+               {
                   val += osc->output[block_pos];
-                  block_pos ++;
-              }
-              val = val / averagingWindow;
-              val = ( (-val+1.0f) * 0.5f * 0.8 + 0.1 ) * valScale;
-          }
-          block_pos++;
-          float xc = valScale * i / totalSamples;
-          
-          // OK so val is now a value between 0 and valScale, and xc is a value between 0 and valScale
-          if( i == 0 )
-          {
-              path->beginSubpath(xc, val);
-          }
-          else
-          {
-              path->addLine(xc, val);
-          }
+                  block_pos++;
+               }
+               val = val / averagingWindow;
+               val = ((-val + 1.0f) * 0.5f * 0.8 + 0.1) * valScale;
+            }
+            block_pos++;
+            float xc = valScale * i / totalSamples;
+
+            // OK so val is now a value between 0 and valScale, and xc is a value between 0 and
+            // valScale
+            if (i == 0)
+            {
+               path->beginSubpath(xc, val);
+            }
+            else
+            {
+               path->addLine(xc, val);
+            }
+         }
+         // srand( (unsigned)time( NULL ) );
       }
-      delete osc;
-      // srand( (unsigned)time( NULL ) );
+      // OK so now we need to figure out how to transfer the box with is [0,valscale] x [0,valscale]
+      // to our coords. So scale then position
+      VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
+                                          .scale(getWidth() / valScale, h / valScale)
+                                          .translate(size.getTopLeft().x, size.getTopLeft().y);
+#if LINUX
+      auto tmps = size;
+      dc->getCurrentTransform().transform(tmps);
+      VSTGUI::CGraphicsTransform tpath = VSTGUI::CGraphicsTransform()
+                                             .scale(getWidth() / valScale, h / valScale)
+                                             .translate(tmps.getTopLeft().x, tmps.getTopLeft().y);
+#else
+      auto tpath = tf;
+#endif
+
+      dc->saveGlobalState();
+
+      if (c == 0)
+      {
+         // OK so draw the rules
+         CPoint mid0(0, valScale / 2.f), mid1(valScale, valScale / 2.f);
+         CPoint top0(0, valScale * 0.9), top1(valScale, valScale * 0.9);
+         CPoint bot0(0, valScale * 0.1), bot1(valScale, valScale * 0.1);
+         tf.transform(mid0);
+         tf.transform(mid1);
+         tf.transform(top0);
+         tf.transform(top1);
+         tf.transform(bot0);
+         tf.transform(bot1);
+         dc->setDrawMode(VSTGUI::kAntiAliasing);
+
+         dc->setLineWidth(1.0);
+         dc->setFrameColor(VSTGUI::CColor(90, 90, 90));
+         dc->drawLine(mid0, mid1);
+
+         dc->setLineWidth(1.0);
+         dc->setFrameColor(VSTGUI::CColor(70, 70, 70));
+         dc->drawLine(top0, top1);
+         dc->drawLine(bot0, bot1);
+      }
+
+#if LINUX
+      dc->setLineWidth(130);
+#else
+      dc->setLineWidth(1.3);
+#endif
+      dc->setDrawMode(VSTGUI::kAntiAliasing);
+      if (c == 0)
+         dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
+      else if (c == 1)
+         dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
+      else
+         dc->setFrameColor(VSTGUI::CColor(0xFF, 0x90, 0, 0xFF));
+      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
+      dc->restoreGlobalState();
+
+      path->forget();
+
+      delete osces[c];
    }
 
-   // OK so now we need to figure out how to transfer the box with is [0,valscale] x [0,valscale] to our coords.
-   // So scale then position
-   auto size = getViewSize();
-   VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
-       .scale(getWidth()/valScale, h / valScale )
-       .translate(size.getTopLeft().x, size.getTopLeft().y );
-#if LINUX
-   auto tmps = size;
-   dc->getCurrentTransform().transform(tmps);
-   VSTGUI::CGraphicsTransform tpath = VSTGUI::CGraphicsTransform()
-       .scale(getWidth()/valScale, h / valScale )
-       .translate(tmps.getTopLeft().x, tmps.getTopLeft().y );
-#else
-   auto tpath = tf;
-#endif
-
-   dc->saveGlobalState();
-
-   // OK so draw the rules
-   CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
-   CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
-   CPoint bot0(0, valScale * 0.1), bot1(valScale,valScale * 0.1);
-   tf.transform(mid0);
-   tf.transform(mid1);
-   tf.transform(top0);
-   tf.transform(top1);
-   tf.transform(bot0);
-   tf.transform(bot1);
-   dc->setDrawMode(VSTGUI::kAntiAliasing);
-
-   dc->setLineWidth(1.0);
-   dc->setFrameColor(VSTGUI::CColor(90,90,90));
-   dc->drawLine(mid0, mid1);
-
-   dc->setLineWidth(1.0);
-   dc->setFrameColor(VSTGUI::CColor(70,70,70));
-   dc->drawLine(top0, top1);
-   dc->drawLine(bot0, bot1);
-
-#if LINUX
-   dc->setLineWidth(130);
-#else
-   dc->setLineWidth(1.3);
-#endif
-   dc->setFrameColor(VSTGUI::CColor(0xFF, 0x90, 0, 0xFF));
-   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath );
-   dc->restoreGlobalState();
-   path->forget();
-   
    if (uses_wavetabledata(oscdata->type.val.i))
    {
       CRect wtlbl(size);
