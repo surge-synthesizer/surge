@@ -42,6 +42,17 @@ bool four_chars(char *v, char a, char b, char c, char d)
         v[3] == d;
 }
 
+struct FcloseGuard {
+    FILE *fp = nullptr;
+    FcloseGuard( FILE *f ) { fp = f; }
+    ~FcloseGuard() {
+        if( fp )
+        {
+            fclose(fp);
+        }
+    }
+                
+};
 void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 {
     std::string uitag = "Wav File Load Error";
@@ -56,7 +67,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         Surge::UserInteractions::promptError(oss.str(), uitag );
         return;
     }
-
+    FcloseGuard closeOnReturn(fp);
+    
     char riff[4], szd[4], wav[4];
     auto hds = fread(riff, 1, 4, fp);
     hds += fread(szd, 1, 4, fp);
@@ -144,7 +156,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
                 oss << "Sorry, Surge only supports 16-bit PCM or 32-bit IEEE float mono (single channel) wav files. "
                     << " You provided a wav with format=" << audioFormat << " (" << fname << ") "
                     << " bitsPerSample=" << bitsPerSample
-                    << " and channels=" << numChannels;
+                    << " and channels=" << numChannels << (numChannels == 2 ? " (stereo)" : "" );
                 
                 Surge::UserInteractions::promptError( oss.str(), uitag );
                 return;

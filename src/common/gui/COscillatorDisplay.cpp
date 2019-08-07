@@ -457,7 +457,6 @@ void COscillatorDisplay::loadWavetable(int id)
 void COscillatorDisplay::loadWavetableFromFile()
 {
     Surge::UserInteractions::promptFileOpenDialog( "", "", [this](std::string s) {
-            std::cout << "Gonna try and open '" << s << "'" << std::endl;
             strncpy(this->oscdata->wt.queue_filename, s.c_str(), 255);
 
         } );

@@ -671,6 +671,12 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt)
       load_wt_wt(filename, wt);
    else if (extension.compare(".wav") == 0)
       load_wt_wav_portable(filename, wt);
+   else
+   {
+       std::ostringstream oss;
+       oss << "Unable to load file with extension '" << extension << "'. Surge only supports .wav and .wt files";
+       Surge::UserInteractions::promptError(oss.str(), "load_wt error" );
+   }
 }
 
 void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
