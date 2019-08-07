@@ -297,6 +297,13 @@ void SurgeGUIEditor::idle()
          }
       }
 
+      if (mod_editor && oscdisplay)
+      {
+         ((COscillatorDisplay*)oscdisplay)->tickModTime();
+         oscdisplay->setDirty(true);
+         oscdisplay->invalid();
+      }
+
       if (polydisp)
       {
          CNumberField *cnpd = static_cast< CNumberField* >( polydisp );
@@ -494,6 +501,12 @@ void SurgeGUIEditor::refresh_mod()
          s->setModValue(synth->getModulation(i, modsource));
          s->invalid();
       }
+   }
+   if (oscdisplay)
+   {
+      ((COscillatorDisplay*)oscdisplay)->setIsMod(mod_editor);
+      oscdisplay->invalid();
+      oscdisplay->setDirty(true);
    }
    synth->storage.CS_ModRouting.leave();
    for (int i = 1; i < n_modsources; i++)
