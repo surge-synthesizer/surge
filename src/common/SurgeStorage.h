@@ -5,7 +5,6 @@
 #include "globals.h"
 #include "Parameter.h"
 #include "ModulationSource.h"
-#include "Sample.h"
 #include "Wavetable.h"
 #include <vector>
 #include <thread/CriticalSection.h>

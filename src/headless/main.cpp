@@ -164,6 +164,10 @@ void portableWt()
 */
 int main(int argc, char** argv)
 {
+    std::cout << "Hi! HEADLESS is a development tool the SurgeDevs use to run parts of the synth\n"
+              << "without a UI or a DAW. It explicitly is NOT a standalone version of surge or a\n"
+              << "user targeted application. If you are running it and are not a dev you will\n"
+              << "surely be dissapointed.\n\n";
    try 
    {
       // simpleOscillatorToStdOut();
@@ -171,8 +175,8 @@ int main(int argc, char** argv)
       //playSomeBach();
       //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
       // Surge::Headless::pullInitSamplesWithNoNotes(1000);
-       // testTuning();
-       portableWt();
+       testTuning();
+       //portableWt();
    }
    catch( Surge::Error &e )
    {
