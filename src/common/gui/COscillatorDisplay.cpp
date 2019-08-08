@@ -33,7 +33,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       if (!is_mod && c != 2)
          continue;
 
-      if (c == 1)
+      if (c == 1) // for a while I had both extrema but cut it back to 1. Keep it configured so I can change my mind
          continue;
 
       double smt = sin(M_PI * mod_time);
@@ -50,6 +50,17 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          auto iter = scene->modulation_voice.begin();
 
          while (iter != scene->modulation_voice.end())
+         {
+            int src_id = iter->source_id;
+            int dst_id = iter->destination_id;
+            float depth = iter->depth;
+            tp[c][dst_id].f += depth * modOut * smt;
+            iter++;
+         }
+
+         iter = scene->modulation_scene.begin();
+
+         while (iter != scene->modulation_scene.end())
          {
             int src_id = iter->source_id;
             int dst_id = iter->destination_id;
