@@ -41,7 +41,10 @@ Effect::Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
    this->pd = pd;
    ringout = 10000000;
    for (int i = 0; i < n_fx_params; i++)
+   {
       f[i] = &pd[fxdata->p[i].id].f;
+      pdata_ival[i] = &pd[fxdata->p[i].id].i;
+   }
 }
 
 bool Effect::process_ringout(float* dataL, float* dataR, bool indata_present)

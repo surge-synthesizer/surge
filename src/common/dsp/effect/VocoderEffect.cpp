@@ -32,6 +32,7 @@ VocoderEffect::VocoderEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd
    mVoicedLevel = 0.f;
    mUnvoicedLevel = 0.f;*/
 
+   active_bands = n_vocoder_bands;
    mGain.set_blocksize(BLOCK_SIZE);
 
    for (int i = 0; i < NVocoderVec; i++)
@@ -56,22 +57,70 @@ void VocoderEffect::init()
 
 void VocoderEffect::setvars(bool init)
 {
-   float Freq[4];
+   float Freq[4], FreqM[4];
 
    const float Q = 20.f * (1.f + 0.5f * *f[KQuality]);
    const float Spread = 0.4f / Q;
 
-   for (int i = 0; i < n_vocoder_bands; i++)
-   {
-      Freq[i & 3] = vocoder_freq_vsm201[i] * samplerate_inv;
+   active_bands = *pdata_ival[kNumBands];
+   active_bands = active_bands - ( active_bands % 4 ); // FIXME - adjust the UI to be chunks of 4
+#if 0
+   std::cout << "ACtivet bands is " << active_bands << std::endl;
 
+   std::cout << "Freq Low is " << *f[kFreqLo] << " " << 440.f * pow(2.f, *f[kFreqLo]/12.f) << std::endl;
+   std::cout << "Freq High is " << *f[kFreqHi] << std::endl;
+#endif
+   float flo = *f[kFreqLo];
+   float fhi = *f[kFreqHi];
+   float df = (fhi-flo)/(active_bands-1);
+
+   float hzlo = 440.f * pow(2.f, flo / 12.f );
+   float dhz = pow(2.f, df / 12.f );
+
+   float fb = hzlo;
+
+   float mb = fb;
+   float mdhz = dhz;
+   bool sepMod = false;
+
+   float mC = *f[kModCenter];
+   float mX = *f[kModExpand];
+
+   if( mC != 0 || mX != 0 )
+   {
+       sepMod = true;
+       auto fDist = fhi - flo;
+       auto fDistHalf = fDist / 2.f;
+       auto mMid = fDistHalf + flo + 0.3 * mC * fDistHalf; // that 0.3 is a tuning choice about how far we can move center
+       auto mLo = mMid - fDistHalf * ( 1 + 0.7 * mX ); // as is that 0.7
+       auto dM = fDistHalf * 2 * ( 1.0 + 0.7 * mX ) / (active_bands - 1);
+       
+       mb = 440.0 * pow(2.f, mLo / 12.f );
+       mdhz = pow( 2.f, dM / 12.f );
+   }
+   
+   for (int i = 0; i < active_bands && i < n_vocoder_bands; i++)
+   {
+       //std::cout << "vsm201[" << i << "]=" << vocoder_freq_vsm201[i] << "  fb=" << fb << std::endl;
+      Freq[i & 3] = fb * samplerate_inv;
+      FreqM[i & 3] = mb * samplerate_inv;
+      
       if ((i & 3) == 3)
       {
          int j = i >> 2;
          mCarrierL[j].SetCoeff(Freq, Q, Spread);
          mCarrierR[j].CopyCoeff(mCarrierL[j]);
-         mModulator[j].CopyCoeff(mCarrierL[j]);
+         if( sepMod )
+         {
+             mModulator[j].SetCoeff(FreqM, Q, Spread);
+         }
+         else
+         {
+             mModulator[j].CopyCoeff(mCarrierL[j]);
+         }
       }
+      fb *= dhz;
+      mb *= mdhz;
    }
 
    /*	mVoicedDetect.coeff_LP(biquadunit::calc_omega_from_Hz(1000.f), 0.707);
@@ -147,7 +196,7 @@ void VocoderEffect::process(float* dataL, float* dataR)
       vFloat LeftSum = vZero;
       vFloat RightSum = vZero;
 
-      for (int j = 0; j < (NVocoderVec); j++)
+      for (int j = 0; j < (active_bands >> 2) && j < ( n_vocoder_bands >> 2 ) /*(NVocoderVec)*/; j++)
       {
          vFloat Mod = mModulator[j].CalcBPF(In);
          Mod = vMin(vMul(Mod, Mod), MaxLevel);
@@ -180,6 +229,17 @@ void VocoderEffect::init_default_values()
    fxdata->p[KGateLevel].val.f = -96.f;
    fxdata->p[KRate].val.f = 0.f;
    fxdata->p[KQuality].val.f = 0.f;
+
+   fxdata->p[kNumBands].val.i = n_vocoder_bands;
+
+   // freq = 440 * 2^(v/12)
+   // log(freq/440)/log(2) = v/12
+   // 12 * log(freq/440) / log(2) = v;
+   fxdata->p[kFreqLo].val.f = 12.f * log(vocoder_freq_vsm201[0]/440.f)/log(2.f);
+   fxdata->p[kFreqHi].val.f = 12.f * log(vocoder_freq_vsm201[n_vocoder_bands-1]/440.f)/log(2.f);
+   
+   fxdata->p[kModExpand].val.f = 0.f;
+   fxdata->p[kModCenter].val.f = 0.f;
 }
 
 //------------------------------------------------------------------------------------------------
@@ -192,6 +252,8 @@ const char* VocoderEffect::group_label(int id)
       return "Levels";
    case 1:
       return "Filterbank";
+   case 2:
+       return "Bands";
    }
    return 0;
 }
@@ -206,6 +268,8 @@ int VocoderEffect::group_label_ypos(int id)
       return 1;
    case 1:
       return 7;
+   case 2:
+       return 13;
    }
    return 0;
 }
@@ -235,6 +299,27 @@ void VocoderEffect::init_ctrltypes()
    fxdata->p[KQuality].set_name("Q");
    fxdata->p[KQuality].set_type(ct_percent_bidirectional);
    fxdata->p[KQuality].posy_offset = 3;
+
+   fxdata->p[kNumBands].set_name("# Bands");
+   fxdata->p[kNumBands].set_type(ct_vocoder_bandcount);
+   fxdata->p[kNumBands].posy_offset = 3;
+
+   fxdata->p[kFreqLo].set_name("Low band");
+   fxdata->p[kFreqLo].set_type(ct_freq_audible);
+   fxdata->p[kFreqLo].posy_offset = 3;
+
+   fxdata->p[kFreqHi].set_name("High band");
+   fxdata->p[kFreqHi].set_type(ct_freq_audible);
+   fxdata->p[kFreqHi].posy_offset = 3;
+
+   fxdata->p[kModExpand].set_name("Mod XPand");
+   fxdata->p[kModExpand].set_type(ct_percent_bidirectional);
+   fxdata->p[kModExpand].posy_offset = 3;
+   
+   fxdata->p[kModCenter].set_name("Mod Center");
+   fxdata->p[kModCenter].set_type(ct_percent_bidirectional);
+   fxdata->p[kModCenter].posy_offset = 3;
+
 }
 
 //------------------------------------------------------------------------------------------------

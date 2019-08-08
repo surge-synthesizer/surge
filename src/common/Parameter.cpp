@@ -565,6 +565,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 0;
       break;
+   case ct_vocoder_bandcount:
+      val_min.i = 4;
+      val_max.i = 20;
+      valtype = vt_int;
+      val_default.i = 20;
+      break;
    case ct_countedset_percent:
       val_min.f = 0;
       val_max.f = 1;
@@ -630,6 +636,11 @@ void Parameter::bound_value(bool force_integer)
       val.f = 1.0 * intcount / count;
    }
 
+   if( ctrltype == ct_vocoder_bandcount )
+   {
+       val.i = val.i - val.i % 4;
+   }
+   
    switch (valtype)
    {
    case vt_float:
@@ -984,6 +995,10 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_sineoscmode:
          // FIXME - do better than this of course
          sprintf(txt, "%d", i);
+         break;
+      case ct_vocoder_bandcount:
+         // FIXME - do better than this of course
+         sprintf(txt, "%d bands", i);
          break;
       case ct_oscroute:
          switch (i)

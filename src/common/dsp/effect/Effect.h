@@ -78,6 +78,7 @@ protected:
    pdata* pd;
    int ringout;
    float* f[n_fx_params];
+   int* pdata_ival[n_fx_params]; // f is not a great choice for a member name, but 'i' woudl be worse!
 };
 
 Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
