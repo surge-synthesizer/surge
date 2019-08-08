@@ -1,6 +1,10 @@
-#include <Windows.h>
-#include <Commdlg.h>
+#include <windows.h>
+#include <shlobj.h>
+#include <commdlg.h>
 #include <string>
+#include <iostream>
+#include <sstream>
+
 #include "UserInteractions.h"
 #include "SurgeGUIEditor.h"
 
@@ -47,11 +51,68 @@ void openFolderInFileBrowser(const std::string& folder)
    UserInteractions::openURL(url);
 }
 
+// thanks https://stackoverflow.com/questions/12034943/win32-select-directory-dialog-from-c-c  
+static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+
+    if(uMsg == BFFM_INITIALIZED)
+    {
+        std::string tmp = (const char *) lpData;
+        std::cout << "path: " << tmp << std::endl;
+        SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+    }
+
+    return 0;
+}
+
+std::string BrowseFolder(std::string saved_path)
+{
+    TCHAR path[MAX_PATH];
+
+    const char * path_param = saved_path.c_str();
+
+    BROWSEINFO bi = { 0 };
+    bi.lpszTitle  = ("Browse for folder...");
+    bi.ulFlags    = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    bi.lpfn       = BrowseCallbackProc;
+    bi.lParam     = (LPARAM) path_param;
+
+    LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
+
+    if ( pidl != 0 )
+    {
+        //get the name of the folder and put it in path
+        SHGetPathFromIDList ( pidl, path );
+
+        //free memory used
+        IMalloc * imalloc = 0;
+        if ( SUCCEEDED( SHGetMalloc ( &imalloc )) )
+        {
+            imalloc->Free ( pidl );
+            imalloc->Release ( );
+        }
+
+        return path;
+    }
+
+    return "";
+}
+
+
+  
 void promptFileOpenDialog(const std::string& initialDirectory,
                           const std::string& filterSuffix,
                           std::function<void(std::string)> callbackOnOpen,
+                          bool canSelectDirectories,
+                          bool canCreateDirectories,
                           SurgeGUIEditor* guiEditor)
 {
+  if( canSelectDirectories )
+    {
+      auto s = BrowseFolder( "c:" );
+      callbackOnOpen(s);
+      return;
+    }
    // With many thanks to
    // https://www.daniweb.com/programming/software-development/code/217307/a-simple-getopenfilename-example
    char szFile[1024];

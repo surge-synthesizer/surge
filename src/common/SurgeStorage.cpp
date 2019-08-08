@@ -31,6 +31,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include "UserDefaults.h"
+
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -243,6 +245,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
 #endif
 #endif
 
+   userDefaultFilePath = userDataPath;
+   
+   std::string userSpecifiedDataPath = Surge::Storage::getUserDefaultValue(this, "userDataPath", "UNSPEC" );
+   if( userSpecifiedDataPath != "UNSPEC" )
+   {
+       std::cout << "Got a custom user data path" << std::endl;
+       userDataPath = userSpecifiedDataPath;
+   }
+   
 #if LINUX
    if (!snapshotloader.Parse((const char*)&configurationXmlStart, 0,
                              TIXML_ENCODING_UTF8)) {

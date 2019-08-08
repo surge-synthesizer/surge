@@ -2862,7 +2862,23 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
        this->synth->storage.refresh_wtlist();
        this->synth->storage.refresh_patchlist();
     });
+    did++;
 
+    addCallbackMenu( dataSubMenu, "Set Custom User Data Folder", [this]() {
+            auto cb = [this](std::string f) {
+                // FIXME - check if f is a path
+                this->synth->storage.userDataPath = f;
+                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                       "userDataPath",
+                                                       f);
+                this->synth->storage.refresh_wtlist();
+                this->synth->storage.refresh_patchlist();
+            };
+            Surge::UserInteractions::promptFileOpenDialog("", "", cb, true, true);
+                                                          
+        });
+    did++;
+    
     settingsMenu->addEntry( dataSubMenu, "Data and Patches");
     eid++;
     dataSubMenu->forget();

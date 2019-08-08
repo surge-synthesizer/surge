@@ -547,6 +547,8 @@ public:
    std::string wtpath;
    std::string datapath;
    std::string userDataPath;
+   std::string userDefaultFilePath;
+   
    std::string defaultsig, defaultname;
    // float table_sin[512],table_sin_offset[512];
    Surge::CriticalSection CS_WaveTableData, CS_ModRouting;

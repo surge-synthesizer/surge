@@ -53,6 +53,8 @@ void openFolderInFileBrowser(const std::string& folder);
 void promptFileOpenDialog(const std::string& initialDirectory,
                           const std::string& filterSuffix,
                           std::function<void(std::string)> callbackOnOpen,
+                          bool canSelectDirectories = false,
+                          bool canCreateDirectories = false,
                           SurgeGUIEditor* guiEditor = nullptr);
 };
 
