@@ -79,10 +79,14 @@ void openFolderInFileBrowser(const std::string& folder)
 void promptFileOpenDialog(const std::string& initialDirectory,
                           const std::string& filterSuffix,
                           std::function<void(std::string)> callbackOnOpen,
+                          bool canSelectDirectories,
+                          bool canCreateDirectories,
                           SurgeGUIEditor* guiEditor)
 {
    // FIXME TODO - support the filterSuffix and initialDirectory
    NSOpenPanel* panel = [NSOpenPanel openPanel];
+   [panel setCanChooseDirectories:canSelectDirectories];
+   [panel setCanCreateDirectories:canCreateDirectories]; 
 
    [panel beginWithCompletionHandler:^(NSInteger result) {
      if (result == NSFileHandlingPanelOKButton)

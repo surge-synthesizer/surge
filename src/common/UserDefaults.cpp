@@ -45,7 +45,7 @@ bool haveReadDefaultsFile = false;
 
 std::string defaultsFileName(SurgeStorage *storage)
 {
-    std::string fn = storage->userDataPath + "/SurgeUserDefaults.xml";
+    std::string fn = storage->userDefaultFilePath + "/SurgeUserDefaults.xml";
     return fn;
 }
 
@@ -99,7 +99,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
     ** See SurgeSytnehsizer::savePatch for instance
     ** and so we have to do the same here
     */
-    fs::create_directories(storage->userDataPath);
+    fs::create_directories(storage->userDefaultFilePath);
 
     
     UserDefaultValue v;
