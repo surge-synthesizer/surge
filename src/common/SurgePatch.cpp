@@ -1245,7 +1245,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       {
          if (p->QueryIntAttribute("bipolar", &j) == TIXML_SUCCESS)
             scene[0].modsources[ms_ctrl1 + cont]->set_bipolar(j);
-         if (!is_preset && (p->QueryDoubleAttribute("v", &d) == TIXML_SUCCESS))
+         if (p->QueryDoubleAttribute("v", &d) == TIXML_SUCCESS)
          {
             ((ControllerModulationSource*)scene[0].modsources[ms_ctrl1 + cont])->set_target(d);
          }
