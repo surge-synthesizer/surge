@@ -278,6 +278,12 @@ public:
       // KUnvoicedThreshold,
       KQuality,
       KShift,
+
+      kNumBands,
+      kFreqLo,
+      kFreqHi,
+      kModExpand,
+      kModCenter,
    };
 
    VocoderEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -307,7 +313,8 @@ private:
    lipol_ps mGain alignas(16);
 
    int mBI; // block increment (to keep track of events not occurring every n blocks)
-
+   int active_bands;
+   
    /*
    float mVoicedLevel;
    float mUnvoicedLevel;
