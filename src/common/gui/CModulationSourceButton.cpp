@@ -6,6 +6,7 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include <vt_dsp/basic_dsp.h>
+#include <iostream>
 
 using namespace VSTGUI;
 using namespace std;
@@ -261,6 +262,20 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+
+   if (is_metacontroller && (buttons & kDoubleClick) && MCRect.pointInside(where) && !controlstate)
+   {
+      if (bipolar)
+         value = 0.5;
+      else
+         value = 0;
+
+      invalid();
+      if (listener)
+         listener->valueChanged(this);
+
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
    if (is_metacontroller && MCRect.pointInside(where) && (buttons & kLButton) && !controlstate)
