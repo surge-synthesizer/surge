@@ -87,7 +87,7 @@ void promptFileOpenDialog(const std::string& initialDirectory,
    NSOpenPanel* panel = [NSOpenPanel openPanel];
    [panel setCanChooseDirectories:canSelectDirectories];
    [panel setCanCreateDirectories:canCreateDirectories]; 
-
+   [panel makeKeyAndOrderFront:panel];
    [panel beginWithCompletionHandler:^(NSInteger result) {
      if (result == NSFileHandlingPanelOKButton)
      {
