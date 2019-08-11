@@ -16,6 +16,8 @@
 #include "vstgui/lib/platform/iplatformresourceinputstream.h"
 #endif
 
+#include <cmath>
+
 #include "resource.h"
 
 #include <stdio.h>
@@ -244,7 +246,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
           VSTGUI::CPoint offScreenSz = sz;
           tf.transform(offScreenSz);
 
-          if (auto offscreen = COffscreenContext::create(frame, offScreenSz.x, offScreenSz.y))
+          if (auto offscreen = COffscreenContext::create(frame, ceil(offScreenSz.x), ceil(offScreenSz.y)))
           {
              offscreen->beginDraw();
              VSTGUI::CRect newRect(0, 0, rect.getWidth(), rect.getHeight());
