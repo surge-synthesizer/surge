@@ -86,8 +86,13 @@ void promptFileOpenDialog(const std::string& initialDirectory,
    // FIXME TODO - support the filterSuffix and initialDirectory
    NSOpenPanel* panel = [NSOpenPanel openPanel];
    [panel setCanChooseDirectories:canSelectDirectories];
-   [panel setCanCreateDirectories:canCreateDirectories]; 
+   [panel setCanCreateDirectories:canCreateDirectories];
+
+   // Logic and others have wierd window ordering which can mean this somethimes pops behind.
+   // See #1001.
    [panel makeKeyAndOrderFront:panel];
+   [panel setLevel:CGShieldingWindowLevel()];
+   
    [panel beginWithCompletionHandler:^(NSInteger result) {
      if (result == NSFileHandlingPanelOKButton)
      {
