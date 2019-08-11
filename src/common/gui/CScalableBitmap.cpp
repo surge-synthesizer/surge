@@ -279,21 +279,16 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
           VSTGUI::CRect origClip;
           context->getClipRect(origClip);
 
-          drect.makeIntegral();
-          // This should occur as a result of makeIntegral but lets just be sure
-          drect.right = drect.left + offscreenCache[offset]->getWidth();
-          drect.bottom = drect.top + offscreenCache[offset]->getHeight();
+          VSTGUI::CRect clipR = origClip;
 
-          
           /*
           ** The clipR goes up to and including the edge of the size; but at very high zooms that
           *shows a
           ** tiny bit of the adjacent image. So make the edge of our clip just inside the size.
           ** This only matters at high zoom levels
           */
-          auto clipR = drect;
-          //clipR.bottom -= 0.01;
-          //clipR.right -= 0.01;
+          clipR.bottom -= 0.01;
+          clipR.right -= 0.01;
           context->setClipRect(clipR);
 
 #if LINUX
