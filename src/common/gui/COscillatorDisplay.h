@@ -57,6 +57,10 @@ public:
       is_mod = b;
       mod_time = 0;
    }
+   void setModSource(modsources m)
+   {
+       modsource = m;
+   }
    void tickModTime()
    {
       mod_time += 1.0 / 30.0;
@@ -72,6 +76,7 @@ protected:
 
    bool doingDrag = false;
    bool is_mod = false;
+   modsources modsource = ms_original;
    float mod_time = 0;
    VSTGUI::CRect rnext, rprev, rmenu;
    VSTGUI::CPoint lastpos;

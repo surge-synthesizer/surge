@@ -25,36 +25,65 @@ extern CFontRef displayFont;
 
 void COscillatorDisplay::draw(CDrawContext* dc)
 {
-   pdata tp[3][n_scene_params];
-   Oscillator* osces[3];
-   for (int c = 0; c < 3; ++c)
+   pdata tp[2][n_scene_params]; // 0 is orange, 1 is blue
+   Oscillator* osces[2];
+   std::string olabel;
+   for (int c = 0; c < 2; ++c)
    {
       osces[c] = nullptr;
-      if (!is_mod && c != 2)
+      if (!is_mod && c > 0 )
          continue;
-
-      if (c == 1) // for a while I had both extrema but cut it back to 1. Keep it configured so I can change my mind
-         continue;
-
-      double smt = sin(M_PI * mod_time);
 
       tp[c][oscdata->pitch.param_id_in_scene].f = 0;
       for (int i = 0; i < n_osc_params; i++)
          tp[c][oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
 
-      if (c != 2)
+      if (c == 1 )
       {
-         auto modOut = (c == 0 ? 1.0 : -1.0);
+         auto modOut = 1.0;
          auto activeScene = storage->getPatch().scene_active.val.i;
          auto* scene = &(storage->getPatch().scene[activeScene]);
          auto iter = scene->modulation_voice.begin();
 
+         // You'd think you could use this right? But you can't. These are NULL if you don't have a voice except scene ones
+         // ModulationSource *ms = scene->modsources[modsource];
+         
+         bool isUnipolar = true;
+         double smt = 1.0 - ( mod_time - (int)mod_time ); // 1hz ramp
+
+         std::ostringstream oss;
+         oss << modsource_abberations[modsource];
+         olabel = oss.str();
+         
+         if( modsource >= ms_lfo1 && modsource <= ms_slfo6 )
+         {
+             auto *lfo = &(scene->lfo[modsource-ms_lfo1]);
+
+             float frate = lfo->rate.val.f;
+             if (lfo->rate.temposync)
+                 frate *= storage->temposyncratio;
+
+             auto freq = powf(2.0f, frate );
+             
+             smt = sin(M_PI * freq * mod_time);
+             if( lfo->shape.val.i == ls_square )
+                 smt = ( smt > 0 ? 1 : -1 );
+             
+             if( lfo->unipolar.val.i )
+             {
+                 smt = 0.5 * ( smt + 1 );
+             }
+         }
+         
          while (iter != scene->modulation_voice.end())
          {
             int src_id = iter->source_id;
-            int dst_id = iter->destination_id;
-            float depth = iter->depth;
-            tp[c][dst_id].f += depth * modOut * smt;
+            if( src_id == modsource )
+            {
+                int dst_id = iter->destination_id;
+                float depth = iter->depth;
+                tp[c][dst_id].f += depth * modOut * smt;
+            }
             iter++;
          }
 
@@ -63,9 +92,12 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          while (iter != scene->modulation_scene.end())
          {
             int src_id = iter->source_id;
-            int dst_id = iter->destination_id;
-            float depth = iter->depth;
-            tp[c][dst_id].f += depth * modOut * smt;
+            if( src_id == modsource )
+            {
+                int dst_id = iter->destination_id;
+                float depth = iter->depth;
+                tp[c][dst_id].f += depth * modOut * smt;
+            }
             iter++;
          }
       }
@@ -93,7 +125,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
    auto size = getViewSize();
 
-   for (int c = 0; c < 3; ++c)
+   for (int c = 1; c >= 0; --c ) // backwards so we draw blue first
    {
       Oscillator* osc = osces[c];
       CGraphicsPath* path = dc->createGraphicsPath();
@@ -194,6 +226,17 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          dc->setFrameColor(VSTGUI::CColor(70, 70, 70));
          dc->drawLine(top0, top1);
          dc->drawLine(bot0, bot1);
+
+         // OK so now the label
+         if( osces[1] )
+         {
+             dc->setFontColor(kWhiteCColor);
+             dc->setFont(displayFont);
+             CPoint lab0(0, valScale * 0.1 - 10);
+             tf.transform(lab0);
+             CRect rlab(lab0, CPoint(10,10) );
+             dc->drawString(olabel.c_str(), rlab, kLeftText, true);
+         }
       }
 
 #if LINUX
@@ -202,12 +245,11 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       dc->setLineWidth(1.3);
 #endif
       dc->setDrawMode(VSTGUI::kAntiAliasing);
-      if (c == 0)
-         dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
-      else if (c == 1)
+      if (c == 1)
          dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
       else
          dc->setFrameColor(VSTGUI::CColor(0xFF, 0x90, 0, 0xFF));
+      
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
       dc->restoreGlobalState();
 

@@ -505,6 +505,7 @@ void SurgeGUIEditor::refresh_mod()
    if (oscdisplay)
    {
       ((COscillatorDisplay*)oscdisplay)->setIsMod(mod_editor);
+      ((COscillatorDisplay*)oscdisplay)->setModSource(modsource);
       oscdisplay->invalid();
       oscdisplay->setDirty(true);
    }
