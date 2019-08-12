@@ -343,4 +343,15 @@ double CModulationSourceButton::getMouseDeltaScaling(CPoint& where, const CButto
    return scaling;
 }
 
+bool CModulationSourceButton::onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons)
+{
+    value += distance / (double)(getWidth());
+    value = limit_range(value, 0.f, 1.f);
+    event_is_drag = true;
+    invalid();
+    if (listener)
+        listener->valueChanged(this);
+    return true;
+}
+
 //------------------------------------------------------------------------------------------------

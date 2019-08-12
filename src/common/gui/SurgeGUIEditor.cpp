@@ -2703,7 +2703,17 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
        zoomSubMenu->addEntry(defaultZ);
        zid++;
 
-       settingsMenu->addEntry(zoomSubMenu, "Zoom");
+       addCallbackMenu(zoomSubMenu, "Set default zoom to ...", [this]() {
+               // FIXME! This won't work on linux
+               char c[256];
+               snprintf(c, 256, "%d", this->zoomFactor );
+               spawn_miniedit_text(c, 16);
+               int newVal = ::atoi(c);
+               Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
+           });
+       zid++;
+
+       settingsMenu->addEntry(zoomSubMenu, "Zoom" );
        eid++;
     }
 
