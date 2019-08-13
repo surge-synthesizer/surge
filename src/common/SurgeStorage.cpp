@@ -145,13 +145,16 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
        FSRefMakePath(&foundRef, (UInt8*)path, 1024);
        datapath = path;
        datapath += "/Surge/";
-       
+
+       auto cxmlpath = datapath + "configuration.xml";
        // check if the directory exist in the user domain (if it doesn't, fall back to the local domain)
-       CFStringRef testpathCF = CFStringCreateWithCString(0, datapath.c_str(), kCFStringEncodingUTF8);
+       // See #863 where I chaned this to dir exists and contains config
+       CFStringRef testpathCF = CFStringCreateWithCString(0, cxmlpath.c_str(), kCFStringEncodingUTF8);
        CFURLRef testCat = CFURLCreateWithFileSystemPath(0, testpathCF, kCFURLPOSIXPathStyle, true);
        CFRelease(testpathCF);
        FSRef myfsRef;
        Boolean works = CFURLGetFSRef(testCat, &myfsRef);
+
        CFRelease(testCat); // don't need it anymore?!?
        if (!works)
        {
