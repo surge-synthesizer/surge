@@ -1093,6 +1093,7 @@ double shafted_tanh(double x)
 
 void SurgeStorage::init_tables()
 {
+   isStandardTuning = true;
    float db60 = powf(10.f, 0.05f * -60.f);
    for (int i = 0; i < 512; i++)
    {
@@ -1233,6 +1234,9 @@ float envelope_rate_linear(float x)
 
 void SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
 {
+   currentScale = s;
+   isStandardTuning = false;
+   
    float pitches[512];
    int pos0 = 256 + scaleConstantNote();
    float pitchMod = log(scaleConstantPitch())/log(2) - 1;

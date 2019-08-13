@@ -66,6 +66,22 @@ void openURL(const std::string &url)
    }
 }
 
+void showHTML( const std::string &html )
+{
+    // FIXME - there's proper APIs for this that crash on MacOS 
+    std::ostringstream fns;
+    fns << "/tmp/surge-tuning." << rand() << ".html";
+
+    FILE *f = fopen(fns.str().c_str(), "w" );
+    if( f )
+    {
+        fprintf( f, "%s", html.c_str());
+        fclose(f);
+        std::string url = std::string("file://") + fns.str();
+        openURL(url);
+    }
+}
+
 void openFolderInFileBrowser(const std::string& folder)
 {
    std::string url = "file://" + folder;

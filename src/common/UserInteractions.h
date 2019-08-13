@@ -44,6 +44,7 @@ MessageResult promptOKCancel(const std::string &message, const std::string &titl
 
 // Open a URL in a user-appropriate fashion
 void openURL(const std::string &url);
+void showHTML(const std::string &html);
 
 // Open a folder in the system appropriate file browser (finder on macOS, explorer on win,
 // etc)

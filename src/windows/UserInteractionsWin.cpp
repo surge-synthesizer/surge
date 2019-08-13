@@ -45,6 +45,24 @@ void openURL(const std::string &url)
     ShellExecute(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 }
 
+void showHTML( const std::string &html )
+{
+    TCHAR lpTempPathBuffer[MAX_PATH];
+
+    auto dwRetVal = GetTempPath(MAX_PATH, lpTempPathBuffer);
+    std::ostringstream fns;
+    fns << lpTempPathBuffer << "surge-tuning." << rand() << ".html";
+
+    FILE *f = fopen(fns.str().c_str(), "w" );
+    if( f )
+    {
+        fprintf( f, "%s", html.c_str());
+        fclose(f);
+        std::string url = std::string("file:///") + fns.str();
+        openURL(url);
+    }
+}
+
 void openFolderInFileBrowser(const std::string& folder)
 {
    std::string url = "file://" + folder;

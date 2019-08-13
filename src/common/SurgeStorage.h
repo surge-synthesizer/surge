@@ -561,6 +561,9 @@ public:
    void retuneToScale(const Surge::Storage::Scale& s);
    inline int scaleConstantNote() { return 48; }
    inline float scaleConstantPitch() { return 16.0; }
+
+   Surge::Storage::Scale currentScale;
+   bool isStandardTuning;
    
 private:
    TiXmlDocument snapshotloader;
