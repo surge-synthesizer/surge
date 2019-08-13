@@ -345,7 +345,20 @@ double CModulationSourceButton::getMouseDeltaScaling(CPoint& where, const CButto
 
 bool CModulationSourceButton::onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons)
 {
-    value += distance / (double)(getWidth());
+    auto rate = 1.f;
+
+#if WINDOWS
+    // This is purely empirical. The wheel for this control feels slow on windows
+    // but fine on a macos trackpad. I callibrated it by making sure the trackpad
+    // across the pad gesture on my macbook pro moved the control the same amount
+    // in surge mac as it does in vst3 bitwig in parallels.
+    rate = 10.f;
+#endif      
+
+    if( buttons & kShift )
+      rate *= 0.05;
+    
+    value += rate * distance / (double)(getWidth());
     value = limit_range(value, 0.f, 1.f);
     event_is_drag = true;
     invalid();
