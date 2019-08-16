@@ -64,6 +64,8 @@ void osc_sine::init(float pitch, bool is_display)
    driftlfo2 = 0;
 
    id_mode = oscdata->p[0].param_id_in_scene;
+   id_fb = oscdata->p[1].param_id_in_scene;
+   lastvalue = 0;
 }
 
 osc_sine::~osc_sine()
@@ -76,17 +78,30 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
       driftlfo = drift_noise(driftlfo2);
       double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
       FMdepth.newValue(fmdepth);
-
+      auto fb = localcopy[id_fb].f;
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
-         output[k] = valueFromSinAndCos(sin(phase), cos(phase));
+         output[k] = valueFromSinAndCos(sin(phase + lastvalue * fb), cos(phase + lastvalue * fb));
          phase += omega + master_osc[k] * FMdepth.v;
+         lastvalue = output[k];
          FMdepth.process();
       }
    }
    else
    {
       driftlfo = drift_noise(driftlfo2);
+      double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
+      auto fb = localcopy[id_fb].f;
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
+      {
+         float phs = phase + fb * lastvalue;
+         output[k] = valueFromSinAndCos(sin(phs), cos(phs));
+         phase += omega;
+         lastvalue = output[k];
+         FMdepth.process();
+      }
+
+      /*driftlfo = drift_noise(driftlfo2);
       sinus.set_rate(min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo)));
 
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
@@ -96,24 +111,7 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
          float cvalue = sinus.i;
 
          output[k] = valueFromSinAndCos(svalue, cvalue);
-
-         // const __m128 scale = _mm_set1_ps(0.000030517578125);
-
-         // HACK for testing sine(__m64)
-         // const __m64 rate = _mm_set1_pi16(0x0040);
-
-         /*m64phase = _mm_add_pi16(m64phase,rate);
-         __m64 a = sine(m64phase);
-         __m128 b = _mm_cvtpi16_ps(a);
-         _mm_store_ss(&output[k],_mm_mul_ss(b,scale));*/
-
-         // int
-         /*m64phase.m64_i32[0] = (m64phase.m64_i32[0] + 0x40);
-         int a = sine(m64phase.m64_i32[0]);
-         __m128 b = _mm_cvtsi32_ss(b,a);
-         _mm_store_ss(&output[k],_mm_mul_ss(b,scale));*/
-      }
-      //_mm_empty(); // HACK MMX
+         }*/
    }
    if (stereo)
    {
@@ -213,11 +211,15 @@ void osc_sine::init_ctrltypes()
 {
    oscdata->p[0].set_name("WaveShape");
    oscdata->p[0].set_type(ct_sineoscmode);
+
+   oscdata->p[1].set_name("Feedback");
+   oscdata->p[1].set_type(ct_percent);
 }
 
 void osc_sine::init_default_values()
 {
    oscdata->p[0].val.i = 0;
+   oscdata->p[1].val.f = 0;
 }
 /* audio input osc */
 
