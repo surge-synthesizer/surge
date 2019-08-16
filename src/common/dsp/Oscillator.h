@@ -59,7 +59,8 @@ public:
    float driftlfo, driftlfo2;
    lag<double> FMdepth;
 
-   int id_mode;
+   int id_mode, id_fb;
+   float lastvalue = 0;
 
    float valueFromSinAndCos(float svalue, float cvalue);
 };
