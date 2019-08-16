@@ -58,6 +58,7 @@ public:
    double phase;
    float driftlfo, driftlfo2;
    lag<double> FMdepth;
+   lag<double> FB;
 
    int id_mode, id_fb;
    float lastvalue = 0;

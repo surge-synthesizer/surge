@@ -73,46 +73,25 @@ osc_sine::~osc_sine()
 
 void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
-   if (FM)
+   driftlfo = drift_noise(driftlfo2);
+   double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
+   // FMdepth.newValue(fmdepth);
+   FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
+   FB.newValue(localcopy[id_fb].f);
+
+   for (int k = 0; k < BLOCK_SIZE_OS; k++)
    {
-      driftlfo = drift_noise(driftlfo2);
-      double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
-      FMdepth.newValue(fmdepth);
-      auto fb = localcopy[id_fb].f;
-      for (int k = 0; k < BLOCK_SIZE_OS; k++)
-      {
-         output[k] = valueFromSinAndCos(sin(phase + lastvalue * fb), cos(phase + lastvalue * fb));
-         phase += omega + master_osc[k] * FMdepth.v;
-         lastvalue = output[k];
-         FMdepth.process();
-      }
+      // Replicate FM2 exactly
+      auto p = phase + lastvalue;
+      if (FM)
+         p += FMdepth.v * master_osc[k];
+      output[k] = valueFromSinAndCos(sin(p), cos(p));
+      phase += omega;
+      lastvalue = output[k] * FB.v;
+      FMdepth.process();
+      FB.process();
    }
-   else
-   {
-      driftlfo = drift_noise(driftlfo2);
-      double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
-      auto fb = localcopy[id_fb].f;
-      for (int k = 0; k < BLOCK_SIZE_OS; k++)
-      {
-         float phs = phase + fb * lastvalue;
-         output[k] = valueFromSinAndCos(sin(phs), cos(phs));
-         phase += omega;
-         lastvalue = output[k];
-         FMdepth.process();
-      }
 
-      /*driftlfo = drift_noise(driftlfo2);
-      sinus.set_rate(min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo)));
-
-      for (int k = 0; k < BLOCK_SIZE_OS; k++)
-      {
-         sinus.process();
-         float svalue = sinus.r;
-         float cvalue = sinus.i;
-
-         output[k] = valueFromSinAndCos(svalue, cvalue);
-         }*/
-   }
    if (stereo)
    {
       memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
