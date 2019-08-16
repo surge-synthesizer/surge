@@ -8,6 +8,7 @@
 #include "CSwitchControl.h"
 #include "CParameterTooltip.h"
 #include "CPatchBrowser.h"
+#include "CStatusPanel.h"
 #include "COscillatorDisplay.h"
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
@@ -56,6 +57,7 @@ enum special_tags
    tag_fx_select,
    tag_fx_menu,
    tag_patchname,
+   tag_statuspanel,
    tag_mp_category,
    tag_mp_patch,
    tag_store,
@@ -65,6 +67,7 @@ enum special_tags
    tag_store_category,
    tag_store_creator,
    tag_store_comments,
+   tag_store_tuning,
    tag_mod_source0,
    tag_mod_source_end = tag_mod_source0 + n_modsources,
    tag_settingsmenu,
@@ -83,6 +86,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
 #endif
 
    patchname = 0;
+   statuspanel = nullptr;
    current_scene = 1;
    current_osc = 0;
    current_fx = 0;
@@ -323,8 +327,18 @@ void SurgeGUIEditor::idle()
 
       bool patchChanged = false;
       if (patchname)
+      {
           patchChanged = ((CPatchBrowser *)patchname)->sel_id != synth->patchid;
+      }
 
+      if( statuspanel )
+      {
+          CStatusPanel *pb = (CStatusPanel *)statuspanel;
+          pb->setDisplayFeature(CStatusPanel::mpeMode, synth->mpeEnabled);
+          pb->setDisplayFeature(CStatusPanel::tuningMode, ! synth->storage.isStandardTuning);
+      }
+
+      
       if (queue_refresh || synth->refresh_editor || patchChanged)
       {
          queue_refresh = false;
@@ -749,13 +763,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    // 150*b - 16 = 434 (b=3)
    patchname =
-       new CPatchBrowser(CRect(156, 11, 591, 11 + 28), this, tag_patchname, &synth->storage);
+       new CPatchBrowser(CRect(156, 11, 547, 11 + 28), this, tag_patchname, &synth->storage);
    ((CPatchBrowser*)patchname)->setLabel(synth->storage.getPatch().name);
    ((CPatchBrowser*)patchname)->setCategory(synth->storage.getPatch().category);
    ((CPatchBrowser*)patchname)->setIDs(synth->current_category_id, synth->patchid);
    ((CPatchBrowser*)patchname)->setAuthor(synth->storage.getPatch().author);
    frame->addView(patchname);
 
+   statuspanel = new CStatusPanel(CRect( 560, 1, 595, 54 ), this, tag_statuspanel, &synth->storage);
+   {
+       CStatusPanel *pb = (CStatusPanel *)statuspanel;
+       pb->setDisplayFeature(CStatusPanel::mpeMode, synth->mpeEnabled);
+       pb->setDisplayFeature(CStatusPanel::tuningMode, ! synth->storage.isStandardTuning);
+       pb->setEditor(this);
+   }
+
+   frame->addView(statuspanel);
+   
    CHSwitch2* mp_cat =
        new CHSwitch2(CRect(157, 41, 157 + 37, 41 + 12), this, tag_mp_category, 2, 12, 1, 2,
                      bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
@@ -768,7 +792,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_patch->setUsesMouseWheel(false);// mousewheel on category and patch buttons is undesirable                                
    frame->addView(mp_patch);
 
-   CHSwitch2* b_store = new CHSwitch2(CRect(591 - 37, 41, 591, 41 + 12), this, tag_store, 1, 12, 1,
+   CHSwitch2* b_store = new CHSwitch2(CRect(547 - 37, 41, 591, 41 + 12), this, tag_store, 1, 12, 1,
                                       1, bitmapStore->getBitmap(IDB_BUTTON_STORE), nopoint, false);
    frame->addView(b_store);
 
@@ -1289,7 +1313,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCategory = new CTextEdit(CRect(CPoint(96, 58), CPoint(340, 21)), this, tag_store_category);
    patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
    patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
-
+   patchTuning = new CCheckBox(CRect(CPoint(96, 112 + (112-85) ), CPoint( 21, 21 )), this, tag_store_tuning);
+   patchTuningLabel = new CTextLabel(CRect(CPoint(96 + 22, 112 + (112-85) ), CPoint( 200, 21 )));
+   patchTuningLabel->setText( "Save Tuning in Patch" );
+   patchTuningLabel->sizeToFit();
+   
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
       CSurgeSlider::sliderMoveRateState =
@@ -1314,7 +1342,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCategory->setBackColor(kWhiteCColor);
    patchCreator->setBackColor(kWhiteCColor);
    patchComment->setBackColor(kWhiteCColor);
-
+   
    patchName->setFontColor(kBlackCColor);
    patchCategory->setFontColor(kBlackCColor);
    patchCreator->setFontColor(kBlackCColor);
@@ -1325,11 +1353,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCreator->setFrameColor(kGreyCColor);
    patchComment->setFrameColor(kGreyCColor);
 
+   CColor bggr(205,206,212);
+   patchTuningLabel->setBackColor(bggr);
+   patchTuningLabel->setFrameColor(bggr);
+   patchTuningLabel->setFontColor(kBlackCColor);
+   
    saveDialog->addView(patchName);
    saveDialog->addView(patchCategory);
    saveDialog->addView(patchCreator);
    saveDialog->addView(patchComment);
-
+   saveDialog->addView(patchTuning);
+   saveDialog->addView(patchTuningLabel);
+                               
+                               
    editor_open = true;
    queue_refresh = false;
    frame->setDirty();
@@ -2282,6 +2318,13 @@ void SurgeGUIEditor::valueChanged(CControl* control)
           synth->storage.getPatch().author = patchCreator->getText();
           synth->storage.getPatch().category = patchCategory->getText();
           synth->storage.getPatch().comment = patchComment->getText();
+
+          synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
+          if( synth->storage.getPatch().patchTuning.tuningStoredInPatch )
+              synth->storage.getPatch().patchTuning.tuningContents = synth->storage.currentScale.rawText;
+
+          synth->storage.getPatch().dawExtraState.isPopulated = false; // Ignore whatever comes from the DAW
+          
           synth->savePatch();
       }
    }
@@ -2552,6 +2595,21 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
                                           std::vector<PatchCategory>* patch_category,
                                           int startcategory)
 {
+   if( synth->storage.isStandardTuning )
+   {
+       patchTuningLabel->setFontColor(kGreyCColor);
+       patchTuning->setMouseEnabled(false);
+       patchTuning->setBoxFrameColor(kGreyCColor);
+       patchTuning->setValue(0);
+   }
+   else
+   {
+       patchTuningLabel->setFontColor(kBlackCColor);
+       patchTuning->setMouseEnabled(true);
+       patchTuning->setBoxFrameColor(kBlackCColor);
+       patchTuning->setValue(0);
+   }
+    
    saveDialog->setVisible(true);
    // frame->setModalView(saveDialog);
 
@@ -2567,6 +2625,53 @@ long SurgeGUIEditor::unapplyParameterOffset(long id)
 {
    return id + start_paramtags;
 }
+
+// Status Panel Callbacks
+void SurgeGUIEditor::toggleMPE()
+{
+    this->synth->mpeEnabled = ! this->synth->mpeEnabled;
+    if( statuspanel )
+        ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::mpeMode, this->synth->mpeEnabled );
+}
+void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint &where)
+{
+    CRect menuRect;
+    menuRect.offset(where.x, where.y);
+    auto m = makeMpeMenu(menuRect);
+    
+    frame->addView(m);
+    m->setDirty();
+    m->popup();
+    frame->removeView(m, true);
+}
+
+void SurgeGUIEditor::toggleTuning()
+{
+    if( this->synth->storage.isStandardTuning && tuningCacheForToggle.size() > 0 )
+    {
+        this->synth->storage.retuneToScale(Surge::Storage::parseSCLData(tuningCacheForToggle));
+    }
+    else if( ! this->synth->storage.isStandardTuning )
+    {
+        tuningCacheForToggle = this->synth->storage.currentScale.rawText;
+        this->synth->storage.init_tables();
+    }
+
+    if( statuspanel )
+        ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::tuningMode, this->synth->storage.isStandardTuning );
+}
+void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
+{
+    CRect menuRect;
+    menuRect.offset(where.x, where.y);
+    auto m = makeTuningMenu(menuRect);
+    
+    frame->addView(m);
+    m->setDirty();
+    m->popup();
+    frame->removeView(m, true);
+}
+
 
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
@@ -2725,26 +2830,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
        eid++;
     }
 
-    COptionMenu* mpeSubMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-    std::string endis = "Enable MPE";
-    if (synth->mpeEnabled)
-       endis = "Disable MPE";
-    addCallbackMenu(mpeSubMenu, endis.c_str(),
-                    [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
-
-    std::ostringstream oss;
-    oss << "Change default pitch bend range (" << synth->mpePitchBendRange << ")";
-    addCallbackMenu(mpeSubMenu, oss.str().c_str(), [this]() {
-       // FIXME! This won't work on linux
-       char c[256];
-       snprintf(c, 256, "%d", synth->mpePitchBendRange);
-       spawn_miniedit_text(c, 16);
-       int newVal = ::atoi(c);
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
-       this->synth->mpePitchBendRange = newVal;
-    });
-
+    auto mpeSubMenu = makeMpeMenu(menuRect);
     std::string mpeMenuName = "MPE (disabled)";
     if (synth->mpeEnabled)
        mpeMenuName = "MPE (enabled)";
@@ -2809,67 +2895,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     mouseSubMenu->forget();
 
-    int tid=0;
-    COptionMenu *tuningSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                 VSTGUI::COptionMenu::kNoDrawStyle |
-                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-    auto *st = addCallbackMenu(tuningSubMenu, "Set to Standard Tuning",
-                    [this]()
-                    {
-                        this->synth->storage.init_tables();
-                    }
-        );
-    st->setEnabled(! this->synth->storage.isStandardTuning);
-    tid++;
-
-    addCallbackMenu(tuningSubMenu, "Apply .scl file tuning",
-                    [this]()
-                    {
-                        auto cb = [this](std::string sf)
-                        {
-                            std::string sfx = ".scl";
-                            if( sf.length() >= sfx.length())
-                            {
-                                if( sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0 )
-                                {
-                                    Surge::UserInteractions::promptError( "Please only select .scl files", "Invalid Choice" );
-                                    std::cout << "FILE is [" << sf << "]" << std::endl;
-                                    return;
-                                }
-                            }
-                            auto sc = Surge::Storage::readSCLFile(sf);
-                            this->synth->storage.retuneToScale(sc);
-                        };
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
-                                                                      ".scl",
-                                                                      cb);
-                    }
-        );
-    tid++;
-
-    auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning",
-                    [this]()
-                    {
-                        // Surge::UserInteractions::promptOKCancel( "Surge tuning is NONstandard tuning", "Tuning Info" );
-                        Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml() );
-                    }
-        );
-    sct->setEnabled(! this->synth->storage.isStandardTuning );
-
-    /*
-    tuningSubMenu->addSeparator(tid++);
-    
-    addCallbackMenu(tuningSubMenu, "Apply .kbm file mapping",
-                    [this]()
-                    {
-                        Surge::UserInteractions::promptError("KBM File Mappings are not yet supported in Surge",
-                                                             "Unsupported",
-                                                             this);
-                    }
-        );
-    */
-
+    auto tuningSubMenu = makeTuningMenu(menuRect);
     settingsMenu->addEntry(tuningSubMenu, "Tuning" );
     eid++;
     tuningSubMenu->forget();
@@ -2950,6 +2976,97 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->setDirty();
     settingsMenu->popup();
     frame->removeView(settingsMenu, true);
+}
+
+
+VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
+{
+    COptionMenu* mpeSubMenu =
+        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+    std::string endis = "Enable MPE";
+    if (synth->mpeEnabled)
+       endis = "Disable MPE";
+    addCallbackMenu(mpeSubMenu, endis.c_str(),
+                    [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
+
+    std::ostringstream oss;
+    oss << "Change default pitch bend range (" << synth->mpePitchBendRange << ")";
+    addCallbackMenu(mpeSubMenu, oss.str().c_str(), [this]() {
+       // FIXME! This won't work on linux
+       char c[256];
+       snprintf(c, 256, "%d", synth->mpePitchBendRange);
+       spawn_miniedit_text(c, 16);
+       int newVal = ::atoi(c);
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
+       this->synth->mpePitchBendRange = newVal;
+    });
+    return mpeSubMenu;
+
+}
+
+VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
+{
+    int tid=0;
+    COptionMenu *tuningSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                 VSTGUI::COptionMenu::kNoDrawStyle |
+                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+    auto *st = addCallbackMenu(tuningSubMenu, "Set to Standard Tuning",
+                    [this]()
+                    {
+                        this->synth->storage.init_tables();
+                    }
+        );
+    st->setEnabled(! this->synth->storage.isStandardTuning);
+    tid++;
+
+    addCallbackMenu(tuningSubMenu, "Apply .scl file tuning",
+                    [this]()
+                    {
+                        auto cb = [this](std::string sf)
+                        {
+                            std::string sfx = ".scl";
+                            if( sf.length() >= sfx.length())
+                            {
+                                if( sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0 )
+                                {
+                                    Surge::UserInteractions::promptError( "Please only select .scl files", "Invalid Choice" );
+                                    std::cout << "FILE is [" << sf << "]" << std::endl;
+                                    return;
+                                }
+                            }
+                            auto sc = Surge::Storage::readSCLFile(sf);
+                            this->synth->storage.retuneToScale(sc);
+                        };
+                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
+                                                                      ".scl",
+                                                                      cb);
+                    }
+        );
+    tid++;
+
+    auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning",
+                    [this]()
+                    {
+                        // Surge::UserInteractions::promptOKCancel( "Surge tuning is NONstandard tuning", "Tuning Info" );
+                        Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml() );
+                    }
+        );
+    sct->setEnabled(! this->synth->storage.isStandardTuning );
+
+    /*
+    tuningSubMenu->addSeparator(tid++);
+    
+    addCallbackMenu(tuningSubMenu, "Apply .kbm file mapping",
+                    [this]()
+                    {
+                        Surge::UserInteractions::promptError("KBM File Mappings are not yet supported in Surge",
+                                                             "Unsupported",
+                                                             this);
+                    }
+        );
+    */
+    return tuningSubMenu;
 }
 
 int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of range

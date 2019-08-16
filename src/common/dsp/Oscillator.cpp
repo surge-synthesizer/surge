@@ -186,6 +186,18 @@ float osc_sine::valueFromSinAndCos(float svalue, float cvalue)
    return pvalue;
 }
 
+void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+{
+    if( streamingRevision <= 10 )
+    {
+        oscdata->p[1].val.f = 0;
+    }
+    if( streamingRevision <= 9 )
+    {
+        oscdata->p[0].val.i = 0;
+    }
+}
+
 void osc_sine::init_ctrltypes()
 {
    oscdata->p[0].set_name("WaveShape");

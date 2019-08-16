@@ -402,6 +402,13 @@ struct DAWExtraStateStorage
    std::string tuningContents = "";
 };
 
+
+struct PatchTuningStorage
+{
+    bool tuningStoredInPatch = false;
+    std::string tuningContents = "";
+};
+    
 class SurgeStorage;
 
 class SurgePatch
@@ -438,6 +445,7 @@ public:
 
    StepSequencerStorage stepsequences[2][n_lfos];
 
+   PatchTuningStorage patchTuning;
    DAWExtraStateStorage dawExtraState;
    
    std::vector<Parameter*> param_ptr;
@@ -453,6 +461,9 @@ public:
    std::string name, category, author, comment;
    // metaparameters
    char CustomControllerLabel[n_customcontrollers][16];
+
+   int streamingRevision;
+   int currentSynthStreamingRevision;
 };
 
 struct Patch

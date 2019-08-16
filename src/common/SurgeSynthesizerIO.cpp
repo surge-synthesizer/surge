@@ -176,6 +176,25 @@ void SurgeSynthesizer::loadPatch(int id)
    loadRaw(data, cs, true);
    free(data);
 
+   /*
+   ** OK so at this point we may have loaded a patch with a tuning override
+   */
+   if( storage.getPatch().patchTuning.tuningStoredInPatch )
+   {
+       if( storage.isStandardTuning )
+           storage.retuneToScale(Surge::Storage::parseSCLData(storage.getPatch().patchTuning.tuningContents ));
+       else
+       {
+           auto okc = Surge::UserInteractions::promptOKCancel(std::string("The patch you loaded contains a recommended tuning, but you ") +
+                                                              "already have a tuning in place. Do you want to override your current tuning " +
+                                                              "with the patch sugeested tuning?",
+                                                              "Replace Tuning? (The rest of the patch will still load).");
+           if( okc == Surge::UserInteractions::MessageResult::OK )
+               storage.retuneToScale(Surge::Storage::parseSCLData(storage.getPatch().patchTuning.tuningContents));
+       }
+                                 
+   }
+   
    masterfade = 1.f;
 #if AU
    /*	AUPreset preset;
