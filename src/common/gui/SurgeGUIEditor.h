@@ -148,6 +148,20 @@ private:
    bool zoomEnabled = true;
 
 public:
+
+   void populateDawExtraState(SurgeSynthesizer *synth) {
+       synth->storage.getPatch().dawExtraState.isPopulated = true;
+       synth->storage.getPatch().dawExtraState.instanceZoomFactor = zoomFactor;
+   }
+   void loadFromDAWExtraState(SurgeSynthesizer *synth) {
+       if( synth->storage.getPatch().dawExtraState.isPopulated )
+       {
+           auto sz = synth->storage.getPatch().dawExtraState.instanceZoomFactor;
+           if( sz > 0 )
+               setZoomFactor(sz);
+       }
+   }
+   
    void setZoomCallback(std::function< void(SurgeGUIEditor *) > f) {
        zoom_callback = f;
        setZoomFactor(getZoomFactor()); // notify the new callback

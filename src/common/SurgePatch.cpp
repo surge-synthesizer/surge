@@ -42,11 +42,15 @@ const int gui_mid_topbar_y = 17;
 // 3 -> 4 comb+/- combined into 1 filtertype (subtype 0,0->0 0,1->1 1,0->2 1,1->3 )
 // 4 -> 5 stereo filterconf now have seperate pan controls
 // 5 -> 6 new filter sound in v1.2 (same parameters, but different sound & changed resonance
-// response). 6 -> 7 custom controller state now stored (in seq. recall) 7 -> 8 larger resonance
-// range (old filters are set to subtype 1), pan2 -> width 8 -> 9 now 8 controls (offset ids larger
-// than ctrl7 by +1), custom controllers have names (guess for pre-rev9 patches) 9 -> 10 added
-// character parameter
-const int ff_revision = 10;
+// response).
+// 6 -> 7 custom controller state now stored (in seq. recall)
+// 7 -> 8 larger resonance
+// range (old filters are set to subtype 1), pan2 -> width
+// 8 -> 9 now 8 controls (offset ids larger
+// than ctrl7 by +1), custom controllers have names (guess for pre-rev9 patches)
+// 9 -> 10 added character parameter
+// 10 -> 11 (1.6.2 release) added DAW Extra State
+const int ff_revision = 11;
 
 SurgePatch::SurgePatch(SurgeStorage* storage)
 {
@@ -732,6 +736,96 @@ struct patch_header
 };
 #pragma pack(pop)
 
+
+// BASE 64 SUPPORT. THANKS https://renenyffenegger.ch/notes/development/Base64/Encoding-and-decoding-base-64-with-cpp
+static const std::string base64_chars = 
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/";
+
+
+static inline bool is_base64(unsigned char c) {
+    return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+    std::string ret;
+    int i = 0;
+    int j = 0;
+    unsigned char char_array_3[3];
+    unsigned char char_array_4[4];
+    
+    while (in_len--) {
+        char_array_3[i++] = *(bytes_to_encode++);
+        if (i == 3) {
+            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+            char_array_4[3] = char_array_3[2] & 0x3f;
+            
+            for(i = 0; (i <4) ; i++)
+                ret += base64_chars[char_array_4[i]];
+            i = 0;
+        }
+    }
+    
+    if (i)
+    {
+        for(j = i; j < 3; j++)
+            char_array_3[j] = '\0';
+        
+        char_array_4[0] = ( char_array_3[0] & 0xfc) >> 2;
+        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+        
+        for (j = 0; (j < i + 1); j++)
+            ret += base64_chars[char_array_4[j]];
+        
+        while((i++ < 3))
+            ret += '=';
+        
+    }
+    
+    return ret;
+}
+
+std::string base64_decode(std::string const& encoded_string) {
+    int in_len = encoded_string.size();
+    int i = 0;
+    int j = 0;
+    int in_ = 0;
+    unsigned char char_array_4[4], char_array_3[3];
+    std::string ret;
+    
+    while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
+        char_array_4[i++] = encoded_string[in_]; in_++;
+        if (i ==4) {
+            for (i = 0; i <4; i++)
+                char_array_4[i] = base64_chars.find(char_array_4[i]);
+            
+            char_array_3[0] = ( char_array_4[0] << 2       ) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) +   char_array_4[3];
+            
+            for (i = 0; (i < 3); i++)
+                ret += char_array_3[i];
+            i = 0;
+        }
+    }
+    
+    if (i) {
+        for (j = 0; j < i; j++)
+            char_array_4[j] = base64_chars.find(char_array_4[j]);
+        
+        char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+        char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+        
+        for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+    }
+    
+    return ret;
+}
+
 void SurgePatch::load_patch(const void* data, int datasize, bool preset)
 {
    if (datasize <= 4)
@@ -878,6 +972,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       char* temp = (char*)malloc(datasize + 1);
       memcpy(temp, data, datasize);
       *(temp + datasize) = 0;
+      // std::cout << "XML DOC is " << temp << std::endl;
       doc.Parse(temp, nullptr, TIXML_ENCODING_LEGACY);
       free(temp);
    }
@@ -1259,6 +1354,53 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       }
       p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("entry"));
    }
+
+   dawExtraState.isPopulated = false;
+   TiXmlElement *de = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("dawExtraState"));
+   if( de )
+   {
+       int pop;
+       if( de->QueryIntAttribute("populated", &pop) == TIXML_SUCCESS )
+       {
+           dawExtraState.isPopulated = (pop != 0);
+       }
+
+       if( dawExtraState.isPopulated )
+       {
+           int ival;
+           TiXmlElement *p;
+           p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("instanceZoomFactor"));
+           if( p &&
+               p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
+               dawExtraState.instanceZoomFactor = ival;
+
+           p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpeEnabled"));
+           if( p &&
+               p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
+               dawExtraState.mpeEnabled = ival;
+
+           p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("hasTuning"));
+           if( p &&
+               p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
+           {
+               dawExtraState.hasTuning = (ival != 0);
+           }
+
+           const char* td;
+           if( dawExtraState.hasTuning )
+           {
+               p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("tuningContents"));
+               if( p &&
+                   (td = p->Attribute("v") ))
+               {
+                   auto tc = base64_decode(td);
+                   dawExtraState.tuningContents = tc;
+               }
+           }
+
+       }
+   }
+                                              
    if (!is_preset)
    {
       TiXmlElement* mw = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("modwheel"));
@@ -1437,6 +1579,35 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
       patch.InsertEndChild(mw);
    }
 
+   TiXmlElement dawExtraXML("dawExtraState");
+   dawExtraXML.SetAttribute( "populated", dawExtraState.isPopulated ? 1 : 0 );
+   
+   if( dawExtraState.isPopulated )
+   {
+       TiXmlElement izf("instanceZoomFactor");
+       izf.SetAttribute( "v", dawExtraState.instanceZoomFactor );
+       dawExtraXML.InsertEndChild(izf);
+
+       TiXmlElement mpe("mpeEnabled");
+       mpe.SetAttribute("v", dawExtraState.mpeEnabled ? 1 : 0 );
+       dawExtraXML.InsertEndChild(mpe);
+
+       TiXmlElement tun("hasTuning");
+       tun.SetAttribute("v", dawExtraState.hasTuning ? 1 : 0 );
+       dawExtraXML.InsertEndChild(tun);
+
+       /*
+       ** we really want a cdata here but TIXML is ambiguous whether
+       ** it does the right thing when I read the code, and is kinda crufty
+       ** so just protect ourselves with a base 64 encoding.
+       */
+       TiXmlElement tnc("tuningContents");
+       tnc.SetAttribute("v", base64_encode( (unsigned const char *)dawExtraState.tuningContents.c_str(),
+                                            dawExtraState.tuningContents.size() ).c_str() );
+       dawExtraXML.InsertEndChild(tnc);
+   }
+   patch.InsertEndChild(dawExtraXML);
+   
    doc.InsertEndChild(decl);
    doc.InsertEndChild(patch);
 

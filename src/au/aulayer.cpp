@@ -525,6 +525,10 @@ ComponentResult aulayer::RestoreState(CFPropertyListRef plist)
       p = CFDataGetBytePtr(data);
       size_t psize = CFDataGetLength(data);
       plugin_instance->loadRaw(p, psize, false);
+
+      plugin_instance->loadFromDawExtraState();
+      if( editor_instance )
+          editor_instance->loadFromDAWExtraState(plugin_instance);
    }
    return noErr;
 }
@@ -545,11 +549,17 @@ ComponentResult aulayer::SaveState(CFPropertyListRef* plist)
 
    CFMutableDictionaryRef dict = (CFMutableDictionaryRef)*plist;
    void* data;
+   
+   plugin_instance->populateDawExtraState();
+   if( editor_instance )
+       editor_instance->populateDawExtraState(plugin_instance);
+   
    CFIndex size = plugin_instance->saveRaw(&data);
    CFDataRef dataref =
        CFDataCreateWithBytesNoCopy(NULL, (const UInt8*)data, size, kCFAllocatorNull);
    CFDictionarySetValue(dict, rawchunkname, dataref);
    CFRelease(dataref);
+
    return noErr;
 }
 
