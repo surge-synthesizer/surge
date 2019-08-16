@@ -387,6 +387,21 @@ struct StepSequencerStorage
    unsigned int trigmask;
 };
 
+/*
+** There are a collection of things we want your DAW to save about your particular instance
+** but don't want saved in your patch. So have this extra structure in the patch which we
+** can activate/populate from the DAW hosts. See #915
+*/
+struct DAWExtraStateStorage
+{
+   bool isPopulated = false;
+    
+   int instanceZoomFactor = -1;
+   bool mpeEnabled = false;
+   bool hasTuning = false;
+   std::string tuningContents = "";
+};
+
 class SurgeStorage;
 
 class SurgePatch
@@ -423,6 +438,8 @@ public:
 
    StepSequencerStorage stepsequences[2][n_lfos];
 
+   DAWExtraStateStorage dawExtraState;
+   
    std::vector<Parameter*> param_ptr;
    std::vector<int> easy_params_id;
 

@@ -159,6 +159,10 @@ tresult PLUGIN_API SurgeVst3Processor::getState(IBStream* state)
    CHECK_INITIALIZED
 
    void* data = nullptr; // surgeInstance keeps its data in an auto-ptr so we don't need to free it
+   surgeInstance->populateDawExtraState();
+   for( auto e : viewsSet )
+       e->populateDawExtraState(surgeInstance.get());
+
    unsigned int stateSize = surgeInstance->saveRaw(&data);
    state->write(data, stateSize);
 
@@ -179,6 +183,10 @@ tresult PLUGIN_API SurgeVst3Processor::setState(IBStream* state)
    if (result == kResultOk)
    {
       surgeInstance->loadRaw(data, numBytes, false);
+      surgeInstance->loadFromDawExtraState();
+      for( auto e : viewsSet )
+          e->loadFromDAWExtraState(surgeInstance.get());
+
    }
 
    free(data);

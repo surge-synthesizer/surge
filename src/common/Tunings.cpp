@@ -31,21 +31,13 @@
  should give a read error and be rejected.
 */
 
-Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
+Surge::Storage::Scale scaleFromStream(std::istream &inf)
 {
-   std::ifstream inf;
-   inf.open(fname);
-   if (!inf.is_open())
-   {
-      return Scale();
-   }
-
    std::string line;
    const int read_header = 0, read_count = 1, read_note = 2;
    int state = read_header;
 
-   Scale res;
-   res.name = fname;
+   Surge::Storage::Scale res;
    std::ostringstream rawOSS;
    while (std::getline(inf, line))
    {
@@ -65,16 +57,16 @@ Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
          state = read_note;
          break;
       case read_note:
-         Tone t;
+         Surge::Storage::Tone t;
          t.stringRep = line;
          if (line.find(".") != std::string::npos)
          {
-            t.type = Tone::kToneCents;
+            t.type = Surge::Storage::Tone::kToneCents;
             t.cents = atof(line.c_str());
          }
          else
          {
-            t.type = Tone::kToneRatio;
+            t.type = Surge::Storage::Tone::kToneRatio;
             auto slashPos = line.find("/");
             if (slashPos == std::string::npos)
             {
@@ -101,6 +93,28 @@ Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
 
    res.rawText = rawOSS.str();
    return res;
+}
+
+Surge::Storage::Scale Surge::Storage::readSCLFile(std::string fname)
+{
+   std::ifstream inf;
+   inf.open(fname);
+   if (!inf.is_open())
+   {
+      return Scale();
+   }
+
+   auto res = scaleFromStream(inf);
+   res.name = fname;
+   return res;
+}
+
+Surge::Storage::Scale Surge::Storage::parseSCLData(const std::string &d)
+{
+    std::istringstream iss(d);
+    auto res = scaleFromStream(iss);
+    res.name = "Scale from Patch";
+    return res;
 }
 
 std::ostream& Surge::Storage::operator<<(std::ostream& os, const Surge::Storage::Tone& t)

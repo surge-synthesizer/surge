@@ -97,6 +97,14 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    // init the size of the plugin
    int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
    float zf = userDefaultZoomFactor / 100.0;
+
+   if( synth->storage.getPatch().dawExtraState.isPopulated &&
+       synth->storage.getPatch().dawExtraState.instanceZoomFactor > 0
+       )
+   {
+       // If I restore state before I am constructed I need to do this
+       zf = synth->storage.getPatch().dawExtraState.instanceZoomFactor / 100.0;
+   }
    
    rect.left = 0;
    rect.top = 0;

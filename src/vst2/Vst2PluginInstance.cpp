@@ -511,6 +511,10 @@ VstInt32 Vst2PluginInstance::getChunk(void** data, bool isPreset)
    if (!tryInit())
       return 0;
 
+   _instance->populateDawExtraState();
+   if( editor )
+       ((SurgeGUIEditor *)editor)->populateDawExtraState(_instance);
+
    return _instance->saveRaw(data);
    //#endif
 }
@@ -524,6 +528,10 @@ VstInt32 Vst2PluginInstance::setChunk(void* data, VstInt32 byteSize, bool isPres
       return 0;
 
    _instance->loadRaw(data, byteSize, false);
+
+   _instance->loadFromDawExtraState();
+   if( editor )
+       ((SurgeGUIEditor *)editor)->loadFromDAWExtraState(_instance);
 
    return 1;
 }

@@ -167,6 +167,26 @@ public:
 
    float vu_peak[8];
 
+   void populateDawExtraState() {
+       storage.getPatch().dawExtraState.isPopulated = true;
+       storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
+       storage.getPatch().dawExtraState.hasTuning = !storage.isStandardTuning;
+       if( ! storage.isStandardTuning )
+           storage.getPatch().dawExtraState.tuningContents = storage.currentScale.rawText;
+       else
+           storage.getPatch().dawExtraState.tuningContents = "";
+   }
+   void loadFromDawExtraState() {
+       if( ! storage.getPatch().dawExtraState.isPopulated )
+           return;
+       mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
+       if( storage.getPatch().dawExtraState.hasTuning )
+       {
+           auto sc = Surge::Storage::parseSCLData(storage.getPatch().dawExtraState.tuningContents );
+           storage.retuneToScale(sc);
+       }
+   }
+   
 public:
    int CC0, PCH, patchid;
    float masterfade = 0;

@@ -45,5 +45,6 @@ std::ostream& operator<<(std::ostream& os, const Tone& sc);
 std::ostream& operator<<(std::ostream& os, const Scale& sc);
 
 Scale readSCLFile(std::string fname);
+Scale parseSCLData(const std::string &sclContents);
 } // namespace Storage
 } // namespace Surge
