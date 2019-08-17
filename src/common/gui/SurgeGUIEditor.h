@@ -174,6 +174,15 @@ public:
       setZoomFactor(100);
    }
 
+   /*
+   ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
+   */
+   void toggleMPE();
+   void showMPEMenu(VSTGUI::CPoint &where);
+   void toggleTuning();
+   void showTuningMenu(VSTGUI::CPoint &where);
+   std::string tuningCacheForToggle = "";
+   
 private:
    /**
     * findLargestFittingZoomBetween
@@ -200,13 +209,15 @@ private:
    std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
 
    VSTGUI::CControl* vu[16];
-   VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
+   VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr, *statuspanel = nullptr;
    VSTGUI::CControl* aboutbox = nullptr;
    VSTGUI::CViewContainer* saveDialog = nullptr;
    VSTGUI::CTextEdit* patchName = nullptr;
    VSTGUI::CTextEdit* patchCategory = nullptr;
    VSTGUI::CTextEdit* patchCreator = nullptr;
    VSTGUI::CTextEdit* patchComment = nullptr;
+   VSTGUI::CCheckBox* patchTuning = nullptr;
+   VSTGUI::CTextLabel* patchTuningLabel = nullptr;
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;
    VSTGUI::CControl* param[1024] = {};
@@ -230,5 +241,7 @@ private:
    */
    VSTGUI::CCommandMenuItem*
    addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
+   VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect &rect);
 };
 

@@ -207,6 +207,7 @@ function plugincommon()
         "src/common/gui/CNumberField.cpp",
         "src/common/gui/COscillatorDisplay.cpp",
         "src/common/gui/CPatchBrowser.cpp",
+        "src/common/gui/CStatusPanel.cpp",
         "src/common/gui/CScalableBitmap.cpp",
         "src/common/gui/CSnapshotMenu.cpp",
         "src/common/gui/CSurgeSlider.cpp",

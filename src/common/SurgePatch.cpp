@@ -709,6 +709,7 @@ void SurgePatch::update_controls(bool init,
          if (t_osc)
          {
             t_osc->init_ctrltypes();
+            t_osc->handleStreamingMismatches( streamingRevision, currentSynthStreamingRevision );
             if (init || (init_osc == &sc.osc[osc]))
                t_osc->init_default_values();
             delete t_osc;
@@ -993,7 +994,9 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    int revision = 0;
    patch->QueryIntAttribute("revision", &revision);
-
+   streamingRevision = revision;
+   currentSynthStreamingRevision = ff_revision;
+   
    TiXmlElement* meta =  TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));
    if (meta)
    {
@@ -1355,6 +1358,20 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("entry"));
    }
 
+   patchTuning.tuningStoredInPatch = false;
+   TiXmlElement *pt = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("patchTuning"));
+   if( pt )
+   {
+       const char* td;
+       if( pt &&
+           (td = pt->Attribute("v") ))
+       {
+           patchTuning.tuningStoredInPatch = true;
+           auto tc = base64_decode(td);
+           patchTuning.tuningContents = tc;
+       }
+   }
+   
    dawExtraState.isPopulated = false;
    TiXmlElement *de = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("dawExtraState"));
    if( de )
@@ -1579,6 +1596,15 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
       patch.InsertEndChild(mw);
    }
 
+   if( patchTuning.tuningStoredInPatch )
+   {
+       TiXmlElement pt( "patchTuning" );
+       pt.SetAttribute("v", base64_encode( (unsigned const char *)patchTuning.tuningContents.c_str(),
+                                            patchTuning.tuningContents.size() ).c_str() );
+       
+       patch.InsertEndChild(pt);
+   }
+   
    TiXmlElement dawExtraXML("dawExtraState");
    dawExtraXML.SetAttribute( "populated", dawExtraState.isPopulated ? 1 : 0 );
    

@@ -34,6 +34,11 @@ public:
       return (float)(M_PI * (16.35159783) * storage->note_to_pitch(x) * dsamplerate_os_inv);
    }
 
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+   {
+       // No-op here.
+   }
+   
 protected:
    SurgeStorage* storage;
    OscillatorStorage* oscdata;
@@ -64,6 +69,7 @@ public:
    float lastvalue = 0;
 
    float valueFromSinAndCos(float svalue, float cvalue);
+   virtual void handleStreamingMismatches(int s, int synths) override;
 };
 
 class FMOscillator : public Oscillator

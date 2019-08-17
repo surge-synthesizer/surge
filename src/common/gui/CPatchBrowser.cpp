@@ -13,7 +13,6 @@ extern CFontRef patchNameFont;
 
 void CPatchBrowser::draw(CDrawContext* dc)
 {
-   dc->setFillColor(kBlackCColor);
    CRect size = getViewSize();
    CRect ar(size);
    ar.inset(1, 0);
@@ -41,7 +40,6 @@ void CPatchBrowser::draw(CDrawContext* dc)
    dc->drawString(category.c_str(), al, kLeftText, true);
    al.offset(0, 12);
    dc->drawString(author.c_str(), al, kLeftText, true);
-
    setDirty(false);
 }
 
