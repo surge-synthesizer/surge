@@ -1,6 +1,7 @@
+#include "SurgeGUIEditor.h"
 #include "CStatusPanel.h"
 #include "RuntimeFont.h"
-#include "SurgeGUIEditor.h"
+
 
 using namespace VSTGUI;
 
