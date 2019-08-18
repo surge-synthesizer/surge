@@ -792,7 +792,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_patch->setUsesMouseWheel(false);// mousewheel on category and patch buttons is undesirable                                
    frame->addView(mp_patch);
 
-   CHSwitch2* b_store = new CHSwitch2(CRect(547 - 37, 41, 591, 41 + 12), this, tag_store, 1, 12, 1,
+   CHSwitch2* b_store = new CHSwitch2(CRect(547 - 37, 41, 547, 41 + 12), this, tag_store, 1, 12, 1,
                                       1, bitmapStore->getBitmap(IDB_BUTTON_STORE), nopoint, false);
    frame->addView(b_store);
 
@@ -2662,7 +2662,7 @@ void SurgeGUIEditor::toggleTuning()
     }
 
     if( statuspanel )
-        ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::tuningMode, this->synth->storage.isStandardTuning );
+        ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::tuningMode, !this->synth->storage.isStandardTuning );
 }
 void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
 {

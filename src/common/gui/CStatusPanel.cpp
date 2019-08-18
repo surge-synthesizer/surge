@@ -40,6 +40,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
            hlbg = false;
        }
 
+       dc->setDrawMode(VSTGUI::kAntiAliasing);
        dc->setFrameColor(bg);;
        auto p = dc->createRoundRectGraphicsPath(CRect(xp,yp,xp+w,yp+h), 5 );
        dc->setFillColor(bg);;
@@ -58,7 +59,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
        dc->setFont(displayFont);
        auto sw = dc->getStringWidth(labs[i].c_str());
        dc->setFontColor(fg);
-       dc->drawString(labs[i].c_str(), CPoint( xp + w/2 - sw/2, yp + h - 2 ), true );
+       dc->drawString(labs[i].c_str(), CPoint( xp + w/2 - sw/2, yp + h - 3 ), true );
    }
 }
 
