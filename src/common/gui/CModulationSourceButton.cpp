@@ -345,6 +345,9 @@ double CModulationSourceButton::getMouseDeltaScaling(CPoint& where, const CButto
 
 bool CModulationSourceButton::onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons)
 {
+    if( ! is_metacontroller )
+        return false;
+    
     auto rate = 1.f;
 
 #if WINDOWS
