@@ -52,6 +52,7 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
       return result;
    }
 
+   disableZoom = false;
 #if WINDOWS
    Steinberg::FUnknownPtr<Steinberg::Vst::IHostApplication> hostApplication(context);
    if (hostApplication)
@@ -567,21 +568,21 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
    */
    wchar_t tmpwchar[512];
    surgeInstance->getParameterNameW(id, tmpwchar);
-#if MAC
+#if MAC || LINUX
    std::copy(tmpwchar, tmpwchar + 128, info.title);
 #else
    swprintf(reinterpret_cast<wchar_t *>(info.title), 128, L"%S", tmpwchar);
 #endif   
 
    surgeInstance->getParameterShortNameW(id, tmpwchar);
-#if MAC
+#if MAC || LINUX
    std::copy(tmpwchar, tmpwchar + 128, info.shortTitle);
 #else
    swprintf(reinterpret_cast<wchar_t *>(info.shortTitle), 128, L"%S", tmpwchar);
 #endif   
 
    surgeInstance->getParameterUnitW(id, tmpwchar);
-#if MAC
+#if MAC || LINUX
    std::copy(tmpwchar, tmpwchar + 128, info.units);
 #else
    swprintf(reinterpret_cast<wchar_t *>(info.units), 128, L"%S", tmpwchar);
@@ -609,7 +610,7 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
    
    wchar_t tmpwchar[ 512 ];
    surgeInstance->getParameterStringW(tag, valueNormalized, tmpwchar);
-#if MAC
+#if MAC || LINUX
    std::copy(string, string+128, tmpwchar);
 #else
    swprintf(reinterpret_cast<wchar_t *>(string), 128, L"%S", tmpwchar);

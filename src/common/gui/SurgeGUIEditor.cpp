@@ -1382,6 +1382,7 @@ void SurgeGUIEditor::close_editor()
 
 #if LINUX && TARGET_VST3
 extern void LinuxVST3Init(Steinberg::Linux::IRunLoop* pf);
+extern void LinuxVST3Detatch();
 extern void LinuxVST3FrameOpen(CFrame* that, void*, const VSTGUI::PlatformType& pt);
 #endif
 
@@ -1486,6 +1487,9 @@ void SurgeGUIEditor::close()
 
 #if TARGET_VST3
    _idleTimer->stop();
+#if LINUX
+   LinuxVST3Detatch();
+#endif
 #endif
 }
 
