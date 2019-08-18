@@ -219,4 +219,9 @@ void LinuxVST3FrameOpen(VSTGUI::CFrame* that, void* parent, const VSTGUI::Platfo
 
    IdleUpdateHandler::start();
 }
+
+void LinuxVST3Detatch()
+{
+  std::cout << "Would detatch here. FIXME" << std::endl;
+}
 #endif
