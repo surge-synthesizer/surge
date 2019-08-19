@@ -65,6 +65,7 @@ void osc_sine::init(float pitch, bool is_display)
 
    id_mode = oscdata->p[0].param_id_in_scene;
    id_fb = oscdata->p[1].param_id_in_scene;
+   id_fmlegacy = oscdata->p[2].param_id_in_scene;
    lastvalue = 0;
 }
 
@@ -73,6 +74,12 @@ osc_sine::~osc_sine()
 
 void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
+   if( localcopy[id_fmlegacy].i == 0 )
+   {
+       process_block_legacy(pitch, drift, stereo, FM, fmdepth );
+       return;
+   }
+   
    driftlfo = drift_noise(driftlfo2);
    double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
    // FMdepth.newValue(fmdepth);
@@ -92,6 +99,58 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
       FB.process();
    }
 
+   if (stereo)
+   {
+      memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
+   }
+}
+
+void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool FM, float fmdepth)
+{
+   if (FM)
+   {
+      driftlfo = drift_noise(driftlfo2);
+      double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
+      FMdepth.newValue(fmdepth);
+
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
+      {
+         output[k] = valueFromSinAndCos(sin(phase), cos(phase));
+         phase += omega + master_osc[k] * FMdepth.v;
+         FMdepth.process();
+      }
+   }
+   else
+   {
+      driftlfo = drift_noise(driftlfo2);
+      sinus.set_rate(min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo)));
+
+      for (int k = 0; k < BLOCK_SIZE_OS; k++)
+      {
+         sinus.process();
+         float svalue = sinus.r;
+         float cvalue = sinus.i;
+
+         output[k] = valueFromSinAndCos(svalue, cvalue);
+
+         // const __m128 scale = _mm_set1_ps(0.000030517578125);
+
+         // HACK for testing sine(__m64)
+         // const __m64 rate = _mm_set1_pi16(0x0040);
+
+         /*m64phase = _mm_add_pi16(m64phase,rate);
+         __m64 a = sine(m64phase);
+         __m128 b = _mm_cvtpi16_ps(a);
+         _mm_store_ss(&output[k],_mm_mul_ss(b,scale));*/
+
+         // int
+         /*m64phase.m64_i32[0] = (m64phase.m64_i32[0] + 0x40);
+         int a = sine(m64phase.m64_i32[0]);
+         __m128 b = _mm_cvtsi32_ss(b,a);
+         _mm_store_ss(&output[k],_mm_mul_ss(b,scale));*/
+      }
+      //_mm_empty(); // HACK MMX
+   }
    if (stereo)
    {
       memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
@@ -191,6 +250,7 @@ void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynth
     if( streamingRevision <= 10 )
     {
         oscdata->p[1].val.f = 0;
+        oscdata->p[2].val.i = 0;
     }
     if( streamingRevision <= 9 )
     {
@@ -205,12 +265,16 @@ void osc_sine::init_ctrltypes()
 
    oscdata->p[1].set_name("Feedback");
    oscdata->p[1].set_type(ct_percent);
+
+   oscdata->p[2].set_name("FM Behaviour");
+   oscdata->p[2].set_type(ct_sinefmlegacy);
 }
 
 void osc_sine::init_default_values()
 {
    oscdata->p[0].val.i = 0;
    oscdata->p[1].val.f = 0;
+   oscdata->p[2].val.i = 1;
 }
 /* audio input osc */
 

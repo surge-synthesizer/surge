@@ -565,6 +565,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 0;
       break;
+   case ct_sinefmlegacy:
+      val_min.i = 0;
+      val_max.i = 1;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
    case ct_vocoder_bandcount:
       val_min.i = 4;
       val_max.i = 20;
@@ -995,6 +1001,12 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_sineoscmode:
          // FIXME - do better than this of course
          sprintf(txt, "%d", i);
+         break;
+      case ct_sinefmlegacy:
+         if( i == 0 )
+             sprintf( txt, "Legacy (1.6.1.1 and earlier)");
+         else
+             sprintf( txt, "Consistent w. FM2/3" );
          break;
       case ct_vocoder_bandcount:
          // FIXME - do better than this of course

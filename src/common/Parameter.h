@@ -85,6 +85,7 @@ enum ctrltypes
    ct_bool_fm,
    ct_character,
    ct_sineoscmode,
+   ct_sinefmlegacy,
    ct_countedset_percent, // what % through a counted set are you
    ct_vocoder_bandcount,
    num_ctrltypes,
