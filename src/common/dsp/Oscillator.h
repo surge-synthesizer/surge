@@ -55,6 +55,8 @@ public:
    virtual void init(float pitch, bool is_display = false) override;
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
+   virtual void process_block_legacy(
+       float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f);
    virtual ~osc_sine();
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
@@ -65,7 +67,7 @@ public:
    lag<double> FMdepth;
    lag<double> FB;
 
-   int id_mode, id_fb;
+   int id_mode, id_fb, id_fmlegacy;
    float lastvalue = 0;
 
    float valueFromSinAndCos(float svalue, float cvalue);
