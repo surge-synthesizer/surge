@@ -81,9 +81,9 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
          double detune = localcopy[id_detune].f * (detune_bias * float(i) + detune_offset);
          // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
          // pow((double)1.05946309435,(double)pitch)));
-         double st = drand * storage->note_to_pitch(detune - 12);
+         double st = drand * storage->note_to_pitch(detune - 12 + storage->scaleConstantNote()) / storage->scaleConstantPitch();
          drand = (double)rand() / RAND_MAX;
-         double ot = drand * storage->note_to_pitch(detune + l_sync.v);
+         double ot = drand * storage->note_to_pitch(detune + l_sync.v + storage->scaleConstantNote()) / storage->scaleConstantPitch();
          oscstate[i] = st;
          syncstate[i] = st;
       }
@@ -143,7 +143,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    if (syncstate[voice] < oscstate[voice])
    {
       ipos = (unsigned int)((float)p24 * (syncstate[voice] * pitchmult_inv));
-      float t = storage->note_to_pitch_inv(detune);
+      float t = storage->note_to_pitch_inv(detune + storage->scaleConstantNote()) * storage->scaleConstantPitch();
       if (state[voice] == 1)
          invertcorrelation = -1.f;
       state[voice] = 0;
@@ -164,9 +164,11 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    // add time until next statechange
    float t;
    if (oscdata->p[5].absolute)
-      t = storage->note_to_pitch_inv(detune * pitchmult_inv * (1.f / 440.f) + l_sync.v);
+       t = storage->note_to_pitch_inv(detune * pitchmult_inv * (1.f / 440.f) + l_sync.v + storage->scaleConstantNote()) *
+           storage->scaleConstantPitch();
    else
-      t = storage->note_to_pitch_inv(detune + l_sync.v);
+       t = storage->note_to_pitch_inv(detune + l_sync.v + storage->scaleConstantNote()) *
+           storage->scaleConstantPitch();
 
    float g, gR;
 
@@ -252,8 +254,8 @@ template <bool is_init> void SampleAndHoldOscillator::update_lagvals()
    l_smooth.newValue(localcopy[id_smooth].f);
    l_sub.newValue(localcopy[id_sub].f);
 
-   float invt = 4.f * min(1.0, (8.175798915 * storage->note_to_pitch(pitch + l_sync.v)) *
-                                   dsamplerate_os_inv);
+   auto pp = storage->note_to_pitch(pitch + l_sync.v + storage->scaleConstantNote()) / storage->scaleConstantPitch();
+   float invt = 4.f * min(1.0, (8.175798915 * pp * dsamplerate_os_inv) );
    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt));
    // TODO Make a lookup-table
 

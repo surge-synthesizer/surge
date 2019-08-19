@@ -584,6 +584,15 @@ public:
 
    float note_to_pitch(float x);
    float note_to_pitch_inv(float x);
+   inline float note_to_pitch_tuningctr(float x)
+   {
+       return note_to_pitch(x + scaleConstantNote() ) / scaleConstantPitch();
+   }
+   inline float note_to_pitch_inv_tuningctr(float x)
+   {
+       return note_to_pitch_inv( x + scaleConstantNote() ) * scaleConstantPitch();
+   }
+       
    void note_to_omega(float, float&, float&);
 
    void retuneToScale(const Surge::Storage::Scale& s);

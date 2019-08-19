@@ -152,7 +152,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
          double detune = localcopy[id_detune].f * (detune_bias * float(i) + detune_offset);
          // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
          // pow((double)1.05946309435,(double)pitch)));
-         double st = 0.25 * drand * storage->note_to_pitch_inv(detune - 12);
+         double st = 0.25 * drand * storage->note_to_pitch_inv(detune - 12 + storage->scaleConstantNote() ) / storage->scaleConstantPitch();
          drand = (double)rand() / RAND_MAX;
          // double ot = 0.25 * drand * storage->note_to_pitch_inv(detune + l_sync.v);
          // HACK test 0.2*
@@ -219,7 +219,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
       // double t = max(0.5,dsamplerate_os * (1/8.175798915) * storage->note_to_pitch_inv(pitch +
       // detune) * 2);
-      float t = storage->note_to_pitch_inv(detune) * 2;
+      float t = storage->note_to_pitch_inv(detune + storage->scaleConstantNote()) / storage->scaleConstantPitch() * 2;
       state[voice] = 0;
       last_level[voice] += dc_uni[voice] * (oscstate[voice] - syncstate[voice]);
 
@@ -376,8 +376,8 @@ template <bool is_init> void SurgeSuperOscillator::update_lagvals()
    l_shape.newValue(limit_range(localcopy[id_shape].f, -1.f, 1.f));
    l_sub.newValue(limit_range(localcopy[id_sub].f, 0.f, 1.f));
 
-   float invt = 4.f * min(1.0, (8.175798915 * storage->note_to_pitch(pitch + l_sync.v)) *
-                                   dsamplerate_os_inv);
+   auto pp = storage->note_to_pitch(pitch + l_sync.v + storage->scaleConstantNote()) / storage->scaleConstantPitch();
+   float invt = 4.f * min(1.0, (8.175798915 * pp * dsamplerate_os_inv) );
    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt)); // TODO ACHTUNG/WARNING! Make a lookup table
 
    li_hpf.set_target(hpf2);
@@ -474,6 +474,7 @@ void SurgeSuperOscillator::process_block(
    __m128 char_b0 = _mm_load_ss(&CoefB0);
    __m128 char_b1 = _mm_load_ss(&CoefB1);
    __m128 char_a1 = _mm_load_ss(&CoefA1);
+
 
    for (k = 0; k < BLOCK_SIZE_OS; k++)
    {
