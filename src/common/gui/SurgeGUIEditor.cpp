@@ -2676,6 +2676,10 @@ void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
     frame->removeView(m, true);
 }
 
+void SurgeGUIEditor::tuningFileDropped(std::string fn)
+{
+    this->synth->storage.retuneToScale(Surge::Storage::readSCLFile(fn));
+}
 
 void SurgeGUIEditor::setZoomFactor(int zf)
 {

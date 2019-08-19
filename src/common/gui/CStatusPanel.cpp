@@ -94,3 +94,30 @@ VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const
     return CControl::onMouseDown(where, button);
 }
 
+bool CStatusPanel::onDrop(VSTGUI::DragEventData data )
+{
+   doingDrag = false;
+
+   auto drag = data.drag;
+   auto where = data.pos;
+   uint32_t ct = drag->getCount();
+   if (ct == 1)
+   {
+      IDataPackage::Type t = drag->getDataType(0);
+      if (t == IDataPackage::kFilePath)
+      {
+         const void* fn;
+         drag->getData(0, fn, t);
+         const char* fName = static_cast<const char*>(fn);
+         fs::path fPath(fName);
+         if ((_stricmp(fPath.extension().generic_string().c_str(), ".scl") == 0))
+         {
+             if( editor )
+                 editor->tuningFileDropped(fName);
+         }
+      }
+   }
+
+   return true;
+}
+
