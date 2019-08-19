@@ -229,9 +229,9 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
    // add time until next statechange
    float tempt;
    if (oscdata->p[5].absolute)
-      tempt = storage->note_to_pitch_inv(detune * pitchmult_inv * (1.f / 440.f));
+      tempt = storage->note_to_pitch_inv_tuningctr(detune * pitchmult_inv * (1.f / 440.f));
    else
-      tempt = storage->note_to_pitch_inv(detune);
+      tempt = storage->note_to_pitch_inv_tuningctr(detune);
    float t;
    float xt = ((float)state[voice] + 0.5f) * dt;
    // xt = (1 - hskew + 2*hskew*xt);
@@ -247,7 +247,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
            t = dt * tempt * wt_inc;
    }	*/
    float ft = block_pos * formant_t + (1.f - block_pos) * formant_last;
-   float formant = storage->note_to_pitch(-ft);
+   float formant = storage->note_to_pitch_tuningctr(-ft);
    dt *= formant * xt;
 
    // if(state[voice] >= (oscdata->wt.size-wt_inc)) dt += (1-formant);
@@ -335,7 +335,7 @@ template <bool is_init> void WavetableOscillator::update_lagvals()
    l_shape.newValue(limit_range(localcopy[id_shape].f, 0.f, 1.f));
    formant_t = max(0.f, localcopy[id_formant].f);
 
-   float invt = min(1.0, (8.175798915 * storage->note_to_pitch(pitch_t)) * dsamplerate_os_inv);
+   float invt = min(1.0, (8.175798915 * storage->note_to_pitch_tuningctr(pitch_t)) * dsamplerate_os_inv);
    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, 4 * invt)); // TODO Make a lookup table
 
    hpf_coeff.newValue(hpf2);
