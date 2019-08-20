@@ -152,7 +152,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
          double detune = localcopy[id_detune].f * (detune_bias * float(i) + detune_offset);
          // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
          // pow((double)1.05946309435,(double)pitch)));
-         double st = 0.25 * drand * storage->note_to_pitch_inv(detune - 12 + storage->scaleConstantNote() ) / storage->scaleConstantPitch();
+         double st = 0.125 * drand * storage->note_to_pitch_inv_tuningctr(detune);
          drand = (double)rand() / RAND_MAX;
          // double ot = 0.25 * drand * storage->note_to_pitch_inv(detune + l_sync.v);
          // HACK test 0.2*
@@ -219,7 +219,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
       // double t = max(0.5,dsamplerate_os * (1/8.175798915) * storage->note_to_pitch_inv(pitch +
       // detune) * 2);
-      float t = storage->note_to_pitch_inv(detune + storage->scaleConstantNote()) / storage->scaleConstantPitch() * 2;
+      float t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
       state[voice] = 0;
       last_level[voice] += dc_uni[voice] * (oscstate[voice] - syncstate[voice]);
 
@@ -250,11 +250,9 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    float sync = min((float)l_sync.v, (12 + 72 + 72) - pitch);
    float t;
    if (oscdata->p[5].absolute)
-      t = storage->note_to_pitch_inv(detune * pitchmult_inv * (1.f / 440.f) + sync + storage->scaleConstantNote()) *
-          storage->scaleConstantPitch();
+       t = storage->note_to_pitch_inv_tuningctr(detune * pitchmult_inv * (1.f / 440.f) + sync);
    else
-      t = storage->note_to_pitch_inv(detune + sync + storage->scaleConstantNote()) *
-          storage->scaleConstantPitch();
+       t = storage->note_to_pitch_inv_tuningctr(detune + sync);
 
    float t_inv = rcp(t);
    float g = 0.0, gR = 0.0;
@@ -376,7 +374,7 @@ template <bool is_init> void SurgeSuperOscillator::update_lagvals()
    l_shape.newValue(limit_range(localcopy[id_shape].f, -1.f, 1.f));
    l_sub.newValue(limit_range(localcopy[id_sub].f, 0.f, 1.f));
 
-   auto pp = storage->note_to_pitch(pitch + l_sync.v + storage->scaleConstantNote()) / storage->scaleConstantPitch();
+   auto pp = storage->note_to_pitch_tuningctr(pitch + l_sync.v );
    float invt = 4.f * min(1.0, (8.175798915 * pp * dsamplerate_os_inv) );
    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt)); // TODO ACHTUNG/WARNING! Make a lookup table
 
