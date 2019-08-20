@@ -586,7 +586,7 @@ public:
    float note_to_pitch_inv(float x);
    inline float note_to_pitch_tuningctr(float x)
    {
-       return note_to_pitch(x + scaleConstantNote() ) / scaleConstantPitch();
+       return note_to_pitch(x + scaleConstantNote() ) * scaleConstantPitchInv();
    }
    inline float note_to_pitch_inv_tuningctr(float x)
    {
@@ -598,6 +598,7 @@ public:
    void retuneToScale(const Surge::Storage::Scale& s);
    inline int scaleConstantNote() { return 48; }
    inline float scaleConstantPitch() { return 16.0; }
+   inline float scaleConstantPitchInv() { return 0.0625; } // Obviously that's the inverse of the above
 
    Surge::Storage::Scale currentScale;
    bool isStandardTuning;
