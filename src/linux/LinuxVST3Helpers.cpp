@@ -54,7 +54,6 @@ public:
 
    bool registerEventHandler(int fd, X11::IEventHandler* handler) final
    {
-      std::cout << __func__ << " " << fd << " " << handler << std::endl;
       if (!runLoop)
          return false;
 
@@ -70,8 +69,7 @@ public:
 
    bool unregisterEventHandler(X11::IEventHandler* handler) final
    {
-      std::cout << __func__ << " " << handler << std::endl;
-      if (!runLoop)
+     if (!runLoop)
          return false;
 
       for (auto it = eventHandlers.begin(), end = eventHandlers.end(); it != end; ++it)
@@ -87,10 +85,9 @@ public:
    }
    bool registerTimer(uint64_t interval, X11::ITimerHandler* handler) final
    {
-      std::cout << __func__ << " " << interval << " " << handler << std::endl;
       if (!runLoop)
          return false;
-      std::cout << "Have a runloop" << std::endl;
+      // std::cout << "Have a runloop" << std::endl;
 
       auto smtgHandler = Steinberg::owned(new TimerHandler());
       smtgHandler->handler = handler;
@@ -103,7 +100,6 @@ public:
    }
    bool unregisterTimer(X11::ITimerHandler* handler) final
    {
-      std::cout << __func__ << " " << handler << std::endl;
       if (!runLoop)
          return false;
 
@@ -121,7 +117,7 @@ public:
 
    RunLoop(Steinberg::Linux::IRunLoop* _runLoop) : runLoop(_runLoop)
    {
-      std::cout << "RunLoop is " << runLoop << " " << _runLoop << std::endl;
+      // std::cout << "RunLoop is " << runLoop << " " << _runLoop << std::endl;
    }
 
 private:
@@ -153,27 +149,21 @@ static UpdateHandlerInit gUpdateHandlerInit;
 class IdleUpdateHandler
 {
 public:
+   std::atomic<bool> running;
+   pthread_t t;
    static void start()
    {
       auto& instance = get();
       if (++instance.users == 1)
       {
-         /*
-         instance.timer = VSTGUI::makeOwned<VSTGUI::CVSTGUITimer>
-           (
-            [] (VSTGUI::CVSTGUITimer*) {
-              std::cout << "DEFUP" << std::endl;
-              gUpdateHandlerInit.get ()->triggerDeferedUpdates (); },
-            1000 / 30);
-         */
-         pthread_t t;
-         pthread_create(&t, NULL, IdleUpdateHandler::doDefUp, NULL);
+	 instance.running = true;
+         pthread_create(&instance.t, NULL, IdleUpdateHandler::doDefUp, NULL);
       }
    }
 
    static void* doDefUp(void* x)
    {
-      while (true)
+      while (get().running)
       {
          // std::cout << "GUpdate" << std::endl;
          gUpdateHandlerInit.get()->triggerDeferedUpdates();
@@ -186,7 +176,8 @@ public:
       auto& instance = get();
       if (--instance.users == 0)
       {
-         instance.timer = nullptr;
+	instance.running = false;
+	pthread_join(instance.t, NULL);
       }
    }
 
@@ -203,7 +194,7 @@ protected:
 
 void LinuxVST3Init(Steinberg::Linux::IRunLoop* rl)
 {
-   std::cout << "irl is " << rl << std::endl;
+   // std::cout << "irl is " << rl << std::endl;
    VSTGUI::X11::RunLoop::init(owned(new RunLoop(rl)));
 }
 
@@ -214,7 +205,7 @@ void LinuxVST3FrameOpen(VSTGUI::CFrame* that, void* parent, const VSTGUI::Platfo
    x11config.runLoop = VSTGUI::X11::RunLoop::get();
    config = &x11config;
 
-   std::cout << "Special Magical VST3 Open" << std::endl;
+   // std::cout << "Special Magical VST3 Open" << std::endl;
    that->open(parent, pt, config);
 
    IdleUpdateHandler::start();
@@ -222,6 +213,6 @@ void LinuxVST3FrameOpen(VSTGUI::CFrame* that, void* parent, const VSTGUI::Platfo
 
 void LinuxVST3Detatch()
 {
-  std::cout << "Would detatch here. FIXME" << std::endl;
+  IdleUpdateHandler::stop();
 }
 #endif
