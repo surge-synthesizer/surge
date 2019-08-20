@@ -117,8 +117,13 @@ void Wavetable::Copy(Wavetable* wt)
    current_id = -1;
    queue_id = -1;
 
-   memcpy(TableF32Data, wt->TableF32Data, sizeof(TableF32Data));
-   memcpy(TableI16Data, wt->TableI16Data, sizeof(TableI16Data));
+   if( dataSizes < wt->dataSizes )
+   {
+       allocPointers(wt->dataSizes);
+   }
+
+   memcpy(TableF32Data, wt->TableF32Data, dataSizes * sizeof(float));
+   memcpy(TableI16Data, wt->TableI16Data, dataSizes * sizeof(short));
 
    for (int i = 0; i < max_mipmap_levels; i++)
    {
