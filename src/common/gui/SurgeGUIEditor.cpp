@@ -1590,7 +1590,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          contextMenu->addEntry(txt, eid++);
          contextMenu->addEntry("-", eid++);
          addCallbackMenu(contextMenu, "Copy",
-                         [this]() { synth->storage.clipboard_copy(cp_osc, current_scene, 0); });
+                         [this, a]() { synth->storage.clipboard_copy(cp_osc, current_scene, a); });
          eid++;
 
          addCallbackMenu(contextMenu, "Copy (with modulation)", [this, a]() {
