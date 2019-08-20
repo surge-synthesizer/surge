@@ -152,7 +152,8 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
          double detune = localcopy[id_detune].f * (detune_bias * float(i) + detune_offset);
          // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
          // pow((double)1.05946309435,(double)pitch)));
-         double st = 0.125 * drand * storage->note_to_pitch_inv_tuningctr(detune);
+         // used to be 0.25 * detune - 12
+         double st = 0.5 * drand * storage->note_to_pitch_inv_tuningctr(detune);
          drand = (double)rand() / RAND_MAX;
          // double ot = 0.25 * drand * storage->note_to_pitch_inv(detune + l_sync.v);
          // HACK test 0.2*
