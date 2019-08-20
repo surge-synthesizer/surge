@@ -81,7 +81,7 @@ cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
 cp ../target/vst2/Release/Surge.so ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
 
 # Once VST3 works, this will be ../products/vst3
-# cp ../target/vst3/Release/Surge.so ${PACKAGE_NAME}/usr/lib/vst3/${SURGE_NAME}.so
+cp -r ../products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
 
 #build package
 
