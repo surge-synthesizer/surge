@@ -72,6 +72,11 @@ public:
    }
    float vu[KNumVuSlots]; // stereo pairs, just use every other when mono
 
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+   {
+       // No-op here.
+   }
+
 protected:
    SurgeStorage* storage;
    FxStorage* fxdata;

@@ -28,8 +28,25 @@ def sceneFun(xml):
         return False
 
 
+def containsFX(xml):
+    try:
+        pt = xml.getElementsByTagName("patch")[0]
+        for i in range(8):
+            nm = "fx{}_type".format(i + 1)
+            fx = pt.getElementsByTagName(nm)
+            if len(fx) > 0:
+                fxe = fx[0]
+                fxt = fxe.attributes["value"].nodeValue
+                if fxt == "10":
+                    return True
+
+        return False
+    except:
+        return False
+
+
 def target(xml):
-    return sceneFun(xml)
+    return containsFX(xml)
 
 
 def patchToDom(patch):

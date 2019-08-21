@@ -35,15 +35,18 @@ Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd
 
 Effect::Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
 {
-   assert(storage);
+   // assert(storage);
    this->fxdata = fxdata;
    this->storage = storage;
    this->pd = pd;
    ringout = 10000000;
-   for (int i = 0; i < n_fx_params; i++)
+   if(pd)
    {
-      f[i] = &pd[fxdata->p[i].id].f;
-      pdata_ival[i] = &pd[fxdata->p[i].id].i;
+       for (int i = 0; i < n_fx_params; i++)
+       {
+           f[i] = &pd[fxdata->p[i].id].f;
+           pdata_ival[i] = &pd[fxdata->p[i].id].i;
+       }
    }
 }
 
