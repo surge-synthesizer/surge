@@ -322,4 +322,17 @@ void VocoderEffect::init_ctrltypes()
 
 }
 
+void VocoderEffect::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+{
+    if( streamingRevision <= 10 )
+    {
+        fxdata->p[kNumBands].val.i = n_vocoder_bands;
+        
+        fxdata->p[kFreqLo].val.f = 12.f * log(vocoder_freq_vsm201[0]/440.f)/log(2.f);
+        fxdata->p[kFreqHi].val.f = 12.f * log(vocoder_freq_vsm201[n_vocoder_bands-1]/440.f)/log(2.f);
+        
+        fxdata->p[kModExpand].val.f = 0.f;
+        fxdata->p[kModCenter].val.f = 0.f;
+    }
+}
 //------------------------------------------------------------------------------------------------
