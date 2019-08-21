@@ -695,8 +695,9 @@ void SurgePatch::copy_globaldata(pdata* d)
 // pdata scenedata[2][n_scene_params];
 
 void SurgePatch::update_controls(bool init,
-                                 void* init_osc) // init_osc is the pointer to the data structure of
-                                                 // a particular osc to be reinitialized
+                                 void* init_osc, // init_osc is the pointer to the data structure of a particular osc to init
+                                 bool from_streaming // we are loading from a patch
+    ) 
 {
    for (auto& sc : scene)
    {
@@ -709,9 +710,12 @@ void SurgePatch::update_controls(bool init,
          if (t_osc)
          {
             t_osc->init_ctrltypes();
-            t_osc->handleStreamingMismatches( streamingRevision, currentSynthStreamingRevision );
+            if (from_streaming)
+                t_osc->handleStreamingMismatches( streamingRevision, currentSynthStreamingRevision );
             if (init || (init_osc == &sc.osc[osc]))
-               t_osc->init_default_values();
+            {
+                t_osc->init_default_values();
+            }
             delete t_osc;
          }
       }

@@ -417,7 +417,7 @@ public:
    SurgePatch(SurgeStorage* storage);
    ~SurgePatch();
    void init_default_values();
-   void update_controls(bool init = false, void* init_osc = 0);
+   void update_controls(bool init = false, void* init_osc = 0, bool from_stream = false);
    void do_morph();
    void copy_scenedata(pdata*, int scene);
    void copy_globaldata(pdata*);
