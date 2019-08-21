@@ -22,8 +22,8 @@ void stackToInfo()
     void* callstack[128];
     int i, frames = backtrace(callstack, 128);
     char** strs = backtrace_symbols(callstack, frames);
-    for (i = 0; i < frames; ++i) {
-        printf( "[SurgeRack] StackTrace[%3d]: %s", i, strs[i] );
+    for (i = 1; i < 8; ++i) {
+        printf( "StackTrace[%3d]: %s\n", i, strs[i] );
     }
     free(strs);
 #endif

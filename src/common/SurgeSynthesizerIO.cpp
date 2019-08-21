@@ -220,7 +220,7 @@ void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
 
    storage.getPatch().init_default_values();
    storage.getPatch().load_patch(data, size, preset);
-   storage.getPatch().update_controls(false);
+   storage.getPatch().update_controls(false, nullptr, true);
    for (int i = 0; i < 8; i++)
    {
       memcpy(&fxsync[i], &storage.getPatch().fx[i], sizeof(FxStorage));
