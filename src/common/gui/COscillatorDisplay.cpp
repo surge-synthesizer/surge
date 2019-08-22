@@ -31,13 +31,20 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    for (int c = 0; c < 2; ++c)
    {
       osces[c] = nullptr;
+
+#if OSC_MOD_ANIMATION
       if (!is_mod && c > 0 )
          continue;
+#else
+      if (c > 0)
+         continue;
+#endif
 
       tp[c][oscdata->pitch.param_id_in_scene].f = 0;
       for (int i = 0; i < n_osc_params; i++)
          tp[c][oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
 
+#if OSC_MOD_ANIMATION
       if (c == 1 )
       {
          auto modOut = 1.0;
@@ -101,6 +108,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
             iter++;
          }
       }
+#endif
 
       osces[c] = spawn_osc(oscdata->type.val.i, storage, oscdata, tp[c]);
    }
