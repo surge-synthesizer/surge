@@ -1300,8 +1300,12 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             }
          }
          break;
-      case ct_wstype:
       case ct_osctype:
+          switch_toggled_queued = true;
+          need_refresh = true;
+          refresh_editor = true;
+          break;
+      case ct_wstype:
       case ct_bool_mute:
       case ct_bool_fm:
       case ct_fbconfig:
@@ -1343,6 +1347,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       }
       break;
       case ct_envmode:
+         refresh_editor = true;
          need_refresh = true; // See github issue #160
          break;
       case ct_bool_link_switch:
