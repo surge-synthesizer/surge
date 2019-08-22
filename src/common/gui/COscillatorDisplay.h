@@ -7,6 +7,8 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 
+#define OSC_MOD_ANIMATION 0
+
 class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget
 {
 public:
@@ -52,6 +54,7 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
+#if OSC_MOD_ANIMATION
    void setIsMod(bool b)
    {
       is_mod = b;
@@ -65,6 +68,7 @@ public:
    {
       mod_time += 1.0 / 30.0;
    }
+#endif
 
 protected:
    void populateMenu(VSTGUI::COptionMenu* m, int selectedItem);
@@ -75,9 +79,12 @@ protected:
    unsigned controlstate;
 
    bool doingDrag = false;
+
+#if OSC_MOD_ANIMATION
    bool is_mod = false;
    modsources modsource = ms_original;
    float mod_time = 0;
+#endif
    VSTGUI::CRect rnext, rprev, rmenu;
    VSTGUI::CPoint lastpos;
    CLASS_METHODS(COscillatorDisplay, VSTGUI::CControl)

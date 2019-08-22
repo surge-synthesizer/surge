@@ -309,12 +309,14 @@ void SurgeGUIEditor::idle()
          }
       }
 
+#if OSC_MOD_ANIMATION
       if (mod_editor && oscdisplay)
       {
          ((COscillatorDisplay*)oscdisplay)->tickModTime();
          oscdisplay->setDirty(true);
          oscdisplay->invalid();
       }
+#endif
 
       if (polydisp)
       {
@@ -524,6 +526,7 @@ void SurgeGUIEditor::refresh_mod()
          s->invalid();
       }
    }
+#if OSC_MOD_ANIMATION
    if (oscdisplay)
    {
       ((COscillatorDisplay*)oscdisplay)->setIsMod(mod_editor);
@@ -531,6 +534,8 @@ void SurgeGUIEditor::refresh_mod()
       oscdisplay->invalid();
       oscdisplay->setDirty(true);
    }
+#endif
+
    synth->storage.CS_ModRouting.leave();
    for (int i = 1; i < n_modsources; i++)
    {
