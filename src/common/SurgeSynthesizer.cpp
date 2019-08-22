@@ -1301,10 +1301,27 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
          }
          break;
       case ct_osctype:
+      {
+          int s = storage.getPatch().param_ptr[index]->scene - 1;
+
+          if( storage.getPatch().param_ptr[index]->val.i != oldval.i )
+          {
+              /*
+              ** Wish there was a better way to figure out my osc but thsi works
+              */
+              for( auto oi = 0; s >=0 && s <= 1 && oi < n_oscs; oi++ )
+              {
+                  if( storage.getPatch().scene[s].osc[oi].type.id == storage.getPatch().param_ptr[index]->id )
+                  {
+                      storage.getPatch().scene[s].osc[oi].queue_type = storage.getPatch().param_ptr[index]->val.i;
+                  }
+              }
+          }
           switch_toggled_queued = true;
           need_refresh = true;
           refresh_editor = true;
           break;
+      }
       case ct_wstype:
       case ct_bool_mute:
       case ct_bool_fm:
