@@ -102,9 +102,11 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     bool hasSMPL = false;
     bool hasCLM = false;;
     bool hasCUE = false;
+    bool hasSRGE = false;
     int clmLEN = 0;
     int smplLEN = 0;
     int cueLEN = 0;
+    int srgeLEN = 0;
     
     // Now start reading chunks
     int tbr = 4;
@@ -190,6 +192,14 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             hasCLM = true;
             clmLEN = 2048;
 
+            free(data);
+        }
+        else if( four_chars(chunkType, 's', 'r', 'g', 'e'))
+        {
+            hasSRGE = true;
+            char *dp = data;
+            int version = pl_int(dp); dp += 4;
+            srgeLEN = pl_int(dp);
             free(data);
         }
         else if( four_chars(chunkType, 'c', 'u', 'e', ' ' ))
@@ -291,12 +301,14 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     std::cout << "  hasCLM =" << hasCLM << " / " << clmLEN << std::endl;
     std::cout << "  hasCUE =" << hasCUE << " / " << cueLEN << std::endl;
     std::cout << "  hasSMPL=" << hasSMPL << "/" << smplLEN << std::endl;
+    std::cout << "  hasSRGE=" << hasSRGE << "/" << srgeLEN << std::endl;
 #endif
 
-    bool loopData = hasSMPL || hasCLM;
+    bool loopData = hasSMPL || hasCLM || hasSRGE;
     int loopLen = hasCLM ? clmLEN :
         ( hasCUE ? cueLEN :
-          (hasSMPL ? smplLEN : -1 ) );
+          (hasSRGE ? srgeLEN :
+           (hasSMPL ? smplLEN : -1 ) ) );
     int loopCount = datasamples / loopLen;
 
 #if WAV_STDOUT_INFO
