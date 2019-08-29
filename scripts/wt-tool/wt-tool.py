@@ -4,17 +4,9 @@
 # Run wt-tool.py --help for instructions
 
 from optparse import OptionParser
-from itertools import tee
 from os import listdir
 from os.path import isfile, join
 import wave
-
-
-def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 
 def read_wt_header(fn):
@@ -82,7 +74,7 @@ def explode(fn, wav_dir):
                 wav_file.writeframes(bdata)
 
 
-def create(fn, wavdir):
+def create(fn, wavdir, norm):
     onlyfiles = [f for f in listdir(wavdir) if (isfile(join(wavdir, f)) and f.endswith(".wav"))]
     onlyfiles.sort()
 
@@ -101,15 +93,81 @@ def create(fn, wavdir):
 
     print("Creating '{0}' with {1} tables of length {2}".format(fn, len(onlyfiles), nf))
 
+    databuffer = []
+    for inf in onlyfiles:
+        with wave.open(join(wavdir, inf), "rb") as wav_file:
+            content = wav_file.readframes(nf * sw)
+            databuffer.append(content)
+    if (norm == "half"):
+        print("Normalizing by half")
+        newdb = []
+        for d in databuffer:
+            newrec = bytearray(len(d))
+
+            for i in range(int(len(d) / 2)):
+                ls = d[2 * i]
+                ms = d[2 * i + 1]
+                if(ms > 128):
+                    ms -= 256
+                r = int((ls + ms * 256) / 2)
+
+                nls = r % 256
+                nms = int(r / 256)
+                # print(ls, " ", ms, " ", ls + ms * 256, " ", nls, " ",  nms, " ", r)
+                if(nms < 0):
+                    nms += 256
+                newrec[2 * i] = nls
+                newrec[2 * i + 1] = nms
+            newdb.append(newrec)
+        databuffer = newdb
+    elif (norm == "peak"):
+        print("Normalizing to peak")
+        peakp = 0
+        peakm = 0
+        for d in databuffer:
+            for i in range(int(len(d) / 2)):
+                ls = d[2 * i]
+                ms = d[2 * i + 1]
+                if(ms > 128):
+                    ms -= 256
+                r = int(ls + ms * 256)
+                if(r > peakp):
+                    peakp = r
+                if(r < peakm):
+                    peakm = r
+        if(-peakm > peakp):
+            peakp = -peakm
+        print("Peak value is ", peakp)
+        newdb = []
+        for d in databuffer:
+            newrec = bytearray(len(d))
+
+            for i in range(int(len(d) / 2)):
+                ls = d[2 * i]
+                ms = d[2 * i + 1]
+                if(ms > 128):
+                    ms -= 256
+                r = int((ls + ms * 256) * 16384.0 / peakp)
+
+                nls = r % 256
+                nms = int(r / 256)
+                if(nms < 0):
+                    nms += 256
+                newrec[2 * i] = nls
+                newrec[2 * i + 1] = nms
+            newdb.append(newrec)
+        databuffer = newdb
+
+    else:
+        print("Not applying any normalization")
+
     with open(fn, "wb") as outf:
         outf.write(b'vawt')
         outf.write(nf.to_bytes(4, byteorder='little'))
         outf.write((len(onlyfiles)).to_bytes(2, byteorder='little'))
         outf.write(bytes([4, 0]))
-        for inf in onlyfiles:
-            with wave.open(join(wavdir, inf), "rb") as wav_file:
-                content = wav_file.readframes(nf * sw)
-                outf.write(content)
+        for d in databuffer:
+            outf.write(d)
 
 
 def info(fn):
@@ -132,6 +190,12 @@ def main():
                       help="wt_file being inspected or created", metavar="FILE")
     parser.add_option("-d", "--wav_dir", dest="wav_dir",
                       help="Directory containing or recieving wav files for wt", metavar="DIR")
+    parser.add_option("-n", "--normalize", dest="normalize", default="none", metavar="MODE",
+                      help="""(Create only) how to normalize input.
+Modes are 'none' leave input untouched;
+'half' input wav are divided by 2 (so 2^16 range becomes 2^15 range);
+'peak' input wav are scanned and re-peaked to 2^15.
+""")
     (options, args) = parser.parse_args()
 
     act = options.action
@@ -140,7 +204,7 @@ def main():
             parser.print_help()
             print("\nYou must specify a file and wav_dir for create")
         else:
-            create(options.file, options.wav_dir)
+            create(options.file, options.wav_dir, options.normalize)
     elif act == "explode":
         if(options.file is None or options.wav_dir is None):
             parser.print_help()
