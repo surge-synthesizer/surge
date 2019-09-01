@@ -52,6 +52,7 @@ size_t RequiredWTSize(int TableSize, int TableCount)
 {
    int Size = 0;
 
+   TableCount += 3; // for sample padding. Should match the "3" in the AppendSilence block below.
    while (TableSize > 0)
    {
       Size += TableCount * (TableSize + FIRoffsetI16 + FIRipolI16_N);
@@ -167,7 +168,7 @@ bool Wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
 
    if (AppendSilence)
    {
-      n_tables += 3;
+       n_tables += 3; // this "3" should match the "3" in RequiredWTSize
    }
 
 #if WINDOWS
