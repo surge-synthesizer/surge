@@ -107,13 +107,15 @@ def create(fn, wavdir, norm):
             for i in range(int(len(d) / 2)):
                 ls = d[2 * i]
                 ms = d[2 * i + 1]
-                if(ms > 128):
+                if(ms >= 128):
                     ms -= 256
                 r = int((ls + ms * 256) / 2)
 
-                nls = r % 256
+                nls = int(r % 256)
                 nms = int(r / 256)
-                # print(ls, " ", ms, " ", ls + ms * 256, " ", nls, " ",  nms, " ", r)
+
+                if(r < 0 and nls != 0):
+                    nms -= 1
                 if(nms < 0):
                     nms += 256
                 newrec[2 * i] = nls
@@ -128,7 +130,7 @@ def create(fn, wavdir, norm):
             for i in range(int(len(d) / 2)):
                 ls = d[2 * i]
                 ms = d[2 * i + 1]
-                if(ms > 128):
+                if(ms >= 128):
                     ms -= 256
                 r = int(ls + ms * 256)
                 if(r > peakp):
@@ -145,12 +147,14 @@ def create(fn, wavdir, norm):
             for i in range(int(len(d) / 2)):
                 ls = d[2 * i]
                 ms = d[2 * i + 1]
-                if(ms > 128):
+                if(ms >= 128):
                     ms -= 256
                 r = int((ls + ms * 256) * 16384.0 / peakp)
 
-                nls = r % 256
+                nls = int(r % 256)
                 nms = int(r / 256)
+                if(r < 0 and nls != 0):
+                    nms -= 1
                 if(nms < 0):
                     nms += 256
                 newrec[2 * i] = nls

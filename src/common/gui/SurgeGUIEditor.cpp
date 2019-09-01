@@ -1858,7 +1858,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   currentSub =
                       new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
                   char name[256];
-                  sprintf(name, "CC %d -> %d", mc, min(mc + 20, 127));
+                  sprintf(name, "CC %d -> %d", mc, min(mc + 20, 128) - 1);
                   midiSub->addEntry(currentSub, name);
                }
 
