@@ -149,7 +149,7 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
        svg[memSVG->size] = '\0';
        strncpy(svg, (const char*)(memorySVGListStart + memSVG->offset), memSVG->size);
        svgImage = nsvgParse(svg, "px", 96);
-       delete svg;
+       delete[] svg;
     }
     catch (Surge::Error err)
     {
