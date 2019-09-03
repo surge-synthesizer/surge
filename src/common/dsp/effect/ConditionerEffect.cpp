@@ -1,4 +1,7 @@
 #include "effect_defs.h"
+#if LINUX
+FOO
+#endif 
 #include <vt_dsp/basic_dsp.h>
 #include "SurgeParamConfig.h"
 
