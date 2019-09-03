@@ -688,6 +688,7 @@ excludes {
 
 includedirs {
     "src/lv2",
+    "libs/lv2",
     "vst3sdk"
 }
 
