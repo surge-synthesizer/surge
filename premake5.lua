@@ -662,6 +662,9 @@ end
 
 -- LV2 PLUGIN --
 
+if (os.istarget("linux")) then
+-- for now, build it on Linux only
+
 project "surge-lv2"
 kind "SharedLib"
 uuid "ECF54716-E9BC-4FF9-9F45-37A2FF4E0D6B"
@@ -713,3 +716,5 @@ end
 postbuildcommands {
     "python scripts/linux/generate-lv2-ttl.py %{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetsuffix}%{cfg.targetextension}"
 }
+
+end
