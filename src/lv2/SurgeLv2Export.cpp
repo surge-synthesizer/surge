@@ -98,7 +98,6 @@ void lv2_generate_ttl(const char* baseName)
                   "        lv2:symbol \"" << pSymbol << "\" ;\n"
                   "        lv2:name \"" << pName << "\" ;\n"
                   "        lv2:default " << pMeta.fdefault << " ;\n"
-                  // TODO LV2: implement an adequate version number scheme
                   "        lv2:minimum " << pMeta.fmin << " ;\n"
                   "        lv2:maximum " << pMeta.fmax << " ;\n"
                   "    ]";
@@ -146,6 +145,7 @@ void lv2_generate_ttl(const char* baseName)
       }
       osDsp << " ;\n";
 
+      // TODO LV2: implement an adequate version number scheme
       osDsp << "    lv2:microVersion 0 ;\n"
                "    lv2:minorVersion 0 .\n";
    }
