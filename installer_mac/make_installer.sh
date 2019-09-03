@@ -30,8 +30,8 @@ PRODUCTS="../products/"
 VST2="Surge.vst"
 VST3="Surge.vst3"
 AU="Surge.component"
-FXAU="surge-fx.component"
-FXVST3="surge-fx.vst3"
+FXAU="SurgeEffectsBank.component"
+FXVST3="SurgeEffectsBank.vst3"
 
 RSRCS="../resources/data"
 

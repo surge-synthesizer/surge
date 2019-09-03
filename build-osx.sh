@@ -352,8 +352,8 @@ get_and_build_fx()
     git submodule update --init --recursive
     make -f Makefile.mac build
     cd Builds/MacOSX/build/Release
-    tar cf - surge-fx.component/* | ( cd ../../../../../../products ; tar xf - )
-	tar cf - surge-fx.vst3/* | ( cd   ../../../../../../products ; tar xf - )
+    tar cf - SurgeEffectsBank.component/* | ( cd ../../../../../../products ; tar xf - )
+    tar cf - SurgeEffectsBank.vst3/* | ( cd   ../../../../../../products ; tar xf - )
 }
 
 # This is the main section of the script
