@@ -49,6 +49,8 @@ void CAboutBox::draw(CDrawContext* pContext)
       std::string flavor = "vst3";
 #elif TARGET_VST2
       std::string flavor = "vst2";
+#elif TARGET_LV2
+      std::string flavor = "lv2";
 #else
       std::string flavor = "NON-PLUGIN"; // for linux app
 #endif      
