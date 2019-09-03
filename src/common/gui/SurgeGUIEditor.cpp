@@ -36,6 +36,13 @@
 #include "vstgui/lib/platform/platform_x11.h"
 #include "vstgui/lib/platform/linux/x11platform.h"
 
+#if LINUX && TARGET_LV2
+namespace SurgeLv2
+{
+    VSTGUI::SharedPointer<VSTGUI::X11::IRunLoop> createRunLoop(void *ui);
+}
+#endif
+
 #include "RuntimeFont.h"
 
 const int yofs = 10;
@@ -76,7 +83,7 @@ enum special_tags
    start_paramtags,
 };
 
-SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(effect)
+SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
 {
    frame = 0;
 
@@ -144,14 +151,11 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth) : super(ef
    idleinc = 0;
 
    _effect = effect;
+   _userdata = userdata;
    this->synth = synth;
 
    // ToolTipWnd = 0;
 
-#if TARGET_VST3
-   _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
-#endif
-   
    minimumZoom = 50;
 #if LINUX
    minimumZoom = 100; // See github issue #628
@@ -1433,11 +1437,10 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    }
    LinuxVST3Init(l);
 #endif
-   _idleTimer->start();
 #endif
 
    float fzf = getZoomFactor() / 100.0;
-#if TARGET_VST2   
+#if TARGET_VST2
    CRect wsize(0, 0, WINDOW_SIZE_X * fzf, WINDOW_SIZE_Y * fzf);
 #else
    CRect wsize( 0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y );
@@ -1456,9 +1459,19 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    frame = nframe;
 #if LINUX && TARGET_VST3
    LinuxVST3FrameOpen(frame, parent, platformType);
+#elif LINUX && TARGET_LV2
+   VSTGUI::X11::FrameConfig frameConfig;
+   frameConfig.runLoop = SurgeLv2::createRunLoop(_userdata);
+   frame->open(parent, platformType, &frameConfig);
 #else
    frame->open(parent, platformType);
 #endif
+
+#if TARGET_VST3 || TARGET_LV2
+   _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
+   _idleTimer->start();
+#endif
+
    /*#if TARGET_AUDIOUNIT
            synth = (sub3_synth*)_effect;
    #elif TARGET_VST3
@@ -1490,8 +1503,12 @@ void SurgeGUIEditor::close()
    super::close();
 #endif
 
-#if TARGET_VST3
+#if TARGET_VST3 || TARGET_LV2
    _idleTimer->stop();
+   _idleTimer = nullptr;
+#endif
+
+#if TARGET_VST3
 #if LINUX
    LinuxVST3Detatch();
 #endif

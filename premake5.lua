@@ -255,7 +255,8 @@ function plugincommon()
 
         sysincludedirs {
             "src/**",
-            "libs/**",
+            "libs/xml/",
+            "libs/filesystem/",
             "vst3sdk/vstgui4",
         }
 
@@ -264,7 +265,6 @@ function plugincommon()
             "src/mac/**.mm",
             "src/mac/**.cpp",
             "src/mac/**.h",
-            "libs/vst/*.mm",
             VSTGUI .. "vstgui_mac.mm",
             VSTGUI .. "vstgui_uidescription_mac.mm",
         }
@@ -642,9 +642,8 @@ if (os.istarget("macosx")) then
     includedirs
     {
         "src/au",
-        "libs/",
-        "libs/AudioUnits/AUPublic",
-        "libs/AudioUnits/PublicUtility",
+        "libs/AUPublic/",
+        "libs/PublicUtility/",
     }
 
     excludes
@@ -657,5 +656,65 @@ if (os.istarget("macosx")) then
     if BREWBUILD then
         xcodebrewbuildsettings()
     end
+
+end
+
+-- LV2 PLUGIN --
+
+if (os.istarget("linux")) then
+-- for now, build it on Linux only
+
+project "surge-lv2"
+kind "SharedLib"
+uuid "ECF54716-E9BC-4FF9-9F45-37A2FF4E0D6B"
+
+defines
+{
+    "TARGET_LV2=1"
+}
+
+plugincommon()
+
+files {
+    "src/lv2/**.cpp",
+    "src/lv2/**.h",
+    VSTGUI .. "plugin-bindings/plugguieditor.cpp",
+    }
+
+excludes {
+    VSTGUI .. "aeffguieditor.cpp",
+}
+
+includedirs {
+    "src/lv2",
+    "libs/lv2",
+    "vst3sdk"
+}
+
+configuration { "Debug" }
+targetdir "target/lv2/Debug/Surge.lv2"
+targetsuffix "-Debug"
+
+configuration { "Release" }
+targetdir "target/lv2/Release/Surge.lv2"
+
+configuration {}
+
+if (os.istarget("macosx")) then
+
+elseif (os.istarget("windows")) then
+
+elseif (os.istarget("linux")) then
+
+    excludes {
+        -- This is both deprecated and, on linux, ejects a non-linkable symbol. So exclude it.
+        "vst3sdk/base/source/timer.cpp"
+    }
+
+end
+
+postbuildcommands {
+    "python scripts/linux/generate-lv2-ttl.py %{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetsuffix}%{cfg.targetextension}"
+}
 
 end

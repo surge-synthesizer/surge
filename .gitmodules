@@ -11,3 +11,6 @@
 [submodule "libs/nanosvg"]
 	path = libs/nanosvg
 	url = https://github.com/memononen/nanosvg.git
+[submodule "libs/lv2"]
+	path = libs/lv2
+	url = https://github.com/drobilla/lv2.git
