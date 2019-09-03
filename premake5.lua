@@ -255,7 +255,8 @@ function plugincommon()
 
         sysincludedirs {
             "src/**",
-            "libs/**",
+            "libs/xml/",
+            "libs/filesystem/",
             "vst3sdk/vstgui4",
         }
 
@@ -264,7 +265,6 @@ function plugincommon()
             "src/mac/**.mm",
             "src/mac/**.cpp",
             "src/mac/**.h",
-            "libs/vst/*.mm",
             VSTGUI .. "vstgui_mac.mm",
             VSTGUI .. "vstgui_uidescription_mac.mm",
         }
@@ -642,9 +642,8 @@ if (os.istarget("macosx")) then
     includedirs
     {
         "src/au",
-        "libs/",
-        "libs/AudioUnits/AUPublic",
-        "libs/AudioUnits/PublicUtility",
+        "libs/AUPublic/",
+        "libs/PublicUtility/",
     }
 
     excludes
