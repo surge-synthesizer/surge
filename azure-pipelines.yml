@@ -98,7 +98,6 @@ jobs:
     displayName: Build Windows x86
 
   - bash: |
-      set -x
       pushd $AGENT_TEMPDIRECTORY
       export PREMAKE_LINUX=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-linux.tar.gz
       curl -L $PREMAKE_LINUX --output premake5.tar.gz
@@ -116,7 +115,6 @@ jobs:
 
       ./build-linux.sh clean && ./build-linux.sh build
 
-      find  . -name '*'
     condition: variables.isLinux
     displayName: Build Linux
 
