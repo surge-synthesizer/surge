@@ -41,6 +41,7 @@ PACKAGE_NAME="$SURGE_NAME"
 rm -rf ${PACKAGE_NAME} product
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
+mkdir -p ${PACKAGE_NAME}/usr/lib/lv2
 mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 mkdir -p ${PACKAGE_NAME}/DEBIAN
 chmod -R 0755 ${PACKAGE_NAME}
@@ -82,6 +83,9 @@ cp ../target/vst2/Release/Surge.so ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
 
 # Once VST3 works, this will be ../products/vst3
 cp -r ../products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
+
+#copy the lv2 bundle
+cp -r ../target/lv2/Release/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
 
 #build package
 
