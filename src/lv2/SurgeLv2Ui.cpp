@@ -47,7 +47,7 @@ void SurgeLv2Ui::associateIdleRunLoop(const VSTGUI::SharedPointer<Lv2IdleRunLoop
 LV2UI_Descriptor SurgeLv2Ui::createDescriptor()
 {
    LV2UI_Descriptor desc = {};
-   desc.URI = "https://github.com/linuxmao-org/surge#UI";
+   desc.URI = "https://github.com/surge-synthesizer/surge#UI";
    desc.instantiate = &instantiate;
    desc.cleanup = &cleanup;
    desc.port_event = &portEvent;

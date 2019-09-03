@@ -281,7 +281,7 @@ const void* SurgeLv2Wrapper::extensionData(const char* uri)
 LV2_Descriptor SurgeLv2Wrapper::createDescriptor()
 {
    LV2_Descriptor desc = {};
-   desc.URI = "https://github.com/linuxmao-org/surge";
+   desc.URI = "https://github.com/surge-synthesizer/surge";
    desc.instantiate = &instantiate;
    desc.connect_port = &connectPort;
    desc.activate = &activate;
