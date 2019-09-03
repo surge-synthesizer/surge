@@ -660,7 +660,7 @@ if (os.istarget("macosx")) then
 
 end
 
--- VST3 PLUGIN --
+-- LV2 PLUGIN --
 
 project "surge-lv2"
 kind "SharedLib"
