@@ -40,7 +40,7 @@ private:
    using super = EditorType;
 
 public:
-   SurgeGUIEditor(void* effect, SurgeSynthesizer* synth);
+   SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
    virtual ~SurgeGUIEditor();
    void idle();
    bool queue_refresh;
@@ -235,7 +235,8 @@ private:
    float blinktimer = 0;
    bool blinkstate = false;
    void* _effect = nullptr;
-   VSTGUI::CVSTGUITimer* _idleTimer = nullptr;
+   void* _userdata = nullptr;
+   VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;
 
    /*
    ** Utility Function
