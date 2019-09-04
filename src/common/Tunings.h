@@ -38,6 +38,8 @@ struct Scale
    {
    }
 
+   bool isValid() const;
+
    std::string toHtml();
 };
 

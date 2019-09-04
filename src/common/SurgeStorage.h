@@ -595,7 +595,7 @@ public:
        
    void note_to_omega(float, float&, float&);
 
-   void retuneToScale(const Surge::Storage::Scale& s);
+   bool retuneToScale(const Surge::Storage::Scale& s);
    inline int scaleConstantNote() { return 48; }
    inline float scaleConstantPitch() { return 16.0; }
    inline float scaleConstantPitchInv() { return 0.0625; } // Obviously that's the inverse of the above

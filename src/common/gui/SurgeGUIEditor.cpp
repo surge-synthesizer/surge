@@ -3067,13 +3067,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                             }
                             auto sc = Surge::Storage::readSCLFile(sf);
 
-                            if (sc.count <= 0) // invalid
+                            if (!this->synth->storage.retuneToScale(sc))
                             {
                                Surge::UserInteractions::promptError( "This .scl file is not valid", "File format error" );
                                return;
                             }
-
-                            this->synth->storage.retuneToScale(sc);
                         };
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
                                                                       ".scl",
