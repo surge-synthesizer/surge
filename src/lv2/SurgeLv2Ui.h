@@ -43,6 +43,9 @@ private:
    static const void* extensionData(const char* uri);
    static int uiIdle(LV2UI_Handle ui);
 
+    // callback from the editor
+    void handleZoom(SurgeGUIEditor* e, const LV2UI_Resize* resizer);
+
 private:
    std::unique_ptr<SurgeGUIEditor> _editor;
    SurgeLv2Wrapper* _instance;
