@@ -21,6 +21,33 @@ namespace Surge
 namespace UserInteractions
 {
 
+// @jpcima: string quoting for shell commands to use with popen.
+static std::string escapeForPosixShell(const std::string &str)
+{
+   std::string esc;
+   esc.reserve(2 * str.size());
+
+   // 1. if it's a newline, write it verbatim enclosed in single-quotes;
+   // 2. if it's a letter or digit, write it verbatim;
+   // 3. otherwise, prefix it with a backward slash.
+
+   for (char c : str)
+   {
+      if (c == '\n')
+         esc.append("'\n'");
+      else
+      {
+         bool isAlphaNum = (c >= '0' && c <= '9') ||
+            (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+         if (!isAlphaNum)
+            esc.push_back('\\');
+         esc.push_back(c);
+      }
+   }
+
+   return esc;
+}
+
 void promptError(const std::string &message, const std::string &title,
                  SurgeGUIEditor *guiEditor)
 {
@@ -98,23 +125,51 @@ void promptFileOpenDialog(const std::string& initialDirectory,
    /*
    ** This is a blocking model which will cause us problems I am sure
    */
-   FILE *z = popen( "zenity --file-selection", "r" );
+
+   std::string zenityCommand;
+   zenityCommand.reserve(1024);
+
+   zenityCommand.append("zenity --file-selection");
+
+   if (!initialDirectory.empty())
+   {
+      zenityCommand.append(" --filename=");
+      zenityCommand.append(escapeForPosixShell(initialDirectory));
+      zenityCommand.push_back('/');  // makes it handled as directory
+   }
+
+   if (!filterSuffix.empty())
+   {
+      zenityCommand.append(" --file-filter=");
+      zenityCommand.append(escapeForPosixShell("*" + filterSuffix));
+   }
+
+   if (canSelectDirectories)
+      zenityCommand.append(" --directory");
+
+   // option not implemented
+   (void)canCreateDirectories;
+
+   FILE *z = popen( zenityCommand.c_str(), "r" );
    if( ! z )
    {
       return;
    }
+
+   std::string result; // not forcing a fixed limit on length, depends on fs
+   result.reserve(1024);
+
    char buffer[ 1024 ];
-   if (fgets(buffer, sizeof(buffer), z) == NULL)
-   {
-      return;
-   }
-   for( int i=0; i<1024; ++i )
-      if( buffer[i] == '\n' )
-         buffer[i] = 0;
-   
+   for (size_t count; (count = fread(buffer, 1, sizeof(buffer), z)) > 0;)
+      result.append(buffer, count);
+
    pclose(z);
 
-   callbackOnOpen(buffer);
+   // eliminate the final newline
+   if (!result.empty() && result.back() == '\n')
+      result.pop_back();
+
+   callbackOnOpen(result);
 }
 };
 
