@@ -169,6 +169,7 @@ public:
          gUpdateHandlerInit.get()->triggerDeferedUpdates();
          usleep(1000 / 30.0);
       }
+      return nullptr;
    }
 
    static void stop()
