@@ -273,7 +273,19 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_min.f = -72;
       val_max.f = 15;
-      val_default.f = -72;
+      val_default.f = -18;
+      break;
+   case ct_freq_vocoder_low:
+      valtype = vt_float;
+      val_min.f = -36; // 55hz
+      val_max.f = 36; // 3520 hz
+      val_default.f = -3;
+      break;
+   case ct_freq_vocoder_high:
+      valtype = vt_float;
+      val_min.f = 0; // 440 hz
+      val_max.f = 60; // ~14.3 khz
+      val_default.f = 49; // ~7.4khz
       break;
    case ct_freq_mod:
       valtype = vt_float;
@@ -933,6 +945,8 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_freq_hpf:
       case ct_freq_audible:
+      case ct_freq_vocoder_low:
+      case ct_freq_vocoder_high:
          sprintf(txt, "%.3f Hz", 440.f * powf(2.0f, f / 12.f));
          break;
       case ct_freq_mod:
