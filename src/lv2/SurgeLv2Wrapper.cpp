@@ -251,7 +251,7 @@ void SurgeLv2Wrapper::handleEvent(const LV2_Atom_Event* event)
       };
 
       if (speed)
-         atomGetNumber(beatsPerMinute, &_timePositionSpeed);
+         atomGetNumber(speed, &_timePositionSpeed);
       if (beatsPerMinute)
          atomGetNumber(beatsPerMinute, &_timePositionTempoBpm);
       if (beat)
