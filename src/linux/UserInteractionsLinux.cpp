@@ -169,7 +169,8 @@ void promptFileOpenDialog(const std::string& initialDirectory,
    if (!result.empty() && result.back() == '\n')
       result.pop_back();
 
-   callbackOnOpen(result);
+   if (!result.empty()) // it's empty if the user cancelled
+      callbackOnOpen(result);
 }
 };
 
