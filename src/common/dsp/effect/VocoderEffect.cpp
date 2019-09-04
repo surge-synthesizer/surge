@@ -72,6 +72,12 @@ void VocoderEffect::setvars(bool init)
 #endif
    float flo = *f[kFreqLo];
    float fhi = *f[kFreqHi];
+   if( flo > fhi )
+   {
+       auto t = fhi;
+       fhi = flo;
+       flo = t;
+   }
    float df = (fhi-flo)/(active_bands-1);
 
    float hzlo = 440.f * pow(2.f, flo / 12.f );
@@ -94,14 +100,20 @@ void VocoderEffect::setvars(bool init)
        auto mMid = fDistHalf + flo + 0.3 * mC * fDistHalf; // that 0.3 is a tuning choice about how far we can move center
        auto mLo = mMid - fDistHalf * ( 1 + 0.7 * mX ); // as is that 0.7
        auto dM = fDistHalf * 2 * ( 1.0 + 0.7 * mX ) / (active_bands - 1);
-       
+
+       auto mHi = mLo + dM * (active_bands - 1);
+
+       if( mHi > 60 )
+           dM = ( 60 - mLo ) / (active_bands - 1);
+
+       mHi = mLo + dM * (active_bands - 1);
+
        mb = 440.0 * pow(2.f, mLo / 12.f );
        mdhz = pow( 2.f, dM / 12.f );
    }
    
    for (int i = 0; i < active_bands && i < n_vocoder_bands; i++)
    {
-       //std::cout << "vsm201[" << i << "]=" << vocoder_freq_vsm201[i] << "  fb=" << fb << std::endl;
       Freq[i & 3] = fb * samplerate_inv;
       FreqM[i & 3] = mb * samplerate_inv;
       
@@ -305,11 +317,11 @@ void VocoderEffect::init_ctrltypes()
    fxdata->p[kNumBands].posy_offset = 3;
 
    fxdata->p[kFreqLo].set_name("Low band");
-   fxdata->p[kFreqLo].set_type(ct_freq_audible);
+   fxdata->p[kFreqLo].set_type(ct_freq_vocoder_low);
    fxdata->p[kFreqLo].posy_offset = 3;
 
    fxdata->p[kFreqHi].set_name("High band");
-   fxdata->p[kFreqHi].set_type(ct_freq_audible);
+   fxdata->p[kFreqHi].set_type(ct_freq_vocoder_high);
    fxdata->p[kFreqHi].posy_offset = 3;
 
    fxdata->p[kModExpand].set_name("Mod XPand");
