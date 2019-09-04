@@ -1235,8 +1235,11 @@ float envelope_rate_linear(float x)
    return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
 }
 
-void SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
+bool SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
 {
+   if (!s.isValid())
+      return false;
+
    currentScale = s;
    isStandardTuning = false;
    
@@ -1291,6 +1294,8 @@ void SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
           (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
 
    }
+
+   return true;
 }
 
 namespace Surge

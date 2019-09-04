@@ -137,6 +137,15 @@ std::ostream& Surge::Storage::operator<<(std::ostream& os, const Surge::Storage:
    return os;
 }
 
+bool Surge::Storage::Scale::isValid() const
+{
+   if (count <= 0)
+      return false;
+
+   // TODO check more things maybe...
+   return true;
+}
+
 std::string Surge::Storage::Scale::toHtml()
 {
     std::ostringstream htmls;
