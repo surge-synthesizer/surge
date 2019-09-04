@@ -5,6 +5,8 @@
 #include "SurgeGUIEditor.h"
 #include <cassert>
 
+#include "CScalableBitmap.h"
+
 SurgeLv2Ui::SurgeLv2Ui(SurgeLv2Wrapper* instance,
                        void* parentWindow,
                        const LV2_URID_Map* uridMapper,
@@ -15,6 +17,12 @@ SurgeLv2Ui::SurgeLv2Ui(SurgeLv2Wrapper* instance,
       _writeFn(writeFn), _controller(controller)
 {
    instance->setEditor(this);
+
+   if (uiResizer)
+   {
+      _editor->setZoomCallback(
+         [this, uiResizer](SurgeGUIEditor* editor) { handleZoom(editor, uiResizer); });
+   }
 
    _editor->open(parentWindow);
 
@@ -122,6 +130,49 @@ int SurgeLv2Ui::uiIdle(LV2UI_Handle ui)
 
    // TODO maybe handle the case of closed window here
    return 0;
+}
+
+void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer)
+{
+   assert(e == _editor.get());
+
+    float fzf = e->getZoomFactor() / 100.0;
+    int newW = WINDOW_SIZE_X * fzf;
+    int newH = WINDOW_SIZE_Y * fzf;
+
+    // identical implementation to VST2, except for here
+    resizer->ui_resize(resizer->handle, newW, newH);
+
+    VSTGUI::CFrame *frame = e->getFrame();
+    if(frame)
+    {
+        frame->setZoom(e->getZoomFactor() / 100.0);
+        /*
+        ** cframe::setZoom uses prior size and integer math which means repeated resets drift
+        ** look at the "oroginWidth" math around in CFrame::setZoom. So rather than let those
+        ** drifts accumulate, just reset the size here since we know it
+        */
+        frame->setSize(newW, newH);
+
+        /*
+        ** VST2 has an error which is that the background bitmap doesn't get the frame transform
+        ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
+        ** scale up using a backdoor API.
+        */
+
+        VSTGUI::CBitmap *bg = frame->getBackground();
+        if(bg != NULL)
+        {
+            CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+            if (sbm)
+            {
+               sbm->setExtraScaleFactor(e->getZoomFactor());
+            }
+        }
+
+        frame->setDirty(true);
+        frame->invalid();
+    }
 }
 
 ///
