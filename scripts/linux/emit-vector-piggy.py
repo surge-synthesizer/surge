@@ -12,11 +12,18 @@
 import os
 import re
 import sys
+try:
+    from io import StringIO
+except ImportError:
+    from StringIO import StringIO
 
 assets_path = "assets/original-vector/SVG/exported"
 
-source_file = open(sys.argv[1] + "/src/linux/ScalablePiggy.S", "w")
-source_file.write("""# THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
+source_file_path = sys.argv[1] + "/src/linux/ScalablePiggy.S"
+header_file_path = sys.argv[1] + "/src/linux/ScalablePiggy.h"
+
+source_file = StringIO()
+source_file.write(u"""# THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
 #
 # If you need to modify this file, please read the comment
 # in scripts/linux/emit-vector-piggy.py
@@ -28,8 +35,8 @@ memorySVGListStart:
 
 """)
 
-header_file = open(sys.argv[1] + "/src/linux/ScalablePiggy.h", "w")
-header_file.write("""/*
+header_file = StringIO()
+header_file.write(u"""/*
 ** THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
 **
 ** If you need to modify this file, please read the comment
@@ -56,13 +63,25 @@ for name in os.listdir(sys.argv[1] + "/" + assets_path):
     path = os.path.join(assets_path, name)
     size = os.stat(sys.argv[1] + "/" + path).st_size;
 
-    source_file.write('    .incbin "../../' + path + '"' + os.linesep)
-    header_file.write('     {"svg/' + name + '", ' + str(size) + ', ' +
-                      str(offset) + '},' + os.linesep)
+    source_file.write(u'    .incbin "../../%s"%s' % (path, os.linesep))
+    header_file.write(u'     {"svg/%s", %d, %d},%s' % (name, size, offset, os.linesep))
 
     offset += size
 
 
-header_file.write("""    {NULL, 0}
+header_file.write(u"""    {NULL, 0}
 };
 """)
+
+def save_if_modified(path, contents):
+    try:
+        same = contents == open(path, 'r').read()
+    except IOError:
+        same = False
+    if not same:
+        open(path, 'w').write(contents)
+    # else:
+    #     sys.stderr.write('File identical, not saving: "%s"\n' % (path))
+
+save_if_modified(header_file_path, header_file.getvalue())
+save_if_modified(source_file_path, source_file.getvalue())
