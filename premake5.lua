@@ -154,6 +154,7 @@ end
 
 includedirs {
     "libs/xml",
+    "libs/strnatcmp",
     "libs/nanosvg/src",
     "src/common/vt_dsp",
     "src/common/thread",
@@ -235,6 +236,7 @@ function plugincommon()
         "libs/xml/tinyxml.cpp",
         "libs/xml/tinyxmlerror.cpp",
         "libs/xml/tinyxmlparser.cpp",
+        "libs/strnatcmp/strnatcmp.cpp",
         "libs/filesystem/filesystem.cpp",
     }
 

@@ -52,6 +52,7 @@ set(SURGE_COMMON_SOURCES
     libs/xml/tinyxml.cpp
     libs/xml/tinyxmlerror.cpp
     libs/xml/tinyxmlparser.cpp
+    libs/strnatcmp/strnatcmp.cpp
     libs/filesystem/filesystem.cpp
 )
 
@@ -59,6 +60,7 @@ set(SURGE_COMMON_INCLUDES
     libs/
     libs/filesystem
     libs/xml
+    libs/strnatcmp
     src/common
     src/common/dsp
     src/common/thread

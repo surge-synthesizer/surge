@@ -33,6 +33,8 @@
 
 #include "UserDefaults.h"
 
+#include "strnatcmp.h"
+
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -344,8 +346,8 @@ void SurgeStorage::refresh_patchlist()
    auto patchCompare =
       [this](const int &i1, const int &i2) -> bool
       {
-         return _stricmp(patch_list[i1].name.c_str(),
-                         patch_list[i2].name.c_str()) < 0;
+         return strnatcasecmp(patch_list[i1].name.c_str(),
+                              patch_list[i2].name.c_str()) < 0;
       };
 
    std::sort(patchOrdering.begin(), patchOrdering.end(), patchCompare);
@@ -359,8 +361,8 @@ void SurgeStorage::refresh_patchlist()
    auto categoryCompare =
       [this](const int &i1, const int &i2) -> bool
       {
-         return _stricmp(patch_category[i1].name.c_str(),
-                         patch_category[i2].name.c_str()) < 0;
+         return strnatcasecmp(patch_category[i1].name.c_str(),
+                              patch_category[i2].name.c_str()) < 0;
       };
 
    int groups[4] = {0, firstThirdPartyCategory, firstUserCategory,
@@ -513,7 +515,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
    auto catCompare =
        [this](const PatchCategory &c1, const PatchCategory &c2) -> bool
        {
-           return _stricmp(c1.name.c_str(),c2.name.c_str()) < 0;
+           return strnatcasecmp(c1.name.c_str(),c2.name.c_str()) < 0;
        };
    for (auto& pc : local_categories)
    {
@@ -583,7 +585,7 @@ void SurgeStorage::refresh_wtlist()
    std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
 
    auto categoryCompare = [this](const int& i1, const int& i2) -> bool {
-      return _stricmp(wt_category[i1].name.c_str(), wt_category[i2].name.c_str()) < 0;
+      return strnatcasecmp(wt_category[i1].name.c_str(), wt_category[i2].name.c_str()) < 0;
    };
 
    int groups[4] = {0, firstThirdPartyWTCategory, firstUserWTCategory, (int)wt_category.size()};
@@ -598,7 +600,7 @@ void SurgeStorage::refresh_wtlist()
    wtOrdering = std::vector<int>();
 
    auto wtCompare = [this](const int& i1, const int& i2) -> bool {
-      return _stricmp(wt_list[i1].name.c_str(), wt_list[i2].name.c_str()) < 0;
+      return strnatcasecmp(wt_list[i1].name.c_str(), wt_list[i2].name.c_str()) < 0;
    };
 
    // Sort wavetables per category in the category order.
