@@ -90,6 +90,8 @@ public:
       delete cdisurf;
    }
    virtual void draw(VSTGUI::CDrawContext* dc);
+   void drawVectorized(VSTGUI::CDrawContext* dc);
+   void drawBitmap(VSTGUI::CDrawContext* dc);
 
 protected:
    LFOStorage* lfodata;
