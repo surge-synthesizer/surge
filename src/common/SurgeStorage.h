@@ -39,7 +39,14 @@ namespace fs = std::experimental::filesystem;
 
 /* PATCH layer			*/
 
+#define SIX_OSC 1
+
+#if SIX_OSC
+const int n_oscs = 6;
+#else
+// This is the 1.6 value const int n_oscs = 3;
 const int n_oscs = 3;
+#endif
 const int n_lfos_voice = 6;
 const int n_lfos_scene = 6;
 const int n_lfos = n_lfos_voice + n_lfos_scene;
@@ -63,7 +70,17 @@ extern float samplerate, samplerate_inv;
 extern double dsamplerate, dsamplerate_inv;
 extern double dsamplerate_os, dsamplerate_os_inv;
 
-const int n_scene_params = 271;
+#if !SIX_OSC
+const int n_scene_params = 271;// This is the 1.6 value
+#else
+// 1.6               271
+// 3 -> 6 osc - each osc has type, octave, pitch, n_osc_params params, keytrack, retrigger - so 12 params
+//                  + ( 3 * 12 ) = 307
+// 3 -> 6 osc - each mixer gets a level, route, solo, and mute
+//                  + ( 3 * 4 ) = 319
+const int n_scene_params = 319;
+#endif
+
 const int n_global_params = 113;
 const int n_global_postparams = 1;
 const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
@@ -354,10 +371,10 @@ struct SurgeSceneStorage
    Parameter fm_depth, fm_switch;
    Parameter drift, noise_colour, keytrack_root;
    Parameter osc_solo;
-   Parameter level_o1, level_o2, level_o3, level_noise, level_ring_12, level_ring_23, level_pfg;
-   Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12, mute_ring_23;
-   Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12, solo_ring_23;
-   Parameter route_o1, route_o2, route_o3, route_noise, route_ring_12, route_ring_23;
+   Parameter level_o[n_oscs], level_noise, level_ring_12, level_ring_23, level_pfg;
+   Parameter mute_o[n_oscs], mute_noise, mute_ring_12, mute_ring_23;
+   Parameter solo_o[n_oscs], solo_noise, solo_ring_12, solo_ring_23;
+   Parameter route_o[n_oscs], route_noise, route_ring_12, route_ring_23;
    Parameter vca_level;
    Parameter pbrange_dn, pbrange_up;
    Parameter vca_velsense;

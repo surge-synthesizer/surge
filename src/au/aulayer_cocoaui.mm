@@ -40,14 +40,12 @@
 
 using namespace VSTGUI;
 
-@interface SurgeNSView : NSView
-{
-    SurgeGUIEditor *editController;
-    CFRunLoopTimerRef idleTimer;
-    float lastScale;
-    NSSize underlyingUISize;
-    bool setSizeByZoom; // use this flag to see if resize comes from here or from external
-    
+@interface SurgeNSViewExp : NSView {
+   SurgeGUIEditor* editController;
+   CFRunLoopTimerRef idleTimer;
+   float lastScale;
+   NSSize underlyingUISize;
+   bool setSizeByZoom; // use this flag to see if resize comes from here or from external
 }
 
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size;
@@ -57,14 +55,13 @@ using namespace VSTGUI;
 
 @end
 
-@interface SurgeCocoaUI : NSObject<AUCocoaUIBase>
-{
+@interface SurgeExpCocoaUI : NSObject <AUCocoaUIBase> {
 }
 
 - (NSString *) description;
 @end
 
-@implementation SurgeCocoaUI
+@implementation SurgeExpCocoaUI
 - (NSView *) uiViewForAudioUnit: (AudioUnit) inAudioUnit
                        withSize: (NSSize) inPreferredSize
 {
@@ -73,8 +70,9 @@ using namespace VSTGUI;
     UInt32 size = sizeof (SurgeGUIEditor *);
     if (AudioUnitGetProperty (inAudioUnit, kVmbAAudioUnitProperty_GetEditPointer, kAudioUnitScope_Global, 0, &editController, &size) != noErr)
         return nil;
-    
-    return [[[SurgeNSView alloc] initWithSurge:editController preferredSize:inPreferredSize] autorelease];
+
+    return [[[SurgeNSViewExp alloc] initWithSurge:editController
+                                    preferredSize:inPreferredSize] autorelease];
     // return nil;
 }
 
@@ -90,11 +88,11 @@ using namespace VSTGUI;
 
 void timerCallback( CFRunLoopTimerRef timer, void *info )
 {
-    SurgeNSView *view = (SurgeNSView *)info;
-    [view doIdle];
+   SurgeNSViewExp* view = (SurgeNSViewExp*)info;
+   [view doIdle];
 }
 
-@implementation SurgeNSView
+@implementation SurgeNSViewExp
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
     cont->setZoomCallback( []( SurgeGUIEditor *ed ) {} );
@@ -278,19 +276,19 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
         {
             case kAudioUnitProperty_CocoaUI:
                 {
-                    auto surgeclass = objc_getClass( "SurgeCocoaUI" );
-                    const char* image = class_getImageName ( surgeclass );
-                    CFBundleRef bundle = GetBundleFromExecutable (image);
-                    CFURLRef url = CFBundleCopyBundleURL (bundle);
-                    CFRetain( url );
-                    CFRelease (bundle);
+                   auto surgeclass = objc_getClass("SurgeExpCocoaUI");
+                   const char* image = class_getImageName(surgeclass);
+                   CFBundleRef bundle = GetBundleFromExecutable(image);
+                   CFURLRef url = CFBundleCopyBundleURL(bundle);
+                   CFRetain(url);
+                   CFRelease(bundle);
 
-                    
-                    AudioUnitCocoaViewInfo* info = static_cast<AudioUnitCocoaViewInfo*> (outData);
-                    info->mCocoaAUViewClass[0] = CFStringCreateWithCString(kCFAllocatorDefault, class_getName(surgeclass), kCFStringEncodingUTF8);
-                    info->mCocoaAUViewBundleLocation = url;
+                   AudioUnitCocoaViewInfo* info = static_cast<AudioUnitCocoaViewInfo*>(outData);
+                   info->mCocoaAUViewClass[0] = CFStringCreateWithCString(
+                       kCFAllocatorDefault, class_getName(surgeclass), kCFStringEncodingUTF8);
+                   info->mCocoaAUViewBundleLocation = url;
 
-                    return noErr;
+                   return noErr;
                 }
             case kVmbAAudioUnitProperty_GetEditPointer:
             {

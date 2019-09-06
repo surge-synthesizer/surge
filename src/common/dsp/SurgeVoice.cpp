@@ -10,9 +10,8 @@ using namespace std;
 enum lag_entries
 {
    le_osc1,
-   le_osc2,
-   le_osc3,
-   le_noise,
+
+   le_noise = le_osc1 + n_oscs,
    le_ring12,
    le_ring23,
    le_pfg,
@@ -109,9 +108,10 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    }
    memset(&FBP, 0, sizeof(FBP));
 
-   lag_id[le_osc1] = scene->level_o1.param_id_in_scene;
-   lag_id[le_osc2] = scene->level_o2.param_id_in_scene;
-   lag_id[le_osc3] = scene->level_o3.param_id_in_scene;
+   for(auto i=0; i<n_oscs; ++i )
+   {
+      lag_id[le_osc1 + i] = scene->level_o[i].param_id_in_scene;
+   }
    lag_id[le_noise] = scene->level_noise.param_id_in_scene;
    lag_id[le_ring12] = scene->level_ring_12.param_id_in_scene;
    lag_id[le_ring23] = scene->level_ring_23.param_id_in_scene;
@@ -252,15 +252,16 @@ void SurgeVoice::switch_toggled()
       break;
    }
 
-   bool solo = (scene->solo_o1.val.b || scene->solo_o2.val.b || scene->solo_o3.val.b ||
+   // FIXME - implement solo for more than 3
+   bool solo = (scene->solo_o[0].val.b || scene->solo_o[1].val.b || scene->solo_o[2].val.b ||
                 scene->solo_noise.val.b || scene->solo_ring_12.val.b || scene->solo_ring_23.val.b);
    if (solo)
    {
-      if (scene->solo_o1.val.b)
+      if (scene->solo_o[0].val.b)
          set_path(true, false, false, false, false, false, false);
-      else if (scene->solo_o2.val.b)
+      else if (scene->solo_o[1].val.b)
          set_path(false, true, false, FM, false, false, false);
-      else if (scene->solo_o3.val.b)
+      else if (scene->solo_o[2].val.b)
          set_path(false, false, true, false, false, false, false);
       else if (scene->solo_noise.val.b)
          set_path(false, false, false, false, false, false, true);
@@ -271,9 +272,9 @@ void SurgeVoice::switch_toggled()
    }
    else
    {
-      bool use_osc1 = (!scene->mute_o1.val.b);
-      bool use_osc2 = (!scene->mute_o2.val.b);
-      bool use_osc3 = (!scene->mute_o3.val.b);
+      bool use_osc1 = (!scene->mute_o[0].val.b);
+      bool use_osc2 = (!scene->mute_o[1].val.b);
+      bool use_osc3 = (!scene->mute_o[2].val.b);
       bool use_ring12 = (!scene->mute_ring_12.val.b);
       bool use_ring23 = (!scene->mute_ring_23.val.b);
       bool use_noise = (!scene->mute_noise.val.b);
@@ -441,25 +442,26 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
       ((ControllerModulationSource*)modsources[ms_polyaftertouch])->process_block();
    }
 
+   // FIXME - implement for NOSC
    float o1 = amp_to_linear(localcopy[lag_id[le_osc1]].f);
-   float o2 = amp_to_linear(localcopy[lag_id[le_osc2]].f);
-   float o3 = amp_to_linear(localcopy[lag_id[le_osc3]].f);
+   float o2 = amp_to_linear(localcopy[lag_id[le_osc1+1]].f);
+   float o3 = amp_to_linear(localcopy[lag_id[le_osc1+2]].f);
    float on = amp_to_linear(localcopy[lag_id[le_noise]].f);
    float r12 = amp_to_linear(localcopy[lag_id[le_ring12]].f);
    float r23 = amp_to_linear(localcopy[lag_id[le_ring23]].f);
    float pfg = db_to_linear(localcopy[lag_id[le_pfg]].f);
 
    osclevels[le_osc1].set_target(o1);
-   osclevels[le_osc2].set_target(o2);
-   osclevels[le_osc3].set_target(o3);
+   osclevels[le_osc1+1].set_target(o2);
+   osclevels[le_osc1+2].set_target(o3);
    osclevels[le_noise].set_target(on);
    osclevels[le_ring12].set_target(r12);
    osclevels[le_ring23].set_target(r23);
    osclevels[le_pfg].set_target(pfg);
 
-   route[0] = routefilter(scene->route_o1.val.i);
-   route[1] = routefilter(scene->route_o2.val.i);
-   route[2] = routefilter(scene->route_o3.val.i);
+   route[0] = routefilter(scene->route_o[0].val.i);
+   route[1] = routefilter(scene->route_o[1].val.i);
+   route[2] = routefilter(scene->route_o[2].val.i);
    route[3] = routefilter(scene->route_ring_12.val.i);
    route[4] = routefilter(scene->route_ring_23.val.i);
    route[5] = routefilter(scene->route_noise.val.i);
@@ -538,12 +540,12 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       {
          if (is_wide)
          {
-            osclevels[le_osc3].multiply_2_blocks_to(osc[2]->output, osc[2]->outputR, tblock,
+            osclevels[le_osc1+2].multiply_2_blocks_to(osc[2]->output, osc[2]->outputR, tblock,
                                                     tblockR, BLOCK_SIZE_OS_QUAD);
          }
          else
          {
-            osclevels[le_osc3].multiply_block_to(osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+            osclevels[le_osc1+2].multiply_block_to(osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
          }
          if (route[2] < 2)
             accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
@@ -574,12 +576,12 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       {
          if (is_wide)
          {
-            osclevels[le_osc2].multiply_2_blocks_to(osc[1]->output, osc[1]->outputR, tblock,
+            osclevels[le_osc1+1].multiply_2_blocks_to(osc[1]->output, osc[1]->outputR, tblock,
                                                     tblockR, BLOCK_SIZE_OS_QUAD);
          }
          else
          {
-            osclevels[le_osc2].multiply_block_to(osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+            osclevels[le_osc1+1].multiply_block_to(osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
          }
 
          if (route[1] < 2)

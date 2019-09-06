@@ -96,7 +96,7 @@ void Parameter::set_name(const char* n)
    create_fullname(dispname, fullname, ctrlgroup, ctrlgroup_entry);
 }
 
-Parameter* Parameter::assign(int id,
+Parameter* Parameter::assign(ParameterIDCounter::promise_t id_promise,
                              int pid,
                              const char* name,
                              const char* dispname,
@@ -109,7 +109,9 @@ Parameter* Parameter::assign(int id,
                              bool modulateable,
                              int ctrlstyle)
 {
-   this->id = id;
+   // std::cout << "Assign with old-style no layout ID for " << name << " / " << dispname << std::endl;
+   this->id = -1;
+   this->id_promise = id_promise;
    this->param_id_in_scene = pid;
    this->ctrlgroup = ctrlgroup;
    this->ctrlgroup_entry = ctrlgroup_entry;
@@ -125,6 +127,51 @@ Parameter* Parameter::assign(int id,
    get_prefix(prefix, ctrlgroup, ctrlgroup_entry, scene);
    sprintf(name_storage, "%s%s", prefix, name);
    posy_offset = 0;
+   if (scene)
+      per_voice_processing = true;
+   else
+      per_voice_processing = false;
+   clear_flags();
+   midictrl = -1;
+
+   set_type(ctrltype);
+   if (valtype == vt_float)
+      val.f = val_default.f;
+
+   bound_value();
+   return this;
+}
+
+Parameter* Parameter::assign(ParameterIDCounter::promise_t id_promise,
+                             int pid,
+                             const char* name,
+                             const char* dispname,
+                             const char* layoutID,
+                             int ctrltype,
+                             int scene,
+                             ControlGroup ctrlgroup,
+                             int ctrlgroup_entry,
+                             bool modulateable)
+{
+   this->id = -1;
+   this->id_promise = id_promise;
+   this->param_id_in_scene = pid;
+   this->ctrlgroup = ctrlgroup;
+   this->ctrlgroup_entry = ctrlgroup_entry;
+   this->modulateable = modulateable;
+   this->scene = scene;
+   this->ctrlstyle = ctrlstyle;
+
+   strncpy(this->name, name, NAMECHARS);
+
+   this->layoutEngineID = layoutID;
+   this->hasLayoutEngineID = true;
+
+   set_name(dispname);
+   char prefix[16];
+   get_prefix(prefix, ctrlgroup, ctrlgroup_entry, scene);
+   sprintf(name_storage, "%s%s", prefix, name);
+
    if (scene)
       per_voice_processing = true;
    else

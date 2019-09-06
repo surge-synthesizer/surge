@@ -13,14 +13,14 @@ FONT_SRC_LOCATION="$RES_SRC_LOCATION/fonts"
 SVG_SRC_LOCATION="assets/${SURGE_USE_VECTOR_SKIN}/SVG/exported"
 
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
-EXEC_LOCATION="target/au/Release/Surge.dylib"
+EXEC_LOCATION="target/au/Release/Surge++.dylib"
 #EXEC_LOCATION="target/au/Debug/Surge-Debug.dylib"
 
 # output configs
 OUTPUT_DIR=products
-BUNDLE_NAME="Surge.component"
+BUNDLE_NAME="Surge++.component"
 BUNDLE_DIR="$OUTPUT_DIR/$BUNDLE_NAME"
-EXEC_TARGET_NAME="Surge"
+EXEC_TARGET_NAME="Surge++"
 
 echo "Creating AudioUnit (AU) Bundle..."
 

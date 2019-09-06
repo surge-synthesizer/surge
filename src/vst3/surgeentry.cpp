@@ -7,7 +7,7 @@
 //#include "SurgeVst3EditController.h"
 #include "surgecids.h"
 
-#define stringPluginName "Surge"
+#define stringPluginName "Surge++"
 
 //------------------------------------------------------------------------
 //  Module init/exit
@@ -34,7 +34,7 @@ bool DeinitModule()
 // GetPluginFactory function!
 //------------------------------------------------------------------------
 
-BEGIN_FACTORY_DEF("Vember Audio", "http://www.vemberaudio.se", "mailto:info@vemberaudio.se")
+BEGIN_FACTORY_DEF("Surge Synth Team", "http://surge-synthesizer.github.io", "")
 
 //---First Plug-in included in this factory-------
 // its kVstAudioEffectClass component

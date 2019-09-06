@@ -30,8 +30,6 @@ static inline int _stricmp(const char *s1, const char *s2)
 #define _SURGE_STR(x) #x
 #define SURGE_STR(x) _SURGE_STR(x)
 
-const int WINDOW_SIZE_X = 904;
-const int WINDOW_SIZE_Y = 542;
 const int NAMECHARS = 64;
 const int BLOCK_SIZE = 32;
 const int OSC_OVERSAMPLING = 2;

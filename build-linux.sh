@@ -3,6 +3,8 @@
 # build-linux.sh is the master script we use to control the multi-step build
 # processes.
 
+set -o xtrace
+
 help_message()
 {
     cat << EOHELP
@@ -239,8 +241,8 @@ run_uninstall()
     fi
 
     if [ ! -z "$option_vst3" ]; then
-	rm -vf $vst3_dest_path/Surge.vst3/Contents/x86_64-linux/$dest_plugin_name
-	rmdir -v $vst3_dest_path/Surge.vst3/Contents/x86_64-linux $vst3_dest_path/Surge.vst3/Contents $vst3_dest_path/Surge.vst3
+	rm -vf $vst3_dest_path/Surge++.vst3/Contents/x86_64-linux/$dest_plugin_name
+	rmdir -v $vst3_dest_path/Surge++.vst3/Contents/x86_64-linux $vst3_dest_path/Surge++.vst3/Contents $vst3_dest_path/Surge++.vst3
     fi
 
     if [ ! -z "$option_lv2" ]; then
@@ -302,17 +304,17 @@ fi
 
 if [ -z "$option_debug" ]; then
     config="config=release_x64"
-    vst2_src_path="target/vst2/Release/Surge.so"
-    vst3_src_path="products/Surge.vst3"
-    lv2_bundle_name="Surge.lv2"
+    vst2_src_path="target/vst2/Release/Surge++.so"
+    vst3_src_path="products/Surge++.vst3"
+    lv2_bundle_name="Surge++.lv2"
     lv2_src_path="target/lv2/Release/$lv2_bundle_name"
     headless_src_path="target/headless/Release/Surge"
-    dest_plugin_name="Surge.so"
+    dest_plugin_name="Surge++.so"
     dest_headless_name="Surge-Headless"
 else
     config="config=debug_x64"
-    vst2_src_path="target/vst2/Debug/Surge-Debug.so"
-    vst3_src_path="target/vst3/Debug/Surge-Debug.so"
+    vst2_src_path="target/vst2/Debug/Surge++-Debug.so"
+    vst3_src_path="target/vst3/Debug/Surge++-Debug.so"
     lv2_bundle_name="Surge.lv2"
     lv2_src_path="target/lv2/Debug/$lv2_bundle_name"
     headless_src_path="target/headless/Debug/Surge-Debug"
@@ -325,13 +327,13 @@ if [[ ! -z "$option_local" ]]; then
     vst3_dest_path="$HOME/.vst3"
     lv2_dest_path="$HOME/.lv2"
     headless_dest_path="$HOME/bin"
-    data_path="$HOME/.local/share/Surge"
+    data_path="$HOME/.local/share/SurgePlusPlus"
 else
     vst2_dest_path="/usr/lib/vst"
     vst3_dest_path="/usr/lib/vst3"
     lv2_dest_path="/usr/lib/lv2"
     headless_dest_path="/usr/bin"
-    data_path="/usr/share/Surge"
+    data_path="/usr/share/SurgePlusPlus"
 fi
 
 case $1 in

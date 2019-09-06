@@ -6,15 +6,15 @@
 	<array>
 		<dict>
 			<key>description</key>
-			<string>Surge</string>
+			<string>Surge++</string>
 			<key>factoryFunction</key>
 			<string>aulayerFactory</string>
 			<key>manufacturer</key>
-			<string>VmbA</string>
+			<string>SrST</string>
 			<key>name</key>
-			<string>VmbA: Surge</string>
+			<string>Surge Synth Team: Surge++</string>
 			<key>subtype</key>
-			<string>Srge</string>
+			<string>SrgT</string>
 			<key>type</key>
 			<string>aumu</string>
 			<key>version</key>
@@ -24,23 +24,23 @@
 	<key>BuildMachineOSBuild</key>
 	<string>17G65</string>
 	<key>CFBundleDisplayName</key>
-	<string>Surge</string>
+	<string>Surge++</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>Surge</string>
+	<string>Surge++</string>
 	<key>CFBundleIconFile</key>
 	<string>surgeicon</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.vemberaudio.au.surge</string>
+	<string>io.github.surge-synthesizer.au.surgetwo</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleSignature</key>
-	<string>VmbA</string>
+	<string>SrST</string>
 	<key>CFBundleVersion</key>
-	<string>1.6.2</string>
+	<string>2.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>CFBundleSupportedPlatforms</key>

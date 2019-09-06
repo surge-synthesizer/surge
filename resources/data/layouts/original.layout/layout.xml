@@ -1,0 +1,541 @@
+<!-- XML document for a surge layout -->
+
+<surge-skin version="1">
+  <strings default="en">
+    <!-- right now this isn't quite supported but I want the data model to allow internationalization -->
+    <stringmap language="en">
+      <string name="oscillator" value="Oscillator"/>
+      <string name="single" value="SINGLE"/>
+      <string name="dual" value="DUAL"/>
+      <string name="split" value="SPLIT"/>
+
+      <string name="keytrack" value="KeyTrack"/>
+      <string name="retrigger" value="ReTrigger"/>
+
+      <string name="poly" value="POLY"/>
+      <string name="mono" value="MONO"/>
+      <string name="monost" value="MONO ST"/>
+      <string name="monofp" value="MONO FP"/>
+      <string name="monostfp" value="MONO STFP"/>
+      <string name="latch" value="LATCH"/>
+
+      <string name="unipolar" value="UniPolar"/>
+      
+    </stringmap>
+
+    <stringmap language="fr">
+      <!-- I don't speak french ... this is just so I can test -->
+      <string name="oscillator" value="Oscillateur"/>
+      <string name="single" value="Un"/>
+      <string name="dual" value="Deux"/>
+      <string name="split" value="LeSplit"/>
+    </stringmap>
+    
+  </strings>
+
+  
+  <colormaps default="default">
+    <colormap name="default">
+      <color name="osc.wavbg" value="#000000"/>
+      <color name="osc.wavfg" value="#ff9B10"/>
+      <color name="osc.wavrule" value="#ccccaa"/>
+      <color name="osc.wavsectionbg" value="#000000"/>
+      <color name="osc.ctrlsectionbg" value="#eeeedd"/>
+      <color name="osc.ctrlsectionfg" value="#222233"/>
+
+      <color name="ctrl.bg" value="#ccccdd"/>
+      <color name="ctrl.fg" value="#000000"/>
+
+      <color name="mixenv.bg" value="#333344"/>
+      <color name="mixenv.fg" value="#ff9000"/>
+      <color name="mixenv.label" value="#eeeeff"/>
+
+      <color name="route.bg" value="#aaaaff"/>
+      <color name="route.fg" value="#000000"/>
+
+      <color name="mod.bg" value="#ff9000"/>
+      <color name="mod.fg" value="#000000"/>
+
+      <color name="patch.bg" value="#eeeeee"/>
+      <color name="patch.fg" value="#000000"/>
+
+      <color name="switchsection.bg" value="#000000"/>
+      <color name="switchsection.fg" value="#111111"/>
+
+      <color name="switch.onfg" value="#ff9000"/>
+      <color name="switch.offfg" value="#ccaa99"/>
+      <color name="switch.hoveronfg" value="#ffC080"/>
+      <color name="switch.hoverofffg" value="#EECCAA"/>
+      <color name="switch.pressonfg" value="#ffC080"/>
+      <color name="switch.pressofffg" value="#EECCAA"/>
+
+      <color name="switch.untabbed.onfg" value="#0000000"/>
+      <color name="switch.untabbed.offfg" value="#ccaa99"/>
+      <color name="switch.untabbed.hoveronfg" value="#221000"/>
+      <color name="switch.untabbed.hoverofffg" value="#EECCAA"/>
+      <color name="switch.untabbed.pressonfg" value="#321000"/>
+      <color name="switch.untabbed.pressofffg" value="#EECCAA"/>
+
+    </colormap>
+  </colormaps>
+
+  <components>
+    <component name="hslider" class="CSurgeSlider" width="140" height="26">
+    </component>
+    <component name="hslider.light" class="CSurgeSlider" width="140" height="26">
+      <componentproperties white="true"/>
+    </component>
+    <component name="vslider" class="CSurgeSlider" height="84" width="22">
+      <componentproperties orientation="vertical"/>
+    </component>
+    <component name="knob.medium" class="CSurgeKnob" width="50" height="50">
+    </component>
+
+    <component name="mod.button.voice" class="CModulationSourceButton">
+    </component>
+
+    <component name="mod.button.scene" class="CModulationSourceButton">
+    </component>
+
+    <component name="Single CHS2" class="CHSwitch2">
+    </component>
+    
+    <component name="Plus Minus" class="CHSwitch2" width="37" height="12">
+      <componentproperties subPixmaps="2"
+                           heightOfOneImage="12"
+                           rows="1"
+                           cols="2"
+                           svg="SVG/PlusMinus_00149.svg"
+                           useMouseWheel="false"
+                           />
+    </component>
+    <component name="Menu Button" class="CHSwitch2" width="37" height="12">
+      <componentproperties subPixmaps="2"
+                           heightOfOneImage="12"
+                           rows="1"
+                           cols="1"
+                           svg="SVG/Menu_00164.svg"
+                           useMouseWheel="false"
+                           />
+    </component>
+    <component name="Mute Switch" class="CSwitchControl" width="22" height="15">
+      <componentproperties subPixmaps="2"
+                           svg="SVG/MuteSwitch_00134.svg"
+                           />
+    </component>
+
+    <!-- 
+    <component name="NxM Glyph Base"> 
+      <componentproperties
+          infopopup="false"
+          
+          onfg="$switch.onfg"
+          offfg="$switch.offfg" 
+          hoveronfg="$switch.hoveronfg"
+          hoverofffg="$switch.hoverofffg" 
+          pressonfg="$switch.pressonfg"
+          pressofffg="$switch.pressofffg"/>
+
+    </component>
+    -->
+
+    <component name="Dark Glyph" class="CGlyphSwitch">
+      <componentproperties
+          infopopup="false"
+          onfg="$switch.onfg"
+          offfg="$switch.offfg" 
+          hoveronfg="$switch.hoveronfg"
+          hoverofffg="$switch.hoverofffg" 
+          pressonfg="$switch.pressonfg"
+          pressofffg="$switch.pressofffg"/>
+    </component>
+    
+    <component name="60x18 Multi" class="Dark Glyph">
+      <componentproperties
+          offsvg="SVG/controlsbg/60x18_Switch_Off.svg"
+          hoveroffsvg="SVG/controlsbg/60x18_Switch_HoverOff.svg"
+          pressoffsvg="SVG/controlsbg/60x18_Switch_PressOff.svg"
+          onsvg="SVG/controlsbg/60x18_Switch_On.svg"
+          hoveronsvg="SVG/controlsbg/60x18_Switch_HoverOn.svg"
+          pressonsvg="SVG/controlsbg/60x18_Switch_PressOn.svg"/>
+    </component>
+
+    <component name="60x18 Switch" class="60x18 Multi" width="60" height="18">
+      <componentproperties
+          rows="1"
+          cols="1"/>
+    </component>
+
+    <component name="60x12 Multi" class="Dark Glyph">
+      <componentproperties
+          fontsize="9"
+          infopopup="false"
+          
+          offsvg="SVG/controlsbg/60x12_Switch_Off.svg"
+          hoveroffsvg="SVG/controlsbg/60x12_Switch_HoverOff.svg"
+          pressoffsvg="SVG/controlsbg/60x12_Switch_PressOff.svg"
+          onsvg="SVG/controlsbg/60x12_Switch_On.svg"
+          hoveronsvg="SVG/controlsbg/60x12_Switch_HoverOn.svg"
+          pressonsvg="SVG/controlsbg/60x12_Switch_PressOn.svg"/>
+    </component>
+
+    <component name="36x36 Multi" class="Dark Glyph">
+      <componentproperties
+          offsvg="SVG/controlsbg/36x36_Switch_Off.svg"
+          hoveroffsvg="SVG/controlsbg/36x36_Switch_HoverOff.svg"
+          pressoffsvg="SVG/controlsbg/36x36_Switch_PressOff.svg"
+          onsvg="SVG/controlsbg/36x36_Switch_On.svg"
+          hoveronsvg="SVG/controlsbg/36x36_Switch_HoverOn.svg"
+          pressonsvg="SVG/controlsbg/36x36_Switch_PressOn.svg"/>
+
+    </component>
+
+    <component name="15x15 UnTabbed Multi" class="CGlyphSwitch">
+      <componentproperties
+          infopopup="false"
+          onfg="$switch.untabbed.onfg"
+          offfg="$switch.untabbed.offfg" 
+          hoveronfg="$switch.untabbed.hoveronfg"
+          hoverofffg="$switch.untabbed.hoverofffg" 
+          pressonfg="$switch.untabbed.pressonfg"
+          pressofffg="$switch.untabbed.pressofffg"
+          
+          offsvg="SVG/controlsbg/15x15_UnTabbed_Off.svg"
+          hoveroffsvg="SVG/controlsbg/15x15_UnTabbed_HoverOff.svg"
+          pressoffsvg="SVG/controlsbg/15x15_UnTabbed_PressOff.svg"
+          onsvg="SVG/controlsbg/15x15_UnTabbed_On.svg"
+          hoveronsvg="SVG/controlsbg/15x15_UnTabbed_HoverOn.svg"
+          pressonsvg="SVG/controlsbg/15x15_UnTabbed_PressOn.svg"/>
+    </component>
+
+    <component name="20x20 UnTabbed Multi" class="CGlyphSwitch">
+      <componentproperties
+          infopopup="false"
+          onfg="$switch.untabbed.onfg"
+          offfg="$switch.untabbed.offfg" 
+          hoveronfg="$switch.untabbed.hoveronfg"
+          hoverofffg="$switch.untabbed.hoverofffg" 
+          pressonfg="$switch.untabbed.pressonfg"
+          pressofffg="$switch.untabbed.pressofffg"
+          
+          offsvg="SVG/controlsbg/20x20_UnTabbed_Off.svg"
+          hoveroffsvg="SVG/controlsbg/20x20_UnTabbed_HoverOff.svg"
+          pressoffsvg="SVG/controlsbg/20x20_UnTabbed_PressOff.svg"
+          onsvg="SVG/controlsbg/20x20_UnTabbed_On.svg"
+          hoveronsvg="SVG/controlsbg/20x20_UnTabbed_HoverOn.svg"
+          pressonsvg="SVG/controlsbg/20x20_UnTabbed_PressOn.svg"/>
+    </component>
+
+    <component name="Filter Selector" class="15x15 UnTabbed Multi" width="150" height="15">
+      <componentproperties rows="1" cols="10">
+        <array name="glyphchoices">
+          <element value="SVG/filter/no_filter.svg"/>
+          <element value="SVG/filter/low_pass.svg"/>
+          <element value="SVG/filter/4pole_low_pass.svg"/>
+          <element value="SVG/filter/low_pass_again.svg"/>
+          <element value="SVG/filter/high_pass.svg"/>
+          <element value="SVG/filter/4pole_high_pass.svg"/>
+          <element value="SVG/filter/bell.svg"/>
+          <element value="SVG/filter/notch.svg"/>
+          <element value="SVG/filter/comb.svg"/>
+          <element value="SVG/filter/sample_and_hold.svg"/>
+        </array>
+      </componentproperties>
+    </component>
+    
+    <component name="Mute Emoji Switch" class="CSwitchControl" width="22" height="22">
+      <componentproperties subPixmaps="2"
+                           svgPerState="true"
+                           svgstate0="SVG/loudspeaker-1f50a.svg"
+                           svgstate1="SVG/hear-no-monkey-1f649.svg"
+                           />
+    </component>
+    <component name="Solo Switch" class="CSwitchControl" width="22" height="15">
+      <componentproperties subPixmaps="2"
+                           svg="SVG/SoloSwitch_00132.svg"
+                           />
+    </component>
+    <component name="OSC Route" class="CHSwitch2" width="22" height="15">
+      <componentproperties subPixmaps="3"
+                           heightOfOneImage="15"
+                           rows="1"
+                           cols="3"
+                           svg="SVG/OscRoute_00143.svg"
+                           useMouseWheel="false"
+                           />
+    </component>
+
+    <component name="OSC Display" class="COscillatorDisplay" width="200" height="120">
+      <componentproperties fg="$osc.wavefg" bg="$osc.wavebg" rulecolor="$osc.waverule"/>
+    </component>
+  </components>
+
+  <layout style="fill" mode="hlist" bgcolor="#9999aa" label="root" width="2148" height="842"> <!-- 904x542 is surge orign -->
+    <layout xoff="0" yoff="0" width="1000" height="auto" mode="vlist" label="side" style="blank">
+      <layout height="60" mode="hlist" width="auto" style="blank" label="top">
+        <layout width="100" height="auto" style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Scene">
+          <node guiid="scene.AB" component="36x36 Multi" width="72" height="36" xoff="5" yoff="5">
+            <nodeproperties rows="1" cols="2" fontsize="24"
+                            choices="A|B" popup="false"/>
+          </node>
+        </layout>
+        <layout width="60" height="auto"  style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="ScMod">
+          <node guiid="scene.mode" component="60x12 Multi" width="60" height="36">
+            <nodeproperties rows="3" cols="1"
+                            choices="$single|$dual|$split"
+                            popup="false"
+                            /> 
+          </node>
+        </layout>
+        <layout width="50" height="auto"  style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Splt"/>
+        <layout width="600" height="auto" style="labelblock" bgcolor="$patch.bg" fgcolor="$patch.fg" label="Patch">
+          <node component="Plus Minus" guiid="patch.categoryjog" xoff="10" yoff="30"/>
+          <node component="Plus Minus" guiid="patch.patchjog" xoff="50" yoff="30"/>
+        </layout>
+        <layout width="50" height="auto" style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Status"/>
+        <layout width="auto" height="auto" style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="FX Bypass"/>
+      </layout>
+      
+      <layout xoff="0" mode="hlist" width="auto" height="500" style="blank" label="voice">
+        <layout width="250" height="auto" style="blank" mode="vlist" label="oparent">
+          <layout width="auto" height="auto" label="oscparent" mode="hlist" style="blank">
+            <layout width="auto" height="auto" label="OSEL" mode="hlist" style="labelblock" fgcolor="$osc.wavsectionfg" bgcolor="$osc.wavsectionbg">
+              <node guiid="osc.switch" component="36x36 Multi" width="36" height="216">
+                <nodeproperties rows="6" cols="1" fontsize="24"
+                                choices="1|2|3|4|5|6"/>
+
+              </node>
+            </layout>
+            <layout width="200" height="auto" label="osc" mode="vlist">
+              <layout yoff="0" width="auto" height="160" mode="vlist" style="fill" bgcolor="$osc.wavsectionbg" label="osc.wave">
+                <layout mode="hlist" yoff="0" width="auto" height="20" style="blank" label="osc.label">
+                  <!-- Labels are trannsparent by default and use the default font unless otherwise specified -->
+                  <label string="$oscillator" valign="left" halign="top" fgcolor="$osc.wavfg" width="auto" height="auto"/> 
+                </layout>
+                <node component="OSC Display" guiid="osc.display" xoff="0" yoff="20"/>
+              </layout>
+              
+              <layout width="auto" height="auto" mode="vlist" style="fill" bgcolor="$osc.ctrlsectionbg" label="osc.controls">
+                <layout width="auto" height="22" mode="hlist" style="blank">
+                  <node component="60x18 Switch" guiid="osc.keytrack">
+                    <nodeproperties label="$keytrack"
+                                    />
+                  </node>
+                  <node component="60x18 Switch" guiid="osc.retrigger">
+                    <nodeproperties label="$retrigger"
+                                    />
+                  </node>
+
+                </layout>
+                <node component="15x15 UnTabbed Multi" guiid="osc.octave" width="105" height="15">
+                  <nodeproperties rows="1" cols="7" fontsize="9" choices="-3|-2|-1|0|1|2|3"/>
+                </node>
+                  
+                <node component="hslider" guiid="osc.pitch"/><!-- Surge::ParamConfig::kHorizontal | kSemitone | sceasy));-->
+                <node component="hslider" guiid="osc.param0"/>
+                <node component="hslider" guiid="osc.param1"/>
+                <node component="hslider" guiid="osc.param2"/>
+                <node component="hslider" guiid="osc.param3"/>
+                <node component="hslider" guiid="osc.param4"/>
+                <node component="hslider" guiid="osc.param5"/>
+                <node component="hslider" guiid="osc.param6"/>
+                <node component="hslider" guiid="osc.param7"/>
+                <!--                                                         Surge::ParamConfig::kHorizontal | ((i < 6) ? sceasy : 0))); -->
+              </layout>
+            </layout>
+          </layout>
+        </layout>
+        
+        
+        <layout width="225" height="auto" mode="vlist" style="blank" label="mixparent">
+          <layout width="auto" height="200" label="Poly" style="roundedblock" fgcolor="$mixenv.fg" bgcolor="$mixenv.bg">
+            <layout width="200" height="70" xoff="center" yoff="20" style="roundedblock" fgcolor="$switchsection.fg" bgcolor="$switchsection.bg">
+              <node guiid="scene.polymode" xoff="130" yoff="3" width="60" height="60" component="60x12 Multi">
+                <nodeproperties rows="6"
+                                cols="1"
+                                choices="$poly|$mono|$monost|$monofp|$monostfp|$latch"
+                                />
+              </node>
+              <layout xoff="10" yoff="10" width="40" height="40" style="fill" bgcolor="#00ff00">
+                <layout yoff="20" xoff="0" width="40" height="12" style="fill" fgcolor="#ff0000" bgcolor="#ff0000"/>
+              </layout>
+              <layout yoff="30" xoff="53" width="40" height="12" style="fill" fgcolor="#ff0000" bgcolor="#ff0000"/>
+            </layout>
+            <node guiid="scene.oscdrift" xoff="center"   yoff="98" component="hslider.light"/>
+            <node guiid="scene.noisecolor" xoff="center" yoff="120" component="hslider.light"/>
+          </layout>
+          <layout width="auto" height="auto"  mode="vlist" label="Scene" style="roundedlabel" fgcolor="$ctrl.fg" bgcolor="$ctrl.bg">
+            <node component="15x15 UnTabbed Multi" guiid="global.octave" width="105" height="15">
+              <nodeproperties rows="1" cols="7" fontsize="9" choices="-3|-2|-1|0|1|2|3"/>
+            </node>
+
+            <node component="hslider" guiid="global.pitch"/> <!-- Surge::ParamConfig::kHorizontal | kSemitone | sceasy -->
+          </layout>
+          <layout width="auto" mode="hlist" height="150" label="Mixer" style="roundedblock" fgcolor="$mixenv.fg" bgcolor="$mixenv.bg">
+            <layout style="blank" width="23" height="auto" mode="vlist">
+              <node guiid="mix.osc0.mute" component="Mute Switch"/>
+              <node guiid="mix.osc0.solo" component="Solo Switch"/>
+              <node guiid="mix.osc0.route" component="OSC Route"/>
+              <node guiid="mix.osc0.level" component="vslider"/>
+              <label string="1" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.osc1.mute" component="Mute Switch"/>
+              <node guiid="mix.osc1.solo" component="Solo Switch"/>
+              <node guiid="mix.osc1.route" component="OSC Route"/>
+              <node guiid="mix.osc1.level" component="vslider"/>
+              <label string="2" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.osc2.mute" component="Mute Switch"/>
+              <node guiid="mix.osc2.solo" component="Solo Switch"/>
+              <node guiid="mix.osc2.route" component="OSC Route"/>
+              <node guiid="mix.osc2.level" component="vslider"/>
+              <label string="3" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.osc3.mute" component="Mute Switch"/>
+              <node guiid="mix.osc3.solo" component="Solo Switch"/>
+              <node guiid="mix.osc3.route" component="OSC Route"/>
+              <node guiid="mix.osc3.level" component="vslider"/>
+              <label string="4" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.osc4.mute" component="Mute Switch"/>
+              <node guiid="mix.osc4.solo" component="Solo Switch"/>
+              <node guiid="mix.osc4.route" component="OSC Route"/>
+              <node guiid="mix.osc4.level" component="vslider"/>
+              <label string="5" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.osc5.mute" component="Mute Switch"/>
+              <node guiid="mix.osc5.solo" component="Solo Switch"/>
+              <node guiid="mix.osc5.route" component="OSC Route"/>
+              <node guiid="mix.osc5.level" component="vslider"/>
+              <label string="6" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.ring12.mute" component="Mute Switch"/>
+              <node guiid="mix.ring12.solo" component="Solo Switch"/>
+              <node guiid="mix.ring12.route" component="OSC Route"/>
+              <node guiid="mix.ring12.level" component="vslider"/>
+              <label string="r12" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.ring23.mute" component="Mute Switch"/>
+              <node guiid="mix.ring23.solo" component="Solo Switch"/>
+              <node guiid="mix.ring23.route" component="OSC Route"/>
+              <node guiid="mix.ring23.level" component="vslider"/>
+              <label string="r23" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+            <layout style="blank"  width="23" height="auto" mode="vlist">
+              <node guiid="mix.noise.mute" component="Mute Emoji Switch"/>
+              <node guiid="mix.noise.solo" component="Solo Switch"/>
+              <node guiid="mix.noise.route" component="OSC Route"/>
+              <node guiid="mix.noise.level" component="vslider"/>
+              <label string="N" halign="center" fgcolor="$mixenv.label" width="auto" height="9"/> 
+            </layout>
+          </layout>
+        </layout>
+
+        <layout width="auto" height="auto" mode="vlist" style="blank" label="midparent">
+          <layout height="150" width="auto" mode="hlist" style="blank" label="ofoparent">
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FM">
+              <node guiid="fm.depth" xoff="center"   yoff="20" component="hslider.light"/>
+            </layout>
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Filter Cfg"/>
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output"/>
+          </layout>
+          <layout height="100" width="auto" mode="hlist" style="blank" label="filtparent">
+            <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 1">
+              <node guiid="filters.filter0.type" component="Filter Selector"/>
+            </layout>
+            <layout height="100" width="175" style="svg" svg="SVG/175x100_BG.svg" label="Filt Mix"/>
+            <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 2">
+              <node guiid="filters.filter1.type" component="Filter Selector"/>
+            </layout>
+          </layout>
+          <layout height="auto" width="auto" mode="hlist" style="blank" label="envparent">
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="KeyTrack"/>
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG"/>
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="AEG"/>
+          </layout>
+        </layout>
+        
+
+      </layout>
+      <layout height="80" width="auto" mode="hlist" style="roundedlabel" bgcolor="$route.bg" fgcolor="$route.fg" label="Routing">
+        <layout height="auto" width="400" mode="grid" style="blank" rows="4" cols="8">
+          <node component="mod.button.voice" guiid="modsource.velocity"/>
+          <node component="mod.button.voice" guiid="modsource.velocity_release"/>
+          <node component="mod.button.voice" guiid="modsource.keytrack"/>
+          <node component="mod.button.voice" guiid="modsource.polyaftertouch"/>
+          <node component="mod.button.voice" guiid="modsource.timbre"/>
+          <node component="mod.button.scene" guiid="modsource.aftertouch"/>
+          <node component="mod.button.scene" guiid="modsource.pitchbend"/>
+          <node component="mod.button.scene" guiid="modsource.modwheel"/>
+
+          <node component="mod.button.voice" guiid="modsource.lfo1"/>
+          <node component="mod.button.voice" guiid="modsource.lfo2"/>
+          <node component="mod.button.voice" guiid="modsource.lfo3"/>
+          <node component="mod.button.voice" guiid="modsource.lfo4"/>
+          <node component="mod.button.voice" guiid="modsource.lfo5"/>
+          <node component="mod.button.voice" guiid="modsource.lfo6"/>
+          <node component="mod.button.voice" guiid="modsource.lfo7"/>
+          <node component="mod.button.voice" guiid="modsource.ampeg"/>
+
+          <node component="mod.button.voice" guiid="modsource.lfo8"/>
+          <node component="mod.button.voice" guiid="modsource.lfo9"/>
+          <node component="mod.button.voice" guiid="modsource.lfo10"/>
+          <node component="mod.button.voice" guiid="modsource.lfo11"/>
+          <node component="mod.button.voice" guiid="modsource.lfo12"/>
+          <node component="mod.button.voice" guiid="modsource.lfo13"/>
+          <node component="mod.button.voice" guiid="modsource.lfo14"/>
+          <node component="mod.button.voice" guiid="modsource.filtereg"/>
+
+          <node component="mod.button.scene" guiid="modsource.slfo1"/>
+          <node component="mod.button.scene" guiid="modsource.slfo2"/>
+          <node component="mod.button.scene" guiid="modsource.slfo3"/>
+          <node component="mod.button.scene" guiid="modsource.slfo4"/>
+          <node component="mod.button.scene" guiid="modsource.slfo5"/>
+          <node component="mod.button.scene" guiid="modsource.slfo6"/>
+          <node component="mod.button.scene" guiid="modsource.slfo7"/>
+          <node component="mod.button.scene" guiid="modsource.slfo8"/>
+
+        </layout>
+
+        <layout height="auto" width="200" mode="grid" style="blank" rows="2" cols="4">
+          <node component="mod.button.scene" guiid="modsource.ctrl1"/>
+          <node component="mod.button.scene" guiid="modsource.ctrl2"/>
+          <node component="mod.button.scene" guiid="modsource.ctrl3"/>
+          <node component="mod.button.scene" guiid="modsource.ctrl4"/>
+
+          <node component="mod.button.scene" guiid="modsource.ctrl5"/>
+          <node component="mod.button.scene" guiid="modsource.ctrl6"/>
+          <node component="mod.button.scene" guiid="modsource.ctrl7"/>
+          <node component="mod.button.scene" guiid="modsource.ctrl8"/>
+        </layout>
+
+      </layout>
+      <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mod.bg" fgcolor="$mod.fg" label="Modulator">
+        <node component="60x18 Switch" xoff="20" yoff="20" guiid="lfo.unipolar">
+          <nodeproperties label="$unipolar" fontsize="9"
+                          />
+        </node>
+      </layout>
+    </layout>
+    <layout yoff="0" width="auto" height="auto" mode="vlist" style="blank" label="fxoutparent">
+      <layout height="100" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output"/>
+      <layout height="auto" width="auto" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="FX"/>
+      <layout height="50" width="auto" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Menu">
+        <node component="Menu Button" guiid="global.menubutton" xoff="2" yoff="2"/>
+      </layout>
+    </layout>
+
+
+    <layout width="944" height="582" label="orig" mode="free" bgcolor="#ff0000">
+      <layout xoff="20" yoff="20" width="904" height="542" label="legacy" bgcolor="#aaaa99">
+      </layout>
+    </layout>
+  </layout>
+</surge-skin>

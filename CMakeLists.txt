@@ -62,6 +62,7 @@ set(SURGE_COMMON_INCLUDES
     libs/xml
     libs/catch2
     libs/strnatcmp
+    libs/catch2
     src/common
     src/common/dsp
     src/common/thread
@@ -77,6 +78,7 @@ add_executable(surge-headless
    src/headless/HeadlessUtils.cpp
    src/headless/Player.cpp
    src/headless/Stress.cpp   
+   src/headless/Stress.cpp
    src/headless/UnitTests.cpp
 )
 

@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "globals.h"
+#include <memory>
 #include <string>
 
 union pdata
@@ -124,11 +125,57 @@ struct CountedSetUserData : public ParamUserData
    virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
 };
 
+/*
+ * This is part of using a smarter mechanism than "++". Basically these look like a linked list.
+ */
+struct ParameterIDCounter
+{
+   struct ParameterIDPromise
+   {
+      std::shared_ptr<ParameterIDPromise> prior, next;
+      ParameterIDPromise() : prior(nullptr), next(nullptr)
+      {}
+      long value = -1;
+   };
+
+   ParameterIDCounter()
+   {
+      head.reset(new ParameterIDPromise());
+      tail = head;
+   }
+
+   typedef std::shared_ptr<ParameterIDPromise> promise_t;
+
+   promise_t head, tail;
+
+   // This is a post-increment operator
+   promise_t next()
+   {
+      promise_t n(new ParameterIDPromise());
+      n->prior = tail;
+      tail->next = n;
+      auto ret = tail;
+      tail = n;
+      return ret;
+   };
+
+   void resolve()
+   {
+      auto h = head;
+      int val = 0;
+      while (h.get())
+      {
+         h->value = val++;
+         h = h->next;
+      }
+   }
+};
+
 class Parameter
 {
 public:
    Parameter();
-   Parameter* assign(int id,
+   Parameter* assign(ParameterIDCounter::promise_t id,
                      int pid,
                      const char* name,
                      const char* dispname,
@@ -140,6 +187,24 @@ public:
                      int ctrlgroup_entry = 0,
                      bool modulateable = true,
                      int ctrlstyle = cs_off);
+
+   Parameter* assign(ParameterIDCounter::promise_t id,
+                     int pid,
+                     const char* name,
+                     const char* layoutID,
+                     const char* dispname, // This is not a layout thing - it is aprt of the VST API
+                                           // for instance but does need to be internationalized
+                                           // somehow without causing a cycle
+                     int ctrltype,
+                     // int posx, comes from layout
+                     // int posy, comes from layout
+                     int scene = 0,
+                     ControlGroup ctrlgroup = cg_GLOBAL,
+                     int ctrlgroup_entry = 0,
+                     bool modulateable = true
+                     // int ctrlstyle = cs_off comes from layout
+   );
+
    bool can_temposync();
    bool can_extend_range();
    bool can_be_absolute();
@@ -173,7 +238,12 @@ public:
    std::string tempoSyncNotationValue(float f);
    
    pdata val, val_default, val_min, val_max;
+   ParameterIDCounter::promise_t id_promise;
    int id;
+
+   std::string layoutEngineID = "";
+   bool hasLayoutEngineID = false;
+
    char name[NAMECHARS], dispname[NAMECHARS], name_storage[NAMECHARS], fullname[NAMECHARS];
    bool modulateable;
    int valtype = 0;

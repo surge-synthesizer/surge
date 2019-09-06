@@ -17,6 +17,12 @@ SurgeBitmaps::~SurgeBitmaps()
       pair.second->forget();
    }
    bitmap_registry.clear();
+
+   for (auto pair : layoutBitmapRegistry)
+   {
+      pair.second->forget();
+   }
+   layoutBitmapRegistry.clear();
 }
 
 void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
@@ -79,4 +85,29 @@ void SurgeBitmaps::setPhysicalZoomFactor(int pzf)
 {
    for (auto pair : bitmap_registry)
       pair.second->setPhysicalZoomFactor(pzf);
+   for (auto pair : layoutBitmapRegistry)
+      pair.second->setPhysicalZoomFactor(pzf);
+}
+
+bool SurgeBitmaps::containsLayoutBitmap(int layoutid, std::string key)
+{
+   auto k = std::make_pair(layoutid, key);
+   return layoutBitmapRegistry.find(k) != layoutBitmapRegistry.end();
+}
+
+CScalableBitmap* SurgeBitmaps::storeLayoutBitmap(int layoutid,
+                                     std::string key,
+                                     std::string svgContents,
+                                     VSTGUI::CFrame* f)
+{
+   auto k = std::make_pair(layoutid, key);
+   CScalableBitmap* bitmap = new CScalableBitmap(svgContents, f);
+   layoutBitmapRegistry[k] = bitmap;
+   return bitmap;
+}
+
+CScalableBitmap* SurgeBitmaps::getLayoutBitmap(int layoutid, std::string key)
+{
+   auto k = std::make_pair(layoutid, key);
+   return layoutBitmapRegistry[k];
 }

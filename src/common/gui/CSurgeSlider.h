@@ -5,8 +5,9 @@
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
 #include "SurgeParamConfig.h"
+#include "ISliderKnobInterface.h"
 
-class CSurgeSlider : public CCursorHidingControl
+class CSurgeSlider : public CCursorHidingControl, public virtual Surge::ISliderKnobInterface
 {
 public:
    CSurgeSlider(const VSTGUI::CPoint& loc,
@@ -31,8 +32,14 @@ public:
    virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
 
+   virtual void setDefaultValue(float val)
+   {
+      CCursorHidingControl::setDefaultValue(val);
+   }
+
    virtual void setLabel(const char* txt);
    virtual void setModValue(float val);
+   virtual void setIsMod( bool b ) { is_mod = b; }
    virtual float getModValue()
    {
       return modval;
@@ -79,8 +86,40 @@ public:
 
    static MoveRateState sliderMoveRateState;
 
+   virtual void setStyle(int i ) 
+   {
+      style = i;
+      invalid();
+   }
+
+   virtual int getStyle() 
+   {
+      return style;
+   }
+
+
+   enum BitmapIdentities {
+      bmap_Handle,
+      bmap_ModHandle,
+      bmap_Tray,
+      bmap_BipolarTray,
+      bmap_BipolarTickTray,
+      bmap_ModTray,
+      bmap_ModBipolarTray,
+      bmap_ModBipolarTickTray,
+      n_bitmaps
+   };
+
+   void setBitmapForIdentity(BitmapIdentities identity, VSTGUI::CBitmap *bm) {
+      stateBitmaps[identity] = bm;
+   }
+   
 private:
+   // For ContainsMultitudes mode
    VSTGUI::CBitmap *pHandle, *pTray, *pModHandle;
+
+   // For BitmapPerState mode
+   VSTGUI::CBitmap *stateBitmaps[n_bitmaps];
    VSTGUI::CRect handle_rect, handle_rect_orig;
    VSTGUI::CPoint offsetHandle;
    int range;

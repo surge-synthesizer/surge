@@ -146,7 +146,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
        // or kUserDomain
        FSRefMakePath(&foundRef, (UInt8*)path, 1024);
        datapath = path;
-       datapath += "/Surge/";
+       datapath += "/SurgePlusPlus/";
 
        auto cxmlpath = datapath + "configuration.xml";
        // check if the directory exist in the user domain (if it doesn't, fall back to the local domain)
@@ -179,9 +179,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    {
        const char* xdgDataPath = getenv("XDG_DATA_HOME");
        if (xdgDataPath)
-           datapath = std::string(xdgDataPath) + "/Surge/";
+           datapath = std::string(xdgDataPath) + "/SurgePlusPlus/";
        else
-           datapath = std::string(homePath) + "/.local/share/Surge/";
+           datapath = std::string(homePath) + "/.local/share/SurgePlusPlus/";
        
        /*
        ** If local directory doesn't exists - we probably came here through an installer -
@@ -189,7 +189,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
        */
        if (! fs::is_directory(datapath))
        {
-           datapath = "/usr/share/Surge/";
+           datapath = "/usr/share/SurgePlusPlus/";
        }
    }
    else
@@ -226,7 +226,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    {
       userDataPath = dotSurge;
    }
-   std::cout << "UserDataPath is " << userDataPath << std::endl;
   
 #elif WINDOWS
 #if TARGET_RACK
@@ -236,7 +235,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
    {
       CHAR path[4096];
-      wsprintf(path, "%S\\Surge\\", localAppData);
+      wsprintf(path, "%S\\SurgePlusPlus\\", localAppData);
       datapath = path;
    }
 

@@ -254,14 +254,14 @@ run_all_builds()
 
 run_install_local()
 {
-    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
+    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/SurgePlusPlus/"
 
     if [ -d "surge-vst2.xcodeproj" ]; then
-        rsync -r --delete "products/Surge.vst/" ~/Library/Audio/Plug-Ins/VST/Surge.vst/
+        rsync -r --delete "products/Surge++.vst/" ~/Library/Audio/Plug-Ins/VST/Surge++.vst/
     fi
     
-    rsync -r --delete "products/Surge.component/" ~/Library/Audio/Plug-Ins/Components/Surge.component/
-    rsync -r --delete "products/Surge.vst3/" ~/Library/Audio/Plug-Ins/VST3/Surge.vst3/
+    rsync -r --delete "products/Surge++.component/" ~/Library/Audio/Plug-Ins/Components/Surge++.component/
+    rsync -r --delete "products/Surge++.vst3/" ~/Library/Audio/Plug-Ins/VST3/Surge++.vst3/
 }
 
 run_build_validate_au()
@@ -269,10 +269,10 @@ run_build_validate_au()
     run_premake_if
     run_build "au"
 
-    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
-    rsync -r --delete "products/Surge.component/" ~/Library/Audio/Plug-Ins/Components/Surge.component/
+    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/SurgePlusPlus/"
+    rsync -r --delete "products/Surge++.component/" ~/Library/Audio/Plug-Ins/Components/Surge++.component/
 
-    auval -vt aumu VmbA
+    auval -vt aumu SrST
 }
 
 run_build_install_vst2()
@@ -280,8 +280,8 @@ run_build_install_vst2()
     run_premake_if
     run_build "vst2"
 
-    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
-    rsync -r --delete "products/Surge.vst/" ~/Library/Audio/Plug-Ins/VST/Surge.vst/
+    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/SurgePlusPlus/"
+    rsync -r --delete "products/Surge++.vst/" ~/Library/Audio/Plug-Ins/VST/Surge++.vst/
 }
 
 run_build_install_vst3()
@@ -289,8 +289,8 @@ run_build_install_vst3()
     run_premake_if
     run_build "vst3"
 
-    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
-    rsync -r --delete "products/Surge.vst3/" ~/Library/Audio/Plug-Ins/VST3/Surge.vst3/
+    rsync -r --delete "resources/data/" "$HOME/Library/Application Support/SurgePlusPlus/"
+    rsync -r --delete "products/Surge++.vst3/" ~/Library/Audio/Plug-Ins/VST3/Surge++.vst3/
 }
 
 run_clean_builds()
@@ -321,13 +321,13 @@ run_clean_all()
 
 run_uninstall_surge()
 {
-    sudo rm -rf /Library/Audio/Plug-Ins/Components/Surge.component
-    sudo rm -rf /Library/Audio/Plug-Ins/VST/Surge.vst
-    sudo rm -rf /Library/Audio/Plug-Ins/VST3/Surge.vst3
-    sudo rm -rf ~/Library/Audio/Plug-Ins/Components/Surge.component
-    sudo rm -rf ~/Library/Audio/Plug-Ins/VST/Surge.vst
-    sudo rm -rf ~/Library/Audio/Plug-Ins/VST3/Surge.vst3
-    sudo rm -rf ~/Library/Application\ Support/Surge
+    sudo rm -rf /Library/Audio/Plug-Ins/Components/Surge++.component
+    sudo rm -rf /Library/Audio/Plug-Ins/VST/Surge++.vst
+    sudo rm -rf /Library/Audio/Plug-Ins/VST3/Surge++.vst3
+    sudo rm -rf ~/Library/Audio/Plug-Ins/Components/Surge++.component
+    sudo rm -rf ~/Library/Audio/Plug-Ins/VST/Surge++.vst
+    sudo rm -rf ~/Library/Audio/Plug-Ins/VST3/Surge++.vst3
+    sudo rm -rf ~/Library/Application\ Support/SurgePlusPlus
 }
 
 run_package()

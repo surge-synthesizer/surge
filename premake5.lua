@@ -66,8 +66,8 @@ if (os.istarget("macosx")) then
         "-Wno-inconsistent-missing-override"   -- Surge was written before this was even a keyword! We do need to fix this though
         }
     links { "c++" }
-    buildoptions { "-mmacosx-version-min=10.9" }
-    linkoptions { "-mmacosx-version-min=10.9" }
+    buildoptions { "-mmacosx-version-min=10.11" }
+    linkoptions { "-mmacosx-version-min=10.11" }
 
     platforms { "x64" }
 
@@ -170,7 +170,7 @@ includedirs {
 function plugincommon()
 
     targetprefix ""
-    targetname "Surge"
+    targetname "Surge++"
 
     files {
         "src/common/dsp/effect/ConditionerEffect.cpp",
@@ -204,6 +204,7 @@ function plugincommon()
         "src/common/gui/CCursorHidingControl.cpp",
         "src/common/gui/CDIBitmap.cpp",
         "src/common/gui/CEffectSettings.cpp",
+        "src/common/gui/CGlyphSwitch.cpp",
         "src/common/gui/CHSwitch2.cpp",
         "src/common/gui/CLFOGui.cpp",
         "src/common/gui/CModulationSourceButton.cpp",
@@ -219,6 +220,9 @@ function plugincommon()
         "src/common/gui/PopupEditorDialog.cpp",
         "src/common/gui/SurgeBitmaps.cpp",
         "src/common/gui/SurgeGUIEditor.cpp",
+        "src/common/layoutengine/LayoutEngine.cpp",
+        "src/common/layoutengine/LayoutEngineControlFactory.cpp",
+        "src/common/layoutengine/LayoutEngineContainer.cpp",
         "src/common/thread/CriticalSection.cpp",
         "src/common/util/FpuState.cpp",
         "src/common/vt_dsp/basic_dsp.cpp",
@@ -468,7 +472,7 @@ if VST24SDK then
 
     if (os.istarget("macosx")) then
 
-        targetname "Surge"
+        targetname "Surge++"
         targetprefix ""
         postbuildcommands { "./scripts/macOS/package-vst.sh" }
 

@@ -28,18 +28,29 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
 #include "PopupEditorSpawner.h"
+#include "../layoutengine/LayoutEngine.h"
 
 #include <vstcontrols.h>
 #include "SurgeSynthesizer.h"
 
 #include <vector>
 
+namespace Surge
+{
+class LayoutEngine;
+};
+
 class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
 {
+   friend class Surge::LayoutEngine;
+
 private:
    using super = EditorType;
 
 public:
+   int WINDOW_SIZE_X = 904;
+   int WINDOW_SIZE_Y = 542;
+
    SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
    virtual ~SurgeGUIEditor();
    void idle();
@@ -210,6 +221,7 @@ private:
    int minimumZoom;
 
    std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
+   std::unique_ptr<Surge::LayoutEngine> layout = nullptr;
 
    bool modsource_is_alternate[n_modsources];
 

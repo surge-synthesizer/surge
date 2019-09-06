@@ -1395,9 +1395,8 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             int s = storage.getPatch().param_ptr[index]->scene - 1;
             if (s >= 0)
             {
-               storage.getPatch().scene[s].solo_o1.val.b = false;
-               storage.getPatch().scene[s].solo_o2.val.b = false;
-               storage.getPatch().scene[s].solo_o3.val.b = false;
+               for( int i=0; i<n_oscs; ++i )
+                  storage.getPatch().scene[s].solo_o[i].val.b = false;
                storage.getPatch().scene[s].solo_ring_12.val.b = false;
                storage.getPatch().scene[s].solo_ring_23.val.b = false;
                storage.getPatch().scene[s].solo_noise.val.b = false;

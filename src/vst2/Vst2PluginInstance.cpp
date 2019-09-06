@@ -94,7 +94,9 @@ void Vst2PluginInstance::inputConnected(VstInt32 index, bool state)
 
 Vst2PluginInstance::~Vst2PluginInstance()
 {
-   delete _instance;
+   std::cout << "DO NOT MERGE THIS CODE INTO MASTER. If you delete on linux you get a core. Don't know why yet" << std::endl;
+   std::cout << "FIXME why does this crash in surge-exp?" << std::endl;
+   // delete _instance;
 }
 
 VstInt32
@@ -357,19 +359,19 @@ void Vst2PluginInstance::getParameterLabel(VstInt32 index, char* label)
 
 bool Vst2PluginInstance::getEffectName(char* name)
 {
-   strcpy(name, "Surge");
+   strcpy(name, "Surge++");
    return true;
 }
 
 bool Vst2PluginInstance::getProductString(char* name)
 {
-   strcpy(name, "Surge");
+   strcpy(name, "Surge++");
    return true;
 }
 
 bool Vst2PluginInstance::getVendorString(char* text)
 {
-   strcpy(text, "Vember Audio");
+   strcpy(text, "Surge Synth Team");
    return true;
 }
 
@@ -589,8 +591,8 @@ void Vst2PluginInstance::handleZoom(SurgeGUIEditor *e)
 {
     ERect *vr;
     float fzf = e->getZoomFactor() / 100.0;
-    int newW = WINDOW_SIZE_X * fzf;
-    int newH = WINDOW_SIZE_Y * fzf;
+    int newW = e->WINDOW_SIZE_X * fzf;
+    int newH = e->WINDOW_SIZE_Y * fzf;
     sizeWindow( newW, newH );
 
     VSTGUI::CFrame *frame = e->getFrame();

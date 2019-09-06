@@ -84,6 +84,10 @@ void CAboutBox::draw(CDrawContext* pContext)
           pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
           yPos += strHeight + yMargin;
       }
+      pContext->setFontColor(kRedCColor);
+      pContext->setFont(infoFont);
+      for (auto i = 0; i < 200; i += 20)
+         pContext->drawString("EXPERIMENTAL", CPoint(i + 15, i + 15));
    }
    else
    {

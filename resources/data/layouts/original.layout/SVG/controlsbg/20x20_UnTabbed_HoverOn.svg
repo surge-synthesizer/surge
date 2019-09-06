@@ -1,0 +1,19 @@
+<!-- 20x20_UnTabbed_HoverOn.svg --><?xml version="1.0" encoding="utf-8"?>
+<svg viewbox="0 0 20 20" xmlns="https://www.w3.org/2000/svg">
+  <defs>
+
+    <linearGradient id="gradient-0" gradientUnits="userSpaceOnUse" x1="10.000000" y1="0" x2="10.000000" y2="10.000000" 
+    spreadMethod="pad">
+      <stop offset="0" style="stop-color: rgb(120, 88, 50);"/>
+      <stop offset="1" style=""/>
+    </linearGradient>
+    
+   <linearGradient id="gradient-1" gradientUnits="userSpaceOnUse" x1="10.000000" y1="0" x2="10.000000" y2="20.000000" 
+                   spreadMethod="pad">
+      <stop offset="0" style="stop-color: rgb(238,128,0);"/>
+      <stop offset="1" style="stop-color: rgb(255,144,0);"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="20" height="20" style="fill: url(#gradient-0);"/>
+  <rect x="0" y="0" width="20" height="20" style="fill: url(#gradient-1);"/>
+</svg>

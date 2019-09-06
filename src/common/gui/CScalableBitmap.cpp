@@ -167,6 +167,22 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
     lastSeenZoom = -1;
 }
 
+CScalableBitmap::CScalableBitmap(std::string svgContents, VSTGUI::CFrame* f)
+    : CBitmap(VSTGUI::CResourceDescription(0)), svgImage(nullptr), frame(f)
+{
+   svgImage = nsvgParse((char*)(svgContents.c_str()), "px", 96);
+
+   
+   if (!svgImage)
+   {
+      std::cout << "Unable to load SVG Image from string contents" << std::endl;
+   }
+
+   extraScaleFactor = 100;
+   currentPhysicalZoomFactor = 100;
+   lastSeenZoom = -1;
+}
+
 #define DUMPR(r)                                                                                   \
    "(x=" << r.getTopLeft().x << ",y=" << r.getTopLeft().y << ")+(w=" << r.getWidth()               \
          << ",h=" << r.getHeight() << ")"
@@ -233,7 +249,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
        */
        int exs = (extraScaleFactor<100?100:extraScaleFactor);
        CGraphicsTransform xtf =
-           CGraphicsTransform().scale(exs / 100.0, exs / 100.0);
+           CGraphicsTransform().scale( exs / 100.0, exs / 100.0);
        CGraphicsTransform itf = tf.inverse();
        CGraphicsTransform ixtf = xtf.inverse();
 
@@ -254,6 +270,10 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
              CDrawContext::Transform trsf(*offscreen, tf);
              CDrawContext::Transform xtrsf(*offscreen, ixtf);
 
+             auto inherent = CGraphicsTransform().scale( inherentScaleFactor, inherentScaleFactor );
+             inherent.inverse().transform(newRect);
+             CDrawContext::Transform isf( *offscreen, inherent );
+             
              drawSVG(offscreen, newRect, offset, alpha);
 
              offscreen->endDraw();
@@ -456,5 +476,36 @@ VSTGUI::CColor CScalableBitmap::svgColorToCColor(int svgColor, float opacity)
    int b = (svgColor & 0x00FF0000) >> 16;
    int g = (svgColor & 0x0000FF00) >> 8;
    int r = (svgColor & 0x000000FF);
+
+   if( glyphMode && r == 0 && g == 0 && b == 0 )
+   {
+      return glyphColor;
+   }
    return VSTGUI::CColor(r, g, b, a);
+}
+
+void CScalableBitmap::setInherentScaleForSize(float w, float h)
+{
+   if( svgImage )
+   {
+      float impz = std::min( w / svgImage->width, h / svgImage->height );
+      inherentScaleFactor = impz;
+      lastSeenZoom = -1;
+   }
+}
+
+void CScalableBitmap::updateWithGlyphColor( VSTGUI::CColor c )
+{
+   if( c != glyphColor )
+   {
+      glyphColor = c;
+
+      for (auto const& pair : offscreenCache)
+      {
+         auto val = pair.second;
+         if (val)
+            val->forget();
+      }
+      offscreenCache.clear();
+   }
 }

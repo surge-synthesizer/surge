@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>4pole_low_pass</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-40.000000, 0.000000)">
+            <g id="Group" transform="translate(45.000000, 5.000000)">
+                <path d="M0,5 L4.571411,5 C4.571411,5 8,6.41909814 8,11" id="Stroke-5" stroke="#000000" stroke-width="1.25" stroke-linejoin="round"></path>
+                <polygon id="Fill-21" fill="#000000" points="7 0 8.35921305 0 8.35921305 2.48187953 9.64078695 2.48187953 9.64078695 1.24968758 11 1.24968758 11 5 9.64078695 5 9.64078695 3.76780805 7.01835347 3.76780805 7.01835347 3.75031242 7 3.75031242"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,2 +1,3 @@
-static const Steinberg::FUID SurgeProcessorUID(0x27B63CC3, 0x3070416E, 0xB55E7739, 0x70D3F5D4);
-static const Steinberg::FUID SurgeControllerUID(0x50E5BE1F, 0x1FAF4E40, 0x9A80F316, 0x8353E30A);
+// These are different from aster
+static const Steinberg::FUID SurgeProcessorUID(0xdaaf48e0, 0xf23742df, 0xaf082609, 0x41ed7a2d);
+static const Steinberg::FUID SurgeControllerUID(0x5f804f7f, 0xd0894906, 0xb397760c, 0xf5ed631e);

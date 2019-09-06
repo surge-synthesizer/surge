@@ -5,19 +5,19 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>SURGE</string>
+	<string>Surge++</string>
 	<key>CFBundleIconFile</key>
 	<string>surgeicon.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.vemberaudio.vst.surge</string>
+	<string>io.github.surge-synthesizer.vst.surgeplusplus</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleSignature</key>
-	<string>VmbA</string>
+	<string>SrST</string>
 	<key>CFBundleVersion</key>
-	<string>1.6.2</string>
+	<string>2.0.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>VSTWindowCompositing</key>

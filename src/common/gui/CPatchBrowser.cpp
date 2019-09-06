@@ -33,7 +33,7 @@ void CPatchBrowser::draw(CDrawContext* dc)
    al.left += 3;
    // al.top += 2;
    al.bottom = al.top + 12;
-   dc->setFontColor(kBlackCColor);
+   dc->setFontColor(kRedCColor);
    dc->setFont(patchNameFont);
    dc->drawString(pname.c_str(), ar, kCenterText, true);
 

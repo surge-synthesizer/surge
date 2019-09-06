@@ -46,6 +46,18 @@ enum modsources
    // ms_arpeggiator,
    ms_timbre,
    ms_releasevelocity,
+   ms_lfo7,
+   ms_lfo8,
+   ms_lfo9,
+   ms_lfo10,
+   ms_lfo11,
+   ms_lfo12,
+   ms_lfo13,
+   ms_lfo14,
+
+   ms_slfo7,
+   ms_slfo8,
+   
    n_modsources,
    /*ms_stepseq1,
    ms_stepseq2,
@@ -57,11 +69,59 @@ enum modsources
 const int n_customcontrollers = 8; // TODO remove this one
 const int num_metaparameters = n_customcontrollers;
 
+const char modsource_enum_names[n_modsources][32] = {
+   "original",
+   "velocity",
+   "keytrack",
+   "polyaftertouch",
+   "aftertouch",
+   "pitchbend",
+   "modwheel",
+   "ctrl1",
+   "ctrl2",
+   "ctrl3",
+   "ctrl4",
+   "ctrl5",
+   "ctrl6",
+   "ctrl7",
+   "ctrl8",
+   "ampeg",
+   "filtereg",
+   "lfo1",
+   "lfo2",
+   "lfo3",
+   "lfo4",
+   "lfo5",
+   "lfo6",
+   "slfo1",
+   "slfo2",
+   "slfo3",
+   "slfo4",
+   "slfo5",
+   "slfo6",
+   "timbre",
+   "velocity_release",
+   "lfo7",
+   "lfo8",
+   "lfo9",
+   "lfo10",
+   "lfo11",
+   "lfo12",
+   "lfo13",
+   "lfo14",
+
+   "slfo7",
+   "slfo8"
+};
+
 const char modsource_abberations_button[n_modsources][32] = {
     "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitchbend", "Modwheel", "Ctrl 1",
     "Ctrl 2",    "Ctrl 3",   "Ctrl 4",   "Ctrl 5",  "Ctrl 6",   "Ctrl 7",    "Ctrl 8",   "Amp EG",
     "Filter EG", "LFO 1",    "LFO 2",    "LFO 3",   "LFO 4",    "LFO 5",     "LFO 6",    "SLFO 1",
-    "SLFO 2",    "SLFO 3",   "SLFO 4",   "SLFO 5",  "SLFO 6",   "Timbre", "Rel Velocity" /*,"Arpeggio"*/};
+    "SLFO 2",    "SLFO 3",   "SLFO 4",   "SLFO 5",  "SLFO 6",   "Timbre",
+    "Rel Velocity",
+    "LFO 7",    "LFO 8",    "LFO 9",   "LFO 10",    "LFO 11",     "LFO 12", "LFO 13", "LFO 14",  "SLFO 7", "SLFO 8"
+};
 
 const char modsource_abberations[n_modsources][32] = {"Off",
                                                       "Velocity",
@@ -93,14 +153,26 @@ const char modsource_abberations[n_modsources][32] = {"Off",
                                                       "Scene LFO 5",
                                                       "Scene LFO 6",
                                                       "Timbre",
-                                                      "Release Velocity"
-                                                      /*,"Arpeggio"*/};
+                                                      "Release Velocity",
+                                                      "Voice LFO 7",
+                                                      "Voice LFO 8",
+                                                      "Voice LFO 9",
+                                                      "Voice LFO 10",
+                                                      "Voice LFO 11",
+                                                      "Voice LFO 12",
+                                                      "Voice LFO 13",
+                                                      "Voice LFO 14",
+                                                      "Scene LFO 7",
+                                                      "Scene LFO 8",
+                                                      
+};
 
 const char modsource_abberations_short[n_modsources][32] = {
-    "Off", "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitch Bend", "Modwheel", "Ctrl 1",
-    "Ctrl 2", "Ctrl 3", "Ctrl 4", "Ctrl 5", "Ctrl 6", "Ctrl 7", "Ctrl 8", "Amp EG",
-    "Filter EG", "LFO 1", "LFO 2", "LFO 3", "LFO 4", "LFO 5", "LFO 6", "SLFO 1",
-    "SLFO 2", "SLFO 3", "SLFO 4", "SLFO 5", "SLFO 6", "Timbre", "Rel Vel" /*,"Arpeggio"*/};
+    "off",   "velocity", "keytrack", "Poly AT", "Ch. AT", "Pitch Bend", "Modwheel", "CTRL1",
+    "CTRL2", "CTRL3",    "CTRL4",    "CTRL5",   "CTRL6",  "CTRL7",      "CTRL8",    "AEG",
+    "FEG",   "LFO1",     "LFO2",     "LFO3",    "LFO4",   "LFO5",       "LFO6",     "SLFO1",
+    "SLFO2", "SLFO3",    "SLFO4",    "SLFO5",   "SLFO6",  "TIMBR",
+    "RELEASE", "LFO7", "LFO8", "LFO9", "LFO10", "LFO11", "LFO12", "LFO13", "LFO14", "SLFO7", "SLFO8" };
 
 const int modsource_grid_xy[n_modsources][2] = {
     {0, 0}, {0, 0}, {1, 0}, {2, 0},  {3, 0}, {4, 0}, {5, 0},          // vel -> mw
@@ -134,7 +206,7 @@ inline bool isEnvelope(modsources ms)
 
 inline bool isLFO(modsources ms)
 {
-   return (ms >= ms_lfo1) && (ms <= ms_slfo6);
+   return ( (ms >= ms_lfo1) && (ms <= ms_slfo6) ) || ( ( ms >= ms_lfo7 ) && ( ms < ms_slfo8 ) );
 }
 
 inline bool canModulateModulators(modsources ms)
@@ -145,7 +217,7 @@ inline bool canModulateModulators(modsources ms)
 
 inline bool isVoiceModulator(modsources ms)
 {
-   return !((ms >= ms_slfo1) && (ms <= ms_slfo6));
+   return !((ms >= ms_slfo1) && (ms <= ms_slfo6)) && ms != ms_slfo7 && ms != ms_slfo8;
 }
 
 inline bool canModulateVoiceModulators(modsources ms)

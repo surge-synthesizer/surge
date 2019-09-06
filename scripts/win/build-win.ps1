@@ -79,16 +79,16 @@ function Install-Surge
 {
     # Copy to APPDATA
     Write-Host "Moving data to $env:LOCALAPPDATA"
-    Remove-Item "$($env:LOCALAPPDATA)\Surge" -Recurse -Force
-    Copy-Item "resources\data\" -Destination "$($env:LOCALAPPDATA)\Surge" -Recurse -Force
+    Remove-Item "$($env:LOCALAPPDATA)\SurgePlusPlus" -Recurse -Force
+    Copy-Item "resources\data\" -Destination "$($env:LOCALAPPDATA)\SurgePlusPlus" -Recurse -Force
 
     Write-Host "Installing VST2 into $vst2Dir"
     If(!(Test-Path $vst2Dir))
     {
         New-Item -ItemType Directory -Force -Path $vst2Dir
     }
-    Copy-Item "target\vst2\Release\Surge.dll" -Destination $vst2Dir -Force 
-    Copy-Item "target\vst2\Release\Surge_x86.dll" -Destination $vst2Dir -Force 
+    Copy-Item "target\vst2\Release\Surge++.dll" -Destination $vst2Dir -Force 
+    #    Copy-Item "target\vst2\Release\Surge++_x86.dll" -Destination $vst2Dir -Force 
 
     Write-Host "Start-Process -Verb runAs -WorkingDirectory $PSScriptRoot powershell -argumentlist install-vst3.ps1"
     Start-Process -Verb runAs   "powershell" -argumentlist "$PSScriptRoot\install-vst3.ps1"

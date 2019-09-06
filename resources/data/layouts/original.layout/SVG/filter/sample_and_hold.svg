@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>sample_and_hold</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-180.000000, 0.000000)">
+            <path d="M184.5151,6.448 C184.5151,6.448 182.4281,6.048 182.4291,7.444 C182.4311,8.554 184.5201,8.631 184.518101,9.463 C184.5151,11.029 182.0931,10.507 182.0931,10.507" id="Fill-18" fill-opacity="0" fill="#FF9D1F"></path>
+            <g id="Group-4" transform="translate(185.000000, 5.000000)">
+                <path d="M2.99628689,1.06326313 C2.99628689,1.06326313 0.414432744,0.586573878 0.415669857,2.25021936 C0.418144082,3.57303203 3.00247245,3.66479471 3,4.65630834 C2.99628689,6.52254676 0,5.90046728 0,5.90046728" id="Stroke-19" stroke="#000000" stroke-width="1.25" stroke-linejoin="round"></path>
+                <path d="M3,11 L8,0" id="Stroke-20" stroke="#000000" stroke-width="1.25" stroke-linejoin="round"></path>
+                <path d="M8.33333333,5 L8.333,7.4 L9.666,7.4 L9.66666667,5 L11,5 L10.999,7.4 L11,7.4 L11,8.6 L10.999,8.6 L11,11 L9.66666667,11 L9.666,8.6 L8.333,8.6 L8.33333333,11 L7,11 L7,5 L8.33333333,5 Z" id="Combined-Shape" fill="#000000"></path>
+            </g>
+        </g>
+    </g>
+</svg>

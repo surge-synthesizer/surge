@@ -1,4 +1,4 @@
 #!/bin/bash
-rsync -r --delete "$DSTVOLUME/tmp/Surge" /Library/Application\ Support/
-chown -R $USER:staff /Library/Application\ Support/Surge
-rm -rf "$DSTVOLUME/tmp/Surge"
+rsync -r --delete "$DSTVOLUME/tmp/SurgePlusPlus" /Library/Application\ Support/
+chown -R $USER:staff /Library/Application\ Support/SurgePlusPlus
+rm -rf "$DSTVOLUME/tmp/SurgePlusPlus"

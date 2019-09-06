@@ -41,6 +41,18 @@ SurgeVst3Processor::~SurgeVst3Processor()
 
 tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 {
+#if GENERATE_ME_SOME_IDS
+   std::cout << "INITIALIZE" << std::endl;
+   for (int i = 0; i < 5; ++i)
+   {
+      Steinberg::FUID fu;
+      bool b = fu.generate();
+      std::cout << b << std::endl;
+      std::cout << std::hex << "0x" << fu.getLong1() << ", 0x" << fu.getLong2() << ", 0x"
+                << fu.getLong3() << ", 0x" << fu.getLong4() << std::endl;
+   }
+#endif
+
    //---always initialize the parent-------
    tresult result = SingleComponentEffect::initialize(context);
    // if everything Ok, continue
@@ -864,9 +876,8 @@ void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
 void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
 {
     float fzf = e->getZoomFactor() / 100.0;
-    int newW = WINDOW_SIZE_X * fzf;
-    int newH = WINDOW_SIZE_Y * fzf;
-
+    int newW = e->WINDOW_SIZE_X * fzf;
+    int newH = e->WINDOW_SIZE_Y * fzf;
 
     VSTGUI::CFrame *frame = e->getFrame();
     if(frame)

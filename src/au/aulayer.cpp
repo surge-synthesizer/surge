@@ -54,7 +54,7 @@ UInt32 aulayer::SupportedNumChannels(const AUChannelInfo** outInfo)
 
 //----------------------------------------------------------------------------------------------------
 
-#define kComponentSubType 'Srge'
+#define kComponentSubType 'Srgx'
 
 //----------------------------------------------------------------------------------------------------
 
@@ -86,7 +86,8 @@ bool aulayer::HasIcon()
 CFURLRef aulayer::GetIconLocation()
 {
    CFURLRef icon = 0;
-   CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.vemberaudio.audiounit.surge"));
+   CFBundleRef bundle =
+       CFBundleGetBundleWithIdentifier(CFSTR("io.github.surge-synthesizer.au.surgetwo"));
 
    if (bundle)
    {

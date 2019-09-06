@@ -13,14 +13,14 @@ SVG_SRC_LOCATION="assets/${SURGE_USE_VECTOR_SKIN}/SVG/exported"
 FONT_SRC_LOCATION="$RES_SRC_LOCATION/fonts"
 
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
-EXEC_LOCATION="target/vst2/Release/Surge.dylib"
+EXEC_LOCATION="target/vst2/Release/Surge++.dylib"
 #EXEC_LOCATION="target/vst2/Debug/Surge-Debug.dylib"
 
 # output configs
 OUTPUT_DIR=products
-BUNDLE_NAME="Surge.vst"
+BUNDLE_NAME="Surge++.vst"
 BUNDLE_DIR="$OUTPUT_DIR/$BUNDLE_NAME"
-EXEC_TARGET_NAME="Surge"
+EXEC_TARGET_NAME="Surge++"
 
 echo Creating VST Bundle...
 

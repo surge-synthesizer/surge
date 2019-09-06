@@ -28,3 +28,17 @@ void stackToInfo()
     free(strs);
 #endif
 }
+---
+
+Huh getting a core file and a stack trace is a bit of work. Here's how to do it if you want to.
+
+cp /usr/bin/auvaltool .
+you have to do this since mojave won't allow you to attach a debugger to stuff owned by root thanks to SIP
+ulimit -c unlimited
+touch /cores/foo
+rm /cores/foo
+if those don't work, then you need to set permissions on /cores properly
+./auvaltool -vt aumu VmbA
+this should dump a nice big /cores/core.(pid) file
+lldb ./auvaltool -c /cores/core.(pid)
+bt all

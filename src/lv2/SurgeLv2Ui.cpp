@@ -137,8 +137,8 @@ void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer)
    assert(e == _editor.get());
 
     float fzf = e->getZoomFactor() / 100.0;
-    int newW = WINDOW_SIZE_X * fzf;
-    int newH = WINDOW_SIZE_Y * fzf;
+    int newW = e->WINDOW_SIZE_X * fzf;
+    int newH = e->WINDOW_SIZE_Y * fzf;
 
     // identical implementation to VST2, except for here
     resizer->ui_resize(resizer->handle, newW, newH);
