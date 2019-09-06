@@ -20,6 +20,8 @@ void lv2_generate_ttl(const char* baseName)
    const LV2_Descriptor* desc = lv2_descriptor(0);
    const LV2UI_Descriptor* uidesc = lv2ui_descriptor(0);
 
+   SurgeStorage::skipLoadWtAndPatch = true;
+
    SurgeLv2Wrapper defaultInstance(44100.0);
    SurgeSynthesizer* defaultSynth = defaultInstance.synthesizer();
 

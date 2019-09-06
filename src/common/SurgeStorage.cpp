@@ -287,8 +287,16 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    load_midi_controllers();
 
 #if !TARGET_RACK   
-   refresh_wtlist();
-   refresh_patchlist();
+   bool loadWtAndPatch = true;
+#if TARGET_LV2
+   // skip loading during export, it pops up an irrelevant error dialog
+   loadWtAndPatch = !skipLoadWtAndPatch;
+#endif
+   if (loadWtAndPatch)
+   {
+      refresh_wtlist();
+      refresh_patchlist();
+   }
 #endif
    
    getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
@@ -1299,6 +1307,10 @@ bool SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
 
    return true;
 }
+
+#if TARGET_LV2
+bool SurgeStorage::skipLoadWtAndPatch = false;
+#endif
 
 namespace Surge
 {
