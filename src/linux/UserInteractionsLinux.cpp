@@ -2,7 +2,9 @@
 #include <iostream>
 #include <iomanip>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
+#include <string.h>
 #include <thread>
 
 /*
@@ -75,11 +77,36 @@ void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
 MessageResult promptOKCancel(const std::string &message, const std::string &title,
                              SurgeGUIEditor *guiEditor)
 {
-    std::cerr << "Surge OkCancel\n"
-              << title << "\n"
-              << message << "\n"
-              << "Returning OK" << std::flush;
-    return UserInteractions::OK;
+   size_t pid = vfork();
+
+   if (pid < 0)
+   {
+      std::cerr << "Surge Error: vfork has failed\n";
+      return UserInteractions::CANCEL;
+   }
+   else if (pid == 0)
+   {
+      execlp("zenity", "zenity",
+                 "--question",
+                 "--text", message.c_str(),
+                 "--title", title.c_str(),
+                 (char*)nullptr);
+      exit(1);
+   }
+
+   int wret;
+   int wstatus;
+   while ((wret = waitpid(pid, &wstatus, 0)) == -1 && errno == EINTR)
+      /* wait interrupted by signal, try again */;
+
+   if (wret == -1)
+   {
+      std::cerr << "Surge Error: waitpid has failed, \"" << strerror(errno) << "\"\n";
+      return UserInteractions::CANCEL;
+   }
+
+   return (WEXITSTATUS(wstatus) == 0) ?
+      UserInteractions::OK : UserInteractions::CANCEL;
 }
 
 void openURL(const std::string &url)
