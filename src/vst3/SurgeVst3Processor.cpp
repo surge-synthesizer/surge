@@ -231,7 +231,8 @@ void SurgeVst3Processor::processEvent(const Event& e)
       }
       else
       {
-         char cVel = std::min((char)(e.noteOn.velocity * 128.0), (char)127); // Why oh why is this a float in VST3?
+         // Why oh why is this a float in VST3?
+         char cVel = (char)std::min(127, std::max(0, (int)(e.noteOn.velocity * 128.0)));
          getSurge()->playNote(e.noteOn.channel, e.noteOn.pitch, cVel, e.noteOn.tuning);
       }
       break;
