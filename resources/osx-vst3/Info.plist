@@ -17,7 +17,7 @@
 	<key>CFBundleSignature</key>
 	<string>VmbA</string>
 	<key>CFBundleVersion</key>
-	<string>1.6.0</string>
+	<string>1.6.2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>VSTWindowCompositing</key>

@@ -40,7 +40,7 @@
 	<key>CFBundleSignature</key>
 	<string>VmbA</string>
 	<key>CFBundleVersion</key>
-	<string>1.6.0</string>
+	<string>1.6.2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>CFBundleSupportedPlatforms</key>
@@ -50,6 +50,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>2018</string>
+	<string>2019</string>
 </dict>
 </plist>
