@@ -220,6 +220,16 @@ void SurgeVst3Processor::processEvents(int sampleOffset,
    }
 }
 
+static int value01ToMidi7Bit(double x)
+{
+   return std::min(127, std::max(0, (int)(x * 127.0)));
+}
+
+static int value01ToMidi14Bit(double x)
+{
+   return std::min(16383, std::max(0, (int)(x * 16383.0)));
+}
+
 void SurgeVst3Processor::processEvent(const Event& e)
 {
    switch (e.type)
@@ -231,7 +241,8 @@ void SurgeVst3Processor::processEvent(const Event& e)
       }
       else
       {
-         char cVel = std::min((char)(e.noteOn.velocity * 128.0), (char)127); // Why oh why is this a float in VST3?
+         // Why oh why is this a float in VST3?
+         char cVel = value01ToMidi7Bit(e.noteOn.velocity);
          getSurge()->playNote(e.noteOn.channel, e.noteOn.pitch, cVel, e.noteOn.tuning);
       }
       break;
@@ -286,20 +297,20 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                      }
                      else
                      {
-                        surgeInstance->channelController(channel, cont, (int)(value * 128));
+                        surgeInstance->channelController(channel, cont, value01ToMidi7Bit(value));
                      }
                   }
                   else
                      switch (cont)
                      {
                      case kAfterTouch:
-                        surgeInstance->channelAftertouch(channel, (int)(value * 127.f));
+                        surgeInstance->channelAftertouch(channel, value01ToMidi7Bit(value));
                         break;
                      case kPitchBend:
                         /*
                         ** VST3 float value is between 0 and 1, pitch bend is between -1 and 1. Center it
                         */
-                        surgeInstance->pitchBend(channel, (int)((value-0.5)*2 * 8192.f));
+                        surgeInstance->pitchBend(channel, value01ToMidi14Bit(value) - 8192);
                         break;
                      case kCtrlProgramChange:
                         break;
