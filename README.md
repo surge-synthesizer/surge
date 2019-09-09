@@ -13,7 +13,7 @@ If you would also like to participate in discussions, testing, and design of Sur
 details below and also in [the contributors section of the surge website](https://surge-synthesizer.github.io/#contributors).
 
 Surge currently builds on macOS as a 64 bit AU, VST2 and VST3, Windows as a 64 and 32 bit VST2 and VST3 
-and Linux as a 64 bit VST2.
+and Linux as a 64 bit VST2, VST3 and LV2.
 
 This README serves as the root of developer documentation for the project.
 
@@ -176,15 +176,23 @@ You can now build with the command
 ./build-linux.sh build
 ```
 
-which will run premake and build the asset.
+or if you prefer a specific flavor
 
-To use the VST, you need to install it locally along with supporting files. You can do this manually
-if you desire, but the build script will also do it.
 
 ```
-./build-linux.sh install --local
+./build-linux.sh build --project=lv2
 ```
-Script will install vst2 to $HOME/.vst dir. To change this, edit vst2_dest_path to taste. Without --local files will be installed to system locations (needs sudo).
+
+which will run premake and build the assets.
+
+To use the VST2, VST3, or LV2, you need to install it locally along with supporting files. You can do this manually
+if you desire, but the build script will also do it using the `install` option.
+
+```
+./build-linux.sh install --project=lv2 --local 
+```
+
+Script will install vst2 to $HOME/.vst dir, vst3 to $HOME/.vst3 and LV2 to $HOME/lv2 in local mode. To change this, edit vst2_dest_path and so forth to taste. Without --local files will be installed to system locations (needs sudo).
 
 For other options, you can do `./build-linux.sh --help`.
 
