@@ -34,7 +34,7 @@ EOHELP
 
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
-NC=`tput init`
+NC=`tput sgr0`
 
 prerequisite_check()
 {
