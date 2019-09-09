@@ -47,11 +47,14 @@ LV2_Handle SurgeLv2Wrapper::instantiate(const LV2_Descriptor* descriptor,
    self->_uridAtomFloat = featureUridMap->map(featureUridMap->handle, LV2_ATOM__Float);
    self->_uridAtomInt = featureUridMap->map(featureUridMap->handle, LV2_ATOM__Int);
    self->_uridAtomLong = featureUridMap->map(featureUridMap->handle, LV2_ATOM__Long);
+   self->_uridAtomChunk = featureUridMap->map(featureUridMap->handle, LV2_ATOM__Chunk);
    self->_uridTimePosition = featureUridMap->map(featureUridMap->handle, LV2_TIME__Position);
    self->_uridTime_beatsPerMinute =
        featureUridMap->map(featureUridMap->handle, LV2_TIME__beatsPerMinute);
    self->_uridTime_speed = featureUridMap->map(featureUridMap->handle, LV2_TIME__speed);
    self->_uridTime_beat = featureUridMap->map(featureUridMap->handle, LV2_TIME__beat);
+
+   self->_uridSurgePatch = featureUridMap->map(featureUridMap->handle, SURGE_PATCH_URI);
 
    return (LV2_Handle)self.release();
 }
@@ -275,13 +278,61 @@ void SurgeLv2Wrapper::cleanup(LV2_Handle instance)
 
 const void* SurgeLv2Wrapper::extensionData(const char* uri)
 {
+   if (!strcmp(uri, LV2_STATE__interface))
+   {
+      static const LV2_State_Interface state = createStateInterface();
+      return &state;
+   }
+
    return nullptr;
+}
+
+LV2_State_Interface SurgeLv2Wrapper::createStateInterface()
+{
+   LV2_State_Interface intf;
+   intf.save = &saveState;
+   intf.restore = &restoreState;
+   return intf;
+}
+
+LV2_State_Status SurgeLv2Wrapper::saveState(LV2_Handle instance, LV2_State_Store_Function store, LV2_State_Handle handle, uint32_t flags, const LV2_Feature* const* features)
+{
+   SurgeLv2Wrapper* self = (SurgeLv2Wrapper*)instance;
+   SurgeSynthesizer* s = self->_synthesizer.get();
+
+   void *data = nullptr;
+   s->populateDawExtraState();
+   // TODO also save editor stuff?
+   size_t size = s->saveRaw(&data);
+
+   uint32_t storageFlags = LV2_STATE_IS_POD|LV2_STATE_IS_PORTABLE;
+   return store(handle, self->_uridSurgePatch, data, size, self->_uridAtomChunk, storageFlags);
+}
+
+LV2_State_Status SurgeLv2Wrapper::restoreState(LV2_Handle instance, LV2_State_Retrieve_Function retrieve, LV2_State_Handle handle, uint32_t flags, const LV2_Feature* const* features)
+{
+   SurgeLv2Wrapper* self = (SurgeLv2Wrapper*)instance;
+   SurgeSynthesizer* s = self->_synthesizer.get();
+
+   size_t size = 0;
+   uint32_t type = 0;
+   uint32_t storageFlags = LV2_STATE_IS_POD|LV2_STATE_IS_PORTABLE;
+   const void* data = retrieve(handle, self->_uridSurgePatch, &size, &type, &storageFlags);
+
+   if (type != self->_uridAtomChunk)
+      return LV2_STATE_ERR_BAD_TYPE;
+
+   s->loadRaw(data, size, false);
+   s->loadFromDawExtraState();
+   // TODO also load editor stuff?
+
+   return LV2_STATE_SUCCESS;
 }
 
 LV2_Descriptor SurgeLv2Wrapper::createDescriptor()
 {
    LV2_Descriptor desc = {};
-   desc.URI = "https://github.com/surge-synthesizer/surge";
+   desc.URI = SURGE_PLUGIN_URI;
    desc.instantiate = &instantiate;
    desc.connect_port = &connectPort;
    desc.activate = &activate;

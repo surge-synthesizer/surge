@@ -61,6 +61,11 @@ private:
    static void cleanup(LV2_Handle instance);
    static const void* extensionData(const char* uri);
 
+   ///
+   static LV2_State_Interface createStateInterface();
+   static LV2_State_Status saveState(LV2_Handle instance, LV2_State_Store_Function store, LV2_State_Handle handle, uint32_t, const LV2_Feature* const*);
+   static LV2_State_Status restoreState(LV2_Handle instance, LV2_State_Retrieve_Function retrieve, LV2_State_Handle handle, uint32_t, const LV2_Feature* const*);
+
 private:
    std::unique_ptr<SurgeSynthesizer> _synthesizer;
    std::unique_ptr<void*[]> _dataLocation;
@@ -81,10 +86,13 @@ private:
    LV2_URID _uridAtomFloat;
    LV2_URID _uridAtomInt;
    LV2_URID _uridAtomLong;
+   LV2_URID _uridAtomChunk;
    LV2_URID _uridTimePosition;
    LV2_URID _uridTime_beatsPerMinute;
    LV2_URID _uridTime_speed;
    LV2_URID _uridTime_beat;
+
+   LV2_URID _uridSurgePatch;
 
    SurgeLv2Ui* _editor = nullptr;
 };
