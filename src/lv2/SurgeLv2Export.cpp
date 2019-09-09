@@ -99,7 +99,7 @@ void lv2_generate_ttl(const char* baseName)
                   "        lv2:index " << portIndex << " ;\n"
                   "        lv2:symbol \"" << pSymbol << "\" ;\n"
                   "        lv2:name \"" << pName << "\" ;\n"
-                  "        lv2:default " << pMeta.fdefault << " ;\n"
+                  "        lv2:default " << defaultSynth->getParameter01(index) << " ;\n"
                   "        lv2:minimum " << pMeta.fmin << " ;\n"
                   "        lv2:maximum " << pMeta.fmax << " ;\n"
                   "    ]";
