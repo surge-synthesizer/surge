@@ -2962,7 +2962,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                 this->synth->storage.refresh_wtlist();
                 this->synth->storage.refresh_patchlist();
             };
-            Surge::UserInteractions::promptFileOpenDialog("", "", cb, true, true);
+            Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath, "", cb, true, true);
                                                           
         });
     did++;

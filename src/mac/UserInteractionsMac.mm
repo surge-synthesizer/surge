@@ -107,6 +107,7 @@ void promptFileOpenDialog(const std::string& initialDirectory,
    NSOpenPanel* panel = [NSOpenPanel openPanel];
    [panel setCanChooseDirectories:canSelectDirectories];
    [panel setCanCreateDirectories:canCreateDirectories];
+   [panel setDirectoryURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:(initialDirectory.c_str())]]];
 
    // Logic and others have wierd window ordering which can mean this somethimes pops behind.
    // See #1001.

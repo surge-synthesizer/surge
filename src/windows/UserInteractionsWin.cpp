@@ -83,7 +83,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM lParam, LPARA
     return 0;
 }
 
-std::string BrowseFolder(std::string saved_path)
+void BrowseFolder(std::string saved_path, std::function<void(std::string)> cb)
 {
     TCHAR path[MAX_PATH];
 
@@ -110,10 +110,8 @@ std::string BrowseFolder(std::string saved_path)
             imalloc->Release ( );
         }
 
-        return path;
+        cb( path );
     }
-
-    return "";
 }
 
 
@@ -127,8 +125,7 @@ void promptFileOpenDialog(const std::string& initialDirectory,
 {
   if( canSelectDirectories )
     {
-      auto s = BrowseFolder( "c:" );
-      callbackOnOpen(s);
+      BrowseFolder( initialDirectory, callbackOnOpen );
       return;
     }
    // With many thanks to
