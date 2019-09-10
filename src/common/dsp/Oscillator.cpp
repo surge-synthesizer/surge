@@ -260,7 +260,7 @@ void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynth
 
 void osc_sine::init_ctrltypes()
 {
-   oscdata->p[0].set_name("WaveShape");
+   oscdata->p[0].set_name("Shape");
    oscdata->p[0].set_type(ct_sineoscmode);
 
    oscdata->p[1].set_name("Feedback");
