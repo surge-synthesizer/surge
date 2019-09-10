@@ -53,7 +53,8 @@ void lv2_generate_ttl(const char* baseName)
                "    ] ;\n"
                "    ui:ui <" << uidesc->URI << "> ;\n"
                "    lv2:optionalFeature lv2:hardRTCapable ;\n"
-               "    lv2:requiredFeature urid:map ;\n";
+               "    lv2:requiredFeature urid:map ;\n"
+               "    lv2:extensionData state:interface ;\n";
 
       unsigned portIndex = 0;
       osDsp << "    lv2:port";
@@ -177,6 +178,7 @@ static void writePrefix(std::ofstream& os)
          "@prefix rsz:  <" LV2_RESIZE_PORT_PREFIX "> .\n"
          "@prefix midi: <" LV2_MIDI_PREFIX "> .\n"
          "@prefix time: <" LV2_TIME_PREFIX "> .\n"
+         "@prefix state: <" LV2_STATE_PREFIX "> .\n"
          "@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
          "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
          "@prefix doap: <http://usefulinc.com/ns/doap#> .\n"

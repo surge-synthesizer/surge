@@ -11,3 +11,8 @@
 #include <lv2/resize-port/resize-port.h>
 #include <lv2/midi/midi.h>
 #include <lv2/time/time.h>
+#include <lv2/state/state.h>
+
+#define SURGE_PLUGIN_URI "https://surge-synthesizer.github.io/lv2/surge"
+#define SURGE_UI_URI     SURGE_PLUGIN_URI "#UI"
+#define SURGE_PATCH_URI  SURGE_PLUGIN_URI "#PatchData"
