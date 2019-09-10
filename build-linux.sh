@@ -239,7 +239,8 @@ run_uninstall()
     fi
 
     if [ ! -z "$option_vst3" ]; then
-        rm -vf $vst3_dest_path/$dest_plugin_name
+	rm -vf $vst3_dest_path/Surge.vst3/Contents/x86_64-linux/$dest_plugin_name
+	rmdir -v $vst3_dest_path/Surge.vst3/Contents/x86_64-linux $vst3_dest_path/Surge.vst3/Contents $vst3_dest_path/Surge.vst3
     fi
 
     if [ ! -z "$option_lv2" ]; then
@@ -249,7 +250,8 @@ run_uninstall()
     fi
 
     if [ ! -z "$option_headless" ]; then
-        rm -vf $headless_dest_path/$dest_headless_name
+	rm -vf $headless_dest_path/$dest_headless_name/Surge/$dest_headless_name
+	rmdir -v $headless_dest_path/$dest_headless_name/Surge $headless_dest_path/$dest_headless_name	
     fi
 }
 
