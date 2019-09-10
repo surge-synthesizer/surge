@@ -305,10 +305,8 @@ bool Vst2PluginInstance::getProgramNameIndexed (VstInt32 category, VstInt32 inde
    if (tryInit())
    {
        SurgeSynthesizer* s = (SurgeSynthesizer*)_instance;
-       /*
-       ** The original surge had this 63. Presume it is documented somewhere in vst land.
-       */
-       strncpy(text, s->storage.getPatch().name.c_str(), 63);
+       strncpy(text, s->storage.getPatch().name.c_str(), kVstMaxProgNameLen);
+       text[kVstMaxProgNameLen - 1] = '\0';
    }
    return true;
 }
