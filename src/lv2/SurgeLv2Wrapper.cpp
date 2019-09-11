@@ -300,10 +300,35 @@ LV2_State_Status SurgeLv2Wrapper::saveState(LV2_Handle instance, LV2_State_Store
    SurgeLv2Wrapper* self = (SurgeLv2Wrapper*)instance;
    SurgeSynthesizer* s = self->_synthesizer.get();
 
+   // XXX force syncing port values into the synthesizer, ensuring ports and
+   //     chunk will contain identical parameter values.
+   //
+   // Ideally, we make Surge able to skip loading its parameters from the chunk.
+   //
+   // Cases for lack of parameter synchronization:
+   //   1. Parameters were set while DSP is suspended, the run routine was not
+   //      called in order to transfer port data into the synth.
+   //   2. Parameters were automated by MIDI.
+   std::unique_ptr<float[]> savedValues01(new float[n_total_params]);
+   for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
+   {
+      float portValue = *(float*)(self->_dataLocation[pNth]);
+      unsigned index = s->remapExternalApiToInternalId(pNth);
+      savedValues01[pNth] = s->getParameter01(index);
+      s->setParameter01(index, portValue);
+   }
+
    void *data = nullptr;
    s->populateDawExtraState();
    // TODO also save editor stuff?
    size_t size = s->saveRaw(&data);
+
+   /// XXX restore the parameter values as before synchronization
+   for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
+   {
+      unsigned index = s->remapExternalApiToInternalId(pNth);
+      s->setParameter01(index, savedValues01[pNth]);
+   }
 
    uint32_t storageFlags = LV2_STATE_IS_POD|LV2_STATE_IS_PORTABLE;
    return store(handle, self->_uridSurgePatch, data, size, self->_uridAtomChunk, storageFlags);
