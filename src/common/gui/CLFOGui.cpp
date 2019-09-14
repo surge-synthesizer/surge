@@ -211,9 +211,9 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       int minSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
       int totalSamples = std::max( (int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE) );
       float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
-      int averagingWindow = 1;
-      while( drawnTime / averagingWindow > 3.0 ) // subsample at longer times
-          averagingWindow ++;
+
+      // OK so lets assume we want about 1000 pixels worth tops in
+      int averagingWindow = (int)(totalSamples/1000.0) + 1;
 
 #if LINUX
       float valScale = 10000.0;
@@ -226,6 +226,10 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       {
          float val = 0;
          float eval = 0;
+         float minval = 1000000;
+         float maxval = -1000000;
+         float firstval;
+         float lastval;
          for (int s = 0; s < averagingWindow; s++)
          {
             tlfo->process_block();
@@ -242,6 +246,10 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
             }
             
             val  += tlfo->output;
+            if( s == 0 ) firstval = tlfo->output;
+            if( s == averagingWindow - 1 ) lastval = tlfo->output;
+            minval = std::min(tlfo->output, minval);
+            maxval = std::max(tlfo->output, maxval);
             eval += tlfo->env_val * lfodata->magnitude.val.f;
          }
          val = val / averagingWindow;
@@ -260,7 +268,17 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
          }
          else
          {
-             path->addLine(xc, val );
+             if( maxval - minval > 0.2 )
+             {
+                 minval  = ( ( - minval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
+                 maxval  = ( ( - maxval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
+                 path->addLine(xc, minval );
+                 path->addLine(xc, maxval );
+             }
+             else
+             {
+                 path->addLine(xc, val );
+             }
              eupath->addLine(xc, euval);
              edpath->addLine(xc, edval);
          }
