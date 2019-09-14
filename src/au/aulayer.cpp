@@ -194,9 +194,12 @@ ComponentResult aulayer::Reset(AudioUnitScope inScope, AudioUnitElement inElemen
    if ((inScope == kAudioUnitScope_Global) && (inElement == 0) && plugin_instance)
    {
       double samplerate = GetOutput(0)->GetStreamFormat().mSampleRate;
-      plugin_instance->setSamplerate(samplerate);
+      if( samplerate != sampleRateCache )
+      {
+          plugin_instance->setSamplerate(samplerate);
+          sampleRateCache = samplerate;
+      }
       plugin_instance->allNotesOff();
-      sampleRateCache = samplerate;
    }
    return noErr;
 }
