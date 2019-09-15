@@ -217,7 +217,7 @@ enum lfoshapes
 };
 
 const char ls_abberations[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Ramp",
-                                              "Noise", "S&H",      "Envelope", "Stepseq"};
+                                              "Noise", "S&H",      "Envelope", "Step Seq"};
 
 enum fu_type
 {
