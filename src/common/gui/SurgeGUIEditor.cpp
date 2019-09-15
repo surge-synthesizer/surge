@@ -2868,6 +2868,9 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     mpeSubMenu->forget();
 
+    COptionMenu *uiOptionsMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle |
+                                                 VSTGUI::COptionMenu::kMultipleCheckStyle );
+    
     // Mouse behavior
     // Mouse behavior
     int mid = 0;
@@ -2921,9 +2924,22 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     std::string mouseMenuName = "Mouse Behavior";
 
-    settingsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
-    eid++;
+    uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str() );
     mouseSubMenu->forget();
+
+    auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO", 0 );
+    auto bitmapMenu = useBitmap ? "Use Vector LFO Display" : "Use Bitmap LFO Display";
+    addCallbackMenu( uiOptionsMenu, bitmapMenu, [this, useBitmap]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   "useBitmapLFO",
+                                                   useBitmap ? 0 : 1 );
+            this->synth->refresh_editor = true;
+        });
+
+    
+    settingsMenu->addEntry(uiOptionsMenu, "UI Options" );
+    uiOptionsMenu->forget();
+    eid++;
 
     auto tuningSubMenu = makeTuningMenu(menuRect);
     settingsMenu->addEntry(tuningSubMenu, "Tuning" );

@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CLFOGui.h"
 #include "LfoModulationSource.h"
+#include "UserDefaults.h"
 
 using namespace VSTGUI;
 using namespace std;
@@ -37,12 +38,19 @@ void CLFOGui::draw(CDrawContext* dc)
    /*
    ** As of 1.6.2, the linux vectorized drawing is slow and scales imporoperly with zoom, so
    ** return to the original bitmap drawing until we resolve. See issue #1103.
+   ** 
+   ** Also some older machines report performance problems so make it switchable
    */
-#if LINUX
-   drawBitmap(dc);
-#else
-   drawVectorized(dc);
-#endif
+
+   auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO", 0 );
+   if( useBitmap )
+   {
+        drawBitmap(dc);
+   }
+   else
+   {
+        drawVectorized(dc);
+   }
 }
 
 void CLFOGui::drawVectorized(CDrawContext* dc)
