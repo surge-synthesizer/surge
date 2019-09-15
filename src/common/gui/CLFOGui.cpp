@@ -42,7 +42,13 @@ void CLFOGui::draw(CDrawContext* dc)
    ** Also some older machines report performance problems so make it switchable
    */
 
-   auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO", 0 );
+   auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO",
+#if LINUX
+                                                         1
+#else
+                                                        0
+#endif
+       );
    if( useBitmap )
    {
         drawBitmap(dc);

@@ -2927,7 +2927,13 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str() );
     mouseSubMenu->forget();
 
-    auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO", 0 );
+    auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO",
+#if LINUX
+                                                         1
+#else
+                                                         0
+#endif
+        );
     auto bitmapMenu = useBitmap ? "Use Vector LFO Display" : "Use Bitmap LFO Display";
     addCallbackMenu( uiOptionsMenu, bitmapMenu, [this, useBitmap]() {
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
