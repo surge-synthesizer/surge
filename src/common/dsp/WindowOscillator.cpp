@@ -133,7 +133,8 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
    const unsigned int M0Mask = 0x07f8;
    unsigned int SizeMask = (oscdata->wt.size << 16) - 1;
    unsigned int SizeMaskWin = (storage->WindowWT.size << 16) - 1;
-   unsigned int WindowVsWavePO2 = storage->WindowWT.size_po2 - oscdata->wt.size_po2;
+
+   
    unsigned char Window = limit_range(oscdata->p[2].val.i, 0, 8);
 
    int Table = limit_range(
@@ -141,7 +142,18 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
        (int)oscdata->wt.n_tables - 1);
    int FormantMul =
        (int)(float)(65536.f * storage->note_to_pitch_tuningctr(localcopy[oscdata->p[1].param_id_in_scene].f));
-   FormantMul = std::max(FormantMul >> WindowVsWavePO2, 1);
+
+   // We can actually get input tables bigger than the convolution table
+   int WindowVsWavePO2 = storage->WindowWT.size_po2 - oscdata->wt.size_po2;
+   if( WindowVsWavePO2 < 0 )
+   {
+       FormantMul = std::max(FormantMul << -WindowVsWavePO2, 1);
+   }
+   else
+   {
+       FormantMul = std::max(FormantMul >> WindowVsWavePO2, 1);
+   }
+
    {
       // SSE2 path
       for (int so = 0; so < ActiveSubOscs; so++)
