@@ -106,6 +106,7 @@ protected:
    VSTGUI::CRect ss_shift_left, ss_shift_right;
    bool edit_trigmask;
    int controlstate;
-
+   bool ignore_bitmap_pref = false; // if this is true, we always use the bitmap
+   
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };
