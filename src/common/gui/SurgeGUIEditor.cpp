@@ -3005,7 +3005,12 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
             Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge/");
         });
     eid++;
-    
+
+    addCallbackMenu(settingsMenu, "Download Extra Content", []() {
+            Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
+    });
+    eid++;
+
     addCallbackMenu(settingsMenu, "Surge Website", []() {
             Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/");
         });
@@ -3015,7 +3020,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
     });
     eid++;
-    
+
     settingsMenu->addSeparator(eid++);
 
     addCallbackMenu(settingsMenu, "About", [this]() {
