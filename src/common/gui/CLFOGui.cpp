@@ -4,6 +4,7 @@
 #include "CLFOGui.h"
 #include "LfoModulationSource.h"
 #include "UserDefaults.h"
+#include <chrono>
 
 using namespace VSTGUI;
 using namespace std;
@@ -35,28 +36,32 @@ void drawtri(CRect r, CDrawContext* context, int orientation)
 
 void CLFOGui::draw(CDrawContext* dc)
 {
+#if LINUX
    /*
    ** As of 1.6.2, the linux vectorized drawing is slow and scales imporoperly with zoom, so
    ** return to the original bitmap drawing until we resolve. See issue #1103.
    ** 
    ** Also some older machines report performance problems so make it switchable
    */
-
-   auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO",
-#if LINUX
-                                                         1
+   drawBitmap(dc);
 #else
-                                                        0
-#endif
-       );
-   if( useBitmap )
+   auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO", 0 );
+   if( ignore_bitmap_pref || useBitmap )
    {
         drawBitmap(dc);
    }
    else
    {
-        drawVectorized(dc);
+       auto start = std::chrono::high_resolution_clock::now();
+       drawVectorized(dc);
+       auto end = std::chrono::high_resolution_clock::now();
+       std::chrono::duration<double> elapsed_seconds = end-start;
+
+       // If this draw takes more than, say, 1/10th of a second, our GPU is too slow. 
+       if( elapsed_seconds.count() > 0.1 )
+           ignore_bitmap_pref = true;
    }
+#endif
 }
 
 void CLFOGui::drawVectorized(CDrawContext* dc)
