@@ -47,6 +47,7 @@ public:
    // PluginLayer
    void updateDisplay();
    void setParameterAutomated(int externalparam, float value);
+   void patchChanged(void);
 
 private:
    static LV2_Handle instantiate(const LV2_Descriptor* descriptor,
