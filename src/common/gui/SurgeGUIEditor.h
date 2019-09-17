@@ -33,7 +33,6 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "SurgeSynthesizer.h"
 
 #include <vector>
-#include <string>
 
 class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
 {
@@ -184,12 +183,6 @@ public:
    void showTuningMenu(VSTGUI::CPoint &where);
    void tuningFileDropped(std::string fn);
    std::string tuningCacheForToggle = "";
-
-   /*
-   ** Menu and Manual URLs
-   */
-public:
-   static std::string additionalContentURL;
    
 private:
    /**

@@ -3004,7 +3004,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
 
     addCallbackMenu(settingsMenu, "Download Additional Content", []() {
-            Surge::UserInteractions::openURL(SurgeGUIEditor::additionalContentURL);
+            Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
     });
     eid++;
 
@@ -3172,8 +3172,5 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
 }
 
 #endif
-
-std::string SurgeGUIEditor::additionalContentURL = "https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content";
-;
 
 //------------------------------------------------------------------------------------------------

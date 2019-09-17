@@ -1,7 +1,6 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
-#include "SurgeGUIEditor.h"
 #include "COscillatorDisplay.h"
 #include "Oscillator.h"
 #include <time.h>
@@ -693,12 +692,12 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
    contextMenu->addEntry(actionItem);
-
+   
    auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content"));
    auto contentAction = [](CCommandMenuItem *item)
-   {
-       Surge::UserInteractions::openURL(SurgeGUIEditor::additionalContentURL);
-   };
+       {
+           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
+       };
    contentItem->setActions(contentAction,nullptr);
    contextMenu->addEntry(contentItem);
 }
