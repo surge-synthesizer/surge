@@ -2,8 +2,8 @@
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #include "CPatchBrowser.h"
+
 #include "UserInteractions.h"
-#include "SurgeGUIEditor.h"
 #include <vector>
 
 using namespace VSTGUI;
@@ -110,13 +110,12 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    }
    // contextMenu->addEntry("refresh list");
 
-
    contextMenu->addSeparator();
    auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content"));
    auto contentAction = [](CCommandMenuItem *item)
-   {
-       Surge::UserInteractions::openURL(SurgeGUIEditor::additionalContentURL);
-   };
+       {
+           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
+       };
    contentItem->setActions(contentAction,nullptr);
    contextMenu->addEntry(contentItem);
    

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
 #include <vt_dsp/lipol.h>
