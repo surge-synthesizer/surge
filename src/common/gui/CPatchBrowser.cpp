@@ -88,7 +88,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
           }
       }
 
-      populatePatchMenuForCategory(rightMouseCategory,contextMenu,single_category,main_e,true);
+      populatePatchMenuForCategory(rightMouseCategory,contextMenu,single_category,main_e,false);
    }
    else
    {
