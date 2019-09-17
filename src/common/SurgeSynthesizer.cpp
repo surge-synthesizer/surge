@@ -2137,6 +2137,9 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
    synth->patchid_queue = -1;
    synth->allNotesOff();
    synth->loadPatch(patchid);
+#if TARGET_LV2
+   synth->getParent()->patchChanged();
+#endif
    synth->halt_engine = false;
    return 0;
 }
@@ -2149,6 +2152,9 @@ void SurgeSynthesizer::processThreadunsafeOperations()
       if (patchid_queue >= 0)
       {
          loadPatch(patchid_queue);
+#if TARGET_LV2
+         getParent()->patchChanged();
+#endif
          patchid_queue = -1;
       }
 
