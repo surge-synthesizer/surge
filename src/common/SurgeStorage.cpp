@@ -255,7 +255,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    std::string userSpecifiedDataPath = Surge::Storage::getUserDefaultValue(this, "userDataPath", "UNSPEC" );
    if( userSpecifiedDataPath != "UNSPEC" )
    {
-       std::cout << "Got a custom user data path" << std::endl;
        userDataPath = userSpecifiedDataPath;
    }
    
