@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+#include <algorithm> // for std::min
 #include "DspUtilities.h"
 #include "SurgeStorage.h"
 #include "SurgeVoiceState.h"
