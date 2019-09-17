@@ -487,13 +487,35 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
 
 tresult SurgeVst3Processor::beginEdit(ParamID id)
 {
+   if( beginEditGuard.find(id) == beginEditGuard.end() )
+   {
+       beginEditGuard[id] = 0;
+   }
+   beginEditGuard[id] ++;
+   if (id >= getParameterCount())
+   {
+      return kInvalidArgument;
+   }
+
    int mappedId =
        SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
-   return Steinberg::Vst::SingleComponentEffect::beginEdit(mappedId);
+   if( beginEditGuard[id] == 1 )
+   {
+       return Steinberg::Vst::SingleComponentEffect::beginEdit(mappedId);
+   }
+   else
+   {
+       return kResultOk;
+   }
 }
 
 tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue valueNormalized)
 {
+   if (id >= getParameterCount())
+   {
+      return kInvalidArgument;
+   }
+
    int mappedId =
        SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
    return Steinberg::Vst::SingleComponentEffect::performEdit(mappedId, valueNormalized);
@@ -501,9 +523,34 @@ tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue v
 
 tresult SurgeVst3Processor::endEdit(ParamID id)
 {
+   if (id >= getParameterCount())
+   {
+      return kInvalidArgument;
+   }
+
+   auto endcount = -1;
+   if( beginEditGuard.find(id) == beginEditGuard.end() )
+   {
+       // this is a pretty bad software error
+       std::cerr << "End called with no matchign begin" << std::endl;
+       return kResultFalse;
+   }
+   else
+   {
+       beginEditGuard[id] --;
+       endcount = beginEditGuard[id];
+   };
+
    int mappedId =
        SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
-   return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
+   if( endcount == 0 )
+   {
+       return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
+   }
+   else
+   {
+       return kResultOk;
+   }
 }
 
 void SurgeVst3Processor::editorAttached(EditorView* editor)
@@ -663,7 +710,9 @@ ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, Pa
 
    if (tag >= getParameterCount())
    {
-      return kInvalidArgument;
+       // return kInvalidArgument;
+       // kInvalidArgument is not a ParamValue. In this case just
+       return 0;
    }
 
    return surgeInstance->valueToNormalized(tag, plainValue);
@@ -675,10 +724,13 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 
    if (tag >= getParameterCount())
    {
-      return kInvalidArgument;
+      // return kInvalidArgument;
+      // kInvalidArgument is not a ParamValue. In this case just
+      return 0;
    }
 
-   return surgeInstance->getParameter01(surgeInstance->remapExternalApiToInternalId(tag));
+   auto res = surgeInstance->getParameter01(surgeInstance->remapExternalApiToInternalId(tag));
+   return res;
 }
 
 tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValue value)
@@ -699,7 +751,7 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
    ** we are specially dealing with midi controls it is the wrong thing to do; it makes the FX
    ** control and the control 0 the same. So here just pass the tag on directly.
    */
-   surgeInstance->setParameter01(tag, value);
+   surgeInstance->setParameter01(tag, value, true);
 
    return kResultOk;
 }
@@ -752,6 +804,13 @@ void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
    int externalparam = SurgeGUIEditor::unapplyParameterOffset(
        surgeInstance->remapExternalApiToInternalId(inputParam));
 
+   /*
+   ** This particular choice of implementation is why we have nested
+   ** begin/end pairs with the guard. We discovered this clsoing in on
+   ** 1.6.2 and decided to leave it and add the guard, but a future version
+   ** of ourselves should think deeply about how we want to implement this,
+   ** since neither AU or VST2 use this approach
+   */
    beginEdit(externalparam);
    performEdit(externalparam, value);
    endEdit(externalparam);

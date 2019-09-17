@@ -6,6 +6,7 @@
 #include <util/FpuState.h>
 #include <memory>
 #include <set>
+#include <map>
 
 using namespace Steinberg;
 
@@ -135,6 +136,7 @@ protected:
 
    std::unique_ptr<SurgeSynthesizer> surgeInstance;
    std::set<SurgeGUIEditor*> viewsSet;
+   std::map<int, int> beginEditGuard;
    int blockpos;
 
    bool disableZoom;
