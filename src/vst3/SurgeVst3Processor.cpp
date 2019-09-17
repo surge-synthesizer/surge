@@ -656,7 +656,7 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
 
 tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
                                                              ParamValue valueNormalized,
-                                                             String128 string)
+                                                             String128 ontostring)
 {
    CHECK_INITIALIZED
 
@@ -669,9 +669,9 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
    wchar_t tmpwchar[ 512 ];
    surgeInstance->getParameterStringW(tag, valueNormalized, tmpwchar);
 #if MAC || LINUX
-   std::copy(string, string+128, tmpwchar);
+   std::copy(tmpwchar, tmpwchar+128, ontostring );
 #else
-   swprintf(reinterpret_cast<wchar_t *>(string), 128, L"%S", tmpwchar);
+   swprintf(reinterpret_cast<wchar_t *>(ontostring), 128, L"%S", tmpwchar);
 #endif   
 
    return kResultOk;
