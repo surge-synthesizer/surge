@@ -26,6 +26,7 @@ enum ctrltypes
    ct_percent_bidirectional,
    ct_pitch_octave,
    ct_pitch_semi7bp,
+   ct_pitch_semi7bp_absolutable,
    ct_pitch,
    ct_fmratio,
    ct_fmratio_int,

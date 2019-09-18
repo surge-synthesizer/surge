@@ -177,7 +177,7 @@ bool Parameter::can_be_absolute()
    switch (ctrltype)
    {
    case ct_oscspread:
-   case ct_pitch_semi7bp:
+   case ct_pitch_semi7bp_absolutable:
       return true;
    }
    return false;
@@ -256,6 +256,7 @@ void Parameter::set_type(int ctrltype)
       val_default.i = 2;
       break;
    case ct_pitch_semi7bp:
+   case ct_pitch_semi7bp_absolutable:
       valtype = vt_float;
       val_min.f = -7;
       val_max.f = 7;
@@ -746,6 +747,7 @@ float Parameter::get_extended(float f)
    case ct_freq_shift:
       return 100.f * f;
    case ct_pitch_semi7bp:
+   case ct_pitch_semi7bp_absolutable:
       return 12.f * f;
    default:
       return f;
@@ -953,6 +955,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.2f semitones", f);
          break;
       case ct_pitch_semi7bp:
+          sprintf(txt, "%.2f", get_extended(f));
+          break;
+      case ct_pitch_semi7bp_absolutable:
          if(absolute)
              sprintf(txt, "%.1f Hz", 10 * get_extended(f));
          else

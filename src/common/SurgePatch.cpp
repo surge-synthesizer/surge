@@ -161,7 +161,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                        cg_OSC, osc, false, Surge::ParamConfig::kHorizontal | kNoPopup));
          py = gui_mainsec_slider_y;
          a->push_back(scene[sc].osc[osc].pitch.assign(p_id++, id_s++, "pitch", "Pitch",
-                                                      ct_pitch_semi7bp, px, py, sc_id, cg_OSC, osc,
+                                                      ct_pitch_semi7bp_absolutable, px, py, sc_id, cg_OSC, osc,
                                                       true, Surge::ParamConfig::kHorizontal | kSemitone | sceasy));
          py += gui_hfader_dist;
          for (int i = 0; i < n_osc_params; i++)
