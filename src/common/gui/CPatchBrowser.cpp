@@ -111,7 +111,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    // contextMenu->addEntry("refresh list");
 
    contextMenu->addSeparator();
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content"));
+   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content..."));
    auto contentAction = [](CCommandMenuItem *item)
        {
            Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
