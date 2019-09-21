@@ -31,6 +31,7 @@
 #include <objc/runtime.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import <AudioUnit/AUCocoaUIView.h>
+#import <AppKit/AppKit.h>
 #include "aulayer.h"
 #include "aulayer_cocoaui.h"
 

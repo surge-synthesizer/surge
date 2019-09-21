@@ -688,12 +688,12 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
 
    // Add direct open here
    contextMenu->addSeparator();
-   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc("Open Wave Table from File"));
+   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc("Open Wave Table from File..."));
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
    contextMenu->addEntry(actionItem);
    
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content"));
+   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content..."));
    auto contentAction = [](CCommandMenuItem *item)
        {
            Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
