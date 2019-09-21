@@ -166,6 +166,7 @@ bool Parameter::can_extend_range()
    switch (ctrltype)
    {
    case ct_pitch_semi7bp:
+   case ct_pitch_semi7bp_absolutable:
    case ct_freq_shift:
       return true;
    }

@@ -455,6 +455,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
 #else
       c.name = p.generic_string().substr(patchpathSubstrLength);
 #endif
+      c.internalid = category;
 
       c.numberOfPatchesInCatgory = 0;
       for (auto& f : fs::directory_iterator(p))

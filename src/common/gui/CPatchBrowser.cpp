@@ -188,7 +188,7 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
             int idx = 0;
             for (auto &cc : storage->patch_category)
             {
-                if (cc.name == childcat.name) break;
+                if (cc.name == childcat.name && cc.internalid == childcat.internalid) break;
                 idx++;
             }
             bool checkedKid = populatePatchMenuForCategory( idx, subMenu, false, main_e, false );

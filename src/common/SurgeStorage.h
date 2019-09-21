@@ -482,6 +482,7 @@ struct PatchCategory
    std::vector<PatchCategory> children;
    bool isRoot;
 
+   int internalid;
    int numberOfPatchesInCatgory;
    int numberOfPatchesInCategoryAndChildren;
 };
