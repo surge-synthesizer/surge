@@ -61,7 +61,7 @@ void promptError(const std::string &message, const std::string &title,
                  "--title", title.c_str(),
                  (char*)nullptr) < 0)
       {
-         exit(0);
+         _exit(0);
       }
    }
     std::cerr << "Surge Error\n"
@@ -91,7 +91,7 @@ MessageResult promptOKCancel(const std::string &message, const std::string &titl
                  "--text", message.c_str(),
                  "--title", title.c_str(),
                  (char*)nullptr);
-      exit(1);
+      _exit(65);
    }
 
    int wret;
@@ -105,8 +105,16 @@ MessageResult promptOKCancel(const std::string &message, const std::string &titl
       return UserInteractions::CANCEL;
    }
 
-   return (WEXITSTATUS(wstatus) == 0) ?
-      UserInteractions::OK : UserInteractions::CANCEL;
+   auto status = WEXITSTATUS(wstatus);
+   switch( status )
+   {
+      case 0:
+      case 65:
+         // zenity worked or was not installed
+         return UserInteractions::OK;
+      default:
+         return UserInteractions::CANCEL;
+   }
 }
 
 void openURL(const std::string &url)
@@ -115,7 +123,7 @@ void openURL(const std::string &url)
    {
       if (execlp("xdg-open", "xdg-open", url.c_str(), (char*)nullptr) < 0)
       {
-         exit(0);
+         _exit(0);
       }
    }
 }
