@@ -35,7 +35,9 @@ public:
               float detune,
               MidiKeyState* keyState,
               MidiChannelState* mainChannelState,
-              MidiChannelState* voiceChannelState);
+              MidiChannelState* voiceChannelState,
+              bool mpeEnabled
+       );
    ~SurgeVoice();
 
    void release();
@@ -173,4 +175,7 @@ private:
    // filterblock stuff
    int id_cfa, id_cfb, id_kta, id_ktb, id_emoda, id_emodb, id_resoa, id_resob, id_drive, id_vca,
        id_vcavel, id_fbalance, id_feedback;
+
+   // MPE special cases
+   bool mpeEnabled;
 };

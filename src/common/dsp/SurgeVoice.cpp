@@ -53,13 +53,16 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
                        float detune,
                        MidiKeyState* keyState,
                        MidiChannelState* mainChannelState,
-                       MidiChannelState* voiceChannelState)
+                       MidiChannelState* voiceChannelState,
+                       bool mpeEnabled
+    )
 //: fb(storage,oscene)
 {
    // assign pointers
    this->storage = storage;
    this->scene = oscene;
    this->paramptr = params;
+   this->mpeEnabled = mpeEnabled;
    assert(storage);
    assert(oscene);
 
@@ -377,9 +380,31 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
       int src_id = iter->source_id;
       int dst_id = iter->destination_id;
       float depth = iter->depth;
+
       if (modsources[src_id])
+      {
          localcopy[dst_id].f += depth * modsources[src_id]->output;
+      }
       iter++;
+   }
+
+   if( mpeEnabled )
+   {
+       // See github issue 1214. This basically compensates for
+       // channel AT being per-voice in MPE mode (since it is per channel)
+       // vs per-scene (since it is per keyboard in non MPE mode).
+       iter = scene->modulation_scene.begin();
+       while( iter != scene->modulation_scene.end() )
+       {
+           int src_id = iter->source_id;
+           if( src_id == ms_aftertouch && modsources[src_id] )
+           {
+               int dst_id = iter->destination_id;
+               float depth = iter->depth;
+               localcopy[dst_id].f += depth * modsources[src_id]->output;
+           }
+           iter++;
+       }
    }
 
    update_portamento();
