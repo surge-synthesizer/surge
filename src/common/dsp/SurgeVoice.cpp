@@ -400,8 +400,12 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
            if( src_id == ms_aftertouch && modsources[src_id] )
            {
                int dst_id = iter->destination_id;
-               float depth = iter->depth;
-               localcopy[dst_id].f += depth * modsources[src_id]->output;
+               // I don't THINK we need this but am not sure the global params are in my localcopy span
+               if( dst_id >= 0 && dst_id < n_scene_params )
+               {
+                   float depth = iter->depth;
+                   localcopy[dst_id].f += depth * modsources[src_id]->output;
+               }
            }
            iter++;
        }
