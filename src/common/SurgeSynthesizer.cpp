@@ -422,7 +422,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
          new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
                                  storage.getPatch().scenedata[scene], key, velocity, channel, scene,
                                  detune, &channelState[channel].keyState[key],
-                                 &channelState[mpeMainChannel], &channelState[channel]);
+                                 &channelState[mpeMainChannel], &channelState[channel], mpeEnabled);
       }
       break;
    }
@@ -457,7 +457,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
          new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
                                  storage.getPatch().scenedata[scene], key, velocity, channel, scene,
                                  detune, &channelState[channel].keyState[key],
-                                 &channelState[mpeMainChannel], &channelState[channel]);
+                                 &channelState[mpeMainChannel], &channelState[channel], mpeEnabled);
       }
    }
    break;
@@ -503,7 +503,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
                                     storage.getPatch().scenedata[scene], key, velocity, channel,
                                     scene, detune, &channelState[channel].keyState[key],
-                                    &channelState[mpeMainChannel], &channelState[channel]);
+                                    &channelState[mpeMainChannel], &channelState[channel], mpeEnabled);
          }
       }
    }
