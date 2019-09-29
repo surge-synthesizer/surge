@@ -132,6 +132,7 @@ void lv2_generate_ttl(const char* baseName)
                   "        lv2:index " << portIndex << " ;\n"
                   "        lv2:symbol \"audio_in_" << (i + 1) << "\" ;\n"
                   "        lv2:name \"Audio input " << (i + 1) << "\" ;\n"
+                  "        lv2:portProperty lv2:connectionOptional ;\n"
                   "    ]";
       }
       // audio output
@@ -162,7 +163,7 @@ void lv2_generate_ttl(const char* baseName)
               "    lv2:optionalFeature ui:parent,\n"
               "                        ui:resize,\n"
               "                        ui:noUserResize ;\n"
-              "    lv2:requiredFeature ui:idleInterface ,\n";
+              "    lv2:requiredFeature ui:idleInterface ,\n"
               "                        <" LV2_INSTANCE_ACCESS_URI "> ;\n"
               "    lv2:extensionData ui:idleInterface .\n";
    }
