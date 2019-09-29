@@ -132,6 +132,7 @@ void lv2_generate_ttl(const char* baseName)
                   "        lv2:index " << portIndex << " ;\n"
                   "        lv2:symbol \"audio_in_" << (i + 1) << "\" ;\n"
                   "        lv2:name \"Audio input " << (i + 1) << "\" ;\n"
+                  "        lv2:portProperty lv2:connectionOptional ;\n"
                   "    ]";
       }
       // audio output

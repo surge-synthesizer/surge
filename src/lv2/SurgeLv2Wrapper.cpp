@@ -114,8 +114,6 @@ void SurgeLv2Wrapper::run(LV2_Handle instance, uint32_t sample_count)
       }
    }
 
-   s->process_input = false /*(!plug_is_synth || input_connected)*/;
-
    bool isPlaying = SurgeLv2::isNotZero(self->_timePositionSpeed);
    bool hasValidTempo = SurgeLv2::isGreaterThanZero(self->_timePositionTempoBpm);
    bool hasValidPosition = self->_timePositionBeat >= 0.0;
@@ -139,11 +137,18 @@ void SurgeLv2Wrapper::run(LV2_Handle instance, uint32_t sample_count)
 
    const float* inputs[NumInputs];
    float* outputs[NumOutputs];
+   bool input_connected = true;
 
    for (uint32_t i = 0; i < NumInputs; ++i)
+   {
       inputs[i] = (const float*)self->_dataLocation[pAudioInput1 + i];
+      if (!inputs[i])
+         input_connected = false;
+   }
    for (uint32_t i = 0; i < NumOutputs; ++i)
       outputs[i] = (float*)self->_dataLocation[pAudioOutput1 + i];
+
+   s->process_input = (/*!plug_is_synth ||*/ input_connected);
 
    for (uint32_t i = 0; i < sample_count; ++i)
    {
