@@ -162,7 +162,7 @@ void lv2_generate_ttl(const char* baseName)
               "    lv2:optionalFeature ui:parent,\n"
               "                        ui:resize,\n"
               "                        ui:noUserResize ;\n"
-              "    lv2:requiredFeature ui:idleInterface ,\n";
+              "    lv2:requiredFeature ui:idleInterface ,\n"
               "                        <" LV2_INSTANCE_ACCESS_URI "> ;\n"
               "    lv2:extensionData ui:idleInterface .\n";
    }
