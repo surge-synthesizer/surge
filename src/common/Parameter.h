@@ -40,6 +40,7 @@ enum ctrltypes
    ct_decibel_attenuation,
    ct_decibel_attenuation_large,
    ct_decibel_fmdepth,
+   ct_decibel_extendable,
    ct_freq_audible,
    ct_freq_mod,
    ct_freq_hpf,
@@ -91,6 +92,7 @@ enum ctrltypes
    ct_sinefmlegacy,
    ct_countedset_percent, // what % through a counted set are you
    ct_vocoder_bandcount,
+   ct_distortion_waveshape,
    num_ctrltypes,
 };
 

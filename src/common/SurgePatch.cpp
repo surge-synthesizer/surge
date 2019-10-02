@@ -50,7 +50,8 @@ const int gui_mid_topbar_y = 17;
 // than ctrl7 by +1), custom controllers have names (guess for pre-rev9 patches)
 // 9 -> 10 added character parameter
 // 10 -> 11 (1.6.2 release) added DAW Extra State
-const int ff_revision = 11;
+// 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
+const int ff_revision = 12;
 
 SurgePatch::SurgePatch(SurgeStorage* storage)
 {

@@ -825,6 +825,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_decibel:
          case ct_decibel_narrow:
          case ct_decibel_extra_narrow:
+         case ct_decibel_extendable:
          case ct_freq_mod:
          case ct_percent_bidirectional:
          case ct_freq_shift:
