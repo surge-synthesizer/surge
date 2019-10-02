@@ -3168,7 +3168,31 @@ VSTGUI::CCommandMenuItem* SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* t
 #if TARGET_VST3
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
 {
+   float izfx = newSize->getWidth() * 1.0 / WINDOW_SIZE_X * 100.0;
+   float izfy = newSize->getHeight() * 1.0 / WINDOW_SIZE_Y * 100.0;
+   float izf = std::min(izfx, izfy);
+   izf = std::max(izf, 1.0f*minimumZoom);
+   
+   float zfd = izf - zoomFactor;
+   if( zfd > 1 || zfd < -1 )
+   {
+      setZoomFactor(izf);
+   }
+
    return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
+}
+Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect* newSize)
+{
+   // float tratio = 1.0 * WINDOW_SIZE_X / WINDOW_SIZE_Y;
+   // float cratio = 1.0 * newSize->getWidth() / newSize->getHeight();
+
+   // we want cratio == tration by adjusting height so
+   // WSX / WSY = gW / gH
+   // gH = gW * WSY / WSX
+
+   float newHeight = 1.0 * newSize->getWidth() * WINDOW_SIZE_Y / WINDOW_SIZE_X;
+   newSize->bottom = newSize->top + std::ceil(newHeight);
+   return Steinberg::kResultTrue;
 }
 
 #endif
