@@ -17,8 +17,6 @@
 #include <codecvt>
 #include <string.h>
 
-#define MIDI_CONTROLLER_0 20000
-#define MIDI_CONTROLLER_MAX 24096
 
 using namespace Steinberg::Vst;
 
@@ -96,6 +94,9 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 
    createSurge();
 
+   midi_controller_0 = getParameterCountWithoutMappings();
+   midi_controller_max = midi_controller_0 + n_midi_controller_params;
+   
    return kResultOk;
 }
 
@@ -270,7 +271,6 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
       for (int32 i = 0; i < numParamsChanged; i++)
       {
          IParamValueQueue* paramQueue = parameterChanges->getParameterData(i);
-
          if (paramQueue)
          {
             int32 offsetSamples;
@@ -279,15 +279,18 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
 
             int id = paramQueue->getParameterId();
 
-            if (id >= MIDI_CONTROLLER_0 && id <= MIDI_CONTROLLER_MAX)
+            
+            if (id >= midi_controller_0 && id <= midi_controller_max)
             {
-               int chancont = id - MIDI_CONTROLLER_0;
+               int chancont = id - midi_controller_0;
                int channel = chancont & 0xF;
                int cont = chancont >> 4;
+               
 
-               for (int i = 0; i < numPoints; ++i)
+               for (int i = 0; i < numPoints && cont != 45; ++i)
                {
                   paramQueue->getPoint(0, offsetSamples, value);
+                  // std::cout << "MIDI id=" << id << " chancont=" << chancont << " channel=" << channel << " controller=" << cont << " value=" << value << std::endl;
                   if (cont < 128)
                   {
                      if (cont == ControllerNumbers::kCtrlAllSoundsOff ||
@@ -324,7 +327,7 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
             else
             {
                int id = paramQueue->getParameterId();
-               if (numPoints == 1)
+               if (numPoints == 1 && id < getParameterCountWithoutMappings() )
                {
                   paramQueue->getPoint(0, offsetSamples, value);
 
@@ -333,6 +336,7 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                else
                {
                   // Unclear what to do here
+                  std::cerr << "Unable to handle parameter " << id << " with npoints " << numPoints << std::endl;
                }
             }
          }
@@ -496,6 +500,10 @@ tresult SurgeVst3Processor::beginEdit(ParamID id)
    {
       return kInvalidArgument;
    }
+   if( id >= getParameterCountWithoutMappings() )
+   {
+      return Steinberg::Vst::SingleComponentEffect::beginEdit(id);
+   }
 
    int mappedId =
        SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
@@ -515,6 +523,10 @@ tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue v
    {
       return kInvalidArgument;
    }
+   if( id >= getParameterCountWithoutMappings() )
+   {
+      return Steinberg::Vst::SingleComponentEffect::performEdit(id, valueNormalized);
+   }
 
    int mappedId =
        SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
@@ -523,7 +535,7 @@ tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue v
 
 tresult SurgeVst3Processor::endEdit(ParamID id)
 {
-   if (id >= getParameterCount())
+   if (id >= getParameterCount() )
    {
       return kInvalidArgument;
    }
@@ -541,15 +553,29 @@ tresult SurgeVst3Processor::endEdit(ParamID id)
        endcount = beginEditGuard[id];
    };
 
-   int mappedId =
-       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
-   if( endcount == 0 )
+   if( id > getParameterCountWithoutMappings() )
    {
-       return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
+      if( endcount == 0 )
+      {
+         return Steinberg::Vst::SingleComponentEffect::endEdit(id);
+      }
+      else
+      {
+         return kResultOk;
+      }
    }
    else
    {
-       return kResultOk;
+      int mappedId =
+         SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+      if( endcount == 0 )
+      {
+         return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
+      }
+      else
+      {
+         return kResultOk;
+      }
    }
 }
 
@@ -583,11 +609,7 @@ void SurgeVst3Processor::removeDependentView(SurgeGUIEditor* view)
 
 int32 PLUGIN_API SurgeVst3Processor::getParameterCount()
 {
-   if (exportAllMidiControllers())
-   {
-      return getParameterCountWithoutMappings() + kCountCtrlNumber;
-   }
-   return getParameterCountWithoutMappings();
+   return getParameterCountWithoutMappings() + n_midi_controller_params;
 }
 
 int32 SurgeVst3Processor::getParameterCountWithoutMappings()
@@ -607,50 +629,56 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
    if (isMidiMapController(paramIndex))
    {
       info.flags = 0;
-      info.id = 0;
+      info.id = paramIndex;
+
+      info.stepCount = 0; // 1 = toggle,
+      info.unitId = 0; // meta.clump;
+      
+      // FIXME - set the title
    }
-
-   int id = surgeInstance->remapExternalApiToInternalId(paramIndex);
-
-   parametermeta meta;
-   surgeInstance->getParameterMeta(id, meta);
-
-   info.id = id;
-
-   /*
-   ** String128 is a TChar[128] is a char16[128]. On mac, wchar is a char32 so
-   ** the original reinrpret cast didn't work well.
-   **
-   ** I thought a lot about using std::wstring_convert<std::codecvt_utf8<wchar_t>> here
-   ** but in the end decided to just copy the bytes
-   */
-   wchar_t tmpwchar[512];
-   surgeInstance->getParameterNameW(id, tmpwchar);
+   else
+   {
+      int id = surgeInstance->remapExternalApiToInternalId(paramIndex);
+      
+      parametermeta meta;
+      surgeInstance->getParameterMeta(id, meta);
+      
+      info.id = id;
+      
+      /*
+      ** String128 is a TChar[128] is a char16[128]. On mac, wchar is a char32 so
+      ** the original reinrpret cast didn't work well.
+      **
+      ** I thought a lot about using std::wstring_convert<std::codecvt_utf8<wchar_t>> here
+      ** but in the end decided to just copy the bytes
+      */
+      wchar_t tmpwchar[512];
+      surgeInstance->getParameterNameW(id, tmpwchar);
 #if MAC || LINUX
-   std::copy(tmpwchar, tmpwchar + 128, info.title);
+      std::copy(tmpwchar, tmpwchar + 128, info.title);
 #else
-   swprintf(reinterpret_cast<wchar_t *>(info.title), 128, L"%S", tmpwchar);
+      swprintf(reinterpret_cast<wchar_t *>(info.title), 128, L"%S", tmpwchar);
 #endif   
-
-   surgeInstance->getParameterShortNameW(id, tmpwchar);
+      
+      surgeInstance->getParameterShortNameW(id, tmpwchar);
 #if MAC || LINUX
-   std::copy(tmpwchar, tmpwchar + 128, info.shortTitle);
+      std::copy(tmpwchar, tmpwchar + 128, info.shortTitle);
 #else
-   swprintf(reinterpret_cast<wchar_t *>(info.shortTitle), 128, L"%S", tmpwchar);
+      swprintf(reinterpret_cast<wchar_t *>(info.shortTitle), 128, L"%S", tmpwchar);
 #endif   
-
-   surgeInstance->getParameterUnitW(id, tmpwchar);
+      
+      surgeInstance->getParameterUnitW(id, tmpwchar);
 #if MAC || LINUX
-   std::copy(tmpwchar, tmpwchar + 128, info.units);
+      std::copy(tmpwchar, tmpwchar + 128, info.units);
 #else
-   swprintf(reinterpret_cast<wchar_t *>(info.units), 128, L"%S", tmpwchar);
+      swprintf(reinterpret_cast<wchar_t *>(info.units), 128, L"%S", tmpwchar);
 #endif   
-
-   info.stepCount = 0; // 1 = toggle,
-   info.defaultNormalizedValue = meta.fdefault;
-   info.unitId = 0; // meta.clump;
-   info.flags = ParameterInfo::kCanAutomate;
-
+      
+      info.stepCount = 0; // 1 = toggle,
+      info.defaultNormalizedValue = meta.fdefault;
+      info.unitId = 0; // meta.clump;
+      info.flags = ParameterInfo::kCanAutomate;
+   }
    return kResultOk;
 }
 
@@ -658,13 +686,17 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
                                                              ParamValue valueNormalized,
                                                              String128 ontostring)
 {
-   CHECK_INITIALIZED
+   CHECK_INITIALIZED;
 
-   if (tag >= getParameterCount())
+   if (tag >= getParameterCount() )
    {
       return kInvalidArgument;
    }
 
+   if( tag >= getParameterCountWithoutMappings() )
+   {
+      return kResultOk;
+   }
    
    wchar_t tmpwchar[ 512 ];
    surgeInstance->getParameterStringW(tag, valueNormalized, tmpwchar);
@@ -681,8 +713,8 @@ tresult PLUGIN_API SurgeVst3Processor::getParamValueByString(ParamID tag,
                                                              TChar* string,
                                                              ParamValue& valueNormalized)
 {
-   CHECK_INITIALIZED
-
+   CHECK_INITIALIZED;
+      
    if (tag >= getParameterCount())
    {
       return kInvalidArgument;
@@ -694,11 +726,15 @@ tresult PLUGIN_API SurgeVst3Processor::getParamValueByString(ParamID tag,
 ParamValue PLUGIN_API SurgeVst3Processor::normalizedParamToPlain(ParamID tag,
                                                                  ParamValue valueNormalized)
 {
-   ABORT_IF_NOT_INITIALIZED
+   ABORT_IF_NOT_INITIALIZED;
 
    if (tag >= getParameterCount())
    {
       return kInvalidArgument;
+   }
+   if( tag >= getParameterCountWithoutMappings())
+   {
+      return 0;
    }
 
    return surgeInstance->normalizedToValue(tag, valueNormalized);
@@ -708,7 +744,7 @@ ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, Pa
 {
    ABORT_IF_NOT_INITIALIZED
 
-   if (tag >= getParameterCount())
+   if (tag >= getParameterCountWithoutMappings())
    {
        // return kInvalidArgument;
        // kInvalidArgument is not a ParamValue. In this case just
@@ -722,7 +758,7 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 {
    ABORT_IF_NOT_INITIALIZED
 
-   if (tag >= getParameterCount())
+   if (tag >= getParameterCountWithoutMappings())
    {
       // return kInvalidArgument;
       // kInvalidArgument is not a ParamValue. In this case just
@@ -735,11 +771,15 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 
 tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValue value)
 {
-   CHECK_INITIALIZED
+   CHECK_INITIALIZED;
 
    if (tag >= getParameterCount())
    {
       return kInvalidArgument;
+   }
+   if( tag >= getParameterCountWithoutMappings() )
+   {
+      return kResultOk;
    }
 
    /*
@@ -771,16 +811,13 @@ tresult PLUGIN_API SurgeVst3Processor::getMidiControllerAssignment(int32 busInde
    /*
    ** Alrighty dighty. What VST3 wants us to do here is, for the controller number,
    ** tell it a parameter to map to. We alas don't have a parameter to map to because
-   ** that's not how surge works. But... we can map to parameter id of MIDI_CONTROLLER_0 + id
+   ** that's not how surge works. But... we can map to parameter id of midi_controller_0 + id
    ** and test that elsewhere
    */
-   id = MIDI_CONTROLLER_0 + midiControllerNumber * 16 + channel;
-   return kResultTrue;
-}
 
-bool SurgeVst3Processor::exportAllMidiControllers()
-{
-   return false;
+   id = midi_controller_0 + midiControllerNumber * 16 + channel;
+   // std::cout << "getMidiControllerAssignment " << channel << " midiControllerNumber=" << midiControllerNumber << " id=" << id << std::endl;
+   return kResultTrue;
 }
 
 bool SurgeVst3Processor::isRegularController(int32 paramIndex)
@@ -790,7 +827,7 @@ bool SurgeVst3Processor::isRegularController(int32 paramIndex)
 
 bool SurgeVst3Processor::isMidiMapController(int32 paramIndex)
 {
-   return paramIndex >= getParameterCountWithoutMappings() < getParameterCount();
+   return paramIndex >= getParameterCountWithoutMappings() && paramIndex < getParameterCount();
 }
 
 void SurgeVst3Processor::updateDisplay()
@@ -801,6 +838,8 @@ void SurgeVst3Processor::updateDisplay()
 
 void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
 {
+   if( inputParam >= getParameterCountWithoutMappings() ) return;
+   
    int externalparam = SurgeGUIEditor::unapplyParameterOffset(
        surgeInstance->remapExternalApiToInternalId(inputParam));
 

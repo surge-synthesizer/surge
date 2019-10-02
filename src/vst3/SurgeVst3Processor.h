@@ -3,6 +3,7 @@
 #include "public.sdk/source/vst/vstsinglecomponenteffect.h"
 #include "public.sdk/source/vst/vsteditcontroller.h"
 #include "pluginterfaces/vst/ivstevents.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include <util/FpuState.h>
 #include <memory>
 #include <set>
@@ -104,10 +105,6 @@ public:
                                Steinberg::Vst::CtrlNumber midiControllerNumber,
                                Steinberg::Vst::ParamID& id /*out*/) override;
 
-   //! when true, surge exports all normal 128 CC parameters, aftertouch and pitch bend as
-   //! parameters (but not automatable)
-   bool exportAllMidiControllers();
-
    void updateDisplay();
    void setParameterAutomated(int externalparam, float value);
 
@@ -146,6 +143,9 @@ protected:
    
    FpuState _fpuState;
 
+   int midi_controller_0, midi_controller_max;
+   const int n_midi_controller_params = 16 * Steinberg::Vst::ControllerNumbers::kCountCtrlNumber;
+   
 public:
    OBJ_METHODS(SurgeVst3Processor, Steinberg::Vst::SingleComponentEffect)
    DEFINE_INTERFACES
