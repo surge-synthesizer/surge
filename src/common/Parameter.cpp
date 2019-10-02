@@ -168,6 +168,7 @@ bool Parameter::can_extend_range()
    case ct_pitch_semi7bp:
    case ct_pitch_semi7bp_absolutable:
    case ct_freq_shift:
+   case ct_decibel_extendable:
       return true;
    }
    return false;
@@ -309,6 +310,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 1;
       break;
    case ct_decibel:
+   case ct_decibel_extendable:
       valtype = vt_float;
       val_min.f = -48;
       val_max.f = 48;
@@ -486,7 +488,7 @@ void Parameter::set_type(int ctrltype)
    case ct_wstype:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_ws_type - 1;
+      val_max.i = n_ws_type - 1; 
       val_default.i = 0;
       break;
    case ct_midikey:
@@ -590,6 +592,12 @@ void Parameter::set_type(int ctrltype)
       val_max.i = 20;
       valtype = vt_int;
       val_default.i = 20;
+      break;
+   case ct_distortion_waveshape:
+      val_min.i = 0;
+      val_max.i = n_ws_type - 2; // we want to skip none also
+      valtype = vt_int;
+      val_default.i = 0;
       break;
    case ct_countedset_percent:
       val_min.f = 0;
@@ -750,6 +758,8 @@ float Parameter::get_extended(float f)
    case ct_pitch_semi7bp:
    case ct_pitch_semi7bp_absolutable:
       return 12.f * f;
+   case ct_decibel_extendable:
+      return 3.f * f;
    default:
       return f;
    }
@@ -909,6 +919,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_decibel_extra_narrow:
          sprintf(txt, "%.2f dB", f);
          break;
+      case ct_decibel_extendable:
+         sprintf(txt, "%.2f dB", get_extended(f));
+         break;
       case ct_bandwidth:
          sprintf(txt, "%.2f octaves", f);
          break;
@@ -1029,8 +1042,32 @@ void Parameter::get_display(char* txt, bool external, float ef)
              sprintf( txt, "Consistent w. FM2/3" );
          break;
       case ct_vocoder_bandcount:
-         // FIXME - do better than this of course
          sprintf(txt, "%d bands", i);
+         break;
+      case ct_distortion_waveshape:
+         // FIXME - do better than this of course
+         switch( i + 1 )
+         {
+         case wst_tanh:
+            sprintf(txt,"tanh");
+            break;
+         case wst_hard:
+            sprintf(txt,"hard");
+            break;
+         case wst_asym:
+            sprintf(txt,"asym");
+            break;
+         case wst_sinus:
+            sprintf(txt,"sin");
+            break;
+         case wst_digi:
+            sprintf(txt,"digi");
+            break;
+         default:
+         case wst_none:
+            sprintf(txt,"none");
+            break;
+         }
          break;
       case ct_oscroute:
          switch (i)

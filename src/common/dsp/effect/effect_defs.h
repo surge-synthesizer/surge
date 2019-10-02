@@ -258,6 +258,8 @@ public:
    virtual const char* group_label(int id) override;
    virtual int group_label_ypos(int id) override;
 
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+
 private:
    BiquadFilter band1, band2, lp1, lp2;
    int bi; // block increment (to keep track of events not occurring every n blocks)
