@@ -80,6 +80,7 @@ public:
    }
 
    virtual Steinberg::tresult PLUGIN_API onSize(Steinberg::ViewRect* newSize) override;
+   virtual Steinberg::tresult PLUGIN_API checkSizeConstraint(Steinberg::ViewRect* newSize) override;
 #endif
 
 
