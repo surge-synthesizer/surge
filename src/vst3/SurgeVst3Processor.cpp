@@ -17,7 +17,6 @@
 #include <codecvt>
 #include <string.h>
 
-
 using namespace Steinberg::Vst;
 
 #define CHECK_INITIALIZED                                                                          \
@@ -287,10 +286,16 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                int cont = chancont >> 4;
                
 
-               for (int i = 0; i < numPoints && cont != 45; ++i)
+               for (int i = 0; i < numPoints; ++i)
                {
                   paramQueue->getPoint(0, offsetSamples, value);
-                  // std::cout << "MIDI id=" << id << " chancont=" << chancont << " channel=" << channel << " controller=" << cont << " value=" << value << std::endl;
+                  /*
+                  if( i == 0 ) 
+                  {
+                     std::cout << "MIDI id=" << id << " chancont=" << chancont << " channel=" << channel << " controller=" << cont << " value=" << value << std::endl;
+                  }
+                  */
+                  
                   if (cont < 128)
                   {
                      if (cont == ControllerNumbers::kCtrlAllSoundsOff ||
@@ -502,7 +507,7 @@ tresult SurgeVst3Processor::beginEdit(ParamID id)
    }
    if( id >= getParameterCountWithoutMappings() )
    {
-      return Steinberg::Vst::SingleComponentEffect::beginEdit(id);
+      return kResultOk;
    }
 
    int mappedId =
@@ -525,7 +530,7 @@ tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue v
    }
    if( id >= getParameterCountWithoutMappings() )
    {
-      return Steinberg::Vst::SingleComponentEffect::performEdit(id, valueNormalized);
+      return kResultOk;
    }
 
    int mappedId =
@@ -555,14 +560,7 @@ tresult SurgeVst3Processor::endEdit(ParamID id)
 
    if( id > getParameterCountWithoutMappings() )
    {
-      if( endcount == 0 )
-      {
-         return Steinberg::Vst::SingleComponentEffect::endEdit(id);
-      }
-      else
-      {
-         return kResultOk;
-      }
+      return kResultOk;
    }
    else
    {
