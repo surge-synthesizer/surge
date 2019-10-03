@@ -169,6 +169,7 @@ public:
    }
    int  getZoomFactor() { return zoomFactor; }
    void setZoomFactor(int zf);
+   bool doesZoomFitToScreen(int zf, int &correctedZf); // returns true if it fits; false if not; sets correctedZF to right size in either case
    void disableZoom()
    {
       zoomEnabled = false;
