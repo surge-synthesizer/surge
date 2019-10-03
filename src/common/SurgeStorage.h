@@ -67,7 +67,7 @@ const int n_scene_params = 271;
 const int n_global_params = 113;
 const int n_global_postparams = 1;
 const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
-const int metaparam_offset = 2048;
+const int metaparam_offset = 20480; // has to be bigger than total + 16 * 130 for fake VST3 mapping
 
 enum sub3_scenemode
 {
