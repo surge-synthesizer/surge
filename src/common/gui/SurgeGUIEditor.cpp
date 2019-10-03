@@ -2704,6 +2704,43 @@ void SurgeGUIEditor::tuningFileDropped(std::string fn)
     this->synth->storage.retuneToScale(Surge::Storage::readSCLFile(fn));
 }
 
+bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
+{
+   CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
+
+   float baseW = WINDOW_SIZE_X;
+   float baseH = WINDOW_SIZE_Y;
+
+   /*
+   ** Window decoration takes up some of the screen so don't zoom to full screen dimensions.
+   ** This heuristic seems to work on windows 10 and macos 10.14 weel enough.
+   ** Keep these as integers to be consistent wiht the other zoom factors, and to make
+   ** the error message cleaner.
+   */
+   int maxScreenUsage = 90;
+
+   /*
+   ** In the startup path we may not have a clean window yet to give us a trustworthy
+   ** screen dimension; so allow callers to supress this check with an optional
+   ** variable and set it only in the constructor of SurgeGUIEditor
+   */
+   if (zf != 100.0 && zf > 100 &&
+       screenDim.getHeight() > 0 && screenDim.getWidth() > 0 && (
+           (baseW * zf / 100.0) > maxScreenUsage * screenDim.getWidth() / 100.0 ||
+           (baseH * zf / 100.0) > maxScreenUsage * screenDim.getHeight() / 100.0
+           )
+       )
+   {
+      correctedZf = findLargestFittingZoomBetween(100.0 , zf, 5, maxScreenUsage, baseW, baseH);
+      return false;
+   }
+   else
+   {
+      correctedZf = zf;
+      return true;
+   }
+}
+
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
    if (!zoomEnabled)
@@ -2731,44 +2768,23 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       zoomInvalid = true;
    }
    
-   float baseW = WINDOW_SIZE_X;
-   float baseH = WINDOW_SIZE_Y;
-
-   /*
-   ** Window decoration takes up some of the screen so don't zoom to full screen dimensions.
-   ** This heuristic seems to work on windows 10 and macos 10.14 weel enough.
-   ** Keep these as integers to be consistent wiht the other zoom factors, and to make
-   ** the error message cleaner.
-   */
-   int maxScreenUsage = 90;
-
-   /*
-   ** In the startup path we may not have a clean window yet to give us a trustworthy
-   ** screen dimension; so allow callers to supress this check with an optional
-   ** variable and set it only in the constructor of SurgeGUIEditor
-   */
-   if (zf != 100.0 && zf > 100 &&
-       screenDim.getHeight() > 0 && screenDim.getWidth() > 0 && (
-           (baseW * zf / 100.0) > maxScreenUsage * screenDim.getWidth() / 100.0 ||
-           (baseH * zf / 100.0) > maxScreenUsage * screenDim.getHeight() / 100.0
-           )
-       )
+   int newZf;
+   if( doesZoomFitToScreen(zf, newZf) )
    {
-       int newZF = findLargestFittingZoomBetween(100.0 , zf, 5, maxScreenUsage, baseW, baseH);
-       zoomFactor = newZF;
-       
-       std::ostringstream msg;
-       msg << "Surge limits zoom levels so as not to grow Surge larger than your available screen. "
-           << "Your screen size is " << screenDim.getWidth() << "x" << screenDim.getHeight() << " "
-           << "and your target zoom of " << zf << "% would be too large."
-           << std::endl << std::endl
-           << "Surge is choosing the largest fitting zoom " << zoomFactor << "%.";
-       Surge::UserInteractions::promptError(msg.str(),
-                                            "Limiting Zoom by Screen Size");
+      zoomFactor = zf;
    }
    else
    {
-       zoomFactor = zf;
+      zoomFactor = newZf;
+      
+      std::ostringstream msg;
+      msg << "Surge limits zoom levels so as not to grow Surge larger than your available screen. "
+          << "Your screen size is " << screenDim.getWidth() << "x" << screenDim.getHeight() << " "
+          << "and your target zoom of " << zf << "% would be too large."
+          << std::endl << std::endl
+          << "Surge is choosing the largest fitting zoom " << zoomFactor << "%.";
+      Surge::UserInteractions::promptError(msg.str(),
+                                           "Limiting Zoom by Screen Size");
    }
    
    zoom_callback(this);
@@ -3173,6 +3189,13 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
    float izfy = newSize->getHeight() * 1.0 / WINDOW_SIZE_Y * 100.0;
    float izf = std::min(izfx, izfy);
    izf = std::max(izf, 1.0f*minimumZoom);
+
+   int fzf = (int)izf;
+   // Don't allow me to set a zoom which will pop a dialog from this drag event. See #1212
+   if( ! doesZoomFitToScreen((int)izf, fzf) )
+   {
+      izf = fzf;
+   }
    
    float zfd = izf - zoomFactor;
    if( zfd > 1 || zfd < -1 )
