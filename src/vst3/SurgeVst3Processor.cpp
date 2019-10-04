@@ -332,16 +332,19 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
             else
             {
                int id = paramQueue->getParameterId();
-               if (numPoints == 1 && id < getParameterCountWithoutMappings() )
+               if ( id < getParameterCountWithoutMappings() )
                {
-                  paramQueue->getPoint(0, offsetSamples, value);
+                  // Make a choice to use the latest point not the earliest. I think that's right. (I actually
+                  // don't think it matters all that much but hey...)
+                  paramQueue->getPoint(numPoints - 1, offsetSamples, value);
 
-                  surgeInstance->setParameter01(id, value, true);
+                  // VST3 wants to send me these events a LOT
+                  if( surgeInstance->getParameter01(id) != value )
+                     surgeInstance->setParameter01(id, value, true);
                }
                else
                {
-                  // Unclear what to do here
-                  std::cerr << "Unable to handle parameter " << id << " with npoints " << numPoints << std::endl;
+                  // std::cerr << "Unable to handle parameter " << id << " with npoints " << numPoints << std::endl;
                }
             }
          }
@@ -789,7 +792,8 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
    ** we are specially dealing with midi controls it is the wrong thing to do; it makes the FX
    ** control and the control 0 the same. So here just pass the tag on directly.
    */
-   surgeInstance->setParameter01(tag, value, true);
+   if( value != surgeInstance->getParameter01(tag) )
+      surgeInstance->setParameter01(tag, value, true);
 
    return kResultOk;
 }

@@ -959,3 +959,23 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    }
    return kMouseEventHandled;
 }
+
+void CLFOGui::invalidateIfIdIsInRange(int id)
+{
+   bool inRange = false;
+   if( ! lfodata ) return;
+   
+   auto *c = &lfodata->rate;
+   auto *e = &lfodata->release;
+   while( c <= e && ! inRange )
+   {
+      if( id == c->id )
+         inRange = true;
+      ++c;
+   }
+
+   if (inRange)
+   {
+      invalid();
+   }
+}

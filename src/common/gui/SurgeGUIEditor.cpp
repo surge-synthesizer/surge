@@ -441,6 +441,29 @@ void SurgeGUIEditor::idle()
             {
                param[j]->setValue(synth->getParameter01(j));
                frame->invalidRect(param[j]->getViewSize());
+               auto *currOsc = &synth->storage.getPatch().scene[current_scene].osc[current_osc].type;
+               auto *endOsc = &synth->storage.getPatch().scene[current_scene].osc[current_osc].retrigger;
+
+               bool oscInvalid = false, lfoInvalid = false;
+               if( oscdisplay )
+               {
+                  while( currOsc <= endOsc && ! oscInvalid )
+                  {
+                     if( currOsc->id == j )
+                        oscInvalid = true;
+                     currOsc++;
+                  }
+                  
+                  if( oscInvalid  )
+                  {
+                     oscdisplay->invalid();
+                  }
+               }
+
+               if( lfodisplay )
+               {
+                  ((CLFOGui*)lfodisplay)->invalidateIfIdIsInRange(j);
+               }
             }
             else if ((j >= metaparam_offset) && (j < (metaparam_offset + n_customcontrollers)))
             {
