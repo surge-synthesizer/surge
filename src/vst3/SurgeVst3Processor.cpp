@@ -757,7 +757,7 @@ ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, Pa
 
 ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 {
-   ABORT_IF_NOT_INITIALIZED
+   ABORT_IF_NOT_INITIALIZED;
 
    if (tag >= getParameterCountWithoutMappings())
    {
@@ -766,7 +766,7 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
       return 0;
    }
 
-   auto res = surgeInstance->getParameter01(surgeInstance->remapExternalApiToInternalId(tag));
+   auto res = surgeInstance->getParameter01(tag);
    return res;
 }
 
