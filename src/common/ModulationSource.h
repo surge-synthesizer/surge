@@ -102,10 +102,10 @@ const char modsource_abberations_short[n_modsources][32] = {
 const int modsource_grid_xy[n_modsources][2] = {
     {0, 0}, {0, 0}, {1, 0}, {2, 0},  {3, 0}, {4, 0}, {5, 0},          // vel -> mw
     {7, 0}, {8, 0}, {9, 0}, {10, 0}, {7, 3}, {8, 3}, {9, 3}, {10, 3}, // ctrl 1-8
-    {6, 0}, {6, 2},                                                   // EGs
+    {6, 2}, {6, 4},                                                   // EGs
     {0, 2}, {1, 2}, {2, 2}, {3, 2},  {4, 2}, {5, 2},                  // LFO
     {0, 4}, {1, 4}, {2, 4}, {3, 4},  {4, 4}, {5, 4},                  // SLFO
-    {6, 4}                                                            // Timbre
+    {6, 0}                                                            // Timbre
 };
 
 inline bool isScenelevel(modsources ms)

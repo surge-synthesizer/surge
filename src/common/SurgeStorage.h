@@ -292,6 +292,7 @@ struct MidiChannelState
    float timbre;
 };
 
+// I have used the ordering here in SurgeGUIEditor to iterate. Be careful if tyoe or retrigger move from first/last position.
 struct OscillatorStorage : public CountedSetUserData // The counted set is the wt tables
 {
    Parameter type;
@@ -331,6 +332,7 @@ struct ADSRStorage
    Parameter mode;
 };
 
+// I have used the ordering here in CLFOGui to iterate. Be careful if rate or release move from first/last position.
 struct LFOStorage
 {
    Parameter rate, shape, start_phase, magnitude, deform;

@@ -1377,7 +1377,6 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             storage.getPatch().scene[s].filterunit[1].cutoff.set_type(ct_freq_audible);
             storage.getPatch().scene[s].filterunit[1].cutoff.set_name("Cutoff");
          }
-
          need_refresh = true;
       }
       break;

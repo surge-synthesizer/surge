@@ -93,6 +93,8 @@ public:
    void drawVectorized(VSTGUI::CDrawContext* dc);
    void drawBitmap(VSTGUI::CDrawContext* dc);
 
+   void invalidateIfIdIsInRange(int id);
+
 protected:
    LFOStorage* lfodata;
    StepSequencerStorage* ss;
