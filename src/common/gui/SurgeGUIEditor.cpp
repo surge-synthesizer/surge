@@ -428,6 +428,17 @@ void SurgeGUIEditor::idle()
                param[j]->setValue(synth->refresh_ctrl_queue_value[i]);
                frame->invalidRect(param[j]->getViewSize());
                // oscdisplay->invalid();
+
+               if( oscdisplay )
+               {
+                  ((COscillatorDisplay*)oscdisplay)->invalidateIfIdIsInRange(j);
+               }
+
+               if( lfodisplay )
+               {
+                  ((CLFOGui*)lfodisplay)->invalidateIfIdIsInRange(j);
+               }
+
             }
          }
       }
@@ -441,23 +452,10 @@ void SurgeGUIEditor::idle()
             {
                param[j]->setValue(synth->getParameter01(j));
                frame->invalidRect(param[j]->getViewSize());
-               auto *currOsc = &synth->storage.getPatch().scene[current_scene].osc[current_osc].type;
-               auto *endOsc = &synth->storage.getPatch().scene[current_scene].osc[current_osc].retrigger;
 
-               bool oscInvalid = false, lfoInvalid = false;
                if( oscdisplay )
                {
-                  while( currOsc <= endOsc && ! oscInvalid )
-                  {
-                     if( currOsc->id == j )
-                        oscInvalid = true;
-                     currOsc++;
-                  }
-                  
-                  if( oscInvalid  )
-                  {
-                     oscdisplay->invalid();
-                  }
+                  ((COscillatorDisplay*)oscdisplay)->invalidateIfIdIsInRange(j);
                }
 
                if( lfodisplay )

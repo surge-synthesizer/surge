@@ -818,3 +818,21 @@ CMouseEventResult COscillatorDisplay::onMouseMoved(CPoint& where, const CButtonS
    }
    return kMouseEventHandled;
 }
+
+void COscillatorDisplay::invalidateIfIdIsInRange(int id)
+{
+   auto *currOsc = &oscdata->type;
+   auto *endOsc = &oscdata->retrigger;
+   bool oscInvalid = false;
+   while( currOsc <= endOsc && ! oscInvalid )
+   {
+      if( currOsc->id == id )
+         oscInvalid = true;
+      currOsc++;
+   }
+   
+   if( oscInvalid  )
+   {
+      invalid();
+   }
+}
