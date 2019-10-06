@@ -99,6 +99,8 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
 
+   void invalidateIfIdIsInRange(int id);
+   
 #if OSC_MOD_ANIMATION
    void setIsMod(bool b)
    {
