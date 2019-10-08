@@ -2807,7 +2807,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       Surge::UserInteractions::promptError(msg.str(),
                                            "Limiting Zoom by Screen Size");
    }
-   
+
    zoom_callback(this);
 
    float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
@@ -3217,11 +3217,17 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
    {
       izf = fzf;
    }
-   
-   float zfd = izf - zoomFactor;
-   if( zfd > 1 || zfd < -1 )
+
+   /*
+   ** If the implied zoom factor changes my size by more than a pixel, resize 
+   */
+   auto zfdx = std::fabs( (izf - zoomFactor) * WINDOW_SIZE_X ) / 100.0;
+   auto zfdy = std::fabs( (izf - zoomFactor) * WINDOW_SIZE_Y ) / 100.0;
+   auto zfd = std::max( zfdx, zfdy );
+
+   if( zfd > 1 )
    {
-      setZoomFactor(izf);
+      setZoomFactor( izf );
    }
 
    return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
