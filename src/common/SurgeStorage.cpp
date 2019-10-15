@@ -303,7 +303,24 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
 
    // WindowWT is a WaveTable which now has a constructor so don't do this
    // memset(&WindowWT, 0, sizeof(WindowWT));
-   load_wt_wt(datapath + "windows.wt", &WindowWT);
+   if( ! load_wt_wt(datapath + "windows.wt", &WindowWT) )
+   {
+      std::ostringstream oss;
+      oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for surge to operate "
+          << "properly. This occurs when Surge is mis-installed and shared resources are not in the "
+          << "os-specific shared directory, which on your OS is a directory called 'Surge' in "
+#if MAC
+          << "the global or user local `Library/Application Support` directory."
+#endif
+#if WINDOWS
+          << "your %LocalAppData% directory."
+#endif
+#if LINUX
+          << "/usr/share or ~/.local/share."
+#endif
+          << " Please install shared assets correctly and restart.";
+      Surge::UserInteractions::promptError(oss.str(), "Unable to load windows.wt");
+   }
 }
 
 SurgePatch& SurgeStorage::getPatch()
@@ -703,11 +720,11 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt)
    }
 }
 
-void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
+bool SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
 {
    FILE* f = fopen(filename.c_str(), "rb");
    if (!f)
-      return;
+      return false;
    wt_header wh;
    memset(&wh, 0, sizeof(wt_header));
 
@@ -718,7 +735,7 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    {
       // SOME sort of error reporting is appropriate
       fclose(f);
-      return;
+      return false;
    }
 
    void* data;
@@ -747,8 +764,11 @@ void SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
            << " https://github.com/surge-synthesizer/surge/";
        Surge::UserInteractions::promptError( oss.str(),
                                              "Software Error on WT Load" );
+       fclose(f);
+       return false;
    }
    fclose(f);
+   return true;
 }
 int SurgeStorage::get_clipboard_type()
 {
