@@ -609,15 +609,29 @@ void SurgeStorage::refresh_wtlist()
    wtCategoryOrdering = std::vector<int>(wt_category.size());
    std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
 
+   // This nonsense deals with the fact that \ < ' ' but ' ' < / and we want "foo bar/h" and "foo/bar" to sort consistently on mac and win.
+   // See #1218
    auto categoryCompare = [this](const int& i1, const int& i2) -> bool {
-      return strnatcasecmp(wt_category[i1].name.c_str(), wt_category[i2].name.c_str()) < 0;
+      auto n1 = wt_category[i1].name;
+      for( auto i=0; i<n1.length(); ++i)
+         if( n1[i] == '\\' )
+            n1[i] = '/';
+      
+      auto n2 = wt_category[i2].name;
+      for( auto i=0; i<n2.length(); ++i)
+         if( n2[i] == '\\' )
+            n2[i] = '/';
+
+      return strnatcasecmp(n1.c_str(), n2.c_str()) < 0;
    };
 
    int groups[4] = {0, firstThirdPartyWTCategory, firstUserWTCategory, (int)wt_category.size()};
 
    for (int i = 0; i < 3; i++)
+   {
       std::sort(std::next(wtCategoryOrdering.begin(), groups[i]),
                 std::next(wtCategoryOrdering.begin(), groups[i + 1]), categoryCompare);
+   }
 
    for (int i = 0; i < wt_category.size(); i++)
       wt_category[wtCategoryOrdering[i]].order = i;
