@@ -36,6 +36,7 @@ enum ctrltypes
    ct_reverbshape,
    ct_decibel,
    ct_decibel_narrow,
+   ct_decibel_narrow_extendable,
    ct_decibel_extra_narrow,
    ct_decibel_attenuation,
    ct_decibel_attenuation_large,

@@ -169,6 +169,7 @@ bool Parameter::can_extend_range()
    case ct_pitch_semi7bp_absolutable:
    case ct_freq_shift:
    case ct_decibel_extendable:
+   case ct_decibel_narrow_extendable:
       return true;
    }
    return false;
@@ -335,6 +336,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_decibel_narrow:
+   case ct_decibel_narrow_extendable:
       valtype = vt_float;
       val_min.f = -24;
       val_max.f = 24;
@@ -760,6 +762,8 @@ float Parameter::get_extended(float f)
       return 12.f * f;
    case ct_decibel_extendable:
       return 3.f * f;
+   case ct_decibel_narrow_extendable:
+      return 5.f * f;
    default:
       return f;
    }
@@ -920,6 +924,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.2f dB", f);
          break;
       case ct_decibel_extendable:
+      case ct_decibel_narrow_extendable:
          sprintf(txt, "%.2f dB", get_extended(f));
          break;
       case ct_bandwidth:

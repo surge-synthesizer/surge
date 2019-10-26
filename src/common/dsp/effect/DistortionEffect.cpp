@@ -68,7 +68,7 @@ void DistortionEffect::process(float* dataL, float* dataR)
    bi = (bi + 1) & slowrate_m1;
 
    band1.process_block(dataL, dataR);
-   drive.set_target_smoothed(db_to_linear(*f[4]));
+   drive.set_target_smoothed(db_to_linear(fxdata->p[4].get_extended(*f[4])));
    outgain.set_target_smoothed(db_to_linear(*f[10]));
    float fb = *f[5];
    int ws = *pdata_ival[11];
@@ -181,7 +181,7 @@ void DistortionEffect::init_ctrltypes()
    fxdata->p[3].set_type(ct_freq_audible);
 
    fxdata->p[4].set_name("Drive");
-   fxdata->p[4].set_type(ct_decibel_narrow);
+   fxdata->p[4].set_type(ct_decibel_narrow_extendable);
    fxdata->p[5].set_name("Feedback");
    fxdata->p[5].set_type(ct_percent_bidirectional);
    fxdata->p[11].set_name("WaveShape");
