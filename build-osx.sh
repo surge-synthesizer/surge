@@ -119,7 +119,15 @@ prerequisite_check()
 
 run_premake()
 {
-    premake5 xcode4
+    if [[ -z $SURGE_PREMAKE ]]; then
+        premake5 xcode4
+    else
+        echo
+        echo ${RED}Using custom premake binary${NC}
+        echo $SURGE_PREMAKE
+        echo
+        $SURGE_PREMAKE xcode4
+    fi 
     touch Surge.xcworkspace/premake-stamp
 }
 

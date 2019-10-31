@@ -40,6 +40,8 @@ if (os.istarget("macosx")) then
     flags { "StaticRuntime" }
     vectorextensions "SSE2"
 
+    systemversion "10.9"
+    
     defines
     {
         "_aligned_malloc(x,a)=malloc(x)",
