@@ -160,7 +160,7 @@ The easiest way to do this is to move the AudioUnitCache away from it's location
 mv ~/Library/Caches/AudioUnitCache ~/Desktop
 ```
 
-For the AU Host, the easiest way to do this is with (Hosting AU)[http://ju-x.com/hostingau.html].
+For the AU Host, the easiest way to do this is with [Hosting AU](http://ju-x.com/hostingau.html).
 Install it and set up a single track containing a surge instance. Save that Hosting AU
 configuration as (say) `~/Desktop/Surge.hosting` then run:
 
@@ -207,7 +207,7 @@ sudo apt-get install jack-keyboard
 sudo apt-get install ajmidid
 ```
 
-The run jac and ajmidid in separate terminals
+Then run `jac` and `ajmidid` in separate terminals
 
 ```
 jackd -d alsa -X alsa_midi
