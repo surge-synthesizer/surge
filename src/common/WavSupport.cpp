@@ -78,7 +78,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     hds += fread(wav, 1, 4, fp);
     if (hds != 12)
     {
-       Surge::UserInteractions::promptError("File does not contain valid RIFF header chunk",
+       std::ostringstream oss;
+       oss << "File does not contain a valid RIFF header chunk. file='" << fn << "'";
+       Surge::UserInteractions::promptError(oss.str(),
                                             uitag );
        return;
     }
@@ -88,7 +90,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     {
        std::ostringstream oss;
        oss << "File is not a standard RIFF/WAVE file. Header is: [" << riff[0] << riff[1] << riff[2]
-           << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ".";
+           << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ". file='" << fn << "'";
        Surge::UserInteractions::promptError(oss.str(), uitag );
        return;
     }
@@ -168,7 +170,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
                 oss << "Sorry, Surge only supports 16-bit PCM or 32-bit IEEE float mono (single channel) wav files. "
                     << " You provided a wav with format=" << audioFormat << " (" << fname << ") "
                     << " bitsPerSample=" << bitsPerSample
-                    << " and channels=" << numChannels << (numChannels == 2 ? " (stereo)" : "" );
+                    << " and channels=" << numChannels << (numChannels == 2 ? " (stereo)" : "" )
+                    << ". file='" << fn << "'";
                 
                 Surge::UserInteractions::promptError( oss.str(), uitag );
                 return;
@@ -375,7 +378,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     {
         std::ostringstream oss;
         oss << "Sorry, Surge only supports power-of-2-samplecount wavetables up to 4096 with at least 3 loops at this time. "
-            << " You provided a wavetable with " << loopCount << " loops of " << loopLen << " samples.";
+            << " You provided a wavetable with " << loopCount << " loops of " << loopLen << " samples. file='" << fn << "'";
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
         if (wavdata) free(wavdata);
@@ -419,7 +422,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         oss << "Sorry, Surge only supports 16-bit PCM or 32-bit IEEE float mono wav files. "
             << " You provided a wav with format=" << audioFormat
             << " bitsPerSample=" << bitsPerSample
-            << " and numChannels=" << numChannels;
+            << " and numChannels=" << numChannels
+            << ". file='" << fn << "'";
 
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
