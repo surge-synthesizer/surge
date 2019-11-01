@@ -30,7 +30,7 @@ the `vst3sdk` components.
 
 Please note that `steinbergmedia/vstgui` has `develop` as its default branch. This means branches like our `surge` branch (which is a branch from `master`) and 
 steinberg's `master` branch will 
-report being many commits behind the repo in the github UI. We think it is prudent for surge to track a patcked master, not a patched develop, so have changed our default
+report being many commits behind the repo in the github UI. We think it is prudent for surge to track a patched master, not a patched develop, so have changed our default
 branch in our fork back to master.
 
 ## How to develop
@@ -48,7 +48,7 @@ steinberg repository. You want a fork of our repository (so a fork-of-a-fork)*.
 * From there, make a feature branch. So 'git checkout -b my-change' on top of 'surge' not 'master'
 * Make your change, commit, push as normal. Since VSTGUI_DIR points to your copy your builds will pick up your changes.
   * Please note that vstgui uses a different code formatting convention than surge
-  * vstgui uses tabs, not spaces; uses space after keywords and before parens
+  * vstgui uses tabs, not spaces; uses space after keywords and before parents
   * there is a .clang-format in the top dir
   
 Now you have two more steps. Uhh really if you are doing this ask @baconpaul OK? This is not user self service level documentation.
