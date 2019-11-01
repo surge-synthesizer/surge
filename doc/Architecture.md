@@ -1,7 +1,7 @@
 # Surge Architecture
 
 This document is a guide for Surge developers to understand how the program hangs together
-and works. This is not a developer how-to. That information is covered in [our Developer Guide](./Developer Guide.md).
+and works. This is not a developer how-to. That information is covered in [our Developer Guide](./Developer%20Guide.md).
 
 **This document is still being written. As we fix things if we remember we add them to this
 document for our future selves**. As such it is rather casual and incomplete now. Sorry!
@@ -25,7 +25,7 @@ are submodules in the top level directory. All of the surge C++ source is in the
 `src/common` contains common code; `src/common/gui` and `src/common/dsp` contain the gui and dsp code
 respectively.
 
-Each of the hosts has a directory in src. `src/vst2`, `src/vst2`, `src/au` and `src/headless` are the
+Each of the hosts has a directory in `src`: `src/vst2`, `src/vst2`, `src/au` and `src/headless` are the
 four flavors of host we have now.
 
 # SurgeStorage, Parameter and Surge Synthesizer
