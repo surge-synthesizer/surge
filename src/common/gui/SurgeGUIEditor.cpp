@@ -262,9 +262,10 @@ void SurgeGUIEditor::idle()
 
             for (int i = 1; i < n_modsources; i++)
             {
-               ((CModulationSourceButton*)gui_modsrc[i])
-                   ->update_rt_vals(synth->isActiveModulation(ptag, (modsources)i), 0,
-                                    synth->isModsourceUsed((modsources)i));
+               if( gui_modsrc[i] )
+                  ((CModulationSourceButton*)gui_modsrc[i])
+                     ->update_rt_vals(synth->isActiveModulation(ptag, (modsources)i), 0,
+                                      synth->isModsourceUsed((modsources)i));
             }
             synth->storage.CS_ModRouting.leave();
          }
@@ -274,8 +275,9 @@ void SurgeGUIEditor::idle()
          synth->storage.CS_ModRouting.enter();
          for (int i = 1; i < n_modsources; i++)
          {
-            ((CModulationSourceButton*)gui_modsrc[i])
-                ->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
+            if( gui_modsrc[i] )
+               ((CModulationSourceButton*)gui_modsrc[i])
+                  ->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
          }
          synth->storage.CS_ModRouting.leave();
       }
@@ -298,7 +300,8 @@ void SurgeGUIEditor::idle()
 #endif
          for (int i = 1; i < n_modsources; i++)
          {
-            ((CModulationSourceButton*)gui_modsrc[i])->setblink(blinkstate);
+            if( gui_modsrc[i] )
+               ((CModulationSourceButton*)gui_modsrc[i])->setblink(blinkstate);
          }
          blinkstate = !blinkstate;
       }
@@ -467,10 +470,10 @@ void SurgeGUIEditor::idle()
             {
                int cc = j - metaparam_offset;
                gui_modsrc[ms_ctrl1 + cc]->setValue(
-                   ((ControllerModulationSource*)synth->storage.getPatch()
-                        .scene[0]
-                        .modsources[ms_ctrl1 + i])
-                       ->get_target01());
+                  ((ControllerModulationSource*)synth->storage.getPatch()
+                   .scene[0]
+                   .modsources[ms_ctrl1 + i])
+                  ->get_target01());
             }
             else if((j < n_total_params) && nonmod_param[j])
             {
@@ -534,6 +537,12 @@ void SurgeGUIEditor::toggle_mod_editing()
 
 void SurgeGUIEditor::refresh_mod()
 {
+   CModulationSourceButton *cms = (CModulationSourceButton *)gui_modsrc[modsource];
+
+   modsources thisms = modsource;
+   if( cms->hasAlternate && cms->useAlternate )
+      thisms = (modsources)cms->alternateId;
+   
    synth->storage.CS_ModRouting.enter();
    for (int i = 0; i < 512; i++)
    {
@@ -544,10 +553,10 @@ void SurgeGUIEditor::refresh_mod()
          {
             s->setModMode(mod_editor ? 1 : 0);
             s->setModPresent(synth->isModDestUsed(i));
-            s->setModCurrent(synth->isActiveModulation(i, modsource));
+            s->setModCurrent(synth->isActiveModulation(i, thisms));
          }
          // s->setDirty();
-         s->setModValue(synth->getModulation(i, modsource));
+         s->setModValue(synth->getModulation(i, thisms));
          s->invalid();
       }
    }
@@ -555,7 +564,7 @@ void SurgeGUIEditor::refresh_mod()
    if (oscdisplay)
    {
       ((COscillatorDisplay*)oscdisplay)->setIsMod(mod_editor);
-      ((COscillatorDisplay*)oscdisplay)->setModSource(modsource);
+      ((COscillatorDisplay*)oscdisplay)->setModSource(thisms);
       oscdisplay->invalid();
       oscdisplay->setDirty(true);
    }
@@ -569,8 +578,11 @@ void SurgeGUIEditor::refresh_mod()
          state = mod_editor ? 2 : 1;
       if (i == modsource_editor)
          state |= 4;
-      ((CModulationSourceButton*)gui_modsrc[i])->state = state;
-      ((CModulationSourceButton*)gui_modsrc[i])->invalid();
+      if( gui_modsrc[i] )
+      {
+         ((CModulationSourceButton*)gui_modsrc[i])->state = state;
+         ((CModulationSourceButton*)gui_modsrc[i])->invalid();
+      }
    }
 
    // ctnvg	frame->redraw();
@@ -697,9 +709,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
    }
 
    int rws = 15;
-   for (int k = 1; k < n_modsources; k++)
+   /* This loop bound is 1.6.* valid ONLY */
+   for (int k = 1; k < /* n_modsources */ ms_releasevelocity; k++)
    {
       modsources ms = (modsources)k;
+
       CRect r = positionForModulationGrid(ms);
 
       int state = 0;
@@ -726,6 +740,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
       else
       {
          ((CModulationSourceButton*)gui_modsrc[ms])->setlabel(modsource_abberations_button[ms]);
+         /*
+         ** Velocity special case for 1.6.* vintage
+         */
+         if( ms == ms_velocity )
+         {
+            ((CModulationSourceButton*)gui_modsrc[ms])->setAlternate(ms_releasevelocity,
+                                                                     modsource_abberations_button[ms_releasevelocity]);
+         }
       }
       frame->addView(gui_modsrc[ms]);
    }
@@ -1708,6 +1730,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
       if (button & kRButton)
       {
+         CModulationSourceButton *cms = (CModulationSourceButton *)control;
          CRect menuRect;
          CPoint where;
          frame->getCurrentMouseLocation(where);
@@ -1720,111 +1743,151 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int eid = 0;
          int id_clearallmr = -1, id_learnctrl = -1, id_clearctrl = -1, id_bipolar = -1,
              id_copy = -1, id_paste = -1, id_rename = -1;
-         contextMenu->addEntry((char*)modsource_abberations[modsource], eid++);
 
-         int n_md = 0;
+         if( cms->hasAlternate )
+         {
+            int idOn = modsource;
+            int idOff = cms->alternateId;
+            if( cms->useAlternate )
+            {
+               auto t = idOn;
+               idOn = idOff;
+               idOff = t;
+            }
+
+            contextMenu->addEntry((char*)modsource_abberations[idOn], eid++);
+            std::string offLab = "Switch to ";
+            offLab += modsource_abberations[idOff];
+            bool activeMod = (cms->state & 3) == 2;
+            
+            auto *mi = addCallbackMenu(
+               contextMenu, offLab, [cms]() {
+                                       cms->setUseAlternate( ! cms->useAlternate );
+                                    }
+               );
+            if( activeMod )
+               mi->setEnabled(false);
+            eid++;
+         }
+         else
+         {
+            contextMenu->addEntry((char*)modsource_abberations[modsource], eid++);
+         }
+         
          int n_total_md = synth->storage.getPatch().param_ptr.size();
 
          const int max_md = 4096;
          assert(max_md >= n_total_md);
 
-         bool first_destination = true;
          bool cancellearn = false;
          int ccid = 0;
 
          // should start at 0, but started at 1 before.. might be a reason but don't remember why...
-         for (int md = 0; md < n_total_md; md++)
+         std::vector<modsources> possibleSources;
+         possibleSources.push_back(modsource);
+         if( cms->hasAlternate )
          {
-            auto activeScene = synth->storage.getPatch().scene_active.val.i;
-            Parameter* parameter = synth->storage.getPatch().param_ptr[md];
-
-            if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
-                synth->isActiveModulation(md, modsource))
-            {
-               char tmptxt[256];
-               sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[modsource],
-                       synth->storage.getPatch().param_ptr[md]->get_full_name(),
-                       synth->getModDepth(md, modsource));
-
-               auto clearOp = [this, first_destination, md, n_total_md, modsource, control]() {
-                  bool resetName = false;   // Should I reset the name?
-                  std::string newName = ""; // And to what?
-                  int ccid = modsource - ms_ctrl1;
-
-                  if (first_destination)
-                  {
-                     if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
-                                 synth->storage.getPatch().param_ptr[md]->get_name(), 15) == 0)
-                     {
-                        // So my modulator is named after my short name. I haven't been renamed. So
-                        // I want to reset at least to "-" unless someone is after me
-                        resetName = true;
-                        newName = "-";
-
-                        // Now we have to find if there's another modulation below me
-                        int nextmd = md + 1;
-                        while (nextmd < n_total_md && !synth->isActiveModulation(nextmd, modsource))
-                           nextmd++;
-                        if (nextmd < n_total_md &&
-                            strlen(synth->storage.getPatch().param_ptr[nextmd]->get_name()) > 1)
-                           newName = synth->storage.getPatch().param_ptr[nextmd]->get_name();
-                     }
-                  }
-
-                  synth->clearModulation(md, modsource);
-                  refresh_mod();
-
-                  if (resetName)
-                  {
-                     // And this is where we apply the name refresh, of course.
-                     strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], newName.c_str(),
-                             15);
-                     synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
-                     ((CModulationSourceButton*)control)
-                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                     control->setDirty();
-                     control->invalid();
-                     synth->updateDisplay();
-                  }
-               };
-
-               if (first_destination)
-               {
-                  contextMenu->addEntry("-", eid++);
-                  first_destination = false;
-               }
-
-               addCallbackMenu(contextMenu, tmptxt, clearOp);
-               eid++;
-
-               n_md++;
-            }
+            possibleSources.push_back((modsources)(cms->alternateId));
          }
 
-         if (n_md)
+         for( auto thisms : possibleSources )
          {
-            addCallbackMenu(
-                contextMenu, "Clear all routings", [this, n_total_md, modsource, control]() {
-                   for (int md = 1; md < n_total_md; md++)
-                      synth->clearModulation(md, modsource);
-                   refresh_mod();
+            bool first_destination = true;
+            int n_md = 0;
+            for (int md = 0; md < n_total_md; md++)
+            {
+               auto activeScene = synth->storage.getPatch().scene_active.val.i;
+               Parameter* parameter = synth->storage.getPatch().param_ptr[md];
+               
+               if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
+                   synth->isActiveModulation(md, thisms))
+               {
+                  char tmptxt[256];
+                  sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[thisms],
+                          synth->storage.getPatch().param_ptr[md]->get_full_name(),
+                          synth->getModDepth(md, thisms));
+                  
+                  auto clearOp = [this, first_destination, md, n_total_md, thisms, control]() {
+                                    bool resetName = false;   // Should I reset the name?
+                                    std::string newName = ""; // And to what?
+                                    int ccid = thisms - ms_ctrl1;
+                                    
+                                    if (first_destination)
+                                    {
+                                       if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
+                                                   synth->storage.getPatch().param_ptr[md]->get_name(), 15) == 0)
+                                       {
+                                          // So my modulator is named after my short name. I haven't been renamed. So
+                                          // I want to reset at least to "-" unless someone is after me
+                                          resetName = true;
+                                          newName = "-";
+                                          
+                                          // Now we have to find if there's another modulation below me
+                                          int nextmd = md + 1;
+                                          while (nextmd < n_total_md && !synth->isActiveModulation(nextmd, thisms))
+                                             nextmd++;
+                                          if (nextmd < n_total_md &&
+                                              strlen(synth->storage.getPatch().param_ptr[nextmd]->get_name()) > 1)
+                                             newName = synth->storage.getPatch().param_ptr[nextmd]->get_name();
+                                       }
+                                    }
+                                    
+                                    synth->clearModulation(md, thisms);
+                                    refresh_mod();
+                                    
+                                    if (resetName)
+                                    {
+                                       // And this is where we apply the name refresh, of course.
+                                       strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], newName.c_str(),
+                                               15);
+                                       synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
+                                       ((CModulationSourceButton*)control)
+                                          ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                                       control->setDirty();
+                                       control->invalid();
+                                       synth->updateDisplay();
+                                    }
+                                 };
+                  
+                  if (first_destination)
+                  {
+                     contextMenu->addEntry("-", eid++);
+                     first_destination = false;
+                  }
+                  
+                  addCallbackMenu(contextMenu, tmptxt, clearOp);
+                  eid++;
 
-                   // Also blank out the name and rebuild the UI
-                   if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
-                   {
-                      int ccid = modsource - ms_ctrl1;
-
-                      synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
-                      synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
-                      ((CModulationSourceButton*)control)
-                          ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                      control->setDirty();
-                      control->invalid();
-
-                      synth->updateDisplay();
-                   }
-                });
-            eid++;
+                  n_md++;
+               }
+            }
+            if (n_md)
+            {
+               char clearLab[256];
+               sprintf( clearLab, "Clear all %s routings", modsource_abberations[thisms] );
+               addCallbackMenu(
+                  contextMenu, clearLab, [this, n_total_md, thisms, control]() {
+                                                        for (int md = 1; md < n_total_md; md++)
+                                                           synth->clearModulation(md, thisms);
+                                                        refresh_mod();
+                                                        
+                                                        // Also blank out the name and rebuild the UI
+                                                        if (within_range(ms_ctrl1, thisms, ms_ctrl1 + n_customcontrollers - 1))
+                                                        {
+                                                           int ccid = thisms - ms_ctrl1;
+                                                           
+                                                           synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+                                                           synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+                                                           ((CModulationSourceButton*)control)
+                                                              ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                                                           control->setDirty();
+                                                           control->invalid();
+                                                           
+                                                           synth->updateDisplay();
+                                                        }
+                                                     });
+               eid++;
+            }
          }
          int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, 1);
          if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
@@ -2151,7 +2214,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       }
       else
       {
-         int state = ((CModulationSourceButton*)control)->get_state();
+         CModulationSourceButton *cms = (CModulationSourceButton *)control;
+         int state = cms->get_state();
          modsources newsource = (modsources)(tag - tag_mod_source0);
          long buttons = 0; // context->getMouseButtons(); // temp fix vstgui 3.5
          bool ciep =
@@ -2391,13 +2455,20 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
              dynamic_cast<CSurgeSlider*>(control) != nullptr)
          {
-            synth->setModulation(ptag, modsource, ((CSurgeSlider*)control)->getModValue());
+            modsources thisms = modsource;
+            if( gui_modsrc[modsource] )
+            {
+               CModulationSourceButton *cms = (CModulationSourceButton *)gui_modsrc[modsource];
+               if( cms->hasAlternate && cms->useAlternate )
+                  thisms = (modsources) cms->alternateId;
+            }
+            synth->setModulation(ptag, thisms, ((CSurgeSlider*)control)->getModValue());
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
-            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, modsource));
+            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms));
 
             synth->getParameterName(ptag, txt);
-            sprintf(pname, "%s -> %s", modsource_abberations_short[modsource], txt);
-            sprintf(pdisp, "%f", synth->getModDepth(ptag, modsource));
+            sprintf(pname, "%s -> %s", modsource_abberations_short[thisms], txt);
+            sprintf(pdisp, "%f", synth->getModDepth(ptag, thisms));
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
 

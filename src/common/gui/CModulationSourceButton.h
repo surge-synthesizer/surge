@@ -4,6 +4,8 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
+#include <iostream>
+
 
 class CModulationSourceButton : public CCursorHidingControl
 {
@@ -52,6 +54,18 @@ public:
    {
       return state;
    }
+
+   bool hasAlternate = false;
+   int alternateId;
+   std::string alternateLabel;
+   virtual void setAlternate( int alt, const std::string &altLabel ) {
+      hasAlternate = true;
+      this->alternateId = alt;
+      this->alternateLabel = altLabel;
+   }
+   bool useAlternate = false;
+   void setUseAlternate( bool f ) { useAlternate = f; if( hasAlternate ) { invalid(); setDirty(); } }
+   
    virtual void draw(VSTGUI::CDrawContext* dc);
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);

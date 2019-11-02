@@ -173,7 +173,15 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    dc->drawRect(framer, kDrawFilled);
    dc->setFillColor(FillCol);
    dc->drawRect(fillr, kDrawFilled);
-   dc->drawString(label, txtbox, kCenterText, true);
+
+   if( hasAlternate && useAlternate )
+   {
+      dc->drawString(alternateLabel.c_str(), txtbox, kCenterText, true);
+   }
+   else
+   {
+      dc->drawString(label, txtbox, kCenterText, true);
+   }
 
    if (is_metacontroller)
    {
