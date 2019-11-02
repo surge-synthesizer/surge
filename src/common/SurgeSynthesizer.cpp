@@ -536,21 +536,17 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
       }
    }
 
-   // if(channelmask&1)
+   bool noHold = ! channelState[channel].hold;
+   if( mpeEnabled )
+      noHold = noHold && ! channelState[0].hold;
+   
+   for( int s=0; s<2; ++s )
    {
-      if (!channelState[channel].hold)
-         releaseNotePostHoldCheck(0, channel, key, velocity);
+      if (noHold)
+         releaseNotePostHoldCheck(s, channel, key, velocity);
       else
-         holdbuffer[0].push_back(key); // hold pedal is down, add to bufffer
+         holdbuffer[s].push_back(std::make_pair(channel,key)); // hold pedal is down, add to bufffer
    }
-   // if(channelmask&2)
-   {
-      if (!channelState[channel].hold)
-         releaseNotePostHoldCheck(1, channel, key, velocity);
-      else
-         holdbuffer[1].push_back(key); // hold pedal is down, add to bufffer
-   }
-
 }
 
 void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char key, char velocity)
@@ -1064,25 +1060,21 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
 {
    int z;
-   list<int>::iterator iter = holdbuffer[scene].begin();
-   while (1)
+   std::list<std::pair<int,int>> retainBuffer;
+   for( auto hp : holdbuffer[scene] )
    {
-      if (iter == holdbuffer[scene].end())
-         break;
-      z = *iter;
-      if (/*voice_state[z].active && */ !channelState[0].hold)
+      auto channel = hp.first;
+      auto key = hp.second;
+      if (!channelState[0].hold && ! channelState[channel].hold )
       {
-         // voices[z]->release(127);
-         releaseNotePostHoldCheck(scene, 0, z, 127);
-         list<int>::iterator del = iter;
-         iter++;
-         holdbuffer[scene].erase(del);
+         releaseNotePostHoldCheck(scene, channel, key, 127);
       }
       else
-         iter++;
+      {
+         retainBuffer.push_back(hp);
+      }
    }
-
-   // note: Must remove entries when notes kill themselves as well
+   holdbuffer[scene] = retainBuffer;
 }
 
 void SurgeSynthesizer::allNotesOff()
