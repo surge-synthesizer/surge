@@ -71,9 +71,14 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    age = 0;
    age_release = 0;
    state.key = key;
-   state.velocity = velocity;
    state.channel = channel;
+
+   state.velocity = velocity;
    state.fvel = velocity / 127.f;
+
+   state.releasevelocity = 0;
+   state.freleasevel = 0;
+   
    state.scene_id = scene_id;
    state.detune = detune;
    state.uberrelease = false;
@@ -125,11 +130,15 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
       modsources[ms_lfo1 + i] = &lfo[i];
    }
    modsources[ms_velocity] = &velocitySource;
+   modsources[ms_releasevelocity] = &releaseVelocitySource;
    modsources[ms_keytrack] = &keytrackSource;
    modsources[ms_polyaftertouch] = &polyAftertouchSource;
    polyAftertouchSource.init(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
+
    velocitySource.output = state.fvel;
+   releaseVelocitySource.output = state.freleasevel;
    keytrackSource.output = 0;
+   
    ampEGSource.init(storage, &scene->adsr[0], localcopy, &state);
    filterEGSource.init(storage, &scene->adsr[1], localcopy, &state);
    modsources[ms_ampeg] = &ampEGSource;
@@ -302,6 +311,7 @@ void SurgeVoice::release()
       lfo[i].release();
 
    state.gate = false;
+   releaseVelocitySource.output = state.releasevelocity / 127.0f;
 }
 
 void SurgeVoice::uber_release()

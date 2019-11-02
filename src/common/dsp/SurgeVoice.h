@@ -164,7 +164,7 @@ private:
 
    std::array<ModulationSource*, n_modsources> modsources;
 
-   ModulationSource velocitySource;
+   ModulationSource velocitySource, releaseVelocitySource;
    ModulationSource keytrackSource;
    ControllerModulationSource polyAftertouchSource;
    ModulationSource monoAftertouchSource;

@@ -527,6 +527,15 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
    int channelmask =
        ((channel == 0) ? 3 : 0) || ((channel == 1) ? 1 : 0) || ((channel == 2) ? 2 : 0);
 
+   for( int s=0; s<2; ++s )
+   {
+      for( auto *v : voices[s] )
+      {
+         if ((v->state.key == key) && (v->state.channel == channel))
+            v->state.releasevelocity = velocity;
+      }
+   }
+
    // if(channelmask&1)
    {
       if (!channelState[channel].hold)
@@ -541,6 +550,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
       else
          holdbuffer[1].push_back(key); // hold pedal is down, add to bufffer
    }
+
 }
 
 void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char key, char velocity)

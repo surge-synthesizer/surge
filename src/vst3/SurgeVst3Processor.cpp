@@ -237,6 +237,7 @@ void SurgeVst3Processor::processEvent(const Event& e)
    case Event::kNoteOnEvent:
       if (e.noteOn.velocity == 0.f)
       {
+         std::cout << "NoteOff with 0 v " << e.noteOff.velocity << std::endl;
          getSurge()->releaseNote(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity);
       }
       else
@@ -248,8 +249,11 @@ void SurgeVst3Processor::processEvent(const Event& e)
       break;
 
    case Event::kNoteOffEvent:
-      getSurge()->releaseNote(e.noteOff.channel, e.noteOff.pitch, e.noteOff.velocity);
+   {
+      char cVel = value01ToMidi7Bit(e.noteOff.velocity);
+      getSurge()->releaseNote(e.noteOff.channel, e.noteOff.pitch, cVel);
       break;
+   }
 
    case Event::kPolyPressureEvent:
       getSurge()->polyAftertouch(e.polyPressure.channel, e.polyPressure.pitch,

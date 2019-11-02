@@ -45,6 +45,7 @@ enum modsources
    ms_slfo6,
    // ms_arpeggiator,
    ms_timbre,
+   ms_releasevelocity,
    n_modsources,
    /*ms_stepseq1,
    ms_stepseq2,
@@ -60,7 +61,7 @@ const char modsource_abberations_button[n_modsources][32] = {
     "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitchbend", "Modwheel", "Ctrl 1",
     "Ctrl 2",    "Ctrl 3",   "Ctrl 4",   "Ctrl 5",  "Ctrl 6",   "Ctrl 7",    "Ctrl 8",   "Amp EG",
     "Filter EG", "LFO 1",    "LFO 2",    "LFO 3",   "LFO 4",    "LFO 5",     "LFO 6",    "SLFO 1",
-    "SLFO 2",    "SLFO 3",   "SLFO 4",   "SLFO 5",  "SLFO 6",   "Timbre" /*,"Arpeggio"*/};
+    "SLFO 2",    "SLFO 3",   "SLFO 4",   "SLFO 5",  "SLFO 6",   "Timbre", "Rel. Velcty" /*,"Arpeggio"*/};
 
 const char modsource_abberations[n_modsources][32] = {"Off",
                                                       "Velocity",
@@ -91,13 +92,15 @@ const char modsource_abberations[n_modsources][32] = {"Off",
                                                       "Scene LFO 4",
                                                       "Scene LFO 5",
                                                       "Scene LFO 6",
-                                                      "Timbre" /*,"Arpeggio"*/};
+                                                      "Timbre",
+                                                      "Release Velocity"
+                                                      /*,"Arpeggio"*/};
 
 const char modsource_abberations_short[n_modsources][32] = {
     "off",   "velocity", "keytrack", "Poly AT", "Ch. AT", "Pitch Bend", "Modwheel", "CTRL1",
     "CTRL2", "CTRL3",    "CTRL4",    "CTRL5",   "CTRL6",  "CTRL7",      "CTRL8",    "AEG",
     "FEG",   "LFO1",     "LFO2",     "LFO3",    "LFO4",   "LFO5",       "LFO6",     "SLFO1",
-    "SLFO2", "SLFO3",    "SLFO4",    "SLFO5",   "SLFO6",  "TIMBR" /*,"Arpeggio"*/};
+    "SLFO2", "SLFO3",    "SLFO4",    "SLFO5",   "SLFO6",  "TIMBR", "RELVEL" /*,"Arpeggio"*/};
 
 const int modsource_grid_xy[n_modsources][2] = {
     {0, 0}, {0, 0}, {1, 0}, {2, 0},  {3, 0}, {4, 0}, {5, 0},          // vel -> mw
@@ -105,13 +108,13 @@ const int modsource_grid_xy[n_modsources][2] = {
     {6, 2}, {6, 4},                                                   // EGs
     {0, 2}, {1, 2}, {2, 2}, {3, 2},  {4, 2}, {5, 2},                  // LFO
     {0, 4}, {1, 4}, {2, 4}, {3, 4},  {4, 4}, {5, 4},                  // SLFO
-    {6, 0}                                                            // Timbre
+    {6, 0}, {0, 0}                                                            // Timbre, relvel is special
 };
 
 inline bool isScenelevel(modsources ms)
 {
    return ((ms <= ms_ctrl8) || ((ms >= ms_slfo1) && (ms <= ms_slfo6))) && (ms != ms_velocity) &&
-          (ms != ms_keytrack) && (ms != ms_polyaftertouch) && (ms != ms_timbre);
+      (ms != ms_keytrack) && (ms != ms_polyaftertouch) && (ms != ms_timbre) && (ms != ms_releasevelocity);
 }
 
 inline bool canModulateMonophonicTarget(modsources ms)
