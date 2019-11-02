@@ -94,10 +94,10 @@ const char modsource_abberations[n_modsources][32] = {"Off",
                                                       "Timbre" /*,"Arpeggio"*/};
 
 const char modsource_abberations_short[n_modsources][32] = {
-    "off",   "velocity", "keytrack", "Poly AT", "Ch. AT", "Pitch Bend", "Modwheel", "CTRL1",
-    "CTRL2", "CTRL3",    "CTRL4",    "CTRL5",   "CTRL6",  "CTRL7",      "CTRL8",    "AEG",
-    "FEG",   "LFO1",     "LFO2",     "LFO3",    "LFO4",   "LFO5",       "LFO6",     "SLFO1",
-    "SLFO2", "SLFO3",    "SLFO4",    "SLFO5",   "SLFO6",  "TIMBR" /*,"Arpeggio"*/};
+    "Off", "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitch Bend", "Modwheel", "Ctrl 1",
+    "Ctrl 2", "Ctrl 3", "Ctrl 4", "Ctrl 5", "Ctrl 6", "Ctrl 7", "Ctrl 8", "Amp EG",
+    "Filter EG", "LFO 1", "LFO 2", "LFO 3", "LFO 4", "LFO 5", "LFO 6", "SLFO 1",
+    "SLFO 2", "SLFO 3", "SLFO 4", "SLFO 5", "SLFO 6", "Timbre" /*,"Arpeggio"*/};
 
 const int modsource_grid_xy[n_modsources][2] = {
     {0, 0}, {0, 0}, {1, 0}, {2, 0},  {3, 0}, {4, 0}, {5, 0},          // vel -> mw
