@@ -10,6 +10,7 @@
 struct QuadFilterChainState;
 
 #include <list>
+#include <utility>
 #include <atomic>
 
 #if TARGET_AUDIOUNIT
@@ -217,7 +218,7 @@ public:
 
    // hold pedal stuff
 
-   std::list<int> holdbuffer[2];
+   std::list<std::pair<int,int>> holdbuffer[2];
    void purgeHoldbuffer(int scene);
    quadr_osc sinus;
    int demo_counter = 0;
