@@ -2157,10 +2157,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       {
          if (synth->isValidModulation(ptag, modsource) && mod_editor)
          {
-            synth->clearModulation(ptag, modsource);
-            ((CSurgeSlider*)control)->setModValue(synth->getModulation(p->id, modsource));
+            CModulationSourceButton *cms = (CModulationSourceButton *)gui_modsrc[modsource];
+            auto thisms = modsource;
+            if( cms && cms->hasAlternate && cms->useAlternate )
+               thisms = (modsources)cms->alternateId;
+            
+            synth->clearModulation(ptag, thisms);
+            ((CSurgeSlider*)control)->setModValue(synth->getModulation(p->id, thisms));
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
-            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, modsource));
+            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms));
             // control->setGhostValue(p->get_value_f01());
             oscdisplay->invalid();
             return 1;
