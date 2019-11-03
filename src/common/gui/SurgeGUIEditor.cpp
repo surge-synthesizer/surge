@@ -219,6 +219,9 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    {
        throw new Surge::Error("Software Error: Param MisMaptch" );
    }
+
+   for( int i=0; i<n_modsources; ++i )
+      modsource_is_alternate[i] = false;
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -747,6 +750,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             ((CModulationSourceButton*)gui_modsrc[ms])->setAlternate(ms_releasevelocity,
                                                                      modsource_abberations_button[ms_releasevelocity]);
+            ((CModulationSourceButton*)gui_modsrc[ms])->setUseAlternate(modsource_is_alternate[ms]);
          }
       }
       frame->addView(gui_modsrc[ms]);
@@ -1761,8 +1765,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             bool activeMod = (cms->state & 3) == 2;
             
             auto *mi = addCallbackMenu(
-               contextMenu, offLab, [cms]() {
+               contextMenu, offLab, [this, modsource, cms]() {
                                        cms->setUseAlternate( ! cms->useAlternate );
+                                       modsource_is_alternate[modsource] = cms->useAlternate;
                                     }
                );
             if( activeMod )

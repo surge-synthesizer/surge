@@ -211,6 +211,8 @@ private:
 
    std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
 
+   bool modsource_is_alternate[n_modsources];
+
    VSTGUI::CControl* vu[16];
    VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr, *statuspanel = nullptr;
    VSTGUI::CControl* aboutbox = nullptr;
