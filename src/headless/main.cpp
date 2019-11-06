@@ -9,35 +9,6 @@
 
 #include "Tunings.h"
 
-void simpleOscillatorToStdOut()
-{
-   SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
-
-   /*
-   ** Change a parameter in the scene. Do this by traversing the
-   ** graph in the current patch (which is in surge->storage).
-   **
-   ** Clearly a more fulsome headless API would provide wrappers around
-   ** this for common activities. This sets up a pair of detuned saw waves
-   ** both active.
-   */
-   surge->storage.getPatch().scene[0].osc[0].pitch.set_value_f01(4);
-   surge->storage.getPatch().scene[0].mute_o2.set_value_f01(0, true);
-   surge->storage.getPatch().scene[0].osc[1].pitch.set_value_f01(1);
-
-   Surge::Headless::playerEvents_t terryRiley = Surge::Headless::makeHoldMiddleC(4410);
-
-   float* data = NULL;
-   int nSamples, nChannels;
-
-   Surge::Headless::playAsConfigured(surge, terryRiley, &data, &nSamples, &nChannels);
-   Surge::Headless::writeToStream(data, nSamples, nChannels, std::cout);
-
-   if (data)
-      delete[] data;
-   delete surge;
-}
-
 void statsFromPlayingEveryPatch()
 {
    /*
@@ -89,32 +60,6 @@ void statsFromPlayingEveryPatch()
    delete surge;
 }
 
-void testTuning()
-{
-   SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
-
-   //Surge::Storage::Scale s = Surge::Storage::readSCLFile("/Users/paul/dev/music/test_scl/Q4.scl" );
-   Surge::Storage::Scale s = Surge::Storage::readSCLFile("/Users/paul/dev/music/test_scl/12-flat.scl" );
-    std::cout << s;
-
-    auto n2f = [surge](int n)
-        {
-            std::cout << "N2F " << n
-            << " " << surge->storage.note_to_pitch(n)
-            << " " << surge->storage.note_to_pitch(n) * 16.35159783
-            << std::endl;
-        };
-   //auto s = Surge::Storage::readSCLFile( "/Users/paul/tmp/scl/temp12k4.scl" );
-   //auto s = Surge::Storage::readSCLFile( "/Users/paul/dev/music/surge/flat.scl" );
-   //auto s = Surge::Storage::readSCLFile("/Users/paul/tmp/scl/lumma_12_strangeion.scl");
-   
-   std::cout << "BEFORE\n";
-   //n2f(0); n2f(24); n2f(25); n2f(60); n2f(57); n2f(48);
-   surge->storage.retuneToScale(s);
-
-   //std::cout << "AFTER\n";
-   //n2f(0); n2f(24); n2f(25);  n2f(60); n2f(57); n2f(48);
-}
 
 void playSomeBach()
 { 
@@ -146,17 +91,6 @@ void playSomeBach()
    Surge::Headless::renderMidiFileToWav(surge, fname, fname + ".wav");
 }
 
-void portableWt()
-{
-    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
-    
-    surge->storage.load_wt_wav_portable("/users/Paul/tmp/Wavetable Example/Wavetable.wav", nullptr);
-    surge->storage.load_wt_wav_portable("/Users/paul/tmp/SerumWT/Korg MS-2000/SQUARE-C2.wav", nullptr);
-    surge->storage.load_wt_wav_portable("/Users/paul/tmp/SerumWT/Classic Synths/05_BELL.WAV", nullptr);
-    surge->storage.load_wt_wav_portable("/Users/paul/tmp/SerumWT/Adventure Kid Serum/pluckalgo.wav", nullptr);
-
-    delete surge;
-}
 
 /*
 ** This is a simple main that, for now, you make call out to the application
@@ -164,27 +98,30 @@ void portableWt()
 */
 int main(int argc, char** argv)
 {
-    std::cout << "Hi! HEADLESS is a development tool the SurgeDevs use to run parts of the synth\n"
+   extern int runAllTests(int, char**);
+   return runAllTests(argc, argv);
+
+#if 0
+   std::cout << "Hi! HEADLESS is a development tool the SurgeDevs use to run parts of the synth\n"
               << "without a UI or a DAW. It explicitly is NOT a standalone version of surge or a\n"
               << "user targeted application. If you are running it and are not a dev you will\n"
               << "surely be dissapointed.\n\n";
    try 
    {
       // simpleOscillatorToStdOut();
-       //statsFromPlayingEveryPatch();
+      //statsFromPlayingEveryPatch();
       //playSomeBach();
       //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
       // Surge::Headless::pullInitSamplesWithNoNotes(1000);
-       testTuning();
-       //portableWt();
+      testTuning();
+      //portableWt();
    }
    catch( Surge::Error &e )
    {
-	std::cout << "SurgeError: " << e.getTitle() << "\n" << e.getMessage() << "\n";
-	return 1;
+      std::cout << "SurgeError: " << e.getTitle() << "\n" << e.getMessage() << "\n";
+      return 1;
    }
-
-   // playSomeBach();
-
+   
    return 0;
+#endif
 }
