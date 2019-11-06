@@ -63,6 +63,17 @@ jobs:
     condition: variables.isMac
     displayName: Build macOS releases
 
+  - bash: |
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      
+      mkdir "$HOME/Library/Application Support/Surge"
+      rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
+      
+      ./build-osx.sh --build-headless
+      ./build/Release/surge-headless
+    condition: variables.isMac
+    displayName: Run MacOS Unit Tests
+
   - task: NuGetToolInstaller@0
     condition: variables.isWindows
     displayName: NuGet
