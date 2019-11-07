@@ -134,7 +134,7 @@ TEST_CASE( "Simple Single Oscillator is Constant", "[dsp]" )
          zeroCrossings ++;
    }
    // Somewhere in here
-   REQUIRE( zeroCrossings > 135 );
+   REQUIRE( zeroCrossings > 130 );
    REQUIRE( zeroCrossings < 160 );
    
    if (data)
@@ -161,7 +161,42 @@ TEST_CASE( "All Patches are Loadable", "[patch]" )
 #endif   
 }
 
+TEST_CASE( "lipol_ps class", "[dsp]" )
+{
+   lipol_ps mypol;
+   float prevtarget = -1.0;
+   mypol.set_target(prevtarget);
+   mypol.instantize();
 
+   constexpr size_t nfloat = 64;
+   constexpr size_t nfloat_quad = 16;
+   float storeTarget alignas(16)[nfloat];
+   mypol.store_block(storeTarget, nfloat_quad);
+
+   for( auto i=0; i<nfloat; ++i )
+      REQUIRE(storeTarget[i] == prevtarget); // should be constant in the first instance
+
+   for( int i=0; i<10; ++i )
+   {
+      float target = (i)*(i) / 100.0;
+      mypol.set_target(target);
+      
+      mypol.store_block(storeTarget, nfloat_quad);
+      
+      REQUIRE(storeTarget[nfloat-1] == Approx(target));
+      
+      float dy = storeTarget[1] - storeTarget[0];
+      for( auto i=1; i<nfloat; ++i )
+      {
+         REQUIRE( storeTarget[i] - storeTarget[i-1] == Approx(dy).epsilon(1e-3) );
+      }
+
+      REQUIRE( prevtarget + dy == Approx(storeTarget[0]) );
+      
+      prevtarget = target;
+   }
+      
+}
 
 int runAllTests(int argc, char **argv)
 {
