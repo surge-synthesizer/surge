@@ -2,6 +2,32 @@
 #include "vt_dsp.h"
 #include "shared.h"
 
+/*
+** lipol_ps is a small utility class for generating small line segments
+** between values
+**
+** usage would be
+**
+** ```
+** lipol_ps mypol;
+**
+** ...
+** 
+** mypol.set_target(13.23);
+** if( init )
+**   mypol.instantize();
+** ```
+**
+** then later in the code
+**
+** ```
+** float values alignas(16)[SIZE]
+** mypol.store_block(values, SIZE_OVER_FOUR);
+** ```
+**
+** and block would contain the linear interpolation between the 
+** last queried value and the target.
+*/
 class lipol_ps
 {
 public:
