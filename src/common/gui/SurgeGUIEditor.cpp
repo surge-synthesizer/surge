@@ -2024,7 +2024,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    {
       Parameter* p = synth->storage.getPatch().param_ptr[ptag];
 
-      if ((button & kRButton) && (p->valtype == vt_float))
+      if ((button & kRButton))
       {
          CRect menuRect;
          CPoint where;
@@ -2046,113 +2046,118 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          contextMenu->addEntry(txt2, eid++);
          bool cancellearn = false;
 
-         // if(p->can_temposync() || p->can_extend_range())	contextMenu->addEntry("-",eid++);
-         if (p->can_temposync())
+         // Modulation and Learn semantics only apply to vt_float types in surge right now
+         if( p->valtype == vt_float )
          {
-            addCallbackMenu(contextMenu, "Temposync",
-                            [this, p]() { p->temposync = !p->temposync; });
-            contextMenu->checkEntry(eid, p->temposync);
-            eid++;
-         }
-         if (p->can_extend_range())
-         {
-            addCallbackMenu(contextMenu, "Extend range",
-                            [this, p]() { p->extend_range = !p->extend_range; });
-            contextMenu->checkEntry(eid, p->extend_range);
-            eid++;
-         }
-         if (p->can_be_absolute())
-         {
-            addCallbackMenu(contextMenu, "Absolute", [this, p]() { p->absolute = !p->absolute; });
-            contextMenu->checkEntry(eid, p->absolute);
-            eid++;
-         }
-         if (p->can_snap())
-         {
-            addCallbackMenu(contextMenu, "Snap", [this, p]() { p->snap = !p->snap; });
-            contextMenu->checkEntry(eid, p->snap);
-            eid++;
-         }
-
-         {
-            if (synth->learn_param > -1)
-               cancellearn = true;
-            std::string learnTag =
-                cancellearn ? "Abort learn controller" : "Learn controller [MIDI]";
-            addCallbackMenu(contextMenu, learnTag, [this, cancellearn, p] {
-               if (cancellearn)
-                  synth->learn_param = -1;
-               else
-                  synth->learn_param = p->id;
-            });
-            eid++;
-         }
-
-         if (p->midictrl >= 0)
-         {
-            char txt4[128];
-            decode_controllerid(txt4, p->midictrl);
-            sprintf(txt, "Clear controller [currently %s]", txt4);
-            addCallbackMenu(contextMenu, txt, [this, p, ptag]() {
-               // p->midictrl = -1;
-               // TODO add so parameter for both scenes are cleared!
-               if (ptag < n_global_params)
-               {
-                  p->midictrl = -1;
-                  synth->storage.save_midi_controllers();
-               }
-               else
-               {
-                  int a = ptag;
-                  if (ptag >= (n_global_params + n_scene_params))
-                     a -= ptag;
-
-                  synth->storage.getPatch().param_ptr[a]->midictrl = -1;
-                  synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
-                  synth->storage.save_midi_controllers();
-               }
-            });
-         }
-
-         int n_ms = 0;
-         // int clear_ms[n_modsources];
-         bool is_modulated = false;
-         for (int ms = 1; ms < n_modsources; ms++)
-            if (synth->isActiveModulation(ptag, (modsources)ms))
-               n_ms++;
-
-         if (n_ms)
-         {
-            contextMenu->addEntry("-", eid++);
-            for (int k = 1; k < n_modsources; k++)
+            // if(p->can_temposync() || p->can_extend_range())	contextMenu->addEntry("-",eid++);
+            if (p->can_temposync())
             {
-               modsources ms = (modsources)k;
-               if (synth->isActiveModulation(ptag, ms))
-               {
-                  char tmptxt[256];
-                  sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[ms],
-                          p->get_name(), synth->getModDepth(ptag, (modsources)ms));
-                  // clear_ms[ms] = eid;
-                  // contextMenu->addEntry(tmptxt, eid++);
-                  addCallbackMenu(contextMenu, tmptxt, [this, ms, ptag]() {
-                     synth->clearModulation(ptag, (modsources)ms);
-                     refresh_mod();
-                  });
-                  eid++;
-               }
+               addCallbackMenu(contextMenu, "Temposync",
+                               [this, p]() { p->temposync = !p->temposync; });
+               contextMenu->checkEntry(eid, p->temposync);
+               eid++;
             }
-            if (n_ms > 1)
+            if (p->can_extend_range())
             {
-               addCallbackMenu(contextMenu, "Clear All", [this, ptag]() {
-                  for (int ms = 1; ms < n_modsources; ms++)
+               addCallbackMenu(contextMenu, "Extend range",
+                               [this, p]() { p->extend_range = !p->extend_range; });
+               contextMenu->checkEntry(eid, p->extend_range);
+               eid++;
+            }
+            if (p->can_be_absolute())
+            {
+               addCallbackMenu(contextMenu, "Absolute", [this, p]() { p->absolute = !p->absolute; });
+               contextMenu->checkEntry(eid, p->absolute);
+               eid++;
+            }
+            if (p->can_snap())
+            {
+               addCallbackMenu(contextMenu, "Snap", [this, p]() { p->snap = !p->snap; });
+               contextMenu->checkEntry(eid, p->snap);
+               eid++;
+            }
+            
+            {
+               if (synth->learn_param > -1)
+                  cancellearn = true;
+               std::string learnTag =
+                  cancellearn ? "Abort learn controller" : "Learn controller [MIDI]";
+               addCallbackMenu(contextMenu, learnTag, [this, cancellearn, p] {
+                                                         if (cancellearn)
+                                                            synth->learn_param = -1;
+                                                         else
+                                                            synth->learn_param = p->id;
+                                                      });
+               eid++;
+            }
+            
+            if (p->midictrl >= 0)
+            {
+               char txt4[128];
+               decode_controllerid(txt4, p->midictrl);
+               sprintf(txt, "Clear controller [currently %s]", txt4);
+               addCallbackMenu(contextMenu, txt,
+                               [this, p, ptag]() {
+                                  // p->midictrl = -1;
+                                  // TODO add so parameter for both scenes are cleared!
+                                  if (ptag < n_global_params)
+                                  {
+                                     p->midictrl = -1;
+                                     synth->storage.save_midi_controllers();
+                                  }
+                                  else
+                                  {
+                                     int a = ptag;
+                                     if (ptag >= (n_global_params + n_scene_params))
+                                        a -= ptag;
+                                     
+                                     synth->storage.getPatch().param_ptr[a]->midictrl = -1;
+                                     synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
+                                     synth->storage.save_midi_controllers();
+                                  }
+                               });
+            }
+            
+            int n_ms = 0;
+            // int clear_ms[n_modsources];
+            bool is_modulated = false;
+            for (int ms = 1; ms < n_modsources; ms++)
+               if (synth->isActiveModulation(ptag, (modsources)ms))
+                  n_ms++;
+
+            if (n_ms)
+            {
+               contextMenu->addEntry("-", eid++);
+               for (int k = 1; k < n_modsources; k++)
+               {
+                  modsources ms = (modsources)k;
+                  if (synth->isActiveModulation(ptag, ms))
                   {
-                     synth->clearModulation(ptag, (modsources)ms);
+                     char tmptxt[256];
+                     sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[ms],
+                             p->get_name(), synth->getModDepth(ptag, (modsources)ms));
+                     // clear_ms[ms] = eid;
+                     // contextMenu->addEntry(tmptxt, eid++);
+                     addCallbackMenu(contextMenu, tmptxt, [this, ms, ptag]() {
+                                                             synth->clearModulation(ptag, (modsources)ms);
+                                                             refresh_mod();
+                                                          });
+                     eid++;
                   }
-                  refresh_mod();
-               });
+               }
+               if (n_ms > 1)
+               {
+                  addCallbackMenu(contextMenu, "Clear All", [this, ptag]() {
+                                                               for (int ms = 1; ms < n_modsources; ms++)
+                                                               {
+                                                                  synth->clearModulation(ptag, (modsources)ms);
+                                                               }
+                                                               refresh_mod();
+                                                            });
+               }
             }
-         }
-
+         } // end vt_float if statement
+         
          frame->addView(contextMenu); // add to frame
          contextMenu->popup();
          frame->removeView(contextMenu, true); // remove from frame and forget
