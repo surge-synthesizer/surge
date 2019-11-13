@@ -20,7 +20,7 @@ This README serves as the root of developer documentation for the project.
 # Developing Surge
 
 We welcome developers. Our workflow revolves around github issues in this github repo
-and conversations in our slack and IRC chatrooms. You can read our developer guidelines
+and conversations in our slack chatroom. You can read our developer guidelines
 in [our developer guide doc](doc/Developer%20Guide.md).
 
 The developer guide also contains information about testing and debugging in particular hosts
