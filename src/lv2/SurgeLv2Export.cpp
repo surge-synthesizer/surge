@@ -45,10 +45,10 @@ void lv2_generate_ttl(const char* baseName)
       writePrefix(osDsp);
 
       osDsp << "<" << desc->URI << ">\n"
-               "    doap:name \"Surge\" ;\n"
+               "    doap:name \"Surge++\" ;\n"
                "    doap:license <GPL-3.0-only> ;\n"
                "    doap:maintainer [\n"
-               "        foaf:name \"Vember Audio\" ;\n"
+               "        foaf:name \"Surge Synth Team\" ;\n"
                "        foaf:homepage <https://surge-synthesizer.github.io/> ;\n"
                "    ] ;\n"
                "    ui:ui <" << uidesc->URI << "> ;\n"

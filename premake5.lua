@@ -700,11 +700,11 @@ includedirs {
 }
 
 configuration { "Debug" }
-targetdir "target/lv2/Debug/Surge.lv2"
+targetdir "target/lv2/Debug/Surge++.lv2"
 targetsuffix "-Debug"
 
 configuration { "Release" }
-targetdir "target/lv2/Release/Surge.lv2"
+targetdir "target/lv2/Release/Surge++.lv2"
 
 configuration {}
 
