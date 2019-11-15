@@ -46,7 +46,7 @@ Great. That's the (bad) error reporting which says you need to layout the node.
 
 ## Step 3: Put the newly named node in the layout
 
-Open `resources/data/layouts/original.layout/layout.xml` and find the "FM" block.
+Open `resources/data/layouts/original.layout/layout.xml` and create a new node for "FM".
 
 ```
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FM"/>
