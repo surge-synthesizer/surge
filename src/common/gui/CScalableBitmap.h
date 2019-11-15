@@ -56,7 +56,7 @@ public:
    /*
    ** In "glyph" mode I remap colors. This doesn't really change except at construction time.
    */
-   bool setGlyphMode( bool b ) {
+   void setGlyphMode( bool b ) {
       glyphMode = b;
    }
    
