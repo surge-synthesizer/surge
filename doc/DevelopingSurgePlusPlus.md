@@ -19,7 +19,7 @@ need to pull the upstream and apply it to your fork on the branch.
 So once (and only once) add an upstream remote to your checked out repo
 
 ```
-git remote add upstream https://github.com/surge-synthesizer/surge.github
+git remote add upstream https://github.com/surge-synthesizer/surge.git
 ```
 
 then when you want to update the surge++-master branch in your fork to upstream
