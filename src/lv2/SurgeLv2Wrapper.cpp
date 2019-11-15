@@ -13,7 +13,11 @@ SurgeLv2Wrapper::SurgeLv2Wrapper(double sampleRate)
 }
 
 SurgeLv2Wrapper::~SurgeLv2Wrapper()
-{}
+{
+   // FIXME S++ has an error whereby you crash on delete on linux.
+   // So for now just leak the synth
+   auto LEAKTHIS = _synthesizer.release();
+}
 
 void SurgeLv2Wrapper::updateDisplay()
 {
