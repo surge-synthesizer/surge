@@ -451,6 +451,9 @@
           <layout height="100" width="auto" mode="hlist" style="blank" label="filtparent">
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 1">
               <node guiid="filters.filter0.type" component="Filter Selector"/>
+              <node component="hslider" guiid="global.cutoff"/>
+              <node component="hslider" guiid="global.resonance"/>
+              
             </layout>
             <layout height="100" width="175" style="svg" svg="SVG/175x100_BG.svg" label="Filt Mix"/>
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 2">
