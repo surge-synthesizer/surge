@@ -369,7 +369,9 @@
               <nodeproperties rows="1" cols="7" fontsize="9" choices="-3|-2|-1|0|1|2|3"/>
             </node>
 
-            <node component="hslider" guiid="global.pitch"/> <!-- Surge::ParamConfig::kHorizontal | kSemitone | sceasy -->
+            <node component="hslider" guiid="global.pitch"/>
+            <node component="hslider" guiid="global.portamento"/>
+            <!-- Surge::ParamConfig::kHorizontal | kSemitone | sceasy -->
           </layout>
           <layout width="auto" mode="hlist" height="150" label="Mixer" style="roundedblock" fgcolor="$mixenv.fg" bgcolor="$mixenv.bg">
             <layout style="blank" width="23" height="auto" mode="vlist">

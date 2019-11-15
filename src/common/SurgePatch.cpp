@@ -147,9 +147,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                           ct_pitch_semi7bp, sc_id, cg_GLOBAL, 0, true));
 
       py += gui_hfader_dist;
-      a->push_back(scene[sc].portamento.assign(p_id.next(), id_s++, "portamento", "Portamento",
-                                               ct_portatime, px, py, sc_id, cg_GLOBAL, 0, true,
-                                               Surge::ParamConfig::kHorizontal | sceasy));
+      a->push_back(scene[sc].portamento.assign(p_id.next(), id_s++, "portamento", "Portamento", "global.portamento",
+                                               ct_portatime, sc_id, cg_GLOBAL, 0, true));
       py += gui_hfader_dist;
 
       for (int osc = 0; osc < n_oscs; osc++)
