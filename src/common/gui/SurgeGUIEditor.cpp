@@ -721,8 +721,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    {
       auto* oscswitch = layout->addLayoutControl("osc.switch", this, tag_osc_select, this);
-      // FIX THIS
-      oscswitch->setValue((float)current_osc / (n_oscs - 1));
+      if( oscswitch )
+         oscswitch->setValue((float)current_osc / (n_oscs - 1));
    }
 
    {
@@ -799,7 +799,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
       else
       {
-         std::cout << "SOFTWARE ERROR IN DYNCAST" << std::endl;
+         // std::cout << "SOFTWARE ERROR IN DYNCAST" << std::endl;
       }
    }
 
@@ -1016,7 +1016,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hsw->setValue(p->get_value_f01());
 
                bool bprop;
-               if( hsw->getAttribute(Surge::LayoutEngine::kSurgeShowPopup, bprop) )
+               if( hsw && hsw->getAttribute(Surge::LayoutEngine::kSurgeShowPopup, bprop) )
                {
                   if( ! bprop ) // explicitly don't show the popup
                   {

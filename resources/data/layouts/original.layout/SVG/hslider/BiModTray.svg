@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 133 14" xmlns="http://www.w3.org/2000/svg">
+  <polygon id="Triangle" fill="#9899EE" points="70.189 -50.255 76.189 60.745 70.189 60.745" transform="matrix(0, -1, 1, 0, 67.944004, 78.434002)"/>
+  <rect id="Rectangle" fill="#000000" x="128" y="0" width="1" height="14"/>
+  <polygon id="polygon-1" fill="#9899EE" points="57.026 -46.524 63.026 64.476 57.026 64.476" transform="matrix(0, 1, -1, 0, 69.002003, -51.049999)"/>
+  <rect id="Rectangle" fill="#000000" x="5" y="6" width="123" height="2"/>
+  <rect id="Rectangle" fill="#000000" x="4" y="0" width="1" height="14"/>
+</svg>

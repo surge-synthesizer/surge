@@ -6,6 +6,7 @@
 #include "SurgeBitmaps.h"
 #include "SurgeParamConfig.h"
 #include "ISliderKnobInterface.h"
+#include "CScalableBitmap.h"
 
 class CSurgeSlider : public CCursorHidingControl, public virtual Surge::ISliderKnobInterface
 {
@@ -17,6 +18,7 @@ public:
                 bool is_mod,
                 std::shared_ptr<SurgeBitmaps> bitmapStore);
    ~CSurgeSlider();
+      
    virtual void draw(VSTGUI::CDrawContext*);
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    // virtual bool onWheel (VSTGUI::CDrawContext *pContext, const VSTGUI::CPoint &where, float distance);
@@ -98,28 +100,47 @@ public:
    }
 
 
-   enum BitmapIdentities {
-      bmap_Handle,
-      bmap_ModHandle,
-      bmap_Tray,
-      bmap_BipolarTray,
-      bmap_BipolarTickTray,
-      bmap_ModTray,
-      bmap_ModBipolarTray,
-      bmap_ModBipolarTickTray,
-      n_bitmaps
-   };
+   typedef enum BitmapMode {
+      Surge16_Bitmaps,
+      Individual_Bitmaps
+   } BitmapMode;
+   BitmapMode bitmapmode = Surge16_Bitmaps;
 
-   void setBitmapForIdentity(BitmapIdentities identity, VSTGUI::CBitmap *bm) {
-      stateBitmaps[identity] = bm;
+   typedef enum StateBitmaps {
+      UnipolarBackground,
+      UnipolarModulatedBackground,
+
+      /* These two states could be here logically but actually aren't used so leave them out
+      UnipolarTickedBackground,
+      UnipolarTickedModulatedBackground,
+      */
+      
+      BipolarBackground,
+      BipolarModulatedBackground,
+      BipolarTickedBackground,
+      BipolarTickedModulatedBackground,
+
+      ValueHandle,
+      ModulationHandle,
+
+      n_stateBitmaps
+   } StateBitmaps;
+      
+
+   void setBitmapForState( StateBitmaps b, VSTGUI::CBitmap *bm ) {
+      bitmapmode = Individual_Bitmaps;
+      stateBitmaps[b] = bm;
    }
+
+   
    
 private:
    // For ContainsMultitudes mode
    VSTGUI::CBitmap *pHandle, *pTray, *pModHandle;
 
+   VSTGUI::CBitmap *stateBitmaps[n_stateBitmaps];
+   
    // For BitmapPerState mode
-   VSTGUI::CBitmap *stateBitmaps[n_bitmaps];
    VSTGUI::CRect handle_rect, handle_rect_orig;
    VSTGUI::CPoint offsetHandle;
    int range;

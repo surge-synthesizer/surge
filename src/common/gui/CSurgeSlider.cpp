@@ -32,7 +32,7 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
    this->style = stylee;
    this->is_mod = is_mod;
 
-   for( int i=0; i<n_bitmaps; ++i )
+   for( int i=0; i<n_stateBitmaps; ++i )
       stateBitmaps[i] = nullptr;
    
    modmode = 0;
