@@ -452,80 +452,82 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          py = gui_modsec_y - 7;
          char label[32];
 
-         sprintf(label, "lfo%i_shape", l);
-         a->push_back(scene[sc].lfo[l].shape.assign(p_id.next(), id_s++, label, "Shape",
-                                                    ct_lfoshape, px, py, sc_id, cg_LFO, ms_lfo1 + l,
-                                                    true, Surge::ParamConfig::kHorizontal));
+                sprintf(label, "lfo%i_shape", l);
+                a->push_back(scene[sc].lfo[l].shape.assign(p_id.next(), id_s++, label, "Shape", "lfo.shape",
+                                                    ct_lfoshape,sc_id, cg_LFO, ms_lfo1 + l, true));
+        
+                px = gui_modsec_x;
+                py = gui_modsec_y - 10;
 
-         px = gui_modsec_x;
-         py = gui_modsec_y - 10;
+                sprintf(label, "lfo%i_rate", l);
+                a->push_back(scene[sc].lfo[l].rate.assign(p_id.next(), id_s++, label, "Rate", "lfo.rate",
+                                                          ct_lforate, sc_id, cg_LFO, ms_lfo1 + l, true));
+                py += gui_hfader_dist;
+                 
+                sprintf(label, "lfo%i_phase", l);
+                a->push_back(scene[sc].lfo[l].start_phase.assign(
+                    p_id.next(), id_s++, label, "Phase / Shuffle", "lfo.phase", ct_percent,sc_id, cg_LFO, ms_lfo1 + l, true));
+                 
+                py += gui_hfader_dist;
+                 
+                sprintf(label, "lfo%i_magnitude", l);
+                a->push_back(scene[sc].lfo[l].magnitude.assign(
+                    p_id.next(), id_s++, label, "Magnitude", "lfo.magnitude", ct_percent, sc_id, cg_LFO, ms_lfo1 + l, true));
+                 
+                py += gui_hfader_dist;
+                sprintf(label, "lfo%i_deform", l);
+                a->push_back(scene[sc].lfo[l].deform.assign(
+                    p_id.next(), id_s++, label, "Deform", "lfo.deform", ct_percent_bidirectional, sc_id, cg_LFO, ms_lfo1 + l, true));
 
-         sprintf(label, "lfo%i_rate", l);
-         a->push_back(scene[sc].lfo[l].rate.assign(p_id.next(), id_s++, label, "Rate", ct_lforate,
-                                                   px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
-                                                   Surge::ParamConfig::kHorizontal | sceasy));
-         py += gui_hfader_dist;
-         sprintf(label, "lfo%i_phase", l);
-         a->push_back(scene[sc].lfo[l].start_phase.assign(
-             p_id.next(), id_s++, label, "Phase / Shuffle", ct_percent, px, py, sc_id, cg_LFO,
-             ms_lfo1 + l, true, Surge::ParamConfig::kHorizontal));
-         py += gui_hfader_dist;
-         sprintf(label, "lfo%i_magnitude", l);
-         a->push_back(scene[sc].lfo[l].magnitude.assign(
-             p_id.next(), id_s++, label, "Magnitude", ct_percent, px, py, sc_id, cg_LFO,
-             ms_lfo1 + l, true, Surge::ParamConfig::kHorizontal | sceasy));
-         py += gui_hfader_dist;
-         sprintf(label, "lfo%i_deform", l);
-         a->push_back(scene[sc].lfo[l].deform.assign(
-             p_id.next(), id_s++, label, "Deform", ct_percent_bidirectional, px, py, sc_id, cg_LFO,
-             ms_lfo1 + l, true, Surge::ParamConfig::kHorizontal));
-
-         px += gui_sec_width;
-         py = gui_modsec_y;
-         sprintf(label, "lfo%i_trigmode", l);
-         a->push_back(scene[sc].lfo[l].trigmode.assign(p_id.next(), id_s++, label, "Trigger Mode",
-                                                       ct_lfotrigmode, px + 5, py - 4, sc_id,
-                                                       cg_LFO, ms_lfo1 + l, false, kNoPopup));
-         py += 44;
-         sprintf(label, "lfo%i_unipolar", l);
-         a->push_back(scene[sc].lfo[l].unipolar.assign(p_id.next(), id_s++, label, "Unipolar", "lfo.unipolar",
-                                                       ct_bool_unipolar, sc_id, cg_LFO, ms_lfo1 + l, false));
-
-         px += 3 * gui_sec_width + 8;
-         py = gui_modsec_y + 5;
-         sprintf(label, "lfo%i_delay", l);
-         a->push_back(scene[sc].lfo[l].delay.assign(p_id.next(), id_s++, label, "Delay", ct_envtime,
-                                                    px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
-                                                    Surge::ParamConfig::kVertical | kMini));
-         px += gui_vfader_dist;
-         sprintf(label, "lfo%i_attack", l);
-         a->push_back(scene[sc].lfo[l].attack.assign(p_id.next(), id_s++, label, "Attack",
-                                                     ct_envtime, px, py, sc_id, cg_LFO, ms_lfo1 + l,
-                                                     true, Surge::ParamConfig::kVertical | kMini));
-         px += gui_vfader_dist;
-         sprintf(label, "lfo%i_hold", l);
-         a->push_back(scene[sc].lfo[l].hold.assign(p_id.next(), id_s++, label, "Hold", ct_envtime,
-                                                   px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
-                                                   Surge::ParamConfig::kVertical | kMini));
-         px += gui_vfader_dist;
-         sprintf(label, "lfo%i_decay", l);
-         a->push_back(scene[sc].lfo[l].decay.assign(p_id.next(), id_s++, label, "Decay", ct_envtime,
-                                                    px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
-                                                    Surge::ParamConfig::kVertical | kMini));
-         px += gui_vfader_dist;
-         sprintf(label, "lfo%i_sustain", l);
-         a->push_back(scene[sc].lfo[l].sustain.assign(
-             p_id.next(), id_s++, label, "Sustain", ct_percent, px, py, sc_id, cg_LFO, ms_lfo1 + l,
-             true, Surge::ParamConfig::kVertical | kMini));
-         px += gui_vfader_dist;
-         sprintf(label, "lfo%i_release", l);
-         a->push_back(scene[sc].lfo[l].release.assign(
-             p_id.next(), id_s++, label, "Release", ct_envtime_lfodecay, px, py, sc_id, cg_LFO,
-             ms_lfo1 + l, true, Surge::ParamConfig::kVertical | kMini));
-         px += gui_vfader_dist;
-      }
-   }
-
+                px += gui_sec_width;
+                py = gui_modsec_y;
+                 
+                sprintf(label, "lfo%i_trigmode", l);
+                a->push_back(scene[sc].lfo[l].trigmode.assign(p_id.next(), id_s++, label, "Trigger Mode",
+                                                              ct_lfotrigmode, px + 5, py - 4, sc_id,
+                                                              cg_LFO, ms_lfo1 + l, false, kNoPopup));
+                py += 44;
+                 
+                sprintf(label, "lfo%i_unipolar", l);
+                a->push_back(scene[sc].lfo[l].unipolar.assign(p_id.next(), id_s++, label, "Unipolar", "lfo.unipolar",
+                                                              ct_bool_unipolar, sc_id, cg_LFO, ms_lfo1 + l, false));
+                px += 3 * gui_sec_width + 8;
+                py = gui_modsec_y + 5;
+                 
+                sprintf(label, "lfo%i_delay", l);
+                a->push_back(scene[sc].lfo[l].delay.assign(p_id.next(), id_s++, label, "Delay", "lfo.env.delay", ct_envtime,
+                                                           sc_id, cg_LFO, ms_lfo1 + l, true));
+                px += gui_vfader_dist;
+                 
+                sprintf(label, "lfo%i_attack", l);
+                a->push_back(scene[sc].lfo[l].attack.assign(p_id.next(), id_s++, label, "Attack", "lfo.env.attack",
+                                                            ct_envtime, sc_id, cg_LFO, ms_lfo1 + l, true));
+                px += gui_vfader_dist;
+                 
+                sprintf(label, "lfo%i_hold", l);
+                a->push_back(scene[sc].lfo[l].hold.assign(p_id.next(), id_s++, label, "Hold", "lfo.env.hold", ct_envtime,
+                                                          sc_id, cg_LFO, ms_lfo1 + l, true));
+                px += gui_vfader_dist; 
+                             
+                sprintf(label, "lfo%i_decay", l);
+                a->push_back(scene[sc].lfo[l].decay.assign(p_id.next(), id_s++, label, "Decay", "lfo.env.decay", ct_envtime,
+                                                           sc_id, cg_LFO, ms_lfo1 + l, true));
+                px += gui_vfader_dist;
+                             
+                sprintf(label, "lfo%i_sustain", l);
+                a->push_back(scene[sc].lfo[l].sustain.assign(
+                    p_id.next(), id_s++, label, "Sustain", "lfo.env.sustain", ct_percent, sc_id, cg_LFO, ms_lfo1 + l, true));
+                             
+                px += gui_vfader_dist;
+                             
+                sprintf(label, "lfo%i_release", l);
+                a->push_back(scene[sc].lfo[l].release.assign(
+                    p_id.next(), id_s++, label, "Release", "lfo.env.release", ct_envtime_lfodecay, sc_id, cg_LFO, ms_lfo1 + l, true));
+                             
+                px += gui_vfader_dist;
+             }
+          }
+                             
    param_ptr.push_back(character.assign(p_id.next(), 0, "character", "Character", ct_character, 607,
                                         gui_mid_topbar_y + 24, 0, cg_GLOBAL, 0, false, kNoPopup));
 

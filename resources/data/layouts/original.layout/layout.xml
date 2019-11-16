@@ -549,10 +549,21 @@
       </layout>
       <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mod.bg" fgcolor="$mod.fg" label="Modulator">
         <node component="60x18 Switch" xoff="20" yoff="20" guiid="lfo.unipolar">
-          <nodeproperties label="$unipolar" fontsize="9"
-                          />
+          <nodeproperties label="$unipolar" fontsize="9"/>
         </node>
-      </layout>
+        <node component="hslider" xoff="20" yoff="37" guiid="lfo.shape"/>
+        <node component="hslider" xoff="20" yoff="54" guiid="lfo.rate"/>
+        <node component="hslider" xoff="20" yoff="71" guiid="lfo.phase"/>
+        <node component="hslider" xoff="20" yoff="88" guiid="lfo.magnitude"/>
+        <node component="hslider" xoff="20" yoff="105" guiid="lfo.deform"/>
+        <node component="vslider" xoff="100" yoff="right" guiid="lfo.env.delay"/>
+        <node component="vslider" xoff="117" yoff="right" guiid="lfo.env.attack"/>
+        <node component="vslider" xoff="134" yoff="right" guiid="lfo.env.hold"/>
+        <node component="vslider" xoff="151" yoff="right" guiid="lfo.env.decay"/>
+        <node component="vslider" xoff="168" yoff="right" guiid="lfo.env.sustain"/>
+        <node component="vslider" xoff="185" yoff="right" guiid="lfo.env.release"/>
+        
+      </layout> 
     </layout>
     <layout yoff="0" width="auto" height="auto" mode="vlist" style="blank" label="fxoutparent">
       <layout height="100" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output"/>
