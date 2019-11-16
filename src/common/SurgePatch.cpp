@@ -213,27 +213,22 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       // ct_midikey
       // drift,keytrack_root
 
-      px = gui_col5_x;
-      py = gui_uppersec_y;
-      a->push_back(scene[sc].volume.assign(p_id.next(), id_s++, "volume", "Volume", ct_amplitude,
-                                           px, py, sc_id, cg_GLOBAL, 0, true,
-                                           Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
-      a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan", ct_percent_bidirectional,
-                                        px, py, sc_id, cg_GLOBAL, 0, true,
-                                        Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
-      a->push_back(scene[sc].width.assign(p_id.next(), id_s++, "pan2", "Width",
-                                          ct_percent_bidirectional, px, py, sc_id, cg_GLOBAL, 0,
-                                          true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
-      a->push_back(scene[sc].send_level[0].assign(
-          p_id.next(), id_s++, "send_fx_1", "FX1 Send", ct_amplitude, px, py, sc_id, cg_GLOBAL, 0,
-          true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
+//Scene Output
+      a->push_back(scene[sc].volume.assign(
+        p_id.next(), id_s++, "volume", "Volume", "scene.output.volume", ct_amplitude, sc_id, cg_GLOBAL, 0, true));
+      
+      a->push_back(scene[sc].pan.assign(
+        p_id.next(), id_s++, "pan", "Pan", "scene.output.pan", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true));
+      
+      a->push_back(scene[sc].width.assign(
+        p_id.next(), id_s++, "pan2", "Width", "scene.output.width", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true));
+      
+       a->push_back(scene[sc].send_level[0].assign(
+        p_id.next(), id_s++, "send_fx_1", "FX1 Send", "scene.output.fx1send", ct_amplitude, sc_id, cg_GLOBAL, 0, true));
+      
       a->push_back(scene[sc].send_level[1].assign(
-          p_id.next(), id_s++, "send_fx_2", "FX2 Send", ct_amplitude, px, py, sc_id, cg_GLOBAL, 0,
-          true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
+          p_id.next(), id_s++, "send_fx_2", "FX2 Send", "scene.output.fx2send", ct_amplitude, sc_id, cg_GLOBAL, 0, true));
+       
       scene[sc].send_level[0].val_max.f = 1.5874f;
       scene[sc].send_level[1].val_max.f = 1.5874f;
 
@@ -437,7 +432,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          a->push_back(scene[sc].adsr[e].r_s.assign(p_id.next(), id_s++, "release_shape",
                                                    "Release Shape", ct_envshape, px, py + so, sc_id,
                                                    cg_ENV, e, false, kNoPopup));
-         px += gui_vfader_dist;
+         px += gui_vfader_dist; 
 
          a->push_back(scene[sc].adsr[e].mode.assign(p_id.next(), id_s++, "mode", "Mode", ct_envmode,
                                                     px + 13, py - 31, sc_id, cg_ENV, e, false,
