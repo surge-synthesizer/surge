@@ -429,7 +429,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
           
           sprintf(gname, "%s.env.sustain", gpfx);
          a->push_back(scene[sc].adsr[e].s.assign(p_id.next(), id_s++, "sustain", "Sustain", gname,
-                                                 ct_percent, sc_id, cg_ENV, e, true));
+                                                 ct_percent, sc_id, cg_ENV, e, true)); 
          px += gui_vfader_dist;
 
           sprintf(gname, "%s.env.release", gpfx);

@@ -555,8 +555,8 @@
     </layout>
 
 
-    <layout width="944" height="582" label="orig" mode="free" bgcolor="#ff0000">
-      <layout xoff="20" yoff="20" width="904" height="542" label="legacy" bgcolor="#aaaa99">
+    <layout width="944" height="582" label="roundedlabel" mode="free" bgcolor="$ctrl.bg">
+      <layout xoff="20" yoff="20" width="904" height="542" label="legacy" bgcolor="#444444">
       </layout>
     </layout>
   </layout>
