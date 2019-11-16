@@ -476,8 +476,19 @@
           </layout>
           <layout height="auto" width="auto" mode="hlist" style="blank" label="envparent">
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="KeyTrack"/>
-            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG"/>
-            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="AEG"/>
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG">
+                <node guiid="filter.env.attack" xoff="23"   yoff="center" component="vslider"/>
+                <node guiid="filter.env.decay" xoff="40"   yoff="center" component="vslider"/>
+                <node guiid="filter.env.sustain" xoff="57"   yoff="center" component="vslider"/>
+                <node guiid="filter.env.release" xoff="74"   yoff="center" component="vslider"/>
+            </layout>
+                
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="AEG">
+              <node guiid="amp.env.attack" xoff="23"   yoff="center" component="vslider"/>
+              <node guiid="amp.env.decay" xoff="40"   yoff="center" component="vslider"/>
+              <node guiid="amp.env.sustain" xoff="57"   yoff="center" component="vslider"/>
+              <node guiid="amp.env.release" xoff="74"   yoff="center" component="vslider"/>
+            </layout>
           </layout>
         </layout>
         
@@ -553,8 +564,8 @@
     </layout>
 
 
-    <layout width="944" height="582" label="orig" mode="free" bgcolor="#ff0000">
-      <layout xoff="20" yoff="20" width="904" height="542" label="legacy" bgcolor="#aaaa99">
+    <layout width="944" height="582" label="roundedlabel" mode="free" bgcolor="$ctrl.bg">
+      <layout xoff="20" yoff="20" width="904" height="542" label="legacy" bgcolor="#444444">
       </layout>
     </layout>
   </layout>

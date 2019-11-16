@@ -402,33 +402,40 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       // scene[sc].filterunit[0].type.val.i = 1;
       for (int e = 0; e < 2; e++)
       {
+          char gpfx[256];
+          char gname[256];
+          if(e==0) strcpy(gpfx, "amp" );
+          else strcpy(gpfx, "filter");
+            
          px = gui_envsec_x + gui_sec_width + (gui_sec_width) * (1 - e);
          py = gui_envsec_y;
          const int so = -30;
-         a->push_back(scene[sc].adsr[e].a.assign(p_id.next(), id_s++, "attack", "Attack",
-                                                 ct_envtime, px, py, sc_id, cg_ENV, e, true,
-                                                 Surge::ParamConfig::kVertical | kWhite | sceasy));
+          sprintf(gname, "%s.env.attack", gpfx);
+         a->push_back(scene[sc].adsr[e].a.assign(p_id.next(), id_s++, "attack", "Attack", gname,
+                                                 ct_envtime, sc_id, cg_ENV, e, true));
+          
          a->push_back(scene[sc].adsr[e].a_s.assign(p_id.next(), id_s++, "attack_shape",
                                                    "Attack Shape", ct_envshape, px, py + so, sc_id,
                                                    cg_ENV, e, false, kNoPopup));
          px += gui_vfader_dist;
-
-         a->push_back(scene[sc].adsr[e].d.assign(p_id.next(), id_s++, "decay", "Decay", ct_envtime,
-                                                 px, py, sc_id, cg_ENV, e, true,
-                                                 Surge::ParamConfig::kVertical | kWhite | sceasy));
+          sprintf(gname, "%s.env.decay", gpfx);
+         a->push_back(scene[sc].adsr[e].d.assign(p_id.next(), id_s++, "decay", "Decay", gname, ct_envtime,
+                                                 sc_id, cg_ENV, e, true));
+          
          a->push_back(scene[sc].adsr[e].d_s.assign(p_id.next(), id_s++, "decay_shape",
                                                    "Decay Shape", ct_envshape, px, py + so, sc_id,
                                                    cg_ENV, e, false, kNoPopup));
          px += gui_vfader_dist;
-
-         a->push_back(scene[sc].adsr[e].s.assign(p_id.next(), id_s++, "sustain", "Sustain",
-                                                 ct_percent, px, py, sc_id, cg_ENV, e, true,
-                                                 Surge::ParamConfig::kVertical | kWhite | sceasy));
+          
+          sprintf(gname, "%s.env.sustain", gpfx);
+         a->push_back(scene[sc].adsr[e].s.assign(p_id.next(), id_s++, "sustain", "Sustain", gname,
+                                                 ct_percent, sc_id, cg_ENV, e, true)); 
          px += gui_vfader_dist;
 
-         a->push_back(scene[sc].adsr[e].r.assign(p_id.next(), id_s++, "release", "Release",
-                                                 ct_envtime, px, py, sc_id, cg_ENV, e, true,
-                                                 Surge::ParamConfig::kVertical | kWhite | sceasy));
+          sprintf(gname, "%s.env.release", gpfx);
+         a->push_back(scene[sc].adsr[e].r.assign(p_id.next(), id_s++, "release", "Release", gname,
+                                                 ct_envtime, sc_id, cg_ENV, e, true));
+          
          a->push_back(scene[sc].adsr[e].r_s.assign(p_id.next(), id_s++, "release_shape",
                                                    "Release Shape", ct_envshape, px, py + so, sc_id,
                                                    cg_ENV, e, false, kNoPopup));
