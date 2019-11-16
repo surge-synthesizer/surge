@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 133 14" xmlns="http://www.w3.org/2000/svg">
+  <polygon id="Triangle" fill="#98999B" points="70.189 -50.255 76.189 60.745 70.189 60.745" transform="matrix(0, -1, 1, 0, 67.944004, 78.434002)"/>
+  <rect id="Rectangle" fill="#000000" x="128" y="0" width="1" height="14"/>
+  <polygon id="polygon-1" fill="#98999B" points="57.026 -46.524 63.026 64.476 57.026 64.476" transform="matrix(0, 1, -1, 0, 69.002003, -51.049999)"/>
+  <rect id="Rectangle" fill="#000000" x="5" y="6" width="123" height="2"/>
+  <rect id="Rectangle" fill="#000000" x="4" y="0" width="1" height="14"/>
+  <rect id="rect-1" fill="#000000" x="128" y="0" width="1" height="14"/>
+  <rect id="rect-2" fill="#000000" x="94.462" y="2.347" width="0.753" height="8.493" style=""/>
+  <rect id="rect-3" fill="#000000" x="63.43" y="2.266" width="1.028" height="9.494" style=""/>
+  <rect id="rect-4" fill="#000000" x="31.372" y="3.051" width="1.087" height="8.424" style=""/>
+</svg>

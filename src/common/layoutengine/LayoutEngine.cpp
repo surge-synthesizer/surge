@@ -53,7 +53,14 @@ bool LayoutEngine::parseLayout()
    // Obviously fix this
    doc.SetTabSize(4);
 
-   doc.LoadFile(layoutResource("layout.xml"));
+   if( ! doc.LoadFile(layoutResource("layout.xml")) || doc.Error() )
+   {
+      LayoutLog::error() << "Unable to parse layout.xml\nError is:\n" << doc.ErrorDesc() << " at row=" <<doc.ErrorRow() << " col=" << doc.ErrorCol() << std::endl;
+      std::ostringstream oss;
+      oss << "XML Error '" << doc.ErrorDesc() << "' at layout.xml line " << doc.ErrorRow() << " column " << doc.ErrorCol() << std::endl;
+      Surge::UserInteractions::promptError(oss.str(), "Layout Parse Error" );
+      return false;
+   }
    TiXmlElement* surgeskin = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-skin"));
 
    if( surgeskin == nullptr )
@@ -133,13 +140,16 @@ void LayoutEngine::buildNodeMapFrom(LayoutElement* here)
 
 LayoutEngine::container_t* LayoutEngine::generateLayoutRootControl()
 {
-   assert(rootLayoutElement.get());
+   if( ! rootLayoutElement ) return nullptr;
+   
    rootLayoutElement->generateLayoutControl(this);
    return rootLayoutElement->associatedContainer;
 }
 
 LayoutEngine::container_t* LayoutEngine::getSubContainerByLabel(std::string label)
 {
+   if( ! rootLayoutElement ) return nullptr;
+   
    std::function<container_t*(std::string, LayoutElement*)> recurse;
 
    recurse = [&recurse](std::string n, LayoutElement* el) -> container_t* {
@@ -190,7 +200,7 @@ LayoutEngine::control_t* LayoutEngine::addLayoutControl(const guiid_t& guiid,
                                                         long tag,
                                                         SurgeGUIEditor* synth)
 {
-   assert(rootLayoutElement->associatedContainer);
+   if( ! rootLayoutElement ) return nullptr;
    if (!bitmapStore)
    {
       LayoutLog::error() << "addLayoutControl called without a bitmapstore set on Layout Engine"
@@ -238,10 +248,12 @@ fail:
 
 float LayoutEngine::getWidth()
 {
+   if( ! rootLayoutElement ) return 100;
    return rootLayoutElement->width;
 }
 float LayoutEngine::getHeight()
 {
+   if( ! rootLayoutElement ) return 100;
    return rootLayoutElement->height;
 }
 

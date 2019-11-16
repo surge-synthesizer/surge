@@ -282,6 +282,22 @@ void LayoutEngine::setupControlFactory()
 
       auto res = new CSurgeSlider(nopoint, style,
                                   listener, tag, true, bitmapStore);
+
+      std::vector<std::string> propNamesForSVG = { "unipolar_background",
+                                                   "unipolar_modulated_background",
+                                                   "bipolar_background",
+                                                   "bipolar_modulated_background",
+                                                   "bipolar_ticked_background",
+                                                   "bipolar_modulated_ticked_background",
+                                                   "handle",
+                                                   "handle_modulated" };
+      for( int i=0; i<CSurgeSlider::n_stateBitmaps; ++i )
+      {
+         if( props[propNamesForSVG[i]] != "" )
+         {
+            // LayoutLog::info() << "Item '" << i << "' name '" << props[propNamesForSVG[i]] << "' value '" << propNamesForSVG[i] << "'" << std::endl;
+         }
+      }
       /*
       ** SO MUCH to fix here; like horizontal and vertical; and like the bitmaps we choose and the
       *background.

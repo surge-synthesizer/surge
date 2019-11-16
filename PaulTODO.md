@@ -11,8 +11,9 @@ Here's my sort of running todo as I think of it, in rough order
   * Alignment of Text (MONO STFP?)
 * Slider Parameterization and Work
   * Handle and BG SVGs
-  * API for painting ticks on sliders; and sizing sliders
-  * SVG for slider handles
+    - hiroz is 133 x 14
+    - vertical is ...
+
 * Modulation Button Properties for Colors exposed
   * including hover, background blink, font, etc...
 * VU Meter and VU Meter Optimization for Background

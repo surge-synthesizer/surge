@@ -81,6 +81,15 @@
 
   <components>
     <component name="hslider" class="CSurgeSlider" width="140" height="26">
+      <componentproperties
+          unipolar_background="SVG/hslider/UniTray.svg"
+          unipolar_modulated_background="SVG/hslider/UniModTray.svg"
+          bipolar_background="SVG/hslider/BiTray.svg"
+          bipolar_modulated_background="SVG/hslider/BiModTray.svg"
+          bipolar_ticked_background="SVG/hslider/BiTickTray.svg"
+          bipolar_modulated_ticked_background="SVG/hslider/BiModTickTray.svg"
+          handle="SVG/hslider/Handle.svg"
+          handle_modulated="SVG/hslider/HandleMod.svg"/>
     </component>
     <component name="hslider.light" class="CSurgeSlider" width="140" height="26">
       <componentproperties white="true"/>

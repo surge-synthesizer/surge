@@ -6,6 +6,8 @@
 #
 # ./build-osx.sh --help
 
+set -o xtrace
+
 
 help_message()
 {
