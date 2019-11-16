@@ -213,27 +213,22 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       // ct_midikey
       // drift,keytrack_root
 
-      px = gui_col5_x;
-      py = gui_uppersec_y;
-      a->push_back(scene[sc].volume.assign(p_id.next(), id_s++, "volume", "Volume", ct_amplitude,
-                                           px, py, sc_id, cg_GLOBAL, 0, true,
-                                           Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
-      a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan", ct_percent_bidirectional,
-                                        px, py, sc_id, cg_GLOBAL, 0, true,
-                                        Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
-      a->push_back(scene[sc].width.assign(p_id.next(), id_s++, "pan2", "Width",
-                                          ct_percent_bidirectional, px, py, sc_id, cg_GLOBAL, 0,
-                                          true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
-      a->push_back(scene[sc].send_level[0].assign(
-          p_id.next(), id_s++, "send_fx_1", "FX1 Send", ct_amplitude, px, py, sc_id, cg_GLOBAL, 0,
-          true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      py += gui_hfader_dist;
+//Scene Output
+      a->push_back(scene[sc].volume.assign(
+        p_id.next(), id_s++, "volume", "Volume", "scene.output.volume", ct_amplitude, sc_id, cg_GLOBAL, 0, true));
+      
+      a->push_back(scene[sc].pan.assign(
+        p_id.next(), id_s++, "pan", "Pan", "scene.output.pan", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true));
+      
+      a->push_back(scene[sc].width.assign(
+        p_id.next(), id_s++, "pan2", "Width", "scene.output.width", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true));
+      
+       a->push_back(scene[sc].send_level[0].assign(
+        p_id.next(), id_s++, "send_fx_1", "FX1 Send", "scene.output.fx1send", ct_amplitude, sc_id, cg_GLOBAL, 0, true));
+      
       a->push_back(scene[sc].send_level[1].assign(
-          p_id.next(), id_s++, "send_fx_2", "FX2 Send", ct_amplitude, px, py, sc_id, cg_GLOBAL, 0,
-          true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
+          p_id.next(), id_s++, "send_fx_2", "FX2 Send", "scene.output.fx2send", ct_amplitude, sc_id, cg_GLOBAL, 0, true));
+       
       scene[sc].send_level[0].val_max.f = 1.5874f;
       scene[sc].send_level[1].val_max.f = 1.5874f;
 
@@ -376,16 +371,16 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
              sc_id, cg_FILTER, f, false, Surge::ParamConfig::kHorizontal));
          py = gui_mainsec_slider_y;
          a->push_back(scene[sc].filterunit[f].cutoff.assign(
-             p_id.next(), id_s++, "cutoff", "Cutoff", "global.cutoff", ct_freq_audible, sc_id, cg_FILTER, f,
-             true));
+             p_id.next(), id_s++, "cutoff", "Cutoff", ct_freq_audible, px, py, sc_id, cg_FILTER, f,
+             true, Surge::ParamConfig::kHorizontal | sceasy));
          if (f == 1)
             a->push_back(scene[sc].f2_cutoff_is_offset.assign(
                 p_id.next(), id_s++, "f2_cf_is_offset", "Is Offset to F1", ct_bool_relative_switch,
                 px, py, sc_id, cg_GLOBAL, 0, false, kMeta));
          py += gui_hfader_dist;
          a->push_back(scene[sc].filterunit[f].resonance.assign(
-             p_id.next(), id_s++, "resonance", "Resonance", "global.resonance", ct_percent, sc_id, cg_FILTER, f,
-             true));
+             p_id.next(), id_s++, "resonance", "Resonance", ct_percent, px, py, sc_id, cg_FILTER, f,
+             true, Surge::ParamConfig::kHorizontal | sceasy));
          if (f == 1)
             a->push_back(scene[sc].f2_link_resonance.assign(
                 p_id.next(), id_s++, "f2_link_resonance", "Link Resonance", ct_bool_link_switch, px,
@@ -437,7 +432,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          a->push_back(scene[sc].adsr[e].r_s.assign(p_id.next(), id_s++, "release_shape",
                                                    "Release Shape", ct_envshape, px, py + so, sc_id,
                                                    cg_ENV, e, false, kNoPopup));
-         px += gui_vfader_dist;
+         px += gui_vfader_dist; 
 
          a->push_back(scene[sc].adsr[e].mode.assign(p_id.next(), id_s++, "mode", "Mode", ct_envmode,
                                                     px + 13, py - 31, sc_id, cg_ENV, e, false,

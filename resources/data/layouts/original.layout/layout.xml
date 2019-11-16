@@ -446,13 +446,18 @@
               <node guiid="fm.depth" xoff="center"   yoff="20" component="hslider.light"/>
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Filter Cfg"/>
-            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output"/>
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output">
+                <node guiid="scene.output.volume" xoff="center"   yoff="23" component="hslider"/>
+                <node guiid="scene.output.pan" xoff="center"   yoff="40" component="hslider"/>
+                <node guiid="scene.output.width" xoff="center"   yoff="57" component="hslider"/>
+                <node guiid="scene.output.fx1send" xoff="center"   yoff="74" component="hslider"/>
+                <node guiid="scene.output.fx2send" xoff="center"   yoff="91" component="hslider"/>
+            </layout>
+
           </layout>
           <layout height="100" width="auto" mode="hlist" style="blank" label="filtparent">
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 1">
               <node guiid="filters.filter0.type" component="Filter Selector"/>
-              <node component="hslider" guiid="global.cutoff"/>
-              <node component="hslider" guiid="global.resonance"/>
               
             </layout>
             <layout height="100" width="175" style="svg" svg="SVG/175x100_BG.svg" label="Filt Mix"/>
@@ -532,6 +537,7 @@
     <layout yoff="0" width="auto" height="auto" mode="vlist" style="blank" label="fxoutparent">
       <layout height="100" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output"/>
       <layout height="auto" width="auto" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="FX"/>
+
       <layout height="50" width="auto" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Menu">
         <node component="Menu Button" guiid="global.menubutton" xoff="2" yoff="2"/>
       </layout>
