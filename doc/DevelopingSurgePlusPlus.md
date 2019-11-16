@@ -22,9 +22,17 @@ So once (and only once) add an upstream remote to your checked out repo
 git remote add upstream https://github.com/surge-synthesizer/surge.git
 ```
 
-then when you want to update the surge++-master branch in your fork to upstream
-run the following commands (which @baconpaul keeps around as a script):
+When you want to update the your copy(fork) of the surge++-master repo to match the master(upstream) repository,
+run the following commands:
 
+git diff --exit-code
+git diff --cached --exit-code
+git checkout surge++-master
+git fetch upstream
+git reset upstream/surge++-master --hard
+git push origin surge++-master
+
+To make updating your fork easier, you can create a script that looks like this:
 ```
 #!/bin/bash
 set -e
@@ -36,7 +44,6 @@ git fetch upstream
 git reset upstream/surge++-master --hard
 git push origin surge++-master
 ```
-
 You can see this makes sure you don't have any local changes, heads over to your
 local s++ branch, grabs upstream, resets to upstream, and pushes.
 
