@@ -288,6 +288,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                   "route_ring23", "Ring Route 2x3", "mix.ring23.route",
                                                   ct_oscroute, sc_id, cg_MIX, 0, false));
       px += gui_vfader_dist;
+       
       a->push_back(scene[sc].level_noise.assign(p_id.next(), id_s++,
                                                 "level_noise", "Noise Level", "mix.noise.level",
                                                 ct_amplitude, sc_id, cg_MIX, 0, true ));
@@ -317,20 +318,22 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
 
       px = gui_envsec_x + gui_vfader_dist * 19 + 10;
       py = gui_envsec_y;
-      a->push_back(scene[sc].vca_level.assign(p_id.next(), id_s++, "vca_level", "Gain", ct_decibel,
-                                              px, py, sc_id, cg_GLOBAL, 0, true,
-                                              Surge::ParamConfig::kVertical | kWhite | sceasy));
+       
+      a->push_back(scene[sc].vca_level.assign(p_id.next(), id_s++, "vca_level", "Gain", "amp.gain",ct_decibel, sc_id, cg_GLOBAL, 0, true));
+       
       px += gui_vfader_dist;
+       
       a->push_back(scene[sc].vca_velsense.assign(
-          p_id.next(), id_s++, "vca_velsense", "Velocity > Gain", ct_decibel_attenuation, px, py,
-          sc_id, cg_GLOBAL, 0, false, Surge::ParamConfig::kVertical | kWhite));
+          p_id.next(), id_s++, "vca_velsense", "Velocity > Gain", "amp.velocity", ct_decibel_attenuation, sc_id, cg_GLOBAL, 0, false));
+       
       px += gui_vfader_dist;
 
       px = gui_col3_x + gui_sec_width + 1;
       py = gui_uppersec_y + gui_hfader_dist * 4;
+       
       a->push_back(scene[sc].feedback.assign(
-          p_id.next(), id_s++, "feedback", "Feedback", ct_percent_bidirectional, px, py, sc_id,
-          cg_GLOBAL, 0, true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
+          p_id.next(), id_s++, "feedback", "Feedback", "global.feedback", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true)); 
+       
       py += gui_hfader_dist;
 
       a->push_back(scene[sc].filterblock_configuration.assign(

@@ -488,6 +488,8 @@
               <node guiid="amp.env.decay" xoff="40"   yoff="center" component="vslider"/>
               <node guiid="amp.env.sustain" xoff="57"   yoff="center" component="vslider"/>
               <node guiid="amp.env.release" xoff="74"   yoff="center" component="vslider"/>
+              <node guiid="amp.gain" xoff="120"   yoff="center" component="vslider"/>
+              <node guiid="amp.velocity" xoff="137"   yoff="center" component="vslider"/>
             </layout>
           </layout>
         </layout>
