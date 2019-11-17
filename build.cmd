@@ -14,4 +14,5 @@ exit /b 0
 
 :error
 echo build failed!
+pause ::pause so the user knows something went wrong
 exit /b 1
