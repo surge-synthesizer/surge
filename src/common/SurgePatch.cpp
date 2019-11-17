@@ -332,7 +332,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       py = gui_uppersec_y + gui_hfader_dist * 4;
        
       a->push_back(scene[sc].feedback.assign(
-          p_id.next(), id_s++, "feedback", "Feedback", "global.feedback", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true)); 
+          p_id.next(), id_s++, "feedback", "Feedback", "filters.feedback", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true)); 
        
       py += gui_hfader_dist;
 

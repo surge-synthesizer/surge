@@ -454,7 +454,9 @@
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FM">
               <node guiid="fm.depth" xoff="center"   yoff="20" component="hslider.light"/>
             </layout>
-            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Filter Cfg"/>
+            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Filter Cfg">
+                <node guiid="filters.feedback" xoff="center"   yoff="20" component="hslider.light"/>
+            </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output">
                 <node guiid="scene.output.volume" xoff="center"   yoff="23" component="hslider"/>
                 <node guiid="scene.output.pan" xoff="center"   yoff="40" component="hslider"/>
