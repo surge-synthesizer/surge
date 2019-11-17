@@ -20,6 +20,9 @@
       <string name="latch" value="LATCH"/>
 
       <string name="unipolar" value="UniPolar"/>
+      <string name="warm" value="Warm"/>
+      <string name="neutral" value="Neutral"/>
+      <string name="bright" value="Bright"/>
       
     </stringmap>
 
@@ -96,6 +99,9 @@
     </component>
     <component name="vslider" class="CSurgeSlider" height="84" width="22">
       <componentproperties orientation="vertical"/>
+    </component>
+    <component name="vslider.mini" class="CSurgeSlider" height="84" width="22">
+      <componentproperties orientation="vertical" mini="true"/>
     </component>
     <component name="knob.medium" class="CSurgeKnob" width="50" height="50">
     </component>
@@ -297,12 +303,19 @@
           </node>
         </layout>
         <layout width="50" height="auto"  style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Splt"/>
-        <layout width="600" height="auto" style="labelblock" bgcolor="$patch.bg" fgcolor="$patch.fg" label="Patch">
+        <layout width="550" height="auto" style="labelblock" bgcolor="$patch.bg" fgcolor="$patch.fg" label="Patch">
           <node component="Plus Minus" guiid="patch.categoryjog" xoff="10" yoff="30"/>
           <node component="Plus Minus" guiid="patch.patchjog" xoff="50" yoff="30"/>
         </layout>
         <layout width="50" height="auto" style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Status"/>
-        <layout width="auto" height="auto" style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="FX Bypass"/>
+        <layout width="auto" height="auto" mode="vlist" style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="FX Bypass">
+          <node guiid="global.fxbypass" component="36x36 Multi" width="144" height="36">
+            <nodeproperties rows="1" cols="4" choices="none|send|sd+ms|all" popup="false"/>
+          </node>
+          <node guiid="global.character" component="60x12 Multi" width="180" height="12">
+            <nodeproperties rows="1" cols="3" choices="$warm|$neutral|$bright" popup="false"/>
+          </node>
+        </layout>
       </layout>
       
       <layout xoff="0" mode="hlist" width="auto" height="500" style="blank" label="voice">
@@ -456,11 +469,11 @@
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Filter Cfg"/>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output">
-                <node guiid="scene.output.volume" xoff="center"   yoff="23" component="hslider"/>
-                <node guiid="scene.output.pan" xoff="center"   yoff="40" component="hslider"/>
-                <node guiid="scene.output.width" xoff="center"   yoff="57" component="hslider"/>
-                <node guiid="scene.output.fx1send" xoff="center"   yoff="74" component="hslider"/>
-                <node guiid="scene.output.fx2send" xoff="center"   yoff="91" component="hslider"/>
+                <node guiid="scene.output.volume" xoff="center"   yoff="23" component="hslider.light"/>
+                <node guiid="scene.output.pan" xoff="center"   yoff="40" component="hslider.light"/>
+                <node guiid="scene.output.width" xoff="center"   yoff="57" component="hslider.light"/>
+                <node guiid="scene.output.fx1send" xoff="center"   yoff="74" component="hslider.light"/>
+                <node guiid="scene.output.fx2send" xoff="center"   yoff="91" component="hslider.light"/>
             </layout>
 
           </layout>
@@ -475,7 +488,14 @@
             </layout>
           </layout>
           <layout height="auto" width="auto" mode="hlist" style="blank" label="envparent">
-            <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="KeyTrack"/>
+            <layout height="auto" mode=vlist width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="KeyTrack">
+              <label string="This is a label demo" fgcolor="$mixenv.fg" height="12" width="auto"/>
+              <label string="This is a colored demo" fgcolor="#ffffff" height="12" width="auto"/>
+              <label string="This is a bg and fg" fgcolor="#ff0000" bgcolor="#00ff00" height="12" width="auto"/>
+              <label string="font size" fgcolor="$mixenv.fg" height="25" fontsize="20" width="auto"/>
+              <!-- You probably almost never want to use this and instead do it through a styled label, yet to be designed -->
+              <label string="This is a font name" fgcolor="#aaaaff" font="Comic Sans MS" fontsize="15" height="20" width="auto"/>
+            </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG">
                 <node guiid="filter.env.attack" xoff="23"   yoff="center" component="vslider"/>
                 <node guiid="filter.env.decay" xoff="40"   yoff="center" component="vslider"/>
@@ -556,12 +576,12 @@
         <node component="hslider" xoff="20" yoff="71" guiid="lfo.phase"/>
         <node component="hslider" xoff="20" yoff="88" guiid="lfo.magnitude"/>
         <node component="hslider" xoff="20" yoff="105" guiid="lfo.deform"/>
-        <node component="vslider" xoff="100" yoff="right" guiid="lfo.env.delay"/>
-        <node component="vslider" xoff="117" yoff="right" guiid="lfo.env.attack"/>
-        <node component="vslider" xoff="134" yoff="right" guiid="lfo.env.hold"/>
-        <node component="vslider" xoff="151" yoff="right" guiid="lfo.env.decay"/>
-        <node component="vslider" xoff="168" yoff="right" guiid="lfo.env.sustain"/>
-        <node component="vslider" xoff="185" yoff="right" guiid="lfo.env.release"/>
+        <node component="vslider.mini" xoff="300" yoff="right" guiid="lfo.env.delay"/>
+        <node component="vslider.mini" xoff="317" yoff="right" guiid="lfo.env.attack"/>
+        <node component="vslider.mini" xoff="334" yoff="right" guiid="lfo.env.hold"/>
+        <node component="vslider.mini" xoff="351" yoff="right" guiid="lfo.env.decay"/>
+        <node component="vslider.mini" xoff="368" yoff="right" guiid="lfo.env.sustain"/>
+        <node component="vslider.mini" xoff="385" yoff="right" guiid="lfo.env.release"/>
         
       </layout> 
     </layout>

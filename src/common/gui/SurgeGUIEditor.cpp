@@ -1007,6 +1007,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_bool_keytrack:
          case ct_pitch_octave:
          case ct_filtertype:
+         case ct_character:
+         case ct_fxbypass:
          {
             CControl *hsw = nullptr;
             if( p->hasLayoutEngineID )
@@ -1102,21 +1104,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             nonmod_param[i] = hsw;
          }
          break;
-         case ct_fxbypass:
-         {
-            CRect rect(0, 0, 135, 27);
-            rect.offset(p->posx, p->posy);
-            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 27, 1, 4,
-                                          bitmapStore->getBitmap(IDB_FXBYPASS), nopoint, true);
-            fxbypass_tag = p->id + start_paramtags;
-            rect(2, 2, 133, 25);
-            rect.offset(p->posx, p->posy);
-            hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
          case ct_fbconfig:
          {
             CRect rect(0, 0, 134, 52);
@@ -1155,17 +1142,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
                if(legacy != nullptr) legacy->addView(slfo);
                nonmod_param[i] = slfo;
             }
-         }
-         break;
-         case ct_character:
-         {
-            CRect rect(0, 0, 135, 12);
-            rect.offset(p->posx, p->posy);
-            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 12, 1, 3,
-                                          bitmapStore->getBitmap(IDB_CHARACTER), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(hsw);
-            nonmod_param[i] = hsw;
          }
          break;
          case ct_midikey:

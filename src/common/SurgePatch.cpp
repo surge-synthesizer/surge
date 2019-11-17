@@ -94,9 +94,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    param_ptr.push_back(polylimit.assign(p_id.next(), 0, "polylimit", "Poly Limit", ct_polylimit,
                                         8 + 91, gui_mid_topbar_y + 13, 0, cg_GLOBAL, 0, false,
                                         Surge::ParamConfig::kHorizontal | kNoPopup));
-   param_ptr.push_back(fx_bypass.assign(p_id.next(), 0, "fx_bypass", "FX Bypass", ct_fxbypass, 607,
-                                        gui_mid_topbar_y - 6, 0, cg_GLOBAL, 0, false,
-                                        Surge::ParamConfig::kHorizontal | kNoPopup));
+   param_ptr.push_back(fx_bypass.assign(p_id.next(), 0, "fx_bypass", "FX Bypass", "global.fxbypass",
+                                        ct_fxbypass, 0, cg_GLOBAL, 0, false));
 
    polylimit.val.i = 8;
    splitkey.val.i = 60;
@@ -528,8 +527,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
              }
           }
                              
-   param_ptr.push_back(character.assign(p_id.next(), 0, "character", "Character", ct_character, 607,
-                                        gui_mid_topbar_y + 24, 0, cg_GLOBAL, 0, false, kNoPopup));
+   param_ptr.push_back(character.assign(p_id.next(), 0, "character", "Character", "global.character",
+                                        ct_character,  0, cg_GLOBAL, 0, false ));
 
    // Resolve my promises
    p_id.resolve();
