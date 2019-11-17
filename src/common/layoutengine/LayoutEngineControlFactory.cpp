@@ -279,6 +279,10 @@ void LayoutEngine::setupControlFactory()
       {
          style |= kWhite;
       }
+      if( props["mini"] == "true" )
+      {
+         style |= kMini;
+      }
 
       auto res = new CSurgeSlider(nopoint, style,
                                   listener, tag, true, bitmapStore);

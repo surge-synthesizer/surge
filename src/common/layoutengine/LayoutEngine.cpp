@@ -623,6 +623,13 @@ void LayoutElement::generateLayoutControl(LayoutEngine* eng, bool recurse)
 
       label->setText(txt.c_str());
 
+      // FIXME - have a default font size in the layout
+      auto fs = getprop( "fontsize", "12" );
+      auto fn = getprop( "font", "Lato" );
+      
+      VSTGUI::SharedPointer<VSTGUI::CFontDesc> newFont = new VSTGUI::CFontDesc( fn.c_str(), std::atoi(fs.c_str() ) );
+      label->setFont(newFont);
+      
       parent->associatedContainer->addView(label);
       associatedControl = label;
       return;
