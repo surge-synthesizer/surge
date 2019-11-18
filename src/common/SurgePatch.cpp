@@ -63,20 +63,17 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    {
       int px = gui_col6_x, py = gui_sendfx_y;
 
-      param_ptr.push_back(fx[4].return_level.assign(p_id.next(), 0, "volume_FX1", "FX1 Return",
-                                                    ct_amplitude, px, py, 0, cg_GLOBAL, 0, true,
-                                                    Surge::ParamConfig::kHorizontal));
+      param_ptr.push_back(fx[4].return_level.assign(p_id.next(), 0, "volume_FX1", "FX1 Return", "scene.output.fx1return",
+                                                    ct_amplitude, 0, cg_GLOBAL, 0, true));
       py += gui_hfader_dist;
-      param_ptr.push_back(fx[5].return_level.assign(p_id.next(), 0, "volume_FX2", "FX2 Return",
-                                                    ct_amplitude, px, py, 0, cg_GLOBAL, 0, true,
-                                                    Surge::ParamConfig::kHorizontal));
+       
+      param_ptr.push_back(fx[5].return_level.assign(p_id.next(), 0, "volume_FX2", "FX2 Return", "scene.output.fx2return",
+                                                    ct_amplitude, 0, cg_GLOBAL, 0, true));
       py += gui_hfader_dist;
 
       // TODO don't store in the patch ?
-      param_ptr.push_back(volume.assign(p_id.next(), 0, "volume", "Master Volume",
-                                        ct_decibel_attenuation, hmargin + gui_sec_width * 5,
-                                        gui_mid_topbar_y + 12, 0, cg_GLOBAL, 0, true,
-                                        Surge::ParamConfig::kHorizontal | kEasy));
+      param_ptr.push_back(volume.assign(p_id.next(), 0, "volume", "Master Volume", "global.volume",
+                                        ct_decibel_attenuation, 0, cg_GLOBAL, 0, true));
    }
    param_ptr.push_back(scene_active.assign(p_id.next(), 0, "scene_active", "Active Scene", "scene.AB",
                                            ct_scenesel, 0, cg_GLOBAL, 0, false)); // FIXME kNoPopup
