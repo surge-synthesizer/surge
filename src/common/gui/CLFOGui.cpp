@@ -384,14 +384,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
       dc->drawLine(top0, top1);
       dc->drawLine(bot0, bot1);
-      
-#if LINUX
-      dc->setLineWidth(100.0);
-#else
-      dc->setLineWidth(1.3);
-#endif
-      dc->setFrameColor(VSTGUI::CColor(0x00, 0x00, 0, 0xFF));
-      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
 
 #if LINUX
       dc->setLineWidth(100.0);
@@ -401,6 +394,17 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       dc->setFrameColor(VSTGUI::CColor(0xB0, 0x60, 0x00, 0xFF));
       dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
+#if LINUX
+      dc->setLineWidth(100.0);
+#else
+      dc->setLineWidth(1.3);
+#endif
+      dc->setFrameColor(VSTGUI::CColor(0x00, 0x00, 0, 0xFF));
+      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
+
+
       dc->restoreGlobalState();
       path->forget();
       eupath->forget();
