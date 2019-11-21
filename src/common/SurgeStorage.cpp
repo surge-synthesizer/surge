@@ -226,7 +226,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    {
       userDataPath = dotSurge;
    }
-   std::cout << "UserDataPath is " << userDataPath << std::endl;
+   //std::cout << "DataPath is " << datapath << std::endl;
+   //std::cout << "UserDataPath is " << userDataPath << std::endl;
   
 #elif WINDOWS
 #if TARGET_RACK
@@ -303,7 +304,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
 
    // WindowWT is a WaveTable which now has a constructor so don't do this
    // memset(&WindowWT, 0, sizeof(WindowWT));
-   if( ! load_wt_wt(datapath + "windows.wt", &WindowWT) )
+   if( loadWtAndPatch && ! load_wt_wt(datapath + "windows.wt", &WindowWT) )
    {
       std::ostringstream oss;
       oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for surge to operate "
