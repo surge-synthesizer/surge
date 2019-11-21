@@ -665,6 +665,11 @@ if (os.istarget("macosx")) then
         xcodebrewbuildsettings()
     end
 
+    project "surge-au-run"
+    kind "Utility"
+    dependson { "surge-au" }
+    postbuildcommands { "./scripts/macOS/run-au-from-xcode.sh" }
+
 end
 
 -- LV2 PLUGIN --

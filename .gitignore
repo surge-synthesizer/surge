@@ -49,6 +49,7 @@ packages.config
 # XCode
 Surge.xcworkspace/
 surge-au.xcodeproj/
+surge-au-run.xcodeproj/
 surge-vst2.xcodeproj/
 surge-vst3.xcodeproj/
 surge-headless.xcodeproj/
