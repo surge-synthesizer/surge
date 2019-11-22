@@ -358,8 +358,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       {
          px = gui_col3_x + gui_sec_width * 2 * f;
          py = gui_mainsec_y;
-
-         char fp[256];
+        char fp[256];
+          
          sprintf(fp, "filters.filter%d.type", f );
          a->push_back(scene[sc].filterunit[f].type.assign(
                          p_id.next(), id_s++, "type", "Filter Type", fp,
@@ -368,35 +368,44 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          a->push_back(scene[sc].filterunit[f].subtype.assign(
              p_id.next(), id_s++, "subtype", "Filter Subtype", ct_filtersubtype, px - 3, py + 1,
              sc_id, cg_FILTER, f, false, Surge::ParamConfig::kHorizontal));
-         py = gui_mainsec_slider_y;
-         a->push_back(scene[sc].filterunit[f].cutoff.assign(
-             p_id.next(), id_s++, "cutoff", "Cutoff", ct_freq_audible, px, py, sc_id, cg_FILTER, f,
-             true, Surge::ParamConfig::kHorizontal | sceasy));
-         if (f == 1)
-            a->push_back(scene[sc].f2_cutoff_is_offset.assign(
-                p_id.next(), id_s++, "f2_cf_is_offset", "Is Offset to F1", ct_bool_relative_switch,
-                px, py, sc_id, cg_GLOBAL, 0, false, kMeta));
-         py += gui_hfader_dist;
-         a->push_back(scene[sc].filterunit[f].resonance.assign(
-             p_id.next(), id_s++, "resonance", "Resonance", ct_percent, px, py, sc_id, cg_FILTER, f,
-             true, Surge::ParamConfig::kHorizontal | sceasy));
-         if (f == 1)
-            a->push_back(scene[sc].f2_link_resonance.assign(
-                p_id.next(), id_s++, "f2_link_resonance", "Link Resonance", ct_bool_link_switch, px,
-                py, sc_id, cg_GLOBAL, 0, false, kMeta));
+          
+            py = gui_mainsec_slider_y;
+             
+            sprintf(fp, "filter%d.cutoff", f );
+            a->push_back(scene[sc].filterunit[f].cutoff.assign(
+                p_id.next(), id_s++, "cutoff", "Cutoff", fp, ct_freq_audible, sc_id, cg_FILTER, f, true));
+             
+            if (f == 1)
+               a->push_back(scene[sc].f2_cutoff_is_offset.assign(
+                   p_id.next(), id_s++, "f2_cf_is_offset", "Is Offset to F1", ct_bool_relative_switch,
+                   px, py, sc_id, cg_GLOBAL, 0, false, kMeta));
+             
+            py += gui_hfader_dist;
+             
+            sprintf(fp, "filter%d.resonance", f );
+            a->push_back(scene[sc].filterunit[f].resonance.assign(
+                p_id.next(), id_s++, "resonance", "Resonance", fp, ct_percent, sc_id, cg_FILTER, f, true));
+             
+            if (f == 1)
+               a->push_back(scene[sc].f2_link_resonance.assign(
+                   p_id.next(), id_s++, "f2_link_resonance", "Link Resonance", ct_bool_link_switch, px,
+                   py, sc_id, cg_GLOBAL, 0, false, kMeta));
+             
 
-         // py += gui_hfader_dist2;
+            // py += gui_hfader_dist2;
 
-         px = gui_envsec_x + gui_vfader_dist * (5 + f) - 10;
-         py = gui_envsec_y;
-         a->push_back(scene[sc].filterunit[f].envmod.assign(
-             p_id.next(), id_s++, "envmod", "Envmod", ct_freq_mod, px + gui_sec_width, py, sc_id,
-             cg_FILTER, f, true, Surge::ParamConfig::kVertical | kWhite | sceasy));
-         px += 3 * gui_vfader_dist - gui_sec_width;
-         a->push_back(scene[sc].filterunit[f].keytrack.assign(
-             p_id.next(), id_s++, "keytrack", "Keytrack", ct_percent_bidirectional, px, py, sc_id,
-             cg_FILTER, f, true, Surge::ParamConfig::kVertical | kWhite));
-      }
+            px = gui_envsec_x + gui_vfader_dist * (5 + f) - 10;
+            py = gui_envsec_y;
+             
+            sprintf(fp, "filter%d.envmod", f );
+            a->push_back(scene[sc].filterunit[f].envmod.assign(
+                p_id.next(), id_s++, "envmod", "Envmod", fp, ct_freq_mod, sc_id, cg_FILTER, f, true));
+             
+            px += 3 * gui_vfader_dist - gui_sec_width;
+            sprintf(fp, "filter%d.keytrack", f );
+            a->push_back(scene[sc].filterunit[f].keytrack.assign(
+                p_id.next(), id_s++, "keytrack", "Keytrack", fp, ct_percent_bidirectional, sc_id, cg_FILTER, f, true));
+         }
 
       // scene[sc].filterunit[0].type.val.i = 1;
       for (int e = 0; e < 2; e++)
