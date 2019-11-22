@@ -773,7 +773,7 @@ void SurgePatch::do_morph()
 struct patch_header
 {
    char tag[4];
-   unsigned int xmlsize, wtsize[2][n_oscs];
+   unsigned int xmlsize, wtsize[2][3]; // n_oscs]; FIXME deal with patch header for n_osc > 3
 };
 #pragma pack(pop)
 
@@ -885,7 +885,7 @@ void SurgePatch::load_patch(const void* data, int datasize, bool preset)
 
       for (int sc = 0; sc < 2; sc++)
       {
-         for (int osc = 0; osc < n_oscs; osc++)
+         for (int osc = 0; osc < 3 /* n_oscs FIXME deal with patch streaming for n_osc != 3 */; osc++)
          {
             ph->wtsize[sc][osc] = vt_read_int32LE(ph->wtsize[sc][osc]);
             if (ph->wtsize[sc][osc])
