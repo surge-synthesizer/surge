@@ -482,27 +482,38 @@
           <layout height="100" width="auto" mode="hlist" style="blank" label="filtparent">
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 1">
               <node guiid="filters.filter0.type" component="Filter Selector"/>
+              <node guiid="filter0.cutoff" xoff="center"   yoff="10" component="hslider.light"/>
+              <node guiid="filter0.resonance" xoff="center"   yoff="27" component="hslider.light"/>
               
             </layout>
             <layout height="100" width="175" style="svg" svg="SVG/175x100_BG.svg" label="Filt Mix"/>
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 2">
               <node guiid="filters.filter1.type" component="Filter Selector"/>
+              <node guiid="filter1.cutoff" xoff="center"   yoff="10" component="hslider.light"/>
+              <node guiid="filter1.resonance" xoff="center"   yoff="27" component="hslider.light"/>
+              
             </layout>
           </layout>
           <layout height="auto" width="auto" mode="hlist" style="blank" label="envparent">
             <layout height="auto" mode=vlist width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="KeyTrack">
-              <label string="This is a label demo" fgcolor="$mixenv.fg" height="12" width="auto"/>
+              <label string="This is a label demo 1" fgcolor="$mixenv.fg" height="12" width="auto"/>
               <label string="This is a colored demo" fgcolor="#ffffff" height="12" width="auto"/>
               <label string="This is a bg and fg" fgcolor="#ff0000" bgcolor="#00ff00" height="12" width="auto"/>
               <label string="font size" fgcolor="$mixenv.fg" height="25" fontsize="20" width="auto"/>
               <!-- You probably almost never want to use this and instead do it through a styled label, yet to be designed -->
-              <label string="This is a font name" fgcolor="#aaaaff" font="Consolas" fontsize="15" height="20" width="auto"/>
+              <label string="This is a font name (Consolas)" fgcolor="#aaaaff" font="Consolas" fontsize="15" height="20" width="auto"/>
+              <node guiid="filter0.keytrack" xoff="10"   yoff="center" component="vslider"/>
+              <node guiid="filter1.keytrack" xoff="30"   yoff="center" component="vslider"/>
+              
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG">
                 <node guiid="filter.env.attack" xoff="23"   yoff="center" component="vslider"/>
                 <node guiid="filter.env.decay" xoff="40"   yoff="center" component="vslider"/>
                 <node guiid="filter.env.sustain" xoff="57"   yoff="center" component="vslider"/>
                 <node guiid="filter.env.release" xoff="74"   yoff="center" component="vslider"/>
+                <node guiid="filter0.envmod" xoff="100"   yoff="center" component="vslider"/>
+                <node guiid="filter1.envmod" xoff="117"   yoff="center" component="vslider"/>
+                
             </layout>
                 
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="AEG">
