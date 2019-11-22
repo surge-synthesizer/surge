@@ -496,7 +496,7 @@
               <label string="This is a bg and fg" fgcolor="#ff0000" bgcolor="#00ff00" height="12" width="auto"/>
               <label string="font size" fgcolor="$mixenv.fg" height="25" fontsize="20" width="auto"/>
               <!-- You probably almost never want to use this and instead do it through a styled label, yet to be designed -->
-              <label string="This is a font name" fgcolor="#aaaaff" font="Consolas" fontsize="15" height="20" width="auto"/>
+              <label string="This is a font name (Consolas)" fgcolor="#aaaaff" font="Consolas" fontsize="15" height="20" width="auto"/>
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG">
                 <node guiid="filter.env.attack" xoff="23"   yoff="center" component="vslider"/>
