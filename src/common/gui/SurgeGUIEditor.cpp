@@ -36,6 +36,16 @@
 #include "vstgui/lib/platform/platform_x11.h"
 #include "vstgui/lib/platform/linux/x11platform.h"
 
+#if LINUX
+#include <experimental/filesystem>
+#elif MAC || TARGET_RACK
+#include <filesystem.h>
+#else
+#include <filesystem>
+#endif
+
+namespace fs = std::experimental::filesystem;
+
 #if LINUX && TARGET_LV2
 namespace SurgeLv2
 {
@@ -3081,6 +3091,8 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
 
     addCallbackMenu(dataSubMenu, "Open User Data Folder", [this]() {
+       // make it if it isn't there
+       fs::create_directories(this->synth->storage.userDataPath);
        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
     });
     did++;
