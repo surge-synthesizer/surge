@@ -145,20 +145,17 @@ TEST_CASE( "Simple Single Oscillator is Constant", "[dsp]" )
 
 TEST_CASE( "All Patches are Loadable", "[patch]" )
 {
-#if 0
    // FIXME - why doesn't this work?
    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
    REQUIRE( surge );
    int i=0;
    for( auto p : surge->storage.patch_list )
    {
-      std::cout << i << " " << p.name << " " << p.path.generic_string() << std::endl;
       surge->loadPatch(i);
       ++i;
    }
    
    delete surge;
-#endif   
 }
 
 TEST_CASE( "lipol_ps class", "[dsp]" )
