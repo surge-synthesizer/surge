@@ -930,7 +930,7 @@ unsigned int SurgePatch::save_patch(void** data)
    wt_header wth[2][n_oscs];
    for (int sc = 0; sc < 2; sc++)
    {
-      for (int osc = 0; osc < n_oscs; osc++)
+      for (int osc = 0; osc < 3 /* n_oscs */; osc++)
       {
          if (uses_wavetabledata(scene[sc].osc[osc].type.val.i))
          {
@@ -962,7 +962,7 @@ unsigned int SurgePatch::save_patch(void** data)
 
    for (int sc = 0; sc < 2; sc++)
    {
-      for (int osc = 0; osc < n_oscs; osc++)
+      for (int osc = 0; osc < 3 /* n_oscs */; osc++)
       {
          if (header.wtsize[sc][osc])
          {
