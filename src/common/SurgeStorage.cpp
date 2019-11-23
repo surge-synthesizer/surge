@@ -1,5 +1,6 @@
 //-------------------------------------------------------------------------------------------------------
-//	Copyright 2005-2006 Claes Johanson & Vember Audio
+//  Copyright 2005-2020, various authors, as described in AUTHORS.
+//  Released under the terms of the Gnu General Public License version 3.0 or greater as described in LICENSE.md
 //-------------------------------------------------------------------------------------------------------
 #include "DspUtilities.h"
 #include "SurgeError.h"

@@ -1,5 +1,6 @@
 //-------------------------------------------------------------------------------------------------------
-//			Copyright 2005 Claes Johanson & Vember Audio
+//  Copyright 2005-20120, various authors, as described in AUTHORS.
+//  Released under the terms of the Gnu General Public License version 3.0 or greater as described in LICENSE.md
 //-------------------------------------------------------------------------------------------------------
 #include "SurgeStorage.h"
 #include "Parameter.h"
