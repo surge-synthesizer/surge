@@ -4,6 +4,7 @@
 #include "CHSwitch2.h"
 #include "COscillatorDisplay.h"
 #include "CGlyphSwitch.h"
+#include "CSVGValueDisplay.h"
 #include "CScalableBitmap.h"
 #include "CSurgeSlider.h"
 #include "CSurgeKnob.h"
@@ -137,7 +138,7 @@ void LayoutEngine::setupControlFactory()
 
       rect.offset(p->xoff, p->yoff);
 
-      auto res = new CGlyphSwitch(rect, listener, tag, 7);
+      auto res = new CGlyphSwitch(rect, listener, tag, 7); // FIXME - 7. WTH?
 
       auto rows = std::max(1,std::atoi(props["rows"].c_str()));
       auto cols = std::max(1,std::atoi(props["cols"].c_str()));
@@ -258,6 +259,21 @@ void LayoutEngine::setupControlFactory()
          res->setFont( props["font"] );
 
       this->commonFactoryMethods(res, props);
+      return res;
+   };
+
+   controlFactory["CSVGValueDisplay"] = [this](const guiid_t& guiid, VSTGUI::IControlListener* listener,
+                                           long tag, SurgeGUIEditor* editor, LayoutElement* p) {
+      auto pprops = p->properties;
+      auto comp = components[p->component];
+      auto props = Surge::mergeProperties(comp->properties, pprops);
+
+      point_t nopoint(0, 0);
+      rect_t rect(0, 0, p->width, p->height);
+
+      rect.offset(p->xoff, p->yoff);
+      
+      auto res = new CSVGValueDisplay(rect, listener, tag);
       return res;
    };
 

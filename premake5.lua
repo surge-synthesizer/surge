@@ -216,6 +216,7 @@ function plugincommon()
         "src/common/gui/CSnapshotMenu.cpp",
         "src/common/gui/CSurgeSlider.cpp",
         "src/common/gui/CSurgeVuMeter.cpp",
+        "src/common/gui/CSVGValueDisplay.cpp",
         "src/common/gui/CSwitchControl.cpp",
         "src/common/gui/PopupEditorDialog.cpp",
         "src/common/gui/SurgeBitmaps.cpp",

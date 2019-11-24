@@ -2,6 +2,7 @@
 
 #include "vstcontrols.h"
 #include "CScalableBitmap.h"
+#include "IUpdateReadOnlyPartner.h"
 
 /*
 ** A switch which paints its background and draws a glyph over the front.
@@ -9,7 +10,7 @@
 ** value is 0.
 */
 
-class CGlyphSwitch : public VSTGUI::CControl
+class CGlyphSwitch : public VSTGUI::CControl, public IUpdateReadOnlyPartner
 {
 public:
    CGlyphSwitch( const VSTGUI::CRect &size,
@@ -20,6 +21,8 @@ public:
    ~CGlyphSwitch() {
       if( glyph )
          glyph->forget();
+      for( auto c : readOnlyPartners )
+         c->forget();
    }
 
    // Use this later
@@ -153,12 +156,18 @@ public:
                                                      const VSTGUI::CButtonState &buttons) override;
 
    void setMousedRowAndCol(VSTGUI::CPoint &where);
+
+   void addReadOnlyPartner(VSTGUI::CControl *c) {
+      c->remember();
+      readOnlyPartners.push_back(c);
+   }
    
 private:
    CScalableBitmap *bgBitmap[n_drawstates];
    VSTGUI::CColor bgColor[n_drawstates], fgColor[n_drawstates];
    CScalableBitmap *glyph = nullptr;
    std::vector<CScalableBitmap *> glyphChoices;
+   std::vector<VSTGUI::CControl *> readOnlyPartners;
    
    std::vector<std::string> choiceLabels;
    

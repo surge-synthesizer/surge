@@ -192,9 +192,9 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       a->push_back(scene[sc].polymode.assign(p_id.next(), id_s++,
                                              "polymode", "Polymode", "scene.polymode",
                                              ct_polymode, sc_id, cg_GLOBAL, 0, false )); // FIXME kWhite kNoPopup
-      a->push_back(scene[sc].fm_switch.assign(p_id.next(), id_s++, "fm_switch", "FM Routing",
-                                              ct_fmconfig, gui_col3_x + 3, gui_topbar + 25, sc_id,
-                                              cg_GLOBAL, 0, false));
+      a->push_back(scene[sc].fm_switch.assign(p_id.next(), id_s++, "fm_switch", "FM Routing", "scene.fmconfig",
+                                              ct_fmconfig, sc_id, cg_GLOBAL, 0, false));
+      
       a->push_back(scene[sc].fm_depth.assign(
                       p_id.next(), id_s++, "fm_depth", "FM Depth", "fm.depth",
                       ct_decibel_fmdepth, sc_id, cg_GLOBAL, 0, true ));
@@ -334,8 +334,9 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       py += gui_hfader_dist;
 
       a->push_back(scene[sc].filterblock_configuration.assign(
-          p_id.next(), id_s++, "fb_config", "Filter Configuration", ct_fbconfig, gui_col4_x - 1,
-          gui_topbar + 25, sc_id, cg_GLOBAL, 0, false, Surge::ParamConfig::kHorizontal));
+                      p_id.next(), id_s++, "fb_config", "Filter Configuration", "filters.config",
+                      ct_fbconfig, sc_id, cg_GLOBAL, 0, false));
+      
       a->push_back(scene[sc].filter_balance.assign(
           p_id.next(), id_s++, "f_balance", "Filter Balance", ct_percent_bidirectional, gui_col4_x,
           gui_mainsec_slider_y + 11, sc_id, cg_GLOBAL, 0, true,
