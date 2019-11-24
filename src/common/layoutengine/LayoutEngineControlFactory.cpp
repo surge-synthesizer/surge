@@ -9,6 +9,7 @@
 #include "CSurgeSlider.h"
 #include "CSurgeKnob.h"
 #include "CSwitchControl.h"
+#include "CNumberField.h"
 #include "CModulationSourceButton.h"
 
 namespace Surge
@@ -274,6 +275,47 @@ void LayoutEngine::setupControlFactory()
       rect.offset(p->xoff, p->yoff);
       
       auto res = new CSVGValueDisplay(rect, listener, tag);
+
+      this->commonFactoryMethods(res, props);
+      return res;
+   };
+
+   controlFactory["CNumberField"] = [this](const guiid_t& guiid, VSTGUI::IControlListener* listener,
+                                           long tag, SurgeGUIEditor* editor, LayoutElement* p) {
+      auto pprops = p->properties;
+      auto comp = components[p->component];
+      auto props = Surge::mergeProperties(comp->properties, pprops);
+
+      point_t nopoint(0, 0);
+      rect_t rect(0, 0, p->width, p->height);
+
+      rect.offset(p->xoff, p->yoff);
+      
+      auto res = new CNumberField(rect, listener, tag);
+      if( props["controlmode"] != "" )
+      {
+         auto cm = props["controlmode" ];
+         if( cm == "cm_pbdepth" )
+         {
+            res->setControlMode(cm_pbdepth);
+         }
+         else if( cm == "cm_notename" )
+         {
+            res->setControlMode(cm_notename);
+         }
+         else if( cm == "cm_polyphony" )
+         {
+            res->setControlMode(cm_polyphony);
+         }
+         else
+         {
+            LayoutLog::warn() << "Unknown control mode '" << cm << "' for NumberField '" << guiid << "'" << std::endl;
+         }
+      }
+
+      // FIXME - needs an fgcolor and bgcolor and font set
+      
+      this->commonFactoryMethods(res, props);
       return res;
    };
 

@@ -55,10 +55,11 @@ public:
                                        VSTGUI::IControlListener* listener,
                                        long tag,
                                        SurgeGUIEditor* editor) {
-      return addLayoutControl(nodeMap[guiid], listener, tag, editor);
+      return addLayoutControl(nodeMap[guiid], guiid, listener, tag, editor);
    }
 
    virtual control_t* addLayoutControl(LayoutElement *node,
+                                       const guiid_t& guiid,
                                        VSTGUI::IControlListener* listener,
                                        long tag,
                                        SurgeGUIEditor* editor);

@@ -114,7 +114,19 @@
 
     <component name="Single CHS2" class="CHSwitch2">
     </component>
-    
+
+    <component name="midikey" class="CNumberField">
+      <componentproperties controlmode="cm_notename" infopopup="false"/>
+    </component>
+
+    <component name="pbdepth" class="CNumberField" width="30" height="12">
+      <componentproperties controlmode="cm_pbdepth" infopopup="false"/>
+    </component>
+
+    <component name="polylimit" class="CNumberField">
+      <componentproperties controlmode="cm_polyphony" infopopup="false"/>
+    </component>
+
     <component name="Plus Minus" class="CHSwitch2" width="37" height="12">
       <componentproperties subPixmaps="2"
                            heightOfOneImage="12"
@@ -329,7 +341,10 @@
                             /> 
           </node>
         </layout>
-        <layout width="50" height="auto"  style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Splt"/>
+        <layout width="50" height="auto" mode="vlist" style="labelblock" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Splt">
+          <node width="auto" height="15" guiid="scene.splitkey" component="midikey"/>
+          <node width="auto" height="15" guiid="scene.polylimit" component="polylimit"/>
+        </layout>
         <layout width="550" height="auto" style="labelblock" bgcolor="$patch.bg" fgcolor="$patch.fg" label="Patch">
           <node component="Plus Minus" guiid="patch.categoryjog" xoff="10" yoff="30"/>
           <node component="Plus Minus" guiid="patch.patchjog" xoff="50" yoff="30"/>
@@ -405,10 +420,14 @@
                                 choices="$poly|$mono|$monost|$monofp|$monostfp|$latch"
                                 />
               </node>
-              <layout xoff="10" yoff="10" width="40" height="40" style="fill" bgcolor="#00ff00">
-                <layout yoff="20" xoff="0" width="40" height="12" style="fill" fgcolor="#ff0000" bgcolor="#ff0000"/>
+              <layout xoff="10" yoff="10" width="84" height="40" style="fill" bgcolor="#00ff00">
+                <layout yoff="20" xoff="1" width="40" height="12" style="fill" fgcolor="#ff00ff" bgcolor="#ff00ff">
+                  <node guiid="global.pbrange_dn" component="pbdepth"/>
+                </layout>
+                <layout yoff="20" xoff="43" width="40" height="12" style="fill" fgcolor="#ffff00" bgcolor="#ffff00">
+                  <node guiid="global.pbrange_up" component="pbdepth"/>
+                </layout>
               </layout>
-              <layout yoff="30" xoff="53" width="40" height="12" style="fill" fgcolor="#ff0000" bgcolor="#ff0000"/>
             </layout>
             <node guiid="scene.oscdrift" xoff="center"   yoff="98" component="hslider.light"/>
             <node guiid="scene.noisecolor" xoff="center" yoff="120" component="hslider.light"/>
@@ -530,15 +549,22 @@
             </layout>
           </layout>
           <layout height="auto" width="auto" mode="hlist" style="blank" label="envparent">
-            <layout height="auto" mode=vlist width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="KeyTrack">
+            <layout height="auto" mode="vlist" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="KeyTrack">
               <label string="This is a label demo 1" fgcolor="$mixenv.fg" height="12" width="auto"/>
               <label string="This is a colored demo" fgcolor="#ffffff" height="12" width="auto"/>
               <label string="This is a bg and fg" fgcolor="#ff0000" bgcolor="#00ff00" height="12" width="auto"/>
               <label string="font size" fgcolor="$mixenv.fg" height="25" fontsize="20" width="auto"/>
               <!-- You probably almost never want to use this and instead do it through a styled label, yet to be designed -->
               <label string="This is a font name (Consolas)" fgcolor="#aaaaff" font="Consolas" fontsize="15" height="20" width="auto"/>
-              <node guiid="filter0.keytrack" xoff="10"   yoff="center" component="vslider"/>
-              <node guiid="filter1.keytrack" xoff="30"   yoff="center" component="vslider"/>
+
+              <layout mode="vlist" width="auto" height="16" style="fill" bgcolor="#ffffff">
+                <node width="auto" height="15" guiid="scene.ktkroot" component="midikey"/>
+              </layout>
+
+              <layout mode="hlist" width="auto" height="150" style="blank">
+                <node guiid="filter0.keytrack" xoff="10"   component="vslider"/>
+                <node guiid="filter1.keytrack" xoff="30"   component="vslider"/>
+              </layout>
               
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG">

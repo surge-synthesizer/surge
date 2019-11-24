@@ -202,6 +202,7 @@ bool LayoutEngine::loadSVGToBitmapStore(std::string svg, std::string svgTag, flo
 }
 
 LayoutEngine::control_t* LayoutEngine::addLayoutControl(LayoutElement *p,
+                                                        const guiid_t &guiid,
                                                         VSTGUI::IControlListener* listener,
                                                         long tag,
                                                         SurgeGUIEditor* synth)
@@ -215,8 +216,6 @@ LayoutEngine::control_t* LayoutEngine::addLayoutControl(LayoutElement *p,
    }
 
    point_t nopoint(0, 0);
-   auto guiid = std::string( "error-no-guiid" );
-   if( p ) guiid = p->guiid;
 
    std::string failmsg = "";
 
@@ -254,7 +253,7 @@ LayoutEngine::control_t* LayoutEngine::addLayoutControl(LayoutElement *p,
             auto clones = readonlyNodeMap[guiid];
             for( auto c : clones )
             {
-               auto *cc = addLayoutControl(c, listener, tag, synth);
+               auto *cc = addLayoutControl(c, guiid, listener, tag, synth);
                iurp->addReadOnlyPartner(cc);
             }
          }
