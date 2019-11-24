@@ -110,7 +110,37 @@ Parameter* Parameter::assign(ParameterIDCounter::promise_t id_promise,
                              bool modulateable,
                              int ctrlstyle)
 {
-   // std::cout << "Assign with old-style no layout ID for " << name << " / " << dispname << std::endl;
+   if( ctrlgroup != cg_FX ) // FX is a special case
+   {
+      std::cout << "Assign with old-style no layout ID for " << name << " / " << dispname << " / cg_";
+      switch( ctrlgroup )
+      {
+      case cg_GLOBAL:
+         std::cout << "GLOBAL";
+         break;
+      case cg_OSC:
+         std::cout << "OSC";
+         break;
+      case cg_MIX:
+         std::cout << "MIX";
+         break;
+      case cg_FILTER:
+         std::cout << "FILTER";
+         break;
+      case cg_ENV:
+         std::cout << "ENV";
+         break;
+      case cg_LFO:
+         std::cout << "LFO";
+         break;
+      case cg_FX:
+         std::cout << "FX";
+         break;
+      default:
+         std::cout << " __ERROR__ (" << ctrlgroup << ")";
+      }
+      std::cout << std::endl;
+   }
    this->id = -1;
    this->id_promise = id_promise;
    this->param_id_in_scene = pid;
