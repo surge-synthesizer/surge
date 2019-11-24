@@ -1,6 +1,7 @@
 #include "SurgeGUIEditor.h"
 #include "LayoutEngine.h"
 #include "CScalableBitmap.h"
+#include "IUpdateReadOnlyPartner.h"
 #include <iostream>
 #include "LayoutEngineContainer.h"
 #include "LayoutLog.h"
@@ -129,7 +130,12 @@ void LayoutEngine::buildNodeMapFrom(LayoutElement* here)
 {
    if (here->type == LayoutElement::Node)
    {
+      // FIXME - test for uniqueness
       nodeMap[here->guiid] = here;
+   }
+   else if( here->type == LayoutElement::ReadOnlyNode )
+   {
+      readonlyNodeMap[here->guiid].push_back(here);
    }
    else
    {
@@ -195,7 +201,7 @@ bool LayoutEngine::loadSVGToBitmapStore(std::string svg, std::string svgTag, flo
    return true;
 }
 
-LayoutEngine::control_t* LayoutEngine::addLayoutControl(const guiid_t& guiid,
+LayoutEngine::control_t* LayoutEngine::addLayoutControl(LayoutElement *p,
                                                         VSTGUI::IControlListener* listener,
                                                         long tag,
                                                         SurgeGUIEditor* synth)
@@ -209,8 +215,9 @@ LayoutEngine::control_t* LayoutEngine::addLayoutControl(const guiid_t& guiid,
    }
 
    point_t nopoint(0, 0);
+   auto guiid = std::string( "error-no-guiid" );
+   if( p ) guiid = p->guiid;
 
-   auto* p = nodeMap[guiid];
    std::string failmsg = "";
 
 #define FAIL_IF(condition, msg)                                                                    \
@@ -237,6 +244,28 @@ LayoutEngine::control_t* LayoutEngine::addLayoutControl(const guiid_t& guiid,
       FAIL_IF(!res, "Factory returned a null component");
 
       p->parent->associatedContainer->addView(res);
+
+      // ADD READONLY CLONES if I am a node (and only then)
+      if( p->type == LayoutElement::Node && ( readonlyNodeMap.find(guiid) != readonlyNodeMap.end() ) )
+      {
+         auto *iurp = dynamic_cast<IUpdateReadOnlyPartner *>(res);
+         if( iurp )
+         {
+            auto clones = readonlyNodeMap[guiid];
+            for( auto c : clones )
+            {
+               auto *cc = addLayoutControl(c, listener, tag, synth);
+               iurp->addReadOnlyPartner(cc);
+            }
+         }
+         else
+         {
+            LayoutLog::error() << "At guiid '" << guiid << "' there are readonly clones but node of type `" << p->component
+                               << "' does not support IUpdateReadOnlyPartner interface" << std::endl;
+         }
+      }
+      
+      
       return res;
    }
 
@@ -374,6 +403,10 @@ LayoutElement* LayoutElement::fromXML(TiXmlElement* el, LayoutElement* parent, L
    {
       res->type = LayoutElement::Node;
    }
+   else if (strcmp(el->Value(), "readonlynode") == 0)
+   {
+      res->type = LayoutElement::ReadOnlyNode;
+   }
    else if (strcmp(el->Value(), "label") == 0)
    {
       res->type = LayoutElement::Label;
@@ -497,6 +530,7 @@ LayoutElement* LayoutElement::fromXML(TiXmlElement* el, LayoutElement* parent, L
       res->depth = 0;
    }
 
+   // FIXME - make this a case
    if( res->type == Node )
    {
       TiXmlElement* nprops = TINYXML_SAFE_TO_ELEMENT(el->FirstChild("nodeproperties"));
@@ -508,7 +542,12 @@ LayoutElement* LayoutElement::fromXML(TiXmlElement* el, LayoutElement* parent, L
             res->properties[a->Name()] = a->Value();
          }
       }
-   } else {
+   }
+   else if( res->type == ReadOnlyNode )
+   {
+   }
+   else
+   {
       for (auto child = el->FirstChild(); child; child = child->NextSibling())
       {
          auto* lkid = fromXML(TINYXML_SAFE_TO_ELEMENT(child), res, eng);
@@ -562,8 +601,12 @@ std::string LayoutElement::toString(bool recurse)
    case Node:
       oss << "node guiid='" << guiid << "' ";
       break;
+   case ReadOnlyNode:
+      oss << "readonlynode guiid='" << guiid << "' ";
+      break;
    case Label:
       oss << "label string='" << properties["string"] << "' ";
+      break;
    }
    oss << "label=\"" << label << "\" ";
 
@@ -583,8 +626,9 @@ std::string LayoutElement::toString(bool recurse)
 
 void LayoutElement::generateLayoutControl(LayoutEngine* eng, bool recurse)
 {
-   if (type == Node)
+   if (type == Node || type == ReadOnlyNode )
       return; // Nodes are only generated when added
+   
    if (type == Label)
    {
       if (!parent || !parent->associatedContainer)

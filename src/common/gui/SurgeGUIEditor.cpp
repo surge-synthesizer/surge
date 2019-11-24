@@ -1010,6 +1010,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_filtertype:
          case ct_character:
          case ct_fxbypass:
+         case ct_fbconfig:
+         case ct_fmconfig:
          {
             CControl *hsw = nullptr;
             if( p->hasLayoutEngineID )
@@ -1039,6 +1041,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
                std::cout << "ERROR: No layoutEngineID for switch type " << std::endl;
             }
             nonmod_param[i] = hsw;
+
+            if( p->ctrltype == ct_fbconfig )
+               filterblock_tag = p->id + start_paramtags;
          }
          break;
          case ct_bool_relative_switch:
@@ -1100,29 +1105,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             rect(0, 0, 28, 47);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_fbconfig:
-         {
-            CRect rect(0, 0, 134, 52);
-            rect.offset(p->posx, p->posy);
-            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 8, 52, 1, 8,
-                                          bitmapStore->getBitmap(IDB_FBCONFIG), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(hsw);
-            nonmod_param[i] = hsw;
-            filterblock_tag = p->id + start_paramtags;
-         }
-         break;
-         case ct_fmconfig:
-         {
-            CRect rect(0, 0, 134, 52);
-            rect.offset(p->posx, p->posy);
-            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 52, 1, 4,
-                                          bitmapStore->getBitmap(IDB_FMCONFIG), nopoint, true);
             hsw->setValue(p->get_value_f01());
             if(legacy != nullptr) legacy->addView(hsw);
             nonmod_param[i] = hsw;
@@ -2535,7 +2517,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       filtersubtype[idx]->invalid();
    }
 
-   if (tag == filterblock_tag)
+   if (tag == filterblock_tag) 
    {
       // pan2 control
       int i = synth->storage.getPatch().scene[current_scene].width.id;

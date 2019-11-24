@@ -24,6 +24,12 @@ void CGlyphSwitch::setValue(float f)
    auto scale = (rows > 1 ? rows - 1 : 1 ) * ( cols > 1 ? cols - 1 : 1 );
    multiValue = std::round( f * scale );
    invalid();
+
+   for( auto c : readOnlyPartners )
+   {
+      c->setValue(f);
+      c->invalid();
+   }
 }
 
 void CGlyphSwitch::setMultiValue(int i)

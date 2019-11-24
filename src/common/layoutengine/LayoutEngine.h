@@ -54,12 +54,23 @@ public:
    virtual control_t* addLayoutControl(const guiid_t& guiid,
                                        VSTGUI::IControlListener* listener,
                                        long tag,
+                                       SurgeGUIEditor* editor) {
+      return addLayoutControl(nodeMap[guiid], listener, tag, editor);
+   }
+
+   virtual control_t* addLayoutControl(LayoutElement *node,
+                                       VSTGUI::IControlListener* listener,
+                                       long tag,
                                        SurgeGUIEditor* editor);
 
    std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
    std::unique_ptr<LayoutElement> rootLayoutElement = nullptr;
    std::unordered_map<std::string, std::shared_ptr<LayoutComponent>> components;
+
+   // These are shallow copies of the pointer
    std::unordered_map<std::string, LayoutElement*> nodeMap;
+   std::unordered_map<std::string, std::vector<LayoutElement*>> readonlyNodeMap;
+   
    std::unordered_map<std::string, controlGenerator_t> controlFactory;
    frame_t* frame = nullptr;
 
@@ -107,6 +118,7 @@ public:
    {
       Layout,
       Node,
+      ReadOnlyNode,
       Label
    } ElementType;
    ElementType type;

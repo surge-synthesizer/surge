@@ -257,7 +257,34 @@
         </array>
       </componentproperties>
     </component>
+
+    <component name="Filter Config Display" class="CSVGValueDisplay" width="120" height="70">
+      <componentproperties>
+        <array name="images">
+          <element value="SVG/filterconfig/s1.svg"/>
+          <element value="SVG/filterconfig/s2.svg"/>
+          <element value="SVG/filterconfig/s3.svg"/>
+          <element value="SVG/filterconfig/d1.svg"/>
+          <element value="SVG/filterconfig/d2.svg"/>
+          <element value="SVG/filterconfig/lr.svg"/>
+          <element value="SVG/filterconfig/rng.svg"/>
+          <element value="SVG/filterconfig/w.svg"/>
+        </array>
+      </componentproperties>
+    </component>
+
     
+    <component name="FM Config Display" class="CSVGValueDisplay" width="120" height="70">
+      <componentproperties>
+        <array name="images">
+          <element value="SVG/fmconfig/none.svg"/>
+          <element value="SVG/fmconfig/a.svg"/>
+          <element value="SVG/fmconfig/b.svg"/>
+          <element value="SVG/fmconfig/c.svg"/> <!-- rename and make obviously -->
+        </array>
+      </componentproperties>
+    </component>
+
     <component name="Mute Emoji Switch" class="CSwitchControl" width="22" height="22">
       <componentproperties subPixmaps="2"
                            svgPerState="true"
@@ -465,10 +492,18 @@
         <layout width="auto" height="auto" mode="vlist" style="blank" label="midparent">
           <layout height="150" width="auto" mode="hlist" style="blank" label="ofoparent">
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FM">
-              <node guiid="fm.depth" xoff="center"   yoff="20" component="hslider.light"/>
+              <readonlynode guiid="scene.fmconfig" xoff="center" yoff="10" component="FM Config Display"/>
+              <node component="15x15 UnTabbed Multi" guiid="scene.fmconfig" width="60" height="15" xoff="center" yoff="90">
+                <nodeproperties rows="1" cols="4" fontsize="8" choices="0|21|321|312"/>
+              </node>
+              <node guiid="fm.depth" xoff="center"   yoff="110" component="hslider.light"/>
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Filter Cfg">
-                <node guiid="filters.feedback" xoff="center"   yoff="20" component="hslider.light"/>
+              <readonlynode guiid="filters.config" xoff="center" yoff="10" component="Filter Config Display"/>
+              <node component="15x15 UnTabbed Multi" guiid="filters.config" width="120" height="15" xoff="center" yoff="90">
+                <nodeproperties rows="1" cols="8" fontsize="8" choices="s1|s2|s3|d1|d2|lr|rng|w"/>
+              </node>
+              <node guiid="filters.feedback" xoff="center"   yoff="110" component="hslider.light"/>
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="Output">
                 <node guiid="scene.output.volume" xoff="center"   yoff="23" component="hslider.light"/>
@@ -482,15 +517,15 @@
           <layout height="100" width="auto" mode="hlist" style="blank" label="filtparent">
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 1">
               <node guiid="filters.filter0.type" component="Filter Selector"/>
-              <node guiid="filter0.cutoff" xoff="center"   yoff="10" component="hslider.light"/>
-              <node guiid="filter0.resonance" xoff="center"   yoff="27" component="hslider.light"/>
+              <node guiid="filter0.cutoff" xoff="center"   yoff="10" component="hslider"/>
+              <node guiid="filter0.resonance" xoff="center"   yoff="27" component="hslider"/>
               
             </layout>
             <layout height="100" width="175" style="svg" svg="SVG/175x100_BG.svg" label="Filt Mix"/>
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 2">
               <node guiid="filters.filter1.type" component="Filter Selector"/>
-              <node guiid="filter1.cutoff" xoff="center"   yoff="10" component="hslider.light"/>
-              <node guiid="filter1.resonance" xoff="center"   yoff="27" component="hslider.light"/>
+              <node guiid="filter1.cutoff" xoff="center"   yoff="10" component="hslider"/>
+              <node guiid="filter1.resonance" xoff="center"   yoff="27" component="hslider"/>
               
             </layout>
           </layout>
