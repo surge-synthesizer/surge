@@ -1012,6 +1012,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_fxbypass:
          case ct_fbconfig:
          case ct_fmconfig:
+         case ct_pbdepth:
+         case ct_midikey:
+         case ct_polylimit:
          {
             CControl *hsw = nullptr;
             if( p->hasLayoutEngineID )
@@ -1038,12 +1041,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
             else
             {
                // FIXME - improve this
-               std::cout << "ERROR: No layoutEngineID for switch type " << std::endl;
+               std::cout << "ERROR: No layoutEngineID for switch type : " << p->ctrltype << " in " << p->name << std::endl;
             }
             nonmod_param[i] = hsw;
 
             if( p->ctrltype == ct_fbconfig )
                filterblock_tag = p->id + start_paramtags;
+            if( p->ctrltype == ct_polylimit )
+               polydisp = hsw;
          }
          break;
          case ct_bool_relative_switch:
@@ -1125,42 +1130,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
                if(legacy != nullptr) legacy->addView(slfo);
                nonmod_param[i] = slfo;
             }
-         }
-         break;
-         case ct_midikey:
-         {
-            CRect rect(0, 0, 43, 14);
-            rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags);
-            key->setControlMode(cm_notename);
-            // key->altlook = true;
-            key->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(key);
-            nonmod_param[i] = key;
-         }
-         break;
-         case ct_pbdepth:
-         {
-            CRect rect(0, 0, 24, 10);
-            rect.offset(p->posx, p->posy);
-            CNumberField* pbd = new CNumberField(rect, this, p->id + start_paramtags);
-            pbd->altlook = true;
-            pbd->setControlMode(cm_pbdepth);
-            pbd->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(pbd);
-         }
-         break;
-         case ct_polylimit:
-         {
-            CRect rect(0, 0, 43, 14);
-            rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags);
-            key->setControlMode(cm_polyphony);
-            // key->setLabel("POLY");
-            // key->setLabelPlacement(lp_below);
-            key->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(key);
-            polydisp = key;
          }
          break;
          default:

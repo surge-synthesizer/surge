@@ -139,6 +139,7 @@ Parameter* Parameter::assign(ParameterIDCounter::promise_t id_promise,
       default:
          std::cout << " __ERROR__ (" << ctrlgroup << ")";
       }
+
       std::cout << std::endl;
    }
    this->id = -1;

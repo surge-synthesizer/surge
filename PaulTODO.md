@@ -1,12 +1,6 @@
 Here's my sort of running todo as I think of it, in rough order
 
-* Pitch Bend Area
-* Labels and Fonts
-* Move the CHSwitch2s as is for now
-  * FM routing
-  * Filter config
 * Move the LFO section over
-* Modulator Sliders move on over
 * Glyph Switch
   * Alignment of Text (MONO STFP?)
 * Slider Parameterization and Work
@@ -31,7 +25,6 @@ Here's my sort of running todo as I think of it, in rough order
 * FX routing and FX section
 * Patch Browser
 * What's left in legacy?
-* Font Controls
 * Second layout with stupid pet tricks
 * Cleanup of bitmaps at close. Do they all get forgotten?
 * About Screen 

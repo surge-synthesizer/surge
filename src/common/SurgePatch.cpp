@@ -82,16 +82,15 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                         ct_scenemode, 0, cg_GLOBAL, 0, false )); // FIXME kNoPopup
    // param_ptr.push_back(scenemorph.assign(p_id.next(),0,"scenemorph","scenemorph",ct_percent,hmargin+gui_sec_width,gui_mid_topbar_y,0,0,0,false,Surge::ParamConfig::kHorizontal));
 
-   param_ptr.push_back(splitkey.assign(p_id.next(), 0, "splitkey", "Split Key", ct_midikey, 8 + 91,
-                                       gui_mid_topbar_y - 3, 0, cg_GLOBAL, 0, false,
-                                       Surge::ParamConfig::kHorizontal | kNoPopup));
+   param_ptr.push_back(splitkey.assign(p_id.next(), 0, "splitkey", "Split Key", "scene.splitkey",
+                                       ct_midikey, 0, cg_GLOBAL, 0, false ));
    param_ptr.push_back(fx_disable.assign(p_id.next(), 0, "fx_disable", "FX Disable", ct_none, 0, 0,
                                          0, cg_GLOBAL, 0, false));
 
    // shouldnt't be stored in the patch
-   param_ptr.push_back(polylimit.assign(p_id.next(), 0, "polylimit", "Poly Limit", ct_polylimit,
-                                        8 + 91, gui_mid_topbar_y + 13, 0, cg_GLOBAL, 0, false,
-                                        Surge::ParamConfig::kHorizontal | kNoPopup));
+   param_ptr.push_back(polylimit.assign(p_id.next(), 0, "polylimit", "Poly Limit", "scene.polylimit",
+                                        ct_polylimit, 0, cg_GLOBAL, 0, false));
+
    param_ptr.push_back(fx_bypass.assign(p_id.next(), 0, "fx_bypass", "FX Bypass", "global.fxbypass",
                                         ct_fxbypass, 0, cg_GLOBAL, 0, false));
 
@@ -205,8 +204,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       a->push_back(scene[sc].noise_colour.assign(p_id.next(), id_s++, "noisecol", "Noise Color", "scene.noisecolor",
                                                  ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true )); // scEasy
       a->push_back(scene[sc].keytrack_root.assign(
-          p_id.next(), id_s++, "ktrkroot", "Keytrack Root Key", ct_midikey, 180 + 127,
-          gui_topbar + 78 + 106 + 24, sc_id, cg_GLOBAL, 0, false));
+                      p_id.next(), id_s++, "ktrkroot", "Keytrack Root Key", "scene.ktkroot",
+                      ct_midikey, sc_id, cg_GLOBAL, 0, false));
       // ct_midikey
       // drift,keytrack_root
 
@@ -306,12 +305,12 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       px += gui_vfader_dist;
 
       int pbx = 164, pby = 112;
-      a->push_back(scene[sc].pbrange_up.assign(p_id.next(), id_s++, "pbrange_up",
-                                               "Pitch Bend Range (up)", ct_pbdepth, pbx + 25, pby,
-                                               sc_id, cg_GLOBAL, 0, true, kNoPopup));
-      a->push_back(scene[sc].pbrange_dn.assign(p_id.next(), id_s++, "pbrange_dn",
-                                               "Pitch Bend Range (down)", ct_pbdepth, pbx, pby,
-                                               sc_id, cg_GLOBAL, 0, true, kNoPopup));
+      a->push_back(scene[sc].pbrange_up.assign(p_id.next(), id_s++,
+                                               "pbrange_up", "Pitch Bend Range (up)", "global.pbrange_up",
+                                               ct_pbdepth,  sc_id, cg_GLOBAL, 0, true ));
+      a->push_back(scene[sc].pbrange_dn.assign(p_id.next(), id_s++,
+                                               "pbrange_dn", "Pitch Bend Range (down)", "global.pbrange_dn",
+                                               ct_pbdepth, sc_id, cg_GLOBAL, 0, true ));
 
       px = gui_envsec_x + gui_vfader_dist * 19 + 10;
       py = gui_envsec_y;
