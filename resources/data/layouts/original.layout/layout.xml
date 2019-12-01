@@ -66,6 +66,7 @@
       <color name="osc.wavfg" value="#ff9B10"/>
       <color name="osc.wavrule" value="#ccccaa"/>
       <color name="osc.wavsectionbg" value="#000000"/>
+      <color name="osc.wavsectionfg" value="#FF9000"/>
       <color name="osc.ctrlsectionbg" value="#eeeedd"/>
       <color name="osc.ctrlsectionfg" value="#222233"/>
 
@@ -590,8 +591,10 @@
               </layout>
 
               <layout mode="hlist" width="auto" height="150" style="blank">
-                <node guiid="filter0.keytrack" xoff="10"   component="vslider"/>
-                <node guiid="filter1.keytrack" xoff="30"   component="vslider"/>
+                <node guiid="scene.prefiltergain" component="vslider"/>
+                <node guiid="scene.hpfcutoff" component="vslider"/>
+                <node guiid="filter0.keytrack" component="vslider"/>
+                <node guiid="filter1.keytrack" component="vslider"/>
 
                 <layout mode="vlist" width="auto" height="auto" bgcolor="$waveshapersection.bg">
                   <label string="$waveshaper" fgcolor="$waveshapersection.fg" height="12" width="auto"/>

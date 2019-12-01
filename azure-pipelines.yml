@@ -125,7 +125,7 @@ jobs:
       sudo apt-get install -y libxkbcommon-x11-dev
       sudo apt-get install -y devscripts
 
-      ./build-linux.sh clean && ./build-linux.sh build
+      ./build-linux.sh clean && ./build-linux.sh build --project=lv2
 
     condition: variables.isLinux
     displayName: Build Linux

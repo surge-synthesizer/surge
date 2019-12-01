@@ -299,9 +299,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                 ct_oscroute, sc_id, cg_MIX, 0, false));
                    
       px += gui_vfader_dist;
-      a->push_back(scene[sc].level_pfg.assign(p_id.next(), id_s++, "level_pfg", "Pre-Filter Gain",
-                                              ct_decibel, px, py, sc_id, cg_MIX, 0, true,
-                                              Surge::ParamConfig::kVertical | kWhite | sceasy));
+      a->push_back(scene[sc].level_pfg.assign(p_id.next(), id_s++, "level_pfg", "Pre-Filter Gain", "scene.prefiltergain", 
+                                              ct_decibel, sc_id, cg_MIX, 0, true ));
       px += gui_vfader_dist;
 
       int pbx = 164, pby = 112;
@@ -339,10 +338,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       a->push_back(scene[sc].filter_balance.assign(
           p_id.next(), id_s++, "f_balance", "Filter Balance", "filters.balance", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true));
 
-      a->push_back(scene[sc].lowcut.assign(p_id.next(), id_s++, "lowcut", "High Pass", ct_freq_hpf,
-                                           gui_envsec_x + gui_vfader_dist * 2 + 5, gui_envsec_y,
-                                           sc_id, cg_GLOBAL, 0, true,
-                                           Surge::ParamConfig::kVertical | kWhite | sceasy));
+      a->push_back(scene[sc].lowcut.assign(p_id.next(), id_s++, "lowcut", "High Pass", "scene.hpfcutoff",
+                                           ct_freq_hpf, sc_id, cg_GLOBAL, 0, true ));
 
       a->push_back(scene[sc].wsunit.type.assign(p_id.next(), id_s++, "ws_type", "Waveshaper Type",
                                                 "global.waveshaper_type", ct_wstype, sc_id,
