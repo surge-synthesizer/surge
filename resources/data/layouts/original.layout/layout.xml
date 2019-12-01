@@ -23,7 +23,30 @@
       <string name="warm" value="Warm"/>
       <string name="neutral" value="Neutral"/>
       <string name="bright" value="Bright"/>
-      
+
+      <string name="freerun" value="Freerun"/>
+      <string name="keytrigger" value="Keytrigger"/>
+      <string name="random" value="Random"/>
+
+      <string name="waveshaper" value="Waveshaper"/>
+      <string name="off" value="OFF"/>
+      <string name="soft" value="SOFT"/>
+      <string name="hard" value="HARD"/>
+      <string name="asym" value="ASYM"/>
+      <string name="sine" value="SINE"/>
+      <string name="digi" value="DIGI"/>
+
+      <string name="digital" value="DIGITAL"/>
+      <string name="analog" value="ANALOG"/>
+
+      <string name="triangle" value="Triangle"/>
+      <string name="square" value="Square"/>
+      <string name="ramp" value="Ramp"/>
+      <string name="noise" value="Noise"/>
+      <string name="s_h" value="S&amp;H"/>
+      <string name="envelope" value="Envelope"/>
+      <string name="stepseq" value="Step Seq"/>
+
     </stringmap>
 
     <stringmap language="fr">
@@ -64,6 +87,9 @@
 
       <color name="switchsection.bg" value="#000000"/>
       <color name="switchsection.fg" value="#111111"/>
+
+      <color name="waveshapersection.bg" value="#5e616a"/>
+      <color name="waveshapersection.fg" value="#cfced4"/>
 
       <color name="switch.onfg" value="#ff9000"/>
       <color name="switch.offfg" value="#ccaa99"/>
@@ -540,7 +566,9 @@
               <node guiid="filter0.resonance" xoff="center"   yoff="27" component="hslider"/>
               
             </layout>
-            <layout height="100" width="175" style="svg" svg="SVG/175x100_BG.svg" label="Filt Mix"/>
+            <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg">
+              <node guiid="filters.balance" component="hslider" xoff="center" yoff="center"/>
+            </layout>
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 2">
               <node guiid="filters.filter1.type" component="Filter Selector"/>
               <node guiid="filter1.cutoff" xoff="center"   yoff="10" component="hslider"/>
@@ -564,10 +592,23 @@
               <layout mode="hlist" width="auto" height="150" style="blank">
                 <node guiid="filter0.keytrack" xoff="10"   component="vslider"/>
                 <node guiid="filter1.keytrack" xoff="30"   component="vslider"/>
+
+                <layout mode="vlist" width="auto" height="auto" bgcolor="$waveshapersection.bg">
+                  <label string="$waveshaper" fgcolor="$waveshapersection.fg" height="12" width="auto"/>
+                  <layout mode="hlist" width="auto" height="auto" style="blank">
+                    <node guiid="global.waveshaper_type" component="60x12 Multi" xoff="10" yoff="0" width="60" height="60">
+                      <nodeproperties rows="6" cols="1" choices="$off|$soft|$hard|$asym|$sine|$digi"/>
+                    </node>
+                    <node guiid="global.waveshaper_drive" component="vslider" xoff="10"/>
+                  </layout>
+                </layout>
               </layout>
               
             </layout>
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="FEG">
+              <node guiid="filter.env.mode" component="60x12 Multi" xoff="80" yoff="20" width="60" height="24">
+                <nodeproperties rows="2" cols="1" choices="$digital|$analog"/>
+              </node>
                 <node guiid="filter.env.attack" xoff="23"   yoff="center" component="vslider"/>
                 <node guiid="filter.env.decay" xoff="40"   yoff="center" component="vslider"/>
                 <node guiid="filter.env.sustain" xoff="57"   yoff="center" component="vslider"/>
@@ -578,6 +619,9 @@
             </layout>
                 
             <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mixenv.bg" fgcolor="$mixenv.fg" label="AEG">
+              <node guiid="amp.env.mode" component="60x12 Multi" xoff="80" yoff="20" width="60" height="24">
+                <nodeproperties rows="2" cols="1" choices="$digital|$analog"/>
+              </node>
               <node guiid="amp.env.attack" xoff="23"   yoff="center" component="vslider"/>
               <node guiid="amp.env.decay" xoff="40"   yoff="center" component="vslider"/>
               <node guiid="amp.env.sustain" xoff="57"   yoff="center" component="vslider"/>
@@ -644,10 +688,15 @@
 
       </layout>
       <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mod.bg" fgcolor="$mod.fg" label="Modulator">
-        <node component="60x18 Switch" xoff="20" yoff="20" guiid="lfo.unipolar">
+        <node component="60x12 Multi" guiid="lfo.trigmode" xoff="170" yoff="20" width="60" height="36">
+          <nodeproperties rows="3" cols="1" choices="$freerun|$keytrigger|$random"/>
+        </node>
+        <node component="60x18 Switch" xoff="170" yoff="65" guiid="lfo.unipolar">
           <nodeproperties label="$unipolar" fontsize="9"/>
         </node>
-        <node component="hslider" xoff="20" yoff="37" guiid="lfo.shape"/>
+        <node component="60x12 Multi" guiid="lfo.shape" xoff="240" yoff="20" width="60" height="96">
+          <nodeproperties rows="8" cols="1" choices="$sine|$triangle|$square|$ramp|$noise|$s_h|$envelope|$stepseq"/>
+        </node>
         <node component="hslider" xoff="20" yoff="54" guiid="lfo.rate"/>
         <node component="hslider" xoff="20" yoff="71" guiid="lfo.phase"/>
         <node component="hslider" xoff="20" yoff="88" guiid="lfo.magnitude"/>
