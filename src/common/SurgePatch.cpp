@@ -347,9 +347,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                            Surge::ParamConfig::kVertical | kWhite | sceasy));
 
       a->push_back(scene[sc].wsunit.type.assign(p_id.next(), id_s++, "ws_type", "Waveshaper Type",
-                                                ct_wstype, gui_envsec_x + gui_vfader_dist * 4 - 1,
-                                                gui_envsec_y + 13, sc_id, cg_GLOBAL, 0, false,
-                                                kNoPopup));
+                                                "global.waveshaper_type", ct_wstype, sc_id,
+                                                cg_GLOBAL, 0, false));
       a->push_back(scene[sc].wsunit.drive.assign(
           p_id.next(), id_s++, "ws_drive", "Waveshaper Drive", ct_decibel_narrow,
           gui_envsec_x + gui_vfader_dist * 5 + 10, gui_envsec_y, sc_id, cg_GLOBAL, 0, true,
@@ -450,9 +449,9 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                    cg_ENV, e, false, kNoPopup));
          px += gui_vfader_dist; 
 
-         a->push_back(scene[sc].adsr[e].mode.assign(p_id.next(), id_s++, "mode", "Mode", ct_envmode,
-                                                    px + 13, py - 31, sc_id, cg_ENV, e, false,
-                                                    kNoPopup));
+         sprintf(gname, "%s.env.mode", gpfx);
+         a->push_back(scene[sc].adsr[e].mode.assign(p_id.next(), id_s++, "mode", "Mode", gname,
+                                                    ct_envmode, sc_id, cg_ENV, e, false));
       }
 
       for (int l = 0; l < n_lfos; l++)
@@ -492,9 +491,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                 py = gui_modsec_y;
                  
                 sprintf(label, "lfo%i_trigmode", l);
-                a->push_back(scene[sc].lfo[l].trigmode.assign(p_id.next(), id_s++, label, "Trigger Mode",
-                                                              ct_lfotrigmode, px + 5, py - 4, sc_id,
-                                                              cg_LFO, ms_lfo1 + l, false, kNoPopup));
+                a->push_back(scene[sc].lfo[l].trigmode.assign(p_id.next(), id_s++, label, "Trigger Mode", "lfo.trigmode",
+                                                              ct_lfotrigmode, sc_id, cg_LFO, ms_lfo1 + l, false));
                 py += 44;
                  
                 sprintf(label, "lfo%i_unipolar", l);

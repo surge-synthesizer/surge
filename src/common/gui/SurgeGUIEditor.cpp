@@ -974,29 +974,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
          }
          break;
-         case ct_envmode:
-         {
-            CRect rect(0, 0, 34, 15);
-            rect.offset(p->posx, p->posy);
-            CHSwitch2* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 2, 15, 2, 1,
-                                           bitmapStore->getBitmap(IDB_ENVMODE), nopoint, false);
-            hsw->setValue(p->get_value_f01());
-
-            if(legacy != nullptr) legacy->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_lfotrigmode:
-         {
-            CRect rect(0, 0, 51, 39);
-            rect.offset(p->posx, p->posy);
-            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 39, 3, 1,
-                                          bitmapStore->getBitmap(IDB_LFOTRIGGER), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
          case ct_bool_mute:
          case ct_bool_solo:
          case ct_oscroute:
@@ -1015,6 +992,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_pbdepth:
          case ct_midikey:
          case ct_polylimit:
+         case ct_wstype:
+         case ct_envmode:
+         case ct_lfotrigmode:
+         case ct_lfoshape:
          {
             CControl *hsw = nullptr;
             if( p->hasLayoutEngineID )
@@ -1099,37 +1080,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                       &synth->fxsync[current_fx], current_fx);
             m->setValue(p->get_value_f01());
             if(legacy != nullptr) legacy->addView(m);
-         }
-         break;
-         case ct_wstype:
-         {
-            CRect rect(0, 0, 28, 47);
-            rect.offset(p->posx, p->posy);
-            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 6, 47, 6, 1,
-                                          bitmapStore->getBitmap(IDB_WAVESHAPER), nopoint, true);
-            rect(0, 0, 28, 47);
-            rect.offset(p->posx, p->posy);
-            hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
-            if(legacy != nullptr) legacy->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_lfoshape:
-         {
-            CRect rect(0, 0, 359, 85);
-            rect.offset(p->posx, p->posy - 2);
-            int lfo_id = p->ctrlgroup_entry - ms_lfo1;
-            if ((lfo_id >= 0) && (lfo_id < n_lfos))
-            {
-               CControl* slfo = new CLFOGui(
-                   rect, lfo_id == 0, this, p->id + start_paramtags,
-                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
-                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id]);
-               lfodisplay = slfo;
-               if(legacy != nullptr) legacy->addView(slfo);
-               nonmod_param[i] = slfo;
-            }
          }
          break;
          default:
