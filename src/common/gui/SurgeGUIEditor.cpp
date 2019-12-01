@@ -37,6 +37,16 @@
 #include "vstgui/lib/platform/platform_x11.h"
 #include "vstgui/lib/platform/linux/x11platform.h"
 
+#if LINUX
+#include <experimental/filesystem>
+#elif MAC || TARGET_RACK
+#include <filesystem.h>
+#else
+#include <filesystem>
+#endif
+
+namespace fs = std::experimental::filesystem;
+
 #if LINUX && TARGET_LV2
 namespace SurgeLv2
 {
@@ -605,13 +615,15 @@ void SurgeGUIEditor::refresh_mod()
          state = mod_editor ? 2 : 1;
       if (i == modsource_editor)
          state |= 4;
+
       if( gui_modsrc[i] )
       {
+         // this could change if I cleared the last one
+         ((CModulationSourceButton*)gui_modsrc[i])->used = synth->isModsourceUsed( (modsources)i );
          ((CModulationSourceButton*)gui_modsrc[i])->state = state;
          ((CModulationSourceButton*)gui_modsrc[i])->invalid();
       }
    }
-
    // ctnvg	frame->redraw();
    // frame->setDirty();
 }
@@ -1708,6 +1720,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                     
                                     synth->clearModulation(md, thisms);
                                     refresh_mod();
+                                    control->setDirty();
+                                    control->invalid();
                                     
                                     if (resetName)
                                     {
@@ -1744,7 +1758,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                         for (int md = 1; md < n_total_md; md++)
                                                            synth->clearModulation(md, thisms);
                                                         refresh_mod();
-                                                        
+
                                                         // Also blank out the name and rebuild the UI
                                                         if (within_range(ms_ctrl1, thisms, ms_ctrl1 + n_customcontrollers - 1))
                                                         {
@@ -1754,11 +1768,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                            synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
                                                            ((CModulationSourceButton*)control)
                                                               ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                                                           control->setDirty();
-                                                           control->invalid();
-                                                           
-                                                           synth->updateDisplay();
                                                         }
+                                                        control->setDirty(true);
+                                                        control->invalid();
+                                                        synth->updateDisplay();
+
                                                      });
                eid++;
             }
@@ -2959,6 +2973,8 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
 
     addCallbackMenu(dataSubMenu, "Open User Data Folder", [this]() {
+       // make it if it isn't there
+       fs::create_directories(this->synth->storage.userDataPath);
        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
     });
     did++;

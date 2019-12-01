@@ -227,6 +227,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    {
       userDataPath = dotSurge;
    }
+   //std::cout << "DataPath is " << datapath << std::endl;
+   //std::cout << "UserDataPath is " << userDataPath << std::endl;
   
 #elif WINDOWS
 #if TARGET_RACK
@@ -301,28 +303,25 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
    load_wt(0, &getPatch().scene[0].osc[0].wt);
 
-   if( loadWtAndPatch )
+   // WindowWT is a WaveTable which now has a constructor so don't do this
+   // memset(&WindowWT, 0, sizeof(WindowWT));
+   if( loadWtAndPatch && ! load_wt_wt(datapath + "windows.wt", &WindowWT) )
    {
-      // WindowWT is a WaveTable which now has a constructor so don't do this
-      // memset(&WindowWT, 0, sizeof(WindowWT));
-      if( ! load_wt_wt(datapath + "windows.wt", &WindowWT) )
-      {
-         std::ostringstream oss;
-         oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for surge to operate "
-             << "properly. This occurs when Surge is mis-installed and shared resources are not in the "
-             << "os-specific shared directory, which on your OS is a directory called 'Surge' in "
+      std::ostringstream oss;
+      oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for surge to operate "
+          << "properly. This occurs when Surge is mis-installed and shared resources are not in the "
+          << "os-specific shared directory, which on your OS is a directory called 'Surge' in "
 #if MAC
-             << "the global or user local `Library/Application Support` directory."
+          << "the global or user local `Library/Application Support` directory."
 #endif
 #if WINDOWS
-             << "your %LocalAppData% directory."
+          << "your %LocalAppData% directory."
 #endif
 #if LINUX
-             << "/usr/share or ~/.local/share."
+          << "/usr/share or ~/.local/share."
 #endif
-             << " Please install shared assets correctly and restart.";
-         Surge::UserInteractions::promptError(oss.str(), "Unable to load windows.wt");
-      }
+          << " Please install shared assets correctly and restart.";
+      Surge::UserInteractions::promptError(oss.str(), "Unable to load windows.wt");
    }
 }
 
