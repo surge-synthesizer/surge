@@ -566,7 +566,9 @@
               <node guiid="filter0.resonance" xoff="center"   yoff="27" component="hslider"/>
               
             </layout>
-            <layout height="100" width="175" style="svg" svg="SVG/175x100_BG.svg" label="Filt Mix"/>
+            <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg">
+              <node guiid="filters.balance" component="hslider" xoff="center" yoff="center"/>
+            </layout>
             <layout height="auto" width="auto" mode="vlist" style="roundedlabel" bgcolor="$ctrl.bg" fgcolor="$ctrl.fg" label="Filt 2">
               <node guiid="filters.filter1.type" component="Filter Selector"/>
               <node guiid="filter1.cutoff" xoff="center"   yoff="10" component="hslider"/>
@@ -593,9 +595,12 @@
 
                 <layout mode="vlist" width="auto" height="auto" bgcolor="$waveshapersection.bg">
                   <label string="$waveshaper" fgcolor="$waveshapersection.fg" height="12" width="auto"/>
-                  <node guiid="global.waveshaper_type" component="60x12 Multi" xoff="10" yoff="0" width="60" height="60">
-                    <nodeproperties rows="6" cols="1" choices="$off|$soft|$hard|$asym|$sine|$digi"/>
-                  </node>
+                  <layout mode="hlist" width="auto" height="auto" style="blank">
+                    <node guiid="global.waveshaper_type" component="60x12 Multi" xoff="10" yoff="0" width="60" height="60">
+                      <nodeproperties rows="6" cols="1" choices="$off|$soft|$hard|$asym|$sine|$digi"/>
+                    </node>
+                    <node guiid="global.waveshaper_drive" component="vslider" xoff="10"/>
+                  </layout>
                 </layout>
               </layout>
               

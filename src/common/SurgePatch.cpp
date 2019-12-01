@@ -337,9 +337,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                       ct_fbconfig, sc_id, cg_GLOBAL, 0, false));
       
       a->push_back(scene[sc].filter_balance.assign(
-          p_id.next(), id_s++, "f_balance", "Filter Balance", ct_percent_bidirectional, gui_col4_x,
-          gui_mainsec_slider_y + 11, sc_id, cg_GLOBAL, 0, true,
-          Surge::ParamConfig::kHorizontal | sceasy));
+          p_id.next(), id_s++, "f_balance", "Filter Balance", "filters.balance", ct_percent_bidirectional, sc_id, cg_GLOBAL, 0, true));
 
       a->push_back(scene[sc].lowcut.assign(p_id.next(), id_s++, "lowcut", "High Pass", ct_freq_hpf,
                                            gui_envsec_x + gui_vfader_dist * 2 + 5, gui_envsec_y,
@@ -350,9 +348,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                 "global.waveshaper_type", ct_wstype, sc_id,
                                                 cg_GLOBAL, 0, false));
       a->push_back(scene[sc].wsunit.drive.assign(
-          p_id.next(), id_s++, "ws_drive", "Waveshaper Drive", ct_decibel_narrow,
-          gui_envsec_x + gui_vfader_dist * 5 + 10, gui_envsec_y, sc_id, cg_GLOBAL, 0, true,
-          Surge::ParamConfig::kVertical | kWhite | sceasy));
+          p_id.next(), id_s++, "ws_drive", "Waveshaper Drive", "global.waveshaper_drive", ct_decibel_narrow,
+          sc_id, cg_GLOBAL, 0, true));
 
       for (int f = 0; f < 2; f++)
       {
