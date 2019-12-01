@@ -688,7 +688,7 @@
 
       </layout>
       <layout height="auto" width="auto" style="roundedlabel" bgcolor="$mod.bg" fgcolor="$mod.fg" label="Modulator">
-        <node component="60x12 Multi" guiid="filter.env.mode" xoff="170" yoff="20" width="60" height="36">
+        <node component="60x12 Multi" guiid="lfo.trigmode" xoff="170" yoff="20" width="60" height="36">
           <nodeproperties rows="3" cols="1" choices="$freerun|$keytrigger|$random"/>
         </node>
         <node component="60x18 Switch" xoff="170" yoff="65" guiid="lfo.unipolar">
