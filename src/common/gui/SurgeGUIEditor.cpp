@@ -458,6 +458,23 @@ void SurgeGUIEditor::idle()
             }
          }
       }
+
+      if(lastTempo != synth->time_data.tempo ||
+         lastTSNum != synth->time_data.timeSigNumerator ||
+         lastTSDen != synth->time_data.timeSigDenominator
+         )
+      {
+         lastTempo = synth->time_data.tempo;
+         lastTSNum = synth->time_data.timeSigNumerator;
+         lastTSDen = synth->time_data.timeSigDenominator;
+         if( lfodisplay )
+         {
+            ((CLFOGui*)lfodisplay)->setTimeSignature(synth->time_data.timeSigNumerator,
+                                                     synth->time_data.timeSigDenominator);
+            ((CLFOGui*)lfodisplay)->invalidateIfAnythingIsTemposynced();
+         }
+      }
+      
       for (int i = 0; i < 8; i++)
       {
          if (synth->refresh_parameter_queue[i] >= 0)
@@ -2067,7 +2084,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (p->can_temposync())
             {
                addCallbackMenu(contextMenu, "Temposync",
-                               [this, p]() { p->temposync = !p->temposync; });
+                               [this, p, control]() {
+                                  p->temposync = !p->temposync;
+                                  if( p->temposync )
+                                     p->bound_value();
+                                  else if( control )
+                                     p->set_value_f01( control->getValue() );
+
+                                  if( this->lfodisplay )
+                                     this->lfodisplay->invalid();
+                               });
                contextMenu->checkEntry(eid, p->temposync);
                eid++;
             }

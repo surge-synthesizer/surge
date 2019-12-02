@@ -405,6 +405,17 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
             surgeInstance->time_data.tempo = tempo;
             surgeInstance->time_data.ppqPos +=
                 (double)BLOCK_SIZE * tempo / (60. * data.processContext->sampleRate);
+
+            if (data.processContext->state & ProcessContext::kTimeSigValid)
+            {
+               surgeInstance->time_data.timeSigNumerator = data.processContext->timeSigNumerator;
+               surgeInstance->time_data.timeSigDenominator = data.processContext->timeSigDenominator;
+            }
+            else
+            {
+               surgeInstance->time_data.timeSigNumerator = 4;
+               surgeInstance->time_data.timeSigDenominator = 4;
+            }
          }
 
          processEvents(i, data.inputEvents, noteEventIndex);

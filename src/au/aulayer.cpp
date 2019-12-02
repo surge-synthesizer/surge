@@ -398,6 +398,16 @@ ComponentResult aulayer::Render(AudioUnitRenderActionFlags& ioActionFlags,
       plugin_instance->time_data.tempo = 120;
    }
 
+   UInt32 oDS;
+   Float32 otsNum;
+   UInt32 otsDen;
+   Float64 ocmD;
+   if( CallHostMusicalTimeLocation(&oDS, &otsNum, &otsDen, &ocmD ) >= 0 )
+   {
+      plugin_instance->time_data.timeSigNumerator = (int)otsNum;
+      plugin_instance->time_data.timeSigDenominator = (int)otsDen;
+   }
+
    unsigned int events_processed = 0;
 
    unsigned int i;

@@ -192,6 +192,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
    }
    else
    {
+      bool drawBeats = false;
       CGraphicsPath *path = dc->createGraphicsPath();
       CGraphicsPath *eupath = dc->createGraphicsPath();
       CGraphicsPath *edpath = dc->createGraphicsPath();
@@ -212,6 +213,18 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
          tp[lfodata->deform.param_id_in_scene].i = lfodata->deform.val.i;
          tp[lfodata->trigmode.param_id_in_scene].i = lm_keytrigger;
       }
+
+      {
+         auto *c = &lfodata->rate;
+         auto *e = &lfodata->release;
+         while( c <= e && ! drawBeats )
+         {
+            if( c->temposync )
+               drawBeats = true;
+            ++c;
+         }
+      }
+
 
       float susTime = 0.5;
       float totalEnvTime =  pow(2.0f,lfodata->delay.val.f) +
@@ -283,7 +296,8 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
          {
              path->beginSubpath(xc, val );
              eupath->beginSubpath(xc, euval);
-             edpath->beginSubpath(xc, edval);
+             if( ! lfodata->unipolar.val.b )
+                edpath->beginSubpath(xc, edval);
          }
          else
          {
@@ -356,14 +370,87 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
               snprintf(txt, 256, "%.1f s", delta * l );
           dc->drawString(txt, tp, VSTGUI::kLeftText, true );
 
-          CPoint sp(xp, valScale * 0.95), ep(xp, valScale * 0.85 );
+          CPoint sp(xp, valScale * 0.95), ep(xp, valScale * 0.9 );
           tf.transform(sp);
           tf.transform(ep);
           dc->setLineWidth(1.0);
-          dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
+          dc->setFrameColor(VSTGUI::kBlackCColor);
           dc->drawLine(sp,ep);
       }
+
       
+      if( drawBeats )
+      {
+         auto bpm = storage->temposyncratio * 120;
+
+         auto denFactor = 4.0 / tsDen;
+         auto beatsPerSecond = bpm / 60.0;
+         auto secondsPerBeat = 1 / beatsPerSecond;
+         auto deltaBeat = secondsPerBeat / drawnTime * valScale * denFactor;
+
+         int nBeats = drawnTime * beatsPerSecond / denFactor;
+
+         auto measureLen = deltaBeat * tsNum;
+         int everyMeasure = 1;
+         while( measureLen < 5 ) // a hand selected parameter by playing around with it, tbh
+         {
+            measureLen *= 2;
+            everyMeasure *= 2;
+         }
+         
+         for( auto l=0; l<nBeats; ++l )
+         {
+            auto xp = deltaBeat * l;
+            if( l % ( tsNum * everyMeasure ) == 0 )
+            {
+               auto soff = 0.0;
+               if( l > 10 ) soff = 0.0;
+               CPoint mp( xp + deltaBeat * ( tsNum - 0.5 ), valScale * 0.01 ),
+                  mps( xp +  deltaBeat * soff, valScale * 0.01 ),
+                  sp(xp, valScale * (.01)),
+                  ep(xp, valScale * (.1) ),
+                  vruleS(xp, valScale * .15 ),
+                  vruleE(xp, valScale * .85 );
+               tf.transform(sp);
+               tf.transform(ep);
+               tf.transform(mp);
+               tf.transform(mps);
+               tf.transform(vruleS);
+               tf.transform(vruleE);
+               dc->setFrameColor(VSTGUI::kBlackCColor);
+               dc->setLineWidth(1.0);
+               dc->drawLine(sp,ep);
+               dc->setLineWidth(1.0);
+               dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
+               // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
+               dc->drawLine(vruleS, vruleE );
+
+               auto mnum = l / tsNum;
+               char s[256];
+               sprintf(s, "%d", l+1 );
+               
+               CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10,10));
+               tf.transform(tp);
+               dc->setFontColor(VSTGUI::kBlackCColor);
+               dc->setFont(lfoTypeFont);
+               dc->drawString(s, tp, VSTGUI::kLeftText, true );
+            }
+            else if( everyMeasure == 1 )
+            {
+               CPoint sp(xp, valScale * (.06)), ep(xp, valScale * (.1) );
+               tf.transform(sp);
+               tf.transform(ep);
+               dc->setLineWidth(0.5);
+               if( l % tsNum == 0 )
+                  dc->setFrameColor(VSTGUI::kBlackCColor );
+               else
+                  dc->setFrameColor(VSTGUI::CColor(0xB0, 0x60, 0x00 ) );
+               dc->drawLine(sp,ep);
+            }
+         }
+         
+      }
+   
       // OK so draw the rules
       CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
       CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
@@ -979,6 +1066,26 @@ void CLFOGui::invalidateIfIdIsInRange(int id)
    }
 
    if (inRange)
+   {
+      invalid();
+   }
+}
+
+void CLFOGui::invalidateIfAnythingIsTemposynced()
+{
+   bool isSynced = false;
+   if( ! lfodata ) return;
+
+   auto *c = &lfodata->rate;
+   auto *e = &lfodata->release;
+   while( c <= e && ! isSynced )
+   {
+      if( c->temposync )
+         isSynced = true;
+      ++c;
+   }
+
+   if (isSynced)
    {
       invalid();
    }

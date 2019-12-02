@@ -127,6 +127,8 @@ private:
    unsigned int idleinc = 0;
    int fxbypass_tag = 0, resolink_tag = 0, f1resotag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0;
+   double lastTempo = 0;
+   int lastTSNum = 0, lastTSDen = 0;
    void draw_infowindow(int ptag, VSTGUI::CControl* control, bool modulate, bool forceMB = false);
 
    bool showPatchStoreDialog(patchdata* p,
