@@ -54,6 +54,8 @@ bool LayoutEngine::parseLayout()
    // Obviously fix this
    doc.SetTabSize(4);
 
+   LayoutLog::info() << "Parsing file '" << layoutResource( "layout.xml" ) << "'" << std::endl;
+   
    if( ! doc.LoadFile(layoutResource("layout.xml")) || doc.Error() )
    {
       LayoutLog::error() << "Unable to parse layout.xml\nError is:\n" << doc.ErrorDesc() << " at row=" <<doc.ErrorRow() << " col=" << doc.ErrorCol() << std::endl;
@@ -122,7 +124,7 @@ bool LayoutEngine::parseLayout()
 
    buildNodeMapFrom(rootLayoutElement.get());
 
-   LayoutLog::info() << "Layout dump\n" << rootLayoutElement->toString() << std::endl;
+   // LayoutLog::info() << "Layout dump\n" << rootLayoutElement->toString() << std::endl;
    return true;
 }
 
@@ -611,7 +613,7 @@ std::string LayoutElement::toString(bool recurse)
 
    oss << "off=(" << xoff << "," << yoff << ") sz=(" << width << "," << height << ") ";
 
-   if (associatedContainer)
+   if (false && associatedContainer)
       oss << " ac=" << (size_t)associatedContainer << " ";
 
    if (recurse)
@@ -1007,11 +1009,12 @@ void LayoutComponent::resolveParent(LayoutEngine *eng)
 void LayoutLibrary::initialize(SurgeStorage *storage)
 {
    // FIXME - implement this somewhat tedious code
-   return;
    LayoutLog::info() << "Initializing LayoutLibrary" << std::endl;
    LayoutLog::info() << "  dp=" << storage->datapath << std::endl;
    LayoutLog::info() << "  up=" << storage->userDataPath << std::endl;
 
+   availableLayouts.clear();
+   
    std::vector<std::string> paths = { storage->datapath, storage->userDataPath };
 
    for( auto sourceS : paths )
@@ -1036,34 +1039,52 @@ void LayoutLibrary::initialize(SurgeStorage *storage)
          }
       }
 
-
-      int sourceSubstrLength= source.generic_string().size() + 1;
-      if (source.generic_string().back() == '/' || source.generic_string().back() == '\\')
-       sourceSubstrLength --;
-
-      for( auto &d : fs::directory_iterator(source))
+      for( auto &p : alldirs )
       {
-         if( fs::is_directory(d) )
-         {
-            std::string name;
+         std::string name;
 #if WINDOWS && ! TARGET_RACK
-            /*
-            ** Windows filesystem names are properly wstrings which, if we want them to 
-            ** display properly in vstgui, need to be converted to UTF8 using the 
-            ** windows widechar API. Linux and Mac do not require this.
-            */
-            std::wstring str = d.path().wstring().substr(sourceSubstrLength);
-            name = Surge::Storage::wstringToUTF8(str);
+         /*
+         ** Windows filesystem names are properly wstrings which, if we want them to 
+         ** display properly in vstgui, need to be converted to UTF8 using the 
+         ** windows widechar API. Linux and Mac do not require this.
+         */
+         std::wstring str = p.wstring();
+         name = Surge::Storage::wstringToUTF8(str);
 #else
-            name = d.path().generic_string().substr(sourceSubstrLength);
+         name = p.generic_string();
 #endif
+
+         std::string ending = ".layout";
+         if (name.length() >= ending.length() &&
+             0 == name.compare (name.length() - ending.length(), ending.length(), ending))
+         {
+#if WINDOWS
+            char sep = '\\';
+#else
+            char sep = '/';
+#endif
+            auto sp = name.rfind(sep);
+            if( sp == std::string::npos )
+            {
+               LayoutLog::error() << "Unable to determine path for '" << name << "'" << std::endl;
+            }
+            else
+            {
+               auto path = name.substr(0,sp + 1);
+               auto lo   = name.substr(sp+1);
+               Entry e;
+               e.root = path;
+               e.name = lo + sep;
+               availableLayouts.push_back(e);
+            }
          }
       }
    }
+   LayoutLog::info() << "Located " << availableLayouts.size() << " layouts" << std::endl;
 }
 
 
 
-std::vector<std::string> LayoutLibrary::availbleLayouts;
+std::vector<LayoutLibrary::Entry> LayoutLibrary::availableLayouts;
 
 } // namespace Surge

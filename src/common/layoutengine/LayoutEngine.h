@@ -209,8 +209,14 @@ public:
 class LayoutLibrary
 {
 public:
+   struct Entry
+   {
+      std::string root;
+      std::string name;
+   };
+   
    static void initialize(SurgeStorage *);
-   static std::vector<std::string> availbleLayouts;
+   static std::vector<Entry> availableLayouts;
 };
    
 } // namespace Surge

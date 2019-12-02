@@ -2966,6 +2966,12 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     tuningSubMenu->forget();
 
+    // FIXME - this shouldn't be quite this hardcoded
+    auto layoutSubMenu = makeLayoutMenu(menuRect);
+    settingsMenu->addEntry(layoutSubMenu, "Layouts" );
+    eid++;
+    layoutSubMenu->forget();
+    
     int did=0;
     COptionMenu *dataSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                VSTGUI::COptionMenu::kNoDrawStyle |
@@ -2987,6 +2993,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     addCallbackMenu(dataSubMenu, "Rescan All Data Folders", [this]() {
        this->synth->storage.refresh_wtlist();
        this->synth->storage.refresh_patchlist();
+       Surge::LayoutLibrary::initialize(&(synth->storage));
     });
     did++;
 
@@ -3145,6 +3152,76 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     */
     return tuningSubMenu;
+}
+
+VSTGUI::COptionMenu *SurgeGUIEditor::makeLayoutMenu(VSTGUI::CRect &menuRect)
+{
+    int tid=0;
+    COptionMenu *layoutSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                 VSTGUI::COptionMenu::kNoDrawStyle |
+                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+    addCallbackMenu(layoutSubMenu, "Re-scan current layout",
+                    [this]()
+                    {
+                       if( this->layout )
+                       {
+                          // FIXME - improve this of course to search
+                          auto olo = this->layout->layoutRoot;
+                          auto olp = this->layout->particularLayout;
+                          auto fr  = this->layout->frame;
+                          
+                          this->layout.reset(new Surge::LayoutEngine());
+                          this->layout->layoutRoot = olo;
+                          this->layout->particularLayout = olp;
+                          this->layout->frame = fr;
+                          this->layout->bitmapStore = this->bitmapStore;
+                          this->layout->parseLayout();
+                          this->queue_refresh = true;
+                       }
+                    }
+        );
+    tid++;
+
+    addCallbackMenu(layoutSubMenu, "Dump layout to stdout",
+                    [this]() {
+                       if( this->layout && this->layout->rootLayoutElement )
+                       {
+                          std::cout << "LAYOUT:\n"
+                                    << "  layoutRoot=" << layout->layoutRoot << "\n"
+                                    << "  particularLayout=" << layout->particularLayout << "\n"
+                                    << this->layout->rootLayoutElement->toString() << std::endl;
+                       }
+                    }
+       );
+    tid++;
+
+    layoutSubMenu->addSeparator();
+    tid++;
+    for( auto ent : Surge::LayoutLibrary::availableLayouts )
+    {
+       addCallbackMenu(layoutSubMenu, std::string( "Switch to " ) + ent.name,
+                       [this, ent]()
+                          {
+                             if( this->layout )
+                             {
+                                // FIXME - improve this of course to search
+                                auto fr  = this->layout->frame;
+                          
+                                this->layout.reset(new Surge::LayoutEngine());
+                                this->layout->layoutRoot = ent.root;
+                                this->layout->particularLayout = ent.name;
+                                this->layout->frame = fr;
+                                this->layout->bitmapStore = this->bitmapStore;
+                                this->layout->parseLayout();
+                                this->queue_refresh = true;
+                             }
+                          }
+          );
+       tid++;
+    }
+    
+    return layoutSubMenu;
 }
 
 int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of range
