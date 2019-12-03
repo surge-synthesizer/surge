@@ -31,10 +31,10 @@ TEST_CASE( "We can read a collection of wavetables", "[wav]" )
       REQUIRE( ( wt->flags & wtf_is_sample ) == 0 );
    }
    
-   SECTION( "05_BELL.wav" )
+   SECTION( "05_BELL.WAV" )
    {
       auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
-      surge->storage.load_wt_wav_portable("test-data/wav/05_BELL.wav", wt);
+      surge->storage.load_wt_wav_portable("test-data/wav/05_BELL.WAV", wt);
       REQUIRE( wt->size == 2048 );
       REQUIRE( wt->n_tables == 33 );
       REQUIRE( ( wt->flags & wtf_is_sample ) == 0 );
