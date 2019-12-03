@@ -23,9 +23,19 @@ jobs:
         imageName: 'vs2017-win2016'
         isWindows: True
         is32Bit: True
-      linux:
+      linux-lv2:
         imageName: 'ubuntu-16.04'
         isLinux: True
+        linuxProject: lv2
+      linux-headless:
+        imageName: 'ubuntu-16.04'
+        isLinux: True
+        linuxProject: headless
+        runHeadless: True
+      linux-vst3:
+        imageName: 'ubuntu-16.04'
+        isLinux: True
+        linuxProject: vst3
 
   pool:
     vmImage: $(imageName)
@@ -124,10 +134,25 @@ jobs:
       sudo apt-get install -y libxkbcommon-x11-dev
       sudo apt-get install -y devscripts
 
-      ./build-linux.sh clean && ./build-linux.sh build
+      echo "Building $(linuxProject)"
+      ./build-linux.sh clean && ./build-linux.sh build --project=$(linuxProject)
 
     condition: variables.isLinux
     displayName: Build Linux
+
+  - bash: |
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+
+      echo "Running HeadlessTest $(linuxProject)"
+      export XDG_DATA_HOME=$AGENT_TEMPDIRECTORY/XH
+      mkdir -p $XDG_DATA_HOME
+      rsync -r --delete "resources/data/" "$XDG_DATA_HOME/Surge/"
+
+      ./target/headless/Release/Surge/Surge-Headless
+
+
+    condition: and(variables.isLinux,variables.runHeadless)
+    displayName: Run Linux Unit Test
 
 
 - job: NotifyReleases
