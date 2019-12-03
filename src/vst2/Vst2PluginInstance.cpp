@@ -395,6 +395,11 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
          if (timeinfo->flags & kVstPpqPosValid)
             _instance->time_data.ppqPos = timeinfo->ppqPos;
       }
+      if (timeinfo->flags & kVstTimeSigValid )
+      {
+         _instance->time_data.timeSigNumerator = timeinfo->timeSigNumerator;
+         _instance->time_data.timeSigDenominator = timeinfo->timeSigDenominator;
+      }
    }
    else
    {
