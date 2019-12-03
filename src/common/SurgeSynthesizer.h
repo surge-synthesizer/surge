@@ -35,6 +35,7 @@ class PluginLayer;
 struct timedata
 {
    double ppqPos, tempo;
+   int timeSigNumerator = 4, timeSigDenominator = 4;
 };
 
 struct parametermeta

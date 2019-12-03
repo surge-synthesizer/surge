@@ -94,6 +94,12 @@ public:
    void drawBitmap(VSTGUI::CDrawContext* dc);
 
    void invalidateIfIdIsInRange(int id);
+   void invalidateIfAnythingIsTemposynced();
+
+   void setTimeSignature(int n, int d ) {
+      tsNum = n;
+      tsDen = d;
+   }
 
 protected:
    LFOStorage* lfodata;
@@ -101,6 +107,9 @@ protected:
    SurgeStorage* storage;
    unsigned int coltable[256];
    CDIBitmap* cdisurf;
+   int tsNum = 4, tsDen = 4;
+   
+   
    VSTGUI::CRect shaperect[n_lfoshapes];
    VSTGUI::CRect steprect[n_stepseqsteps];
    VSTGUI::CRect gaterect[n_stepseqsteps];
