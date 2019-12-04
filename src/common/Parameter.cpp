@@ -968,8 +968,14 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_freq_audible:
       case ct_freq_vocoder_low:
       case ct_freq_vocoder_high:
-         sprintf(txt, "%.3f Hz", 440.f * powf(2.0f, f / 12.f));
+      {
+         int i_value = (int)( f + 0.5 ) + 69; // that 1/2th centers us
+         if( i_value < 0 ) i_value = 0; 
+         int octave = (i_value / 12) - 1;
+         char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+         sprintf(txt, "%.3f Hz (~%s%d)", 440.f * powf(2.0f, f / 12.f),  notenames[i_value % 12], octave);
          break;
+      }
       case ct_freq_mod:
          sprintf(txt, "%.2f semitones", f);
          break;
