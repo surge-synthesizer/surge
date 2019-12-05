@@ -42,6 +42,30 @@ void promptError(const Surge::Error& error, SurgeGUIEditor* guiEditor)
    promptError(error.getMessage(), error.getTitle());
 }
 
+void promptInfo(const std::string& message, const std::string& title, SurgeGUIEditor* guiEditor)
+{
+   CFStringRef cfT =
+       CFStringCreateWithCString(kCFAllocatorDefault, title.c_str(), kCFStringEncodingUTF8);
+   CFStringRef cfM =
+       CFStringCreateWithCString(kCFAllocatorDefault, message.c_str(), kCFStringEncodingUTF8);
+
+   SInt32 nRes = 0;
+   CFUserNotificationRef pDlg = NULL;
+   const void* keys[] = {kCFUserNotificationAlertHeaderKey, kCFUserNotificationAlertMessageKey};
+   const void* vals[] = {cfT, cfM};
+
+   CFDictionaryRef dict =
+       CFDictionaryCreate(0, keys, vals, sizeof(keys) / sizeof(*keys),
+                          &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+   pDlg = CFUserNotificationCreate(kCFAllocatorDefault, 0, kCFUserNotificationNoteAlertLevel, &nRes,
+                                   dict);
+
+   CFRelease(cfT);
+   CFRelease(cfM);
+}
+
+
 MessageResult
 promptOKCancel(const std::string& message, const std::string& title, SurgeGUIEditor* guiEditor)
 {

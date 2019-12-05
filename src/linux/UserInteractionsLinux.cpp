@@ -74,6 +74,25 @@ void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
     promptError(error.getMessage(), error.getTitle());
 }
 
+void promptInfo(const std::string &message, const std::string &title,
+                SurgeGUIEditor *guiEditor)
+{
+   if (vfork()==0)
+   {
+      if (execlp("zenity", "zenity",
+                 "--info",
+                 "--text", message.c_str(),
+                 "--title", title.c_str(),
+                 (char*)nullptr) < 0)
+      {
+         _exit(0);
+      }
+   }
+   std::cerr << "Surge Error\n"
+             << title << "\n"
+             << message << "\n" << std::flush;
+}
+
 MessageResult promptOKCancel(const std::string &message, const std::string &title,
                              SurgeGUIEditor *guiEditor)
 {

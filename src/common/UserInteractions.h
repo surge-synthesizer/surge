@@ -32,6 +32,10 @@ void promptError(const std::string &message, const std::string &title,
 // And a convenience version which does the same from a Surge::Error
 void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor = nullptr);
 
+// Show the user an Info dialog with an OK button; and wait for them to press it
+void promptInfo(const std::string &message, const std::string &title,
+                SurgeGUIEditor *guiEditor = nullptr);
+
 // Prompt the user with an OK/Cance
 typedef enum MessageResult
 {

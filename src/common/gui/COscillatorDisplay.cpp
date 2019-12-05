@@ -692,7 +692,38 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
    contextMenu->addEntry(actionItem);
-   
+
+   auto exportItem = new CCommandMenuItem(CCommandMenuItem::Desc("Export Wave Table to File..."));
+   auto exportAction = [this](CCommandMenuItem *item)
+       {
+          // FIXME - we need to find the scene and osc by iterating (gross).
+          int oscNum = -1;
+          int scene = -1;
+          for( int sc=0;sc<2;sc++ )
+          {
+             auto s = &(storage->getPatch().scene[sc]);
+             for( int o=0;o<n_oscs; ++o )
+             {
+                if( &( s->osc[o] ) == this->oscdata )
+                {
+                   oscNum = o;
+                   scene = sc;
+                }
+             }
+          }
+          if( scene == -1 || oscNum == -1 )
+          {
+             Surge::UserInteractions::promptError( "Unable to determine which osc I have data for in export", "Export" );
+          }
+          else
+          {
+             std::string baseName = storage->getPatch().name + "_osc" + std::to_string(oscNum + 1) + "_scene" + (scene == 0 ? "A" : "B" );
+             storage->export_wt_wav_portable( baseName, &( oscdata->wt ) );
+          }
+       };
+   exportItem->setActions(exportAction,nullptr);
+   contextMenu->addEntry(exportItem);
+
    auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content..."));
    auto contentAction = [](CCommandMenuItem *item)
        {

@@ -24,6 +24,16 @@
 #include "SurgeStorage.h"
 #include <sstream>
 
+#if LINUX
+#include <experimental/filesystem>
+#elif MAC || TARGET_RACK
+#include <filesystem.h>
+#else
+#include <filesystem>
+#endif
+
+namespace fs = std::experimental::filesystem;
+
 // Sigh - lets write a portable ntol by hand
 unsigned int pl_int(char *d)
 {
@@ -105,6 +115,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     bool hasCLM = false;;
     bool hasCUE = false;
     bool hasSRGE = false;
+    bool hasSRGO = false;
     int clmLEN = 0;
     int smplLEN = 0;
     int cueLEN = 0;
@@ -200,6 +211,14 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         else if( four_chars(chunkType, 's', 'r', 'g', 'e'))
         {
             hasSRGE = true;
+            char *dp = data;
+            int version = pl_int(dp); dp += 4;
+            srgeLEN = pl_int(dp);
+            free(data);
+        }
+        else if( four_chars(chunkType, 's', 'r', 'g', 'o'))
+        {
+            hasSRGO = true;
             char *dp = data;
             int version = pl_int(dp); dp += 4;
             srgeLEN = pl_int(dp);
@@ -393,6 +412,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if( wh.flags & wtf_is_sample )
     {
         auto windowSize = 1024;
+        if( hasSRGO )
+           windowSize = srgeLEN;
+        
         while( windowSize * 4 > sample_length && windowSize > 8 )
             windowSize = windowSize / 2;
         wh.n_samples = windowSize;
@@ -441,4 +463,133 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         free( wavdata );
     }
     return;
+}
+
+void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
+{
+   std::ostringstream oss;
+   oss << userDataPath << "/ExportedWaveTables";
+   fs::create_directories( oss.str() );
+   std::string dirName = oss.str();
+
+   auto fnamePre = fbase + ".wav";
+   auto fname = dirName + "/" + fbase + ".wav";
+   int fnum = 1;
+   while( fs::exists( fs::path( fname ) ) ) {
+      fname = dirName + "/" + fbase + "_" + std::to_string(fnum) + ".wav";
+      fnamePre = fbase + "_" + std::to_string(fnum) + ".wav";
+      fnum++;
+   }
+   
+   struct FG {
+      FILE *f = nullptr;
+      ~FG() {
+         if( f ) fclose( f );
+      }
+   };
+   std::string errorMessage = "Unknown Error";
+   FG fguard;
+   
+   {
+      FILE *wfp = fopen( fname.c_str(), "wb" );
+      if( ! wfp )
+      {
+         errorMessage = "Unable to open file '" + fname + "'";
+         goto error;
+      }
+      fguard.f = wfp;
+      
+      auto audioFormat = 3;
+      auto bitsPerSample = 32;
+      auto sampleRate = 44100;
+      auto nChannels = 1;
+
+      auto w4i = [wfp](unsigned int v) {
+                    unsigned char fi[4];
+                    for( int i=0; i<4; ++i )
+                    {
+                       fi[i] = (unsigned char)( v & 255 );
+                       v = v / 256;
+                    }
+                    fwrite( fi, 1, 4, wfp );
+                 };
+
+         
+      auto w2i = [wfp](unsigned int v) {
+                    unsigned char fi[2];
+                    for( int i=0; i<2; ++i )
+                    {
+                       fi[i] = (unsigned char)( v & 255 );
+                       v = v / 256;
+                    }
+                    fwrite( fi, 1, 2, wfp );
+                 };
+
+      fwrite( "RIFF", 1, 4, wfp );
+
+      bool isSample = false;
+      if( wt->flags & wtf_is_sample )
+         isSample = true;
+
+      // OK so how much data do I have.
+      unsigned int tableSize = nChannels * bitsPerSample / 8 * wt->n_tables * wt->size;
+      unsigned int dataSize =  4 + // 'WAVE'
+         4 + 4 + 18 + // fmt chunk
+         4 + 4 + tableSize;
+
+      if( ! isSample )
+         dataSize += 4 + 4 + 8; // srge chunk
+
+
+      w4i(dataSize);
+      fwrite( "WAVE", 1, 4, wfp );
+
+      // OK so format chunk
+      fwrite( "fmt ", 1, 4, wfp );
+      w4i( 16 );
+      w2i( audioFormat );
+      w2i( nChannels );
+      w4i( sampleRate );
+      w4i( sampleRate * nChannels * bitsPerSample );
+      w2i( bitsPerSample * nChannels );
+      w2i( bitsPerSample );
+
+      if( ! isSample )
+      {
+         fwrite( "srge", 1, 4, wfp );
+         w4i( 8 );
+         w4i( 1 );
+         w4i( wt->size );
+      }
+      else
+      {
+         fwrite( "srgo", 1, 4, wfp ); // o for oneshot
+         w4i( 8 );
+         w4i( 1 );
+         w4i( wt->size );
+
+      }
+      
+      fwrite( "data", 1, 4, wfp );
+      w4i( tableSize );
+      for( int i=0; i<wt->n_tables; ++i )
+      {
+         fwrite( wt->TableF32WeakPointers[0][i], wt->size, bitsPerSample / 8, wfp );
+      }
+
+      fclose(wfp);
+      fguard.f = nullptr;
+      refresh_wtlist();
+
+      Surge::UserInteractions::promptInfo( "Exported to your Surge Documents in `ExportedWaveTables/" + fnamePre + "'",
+                                           "Export Succeeded" );
+      
+      return;
+   }
+   
+error:
+   Surge::UserInteractions::promptError( errorMessage, "Export" );
+   return;
+   
+   
 }
