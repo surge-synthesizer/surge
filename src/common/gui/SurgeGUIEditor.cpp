@@ -1306,6 +1306,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->setValue(p->get_value_f01());
                hs->setLabel(p->get_name());
                hs->setMoveRate(p->moverate);
+               if( p->can_temposync() )
+                  hs->setTempoSync(p->temposync);
                frame->addView(hs);
                param[i] = hs;
             }
@@ -1318,6 +1320,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->setDefaultValue(p->get_default_value_f01());
                hs->setLabel(p->get_name());
                hs->setMoveRate(p->moverate);
+               if( p->can_temposync() )
+                  hs->setTempoSync(p->temposync);
                frame->addView(hs);
                param[i] = hs;
 
@@ -2093,6 +2097,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                                   if( this->lfodisplay )
                                      this->lfodisplay->invalid();
+                                  auto *css = dynamic_cast<CSurgeSlider *>(control);
+                                  if( css )
+                                  {
+                                     css->setTempoSync(p->temposync);
+                                     css->invalid();
+                                  }
                                });
                contextMenu->checkEntry(eid, p->temposync);
                eid++;

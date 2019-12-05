@@ -61,6 +61,8 @@ public:
    virtual void setValue(float val);
    virtual void setBipolar(bool);
 
+   virtual void setTempoSync( bool b ) { is_temposync = b; }
+   
    void SetQuantitizedDispValue(float f);
 
    CLASS_METHODS(CSurgeSlider, CControl)
@@ -93,6 +95,7 @@ private:
    int typex, typey;
    int typehx, typehy;
    bool has_modulation, has_modulation_current;
+   bool is_temposync = false;
    VSTGUI::CPoint lastpoint, sourcepoint;
    float oldVal, *edit_value;
    int drawcount_debug;
