@@ -28,6 +28,16 @@ void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
     promptError(error.getMessage(), error.getTitle());
 }
 
+void promptInfo(const std::string &message, const std::string &title,
+                SurgeGUIEditor *guiEditor)
+{
+    MessageBox(::GetActiveWindow(),
+               message.c_str(),
+               title.c_str(),
+               MB_OK | MB_ICONINFORMATION );
+}
+
+
 MessageResult promptOKCancel(const std::string &message, const std::string &title,
                              SurgeGUIEditor *guiEditor)
 {
