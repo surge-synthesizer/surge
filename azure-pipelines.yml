@@ -90,6 +90,16 @@ jobs:
 
   - bash: |
       pushd $AGENT_TEMPDIRECTORY
+      mkdir issIns
+      nuget install innosetup
+      ls -l
+      ls -l innosetup-5.6.1/tools
+
+    condition: variables.isWindows
+    displayName: Direct Inno
+
+  - bash: |
+      pushd $AGENT_TEMPDIRECTORY
       export PREMAKE_WINDOWS=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip
       curl -L $PREMAKE_WINDOWS --output premake5.zip
       unzip premake5.zip
