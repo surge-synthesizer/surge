@@ -272,9 +272,7 @@ void DualDelayEffect::init_ctrltypes()
    fxdata->p[11].set_type(ct_decibel_narrow);
 
    fxdata->p[0].posy_offset = 5;
-   fxdata->p[0].temposync = false;
    fxdata->p[1].posy_offset = 5;
-   fxdata->p[1].temposync = false;
 
    fxdata->p[2].posy_offset = 7;
    fxdata->p[3].posy_offset = 7;
