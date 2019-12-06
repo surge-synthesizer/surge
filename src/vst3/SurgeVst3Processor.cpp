@@ -67,8 +67,8 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 #endif
 
    //---create Audio In/Out busses------
-   // we want a stereo Input and a Stereo Output
-   addAudioInput(STR16("Stereo In"), SpeakerArr::kStereo, kAux );
+   // we want a SideChain Input and a Stereo Output
+   addAudioInput(STR16("SideChain In"), SpeakerArr::kStereo, kAux );
    addAudioOutput(STR16("Stereo Out"), SpeakerArr::kStereo);
 
    //---create Event In/Out busses (1 bus with 16 channels)------
