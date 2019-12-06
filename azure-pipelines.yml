@@ -49,7 +49,18 @@ jobs:
      echo "BUILD REASON = " $BUILD_REASON
      echo "MAKE ASSETS = " $MAKEASSETS     
     displayName: Details on build
-    
+
+  - bash: |
+      pushd $AGENT_TEMPDIRECTORY
+      mkdir issIns
+      cd issIns
+      curl -o ./is.exe http://files.jrsoftware.org/is/5/innosetup-5.5.9.exe
+      ls -al
+      ./is.exe /SILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+
+    condition: variables.isWindows
+    displayName: Direct Inno
+
   - bash: |
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
       git submodule update --init --recursive
@@ -88,15 +99,6 @@ jobs:
     condition: variables.isWindows
     displayName: NuGet
 
-  - bash: |
-      pushd $AGENT_TEMPDIRECTORY
-      mkdir issIns
-      cd issIns
-      curl -o is.exe http://files.jrsoftware.org/is/5/innosetup-5.5.9.exe
-      is.exe /SILENT /SUPPRESSMSGBOXES /NORESTART /SP-
-
-    condition: variables.isWindows
-    displayName: Direct Inno
 
   - bash: |
       pushd $AGENT_TEMPDIRECTORY
