@@ -297,6 +297,7 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
                 if( editor_instance == NULL )
                 {
                     editor_instance = new SurgeGUIEditor( this, plugin_instance );
+                    editor_instance->loadFromDAWExtraState(plugin_instance);
                 }
                 void** pThis = (void**)(outData);
                 *pThis = (void*)editor_instance;
