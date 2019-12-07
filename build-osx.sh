@@ -52,6 +52,13 @@ Commands are:
 
         --uninstall-surge        Uninstall surge both from user and system areas. Be very careful!
 
+We also have a few useful defaults to run in a DAW if you have the DAW installed. Your favorite dev combo
+not listed here? Feel free to add one and send in a Pull Request!
+
+        --run-hosting-au         Run the Audio Unit in Hosting AU
+        --run-logic-au           Run the Audio Unit in Logic Pro X
+        --run-reaper-vst3        Run the VST3 in Reaper64
+
 The default behaviour without arguments is to clean and rebuild everything.
 
 Options are:
@@ -275,6 +282,42 @@ run_build_validate_au()
     auval -vt aumu VmbA
 }
 
+run_hosting_au()
+{
+    if [ ! -d "/Applications/Hosting AU.app" ]; then
+        echo
+        echo "Hosting AU is not installed. Please install it from http://ju-x.com/hostingau.html"
+        echo
+        exit 1;
+    fi
+
+    "/Applications/Hosting AU.app/Contents/MacOS/Hosting AU" "test-data/daw-files/mac/Surge.hosting"
+}
+
+run_logic_au()
+{
+    if [ ! -d "/Applications/Logic Pro X.app" ]; then
+        echo
+        echo "Logic is not installed. Please install it!"
+        echo
+        exit 1;
+    fi
+
+    "/Applications/Logic Pro X.app/Contents/MacOS/Logic Pro X" "test-data/daw-files/mac/Surge_AU.logicx"
+}
+
+run_reaper_vst3()
+{
+    if [ ! -d "/Applications/REAPER64.app" ]; then
+        echo
+        echo "REAPER64 is not installed. Please install it!"
+        echo
+        exit 1;
+    fi
+
+    "/Applications/REAPER64.app/Contents/MacOS/REAPER" "test-data/daw-files/mac/Surge_VST3.RPP"
+}
+
 run_build_install_vst2()
 {
     run_premake_if
@@ -398,6 +441,18 @@ case $command in
         ;;
     --build-validate-au)
         run_build_validate_au
+        ;;
+    --run-hosting-au)
+        run_build_validate_au
+        run_hosting_au
+        ;;
+    --run-logic-au)
+        run_build_validate_au
+        run_logic_au
+        ;;
+    --run-reaper-vst3)
+        run_build_install_vst3
+        run_reaper_vst3
         ;;
     --build-install-vst2)
         run_build_install_vst2
