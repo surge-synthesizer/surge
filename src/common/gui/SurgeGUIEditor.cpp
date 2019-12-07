@@ -2106,6 +2106,54 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                });
                contextMenu->checkEntry(eid, p->temposync);
                eid++;
+
+               if( p->ctrlgroup == cg_LFO )
+               {
+                  char lab[256];
+                  char prefix[256];
+                  char un[5];
+
+                  // WARNING - this won't work with Surge++
+                  int a = p->ctrlgroup_entry + 1 - ms_lfo1;
+                  if (a > 6)
+                     sprintf(prefix, "SLFO%i", a - 6);
+                  else
+                     sprintf(prefix, "LFO%i", a);
+
+                  bool setTSTo;
+                  if( p->temposync )
+                  {
+                     un[0] = 'U'; un[1] = 'n'; un[2] = '-', un[3] = 0;;
+                     setTSTo = false;
+                  }
+                  else
+                  {
+                     un[0] = 0;
+                     setTSTo = true;
+                  }
+
+                  snprintf(lab, 256, "%sTempoSync all %s Params", un, prefix );
+                  addCallbackMenu( contextMenu, lab,
+                                   [this, p, setTSTo](){
+                                      // There is surely a more efficient way but this is fine
+                                      for (auto iter = this->synth->storage.getPatch().param_ptr.begin();
+                                           iter != this->synth->storage.getPatch().param_ptr.end(); iter++)
+                                      {
+                                         Parameter* pl = *iter;
+                                         if( pl->ctrlgroup_entry == p->ctrlgroup_entry &&
+                                             pl->ctrlgroup == p->ctrlgroup &&
+                                             pl->can_temposync()
+                                            )
+                                         {
+                                            pl->temposync = setTSTo;
+                                            if( setTSTo )
+                                               pl->bound_value();
+                                         }
+                                      }
+                                      this->synth->refresh_editor = true;
+                                   } );
+                  eid++;
+               }
             }
             if (p->can_extend_range())
             {
