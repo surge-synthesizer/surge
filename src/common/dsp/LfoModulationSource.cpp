@@ -27,7 +27,8 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    env_phase = 0;
    shuffle_id = 0;
    ratemult = 1.f;
-   retrigger_EG = false;
+   retrigger_FEG = false;
+   retrigger_AEG = false;
 
    rate = lfo->rate.param_id_in_scene;
    magn = lfo->magnitude.param_id_in_scene;
@@ -231,7 +232,8 @@ void LfoModulationSource::release()
 
 void LfoModulationSource::process_block()
 {
-   retrigger_EG = false;
+   retrigger_FEG = false;
+   retrigger_AEG = false;
    int s = lfo->shape.val.i;
 
    float frate = envelope_rate_linear(-localcopy[rate].f);
@@ -364,8 +366,24 @@ void LfoModulationSource::process_block()
       }
       break;
       case ls_stepseq:
-         if (ss->trigmask & (1 << step))
-            retrigger_EG = true;
+         /*
+         ** You might thing we don't need this and technically we don't
+         ** but I wanted to keep it here to retain compatability with 
+         ** versions of trigmask which were streamed in older sessions
+         */
+         if (ss->trigmask & (1L << step))
+         {
+            retrigger_FEG = true;
+            retrigger_AEG = true;
+         }
+         if (ss->trigmask & (1L << (16+step)))
+         {
+            retrigger_FEG = true;
+         }
+         if (ss->trigmask & (1L << (32+step)))
+         {
+            retrigger_AEG = true;
+         }
          step++;
          shuffle_id = (shuffle_id + 1) & 1;
          if (shuffle_id)

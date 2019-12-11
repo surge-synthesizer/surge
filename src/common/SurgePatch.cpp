@@ -1332,6 +1332,27 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          if (p->QueryIntAttribute("trigmask", &j) == TIXML_SUCCESS)
             stepsequences[sc][lfo].trigmask = j;
 
+         if (p->QueryIntAttribute("trigmask_0to15", &j ) == TIXML_SUCCESS )
+         {
+            stepsequences[sc][lfo].trigmask &= 0xFFFFFFFFFFFF0000;
+            j &= 0xFFFF;
+            stepsequences[sc][lfo].trigmask |= j;
+         };
+         if (p->QueryIntAttribute("trigmask_16to31", &j ) == TIXML_SUCCESS )
+         {
+            stepsequences[sc][lfo].trigmask &= 0xFFFFFFFF0000FFFF;
+            j &= 0xFFFF;
+            uint64_t jl = j;
+            stepsequences[sc][lfo].trigmask |= jl << 16;
+         };
+         if (p->QueryIntAttribute("trigmask_32to47", &j ) == TIXML_SUCCESS )
+         {
+            stepsequences[sc][lfo].trigmask &= 0xFFFF0000FFFFFFFF;
+            j &= 0xFFFF;
+            uint64_t jl = j;
+            stepsequences[sc][lfo].trigmask |= jl << 32;
+         };
+         
          for (int s = 0; s < n_stepseqsteps; s++)
          {
             char txt[256];
@@ -1580,7 +1601,20 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("loop_end", stepsequences[sc][l].loop_end);
             p.SetAttribute("shuffle", float_to_str(stepsequences[sc][l].shuffle, txt2));
             if (l == 0)
-               p.SetAttribute("trigmask", stepsequences[sc][l].trigmask);
+            {
+               uint64_t ttm = stepsequences[sc][l].trigmask;
+
+               // collapse in case an old surge loads this
+               uint64_t old_ttm = ( ttm & 0xFFFF ) | ( ( ttm >> 16 ) & 0xFFFF ) | ( ( ttm >> 32 ) & 0xFFFF );
+               
+               p.SetAttribute("trigmask", old_ttm);
+
+               p.SetAttribute("trigmask_0to15", ttm & 0xFFFF );
+               ttm = ttm >> 16;
+               p.SetAttribute("trigmask_16to31", ttm & 0xFFFF );
+               ttm = ttm >> 16;
+               p.SetAttribute("trigmask_32to47", ttm & 0xFFFF );
+            }
             ss.InsertEndChild(p);
          }
       }

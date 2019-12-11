@@ -100,6 +100,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #endif
        // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and mac is 0xAABBGGRR
        int stepMarker = PIX_COL( 0xff000000, 0x000000ff);
+       int disStepMarker = PIX_COL( 0xffaaaaaa, 0xaaaaaaff);
        int loopRegionHi = PIX_COL( 0xffc6e9c4, 0xc4e9c6ff);
        int loopRegionLo = PIX_COL( 0xffb6d9b4, 0xb4d9b6ff );
        int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
@@ -125,8 +126,23 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
             gaterect[i] = gstep;
             gaterect[i].offset(size.left + splitpoint, size.top);
 
-            if (ss->trigmask & (1 << i))
+            if (ss->trigmask & (1L << i))
                cdisurf->fillRect(gstep, stepMarker);
+            else if( ss->trigmask & ( 1L << ( 16 + i ) ) )
+            {
+               // FIXME - an A or an F would be nice eh?
+               cdisurf->fillRect(gstep, disStepMarker);
+               auto qrect = gstep;
+               qrect.right -= (qrect.getWidth() / 2 );
+               cdisurf->fillRect(qrect, stepMarker);
+            }
+            else if( ss->trigmask & ( 1L << ( 32 + i ) ) )
+            {
+               cdisurf->fillRect(gstep, disStepMarker);
+               auto qrect = gstep;
+               qrect.left += (qrect.getWidth() / 2 );
+               cdisurf->fillRect(qrect, stepMarker);
+            }
             else if ((i >= ss->loop_start) && (i <= ss->loop_end))
                cdisurf->fillRect(gstep, (i & 3) ? loopRegionHi : loopRegionLo);
             else
@@ -594,6 +610,7 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
 #endif
       // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and mac is 0xAABBGGRR
       int stepMarker = PIX_COL(0xff000000, 0x000000ff);
+      int disStepMarker = PIX_COL( 0xffaaaaaa, 0xaaaaaaff);
       int loopRegionHi = PIX_COL(0xffc6e9c4, 0xc4e9c6ff);
       int loopRegionLo = PIX_COL(0xffb6d9b4, 0xb4d9b6ff);
       int noLoopHi = PIX_COL(0xffdfdfdf, 0xdfdfdfff);
@@ -620,8 +637,24 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
             gaterect[i] = gstep;
             gaterect[i].offset(size.left + splitpoint, size.top);
 
-            if (ss->trigmask & (1 << i))
+            if (ss->trigmask & (1L << i))
                cdisurf->fillRect(gstep, stepMarker);
+            else if( ss->trigmask & ( 1L << ( 16 + i ) ) )
+            {
+               // FIXME - an A or an F would be nice eh?
+               cdisurf->fillRect(gstep, disStepMarker);
+               auto qrect = gstep;
+               qrect.right -= (qrect.getWidth() / 2 );
+               cdisurf->fillRect(qrect, stepMarker);
+            }
+            else if( ss->trigmask & ( 1L << ( 32 + i ) ) )
+            {
+               cdisurf->fillRect(gstep, disStepMarker);
+               auto qrect = gstep;
+               qrect.left += (qrect.getWidth() / 2 );
+               cdisurf->fillRect(qrect, stepMarker);
+            }
+
             else if ((i >= ss->loop_start) && (i <= ss->loop_end))
                cdisurf->fillRect(gstep, (i & 3) ? loopRegionHi : loopRegionLo);
             else
@@ -892,8 +925,7 @@ enum
    cs_null = 0,
    cs_shape,
    cs_steps,
-   cs_trigtray_false,
-   cs_trigtray_true,
+   cs_trigtray_toggle,
    cs_loopstart,
    cs_loopend,
 
@@ -913,15 +945,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
          }
          else if (rect_steps_retrig.pointInside(where))
          {
-            bool gatestate = false;
-            for (int i = 0; i < (n_stepseqsteps); i++)
-            {
-               if (gaterect[i].pointInside(where))
-               {
-                  gatestate = ss->trigmask & (1 << i);
-               }
-            }
-            controlstate = gatestate ? cs_trigtray_true : cs_trigtray_false;
+            controlstate = cs_trigtray_toggle;
             onMouseMoved(where, buttons);
             return kMouseEventHandled;
          }
@@ -934,7 +958,10 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
                assert((i >= 0) && (i < n_stepseqsteps));
             }
             ss->steps[n_stepseqsteps - 1] = t;
-            ss->trigmask = ((ss->trigmask & 0xfffe) >> 1) | ((ss->trigmask & 1) << 15);
+            ss->trigmask = ( ((ss->trigmask & 0x000000000000fffe) >> 1) | ((ss->trigmask & 1) << 15) & 0xffff) |
+               ( ((ss->trigmask & 0x00000000fffe0000) >> 1) | ((ss->trigmask & 0x10000) << 15) & 0xffff0000 ) |
+               ( ((ss->trigmask & 0x0000fffe00000000) >> 1) | ((ss->trigmask & 0x100000000) << 15) & 0xffff00000000 );
+
             invalid();
             return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
          }
@@ -947,7 +974,9 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
                assert((i >= 0) && (i < n_stepseqsteps));
             }
             ss->steps[0] = t;
-            ss->trigmask = ((ss->trigmask & 0x7fff) << 1) | ((ss->trigmask & 0x8000) >> 15);
+            ss->trigmask = ( ((ss->trigmask & 0x0000000000007fff) << 1) | ((ss->trigmask & 0x0000000000008000) >> 15) & 0xffff ) |
+               ( ((ss->trigmask & 0x000000007fff0000) << 1) | ((ss->trigmask & 0x0000000080000000) >> 15) & 0xffff0000 )|
+               ( ((ss->trigmask & 0x00007fff00000000) << 1) | ((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000 );
             invalid();
             return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
          }
@@ -1033,17 +1062,64 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
          }
       }
    }
-   else if ((controlstate == cs_trigtray_false) || (controlstate == cs_trigtray_true))
+   else if (controlstate == cs_trigtray_toggle)
    {
       for (int i = 0; i < n_stepseqsteps; i++)
       {
          if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
          {
-            unsigned int m = 1 << i;
-            unsigned int minv = m ^ 0xffffffff;
-            ss->trigmask =
-                (ss->trigmask & minv) |
-                (((controlstate == cs_trigtray_true) || (buttons & (kControl | kRButton))) ? 0 : m);
+            bool bothOn = ss->trigmask & ( 1L << i );
+            bool filtOn = ss->trigmask & ( 1L << ( 16 + i ) );
+            bool ampOn = ss->trigmask & ( 1L << ( 32 + i ) );
+
+            bool anyOn = bothOn || filtOn || ampOn;
+            
+            uint64_t off = 0, on = 0;
+            if( bothOn )
+            {
+               off = 1L << i;
+            }
+            else if( filtOn )
+            {
+               off = 1L << ( 16 + i );
+            }
+            else if( ampOn )
+            {
+               off = 1L << ( 32 + i );
+            }
+            else
+            {
+               off = 0;
+            }
+
+            if( buttons & kShift )
+            {
+               if( bothOn )
+               {
+                  on = 1L << ( 16 + i );
+               }
+               else if( filtOn )
+               {
+                  on = 1L << ( 32 + i );
+               }
+               else if( ampOn )
+               {
+                  on = 0;
+               }
+               else
+               {
+                  on = 1L << i;
+               }
+            }
+            else
+            {
+               if( ! anyOn )
+               {
+                  on = 1L << i;
+               }
+            }
+            
+            ss->trigmask = (ss->trigmask & ~off) | on;
             invalid();
          }
       }
