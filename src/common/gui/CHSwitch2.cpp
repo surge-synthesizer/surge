@@ -43,7 +43,7 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
       if (columns * rows > 1)
       {
          value = (float)(x + y * columns) / (float)(columns * rows - 1);
-
+         
          if (value > 1.f)
             value = 1.f;
          else if (value < 0.f)
@@ -92,7 +92,7 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
       if (columns * rows > 1)
       {
          value = (float)(x + y * columns) / (float)(columns * rows - 1);
-
+         
          if (value > 1.f)
             value = 1.f;
          else if (value < 0.f)
@@ -126,6 +126,7 @@ bool CHSwitch2::onWheel(const CPoint& where, const float& distance, const CButto
       }
       beginEdit();
       value = newVal;
+
       bounceValue();
       if (listener)
          listener->valueChanged(this);

@@ -28,6 +28,9 @@ public:
    }
 
    int rows, columns;
+   // This matches the paint offset
+   virtual int getIValue() { return (int)(value * (float)(rows * columns - 1) + 0.5f); }
+   
    int imgoffset;
    bool dragable;
    bool usesMouseWheel;
