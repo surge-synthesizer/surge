@@ -362,9 +362,12 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
          lfo[i].process_block();
    }
 
-   if (lfo[0].retrigger_EG)
+   if (lfo[0].retrigger_AEG)
    {
       ((AdsrEnvelope*)modsources[ms_ampeg])->retrigger();
+   }
+   if (lfo[0].retrigger_FEG)
+   {
       ((AdsrEnvelope*)modsources[ms_filtereg])->retrigger();
    }
 

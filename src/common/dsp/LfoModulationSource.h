@@ -50,7 +50,8 @@ public:
    }
    float env_val;
    int env_state;
-   bool retrigger_EG;
+   bool retrigger_FEG;
+   bool retrigger_AEG;
 
 private:
    LFOStorage* lfo;

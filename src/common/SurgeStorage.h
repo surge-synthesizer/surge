@@ -9,6 +9,7 @@
 #include <vector>
 #include <thread/CriticalSection.h>
 #include <memory>
+#include <stdint.h>
 
 #ifndef TIXML_USE_STL
 #define TIXML_USE_STL
@@ -386,7 +387,7 @@ struct StepSequencerStorage
    float steps[n_stepseqsteps];
    int loop_start, loop_end;
    float shuffle;
-   unsigned int trigmask;
+   uint64_t trigmask;
 };
 
 /*
