@@ -1342,14 +1342,14 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          {
             stepsequences[sc][lfo].trigmask &= 0xFFFFFFFF0000FFFF;
             j &= 0xFFFF;
-            uint64_t jl = j;
+            uint64_t jl = (uint64_t)j;
             stepsequences[sc][lfo].trigmask |= jl << 16;
          };
          if (p->QueryIntAttribute("trigmask_32to47", &j ) == TIXML_SUCCESS )
          {
             stepsequences[sc][lfo].trigmask &= 0xFFFF0000FFFFFFFF;
             j &= 0xFFFF;
-            uint64_t jl = j;
+            uint64_t jl = (uint64_t)j;
             stepsequences[sc][lfo].trigmask |= jl << 32;
          };
          

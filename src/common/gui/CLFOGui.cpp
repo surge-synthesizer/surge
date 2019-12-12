@@ -46,6 +46,7 @@ void CLFOGui::draw(CDrawContext* dc)
    drawBitmap(dc);
 #else
    auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO", 0 );
+
    if( ignore_bitmap_pref || useBitmap )
    {
         drawBitmap(dc);
@@ -82,125 +83,16 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 
    if (ss && lfodata->shape.val.i == ls_stepseq)
    {
-       cdisurf->begin();
+      // In the bitmap version this has been done for the global; so pull it out of the function
+      cdisurf->begin();
 #if MAC
-       cdisurf->clear(0x0090ffff);
+      cdisurf->clear(0x0090ffff);
 #else
-       cdisurf->clear(0xffff9000);
+      cdisurf->clear(0xffff9000);
 #endif
-       int w = cdisurf->getWidth();
-       int h = cdisurf->getHeight();
 
-       // I know I could do the math to convert these colors but I would rather leave them as literals for the compiler
-       // so we don't have to shift them at runtime. See issue #141 in surge github
-#if MAC
-#define PIX_COL( a, b ) b
-#else
-#define PIX_COL( a, b ) a
-#endif
-       // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and mac is 0xAABBGGRR
-       int stepMarker = PIX_COL( 0xff000000, 0x000000ff);
-       int disStepMarker = PIX_COL( 0xffaaaaaa, 0xaaaaaaff);
-       int loopRegionHi = PIX_COL( 0xffc6e9c4, 0xc4e9c6ff);
-       int loopRegionLo = PIX_COL( 0xffb6d9b4, 0xb4d9b6ff );
-       int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
-       int noLoopLo = PIX_COL( 0xffcfcfcf, 0xcfcfcfff );
-       int grabMarker = PIX_COL( 0x00087f00, 0x007f08ff ); // Surely you can't mean this to be fully transparent?
-       // But leave non-mac unch
-       
-      for (int i = 0; i < n_stepseqsteps; i++)
-      {
-         CRect rstep(maindisp), gstep;
-         rstep.offset(-size.left - splitpoint, -size.top);
-         rstep.left += scale * i;
-         rstep.right = rstep.left + scale - 1;
-         rstep.bottom -= margin2 + 1;
-         CRect shadow(rstep);
-         shadow.inset(-1, -1);
-         cdisurf->fillRect(shadow, skugga);
-         if (edit_trigmask)
-         {
-            gstep = rstep;
-            rstep.top += margin2;
-            gstep.bottom = rstep.top - 1;
-            gaterect[i] = gstep;
-            gaterect[i].offset(size.left + splitpoint, size.top);
+      drawStepSeq(dc, maindisp, leftpanel);
 
-            if (ss->trigmask & (1L << i))
-               cdisurf->fillRect(gstep, stepMarker);
-            else if( ss->trigmask & ( 1L << ( 16 + i ) ) )
-            {
-               // FIXME - an A or an F would be nice eh?
-               cdisurf->fillRect(gstep, disStepMarker);
-               auto qrect = gstep;
-               qrect.right -= (qrect.getWidth() / 2 );
-               cdisurf->fillRect(qrect, stepMarker);
-            }
-            else if( ss->trigmask & ( 1L << ( 32 + i ) ) )
-            {
-               cdisurf->fillRect(gstep, disStepMarker);
-               auto qrect = gstep;
-               qrect.left += (qrect.getWidth() / 2 );
-               cdisurf->fillRect(qrect, stepMarker);
-            }
-            else if ((i >= ss->loop_start) && (i <= ss->loop_end))
-               cdisurf->fillRect(gstep, (i & 3) ? loopRegionHi : loopRegionLo);
-            else
-               cdisurf->fillRect(gstep, (i & 3) ? noLoopHi : noLoopLo);
-         }
-         if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
-         else
-            cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
-         steprect[i] = rstep;
-         steprect[i].offset(size.left + splitpoint, size.top);
-         CRect v(rstep);
-         int p1, p2;
-         if (lfodata->unipolar.val.b)
-         {
-            v.top = v.bottom - (int)(v.getHeight() * ss->steps[i]);
-         }
-         else
-         {
-            p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.5f + 0.5f * ss->steps[i]));
-            p2 = (v.bottom + v.top) * 0.5;
-            v.top = min(p1, p2);
-            v.bottom = max(p1, p2) + 1;
-         }
-         // if (p1 == p2) p2++;
-         cdisurf->fillRect(v, stepMarker);
-      }
-
-      rect_steps = steprect[0];
-      rect_steps.right = steprect[n_stepseqsteps - 1].right;
-      rect_steps_retrig = gaterect[0];
-      rect_steps_retrig.right = gaterect[n_stepseqsteps - 1].right;
-
-      rect_ls = maindisp;
-      rect_ls.offset(-size.left - splitpoint, -size.top);
-      rect_ls.top = rect_ls.bottom - margin2;
-      rect_le = rect_ls;
-
-      rect_ls.left += scale * ss->loop_start - 1;
-      rect_ls.right = rect_ls.left + margin2;
-      rect_le.right = rect_le.left + scale * (ss->loop_end + 1);
-      rect_le.left = rect_le.right - margin2;
-
-      cdisurf->fillRect(rect_ls, grabMarker);
-      cdisurf->fillRect(rect_le, grabMarker);
-      CRect linerect(rect_ls);
-      linerect.top = maindisp.top - size.top;
-      linerect.right = linerect.left + 1;
-      cdisurf->fillRect(linerect, grabMarker);
-      linerect = rect_le;
-      linerect.top = maindisp.top - size.top;
-      linerect.left = linerect.right - 1;
-      cdisurf->fillRect(linerect, grabMarker);
-
-      rect_ls.offset(size.left + splitpoint, size.top);
-      rect_le.offset(size.left + splitpoint, size.top);
-
-      
       CPoint sp(0, 0);
       CRect sr(size.left + splitpoint, size.top, size.right, size.bottom);
       cdisurf->commit();
@@ -546,30 +438,6 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       dc->drawString(ls_abberations[i], tb);
    }
 
-   if (ss && lfodata->shape.val.i == ls_stepseq)
-   {
-      ss_shift_left = leftpanel;
-      ss_shift_left.offset(53, 23);
-      ss_shift_left.right = ss_shift_left.left + 12;
-      ss_shift_left.bottom = ss_shift_left.top + 34;
-
-      dc->setFillColor(cskugga);
-      dc->drawRect(ss_shift_left, kDrawFilled);
-      ss_shift_left.inset(1, 1);
-      ss_shift_left.bottom = ss_shift_left.top + 16;
-
-      dc->setFillColor(cgray);
-      dc->drawRect(ss_shift_left, kDrawFilled);
-      drawtri(ss_shift_left, dc, -1);
-
-      ss_shift_right = ss_shift_left;
-      ss_shift_right.offset(0, 16);
-      dc->setFillColor(cgray);
-      dc->drawRect(ss_shift_right, kDrawFilled);
-      drawtri(ss_shift_right, dc, 1);
-      // ss_shift_left,ss_shift_right;
-   }
-
    setDirty(false);
 }
 
@@ -600,117 +468,7 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
 
    if (ss && lfodata->shape.val.i == ls_stepseq)
    {
-      // I know I could do the math to convert these colors but I would rather leave them as
-      // literals for the compiler so we don't have to shift them at runtime. See issue #141 in
-      // surge github
-#if MAC
-#define PIX_COL(a, b) b
-#else
-#define PIX_COL(a, b) a
-#endif
-      // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and mac is 0xAABBGGRR
-      int stepMarker = PIX_COL(0xff000000, 0x000000ff);
-      int disStepMarker = PIX_COL( 0xffaaaaaa, 0xaaaaaaff);
-      int loopRegionHi = PIX_COL(0xffc6e9c4, 0xc4e9c6ff);
-      int loopRegionLo = PIX_COL(0xffb6d9b4, 0xb4d9b6ff);
-      int noLoopHi = PIX_COL(0xffdfdfdf, 0xdfdfdfff);
-      int noLoopLo = PIX_COL(0xffcfcfcf, 0xcfcfcfff);
-      int grabMarker =
-          PIX_COL(0x00087f00, 0x007f08ff); // Surely you can't mean this to be fully transparent?
-                                           // But leave non-mac unch
-
-      for (int i = 0; i < n_stepseqsteps; i++)
-      {
-         CRect rstep(maindisp), gstep;
-         rstep.offset(-size.left - splitpoint, -size.top);
-         rstep.left += scale * i;
-         rstep.right = rstep.left + scale - 1;
-         rstep.bottom -= margin2 + 1;
-         CRect shadow(rstep);
-         shadow.inset(-1, -1);
-         cdisurf->fillRect(shadow, skugga);
-         if (edit_trigmask)
-         {
-            gstep = rstep;
-            rstep.top += margin2;
-            gstep.bottom = rstep.top - 1;
-            gaterect[i] = gstep;
-            gaterect[i].offset(size.left + splitpoint, size.top);
-
-            if (ss->trigmask & (1L << i))
-               cdisurf->fillRect(gstep, stepMarker);
-            else if( ss->trigmask & ( 1L << ( 16 + i ) ) )
-            {
-               // FIXME - an A or an F would be nice eh?
-               cdisurf->fillRect(gstep, disStepMarker);
-               auto qrect = gstep;
-               qrect.right -= (qrect.getWidth() / 2 );
-               cdisurf->fillRect(qrect, stepMarker);
-            }
-            else if( ss->trigmask & ( 1L << ( 32 + i ) ) )
-            {
-               cdisurf->fillRect(gstep, disStepMarker);
-               auto qrect = gstep;
-               qrect.left += (qrect.getWidth() / 2 );
-               cdisurf->fillRect(qrect, stepMarker);
-            }
-
-            else if ((i >= ss->loop_start) && (i <= ss->loop_end))
-               cdisurf->fillRect(gstep, (i & 3) ? loopRegionHi : loopRegionLo);
-            else
-               cdisurf->fillRect(gstep, (i & 3) ? noLoopHi : noLoopLo);
-         }
-         if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
-         else
-            cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
-         steprect[i] = rstep;
-         steprect[i].offset(size.left + splitpoint, size.top);
-         CRect v(rstep);
-         int p1, p2;
-         if (lfodata->unipolar.val.b)
-         {
-            v.top = v.bottom - (int)(v.getHeight() * ss->steps[i]);
-         }
-         else
-         {
-            p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.5f + 0.5f * ss->steps[i]));
-            p2 = (v.bottom + v.top) * 0.5;
-            v.top = min(p1, p2);
-            v.bottom = max(p1, p2) + 1;
-         }
-         // if (p1 == p2) p2++;
-         cdisurf->fillRect(v, stepMarker);
-      }
-
-      rect_steps = steprect[0];
-      rect_steps.right = steprect[n_stepseqsteps - 1].right;
-      rect_steps_retrig = gaterect[0];
-      rect_steps_retrig.right = gaterect[n_stepseqsteps - 1].right;
-
-      rect_ls = maindisp;
-      rect_ls.offset(-size.left - splitpoint, -size.top);
-      rect_ls.top = rect_ls.bottom - margin2;
-      rect_le = rect_ls;
-
-      rect_ls.left += scale * ss->loop_start - 1;
-      rect_ls.right = rect_ls.left + margin2;
-      rect_le.right = rect_le.left + scale * (ss->loop_end + 1);
-      rect_le.left = rect_le.right - margin2;
-
-      cdisurf->fillRect(rect_ls, grabMarker);
-      cdisurf->fillRect(rect_le, grabMarker);
-      CRect linerect(rect_ls);
-      linerect.top = maindisp.top - size.top;
-      linerect.right = linerect.left + 1;
-      cdisurf->fillRect(linerect, grabMarker);
-      linerect = rect_le;
-      linerect.top = maindisp.top - size.top;
-      linerect.left = linerect.right - 1;
-      cdisurf->fillRect(linerect, grabMarker);
-
-      rect_ls.offset(size.left + splitpoint, size.top);
-      rect_le.offset(size.left + splitpoint, size.top);
+      drawStepSeq(dc, maindisp, leftpanel);
    }
    else
    {
@@ -893,31 +651,154 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
       dc->drawString(ls_abberations[i], tb);
    }
 
-   if (ss && lfodata->shape.val.i == ls_stepseq)
+   setDirty(false);
+}
+
+void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel)
+{
+   auto size = getViewSize();
+
+   int w = cdisurf->getWidth();
+   int h = cdisurf->getHeight();
+   
+   // I know I could do the math to convert these colors but I would rather leave them as literals for the compiler
+   // so we don't have to shift them at runtime. See issue #141 in surge github
+#if MAC
+#define PIX_COL( a, b ) b
+#else
+#define PIX_COL( a, b ) a
+#endif
+   // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and mac is 0xAABBGGRR
+
+   int cgray = PIX_COL( 0xff97989a, 0x9a9897ff );
+   int stepMarker = PIX_COL( 0xFF123463, 0x633412FF);
+   int disStepMarker = PIX_COL( 0xffaaaaaa, 0xaaaaaaff);
+   int loopRegionHi = PIX_COL( 0xff9abfe0, 0xe0bf9aff);
+   int loopRegionLo = PIX_COL( 0xffa9d0ef, 0xefd0a9ff );
+   int shadowcol = PIX_COL( 0xff6d6d7d, 0x7d6d6dff );
+
+   int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
+   int noLoopLo = PIX_COL( 0xffcfcfcf, 0xcfcfcfff );
+   int grabMarker = PIX_COL( 0xff123463, 0x633412ff ); // Surely you can't mean this to be fully transparent?
+   // But leave non-mac unch
+       
+   for (int i = 0; i < n_stepseqsteps; i++)
    {
-      ss_shift_left = leftpanel;
-      ss_shift_left.offset(53, 23);
-      ss_shift_left.right = ss_shift_left.left + 12;
-      ss_shift_left.bottom = ss_shift_left.top + 34;
+      CRect rstep(maindisp), gstep;
+      rstep.offset(-size.left - splitpoint, -size.top);
+      rstep.left += scale * i;
+      rstep.right = rstep.left + scale - 1;
+      rstep.bottom -= margin2 + 1;
+      CRect shadow(rstep);
+      shadow.inset(-1, -1);
+      cdisurf->fillRect(shadow, shadowcol);
+      if (edit_trigmask)
+      {
+         gstep = rstep;
+         rstep.top += margin2;
+         gstep.bottom = rstep.top - 1;
+         gaterect[i] = gstep;
+         gaterect[i].offset(size.left + splitpoint, size.top);
 
-      dc->setFillColor(cskugga);
-      dc->drawRect(ss_shift_left, kDrawFilled);
-      ss_shift_left.inset(1, 1);
-      ss_shift_left.bottom = ss_shift_left.top + 16;
-
-      dc->setFillColor(cgray);
-      dc->drawRect(ss_shift_left, kDrawFilled);
-      drawtri(ss_shift_left, dc, -1);
-
-      ss_shift_right = ss_shift_left;
-      ss_shift_right.offset(0, 16);
-      dc->setFillColor(cgray);
-      dc->drawRect(ss_shift_right, kDrawFilled);
-      drawtri(ss_shift_right, dc, 1);
-      // ss_shift_left,ss_shift_right;
+         if (ss->trigmask & (UINT64_C(1) << i))
+            cdisurf->fillRect(gstep, stepMarker);
+         else if( ss->trigmask & ( UINT64_C(1) << ( 16 + i ) ) )
+         {
+            // FIXME - an A or an F would be nice eh?
+            cdisurf->fillRect(gstep, disStepMarker);
+            auto qrect = gstep;
+            qrect.right -= (qrect.getWidth() / 2 );
+            cdisurf->fillRect(qrect, stepMarker);
+         }
+         else if( ss->trigmask & ( UINT64_C(1) << ( 32 + i ) ) )
+         {
+            cdisurf->fillRect(gstep, disStepMarker);
+            auto qrect = gstep;
+            qrect.left += (qrect.getWidth() / 2 );
+            cdisurf->fillRect(qrect, stepMarker);
+         }
+         else if ((i >= ss->loop_start) && (i <= ss->loop_end))
+            cdisurf->fillRect(gstep, (i & 3) ? loopRegionHi : loopRegionLo);
+         else
+            cdisurf->fillRect(gstep, (i & 3) ? noLoopHi : noLoopLo);
+      }
+      if ((i >= ss->loop_start) && (i <= ss->loop_end))
+         cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
+      else
+         cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
+      steprect[i] = rstep;
+      steprect[i].offset(size.left + splitpoint, size.top);
+      CRect v(rstep);
+      int p1, p2;
+      if (lfodata->unipolar.val.b)
+      {
+         v.top = v.bottom - (int)(v.getHeight() * ss->steps[i]);
+      }
+      else
+      {
+         p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.5f + 0.5f * ss->steps[i]));
+         p2 = (v.bottom + v.top) * 0.5;
+         v.top = min(p1, p2);
+         v.bottom = max(p1, p2) + 1;
+      }
+      // if (p1 == p2) p2++;
+      cdisurf->fillRect(v, stepMarker);
    }
 
-   setDirty(false);
+   
+   rect_steps = steprect[0];
+   rect_steps.right = steprect[n_stepseqsteps - 1].right;
+   rect_steps_retrig = gaterect[0];
+   rect_steps_retrig.right = gaterect[n_stepseqsteps - 1].right;
+
+   rect_ls = maindisp;
+   rect_ls.offset(-size.left - splitpoint, -size.top);
+   rect_ls.top = rect_ls.bottom - margin2;
+   rect_le = rect_ls;
+
+   rect_ls.left += scale * ss->loop_start - 1;
+   rect_ls.right = rect_ls.left + margin2;
+   rect_le.right = rect_le.left + scale * (ss->loop_end + 1);
+   rect_le.left = rect_le.right - margin2;
+
+   cdisurf->fillRect(rect_ls, grabMarker);
+   cdisurf->fillRect(rect_le, grabMarker);
+   CRect linerect(rect_ls);
+   linerect.top = maindisp.top - size.top;
+   linerect.right = linerect.left + 1;
+   cdisurf->fillRect(linerect, grabMarker);
+   linerect = rect_le;
+   linerect.top = maindisp.top - size.top;
+   linerect.left = linerect.right - 1;
+   cdisurf->fillRect(linerect, grabMarker);
+
+   rect_ls.offset(size.left + splitpoint, size.top);
+   rect_le.offset(size.left + splitpoint, size.top);
+
+      
+   CPoint sp(0, 0);
+   CRect sr(size.left + splitpoint, size.top, size.right, size.bottom);
+
+   ss_shift_left = leftpanel;
+   ss_shift_left.offset(53, 23);
+   ss_shift_left.right = ss_shift_left.left + 12;
+   ss_shift_left.bottom = ss_shift_left.top + 34;
+
+   dc->setFillColor(VSTGUI::CColor(0x5d,0x5d,0x5d,0xff));
+   dc->drawRect(ss_shift_left, kDrawFilled);
+   ss_shift_left.inset(1, 1);
+   ss_shift_left.bottom = ss_shift_left.top + 16;
+
+   dc->setFillColor(VSTGUI::CColor(0x97,0x98,0x9a,0xff));
+   dc->drawRect(ss_shift_left, kDrawFilled);
+   drawtri(ss_shift_left, dc, -1);
+
+   ss_shift_right = ss_shift_left;
+   ss_shift_right.offset(0, 16);
+   dc->setFillColor(VSTGUI::CColor(0x97,0x98,0x9a,0xff));
+   dc->drawRect(ss_shift_right, kDrawFilled);
+   drawtri(ss_shift_right, dc, 1);
+   // ss_shift_left,ss_shift_right;
 }
 
 enum
@@ -1051,7 +932,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                f = limit_range(f, 0.f, 1.f);
             else
                f = limit_range(f * 2.f - 1.f, -1.f, 1.f);
-            if (buttons & kShift)
+            if ( (buttons & kShift) )
             {
                f *= 12;
                f = floor(f);
@@ -1068,39 +949,39 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
       {
          if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
          {
-            bool bothOn = ss->trigmask & ( 1L << i );
-            bool filtOn = ss->trigmask & ( 1L << ( 16 + i ) );
-            bool ampOn = ss->trigmask & ( 1L << ( 32 + i ) );
+            bool bothOn = ss->trigmask & ( UINT64_C(1) << i );
+            bool filtOn = ss->trigmask & ( UINT64_C(1) << ( 16 + i ) );
+            bool ampOn = ss->trigmask & ( UINT64_C(1) << ( 32 + i ) );
 
             bool anyOn = bothOn || filtOn || ampOn;
             
             uint64_t off = 0, on = 0;
             if( bothOn )
             {
-               off = 1L << i;
+               off = UINT64_C(1) << i;
             }
             else if( filtOn )
             {
-               off = 1L << ( 16 + i );
+               off = UINT64_C(1) << ( 16 + i );
             }
             else if( ampOn )
             {
-               off = 1L << ( 32 + i );
+               off = UINT64_C(1) << ( 32 + i );
             }
             else
             {
                off = 0;
             }
 
-            if( buttons & kShift )
+            if( ( buttons & kShift ) | ( buttons & kRButton ) )
             {
                if( bothOn )
                {
-                  on = 1L << ( 16 + i );
+                  on = UINT64_C(1) << ( 16 + i );
                }
                else if( filtOn )
                {
-                  on = 1L << ( 32 + i );
+                  on = UINT64_C(1) << ( 32 + i );
                }
                else if( ampOn )
                {
@@ -1108,14 +989,14 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                }
                else
                {
-                  on = 1L << i;
+                  on = UINT64_C(1) << i;
                }
             }
             else
             {
                if( ! anyOn )
                {
-                  on = 1L << i;
+                  on = UINT64_C(1) << i;
                }
             }
             

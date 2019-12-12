@@ -2055,11 +2055,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       return 0;
 
    int ptag = tag - start_paramtags;
-   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
+   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()) )
    {
       Parameter* p = synth->storage.getPatch().param_ptr[ptag];
 
-      if ((button & kRButton))
+      if ((button & kRButton) && ! ( p->ctrltype == ct_lfoshape) ) // supress RMB on LFO Shape and let CLFOGui handle)
       {
          CRect menuRect;
          CPoint where;
