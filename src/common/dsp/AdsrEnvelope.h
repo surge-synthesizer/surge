@@ -73,6 +73,11 @@ public:
       idlecount = 0;
       scalestage = 1.f;
 
+      // Reset the analog state machine too
+      _v_c1 = 0.f;
+      _v_c1_delayed = 0.f;
+      _discharge = 0.f;
+
       envstate = s_attack;
       if ((lc[a].f - adsr->a.val_min.f) < 0.01)
       {
@@ -139,6 +144,9 @@ public:
    {
       if (lc[mode].b)
       {
+         /*
+         ** This is the "analog" mode of the envelope
+         */
          const float v_cc = 1.5f;
 
          __m128 v_c1 = _mm_load_ss(&_v_c1);

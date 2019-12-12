@@ -654,6 +654,17 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
    setDirty(false);
 }
 
+enum
+{
+   cs_null = 0,
+   cs_shape,
+   cs_steps,
+   cs_trigtray_toggle,
+   cs_loopstart,
+   cs_loopend,
+
+};
+
 void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel)
 {
    auto size = getViewSize();
@@ -672,14 +683,16 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
    int cgray = PIX_COL( 0xff97989a, 0x9a9897ff );
    int stepMarker = PIX_COL( 0xFF123463, 0x633412FF);
-   int disStepMarker = PIX_COL( 0xffaaaaaa, 0xaaaaaaff);
+   int disStepMarker = PIX_COL( 0xffccccee, 0xeeccccff);
    int loopRegionLo = PIX_COL( 0xff9abfe0, 0xe0bf9aff);
    int loopRegionHi = PIX_COL( 0xffa9d0ef, 0xefd0a9ff );
+   int loopRegionClick = PIX_COL( 0xffb9e0ff, 0xffe0b9ff );
    int shadowcol = PIX_COL( 0xff6d6d7d, 0x7d6d6dff );
 
    int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
    int noLoopLo = PIX_COL( 0xffcfcfcf, 0xcfcfcfff );
-   int grabMarker = PIX_COL( 0xff123463, 0x633412ff ); // Surely you can't mean this to be fully transparent?
+   int grabMarker = PIX_COL( 0xff123463, 0x633412ff );
+   int grabMarkerHi = PIX_COL( 0xff325483, 0x835432ff ); 
    // But leave non-mac unch
        
    for (int i = 0; i < n_stepseqsteps; i++)
@@ -700,27 +713,38 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          gaterect[i] = gstep;
          gaterect[i].offset(size.left + splitpoint, size.top);
 
+         int stepcolor, knobcolor;
+         knobcolor = stepMarker;
+         if ((i >= ss->loop_start) && (i <= ss->loop_end))
+            stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
+         else
+            stepcolor = (i & 3 ) ? noLoopHi : noLoopLo;
+
+         if( controlstate == cs_trigtray_toggle && i == selectedSSrow )
+         {
+            stepcolor = loopRegionClick;
+            knobcolor = grabMarkerHi;
+         }
+            
          if (ss->trigmask & (UINT64_C(1) << i))
-            cdisurf->fillRect(gstep, stepMarker);
+            cdisurf->fillRect(gstep, knobcolor);
          else if( ss->trigmask & ( UINT64_C(1) << ( 16 + i ) ) )
          {
             // FIXME - an A or an F would be nice eh?
-            cdisurf->fillRect(gstep, disStepMarker);
+            cdisurf->fillRect(gstep, stepcolor);
             auto qrect = gstep;
             qrect.right -= (qrect.getWidth() / 2 );
-            cdisurf->fillRect(qrect, stepMarker);
+            cdisurf->fillRect(qrect, knobcolor);
          }
          else if( ss->trigmask & ( UINT64_C(1) << ( 32 + i ) ) )
          {
-            cdisurf->fillRect(gstep, disStepMarker);
+            cdisurf->fillRect(gstep, stepcolor);
             auto qrect = gstep;
             qrect.left += (qrect.getWidth() / 2 );
-            cdisurf->fillRect(qrect, stepMarker);
+            cdisurf->fillRect(qrect, knobcolor);
          }
-         else if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            cdisurf->fillRect(gstep, (i & 3) ? loopRegionHi : loopRegionLo);
          else
-            cdisurf->fillRect(gstep, (i & 3) ? noLoopHi : noLoopLo);
+            cdisurf->fillRect(gstep, stepcolor );
       }
       if ((i >= ss->loop_start) && (i <= ss->loop_end))
          cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
@@ -801,16 +825,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    // ss_shift_left,ss_shift_right;
 }
 
-enum
-{
-   cs_null = 0,
-   cs_shape,
-   cs_steps,
-   cs_trigtray_toggle,
-   cs_loopstart,
-   cs_loopend,
-
-};
 
 CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
@@ -827,7 +841,15 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
          else if (rect_steps_retrig.pointInside(where))
          {
             controlstate = cs_trigtray_toggle;
-            onMouseMoved(where, buttons);
+
+            for (int i = 0; i < n_stepseqsteps; i++)
+            {
+               if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
+               {
+                  selectedSSrow = i;
+               }
+            }
+            invalid();
             return kMouseEventHandled;
          }
          else if (ss_shift_left.pointInside(where))
@@ -883,68 +905,9 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
 }
 CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
-   if (controlstate)
+   if (controlstate == cs_trigtray_toggle)
    {
-      // onMouseMoved(where,buttons);
-      controlstate = cs_null;
-   }
-   return kMouseEventHandled;
-}
-
-CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
-{
-   if (controlstate == cs_shape)
-   {
-      for (int i = 0; i < n_lfoshapes; i++)
-      {
-         if (shaperect[i].pointInside(where))
-         {
-            if (lfodata->shape.val.i != i)
-            {
-               lfodata->shape.val.i = i;
-               invalid();
-            }
-         }
-      }
-   }
-   else if (controlstate == cs_loopstart)
-   {
-      ss->loop_start = limit_range((int)(where.x - steprect[0].left + (scale >> 1)) / scale, 0,
-                                   n_stepseqsteps - 1);
-      invalid();
-   }
-   else if (controlstate == cs_loopend)
-   {
-      ss->loop_end = limit_range((int)(where.x - steprect[0].left - (scale >> 1)) / scale, 0,
-                                 n_stepseqsteps - 1);
-      invalid();
-   }
-   else if (controlstate == cs_steps)
-   {
-      for (int i = 0; i < n_stepseqsteps; i++)
-      {
-         if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
-         {
-            float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
-            if (buttons & (kControl | kRButton))
-               f = 0;
-            else if (lfodata->unipolar.val.b)
-               f = limit_range(f, 0.f, 1.f);
-            else
-               f = limit_range(f * 2.f - 1.f, -1.f, 1.f);
-            if ( (buttons & kShift) )
-            {
-               f *= 12;
-               f = floor(f);
-               f *= (1.f / 12.f);
-            }
-            ss->steps[i] = f;
-            invalid();
-         }
-      }
-   }
-   else if (controlstate == cs_trigtray_toggle)
-   {
+      selectedSSrow = -1;
       for (int i = 0; i < n_stepseqsteps; i++)
       {
          if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
@@ -1001,6 +964,67 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
             }
             
             ss->trigmask = (ss->trigmask & ~off) | on;
+            invalid();
+         }
+      }
+   }
+   
+   if (controlstate)
+   {
+      // onMouseMoved(where,buttons);
+      controlstate = cs_null;
+   }
+   return kMouseEventHandled;
+}
+
+CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
+{
+   if (controlstate == cs_shape)
+   {
+      for (int i = 0; i < n_lfoshapes; i++)
+      {
+         if (shaperect[i].pointInside(where))
+         {
+            if (lfodata->shape.val.i != i)
+            {
+               lfodata->shape.val.i = i;
+               invalid();
+            }
+         }
+      }
+   }
+   else if (controlstate == cs_loopstart)
+   {
+      ss->loop_start = limit_range((int)(where.x - steprect[0].left + (scale >> 1)) / scale, 0,
+                                   n_stepseqsteps - 1);
+      invalid();
+   }
+   else if (controlstate == cs_loopend)
+   {
+      ss->loop_end = limit_range((int)(where.x - steprect[0].left - (scale >> 1)) / scale, 0,
+                                 n_stepseqsteps - 1);
+      invalid();
+   }
+   else if (controlstate == cs_steps)
+   {
+      for (int i = 0; i < n_stepseqsteps; i++)
+      {
+         if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
+         {
+            float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
+            if (buttons & (kControl | kRButton))
+               f = 0;
+            else if (lfodata->unipolar.val.b)
+               f = limit_range(f, 0.f, 1.f);
+            else
+               f = limit_range(f * 2.f - 1.f, -1.f, 1.f);
+            if ( (buttons & kShift) )
+            {
+               f *= 12;
+               f = floor(f);
+               f *= (1.f / 12.f);
+            }
+            ss->steps[i] = f;
             invalid();
          }
       }
