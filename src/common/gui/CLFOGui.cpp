@@ -673,8 +673,8 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    int cgray = PIX_COL( 0xff97989a, 0x9a9897ff );
    int stepMarker = PIX_COL( 0xFF123463, 0x633412FF);
    int disStepMarker = PIX_COL( 0xffaaaaaa, 0xaaaaaaff);
-   int loopRegionHi = PIX_COL( 0xff9abfe0, 0xe0bf9aff);
-   int loopRegionLo = PIX_COL( 0xffa9d0ef, 0xefd0a9ff );
+   int loopRegionLo = PIX_COL( 0xff9abfe0, 0xe0bf9aff);
+   int loopRegionHi = PIX_COL( 0xffa9d0ef, 0xefd0a9ff );
    int shadowcol = PIX_COL( 0xff6d6d7d, 0x7d6d6dff );
 
    int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
