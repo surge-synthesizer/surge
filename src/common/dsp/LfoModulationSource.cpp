@@ -371,16 +371,16 @@ void LfoModulationSource::process_block()
          ** but I wanted to keep it here to retain compatability with 
          ** versions of trigmask which were streamed in older sessions
          */
-         if (ss->trigmask & (1L << step))
+         if (ss->trigmask & (UINT64_C(1) << step))
          {
             retrigger_FEG = true;
             retrigger_AEG = true;
          }
-         if (ss->trigmask & (1L << (16+step)))
+         if (ss->trigmask & (UINT64_C(1) << (16+step)))
          {
             retrigger_FEG = true;
          }
-         if (ss->trigmask & (1L << (32+step)))
+         if (ss->trigmask & (UINT64_C(1) << (32+step)))
          {
             retrigger_AEG = true;
          }

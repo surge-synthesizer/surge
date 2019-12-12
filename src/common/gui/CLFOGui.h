@@ -92,7 +92,8 @@ public:
    virtual void draw(VSTGUI::CDrawContext* dc);
    void drawVectorized(VSTGUI::CDrawContext* dc);
    void drawBitmap(VSTGUI::CDrawContext* dc);
-
+   void drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel);
+   
    void invalidateIfIdIsInRange(int id);
    void invalidateIfAnythingIsTemposynced();
 
