@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="73px" height="144px" viewBox="0 0 73 144" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g id="bmp00124" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path d="M55.5,119.5 L55.5,116.5 L57.5,116.5 L57.5,119.5 L60.0675208,119.5 L56.5,123.781025 L52.9324792,119.5 L55.5,119.5 Z" id="Path" stroke="#123462" fill="#2E86FE"></path>
-        <path d="M55.5,135.5 L55.5,132.5 L57.5,132.5 L57.5,135.5 L60.0675208,135.5 L56.5,139.781025 L52.9324792,135.5 L55.5,135.5 Z" id="Path" stroke="#FF8F02" fill="#113363"></path>
-        <rect id="Rectangle" stroke="#2E86FE" fill="#FFFFFF" x="0.5" y="0.5" width="72" height="15"></rect>
-        <rect id="Rectangle" stroke="#2E86FE" fill="#FFFFFF" x="0.5" y="16.5" width="72" height="15"></rect>
-        <rect id="Rectangle" fill="#2E86FE" x="0" y="33" width="73" height="14"></rect>
-        <rect id="Rectangle" fill="#2E86FE" x="0" y="49" width="73" height="14"></rect>
-        <rect id="Rectangle" fill="#ADFF6B" x="0" y="81" width="73" height="14"></rect>
-        <rect id="Rectangle" stroke-opacity="0.278560915" stroke="#FFFFFF" x="1.5" y="98.5" width="70" height="11"></rect>
-        <rect id="Rectangle" stroke-opacity="0.501415308" stroke="#FFFFFF" x="0.5" y="97.5" width="72" height="13"></rect>
-        <path d="M-0.5,96.5 L-0.5,111.5 L73.5,111.5 L73.5,96.5 L-0.5,96.5 Z" id="Path" stroke-opacity="0.278560915" stroke="#FFFFFF"></path>
-    </g>
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="73px" height="144px" viewBox="0 0 73 144" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g id="bmp00124" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <path d="M55.5,119.5 L55.5,116.5 L57.5,116.5 L57.5,119.5 L60.0675208,119.5 L56.5,123.781025 L52.9324792,119.5 L55.5,119.5 Z" id="Path" stroke="#123462" fill="#2E86FE"/>
+    <path d="M55.5,135.5 L55.5,132.5 L57.5,132.5 L57.5,135.5 L60.0675208,135.5 L56.5,139.781025 L52.9324792,135.5 L55.5,135.5 Z" id="Path" stroke="#113363" fill="#FF8F02"/>
+    <rect id="Rectangle" stroke="#2E86FE" fill="#FFFFFF" x="0.5" y="0.5" width="72" height="15"/>
+    <rect id="Rectangle" stroke="#2E86FE" fill="#FFFFFF" x="0.5" y="16.5" width="72" height="15"/>
+    <rect id="Rectangle" fill="#2E86FE" x="0" y="33" width="73" height="14"/>
+    <rect id="Rectangle" fill="#2E86FE" x="0" y="49" width="73" height="14"/>
+    <rect id="Rectangle" fill="#ADFF6B" x="0" y="81" width="73" height="14"/>
+    <rect id="Rectangle" stroke-opacity="0.278560915" stroke="#FFFFFF" x="1.5" y="98.5" width="70" height="11"/>
+    <rect id="Rectangle" stroke-opacity="0.501415308" stroke="#FFFFFF" x="0.5" y="97.5" width="72" height="13"/>
+    <path d="M-0.5,96.5 L-0.5,111.5 L73.5,111.5 L73.5,96.5 L-0.5,96.5 Z" id="Path" stroke-opacity="0.278560915" stroke="#FFFFFF"/>
+  </g>
 </svg>
