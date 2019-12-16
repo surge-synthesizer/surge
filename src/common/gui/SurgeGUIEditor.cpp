@@ -1203,14 +1203,30 @@ void SurgeGUIEditor::openOrRecreateEditor()
          break;
          case ct_scenemode:
          {
-            CRect rect(0, 0, 36, 27);
+            CRect rect(0, 0, 36, 33);
             rect.offset(p->posx, p->posy);
-            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 27, 3, 1,
+            CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 33, 4, 1,
                                           bitmapStore->getBitmap(IDB_SCENEMODE), nopoint, true);
             rect(1, 1, 35, 27);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
+
+            /*
+            ** SceneMode is special now because we have a streaming vs UI difference.
+            ** The streamed integer value is 0, 1, 2, 3 which matches the sub3_scenemode
+            ** SurgeStorage enum. But our display would look gross in that order, so
+            ** our display order is singple, split, chsplit, dual which is 0, 1, 3, 2.
+            ** Fine. So just deal with that here.
+            */
+            auto guiscenemode = p->val.i;
+            if( guiscenemode == 3 ) guiscenemode = 2;
+            else if( guiscenemode == 2 ) guiscenemode = 3;
+            auto fscenemode = 0.005 + 0.99 * ( (float)( guiscenemode ) / (n_scenemodes-1) );
+            hsw->setValue(fscenemode);
+            /*
+            ** end special case 
+            */
+            
             frame->addView(hsw);
             nonmod_param[i] = hsw;
          }
@@ -1256,7 +1272,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             nonmod_param[i] = hsw;
          }
          break;
-         case ct_midikey:
+         case ct_midikey_or_channel:
          {
             CRect rect(0, 0, 43, 14);
             rect.offset(p->posx, p->posy);
@@ -2312,7 +2328,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    if (!editor_open)
       return;
    long tag = control->getTag();
-
+   
    if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
    {
       if (((CModulationSourceButton*)control)->event_is_drag)
@@ -2601,9 +2617,47 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          }
          else
          {
-            // synth->storage.getPatch().param_ptr[ptag]->set_value_f01(control->getValue());
+            auto val = control->getValue();
+            if( p->ctrltype == ct_scenemode )
+            {
+               /*
+               ** See the comment in the constructor of ct_scenemode above
+               */
+               auto cs2 = dynamic_cast<CHSwitch2 *>(control);
+               auto im = 0;
+               if( cs2 )
+               {
+                  im = cs2->getIValue();
+                  if( im == 3 ) im = 2;
+                  else if( im == 2 ) im = 3;
+                  val = 0.005 + 0.99 * ( (float)( im ) / (n_scenemodes-1) );
+               }
+
+               /*
+               ** Now I also need to toggle the split key state
+               */
+               auto koc = dynamic_cast<KeyOrChannelState *>(synth->storage.getPatch().splitkey.user_data);
+               if( koc )
+               {
+                  if( koc->getIsKey() && im == sm_chsplit )
+                  {
+                     koc->setIsChannel();
+                     synth->refresh_editor = true;
+                  }
+                  else if( koc->getIsChannel() && im != sm_chsplit )
+                  {
+                     koc->setIsKey();
+                     synth->refresh_editor = true;
+                  }
+               }
+               else
+               {
+                  std::cout << "NULL STATE AFTER CAST of " << synth->storage.getPatch().splitkey.user_data << std::endl;
+               }
+            }
+            // synth->storage.getPatch().param_ptr[ptag]->set_value_f01(val);
             bool force_integer = frame->getCurrentMouseButtons() & kControl;
-            if (synth->setParameter01(ptag, control->getValue(), false, force_integer))
+            if (synth->setParameter01(ptag, val, false, force_integer))
             {
                queue_refresh = true;
                return;

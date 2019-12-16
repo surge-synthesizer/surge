@@ -76,7 +76,7 @@ enum ctrltypes
    ct_scenesel,
    ct_polymode,
    ct_polylimit,
-   ct_midikey,
+   ct_midikey_or_channel,
    ct_bool,
    ct_bool_relative_switch,
    ct_bool_link_switch,
@@ -124,6 +124,15 @@ struct CountedSetUserData : public ParamUserData
    virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
 };
 
+struct KeyOrChannelState : public ParamUserData
+{
+   bool key = true;
+   virtual bool getIsKey() { return key; }
+   virtual bool getIsChannel() { return ! key; }
+   virtual void setIsKey() { key = true; }
+   virtual void setIsChannel() { key = false; }
+};
+
 class Parameter
 {
 public:
@@ -140,6 +149,8 @@ public:
                      int ctrlgroup_entry = 0,
                      bool modulateable = true,
                      int ctrlstyle = cs_off);
+   virtual ~Parameter();
+
    bool can_temposync();
    bool can_extend_range();
    bool can_be_absolute();
@@ -189,6 +200,11 @@ public:
    bool per_voice_processing;
    bool temposync, extend_range, absolute, snap;
 
+   bool owns_user_data = false;
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
-   void set_user_data(ParamUserData* ud); // I take a shallow copy and assume i am referencable
+   void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable
+   void set_user_data_owned(ParamUserData *ud) { // I take ownership
+      set_user_data(ud);
+      owns_user_data = true;
+   }
 };

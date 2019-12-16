@@ -16,6 +16,19 @@ Parameter::Parameter()
    posy_offset = 0;
 }
 
+Parameter::~Parameter()
+{
+   {
+      if( owns_user_data && user_data != nullptr )
+      {
+         std::cout << "Deleting User Data on DTOR" << std::endl;
+         delete user_data;
+         user_data = nullptr;
+         owns_user_data = false;
+      }
+   }
+}
+
 void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
    char prefix[19];
@@ -198,6 +211,14 @@ bool Parameter::can_snap()
 
 void Parameter::set_user_data(ParamUserData* ud)
 {
+   if( owns_user_data && user_data != nullptr )
+   {
+      std::cout << "Deleting User Data on Set" << std::endl;
+      delete user_data;
+      user_data = nullptr;
+      owns_user_data = false;
+   }
+   
    switch (ctrltype)
    {
    case ct_countedset_percent:
@@ -209,6 +230,9 @@ void Parameter::set_user_data(ParamUserData* ud)
       {
          user_data = nullptr;
       }
+      break;
+   case ct_midikey_or_channel:
+      user_data = ud;
       break;
    default:
       std::cerr << "Setting userdata on a non-supporting param ignored" << std::endl;
@@ -493,7 +517,7 @@ void Parameter::set_type(int ctrltype)
       val_max.i = n_ws_type - 1; 
       val_default.i = 0;
       break;
-   case ct_midikey:
+   case ct_midikey_or_channel:
       valtype = vt_int;
       val_min.i = 0;
       val_max.i = 127;

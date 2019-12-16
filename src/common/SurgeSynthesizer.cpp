@@ -198,6 +198,11 @@ SurgeSynthesizer::~SurgeSynthesizer()
 
 int SurgeSynthesizer::calculateChannelMask(int channel, int key)
 {
+   /*
+   ** Just because I always forget
+   **
+   ** A voice is routed to scene n if channelmask & n. So "1" means scene A, "2" means scene B and "3" (= 2 | 1 ) = both.
+   */
    int channelmask = channel;
 
    if ((channel == 0) || (channel > 2) || mpeEnabled)
@@ -219,6 +224,13 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
             channelmask = 1;
          else
             channelmask = 2;
+         break;
+      case sm_chsplit:
+         if( channel <= 8 )
+            channelmask = 1;
+         else
+            channelmask = 2;
+
          break;
       }
    }
@@ -246,9 +258,13 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
    int channelmask = calculateChannelMask(channel, key);
 
    if (channelmask & 1)
+   {
       playVoice(0, channel, key, velocity, detune);
+   }
    if (channelmask & 2)
+   {
       playVoice(1, channel, key, velocity, detune);
+   }
 
    channelState[channel].keyState[key].keystate = velocity;
    channelState[channel].keyState[key].lastdetune = detune;
@@ -2170,8 +2186,8 @@ void SurgeSynthesizer::processControl()
 {
    storage.perform_queued_wtloads();
    int sm = storage.getPatch().scenemode.val.i;
-   bool playA = (sm == sm_split) || (sm == sm_dual) || (storage.getPatch().scene_active.val.i == 0);
-   bool playB = (sm == sm_split) || (sm == sm_dual) || (storage.getPatch().scene_active.val.i == 1);
+   bool playA = (sm == sm_split) || (sm == sm_dual) || (sm == sm_chsplit) || (storage.getPatch().scene_active.val.i == 0);
+   bool playB = (sm == sm_split) || (sm == sm_dual) || (sm == sm_chsplit) || (storage.getPatch().scene_active.val.i == 1);
    storage.songpos = time_data.ppqPos;
    storage.temposyncratio = time_data.tempo / 120.f;
    storage.temposyncratio_inv = 1.f / storage.temposyncratio;

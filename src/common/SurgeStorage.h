@@ -75,6 +75,7 @@ enum sub3_scenemode
    sm_single = 0,
    sm_split,
    sm_dual,
+   sm_chsplit,
    n_scenemodes,
 };
 
