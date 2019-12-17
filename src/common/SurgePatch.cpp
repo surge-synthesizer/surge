@@ -87,7 +87,6 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    param_ptr.push_back(splitkey.assign(p_id++, 0, "splitkey", "Split Key", ct_midikey_or_channel, 8 + 91,
                                        gui_mid_topbar_y - 3, 0, cg_GLOBAL, 0, false,
                                        Surge::ParamConfig::kHorizontal | kNoPopup));
-   param_ptr.back()->set_user_data_owned(new KeyOrChannelState() );
    
    param_ptr.push_back(fx_disable.assign(p_id++, 0, "fx_disable", "FX Disable", ct_none, 0, 0, 0,
                                          cg_GLOBAL, 0, false));
@@ -214,7 +213,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
           gui_uppersec_y + gui_hfader_dist * 4, sc_id, cg_GLOBAL, 0, true,
           Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       a->push_back(scene[sc].keytrack_root.assign(p_id++, id_s++, "ktrkroot", "Keytrack Root Key",
-                                                  ct_midikey_or_channel, 180 + 127, gui_topbar + 78 + 106 + 24,
+                                                  ct_midikey, 180 + 127, gui_topbar + 78 + 106 + 24,
                                                   sc_id, cg_GLOBAL, 0, false));
       // ct_midikey
       // drift,keytrack_root
