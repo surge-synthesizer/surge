@@ -1280,6 +1280,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
             key->setControlMode(cm_notename);
             // key->altlook = true;
             key->setValue(p->get_value_f01());
+            splitkeyControl = key;
+            frame->addView(key);
+            nonmod_param[i] = key;
+         }
+         break;
+         case ct_midikey:
+         {
+            CRect rect(0, 0, 43, 14);
+            rect.offset(p->posx, p->posy);
+            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags);
+            key->setControlMode(cm_notename);
+            // key->altlook = true;
+            key->setValue(p->get_value_f01());
             frame->addView(key);
             nonmod_param[i] = key;
          }
@@ -2636,23 +2649,11 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                /*
                ** Now I also need to toggle the split key state
                */
-               auto koc = dynamic_cast<KeyOrChannelState *>(synth->storage.getPatch().splitkey.user_data);
-               if( koc )
+               auto nf = dynamic_cast<CNumberField *>(splitkeyControl);
+               if( nf )
                {
-                  if( koc->getIsKey() && im == sm_chsplit )
-                  {
-                     koc->setIsChannel();
-                     synth->refresh_editor = true;
-                  }
-                  else if( koc->getIsChannel() && im != sm_chsplit )
-                  {
-                     koc->setIsKey();
-                     synth->refresh_editor = true;
-                  }
-               }
-               else
-               {
-                  std::cout << "NULL STATE AFTER CAST of " << synth->storage.getPatch().splitkey.user_data << std::endl;
+
+                  std::cout << "Would whack SKC " << im << std::endl;
                }
             }
             // synth->storage.getPatch().param_ptr[ptag]->set_value_f01(val);

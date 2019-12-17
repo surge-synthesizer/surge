@@ -227,6 +227,7 @@ private:
    VSTGUI::CTextLabel* patchTuningLabel = nullptr;
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;
+   VSTGUI::CControl* splitkeyControl = nullptr;
    VSTGUI::CControl* param[1024] = {};
    VSTGUI::CControl* nonmod_param[1024] = {}; 
    VSTGUI::CControl* gui_modsrc[n_modsources] = {};
