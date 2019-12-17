@@ -23,6 +23,7 @@ enum ctrl_mode
    cm_envelopetime,
    cm_lforate,
    cm_midichannel,
+   cm_midichannel_from_127,
    cm_mutegroup,
    cm_lag,
    cm_pbdepth,
@@ -164,6 +165,7 @@ public:
    }
 
    void setControlMode(int mode);
+   int getControlMode() { return controlmode; }
    void setPoly(int p)
    {
       if (i_poly != p)

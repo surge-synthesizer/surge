@@ -1207,7 +1207,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             rect.offset(p->posx, p->posy);
             CControl* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 33, 4, 1,
                                           bitmapStore->getBitmap(IDB_SCENEMODE), nopoint, true);
-            rect(1, 1, 35, 27);
+            rect(1, 1, 35, 32);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
 
@@ -1277,7 +1277,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect rect(0, 0, 43, 14);
             rect.offset(p->posx, p->posy);
             CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags);
-            key->setControlMode(cm_notename);
+            auto sm = this->synth->storage.getPatch().scenemode.val.i;
+
+            switch(sm)
+            {
+            case sm_single:
+            case sm_dual:
+               key->setControlMode(cm_none);
+               break;
+            case sm_split:
+               key->setControlMode(cm_notename);
+               break;
+            case sm_chsplit:
+               key->setControlMode(cm_midichannel_from_127);
+               break;
+            }
+
             // key->altlook = true;
             key->setValue(p->get_value_f01());
             splitkeyControl = key;
@@ -2652,8 +2667,21 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                auto nf = dynamic_cast<CNumberField *>(splitkeyControl);
                if( nf )
                {
-
-                  std::cout << "Would whack SKC " << im << std::endl;
+                  int cm = nf->getControlMode();
+                  if( im == sm_chsplit && cm != cm_midichannel_from_127 )
+                  {
+                     nf->setControlMode(cm_midichannel_from_127);
+                     nf->invalid();
+                  }
+                  else if( im == sm_split && cm != cm_notename ) {
+                     nf->setControlMode(cm_notename);
+                     nf->invalid();
+                  }
+                  else if( (im == sm_single || im == sm_dual ) && cm != cm_none ) {
+                     nf->setControlMode(cm_none);
+                     nf->invalid();
+                  }
+                  
                }
             }
             // synth->storage.getPatch().param_ptr[ptag]->set_value_f01(val);
