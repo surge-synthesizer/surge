@@ -317,6 +317,12 @@ void CNumberField::draw(CDrawContext* pContext)
    case cm_polyphony:
       sprintf(the_text, "%i / %i", i_poly, i_value);
       break;
+   case cm_midichannel_from_127:
+   {
+      int mc = i_value / 8 + 1;
+      sprintf(the_text, "Ch. %i", mc );
+   }
+   break;
    case cm_notename:
    {
       int octave = (i_value / 12) - 2;
@@ -478,7 +484,7 @@ void CNumberField::draw(CDrawContext* pContext)
          sprintf(the_text, "no");
       break;
    case cm_none:
-      sprintf(the_text, "---");
+      sprintf(the_text, "-");
       break;
    }
 

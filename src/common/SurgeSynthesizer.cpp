@@ -226,7 +226,7 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
             channelmask = 2;
          break;
       case sm_chsplit:
-         if( channel <= 8 )
+         if( channel <= ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
             channelmask = 1;
          else
             channelmask = 2;
@@ -540,9 +540,6 @@ void SurgeSynthesizer::releaseScene(int s)
 
 void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
 {
-   int channelmask =
-       ((channel == 0) ? 3 : 0) || ((channel == 1) ? 1 : 0) || ((channel == 2) ? 2 : 0);
-
    for( int s=0; s<2; ++s )
    {
       for( auto *v : voices[s] )

@@ -498,6 +498,7 @@ void Parameter::set_type(int ctrltype)
       val_default.i = 0;
       break;
    case ct_midikey_or_channel:
+   case ct_midikey:
       valtype = vt_int;
       val_min.i = 0;
       val_max.i = 127;
