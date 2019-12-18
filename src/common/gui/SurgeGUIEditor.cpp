@@ -29,7 +29,6 @@
 #include <iomanip>
 #include <strstream>
 
-
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/base/ustring.h"
@@ -51,6 +50,7 @@
 #endif
 
 namespace fs = std::experimental::filesystem;
+
 
 #if LINUX && TARGET_LV2
 namespace SurgeLv2
@@ -1631,6 +1631,16 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
 void SurgeGUIEditor::close()
 {
+#if TARGET_VST2
+   // We may need this in other hosts also; but for now 
+   if (frame);
+   {
+      getFrame()->unregisterKeyboardHook(this);
+      frame->close();
+      frame = nullptr;
+   }
+#endif
+
 #if !TARGET_VST3
    super::close();
 #endif
