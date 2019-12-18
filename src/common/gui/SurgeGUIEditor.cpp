@@ -1366,6 +1366,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
                CSurgeSlider* hs =
                    new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs), style, this,
                                     p->id + start_paramtags, false, bitmapStore);
+
+               // Even if current modsource isn't modulating me, something else may be
+               hs->setModPresent(synth->isModDestUsed(p->id));
+
                hs->setValue(p->get_value_f01());
                hs->setDefaultValue(p->get_default_value_f01());
                hs->setLabel(p->get_name());
