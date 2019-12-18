@@ -29,14 +29,20 @@
 #include <iomanip>
 #include <strstream>
 
+
+#if TARGET_VST3
+#include "pluginterfaces/vst/ivstcontextmenu.h"
+#include "pluginterfaces/base/ustring.h"
+#endif
+
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
 #endif
 
-#include "vstgui/lib/platform/platform_x11.h"
-#include "vstgui/lib/platform/linux/x11platform.h"
 
 #if LINUX
+#include "vstgui/lib/platform/platform_x11.h"
+#include "vstgui/lib/platform/linux/x11platform.h"
 #include <experimental/filesystem>
 #elif MAC || TARGET_RACK
 #include <filesystem.h>
@@ -2082,7 +2088,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid++;
             }
          }
-
          frame->addView(contextMenu); // add to frame
          contextMenu->setDirty();
          contextMenu->popup();
@@ -2296,13 +2301,68 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                                }
                                                                refresh_mod();
                                                             });
+                  eid++;
                }
             }
          } // end vt_float if statement
+
          
+#ifdef TARGET_VST3
+         Steinberg::Vst::IComponentHandler* componentHandler =
+            getController()->getComponentHandler();
+         Steinberg::FUnknownPtr<Steinberg::Vst::IComponentHandler3> componentHandler3(
+            componentHandler);
+         Steinberg::Vst::IContextMenu* hostMenu = nullptr;
+         if (componentHandler3)
+         {
+            Steinberg::Vst::ParamID param = ptag;
+            hostMenu = componentHandler3->createContextMenu(this, &param);
+
+            int N = hostMenu ?  hostMenu->getItemCount() : 0;
+            if( N > 0 )
+               contextMenu->addSeparator(eid++);
+            for (int i = 0; i < N; i++)
+            {
+               Steinberg::Vst::IContextMenu::Item item = {0};
+               Steinberg::Vst::IContextMenuTarget *target = {0};
+
+               hostMenu->getItem(i, item, &target );
+
+               char nm[1024];
+               Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
+               int itag = item.tag;
+               if( item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator )
+               {
+                  contextMenu->addSeparator(eid++);
+               }
+               else
+               {
+                  auto menu = addCallbackMenu(contextMenu, nm, [this, target, itag]() {
+                                                                  target->executeMenuItem(itag);
+                                                               });
+                  eid++;
+                  if( item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled )
+                  {
+                     menu->setEnabled(false);
+                  }
+                  if( item.flags & Steinberg::Vst::IContextMenuItem::kIsChecked )
+                  {
+                     menu->setChecked(true);
+                  }
+               }
+               // hostMenu->addItem(item, &target);
+            }
+
+         }
+ #endif
+             
+
          frame->addView(contextMenu); // add to frame
          contextMenu->popup();
          frame->removeView(contextMenu, true); // remove from frame and forget
+#if TARGET_VST3
+         if( hostMenu ) hostMenu->release();
+#endif         
          return 1;
       }
       else if (button & kControl)
