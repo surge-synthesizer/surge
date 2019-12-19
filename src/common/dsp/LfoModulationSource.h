@@ -59,6 +59,9 @@ private:
    SurgeStorage* storage;
    StepSequencerStorage* ss;
    pdata* localcopy;
+   bool phaseInitialized;
+   void initPhaseFromStartPhase();
+   
    float phase, target, noise, noised1, env_phase;
    float ratemult;
    float env_releasestart;

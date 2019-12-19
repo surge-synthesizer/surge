@@ -41,7 +41,7 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    startphase = lfo->start_phase.param_id_in_scene;
    ideform = lfo->deform.param_id_in_scene;
 
-   phase = localcopy[startphase].f;
+   phaseInitialized = false;
 
    if (is_display)
       srand(17);
@@ -95,8 +95,23 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
    return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
 }
 
+void LfoModulationSource::initPhaseFromStartPhase()
+{
+   phase = localcopy[startphase].f;
+   phaseInitialized = true;
+   while( phase < 0.f )
+      phase += 1.f;
+   while( phase > 1.f )
+      phase -= 1.f;
+}
+
 void LfoModulationSource::attack()
 {
+   if( ! phaseInitialized )
+   {
+      initPhaseFromStartPhase();
+   }
+
    env_state = lenv_delay;
 
    env_val = 0.f;
@@ -232,6 +247,11 @@ void LfoModulationSource::release()
 
 void LfoModulationSource::process_block()
 {
+   if( ! phaseInitialized )
+   {
+      initPhaseFromStartPhase();
+   }
+
    retrigger_FEG = false;
    retrigger_AEG = false;
    int s = lfo->shape.val.i;
