@@ -32,7 +32,12 @@
 #include <filesystem>
 #endif
 
+#if WINDOWS && ( _MSC_VER >= 1920 )
+// vs2019
+namespace fs = std::filesystem;
+#else
 namespace fs = std::experimental::filesystem;
+#endif
 
 // Sigh - lets write a portable ntol by hand
 unsigned int pl_int(char *d)

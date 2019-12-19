@@ -16,7 +16,12 @@
 
 using namespace VSTGUI;
 
+#if WINDOWS && ( _MSC_VER >= 1920 )
+// vs2019
+namespace fs = std::filesystem;
+#else
 namespace fs = std::experimental::filesystem;
+#endif
 
 const float disp_pitch = 90.15f - 48.f;
 const int wtbheight = 12;
