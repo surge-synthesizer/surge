@@ -51,8 +51,10 @@ If you are doing a fresh install of Visual Studio Community Edition, after you i
 update, and then make sure the `desktop C++ kit`, including `optional CLI support`, `Windows 8.1 SDK`, 
 and `VC2015 toolset for desktop` are installed. 
 
+You then want to start a visual studio prompt. This is a command like `x64 Native Tools Command Prompt for VS 2017` or similar installed by your visual studio install.
+
 After all this is done, make a fork of this repo, clone the repo and get the required 
-submodules with the following commands.
+submodules with the following commands in that command shell.
 
 ```
 git clone https://github.com/{your-user-name}/surge.git
