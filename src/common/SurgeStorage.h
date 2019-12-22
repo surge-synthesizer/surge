@@ -85,7 +85,7 @@ enum sub3_scenemode
    n_scenemodes,
 };
 
-const char scenemode_abberations[n_scenemodes][16] = {"Single", "Split", "Dual"};
+const char scenemode_abberations[n_scenemodes][16] = {"Single", "Key Split", "Dual", "Channel Split"};
 
 enum sub3_polymode
 {

@@ -116,12 +116,12 @@ bool CHSwitch2::onWheel(const CPoint& where, const float& distance, const CButto
       float range = getRange();
       if (columns >1)
       {
-         rate = range / (float)columns;
+         rate = range / (float)(columns-1); // Colums-1 = number of scroll steps
          newVal += rate * distance;
       }
       else
       {
-         rate = range / (float)rows;
+         rate = range / (float)(rows-1); // Rows-1 = Number of scroll steps
          newVal += rate * -distance; // flip distance (==direction) because it makes more sense when wheeling
       }
       beginEdit();
