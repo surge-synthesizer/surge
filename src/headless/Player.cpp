@@ -14,12 +14,17 @@ namespace Headless
 
 playerEvents_t makeHoldMiddleC(int forSamples, int withTail)
 {
+   return makeHoldNoteFor(60, forSamples, withTail );
+}
+
+playerEvents_t makeHoldNoteFor( int note, int forSamples, int withTail )
+{
    playerEvents_t result;
 
    Event on;
    on.type = Event::NOTE_ON;
    on.channel = 0;
-   on.data1 = 60;
+   on.data1 = note;
    on.data2 = 100;
    on.atSample = 0;
 
@@ -157,6 +162,33 @@ void playOnEveryPatch(
                delete[] data;
          }
       }
+   }
+}
+
+void playOnNRandomPatches(
+    SurgeSynthesizer* surge,
+    const playerEvents_t& events,
+    int nPlays,
+    std::function<void(
+        const Patch& p, const PatchCategory& c, const float* data, int nSamples, int nChannels)> cb)
+{
+   int nPresets = surge->storage.patch_list.size();
+   int nCats = surge->storage.patch_category.size();
+
+   for (auto i = 0; i < nPlays; ++i)
+   {
+      int rp = (int)( 1.0 * rand() / RAND_MAX * ( surge->storage.patch_list.size() - 1 ) );
+      Patch p = surge->storage.patch_list[rp];
+      PatchCategory pc = surge->storage.patch_category[p.category];
+
+      float* data = NULL;
+      int nSamples, nChannels;
+
+      playOnPatch(surge, i, events, &data, &nSamples, &nChannels);
+      cb(p, pc, data, nSamples, nChannels);
+      
+      if (data)
+         delete[] data;
    }
 }
 
