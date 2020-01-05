@@ -29,10 +29,22 @@ void DualDelayEffect::init()
    lp.suspend();
    hp.suspend();
    setvars(true);
+   inithadtempo = true;
+   // See issue #1444 and the fix for this stuff
+   if( storage->temposyncratio_inv == 0 )
+   {
+      inithadtempo = false;
+   }
 }
 
 void DualDelayEffect::setvars(bool init)
 {
+   if( ! inithadtempo && storage->temposyncratio_inv != 0 )
+   {
+      init = true;
+      inithadtempo = true;
+   }
+   
    float fb = amp_to_linear(*f[2]);
    float cf = amp_to_linear(*f[3]);
 

@@ -50,6 +50,7 @@ public:
 
 private:
    lag<float, true> timeL, timeR;
+   bool inithadtempo;
    float envf;
    int wpos;
    BiquadFilter lp, hp;
@@ -121,6 +122,7 @@ public:
 private:
    lipol<float, true> feedback;
    lag<float, true> time, shiftL, shiftR;
+   bool inithadtempo;
    float buffer[2][max_delay_length];
    int wpos;
    // CHalfBandFilter<6> frL,fiL,frR,fiR;

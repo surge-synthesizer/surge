@@ -109,6 +109,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    last_key[0] = 60;
    last_key[1] = 60;
    temposyncratio = 1.f;
+   temposyncratio_inv = 0.0f; // Use this as a sentinel (since it was not initialized prior to 1.6.5 this was the value at least win and mac had). #1444
+   
    songpos = 0;
 
    for (int i = 0; i < n_customcontrollers; i++)

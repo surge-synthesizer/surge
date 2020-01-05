@@ -35,10 +35,24 @@ void FreqshiftEffect::init()
    fi.reset();
    ringout = 10000000;
    setvars(true);
+
+   inithadtempo = true;
+   // See issue #1444 and the fix for this stuff
+   if( storage->temposyncratio_inv == 0 )
+   {
+      inithadtempo = false;
+   }
+
 }
 
 void FreqshiftEffect::setvars(bool init)
 {
+   if( ! inithadtempo && storage->temposyncratio_inv != 0 )
+   {
+      init = true;
+      inithadtempo = true;
+   }
+
    feedback.newValue(amp_to_linear(*f[fsp_feedback]));
 
    if (init)
