@@ -150,17 +150,21 @@ void SurgeSynthesizer::loadPatch(int id)
    patchid = id;
 
    Patch e = storage.patch_list[id];
+   loadPatchByPath( e.path.generic_string().c_str(), e.category, e.name.c_str() );
+}
 
-   FILE* f = fopen(e.path.generic_string().c_str(), "rb");
+bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, const char* patchName )
+{
+   FILE* f = fopen(fxpPath, "rb");
    if (!f)
-      return;
+      return false;
    fxChunkSetCustom fxp;
    fread(&fxp, sizeof(fxChunkSetCustom), 1, f);
    if ((vt_read_int32BE(fxp.chunkMagic) != 'CcnK') || (vt_read_int32BE(fxp.fxMagic) != 'FPCh') ||
        (vt_read_int32BE(fxp.fxID) != 'cjs3'))
    {
       fclose(f);
-      return;
+      return false;
    }
 
    int cs = vt_read_int32BE(fxp.chunkSize);
@@ -174,9 +178,16 @@ void SurgeSynthesizer::loadPatch(int id)
 
    storage.getPatch().comment = "";
    storage.getPatch().author = "";
-   storage.getPatch().category = storage.patch_category[e.category].name;
-   current_category_id = e.category;
-   storage.getPatch().name = e.name;
+   if( categoryId >= 0 )
+   {
+      storage.getPatch().category = storage.patch_category[categoryId].name;
+   }
+   else
+   {
+      storage.getPatch().category = "direct-load";
+   }
+   current_category_id = categoryId;
+   storage.getPatch().name = patchName;
 
    loadRaw(data, cs, true);
    free(data);
@@ -213,6 +224,7 @@ void SurgeSynthesizer::loadPatch(int id)
    ** Notify the host display that the patch name has changed
    */
    updateDisplay();
+   return true;
 }
 
 void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
