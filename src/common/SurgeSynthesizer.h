@@ -150,6 +150,7 @@ public:
    //	unsigned int getParameterFlags (long index);
    void loadRaw(const void* data, int size, bool preset = false);
    void loadPatch(int id);
+   bool loadPatchByPath(const char* fxpPath, int categoryId, const char* name );
    void incrementPatch(bool nextPrev);
    void incrementCategory(bool nextPrev);
 

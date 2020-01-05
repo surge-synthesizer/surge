@@ -137,16 +137,16 @@ std::shared_ptr<SurgeSynthesizer> surgeOnSine()
 ** frequency measure (which works great for the sine patch and poorly for others
 ** At one day we could do this with autocorrelation instead but no need now.
 */
-double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note )
+double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note, int seconds = 2, bool channel = 0 )
 {
-   auto events = Surge::Headless::makeHoldNoteFor( note, 44100 * 2, 64 );
+   auto events = Surge::Headless::makeHoldNoteFor( note, 44100 * seconds, 64 );
    float *buffer;
    int nS, nC;
    Surge::Headless::playAsConfigured( surge.get(), events, &buffer, &nS, &nC );
 
    REQUIRE( nC == 2 );
-   REQUIRE( nS >= 44100 * 2 );
-   REQUIRE( nS <= 44100 * 2 + 4 * BLOCK_SIZE );
+   REQUIRE( nS >= 44100 * seconds );
+   REQUIRE( nS <= 44100 * seconds + 4 * BLOCK_SIZE );
 
    // Trim off the leading and trailing
    int nSTrim = (int)(nS / 2 * 0.8);
@@ -154,7 +154,7 @@ double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note )
    float *leftTrimmed = new float[nSTrim];
 
    for( int i=0; i<nSTrim; ++i )
-      leftTrimmed[i] = buffer[ (i + start) * 2 ];
+      leftTrimmed[i] = buffer[ (i + start) * 2 + channel ];
 
    // OK so now look for sample times between positive/negative crosses
    int v = -1;
@@ -292,6 +292,75 @@ TEST_CASE( "Simple Single Oscillator is Constant", "[dsp]" )
    if (data)
       delete[] data;
    delete surge;
+
+}
+
+TEST_CASE( "Unison Absolute and Relative", "[osc]" )
+{
+   auto surge = std::shared_ptr<SurgeSynthesizer>( Surge::Headless::createSurge(44100) );
+   REQUIRE( surge );
+
+   auto assertRelative = [surge](const char* pn) {
+                            REQUIRE( surge->loadPatchByPath( pn, -1, "Test" ) );
+                            auto f60_0 = frequencyForNote( surge, 60, 5, 0 );
+                            auto f60_1 = frequencyForNote( surge, 60, 5, 1 );
+                            
+                            auto f60_avg = 0.5 * ( f60_0 + f60_1 );
+                            
+                            auto f72_0 = frequencyForNote( surge, 72, 5, 0 );
+                            auto f72_1 = frequencyForNote( surge, 72, 5, 1 );
+                            auto f72_avg = 0.5 * ( f72_0 + f72_1 );
+                            
+                            // In relative mode, the average frequencies should double, as should the individual outliers
+                            REQUIRE( f72_avg / f60_avg == Approx( 2 ).margin( 0.01 ) );
+                            REQUIRE( f72_0 / f60_0 == Approx( 2 ).margin( 0.01 ) );
+                            REQUIRE( f72_1 / f60_1 == Approx( 2 ).margin( 0.01 ) );
+                         };
+
+   auto assertAbsolute = [surge](const char* pn, bool print = false) {
+                            REQUIRE( surge->loadPatchByPath( pn, -1, "Test" ) );
+                            auto f60_0 = frequencyForNote( surge, 60, 5, 0 );
+                            auto f60_1 = frequencyForNote( surge, 60, 5, 1 );
+                            
+                            auto f60_avg = 0.5 * ( f60_0 + f60_1 );
+                            
+                            auto f72_0 = frequencyForNote( surge, 72, 5, 0 );
+                            auto f72_1 = frequencyForNote( surge, 72, 5, 1 );
+                            auto f72_avg = 0.5 * ( f72_0 + f72_1 );
+                            
+                            // In absolute mode, the average frequencies should double, but the channels should have constant difference
+                            REQUIRE( f72_avg / f60_avg == Approx( 2 ).margin( 0.01 ) );
+                            REQUIRE( ( f72_0 - f72_1 ) / ( f60_0 - f60_1 ) == Approx( 1 ).margin( 0.01 ) );
+                            if( print )
+                            {
+                               std::cout << "F60 " << f60_avg << " " << f60_0 << " " << f60_1 << " " << f60_0 - f60_1 << std::endl;
+                               std::cout << "F72 " << f72_avg << " " << f72_0 << " " << f72_1 << " " << f60_0 - f60_1 << std::endl;
+                            }
+                         };
+   
+   SECTION( "Wavetable Oscillator" )
+   {
+      assertRelative("test-data/patches/Wavetable-Sin-Uni2-Relative.fxp");
+      assertAbsolute("test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
+   }
+
+   SECTION( "Window Oscillator" )
+   {
+      assertRelative("test-data/patches/Window-Sin-Uni2-Relative.fxp");
+      assertAbsolute("test-data/patches/Window-Sin-Uni2-Absolute.fxp");
+   }
+
+   SECTION( "Classic Oscillator" )
+   {
+      assertRelative("test-data/patches/Classic-Uni2-Relative.fxp");
+      assertAbsolute("test-data/patches/Classic-Uni2-Absolute.fxp");
+   }
+
+   SECTION( "SH Oscillator" )
+   {
+      assertRelative("test-data/patches/SH-Uni2-Relative.fxp");
+      assertAbsolute("test-data/patches/SH-Uni2-Absolute.fxp");
+   }
 
 }
 
