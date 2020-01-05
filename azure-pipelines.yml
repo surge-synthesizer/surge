@@ -19,6 +19,9 @@ jobs:
         imageName: 'vs2017-win2016'
         isWindows: True
         is64Bit: True
+      windows-unittest:
+        imageName: 'vs2017-win2016'
+        isWindowsUnitTest: True
       windows-x86:
         imageName: 'vs2017-win2016'
         isWindows: True
@@ -84,10 +87,6 @@ jobs:
     condition: variables.isMac
     displayName: Run MacOS Unit Tests
 
-  - task: NuGetToolInstaller@0
-    condition: variables.isWindows
-    displayName: NuGet
-
   - bash: |
       pushd $AGENT_TEMPDIRECTORY
       export PREMAKE_WINDOWS=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip
@@ -117,6 +116,38 @@ jobs:
       platform: 'Win32'
     condition: and(variables.isWindows,variables.is32Bit)
     displayName: Build Windows x86
+
+# https://github.com/Microsoft/azure-pipelines-tasks/issues/9737
+  - script: |
+      pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+      for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+      popd
+
+      call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+      cmake -S . -B build  -G "Visual Studio 15 2017 Win64"
+    condition: variables.isWindowsUnitTest
+    displayName: Run CMake
+
+  - task: MSBuild@1
+    inputs:
+      solution: 'build\surge-headless.vcxproj'
+      maximumCpuCount: true
+      platform: 'x64'
+      msbuildVersion: '15.0'
+      configuration: 'Release'
+    condition: variables.isWindowsUnitTest
+    displayName: Build Unit Test
+
+  - bash: | 
+      mkdir -p "${LOCALAPPDATA}/Surge/"
+      cd resources/data && tar cf - . | ( cd ${LOCALAPPDATA}/Surge && tar xf - ) && cd ../..
+
+      ls -l "${LOCALAPPDATA}/Surge/"
+      
+      build/Release/surge-headless.exe
+
+    condition: variables.isWindowsUnitTest
+    displayName: Run Windows Unit Test
 
   - bash: |
       pushd $AGENT_TEMPDIRECTORY
