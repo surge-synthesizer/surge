@@ -59,12 +59,19 @@ CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint& where, const CButto
 #if WINDOWS
    if (_isDetatched)
    {
-      double ddx = where.x - _detachPos.x;
-      double ddy = where.y - _detachPos.y;
-      double d = sqrt(ddx * ddx + ddy * ddy);
-      if (d > 10 && SetCursorPos(_hideX, _hideY))
+      // test for touch. If we are in a touch screen this cursor reset seems like a messy flip. See #1443
+      int value = GetSystemMetrics(SM_DIGITIZER);
+      bool hasTouch = ( value & ( NID_INTEGRATED_TOUCH | NID_EXTERNAL_TOUCH ) ) ? true : false;
+      
+      if (!hasTouch)
       {
-         _lastPos = _detachPos;
+         double ddx = where.x - _detachPos.x;
+         double ddy = where.y - _detachPos.y;
+         double d = sqrt(ddx * ddx + ddy * ddy);
+         if (d > 10 && SetCursorPos(_hideX, _hideY))
+         {
+            _lastPos = _detachPos;
+         }
       }
    }
 #endif
