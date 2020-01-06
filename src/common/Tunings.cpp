@@ -1,5 +1,6 @@
 
 #include "Tunings.h"
+#include "SurgeStorage.h"
 
 #include <iostream>
 #include <fstream>
@@ -146,7 +147,7 @@ bool Surge::Storage::Scale::isValid() const
    return true;
 }
 
-std::string Surge::Storage::Scale::toHtml()
+std::string Surge::Storage::Scale::toHtml(SurgeStorage *storage)
 {
     std::ostringstream htmls;
 
@@ -216,6 +217,33 @@ R"HTML(
        htmls << "</td><td>" << t.cents << "</td><td>" << t.floatValue << "</td></tr>\n";
     };
 
+       htmls << R"HTML(
+        </table>
+
+        <p>
+
+        <table>
+          <tr>
+            <th>Midi Note</th><th>Scale Position</th><th>Frequency</th>
+          </tr>
+
+)HTML";
+
+       for( int i=0; i<127; ++i )
+       {
+          int octave = (i / 12) - 1;
+          char notenames[12][3] = {"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "};
+
+          htmls << "<tr><td>" << i << " (" << notenames[i % 12 ] << octave << ")</td>\n";
+
+          auto tn = i - storage->scaleConstantNote();
+          while( tn < 0 ) tn += count;
+          
+          auto p = storage->note_to_pitch(i);
+          htmls << "<td>" << (tn % count + 1) << "</td><td>" << 8.175798915 * p << " hz</td>";
+          htmls << "</tr>\n";
+       }
+       
        htmls << R"HTML(
         </table>
       </div>

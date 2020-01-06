@@ -3494,8 +3494,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
     auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning",
                     [this]()
                     {
-                        // Surge::UserInteractions::promptOKCancel( "Surge tuning is NONstandard tuning", "Tuning Info" );
-                        Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml() );
+                       // Surge::UserInteractions::promptOKCancel( "Surge tuning is NONstandard tuning", "Tuning Info" );
+                       Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml(&(this->synth->storage)) );
                     }
         );
     sct->setEnabled(! this->synth->storage.isStandardTuning );
