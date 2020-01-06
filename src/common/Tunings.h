@@ -3,6 +3,8 @@
 #include <vector>
 #include <iostream>
 
+class SurgeStorage;
+
 namespace Surge
 {
 namespace Storage
@@ -40,7 +42,7 @@ struct Scale
 
    bool isValid() const;
 
-   std::string toHtml();
+   std::string toHtml(SurgeStorage *storage);
 };
 
 std::ostream& operator<<(std::ostream& os, const Tone& sc);
