@@ -145,7 +145,13 @@ public:
       if (lc[mode].b)
       {
          /*
-         ** This is the "analog" mode of the envelope
+         ** This is the "analog" mode of the envelope. If you are unclear what it is doing
+         ** because of the SSE the algo is pretty simple; charge up and discharge a capacitor
+         ** with a gate. charge until you hit 1, discharge while the gate is open floored at
+         ** the Sustain; then release.
+         **
+         ** There is, in src/headless/UnitTests.cpp in the "Clone the Analog" section, 
+         ** a non-SSE implementation of this which makes it much easier to understand.
          */
          const float v_cc = 1.5f;
 
@@ -314,6 +320,8 @@ public:
       }
    }
 
+   int getEnvState() { return envstate; }
+   
 private:
    ADSRStorage* adsr = nullptr;
    SurgeVoiceState* state = nullptr;
