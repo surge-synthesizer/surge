@@ -509,7 +509,9 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
    auto runAdsr = [surge](float a, float d, float s, float r,
                           int a_s, int d_s, int r_s,
                           bool isAnalog,
-                          float releaseAfter, float runUntil )
+                          float releaseAfter, float runUntil,
+                          float pushSusAt = -1,
+                          float pushSusTo = 0 )
                      {
                         auto* adsrstorage = &(surge->storage.getPatch().scene[0].adsr[0]);
                         std::shared_ptr<AdsrEnvelope> adsr( new AdsrEnvelope() );
@@ -549,6 +551,7 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                         adsr->attack();
 
                         bool released = false;
+                        bool pushSus = false;
                         int i = 0;
                         std::vector<std::pair<float,float>> res;
                         res.push_back(std::make_pair(0.f, 0.f));
@@ -564,6 +567,13 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                            {
                               adsr->release();
                               released = true;
+                           }
+
+                           if( pushSusAt > 0 && ! pushSus && t > pushSusAt )
+                           {
+                              pushSus = true;
+                              svn(&(adsrstorage->s), pushSusTo);
+                              copyScenedataSubset(&(surge->storage), 0, ids, ide);
                            }
                            
                            adsr->process_block();
@@ -695,7 +705,7 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
       // Also the analog ADSR sustains at half the given sustain.
       auto testAnalog = [&](float a, float d, float s, float r )
                            {
-                              // std::cout << "ANALOG " << a << " " << d << " " << s << " " << r << std::endl;
+                              INFO( "ANALOG " << a << " " << d << " " << s << " " << r );
                               auto holdFor = a + d + d + 0.5;
                               
                               auto ae = runAdsr( a, d, s, r, 0, 0, 0, true, holdFor, holdFor + 4 * r );
@@ -709,12 +719,12 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                               {
                                  //std::cout << obs.first << " " << obs.second << std::endl;
 
-                                 if( obs.first > a + d + d * 0.5 && obs.first < holdFor && s > 0.05 ) // that 0.1 lets the delay ring off
+                                 if( obs.first > a + d + d * 0.95 && obs.first < holdFor && s > 0.05 ) // that 0.1 lets the delay ring off
                                  {
-                                    REQUIRE( obs.second <  s * s * 1.02 );
+                                    REQUIRE( obs.second == Approx( s * s ).margin( 1e-3 ) );
                                     heldPeriod.push_back(obs.second);
                                  }
-                                 if( obs.first > a + d && obs.second < 1e-6 && zerot == 0 )
+                                 if( obs.first > a + d && obs.second < 5e-5 && zerot == 0 )
                                     zerot = obs.first;
                                  if( obs.first > holdFor + r && valAtRelEnd < 0 )
                                     valAtRelEnd = obs.second;
@@ -744,106 +754,220 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                               REQUIRE( maxv > 0.99 );
                               if( s > 0.05 )
                               {
-                                 REQUIRE( zerot > holdFor + r );
+                                 REQUIRE( zerot > holdFor + r * 0.9 );
                                  REQUIRE( valAtRelEnd < s * 0.025 );
                               }
                            };
-
+      
       testAnalog( 0.1, 0.2, 0.5, 0.1 );
       testAnalog( 0.1, 0.2, 0.0, 0.1 );
       for( int rc=0;rc<50; ++rc )
       {
-         auto a = rand() * 1.0 / RAND_MAX + 0.01;
-         auto d = rand() * 1.0 / RAND_MAX + 0.01;
+         auto a = rand() * 1.0 / RAND_MAX + 0.03;
+         auto d = rand() * 1.0 / RAND_MAX + 0.03;
          auto s = 0.7 * rand() * 1.0 / RAND_MAX + 0.2; // we have tested the s=0 case above
          auto r = rand() * 1.0 / RAND_MAX;
          testAnalog( a, d, s, r);
       }
-
+      
    }
 
+   // This is just a rudiemntary little test of this in digital mode
+   SECTION( "Test Digital Sus Push" )
+   {
+      auto testSusPush = [&]( float s1, float s2 )
+                            {
+                               auto digPush = runAdsr( 0.05, 0.05, s1, 0.1, 0, 0, 0, false, 0.5, s2, 0.25, s2 );
+                               int obs = 0;
+                               for( auto s : digPush )
+                               {
+                                  if( s.first > 0.2 && obs == 0 )
+                                  {
+                                     REQUIRE( s.second == Approx( s1 ).margin( 1e-5 ) );
+                                     obs++;
+                                  }
+                                  if( s.first > 0.3 && obs == 1 )
+                                  {
+                                     REQUIRE( s.second == Approx( s2 ).margin( 1e-5 ) );
+                                     obs++;
+                                  }
+                               }
+                            };
 
+      for( auto i=0; i<10; ++i )
+      {
+         auto s1 = 0.95f * rand() / RAND_MAX + 0.02;
+         auto s2 = 0.95f * rand() / RAND_MAX + 0.02;
+         testSusPush( s1, s2 );
+      }
+   }
+   
    /*
    ** This section recreates the somewhat painful SSE code in readable stuff
    */
-   SECTION( "Clone the Analog" )
-   {
-      auto analogClone = [](float a_sec, float d_sec, float s, float r_sec, float releaseAfter, float runUntil )
+   auto analogClone = [](float a_sec, float d_sec, float s, float r_sec, float releaseAfter, float runUntil, float pushSusAt = -1, float pushSusTo = 0 )
+                         {
+                            float a = limit_range((float)( log(a_sec)/log(2.0) ), -8.f, 5.f);
+                            float d = limit_range((float)( log(d_sec)/log(2.0) ), -8.f, 5.f);
+                            float r = limit_range((float)( log(r_sec)/log(2.0) ), -8.f, 5.f);
+                               
+                            int i = 0;
+                            bool released = false;
+                            std::vector<std::pair<float,float>> res;
+                            res.push_back(std::make_pair(0.f, 0.f));
+
+                            float v_c1 = 0.f;
+                            float v_c1_delayed = 0.f;
+                            bool discharge = false;
+                            const float v_cc = 1.5f;
+                               
+                            while( true )
                             {
-                               float a = log(a_sec)/log(2.0);
-                               float d = log(d_sec)/log(2.0);
-                               float r = log(r_sec)/log(2.0);
-                               
-                               int i = 0;
-                               bool released = false;
-                               std::vector<std::pair<float,float>> res;
-                               res.push_back(std::make_pair(0.f, 0.f));
-
-                               auto v_c1 = 0.f;
-                               auto v_c1_delayed = 0.f;
-                               bool discharge = false;
-                               const float v_cc = 1.5f;
-                               
-                               while( true )
-                               {
-                                  auto t = 1.0 * (i+1) * BLOCK_SIZE * dsamplerate_inv;
-                                  i++;
-                                  if( t > runUntil || runUntil < 0 )
-                                     break;
+                               float t = 1.0 * (i+1) * BLOCK_SIZE * dsamplerate_inv;
+                               i++;
+                               if( t > runUntil || runUntil < 0 )
+                                  break;
                            
-                                  if( t > releaseAfter && ! released )
-                                  {
-                                     released = true;
-                                  }
+                               if( t > releaseAfter && ! released )
+                               {
+                                  released = true;
+                               }
 
-                                  auto gate = !released;
-                                  auto v_gate = gate ? v_cc : 0.f;
+                               if( pushSusAt > 0 && t > pushSusAt )
+                                  s = pushSusTo;
 
-                                  // discharge = _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
-                                  discharge = ( ( v_c1_delayed > 1 ) || discharge ) && gate;
-                                  v_c1_delayed = v_c1;
+                               auto gate = !released;
+                               float v_gate = gate ? v_cc : 0.f;
 
-                                  auto S = s * s;
+                               // discharge = _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
+                               discharge = ( ( v_c1_delayed > 1 ) || discharge ) && gate;
+                               v_c1_delayed = v_c1;
 
-                                  auto v_attack = discharge ? 0 : v_gate;
-                                  auto v_decay = discharge ? S : v_cc;
-                                  auto v_release = v_gate;
+                               float S = s * s;
 
-                                  auto diff_v_a = std::max( 0.f, v_attack  - v_c1 );
-                                  auto diff_v_d = std::min( 0.f, v_decay   - v_c1 );
-                                  auto diff_v_r = std::min( 0.f, v_release - v_c1 );
+                               float v_attack = discharge ? 0 : v_gate;
+                               // OK so this line:
+                               // __m128 v_decay = _mm_or_ps(_mm_andnot_ps(discharge, v_cc_vec), _mm_and_ps(discharge, S));
+                               // The semantic intent is discharge ? S : v_cc
+                               // but in the ADSR discharge has a value of v_gate which is 1.5 (v_cc) not 1.0.
+                               // That bitwise and with 1.5 acts as a binary filter (the mantissa) and a rounding operation
+                               // (from the .5) so I need to duplicate it exactly here.
+                               /*
+                               __m128 sM = _mm_load_ss(&S);
+                               __m128 dM = _mm_load_ss(&v_cc);
+                               __m128 vdv = _mm_and_ps(dM, sM);
+                               float v_decay = discharge ? vdv[0] : v_cc;
+                               */
+                               // Alternately I can correct the SSE code for discharge
+                               float v_decay = discharge ? S : v_cc;
+                               float v_release = v_gate;
 
-                                  const float shortest = 6.f;
-                                  const float longest = -2.f;
-                                  const float coeff_offset = 2.f - log( samplerate / BLOCK_SIZE ) / log( 2.f );
+                               float diff_v_a = std::max( 0.f, v_attack  - v_c1 );
+                               float diff_v_d = ( discharge && gate ) ? v_decay - v_c1 : std::min( 0.f, v_decay   - v_c1 );
+                               // float diff_v_d = std::min( 0.f, v_decay   - v_c1 );
+                               float diff_v_r = std::min( 0.f, v_release - v_c1 );
 
-                                  float coef_A = pow( 2.f, std::min( 0.f, coeff_offset - a ) );
-                                  float coef_D = pow( 2.f, std::min( 0.f, coeff_offset - d ) );
-                                  float coef_R = pow( 2.f, std::min( 0.f, coeff_offset - r ) );
+                               const float shortest = 6.f;
+                               const float longest = -2.f;
+                               const float coeff_offset = 2.f - log( samplerate / BLOCK_SIZE ) / log( 2.f );
 
-                                  v_c1 = v_c1 + diff_v_a * coef_A;
-                                  v_c1 = v_c1 + diff_v_d * coef_D;
-                                  v_c1 = v_c1 + diff_v_r * coef_R;
+                               float coef_A = pow( 2.f, std::min( 0.f, coeff_offset - a ) );
+                               float coef_D = pow( 2.f, std::min( 0.f, coeff_offset - d ) );
+                               float coef_R = pow( 2.f, std::min( 0.f, coeff_offset - r ) );
+
+                               v_c1 = v_c1 + diff_v_a * coef_A;
+                               v_c1 = v_c1 + diff_v_d * coef_D;
+                               v_c1 = v_c1 + diff_v_r * coef_R;
                                      
                            
-                                  // adsr->process_block();
-                                  auto output = v_c1;
-                                  if( !gate && !discharge && v_c1 < 1e-6 )
-                                     output = 0;
+                               // adsr->process_block();
+                               float output = v_c1;
+                               if( !gate && !discharge && v_c1 < 1e-6 )
+                                  output = 0;
                                   
-                                  res.push_back( std::make_pair( (float)t, output ) );
+                               res.push_back( std::make_pair( (float)t, output ) );
+                            }
+                            return res;
+                         };
+
+   SECTION( "Clone the Analog" )
+   {
+      auto compareSrgRepl = [&](float a, float d, float s, float r )
+                               {
+                                  auto t = a + d + 0.5 + r * 3;
+                                  auto surgeA = runAdsr( a, d, s, r, 0, 0, 0, true, a + d + 0.5, t );
+                                  auto replA = analogClone( a, d, s, r, a + d + 0.5, t );
+
+                                  REQUIRE( surgeA.size() == replA.size() );
+                                  
+                                  for( auto i=0; i<surgeA.size(); ++i )
+                                  {
+                                     REQUIRE( replA[i].second == Approx( surgeA[i].second ).margin( 1e-6 ) );
+                                  }
+                               };
+
+      compareSrgRepl( 0.1, 0.2, 0.5, 0.1 );
+      compareSrgRepl( 0.1, 0.2, 0.0, 0.1 );
+         
+      for( int rc=0;rc<100; ++rc )
+      {
+         float a = rand() * 1.0 / RAND_MAX + 0.01;
+         float d = rand() * 1.0 / RAND_MAX + 0.01;
+         float s = 0.7 * rand() * 1.0 / RAND_MAX + 0.1; // we have tested the s=0 case above
+         float r = rand() * 1.0 / RAND_MAX + 0.01;
+         INFO(  "Testing with ADSR=" << a << " " << d << " " << s << " " << r );
+         compareSrgRepl( a, d, s, r );
+
+      }
+   }
+
+   SECTION( "Test Analog Sus Push" )
+   {
+      auto testSusPush = [&]( float s1, float s2 )
+                            {
+                               auto aSurgePush = runAdsr( 0.05, 0.05, s1, 0.1, 0, 0, 0, true, 0.5, s2, 0.25, s2 );
+                               auto aDupPush = analogClone( 0.05, 0.05, s1, 0.1, 0.5, 0.7, 0.25, s2 );
+
+                               int obs = 0;
+                               INFO( "Analog Dup passes sus push" );
+                               for( auto s : aDupPush )
+                               {
+                                  if( s.first > 0.2 && obs == 0 )
+                                  {
+                                     REQUIRE( s.second == Approx( s1 * s1 ).margin( 1e-3 ) );
+                                     obs++;
+                                  }
+                                  if( s.first > 0.4 && obs == 1 )
+                                  {
+                                     REQUIRE( s.second == Approx( s2 * s2 ).margin( 1e-3 ) );
+                                     obs++;
+                                  }
                                }
-                               return res;
+
+
+                               obs = 0;
+                               INFO( "Analog SSE passes sus push" );
+                               for( auto s : aSurgePush )
+                               {
+                                  if( s.first > 0.2 && obs == 0 )
+                                  {
+                                     REQUIRE( s.second == Approx( s1 * s1 ).margin( 1e-3 ) );
+                                     obs++;
+                                  }
+                                  if( s.first > 0.4 && obs == 1 )
+                                  {
+                                     REQUIRE( s.second == Approx( s2 * s2 ).margin( 1e-5 ) );
+                                     obs++;
+                                  }
+                               }
                             };
 
-      auto surgeA = runAdsr( 0.1, 0.2, 0.5, 0.1, 0, 0, 0, true, .5, 1.0 );
-      auto replA  = analogClone( 0.1, 0.2, 0.5, 0.1, 0.5, 1.0 );
-
-      REQUIRE( surgeA.size() == replA.size() );
-
-      for( auto i=0; i<surgeA.size(); ++i )
+      testSusPush( 0.3, 0.7 );
+      for( auto i=0; i<10; ++i )
       {
-         REQUIRE( replA[i].second == Approx( surgeA[i].second ).margin( 1e-6 ) );
+         auto s1 = 0.95f * rand() / RAND_MAX + 0.02;
+         auto s2 = 0.95f * rand() / RAND_MAX + 0.02;
+         testSusPush( s1, s2 );
       }
    }
 
