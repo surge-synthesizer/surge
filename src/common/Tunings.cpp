@@ -118,6 +118,97 @@ Surge::Storage::Scale Surge::Storage::parseSCLData(const std::string &d)
     return res;
 }
 
+Surge::Storage::KeyboardMapping keyboardMappingFromStream(std::istream &inf)
+{
+   std::string line;
+   const int read_header = 0, read_count = 1, read_note = 2;
+
+   Surge::Storage::KeyboardMapping res;
+   std::ostringstream rawOSS;
+   res.isStandardMapping = false;
+   res.keys.clear();
+
+   enum parsePosition {
+      map_size = 0,
+      first_midi,
+      last_midi,
+      middle,
+      reference,
+      freq,
+      degree,
+      keys
+   };
+   parsePosition state = map_size;
+   
+   while (std::getline(inf, line))
+   {
+      rawOSS << line << "\n";
+      if (line[0] == '!')
+      {
+         continue;
+      }
+
+      if( line == "x" ) line = "-1";
+      
+      int i = std::atoi(line.c_str());
+      float v = std::atof(line.c_str());
+
+      switch (state)
+      {
+      case map_size:
+         res.count = i;
+         break;
+      case first_midi:
+         res.firstMidi = i;
+         break;
+      case last_midi:
+         res.lastMidi = i;
+         break;
+      case middle:
+         res.middleNote = i;
+         break;
+      case reference:
+         res.tuningConstantNote = i;
+         break;
+      case freq:
+         res.tuningFrequency = v;
+         break;
+      case degree:
+         res.octaveDegrees = i;
+         break;
+      case keys:
+         res.keys.push_back(i);
+         break;
+      }
+      if( state != keys ) state = (parsePosition)(state + 1);
+   }
+
+   res.rawText = rawOSS.str();
+   return res;
+}
+
+Surge::Storage::KeyboardMapping Surge::Storage::readKBMFile(std::string fname)
+{
+   std::ifstream inf;
+   inf.open(fname);
+   if (!inf.is_open())
+   {
+      return KeyboardMapping();
+   }
+
+   auto res = keyboardMappingFromStream(inf);
+   res.name = fname;
+   return res;
+}
+
+Surge::Storage::KeyboardMapping Surge::Storage::parseKBMData(const std::string &d)
+{
+    std::istringstream iss(d);
+    auto res = keyboardMappingFromStream(iss);
+    res.name = "Mapping from Patch";
+    return res;
+}
+
 std::ostream& Surge::Storage::operator<<(std::ostream& os, const Surge::Storage::Tone& t)
 {
    os << (t.type == Tone::kToneCents ? "cents" : "ratio") << "  ";

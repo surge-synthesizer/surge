@@ -608,12 +608,18 @@ public:
    void note_to_omega(float, float&, float&);
 
    bool retuneToScale(const Surge::Storage::Scale& s);
-   inline int scaleConstantNote() { return 60; }
-   inline float scaleConstantPitch() { return 32.0; }
-   inline float scaleConstantPitchInv() { return 0.03125; } // Obviously that's the inverse of the above
+   bool remapToKeyboard(const Surge::Storage::KeyboardMapping &k);
+   bool remapToStandardKeyboard(); 
+   inline int scaleConstantNote() { return currentMapping.tuningConstantNote; }
+   inline float scaleConstantPitch() { return tuningPitch; }
+   inline float scaleConstantPitchInv() { return tuningPitchInv; } // Obviously that's the inverse of the above
 
    Surge::Storage::Scale currentScale;
    bool isStandardTuning;
+
+   Surge::Storage::KeyboardMapping currentMapping;
+   bool isStandardMapping = true;
+   float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
    
 private:
    TiXmlDocument snapshotloader;

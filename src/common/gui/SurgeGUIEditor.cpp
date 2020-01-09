@@ -3460,6 +3460,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     st->setEnabled(! this->synth->storage.isStandardTuning);
     tid++;
+    
+    auto *kst = addCallbackMenu(tuningSubMenu, "Set to Standard Keyboard Mapping",
+                    [this]()
+                    {
+                        this->synth->storage.remapToStandardKeyboard();
+                    }
+        );
+    kst->setEnabled(! this->synth->storage.currentMapping.isStandardMapping);
+    tid++;
 
     addCallbackMenu(tuningSubMenu, "Apply .scl file tuning",
                     [this]()
@@ -3481,6 +3490,36 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                             if (!this->synth->storage.retuneToScale(sc))
                             {
                                Surge::UserInteractions::promptError( "This .scl file is not valid", "File format error" );
+                               return;
+                            }
+                        };
+                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
+                                                                      ".scl",
+                                                                      cb);
+                    }
+        );
+    tid++;
+
+    addCallbackMenu(tuningSubMenu, "Apply .kbm keyboard mapping",
+                    [this]()
+                    {
+                        auto cb = [this](std::string sf)
+                        {
+                            std::string sfx = ".kbm";
+                            if( sf.length() >= sfx.length())
+                            {
+                                if( sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0 )
+                                {
+                                    Surge::UserInteractions::promptError( "Please only select .kbm files", "Invalid Choice" );
+                                    std::cout << "FILE is [" << sf << "]" << std::endl;
+                                    return;
+                                }
+                            }
+                            auto kb = Surge::Storage::readKBMFile(sf);
+
+                            if (!this->synth->storage.remapToKeyboard(kb) )
+                            {
+                               Surge::UserInteractions::promptError( "This .kbm file is not valid", "File format error" );
                                return;
                             }
                         };
