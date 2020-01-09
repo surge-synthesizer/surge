@@ -43,7 +43,7 @@ CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint& where, const CButto
    double dy = where.y - _lastPos.y;
    _lastPos = where;
 
-   if (_isDetatched)
+   if (_isDetatched && !buttons.isTouch())
    {
       double scaling = getMouseDeltaScaling(where, buttons);
 
@@ -57,22 +57,15 @@ CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint& where, const CButto
    onMouseMoveDelta(where, buttons, dx, dy);
 
 #if WINDOWS
-   if (_isDetatched)
+   if (_isDetatched && !buttons.isTouch())
    {
-      // test for touch. If we are in a touch screen this cursor reset seems like a messy flip. See #1443
-      int value = GetSystemMetrics(SM_DIGITIZER);
-      bool hasTouch = ( value & ( NID_INTEGRATED_TOUCH | NID_EXTERNAL_TOUCH ) ) ? true : false;
-      
-      if (!hasTouch)
-      {
-         double ddx = where.x - _detachPos.x;
-         double ddy = where.y - _detachPos.y;
-         double d = sqrt(ddx * ddx + ddy * ddy);
-         if (d > 10 && SetCursorPos(_hideX, _hideY))
-         {
-            _lastPos = _detachPos;
-         }
-      }
+       double ddx = where.x - _detachPos.x;
+       double ddy = where.y - _detachPos.y;
+       double d = sqrt(ddx * ddx + ddy * ddy);
+       if (d > 10 && SetCursorPos(_hideX, _hideY))
+       {
+          _lastPos = _detachPos;
+       }
    }
 #endif
 

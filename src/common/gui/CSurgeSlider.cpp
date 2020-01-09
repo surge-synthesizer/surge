@@ -465,6 +465,9 @@ double CSurgeSlider::getMouseDeltaScaling(CPoint& where, const CButtonState& but
       break;
    }
 
+   if (buttons.isTouch())
+      rate = 1.0;
+
    if (buttons & kRButton)
       rate *= 0.1;
    if (buttons & kShift)
