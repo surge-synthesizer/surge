@@ -1446,7 +1446,7 @@ bool SurgeStorage::remapToKeyboard(const Surge::Storage::KeyboardMapping& k)
    if( ! currentScale.isValid() )
    {
       // We need to set the current scale to a default scale
-      retuneToScale(Surge::Storage::Scale::evenTemprament12NoteScale());
+      retuneToScale(Surge::Storage::Scale::evenTemperament12NoteScale());
    }
    else
    {

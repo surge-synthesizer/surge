@@ -3524,7 +3524,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                             }
                         };
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
-                                                                      ".scl",
+                                                                      ".kbm",
                                                                       cb);
                     }
         );

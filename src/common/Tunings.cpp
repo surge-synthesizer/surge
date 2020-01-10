@@ -118,7 +118,7 @@ Surge::Storage::Scale Surge::Storage::parseSCLData(const std::string &d)
     return res;
 }
 
-Surge::Storage::Scale Surge::Storage::Scale::evenTemprament12NoteScale()
+Surge::Storage::Scale Surge::Storage::Scale::evenTemperament12NoteScale()
 {
    auto data = R"SCL(! even.scl
 !
