@@ -1296,7 +1296,10 @@ bool SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
    float pitchMod = log(scaleConstantPitch())/log(2) - 1;
 
    int scalePositionOfStartNote = 0;
-   int scalePositionOfTuningNote = currentMapping.keys[currentMapping.tuningConstantNote - currentMapping.middleNote];
+   int scalePositionOfTuningNote = currentMapping.tuningConstantNote - currentMapping.middleNote;
+   if( currentMapping.count > 0 )
+      scalePositionOfTuningNote = currentMapping.keys[scalePositionOfTuningNote];
+
    float tuningCenterPitchOffset;
    if( scalePositionOfTuningNote == 0 )
       tuningCenterPitchOffset = 0;
@@ -1335,7 +1338,7 @@ bool SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
           int rounds;
           int thisRound;
           int disable = false;
-          if( currentMapping.isStandardMapping )
+          if( currentMapping.isStandardMapping || ( currentMapping.count == 0 ) )
           {
              rounds = (distanceFromScale0-1) / s.count;
              thisRound = (distanceFromScale0-1) % s.count;
@@ -1439,8 +1442,16 @@ bool SurgeStorage::remapToKeyboard(const Surge::Storage::KeyboardMapping& k)
       tuningPitch = k.tuningFrequency / 8.175798915;
       tuningPitchInv = 1.0 / tuningPitch;
    }
-   // The mapping will change all the cached pitches
-   retuneToScale(currentScale);
+   // The mapping will change all the cached pitches.
+   if( ! currentScale.isValid() )
+   {
+      // We need to set the current scale to a default scale
+      retuneToScale(Surge::Storage::Scale::evenTemprament12NoteScale());
+   }
+   else
+   {
+      retuneToScale(currentScale);
+   }
    return true;
 }
 

@@ -43,6 +43,8 @@ struct Scale
    bool isValid() const;
 
    std::string toHtml(SurgeStorage *storage);
+
+   static Scale evenTemprament12NoteScale();
 };
 
 struct KeyboardMapping
