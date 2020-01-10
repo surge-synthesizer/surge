@@ -1083,7 +1083,7 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
          auto a = rand() * 1.0 / RAND_MAX + 0.03;
          auto d = rand() * 1.0 / RAND_MAX + 0.03;
          auto s = 0.7 * rand() * 1.0 / RAND_MAX + 0.2; // we have tested the s=0 case above
-         auto r = rand() * 1.0 / RAND_MAX;
+         auto r = rand() * 1.0 / RAND_MAX + 0.03;
          testAnalog( a, d, s, r);
       }
       
