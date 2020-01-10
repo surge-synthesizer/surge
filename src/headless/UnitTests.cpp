@@ -505,6 +505,69 @@ TEST_CASE( "Non-uniform keyboard mapping", "[tun]" )
    }
 }
 
+TEST_CASE( "Zero Size Maps", "[tun]" )
+{
+   auto surge = surgeOnSine();
+   REQUIRE( surge.get() );
+
+   SECTION( "Note 61" )
+   {
+      auto f60std = frequencyForNote( surge, 60 );
+      auto f61std = frequencyForNote( surge, 61 );
+      REQUIRE( f60std == Approx( 261.63 ).margin( 0.1 ) );
+
+      auto k61 = Surge::Storage::readKBMFile( "test-data/scl/empty-note61.kbm" );
+      REQUIRE( !k61.isStandardMapping );
+      REQUIRE( k61.count == 0 );
+      surge->storage.remapToKeyboard( k61 );
+
+      auto f60map = frequencyForNote( surge, 60 );
+      auto f61map = frequencyForNote( surge, 61 );
+      REQUIRE( frequencyForNote( surge, 61 ) == Approx( 280 ).margin( 0.1 ) );
+      REQUIRE( f61std / f60std == Approx( f61map / f60map ).margin( 0.001 ) );
+   }
+
+   SECTION( "Note 69" )
+   {
+      auto f60std = frequencyForNote( surge, 60 );
+      auto f69std = frequencyForNote( surge, 69 );
+      REQUIRE( f60std == Approx( 261.63 ).margin( 0.1 ) );
+      REQUIRE( f69std == Approx( 440.0 ).margin( 0.1 ) );
+
+      auto k69 = Surge::Storage::readKBMFile( "test-data/scl/empty-note69.kbm" );
+      REQUIRE( !k69.isStandardMapping );
+      REQUIRE( k69.count == 0 );
+      surge->storage.remapToKeyboard( k69 );
+
+      auto f60map = frequencyForNote( surge, 60 );
+      auto f69map = frequencyForNote( surge, 69 );
+      REQUIRE( frequencyForNote( surge, 69 ) == Approx( 452 ).margin( 0.1 ) );
+      REQUIRE( f69std / f60std == Approx( f69map / f60map ).margin( 0.001 ) );
+   }
+
+   SECTION( "Note 69 with Tuning" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/marvel12.scl" );
+      surge->storage.retuneToScale(s);
+      auto f60std = frequencyForNote( surge, 60 );
+      auto f69std = frequencyForNote( surge, 69 );
+      REQUIRE( f60std == Approx( 261.63 ).margin( 0.1 ) );
+      REQUIRE( f69std != Approx( 440.0 ).margin( 0.1 ) );
+
+
+      auto k69 = Surge::Storage::readKBMFile( "test-data/scl/empty-note69.kbm" );
+      REQUIRE( !k69.isStandardMapping );
+      REQUIRE( k69.count == 0 );
+      surge->storage.remapToKeyboard( k69 );
+
+      auto f60map = frequencyForNote( surge, 60 );
+      auto f69map = frequencyForNote( surge, 69 );
+      REQUIRE( frequencyForNote( surge, 69 ) == Approx( 452 ).margin( 0.1 ) );
+      REQUIRE( f69std / f60std == Approx( f69map / f60map ).margin( 0.001 ) );
+   }
+
+}
+
 TEST_CASE( "Simple Single Oscillator is Constant", "[dsp]" )
 {
    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);

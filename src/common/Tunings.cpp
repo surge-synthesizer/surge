@@ -118,6 +118,29 @@ Surge::Storage::Scale Surge::Storage::parseSCLData(const std::string &d)
     return res;
 }
 
+Surge::Storage::Scale Surge::Storage::Scale::evenTemprament12NoteScale()
+{
+   auto data = R"SCL(! even.scl
+!
+12 note even temprament
+ 12
+!
+ 100.0
+ 200.0
+ 300.0
+ 400.0
+ 500.0
+ 600.0
+ 700.0
+ 800.0
+ 900.0
+ 1000.0
+ 1100.0
+ 2/1
+)SCL";
+   return parseSCLData(data);
+}
+
 Surge::Storage::KeyboardMapping keyboardMappingFromStream(std::istream &inf)
 {
    std::string line;
