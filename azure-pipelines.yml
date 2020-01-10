@@ -12,30 +12,33 @@ jobs:
 - job: Build
   strategy:
     matrix:
-      mac:
+      macOS:
         imageName: 'macos-10.13'
         isMac: True
-      windows:
+      windows-x64-plugins:
         imageName: 'vs2017-win2016'
         isWindows: True
         is64Bit: True
-      windows-x86:
+      windows-x86-plugins:
         imageName: 'vs2017-win2016'
         isWindows: True
         is32Bit: True
+      windows-unittest:
+        imageName: 'vs2017-win2016'
+        isWindowsUnitTest: True
       linux-lv2:
         imageName: 'ubuntu-16.04'
         isLinux: True
         linuxProject: lv2
-      linux-headless:
-        imageName: 'ubuntu-16.04'
-        isLinux: True
-        linuxProject: headless
-        runHeadless: True
       linux-vst3:
         imageName: 'ubuntu-16.04'
         isLinux: True
         linuxProject: vst3
+      linux-unittest:
+        imageName: 'ubuntu-16.04'
+        isLinux: True
+        linuxProject: headless
+        runHeadless: True
 
   pool:
     vmImage: $(imageName)
@@ -48,7 +51,7 @@ jobs:
   - bash: |
      echo "BUILD REASON = " $BUILD_REASON
      echo "MAKE ASSETS = " $MAKEASSETS     
-    displayName: Details on build
+    displayName: all - details on build
     
   - bash: |
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
@@ -57,7 +60,7 @@ jobs:
       export SURGE_VERSION=$(cat VERSION)
       echo "SURGE_VERSION=$SURGE_VERSION"
       echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
-    displayName: Submodule init
+    displayName: all - submodule init
 
   - bash: |
       pushd $AGENT_TEMPDIRECTORY
@@ -71,7 +74,7 @@ jobs:
       ls -alFh target
       ls -alFh products
     condition: variables.isMac
-    displayName: Build macOS releases
+    displayName: macOS - build all assets
 
   - bash: |
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
@@ -82,11 +85,7 @@ jobs:
       ./build-osx.sh --build-headless
       ./build/Release/surge-headless
     condition: variables.isMac
-    displayName: Run MacOS Unit Tests
-
-  - task: NuGetToolInstaller@0
-    condition: variables.isWindows
-    displayName: NuGet
+    displayName: macOS - run unit tests
 
   - bash: |
       pushd $AGENT_TEMPDIRECTORY
@@ -100,7 +99,7 @@ jobs:
       ls -alFh
 
     condition: variables.isWindows
-    displayName: Setup Windows Project
+    displayName: windows - setup premake for plugins
 
   - task: MSBuild@1
     inputs:
@@ -108,7 +107,7 @@ jobs:
       maximumCpuCount: true
       platform: 'x64'
     condition: and(variables.isWindows,variables.is64Bit)
-    displayName: Build Windows x64
+    displayName: windows - build x64 plugins
 
   - task: MSBuild@1
     inputs:
@@ -116,7 +115,39 @@ jobs:
       maximumCpuCount: true
       platform: 'Win32'
     condition: and(variables.isWindows,variables.is32Bit)
-    displayName: Build Windows x86
+    displayName: windows - build x86 plugins
+
+# https://github.com/Microsoft/azure-pipelines-tasks/issues/9737
+  - script: |
+      pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+      for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+      popd
+
+      call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+      cmake -S . -B build  -G "Visual Studio 15 2017 Win64"
+    condition: variables.isWindowsUnitTest
+    displayName: windows - run cmake
+
+  - task: MSBuild@1
+    inputs:
+      solution: 'build\surge-headless.vcxproj'
+      maximumCpuCount: true
+      platform: 'x64'
+      msbuildVersion: '15.0'
+      configuration: 'Release'
+    condition: variables.isWindowsUnitTest
+    displayName: windows - build unit tests
+
+  - bash: | 
+      mkdir -p "${LOCALAPPDATA}/Surge/"
+      cd resources/data && tar cf - . | ( cd ${LOCALAPPDATA}/Surge && tar xf - ) && cd ../..
+
+      ls -l "${LOCALAPPDATA}/Surge/"
+      
+      build/Release/surge-headless.exe
+
+    condition: variables.isWindowsUnitTest
+    displayName: windows - run unit tests
 
   - bash: |
       pushd $AGENT_TEMPDIRECTORY
@@ -138,7 +169,7 @@ jobs:
       ./build-linux.sh clean && ./build-linux.sh build --project=$(linuxProject)
 
     condition: variables.isLinux
-    displayName: Build Linux
+    displayName: linux - build plugin
 
   - bash: |
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
@@ -152,7 +183,7 @@ jobs:
 
 
     condition: and(variables.isLinux,variables.runHeadless)
-    displayName: Run Linux Unit Test
+    displayName: linux - build and run unit test
 
 
 - job: NotifyReleases

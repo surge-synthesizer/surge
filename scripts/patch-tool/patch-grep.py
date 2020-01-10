@@ -28,6 +28,22 @@ def sceneFun(xml):
         return False
 
 
+def hasAnalogEnv(xml):
+    try:
+        pt = xml.getElementsByTagName("patch")[0]
+        aem = 0
+        aem = aem + int(pt.getElementsByTagName("a_env1_mode")[0].attributes["value"].nodeValue)
+        aem = aem + int(pt.getElementsByTagName("a_env2_mode")[0].attributes["value"].nodeValue)
+        aem = aem + int(pt.getElementsByTagName("b_env1_mode")[0].attributes["value"].nodeValue)
+        aem = aem + int(pt.getElementsByTagName("b_env2_mode")[0].attributes["value"].nodeValue)
+
+        if aem > 0:
+            return True
+        return False
+    except:
+        return False
+
+
 def containsFX(xml):
     try:
         pt = xml.getElementsByTagName("patch")[0]
@@ -46,7 +62,7 @@ def containsFX(xml):
 
 
 def target(xml):
-    return containsFX(xml)
+    return hasAnalogEnv(xml)
 
 
 def patchToDom(patch):

@@ -145,7 +145,13 @@ public:
       if (lc[mode].b)
       {
          /*
-         ** This is the "analog" mode of the envelope
+         ** This is the "analog" mode of the envelope. If you are unclear what it is doing
+         ** because of the SSE the algo is pretty simple; charge up and discharge a capacitor
+         ** with a gate. charge until you hit 1, discharge while the gate is open floored at
+         ** the Sustain; then release.
+         **
+         ** There is, in src/headless/UnitTests.cpp in the "Clone the Analog" section, 
+         ** a non-SSE implementation of this which makes it much easier to understand.
          */
          const float v_cc = 1.5f;
 
@@ -157,8 +163,13 @@ public:
 
          bool gate = (envstate == s_attack) || (envstate == s_decay);
          __m128 v_gate = gate ? _mm_set_ss(v_cc) : _mm_set_ss(0.f);
+         __m128 v_is_gate = _mm_cmpgt_ss( v_gate, _mm_set_ss( 0.0 ) );
 
-         discharge = _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
+         // The original code here was
+         // _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
+         // which ored in the v_gate value as opposed to the boolean
+         discharge = _mm_and_ps( _mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_is_gate );
+                                 
          v_c1_delayed = v_c1;
 
          __m128 S = _mm_load_ss(&lc[s].f);
@@ -168,7 +179,14 @@ public:
          __m128 v_release = v_gate;
 
          __m128 diff_v_a = _mm_max_ss(_mm_setzero_ps(), _mm_sub_ss(v_attack, v_c1));
-         __m128 diff_v_d = _mm_min_ss(_mm_setzero_ps(), _mm_sub_ss(v_decay, v_c1));
+
+         // This change from a straight min allows sustain swells
+         __m128 diff_vd_kernel = _mm_sub_ss(v_decay, v_c1);
+         __m128 diff_vd_kernel_min = _mm_min_ss(_mm_setzero_ps(), diff_vd_kernel );
+         __m128 dis_and_gate = _mm_and_ps(discharge, v_is_gate );
+         __m128 diff_v_d = _mm_or_ps(_mm_and_ps(dis_and_gate, diff_vd_kernel),
+                                     _mm_andnot_ps(dis_and_gate, diff_vd_kernel_min));
+                                                
          __m128 diff_v_r = _mm_min_ss(_mm_setzero_ps(), _mm_sub_ss(v_release, v_c1));
 
          // calculate coefficients for envelope
@@ -314,6 +332,8 @@ public:
       }
    }
 
+   int getEnvState() { return envstate; }
+   
 private:
    ADSRStorage* adsr = nullptr;
    SurgeVoiceState* state = nullptr;

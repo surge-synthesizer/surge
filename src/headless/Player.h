@@ -48,6 +48,8 @@ typedef std::vector<Event> playerEvents_t; // We assume these are monotonic in E
  */
 playerEvents_t makeHoldMiddleC(int forSamples, int withTail = 0);
 
+playerEvents_t makeHoldNoteFor(int note, int forSamples, int withTail = 0);
+
 playerEvents_t make120BPMCMajorQuarterNoteScale(long sample0 = 0, int sr = 44100);
 
 /**
@@ -83,6 +85,20 @@ void playOnPatch(SurgeSynthesizer* synth,
 void playOnEveryPatch(
     SurgeSynthesizer* synth,
     const playerEvents_t& events,
+    std::function<void(
+        const Patch& p, const PatchCategory& c, const float* data, int nSamples, int nChannels)>
+        completedCallback);
+
+/**
+ * playOnEveryNRandomPatches
+ *
+ * Play the events on every patch Surge knows callign the callback for each one with
+ * the result.
+ */
+void playOnNRandomPatches(
+    SurgeSynthesizer* synth,
+    const playerEvents_t& events,
+    int nPlays,
     std::function<void(
         const Patch& p, const PatchCategory& c, const float* data, int nSamples, int nChannels)>
         completedCallback);

@@ -1,5 +1,6 @@
 
 #include "Tunings.h"
+#include "SurgeStorage.h"
 
 #include <iostream>
 #include <fstream>
@@ -117,6 +118,120 @@ Surge::Storage::Scale Surge::Storage::parseSCLData(const std::string &d)
     return res;
 }
 
+Surge::Storage::Scale Surge::Storage::Scale::evenTemprament12NoteScale()
+{
+   auto data = R"SCL(! even.scl
+!
+12 note even temprament
+ 12
+!
+ 100.0
+ 200.0
+ 300.0
+ 400.0
+ 500.0
+ 600.0
+ 700.0
+ 800.0
+ 900.0
+ 1000.0
+ 1100.0
+ 2/1
+)SCL";
+   return parseSCLData(data);
+}
+
+Surge::Storage::KeyboardMapping keyboardMappingFromStream(std::istream &inf)
+{
+   std::string line;
+   const int read_header = 0, read_count = 1, read_note = 2;
+
+   Surge::Storage::KeyboardMapping res;
+   std::ostringstream rawOSS;
+   res.isStandardMapping = false;
+   res.keys.clear();
+
+   enum parsePosition {
+      map_size = 0,
+      first_midi,
+      last_midi,
+      middle,
+      reference,
+      freq,
+      degree,
+      keys
+   };
+   parsePosition state = map_size;
+   
+   while (std::getline(inf, line))
+   {
+      rawOSS << line << "\n";
+      if (line[0] == '!')
+      {
+         continue;
+      }
+
+      if( line == "x" ) line = "-1";
+      
+      int i = std::atoi(line.c_str());
+      float v = std::atof(line.c_str());
+
+      switch (state)
+      {
+      case map_size:
+         res.count = i;
+         break;
+      case first_midi:
+         res.firstMidi = i;
+         break;
+      case last_midi:
+         res.lastMidi = i;
+         break;
+      case middle:
+         res.middleNote = i;
+         break;
+      case reference:
+         res.tuningConstantNote = i;
+         break;
+      case freq:
+         res.tuningFrequency = v;
+         break;
+      case degree:
+         res.octaveDegrees = i;
+         break;
+      case keys:
+         res.keys.push_back(i);
+         break;
+      }
+      if( state != keys ) state = (parsePosition)(state + 1);
+   }
+
+   res.rawText = rawOSS.str();
+   return res;
+}
+
+Surge::Storage::KeyboardMapping Surge::Storage::readKBMFile(std::string fname)
+{
+   std::ifstream inf;
+   inf.open(fname);
+   if (!inf.is_open())
+   {
+      return KeyboardMapping();
+   }
+
+   auto res = keyboardMappingFromStream(inf);
+   res.name = fname;
+   return res;
+}
+
+Surge::Storage::KeyboardMapping Surge::Storage::parseKBMData(const std::string &d)
+{
+    std::istringstream iss(d);
+    auto res = keyboardMappingFromStream(iss);
+    res.name = "Mapping from Patch";
+    return res;
+}
+
 std::ostream& Surge::Storage::operator<<(std::ostream& os, const Surge::Storage::Tone& t)
 {
    os << (t.type == Tone::kToneCents ? "cents" : "ratio") << "  ";
@@ -146,7 +261,7 @@ bool Surge::Storage::Scale::isValid() const
    return true;
 }
 
-std::string Surge::Storage::Scale::toHtml()
+std::string Surge::Storage::Scale::toHtml(SurgeStorage *storage)
 {
     std::ostringstream htmls;
 
@@ -216,6 +331,33 @@ R"HTML(
        htmls << "</td><td>" << t.cents << "</td><td>" << t.floatValue << "</td></tr>\n";
     };
 
+       htmls << R"HTML(
+        </table>
+
+        <p>
+
+        <table>
+          <tr>
+            <th>Midi Note</th><th>Scale Position</th><th>Frequency</th>
+          </tr>
+
+)HTML";
+
+       for( int i=0; i<127; ++i )
+       {
+          int octave = (i / 12) - 1;
+          char notenames[12][3] = {"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "};
+
+          htmls << "<tr><td>" << i << " (" << notenames[i % 12 ] << octave << ")</td>\n";
+
+          auto tn = i - storage->scaleConstantNote();
+          while( tn < 0 ) tn += count;
+          
+          auto p = storage->note_to_pitch(i);
+          htmls << "<td>" << (tn % count + 1) << "</td><td>" << 8.175798915 * p << " hz</td>";
+          htmls << "</tr>\n";
+       }
+       
        htmls << R"HTML(
         </table>
       </div>

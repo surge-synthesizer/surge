@@ -242,7 +242,18 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
    if (stereo)
       memset(IOutputR, 0, BLOCK_SIZE_OS * sizeof(int));
 
-   float Detune = localcopy[oscdata->p[5].param_id_in_scene].f;
+   float Detune;
+   if( oscdata->p[5].absolute )
+   {
+      auto pitchmult_inv =
+         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv( std::min(148.f,pitch)));
+
+      Detune = localcopy[oscdata->p[5].param_id_in_scene].f * pitchmult_inv * 1.f / 440.f;
+   }
+   else
+   {
+      Detune = localcopy[oscdata->p[5].param_id_in_scene].f;
+   }
    for (int l = 0; l < ActiveSubOscs; l++)
    {
       Sub.DriftLFO[l][0] = drift_noise(Sub.DriftLFO[l][1]);
