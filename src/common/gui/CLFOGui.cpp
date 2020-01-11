@@ -938,7 +938,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
             if( ( buttons & kShift ) | ( buttons & kRButton ) )
             {
-               if( bothOn )
+               if( bothOn || ( !(filtOn || ampOn) ) )
                {
                   on = UINT64_C(1) << ( 16 + i );
                }
@@ -947,10 +947,6 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
                   on = UINT64_C(1) << ( 32 + i );
                }
                else if( ampOn )
-               {
-                  on = 0;
-               }
-               else
                {
                   on = UINT64_C(1) << i;
                }
