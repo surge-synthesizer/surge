@@ -44,7 +44,7 @@ struct Scale
 
    std::string toHtml(SurgeStorage *storage);
 
-   static Scale evenTemprament12NoteScale();
+   static Scale evenTemperament12NoteScale();
 };
 
 struct KeyboardMapping
