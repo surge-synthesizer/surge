@@ -1,125 +1,685 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="48px" height="300px" viewBox="0 0 48 300" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <title>bmp00105</title>
-  <desc>Created with Sketch.</desc>
-  <g id="bmp00105" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-    <g id="Group" transform="translate(1.000000, 0.000000)">
-      <g id="Group-2" fill="#D9DADC">
-        <rect id="Rectangle" x="6" y="0" width="2" height="73"/>
-        <rect id="Rectangle" x="0" y="9" width="6" height="1"/>
-        <rect id="Rectangle" x="8" y="9" width="6" height="1"/>
-        <polygon id="Triangle" opacity="0.504952567" points="8 65 8 10 14 10"/>
-        <rect id="Rectangle" x="0" y="65" width="6" height="1"/>
-        <rect id="Rectangle" x="8" y="65" width="6" height="1"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="48px"
+   height="300px"
+   viewBox="0 0 48 300"
+   version="1.1"
+   id="svg207"
+   sodipodi:docname="bmp00105.svg"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)">
+  <metadata
+     id="metadata213">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs211" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="2560"
+     inkscape:window-height="1057"
+     id="namedview209"
+     showgrid="false"
+     inkscape:zoom="6.2933333"
+     inkscape:cx="-4.7400226"
+     inkscape:cy="234.33563"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg207" />
+  <title
+     id="title2">bmp00105</title>
+  <desc
+     id="desc4">Created with Sketch.</desc>
+  <g
+     id="bmp00105"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd">
+    <g
+       id="Group"
+       transform="translate(1.000000, 0.000000)">
+      <g
+         id="Group-2"
+         fill="#D9DADC">
+        <rect
+           id="Rectangle"
+           x="6"
+           y="0"
+           width="2"
+           height="73" />
+        <rect
+           id="rect7"
+           x="0"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect9"
+           x="8"
+           y="9"
+           width="6"
+           height="1" />
+        <polygon
+           id="Triangle"
+           opacity="0.504952567"
+           points="8 65 8 10 14 10" />
+        <rect
+           id="rect12"
+           x="0"
+           y="65"
+           width="6"
+           height="1" />
+        <rect
+           id="rect14"
+           x="8"
+           y="65"
+           width="6"
+           height="1" />
       </g>
-      <g id="Group-2" transform="translate(16.000000, 0.000000)">
-        <rect id="Rectangle" fill="#99A7DB" x="6" y="0" width="2" height="73"/>
-        <rect id="Rectangle" fill="#9AA7DB" x="0" y="9" width="6" height="1"/>
-        <rect id="Rectangle" fill="#9AA7DB" x="8" y="9" width="6" height="1"/>
-        <polygon id="Triangle" fill="#99A7DB" opacity="0.500837054" points="8 65 8 10 14 10"/>
-        <rect id="Rectangle" fill="#9AA7DB" x="0" y="65" width="6" height="1"/>
-        <rect id="Rectangle" fill="#9AA7DB" x="8" y="65" width="6" height="1"/>
+      <g
+         id="g29"
+         transform="translate(16.000000, 0.000000)">
+        <rect
+           id="rect17"
+           fill="#99A7DB"
+           x="6"
+           y="0"
+           width="2"
+           height="73" />
+        <rect
+           id="rect19"
+           fill="#9AA7DB"
+           x="0"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect21"
+           fill="#9AA7DB"
+           x="8"
+           y="9"
+           width="6"
+           height="1" />
+        <polygon
+           id="polygon23"
+           fill="#99A7DB"
+           opacity="0.500837054"
+           points="8 65 8 10 14 10" />
+        <rect
+           id="rect25"
+           fill="#9AA7DB"
+           x="0"
+           y="65"
+           width="6"
+           height="1" />
+        <rect
+           id="rect27"
+           fill="#9AA7DB"
+           x="8"
+           y="65"
+           width="6"
+           height="1" />
       </g>
-      <g id="Group-2" transform="translate(32.000000, 0.000000)">
-        <rect id="Rectangle" fill="#BBC4f6" x="6" y="0" width="2" height="73"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="0" y="9" width="6" height="1"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="8" y="9" width="6" height="1"/>
-        <polygon id="Triangle" fill="#4662C8" opacity="0.498883929" points="8 65 8 10 14 10"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="0" y="65" width="6" height="1"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="8" y="65" width="6" height="1"/>
+      <g
+         id="g43"
+         transform="translate(32.000000, 0.000000)">
+        <rect
+           id="rect31"
+           fill="#BBC4f6"
+           x="6"
+           y="0"
+           width="2"
+           height="73" />
+        <rect
+           id="rect33"
+           fill="#BBC4f6"
+           x="0"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect35"
+           fill="#BBC4f6"
+           x="8"
+           y="9"
+           width="6"
+           height="1" />
+        <polygon
+           id="polygon37"
+           fill="#4662C8"
+           opacity="0.498883929"
+           points="8 65 8 10 14 10" />
+        <rect
+           id="rect39"
+           fill="#BBC4f6"
+           x="0"
+           y="65"
+           width="6"
+           height="1" />
+        <rect
+           id="rect41"
+           fill="#BBC4f6"
+           x="8"
+           y="65"
+           width="6"
+           height="1" />
       </g>
     </g>
-    <rect id="Rectangle" fill="#D9DADC" x="7" y="0" width="2" height="73"/>
-    <rect id="Rectangle" fill="#D9DADC" x="1" y="9" width="6" height="1"/>
-    <rect id="Rectangle" fill="#D9DADC" x="9" y="9" width="6" height="1"/>
-    <polygon id="Triangle" fill="#D9DADC" opacity="0.504952567" points="9 65 9 10 15 10"/>
-    <rect id="Rectangle" fill="#D9DADC" x="1" y="65" width="6" height="1"/>
-    <rect id="Rectangle" fill="#D9DADC" x="9" y="65" width="6" height="1"/>
-    <rect id="Rectangle" fill="#99A7DB" x="23" y="0" width="2" height="73"/>
-    <rect id="Rectangle" fill="#9AA7DB" x="17" y="9" width="6" height="1"/>
-    <rect id="Rectangle" fill="#9AA7DB" x="25" y="9" width="6" height="1"/>
-    <polygon id="Triangle" fill="#99A7DB" opacity="0.500837054" points="25 65 25 10 31 10"/>
-    <rect id="Rectangle" fill="#9AA7DB" x="17" y="65" width="6" height="1"/>
-    <rect id="Rectangle" fill="#9AA7DB" x="25" y="65" width="6" height="1"/>
-    <rect id="Rectangle" fill="#BBC4f6" x="39" y="0" width="2" height="73"/>
-    <rect id="Rectangle" fill="#BBC4f6" x="33" y="9" width="6" height="1"/>
-    <rect id="Rectangle" fill="#BBC4f6" x="41" y="9" width="6" height="1"/>
-    <polygon id="Triangle" fill="#297be6" opacity="0.7" points="41 65 41 10 47 10"/>
-    <rect id="Rectangle" fill="#BBC4f6" x="33" y="65" width="6" height="1"/>
-    <rect id="Rectangle" fill="#BBC4f6" x="41" y="65" width="6" height="1"/>
-    <g id="Group" transform="translate(1.000000, 75.000000)">
-      <g id="Group-2" fill="#D9DADC">
-        <rect id="Rectangle" x="6" y="0" width="2" height="73"/>
-        <rect id="Rectangle" x="0" y="9" width="6" height="1"/>
-        <rect id="Rectangle" x="8" y="9" width="6" height="1"/>
-        <polygon id="Triangle" opacity="0.503162202" transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) " points="8 10 14 38 8 38"/>
-        <polygon id="Triangle" opacity="0.503162202" transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) " points="0 37 6 65 0 65"/>
-        <rect id="Rectangle" x="0" y="65" width="6" height="1"/>
-        <rect id="Rectangle" x="8" y="65" width="6" height="1"/>
-        <rect id="Rectangle" x="4" y="37" width="2" height="1"/>
-        <rect id="Rectangle" x="8" y="37" width="2" height="1"/>
+    <rect
+       id="rect46"
+       fill="#D9DADC"
+       x="7"
+       y="0"
+       width="2"
+       height="73" />
+    <rect
+       id="rect48"
+       fill="#D9DADC"
+       x="1"
+       y="9"
+       width="6"
+       height="1" />
+    <rect
+       id="rect50"
+       fill="#D9DADC"
+       x="9"
+       y="9"
+       width="6"
+       height="1" />
+    <polygon
+       id="polygon52"
+       points="9,10 15,10 9,65 "
+       style="opacity:0.50495252" />
+    <rect
+       id="rect54"
+       fill="#D9DADC"
+       x="1"
+       y="65"
+       width="6"
+       height="1" />
+    <rect
+       id="rect56"
+       fill="#D9DADC"
+       x="9"
+       y="65"
+       width="6"
+       height="1" />
+    <rect
+       id="rect58"
+       fill="#99A7DB"
+       x="23"
+       y="0"
+       width="2"
+       height="73" />
+    <rect
+       id="rect60"
+       fill="#9AA7DB"
+       x="17"
+       y="9"
+       width="6"
+       height="1" />
+    <rect
+       id="rect62"
+       fill="#9AA7DB"
+       x="25"
+       y="9"
+       width="6"
+       height="1" />
+    <polygon
+       id="polygon64"
+       fill="#99A7DB"
+       opacity="0.500837054"
+       points="25 65 25 10 31 10" />
+    <rect
+       id="rect66"
+       fill="#9AA7DB"
+       x="17"
+       y="65"
+       width="6"
+       height="1" />
+    <rect
+       id="rect68"
+       fill="#9AA7DB"
+       x="25"
+       y="65"
+       width="6"
+       height="1" />
+    <rect
+       id="rect70"
+       fill="#BBC4f6"
+       x="39"
+       y="0"
+       width="2"
+       height="73" />
+    <rect
+       id="rect72"
+       fill="#BBC4f6"
+       x="33"
+       y="9"
+       width="6"
+       height="1" />
+    <rect
+       id="rect74"
+       fill="#BBC4f6"
+       x="41"
+       y="9"
+       width="6"
+       height="1" />
+    <polygon
+       id="polygon76"
+       fill="#297be6"
+       opacity="0.7"
+       points="41 65 41 10 47 10" />
+    <rect
+       id="rect78"
+       fill="#BBC4f6"
+       x="33"
+       y="65"
+       width="6"
+       height="1" />
+    <rect
+       id="rect80"
+       fill="#BBC4f6"
+       x="41"
+       y="65"
+       width="6"
+       height="1" />
+    <g
+       id="g142"
+       transform="translate(1.000000, 75.000000)">
+      <g
+         id="g100"
+         fill="#D9DADC">
+        <rect
+           id="rect82"
+           x="6"
+           y="0"
+           width="2"
+           height="73" />
+        <rect
+           id="rect84"
+           x="0"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect86"
+           x="8"
+           y="9"
+           width="6"
+           height="1" />
+        <polygon
+           id="polygon88"
+           opacity="0.503162202"
+           transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) "
+           points="8 10 14 38 8 38" />
+        <polygon
+           id="polygon90"
+           opacity="0.503162202"
+           transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) "
+           points="0 37 6 65 0 65" />
+        <rect
+           id="rect92"
+           x="0"
+           y="65"
+           width="6"
+           height="1" />
+        <rect
+           id="rect94"
+           x="8"
+           y="65"
+           width="6"
+           height="1" />
+        <rect
+           id="rect96"
+           x="4"
+           y="37"
+           width="2"
+           height="1" />
+        <rect
+           id="rect98"
+           x="8"
+           y="37"
+           width="2"
+           height="1" />
       </g>
-      <g id="Group-2" transform="translate(16.000000, 0.000000)">
-        <rect id="Rectangle" fill="#93A0D2" x="6" y="0" width="2" height="73"/>
-        <rect id="Rectangle" fill="#93A0D2" x="0" y="9" width="6" height="1"/>
-        <rect id="Rectangle" fill="#93A0D2" x="8" y="9" width="6" height="1"/>
-        <rect id="Rectangle" fill="#93A0D2" x="4" y="37" width="2" height="1"/>
-        <rect id="Rectangle" fill="#93A0D2" x="8" y="37" width="2" height="1"/>
-        <polygon id="Triangle" fill="#575F79" transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) " points="8 10 14 38 8 38"/>
-        <polygon id="Triangle" fill="#575F79" transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) " points="0 37 6 65 0 65"/>
-        <rect id="Rectangle" fill="#93A0D2" x="0" y="65" width="6" height="1"/>
-        <rect id="Rectangle" fill="#93A0D2" x="8" y="65" width="6" height="1"/>
+      <g
+         id="g120"
+         transform="translate(16.000000, 0.000000)">
+        <rect
+           id="rect102"
+           fill="#93A0D2"
+           x="6"
+           y="0"
+           width="2"
+           height="73" />
+        <rect
+           id="rect104"
+           fill="#93A0D2"
+           x="0"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect106"
+           fill="#93A0D2"
+           x="8"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect108"
+           fill="#93A0D2"
+           x="4"
+           y="37"
+           width="2"
+           height="1" />
+        <rect
+           id="rect110"
+           fill="#93A0D2"
+           x="8"
+           y="37"
+           width="2"
+           height="1" />
+        <polygon
+           id="polygon112"
+           fill="#575F79"
+           transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) "
+           points="8 10 14 38 8 38" />
+        <polygon
+           id="polygon114"
+           fill="#575F79"
+           transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) "
+           points="0 37 6 65 0 65" />
+        <rect
+           id="rect116"
+           fill="#93A0D2"
+           x="0"
+           y="65"
+           width="6"
+           height="1" />
+        <rect
+           id="rect118"
+           fill="#93A0D2"
+           x="8"
+           y="65"
+           width="6"
+           height="1" />
       </g>
-      <g id="Group-2" transform="translate(32.000000, 0.000000)">
-        <rect id="Rectangle" fill="#BBC4f6" x="6" y="0" width="2" height="73"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="0" y="9" width="6" height="1"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="8" y="9" width="6" height="1"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="4" y="37" width="2" height="1"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="8" y="37" width="2" height="1"/>
-        <polygon id="Triangle" fill="#297be6" opacity="0.7" transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) " points="8 10 14 38 8 38"/>
-        <polygon id="Triangle" fill="#297be6" opacity="0.7" transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) " points="0 37 6 65 0 65"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="0" y="65" width="6" height="1"/>
-        <rect id="Rectangle" fill="#BBC4f6" x="8" y="65" width="6" height="1"/>
+      <g
+         id="g140"
+         transform="translate(32.000000, 0.000000)">
+        <rect
+           id="rect122"
+           fill="#BBC4f6"
+           x="6"
+           y="0"
+           width="2"
+           height="73" />
+        <rect
+           id="rect124"
+           fill="#BBC4f6"
+           x="0"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect126"
+           fill="#BBC4f6"
+           x="8"
+           y="9"
+           width="6"
+           height="1" />
+        <rect
+           id="rect128"
+           fill="#BBC4f6"
+           x="4"
+           y="37"
+           width="2"
+           height="1" />
+        <rect
+           id="rect130"
+           fill="#BBC4f6"
+           x="8"
+           y="37"
+           width="2"
+           height="1" />
+        <polygon
+           id="polygon132"
+           fill="#297be6"
+           opacity="0.7"
+           transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) "
+           points="8 10 14 38 8 38" />
+        <polygon
+           id="polygon134"
+           fill="#297be6"
+           opacity="0.7"
+           transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) "
+           points="0 37 6 65 0 65" />
+        <rect
+           id="rect136"
+           fill="#BBC4f6"
+           x="0"
+           y="65"
+           width="6"
+           height="1" />
+        <rect
+           id="rect138"
+           fill="#BBC4f6"
+           x="8"
+           y="65"
+           width="6"
+           height="1" />
       </g>
     </g>
-    <g id="Group-4" transform="translate(1.000000, 150.000000)">
-      <g id="Group-3">
-        <rect id="Rectangle" fill="#000000" x="6" y="0" width="2" height="56"/>
-        <rect id="Rectangle" fill="#000000" x="0" y="9" width="14" height="1"/>
-        <polygon id="Triangle" fill="#98999B" transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) " points="14 10 14 49 8 49"/>
-        <rect id="Rectangle" fill="#000000" x="0" y="48" width="14" height="1"/>
+    <g
+       id="Group-4"
+       transform="translate(1.000000, 150.000000)">
+      <g
+         id="Group-3">
+        <rect
+           id="rect144"
+           fill="#000000"
+           x="6"
+           y="0"
+           width="2"
+           height="56" />
+        <rect
+           id="rect146"
+           fill="#000000"
+           x="0"
+           y="9"
+           width="14"
+           height="1" />
+        <polygon
+           id="polygon148"
+           fill="#98999B"
+           transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) "
+           points="14 10 14 49 8 49" />
+        <rect
+           id="rect150"
+           fill="#000000"
+           x="0"
+           y="48"
+           width="14"
+           height="1" />
       </g>
-      <g id="Group-3" transform="translate(16.000000, 0.000000)">
-        <rect id="Rectangle" fill="#5E72BA" x="6" y="0" width="2" height="56"/>
-        <rect id="Rectangle" fill="#5E72BA" x="0" y="9" width="14" height="1"/>
-        <polygon id="Triangle" fill="#405CBF" opacity="0.497558594" transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) " points="14 10 14 49 8 49"/>
-        <rect id="Rectangle" fill="#5E72BA" x="0" y="48" width="14" height="1"/>
+      <g
+         id="g161"
+         transform="translate(16.000000, 0.000000)">
+        <rect
+           id="rect153"
+           fill="#5E72BA"
+           x="6"
+           y="0"
+           width="2"
+           height="56" />
+        <rect
+           id="rect155"
+           fill="#5E72BA"
+           x="0"
+           y="9"
+           width="14"
+           height="1" />
+        <polygon
+           id="polygon157"
+           fill="#405CBF"
+           opacity="0.497558594"
+           transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) "
+           points="14 10 14 49 8 49" />
+        <rect
+           id="rect159"
+           fill="#5E72BA"
+           x="0"
+           y="48"
+           width="14"
+           height="1" />
       </g>
-      <g id="Group-3" transform="translate(32.000000, 0.000000)">
-        <rect id="Rectangle" fill="#1437B8" x="6" y="0" width="2" height="56"/>
-        <rect id="Rectangle" fill="#1437B8" x="0" y="9" width="14" height="1"/>
-        <polygon id="Triangle" fill="#3356D5" transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) " points="14 10 14 49 8 49"/>
-        <rect id="Rectangle" fill="#1437B8" x="0" y="48" width="14" height="1"/>
+      <g
+         id="g171"
+         transform="translate(32.000000, 0.000000)">
+        <rect
+           id="rect163"
+           fill="#1437B8"
+           x="6"
+           y="0"
+           width="2"
+           height="56" />
+        <rect
+           id="rect165"
+           fill="#1437B8"
+           x="0"
+           y="9"
+           width="14"
+           height="1" />
+        <polygon
+           id="polygon167"
+           fill="#3356D5"
+           transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) "
+           points="14 10 14 49 8 49" />
+        <rect
+           id="rect169"
+           fill="#1437B8"
+           x="0"
+           y="48"
+           width="14"
+           height="1" />
       </g>
     </g>
-    <g id="Group-4" transform="translate(1.000000, 225.000000)">
-      <g id="Group-3">
-        <rect id="Rectangle" fill="#000000" x="6" y="0" width="2" height="56"/>
-        <rect id="Rectangle" fill="#000000" x="0" y="9" width="14" height="1"/>
-        <polygon id="Triangle" fill="#98999B" transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) " points="14 10 14 49 8 49"/>
-        <rect id="Rectangle" fill="#000000" x="0" y="48" width="14" height="1"/>
+    <g
+       id="g204"
+       transform="translate(1.000000, 225.000000)">
+      <g
+         id="g182">
+        <rect
+           id="rect174"
+           fill="#000000"
+           x="6"
+           y="0"
+           width="2"
+           height="56" />
+        <rect
+           id="rect176"
+           fill="#000000"
+           x="0"
+           y="9"
+           width="14"
+           height="1" />
+        <polygon
+           id="polygon178"
+           fill="#98999B"
+           transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) "
+           points="14 10 14 49 8 49" />
+        <rect
+           id="rect180"
+           fill="#000000"
+           x="0"
+           y="48"
+           width="14"
+           height="1" />
       </g>
-      <g id="Group-3" transform="translate(16.000000, 0.000000)">
-        <rect id="Rectangle" fill="#5E72BA" x="6" y="0" width="2" height="56"/>
-        <rect id="Rectangle" fill="#5E72BA" x="0" y="9" width="14" height="1"/>
-        <polygon id="Triangle" fill="#405CBF" opacity="0.498232887" transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) " points="14 10 14 49 8 49"/>
-        <rect id="Rectangle" fill="#5E72BA" x="0" y="48" width="14" height="1"/>
+      <g
+         id="g192"
+         transform="translate(16.000000, 0.000000)">
+        <rect
+           id="rect184"
+           fill="#5E72BA"
+           x="6"
+           y="0"
+           width="2"
+           height="56" />
+        <rect
+           id="rect186"
+           fill="#5E72BA"
+           x="0"
+           y="9"
+           width="14"
+           height="1" />
+        <polygon
+           id="polygon188"
+           fill="#405CBF"
+           opacity="0.498232887"
+           transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) "
+           points="14 10 14 49 8 49" />
+        <rect
+           id="rect190"
+           fill="#5E72BA"
+           x="0"
+           y="48"
+           width="14"
+           height="1" />
       </g>
-      <g id="Group-3" transform="translate(32.000000, 0.000000)">
-        <rect id="Rectangle" fill="#1438B8" x="6" y="0" width="2" height="56"/>
-        <rect id="Rectangle" fill="#1438B8" x="0" y="9" width="14" height="1"/>
-        <polygon id="Triangle" fill="#3357D4" transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) " points="14 10 14 49 8 49"/>
-        <rect id="Rectangle" fill="#1438B8" x="0" y="48" width="14" height="1"/>
+      <g
+         id="g202"
+         transform="translate(32.000000, 0.000000)">
+        <rect
+           id="rect194"
+           fill="#1438B8"
+           x="6"
+           y="0"
+           width="2"
+           height="56" />
+        <rect
+           id="rect196"
+           fill="#1438B8"
+           x="0"
+           y="9"
+           width="14"
+           height="1" />
+        <polygon
+           id="polygon198"
+           fill="#3357D4"
+           transform="translate(11.000000, 29.500000) rotate(-180.000000) translate(-11.000000, -29.500000) "
+           points="14 10 14 49 8 49" />
+        <rect
+           id="rect200"
+           fill="#1438B8"
+           x="0"
+           y="48"
+           width="14"
+           height="1" />
       </g>
     </g>
   </g>
