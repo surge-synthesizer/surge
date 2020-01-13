@@ -568,6 +568,147 @@ TEST_CASE( "Zero Size Maps", "[tun]" )
 
 }
 
+TEST_CASE( "An Octave is an Octave", "[tun]" )
+{
+   auto surge = surgeOnSine();
+   REQUIRE( surge.get() );
+
+   SECTION( "Untuned OSC Octave" )
+   {
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+
+   SECTION( "Untuned Scene Octave" )
+   {
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+
+   SECTION( "Tuned to 12 OSC octave" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/12-intune.scl" );
+      surge->storage.retuneToScale(s);
+
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+
+
+   SECTION( "Tuned to 12 Scene Octave" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/12-intune.scl" );
+      surge->storage.retuneToScale(s);
+
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+
+   SECTION( "22 note scale OSC Octave" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/zeus22.scl" );
+      surge->storage.retuneToScale(s);
+      REQUIRE( s.count == 22 );
+      
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+
+   SECTION( "22 note scale Scene Octave" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/zeus22.scl" );
+      surge->storage.retuneToScale(s);
+      REQUIRE( s.count == 22 );
+      
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+
+   SECTION( "6 note scale OSC Octave" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/6-exact.scl" );
+      surge->storage.retuneToScale(s);
+      REQUIRE( s.count == 6 );
+      
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].osc[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+
+   SECTION( "6 note scale Scene Octave" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/6-exact.scl" );
+      surge->storage.retuneToScale(s);
+      REQUIRE( s.count == 6 );
+      
+      auto f60 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = -1;
+      auto f60m1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 1;
+      auto f60p1 = frequencyForNote(surge, 60);
+      surge->storage.getPatch().scene[0].octave.val.i = 0;
+      auto f60z = frequencyForNote(surge, 60);
+      REQUIRE( f60 == Approx( f60z ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60m1 * 2 ).margin( 0.1 ) );
+      REQUIRE( f60 == Approx( f60p1 / 2 ).margin( 0.1 ) );
+   }
+}
+
 TEST_CASE( "Simple Single Oscillator is Constant", "[dsp]" )
 {
    SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);

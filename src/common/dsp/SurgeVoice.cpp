@@ -431,11 +431,15 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
    else
       pb *= (float)scene->pbrange_dn.val.i;
 
+   octaveSize = 12.0f;
+   if( ! storage->isStandardTuning )
+      octaveSize = storage->currentScale.count;
+   
    state.pitch = state.pkey + pb +
                  localcopy[pitch_id].f * (scene->pitch.extend_range ? 12.f : 1.f) +
-                 (12.0f * localcopy[octave_id].i);
+                 (octaveSize * localcopy[octave_id].i);
    modsources[ms_keytrack]->output =
-       (state.pitch - (float)scene->keytrack_root.val.i) * (1.0f / 12.0f);
+      (state.pitch - (float)scene->keytrack_root.val.i) * (1.0f / 12.0f); // I didn't change this for octaveSize, I think rightly
 
    if (scene->modsource_doprocess[ms_polyaftertouch])
    {
@@ -533,7 +537,7 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
        (osc1 && (FMmode == fm_2and3to1)))
    {
        osc[2]->process_block(noteShiftFromPitchParam( (scene->osc[2].keytrack.val.b ? state.pitch : ktrkroot) +
-                                                      12 * scene->osc[2].octave.val.i,
+                                                      octaveSize *  scene->osc[2].octave.val.i,
                                                       2 ),
                             drift, is_wide);
 
@@ -560,7 +564,7 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       if (FMmode == fm_3to2to1)
       {
           osc[1]->process_block(noteShiftFromPitchParam((scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot) +
-                                                        12 * scene->osc[1].octave.val.i,
+                                                        octaveSize *  scene->osc[1].octave.val.i,
                                                         1 ),
                                
                                drift, is_wide, true,
@@ -569,7 +573,7 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       else
       {
           osc[1]->process_block(noteShiftFromPitchParam((scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot) +
-                                                        12 * scene->osc[1].octave.val.i,
+                                                        octaveSize *  scene->osc[1].octave.val.i,
                                                         1),
                                drift, is_wide);
       }
@@ -598,14 +602,14 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       {
          add_block(osc[1]->output, osc[2]->output, fmbuffer, BLOCK_SIZE_OS_QUAD);
          osc[0]->process_block(noteShiftFromPitchParam((scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot) +
-                                                       12 * scene->osc[0].octave.val.i, 0 ),
+                                                       octaveSize *  scene->osc[0].octave.val.i, 0 ),
                                drift, is_wide, true,
                                db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
       }
       else if (FMmode)
       {
           osc[0]->process_block(noteShiftFromPitchParam((scene->osc[0].keytrack.val.b ? state.pitch : 60) +
-                                                        12 * scene->osc[0].octave.val.i,
+                                                        octaveSize *  scene->osc[0].octave.val.i,
                                                         0),
 
                                drift, is_wide, true,
@@ -614,7 +618,7 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
       else
       {
          osc[0]->process_block(noteShiftFromPitchParam((scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot) +
-                                                       12 * scene->osc[0].octave.val.i,
+                                                       octaveSize *  scene->osc[0].octave.val.i,
                                                        0),
                                drift, is_wide);
       }
