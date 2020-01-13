@@ -156,6 +156,8 @@ private:
    pdata* paramptr;
    int route[6];
 
+   float octaveSize = 12.0f;
+   
    bool osc1, osc2, osc3, ring12, ring23, noise;
    int FMmode;
    float noisegenL[2], noisegenR[2];
