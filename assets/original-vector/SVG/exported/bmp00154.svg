@@ -1,222 +1,1563 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="399px" height="84px" viewBox="0 0 399 84" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <g id="bmp00154" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-    <polygon id="Triangle" fill="#297be6" opacity="0.7" points="334 76 388 73 388 76"/>
-    <polygon id="Triangle" fill="#297be6" opacity="0.7" points="331 78 277 81 277 78"/>
-    <polygon id="Triangle" fill="#B6C4F6" opacity="0.423897879" points="201 76 255 73 255 76"/>
-    <polygon id="Triangle" fill="#B6C4F6" opacity="0.423897879" points="198 78 144 81 144 78"/>
-    <rect id="Rectangle" fill="#000000" x="10" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="5" y="34" width="123" height="2"/>
-    <polygon id="Triangle" fill="#98999B" points="68 34 122 31 122 34"/>
-    <polygon id="Triangle" fill="#98999B" points="65 36 11 39 11 36"/>
-    <rect id="Rectangle" fill="#000000" x="65" y="28" width="3" height="14"/>
-    <rect id="Rectangle" fill="#000000" x="18" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="26" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="34" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="42" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="90" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="98" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="106" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="114" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="122" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="65" y="28" width="3" height="14"/>
-    <rect id="Rectangle" fill="#000000" x="122" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="5" y="20" width="123" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="66" y="18" width="1" height="6"/>
-    <rect id="Rectangle" fill="#000000" x="122" y="0" width="1" height="28"/>
-    <rect id="Rectangle" fill="#000000" x="5" y="6" width="123" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="10" y="0" width="1" height="28"/>
-    <polygon id="Triangle" fill="#98999B" transform="translate(66.500000, 3.000000) rotate(-90.000000) translate(-66.500000, -3.000000) " points="63.5 -52.5 69.5 58.5 63.5 58.5"/>
-    <polygon id="Triangle" fill="#98999B" transform="translate(94.500000, 17.000000) rotate(-90.000000) translate(-94.500000, -17.000000) " points="91.5 -10.5 97.5 44.5 91.5 44.5"/>
-    <polygon id="Triangle" fill="#98999B" transform="translate(38.500000, 25.000000) rotate(-270.000000) translate(-38.500000, -25.000000) " points="35.5 -2.5 41.5 52.5 35.5 52.5"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="50" y="78" width="1" height="1"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="58" y="78" width="1" height="1"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="74" y="75" width="1" height="1"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="82" y="75" width="1" height="1"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="5" y="76" width="123" height="2"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="65" y="70" width="3" height="6"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="65" y="78" width="3" height="6"/>
-    <polygon id="Triangle" fill="#F5F5F6" opacity="0.503557478" points="68 76 122 73 122 76"/>
-    <polygon id="Triangle" fill="#F5F5F6" opacity="0.503557478" points="65 78 11 81 11 78"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="18" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="11" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="26" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="34" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="42" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="90" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="98" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="106" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill-opacity="0.854478034" fill="#FFFFFF" x="114" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#FFFFFF" x="122" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="5" y="62" width="123" height="2"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="66" y="60" width="1" height="6"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="122" y="42" width="1" height="28"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="5" y="48" width="123" height="2"/>
-    <rect id="Rectangle" fill="#F5F5F6" x="10" y="42" width="1" height="28"/>
-    <polygon id="Triangle" fill="#F5F5F6" opacity="0.503557478" transform="translate(66.500000, 45.000000) rotate(-90.000000) translate(-66.500000, -45.000000) " points="63.5 -10.5 69.5 100.5 63.5 100.5"/>
-    <polygon id="Triangle" fill="#F5F5F6" opacity="0.503557478" transform="translate(94.500000, 59.000000) rotate(-90.000000) translate(-94.500000, -59.000000) " points="91.5 31.5 97.5 86.5 91.5 86.5"/>
-    <polygon id="Triangle" fill="#F5F5F6" opacity="0.503557478" transform="translate(38.500000, 67.000000) rotate(-270.000000) translate(-38.500000, -67.000000) " points="35.5 39.5 41.5 94.5 35.5 94.5"/>
-    <rect id="Rectangle" fill="#2B3E80" x="143" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="183" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#2B3E80" x="191" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#2B3E80" x="207" y="33" width="1" height="1"/>
-    <rect id="Rectangle" fill="#000000" x="215" y="33" width="1" height="1"/>
-    <rect id="Rectangle" fill="#2B3E80" x="138" y="34" width="123" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="198" y="28" width="3" height="14"/>
-    <rect id="Rectangle" fill="#000000" x="151" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="159" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="167" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="175" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="223" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="231" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#000000" x="239" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#000000" x="247" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="255" y="31" width="1" height="3"/>
-    <polygon id="Triangle" fill="#8395D1" points="201 34 255 31 255 34"/>
-    <polygon id="Triangle" fill="#8395D1" points="198 36 144 39 144 36"/>
-    <rect id="Rectangle" fill="#2B3E80" x="138" y="20" width="123" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="199" y="18" width="1" height="6"/>
-    <rect id="Rectangle" fill="#2B3E80" x="255" y="0" width="1" height="28"/>
-    <rect id="Rectangle" fill="#2B3E80" x="138" y="6" width="123" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="143" y="0" width="1" height="28"/>
-    <polygon id="Triangle" fill="#7B8ECE" transform="translate(199.500000, 3.000000) rotate(-90.000000) translate(-199.500000, -3.000000) " points="196.5 -52.5 202.5 58.5 196.5 58.5"/>
-    <polygon id="Triangle" fill="#7B8ECE" transform="translate(227.500000, 17.000000) rotate(-90.000000) translate(-227.500000, -17.000000) " points="224.5 -10.5 230.5 44.5 224.5 44.5"/>
-    <polygon id="Triangle" fill="#7B8ECE" transform="translate(171.500000, 25.000000) rotate(-270.000000) translate(-171.500000, -25.000000) " points="168.5 -2.5 174.5 52.5 168.5 52.5"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="143" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#C1CEFF" x="191" y="78" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="207" y="75" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="215" y="75" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="138" y="76" width="123" height="2"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="198" y="70" width="3" height="14"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="255" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="151" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="159" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="167" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="175" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="191" y="78" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="183" y="78" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="223" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="231" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="239" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="247" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="138" y="62" width="123" height="2"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="199" y="60" width="1" height="6"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="255" y="42" width="1" height="28"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="138" y="48" width="123" height="2"/>
-    <rect id="Rectangle" fill="#B6C4F6" x="143" y="42" width="1" height="28"/>
-    <polygon id="Triangle" fill="#B6C4F6" opacity="0.497721354" transform="translate(199.500000, 45.000000) rotate(-90.000000) translate(-199.500000, -45.000000) " points="196.5 -10.5 202.5 100.5 196.5 100.5"/>
-    <polygon id="Triangle" fill="#B6C4F6" opacity="0.497721354" transform="translate(227.500000, 59.000000) rotate(-90.000000) translate(-227.500000, -59.000000) " points="224.5 31.5 230.5 86.5 224.5 86.5"/>
-    <polygon id="Triangle" fill="#B6C4F6" opacity="0.497721354" transform="translate(171.500000, 67.000000) rotate(-270.000000) translate(-171.500000, -67.000000) " points="168.5 39.5 174.5 94.5 168.5 94.5"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="276" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="388" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="316" y="78" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="324" y="78" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="340" y="75" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="348" y="75" width="1" height="1"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="271" y="76" width="123" height="2"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="271" y="62" width="123" height="2"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="332" y="60" width="1" height="6"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="388" y="42" width="1" height="28"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="271" y="48" width="123" height="2"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="276" y="42" width="1" height="28"/>
-    <polygon id="Triangle" fill="#297be6" opacity="0.7" transform="translate(332.500000, 45.000000) rotate(-90.000000) translate(-332.500000, -45.000000) " points="329.5 -10.5 335.5 100.5 329.5 100.5"/>
-    <polygon id="Triangle" fill="#297be6" opacity="0.7" transform="translate(360.500000, 59.000000) rotate(-90.000000) translate(-360.500000, -59.000000) " points="357.5 31.5 363.5 86.5 357.5 86.5"/>
-    <polygon id="Triangle" fill="#297be6" opacity="0.7" transform="translate(304.500000, 67.000000) rotate(-270.000000) translate(-304.500000, -67.000000) " points="301.5 39.5 307.5 94.5 301.5 94.5"/>
-    <rect id="Rectangle" fill="#1437B8" x="276" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#C1CEFF" x="324" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="340" y="33" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="348" y="33" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="271" y="34" width="123" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="331" y="28" width="3" height="14"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="331" y="70" width="3" height="14"/>
-    <rect id="Rectangle" fill="#1437B8" x="388" y="31" width="1" height="3"/>
-    <polygon id="Triangle" fill="#297be6" opacity="1" points="334 34 388 31 388 34"/>
-    <polygon id="Triangle" fill="#297be6" opacity="1" points="331 36 277 39 277 36"/>
-    <rect id="Rectangle" fill="#1437B8" x="271" y="20" width="123" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="332" y="18" width="1" height="6"/>
-    <rect id="Rectangle" fill="#1437B8" x="388" y="0" width="1" height="28"/>
-    <rect id="Rectangle" fill="#1437B8" x="271" y="6" width="123" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="276" y="0" width="1" height="28"/>
-    <polygon id="Triangle" fill="#297be6" opacity="1" transform="translate(332.500000, 3.000000) rotate(-90.000000) translate(-332.500000, -3.000000) " points="329.5 -52.5 335.5 58.5 329.5 58.5"/>
-    <polygon id="Triangle" fill="#297be6" opacity="1" transform="translate(360.500000, 17.000000) rotate(-90.000000) translate(-360.500000, -17.000000) " points="357.5 -10.5 363.5 44.5 357.5 44.5"/>
-    <polygon id="Triangle" fill="#297be6" opacity="1" transform="translate(304.500000, 25.000000) rotate(-270.000000) translate(-304.500000, -25.000000) " points="301.5 -2.5 307.5 52.5 301.5 52.5"/>
-    <rect id="Rectangle" fill="#1437B8" x="284" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="292" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="300" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="308" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="324" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="316" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="356" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="364" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="372" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="380" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="284" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="292" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="300" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="308" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="324" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="316" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="356" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="364" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="372" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="380" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="284" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="292" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="300" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="308" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="324" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="316" y="36" width="1" height="1"/>
-    <rect id="Rectangle" fill="#1437B8" x="356" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="364" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#1437B8" x="372" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#1437B8" x="380" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="151" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="159" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="167" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="175" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="223" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="231" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="239" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="247" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="151" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="159" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="167" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="175" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="223" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="231" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="239" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="247" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="151" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="159" y="36" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="167" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="175" y="36" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="223" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="231" y="32" width="1" height="2"/>
-    <rect id="Rectangle" fill="#2B3E80" x="239" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#2B3E80" x="247" y="31" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="284" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="292" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="300" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="308" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="356" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="364" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="372" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="380" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="284" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="292" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="300" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="308" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="356" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="364" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#405CBF" x="372" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#405CBF" x="380" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="284" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="292" y="78" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="300" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="308" y="78" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="356" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="364" y="74" width="1" height="2"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="372" y="73" width="1" height="3"/>
-    <rect id="Rectangle" fill="#B6C4f6" x="380" y="73" width="1" height="3"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="399px"
+   height="84px"
+   viewBox="0 0 399 84"
+   version="1.1"
+   id="svg435"
+   sodipodi:docname="bmp00154.svg"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)">
+  <metadata
+     id="metadata441">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs439" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1511"
+     inkscape:window-height="1048"
+     id="namedview437"
+     showgrid="false"
+     inkscape:zoom="4"
+     inkscape:cx="212.7832"
+     inkscape:cy="39.612041"
+     inkscape:window-x="1040"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="bmp00154" />
+  <g
+     id="bmp00154"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd">
+    <polygon
+       id="Triangle"
+       fill="#297be6"
+       opacity="0.7"
+       points="334 76 388 73 388 76"
+       style="opacity:0.92" />
+    <polygon
+       id="polygon3"
+       fill="#297be6"
+       opacity="0.7"
+       points="331 78 277 81 277 78"
+       style="opacity:0.92" />
+    <polygon
+       id="polygon5"
+       fill="#B6C4F6"
+       opacity="0.423897879"
+       points="201 76 255 73 255 76"
+       style="opacity:0.45" />
+    <polygon
+       id="polygon7"
+       fill="#B6C4F6"
+       opacity="0.423897879"
+       points="198 78 144 81 144 78"
+       style="opacity:0.4" />
+    <rect
+       id="Rectangle"
+       fill="#000000"
+       x="10"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect10"
+       fill="#000000"
+       x="5"
+       y="34"
+       width="123"
+       height="2" />
+    <polygon
+       id="polygon12"
+       fill="#98999B"
+       points="68 34 122 31 122 34" />
+    <polygon
+       id="polygon14"
+       fill="#98999B"
+       points="65 36 11 39 11 36" />
+    <rect
+       id="rect16"
+       fill="#000000"
+       x="65"
+       y="28"
+       width="3"
+       height="14" />
+    <rect
+       id="rect18"
+       fill="#000000"
+       x="18"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect20"
+       fill="#000000"
+       x="26"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect22"
+       x="34"
+       y="36"
+       width="1"
+       height="2.5"
+       style="fill:#000000" />
+    <rect
+       id="rect24"
+       fill="#000000"
+       x="42"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect26"
+       fill="#000000"
+       x="90"
+       y="32"
+       width="1"
+       height="2" />
+    <rect
+       id="rect28"
+       x="98"
+       y="31.5"
+       width="1"
+       height="2.5"
+       style="fill:#000000" />
+    <rect
+       id="rect30"
+       fill="#000000"
+       x="106"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect32"
+       fill="#000000"
+       x="114"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect34"
+       fill="#000000"
+       x="122"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect36"
+       fill="#000000"
+       x="65"
+       y="28"
+       width="3"
+       height="14" />
+    <rect
+       id="rect38"
+       fill="#000000"
+       x="122"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect40"
+       fill="#000000"
+       x="5"
+       y="20"
+       width="123"
+       height="2" />
+    <rect
+       id="rect42"
+       fill="#000000"
+       x="66"
+       y="18"
+       width="1"
+       height="6" />
+    <rect
+       id="rect44"
+       fill="#000000"
+       x="122"
+       y="0"
+       width="1"
+       height="28" />
+    <rect
+       id="rect46"
+       fill="#000000"
+       x="5"
+       y="6"
+       width="123"
+       height="2" />
+    <rect
+       id="rect48"
+       fill="#000000"
+       x="10"
+       y="0"
+       width="1"
+       height="28" />
+    <polygon
+       id="polygon50"
+       fill="#98999B"
+       transform="translate(66.500000, 3.000000) rotate(-90.000000) translate(-66.500000, -3.000000) "
+       points="63.5 -52.5 69.5 58.5 63.5 58.5" />
+    <polygon
+       id="polygon52"
+       fill="#98999B"
+       transform="translate(94.500000, 17.000000) rotate(-90.000000) translate(-94.500000, -17.000000) "
+       points="91.5 -10.5 97.5 44.5 91.5 44.5" />
+    <polygon
+       id="polygon54"
+       fill="#98999B"
+       transform="translate(38.500000, 25.000000) rotate(-270.000000) translate(-38.500000, -25.000000) "
+       points="35.5 -2.5 41.5 52.5 35.5 52.5" />
+    <rect
+       id="rect56"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="50"
+       y="78"
+       width="1"
+       height="1" />
+    <rect
+       id="rect58"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="58"
+       y="78"
+       width="1"
+       height="1" />
+    <rect
+       id="rect60"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="74"
+       y="75"
+       width="1"
+       height="1" />
+    <rect
+       id="rect62"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="82"
+       y="75"
+       width="1"
+       height="1" />
+    <rect
+       id="rect64"
+       fill="#F5F5F6"
+       x="5"
+       y="76"
+       width="123"
+       height="2" />
+    <rect
+       id="rect66"
+       fill="#F5F5F6"
+       x="65"
+       y="70"
+       width="3"
+       height="6" />
+    <rect
+       id="rect68"
+       fill="#F5F5F6"
+       x="65"
+       y="78"
+       width="3"
+       height="6" />
+    <polygon
+       id="polygon70"
+       fill="#F5F5F6"
+       opacity="0.503557478"
+       points="68 76 122 73 122 76" />
+    <polygon
+       id="polygon72"
+       fill="#F5F5F6"
+       opacity="0.503557478"
+       points="65 78 11 81 11 78" />
+    <rect
+       id="rect74"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="18"
+       y="78"
+       width="1"
+       height="3" />
+    <rect
+       id="rect76"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="11"
+       y="78"
+       width="1"
+       height="3" />
+    <rect
+       id="rect78"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="26"
+       y="78"
+       width="1"
+       height="3" />
+    <rect
+       id="rect80"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="34"
+       y="78"
+       width="1"
+       height="2" />
+    <rect
+       id="rect82"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="42"
+       y="78"
+       width="1"
+       height="2" />
+    <rect
+       id="rect84"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="90"
+       y="74"
+       width="1"
+       height="2" />
+    <rect
+       id="rect86"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="98"
+       y="74"
+       width="1"
+       height="2" />
+    <rect
+       id="rect88"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="106"
+       y="73"
+       width="1"
+       height="3" />
+    <rect
+       id="rect90"
+       fill-opacity="0.854478034"
+       fill="#FFFFFF"
+       x="114"
+       y="73"
+       width="1"
+       height="3" />
+    <rect
+       id="rect92"
+       fill="#FFFFFF"
+       x="122"
+       y="73"
+       width="1"
+       height="3" />
+    <rect
+       id="rect94"
+       fill="#F5F5F6"
+       x="5"
+       y="62"
+       width="123"
+       height="2" />
+    <rect
+       id="rect96"
+       fill="#F5F5F6"
+       x="66"
+       y="60"
+       width="1"
+       height="6" />
+    <rect
+       id="rect98"
+       fill="#F5F5F6"
+       x="122"
+       y="42"
+       width="1"
+       height="28" />
+    <rect
+       id="rect100"
+       fill="#F5F5F6"
+       x="5"
+       y="48"
+       width="123"
+       height="2" />
+    <rect
+       id="rect102"
+       fill="#F5F5F6"
+       x="10"
+       y="42"
+       width="1"
+       height="28" />
+    <polygon
+       id="polygon104"
+       fill="#F5F5F6"
+       opacity="0.503557478"
+       transform="translate(66.500000, 45.000000) rotate(-90.000000) translate(-66.500000, -45.000000) "
+       points="63.5 -10.5 69.5 100.5 63.5 100.5" />
+    <polygon
+       id="polygon106"
+       fill="#F5F5F6"
+       opacity="0.503557478"
+       transform="translate(94.500000, 59.000000) rotate(-90.000000) translate(-94.500000, -59.000000) "
+       points="91.5 31.5 97.5 86.5 91.5 86.5" />
+    <polygon
+       id="polygon108"
+       fill="#F5F5F6"
+       opacity="0.503557478"
+       transform="translate(38.500000, 67.000000) rotate(-270.000000) translate(-38.500000, -67.000000) "
+       points="35.5 39.5 41.5 94.5 35.5 94.5" />
+    <rect
+       id="rect110"
+       fill="#2B3E80"
+       x="143"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect120"
+       fill="#2B3E80"
+       x="138"
+       y="34"
+       width="123"
+       height="2" />
+    <rect
+       id="rect122"
+       fill="#2B3E80"
+       x="198"
+       y="28"
+       width="3"
+       height="14" />
+    <rect
+       id="rect124"
+       fill="#000000"
+       x="151"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect126"
+       fill="#000000"
+       x="159"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect128"
+       fill="#000000"
+       x="167"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect130"
+       fill="#000000"
+       x="175"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect132"
+       fill="#000000"
+       x="223"
+       y="32"
+       width="1"
+       height="2" />
+    <rect
+       id="rect136"
+       fill="#000000"
+       x="239"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect138"
+       fill="#000000"
+       x="247"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect140"
+       fill="#2B3E80"
+       x="255"
+       y="31"
+       width="1"
+       height="3" />
+    <polygon
+       id="polygon142"
+       fill="#8395D1"
+       points="201 34 255 31 255 34"
+       style="fill:#7b8ece;fill-opacity:1" />
+    <polygon
+       id="polygon144"
+       fill="#8395D1"
+       points="198 36 144 39 144 36"
+       style="fill:#7b8ece;fill-opacity:1" />
+    <rect
+       id="rect114"
+       fill="#2B3E80"
+       x="191"
+       y="36"
+       width="1"
+       height="1" />
+    <rect
+       id="rect112"
+       x="183"
+       y="36"
+       width="1"
+       height="1.5"
+       style="fill:#2b3e80" />
+    <rect
+       id="rect146"
+       fill="#2B3E80"
+       x="138"
+       y="20"
+       width="123"
+       height="2" />
+    <rect
+       id="rect116"
+       fill="#2B3E80"
+       x="207"
+       y="33"
+       width="1"
+       height="1" />
+    <rect
+       id="rect148"
+       fill="#2B3E80"
+       x="199"
+       y="18"
+       width="1"
+       height="6" />
+    <rect
+       id="rect150"
+       fill="#2B3E80"
+       x="255"
+       y="0"
+       width="1"
+       height="28" />
+    <rect
+       id="rect152"
+       fill="#2B3E80"
+       x="138"
+       y="6"
+       width="123"
+       height="2" />
+    <rect
+       id="rect154"
+       fill="#2B3E80"
+       x="143"
+       y="0"
+       width="1"
+       height="28" />
+    <polygon
+       id="polygon156"
+       fill="#7B8ECE"
+       transform="translate(199.500000, 3.000000) rotate(-90.000000) translate(-199.500000, -3.000000) "
+       points="196.5 -52.5 202.5 58.5 196.5 58.5"
+       style="fill:#7b8ece;fill-opacity:1" />
+    <polygon
+       id="polygon158"
+       fill="#7B8ECE"
+       transform="translate(227.500000, 17.000000) rotate(-90.000000) translate(-227.500000, -17.000000) "
+       points="224.5 -10.5 230.5 44.5 224.5 44.5"
+       style="fill:#7b8ece;fill-opacity:1" />
+    <polygon
+       id="polygon160"
+       fill="#7B8ECE"
+       transform="translate(171.500000, 25.000000) rotate(-270.000000) translate(-171.500000, -25.000000) "
+       points="168.5 -2.5 174.5 52.5 168.5 52.5"
+       style="fill:#7b8ece;fill-opacity:1" />
+    <rect
+       id="rect162"
+       fill="#B6C4F6"
+       x="143"
+       y="78"
+       width="1"
+       height="3"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect164"
+       fill="#C1CEFF"
+       x="191"
+       y="78"
+       width="1"
+       height="1" />
+    <rect
+       id="rect166"
+       fill="#B6C4F6"
+       x="207"
+       y="75"
+       width="1"
+       height="1"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect168"
+       x="215"
+       y="74.5"
+       width="1"
+       height="1.5"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect170"
+       fill="#B6C4F6"
+       x="138"
+       y="76"
+       width="123"
+       height="2"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect172"
+       fill="#B6C4F6"
+       x="198"
+       y="70"
+       width="3"
+       height="14"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect174"
+       fill="#B6C4F6"
+       x="255"
+       y="73"
+       width="1"
+       height="3"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect176"
+       fill="#B6C4F6"
+       x="151"
+       y="78"
+       width="1"
+       height="3"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect178"
+       fill="#B6C4F6"
+       x="159"
+       y="78"
+       width="1"
+       height="3"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect180"
+       x="167"
+       y="78"
+       width="1"
+       height="2.5"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect182"
+       fill="#B6C4F6"
+       x="175"
+       y="78"
+       width="1"
+       height="2"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect184"
+       fill="#B6C4F6"
+       x="191"
+       y="78"
+       width="1"
+       height="1"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect186"
+       x="183"
+       y="78"
+       width="1"
+       height="1.5"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect188"
+       fill="#B6C4F6"
+       x="223"
+       y="74"
+       width="1"
+       height="2"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect190"
+       x="231"
+       y="73.5"
+       width="1"
+       height="2.5"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect192"
+       fill="#B6C4F6"
+       x="239"
+       y="73"
+       width="1"
+       height="3"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect194"
+       fill="#B6C4F6"
+       x="247"
+       y="73"
+       width="1"
+       height="3"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect196"
+       fill="#B6C4F6"
+       x="138"
+       y="62"
+       width="123"
+       height="2"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect198"
+       fill="#B6C4F6"
+       x="199"
+       y="60"
+       width="1"
+       height="6"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect200"
+       fill="#B6C4F6"
+       x="255"
+       y="42"
+       width="1"
+       height="28"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect202"
+       fill="#B6C4F6"
+       x="138"
+       y="48"
+       width="123"
+       height="2"
+       style="fill:#9daadd;fill-opacity:1" />
+    <rect
+       id="rect204"
+       fill="#B6C4F6"
+       x="143"
+       y="42"
+       width="1"
+       height="28"
+       style="fill:#9daadd;fill-opacity:1" />
+    <polygon
+       id="polygon206"
+       fill="#B6C4F6"
+       opacity="0.497721354"
+       transform="translate(199.500000, 45.000000) rotate(-90.000000) translate(-199.500000, -45.000000) "
+       points="196.5 -10.5 202.5 100.5 196.5 100.5"
+       style="opacity:0.45" />
+    <polygon
+       id="polygon208"
+       fill="#B6C4F6"
+       opacity="0.497721354"
+       transform="translate(227.500000, 59.000000) rotate(-90.000000) translate(-227.500000, -59.000000) "
+       points="224.5 31.5 230.5 86.5 224.5 86.5"
+       style="opacity:0.45" />
+    <polygon
+       id="polygon210"
+       fill="#B6C4F6"
+       opacity="0.497721354"
+       transform="translate(171.500000, 67.000000) rotate(-270.000000) translate(-171.500000, -67.000000) "
+       points="168.5 39.5 174.5 94.5 168.5 94.5"
+       style="opacity:0.4" />
+    <rect
+       id="rect212"
+       fill="#B6C4f6"
+       x="276"
+       y="78"
+       width="1"
+       height="3"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect214"
+       fill="#B6C4f6"
+       x="388"
+       y="73"
+       width="1"
+       height="3"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect216"
+       x="316"
+       y="78"
+       width="1"
+       height="1.5"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect218"
+       fill="#B6C4f6"
+       x="324"
+       y="78"
+       width="1"
+       height="1"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect220"
+       fill="#B6C4f6"
+       x="340"
+       y="75"
+       width="1"
+       height="1"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect222"
+       x="348"
+       y="74.5"
+       width="1"
+       height="1.5"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect224"
+       fill="#B6C4f6"
+       x="271"
+       y="76"
+       width="123"
+       height="2"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect226"
+       fill="#B6C4f6"
+       x="271"
+       y="62"
+       width="123"
+       height="2"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect228"
+       fill="#B6C4f6"
+       x="332"
+       y="60"
+       width="1"
+       height="6"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect230"
+       fill="#B6C4f6"
+       x="388"
+       y="42"
+       width="1"
+       height="28"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect232"
+       fill="#B6C4f6"
+       x="271"
+       y="48"
+       width="123"
+       height="2"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect234"
+       fill="#B6C4f6"
+       x="276"
+       y="42"
+       width="1"
+       height="28"
+       style="fill:#74aefe;fill-opacity:1" />
+    <polygon
+       id="polygon236"
+       fill="#297be6"
+       opacity="0.7"
+       transform="translate(332.500000, 45.000000) rotate(-90.000000) translate(-332.500000, -45.000000) "
+       points="329.5 -10.5 335.5 100.5 329.5 100.5"
+       style="fill:#2e86fe;fill-opacity:1;opacity:0.92" />
+    <polygon
+       id="polygon238"
+       fill="#297be6"
+       opacity="0.7"
+       transform="translate(360.500000, 59.000000) rotate(-90.000000) translate(-360.500000, -59.000000) "
+       points="357.5 31.5 363.5 86.5 357.5 86.5"
+       style="opacity:1" />
+    <polygon
+       id="polygon240"
+       fill="#297be6"
+       opacity="0.7"
+       transform="translate(304.500000, 67.000000) rotate(-270.000000) translate(-304.500000, -67.000000) "
+       points="301.5 39.5 307.5 94.5 301.5 94.5"
+       style="opacity:1" />
+    <rect
+       id="rect242"
+       fill="#1437B8"
+       x="276"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect244"
+       fill="#C1CEFF"
+       x="324"
+       y="36"
+       width="1"
+       height="1" />
+    <rect
+       id="rect250"
+       fill="#1437B8"
+       x="271"
+       y="34"
+       width="123"
+       height="2" />
+    <rect
+       id="rect252"
+       fill="#1437B8"
+       x="331"
+       y="28"
+       width="3"
+       height="14" />
+    <rect
+       id="rect254"
+       fill="#B6C4f6"
+       x="331"
+       y="70"
+       width="3"
+       height="14"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect256"
+       x="388"
+       y="31"
+       width="1"
+       height="3"
+       fill="#1437B8" />
+    <polygon
+       id="polygon258"
+       points="334 34 388 31 388 34"
+       fill="#297be6"
+       opacity="1"
+       style="fill:#2e86fe;fill-opacity:1;opacity:0.92" />
+    <polygon
+       id="polygon260"
+       fill="#297be6"
+       opacity="1"
+       points="331 36 277 39 277 36"
+       style="fill:#2e86fe;fill-opacity:1;opacity:0.92" />
+    <rect
+       id="rect246"
+       x="340"
+       y="33"
+       width="1"
+       height="1"
+       fill="#1437B8" />
+    <rect
+       id="rect262"
+       fill="#1437B8"
+       x="271"
+       y="20"
+       width="123"
+       height="2" />
+    <rect
+       id="rect248"
+       x="348"
+       y="32.50288"
+       width="1"
+       height="1.5"
+       style="opacity:1;fill:#1437b8" />
+    <rect
+       id="rect264"
+       fill="#1437B8"
+       x="332"
+       y="18"
+       width="1"
+       height="6" />
+    <rect
+       id="rect266"
+       fill="#1437B8"
+       x="388"
+       y="0"
+       width="1"
+       height="28" />
+    <rect
+       id="rect268"
+       fill="#1437B8"
+       x="271"
+       y="6"
+       width="123"
+       height="2" />
+    <rect
+       id="rect270"
+       fill="#1437B8"
+       x="276"
+       y="0"
+       width="1"
+       height="28" />
+    <polygon
+       id="polygon272"
+       fill="#297be6"
+       opacity="1"
+       transform="translate(332.500000, 3.000000) rotate(-90.000000) translate(-332.500000, -3.000000) "
+       points="329.5 -52.5 335.5 58.5 329.5 58.5"
+       style="fill:#2e86fe;fill-opacity:1;opacity:0.92" />
+    <polygon
+       id="polygon274"
+       fill="#297be6"
+       opacity="1"
+       transform="translate(360.500000, 17.000000) rotate(-90.000000) translate(-360.500000, -17.000000) "
+       points="357.5 -10.5 363.5 44.5 357.5 44.5"
+       style="fill:#2e86fe;fill-opacity:1;opacity:0.92" />
+    <polygon
+       id="polygon276"
+       fill="#297be6"
+       opacity="1"
+       transform="translate(304.500000, 25.000000) rotate(-270.000000) translate(-304.500000, -25.000000) "
+       points="301.5 -2.5 307.5 52.5 301.5 52.5"
+       style="fill:#2e86fe;fill-opacity:1;opacity:0.92" />
+    <rect
+       id="rect278"
+       fill="#1437B8"
+       x="284"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect280"
+       fill="#1437B8"
+       x="292"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect282"
+       fill="#1437B8"
+       x="300"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect284"
+       fill="#1437B8"
+       x="308"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect286"
+       fill="#1437B8"
+       x="324"
+       y="36"
+       width="1"
+       height="1" />
+    <rect
+       id="rect288"
+       fill="#1437B8"
+       x="316"
+       y="36"
+       width="1"
+       height="1" />
+    <rect
+       id="rect290"
+       fill="#1437B8"
+       x="356"
+       y="32"
+       width="1"
+       height="2" />
+    <rect
+       id="rect294"
+       fill="#1437B8"
+       x="372"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect296"
+       fill="#1437B8"
+       x="380"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect298"
+       fill="#1437B8"
+       x="284"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect300"
+       fill="#1437B8"
+       x="292"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect302"
+       fill="#1437B8"
+       x="300"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect304"
+       fill="#1437B8"
+       x="308"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect306"
+       fill="#1437B8"
+       x="324"
+       y="36"
+       width="1"
+       height="1" />
+    <rect
+       id="rect308"
+       fill="#1437B8"
+       x="316"
+       y="36"
+       width="1"
+       height="1" />
+    <rect
+       id="rect310"
+       fill="#1437B8"
+       x="356"
+       y="32"
+       width="1"
+       height="2" />
+    <rect
+       id="rect314"
+       fill="#1437B8"
+       x="372"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect316"
+       fill="#1437B8"
+       x="380"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect318"
+       fill="#1437B8"
+       x="284"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect320"
+       fill="#1437B8"
+       x="292"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect322"
+       x="300"
+       y="36"
+       width="1"
+       height="2.5"
+       style="fill:#1437b8" />
+    <rect
+       id="rect324"
+       fill="#1437B8"
+       x="308"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect326"
+       fill="#1437B8"
+       x="324"
+       y="36"
+       width="1"
+       height="1" />
+    <rect
+       id="rect328"
+       x="316"
+       y="36"
+       width="1"
+       height="1.5"
+       style="fill:#1437b8" />
+    <rect
+       id="rect332"
+       x="364"
+       y="31.498962"
+       width="1"
+       height="2.5"
+       style="fill:#1437b8" />
+    <rect
+       id="rect334"
+       x="372"
+       y="31"
+       width="1"
+       height="3"
+       fill="#1437B8" />
+    <rect
+       id="rect336"
+       fill="#1437B8"
+       x="380"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect338"
+       fill="#2B3E80"
+       x="151"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect340"
+       fill="#2B3E80"
+       x="159"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect342"
+       fill="#2B3E80"
+       x="167"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect344"
+       fill="#2B3E80"
+       x="175"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect346"
+       fill="#2B3E80"
+       x="223"
+       y="32"
+       width="1"
+       height="2" />
+    <rect
+       id="rect350"
+       fill="#2B3E80"
+       x="239"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect352"
+       fill="#2B3E80"
+       x="247"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect354"
+       fill="#2B3E80"
+       x="151"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect356"
+       fill="#2B3E80"
+       x="159"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect358"
+       fill="#2B3E80"
+       x="167"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect360"
+       fill="#2B3E80"
+       x="175"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect362"
+       fill="#2B3E80"
+       x="223"
+       y="32"
+       width="1"
+       height="2" />
+    <rect
+       id="rect366"
+       fill="#2B3E80"
+       x="239"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect368"
+       fill="#2B3E80"
+       x="247"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect370"
+       fill="#2B3E80"
+       x="151"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect372"
+       fill="#2B3E80"
+       x="159"
+       y="36"
+       width="1"
+       height="3" />
+    <rect
+       id="rect374"
+       x="167"
+       y="36"
+       width="1"
+       height="2.5"
+       style="fill:#2b3e80" />
+    <rect
+       id="rect376"
+       fill="#2B3E80"
+       x="175"
+       y="36"
+       width="1"
+       height="2" />
+    <rect
+       id="rect378"
+       fill="#2B3E80"
+       x="223"
+       y="32"
+       width="1"
+       height="2" />
+    <rect
+       id="rect382"
+       fill="#2B3E80"
+       x="239"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect384"
+       fill="#2B3E80"
+       x="247"
+       y="31"
+       width="1"
+       height="3" />
+    <rect
+       id="rect386"
+       fill="#405CBF"
+       x="284"
+       y="78"
+       width="1"
+       height="3" />
+    <rect
+       id="rect388"
+       fill="#405CBF"
+       x="292"
+       y="78"
+       width="1"
+       height="3" />
+    <rect
+       id="rect390"
+       fill="#405CBF"
+       x="300"
+       y="78"
+       width="1"
+       height="2" />
+    <rect
+       id="rect392"
+       fill="#405CBF"
+       x="308"
+       y="78"
+       width="1"
+       height="2" />
+    <rect
+       id="rect394"
+       fill="#405CBF"
+       x="356"
+       y="74"
+       width="1"
+       height="2" />
+    <rect
+       id="rect398"
+       fill="#405CBF"
+       x="372"
+       y="73"
+       width="1"
+       height="3" />
+    <rect
+       id="rect400"
+       fill="#405CBF"
+       x="380"
+       y="73"
+       width="1"
+       height="3" />
+    <rect
+       id="rect402"
+       fill="#405CBF"
+       x="284"
+       y="78"
+       width="1"
+       height="3" />
+    <rect
+       id="rect404"
+       fill="#405CBF"
+       x="292"
+       y="78"
+       width="1"
+       height="3" />
+    <rect
+       id="rect406"
+       fill="#405CBF"
+       x="300"
+       y="78"
+       width="1"
+       height="2" />
+    <rect
+       id="rect408"
+       fill="#405CBF"
+       x="308"
+       y="78"
+       width="1"
+       height="2" />
+    <rect
+       id="rect410"
+       fill="#405CBF"
+       x="356"
+       y="74"
+       width="1"
+       height="2" />
+    <rect
+       id="rect414"
+       fill="#405CBF"
+       x="372"
+       y="73"
+       width="1"
+       height="3" />
+    <rect
+       id="rect416"
+       fill="#405CBF"
+       x="380"
+       y="73"
+       width="1"
+       height="3" />
+    <rect
+       id="rect418"
+       fill="#B6C4f6"
+       x="284"
+       y="78"
+       width="1"
+       height="3"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect420"
+       fill="#B6C4f6"
+       x="292"
+       y="78"
+       width="1"
+       height="3"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect422"
+       x="300"
+       y="78"
+       width="1"
+       height="2.5"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect424"
+       fill="#B6C4f6"
+       x="308"
+       y="78"
+       width="1"
+       height="2"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect426"
+       fill="#B6C4f6"
+       x="356"
+       y="74"
+       width="1"
+       height="2"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect430"
+       fill="#B6C4f6"
+       x="372"
+       y="73"
+       width="1"
+       height="3"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect432"
+       fill="#B6C4f6"
+       x="380"
+       y="73"
+       width="1"
+       height="3"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       style="fill:#2b3e80"
+       id="rect116-2"
+       x="215"
+       y="32.501686"
+       width="1"
+       height="1.5" />
+    <rect
+       id="rect428"
+       x="364"
+       y="73.5"
+       width="1"
+       height="2.5"
+       style="fill:#74aefe;fill-opacity:1" />
+    <rect
+       id="rect380"
+       x="231"
+       y="31.5"
+       width="1"
+       height="2.5"
+       style="fill:#2b3e80" />
+    <rect
+       style="fill:#000000"
+       id="rect24-0"
+       x="50"
+       y="35.999451"
+       width="1"
+       height="1.5" />
+    <rect
+       style="fill:#000000"
+       id="rect24-0-2"
+       x="58"
+       y="35.998249"
+       width="1"
+       height="1" />
+    <rect
+       style="fill:#000000"
+       id="rect26-1"
+       x="82"
+       y="32.502533"
+       width="1"
+       height="1.5" />
+    <rect
+       style="fill:#000000"
+       id="rect26-1-9"
+       x="74"
+       y="33.001095"
+       width="1"
+       height="1" />
   </g>
 </svg>
