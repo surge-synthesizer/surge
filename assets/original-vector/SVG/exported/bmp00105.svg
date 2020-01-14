@@ -36,17 +36,17 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="2560"
-     inkscape:window-height="1057"
+     inkscape:window-width="1753"
+     inkscape:window-height="1048"
      id="namedview209"
      showgrid="false"
-     inkscape:zoom="6.2933333"
-     inkscape:cx="-4.7400226"
-     inkscape:cy="234.33563"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="svg207" />
+     inkscape:zoom="4"
+     inkscape:cx="42.9201"
+     inkscape:cy="207.25243"
+     inkscape:window-x="821"
+     inkscape:window-y="71"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="bmp00105" />
   <title
      id="title2">bmp00105</title>
   <desc
@@ -232,80 +232,92 @@
        x="23"
        y="0"
        width="2"
-       height="73" />
+       height="73"
+       style="fill:#9daadd;fill-opacity:1" />
     <rect
        id="rect60"
        fill="#9AA7DB"
        x="17"
        y="9"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#9daadd;fill-opacity:1" />
     <rect
        id="rect62"
        fill="#9AA7DB"
        x="25"
        y="9"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#9daadd;fill-opacity:1" />
     <polygon
        id="polygon64"
        fill="#99A7DB"
        opacity="0.500837054"
-       points="25 65 25 10 31 10" />
+       points="25 65 25 10 31 10"
+       style="fill:#606986;fill-opacity:1;opacity:1" />
     <rect
        id="rect66"
        fill="#9AA7DB"
        x="17"
        y="65"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#9daadd;fill-opacity:1" />
     <rect
        id="rect68"
        fill="#9AA7DB"
        x="25"
        y="65"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#9daadd;fill-opacity:1" />
     <rect
        id="rect70"
-       fill="#BBC4f6"
        x="39"
        y="0"
        width="2"
-       height="73" />
+       height="73"
+       fill="#BBC4f6"
+       style="fill:#62a4fe;fill-opacity:1" />
     <rect
        id="rect72"
        fill="#BBC4f6"
        x="33"
        y="9"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#62a4fe;fill-opacity:1" />
     <rect
        id="rect74"
        fill="#BBC4f6"
        x="41"
        y="9"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#62a4fe;fill-opacity:1" />
     <polygon
        id="polygon76"
        fill="#297be6"
        opacity="0.7"
-       points="41 65 41 10 47 10" />
+       points="41 65 41 10 47 10"
+       style="fill:#2e86fe;fill-opacity:1;opacity:0.4" />
     <rect
        id="rect78"
        fill="#BBC4f6"
        x="33"
        y="65"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#62a4fe;fill-opacity:1" />
     <rect
        id="rect80"
        fill="#BBC4f6"
        x="41"
        y="65"
        width="6"
-       height="1" />
+       height="1"
+       style="fill:#62a4fe;fill-opacity:1" />
     <g
        id="g142"
        transform="translate(1.000000, 75.000000)">
@@ -374,59 +386,68 @@
            x="6"
            y="0"
            width="2"
-           height="73" />
+           height="73"
+           style="fill:#9daadd;fill-opacity:1" />
         <rect
            id="rect104"
            fill="#93A0D2"
            x="0"
            y="9"
            width="6"
-           height="1" />
+           height="1"
+           style="fill:#9daadd;fill-opacity:1" />
         <rect
            id="rect106"
            fill="#93A0D2"
            x="8"
            y="9"
            width="6"
-           height="1" />
-        <rect
-           id="rect108"
-           fill="#93A0D2"
-           x="4"
-           y="37"
-           width="2"
-           height="1" />
+           height="1"
+           style="fill:#9daadd;fill-opacity:1" />
+        <polygon
+           id="polygon112"
+           fill="#575F79"
+           transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) "
+           points="8 10 14 38 8 38"
+           style="fill:#575f79;fill-opacity:1" />
         <rect
            id="rect110"
            fill="#93A0D2"
            x="8"
            y="37"
            width="2"
-           height="1" />
-        <polygon
-           id="polygon112"
-           fill="#575F79"
-           transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) "
-           points="8 10 14 38 8 38" />
+           height="1"
+           style="fill:#9daadd;fill-opacity:1" />
         <polygon
            id="polygon114"
            fill="#575F79"
            transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) "
-           points="0 37 6 65 0 65" />
+           points="0 37 6 65 0 65"
+           style="fill:#575f79;fill-opacity:1" />
+        <rect
+           id="rect108"
+           fill="#93A0D2"
+           x="4"
+           y="37"
+           width="2"
+           height="1"
+           style="fill:#9daadd;fill-opacity:1" />
         <rect
            id="rect116"
            fill="#93A0D2"
            x="0"
            y="65"
            width="6"
-           height="1" />
+           height="1"
+           style="fill:#9daadd;fill-opacity:1" />
         <rect
            id="rect118"
            fill="#93A0D2"
            x="8"
            y="65"
            width="6"
-           height="1" />
+           height="1"
+           style="fill:#9daadd;fill-opacity:1" />
       </g>
       <g
          id="g140"
@@ -437,61 +458,70 @@
            x="6"
            y="0"
            width="2"
-           height="73" />
+           height="73"
+           style="fill:#62a4fe;fill-opacity:1" />
         <rect
            id="rect124"
            fill="#BBC4f6"
            x="0"
            y="9"
            width="6"
-           height="1" />
+           height="1"
+           style="fill:#62a4fe;fill-opacity:1" />
         <rect
            id="rect126"
            fill="#BBC4f6"
            x="8"
            y="9"
            width="6"
-           height="1" />
-        <rect
-           id="rect128"
-           fill="#BBC4f6"
-           x="4"
-           y="37"
-           width="2"
-           height="1" />
+           height="1"
+           style="fill:#62a4fe;fill-opacity:1" />
+        <polygon
+           id="polygon132"
+           fill="#297be6"
+           opacity="0.7"
+           transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) "
+           points="8 10 14 38 8 38"
+           style="fill:#2e86fe;fill-opacity:1;opacity:0.55" />
         <rect
            id="rect130"
            fill="#BBC4f6"
            x="8"
            y="37"
            width="2"
-           height="1" />
-        <polygon
-           id="polygon132"
-           fill="#297be6"
-           opacity="0.7"
-           transform="translate(11.000000, 24.000000) scale(1, -1) translate(-11.000000, -24.000000) "
-           points="8 10 14 38 8 38" />
+           height="1"
+           style="fill:#62a4fe;fill-opacity:1" />
         <polygon
            id="polygon134"
            fill="#297be6"
            opacity="0.7"
            transform="translate(3.000000, 51.000000) scale(1, -1) rotate(-180.000000) translate(-3.000000, -51.000000) "
-           points="0 37 6 65 0 65" />
+           points="0 37 6 65 0 65"
+           style="fill:#2e86fe;fill-opacity:1;opacity:0.55" />
+        <rect
+           id="rect128"
+           fill="#BBC4f6"
+           x="4"
+           y="37"
+           width="2"
+           height="1"
+           style="fill:#62a4fe;fill-opacity:1" />
         <rect
            id="rect136"
            fill="#BBC4f6"
            x="0"
            y="65"
            width="6"
-           height="1" />
+           height="1"
+           style="fill:#62a4fe;fill-opacity:1" />
         <rect
            id="rect138"
            fill="#BBC4f6"
            x="8"
            y="65"
            width="6"
-           height="1" />
+           height="1"
+           style="fill:#62a4fe;fill-opacity:1" />
       </g>
     </g>
     <g
