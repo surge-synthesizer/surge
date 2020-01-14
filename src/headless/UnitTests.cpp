@@ -1356,9 +1356,9 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                                   auto surgeA = runAdsr( a, d, s, r, 0, 0, 0, true, a + d + 0.5, t );
                                   auto replA = analogClone( a, d, s, r, a + d + 0.5, t );
 
-                                  REQUIRE( surgeA.size() == replA.size() );
-                                  
-                                  for( auto i=0; i<surgeA.size(); ++i )
+                                  REQUIRE( surgeA.size() == Approx( replA.size() ).margin( 3 ) );
+                                  auto sz = std::min( surgeA.size(), replA.size() );                             
+                                  for( auto i=0; i<sz; ++i )
                                   {
                                      REQUIRE( replA[i].second == Approx( surgeA[i].second ).margin( 1e-6 ) );
                                   }
