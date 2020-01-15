@@ -40,9 +40,9 @@
      inkscape:window-height="1057"
      id="namedview929"
      showgrid="false"
-     inkscape:zoom="11.313708"
-     inkscape:cx="46.154719"
-     inkscape:cy="290.55729"
+     inkscape:zoom="7.9999996"
+     inkscape:cx="47.147001"
+     inkscape:cy="333.56589"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -1102,13 +1102,11 @@
             <g
                id="g350"
                transform="translate(0.000000, 104.000000)">
-              <rect
-                 id="rect346"
-                 x="1.25e-08"
-                 y="2.999999"
-                 width="34.3125"
-                 height="1"
-                 style="fill:#ff9915;stroke-width:1" />
+              <path
+                 style="fill:#ff9915;stroke-width:1"
+                 d="M 12.5 332 L 10 336 L 12 336 L 12 339 L 13 339 L 13 336 L 15 336 L 12.5 332 z M 12 343 L 12 344 L 46.3125 344 L 46.3125 343 L 12 343 z "
+                 transform="translate(-12,-340)"
+                 id="rect346" />
               <path
                  d="M 33.187335,3.4999992 45.5,9.216595 V -2.2165954 Z"
                  id="path348"
@@ -1570,20 +1568,16 @@
                width="12.71875"
                height="1"
                style="stroke-width:0.99999994" />
-            <rect
-               id="rect493"
-               x="55.34375"
-               y="5.0000005"
-               width="36.65625"
-               height="1"
-               style="stroke-width:1" />
-            <rect
-               id="rect495"
-               x="55.25"
-               y="-0.99999964"
-               width="42.75"
-               height="1"
-               style="stroke-width:0.99999994" />
+            <path
+               style="stroke-width:1"
+               d="M 15.5 383 L 13 387 L 15 387 L 15 390 L 15 392 L 15 393 L 51.65625 393 L 51.65625 392 L 16 392 L 16 390 L 16 387 L 18 387 L 15.5 383 z "
+               transform="rotate(180,53.5,199)"
+               id="rect493" />
+            <path
+               style="stroke-width:0.99999994"
+               d="M 9.5 383 L 7 387 L 9 387 L 9 390 L 9 398 L 9 399 L 51.75 399 L 51.75 398 L 10 398 L 10 390 L 10 387 L 12 387 L 9.5 383 z "
+               transform="rotate(180,53.5,199)"
+               id="rect495" />
           </g>
         </g>
         <rect
@@ -2546,38 +2540,10 @@
        id="path857-9" />
     <g
        id="g1906"
-       transform="translate(0,-1)">
-      <path
-         id="path777-3"
-         d="M 9,387.99999 H 7 l 2.5,-4 2.5,4 h -2 v 3 H 9 Z"
-         style="fill:#ff9915"
-         inkscape:connector-curvature="0" />
-      <rect
-         transform="rotate(-90)"
-         height="1"
-         width="8.0000191"
-         y="9"
-         x="-399"
-         id="rect506-4"
-         style="fill:#ff9915;stroke-width:0.99999988" />
-    </g>
+       transform="translate(0,-1)" />
     <g
        id="g1902"
-       transform="translate(0,-1)">
-      <path
-         id="path777-3-3"
-         d="m 15,387.99998 h -2 l 2.5,-4 2.5,4 h -2 v 3 h -1 z"
-         style="fill:#ff9915"
-         inkscape:connector-curvature="0" />
-      <rect
-         transform="rotate(-90)"
-         height="1"
-         width="2.0000196"
-         y="15"
-         x="-393"
-         id="rect506-7"
-         style="fill:#ff9915;stroke-width:1" />
-    </g>
+       transform="translate(0,-1)" />
     <g
        transform="translate(2.0003679,61)"
        id="g1770-0">
@@ -2665,11 +2631,6 @@
          transform="rotate(-90)"
          inkscape:transform-center-x="5.5"
          inkscape:transform-center-y="-2.2878817" />
-      <path
-         d="m 12,128.99907 h -2 l 2.5,-4 2.5,4 h -2 v 3 h -1 z"
-         id="path741-0-1-21"
-         inkscape:connector-curvature="0"
-         style="fill:#ff9915" />
     </g>
     <g
        transform="translate(0,-52)"
