@@ -48,7 +48,7 @@ typedef std::vector<Event> playerEvents_t; // We assume these are monotonic in E
  */
 playerEvents_t makeHoldMiddleC(int forSamples, int withTail = 0);
 
-playerEvents_t makeHoldNoteFor(int note, int forSamples, int withTail = 0);
+playerEvents_t makeHoldNoteFor(int note, int forSamples, int withTail = 0, int midiChannel = 0);
 
 playerEvents_t make120BPMCMajorQuarterNoteScale(long sample0 = 0, int sr = 44100);
 

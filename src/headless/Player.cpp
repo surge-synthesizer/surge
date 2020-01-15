@@ -17,13 +17,13 @@ playerEvents_t makeHoldMiddleC(int forSamples, int withTail)
    return makeHoldNoteFor(60, forSamples, withTail );
 }
 
-playerEvents_t makeHoldNoteFor( int note, int forSamples, int withTail )
+playerEvents_t makeHoldNoteFor( int note, int forSamples, int withTail, int midiChannel )
 {
    playerEvents_t result;
 
    Event on;
    on.type = Event::NOTE_ON;
-   on.channel = 0;
+   on.channel = midiChannel;
    on.data1 = note;
    on.data2 = 100;
    on.atSample = 0;

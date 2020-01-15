@@ -139,9 +139,11 @@ std::shared_ptr<SurgeSynthesizer> surgeOnSine()
 ** frequency measure (which works great for the sine patch and poorly for others
 ** At one day we could do this with autocorrelation instead but no need now.
 */
-double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note, int seconds = 2, bool channel = 0 )
+double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
+                         int seconds = 2, bool audioChannel = 0,
+                         int midiChannel = 0 )
 {
-   auto events = Surge::Headless::makeHoldNoteFor( note, 44100 * seconds, 64 );
+   auto events = Surge::Headless::makeHoldNoteFor( note, 44100 * seconds, 64, midiChannel );
    float *buffer;
    int nS, nC;
    Surge::Headless::playAsConfigured( surge.get(), events, &buffer, &nS, &nC );
@@ -156,7 +158,7 @@ double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note, int 
    float *leftTrimmed = new float[nSTrim];
 
    for( int i=0; i<nSTrim; ++i )
-      leftTrimmed[i] = buffer[ (i + start) * 2 + channel ];
+      leftTrimmed[i] = buffer[ (i + start) * 2 + audioChannel ];
 
    // OK so now look for sample times between positive/negative crosses
    int v = -1;
@@ -1431,6 +1433,46 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
 
 }
 
+
+TEST_CASE( "Channel Split Routes on Channel", "[midi]" )
+{
+   auto surge = std::shared_ptr<SurgeSynthesizer>( Surge::Headless::createSurge(44100) );
+   REQUIRE( surge );
+   REQUIRE( surge->loadPatchByPath( "test-data/patches/ChannelSplit-Sin-2OctaveB.fxp", -1, "Test" ) );
+
+   SECTION( "Regular (non-MPE)" )
+   {
+      surge->mpeEnabled = false;
+      for( auto splitChan = 2; splitChan < 14; splitChan ++ )
+      {
+         auto smc = splitChan * 8;
+         surge->storage.getPatch().splitkey.val.i = smc;
+         for( auto mc=0; mc<16; ++mc )
+         {
+            auto fr = frequencyForNote( surge, 69, 2, 0, mc );
+            auto targetfr = mc <= splitChan ? 440 : 440 * 4;
+            REQUIRE( fr == Approx( targetfr ).margin( 0.1 ) );
+         }
+      }
+   }
+
+   
+   SECTION( "MPE Enabled" )
+   {
+      surge->mpeEnabled = true;
+      for( auto splitChan = 2; splitChan < 14; splitChan ++ )
+      {
+         auto smc = splitChan * 8;
+         surge->storage.getPatch().splitkey.val.i = smc;
+         for( auto mc=0; mc<16; ++mc )
+         {
+            auto fr = frequencyForNote( surge, 69, 2, 0, mc );
+            auto targetfr = mc <= splitChan ? 440 : 440 * 4;
+            REQUIRE( fr == Approx( targetfr ).margin( 0.1 ) );
+         }
+      }
+   }
+}
 
 
 int runAllTests(int argc, char **argv)
