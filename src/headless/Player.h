@@ -57,7 +57,7 @@ playerEvents_t make120BPMCMajorQuarterNoteScale(long sample0 = 0, int sr = 44100
  *
  * given a surge, play the events from first to last accumulating the result in the audiodata
  */
-void playAsConfigured(SurgeSynthesizer* synth,
+void playAsConfigured(std::shared_ptr<SurgeSynthesizer> synth,
                       const playerEvents_t& events,
                       float** resultData,
                       int* nSamples,
@@ -69,7 +69,7 @@ void playAsConfigured(SurgeSynthesizer* synth,
  * given a surge and a patch, play the events accumulating the data. This is a convenience
  * for loadpatch / playAsConfigured
  */
-void playOnPatch(SurgeSynthesizer* synth,
+void playOnPatch(std::shared_ptr<SurgeSynthesizer> synth,
                  int patch,
                  const playerEvents_t& events,
                  float** resultData,
@@ -83,7 +83,7 @@ void playOnPatch(SurgeSynthesizer* synth,
  * the result.
  */
 void playOnEveryPatch(
-    SurgeSynthesizer* synth,
+    std::shared_ptr<SurgeSynthesizer> synth,
     const playerEvents_t& events,
     std::function<void(
         const Patch& p, const PatchCategory& c, const float* data, int nSamples, int nChannels)>
@@ -96,7 +96,7 @@ void playOnEveryPatch(
  * the result.
  */
 void playOnNRandomPatches(
-    SurgeSynthesizer* synth,
+    std::shared_ptr<SurgeSynthesizer> synth,
     const playerEvents_t& events,
     int nPlays,
     std::function<void(
@@ -110,7 +110,7 @@ void playOnNRandomPatches(
  * configuration of the synth. Rather than generate a mass of data, this calls you
  * back with a pointer to the data every (n) samples
  */
-void playMidiFile(SurgeSynthesizer* synth,
+void playMidiFile(std::shared_ptr<SurgeSynthesizer> synth,
                   std::string midiFileName,
                   long callBackEvery,
                   std::function<void(float* data, int nSamples, int nChannels)> dataCB);
@@ -121,7 +121,7 @@ void playMidiFile(SurgeSynthesizer* synth,
  * Given a surge synthesizer and MidiFile name, create a Wav file which results
  * from playing that midi file.
  */
-void renderMidiFileToWav(SurgeSynthesizer* synth,
+void renderMidiFileToWav(std::shared_ptr<SurgeSynthesizer> synth,
                          std::string midiFileName,
                          std::string outputWavFile);
 

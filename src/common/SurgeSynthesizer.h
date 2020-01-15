@@ -176,20 +176,46 @@ public:
    void populateDawExtraState() {
        storage.getPatch().dawExtraState.isPopulated = true;
        storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
+       storage.getPatch().dawExtraState.mpePitchBendRange = mpePitchBendRange;
+       
        storage.getPatch().dawExtraState.hasTuning = !storage.isStandardTuning;
        if( ! storage.isStandardTuning )
            storage.getPatch().dawExtraState.tuningContents = storage.currentScale.rawText;
        else
            storage.getPatch().dawExtraState.tuningContents = "";
+
+       storage.getPatch().dawExtraState.hasMapping = !storage.isStandardMapping;
+       if( ! storage.isStandardMapping )
+           storage.getPatch().dawExtraState.mappingContents = storage.currentMapping.rawText;
+       else
+           storage.getPatch().dawExtraState.mappingContents = "";
    }
+   
    void loadFromDawExtraState() {
        if( ! storage.getPatch().dawExtraState.isPopulated )
            return;
        mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
+       if( storage.getPatch().dawExtraState.mpePitchBendRange > 0 )
+          mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
+
        if( storage.getPatch().dawExtraState.hasTuning )
        {
            auto sc = Surge::Storage::parseSCLData(storage.getPatch().dawExtraState.tuningContents );
            storage.retuneToScale(sc);
+       }
+       else
+       {
+          storage.retuneToStandardTuning();
+       }
+       
+       if( storage.getPatch().dawExtraState.hasMapping )
+       {
+          auto kb = Surge::Storage::parseKBMData(storage.getPatch().dawExtraState.mappingContents );
+          storage.remapToKeyboard(kb);
+       }
+       else
+       {
+          storage.remapToStandardKeyboard();
        }
    }
    

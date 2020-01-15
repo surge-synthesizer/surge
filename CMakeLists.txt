@@ -76,8 +76,13 @@ add_executable(surge-headless
    src/headless/LinkFixesHeadless.cpp
    src/headless/HeadlessUtils.cpp
    src/headless/Player.cpp
-   src/headless/Stress.cpp   
    src/headless/UnitTests.cpp
+   src/headless/UnitTestUtilities.cpp    
+   src/headless/UnitTestsDSP.cpp
+   src/headless/UnitTestsIO.cpp
+   src/headless/UnitTestsMIDI.cpp
+   src/headless/UnitTestsMOD.cpp
+   src/headless/UnitTestsTUN.cpp
 )
 
 target_compile_features(surge-headless
