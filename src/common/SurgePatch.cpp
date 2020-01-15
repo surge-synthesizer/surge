@@ -1437,6 +1437,12 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
                dawExtraState.mpeEnabled = ival;
 
+           p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpePitchBendRange"));
+           if( p &&
+               p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
+               dawExtraState.mpePitchBendRange = ival;
+
+
            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("hasTuning"));
            if( p &&
                p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
@@ -1453,6 +1459,24 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                {
                    auto tc = base64_decode(td);
                    dawExtraState.tuningContents = tc;
+               }
+           }
+
+           p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("hasMapping"));
+           if( p &&
+               p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
+           {
+               dawExtraState.hasMapping = (ival != 0);
+           }
+
+           if( dawExtraState.hasMapping )
+           {
+               p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mappingContents"));
+               if( p &&
+                   (td = p->Attribute("v") ))
+               {
+                   auto tc = base64_decode(td);
+                   dawExtraState.mappingContents = tc;
                }
            }
 
@@ -1672,6 +1696,10 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
        mpe.SetAttribute("v", dawExtraState.mpeEnabled ? 1 : 0 );
        dawExtraXML.InsertEndChild(mpe);
 
+       TiXmlElement mppb("mpePitchBendRange");
+       mppb.SetAttribute("v", dawExtraState.mpePitchBendRange );
+       dawExtraXML.InsertEndChild(mppb);
+
        TiXmlElement tun("hasTuning");
        tun.SetAttribute("v", dawExtraState.hasTuning ? 1 : 0 );
        dawExtraXML.InsertEndChild(tun);
@@ -1685,6 +1713,20 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
        tnc.SetAttribute("v", base64_encode( (unsigned const char *)dawExtraState.tuningContents.c_str(),
                                             dawExtraState.tuningContents.size() ).c_str() );
        dawExtraXML.InsertEndChild(tnc);
+
+       TiXmlElement hmp("hasMapping");
+       hmp.SetAttribute("v", dawExtraState.hasMapping ? 1 : 0 );
+       dawExtraXML.InsertEndChild(hmp);
+
+       /*
+       ** we really want a cdata here but TIXML is ambiguous whether
+       ** it does the right thing when I read the code, and is kinda crufty
+       ** so just protect ourselves with a base 64 encoding.
+       */
+       TiXmlElement mpc("mappingContents");
+       mpc.SetAttribute("v", base64_encode( (unsigned const char *)dawExtraState.mappingContents.c_str(),
+                                            dawExtraState.mappingContents.size() ).c_str() );
+       dawExtraXML.InsertEndChild(mpc);
    }
    patch.InsertEndChild(dawExtraXML);
    

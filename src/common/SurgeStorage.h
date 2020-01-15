@@ -408,8 +408,13 @@ struct DAWExtraStateStorage
     
    int instanceZoomFactor = -1;
    bool mpeEnabled = false;
+   int mpePitchBendRange = -1;
+
    bool hasTuning = false;
    std::string tuningContents = "";
+
+   bool hasMapping = false;
+   std::string mappingContents = "";
 };
 
 
@@ -608,6 +613,8 @@ public:
    void note_to_omega(float, float&, float&);
 
    bool retuneToScale(const Surge::Storage::Scale& s);
+   bool retuneToStandardTuning() { init_tables(); return true; }
+   
    bool remapToKeyboard(const Surge::Storage::KeyboardMapping &k);
    bool remapToStandardKeyboard(); 
    inline int scaleConstantNote() { return currentMapping.tuningConstantNote; }

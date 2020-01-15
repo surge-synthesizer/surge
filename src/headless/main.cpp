@@ -4,7 +4,6 @@
 
 #include "HeadlessUtils.h"
 #include "Player.h"
-#include "Stress.h"
 #include "SurgeError.h"
 
 #include "Tunings.h"
@@ -16,7 +15,7 @@ void statsFromPlayingEveryPatch()
    ** and a scale then asking headless to map it onto every patch
    ** and call us back with a result
    */
-   SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
+   auto surge = Surge::Headless::createSurge(44100);
 
    Surge::Headless::playerEvents_t scale =
        Surge::Headless::make120BPMCMajorQuarterNoteScale(0, 44100);
@@ -57,13 +56,12 @@ void statsFromPlayingEveryPatch()
    };
 
    Surge::Headless::playOnEveryPatch(surge, scale, callBack);
-   delete surge;
 }
 
 
 void playSomeBach()
 { 
-   SurgeSynthesizer* surge = Surge::Headless::createSurge(44100);
+   auto surge = Surge::Headless::createSurge(44100);
 
    std::string tmpdir = "/tmp";
    std::string fname = tmpdir + "/988-v05.mid";
