@@ -205,7 +205,7 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
    */
    int channelmask = channel;
 
-   if ((channel == 0) || (channel > 2) || mpeEnabled)
+   if ((channel == 0) || (channel > 2) || mpeEnabled || storage.getPatch().scenemode.val.i == sm_chsplit ) 
    {
       switch (storage.getPatch().scenemode.val.i)
       {
@@ -226,7 +226,7 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
             channelmask = 2;
          break;
       case sm_chsplit:
-         if( channel <= ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
+         if( channel < ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
             channelmask = 1;
          else
             channelmask = 2;
@@ -241,7 +241,7 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
        else
            channelmask = 1;
    }
-
+   
    return channelmask;
 }
 
