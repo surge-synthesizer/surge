@@ -1,0 +1,17 @@
+! 67-392-67 Concert G.kbm
+! 
+! Size of map:
+0
+! First MIDI note number to retune:
+0
+! Last MIDI note number to retune:
+127
+! Middle note where the first entry in the mapping is mapped to:
+67
+! Reference note for which frequency is given:
+67
+! Frequency to tune the above note to (floating point e.g. 440.0):
+391.995436
+! Scale degree to consider as formal octave:
+0
+! Mapping.

@@ -186,6 +186,7 @@ public:
    void toggleTuning();
    void showTuningMenu(VSTGUI::CPoint &where);
    void tuningFileDropped(std::string fn);
+   void mappingFileDropped(std::string fn);
    std::string tuningCacheForToggle = "";
    
 private:

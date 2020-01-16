@@ -3072,6 +3072,11 @@ void SurgeGUIEditor::tuningFileDropped(std::string fn)
     this->synth->storage.retuneToScale(Surge::Storage::readSCLFile(fn));
 }
 
+void SurgeGUIEditor::mappingFileDropped(std::string fn)
+{
+    this->synth->storage.remapToKeyboard(Surge::Storage::readKBMFile(fn));
+}
+
 bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
 {
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
@@ -3470,6 +3475,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
     kst->setEnabled(! this->synth->storage.currentMapping.isStandardMapping);
     tid++;
 
+    tuningSubMenu->addSeparator();
+    tid++;
+
     addCallbackMenu(tuningSubMenu, "Apply .scl file tuning",
                     [this]()
                     {
@@ -3530,27 +3538,29 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
+    tuningSubMenu->addSeparator();
+    tid++;
     auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning",
                     [this]()
                     {
-                       // Surge::UserInteractions::promptOKCancel( "Surge tuning is NONstandard tuning", "Tuning Info" );
                        Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml(&(this->synth->storage)) );
                     }
         );
     sct->setEnabled(! this->synth->storage.isStandardTuning );
 
-    /*
-    tuningSubMenu->addSeparator(tid++);
-    
-    addCallbackMenu(tuningSubMenu, "Apply .kbm file mapping",
+    auto *tfl = addCallbackMenu(tuningSubMenu, "Factory Tuning Library",
                     [this]()
                     {
-                        Surge::UserInteractions::promptError("KBM File Mappings are not yet supported in Surge",
-                                                             "Unsupported",
-                                                             this);
+                       Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath +
+#if WINDOWS
+                                                                        "\\"
+#else
+                                                                        "/"
+#endif                                                                        
+                          + "tuning-library");
                     }
         );
-    */
+
     return tuningSubMenu;
 }
 

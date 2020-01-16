@@ -1,0 +1,17 @@
+! 61-277-61 Concert C#, Db.kbm
+! 
+! Size of map:
+0
+! First MIDI note number to retune:
+0
+! Last MIDI note number to retune:
+127
+! Middle note where the first entry in the mapping is mapped to:
+61
+! Reference note for which frequency is given:
+61
+! Frequency to tune the above note to (floating point e.g. 440.0):
+277.182631
+! Scale degree to consider as formal octave:
+0
+! Mapping.
