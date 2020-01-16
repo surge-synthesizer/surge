@@ -115,6 +115,11 @@ bool CStatusPanel::onDrop(VSTGUI::DragEventData data )
              if( editor )
                  editor->tuningFileDropped(fName);
          }
+         if ((_stricmp(fPath.extension().generic_string().c_str(), ".kbm") == 0))
+         {
+             if( editor )
+                 editor->mappingFileDropped(fName);
+         }
       }
    }
 

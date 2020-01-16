@@ -331,11 +331,22 @@ R"HTML(
        htmls << "</td><td>" << t.cents << "</td><td>" << t.floatValue << "</td></tr>\n";
     };
 
-       htmls << R"HTML(
+    htmls << R"HTML(
         </table>
 
         <p>
+)HTML";
 
+
+    if( ! storage->isStandardMapping )
+    {
+       htmls << "\n<div>Tuning was generated with altered keyboard mapping. See full mapping below. Scale position 0 maps to key "
+             << storage->currentMapping.middleNote << "; Midi note " << storage->currentMapping.tuningConstantNote << " is set to frequency "
+             << storage->currentMapping.tuningFrequency << "hz. " << storage->scaleConstantNote() << "</div>\n";
+    }
+       
+    htmls << R"HTML(
+<p>
         <table>
           <tr>
             <th>Midi Note</th><th>Scale Position</th><th>Frequency</th>
@@ -351,6 +362,10 @@ R"HTML(
           htmls << "<tr><td>" << i << " (" << notenames[i % 12 ] << octave << ")</td>\n";
 
           auto tn = i - storage->scaleConstantNote();
+          if( ! storage->isStandardMapping )
+          {
+             tn = i - storage->currentMapping.middleNote;
+          }
           while( tn < 0 ) tn += count;
           
           auto p = storage->note_to_pitch(i);
@@ -366,10 +381,24 @@ R"HTML(
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; font-family: Lato; color: #123463;">
-        Raw File:
+        Tuning Raw File:
            )HTML" << name << "</div>\n<pre>\n" << rawText << R"HTML(
       </pre>
     </div>
+)HTML";
+
+       if( ! storage->isStandardMapping )
+       {
+          htmls << R"HTML(
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+        Raw File:
+           )HTML" << name << "</div>\n<pre>\n" << storage->currentMapping.rawText << R"HTML(
+      </pre>
+    </div>
+)HTML";
+       }
+       htmls << R"HTML(
   </body>
 </html>
       )HTML";

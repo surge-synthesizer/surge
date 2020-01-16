@@ -1,0 +1,37 @@
+This archive contains a collection of basic linear keyboard mapping files (KBM) that may be used in virtual-instruments that support loading both the Scala SCL and KBM microtuning format files, such as Pianoteq, as well as for creating custom microtuning mappings within the Scala application itself for exporting to other popular formats, such as TUN, MTS and KSP.
+
+This small linear KBM collection may be used for mapping the starting 1/1 MIDI Note, as well as the Reference Frequency MIDI Note, to the standard concert-pitch chromatic notes.
+
+The file naming convention indicates:
+
+The 1/1 starting MIDI Note for the mapping.
+
+The rounded Reference Frequency.
+
+The mapping for the Reference Frequency MIDI Note.
+
+The standard letter format concert-pitch chromatic scale degree.
+
+
+For example: 60-262-60 Concert C, indicates at a glance that:
+
+The 1/1 of the microtuning will be mapped to MIDI Note 60.
+
+The Reference Frequency is 262 Hz.
+
+The MIDI Note on which the Reference Frequency is mapped is 60.
+
+
+*** Please note here that the KBM format is flexible enough that the above parameters can be arbitrarily and independently mapped, such that for instance, a microtuning could have its diapason mapped to the standard concert-pitch of MIDI Note A.69 @ 440 Hz, while the 1/1 starting note could be mapped on 60.C, or any other MIDI Note required of the musical scenario at hand. Such a mapping would look like this:
+
+60-440-69.kbm
+|
+Range         : 0.C  .. 127.G 
+Middle        : 60.C 
+Reference     : 440.000000 Hertz at note 69.A 
+Octave degree : 0 (highest degree of scale)
+Mapping : linear
+
+This potential for arbitrary mapping of pitches to MIDI Notes, is the very nature and definition of what's referred to as 'full keyboard microtuning'.
+
+Jacky Ligon
