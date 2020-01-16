@@ -2319,6 +2319,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      addCallbackMenu(contextMenu, tmptxt, [this, ms, ptag]() {
                                                              synth->clearModulation(ptag, (modsources)ms);
                                                              refresh_mod();
+                                                             /*
+                                                             ** FIXME - this is a pretty big hammer to deal with
+                                                             ** #1477 - can we be more parsimonious?
+                                                             */
+                                                             synth->refresh_editor = true;
                                                           });
                      eid++;
                   }
