@@ -516,7 +516,7 @@ void SurgeGUIEditor::idle()
                    .modsources[ms_ctrl1 + i])
                   ->get_target01());
             }
-            else if((j < n_total_params) && nonmod_param[j])
+            else if((j>=0) && (j < n_total_params) && nonmod_param[j])
             {
                 /*
                 ** What the heck is this NONMOD_PARAM thing?
@@ -534,7 +534,19 @@ void SurgeGUIEditor::idle()
                 ** can actually get them redrawing when an external param set occurs.
                 */
                 CControl *cc = nonmod_param[ j ];
+
+#if TARGET_VST2
+                /*
+                ** This is a gross hack. The right thing is to have a remapper lambda on the control.
+                ** But for now we have this. The VST2 calls back into here when you setvalue to (basically)
+                ** double set value. But for the scenemod this means that the transformation doesn't occur
+                ** so you get a dance. Since we don't really care if scenemode is automatable for now we just do
+                */
+                if( synth->storage.getPatch().param_ptr[j]->ctrltype != ct_scenemode )
+                   cc->setValue(synth->getParameter01(j));
+#else
                 cc->setValue(synth->getParameter01(j));
+#endif
                 cc->setDirty();
                 cc->invalid();
             }
@@ -2435,7 +2447,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    if (!editor_open)
       return;
    long tag = control->getTag();
-   
+
    if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
    {
       if (((CModulationSourceButton*)control)->event_is_drag)
@@ -2727,6 +2739,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             auto val = control->getValue();
             if( p->ctrltype == ct_scenemode )
             {
+
                /*
                ** See the comment in the constructor of ct_scenemode above
                */
@@ -2763,7 +2776,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   
                }
             }
-            // synth->storage.getPatch().param_ptr[ptag]->set_value_f01(val);
+
             bool force_integer = frame->getCurrentMouseButtons() & kControl;
             if (synth->setParameter01(ptag, val, false, force_integer))
             {
