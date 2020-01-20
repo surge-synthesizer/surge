@@ -12,13 +12,21 @@ namespace Test {
 ** At one day we could do this with autocorrelation instead but no need now.
 */
 double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
-                         int seconds = 2, bool audioChannel = 0,
+                         int seconds = 2, int audioChannel = 0,
                          int midiChannel = 0 );
+
+double frequencyFromData( float *buffer, int nS, int nC, int audioChannel,
+                          int start, int trimTo );
+
+double frequencyForEvents( std::shared_ptr<SurgeSynthesizer> surge,
+                           Surge::Headless::playerEvents_t &events,
+                           int audioChannel,
+                           int startSample, int endSample );
 
 void copyScenedataSubset(SurgeStorage *storage, int scene, int start, int end);
 void setupStorageRanges(Parameter *start, Parameter *endIncluding,
                         int &storage_id_start, int &storage_id_end);
 
-
+std::shared_ptr<SurgeSynthesizer> surgeOnSine();
 }
 }

@@ -35,7 +35,10 @@ inline float get1f(__m128 m, int i)
 
 float SurgeVoiceState::getPitch()
 {
-   return key + mainChannelState->pitchBendInSemitones + voiceChannelState->pitchBendInSemitones +
+   /*
+   ** For this commented out section, see the comment on MPE global pitch bend in SurgeSynthesizer::pitchBend
+   */
+   return key + /* mainChannelState->pitchBendInSemitones + */ voiceChannelState->pitchBendInSemitones +
           detune;
 }
 

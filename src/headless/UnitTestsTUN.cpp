@@ -50,30 +50,6 @@ TEST_CASE( "Retune Surge to .scl files", "[tun]" )
    }
 }
 
-/*
-** Create a surge pointer on init sine
-*/
-std::shared_ptr<SurgeSynthesizer> surgeOnSine()
-{
-   auto surge = Surge::Headless::createSurge(44100);
-
-   std::string otp = "Init Sine";
-   bool foundInitSine = false;
-   for (int i = 0; i < surge->storage.patch_list.size(); ++i)
-   {
-      Patch p = surge->storage.patch_list[i];
-      if (p.name == otp)
-      {
-         surge->loadPatch(i);
-         foundInitSine = true;
-         break;
-      }
-   }
-   if( ! foundInitSine )
-      return nullptr;
-   else
-      return surge;
-}
 
 TEST_CASE( "Notes at Appropriate Frequencies", "[tun]" )
 {
@@ -601,4 +577,51 @@ TEST_CASE( "An Octave is an Octave", "[tun]" )
 }
 
 
+TEST_CASE( "Non-Monotonic Tunings", "[tun]" )
+{
+   SECTION( "SCL Non-monotonicity" )
+   {
+      auto surge = surgeOnSine();
+      
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/12-intune.scl" );
+      surge->storage.retuneToScale(s);
+      std::vector<float> straight, shuffle;
 
+      for( int i=0; i<=12; ++i )
+         straight.push_back( frequencyForNote( surge, 60 + i ) );
+
+      Surge::Storage::Scale sh = Surge::Storage::readSCLFile("test-data/scl/12-shuffled.scl" );
+      surge->storage.retuneToScale(sh);
+      for( int i=0; i<=12; ++i )
+         shuffle.push_back( frequencyForNote( surge, 60 + i ) );
+
+      std::vector<int> indices = { 0, 2, 1, 3, 5, 4, 6, 7, 8, 10, 9, 11, 12 };
+      for( int i=0; i<=12; ++i )
+      {
+         INFO( "Comparing index " << i << " with " << indices[i] );
+         REQUIRE( straight[i] == Approx( shuffle[indices[i]] ).margin( 0.1 ) );
+      }
+   }
+
+   SECTION( "KBM Non-monotonicity" )
+   {
+      auto surge = surgeOnSine();
+      
+      std::vector<float> straight, shuffle;
+      for( int i=0; i<=12; ++i )
+         straight.push_back( frequencyForNote( surge, 60 + i ) );
+
+      auto k = Surge::Storage::readKBMFile("test-data/scl/shuffle-a440-constant.kbm" );
+      surge->storage.remapToKeyboard(k);
+      for( int i=0; i<=12; ++i )
+         shuffle.push_back( frequencyForNote( surge, 60 + i ) );
+
+      std::vector<int> indices = { 0, 2, 1, 3, 4, 6, 5, 7, 8, 9, 11, 10, 12 };
+      for( int i=0; i<=12; ++i )
+      {
+         INFO( "Comparing index " << i << " with " << indices[i] );
+         REQUIRE( straight[i] == Approx( shuffle[indices[i]] ).margin( 0.1 ) );
+      }
+   }
+
+}

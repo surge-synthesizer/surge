@@ -172,7 +172,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    mpeEnabled = false;
    mpeVoices = 0;
    mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
-   mpeGlobalPitchBendRange = 2;
+   mpeGlobalPitchBendRange = 0;
 
    //	load_patch(0);
 }
@@ -739,6 +739,13 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
       }
    }
 
+   /*
+   ** So here's the thing. We want global pitch bend modulation to work for other things in MPE mode.
+   ** This code has beenhere forever. But that means we need to ignore the channel[0] mpe pitchbend
+   ** elsewhere, especially since the range was hardwired to 2 (but is now 0). As far as I know the
+   ** main MPE devices don't have a global pitch bend anyway so this just screws up regular keyboards
+   ** sending channel 0 pitch bend in MPE mode.
+   */
    if (!mpeEnabled || channel == 0)
    {
       storage.pitch_bend = value / 8192.f;
@@ -848,7 +855,7 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
       mpeEnabled = msbValue > 0;
       mpeVoices = msbValue & 0xF;
       mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
-      mpeGlobalPitchBendRange = 2;
+      mpeGlobalPitchBendRange = 0;
       return;
    }
    else if (lsbRPN == 4 && msbRPN == 0 && channel != 0 && channel != 0xF )
@@ -857,7 +864,7 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
        mpeEnabled = true;
        mpeVoices = msbValue & 0xF;
        mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
-       mpeGlobalPitchBendRange = 2;
+       mpeGlobalPitchBendRange = 0;
        return;
    }
 }
