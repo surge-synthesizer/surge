@@ -2721,7 +2721,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
             synth->getParameterName(ptag, txt);
             sprintf(pname, "%s -> %s", modsource_abberations_short[thisms], txt);
-            sprintf(pdisp, "%f", synth->getModDepth(ptag, thisms));
+            sprintf(pdisp, "%.3f", synth->getModDepth(ptag, thisms));
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
 
