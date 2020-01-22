@@ -162,6 +162,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #endif
       int susCountdown = -1;
       
+      float priorval = 0.f;
       for (int i=0; i<totalSamples; i += averagingWindow )
       {
          float val = 0;
@@ -206,6 +207,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
              eupath->beginSubpath(xc, euval);
              if( ! lfodata->unipolar.val.b )
                 edpath->beginSubpath(xc, edval);
+             priorval = val;
          }
          else
          {
@@ -213,13 +215,23 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
              {
                  minval  = ( ( - minval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
                  maxval  = ( ( - maxval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
-                 path->addLine(xc, minval );
-                 path->addLine(xc, maxval );
+                 // Windows is sensitive to out-of-order line draws in a way which causes spikes.
+                 // Make sure we draw one closest to prior first. See #1438
+                 float firstval = minval;
+                 float secondval = maxval;
+                 if( priorval - minval < maxval - priorval )
+                 {
+                    firstval = maxval;
+                    secondval = minval;
+                 }
+                 path->addLine(xc - 0.1 * valScale / totalSamples, firstval );
+                 path->addLine(xc + 0.1 * valScale / totalSamples, secondval );
              }
              else
              {
                  path->addLine(xc, val );
              }
+             priorval = val;
              eupath->addLine(xc, euval);
              edpath->addLine(xc, edval);
          }
