@@ -296,8 +296,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
       std::vector<CRect> drawThese;
       if (style & CSlider::kHorizontal)
       {
-         trect.top += 7;
-         trect.bottom = trect.top + 4;
+         trect.top += 8;
+         trect.bottom = trect.top + 2;
          float modDistance = 40;
          if( ! modulation_is_bipolar )
          {
@@ -379,11 +379,13 @@ void CSurgeSlider::draw(CDrawContext* dc)
       {
          dc->setFillColor( ColBar );
          dc->drawRect( r, VSTGUI::kDrawFilled );
+         /*
          dc->setLineWidth( 0.5 );
          dc->setFrameColor( VSTGUI::kBlackCColor );
          r.right += 0.9;
          r.bottom += 0.9;
          dc->drawRect( r, VSTGUI::kDrawStroked );
+         */
       }
    }
    
