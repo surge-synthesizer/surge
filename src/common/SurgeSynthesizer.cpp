@@ -1647,6 +1647,36 @@ bool SurgeSynthesizer::isActiveModulation(long ptag, modsources modsource)
    return false;
 }
 
+bool SurgeSynthesizer::isBipolarModulation(modsources tms)
+{
+   // HERE
+   int scene_ms = storage.getPatch().scene_active.val.i;
+   /* You would think you could just do this nad ask for is_bipolar but remember the LFOs are made at voice time so... */
+   // auto ms = storage.getPatch().scene[scene_ms].modsources.at(tms);
+
+   // FIX - this will break in S++
+   if( tms >= ms_lfo1 && tms <= ms_slfo6 )
+   {
+      bool isup = storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].unipolar.val.i;
+      // For now
+      return !isup;
+   }
+   if( tms >= ms_ctrl1 && tms <= ms_ctrl8 )
+   {
+      // Controls can also be bipolar
+      auto ms = storage.getPatch().scene[scene_ms].modsources[tms];
+      if( ms )
+         return ms->is_bipolar();
+      else
+         return false;
+   }
+   else
+   {
+      return false;
+   }
+}
+
+
 bool SurgeSynthesizer::isModDestUsed(long ptag)
 {
    int scene_ms = storage.getPatch().scene_active.val.i;

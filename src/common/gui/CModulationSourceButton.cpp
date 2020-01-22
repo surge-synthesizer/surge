@@ -142,8 +142,8 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    FontCol = UsedOrActive ? ColEdge : ColSemiTint;
    if (ActiveModSource)
    {
-      FrameCol = blink ? ColBlink : ColTint;
-      FillCol = blink ? ColBlink : ColTint;
+      FrameCol = ColBlink; // blink ? ColBlink : ColTint;
+      FillCol = ColBlink; // blink ? ColBlink : ColTint;
       FontCol = ColBG;
    }
    else if (SelectedModSource)
