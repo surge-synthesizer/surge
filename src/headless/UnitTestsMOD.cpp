@@ -491,3 +491,190 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
 
 }
 
+TEST_CASE( "Non-MPE pitch bend", "[mod]" )
+{
+   SECTION( "Simple Bend Distances" )
+   {
+      auto surge = surgeOnSine();
+      surge->mpeEnabled = false;
+      surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
+      surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
+
+      auto f60 = frequencyForNote( surge, 60 );
+      auto f62 = frequencyForNote( surge, 62 );
+      auto f58 = frequencyForNote( surge, 58 );
+      
+      surge->pitchBend( 0, 8192 );
+      auto f60bendUp = frequencyForNote( surge, 60 );
+
+      surge->pitchBend( 0, -8192 );
+      auto f60bendDn = frequencyForNote( surge, 60 );
+
+      REQUIRE( f62 == Approx( f60bendUp ).margin( 0.3 ) );
+      REQUIRE( f58 == Approx( f60bendDn ).margin( 0.3 ) );
+   }
+
+   SECTION( "Asymmetric Bend Distances" )
+   {
+      auto surge = surgeOnSine();
+      surge->mpeEnabled = false;
+      for( int tests=0; tests<20; ++tests )
+      {
+         int bUp = rand() % 24 + 1;
+         int bDn = rand() % 24 + 1;
+
+         surge->storage.getPatch().scene[0].pbrange_up.val.i = bUp;
+         surge->storage.getPatch().scene[0].pbrange_dn.val.i = bDn;
+         auto fUpD = frequencyForNote( surge, 60 + bUp );
+         auto fDnD = frequencyForNote( surge, 60 - bDn );
+
+         // Bend pitch and let it get there
+         surge->pitchBend(0, 8192);
+         for( int i=0; i<100; ++i ) surge->process();
+         
+         auto fUpB = frequencyForNote( surge, 60 );
+
+         // Bend pitch and let it get there
+         surge->pitchBend(0, -8192);
+         for( int i=0; i<100; ++i ) surge->process();
+         auto fDnB = frequencyForNote( surge, 60 );
+
+         REQUIRE( fUpD == Approx( fUpB ).margin( 3 * bUp ) );  // It can take a while for the midi lag to normalize and my pitch detector is so so
+         REQUIRE( fDnD == Approx( fDnB ).margin( 3 * bDn ) );
+
+         surge->pitchBend( 0, 0 );
+         for( int i=0; i<100; ++i ) surge->process();
+      }
+   }
+}
+
+TEST_CASE( "Pitch Bend and Tuning", "[mod][tun]" )
+{
+   std::vector<std::string> testScales = { "test-data/scl/12-intune.scl",
+                                           "test-data/scl/zeus22.scl",
+                                           "test-data/scl/6-exact.scl" };
+   
+   SECTION( "Multi Scale Bend Distances" )
+   {
+      auto surge = surgeOnSine();
+      surge->mpeEnabled = false;
+
+      for( auto sclf : testScales )
+      {
+         INFO( "Retuning pitch bend to " << sclf );
+         Surge::Storage::Scale s = Surge::Storage::readSCLFile("sclf" );
+         surge->storage.retuneToScale(s);
+         for( int tests=0; tests<20; ++tests )
+         {
+            int bUp = rand() % 24 + 1;
+            int bDn = rand() % 24 + 1;
+            
+            surge->storage.getPatch().scene[0].pbrange_up.val.i = bUp;
+            surge->storage.getPatch().scene[0].pbrange_dn.val.i = bDn;
+            auto fUpD = frequencyForNote( surge, 60 + bUp );
+            auto fDnD = frequencyForNote( surge, 60 - bDn );
+            
+            // Bend pitch and let it get there
+            surge->pitchBend(0, 8192);
+            for( int i=0; i<100; ++i ) surge->process();
+            
+            auto fUpB = frequencyForNote( surge, 60 );
+            
+            // Bend pitch and let it get there
+            surge->pitchBend(0, -8192);
+            for( int i=0; i<100; ++i ) surge->process();
+            auto fDnB = frequencyForNote( surge, 60 );
+            
+            REQUIRE( fUpD == Approx( fUpB ).margin( 3 * bUp ) );  // It can take a while for the midi lag to normalize and my pitch detector is so so
+            REQUIRE( fDnD == Approx( fDnB ).margin( 3 * bDn ) );
+            
+            surge->pitchBend( 0, 0 );
+            for( int i=0; i<100; ++i ) surge->process();
+         }
+      }
+   }
+}
+
+
+TEST_CASE( "MPE pitch bend", "[mod]" )
+{
+   SECTION( "Channel 0 bends should be a correct global bend" )
+   {
+      auto surge = surgeOnSine();
+      surge->mpeEnabled = true;
+      surge->mpePitchBendRange = 48;
+      surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
+      surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
+      
+      auto f60 = frequencyForNote( surge, 60 );
+      auto f62 = frequencyForNote( surge, 62 );
+      auto f58 = frequencyForNote( surge, 58 );
+      
+      surge->pitchBend( 0, 8192 );
+      auto f60bendUp = frequencyForNote( surge, 60 );
+
+      surge->pitchBend( 0, -8192 );
+      auto f60bendDn = frequencyForNote( surge, 60 );
+
+      REQUIRE( f62 == Approx( f60bendUp ).margin( 0.3 ) );
+      REQUIRE( f58 == Approx( f60bendDn ).margin( 0.3 ) );
+   }
+   
+   SECTION( "Channel n bends should be a correct note bend" )
+   {
+      auto surge = surgeOnSine();
+      surge->mpeEnabled = true;
+      auto pbr = 48;
+      auto sbs = 8192 * 1.f / pbr;
+      
+      surge->mpePitchBendRange = pbr;
+      surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
+      surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
+
+      // Play on channel 1 which is now an MPE bend channel and send bends on that chan
+      auto f60 = frequencyForNote( surge, 60, 2, 0, 1 );
+      auto f62 = frequencyForNote( surge, 62, 2, 0, 1 );
+      auto f58 = frequencyForNote( surge, 58, 2, 0, 1 );
+
+
+      // for MPE bend after the note starts to be the most accurate simulation
+      auto noteFreqWithBend = [surge](int n, int b) {
+                                 Surge::Headless::playerEvents_t events;
+
+                                 Surge::Headless::Event on, off, bend;
+                                 on.type = Surge::Headless::Event::NOTE_ON;
+                                 on.channel = 1;
+                                 on.data1 = n;
+                                 on.data2 = 100;
+                                 on.atSample = 100;
+                                 
+                                 off.type = Surge::Headless::Event::NOTE_ON;
+                                 off.channel = 1;
+                                 off.data1 = n;
+                                 off.data2 = 100;
+                                 off.atSample = 44100 * 2 + 100;
+
+                                 bend.type = Surge::Headless::Event::LAMBDA_EVENT;
+                                 bend.surgeLambda = [b](std::shared_ptr<SurgeSynthesizer> s) {
+                                                       s->pitchBend( 1, b );
+                                                    };
+                                 bend.atSample = 400;
+
+                                 events.push_back( on );
+                                 events.push_back( bend );
+                                 events.push_back( off );
+
+                                 return frequencyForEvents( surge, events, 0,
+                                                            2000, 44100 * 2 - 8000 );
+                              };
+
+
+      auto f60bendUp = noteFreqWithBend( 60, 2 * sbs );
+      auto f60bendDn = noteFreqWithBend( 60, -2 * sbs );
+
+      REQUIRE( f62 == Approx( f60bendUp ).margin( 0.3 ) );
+      REQUIRE( f58 == Approx( f60bendDn ).margin( 0.3 ) );
+   }
+
+}
+

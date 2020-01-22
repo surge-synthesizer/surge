@@ -27,7 +27,8 @@ struct Event
    {
       NOTE_ON,
       NOTE_OFF,
-
+      LAMBDA_EVENT,
+      
       NO_EVENT // Useful if you want to keep the player running and have nothing happen
    } Type;     // FIXME: Controllers etc...
 
@@ -36,6 +37,8 @@ struct Event
    char data1;
    char data2;
 
+   std::function<void(std::shared_ptr<SurgeSynthesizer>)> surgeLambda;
+   
    long atSample;
 };
 

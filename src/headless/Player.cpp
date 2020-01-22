@@ -103,10 +103,18 @@ void playAsConfigured(std::shared_ptr<SurgeSynthesizer> surge,
       while (currEvt < events.size() && events[currEvt].atSample <= cs + BLOCK_SIZE - 1)
       {
          Event e = events[currEvt];
-         if (e.type == Event::NOTE_ON)
+         switch( e.type )
+         {
+         case Event::NOTE_ON:
             surge->playNote(e.channel, e.data1, e.data2, 0);
-         if (e.type == Event::NOTE_OFF)
+            break;
+         case Event::NOTE_OFF:
             surge->releaseNote(e.channel, e.data1, e.data2);
+            break;
+         case Event::LAMBDA_EVENT:
+            e.surgeLambda(surge);
+            break;
+         }
 
          currEvt++;
       }
