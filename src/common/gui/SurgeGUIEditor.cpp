@@ -28,6 +28,7 @@
 #include <iostream>
 #include <iomanip>
 #include <strstream>
+#include <stack>
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -2352,12 +2353,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          Steinberg::Vst::IContextMenu* hostMenu = nullptr;
          if (componentHandler3)
          {
+            std::stack<COptionMenu *> menuStack;
+            menuStack.push(contextMenu);
+            std::stack<int> eidStack;
+            eidStack.push(eid);
+            
             Steinberg::Vst::ParamID param = ptag;
             hostMenu = componentHandler3->createContextMenu(this, &param);
 
             int N = hostMenu ?  hostMenu->getItemCount() : 0;
             if( N > 0 )
                contextMenu->addSeparator(eid++);
+
+            auto currentMenu = contextMenu;
+            std::deque<COptionMenu*> parentMenus;
             for (int i = 0; i < N; i++)
             {
                Steinberg::Vst::IContextMenu::Item item = {0};
@@ -2367,17 +2376,56 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                char nm[1024];
                Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
+               if( nm[0] == '-' ) // FL sends us this as a separator with no VST indication so just strip the '-'
+               {
+                  int pos = 1;
+                  while( nm[pos] == ' ' && nm[pos] != 0 )
+                     pos++;
+                  std::string truncName( nm + pos );
+                  strcpy( nm, truncName.c_str() );
+               }
+               
                int itag = item.tag;
+               /*
+               ** Leave this here so we can debug if another vst3 problem comes up
+               std::cout << nm << " FL=" << item.flags << " jGS=" << Steinberg::Vst::IContextMenuItem::kIsGroupStart
+                         << " and=" << ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart )
+                         << " IGS="
+                         << ( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart ) == Steinberg::Vst::IContextMenuItem::kIsGroupStart ) << " IGE="
+                         << ( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) == Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) << " "
+                         << std::endl;
+               */
                if( item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator )
                {
-                  contextMenu->addSeparator(eid++);
+                  menuStack.top()->addSeparator(eid++);
+               }
+               else if( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart ) == Steinberg::Vst::IContextMenuItem::kIsGroupStart )
+               {
+                  COptionMenu *subMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle |
+                                                          VSTGUI::COptionMenu::kMultipleCheckStyle );
+                  menuStack.top()->addEntry(subMenu, nm );
+                  menuStack.push(subMenu);
+                  eidStack.push(0);
+
+                  /*
+                    VSTGUI doesn't seem to allow a disabled or checked grouping menu. 
+                  if( item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled )
+                  {
+                     subMenu->setEnabled(false);
+                  }
+                  if( item.flags & Steinberg::Vst::IContextMenuItem::kIsChecked )
+                  {
+                     subMenu->setChecked(true);
+                  }
+                  */
+                  
                }
                else
                {
-                  auto menu = addCallbackMenu(contextMenu, nm, [this, target, itag]() {
+                  auto menu = addCallbackMenu(menuStack.top(), nm, [this, target, itag]() {
                                                                   target->executeMenuItem(itag);
                                                                });
-                  eid++;
+                  eidStack.top()++;
                   if( item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled )
                   {
                      menu->setEnabled(false);
@@ -2386,9 +2434,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   {
                      menu->setChecked(true);
                   }
+
+                  if( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) == Steinberg::Vst::IContextMenuItem::kIsGroupEnd )
+                  {
+                     menuStack.pop();
+                     eidStack.pop();
+                  }
                }
                // hostMenu->addItem(item, &target);
             }
+            eid = eidStack.top();
 
          }
  #endif
