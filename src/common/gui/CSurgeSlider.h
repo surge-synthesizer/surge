@@ -49,9 +49,10 @@ public:
    {
       has_modulation = b;
    } // true if the slider has modulation routings assigned to it
-   virtual void setModCurrent(bool b)
+   virtual void setModCurrent(bool isCurrent, bool isBipolarModulator)
    {
-      has_modulation_current = b;
+      has_modulation_current = isCurrent;
+      modulation_is_bipolar = isBipolarModulator;
       invalid();
    } // - " " - for the currently selected modsource
    virtual void bounceValue(const bool keeprest = false);
@@ -94,7 +95,7 @@ private:
    float moverate, statezoom;
    int typex, typey;
    int typehx, typehy;
-   bool has_modulation, has_modulation_current;
+   bool has_modulation, has_modulation_current, modulation_is_bipolar = false;
    bool is_temposync = false;
    VSTGUI::CPoint lastpoint, sourcepoint;
    float oldVal, *edit_value;

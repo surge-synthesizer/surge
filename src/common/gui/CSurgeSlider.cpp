@@ -226,30 +226,170 @@ void CSurgeSlider::draw(CDrawContext* dc)
          dc->drawString(leftlabel, trect, kLeftText, true);
    }
 
-   if (pHandle && (modmode != 2))
+   CRect hrect(headrect);
+   handle_rect = handle_rect_orig;
+   hrect.offset(size.left, size.top);
+   if (style & CSlider::kHorizontal)
+      hrect.offset(0, 3);
+   
+   float dispv = limit_range(qdvalue, 0.f, 1.f);
+   if (style & CSlider::kRight || style & CSlider::kBottom)
+      dispv = 1 - dispv;
+   dispv *= range;
+   
+   if (style & CSlider::kHorizontal)
    {
-      CRect hrect(headrect);
-      handle_rect = handle_rect_orig;
-      hrect.offset(size.left, size.top);
-      if (style & CSlider::kHorizontal)
-         hrect.offset(0, 3);
+      hrect.offset(dispv + 1, 0);
+      handle_rect.offset(dispv + 1, 0);
+   }
+   else
+   {
+      hrect.offset(1, dispv);
+      handle_rect.offset(1, dispv);
+   }
 
-      float dispv = limit_range(qdvalue, 0.f, 1.f);
-      if (style & CSlider::kRight || style & CSlider::kBottom)
-         dispv = 1 - dispv;
-      dispv *= range;
+   if( modmode )
+   {
+      CRect trect = hrect;
+      const CColor ColBar = CColor(173, 255, 107, 255 );
 
+      // float moddist = modval * range;
+      // We want modval + value to be bould by -1 and 1. So
+      float modup = modval;
+      bool overtop = false;
+      float moddn = modval;
+      bool overbot = false;
+      if( modup + value > 1.f )
+      {
+         overtop = true;
+         modup = 1.f - value;
+      }
+      if( modup + value < 0.f )
+      {
+         overbot = true;
+         modup = 0.f - value;
+      }
+      if( value - moddn < 0.f )
+      {
+         overbot = true;
+         moddn = value + 0.f;
+      }
+      if( value - moddn > 1.f )
+      {
+         overtop = true;
+         moddn = value - 1.f;
+      }
+      // at some point in the future draw something special with overtop and overbot
+
+      modup *= range;
+      moddn *= range;
+
+      /*
+      if( modval != 0 )
+         std::cout << "mv=" << modval
+                   << " val=" << value
+                   << " rn=" << range
+                   << " mu=" << modup
+                   << " md=" << moddn << std::endl;
+      */
+
+      std::vector<CRect> drawThese;
       if (style & CSlider::kHorizontal)
       {
-         hrect.offset(dispv + 1, 0);
-         handle_rect.offset(dispv + 1, 0);
+         trect.top += 7;
+         trect.bottom = trect.top + 4;
+         float modDistance = 40;
+         if( ! modulation_is_bipolar )
+         {
+            trect.left += 11;
+            trect.right = trect.left + modup;
+         }
+         else
+         {
+            trect.left += 11;
+            trect.right = trect.left + modup;
+            trect.left -= moddn;
+         }
+         if( trect.left > trect.right )
+            std::swap( trect.left, trect.right );
+         drawThese.push_back( trect );
+
+         if( overtop )
+         {
+            CRect topr;
+            topr.top = trect.top;
+            topr.bottom = trect.bottom;
+            topr.left = trect.right + 1;
+            topr.right = topr.left + 3;
+            drawThese.push_back(topr);
+         }
+
+         if( overbot )
+         {
+            CRect topr;
+            topr.top = trect.top;
+            topr.bottom = trect.bottom;
+            topr.left = trect.left - 4;
+            topr.right = topr.left + 3;
+            drawThese.push_back(topr);
+         }
       }
       else
       {
-         hrect.offset(1, dispv);
-         handle_rect.offset(1, dispv);
+         trect.left += 7;
+         trect.right = trect.left + 4;
+         if( ! modulation_is_bipolar )
+         {
+            trect.top += 11;
+            trect.bottom = trect.top - modup;
+         }
+         else
+         {
+            trect.top += 11;
+            trect.bottom = trect.top - modup;
+            trect.top += moddn;
+         }
+
+         if( overbot )
+         {
+            CRect topr;
+            topr.left = trect.left;
+            topr.right = trect.right;
+            topr.bottom = trect.top + 1;
+            topr.top = topr.bottom + 3;
+            drawThese.push_back(topr);
+         }
+
+         if( overtop )
+         {
+            CRect topr;
+            topr.left = trect.left;
+            topr.right = trect.right;
+            topr.top = trect.top - 1;
+            topr.bottom = topr.top - 3;
+            drawThese.push_back(topr);
+         }
+
+         if( trect.top < trect.bottom )
+            std::swap( trect.top, trect.bottom );
+         drawThese.push_back( trect );
       }
 
+      for( auto r : drawThese )
+      {
+         dc->setFillColor( ColBar );
+         dc->drawRect( r, VSTGUI::kDrawFilled );
+         dc->setLineWidth( 0.5 );
+         dc->setFrameColor( VSTGUI::kBlackCColor );
+         r.right += 0.9;
+         r.bottom += 0.9;
+         dc->drawRect( r, VSTGUI::kDrawStroked );
+      }
+   }
+   
+   
+   if (pHandle && (modmode != 2))
+   {
       if (style & CSlider::kHorizontal)
       {
          pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0x7f : 0xff);

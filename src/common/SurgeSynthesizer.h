@@ -128,6 +128,7 @@ public:
    //	float getParameter (long index);
    bool isValidModulation(long ptag, modsources modsource);
    bool isActiveModulation(long ptag, modsources modsource);
+   bool isBipolarModulation(modsources modsources);
    bool isModsourceUsed(modsources modsource);
    bool isModDestUsed(long moddest);
    ModulationRouting* getModRouting(long ptag, modsources modsource);

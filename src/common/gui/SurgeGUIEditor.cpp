@@ -606,7 +606,7 @@ void SurgeGUIEditor::refresh_mod()
          {
             s->setModMode(mod_editor ? 1 : 0);
             s->setModPresent(synth->isModDestUsed(i));
-            s->setModCurrent(synth->isActiveModulation(i, thisms));
+            s->setModCurrent(synth->isActiveModulation(i, thisms), synth->isBipolarModulation(thisms));
          }
          // s->setDirty();
          s->setModValue(synth->getModulation(i, thisms));
@@ -1369,7 +1369,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->setModMode(mod_editor ? 1 : 0);
                hs->setModValue(synth->getModulation(p->id, modsource));
                hs->setModPresent(synth->isModDestUsed(p->id));
-               hs->setModCurrent(synth->isActiveModulation(p->id, modsource));
+               hs->setModCurrent(synth->isActiveModulation(p->id, modsource), synth->isBipolarModulation(modsource));
                hs->setValue(p->get_value_f01());
                hs->setLabel(p->get_name());
                hs->setMoveRate(p->moverate);
@@ -2413,7 +2413,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             synth->clearModulation(ptag, thisms);
             ((CSurgeSlider*)control)->setModValue(synth->getModulation(p->id, thisms));
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
-            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms));
+            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms), synth->isBipolarModulation(thisms));
             // control->setGhostValue(p->get_value_f01());
             oscdisplay->invalid();
             return 1;
@@ -2717,7 +2717,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             }
             synth->setModulation(ptag, thisms, ((CSurgeSlider*)control)->getModValue());
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
-            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms));
+            ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms), synth->isBipolarModulation(thisms));
 
             synth->getParameterName(ptag, txt);
             sprintf(pname, "%s -> %s", modsource_abberations_short[thisms], txt);
