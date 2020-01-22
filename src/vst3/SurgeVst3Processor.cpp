@@ -237,7 +237,7 @@ void SurgeVst3Processor::processEvent(const Event& e)
    case Event::kNoteOnEvent:
       if (e.noteOn.velocity == 0.f)
       {
-         std::cout << "NoteOff with 0 v " << e.noteOff.velocity << std::endl;
+         // std::cout << "NoteOff with 0 v " << e.noteOff.velocity << std::endl;
          getSurge()->releaseNote(e.noteOn.channel, e.noteOn.pitch, e.noteOn.velocity);
       }
       else
@@ -382,7 +382,10 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
    int noteEventIndex = 0;
    int parameterEventIndex = 0;
 
-   if (data.processContext && data.processContext->state & ProcessContext::kProjectTimeMusicValid)
+   if (data.processContext &&
+       data.processContext->state & ProcessContext::kProjectTimeMusicValid &&
+       data.processContext->state & ProcessContext::kPlaying // See #1491 for a discussion of this choice
+      )
    {
       surgeInstance->time_data.ppqPos = data.processContext->projectTimeMusic;
    }
