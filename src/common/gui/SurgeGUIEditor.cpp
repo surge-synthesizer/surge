@@ -2054,6 +2054,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->get_output01();
                control->setValue(f);
                ((CModulationSourceButton*)control)->setBipolar(bp);
+               refresh_mod();
             });
             contextMenu->checkEntry(
                 eid, synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar());
@@ -2801,6 +2802,12 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                ((CParameterTooltip*)infowindow)->setLabel(0, pdisp);
                if (p->ctrltype == ct_polymode)
                   modulate = true;
+            }
+
+            if( p->ctrltype == ct_bool_unipolar )
+            {
+               // The green line might change so...
+               refresh_mod();
             }
          }
          if (!queue_refresh)
