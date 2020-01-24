@@ -16,6 +16,7 @@
 #include <cwchar>
 #include <codecvt>
 #include <string.h>
+#include <cwchar>
 
 using namespace Steinberg::Vst;
 
@@ -654,6 +655,19 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
       info.unitId = 0; // meta.clump;
       
       // FIXME - set the title
+      wchar_t nm[512];
+      auto im = paramIndex - midi_controller_0;
+      auto ich = im % 16;
+      auto icc = im / 16;
+      
+      swprintf(nm, 512, L"MIDI CC %d Ch.%d", icc, ich );
+
+#if MAC || LINUX
+      std::copy(nm, nm + 128, info.title);
+#else
+      swprintf(reinterpret_cast<wchar_t *>(info.title), 128, L"%S", nm);
+#endif
+      
    }
    else
    {
@@ -697,6 +711,12 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
       info.defaultNormalizedValue = meta.fdefault;
       info.unitId = 0; // meta.clump;
       info.flags = ParameterInfo::kCanAutomate;
+
+      //char nm[512];
+      //surgeInstance->getParameterName( id, nm );
+      // std::cout << "gPID " << paramIndex << " "  << " " << info.id << std::endl;
+            
+
    }
    return kResultOk;
 }
@@ -828,6 +848,10 @@ tresult PLUGIN_API SurgeVst3Processor::getMidiControllerAssignment(int32 busInde
                                                                    CtrlNumber midiControllerNumber,
                                                                    ParamID& id /*out*/)
 {
+   // Why even ask me? But you do. So...
+   if( midiControllerNumber >= kCountCtrlNumber || midiControllerNumber < 0 )
+      return kResultFalse;
+   
    /*
    ** Alrighty dighty. What VST3 wants us to do here is, for the controller number,
    ** tell it a parameter to map to. We alas don't have a parameter to map to because
@@ -836,7 +860,6 @@ tresult PLUGIN_API SurgeVst3Processor::getMidiControllerAssignment(int32 busInde
    */
 
    id = midi_controller_0 + midiControllerNumber * 16 + channel;
-   // std::cout << "getMidiControllerAssignment " << channel << " midiControllerNumber=" << midiControllerNumber << " id=" << id << std::endl;
    return kResultTrue;
 }
 

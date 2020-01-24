@@ -144,7 +144,7 @@ protected:
    FpuState _fpuState;
 
    int midi_controller_0, midi_controller_max;
-   const int n_midi_controller_params = 16 * Steinberg::Vst::ControllerNumbers::kCountCtrlNumber;
+   const int n_midi_controller_params = 16 * (Steinberg::Vst::ControllerNumbers::kCountCtrlNumber);
    
 public:
    OBJ_METHODS(SurgeVst3Processor, Steinberg::Vst::SingleComponentEffect)
