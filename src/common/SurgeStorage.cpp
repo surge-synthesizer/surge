@@ -235,12 +235,28 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
 #if TARGET_RACK
    datapath = suppliedDataPath;
 #else
-   PWSTR localAppData;
-   if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
+   bool foundSurge = false;
+   PWSTR commonAppData;
+   if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
    {
       CHAR path[4096];
-      wsprintf(path, "%S\\Surge\\", localAppData);
+      wsprintf(path, "%S\\Surge\\", commonAppData);
       datapath = path;
+      if( fs::is_directory( fs::path( datapath ) ) )
+         foundSurge = true;
+      else
+         datapath = "";
+   }
+
+   if( ! foundSurge ) {
+      PWSTR localAppData;
+      if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
+      {
+         CHAR path[4096];
+         wsprintf(path, "%S\\Surge\\", localAppData);
+         datapath = path;
+         foundSurge = true;
+      }
    }
 
    PWSTR documentsFolder;
