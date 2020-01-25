@@ -3461,8 +3461,20 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
                     [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
 
     std::ostringstream oss;
-    oss << "Change default pitch bend range (" << synth->mpePitchBendRange << ")";
+    oss << "Change pitch bend range (range=" << synth->mpePitchBendRange << ")";
     addCallbackMenu(mpeSubMenu, oss.str().c_str(), [this]() {
+       // FIXME! This won't work on linux
+       char c[256];
+       snprintf(c, 256, "%d", synth->mpePitchBendRange);
+       spawn_miniedit_text(c, 16);
+       int newVal = ::atoi(c);
+       this->synth->mpePitchBendRange = newVal;
+    });
+
+    std::ostringstream oss2;
+    int def = Surge::Storage::getUserDefaultValue( &(synth->storage), "mpePitchBendRange", 48 );
+    oss2 << "Change default pitch bend range (range=" << synth->mpePitchBendRange <<" default=" << def << ")";
+    addCallbackMenu(mpeSubMenu, oss2.str().c_str(), [this]() {
        // FIXME! This won't work on linux
        char c[256];
        snprintf(c, 256, "%d", synth->mpePitchBendRange);

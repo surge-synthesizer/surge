@@ -83,7 +83,7 @@ TEST_CASE( "All Patches are Loadable", "[io]" )
    }
 }
 
-TEST_CASE( "DAW Streaming and Unstreaming", "[io]" )
+TEST_CASE( "DAW Streaming and Unstreaming", "[io][mpe][tun]" )
 {
    // The basic plan of attack is, in a section, set up two surges,
    // stream onto data on the first and off of data on the second
@@ -155,6 +155,19 @@ TEST_CASE( "DAW Streaming and Unstreaming", "[io]" )
       fromto( surgeSrc, surgeDest );
       REQUIRE( surgeDest->mpePitchBendRange == v2 );
    }
+   
+   SECTION( "Everything Standard Stays Standard" )
+   {
+      auto surgeSrc = Surge::Headless::createSurge(44100);
+      auto surgeDest = Surge::Headless::createSurge(44100);
+      REQUIRE( surgeSrc->storage.isStandardTuning );
+      REQUIRE( surgeSrc->storage.isStandardMapping );
+      fromto(surgeSrc, surgeDest );
+      REQUIRE( surgeSrc->storage.isStandardTuning );
+      REQUIRE( surgeSrc->storage.isStandardMapping );
+      REQUIRE( surgeDest->storage.isStandardTuning );
+      REQUIRE( surgeDest->storage.isStandardMapping );
+   }
 
    SECTION( "SCL State Saves" )
    {
@@ -212,6 +225,5 @@ TEST_CASE( "DAW Streaming and Unstreaming", "[io]" )
       REQUIRE( surgeDest->storage.isStandardMapping );
 
    }
-
 
 }

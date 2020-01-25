@@ -837,6 +837,9 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
      
      for each channel. Which seems unrelated to the spec. But as a result the original onRPN code
      means you get no MPE with a Roli Seaboard.
+
+     Hey one year later an edit: Those aren't coming from ROLI they are coming from Logic PRO and
+     now that I correct modify and stream MPE state, we should not listen to those messages.
      */
     
    if (lsbRPN == 0 && msbRPN == 0) // PITCH BEND RANGE
@@ -854,17 +857,26 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
    {
       mpeEnabled = msbValue > 0;
       mpeVoices = msbValue & 0xF;
-      mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+      if( mpePitchBendRange < 0 )
+         mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
       mpeGlobalPitchBendRange = 0;
       return;
    }
    else if (lsbRPN == 4 && msbRPN == 0 && channel != 0 && channel != 0xF )
    {
+      /*
+      ** This is code sent by logic in all cases for some reason. In ancient times
+      ** I thought it came from a roli. But I since changed the MPE state management so
+      ** with 1.6.5 do this:
+      */
+#if 0      
        // This is the invalid message which the ROLI sends. Rather than have the Roli not work
        mpeEnabled = true;
        mpeVoices = msbValue & 0xF;
        mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+       std::cout << __LINE__ << " " << __FILE__ << " MPEE=" << mpeEnabled << " MPEPBR=" << mpePitchBendRange << std::endl;
        mpeGlobalPitchBendRange = 0;
+#endif       
        return;
    }
 }
