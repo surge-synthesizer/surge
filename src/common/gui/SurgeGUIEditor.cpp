@@ -3439,7 +3439,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     addCallbackMenu(settingsMenu, "About", [this]() {
        if (aboutbox)
-          ((CAboutBox*)aboutbox)->boxShow();
+          ((CAboutBox*)aboutbox)->boxShow(this->synth->storage.datapath, this->synth->storage.userDataPath);
     });
     eid++;
 
