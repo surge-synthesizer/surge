@@ -267,6 +267,7 @@ public:
                 envelope_rate_linear(lc[d].f) * (adsr->d.temposync ? storage->temposyncratio : 1.f);
 
             float l_lo, l_hi;
+
             switch (lc[d_s].i)
             {
             case 1:
@@ -274,6 +275,11 @@ public:
                float sx = sqrt(phase);
                l_lo = phase - 2 * sx * rate + rate * rate;
                l_hi = phase + 2 * sx * rate + rate * rate;
+               // That + rate * rate in both means at low sustain ( < 1e-3 or so) you end up with
+               // lo and hi both pushing us up off sustain. Unfortunatley we ned to handle that case
+               // specially by pushing lo down
+               if( lc[s].f < 1e-3 && phase < 1e-4 )
+                  l_lo = 0;
             }
             break;
             case 2:

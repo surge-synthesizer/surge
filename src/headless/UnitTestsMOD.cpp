@@ -46,7 +46,12 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                                       {
                                          p->set_value_f01( p->value_to_normalized( limit_range( vn, p->val_min.f, p->val_max.f ) ) );
                                       };
-                        
+
+                        auto svni = [](Parameter *p, int vn)
+                                      {
+                                         p->val.i = vn;
+                                      };
+
                         auto inverseEnvtime = [](float desiredTime)
                                                  {
                                                     // 2^x = desired time
@@ -59,9 +64,9 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                         svn(&(adsrstorage->s), s);
                         svn(&(adsrstorage->r), inverseEnvtime(r));
                         
-                        svn(&(adsrstorage->a_s), a_s);
-                        svn(&(adsrstorage->d_s), d_s);
-                        svn(&(adsrstorage->r_s), r_s);
+                        svni(&(adsrstorage->a_s), a_s);
+                        svni(&(adsrstorage->d_s), d_s);
+                        svni(&(adsrstorage->r_s), r_s);
                         
                         adsrstorage->mode.val.b = isAnalog;
                         
@@ -116,8 +121,8 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                                   {
                                      int ldir = 0;
                                      if( v > 0.999999f ) ldir = dir; // sometimes we get a double '1'
-                                     if( fabs( v - pv ) < 5e-6 && fabs( v ) < 1e-5) ldir = 0; // bouncing off of 0 is annoying
-                                     else if( fabs( v - pv ) < 5e-7 ) ldir = 0;
+                                     if( turns.size() > 1 && fabs( v - pv ) < 5e-6 && fabs( v ) < 1e-5) ldir = 0; // bouncing off of 0 is annoying
+                                     else if( fabs( v - pv ) < 1e-7 ) ldir = 0;
                                      else if( v > pv ) ldir = 1;
                                      else ldir = -1;
 
@@ -144,8 +149,7 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                            
                            auto simple = runAdsr( a, d, s, r, a_s, d_s, r_s, isAnalog, a + d + sustime, totaltime );
                            auto sturns = detectTurnarounds(simple);
-                           if( false )
-                              std::cout << "ADSR: " << a << " " << d << " " << s << " " << r << " switches: " << a_s << " " << d_s << " " << r_s << std::endl;
+                           INFO( "ADSR: " << a << " " << d << " " << s << " " << r << " switches: " << a_s << " " << d_s << " " << r_s );
                            if( s == 0 )
                            {
                               if( sturns.size() != 3 )
@@ -169,6 +173,7 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                               {
                                  for( auto s : simple )
                                     std::cout << s.first << " " << s.second << std::endl;
+                                 std::cout << "TURNS" << std::endl;
                                  for( auto s : sturns )
                                     std::cout << s.first << " " << s.second << std::endl;
                               }
@@ -216,7 +221,22 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                }
             }
    }
-
+   
+   SECTION( "Quadrtic Digital hits Zero" )
+   {
+      auto res = runAdsr( 0.1, 0.1, 0.0, 0.1,
+                          0, 1, 0,
+                          false,
+                          0.4, 0.5 );
+      for( auto p : res )
+      {
+         if( p.first > 0.22 )
+         {
+            REQUIRE( p.second == 0.f );
+         }
+      }
+   }
+   
    SECTION( "Test the Analog Envelope" )
    {
       // OK so we can't check the same thing here since the turns aren't as tight in analog mode
@@ -429,11 +449,11 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
          
       for( int rc=0;rc<100; ++rc )
       {
-         float a = rand() * 1.0 / RAND_MAX + 0.01;
+         float a = rand() * 1.0 / RAND_MAX + 0.03;
          float d = rand() * 1.0 / RAND_MAX + 0.01;
          float s = 0.7 * rand() * 1.0 / RAND_MAX + 0.1; // we have tested the s=0 case above
          float r = rand() * 1.0 / RAND_MAX + 0.01;
-         INFO(  "Testing with ADSR=" << a << " " << d << " " << s << " " << r );
+         INFO(  "Testing " << rc << " with ADSR=" << a << " " << d << " " << s << " " << r );
          compareSrgRepl( a, d, s, r );
 
       }
@@ -488,7 +508,6 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
          testSusPush( s1, s2 );
       }
    }
-
 }
 
 TEST_CASE( "Non-MPE pitch bend", "[mod]" )
