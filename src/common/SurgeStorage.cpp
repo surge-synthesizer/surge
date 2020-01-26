@@ -235,12 +235,28 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
 #if TARGET_RACK
    datapath = suppliedDataPath;
 #else
-   PWSTR localAppData;
-   if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
+   bool foundSurge = false;
+   PWSTR commonAppData;
+   if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
    {
       CHAR path[4096];
-      wsprintf(path, "%S\\Surge\\", localAppData);
+      wsprintf(path, "%S\\Surge\\", commonAppData);
       datapath = path;
+      if( fs::is_directory( fs::path( datapath ) ) )
+         foundSurge = true;
+      else
+         datapath = "";
+   }
+
+   if( ! foundSurge ) {
+      PWSTR localAppData;
+      if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
+      {
+         CHAR path[4096];
+         wsprintf(path, "%S\\Surge\\", localAppData);
+         datapath = path;
+         foundSurge = true;
+      }
    }
 
    PWSTR documentsFolder;
@@ -1442,10 +1458,15 @@ bool SurgeStorage::remapToKeyboard(const Surge::Storage::KeyboardMapping& k)
       tuningPitch = k.tuningFrequency / 8.175798915;
       tuningPitchInv = 1.0 / tuningPitch;
    }
-   // The mapping will change all the cached pitches.
-   if( ! currentScale.isValid() )
+   // The mapping will change all the cached pitches so we need to redo
+   if( isStandardMapping && isStandardTuning )
    {
-      // We need to set the current scale to a default scale
+      retuneToStandardTuning();
+   }
+   else if( !isStandardMapping && !currentScale.isValid() )
+   {
+      // We need to set the current scale to a default scale so we can remap the keyboard.
+      // This is an odd edge case but we do need to support it.
       retuneToScale(Surge::Storage::Scale::evenTemperament12NoteScale());
    }
    else
