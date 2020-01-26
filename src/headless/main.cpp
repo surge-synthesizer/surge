@@ -96,6 +96,9 @@ void playSomeBach()
 */
 int main(int argc, char** argv)
 {
+   std::cout << "\n\n"
+             << "surge-headless is our regtest engine for the synth engine excluding the UI\n"
+             << "Run 'surge-headless --help' for options.\n\n";
    extern int runAllTests(int, char**);
    return runAllTests(argc, argv);
 

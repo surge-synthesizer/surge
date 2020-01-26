@@ -2,6 +2,9 @@
 #include "SurgeSynthesizer.h"
 #include "Player.h"
 #include "catch2.hpp"
+#include <iostream>
+#include <cstdio>
+#include <string>
 
 namespace Surge
 {
@@ -133,6 +136,35 @@ std::shared_ptr<SurgeSynthesizer> surgeOnSine()
       return nullptr;
    else
       return surge;
+}
+
+void makePlotPNGFromData( std::string pngFileName,
+                          std::string plotTitle,
+                          float *buffer, int nS, int nC,
+                          int startSample, int endSample )
+{
+#if MAC
+   if( nC != 2 )
+      std::cout << "This won't work really" << std::endl;
+   
+   if( startSample < 0 ) startSample = 0;
+   if( endSample < 0 ) endSample = nS;
+
+   auto csvnm = std::tmpnam( nullptr );
+   std::cout << "Creating csvnm " << csvnm << std::endl;
+   std::ofstream ofs( csvnm );
+   for( int i=startSample; i<endSample; ++i )
+   {
+      ofs << i << ", " << buffer[ i * nC ] << ", " << buffer[ i * nC + 1 ] << std::endl;
+   }
+   ofs.close();
+
+   std::string cmd = "python3 scripts/misc/csvtoPlot.py \"" + std::string( csvnm ) + "\" \"" + pngFileName + "\" \"" + plotTitle + "\"";
+   std::cout << "Running " << cmd << std::endl;
+   system( cmd.c_str() );
+#else
+   std::cout << "makePlotPNGFromData is only on mac for now (since @baconpaul just uses it to debug)" << std::endl;
+#endif   
 }
 
 
