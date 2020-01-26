@@ -159,6 +159,7 @@ public:
    const char* get_storage_name();
    const wchar_t* getUnit() const;
    void get_display(char* txt, bool external = false, float ef = 0.f);
+   void get_display_alt(char* txt, bool external = false, float ef = 0.f);
    char* get_storage_value(char*);
    void set_storage_value(int i);
    void set_storage_value(float f);
