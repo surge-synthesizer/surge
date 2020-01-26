@@ -142,6 +142,7 @@ public:
    int remapInternalToExternalApiId(unsigned int x);
    void getParameterDisplay(long index, char* text);
    void getParameterDisplay(long index, char* text, float x);
+   void getParameterDisplayAlt(long index, char* text);
    void getParameterName(long index, char* text);
    void getParameterMeta(long index, parametermeta& pm);
    void getParameterNameW(long index, wchar_t* ptr);

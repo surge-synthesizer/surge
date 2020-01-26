@@ -2799,7 +2799,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   control->invalid();
                synth->getParameterName(ptag, pname);
                synth->getParameterDisplay(ptag, pdisp);
-               ((CParameterTooltip*)infowindow)->setLabel(0, pdisp);
+               char pdispalt[256];
+               synth->getParameterDisplayAlt(ptag, pdispalt);
+               ((CParameterTooltip*)infowindow)->setLabel(0, pdisp, pdispalt);
                if (p->ctrltype == ct_polymode)
                   modulate = true;
             }

@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
+#include <iostream>
 
 class CParameterTooltip : public VSTGUI::CControl
 {
@@ -15,7 +16,7 @@ public:
       last_tag = -1;
    }
 
-   void setLabel(const char* txt1, const char* txt2)
+   void setLabel(const char* txt1, const char* txt2, const char* txt2left = nullptr)
    {
       if (txt1)
          strncpy(label[0], txt1, 256);
@@ -25,6 +26,11 @@ public:
          strncpy(label[1], txt2, 256);
       else
          label[1][0] = 0;
+      if (txt2left)
+         strncpy(label2left, txt2left, 256);
+      else
+         label2left[0] = 0;
+      
       setDirty(true);
    }
 
@@ -91,6 +97,8 @@ public:
              dc->drawString(label[0], tupper, VSTGUI::kLeftText, true);
          // dc->drawString(label[1],tlower,false,label[0][0]?kRightText:kCenterText);
          dc->drawString(label[1], tlower, VSTGUI::kRightText, true);
+         if( label2left[0] )
+            dc->drawString(label2left, tlower, VSTGUI::kLeftText, true);
          // dc->copyFrom(dc1,smaller);
          // dc->forget();
       }
@@ -98,7 +106,7 @@ public:
    }
 
 protected:
-   char label[2][256];
+   char label[2][256], label2left[256];
    bool visible;
    int last_tag;
 

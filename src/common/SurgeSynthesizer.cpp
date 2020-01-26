@@ -2002,6 +2002,18 @@ void SurgeSynthesizer::getParameterDisplay(long index, char* text)
       sprintf(text, "-");
 }
 
+void SurgeSynthesizer::getParameterDisplayAlt(long index, char* text)
+{
+   if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
+   {
+      storage.getPatch().param_ptr[index]->get_display_alt(text);
+   }
+   else 
+   {
+      text[0] = 0;
+   }
+}
+
 void SurgeSynthesizer::getParameterDisplay(long index, char* text, float x)
 {
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))

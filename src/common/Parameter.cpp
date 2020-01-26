@@ -858,6 +858,41 @@ std::string Parameter::tempoSyncNotationValue(float f)
     return res;
 }
 
+void Parameter::get_display_alt(char* txt, bool external, float ef)
+{
+   
+   txt[0] = 0;
+   switch( ctrltype )
+   {
+   case ct_freq_hpf:
+   case ct_freq_audible:
+   case ct_freq_vocoder_low:
+   case ct_freq_vocoder_high:
+   {
+      float f = val.f;
+      int i_value = (int)( f + 0.5 ) + 69; // that 1/2th centers us
+      if( i_value < 0 ) i_value = 0; 
+      int octave = (i_value / 12) - 1;
+      char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+      sprintf(txt, "~%s%d", notenames[i_value % 12], octave);
+      break;
+   }
+   case ct_countedset_percent:
+      if (user_data != nullptr)
+      {
+         // We check when set so the reinterpret cast is safe and fast
+         float f = val.f;
+         CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
+         auto count = cs->getCountedSetSize();
+         auto tl = count * f;
+         sprintf(txt, "%.1f / %d", tl, count);
+      }
+
+      break;
+
+   }
+}
+
 void Parameter::get_display(char* txt, bool external, float ef)
 {
    if (ctrltype == ct_none)
@@ -940,22 +975,8 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_percent:
       case ct_percent_bidirectional:
-         sprintf(txt, "%.1f %c", f * 100.f, '%');
-         break;
       case ct_countedset_percent:
-         if (user_data == nullptr)
-         {
-            sprintf(txt, "%.1f %c", f * 100.f, '%');
-         }
-         else
-         {
-            // We check when set so the reinterpret cast is safe and fast
-            CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
-            auto count = cs->getCountedSetSize();
-            auto tl = count * f;
-            sprintf(txt, "%.1f%% (%.1f / %d)", f * 100.f, tl, count);
-         }
-
+         sprintf(txt, "%.1f %c", f * 100.f, '%');
          break;
       case ct_oscspread:
          if (absolute)
@@ -974,11 +995,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_freq_vocoder_low:
       case ct_freq_vocoder_high:
       {
-         int i_value = (int)( f + 0.5 ) + 69; // that 1/2th centers us
-         if( i_value < 0 ) i_value = 0; 
-         int octave = (i_value / 12) - 1;
-         char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-         sprintf(txt, "%.3f Hz (~%s%d)", 440.f * powf(2.0f, f / 12.f),  notenames[i_value % 12], octave);
+         sprintf(txt, "%.3f Hz", 440.f * powf(2.0f, f / 12.f) );
          break;
       }
       case ct_freq_mod:
