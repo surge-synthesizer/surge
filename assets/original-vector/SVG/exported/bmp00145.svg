@@ -1,26 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="20px" height="140px" viewBox="0 0 20 140" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g id="bmp00145" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect id="Rectangle" fill="#C4C5C8" x="0" y="0" width="20" height="140"></rect>
-        <rect id="Rectangle" fill="#52565E" x="0" y="0" width="20" height="133"></rect>
-        <rect id="Rectangle" x="0" y="0" width="20" height="133"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="13" y="112" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="7" y="98" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="1" y="84" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="13" y="70" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="7" y="56" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="1" y="42" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="13" y="28" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="7" y="14" width="6" height="14"></rect>
-        <rect id="Rectangle" fill-opacity="0.25" fill="#FF9A10" x="1" y="0" width="6" height="14"></rect>
-        <path d="M20,14 L-7.10542736e-15,14 C4.47949219,4.66666667 11.1461589,7.58997975e-16 20,0 C20,0 20,4.66666667 20,14 Z" id="Path-5" fill-opacity="0.7" fill="#FFFFFF"></path>
-        <path d="M20,42 C6.66666667,42 -1.77635684e-15,42 -1.77635684e-15,42 C8,42 14.6666667,37.3333333 20,28 L20,42 Z" id="Path-5" fill-opacity="0.7" fill="#FFFFFF"></path>
-        <polygon id="Path-4" fill-opacity="0.7" fill="#FFFFFF" points="0 28 20 14 20 28"></polygon>
-        <polygon id="Path-6" fill-opacity="0.7" fill="#FFFFFF" points="0 42 0 56 20 56 20 49"></polygon>
-        <path d="M-3.55271368e-15,56 L-3.55271368e-15,70 L20,70 C20,65.3333333 20,63 20,63 C14,63 7.33333333,60.6666667 -3.55271368e-15,56 Z" id="Path-7" fill-opacity="0.7" fill="#FFFFFF"></path>
-        <path d="M-2.84217094e-14,70 L-2.84217094e-14,84 L20,84 C20,79.3333333 20,77 20,77 C9.33333333,77 2.66666667,74.6666667 -2.84217094e-14,70 Z" id="Path-9" fill-opacity="0.7" fill="#FFFFFF"></path>
-        <polygon id="Path-10" fill-opacity="0.7" fill="#FFFFFF" points="0 91 0 98 20 98"></polygon>
-        <path d="M0,105 C0,105 0,107.333333 0,112 L20,112 C9.33333333,110.833333 2.66666667,108.5 0,105 Z" id="Path-11" fill-opacity="0.7" fill="#FFFFFF"></path>
-        <path d="M0,119 C0,119 0,121.333333 0,126 L20,126 C9.33333333,124.833333 2.66666667,122.5 0,119 Z" id="Path-11" fill-opacity="0.7" fill="#FFFFFF"></path>
-    </g>
+<svg width="20px" height="140px" version="1.1" viewBox="0 0 20 140" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g fill="none" fill-rule="evenodd">
+  <rect id="Rectangle" width="20" height="140" fill="#C4C5C8"/>
+  <rect width="20" height="133" fill="#52565E"/>
+  <rect width="20" height="133"/>
+  <g fill="#FF9A10" fill-opacity=".25">
+   <rect x="13" y="112" width="6" height="14"/>
+   <rect x="7" y="98" width="6" height="14"/>
+   <rect x="1" y="84" width="6" height="14"/>
+   <rect x="13" y="70" width="6" height="14"/>
+   <rect x="7" y="56" width="6" height="14"/>
+   <rect x="1" y="42" width="6" height="14"/>
+   <rect x="13" y="28" width="6" height="14"/>
+   <rect x="7" y="14" width="6" height="14"/>
+   <rect x="1" width="6" height="14"/>
+  </g>
+  <g fill="#fff" fill-opacity=".7">
+   <path d="m20 14h-20c4.4795-9.3333 11.146-14 20-14v14z"/>
+   <path d="m20 42h-20c8 0 14.667-4.6667 20-14v14z"/>
+   <polygon points="0 28 20 14 20 28"/>
+   <polygon points="0 42 0 56 20 56 20 49"/>
+   <path d="m-3.5527e-15 56v14h20v-7c-6 0-12.667-2.3333-20-7z"/>
+   <path d="m-2.8422e-14 70v14h20v-7c-10.667 0-17.333-2.3333-20-7z"/>
+   <polygon points="0 91 0 98 20 98"/>
+   <path d="m0 105v7h20c-10.718-2.0815-16.667-4.1625-20-7z"/>
+   <path d="m0 119v7h20c-10.667-1.1667-17.333-3.5-20-7z"/>
+  </g>
+ </g>
 </svg>
