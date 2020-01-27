@@ -28,6 +28,9 @@ public:
    virtual VSTGUI::CMouseEventResult
    onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons); ///< called when a mouse up event occurs
 
+   virtual VSTGUI::CMouseEventResult
+   onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   
    virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
 
@@ -102,4 +105,5 @@ private:
    int drawcount_debug;
 
    float restvalue, restmodval;
+   bool wheelInitiatedEdit = false;
 };

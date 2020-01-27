@@ -526,6 +526,11 @@ bool CSurgeSlider::isInMouseInteraction()
 
 CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   if( wheelInitiatedEdit )
+      while( editing )
+         endEdit();
+   wheelInitiatedEdit = false;
+   
    CCursorHidingControl::onMouseDown(where, buttons);
    if (disabled)
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
@@ -583,6 +588,16 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 
       attachCursor();
    }
+   return kMouseEventHandled;
+}
+
+VSTGUI::CMouseEventResult CSurgeSlider::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
+{
+   if( wheelInitiatedEdit )
+      while( editing )
+         endEdit();
+   wheelInitiatedEdit = false;
+
    return kMouseEventHandled;
 }
 
@@ -689,8 +704,12 @@ bool CSurgeSlider::onWheel(const VSTGUI::CPoint& where, const float &distance, c
    
    edit_value = modmode ? &modval : &value;
    oldVal = *edit_value;
-   
-   beginEdit();
+
+   if( editing == 0 )
+   {
+      wheelInitiatedEdit = true;
+      beginEdit();
+   }
    *edit_value += rate * distance;
    bounceValue();
    if (modmode)
@@ -704,11 +723,11 @@ bool CSurgeSlider::onWheel(const VSTGUI::CPoint& where, const float &distance, c
    setDirty();
    if (isDirty() && listener)
       listener->valueChanged(this);
-   //endEdit();
+
    /*
-   ** No need to call endEdit since the timer in SurgeGUIEditor will close the
-   ** info window, and  SurgeGUIEditor will make sure a window
-   ** doesn't appear twice
+   ** If we call endEdit it will dismiss the infowindow so instead
+   ** use the state management where I have a lignering begin 
+   ** which I clear when we click or leave.
    */
    edit_value = nullptr;
    return true;
