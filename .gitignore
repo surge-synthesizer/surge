@@ -75,3 +75,6 @@ src/linux/ScalablePiggy*
 
 # cmake
 build/
+
+# Reaper
+*.RPP-bak

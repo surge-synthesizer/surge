@@ -523,17 +523,24 @@ tresult SurgeVst3Processor::beginEdit(ParamID id)
        beginEditGuard[id] = 0;
    }
    beginEditGuard[id] ++;
-   if (id >= getParameterCount())
+
+   int mappedId =
+       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+
+   if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
+   {
+      mappedId = id;
+   }
+   else if (id >= getParameterCount())
    {
       return kInvalidArgument;
    }
-   if( id >= getParameterCountWithoutMappings() )
+   else if( id >= getParameterCountWithoutMappings() )
    {
       return kResultOk;
    }
 
-   int mappedId =
-       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+   
    if( beginEditGuard[id] == 1 )
    {
        return Steinberg::Vst::SingleComponentEffect::beginEdit(mappedId);
@@ -546,25 +553,41 @@ tresult SurgeVst3Processor::beginEdit(ParamID id)
 
 tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue valueNormalized)
 {
-   if (id >= getParameterCount())
+   int mappedId =
+       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+
+   if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
+   {
+      mappedId = id;
+   }
+   else if (id >= getParameterCount())
    {
       return kInvalidArgument;
    }
-   if( id >= getParameterCountWithoutMappings() )
+   else if( id >= getParameterCountWithoutMappings() )
    {
       return kResultOk;
    }
 
-   int mappedId =
-       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
    return Steinberg::Vst::SingleComponentEffect::performEdit(mappedId, valueNormalized);
 }
 
 tresult SurgeVst3Processor::endEdit(ParamID id)
 {
-   if (id >= getParameterCount() )
+   int mappedId =
+       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+
+   if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
+   {
+      mappedId = id;
+   }
+   else if (id >= getParameterCount())
    {
       return kInvalidArgument;
+   }
+   else if( id >= getParameterCountWithoutMappings() )
+   {
+      return kResultOk;
    }
 
    auto endcount = -1;
@@ -580,22 +603,13 @@ tresult SurgeVst3Processor::endEdit(ParamID id)
        endcount = beginEditGuard[id];
    };
 
-   if( id > getParameterCountWithoutMappings() )
+   if( endcount == 0 )
    {
-      return kResultOk;
+      return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
    }
    else
    {
-      int mappedId =
-         SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
-      if( endcount == 0 )
-      {
-         return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
-      }
-      else
-      {
-         return kResultOk;
-      }
+      return kResultOk;
    }
 }
 
@@ -639,6 +653,9 @@ int32 SurgeVst3Processor::getParameterCountWithoutMappings()
 
 tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, ParameterInfo& info)
 {
+   // Concerning - reaper calls this all the time!
+   // std::cout << __LINE__ << " getParameterInfo " << paramIndex << std::endl;
+   // stackToInfo();
    CHECK_INITIALIZED
 
    if (paramIndex >= getParameterCount())
@@ -795,9 +812,12 @@ ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, Pa
 
 ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 {
+   //std::cout << __LINE__ << " getParamNormalized " << tag << std::endl;
    ABORT_IF_NOT_INITIALIZED;
 
-   if (tag >= getParameterCountWithoutMappings())
+   if(tag >= getParameterCountWithoutMappings() &&
+      ! ( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters )
+      )
    {
       // return kInvalidArgument;
       // kInvalidArgument is not a ParamValue. In this case just
@@ -805,6 +825,8 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
    }
 
    auto res = surgeInstance->getParameter01(tag);
+   //std::cout << __LINE__ << " getParamNormalized " << tag << " = " << res << " " << floatBytes(res) << std::endl;
+   //stackToInfo();
    return res;
 }
 
@@ -812,11 +834,14 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
 {
    CHECK_INITIALIZED;
 
-   if (tag >= getParameterCount())
+   if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
+   {
+   }
+   else if (tag >= getParameterCount())
    {
       return kInvalidArgument;
    }
-   if( tag >= getParameterCountWithoutMappings() )
+   else if( tag >= getParameterCountWithoutMappings() )
    {
       return kResultOk;
    }
@@ -830,8 +855,11 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
    ** we are specially dealing with midi controls it is the wrong thing to do; it makes the FX
    ** control and the control 0 the same. So here just pass the tag on directly.
    */
+   
    if( value != surgeInstance->getParameter01(tag) )
+   {
       surgeInstance->setParameter01(tag, value, true);
+   }
 
    return kResultOk;
 }
@@ -881,11 +909,20 @@ void SurgeVst3Processor::updateDisplay()
 
 void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
 {
-   if( inputParam >= getParameterCountWithoutMappings() ) return;
+   int externalparam;
+   if( inputParam >= metaparam_offset && inputParam <= metaparam_offset + n_midi_controller_params )
+   {
+      externalparam = inputParam;
+   }
+   else
+   {
+      if( inputParam >= getParameterCountWithoutMappings() ) return;
    
-   int externalparam = SurgeGUIEditor::unapplyParameterOffset(
-       surgeInstance->remapExternalApiToInternalId(inputParam));
+      externalparam = SurgeGUIEditor::unapplyParameterOffset(
+         surgeInstance->remapExternalApiToInternalId(inputParam));
+   }
 
+   
    /*
    ** This particular choice of implementation is why we have nested
    ** begin/end pairs with the guard. We discovered this clsoing in on
