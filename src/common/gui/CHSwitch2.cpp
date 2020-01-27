@@ -131,6 +131,7 @@ bool CHSwitch2::onWheel(const CPoint& where, const float& distance, const CButto
       if (listener)
          listener->valueChanged(this);
       setValue(value);
+      endEdit();
       return true;
    }
    return false;
