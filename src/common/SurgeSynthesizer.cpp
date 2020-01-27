@@ -796,7 +796,7 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
 {
    int externalparam = remapInternalToExternalApiId(index);
 
-#if TARGET_VST3
+#if TARGET_VST3 || TARGET_AUDIOUNIT
    if( index >= metaparam_offset )
       externalparam = index;
 #endif
@@ -2024,6 +2024,14 @@ void SurgeSynthesizer::getParameterDisplay(long index, char* text, float x)
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
       storage.getPatch().param_ptr[index]->get_display(text, true, x);
+   }
+   else if (index >= metaparam_offset)
+   {
+      sprintf(text, "%.2f %%",
+              100.f * storage.getPatch()
+                          .scene[0]
+                          .modsources[ms_ctrl1 + index - metaparam_offset]
+                          ->get_output());
    }
    else
       sprintf(text, "-");
