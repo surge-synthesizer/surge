@@ -2338,6 +2338,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                                   synth->clearModulation(ptag, (modsources)ms);
                                                                }
                                                                refresh_mod();
+                                                               synth->refresh_editor = true;
                                                             });
                   eid++;
                }
