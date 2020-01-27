@@ -144,7 +144,7 @@ ComponentResult aulayer::Initialize()
    blockpos = 0;
    events_this_block = 0;
    // init parameters
-   for (UInt32 i = 0; i < n_total_params; i++)
+   for (UInt32 i = 0; i < n_total_params + num_metaparameters; i++)
    {
       parameterIDlist[i] = i;
       parameterIDlist_CFString[i] = 0;
@@ -647,9 +647,9 @@ ComponentResult aulayer::GetParameterList(AudioUnitScope inScope,
       return noErr;
    }
 
-   outNumParameters = n_total_params;
+   outNumParameters = n_total_params + num_metaparameters;
    if (outParameterList)
-      memcpy(outParameterList, parameterIDlist, sizeof(AudioUnitParameterID) * n_total_params);
+      memcpy(outParameterList, parameterIDlist, sizeof(AudioUnitParameterID) * ( n_total_params + num_metaparameters ));
    return noErr;
 }
 
@@ -710,7 +710,7 @@ ComponentResult aulayer::GetParameter(AudioUnitParameterID inID,
 {
    if (inScope != kAudioUnitScope_Global)
       return kAudioUnitErr_InvalidParameter;
-   if (inID >= n_total_params)
+   if (inID >= n_total_params + num_metaparameters)
       return kAudioUnitErr_InvalidParameter;
    if (!IsInitialized())
       return kAudioUnitErr_Uninitialized;
@@ -728,7 +728,7 @@ ComponentResult aulayer::SetParameter(AudioUnitParameterID inID,
 {
    if (inScope != kAudioUnitScope_Global)
       return kAudioUnitErr_InvalidParameter;
-   if (inID >= n_total_params)
+   if (inID >= n_total_params + num_metaparameters)
       return kAudioUnitErr_InvalidParameter;
    if (!IsInitialized())
       return kAudioUnitErr_Uninitialized;
@@ -751,7 +751,7 @@ bool aulayer::ParameterBeginEdit(int p)
    AudioUnitEvent event;
    event.mEventType = kAudioUnitEvent_BeginParameterChangeGesture;
    event.mArgument.mParameter.mAudioUnit = GetComponentInstance();
-   event.mArgument.mParameter.mParameterID = p;
+   event.mArgument.mParameter.mParameterID = plugin_instance->remapInternalToExternalApiId(p);
    event.mArgument.mParameter.mScope = kAudioUnitScope_Global;
    event.mArgument.mParameter.mElement = 0;
    AUEventListenerNotify(NULL, NULL, &event);
@@ -765,7 +765,7 @@ bool aulayer::ParameterEndEdit(int p)
    AudioUnitEvent event;
    event.mEventType = kAudioUnitEvent_EndParameterChangeGesture;
    event.mArgument.mParameter.mAudioUnit = GetComponentInstance();
-   event.mArgument.mParameter.mParameterID = p;
+   event.mArgument.mParameter.mParameterID = plugin_instance->remapInternalToExternalApiId(p);
    event.mArgument.mParameter.mScope = kAudioUnitScope_Global;
    event.mArgument.mParameter.mElement = 0;
    AUEventListenerNotify(NULL, NULL, &event);
@@ -779,7 +779,7 @@ bool aulayer::ParameterUpdate(int p)
    AudioUnitEvent event;
    event.mEventType = kAudioUnitEvent_ParameterValueChange;
    event.mArgument.mParameter.mAudioUnit = GetComponentInstance();
-   event.mArgument.mParameter.mParameterID = p;
+   event.mArgument.mParameter.mParameterID = plugin_instance->remapInternalToExternalApiId(p);
    event.mArgument.mParameter.mScope = kAudioUnitScope_Global;
    event.mArgument.mParameter.mElement = 0;
    AUEventListenerNotify(NULL, NULL, &event);

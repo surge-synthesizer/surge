@@ -142,8 +142,8 @@ protected:
    AuMIDIEvent eventbuffer[1024];
    int blockpos, events_this_block;
    AUChannelInfo cinfo[2]; // stored output configs
-   AudioUnitParameterID parameterIDlist[n_total_params];
-   CFStringRef parameterIDlist_CFString[n_total_params];
+   AudioUnitParameterID parameterIDlist[n_total_params + num_metaparameters];
+   CFStringRef parameterIDlist_CFString[n_total_params + num_metaparameters];
    float sampleRateCache;
 };
 

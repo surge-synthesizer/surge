@@ -2988,14 +2988,21 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
 #if TARGET_AUDIOUNIT
    long tag = control->getTag();
    int ptag = tag - start_paramtags;
-   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
+
+   if( tag >= tag_mod_source0 + ms_ctrl1 && tag <= tag_mod_source0 + ms_ctrl8 )
+   {
+      ptag = metaparam_offset + tag - tag_mod_source0 - ms_ctrl1;
+      synth->getParent()->ParameterBeginEdit(ptag);
+   }
+   else if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
    {
       int externalparam = synth->remapInternalToExternalApiId(ptag);
       if (externalparam >= 0)
       {
-          synth->getParent()->ParameterBeginEdit(externalparam);
+         synth->getParent()->ParameterBeginEdit(externalparam);
       }
    }
+   
 #endif
 }
 
@@ -3006,7 +3013,12 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
 #if TARGET_AUDIOUNIT
    long tag = control->getTag();
    int ptag = tag - start_paramtags;
-   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
+   if( tag >= tag_mod_source0 + ms_ctrl1 && tag <= tag_mod_source0 + ms_ctrl8 )
+   {
+      ptag = metaparam_offset + tag - tag_mod_source0 - ms_ctrl1;
+      synth->getParent()->ParameterEndEdit(ptag);
+   }
+   else if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
    {
       int externalparam = synth->remapInternalToExternalApiId(ptag);
       if (externalparam >= 0)
