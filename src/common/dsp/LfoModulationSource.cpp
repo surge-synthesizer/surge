@@ -145,6 +145,12 @@ void LfoModulationSource::attack()
       else
          phaseslider = localcopy[startphase].f;
 
+      // With modulation the phaseslider can be outside [0,1], as in #1524
+      while( phaseslider < 0.f )
+         phaseslider += 1.f;
+      while( phaseslider > 1.f )
+         phaseslider -= 1.f;
+
       switch (lfo->trigmode.val.i)
       {
       case lm_keytrigger:
