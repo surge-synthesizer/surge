@@ -796,6 +796,11 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
 {
    int externalparam = remapInternalToExternalApiId(index);
 
+#if TARGET_VST3
+   if( index >= metaparam_offset )
+      externalparam = index;
+#endif
+
    if (externalparam >= 0)
    {
 #if TARGET_AUDIOUNIT
