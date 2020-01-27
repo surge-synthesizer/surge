@@ -27,6 +27,11 @@ void copyScenedataSubset(SurgeStorage *storage, int scene, int start, int end);
 void setupStorageRanges(Parameter *start, Parameter *endIncluding,
                         int &storage_id_start, int &storage_id_end);
 
+void makePlotPNGFromData( std::string pngFileName,
+                          std::string plotTitle,
+                          float *buffer, int nS, int nC,
+                          int startSample = -1, int endSample = -1 );
+
 std::shared_ptr<SurgeSynthesizer> surgeOnSine();
 }
 }

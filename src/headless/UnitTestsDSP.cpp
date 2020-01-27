@@ -214,3 +214,41 @@ TEST_CASE( "lipol_ps class", "[dsp]" )
       
 }
 
+// When we return to #1514 this is a good starting point
+#if 0
+TEST_CASE( "NaN Patch from Issue 1514", "[dsp]" )
+{
+   auto surge = Surge::Headless::createSurge(44100);
+   REQUIRE( surge );
+   REQUIRE( surge->loadPatchByPath( "test-data/patches/VinceyCrash1514.fxp", -1, "Test" ) );
+
+   for( int d=0; d<10; d++ )
+   {
+      auto events = Surge::Headless::makeHoldNoteFor( 60 + 24, 4410, 100, 0 );
+      for( auto &e : events )
+         e.atSample += 1000;
+
+      surge->allNotesOff();
+      for( int i=0; i<100; ++i )
+         surge->process();
+      
+      float *res;
+      int nS, nC;
+      playAsConfigured(surge, events, &res, &nS, &nC );
+      surge->storage.getPatch().scene[0].lfo[0].decay.set_value_f01( .325 + d/1000.f );
+      char txt[512];
+      surge->storage.getPatch().scene[0].lfo[0].decay.get_display( txt, false, 0.f );
+      const auto minmaxres = std::minmax_element(res, res + nS * nC);
+      auto mind = minmaxres.first;
+      auto maxd = minmaxres.second;
+
+      // std::cout << "minMax at " << d << " / " << txt << " is " << *mind << " / " << *maxd << std::endl;
+      std::string title = "delay = " + std::string( txt );
+      std::string fname = "/tmp/nanPatch_" + std::to_string( d ) + ".png";
+      makePlotPNGFromData( fname, title, res, nS, nC );
+
+      delete[] res;
+   }
+   
+}
+#endif
