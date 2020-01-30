@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
+#include "SurgeGUIEditor.h"
 #include "CLFOGui.h"
 #include "LfoModulationSource.h"
 #include "UserDefaults.h"
-#include "SurgeGUIEditor.h"
 #include <chrono>
 
 using namespace VSTGUI;
