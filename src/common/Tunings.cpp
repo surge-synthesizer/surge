@@ -406,3 +406,29 @@ R"HTML(
   return htmls.str();
 
 }
+
+Surge::Storage::KeyboardMapping Surge::Storage::KeyboardMapping::tuneA69To(double freq)
+{
+   // There's a couple of ways to do this but since I want it to stream I will syntheitcally create
+   // a KBM file
+   std::ostringstream oss;
+   oss << R"KBM(! Surge Synthetic Keyboard Tuning to Retune A69
+!
+! Map Size
+0
+! First note
+0
+! Last note
+127
+! First mapping
+60
+! Reference Note
+69
+! Reference Freqency
+)KBM" << freq << R"KBM(
+! Scale Degree
+0
+! Mapping)KBM";
+   std::cout << oss.str() << std::endl;;
+   return parseKBMData( oss.str() );
+}

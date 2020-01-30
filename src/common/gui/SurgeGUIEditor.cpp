@@ -2862,7 +2862,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   modulate = true;
             }
 
-            if( p->ctrltype == ct_bool_unipolar )
+            if( p->ctrltype == ct_bool_unipolar || p->ctrltype == ct_lfoshape )
             {
                // The green line might change so...
                refresh_mod();
@@ -3645,6 +3645,29 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
+    addCallbackMenu( tuningSubMenu, "ReMap A4 (midi #69) frequency directly to...",
+                     [this]()
+                        {
+                           char c[256];
+                           snprintf(c, 256, "440.0");
+                           spawn_miniedit_text(c, 16);
+                           float freq = ::atof(c);
+                           if( freq == 440.0 )
+                           {
+                              this->synth->storage.remapToStandardKeyboard();
+                           }
+                           else
+                           {
+                              auto kb = Surge::Storage::KeyboardMapping::tuneA69To(freq);
+                              if( ! this->synth->storage.remapToKeyboard(kb) )
+                              {
+                                 Surge::UserInteractions::promptError( "This .kbm file is not valid", "File format error" );
+                                 return;
+                              }
+                           }
+                        }
+       );
+    
     tuningSubMenu->addSeparator();
     tid++;
     auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning",
