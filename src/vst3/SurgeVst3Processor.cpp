@@ -33,7 +33,8 @@ using namespace Steinberg::Vst;
    }
 
 SurgeVst3Processor::SurgeVst3Processor() : blockpos(0), surgeInstance()
-{}
+{
+}
 
 SurgeVst3Processor::~SurgeVst3Processor()
 {
@@ -531,7 +532,7 @@ tresult SurgeVst3Processor::beginEdit(ParamID id)
    {
       mappedId = id;
    }
-   else if (id >= getParameterCount())
+   else if (id >= getParameterCount() || mappedId < 0 )
    {
       return kInvalidArgument;
    }
@@ -543,6 +544,7 @@ tresult SurgeVst3Processor::beginEdit(ParamID id)
    
    if( beginEditGuard[id] == 1 )
    {
+      // std::cout << "BeginEdit " << mappedId << std::endl;
        return Steinberg::Vst::SingleComponentEffect::beginEdit(mappedId);
    }
    else
@@ -560,7 +562,7 @@ tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue v
    {
       mappedId = id;
    }
-   else if (id >= getParameterCount())
+   else if (id >= getParameterCount() || mappedId < 0 )
    {
       return kInvalidArgument;
    }
@@ -569,6 +571,8 @@ tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue v
       return kResultOk;
    }
 
+   // std::cout << "PerformEdit " << mappedId << std::endl;
+         
    return Steinberg::Vst::SingleComponentEffect::performEdit(mappedId, valueNormalized);
 }
 
@@ -581,7 +585,7 @@ tresult SurgeVst3Processor::endEdit(ParamID id)
    {
       mappedId = id;
    }
-   else if (id >= getParameterCount())
+   else if (id >= getParameterCount() && mappedId < 0 )
    {
       return kInvalidArgument;
    }
@@ -605,6 +609,7 @@ tresult SurgeVst3Processor::endEdit(ParamID id)
 
    if( endcount == 0 )
    {
+      // std::cout << "EndEdit " << mappedId << std::endl;
       return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
    }
    else
