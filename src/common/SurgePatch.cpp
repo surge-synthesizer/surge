@@ -114,8 +114,10 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       {
          char label[16];
          sprintf(label, "p%i", p);
+         char dawlabel[32];
+         sprintf(dawlabel, "param %i", p);
          param_ptr.push_back(
-             this->fx[fx].p[p].assign(p_id++, 0, label, "param", ct_none, px, py, 0, cg_FX, fx,
+             this->fx[fx].p[p].assign(p_id++, 0, label, dawlabel, ct_none, px, py, 0, cg_FX, fx,
                                       true, Surge::ParamConfig::kHorizontal | kHide | ((fx == 0) ? kEasy : 0)));
          py += 20;
       }

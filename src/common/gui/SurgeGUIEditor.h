@@ -100,6 +100,7 @@ protected:
    void controlBeginEdit(VSTGUI::CControl* pControl) override;
    void controlEndEdit(VSTGUI::CControl* pControl) override;
 
+public:
    void refresh_mod();
 
 #if TARGET_VST3

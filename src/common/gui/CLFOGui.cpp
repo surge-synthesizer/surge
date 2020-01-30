@@ -4,6 +4,7 @@
 #include "CLFOGui.h"
 #include "LfoModulationSource.h"
 #include "UserDefaults.h"
+#include "SurgeGUIEditor.h"
 #include <chrono>
 
 using namespace VSTGUI;
@@ -997,6 +998,14 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
             {
                lfodata->shape.val.i = i;
                invalid();
+
+               // This is such a hack
+               auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+               if( sge )
+               {
+                  sge->refresh_mod();
+               }
+               
             }
          }
       }

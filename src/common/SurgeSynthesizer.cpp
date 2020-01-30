@@ -1674,7 +1674,9 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
    // FIX - this will break in S++
    if( tms >= ms_lfo1 && tms <= ms_slfo6 )
    {
-      bool isup = storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].unipolar.val.i;
+      bool isup = storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].unipolar.val.i ||
+         storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].shape.val.i == ls_constant1;
+      
       // For now
       return !isup;
    }
@@ -1686,6 +1688,10 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
          return ms->is_bipolar();
       else
          return false;
+   }
+   if( tms == ms_keytrack )
+   {
+      return true;
    }
    else
    {

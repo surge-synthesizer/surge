@@ -78,6 +78,8 @@ struct KeyboardMapping
             keys.push_back(i);
       }
 
+   static KeyboardMapping tuneA69To(double freq);
+   
    // TODO
    // std::string toHtml(); 
 };
