@@ -3140,10 +3140,17 @@ void SurgeGUIEditor::toggleTuning()
     if( this->synth->storage.isStandardTuning && tuningCacheForToggle.size() > 0 )
     {
         this->synth->storage.retuneToScale(Surge::Storage::parseSCLData(tuningCacheForToggle));
+        if( mappingCacheForToggle.size() > 0 )
+           this->synth->storage.remapToKeyboard(Surge::Storage::parseKBMData(mappingCacheForToggle));
     }
     else if( ! this->synth->storage.isStandardTuning )
     {
         tuningCacheForToggle = this->synth->storage.currentScale.rawText;
+        if( ! this->synth->storage.isStandardMapping )
+        {
+           mappingCacheForToggle = this->synth->storage.currentMapping.rawText;
+        }
+        this->synth->storage.remapToStandardKeyboard();
         this->synth->storage.init_tables();
     }
 

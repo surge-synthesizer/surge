@@ -189,6 +189,7 @@ public:
    void tuningFileDropped(std::string fn);
    void mappingFileDropped(std::string fn);
    std::string tuningCacheForToggle = "";
+   std::string mappingCacheForToggle = "";
    
 private:
    /**

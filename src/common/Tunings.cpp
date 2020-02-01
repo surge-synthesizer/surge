@@ -303,8 +303,27 @@ th {
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
         Tuning Information
-      </div>
+     )HTML";
 
+    if( storage && ! storage->isStandardMapping )
+    {
+       htmls << "<ul>\n"
+             << "<li><a href=\"#rawscl\">Jump to Raw SCL</a>.\n"
+             << "<li><a href=\"#rawkbm\">Jump to raw KBM</a>.\n"
+             << "<li>Scale position 0 maps to key "
+             << storage->currentMapping.middleNote << "\n<li> Midi note " << storage->currentMapping.tuningConstantNote << " is set to frequency "
+             << storage->currentMapping.tuningFrequency << "hz.\n</ul> ";
+    }
+    else
+    {
+       htmls << "\n<div>Tuning uses standard keyboard mapping.\n"
+             << "<ul>\n"
+             << "<li><a href=\"#rawscl\">Jump to Raw SCL</a>.\n"
+             << "</ul>\n";
+    }
+
+    htmls << R"HTML(
+      </div>
       <div style="font-size: 12pt; font-family: Lato;">
         <div style="padding-bottom: 10pt;">
         )HTML" << count << " tones" <<
@@ -338,12 +357,6 @@ R"HTML(
 )HTML";
 
 
-    if( ! storage->isStandardMapping )
-    {
-       htmls << "\n<div>Tuning was generated with altered keyboard mapping. See full mapping below. Scale position 0 maps to key "
-             << storage->currentMapping.middleNote << "; Midi note " << storage->currentMapping.tuningConstantNote << " is set to frequency "
-             << storage->currentMapping.tuningFrequency << "hz. " << storage->scaleConstantNote() << "</div>\n";
-    }
        
     htmls << R"HTML(
 <p>
@@ -354,7 +367,7 @@ R"HTML(
 
 )HTML";
 
-       for( int i=0; i<127; ++i )
+       for( int i=0; i<128; ++i )
        {
           int octave = (i / 12) - 1;
           char notenames[12][3] = {"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "};
@@ -381,7 +394,7 @@ R"HTML(
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; font-family: Lato; color: #123463;">
-        Tuning Raw File:
+        <a name="rawscl">Tuning Raw File</a>:
            )HTML" << name << "</div>\n<pre>\n" << rawText << R"HTML(
       </pre>
     </div>
@@ -392,7 +405,7 @@ R"HTML(
           htmls << R"HTML(
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; font-family: Lato; color: #123463;">
-        Raw File:
+        <a name="rawkbm">Keyboard Mapping Raw File</a>:
            )HTML" << name << "</div>\n<pre>\n" << storage->currentMapping.rawText << R"HTML(
       </pre>
     </div>
