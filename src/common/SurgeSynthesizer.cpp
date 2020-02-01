@@ -2070,14 +2070,19 @@ void SurgeSynthesizer::getParameterNameW(long index, wchar_t* ptr)
    else if (index >= metaparam_offset)
    {
       int c = index - metaparam_offset;
+      // For a reason I don't understand, on windows, we need to sprintf then swprinf just the short char
+      // to make just these names work. :shrug:
+      char wideHack[256];
+       
       if (c >= num_metaparameters)
       {
-         swprintf(ptr, 128, L"C%i:ERROR");
+         snprintf(wideHack, 255, "C:ERROR");
       }
       else
       {
-         swprintf(ptr, 128, L"C%i:%s", c + 1, storage.getPatch().CustomControllerLabel[c]);
+         snprintf(wideHack, 255, "C%d:%s", c+1, storage.getPatch().CustomControllerLabel[c]);
       }
+      swprintf(ptr, 128, L"%s", wideHack);
    }
    else
    {
@@ -2093,15 +2098,7 @@ void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t* ptr)
    }
    else if (index >= metaparam_offset)
    {
-      int c = index - metaparam_offset;
-      if (c >= num_metaparameters)
-      {
-         swprintf(ptr, 128, L"C%i:ERROR", c + 1);
-      }
-      else
-      {
-         swprintf(ptr, 128, L"C%i:%s", c + 1, storage.getPatch().CustomControllerLabel[c]);
-      }
+       getParameterNameW( index, ptr );
    }
    else
    {
@@ -2204,6 +2201,8 @@ float SurgeSynthesizer::normalizedToValue(long index, float value)
 {
    if (index < 0)
       return 0.f;
+   if (index >= metaparam_offset)
+      return value;
    if (index < storage.getPatch().param_ptr.size())
       return storage.getPatch().param_ptr[index]->normalized_to_value(value);
    return 0.f;
@@ -2213,6 +2212,8 @@ float SurgeSynthesizer::valueToNormalized(long index, float value)
 {
    if (index < 0)
       return 0.f;
+   if (index >= metaparam_offset)
+      return value;
    if (index < storage.getPatch().param_ptr.size())
       return storage.getPatch().param_ptr[index]->value_to_normalized(value);
    return 0.f;

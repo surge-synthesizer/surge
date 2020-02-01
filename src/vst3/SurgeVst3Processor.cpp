@@ -747,14 +747,17 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
                                                              ParamValue valueNormalized,
                                                              String128 ontostring)
 {
+   // std::cout << __LINE__ << " " << __func__ << " " << tag << std::endl;
    CHECK_INITIALIZED;
 
-   if (tag >= getParameterCount() )
+   if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
+   {
+   }
+   else if (tag >= getParameterCount() )
    {
       return kInvalidArgument;
    }
-
-   if( tag >= getParameterCountWithoutMappings() )
+   else if( tag >= getParameterCountWithoutMappings() )
    {
       return kResultOk;
    }
@@ -774,6 +777,7 @@ tresult PLUGIN_API SurgeVst3Processor::getParamValueByString(ParamID tag,
                                                              TChar* string,
                                                              ParamValue& valueNormalized)
 {
+   // std::cout << __LINE__ << " " << __func__ << " " << tag << std::endl;
    CHECK_INITIALIZED;
       
    if (tag >= getParameterCount())
@@ -787,13 +791,17 @@ tresult PLUGIN_API SurgeVst3Processor::getParamValueByString(ParamID tag,
 ParamValue PLUGIN_API SurgeVst3Processor::normalizedParamToPlain(ParamID tag,
                                                                  ParamValue valueNormalized)
 {
+   // std::cout << __LINE__ << " " << __func__ << " " << tag << std::endl;
    ABORT_IF_NOT_INITIALIZED;
 
-   if (tag >= getParameterCount())
+   if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
+   {
+   }
+   else if (tag >= getParameterCount())
    {
       return kInvalidArgument;
    }
-   if( tag >= getParameterCountWithoutMappings())
+   else if( tag >= getParameterCountWithoutMappings())
    {
       return 0;
    }
@@ -803,21 +811,27 @@ ParamValue PLUGIN_API SurgeVst3Processor::normalizedParamToPlain(ParamID tag,
 
 ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, ParamValue plainValue)
 {
+   // std::cout << __LINE__ << " " << __func__ << " " << tag << " " << plainValue << std::endl;
    ABORT_IF_NOT_INITIALIZED
 
-   if (tag >= getParameterCountWithoutMappings())
+   if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
+   {
+   }
+   else if (tag >= getParameterCountWithoutMappings())
    {
        // return kInvalidArgument;
        // kInvalidArgument is not a ParamValue. In this case just
        return 0;
    }
 
-   return surgeInstance->valueToNormalized(tag, plainValue);
+   auto res = surgeInstance->valueToNormalized(tag, plainValue);
+   // std::cout << __LINE__ << " " << __func__ << " " << tag << " " << plainValue << " = " << res << std::endl;
+   return res;
 }
 
 ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 {
-   //std::cout << __LINE__ << " getParamNormalized " << tag << std::endl;
+   // std::cout << __LINE__ << " getParamNormalized " << tag << std::endl;
    ABORT_IF_NOT_INITIALIZED;
 
    if(tag >= getParameterCountWithoutMappings() &&
@@ -837,6 +851,7 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 
 tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValue value)
 {
+   // std::cout << __LINE__ << " " << __func__ << " " << tag << std::endl;
    CHECK_INITIALIZED;
 
    if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
