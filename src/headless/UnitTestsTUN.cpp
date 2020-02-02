@@ -623,5 +623,126 @@ TEST_CASE( "Non-Monotonic Tunings", "[tun]" )
          REQUIRE( straight[i] == Approx( shuffle[indices[i]] ).margin( 0.1 ) );
       }
    }
+}
+
+TEST_CASE( "HPF Ignores Tuning Properly", "[tun][dsp]" )
+{
+   INFO( "Testing condition reported in #1545" );
+   // This is a simple test which just guarantees monotonicity of the filter and
+   // midpoint at the cutoff point both with tuning and not
+
+   SECTION( "Frequency And RMS In Default" )
+   {
+      auto surge = surgeOnSine();
+      REQUIRE( surge.get() );
+
+      for( auto note = 40; note < 90; ++note )
+      {
+         auto fr = frequencyAndRMSForNote(surge, note);
+         REQUIRE( fr.second == Approx( 0.25 ).margin( 0.02 ) );
+      }
+   }
+
+   SECTION( "Frequency vs HPF untuned" )
+   {
+      auto surge = surgeOnSine();
+      REQUIRE( surge.get() );
+
+      // f = 440 * 2^x/12
+      // so if we want f to be 220
+      // 2^x/12 = 1/2
+      // x=-12
+      surge->storage.getPatch().scene[0].lowcut.val.f = -12.0;
+      char txt[256];
+      surge->storage.getPatch().scene[0].lowcut.get_display(txt);
+
+      double priorRMS = 0;
+      for( auto note = 20; note < 90; note += 2 )
+      {
+         auto fr = frequencyAndRMSForNote(surge, note);
+
+         REQUIRE( priorRMS < fr.second );
+         priorRMS = fr.second;
+         
+         if( fr.first < 220 )
+            REQUIRE( fr.second < 0.1 );
+         else
+            REQUIRE( fr.second > 0.1 );
+      }
+   }
+
+   SECTION( "Frequency vs HPF 31 note scale" )
+   {
+      auto surge = surgeOnSine();
+      REQUIRE( surge.get() );
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/31edo.scl" );
+      surge->storage.retuneToScale(s);
+
+      surge->storage.getPatch().scene[0].lowcut.val.f = -12.0;
+      char txt[256];
+      surge->storage.getPatch().scene[0].lowcut.get_display(txt);
+
+      double priorRMS = 0;
+      for( auto note = 1; note < 120; note += 2 )
+      {
+         auto fr = frequencyAndRMSForNote(surge, note);
+
+         REQUIRE( priorRMS < fr.second );
+         priorRMS = fr.second;
+         
+         if( fr.first < 220 )
+            REQUIRE( fr.second < 0.1 );
+         else
+            REQUIRE( fr.second > 0.1 );
+      }
+   }
+}
+
+TEST_CASE( "Ignoring Tuning Tables are Correct", "[dsp][tun]" )
+{
+   INFO( "Testing condition reported in #1545" );
+   // This is a simple test which just guarantees monotonicity of the filter and
+   // midpoint at the cutoff point both with tuning and not
+
+   SECTION( "Self-consistent when untuned" )
+   {
+      auto surge = surgeOnSine();
+      for( int i=0; i<1000; ++i )
+      {
+         auto e = 512.f * rand() / RAND_MAX;
+         REQUIRE( surge->storage.note_to_pitch(e) == surge->storage.note_to_pitch_ignoring_tuning(e) );
+         REQUIRE( surge->storage.note_to_pitch_inv(e) == surge->storage.note_to_pitch_inv_ignoring_tuning(e) );
+
+         float s,c,si,ci;
+         surge->storage.note_to_omega(e,s,c);
+         surge->storage.note_to_omega_ignoring_tuning(e,si,ci);
+         REQUIRE( s == si );
+         REQUIRE( c == ci );
+      }
+   }
+
+   SECTION( "Ignoring in retuned compares with untuned" )
+   {
+      auto surge = surgeOnSine();
+      auto surgeTuned = surgeOnSine();
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/31edo.scl" );
+      surgeTuned->storage.retuneToScale(s);
+
+      for( int i=0; i<1000; ++i )
+      {
+         auto e = 512.f * rand() / RAND_MAX;
+         REQUIRE( surge->storage.note_to_pitch(e) == surgeTuned->storage.note_to_pitch_ignoring_tuning(e) );
+         REQUIRE( surge->storage.note_to_pitch(e) != surgeTuned->storage.note_to_pitch(e) );
+         
+         REQUIRE( surge->storage.note_to_pitch_inv(e) == surgeTuned->storage.note_to_pitch_inv_ignoring_tuning(e) );
+         REQUIRE( surge->storage.note_to_pitch_inv(e) != surgeTuned->storage.note_to_pitch_inv(e) );
+
+         float s,c,si,ci;
+         surge->storage.note_to_omega(e,s,c);
+         surgeTuned->storage.note_to_omega_ignoring_tuning(e,si,ci);
+         REQUIRE( s == si );
+         REQUIRE( c == ci );
+      }
+   }
 
 }

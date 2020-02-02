@@ -41,7 +41,30 @@ double frequencyFromData( float *buffer, int nS, int nC, int audioChannel,
    delete[] leftTrimmed;
    return freq;
 }
+
+double RMSFromData( float *buffer, int nS, int nC, int audioChannel,
+                             int start, int trimTo )
+{
+   float *leftTrimmed = new float[trimTo];
+
+   for( int i=0; i<trimTo; ++i )
+      leftTrimmed[i] = buffer[ (i + start) * 2 + audioChannel ];
+
+   // OK so now look for sample times between positive/negative crosses
+   double RMS=0;
+   int ct = 0;
+   for( int i=0; i<trimTo -1; ++i )
+   {
+      RMS += leftTrimmed[i] * leftTrimmed[i];
+      ct ++;
+   }
+   RMS /= ct;
+   RMS = sqrt(RMS);
    
+   delete[] leftTrimmed;
+   return RMS;
+}
+
 double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
                          int seconds, int audioChannel,
                          int midiChannel )
@@ -64,6 +87,31 @@ double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
    delete[] buffer;
 
    return freq;
+}
+
+std::pair<double,double> frequencyAndRMSForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
+                                                 int seconds, int audioChannel,
+                                                 int midiChannel )
+{
+   auto events = Surge::Headless::makeHoldNoteFor( note, 44100 * seconds, 64, midiChannel );
+   float *buffer;
+   int nS, nC;
+   Surge::Headless::playAsConfigured( surge, events, &buffer, &nS, &nC );
+   for( auto i=0; i<500; ++i ) surge->process(); // Ring out any transients on this synth
+   
+   REQUIRE( nC == 2 );
+   REQUIRE( nS >= 44100 * seconds );
+   REQUIRE( nS <= 44100 * seconds + 4 * BLOCK_SIZE );
+
+   // Trim off the leading and trailing
+   int nSTrim = (int)(nS / 2 * 0.8);
+   int start = (int)( nS / 2 * 0.05 );
+
+   auto freq = frequencyFromData( buffer, nS, nC, audioChannel, start, nSTrim );
+   auto rms = RMSFromData( buffer, nS, nC, audioChannel, start, nSTrim );
+   delete[] buffer;
+
+   return std::make_pair(freq,rms);
 }
 
 double frequencyForEvents( std::shared_ptr<SurgeSynthesizer> surge,

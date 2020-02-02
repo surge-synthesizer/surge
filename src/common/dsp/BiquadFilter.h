@@ -194,7 +194,7 @@ public:
    // 440*powf(2,scfreq)*samplerate_inv); }
    double calc_omega(double scfreq)
    {
-      return (2 * 3.14159265358979323846) * 440 * storage->note_to_pitch((float)(12.f * scfreq)) *
+      return (2 * 3.14159265358979323846) * 440 * storage->note_to_pitch_ignoring_tuning((float)(12.f * scfreq)) *
              dsamplerate_inv;
    }
    static double calc_omega_from_Hz(double Hz)
