@@ -15,7 +15,13 @@ double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
                          int seconds = 2, int audioChannel = 0,
                          int midiChannel = 0 );
 
+std::pair<double,double> frequencyAndRMSForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
+                                                 int seconds = 2, int audioChannel = 0,
+                                                 int midiChannel = 0 );
+
 double frequencyFromData( float *buffer, int nS, int nC, int audioChannel,
+                          int start, int trimTo );
+double RMSFromData( float *buffer, int nS, int nC, int audioChannel,
                           int start, int trimTo );
 
 double frequencyForEvents( std::shared_ptr<SurgeSynthesizer> surge,

@@ -526,7 +526,10 @@ public:
    float table_pitch alignas(16)[512];
    float table_pitch_inv alignas(16)[512];
    float table_note_omega alignas(16)[2][512];
-
+   float table_pitch_ignoring_tuning alignas(16)[512];
+   float table_pitch_inv_ignoring_tuning alignas(16)[512];
+   float table_note_omega_ignoring_tuning alignas(16)[2][512];
+   
    ~SurgeStorage();
 
    std::unique_ptr<SurgePatch> _patch;
@@ -601,6 +604,8 @@ public:
 
    float note_to_pitch(float x);
    float note_to_pitch_inv(float x);
+   float note_to_pitch_ignoring_tuning(float x);
+   float note_to_pitch_inv_ignoring_tuning(float x);
    inline float note_to_pitch_tuningctr(float x)
    {
        return note_to_pitch(x + scaleConstantNote() ) * scaleConstantPitchInv();
@@ -611,6 +616,7 @@ public:
    }
        
    void note_to_omega(float, float&, float&);
+   void note_to_omega_ignoring_tuning(float, float&, float&);
 
    bool retuneToScale(const Surge::Storage::Scale& s);
    bool retuneToStandardTuning() { init_tables(); return true; }

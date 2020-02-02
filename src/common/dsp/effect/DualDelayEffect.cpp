@@ -72,19 +72,19 @@ void DualDelayEffect::setvars(bool init)
    if (init)
    {
       timeL.newValue(samplerate * ((fxdata->p[0].temposync ? storage->temposyncratio_inv : 1.f) *
-                                   storage->note_to_pitch(12 * fxdata->p[0].val.f)) +
+                                   storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[0].val.f)) +
                      LFOval - FIRoffset);
       timeR.newValue(samplerate * ((fxdata->p[1].temposync ? storage->temposyncratio_inv : 1.f) *
-                                   storage->note_to_pitch(12 * fxdata->p[1].val.f)) -
+                                   storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[1].val.f)) -
                      LFOval - FIRoffset);
    }
    else
    {
       timeL.newValue(samplerate * ((fxdata->p[0].temposync ? storage->temposyncratio_inv : 1.f) *
-                                   storage->note_to_pitch(12 * *f[0])) +
+                                   storage->note_to_pitch_ignoring_tuning(12 * *f[0])) +
                      LFOval - FIRoffset);
       timeR.newValue(samplerate * ((fxdata->p[1].temposync ? storage->temposyncratio_inv : 1.f) *
-                                   storage->note_to_pitch(12 * *f[1])) -
+                                   storage->note_to_pitch_ignoring_tuning(12 * *f[1])) -
                      LFOval - FIRoffset);
    }
 

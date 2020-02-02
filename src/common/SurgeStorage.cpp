@@ -1165,11 +1165,15 @@ void SurgeStorage::init_tables()
    {
       table_dB[i] = powf(10.f, 0.05f * ((float)i - 384.f));
       table_pitch[i] = powf(2.f, ((float)i - 256.f) * (1.f / 12.f));
+      table_pitch_ignoring_tuning[i] = table_pitch[i];
       table_pitch_inv[i] = 1.f / table_pitch[i];
+      table_pitch_inv_ignoring_tuning[i] = table_pitch_inv[i];
       table_note_omega[0][i] =
           (float)sin(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
       table_note_omega[1][i] =
           (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
+      table_note_omega_ignoring_tuning[0][i] = table_note_omega[0][i];
+      table_note_omega_ignoring_tuning[1][i] = table_note_omega[1][i];
       double k = dsamplerate_os * pow(2.0, (((double)i - 256.0) / 16.0)) / (double)BLOCK_SIZE_OS;
       table_envrate_lpf[i] = (float)(1.f - exp(log(db60) / k));
       table_envrate_linear[i] = (float)1.f / k;
@@ -1228,6 +1232,30 @@ float SurgeStorage::note_to_pitch_inv(float x)
    return (1 - a) * table_pitch_inv[e & 0x1ff] + a * table_pitch_inv[(e + 1) & 0x1ff];
 }
 
+float SurgeStorage::note_to_pitch_ignoring_tuning(float x)
+{
+   x += 256;
+   int e = (int)x;
+   float a = x - (float)e;
+
+   if (e > 0x1fe)
+      e = 0x1fe;
+
+   return (1 - a) * table_pitch_ignoring_tuning[e & 0x1ff] + a * table_pitch_ignoring_tuning[(e + 1) & 0x1ff];
+}
+
+float SurgeStorage::note_to_pitch_inv_ignoring_tuning(float x)
+{
+   x += 256;
+   int e = (int)x;
+   float a = x - (float)e;
+
+   if (e > 0x1fe)
+      e = 0x1fe;
+
+   return (1 - a) * table_pitch_inv_ignoring_tuning[e & 0x1ff] + a * table_pitch_inv_ignoring_tuning[(e + 1) & 0x1ff];
+}
+
 void SurgeStorage::note_to_omega(float x, float& sinu, float& cosi)
 {
    x += 256;
@@ -1241,6 +1269,21 @@ void SurgeStorage::note_to_omega(float x, float& sinu, float& cosi)
 
    sinu = (1 - a) * table_note_omega[0][e & 0x1ff] + a * table_note_omega[0][(e + 1) & 0x1ff];
    cosi = (1 - a) * table_note_omega[1][e & 0x1ff] + a * table_note_omega[1][(e + 1) & 0x1ff];
+}
+
+void SurgeStorage::note_to_omega_ignoring_tuning(float x, float& sinu, float& cosi)
+{
+   x += 256;
+   int e = (int)x;
+   float a = x - (float)e;
+
+   if (e > 0x1fe)
+      e = 0x1fe;
+   else if (e < 0)
+      e = 0;
+
+   sinu = (1 - a) * table_note_omega_ignoring_tuning[0][e & 0x1ff] + a * table_note_omega_ignoring_tuning[0][(e + 1) & 0x1ff];
+   cosi = (1 - a) * table_note_omega_ignoring_tuning[1][e & 0x1ff] + a * table_note_omega_ignoring_tuning[1][(e + 1) & 0x1ff];
 }
 
 float db_to_linear(float x)
