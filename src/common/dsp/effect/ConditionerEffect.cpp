@@ -230,9 +230,9 @@ void ConditionerEffect::init_ctrltypes()
 
    fxdata->p[4].set_name("Threshold");
    fxdata->p[4].set_type(ct_decibel_attenuation);
-   fxdata->p[5].set_name("A Rate");
+   fxdata->p[5].set_name("Attack Rate");
    fxdata->p[5].set_type(ct_percent_bidirectional);
-   fxdata->p[6].set_name("R Rate");
+   fxdata->p[6].set_name("Release Rate");
    fxdata->p[6].set_type(ct_percent_bidirectional);
    fxdata->p[7].set_name("Output");
    fxdata->p[7].set_type(ct_decibel_attenuation);
