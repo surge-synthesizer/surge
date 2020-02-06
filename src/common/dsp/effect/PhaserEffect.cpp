@@ -145,11 +145,11 @@ const char* PhaserEffect::group_label(int id)
    switch (id)
    {
    case 0:
-      return "Phaser";
+      return "Stages";
    case 1:
       return "Modulation";
    case 2:
-      return "Mix";
+      return "Output";
    }
    return 0;
 }
@@ -171,7 +171,7 @@ void PhaserEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[pp_base].set_name("Base Freq");
+   fxdata->p[pp_base].set_name("Center");
    fxdata->p[pp_base].set_type(ct_percent_bidirectional);
    fxdata->p[pp_feedback].set_name("Feedback");
    fxdata->p[pp_feedback].set_type(ct_percent_bidirectional);
