@@ -592,9 +592,9 @@ bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
          {
             Surge::UserInteractions::promptError(
                 std::string(
-                    "Surge only supports drag-and-drop of .wt or .wav wavetables onto the oscillator. ") +
+                    "Surge only supports drag-and-drop of .wt or .wav wavetables onto the oscillator.") +
                 "You dropped a file with extension " + fPath.extension().generic_string(),
-                "Please drag a valid file type");
+                "Please drag a valid file type!");
          }
          else
          {
@@ -604,8 +604,8 @@ bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
       else
       {
          Surge::UserInteractions::promptError(
-             "Surge only supports drag-and-drop of files onto the oscillator",
-             "Please Drag a File");
+             "Surge only supports drag-and-drop of files onto the oscillator.",
+             "Please drop a file!");
       }
    }
 
@@ -693,12 +693,12 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
 
    // Add direct open here
    contextMenu->addSeparator();
-   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc("Open Wave Table from File..."));
+   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc("Open Wavetable from file..."));
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
    contextMenu->addEntry(actionItem);
 
-   auto exportItem = new CCommandMenuItem(CCommandMenuItem::Desc("Export Wave Table to File..."));
+   auto exportItem = new CCommandMenuItem(CCommandMenuItem::Desc("Export Wavetable to file..."));
    auto exportAction = [this](CCommandMenuItem *item)
        {
           // FIXME - we need to find the scene and osc by iterating (gross).
@@ -718,7 +718,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
           }
           if( scene == -1 || oscNum == -1 )
           {
-             Surge::UserInteractions::promptError( "Unable to determine which osc I have data for in export", "Export" );
+             Surge::UserInteractions::promptError( "Unable to determine which oscillator I have data for in export", "Export" );
           }
           else
           {
