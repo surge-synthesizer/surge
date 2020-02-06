@@ -224,13 +224,13 @@ const char* DualDelayEffect::group_label(int id)
    case 0:
       return "Input";
    case 1:
-      return "Delay time";
+      return "Delay Time";
    case 2:
-      return "Feedback/EQ";
+      return "Feedback";
    case 3:
       return "Modulation";
    case 4:
-      return "Mix";
+      return "Output";
    }
    return 0;
 }
@@ -260,7 +260,7 @@ void DualDelayEffect::init_ctrltypes()
    fxdata->p[0].set_type(ct_envtime);
    fxdata->p[1].set_name("Right");
    fxdata->p[1].set_type(ct_envtime);
-   fxdata->p[2].set_name("Feedback");
+   fxdata->p[2].set_name("Amount");
    fxdata->p[2].set_type(ct_amplitude);
    fxdata->p[3].set_name("Crossfeed");
    fxdata->p[3].set_type(ct_amplitude);
