@@ -173,9 +173,9 @@ void DistortionEffect::init_ctrltypes()
 
    fxdata->p[0].set_name("Gain");
    fxdata->p[0].set_type(ct_decibel_extendable);
-   fxdata->p[1].set_name("Freq");
+   fxdata->p[1].set_name("Frequency");
    fxdata->p[1].set_type(ct_freq_audible);
-   fxdata->p[2].set_name("BW");
+   fxdata->p[2].set_name("Bandwidth");
    fxdata->p[2].set_type(ct_bandwidth);
    fxdata->p[3].set_name("High Cut");
    fxdata->p[3].set_type(ct_freq_audible);
@@ -184,14 +184,14 @@ void DistortionEffect::init_ctrltypes()
    fxdata->p[4].set_type(ct_decibel_narrow_extendable);
    fxdata->p[5].set_name("Feedback");
    fxdata->p[5].set_type(ct_percent_bidirectional);
-   fxdata->p[11].set_name("WaveShape");
+   fxdata->p[11].set_name("Waveshape");
    fxdata->p[11].set_type(ct_distortion_waveshape);
 
    fxdata->p[6].set_name("Gain");
    fxdata->p[6].set_type(ct_decibel_extendable);
    fxdata->p[7].set_name("Freq");
    fxdata->p[7].set_type(ct_freq_audible);
-   fxdata->p[8].set_name("BW");
+   fxdata->p[8].set_name("Bandwidth");
    fxdata->p[8].set_type(ct_bandwidth);
    fxdata->p[9].set_name("High Cut");
    fxdata->p[9].set_type(ct_freq_audible);
