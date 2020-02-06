@@ -315,11 +315,11 @@ const char* Reverb1Effect::group_label(int id)
    case 0:
       return "Pre-Delay";
    case 1:
-      return "Reverb";
+      return "Room";
    case 2:
       return "EQ";
    case 3:
-      return "Mix";
+      return "Output";
    }
    return 0;
 }
@@ -343,26 +343,26 @@ void Reverb1Effect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[rp_predelay].set_name("Pre-Delay");
+   fxdata->p[rp_predelay].set_name("Time");
    fxdata->p[rp_predelay].set_type(ct_envtime);
    fxdata->p[rp_predelay].modulateable = false;
 
-   fxdata->p[rp_shape].set_name("Room Shape");
+   fxdata->p[rp_shape].set_name("Shape");
    fxdata->p[rp_shape].set_type(ct_reverbshape);
    fxdata->p[rp_shape].modulateable = false;
    fxdata->p[rp_roomsize].set_name("Size");
    fxdata->p[rp_roomsize].set_type(ct_percent);
    fxdata->p[rp_roomsize].modulateable = false;
-   fxdata->p[rp_decaytime].set_name("Decay Time");
+   fxdata->p[rp_decaytime].set_name("Decay");
    fxdata->p[rp_decaytime].set_type(ct_reverbtime);
-   fxdata->p[rp_damping].set_name("HF Damp");
+   fxdata->p[rp_damping].set_name("Damping");
    fxdata->p[rp_damping].set_type(ct_percent);
 
    fxdata->p[rp_locut].set_name("Low Cut");
    fxdata->p[rp_locut].set_type(ct_freq_audible);
-   fxdata->p[rp_freq1].set_name("Band1 Freq");
+   fxdata->p[rp_freq1].set_name("Band Frequency");
    fxdata->p[rp_freq1].set_type(ct_freq_audible);
-   fxdata->p[rp_gain1].set_name("Band1 Gain");
+   fxdata->p[rp_gain1].set_name("Band Gain");
    fxdata->p[rp_gain1].set_type(ct_decibel);
    fxdata->p[rp_hicut].set_name("High Cut");
    fxdata->p[rp_hicut].set_type(ct_freq_audible);
