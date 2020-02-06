@@ -179,25 +179,25 @@ void Eq3BandEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[0].set_name("L Gain");
+   fxdata->p[0].set_name("Gain 1");
    fxdata->p[0].set_type(ct_decibel);
-   fxdata->p[1].set_name("L Freq");
+   fxdata->p[1].set_name("Frequency 1");
    fxdata->p[1].set_type(ct_freq_audible);
-   fxdata->p[2].set_name("L BW");
+   fxdata->p[2].set_name("Bandwidth 1");
    fxdata->p[2].set_type(ct_bandwidth);
 
-   fxdata->p[3].set_name("M Gain");
+   fxdata->p[3].set_name("Gain 2");
    fxdata->p[3].set_type(ct_decibel);
-   fxdata->p[4].set_name("M Freq");
+   fxdata->p[4].set_name("Frequency 2");
    fxdata->p[4].set_type(ct_freq_audible);
-   fxdata->p[5].set_name("M BW");
+   fxdata->p[5].set_name("Bandwidth 2");
    fxdata->p[5].set_type(ct_bandwidth);
 
-   fxdata->p[6].set_name("H Gain");
+   fxdata->p[6].set_name("Gain 3");
    fxdata->p[6].set_type(ct_decibel);
-   fxdata->p[7].set_name("H Freq");
+   fxdata->p[7].set_name("Frequency 3");
    fxdata->p[7].set_type(ct_freq_audible);
-   fxdata->p[8].set_name("H BW");
+   fxdata->p[8].set_name("Bandwidth 3");
    fxdata->p[8].set_type(ct_bandwidth);
 
    fxdata->p[9].set_name("Gain");
