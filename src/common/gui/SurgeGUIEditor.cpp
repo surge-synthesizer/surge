@@ -2169,7 +2169,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             // if(p->can_temposync() || p->can_extend_range())	contextMenu->addEntry("-",eid++);
             if (p->can_temposync())
             {
-               addCallbackMenu(contextMenu, "Temposync",
+               addCallbackMenu(contextMenu, "Tempo sync",
                                [this, p, control]() {
                                   p->temposync = !p->temposync;
                                   if( p->temposync )
@@ -2193,7 +2193,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                {
                   char lab[256];
                   char prefix[256];
-                  char un[5];
+                  char un[7];
 
                   // WARNING - this won't work with Surge++
                   int a = p->ctrlgroup_entry + 1 - ms_lfo1;
@@ -2203,18 +2203,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      sprintf(prefix, "LFO%i", a);
 
                   bool setTSTo;
+                  
+                  // baconpaul, please don't be gross! - EvilDragon
                   if( p->temposync )
                   {
-                     un[0] = 'U'; un[1] = 'n'; un[2] = '-', un[3] = 0;;
+                     un[0] = 'R'; un[1] = 'e'; un[2] = 'm'; un[3] = 'o'; un[4] = 'v'; un[5] = 'e'; un[6] = 0;
                      setTSTo = false;
                   }
                   else
                   {
-                     un[0] = 0;
+                     un[0] = 'S'; un[1] = 'e'; un[2] = 't'; un[3] = 0;
                      setTSTo = true;
                   }
 
-                  snprintf(lab, 256, "%sTempoSync all %s Params", un, prefix );
+                  snprintf(lab, 256, "%s tempo sync for all %s parameters", un, prefix );
                   addCallbackMenu( contextMenu, lab,
                                    [this, p, setTSTo](){
                                       // There is surely a more efficient way but this is fine
