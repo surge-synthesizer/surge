@@ -126,6 +126,136 @@ TEST_CASE( "Unison Absolute and Relative", "[osc]" )
 
 }
 
+TEST_CASE( "Unison at Sample Rates", "[osc]" )
+{
+   auto assertRelative = [](std::shared_ptr<SurgeSynthesizer> surge, const char* pn) {
+                            REQUIRE( surge->loadPatchByPath( pn, -1, "Test" ) );
+                            auto f60_0 = frequencyForNote( surge, 60, 5, 0 );
+                            auto f60_1 = frequencyForNote( surge, 60, 5, 1 );
+                            auto f60_avg = 0.5 * ( f60_0 + f60_1 );
+                            REQUIRE( f60_avg == Approx( 261.6 ).margin(1) );
+                            
+                            auto f72_0 = frequencyForNote( surge, 72, 5, 0 );
+                            auto f72_1 = frequencyForNote( surge, 72, 5, 1 );
+                            auto f72_avg = 0.5 * ( f72_0 + f72_1 );
+                            REQUIRE( f72_avg == Approx( 2 * 261.6 ).margin(1) );
+                            
+                            // In relative mode, the average frequencies should double, as should the individual outliers
+                            REQUIRE( f72_avg / f60_avg == Approx( 2 ).margin( 0.01 ) );
+                            REQUIRE( f72_0 / f60_0 == Approx( 2 ).margin( 0.01 ) );
+                            REQUIRE( f72_1 / f60_1 == Approx( 2 ).margin( 0.01 ) );
+                         };
+
+   auto assertAbsolute = [](std::shared_ptr<SurgeSynthesizer> surge, const char* pn, bool print = false) {
+                            REQUIRE( surge->loadPatchByPath( pn, -1, "Test" ) );
+                            auto f60_0 = frequencyForNote( surge, 60, 5, 0 );
+                            auto f60_1 = frequencyForNote( surge, 60, 5, 1 );
+                            
+                            auto f60_avg = 0.5 * ( f60_0 + f60_1 );
+                            REQUIRE( f60_avg == Approx( 261.6 ).margin(2) );
+
+                            auto f72_0 = frequencyForNote( surge, 72, 5, 0 );
+                            auto f72_1 = frequencyForNote( surge, 72, 5, 1 );
+                            auto f72_avg = 0.5 * ( f72_0 + f72_1 );
+                            REQUIRE( f72_avg == Approx( 2 * 261.6 ).margin(2) );
+                            
+                            // In absolute mode, the average frequencies should double, but the channels should have constant difference
+                            REQUIRE( f72_avg / f60_avg == Approx( 2 ).margin( 0.01 ) );
+                            REQUIRE( ( f72_0 - f72_1 ) / ( f60_0 - f60_1 ) == Approx( 1 ).margin( 0.01 ) );
+
+                            // While this test is correct, the differences depend on samplerate in 1.6.5. That should not be the case here.
+                            auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[n_osc_params - 2]);
+
+                            char txt[256];
+                            ap->get_display(txt);
+                            float spreadWhichMatchesDisplay = ap->val.f * 16.f;
+                            INFO( "Comparing absolute with " << txt << " " << spreadWhichMatchesDisplay );
+                            REQUIRE( spreadWhichMatchesDisplay == Approx( f60_0 - f60_1 ).margin( 0.05 ) );
+                            
+                            if( print )
+                            {
+                               std::cout << "F60 " << f60_avg << " " << f60_0 << " " << f60_1 << " " << f60_0 - f60_1 << std::endl;
+                               std::cout << "F72 " << f72_avg << " " << f72_0 << " " << f72_1 << " " << f60_0 - f60_1 << std::endl;
+                            }
+                         };
+
+      auto randomAbsolute = [](std::shared_ptr<SurgeSynthesizer> surge, const char* pn, bool print = false) {
+                            for( int i=0; i<10; ++i )
+                            {
+                               REQUIRE( surge->loadPatchByPath( pn, -1, "Test" ) );
+                               int note = rand() % 70 + 22;
+                               float abss = rand() * 1.f / RAND_MAX * 0.8 + 0.15;
+                               auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[n_osc_params - 2]);
+                               ap->set_value_f01(abss);
+                               char txt[256];
+                               ap->get_display(txt);
+
+                               INFO( "Test[" << i << "] note=" << note << " at absolute spread " << abss << " = " << txt );
+                               for( int j=0; j<200; ++j ) surge->process();
+                               
+                               auto fn_0 = frequencyForNote( surge, note, 5, 0 );
+                               auto fn_1 = frequencyForNote( surge, note, 5, 1 );
+                               REQUIRE( 16.f * abss == Approx( fn_0 - fn_1 ).margin( 0.3 ) );
+                            }
+                         };
+
+   std::vector<int> srs = { { 44100, 48000, 88200, 96000 } };
+
+   SECTION( "Wavetable Oscillator" )
+   {
+      for( auto sr : srs )
+      {
+         INFO( "Wavetable test at " << sr );
+         auto surge = Surge::Headless::createSurge(sr);
+         
+         assertRelative(surge, "test-data/patches/Wavetable-Sin-Uni2-Relative.fxp");
+         assertAbsolute(surge, "test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
+         // HF noise in the wavetable makes my detector unreliable at zero crossings in this case
+         // It passes 99% of the time but leave this test out for now.
+         // randomAbsolute(surge, "test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
+      }
+   }
+
+   SECTION( "Window Oscillator" )
+   {
+      for( auto sr : srs )
+      {
+         INFO( "Window test at " << sr );
+         auto surge = Surge::Headless::createSurge(sr);
+         
+         assertRelative(surge, "test-data/patches/Window-Sin-Uni2-Relative.fxp");
+         assertAbsolute(surge, "test-data/patches/Window-Sin-Uni2-Absolute.fxp");
+         randomAbsolute(surge, "test-data/patches/Window-Sin-Uni2-Absolute.fxp");
+      }
+   }
+   
+   SECTION( "Classic Oscillator" )
+   {
+      for( auto sr : srs )
+      {
+         INFO( "Classic test at " << sr );
+         auto surge = Surge::Headless::createSurge(sr);
+         
+         assertRelative(surge, "test-data/patches/Classic-Uni2-Relative.fxp");
+         assertAbsolute(surge, "test-data/patches/Classic-Uni2-Absolute.fxp");
+         randomAbsolute(surge, "test-data/patches/Classic-Uni2-Absolute.fxp");
+      }
+   }
+   
+   SECTION( "SH Oscillator" )
+   {
+      for( auto sr : srs )
+      {
+         INFO( "SH test at " << sr );
+         auto surge = Surge::Headless::createSurge(sr);
+         
+         assertRelative(surge, "test-data/patches/SH-Uni2-Relative.fxp");
+         assertAbsolute(surge, "test-data/patches/SH-Uni2-Absolute.fxp");
+         randomAbsolute(surge, "test-data/patches/SH-Uni2-Absolute.fxp");
+      }
+   }
+}
+
 TEST_CASE( "All Patches have Bounded Output", "[dsp]" )
 {
    auto surge = Surge::Headless::createSurge(44100);

@@ -402,7 +402,34 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    float sync = min((float)l_sync.v, (12 + 72 + 72) - pitch);
    float t;
    if (oscdata->p[5].absolute)
-       t = storage->note_to_pitch_inv_tuningctr(detune * pitchmult_inv * (1.f / 440.f) + sync);
+   {
+      /* 
+      ** Oh so this line of code. What is it doing?
+      **
+      **  t = storage->note_to_pitch_inv_tuningctr(detune * pitchmult_inv * (1.f / 440.f) + sync);
+      ** Lets for a moment assume std tuning. So note_to_pitch_inv will give you, say, 1/32 for note 60 and 1/1 for note 0. Cool.
+      ** it is the inverse of frequency. That's why below with detune = +/- 1 for the extreme 2 voice case we just use it directly.
+      ** It is the time distance of one note.
+      **
+      ** But in absolute mode we want to scale that note. So teh calculation here (assume sync is 0 for a second) is 
+      ** detune * pitcmult_inv / 440
+      ** pitchmult_inv =  dsamplerate_os / 8.17 * note_to_pitch_inv(pitch)
+      ** so this is using
+      ** detune * 1.0 / 440 * 1.0 / 8.17 * dsamplerate * note_to_pitch_inv(pitch)
+      ** Or: 
+      ** detune / note_to_pitch(pitch) * ( 1.0 / (440 * 8.17 ) ) * dsamplerate
+      **
+      ** So there's a couple of things wrong with that. First of all this should not be samplerate dependent.
+      ** Second of all, what/s up with 1.0 / ( 8.17 * 440 )
+      ** 
+      ** Well the answer is that we want the time to be pushed around in hz. So it turns out that
+      ** 44100 * 2 / ( 440 * 8.175 ) =~ 24.2 and 24.2 / 16 = 1.447 which is almost how much absolute is off. So
+      ** lets set the multiplier here so that the regtests exacty match the display frequency. That is the
+      ** frequency desired spread / 0.9443. 0.9443 is empirically determined by running the 2 unisoncase
+      ** over a bunch of tests.
+      */
+      t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 + sync );
+   }
    else
        t = storage->note_to_pitch_inv_tuningctr(detune + sync);
 

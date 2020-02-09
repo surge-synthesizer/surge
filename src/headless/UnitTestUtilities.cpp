@@ -12,7 +12,7 @@ namespace Test
 {
 
 double frequencyFromData( float *buffer, int nS, int nC, int audioChannel,
-                             int start, int trimTo )
+                          int start, int trimTo )
 {
    float *leftTrimmed = new float[trimTo];
 
@@ -22,9 +22,14 @@ double frequencyFromData( float *buffer, int nS, int nC, int audioChannel,
    // OK so now look for sample times between positive/negative crosses
    int v = -1;
    uint64_t dSample = 0, crosses = 0;
-   for( int i=0; i<trimTo -1; ++i )
-      if( leftTrimmed[i] < 0 && leftTrimmed[i+1] > 0 )
+   const int minSamplesBetweenCrosses = 10;
+   int lc = -1;
+   const int upswingWindow = 5;
+   for( int i=upswingWindow; i<trimTo - 1; ++i )
+   {
+      if( leftTrimmed[i-upswingWindow] < 0 && leftTrimmed[i] < 0 && leftTrimmed[i+1] >= 0 && i - lc > minSamplesBetweenCrosses )
       {
+         lc = i;
          if( v > 0 )
          {
             dSample += ( i - v );
@@ -32,12 +37,13 @@ double frequencyFromData( float *buffer, int nS, int nC, int audioChannel,
          }
          v = i;
       }
-
+   }
+   
    float aSample = 1.f * dSample / crosses;
 
-   float time = aSample / 44100.0;
+   float time = aSample / samplerate;
    float freq = 1.0 / time;
-   
+
    delete[] leftTrimmed;
    return freq;
 }
@@ -69,15 +75,15 @@ double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
                          int seconds, int audioChannel,
                          int midiChannel )
 {
-   auto events = Surge::Headless::makeHoldNoteFor( note, 44100 * seconds, 64, midiChannel );
+   auto events = Surge::Headless::makeHoldNoteFor( note, samplerate * seconds, 64, midiChannel );
    float *buffer;
    int nS, nC;
    Surge::Headless::playAsConfigured( surge, events, &buffer, &nS, &nC );
    for( auto i=0; i<500; ++i ) surge->process(); // Ring out any transients on this synth
    
    REQUIRE( nC == 2 );
-   REQUIRE( nS >= 44100 * seconds );
-   REQUIRE( nS <= 44100 * seconds + 4 * BLOCK_SIZE );
+   REQUIRE( nS >= samplerate * seconds );
+   REQUIRE( nS <= samplerate * seconds + 4 * BLOCK_SIZE );
 
    // Trim off the leading and trailing
    int nSTrim = (int)(nS / 2 * 0.8);
@@ -93,15 +99,15 @@ std::pair<double,double> frequencyAndRMSForNote( std::shared_ptr<SurgeSynthesize
                                                  int seconds, int audioChannel,
                                                  int midiChannel )
 {
-   auto events = Surge::Headless::makeHoldNoteFor( note, 44100 * seconds, 64, midiChannel );
+   auto events = Surge::Headless::makeHoldNoteFor( note, samplerate * seconds, 64, midiChannel );
    float *buffer;
    int nS, nC;
    Surge::Headless::playAsConfigured( surge, events, &buffer, &nS, &nC );
    for( auto i=0; i<500; ++i ) surge->process(); // Ring out any transients on this synth
    
    REQUIRE( nC == 2 );
-   REQUIRE( nS >= 44100 * seconds );
-   REQUIRE( nS <= 44100 * seconds + 4 * BLOCK_SIZE );
+   REQUIRE( nS >= samplerate * seconds );
+   REQUIRE( nS <= samplerate * seconds + 4 * BLOCK_SIZE );
 
    // Trim off the leading and trailing
    int nSTrim = (int)(nS / 2 * 0.8);

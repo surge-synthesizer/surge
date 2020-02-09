@@ -245,10 +245,8 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
    float Detune;
    if( oscdata->p[5].absolute )
    {
-      auto pitchmult_inv =
-         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv( std::min(148.f,pitch)));
-
-      Detune = localcopy[oscdata->p[5].param_id_in_scene].f * pitchmult_inv * 1.f / 440.f;
+      // See comment in SurgeSuperOscillator
+      Detune = localcopy[oscdata->p[5].param_id_in_scene].f * storage->note_to_pitch_inv_ignoring_tuning( std::min( 148.f, pitch ) ) * 16 / 0.9443;
    }
    else
    {
