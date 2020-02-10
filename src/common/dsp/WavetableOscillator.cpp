@@ -229,7 +229,10 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
    // add time until next statechange
    float tempt;
    if (oscdata->p[5].absolute)
-      tempt = storage->note_to_pitch_inv_tuningctr(detune * pitchmult_inv * (1.f / 440.f));
+   {
+      // See the comment in SurgeSuperOscillator.cpp at the absolute treatment
+      tempt = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch_t ) * 16 / 0.9443 );
+   }
    else
       tempt = storage->note_to_pitch_inv_tuningctr(detune);
    float t;

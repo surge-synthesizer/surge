@@ -164,7 +164,10 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    // add time until next statechange
    float t;
    if (oscdata->p[5].absolute)
-       t = storage->note_to_pitch_inv_tuningctr(detune * pitchmult_inv * (1.f / 440.f) + l_sync.v);
+   {
+      // see the comment in SurgeSuperOscillator in the absolute branch
+      t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 );
+   }
    else
        t = storage->note_to_pitch_inv_tuningctr(detune + l_sync.v);
 
