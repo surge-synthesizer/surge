@@ -232,8 +232,8 @@ j;
 
 // CFxMenu
 
-const char fxslot_names[8][NAMECHARS] = {"A Insert 1", "A Insert 2", "B Insert 1", "B Insert 2",
-                                         "Send FX 1",  "Send FX 2",  "Master 1",   "Master 2"};
+const char fxslot_names[8][NAMECHARS] = {"A Insert FX 1", "A Insert FX 2", "B Insert FX 1", "B Insert FX 2",
+                                         "Send FX 1",  "Send FX 2",  "Master FX 1",   "Master FX 2"};
 
 std::vector<float> CFxMenu::fxCopyPaste;
 
