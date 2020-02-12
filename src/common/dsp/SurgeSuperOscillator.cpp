@@ -266,7 +266,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
       else
       {
          double drand = (double)rand() / RAND_MAX;
-         double detune = localcopy[id_detune].f * (detune_bias * float(i) + detune_offset);
+         double detune = oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
          // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
          // pow((double)1.05946309435,(double)pitch)));
          // used to be 0.25 * detune - 12
@@ -334,7 +334,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    */
    float detune = drift * driftlfo[voice];
    if (n_unison > 1)
-      detune += localcopy[id_detune].f * (detune_bias * (float)voice + detune_offset);
+      detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * (float)voice + detune_offset);
 
    
    float wf = l_shape.v;
@@ -429,6 +429,9 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
       ** over a bunch of tests.
       */
       t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 + sync );
+
+      // With extended range and low frequencies we can have an implied negative frequency; cut that off by setting a lower bound here.
+      if( t < 0.1 ) t = 0.0;
    }
    else
        t = storage->note_to_pitch_inv_tuningctr(detune + sync);
