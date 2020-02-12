@@ -562,6 +562,11 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
       restvalue = 0.f;
       restmodval = 0.f;
 
+      // Show the infowindow. Bit heavy handed
+      bounceValue();
+      if( listener )
+         listener->valueChanged( this );
+      
       detachCursor(where);
       return kMouseEventHandled;
    }
