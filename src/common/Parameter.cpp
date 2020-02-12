@@ -80,7 +80,36 @@ void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_e
    }
    break;
    case cg_FX:
-      sprintf(prefix, "FX%i", ctrlgroup_entry + 1);
+      switch( ctrlgroup_entry )
+      {
+      case 0:
+         sprintf( prefix, "FX A1" );
+         break;
+      case 1:
+         sprintf( prefix, "FX A2" );
+         break;
+      case 2:
+         sprintf( prefix, "FX B1" );
+         break;
+      case 3:
+         sprintf( prefix, "FX B2" );
+         break;
+      case 4:
+         sprintf( prefix, "FX S1" );
+         break;
+      case 5:
+         sprintf( prefix, "FX S2" );
+         break;
+      case 6:
+         sprintf( prefix, "FX M1" );
+         break;
+      case 7:
+         sprintf( prefix, "FX M2" );
+         break;
+      default:
+         sprintf( prefix, "FXERR" );
+         break;
+      }
       break;
    default:
       prefix[0] = '\0';
