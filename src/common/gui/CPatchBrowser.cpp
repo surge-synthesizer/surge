@@ -118,7 +118,15 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
        };
    contentItem->setActions(contentAction,nullptr);
    contextMenu->addEntry(contentItem);
-   
+
+   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc("Refresh Patch List"));
+   auto refreshAction = [this](CCommandMenuItem *item)
+                           {
+                              this->storage->refresh_patchlist();
+                           };
+   refreshItem->setActions(refreshAction,nullptr);
+   contextMenu->addEntry(refreshItem);
+
    getFrame()->addView(contextMenu); // add to frame
    contextMenu->setDirty();
    contextMenu->popup();
