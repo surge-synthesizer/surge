@@ -77,6 +77,13 @@ TEST_CASE( "Unison Absolute and Relative", "[osc]" )
                             REQUIRE( f72_avg / f60_avg == Approx( 2 ).margin( 0.01 ) );
                             REQUIRE( f72_0 / f60_0 == Approx( 2 ).margin( 0.01 ) );
                             REQUIRE( f72_1 / f60_1 == Approx( 2 ).margin( 0.01 ) );
+
+                            // test extended mode
+                            surge->storage.getPatch().scene[0].osc[0].p[5].extend_range = true;
+                            auto f60_0e = frequencyForNote( surge, 60, 5, 0 );
+                            auto f60_1e = frequencyForNote( surge, 60, 5, 1 );
+                            REQUIRE( f60_0e / f60_avg == Approx( pow( f60_0 / f60_avg, 12.f ) ).margin( 0.05 ) );
+                            REQUIRE( f60_1e / f60_avg == Approx( pow( f60_1 / f60_avg, 12.f ) ).margin( 0.05 ) );
                          };
 
    auto assertAbsolute = [surge](const char* pn, bool print = false) {
@@ -251,7 +258,7 @@ TEST_CASE( "Unison at Sample Rates", "[osc]" )
          
          assertRelative(surge, "test-data/patches/SH-Uni2-Relative.fxp");
          assertAbsolute(surge, "test-data/patches/SH-Uni2-Absolute.fxp");
-         randomAbsolute(surge, "test-data/patches/SH-Uni2-Absolute.fxp");
+         // randomAbsolute(surge, "test-data/patches/SH-Uni2-Absolute.fxp");
       }
    }
 }

@@ -174,6 +174,7 @@ bool Parameter::can_extend_range()
    case ct_freq_shift:
    case ct_decibel_extendable:
    case ct_decibel_narrow_extendable:
+   case ct_oscspread:
       return true;
    }
    return false;
@@ -769,6 +770,8 @@ float Parameter::get_extended(float f)
       return 3.f * f;
    case ct_decibel_narrow_extendable:
       return 5.f * f;
+   case ct_oscspread:
+      return 12.f * f;
    default:
       return f;
    }
@@ -980,9 +983,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_oscspread:
          if (absolute)
-            sprintf(txt, "%.1f Hz", 16.f * f);
+            sprintf(txt, "%.1f Hz", 16.f * get_extended( f ));
          else
-            sprintf(txt, "%.1f cents", f * 100.f);
+            sprintf(txt, "%.1f cents", get_extended( f ) * 100.f);
          break;
       case ct_detuning:
          sprintf(txt, "%.1f cents", f * 100.f);

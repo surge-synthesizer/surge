@@ -78,7 +78,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
       else
       {
          double drand = (double)rand() / RAND_MAX;
-         double detune = localcopy[id_detune].f * (detune_bias * float(i) + detune_offset);
+         double detune = oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
          // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
          // pow((double)1.05946309435,(double)pitch)));
          double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
@@ -128,7 +128,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 {
    float detune = drift * driftlfo[voice];
    if (n_unison > 1)
-      detune += localcopy[id_detune].f * (detune_bias * float(voice) + detune_offset);
+      detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(voice) + detune_offset);
 
    float sub = l_sub.v;
 
@@ -167,6 +167,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    {
       // see the comment in SurgeSuperOscillator in the absolute branch
       t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 );
+      if( t < 0.1 ) t = 0.1;
    }
    else
        t = storage->note_to_pitch_inv_tuningctr(detune + l_sync.v);

@@ -148,7 +148,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
    double detune = drift * driftlfo[voice];
    if (n_unison > 1)
-      detune += localcopy[id_detune].f * (detune_bias * float(voice) + detune_offset);
+      detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(voice) + detune_offset);
 
    // int ipos = (large+oscstate[voice])>>16;
    const float p24 = (1 << 24);
@@ -232,6 +232,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
    {
       // See the comment in SurgeSuperOscillator.cpp at the absolute treatment
       tempt = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch_t ) * 16 / 0.9443 );
+      if( tempt < 0.1 ) tempt = 0.1;
    }
    else
       tempt = storage->note_to_pitch_inv_tuningctr(detune);
