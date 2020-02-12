@@ -2129,7 +2129,11 @@ void SurgeSynthesizer::getParameterStringW(long index, float value, wchar_t* ptr
    }
    else if (index >= metaparam_offset)
    {
-      swprintf(ptr, 128, L"%.2f %%", 100.f * value);
+      // For a reason I don't understand, on windows, we need to sprintf then swprinf just the short char
+      // to make just these names work. :shrug:
+      char wideHack[256];
+      snprintf(wideHack, 256, "%.2f %%", 100.f * value ); 
+      swprintf(ptr, 128, L"%s", wideHack);
    }
    else
    {

@@ -232,7 +232,6 @@ void SurgeVoice::switch_toggled()
          osc[i].reset(spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy));
          if (osc[i])
          {
-            std::cout << __LINE__ << " init" << std::endl;
             osc[i]->init(state.pitch);
          }
          osctype[i] = scene->osc[i].type.val.i;
