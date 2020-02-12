@@ -265,6 +265,8 @@ private:
                                                // per-sample scheduling)
       unsigned char Gain[wt2_suboscs][2];
       float DriftLFO[wt2_suboscs][2];
+
+      int FMRatio[wt2_suboscs][BLOCK_SIZE_OS];
    } Sub alignas(16);
 
 public:
@@ -277,7 +279,9 @@ public:
    virtual ~WindowOscillator();
 
 private:
-   void ProcessSubOscs(bool);
+   void ProcessSubOscs(bool stereo, bool FM);
+   lag<double> FMdepth[wt2_suboscs];
+
    float OutAttenuation;
    float DetuneBias, DetuneOffset;
    int ActiveSubOscs;

@@ -128,7 +128,7 @@ inline bool _BitScanReverse(unsigned long* result, unsigned long bits)
 }
 #endif
 
-void WindowOscillator::ProcessSubOscs(bool stereo)
+void WindowOscillator::ProcessSubOscs(bool stereo, bool FM)
 {
    const unsigned int M0Mask = 0x07f8;
    unsigned int SizeMask = (oscdata->wt.size << 16) - 1;
@@ -160,6 +160,9 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
       {
          unsigned int Pos = Sub.Pos[so];
          unsigned int RatioA = Sub.Ratio[so];
+         if( FM )
+            RatioA = Sub.FMRatio[so][0];
+         
          unsigned int MipMapA = 0;
          unsigned int MipMapB = 0;
          if (Sub.Table[so] >= oscdata->wt.n_tables)
@@ -179,7 +182,14 @@ void WindowOscillator::ProcessSubOscs(bool stereo)
 
          for (int i = 0; i < BLOCK_SIZE_OS; i++)
          {
-            Pos += RatioA;
+            if( FM )
+            {
+               Pos += Sub.FMRatio[so][i];
+            }
+            else
+            {
+               Pos += RatioA;
+            }
             if (Pos & ~SizeMaskWin)
             {
                Sub.FormantMul[so] = FormantMul;
@@ -253,6 +263,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
    {
       Detune = oscdata->p[5].get_extended(localcopy[oscdata->p[5].param_id_in_scene].f);
    }
+   float fmstrength = 32 * M_PI * fmdepth * fmdepth * fmdepth;
    for (int l = 0; l < ActiveSubOscs; l++)
    {
       Sub.DriftLFO[l][0] = drift_noise(Sub.DriftLFO[l][1]);
@@ -264,10 +275,25 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
                                        Detune * (DetuneOffset + DetuneBias * (float)l));
       int Ratio = Float2Int(8.175798915f * 32768.f * f * (float)(storage->WindowWT.size) *
                             samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
+
       Sub.Ratio[l] = Ratio;
+      if( FM )
+      {
+         FMdepth[l].newValue( fmstrength );
+         for( int i=0; i<BLOCK_SIZE_OS; ++i )
+         {
+            float fmadj = ( 1.0 + FMdepth[l].v * master_osc[i] );
+            float f = storage->note_to_pitch(pitch + drift * Sub.DriftLFO[l][0] +
+                                             Detune * (DetuneOffset + DetuneBias * (float)l));
+            int Ratio = Float2Int(8.175798915f * 32768.f * f * fmadj * (float)(storage->WindowWT.size) *
+                                  samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
+            Sub.FMRatio[l][i] = Ratio;
+            FMdepth[l].process();
+         }
+      }
    }
 
-   ProcessSubOscs(stereo);
+   ProcessSubOscs(stereo, FM);
 
    // int32 -> float conversion
    __m128 scale = _mm_load1_ps(&OutAttenuation);
