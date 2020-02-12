@@ -176,16 +176,18 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    id_fbalance = scene->filter_balance.param_id_in_scene;
    id_feedback = scene->feedback.param_id_in_scene;
 
-   switch_toggled();
    ampEGSource.attack();
    filterEGSource.attack();
-
-   calc_ctrldata<true>(0, 0); // init interpolators
-
-   SetQFB(0, 0); // init Quad-Filterblock parameter interpolators
-
    for (int i = 0; i < 6; i++)
       lfo[i].attack();
+
+   calc_ctrldata<true>(0, 0); // init interpolators
+   SetQFB(0, 0); // init Quad-Filterblock parameter interpolators
+
+   // It is imposrtant that switch_toggled comes last since it creates and activates the
+   // oscillators which need the modulation state set in calc_ctrldata to get sample 0
+   // right.
+   switch_toggled();
 }
 
 SurgeVoice::~SurgeVoice()
@@ -229,7 +231,10 @@ void SurgeVoice::switch_toggled()
       {
          osc[i].reset(spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy));
          if (osc[i])
+         {
+            std::cout << __LINE__ << " init" << std::endl;
             osc[i]->init(state.pitch);
+         }
          osctype[i] = scene->osc[i].type.val.i;
       }
    }
