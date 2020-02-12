@@ -662,7 +662,9 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
 
       *edit_value += diff / (float)range;
 
-      bounceValue(!(sliderMoveRateState==MoveRateState::kClassic));
+      // this "retain" means if you turnaround an overshoot you have to use it all up first, vs
+      // starting the turnaround right away. That behavior only makes sense in exact mode.
+      bounceValue(sliderMoveRateState==MoveRateState::kExact);
 
       setDirty();
 
