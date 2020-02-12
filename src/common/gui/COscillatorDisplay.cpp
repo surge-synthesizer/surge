@@ -736,6 +736,12 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
        };
    contentItem->setActions(contentAction,nullptr);
    contextMenu->addEntry(contentItem);
+
+   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc("Refresh Wavetable List"));
+   auto refresh = [this](CCommandMenuItem* item) { this->storage->refresh_wtlist(); };
+   refreshItem->setActions(refresh, nullptr);
+   contextMenu->addEntry(refreshItem);
+
 }
 
 bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
