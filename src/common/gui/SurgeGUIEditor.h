@@ -255,5 +255,6 @@ private:
    addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
    VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
 };
 
