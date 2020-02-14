@@ -3484,6 +3484,13 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     dataSubMenu->forget();
 
+#if USE_DEV_MENU    
+    auto devSubMenu = makeDevMenu(menuRect);
+    settingsMenu->addEntry(devSubMenu, "Dev" );
+    eid++;
+    devSubMenu->forget();
+#endif
+    
     settingsMenu->addSeparator(eid++);
 
 
@@ -3700,6 +3707,73 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
 
     return tuningSubMenu;
 }
+
+VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
+{
+    int tid=0;
+    COptionMenu *devSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                 VSTGUI::COptionMenu::kNoDrawStyle |
+                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+    auto *st = addCallbackMenu(devSubMenu, "Dump Components to StdOut",
+                    [this]()
+                    {
+                       auto leafOp =
+                          [this](CView *v) {
+                             CControl *c = dynamic_cast<CControl *>(v);
+                             if( c )
+                             {
+                                auto tag = c->getTag();
+                                Parameter *p = nullptr;
+                                if( tag >= start_paramtags )
+                                {
+                                   p = this->synth->storage.getPatch().param_ptr[tag - start_paramtags];
+                                }
+                                std::cout << "CONTROL " << c ;
+                                if( p )
+                                {
+                                   std::cout << " param="  << c->getTag()-start_paramtags << " " <<  p->ui_identifier;
+                                }
+                                else
+                                {
+                                   std::cout << " special_enum=" << c->getTag();
+                                }
+                                std::cout << " " << typeid(*c).name();
+
+                                auto vs = c->getViewSize();
+                                std::cout << " x=" << vs.top << " y=" << vs.left << " w=" << vs.getWidth() << " h=" << vs.getHeight();
+                                std::cout << std::endl;
+                             }
+                             else
+                             {
+                                std::cout << "Something Else " << typeid(*v).name() << std::endl;
+                             }
+                          };
+
+                       std::stack<CView*> stk;
+                       stk.push( this->frame );
+                       while( ! stk.empty() )
+                       {
+                          auto e = stk.top();
+                          stk.pop();
+                          leafOp(e);
+                          auto c = dynamic_cast<CViewContainer *>(e);
+                          if( c )
+                          {
+                             auto b = stk.size();
+                             c->forEachChild( [&stk](CView *cc) { stk.push(cc); } );
+                             std::cout << "Added " << stk.size() - b << " elements" << std::endl;
+                          }
+                       }
+                       
+                       std::cout << "Dump Components" << std::endl;
+                    }
+        );
+    tid++;
+
+    return devSubMenu;
+}
+
 
 int SurgeGUIEditor::findLargestFittingZoomBetween(int zoomLow, // bottom of range
                                                   int zoomHigh, // top of range

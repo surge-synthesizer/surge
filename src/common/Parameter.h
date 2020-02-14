@@ -4,6 +4,7 @@
 #pragma once
 #include "globals.h"
 #include <string>
+#include <memory>
 
 union pdata
 {
@@ -125,17 +126,96 @@ struct CountedSetUserData : public ParamUserData
    virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
 };
 
+/*
+** It used to be parameters were assigned IDs in SurgePatch using an int which we ++ed along the
+** way. If we want to 'add at the end' but 'cluster together' we need a different data strcture
+** to allow clusters of parameters, so instead make SurgePatch use a linked list (or multiple lists)
+** while constructing params and then resolve them all at the end. This little class lets us
+** do that.
+*/
+struct ParameterIDCounter
+{
+   struct ParameterIDPromise
+   {
+      std::shared_ptr<ParameterIDPromise> prior, next;
+      ParameterIDPromise() : prior(nullptr), next(nullptr)
+      {}
+      long value = -1;
+   };
+
+   ParameterIDCounter()
+   {
+      head.reset(new ParameterIDPromise());
+      tail = head;
+   }
+
+   typedef std::shared_ptr<ParameterIDPromise> promise_t;
+   typedef ParameterIDPromise* promise_ptr_t; // use this for constant size carefully managed weak references
+
+   promise_t head, tail;
+
+   // This is a post-increment operator
+   promise_t next()
+   {
+      promise_t n(new ParameterIDPromise());
+      n->prior = tail;
+      tail->next = n;
+      auto ret = tail;
+      tail = n;
+      return ret;
+   };
+
+   void resolve()
+   {
+      auto h = head;
+      int val = 0;
+      while (h.get())
+      {
+         h->value = val++;
+         h = h->next;
+      }
+   }
+};
+
+/*
+** Similarly the "position" is part of the parameter and that's a nasty mistake - there should
+** be an indirection. Ideally we would remove posx and posy as members altogether but to allow
+** an incremental approach make a little class which casts to an int and can redirect (at some
+** future point) for position. At this current iteration it is simply a holder for an int.
+*/
+class PositionHolder
+{
+public:
+   typedef enum {
+      X,
+      Y,
+      YOFF
+   } Axis;
+   
+   PositionHolder(Axis a) : val(-1), axis(a)  { }
+
+   operator int() const { return val; }
+   PositionHolder& operator=(const int v) { val = v; return *this; }
+   
+private:
+   Axis axis;
+   int val;
+};
+
 class Parameter
 {
 public:
    Parameter();
-   Parameter* assign(int id,
+   Parameter* assign(ParameterIDCounter::promise_t id,
                      int pid,
                      const char* name,
                      const char* dispname,
                      int ctrltype,
+
+                     std::string ui_identifier,
                      int posx,
                      int posy,
+                     
                      int scene = 0,
                      ControlGroup ctrlgroup = cg_GLOBAL,
                      int ctrlgroup_entry = 0,
@@ -177,12 +257,18 @@ public:
    std::string tempoSyncNotationValue(float f);
    
    pdata val, val_default, val_min, val_max;
+   // You might be tempted to use a non-fixed-size member here, like a std::string, but
+   // this class gets pre-c++ memcopied so thats not an option which is why I do this wonky
+   // pointer thing and strncpy from a string onto ui_identifier
+   ParameterIDCounter::promise_ptr_t id_promise;
    int id;
    char name[NAMECHARS], dispname[NAMECHARS], name_storage[NAMECHARS], fullname[NAMECHARS];
+   char ui_identifier[NAMECHARS];
    bool modulateable;
    int valtype = 0;
    int scene; // 0 = patch, 1 = scene A, 2 = scene B
-   int ctrltype, posx, posy, posy_offset;
+   int ctrltype;
+   PositionHolder posx, posy, posy_offset;
    ControlGroup ctrlgroup = cg_GLOBAL;
    int ctrlgroup_entry = 0;
    int ctrlstyle = cs_off;
@@ -193,6 +279,7 @@ public:
    bool per_voice_processing;
    bool temposync, extend_range, absolute, snap;
 
+   
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable
 };
