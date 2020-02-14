@@ -137,9 +137,13 @@ struct ParameterIDCounter
 {
    struct ParameterIDPromise
    {
-      std::shared_ptr<ParameterIDPromise> prior, next;
-      ParameterIDPromise() : prior(nullptr), next(nullptr)
-      {}
+      std::shared_ptr<ParameterIDPromise> next;
+      ParameterIDPromise() : next(nullptr)
+      {
+      }
+      ~ParameterIDPromise()
+      {
+      }
       long value = -1;
    };
 
@@ -147,6 +151,11 @@ struct ParameterIDCounter
    {
       head.reset(new ParameterIDPromise());
       tail = head;
+   }
+   ~ParameterIDCounter()
+   {
+      head = nullptr;
+      tail = nullptr;
    }
 
    typedef std::shared_ptr<ParameterIDPromise> promise_t;
@@ -158,7 +167,6 @@ struct ParameterIDCounter
    promise_t next()
    {
       promise_t n(new ParameterIDPromise());
-      n->prior = tail;
       tail->next = n;
       auto ret = tail;
       tail = n;
