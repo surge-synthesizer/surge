@@ -180,10 +180,9 @@ TEST_CASE( "KBM File Remaps Center", "[tun]" )
    auto surge = surgeOnSine();
    REQUIRE( surge.get() );
 
-   SECTION( "Marvel 12 mapped and unmapped" )
+   float unmapped[3];
+   SECTION( "Marvel 12 unmapped" )
    {
-      float unmapped[3];
-      
       Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/marvel12.scl" );
       surge->storage.retuneToScale(s);
       auto f60 = frequencyForNote( surge, 60 );
@@ -196,14 +195,19 @@ TEST_CASE( "KBM File Remaps Center", "[tun]" )
       unmapped[0] = f60;
       unmapped[1] = f72;
       unmapped[2] = f69;
+   }
 
+   SECTION( "And remap to 440" )
+   {
+      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/marvel12.scl" );
       auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-a440-constant.kbm" );
 
+      surge->storage.retuneToScale(s);
       surge->storage.remapToKeyboard(k);
       
-      f60 = frequencyForNote( surge, 60 );
-      f72 = frequencyForNote( surge, 72 );
-      f69 = frequencyForNote( surge, 69 );
+      auto f60 = frequencyForNote( surge, 60 );
+      auto f72 = frequencyForNote( surge, 72 );
+      auto f69 = frequencyForNote( surge, 69 );
       REQUIRE( f69 == Approx( 440.0 ).margin(.1) );
       REQUIRE( unmapped[2]/440.0 == Approx( unmapped[0] / f60 ).margin(.001) );
       REQUIRE( unmapped[2]/440.0 == Approx( unmapped[1] / f72 ).margin(.001) );
