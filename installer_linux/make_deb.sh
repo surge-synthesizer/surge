@@ -90,7 +90,7 @@ cp -r ../target/lv2/Release/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
 #build package
 
 mkdir -p product
-dpkg-deb --root-owner-group --build ${PACKAGE_NAME} product/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
+dpkg-deb --build ${PACKAGE_NAME} product/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
 rm -rf ${PACKAGE_NAME}
 
 echo "Built DEB Package"
