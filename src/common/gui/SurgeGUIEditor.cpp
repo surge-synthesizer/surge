@@ -3030,7 +3030,17 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
 #endif
    if (((CParameterTooltip*)infowindow)->isVisible())
    {
-      ((CParameterTooltip*)infowindow)->Hide();
+      auto cs = dynamic_cast<CSurgeSlider *>(control);
+      if( cs == nullptr || cs->hasBeenDraggedDuringMouseGesture )
+         ((CParameterTooltip*)infowindow)->Hide();
+      else
+      {
+#if LINUX
+         clear_infoview_countdown = 40;
+#else
+         clear_infoview_countdown = 15;
+#endif
+      }
    }
 }
 
