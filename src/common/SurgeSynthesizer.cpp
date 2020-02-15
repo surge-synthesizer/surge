@@ -268,6 +268,37 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
 
    channelState[channel].keyState[key].keystate = velocity;
    channelState[channel].keyState[key].lastdetune = detune;
+
+   /*
+   ** OK so why is there hold stuff here? This is play not release.
+   ** Well if you release a key with the pedal down it goes into the
+   ** 'release me later' buffer. If you press the key again it stays there
+   ** so even with the key held, you end up releasing it when you pedal. 
+   **
+   ** Or: NoteOn / Pedal On / Note Off / Note On / Pedal Off should leave the note ringing
+   **
+   ** and right now it doesn't
+   */
+   bool noHold = ! channelState[channel].hold;
+   if( mpeEnabled )
+      noHold = noHold && ! channelState[0].hold;
+
+   if( ! noHold )
+   {
+      for( int s=0; s<2; ++s )
+      {
+         for( auto &h : holdbuffer[s] )
+         {            
+            if( h.first == channel && h.second == key )
+            {
+               h.first = -1;
+               h.second = -1;
+            }
+         }
+      }
+   }
+
+
 }
 
 void SurgeSynthesizer::softkillVoice(int s)
@@ -558,7 +589,9 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
       if (noHold)
          releaseNotePostHoldCheck(s, channel, key, velocity);
       else
+      {
          holdbuffer[s].push_back(std::make_pair(channel,key)); // hold pedal is down, add to bufffer
+      }
    }
 }
 
@@ -905,8 +938,6 @@ float int7ToBipolarFloat(int x)
 
 void SurgeSynthesizer::channelController(char channel, int cc, int value)
 {
-   int channelmask = ((channel == 0) ? 3 : 0) | ((channel == 1) ? 1 : 0) | ((channel == 2) ? 2 : 0);
-
    float fval = (float)value * (1.f / 127.f);
    // store all possible NRPN & RPNs in a short array .. just amounts for 128kb or thereabouts
    // anyway
@@ -946,10 +977,35 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
    case 64:
    {
       channelState[channel].hold = value > 63; // check hold pedal
-      if (channelmask & 1)
+
+      // OK in single mode, only purge scene 0, but in split or dual purge both, and in chsplit
+      // pick based on channel
+      switch(storage.getPatch().scenemode.val.i)
+      {
+      case sm_single:
+         purgeHoldbuffer(storage.getPatch().scene_active.val.i);
+         break;
+      case sm_split:
+      case sm_dual:
          purgeHoldbuffer(0);
-      if (channelmask & 2)
          purgeHoldbuffer(1);
+         break;
+      case sm_chsplit:
+         if( mpeEnabled && channel == 0 ) // a control channel message
+         {
+            purgeHoldbuffer(0);
+            purgeHoldbuffer(1);
+         }
+         else
+         {
+            if( channel < ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
+               purgeHoldbuffer(0);
+            else
+               purgeHoldbuffer(1);
+         }
+         break;
+      }
+
       return;
    }
 
@@ -1102,13 +1158,21 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
    {
       auto channel = hp.first;
       auto key = hp.second;
-      if (!channelState[0].hold && ! channelState[channel].hold )
+
+      if( channel < 0 || key < 0 )
       {
-         releaseNotePostHoldCheck(scene, channel, key, 127);
+         // std::cout << "Caught tricky double releease condition!" << std::endl;
       }
       else
       {
-         retainBuffer.push_back(hp);
+         if (!channelState[0].hold && ! channelState[channel].hold )
+         {
+            releaseNotePostHoldCheck(scene, channel, key, 127);
+         }
+         else
+         {
+            retainBuffer.push_back(hp);
+         }
       }
    }
    holdbuffer[scene] = retainBuffer;
