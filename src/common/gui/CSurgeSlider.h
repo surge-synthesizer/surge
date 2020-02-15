@@ -73,7 +73,8 @@ public:
 
    bool is_mod;
    bool disabled;
-
+   bool hasBeenDraggedDuringMouseGesture = false;
+   
    enum MoveRateState
    {
       kUnInitialized = 0,

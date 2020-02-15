@@ -526,6 +526,7 @@ bool CSurgeSlider::isInMouseInteraction()
 
 CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   hasBeenDraggedDuringMouseGesture = false;
    if( wheelInitiatedEdit )
       while( editing )
          endEdit();
@@ -647,6 +648,7 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
       return;
    if ((controlstate == cs_drag) && (buttons & kLButton))
    {
+      hasBeenDraggedDuringMouseGesture = true;
       if (!edit_value)
          return;
       CPoint p;
