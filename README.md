@@ -203,7 +203,8 @@ For other options, you can do `./build-linux.sh --help`.
 In addition to the build commands above, we use azure pipelines to do continuous integration.
 This means each of your pull requests will be automatically built in all of our environments,
 and a clean build on all platforms is an obvious pre-requisite. If you have questions about 
-our CI tools, please ask on our Slack channel.
+our CI tools, please ask on our Slack channel. We are grateful to Microsoft for providing 
+azure pipelines to free to the open source community!
 
 # References
 
