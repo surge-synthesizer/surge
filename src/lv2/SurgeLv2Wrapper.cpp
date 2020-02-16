@@ -28,18 +28,9 @@ void SurgeLv2Wrapper::setParameterAutomated(int externalparam, float value)
    _editor->setParameterAutomated(externalparam, value);
 }
 
-void SurgeLv2Wrapper::patchChanged(void)
+void SurgeLv2Wrapper::patchChanged()
 {
-   if( _editor == nullptr ) return;
-
-   SurgeSynthesizer *s = _synthesizer.get();
-
-   for (unsigned int i = 0; i < n_total_params; i++)
-   {
-      unsigned index = s->remapExternalApiToInternalId(i);
-      float value = s->getParameter01(index);
-      _editor->setParameterAutomated(i, value);
-   }
+   _editorMustReloadPatch.store(true);
 }
 
 LV2_Handle SurgeLv2Wrapper::instantiate(const LV2_Descriptor* descriptor,
