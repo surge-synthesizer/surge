@@ -2,6 +2,7 @@
 #include "SurgeSynthesizer.h"
 #include "AllLv2.h"
 #include "util/FpuState.h"
+#include <atomic>
 #include <memory>
 
 class SurgeLv2Ui;
@@ -47,7 +48,7 @@ public:
    // PluginLayer
    void updateDisplay();
    void setParameterAutomated(int externalparam, float value);
-   void patchChanged(void);
+   void patchChanged();
 
 private:
    static LV2_Handle instantiate(const LV2_Descriptor* descriptor,
@@ -96,4 +97,8 @@ private:
    LV2_URID _uridSurgePatch;
 
    SurgeLv2Ui* _editor = nullptr;
+
+public:
+   // tells the editor it must take parameters from synth and update itself
+   std::atomic<bool> _editorMustReloadPatch{false};
 };

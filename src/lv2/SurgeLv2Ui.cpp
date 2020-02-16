@@ -123,6 +123,21 @@ const void* SurgeLv2Ui::extensionData(const char* uri)
 int SurgeLv2Ui::uiIdle(LV2UI_Handle ui)
 {
    SurgeLv2Ui* self = (SurgeLv2Ui*)ui;
+   SurgeLv2Wrapper* instance = self->_instance;
+
+   // HACK to get parameters written to host
+   // if a patch was loaded from storage, the plugin atomically sets a bit to
+   // indicate it. In this case, write the control value again using UI's write
+   // interface, in order to update the host side.
+   if (instance->_editorMustReloadPatch.exchange(false)) {
+      SurgeSynthesizer *s = instance->synthesizer();
+      for (unsigned int i = 0; i < n_total_params; i++)
+      {
+         unsigned index = s->remapExternalApiToInternalId(i);
+         float value = s->getParameter01(index);
+         self->setParameterAutomated(i, value);
+      }
+   }
 
 #if LINUX
    self->_runLoop->execIdle();
