@@ -10,7 +10,9 @@
 #include <sstream>
 #include <string>
 
-Parameter::Parameter()
+Parameter::Parameter() : posx( PositionHolder::Axis::X ),
+                         posy( PositionHolder::Axis::Y ),
+                         posy_offset( PositionHolder::Axis::YOFF )
 {
    val.i = 0;
    posy_offset = 0;
@@ -129,11 +131,13 @@ void Parameter::set_name(const char* n)
    create_fullname(dispname, fullname, ctrlgroup, ctrlgroup_entry);
 }
 
-Parameter* Parameter::assign(int id,
+Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
                              int pid,
                              const char* name,
                              const char* dispname,
                              int ctrltype,
+
+                             std::string ui_identifier,
                              int posx,
                              int posy,
                              int scene,
@@ -142,7 +146,8 @@ Parameter* Parameter::assign(int id,
                              bool modulateable,
                              int ctrlstyle)
 {
-   this->id = id;
+   this->id_promise = idp.get();
+   this->id = -1;
    this->param_id_in_scene = pid;
    this->ctrlgroup = ctrlgroup;
    this->ctrlgroup_entry = ctrlgroup_entry;
@@ -151,6 +156,7 @@ Parameter* Parameter::assign(int id,
    this->modulateable = modulateable;
    this->scene = scene;
    this->ctrlstyle = ctrlstyle;
+   strncpy(this->ui_identifier, ui_identifier.c_str(), NAMECHARS );
 
    strncpy(this->name, name, NAMECHARS);
    set_name(dispname);

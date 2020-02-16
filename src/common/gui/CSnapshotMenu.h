@@ -6,8 +6,9 @@
 #include "SurgeStorage.h"
 #include "PopupEditorSpawner.h"
 #include "SurgeBitmaps.h"
+#include "SkinSupport.h"
 
-class CSnapshotMenu : public VSTGUI::COptionMenu
+class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CSnapshotMenu(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage);

@@ -86,10 +86,16 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
    {
       // In the bitmap version this has been done for the global; so pull it out of the function
       cdisurf->begin();
+      auto col = skin->getColor( "lfo.stepseq.background", CColor( 0xFF, 0x90, 0x00 ) );
+      int r = col.red;
+      int g = col.green;
+      int b = col.blue;
 #if MAC
-      cdisurf->clear(0x0090ffff);
+      int c = ( b << 24 ) + ( g << 16 ) + ( r << 8 ) + 255;
+      cdisurf->clear(c);
 #else
-      cdisurf->clear(0xffff9000);
+      int c = ( b ) + ( g << 8 ) + ( r << 16 ) + ( 255 << 24 );
+      cdisurf->clear(c);
 #endif
 
       drawStepSeq(dc, maindisp, leftpanel);
@@ -281,7 +287,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #endif 
           CRect tp(CPoint(xp + 1,yp), CPoint(10,10));
           tf.transform(tp);
-          dc->setFontColor(VSTGUI::kBlackCColor);
+          dc->setFontColor(skin->getColor( "lfo.waveform.font", VSTGUI::kBlackCColor ) );
           dc->setFont(lfoTypeFont);
           char txt[256];
           float tv = delta * l;
@@ -295,7 +301,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
           tf.transform(sp);
           tf.transform(ep);
           dc->setLineWidth(1.0);
-          dc->setFrameColor(VSTGUI::kBlackCColor);
+          dc->setFrameColor(skin->getColor( "lfo.waveform.font", VSTGUI::kBlackCColor ) );
           dc->drawLine(sp,ep);
       }
 
@@ -352,7 +358,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
                
                CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10,10));
                tf.transform(tp);
-               dc->setFontColor(VSTGUI::kBlackCColor);
+               dc->setFontColor(skin->getColor( "lfo.waveform.font", VSTGUI::kBlackCColor ) );
                dc->setFont(lfoTypeFont);
                dc->drawString(s, tp, VSTGUI::kLeftText, true );
             }
@@ -385,11 +391,11 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       dc->setDrawMode(VSTGUI::kAntiAliasing);
 
       dc->setLineWidth(1.0);
-      dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
+      dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
       dc->drawLine(mid0, mid1);
       
       dc->setLineWidth(1.0);
-      dc->setFrameColor(VSTGUI::CColor(0xE0, 0x80, 0x00));
+      dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
       dc->drawLine(top0, top1);
       dc->drawLine(bot0, bot1);
 
@@ -399,7 +405,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #else
       dc->setLineWidth(1.0);
 #endif
-      dc->setFrameColor(VSTGUI::CColor(0xB0, 0x60, 0x00, 0xFF));
+      dc->setFrameColor(skin->getColor("lfo.waveform.envelope", VSTGUI::CColor(0xB0, 0x60, 0x00, 0xFF)));
       dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
@@ -408,7 +414,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #else
       dc->setLineWidth(1.3);
 #endif
-      dc->setFrameColor(VSTGUI::CColor(0x00, 0x00, 0, 0xFF));
+      dc->setFrameColor(skin->getColor("lfo.waveform.wave", VSTGUI::CColor( 0x00, 0x00, 0x00, 0xFF )));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
 
@@ -421,7 +427,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 
    CColor cskugga = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cgray = {0x97, 0x98, 0x9a, 0xff};
-   CColor cselected = {0xfe, 0x98, 0x15, 0xff};
+   CColor cselected = skin->getColor( "lfo.type.selected.background", CColor( 0xfe, 0x98, 0x15, 0xff ) );
    // CColor blackColor (0, 0, 0, 0);
    dc->setFrameColor(cskugga);
    dc->setFont(lfoTypeFont);
@@ -441,12 +447,16 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
          tb2.offset(0, 1);
          dc->setFillColor(cselected);
          dc->drawRect(tb2, kDrawFilled);
+         dc->setFontColor(skin->getColor( "lfo.type.selected.foreground", kBlackCColor) );
+      }
+      else
+      {
+         dc->setFontColor(skin->getColor( "lfo.type.unselected.foreground", kBlackCColor) );
       }
       // else dc->setFillColor(cgray);
       // dc->fillRect(tb);
       shaperect[i] = tb;
       // tb.offset(0,-1);
-      dc->setFontColor(kBlackCColor);
       tb.top += 1.6; // now the font is smaller and the box is square, smidge down the text
       dc->drawString(ls_abberations[i], tb);
    }
@@ -471,11 +481,18 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
    maindisp.bottom -= 1;
 
    cdisurf->begin();
+   auto col = skin->getColor( "lfo.stepseq.background", CColor( 0xFF, 0x90, 0x00 ) );
+   int r = col.red;
+   int g = col.green;
+   int b = col.blue;
 #if MAC
-   cdisurf->clear(0x0090ffff);
+   int c = ( b << 24 ) + ( g << 16 ) + ( r << 8 ) + 255;
+   cdisurf->clear(c);
 #else
-   cdisurf->clear(0xffff9000);
+   int c = ( b ) + ( g << 8 ) + ( r << 16 ) + ( 255 << 24 );
+   cdisurf->clear(c);
 #endif
+
    int w = cdisurf->getWidth();
    int h = cdisurf->getHeight();
 
@@ -634,7 +651,7 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
 
    CColor cskugga = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cgray = {0x97, 0x98, 0x9a, 0xff};
-   CColor cselected = {0xfe, 0x98, 0x15, 0xff};
+   CColor cselected = skin->getColor( "lfo.type.selected.background", CColor( 0xfe, 0x98, 0x15, 0xff ) );
    // CColor blackColor (0, 0, 0, 0);
    dc->setFrameColor(cskugga);
    dc->setFont(lfoTypeFont);
@@ -654,12 +671,16 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
          tb2.offset(0, 1);
          dc->setFillColor(cselected);
          dc->drawRect(tb2, kDrawFilled);
+         dc->setFontColor(skin->getColor( "lfo.type.selected.foreground", kBlackCColor) );
+      }
+      else
+      {
+         dc->setFontColor(skin->getColor( "lfo.type.unselected.foreground", kBlackCColor) );
       }
       // else dc->setFillColor(cgray);
       // dc->fillRect(tb);
       shaperect[i] = tb;
       // tb.offset(0,-1);
-      dc->setFontColor(kBlackCColor);
       tb.top += 1.6; // now the font is smaller and the box is square, smidge down the text
       dc->drawString(ls_abberations[i], tb);
    }
@@ -692,20 +713,43 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 #else
 #define PIX_COL( a, b ) a
 #endif
-   // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and mac is 0xAABBGGRR
+   // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and win is 0xAABBGGRR
 
-   int cgray = PIX_COL( 0xff97989a, 0x9a9897ff );
-   int stepMarker = PIX_COL( 0xFF123463, 0x633412FF);
-   int disStepMarker = PIX_COL( 0xffccccee, 0xeeccccff);
-   int loopRegionLo = PIX_COL( 0xff9abfe0, 0xe0bf9aff);
-   int loopRegionHi = PIX_COL( 0xffa9d0ef, 0xefd0a9ff );
-   int loopRegionClick = PIX_COL( 0xffb9e0ff, 0xffe0b9ff );
-   int shadowcol = PIX_COL( 0xff6d6d7d, 0x7d6d6dff );
+   auto skd = [this](std::string n, int def) -> int {
+                 if( this->skin->hasColor(n) )
+                 {
+                    auto c = this->skin->getColor( n, VSTGUI::kBlackCColor );
+#if MAC
+                    return ( c.red << 8 ) + ( c.green << 16 ) + ( c.blue << 24 ) + 255;
+#else
+                    return c.red + ( c.green << 8 ) + ( c.blue << 16 ) + ( 255 << 24 );
+#endif                    
+                 }
+#if MAC
+                 return def;
+#else
+                 // Source is in RGBA
+                 return
+                    ((def & 0xFF000000) >> 24) | //______RR
+                    ((def & 0x00FF0000) >>  8) | //____GG__
+                    ((def & 0x0000FF00) <<  8) | //__BB____
+                    ((def & 0x000000FF) << 24);  //AA______
+#endif                 
+              };
 
-   int noLoopHi = PIX_COL( 0xffdfdfdf, 0xdfdfdfff );
-   int noLoopLo = PIX_COL( 0xffcfcfcf, 0xcfcfcfff );
-   int grabMarker = PIX_COL( 0xff123463, 0x633412ff );
-   int grabMarkerHi = PIX_COL( 0xff325483, 0x835432ff ); 
+   
+   int cgray = skd( "lfo.stepseq.cgray", 0x9a9897ff );
+   int stepMarker = skd( "lfo.stepseq.stepmarker", 0x633412FF);
+   int disStepMarker = skd( "lfo.stepseq.disabledstepmarker", 0xeeccccff);
+   int loopRegionLo = skd( "lfo.stepseq.loopregionlo", 0xe0bf9aff);
+   int loopRegionHi = skd( "lfo.stepseq.loopregionhi", 0xefd0a9ff );
+   int loopRegionClick = skd( "lfo.stepseq.loopregionclick", 0xffe0b9ff );
+   int shadowcol = skd( "lfo.stepseq.shadowcol", 0x7d6d6dff );
+
+   int noLoopHi = skd( "lfo.stepseq.noloophi", 0xdfdfdfff );
+   int noLoopLo = skd( "lfo.stepseq.nolooplo", 0xcfcfcfff );
+   int grabMarker = skd( "lfo.stepseq.grabmarker", 0x633412ff );
+   int grabMarkerHi = skd( "lfo.stepseq.grabmarkerhi", 0x835432ff ); 
    // But leave non-mac unch
        
    for (int i = 0; i < n_stepseqsteps; i++)

@@ -5,8 +5,9 @@
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
 #include "SurgeParamConfig.h"
+#include "SkinSupport.h"
 
-class CSurgeSlider : public CCursorHidingControl
+class CSurgeSlider : public CCursorHidingControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CSurgeSlider(const VSTGUI::CPoint& loc,

@@ -259,18 +259,12 @@ void CFxMenu::draw(CDrawContext* dc)
    CRect lbox = getViewSize();
    lbox.right--;
    lbox.bottom--;
-   dc->setFillColor(kBlackCColor);
-   CRect f1(lbox), f2(lbox);
-   f1.inset(1, 0);
-   f2.inset(0, 1);
-   // dc->fillRect(f1); dc->fillRect(f2);
 
-   dc->setFontColor(kBlackCColor);
+   auto fgc = skin->getColor( "fxmenu.foreground", kBlackCColor );
+   dc->setFontColor(fgc);
    dc->setFont(displayFont);
    CRect txtbox(lbox);
    txtbox.inset(2, 2);
-   dc->setFillColor(kWhiteCColor);
-   // dc->fillRect(txtbox);
    txtbox.inset(3, 0);
    txtbox.right -= 6;
    txtbox.top--;
@@ -281,14 +275,14 @@ void CFxMenu::draw(CDrawContext* dc)
    dc->drawString(fxname, txtbox, kRightText, true);
 
    CPoint d(txtbox.right + 2, txtbox.top + 5);
-   dc->drawPoint(d, kBlackCColor);
+   dc->drawPoint(d, fgc);
    d.x++;
-   dc->drawPoint(d, kBlackCColor);
+   dc->drawPoint(d, fgc);
    d.y++;
-   dc->drawPoint(d, kBlackCColor);
+   dc->drawPoint(d, fgc);
    d.y--;
    d.x++;
-   dc->drawPoint(d, kBlackCColor);
+   dc->drawPoint(d, fgc);
 
    setDirty(false);
 }

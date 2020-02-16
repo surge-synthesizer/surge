@@ -4,8 +4,9 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SurgeStorage.h"
+#include "SkinSupport.h"
 
-class CPatchBrowser : public VSTGUI::CControl
+class CPatchBrowser : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
 

@@ -6,10 +6,11 @@
 #include "SurgeStorage.h"
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
+#include "SkinSupport.h"
 
 #define OSC_MOD_ANIMATION 0
 
-class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget
+class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponnt
 {
 public:
    COscillatorDisplay(const VSTGUI::CRect& size, OscillatorStorage* oscdata, SurgeStorage* storage)

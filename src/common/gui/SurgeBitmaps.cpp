@@ -21,6 +21,7 @@ SurgeBitmaps::~SurgeBitmaps()
 
 void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
 {
+   frame = f;
    addEntry(IDB_BG, f);
    addEntry(IDB_BUTTON_ABOUT, f);
    addEntry(IDB_ABOUT, f);
@@ -31,6 +32,7 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_FBCONFIG, f);
    addEntry(IDB_SCENESWITCH, f);
    addEntry(IDB_SCENEMODE, f);
+   addEntry(IDB_OCTAVES_OSC , f);
    addEntry(IDB_OCTAVES, f);
    addEntry(IDB_WAVESHAPER, f);
    addEntry(IDB_POLYMODE, f);
@@ -75,8 +77,33 @@ CScalableBitmap* SurgeBitmaps::getBitmap(int id)
    return bitmap_registry.at(id);
 }
 
+CScalableBitmap* SurgeBitmaps::getBitmapByPath(std::string path)
+{
+   return bitmap_file_registry.at(path);
+}
+
+CScalableBitmap* SurgeBitmaps::loadBitmapByPath(std::string path )
+{
+   bitmap_file_registry[path] = new CScalableBitmap(path, frame);
+   return bitmap_file_registry[path];
+}
+
+CScalableBitmap* SurgeBitmaps::loadBitmapByPathForID(std::string path, int id)
+{
+   if( bitmap_registry.find(id) != bitmap_registry.end() )
+   {
+      // FIXME - think about ownership here
+      bitmap_registry[id]->forget();
+   }
+   bitmap_registry[id] = new CScalableBitmap( path, frame );
+   return bitmap_registry[id];
+}
+
 void SurgeBitmaps::setPhysicalZoomFactor(int pzf)
 {
    for (auto pair : bitmap_registry)
       pair.second->setPhysicalZoomFactor(pzf);
+   for (auto pair : bitmap_file_registry)
+      pair.second->setPhysicalZoomFactor(pzf);
 }
+

@@ -68,11 +68,6 @@ CNumberField::CNumberField(const CRect& size,
                            CBitmap* pBackground)
     : CControl(size, listener, tag, pBackground)
 {
-   backColor = CColor(255, 255, 255, 255);
-   envColor = CColor(214, 209, 198, 255);
-   fontColor = CColor(42, 42, 42, 255);
-   lineColor = CColor(42, 42, 42, 255);
-
    i_value = 60;
    controlmode = cm_integer;
    i_min = 0;
@@ -252,6 +247,11 @@ void CNumberField::setValue(float val)
 //------------------------------------------------------------------------
 void CNumberField::draw(CDrawContext* pContext)
 {
+   backColor = skin->getColor( "control.numberfield.background", CColor(255, 255, 255, 255) );
+   envColor = skin->getColor( "control.numberfield.env", CColor(214, 209, 198, 255) );
+   fontColor = skin->getColor( "control.numberfield.foreground", CColor(42, 42, 42, 255) );
+   lineColor = skin->getColor( "control.numberfield.rule", CColor(42, 42, 42, 255) );
+
    // COffscreenContext *tempContext = new
    // COffscreenContext(this->getFrame(),drawsize.width(),drawsize.height());
 

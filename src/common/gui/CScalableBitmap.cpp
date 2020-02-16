@@ -167,6 +167,24 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
     lastSeenZoom = -1;
 }
 
+CScalableBitmap::CScalableBitmap(std::string fname, VSTGUI::CFrame* f)
+   : CBitmap(CResourceDescription(0)), svgImage(nullptr), frame(f)
+{
+    int id = 0;
+    resourceID = id;
+
+    svgImage = nsvgParseFromFile(fname.c_str(), "px", 96);
+
+    if (!svgImage)
+    {
+       std::cout << "Unable to load SVG Image " << fname << std::endl;
+    }
+
+    extraScaleFactor = 100;
+    currentPhysicalZoomFactor = 100;
+    lastSeenZoom = -1;
+}
+
 #define DUMPR(r)                                                                                   \
    "(x=" << r.getTopLeft().x << ",y=" << r.getTopLeft().y << ")+(w=" << r.getWidth()               \
          << ",h=" << r.getHeight() << ")"
@@ -224,6 +242,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
           offscreenCache.clear();
           lastSeenZoom = currentPhysicalZoomFactor;
        }
+       
 
        CGraphicsTransform tf = CGraphicsTransform().scale(lastSeenZoom / 100.0, lastSeenZoom / 100.0);
        

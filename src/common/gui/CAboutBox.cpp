@@ -65,26 +65,46 @@ void CAboutBox::draw(CDrawContext* pContext)
       std::string platform = "orac or skynet or something";
 #endif      
 
-      std::vector< std::string > msgs = { {
-              std::string() + "Version " + SURGE_STR(SURGE_VERSION) + " (" + bittiness + " " + platform + " " + flavor + ". Built " +
-              __DATE__ + " " + __TIME__ + ")",
-              std::string() + "Resources: dataPath=" + dataPath + " userData=" + userPath,
-              "Released under the GNU General Public License, v3",
-              "Copyright 2005-2020 by individual contributors",
-              "Source, contributors and other information at https://github.com/surge-synthesizer/surge",
-              "VST Plug-in technology by Steinberg, AU Plugin Technology by Apple Computer"
-          } };
-
-      int yMargin = 5;
-      int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
-      int xPos = strHeight;
-      pContext->setFontColor(kWhiteCColor);
-      pContext->setFont(infoFont);
-      for (auto s : msgs)
       {
-          pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
-          yPos += strHeight + yMargin;
+         std::vector< std::string > msgs = { {
+               std::string() + "Version " + SURGE_STR(SURGE_VERSION) + " (" + bittiness + " " + platform + " " + flavor + ". Built " +
+               __DATE__ + " " + __TIME__ + ")",
+               std::string() + "Resources: dataPath=" + dataPath + " userData=" + userPath,
+               "Released under the GNU General Public License, v3",
+               "Copyright 2005-2020 by individual contributors",
+               "Source, contributors and other information at https://github.com/surge-synthesizer/surge",
+               "VST Plug-in technology by Steinberg, AU Plugin Technology by Apple Computer"
+            } };
+         
+         int yMargin = 5;
+         int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
+         int xPos = strHeight;
+         pContext->setFontColor(skin->getColor( "aboutbox.text", kWhiteCColor) );
+         pContext->setFont(infoFont);
+         for (auto s : msgs)
+         {
+            pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
+            yPos += strHeight + yMargin;
+         }
       }
+
+      {
+         std::vector< std::string > msgs;
+         msgs.push_back( std::string( ) + "Current Skin: " + skin->displayName );
+         msgs.push_back( std::string( ) + "Skin Author: " + skin->author + " " + skin->authorURL ); 
+         
+         int yMargin = 5;
+         int yPos = strHeight * 2;
+         int xPos = strHeight;
+         pContext->setFontColor(skin->getColor( "aboutbox.text", kWhiteCColor) );
+         pContext->setFont(infoFont);
+         for (auto s : msgs)
+         {
+            pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
+            yPos += strHeight + yMargin;
+         }
+      }
+      
    }
    else
    {

@@ -16,8 +16,13 @@ public:
    void setPhysicalZoomFactor(int pzf);
 
    CScalableBitmap* getBitmap(int id);
-
+   CScalableBitmap* getBitmapByPath(std::string filename);
+   CScalableBitmap* loadBitmapByPath(std::string filename);
+   CScalableBitmap* loadBitmapByPathForID(std::string filename, int id);
+   
 protected:
    void addEntry(int id, VSTGUI::CFrame* f);
    std::map<int, CScalableBitmap*> bitmap_registry;
+   std::map<std::string, CScalableBitmap*> bitmap_file_registry;
+   VSTGUI::CFrame *frame;
 };
