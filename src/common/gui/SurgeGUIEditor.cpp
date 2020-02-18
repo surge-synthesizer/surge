@@ -3166,6 +3166,8 @@ void SurgeGUIEditor::toggleTuning()
 
     if( statuspanel )
         ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::tuningMode, !this->synth->storage.isStandardTuning );
+
+    this->synth->refresh_editor = true;
 }
 void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
 {
@@ -3182,11 +3184,13 @@ void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
 void SurgeGUIEditor::tuningFileDropped(std::string fn)
 {
     this->synth->storage.retuneToScale(Surge::Storage::readSCLFile(fn));
+    this->synth->refresh_editor = true;
 }
 
 void SurgeGUIEditor::mappingFileDropped(std::string fn)
 {
     this->synth->storage.remapToKeyboard(Surge::Storage::readKBMFile(fn));
+    this->synth->refresh_editor = true;
 }
 
 bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)

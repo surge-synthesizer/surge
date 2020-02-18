@@ -154,6 +154,33 @@ void COscillatorDisplay::drawVector(CDrawContext* dc)
       if (osc)
       {
          float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
+         if(! storage->isStandardTuning )
+         {
+            // OK so in this case we need to find a better version of the note which gets us
+            // that pitch. Sigh.
+            auto pit = storage->note_to_pitch_ignoring_tuning(disp_pitch_rs);
+            int bracket = -1;
+            for( int i=0; i<128; ++i )
+            {
+               if( storage->note_to_pitch(i) < pit && storage->note_to_pitch(i+1) > pit )
+               {
+                  bracket = i;
+                  break;
+               }
+            }
+            if( bracket >= 0 )
+            {
+               float f1 = storage->note_to_pitch(bracket);
+               float f2 = storage->note_to_pitch(bracket+1);
+               float frac = (pit - f1)/ (f2-f1);
+               float newp = storage->note_to_pitch(bracket + frac);
+               disp_pitch_rs = bracket + frac;
+            }
+            else
+            {
+               // What the hell type of scale is this folks! But this is just UI code so just punt
+            }
+         }
          bool use_display = osc->allow_display();
 
          // Mis-install check #2
