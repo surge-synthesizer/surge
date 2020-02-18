@@ -180,18 +180,31 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
    if(!hasSuppliedDataPath)
    {
        const char* xdgDataPath = getenv("XDG_DATA_HOME");
+       std::string localDataPath = std::string(homePath) + "/.local/share/surge/";
        if (xdgDataPath)
-           datapath = std::string(xdgDataPath) + "/Surge/";
+       {
+           datapath = std::string(xdgDataPath) + "/surge/";
+       }
+       else if ( fs::is_directory(localDataPath) )
+       {
+           datapath = localDataPath;
+       }
        else
-           datapath = std::string(homePath) + "/.local/share/Surge/";
+       {
+          datapath = std::string(homePath) + "/.local/share/Surge/";
+       }
        
        /*
        ** If local directory doesn't exists - we probably came here through an installer -
-       ** use /usr/share/Surge as our last guess
+       ** check for /usr/share/surge and use /usr/share/Surge as our last guess
        */
        if (! fs::is_directory(datapath))
        {
-           datapath = "/usr/share/Surge/";
+          std::string systemDataPath = "/usr/share/surge/";
+          if ( fs::is_directory(systemDataPath) )
+             datapath = systemDataPath;
+          else
+             datapath = "/usr/share/Surge/";
        }
    }
    else

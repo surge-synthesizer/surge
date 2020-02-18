@@ -325,13 +325,13 @@ if [[ ! -z "$option_local" ]]; then
     vst3_dest_path="$HOME/.vst3"
     lv2_dest_path="$HOME/.lv2"
     headless_dest_path="$HOME/bin"
-    data_path="$HOME/.local/share/Surge"
+    data_path="$HOME/.local/share/surge"
 else
     vst2_dest_path="/usr/lib/vst"
     vst3_dest_path="/usr/lib/vst3"
     lv2_dest_path="/usr/lib/lv2"
     headless_dest_path="/usr/bin"
-    data_path="/usr/share/Surge"
+    data_path="/usr/share/surge"
 fi
 
 case $1 in
