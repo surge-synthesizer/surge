@@ -3348,7 +3348,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
        zoomSubMenu->addEntry(defaultZ);
        zid++;
 
-       addCallbackMenu(zoomSubMenu, "Set default zoom to ...", [this]() {
+       addCallbackMenu(zoomSubMenu, "Set default zoom to...", [this]() {
                // FIXME! This won't work on linux
                char c[256];
                snprintf(c, 256, "%d", this->zoomFactor );
@@ -3457,14 +3457,14 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                                                VSTGUI::COptionMenu::kMultipleCheckStyle);
 
 
-    addCallbackMenu(dataSubMenu, "Open User Data Folder", [this]() {
+    addCallbackMenu(dataSubMenu, "Open User Data Folder...", [this]() {
        // make it if it isn't there
        fs::create_directories(this->synth->storage.userDataPath);
        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
     });
     did++;
     
-    addCallbackMenu(dataSubMenu, "Open Factory Data Folder", [this]() {
+    addCallbackMenu(dataSubMenu, "Open Factory Data Folder...", [this]() {
        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath);
     });
     did++;
@@ -3475,7 +3475,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     });
     did++;
 
-    addCallbackMenu( dataSubMenu, "Set Custom User Data Folder", [this]() {
+    addCallbackMenu( dataSubMenu, "Set Custom User Data Folder...", [this]() {
             auto cb = [this](std::string f) {
                 // FIXME - check if f is a path
                 this->synth->storage.userDataPath = f;
@@ -3497,27 +3497,27 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->addSeparator(eid++);
 
 
-    addCallbackMenu(settingsMenu, "Reach the Developers", []() {
+    addCallbackMenu(settingsMenu, "Reach the Developers...", []() {
             Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/feedback");
         });
     eid++;
     
-    addCallbackMenu(settingsMenu, "Read the Code", []() {
+    addCallbackMenu(settingsMenu, "Read the Code...", []() {
             Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge/");
         });
     eid++;
 
-    addCallbackMenu(settingsMenu, "Download Additional Content", []() {
+    addCallbackMenu(settingsMenu, "Download Additional Content...", []() {
             Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
     });
     eid++;
 
-    addCallbackMenu(settingsMenu, "Surge Website", []() {
+    addCallbackMenu(settingsMenu, "Surge Website...", []() {
             Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/");
         });
     eid++;
     
-    addCallbackMenu(settingsMenu, "Surge Manual", []() {
+    addCallbackMenu(settingsMenu, "Surge Manual...", []() {
        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
     });
     eid++;
@@ -3548,7 +3548,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
                     [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
 
     std::ostringstream oss;
-    oss << "Change pitch bend range (range=" << synth->mpePitchBendRange << ")";
+    oss << "Change pitch bend range (current: " << synth->mpePitchBendRange << " semitones)";
     addCallbackMenu(mpeSubMenu, oss.str().c_str(), [this]() {
        // FIXME! This won't work on linux
        char c[256];
@@ -3560,7 +3560,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
 
     std::ostringstream oss2;
     int def = Surge::Storage::getUserDefaultValue( &(synth->storage), "mpePitchBendRange", 48 );
-    oss2 << "Change default pitch bend range (range=" << synth->mpePitchBendRange <<" default=" << def << ")";
+    oss2 << "Change default pitch bend range (current: " << def << " semitones)";
     addCallbackMenu(mpeSubMenu, oss2.str().c_str(), [this]() {
        // FIXME! This won't work on linux
        char c[256];
@@ -3602,7 +3602,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
     tuningSubMenu->addSeparator();
     tid++;
 
-    addCallbackMenu(tuningSubMenu, "Apply .scl file tuning",
+    addCallbackMenu(tuningSubMenu, "Apply .scl file tuning...",
                     [this]()
                     {
                         auto cb = [this](std::string sf)
@@ -3612,7 +3612,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                             {
                                 if( sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0 )
                                 {
-                                    Surge::UserInteractions::promptError( "Please only select .scl files", "Invalid Choice" );
+                                    Surge::UserInteractions::promptError( "Please select only .scl files!", "Invalid Choice" );
                                     std::cout << "FILE is [" << sf << "]" << std::endl;
                                     return;
                                 }
@@ -3621,7 +3621,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
 
                             if (!this->synth->storage.retuneToScale(sc))
                             {
-                               Surge::UserInteractions::promptError( "This .scl file is not valid", "File format error" );
+                               Surge::UserInteractions::promptError( "This .scl file is not valid!", "File Format Error" );
                                return;
                             }
                         };
@@ -3632,7 +3632,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
-    addCallbackMenu(tuningSubMenu, "Apply .kbm keyboard mapping",
+    addCallbackMenu(tuningSubMenu, "Apply .kbm keyboard mapping...",
                     [this]()
                     {
                         auto cb = [this](std::string sf)
@@ -3642,7 +3642,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                             {
                                 if( sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0 )
                                 {
-                                    Surge::UserInteractions::promptError( "Please only select .kbm files", "Invalid Choice" );
+                                    Surge::UserInteractions::promptError( "Please select only .kbm files!", "Invalid Choice" );
                                     std::cout << "FILE is [" << sf << "]" << std::endl;
                                     return;
                                 }
@@ -3651,7 +3651,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
 
                             if (!this->synth->storage.remapToKeyboard(kb) )
                             {
-                               Surge::UserInteractions::promptError( "This .kbm file is not valid", "File format error" );
+                               Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
                                return;
                             }
                         };
@@ -3662,7 +3662,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
-    addCallbackMenu( tuningSubMenu, "ReMap A4 (midi #69) frequency directly to...",
+    addCallbackMenu( tuningSubMenu, "Remap A4 (MIDI note 69) frequency directly to...",
                      [this]()
                         {
                            char c[256];
@@ -3678,7 +3678,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                               auto kb = Surge::Storage::KeyboardMapping::tuneA69To(freq);
                               if( ! this->synth->storage.remapToKeyboard(kb) )
                               {
-                                 Surge::UserInteractions::promptError( "This .kbm file is not valid", "File format error" );
+                                 Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
                                  return;
                               }
                            }
@@ -3687,7 +3687,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
     
     tuningSubMenu->addSeparator();
     tid++;
-    auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning",
+    auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning...",
                     [this]()
                     {
                        Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml(&(this->synth->storage)) );
@@ -3695,7 +3695,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     sct->setEnabled(! this->synth->storage.isStandardTuning );
 
-    auto *tfl = addCallbackMenu(tuningSubMenu, "Factory Tuning Library",
+    auto *tfl = addCallbackMenu(tuningSubMenu, "Factory Tuning Library...",
                     [this]()
                     {
                        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath +
