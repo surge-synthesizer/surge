@@ -3702,13 +3702,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
     auto *tfl = addCallbackMenu(tuningSubMenu, "Factory Tuning Library...",
                     [this]()
                     {
-                       Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath +
+                       auto dpath = this->synth->storage.datapath;
+                       std::string sep = "/";
 #if WINDOWS
-                                                                        "\\"
-#else
-                                                                        "/"
-#endif                                                                        
-                          + "tuning-library");
+                       sep = "\\";
+                       if( dpath.back() == '\\' || dpath.back() == '/' )
+                         sep = "";
+#endif
+                       Surge::UserInteractions::openFolderInFileBrowser(
+                          dpath + sep + "tuning-library");
                     }
         );
 
