@@ -1,5 +1,6 @@
 #include "SurgeLv2Wrapper.h"
 #include <fstream>
+#include <iomanip>
 
 #if defined _WIN32
 #define LV2_DLL_SUFFIX ".dll"
@@ -46,7 +47,7 @@ void lv2_generate_ttl(const char* baseName)
 
       osDsp << "<" << desc->URI << ">\n"
                "    doap:name \"Surge\" ;\n"
-               "    doap:license <GPL-3.0-only> ;\n"
+               "    doap:license <https://www.gnu.org/licenses/gpl-3.0.en.html> ;\n"
                "    doap:maintainer [\n"
                "        foaf:name \"Vember Audio\" ;\n"
                "        foaf:homepage <https://surge-synthesizer.github.io/> ;\n"
@@ -71,38 +72,25 @@ void lv2_generate_ttl(const char* baseName)
          char pName[256];
          defaultSynth->getParameterName(index, pName);
 
-         // TODO LV2: implement fixed symbol names for stability
-         std::string pSymbol = ([](std::string name) -> std::string {
-            auto isLeadChar = [](char c) -> bool {
-               return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-            };
-            auto isMidChar = [](char c) -> bool {
-               return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                      (c >= '0' && c <= '9');
-            };
-            if (name.empty())
-               name = '_';
-            else
-            {
-               if (!isLeadChar(name[0]))
-                  name[0] = '_';
-               for (size_t i = 1; i < name.size(); ++i)
-               {
-                  if (!isMidChar(name[i]))
-                     name[i] = '_';
-               }
-            }
-            return name;
-         })(pName);
-
+         std::string pSymbol;
+         if( index >= metaparam_offset )
+         {
+            pSymbol = "meta_cc" + std::to_string( index - metaparam_offset + 1 );
+         }
+         else
+         {
+            auto *par = defaultSynth->storage.getPatch().param_ptr[index];
+            pSymbol = par->get_storage_name();
+         }
+         
          osDsp << " [\n"
                   "        a lv2:InputPort, lv2:ControlPort ;\n"
                   "        lv2:index " << portIndex << " ;\n"
                   "        lv2:symbol \"" << pSymbol << "\" ;\n"
                   "        lv2:name \"" << pName << "\" ;\n"
-                  "        lv2:default " << defaultSynth->getParameter01(index) << " ;\n"
-                  "        lv2:minimum " << pMeta.fmin << " ;\n"
-                  "        lv2:maximum " << pMeta.fmax << " ;\n"
+                  "        lv2:default " << std::fixed << std::setw(10) << std::setprecision(8) << defaultSynth->getParameter01(index) << " ;\n"
+                  "        lv2:minimum " << std::fixed << std::setw(10) <<  std::setprecision(8) << pMeta.fmin << " ;\n"
+                  "        lv2:maximum " << std::fixed << std::setw(10) << std::setprecision(8) << pMeta.fmax << " ;\n"
                   "    ]";
          ++portIndex;
       }
@@ -151,7 +139,7 @@ void lv2_generate_ttl(const char* baseName)
 
       // TODO LV2: implement an adequate version number scheme. For now, make it the last two (so 1.6.2 gets 6 2)
       osDsp << "    lv2:minorVersion 6 ;\n"
-               "    lv2:microVersion 2 .\n";
+               "    lv2:microVersion 6 .\n";
    }
 
    {
