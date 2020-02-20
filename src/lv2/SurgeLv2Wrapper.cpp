@@ -10,6 +10,9 @@ SurgeLv2Wrapper::SurgeLv2Wrapper(double sampleRate)
 {
    // needed?
    _synthesizer->time_data.ppqPos = 0;
+
+   for( int i=0; i<NumPorts; ++i )
+      _dataLocation[i] = nullptr;
 }
 
 SurgeLv2Wrapper::~SurgeLv2Wrapper()
@@ -68,6 +71,10 @@ void SurgeLv2Wrapper::connectPort(LV2_Handle instance, uint32_t port, void* data
 {
    SurgeLv2Wrapper* self = (SurgeLv2Wrapper*)instance;
    self->_dataLocation[port] = data_location;
+#if DEBUG_STARTUP_SETS
+   if( port == 118 )
+      std::cout << "connectPort " << port << " " << *(float *)(data_location) << std::endl;
+#endif   
 }
 
 void SurgeLv2Wrapper::activate(LV2_Handle instance)
@@ -81,6 +88,10 @@ void SurgeLv2Wrapper::activate(LV2_Handle instance)
    {
       unsigned index = s->remapExternalApiToInternalId(pNth);
       self->_oldControlValues[pNth] = s->getParameter01(index);
+#if DEBUG_STARTUP_SETS      
+      if( index == 118 )
+         std::cout << "ACTIVATE " << pNth << " " << self->_oldControlValues[pNth] << std::endl;
+#endif      
    }
 
    s->audio_processing_active = true;
@@ -97,8 +108,13 @@ void SurgeLv2Wrapper::run(LV2_Handle instance, uint32_t sample_count)
    for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
    {
       float portValue = *(float*)(self->_dataLocation[pNth]);
+;
       if (portValue != self->_oldControlValues[pNth])
       {
+#if DEBUG_STARTUP_SETS         
+         std::cout << "LV2 at " << pNth << " portValue=" << portValue
+                   << " ocv=" << self->_oldControlValues[pNth] << std::endl;
+#endif         
          unsigned index = s->remapExternalApiToInternalId(pNth);
          s->setParameter01(index, portValue);
          self->_oldControlValues[pNth] = portValue;
@@ -321,6 +337,10 @@ LV2_State_Status SurgeLv2Wrapper::saveState(LV2_Handle instance, LV2_State_Store
 
 LV2_State_Status SurgeLv2Wrapper::restoreState(LV2_Handle instance, LV2_State_Retrieve_Function retrieve, LV2_State_Handle handle, uint32_t flags, const LV2_Feature* const* features)
 {
+#if DEBUG_STARTUP_SETS
+   std::cout << "restoreState" << std::endl
+#endif
+      
    SurgeLv2Wrapper* self = (SurgeLv2Wrapper*)instance;
    SurgeSynthesizer* s = self->_synthesizer.get();
 
@@ -334,6 +354,19 @@ LV2_State_Status SurgeLv2Wrapper::restoreState(LV2_Handle instance, LV2_State_Re
 
    s->loadRaw(data, size, false);
    s->loadFromDawExtraState();
+
+   // Restore the ports with the loadRaw state since the synth is now in good shape
+   for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
+   {
+      float* portValue = (float*)(self->_dataLocation[pNth]);
+      if( portValue )
+      {
+         unsigned index = s->remapExternalApiToInternalId(pNth);
+         float v = s->getParameter01(index);
+         *portValue = v;
+      }
+   }   
+   
    // TODO also load editor stuff?
 
    return LV2_STATE_SUCCESS;
