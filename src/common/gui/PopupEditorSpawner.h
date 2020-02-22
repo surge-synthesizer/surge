@@ -9,7 +9,6 @@
 
 #include <string>
 #include <vector>
-#include "SurgeSynthesizer.h"
 
 float spawn_miniedit_float(float f, int ctype);
 int spawn_miniedit_int(int i, int ctype);

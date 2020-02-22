@@ -2744,7 +2744,17 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
           synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
           if( synth->storage.getPatch().patchTuning.tuningStoredInPatch )
+          {
               synth->storage.getPatch().patchTuning.tuningContents = synth->storage.currentScale.rawText;
+              if( synth->storage.currentMapping.isStandardMapping )
+              {
+                 synth->storage.getPatch().patchTuning.mappingContents = "";
+              }
+              else
+              {
+                 synth->storage.getPatch().patchTuning.mappingContents = synth->storage.currentMapping.rawText;
+              }
+          }
 
           synth->storage.getPatch().dawExtraState.isPopulated = false; // Ignore whatever comes from the DAW
           

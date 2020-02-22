@@ -31,7 +31,7 @@ TEST_CASE( "We can read a collection of wavetables", "[io]" )
    SECTION( "Wavetable.wav" )
    {
       auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
-      surge->storage.load_wt_wav_portable("test-data/wav/Wavetable.wav", wt);
+      surge->storage.load_wt_wav_portable("test-data/wav/Wavetable.wav", wt );
       REQUIRE( wt->size == 2048 );
       REQUIRE( wt->n_tables == 256 );
       REQUIRE( ( wt->flags & wtf_is_sample ) == 0 );
@@ -40,7 +40,7 @@ TEST_CASE( "We can read a collection of wavetables", "[io]" )
    SECTION( "05_BELL.WAV" )
    {
       auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
-      surge->storage.load_wt_wav_portable("test-data/wav/05_BELL.WAV", wt);
+      surge->storage.load_wt_wav_portable("test-data/wav/05_BELL.WAV", wt );
       REQUIRE( wt->size == 2048 );
       REQUIRE( wt->n_tables == 33 );
       REQUIRE( ( wt->flags & wtf_is_sample ) == 0 );
@@ -66,7 +66,7 @@ TEST_CASE( "All .wt and .wav factory assets load", "[io]" )
       auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
       wt->size = -1;
       wt->n_tables = -1;
-      surge->storage.load_wt(p.path.generic_string(), wt );
+      surge->storage.load_wt(p.path.generic_string(), wt, &(surge->storage.getPatch().scene[0].osc[0]) );
       REQUIRE( wt->size > 0 );
       REQUIRE( wt->n_tables > 0 );
    }
@@ -82,6 +82,10 @@ TEST_CASE( "All Patches are Loadable", "[io]" )
    {
       surge->loadPatch(i);
       ++i;
+
+      // A tiny oddity that the surge state pops up if we have tuning patches in the library so
+      surge->storage.remapToStandardKeyboard();
+      surge->storage.retuneToStandardTuning();
    }
 }
 
@@ -230,7 +234,144 @@ TEST_CASE( "DAW Streaming and Unstreaming", "[io][mpe][tun]" )
 
 }
 
-TEST_CASE( "IDs are Stable" )
+TEST_CASE( "Stream WaveTable Names", "[io]" )
+{
+   SECTION( "Name Restored for Old Patch" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+      REQUIRE( surge->loadPatchByPath( "test-data/patches/Church.fxp", -1, "Test" ) );
+      REQUIRE( std::string( surge->storage.getPatch().scene[0].osc[0].wavetable_display_name ) == "(Patch Wavetable)" );
+   }
+
+   SECTION( "Name Set when Loading Factory" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+
+      auto patch = &(surge->storage.getPatch());
+      patch->scene[0].osc[0].type.val.i = ot_wavetable;
+
+      for( int i=0; i<40; ++i )
+      {
+         int wti = rand() % surge->storage.wt_list.size();
+         INFO( "Loading random wavetable " << wti << " at run " << i );
+
+         surge->storage.load_wt(wti, &patch->scene[0].osc[0].wt, &patch->scene[0].osc[0]);
+         REQUIRE( std::string( patch->scene[0].osc[0].wavetable_display_name ) == surge->storage.wt_list[wti].name );
+      }
+   }
+
+   SECTION( "Name Survives Restore" )
+   {
+      auto fromto = [](std::shared_ptr<SurgeSynthesizer> src,
+                       std::shared_ptr<SurgeSynthesizer> dest)
+                       {
+                          void *d = nullptr;
+                          src->populateDawExtraState();
+                          auto sz = src->saveRaw( &d );
+                          REQUIRE( src->storage.getPatch().dawExtraState.isPopulated );
+                          
+                          dest->loadRaw( d, sz, false );
+                          dest->loadFromDawExtraState();
+                          REQUIRE( dest->storage.getPatch().dawExtraState.isPopulated );
+                          
+                          // Why does this crash macos?
+                          // if(d) free(d);
+                       };
+      
+      auto surgeS = Surge::Headless::createSurge(44100);
+      auto surgeD = Surge::Headless::createSurge(44100);
+      REQUIRE( surgeD );
+
+      for( int i=0; i<50; ++i )
+      {
+         auto patch = &(surgeS->storage.getPatch());
+         std::vector<bool> iswts;
+         std::vector<std::string> names;
+         
+         for( int s = 0; s < 2; ++s )
+            for( int o = 0; o < n_oscs; ++o )
+            {
+               bool isWT = 1.0 * rand() / RAND_MAX > 0.7;
+               iswts.push_back(isWT);
+
+               auto patch = &(surgeS->storage.getPatch());
+               if( isWT )
+               {
+                  patch->scene[s].osc[o].type.val.i = ot_wavetable;
+                  int wti = rand() % surgeS->storage.wt_list.size();
+                  surgeS->storage.load_wt(wti, &patch->scene[s].osc[o].wt, &patch->scene[s].osc[o]);
+                  REQUIRE( std::string( patch->scene[s].osc[o].wavetable_display_name ) == surgeS->storage.wt_list[wti].name );
+
+                  if( 1.0 * rand() / RAND_MAX  > 0.8 )
+                  {
+                     auto sn = std::string( "renamed blurg " ) + std::to_string(rand());
+                     strncpy( patch->scene[s].osc[o].wavetable_display_name, sn.c_str(), 256 );
+                     REQUIRE( std::string( patch->scene[s].osc[o].wavetable_display_name ) == sn );
+                  }
+                  names.push_back( patch->scene[s].osc[o].wavetable_display_name );
+               }
+               else
+               {
+                  patch->scene[s].osc[o].type.val.i = ot_sinus;
+                  names.push_back( "" );
+               }
+            }
+
+         fromto(surgeS, surgeD);
+         auto patchD = &(surgeD->storage.getPatch());
+
+         int idx = 0;
+         for( int s = 0; s < 2; ++s )
+            for( int o = 0; o < n_oscs; ++o )
+            {
+               if( iswts[idx] )
+                  REQUIRE( std::string( patchD->scene[s].osc[o].wavetable_display_name ) == names[idx] );
+               idx++;
+            }
+               
+      }
+   }
+}
+
+TEST_CASE( "Load Patches with Embedded KBM" )
+{
+   std::vector<std::string> patches = {
+   };
+   SECTION( "Check Restore" )
+   {
+      {
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->loadPatchByPath("test-data/patches/HasKBM.fxp",-1, "Test" );
+         REQUIRE( !surge->storage.isStandardTuning );
+         REQUIRE( !surge->storage.isStandardMapping );
+      }
+
+      {
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->loadPatchByPath("test-data/patches/HasSCL.fxp",-1, "Test" );
+         REQUIRE( !surge->storage.isStandardTuning );
+         REQUIRE( surge->storage.isStandardMapping );
+      }
+
+      {
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->loadPatchByPath("test-data/patches/HasSCLandKBM.fxp",-1, "Test" );
+         REQUIRE( !surge->storage.isStandardTuning );
+         REQUIRE( !surge->storage.isStandardMapping );
+      }
+
+      {
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->loadPatchByPath("test-data/patches/HasSCL_165Vintage.fxp",-1, "Test" );
+         REQUIRE( !surge->storage.isStandardTuning );
+         REQUIRE( surge->storage.isStandardMapping );
+      }
+   }
+}
+
+TEST_CASE( "IDs are Stable", "[io]" )
 {
 #define GENERATE_ID_TO_STDOUT 0
 #if GENERATE_ID_TO_STDOUT

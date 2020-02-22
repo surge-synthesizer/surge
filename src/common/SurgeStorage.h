@@ -308,6 +308,7 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
    Parameter p[n_osc_params];
    Parameter keytrack, retrigger;
    Wavetable wt;
+   char wavetable_display_name[256];
    void* queue_xmldata;
    int queue_type;
 
@@ -420,8 +421,9 @@ struct DAWExtraStateStorage
 
 struct PatchTuningStorage
 {
-    bool tuningStoredInPatch = false;
-    std::string tuningContents = "";
+   bool tuningStoredInPatch = false;
+   std::string tuningContents = "";
+   std::string mappingContents = "";
 };
     
 class SurgeStorage;
@@ -564,8 +566,8 @@ public:
 
    void perform_queued_wtloads();
 
-   void load_wt(int id, Wavetable* wt);
-   void load_wt(std::string filename, Wavetable* wt);
+   void load_wt(int id, Wavetable* wt, OscillatorStorage *);
+   void load_wt(std::string filename, Wavetable* wt, OscillatorStorage *);
    bool load_wt_wt(std::string filename, Wavetable* wt);
    // void load_wt_wav(std::string filename, Wavetable* wt);
    void load_wt_wav_portable(std::string filename, Wavetable *wt);

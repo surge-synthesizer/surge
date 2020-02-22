@@ -198,7 +198,13 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
    if( storage.getPatch().patchTuning.tuningStoredInPatch )
    {
        if( storage.isStandardTuning )
+       {
            storage.retuneToScale(Surge::Storage::parseSCLData(storage.getPatch().patchTuning.tuningContents ));
+           if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
+           {
+              storage.remapToKeyboard(Surge::Storage::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
+           }
+       }
        else
        {
            auto okc = Surge::UserInteractions::promptOKCancel(std::string("The patch you loaded contains a recommended tuning, but you ") +
@@ -206,7 +212,13 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
                                                               "with the patch sugeested tuning?",
                                                               "Replace Tuning? (The rest of the patch will still load).");
            if( okc == Surge::UserInteractions::MessageResult::OK )
+           {
                storage.retuneToScale(Surge::Storage::parseSCLData(storage.getPatch().patchTuning.tuningContents));
+               if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
+               {
+                  storage.remapToKeyboard(Surge::Storage::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
+               }
+           }
        }
                                  
    }
