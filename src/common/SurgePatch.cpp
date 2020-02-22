@@ -155,6 +155,9 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       py += gui_hfader_dist;
       for (int osc = 0; osc < n_oscs; osc++)
       {
+         // Initialize the display name here
+         scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+         
          px = gui_col1_x;
          py = gui_mainsec_y;
 
@@ -884,6 +887,17 @@ void SurgePatch::load_patch(const void* data, int datasize, bool preset)
 
                storage->CS_WaveTableData.enter();
                scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
+               if( scene[sc].osc[osc].wavetable_display_name[0] == '\0' )
+               {
+                  if (scene[sc].osc[osc].wt.flags & wtf_is_sample)
+                  {
+                     strncpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Sample)", 256);
+                  }
+                  else
+                  {
+                     strncpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Wavetable)", 256);
+                  }
+               }
                storage->CS_WaveTableData.leave();
 
                dr += ph->wtsize[sc][osc];
@@ -1302,6 +1316,42 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       }
    }
 
+   /*
+   ** extra osc data handling
+   */
+
+   // Blank out the display names
+   for (int sc = 0; sc < 2; sc++)
+   {
+      for (int osc = 0; osc < n_oscs; osc++)
+      {
+         scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+      }
+   }
+
+   TiXmlElement* eod = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("extraoscdata"));
+   if (eod)
+   {
+      for( auto child = eod->FirstChild(); child; child = child->NextSibling() )
+      {
+         auto *lkid = TINYXML_SAFE_TO_ELEMENT(child);
+         if( lkid &&
+             lkid->Attribute( "osc" ) &&
+             lkid->Attribute( "scene" ) )
+         {
+            int sos = std::atoi( lkid->Attribute("osc") );
+            int ssc = std::atoi( lkid->Attribute("scene") );
+
+            if( lkid->Attribute( "wavetable_display_name" ) )
+            {
+               strncpy( scene[ssc].osc[sos].wavetable_display_name, lkid->Attribute( "wavetable_display_name" ), 256 );
+            }
+         }
+      }
+      
+   }
+  
+
    // reset stepsequences first
    for (auto& stepsequence : stepsequences)
       for (auto& l : stepsequence)
@@ -1402,6 +1452,9 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    }
 
    patchTuning.tuningStoredInPatch = false;
+   patchTuning.tuningContents = "";
+   patchTuning.mappingContents = "";
+
    TiXmlElement *pt = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("patchTuning"));
    if( pt )
    {
@@ -1412,6 +1465,14 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
            patchTuning.tuningStoredInPatch = true;
            auto tc = base64_decode(td);
            patchTuning.tuningContents = tc;
+       }
+
+       if( pt &&
+           (td = pt->Attribute("m") ))
+       {
+           patchTuning.tuningStoredInPatch = true;
+           auto tc = base64_decode(td);
+           patchTuning.mappingContents = tc;
        }
    }
    
@@ -1605,6 +1666,25 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    }
    patch.InsertEndChild(parameters);
 
+   TiXmlElement eod( "extraoscdata" );
+   for( int sc=0; sc<2; ++sc )
+   {
+      for( int os=0; os<n_oscs; ++os )
+      {
+         std::string streaming_name = "osc_extra_sc" + std::to_string(sc) + "_osc" + std::to_string(os);
+         if( uses_wavetabledata(scene[sc].osc[os].type.val.i) )
+         {
+            TiXmlElement on(streaming_name.c_str());
+            on.SetAttribute("wavetable_display_name", scene[sc].osc[os].wavetable_display_name );
+            on.SetAttribute("scene", sc );
+            on.SetAttribute("osc", os );
+            eod.InsertEndChild(on);
+         }
+      }
+   }
+   patch.InsertEndChild(eod);
+     
+   
    TiXmlElement ss("stepsequences");
    for (int sc = 0; sc < 2; sc++)
    {
@@ -1681,6 +1761,9 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
        TiXmlElement pt( "patchTuning" );
        pt.SetAttribute("v", base64_encode( (unsigned const char *)patchTuning.tuningContents.c_str(),
                                             patchTuning.tuningContents.size() ).c_str() );
+       if( patchTuning.mappingContents.size() > 0 )
+          pt.SetAttribute("m", base64_encode( (unsigned const char *)patchTuning.mappingContents.c_str(),
+                                              patchTuning.mappingContents.size() ).c_str() );
        
        patch.InsertEndChild(pt);
    }

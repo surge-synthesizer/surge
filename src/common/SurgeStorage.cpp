@@ -318,7 +318,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
 #endif
    
    getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
-   load_wt(0, &getPatch().scene[0].osc[0].wt);
+   load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
 
    // WindowWT is a WaveTable which now has a constructor so don't do this
    // memset(&WindowWT, 0, sizeof(WindowWT));
@@ -708,21 +708,21 @@ void SurgeStorage::perform_queued_wtloads()
       {
          if (patch.scene[sc].osc[o].wt.queue_id != -1)
          {
-            load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt);
+            load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt, &patch.scene[sc].osc[o]);
             patch.scene[sc].osc[o].wt.refresh_display = true;
          }
          else if (patch.scene[sc].osc[o].wt.queue_filename[0])
          {
             patch.scene[sc].osc[o].queue_type = ot_wavetable;
             patch.scene[sc].osc[o].wt.current_id = -1;
-            load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt);
+            load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt, &patch.scene[sc].osc[o]);
             patch.scene[sc].osc[o].wt.refresh_display = true;
          }
       }
    }
 }
 
-void SurgeStorage::load_wt(int id, Wavetable* wt)
+void SurgeStorage::load_wt(int id, Wavetable* wt, OscillatorStorage *osc)
 {
    wt->current_id = id;
    wt->queue_id = -1;
@@ -732,11 +732,32 @@ void SurgeStorage::load_wt(int id, Wavetable* wt)
       return;
    if (!wt)
       return;
-   load_wt(wt_list[id].path.generic_string(), wt);
+
+   load_wt(wt_list[id].path.generic_string(), wt, osc);
+
+   if( osc )
+   {
+      auto n = wt_list.at(id).name;
+      strncpy( osc->wavetable_display_name, n.c_str(), 256 );
+   }
 }
 
-void SurgeStorage::load_wt(string filename, Wavetable* wt)
+void SurgeStorage::load_wt(string filename, Wavetable* wt, OscillatorStorage *osc)
 {
+   if( osc )
+   {
+      char sep = '/';
+#if WINDOWS
+      sep = '\\';
+#endif
+      auto fn = filename.substr(filename.find_last_of(sep) + 1, filename.npos);
+      std::string fnnoext = fn.substr( 0, fn.find_last_of('.' ) );
+      
+      if( fnnoext.length() > 0 )
+      {
+         strncpy( osc->wavetable_display_name, fnnoext.c_str(), 256 );
+      }
+   }
    wt->queue_filename[0] = 0;
    string extension = filename.substr(filename.find_last_of('.'), filename.npos);
    for (unsigned int i = 0; i < extension.length(); i++)

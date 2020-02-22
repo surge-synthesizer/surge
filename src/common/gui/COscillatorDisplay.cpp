@@ -13,6 +13,7 @@
 #else
 #include "filesystem"
 #endif
+#include "PopupEditorSpawner.h"
 
 using namespace VSTGUI;
 
@@ -319,7 +320,11 @@ void COscillatorDisplay::drawVector(CDrawContext* dc)
       storage->CS_WaveTableData.enter();
 
       int wtid = oscdata->wt.current_id;
-      if ((wtid >= 0) && (wtid < storage->wt_list.size()))
+      if( oscdata->wavetable_display_name[0] != '\0' )
+      {
+         strcpy(wttxt, oscdata->wavetable_display_name );
+      }
+      else if ((wtid >= 0) && (wtid < storage->wt_list.size()))
       {
          strcpy(wttxt, storage->wt_list.at(wtid).name.c_str());
       }
@@ -529,7 +534,11 @@ void COscillatorDisplay::drawBitmap(CDrawContext* dc)
       storage->CS_WaveTableData.enter();
 
       int wtid = oscdata->wt.current_id;
-      if ((wtid >= 0) && (wtid < storage->wt_list.size()))
+      if( oscdata->wavetable_display_name[0] != '\0' )
+      {
+         strcpy(wttxt, oscdata->wavetable_display_name );
+      }
+      else if ((wtid >= 0) && (wtid < storage->wt_list.size()))
       {
          strcpy(wttxt, storage->wt_list.at(wtid).name.c_str());
       }
@@ -720,6 +729,18 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
 
    // Add direct open here
    contextMenu->addSeparator();
+   auto renameItem = new CCommandMenuItem(CCommandMenuItem::Desc("Change Display Name..." ));
+   auto rnaction = [this](CCommandMenuItem *item)
+                      {
+                         char c[256];
+                         strncpy( c, this->oscdata->wavetable_display_name, 256 );
+                         spawn_miniedit_text(c, 256);
+                         strncpy( this->oscdata->wavetable_display_name, c, 256 );
+                         invalid();
+                      };
+   renameItem->setActions(rnaction, nullptr);
+   contextMenu->addEntry(renameItem);
+   
    auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc("Open Wavetable from file..."));
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
