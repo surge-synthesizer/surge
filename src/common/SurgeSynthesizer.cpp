@@ -1603,7 +1603,7 @@ bool SurgeSynthesizer::loadOscalgos()
    {
       for (int i = 0; i < n_oscs; i++)
       {
-
+         bool resend = false;
          if (storage.getPatch().scene[s].osc[i].queue_type > -1)
          {
             storage.getPatch().scene[s].osc[i].type.val.i =
@@ -1612,12 +1612,14 @@ bool SurgeSynthesizer::loadOscalgos()
             storage.getPatch().scene[s].osc[i].queue_type = -1;
             switch_toggled_queued = true;
             refresh_editor = true;
+            resend = true;
          }
 
          TiXmlElement* e = (TiXmlElement*)storage.getPatch().scene[s].osc[i].queue_xmldata;
 
          if (e)
          {
+            resend = true;
             for (int k = 0; k < n_osc_params; k++)
             {
                double d;
@@ -1636,6 +1638,18 @@ bool SurgeSynthesizer::loadOscalgos()
                }
             }
             storage.getPatch().scene[s].osc[i].queue_xmldata = 0;
+         }
+         if (resend)
+         {
+#if TARGET_LV2
+            auto tp = &(storage.getPatch().scene[s].osc[i].type);
+            sendParameterAutomation(tp->id, getParameter01(tp->id) );
+            for (int k = 0; k < n_osc_params; k++)
+            {
+               auto pp = &(storage.getPatch().scene[s].osc[i].p[k]);
+               sendParameterAutomation(pp->id, getParameter01(pp->id) );
+            }
+#endif            
          }
       }
    }
