@@ -334,11 +334,11 @@ R"HTML(
             <th>#</th><th>Datum</th><th>Cents</th><th>Float</th>
           </tr>
           <tr>
-            <td>1</td><td>1</td><td>0</td><td>1</td>
+            <td>0</td><td>1</td><td>0</td><td>1</td>
           </tr>
     )HTML";
 
-    int ct = 2;
+    int ct = 1;
     for( auto & t : tones )
     {
        htmls << "<tr><td> " << ct++ << "</td><td>";

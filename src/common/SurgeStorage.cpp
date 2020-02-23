@@ -1384,7 +1384,24 @@ bool SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
    if( scalePositionOfTuningNote == 0 )
       tuningCenterPitchOffset = 0;
    else
-      tuningCenterPitchOffset = s.tones[scalePositionOfTuningNote-1].floatValue - 1.0;
+   {
+      int tshift = 0;
+      while( scalePositionOfTuningNote < 0 )
+      {
+         scalePositionOfTuningNote += s.count;
+         tshift ++;
+      }
+      while( scalePositionOfTuningNote > s.count )
+      {
+         scalePositionOfTuningNote -= s.count;
+         tshift --;
+      }
+      
+      if( scalePositionOfTuningNote == 0 )
+         tuningCenterPitchOffset = -tshift;
+      else
+         tuningCenterPitchOffset = s.tones[scalePositionOfTuningNote-1].floatValue - 1.0 - tshift;
+   }
 
    pitches[posPitch0] = 1.0;
    for (int i=0; i<512; ++i)

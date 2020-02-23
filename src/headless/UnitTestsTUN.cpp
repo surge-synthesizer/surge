@@ -625,6 +625,139 @@ TEST_CASE( "Non-Monotonic Tunings", "[tun]" )
    }
 }
 
+TEST_CASE( "Mapping below and outside of count" )
+{
+   SECTION( "A bit below" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note54-to-259-6.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[54+256] == Approx( 259.6 / 8.175798915 ).margin( 1e-4 ) );
+      
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "Twelve below" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note48-to-100.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[48+256] == Approx( 100.0 / 8.175798915 ).margin( 1e-4 ) );
+      
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "A lot below" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note42-to-100.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[42+256] == Approx( 100.0 / 8.175798915 ).margin( 1e-4 ) );
+
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "Twelve above" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note72-to-500.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[72+256] == Approx( 500.0 / 8.175798915 ).margin( 1e-4 ) );
+      
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "A lot above" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note80-to-1000.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[80+256] == Approx( 1000.0 / 8.175798915 ).margin( 1e-4 ) );
+      
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "A bit below with 6ns" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto s = Surge::Storage::readSCLFile( "test-data/scl/6-exact.scl" );
+      surge->storage.retuneToScale(s);
+      
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note54-to-259-6.kbm" );
+      surge->storage.remapToKeyboard(k);
+      
+      REQUIRE( surge->storage.table_pitch[54+256] == Approx( 259.6 / 8.175798915 ).margin( 1e-4 ) );
+      
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "A lot below witn 6ns" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto s = Surge::Storage::readSCLFile( "test-data/scl/6-exact.scl" );
+      surge->storage.retuneToScale(s);
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note42-to-100.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[42+256] == Approx( 100.0 / 8.175798915 ).margin( 1e-4 ) );
+
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "A lot above with 6ns" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto s = Surge::Storage::readSCLFile( "test-data/scl/6-exact.scl" );
+      surge->storage.retuneToScale(s);
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note80-to-1000.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[80+256] == Approx( 1000.0 / 8.175798915 ).margin( 1e-4 ) );
+      
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+}
+
 TEST_CASE( "HPF Ignores Tuning Properly", "[tun][dsp]" )
 {
    INFO( "Testing condition reported in #1545" );
