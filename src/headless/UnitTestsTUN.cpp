@@ -756,6 +756,42 @@ TEST_CASE( "Mapping below and outside of count" )
       }
    }
 
+   SECTION( "A lot below witn ED3-17" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto s = Surge::Storage::readSCLFile( "test-data/scl/ED3-17.scl" );
+      surge->storage.retuneToScale(s);
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note42-to-100.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[42+256] == Approx( 100.0 / 8.175798915 ).margin( 1e-4 ) );
+
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
+   SECTION( "A lot above with ED3-17" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge.get() );
+
+      auto s = Surge::Storage::readSCLFile( "test-data/scl/ED3-17.scl" );
+      surge->storage.retuneToScale(s);
+
+      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-note80-to-1000.kbm" );
+
+      surge->storage.remapToKeyboard(k);
+      REQUIRE( surge->storage.table_pitch[80+256] == Approx( 1000.0 / 8.175798915 ).margin( 1e-4 ) );
+      
+      for( int i=256 ; i < 256 + 128; ++i ) {
+         REQUIRE( surge->storage.table_pitch[i] > surge->storage.table_pitch[i-1] );
+      }
+   }
+
 }
 
 TEST_CASE( "HPF Ignores Tuning Properly", "[tun][dsp]" )
