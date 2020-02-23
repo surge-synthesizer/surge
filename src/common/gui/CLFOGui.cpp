@@ -1004,6 +1004,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                if( sge )
                {
                   sge->refresh_mod();
+                  sge->forceautomationchangefor(&(lfodata->shape));
                }
                
             }

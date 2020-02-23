@@ -3809,4 +3809,11 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::Vie
 
 #endif
 
+void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
+{
+#if TARGET_LV2
+   // revisit this for non-LV2 outside 1.6.6
+   synth->sendParameterAutomation(p->id, synth->getParameter01(p->id));
+#endif   
+}
 //------------------------------------------------------------------------------------------------

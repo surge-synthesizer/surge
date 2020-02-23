@@ -102,7 +102,8 @@ protected:
 
 public:
    void refresh_mod();
-
+   void forceautomationchangefor(Parameter *p);
+   
 #if TARGET_VST3
 public:
    /**
