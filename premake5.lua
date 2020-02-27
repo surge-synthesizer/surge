@@ -85,7 +85,7 @@ elseif (os.istarget("linux")) then
 
     buildoptions { "-std=c++17" }
 
-    platforms { "x64", "x86" }
+    platforms { "x64", "x86", "armv7ve", "arm64" }
 
     files
     {
