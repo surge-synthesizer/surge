@@ -1,4 +1,6 @@
+#ifndef NEON_SSE
 #include <emmintrin.h>
+#endif
 
 #include "globals.h"
 

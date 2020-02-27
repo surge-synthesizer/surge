@@ -1,5 +1,7 @@
+#ifndef NEON_SSE
 #if LINUX
 #include <immintrin.h>
+#endif
 #endif
 
 #define vFloat __m128

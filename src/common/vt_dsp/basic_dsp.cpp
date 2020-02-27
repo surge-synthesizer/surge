@@ -179,7 +179,11 @@ double limit_range(double x, double min, double max)
 
 int Float2Int(float x)
 {
+#ifdef NEON_SSE
+   return int(x + 0.5f);
+#else
    return _mm_cvt_ss2si(_mm_load_ss(&x));
+#endif
 }
 
 void float2i15_block(float* f, short* s, int n)
@@ -667,7 +671,7 @@ float sine_ss(unsigned int x) // using 24-bit range as [0..2PI] input
 
    return P * (y * abs(y) - y) + y;   // Q * y + P * y * abs(y)   */
 }
-#if !_M_X64
+#if !_M_X64 && !defined(NEON_SSE)
 __m64 sine(__m64 x)
 {
    __m64 xabs = _mm_xor_si64(x, _mm_srai_pi16(x, 15));

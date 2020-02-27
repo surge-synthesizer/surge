@@ -508,7 +508,7 @@ __m128 SNHquad(QuadFilterUnitState* __restrict f, __m128 in)
    return f->R[1];
 }
 
-#if !_M_X64
+#if !_M_X64 && !defined(NEON_SSE)
 __m128 COMBquad_SSE1(QuadFilterUnitState* __restrict f, __m128 in)
 {
    assert(FIRipol_M == 256); // changing the constant requires updating the code below
@@ -653,7 +653,7 @@ __m128 DIGI_SSE2(__m128 in, __m128 drive)
    return _mm_mul_ps(drive, _mm_mul_ps(m16inv, _mm_sub_ps(_mm_cvtepi32_ps(a), mofs)));
 }
 
-#if !_M_X64
+#if !_M_X64 && !defined(NEON_SSE)
 __m128 DIGI_SSE1(__m128 in, __m128 drive)
 {
    const __m128 mofs = _mm_set1_ps(0.5f);
@@ -691,7 +691,7 @@ __m128 TANH(__m128 in, __m128 drive)
    return _mm_max_ps(_mm_min_ps(y, y_max), y_min);
 }
 
-#if !_M_X64
+#if !_M_X64 && !defined(NEON_SSE)
 __m128 SINUS_SSE1(__m128 in, __m128 drive)
 {
    const __m128 one = _mm_set1_ps(1.f);
@@ -770,7 +770,7 @@ __m128 SINUS_SSE2(__m128 in, __m128 drive)
    return x;
 }
 
-#if !_M_X64
+#if !_M_X64 && !defined(NEON_SSE)
 __m128 ASYM_SSE1(__m128 in, __m128 drive)
 {
    const __m128 one = _mm_set1_ps(1.f);
