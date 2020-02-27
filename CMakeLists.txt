@@ -120,7 +120,6 @@ endif()
 if (UNIX)
     target_compile_options(surge-headless
         PRIVATE
-            -msse2
             "-D_aligned_malloc(x,a)=malloc(x)"
             "-D_aligned_free(x)=free(x)"
     )
