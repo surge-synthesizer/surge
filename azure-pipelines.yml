@@ -177,7 +177,7 @@ jobs:
       echo "Running HeadlessTest $(linuxProject)"
       export XDG_DATA_HOME=$AGENT_TEMPDIRECTORY/XH
       mkdir -p $XDG_DATA_HOME
-      rsync -r --delete "resources/data/" "$XDG_DATA_HOME/Surge/"
+      rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge/"
 
       ./target/headless/Release/Surge/Surge-Headless
 
