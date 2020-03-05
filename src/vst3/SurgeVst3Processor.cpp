@@ -258,9 +258,11 @@ void SurgeVst3Processor::processEvent(const Event& e)
    }
 
    case Event::kPolyPressureEvent:
-      getSurge()->polyAftertouch(e.polyPressure.channel, e.polyPressure.pitch,
-                                 e.polyPressure.pressure);
+   {
+      char cPres = value01ToMidi7Bit(e.polyPressure.pressure);
+      getSurge()->polyAftertouch(e.polyPressure.channel, e.polyPressure.pitch, cPres);
       break;
+   }
    }
 }
 
