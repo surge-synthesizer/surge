@@ -45,6 +45,28 @@ void lv2_generate_ttl(const char* baseName)
       std::ofstream osDsp(baseName + std::string("_dsp.ttl"));
       writePrefix(osDsp);
 
+      // parameters
+      for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
+      {
+         unsigned index = defaultSynth->remapExternalApiToInternalId(pNth);
+
+         parametermeta pMeta;
+         defaultSynth->getParameterMeta(index, pMeta);
+
+         char pName[256];
+         defaultSynth->getParameterName(index, pName);
+
+         osDsp << "<" << defaultInstance.getParameterUri(pNth) << ">\n"
+                  "        a lv2:Parameter ;\n"
+                  "        rdfs:label \"\"\"" << pName << "\"\"\" ;\n"
+                  "        rdfs:range atom:Float ;\n"
+                  "        lv2:index " << pNth << " ;\n"
+                  "        lv2:default " << std::fixed << std::setw(10) << std::setprecision(8) << defaultSynth->getParameter01(index) << " ;\n"
+                  "        lv2:minimum " << std::fixed << std::setw(10) << std::setprecision(8) << pMeta.fmin << " ;\n"
+                  "        lv2:maximum " << std::fixed << std::setw(10) << std::setprecision(8) << pMeta.fmax << " .\n"
+                  "\n";
+      }
+
       osDsp << "<" << desc->URI << ">\n"
                "    doap:name \"Surge\" ;\n"
                "    doap:license <https://www.gnu.org/licenses/gpl-3.0.en.html> ;\n"
@@ -57,43 +79,15 @@ void lv2_generate_ttl(const char* baseName)
                "    lv2:requiredFeature urid:map ;\n"
                "    lv2:extensionData state:interface ;\n";
 
-      unsigned portIndex = 0;
-      osDsp << "    lv2:port";
-      // parameters
       for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
       {
-         if (portIndex > 0)
-            osDsp << " ,";
-
-         unsigned index = defaultSynth->remapExternalApiToInternalId(pNth);
-         parametermeta pMeta;
-         defaultSynth->getParameterMeta(index, pMeta);
-
-         char pName[256];
-         defaultSynth->getParameterName(index, pName);
-
-         std::string pSymbol;
-         if( index >= metaparam_offset )
-         {
-            pSymbol = "meta_cc" + std::to_string( index - metaparam_offset + 1 );
-         }
-         else
-         {
-            auto *par = defaultSynth->storage.getPatch().param_ptr[index];
-            pSymbol = par->get_storage_name();
-         }
-         
-         osDsp << " [\n"
-                  "        a lv2:InputPort, lv2:ControlPort ;\n"
-                  "        lv2:index " << portIndex << " ;\n"
-                  "        lv2:symbol \"" << pSymbol << "\" ;\n"
-                  "        lv2:name \"" << pName << "\" ;\n"
-                  "        lv2:default " << std::fixed << std::setw(10) << std::setprecision(8) << defaultSynth->getParameter01(index) << " ;\n"
-                  "        lv2:minimum " << std::fixed << std::setw(10) <<  std::setprecision(8) << pMeta.fmin << " ;\n"
-                  "        lv2:maximum " << std::fixed << std::setw(10) << std::setprecision(8) << pMeta.fmax << " ;\n"
-                  "    ]";
-         ++portIndex;
+         std::string pUri = defaultInstance.getParameterUri(pNth);
+         osDsp << "    patch:readable <" << pUri << "> ;\n"
+                  "    patch:writable <" << pUri << "> ;\n";
       }
+
+      unsigned portIndex = 0;
+      osDsp << "    lv2:port";
       // event input
       {
          if (portIndex > 0)
@@ -106,7 +100,23 @@ void lv2_generate_ttl(const char* baseName)
                   "        rsz:minimumSize " << SurgeLv2Wrapper::EventBufferSize << " ;\n"
                   "        atom:bufferType atom:Sequence ;\n"
                   "        atom:supports midi:MidiEvent,\n"
-                  "                      time:Position ;\n"
+                  "                      time:Position,\n"
+                  "                      patch:Message ;\n"
+                  "    ]";
+         ++portIndex;
+      }
+      // event output
+      {
+         if (portIndex > 0)
+            osDsp << " ,";
+         osDsp << " [\n"
+                  "        a lv2:OutputPort, atom:AtomPort ;\n"
+                  "        lv2:index " << portIndex << " ;\n"
+                  "        lv2:symbol \"events_out\" ;\n"
+                  "        lv2:name \"Event output\" ;\n"
+                  "        rsz:minimumSize " << SurgeLv2Wrapper::EventBufferSize << " ;\n"
+                  "        atom:bufferType atom:Sequence ;\n"
+                  "        atom:supports patch:Message ;\n"
                   "    ]";
          ++portIndex;
       }
@@ -169,6 +179,7 @@ static void writePrefix(std::ofstream& os)
          "@prefix midi: <" LV2_MIDI_PREFIX "> .\n"
          "@prefix time: <" LV2_TIME_PREFIX "> .\n"
          "@prefix state: <" LV2_STATE_PREFIX "> .\n"
+         "@prefix patch: <" LV2_PATCH_PREFIX "> .\n"
          "@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
          "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
          "@prefix doap: <http://usefulinc.com/ns/doap#> .\n"

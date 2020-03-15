@@ -2,6 +2,7 @@
 #include "SurgeLv2Util.h"
 #include "SurgeLv2Vstgui.h"
 #include "SurgeLv2Wrapper.h"
+#include "SurgeLv2Helpers.h"
 #include "SurgeGUIEditor.h"
 #include <cassert>
 
@@ -71,6 +72,7 @@ LV2UI_Handle SurgeLv2Ui::instantiate(const LV2UI_Descriptor* descriptor,
                                      LV2UI_Widget* widget,
                                      const LV2_Feature* const* features)
 {
+   ScopedCallerType callerType(kCallerUi);
    SurgeLv2Wrapper* instance =
        (SurgeLv2Wrapper*)SurgeLv2::requireFeature(LV2_INSTANCE_ACCESS_URI, features);
    void* parentWindow = (void*)SurgeLv2::findFeature(LV2_UI__parent, features);
@@ -84,6 +86,7 @@ LV2UI_Handle SurgeLv2Ui::instantiate(const LV2UI_Descriptor* descriptor,
 
 void SurgeLv2Ui::cleanup(LV2UI_Handle ui)
 {
+   ScopedCallerType callerType(kCallerUi);
    SurgeLv2Ui* self = (SurgeLv2Ui*)ui;
    delete self;
 }
@@ -91,6 +94,7 @@ void SurgeLv2Ui::cleanup(LV2UI_Handle ui)
 void SurgeLv2Ui::portEvent(
     LV2UI_Handle ui, uint32_t port_index, uint32_t buffer_size, uint32_t format, const void* buffer)
 {
+   ScopedCallerType callerType(kCallerUi);
    SurgeLv2Ui* self = (SurgeLv2Ui*)ui;
    SurgeSynthesizer* s = self->_instance->synthesizer();
 
@@ -108,6 +112,7 @@ void SurgeLv2Ui::portEvent(
 
 const void* SurgeLv2Ui::extensionData(const char* uri)
 {
+   ScopedCallerType callerType(kCallerUi);
    if (!strcmp(uri, LV2_UI__idleInterface))
    {
       static const LV2UI_Idle_Interface idle = {&uiIdle};
@@ -122,6 +127,7 @@ const void* SurgeLv2Ui::extensionData(const char* uri)
 
 int SurgeLv2Ui::uiIdle(LV2UI_Handle ui)
 {
+   ScopedCallerType callerType(kCallerUi);
    SurgeLv2Ui* self = (SurgeLv2Ui*)ui;
    SurgeLv2Wrapper* instance = self->_instance;
 

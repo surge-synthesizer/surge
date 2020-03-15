@@ -215,6 +215,7 @@ set( SURGE_LV2_SOURCES
   src/lv2/SurgeLv2Util.cpp
   src/lv2/SurgeLv2Vstgui.cpp
   src/lv2/SurgeLv2Wrapper.cpp
+  src/lv2/SurgeLv2Helpers.cpp
   vstgui.surge/vstgui/plugin-bindings/plugguieditor.cpp
 )
 

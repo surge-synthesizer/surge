@@ -4,6 +4,7 @@
 #include "util/FpuState.h"
 #include <atomic>
 #include <memory>
+#include <unordered_map>
 
 class SurgeLv2Ui;
 
@@ -28,13 +29,13 @@ public:
 
    enum
    {
-      EventBufferSize = 8192,
+      EventBufferSize = 512 * 1024,
    };
 
    enum
    {
-      /* [0,n] parameters */
-      pEvents = n_total_params,
+      pEventsIn,
+      pEventsOut,
       pAudioInput1,
       pAudioOutput1 = pAudioInput1 + NumInputs,
       NumPorts = pAudioOutput1 + NumOutputs,
@@ -49,6 +50,9 @@ public:
    void updateDisplay();
    void setParameterAutomated(int externalparam, float value);
    void patchChanged();
+
+   // Parameter helpers
+   void writeOutputParameterToPort(int externalparam, float value);
 
 private:
    static LV2_Handle instantiate(const LV2_Descriptor* descriptor,
@@ -68,10 +72,14 @@ private:
    static LV2_State_Status saveState(LV2_Handle instance, LV2_State_Store_Function store, LV2_State_Handle handle, uint32_t, const LV2_Feature* const*);
    static LV2_State_Status restoreState(LV2_Handle instance, LV2_State_Retrieve_Function retrieve, LV2_State_Handle handle, uint32_t, const LV2_Feature* const*);
 
+public:
+   /// metadata
+   std::string getParameterSymbol(unsigned pNth) const;
+   std::string getParameterUri(unsigned pNth) const;
+
 private:
    std::unique_ptr<SurgeSynthesizer> _synthesizer;
    std::unique_ptr<void*[]> _dataLocation;
-   std::unique_ptr<float[]> _oldControlValues;
    double _sampleRate = 44100.0;
 
    uint32_t _blockPos = 0;
@@ -81,6 +89,8 @@ private:
    double _timePositionTempoBpm = 0.0;
    double _timePositionBeat = 0.0;
 
+   LV2_Atom_Forge _eventsForge;
+
    LV2_URID _uridMidiEvent;
    LV2_URID _uridAtomBlank;
    LV2_URID _uridAtomObject;
@@ -89,12 +99,18 @@ private:
    LV2_URID _uridAtomInt;
    LV2_URID _uridAtomLong;
    LV2_URID _uridAtomChunk;
+   LV2_URID _uridAtomURID;
    LV2_URID _uridTimePosition;
    LV2_URID _uridTime_beatsPerMinute;
    LV2_URID _uridTime_speed;
    LV2_URID _uridTime_beat;
+   LV2_URID _uridPatchSet;
+   LV2_URID _uridPatch_property;
+   LV2_URID _uridPatch_value;
 
    LV2_URID _uridSurgePatch;
+   LV2_URID _uridSurgeParameter[n_total_params];
+   std::unordered_map<LV2_URID, unsigned> _surgeParameterUrid;
 
    SurgeLv2Ui* _editor = nullptr;
 
