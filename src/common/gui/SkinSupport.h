@@ -119,10 +119,12 @@ private:
    ~SkinDB();
    SkinDB(const SkinDB&) = delete; 
    SkinDB& operator=(const SkinDB&) = delete; 
-
+   SurgeStorage *storage;
+   
    std::vector<Entry> availableSkins;
    std::unordered_map<Entry,std::shared_ptr<Skin>, Entry::hash> skins;
    Entry defaultSkinEntry;
+   bool foundDefaultSkinEntry = false;
    
    static std::shared_ptr<SkinDB> instance;
 };

@@ -5,6 +5,8 @@
 #include "SkinSupport.h"
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
+#include "UserInteractions.h"
+#include "UserDefaults.h"
 
 #if LINUX
 #include <experimental/filesystem>
@@ -34,6 +36,7 @@ SkinDB::SkinDB(SurgeStorage* s)
 {
    std::cout << "Constructing SkinDB" << std::endl;
    rescanForSkins(s);
+   this->storage = s;
 }
 
 SkinDB::~SkinDB()
@@ -45,8 +48,18 @@ SkinDB::~SkinDB()
 
 std::shared_ptr<Skin> SkinDB::defaultSkin()
 {
-   // for now
-   return getSkin(defaultSkinEntry);
+   auto uds = Surge::Storage::getUserDefaultValue( storage, "defaultSkin", "" );
+   if( uds == "" )
+      return getSkin(defaultSkinEntry);
+   else
+   {
+      for( auto e : availableSkins )
+      {
+         if( e.name == uds )
+            return getSkin(e);
+      }
+      return getSkin(defaultSkinEntry);
+   }
 }
 
 std::shared_ptr<Skin> SkinDB::getSkin(const Entry& skinEntry)
@@ -125,11 +138,17 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
                    defaultSkinEntry.name == "")
                {
                   defaultSkinEntry = e;
+                  foundDefaultSkinEntry = true;
                }
                availableSkins.push_back(e);
             }
          }
       }
+   }
+   if( ! foundDefaultSkinEntry )
+   {
+      Surge::UserInteractions::promptError( "Default skin not located. Surge is probably mis-installed",
+                                            "Skin Support Error" );
    }
 }
 

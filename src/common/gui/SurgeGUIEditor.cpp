@@ -3782,6 +3782,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                           this->currentSkin->reloadSkin(this->bitmapStore);
                           reloadFromSkin();
                           this->synth->refresh_editor = true;
+                          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkin", entry.name );
                        });
        tid++;
     }
