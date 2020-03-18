@@ -9,6 +9,7 @@
 #pragma once
 
 #include "vstcontrols.h"
+#include "SkinSupport.h"
 
 enum ctrl_mode
 {
@@ -103,7 +104,7 @@ enum label_placement
    lp_above
 };
 
-class CNumberField : public VSTGUI::CControl
+class CNumberField : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CNumberField(const VSTGUI::CRect& size,

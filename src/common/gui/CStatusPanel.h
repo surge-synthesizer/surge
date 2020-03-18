@@ -4,10 +4,11 @@
 #pragma once
 #include "SurgeStorage.h"
 #include "vstcontrols.h"
+#include "SkinSupport.h"
 
 class SurgeGUIEditor;
 
-class CStatusPanel : public VSTGUI::CControl, public VSTGUI::IDropTarget
+class CStatusPanel : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponnt
 {
 public:
 

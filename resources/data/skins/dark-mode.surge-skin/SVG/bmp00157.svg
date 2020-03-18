@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48px" height="56px" viewBox="0 0 48 56" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>bmp00157</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#FFBF00" offset="0%"></stop>
+            <stop stop-color="#FF8700" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#036DD4" offset="0%"></stop>
+            <stop stop-color="#0054A6" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="bmp00157" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Oval" fill="url(#linearGradient-1)" cx="8.5" cy="11.5" r="5.5"></circle>
+        <circle id="Oval" fill="url(#linearGradient-1)" cx="8.5" cy="39.5" r="5.5"></circle>
+        <circle id="Oval" fill="url(#linearGradient-2)" cx="32.5" cy="11.5" r="5.5"></circle>
+        <circle id="Oval" fill="url(#linearGradient-2)" cx="32.5" cy="39.5" r="5.5"></circle>
+    </g>
+</svg>

@@ -49,7 +49,8 @@ void CSurgeVuMeter::setValueR(float f)
 
 void CSurgeVuMeter::draw(CDrawContext* dc)
 {
-   const CColor vugreen = {5, 201, 13, 255};
+   CColor vugreen = skin->getColor( "vumeter.level", {5, 201, 13, 255} );
+   auto vured = skin->getColor( "vumeter.highlevel", kRedCColor );
    CRect size = getViewSize();
    CRect lbox(size);
 
@@ -57,14 +58,15 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
    VSTGUI::CDrawMode newMode(VSTGUI::kAntiAliasing);
    dc->setDrawMode(newMode);
 
-   dc->setFillColor(VSTGUI::CColor(0xCD, 0xCE, 0xD4)); // The light gray from origina-vector skin
+   dc->setFillColor(skin->getColor( "vumeter.background", VSTGUI::CColor(0xCD, 0xCE, 0xD4) )); // The light gray from origina-vector skin
    dc->drawRect(size, VSTGUI::kDrawFilled);
 
    CRect rectBox = lbox;
    rectBox.inset(1, 1);
    VSTGUI::CGraphicsPath* path = dc->createRoundRectGraphicsPath(rectBox, 2);
 
-   dc->setFillColor(kBlackCColor);
+   auto border = skin->getColor( "vumeter.border", kBlackCColor );
+   dc->setFillColor(border);
    dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathFilled);
 
    CRect bar(lbox);
@@ -76,8 +78,8 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
    float w = bar.getWidth();
    int zerodb = (0.7937f * w);
 
-   dc->drawPoint(CPoint(bar.left + zerodb, size.top), kBlackCColor);
-   dc->drawPoint(CPoint(bar.left + zerodb, size.bottom - 1), kBlackCColor);
+   dc->drawPoint(CPoint(bar.left + zerodb, size.top), border);
+   dc->drawPoint(CPoint(bar.left + zerodb, size.bottom - 1), border);
 
    if (type == vut_gain_reduction)
    {
@@ -90,10 +92,10 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
       barblack.left--;
       bb2.left = bar.right - 1;
       bb2.right++;
-      dc->setFillColor(kBlackCColor);
+      dc->setFillColor(border);
       dc->drawRect(barblack, kDrawFilled);
       dc->drawRect(bb2, kDrawFilled);
-      dc->setFillColor(kRedCColor);
+      dc->setFillColor(vured);
       dc->drawRect(bar, kDrawFilled);
    }
    else
@@ -103,7 +105,7 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
       bar.right = bar.left + (scale(value) * w);
       dc->setFillColor(vugreen);
       if (value > 1.0f)
-         dc->setFillColor(kRedCColor);
+         dc->setFillColor(vured);
       dc->drawRect(bar, kDrawFilled);
 
       barblack.left = bar.right - 1;
@@ -123,16 +125,16 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
          bar.right = bar.left + (scale(valueR) * w);
          dc->setFillColor(vugreen);
          if (valueR > 1.0f)
-            dc->setFillColor(kRedCColor);
+            dc->setFillColor(vured);
          dc->drawRect(bar, kDrawFilled);
 
          barblack.left = bar.right - 1;
-         dc->setFillColor(kBlackCColor);
+         dc->setFillColor(border);
          dc->drawRect(midline, kDrawFilled);
       }
    }
 
-   dc->setFrameColor(VSTGUI::CColor(0xA1, 0xA4, 0xB7)); // the dark gray from original vector skin
+   dc->setFrameColor(skin->getColor( "vumeter.background", VSTGUI::CColor(0xA1, 0xA4, 0xB7) )); // the dark gray from original vector skin
    dc->setLineWidth(1);
    dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathStroked);
 

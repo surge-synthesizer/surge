@@ -9,8 +9,9 @@
 #pragma once
 
 #include "vstcontrols.h"
+#include "SkinSupport.h"
 
-class CAboutBox : public VSTGUI::CControl
+class CAboutBox : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CAboutBox(const VSTGUI::CRect& size,

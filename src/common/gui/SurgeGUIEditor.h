@@ -32,6 +32,8 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include <vstcontrols.h>
 #include "SurgeSynthesizer.h"
 
+#include "SkinSupport.h"
+
 #include <vector>
 
 class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
@@ -256,5 +258,13 @@ private:
    addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
    VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeSkinMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
+
+   /*
+   ** Skin support
+   */
+   Surge::UI::Skin::ptr_t currentSkin;
+   void reloadFromSkin();
 };
 

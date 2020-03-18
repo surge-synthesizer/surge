@@ -4,8 +4,9 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SurgeParamConfig.h"
+#include "SkinSupport.h"
 
-class CSurgeVuMeter : public VSTGUI::CControl
+class CSurgeVuMeter : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CSurgeVuMeter(const VSTGUI::CRect& size);

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="37px" height="24px" viewBox="0 0 37 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>bmp00149</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="37" height="12" rx="2"></rect>
+        <filter x="-0.7%" y="-2.1%" width="101.4%" height="108.3%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="0.5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feComposite in="shadowOffsetOuter1" in2="SourceAlpha" operator="out" result="shadowOffsetOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.05 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
+        </filter>
+        <rect id="path-3" x="0" y="0" width="37" height="12" rx="2"></rect>
+        <filter x="-0.7%" y="-2.1%" width="101.4%" height="108.3%" filterUnits="objectBoundingBox" id="filter-4">
+            <feOffset dx="0" dy="0.5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feComposite in="shadowOffsetOuter1" in2="SourceAlpha" operator="out" result="shadowOffsetOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.05 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="bmp00149" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-2">
+            <g id="button/smallButton">
+                <g id="Rectangle">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                    <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="36" height="11" rx="2"></rect>
+                </g>
+            </g>
+            <g id="Group-3" transform="translate(6.000000, 3.000000)" fill="#B4B4B4">
+                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
+                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
+            </g>
+            <g id="Group-3" transform="translate(27.000000, 6.000000) scale(-1, 1) translate(-27.000000, -6.000000) translate(23.000000, 3.000000)" fill="#B4B4B4">
+                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
+                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
+            </g>
+            <g id="Group" transform="translate(7.000000, 3.000000)" fill="#0F0F0F">
+                <rect id="Rectangle" x="11" y="0" width="1" height="6"></rect>
+            </g>
+        </g>
+        <g id="Group-2" transform="translate(0.000000, 12.000000)">
+            <g id="button/smallButton">
+                <g id="Rectangle">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-4)" xlink:href="#path-3"></use>
+                    <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="36" height="11" rx="2"></rect>
+                </g>
+            </g>
+            <g id="Group-3" transform="translate(6.000000, 3.000000)" fill="#B4B4B4">
+                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
+                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
+            </g>
+            <g id="Group-3" transform="translate(27.000000, 6.000000) scale(-1, 1) translate(-27.000000, -6.000000) translate(23.000000, 3.000000)" fill="#B4B4B4">
+                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
+                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
+            </g>
+            <g id="Group" transform="translate(7.000000, 3.000000)" fill="#0F0F0F">
+                <rect id="Rectangle" x="11" y="0" width="1" height="6"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

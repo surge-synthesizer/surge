@@ -213,9 +213,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
       // if (label_id >= 0) pLabels->draw(dc,trect,CPoint(0,8*label_id),0xff);
 
       if (style & kWhite)
-         dc->setFontColor(kWhiteCColor);
+         dc->setFontColor(skin->getColor( "slider.light.label", kWhiteCColor) );
       else
-         dc->setFontColor(kBlackCColor);
+         dc->setFontColor(skin->getColor( "slider.dark.label", kBlackCColor) );
       dc->setFont(displayFont);
 
       //		int a = 'a' + (rand()&31);
@@ -251,7 +251,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    if( modmode )
    {
       CRect trect = hrect;
-      const CColor ColBar = CColor(173, 255, 107, 255 );
+      const CColor ColBar = skin->getColor( "slider.modulation", CColor(173, 255, 107, 255 ) );
 
       // float moddist = modval * range;
       // We want modval + value to be bould by -1 and 1. So
@@ -389,7 +389,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
       }
    }
    
-   
+
+   // FIXME - temposync into skin?
    if (pHandle && (modmode != 2))
    {
       if (style & CSlider::kHorizontal)

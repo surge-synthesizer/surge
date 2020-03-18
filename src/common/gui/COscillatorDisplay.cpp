@@ -269,23 +269,23 @@ void COscillatorDisplay::drawVector(CDrawContext* dc)
          dc->setDrawMode(VSTGUI::kAntiAliasing);
 
          dc->setLineWidth(1.0);
-         dc->setFrameColor(VSTGUI::CColor(90, 90, 90));
+         dc->setFrameColor(skin->getColor( "osc.midline", VSTGUI::CColor(90, 90, 90)) );
          dc->drawLine(mid0, mid1);
 
          dc->setLineWidth(1.0);
-         dc->setFrameColor(VSTGUI::CColor(70, 70, 70));
+         dc->setFrameColor(skin->getColor( "osc.topline", VSTGUI::CColor(70, 70, 70)) );
          dc->drawLine(top0, top1);
          dc->drawLine(bot0, bot1);
 
          // OK so now the label
          if( osces[1] )
          {
-             dc->setFontColor(kWhiteCColor);
-             dc->setFont(displayFont);
-             CPoint lab0(0, valScale * 0.1 - 10);
-             tf.transform(lab0);
-             CRect rlab(lab0, CPoint(10,10) );
-             dc->drawString(olabel.c_str(), rlab, kLeftText, true);
+            dc->setFontColor(skin->getColor( "osc.label", kWhiteCColor) );
+            dc->setFont(displayFont);
+            CPoint lab0(0, valScale * 0.1 - 10);
+            tf.transform(lab0);
+            CRect rlab(lab0, CPoint(10,10) );
+            dc->drawString(olabel.c_str(), rlab, kLeftText, true);
          }
       }
 
@@ -298,7 +298,7 @@ void COscillatorDisplay::drawVector(CDrawContext* dc)
       if (c == 1)
          dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
       else
-         dc->setFrameColor(VSTGUI::CColor(0xFF, 0x90, 0, 0xFF));
+         dc->setFrameColor(skin->getColor( "osc.wave", VSTGUI::CColor(0xFF, 0x90, 0, 0xFF)) );
       
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
       dc->restoreGlobalState();
@@ -343,10 +343,10 @@ void COscillatorDisplay::drawVector(CDrawContext* dc)
       if (r)
          *r = 0;
       // VSTGUI::CColor fgcol = cdisurf->int_to_ccol(coltable[255]);
-      VSTGUI::CColor fgcol = {0xff, 0xA0, 0x10, 0xff};
+      VSTGUI::CColor fgcol = skin->getColor( "osc.wavename.background", VSTGUI::CColor( 0xff, 0xA0, 0x10, 0xff ) );
       dc->setFillColor(fgcol);
       dc->drawRect(rmenu, kDrawFilled);
-      dc->setFontColor(kBlackCColor);
+      dc->setFontColor(skin->getColor( "osc.wavename.foreground", kBlackCColor) );
       dc->setFont(displayFont);
       // strupr(wttxt);
       dc->drawString(wttxt, rmenu, kCenterText, true);

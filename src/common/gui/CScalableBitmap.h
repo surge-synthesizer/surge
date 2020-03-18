@@ -16,6 +16,7 @@ class CScalableBitmap : public VSTGUI::CBitmap
 {
 public:
    CScalableBitmap(VSTGUI::CResourceDescription d, VSTGUI::CFrame* f);
+   CScalableBitmap(std::string fname, VSTGUI::CFrame* f);
 
    virtual void draw(VSTGUI::CDrawContext* context,
                      const VSTGUI::CRect& rect,
