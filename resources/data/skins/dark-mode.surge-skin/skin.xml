@@ -3,6 +3,8 @@
     <!-- This means if there is a bmp00???.svg in this directory we use it over the built in for this skin -->
     <defaultimage directory="SVG/"/>
 
+    <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/temposync_horizontal_overlay.svg"/>
+    <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/temposync_vertical_overlay.svg"/>
     
     <color id="lfo.waveform.fill" value="#303030"/> 
     <color id="lfo.waveform.font" value="#FF9000"/>

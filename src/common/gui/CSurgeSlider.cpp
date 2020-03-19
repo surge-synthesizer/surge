@@ -63,7 +63,8 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
    {
       pTray = bitmapStore->getBitmap(IDB_FADERH_BG);
       pHandle = bitmapStore->getBitmap(IDB_FADERH_HANDLE);
-
+      pTempoSyncHandle = bitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_OVERLAY" );
+      
       if (style & kWhite)
          typehy = 1;
 
@@ -80,6 +81,7 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
 
       pTray = bitmapStore->getBitmap(IDB_FADERV_BG);
       pHandle = bitmapStore->getBitmap(IDB_FADERV_HANDLE);
+      pTempoSyncHandle = bitmapStore->getBitmapByStringID( "TEMPOSYNC_VERTICAL_OVERLAY" );
 
       if (style & kWhite)
          typehy = 0;
@@ -390,7 +392,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
    }
    
 
-   // FIXME - temposync into skin?
    if (pHandle && (modmode != 2))
    {
       if (style & CSlider::kHorizontal)
@@ -398,24 +399,30 @@ void CSurgeSlider::draw(CDrawContext* dc)
          pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0x7f : 0xff);
          if( is_temposync )
          {
-            dc->setFont(displayFont);
-            dc->setFontColor(CColor(80,80,100));
-            auto newRect = hrect;
-            newRect.top += 1;
-            newRect.left += 1;
-            newRect.bottom = newRect.top + 15;
-            newRect.right = newRect.left + 21;
-
-            auto tRect = newRect;
-            tRect.right = tRect.left + 11;
-            tRect.left += 2;
-
-            auto sRect = newRect;
-            sRect.left += 11;
-            sRect.right -= 2;
-            dc->drawString("T", tRect, kCenterText, true);
-            dc->drawString("S", sRect, kCenterText, true);
-
+            if( pTempoSyncHandle )
+            {
+               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 0xff );
+            }
+            else
+            {
+               dc->setFont(displayFont);
+               dc->setFontColor(CColor(80,80,100));
+               auto newRect = hrect;
+               newRect.top += 1;
+               newRect.left += 1;
+               newRect.bottom = newRect.top + 15;
+               newRect.right = newRect.left + 21;
+               
+               auto tRect = newRect;
+               tRect.right = tRect.left + 11;
+               tRect.left += 2;
+               
+               auto sRect = newRect;
+               sRect.left += 11;
+               sRect.right -= 2;
+               dc->drawString("T", tRect, kCenterText, true);
+               dc->drawString("S", sRect, kCenterText, true);
+            }
          }
       }
       else
@@ -423,26 +430,32 @@ void CSurgeSlider::draw(CDrawContext* dc)
          pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0x7f : 0xff);
          if( is_temposync )
          {
-            auto newRect = hrect;
-            newRect.top += 1;
-            newRect.left += 1;
-            newRect.bottom = newRect.top + 20;
-            newRect.right = newRect.left + 16;
-
-            dc->setFont(displayFont);
-            dc->setFontColor(CColor(80,80,100));
-
-            auto tRect = newRect;
-            tRect.bottom = tRect.top + 11;
-            tRect.top += 2;
-
-            auto sRect = newRect;
-            sRect.top += 11;
-            sRect.bottom -= 2;
+            if( pTempoSyncHandle )
+            {
+               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 0xff );
+            }
+            else
+            {
+               auto newRect = hrect;
+               newRect.top += 1;
+               newRect.left += 1;
+               newRect.bottom = newRect.top + 20;
+               newRect.right = newRect.left + 16;
+               
+               dc->setFont(displayFont);
+               dc->setFontColor(CColor(80,80,100));
+               
+               auto tRect = newRect;
+               tRect.bottom = tRect.top + 11;
+               tRect.top += 2;
+               
+               auto sRect = newRect;
+               sRect.top += 11;
+               sRect.bottom -= 2;
             
-            dc->drawString("T", tRect, kCenterText, true);
-            dc->drawString("S", sRect, kCenterText, true);
-
+               dc->drawString("T", tRect, kCenterText, true);
+               dc->drawString("S", sRect, kCenterText, true);
+            }
          }
                   
       }
