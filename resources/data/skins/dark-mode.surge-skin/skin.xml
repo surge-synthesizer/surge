@@ -14,8 +14,8 @@
 
     <color id="lfo.stepseq.background" value="#202020"/>
     <color id="lfo.stepseq.stepmarker" value="#ff9000"/>
-    <color id="lfo.stepseq.loopregionlo" value="#453515"/>
-    <color id="lfo.stepseq.loopregionhi" value="#403020"/>
+    <color id="lfo.stepseq.loopregionlo" value="#151515"/>
+    <color id="lfo.stepseq.loopregionhi" value="#202020"/>
     <color id="lfo.stepseq.loopregionclick" value="#000000"/>
     <color id="lfo.stepseq.shadowcol" value="#050505"/>
     <color id="lfo.stepseq.noloophi" value="#3c3c3c"/>

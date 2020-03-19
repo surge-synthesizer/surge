@@ -232,7 +232,7 @@
         <g id="button/smallButton" transform="translate(767.000000, 184.000000)">
             <g id="Rectangle">
                 <use fill="black" fill-opacity="1" filter="url(#filter-23)" xlink:href="#path-22"></use>
-                <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="120" height="10" rx="2"></rect>
+                <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#2D2D2D" fill-rule="evenodd" x="0.5" y="0.5" width="120" height="10" rx="2"></rect>
             </g>
         </g>
         <g id="button/smallButton" transform="translate(162.000000, 112.000000)">
