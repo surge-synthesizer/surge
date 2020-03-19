@@ -88,7 +88,7 @@ public:
    static MoveRateState sliderMoveRateState;
 
 private:
-   VSTGUI::CBitmap *pHandle, *pTray, *pModHandle;
+   VSTGUI::CBitmap *pHandle, *pTray, *pModHandle, *pTempoSyncHandle;
    VSTGUI::CRect handle_rect, handle_rect_orig;
    VSTGUI::CPoint offsetHandle;
    int range;
