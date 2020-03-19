@@ -3999,6 +3999,33 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
+    addCallbackMenu(devSubMenu, "Show Queried Colors",
+                    [this]()
+                       {
+                          auto qc = this->currentSkin->getQueriedColors();
+                          std::set<std::string> ss( qc.begin(), qc.end() );
+                          std::ostringstream htmls;
+                          htmls << "<html><body><h1>Color Tags</h1>\n<table border=1><tr><th>tag</th><th>value in skin</th></tr>\n";
+                          for( auto s : ss )
+                          {
+                             htmls << "<tr><td>" << s << "</td><td>";
+                             if( this->currentSkin->hasColor(s) )
+                             {
+                                auto c = this->currentSkin->getColor(s,kBlackCColor);
+                                htmls << "#" << std::hex << (int)c.red << (int)c.green << (int)c.blue << std::dec << std::endl;
+                             }
+                             else
+                             {
+                                htmls << "default" << std::endl;
+                             }
+                             htmls << "</td></tr>\n";
+                          }
+                          htmls << "</pre></body></html>\n";
+                          Surge::UserInteractions::showHTML( htmls.str() );
+                       }
+       );
+    tid++;
+
     return devSubMenu;
 }
 

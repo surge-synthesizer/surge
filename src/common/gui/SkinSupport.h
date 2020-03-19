@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 
 #include "vstgui/lib/ccolor.h"
@@ -78,11 +79,13 @@ public:
 
    bool hasColor( std::string id );
    VSTGUI::CColor getColor( std::string id, const VSTGUI::CColor &def );
+   std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
    
 private:
    std::vector<std::pair<std::string, props_t>> globals;
 
-   std::unordered_map<std::string, VSTGUI::CColor> colors; 
+   std::unordered_map<std::string, VSTGUI::CColor> colors;
+   std::unordered_set<std::string> queried_colors;
    std::unordered_map<std::string, int> imageIds;
    std::vector<Control> controls;
 };

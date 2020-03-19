@@ -337,6 +337,7 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    }
 
    colors.clear();
+   queried_colors.clear();
    for (auto g : globals)
    {
       if (g.first == "image")
@@ -392,10 +393,12 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
 
 bool Skin::hasColor(std::string id)
 {
+   queried_colors.insert(id);
    return colors.find(id) != colors.end();
 }
 VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def)
 {
+   queried_colors.insert(id);
    if (colors.find(id) != colors.end())
       return colors[id];
    return def;
