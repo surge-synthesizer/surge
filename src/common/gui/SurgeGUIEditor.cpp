@@ -887,7 +887,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ((CPatchBrowser*)patchname)->setAuthor(synth->storage.getPatch().author);
    frame->addView(patchname);
 
-   statuspanel = new CStatusPanel(CRect( 560, 1, 595, 54 ), this, tag_statuspanel, &synth->storage);
+   statuspanel = new CStatusPanel(CRect( 560, 1, 595, 54 ), this, tag_statuspanel, &synth->storage, bitmapStore);
    {
        CStatusPanel *pb = (CStatusPanel *)statuspanel;
        pb->setSkin( currentSkin );

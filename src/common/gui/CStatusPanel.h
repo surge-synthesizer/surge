@@ -5,6 +5,7 @@
 #include "SurgeStorage.h"
 #include "vstcontrols.h"
 #include "SkinSupport.h"
+#include "SurgeBitmaps.h"
 
 class SurgeGUIEditor;
 
@@ -18,8 +19,9 @@ public:
         numDisplayFeatures
     } DisplayFeatures;
     
-    CStatusPanel(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage)
-        : VSTGUI::CControl(size, listener, tag, 0) {
+    CStatusPanel(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag,
+                 SurgeStorage* storage, std::shared_ptr<SurgeBitmaps> ibms)
+       : VSTGUI::CControl(size, listener, tag, 0), bitmapStore(ibms) {
         for( auto i=0; i<numDisplayFeatures; ++i )
             dispfeatures[i] = false;
         doingDrag = false;
@@ -63,7 +65,7 @@ protected:
     SurgeStorage* storage = nullptr;
     SurgeGUIEditor *editor = nullptr;
     VSTGUI::CRect mpeBox, tuningBox, tuningLock;
-    
+    std::shared_ptr<SurgeBitmaps> bitmapStore;
     
     CLASS_METHODS(CStatusPanel, VSTGUI::CControl)
 };
