@@ -1,5 +1,6 @@
 #include "SurgeGUIEditor.h"
 #include "CStatusPanel.h"
+#include "CScalableBitmap.h"
 #include "RuntimeFont.h"
 
 
@@ -8,6 +9,8 @@ using namespace VSTGUI;
 void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
 {
     auto size = getViewSize();
+
+    auto statusButtonGlyph = bitmapStore->getBitmapByStringID( "STATUS_BUTTON" );
 
     dc->setFont(displayFont);
     auto sw = dc->getStringWidth("Status");
@@ -29,7 +32,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
            mpeBox = CRect(xp,yp,xp+w,yp+h);
        if( i == tuningMode )
            tuningBox = CRect(xp,yp,xp+w,yp+h);
-       
+
        auto hlbg = true;
        auto ol = skin->getColor( "mpetunstatus.button.outline", CColor(0x97, 0x97, 0x97 ) );
        auto bg = skin->getColor( "mpetunstatus.button.background", CColor(0xe3, 0xe3, 0xe3 ) );
@@ -41,21 +44,34 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
            hlbg = false;
        }
 
-       dc->setDrawMode(VSTGUI::kAntiAliasing);
-       dc->setFrameColor(bg);;
-       auto p = dc->createRoundRectGraphicsPath(CRect(xp,yp,xp+w,yp+h), 5 );
-       dc->setFillColor(bg);;
-       dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
-       dc->setFrameColor(ol);
-       dc->drawGraphicsPath(p, CDrawContext::kPathStroked);
-       p->forget();
+       if( statusButtonGlyph != nullptr )
+       {
+          CRect wr = CRect(xp,yp,xp+w,yp+h);
+
+          statusButtonGlyph->draw( dc, wr, CPoint( 0, h * ( hlbg ? 1 : 0 ) ), 0xff );
+       }
+       else
+       {
+          dc->setDrawMode(VSTGUI::kAntiAliasing);
+          dc->setFrameColor(bg);;
+          auto p = dc->createRoundRectGraphicsPath(CRect(xp,yp,xp+w,yp+h), 5 );
+          dc->setFillColor(bg);;
+          dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
+          dc->setFrameColor(ol);
+          dc->drawGraphicsPath(p, CDrawContext::kPathStroked);
+          p->forget();
+          
+          if( hlbg )
+          {
+             auto p = dc->createRoundRectGraphicsPath(CRect(xp+2,yp+2,xp+w-2,yp+h-2), 3 );
+             dc->setFillColor(hl);
+             dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
+             p->forget();
+          }
+       }
 
        if( hlbg )
        {
-           auto p = dc->createRoundRectGraphicsPath(CRect(xp+2,yp+2,xp+w-2,yp+h-2), 3 );
-           dc->setFillColor(hl);
-           dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
-           p->forget();
            dc->setFontColor(fg);
        }
        else

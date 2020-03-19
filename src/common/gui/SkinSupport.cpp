@@ -349,7 +349,12 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          {
             if (id.size() > 0)
             {
-               bitmapStore->loadBitmapByPathForID(resourceName(res), imageIds[id]);
+               if( imageIds.find(id) != imageIds.end() )
+                  bitmapStore->loadBitmapByPathForID(resourceName(res), imageIds[id]);
+               else
+               {
+                  bitmapStore->loadBitmapByPathForStringID(resourceName(res), id );
+               }
             }
             else
             {

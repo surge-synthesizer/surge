@@ -16,6 +16,14 @@ SurgeBitmaps::~SurgeBitmaps()
    {
       pair.second->forget();
    }
+   for (auto pair : bitmap_file_registry)
+   {
+      pair.second->forget();
+   }
+   for (auto pair : bitmap_stringid_registry)
+   {
+      pair.second->forget();
+   }
    bitmap_registry.clear();
 }
 
@@ -82,6 +90,13 @@ CScalableBitmap* SurgeBitmaps::getBitmapByPath(std::string path)
    return bitmap_file_registry.at(path);
 }
 
+CScalableBitmap* SurgeBitmaps::getBitmapByStringID(std::string id)
+{
+   if( bitmap_stringid_registry.find(id) == bitmap_stringid_registry.end() )
+      return nullptr;
+   return bitmap_stringid_registry[id];
+}
+
 CScalableBitmap* SurgeBitmaps::loadBitmapByPath(std::string path )
 {
    bitmap_file_registry[path] = new CScalableBitmap(path, frame);
@@ -99,11 +114,24 @@ CScalableBitmap* SurgeBitmaps::loadBitmapByPathForID(std::string path, int id)
    return bitmap_registry[id];
 }
 
+CScalableBitmap* SurgeBitmaps::loadBitmapByPathForStringID(std::string path, std::string id)
+{
+   if( bitmap_stringid_registry.find(id) != bitmap_stringid_registry.end() )
+   {
+      // FIXME - think about ownership here
+      bitmap_stringid_registry[id]->forget();
+   }
+   bitmap_stringid_registry[id] = new CScalableBitmap( path, frame );
+   return bitmap_stringid_registry[id];
+}
+
 void SurgeBitmaps::setPhysicalZoomFactor(int pzf)
 {
    for (auto pair : bitmap_registry)
       pair.second->setPhysicalZoomFactor(pzf);
    for (auto pair : bitmap_file_registry)
+      pair.second->setPhysicalZoomFactor(pzf);
+   for (auto pair : bitmap_stringid_registry)
       pair.second->setPhysicalZoomFactor(pzf);
 }
 
