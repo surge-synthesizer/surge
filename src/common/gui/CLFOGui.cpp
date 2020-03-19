@@ -154,6 +154,15 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       tlfo->attack();
       CRect boxo(maindisp);
       boxo.offset(-size.left - splitpoint, -size.top);
+
+      if( skin->hasColor( "lfo.waveform.fill" ) )
+      {
+         CRect boxI(size);
+         boxI.left += lpsize + 4 + 15;
+
+         dc->setFillColor( skin->getColor( "lfo.waveform.fill", CColor( 0xFF, 0x90, 0x00 ) ) );
+         dc->drawRect(boxI, CDrawStyle::kDrawFilled);
+      }
       
       int minSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
       int totalSamples = std::max( (int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE) );
@@ -481,7 +490,7 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
    maindisp.bottom -= 1;
 
    cdisurf->begin();
-   auto col = skin->getColor( "lfo.stepseq.background", CColor( 0xFF, 0x90, 0x00 ) );
+   auto col = skin->getColor( "lfo.waveform.fill", CColor( 0xFF, 0x90, 0x00 ) );
    int r = col.red;
    int g = col.green;
    int b = col.blue;
@@ -498,6 +507,17 @@ void CLFOGui::drawBitmap(CDrawContext* dc)
 
    if (ss && lfodata->shape.val.i == ls_stepseq)
    {
+      auto col = skin->getColor( "lfo.stepseq.background", CColor( 0xFF, 0x90, 0x00 ) );
+      int r = col.red;
+      int g = col.green;
+      int b = col.blue;
+#if MAC
+      int c = ( b << 24 ) + ( g << 16 ) + ( r << 8 ) + 255;
+      cdisurf->clear(c);
+#else
+      int c = ( b ) + ( g << 8 ) + ( r << 16 ) + ( 255 << 24 );
+      cdisurf->clear(c);
+#endif
       drawStepSeq(dc, maindisp, leftpanel);
    }
    else

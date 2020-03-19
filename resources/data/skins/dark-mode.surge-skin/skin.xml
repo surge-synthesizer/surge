@@ -4,7 +4,7 @@
     <defaultimage directory="SVG/"/>
 
     
-    <color id="lfo.waveform.fill" value="#303030"/> <!-- Only used in the bitmap mode (linux; slow windows) -->
+    <color id="lfo.waveform.fill" value="#303030"/> 
     <color id="lfo.waveform.font" value="#FF9000"/>
     <color id="lfo.waveform.rules" value="#FF9000"/>
     <color id="lfo.waveform.envelope" value="#FF9000"/>
@@ -13,6 +13,7 @@
     <color id="lfo.type.unselected.foreground" value="#B4B4B4"/>
 
     <color id="lfo.stepseq.background" value="#202020"/>
+    
     <color id="lfo.stepseq.stepmarker" value="#ff9000"/>
     <color id="lfo.stepseq.loopregionlo" value="#151515"/>
     <color id="lfo.stepseq.loopregionhi" value="#202020"/>
