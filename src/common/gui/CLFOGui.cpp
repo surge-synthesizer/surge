@@ -28,7 +28,7 @@ void CLFOGui::drawtri(CRect r, CDrawContext* context, int orientation)
    {
       for (int y = (midy - a); y <= (midy + a); y++)
       {
-         context->drawPoint(CPoint(x, y), skin->getColor( "lfo.stepseq.button.arrow.fill", kRedCColor ) );
+         context->drawPoint(CPoint(x, y), skin->getColor( "lfo.stepseq.button.arrow.fill", kWhiteCColor ) );
       }
       a -= orientation;
       a = max(a, 0);
@@ -353,7 +353,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
                tf.transform(mps);
                tf.transform(vruleS);
                tf.transform(vruleE);
-               dc->setFrameColor(skin->getColor( "lfo.waveform.tickmajor", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
+               dc->setFrameColor(skin->getColor( "lfo.waveform.tickmajor", VSTGUI::kBlackCColor ) );
                dc->setLineWidth(1.0);
                dc->drawLine(sp,ep);
                dc->setLineWidth(1.0);
@@ -885,18 +885,18 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    ss_shift_left.right = ss_shift_left.left + 12;
    ss_shift_left.bottom = ss_shift_left.top + 34;
 
-   dc->setFillColor(skin->getColor( "lfo.stepseq.button.border", kBlackCColor) );
+   dc->setFillColor(skin->getColor( "lfo.stepseq.button.border", VSTGUI::CColor( 0x5d, 0x5d, 0x5d, 0xff ) ) );
    dc->drawRect(ss_shift_left, kDrawFilled);
    ss_shift_left.inset(1, 1);
    ss_shift_left.bottom = ss_shift_left.top + 16;
 
-   dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", kBlackCColor) );
+   dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff ) ) );
    dc->drawRect(ss_shift_left, kDrawFilled);
    drawtri(ss_shift_left, dc, -1);
 
    ss_shift_right = ss_shift_left;
    ss_shift_right.offset(0, 16);
-   dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", kBlackCColor) );
+   dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff )) );
    dc->drawRect(ss_shift_right, kDrawFilled);
    drawtri(ss_shift_right, dc, 1);
    // ss_shift_left,ss_shift_right;
