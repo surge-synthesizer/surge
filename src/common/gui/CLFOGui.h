@@ -8,6 +8,8 @@
 #include "DspUtilities.h"
 #include "SkinSupport.h"
 
+
+
 class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
@@ -18,6 +20,8 @@ public:
    const static int shadowoffset = 1;
    const static int skugga = 0xff5d5d5d;
    const static int splitpoint = lpsize + 20;
+    
+   void drawtri(VSTGUI::CRect r, VSTGUI::CDrawContext* context, int orientation);
 
    CLFOGui(const VSTGUI::CRect& size,
            bool trigmaskedit,
