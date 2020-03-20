@@ -6,11 +6,17 @@
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/temposync_horizontal_overlay.svg"/>
     <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/temposync_vertical_overlay.svg"/>
     
-    <color id="lfo.waveform.fill" value="#303030"/> 
-    <color id="lfo.waveform.font" value="#FF9000"/>
-    <color id="lfo.waveform.rules" value="#FF9000"/>
+    <image id="STATUS_BUTTON" resource="SVG/StatusButton.svg"/>
+    
+    <color id="lfo.waveform.fill" value="#202020"/>
+    <color id="lfo.waveform.font" value="#B4B4B4"/>
+    <color id="lfo.waveform.rules" value="#B4B4B4"/>
     <color id="lfo.waveform.envelope" value="#FF9000"/>
     <color id="lfo.waveform.wave" value="#B4B4B4"/>
+    <color id="lfo.waveform.tickruler" value="#B4B4B4"/>
+    <color id="lfo.waveform.tickmajor" value="#B4B4B4"/>
+    <color id="lfo.waveform.majordivisions" value="#101010"/>
+    
 
     <color id="lfo.type.unselected.foreground" value="#B4B4B4"/>
 
@@ -25,6 +31,10 @@
     <color id="lfo.stepseq.nolooplo" value="#3c3c3c"/>
     <color id="lfo.stepseq.grabmarker" value="#B4B4B4"/>
     <color id="lfo.stepseq.grabmarkerhi" value="#B4B4B4"/>
+    
+    <color id="lfo.stepseq.button.border" value="#151515"/>
+    <color id="lfo.stepseq.button.fill" value="#202020"/>
+    <color id="lfo.stepseq.button.arrow.fill" value="#B4B4B4"/>
 
     <color id="mpetunstatus.title" value="#B4B4B4"/>
 
