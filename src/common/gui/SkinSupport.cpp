@@ -207,15 +207,19 @@ std::unordered_map<std::string, int> createIdNameMap()
    return res;
 }
 
+std::atomic<int> Skin::instances( 0 );
+
 Skin::Skin(std::string root, std::string name) : root(root), name(name)
 {
-   std::cout << "Constructing a skin " << _D(root) << _D(name) << std::endl;
+   instances++;
+   std::cout << "Constructing a skin " << _D(root) << _D(name) << _D(instances) << std::endl;
    imageIds = createIdNameMap();
 }
 
 Skin::~Skin()
 {
-   std::cout << "Destroying a skin" << std::endl;
+   instances--;
+   std::cout << "Destroying a skin " << _D(instances) << std::endl;
 }
 
 #if !defined(TINYXML_SAFE_TO_ELEMENT)

@@ -3,6 +3,7 @@
 #include "resource.h"
 #include "vstgui/vstgui.h"
 #include <map>
+#include <atomic>
 
 class CScalableBitmap;
 
@@ -24,6 +25,8 @@ public:
    CScalableBitmap* loadBitmapByPathForStringID(std::string filename, std::string id);
    
 protected:
+   static std::atomic<int> instances;
+   
    void addEntry(int id, VSTGUI::CFrame* f);
    std::map<int, CScalableBitmap*> bitmap_registry;
    std::map<std::string, CScalableBitmap*> bitmap_file_registry;

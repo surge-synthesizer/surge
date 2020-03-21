@@ -6,8 +6,11 @@
 
 using namespace VSTGUI;
 
+std::atomic<int> SurgeBitmaps::instances( 0 );
 SurgeBitmaps::SurgeBitmaps()
 {
+   instances++;
+   std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 SurgeBitmaps::~SurgeBitmaps()
@@ -25,6 +28,10 @@ SurgeBitmaps::~SurgeBitmaps()
       pair.second->forget();
    }
    bitmap_registry.clear();
+   bitmap_file_registry.clear();
+   bitmap_stringid_registry.clear();
+   instances --;
+   std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
