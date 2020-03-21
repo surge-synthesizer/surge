@@ -84,7 +84,21 @@ public:
 private:
    std::vector<std::pair<std::string, props_t>> globals;
 
-   std::unordered_map<std::string, VSTGUI::CColor> colors;
+   struct ColorStore {
+      VSTGUI::CColor color;
+      std::string alias;
+
+      typedef enum {
+         COLOR,
+         ALIAS
+      } Type;
+
+      Type type;
+      ColorStore() : type( COLOR ), color( VSTGUI::kBlackCColor ) { }
+      ColorStore( VSTGUI::CColor c ) : type( COLOR ), color( c ) { }
+      ColorStore( std::string a ) : type( ALIAS ), alias( a ) { }
+   };
+   std::unordered_map<std::string, ColorStore> colors;
    std::unordered_set<std::string> queried_colors;
    std::unordered_map<std::string, int> imageIds;
    std::vector<Control> controls;

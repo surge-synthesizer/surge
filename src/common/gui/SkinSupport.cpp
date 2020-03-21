@@ -381,11 +381,14 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             rgb = rgb >> 8;
 
             int r = rgb % 256;
-            colors[id] = VSTGUI::CColor(r, g, b);
+            colors[id] = ColorStore( VSTGUI::CColor(r, g, b) );
          }
-         else
+         else if( val[0] == '$' )
          {
-            colors[id] = VSTGUI::CColor(255, 0, 0);
+            colors[id] = ColorStore( val.c_str() + 1 );
+         }
+         else {
+            colors[id] = ColorStore( VSTGUI::CColor(255, 0, 0) );
          }
       }
    }
@@ -400,7 +403,16 @@ VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def)
 {
    queried_colors.insert(id);
    if (colors.find(id) != colors.end())
-      return colors[id];
+   {
+      auto c = colors[id];
+      switch( c.type )
+      {
+      case ColorStore::COLOR:
+         return c.color;
+      case ColorStore::ALIAS:
+         return getColor( c.alias, def );
+      }
+   }
    return def;
 }
 } // namespace UI
