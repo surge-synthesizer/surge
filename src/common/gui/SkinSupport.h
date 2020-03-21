@@ -79,7 +79,7 @@ public:
    };
 
    bool hasColor( std::string id );
-   VSTGUI::CColor getColor( std::string id, const VSTGUI::CColor &def );
+   VSTGUI::CColor getColor( std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>() );
    std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
    
 private:
