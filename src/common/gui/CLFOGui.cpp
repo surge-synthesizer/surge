@@ -159,7 +159,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       {
          CRect boxI(size);
          boxI.left += lpsize + 4 + 15;
-
+         // LFO Waveform BG Area
          dc->setFillColor( skin->getColor( "lfo.waveform.fill", CColor( 0xFF, 0x90, 0x00 ) ) );
          dc->drawRect(boxI, CDrawStyle::kDrawFilled);
       }
@@ -310,7 +310,8 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
           tf.transform(sp);
           tf.transform(ep);
           dc->setLineWidth(1.0);
-          dc->setFrameColor(skin->getColor( "lfo.waveform.font", VSTGUI::kBlackCColor ) );
+          // Lower ruler time ticks
+          dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::kBlackCColor ) );
           dc->drawLine(sp,ep);
       }
 
@@ -353,10 +354,12 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
                tf.transform(mps);
                tf.transform(vruleS);
                tf.transform(vruleE);
-               dc->setFrameColor(skin->getColor( "lfo.waveform.tickmajor", VSTGUI::kBlackCColor ) );
+               // Upper Ruler Beat Tick for major beats
+               dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::kBlackCColor ) );
                dc->setLineWidth(1.0);
                dc->drawLine(sp,ep);
                dc->setLineWidth(1.0);
+               // On the lfo waveform bg major beat division
                dc->setFrameColor(skin->getColor( "lfo.waveform.majordivisions", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
                // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
                dc->drawLine(vruleS, vruleE );
@@ -380,7 +383,8 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
                if( l % tsNum == 0 )
                   dc->setFrameColor(VSTGUI::kBlackCColor );
                else
-                  dc->setFrameColor(VSTGUI::CColor(0xB0, 0x60, 0x00 ) );
+                  // The small ticks for the ruler
+                  dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::CColor(0xB0, 0x60, 0x00 ) ) );
                dc->drawLine(sp,ep);
             }
          }
@@ -400,11 +404,13 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       dc->setDrawMode(VSTGUI::kAntiAliasing);
 
       dc->setLineWidth(1.0);
-      dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
+      // LFO bg center line
+      dc->setFrameColor(skin->getColor( "lfo.waveform.centerline", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
       dc->drawLine(mid0, mid1);
       
       dc->setLineWidth(1.0);
-      dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
+      // Lfo ruler bounds AKA the upper and lower horizontal lines that define the bounds that the waveform draws in
+      dc->setFrameColor(skin->getColor( "lfo.waveform.bounds", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
       dc->drawLine(top0, top1);
       dc->drawLine(bot0, bot1);
 
@@ -414,6 +420,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #else
       dc->setLineWidth(1.0);
 #endif
+      // Lfo ruler bounds AKA the upper and lower horizontal lines that draw the envelope if enabled
       dc->setFrameColor(skin->getColor("lfo.waveform.envelope", VSTGUI::CColor(0xB0, 0x60, 0x00, 0xFF)));
       dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
@@ -423,6 +430,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #else
       dc->setLineWidth(1.3);
 #endif
+      //       lfo waveform itself
       dc->setFrameColor(skin->getColor("lfo.waveform.wave", VSTGUI::CColor( 0x00, 0x00, 0x00, 0xFF )));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
