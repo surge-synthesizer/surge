@@ -31,6 +31,7 @@
 #include "nanosvg.h"
 
 using namespace VSTGUI;
+std::atomic<int> CScalableBitmap::instances( 0 );
 
 #if MAC
 static const std::string svgFullFileNameFromBundle(const std::string& filename)
@@ -98,6 +99,10 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
     int id = 0;
     if(desc.type == CResourceDescription::kIntegerType)
         id = (int32_t)desc.u.id;
+
+    instances++;
+    //std::cout << "  Construct CScalableBitmap. instances=" << instances << " id=" << id << std::endl;
+    
 
     resourceID = id;
 
@@ -167,9 +172,14 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
     lastSeenZoom = -1;
 }
 
-CScalableBitmap::CScalableBitmap(std::string fname, VSTGUI::CFrame* f)
+CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
    : CBitmap(CResourceDescription(0)), svgImage(nullptr), frame(f)
 {
+    fname = ifname;
+    
+    instances++;
+    //std::cout << "  Construct CScalableBitmap. instances=" << instances << " fname=" << fname << std::endl;
+
     int id = 0;
     resourceID = id;
 
@@ -184,6 +194,21 @@ CScalableBitmap::CScalableBitmap(std::string fname, VSTGUI::CFrame* f)
     currentPhysicalZoomFactor = 100;
     lastSeenZoom = -1;
 }
+
+CScalableBitmap::~CScalableBitmap()
+{
+   for (auto const& pair : offscreenCache)
+   {
+      auto val = pair.second;
+      if (val)
+         val->forget();
+   }
+   offscreenCache.clear();
+
+   instances--;
+   //std::cout << "  Destroy CScalableBitmap. instances=" << instances << " id=" << resourceID << " fn=" << fname << std::endl;
+}
+
 
 #define DUMPR(r)                                                                                   \
    "(x=" << r.getTopLeft().x << ",y=" << r.getTopLeft().y << ")+(w=" << r.getWidth()               \

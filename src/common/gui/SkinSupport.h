@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <atomic>
 
 #include "vstgui/lib/ccolor.h"
 
@@ -82,6 +83,7 @@ public:
    std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
    
 private:
+   static std::atomic<int> instances;
    std::vector<std::pair<std::string, props_t>> globals;
 
    struct ColorStore {
