@@ -403,9 +403,20 @@ bool Skin::hasColor(std::string id)
    queried_colors.insert(id);
    return colors.find(id) != colors.end();
 }
-VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def)
+VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def, std::unordered_set<std::string> noLoops)
 {
+   if( noLoops.find( id ) != noLoops.end() )
+   {
+      std::ostringstream oss;
+      oss << "Resoving color '" << id << "' resulted in a loop. Please check your XML. Colors which were visited during traversal are: ";
+      for( auto l : noLoops )
+         oss << "'" << l << "' ";
+      // FIXME ERROR
+      Surge::UserInteractions::promptError( oss.str(), "Skin Configuration Error" );
+      return def;
+   }
    queried_colors.insert(id);
+   noLoops.insert(id);
    if (colors.find(id) != colors.end())
    {
       auto c = colors[id];
@@ -414,7 +425,7 @@ VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def)
       case ColorStore::COLOR:
          return c.color;
       case ColorStore::ALIAS:
-         return getColor( c.alias, def );
+         return getColor( c.alias, def, noLoops );
       }
    }
    return def;
