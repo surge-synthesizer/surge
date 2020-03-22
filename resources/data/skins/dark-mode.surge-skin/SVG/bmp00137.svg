@@ -15,8 +15,7 @@
             <rect id="Rectangle" stroke="#FF9000" x="88.5" y="30.5" width="18" height="10"></rect>
             <rect id="Rectangle" fill="#FF9000" x="61" y="5" width="5" height="1"></rect>
             <rect id="Rectangle" fill="#FF9000" x="65" y="5" width="1" height="23"></rect>
-            <rect id="Rectangle" fill="#FF9000" x="63" y="5" width="1" height="9"></rect>
-            <rect id="Rectangle" fill="#FF9000" x="19" y="13" width="45" height="1"></rect>
+            <rect id="Rectangle" fill="#FF9000" x="19" y="13" width="47" height="1"></rect>
             <rect id="Rectangle" stroke="#FF9000" x="17.5" y="40.5" width="18" height="10"></rect>
             <rect id="Rectangle" stroke="#FF9000" x="43.5" y="40.5" width="18" height="10"></rect>
             <rect id="Rectangle" stroke="#FF9000" x="0.5" y="0.5" width="9" height="10"></rect>
@@ -30,9 +29,7 @@
             <g id="Group-3" transform="translate(112.000000, 23.000000)"></g>
             <g id="Group-3" transform="translate(10.000000, 43.000000)"></g>
             <g id="Group-3" transform="translate(35.000000, 43.000000)"></g>
-            <rect id="Rectangle" fill="#FF9000" x="35" y="26" width="7" height="1"></rect>
-            <rect id="Rectangle" fill="#FF9000" x="20" y="37" width="44" height="1"></rect>
-            <rect id="Rectangle" fill="#FF9000" x="63" y="37" width="1" height="9"></rect>
+            <rect id="Rectangle" fill="#FF9000" x="20" y="37" width="46" height="1"></rect>
             <rect id="Rectangle" fill="#FF9000" x="65" y="29" width="1" height="17"></rect>
             <g id="Group-15" transform="translate(65.000000, 27.000000)" fill="#FF9000">
                 <rect id="Rectangle" x="0" y="2" width="1" height="1"></rect>
@@ -55,9 +52,10 @@
         <path d="M12,3 L16,5.5 L12,8 L12,6 L10,6 L10,5 L12,5 L12,3 Z" id="Combined-Shape" fill="#FF9000" transform="translate(13.000000, 5.500000) rotate(-360.000000) translate(-13.000000, -5.500000) "></path>
         <path d="M18.5,13.5 L22.5,16 L18.5,18.5 L18.5,16.5 L16.5,16.5 L16.5,15.5 L18.5,15.5 L18.5,13.5 Z" id="Combined-Shape" fill="#FF9000" transform="translate(19.500000, 16.000000) rotate(-270.000000) translate(-19.500000, -16.000000) "></path>
         <path d="M44.5,13.5 L48.5,16 L44.5,18.5 L44.5,16.5 L42.5,16.5 L42.5,15.5 L44.5,15.5 L44.5,13.5 Z" id="Combined-Shape" fill="#FF9000" transform="translate(45.500000, 16.000000) rotate(-270.000000) translate(-45.500000, -16.000000) "></path>
-        <path d="M68,23 L71,25.5 L68,28 L67.999,26 L66,26 L66,25 L68,25 L68,23 Z" id="Combined-Shape" fill="#FF9000"></path>
-        <path d="M19,32 L23,34.5 L19,37 L19,35 L16,35 L16,34 L19,34 L19,32 Z" id="Combined-Shape" fill="#FF9000" transform="translate(19.500000, 34.500000) rotate(-90.000000) translate(-19.500000, -34.500000) "></path>
-        <path d="M44.5,31.5 L48.5,34 L44.5,36.5 L44.5,34.5 L42.5,34.5 L42.5,33.5 L44.5,33.5 L44.5,31.5 Z" id="Combined-Shape" fill="#FF9000" transform="translate(45.500000, 34.000000) rotate(-90.000000) translate(-45.500000, -34.000000) "></path>
+        <path d="M67,23 L70,25.5 L67,28 L66.999,26 L65,26 L65,25 L67,25 L67,23 Z" id="Combined-Shape" fill="#FF9000"></path>
+        <path d="M18.5,32.5 L22.5,35 L18.5,37.5 L18.5,35.5 L16.5,35.5 L16.5,34.5 L18.5,34.5 L18.5,32.5 Z" id="Combined-Shape" fill="#FF9000" transform="translate(19.500000, 35.000000) rotate(-90.000000) translate(-19.500000, -35.000000) "></path>
+        <path d="M39,23 L42,25.5 L39,28 L39,26 L36,26 L36,25 L39,25 L39,23 Z" id="Combined-Shape" fill="#FF9000" transform="translate(39.000000, 25.500000) rotate(-360.000000) translate(-39.000000, -25.500000) "></path>
+        <path d="M44.5,32.5 L48.5,35 L44.5,37.5 L44.5,35.5 L42.5,35.5 L42.5,34.5 L44.5,34.5 L44.5,32.5 Z" id="Combined-Shape" fill="#FF9000" transform="translate(45.500000, 35.000000) rotate(-90.000000) translate(-45.500000, -35.000000) "></path>
         <path d="M38,3 L42,5.5 L38,8 L38,6 L36,6 L36,5 L38,5 L38,3 Z" id="Combined-Shape" fill="#FF9000" transform="translate(39.000000, 5.500000) rotate(-360.000000) translate(-39.000000, -5.500000) "></path>
         <path d="M12,43 L16,45.5 L12,48 L12,46 L10,46 L10,45 L12,45 L12,43 Z" id="Combined-Shape" fill="#FF9000" transform="translate(13.000000, 45.500000) rotate(-360.000000) translate(-13.000000, -45.500000) "></path>
         <path d="M38,43 L42,45.5 L38,48 L38,46 L36,46 L36,45 L38,45 L38,43 Z" id="Combined-Shape" fill="#FF9000" transform="translate(39.000000, 45.500000) rotate(-360.000000) translate(-39.000000, -45.500000) "></path>
