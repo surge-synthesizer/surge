@@ -3,72 +3,85 @@
     <!-- This means if there is a bmp00???.svg in this directory we use it over the built in for this skin -->
     <defaultimage directory="SVG/"/>
 
-    <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/temposync_horizontal_overlay.svg"/>
-    <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/temposync_vertical_overlay.svg"/>
+    <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
+    <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
     
     <image id="STATUS_BUTTON" resource="SVG/StatusButton.svg"/>
     
-    <color id="lfo.waveform.fill" value="#202020"/>
-    <color id="lfo.waveform.font" value="#B4B4B4"/>
-    <color id="lfo.waveform.rules" value="#B4B4B4"/>
-    <color id="lfo.waveform.envelope" value="#FF9000"/>
-    <color id="lfo.waveform.wave" value="#B4B4B4"/>
-    <color id="lfo.waveform.tickruler" value="#B4B4B4"/>
-    <color id="lfo.waveform.tickmajor" value="#B4B4B4"/>
-    <color id="lfo.waveform.majordivisions" value="#101010"/>
+    <color id="lightgray" value="#B4B4B4"/>
+    <color id="gray" value="#808080"/>
+    <color id="darkblack" value="#050505"/>
+    <color id="black" value="#131313"/>
+    <color id="darkgray" value="#3c3c3c"/>
+    <color id="darkergray" value="#202020"/>
+    <color id="surgeblue" value="#005CB6"/>
+    <color id="surgeorange" value="#ff9000"/>
     
-
-    <color id="lfo.type.unselected.foreground" value="#B4B4B4"/>
-
-    <color id="lfo.stepseq.background" value="#202020"/>
+    <color id="buttonbg" value=#151515/>
     
-    <color id="lfo.stepseq.stepmarker" value="#ff9000"/>
-    <color id="lfo.stepseq.loopregionlo" value="#151515"/>
-    <color id="lfo.stepseq.loopregionhi" value="#202020"/>
-    <color id="lfo.stepseq.loopregionclick" value="#000000"/>
-    <color id="lfo.stepseq.shadowcol" value="#050505"/>
-    <color id="lfo.stepseq.noloophi" value="#3c3c3c"/>
-    <color id="lfo.stepseq.nolooplo" value="#3c3c3c"/>
-    <color id="lfo.stepseq.grabmarker" value="#B4B4B4"/>
-    <color id="lfo.stepseq.grabmarkerhi" value="#B4B4B4"/>
+    <color id="lfo.waveform.fill" value="#242424"/>
+    <color id="lfo.waveform.font" value="$lightgray"/>
+    <color id="lfo.waveform.rules" value="$lightgray"/>
+    <color id="lfo.waveform.bounds" value="$darkgray"/>
+    <color id="lfo.waveform.centerline" value="$black"/>
+    <color id="lfo.waveform.envelope" value="$darkgray"/>
+    <color id="lfo.waveform.wave" value="$surgeblue"/>
+    <color id="lfo.waveform.majordivisions" value="$black"/>
     
-    <color id="lfo.stepseq.button.border" value="#151515"/>
-    <color id="lfo.stepseq.button.fill" value="#202020"/>
-    <color id="lfo.stepseq.button.arrow.fill" value="#B4B4B4"/>
+    <color id="lfo.type.unselected.foreground" value="$lightgray"/>
+    <color id="lfo.type.selected.foreground" value="#E5E5E5"/>
+    
+    <color id="lfo.type.selected.background" value="$surgeblue"/>
 
-    <color id="mpetunstatus.title" value="#B4B4B4"/>
+    <color id="lfo.stepseq.background" value="$darkergray"/>
+    
+    <color id="lfo.stepseq.stepmarker" value="$surgeblue"/>
+    <color id="lfo.stepseq.loopregionlo" value="#000000"/>
+    <color id="lfo.stepseq.loopregionhi" value="$buttonbg"/>
+    <color id="lfo.stepseq.loopregionclick" value="$surgeorange"/>
+    <color id="lfo.stepseq.shadowcol" value="$darkblack"/>
+    <color id="lfo.stepseq.noloophi" value="#303030"/>
+    <color id="lfo.stepseq.nolooplo" value="#303030"/>
+    <color id="lfo.stepseq.grabmarker" value="$lightgray"/>
+    <color id="lfo.stepseq.grabmarkerhi" value="$lightgray"/>
+    
+    <color id="lfo.stepseq.button.border" value="$buttonbg"/>
+    <color id="lfo.stepseq.button.fill" value="$darkergray"/>
+    <color id="lfo.stepseq.button.arrow.fill" value="$lightgray"/>
+
+    <color id="mpetunstatus.title" value="$lightgray"/>
 
     <color id="savedialog.background" value="#303030"/>
 
     <color id="mpetunstatus.button.outline" value="#0F0F0F"/>
     <color id="mpetunstatus.button.background" value="#181818"/>
     <color id="mpetunstatus.button.selected.foreground" value="#000000"/>
-    <color id="mpetunstatus.button.unselected.foreground" value="#B4B4B4"/>
-    <color id="mpetunstatus.buttun.highlight" value="#FF9000"/>
+    <color id="mpetunstatus.button.unselected.foreground" value="$lightgray"/>
+    <color id="mpetunstatus.buttun.highlight" value="$surgeorange"/>
 
     <color id="effect.label.hrule" value="#5E5E5E"/>
-    <color id="effect.label.foreground" value="#B4B4B4"/>
+    <color id="effect.label.foreground" value="$lightgray"/>
 
-    <color id="patchbrowser.background" value="#B4B4B4"/>
-    <color id="patchbrowser.foreground" value="#B4B4B4"/>
+    <color id="patchbrowser.background" value="$lightgray"/>
+    <color id="patchbrowser.foreground" value="$lightgray"/>
 
-    <color id="control.numberfield.background" value="#B4B4B4"/>
-    <color id="control.numberfield.foreground" value="#B4B4B4"/>
-    <color id="control.numberfield.env" value="#B4B4B4"/>
-    <color id="control.numberfield.rule" value="#B4B4B4"/>
+    <color id="control.numberfield.background" value="$lightgray"/>
+    <color id="control.numberfield.foreground" value="$lightgray"/>
+    <color id="control.numberfield.env" value="$lightgray"/>
+    <color id="control.numberfield.rule" value="$lightgray"/>
 
-    <color id="slider.light.label" value="#B4B4B4"/>
-    <color id="slider.dark.label" value="#B4B4B4"/>
+    <color id="slider.light.label" value="$lightgray"/>
+    <color id="slider.dark.label" value="$lightgray"/>
     <color id="slider.modulation" value="#FFBF00"/>
 
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="#FF0000"/>
-    <color id="vumeter.background" value="#202020"/>
+    <color id="vumeter.background" value="$darkergray"/>
     <color id="vumeter.border" value="#0F0F0F"/>
 
-    <color id="osc.label" value="#B4B4B4"/>
+    <color id="osc.label" value="$lightgray"/>
 
-    <color id="fxmenu.foreground" value="#B4B4B4"/>
+    <color id="fxmenu.foreground" value="$lightgray"/>
   </globals>
 
   <controls>

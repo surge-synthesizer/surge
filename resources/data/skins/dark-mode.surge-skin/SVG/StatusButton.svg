@@ -3,32 +3,12 @@
     <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
     <title>StatusButton</title>
     <desc>Created with Sketch.</desc>
-    <defs>
-        <rect id="path-1" x="0" y="0" width="31" height="11" rx="2"></rect>
-        <filter x="-0.8%" y="-2.3%" width="101.6%" height="109.1%" filterUnits="objectBoundingBox" id="filter-2">
-            <feOffset dx="0" dy="0.5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
-            <feComposite in="shadowOffsetOuter1" in2="SourceAlpha" operator="out" result="shadowOffsetOuter1"></feComposite>
-            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.05 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
-        </filter>
-        <rect id="path-3" x="0" y="0" width="31" height="11" rx="2"></rect>
-        <filter x="-0.8%" y="-2.3%" width="101.6%" height="109.1%" filterUnits="objectBoundingBox" id="filter-4">
-            <feOffset dx="0" dy="0.5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
-            <feComposite in="shadowOffsetOuter1" in2="SourceAlpha" operator="out" result="shadowOffsetOuter1"></feComposite>
-            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.05 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
-        </filter>
-    </defs>
     <g id="StatusButton" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="button/smallButton">
-            <g id="Rectangle">
-                <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
-                <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="30" height="10" rx="2"></rect>
-            </g>
+        <g id="button/smallButton" fill="#242424" stroke="#0F0F0F">
+            <rect id="Rectangle" x="0.5" y="0.5" width="30" height="10" rx="2"></rect>
         </g>
-        <g id="button/smallButton" transform="translate(0.000000, 11.000000)">
-            <g id="Rectangle">
-                <use fill="black" fill-opacity="1" filter="url(#filter-4)" xlink:href="#path-3"></use>
-                <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="30" height="10" rx="2"></rect>
-            </g>
+        <g id="button/smallButton" transform="translate(0.000000, 11.000000)" fill="#242424" stroke="#0F0F0F">
+            <rect id="Rectangle" x="0.5" y="0.5" width="30" height="10" rx="2"></rect>
         </g>
         <rect id="Rectangle" fill="#FF9000" x="2" y="13" width="27" height="7" rx="1"></rect>
     </g>

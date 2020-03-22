@@ -12,7 +12,7 @@
         </filter>
         <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-3">
             <stop stop-color="#FFBF00" offset="0%"></stop>
-            <stop stop-color="#FF8700" offset="100%"></stop>
+            <stop stop-color="#FF9000" offset="100%"></stop>
         </linearGradient>
     </defs>
     <g id="bmp00140" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -22,10 +22,10 @@
                 <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="9" height="12" rx="2"></rect>
             </g>
         </g>
-        <rect id="Rectangle" stroke="#BD6404" fill="url(#linearGradient-3)" x="0.5" y="19.5" width="9" height="12" rx="2"></rect>
-        <g id="Font-Layer-Copy" transform="translate(3.000000, 3.000000)" fill-rule="nonzero">
-            <polygon id="L" fill="#B4B4B4" points="3.479 7 3.479 6.223 1.4525 6.223 1.4525 1.939 0.511 1.939 0.511 7"></polygon>
-            <polygon id="L" fill="#252525" points="3.479 25 3.479 24.223 1.4525 24.223 1.4525 19.939 0.511 19.939 0.511 25"></polygon>
+        <rect id="Rectangle" fill="url(#linearGradient-3)" x="0" y="19" width="10" height="13" rx="2"></rect>
+        <g id="Font-Layer-Copy" transform="translate(3.000000, 4.000000)" fill-rule="nonzero">
+            <polygon id="L" fill="#B4B4B4" points="3.479 6 3.479 5.223 1.4525 5.223 1.4525 0.939 0.511 0.939 0.511 6"></polygon>
+            <polygon id="L" fill="#000000" points="3.479 24 3.479 23.223 1.4525 23.223 1.4525 18.939 0.511 18.939 0.511 24"></polygon>
         </g>
     </g>
 </svg>

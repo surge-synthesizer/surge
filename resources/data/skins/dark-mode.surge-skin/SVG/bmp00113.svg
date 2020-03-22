@@ -3,35 +3,15 @@
     <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
     <title>bmp00113</title>
     <desc>Created with Sketch.</desc>
-    <defs>
-        <rect id="path-1" x="0" y="0" width="51" height="27" rx="2"></rect>
-        <filter x="-0.5%" y="-0.9%" width="101.0%" height="103.7%" filterUnits="objectBoundingBox" id="filter-2">
-            <feOffset dx="0" dy="0.5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
-            <feComposite in="shadowOffsetOuter1" in2="SourceAlpha" operator="out" result="shadowOffsetOuter1"></feComposite>
-            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.05 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
-        </filter>
-        <rect id="path-3" x="0" y="0" width="51" height="27" rx="2"></rect>
-        <filter x="-0.5%" y="-0.9%" width="101.0%" height="103.7%" filterUnits="objectBoundingBox" id="filter-4">
-            <feOffset dx="0" dy="0.5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
-            <feComposite in="shadowOffsetOuter1" in2="SourceAlpha" operator="out" result="shadowOffsetOuter1"></feComposite>
-            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.05 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
-        </filter>
-    </defs>
     <g id="bmp00113" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="button/smallButton">
-            <g id="Rectangle">
-                <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
-                <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="50" height="26" rx="2"></rect>
-            </g>
+        <g id="button/smallButton" fill="#242424" stroke="#0F0F0F">
+            <rect id="Rectangle" x="0.5" y="0.5" width="50" height="26" rx="2"></rect>
         </g>
-        <g id="button/smallButton" transform="translate(0.000000, 27.000000)">
-            <g id="Rectangle">
-                <use fill="black" fill-opacity="1" filter="url(#filter-4)" xlink:href="#path-3"></use>
-                <rect stroke="#0F0F0F" stroke-width="1" stroke-linejoin="square" fill="#242424" fill-rule="evenodd" x="0.5" y="0.5" width="50" height="26" rx="2"></rect>
-            </g>
+        <g id="button/smallButton" transform="translate(0.000000, 27.000000)" fill="#242424" stroke="#0F0F0F">
+            <rect id="Rectangle" x="0.5" y="0.5" width="50" height="26" rx="2"></rect>
         </g>
-        <rect id="Rectangle" fill="#FF9A10" x="2" y="2" width="22" height="23" rx="2"></rect>
-        <rect id="Rectangle" fill="#FF9A10" x="27" y="29" width="22" height="23" rx="2"></rect>
+        <rect id="Rectangle" fill="#FF9000" x="2" y="2" width="22" height="23" rx="1"></rect>
+        <rect id="Rectangle" fill="#FF9000" x="27" y="29" width="22" height="23" rx="1"></rect>
         <g id="Group" transform="translate(7.000000, 2.000000)">
             <rect id="Rectangle" fill="#0F0F0F" x="18" y="0" width="1" height="23"></rect>
             <path d="M0.978027344,17 L5.1015625,6.26269531 L6.63232422,6.26269531 L11.0268555,17 L9.40820312,17 L8.15576172,13.7480469 L3.66601562,13.7480469 L2.48681641,17 L0.978027344,17 Z M4.07617188,12.5908203 L7.71630859,12.5908203 L6.59570312,9.6171875 C6.25390454,8.71386267 6.00000083,7.97168259 5.83398438,7.390625 C5.69726494,8.079105 5.50439578,8.76269192 5.25537109,9.44140625 L4.07617188,12.5908203 Z" id="A" fill="#000000"></path>
