@@ -1279,7 +1279,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                CLFOGui* slfo = new CLFOGui(
                    rect, lfo_id == 0, this, p->id + start_paramtags,
                    &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
-                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id]);
+                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
+                   bitmapStore);
                slfo->setSkin( currentSkin );
                lfodisplay = slfo;
                frame->addView(slfo);

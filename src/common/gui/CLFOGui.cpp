@@ -163,6 +163,13 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
          dc->setFillColor( skin->getColor( "lfo.waveform.fill", CColor( 0xFF, 0x90, 0x00 ) ) );
          dc->drawRect(boxI, CDrawStyle::kDrawFilled);
       }
+      auto lfoBgGlyph = bitmapStore->getBitmapByStringID( "LFO_WAVE_BACKGROUND" );
+      if( lfoBgGlyph != nullptr )
+      {
+         CRect boxI(size);
+         boxI.left += lpsize + 4 + 15;
+         lfoBgGlyph->draw( dc, boxI, CPoint( 0, 0 ), 0xff );
+      }
       
       int minSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
       int totalSamples = std::max( (int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE) );

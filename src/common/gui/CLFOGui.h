@@ -7,7 +7,8 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 #include "SkinSupport.h"
-
+#include "SurgeBitmaps.h"
+#include "CScalableBitmap.h"
 
 
 class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
@@ -29,8 +30,10 @@ public:
            long tag = 0,
            LFOStorage* lfodata = 0,
            SurgeStorage* storage = 0,
-           StepSequencerStorage* ss = 0)
-       : VSTGUI::CControl(size, listener, tag, 0)
+           StepSequencerStorage* ss = 0,
+           std::shared_ptr<SurgeBitmaps> ibms = nullptr)
+      : VSTGUI::CControl(size, listener, tag, 0),
+        bitmapStore( ibms )
    {
       this->lfodata = lfodata;
       this->storage = storage;
@@ -123,6 +126,7 @@ protected:
    SurgeStorage* storage;
    unsigned int coltable[256];
    CDIBitmap* cdisurf;
+   std::shared_ptr<SurgeBitmaps> bitmapStore;
    int tsNum = 4, tsDen = 4;
    
    
