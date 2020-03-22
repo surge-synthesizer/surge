@@ -223,37 +223,31 @@ TEST_CASE( "Unison at Sample Rates", "[osc]" )
       }
    }
 
-   SECTION( "Window Oscillator" )
+   SECTION( "Test Each Oscillator" )
    {
       for( auto sr : srs )
       {
-         INFO( "Window test at " << sr );
+         INFO( "Window Oscillator test at " << sr );
          auto surge = Surge::Headless::createSurge(sr);
          
          assertRelative(surge, "test-data/patches/Window-Sin-Uni2-Relative.fxp");
          assertAbsolute(surge, "test-data/patches/Window-Sin-Uni2-Absolute.fxp");
          randomAbsolute(surge, "test-data/patches/Window-Sin-Uni2-Absolute.fxp");
       }
-   }
-   
-   SECTION( "Classic Oscillator" )
-   {
+
       for( auto sr : srs )
       {
-         INFO( "Classic test at " << sr );
+         INFO( "Classic Oscillator test at " << sr );
          auto surge = Surge::Headless::createSurge(sr);
          
          assertRelative(surge, "test-data/patches/Classic-Uni2-Relative.fxp");
          assertAbsolute(surge, "test-data/patches/Classic-Uni2-Absolute.fxp");
          randomAbsolute(surge, "test-data/patches/Classic-Uni2-Absolute.fxp");
       }
-   }
-   
-   SECTION( "SH Oscillator" )
-   {
+
       for( auto sr : srs )
       {
-         INFO( "SH test at " << sr );
+         INFO( "SH Oscillator test at " << sr );
          auto surge = Surge::Headless::createSurge(sr);
          
          assertRelative(surge, "test-data/patches/SH-Uni2-Relative.fxp");
