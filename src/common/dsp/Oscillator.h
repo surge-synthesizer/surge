@@ -247,7 +247,7 @@ private:
    // float wavetable[wavetable_steps];
 };
 
-const int wt2_suboscs = 8;
+const int wt2_suboscs = 16;
 
 class WindowOscillator : public Oscillator
 {
