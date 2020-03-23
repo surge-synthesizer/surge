@@ -205,6 +205,10 @@ CScalableBitmap::~CScalableBitmap()
    }
    offscreenCache.clear();
 
+   if( svgImage )
+   {
+      nsvgDelete( svgImage );
+   }
    instances--;
    //std::cout << "  Destroy CScalableBitmap. instances=" << instances << " id=" << resourceID << " fn=" << fname << std::endl;
 }
@@ -457,6 +461,7 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
             VSTGUI::CPoint p1 = gradXform.inverse().transform(s1);
 
             dc->fillLinearGradient(gp, *cg, p0, p1, evenOdd);
+            cg->forget();
          }
          else
          {
