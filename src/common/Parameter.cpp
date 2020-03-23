@@ -555,7 +555,7 @@ void Parameter::set_type(int ctrltype)
    case ct_osccountWT:
       valtype = vt_int;
       val_min.i = 1;
-      val_max.i = 7;
+      val_max.i = 16;
       val_default.i = 1;
       break;
    case ct_scenemode:
