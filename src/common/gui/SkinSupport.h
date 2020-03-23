@@ -151,6 +151,8 @@ private:
 
 class SkinConsumingComponnt {
 public:
+   virtual ~SkinConsumingComponnt() {
+   }
    virtual void setSkin( Skin::ptr_t s ) { skin = s; }
 protected:
    Skin::ptr_t skin;
