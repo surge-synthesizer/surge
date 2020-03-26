@@ -1643,7 +1643,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 #endif
 
 #if TARGET_VST3 || TARGET_LV2
-   _idleTimer = new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false);
+   _idleTimer = VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer>( new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false), false );
    _idleTimer->start();
 #endif
 
@@ -2428,6 +2428,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                           VSTGUI::COptionMenu::kMultipleCheckStyle );
                   menuStack.top()->addEntry(subMenu, nm );
                   menuStack.push(subMenu);
+                  subMenu->forget();
                   eidStack.push(0);
 
                   /*
@@ -3395,6 +3396,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
        zid++;
 
        settingsMenu->addEntry(zoomSubMenu, "Zoom" );
+       zoomSubMenu->forget();
        eid++;
     }
 
@@ -3405,6 +3407,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->addEntry(mpeSubMenu, mpeMenuName.c_str());
     eid++;
     mpeSubMenu->forget();
+
 
     COptionMenu *uiOptionsMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle |
                                                  VSTGUI::COptionMenu::kMultipleCheckStyle );
@@ -3525,6 +3528,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                                                           
         });
     did++;
+
     
     settingsMenu->addEntry( dataSubMenu, "Data and Patches");
     eid++;
@@ -3544,7 +3548,6 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 #endif
     
     settingsMenu->addSeparator(eid++);
-
 
     addCallbackMenu(settingsMenu, "Reach the Developers...", []() {
             Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/feedback");

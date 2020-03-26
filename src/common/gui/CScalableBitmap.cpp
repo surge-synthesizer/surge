@@ -42,15 +42,19 @@ static const std::string svgFullFileNameFromBundle(const std::string& filename)
    if (url)
    {
       CFStringRef urlStr = CFURLGetString(url);
-      // std::cout << "URLString = " << urlStr << std::flush << std::endl;
+      CFRetain( urlStr ); // "GET" rule https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFMemoryMgmt/Concepts/Ownership.html#//apple_ref/doc/uid/20001148-SW1
       const char* csp = CFStringGetCStringPtr(urlStr, kCFStringEncodingUTF8);
       if (csp)
       {
-         std::string resPath(CFStringGetCStringPtr(CFURLGetString(url), kCFStringEncodingUTF8));
+         std::string resPath(csp);
          if (resPath.find("file://") != std::string::npos)
             resPath = resPath.substr(7);
+         CFRelease( urlStr );
+         CFRelease( url );
          return resPath;
       }
+      CFRelease( urlStr );
+      CFRelease( url );
    }
 
    return "";
