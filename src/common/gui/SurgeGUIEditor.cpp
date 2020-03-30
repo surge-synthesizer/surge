@@ -106,6 +106,59 @@ enum special_tags
    start_paramtags,
 };
 
+std::string specialTagToString( special_tags t )
+{
+   if( t >= tag_mod_source0 && t <= tag_mod_source_end )
+   {
+      modsources modsource = (modsources)(t - tag_mod_source0);
+      std::string s = std::string( "tag_modsource" ) + modsource_abberations_short[modsource];
+      return s;
+   }
+   
+   switch( t ) {
+   case tag_scene_select:
+      return "tag_scene_select";
+   case tag_osc_select:
+      return "tag_osc_select";
+   case tag_osc_menu:
+      return "tag_osc_menu";
+   case tag_fx_select:
+      return "tag_fx_select";
+   case tag_fx_menu:
+      return "tag_fx_menu";
+   case tag_patchname:
+      return "tag_patchname";
+   case tag_statuspanel:
+      return "tag_statuspanel";
+   case tag_mp_category:
+      return "tag_mp_category";
+   case tag_mp_patch:
+      return "tag_mp_patch";
+   case tag_store:
+      return "tag_store";
+   case tag_store_cancel:
+      return "tag_store_cancel";
+   case tag_store_ok:
+      return "tag_store_ok";
+   case tag_store_name:
+      return "tag_store_name";
+   case tag_store_category:
+      return "tag_store_category";
+   case tag_store_creator:
+      return "tag_store_creator";
+   case tag_store_comments:
+      return "tag_store_comments";
+   case tag_store_tuning:
+      return "tag_store_tuning";
+   case tag_settingsmenu:
+      return "tag_store_settingsmenu";
+   default:
+      return "ERROR";
+   }
+   return "ERROR";
+   
+}
+
 SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
 {
    frame = 0;
@@ -922,6 +975,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
         iter != synth->storage.getPatch().param_ptr.end(); iter++)
    {
       Parameter* p = *iter;
+
+      std::string uiid = p->ui_identifier;
+      Surge::UI::Skin::Control c;
+      if( currentSkin->controlForUIID(uiid, c) )
+      {
+         // std::cout << "Was able to get a control for the uiid '" << c.ui_id  << "' class is '" << c.classname << "'" << std::endl;
+      }
 
       if ((p->posx != 0) && ((p->scene == (current_scene + 1)) || (p->scene == 0)) &&
           isControlVisible(p->ctrlgroup, p->ctrlgroup_entry) && (p->ctrltype != ct_none))
@@ -3875,12 +3935,16 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                 {
                                    oss << "ui_identifier=\""  <<  p->ui_identifier << "\"";
                                 }
+                                else if( c->getTag() >= tag_scene_select && c->getTag() < start_paramtags )
+                                {
+                                   oss << "tag_value=\"" << c->getTag() << "\" tag_name=\"" << specialTagToString( (special_tags)(c->getTag()) ) << "\"";
+                                }
                                 else
                                 {
-                                   oss << "enum_value=\"" << c->getTag() << "\"";
+                                   oss << "special=\"true\" ";
                                 }
                                 auto vs = c->getViewSize();
-                                oss << " x=\"" << vs.top << "\" y=\"" << vs.left
+                                oss << " x=\"" << vs.left << "\" y=\"" << vs.top
                                           << "\" w=\"" << vs.getWidth() << "\" h=\"" << vs.getHeight() << "\"";
 
                                 if( p )
@@ -3888,9 +3952,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                        << " posy=\"" << p->posy << "\" "
                                        << " posy_offset=\"" << p->posy_offset << "\" ";
                                    
-                                oss << ">\n";
-                                oss << "      <instance ";
-
                                 auto dumpBG = [&oss](CControl *a) {
                                                  auto bg = a->getBackground();
                                                  auto rd = bg->getResourceDescription();
@@ -3910,15 +3971,20 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                 }
                                 else if( auto a = dynamic_cast<CSurgeSlider *>(c) )
                                 {
-                                   oss << " class=\"CSurgeSlider\" ";
                                    if( p->ctrlstyle & Surge::ParamConfig::kHorizontal )
-                                      oss << " orientation=\"horizontal\" ";
+                                   {
+                                      if( p->ctrlstyle & kWhite )
+                                         oss << " class=\"light-hslider\"";
+                                      else
+                                         oss << " class=\"dark-hslider\"";
+                                   }
                                    else
-                                      oss << " orientation=\"vertical\" ";
-                                   if( p->ctrlstyle & kWhite )
-                                      oss << " color=\"light\" ";
-                                   else
-                                      oss << " color=\"dark\" ";
+                                   {
+                                      if( p->ctrlstyle & kWhite )
+                                         oss << " class=\"light-vslider\"";
+                                      else
+                                         oss << " class=\"dark-vslider\"";
+                                   }
                                       
                                 }
                                 else if( auto a = dynamic_cast<CSwitchControl *>(c) )
@@ -3964,7 +4030,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                    oss << "rtti_class=\"" << typeid(*c).name() << "\" tag=\"" << tag << "\" ";
                                 }
                                 oss << "/>\n";
-                                oss << "    </control>" << std::endl;
                              }
                              else
                              {
@@ -3978,6 +4043,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                        oss << "<surge-layout>\n";
                        oss << "  <globals>\n";
                        oss << "  </globals\n";
+                       
+                       oss << "  <component-classes>\n";
+                       oss << "    <class name=\"dark-vslider\" parent=\"CSurgeSlider\" orientation=\"vertical\" white=\"false\"/>\n";
+                       oss << "    <class name=\"light-vslider\" parent=\"CSurgeSlider\" orientation=\"vertical\" white=\"true\"/>\n";
+                       oss << "    <class name=\"dark-hslider\" parent=\"CSurgeSlider\" orientation=\"horizontal\" white=\"false\"/>\n";
+                       oss << "    <class name=\"light-hslider\" parent=\"CSurgeSlider\" orientation=\"horizontal\" white=\"true\"/>\n";
+                       oss << "  </component-classes>\n\n";
+                          
                        oss << "  <controls>\n";
                        while( ! stk.empty() )
                        {
