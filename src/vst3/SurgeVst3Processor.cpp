@@ -296,7 +296,7 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
 
                for (int i = 0; i < numPoints; ++i)
                {
-                  paramQueue->getPoint(0, offsetSamples, value);
+                  paramQueue->getPoint(i, offsetSamples, value);
                   /*
                   if( i == 0 ) 
                   {
