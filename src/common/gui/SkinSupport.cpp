@@ -253,18 +253,23 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    displayName = name;
    author = "";
    authorURL = "";
-   if (a = surgeskin->Attribute("name"))
+   if ( (a = surgeskin->Attribute("name") ) )
       displayName = a;
-   if (a = surgeskin->Attribute("author"))
+   if ( (a = surgeskin->Attribute("author") ) )
       author = a;
-   if (a = surgeskin->Attribute("authorURL"))
+   if ( ( a = surgeskin->Attribute("authorURL") ) )
       authorURL = a;
 
    auto globalsxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("globals"));
+   auto componentclassesxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("component-classes"));
    auto controlsxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("controls"));
    if (!globalsxml)
    {
       FIXMEERROR << "surge-skin contains no globals element" << std::endl;
+   }
+   if(!componentclassesxml)
+   {
+      FIXMEERROR << "surge-skin contains no component-classes element" << std::endl;
    }
    if (!controlsxml)
    {
@@ -297,6 +302,13 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       return std::atoi(av);
    };
 
+   auto attrstr = [](TiXmlElement *e, const char* a ) {
+                     const char* av = e->Attribute(a);
+                     if( !av )
+                        return std::string();
+                     return std::string( av );
+                  };
+
    for (auto gchild = controlsxml->FirstChild(); gchild; gchild = gchild->NextSibling())
    {
       auto lkid = TINYXML_SAFE_TO_ELEMENT(gchild);
@@ -318,8 +330,57 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       c.posy = attrint(lkid, "posy");
       c.posy_offset = attrint(lkid, "posy_offset");
 
+      c.classname  = attrstr(lkid, "class" );
+      if( lkid->Attribute( "tag_value" ) )
+      {
+         c.type = Control::Type::ENUM;
+         c.enum_id = attrint( lkid, "tag_value" );
+         c.enum_name = attrstr( lkid, "tag_name" );
+      }
+      else
+      {
+         c.type = Control::Type::UIID;
+         c.ui_id = attrstr( lkid, "ui_identifier" );
+      }
+      
+      for (auto a = lkid->FirstAttribute(); a; a = a->Next())
+         c.allprops[a->Name()] = a->Value();
+
       controls.push_back(c);
    }
+
+   // TODO: add component-classes section
+   for (auto gchild = componentclassesxml->FirstChild(); gchild; gchild = gchild->NextSibling())
+   {
+      auto lkid = TINYXML_SAFE_TO_ELEMENT(gchild);
+      if (!lkid)
+         continue;
+
+      if (std::string(lkid->Value()) != "class")
+      {
+         FIXMEERROR << "INVALID CLASS" << std::endl;
+         continue;
+      }
+
+      Skin::ComponentClass c;
+
+      c.name = attrstr( lkid, "name" );
+      if( c.name == "" )
+      {
+         FIXMEERROR << "INVALUD NAME" << std::endl;
+      }
+
+      if( componentClasses.find( c.name ) != componentClasses.end() )
+      {
+         FIXMEERROR << "Double Definition" << std::endl;
+      }
+      
+      for (auto a = lkid->FirstAttribute(); a; a = a->Next())
+         c.allprops[a->Name()] = a->Value();
+
+      componentClasses[c.name] = c;
+
+   };
 
    // process the images
    for (auto g : globals)

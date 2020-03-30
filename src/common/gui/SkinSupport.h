@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <memory>
 #include <atomic>
+#include <iostream>
 
 #include "vstgui/lib/ccolor.h"
 
@@ -63,24 +64,45 @@ public:
    std::string displayName;
    std::string author;
    std::string authorURL;
+
+   struct ComponentClass
+   {
+      std::string name;
+      props_t allprops;
+   };
    
    struct Control
    {
       int x, y, w, h, posx, posy, posy_offset;
 
       int enum_id;
-      std::string ui_id;
+      std::string ui_id, enum_name;
       typedef enum {
          ENUM,
          UIID
       } Type;
       Type type;
-      props_t instance_info;
+      std::string classname;
+      props_t allprops;
    };
 
    bool hasColor( std::string id );
    VSTGUI::CColor getColor( std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>() );
    std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
+
+   bool controlForUIID( std::string ui_id, Skin::Control &c ) {
+      // FIXME don't be stupid like this of course
+      for( auto ic : controls )
+      {
+         if( ic.type == Control::Type::UIID && ic.ui_id == ui_id  )
+         {
+            c = ic;
+            return true;
+         }
+      }
+      
+      return false;
+   }
    
 private:
    static std::atomic<int> instances;
@@ -104,6 +126,7 @@ private:
    std::unordered_set<std::string> queried_colors;
    std::unordered_map<std::string, int> imageIds;
    std::vector<Control> controls;
+   std::unordered_map<std::string, ComponentClass> componentClasses;
 };
    
 class SkinDB
