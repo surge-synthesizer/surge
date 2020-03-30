@@ -56,6 +56,7 @@ enum modsources
 
 const int n_customcontrollers = 8; // TODO remove this one
 const int num_metaparameters = n_customcontrollers;
+extern float samplerate_inv;
 
 const char modsource_abberations_button[n_modsources][32] = {
     "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitchbend", "Modwheel", "Ctrl 1",
@@ -271,7 +272,7 @@ public:
    virtual void process_block() override
    {
       float b = fabs(target - output);
-      float a = 0.4f * b;
+      float a = 0.9f * 44100 * samplerate_inv * b;
       output = (1 - a) * output + a * target;
    }
 
@@ -283,7 +284,7 @@ public:
          output = target;
          return false; // this interpolator has reached it's target and is no longer needed
       }
-      float a = 0.4f * b;
+      float a = 0.9f * 44100 * samplerate_inv * b;
       output = (1 - a) * output + a * target;
       return true; // continue
    }
