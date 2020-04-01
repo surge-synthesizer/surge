@@ -462,8 +462,10 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       CRect tb(leftpanel);
       tb.top = leftpanel.top + 10 * i;
       tb.bottom = tb.top + 10;
+      //std::cout << std::hex << this << std::dec << " CHECK " << i << " " << lfodata->shape.val.i;
       if (i == lfodata->shape.val.i)
       {
+         //std::cout << " ON" << std::endl;
          CRect tb2(tb);
          tb2.left++;
          tb2.top += 0.5;
@@ -475,6 +477,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       }
       else
       {
+         //std::cout << " OFF" << std::endl;
          dc->setFontColor(skin->getColor( "lfo.type.unselected.foreground", kBlackCColor) );
       }
       // else dc->setFillColor(cgray);
@@ -858,7 +861,10 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          v.bottom = max(p1, p2) + 1;
       }
       // if (p1 == p2) p2++;
-      cdisurf->fillRect(v, stepMarker);
+      if ((i >= ss->loop_start) && (i <= ss->loop_end))
+         cdisurf->fillRect(v, stepMarker);
+      else
+         cdisurf->fillRect(v, disStepMarker); 
    }
 
    
