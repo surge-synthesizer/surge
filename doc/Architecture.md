@@ -25,7 +25,7 @@ are submodules in the top level directory. All of the surge C++ source is in the
 `src/common` contains common code; `src/common/gui` and `src/common/dsp` contain the gui and dsp code
 respectively.
 
-Each of the hosts has a directory in `src`: `src/vst2`, `src/vst2`, `src/au` and `src/headless` are the
+Each of the hosts has a directory in `src`: `src/vst2`, `src/vst3`, `src/au` and `src/headless` are the
 four flavors of host we have now.
 
 # SurgeStorage, Parameter and Surge Synthesizer
@@ -65,8 +65,7 @@ on 16 byte boundaries.
 
 # Hosts
 
-The three traditional hosts (VST2, 3 and AU) are pretty straight forward. The VST3 needs
-some love still.
+The three traditional hosts (VST2, 3 and AU) are pretty straight forward.
 
 The headless host makes an executable out of surge without a UI attached. Right now it is
 primarily used for debugging and testing.
@@ -77,7 +76,7 @@ See (our documentation on how we use vstgui in surge)[vstgui-dev.md]
 
 # Other Considerations.
 
-## Why didn't you use 3rd part framework XYZ
+## Why didn't you use 3rd party framework XYZ
 
 Here's a summary of a discussion some of the devs had.
 
