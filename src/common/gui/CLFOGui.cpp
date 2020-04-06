@@ -757,7 +757,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 #if MAC
                     return ( c.red << 8 ) + ( c.green << 16 ) + ( c.blue << 24 ) + 255;
 #else
-                    return c.red + ( c.green << 8 ) + ( c.blue << 16 ) + ( 255 << 24 );
+                    return c.blue + ( c.green << 8 ) + ( c.red << 16 ) + ( 255 << 24 );
 #endif                    
                  }
 #if MAC
