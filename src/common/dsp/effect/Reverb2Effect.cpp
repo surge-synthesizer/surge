@@ -302,5 +302,6 @@ void Reverb2Effect::init_default_values()
    fxdata->p[r2p_buildup].val.f = 1.0f;
    fxdata->p[r2p_modulation].val.f = 0.5f;
    fxdata->p[r2p_hf_damping].val.f = 0.2f;
+   fxdata->p[r2p_lf_damping].val.f = 0.2f;
    fxdata->p[r2p_room_size].val.f = 0.f;
 }
