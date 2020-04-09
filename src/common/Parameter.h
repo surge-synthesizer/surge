@@ -56,6 +56,7 @@ enum ctrltypes
    ct_envmode,
    ct_delaymodtime,
    ct_reverbtime,
+   ct_reverbpredelaytime,
    ct_portatime,
    ct_lforate,
    ct_lfoshape,

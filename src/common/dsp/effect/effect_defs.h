@@ -464,9 +464,7 @@ private:
 
 class Reverb2Effect : public Effect
 {
-   enum
-   {
-      NUM_BLOCKS = 4,
+   static const int NUM_BLOCKS = 4,
       NUM_INPUT_ALLPASSES = 4,
       NUM_ALLPASSES_PER_BLOCK = 2,
       MAX_ALLPASS_LEN = 16384,
@@ -474,7 +472,7 @@ class Reverb2Effect : public Effect
       DELAY_LEN_MASK = MAX_DELAY_LEN - 1,
       DELAY_SUBSAMPLE_BITS = 8,
       DELAY_SUBSAMPLE_RANGE = (1 << DELAY_SUBSAMPLE_BITS),
-   };
+      PREDELAY_BUFFER_SIZE = 48000 * 4 * 2; // max sample rate is 48000 * 4 probably
 
    class allpass
    {
@@ -500,6 +498,24 @@ class Reverb2Effect : public Effect
       int _len;
       int _k;
       float _data[MAX_DELAY_LEN];
+   };
+
+   class predelay
+   {
+   public:
+      predelay() {
+         memset( _data, 0, PREDELAY_BUFFER_SIZE * sizeof(float));
+      }
+      float process( float in, int tap ) {
+         k = ( k + 1 ); if( k == PREDELAY_BUFFER_SIZE ) k = 0;
+         auto p = k - tap; if( p < 0 ) p += PREDELAY_BUFFER_SIZE;
+         auto res = _data[p];
+         _data[k] = in;
+         return res;
+      }
+   private:
+      int k=0;
+      float _data[PREDELAY_BUFFER_SIZE];
    };
 
    class onepole_filter
@@ -546,6 +562,7 @@ private:
    onepole_filter _hf_damper[NUM_BLOCKS];
    onepole_filter _lf_damper[NUM_BLOCKS];
    delay _delay[NUM_BLOCKS];
+   predelay _predelay;
    int _tap_timeL[NUM_BLOCKS];
    int _tap_timeR[NUM_BLOCKS];
    float _tap_gainL[NUM_BLOCKS];

@@ -169,8 +169,8 @@ enum sub3_fxtypes
    num_fxtypes,
 };
 const char fxtype_abberations[num_fxtypes][16] = {
-    "Off", "Delay",     "Reverb",      "Phaser", "Rotary",  "Distortion",
-    "EQ",  "Freqshift", "Conditioner", "Chorus", "Vocoder", "Reverb2"};
+    "Off", "Delay",     "Reverb 1",      "Phaser", "Rotary",  "Distortion",
+    "EQ",  "Freqshift", "Conditioner", "Chorus", "Vocoder", "Reverb 2"};
 
 enum fx_bypass
 {
