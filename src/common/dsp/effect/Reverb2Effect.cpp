@@ -173,7 +173,10 @@ void Reverb2Effect::setvars(bool init)
 
 void Reverb2Effect::update_rtime()
 {
-   float t = BLOCK_SIZE_INV * ( samplerate * powf(2.f, *f[r2p_decay_time]) * 2.f); // *2 is to get the db120 time
+   float t = BLOCK_SIZE_INV * ( samplerate *
+                                ( std::max( 1.0f, powf(2.f, *f[r2p_decay_time]) ) * 2.f +
+                                  std::max( 0.1f, powf(2.f, *f[r2p_predelay]) ) * 2.f
+                                   ) ); // *2 is to get the db120 time
    ringout_time = (int)t;
 }
 
@@ -197,7 +200,7 @@ void Reverb2Effect::process(float* dataL, float* dataR)
    _diffusion.newValue(0.7f * *f[r2p_diffusion]);
    _buildup.newValue(0.7f * *f[r2p_buildup]);
    _hf_damp_coefficent.newValue(0.8 * *f[r2p_hf_damping]);
-   _lf_damp_coefficent.newValue(0.008 * *f[r2p_lf_damping]);
+   _lf_damp_coefficent.newValue(0.2 * *f[r2p_lf_damping]);
    _modulation.newValue(*f[r2p_modulation] * samplerate * 0.001f * 5.f);
 
    mix.set_target_smoothed(*f[r2p_mix]);

@@ -16,6 +16,7 @@ int get_fxtype(int id)
    case fxt_delay:
       return 1;
    case fxt_reverb:
+   case fxt_reverb2:
       return 2;
    case fxt_phaser:
       return 7;
