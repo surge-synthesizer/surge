@@ -168,10 +168,21 @@ void Reverb2Effect::setvars(bool init)
    calc_size(1.f);
 }
 
+void Reverb2Effect::update_rtime()
+{
+   float t = BLOCK_SIZE_INV * ( samplerate * powf(2.f, *f[r2p_decay_time]) * 2.f); // *2 is to get the db120 time
+   ringout_time = (int)t;
+}
+
 void Reverb2Effect::process(float* dataL, float* dataR)
 {
    float scale = powf(2.f, 1.f * *f[r2p_room_size]);
    calc_size(scale);
+
+   if (fabs(*f[r2p_decay_time] - last_decay_time) > 0.001f)
+      update_rtime();
+
+   last_decay_time = *f[r2p_decay_time];
 
    float wetL alignas(16)[BLOCK_SIZE],
          wetR alignas(16)[BLOCK_SIZE];

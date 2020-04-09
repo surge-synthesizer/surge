@@ -537,7 +537,9 @@ public:
       return ringout_time;
    }
 
+
 private:
+   void update_rtime();
    int ringout_time;
    allpass _input_allpass[NUM_INPUT_ALLPASSES];
    allpass _allpass[NUM_BLOCKS][NUM_ALLPASSES_PER_BLOCK];
@@ -556,4 +558,5 @@ private:
    lipol<float, true> _lf_damp_coefficent;
    lipol<float, true> _modulation;
    quadr_osc _lfo;
+   float last_decay_time = -1.0;
 };
