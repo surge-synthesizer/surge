@@ -1120,7 +1120,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( i + 1 )
          {
          case wst_tanh:
-            sprintf(txt,"tanh");
+            sprintf(txt,"soft");
             break;
          case wst_hard:
             sprintf(txt,"hard");
@@ -1129,7 +1129,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
             sprintf(txt,"asym");
             break;
          case wst_sinus:
-            sprintf(txt,"sin");
+            sprintf(txt,"sine");
             break;
          case wst_digi:
             sprintf(txt,"digi");
