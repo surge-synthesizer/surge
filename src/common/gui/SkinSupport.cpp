@@ -309,47 +309,11 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                      return std::string( av );
                   };
 
-   for (auto gchild = controlsxml->FirstChild(); gchild; gchild = gchild->NextSibling())
-   {
-      auto lkid = TINYXML_SAFE_TO_ELEMENT(gchild);
-      if (!lkid)
-         continue;
+   controls.clear();
+   rootControl = std::make_shared<ControlGroup>();
+   recursiveGroupParse( rootControl, controlsxml );
 
-      if (std::string(lkid->Value()) != "control")
-      {
-         FIXMEERROR << "INVALID CONTROL" << std::endl;
-         continue;
-      }
-
-      Skin::Control c;
-      c.x = attrint(lkid, "x");
-      c.y = attrint(lkid, "y");
-      c.w = attrint(lkid, "w");
-      c.h = attrint(lkid, "h");
-      c.posx = attrint(lkid, "posx");
-      c.posy = attrint(lkid, "posy");
-      c.posy_offset = attrint(lkid, "posy_offset");
-
-      c.classname  = attrstr(lkid, "class" );
-      if( lkid->Attribute( "tag_value" ) )
-      {
-         c.type = Control::Type::ENUM;
-         c.enum_id = attrint( lkid, "tag_value" );
-         c.enum_name = attrstr( lkid, "tag_name" );
-      }
-      else
-      {
-         c.type = Control::Type::UIID;
-         c.ui_id = attrstr( lkid, "ui_identifier" );
-      }
-      
-      for (auto a = lkid->FirstAttribute(); a; a = a->Next())
-         c.allprops[a->Name()] = a->Value();
-
-      controls.push_back(c);
-   }
-
-   // TODO: add component-classes section
+   componentClasses.clear();
    for (auto gchild = componentclassesxml->FirstChild(); gchild; gchild = gchild->NextSibling())
    {
       auto lkid = TINYXML_SAFE_TO_ELEMENT(gchild);
@@ -362,27 +326,27 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          continue;
       }
 
-      Skin::ComponentClass c;
+      auto c = std::make_shared<Skin::ComponentClass>();
 
-      c.name = attrstr( lkid, "name" );
-      if( c.name == "" )
+      c->name = attrstr( lkid, "name" );
+      if( c->name == "" )
       {
          FIXMEERROR << "INVALUD NAME" << std::endl;
       }
 
-      if( componentClasses.find( c.name ) != componentClasses.end() )
+      if( componentClasses.find( c->name ) != componentClasses.end() )
       {
          FIXMEERROR << "Double Definition" << std::endl;
       }
       
       for (auto a = lkid->FirstAttribute(); a; a = a->Next())
-         c.allprops[a->Name()] = a->Value();
+         c->allprops[a->Name()] = a->Value();
 
-      componentClasses[c.name] = c;
+      componentClasses[c->name] = c;
 
    };
 
-   // process the images
+   // process the images and colors
    for (auto g : globals)
    {
       if (g.first == "defaultimage")
@@ -457,6 +421,96 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          }
       }
    }
+
+   // Resolve the ultimate parent classes
+   for( auto &c : controls )
+   {
+      c->ultimateparentclassname = c->classname;
+      while( componentClasses.find( c->ultimateparentclassname ) != componentClasses.end() )
+      {
+         auto comp = componentClasses[c->ultimateparentclassname];
+         if( comp->allprops.find( "parent" ) != comp->allprops.end() )
+         {
+            c->ultimateparentclassname = componentClasses[c->ultimateparentclassname]->allprops["parent"];
+         }
+         else
+         {
+            FIXMEERROR << "PARENT CLASS DOESN'T RESOLVE FOR " << c->ultimateparentclassname << std::endl;
+            break;
+         }
+      }
+   }
+  
+}
+
+void Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *controlsxml, std::string pfx )
+{
+   // I know I am gross for copying these
+   auto attrint = [](TiXmlElement* e, const char* a) {
+                     const char* av = e->Attribute(a);
+                     if (!av)
+                        return -1;
+                     return std::atoi(av);
+                  };
+   
+   auto attrstr = [](TiXmlElement *e, const char* a ) {
+                     const char* av = e->Attribute(a);
+                     if( !av )
+                        return std::string();
+                     return std::string( av );
+                  };
+
+   for (auto gchild = controlsxml->FirstChild(); gchild; gchild = gchild->NextSibling())
+   {
+      auto lkid = TINYXML_SAFE_TO_ELEMENT(gchild);
+      if (!lkid)
+         continue;
+
+      if( std::string( lkid->Value()) == "group" )
+      {
+         auto g = std::make_shared<Skin::ControlGroup>();
+
+         g->x = attrint( lkid, "x" ); if( g->x < 0 ) g->x = 0; g->x += parent->x;
+         g->y = attrint( lkid, "y" ); if( g->y < 0 ) g->y = 0; g->y += parent->y;
+         g->w = attrint( lkid, "w" );
+         g->h = attrint( lkid, "h" );
+         
+         parent->childGroups.push_back(g);
+         recursiveGroupParse( g, lkid, pfx + "|--"  );
+      }
+      else if (std::string(lkid->Value()) == "control")
+      {
+         auto c = std::make_shared<Skin::Control>();
+         c->x = attrint(lkid, "x") + parent->x;
+         c->y = attrint(lkid, "y") + parent->y;
+         c->w = attrint(lkid, "w");
+         c->h = attrint(lkid, "h");
+
+         c->classname  = attrstr(lkid, "class" );
+         if( lkid->Attribute( "tag_value" ) )
+         {
+            c->type = Control::Type::ENUM;
+            c->enum_id = attrint( lkid, "tag_value" );
+            c->enum_name = attrstr( lkid, "tag_name" );
+         }
+         else
+         {
+            c->type = Control::Type::UIID;
+            c->ui_id = attrstr( lkid, "ui_identifier" );
+         }
+         
+         for (auto a = lkid->FirstAttribute(); a; a = a->Next())
+            c->allprops[a->Name()] = a->Value();
+
+         controls.push_back(c);
+         parent->childControls.push_back(c);
+      }
+      else
+      {
+         FIXMEERROR << "INVALID CONTROL" << std::endl;
+      }
+   }
+
 }
 
 bool Skin::hasColor(std::string id)
@@ -491,5 +545,28 @@ VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def, std::un
    }
    return def;
 }
+
+
+CScalableBitmap *Skin::backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore )
+{
+   CScalableBitmap *bmp = nullptr;
+   auto ms = propertyValue( c, "bg_id" );
+   if( ms.isJust() )
+   {
+      bmp = bitmapStore->getBitmap(std::atoi(ms.fromJust().c_str()));
+   }
+   else
+   {
+      auto mr = propertyValue( c, "bg_resource" );
+      if( mr.isJust() )
+      {
+         bmp = bitmapStore->getBitmapByStringID( mr.fromJust() );
+         if( ! bmp )
+            bmp = bitmapStore->loadBitmapByPathForStringID( resourceName( mr.fromJust() ), mr.fromJust() );
+      }
+   }
+   return bmp;
+}
+
 } // namespace UI
 } // namespace Surge

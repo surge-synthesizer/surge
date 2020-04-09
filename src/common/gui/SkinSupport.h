@@ -26,6 +26,7 @@
 class SurgeStorage;
 class SurgeBitmaps;
 class CScalableBitmap;
+class TiXmlElement;
 
 namespace VSTGUI {
    class CFrame;
@@ -35,12 +36,37 @@ namespace VSTGUI {
 
 namespace Surge
 {
+
+   
+template <typename T>
+class Maybe {
+public:
+   Maybe() : _empty(true){};
+   explicit Maybe(T value) : _empty(false), _value(value){};
+
+   T fromJust() const {
+      if (isJust()) {
+         return _value;
+      } else {
+         throw "Cannot get value from Nothing";
+      }
+   }
+   
+   bool isJust() const { return !_empty; }
+   bool isNothing() const { return _empty; }
+   
+   static bool isJust(Maybe &m) { return m.isJust(); }
+   static bool isNothing(Maybe &m) { return m.isNothing(); }
+private:
+   bool _empty;
+   T _value;
+};
+   
 namespace UI
 {
 
-
 class SkinDB;
-   
+
 class Skin
 {
 public:
@@ -67,42 +93,89 @@ public:
 
    struct ComponentClass
    {
+      typedef std::shared_ptr<ComponentClass> ptr_t;
       std::string name;
       props_t allprops;
    };
-   
+
    struct Control
    {
-      int x, y, w, h, posx, posy, posy_offset;
+      typedef std::shared_ptr<Control> ptr_t;
+      int x, y, w, h;
 
       int enum_id;
       std::string ui_id, enum_name;
       typedef enum {
          ENUM,
-         UIID
+         UIID,
       } Type;
       Type type;
       std::string classname;
+      std::string ultimateparentclassname;
       props_t allprops;
    };
 
+   struct ControlGroup
+   {
+      typedef std::shared_ptr<ControlGroup> ptr_t;
+      std::vector<ControlGroup::ptr_t> childGroups;
+      std::vector<Control::ptr_t> childControls;
+
+      int x = 0, y = 0, w = -1, h = -1;
+      
+      props_t allprops;
+   };
+   
    bool hasColor( std::string id );
    VSTGUI::CColor getColor( std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>() );
    std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
 
-   bool controlForUIID( std::string ui_id, Skin::Control &c ) {
+   Skin::Control::ptr_t controlForUIID( std::string ui_id ) {
       // FIXME don't be stupid like this of course
       for( auto ic : controls )
       {
-         if( ic.type == Control::Type::UIID && ic.ui_id == ui_id  )
+         if( ic->type == Control::Type::UIID && ic->ui_id == ui_id  )
          {
-            c = ic;
-            return true;
+            return ic;
          }
       }
       
-      return false;
+      return nullptr;
    }
+
+   Maybe<std::string> propertyValue( Skin::Control::ptr_t c, std::string key ) {
+      /*
+      ** Traverse class heirarchy looking for value
+      */
+      if( c->allprops.find(key) != c->allprops.end() )
+         return Maybe<std::string>(c->allprops[key]);
+      auto cl = componentClasses[c->classname];
+
+      do {
+         if( cl->allprops.find(key) != cl->allprops.end() )
+            return Maybe<std::string>(cl->allprops[key]);
+
+         if( cl->allprops.find( "parent" ) !=cl->allprops.end() &&
+             componentClasses.find(cl->allprops["parent"]) != componentClasses.end() )
+         {
+            cl = componentClasses[cl->allprops["parent"]];
+         }
+         else
+            return Maybe<std::string>();
+      } while( true );
+
+      return Maybe<std::string>();
+   }
+
+   std::string propertyValue( Skin::Control::ptr_t c, std::string key, std::string defaultValue ) {
+      auto pv = propertyValue( c, key );
+      if( pv.isJust() )
+         return pv.fromJust();
+      else
+         return defaultValue;
+   }
+
+   CScalableBitmap *backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore );
    
 private:
    static std::atomic<int> instances;
@@ -125,8 +198,11 @@ private:
    std::unordered_map<std::string, ColorStore> colors;
    std::unordered_set<std::string> queried_colors;
    std::unordered_map<std::string, int> imageIds;
-   std::vector<Control> controls;
-   std::unordered_map<std::string, ComponentClass> componentClasses;
+   ControlGroup::ptr_t rootControl;
+   std::vector<Control::ptr_t> controls;
+   std::unordered_map<std::string, ComponentClass::ptr_t> componentClasses;
+
+   void recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *groupList, std::string pfx="" );
 };
    
 class SkinDB

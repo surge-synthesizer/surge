@@ -1,0 +1,20 @@
+<surge-skin name="Test: Minimal Position Change" author="Surge Synth Team" authorURL="https://surge-synth-team.org/">
+  <globals>
+  </globals>
+  <component-classes>
+  </component-classes>
+  <controls>
+    <!-- 
+         Swap the location of the character. 
+            Original was y=11 h=27; y=41. So 41 = 11 + 27 + 3 so margin is 3 
+            Since height of character is 12, 11 + 12 + 3 = 26 so char y == 11 and bybass y is 26
+ 
+         To make the relative position clearer, enclose them in a group
+    -->
+    <group name="fx and char" x="607" y="11">
+      <control ui_identifier="global.character" x="0" y="0" w="135" h="12" subpixmaps="3" rows="1" columns="3" class="CHSwitch2"  bg_id="161" />
+      <control ui_identifier="global.fx_bypass" x="0" y="15" w="135" h="27"  subpixmaps="4" rows="1" columns="4" class="CHSwitch2"  bg_id="144" />
+    </group>
+
+  </controls>
+</surge-skin>
