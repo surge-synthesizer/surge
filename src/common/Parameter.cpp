@@ -413,6 +413,12 @@ void Parameter::set_type(int ctrltype)
       val_max.f = 6;
       val_default.f = 1;
       break;
+   case ct_reverbpredelaytime:
+      valtype = vt_float;
+      val_min.f = -4;
+      val_max.f = 1;
+      val_default.f = -2;
+      break;
    case ct_lforate:
       valtype = vt_float;
       val_min.f = -7;
@@ -956,6 +962,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_envtime:
       case ct_envtime_lfodecay:
       case ct_reverbtime:
+      case ct_reverbpredelaytime:
       case ct_delaymodtime:
          if ((ctrltype == ct_envtime_lfodecay) && (f == val_max.f))
          {
