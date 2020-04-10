@@ -30,3 +30,5 @@ void stackToInfo()
 }
 ---
 #define _D(x) " " << (#x) << "=" << x
+---
+leaks `ps -ef | grep Hosting | grep Surge | awk '{ print $2 }'`
