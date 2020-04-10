@@ -3611,6 +3611,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
                spawn_miniedit_text(c, 16);
                int newVal = ::atoi(c);
                Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
+               this->setZoomFactor(newVal);
            });
        zid++;
 
