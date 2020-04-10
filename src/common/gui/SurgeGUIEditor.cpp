@@ -25,6 +25,7 @@
 #include "DisplayInfo.h"
 #include "UserDefaults.h"
 #include "SkinSupport.h"
+#include "UIInstrumentation.h"
 
 #include <iostream>
 #include <iomanip>
@@ -161,6 +162,9 @@ std::string specialTagToString( special_tags t )
 
 SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "SurgeGUIEditor::SurgeGUIEditor" );
+#endif   
    frame = 0;
 
 #if TARGET_VST3
@@ -786,6 +790,9 @@ CRect positionForModulationGrid(modsources entry)
 
 void SurgeGUIEditor::openOrRecreateEditor()
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "SurgeGUIEditor::openOrRecreateEditor" );
+#endif   
    if (!synth)
       return;
    assert(frame);
@@ -4095,6 +4102,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
 
+#ifdef INSTRUMENT_UI
+    addCallbackMenu(devSubMenu, "Show UI Instrumentation",
+                    []() {
+                       Surge::Debug::report();
+                    }
+       );
+#endif    
+    
     /*
     ** This code takes a running surge and makes an XML file we can use to bootstrap the layout manager.
     ** It as used as we transitioned from 1.6.5 to 1.7 to do the first layout file which matched

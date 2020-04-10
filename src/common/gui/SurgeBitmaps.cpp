@@ -1,6 +1,7 @@
 #include "SurgeBitmaps.h"
 #include "UserInteractions.h"
 
+#include "UIInstrumentation.h"
 #include "CScalableBitmap.h"
 #include <iostream>
 
@@ -10,11 +11,18 @@ std::atomic<int> SurgeBitmaps::instances( 0 );
 SurgeBitmaps::SurgeBitmaps()
 {
    instances++;
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "SurgeBitmaps::SurgeBitmaps" );
+#endif   
+
    std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 SurgeBitmaps::~SurgeBitmaps()
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "SurgeBitmaps::~SurgeBitmaps" );
+#endif   
    for (auto pair : bitmap_registry)
    {
       pair.second->forget();
