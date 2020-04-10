@@ -1,6 +1,7 @@
 #include "CScalableBitmap.h"
 #include "SurgeError.h"
 #include "UserInteractions.h"
+#include "UIInstrumentation.h"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -15,6 +16,7 @@
 #if WINDOWS
 #include "vstgui/lib/platform/iplatformresourceinputstream.h"
 #endif
+#include <unordered_map>
 
 #include <cmath>
 
@@ -76,17 +78,35 @@ static const struct MemorySVG* findMemorySVG(const std::string& filename)
 #if WINDOWS
 static int svgContentsFromRCFile(int id, char* svgData, int maxSz)
 {
-   VSTGUI::IPlatformResourceInputStream::Ptr istr =
-       VSTGUI::IPlatformResourceInputStream::create(CResourceDescription(id));
-
-   if (istr == NULL)
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "svgContentsFromRCFile::GET" );
+#endif   
+   static std::unordered_map<int, char*> leakyStore;
+   if( leakyStore.find(id) == leakyStore.end() )
    {
-      return -1;
+#ifdef INSTRUMENT_UI
+      Surge::Debug::record( "svgContentsFromRCFile::READ" );
+#endif   
+
+      VSTGUI::IPlatformResourceInputStream::Ptr istr =
+          VSTGUI::IPlatformResourceInputStream::create(CResourceDescription(id));
+
+      if (istr == NULL)
+      {
+         return -1;
+      }
+
+      size_t sz = 1024 * 1024;
+      char *leakThis = new char[sz];
+      memset( leakThis, 0, sz );
+      uint32_t readSize = istr->readRaw(leakThis, sz);
+      leakThis[readSize] = 0;
+      leakyStore[id] = leakThis;
    }
-   memset(svgData, 0, maxSz);
-   uint32_t readSize = istr->readRaw(svgData, maxSz);
-   svgData[readSize] = 0;
-   return readSize;
+   
+   memcpy(svgData, leakyStore[id], maxSz);
+  
+   return 1;
 }
 #endif
 
@@ -100,6 +120,10 @@ void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)
 CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
     : CBitmap(desc), svgImage(nullptr), frame(f)
 {
+#ifdef INSTRUMENT_UI   
+    Surge::Debug::record( "CScalableBitmap::CScalableBitmap desc" );
+#endif
+
     int id = 0;
     if(desc.type == CResourceDescription::kIntegerType)
         id = (int32_t)desc.u.id;
@@ -107,7 +131,6 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
     instances++;
     //std::cout << "  Construct CScalableBitmap. instances=" << instances << " id=" << id << std::endl;
     
-
     resourceID = id;
 
     std::stringstream filename;
@@ -179,6 +202,10 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
 CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
    : CBitmap(CResourceDescription(0)), svgImage(nullptr), frame(f)
 {
+#ifdef INSTRUMENT_UI   
+    Surge::Debug::record( "CScalableBitmap::CScalableBitmap file" );
+#endif
+
     fname = ifname;
     
     instances++;
@@ -201,6 +228,10 @@ CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
 
 CScalableBitmap::~CScalableBitmap()
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "CScalableBitmap::~CScalableBitmap" );
+#endif   
+   
    for (auto const& pair : offscreenCache)
    {
       auto val = pair.second;
@@ -224,6 +255,9 @@ CScalableBitmap::~CScalableBitmap()
 
 void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoint& offset, float alpha )
 {
+#ifdef INSTRUMENT_UI   
+    Surge::Debug::record( "CScalableBitmap::draw" );
+#endif
     /*
     ** CViewContainer, in the ::drawRect method, no matter what invalidates, calls a drawBackground
     ** on the entire background with a clip rectangle applied. This is not normally a problem when
@@ -292,6 +326,9 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
 
        if (offscreenCache.find(offset) == offscreenCache.end())
        {
+#ifdef INSTRUMENT_UI   
+          Surge::Debug::record( "CScalableBitmap::draw::createOffscreenCache" );
+#endif
           VSTGUI::CPoint sz = rect.getSize();
           ixtf.transform(sz);
 

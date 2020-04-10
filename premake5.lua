@@ -220,6 +220,7 @@ function plugincommon()
         "src/common/gui/SurgeBitmaps.cpp",
         "src/common/gui/SurgeGUIEditor.cpp",
         "src/common/gui/SkinSupport.cpp",
+        "src/common/gui/UIInstrumentation.cpp",
         "src/common/thread/CriticalSection.cpp",
         "src/common/util/FpuState.cpp",
         "src/common/vt_dsp/basic_dsp.cpp",
