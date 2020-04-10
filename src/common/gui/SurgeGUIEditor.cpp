@@ -804,7 +804,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
    
    current_scene = synth->storage.getPatch().scene_active.val.i;
 
-   {
+   CControl *skinTagControl;
+   if( ( skinTagControl = layoutTagWithSkin( tag_osc_select ) ) == nullptr ) {
       CRect rect(0, 0, 75, 13);
       rect.offset(104 - 36, 69);
       CControl* oscswitch = new CHSwitch2(rect, this, tag_osc_select, 3, 13, 1, 3,
@@ -813,7 +814,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       frame->addView(oscswitch);
    }
 
-   {
+   if( ( skinTagControl = layoutTagWithSkin( tag_fx_select ) ) == nullptr ) {
       CRect rect(0, 0, 119, 51);
       rect.offset(764 + 3, 71);
       CEffectSettings* fc = new CEffectSettings(rect, this, tag_fx_select, current_fx, bitmapStore);
@@ -1784,6 +1785,11 @@ void SurgeGUIEditor::close_editor()
    lfodisplay = 0;
    frame->removeAll(true);
    setzero(param);
+}
+
+VSTGUI::CControl *SurgeGUIEditor::layoutTagWithSkin( int tag )
+{
+   return nullptr;
 }
 
 #if LINUX && TARGET_VST3
@@ -4042,6 +4048,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
        }
        skinSubMenu->addEntry( testSM, "Test Skins" );
+       testSM->forget();
     }
     
     skinSubMenu->addSeparator();

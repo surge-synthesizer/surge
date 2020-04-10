@@ -121,6 +121,7 @@ public:
    
 private:
    void openOrRecreateEditor();
+   VSTGUI::CControl * layoutTagWithSkin( int tag );
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
    SurgeSynthesizer* synth = nullptr;
