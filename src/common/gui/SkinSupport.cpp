@@ -7,6 +7,7 @@
 #include "SurgeBitmaps.h"
 #include "UserInteractions.h"
 #include "UserDefaults.h"
+#include "UIInstrumentation.h"
 
 #if LINUX
 #include <experimental/filesystem>
@@ -34,6 +35,9 @@ SkinDB& Surge::UI::SkinDB::get(SurgeStorage* s)
 
 SkinDB::SkinDB(SurgeStorage* s)
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "SkinDB::SkinDB" );
+#endif   
    std::cout << "Constructing SkinDB" << std::endl;
    rescanForSkins(s);
    this->storage = s;
@@ -41,6 +45,9 @@ SkinDB::SkinDB(SurgeStorage* s)
 
 SkinDB::~SkinDB()
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "SkinDB::~SkinDB" );
+#endif   
    skins.clear(); // Not really necessary but means the skins are destroyed before the rest of the
                   // dtor runs
    std::cout << "Destroying SkinDB" << std::endl;
@@ -73,6 +80,9 @@ std::shared_ptr<Skin> SkinDB::getSkin(const Entry& skinEntry)
 
 void SkinDB::rescanForSkins(SurgeStorage* storage)
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "SkinDB::rescanForSkins" );
+#endif   
    availableSkins.clear();
 
    std::vector<std::string> paths = {storage->datapath, storage->userDataPath};
@@ -211,6 +221,9 @@ std::atomic<int> Skin::instances( 0 );
 
 Skin::Skin(std::string root, std::string name) : root(root), name(name)
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "Skin::Skin" );
+#endif   
    instances++;
    std::cout << "Constructing a skin " << _D(root) << _D(name) << _D(instances) << std::endl;
    imageIds = createIdNameMap();
@@ -218,6 +231,9 @@ Skin::Skin(std::string root, std::string name) : root(root), name(name)
 
 Skin::~Skin()
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "Skin::~Skin" );
+#endif   
    instances--;
    std::cout << "Destroying a skin " << _D(instances) << std::endl;
 }
@@ -228,6 +244,10 @@ Skin::~Skin()
 
 void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
 {
+#ifdef INSTRUMENT_UI
+   Surge::Debug::record( "Skin::reloadSkin" );
+   Surge::Debug::TimeThisBlock _trs_( "Skin::reloadSkin" );
+#endif   
    std::cout << "Reloading skin " << _D(name) << std::endl;
    TiXmlDocument doc;
    // Obviously fix this
@@ -248,7 +268,6 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       FIXMEERROR << "There is no top level suge-skin node in skin.xml" << std::endl;
       return;
    }
-
    const char* a;
    displayName = name;
    author = "";
@@ -279,6 +298,7 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    /*
    ** Parse the globals section
    */
+   globals.clear();
    for (auto gchild = globalsxml->FirstChild(); gchild; gchild = gchild->NextSibling())
    {
       auto lkid = TINYXML_SAFE_TO_ELEMENT(gchild);
