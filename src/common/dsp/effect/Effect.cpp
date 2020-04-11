@@ -28,6 +28,8 @@ Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd
       return new ChorusEffect<4>(storage, fxdata, pd);
    case fxt_vocoder:
       return new VocoderEffect(storage, fxdata, pd);
+   case fxt_flanger:
+      return new FlangerEffect(storage, fxdata, pd);
    default:
       return 0;
    };

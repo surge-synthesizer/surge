@@ -22,6 +22,7 @@ int get_fxtype(int id)
       return 7;
    case fxt_rotaryspeaker:
    case fxt_chorus4:
+   case fxt_flanger:
       return 3;
    case fxt_distortion:
       return 4;

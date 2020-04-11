@@ -654,6 +654,24 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
+   case ct_flangerpitch:
+      val_min.f = 0;
+      val_max.f = 127;
+      valtype = vt_float;
+      val_default.f = 60;
+      break;
+   case ct_flangervoices:
+      val_min.f = 1;
+      val_max.f = 4;
+      valtype = vt_float;
+      val_default.f = 4;
+      break;
+   case ct_flangermode:
+      val_min.i = 0;
+      val_max.i = 11;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
    default:
    case ct_none:
       sprintf(dispname, "-");
@@ -921,6 +939,16 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       sprintf(txt, "~%s%d", notenames[i_value % 12], octave);
       break;
    }
+   case ct_flangerpitch:
+   {
+      float f = val.f;
+      int i_value = (int)( f );
+      if( i_value < 0 ) i_value = 0; 
+      int octave = (i_value / 12) - 1;
+      char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+      sprintf(txt, "~%s%d", notenames[i_value % 12], octave);
+      break;
+   }
    case ct_countedset_percent:
       if (user_data != nullptr)
       {
@@ -1055,6 +1083,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
          else
              sprintf(txt, "%.2f", get_extended(f));
          break;
+      case ct_flangerpitch:
+         sprintf(txt, "fp %.2f", f);
+         break;
       default:
          sprintf(txt, "%.2f", f);
          break;
@@ -1160,6 +1191,44 @@ void Parameter::get_display(char* txt, bool external, float ef)
             sprintf(txt, "filter 2");
             break;
          }
+         break;
+      case ct_flangermode:
+      {
+         int mode = i;
+         int mtype = mode / 4;
+         int mwave = mode % 4;
+
+         std::string types;
+         switch( mtype )
+         {
+         case 0:
+            types = "unison";
+            break;
+         case 1:
+            types = "vibrato";
+            break;
+         case 2:
+            types = "arp";
+            break;
+         }
+         std::string typew;
+         switch( mwave )
+         {
+         case 0:
+            typew = "tri";
+            break;
+         case 1:
+            typew = "saw";
+            break;
+         case 2:
+            typew = "sin";
+            break;
+         case 3:
+            typew = "s+h";
+            break;
+         }
+         sprintf( txt, "%s %s", types.c_str(), typew.c_str() );
+      }
          break;
       default:
          sprintf(txt, "%i", i);
