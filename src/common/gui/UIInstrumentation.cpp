@@ -35,6 +35,18 @@ namespace Debug
       oss << "</table></body></html>\n";
       Surge::UserInteractions::showHTML( oss.str() );
    }
+
+   TimeThisBlock::TimeThisBlock(std::string i ) : tag( i ) {
+      start = std::chrono::high_resolution_clock::now();
+   }
+
+   TimeThisBlock::~TimeThisBlock() {
+      auto end = std::chrono::high_resolution_clock::now();
+      auto duration = end - start;
+      auto durationFloat = duration.count();
+      // std::cout << "Block in " << tag << " took " << durationFloat << std::endl;
+      // FIX - record this so I can report
+   }
 }
 }
 #endif
