@@ -577,3 +577,56 @@ private:
    quadr_osc _lfo;
    float last_decay_time = -1.0;
 };
+
+class FlangerEffect : public Effect
+{
+   static const int COMBS_PER_CHANNEL = 4;
+   struct InterpDelay {
+      // OK so lets say we want lowest tunable frequency to be 23.5hz at 96k
+      // 96000/23.5 = 4084
+      // And lets future proof a bit and make it a power of 2 so we can use & properly
+      static const int DELAY_SIZE=8192, DELAY_SIZE_MASK = DELAY_SIZE - 1;
+      float line[DELAY_SIZE];
+      int k = 0;
+      InterpDelay() { memset( line, 0, DELAY_SIZE * sizeof( float ) ); }
+      float value( float delayBy );
+      void push( float nv ) {
+         k = ( k + 1 ) & DELAY_SIZE_MASK;
+         line[k] = nv;
+      }
+   };
+      
+public:
+   FlangerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
+   virtual ~FlangerEffect();
+   virtual const char* get_effectname() override
+   {
+      return "flanger";
+   }
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
+   void setvars(bool init);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
+
+   virtual int get_ringout_decay() override
+   {
+      return 1024;
+   }
+
+private:
+   InterpDelay idels[2];
+
+   float lfophase[2][COMBS_PER_CHANNEL], longphase;
+   float lpaL = 0.f, lpaR = 0.f; // state for the onepole LP filter
+   
+   lipol<float,true> lfoval[2][COMBS_PER_CHANNEL], delaybase[2][COMBS_PER_CHANNEL];
+   lipol<float,true> depth, mix;
+   lipol<float,true> voices, voice_detune, voice_chord;
+   lipol<float,true> feedback, fb_lf_damping, stereo_width, gain;
+
+};

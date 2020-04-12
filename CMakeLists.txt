@@ -11,6 +11,7 @@ set(SURGE_COMMON_SOURCES
     src/common/dsp/effect/DualDelayEffect.cpp
     src/common/dsp/effect/Effect.cpp
     src/common/dsp/effect/FreqshiftEffect.cpp
+    src/common/dsp/effect/FlangerEffect.cpp   
     src/common/dsp/effect/PhaserEffect.cpp
     src/common/dsp/effect/Reverb1Effect.cpp
     src/common/dsp/effect/Reverb2Effect.cpp

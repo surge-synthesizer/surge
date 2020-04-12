@@ -177,6 +177,7 @@ function plugincommon()
         "src/common/dsp/effect/DistortionEffect.cpp",
         "src/common/dsp/effect/DualDelayEffect.cpp",
         "src/common/dsp/effect/Effect.cpp",
+        "src/common/dsp/effect/FlangerEffect.cpp",
         "src/common/dsp/effect/FreqshiftEffect.cpp",
         "src/common/dsp/effect/PhaserEffect.cpp",
         "src/common/dsp/effect/Reverb1Effect.cpp",

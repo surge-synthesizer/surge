@@ -166,6 +166,7 @@ enum sub3_fxtypes
    fxt_vocoder,
    //	fxt_emphasize,
    fxt_reverb2,
+   fxt_flanger,
    num_fxtypes,
 };
 const char fxtype_abberations[num_fxtypes][16] = {
