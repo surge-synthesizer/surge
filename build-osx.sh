@@ -126,8 +126,24 @@ prerequisite_check()
 
 run_premake()
 {
+    rm -rf surge-au.xcodeproj
+    rm -rf surge-vst2.xcodeproj
+    rm -rf surge-vst3.xcodeproj
+    
     if [[ -z $SURGE_PREMAKE ]]; then
         premake5 xcode4
+
+        # We need this until premake pushes my #1336 to a binary
+        perl scripts/macOS/whack-xcode.pl < surge-au.xcodeproj/project.pbxproj > txc
+        mv txc surge-au.xcodeproj/project.pbxproj 
+
+        perl scripts/macOS/whack-xcode.pl < surge-vst3.xcodeproj/project.pbxproj > txc
+        mv txc surge-vst3.xcodeproj/project.pbxproj 
+
+        if [[ -d surge-vst2.xcodeproj/ ]]; then
+            perl scripts/macOS/whack-xcode.pl < surge-vst2.xcodeproj/project.pbxproj > txc
+            mv txc surge-vst2.xcodeproj/project.pbxproj
+        fi
     else
         echo
         echo ${RED}Using custom premake binary${NC}
