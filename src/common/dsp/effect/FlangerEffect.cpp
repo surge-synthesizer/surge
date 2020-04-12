@@ -49,12 +49,7 @@ enum flangermode // match this with the string gneerator in Parameter.cpp pls
 FlangerEffect::FlangerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd)
 {
-   for( int c=0;c<2;++c )
-      for( int i=0; i<COMBS_PER_CHANNEL; ++i )
-      {
-         lfophase[c][i] =  1.f * ( i + 0.5 * c ) / COMBS_PER_CHANNEL;
-      }
-   longphase = 0;
+   init();
 }
 
 FlangerEffect::~FlangerEffect()
@@ -63,6 +58,12 @@ FlangerEffect::~FlangerEffect()
 
 void FlangerEffect::init()
 {
+   for( int c=0;c<2;++c )
+      for( int i=0; i<COMBS_PER_CHANNEL; ++i )
+      {
+         lfophase[c][i] =  1.f * ( i + 0.5 * c ) / COMBS_PER_CHANNEL;
+      }
+   longphase = 0;
 }
 
 void FlangerEffect::setvars(bool init)
@@ -77,7 +78,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
    float rate = envelope_rate_linear(-*f[flng_rate]) * (fxdata->p[flng_rate].temposync ? storage->temposyncratio : 1.f);
 
    longphase += rate;
-   if( longphase > COMBS_PER_CHANNEL ) longphase = 0;
+   if( longphase >= COMBS_PER_CHANNEL ) longphase -= COMBS_PER_CHANNEL;
    
    const float oneoverFreq0 = 1.0f / 8.175798915;
 
@@ -89,6 +90,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
    for( int c=0; c<2; ++c )
       for( int i=0; i<COMBS_PER_CHANNEL; ++i )
       {
+
          lfophase[c][i] += rate;
          bool lforeset = false;
          if( lfophase[c][i] > 1 )
@@ -112,7 +114,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
             lfoout = thisphase * 2.0f - 1.f;
             break;
          case 2: // sine (FIXME use a better approx)
-            lfoout = sin( 3.141592657 * thisphase);
+            lfoout = sin( 2.0 * 3.141592657 * thisphase);
             break;
          case 3: // S&H random noise. Needs smoothing over the jump like the triangle
             if( lforeset )
@@ -128,7 +130,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
    depth.newValue( *f[flng_depth] );
    mix.newValue( *f[flng_mix] );
    float feedbackScale = 0.7;
-   if( mtype = 2 )
+   if( mtype == 2 )
    {
       // arpeggio
       feedbackScale = 1.4;
@@ -139,18 +141,25 @@ void FlangerEffect::process(float* dataL, float* dataR)
 
    float combs alignas(16)[2][BLOCK_SIZE];
 
-   float vweights[4] = { 0.f, 0.f, 0.f, 0.f };
+   float vweights[COMBS_PER_CHANNEL];
+   for( int i=0; i<COMBS_PER_CHANNEL; ++i )
+      vweights[i] = 0;
+
    if( mtype == 2 )
    {
       int ilp = (int)longphase;
       float flp = longphase - ilp;
+      if( ilp == COMBS_PER_CHANNEL )
+         ilp = 0;
+      
       if( flp > 0.9 )
       {
          float dt = (flp - 0.9) * 10; // this will be between 0,1
          float nxt = sqrt( dt );
          float prr = sqrt( 1.f - dt );
+         // std::cout << _D(longphase) << _D(dt) << _D(nxt) << _D(prr) << _D(ilp) << _D(flp) << std::endl;
          vweights[ilp] = prr;
-         if( ilp + 1 > COMBS_PER_CHANNEL )
+         if( ilp == COMBS_PER_CHANNEL - 1 )
             vweights[0] = nxt;
          else
             vweights[ilp + 1] = nxt;
@@ -164,7 +173,9 @@ void FlangerEffect::process(float* dataL, float* dataR)
    else
    {
       float voices = *f[flng_voices];
-      for( int i=0; i<=voices-1.f && i < 4; ++i )
+      vweights[0] = 1.0;
+      
+      for( int i=0; i<voices && i < 4; ++i )
          vweights[i] = 1.0;
       
       int li = (int)voices;
@@ -173,16 +184,18 @@ void FlangerEffect::process(float* dataL, float* dataR)
          vweights[li] = fi;
    }
 
-
    for( int b=0; b<BLOCK_SIZE; ++b )
    {
       for( int c=0; c<2; ++c ) {
          combs[c][b] = 0;
          for( int i=0; i<COMBS_PER_CHANNEL; ++i )
          {
-            auto tap = delaybase[c][i].v * ( 1.0 + lfoval[c][i].v * depth.v );
-            auto v = idels[c].value(tap);
-            combs[c][b] += vweights[i] * v;
+            if( vweights[i] > 0 )
+            {
+               auto tap = delaybase[c][i].v * ( 1.0 + lfoval[c][i].v * depth.v ) + 1;
+               auto v = idels[c].value(tap);
+               combs[c][b] += vweights[i] * v;
+            }
             
             lfoval[c][i].process();
             delaybase[c][i].process();
@@ -199,7 +212,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
          fbl = 1.5 * fbl - 0.5 * fbl * fbl * fbl;
          fbr = 1.5 * fbr - 0.5 * fbr * fbr * fbr;
 
-         // and now we have clipped, apply the damping
+         // and now we have clipped, apply the damping. FIXME - move to one mul form
          lpaL = lpaL * ( 1.0 - fb_lf_damping.v ) + fbl * fb_lf_damping.v;
          fbl = fbl - lpaL;
 
@@ -211,7 +224,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
       auto vr = dataR[b] - fbr;
       idels[0].push( vl );
       idels[1].push( vr );
-
+      
       auto origw = 1.f;
       if( mtype == 1 )
       {
@@ -219,15 +232,15 @@ void FlangerEffect::process(float* dataL, float* dataR)
          origw = 0.f;
       }
          
-      auto outl = origw * dataL[b] + mix.v * combs[0][b];
-      auto outr = origw * dataR[b] + mix.v * combs[1][b];
+      float outl = origw * dataL[b] + /* mix.v * */ 0.9 *  combs[0][b];
+      float outr = origw * dataR[b] + /* mix.v * */ 0.9 *  combs[1][b];
 
       outl = limit_range( (1.0f + gain.v ) * outl, -1.f, 1.f );
       outr = limit_range( (1.0f + gain.v ) * outr, -1.f, 1.f );
       
       outl = 1.5 * outl - 0.5 * outl * outl * outl;
       outr = 1.5 * outr - 0.5 * outr * outr * outr;
-
+      
       dataL[b] = outl;
       dataR[b] = outr;
       
@@ -244,8 +257,9 @@ float FlangerEffect::InterpDelay::value( float delayBy )
    // so if delayBy is 19.2
    int itap = (int) delayBy; // this is 19
    float fractap = delayBy - itap; // this is .2
-   int k0 = ( k - itap - 1 ) & DELAY_SIZE_MASK; // this is 20 back
-   int k1 = ( k - itap     ) & DELAY_SIZE_MASK; // this is 19 back
+   int k0 = ( k + DELAY_SIZE - itap - 1 ) & DELAY_SIZE_MASK; // this is 20 back
+   int k1 = ( k + DELAY_SIZE - itap     ) & DELAY_SIZE_MASK; // this is 19 back
+   // std::cout << "KDATUM" << k << "," << delayBy << "," << itap << "," << k0 << "," << k1 << "," << fractap << std::endl;
    // so the result is
    float result = line[k0] * fractap + line[k1] * ( 1.0 - fractap ); // FIXME move to the one mul form
    // std::cout << "id::value " << _D(delayBy) << _D(itap) << _D(fractap) << _D(k) << _D(k0) << _D(k1) << _D(result) << _D(line[k0]) << _D(line[k1]) << std::endl;

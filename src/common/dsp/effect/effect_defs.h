@@ -588,7 +588,8 @@ class FlangerEffect : public Effect
       static const int DELAY_SIZE=8192, DELAY_SIZE_MASK = DELAY_SIZE - 1;
       float line[DELAY_SIZE];
       int k = 0;
-      InterpDelay() { memset( line, 0, DELAY_SIZE * sizeof( float ) ); }
+      InterpDelay() { reset(); }
+      void reset() { memset( line, 0, DELAY_SIZE * sizeof( float ) ); k = 0; }
       float value( float delayBy );
       void push( float nv ) {
          k = ( k + 1 ) & DELAY_SIZE_MASK;
