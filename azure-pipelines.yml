@@ -63,15 +63,7 @@ jobs:
     displayName: all - submodule init
 
   - bash: |
-      pushd $AGENT_TEMPDIRECTORY
-      export PREMAKE_MAC=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-macosx.tar.gz
-      curl -L $PREMAKE_MAC --output premake5.tar.gz
-      tar zxvf premake5.tar.gz
-      popd
-
-      export PATH=$AGENT_TEMPDIRECTORY:$PATH
       ./build-osx.sh --build --verbose
-      ls -alFh target
       ls -alFh products
     condition: variables.isMac
     displayName: macOS - build all assets

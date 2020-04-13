@@ -13,7 +13,8 @@ FONT_SRC_LOCATION="$RES_SRC_LOCATION/fonts"
 SVG_SRC_LOCATION="assets/${SURGE_USE_VECTOR_SKIN}/SVG/exported"
 
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
-EXEC_LOCATION="target/au/Release/Surge.dylib"
+#EXEC_LOCATION="target/au/Release/Surge.dylib"
+EXEC_LOCATION="build/Release/libsurge-au.dylib"
 #EXEC_LOCATION="target/au/Debug/Surge-Debug.dylib"
 
 # output configs
