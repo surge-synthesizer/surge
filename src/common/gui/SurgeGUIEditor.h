@@ -29,7 +29,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "SurgeBitmaps.h"
 #include "PopupEditorSpawner.h"
 
-#include <vstcontrols.h>
+#include "vstcontrols.h"
 #include "SurgeSynthesizer.h"
 
 #include "SkinSupport.h"

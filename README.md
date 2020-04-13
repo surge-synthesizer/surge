@@ -34,6 +34,10 @@ tailored at Surge dev.
 
 # Building Surge
 
+*PLEASE BE AWARE WE ARE RIGHT NOW (like April 13 2020) IN THE MIDDLE OF MOVING TO CMAKE AND THESE DIRECTIONS
+ARE NOT YET UPDATED. If you are on MACOS you should use build-osx.sh like normal but don't need PREMAKE. 
+Check https://github.com/surge-synthesizer/surge/issues/1206 for details*
+
 To build surge, you need  [Git](https://git-scm.com/downloads) and [Premake 5](https://premake.github.io/download.html#v5) 
 installed with the appropriate version for your system. We are migrating towards [CMake](https://cmake.org) so for
 some OSes you need to install CMake also.

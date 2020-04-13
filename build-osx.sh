@@ -30,7 +30,6 @@ Other usages take the form of
 Commands are:
 
         --help                   Show this message
-        --premake                Run premake only
 
         --build                  Run the builds without cleans
         --install-local          Once assets are built, install them locally
@@ -94,16 +93,6 @@ prerequisite_check()
         exit 1
     fi
 
-    # TODO: Check premake is installed
-    if [ ! $(which premake5) ]; then
-        echo
-        echo ${RED}ERROR: You do not have premake5 on your path${NC}
-        echo
-        echo Please download and install premake from https://premake.github.io per the Surge README.md
-        echo
-        exit 1
-    fi
-
     if [ ! $(which cmake) ]; then
         echo
         echo ${RED}ERROR: You do not have cmake on your path${NC}
@@ -124,58 +113,13 @@ prerequisite_check()
     fi
 }
 
-run_premake()
-{
-    rm -rf surge-au.xcodeproj
-    rm -rf surge-vst2.xcodeproj
-    rm -rf surge-vst3.xcodeproj
-    
-    if [[ -z $SURGE_PREMAKE ]]; then
-        premake5 xcode4
-
-        # We need this until premake pushes my #1336 to a binary
-        perl scripts/macOS/whack-xcode.pl < surge-au.xcodeproj/project.pbxproj > txc
-        mv txc surge-au.xcodeproj/project.pbxproj 
-
-        perl scripts/macOS/whack-xcode.pl < surge-vst3.xcodeproj/project.pbxproj > txc
-        mv txc surge-vst3.xcodeproj/project.pbxproj 
-
-        if [[ -d surge-vst2.xcodeproj/ ]]; then
-            perl scripts/macOS/whack-xcode.pl < surge-vst2.xcodeproj/project.pbxproj > txc
-            mv txc surge-vst2.xcodeproj/project.pbxproj
-        fi
-    else
-        echo
-        echo ${RED}Using custom premake binary${NC}
-        echo $SURGE_PREMAKE
-        echo
-        $SURGE_PREMAKE xcode4
-    fi 
-    touch Surge.xcworkspace/premake-stamp
-}
-
-run_premake_if()
-{
-    if [[ premake5.lua -nt Surge.xcworkspace/premake-stamp ]]; then
-        run_premake
-    fi
-}
 
 run_clean()
 {
     flavor=$1
     echo
     echo "Cleaning build - $flavor"
-    xcodebuild clean -configuration Release -project surge-${flavor}.xcodeproj
-}
-
-run_clean_headless()
-{
-    if [ -d "build/Surge.xcodeproj" ]; then
-        echo
-        echo "Cleaning build - headless"
-        xcodebuild clean -configuration Release -project build/Surge.xcodeproj
-    fi
+    xcodebuild clean -configuration Release -project build/Surge.xcodeproj/ -target $flavor
 }
 
 run_build()
@@ -205,6 +149,29 @@ run_build()
         grep -i ": error" build_logs/build_${flavor}.log
         echo
         echo Complete information is in build_logs/build_${flavor}.log
+
+        exit 2
+    fi
+}
+
+run_cmake_build()
+{
+    target=$1
+
+    echo Building ${target} with cmake
+
+    # Don't let TEE eat my return status
+    mkdir -p build
+    cmake -GXcode -Bbuild
+    xcodebuild build -configuration Release -project build/Surge.xcodeproj -target ${target}
+
+    build_suc=$?
+
+    if [[ $build_suc = 0 ]]; then
+        echo ${GREEN}Build of $target succeeded${NC}
+    else
+        echo
+        echo ${RED}** Build of $target failed**${NC}
 
         exit 2
     fi
@@ -250,28 +217,28 @@ run_build_headless()
 
 default_action()
 {
-    run_premake
     if [ -d "surge-vst2.xcodeproj" ]; then
         run_clean "vst2"
-        run_build "vst2"
+        run_cmake_build "Surge.vst2"
     fi
 
-    run_clean "vst3"
-    run_build "vst3"
+    # FIXME
+    # run_clean "vst3"
+    run_cmake_build "Surge.vst3"
 
-    run_clean "au"
-    run_build "au"
+    # FIXME
+    # run_clean "au"
+    run_cmake_build "Surge.component"
 }
 
 run_all_builds()
 {
-    run_premake_if
     if [ -d "surge-vst2.xcodeproj" ]; then
         run_build "vst2"
     fi
 
-    run_build "vst3"
-    run_build "au"
+    run_cmake_build "Surge.vst3"
+    run_cmake_build "Surge.component"
     run_build_headless
 }
 
@@ -289,8 +256,7 @@ run_install_local()
 
 run_build_validate_au()
 {
-    run_premake_if
-    run_build "au"
+    run_cmake_build "Surge.component"
 
     rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
     rsync -r --delete "products/Surge.component/" ~/Library/Audio/Plug-Ins/Components/Surge.component/
@@ -336,8 +302,7 @@ run_reaper_vst3()
 
 run_build_install_vst2()
 {
-    run_premake_if
-    run_build "vst2"
+    run_cmake_build "Surge.vst2"
 
     rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
     rsync -r --delete "products/Surge.vst/" ~/Library/Audio/Plug-Ins/VST/Surge.vst/
@@ -345,8 +310,7 @@ run_build_install_vst2()
 
 run_build_install_vst3()
 {
-    run_premake_if
-    run_build "vst3"
+    run_cmake_build "Surge.vst3"
 
     rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
     rsync -r --delete "products/Surge.vst3/" ~/Library/Audio/Plug-Ins/VST3/Surge.vst3/
@@ -354,20 +318,12 @@ run_build_install_vst3()
 
 run_clean_builds()
 {
-    if [ ! -d "Surge.xcworkspace" ]; then
+    if [ ! -d "build/Surge.xcodeproj" ]; then
         echo "No surge workspace; no builds to clean"
         return 0
     else
-        echo "Clean build on all flavors"
+        xcodebuild clean -project build/Surge.xcodeproj
     fi
-       
-    if [ -d "surge-vst2.xcodeproj" ]; then
-        run_clean "vst2"
-    fi
-
-    run_clean "vst3"
-    run_clean "au"
-    run_clean_headless
 }
 
 run_clean_all()
@@ -442,9 +398,6 @@ prerequisite_check
 # if you add a Key here then you need to implement it as a function and add it to the help above
 # to get the PR swept. Thanks!
 case $command in
-    --premake)
-        run_premake
-        ;;
     --build)
         run_all_builds
         ;;
