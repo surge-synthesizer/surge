@@ -311,8 +311,8 @@ th {
              << "<li><a href=\"#rawscl\">Jump to Raw SCL</a>.\n"
              << "<li><a href=\"#rawkbm\">Jump to raw KBM</a>.\n"
              << "<li>Scale position 0 maps to key "
-             << storage->currentMapping.middleNote << "\n<li> Midi note " << storage->currentMapping.tuningConstantNote << " is set to frequency "
-             << storage->currentMapping.tuningFrequency << "hz.\n</ul> ";
+             << storage->currentMapping.middleNote << "\n<li> MIDI note " << storage->currentMapping.tuningConstantNote << " is set to frequency "
+             << storage->currentMapping.tuningFrequency << "Hz.\n</ul> ";
     }
     else
     {
@@ -362,7 +362,7 @@ R"HTML(
 <p>
         <table>
           <tr>
-            <th>Midi Note</th><th>Scale Position</th><th>Frequency</th>
+            <th>MIDI Note</th><th>Scale Position</th><th>Frequency</th>
           </tr>
 
 )HTML";
@@ -382,7 +382,7 @@ R"HTML(
           while( tn < 0 ) tn += count;
           
           auto p = storage->note_to_pitch(i);
-          htmls << "<td>" << (tn % count + 1) << "</td><td>" << 8.175798915 * p << " hz</td>";
+          htmls << "<td>" << (tn % count + 1) << "</td><td>" << 8.175798915 * p << " Hz</td>";
           htmls << "</tr>\n";
        }
        
