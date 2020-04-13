@@ -290,7 +290,6 @@ public:
    float moverate;
    bool per_voice_processing;
    bool temposync, extend_range, absolute, snap;
-
    
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable

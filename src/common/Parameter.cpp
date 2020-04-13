@@ -1084,7 +1084,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
              sprintf(txt, "%.2f", get_extended(f));
          break;
       case ct_flangerpitch:
-         sprintf(txt, "fp %.2f", f);
+         sprintf(txt, "%.2f", f);
          break;
       default:
          sprintf(txt, "%.2f", f);
@@ -1202,7 +1202,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mtype )
          {
          case 0:
-            types = "unison";
+            types = "classic";
             break;
          case 1:
             types = "vibrato";
@@ -1215,13 +1215,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mwave )
          {
          case 0:
-            typew = "tri";
+            typew = "sin";
             break;
          case 1:
-            typew = "saw";
+            typew = "tri";
             break;
          case 2:
-            typew = "sin";
+            typew = "saw";
             break;
          case 3:
             typew = "s+h";

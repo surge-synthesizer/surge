@@ -629,5 +629,9 @@ private:
    lipol<float,true> depth, mix;
    lipol<float,true> voices, voice_detune, voice_chord;
    lipol<float,true> feedback, fb_lf_damping, stereo_width, gain;
-
+   
+   const static int LFO_TABLE_SIZE=8192;
+   const static int LFO_TABLE_MASK=LFO_TABLE_SIZE-1;
+   float sin_lfo_table[LFO_TABLE_SIZE];
+   float saw_lfo_table[LFO_TABLE_SIZE]; // don't make it analytic since I want to smooth the edges
 };

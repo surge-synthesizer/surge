@@ -7,7 +7,6 @@ enum flangparam
    // Basic Control
    flng_rate = 0, // How quickly the oscillations happen
    flng_depth, // How extreme the modulation of the delay is
-   flng_mix, // how much we add the comb into the mix
    flng_mode, // flange, phase-inverse-flange, arepeggio, vibrato
 
    // Voices
@@ -20,8 +19,9 @@ enum flangparam
    // Feedback and EQ
    flng_feedback, // how much the output feeds back into the filters
    flng_fb_lf_damping, // how much low pass damping in the feedback mechanism
-   flng_stereo_width, // how much to pan the delay lines ( 0 -> all even; 1 -> full spread)
    flng_gain, // How much gain before we run into the final clipper
+   flng_stereo_width, // how much to pan the delay lines ( 0 -> all even; 1 -> full spread)
+   flng_mix, // how much we add the comb into the mix
    
    flng_num_params,
 };
@@ -64,6 +64,11 @@ void FlangerEffect::init()
          lfophase[c][i] =  1.f * ( i + 0.5 * c ) / COMBS_PER_CHANNEL;
       }
    longphase = 0;
+
+   for( int i=0; i<LFO_TABLE_SIZE; ++i )
+   {
+      sin_lfo_table[i] = sin( 2.0 * M_PI * i / LFO_TABLE_SIZE );
+   }
 }
 
 void FlangerEffect::setvars(bool init)
@@ -107,14 +112,20 @@ void FlangerEffect::process(float* dataL, float* dataR)
          }
          switch( mwave )
          {
-         case 0: // triangle
+         case 0: // sin
+         {
+            float ps = thisphase * LFO_TABLE_SIZE;
+            int psi = (int)ps;
+            float psf = ps - psi;
+            int psn = (psi+1) & LFO_TABLE_MASK;
+            lfoout = sin_lfo_table[psi] * ( 1.0 - psf ) + psf * sin_lfo_table[psn];
+         }
+         break;
+         case 1: // triangle
             lfoout = (2.f * fabs(2.f * thisphase - 1.f) - 1.f);
             break;
-         case 1: // saw - but we gotta be gentler than a pure saw. So FIXME on this waveform
+         case 2: // saw - but we gotta be gentler than a pure saw. So FIXME on this waveform
             lfoout = thisphase * 2.0f - 1.f;
-            break;
-         case 2: // sine (FIXME use a better approx)
-            lfoout = sin( 2.0 * 3.141592657 * thisphase);
             break;
          case 3: // S&H random noise. Needs smoothing over the jump like the triangle
             if( lforeset )
@@ -129,59 +140,68 @@ void FlangerEffect::process(float* dataL, float* dataR)
    
    depth.newValue( *f[flng_depth] );
    mix.newValue( *f[flng_mix] );
-   float feedbackScale = 0.7;
+   float feedbackScale = 0.4;
+   if( mtype == 1 )
+   {
+      feedbackScale = 0.6;
+   }
    if( mtype == 2 )
    {
-      // arpeggio
-      feedbackScale = 1.4;
+      feedbackScale = 0.9;
    }
-   feedback.newValue( feedbackScale * *f[flng_feedback] ); 
+   float fbv = *f[flng_feedback];
+   fbv = fbv * fbv * fbv;
+   feedback.newValue( feedbackScale * fbv ); 
    fb_lf_damping.newValue( 0.4 * *f[flng_fb_lf_damping ] );
    gain.newValue( *f[flng_gain] );
 
    float combs alignas(16)[2][BLOCK_SIZE];
 
-   float vweights[COMBS_PER_CHANNEL];
-   for( int i=0; i<COMBS_PER_CHANNEL; ++i )
-      vweights[i] = 0;
-
-   if( mtype == 2 )
+   // Obviously when we implement stereo spread this will be different
+   float vweights[2][COMBS_PER_CHANNEL];
+   for( int c=0; c<2; ++c )
    {
-      int ilp = (int)longphase;
-      float flp = longphase - ilp;
-      if( ilp == COMBS_PER_CHANNEL )
-         ilp = 0;
+      for( int i=0; i<COMBS_PER_CHANNEL; ++i )
+         vweights[c][i] = 0;
       
-      if( flp > 0.9 )
+      if( mtype == 2 )
       {
-         float dt = (flp - 0.9) * 10; // this will be between 0,1
-         float nxt = sqrt( dt );
-         float prr = sqrt( 1.f - dt );
-         // std::cout << _D(longphase) << _D(dt) << _D(nxt) << _D(prr) << _D(ilp) << _D(flp) << std::endl;
-         vweights[ilp] = prr;
-         if( ilp == COMBS_PER_CHANNEL - 1 )
-            vweights[0] = nxt;
-         else
-            vweights[ilp + 1] = nxt;
+         int ilp = (int)longphase;
+         float flp = longphase - ilp;
+         if( ilp == COMBS_PER_CHANNEL )
+            ilp = 0;
+         
+         if( flp > 0.9 )
+         {
+            float dt = (flp - 0.9) * 10; // this will be between 0,1
+            float nxt = sqrt( dt );
+            float prr = sqrt( 1.f - dt );
+            // std::cout << _D(longphase) << _D(dt) << _D(nxt) << _D(prr) << _D(ilp) << _D(flp) << std::endl;
+            vweights[c][ilp] = prr;
+            if( ilp == COMBS_PER_CHANNEL - 1 )
+               vweights[c][0] = nxt;
+            else
+               vweights[c][ilp + 1] = nxt;
             
+         }
+         else
+         {
+            vweights[c][ilp] = 1.f;
+         }
       }
       else
       {
-         vweights[ilp] = 1.f;
+         float voices = *f[flng_voices];
+         vweights[c][0] = 1.0;
+         
+         for( int i=0; i<voices && i < 4; ++i )
+            vweights[c][i] = 1.0;
+         
+         int li = (int)voices;
+         float fi = voices-li;
+         if( li < 4 )
+            vweights[c][li] = fi;
       }
-   }
-   else
-   {
-      float voices = *f[flng_voices];
-      vweights[0] = 1.0;
-      
-      for( int i=0; i<voices && i < 4; ++i )
-         vweights[i] = 1.0;
-      
-      int li = (int)voices;
-      float fi = voices-li;
-      if( li < 4 )
-         vweights[li] = fi;
    }
 
    for( int b=0; b<BLOCK_SIZE; ++b )
@@ -190,11 +210,11 @@ void FlangerEffect::process(float* dataL, float* dataR)
          combs[c][b] = 0;
          for( int i=0; i<COMBS_PER_CHANNEL; ++i )
          {
-            if( vweights[i] > 0 )
+            if( vweights[c][i] > 0 )
             {
                auto tap = delaybase[c][i].v * ( 1.0 + lfoval[c][i].v * depth.v ) + 1;
                auto v = idels[c].value(tap);
-               combs[c][b] += vweights[i] * v;
+               combs[c][b] += vweights[c][i] * v;
             }
             
             lfoval[c][i].process();
@@ -232,8 +252,8 @@ void FlangerEffect::process(float* dataL, float* dataR)
          origw = 0.f;
       }
          
-      float outl = origw * dataL[b] + /* mix.v * */ 0.9 *  combs[0][b];
-      float outr = origw * dataR[b] + /* mix.v * */ 0.9 *  combs[1][b];
+      float outl = origw * dataL[b] + mix.v * combs[0][b];
+      float outr = origw * dataR[b] + mix.v * combs[1][b];
 
       outl = limit_range( (1.0f + gain.v ) * outl, -1.f, 1.f );
       outr = limit_range( (1.0f + gain.v ) * outr, -1.f, 1.f );
@@ -277,9 +297,9 @@ const char* FlangerEffect::group_label(int id)
    switch (id)
    {
    case 0:
-      return "Basics";
+      return "Modulation";
    case 1:
-      return "Voices";
+      return "Combs";
    case 2:
       return "Feedback";
    case 3:
@@ -294,9 +314,9 @@ int FlangerEffect::group_label_ypos(int id)
    case 0:
       return 1;
    case 1:
-      return 11;
+      return 9;
    case 2:
-      return 21;
+      return 19;
    case 3:
       return 27;
    }
@@ -313,16 +333,13 @@ void FlangerEffect::init_ctrltypes()
    fxdata->p[flng_depth].set_name( "Depth" );
    fxdata->p[flng_depth].set_type( ct_percent );
 
-   fxdata->p[flng_mix].set_name( "Mix" );
-   fxdata->p[flng_mix].set_type( ct_percent_bidirectional );
-
    fxdata->p[flng_mode].set_name( "Mode" );
    fxdata->p[flng_mode].set_type( ct_flangermode );
 
-   fxdata->p[flng_voices].set_name( "Voices" );
+   fxdata->p[flng_voices].set_name( "Count" );
    fxdata->p[flng_voices].set_type( ct_flangervoices );
 
-   fxdata->p[flng_voice_zero_pitch].set_name( "Voice 0 Pitch" );
+   fxdata->p[flng_voice_zero_pitch].set_name( "Base Pitch" );
    fxdata->p[flng_voice_zero_pitch].set_type( ct_flangerpitch );
 
    fxdata->p[flng_voice_detune].set_name( "Detune (unimpl)" );
@@ -334,14 +351,18 @@ void FlangerEffect::init_ctrltypes()
    fxdata->p[flng_feedback].set_name( "Feedback" );
    fxdata->p[flng_feedback].set_type( ct_percent );
 
-   fxdata->p[flng_fb_lf_damping].set_name( "FB LF Damp" );
+   fxdata->p[flng_fb_lf_damping].set_name( "LF Damp" );
    fxdata->p[flng_fb_lf_damping].set_type( ct_percent );
 
-   fxdata->p[flng_stereo_width].set_name( "Stereo Width (unimpl)" );
-   fxdata->p[flng_stereo_width].set_type( ct_percent );
-   
-   fxdata->p[flng_gain].set_name( "Gain" );
+   fxdata->p[flng_gain].set_name( "Saturation" );
    fxdata->p[flng_gain].set_type( ct_percent_bidirectional );
+
+   fxdata->p[flng_stereo_width].set_name( "Width (unimpl)" );
+   fxdata->p[flng_stereo_width].set_type( ct_percent );
+
+   fxdata->p[flng_mix].set_name( "Mix" );
+   fxdata->p[flng_mix].set_type( ct_percent_bidirectional );
+
 
    for( int i=flng_rate; i<flng_num_params; ++i )
    {
