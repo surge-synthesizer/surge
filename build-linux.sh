@@ -10,7 +10,7 @@ Usage: $0 [options] <command>
 
 Commands:
 
-    premake         Run premake only.
+    cmake           Run cmake only.
 
     build           Run the builds without cleans.
     install         Install built assets.
@@ -46,104 +46,46 @@ prerequisite_check()
         echo
         exit 1
     fi
+}
 
-    if [ ! $(which premake5) ]; then
-        echo
-        echo ${RED}ERROR: You do not have premake5 on your path${NC}
-        echo
-        echo Please download and install premake from https://premake.github.io per the Surge README.md
-        echo
-        exit 1
+run_cmake()
+{
+    mkdir -p build
+    cmake . -Bbuild
+    touch cmake-stamp
+}
+
+run_cmake_if()
+{
+    if [[ CMakeLists.txt -nt cmake-stamp ]]; then
+        run_cmake
     fi
-}
-
-run_premake()
-{
-    premake5 --cc=gcc --os=linux gmake2
-    touch premake-stamp
-}
-
-run_premake_if()
-{
-    if [[ premake5.lua -nt premake-stamp ]]; then
-        run_premake
+    if [[ ! -d build ]]; then
+        run_cmake
     fi
 }
 
 run_clean()
 {
-    local project=$1
-    echo
-    echo "Cleaning build - $project"
-    make clean
+    if [[ -d build ]]; then
+        cd build 
+        make clean
+    fi
 }
 
 run_build()
 {
-    local project=$1
-    mkdir -p build_logs
-
-    echo
-    echo Building surge-${project} with output in build_logs/build_${project}.log
-
-    # Since these are piped we lose status from the tee and get wrong return code so
-    set -o pipefail
-
-    if [[ -z "$option_verbose" ]]; then
-        make ${config} surge-${project} 2>&1 | tee build_logs/build_${project}.log
-    else
-        make ${config} surge-${project} verbose=1 2>&1 | tee build_logs/build_${project}.log
-    fi
-
+    local flavor=$1
+    cd build
+    make -j 2 $flavor
+  
     build_suc=$?
-    set +o pipefail
     if [[ $build_suc = 0 ]]; then
-        echo ${GREEN}Build of surge-${project} succeeded${NC}
+        echo ${GREEN}Build of ${flavor} succeeded${NC}
     else
         echo
-        echo ${RED}** Build of ${project} failed**${NC}
-        grep -i error build_logs/build_${project}.log
-        echo
-        echo ${RED}** Exiting failed ${project} build**${NC}
-        echo Complete information is in build_logs/build_${project}.log
-
-        exit 2
-    fi
-}
-
-run_build_headless()
-{
-    mkdir -p build_logs
-
-    echo
-    echo Building surge-headless with output in build_logs/build_headless.log
-
-    mkdir build
-    cmake . -Bbuild
-
-    # Since these are piped we lose status from the tee and get wrong return code so
-    set -o pipefail
-
-    if [[ -z "$option_verbose" ]]; then
-        make surge-headless -C build 2>&1 | tee build_logs/build_headless.log
-    else
-        make surge-headless verbose=1 -C build 2>&1 | tee build_logs/build_headless.log
-    fi
-
-    build_suc=$?
-    set +o pipefail
-    if [[ $build_suc = 0 ]]; then
-        echo ${GREEN}Build of surge-headless succeeded${NC}
-        mkdir -p "$headless_src_path"
-        cp build/surge-headless "${headless_src_path}/${dest_headless_name}"
-    else
-        echo
-        echo ${RED}** Build of headless failed**${NC}
-        grep -i error build_logs/build_headless.log
-        echo
-        echo ${RED}** Exiting failed headless build**${NC}
-        echo Complete information is in build_logs/build_headless.log
-
+        echo ${RED}** Build of ${flavor} failed**${NC}
+     
         exit 2
     fi
 }
@@ -151,22 +93,23 @@ run_build_headless()
 run_builds()
 {
     if [ ! -z "$option_vst2" ]; then
-        run_premake_if
-        run_build "vst2"
+        run_cmake_if
+        run_build "surge-vst2"
     fi
 
     if [ ! -z "$option_vst3" ]; then
-        run_premake_if
-        run_build "vst3"
+        run_cmake_if
+        run_build "Surge.vst3"
     fi
 
     if [ ! -z "$option_lv2" ]; then
-        run_premake_if
-        run_build "lv2"
+        run_cmake_if
+        run_build "Surge.lv2"
     fi
 
     if [ ! -z "$option_headless" ]; then
-        run_build_headless
+        run_cmake_if
+        run_build "surge-headless"
     fi
 }
 
@@ -204,22 +147,7 @@ run_install()
 
 run_clean_builds()
 {
-    if [ ! -e "Makefile" ]; then
-        echo "No surge workspace; no builds to clean"
-        return 0
-    fi
-
-    if [ ! -z "$option_vst2" ]; then
-        run_clean "vst2"
-    fi
-
-    if [ ! -z "$option_vst3" ]; then
-        run_clean "vst3"
-    fi
-
-    if [ ! -z "$option_lv2" ]; then
-        run_clean "lv2"
-    fi
+    run_clean
 }
 
 run_clean_all()
@@ -227,7 +155,7 @@ run_clean_all()
     run_clean_builds
 
     echo "Cleaning additional assets"
-    rm -rf Makefile surge-vst2.make surge-vst3.make surge-lv2.make surge-headless.make build_logs target obj premake-stamp build
+    rm -rf Makefile surge-vst2.make surge-vst3.make surge-lv2.make surge-headless.make build_logs target obj cmake-stamp build
 }
 
 run_uninstall()
@@ -302,11 +230,11 @@ fi
 
 if [ -z "$option_debug" ]; then
     config="config=release_x64"
-    vst2_src_path="target/vst2/Release/Surge.so"
+    vst2_src_path="build/libsurge-vst2.so"
     vst3_src_path="products/Surge.vst3"
     lv2_bundle_name="Surge.lv2"
-    lv2_src_path="target/lv2/Release/$lv2_bundle_name"
-    headless_src_path="target/headless/Release/Surge"
+    lv2_src_path="products/$lv2_bundle_name"
+    headless_src_path="build/surge-headless"
     dest_plugin_name="Surge.so"
     dest_headless_name="Surge-Headless"
 else
@@ -335,8 +263,8 @@ else
 fi
 
 case $1 in
-    premake)
-        run_premake
+    cmake)
+        run_cmake
         ;;
     build)
         run_builds

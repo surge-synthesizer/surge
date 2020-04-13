@@ -99,12 +99,15 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
       {
          auto top = workStack.front();
          workStack.pop_front();
-         for (auto& d : fs::directory_iterator(top))
+         if( fs::is_directory(top) )
          {
-            if (fs::is_directory(d))
+            for (auto& d : fs::directory_iterator(top))
             {
-               alldirs.push_back(d);
-               workStack.push_back(d);
+               if (fs::is_directory(d))
+               {
+                  alldirs.push_back(d);
+                  workStack.push_back(d);
+               }
             }
          }
       }

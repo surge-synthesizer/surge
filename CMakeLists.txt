@@ -132,18 +132,6 @@ set(SURGE_GUI_SOURCES
   src/common/gui/UIInstrumentation.cpp
   )
 
-set(SURGE_APPLE_SOURCES
-  src/mac/UserInteractionsMac.mm
-  )
-
-set(SURGE_APPLE_GUI_SOURCES
-  src/mac/DisplayInfoMac.mm
-  src/mac/RuntimeFontMac.cpp
-  src/mac/cocoa_utils.mm
-  vstgui.surge/vstgui/vstgui_mac.mm
-  vstgui.surge/vstgui/vstgui_uidescription_mac.mm
-  )
-
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp
   src/vst3/surgeentry.cpp
@@ -224,6 +212,15 @@ set( SURGE_VST2_LIBRARY_SOURCES
   vstgui.surge/vstgui/plugin-bindings/aeffguieditor.cpp
   )
 
+set( SURGE_LV2_SOURCES 
+  src/lv2/SurgeLv2Export.cpp
+  src/lv2/SurgeLv2Ui.cpp
+  src/lv2/SurgeLv2Util.cpp
+  src/lv2/SurgeLv2Vstgui.cpp
+  src/lv2/SurgeLv2Wrapper.cpp
+  vstgui.surge/vstgui/plugin-bindings/plugguieditor.cpp
+)
+
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
   libs/
@@ -243,58 +240,139 @@ set(SURGE_GUI_INCLUDES
   libs/nanosvg/src
   )
 
-# OS Specific Variables
-set(APPLE_COMPILE_OPTIONS
-  -msse2
-  "-D_aligned_malloc(x,a)=malloc(x)"
-  "-D_aligned_free(x)=free(x)"
-  )
-set(APPLE_INCLUDE_DIRECTORIES
-  src/mac
-  )
-set(APPLE_COMPILE_DEFINITIONS
-  MAC=1
-  MAC_COCOA=1
-  COCOA=1
-  OBJC_OLD_DISPATCH_PROTOTYPES=1
-  )
-set(APPLE_LINK_LIBRARIES
-  "-framework Accelerate"
-  "-framework ApplicationServices"
-  "-framework AudioUnit"
-  "-framework AudioToolbox"
-  "-framework Carbon"
-  "-framework CoreAudio"
-  "-framework CoreAudioKit"
-  "-framework CoreServices"
-  "-framework CoreText"
-  "-framework Cocoa"
-  "-framework CoreFoundation"
-  "-framework OpenGL"
-  "-framework QuartzCore"
+### OS SPECIFIC SECTION
+if( APPLE )
+  set(SURGE_OS_SOURCES
+    src/mac/UserInteractionsMac.mm
+    )
+
+  set(SURGE_OS_GUI_SOURCES
+    src/mac/DisplayInfoMac.mm
+    src/mac/RuntimeFontMac.cpp
+    src/mac/cocoa_utils.mm
+    vstgui.surge/vstgui/vstgui_mac.mm
+    vstgui.surge/vstgui/vstgui_uidescription_mac.mm
+    )
+
+  set(OS_COMPILE_OPTIONS
+    -msse2
+    "-D_aligned_malloc(x,a)=malloc(x)"
+    "-D_aligned_free(x)=free(x)"
+    ) 
+  set(OS_INCLUDE_DIRECTORIES
+    src/mac
+    )
+  set(OS_COMPILE_DEFINITIONS
+    MAC=1
+    MAC_COCOA=1
+    COCOA=1
+    OBJC_OLD_DISPATCH_PROTOTYPES=1
+    )
+  set(OS_LINK_LIBRARIES
+    "-framework Accelerate"
+    "-framework ApplicationServices"
+    "-framework AudioUnit"
+    "-framework AudioToolbox"
+    "-framework Carbon"
+    "-framework CoreAudio"
+    "-framework CoreAudioKit"
+    "-framework CoreServices"
+    "-framework CoreText"
+    "-framework Cocoa"
+    "-framework CoreFoundation"
+    "-framework OpenGL"
+    "-framework QuartzCore"
+    )
+elseif( UNIX AND NOT APPLE )
+  set(SURGE_OS_SOURCES
+    src/linux/UserInteractionsLinux.cpp
+    )
+
+  file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
+
+  set(SURGE_OS_GUI_SOURCES
+    src/linux/DisplayInfoLinux.cpp
+    src/linux/RuntimeFontLinux.cpp
+    src/linux/ConfigurationXml.S
+    src/linux/ScalablePiggy.S
+    vstgui.surge/vstgui/vstgui.cpp
+    vstgui.surge/vstgui/vstgui_uidescription.cpp
+    vstgui.surge/vstgui/lib/platform/common/genericoptionmenu.cpp
+    vstgui.surge/vstgui/lib/platform/common/generictextedit.cpp
+    ${LINUX_VSTGUI_GLOB}
+    )
+
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(CAIRO REQUIRED cairo)
+  pkg_check_modules(XCB REQUIRED xcb)
+  pkg_check_modules(XCBCURSOR REQUIRED xcb-cursor)
+  pkg_check_modules(XCBUTIL REQUIRED xcb-util)
+  pkg_check_modules(XCBXKB REQUIRED xcb-xkb)
+  pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
+  pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
+  
+  set(OS_COMPILE_OPTIONS
+    -msse2
+    "-D_aligned_malloc(x,a)=malloc(x)"
+    "-D_aligned_free(x)=free(x)"
+    -Wno-multichar
+    -fvisibility=hidden
+    -fvisibility-inlines-hidden
+    -fdata-sections
+    -ffunction-sections
+
+    ${CAIRO_CFLAGS_OTHER}
+    )
+
+  set(OS_COMPILE_DEFINITIONS
+    LINUX=1
+    RELEASE=1
+    )
+
+  set(OS_INCLUDE_DIRECTORIES
+    src/linux
+    ${CAIRO_INCLUDE_DIRS}
+    )
+
+  set(OS_LINK_LIBRARIES
+     pthread
+     stdc++fs
+     gcc_s
+     gcc
+     dl
+     ${CAIRO_LDFLAGS}
+     ${XCB_LDFLAGS}
+     ${XCBCURSOR_LDFLAGS}
+     ${XCBUTIL_LDFLAGS}
+     ${XCBXKB_LDFLAGS}
+     ${XKBCOMMON_LDFLAGS}
+     ${XKBX11COMMON_LDFLAGS}
+    )
+
+  add_custom_target( generate-svg-embed ALL )
+  add_custom_command(
+    TARGET generate-svg-embed
+    PRE_BUILD
+    COMMAND echo "Updating SVG Assets"
+    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
-set(LINUX_COMPILE_OPTIONS
-  -msse2
-  "-D_aligned_malloc(x,a)=malloc(x)"
-  "-D_aligned_free(x)=free(x)"
-  )
+elseif( WINDOWS )
 
-set(LINUX_COMPILE_DEFINITIONS
-  LINUX=1
-  )
+  set(WINDOWS_COMPILE_DEFINITIONS
+    WINDOWS=1
+    NOMINMAX=1
+    )
 
-set(WINDOWS_COMPILE_DEFINITIONS
-  WINDOWS=1
-  NOMINMAX=1
-  )
-
-set(WINDOWS_COMPILE_OPTIONS
-  /arch:SSE2
-  "/FI precompiled.h"
-  /Zc:alignedNew
-  /bigobj
-  )
+  set(WINDOWS_COMPILE_OPTIONS
+    /arch:SSE2
+    "/FI precompiled.h"
+    /Zc:alignedNew
+    /bigobj
+    )
+else()
+  message( "UNKNOWN OS. Please use lin mac or win" )
+endif()
 
 
 #
@@ -305,8 +383,8 @@ if( BUILD_AU )
     SHARED
     ${SURGE_COMMON_SOURCES}
     ${SURGE_GUI_SOURCES}
-    ${SURGE_APPLE_SOURCES}
-    ${SURGE_APPLE_GUI_SOURCES}
+    ${SURGE_OS_SOURCES}
+    ${SURGE_OS_GUI_SOURCES}
     ${SURGE_AU_SOURCES}
     ${SURGE_AU_LIBRARY_SOURCES}
     )
@@ -315,20 +393,20 @@ if( BUILD_AU )
 
   target_compile_definitions(surge-au
     PRIVATE
-    ${APPLE_COMPILE_DEFINITIONS}
+    ${OS_COMPILE_DEFINITIONS}
     TARGET_AUDIOUNIT=1
     )
 
   target_compile_options(surge-au
     PRIVATE
-    ${APPLE_COMPILE_OPTIONS}
+    ${OS_COMPILE_OPTIONS}
     )
 
   target_include_directories(surge-au
     PRIVATE
     ${SURGE_COMMON_INCLUDES}
     ${SURGE_GUI_INCLUDES}
-    ${APPLE_INCLUDE_DIRECTORIES}
+    ${OS_INCLUDE_DIRECTORIES}
     src/au
     libs/AUPublic
     libs/PublicUtility
@@ -336,7 +414,7 @@ if( BUILD_AU )
 
   target_link_libraries(surge-au
     PRIVATE
-    ${APPLE_LINK_LIBRARIES}
+    ${OS_LINK_LIBRARIES}
     )
 
   add_custom_target( Surge.component ALL )
@@ -352,51 +430,78 @@ endif()
 
 # Currently this is MAC only VST3
 if( BUILD_VST3 )
+  if( UNIX AND NOT APPLE )
+    # Sigh - vst3sdk ships with non-working code if you has it 
+    get_filename_component(full_path_test_cpp ${CMAKE_CURRENT_SOURCE_DIR}/vst3sdk/base/source/timer.cpp ABSOLUTE)
+    list(REMOVE_ITEM SURGE_VST3_LIBRARY_SOURCES "${full_path_test_cpp}")
+  endif()
+
   add_library(surge-vst3
     SHARED
     ${SURGE_COMMON_SOURCES}
     ${SURGE_GUI_SOURCES}
-    ${SURGE_APPLE_SOURCES}
-    ${SURGE_APPLE_GUI_SOURCES}
+    ${SURGE_OS_SOURCES}
+    ${SURGE_OS_GUI_SOURCES}
     ${SURGE_VST3_SOURCES}
     ${SURGE_VST3_LIBRARY_SOURCES}
     )
 
   target_compile_features(surge-vst3 PRIVATE cxx_std_17 )
 
+  if( UNIX AND NOT APPLE )
+    add_dependencies(surge-vst3 generate-svg-embed)
+    target_sources(surge-vst3 PUBLIC
+         vst3sdk/public.sdk/source/main/linuxmain.cpp
+         src/linux/LinuxVST3Helpers.cpp)
+
+  endif()
+  
   target_compile_definitions(surge-vst3
     PRIVATE
-    ${APPLE_COMPILE_DEFINITIONS}
+    ${OS_COMPILE_DEFINITIONS}
     TARGET_VST3=1
     )
 
   target_compile_options(surge-vst3
     PRIVATE
-    ${APPLE_COMPILE_OPTIONS}
+    ${OS_COMPILE_OPTIONS}
     )
 
   target_include_directories(surge-vst3
     PRIVATE
     ${SURGE_COMMON_INCLUDES}
     ${SURGE_GUI_INCLUDES}
-    ${APPLE_INCLUDE_DIRECTORIES}
+    ${OS_INCLUDE_DIRECTORIES}
     src/vst3
     vst3sdk/
     )
 
   target_link_libraries(surge-vst3
     PRIVATE
-    ${APPLE_LINK_LIBRARIES}
+    ${OS_LINK_LIBRARIES}
     )
 
-  add_custom_target( Surge.vst3 ALL )
-  add_dependencies( Surge.vst3 surge-vst3 )
-  add_custom_command(
-    TARGET Surge.vst3
-    POST_BUILD
-    COMMAND echo "Packaging up VST3 component"
-    COMMAND (cd .. && ./scripts/macOS/package-vst3.sh )
-    )
+  if( APPLE )
+    add_custom_target( Surge.vst3 ALL )
+    add_dependencies( Surge.vst3 surge-vst3 )
+    add_custom_command(
+      TARGET Surge.vst3
+      POST_BUILD
+      COMMAND echo "Packaging up VST3 component"
+      COMMAND (cd .. && ./scripts/macOS/package-vst3.sh )
+      )
+   elseif( UNIX )
+    add_custom_target( Surge.vst3 ALL )
+    add_dependencies( Surge.vst3 surge-vst3 )
+    add_custom_command(
+      TARGET Surge.vst3
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Packaging up VST3 component"
+      COMMAND pwd
+      COMMAND ./scripts/linux/package-vst3.sh 
+      )
+   endif()
 
 endif()
 
@@ -405,38 +510,51 @@ if( BUILD_VST2 )
     SHARED
     ${SURGE_COMMON_SOURCES}
     ${SURGE_GUI_SOURCES}
-    ${SURGE_APPLE_SOURCES}
-    ${SURGE_APPLE_GUI_SOURCES}
+    ${SURGE_OS_SOURCES}
+    ${SURGE_OS_GUI_SOURCES}
     ${SURGE_VST2_SOURCES}
     ${SURGE_VST2_LIBRARY_SOURCES}
     )
+
+  if( UNIX AND NOT APPLE )
+    add_dependencies(surge-vst2 generate-svg-embed)
+    target_sources(surge-vst2 PUBLIC src/linux/linux-aeffguieditor.cpp )
+    
+    # Ideally we wouldn't define __cdecl on linux. It's not needed
+    # Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
+    # it so without __cdecl blank defined on linux vst2, we don't get
+    # reliable builds. We considered defining it just where used but
+    # it is used also, indirectly, by the vst3 sdk, so the smallest
+    # change is this diff plus this comment.
+    target_compile_definitions( surge-vst2 PRIVATE "__cdecl=" )
+  endif()
 
   target_compile_features(surge-vst2 PRIVATE cxx_std_17 )
 
   target_compile_definitions(surge-vst2
     PRIVATE
-    ${APPLE_COMPILE_DEFINITIONS}
+    ${OS_COMPILE_DEFINITIONS}
     TARGET_VST2=1
     VSTGUI_ENABLE_DEPRECATED_METHODS=0
     )
 
   target_compile_options(surge-vst2
     PRIVATE
-    ${APPLE_COMPILE_OPTIONS}
+    ${OS_COMPILE_OPTIONS}
     )
 
   target_include_directories(surge-vst2
     PRIVATE
     ${SURGE_COMMON_INCLUDES}
     ${SURGE_GUI_INCLUDES}
-    ${APPLE_INCLUDE_DIRECTORIES}
+    ${OS_INCLUDE_DIRECTORIES}
     src/vst2
     ${VST2SDK_DIR}
     )
 
   target_link_libraries(surge-vst2
     PRIVATE
-    ${APPLE_LINK_LIBRARIES}
+    ${OS_LINK_LIBRARIES}
     )
 
   add_custom_target( Surge.vst2 ALL )
@@ -447,6 +565,62 @@ if( BUILD_VST2 )
     COMMAND echo "Packaging up VST2 component"
     COMMAND (cd .. && ./scripts/macOS/package-vst.sh )
     )
+
+endif()
+
+if( BUILD_LV2 )
+  add_library(surge-lv2
+    SHARED
+    ${SURGE_COMMON_SOURCES}
+    ${SURGE_GUI_SOURCES}
+    ${SURGE_OS_SOURCES}
+    ${SURGE_OS_GUI_SOURCES}
+    ${SURGE_LV2_SOURCES}
+    ${SURGE_LV2_LIBRARY_SOURCES}
+    )
+
+  target_compile_features(surge-lv2 PRIVATE cxx_std_17 )
+
+  if( UNIX AND NOT APPLE )
+    add_dependencies(surge-lv2 generate-svg-embed)
+  endif()
+  
+  target_compile_definitions(surge-lv2
+    PRIVATE
+    ${OS_COMPILE_DEFINITIONS}
+    TARGET_LV2=1
+    )
+
+  target_compile_options(surge-lv2
+    PRIVATE
+    ${OS_COMPILE_OPTIONS}
+    )
+
+  target_include_directories(surge-lv2
+    PRIVATE
+    ${SURGE_COMMON_INCLUDES}
+    ${SURGE_GUI_INCLUDES}
+    ${OS_INCLUDE_DIRECTORIES}
+    src/lv2
+    libs/lv2
+    )
+
+  target_link_libraries(surge-lv2
+    PRIVATE
+    ${OS_LINK_LIBRARIES}
+    )
+
+  add_custom_target( Surge.lv2 ALL )
+  add_dependencies( Surge.lv2 surge-lv2 )
+  add_custom_command(
+      TARGET Surge.lv2
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Packaging up LV2 component"
+      COMMAND mkdir -p products/Surge.lv2 
+      COMMAND cp build/libsurge-lv2.so products/Surge.lv2/Surge.so
+      COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.so 
+      )
 
 endif()
 
