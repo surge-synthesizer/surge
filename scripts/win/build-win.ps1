@@ -57,12 +57,6 @@ if( $w32 )
 }
 
 
-If( -Not ( Test-Path .\Surge.sln ) )
-{
-    Write-Host "Please run premake"
-    return
-}
-
 function Build-Surge
 {
     Write-Host "Building"

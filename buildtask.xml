@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
-        <ProjectToBuild Include="surge.sln">
+        <ProjectToBuild Include="build/Surge.sln">
             <Properties>Configuration=Release</Properties>
         </ProjectToBuild>
     </ItemGroup>

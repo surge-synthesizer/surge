@@ -80,18 +80,20 @@ jobs:
     displayName: macOS - run unit tests
 
   - bash: |
-      pushd $AGENT_TEMPDIRECTORY
-      export PREMAKE_WINDOWS=https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip
-      curl -L $PREMAKE_WINDOWS --output premake5.zip
-      unzip premake5.zip
-      popd
-
-      export PATH=$AGENT_TEMPDIRECTORY:$PATH
-      premake5 vs2017
+      mkdir -p build
+      cmake -Bbuild -A x64
       ls -alFh
 
-    condition: variables.isWindows
-    displayName: windows - setup premake for plugins
+    condition: and(variables.isWindows,variables.is64Bit)
+    displayName: windows - setup 64bit build for plugins
+
+  - bash: |
+      mkdir -p build
+      cmake -Bbuild -A Win32
+      ls -alFh
+
+    condition: and(variables.isWindows,variables.is32Bit)
+    displayName: windows - setup 32 bit build for plugins
 
   - task: MSBuild@1
     inputs:
