@@ -24,9 +24,10 @@ set( BUILD_HEADLESS true )
 set( BUILD_VST3 true )
 
 if( DEFINED ENV{VST2SDK_DIR} )
-  message( "-- Configured to build VST2" )
   set( BUILD_VST2 true )
-  set( VST2SDK_DIR $ENV{VST2SDK_DIR} )
+  file( TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" VST2SDK_DIR )
+  message( "-- Configured to build VST2 using " ${VST2SDK_DIR} )
+ 
 else()
   set( BUILD_VST2 false )
 endif()
@@ -516,7 +517,6 @@ if( BUILD_VST3 )
     ${OS_COMPILE_OPTIONS}
     )
 
-  message( "ADDING OS INCLUDE " ${OS_INCLUDE_DIRECTORIES})
   target_include_directories(surge-vst3
     PRIVATE
     ${SURGE_COMMON_INCLUDES}
