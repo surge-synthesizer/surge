@@ -67,7 +67,6 @@ surge-*.make
 premake-stamp
 cmake-stamp
 /Debug
-src/linux/ScalablePiggy*
 *.deb
 
 # Qt Creator

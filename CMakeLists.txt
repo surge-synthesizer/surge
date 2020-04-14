@@ -1,19 +1,16 @@
 # Surge CMake file
 # Exports targets for each of our builds
 #
-# Current Status - this builds the following assets
+# Current Status - this builds the whole shooting match
+# See issue 1206 for our working list to get this finished
 #
-# Win32   headless
-# Win64   headless
-# MacOSX  headless
-# Linux   headless
 
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12 CACHE STRING "Build for 10.12")
 
 project(Surge VERSION 1.7.0 LANGUAGES CXX ASM)
 
-#set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 # Set up external packages
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
@@ -287,6 +284,8 @@ if( APPLE )
 elseif( UNIX AND NOT APPLE )
   set(SURGE_OS_SOURCES
     src/linux/UserInteractionsLinux.cpp
+    src/linux/ConfigurationXml.S
+    src/linux/ScalablePiggy.S
     )
 
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
@@ -294,8 +293,6 @@ elseif( UNIX AND NOT APPLE )
   set(SURGE_OS_GUI_SOURCES
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
-    src/linux/ConfigurationXml.S
-    src/linux/ScalablePiggy.S
     vstgui.surge/vstgui/vstgui.cpp
     vstgui.surge/vstgui/vstgui_uidescription.cpp
     vstgui.surge/vstgui/lib/platform/common/genericoptionmenu.cpp
@@ -349,14 +346,6 @@ elseif( UNIX AND NOT APPLE )
      ${XKBCOMMON_LDFLAGS}
      ${XKBX11COMMON_LDFLAGS}
     )
-
-  add_custom_target( generate-svg-embed ALL )
-  add_custom_command(
-    TARGET generate-svg-embed
-    PRE_BUILD
-    COMMAND echo "Updating SVG Assets"
-    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_CURRENT_SOURCE_DIR}
-  )
 
 elseif( WIN32 )
 
@@ -494,7 +483,6 @@ if( BUILD_VST3 )
   target_compile_features(surge-vst3 PRIVATE cxx_std_17 )
 
   if( UNIX AND NOT APPLE )
-    add_dependencies(surge-vst3 generate-svg-embed)
     target_sources(surge-vst3 PUBLIC
          vst3sdk/public.sdk/source/main/linuxmain.cpp
          src/linux/LinuxVST3Helpers.cpp)
@@ -578,7 +566,6 @@ if( BUILD_VST2 )
     )
 
   if( UNIX AND NOT APPLE )
-    add_dependencies(surge-vst2 generate-svg-embed)
     target_sources(surge-vst2 PUBLIC src/linux/linux-aeffguieditor.cpp )
     
     # Ideally we wouldn't define __cdecl on linux. It's not needed
@@ -659,10 +646,6 @@ if( BUILD_LV2 )
     )
 
   target_compile_features(surge-lv2 PRIVATE cxx_std_17 )
-
-  if( UNIX AND NOT APPLE )
-    add_dependencies(surge-lv2 generate-svg-embed)
-  endif()
   
   target_compile_definitions(surge-lv2
     PRIVATE
@@ -725,6 +708,7 @@ if( BUILD_HEADLESS )
 
   target_compile_definitions(surge-headless
     PRIVATE
+    ${OS_COMPILE_DEFINITIONS}
     TARGET_HEADLESS=1
     LIBMIDIFILE=1
     )
@@ -733,6 +717,7 @@ if( BUILD_HEADLESS )
     PRIVATE
     ${SURGE_COMMON_INCLUDES}
     ${LIB_MIDIFILE_INCLUDES}
+    ${OS_INCLUDE_DIRECTORIES}
     src/headless
     )
 
@@ -745,95 +730,28 @@ if( BUILD_HEADLESS )
       PRIVATE
       LIBSNDFILE=1
       )
-    target_link_libraries(surge-headless ${LIBSNDFILE_LIBRARIES})
+    target_link_libraries(surge-headless PRIVATE ${LIBSNDFILE_LIBRARIES})
     include_directories(surge-headless ${LIBSNDFILE_INCLUDE_DIRS})
   endif()
 
-  # *NIX
-  if (UNIX)
-    target_compile_options(surge-headless
-      PRIVATE
-      -msse2
-      "-D_aligned_malloc(x,a)=malloc(x)"
-      "-D_aligned_free(x)=free(x)"
-      )
-  endif()
+  target_link_libraries(surge-headless
+    PRIVATE
+    ${OS_LINK_LIBRARIES}
+    )
 
-  # macOS
-  if (APPLE)
-    target_compile_definitions(surge-headless
-      PRIVATE
-      MAC=1
-      MAC_COCOA=1
-      COCOA=1
-      OBJC_OLD_DISPATCH_PROTOTYPES=1
-      )
+  target_compile_options(surge-headless
+    PRIVATE
+    ${OS_COMPILE_OPTIONS}
+    )
 
-    target_include_directories(surge-headless
-      PRIVATE
-      src/mac
-      )
 
-    target_link_libraries(surge-headless
-      "-framework ApplicationServices"
-      "-framework CoreFoundation"
-      )
-  endif()
-
-  # Linux
-  if (UNIX AND NOT APPLE)
+  if( UNIX AND NOT APPLE )
     find_package(Threads REQUIRED)
-
-    add_custom_target(
-      scalable-piggy ALL
-      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/linux/_ScalablePiggy.S
-      )
-
-    add_custom_command(
-      OUTPUT
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/linux/_ScalablePiggy.S
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/linux/ScalablePiggy.S
-
-      COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_CURRENT_SOURCE_DIR}
-      )
-
-    target_compile_definitions(surge-headless
-      PRIVATE
-      LINUX=1
-      )
-
-    target_sources(surge-headless
-      PRIVATE
-      src/linux/ConfigurationXml.S
-      src/linux/ScalablePiggy.S
-      )
-
-    target_include_directories(surge-headless
-      PRIVATE
-      src/linux
-      )
-
+    target_sources( surge-headless PUBLIC src/linux/ConfigurationXml.S )
     target_link_libraries(surge-headless
+      PRIVATE
       stdc++fs
       Threads::Threads
       )
-  endif()
-
-  if (WIN32)
-    target_compile_definitions(surge-headless
-      PRIVATE
-      WINDOWS=1
-      NOMINMAX=1
-      )
-
-    target_compile_options(surge-headless
-      PRIVATE
-      /arch:SSE2
-      "/FI precompiled.h"
-      /Zc:alignedNew
-      /bigobj
-      )
-
-    target_link_libraries(surge-headless winmm.lib)
   endif()
 endif()
