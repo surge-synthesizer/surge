@@ -357,21 +357,65 @@ elseif( UNIX AND NOT APPLE )
     COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
-elseif( WINDOWS )
+elseif( WIN32 )
 
-  set(WINDOWS_COMPILE_DEFINITIONS
-    WINDOWS=1
-    NOMINMAX=1
+  set(SURGE_OS_SOURCES
+    src/windows/UserInteractionsWin.cpp
     )
 
-  set(WINDOWS_COMPILE_OPTIONS
+  set(SURGE_OS_GUI_SOURCES
+    src/windows/DisplayInfoWin.cpp
+    src/windows/RuntimeFontWin.cpp
+    src/windows/surge.rc 
+    vstgui.surge/vstgui/vstgui_win32.cpp
+    vstgui.surge/vstgui/vstgui_uidescription_win32.cpp
+  ) 
+
+  set(OS_COMPILE_DEFINITIONS
+    WINDOWS=1
+    NOMINMAX=1
+    WIN32
+    _WIN32_WINNT=0x0601
+    _USRDLL
+    VA_SUBTRACTIVE_EXPORTS
+    TIXML_USE_STL
+    USE_LIBPNG
+    _CRT_SECURE_NO_WARNINGS=1
+    )
+
+  if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
+    set( WIN_DLL_BASENAME "Surge_x86" )
+    list( APPEND OS_COMPILE_DEFINITIONS WIN_X86=1 )
+  else()
+    set( WIN_DLL_BASENAME "Surge" )
+  endif()
+
+
+  set(OS_COMPILE_OPTIONS
     /arch:SSE2
-    "/FI precompiled.h"
+    /FIprecompiled.h
     /Zc:alignedNew
     /bigobj
     )
+
+  set(OS_INCLUDE_DIRECTORIES 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    src/windows
+    libs/wtl
+    )
+
+  set(OS_LINK_LIBRARIES 
+    Winmm
+    gdi32
+    gdiplus
+    ComDlg32
+    ComCtl32
+    shell32
+    user32
+    ../libs/libpng/win/x64/lib/libpng16_static
+  )
 else()
-  message( "UNKNOWN OS. Please use lin mac or win" )
+  message(FATAL_ERROR "UNKNOWN OS. Please use lin mac or win" )
 endif()
 
 
@@ -455,7 +499,12 @@ if( BUILD_VST3 )
          src/linux/LinuxVST3Helpers.cpp)
 
   endif()
-  
+
+  if( WIN32 )
+    target_sources(surge-vst3 PUBLIC vst3sdk/public.sdk/source/main/dllmain.cpp)
+    target_link_options( surge-vst3 PUBLIC  "/DEF:..\\resources\\windows-vst3\\surge.def" )
+  endif()
+
   target_compile_definitions(surge-vst3
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
@@ -467,6 +516,7 @@ if( BUILD_VST3 )
     ${OS_COMPILE_OPTIONS}
     )
 
+  message( "ADDING OS INCLUDE " ${OS_INCLUDE_DIRECTORIES})
   target_include_directories(surge-vst3
     PRIVATE
     ${SURGE_COMMON_INCLUDES}
@@ -501,6 +551,17 @@ if( BUILD_VST3 )
       COMMAND pwd
       COMMAND ./scripts/linux/package-vst3.sh 
       )
+    elseif( WIN32 )
+     add_custom_target( surgev3-dll ALL )
+     add_dependencies( surgev3-dll surge-vst3 )
+     add_custom_command(
+       TARGET surgev3-dll
+       POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/target/vst3/Release
+       
+       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst3.dll 
+                                        ${CMAKE_CURRENT_SOURCE_DIR}/target/vst3/Release/${WIN_DLL_BASENAME}.vst3
+     )
    endif()
 
 endif()
@@ -527,6 +588,9 @@ if( BUILD_VST2 )
     # it is used also, indirectly, by the vst3 sdk, so the smallest
     # change is this diff plus this comment.
     target_compile_definitions( surge-vst2 PRIVATE "__cdecl=" )
+  endif()
+  if( WIN32 )
+    target_link_options( surge-vst2 PUBLIC  "/DEF:..\\resources\\windows-vst2\\surge.def" )
   endif()
 
   target_compile_features(surge-vst2 PRIVATE cxx_std_17 )
@@ -557,14 +621,29 @@ if( BUILD_VST2 )
     ${OS_LINK_LIBRARIES}
     )
 
-  add_custom_target( Surge.vst2 ALL )
-  add_dependencies( Surge.vst2 surge-vst2 )
-  add_custom_command(
-    TARGET Surge.vst2
-    POST_BUILD
-    COMMAND echo "Packaging up VST2 component"
-    COMMAND (cd .. && ./scripts/macOS/package-vst.sh )
-    )
+  if( APPLE )
+    add_custom_target( Surge.vst2 ALL )
+    add_dependencies( Surge.vst2 surge-vst2 )
+    add_custom_command(
+      TARGET Surge.vst2
+      POST_BUILD
+      COMMAND echo "Packaging up VST2 component"
+      COMMAND (cd .. && ./scripts/macOS/package-vst.sh )
+      )
+   endif()
+
+   if( WIN32 )
+     add_custom_target( surgev2-dll ALL )
+     add_dependencies( surgev2-dll surge-vst2 )
+     add_custom_command(
+       TARGET surgev2-dll
+       POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/target/vst2/Release
+       
+       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll 
+                                        ${CMAKE_CURRENT_SOURCE_DIR}/target/vst2/Release/${WIN_DLL_BASENAME}.dll
+     )
+   endif()
 
 endif()
 
