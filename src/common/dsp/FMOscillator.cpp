@@ -85,7 +85,7 @@ void FMOscillator::init_ctrltypes()
 
    oscdata->p[4].set_name("M3 Amount");
    oscdata->p[4].set_type(ct_percent);
-   oscdata->p[5].set_name("M3 Freq");
+   oscdata->p[5].set_name("M3 Frequency");
    oscdata->p[5].set_type(ct_freq_audible);
 
    oscdata->p[6].set_name("Feedback");
@@ -184,9 +184,9 @@ void FM2Oscillator::init_ctrltypes()
    oscdata->p[2].set_type(ct_percent);
    oscdata->p[3].set_name("M2 Ratio");
    oscdata->p[3].set_type(ct_fmratio_int);
-   oscdata->p[4].set_name("Mx Shift");
+   oscdata->p[4].set_name("M1/2 Offset");
    oscdata->p[4].set_type(ct_freq_shift);
-   oscdata->p[5].set_name("Mx Start Phase");
+   oscdata->p[5].set_name("M1/2 Phase");
    oscdata->p[5].set_type(ct_percent);
    oscdata->p[6].set_name("Feedback");
    oscdata->p[6].set_type(ct_percent);
