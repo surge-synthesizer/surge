@@ -2276,7 +2276,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                cancellearn = true;
 
             std::string learnTag =
-                cancellearn ? "Abort learn controller" : "Learn controller [MIDI]";
+                cancellearn ? "Abort controller MIDI learn" : "MIDI learn controller...";
             addCallbackMenu(contextMenu, learnTag, [this, cancellearn, ccid] {
                if (cancellearn)
                   synth->learn_param = -1;
@@ -2289,7 +2289,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             {
                char txt4[128];
                decode_controllerid(txt4, synth->storage.controllers[ccid]);
-               sprintf(txt, "Clear controller [currently %s]", txt4);
+               sprintf(txt, "Clear controller [%s]", txt4);
                addCallbackMenu(contextMenu, txt, [this, ccid]() {
                   synth->storage.controllers[ccid] = -1;
                   synth->storage.save_midi_controllers();
@@ -2327,7 +2327,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             contextMenu->addEntry("-", eid++);
 
-            // Construct submenus for expicit controller mapping
+            // Construct submenus for explicit controller mapping
             COptionMenu* midiSub =
                 new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
             COptionMenu* currentSub;
@@ -2423,7 +2423,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             // if(p->can_temposync() || p->can_extend_range())	contextMenu->addEntry("-",eid++);
             if (p->can_temposync())
             {
-               addCallbackMenu(contextMenu, "Temposync",
+               addCallbackMenu(contextMenu, "Tempo sync",
                                [this, p, control]() {
                                   p->temposync = !p->temposync;
                                   if( p->temposync )
@@ -2447,7 +2447,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                {
                   char lab[256];
                   char prefix[256];
-                  char un[5];
 
                   // WARNING - this won't work with Surge++
                   int a = p->ctrlgroup_entry + 1 - ms_lfo1;
@@ -2459,16 +2458,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   bool setTSTo;
                   if( p->temposync )
                   {
-                     un[0] = 'U'; un[1] = 'n'; un[2] = '-', un[3] = 0;;
+                     snprintf(lab, 256, "Disable tempo sync for all %s parameters", prefix);
                      setTSTo = false;
                   }
                   else
                   {
-                     un[0] = 0;
+                     snprintf(lab, 256, "Enable tempo sync for all %s parameters", prefix);
                      setTSTo = true;
                   }
 
-                  snprintf(lab, 256, "%sTempoSync all %s Params", un, prefix );
                   addCallbackMenu( contextMenu, lab,
                                    [this, p, setTSTo](){
                                       // There is surely a more efficient way but this is fine
@@ -2515,7 +2513,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (synth->learn_param > -1)
                   cancellearn = true;
                std::string learnTag =
-                  cancellearn ? "Abort learn controller" : "Learn controller [MIDI]";
+                  cancellearn ? "Abort parameter MIDI learn" : "MIDI learn parameter...";
                addCallbackMenu(contextMenu, learnTag, [this, cancellearn, p] {
                                                          if (cancellearn)
                                                             synth->learn_param = -1;
@@ -2529,7 +2527,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             {
                char txt4[128];
                decode_controllerid(txt4, p->midictrl);
-               sprintf(txt, "Clear controller [currently %s]", txt4);
+               sprintf(txt, "Clear learned MIDI [%s]", txt4);
                addCallbackMenu(contextMenu, txt,
                                [this, p, ptag]() {
                                   // p->midictrl = -1;

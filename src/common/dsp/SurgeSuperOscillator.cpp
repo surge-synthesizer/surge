@@ -293,16 +293,16 @@ void SurgeSuperOscillator::init_ctrltypes()
    oscdata->p[1].set_name("Width");
    oscdata->p[1].set_type(ct_percent);
    oscdata->p[1].val_default.f = 0.5f;
-   oscdata->p[2].set_name("Sub Width");
+   oscdata->p[2].set_name("Sub Osc Width");
    oscdata->p[2].set_type(ct_percent);
    oscdata->p[2].val_default.f = 0.5f;
-   oscdata->p[3].set_name("Sub Level");
+   oscdata->p[3].set_name("Sub Osc Level");
    oscdata->p[3].set_type(ct_percent);
    oscdata->p[4].set_name("Sync");
    oscdata->p[4].set_type(ct_syncpitch);
-   oscdata->p[5].set_name("Uni Spread");
+   oscdata->p[5].set_name("Unison Detune");
    oscdata->p[5].set_type(ct_oscspread);
-   oscdata->p[6].set_name("Uni Count");
+   oscdata->p[6].set_name("Unison Voices");
    oscdata->p[6].set_type(ct_osccount);
 }
 void SurgeSuperOscillator::init_default_values()

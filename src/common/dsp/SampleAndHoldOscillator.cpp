@@ -108,9 +108,9 @@ void SampleAndHoldOscillator::init_ctrltypes()
    oscdata->p[3].set_type(ct_none);
    oscdata->p[4].set_name("Sync");
    oscdata->p[4].set_type(ct_syncpitch);
-   oscdata->p[5].set_name("Uni Spread");
+   oscdata->p[5].set_name("Unison Detune");
    oscdata->p[5].set_type(ct_oscspread);
-   oscdata->p[6].set_name("Uni Count");
+   oscdata->p[6].set_name("Unison Voices");
    oscdata->p[6].set_type(ct_osccount);
 }
 void SampleAndHoldOscillator::init_default_values()

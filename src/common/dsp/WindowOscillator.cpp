@@ -80,9 +80,9 @@ void WindowOscillator::init_ctrltypes()
    oscdata->p[2].set_name("Window");
    oscdata->p[2].set_type(ct_wt2window);
 
-   oscdata->p[5].set_name("Uni Spread");
+   oscdata->p[5].set_name("Unison Detune");
    oscdata->p[5].set_type(ct_oscspread);
-   oscdata->p[6].set_name("Uni Count");
+   oscdata->p[6].set_name("Unison Voices");
    oscdata->p[6].set_type(ct_osccountWT);
 }
 void WindowOscillator::init_default_values()

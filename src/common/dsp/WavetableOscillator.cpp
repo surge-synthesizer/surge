@@ -105,17 +105,17 @@ void WavetableOscillator::init_ctrltypes()
    oscdata->p[0].set_user_data(oscdata);
    oscdata->p[0].snap = false;
 
-   oscdata->p[1].set_name("Skew V");
+   oscdata->p[1].set_name("Skew Vertical");
    oscdata->p[1].set_type(ct_percent_bidirectional);
    oscdata->p[2].set_name("Saturate");
    oscdata->p[2].set_type(ct_percent);
    oscdata->p[3].set_name("Formant");
    oscdata->p[3].set_type(ct_syncpitch);
-   oscdata->p[4].set_name("Skew H");
+   oscdata->p[4].set_name("Skew Horizontal");
    oscdata->p[4].set_type(ct_percent_bidirectional);
-   oscdata->p[5].set_name("Uni Spread");
+   oscdata->p[5].set_name("Unison Detune");
    oscdata->p[5].set_type(ct_oscspread);
-   oscdata->p[6].set_name("Uni Count");
+   oscdata->p[6].set_name("Unison Voices");
    oscdata->p[6].set_type(ct_osccountWT);
 }
 void WavetableOscillator::init_default_values()

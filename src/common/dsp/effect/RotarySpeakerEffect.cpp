@@ -86,9 +86,9 @@ const char* RotarySpeakerEffect::group_label(int id)
    switch (id)
    {
    case 0:
-      return "Rate";
+      return "Horn";
    case 1:
-      return "Depth";
+      return "Modulation";
    }
    return 0;
 }
@@ -108,11 +108,11 @@ void RotarySpeakerEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[0].set_name("Horn Rate");
+   fxdata->p[0].set_name("Rate");
    fxdata->p[0].set_type(ct_lforate);
    fxdata->p[1].set_name("Doppler");
    fxdata->p[1].set_type(ct_percent);
-   fxdata->p[2].set_name("Amp Mod");
+   fxdata->p[2].set_name("Tremolo");
    fxdata->p[2].set_type(ct_percent);
 
    fxdata->p[0].posy_offset = 1;
