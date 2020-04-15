@@ -95,7 +95,7 @@ run_builds()
 {
     if [ ! -z "$option_vst2" ]; then
         run_cmake_if
-        run_build "surge-vst2"
+        run_build "Surge.vst2"
     fi
 
     if [ ! -z "$option_vst3" ]; then
@@ -231,7 +231,7 @@ fi
 
 if [ -z "$option_debug" ]; then
     config="config=release_x64"
-    vst2_src_path="build/libsurge-vst2.so"
+    vst2_src_path="products/Surge.vst2"
     vst3_src_path="products/Surge.vst3"
     lv2_bundle_name="Surge.lv2"
     lv2_src_path="products/$lv2_bundle_name"
