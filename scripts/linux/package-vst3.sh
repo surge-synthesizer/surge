@@ -15,4 +15,4 @@ fi
 
 VST_SO_DIR="$BUNDLE_DIR/Contents/x86_64-linux"
 mkdir -p "$VST_SO_DIR"
-cp build/libsurge-vst3.so "$VST_SO_DIR"/Surge.so
+cp $1 "$VST_SO_DIR"/Surge.so

@@ -456,8 +456,9 @@ if( BUILD_AU )
   add_custom_command(
     TARGET Surge.component
     POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Packaging up AU component"
-    COMMAND (cd .. && ./scripts/macOS/package-au.sh )
+    COMMAND ./scripts/macOS/package-au.sh  ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-au.dylib
     )
 
 endif()
@@ -483,7 +484,7 @@ if( BUILD_VST3 )
   target_compile_features(surge-vst3 PRIVATE cxx_std_17 )
 
   if( APPLE )
-    target_sources(surge-vst3 PUBLIC vst3sdk/public.sdk/source/main/macmain.cpp)
+    target_sources(surge-vst3 PRIVATE vst3sdk/public.sdk/source/main/macmain.cpp)
   elseif( UNIX AND NOT APPLE )
     target_sources(surge-vst3 PUBLIC
          vst3sdk/public.sdk/source/main/linuxmain.cpp
@@ -524,8 +525,9 @@ if( BUILD_VST3 )
     add_custom_command(
       TARGET Surge.vst3
       POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
-      COMMAND (cd .. && ./scripts/macOS/package-vst3.sh )
+      COMMAND ./scripts/macOS/package-vst3.sh ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst3.dylib
       )
    elseif( UNIX )
     add_custom_target( Surge.vst3 ALL )
@@ -536,7 +538,7 @@ if( BUILD_VST3 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
       COMMAND pwd
-      COMMAND ./scripts/linux/package-vst3.sh 
+      COMMAND ./scripts/linux/package-vst3.sh  ${CMAKE_BINARY_DIR}/libsurge-vst3.so
       )
     elseif( WIN32 )
      add_custom_target( surgev3-dll ALL )
@@ -613,8 +615,9 @@ if( BUILD_VST2 )
     add_custom_command(
       TARGET Surge.vst2
       POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST2 component"
-      COMMAND (cd .. && ./scripts/macOS/package-vst.sh )
+      COMMAND ./scripts/macOS/package-vst.sh   ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst2.dylib
       )
    endif()
   if( UNIX AND NOT APPLE )
@@ -763,4 +766,89 @@ if( BUILD_HEADLESS )
       Threads::Threads
       )
   endif()
+endif()
+
+#
+# INSTALL RULES - currently implemented on APPLE only
+#
+if( APPLE )
+  add_custom_target( all-components )
+  if( BUILD_VST2 )
+    add_dependencies(all-components Surge.vst2 )
+  endif()
+  add_dependencies(all-components Surge.vst3 )
+  add_dependencies(all-components Surge.component )
+
+  add_custom_target( run-headless )
+  add_dependencies( run-headless install-resources-local )
+  add_dependencies( run-headless surge-headless )
+  add_custom_command(
+    TARGET run-headless
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${CMAKE_BINARY_DIR}/Release/surge-headless
+    )
+  
+  add_custom_target( install-resources-local )
+  add_custom_command(
+    TARGET install-resources-local
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing local resources"
+    COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge/"
+    )
+  
+  add_custom_target( install-au-local )
+  add_dependencies( install-au-local Surge.component )
+  add_dependencies( install-au-local install-resources-local )
+  add_custom_command(
+    TARGET install-au-local
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing audio unit locally"
+    rsync -r --delete "products/Surge.component/" "\${HOME}/Library/Audio/Plug-Ins/Components/Surge.component/"
+    )
+
+  add_custom_target( validate-au )
+  add_dependencies( validate-au install-au-local )
+  add_custom_command(
+    TARGET validate-au
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND auval -vt aumu VmbA
+    )
+
+  if( BUILD_VST2 )
+    add_custom_target( install-vst2-local )
+    add_dependencies( install-vst2-local Surge.vst2 )
+    add_dependencies( install-vst2-local install-resources-local )
+    add_custom_command(
+      TARGET install-vst2-local
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Installing vst2 unit locally"
+      rsync -r --delete "products/Surge.vst/" "\${HOME}/Library/Audio/Plug-Ins/VST/Surge.vst/"
+      )
+  endif()
+
+  add_custom_target( install-vst3-local )
+  add_dependencies( install-vst3-local Surge.vst3 )
+  add_dependencies( install-vst3-local install-resources-local )
+  add_custom_command(
+    TARGET install-vst3-local
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing vst3 unit locally"
+    rsync -r --delete "products/Surge.vst3/" "\${HOME}/Library/Audio/Plug-Ins/VST3/Surge.component/"
+    )
+
+  add_custom_target( install-everything-local )
+  add_dependencies( install-everything-local install-au-local )
+  add_dependencies( install-everything-local install-vst3-local )
+  if( BUILD_VST2 )
+    add_dependencies( install-everything-local install-vst2-local )
+  endif()
+
+  
+  
 endif()
