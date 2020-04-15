@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <thread>
+#include <sstream>
 
 /*
 ** In June 2019, @baconpaul chose to implement these with an attempt
