@@ -624,9 +624,8 @@ if( BUILD_VST2 )
       TARGET Surge.vst2
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Packaging up VST2 component"
-      COMMAND pwd
-      COMMAND ./scripts/linux/package-vst2.sh
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-vst2.so ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.so
       )
    endif()
    if( WIN32 )

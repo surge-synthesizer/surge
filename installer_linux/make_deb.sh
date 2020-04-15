@@ -83,13 +83,13 @@ gzip -9 -n ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
 
 cp ../LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/copyright
 cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
-cp ../target/vst2/Release/Surge.so ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
+cp ../products/Surge.so ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
 
 # Once VST3 works, this will be ../products/vst3
 cp -r ../products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
 
 # copy the lv2 bundle
-cp -r ../target/lv2/Release/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
+cp -r ../products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
 
 # set permissions on shared libraries
 chmod -R 0644 ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
