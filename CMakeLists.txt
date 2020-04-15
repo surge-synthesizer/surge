@@ -482,14 +482,13 @@ if( BUILD_VST3 )
 
   target_compile_features(surge-vst3 PRIVATE cxx_std_17 )
 
-  if( UNIX AND NOT APPLE )
+  if( APPLE )
+    target_sources(surge-vst3 PUBLIC vst3sdk/public.sdk/source/main/macmain.cpp)
+  elseif( UNIX AND NOT APPLE )
     target_sources(surge-vst3 PUBLIC
          vst3sdk/public.sdk/source/main/linuxmain.cpp
          src/linux/LinuxVST3Helpers.cpp)
-
-  endif()
-
-  if( WIN32 )
+  elseif( WIN32 )
     target_sources(surge-vst3 PUBLIC vst3sdk/public.sdk/source/main/dllmain.cpp)
     target_link_options( surge-vst3 PUBLIC  "/DEF:..\\resources\\windows-vst3\\surge.def" )
   endif()
