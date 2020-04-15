@@ -617,7 +617,18 @@ if( BUILD_VST2 )
       COMMAND (cd .. && ./scripts/macOS/package-vst.sh )
       )
    endif()
-
+  if( UNIX AND NOT APPLE )
+    add_custom_target( Surge.vst2 ALL )
+    add_dependencies( Surge.vst2 surge-vst2)
+    add_custom_command(
+      TARGET Surge.vst2
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Packaging up VST2 component"
+      COMMAND pwd
+      COMMAND ./scripts/linux/package-vst2.sh
+      )
+   endif()
    if( WIN32 )
      add_custom_target( surgev2-dll ALL )
      add_dependencies( surgev2-dll surge-vst2 )
