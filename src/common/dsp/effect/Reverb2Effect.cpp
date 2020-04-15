@@ -289,7 +289,7 @@ const char* Reverb2Effect::group_label(int id)
    case 2:
       return "EQ";
    case 3:
-      return "Mix";
+      return "Output";
    }
    return 0;
 }

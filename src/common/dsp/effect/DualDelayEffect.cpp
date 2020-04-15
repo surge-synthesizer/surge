@@ -224,13 +224,13 @@ const char* DualDelayEffect::group_label(int id)
    case 0:
       return "Input";
    case 1:
-      return "Delay time";
+      return "Delay Time";
    case 2:
       return "Feedback/EQ";
    case 3:
       return "Modulation";
    case 4:
-      return "Mix";
+      return "Output";
    }
    return 0;
 }

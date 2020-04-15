@@ -192,6 +192,8 @@ const char* ConditionerEffect::group_label(int id)
       return "Stereo";
    case 2:
       return "Limiter";
+   case 3:
+      return "Output";
    }
    return 0;
 }
@@ -205,6 +207,8 @@ int ConditionerEffect::group_label_ypos(int id)
       return 7;
    case 2:
       return 13;
+   case 3:
+      return 27;
    }
    return 0;
 }
@@ -230,11 +234,11 @@ void ConditionerEffect::init_ctrltypes()
 
    fxdata->p[4].set_name("Threshold");
    fxdata->p[4].set_type(ct_decibel_attenuation);
-   fxdata->p[5].set_name("A Rate");
+   fxdata->p[5].set_name("Attack Rate");
    fxdata->p[5].set_type(ct_percent_bidirectional);
-   fxdata->p[6].set_name("R Rate");
+   fxdata->p[6].set_name("Release Rate");
    fxdata->p[6].set_type(ct_percent_bidirectional);
-   fxdata->p[7].set_name("Output");
+   fxdata->p[7].set_name("Gain");
    fxdata->p[7].set_type(ct_decibel_attenuation);
 
    fxdata->p[0].posy_offset = 1;
@@ -246,7 +250,7 @@ void ConditionerEffect::init_ctrltypes()
    fxdata->p[4].posy_offset = 11;
    fxdata->p[5].posy_offset = 11;
    fxdata->p[6].posy_offset = 11;
-   fxdata->p[7].posy_offset = 11;
+   fxdata->p[7].posy_offset = 13;
 }
 void ConditionerEffect::init_default_values()
 {}

@@ -319,7 +319,7 @@ const char* Reverb1Effect::group_label(int id)
    case 2:
       return "EQ";
    case 3:
-      return "Mix";
+      return "Output";
    }
    return 0;
 }
@@ -360,9 +360,9 @@ void Reverb1Effect::init_ctrltypes()
 
    fxdata->p[rp_locut].set_name("Low Cut");
    fxdata->p[rp_locut].set_type(ct_freq_audible);
-   fxdata->p[rp_freq1].set_name("Band1 Freq");
+   fxdata->p[rp_freq1].set_name("Peak Freq");
    fxdata->p[rp_freq1].set_type(ct_freq_audible);
-   fxdata->p[rp_gain1].set_name("Band1 Gain");
+   fxdata->p[rp_gain1].set_name("Peak Gain");
    fxdata->p[rp_gain1].set_type(ct_decibel);
    fxdata->p[rp_hicut].set_name("High Cut");
    fxdata->p[rp_hicut].set_type(ct_freq_audible);

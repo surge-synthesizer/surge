@@ -261,11 +261,13 @@ const char* VocoderEffect::group_label(int id)
    switch (id)
    {
    case 0:
-      return "Levels";
+      return "Input";
    case 1:
-      return "Filterbank";
+      return "Filter Bank";
    case 2:
-       return "Bands";
+       return "Carrier";
+   case 3:
+       return "Modulator";
    }
    return 0;
 }
@@ -282,6 +284,8 @@ int VocoderEffect::group_label_ypos(int id)
       return 7;
    case 2:
        return 13;
+   case 3:
+       return 22;
    }
    return 0;
 }
@@ -300,7 +304,7 @@ void VocoderEffect::init_ctrltypes()
    fxdata->p[KGateLevel].set_type(ct_decibel_attenuation_large);
    fxdata->p[KGateLevel].posy_offset = 1;
 
-   fxdata->p[KRate].set_name("Rate");
+   fxdata->p[KRate].set_name("Env Follow");
    fxdata->p[KRate].set_type(ct_percent);
    fxdata->p[KRate].posy_offset = 3;
 
@@ -312,25 +316,25 @@ void VocoderEffect::init_ctrltypes()
    fxdata->p[KQuality].set_type(ct_percent_bidirectional);
    fxdata->p[KQuality].posy_offset = 3;
 
-   fxdata->p[kNumBands].set_name("# Bands");
+   fxdata->p[kNumBands].set_name("Bands");
    fxdata->p[kNumBands].set_type(ct_vocoder_bandcount);
    fxdata->p[kNumBands].posy_offset = 3;
 
-   fxdata->p[kFreqLo].set_name("Low band");
+   fxdata->p[kFreqLo].set_name("Min Frequency");
    fxdata->p[kFreqLo].set_type(ct_freq_vocoder_low);
    fxdata->p[kFreqLo].posy_offset = 3;
 
-   fxdata->p[kFreqHi].set_name("High band");
+   fxdata->p[kFreqHi].set_name("Max Frequency");
    fxdata->p[kFreqHi].set_type(ct_freq_vocoder_high);
    fxdata->p[kFreqHi].posy_offset = 3;
 
-   fxdata->p[kModExpand].set_name("Mod XPand");
+   fxdata->p[kModExpand].set_name("Mod Range");
    fxdata->p[kModExpand].set_type(ct_percent_bidirectional);
-   fxdata->p[kModExpand].posy_offset = 3;
+   fxdata->p[kModExpand].posy_offset = 6;
    
    fxdata->p[kModCenter].set_name("Mod Center");
    fxdata->p[kModCenter].set_type(ct_percent_bidirectional);
-   fxdata->p[kModCenter].posy_offset = 3;
+   fxdata->p[kModCenter].posy_offset = 6;
 
 }
 
