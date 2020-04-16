@@ -66,7 +66,7 @@ public:
    {
       delete cdisurf;
    }
-   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
    void drawBitmap(VSTGUI::CDrawContext* dc);
    void drawVector(VSTGUI::CDrawContext* dc);
 
@@ -96,9 +96,9 @@ public:
    void loadWavetableFromFile();
 
    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
 
    void invalidateIfIdIsInRange(int id);
    

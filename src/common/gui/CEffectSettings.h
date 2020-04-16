@@ -13,12 +13,12 @@ public:
                    long tag,
                    int current,
                    std::shared_ptr<SurgeBitmaps> bitmapStore);
-   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
    virtual VSTGUI::CMouseEventResult
    onMouseDown(VSTGUI::CPoint& where,
-               const VSTGUI::CButtonState& buttons); ///< called when a mouse down event occurs
+               const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
    virtual VSTGUI::CMouseEventResult
-   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons); ///< called when a mouse up event occurs
+   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse up event occurs
 
    int current;
    VSTGUI::CBitmap *bg, *labels;

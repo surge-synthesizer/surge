@@ -44,7 +44,11 @@ private:
 public:
    SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
    virtual ~SurgeGUIEditor();
+#if TARGET_AUDIOUNIT
+   void idle() override;
+#else
    void idle();
+#endif   
    bool queue_refresh;
    virtual void toggle_mod_editing();
 
@@ -58,7 +62,7 @@ public:
    bool open(void* parent) override;
    void close() override;
 #else
-   virtual bool PLUGIN_API open(void* parent, const VSTGUI::PlatformType& platformType = VSTGUI::kDefaultNative);
+   virtual bool PLUGIN_API open(void* parent, const VSTGUI::PlatformType& platformType = VSTGUI::kDefaultNative) override;
    virtual void PLUGIN_API close() override;
 
    virtual Steinberg::tresult PLUGIN_API onWheel( float distance ) override

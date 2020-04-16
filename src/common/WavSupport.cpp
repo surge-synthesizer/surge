@@ -175,9 +175,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             free(data);
 
             // Do a format check here to bail out
-            if (! ( numChannels == 1 &&
-                    ( (audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16) ) ||
-                    ( (audioFormat == 3 /* IEEE_FLOAT */ ) && (bitsPerSample == 32) ) ) )
+            if (! ( ( numChannels == 1 ) &&
+                    ( ( (audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16) ) ||
+                      ( (audioFormat == 3 /* IEEE_FLOAT */ ) && (bitsPerSample == 32) ) ) ) )
             {
                 std::string formname = "Unknown (" + std::to_string(audioFormat) + ")";
                 if( audioFormat == 1 ) formname = "PCM";

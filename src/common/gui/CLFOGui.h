@@ -94,9 +94,9 @@ public:
 #endif      
    }
    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
 
    virtual void setSkin( Surge::UI::Skin::ptr_t s ) override {
       SkinConsumingComponnt::setSkin(s);
@@ -107,7 +107,7 @@ public:
    {
       delete cdisurf;
    }
-   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
    void drawVectorized(VSTGUI::CDrawContext* dc);
    void drawBitmap(VSTGUI::CDrawContext* dc);
    void drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel);
