@@ -116,10 +116,10 @@ public:
                                Steinberg::Vst::ParamValue valueNormalized);
    virtual tresult endEdit(Steinberg::Vst::ParamID id);
 #else
-   virtual tresult PLUGIN_API beginEdit(Steinberg::Vst::ParamID id);
+   virtual tresult PLUGIN_API beginEdit(Steinberg::Vst::ParamID id) override;
    virtual tresult PLUGIN_API performEdit(Steinberg::Vst::ParamID id,
-                               Steinberg::Vst::ParamValue valueNormalized);
-   virtual tresult PLUGIN_API endEdit(Steinberg::Vst::ParamID id);
+                               Steinberg::Vst::ParamValue valueNormalized) override;
+   virtual tresult PLUGIN_API endEdit(Steinberg::Vst::ParamID id) override;
 #endif
     
 protected:

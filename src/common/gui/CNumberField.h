@@ -145,9 +145,9 @@ public:
       envColor = bgcol;
    }
 
-   virtual void bounceValue();
+   virtual void bounceValue() override;
 
-   virtual void setValue(float val);
+   virtual void setValue(float val) override;
 
    void setIntValue(int ival)
    {
@@ -221,12 +221,12 @@ public:
    virtual void setLabel(char* newlabel);
    virtual void setLabelPlacement(int placement);
 
-   virtual void draw(VSTGUI::CDrawContext*);
+   virtual void draw(VSTGUI::CDrawContext*) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
    bool altlook;
 
 private:

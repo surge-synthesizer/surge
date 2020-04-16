@@ -17,23 +17,23 @@ public:
                 bool is_mod,
                 std::shared_ptr<SurgeBitmaps> bitmapStore);
    ~CSurgeSlider();
-   virtual void draw(VSTGUI::CDrawContext*);
+   virtual void draw(VSTGUI::CDrawContext*) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    // virtual bool onWheel (VSTGUI::CDrawContext *pContext, const VSTGUI::CPoint &where, float distance);
    virtual bool 
-   onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons);
+   onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons) override;
 
    virtual VSTGUI::CMouseEventResult
    onMouseDown(VSTGUI::CPoint& where,
-               const VSTGUI::CButtonState& buttons); ///< called when a mouse down event occurs
+               const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
    virtual VSTGUI::CMouseEventResult
-   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons); ///< called when a mouse up event occurs
+   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse up event occurs
 
    virtual VSTGUI::CMouseEventResult
    onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    
-   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
+   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override;
 
    virtual void setLabel(const char* txt);
    virtual void setModValue(float val);
@@ -63,7 +63,7 @@ public:
 
    virtual bool isInMouseInteraction();
 
-   virtual void setValue(float val);
+   virtual void setValue(float val) override;
    virtual void setBipolar(bool);
 
    virtual void setTempoSync( bool b ) { is_temposync = b; }

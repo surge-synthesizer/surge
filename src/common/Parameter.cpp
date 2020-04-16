@@ -911,7 +911,7 @@ std::string Parameter::tempoSyncNotationValue(float f)
         else
         {
             char tmp[1024];
-            snprintf(tmp, 1024, "1/%0.d", (int)d, d );
+            snprintf(tmp, 1024, "1/%d", (int)d );
             nn = tmp;
         }
     }
@@ -1405,14 +1405,14 @@ void Parameter::morph(Parameter* a, Parameter* b, float x)
 {
    if ((a->valtype == vt_float) && (b->valtype == vt_float) && (a->ctrltype == b->ctrltype))
    {
-      memcpy(this, a, sizeof(Parameter));
+      memcpy((void*)this, (void*)a, sizeof(Parameter));
       val.f = (1 - x) * a->val.f + x * b->val.f;
    }
    else
    {
       if (x > 0.5)
-         memcpy(this, b, sizeof(Parameter));
+         memcpy((void*)this, (void*)b, sizeof(Parameter));
       else
-         memcpy(this, a, sizeof(Parameter));
+         memcpy((void*)this, (void*)a, sizeof(Parameter));
    }
 }

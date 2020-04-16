@@ -256,6 +256,11 @@ if( APPLE )
     -msse2
     "-D_aligned_malloc(x,a)=malloc(x)"
     "-D_aligned_free(x)=free(x)"
+    -Wno-deprecated-declarations
+    -Werror=inconsistent-missing-override
+    -Werror=logical-op-parentheses
+    -Werror=dynamic-class-memaccess
+    -Werror=undefined-bool-conversion
     ) 
   set(OS_INCLUDE_DIRECTORIES
     src/mac
@@ -486,11 +491,11 @@ if( BUILD_VST3 )
   if( APPLE )
     target_sources(surge-vst3 PRIVATE vst3sdk/public.sdk/source/main/macmain.cpp)
   elseif( UNIX AND NOT APPLE )
-    target_sources(surge-vst3 PUBLIC
+    target_sources(surge-vst3 PRIVATE
          vst3sdk/public.sdk/source/main/linuxmain.cpp
          src/linux/LinuxVST3Helpers.cpp)
   elseif( WIN32 )
-    target_sources(surge-vst3 PUBLIC vst3sdk/public.sdk/source/main/dllmain.cpp)
+    target_sources(surge-vst3 PRIVATE vst3sdk/public.sdk/source/main/dllmain.cpp)
     target_link_options( surge-vst3 PUBLIC  "/DEF:..\\resources\\windows-vst3\\surge.def" )
   endif()
 
@@ -735,8 +740,8 @@ if( BUILD_HEADLESS )
 
   find_package(LibSndFile ${PACKAGE_OPTION})
   if(NOT LIBSNDFILE_FOUND)
-    message(WARNING "LibSndFile not installed; building without wav support")
-    message(WARNING "You can 'brew install libsndfile' or 'apt-get install libsndfile1-dev'")
+    message("-- LibSndFile not installed; building without wav support")
+    message("-- You can 'brew install libsndfile' or 'apt-get install libsndfile1-dev'")
   else()
     target_compile_definitions(surge-headless
       PRIVATE

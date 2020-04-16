@@ -21,16 +21,16 @@ public:
                            std::shared_ptr<SurgeBitmaps> bitmapStore);
    ~CModulationSourceButton();
 
-   virtual void setValue(float val)
+   virtual void setValue(float val) override
    {
       if (value != val)
          invalid();
       value = val;
    }
 
-   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
-   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual bool onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons);
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override;
+   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual bool onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons) override;
 
    int state, msid, controlstate;
 
@@ -66,9 +66,9 @@ public:
    bool useAlternate = false;
    void setUseAlternate( bool f ) { useAlternate = f; if( hasAlternate ) { invalid(); setDirty(); } }
    
-   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };

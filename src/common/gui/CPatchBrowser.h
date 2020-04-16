@@ -55,8 +55,8 @@ public:
       setDirty(true);
    }
 
-   virtual void draw(VSTGUI::CDrawContext* dc);
-   VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
+   VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
    void loadPatch(int id);
    int sel_id = 0;
 

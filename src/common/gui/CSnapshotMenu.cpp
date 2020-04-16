@@ -444,7 +444,7 @@ void CFxMenu::copyFX()
         fxCopyPaste[tp] = fx->p[i].temposync;
         fxCopyPaste[xp] = fx->p[i].extend_range;
     }
-    memcpy(fxbuffer,fx,sizeof(FxStorage));
+    memcpy((void*)fxbuffer,(void*)fx,sizeof(FxStorage));
     
 }
 

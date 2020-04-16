@@ -8,16 +8,16 @@ class CSwitchControl : public VSTGUI::CControl
 {
 public:
    CSwitchControl(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, VSTGUI::CBitmap* background);
-   virtual void draw(VSTGUI::CDrawContext* dc);
-   virtual void setValue(float f);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
+   virtual void setValue(float f) override;
    virtual VSTGUI::CMouseEventResult
    onMouseDown(VSTGUI::CPoint& where,
-               const VSTGUI::CButtonState& buttons); ///< called when a mouse down event occurs
+               const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
    virtual VSTGUI::CMouseEventResult
-   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons); ///< called when a mouse up event occurs
+   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse up event occurs
    virtual VSTGUI::CMouseEventResult
    onMouseMoved(VSTGUI::CPoint& where,
-                const VSTGUI::CButtonState& buttons); ///< called when a mouse move event occurs
+                const VSTGUI::CButtonState& buttons) override; ///< called when a mouse move event occurs
    int ivalue, imax;
    bool is_itype;
 

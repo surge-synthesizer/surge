@@ -13,7 +13,7 @@ public:
    CEffectLabel(const VSTGUI::CRect& size) : VSTGUI::CControl(size, 0, 0, 0)
    {}
 
-   virtual void draw(VSTGUI::CDrawContext* dc)
+   virtual void draw(VSTGUI::CDrawContext* dc) override
    {
       VSTGUI::CRect size = getViewSize();
       VSTGUI::CRect bl(size);

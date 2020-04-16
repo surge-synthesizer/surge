@@ -10,7 +10,7 @@ class CSurgeVuMeter : public VSTGUI::CControl, public Surge::UI::SkinConsumingCo
 {
 public:
    CSurgeVuMeter(const VSTGUI::CRect& size);
-   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
    void setType(int vutype);
    // void setSecondaryValue(float v);
    void setValueR(float f);

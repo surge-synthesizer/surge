@@ -13,7 +13,7 @@ class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumin
 public:
    CSnapshotMenu(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage);
    virtual ~CSnapshotMenu();
-   virtual void draw(VSTGUI::CDrawContext* dc);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
    // virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual void populate();
    virtual void loadSnapshot(int type, TiXmlElement* e){};
@@ -35,8 +35,8 @@ public:
             SurgeStorage* storage,
             OscillatorStorage* osc,
             std::shared_ptr<SurgeBitmaps>);
-   virtual void draw(VSTGUI::CDrawContext* dc);
-   virtual void loadSnapshot(int type, TiXmlElement* e);
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
+   virtual void loadSnapshot(int type, TiXmlElement* e) override;
 
 protected:
    OscillatorStorage* osc = nullptr;
@@ -55,13 +55,13 @@ public:
            FxStorage* fx,
            FxStorage* fxbuffer,
            int slot);
-   virtual void draw(VSTGUI::CDrawContext* dc);
-   virtual bool canSave()
+   virtual void draw(VSTGUI::CDrawContext* dc) override;
+   virtual bool canSave() override
    {
       return true;
    }
-   virtual void loadSnapshot(int type, TiXmlElement* e);
-   virtual void saveSnapshot(TiXmlElement* e, const char* name);
+   virtual void loadSnapshot(int type, TiXmlElement* e) override;
+   virtual void saveSnapshot(TiXmlElement* e, const char* name) override;
    virtual void populate() override;
    
 protected:
