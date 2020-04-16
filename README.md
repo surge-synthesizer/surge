@@ -13,7 +13,7 @@ If you would also like to participate in discussions, testing, and design of Sur
 details below and also in [the contributors section of the surge website](https://surge-synthesizer.github.io/#contributors).
 
 Surge currently builds on macOS as a 64 bit AU, VST2 and VST3, Windows as a 64 and 32 bit VST2 and VST3 
-and Linux as a 64 bit VST2, VST3 and LV2.
+and Linux as a 64 bit VST2, VST3 and LV2. 
 
 This README serves as the root of developer documentation for the project.
 
@@ -34,14 +34,8 @@ tailored at Surge dev.
 
 # Building Surge
 
-*PLEASE BE AWARE WE ARE RIGHT NOW (like April 13 2020) IN THE MIDDLE OF MOVING TO CMAKE AND THESE DIRECTIONS
-ARE NOT YET UPDATED. If you are on MACOS you should use build-osx.sh like normal but don't need PREMAKE. 
-Simiklarly if you are on linux you should use build-linux.sh like normal but also dont need PREMAKE.
-Check https://github.com/surge-synthesizer/surge/issues/1206 for details*
-
-To build surge, you need  [Git](https://git-scm.com/downloads) and [Premake 5](https://premake.github.io/download.html#v5) 
-installed with the appropriate version for your system. We are migrating towards [CMake](https://cmake.org) so for
-some OSes you need to install CMake also.
+As of April 2020, Surge is built using cmake. Versions in the 1.6 family require premake5 to build but that is
+no longer required as of commit 6eaf2b2e20 or the 1.7 family.
 
 ## Windows
 
@@ -50,11 +44,9 @@ Additional pre-requisites:
 * [Visual Studio 15.5 (at least)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
-Install Git, Premake5, Visual Studio 2017 and (if you want to build an installer) Inno Setup. 
-
-If you are doing a fresh install of Visual Studio Community Edition, after you install run Visual Studio installer, 
-update, and then make sure the `desktop C++ kit`, including `optional CLI support`, `Windows 8.1 SDK`, 
-and `VC2015 toolset for desktop` are installed. 
+Install Git, Visual Studio 2017 or 2019, and (if you want to build an installer) Inno Setup. When you 
+install Visual Studio, make sure to include the CLI tools and cmake, which are included in
+'optional CLI support' and 'toolset for desktop' install bundles.
 
 You then want to start a visual studio prompt. This is a command like `x64 Native Tools Command Prompt for VS 2017` or similar installed by your visual studio install.
 
@@ -67,31 +59,44 @@ cd surge
 git submodule update --init --recursive
 ```
 
-Build with Windows by running
+If you have the VST2SDK and are building the VST2, set your environment. If not, don't worry.
+You can build the VST3 on windows without any extra assets (we recommend all windows users
+use the VST3).
 
 ```
-build.cmd
+set VST2SDK_DIR=c:\path\to\vst2
 ```
 
-You can also, instead of running `build.cmd`, generate the project files by using
+Next, run cmake to construct the appropriate build files
 
 ```
-premake5 vs2017
+cmake . -Bbuild
 ```
 
-After which you can open the freshly generated Visual Studio solution `Surge.sln` - If you had the `VST2.4SDK` folder specified 
-prior to running `premake5`, you will have `surge-vst2.vcxproj` and `surge-vst3.vcxproj` in your Surge folder.
+After which you can open the freshly generated Visual Studio solution `build/Surge.sln`. You can also
+compile from the command line with
 
-Now, to build the installer, open the file `installer_win/surge.iss` by using `Inno Setup`. `Inno Setup` will bake an installer and place it in `installer_win/Output/`
+```
+msbuild buildtask.xml /p:Platform=x64
+```
+
+If you want to build the installer, open the file `installer_win/surge.iss` by using `Inno Setup`. 
+`Inno Setup` will bake an installer and place it in `installer_win/Output/`
 
 
 ## macOS
 
-In addition to having Git and premake5 in your path, Surge builds require you have both `Xcode` and `Xcode Command Line Utilities` installed. 
-The commandline to install the `Xcode Command Line Utilities` is 
+To build on macOS, you need `Xcode`, `Xcode Command Line Utilities`, and cmake. Once you have installed
+`Xcode` from the mac app store, the commandline to install the `Xcode Command Line Utilities` is 
 
 ```
 xcode-select --install
+```
+
+There are a variety of ways to instal cmake. If you run [homebrew](https://brew.sh) you can
+
+```
+brew install cmake
 ```
 
 Once that's done, fork this repo, clone it, and update submodules.
@@ -105,6 +110,7 @@ git submodule update --init --recursive
 ### Building with build-osx.sh
 
 `build-osx.sh` has all the commands you need to build, test, locally install, validate, and package Surge on Mac.
+As of April 2020, it is a very thin wraper on cmake and xcode. 
 It's what the primary Mac developers use day to day. The simplest approach is to build everything with
 
 ```
@@ -132,34 +138,25 @@ alternate version number, the packaging script is in `installer_mac`.
 
 * `VST2SDK_DIR` points to a vst2sdk. If this is set vst2 will build. If you set it after having
 done a run without vst2, you will need to `./build-osx.sh --clean-all` to pick up vst2 consistently
-
-* `BREWBUILD=TRUE` will use homebrew clang. If XCode refuses to build immediately with `error: invalid value 'c++17' in '-std=c++17'` 
-and you do not want to upgrade XCode to a more recent version, use [homebrew](https://brew.sh/) to install llvm and set this variable.
  
 ### Using Xcode
 
-`premake xcode4` builds xcode assets so if you would rather just use xcode, you can open the solutions created after running premake yourself or having `./build-osx.sh` run it.
+If you would rather use xcode directly, all of the install and build rules are exposed as targets.
+You simply need to run cmake and open the xcode project. From the command line:
 
-After the build runs, be it successful or not, you can now launch Xcode and open the `Surge` folder. Let Xcode do it's own indexing / processing, which will take a while.
+```
+cd surge
+cmake . -GXcode -Bbuild
+open build/Surge.xcodeproj
+```
 
-All of the three projects (`surge-vst3`, `surge-vst2`, `surge-au`) will recommend you to `Validate Project Settings`, meaning, more precisely, to `Update to recommended settings`. By clicking on `Update to recommended settings`, a dialog will open and you'll be prompted to `Perform Changes`. Perform the changes.
-
-Xcode will result in built assets in `products/` but will not install them and will not install the ancilliary assets. To do that you can either `./build-osx.sh --install-local` or `./build-osx.sh --package` and run the resulting pkg file to install in `/Library`.
-
+and you will set a set of targets like `install-au-local` which will compile and install the au. 
+These are the targets used by `build-osx.sh` from the command line.
 
 ## Linux
 
-Download `premake5` from https://premake.github.io/download.html#v5
-
-Untar the package, and move it to `~/bin/` or elsewhere in your path so the install script can find it.
-
-For VST2, you will need the `VST2 SDK` - unzip it to a folder of your choice and set `VST2SDK_DIR` to point to it.
-
-```
-export VST2SDK_DIR="/your/path/to/VST2SDK"
-```
-
-You will need to install a set of dependencies.
+Most linux systems have cmake and a modern C++ compiler installed. Make sure yours does.
+You will also need to install a set of dependencies.
 
 - build-essential
 - libcairo-dev
@@ -169,6 +166,13 @@ You will need to install a set of dependencies.
 - libxcb-keysyms1-dev
 - libxcb-util-dev
 
+For VST2, you will need the `VST2 SDK` - unzip it to a folder of your choice and set `VST2SDK_DIR` to point to it.
+
+```
+export VST2SDK_DIR="/your/path/to/VST2SDK"
+```
+
+
 Then fork this repo, `git clone` surge and update the submodules:
 
 ```
@@ -177,7 +181,10 @@ cd surge
 git submodule update --init --recursive
 ```
 
-You can now build with the command
+### Building with build-linux.sh
+
+`build-linux.sh` is a wrapper on the various cmake and make commands needed to build Surge. As with
+macOS, it is getting smaller every day as we move more things direclty into cmake. You can now build with the command
 
 ```
 ./build-linux.sh build
@@ -190,7 +197,7 @@ or if you prefer a specific flavor
 ./build-linux.sh build --project=lv2
 ```
 
-which will run premake and build the assets.
+which will run cmake and build the assets.
 
 To use the VST2, VST3, or LV2, you need to install it locally along with supporting files. You can do this manually
 if you desire, but the build script will also do it using the `install` option.
@@ -199,9 +206,23 @@ if you desire, but the build script will also do it using the `install` option.
 ./build-linux.sh install --project=lv2 --local 
 ```
 
-Script will install vst2 to $HOME/.vst dir, vst3 to $HOME/.vst3 and LV2 to $HOME/lv2 in local mode. To change this, edit vst2_dest_path and so forth to taste. Without --local files will be installed to system locations (needs sudo).
+Script will install vst2 to $HOME/.vst dir, vst3 to $HOME/.vst3 and LV2 to $HOME/lv2 in local mode. 
+To change this, edit vst2_dest_path and so forth to taste. Without --local files will be installed to system locations (needs sudo).
 
 For other options, you can do `./build-linux.sh --help`.
+
+### Build using cmake directly
+
+A build with cmake is also really simple. 
+
+```
+cd surge
+cmake . -Bbuild
+cd build
+make -j 2 Surge.vst3
+```
+
+will build the VST3 and deposit it in surge/products.
 
 # Continuous Integration
 

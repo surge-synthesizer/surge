@@ -130,7 +130,7 @@ use this to make sure your diffs are formatted properly. Here's how
 
 Occasionally code needs an `#if MAC` but if you have entire classes with parallel implementations
 just put the implementations in the `src/mac` `src/windows` and `src/linux` directories and
-let premake pick the right one. This does mean that you need stubs on all three platforms to link.
+let cmake pick the right one. This does mean that you need stubs on all three platforms to link.
 Look at the `UserInteractions` example.
 
 The only numbers which make sense in code are 0, 1, n, and infinity. If you are using a number other
