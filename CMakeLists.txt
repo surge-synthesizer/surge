@@ -261,6 +261,7 @@ if( APPLE )
     -Werror=logical-op-parentheses
     -Werror=dynamic-class-memaccess
     -Werror=undefined-bool-conversion
+    -Werror=bitwise-op-parentheses
     ) 
   set(OS_INCLUDE_DIRECTORIES
     src/mac
@@ -783,6 +784,7 @@ if( APPLE )
   endif()
   add_dependencies(all-components Surge.vst3 )
   add_dependencies(all-components Surge.component )
+  add_dependencies(all-components surge-headless )
 
   add_custom_target( run-headless )
   add_dependencies( run-headless install-resources-local )
