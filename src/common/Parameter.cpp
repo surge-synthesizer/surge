@@ -61,10 +61,10 @@ void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_e
    switch (ctrlgroup)
    {
    case cg_OSC:
-      sprintf(prefix, "Osc%i", ctrlgroup_entry + 1);
+      sprintf(prefix, "Osc %i", ctrlgroup_entry + 1);
       break;
    case cg_FILTER:
-      sprintf(prefix, "F%i", ctrlgroup_entry + 1);
+      sprintf(prefix, "Filter %i", ctrlgroup_entry + 1);
       break;
    case cg_ENV:
       if (ctrlgroup_entry)
@@ -76,9 +76,9 @@ void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_e
    {
       int a = ctrlgroup_entry + 1 - ms_lfo1;
       if (a > 6)
-         sprintf(prefix, "SLFO%i", a - 6);
+         sprintf(prefix, "Scene LFO %i", a - 6);
       else
-         sprintf(prefix, "LFO%i", a);
+         sprintf(prefix, "LFO %i", a);
    }
    break;
    case cg_FX:

@@ -2451,9 +2451,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   // WARNING - this won't work with Surge++
                   int a = p->ctrlgroup_entry + 1 - ms_lfo1;
                   if (a > 6)
-                     sprintf(prefix, "SLFO%i", a - 6);
+                     sprintf(prefix, "SLFO %i", a - 6);
                   else
-                     sprintf(prefix, "LFO%i", a);
+                     sprintf(prefix, "LFO %i", a);
 
                   bool setTSTo;
                   if( p->temposync )
