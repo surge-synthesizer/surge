@@ -150,6 +150,11 @@ void FlangerEffect::process(float* dataL, float* dataR)
       feedbackScale = 0.9;
    }
    float fbv = *f[flng_feedback];
+   if( fbv > 0 )
+      ringout_value = samplerate * 32.0;
+   else
+      ringout_value = 1024;
+   
    fbv = fbv * fbv * fbv;
    feedback.newValue( feedbackScale * fbv ); 
    fb_lf_damping.newValue( 0.4 * *f[flng_fb_lf_damping ] );
