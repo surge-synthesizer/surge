@@ -813,7 +813,7 @@ if( APPLE )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Installing audio unit locally"
-    rsync -r --delete "products/Surge.component/" "\${HOME}/Library/Audio/Plug-Ins/Components/Surge.component/"
+    COMMAND rsync -r --delete "products/Surge.component/" "\${HOME}/Library/Audio/Plug-Ins/Components/Surge.component/"
     )
 
   add_custom_target( validate-au )
@@ -834,7 +834,7 @@ if( APPLE )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Installing vst2 unit locally"
-      rsync -r --delete "products/Surge.vst/" "\${HOME}/Library/Audio/Plug-Ins/VST/Surge.vst/"
+      COMMAND rsync -r --delete "products/Surge.vst/" "\${HOME}/Library/Audio/Plug-Ins/VST/Surge.vst/"
       )
   endif()
 
@@ -846,7 +846,7 @@ if( APPLE )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Installing vst3 unit locally"
-    rsync -r --delete "products/Surge.vst3/" "\${HOME}/Library/Audio/Plug-Ins/VST3/Surge.component/"
+    COMMAND rsync -r --delete "products/Surge.vst3/" "\${HOME}/Library/Audio/Plug-Ins/VST3/Surge.component/"
     )
 
   add_custom_target( install-everything-local )
