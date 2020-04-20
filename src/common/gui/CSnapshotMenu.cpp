@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <queue>
 
 using namespace VSTGUI;
 
@@ -43,6 +44,7 @@ void CSnapshotMenu::populate()
    bool do_nothing = false;
    const long max_main = 16, max_sub = 256;
 
+   int idx = 0;
    TiXmlElement* sect = storage->getSnapshotSection(mtype);
    if (sect)
    {
@@ -50,7 +52,7 @@ void CSnapshotMenu::populate()
 
       while (type)
       {
-          populateSubmenuFromTypeElement(type, this, main, sub, max_sub);
+          populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
           type = TINYXML_SAFE_TO_ELEMENT(type->NextSibling("type"));
           main++;
           if (main >= max_main)
@@ -59,7 +61,60 @@ void CSnapshotMenu::populate()
    }
 }
 
-void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub)
+bool CSnapshotMenu::loadSnapshotByIndex( int idx )
+{
+   int cidx = 0;
+   // This isn't that efficient but you know
+   TiXmlElement *sect = storage->getSnapshotSection(mtype);
+   if( sect )
+   {
+      std::queue<TiXmlElement *> typeD;
+      typeD.push( TINYXML_SAFE_TO_ELEMENT(sect->FirstChild("type")) );
+      while( ! typeD.empty() )
+      {
+         auto type = typeD.front();
+         typeD.pop();
+         auto tn = type->Attribute( "name" );
+         int type_id = 0;
+         type->Attribute("i", &type_id);
+         TiXmlElement* snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
+         while (snapshot)
+         {
+            auto n = snapshot->Attribute("name");
+            int snapshotTypeID = type_id, tmpI = 0;
+            if (snapshot->Attribute("i", &tmpI) != nullptr)
+            {
+               snapshotTypeID = tmpI;
+            }
+
+            if( cidx == idx )
+            {
+               selectedIdx = idx;
+               loadSnapshot( snapshotTypeID, snapshot, idx);
+               if( listener )
+                  listener->valueChanged( this );
+               return true;
+            }
+            snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
+            cidx++;
+         }
+
+         auto subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
+         while( subType )
+         {
+            typeD.push(subType);
+            subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
+         }
+
+         auto next = TINYXML_SAFE_TO_ELEMENT(type->NextSibling("type"));
+         if( next )
+            typeD.push( next );
+      }
+   }
+   return false;
+}
+
+void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx)
 {
     /*
     ** Begin by grabbing all the snapshot elements
@@ -81,10 +136,14 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
         }
 
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt));
-        auto action = [this, snapshot, snapshotTypeID](CCommandMenuItem* item) {
-            this->loadSnapshot(snapshotTypeID, snapshot);
+        auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem* item) {
+                         this->selectedIdx = idx;
+                         this->loadSnapshot(snapshotTypeID, snapshot, idx);
+                         if( this->listener )
+                            this->listener->valueChanged( this );
         };
-
+        idx++;
+        
         actionItem->setActions(action, nullptr);
         subMenu->addEntry(actionItem);
 
@@ -101,7 +160,7 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
     TiXmlElement* subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
     if (subType)
     {
-        populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub);
+        populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub, idx);
         subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
     }
         
@@ -118,7 +177,8 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
     {
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt));
         auto action = [this, type_id](CCommandMenuItem* item) {
-            this->loadSnapshot(type_id, nullptr);
+                         this->selectedIdx = 0;
+                         this->loadSnapshot(type_id, nullptr, 0);
         };
 
         actionItem->setActions(action, nullptr);
@@ -197,7 +257,7 @@ void COscMenu::draw(CDrawContext* dc)
    setDirty(false);
 }
 
-void COscMenu::loadSnapshot(int type, TiXmlElement* e)
+void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
 {
    assert(within_range(0, type, num_osctypes));
    osc->queue_type = type;
@@ -287,7 +347,7 @@ void CFxMenu::draw(CDrawContext* dc)
    setDirty(false);
 }
 
-void CFxMenu::loadSnapshot(int type, TiXmlElement* e)
+void CFxMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
 {
    if (!type)
       fxbuffer->type.val.i = type;

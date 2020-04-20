@@ -222,6 +222,8 @@ private:
    bool zoomInvalid;
    int minimumZoom;
 
+   int selectedFX[8];
+   
    std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
 
    bool modsource_is_alternate[n_modsources];
@@ -245,6 +247,7 @@ private:
    VSTGUI::CControl* metaparam[n_customcontrollers] = {};
    VSTGUI::CControl* lfodisplay = nullptr;
    VSTGUI::CControl* filtersubtype[2] = {};
+   VSTGUI::CControl* fxmenu = nullptr;
 #if MAC || LINUX
 #else
    HWND ToolTipWnd;
