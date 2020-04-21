@@ -16,12 +16,15 @@ public:
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    // virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual void populate();
-   virtual void loadSnapshot(int type, TiXmlElement* e){};
+   virtual void loadSnapshot(int type, TiXmlElement* e, int idx){};
+   virtual bool loadSnapshotByIndex(int idx);
+
    virtual void saveSnapshot(TiXmlElement* e, const char* name){};
    virtual bool canSave();
 
+   int selectedIdx = -1;
 protected:
-   void populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub);
+   void populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx);
    SurgeStorage* storage = nullptr;
    char mtype[16] = {0};
 };
@@ -36,7 +39,7 @@ public:
             OscillatorStorage* osc,
             std::shared_ptr<SurgeBitmaps>);
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-   virtual void loadSnapshot(int type, TiXmlElement* e) override;
+   virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
 
 protected:
    OscillatorStorage* osc = nullptr;
@@ -60,7 +63,7 @@ public:
    {
       return true;
    }
-   virtual void loadSnapshot(int type, TiXmlElement* e) override;
+   virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
    virtual void saveSnapshot(TiXmlElement* e, const char* name) override;
    virtual void populate() override;
    
