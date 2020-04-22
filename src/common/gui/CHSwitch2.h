@@ -45,7 +45,18 @@ public:
    onMouseMoved(VSTGUI::CPoint& where,
                 const VSTGUI::CButtonState& buttons) override; ///< called when a mouse move event occurs
    virtual bool
-   onWheel (const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override; ///< called when scrollwheel events occurs    
+   onWheel (const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override; ///< called when scrollwheel events occurs
+
+   virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
+      getFrame()->setCursor( VSTGUI::kCursorHand );
+      return VSTGUI::kMouseEventHandled;
+   }
+   virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
+      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      return VSTGUI::kMouseEventHandled;
+   }
+
+   
    CLASS_METHODS(CHSwitch2, VSTGUI::CControl)
    void setUsesMouseWheel(bool wheel);
 };

@@ -569,6 +569,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    {
       beginEdit();
       controlstate = cs_drag;
+      getFrame()->setCursor( VSTGUI::kCursorHand );
       statezoom = 1.f;
 
       edit_value = modmode ? &modval : &value;
@@ -604,6 +605,8 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 #endif
       endEdit();
       controlstate = cs_none;
+      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      
       edit_value = nullptr;
 
       attachCursor();
@@ -660,6 +663,46 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
 {
    if (disabled)
       return;
+
+   if( controlstate != cs_drag )
+   {
+      // FIXME - deal with modulation
+      auto handle_rect = handle_rect_orig;
+      auto size = getViewSize();
+      handle_rect.offset(size.left, size.top);
+      
+      float dispv = limit_range(qdvalue, 0.f, 1.f);
+      if (style & CSlider::kRight || style & CSlider::kBottom)
+         dispv = 1 - dispv;
+      dispv *= range;
+      
+      if( modmode )
+      {
+         if (modmode == 2)
+            dispv = limit_range(0.5f + 0.5f * modval, 0.f, 1.f);
+         else
+            dispv = limit_range(modval + value, 0.f, 1.f);
+         
+         if (style & CSlider::kRight || style & CSlider::kBottom)
+            dispv = 1 - dispv;
+         dispv *= range;
+      }
+      
+      if (style & CSlider::kHorizontal)
+      {
+         handle_rect.offset(dispv + 1, 3);
+      }
+      else
+      {
+         handle_rect.offset(1, dispv);
+      }
+      
+      if( handle_rect.pointInside(where) )
+         getFrame()->setCursor( VSTGUI::kCursorHand );
+      else
+         getFrame()->setCursor( VSTGUI::kCursorDefault );
+   }
+   
    if ((controlstate == cs_drag) && (buttons & kLButton))
    {
       hasBeenDraggedDuringMouseGesture = true;
