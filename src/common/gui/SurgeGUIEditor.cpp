@@ -110,7 +110,7 @@ enum special_tags
 
 std::string specialTagToString( special_tags t )
 {
-   if( t >= tag_mod_source0 && t <= tag_mod_source_end )
+   if( t >= tag_mod_source0 && t < tag_mod_source_end )
    {
       modsources modsource = (modsources)(t - tag_mod_source0);
       std::string s = std::string( "tag_modsource" ) + modsource_abberations_short[modsource];
@@ -211,7 +211,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 #endif   
    editor_open = false;
    queue_refresh = false;
-   memset(param, 0, 1024 * sizeof(void*));
+   memset(param, 0, n_paramslots * sizeof(void*));
    polydisp = 0; // FIXME - when changing skins and rebuilding we need to reset these state variables too
    clear_infoview_countdown = -1;
    vu[0] = 0;
@@ -579,7 +579,7 @@ void SurgeGUIEditor::idle()
                int cc = j - metaparam_offset;
                gui_modsrc[ms_ctrl1 + cc]->setValue(
                   ((ControllerModulationSource*)synth->storage.getPatch()
-                   .scene[0]
+                   .scene[current_scene]
                    .modsources[ms_ctrl1 + i])
                   ->get_target01());
             }
@@ -626,13 +626,13 @@ void SurgeGUIEditor::idle()
       }
       for (int i = 0; i < n_customcontrollers; i++)
       {
-         if (((ControllerModulationSource*)synth->storage.getPatch().scene[0].modsources[ms_ctrl1 +
-                                                                                         i])
+         if (((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 +
+                                                                                                     i])
              ->has_changed(true))
          {
             gui_modsrc[ms_ctrl1 + i]->setValue(
                ((ControllerModulationSource*)synth->storage.getPatch()
-                .scene[0]
+                .scene[current_scene]
                 .modsources[ms_ctrl1 + i])
                ->get_target01());
          }
@@ -665,7 +665,7 @@ void SurgeGUIEditor::refresh_mod()
       thisms = (modsources)cms->alternateId;
    
    synth->storage.CS_ModRouting.enter();
-   for (int i = 0; i < 512; i++)
+   for (int i = 0; i < n_paramslots; i++)
    {
       if (param[i])
       {
@@ -867,9 +867,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             ->setlabel(synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
          ((CModulationSourceButton*)gui_modsrc[ms])->set_ismeta(true);
          ((CModulationSourceButton*)gui_modsrc[ms])
-            ->setBipolar(synth->storage.getPatch().scene[0].modsources[ms]->is_bipolar());
+            ->setBipolar(synth->storage.getPatch().scene[current_scene].modsources[ms]->is_bipolar());
          gui_modsrc[ms]->setValue(
-            ((ControllerModulationSource*)synth->storage.getPatch().scene[0].modsources[ms])
+            ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms])
             ->get_target01());
       }
       else
@@ -997,19 +997,25 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                       1, bitmapStore->getBitmap(IDB_BUTTON_STORE), nopoint, false);
    frame->addView(b_store);
 
-   memset(param, 0, 1024 * sizeof(void*)); // see the correct size in SurgeGUIEditor.h
-   memset(nonmod_param, 0, 1024 * sizeof(void*));
+   memset(param, 0, n_paramslots * sizeof(void*));
+   memset(nonmod_param, 0, n_paramslots * sizeof(void*));
    int i = 0;
    vector<Parameter*>::iterator iter;
    for (iter = synth->storage.getPatch().param_ptr.begin();
         iter != synth->storage.getPatch().param_ptr.end(); iter++)
    {
+      if( i == n_paramslots )
+      {
+         // This would only happen if a dev added params. But with 1.7 a dev might so lets at least put this here.
+         Surge::UserInteractions::promptError( "INTERNAL ERROR - params larger than paramslots.  Up n_paramslots in SGE.h", "SOFTWARE ERROR" );
+      }
       Parameter* p = *iter;
 
       bool paramIsVisible = ((p->scene == (current_scene + 1)) || (p->scene == 0)) &&
          isControlVisible(p->ctrlgroup, p->ctrlgroup_entry) && (p->ctrltype != ct_none);
    
       std::string uiid = p->ui_identifier;
+
       bool handledBySkins = false;
 
       /*
@@ -1533,7 +1539,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             int lfo_id = p->ctrlgroup_entry - ms_lfo1;
             if ((lfo_id >= 0) && (lfo_id < n_lfos))
             {
-               std::cout << "Old School LFOGUI Build" << std::endl;
                CLFOGui* slfo = new CLFOGui(
                   rect, lfo_id == 0, this, p->id + start_paramtags,
                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
@@ -1795,7 +1800,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
    saveDialog->addView(patchComment);
    saveDialog->addView(patchTuning);
    saveDialog->addView(patchTuningLabel);
-                               
+
+   refresh_mod();
                                
    editor_open = true;
    queue_refresh = false;
@@ -2319,17 +2325,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             addCallbackMenu(contextMenu, "Bipolar", [this, control, ccid]() {
                                                        bool bp =
-                                                          !synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar();
-                                                       synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->set_bipolar(bp);
+                                                          !synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->is_bipolar();
+                                                       synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->set_bipolar(bp);
 
                                                        float f =
-                                                          synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->get_output01();
+                                                          synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->get_output01();
                                                        control->setValue(f);
                                                        ((CModulationSourceButton*)control)->setBipolar(bp);
                                                        refresh_mod();
                                                     });
             contextMenu->checkEntry(
-               eid, synth->storage.getPatch().scene[0].modsources[ms_ctrl1 + ccid]->is_bipolar());
+               eid, synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->is_bipolar());
             eid++;
 
             addCallbackMenu(contextMenu, "Rename", [this, control, ccid]() {
@@ -2785,7 +2791,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if (((CModulationSourceButton*)control)->event_is_drag)
       {
          int t = (tag - tag_mod_source0);
-         ((ControllerModulationSource*)synth->storage.getPatch().scene[0].modsources[t])
+         ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[t])
             ->set_target01(control->getValue(), false);
 
          synth->sendParameterAutomation(t + metaparam_offset - ms_ctrl1, control->getValue());
@@ -2800,7 +2806,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          long buttons = 0; // context->getMouseButtons(); // temp fix vstgui 3.5
          bool ciep =
             ((CModulationSourceButton*)control)->click_is_editpart && (newsource >= ms_lfo1);
-
          if (!ciep)
          {
             switch (state & 3)
@@ -2811,6 +2816,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                mod_editor = false;
                // mod_editor = true;
                queue_refresh = true;
+               refresh_mod();
                break;
             case 1:
                modsource = newsource;

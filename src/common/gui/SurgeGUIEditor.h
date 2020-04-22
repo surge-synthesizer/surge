@@ -241,8 +241,10 @@ private:
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;
    VSTGUI::CControl* splitkeyControl = nullptr;
-   VSTGUI::CControl* param[1024] = {};
-   VSTGUI::CControl* nonmod_param[1024] = {}; 
+
+   static const int n_paramslots = 1024;
+   VSTGUI::CControl* param[n_paramslots] = {};
+   VSTGUI::CControl* nonmod_param[n_paramslots] = {}; 
    VSTGUI::CControl* gui_modsrc[n_modsources] = {};
    VSTGUI::CControl* metaparam[n_customcontrollers] = {};
    VSTGUI::CControl* lfodisplay = nullptr;
