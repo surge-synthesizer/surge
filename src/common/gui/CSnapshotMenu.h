@@ -22,6 +22,15 @@ public:
    virtual void saveSnapshot(TiXmlElement* e, const char* name){};
    virtual bool canSave();
 
+   virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
+      getFrame()->setCursor( VSTGUI::kCursorHand );
+      return VSTGUI::kMouseEventHandled;
+   }
+   virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
+      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      return VSTGUI::kMouseEventHandled;
+   }
+
    int selectedIdx = -1;
 protected:
    void populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx);

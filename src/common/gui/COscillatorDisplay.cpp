@@ -899,6 +899,22 @@ CMouseEventResult COscillatorDisplay::onMouseUp(CPoint& where, const CButtonStat
 }
 CMouseEventResult COscillatorDisplay::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   if ( uses_wavetabledata(oscdata->type.val.i) )
+   {
+      if (rprev.pointInside(where) || rnext.pointInside(where) || rmenu.pointInside(where) )
+      {
+         getFrame()->setCursor( VSTGUI::kCursorHand );
+      }
+      else
+      {
+         getFrame()->setCursor( VSTGUI::kCursorDefault );
+      }
+   }
+   else
+   {
+      getFrame()->setCursor( VSTGUI::kCursorDefault );
+   }
+
    if (controlstate)
    {
       /*oscdata->startphase.val.f -= 0.005f * (where.x - lastpos.x);

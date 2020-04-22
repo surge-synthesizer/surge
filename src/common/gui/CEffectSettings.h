@@ -20,6 +20,8 @@ public:
    virtual VSTGUI::CMouseEventResult
    onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse up event occurs
 
+   virtual VSTGUI::CMouseEventResult onMouseMoved( VSTGUI::CPoint &where, const VSTGUI::CButtonState &buttons ) override;
+
    int current;
    VSTGUI::CBitmap *bg, *labels;
    int type[8], bypass, disabled;

@@ -1073,6 +1073,25 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
 CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   if (rect_shapes.pointInside(where))
+   {
+      getFrame()->setCursor( VSTGUI::kCursorHand );
+   }
+   else if (ss && lfodata->shape.val.i == ls_stepseq && (
+               rect_steps.pointInside(where) ||
+               rect_steps_retrig.pointInside(where) ||
+               ss_shift_left.pointInside(where) ||
+               ss_shift_right.pointInside(where) ||
+               rect_ls.pointInside(where) ||
+               rect_le.pointInside(where)
+               ))
+   {
+      getFrame()->setCursor( VSTGUI::kCursorHand );
+   }
+   else
+   {
+      getFrame()->setCursor( VSTGUI::kCursorDefault );
+   }
    if (controlstate == cs_shape)
    {
       for (int i = 0; i < n_lfoshapes; i++)

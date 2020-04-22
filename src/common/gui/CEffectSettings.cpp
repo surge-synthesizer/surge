@@ -128,3 +128,26 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint& where, const CButtonState& 
 {
    return kMouseEventHandled;
 }
+
+CMouseEventResult CEffectSettings::onMouseMoved(CPoint& where, const CButtonState& buttons)
+{
+   bool isInside = false;
+   for (int i = 0; i < 8; i++)
+   {
+      CRect size = getViewSize();
+      CRect r(0, 0, 17, 9);
+      r.offset(size.left, size.top);
+      r.offset(blocks[i][0], blocks[i][1]);
+      if (r.pointInside(where))
+      {
+         isInside = true;
+      }
+   }
+   if( isInside )
+      getFrame()->setCursor( VSTGUI::kCursorHand );
+   else
+      getFrame()->setCursor( VSTGUI::kCursorDefault );
+
+   
+   return kMouseEventHandled;
+}

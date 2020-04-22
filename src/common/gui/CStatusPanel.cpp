@@ -116,6 +116,15 @@ VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const
     return CControl::onMouseDown(where, button);
 }
 
+VSTGUI::CMouseEventResult CStatusPanel::onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) {
+   if( mpeBox.pointInside(where) || tuningBox.pointInside(where) )
+      getFrame()->setCursor( VSTGUI::kCursorHand );
+   else
+      getFrame()->setCursor( VSTGUI::kCursorDefault );
+   
+   return kMouseEventHandled;
+}
+
 bool CStatusPanel::onDrop(VSTGUI::DragEventData data )
 {
    doingDrag = false;
