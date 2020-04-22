@@ -672,6 +672,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 0;
       break;
+   case ct_flangerchord:
+      val_min.i = 0;
+      val_max.i = 12;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
    default:
    case ct_none:
       sprintf(dispname, "-");
@@ -1228,6 +1234,56 @@ void Parameter::get_display(char* txt, bool external, float ef)
             break;
          }
          sprintf( txt, "%s %s", types.c_str(), typew.c_str() );
+      }
+         break;
+      case ct_flangerchord:
+      {
+         int mode = i;
+
+         std::string types;
+         switch( mode )
+         {
+         case 0:
+            types = "unison";
+            break;
+         case 1:
+            types = "octaves";
+            break;
+         case 2:
+            types = "min 2nds";
+            break;
+         case 3:
+            types = "2nds";
+            break;
+         case 4:
+            types = "diminished";
+            break;
+         case 5:
+            types = "augmented";
+            break;
+         case 6:
+            types = "4ths";
+            break;
+         case 7:
+            types = "tritones";
+            break;
+         case 8:
+            types = "5ths";
+            break;
+         case 9:
+            types = "major";
+            break;
+         case 10:
+            types = "minor";
+            break;
+         case 11:
+            types = "dominant";
+            break;
+         case 12:
+            types = "maj 7";
+            break;
+         }
+         sprintf( txt, "%s", types.c_str() );
       }
          break;
       default:

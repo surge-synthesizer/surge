@@ -635,4 +635,6 @@ private:
    const static int LFO_TABLE_MASK=LFO_TABLE_SIZE-1;
    float sin_lfo_table[LFO_TABLE_SIZE];
    float saw_lfo_table[LFO_TABLE_SIZE]; // don't make it analytic since I want to smooth the edges
+   float panL_table[LFO_TABLE_SIZE];
+   float panR_table[LFO_TABLE_SIZE];
 };

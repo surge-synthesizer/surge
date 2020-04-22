@@ -80,15 +80,15 @@
         <snapshot i="1" p0="-8.000000" p1="-8.000000" p2="0.000000" p3="0.000000" p4="-15.792830" p5="39.851772" p6="1.764290" p7="0.476786" p8="0.000000" p10="0.305357" p11="12.985722" name="Wide Chorus (using Delay)" />
     </type>
 	
+    <type i="12" name="Flanger (WIP)">
+      <snapshot name="Init" />
+    </type>
+
     <type i="3" name="Phaser">
         <snapshot p0="0.000000" p1="0.000000" p2="0.000000" p3="-2.00000" p4="0.500000" p5="0.500000" p6="0.500000" name="Init" />
         <snapshot p0="0.000000" p1="0.000000" p2="0.000000" p3="-2.00000" p4="0.500000" p5="0.500000" p6="1.000000" name="Init (Send)" />
         <snapshot p0="0.000000" p1="-0.625000" p2="0.283929" p3="-1.352413" p4="0.817857" p5="0.747321" p6="0.493750" name="Stereo Phaser" />
         <snapshot p0="0.057143" p1="0.858929" p2="-0.401786" p3="-1.998566" p4="0.718750" p5="0.586607" p6="0.694643" name="Talky" />
-    </type>
-
-    <type i="12" name="Flanger (WIP)">
-      <snapshot name="Init" />
     </type>
 
     <type i="4" name="Rotary Speaker">
