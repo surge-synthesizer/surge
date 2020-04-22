@@ -100,6 +100,7 @@ enum ctrltypes
    ct_flangerpitch,
    ct_flangermode,
    ct_flangervoices,
+   ct_flangerchord,
    num_ctrltypes,
 };
 
