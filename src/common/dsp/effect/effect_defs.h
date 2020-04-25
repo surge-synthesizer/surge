@@ -580,6 +580,21 @@ private:
 
 class FlangerEffect : public Effect
 {
+   enum Modes {
+      classic,
+      classic_tuned,
+      doppler,
+      doppler_tuned,
+      arp_tuned,
+      arp_tuned_bare
+   };
+   enum Waves {
+      sinw,
+      triw,
+      saww,
+      sandhw
+   };
+   
    static const int COMBS_PER_CHANNEL = 4;
    struct InterpDelay {
       // OK so lets say we want lowest tunable frequency to be 23.5hz at 96k
@@ -629,12 +644,13 @@ private:
    lipol<float,true> lfoval[2][COMBS_PER_CHANNEL], delaybase[2][COMBS_PER_CHANNEL];
    lipol<float,true> depth, mix;
    lipol<float,true> voices, voice_detune, voice_chord;
-   lipol<float,true> feedback, fb_lf_damping, stereo_width, gain;
+   lipol<float,true> feedback, fb_lf_damping;
+   float lfosandhtarget[2][COMBS_PER_CHANNEL];
+   
+   lipol_ps width;
    
    const static int LFO_TABLE_SIZE=8192;
    const static int LFO_TABLE_MASK=LFO_TABLE_SIZE-1;
    float sin_lfo_table[LFO_TABLE_SIZE];
    float saw_lfo_table[LFO_TABLE_SIZE]; // don't make it analytic since I want to smooth the edges
-   float panL_table[LFO_TABLE_SIZE];
-   float panR_table[LFO_TABLE_SIZE];
 };

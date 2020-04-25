@@ -99,6 +99,7 @@ enum ctrltypes
    ct_distortion_waveshape,
    ct_flangerpitch,
    ct_flangermode,
+   ct_flangerwave,
    ct_flangervoices,
    ct_flangerchord,
    ct_osc_feedback,

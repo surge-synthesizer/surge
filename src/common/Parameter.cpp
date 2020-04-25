@@ -663,8 +663,13 @@ void Parameter::set_type(int ctrltype)
       break;
    case ct_flangermode:
       val_min.i = 0;
-      val_max.i = 11;
+      val_max.i = 5; // classic, classic tuned, doppler, doppler tuned, arpeggio blend, arpeggio bare
       valtype = vt_int;
+      val_default.i = 0;
+      break;
+   case ct_flangerwave:
+      val_min.i = 0;
+      val_max.i = 3; // sin, tri, saw, s&h
       val_default.i = 0;
       break;
    case ct_flangerchord:
@@ -1429,41 +1434,51 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_flangermode:
       {
          int mode = i;
-         int mtype = mode / 4;
-         int mwave = mode % 4;
 
          std::string types;
-         switch( mtype )
+         switch( mode )
          {
          case 0:
             types = "Classic";
             break;
          case 1:
-            types = "Vibrato";
+            types = "Classic Tuned";
             break;
          case 2:
-            types = "Arp";
-            break;
-         }
-         std::string typew;
-         switch( mwave )
-         {
-         case 0:
-            typew = "Sine";
-            break;
-         case 1:
-            typew = "Triangle";
-            break;
-         case 2:
-            typew = "Sawtooth";
+            types = "Doppler";
             break;
          case 3:
-            typew = "S&H";
+            types = "Doppler Tuned";
+            break;
+         case 4:
+            types = "Arpeggio Tuned Mixed";
+            break;
+         case 5:
+            types = "Arpeggio Tuned Bare";
             break;
          }
-         sprintf( txt, "%s %s", types.c_str(), typew.c_str() );
+         sprintf( txt, "%s", types.c_str() );
       }
-         break;
+      break;
+      case ct_flangerwave:
+      {
+         switch( i )
+         {
+         case 0:
+            sprintf( txt, "sin" );
+            break;
+         case 1:
+            sprintf( txt, "tri" );
+            break;
+         case 2:
+            sprintf( txt, "saw" );
+            break;
+         case 3:
+            sprintf( txt, "s&h" );
+            break;
+         }
+      }
+      break;
       case ct_flangerchord:
       {
          int mode = i;
@@ -1818,19 +1833,19 @@ bool Parameter::set_value_from_string( std::string s )
 
             // check if the following character is sharp or flat, adjust val if so
             n++;
-            if (m = s.find("#", n, 1) != std::string::npos)
+            if (( m = s.find("#", n, 1) ) != std::string::npos)
             {
                val += 1;
                n++;
             }
-            else if (m = s.find("b", n, 1) != std::string::npos)
+            else if ((m = s.find("b", n, 1)) != std::string::npos)
             {
                val -= 1;
                n++;
             }
 
             // if neither note modifiers are found, check for minus
-            if (m = s.find("-", n, 1) != std::string::npos)
+            if ((m = s.find("-", n, 1)) != std::string::npos)
             {
                neg = -1;
                n++;
