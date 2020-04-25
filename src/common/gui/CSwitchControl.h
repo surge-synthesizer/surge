@@ -3,8 +3,9 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
+#include "SkinSupport.h"
 
-class CSwitchControl : public VSTGUI::CControl
+class CSwitchControl : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CSwitchControl(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, VSTGUI::CBitmap* background);

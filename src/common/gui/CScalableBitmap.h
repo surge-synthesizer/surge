@@ -50,6 +50,8 @@ public:
       extraScaleFactor = a;
    }
 
+   int resourceID;
+
 private:
    struct CPointCompare
    {
@@ -66,7 +68,6 @@ private:
    
    int lastSeenZoom, bestFitScaleGroup;
    int extraScaleFactor;
-   int resourceID;
    std::string fname;
 
    VSTGUI::CFrame* frame;

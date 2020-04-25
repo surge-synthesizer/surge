@@ -3,8 +3,9 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
+#include "SkinSupport.h"
 
-class CHSwitch2 : public VSTGUI::CHorizontalSwitch
+class CHSwitch2 : public VSTGUI::CHorizontalSwitch, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CHSwitch2(const VSTGUI::CRect& size,
@@ -35,6 +36,11 @@ public:
    bool dragable;
    bool usesMouseWheel;
 
+   bool lookedForHover = false;
+   CScalableBitmap *hoverBmp = nullptr;
+   bool doingHover = false;
+   float hoverValue = 0.0f;
+   
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    virtual VSTGUI::CMouseEventResult
    onMouseDown(VSTGUI::CPoint& where,
@@ -49,10 +55,13 @@ public:
 
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       getFrame()->setCursor( VSTGUI::kCursorHand );
+      doingHover = true;
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       getFrame()->setCursor( VSTGUI::kCursorDefault );
+      doingHover = false;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
 

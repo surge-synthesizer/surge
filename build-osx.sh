@@ -87,6 +87,7 @@ NC=`tput init`
 
 prerequisite_check()
 {
+
     if [ ! -f vst3sdk/LICENSE.txt ]; then
         echo
         echo ${RED}ERROR: You have not gotten the submodules required to build Surge. Run the following command to get them.${NC}
@@ -100,10 +101,17 @@ prerequisite_check()
         echo
         echo ${RED}ERROR: You do not have cmake on your path${NC}
         echo
-	echo Please install cmake. "brew install cmake" or visit https://cmake.org
+  	    echo Please install cmake. "brew install cmake" or visit https://cmake.org
         echo
         exit 1
     fi
+
+    if [ ! $(which xcpretty) ]; then
+        echo
+        echo ${GREEN}You will get better output if you `brew install xcpretty`${NC}
+        echo
+    fi
+
 }
 
 
@@ -124,7 +132,14 @@ run_cmake_build()
     # Don't let TEE eat my return status
     mkdir -p build
     cmake -GXcode -Bbuild
-    xcodebuild build -configuration Release -project build/Surge.xcodeproj -target ${target}
+
+    if [ $(which xcpretty) ]; then
+        set -o pipefail && xcodebuild build -configuration Release -project build/Surge.xcodeproj -target ${target} | xcpretty
+    else
+        xcodebuild build -configuration Release -project build/Surge.xcodeproj -target ${target}
+    fi
+
+
 
     build_suc=$?
 

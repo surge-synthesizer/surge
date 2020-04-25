@@ -117,6 +117,9 @@ It's what the primary Mac developers use day to day. The simplest approach is to
 ./build-osx.sh
 ```
 
+`build-osx.sh` will give you better output if you first `gem install xcpretty`, the xcodebuild formatter, 
+and you have your gem environment running. If that doesn't work don't worry - you can still build.
+
 this command will build, but not install, the VST3 and AU components. It has a variety of options which
 are documented in the `./build-osx.sh --help` screen but a few key ones are:
 
