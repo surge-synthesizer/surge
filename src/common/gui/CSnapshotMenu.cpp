@@ -111,6 +111,10 @@ bool CSnapshotMenu::loadSnapshotByIndex( int idx )
             typeD.push( next );
       }
    }
+   if( idx < 0 && cidx + idx > 0 ) {
+      // I've gone off the end
+      return( loadSnapshotByIndex( cidx + idx ) );
+   }
    return false;
 }
 
