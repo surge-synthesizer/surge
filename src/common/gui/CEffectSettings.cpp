@@ -19,7 +19,6 @@ int get_fxtype(int id)
    case fxt_reverb2:
       return 2;
    case fxt_phaser:
-      return 7;
    case fxt_rotaryspeaker:
    case fxt_chorus4:
    case fxt_flanger:
