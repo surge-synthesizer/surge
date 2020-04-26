@@ -2940,7 +2940,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       CFxMenu *fxm = dynamic_cast<CFxMenu*>(fxmenu);
       auto jog = [this, fxm](int byThis ) {
-                    this->selectedFX[this->current_fx] += byThis;
+                    this->selectedFX[this->current_fx] = std::max( this->selectedFX[this->current_fx] + byThis, -1 );
                     if( ! fxm->loadSnapshotByIndex( this->selectedFX[this->current_fx] ) )
                     {
                        // Try and go back to 0. This is the wrong behavior for negative jog
