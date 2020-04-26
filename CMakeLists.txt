@@ -96,7 +96,6 @@ set(SURGE_COMMON_SOURCES
   src/common/SurgeStorage.cpp
   src/common/SurgeSynthesizer.cpp
   src/common/SurgeSynthesizerIO.cpp
-  src/common/Tunings.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp 
   libs/xml/tinyxml.cpp
@@ -226,6 +225,7 @@ set(SURGE_COMMON_INCLUDES
   libs/xml
   libs/catch2
   libs/strnatcmp
+  libs/tuning-library/include
   src/common
   src/common/dsp
   src/common/thread

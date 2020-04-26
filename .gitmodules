@@ -14,3 +14,6 @@
 [submodule "libs/lv2"]
 	path = libs/lv2
 	url = https://github.com/drobilla/lv2.git
+[submodule "libs/tuning-library"]
+	path = libs/tuning-library
+	url = https://github.com/surge-synthesizer/tuning-library

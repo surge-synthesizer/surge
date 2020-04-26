@@ -353,6 +353,10 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath)
           << " Please install shared assets correctly and restart.";
       Surge::UserInteractions::promptError(oss.str(), "Unable to load windows.wt");
    }
+
+   // Tunings Library Support
+   currentScale = Tunings::evenTemperament12NoteScale();
+   currentMapping = Tunings::KeyboardMapping();
 }
 
 SurgePatch& SurgeStorage::getPatch()
@@ -1375,155 +1379,16 @@ float envelope_rate_linear(float x)
    return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
 }
 
-bool SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
+bool SurgeStorage::retuneToScale(const Tunings::Scale& s)
 {
-   if (!s.isValid())
-      return false;
-
    currentScale = s;
    isStandardTuning = false;
-   
-   float pitches[512];
-   int posPitch0 = 256 + scaleConstantNote();
-   int posScale0 = 256 + currentMapping.middleNote;
-   float pitchMod = log(scaleConstantPitch())/log(2) - 1;
 
-   int scalePositionOfStartNote = 0;
-   int scalePositionOfTuningNote = currentMapping.tuningConstantNote - currentMapping.middleNote;
-   if( currentMapping.count > 0 )
-      scalePositionOfTuningNote = currentMapping.keys[scalePositionOfTuningNote];
-
-   float tuningCenterPitchOffset;
-   if( scalePositionOfTuningNote == 0 )
-      tuningCenterPitchOffset = 0;
-   else
-   {
-      float tshift = 0;
-      float dt = s.tones[s.count -1].floatValue - 1.0;
-
-      while( scalePositionOfTuningNote < 0 )
-      {
-         scalePositionOfTuningNote += s.count;
-         tshift += dt;
-      }
-      while( scalePositionOfTuningNote > s.count )
-      {
-         scalePositionOfTuningNote -= s.count;
-         tshift -= dt;
-      }
-      
-      if( scalePositionOfTuningNote == 0 )
-         tuningCenterPitchOffset = -tshift;
-      else
-         tuningCenterPitchOffset = s.tones[scalePositionOfTuningNote-1].floatValue - 1.0 - tshift;
-   }
-
-   pitches[posPitch0] = 1.0;
-   for (int i=0; i<512; ++i)
-   {
-      // TODO: ScaleCenter and PitchCenter are now two different notes.
-       int distanceFromPitch0 = i - posPitch0;
-       int distanceFromScale0 = i - posScale0;
-       
-       if( distanceFromPitch0 == 0 )
-       {
-          table_pitch[i] = pow( 2.0, pitches[i] + pitchMod );
-#if DEBUG_SCALES
-           if( i > 296 && i < 340 )
-               std::cout << "PITCH: i=" << i << " n=" << i - 256 
-                         << " p=" << pitches[i]
-                         << " tp=" << table_pitch[i]
-                         << " fr=" << table_pitch[i] * 8.175798915
-                         << std::endl;
-#endif           
-       }
-       else 
-       {
-          /*
-            We used to have this which assumed 1-12
-            Now we have our note number, our distance from the 
-            center note, and the key remapping
-           int rounds = (distanceFromScale0-1) / s.count;
-           int thisRound = (distanceFromScale0-1) % s.count;
-          */
-
-          int rounds;
-          int thisRound;
-          int disable = false;
-          if( currentMapping.isStandardMapping || ( currentMapping.count == 0 ) )
-          {
-             rounds = (distanceFromScale0-1) / s.count;
-             thisRound = (distanceFromScale0-1) % s.count;
-          }
-          else
-          {
-             /*
-             ** Now we have this situation. We are at note i so we
-             ** are m away from the center note which is distanceFromScale0
-             **
-             ** If we mod that by the mapping size we know which note we are on
-             */
-             int mappingKey = distanceFromScale0 % currentMapping.count;
-             if( mappingKey < 0 )
-                mappingKey += currentMapping.count;
-             int cm = currentMapping.keys[mappingKey];
-             int push = 0;
-             if( cm < 0 )
-             {
-                disable = true;
-             }
-             else
-             {
-                push = mappingKey - cm;
-             }
-             rounds = (distanceFromScale0 - push - 1) / s.count;
-             thisRound = (distanceFromScale0 - push - 1) % s.count;
-#ifdef DEBUG_SCALES
-             if( i > 296 && i < 340 )
-                std::cout << "MAPPING n=" << i - 256 << " pushes ds0=" << distanceFromScale0 << " cmc=" << currentMapping.count << " tr=" << thisRound << " r=" << rounds << " mk=" << mappingKey << " cm=" << cm << " push=" << push << " dis=" << disable << " mk-p-1=" << mappingKey - push - 1 << std::endl;
-#endif
-             
-
-          }
-
-           if( thisRound < 0 )
-           {
-               thisRound += s.count;
-               rounds -= 1;
-           }
-           float mul = pow( s.tones[s.count-1].floatValue, rounds);
-           if( disable )
-              pitches[i] = 0;
-           else
-              pitches[i] = s.tones[thisRound].floatValue + rounds * (s.tones[s.count - 1].floatValue - 1.0) - tuningCenterPitchOffset;
-           
-           float otp = table_pitch[i];
-           table_pitch[i] = pow( 2.0, pitches[i] + pitchMod );
-
-#if DEBUG_SCALES
-           if( i > 296 && i < 340 )
-               std::cout << "PITCH: i=" << i << " n=" << i - 256
-                         << " ds0=" << distanceFromScale0 
-                         << " dp0=" << distanceFromPitch0
-                         << " r=" << rounds << " t=" << thisRound
-                         << " p=" << pitches[i]
-                         << " t=" << s.tones[thisRound].floatValue << " " << s.tones[thisRound ]
-                         << " dis=" << disable
-                         << " tp=" << table_pitch[i]
-                         << " fr=" << table_pitch[i] * 8.175798915
-                         << " otp=" << otp
-                         << " tcpo=" << tuningCenterPitchOffset
-                         << " diff=" << table_pitch[i] - otp
-                         
-                   //<< " l2p=" << log(otp)/log(2.0)
-                   //<< " l2p-p=" << log(otp)/log(2.0) - pitches[i] - rounds - 3
-                         << std::endl;
-#endif           
-       }
-   }
+   Tunings::Tuning t(currentScale, currentMapping);
    
    for( int i=0; i<512; ++i )
    {
+      table_pitch[i] = t.frequencyForMidiNoteScaledByMidi0( i - 256 );
       table_pitch_inv[i] = 1.f / table_pitch[i];
       table_note_omega[0][i] =
           (float)sin(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
@@ -1531,44 +1396,36 @@ bool SurgeStorage::retuneToScale(const Surge::Storage::Scale& s)
           (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
 
    }
-
+   
    return true;
 }
 
 bool SurgeStorage::remapToStandardKeyboard()
 {
-   return remapToKeyboard(Surge::Storage::KeyboardMapping());
-}
-
-bool SurgeStorage::remapToKeyboard(const Surge::Storage::KeyboardMapping& k)
-{
+   auto k = Tunings::KeyboardMapping();
    currentMapping = k;
-   isStandardMapping = k.isStandardMapping;
-   if( isStandardMapping )
-   {
-      tuningPitch = 32.0;
-      tuningPitchInv = 1.0 / 32.0;
-   }
-   else
-   {
-      tuningPitch = k.tuningFrequency / 8.175798915;
-      tuningPitchInv = 1.0 / tuningPitch;
-   }
-   // The mapping will change all the cached pitches so we need to redo
-   if( isStandardMapping && isStandardTuning )
+   isStandardMapping = true;
+   tuningPitch = 32.0;
+   tuningPitchInv = 1.0 / 32.0;
+   if( isStandardTuning )
    {
       retuneToStandardTuning();
-   }
-   else if( !isStandardMapping && !currentScale.isValid() )
-   {
-      // We need to set the current scale to a default scale so we can remap the keyboard.
-      // This is an odd edge case but we do need to support it.
-      retuneToScale(Surge::Storage::Scale::evenTemperament12NoteScale());
    }
    else
    {
       retuneToScale(currentScale);
    }
+   return true;
+}
+
+bool SurgeStorage::remapToKeyboard(const Tunings::KeyboardMapping& k)
+{
+   currentMapping = k;
+   isStandardMapping = false;
+
+   tuningPitch = k.tuningFrequency / Tunings::MIDI_0_FREQ;
+   tuningPitchInv = 1.0 / tuningPitch;
+   retuneToScale(currentScale);
    return true;
 }
 

@@ -114,6 +114,8 @@ void playAsConfigured(std::shared_ptr<SurgeSynthesizer> surge,
          case Event::LAMBDA_EVENT:
             e.surgeLambda(surge);
             break;
+         case Event::NO_EVENT:
+            break;
          }
 
          currEvt++;

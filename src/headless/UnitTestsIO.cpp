@@ -179,7 +179,7 @@ TEST_CASE( "DAW Streaming and Unstreaming", "[io][mpe][tun]" )
    {
       auto surgeSrc = Surge::Headless::createSurge(44100);
       auto surgeDest = Surge::Headless::createSurge(44100);
-      Surge::Storage::Scale s = Surge::Storage::readSCLFile("test-data/scl/zeus22.scl" );
+      Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl" );
 
       REQUIRE( surgeSrc->storage.isStandardTuning );
       REQUIRE( surgeDest->storage.isStandardTuning );
@@ -205,7 +205,7 @@ TEST_CASE( "DAW Streaming and Unstreaming", "[io][mpe][tun]" )
       auto surgeSrc = Surge::Headless::createSurge(44100);
       auto surgeDest = Surge::Headless::createSurge(44100);
 
-      auto k = Surge::Storage::readKBMFile( "test-data/scl/mapping-a440-constant.kbm" );
+      auto k = Tunings::readKBMFile( "test-data/scl/mapping-a440-constant.kbm" );
 
       REQUIRE( surgeSrc->storage.isStandardMapping );
       REQUIRE( surgeDest->storage.isStandardMapping );
