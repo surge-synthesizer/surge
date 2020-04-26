@@ -37,6 +37,8 @@ endif()
 
 if( UNIX AND NOT APPLE )
   set( BUILD_LV2 true )
+elseif( APPLE )
+  set( BUILD_LV2 false )  # Status as of Apr 26. This CMake will build 'something' in products/Surge.lv2 but :shrug:
 else()
   set( BUILD_LV2 false )
 endif()
@@ -690,9 +692,21 @@ if( BUILD_LV2 )
     ${OS_LINK_LIBRARIES}
     )
 
+  # FIXME - these rules have all sorts of problems with out-of-line
   add_custom_target( Surge.lv2 ALL )
   add_dependencies( Surge.lv2 surge-lv2 )
-  add_custom_command(
+  if( APPLE )
+    add_custom_command(
+      TARGET Surge.lv2
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Packaging up LV2 component"
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-lv2.dylib ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2/Surge.dylib
+      COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.dylib
+      )
+  elseif( UNIX AND NOT APPLE )
+    add_custom_command(
       TARGET Surge.lv2
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -701,6 +715,7 @@ if( BUILD_LV2 )
       COMMAND cp build/libsurge-lv2.so products/Surge.lv2/Surge.so
       COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.so 
       )
+  endif()
 
 endif()
 
