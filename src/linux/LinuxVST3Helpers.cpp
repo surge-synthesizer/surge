@@ -206,14 +206,17 @@ void LinuxVST3FrameOpen(VSTGUI::CFrame* that, void* parent, const VSTGUI::Platfo
    x11config.runLoop = VSTGUI::X11::RunLoop::get();
    config = &x11config;
 
-   // std::cout << "Special Magical VST3 Open" << std::endl;
+   // std::cout << "Special Magical VST3 Open " << VSTGUI::X11::RunLoop::instance().getXcbConnection() << std::endl;
    that->open(parent, pt, config);
-
+   // std::cout << "Are we done?" << std::endl;
    IdleUpdateHandler::start();
 }
 
 void LinuxVST3Detatch()
 {
   IdleUpdateHandler::stop();
+
+  // We need to downcount the usage on the RunLoop to allow xcb to restart
+  VSTGUI::X11::RunLoop::exit();
 }
 #endif
