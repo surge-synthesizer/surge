@@ -19,6 +19,7 @@
 #endif
 
 #include <iostream>
+#include <iomanip>
 
 #if !WINDOWS
 namespace fs = std::experimental::filesystem;
