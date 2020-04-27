@@ -621,21 +621,21 @@ public:
    void note_to_omega(float, float&, float&);
    void note_to_omega_ignoring_tuning(float, float&, float&);
 
-   bool retuneToScale(const Surge::Storage::Scale& s);
+   bool retuneToScale(const Tunings::Scale& s);
    bool retuneToStandardTuning() { init_tables(); return true; }
    
-   bool remapToKeyboard(const Surge::Storage::KeyboardMapping &k);
+   bool remapToKeyboard(const Tunings::KeyboardMapping &k);
    bool remapToStandardKeyboard(); 
    inline int scaleConstantNote() { return currentMapping.tuningConstantNote; }
    inline float scaleConstantPitch() { return tuningPitch; }
    inline float scaleConstantPitchInv() { return tuningPitchInv; } // Obviously that's the inverse of the above
 
-   Surge::Storage::Scale currentScale;
+   Tunings::Scale currentScale;
    bool isStandardTuning;
 
-   Surge::Storage::KeyboardMapping currentMapping;
+   Tunings::KeyboardMapping currentMapping;
    bool isStandardMapping = true;
-   float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
+   float tuningPitch = 32.0f, tuningPitchInv = 0.03125f; 
    
 private:
    TiXmlDocument snapshotloader;

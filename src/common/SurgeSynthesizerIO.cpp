@@ -199,11 +199,18 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
    {
        if( storage.isStandardTuning )
        {
-           storage.retuneToScale(Surge::Storage::parseSCLData(storage.getPatch().patchTuning.tuningContents ));
-           if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
-           {
-              storage.remapToKeyboard(Surge::Storage::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
-           }
+          try {
+             storage.retuneToScale(Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents ));
+             if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
+             {
+                storage.remapToKeyboard(Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
+             }
+          }
+          catch( Tunings::TuningError &e )
+          {
+             Surge::UserInteractions::promptError( e.what(), "Error restoring tunings" );
+             storage.retuneToStandardTuning();
+          }
        }
        else
        {
@@ -213,11 +220,18 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
                                                               "Replace Tuning? (The rest of the patch will still load).");
            if( okc == Surge::UserInteractions::MessageResult::OK )
            {
-               storage.retuneToScale(Surge::Storage::parseSCLData(storage.getPatch().patchTuning.tuningContents));
-               if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
-               {
-                  storage.remapToKeyboard(Surge::Storage::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
-               }
+              try {
+                 storage.retuneToScale(Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents));
+                 if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
+                 {
+                    storage.remapToKeyboard(Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
+                 }
+              }
+              catch( Tunings::TuningError &e )
+              {
+                 Surge::UserInteractions::promptError( e.what(), "Error restoring tunings" );
+                 storage.retuneToStandardTuning();
+              }
            }
        }
                                  

@@ -198,6 +198,7 @@ public:
    void mappingFileDropped(std::string fn);
    std::string tuningCacheForToggle = "";
    std::string mappingCacheForToggle = "";
+   std::string tuningToHtml();
    
 private:
    /**

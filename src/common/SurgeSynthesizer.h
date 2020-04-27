@@ -6,6 +6,7 @@
 #include "SurgeVoice.h"
 #include "effect/Effect.h"
 #include "BiquadFilter.h"
+#include "UserInteractions.h"
 
 struct QuadFilterChainState;
 
@@ -202,8 +203,15 @@ public:
 
        if( storage.getPatch().dawExtraState.hasTuning )
        {
-           auto sc = Surge::Storage::parseSCLData(storage.getPatch().dawExtraState.tuningContents );
-           storage.retuneToScale(sc);
+          try {
+             auto sc = Tunings::parseSCLData(storage.getPatch().dawExtraState.tuningContents );
+             storage.retuneToScale(sc);
+          }
+          catch( Tunings::TuningError &e )
+          {
+             Surge::UserInteractions::promptError( e.what(), "Unable to restore tuning" );
+             storage.retuneToStandardTuning();
+          }
        }
        else
        {
@@ -212,8 +220,17 @@ public:
        
        if( storage.getPatch().dawExtraState.hasMapping )
        {
-          auto kb = Surge::Storage::parseKBMData(storage.getPatch().dawExtraState.mappingContents );
-          storage.remapToKeyboard(kb);
+          try
+          {
+             auto kb = Tunings::parseKBMData(storage.getPatch().dawExtraState.mappingContents );
+             storage.remapToKeyboard(kb);
+          }
+          catch( Tunings::TuningError &e )
+          {
+             Surge::UserInteractions::promptError( e.what(), "Unable to restore mapping" );
+             storage.retuneToStandardTuning();
+          }
+
        }
        else
        {

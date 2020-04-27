@@ -3094,7 +3094,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          if( synth->storage.getPatch().patchTuning.tuningStoredInPatch )
          {
             synth->storage.getPatch().patchTuning.tuningContents = synth->storage.currentScale.rawText;
-            if( synth->storage.currentMapping.isStandardMapping )
+            if( synth->storage.isStandardMapping )
             {
                synth->storage.getPatch().patchTuning.mappingContents = "";
             }
@@ -3507,9 +3507,16 @@ void SurgeGUIEditor::toggleTuning()
 {
    if( this->synth->storage.isStandardTuning && tuningCacheForToggle.size() > 0 )
    {
-      this->synth->storage.retuneToScale(Surge::Storage::parseSCLData(tuningCacheForToggle));
-      if( mappingCacheForToggle.size() > 0 )
-         this->synth->storage.remapToKeyboard(Surge::Storage::parseKBMData(mappingCacheForToggle));
+      try
+      {
+         this->synth->storage.retuneToScale(Tunings::parseSCLData(tuningCacheForToggle));
+         if( mappingCacheForToggle.size() > 0 )
+            this->synth->storage.remapToKeyboard(Tunings::parseKBMData(mappingCacheForToggle));
+      } catch( Tunings::TuningError &e )
+      {
+         Surge::UserInteractions::promptError( e.what(), "Error when Toggling Tuning" );
+      }
+     
    }
    else if( ! this->synth->storage.isStandardTuning )
    {
@@ -3541,14 +3548,27 @@ void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
 
 void SurgeGUIEditor::tuningFileDropped(std::string fn)
 {
-    this->synth->storage.retuneToScale(Surge::Storage::readSCLFile(fn));
-    this->synth->refresh_editor = true;
+   try
+   {
+      this->synth->storage.retuneToScale(Tunings::readSCLFile(fn));
+      this->synth->refresh_editor = true;
+   }
+   catch( Tunings::TuningError &e )
+   {
+      Surge::UserInteractions::promptError( e.what(), "Tuning Error applying Scale" );
+   }
 }
 
 void SurgeGUIEditor::mappingFileDropped(std::string fn)
 {
-    this->synth->storage.remapToKeyboard(Surge::Storage::readKBMFile(fn));
-    this->synth->refresh_editor = true;
+   try {
+      this->synth->storage.remapToKeyboard(Tunings::readKBMFile(fn));
+      this->synth->refresh_editor = true;
+   }
+   catch( Tunings::TuningError &e )
+   {
+      Surge::UserInteractions::promptError( e.what(), "Tuning Error applying Mapping" );
+   }
 }
 
 bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
@@ -3974,7 +3994,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                         this->synth->storage.remapToStandardKeyboard();
                     }
         );
-    kst->setEnabled(! this->synth->storage.currentMapping.isStandardMapping);
+    kst->setEnabled(! this->synth->storage.isStandardMapping);
     tid++;
 
     tuningSubMenu->addSeparator();
@@ -3995,12 +4015,19 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                                     return;
                                 }
                             }
-                            auto sc = Surge::Storage::readSCLFile(sf);
-
-                            if (!this->synth->storage.retuneToScale(sc))
+                            try
                             {
-                               Surge::UserInteractions::promptError( "This .scl file is not valid!", "File Format Error" );
-                               return;
+                               auto sc = Tunings::readSCLFile(sf);
+                               
+                               if (!this->synth->storage.retuneToScale(sc))
+                               {
+                                  Surge::UserInteractions::promptError( "This .scl file is not valid!", "File Format Error" );
+                                  return;
+                               }
+                            }
+                            catch( Tunings::TuningError &e )
+                            {
+                               Surge::UserInteractions::promptError( e.what(), "Error loading SCL" );
                             }
                         };
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
@@ -4025,13 +4052,21 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                                     return;
                                 }
                             }
-                            auto kb = Surge::Storage::readKBMFile(sf);
-
-                            if (!this->synth->storage.remapToKeyboard(kb) )
+                            try
                             {
-                               Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
-                               return;
+                               auto kb = Tunings::readKBMFile(sf);
+                               
+                               if (!this->synth->storage.remapToKeyboard(kb) )
+                               {
+                                  Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
+                                  return;
+                               }
                             }
+                            catch( Tunings::TuningError &e )
+                            {
+                               Surge::UserInteractions::promptError( e.what(), "Error loading KBM" );
+                            }
+
                         };
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
                                                                       ".kbm",
@@ -4047,18 +4082,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                            snprintf(c, 256, "440.0");
                            spawn_miniedit_text(c, 16);
                            float freq = ::atof(c);
-                           if( freq == 440.0 )
+                           auto kb = Tunings::tuneA69To(freq);
+                           if( ! this->synth->storage.remapToKeyboard(kb) )
                            {
-                              this->synth->storage.remapToStandardKeyboard();
-                           }
-                           else
-                           {
-                              auto kb = Surge::Storage::KeyboardMapping::tuneA69To(freq);
-                              if( ! this->synth->storage.remapToKeyboard(kb) )
-                              {
-                                 Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
-                                 return;
-                              }
+                              Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
+                              return;
                            }
                         }
        );
@@ -4068,7 +4096,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
     auto *sct = addCallbackMenu(tuningSubMenu, "Show current tuning...",
                     [this]()
                     {
-                       Surge::UserInteractions::showHTML( this->synth->storage.currentScale.toHtml(&(this->synth->storage)) );
+                       Surge::UserInteractions::showHTML( this->tuningToHtml() );
                     }
         );
     sct->setEnabled(! this->synth->storage.isStandardTuning );
@@ -4511,3 +4539,169 @@ void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
 #endif   
 }
 //------------------------------------------------------------------------------------------------
+
+std::string SurgeGUIEditor::tuningToHtml()
+{
+   std::ostringstream htmls;
+   
+   htmls << 
+      R"HTML(
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+    <style>
+table {
+  border-collapse: collapse;
+}
+
+td {
+  border: 1px solid #CDCED4;
+  padding: 2pt;
+}
+
+th {
+  padding: 4pt;
+  color: #123463;
+  background: #CDCED4;
+  border: 1px solid #123463;
+}
+</style>
+  </head>
+  <body style="margin: 0pt; background: #CDCED4;">
+    <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+      <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+        Surge Tuning
+      </div>
+      <div style="font-size: 12pt; font-family: Lato; padding: 2pt;">
+    )HTML" 
+       << synth->storage.currentScale.description << 
+    R"HTML(
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+        Tuning Information
+     )HTML";
+
+    if( ! synth->storage.isStandardMapping )
+    {
+       htmls << "<ul>\n"
+             << "<li><a href=\"#rawscl\">Jump to Raw SCL</a>.\n"
+             << "<li><a href=\"#rawkbm\">Jump to raw KBM</a>.\n"
+             << "<li>Scale position 0 maps to key "
+             << synth->storage.currentMapping.middleNote << "\n<li> MIDI note " << synth->storage.currentMapping.tuningConstantNote << " is set to frequency "
+             << synth->storage.currentMapping.tuningFrequency << "Hz.\n</ul> ";
+    }
+    else
+    {
+       htmls << "\n<div>Tuning uses standard keyboard mapping.\n"
+             << "<ul>\n"
+             << "<li><a href=\"#rawscl\">Jump to Raw SCL</a>.\n"
+             << "</ul>\n";
+    }
+
+    htmls << R"HTML(
+      </div>
+      <div style="font-size: 12pt; font-family: Lato;">
+        <div style="padding-bottom: 10pt;">
+        )HTML" << synth->storage.currentScale.count << " tones" <<
+R"HTML(
+    </div>
+        <table>
+          <tr>
+            <th>#</th><th>Datum</th><th>Cents</th><th>Float</th>
+          </tr>
+          <tr>
+            <td>0</td><td>1</td><td>0</td><td>1</td>
+          </tr>
+    )HTML";
+
+    int ct = 1;
+    for( auto & t : synth->storage.currentScale.tones )
+    {
+       htmls << "<tr><td> " << ct++ << "</td><td>";
+       if (t.type == Tunings::Tone::kToneCents)
+          htmls << t.cents;
+       else
+          htmls << t.ratio_n << " / " << t.ratio_d;
+
+       htmls << "</td><td>" << t.cents << "</td><td>" << t.floatValue << "</td></tr>\n";
+    };
+
+    htmls << R"HTML(
+        </table>
+
+        <p>
+)HTML";
+
+
+       
+    htmls << R"HTML(
+<p>
+        <table>
+          <tr>
+            <th colspan=2>MIDI Note</th><th>Scale Position</th><th>Frequency</th>
+          </tr>
+
+)HTML";
+
+       for( int i=0; i<128; ++i )
+       {
+          int octave = (i / 12) - 1;
+          char notenames[12][3] = {"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "};
+
+          std::string rowstyle="";
+          std::string tdopen="<td colspan=2>";
+          int np = i%12;
+          if( np == 1 || np == 3 || np == 6 || np ==8 || np == 10 )
+          {
+             rowstyle = "style=\"background-color: #dddddd;\"";
+             tdopen="<td style=\"background-color: #ffffff;\">&nbsp;</td><td>";
+          }
+          htmls << "<tr " << rowstyle << ">" << tdopen << i << " (" << notenames[i % 12 ] << octave << ")</td>\n";
+
+          auto tn = i - synth->storage.scaleConstantNote();
+          if( ! synth->storage.isStandardMapping )
+          {
+             tn = i - synth->storage.currentMapping.middleNote;
+          }
+          while( tn < 0 ) tn += synth->storage.currentScale.count;
+          
+          auto p = synth->storage.note_to_pitch(i);
+          htmls << "<td>" << (tn % synth->storage.currentScale.count + 1) << "</td><td>" << 8.175798915 * p << " Hz</td>";
+          htmls << "</tr>\n";
+       }
+       
+       htmls << R"HTML(
+        </table>
+      </div>
+
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+        <a name="rawscl">Tuning Raw File</a>:
+           )HTML" << synth->storage.currentScale.name << "</div>\n<pre>\n" << synth->storage.currentScale.rawText << R"HTML(
+      </pre>
+    </div>
+)HTML";
+
+       if( ! synth->storage.isStandardMapping )
+       {
+          htmls << R"HTML(
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+        <a name="rawkbm">Keyboard Mapping Raw File</a>:
+           )HTML" << synth->storage.currentMapping.name << "</div>\n<pre>\n" << synth->storage.currentMapping.rawText << R"HTML(
+      </pre>
+    </div>
+)HTML";
+       }
+       htmls << R"HTML(
+  </body>
+</html>
+      )HTML";
+ 
+  return htmls.str();
+}

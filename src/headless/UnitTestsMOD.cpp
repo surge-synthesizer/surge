@@ -582,7 +582,7 @@ TEST_CASE( "Pitch Bend and Tuning", "[mod][tun]" )
       for( auto sclf : testScales )
       {
          INFO( "Retuning pitch bend to " << sclf );
-         Surge::Storage::Scale s = Surge::Storage::readSCLFile("sclf" );
+         auto s = Tunings::readSCLFile( sclf );
          surge->storage.retuneToScale(s);
          for( int tests=0; tests<20; ++tests )
          {
