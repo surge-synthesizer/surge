@@ -37,7 +37,7 @@ public:
    bool usesMouseWheel;
 
    bool lookedForHover = false;
-   CScalableBitmap *hoverBmp = nullptr;
+   CScalableBitmap *hoverBmp = nullptr, *hoverOnBmp = nullptr;
    bool doingHover = false;
    float hoverValue = 0.0f;
    
