@@ -4,6 +4,7 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SkinSupport.h"
+#include "CScalableBitmap.h"
 
 class CSwitchControl : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
@@ -21,17 +22,24 @@ public:
                 const VSTGUI::CButtonState& buttons) override; ///< called when a mouse move event occurs
 
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      getFrame()->setCursor( VSTGUI::kCursorHand );
+      // getFrame()->setCursor( VSTGUI::kCursorHand );
+      doingHover = true;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      // getFrame()->setCursor( VSTGUI::kCursorDefault );
+      doingHover = false;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
 
 
    int ivalue, imax;
    bool is_itype;
+   bool lookedForHover = false;
+   bool doingHover = false;
+   CScalableBitmap *hoverBmp = nullptr;
 
 private:
    bool down;

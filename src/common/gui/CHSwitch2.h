@@ -54,12 +54,14 @@ public:
    onWheel (const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override; ///< called when scrollwheel events occurs
 
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      getFrame()->setCursor( VSTGUI::kCursorHand );
+      // disable hand as we move to hovertasticism
+      // getFrame()->setCursor( VSTGUI::kCursorHand );
       doingHover = true;
+      hoverValue = -1;
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      // getFrame()->setCursor( VSTGUI::kCursorDefault );
       doingHover = false;
       invalid();
       return VSTGUI::kMouseEventHandled;

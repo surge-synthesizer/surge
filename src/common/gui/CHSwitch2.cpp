@@ -123,7 +123,7 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
 
    if( doingHover )
    {
-            auto mouseableArea = getMouseableArea();
+      auto mouseableArea = getMouseableArea();
       double coefX, coefY;
       coefX = (double)mouseableArea.getWidth() / (double)columns;
       coefY = (double)mouseableArea.getHeight() / (double)rows;
