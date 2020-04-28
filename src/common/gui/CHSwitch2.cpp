@@ -19,10 +19,20 @@ void CHSwitch2::draw(CDrawContext* dc)
       if( ! lookedForHover && skin.get() )
       {
          lookedForHover = true;
-         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap( skinControl, dynamic_cast<CScalableBitmap*>( getBackground() ), associatedBitmapStore );
+         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap( skinControl, dynamic_cast<CScalableBitmap*>( getBackground() ), associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER );
+         hoverOnBmp = skin->hoverBitmapOverlayForBackgroundBitmap( skinControl, dynamic_cast<CScalableBitmap*>( getBackground() ), associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER_OVER_ON );
       }
 
-      if( hoverBmp && doingHover )
+      long vv = (long)(imgoffset + ((value * (float)(rows * columns - 1) + 0.5f)));
+      long hv = (long)(imgoffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f)));
+      if( doingHover && hoverOnBmp && vv == hv )
+      {
+         CPoint hwhere(0, heightOfOneImage *
+                       (long)(imgoffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));
+         
+         hoverOnBmp->draw(dc, getViewSize(), hwhere, 0xff);
+      }
+      else if( hoverBmp && doingHover )
       {
          CPoint hwhere(0, heightOfOneImage *
                       (long)(imgoffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));

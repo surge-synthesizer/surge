@@ -601,7 +601,7 @@ CScalableBitmap *Skin::backgroundBitmapForControl( Skin::Control::ptr_t c, std::
    return bmp;
 }
 
-CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr_t c, CScalableBitmap *b, std::shared_ptr<SurgeBitmaps> bitmapStore )
+CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr_t c, CScalableBitmap *b, std::shared_ptr<SurgeBitmaps> bitmapStore, HoverType t )
 {
    if( ! bitmapStore.get() )
    {
@@ -616,7 +616,15 @@ CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr
       return nullptr;
    }
    std::ostringstream sid;
-   sid << defaultImageIDPrefix << "hover" << std::setw(5) << std::setfill('0') << b->resourceID << ".svg";
+   switch(t)
+   {
+   case HOVER:
+      sid << defaultImageIDPrefix << "hover" << std::setw(5) << std::setfill('0') << b->resourceID << ".svg";
+      break;
+   case HOVER_OVER_ON:
+      sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0') << b->resourceID << ".svg";
+      break;
+   }
    auto bmp = bitmapStore->getBitmapByStringID( sid.str() );
    if( bmp )
       return bmp;
