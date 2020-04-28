@@ -30,6 +30,27 @@ void CSwitchControl::draw(CDrawContext* dc)
          CPoint where(0, (down ? heightOfSingleImage : 0));
          pBackground->draw(dc, size, where, 0xff);
       }
+
+      if( ! lookedForHover && skin.get() )
+      {
+         lookedForHover = true;
+         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap( skinControl, dynamic_cast<CScalableBitmap*>( getBackground() ), associatedBitmapStore );
+      }
+
+      if( hoverBmp && doingHover )
+      {
+         if (is_itype)
+         {
+            CPoint where(0, size.getHeight() * ivalue);
+            hoverBmp->draw(dc, size, where, 0xff);
+         }
+         else
+         {
+            CPoint where(0, (down ? heightOfSingleImage : 0));
+            hoverBmp->draw(dc, size, where, 0xff);
+         }
+
+      }
    }
    setDirty(false);
 }
