@@ -616,18 +616,44 @@ CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr
       return nullptr;
    }
    std::ostringstream sid;
-   switch(t)
+   if( b->resourceID < 0 )
    {
-   case HOVER:
-      sid << defaultImageIDPrefix << "hover" << std::setw(5) << std::setfill('0') << b->resourceID << ".svg";
-      break;
-   case HOVER_OVER_ON:
-      sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0') << b->resourceID << ".svg";
-      break;
+      // we got a skin
+      auto pos = b->fname.find( "bmp00" );
+      if( pos != std::string::npos )
+      {
+         auto b4 = b->fname.substr( 0, pos );
+         auto ftr = b->fname.substr( pos + 3 );
+
+         switch(t)
+         {
+         case HOVER:
+            sid << defaultImageIDPrefix << "hover" << ftr;
+            break;
+         case HOVER_OVER_ON:
+            sid << defaultImageIDPrefix << "hoverOn" << ftr;
+            break;
+         }
+         auto bmp = bitmapStore->getBitmapByStringID( sid.str() );
+         if( bmp )
+            return bmp;
+      }
    }
-   auto bmp = bitmapStore->getBitmapByStringID( sid.str() );
-   if( bmp )
-      return bmp;
+   else
+   {
+      switch(t)
+      {
+      case HOVER:
+         sid << defaultImageIDPrefix << "hover" << std::setw(5) << std::setfill('0') << b->resourceID << ".svg";
+         break;
+      case HOVER_OVER_ON:
+         sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0') << b->resourceID << ".svg";
+         break;
+      }
+      auto bmp = bitmapStore->getBitmapByStringID( sid.str() );
+      if( bmp )
+         return bmp;
+   }
 
    return nullptr;
 }
