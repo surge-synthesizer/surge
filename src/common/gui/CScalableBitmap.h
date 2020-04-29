@@ -51,6 +51,7 @@ public:
    }
 
    int resourceID;
+   std::string fname;
 
 private:
    struct CPointCompare
@@ -68,7 +69,6 @@ private:
    
    int lastSeenZoom, bestFitScaleGroup;
    int extraScaleFactor;
-   std::string fname;
 
    VSTGUI::CFrame* frame;
 

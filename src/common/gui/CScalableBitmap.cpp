@@ -211,8 +211,7 @@ CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
     instances++;
     //std::cout << "  Construct CScalableBitmap. instances=" << instances << " fname=" << fname << std::endl;
 
-    int id = 0;
-    resourceID = id;
+    resourceID = -1;
 
     svgImage = nsvgParseFromFile(fname.c_str(), "px", 96);
 
