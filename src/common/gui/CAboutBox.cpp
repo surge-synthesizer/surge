@@ -3,6 +3,7 @@
 #include "resource.h"
 #include "RuntimeFont.h"
 #include <stdio.h>
+#include "version.h"
 
 using namespace VSTGUI;
 
@@ -48,7 +49,7 @@ void CAboutBox::draw(CDrawContext* pContext)
 #elif TARGET_VST3
       std::string flavor = "vst3";
 #elif TARGET_VST2
-      std::string flavor = "vst2";
+      std::string flavor = "unsupported vst2";
 #elif TARGET_LV2
       std::string flavor = "lv2";
 #else
@@ -67,8 +68,8 @@ void CAboutBox::draw(CDrawContext* pContext)
 
       {
          std::vector< std::string > msgs = { {
-               std::string() + "Version " + SURGE_STR(SURGE_VERSION) + " (" + bittiness + " " + platform + " " + flavor + ". Built " +
-               __DATE__ + " " + __TIME__ + ")",
+               std::string() + "Version " + FULL_VERSION_STR + " (" + bittiness + " " + platform + " " + flavor + ". Built " +
+               __DATE__ + " " + __TIME__ + " on " + BUILD_HOST + ")",
                std::string() + "Resources: dataPath=" + dataPath + " userData=" + userPath,
                "Released under the GNU General Public License, v3",
                "Copyright 2005-2020 by individual contributors",

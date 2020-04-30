@@ -1,4 +1,5 @@
 #include "SurgeLv2Wrapper.h"
+#include "version.h"
 #include <fstream>
 #include <iomanip>
 
@@ -46,16 +47,16 @@ void lv2_generate_ttl(const char* baseName)
       writePrefix(osDsp);
 
       osDsp << "<" << desc->URI << ">\n"
-               "    doap:name \"Surge\" ;\n"
-               "    doap:license <https://www.gnu.org/licenses/gpl-3.0.en.html> ;\n"
-               "    doap:maintainer [\n"
-               "        foaf:name \"Vember Audio\" ;\n"
-               "        foaf:homepage <https://surge-synthesizer.github.io/> ;\n"
-               "    ] ;\n"
-               "    ui:ui <" << uidesc->URI << "> ;\n"
-               "    lv2:optionalFeature lv2:hardRTCapable ;\n"
-               "    lv2:requiredFeature urid:map ;\n"
-               "    lv2:extensionData state:interface ;\n";
+         "    doap:name \"" << stringProductName << "\" ;\n"
+         "    doap:license <https://www.gnu.org/licenses/gpl-3.0.en.html> ;\n"
+         "    doap:maintainer [\n"
+         "        foaf:name \"" << stringCompanyName << "\" ;\n"
+         "        foaf:homepage <" << stringWebsite << "> ;\n"
+         "    ] ;\n"
+         "    ui:ui <" << uidesc->URI << "> ;\n"
+         "    lv2:optionalFeature lv2:hardRTCapable ;\n"
+         "    lv2:requiredFeature urid:map ;\n"
+         "    lv2:extensionData state:interface ;\n";
 
       unsigned portIndex = 0;
       osDsp << "    lv2:port";
@@ -138,8 +139,8 @@ void lv2_generate_ttl(const char* baseName)
       osDsp << " ;\n";
 
       // TODO LV2: implement an adequate version number scheme. For now, make it the last two (so 1.6.2 gets 6 2)
-      osDsp << "    lv2:minorVersion 6 ;\n"
-               "    lv2:microVersion 6 .\n";
+      osDsp << "    lv2:minorVersion " << SUB_VERSION_INT << " ;\n"
+         "    lv2:microVersion " << RELEASE_NUMBER_STR << " .\n";
    }
 
    {

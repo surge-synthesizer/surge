@@ -12,13 +12,13 @@
 			<key>manufacturer</key>
 			<string>VmbA</string>
 			<key>name</key>
-			<string>VmbA: Surge</string>
+			<string>Surge Synth Team: Surge</string>
 			<key>subtype</key>
 			<string>Srge</string>
 			<key>type</key>
 			<string>aumu</string>
 			<key>version</key>
-			<integer>65536</integer>
+			<integer>65537</integer>
 		</dict>
 	</array>
 	<key>BuildMachineOSBuild</key>
@@ -50,6 +50,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>2019</string>
+	<string>Copyright (c) 2020 various authors</string>
 </dict>
 </plist>
