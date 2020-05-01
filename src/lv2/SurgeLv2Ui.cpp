@@ -43,7 +43,30 @@ SurgeLv2Ui::~SurgeLv2Ui()
 
 void SurgeLv2Ui::setParameterAutomated(int externalparam, float value)
 {
-   _writeFn(_controller, externalparam, sizeof(float), 0, &value);
+   uint8_t buffer[256];
+   LV2_Atom_Forge* forge = &_eventsForge;
+
+   lv2_atom_forge_set_buffer(forge, buffer, sizeof(buffer));
+
+   LV2_Atom_Forge_Frame objFrame;
+   LV2_Atom_Forge_Ref objRef = lv2_atom_forge_object(forge, &objFrame, 0, _uridPatchSet);
+   if (!objRef ||
+       // property
+       !lv2_atom_forge_key(forge, _uridPatch_property) ||
+       !lv2_atom_forge_urid(forge, _uridSurgeParameter[externalparam]) ||
+       // value
+       !lv2_atom_forge_key(forge, _uridPatch_value) ||
+       !lv2_atom_forge_float(forge, value))
+   {
+      fprintf(stderr, "SurgeLv2Ui: cannot write patch:Set object, insufficient capacity (%d).\n", externalparam);
+      return;
+   }
+
+   lv2_atom_forge_pop(forge, &objFrame);
+
+   _writeFn(
+      _controller, SurgeLv2Wrapper::pEventsIn,
+      lv2_atom_total_size((LV2_Atom*)objRef), _uridAtom_eventTransfer, buffer);
 }
 
 #if LINUX
@@ -76,11 +99,25 @@ LV2UI_Handle SurgeLv2Ui::instantiate(const LV2UI_Descriptor* descriptor,
    SurgeLv2Wrapper* instance =
        (SurgeLv2Wrapper*)SurgeLv2::requireFeature(LV2_INSTANCE_ACCESS_URI, features);
    void* parentWindow = (void*)SurgeLv2::findFeature(LV2_UI__parent, features);
-   auto* featureUridMap = (const LV2_URID_Map*)SurgeLv2::requireFeature(LV2_URID__map, features);
+   auto* featureUridMap = (LV2_URID_Map*)SurgeLv2::requireFeature(LV2_URID__map, features);
    auto* featureResize = (const LV2UI_Resize*)SurgeLv2::findFeature(LV2_UI__resize, features);
 
    std::unique_ptr<SurgeLv2Ui> ui(new SurgeLv2Ui(instance, parentWindow, featureUridMap,
                                                  featureResize, write_function, controller));
+
+   lv2_atom_forge_init(&ui->_eventsForge, featureUridMap);
+
+   ui->_uridAtom_eventTransfer = featureUridMap->map(featureUridMap->handle, LV2_ATOM__eventTransfer);
+   ui->_uridPatchSet = featureUridMap->map(featureUridMap->handle, LV2_PATCH__Set);
+   ui->_uridPatch_property = featureUridMap->map(featureUridMap->handle, LV2_PATCH__property);
+   ui->_uridPatch_value = featureUridMap->map(featureUridMap->handle, LV2_PATCH__value);
+
+   for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
+   {
+      LV2_URID urid = featureUridMap->map(featureUridMap->handle, instance->getParameterUri(pNth).c_str());
+      ui->_uridSurgeParameter[pNth] = urid;
+   }
+
    return (LV2UI_Handle)ui.release();
 }
 

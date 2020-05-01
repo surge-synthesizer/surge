@@ -109,9 +109,12 @@ private:
    LV2_URID _uridPatch_value;
 
    LV2_URID _uridSurgePatch;
+
+   // mappings between URID and Parameter
    LV2_URID _uridSurgeParameter[n_total_params];
    std::unordered_map<LV2_URID, unsigned> _surgeParameterUrid;
 
+private:
    SurgeLv2Ui* _editor = nullptr;
 
 public:

@@ -1,5 +1,6 @@
 #pragma once
 #include "AllLv2.h"
+#include "SurgeStorage.h"
 #include "vstgui/lib/vstguibase.h"
 #include <memory>
 
@@ -54,4 +55,14 @@ private:
 #endif
    LV2UI_Write_Function _writeFn;
    LV2UI_Controller _controller;
+
+   LV2_Atom_Forge _eventsForge;
+
+   LV2_URID _uridAtom_eventTransfer;
+   LV2_URID _uridPatchSet;
+   LV2_URID _uridPatch_property;
+   LV2_URID _uridPatch_value;
+
+   // mappings between URID and Parameter
+   LV2_URID _uridSurgeParameter[n_total_params];
 };
