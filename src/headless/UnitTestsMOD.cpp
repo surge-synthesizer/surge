@@ -440,7 +440,7 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                                   auto sz = std::min( surgeA.size(), replA.size() );                             
                                   for( auto i=0; i<sz; ++i )
                                   {
-                                     if( replA[i].second > 1e-6 ) // CI pipelines bounce around zero badly
+                                     if( replA[i].second > 1e-5 ) // CI pipelines bounce around zero badly
                                         REQUIRE( replA[i].second == Approx( surgeA[i].second ).margin( 1e-6 ) );
                                   }
                                };
@@ -584,7 +584,7 @@ TEST_CASE( "Pitch Bend and Tuning", "[mod][tun]" )
          INFO( "Retuning pitch bend to " << sclf );
          auto s = Tunings::readSCLFile( sclf );
          surge->storage.retuneToScale(s);
-         for( int tests=0; tests<20; ++tests )
+         for( int tests=0; tests<30; ++tests )
          {
             int bUp = rand() % 24 + 1;
             int bDn = rand() % 24 + 1;
@@ -596,17 +596,23 @@ TEST_CASE( "Pitch Bend and Tuning", "[mod][tun]" )
             
             // Bend pitch and let it get there
             surge->pitchBend(0, 8192);
-            for( int i=0; i<100; ++i ) surge->process();
+            for( int i=0; i<500; ++i ) surge->process();
             
             auto fUpB = frequencyForNote( surge, 60 );
             
             // Bend pitch and let it get there
             surge->pitchBend(0, -8192);
-            for( int i=0; i<100; ++i ) surge->process();
+            for( int i=0; i<500; ++i ) surge->process();
             auto fDnB = frequencyForNote( surge, 60 );
+            auto dup = surge->storage.note_to_pitch( 60 + bUp + 2 ) - surge->storage.note_to_pitch( 60 + bUp );
+            dup = dup * 8.17;
             
-            REQUIRE( fUpD == Approx( fUpB ).margin( 3 * bUp ) );  // It can take a while for the midi lag to normalize and my pitch detector is so so
-            REQUIRE( fDnD == Approx( fDnB ).margin( 3 * bDn ) );
+            auto ddn = surge->storage.note_to_pitch( 60 - bDn ) - surge->storage.note_to_pitch( 60 - bDn - 2 );
+            ddn = ddn * 8.17;
+
+            INFO( "Pitch Bend " << bUp << " " << bDn << " " << fUpD << " " << fUpB << " " << dup << " " << ddn );
+            REQUIRE( fUpD == Approx( fUpB ).margin( dup ) );  // It can take a while for the midi lag to normalize and my pitch detector is so so
+            REQUIRE( fDnD == Approx( fDnB ).margin( ddn ) );
             
             surge->pitchBend( 0, 0 );
             for( int i=0; i<100; ++i ) surge->process();
