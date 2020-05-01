@@ -60,8 +60,6 @@ void SurgeLv2Wrapper::writeOutputParameterToPort(int externalparam, float value)
       return;
    }
 
-   lv2_atom_forge_set_buffer(forge, (uint8_t*)eventSequence, eventSequence->atom.size);
-
    LV2_Atom_Forge_Frame objFrame;
    if (!lv2_atom_forge_frame_time(forge, 0) ||
        !lv2_atom_forge_object(forge, &objFrame, 0, _uridPatchSet) ||
@@ -168,6 +166,14 @@ void SurgeLv2Wrapper::run(LV2_Handle instance, uint32_t sample_count)
    if (isPlaying && hasValidPosition)
       s->time_data.ppqPos = self->_timePositionBeat; // TODO is it correct?
 
+   // Events Out
+   auto* forge = &self->_eventsForge;
+   auto* eventSequenceOut = (const LV2_Atom_Sequence*)self->_dataLocation[pEventsOut];
+   lv2_atom_forge_set_buffer(forge, (uint8_t*)eventSequenceOut, eventSequenceOut->atom.size);
+   LV2_Atom_Forge_Frame eventsOutFrame {};
+   lv2_atom_forge_sequence_head(forge, &eventsOutFrame, 0);
+
+   // Events In
    auto* eventSequence = (const LV2_Atom_Sequence*)self->_dataLocation[pEventsIn];
    const LV2_Atom_Event* eventIter = lv2_atom_sequence_begin(&eventSequence->body);
    const LV2_Atom_Event* event = SurgeLv2::popNextEvent(eventSequence, &eventIter);
@@ -232,6 +238,9 @@ void SurgeLv2Wrapper::run(LV2_Handle instance, uint32_t sample_count)
    }
 
    self->_fpuState.restore();
+
+   // Events Out
+   lv2_atom_forge_pop(forge, &eventsOutFrame);
 }
 
 void SurgeLv2Wrapper::handleEvent(const LV2_Atom_Event* event)
