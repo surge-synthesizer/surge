@@ -6,6 +6,8 @@
 #include <time.h>
 #include "unitconversion.h"
 #include "UserInteractions.h"
+#include "guihelpers.h"
+
 #if MAC
 #include "filesystem.h"
 #elif LINUX
@@ -729,7 +731,15 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
 
    // Add direct open here
    contextMenu->addSeparator();
-   auto renameItem = new CCommandMenuItem(CCommandMenuItem::Desc("Change Display Name..." ));
+
+   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Wavetable List")));
+   auto refresh = [this](CCommandMenuItem* item) { this->storage->refresh_wtlist(); };
+   refreshItem->setActions(refresh, nullptr);
+   contextMenu->addEntry(refreshItem);
+
+   contextMenu->addSeparator();
+
+   auto renameItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Change Wavetable Display Name..." )));
    auto rnaction = [this](CCommandMenuItem *item)
                       {
                          char c[256];
@@ -741,12 +751,12 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    renameItem->setActions(rnaction, nullptr);
    contextMenu->addEntry(renameItem);
    
-   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc("Open Wavetable from file..."));
+   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Wavetable From File...")));
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
    contextMenu->addEntry(actionItem);
 
-   auto exportItem = new CCommandMenuItem(CCommandMenuItem::Desc("Export Wavetable to file..."));
+   auto exportItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save Wavetable to File...")));
    auto exportAction = [this](CCommandMenuItem *item)
        {
           // FIXME - we need to find the scene and osc by iterating (gross).
@@ -777,18 +787,15 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    exportItem->setActions(exportAction,nullptr);
    contextMenu->addEntry(exportItem);
 
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content..."));
+   contextMenu->addSeparator();
+
+   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Download Additional Content...")));
    auto contentAction = [](CCommandMenuItem *item)
        {
            Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
        };
    contentItem->setActions(contentAction,nullptr);
    contextMenu->addEntry(contentItem);
-
-   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc("Refresh Wavetable List"));
-   auto refresh = [this](CCommandMenuItem* item) { this->storage->refresh_wtlist(); };
-   refreshItem->setActions(refresh, nullptr);
-   contextMenu->addEntry(refreshItem);
 
 }
 
