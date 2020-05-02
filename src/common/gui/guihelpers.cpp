@@ -1,5 +1,7 @@
 #include "guihelpers.h"
 
+#include <cctype>
+
 std::string Surge::UI::toOSCaseForMenu(std::string menuName)
 {
 #if WINDOWS
