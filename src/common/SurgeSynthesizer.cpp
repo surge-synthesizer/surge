@@ -1568,6 +1568,25 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             fx[s]->init_ctrltypes();
             if (initp)
                fx[s]->init_default_values();
+            else
+            {
+               for(int j=0; j<n_fx_params; j++)
+               {
+                  auto p = &( storage.getPatch().fx[s].p[j] );
+                  if( p->valtype == vt_float )
+                  {
+                     if( p->val.f < p->val_min.f )
+                     {
+                        p->val.f = p->val_min.f;
+                     }
+                     if( p->val.f > p->val_max.f )
+                     {
+                        p->val.f = p->val_max.f;
+                     }
+                  }
+               }
+
+            }
             /*for(int j=0; j<n_fx_params; j++)
             {
                 storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].f =

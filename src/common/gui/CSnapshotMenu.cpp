@@ -538,8 +538,18 @@ void CFxMenu::pasteFX()
         switch( fxbuffer->p[i].valtype )
         {
         case vt_float:
+        {
             fxbuffer->p[i].val.f = fxCopyPaste[vp];
-            break;
+            if( fxbuffer->p[i].val.f < fxbuffer->p[i].val_min.f )
+            {
+               fxbuffer->p[i].val.f = fxbuffer->p[i].val_min.f;
+            }
+            if( fxbuffer->p[i].val.f > fxbuffer->p[i].val_max.f )
+            {
+               fxbuffer->p[i].val.f = fxbuffer->p[i].val_max.f;
+            }
+        }
+        break;
         case vt_int:
             fxbuffer->p[i].val.i = (int)fxCopyPaste[vp];
             break;
