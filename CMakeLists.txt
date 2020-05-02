@@ -24,7 +24,7 @@ if( DEFINED ENV{VST2SDK_DIR} )
   set( BUILD_VST2 true )
   file( TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" VST2SDK_DIR )
   message( "-- Configured to build VST2 using " ${VST2SDK_DIR} )
- 
+
 else()
   set( BUILD_VST2 false )
 endif()
@@ -60,7 +60,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/DualDelayEffect.cpp
   src/common/dsp/effect/Effect.cpp
   src/common/dsp/effect/FreqshiftEffect.cpp
-  src/common/dsp/effect/FlangerEffect.cpp   
+  src/common/dsp/effect/FlangerEffect.cpp
   src/common/dsp/effect/PhaserEffect.cpp
   src/common/dsp/effect/Reverb1Effect.cpp
   src/common/dsp/effect/Reverb2Effect.cpp
@@ -97,7 +97,7 @@ set(SURGE_COMMON_SOURCES
   src/common/SurgeSynthesizer.cpp
   src/common/SurgeSynthesizerIO.cpp
   src/common/UserDefaults.cpp
-  src/common/WavSupport.cpp 
+  src/common/WavSupport.cpp
   libs/xml/tinyxml.cpp
   libs/xml/tinyxmlerror.cpp
   libs/xml/tinyxmlparser.cpp
@@ -127,6 +127,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SurgeBitmaps.cpp
   src/common/gui/SurgeGUIEditor.cpp
   src/common/gui/UIInstrumentation.cpp
+  src/common/gui/guihelpers.cpp
   )
 
 set(SURGE_VST3_SOURCES
@@ -194,7 +195,7 @@ set(SURGE_AU_LIBRARY_SOURCES
   libs/PublicUtility/CAStreamBasicDescription.cpp
   libs/PublicUtility/CAVectorUnit.cpp
   libs/PublicUtility/CAXException.cpp
-  
+
   vstgui.surge/vstgui/plugin-bindings/plugguieditor.cpp
   )
 
@@ -209,7 +210,7 @@ set( SURGE_VST2_LIBRARY_SOURCES
   vstgui.surge/vstgui/plugin-bindings/aeffguieditor.cpp
   )
 
-set( SURGE_LV2_SOURCES 
+set( SURGE_LV2_SOURCES
   src/lv2/SurgeLv2Export.cpp
   src/lv2/SurgeLv2Ui.cpp
   src/lv2/SurgeLv2Util.cpp
@@ -262,7 +263,7 @@ if( APPLE )
     -Werror=dynamic-class-memaccess
     -Werror=undefined-bool-conversion
     -Werror=bitwise-op-parentheses
-    ) 
+    )
   set(OS_INCLUDE_DIRECTORIES
     src/mac
     )
@@ -314,7 +315,7 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XCBXKB REQUIRED xcb-xkb)
   pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
-  
+
   set(OS_COMPILE_OPTIONS
     -msse2
     "-D_aligned_malloc(x,a)=malloc(x)"
@@ -362,10 +363,10 @@ elseif( WIN32 )
   set(SURGE_OS_GUI_SOURCES
     src/windows/DisplayInfoWin.cpp
     src/windows/RuntimeFontWin.cpp
-    src/windows/surge.rc 
+    src/windows/surge.rc
     vstgui.surge/vstgui/vstgui_win32.cpp
     vstgui.surge/vstgui/vstgui_uidescription_win32.cpp
-  ) 
+  )
 
   set(OS_COMPILE_DEFINITIONS
     WINDOWS=1
@@ -394,13 +395,13 @@ elseif( WIN32 )
     /bigobj
     )
 
-  set(OS_INCLUDE_DIRECTORIES 
+  set(OS_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}
     src/windows
     libs/wtl
     )
 
-  set(OS_LINK_LIBRARIES 
+  set(OS_LINK_LIBRARIES
     Winmm
     gdi32
     gdiplus
@@ -472,7 +473,7 @@ endif()
 # Currently this is MAC only VST3
 if( BUILD_VST3 )
   if( UNIX AND NOT APPLE )
-    # Sigh - vst3sdk ships with non-working code if you has it 
+    # Sigh - vst3sdk ships with non-working code if you has it
     get_filename_component(full_path_test_cpp ${CMAKE_CURRENT_SOURCE_DIR}/vst3sdk/base/source/timer.cpp ABSOLUTE)
     list(REMOVE_ITEM SURGE_VST3_LIBRARY_SOURCES "${full_path_test_cpp}")
   endif()
@@ -553,8 +554,8 @@ if( BUILD_VST3 )
        TARGET surgev3-dll
        POST_BUILD
        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/target/vst3/Release
-       
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst3.dll 
+
+       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst3.dll
                                         ${CMAKE_CURRENT_SOURCE_DIR}/target/vst3/Release/${WIN_DLL_BASENAME}.vst3
      )
    endif()
@@ -574,7 +575,7 @@ if( BUILD_VST2 )
 
   if( UNIX AND NOT APPLE )
     target_sources(surge-vst2 PUBLIC src/linux/linux-aeffguieditor.cpp )
-    
+
     # Ideally we wouldn't define __cdecl on linux. It's not needed
     # Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
     # it so without __cdecl blank defined on linux vst2, we don't get
@@ -644,8 +645,8 @@ if( BUILD_VST2 )
        TARGET surgev2-dll
        POST_BUILD
        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/target/vst2/Release
-       
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll 
+
+       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll
                                         ${CMAKE_CURRENT_SOURCE_DIR}/target/vst2/Release/${WIN_DLL_BASENAME}.dll
      )
    endif()
@@ -664,7 +665,7 @@ if( BUILD_LV2 )
     )
 
   target_compile_features(surge-lv2 PRIVATE cxx_std_17 )
-  
+
   target_compile_definitions(surge-lv2
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
@@ -697,9 +698,9 @@ if( BUILD_LV2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
-      COMMAND mkdir -p products/Surge.lv2 
+      COMMAND mkdir -p products/Surge.lv2
       COMMAND cp build/libsurge-lv2.so products/Surge.lv2/Surge.so
-      COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.so 
+      COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.so
       )
 
 endif()
@@ -714,7 +715,7 @@ if( BUILD_HEADLESS )
     src/headless/HeadlessUtils.cpp
     src/headless/Player.cpp
     src/headless/UnitTests.cpp
-    src/headless/UnitTestUtilities.cpp    
+    src/headless/UnitTestUtilities.cpp
     src/headless/UnitTestsDSP.cpp
     src/headless/UnitTestsIO.cpp
     src/headless/UnitTestsMIDI.cpp
@@ -795,7 +796,7 @@ if( APPLE )
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND ${CMAKE_BINARY_DIR}/Release/surge-headless
     )
-  
+
   add_custom_target( install-resources-local )
   add_custom_command(
     TARGET install-resources-local
@@ -804,7 +805,7 @@ if( APPLE )
     COMMAND echo "Installing local resources"
     COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge/"
     )
-  
+
   add_custom_target( install-au-local )
   add_dependencies( install-au-local Surge.component )
   add_dependencies( install-au-local install-resources-local )
@@ -856,6 +857,6 @@ if( APPLE )
     add_dependencies( install-everything-local install-vst2-local )
   endif()
 
-  
-  
+
+
 endif()

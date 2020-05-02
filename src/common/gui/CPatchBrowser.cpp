@@ -2,8 +2,9 @@
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 #include "CPatchBrowser.h"
-
 #include "UserInteractions.h"
+#include "guihelpers.h"
+
 #include <vector>
 
 using namespace VSTGUI;
@@ -111,21 +112,29 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    // contextMenu->addEntry("refresh list");
 
    contextMenu->addSeparator();
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc("Download Additional Content..."));
-   auto contentAction = [](CCommandMenuItem *item)
-       {
-           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
-       };
-   contentItem->setActions(contentAction,nullptr);
-   contextMenu->addEntry(contentItem);
-
-   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc("Refresh Patch List"));
+   
+   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
    auto refreshAction = [this](CCommandMenuItem *item)
                            {
                               this->storage->refresh_patchlist();
                            };
    refreshItem->setActions(refreshAction,nullptr);
    contextMenu->addEntry(refreshItem);
+
+ /*
+    TODO: add menu entries for opening factory and user patch folders!
+ */
+
+
+   contextMenu->addSeparator();
+
+   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Download Additional Content...")));
+   auto contentAction = [](CCommandMenuItem *item)
+       {
+           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
+       };
+   contentItem->setActions(contentAction,nullptr);
+   contextMenu->addEntry(contentItem);
 
    getFrame()->addView(contextMenu); // add to frame
    contextMenu->setDirty();
