@@ -217,7 +217,7 @@ private:
 class SkinDB
 {
 public:
-   static SkinDB& get(SurgeStorage *);
+   static SkinDB& get();
 
    struct Entry {
       std::string root;
@@ -239,14 +239,13 @@ public:
    void rescanForSkins(SurgeStorage *);
    std::vector<Entry> getAvailableSkins() { return availableSkins; }
    Skin::ptr_t getSkin( const Entry &skinEntry );
-   Skin::ptr_t defaultSkin();
+   Skin::ptr_t defaultSkin(SurgeStorage *);
 
 private:
-   SkinDB(SurgeStorage *);
+   SkinDB();
    ~SkinDB();
    SkinDB(const SkinDB&) = delete; 
    SkinDB& operator=(const SkinDB&) = delete; 
-   SurgeStorage *storage;
    
    std::vector<Entry> availableSkins;
    std::unordered_map<Entry,std::shared_ptr<Skin>, Entry::hash> skins;

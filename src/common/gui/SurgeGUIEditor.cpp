@@ -310,7 +310,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    for( int i=0; i<n_modsources; ++i )
       modsource_is_alternate[i] = false;
 
-   currentSkin = Surge::UI::SkinDB::get(&(this->synth->storage)).defaultSkin();
+   currentSkin = Surge::UI::SkinDB::get().defaultSkin(&(this->synth->storage));
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -4145,7 +4145,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     auto defaultNoOp = []() { Surge::UserInteractions::promptError( "Rescanning the skins folder is not implemented yet!", "Error" ); };
 
-    auto &db = Surge::UI::SkinDB::get(&(synth->storage));
+    auto &db = Surge::UI::SkinDB::get();
     bool hasTests = false;
     for( auto &entry : db.getAvailableSkins() )
     {
