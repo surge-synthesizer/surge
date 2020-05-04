@@ -300,7 +300,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       {
          trect.top += 8;
          trect.bottom = trect.top + 2;
-         float modDistance = 40;
+
          if( ! modulation_is_bipolar )
          {
             trect.left += 11;
