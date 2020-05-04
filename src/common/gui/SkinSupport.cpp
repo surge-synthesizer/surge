@@ -32,20 +32,18 @@ namespace UI
 
 const std::string Skin::defaultImageIDPrefix = "DEFAULT/";
    
-SkinDB& Surge::UI::SkinDB::get(SurgeStorage* s)
+SkinDB& Surge::UI::SkinDB::get()
 {
-   static SkinDB instance(s);
+   static SkinDB instance;
    return instance;
 }
 
-SkinDB::SkinDB(SurgeStorage* s)
+SkinDB::SkinDB()
 {
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "SkinDB::SkinDB" );
 #endif   
    std::cout << "Constructing SkinDB" << std::endl;
-   rescanForSkins(s);
-   this->storage = s;
 }
 
 SkinDB::~SkinDB()
@@ -58,8 +56,9 @@ SkinDB::~SkinDB()
    std::cout << "Destroying SkinDB" << std::endl;
 }
 
-std::shared_ptr<Skin> SkinDB::defaultSkin()
+std::shared_ptr<Skin> SkinDB::defaultSkin(SurgeStorage *storage)
 {
+   rescanForSkins(storage);
    auto uds = Surge::Storage::getUserDefaultValue( storage, "defaultSkin", "" );
    if( uds == "" )
       return getSkin(defaultSkinEntry);
