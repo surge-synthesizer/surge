@@ -299,6 +299,11 @@ elseif( UNIX AND NOT APPLE )
 
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
 
+  # Our friends at steinberg have this maddening habig of using #warning DEPRECATED in linux code
+  set_source_files_properties(${SURGE_VST3_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
+  set_source_files_properties(${LINUX_VSTGUI_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
+
+
   set(SURGE_OS_GUI_SOURCES
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
@@ -322,6 +327,7 @@ elseif( UNIX AND NOT APPLE )
     -msse2
     "-D_aligned_malloc(x,a)=malloc(x)"
     "-D_aligned_free(x)=free(x)"
+    -Werror
     -Wno-multichar
     -fvisibility=hidden
     -fvisibility-inlines-hidden
@@ -576,7 +582,7 @@ if( BUILD_VST2 )
     )
 
   if( UNIX AND NOT APPLE )
-    target_sources(surge-vst2 PUBLIC src/linux/linux-aeffguieditor.cpp )
+    target_sources(surge-vst2 PRIVATE src/linux/linux-aeffguieditor.cpp )
 
     # Ideally we wouldn't define __cdecl on linux. It's not needed
     # Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
@@ -712,9 +718,9 @@ if( BUILD_LV2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
-      COMMAND mkdir -p products/Surge.lv2
-      COMMAND cp build/libsurge-lv2.so products/Surge.lv2/Surge.so
-      COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.so
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-lv2.so ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2/Surge.so
+      COMMAND python scripts/linux/generate-lv2-ttl.py ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2/Surge.so
       )
   endif()
 
@@ -781,7 +787,7 @@ if( BUILD_HEADLESS )
 
   if( UNIX AND NOT APPLE )
     find_package(Threads REQUIRED)
-    target_sources( surge-headless PUBLIC src/linux/ConfigurationXml.S )
+    target_sources( surge-headless PRIVATE src/linux/ConfigurationXml.S )
     target_link_libraries(surge-headless
       PRIVATE
       stdc++fs

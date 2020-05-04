@@ -138,7 +138,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         {
             break;
         }
-        fread(chunkSzD, 1, 4, fp);
+        br = fread(chunkSzD, 1, 4, fp);
+        // FIXME - deal with br
         int cs = pl_int(chunkSzD);
 
 #if WAV_STDOUT_INFO

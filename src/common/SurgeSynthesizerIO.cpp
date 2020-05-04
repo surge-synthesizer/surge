@@ -159,7 +159,8 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
    if (!f)
       return false;
    fxChunkSetCustom fxp;
-   fread(&fxp, sizeof(fxChunkSetCustom), 1, f);
+   auto read = fread(&fxp, sizeof(fxChunkSetCustom), 1, f);
+   // FIXME - error if read != chunk size
    if ((vt_read_int32BE(fxp.chunkMagic) != 'CcnK') || (vt_read_int32BE(fxp.fxMagic) != 'FPCh') ||
        (vt_read_int32BE(fxp.fxID) != 'cjs3'))
    {

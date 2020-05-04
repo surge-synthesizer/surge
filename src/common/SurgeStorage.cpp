@@ -817,7 +817,9 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
       ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
 
    data = malloc(ds);
-   fread(data, 1, ds, f);
+   read = fread(data, 1, ds, f);
+   // FIXME - error if read != ds
+   
    CS_WaveTableData.enter();
    bool wasBuilt = wt->BuildWT(data, wh, false);
    CS_WaveTableData.leave();

@@ -166,7 +166,7 @@ jobs:
       mkdir -p $XDG_DATA_HOME
       rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge/"
 
-      ./build/surge-headless
+      ./buildlin/surge-headless
 
 
     condition: and(variables.isLinux,variables.runHeadless)

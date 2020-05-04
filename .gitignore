@@ -76,6 +76,9 @@ cmake-stamp
 
 # cmake
 build/
+buildlin/
+buildmac/
+buildwin/
 
 # Reaper
 *.RPP-bak

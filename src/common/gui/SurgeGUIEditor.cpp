@@ -30,7 +30,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <strstream>
+#include <sstream>
 #include <stack>
 
 #if TARGET_VST3
@@ -2516,7 +2516,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if( p->ctrlgroup == cg_LFO )
                {
                   char lab[256];
-                  char prefix[256];
+                  char prefix[32];
 
                   // WARNING - this won't work with Surge++
                   int a = p->ctrlgroup_entry + 1 - ms_lfo1;

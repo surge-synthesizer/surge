@@ -70,7 +70,7 @@ void playSomeBach()
    if (!tf)
    {
       std::string cmd = "curl -o " + fname + " http://www.jsbach.net/midi/bwv988/988-v05.mid";
-      system(cmd.c_str()); 
+      auto res = system(cmd.c_str()); 
    }
    else
       fclose(tf);

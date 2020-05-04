@@ -425,8 +425,9 @@ void CNumberField::draw(CDrawContext* pContext)
       else
       {
          float t = powf(2, value);
-         unit_prefix(t, the_text, true, false);
-         sprintf(the_text, "%ss", the_text);
+         char tmp_text[28];
+         unit_prefix(t, tmp_text, true, false);
+         sprintf(the_text, "%ss", tmp_text);
       }
       break;
    }
@@ -467,15 +468,17 @@ void CNumberField::draw(CDrawContext* pContext)
    case cm_frequency1hz:
    {
       float freq = powf(2, value);
-      unit_prefix(freq, the_text, false, false);
-      sprintf(the_text, "%sHz", the_text);
+      char tmp_text[28];
+      unit_prefix(freq, tmp_text, false, false);
+      sprintf(the_text, "%sHz", tmp_text);
       break;
    }
    case cm_time1s:
    {
       float t = powf(2, value);
-      unit_prefix(t, the_text, true, false);
-      sprintf(the_text, "%ss", the_text);
+      char tmp_text[28];
+      unit_prefix(t, tmp_text, true, false);
+      sprintf(the_text, "%ss", tmp_text);
       break;
    }
    case cm_noyes:
