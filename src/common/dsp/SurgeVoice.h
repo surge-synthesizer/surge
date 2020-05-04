@@ -64,7 +64,6 @@ public:
        {
            // remember note_to_pitch is linear interpolation on storage->table_pitch from
            // position note + 256 % 512
-           bool debug = false;
            // OK so now what we are searching for is the pair which surrounds us plus the pitch drift... so
            float fqShift = 10 * localcopy[scene->osc[oscNum].pitch.param_id_in_scene].f *
                (scene->osc[oscNum].pitch.extend_range ? 12.f : 1.f);

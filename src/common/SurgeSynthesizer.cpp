@@ -1065,7 +1065,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
       }
 
       fval = (float)tv / 16384.0f;
-      int cmode = channelState[channel].nrpn_last;
+      // int cmode = channelState[channel].nrpn_last;
    }
 
    for (int i = 0; i < n_customcontrollers; i++)
@@ -1151,7 +1151,6 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
 {
-   int z;
    std::list<std::pair<int,int>> retainBuffer;
    for( auto hp : holdbuffer[scene] )
    {
