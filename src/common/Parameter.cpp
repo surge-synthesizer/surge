@@ -56,7 +56,7 @@ void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
 
 void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_entry)
 {
-   char prefix[16];
+   char prefix[32];
    bool useprefix = true;
    switch (ctrlgroup)
    {
@@ -119,10 +119,13 @@ void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_e
       break;
    };
 
+   char tfn[256];
    if (useprefix)
-      sprintf(fn, "%s %s", prefix, dn);
+      sprintf(tfn, "%s %s", prefix, dn);
    else
-      sprintf(fn, "%s", dn);
+      sprintf(tfn, "%s", dn);
+   memset(fn, 0, NAMECHARS * sizeof(char));
+   strncpy(fn, tfn, NAMECHARS - 1 );
 }
 
 void Parameter::set_name(const char* n)

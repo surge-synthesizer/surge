@@ -35,6 +35,7 @@ EOHELP
 RED=`tput setaf 1`
 GREEN=`tput setaf 2`
 NC=`tput sgr0`
+DEF_BUILD_DIR="buildlin"
 
 prerequisite_check()
 {
@@ -50,35 +51,30 @@ prerequisite_check()
 
 run_cmake()
 {
-    mkdir -p build
-    cmake . -Bbuild
+    cmake . -B${DEF_BUILD_DIR}
 }
 
 run_cmake_if()
 {
-    if [[ ! -f build/CMakeCache.txt ]]; then
+    if [[ ! -f ${DEF_BUILD_DIR}/CMakeCache.txt ]]; then
         run_cmake
     fi
-    if [[ CMakeLists.txt -nt build/CMakeCache.txt ]]; then
+    if [[ CMakeLists.txt -nt ${DEF_BUILD_DIR}/CMakeCache.txt ]]; then
         run_cmake
     fi
 }
 
 run_clean()
 {
-    if [[ -d build ]]; then
-        pushd build 
-        make clean
-        popd
+    if [[ -d ${DEF_BUILD_DIR} ]]; then
+	cmake --build ${DEF_BUILD_DIR} --target clean --config Release
     fi
 }
 
 run_build()
 {
     local flavor=$1
-    pushd build
-    make -j 2 $flavor
-    popd
+    cmake --build ${DEF_BUILD_DIR} --config Release --target $flavor --parallel 2
 
     build_suc=$?
     if [[ $build_suc = 0 ]]; then
@@ -156,7 +152,7 @@ run_clean_all()
     run_clean_builds
 
     echo "Cleaning additional assets"
-    rm -rf target products build
+    rm -rf target products ${DEF_BUILD_DIR}
 }
 
 run_uninstall()
@@ -235,7 +231,7 @@ if [ -z "$option_debug" ]; then
     vst3_src_path="products/Surge.vst3"
     lv2_bundle_name="Surge.lv2"
     lv2_src_path="products/$lv2_bundle_name"
-    headless_src_path="build/surge-headless"
+    headless_src_path="${DEF_BUILD_DIR}/surge-headless"
     dest_plugin_name="Surge.so"
     dest_headless_name="Surge-Headless"
 else
