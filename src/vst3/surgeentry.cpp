@@ -1,3 +1,4 @@
+#include "pluginterfaces/base/fplatform.h"
 
 #include "version.h" // for versioning
 
@@ -34,7 +35,7 @@ bool DeinitModule()
 // GetPluginFactory function!
 //------------------------------------------------------------------------
 
-BEGIN_FACTORY_DEF("Vember Audio", "http://www.vemberaudio.se", "mailto:info@vemberaudio.se")
+BEGIN_FACTORY_DEF("Surge Synth Team", "http://surge-synthesizer.github.io", "mailto:no-email@no-email.com")
 
 //---First Plug-in included in this factory-------
 // its kVstAudioEffectClass component

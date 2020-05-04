@@ -8,7 +8,11 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12 CACHE STRING "Build for 10.12")
 
-project(Surge VERSION 1.7.0 LANGUAGES CXX ASM)
+project(Surge VERSION 1.7.0.0 LANGUAGES CXX ASM)
+
+include( "cmake/versiontools.cmake" )
+add_custom_target(surge-shared)
+
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -23,8 +27,7 @@ set( BUILD_VST3 true )
 if( DEFINED ENV{VST2SDK_DIR} )
   set( BUILD_VST2 true )
   file( TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" VST2SDK_DIR )
-  message( "-- Configured to build VST2 using " ${VST2SDK_DIR} )
-
+  message( WARNING "Building VST2 using " ${VST2SDK_DIR} " - this is an unsupported configuration" )
 else()
   set( BUILD_VST2 false )
 endif()
@@ -233,6 +236,7 @@ set(SURGE_COMMON_INCLUDES
   src/common/dsp
   src/common/thread
   src/common/vt_dsp
+  ${CMAKE_BINARY_DIR}/geninclude
   )
 
 set(SURGE_GUI_INCLUDES
@@ -437,7 +441,8 @@ if( BUILD_AU )
     ${SURGE_AU_SOURCES}
     ${SURGE_AU_LIBRARY_SOURCES}
     )
-
+  add_dependencies(surge-au surge-shared)
+  
   target_compile_features(surge-au PRIVATE cxx_std_17 )
 
   target_compile_definitions(surge-au
@@ -495,7 +500,8 @@ if( BUILD_VST3 )
     ${SURGE_VST3_SOURCES}
     ${SURGE_VST3_LIBRARY_SOURCES}
     )
-
+  add_dependencies(surge-vst3  surge-shared)
+  
   target_compile_features(surge-vst3 PRIVATE cxx_std_17 )
 
   if( APPLE )
@@ -556,10 +562,10 @@ if( BUILD_VST3 )
       COMMAND ./scripts/linux/package-vst3.sh  ${CMAKE_BINARY_DIR}/libsurge-vst3.so
       )
     elseif( WIN32 )
-     add_custom_target( surgev3-dll ALL )
-     add_dependencies( surgev3-dll surge-vst3 )
+     add_custom_target( Surge.vst3 ALL )
+     add_dependencies( Surge.vst3 surge-vst3 )
      add_custom_command(
-       TARGET surgev3-dll
+       TARGET Surge.vst3
        POST_BUILD
        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/target/vst3/Release
 
@@ -580,7 +586,8 @@ if( BUILD_VST2 )
     ${SURGE_VST2_SOURCES}
     ${SURGE_VST2_LIBRARY_SOURCES}
     )
-
+  add_dependencies(surge-vst2 surge-shared)
+  
   if( UNIX AND NOT APPLE )
     target_sources(surge-vst2 PRIVATE src/linux/linux-aeffguieditor.cpp )
 
@@ -671,7 +678,8 @@ if( BUILD_LV2 )
     ${SURGE_LV2_SOURCES}
     ${SURGE_LV2_LIBRARY_SOURCES}
     )
-
+  add_dependencies(surge-lv2 surge-shared)
+  
   target_compile_features(surge-lv2 PRIVATE cxx_std_17 )
 
   target_compile_definitions(surge-lv2
@@ -743,7 +751,8 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsMOD.cpp
     src/headless/UnitTestsTUN.cpp
     )
-
+  add_dependencies(surge-headless surge-shared)
+  
   target_compile_features(surge-headless PRIVATE cxx_std_17 )
 
   target_compile_definitions(surge-headless

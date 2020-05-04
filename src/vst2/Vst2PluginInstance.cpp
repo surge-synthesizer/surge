@@ -10,6 +10,7 @@
 #include <float.h>
 #include "public.sdk/source/vst2.x/aeffeditor.h"
 #include "public.sdk/source/vst2.x/audioeffectx.h"
+#include "version.h"
 
 #if MAC
 #include <fenv.h>
@@ -357,19 +358,19 @@ void Vst2PluginInstance::getParameterLabel(VstInt32 index, char* label)
 
 bool Vst2PluginInstance::getEffectName(char* name)
 {
-   strcpy(name, "Surge");
+   strcpy(name, stringProductName);
    return true;
 }
 
 bool Vst2PluginInstance::getProductString(char* name)
 {
-   strcpy(name, "Surge");
+   strcpy(name, stringProductName);
    return true;
 }
 
 bool Vst2PluginInstance::getVendorString(char* text)
 {
-   strcpy(text, "Vember Audio");
+   strcpy(text, stringCompanyName);
    return true;
 }
 
