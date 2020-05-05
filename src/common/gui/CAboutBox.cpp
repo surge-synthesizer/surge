@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "version.h"
 
+#include "UserInteractions.h"
+
 using namespace VSTGUI;
 
 SharedPointer<CFontDesc> CAboutBox::infoFont;
@@ -42,42 +44,43 @@ void CAboutBox::draw(CDrawContext* pContext)
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
 
       int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
-      std::string bittiness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + " bit";
+      std::string bittiness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + "-bit";
 
 #if TARGET_AUDIOUNIT      
-      std::string flavor = "au";
+      std::string flavor = "AU";
 #elif TARGET_VST3
-      std::string flavor = "vst3";
+      std::string flavor = "VST3";
 #elif TARGET_VST2
-      std::string flavor = "unsupported vst2";
+      std::string flavor = "VST2 (unsupported)";
 #elif TARGET_LV2
-      std::string flavor = "lv2";
+      std::string flavor = "LV2";
 #else
-      std::string flavor = "NON-PLUGIN"; // for linux app
+      std::string flavor = "Non-Plugin"; // for linux app
 #endif      
 
 #if MAC
       std::string platform = "macOS";
 #elif WINDOWS
-      std::string platform = "windows";
+      std::string platform = "Windows";
 #elif LINUX
-      std::string platform = "linux";
+      std::string platform = "Linux";
 #else
-      std::string platform = "orac or skynet or something";
+      std::string platform = "Orac, Skynet or something";
 #endif      
 
       {
          std::vector< std::string > msgs = { {
                std::string() + "Version " + FULL_VERSION_STR + " (" + bittiness + " " + platform + " " + flavor + ". Built " +
                __DATE__ + " " + __TIME__ + " on " + BUILD_HOST + ")",
-               std::string() + "Resources: dataPath=" + dataPath + " userData=" + userPath,
+               "Factory Data Path: " + dataPath,
+               "User Data Path: " + userPath,
                "Released under the GNU General Public License, v3",
-               "Copyright 2005-2020 by individual contributors",
+               "Copyright 2005-2020 by Vember Audio and individual contributors",
                "Source, contributors and other information at https://github.com/surge-synthesizer/surge",
-               "VST Plug-in technology by Steinberg, AU Plugin Technology by Apple Computer"
+               "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc."
             } };
          
-         int yMargin = 5;
+         int yMargin = 6;
          int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
          int xPos = strHeight;
          pContext->setFontColor(skin->getColor( "aboutbox.text", kWhiteCColor) );
@@ -94,7 +97,7 @@ void CAboutBox::draw(CDrawContext* pContext)
          msgs.push_back( std::string( ) + "Current Skin: " + skin->displayName );
          msgs.push_back( std::string( ) + "Skin Author: " + skin->author + " " + skin->authorURL ); 
          
-         int yMargin = 5;
+         int yMargin = 6;
          int yPos = strHeight * 2;
          int xPos = strHeight;
          pContext->setFontColor(skin->getColor( "aboutbox.text", kWhiteCColor) );
@@ -105,6 +108,10 @@ void CAboutBox::draw(CDrawContext* pContext)
             yPos += strHeight + yMargin;
          }
       }
+
+      CRect infobg(0, 395, 550, 540);
+      pContext->setFillColor(CColor(0xFF, 0xFF, 0xFF, 0x10));
+      pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
       
    }
    else
@@ -152,7 +159,10 @@ CAboutBox::onMouseDown(CPoint& where,
    if (!(button & kLButton))
       return kMouseEventNotHandled;
 
-   boxHide();
+   if (where.x >= 250 && where.x <= 480 && where.y >= 496 && where.y <= 510)
+      Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
+   else
+      boxHide();
 
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
