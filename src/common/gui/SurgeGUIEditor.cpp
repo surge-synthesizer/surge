@@ -1792,7 +1792,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
    patchTuning = new CCheckBox(CRect(CPoint(96, 112 + (112-85) ), CPoint( 21, 21 )), this, tag_store_tuning);
    patchTuningLabel = new CTextLabel(CRect(CPoint(96 + 22, 112 + (112-85) ), CPoint( 200, 21 )));
-   patchTuningLabel->setText( "Save Tuning in Patch" );
+   patchTuningLabel->setText( "Save With Tuning" );
    patchTuningLabel->sizeToFit();
    
    // Mouse behavior
@@ -1833,7 +1833,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
    patchTuningLabel->setBackColor(bggr);
    patchTuningLabel->setFrameColor(bggr);
-   patchTuningLabel->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
    
    saveDialog->addView(patchName);
    saveDialog->addView(patchCategory);
@@ -3470,17 +3469,19 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
 {
    if( synth->storage.isStandardTuning )
    {
-      patchTuningLabel->setFontColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-      patchTuning->setMouseEnabled(false);
-      patchTuning->setBoxFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-      patchTuning->setValue(0);
+      patchTuningLabel->setVisible(false);
+      patchTuning->setVisible(false);
    }
    else
    {
-      patchTuningLabel->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-      patchTuning->setMouseEnabled(true);
-      patchTuning->setBoxFrameColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+      patchTuningLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+      patchTuningLabel->setVisible(true);
+      patchTuning->setBoxFrameColor(currentSkin->getColor( "savedialog.checkbox.border", kBlackCColor ));
+      patchTuning->setBoxFillColor(currentSkin->getColor( "savedialog.checkbox.fill", kWhiteCColor ));
+      patchTuning->setCheckMarkColor(currentSkin->getColor( "savedialog.checkbox.tick", kBlackCColor));
       patchTuning->setValue(0);
+      patchTuning->setMouseEnabled(true);
+      patchTuning->setVisible(true);
    }
     
    saveDialog->setVisible(true);
