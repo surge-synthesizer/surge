@@ -438,6 +438,13 @@ void SurgeGUIEditor::idle()
          pb->setDisplayFeature(CStatusPanel::mpeMode, synth->mpeEnabled);
          pb->setDisplayFeature(CStatusPanel::tuningMode, ! synth->storage.isStandardTuning);
       }
+
+      if( patchChanged )
+      {
+#if TARGET_AUDIOUNIT
+        synth-> getParent()->setPresetByID(synth->patchid);
+#endif
+      }
       
       
       if (queue_refresh || synth->refresh_editor || patchChanged)
