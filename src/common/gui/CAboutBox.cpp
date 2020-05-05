@@ -75,7 +75,7 @@ void CAboutBox::draw(CDrawContext* pContext)
                "Factory Data Path: " + dataPath,
                "User Data Path: " + userPath,
                "Released under the GNU General Public License, v3",
-               "Copyright 2005-20xx by Vember Audio and individual contributors",
+               "Copyright 2005-2020 by Vember Audio and individual contributors",
                "Source, contributors and other information at https://github.com/surge-synthesizer/surge",
                "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc."
             } };
