@@ -133,6 +133,8 @@ public:
    void InitializePlugin();
    bool IsPluginInitialized();
 
+   void setPresetByID( int id );
+   
    // FIXME: Move to std::unique_ptr<>
    plugin* plugin_instance;
    SurgeGUIEditor* editor_instance;

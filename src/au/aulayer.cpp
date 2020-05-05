@@ -629,6 +629,7 @@ OSStatus aulayer::NewFactoryPresetSet(const AUPreset& inNewFactoryPreset)
       return false;
    if (inNewFactoryPreset.presetNumber < 0)
       return false;
+   SetAFactoryPresetAsCurrent( inNewFactoryPreset );
    sub3_synth* s = (sub3_synth*)plugin_instance;
    s->patchid_queue = inNewFactoryPreset.presetNumber;
    s->processThreadunsafeOperations();
