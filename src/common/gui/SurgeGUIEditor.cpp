@@ -2573,7 +2573,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
             if (p->can_snap())
             {
-               addCallbackMenu(contextMenu, "Snap", [this, p]() { p->snap = !p->snap; });
+               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Snap To Frames"),
+                               [this, p]() { p->snap = !p->snap; });
                contextMenu->checkEntry(eid, p->snap);
                eid++;
             }
