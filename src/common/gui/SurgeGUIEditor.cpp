@@ -1102,7 +1102,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             if ((lfo_id >= 0) && (lfo_id < n_lfos))
             {
                CLFOGui* slfo = new CLFOGui(
-                  rect, lfo_id == 0, this, p->id + start_paramtags,
+                  rect, lfo_id >= 0 && lfo_id <= ( ms_lfo6 - ms_lfo1 ), this, p->id + start_paramtags,
                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
                   bitmapStore);
@@ -1584,7 +1584,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             if ((lfo_id >= 0) && (lfo_id < n_lfos))
             {
                CLFOGui* slfo = new CLFOGui(
-                  rect, lfo_id == 0, this, p->id + start_paramtags,
+                  rect, lfo_id >= 0 && lfo_id <= ( ms_lfo6 - ms_lfo1 ) , this, p->id + start_paramtags,
                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
                   bitmapStore);
