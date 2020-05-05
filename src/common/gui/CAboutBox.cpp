@@ -2,7 +2,6 @@
 #include "globals.h"
 #include "resource.h"
 #include "RuntimeFont.h"
-#include <windows.h>
 #include <stdio.h>
 #include "version.h"
 
@@ -159,15 +158,6 @@ CAboutBox::onMouseDown(CPoint& where,
 {
    if (!(button & kLButton))
       return kMouseEventNotHandled;
-
-   //char debug[128];
-   //wchar_t wdebug[128];
-   //
-   //sprintf_s(debug, "%.2f, %.2f \n", where.x, where.y);
-   //mbstowcs(wdebug, debug, strlen(debug) + 1);
-   //LPWSTR dbgptr = wdebug;
-
-   //OutputDebugString(dbgptr);
 
    if (where.x >= 250 && where.x <= 480 && where.y >= 496 && where.y <= 510)
       Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
