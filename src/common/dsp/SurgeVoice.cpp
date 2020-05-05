@@ -369,13 +369,16 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
          lfo[i].process_block();
    }
 
-   if (lfo[0].retrigger_AEG)
+   for( int i=0; i<6; ++i )
    {
-      ((AdsrEnvelope*)modsources[ms_ampeg])->retrigger();
-   }
-   if (lfo[0].retrigger_FEG)
-   {
-      ((AdsrEnvelope*)modsources[ms_filtereg])->retrigger();
+      if (lfo[i].retrigger_AEG)
+      {
+         ((AdsrEnvelope*)modsources[ms_ampeg])->retrigger();
+      }
+      if (lfo[i].retrigger_FEG)
+      {
+         ((AdsrEnvelope*)modsources[ms_filtereg])->retrigger();
+      }
    }
 
    modsources[ms_aftertouch]->output = state.voiceChannelState->pressure;

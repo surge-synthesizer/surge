@@ -16,6 +16,10 @@
 #include <iterator>
 #include "UserInteractions.h"
 
+#if TARGET_AUDIOUNIT
+#include "aulayer.h"
+#endif
+
 #if WINDOWS && ( _MSC_VER >= 1920 )
 // vs2019
 namespace fs = std::filesystem;
@@ -239,14 +243,6 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
    }
    
    masterfade = 1.f;
-#if AU
-   /*	AUPreset preset;
-           preset.presetNumber = patchid;
-           preset.presetName =
-      CFStringCreateWithCString(NULL,storage.patch_list[patchid].name.c_str(),
-      kCFStringEncodingUTF8);
-           ((aulayer*)parent)->SetAFactoryPresetAsCurrent(preset);*/
-#endif
    /*
    ** Notify the host display that the patch name has changed
    */

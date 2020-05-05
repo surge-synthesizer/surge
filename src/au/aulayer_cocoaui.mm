@@ -334,3 +334,14 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
     return AUInstrumentBase::GetProperty(iID, iScope, iElem, outData);
 }
 
+
+void aulayer::setPresetByID( int pid )
+{
+    AUPreset preset;
+    preset.presetNumber = pid;
+    preset.presetName = CFStringCreateWithCString(NULL,plugin_instance->storage.patch_list[pid].name.c_str(),
+                                                  kCFStringEncodingUTF8);
+    SetAFactoryPresetAsCurrent(preset);
+    PropertyChanged(kAudioUnitProperty_CurrentPreset, kAudioUnitScope_Global, 0 );
+    PropertyChanged(kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global, 0 );
+}

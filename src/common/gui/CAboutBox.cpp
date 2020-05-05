@@ -76,7 +76,7 @@ void CAboutBox::draw(CDrawContext* pContext)
                "Factory Data Path: " + dataPath,
                "User Data Path: " + userPath,
                "Released under the GNU General Public License, v3",
-               "Copyright 2005-20xx by Vember Audio and individual contributors",
+               "Copyright 2005-2020 by Vember Audio and individual contributors",
                "Source, contributors and other information at https://github.com/surge-synthesizer/surge",
                "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc."
             } };
@@ -159,15 +159,6 @@ CAboutBox::onMouseDown(CPoint& where,
 {
    if (!(button & kLButton))
       return kMouseEventNotHandled;
-
-   //char debug[128];
-   //wchar_t wdebug[128];
-   //
-   //sprintf_s(debug, "%.2f, %.2f \n", where.x, where.y);
-   //mbstowcs(wdebug, debug, strlen(debug) + 1);
-   //LPWSTR dbgptr = wdebug;
-
-   //OutputDebugString(dbgptr);
 
    if (where.x >= 250 && where.x <= 480 && where.y >= 496 && where.y <= 510)
       Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
