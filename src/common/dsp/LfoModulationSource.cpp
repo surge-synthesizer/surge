@@ -485,9 +485,8 @@ void LfoModulationSource::process_block()
    if (lfo->unipolar.val.b)
       if (s != ls_stepseq)
          io2 = 0.5f + 0.5f * io2;
-      else
-         if (io2 < 0.f)
-            io2 = 0.f;
+      else if (io2 < 0.f)
+         io2 = 0.f;
 
    output = env_val * localcopy[magn].f * io2;
 }
