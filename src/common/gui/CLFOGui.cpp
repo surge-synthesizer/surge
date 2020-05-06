@@ -809,11 +809,33 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          gaterect[i].offset(size.left + splitpoint, size.top);
 
          int stepcolor, knobcolor;
-         knobcolor = stepMarker;
-         if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
+
+         if (ss->loop_end >= ss->loop_start)
+         {
+            if ((i >= ss->loop_start) && (i <= ss->loop_end))
+            {
+               stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
+               knobcolor = stepMarker;
+            }
+            else
+            {
+               stepcolor = (i & 3 ) ? noLoopHi : noLoopLo;
+               knobcolor = disStepMarker;
+            }
+         }
          else
-            stepcolor = (i & 3 ) ? noLoopHi : noLoopLo;
+         {
+            if ((i > ss->loop_end) && (i < ss->loop_start))
+            {
+               stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
+               knobcolor = stepMarker;
+            }
+            else
+            {
+               stepcolor = (i & 3) ? noLoopHi : noLoopLo;
+               knobcolor = disStepMarker;
+            }
+         }
 
          if( controlstate == cs_trigtray_toggle && i == selectedSSrow )
          {
@@ -841,10 +863,22 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          else
             cdisurf->fillRect(gstep, stepcolor );
       }
-      if ((i >= ss->loop_start) && (i <= ss->loop_end))
-         cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
+
+      if (ss->loop_end >= ss->loop_start)
+      {
+         if ((i >= ss->loop_start) && (i <= ss->loop_end))
+            cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
+         else
+            cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
+      }
       else
-         cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
+      {
+         if ((i > ss->loop_end) && (i < ss->loop_start))
+            cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
+         else
+            cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
+      }
+
       steprect[i] = rstep;
       steprect[i].offset(size.left + splitpoint, size.top);
       CRect v(rstep);
@@ -860,11 +894,21 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          v.top = min(p1, p2);
          v.bottom = max(p1, p2) + 1;
       }
-      // if (p1 == p2) p2++;
-      if ((i >= ss->loop_start) && (i <= ss->loop_end))
-         cdisurf->fillRect(v, stepMarker);
+
+      if (ss->loop_end >= ss->loop_start)
+      {
+         if ((i >= ss->loop_start) && (i <= ss->loop_end))
+            cdisurf->fillRect(v, stepMarker);
+         else
+            cdisurf->fillRect(v, disStepMarker);
+      }
       else
-         cdisurf->fillRect(v, disStepMarker); 
+      {
+         if ((i > ss->loop_end) && (i < ss->loop_start))
+            cdisurf->fillRect(v, stepMarker);
+         else
+            cdisurf->fillRect(v, disStepMarker);
+      }
    }
 
    

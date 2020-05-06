@@ -191,8 +191,17 @@ void LfoModulationSource::attack()
       wf_history[1] = ss->steps[step & (n_stepseqsteps - 1)];
 
       step++;
-      if (step > ss->loop_end)
-         step = ss->loop_start;
+
+      if (ss->loop_end > ss->loop_start)
+      {
+          if (step > ss->loop_end)
+             step = ss->loop_start;
+      }
+      else
+      {
+          if (step >= ss->loop_start)
+             step = ss->loop_end + 1;
+      }
       shuffle_id = (shuffle_id + 1) & 1;
       if (shuffle_id)
          ratemult = 1.f / max(0.01f, 1.f - 0.5f * lfo->start_phase.val.f);
@@ -417,8 +426,16 @@ void LfoModulationSource::process_block()
          else
             ratemult = 1.f / (1.f + 0.5f * lfo->start_phase.val.f);
 
-         if (step > ss->loop_end)
-            step = ss->loop_start;
+         if (ss->loop_end > ss->loop_start)
+         {
+            if (step > ss->loop_end)
+               step = ss->loop_start;
+         }
+         else
+         {
+            if (step >= ss->loop_start)
+               step = ss->loop_end + 1;
+         }
          wf_history[3] = wf_history[2];
          wf_history[2] = wf_history[1];
          wf_history[1] = wf_history[0];
