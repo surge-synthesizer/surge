@@ -16,7 +16,7 @@
 #endif
 #include <tinyxml.h>
 
-#if LINUX 
+#if LINUX
 #include <experimental/filesystem>
 #elif MAC || (WINDOWS && TARGET_RACK)
 #include <filesystem.h>
@@ -134,11 +134,12 @@ enum sub3_osctypes
    ot_WT2,
    num_osctypes,
 };
-const char osctype_abberations[num_osctypes][16] = {"Classic",  "Sine", "Wavetable", "S/H Noise",
+const char osctype_abberations[num_osctypes][16] = {"Classic",  "Sine", "Wavetable", "S&H Noise",
                                                     "Audio In", "FM3",  "FM2",       "Window"};
-const char window_abberations[9][16] = {"Triangular", "Cosine",       "Blend 1",
-                                        "Blend 2",    "Blend 3",      "Ramp",
-                                        "Sine Cycle", "Square Cycle", "Rectangular"};
+
+const char window_abberations[9][16] = {"Triangle", "Cosine",       "Blend 1",
+                                        "Blend 2",    "Blend 3",      "Sawtooth",
+                                        "Sine", "Square", "Rectangle"};
 
 inline bool uses_wavetabledata(int i)
 {
@@ -171,7 +172,7 @@ enum sub3_fxtypes
 };
 const char fxtype_abberations[num_fxtypes][16] = {
     "Off", "Delay",     "Reverb 1",      "Phaser", "Rotary",  "Distortion",
-    "EQ",  "Freqshift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger" };
+    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger" };
 
 enum fx_bypass
 {
@@ -225,7 +226,7 @@ enum lfoshapes
    n_lfoshapes
 };
 
-const char ls_abberations[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Ramp",
+const char ls_abberations[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Sawtooth",
                                               "Noise", "S&H",      "Envelope", "Step Seq"};
 
 enum fu_type
@@ -407,7 +408,7 @@ struct StepSequencerStorage
 struct DAWExtraStateStorage
 {
    bool isPopulated = false;
-    
+
    int instanceZoomFactor = -1;
    bool mpeEnabled = false;
    int mpePitchBendRange = -1;
@@ -426,7 +427,7 @@ struct PatchTuningStorage
    std::string tuningContents = "";
    std::string mappingContents = "";
 };
-    
+
 class SurgeStorage;
 
 class SurgePatch
@@ -465,7 +466,7 @@ public:
 
    PatchTuningStorage patchTuning;
    DAWExtraStateStorage dawExtraState;
-   
+
    std::vector<Parameter*> param_ptr;
    std::vector<int> easy_params_id;
 
@@ -532,7 +533,7 @@ public:
    float table_pitch_ignoring_tuning alignas(16)[512];
    float table_pitch_inv_ignoring_tuning alignas(16)[512];
    float table_note_omega_ignoring_tuning alignas(16)[2][512];
-   
+
    ~SurgeStorage();
 
    std::unique_ptr<SurgePatch> _patch;
@@ -599,7 +600,7 @@ public:
    std::string datapath;
    std::string userDataPath;
    std::string userDefaultFilePath;
-   
+
    std::string defaultsig, defaultname;
    // float table_sin[512],table_sin_offset[512];
    Surge::CriticalSection CS_WaveTableData, CS_ModRouting;
@@ -617,15 +618,15 @@ public:
    {
        return note_to_pitch_inv( x + scaleConstantNote() ) * scaleConstantPitch();
    }
-       
+
    void note_to_omega(float, float&, float&);
    void note_to_omega_ignoring_tuning(float, float&, float&);
 
    bool retuneToScale(const Tunings::Scale& s);
    bool retuneToStandardTuning() { init_tables(); return true; }
-   
+
    bool remapToKeyboard(const Tunings::KeyboardMapping &k);
-   bool remapToStandardKeyboard(); 
+   bool remapToStandardKeyboard();
    inline int scaleConstantNote() { return currentMapping.tuningConstantNote; }
    inline float scaleConstantPitch() { return tuningPitch; }
    inline float scaleConstantPitchInv() { return tuningPitchInv; } // Obviously that's the inverse of the above
@@ -635,8 +636,8 @@ public:
 
    Tunings::KeyboardMapping currentMapping;
    bool isStandardMapping = true;
-   float tuningPitch = 32.0f, tuningPitchInv = 0.03125f; 
-   
+   float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
+
 private:
    TiXmlDocument snapshotloader;
    std::vector<Parameter> clipboard_p;

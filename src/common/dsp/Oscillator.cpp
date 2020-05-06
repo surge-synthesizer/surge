@@ -157,18 +157,23 @@ void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool 
    }
 }
 
-float osc_sine::valueFromSinAndCos(float svalue, float cvalue)
+float osc_sine::valueFromSinAndCos(float sinx, float cosx)
 {
    int wfMode = localcopy[id_mode].i;
-   float pvalue = svalue;
+   float pvalue = sinx;
+
+   float sin2x = 2 * sinx * cosx;
+   float cos2x = 1 - (2 * sinx * sinx);
 
    int quadrant;
-   if (svalue > 0)
-      if (cvalue > 0)
+   int octant;
+
+   if (sinx > 0)
+      if (cosx > 0)
          quadrant = 1;
       else
          quadrant = 2;
-   else if (cvalue < 0)
+   else if (cosx < 0)
       quadrant = 3;
    else
       quadrant = 4;
@@ -176,7 +181,7 @@ float osc_sine::valueFromSinAndCos(float svalue, float cvalue)
    switch (wfMode)
    {
    case 1:
-      if (quadrant == 3 || quadrant == 4)
+      if (quadrant > 2)
          pvalue = 0;
       pvalue = 2 * pvalue - 1;
       break;
@@ -192,16 +197,16 @@ float osc_sine::valueFromSinAndCos(float svalue, float cvalue)
       switch (quadrant)
       {
       case 1:
-         pvalue = 1 - cvalue;
+         pvalue = 1 - cosx;
          break;
       case 2:
-         pvalue = 1 + cvalue;
+         pvalue = 1 + cosx;
          break;
       case 3:
-         pvalue = -1 - cvalue;
+         pvalue = -1 - cosx;
          break;
       case 4:
-         pvalue = -1 + cvalue;
+         pvalue = -1 + cosx;
          break;
       }
       break;
@@ -209,10 +214,10 @@ float osc_sine::valueFromSinAndCos(float svalue, float cvalue)
       switch (quadrant)
       {
       case 1:
-         pvalue = 1 - cvalue;
+         pvalue = 1 - cosx;
          break;
       case 2:
-         pvalue = 1 + cvalue;
+         pvalue = 1 + cosx;
          break;
       default:
          pvalue = 0;
@@ -222,21 +227,91 @@ float osc_sine::valueFromSinAndCos(float svalue, float cvalue)
       break;
    case 6:
       if (quadrant <= 2)
-         pvalue = 2 * svalue * cvalue; // remember sin 2x = 2 * sinx * cosx
+         pvalue = sin2x;
       else
          pvalue = 0;
       break;
    case 7:
-      pvalue = 2 * svalue * cvalue;
+      pvalue = sin2x;
       if (quadrant == 2 || quadrant == 3)
          pvalue = -pvalue;
       break;
    case 8:
-      pvalue = 2 * svalue * cvalue;
+      pvalue = sin2x;
       if (quadrant == 2 || quadrant == 4)
          pvalue = 0;
       if (quadrant == 3)
          pvalue = -pvalue;
+      break;
+   case 9:
+      if (quadrant > 2)
+         pvalue = 0;
+      break;
+   case 10:
+      switch (quadrant)
+      {
+      case 1:
+         pvalue = 1 - cosx;
+         break;
+      case 2:
+         pvalue = 1 + cosx;
+         break;
+      default:
+         pvalue = 0;
+         break;
+      }
+      break;
+   case 11:
+   case 13:
+      if (sin2x > 0)
+         if (cos2x > 0)
+            octant = 1;
+         else
+            octant = 2;
+      else if (cos2x < 0)
+         octant = 3;
+      else
+         octant = 4;
+
+      if (quadrant > 2)
+         octant += 4;
+
+      switch (octant)
+      {
+      case 1:
+      case 5:
+         pvalue = 1 - cos2x;
+         break;
+      case 2:
+      case 6:
+         pvalue = 1 + cos2x;
+         break;
+      case 3:
+      case 7:
+         pvalue = -1 - cos2x;
+         break;
+      case 4:
+      case 8:
+         pvalue = -1 + cos2x;
+         break;
+      }
+
+      if (wfMode == 13)
+         pvalue = abs(pvalue);
+
+      if (quadrant > 2)
+         pvalue = 0;
+
+      break;
+   case 12:
+      pvalue = abs(sin2x);
+      if (quadrant > 2)
+         pvalue = 0;
+      break;
+   case 14:
+      pvalue = abs(cos2x);
+      if (quadrant > 2)
+         pvalue = 0;
       break;
 
    default:
