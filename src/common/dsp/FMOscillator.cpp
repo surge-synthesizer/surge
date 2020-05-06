@@ -58,6 +58,8 @@ void FMOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
       output[k] = sin(output[k]);
       lastoutput = output[k] * FeedbackDepth.v;
       phase += omega;
+      if( phase > 2.0 * M_PI )
+         phase -= 2.0 * M_PI;
       RelModDepth1.process();
       RelModDepth2.process();
       AbsModDepth.process();
@@ -162,6 +164,9 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
       output[k] = sin(output[k]);
       lastoutput = output[k] * FeedbackDepth.v;
       phase += omega;
+      if( phase > 2.0 * M_PI )
+         phase -= 2.0 * M_PI;
+
       RelModDepth1.process();
       RelModDepth2.process();
       FeedbackDepth.process();
