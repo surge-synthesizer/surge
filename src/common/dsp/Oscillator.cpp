@@ -94,6 +94,9 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
          p += FMdepth.v * master_osc[k];
       output[k] = valueFromSinAndCos(sin(p), cos(p));
       phase += omega;
+      if( phase > 2.0 * M_PI )
+         phase -= 2.0 * M_PI;
+
       lastvalue = output[k] * FB.v;
       FMdepth.process();
       FB.process();
@@ -117,6 +120,9 @@ void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool 
       {
          output[k] = valueFromSinAndCos(sin(phase), cos(phase));
          phase += omega + master_osc[k] * FMdepth.v;
+         if( phase > 2.0 * M_PI )
+            phase -= 2.0 * M_PI;
+
          FMdepth.process();
       }
    }
