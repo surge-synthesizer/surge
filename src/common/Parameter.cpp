@@ -629,7 +629,7 @@ void Parameter::set_type(int ctrltype)
       break;
    case ct_sineoscmode:
       val_min.i = 0;
-      val_max.i = 8;
+      val_max.i = 14;
       valtype = vt_int;
       val_default.i = 0;
       break;
@@ -1003,7 +1003,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_delaymodtime:
          if ((ctrltype == ct_envtime_lfodecay) && (f == val_max.f))
          {
-            sprintf(txt, "forever");
+            sprintf(txt, "Forever");
          }
          else
          {
@@ -1150,14 +1150,41 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%s", character_abberations[limit_range(i, 0, (int)n_charactermodes - 1)]);
          break;
       case ct_sineoscmode:
-         // FIXME - do better than this of course
-         sprintf(txt, "%d", i);
+         switch (i)
+         {
+         case 0:
+            sprintf(txt, "Wave %d (TX 1)", i + 1);
+            break;
+         case 4:
+            sprintf(txt, "Wave %d (TX 2)", i + 1);
+            break;
+         case 6:
+            sprintf(txt, "Wave %d (TX 5)", i + 1);
+            break;
+         case 9:
+            sprintf(txt, "Wave %d (TX 3)", i + 1);
+            break;
+         case 10:
+            sprintf(txt, "Wave %d (TX 4)", i + 1);
+            break;
+         case 11:
+            sprintf(txt, "Wave %d (TX 6)", i + 1);
+            break;
+         case 12:
+            sprintf(txt, "Wave %d (TX 7)", i + 1);
+            break;
+         case 13:
+            sprintf(txt, "Wave %d (TX 8)", i + 1);
+            break;
+         default:
+            sprintf(txt, "Wave %d", i + 1);
+         }
          break;
       case ct_sinefmlegacy:
          if( i == 0 )
-             sprintf( txt, "Legacy (1.6.1.1 and earlier)");
+             sprintf( txt, "Legacy (before v1.6.2)");
          else
-             sprintf( txt, "Consistent w. FM2/3" );
+             sprintf( txt, "Consistent with FM2/3" );
          break;
       case ct_vocoder_bandcount:
          sprintf(txt, "%d bands", i);
@@ -1167,23 +1194,23 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( i + 1 )
          {
          case wst_tanh:
-            sprintf(txt,"soft");
+            sprintf(txt,"Soft");
             break;
          case wst_hard:
-            sprintf(txt,"hard");
+            sprintf(txt,"Hard");
             break;
          case wst_asym:
-            sprintf(txt,"asym");
+            sprintf(txt,"Asymmetric");
             break;
          case wst_sinus:
-            sprintf(txt,"sine");
+            sprintf(txt,"Sine");
             break;
          case wst_digi:
-            sprintf(txt,"digi");
+            sprintf(txt,"Digital");
             break;
          default:
          case wst_none:
-            sprintf(txt,"none");
+            sprintf(txt,"None");
             break;
          }
          break;
@@ -1191,13 +1218,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch (i)
          {
          case 0:
-            sprintf(txt, "filter 1");
+            sprintf(txt, "Filter 1");
             break;
          case 1:
-            sprintf(txt, "both");
+            sprintf(txt, "Both");
             break;
          case 2:
-            sprintf(txt, "filter 2");
+            sprintf(txt, "Filter 2");
             break;
          }
          break;
@@ -1211,29 +1238,29 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mtype )
          {
          case 0:
-            types = "classic";
+            types = "Classic";
             break;
          case 1:
-            types = "vibrato";
+            types = "Vibrato";
             break;
          case 2:
-            types = "arp";
+            types = "Arp";
             break;
          }
          std::string typew;
          switch( mwave )
          {
          case 0:
-            typew = "sin";
+            typew = "Sine";
             break;
          case 1:
-            typew = "tri";
+            typew = "Triangle";
             break;
          case 2:
-            typew = "saw";
+            typew = "Sawtooth";
             break;
          case 3:
-            typew = "s+h";
+            typew = "S&H";
             break;
          }
          sprintf( txt, "%s %s", types.c_str(), typew.c_str() );
@@ -1247,43 +1274,43 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mode )
          {
          case 0:
-            types = "unison";
+            types = "Unison";
             break;
          case 1:
-            types = "octaves";
+            types = "Octaves";
             break;
          case 2:
-            types = "min 2nds";
+            types = "Minor 2nds";
             break;
          case 3:
-            types = "2nds";
+            types = "Major 2nds";
             break;
          case 4:
-            types = "diminished";
+            types = "Diminished";
             break;
          case 5:
-            types = "augmented";
+            types = "Augmented";
             break;
          case 6:
             types = "4ths";
             break;
          case 7:
-            types = "tritones";
+            types = "Tritones";
             break;
          case 8:
             types = "5ths";
             break;
          case 9:
-            types = "major";
+            types = "Major";
             break;
          case 10:
-            types = "minor";
+            types = "Minor";
             break;
          case 11:
-            types = "dominant";
+            types = "Dominant";
             break;
          case 12:
-            types = "maj 7";
+            types = "Major 7th";
             break;
          }
          sprintf( txt, "%s", types.c_str() );
@@ -1300,9 +1327,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
       else
          b = val.b;
       if (b)
-         sprintf(txt, "true");
+         sprintf(txt, "On");
       else
-         sprintf(txt, "false");
+         sprintf(txt, "Off");
       break;
    };
 }
