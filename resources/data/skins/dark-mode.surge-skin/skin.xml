@@ -51,7 +51,17 @@
 
     <color id="mpetunstatus.title" value="$lightgray"/>
 
-    <color id="savedialog.background" value="#303030"/>
+    <color id="savedialog.background" value="#242424"/>
+​
+    <color id="savedialog.textfield.border" value="#0F0F0F"/>
+    <color id="savedialog.textfield.background" value="#2E2E2E"/>
+    <color id="savedialog.textfield.foreground" value="$lightgray"/>
+​
+    <color id="savedialog.textlabel" value="$lightgray"/>
+​
+    <color id="savedialog.checkbox.border" value="$lightgray"/>
+    <color id="savedialog.checkbox.fill" value="#FFFFFF"/>
+    <color id="savedialog.checkbox.tick" value="$darkergray"/>
 
     <color id="mpetunstatus.button.outline" value="#0F0F0F"/>
     <color id="mpetunstatus.button.background" value="#181818"/>
