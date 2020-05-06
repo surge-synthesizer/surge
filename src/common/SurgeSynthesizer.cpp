@@ -2569,7 +2569,6 @@ void SurgeSynthesizer::process()
       clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
    }
 
-   float sceneout alignas(16)[2][2][BLOCK_SIZE_OS];
    float fxsendout alignas(16)[2][2][BLOCK_SIZE];
    bool play_scene[2];
 

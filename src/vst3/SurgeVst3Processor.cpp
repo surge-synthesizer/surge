@@ -72,6 +72,8 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
    // we want a SideChain Input and a Stereo Output
    addAudioInput(STR16("SideChain In"), SpeakerArr::kStereo, kAux );
    addAudioOutput(STR16("Stereo Out"), SpeakerArr::kStereo);
+   addAudioOutput(STR16("Scene A Out"), SpeakerArr::kStereo);
+   addAudioOutput(STR16("Scene B Out"), SpeakerArr::kStereo);
 
    //---create Event In/Out busses (1 bus with 16 channels)------
    addEventInput(USTRING("MIDI In"));
@@ -445,6 +447,16 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       {
          out[outp][i] = (float)surgeInstance->output[outp][blockpos];
       }
+      if( numOutputs == 3 )
+      {
+         float** outA = data.outputs[1].channelBuffers32;
+         float** outB = data.outputs[2].channelBuffers32;
+         for(int c=0;c<2;++c)
+         {
+            outA[c][i] = (float)surgeInstance->sceneout[0][c][blockpos];
+            outB[c][i] = (float)surgeInstance->sceneout[1][c][blockpos];
+         }
+      }
 
       blockpos++;
       if (blockpos >= BLOCK_SIZE)
@@ -458,6 +470,11 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    // mark as not silent
    data.outputs[0].silenceFlags = 0;
+   if( numOutputs == 3 )
+   {
+      data.outputs[1].silenceFlags = 0;
+      data.outputs[2].silenceFlags = 0;
+   }
 
    _fpuState.restore();
 

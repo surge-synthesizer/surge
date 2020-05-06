@@ -50,6 +50,8 @@ class alignas(16) SurgeSynthesizer
 {
 public:
    float output alignas(16)[N_OUTPUTS][BLOCK_SIZE];
+   float sceneout alignas(16)[2][N_OUTPUTS][BLOCK_SIZE_OS]; // this is blocksize_os but has been downsampled by the end of process into block_size
+
    float input alignas(16)[N_INPUTS][BLOCK_SIZE];
    timedata time_data;
    bool audio_processing_active;
