@@ -35,7 +35,8 @@ tailored at Surge dev.
 # Building Surge
 
 As of April 2020, Surge is built using cmake. Versions in the 1.6 family require premake5 to build but that is
-no longer required as of commit 6eaf2b2e20 or the 1.7 family.
+no longer required as of commit 6eaf2b2e20 or the 1.7 family. If you are generally familiar with and set up with cmake
+you can use cmake directly to build targets such as "Surge.vst3" or "Surge.au".
 
 ## Windows
 
