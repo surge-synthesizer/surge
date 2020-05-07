@@ -53,20 +53,70 @@ osc_sine::osc_sine(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* loc
     : Oscillator(storage, oscdata, localcopy)
 {}
 
+void osc_sine::prepare_unison(int voices)
+{
+   out_attenuation_inv = sqrt((float)voices);
+   out_attenuation = 0.8 / out_attenuation_inv + 0.2 / voices;
+   dplaying = 1.0 / 50.0 * 44100 / samplerate; // normalize to be sample rate independent amount of time for 50 441k samples
+   
+   if (voices == 1)
+   {
+      detune_bias = 1;
+      detune_offset = 0;
+      panL[0] = 1.f;
+      panR[0] = 1.f;
+      playingramp[0] = 1;
+   }
+   else
+   {
+      detune_bias = (float)2.f / (n_unison - 1.f);
+      detune_offset = -1.f;
+
+      bool odd = voices & 1;
+      float mid = voices * 0.5 - 0.5;
+      int half = voices >> 1;
+      for (int i = 0; i < voices; i++)
+      {
+         float d = fabs((float)i - mid) / mid;
+         if (odd && (i >= half))
+            d = -d;
+         if (i & 1)
+            d = -d;
+
+         panL[i] = (1.f - d);
+         panR[i] = (1.f + d);
+      
+         playingramp[i] = 0;
+      }
+      playingramp[0] = 1;
+   }
+}
+
 void osc_sine::init(float pitch, bool is_display)
 {
-   // phase = oscdata->retrigger.val.b ? ((oscdata->startphase.val.f) * M_PI * 2) : 0.f;
-   phase = 0.f;
-   // m64phase = _mm_set1_pi16(0);
-   // m64phase.m64_i32[0] = 0;
-   sinus.set_phase(phase);
-   driftlfo = 0;
-   driftlfo2 = 0;
+   n_unison = limit_range(oscdata->p[6].val.i, 1, MAX_UNISON);
+   if (is_display)
+      n_unison = 1;
+   prepare_unison(n_unison);
+
+   for (int i = 0; i < n_unison; i++)
+   {
+      if (i > 0)
+         phase[i] = 2.0 * M_PI * rand() / RAND_MAX;
+      else
+         phase[i] = 0.f;
+      lastvalue[i] = 0.f;
+      driftlfo[i] = 0.f;
+      driftlfo2[i] = 0.f;
+      sinus[i].set_phase(phase[i]);
+   }
+
+   fb_val = 0.f;
 
    id_mode = oscdata->p[0].param_id_in_scene;
    id_fb = oscdata->p[1].param_id_in_scene;
    id_fmlegacy = oscdata->p[2].param_id_in_scene;
-   lastvalue = 0;
+   id_detune = oscdata->p[5].param_id_in_scene;
 }
 
 osc_sine::~osc_sine()
@@ -80,86 +130,191 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
        return;
    }
    
-   driftlfo = drift_noise(driftlfo2);
-   double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
-   // FMdepth.newValue(fmdepth);
+   fb_val = oscdata->p[1].get_extended(localcopy[id_fb].f);
+
+   double detune;
+   double omega[MAX_UNISON];
+
+   for (int l = 0; l < n_unison; l++)
+   {
+      driftlfo[l] = drift_noise(driftlfo2[l]);
+      detune = drift * driftlfo[l];
+
+      if (n_unison > 1)
+      {
+         if( oscdata->p[5].absolute )
+         {
+            detune += oscdata->p[5].get_extended(localcopy[oscdata->p[5].param_id_in_scene].f)
+               * storage->note_to_pitch_inv_ignoring_tuning( std::min( 148.f, pitch ) ) * 16 / 0.9443  * (detune_bias * float(l) + detune_offset);;
+         }
+         else
+         {
+            detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
+         }
+      }
+
+      omega[l] = min(M_PI, (double)pitch_to_omega(pitch + detune));
+   }
+   
    FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
-   FB.newValue(localcopy[id_fb].f);
+   FB.newValue(abs(fb_val));
 
    for (int k = 0; k < BLOCK_SIZE_OS; k++)
    {
-      // Replicate FM2 exactly
-      auto p = phase + lastvalue;
-      if (FM)
-         p += FMdepth.v * master_osc[k];
-      output[k] = valueFromSinAndCos(sin(p), cos(p));
-      phase += omega;
-      if( phase > 2.0 * M_PI )
-         phase -= 2.0 * M_PI;
+      float outL = 0.f, outR = 0.f;
 
-      lastvalue = output[k] * FB.v;
+      for (int u = 0; u < n_unison; u++)
+      {
+          // Replicate FM2 exactly
+          auto p = phase[u] + lastvalue[u];
+            
+          if (FM)
+             p += FMdepth.v * master_osc[k];
+
+          float out_local = valueFromSinAndCos(sin(p), cos(p));
+
+          outL += (panL[u] * out_local) * playingramp[u] * out_attenuation;
+          outR += (panR[u] * out_local) * playingramp[u] * out_attenuation;
+
+          if( playingramp[u] < 1 )
+             playingramp[u] += dplaying;
+          if( playingramp[u] > 1 )
+             playingramp[u] = 1;
+          
+          phase[u] += omega[u];
+          if ( phase[u] > 2.0 * M_PI )
+          {
+             phase[u] -= 2.0 * M_PI;
+          }
+
+          lastvalue[u] = (fb_val < 0) ? out_local * out_local * FB.v : out_local * FB.v;
+      }
+
       FMdepth.process();
       FB.process();
-   }
 
-   if (stereo)
-   {
-      memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
+      if (stereo)
+      {
+         output[k] = outL;
+         outputR[k]= outR;
+      }
+      else
+         output[k] = (outL + outR) / 2;
    }
 }
 
 void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
+  double detune;
+  double omega[MAX_UNISON];
+
    if (FM)
    {
-      driftlfo = drift_noise(driftlfo2);
-      double omega = min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo));
+      for (int l = 0; l < n_unison; l++)
+      {
+         driftlfo[l] = drift_noise(driftlfo2[l]);
+         detune = drift * driftlfo[l];
+
+         if (n_unison > 1)
+         {
+            if( oscdata->p[5].absolute )
+            {
+               detune += oscdata->p[5].get_extended(localcopy[oscdata->p[5].param_id_in_scene].f)
+                  * storage->note_to_pitch_inv_ignoring_tuning( std::min( 148.f, pitch ) ) * 16 / 0.9443  * (detune_bias * float(l) + detune_offset);;
+            }
+            else
+            {
+               detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
+            }
+         }
+
+         omega[l] = min(M_PI, (double)pitch_to_omega(pitch + detune));
+      }
+
       FMdepth.newValue(fmdepth);
 
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
-         output[k] = valueFromSinAndCos(sin(phase), cos(phase));
-         phase += omega + master_osc[k] * FMdepth.v;
-         if( phase > 2.0 * M_PI )
-            phase -= 2.0 * M_PI;
+         float outL = 0.f, outR = 0.f;
+
+         for (int u = 0; u < n_unison; u++)
+         {
+             float out_local = valueFromSinAndCos(sin(phase[u]), cos(phase[u]));
+
+             outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
+             outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
+
+
+             if( playingramp[u] < 1 )
+                playingramp[u] += dplaying;
+             if( playingramp[u] > 1 )
+                playingramp[u] = 1;
+
+             phase[u] += omega[u] + master_osc[k] * FMdepth.v;
+             if (phase[u] > 2.0 * M_PI)
+             {
+                phase[u] -= 2.0 * M_PI;
+             }
+         }
 
          FMdepth.process();
+
+         if (stereo)
+         {
+            output[k] = outL;
+            outputR[k] = outR;
+         }
+         else
+            output[k] = (outL + outR) / 2;
       }
    }
    else
    {
-      driftlfo = drift_noise(driftlfo2);
-      sinus.set_rate(min(M_PI, (double)pitch_to_omega(pitch + drift * driftlfo)));
+      for (int l = 0; l < n_unison; l++)
+      {
+         driftlfo[l] = drift_noise(driftlfo2[l]);
+
+         detune = drift * driftlfo[l];
+
+         if (n_unison > 1)
+            detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
+
+         omega[l] = min(M_PI, (double)pitch_to_omega(pitch + detune));
+         sinus[l].set_rate(omega[l]);
+      }
 
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
-         sinus.process();
-         float svalue = sinus.r;
-         float cvalue = sinus.i;
+         float outL = 0.f, outR = 0.f;
 
-         output[k] = valueFromSinAndCos(svalue, cvalue);
+         for (int u = 0; u < n_unison; u++)
+         {
+             sinus[u].process();
 
-         // const __m128 scale = _mm_set1_ps(0.000030517578125);
+             float sinx = sinus[u].r;
+             float cosx = sinus[u].i;
 
-         // HACK for testing sine(__m64)
-         // const __m64 rate = _mm_set1_pi16(0x0040);
+             float out_local = valueFromSinAndCos(sinx, cosx);
 
-         /*m64phase = _mm_add_pi16(m64phase,rate);
-         __m64 a = sine(m64phase);
-         __m128 b = _mm_cvtpi16_ps(a);
-         _mm_store_ss(&output[k],_mm_mul_ss(b,scale));*/
+             outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
+             outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
 
-         // int
-         /*m64phase.m64_i32[0] = (m64phase.m64_i32[0] + 0x40);
-         int a = sine(m64phase.m64_i32[0]);
-         __m128 b = _mm_cvtsi32_ss(b,a);
-         _mm_store_ss(&output[k],_mm_mul_ss(b,scale));*/
+             
+             if( playingramp[u] < 1 )
+                playingramp[u] += dplaying;
+             if( playingramp[u] > 1 )
+                playingramp[u] = 1;
+
+         }
+
+         if (stereo)
+         {
+            output[k] = outL;
+            outputR[k] = outR;
+         }
+         else
+            output[k] = (outL + outR) / 2;
       }
-      //_mm_empty(); // HACK MMX
-   }
-   if (stereo)
-   {
-      memcpy(outputR, output, sizeof(float) * BLOCK_SIZE_OS);
    }
 }
 
@@ -345,10 +500,16 @@ void osc_sine::init_ctrltypes()
    oscdata->p[0].set_type(ct_sineoscmode);
 
    oscdata->p[1].set_name("Feedback");
-   oscdata->p[1].set_type(ct_percent);
+   oscdata->p[1].set_type(ct_osc_feedback);
 
    oscdata->p[2].set_name("FM Behaviour");
    oscdata->p[2].set_type(ct_sinefmlegacy);
+
+   oscdata->p[5].set_name("Unison Detune");
+   oscdata->p[5].set_type(ct_oscspread);
+
+   oscdata->p[6].set_name("Unison Voices");
+   oscdata->p[6].set_type(ct_osccount);
 }
 
 void osc_sine::init_default_values()
@@ -356,6 +517,8 @@ void osc_sine::init_default_values()
    oscdata->p[0].val.i = 0;
    oscdata->p[1].val.f = 0;
    oscdata->p[2].val.i = 1;
+   oscdata->p[5].val.f = 0.2;
+   oscdata->p[6].val.i = 1;
 }
 /* audio input osc */
 

@@ -18,6 +18,7 @@ void FMOscillator::init(float pitch, bool is_display)
    lastoutput = 0.0;
    driftlfo = 0;
    driftlfo2 = 0;
+   fb_val = 0.0;
    AM.set_phase(0.0);
    RM1.set_phase(0.0);
    RM2.set_phase(0.0);
@@ -29,6 +30,7 @@ FMOscillator::~FMOscillator()
 void FMOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
    driftlfo = drift_noise(driftlfo2) * drift;
+   fb_val = oscdata->p[6].get_extended(localcopy[oscdata->p[6].param_id_in_scene].f);
    double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
    RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
                               localcopy[oscdata->p[1].param_id_in_scene].f));
@@ -44,7 +46,7 @@ void FMOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
    AbsModDepth.newValue(32.0 * M_PI * d3 * d3 * d3);
    if (FM)
       FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
-   FeedbackDepth.newValue(localcopy[oscdata->p[6].param_id_in_scene].f);
+   FeedbackDepth.newValue(abs(fb_val));
 
    for (int k = 0; k < BLOCK_SIZE_OS; k++)
    {
@@ -56,9 +58,9 @@ void FMOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
       if (FM)
          output[k] += FMdepth.v * master_osc[k];
       output[k] = sin(output[k]);
-      lastoutput = output[k] * FeedbackDepth.v;
+      lastoutput = (fb_val < 0) ? output[k] * output[k] * FeedbackDepth.v : output[k] * FeedbackDepth.v;
       phase += omega;
-      if( phase > 2.0 * M_PI )
+      if (phase > 2.0 * M_PI)
          phase -= 2.0 * M_PI;
       RelModDepth1.process();
       RelModDepth2.process();
@@ -91,7 +93,7 @@ void FMOscillator::init_ctrltypes()
    oscdata->p[5].set_type(ct_freq_audible);
 
    oscdata->p[6].set_name("Feedback");
-   oscdata->p[6].set_type(ct_percent);
+   oscdata->p[6].set_type(ct_osc_feedback);
 }
 void FMOscillator::init_default_values()
 {
@@ -122,6 +124,7 @@ void FM2Oscillator::init(float pitch, bool is_display)
    lastoutput = 0.0;
    driftlfo = 0;
    driftlfo2 = 0;
+   fb_val = 0.0;
    double ph = localcopy[oscdata->p[5].param_id_in_scene].f * 2.0 * M_PI;
    RM1.set_phase(ph);
    RM2.set_phase(ph);
@@ -136,6 +139,7 @@ FM2Oscillator::~FM2Oscillator()
 void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
    driftlfo = drift_noise(driftlfo2) * drift;
+   fb_val = oscdata->p[6].get_extended(localcopy[oscdata->p[6].param_id_in_scene].f);
    double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
    double shift = localcopy[oscdata->p[4].param_id_in_scene].f * dsamplerate_inv;
    RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
@@ -150,7 +154,7 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
    RelModDepth2.newValue(calcmd(d2));
    if (FM)
       FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
-   FeedbackDepth.newValue(localcopy[oscdata->p[6].param_id_in_scene].f);
+   FeedbackDepth.newValue(abs(fb_val));
    PhaseOffset.newValue(2.0 * M_PI * localcopy[oscdata->p[5].param_id_in_scene].f);
 
    for (int k = 0; k < BLOCK_SIZE_OS; k++)
@@ -162,11 +166,10 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
       if (FM)
          output[k] += FMdepth.v * master_osc[k];
       output[k] = sin(output[k]);
-      lastoutput = output[k] * FeedbackDepth.v;
+      lastoutput = (fb_val < 0) ? output[k] * output[k] * FeedbackDepth.v : output[k] * FeedbackDepth.v;
       phase += omega;
-      if( phase > 2.0 * M_PI )
+      if (phase > 2.0 * M_PI)
          phase -= 2.0 * M_PI;
-
       RelModDepth1.process();
       RelModDepth2.process();
       FeedbackDepth.process();
@@ -194,7 +197,7 @@ void FM2Oscillator::init_ctrltypes()
    oscdata->p[5].set_name("M1/2 Phase");
    oscdata->p[5].set_type(ct_percent);
    oscdata->p[6].set_name("Feedback");
-   oscdata->p[6].set_type(ct_percent);
+   oscdata->p[6].set_type(ct_osc_feedback);
 }
 void FM2Oscillator::init_default_values()
 {

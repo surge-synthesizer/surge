@@ -2568,7 +2568,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (p->can_extend_range())
             {
                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Extend Range"),
-                               [this, p]() { p->extend_range = !p->extend_range; });
+                               [this, p]() { p->extend_range = !p->extend_range; this->synth->refresh_editor=true;});
                contextMenu->checkEntry(eid, p->extend_range);
                eid++;
             }

@@ -213,6 +213,7 @@ bool Parameter::can_extend_range()
    case ct_decibel_extendable:
    case ct_decibel_narrow_extendable:
    case ct_oscspread:
+   case ct_osc_feedback:
       return true;
    }
    return false;
@@ -681,6 +682,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 0;
       break;
+   case ct_osc_feedback:
+      val_min.f = 0;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
    default:
    case ct_none:
       sprintf(dispname, "-");
@@ -840,6 +847,8 @@ float Parameter::get_extended(float f)
       return 5.f * f;
    case ct_oscspread:
       return 12.f * f;
+   case ct_osc_feedback:
+      return 8.f * f - 4.f;
    default:
       return f;
    }
@@ -1094,6 +1103,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_flangerpitch:
          sprintf(txt, "%.2f", f);
+         break;
+      case ct_osc_feedback:
+         sprintf(txt, "%.1f %c", get_extended(f) * 100.f, '%');
          break;
       default:
          sprintf(txt, "%.2f", f);

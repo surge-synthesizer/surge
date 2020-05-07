@@ -101,6 +101,7 @@ enum ctrltypes
    ct_flangermode,
    ct_flangervoices,
    ct_flangerchord,
+   ct_osc_feedback,
    num_ctrltypes,
 };
 
