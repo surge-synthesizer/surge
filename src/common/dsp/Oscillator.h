@@ -15,6 +15,7 @@ public:
    Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual ~Oscillator();
    virtual void init(float pitch, bool is_display = false){};
+   virtual void init_ctrltypes(int scene, int oscnum){ init_ctrltypes(); };
    virtual void init_ctrltypes(){};
    virtual void init_default_values(){};
    virtual void process_block(
@@ -122,12 +123,13 @@ public:
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
    virtual ~osc_audioinput();
-   virtual void init_ctrltypes() override;
+   virtual void init_ctrltypes(int scene, int osc) override;
    virtual void init_default_values() override;
    virtual bool allow_display() override
    {
       return false;
    }
+   bool isInSceneB;
 };
 
 class AbstractBlitOscillator : public Oscillator

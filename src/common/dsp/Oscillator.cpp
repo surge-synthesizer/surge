@@ -531,29 +531,57 @@ limiter?
 
 osc_audioinput::osc_audioinput(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy)
-{}
+{
+   isInSceneB = false;
+   if( storage )
+   {
+      storage->otherscene_clients ++;
+      bool isSB = false;
+      for( int i=0; i<n_oscs; ++i )
+         if( &(storage->getPatch().scene[1].osc[i]) == oscdata )
+            isSB = true;
+
+      isInSceneB = isSB;
+   }
+}
 
 void osc_audioinput::init(float pitch, bool is_display)
-{}
+{
+}
 
 osc_audioinput::~osc_audioinput()
-{}
+{
+   if( storage )
+      storage->otherscene_clients --;
+}
 
-void osc_audioinput::init_ctrltypes()
+void osc_audioinput::init_ctrltypes(int scene, int osc)
 {
    oscdata->p[0].set_name("Input");
    oscdata->p[0].set_type(ct_percent_bidirectional);
    oscdata->p[1].set_name("Gain");
    oscdata->p[1].set_type(ct_decibel);
+   if( scene == 1 )
+   {
+      oscdata->p[2].set_name("Use SceneA as Source");
+      oscdata->p[2].set_type(ct_bool);
+   }
 }
 void osc_audioinput::init_default_values()
 {
    oscdata->p[0].val.f = 0.0f;
    oscdata->p[1].val.f = 0.0f;
+   if( isInSceneB )
+      oscdata->p[2].val.i = 0;
 }
 
 void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
+   bool useOtherScene = false;
+   if( isInSceneB && localcopy[oscdata->p[2].param_id_in_scene].i && storage->audio_otherscene )
+   {
+      useOtherScene = true;
+   }
    if (stereo)
    {
       float g = db_to_linear(localcopy[oscdata->p[1].param_id_in_scene].f);
@@ -564,8 +592,16 @@ void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool F
 
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
-         output[k] = a * storage->audio_in[0][k];
-         outputR[k] = b * storage->audio_in[1][k];
+         if( useOtherScene )
+         {
+            output[k] = a * storage->audio_otherscene[0][k];
+            outputR[k] = b * storage->audio_otherscene[1][k];
+         }
+         else
+         {
+            output[k] = a * storage->audio_in[0][k];
+            outputR[k] = b * storage->audio_in[1][k];
+         }
       }
    }
    else
@@ -578,7 +614,14 @@ void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool F
 
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
-         output[k] = a * storage->audio_in[0][k] + b * storage->audio_in[1][k];
+         if( useOtherScene )
+         {
+            output[k] = a * storage->audio_otherscene[0][k] + b * storage->audio_otherscene[1][k];
+         }
+         else
+         {
+            output[k] = a * storage->audio_in[0][k] + b * storage->audio_in[1][k];
+         }
       }
    }
 }
