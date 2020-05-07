@@ -61,14 +61,20 @@ public:
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
 
-   quadr_osc sinus;
-   double phase;
-   float driftlfo, driftlfo2;
+   quadr_osc sinus[MAX_UNISON];
+   double phase[MAX_UNISON];
+   float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
+   float fb_val;
+   float playingramp[MAX_UNISON], dplaying;
    lag<double> FMdepth;
    lag<double> FB;
+   void prepare_unison(int voices);
+   int n_unison;
+   float out_attenuation, out_attenuation_inv, detune_bias, detune_offset;
+   float panL[MAX_UNISON], panR[MAX_UNISON];
 
-   int id_mode, id_fb, id_fmlegacy;
-   float lastvalue = 0;
+   int id_mode, id_fb, id_fmlegacy, id_detune;
+   float lastvalue[MAX_UNISON];
 
    float valueFromSinAndCos(float svalue, float cvalue);
    virtual void handleStreamingMismatches(int s, int synths) override;
@@ -87,6 +93,7 @@ public:
    double phase, lastoutput;
    quadr_osc RM1, RM2, AM;
    float driftlfo, driftlfo2;
+   float fb_val;
    lag<double> FMdepth, AbsModDepth, RelModDepth1, RelModDepth2, FeedbackDepth;
 };
 
@@ -103,6 +110,7 @@ public:
    double phase, lastoutput;
    quadr_osc RM1, RM2;
    float driftlfo, driftlfo2;
+   float fb_val;
    lag<double> FMdepth, RelModDepth1, RelModDepth2, FeedbackDepth, PhaseOffset;
 };
 
@@ -135,8 +143,8 @@ protected:
    void prepare_unison(int voices);
    float integrator_hpf;
    float pitchmult, pitchmult_inv;
-   int n_unison;
    int bufpos;
+   int n_unison;
    float out_attenuation, out_attenuation_inv, detune_bias, detune_offset;
    float oscstate[MAX_UNISON], syncstate[MAX_UNISON], rate[MAX_UNISON];
    float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
