@@ -39,7 +39,7 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, 1, n_total_params + n_customcontrollers)
 {
    setNumInputs(2);  // stereo in
-   setNumOutputs(2); // stereo out
+   setNumOutputs(6); // stereo out, scene A out, scene B out
 
 #if MAC || LINUX
    isSynth();
@@ -188,7 +188,7 @@ VstInt32 Vst2PluginInstance::canDo(char* text)
    if (!strcmp(text, "midiProgramNames"))
       return -1;
 
-   if (!strcmp(text, "2in2out"))
+   if (!strcmp(text, "2in6out"))
       return 1;
 
    if (!strcmp(text, "plugAsChannelInsert"))
@@ -448,9 +448,17 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
       for (outp = 0; outp < n_outputs; outp++)
       {
          if (replacing)
-            outputs[outp][i] = (float)_instance->output[outp][blockpos]; // replacing
-         else
-            outputs[outp][i] += (float)_instance->output[outp][blockpos]; // adding
+         {
+            outputs[outp][i] = (float)_instance->output[outp][blockpos];
+            outputs[2 + outp][i] = (float)_instance->sceneout[0][outp][blockpos];
+            outputs[4 + outp][i] = (float)_instance->sceneout[1][outp][blockpos];
+         }
+         else  // adding
+         {
+            outputs[outp][i] += (float)_instance->output[outp][blockpos]; 
+            outputs[2 + outp][i] += (float)_instance->sceneout[0][outp][blockpos];
+            outputs[4 + outp][i] += (float)_instance->sceneout[1][outp][blockpos];
+         }
       }
 
       blockpos++;
@@ -480,9 +488,29 @@ void Vst2PluginInstance::processReplacing(float** inputs, float** outputs, VstIn
 
 bool Vst2PluginInstance::getOutputProperties(VstInt32 index, VstPinProperties* properties)
 {
-   if (index < 2)
+   if (index < 6)
    {
-      sprintf(properties->label, "SURGE"); // , (index & 0xfe) + 1, (index & 0xfe) + 2);
+   	  switch (index)
+   	  {
+   	     case 0:
+            sprintf(properties->label, "Audio Out L");
+            break;
+   	     case 1:
+            sprintf(properties->label, "Audio Out R");
+            break;
+   	     case 2:
+            sprintf(properties->label, "Scene A Out L");
+            break;
+   	     case 3:
+            sprintf(properties->label, "Scene A Out R");
+            break;
+   	     case 4:
+            sprintf(properties->label, "Scene B Out L");
+            break;
+   	     case 5:
+            sprintf(properties->label, "Scene B Out R");
+            break;
+   	  }
       properties->flags = kVstPinIsStereo | kVstPinIsActive;
       return true;
    }
@@ -494,7 +522,10 @@ bool Vst2PluginInstance::getInputProperties(VstInt32 index, VstPinProperties* pr
    bool returnCode = false;
    if (index < 2)
    {
-      sprintf(properties->label, "SURGE in");
+   	  if (index == 0)
+         sprintf(properties->label, "Audio In L");
+      else
+         sprintf(properties->label, "Audio In R");
       properties->flags = kVstPinIsStereo | kVstPinIsActive;
       returnCode = true;
    }
@@ -585,7 +616,7 @@ bool Vst2PluginInstance::tryInit()
    }
 
    static_cast<SurgeGUIEditor *>(editor)->setZoomCallback( [this](SurgeGUIEditor *e) { handleZoom(e); } );
-   
+
    blockpos = 0;
    state = INITIALIZED;
    return true;
@@ -609,13 +640,13 @@ void Vst2PluginInstance::handleZoom(SurgeGUIEditor *e)
         ** drifts accumulate, just reset the size here since we know it
         */
         frame->setSize(newW, newH);
-        
+
         /*
         ** VST2 has an error which is that the background bitmap doesn't get the frame transform
         ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
         ** scale up using a backdoor API.
         */
-       
+
         VSTGUI::CBitmap *bg = frame->getBackground();
         if(bg != NULL)
         {
