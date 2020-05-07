@@ -2796,6 +2796,15 @@ void SurgeSynthesizer::process()
 
    hardclip_block8(output[0], BLOCK_SIZE_QUAD);
    hardclip_block8(output[1], BLOCK_SIZE_QUAD);
+
+   // since the sceneout is now routable we also need to mute and clip it
+   for( int s=0; s<2; ++s )
+   {
+      amp.multiply_2_blocks(sceneout[s][0], sceneout[s][1], BLOCK_SIZE_QUAD);
+      amp_mute.multiply_2_blocks(sceneout[s][0], sceneout[s][1], BLOCK_SIZE_QUAD);
+      hardclip_block8(sceneout[s][0], BLOCK_SIZE_QUAD);
+      hardclip_block8(sceneout[s][1], BLOCK_SIZE_QUAD);
+   }
 }
 
 PluginLayer* SurgeSynthesizer::getParent()
