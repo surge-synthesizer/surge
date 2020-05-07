@@ -19,8 +19,8 @@ except ImportError:
 
 assets_path = "assets/original-vector/SVG/exported"
 
-source_file_path = sys.argv[1] + "/src/linux/ScalablePiggy.S"
-header_file_path = sys.argv[1] + "/src/linux/ScalablePiggy.h"
+source_file_path = sys.argv[2] + "/ScalablePiggy.S"
+header_file_path = sys.argv[2] + "/ScalablePiggy.h"
 
 source_file = StringIO()
 source_file.write(u"""# THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT.
@@ -63,7 +63,7 @@ for name in os.listdir(sys.argv[1] + "/" + assets_path):
     path = os.path.join(assets_path, name)
     size = os.stat(sys.argv[1] + "/" + path).st_size;
 
-    source_file.write(u'    .incbin "../../%s"%s' % (path, os.linesep))
+    source_file.write(u'    .incbin "%s/%s"%s' % (sys.argv[1], path, os.linesep))
     header_file.write(u'     {"svg/%s", %d, %d},%s' % (name, size, offset, os.linesep))
 
     offset += size

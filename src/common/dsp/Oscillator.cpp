@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "Oscillator.h"
 #include "DspUtilities.h"
+#include <cmath>
 
 using namespace std;
 

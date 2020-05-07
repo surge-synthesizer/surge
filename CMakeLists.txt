@@ -295,10 +295,18 @@ if( APPLE )
     "-framework QuartzCore"
     )
 elseif( UNIX AND NOT APPLE )
+  file(GLOB PIGGY_INPUTS assets/original-vector/SVG/exported/*svg)
+  add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S 
+                      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                      DEPENDS ${PIGGY_INPUTS}
+                      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
+                      COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp 
+                    )
+
   set(SURGE_OS_SOURCES
     src/linux/UserInteractionsLinux.cpp
     src/linux/ConfigurationXml.S
-    src/linux/ScalablePiggy.S
+    ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
     )
 
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
@@ -349,6 +357,7 @@ elseif( UNIX AND NOT APPLE )
   set(OS_INCLUDE_DIRECTORIES
     src/linux
     ${CAIRO_INCLUDE_DIRS}
+    ${CMAKE_BINARY_DIR}/lintemp
     )
 
   set(OS_LINK_LIBRARIES
