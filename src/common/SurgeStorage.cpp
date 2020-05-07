@@ -49,7 +49,7 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 using namespace std;
 
-SurgeStorage::SurgeStorage(std::string suppliedDataPath)
+SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
    _patch.reset(new SurgePatch(this));
 

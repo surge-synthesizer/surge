@@ -9,6 +9,7 @@
 #include <vector>
 #include <thread/CriticalSection.h>
 #include <memory>
+#include <atomic>
 #include <stdint.h>
 
 #ifndef TIXML_USE_STL
@@ -523,8 +524,9 @@ class alignas(16) SurgeStorage
 public:
    float audio_in alignas(16)[2][BLOCK_SIZE_OS];
    float audio_in_nonOS alignas(16)[2][BLOCK_SIZE];
+   float audio_otherscene alignas(16)[2][BLOCK_SIZE_OS]; // this will be a pointer to an aligned 2 x BLOCK_SIZE_OS array
    //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
-
+   
 
    SurgeStorage(std::string suppliedDataPath="");
    float table_pitch alignas(16)[512];
@@ -637,6 +639,8 @@ public:
    Tunings::KeyboardMapping currentMapping;
    bool isStandardMapping = true;
    float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
+
+   std::atomic<int> otherscene_clients;
 
 private:
    TiXmlDocument snapshotloader;

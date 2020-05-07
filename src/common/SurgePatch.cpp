@@ -793,6 +793,7 @@ void SurgePatch::update_controls(bool init,
                                  bool from_streaming // we are loading from a patch
     ) 
 {
+   int sn = 0;
    for (auto& sc : scene)
    {
       for (int osc = 0; osc < n_oscs; osc++)
@@ -803,7 +804,7 @@ void SurgePatch::update_controls(bool init,
          Oscillator* t_osc = spawn_osc(sc.osc[osc].type.val.i, nullptr, &sc.osc[osc], nullptr);
          if (t_osc)
          {
-            t_osc->init_ctrltypes();
+            t_osc->init_ctrltypes(sn,osc);
             if (from_streaming)
                 t_osc->handleStreamingMismatches( streamingRevision, currentSynthStreamingRevision );
             if (init || (init_osc == &sc.osc[osc]))
@@ -813,6 +814,7 @@ void SurgePatch::update_controls(bool init,
             delete t_osc;
          }
       }
+      sn++;
    }
 
    if( from_streaming )

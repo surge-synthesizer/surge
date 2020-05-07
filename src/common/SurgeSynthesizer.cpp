@@ -2651,14 +2651,9 @@ void SurgeSynthesizer::process()
          else
             iter++;
       }
-   }
-   polydisplay = vcount;
 
-   // CS LEAVE
-   storage.CS_ModRouting.leave();
+      storage.CS_ModRouting.leave();
 
-   for (int s = 0; s < 2; s++)
-   {
       fbq_global g;
       g.FU1ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[0].type.val.i,
                                     storage.getPatch().scene[s].filterunit[0].subtype.val.i);
@@ -2683,6 +2678,14 @@ void SurgeSynthesizer::process()
          ProcessQuadFB(FBQ[s][e >> 2], g, sceneout[s][0], sceneout[s][1]);
       }
 
+      if( s == 0 && storage.otherscene_clients > 0 )
+      {
+         // Make available for scene b 
+         copy_block(sceneout[0][0], storage.audio_otherscene[0], BLOCK_SIZE_OS_QUAD);
+         copy_block(sceneout[0][1], storage.audio_otherscene[1], BLOCK_SIZE_OS_QUAD);
+      }
+
+      
       iter = voices[s].begin();
       while (iter != voices[s].end())
       {
@@ -2691,7 +2694,12 @@ void SurgeSynthesizer::process()
          v->GetQFB(); // save filter state in voices after quad processing is done
          iter++;
       }
+      storage.CS_ModRouting.enter();
    }
+
+   // CS LEAVE
+   storage.CS_ModRouting.leave();
+   polydisplay = vcount;
 
    if (play_scene[0])
    {
