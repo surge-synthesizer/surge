@@ -248,12 +248,7 @@ enum fu_type
 };
 const char fut_abberations[n_fu_type][32] = {
     "Off",           "Lowpass 12dB",  "Lowpass 24dB", "Lowpass 6-24dB Ladder",
-    "Highpass 12dB", "Highpass 24dB", "Bandpass",     "Notch",   "Comb",
-    #if WINDOWS
-       "Sample && Hold" /*,"APF"*/};
-    #else
-       "Sample & Hold" /*,"APF"*/};
-    #endif
+    "Highpass 12dB", "Highpass 24dB", "Bandpass",     "Notch",   "Comb", "Sample & Hold" /*,"APF"*/};
 const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 4, 2, 4, 0};
 
 enum fu_subtype
