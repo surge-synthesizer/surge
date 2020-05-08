@@ -51,6 +51,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    , halfbandIN(6, true)
 {
    switch_toggled_queued = false;
+   audio_processing_active = false;
    halt_engine = false;
    release_if_latched[0] = true;
    release_if_latched[1] = true;
@@ -179,8 +180,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    {
       if (p.name == "Init Saw" && storage.patch_category[p.category].name == "Init")
       {
-         patchid_queue = pid;
-         processThreadunsafeOperations();
+         // patchid_queue = pid;
          break;
       }
       pid++;
