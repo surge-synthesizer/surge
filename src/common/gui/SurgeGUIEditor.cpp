@@ -4122,8 +4122,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                                Surge::UserInteractions::promptError( e.what(), "Error Loading .scl" );
                             }
                         };
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
-                                                                      ".scl",
+                        std::string scl_folder;
+                        #if WINDOWS
+                           scl_folder = "tuning-library\\SCL";
+                        #else
+                           scl_folder = "tuning-library/SCL";
+                        #endif
+                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + scl_folder,
+                                                                      "Scala microtuning files (*.scl)",
                                                                       cb);
                     }
         );
@@ -4160,8 +4166,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                             }
 
                         };
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
-                                                                      ".kbm",
+                        std::string kbm_folder;
+                        #if WINDOWS
+                           kbm_folder = "tuning-library\\KBM Concert Pitch";
+                        #else
+                           kbm_folder = "tuning-library/KBM Concert Pitch";
+                        #endif
+                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + kbm_folder,
+                                                                      "Scala keyboard mapping files (*.kbm)",
                                                                       cb);
                     }
         );
