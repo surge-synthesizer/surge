@@ -239,6 +239,11 @@ private:
    VSTGUI::CTextEdit* patchComment = nullptr;
    VSTGUI::CCheckBox* patchTuning = nullptr;
    VSTGUI::CTextLabel* patchTuningLabel = nullptr;
+
+   VSTGUI::CViewContainer* typeinDialog = nullptr;
+   VSTGUI::CTextEdit* typeinValue = nullptr;
+   VSTGUI::CTextLabel* typeinLabel = nullptr;
+   
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;
    VSTGUI::CControl* splitkeyControl = nullptr;
@@ -272,6 +277,8 @@ private:
    VSTGUI::COptionMenu* makeSkinMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
 
+   void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c);
+   
    /*
    ** Skin support
    */
