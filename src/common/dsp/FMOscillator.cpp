@@ -2,6 +2,7 @@
 //	Copyright 2006 Claes Johanson & vember audio
 //-------------------------------------------------------------------------------------------------------
 #include "Oscillator.h"
+#include <cmath>
 
 using namespace std;
 
