@@ -241,6 +241,7 @@ public:
    bool can_extend_range();
    bool can_be_absolute();
    bool can_snap();
+   bool can_setvalue_from_string();
    void clear_flags();
    void set_type(int ctrltype);
    void morph(Parameter* a, Parameter* b, float x);
@@ -263,6 +264,7 @@ public:
    float value_to_normalized(float value);
    float get_default_value_f01();
    void set_value_f01(float v, bool force_integer = false);
+   bool set_value_from_string(std::string s);
    float
    get_modulation_f01(float mod);     // used by the gui to get the position of the modulated handle
    float set_modulation_f01(float v); // used by the gui to set the modulation to match the position

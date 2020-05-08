@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 
 Parameter::Parameter() : posx( PositionHolder::Axis::X ),
                          posy( PositionHolder::Axis::Y ),
@@ -1513,4 +1514,43 @@ void Parameter::morph(Parameter* a, Parameter* b, float x)
       else
          memcpy((void*)this, (void*)a, sizeof(Parameter));
    }
+}
+
+bool Parameter::can_setvalue_from_string()
+{
+   switch( ctrltype )
+   {
+   case ct_percent:
+   case ct_percent_bidirectional:
+      return true;
+      break;
+   }
+   return false;
+}
+
+bool Parameter::set_value_from_string( std::string s )
+{
+   const char* c = s.c_str();
+   switch( valtype )
+   {
+   case ct_percent:
+   {
+      auto nv = std::atof(c);
+      if( nv < 0 || nv > 100 )
+         return false;
+      val.f = nv / 100.0;
+   }
+   break;
+   case ct_percent_bidirectional:
+   {
+      auto nv = std::atof(c);
+      if( nv < -100 || nv > 100 )
+         return false;
+      val.f = nv / 100.0;
+   }
+   break;
+   default:
+      return false;
+   }
+   return true;
 }
