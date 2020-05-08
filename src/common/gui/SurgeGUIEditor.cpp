@@ -2510,6 +2510,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                this->promptForUserValueEntry( p, control );
                             }
                );
+            eid++;
          }
          else if( p->valtype == vt_bool )
          {
@@ -2520,6 +2521,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                synth->refresh_editor=true;
                             }
                );
+            eid++;
             if( p->val.b )
                b->setChecked(true);
                
@@ -2537,6 +2539,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                           synth->refresh_editor=true;
                                        }
                   );
+               eid++;
                if( i == p->val.i )
                   b->setChecked(true);
             }
