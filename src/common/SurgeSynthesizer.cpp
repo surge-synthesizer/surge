@@ -174,7 +174,17 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
    mpeGlobalPitchBendRange = 0;
 
-   //	load_patch(0);
+   int pid = 0;
+   for (auto p : storage.patch_list)
+   {
+      if (p.name == "Init Saw" && storage.patch_category[p.category].name == "Init")
+      {
+         patchid_queue = pid;
+         processThreadunsafeOperations();
+         break;
+      }
+      pid++;
+   }
 }
 
 SurgeSynthesizer::~SurgeSynthesizer()
