@@ -604,6 +604,8 @@ bool Vst2PluginInstance::tryInit()
       std::unique_ptr<SurgeGUIEditor> editorTmp(new SurgeGUIEditor(this, synthTmp.get()));
 
       _instance = synthTmp.release();
+      _instance->audio_processing_active = true;
+
       editor = editorTmp.release();
    } catch (std::bad_alloc err) {
       Surge::UserInteractions::promptError(err.what(), "Out of memory");
