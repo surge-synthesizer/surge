@@ -774,6 +774,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsIO.cpp
     src/headless/UnitTestsMIDI.cpp
     src/headless/UnitTestsMOD.cpp
+    src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
     )
   add_dependencies(surge-headless surge-shared)

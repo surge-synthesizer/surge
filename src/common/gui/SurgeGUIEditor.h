@@ -243,6 +243,7 @@ private:
    VSTGUI::CViewContainer* typeinDialog = nullptr;
    VSTGUI::CTextEdit* typeinValue = nullptr;
    VSTGUI::CTextLabel* typeinLabel = nullptr;
+   Parameter *typeinEditTarget = nullptr;
    
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;

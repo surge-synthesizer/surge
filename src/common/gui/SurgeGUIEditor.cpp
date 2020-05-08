@@ -737,7 +737,18 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
          }
          toggle_mod_editing();
          return 1;
+         break;
+      case VKEY_ESCAPE:
+         if( typeinDialog && typeinDialog->isVisible() )
+         {
+            typeinDialog->setVisible(false);
+            frame->removeView(typeinDialog);
+            typeinDialog = nullptr;
+            typeinEditTarget = nullptr;
+         }
+         break;
       }
+
    }
    else
    {
@@ -2496,7 +2507,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          {
             addCallbackMenu(contextMenu, txt2,
                             [this,p,control]() {
-                               // this->promptForUserValueEntry( p, control );
+                               this->promptForUserValueEntry( p, control );
                             }
                );
          }
@@ -3115,6 +3126,22 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       saveDialog->setVisible(false);
       // frame->setModalView(nullptr);
       frame->setDirty();
+   }
+   break;
+   case tag_value_typein:
+   {
+      if( typeinDialog && typeinEditTarget )
+      {
+         std::string t = typeinValue->getText().getString();
+
+         if( typeinEditTarget->set_value_from_string( t ) )
+            synth->refresh_editor = true;
+         
+         typeinDialog->setVisible(false);
+         frame->removeView(typeinDialog);
+         typeinDialog = nullptr;
+         typeinEditTarget = nullptr;
+      }
    }
    break;
    case tag_store_ok:
@@ -4788,16 +4815,32 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
       CRect typeinSize( cp.left, cp.top - 40, cp.left + 120, cp.top - 40 + 40  );
 
       typeinDialog = new CViewContainer(typeinSize);
-      typeinDialog->setBackgroundColor( VSTGUI::kWhiteCColor ); // FIXME
+      CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
+      typeinDialog->setBackgroundColor( bggr );
       typeinDialog->setVisible(false);
       frame->addView(typeinDialog);
       
-      typeinLabel = new CTextLabel( CRect( 3, 3, 120-6, 20-3 ), "Enter Label" );
+      typeinLabel = new CTextLabel( CRect( 3, 3, 120-6, 20-3 ), p->get_full_name() );
+      typeinLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+      typeinLabel->setBackColor(currentSkin->getColor( "savedialog.background", kWhiteCColor ));
       typeinDialog->addView(typeinLabel);
+
+      char txt[256];
+      p->get_display(txt);
+
+      typeinValue = new CTextEdit( CRect( 3, 23, 120-6, 40-3 ), this, tag_value_typein, txt );
+      typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
+      typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+
+      if( ! p->can_setvalue_from_string() )
+      {
+         typeinValue->setFontColor( VSTGUI::kRedCColor );
+         typeinLabel->setText( "UNSUPPORTED" );
+      }
       
-      typeinValue = new CTextEdit( CRect( 3, 23, 120-6, 40-3 ), this, tag_value_typein, "VALUE" );
       typeinDialog->addView(typeinValue);
 
+      typeinEditTarget = p;
       typeinDialog->setVisible(true);
       //typeinDialog->takeFocus();
       //frame->changeViewZOrder( typeinDialog, frame->getNbViews()-1 );
