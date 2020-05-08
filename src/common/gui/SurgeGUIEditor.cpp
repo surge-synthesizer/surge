@@ -104,6 +104,7 @@ enum special_tags
    tag_mod_source_end = tag_mod_source0 + n_modsources,
    tag_settingsmenu,
    tag_mp_jogfx,
+   tag_value_typein,
    //	tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
@@ -1780,6 +1781,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    
    frame->addView(aboutbox);
 
+   
    CRect dialogSize(148, 8, 598, 8 + 182);
    saveDialog = new CViewContainer(dialogSize);
    saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
@@ -2485,12 +2487,49 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
          int eid = 0;
 
-         contextMenu->addEntry((char*)p->get_name(), eid++);
+         contextMenu->addEntry((char*)p->get_full_name(), eid++);
          contextMenu->addEntry("-", eid++);
          char txt[256], txt2[512];
          p->get_display(txt);
          sprintf(txt2, "Value: %s", txt);
-         contextMenu->addEntry(txt2, eid++);
+         if( p->valtype == vt_float )
+         {
+            addCallbackMenu(contextMenu, txt2,
+                            [this,p,control]() {
+                               // this->promptForUserValueEntry( p, control );
+                            }
+               );
+         }
+         else if( p->valtype == vt_bool )
+         {
+            // FIXME - make this a checked toggle
+            auto b = addCallbackMenu(contextMenu, txt2,
+                            [this,p,control]() {
+                               synth->setParameter01( p->id, !p->val.b, false, false );
+                               synth->refresh_editor=true;
+                            }
+               );
+            if( p->val.b )
+               b->setChecked(true);
+               
+         }
+         else if( p->valtype == vt_int )
+         {
+            for( int i=p->val_min.i; i<= p->val_max.i; ++i )
+            {
+               char txt[256];
+               float ef = ( 1.0f * i - p->val_min.i) / ( p->val_max.i - p->val_min.i);
+               p->get_display(txt, true, ef );
+               auto b =addCallbackMenu(contextMenu, txt,
+                                       [this,ef,p,i]() {
+                                          synth->setParameter01( p->id, ef, false, false );
+                                          synth->refresh_editor=true;
+                                       }
+                  );
+               if( i == p->val.i )
+                  b->setChecked(true);
+            }
+         }
          bool cancellearn = false;
 
          // Modulation and Learn semantics only apply to vt_float types in surge right now
@@ -4730,4 +4769,37 @@ R"HTML(
       )HTML";
  
   return htmls.str();
+}
+
+void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
+{
+   if( typeinDialog )
+   {
+      typeinDialog->setVisible(false);
+      frame->removeView( typeinDialog );
+      typeinDialog = nullptr;
+   }
+   if( dynamic_cast<CSurgeSlider*>(c) &&
+       p->valtype == vt_float
+      )
+   {
+      auto s = dynamic_cast<CSurgeSlider*>(c);
+      auto cp = s->getViewSize();
+      CRect typeinSize( cp.left, cp.top - 40, cp.left + 120, cp.top - 40 + 40  );
+
+      typeinDialog = new CViewContainer(typeinSize);
+      typeinDialog->setBackgroundColor( VSTGUI::kWhiteCColor ); // FIXME
+      typeinDialog->setVisible(false);
+      frame->addView(typeinDialog);
+      
+      typeinLabel = new CTextLabel( CRect( 3, 3, 120-6, 20-3 ), "Enter Label" );
+      typeinDialog->addView(typeinLabel);
+      
+      typeinValue = new CTextEdit( CRect( 3, 23, 120-6, 40-3 ), this, tag_value_typein, "VALUE" );
+      typeinDialog->addView(typeinValue);
+
+      typeinDialog->setVisible(true);
+      //typeinDialog->takeFocus();
+      //frame->changeViewZOrder( typeinDialog, frame->getNbViews()-1 );
+   }
 }
