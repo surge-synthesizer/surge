@@ -1522,6 +1522,10 @@ bool Parameter::can_setvalue_from_string()
    {
    case ct_percent:
    case ct_percent_bidirectional:
+   case ct_freq_hpf:
+   case ct_freq_audible:
+   case ct_freq_vocoder_low:
+   case ct_freq_vocoder_high:
       return true;
       break;
    }
@@ -1531,7 +1535,7 @@ bool Parameter::can_setvalue_from_string()
 bool Parameter::set_value_from_string( std::string s )
 {
    const char* c = s.c_str();
-   switch( valtype )
+   switch( ctrltype )
    {
    case ct_percent:
    {
@@ -1549,6 +1553,18 @@ bool Parameter::set_value_from_string( std::string s )
       val.f = nv / 100.0;
    }
    break;
+   case ct_freq_hpf:
+   case ct_freq_audible:
+   case ct_freq_vocoder_low:
+   case ct_freq_vocoder_high:
+   {
+      // these are 440 * 2 ^ ( f / 12 ) = c
+      // so log2( c / 440 ) * 12 = f;
+      auto nv = std::atof(c);
+      val.f = limit_range( log2f( nv / 440.0 ) * 12.0f, val_min.f, val_max.f );
+      return true;
+   }
+
    default:
       return false;
    }

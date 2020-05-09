@@ -4849,7 +4849,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
       if( ! p->can_setvalue_from_string() )
       {
          typeinValue->setFontColor( VSTGUI::kRedCColor );
-         typeinLabel->setText( "COMING SOON" );
+         typeinValue->setText( "edit coming soon" );
       }
       inner->addView(typeinValue);
 
