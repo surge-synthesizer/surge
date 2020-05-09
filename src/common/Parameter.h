@@ -102,6 +102,7 @@ enum ctrltypes
    ct_flangervoices,
    ct_flangerchord,
    ct_osc_feedback,
+   ct_chorusmodtime,
    num_ctrltypes,
 };
 

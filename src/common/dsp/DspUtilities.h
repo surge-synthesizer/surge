@@ -266,11 +266,11 @@ inline float linear_to_amp(float x)
 }
 inline float amp_to_db(float x)
 {
-   return limit_range((float)(6.f * 3.f * log(x) / log(2.f)), -192.f, 96.f);
+   return limit_range((float)(18.f * log2(x)), -192.f, 96.f);
 }
 inline float db_to_amp(float x)
 {
-   return limit_range(powf((10.f / 3.f), 0.05f * x), 0.f, 1.f);
+   return limit_range(powf(2.f, x / 18.f), 0.f, 2.f);
 }
 
 inline double sincf(double x)
