@@ -15,7 +15,6 @@ using namespace Surge::Test;
 
 TEST_CASE( "Param String Inversion", "[parm]" )
 {
-#if 0   
    SECTION( "Inverting" )
    {
       Parameter pq;
@@ -29,15 +28,15 @@ TEST_CASE( "Param String Inversion", "[parm]" )
          }
       }
       REQUIRE( supportedTypes.size() > 0 );
-      
+#if 0      
       for( auto type : supportedTypes )
       {
          INFO( "Testing " << type );
-         REQUIRE( p.can_setvalue_from_string() );
          for( int i=0; i<25000; ++i )
          {
             Parameter p;
             p.set_type(type);
+            REQUIRE( p.can_setvalue_from_string() );
             
             auto val = 1.f * rand() / RAND_MAX;
             p.set_value_f01(val);
@@ -51,6 +50,6 @@ TEST_CASE( "Param String Inversion", "[parm]" )
             REQUIRE( v01 == Approx( val ).margin( .01 ) );
          }
       }
+#endif      
    }
-#endif   
 }
