@@ -832,6 +832,7 @@ void SurgeSynthesizer::updateDisplay()
 #if ! TARGET_AUDIOUNIT
    getParent()->updateDisplay();
 #endif
+   refresh_editor = true;
 }
 
 void SurgeSynthesizer::sendParameterAutomation(long index, float value)
