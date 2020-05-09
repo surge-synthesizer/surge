@@ -17,7 +17,8 @@ public:
                        const LV2_URID_Map* uridMapper,
                        const LV2UI_Resize* uiResizer,
                        LV2UI_Write_Function writeFn,
-                       LV2UI_Controller controller);
+                       LV2UI_Controller controller,
+                       float uiScaleFactor);
    ~SurgeLv2Ui();
 
    void setParameterAutomated(int externalparam, float value);
@@ -54,4 +55,6 @@ private:
 #endif
    LV2UI_Write_Function _writeFn;
    LV2UI_Controller _controller;
+   float _uiScaleFactor;
+   bool _uiInitialized;
 };
