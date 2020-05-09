@@ -148,11 +148,11 @@ void promptFileOpenDialog(const std::string& initialDirectory,
    ofn.lpstrFile = szFile;
    ofn.lpstrFile[0] = '\0';
    ofn.nMaxFile = sizeof(szFile);
-   ofn.lpstrFilter = "All\0*.*\0";
+   ofn.lpstrFilter = filterSuffix.c_str();
    ofn.nFilterIndex = 0;
    ofn.lpstrFileTitle = NULL;
    ofn.nMaxFileTitle = 0;
-   ofn.lpstrInitialDir = NULL;
+   ofn.lpstrInitialDir = initialDirectory.c_str();
    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
    if (GetOpenFileName(&ofn))
