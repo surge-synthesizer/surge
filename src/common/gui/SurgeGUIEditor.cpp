@@ -728,7 +728,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
       switch (code.virt)
       {
       case VKEY_TAB:
-         if (saveDialog && saveDialog->isVisible())
+         if ( (saveDialog && saveDialog->isVisible()) || (typeinDialog && typeinDialog->isVisible() ) )
          {
             /* 
             ** SaveDialog gets access to the tab key to switch between fields if it is open
@@ -756,31 +756,6 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
             typeinDialog->setVisible(false);
          }
          break;
-      }
-
-   }
-   else
-   {
-      switch(code.character)
-      {
-      case '+':
-         setZoomFactor(getZoomFactor()+10);
-         return 1;
-      case '=':
-         /*
-         ** This is a bit unsatisfying. The '+' key on linux with a US standard
-         ** keyboard delivers as = with a shift modifier. I dislike hardcoding keyboard
-         ** layouts but I don't see an API and this is a commonly used feature
-         */
-         if (code.modifier == VstModifierKey::MODIFIER_SHIFT)
-         {
-            setZoomFactor(getZoomFactor()+10);
-            return 1;
-         }
-         break;
-      case '-':
-         setZoomFactor(getZoomFactor()-10);
-         return 1;
       }
    }
    return -1;
@@ -1802,7 +1777,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    frame->addView(aboutbox);
 
    
-   CRect dialogSize(148, 8, 598, 8 + 182);
+   CRect dialogSize(148, 53, 598, 53 + 182);
    saveDialog = new CViewContainer(dialogSize);
    saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
    saveDialog->setVisible(false);
@@ -4854,7 +4829,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
       if( ! p->can_setvalue_from_string() )
       {
          typeinValue->setFontColor( VSTGUI::kRedCColor );
-         typeinLabel->setText( "UNSUPPORTED" );
+         typeinLabel->setText( "COMING SOON" );
       }
       inner->addView(typeinValue);
 
