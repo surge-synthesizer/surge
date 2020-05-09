@@ -4129,7 +4129,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                            scl_folder = "tuning-library/SCL";
                         #endif
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + scl_folder,
-                                                                      "Scala microtuning files (*.scl)",
+                                                                      #ifdef WINDOWS
+                                                                         "Scala microtuning files (*.scl)",
+                                                                      #else
+                                                                         ".scl",
+                                                                      #endif
                                                                       cb);
                     }
         );
@@ -4173,7 +4177,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                            kbm_folder = "tuning-library/KBM Concert Pitch";
                         #endif
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + kbm_folder,
-                                                                      "Scala keyboard mapping files (*.kbm)",
+                                                                      #ifdef WINDOWS
+                                                                         "Scala keyboard mapping files (*.kbm)",
+                                                                      #else
+                                                                         ".kbm",
+                                                                      #endif
                                                                       cb);
                     }
         );
