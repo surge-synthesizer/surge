@@ -730,8 +730,6 @@ void Parameter::bound_value(bool force_integer)
       val.f = a + b;
    }
 
-   printf("ctrltype: %d  > ", ctrltype);
-
    if (force_integer && (valtype == vt_float))
    {
       switch (ctrltype)
@@ -842,7 +840,6 @@ void Parameter::bound_value(bool force_integer)
          break;
       }
    }
-   printf("%.8f\n", val.f);
 
    if (ctrltype == ct_vocoder_bandcount)
    {
