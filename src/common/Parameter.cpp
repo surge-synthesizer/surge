@@ -791,7 +791,7 @@ void Parameter::bound_value(bool force_integer)
          break;
       case ct_chorusmodtime:
          val.f = limit_range(
-                    log2(round(powf(2.0f, val.f) * 100) / 100.f),
+                    (float) log2(round(powf(2.0f, val.f) * 100) / 100.f),
                             val_min.f, val_max.f);
          break;
       case ct_portatime:
@@ -811,7 +811,7 @@ void Parameter::bound_value(bool force_integer)
             val.f = floor(val.f + 0.5f);
          else if (val.f < 0)
             val.f = limit_range(
-                      log2((round(powf(2.0f, val.f) * 10) / 10.f)),
+                      (float) log2(round(powf(2.0f, val.f) * 10) / 10.f),
                                val_min.f, val_max.f);
          else
             val.f = log2(round(powf(2.0f, val.f)));
