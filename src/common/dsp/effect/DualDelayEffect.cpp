@@ -261,7 +261,7 @@ void DualDelayEffect::init_ctrltypes()
    fxdata->p[1].set_name("Right");
    fxdata->p[1].set_type(ct_envtime);
    fxdata->p[2].set_name("Feedback");
-   fxdata->p[2].set_type(ct_amplitude);
+   fxdata->p[2].set_type(ct_percent);
    fxdata->p[3].set_name("Crossfeed");
    fxdata->p[3].set_type(ct_amplitude);
    fxdata->p[4].set_name("Low Cut");

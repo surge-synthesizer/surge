@@ -407,6 +407,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_delaymodtime:
+   case ct_chorusmodtime:
       valtype = vt_float;
       val_min.f = -11;
       val_max.f = -3;
@@ -713,16 +714,13 @@ void Parameter::bound_value(bool force_integer)
       }
       b = powf(2.0f, b);
 
-      // b = min(floor(b*2.f) / 2.f,floor(b*3.f) / 3.f);
-
       if (b > 1.41f)
       {
-         b = log(1.5f) / log(2.f);
-          
+         b = log2(1.5f);
       }
       else if (b > 1.167f)
       {
-         b = log(1.3333333333f) / log(2.f);
+         b = log2(1.3333333333f);
       }
       else
       {
@@ -730,25 +728,120 @@ void Parameter::bound_value(bool force_integer)
       }
 
       val.f = a + b;
-      // val.f = floor(val.f * 4.f + 0.5f) / 4.f;
    }
 
    if (force_integer && (valtype == vt_float))
    {
-      val.f = floor(val.f + 0.5f);
+      switch (ctrltype)
+      {
+      case ct_percent:
+      case ct_percent_bidirectional:
+      case ct_osc_feedback:
+      case ct_detuning:
+         val.f = floor(val.f * 100) / 100.0;
+         break;
+      case ct_pitch:
+      case ct_pitch_semi7bp:
+      case ct_syncpitch: {
+         if (!extend_range)
+            val.f = floor(val.f + 0.5f);
+         break;
+      }
+      case ct_oscspread: {
+         if (absolute)
+            if (extend_range)
+               val.f = floor(val.f * 192) / 192.0;
+            else
+               val.f = floor(val.f * 16) / 16.0;
+         else if (extend_range)
+            val.f = floor(val.f * 120) / 120.0;
+         else
+            val.f = floor(val.f * 100) / 100.0;
+         break;
+      }
+      case ct_pitch_semi7bp_absolutable: {
+         if (absolute)
+            if (extend_range)
+               val.f = floor(val.f * 120) / 120.0;
+            else
+               val.f = floor(val.f * 12) / 12.0;
+         else
+            val.f = floor(val.f + 0.5f);
+         break;
+      }
+      case ct_amplitude:
+         if (val.f != 0)
+            val.f = db_to_amp(
+                round(amp_to_db(val.f))); // we use round instead of floor because with some params
+                                          // it wouldn't snap to max value (i.e. send levels)
+         else
+            val.f = -INFINITY; // this is so that the popup shows -inf proper instead of -192.0
+         break;
+      case ct_decibel:
+      case ct_decibel_narrow:
+      case ct_decibel_narrow_extendable:
+      case ct_decibel_extra_narrow:
+      case ct_decibel_attenuation:
+      case ct_decibel_attenuation_large:
+      case ct_decibel_fmdepth:
+      case ct_decibel_extendable:
+         val.f = floor(val.f);
+         break;
+      case ct_chorusmodtime:
+         val.f = limit_range(
+                    (float) log2(round(powf(2.0f, val.f) * 100) / 100.f),
+                            val_min.f, val_max.f);
+         break;
+      case ct_portatime:
+      case ct_envtime:
+      case ct_envtime_lfodecay:
+      case ct_reverbtime:
+      case ct_reverbpredelaytime:
+      case ct_delaymodtime:
+         if (temposync)
+             val.f = floor(val.f + 0.5f);
+         else
+             val.f = log2(round(powf(2.0f, val.f) * 10) / 10.f);
+         break;
+      case ct_lforate:
+      {
+         if (temposync)
+            val.f = floor(val.f + 0.5f);
+         else if (val.f < 0)
+            val.f = limit_range(
+                      (float) log2(round(powf(2.0f, val.f) * 10) / 10.f),
+                               val_min.f, val_max.f);
+         else
+            val.f = log2(round(powf(2.0f, val.f)));
+
+         break;
+      }
+      case ct_bandwidth:
+         val.f = floor(val.f * 10) / 10.0;
+         break;
+      case ct_freq_shift:
+         if (extend_range)
+            val.f = floor(val.f * 100) / 100.0;
+         else
+            val.f = floor(val.f + 0.5f);
+         break;
+      case ct_countedset_percent:
+      {
+         CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
+         auto count = cs->getCountedSetSize();
+         // OK so now val.f is between 0 and 1. So
+         auto fraccount = val.f * count;
+         auto intcount = (int)fraccount;
+         val.f = 1.0 * intcount / count;
+         break;
+      }
+      default:
+         val.f = floor(val.f + 0.5f);
+         break;
+      }
    }
 
-   if (snap && ctrltype == ct_countedset_percent && user_data)
-   {
-      CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
-      auto count = cs->getCountedSetSize();
-      // OK so now val.f is between 0 and 1. So
-      auto fraccount = val.f * count;
-      auto intcount = (int)fraccount;
-      val.f = 1.0 * intcount / count;
-   }
-
-   if( ctrltype == ct_vocoder_bandcount )
+   if (ctrltype == ct_vocoder_bandcount)
    {
        val.i = val.i - val.i % 4;
    }
@@ -1010,6 +1103,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_envtime_lfodecay:
       case ct_reverbtime:
       case ct_reverbpredelaytime:
+      case ct_chorusmodtime:
       case ct_delaymodtime:
          if ((ctrltype == ct_envtime_lfodecay) && (f == val_max.f))
          {
@@ -1020,7 +1114,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
             if (temposync)
             {
                std::string res = tempoSyncNotationValue(f);
-               sprintf( txt, "%s", res.c_str() );
+               sprintf(txt, "%s", res.c_str() );
             }
             else if (f == val_min.f)
             {
@@ -1063,25 +1157,35 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.2f octaves", f);
          break;
       case ct_freq_shift:
+      {
          sprintf(txt, "%.2f Hz", get_extended(f));
          break;
+      }
       case ct_percent:
       case ct_percent_bidirectional:
       case ct_countedset_percent:
+      {
          sprintf(txt, "%.1f %c", f * 100.f, '%');
          break;
+      }
       case ct_oscspread:
+      {
          if (absolute)
             sprintf(txt, "%.1f Hz", 16.f * get_extended( f ));
          else
             sprintf(txt, "%.1f cents", get_extended( f ) * 100.f);
          break;
+      }
       case ct_detuning:
+      {
          sprintf(txt, "%.1f cents", f * 100.f);
          break;
+      }
       case ct_stereowidth:
+      {
          sprintf(txt, "%.1fº", f);
          break;
+      }
       case ct_freq_hpf:
       case ct_freq_audible:
       case ct_freq_vocoder_low:
@@ -1090,24 +1194,36 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.3f Hz", 440.f * powf(2.0f, f / 12.f) );
          break;
       }
+      case ct_pitch:
+      case ct_syncpitch:
       case ct_freq_mod:
+      {
          sprintf(txt, "%.2f semitones", f);
          break;
+      }
       case ct_pitch_semi7bp:
-          sprintf(txt, "%.2f", get_extended(f));
+      {
+          sprintf(txt, "%.2f semitones", get_extended(f));
           break;
+      }
       case ct_pitch_semi7bp_absolutable:
+      {
          if(absolute)
-             sprintf(txt, "%.1f Hz", 10 * get_extended(f));
+             sprintf(txt, "%.1f Hz", 10.f * get_extended(f));
          else
-             sprintf(txt, "%.2f", get_extended(f));
+             sprintf(txt, "%.2f semitones", get_extended(f));
          break;
+      }
       case ct_flangerpitch:
+      {
          sprintf(txt, "%.2f", f);
          break;
+      }
       case ct_osc_feedback:
+      {
          sprintf(txt, "%.1f %c", get_extended(f) * 100.f, '%');
          break;
+      }
       default:
          sprintf(txt, "%.2f", f);
          break;

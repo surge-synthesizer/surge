@@ -242,7 +242,7 @@ void FreqshiftEffect::init_ctrltypes()
    fxdata->p[fsp_delay].set_name("Time");
    fxdata->p[fsp_delay].set_type(ct_envtime);
    fxdata->p[fsp_feedback].set_name("Feedback");
-   fxdata->p[fsp_feedback].set_type(ct_amplitude);
+   fxdata->p[fsp_feedback].set_type(ct_percent);
    fxdata->p[fsp_mix].set_name("Mix");
    fxdata->p[fsp_mix].set_type(ct_percent);
 
