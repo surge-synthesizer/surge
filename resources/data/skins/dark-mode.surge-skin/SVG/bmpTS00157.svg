@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="24px" height="28px" viewBox="0 0 24 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
     <title>bmpTS00157</title>
-    <desc>Created with Sketch.</desc>
     <defs>
-        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+        <linearGradient x1="50%" y1="50%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#000000" offset="0%"></stop>
+            <stop stop-color="#000000" stop-opacity="0.0876311189" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
             <stop stop-color="#FFBF00" offset="0%"></stop>
             <stop stop-color="#FF9000" offset="100%"></stop>
         </linearGradient>
     </defs>
     <g id="bmpTS00157" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <circle id="Oval" fill="url(#linearGradient-1)" cx="8.5" cy="11.5" r="5.5"></circle>
+        <ellipse id="Oval-Copy" fill="url(#linearGradient-1)" cx="8.5" cy="14" rx="5.5" ry="6"></ellipse>
+        <circle id="Oval" fill="url(#linearGradient-2)" cx="8.5" cy="11.5" r="5.5"></circle>
         <circle id="Oval" stroke="#0100DA" fill="#005CB6" cx="8.5" cy="11.5" r="3"></circle>
     </g>
 </svg>

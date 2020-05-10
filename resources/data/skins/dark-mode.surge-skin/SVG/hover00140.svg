@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="36px" viewBox="0 0 12 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>hover00140</title>
+    <g id="hover00140" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group" transform="translate(0.000000, 1.000000)" fill="#399DFF">
+            <rect id="Rectangle" x="0" y="0" width="10" height="13" rx="2"></rect>
+        </g>
+        <rect id="Rectangle" stroke="#FFFFFF" fill="#FF9000" x="0.5" y="19.5" width="9" height="12" rx="2"></rect>
+        <g id="Font-Layer-Copy" transform="translate(3.000000, 4.000000)" fill-rule="nonzero">
+            <polygon id="L" fill="#FFFFFF" points="3.479 6 3.479 5.223 1.4525 5.223 1.4525 0.939 0.511 0.939 0.511 6"></polygon>
+            <polygon id="L" fill="#000000" points="3.479 24 3.479 23.223 1.4525 23.223 1.4525 18.939 0.511 18.939 0.511 24"></polygon>
+        </g>
+    </g>
+</svg>

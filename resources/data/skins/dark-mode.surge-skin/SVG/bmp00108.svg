@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="129px" height="180px" viewBox="0 0 129 180" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
     <title>bmp00108</title>
-    <desc>Created with Sketch.</desc>
     <defs>
         <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
             <stop stop-color="#FFFFFF" offset="0%"></stop>
@@ -45,7 +43,7 @@
             </g>
         </g>
         <g id="Group-68" transform="translate(5.000000, 3.000000)">
-            <polygon id="Fill-3" fill="#00478D" points="0 5 9 5 9 4 0 4"></polygon>
+            <polygon id="Fill-3" fill="#000000" points="0 5 9 5 9 4 0 4"></polygon>
             <path d="M12.0012,4.5 L15.7154714,4.5 C15.7154714,4.5 18.5012,5.56432361 18.5012,9" id="Stroke-4" stroke="#E0E0E0" fill-rule="nonzero"></path>
             <path d="M24.0012,4.5 L27.7154714,4.5 C27.7154714,4.5 30.5012,5.56432361 30.5012,9" id="Stroke-5" stroke="#E0E0E0" fill-rule="nonzero"></path>
             <path d="M36.0012,4.5 L39.7154714,4.5 C39.7154714,4.5 42.5012,5.56432361 42.5012,9" id="Stroke-6" stroke="#E0E0E0" fill-rule="nonzero"></path>

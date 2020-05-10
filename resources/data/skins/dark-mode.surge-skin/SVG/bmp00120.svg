@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="28px" height="282px" viewBox="0 0 28 282" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background: #000000;">
-    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+<svg width="28px" height="282px" viewBox="0 0 28 282" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background: #151515;">
     <title>bmp00120</title>
-    <desc>Created with Sketch.</desc>
     <g id="bmp00120" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect fill="#000000" x="0" y="0" width="28" height="282"></rect>
+        <rect fill="#151515" x="0" y="0" width="28" height="282"></rect>
         <g id="Group-6" transform="translate(0.000000, 220.000000)">
             <rect id="Rectangle" fill="#FF9000" x="0" y="0" width="28" height="7" rx="1"></rect>
             <g id="Group-5" transform="translate(0.000000, 8.000000)"></g>
