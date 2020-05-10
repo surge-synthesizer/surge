@@ -559,11 +559,6 @@ void Parameter::set_type(int ctrltype)
       val_default.i = 0;
       break;
    case ct_osccount:
-      valtype = vt_int;
-      val_min.i = 1;
-      val_max.i = 16;
-      val_default.i = 1;
-      break;
    case ct_osccountWT:
       valtype = vt_int;
       val_min.i = 1;
@@ -1242,8 +1237,15 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_wt2window:
          sprintf(txt, "%s", window_abberations[limit_range(i, 0, 8)]);
          break;
+      case ct_osccount:
+      case ct_osccountWT:
+         sprintf(txt, "%d voice%s", i, (i > 1 ? "s" : ""));
+         break;
       case ct_fxtype:
          sprintf(txt, "%s", fxtype_abberations[limit_range(i, 0, (int)num_fxtypes - 1)]);
+         break;
+      case ct_reverbshape:
+         sprintf(txt, "Type %d", i + 1);
          break;
       case ct_fxbypass:
          sprintf(txt, "%s", fxbypass_abberations[limit_range(i, 0, (int)n_fx_bypass - 1)]);
