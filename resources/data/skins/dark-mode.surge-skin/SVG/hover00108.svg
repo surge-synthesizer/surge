@@ -1,40 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="129px" height="180px" viewBox="0 0 129 180" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <defs>
-        <linearGradient x1="50%" y1="2.35729769%" x2="50%" y2="100%" id="linearGradient-2">
-            <stop stop-color="#FFC74E" stop-opacity="0.4" offset="0%"></stop>
-            <stop stop-color="#FFE76E" stop-opacity="0.4" offset="16.3111173%"></stop>
-            <stop stop-color="#FFEA60" stop-opacity="0.4" offset="18.7978259%"></stop>
-            <stop stop-color="#FFAA10" stop-opacity="0.4" offset="100%"></stop>
-        </linearGradient>
-    </defs>
-    <g id="bmp00108" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="4" y="2" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="112" y="164" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="64" y="92" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="52" y="74" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="40" y="56" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="28" y="38" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="16" y="20" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="100" y="146" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="88" y="128" width="11" height="11"></rect>
-        <rect id="Rectangle" fill="url(#linearGradient-2)" x="76" y="110" width="11" height="11"></rect>
-        <polygon id="Fill-3" fill="#FFFFFF" points="5 8 14 8 14 7 5 7"></polygon>
-        <path d="M17.0012,25.5 L20.7154714,25.5 C20.7154714,25.5 23.5012,26.5643236 23.5012,30" id="Stroke-4" stroke="#FFFFFF" stroke-linejoin="round"></path>
-
-        <path d="M29.0012,43.5 L32.7154714,43.5 C32.7154714,43.5 35.5012,44.5643236 35.5012,48" id="Stroke-5" stroke="#FFFFFF" stroke-linejoin="round"></path>
-        <polygon id="Fill-21" fill="#FFFFFF" points="34.9803 39.019 36.0097 39.019 36.0097 41.005 36.9803 41.005 36.9803 40.019 38.0097 40.019 38.0097 43.02 36.9803 43.02 36.9803 42.034 34.9942 42.034 34.9942 42.02 34.9803 42.02"></polygon>
-        <path d="M41.0012,61.5 L44.7154714,61.5 C44.7154714,61.5 47.5012,62.5643236 47.5012,66" id="Stroke-6" stroke="#FFFFFF" stroke-linejoin="round"></path>
-        <polygon id="Fill-23" fill="#FFFFFF" points="46.9976 60.021 47.0013 60.021 47.0013 57 47.9915 57 47.9915 60.021 50.0005 60.021 50.0005 61.011 47.9915 61.011 47.9915 61.015 47.0013 61.015 47.0013 61.011 46.9976 61.011"></polygon>
-        <path d="M55.512207,79.5 L59.512207,79.5 C60.9220581,79.5 62,83.56073 62,84" id="Stroke-6" stroke="#FFFFFF" stroke-linejoin="round" transform="translate(58.756104, 81.750000) scale(-1, 1) translate(-58.756104, -81.750000) "></path>
-        <path d="M67.512207,97.5 L71.512207,97.5 C72.9220581,97.5 74,101.56073 74,102" id="Stroke-6" stroke="#FFFFFF" stroke-linejoin="round" transform="translate(70.756104, 99.750000) scale(-1, 1) translate(-70.756104, -99.750000) "></path>
-        <polygon id="Fill-22" fill="#FFFFFF" points="64.9803 93.019 66.0097 93.019 66.0097 95.005 66.9803 95.005 66.9803 94.019 68.0097 94.019 68.0097 97.02 66.9803 97.02 66.9803 96.034 64.9942 96.034 64.9942 96.02 64.9803 96.02"></polygon>
-        <path d="M77.5,119.992056 C77.5,116.562445 81.4517235,115.5 81.4517235,115.5 L81.4589726,115.5 C81.4589726,115.5 85.5,116.571381 85.5,120" id="Stroke-10" stroke="#FFFFFF" stroke-linejoin="round"></path>
-        <path d="M89,133.512793 C89,133.512793 93.5049032,133.029754 93.5049032,138 L93.5018012,138 C93.5018012,133.029754 98,133.512793 98,133.512793" id="Stroke-9" stroke="#FFFFFF" stroke-linejoin="round"></path>
-        <path d="M115.496906,165.550611 C115.496906,165.550611 113.345361,165.169259 113.346392,166.500175 C113.348453,167.558426 115.50206,167.631836 115.499999,168.425047 C115.496906,169.918037 113,169.420374 113,169.420374" id="Stroke-19" stroke="#FFFFFF" stroke-linejoin="round"></path>
-        <path d="M115.5,174 L119.5,165" id="Stroke-20" stroke="#FFFFFF" stroke-linejoin="round"></path>
-        <path d="M101.5,151 C101.5,151.581261 101.5,152.415104 101.5,153.501528 C101.508362,155.167176 101.841695,156 102.5,156 C104,156 103,151.5 104.5,151.5 C106,151.5 104.996551,156 106.5,156 C108.003449,156 107,151.5 108.5,151.5 C109.512797,151.5 109.512797,154 109.512797,156.5" id="Stroke-11" stroke="#FFFFFF"></path>
-
-        <polygon id="Path" fill="#FFFFFF" points="120 171 121 171 121 169 122 169 122 174 121 174 121 172 120 172 120 174 119 174 119 169 120 169"></polygon>
+    <title>hover00108</title>
+    <g id="hover00108" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Stacked-Group" transform="translate(3.000000, 1.000000)"></g>
+        <g id="Stacked-Group-2" transform="translate(4.000000, 2.000000)">
+            <g id="Group">
+                <rect id="Rectangle" stroke="#41A1FF" fill="#399DFF" x="0" y="0" width="11" height="11" rx="1"></rect>
+                <g id="Group-57" transform="translate(13.000000, 5.000000)"></g>
+            </g>
+            <g id="Group" transform="translate(108.000000, 162.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(60.000000, 90.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(48.000000, 72.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(36.000000, 54.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(24.000000, 36.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(12.000000, 18.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(96.000000, 144.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(84.000000, 126.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+            <g id="Group" transform="translate(72.000000, 108.000000)" fill="#399DFF" stroke="#41A1FF">
+                <rect id="Rectangle" x="0" y="0" width="11" height="11" rx="1"></rect>
+            </g>
+        </g>
+        <g id="Group-68" transform="translate(5.000000, 7.000000)">
+            <polygon id="Fill-3" fill="#FFFFFF" points="0 1 9 1 9 0 0 0"></polygon>
+            <g id="Group-2" transform="translate(96.000000, 144.000000)" stroke="#FFFFFF">
+                <path d="M0.5,0 C0.5,0.581261171 0.5,1.41510393 0.5,2.50152829 C0.508361583,4.1671761 0.841694917,5 1.5,5 C3,5 2,0.5 3.5,0.5 C5,0.5 3.996551,5 5.5,5 C7.003449,5 6,0.5 7.5,0.5 C8.51279659,0.5 8.51279659,3 8.51279659,5.5" id="Stroke-11"></path>
+            </g>
+        </g>
+        <g id="Group-68" transform="translate(17.000000, 25.000000)" stroke="#FFFFFF" stroke-linejoin="round">
+            <path d="M0.0012,0.5 L3.71547144,0.5 C3.71547144,0.5 6.5012,1.56432361 6.5012,5" id="Stroke-4"></path>
+        </g>
+        <g id="Group-68" transform="translate(29.000000, 39.000000)">
+            <path d="M0.0012,4.5 L3.71547144,4.5 C3.71547144,4.5 6.5012,5.56432361 6.5012,9" id="Stroke-5" stroke="#FFFFFF" stroke-linejoin="round"></path>
+            <polygon id="Fill-21" fill="#FFFFFF" points="5.9803 0.019 7.0097 0.019 7.0097 2.005 7.9803 2.005 7.9803 1.019 9.0097 1.019 9.0097 4.02 7.9803 4.02 7.9803 3.034 5.9942 3.034 5.9942 3.02 5.9803 3.02"></polygon>
+        </g>
+        <g id="Group-68" transform="translate(41.000000, 57.000000)">
+            <path d="M0.0012,4.5 L3.71547144,4.5 C3.71547144,4.5 6.5012,5.56432361 6.5012,9" id="Stroke-6" stroke="#FFFFFF" stroke-linejoin="round"></path>
+            <polygon id="Fill-23" fill="#FFFFFF" points="5.9976 3.021 6.0013 3.021 6.0013 0 6.9915 0 6.9915 3.021 9.0005 3.021 9.0005 4.011 6.9915 4.011 6.9915 4.015 6.0013 4.015 6.0013 4.011 5.9976 4.011"></polygon>
+        </g>
+        <g id="Group-68" transform="translate(55.000000, 79.000000)" stroke="#FFFFFF" stroke-linejoin="round">
+            <path d="M0.512207031,0.5 L4.51220703,0.5 C5.92205811,0.5 7,4.56072998 7,5" id="Stroke-6" transform="translate(3.756104, 2.750000) scale(-1, 1) translate(-3.756104, -2.750000) "></path>
+        </g>
+        <g id="Group-68" transform="translate(64.000000, 93.000000)">
+            <path d="M3.51220703,4.5 L7.51220703,4.5 C8.92205811,4.5 10,8.56072998 10,9" id="Stroke-6" stroke="#FFFFFF" stroke-linejoin="round" transform="translate(6.756104, 6.750000) scale(-1, 1) translate(-6.756104, -6.750000) "></path>
+            <polygon id="Fill-22" fill="#FFFFFF" points="0.9803 0.019 2.0097 0.019 2.0097 2.005 2.9803 2.005 2.9803 1.019 4.0097 1.019 4.0097 4.02 2.9803 4.02 2.9803 3.034 0.9942 3.034 0.9942 3.02 0.9803 3.02"></polygon>
+        </g>
+        <g id="Group-68" transform="translate(77.000000, 115.000000)" stroke="#FFFFFF" stroke-linejoin="round">
+            <path d="M0.5,4.99205649 C0.5,1.56244484 4.45172353,0.5 4.45172353,0.5 L4.45897255,0.5 C4.45897255,0.5 8.5,1.57138129 8.5,5" id="Stroke-10"></path>
+        </g>
+        <g id="Group-68" transform="translate(89.000000, 133.000000)" stroke="#FFFFFF" stroke-linejoin="round">
+            <path d="M0,0.51279299 C0,0.51279299 4.50490316,0.0297536859 4.50490316,5 L4.50180116,5 C4.50180116,0.0297536859 9,0.51279299 9,0.51279299" id="Stroke-9"></path>
+        </g>
+        <g id="Group-68" transform="translate(101.000000, 151.000000)">
+            <g id="Group-69" transform="translate(18.000000, 0.000000)"></g>
+        </g>
+        <g id="Group-68" transform="translate(101.000000, 165.000000)">
+            <path d="M14.5151,0.448 C14.5151,0.448 12.4281,0.048 12.4291,1.444 C12.4311,2.554 14.5201,2.631 14.5181014,3.463 C14.5151,5.029 12.0931,4.507 12.0931,4.507" id="Fill-18" fill-opacity="0" fill="#FF9D1F"></path>
+            <path d="M14.4969057,0.550610502 C14.4969057,0.550610502 12.3453606,0.169259103 12.3463915,1.50017549 C12.3484534,2.55842562 14.5020604,2.63183576 14.5,3.42504668 C14.4969057,4.9180374 12,4.42037383 12,4.42037383" id="Stroke-19" stroke="#FFFFFF" stroke-linejoin="round"></path>
+            <line x1="14.5" y1="9" x2="18.5" y2="-3.90312782e-18" id="Stroke-20" stroke="#FFFFFF" stroke-linejoin="round"></line>
+            <g id="Group-69" transform="translate(18.000000, 4.000000)" fill="#FFFFFF">
+                <path d="M3,5 L2,5 L2,3 L1,3 L1,5 L0,5 L0,0 L1,0 L1,2 L2,2 L2,0 L3,0 L3,5 Z" id="Combined-Shape"></path>
+            </g>
+        </g>
     </g>
 </svg>

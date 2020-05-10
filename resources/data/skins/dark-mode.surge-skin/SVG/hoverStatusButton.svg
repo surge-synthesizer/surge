@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="31px" height="22px" viewBox="0 0 31 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>hoverStatusButton</title>
+    <g id="hoverStatusButton" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="button/smallButton" transform="translate(1.000000, 1.000000)" fill="#399DFF">
+            <rect id="Rectangle" x="0" y="0" width="29" height="9" rx="2"></rect>
+        </g>
+        <rect id="Rectangle" stroke="#FFFFFF" fill="#FF9000" x="2.5" y="13.5" width="26" height="6" rx="1"></rect>
+    </g>
+</svg>
