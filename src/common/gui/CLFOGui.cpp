@@ -454,13 +454,13 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
    CColor cselected = skin->getColor( "lfo.type.selected.background", CColor( 0xfe, 0x98, 0x15, 0xff ) );
    // CColor blackColor (0, 0, 0, 0);
    dc->setFrameColor(cskugga);
-   dc->setFont(lfoTypeFont);
+   dc->setFont(lfoTypeFont, 8, 1);
 
    rect_shapes = leftpanel;
    for (int i = 0; i < n_lfoshapes; i++)
    {
       CRect tb(leftpanel);
-      tb.top = leftpanel.top + 10 * i;
+      tb.top = leftpanel.top + (10 * i);
       tb.bottom = tb.top + 10;
       //std::cout << std::hex << this << std::dec << " CHECK " << i << " " << lfodata->shape.val.i;
       if (i == lfodata->shape.val.i)
