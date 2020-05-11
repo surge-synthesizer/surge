@@ -337,6 +337,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    // memset(&WindowWT, 0, sizeof(WindowWT));
    if( loadWtAndPatch && ! load_wt_wt(datapath + "windows.wt", &WindowWT) )
    {
+      WindowWT.size = 0;
       std::ostringstream oss;
       oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for surge to operate "
           << "properly. This occurs when Surge is mis-installed and shared resources are not in the "

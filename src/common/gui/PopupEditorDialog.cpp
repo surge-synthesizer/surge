@@ -157,16 +157,20 @@ void spawn_miniedit_text(char* c, int maxchars)
    FILE *z = popen( cmd, "r" );
    if( ! z )
    {
+      // leave c unchanged - output == input
       return;
    }
    char buffer[ 1024 ];
    if (!fscanf(z, "%1024s", buffer))
    {
+      // leave c unchanged - output == input
       return;
    }
    pclose(z);
 
-   strncpy( c, buffer, maxchars);
+   // copy c and leave room for a terminator
+   strncpy( c, buffer, maxchars-1);
+   c[maxchars-1] = 0;
 
 }
 
