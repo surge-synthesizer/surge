@@ -2460,7 +2460,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    if (tag < start_paramtags)
       return 0;
-   if (!(button & (kControl | kRButton)))
+   if (!(button & (kDoubleClick | kRButton)))
       return 0;
 
    int ptag = tag - start_paramtags;
