@@ -18,7 +18,14 @@ spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata*
    case ot_wavetable:
       return new WavetableOscillator(storage, oscdata, localcopy);
    case ot_WT2:
+   {
+      // In the event we are misconfigured, window will segv. If you still play
+      // after clicking through 100 warnings, lets jsut give youa sin
+      if( storage && storage->WindowWT.size == 0 )
+         return new osc_sine( storage, oscdata, localcopy );
+ 
       return new WindowOscillator(storage, oscdata, localcopy);
+   }
    case ot_shnoise:
       return new SampleAndHoldOscillator(storage, oscdata, localcopy);
    case ot_audioinput:
