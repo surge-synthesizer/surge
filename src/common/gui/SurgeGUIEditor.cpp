@@ -408,6 +408,16 @@ void SurgeGUIEditor::idle()
             oscdisplay->invalid();
          }
       }
+
+      if( typeinResetCounter > 0 )
+      {
+         typeinResetCounter--;
+         if( typeinResetCounter <= 0 && typeinDialog )
+         {
+            typeinLabel->setText( typeinResetLabel.c_str() );
+            typeinLabel->invalid();
+         }
+      }
       
 #if OSC_MOD_ANIMATION
       if (mod_editor && oscdisplay)
@@ -747,6 +757,8 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
             typeinDialog->setVisible(false);
             frame->removeView(typeinDialog);
             typeinDialog = nullptr;
+            typeinResetCounter = -1;
+
             return 1;
          }
          break;
@@ -3122,12 +3134,23 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          std::string t = typeinValue->getText().getString();
 
          if( typeinEditTarget->set_value_from_string( t ) )
+         {
             synth->refresh_editor = true;
-         
-         typeinDialog->setVisible(false);
-         frame->removeView(typeinDialog);
-         typeinDialog = nullptr;
-         typeinEditTarget = nullptr;
+            
+            typeinDialog->setVisible(false);
+            frame->removeView(typeinDialog);
+            typeinDialog = nullptr;
+            typeinResetCounter = -1;
+            typeinEditTarget = nullptr;
+         }
+         else
+         {
+            typeinDialog->setVisible(true);
+            typeinResetCounter = 20;
+            typeinResetLabel = typeinLabel->getText().getString();
+            typeinLabel->setText( "Invalid Entry" );
+         }
+              
       }
    }
    break;
@@ -4804,6 +4827,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
       typeinDialog->setVisible(false);
       frame->removeView( typeinDialog );
       typeinDialog = nullptr;
+      typeinResetCounter = -1;
    }
    if( dynamic_cast<CSurgeSlider*>(c) &&
        p->valtype == vt_float
@@ -4813,6 +4837,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
       auto cp = s->getViewSize();
       CRect typeinSize( cp.left, cp.top - 44, cp.left + 120, cp.top - 44 + 44  );
 
+      typeinResetCounter = -1;
       typeinDialog = new CViewContainer(typeinSize);
       typeinDialog->setBackgroundColor(currentSkin->getColor( "savedialog.border", VSTGUI::kBlackCColor) );
       typeinDialog->setVisible(false);
