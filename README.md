@@ -81,6 +81,14 @@ compile from the command line with
 msbuild buildtask.xml /p:Platform=x64
 ```
 
+If you want to build 32 bit, build a separate solution file with
+
+```
+cmake . -Bbuild32 -A Win32
+```
+
+and the `build32` directory will contain your x86 solution. 
+
 If you want to build the installer, open the file `installer_win/surge.iss` by using `Inno Setup`. 
 `Inno Setup` will bake an installer and place it in `installer_win/Output/`
 
