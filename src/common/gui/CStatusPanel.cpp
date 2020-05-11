@@ -19,7 +19,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
     
    std::string labs[numDisplayFeatures];
    labs[mpeMode] = "MPE";
-   labs[tuningMode] = "Scala";
+   labs[tuningMode] = "Tuning";
    int y0 = 11;
    int boxSize = 13;
    for( int i=0; i<numDisplayFeatures; ++i )
