@@ -18,14 +18,14 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
     dc->drawString("Status", CPoint( size.left + size.getWidth()/2 - sw/2, size.top + 8 ), true );
     
    std::string labs[numDisplayFeatures];
-   labs[mpeMode] = "mpe";
-   labs[tuningMode] = "tun";
-   int y0 = 13;
+   labs[mpeMode] = "MPE";
+   labs[tuningMode] = "Tuning";
+   int y0 = 11;
    int boxSize = 13;
    for( int i=0; i<numDisplayFeatures; ++i )
    {
        int xp = size.left + 2;
-       int yp = size.top + y0 + i * boxSize;
+       int yp = size.top + y0 + i * boxSize + (3 * i);
        int w = size.getWidth() - 4;;
        int h = boxSize - 2;
        if( i == mpeMode )
@@ -79,7 +79,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
           dc->setFontColor(ufg);
        }
           
-       dc->setFont(displayFont);
+       dc->setFont(displayFont, 8, 2);
        auto sw = dc->getStringWidth(labs[i].c_str());
        dc->drawString(labs[i].c_str(), CPoint( xp + w/2 - sw/2, yp + h - 3 ), true );
    }
