@@ -243,6 +243,9 @@ private:
    VSTGUI::CViewContainer* typeinDialog = nullptr;
    VSTGUI::CTextEdit* typeinValue = nullptr;
    VSTGUI::CTextLabel* typeinLabel = nullptr;
+   int typeinResetCounter = -1;
+   std::string typeinResetLabel = "";
+   
    Parameter *typeinEditTarget = nullptr;
    
    VSTGUI::CControl* polydisp = nullptr;
