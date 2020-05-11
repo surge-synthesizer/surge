@@ -70,6 +70,7 @@ void showHTML( const std::string &html)
 
 void promptFileOpenDialog(const std::string& initialDirectory,
                           const std::string& filterSuffix,
+                          const std::string& filterDescription,
                           std::function<void(std::string)> callbackOnOpen,
 			  bool od, bool cd,
                           SurgeGUIEditor* guiEditor)

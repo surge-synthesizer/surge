@@ -57,6 +57,7 @@ void openFolderInFileBrowser(const std::string& folder);
 // Prompt for a file to open; call the callback if you pick one
 void promptFileOpenDialog(const std::string& initialDirectory,
                           const std::string& filterSuffix,
+                          const std::string& filterDescription,
                           std::function<void(std::string)> callbackOnOpen,
                           bool canSelectDirectories = false,
                           bool canCreateDirectories = false,
