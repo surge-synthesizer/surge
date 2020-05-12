@@ -2248,6 +2248,36 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          {
             bool first_destination = true;
             int n_md = 0;
+
+            std::cout << "Extra Loop" << std::endl;
+            for (int md = 0; md < n_total_md; md++)
+            {
+               auto activeScene = synth->storage.getPatch().scene_active.val.i;
+               Parameter* parameter = synth->storage.getPatch().param_ptr[md];
+               
+               if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
+                   synth->isActiveModulation(md, thisms))
+               {
+                  char tmptxt[256];
+                  sprintf(tmptxt, "Edit %s -> %s [%.2f]", (char*)modsource_abberations[thisms],
+                          synth->storage.getPatch().param_ptr[md]->get_full_name(),
+                          synth->getModDepth(md, thisms));
+                  std::cout << tmptxt << std::endl;
+                  auto clearOp = [this, first_destination, md, n_total_md, thisms, control]() {
+                                 };
+                  
+                  if (first_destination)
+                  {
+                     contextMenu->addEntry("-", eid++);
+                     first_destination = false;
+                  }
+                  
+                  addCallbackMenu(contextMenu, tmptxt, clearOp);
+                  eid++;
+               }
+            }
+
+            first_destination = true;
             for (int md = 0; md < n_total_md; md++)
             {
                auto activeScene = synth->storage.getPatch().scene_active.val.i;
@@ -2760,8 +2790,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char tmptxt[256];
-                     sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[ms],
+                     sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modsource_abberations[ms],
                              p->get_name(), synth->getModDepth(ptag, (modsources)ms));
+                     addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms ]() {
+                                                             this->promptForUserValueEntry( p, control, ms );
+                                                          });
+                     eid++;
+                  }
+               }
+               contextMenu->addEntry("-", eid++);
+               for (int k = 1; k < n_modsources; k++)
+               {
+                  modsources ms = (modsources)k;
+                  if (synth->isActiveModulation(ptag, ms))
+                  {
+                     char tmptxt[256];
+                     sprintf(tmptxt, "Clear %s -> %s", (char*)modsource_abberations[ms],
+                             p->get_name() );
                      // clear_ms[ms] = eid;
                      // contextMenu->addEntry(tmptxt, eid++);
                      addCallbackMenu(contextMenu, tmptxt, [this, ms, ptag]() {
@@ -3201,7 +3246,19 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       {
          std::string t = typeinValue->getText().getString();
 
-         if( typeinEditTarget->set_value_from_string( t ) )
+         if( typeinModSource > 0 )
+         {
+            auto mv = std::atof( t.c_str() );
+            synth->setModulation(typeinEditTarget->id, (modsources)typeinModSource, mv );
+            synth->refresh_editor = true;
+            
+            typeinDialog->setVisible(false);
+            frame->removeView(typeinDialog);
+            typeinDialog = nullptr;
+            typeinResetCounter = -1;
+            typeinEditTarget = nullptr;
+         }
+         else if( typeinEditTarget->set_value_from_string( t ) )
          {
             synth->refresh_editor = true;
             
@@ -4890,7 +4947,7 @@ R"HTML(
   return htmls.str();
 }
 
-void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
+void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms )
 {
    if( typeinDialog )
    {
@@ -4900,14 +4957,20 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
       typeinResetCounter = -1;
    }
 
+   bool ismod = ms > 0;
+   int boxht = 44;
    auto cp = c->getViewSize();
-   CRect typeinSize( cp.left, cp.top - 44, cp.left + 120, cp.top - 44 + 44  );
-   if( cp.top - 44 < 0 )
+   if( ismod )
+      boxht += 10;
+   CRect typeinSize( cp.left, cp.top - boxht, cp.left + 120, cp.top - boxht + boxht  );
+   if( cp.top - boxht < 0 )
    {
       typeinSize = CRect( cp.left, cp.top + c->getHeight(),
-                          cp.left + 120, cp.top + c->getHeight() + 44 );
+                          cp.left + 120, cp.top + c->getHeight() + boxht );
    }
                           
+
+   typeinModSource = ms;
    
    typeinResetCounter = -1;
    typeinDialog = new CViewContainer(typeinSize);
@@ -4921,17 +4984,35 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
    CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
    inner->setBackgroundColor( bggr );
    typeinDialog->addView(inner);
-   
-   typeinLabel = new CTextLabel( CRect( 2, 2, 118-4, 14 ), p->get_full_name() );
+
+   std::string lab = p->get_full_name();
+   typeinLabel = new CTextLabel( CRect( 2, 2, 118-4, 14 ), lab.c_str() );
    typeinLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
    typeinLabel->setTransparency(true);
    typeinLabel->setFont( displayFont );
    inner->addView(typeinLabel);
+
+   if( ismod )
+   {
+      std::string mls = std::string( "by " ) + (char*)modsource_abberations[ms];
+      auto ml = new CTextLabel( CRect( 2, 2 + 10, 118-4, 25 ), mls.c_str() );
+      ml->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+      ml->setTransparency(true);
+      ml->setFont( displayFont );
+      inner->addView(ml);
+   }
    
    char txt[256];
-   p->get_display(txt);
+   if( ismod )
+   {
+      sprintf( txt, "%.4f", synth->getModDepth( p->id, (modsources)ms ) );
+   }
+   else
+   {
+      p->get_display(txt);
+   }
    
-   typeinValue = new CTextEdit( CRect( 2, 18, 118-4, 42-2 ), this, tag_value_typein, txt );
+   typeinValue = new CTextEdit( CRect( 2, 18 + ( ismod ? 10 : 0 ), 118-4, 42-2 + ( ismod ? 10 : 0 ) ), this, tag_value_typein, txt );
    typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
    typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
    
