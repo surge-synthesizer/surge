@@ -734,45 +734,70 @@ void Parameter::bound_value(bool force_integer)
       case ct_percent_bidirectional:
       case ct_osc_feedback:
       case ct_detuning:
+      {
          val.f = floor(val.f * 100) / 100.0;
          break;
+      }
       case ct_pitch:
       case ct_pitch_semi7bp:
-      case ct_syncpitch: {
-         if (!extend_range)
-            val.f = floor(val.f + 0.5f);
+      case ct_syncpitch:
+      {
+         if (!extend_range) {
+            val.f = floor(val.f + 0.5f); }
+
          break;
       }
-      case ct_oscspread: {
+      case ct_oscspread:
+      {
          if (absolute)
-            if (extend_range)
-               val.f = floor(val.f * 192) / 192.0;
-            else
-               val.f = floor(val.f * 16) / 16.0;
+         {
+            if (extend_range) {
+               val.f = floor(val.f * 192) / 192.0; }
+            else {
+               val.f = floor(val.f * 16) / 16.0; }
+         }
          else if (extend_range)
+         {
             val.f = floor(val.f * 120) / 120.0;
+         }
          else
+         {
             val.f = floor(val.f * 100) / 100.0;
+         }
+
          break;
       }
-      case ct_pitch_semi7bp_absolutable: {
+      case ct_pitch_semi7bp_absolutable:
+      {
          if (absolute)
             if (extend_range)
+            {
                val.f = floor(val.f * 120) / 120.0;
+            }
             else
+            {
                val.f = floor(val.f * 12) / 12.0;
+            }
          else
+         {
             val.f = floor(val.f + 0.5f);
+         }
          break;
       }
       case ct_amplitude:
+      {
          if (val.f != 0)
+         {
             val.f = db_to_amp(
                 round(amp_to_db(val.f))); // we use round instead of floor because with some params
                                           // it wouldn't snap to max value (i.e. send levels)
+         }
          else
+         {
             val.f = -INFINITY; // this is so that the popup shows -inf proper instead of -192.0
+         }
          break;
+      }
       case ct_decibel:
       case ct_decibel_narrow:
       case ct_decibel_narrow_extendable:
@@ -781,13 +806,17 @@ void Parameter::bound_value(bool force_integer)
       case ct_decibel_attenuation_large:
       case ct_decibel_fmdepth:
       case ct_decibel_extendable:
+      {
          val.f = floor(val.f);
          break;
+      }
       case ct_chorusmodtime:
+      {
          val.f = limit_range(
                     (float) log2(round(powf(2.0f, val.f) * 100) / 100.f),
                             val_min.f, val_max.f);
          break;
+      }
       case ct_portatime:
       case ct_envtime:
       case ct_envtime_lfodecay:
@@ -795,32 +824,46 @@ void Parameter::bound_value(bool force_integer)
       case ct_reverbpredelaytime:
       case ct_delaymodtime:
          if (temposync)
+         {
              val.f = floor(val.f + 0.5f);
+         }
          else
-             val.f = log2(round(powf(2.0f, val.f) * 10) / 10.f);
+         {
+            val.f = log2(round(powf(2.0f, val.f) * 10) / 10.f);
+         }
          break;
       case ct_lforate:
       {
          if (temposync)
+         {
             val.f = floor(val.f + 0.5f);
+         }
          else if (val.f < 0)
+         {
             val.f = limit_range(
                       (float) log2(round(powf(2.0f, val.f) * 10) / 10.f),
                                val_min.f, val_max.f);
+         }
          else
+         {
             val.f = log2(round(powf(2.0f, val.f)));
+         }
 
          break;
       }
       case ct_bandwidth:
+      {
          val.f = floor(val.f * 10) / 10.0;
          break;
+      }
       case ct_freq_shift:
-         if (extend_range)
-            val.f = floor(val.f * 100) / 100.0;
-         else
-            val.f = floor(val.f + 0.5f);
+      {
+         if (extend_range) {
+            val.f = floor(val.f * 100) / 100.0; }
+         else {
+            val.f = floor(val.f + 0.5f); }
          break;
+      }
       case ct_countedset_percent:
       {
          CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
@@ -831,25 +874,23 @@ void Parameter::bound_value(bool force_integer)
          val.f = 1.0 * intcount / count;
          break;
       }
-      default:
+      default: {
          val.f = floor(val.f + 0.5f);
-         break;
+         break; }
       }
    }
 
-   if (ctrltype == ct_vocoder_bandcount)
-   {
-       val.i = val.i - val.i % 4;
-   }
+   if (ctrltype == ct_vocoder_bandcount) {
+       val.i = val.i - val.i % 4; }
    
    switch (valtype)
    {
-   case vt_float:
+   case vt_float: {
       val.f = limit_range(val.f, val_min.f, val_max.f);
-      break;
-   case vt_int:
+      break; }
+   case vt_int: {
       val.i = limit_range(val.i, val_min.i, val_max.i);
-      break;
+      break; }
    };
 }
 
@@ -901,9 +942,9 @@ void Parameter::set_storage_value(int i)
 {
    switch (ctrltype)
    {
-   default:
+   default: {
       val.i = i;
-      break;
+      break; }
    }
 }
 void Parameter::set_storage_value(float f)
@@ -913,9 +954,9 @@ void Parameter::set_storage_value(float f)
    /*case ct_amplitude:
            val.f = db_to_amp(f);
            break;*/
-   default:
+   default: {
       val.f = f;
-      break;
+      break; }
    }
 }
 
@@ -962,23 +1003,23 @@ std::string Parameter::tempoSyncNotationValue(float f)
     {
         q = pow(2.0, f - 1);
         nn = "whole";
-        if(q >= 3)
+        if (q >= 3)
         {
             snprintf(tmp, 1024, "%.2f whole notes", q);
             std::string res = tmp;
             return res;
         }
-        else if(q >= 2)
+        else if (q >= 2)
         {
             nn = "double whole";
             q /= 2;
         }
 
-        if(q < 1.3)
+        if (q < 1.3)
         {
             t = "note";
         }
-        else if(q < 1.4)
+        else if (q < 1.4)
         {
             t = "triplet";
             if (nn == "whole")
@@ -999,11 +1040,12 @@ std::string Parameter::tempoSyncNotationValue(float f)
     {
         d = pow(2.0, -(a - 2));
         q = pow(2.0, (b+1));
+
         if (q < 1.3)
         {
             t = "note";
         }
-        else if(q < 1.4)
+        else if (q < 1.4)
         {
             t = "triplet";
             d = d / 2;
@@ -1012,7 +1054,7 @@ std::string Parameter::tempoSyncNotationValue(float f)
         {
             t = "dotted";
         }
-        if ( d == 1 )
+        if (d == 1)
         {
             nn = "whole";
         }
@@ -1660,8 +1702,9 @@ bool Parameter::can_setvalue_from_string()
    case ct_flangervoices:
    case ct_osc_feedback:
    case ct_chorusmodtime:
+     {
       return true;
-      break;
+      break; }
    }
    return false;
 }
@@ -1679,8 +1722,8 @@ bool Parameter::set_value_from_string( std::string s )
    case ct_countedset_percent:
    case ct_detuning:
    {
-      if (nv < val_min.f * 100 || nv > val_max.f * 100)
-         return false;
+      if (nv < val_min.f * 100 || nv > val_max.f * 100) {
+         return false; }
 
       val.f = nv / 100.0;
 
@@ -1697,8 +1740,8 @@ bool Parameter::set_value_from_string( std::string s )
       int factor = ext_mul * abs_mul;
       int limit = val_max.f * factor;
 
-      if (nv < -limit || nv > limit)
-         return false;
+      if (nv < -limit || nv > limit) {
+         return false; }
 
       val.f = nv / factor;
 
@@ -1710,13 +1753,13 @@ bool Parameter::set_value_from_string( std::string s )
       // probably because of float precision (or lack thereof)
       // so special case them here
       // better solution welcome!
-      if (nv == 12)
-         nv = limit_range((float)db_to_amp(nv), val_min.f, val_max.f);
-      else
-         nv = db_to_amp(nv);
+      if (nv == 12) {
+         nv = limit_range((float)db_to_amp(nv), val_min.f, val_max.f); }
+      else {
+         nv = db_to_amp(nv); }
       
-      if (nv < val_min.f || nv > val_max.f)
-         return false;
+      if (nv < val_min.f || nv > val_max.f) {
+         return false; }
 
       val.f = nv;
 
@@ -1734,8 +1777,8 @@ bool Parameter::set_value_from_string( std::string s )
    case ct_flangerpitch:
    case ct_flangervoices:
    {
-      if (nv < val_min.f || nv > val_max.f)
-         return false;
+      if (nv < val_min.f || nv > val_max.f) {
+         return false; }
 
       val.f = nv;
 
@@ -1748,8 +1791,8 @@ bool Parameter::set_value_from_string( std::string s )
 
       int limit = val_max.f * factor;
 
-      if (nv < -limit || nv > limit)
-         return false;
+      if (nv < -limit || nv > limit) {
+         return false; }
 
       val.f = nv / factor;
 
@@ -1767,8 +1810,10 @@ bool Parameter::set_value_from_string( std::string s )
       val.f = log2f(nv / 440.0) * 12.0f;
 
       if (val.f < val_min.f || val.f > val_max.f)
+      {
          val.f = oldval;
          return false;
+      }
 
       break;
    }
@@ -1777,10 +1822,10 @@ bool Parameter::set_value_from_string( std::string s )
       int factor = 1 + ((int)extend_range * 99);
       int limit = 10 + (990 * (int)extend_range); // x10 when normal, x1000 when extended
       
-      if (nv < -limit || nv > limit)
-         return false;
-      else
-         val.f = nv / factor;
+      if (nv < -limit || nv > limit) {
+          return false; }
+      else {
+         val.f = nv / factor; }
 
       break;
    }
@@ -1798,38 +1843,39 @@ bool Parameter::set_value_from_string( std::string s )
       val.f = log2f(nv);
 
       if (val.f < val_min.f || val.f > val_max.f)
+      {
          val.f = oldval;
          return false;
-      
+      }
+
       break;
    }
-   case ct_oscspread:
-   {   
+   case ct_oscspread: {
       int ext_mul = 1 + (11 * (int)extend_range); // x12 when extended
-      int abs_mul = 100 - (84 * (int)absolute); // x100 for cents, x16 for Hz (absolute)
+      int abs_mul = 100 - (84 * (int)absolute);   // x100 for cents, x16 for Hz (absolute)
 
       int range = val_max.f * abs_mul * ext_mul;
 
-      if (nv < 0 || nv > range)
-         return false;
+      if (nv < 0 || nv > range) {
+         return false; }
 
       val.f = nv / range;
 
-       break;
+      break;
    }
    case ct_osc_feedback:
    {
       if (extend_range)
       {
-         if (nv < -400 || nv > 400)
-            return false;
+         if (nv < -400 || nv > 400) {
+            return false; }
 
          val.f = (nv * 0.00125) + 0.5f;
       }
       else
       {
-         if (nv < 0 || nv > 100)
-            return false;
+         if (nv < 0 || nv > 100) {
+            return false; }
 
          val.f = nv / 100.f;
       }
