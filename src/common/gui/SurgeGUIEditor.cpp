@@ -2512,9 +2512,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                for( int i=p->val_min.f; i <= p->val_max.f; ++i )
                {
                   float mul = 1.0;
+                  float triplaboff = log2(1.33333333);
+                  float tripoff = triplaboff;
+                  float dotlaboff = log2(1.5);
+                  float dotoff = dotlaboff;
                   if( p->ctrltype == ct_lforate )
                   {
                      mul = -1.0;
+                     triplaboff = log2(1.5);
+                     tripoff = triplaboff;
+                     dotlaboff = log2(1.3333333333);
+                     dotoff = dotlaboff;
                   }
                   addCallbackMenu( tsMenuR, p->tempoSyncNotationValue( mul * (  (float) i  ) ),
                                    [p, i, this]() {
@@ -2522,26 +2530,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                       p->bound_value();
                                       this->synth->refresh_editor = true;
                                    } );
-                  addCallbackMenu( tsMenuD, p->tempoSyncNotationValue( mul * (  (float) i  + log2( 1.333333333 ) ) ),
-                                   [p, i, this]() {
-                                      p->val.f = (float)i + log2( 1.33333333333 ) ;
+                  addCallbackMenu( tsMenuD, p->tempoSyncNotationValue( mul * (  (float) i  + dotlaboff ) ),
+                                   [p, i, dotoff, this]() {
+                                      p->val.f = (float)i + dotoff;
                                       p->bound_value();
                                       this->synth->refresh_editor = true;
                                    } );
-                  addCallbackMenu( tsMenuT, p->tempoSyncNotationValue( mul * (  (float) i  + log2( 1.5 ) ) ),
-                                   [p, i, this]() {
-                                      p->val.f = (float)i + log2( 1.5 );
+                  addCallbackMenu( tsMenuT, p->tempoSyncNotationValue( mul * (  (float) i  + triplaboff ) ),
+                                   [p, i, tripoff, this]() {
+                                      p->val.f = (float)i + tripoff;
                                       p->bound_value();
                                       this->synth->refresh_editor = true;
                                    } );
-                  p->tempoSyncNotationValue( mul * ( (float) i  + log2f( 1.3333333 ) ) );
-                  p->tempoSyncNotationValue( mul * ( (float) i  + log2f( 1.5 ) ) );
                }
                contextMenu->addEntry( txt2 ); eid++;
                contextMenu->addSeparator(); eid++;
-               contextMenu->addEntry( tsMenuR, "Notes" ); tsMenuR->forget(); eid++;
-               contextMenu->addEntry( tsMenuD, "Dotted Notes" ); tsMenuD->forget(); eid++;
-               contextMenu->addEntry( tsMenuT, "Triplets" ); tsMenuT->forget(); eid++;
+               contextMenu->addEntry( tsMenuR, "Straight" ); tsMenuR->forget(); eid++;
+               contextMenu->addEntry( tsMenuD, "Dotted" ); tsMenuD->forget(); eid++;
+               contextMenu->addEntry( tsMenuT, "Triplet" ); tsMenuT->forget(); eid++;
                contextMenu->addSeparator(); eid++;
             }
             else
