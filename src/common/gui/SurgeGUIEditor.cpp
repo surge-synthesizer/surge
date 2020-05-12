@@ -415,6 +415,7 @@ void SurgeGUIEditor::idle()
          if( typeinResetCounter <= 0 && typeinDialog )
          {
             typeinLabel->setText( typeinResetLabel.c_str() );
+            typeinLabel->setFontColor( currentSkin->getColor( "savedialog.textlabel", kBlackCColor ) );
             typeinLabel->invalid();
          }
       }
@@ -2501,12 +2502,57 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          sprintf(txt2, "Value: %s", txt);
          if( p->valtype == vt_float )
          {
-            addCallbackMenu(contextMenu, txt2,
-                            [this,p,control]() {
-                               this->promptForUserValueEntry( p, control );
-                            }
-               );
-            eid++;
+            if( p->can_temposync() && p->temposync )
+            {
+               COptionMenu *tsMenuR = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+               COptionMenu *tsMenuD = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+               COptionMenu *tsMenuT = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+               // have 0 1 2 then 0 + log2 1.5 1 + log2 1.5 then 0 + log2 1.33 and so on
+               for( int i=p->val_min.f; i <= p->val_max.f; ++i )
+               {
+                  float mul = 1.0;
+                  if( p->ctrltype == ct_lforate )
+                  {
+                     mul = -1.0;
+                  }
+                  addCallbackMenu( tsMenuR, p->tempoSyncNotationValue( mul * (  (float) i  ) ),
+                                   [p, i, this]() {
+                                      p->val.f = (float)i;
+                                      p->bound_value();
+                                      this->synth->refresh_editor = true;
+                                   } );
+                  addCallbackMenu( tsMenuD, p->tempoSyncNotationValue( mul * (  (float) i  + log2( 1.333333333 ) ) ),
+                                   [p, i, this]() {
+                                      p->val.f = (float)i + log2( 1.33333333333 ) ;
+                                      p->bound_value();
+                                      this->synth->refresh_editor = true;
+                                   } );
+                  addCallbackMenu( tsMenuT, p->tempoSyncNotationValue( mul * (  (float) i  + log2( 1.5 ) ) ),
+                                   [p, i, this]() {
+                                      p->val.f = (float)i + log2( 1.5 );
+                                      p->bound_value();
+                                      this->synth->refresh_editor = true;
+                                   } );
+                  p->tempoSyncNotationValue( mul * ( (float) i  + log2f( 1.3333333 ) ) );
+                  p->tempoSyncNotationValue( mul * ( (float) i  + log2f( 1.5 ) ) );
+               }
+               contextMenu->addEntry( txt2 ); eid++;
+               contextMenu->addSeparator(); eid++;
+               contextMenu->addEntry( tsMenuR, "Notes" ); tsMenuR->forget(); eid++;
+               contextMenu->addEntry( tsMenuD, "Dotted Notes" ); tsMenuD->forget(); eid++;
+               contextMenu->addEntry( tsMenuT, "Triplets" ); tsMenuT->forget(); eid++;
+               contextMenu->addSeparator(); eid++;
+            }
+            else
+            {
+               addCallbackMenu(contextMenu, txt2,
+                               [this,p,control]() {
+                                  this->promptForUserValueEntry( p, control );
+                               }
+                  );
+               eid++;
+            }
          }
          else if( p->valtype == vt_bool )
          {
@@ -2524,20 +2570,35 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
          else if( p->valtype == vt_int )
          {
-            for( int i=p->val_min.i; i<= p->val_max.i; ++i )
+            if( p->can_setvalue_from_string() )
             {
-               char txt[256];
-               float ef = ( 1.0f * i - p->val_min.i) / ( p->val_max.i - p->val_min.i);
-               p->get_display(txt, true, ef );
-               auto b =addCallbackMenu(contextMenu, txt,
-                                       [this,ef,p,i]() {
-                                          synth->setParameter01( p->id, ef, false, false );
-                                          synth->refresh_editor=true;
-                                       }
+               addCallbackMenu(contextMenu, txt2,
+                               [this,p,control]() {
+                                  this->promptForUserValueEntry( p, control );
+                               }
                   );
                eid++;
-               if( i == p->val.i )
-                  b->setChecked(true);
+            }
+            else
+            {
+               int incr = 1;
+               if( p->ctrltype == ct_vocoder_bandcount )
+                  incr = 4;
+               for( int i=p->val_min.i; i<= p->val_max.i; i += incr )
+               {
+                  char txt[256];
+                  float ef = ( 1.0f * i - p->val_min.i) / ( p->val_max.i - p->val_min.i);
+                  p->get_display(txt, true, ef );
+                  auto b =addCallbackMenu(contextMenu, txt,
+                                          [this,ef,p,i]() {
+                                             synth->setParameter01( p->id, ef, false, false );
+                                             synth->refresh_editor=true;
+                                          }
+                     );
+                  eid++;
+                  if( i == p->val.i )
+                     b->setChecked(true);
+               }
             }
          }
          bool cancellearn = false;
@@ -2548,7 +2609,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             // if(p->can_temposync() || p->can_extend_range())	contextMenu->addEntry("-",eid++);
             if (p->can_temposync())
             {
-               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Tempo Sync"),
+               auto r = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Tempo Sync"),
                                [this, p, control]() {
                                   p->temposync = !p->temposync;
                                   if( p->temposync )
@@ -2565,7 +2626,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                      css->invalid();
                                   }
                                });
-               contextMenu->checkEntry(eid, p->temposync);
+               if( p->temposync )
+                  r->setChecked( true );
                eid++;
 
                if( p->ctrlgroup == cg_LFO )
@@ -2776,7 +2838,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                */
                if( item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator )
                {
-                  menuStack.top()->addSeparator(eid++);
+                  menuStack.top()->addSeparator(eidStack.top()++);
                }
                else if( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart ) == Steinberg::Vst::IContextMenuItem::kIsGroupStart )
                {
@@ -3149,6 +3211,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             typeinResetCounter = 20;
             typeinResetLabel = typeinLabel->getText().getString();
             typeinLabel->setText( "Invalid Entry" );
+            typeinLabel->setFontColor( currentSkin->getColor( "savedialog.textlabel.error", kRedCColor ) );
+            typeinValue->takeFocus();
          }
               
       }
@@ -4829,52 +4893,50 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c )
       typeinDialog = nullptr;
       typeinResetCounter = -1;
    }
-   if( dynamic_cast<CSurgeSlider*>(c) &&
-       p->valtype == vt_float
-      )
+
+   auto cp = c->getViewSize();
+   CRect typeinSize( cp.left, cp.top - 44, cp.left + 120, cp.top - 44 + 44  );
+   if( cp.top - 44 < 0 )
    {
-      auto s = dynamic_cast<CSurgeSlider*>(c);
-      auto cp = s->getViewSize();
-      CRect typeinSize( cp.left, cp.top - 44, cp.left + 120, cp.top - 44 + 44  );
-
-      typeinResetCounter = -1;
-      typeinDialog = new CViewContainer(typeinSize);
-      typeinDialog->setBackgroundColor(currentSkin->getColor( "savedialog.border", VSTGUI::kBlackCColor) );
-      typeinDialog->setVisible(false);
-      frame->addView(typeinDialog);
-
-      CRect innerSize( 0, 0, typeinSize.getWidth(), typeinSize.getHeight() );
-      innerSize.inset( 1, 1 );
-      auto inner = new CViewContainer(innerSize);
-      CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
-      inner->setBackgroundColor( bggr );
-      typeinDialog->addView(inner);
-      
-      typeinLabel = new CTextLabel( CRect( 2, 2, 118-4, 14 ), p->get_full_name() );
-      typeinLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
-      typeinLabel->setTransparency(true);
-      typeinLabel->setFont( displayFont );
-      inner->addView(typeinLabel);
-
-      char txt[256];
-      p->get_display(txt);
-
-      typeinValue = new CTextEdit( CRect( 2, 18, 118-4, 42-2 ), this, tag_value_typein, txt );
-      typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-      typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-
-      if( ! p->can_setvalue_from_string() )
-      {
-         typeinValue->setFontColor( VSTGUI::kRedCColor );
-         typeinValue->setText( "edit coming soon" );
-      }
-      inner->addView(typeinValue);
-
-      typeinEditTarget = p;
-      typeinDialog->setVisible(true);
-      typeinValue->takeFocus();
-      
-      //typeinDialog->takeFocus();
-      //frame->changeViewZOrder( typeinDialog, frame->getNbViews()-1 );
+      typeinSize = CRect( cp.left, cp.top + c->getHeight(),
+                          cp.left + 120, cp.top + c->getHeight() + 44 );
    }
+                          
+   
+   typeinResetCounter = -1;
+   typeinDialog = new CViewContainer(typeinSize);
+   typeinDialog->setBackgroundColor(currentSkin->getColor( "savedialog.border", VSTGUI::kBlackCColor) );
+   typeinDialog->setVisible(false);
+   frame->addView(typeinDialog);
+   
+   CRect innerSize( 0, 0, typeinSize.getWidth(), typeinSize.getHeight() );
+   innerSize.inset( 1, 1 );
+   auto inner = new CViewContainer(innerSize);
+   CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
+   inner->setBackgroundColor( bggr );
+   typeinDialog->addView(inner);
+   
+   typeinLabel = new CTextLabel( CRect( 2, 2, 118-4, 14 ), p->get_full_name() );
+   typeinLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+   typeinLabel->setTransparency(true);
+   typeinLabel->setFont( displayFont );
+   inner->addView(typeinLabel);
+   
+   char txt[256];
+   p->get_display(txt);
+   
+   typeinValue = new CTextEdit( CRect( 2, 18, 118-4, 42-2 ), this, tag_value_typein, txt );
+   typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
+   typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+   
+   if( ! p->can_setvalue_from_string() )
+   {
+      typeinValue->setFontColor( VSTGUI::kRedCColor );
+      typeinValue->setText( "edit coming soon" );
+   }
+   inner->addView(typeinValue);
+   
+   typeinEditTarget = p;
+   typeinDialog->setVisible(true);
+   typeinValue->takeFocus();
 }
