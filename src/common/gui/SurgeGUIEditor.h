@@ -247,6 +247,7 @@ private:
    std::string typeinResetLabel = "";
    
    Parameter *typeinEditTarget = nullptr;
+   int typeinModSource = -1;
    
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;
@@ -281,7 +282,7 @@ private:
    VSTGUI::COptionMenu* makeSkinMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
 
-   void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c);
+   void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c, int modulationSource = -1);
    
    /*
    ** Skin support
