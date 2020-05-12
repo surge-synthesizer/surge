@@ -1702,6 +1702,10 @@ bool Parameter::can_setvalue_from_string()
    case ct_flangervoices:
    case ct_osc_feedback:
    case ct_chorusmodtime:
+   case ct_pbdepth:
+   case ct_polylimit:
+   case ct_midikey:
+   case ct_midikey_or_channel:
      {
       return true;
       break; }
@@ -1712,6 +1716,17 @@ bool Parameter::can_setvalue_from_string()
 bool Parameter::set_value_from_string( std::string s )
 {
    const char* c = s.c_str();
+
+   if( valtype == vt_int )
+   {
+      auto ni = std::atoi( c );
+      if( ni >= val_min.i && ni <= val_max.i )
+      {
+         val.i = ni;
+         return true;
+      }
+      return false;
+   }
 
    auto nv = std::atof(c);
 
