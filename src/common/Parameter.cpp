@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 #include <cstdlib>
+#include <algorithm>
 
 Parameter::Parameter() : posx( PositionHolder::Axis::X ),
                          posy( PositionHolder::Axis::Y ),
@@ -1091,6 +1092,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          f = ef * (val_max.f - val_min.f) + val_min.f;
       else
          f = val.f;
+
       switch (ctrltype)
       {
       case ct_portatime:
@@ -1152,73 +1154,54 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.2f octaves", f);
          break;
       case ct_freq_shift:
-      {
          sprintf(txt, "%.2f Hz", get_extended(f));
          break;
-      }
       case ct_percent:
       case ct_percent_bidirectional:
       case ct_countedset_percent:
-      {
          sprintf(txt, "%.1f %c", f * 100.f, '%');
          break;
-      }
       case ct_oscspread:
-      {
          if (absolute)
-            sprintf(txt, "%.1f Hz", 16.f * get_extended( f ));
+            sprintf(txt, "%.1f Hz", 16.f * get_extended(f));
          else
-            sprintf(txt, "%.1f cents", get_extended( f ) * 100.f);
+            sprintf(txt, "%.1f cents", get_extended(f) * 100.f);
          break;
-      }
       case ct_detuning:
-      {
          sprintf(txt, "%.1f cents", f * 100.f);
          break;
-      }
       case ct_stereowidth:
-      {
          sprintf(txt, "%.1fº", f);
          break;
-      }
       case ct_freq_hpf:
       case ct_freq_audible:
       case ct_freq_vocoder_low:
       case ct_freq_vocoder_high:
-      {
          sprintf(txt, "%.3f Hz", 440.f * powf(2.0f, f / 12.f) );
          break;
-      }
       case ct_pitch:
       case ct_syncpitch:
       case ct_freq_mod:
-      {
          sprintf(txt, "%.2f semitones", f);
          break;
-      }
       case ct_pitch_semi7bp:
-      {
           sprintf(txt, "%.2f semitones", get_extended(f));
           break;
-      }
       case ct_pitch_semi7bp_absolutable:
-      {
          if(absolute)
              sprintf(txt, "%.1f Hz", 10.f * get_extended(f));
          else
              sprintf(txt, "%.2f semitones", get_extended(f));
          break;
-      }
+      case ct_fmratio:
+         sprintf(txt, "C : %.2f", f);
+         break;
       case ct_flangerpitch:
-      {
          sprintf(txt, "%.2f", f);
          break;
-      }
       case ct_osc_feedback:
-      {
          sprintf(txt, "%.1f %c", get_extended(f) * 100.f, '%');
          break;
-      }
       default:
          sprintf(txt, "%.2f", f);
          break;
@@ -1280,6 +1263,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_character:
          sprintf(txt, "%s", character_abberations[limit_range(i, 0, (int)n_charactermodes - 1)]);
          break;
+      case ct_fmratio_int:
+         sprintf(txt, "C : %d", i);
+         break;
       case ct_sineoscmode:
          switch (i)
          {
@@ -1312,7 +1298,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          }
          break;
       case ct_sinefmlegacy:
-         if( i == 0 )
+         if (i == 0)
              sprintf( txt, "Legacy (before v1.6.2)");
          else
              sprintf( txt, "Consistent with FM2/3" );
@@ -1640,10 +1626,40 @@ bool Parameter::can_setvalue_from_string()
    {
    case ct_percent:
    case ct_percent_bidirectional:
-   case ct_freq_hpf:
+   case ct_pitch_semi7bp:
+   case ct_pitch_semi7bp_absolutable:
+   case ct_pitch:
+   case ct_fmratio:
+   case ct_syncpitch:
+   case ct_amplitude:
+   case ct_decibel:
+   case ct_decibel_narrow:
+   case ct_decibel_narrow_extendable:
+   case ct_decibel_extra_narrow:
+   case ct_decibel_attenuation:
+   case ct_decibel_attenuation_large:
+   case ct_decibel_fmdepth:
+   case ct_decibel_extendable:
    case ct_freq_audible:
+   case ct_freq_shift:
+   case ct_freq_hpf:
    case ct_freq_vocoder_low:
    case ct_freq_vocoder_high:
+   case ct_bandwidth:
+   case ct_envtime:
+   case ct_envtime_lfodecay:
+   case ct_delaymodtime:
+   case ct_reverbtime:
+   case ct_reverbpredelaytime:
+   case ct_portatime:
+   case ct_lforate:
+   case ct_detuning:
+   case ct_oscspread:
+   case ct_countedset_percent:
+   case ct_flangerpitch:
+   case ct_flangervoices:
+   case ct_osc_feedback:
+   case ct_chorusmodtime:
       return true;
       break;
    }
@@ -1653,34 +1669,172 @@ bool Parameter::can_setvalue_from_string()
 bool Parameter::set_value_from_string( std::string s )
 {
    const char* c = s.c_str();
-   switch( ctrltype )
+
+   auto nv = std::atof(c);
+
+   switch (ctrltype)
    {
    case ct_percent:
-   {
-      auto nv = std::atof(c);
-      if( nv < 0 || nv > 100 )
-         return false;
-      val.f = nv / 100.0;
-   }
-   break;
    case ct_percent_bidirectional:
+   case ct_countedset_percent:
+   case ct_detuning:
    {
-      auto nv = std::atof(c);
-      if( nv < -100 || nv > 100 )
+      if (nv < val_min.f * 100 || nv > val_max.f * 100)
          return false;
+
       val.f = nv / 100.0;
+
+      break;
    }
-   break;
+   case ct_pitch_semi7bp:
+   case ct_pitch_semi7bp_absolutable:
+   case ct_pitch: {
+      // factors 12 and 10 need to be consistent with get_extended and get_absolute returns for these ctypes
+      // if those returns are changed at some point, the factors also need to be changed here
+      int ext_mul = 1 + (11 * (int)extend_range);
+      int abs_mul = 1 + (9 * (int)absolute);
+
+      int factor = ext_mul * abs_mul;
+      int limit = val_max.f * factor;
+
+      if (nv < -limit || nv > limit)
+         return false;
+
+      val.f = nv / factor;
+
+      break;
+   }
+   case ct_amplitude:
+   {
+      // typing in the maximum value for send levels (12 dB) didn't work
+      // probably because of float precision (or lack thereof)
+      // so special case them here
+      // better solution welcome!
+      if (nv == 12)
+         nv = limit_range((float)db_to_amp(nv), val_min.f, val_max.f);
+      else
+         nv = db_to_amp(nv);
+      
+      if (nv < val_min.f || nv > val_max.f)
+         return false;
+
+      val.f = nv;
+
+      break;
+   }
+   case ct_decibel:
+   case ct_decibel_narrow:
+   case ct_decibel_extra_narrow:
+   case ct_decibel_attenuation:
+   case ct_decibel_attenuation_large:
+   case ct_decibel_fmdepth:
+   case ct_syncpitch:
+   case ct_fmratio:
+   case ct_bandwidth:
+   case ct_flangerpitch:
+   case ct_flangervoices:
+   {
+      if (nv < val_min.f || nv > val_max.f)
+         return false;
+
+      val.f = nv;
+
+      break;
+   }
+   case ct_decibel_narrow_extendable:
+   case ct_decibel_extendable:
+   {
+      int factor = 1 + ((ctrltype == ct_decibel_narrow_extendable ? 4 : 2) * (int)extend_range); // 5 for dB narrow extendable, 3 for dB extendable
+
+      int limit = val_max.f * factor;
+
+      if (nv < -limit || nv > limit)
+         return false;
+
+      val.f = nv / factor;
+
+      break;
+   }
    case ct_freq_hpf:
    case ct_freq_audible:
    case ct_freq_vocoder_low:
    case ct_freq_vocoder_high:
-   {
+   {  
+      float oldval = val.f;
+
       // these are 440 * 2 ^ ( f / 12 ) = c
       // so log2( c / 440 ) * 12 = f;
-      auto nv = std::atof(c);
-      val.f = limit_range( log2f( nv / 440.0 ) * 12.0f, val_min.f, val_max.f );
-      return true;
+      val.f = log2f(nv / 440.0) * 12.0f;
+
+      if (val.f < val_min.f || val.f > val_max.f)
+         val.f = oldval;
+         return false;
+
+      break;
+   }
+   case ct_freq_shift:
+   {
+      int factor = 1 + ((int)extend_range * 99);
+      int limit = 10 + (990 * (int)extend_range); // x10 when normal, x1000 when extended
+      
+      if (nv < -limit || nv > limit)
+         return false;
+      else
+         val.f = nv / factor;
+
+      break;
+   }
+   case ct_envtime:
+   case ct_envtime_lfodecay:
+   case ct_delaymodtime:
+   case ct_reverbtime:
+   case ct_reverbpredelaytime:
+   case ct_portatime:
+   case ct_lforate:
+   case ct_chorusmodtime:
+   {
+      float oldval = val.f;
+      
+      val.f = log2f(nv);
+
+      if (val.f < val_min.f || val.f > val_max.f)
+         val.f = oldval;
+         return false;
+      
+      break;
+   }
+   case ct_oscspread:
+   {   
+      int ext_mul = 1 + (11 * (int)extend_range); // x12 when extended
+      int abs_mul = 100 - (84 * (int)absolute); // x100 for cents, x16 for Hz (absolute)
+
+      int range = val_max.f * abs_mul * ext_mul;
+
+      if (nv < 0 || nv > range)
+         return false;
+
+      val.f = nv / range;
+
+       break;
+   }
+   case ct_osc_feedback:
+   {
+      if (extend_range)
+      {
+         if (nv < -400 || nv > 400)
+            return false;
+
+         val.f = (nv * 0.00125) + 0.5f;
+      }
+      else
+      {
+         if (nv < 0 || nv > 100)
+            return false;
+
+         val.f = nv / 100.f;
+      }
+
+      break;
    }
 
    default:
