@@ -1005,9 +1005,17 @@ std::string Parameter::tempoSyncNotationValue(float f)
         nn = "whole";
         if (q >= 3)
         {
-            snprintf(tmp, 1024, "%.2f whole notes", q);
-            std::string res = tmp;
-            return res;
+           if( abs( q - floor(q + 0.01 ) ) < 0.01 )
+           {
+              snprintf(tmp, 1024, "%d whole notes", (int)floor(q + 0.01));
+           }
+           else
+           {
+              // this is the triplet case
+              snprintf(tmp, 1024, "%d whole triplets", (int)floor(q * 3.0 / 2.0 + 0.02 ));
+           }
+           std::string res = tmp;
+           return res;
         }
         else if (q >= 2)
         {
@@ -1024,11 +1032,14 @@ std::string Parameter::tempoSyncNotationValue(float f)
             t = "triplet";
             if (nn == "whole")
             {
-                nn = "1/2";
+               nn = "double whole";
             }
             else
             {
-                nn = "whole";
+               q = pow(2.0, f - 1);
+               snprintf(tmp, 1024, "%d whole triplets", (int)floor(q * 3.0 / 2.0 + 0.02 ));
+               std::string res = tmp;
+               return res;
             }
         }
         else
