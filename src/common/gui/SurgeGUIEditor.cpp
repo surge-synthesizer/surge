@@ -732,6 +732,9 @@ void SurgeGUIEditor::refresh_mod()
          // this could change if I cleared the last one
          ((CModulationSourceButton*)gui_modsrc[i])->used = synth->isModsourceUsed( (modsources)i );
          ((CModulationSourceButton*)gui_modsrc[i])->state = state;
+
+         auto mn = modulatorName(i, true);
+         ((CModulationSourceButton*)gui_modsrc[i])->setlabel(mn.c_str() );
          ((CModulationSourceButton*)gui_modsrc[i])->invalid();
       }
    }
@@ -904,7 +907,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
       else
       {
-         ((CModulationSourceButton*)gui_modsrc[ms])->setlabel(modsource_abberations_button[ms]);
+         ((CModulationSourceButton*)gui_modsrc[ms])->setlabel(modulatorName(ms, true).c_str() );
          /*
          ** Velocity special case for 1.6.* vintage
          */
@@ -2235,7 +2238,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
          else
          {
-            contextMenu->addEntry((char*)modsource_abberations[modsource], eid++);
+            contextMenu->addEntry((char*)modulatorName( modsource, false ).c_str(), eid++);
          }
          
          int n_total_md = synth->storage.getPatch().param_ptr.size();
@@ -2268,11 +2271,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char tmptxt[256];
-                  sprintf(tmptxt, "Edit %s -> %s [%.2f]", (char*)modsource_abberations[thisms],
+                  sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modsource_abberations[thisms],
                           synth->storage.getPatch().param_ptr[md]->get_full_name(),
                           synth->getModDepth(md, thisms));
-                  std::cout << tmptxt << std::endl;
-                  auto clearOp = [this, first_destination, md, n_total_md, thisms, control]() {
+
+                  auto clearOp = [this, parameter, control, thisms]() {
+                                    this->promptForUserValueEntry( parameter, control, thisms );
                                  };
                   
                   if (first_destination)
@@ -2296,9 +2300,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char tmptxt[256];
-                  sprintf(tmptxt, "Clear %s -> %s [%.2f]", (char*)modsource_abberations[thisms],
-                          synth->storage.getPatch().param_ptr[md]->get_full_name(),
-                          synth->getModDepth(md, thisms));
+                  sprintf(tmptxt, "Clear %s -> %s", (char*)modsource_abberations[thisms],
+                          synth->storage.getPatch().param_ptr[md]->get_full_name() );
                   
                   auto clearOp = [this, first_destination, md, n_total_md, thisms, control]() {
                                     bool resetName = false;   // Should I reset the name?
@@ -2799,7 +2802,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char tmptxt[256];
-                     sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modsource_abberations[ms],
+                     sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modulatorName(ms, true).c_str(),
                              p->get_name(), synth->getModDepth(ptag, (modsources)ms));
                      addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms ]() {
                                                              this->promptForUserValueEntry( p, control, ms );
@@ -2814,7 +2817,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char tmptxt[256];
-                     sprintf(tmptxt, "Clear %s -> %s", (char*)modsource_abberations[ms],
+                     sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName(ms, true).c_str(),
                              p->get_name() );
                      // clear_ms[ms] = eid;
                      // contextMenu->addEntry(tmptxt, eid++);
@@ -5004,7 +5007,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
    if( ismod )
    {
-      std::string mls = std::string( "by " ) + (char*)modsource_abberations[ms];
+      std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
       auto ml = new CTextLabel( CRect( 2, 2 + 10, 118-4, 25 ), mls.c_str() );
       ml->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
       ml->setTransparency(true);
@@ -5036,4 +5039,41 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinEditTarget = p;
    typeinDialog->setVisible(true);
    typeinValue->takeFocus();
+}
+
+std::string SurgeGUIEditor::modulatorName( int i, bool button )
+{
+   if( ( i >= ms_lfo1 && i <= ms_slfo6 ) )
+   {
+      int idx = i-ms_lfo1;
+      bool isS = idx >= 6;
+      bool fnum = idx % 6;
+      auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ i - ms_lfo1 ] );
+      
+      if( lfodata->shape.val.i == ls_constant1 )
+      {
+         char txt[64];
+         if( button )
+            sprintf( txt, "%sENV %d", (isS ? "S-" : "" ), fnum + 1 );
+         else
+            sprintf( txt, "%s ENV %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+         ((CModulationSourceButton*)gui_modsrc[i])->setlabel(txt);
+         return std::string( txt );
+      }
+      else if( lfodata->shape.val.i == ls_stepseq )
+      {
+         char txt[64];
+         if( button )
+            sprintf( txt, "%sSEQ %d", (isS ? "S-" : "" ), fnum + 1 );
+         else
+            sprintf( txt, "%s SEQ2. %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+         ((CModulationSourceButton*)gui_modsrc[i])->setlabel(txt);
+         return std::string( txt );
+      }
+   }
+   if( button )
+      return std::string( modsource_abberations_button[i] );
+   else
+      return std::string( modsource_abberations[i] );
+
 }
