@@ -3249,7 +3249,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
          if( typeinModSource > 0 )
          {
-            auto mv = std::atof( t.c_str() );
+            auto mv = limit_range( (float)std::atof( t.c_str() ) / ( typeinEditTarget->val_max.f - typeinEditTarget->val_min.f ), -1.f, 1.f );
             synth->setModulation(typeinEditTarget->id, (modsources)typeinModSource, mv );
             synth->refresh_editor = true;
             
@@ -4988,7 +4988,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
    std::string lab = p->get_full_name();
    typeinLabel = new CTextLabel( CRect( 2, 2, 118-4, 14 ), lab.c_str() );
-   typeinLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+   typeinLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
    typeinLabel->setTransparency(true);
    typeinLabel->setFont( displayFont );
    inner->addView(typeinLabel);
@@ -4997,7 +4997,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       std::string mls = std::string( "by " ) + (char*)modsource_abberations[ms];
       auto ml = new CTextLabel( CRect( 2, 2 + 10, 118-4, 25 ), mls.c_str() );
-      ml->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+      ml->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
       ml->setTransparency(true);
       ml->setFont( displayFont );
       inner->addView(ml);
