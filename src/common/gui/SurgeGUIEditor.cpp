@@ -333,6 +333,10 @@ void SurgeGUIEditor::idle()
       return;
    if (editor_open && frame && !synth->halt_engine)
    {
+      for( auto c : removeFromFrame )
+         frame->removeView(c);
+      removeFromFrame.clear();
+      
       if(zoomInvalid)
       {
          setZoomFactor(getZoomFactor());
@@ -756,7 +760,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
             typeinEditTarget = nullptr;
 
             typeinDialog->setVisible(false);
-            frame->removeView(typeinDialog);
+            removeFromFrame.push_back( typeinDialog );
             typeinDialog = nullptr;
             typeinResetCounter = -1;
 
@@ -835,6 +839,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    lfodisplay = 0;
    fxmenu = 0;
    typeinDialog = nullptr;
+   removeFromFrame.clear();
    for( int i=0; i<16; ++i ) vu[i] = 0;
    
    current_scene = synth->storage.getPatch().scene_active.val.i;
@@ -3246,7 +3251,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if( typeinDialog && typeinEditTarget )
       {
          std::string t = typeinValue->getText().getString();
-
          if( typeinModSource > 0 )
          {
             auto mv = limit_range( (float)std::atof( t.c_str() ) / ( typeinEditTarget->val_max.f - typeinEditTarget->val_min.f ), -1.f, 1.f );
@@ -3254,7 +3258,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             synth->refresh_editor = true;
             
             typeinDialog->setVisible(false);
-            frame->removeView(typeinDialog);
+            removeFromFrame.push_back(typeinDialog);
             typeinDialog = nullptr;
             typeinResetCounter = -1;
             typeinEditTarget = nullptr;
@@ -3262,9 +3266,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          else if( typeinEditTarget->set_value_from_string( t ) )
          {
             synth->refresh_editor = true;
-            
             typeinDialog->setVisible(false);
-            frame->removeView(typeinDialog);
+            removeFromFrame.push_back(typeinDialog);
             typeinDialog = nullptr;
             typeinResetCounter = -1;
             typeinEditTarget = nullptr;
@@ -4953,7 +4956,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    if( typeinDialog )
    {
       typeinDialog->setVisible(false);
-      frame->removeView( typeinDialog );
+      removeFromFrame.push_back(typeinDialog);
       typeinDialog = nullptr;
       typeinResetCounter = -1;
    }
