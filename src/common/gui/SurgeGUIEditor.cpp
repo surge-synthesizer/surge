@@ -834,6 +834,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    polydisp = 0;
    lfodisplay = 0;
    fxmenu = 0;
+   typeinDialog = nullptr;
    for( int i=0; i<16; ++i ) vu[i] = 0;
    
    current_scene = synth->storage.getPatch().scene_active.val.i;
