@@ -247,6 +247,8 @@ private:
    std::vector<VSTGUI::CViewContainer*> removeFromFrame;
    int typeinResetCounter = -1;
    std::string typeinResetLabel = "";
+
+   std::string modulatorName(int ms, bool forButton);
    
    Parameter *typeinEditTarget = nullptr;
    int typeinModSource = -1;
