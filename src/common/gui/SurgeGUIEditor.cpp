@@ -2271,7 +2271,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char tmptxt[256];
-                  sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modsource_abberations[thisms],
+                  sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modulatorName(thisms, true).c_str(),
                           synth->storage.getPatch().param_ptr[md]->get_full_name(),
                           synth->getModDepth(md, thisms));
 
@@ -2300,7 +2300,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char tmptxt[256];
-                  sprintf(tmptxt, "Clear %s -> %s", (char*)modsource_abberations[thisms],
+                  sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName( thisms, true ).c_str(),
                           synth->storage.getPatch().param_ptr[md]->get_full_name() );
                   
                   auto clearOp = [this, first_destination, md, n_total_md, thisms, control]() {
@@ -2365,7 +2365,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                std::string modName;
 
                // hacky, but works - we want to retain the capitalization for modulator names regardless of OS!
-               modName = modsource_abberations[thisms];
+               modName = modulatorName( thisms, false );
                clearLab = Surge::UI::toOSCaseForMenu("Clear All ") + modName +
                        Surge::UI::toOSCaseForMenu(" Routings");
                
@@ -3372,7 +3372,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms), synth->isBipolarModulation(thisms));
 
             synth->getParameterName(ptag, txt);
-            sprintf(pname, "%s -> %s", modsource_abberations_short[thisms], txt);
+            sprintf(pname, "%s -> %s", modulatorName(thisms,true).c_str(), txt);
             sprintf(pdisp, "%.3f", synth->getModDepth(ptag, thisms));
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
@@ -5047,7 +5047,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
    {
       int idx = i-ms_lfo1;
       bool isS = idx >= 6;
-      bool fnum = idx % 6;
+      int fnum = idx % 6;
       auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ i - ms_lfo1 ] );
       
       if( lfodata->shape.val.i == ls_constant1 )
@@ -5057,7 +5057,6 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
             sprintf( txt, "%sENV %d", (isS ? "S-" : "" ), fnum + 1 );
          else
             sprintf( txt, "%s ENV %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
-         ((CModulationSourceButton*)gui_modsrc[i])->setlabel(txt);
          return std::string( txt );
       }
       else if( lfodata->shape.val.i == ls_stepseq )
@@ -5066,8 +5065,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
          if( button )
             sprintf( txt, "%sSEQ %d", (isS ? "S-" : "" ), fnum + 1 );
          else
-            sprintf( txt, "%s SEQ2. %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
-         ((CModulationSourceButton*)gui_modsrc[i])->setlabel(txt);
+            sprintf( txt, "%s SEQ %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
    }
