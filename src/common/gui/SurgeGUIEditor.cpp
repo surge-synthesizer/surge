@@ -732,6 +732,29 @@ void SurgeGUIEditor::refresh_mod()
          // this could change if I cleared the last one
          ((CModulationSourceButton*)gui_modsrc[i])->used = synth->isModsourceUsed( (modsources)i );
          ((CModulationSourceButton*)gui_modsrc[i])->state = state;
+
+         ((CModulationSourceButton*)gui_modsrc[i])->setlabel(modsource_abberations_button[i]);
+         if( ( i >= ms_lfo1 && i <= ms_slfo6 ) )
+         {
+            int idx = i-ms_lfo1;
+            bool isS = idx >= 6;
+            bool fnum = idx % 6;
+            auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ i - ms_lfo1 ] );
+            
+            if( lfodata->shape.val.i == ls_constant1 )
+            {
+               char txt[64];
+               sprintf( txt, "%sENV %d", (isS ? "S-" : "" ), fnum + 1 );
+               ((CModulationSourceButton*)gui_modsrc[i])->setlabel(txt);
+            }
+            else if( lfodata->shape.val.i == ls_stepseq )
+            {
+               char txt[64];
+               sprintf( txt, "%sSEQ %d", (isS ? "S-" : "" ), fnum + 1 );
+               ((CModulationSourceButton*)gui_modsrc[i])->setlabel(txt);
+            }
+         }
+                  
          ((CModulationSourceButton*)gui_modsrc[i])->invalid();
       }
    }
