@@ -334,7 +334,10 @@ void SurgeGUIEditor::idle()
    if (editor_open && frame && !synth->halt_engine)
    {
       for( auto c : removeFromFrame )
+      {
          frame->removeView(c);
+      }
+
       removeFromFrame.clear();
       
       if(zoomInvalid)
@@ -419,7 +422,7 @@ void SurgeGUIEditor::idle()
          if( typeinResetCounter <= 0 && typeinDialog )
          {
             typeinLabel->setText( typeinResetLabel.c_str() );
-            typeinLabel->setFontColor( currentSkin->getColor( "savedialog.textlabel", kBlackCColor ) );
+            typeinLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
             typeinLabel->invalid();
          }
       }
@@ -764,6 +767,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
             typeinDialog = nullptr;
             typeinResetCounter = -1;
 
+                        
             return 1;
          }
          break;
@@ -2255,7 +2259,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             bool first_destination = true;
             int n_md = 0;
 
-            std::cout << "Extra Loop" << std::endl;
             for (int md = 0; md < n_total_md; md++)
             {
                auto activeScene = synth->storage.getPatch().scene_active.val.i;
@@ -3274,12 +3277,14 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          }
          else
          {
-            typeinDialog->setVisible(true);
+            std::cout << "Invalid Entry" << std::endl;
+            auto l = typeinLabel->getText().getString();
+            promptForUserValueEntry( typeinEditTarget, typeinEditControl, typeinModSource );
             typeinResetCounter = 20;
-            typeinResetLabel = typeinLabel->getText().getString();
+            typeinResetLabel = l;
             typeinLabel->setText( "Invalid Entry" );
+            typeinValue->setText(t.c_str());
             typeinLabel->setFontColor( currentSkin->getColor( "savedialog.textlabel.error", kRedCColor ) );
-            typeinValue->takeFocus();
          }
               
       }
@@ -4975,6 +4980,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
                           
 
    typeinModSource = ms;
+   typeinEditControl = c;
    
    typeinResetCounter = -1;
    typeinDialog = new CViewContainer(typeinSize);

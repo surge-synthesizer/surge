@@ -243,6 +243,7 @@ private:
    VSTGUI::CViewContainer* typeinDialog = nullptr;
    VSTGUI::CTextEdit* typeinValue = nullptr;
    VSTGUI::CTextLabel* typeinLabel = nullptr;
+   VSTGUI::CControl* typeinEditControl = nullptr;
    std::vector<VSTGUI::CViewContainer*> removeFromFrame;
    int typeinResetCounter = -1;
    std::string typeinResetLabel = "";
