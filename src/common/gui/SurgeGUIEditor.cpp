@@ -2458,10 +2458,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             // Construct submenus for explicit controller mapping
             COptionMenu* midiSub =
                new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-            COptionMenu* currentSub;
+            COptionMenu* currentSub = nullptr;
 
             for (int subs = 0; subs < 7; ++subs)
             {
+               if( currentSub )
+               {
+                  currentSub->forget();
+                  currentSub = nullptr;
+               }
                currentSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
                   
                char name[256];
@@ -2493,12 +2498,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                 synth->storage.controllers[ccid] = mc;
                                 synth->storage.save_midi_controllers();
                                 });
+                  cmd->setEnabled(!disabled);
 
-                  currentSub->addEntry(name, item, disabled);
+                  currentSub->addEntry(cmd);
                }
             }
-
+            if( currentSub ) {
+               currentSub->forget();
+               currentSub = nullptr;
+            }
             contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Set Controller To..."));
+            midiSub->forget();
          }
 
          int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
