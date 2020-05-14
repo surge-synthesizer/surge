@@ -2476,7 +2476,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   int disabled = 0;
 
                   // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
-                  if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 || (mc >= 98 && mc <= 101) || mc == 120 || mc == 123)
+                  if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 || (mc == 74 && synth->mpeEnabled) ||(mc >= 98 && mc <= 101) || mc == 120 || mc == 123)
                      disabled = 1;
 
                   // we don't have any more CCs to cover, so break the loop
