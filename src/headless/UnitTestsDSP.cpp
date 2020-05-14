@@ -206,7 +206,7 @@ TEST_CASE( "Unison at Sample Rates", "[osc]" )
                             }
                          };
 
-   std::vector<int> srs = { { 44100, 48000, 88200, 96000 } };
+   std::vector<int> srs = { { 44100, 48000 } };
 
    SECTION( "Wavetable Oscillator" )
    {
