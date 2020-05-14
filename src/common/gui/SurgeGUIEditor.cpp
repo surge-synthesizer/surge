@@ -2415,10 +2415,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             if (synth->storage.controllers[ccid] >= 0)
             {
-               char txt4[128];
+               char txt4[16];
                decode_controllerid(txt4, synth->storage.controllers[ccid]);
-               sprintf(txt, "Clear Controller [%s]", txt4);
-               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt), [this, ccid]() {
+               sprintf(txt, "Clear Controller (%s ", txt4);
+               addCallbackMenu(contextMenu,
+                               Surge::UI::toOSCaseForMenu(txt) + midicc_names[synth->storage.controllers[ccid]] + ")",
+                               [this, ccid]() {
                                                     synth->storage.controllers[ccid] = -1;
                                                     synth->storage.save_midi_controllers();
                                                  });
@@ -2462,14 +2464,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             for (int subs = 0; subs < 7; ++subs)
             {
-               if( currentSub )
+               if (currentSub)
                {
                   currentSub->forget();
                   currentSub = nullptr;
                }
                currentSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
                   
-               char name[256];
+               char name[16];
 
                sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
 
@@ -2488,9 +2490,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (mc > 127)
                      break;
 
-                  char name[256];
+                  char name[128];
 
-                  sprintf(name, "CC %d", mc);
+                  sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc], (disabled == 1 ? "- RESERVED" : ""));
 
                   CCommandMenuItem* cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
 
@@ -2503,10 +2505,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   currentSub->addEntry(cmd);
                }
             }
-            if( currentSub ) {
+
+            if (currentSub)
+            {
                currentSub->forget();
                currentSub = nullptr;
             }
+
             contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Set Controller To..."));
             midiSub->forget();
          }
@@ -2790,10 +2795,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             
             if (p->midictrl >= 0)
             {
-               char txt4[128];
+               char txt4[16];
                decode_controllerid(txt4, p->midictrl);
-               sprintf(txt, "Clear learned MIDI [%s]", txt4);
-               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt),
+               sprintf(txt, "Clear Learned MIDI (%s ", txt4);
+               addCallbackMenu(contextMenu,
+                               Surge::UI::toOSCaseForMenu(txt) + midicc_names[p->midictrl] + ")",
                                [this, p, ptag]() {
                                   // p->midictrl = -1;
                                   // TODO add so parameter for both scenes are cleared!
