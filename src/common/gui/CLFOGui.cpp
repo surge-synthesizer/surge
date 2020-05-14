@@ -1192,12 +1192,20 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
             
             if (buttons & kShift)
             {
-               f *= 12;
-               f = floor(f);
-               f *= (1.f / 12.f);
+               if (buttons & kAlt)
+               {
+                  f *= altQuantStep * 2;
+                  f = floor(f);
+                  f *= (1.f / (altQuantStep * 2));
+               }
+               else
+               {
+                  f *= 12;
+                  f = floor(f);
+                  f *= (1.f / 12.f);
+               }
             }
-
-            if (buttons & kAlt)
+            else if (buttons & kAlt)
             {
                f *= altQuantStep;
                f = floor(f);
