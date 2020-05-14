@@ -21,7 +21,6 @@ public:
    const static int shadowoffset = 1;
    const static int skugga = 0xff5d5d5d;
    const static int splitpoint = lpsize + 20;
-   int altQuantStep = 12;
     
    void drawtri(VSTGUI::CRect r, VSTGUI::CDrawContext* context, int orientation);
 
