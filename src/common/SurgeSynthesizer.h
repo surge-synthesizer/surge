@@ -241,7 +241,7 @@ public:
    }
    
 public:
-   int CC0, PCH, patchid;
+   int CC0, CC32, PCH, patchid;
    float masterfade = 0;
    HalfRateFilter halfbandA, halfbandB, halfbandIN;
    std::list<SurgeVoice*> voices[2];
