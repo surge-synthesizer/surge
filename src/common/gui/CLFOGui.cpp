@@ -1178,18 +1178,44 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
          if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
          {
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
-            if (buttons & (kControl | kRButton))
-               f = 0;
-            else if (lfodata->unipolar.val.b)
-               f = limit_range(f, 0.f, 1.f);
-            else
-               f = limit_range(f * 2.f - 1.f, -1.f, 1.f);
-            if ( (buttons & kShift) )
+
+            if (buttons & (kControl | kRButton)) {
+               f = 0; }
+            else if (lfodata->unipolar.val.b) {
+               f = limit_range(f, 0.f, 1.f); }
+            else {
+               f = limit_range(f * 2.f - 1.f, -1.f, 1.f); }
+            
+
+            // find out if a microtuning is loaded and store the scale length for Alt-drag
+            // quantization to scale degrees
+            int altQuantStep = 12;
+            
+            if (!storage->isStandardTuning && storage->currentScale.count > 1)
+               altQuantStep = storage->currentScale.count;
+
+            if (buttons & kShift)
             {
-               f *= 12;
-               f = floor(f);
-               f *= (1.f / 12.f);
+               if (buttons & kAlt)
+               {
+                  f *= altQuantStep * 2;
+                  f = floor(f);
+                  f *= (1.f / (altQuantStep * 2));
+               }
+               else
+               {
+                  f *= 12;
+                  f = floor(f);
+                  f *= (1.f / 12.f);
+               }
             }
+            else if (buttons & kAlt)
+            {
+               f *= altQuantStep;
+               f = floor(f);
+               f *= (1.f / altQuantStep);
+            }
+
             ss->steps[i] = f;
             invalid();
          }
