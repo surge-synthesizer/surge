@@ -3295,20 +3295,30 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if( typeinDialog && typeinEditTarget )
       {
          std::string t = typeinValue->getText().getString();
+         bool isInvalid = false;
          if( typeinModSource > 0 )
          {
-            auto mv = limit_range( (float)std::atof( t.c_str() ) / ( typeinEditTarget->val_max.f - typeinEditTarget->val_min.f ), -1.f, 1.f );
-            synth->setModulation(typeinEditTarget->id, (modsources)typeinModSource, mv );
-            synth->refresh_editor = true;
-            
-            typeinDialog->setVisible(false);
-            removeFromFrame.push_back(typeinDialog);
-            typeinDialog = nullptr;
-            typeinResetCounter = -1;
-            typeinEditTarget = nullptr;
+            auto mv = (float)std::atof( t.c_str() ) / ( typeinEditTarget->get_extended( typeinEditTarget->val_max.f ) -
+                                                        typeinEditTarget->get_extended( typeinEditTarget->val_min.f ) );
+            if( mv < -1.f || mv > 1.f )
+            {
+               isInvalid = true;
+            }
+            else
+            {
+               synth->setModulation(typeinEditTarget->id, (modsources)typeinModSource, mv );
+               synth->refresh_editor = true;
+               
+               typeinDialog->setVisible(false);
+               removeFromFrame.push_back(typeinDialog);
+               typeinDialog = nullptr;
+               typeinResetCounter = -1;
+               typeinEditTarget = nullptr;
+            }
          }
          else if( typeinEditTarget->set_value_from_string( t ) )
          {
+            isInvalid = false;
             synth->refresh_editor = true;
             typeinDialog->setVisible(false);
             removeFromFrame.push_back(typeinDialog);
@@ -3318,6 +3328,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          }
          else
          {
+            isInvalid = true;
+         }
+
+         if( isInvalid ) {
             std::cout << "Invalid Entry" << std::endl;
             auto l = typeinLabel->getText().getString();
             promptForUserValueEntry( typeinEditTarget, typeinEditControl, typeinModSource );
