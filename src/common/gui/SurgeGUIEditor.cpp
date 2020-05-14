@@ -2274,7 +2274,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char tmptxt[256];
-                  sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modulatorName(thisms, true).c_str(),
+                  sprintf(tmptxt, "%s -> %s: %.2f", (char*)modulatorName(thisms, true).c_str(),
                           synth->storage.getPatch().param_ptr[md]->get_full_name(),
                           synth->getModDepth(md, thisms));
 
@@ -2461,8 +2461,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             contextMenu->addEntry("-", eid++);
 
             // Construct submenus for explicit controller mapping
-            COptionMenu* midiSub =
-               new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+            COptionMenu* midiSub = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                   VSTGUI::COptionMenu::kNoDrawStyle |
+                                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
             COptionMenu* currentSub = nullptr;
 
             for (int subs = 0; subs < 7; ++subs)
@@ -2472,14 +2473,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   currentSub->forget();
                   currentSub = nullptr;
                }
-               currentSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+               currentSub = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                            VSTGUI::COptionMenu::kNoDrawStyle |
+                                                VSTGUI::COptionMenu::kMultipleCheckStyle);
                   
                char name[16];
 
                sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
 
-               midiSub->addEntry(currentSub, name);
-               
+               auto added_to_menu = midiSub->addEntry(currentSub, name);
+
                for (int item = 0; item < 20; ++item)
                {
                   int mc = (subs * 20) + item;
@@ -2505,7 +2508,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                 });
                   cmd->setEnabled(!disabled);
 
-                  currentSub->addEntry(cmd);
+                  auto added = currentSub->addEntry(cmd);
+
+                  if (synth->storage.controllers[ccid] == mc)
+                  {
+                     added->setChecked();
+                     added_to_menu->setChecked();
+                  }
                }
             }
 
@@ -2840,7 +2849,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char tmptxt[256];
-                     sprintf(tmptxt, "%s -> %s [%.2f]", (char*)modulatorName(ms, true).c_str(),
+                     sprintf(tmptxt, "%s -> %s: %.2f", (char*)modulatorName(ms, true).c_str(),
                              p->get_name(), synth->getModDepth(ptag, (modsources)ms));
                      addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms ]() {
                                                              this->promptForUserValueEntry( p, control, ms );
@@ -5108,7 +5117,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
          if( button )
             sprintf( txt, "%sENV %d", (isS ? "S-" : "" ), fnum + 1 );
          else
-            sprintf( txt, "%s ENV %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+            sprintf( txt, "%s Envelope %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
       else if( lfodata->shape.val.i == ls_stepseq )
@@ -5117,7 +5126,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
          if( button )
             sprintf( txt, "%sSEQ %d", (isS ? "S-" : "" ), fnum + 1 );
          else
-            sprintf( txt, "%s SEQ %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+            sprintf( txt, "%s Step Sequencer %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
    }
