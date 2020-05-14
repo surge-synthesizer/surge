@@ -733,8 +733,11 @@ void SurgeGUIEditor::refresh_mod()
          ((CModulationSourceButton*)gui_modsrc[i])->used = synth->isModsourceUsed( (modsources)i );
          ((CModulationSourceButton*)gui_modsrc[i])->state = state;
 
-         auto mn = modulatorName(i, true);
-         ((CModulationSourceButton*)gui_modsrc[i])->setlabel(mn.c_str() );
+         if( i < ms_ctrl1 || i > ms_ctrl8 )
+         {
+            auto mn = modulatorName(i, true);
+            ((CModulationSourceButton*)gui_modsrc[i])->setlabel(mn.c_str() );
+         }
          ((CModulationSourceButton*)gui_modsrc[i])->invalid();
       }
    }
