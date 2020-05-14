@@ -154,6 +154,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    patchid_queue = -1;
    patchid = -1;
    CC0 = 0;
+   CC32 = 0;
    PCH = 0;
    for (int i = 0; i < 8; i++)
    {
@@ -977,13 +978,29 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
          onRPN(channel, channelState[channel].rpn[0], channelState[channel].rpn[1],
                channelState[channel].rpn_v[0], channelState[channel].rpn_v[1]);
       }
+      return;
+
+   case 10:
+   {
+      if (mpeEnabled)
+      {
+         channelState[channel].pan = int7ToBipolarFloat(value);
+         return;
+      }
       break;
+   }
+
+   case 32:
+      CC32 = value;
+      return;
+
    case 38:
       if (channelState[channel].nrpn_last)
          channelState[channel].nrpn_v[0] = value;
       else
          channelState[channel].rpn_v[0] = value;
       break;
+
    case 64:
    {
       channelState[channel].hold = value > 63; // check hold pedal
@@ -1019,16 +1036,6 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
       return;
    }
 
-   case 10:
-   {
-      if (mpeEnabled)
-      {
-         channelState[channel].pan = int7ToBipolarFloat(value);
-         return;
-      }
-      break;
-   }
-
    case 74:
    {
       if (mpeEnabled)
@@ -1054,6 +1061,9 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
    case 101: // RPN MSB
       channelState[channel].rpn[1] = value;
       channelState[channel].nrpn_last = false;
+      return;
+   case 120: // all sound off
+   case 123: // all notes off
       return;
    };
 

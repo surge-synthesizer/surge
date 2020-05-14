@@ -2459,26 +2459,45 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             COptionMenu* midiSub =
                new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
             COptionMenu* currentSub;
-            for (int mc = 0; mc < 128; ++mc)
-            {
-               if (mc % 20 == 0)
-               {
-                  currentSub =
-                     new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-                  char name[256];
-                  sprintf(name, "CC %d -> %d", mc, min(mc + 20, 128) - 1);
-                  midiSub->addEntry(currentSub, name);
-               }
 
+            for (int subs = 0; subs < 7; ++subs)
+            {
+               currentSub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                  
                char name[256];
-               sprintf(name, "CC # %d", mc);
-               CCommandMenuItem* cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
-               cmd->setActions([this, ccid, mc](CCommandMenuItem* men) {
-                                  synth->storage.controllers[ccid] = mc;
-                                  synth->storage.save_midi_controllers();
-                               });
-               currentSub->addEntry(cmd);
+
+               sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
+
+               midiSub->addEntry(currentSub, name);
+               
+               for (int item = 0; item < 20; ++item)
+               {
+                  int mc = (subs * 20) + item;
+                  int disabled = 0;
+
+                  // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
+                  if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 || (mc >= 98 && mc <= 101) || mc == 120 || mc == 123)
+                     disabled = 1;
+
+                  // we don't have any more CCs to cover, so break the loop
+                  if (mc > 127)
+                     break;
+
+                  char name[256];
+
+                  sprintf(name, "CC %d", mc);
+
+                  CCommandMenuItem* cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+
+                  cmd->setActions([this, ccid, mc](CCommandMenuItem* men) {
+                                synth->storage.controllers[ccid] = mc;
+                                synth->storage.save_midi_controllers();
+                                });
+
+                  currentSub->addEntry(name, item, disabled);
+               }
             }
+
             contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Set Controller To..."));
          }
 
