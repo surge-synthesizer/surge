@@ -208,12 +208,11 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         {
             int p = ctge[i];
 
-            #if WINDOWS
-               string patch_name = storage->patch_list[p].name;
-               findReplaceSubstring(patch_name, string("&"), string("&&"));
-            #endif
+            name = storage->patch_list[p].name;
 
-            name = patch_name;
+            #if WINDOWS
+               findReplaceSubstring(name, string("&"), string("&&"));
+            #endif
             
             auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name.c_str()));
             auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
