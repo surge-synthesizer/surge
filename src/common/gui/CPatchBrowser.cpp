@@ -77,7 +77,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
               return kMouseEventHandled;
           for (auto c : storage->patchCategoryOrdering)
           {
-              if (_stricmp(storage->patch_category[c].name.c_str(),"init")==0)
+              if (_stricmp(storage->patch_category[c].name.c_str(),"Init") == 0)
               {
                   rightMouseCategory = c;;
               }
@@ -144,6 +144,29 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
+string findReplaceSubstring(string& source, const string& from, const string& to)
+{
+   string newString;
+   newString.reserve(source.length()); // avoids a few memory allocations
+
+   string::size_type lastPos = 0;
+   string::size_type findPos;
+
+   while (string::npos != (findPos = source.find(from, lastPos)))
+   {
+      newString.append(source, lastPos, findPos - lastPos);
+      newString += to;
+      lastPos = findPos + from.length();
+   }
+
+   // care for the rest after last occurrence
+   newString += source.substr(lastPos);
+
+   source.swap(newString);
+
+   return newString;
+}
+
 bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall )
 {
     bool amIChecked = false;
@@ -168,8 +191,9 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
     int n_subc = 1 + (max(2, (int)ctge.size()) - 1) / splitcount;
     for (int subc = 0; subc < n_subc; subc++)
     {
-        char name[256];
+        string name;
         COptionMenu* subMenu;
+
         if (single_category)
             subMenu = contextMenu;
         else
@@ -183,10 +207,14 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         for (int i = subc * splitcount; i < min((subc + 1) * splitcount, (int)ctge.size()); i++)
         {
             int p = ctge[i];
-            // sprintf(name,"%i. %s",p,storage->patch_list[p].name.c_str());
-            sprintf(name, "%s", storage->patch_list[p].name.c_str());
+
+            name = storage->patch_list[p].name;
+
+            #if WINDOWS
+               findReplaceSubstring(name, string("&"), string("&&"));
+            #endif
             
-            auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+            auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name.c_str()));
             auto action = [this, p](CCommandMenuItem* item) { this->loadPatch(p); };
             
             if (p == current_patch)
@@ -217,22 +245,28 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         
         std::string menuName = storage->patch_category[c].name;
         std::string pathSep = "/";
-#if WINDOWS
-        pathSep = "\\";
-#endif
+
+        #if WINDOWS
+           pathSep = "\\";
+        #endif
+
         if (menuName.find_last_of(pathSep) != string::npos)
             menuName = menuName.substr(menuName.find_last_of(pathSep) + 1);
         
         if (n_subc > 1)
-            sprintf(name, "%s - %i", menuName.c_str(), subc + 1);
+           name = menuName.c_str() + (subc + 1);
         else
         {
-           strncpy(name, menuName.c_str(), NAMECHARS);
+           name = menuName.c_str();
         }
+
+        #if WINDOWS
+           findReplaceSubstring(name, string("&"), string("&&"));
+        #endif
 
         if (!single_category)
         {
-            CMenuItem *entry = contextMenu->addEntry(subMenu, name);
+            CMenuItem *entry = contextMenu->addEntry(subMenu, name.c_str());
             if (c == current_category || amIChecked)
                 entry->setChecked(true);
             subMenu->forget(); // Important, so that the refcounter gets it right
