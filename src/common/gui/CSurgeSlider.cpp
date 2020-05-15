@@ -186,19 +186,15 @@ void CSurgeSlider::draw(CDrawContext* dc)
          trect.offset(2, 2);
 
       int alpha = 0xff;
+
       if (disabled)
-      {
-         typex = 0;
-         alpha = 0x80;
-      }
+         return;
 
       if (style & CSlider::kHorizontal)
          pTray->draw(dc, trect, CPoint(133 * typex, 14 * typey), alpha);
       else
          pTray->draw(dc, trect, CPoint(16 * typex, 75 * typey), alpha);
    }
-   if (disabled)
-      return;
 
    CRect headrect;
    if (style & CSlider::kHorizontal)
