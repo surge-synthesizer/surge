@@ -5,7 +5,6 @@
 #include "UserInteractions.h"
 #include "guihelpers.h"
 
-#include <algorithm>
 #include <vector>
 
 using namespace VSTGUI;
