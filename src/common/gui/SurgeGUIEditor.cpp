@@ -2588,7 +2588,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       auto ctrl = dynamic_cast<CSurgeSlider*>(control);
 
       if ((button & kRButton) && !(p->ctrltype == ct_lfoshape) &&
-          !(ctrl != nullptr || ctrl->disabled == true)) // supress RMB on LFO Shape and hidden sliders, for LFO let CLFOGui handle it
+          !(ctrl != nullptr && ctrl->disabled == true)) // supress RMB on LFO Shape and hidden sliders, for LFO let CLFOGui handle it
       {
          CRect menuRect;
          CPoint where;
