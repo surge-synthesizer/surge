@@ -1769,6 +1769,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
          ((CSurgeSlider*)param[i])->disabled = true;
    }
 
+   // feedback control
+   if (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i == fb_serial)
+   {
+      i = synth->storage.getPatch().scene[current_scene].feedback.id;
+      if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
+      {
+         bool curr = ((CSurgeSlider*)param[i])->disabled;
+         ((CSurgeSlider*)param[i])->disabled = true;
+         if (!curr)
+         {
+            param[i]->setDirty();
+            param[i]->invalid();
+         }
+      }
+   }
+
    // pan2 control
    if ((synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
         fb_stereo) &&
@@ -2569,7 +2585,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    {
       Parameter* p = synth->storage.getPatch().param_ptr[ptag];
 
-      if ((button & kRButton) && ! ( p->ctrltype == ct_lfoshape) ) // supress RMB on LFO Shape and let CLFOGui handle)
+      if ((button & kRButton) && !(p->ctrltype == ct_lfoshape) &&
+          !(((CSurgeSlider*)param[ptag])->disabled == true)) // supress RMB on LFO Shape and hidden sliders, for LFO let CLFOGui handle it
       {
          CRect menuRect;
          CPoint where;
@@ -3579,7 +3596,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       
       param[i]->setDirty();
       param[i]->invalid();
+
+      // feedback control
+      i = synth->storage.getPatch().scene[current_scene].feedback.id;
+      if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
+         ((CSurgeSlider*)param[i])->disabled =
+            (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i ==
+             fb_serial);
+      
+      param[i]->setDirty();
+      param[i]->invalid();
    }
+
    if (tag == fxbypass_tag) // still do the normal operation, that's why it's outside the
       // switch-statement
    {
