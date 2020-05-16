@@ -137,8 +137,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    polydisplay = 0;
    refresh_editor = false;
    patch_loaded = false;
-   storage.getPatch().category = "init";
-   storage.getPatch().name = "init";
+   storage.getPatch().category = "Init";
+   storage.getPatch().name = "Init";
    storage.getPatch().comment = "";
    storage.getPatch().author = "";
    midiprogramshavechanged = false;
@@ -2163,14 +2163,15 @@ void SurgeSynthesizer::getParameterName(long index, char* text)
 {
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
-      // strncpy(text,storage.getPatch().param_ptr[index]->get_name(),32);
-      strncpy(text, storage.getPatch().param_ptr[index]->get_full_name(), 32);
-      // strncpy(text,storage.getPatch().param_ptr[index]->get_storage_name(),32);
+      int scn = storage.getPatch().param_ptr[index]->scene;
+      string sn[3] = {"", "A ", "B "};
+
+      sprintf(text, "%s%s", sn[scn], storage.getPatch().param_ptr[index]->get_full_name());
    }
    else if (index >= metaparam_offset)
    {
       int c = index - metaparam_offset;
-      sprintf(text, "C%i:%s", c + 1, storage.getPatch().CustomControllerLabel[c]);
+      sprintf(text, "Macro %i: %s", c + 1, storage.getPatch().CustomControllerLabel[c]);
    }
    else
       sprintf(text, "-");
@@ -2180,8 +2181,14 @@ void SurgeSynthesizer::getParameterNameW(long index, wchar_t* ptr)
 {
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
+      int scn = storage.getPatch().param_ptr[index]->scene;
+      char sn[3][3] = {"", "A ", "B "};
+      char pname[256];
+      
+      snprintf(pname, 255, "%s%s", sn[scn], storage.getPatch().param_ptr[index]->get_full_name());
+
       // the input is not wide so don't use %S
-      swprintf(ptr, 128, L"%s", storage.getPatch().param_ptr[index]->get_full_name());
+      swprintf(ptr, 128, L"%s", pname);
    }
    else if (index >= metaparam_offset)
    {
@@ -2192,11 +2199,11 @@ void SurgeSynthesizer::getParameterNameW(long index, wchar_t* ptr)
        
       if (c >= num_metaparameters)
       {
-         snprintf(wideHack, 255, "C:ERROR");
+         snprintf(wideHack, 255, "Macro: ERROR");
       }
       else
       {
-         snprintf(wideHack, 255, "C%d:%s", c+1, storage.getPatch().CustomControllerLabel[c]);
+         snprintf(wideHack, 255, "Macro %d: %s", c+1, storage.getPatch().CustomControllerLabel[c]);
       }
       swprintf(ptr, 128, L"%s", wideHack);
    }
@@ -2210,7 +2217,10 @@ void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t* ptr)
 {
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
-      swprintf(ptr, 128, L"%s", storage.getPatch().param_ptr[index]->get_name());
+      int scn = storage.getPatch().param_ptr[index]->scene;
+      string sn[3] = {"", "A ", "B "};
+
+      swprintf(ptr, 128, L"%s%s", sn[scn], storage.getPatch().param_ptr[index]->get_name());
    }
    else if (index >= metaparam_offset)
    {
