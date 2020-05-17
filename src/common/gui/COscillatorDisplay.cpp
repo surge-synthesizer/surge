@@ -509,12 +509,12 @@ void COscillatorDisplay::drawBitmap(CDrawContext* dc)
                column_d[y]--;
             }
          }
-         column[midline] = max((unsigned int)64 << aa_bs, column[midline]);
-         column[topline] = max((unsigned int)32 << aa_bs, column[topline]);
-         column[bottomline] = max((unsigned int)32 << aa_bs, column[bottomline]);
+         column[midline] = std::max((unsigned int)64 << aa_bs, column[midline]);
+         column[topline] = std::max((unsigned int)32 << aa_bs, column[topline]);
+         column[bottomline] = std::max((unsigned int)32 << aa_bs, column[bottomline]);
          for (int y = 0; y < h2; y++)
          {
-            cdisurf->setPixel(x, y, coltable[min((unsigned int)255, (column[y] >> aa_bs))]);
+            cdisurf->setPixel(x, y, coltable[std::min((unsigned int)255, (column[y] >> aa_bs))]);
          }
       }
       delete osc;
