@@ -2166,7 +2166,7 @@ void SurgeSynthesizer::getParameterName(long index, char* text)
       int scn = storage.getPatch().param_ptr[index]->scene;
       string sn[3] = {"", "A ", "B "};
 
-      sprintf(text, "%s%s", sn[scn], storage.getPatch().param_ptr[index]->get_full_name());
+      sprintf(text, "%s%s", sn[scn].c_str(), storage.getPatch().param_ptr[index]->get_full_name());
    }
    else if (index >= metaparam_offset)
    {
@@ -2220,7 +2220,7 @@ void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t* ptr)
       int scn = storage.getPatch().param_ptr[index]->scene;
       string sn[3] = {"", "A ", "B "};
 
-      swprintf(ptr, 128, L"%s%s", sn[scn], storage.getPatch().param_ptr[index]->get_name());
+      swprintf(ptr, 128, L"%s%s", sn[scn].c_str(), storage.getPatch().param_ptr[index]->get_name());
    }
    else if (index >= metaparam_offset)
    {
