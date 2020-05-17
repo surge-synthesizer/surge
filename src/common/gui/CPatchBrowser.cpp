@@ -50,8 +50,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    if (!(button & kLButton || button & kRButton))
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 
-   char txt[256];
-
    CRect menurect(0, 0, 0, 0);
    menurect.offset(where.x, where.y);
    COptionMenu* contextMenu = new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
@@ -93,14 +91,25 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    }
    else
    {
+       auto factory_add = contextMenu->addEntry("FACTORY PRESETS");
+       factory_add->setEnabled(0);
+
        for (int i = 0; i < storage->patch_category.size(); i++)
        {
            if ((!single_category) || (i == last_category))
            {
-               if (!single_category &&
-                   ((i == storage->firstThirdPartyCategory) ||
-                    (i == storage->firstUserCategory)))
-                   contextMenu->addEntry("-");
+               if (!single_category && (i == storage->firstThirdPartyCategory || i == storage->firstUserCategory))
+               {
+                   string txt;
+
+                   if (i == storage->firstThirdPartyCategory)
+                      txt = "THIRD PARTY PRESETS";
+                   else
+                      txt = "USER PRESETS";
+
+                   auto add = contextMenu->addEntry(txt.c_str());
+                   add->setEnabled(0);
+               }
 
                // Remap index to the corresponding category in alphabetical order.
                int c = storage->patchCategoryOrdering[i];
@@ -109,8 +118,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
            }
        }
    }
-   // contextMenu->addEntry("refresh list");
-
+   
    contextMenu->addSeparator();
    
    auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
@@ -236,15 +244,16 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
                 if (cc.name == childcat.name && cc.internalid == childcat.internalid) break;
                 idx++;
             }
+
             bool checkedKid = populatePatchMenuForCategory( idx, subMenu, false, main_e, false );
-            if(checkedKid)
+            if (checkedKid)
             {
                 amIChecked=true;
             }
         }
         
-        std::string menuName = storage->patch_category[c].name;
-        std::string pathSep = "/";
+        string menuName = storage->patch_category[c].name;
+        string pathSep = "/";
 
         #if WINDOWS
            pathSep = "\\";
@@ -256,9 +265,11 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         if (n_subc > 1)
            name = menuName.c_str() + (subc + 1);
         else
-        {
            name = menuName.c_str();
-        }
+
+        // tuck in the category name by 4 spaces, but only the root categories
+        if (rootCall)
+           name = "    " + name;
 
         #if WINDOWS
            findReplaceSubstring(name, string("&"), string("&&"));
