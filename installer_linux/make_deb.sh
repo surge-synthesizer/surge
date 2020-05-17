@@ -63,7 +63,7 @@ Provides: vst-plugin
 Section: sound
 Priority: optional
 Description: Subtractive hybrid synthesizer virtual instrument
- Surge includes VST2, VST3, and LV2 virtual instrument formats for use in compatible hosts.
+ Surge includes VST3, and LV2 virtual instrument formats for use in compatible hosts.
 EOT
 
 touch ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
@@ -83,9 +83,8 @@ gzip -9 -n ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
 
 cp ../LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/copyright
 cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
-cp ../products/Surge.so ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
 
-# Once VST3 works, this will be ../products/vst3
+# Copy the VST3 bundld 
 cp -r ../products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
 
 # copy the lv2 bundle

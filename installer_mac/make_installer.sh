@@ -27,7 +27,6 @@ fi
 
 PRODUCTS="../products/"
 
-VST2="Surge.vst"
 VST3="Surge.vst3"
 AU="Surge.component"
 FXAU="SurgeEffectsBank.component"
@@ -65,11 +64,6 @@ build_flavor()
     rmdir $TMPDIR
 }
 
-# try to build VST2 package
-
-if [[ -d $PRODUCTS/$VST2 ]]; then
-    build_flavor "VST2" $VST2 "com.vemberaudio.vst2.pkg" "/Library/Audio/Plug-Ins/VST"
-fi
 
 # try to build VST3 package
 
@@ -110,11 +104,6 @@ rm "$RSRCS/BuildInfo.txt"
 
 # create distribution.xml
 
-if [[ -d $PRODUCTS/$VST2 ]]; then
-	VST2_PKG_REF='<pkg-ref id="com.vemberaudio.vst2.pkg"/>'
-	VST2_CHOICE='<line choice="com.vemberaudio.vst2.pkg"/>'
-	VST2_CHOICE_DEF="<choice id=\"com.vemberaudio.vst2.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST\"><pkg-ref id=\"com.vemberaudio.vst2.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst2.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST2.pkg</pkg-ref>"
-fi
 if [[ -d $PRODUCTS/$VST3 ]]; then
 	VST3_PKG_REF='<pkg-ref id="com.vemberaudio.vst3.pkg"/>'
 	VST3_CHOICE='<line choice="com.vemberaudio.vst3.pkg"/>'
@@ -141,7 +130,6 @@ cat > distribution.xml << XMLEND
 <installer-gui-script minSpecVersion="1">
     <title>Surge ${VERSION}</title>
     <license file="License.txt" />
-    ${VST2_PKG_REF}
     ${VST3_PKG_REF}
     ${AU_PKG_REF}
     ${FXVST3_PKG_REF}
@@ -149,14 +137,12 @@ cat > distribution.xml << XMLEND
     <pkg-ref id="com.vemberaudio.resources.pkg"/>
     <options require-scripts="false" customize="always" />
     <choices-outline>
-        ${VST2_CHOICE}
         ${VST3_CHOICE}
         ${AU_CHOICE}
         ${FXVST3_CHOICE}
         ${FXAU_CHOICE}
         <line choice="com.vemberaudio.resources.pkg"/>
     </choices-outline>
-    ${VST2_CHOICE_DEF}
     ${VST3_CHOICE_DEF}
     ${AU_CHOICE_DEF}
     ${FXVST3_CHOICE_DEF}
