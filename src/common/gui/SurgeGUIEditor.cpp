@@ -2423,7 +2423,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                cancellearn = true;
 
             std::string learnTag =
-               cancellearn ? "Abort Controller MIDI Larn" : "MIDI Learn Controller...";
+               cancellearn ? "Abort Macro MIDI Learn" : "MIDI Learn Macro...";
             addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, ccid] {
                                                       if (cancellearn)
                                                          synth->learn_param = -1;
@@ -2436,7 +2436,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             {
                char txt4[16];
                decode_controllerid(txt4, synth->storage.controllers[ccid]);
-               sprintf(txt, "Clear Controller (%s ", txt4);
+               sprintf(txt, "Clear Macro (%s ", txt4);
                addCallbackMenu(contextMenu,
                                Surge::UI::toOSCaseForMenu(txt) + midicc_names[synth->storage.controllers[ccid]] + ")",
                                [this, ccid]() {
@@ -2540,7 +2540,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                currentSub = nullptr;
             }
 
-            contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Set Controller To..."));
+            contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Set Macro To..."));
             midiSub->forget();
          }
 
