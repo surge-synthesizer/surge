@@ -20,18 +20,21 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
    std::string labs[numDisplayFeatures];
    labs[mpeMode] = "MPE";
    labs[tuningMode] = "Tuning";
+   labs[zoomOptions] = "Zoom";
    int y0 = 11;
    int boxSize = 13;
    for( int i=0; i<numDisplayFeatures; ++i )
    {
        int xp = size.left + 2;
-       int yp = size.top + y0 + i * boxSize + (3 * i);
+       int yp = size.top + y0 + i * boxSize + (2 * i);
        int w = size.getWidth() - 4;;
        int h = boxSize - 2;
        if( i == mpeMode )
            mpeBox = CRect(xp,yp,xp+w,yp+h);
        if( i == tuningMode )
            tuningBox = CRect(xp,yp,xp+w,yp+h);
+       if (i == zoomOptions)
+           zoomBox = CRect(xp,yp,xp+w,yp+h);
 
        auto hlbg = true;
        auto ol = skin->getColor( "mpetunstatus.button.outline", CColor(0x97, 0x97, 0x97 ) );
@@ -87,6 +90,18 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
 
 VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button)
 {
+   static bool haveOpened = false;
+   if (!haveOpened)
+   {
+      haveOpened = true;
+      int hConHandle;
+      long lStdHandle;
+      FILE* fp;
+      // Allocate a console for this app
+      AllocConsole();
+      freopen_s(&fp, "CONOUT$", "w", stdout);
+   }
+
     if( mpeBox.pointInside(where) && editor )
     {
         if( button & kLButton )
@@ -104,7 +119,7 @@ VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const
     {
         if( button & kLButton )
         {
-            editor->toggleTuning();
+           editor->toggleTuning();
         }
         else if( button & kRButton )
         {
@@ -113,11 +128,21 @@ VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
 
+    if( zoomBox.pointInside(where) && editor )
+    {
+        if( button & kLButton )
+        {
+            editor->showZoomMenu(where);
+        }
+
+        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+    }
+
     return CControl::onMouseDown(where, button);
 }
 
 VSTGUI::CMouseEventResult CStatusPanel::onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) {
-   if( mpeBox.pointInside(where) || tuningBox.pointInside(where) )
+   if( mpeBox.pointInside(where) || tuningBox.pointInside(where) || zoomBox.pointInside(where) )
       getFrame()->setCursor( VSTGUI::kCursorHand );
    else
       getFrame()->setCursor( VSTGUI::kCursorDefault );
