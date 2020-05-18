@@ -90,18 +90,6 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
 
 VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button)
 {
-   static bool haveOpened = false;
-   if (!haveOpened)
-   {
-      haveOpened = true;
-      int hConHandle;
-      long lStdHandle;
-      FILE* fp;
-      // Allocate a console for this app
-      AllocConsole();
-      freopen_s(&fp, "CONOUT$", "w", stdout);
-   }
-
     if( mpeBox.pointInside(where) && editor )
     {
         if( button & kLButton )
