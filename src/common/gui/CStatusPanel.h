@@ -16,6 +16,7 @@ public:
     typedef enum {
         mpeMode,
         tuningMode,
+        zoomOptions,
         numDisplayFeatures
     } DisplayFeatures;
     
@@ -66,7 +67,7 @@ protected:
     bool dispfeatures[numDisplayFeatures];
     SurgeStorage* storage = nullptr;
     SurgeGUIEditor *editor = nullptr;
-    VSTGUI::CRect mpeBox, tuningBox, tuningLock;
+    VSTGUI::CRect mpeBox, tuningBox, tuningLock, zoomBox;
     std::shared_ptr<SurgeBitmaps> bitmapStore;
     
     CLASS_METHODS(CStatusPanel, VSTGUI::CControl)

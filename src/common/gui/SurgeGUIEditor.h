@@ -190,6 +190,7 @@ public:
    /*
    ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
    */
+   void showZoomMenu(VSTGUI::CPoint &where);
    void toggleMPE();
    void showMPEMenu(VSTGUI::CPoint &where);
    void toggleTuning();
@@ -284,6 +285,9 @@ private:
    VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeSkinMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeZoomMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeUIOptionsMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeDataMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
 
    void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c, int modulationSource = -1);

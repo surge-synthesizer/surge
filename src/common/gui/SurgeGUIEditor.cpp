@@ -1,6 +1,8 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
+#define USE_DEV_MENU 1
+
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 #include "CSurgeSlider.h"
@@ -2140,7 +2142,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          char txt[256];
          sprintf(txt, "Osc %i", a + 1);
          contextMenu->addEntry(txt, eid++);
-         contextMenu->addEntry("-", eid++);
+         contextMenu->addSeparator(eid++);
          addCallbackMenu(contextMenu, "Copy",
                          [this, a]() { synth->storage.clipboard_copy(cp_osc, current_scene, a); });
          eid++;
@@ -2186,7 +2188,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          char txt[256];
          sprintf(txt, "Scene %c", 'A' + a);
          contextMenu->addEntry(txt, eid++);
-         contextMenu->addEntry("-", eid++);
+         contextMenu->addSeparator(eid++);
 
          addCallbackMenu(contextMenu, "Copy",
                          [this, a]() { synth->storage.clipboard_copy(cp_scene, a, -1); });
@@ -2300,7 +2302,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   
                   if (first_destination)
                   {
-                     contextMenu->addEntry("-", eid++);
+                     contextMenu->addSeparator(eid++);
                      first_destination = false;
                   }
                   
@@ -2368,7 +2370,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   
                   if (first_destination)
                   {
-                     contextMenu->addEntry("-", eid++);
+                     contextMenu->addSeparator(eid++);
                      first_destination = false;
                   }
                   
@@ -2416,7 +2418,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
          {
             ccid = modsource - ms_ctrl1;
-            contextMenu->addEntry("-", eid++);
+            contextMenu->addSeparator(eid++);
             char txt[256];
 
             if (synth->learn_custom > -1)
@@ -2447,7 +2449,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
 
          
-            contextMenu->addEntry("-", eid++);
+            contextMenu->addSeparator(eid++);
 
             addCallbackMenu(contextMenu, "Bipolar", [this, control, ccid]() {
                                                        bool bp =
@@ -2474,7 +2476,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                    });
             eid++;
 
-            contextMenu->addEntry("-", eid++);
+            contextMenu->addSeparator(eid++);
 
             // Construct submenus for explicit controller mapping
             COptionMenu* midiSub = new COptionMenu(menuRect, 0, 0, 0, 0,
@@ -2548,7 +2550,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          if (lfo_id >= 0)
          {
-            contextMenu->addEntry("-", eid++);
+            contextMenu->addSeparator(eid++);
             addCallbackMenu(contextMenu, "Copy", [this, sc, lfo_id]() {
                                                     if (lfo_id >= 0)
                                                        synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
@@ -2603,7 +2605,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int eid = 0;
 
          contextMenu->addEntry((char*)p->get_full_name(), eid++);
-         contextMenu->addEntry("-", eid++);
+         contextMenu->addSeparator(eid++);
          char txt[256], txt2[512];
          p->get_display(txt);
          sprintf(txt2, "Value: %s", txt);
@@ -2719,7 +2721,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          // Modulation and Learn semantics only apply to vt_float types in surge right now
          if( p->valtype == vt_float )
          {
-            // if(p->can_temposync() || p->can_extend_range())	contextMenu->addEntry("-",eid++);
+            // if(p->can_temposync() || p->can_extend_range())	contextMenu->addSeparator(eid++);
             if (p->can_temposync())
             {
                auto r = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Tempo Sync"),
@@ -2861,7 +2863,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             if (n_ms)
             {
-               contextMenu->addEntry("-", eid++);
+               contextMenu->addSeparator(eid++);
                for (int k = 1; k < n_modsources; k++)
                {
                   modsources ms = (modsources)k;
@@ -2876,7 +2878,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      eid++;
                   }
                }
-               contextMenu->addEntry("-", eid++);
+               contextMenu->addSeparator(eid++);
                for (int k = 1; k < n_modsources; k++)
                {
                   modsources ms = (modsources)k;
@@ -3821,6 +3823,18 @@ void SurgeGUIEditor::toggleMPE()
    if( statuspanel )
       ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::mpeMode, this->synth->mpeEnabled );
 }
+void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint &where)
+{
+   CRect menuRect;
+   menuRect.offset(where.x, where.y);
+   auto m = makeZoomMenu(menuRect);
+    
+   frame->addView(m);
+   m->setDirty();
+   m->popup();
+   frame->removeView(m, true);
+}
+
 void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint &where)
 {
    CRect menuRect;
@@ -3995,229 +4009,44 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 {
     COptionMenu* settingsMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+    new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+
     int eid = 0;
 
-    // Zoom submenus
-    if (zoomEnabled)
-    {
-       COptionMenu* zoomSubMenu =
-           new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-
-       int zid = 0;
-       for (auto s : {100, 125, 150, 200, 300}) // These are somewhat arbitrary reasonable defaults
-       {
-          std::ostringstream lab;
-          lab << "Zoom to " << s << "%";
-          CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-          zcmd->setActions([this, s](CCommandMenuItem* m) { setZoomFactor(s); });
-          zoomSubMenu->addEntry(zcmd);
-          zid++;
-       }
-
-       zoomSubMenu->addEntry("-", zid++);
-
-       for (auto jog : {-25, -10, 10, 25}) // These are somewhat arbitrary reasonable defaults also
-       {
-          std::ostringstream lab;
-          if (jog > 0)
-             lab << "Grow by " << jog << "%";
-          else
-             lab << "Shrink by " << -jog << "%";
-
-          CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-          zcmd->setActions(
-              [this, jog](CCommandMenuItem* m) { setZoomFactor(getZoomFactor() + jog); });
-          zoomSubMenu->addEntry(zcmd);
-          zid++;
-       }
-
-       zoomSubMenu->addEntry("-", zid++);
-       CCommandMenuItem* biggestZ = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Largest")));
-       biggestZ->setActions([this](CCommandMenuItem* m) {
-          int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
-                                                    90, // See comment in setZoomFactor
-                                                    WINDOW_SIZE_X, WINDOW_SIZE_Y);
-          setZoomFactor(newZF);
-       });
-       zoomSubMenu->addEntry(biggestZ);
-       zid++;
-
-       CCommandMenuItem* smallestZ =
-           new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Smallest")));
-       smallestZ->setActions([this](CCommandMenuItem* m) { setZoomFactor(minimumZoom); });
-       zoomSubMenu->addEntry(smallestZ);
-       zid++;
-
-       zoomSubMenu->addEntry("-", zid++);
-       std::ostringstream zss;
-       zss << "Set " << zoomFactor << "% as Default";
-       CCommandMenuItem* defaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(zss.str().c_str())));
-       defaultZ->setActions([this](CCommandMenuItem* m) {
-          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom",
-                                                 this->zoomFactor);
-       });
-       zoomSubMenu->addEntry(defaultZ);
-       zid++;
-
-       addCallbackMenu(zoomSubMenu, Surge::UI::toOSCaseForMenu("Set Default Zoom Level to..."), [this]() {
-               // FIXME! This won't work on linux
-               char c[256];
-               snprintf(c, 256, "%d", this->zoomFactor );
-               spawn_miniedit_text(c, 16);
-               int newVal = ::atoi(c);
-               Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
-               this->setZoomFactor(newVal);
-           });
-       zid++;
-
-       settingsMenu->addEntry(zoomSubMenu, "Zoom" );
-       zoomSubMenu->forget();
-       eid++;
-    }
-
     auto mpeSubMenu = makeMpeMenu(menuRect);
-    std::string mpeMenuName = "MPE Options (disabled)";
-    if (synth->mpeEnabled)
-       mpeMenuName = "MPE (enabled)";
-    settingsMenu->addEntry(mpeSubMenu, Surge::UI::toOSCaseForMenu(mpeMenuName.c_str()));
+    settingsMenu->addEntry(mpeSubMenu, Surge::UI::toOSCaseForMenu("MPE Options"));
     eid++;
     mpeSubMenu->forget();
 
+    auto tuningSubMenu = makeTuningMenu(menuRect);
+    settingsMenu->addEntry(tuningSubMenu, "Tuning");
+    eid++;
+    tuningSubMenu->forget();
 
-    COptionMenu *uiOptionsMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle |
-                                                 VSTGUI::COptionMenu::kMultipleCheckStyle );
+    if (zoomEnabled)
+    {
+        auto zoomMenu = makeZoomMenu(menuRect);
+        settingsMenu->addEntry(zoomMenu, "Zoom");
+        eid++;
+        zoomMenu->forget();
+    }
+
+    auto skinSubMenu = makeSkinMenu(menuRect);
+    settingsMenu->addEntry(skinSubMenu, "Skins");
+    eid++;
+    skinSubMenu->forget();
     
-    // Mouse behavior
-    // Mouse behavior
-    int mid = 0;
-
-    COptionMenu* mouseSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                VSTGUI::COptionMenu::kNoDrawStyle |
-                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-    std::string mouseClassic = "Classic";
-    std::string mouseSlow = "Slow";
-    std::string mouseMedium = "Medium";
-    std::string mouseExact = "Exact";
-
-    VSTGUI::CCommandMenuItem* menuItem = nullptr;
-
-    menuItem = addCallbackMenu(mouseSubMenu, mouseClassic.c_str(), [this]() {
-       CSurgeSlider::sliderMoveRateState = CSurgeSlider::kClassic;
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
-                                              CSurgeSlider::sliderMoveRateState);
-    });
-    if (menuItem)
-       menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kClassic));
-    mid++;
-
-    menuItem = addCallbackMenu(mouseSubMenu, mouseSlow.c_str(), [this]() {
-       CSurgeSlider::sliderMoveRateState = CSurgeSlider::kSlow;
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
-                                              CSurgeSlider::sliderMoveRateState);
-    });
-    if (menuItem)
-       menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow));
-    mid++;
-
-    menuItem = addCallbackMenu(mouseSubMenu, mouseMedium.c_str(), [this]() {
-       CSurgeSlider::sliderMoveRateState = CSurgeSlider::kMedium;
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
-                                              CSurgeSlider::sliderMoveRateState);
-    });
-    if (menuItem)
-       menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium));
-    mid++;
-
-    menuItem = addCallbackMenu(mouseSubMenu, mouseExact.c_str(), [this]() {
-       CSurgeSlider::sliderMoveRateState = CSurgeSlider::kExact;
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
-                                              CSurgeSlider::sliderMoveRateState);
-    });
-    if (menuItem)
-       menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact));
-    mid++;
-
-    std::string mouseMenuName = Surge::UI::toOSCaseForMenu("Mouse Behavior");
-
-    uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str() );
-    mouseSubMenu->forget();
-
-#if !LINUX
-    auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO",
-                                                         0
-        );
-    auto bitmapMenu = useBitmap ? "Use Vectorized LFO Display" : "Use Bitmap LFO Display";
-    addCallbackMenu( uiOptionsMenu, Surge::UI::toOSCaseForMenu(bitmapMenu), [this, useBitmap]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   "useBitmapLFO",
-                                                   useBitmap ? 0 : 1 );
-            this->synth->refresh_editor = true;
-        });
-#endif
-    
+    auto uiOptionsMenu = makeUIOptionsMenu(menuRect);
     settingsMenu->addEntry(uiOptionsMenu, Surge::UI::toOSCaseForMenu("User Interface Options"));
     uiOptionsMenu->forget();
     eid++;
 
-    auto tuningSubMenu = makeTuningMenu(menuRect);
-    settingsMenu->addEntry(tuningSubMenu, "Tuning" );
-    eid++;
-    tuningSubMenu->forget();
-
-    int did=0;
-    COptionMenu *dataSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                               VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-    
-    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open Factory Data Folder..."), [this]() {
-       Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath);
-    });
-    did++;
-
-    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
-       // make it if it isn't there
-       fs::create_directories(this->synth->storage.userDataPath);
-       Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
-    });
-    did++;
-
-    addCallbackMenu( dataSubMenu, Surge::UI::toOSCaseForMenu("Set Custom User Data Folder..."), [this]() {
-            auto cb = [this](std::string f) {
-                // FIXME - check if f is a path
-                this->synth->storage.userDataPath = f;
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                       "userDataPath",
-                                                       f);
-                this->synth->storage.refresh_wtlist();
-                this->synth->storage.refresh_patchlist();
-            };
-            Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath, "", "", cb, true, true);
-                                                          
-        });
-    did++;
-
-    dataSubMenu->addEntry("-", did++);
-
-    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Rescan All Data Folders"), [this]() {
-       this->synth->storage.refresh_wtlist();
-       this->synth->storage.refresh_patchlist();
-    });
-    did++;
-
-    
+    auto dataSubMenu = makeDataMenu(menuRect);
     settingsMenu->addEntry(dataSubMenu, Surge::UI::toOSCaseForMenu("Data Folders"));
     eid++;
     dataSubMenu->forget();
 
-    auto skinSubMenu = makeSkinMenu(menuRect);
-    settingsMenu->addEntry(skinSubMenu, "Skins" );
-    eid++;
-    skinSubMenu->forget();
 
-#define USE_DEV_MENU 1
 #if USE_DEV_MENU    
     auto devSubMenu = makeDevMenu(menuRect);
     settingsMenu->addEntry(devSubMenu, Surge::UI::toOSCaseForMenu("Developer Options"));
@@ -4270,7 +4099,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
 {
     COptionMenu* mpeSubMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+    new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
     std::string endis = "Enable MPE";
     if (synth->mpeEnabled)
        endis = "Disable MPE";
@@ -4301,7 +4130,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
        this->synth->mpePitchBendRange = newVal;
     });
     return mpeSubMenu;
-
 }
 
 VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
@@ -4317,7 +4145,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                         this->synth->storage.init_tables();
                     }
         );
-    st->setEnabled(! this->synth->storage.isStandardTuning);
+    st->setEnabled(!this->synth->storage.isStandardTuning || tuningCacheForToggle.size() > 0);
     tid++;
     
     auto *kst = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Keyboard Mapping"),
@@ -4326,7 +4154,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                         this->synth->storage.remapToStandardKeyboard();
                     }
         );
-    kst->setEnabled(! this->synth->storage.isStandardMapping);
+    kst->setEnabled(!this->synth->storage.isStandardMapping || tuningCacheForToggle.size() > 0);
     tid++;
 
     tuningSubMenu->addSeparator();
@@ -4463,6 +4291,157 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
     return tuningSubMenu;
 }
 
+VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
+{
+    COptionMenu* zoomSubMenu =
+        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+
+    int zid = 0;
+    for (auto s : {100, 125, 150, 200, 300}) // These are somewhat arbitrary reasonable defaults
+    {
+        std::ostringstream lab;
+        lab << "Zoom to " << s << "%";
+        CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+        zcmd->setActions([this, s](CCommandMenuItem* m) { setZoomFactor(s); });
+        zoomSubMenu->addEntry(zcmd);
+        zid++;
+    }
+
+    zoomSubMenu->addSeparator(zid++);
+
+    for (auto jog : {-25, -10, 10, 25}) // These are somewhat arbitrary reasonable defaults also
+    {
+        std::ostringstream lab;
+        if (jog > 0)
+        lab << "Grow by " << jog << "%";
+        else
+        lab << "Shrink by " << -jog << "%";
+
+        CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+        zcmd->setActions(
+            [this, jog](CCommandMenuItem* m) { setZoomFactor(getZoomFactor() + jog); });
+        zoomSubMenu->addEntry(zcmd);
+        zid++;
+    }
+
+    zoomSubMenu->addSeparator(zid++);
+    CCommandMenuItem* biggestZ = new CCommandMenuItem(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Largest")));
+    biggestZ->setActions([this](CCommandMenuItem* m) {
+        int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
+                                                90, // See comment in setZoomFactor
+                                                WINDOW_SIZE_X, WINDOW_SIZE_Y);
+        setZoomFactor(newZF);
+    });
+    zoomSubMenu->addEntry(biggestZ);
+    zid++;
+
+    CCommandMenuItem* smallestZ = new CCommandMenuItem(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Smallest")));
+    smallestZ->setActions([this](CCommandMenuItem* m) { setZoomFactor(minimumZoom); });
+    zoomSubMenu->addEntry(smallestZ);
+    zid++;
+
+    zoomSubMenu->addSeparator(zid++);
+    std::ostringstream zss;
+    zss << "Set " << zoomFactor << "% as Default";
+    CCommandMenuItem* defaultZ = new CCommandMenuItem(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(zss.str().c_str())));
+    defaultZ->setActions([this](CCommandMenuItem* m) {
+        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom",
+                                            this->zoomFactor);
+    });
+    zoomSubMenu->addEntry(defaultZ);
+    zid++;
+
+    addCallbackMenu(
+        zoomSubMenu, Surge::UI::toOSCaseForMenu("Set Default Zoom Level to..."), [this]() {
+            // FIXME! This won't work on linux
+            char c[256];
+            snprintf(c, 256, "%d", this->zoomFactor);
+            spawn_miniedit_text(c, 16);
+            int newVal = ::atoi(c);
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
+            this->setZoomFactor(newVal);
+        });
+    zid++;
+
+    return zoomSubMenu;
+}
+
+VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
+{
+   COptionMenu* uiOptionsMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                VSTGUI::COptionMenu::kNoDrawStyle |
+                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   // Mouse behavior
+   int mid = 0;
+   COptionMenu* mouseSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                               VSTGUI::COptionMenu::kNoDrawStyle |
+                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   std::string mouseClassic = "Classic";
+   std::string mouseSlow = "Slow";
+   std::string mouseMedium = "Medium";
+   std::string mouseExact = "Exact";
+
+   VSTGUI::CCommandMenuItem* menuItem = nullptr;
+
+   menuItem = addCallbackMenu(mouseSubMenu, mouseClassic.c_str(), [this]() {
+      CSurgeSlider::sliderMoveRateState = CSurgeSlider::kClassic;
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                             CSurgeSlider::sliderMoveRateState);
+   });
+   if (menuItem)
+      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kClassic));
+   mid++;
+
+   menuItem = addCallbackMenu(mouseSubMenu, mouseSlow.c_str(), [this]() {
+      CSurgeSlider::sliderMoveRateState = CSurgeSlider::kSlow;
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                             CSurgeSlider::sliderMoveRateState);
+   });
+   if (menuItem)
+      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow));
+   mid++;
+
+   menuItem = addCallbackMenu(mouseSubMenu, mouseMedium.c_str(), [this]() {
+      CSurgeSlider::sliderMoveRateState = CSurgeSlider::kMedium;
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                             CSurgeSlider::sliderMoveRateState);
+   });
+   if (menuItem)
+      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium));
+   mid++;
+
+   menuItem = addCallbackMenu(mouseSubMenu, mouseExact.c_str(), [this]() {
+      CSurgeSlider::sliderMoveRateState = CSurgeSlider::kExact;
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                             CSurgeSlider::sliderMoveRateState);
+   });
+   if (menuItem)
+      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact));
+   mid++;
+
+   std::string mouseMenuName = Surge::UI::toOSCaseForMenu("Mouse Behavior");
+
+   uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
+   mouseSubMenu->forget();
+
+#if !LINUX
+   auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO", 0);
+   auto bitmapMenu = useBitmap ? "Use Vectorized LFO Display" : "Use Bitmap LFO Display";
+   addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu(bitmapMenu), [this, useBitmap]() {
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "useBitmapLFO",
+                                             useBitmap ? 0 : 1);
+      this->synth->refresh_editor = true;
+   });
+#endif
+
+   return uiOptionsMenu;
+}
+
 VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 {
     int tid=0;
@@ -4540,6 +4519,50 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     tid++;
 
     return skinSubMenu;
+}
+
+VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
+{
+   int did = 0;
+   COptionMenu* dataSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                              VSTGUI::COptionMenu::kNoDrawStyle |
+                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   addCallbackMenu(
+       dataSubMenu, Surge::UI::toOSCaseForMenu("Open Factory Data Folder..."), [this]() {
+          Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath);
+       });
+   did++;
+
+   addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
+      // make it if it isn't there
+      fs::create_directories(this->synth->storage.userDataPath);
+      Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
+   });
+   did++;
+
+   addCallbackMenu(
+       dataSubMenu, Surge::UI::toOSCaseForMenu("Set Custom User Data Folder..."), [this]() {
+          auto cb = [this](std::string f) {
+             // FIXME - check if f is a path
+             this->synth->storage.userDataPath = f;
+             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "userDataPath", f);
+             this->synth->storage.refresh_wtlist();
+             this->synth->storage.refresh_patchlist();
+          };
+          Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath, "", "",
+                                                        cb, true, true);
+       });
+   did++;
+
+   dataSubMenu->addSeparator(did++);
+
+   addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Rescan All Data Folders"), [this]() {
+      this->synth->storage.refresh_wtlist();
+      this->synth->storage.refresh_patchlist();
+   });
+
+   return dataSubMenu;
 }
 
 void SurgeGUIEditor::reloadFromSkin()
