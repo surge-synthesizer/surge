@@ -565,7 +565,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    {
       beginEdit();
       controlstate = cs_drag;
-      getFrame()->setCursor( VSTGUI::kCursorHand );
+      // getFrame()->setCursor( VSTGUI::kCursorHand );
       statezoom = 1.f;
 
       edit_value = modmode ? &modval : &value;
@@ -601,7 +601,7 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 #endif
       endEdit();
       controlstate = cs_none;
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      // getFrame()->setCursor( VSTGUI::kCursorDefault );
       
       edit_value = nullptr;
 
@@ -692,11 +692,13 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
       {
          handle_rect.offset(1, dispv);
       }
-      
+
+      /*
       if( handle_rect.pointInside(where) )
          getFrame()->setCursor( VSTGUI::kCursorHand );
       else
          getFrame()->setCursor( VSTGUI::kCursorDefault );
+      */
    }
    
    if ((controlstate == cs_drag) && (buttons & kLButton))

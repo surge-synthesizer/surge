@@ -71,12 +71,12 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
 
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-      virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      getFrame()->setCursor( VSTGUI::kCursorHand );
+   virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
+      // getFrame()->setCursor( VSTGUI::kCursorHand );
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      // getFrame()->setCursor( VSTGUI::kCursorDefault );
       return VSTGUI::kMouseEventHandled;
    }
 

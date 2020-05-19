@@ -1119,7 +1119,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 {
    if (rect_shapes.pointInside(where))
    {
-      getFrame()->setCursor( VSTGUI::kCursorHand );
+      // getFrame()->setCursor( VSTGUI::kCursorHand );
    }
    else if (ss && lfodata->shape.val.i == ls_stepseq && (
                rect_steps.pointInside(where) ||
@@ -1130,11 +1130,11 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                rect_le.pointInside(where)
                ))
    {
-      getFrame()->setCursor( VSTGUI::kCursorHand );
+      // getFrame()->setCursor( VSTGUI::kCursorHand );
    }
    else
    {
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      // getFrame()->setCursor( VSTGUI::kCursorDefault );
    }
    if (controlstate == cs_shape)
    {

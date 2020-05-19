@@ -134,10 +134,14 @@ VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const
 }
 
 VSTGUI::CMouseEventResult CStatusPanel::onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) {
+   /*
+   ** Restore once I have a hover strategy for this widget
+
    if ( mpeBox.pointInside(where) || tuningBox.pointInside(where) || zoomBox.pointInside(where) )
-      getFrame()->setCursor( VSTGUI::kCursorHand );
+     getFrame()->setCursor( VSTGUI::kCursorHand );
    else
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
+     getFrame()->setCursor( VSTGUI::kCursorDefault );
+   */
    
    return kMouseEventHandled;
 }
