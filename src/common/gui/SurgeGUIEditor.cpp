@@ -2812,6 +2812,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid++;
             }
             
+            contextMenu->addSeparator(eid++);
+
             {
                if (synth->learn_param > -1)
                   cancellearn = true;
@@ -2852,6 +2854,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                      synth->storage.save_midi_controllers();
                                   }
                                });
+               eid++;
             }
             
             int n_ms = 0;
