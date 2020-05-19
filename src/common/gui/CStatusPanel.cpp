@@ -19,16 +19,16 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
     
    std::string labs[numDisplayFeatures];
    labs[mpeMode] = "MPE";
-   labs[tuningMode] = "Tuning";
+   labs[tuningMode] = "Tune";
    labs[zoomOptions] = "Zoom";
-   int y0 = 11;
-   int boxSize = 13;
+   float y0 = 11;
+   float boxSize = 13;
    for( int i=0; i<numDisplayFeatures; ++i )
    {
-       int xp = size.left + 2;
-       int yp = size.top + y0 + i * boxSize + (2 * i);
-       int w = size.getWidth() - 4;;
-       int h = boxSize - 2;
+       float xp = size.left + 2;
+       float yp = size.top + y0 + i * boxSize + (2 * i);
+       float w = size.getWidth() - 4;;
+       float h = boxSize - 2;
        if ( i == mpeMode )
            mpeBox = CRect(xp,yp,xp+w,yp+h);
        if ( i == tuningMode )
@@ -57,7 +57,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
        {
           dc->setDrawMode(VSTGUI::kAntiAliasing);
           dc->setFrameColor(bg);;
-          auto p = dc->createRoundRectGraphicsPath(CRect(xp,yp,xp+w,yp+h), 5 );
+          auto p = dc->createRoundRectGraphicsPath(CRect(xp,yp,xp+w,yp+h), 5.f );
           dc->setFillColor(bg);;
           dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
           dc->setFrameColor(ol);
@@ -84,7 +84,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
           
        dc->setFont(displayFont, 8, 2);
        auto sw = dc->getStringWidth(labs[i].c_str());
-       dc->drawString(labs[i].c_str(), CPoint( xp + w/2 - sw/2, yp + h - 3 ), true );
+       dc->drawString(labs[i].c_str(), CPoint( xp + w/2.0 - sw/2.0, yp + h - 3.0 ), true );
    }
 }
 
