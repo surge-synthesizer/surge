@@ -172,7 +172,8 @@ public:
                                  
          v_c1_delayed = v_c1;
 
-         __m128 S = _mm_load_ss(&lc[s].f);
+         float sparm = limit_range( lc[s].f, 0.f, 1.f );
+         __m128 S = _mm_load_ss(&sparm);
          S = _mm_mul_ss(S, S);
          __m128 v_attack = _mm_andnot_ps(discharge, v_gate);
          __m128 v_decay = _mm_or_ps(_mm_andnot_ps(discharge, v_cc_vec), _mm_and_ps(discharge, S));
