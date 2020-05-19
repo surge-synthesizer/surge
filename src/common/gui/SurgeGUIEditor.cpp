@@ -4143,6 +4143,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                     [this]()
                     {
                         this->synth->storage.init_tables();
+                        tuningCacheForToggle = "";
                     }
         );
     st->setEnabled(!this->synth->storage.isStandardTuning || tuningCacheForToggle.size() > 0);
@@ -4152,9 +4153,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                     [this]()
                     {
                         this->synth->storage.remapToStandardKeyboard();
+                        mappingCacheForToggle = "";
                     }
         );
-    kst->setEnabled(!this->synth->storage.isStandardMapping || tuningCacheForToggle.size() > 0);
+    kst->setEnabled(!this->synth->storage.isStandardMapping || mappingCacheForToggle.size() > 0);
     tid++;
 
     tuningSubMenu->addSeparator();

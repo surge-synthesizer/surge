@@ -29,9 +29,9 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
        int yp = size.top + y0 + i * boxSize + (2 * i);
        int w = size.getWidth() - 4;;
        int h = boxSize - 2;
-       if( i == mpeMode )
+       if ( i == mpeMode )
            mpeBox = CRect(xp,yp,xp+w,yp+h);
-       if( i == tuningMode )
+       if ( i == tuningMode )
            tuningBox = CRect(xp,yp,xp+w,yp+h);
        if (i == zoomOptions)
            zoomBox = CRect(xp,yp,xp+w,yp+h);
@@ -42,12 +42,12 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
        auto fg = skin->getColor( "mpetunstatus.button.selected.foreground", kBlackCColor );
        auto ufg = skin->getColor( "mpetunstatus.button.unselected.foreground", kBlackCColor );
        auto hl = skin->getColor( "mpetunstatus.buttun.highlight", CColor(0xff, 0x9A, 0x10 ) );
-       if( ! dispfeatures[i] )
+       if ( ! dispfeatures[i] )
        {
            hlbg = false;
        }
 
-       if( statusButtonGlyph != nullptr )
+       if ( statusButtonGlyph != nullptr )
        {
           CRect wr = CRect(xp,yp,xp+w,yp+h);
 
@@ -64,7 +64,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
           dc->drawGraphicsPath(p, CDrawContext::kPathStroked);
           p->forget();
           
-          if( hlbg )
+          if ( hlbg )
           {
              auto p = dc->createRoundRectGraphicsPath(CRect(xp+2,yp+2,xp+w-2,yp+h-2), 3 );
              dc->setFillColor(hl);
@@ -73,7 +73,7 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
           }
        }
 
-       if( hlbg )
+       if ( hlbg )
        {
            dc->setFontColor(fg);
        }
@@ -90,35 +90,39 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
 
 VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button)
 {
-    if( mpeBox.pointInside(where) && editor )
+    if ( mpeBox.pointInside(where) && editor )
     {
-        if( button & kLButton )
+        if ( button & kLButton )
         {
-            editor->toggleMPE();
+             editor->toggleMPE();
         }
-        else if( button & kRButton )
+        else if ( button & kRButton )
         {
-            editor->showMPEMenu(where);
+             editor->showMPEMenu(where);
         }
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
 
-    if( tuningBox.pointInside(where) && editor )
+    if ( tuningBox.pointInside(where) && editor )
     {
-        if( button & kLButton )
+        if ( button & kLButton )
         {
-           editor->toggleTuning();
+            if (!storage->isStandardTuning  || editor->tuningCacheForToggle.size() > 0 ||
+                !storage->isStandardMapping || editor->mappingCacheForToggle.size() > 0)
+                editor->toggleTuning();
+            else
+                editor->showTuningMenu(where);
         }
-        else if( button & kRButton )
+        else if ( button & kRButton )
         {
             editor->showTuningMenu(where);
         }
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
 
-    if( zoomBox.pointInside(where) && editor )
+    if ( zoomBox.pointInside(where) && editor )
     {
-        if( button & kLButton )
+        if ( button & kLButton )
         {
             editor->showZoomMenu(where);
         }
@@ -130,7 +134,7 @@ VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const
 }
 
 VSTGUI::CMouseEventResult CStatusPanel::onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) {
-   if( mpeBox.pointInside(where) || tuningBox.pointInside(where) || zoomBox.pointInside(where) )
+   if ( mpeBox.pointInside(where) || tuningBox.pointInside(where) || zoomBox.pointInside(where) )
       getFrame()->setCursor( VSTGUI::kCursorHand );
    else
       getFrame()->setCursor( VSTGUI::kCursorDefault );
@@ -156,13 +160,13 @@ bool CStatusPanel::onDrop(VSTGUI::DragEventData data )
          fs::path fPath(fName);
          if ((_stricmp(fPath.extension().generic_string().c_str(), ".scl") == 0))
          {
-             if( editor )
-                 editor->tuningFileDropped(fName);
+            if ( editor )
+               editor->tuningFileDropped(fName);
          }
          if ((_stricmp(fPath.extension().generic_string().c_str(), ".kbm") == 0))
          {
-             if( editor )
-                 editor->mappingFileDropped(fName);
+            if ( editor )
+               editor->mappingFileDropped(fName);
          }
       }
    }
