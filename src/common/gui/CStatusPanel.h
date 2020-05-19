@@ -26,6 +26,7 @@ public:
         for( auto i=0; i<numDisplayFeatures; ++i )
             dispfeatures[i] = false;
         doingDrag = false;
+        this->storage = storage;
     }
     
     void setDisplayFeature( DisplayFeatures df, bool v ) {
