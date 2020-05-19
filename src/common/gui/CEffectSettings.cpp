@@ -142,11 +142,12 @@ CMouseEventResult CEffectSettings::onMouseMoved(CPoint& where, const CButtonStat
          isInside = true;
       }
    }
+   /*
    if( isInside )
       getFrame()->setCursor( VSTGUI::kCursorHand );
    else
       getFrame()->setCursor( VSTGUI::kCursorDefault );
-
+   */
    
    return kMouseEventHandled;
 }

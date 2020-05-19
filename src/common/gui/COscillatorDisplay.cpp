@@ -910,16 +910,16 @@ CMouseEventResult COscillatorDisplay::onMouseMoved(CPoint& where, const CButtonS
    {
       if (rprev.pointInside(where) || rnext.pointInside(where) || rmenu.pointInside(where) )
       {
-         getFrame()->setCursor( VSTGUI::kCursorHand );
+         // getFrame()->setCursor( VSTGUI::kCursorHand );
       }
       else
       {
-         getFrame()->setCursor( VSTGUI::kCursorDefault );
+         // getFrame()->setCursor( VSTGUI::kCursorDefault );
       }
    }
    else
    {
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
+      // getFrame()->setCursor( VSTGUI::kCursorDefault );
    }
 
    if (controlstate)
