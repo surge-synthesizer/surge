@@ -5,9 +5,10 @@
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
 #include <iostream>
+#include "SkinSupport.h"
 
 
-class CModulationSourceButton : public CCursorHidingControl
+class CModulationSourceButton : public CCursorHidingControl, public Surge::UI::SkinConsumingComponnt
 {
 private:
    typedef CCursorHidingControl super;
@@ -72,13 +73,16 @@ public:
 
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorHand );
+      hovered = true;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorDefault );
+      hovered = false;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
+   bool hovered = false;
 
    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };
