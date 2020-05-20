@@ -110,8 +110,6 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    CRect sze = getViewSize();
    // sze.offset(-size.left,-size.top);
 
-   const CColor ColSelectedBG = CColor(0, 0, 0, 255);
-   const CColor ColBG = CColor(18, 52, 99, 255);
    const CColor ColHover = CColor(103, 167, 253, 255);
    const CColor ColEdge = CColor(46, 134, 254, 255);
    const CColor ColTint = CColor(46, 134, 254, 255);
@@ -137,25 +135,57 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
    CColor FrameCol, FillCol, FontCol;
 
-   FillCol = ColBG;
-   FrameCol = UsedOrActive ? ColEdge : ColSemiTint;
-   FontCol = UsedOrActive ? ColEdge : ColSemiTint;
+   auto brighten = [](const CColor &c) -> CColor
+                      {
+                         auto fac = 1.4f;
+                         return CColor( std::min( (int)(c.red * fac), 255 ),
+                                        std::min( (int)(c.green * fac), 255 ),
+                                        std::min( (int)(c.blue * fac), 255 ) );
+                      };
+
+   FillCol = skin->getColor( "modbutton.inactive.fill", CColor(18, 52, 99, 255) );
+   FrameCol = UsedOrActive ? skin->getColor( "modbutton.inactive.frame", ColEdge ) :
+      skin->getColor( "modbutton.used.frame", ColSemiTint );
+   FontCol = UsedOrActive ? skin->getColor( "modbutton.inactive.font", ColEdge ) :
+      skin->getColor( "modbutton.used.font", ColSemiTint );
+   if( hovered )
+   {
+      FrameCol = UsedOrActive ? skin->getColor( "modbutton.inactive.frame.hover", brighten( FrameCol ) ):
+         skin->getColor( "modbutton.used.frame.hover", brighten( FrameCol ) );
+      FontCol = UsedOrActive ? skin->getColor( "modbutton.inactive.font.hover", brighten( ColEdge )  ):
+         skin->getColor( "modbutton.used.font.hover", brighten( ColSemiTint ) );
+   }
+   
    if (ActiveModSource)
    {
-      FrameCol = ColBlink; // blink ? ColBlink : ColTint;
-      FillCol = ColBlink; // blink ? ColBlink : ColTint;
-      FontCol = ColBG;
+      FrameCol = skin->getColor( "modbutton.active.frame", ColBlink ); // blink ? ColBlink : ColTint;
+      if( hovered )
+         FrameCol = skin->getColor( "modbutton.active.frame.hover", brighten( FrameCol ) );
+      
+      FillCol = skin->getColor( "modbutton.active.fill", ColBlink ); // blink ? ColBlink : ColTint;
+      FontCol = skin->getColor( "modbutton.active.font", CColor(18, 52, 99, 255) );
+      if( hovered )
+         FontCol = skin->getColor( "modbutton.active.font.hover", brighten( CColor(18, 52, 99, 255) ) );
    }
    else if (SelectedModSource)
    {
-      FrameCol = ColTint;
-      FillCol = ColTint;
-      FontCol = ColBG;
+      FrameCol = skin->getColor( "modbutton.selected.frame", ColTint );
+      if( hovered )
+         FrameCol = skin->getColor( "modbutton.selected.frame.hover", brighten( FrameCol ) );
+      FillCol = skin->getColor( "modbutton.selected.fill", ColTint );
+      FontCol = skin->getColor( "modbutton.selected.font", CColor(18, 52, 99, 255) );
+      if( hovered )
+         FontCol = skin->getColor( "modbutton.selected.font.hover", brighten( CColor(18, 52, 99, 255) ) );
    }
    else if (tint)
    {
-      FrameCol = ColHover;
-      FontCol = ColHover;
+      FillCol = skin->getColor( "modbutton.used.fill", FillCol );
+      FrameCol = skin->getColor( "modbutton.used.frame", ColHover );
+      if( hovered )
+         FrameCol = skin->getColor( "modbutton.used.frame.hover", brighten( FrameCol ) );
+      FontCol = skin->getColor( "modbutton.used.font", ColHover );
+      if( hovered )
+         FontCol = skin->getColor( "modbutton.used.font.hover", brighten( ColHover ) );
    }
 
    CRect framer(sze);
@@ -191,7 +221,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       MCRect.top += 12;
       MCRect.bottom--;
       MCRect.right--;
-      dc->setFillColor(ColBG);
+      dc->setFillColor(skin->getColor( "modbutton.inactive.fill", CColor(18, 52, 99, 255) ));
       dc->drawRect(MCRect, kDrawFilled);
       CRect brect(MCRect);
       brect.inset(1, 1);

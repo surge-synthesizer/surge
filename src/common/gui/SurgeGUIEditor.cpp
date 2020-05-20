@@ -897,6 +897,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
       gui_modsrc[ms] =
          new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms, bitmapStore);
+      ((CModulationSourceButton*)gui_modsrc[ms])->setSkin(currentSkin);
       ((CModulationSourceButton*)gui_modsrc[ms])
          ->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
       if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
