@@ -1107,7 +1107,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
          CountedSetUserData* cs = reinterpret_cast<CountedSetUserData*>(user_data);
          auto count = cs->getCountedSetSize();
          auto tl = count * f;
-         sprintf(txt, "%.1f / %d", tl, count);
+         sprintf(txt, "%.2f / %d", tl, count);
       }
 
       break;
