@@ -482,6 +482,85 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx)
       if (quadrant > 2)
          pvalue = 0;
       break;
+   case 15:
+      switch (quadrant)
+      {
+      case 1:
+         pvalue = 1 - sinx;
+         break;
+      case 4:
+         pvalue = -1 - sinx;
+         break;
+      default:
+         pvalue = 0;
+         break;
+      }
+      break;
+   case 16:
+      switch (quadrant)
+      {
+      case 1:
+         pvalue = 1 - sinx;
+         break;
+      case 4:
+         pvalue = -1 + cosx;
+         break;
+      default:
+         pvalue = 0;
+         break;
+      }
+      break;
+   case 17:
+      switch (quadrant)
+      {
+      case 1:
+         pvalue = 1 - sinx;
+         break;
+      case 2:
+         pvalue = abs(-1 + sinx);
+         break;
+      case 3:
+         pvalue = -1 - sinx;
+         break;
+      case 4:
+         pvalue = -1 * abs(1 + sinx);
+         break;
+      }
+      pvalue *= 0.85;
+      break;
+   case 18:
+      switch (quadrant)
+      {
+      case 1:
+         pvalue = sin2x;
+         break;
+      case 2:
+      case 3:
+         pvalue = cosx;
+         break;
+      case 4:
+         pvalue = -sin2x;
+         break;
+      }
+      break;
+   case 19:
+   {
+      float sin4x = 2 * sin2x * cos2x;
+
+      switch (quadrant)
+      {
+      case 1:
+         pvalue = sin4x;
+         break;
+      case 2:
+         pvalue = -sin2x;
+         break;
+      default:
+         pvalue = sinx;
+         break;
+      }
+   }
+      break;
 
    default:
       break;
