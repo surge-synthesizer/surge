@@ -189,7 +189,6 @@ void Parameter::clear_flags()
    temposync = false;
    extend_range = false;
    absolute = false;
-   snap = false;
 }
 
 bool Parameter::can_temposync()
@@ -227,16 +226,6 @@ bool Parameter::can_be_absolute()
    {
    case ct_oscspread:
    case ct_pitch_semi7bp_absolutable:
-      return true;
-   }
-   return false;
-}
-
-bool Parameter::can_snap()
-{
-   switch (ctrltype)
-   {
-   case ct_countedset_percent:
       return true;
    }
    return false;
