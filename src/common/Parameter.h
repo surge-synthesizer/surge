@@ -241,7 +241,6 @@ public:
    bool can_temposync();
    bool can_extend_range();
    bool can_be_absolute();
-   bool can_snap();
    bool can_setvalue_from_string();
    void clear_flags();
    void set_type(int ctrltype);
@@ -294,7 +293,7 @@ public:
    bool affect_other_parameters;
    float moverate;
    bool per_voice_processing;
-   bool temposync, extend_range, absolute, snap;
+   bool temposync, extend_range, absolute;
    
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable

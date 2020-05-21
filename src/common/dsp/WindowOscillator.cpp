@@ -73,7 +73,6 @@ void WindowOscillator::init_ctrltypes()
    oscdata->p[0].set_name("Morph");
    oscdata->p[0].set_type(ct_countedset_percent);
    oscdata->p[0].set_user_data(oscdata);
-   oscdata->p[0].snap = false;
 
    oscdata->p[1].set_name("Formant");
    oscdata->p[1].set_type(ct_pitch);
