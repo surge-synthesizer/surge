@@ -108,8 +108,6 @@ public:
       delete cdisurf;
    }
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-   void drawVectorized(VSTGUI::CDrawContext* dc);
-   void drawBitmap(VSTGUI::CDrawContext* dc);
    void drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel);
    
    void invalidateIfIdIsInRange(int id);
@@ -138,7 +136,6 @@ protected:
    bool edit_trigmask;
    int controlstate;
    int selectedSSrow = -1;
-   bool ignore_bitmap_pref = false; // if this is true, we always use the bitmap
    
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };

@@ -537,7 +537,7 @@ void SurgeGUIEditor::idle()
 
             if (param[j])
             {
-               char pname[256], pdisp[256], txt[256];
+               char pname[256], pdisp[256];
                synth->getParameterName(j, pname);
                synth->getParameterDisplay(j, pdisp);
 
@@ -808,8 +808,6 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
    default:
       return true;
    }
-
-   return true; // visible by default
 }
 
 CRect positionForModulationGrid(modsources entry)
@@ -4438,16 +4436,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
 
    uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
    mouseSubMenu->forget();
-
-   auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO", 0 );
-   auto bitmapMenu = useBitmap ? "Use Vectorized LFO Display" : "Use Bitmap LFO Display";
-   addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu(bitmapMenu), [this, useBitmap]() {
-      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "useBitmapLFO",
-                                             useBitmap ? 0 : 1);
-      this->synth->refresh_editor = true;
-   });
-
-   uiOptionsMenu->addSeparator(mid++);
 
    auto precReadout = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
    menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
