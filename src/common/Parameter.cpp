@@ -18,6 +18,7 @@ Parameter::Parameter() : posx( PositionHolder::Axis::X ),
 {
    val.i = 0;
    posy_offset = 0;
+   storage = nullptr;
 }
 
 Parameter::~Parameter()
@@ -161,6 +162,7 @@ Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
    this->modulateable = modulateable;
    this->scene = scene;
    this->ctrlstyle = ctrlstyle;
+   this->storage = nullptr;
    strncpy(this->ui_identifier, ui_identifier.c_str(), NAMECHARS );
 
    strncpy(this->name, name, NAMECHARS);
@@ -1224,16 +1226,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_pitch:
       case ct_syncpitch:
       case ct_freq_mod:
-         sprintf(txt, "%.2f semitones", f);
+         sprintf(txt, "%.2f %s", f, (storage && ! storage->isStandardTuning ? "keys" : "semitones" ));
          break;
       case ct_pitch_semi7bp:
-          sprintf(txt, "%.2f semitones", get_extended(f));
+          sprintf(txt, "%.2f %s", get_extended(f), (storage && ! storage->isStandardTuning ? "keys" : "semitones" ) );
           break;
       case ct_pitch_semi7bp_absolutable:
          if(absolute)
              sprintf(txt, "%.1f Hz", 10.f * get_extended(f));
          else
-             sprintf(txt, "%.2f semitones", get_extended(f));
+             sprintf(txt, "%.2f %s", get_extended(f), (storage && ! storage->isStandardTuning ? "keys" : "semitones" ) );
          break;
       case ct_fmratio:
          sprintf(txt, "C : %.2f", f);

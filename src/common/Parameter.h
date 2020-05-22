@@ -217,6 +217,8 @@ private:
    int val;
 };
 
+class SurgeStorage;
+
 class Parameter
 {
 public:
@@ -297,4 +299,14 @@ public:
    
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable
+
+   /*
+   ** Parameter has a pointer to the storage that manages the patch that contains it
+   ** *if* this parameter was thus constructed. There are real and legitimate uses
+   ** of the Parameter class where this pointer will be null so if you use it you
+   ** have to check the nullity
+   **
+   ** if( storage && storage->isStandardTuning ) { }
+   */
+   SurgeStorage *storage = nullptr;
 };
