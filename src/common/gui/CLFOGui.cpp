@@ -5,6 +5,7 @@
 #include "CLFOGui.h"
 #include "LfoModulationSource.h"
 #include "UserDefaults.h"
+#include "UIInstrumentation.h"
 #include <chrono>
 
 using namespace VSTGUI;
@@ -44,26 +45,34 @@ void CLFOGui::draw(CDrawContext* dc)
    ** 
    ** Also some older machines report performance problems so make it switchable
    */
-   drawBitmap(dc);
+   // drawBitmap(dc);
+
+   // We want to fix this in master, so make it switchable and default to true
+   auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO", 1 );
+
 #else
    auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO", 0 );
-
+#endif
+   
    if( ignore_bitmap_pref || useBitmap )
    {
-        drawBitmap(dc);
+      Surge::Debug::TimeThisBlock t( "LFO.Bitmap.Draw" );
+      drawBitmap(dc);
    }
    else
    {
+      Surge::Debug::TimeThisBlock t( "LFO.Vector.Draw" );
        auto start = std::chrono::high_resolution_clock::now();
        drawVectorized(dc);
        auto end = std::chrono::high_resolution_clock::now();
        std::chrono::duration<double> elapsed_seconds = end-start;
 
+#if ! LINUX       
        // If this draw takes more than, say, 1/10th of a second, our GPU is too slow. 
        if( elapsed_seconds.count() > 0.1 )
            ignore_bitmap_pref = true;
+#endif       
    }
-#endif
 }
 
 void CLFOGui::drawVectorized(CDrawContext* dc)
@@ -107,6 +116,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
    }
    else
    {
+      auto debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.001 vector setup" );
       bool drawBeats = false;
       CGraphicsPath *path = dc->createGraphicsPath();
       CGraphicsPath *eupath = dc->createGraphicsPath();
@@ -149,11 +159,15 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
           std::min(pow(2.0f,lfodata->release.val.f), 4.f) +
           susTime;
 
+      debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.002 sample" );
+
       LfoModulationSource* tlfo = new LfoModulationSource();
       tlfo->assign(storage, lfodata, tp, 0, ss, true);
       tlfo->attack();
       CRect boxo(maindisp);
       boxo.offset(-size.left - splitpoint, -size.top);
+
+      debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.003 background" );
 
       if( skin->hasColor( "lfo.waveform.fill" ) )
       {
@@ -186,6 +200,9 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       int susCountdown = -1;
       
       float priorval = 0.f;
+
+      debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.004 makepath" );
+
       for (int i=0; i<totalSamples; i += averagingWindow )
       {
          float val = 0;
@@ -261,6 +278,8 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       }
       delete tlfo;
 
+      debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.005 apply transforms" );
+
       VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
           .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
           .translate(boxo.getTopLeft().x, boxo.getTopLeft().y )
@@ -278,6 +297,8 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #endif
 
       dc->saveGlobalState();
+
+      debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.006 make axes" );
 
       // find time delta
       int maxNumLabels = 5;
@@ -397,7 +418,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
          }
          
       }
-   
+
       // OK so draw the rules
       CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
       CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
@@ -437,16 +458,20 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 #else
       dc->setLineWidth(1.3);
 #endif
+      debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.007 draw wave" );
+
       //       lfo waveform itself
       dc->setFrameColor(skin->getColor("lfo.waveform.wave", VSTGUI::CColor( 0x00, 0x00, 0x00, 0xFF )));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
 
-
+      debugTimer =std::make_shared<Surge::Debug::TimeThisBlock>( "LFO.Vector.Draw.008 restore state" );
       dc->restoreGlobalState();
       path->forget();
       eupath->forget();
       edpath->forget();
+
+      debugTimer = nullptr;
    }
 
    CColor cskugga = {0x5d, 0x5d, 0x5d, 0xff};
