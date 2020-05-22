@@ -2271,6 +2271,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          bool cancellearn = false;
          int ccid = 0;
 
+         int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+
          // should start at 0, but started at 1 before.. might be a reason but don't remember why...
          std::vector<modsources> possibleSources;
          possibleSources.push_back(modsource);
@@ -2293,9 +2295,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char tmptxt[256];
-                  sprintf(tmptxt, "%s -> %s: %.2f", (char*)modulatorName(thisms, true).c_str(),
+                  sprintf(tmptxt, "%s -> %s: %.*f", (char*)modulatorName(thisms, true).c_str(),
                           synth->storage.getPatch().param_ptr[md]->get_full_name(),
-                          synth->getModDepth(md, thisms));
+                          (detailedMode ? 6 : 2), synth->getModDepth(md, thisms));
 
                   auto clearOp = [this, parameter, control, thisms]() {
                                     this->promptForUserValueEntry( parameter, control, thisms );
@@ -2861,14 +2863,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (n_ms)
             {
                contextMenu->addSeparator(eid++);
+
+               int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+
                for (int k = 1; k < n_modsources; k++)
                {
                   modsources ms = (modsources)k;
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char tmptxt[256];
-                     sprintf(tmptxt, "%s -> %s: %.2f", (char*)modulatorName(ms, true).c_str(),
-                             p->get_name(), synth->getModDepth(ptag, (modsources)ms));
+                     sprintf(tmptxt, "%s -> %s: %.*f", (char*)modulatorName(ms, true).c_str(),
+                             p->get_name(), (detailedMode ? 6 : 2),
+                             synth->getModDepth(ptag, (modsources)ms));
                      addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms ]() {
                                                              this->promptForUserValueEntry( p, control, ms );
                                                           });
@@ -3429,6 +3435,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    default:
    {
       int ptag = tag - start_paramtags;
+
+      int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+
       if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
       {
          Parameter* p = synth->storage.getPatch().param_ptr[ptag];
@@ -3452,7 +3461,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
             synth->getParameterName(ptag, txt);
             sprintf(pname, "%s -> %s", modulatorName(thisms,true).c_str(), txt);
-            sprintf(pdisp, "%.3f", synth->getModDepth(ptag, thisms));
+            sprintf(pdisp, "%.*f", (detailedMode ? 6 : 2), synth->getModDepth(ptag, thisms));
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
 
@@ -4324,6 +4333,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
     }
 
     zoomSubMenu->addSeparator(zid++);
+
     CCommandMenuItem* biggestZ = new CCommandMenuItem(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Largest")));
     biggestZ->setActions([this](CCommandMenuItem* m) {
@@ -4342,6 +4352,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
     zid++;
 
     zoomSubMenu->addSeparator(zid++);
+
     std::ostringstream zss;
     zss << "Set " << zoomFactor << "% as Default";
     CCommandMenuItem* defaultZ = new CCommandMenuItem(
@@ -4437,6 +4448,16 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
       this->synth->refresh_editor = true;
    });
 #endif
+
+   uiOptionsMenu->addSeparator(mid++);
+
+   auto precReadout = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
+      [this, precReadout]() {Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts",
+                                             precReadout ? 0 : 1);
+   });
+
+   menuItem->setChecked(precReadout);
 
    return uiOptionsMenu;
 }
@@ -5131,7 +5152,9 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    char txt[256];
    if( ismod )
    {
-      sprintf( txt, "%.4f", synth->getModDepth( p->id, (modsources)ms ) );
+      int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+
+      sprintf(txt, "%.*f", (detailedMode ? 6 : 3), synth->getModDepth(p->id, (modsources)ms));
    }
    else
    {

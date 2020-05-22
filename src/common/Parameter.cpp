@@ -11,6 +11,7 @@
 #include <string>
 #include <cstdlib>
 #include <algorithm>
+#include <UserDefaults.h>
 
 Parameter::Parameter() : posx( PositionHolder::Axis::X ),
                          posy( PositionHolder::Axis::Y ),
@@ -1129,6 +1130,11 @@ void Parameter::get_display(char* txt, bool external, float ef)
    float f;
    bool b;
 
+   int detailedMode = 0;
+
+   if (storage)
+      detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+
    switch (valtype)
    {
    case vt_float:
@@ -1159,11 +1165,11 @@ void Parameter::get_display(char* txt, bool external, float ef)
             }
             else if (f == val_min.f)
             {
-               sprintf(txt, "0.000 s");
+               sprintf(txt, "0.*f s", (detailedMode ? 6 : 3));
             }
             else
             {
-               sprintf(txt, "%.3f s", powf(2.0f, val.f));
+               sprintf(txt, "%.*f s", (detailedMode ? 6 : 3), powf(2.0f, val.f));
             }
          }
          break;
@@ -1174,13 +1180,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
             sprintf(txt, "%s", res.c_str() );
          }
          else
-            sprintf(txt, "%.3f Hz", powf(2.0f, f));
+            sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 3), powf(2.0f, f));
          break;
       case ct_amplitude:
          if (f == 0)
             sprintf(txt, "-inf dB");
          else
-            sprintf(txt, "%.2f dB", amp_to_db(f));
+            sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(f));
          break;
       case ct_decibel:
       case ct_decibel_attenuation:
@@ -1188,66 +1194,69 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_decibel_fmdepth:
       case ct_decibel_narrow:
       case ct_decibel_extra_narrow:
-         sprintf(txt, "%.2f dB", f);
+         sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), f);
          break;
       case ct_decibel_extendable:
       case ct_decibel_narrow_extendable:
-         sprintf(txt, "%.2f dB", get_extended(f));
+         sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), get_extended(f));
          break;
       case ct_bandwidth:
-         sprintf(txt, "%.2f octaves", f);
+         sprintf(txt, "%.*f octaves", (detailedMode ? 6 : 2), f);
          break;
       case ct_freq_shift:
-         sprintf(txt, "%.2f Hz", get_extended(f));
+         sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), get_extended(f));
          break;
       case ct_percent:
       case ct_percent_bidirectional:
       case ct_countedset_percent:
-         sprintf(txt, "%.1f %c", f * 100.f, '%');
+         sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), f * 100.f, '%');
          break;
       case ct_oscspread:
          if (absolute)
-            sprintf(txt, "%.1f Hz", 16.f * get_extended(f));
+            sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), 16.f * get_extended(f));
          else
-            sprintf(txt, "%.1f cents", get_extended(f) * 100.f);
+            sprintf(txt, "%.*f cents", (detailedMode ? 6 : 2), get_extended(f) * 100.f);
          break;
       case ct_detuning:
-         sprintf(txt, "%.1f cents", f * 100.f);
+         sprintf(txt, "%.*f cents", (detailedMode ? 6 : 2), f * 100.f);
          break;
       case ct_stereowidth:
-         sprintf(txt, "%.1fº", f);
+         sprintf(txt, "%.*fº", (detailedMode ? 6 : 2), f);
          break;
       case ct_freq_hpf:
       case ct_freq_audible:
       case ct_freq_vocoder_low:
       case ct_freq_vocoder_high:
-         sprintf(txt, "%.3f Hz", 440.f * powf(2.0f, f / 12.f) );
+         sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 3), 440.f * powf(2.0f, f / 12.f));
          break;
       case ct_pitch:
       case ct_syncpitch:
       case ct_freq_mod:
-         sprintf(txt, "%.2f %s", f, (storage && ! storage->isStandardTuning ? "keys" : "semitones" ));
+         sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), f,
+                 (storage && !storage->isStandardTuning ? "keys" : "semitones"));
          break;
       case ct_pitch_semi7bp:
-          sprintf(txt, "%.2f %s", get_extended(f), (storage && ! storage->isStandardTuning ? "keys" : "semitones" ) );
+         sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), get_extended(f),
+                 (storage && !storage->isStandardTuning ? "keys" : "semitones"));
           break;
       case ct_pitch_semi7bp_absolutable:
          if(absolute)
-             sprintf(txt, "%.1f Hz", 10.f * get_extended(f));
+            sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), 10.f * get_extended(f));
          else
-             sprintf(txt, "%.2f %s", get_extended(f), (storage && ! storage->isStandardTuning ? "keys" : "semitones" ) );
+            sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), get_extended(f),
+                    (storage && !storage->isStandardTuning ? "keys" : "semitones"));
          break;
       case ct_fmratio:
-         sprintf(txt, "C : %.2f", f);
+         sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), f);
          break;
       case ct_flangerpitch:
-         sprintf(txt, "%.2f", f);
+         sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
          break;
       case ct_osc_feedback:
-         sprintf(txt, "%.1f %c", get_extended(f) * 100.f, '%');
+         sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), get_extended(f) * 100.f, '%');
          break;
       default:
-         sprintf(txt, "%.2f", f);
+         sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
          break;
       }
       break;
