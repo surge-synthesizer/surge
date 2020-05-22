@@ -33,11 +33,6 @@ extern CFontRef displayFont;
 
 void COscillatorDisplay::draw(CDrawContext* dc)
 {
-   drawVector(dc);
-}
-
-void COscillatorDisplay::drawVector(CDrawContext* dc)
-{
    pdata tp[2][n_scene_params]; // 0 is orange, 1 is blue
    Oscillator* osces[2];
    std::string olabel;

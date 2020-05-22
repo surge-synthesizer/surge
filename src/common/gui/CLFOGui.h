@@ -108,7 +108,6 @@ public:
       delete cdisurf;
    }
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-   void drawVectorized(VSTGUI::CDrawContext* dc);
    void drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel);
    
    void invalidateIfIdIsInRange(int id);

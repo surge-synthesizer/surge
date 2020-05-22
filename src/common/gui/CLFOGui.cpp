@@ -35,15 +35,8 @@ void CLFOGui::drawtri(CRect r, CDrawContext* context, int orientation)
    }
 }
 
-void CLFOGui::draw(CDrawContext* dc)
-{
-   auto start = std::chrono::high_resolution_clock::now();
-   drawVectorized(dc);
-   auto end = std::chrono::high_resolution_clock::now();
-   std::chrono::duration<double> elapsed_seconds = end-start;
-}
 
-void CLFOGui::drawVectorized(CDrawContext* dc)
+void CLFOGui::draw(CDrawContext* dc)
 {
    assert(lfodata);
    assert(storage);
