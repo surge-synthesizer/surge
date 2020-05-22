@@ -67,7 +67,6 @@ public:
       delete cdisurf;
    }
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-   void drawBitmap(VSTGUI::CDrawContext* dc);
    void drawVector(VSTGUI::CDrawContext* dc);
 
    virtual VSTGUI::DragOperation onDragEnter(VSTGUI::DragEventData data) override
