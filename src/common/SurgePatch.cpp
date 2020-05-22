@@ -617,6 +617,12 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    {
       param_ptr[i]->id = param_ptr[i]->id_promise->value;
       param_ptr[i]->id_promise = nullptr; // we only hold it transiently since we have a direct pointer copy to keep the class size fixed
+
+      /*
+      ** Give the param a weak pointer to the storage, since we know this patch will last the
+      ** lifetime of the storage which created it. See comment in Parameter.h
+      */
+      param_ptr[i]->storage = storage;
    }
 
    scene_start[0] = scene_start_promise[0]->value;
