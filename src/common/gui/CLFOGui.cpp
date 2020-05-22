@@ -288,10 +288,11 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       {
           float xp = dx * l;
           float yp = valScale * 0.9;
+          float typ = yp;
 #if LINUX
-          yp = valScale * 0.95;
+          typ = valScale * 0.95;
 #endif 
-          CRect tp(CPoint(xp + 1,yp), CPoint(10,10));
+          CRect tp(CPoint(xp + 1,typ), CPoint(10,10));
           tf.transform(tp);
           dc->setFontColor(skin->getColor( "lfo.waveform.font", VSTGUI::kBlackCColor ) );
           dc->setFont(lfoTypeFont);

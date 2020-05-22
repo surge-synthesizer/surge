@@ -33,11 +33,7 @@ extern CFontRef displayFont;
 
 void COscillatorDisplay::draw(CDrawContext* dc)
 {
-#if LINUX
-   drawBitmap(dc);
-#else
    drawVector(dc);
-#endif
 }
 
 void COscillatorDisplay::drawVector(CDrawContext* dc)
