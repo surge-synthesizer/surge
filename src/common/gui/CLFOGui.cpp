@@ -37,15 +37,6 @@ void CLFOGui::drawtri(CRect r, CDrawContext* context, int orientation)
 
 void CLFOGui::draw(CDrawContext* dc)
 {
-#if LINUX
-   /*
-   ** As of 1.6.2, the linux vectorized drawing is slow and scales imporoperly with zoom, so
-   ** return to the original bitmap drawing until we resolve. See issue #1103.
-   ** 
-   ** Also some older machines report performance problems so make it switchable
-   */
-   drawBitmap(dc);
-#else
    auto useBitmap = Surge::Storage::getUserDefaultValue(storage, "useBitmapLFO", 0 );
 
    if( ignore_bitmap_pref || useBitmap )
@@ -63,7 +54,6 @@ void CLFOGui::draw(CDrawContext* dc)
        if( elapsed_seconds.count() > 0.1 )
            ignore_bitmap_pref = true;
    }
-#endif
 }
 
 void CLFOGui::drawVectorized(CDrawContext* dc)
@@ -423,7 +413,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
 
 
 #if LINUX
-      dc->setLineWidth(100.0);
+      dc->setLineWidth(40.0);
 #else
       dc->setLineWidth(1.0);
 #endif
@@ -433,7 +423,7 @@ void CLFOGui::drawVectorized(CDrawContext* dc)
       dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
 #if LINUX
-      dc->setLineWidth(100.0);
+      dc->setLineWidth(50.0);
 #else
       dc->setLineWidth(1.3);
 #endif

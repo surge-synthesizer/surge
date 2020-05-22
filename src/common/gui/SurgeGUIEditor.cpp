@@ -4439,15 +4439,13 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
    uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
    mouseSubMenu->forget();
 
-#if !LINUX
-   auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO", 0);
+   auto useBitmap = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useBitmapLFO", 0 );
    auto bitmapMenu = useBitmap ? "Use Vectorized LFO Display" : "Use Bitmap LFO Display";
    addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu(bitmapMenu), [this, useBitmap]() {
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "useBitmapLFO",
                                              useBitmap ? 0 : 1);
       this->synth->refresh_editor = true;
    });
-#endif
 
    uiOptionsMenu->addSeparator(mid++);
 
