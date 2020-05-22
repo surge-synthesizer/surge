@@ -1165,7 +1165,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
             }
             else if (f == val_min.f)
             {
-               sprintf(txt, "0.*f s", (detailedMode ? 6 : 3));
+               sprintf(txt, "%.*f s", (detailedMode ? 6 : 3), 0.f);
             }
             else
             {
