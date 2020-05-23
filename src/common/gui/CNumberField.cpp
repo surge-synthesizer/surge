@@ -8,6 +8,8 @@
 
 #include "CNumberField.h"
 #include "Colors.h"
+#include "SurgeStorage.h"
+#include "UserDefaults.h"
 #include <string>
 #include <math.h>
 #include "unitconversion.h"
@@ -65,7 +67,8 @@ void unit_prefix(float value, char* text, bool allow_milli = true, bool allow_ki
 CNumberField::CNumberField(const CRect& size,
                            IControlListener* listener,
                            long tag,
-                           CBitmap* pBackground)
+                           CBitmap* pBackground,
+                           SurgeStorage* storage)
     : CControl(size, listener, tag, pBackground)
 {
    i_value = 60;
@@ -83,6 +86,7 @@ CNumberField::CNumberField(const CRect& size,
    setLabelPlacement(lp_left);
    i_poly = 0;
    altlook = false;
+   this->storage = storage;
 }
 
 CNumberField::~CNumberField()
@@ -321,15 +325,16 @@ void CNumberField::draw(CDrawContext* pContext)
    case cm_midichannel_from_127:
    {
       int mc = i_value / 8 + 1;
-      sprintf(the_text, "Ch. %i", mc );
+      sprintf(the_text, "Ch %i", mc );
    }
    break;
    case cm_notename:
    {
-      int octave = (i_value / 12) - 2;
-      char notenames[12][3] = {"C ", "C#", "D ", "D#", "E ", "F ",
-                               "F#", "G ", "G#", "A ", "A#", "B "};
-      sprintf(the_text, "%s%i", notenames[i_value % 12], octave);
+      int oct_offset = 1;
+      if (storage)
+         oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+      char notename[8];
+      sprintf(the_text, "%s", get_notename(notename, i_value, oct_offset));
    }
    break;
    case cm_envshape:

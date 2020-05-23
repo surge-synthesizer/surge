@@ -1651,7 +1651,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 43, 14);
             rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags);
+            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
             key->setSkin(currentSkin,bitmapStore);
             auto sm = this->synth->storage.getPatch().scenemode.val.i;
 
@@ -1680,7 +1680,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 43, 14);
             rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags);
+            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
             key->setSkin(currentSkin,bitmapStore);
             key->setControlMode(cm_notename);
             // key->altlook = true;
@@ -1693,7 +1693,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 24, 10);
             rect.offset(p->posx, p->posy);
-            CNumberField* pbd = new CNumberField(rect, this, p->id + start_paramtags);
+            CNumberField* pbd = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
             pbd->setSkin(currentSkin,bitmapStore);
             pbd->altlook = true;
             pbd->setControlMode(cm_pbdepth);
@@ -1705,7 +1705,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 43, 14);
             rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags);
+            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
             key->setSkin(currentSkin,bitmapStore);
             key->setControlMode(cm_polyphony);
             // key->setLabel("POLY");
@@ -4378,7 +4378,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
                                                 VSTGUI::COptionMenu::kNoDrawStyle |
                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-   // Mouse behavior
+   // Mouse behavior submenu
    int mid = 0;
    COptionMenu* mouseSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                VSTGUI::COptionMenu::kNoDrawStyle |
@@ -4396,8 +4396,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
                                              CSurgeSlider::sliderMoveRateState);
    });
-   if (menuItem)
-      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kClassic));
+   menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kClassic));
    mid++;
 
    menuItem = addCallbackMenu(mouseSubMenu, mouseSlow.c_str(), [this]() {
@@ -4405,8 +4404,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
                                              CSurgeSlider::sliderMoveRateState);
    });
-   if (menuItem)
-      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow));
+   menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow));
    mid++;
 
    menuItem = addCallbackMenu(mouseSubMenu, mouseMedium.c_str(), [this]() {
@@ -4414,8 +4412,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
                                              CSurgeSlider::sliderMoveRateState);
    });
-   if (menuItem)
-      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium));
+   menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium));
    mid++;
 
    menuItem = addCallbackMenu(mouseSubMenu, mouseExact.c_str(), [this]() {
@@ -4423,8 +4420,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
                                              CSurgeSlider::sliderMoveRateState);
    });
-   if (menuItem)
-      menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact));
+   menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact));
    mid++;
 
    std::string mouseMenuName = Surge::UI::toOSCaseForMenu("Mouse Behavior");
@@ -4432,13 +4428,48 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
    uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
    mouseSubMenu->forget();
 
+   // Middle C submenu
+   int mcid = 0;
+   COptionMenu* middleCSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                               VSTGUI::COptionMenu::kNoDrawStyle |
+                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   VSTGUI::CCommandMenuItem* mcItem = nullptr;
+
+   auto mcValue = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
+
+   mcItem = addCallbackMenu(middleCSubMenu, "C3", [this]() {
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 2);
+      synth->refresh_editor = true;
+   });
+   mcItem->setChecked(mcValue == 2);
+   mcid++;
+
+   mcItem = addCallbackMenu(middleCSubMenu, "C4", [this]() {
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 1);
+      synth->refresh_editor = true;
+   });
+   mcItem->setChecked(mcValue == 1);
+   mcid++;
+
+   mcItem = addCallbackMenu(middleCSubMenu, "C5", [this]() {
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 0);
+      synth->refresh_editor = true;
+   });
+   mcItem->setChecked(mcValue == 0);
+   mcid++;
+
+   uiOptionsMenu->addEntry(middleCSubMenu, "Middle C");
+   middleCSubMenu->forget();
+
+
    auto precReadout = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
    menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
       [this, precReadout]() {Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts",
                                              precReadout ? 0 : 1);
    });
-
    menuItem->setChecked(precReadout);
+
 
    return uiOptionsMenu;
 }
@@ -5015,8 +5046,9 @@ R"HTML(
 
        for( int i=0; i<128; ++i )
        {
-          int octave = (i / 12) - 1;
-          char notenames[12][3] = {"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "};
+          int oct_offset = 1;
+             oct_offset = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
+          char notename[8];
 
           std::string rowstyle="";
           std::string tdopen="<td colspan=2>";
@@ -5026,7 +5058,7 @@ R"HTML(
              rowstyle = "style=\"background-color: #dddddd;\"";
              tdopen="<td style=\"background-color: #ffffff;\">&nbsp;</td><td>";
           }
-          htmls << "<tr " << rowstyle << ">" << tdopen << i << " (" << notenames[i % 12 ] << octave << ")</td>\n";
+          htmls << "<tr " << rowstyle << ">" << tdopen << i << " (" << get_notename(notename, i, oct_offset) << ")</td>\n";
 
           auto tn = i - synth->storage.scaleConstantNote();
           if( ! synth->storage.isStandardMapping )
