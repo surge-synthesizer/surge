@@ -11,6 +11,7 @@
 #include <string>
 #include <cstdlib>
 #include <algorithm>
+#include <cctype>
 #include <UserDefaults.h>
 
 Parameter::Parameter() : posx( PositionHolder::Axis::X ),
@@ -1791,6 +1792,13 @@ bool Parameter::set_value_from_string( std::string s )
 
       break;
    }
+   case ct_fmratio:
+   {
+      // In this case we have to set nv differently
+      const char *strip = &(c[0]);
+      while( *strip != '\0' && ! std::isdigit( *strip ) ) ++strip;
+      nv = std::atof( strip );
+   }
    case ct_decibel:
    case ct_decibel_narrow:
    case ct_decibel_extra_narrow:
@@ -1798,7 +1806,6 @@ bool Parameter::set_value_from_string( std::string s )
    case ct_decibel_attenuation_large:
    case ct_decibel_fmdepth:
    case ct_syncpitch:
-   case ct_fmratio:
    case ct_bandwidth:
    case ct_flangerpitch:
    case ct_flangervoices:

@@ -5090,7 +5090,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    }
 
    bool ismod = ms > 0;
-   int boxht = 44;
+   int boxht = 55;
    auto cp = c->getViewSize();
    if( ismod )
       boxht += 10;
@@ -5125,16 +5125,6 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinLabel->setFont( displayFont );
    inner->addView(typeinLabel);
 
-   if( ismod )
-   {
-      std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
-      auto ml = new CTextLabel( CRect( 2, 2 + 10, 118-4, 25 ), mls.c_str() );
-      ml->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
-      ml->setTransparency(true);
-      ml->setFont( displayFont );
-      inner->addView(ml);
-   }
-
    char txt[256];
    if( ismod )
    {
@@ -5147,7 +5137,27 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
       p->get_display(txt);
    }
 
-   typeinValue = new CTextEdit( CRect( 2, 18 + ( ismod ? 10 : 0 ), 118-4, 42-2 + ( ismod ? 10 : 0 ) ), this, tag_value_typein, txt );
+   char ptext[512];
+   sprintf( ptext, "current: %s", txt );
+   
+   typeinPriorValueLabel = new CTextLabel( CRect( 2, 15, 118-4, 27 ), ptext );
+   typeinPriorValueLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+   typeinPriorValueLabel->setTransparency(true);
+   typeinPriorValueLabel->setFont( displayFont );
+   inner->addView(typeinPriorValueLabel);
+
+   if( ismod )
+   {
+      std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
+      auto ml = new CTextLabel( CRect( 2, 15 + 10, 118-4, 36 ), mls.c_str() );
+      ml->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+      ml->setTransparency(true);
+      ml->setFont( displayFont );
+      inner->addView(ml);
+   }
+
+
+   typeinValue = new CTextEdit( CRect( 2, 27 + ( ismod ? 10 : 0 ), 118-4, 51-2 + ( ismod ? 10 : 0 ) ), this, tag_value_typein, txt );
    typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
    typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
 
