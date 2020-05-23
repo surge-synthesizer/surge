@@ -14,25 +14,27 @@ extern CFontRef displayFont;
 extern CFontRef patchNameFont;
 extern CFontRef lfoTypeFont;
 
-void CLFOGui::drawtri(CRect r, CDrawContext* context, int orientation)
+void CLFOGui::drawtri(CRect r, CDrawContext* dc, int orientation)
 {
    int m = 2;
    int startx = r.left + m + 1;
    int endx = r.right - m;
-   int midy = (r.top + r.bottom) * 0.5;
-   int a = 0;
-   if (orientation > 0)
-      a = (endx - startx) - 1;
 
-   for (int x = startx; x < endx; x++)
+   int starty = r.top + m;
+   int midy = (r.top + r.bottom) * 0.5;
+   int endy = r.bottom - m;
+
+   if( orientation < 0 )
    {
-      for (int y = (midy - a); y <= (midy + a); y++)
-      {
-         context->drawPoint(CPoint(x, y), skin->getColor( "lfo.stepseq.button.arrow.fill", kWhiteCColor ) );
-      }
-      a -= orientation;
-      a = max(a, 0);
+      std::swap( startx, endx );
    }
+   
+   std::vector<CPoint> pl;
+   pl.push_back( CPoint( startx, starty ) );
+   pl.push_back( CPoint( endx, midy ) );
+   pl.push_back( CPoint( startx, endy ) );
+   dc->setFillColor( skin->getColor( "lfo.stepseq.button.arrow.fill", kWhiteCColor ) ); 
+   dc->drawPolygon( pl, kDrawFilled );
 }
 
 
@@ -54,26 +56,7 @@ void CLFOGui::draw(CDrawContext* dc)
 
    if (ss && lfodata->shape.val.i == ls_stepseq)
    {
-      // In the bitmap version this has been done for the global; so pull it out of the function
-      cdisurf->begin();
-      auto col = skin->getColor( "lfo.stepseq.background", CColor( 0xFF, 0x90, 0x00 ) );
-      int r = col.red;
-      int g = col.green;
-      int b = col.blue;
-#if MAC
-      int c = ( b << 24 ) + ( g << 16 ) + ( r << 8 ) + 255;
-      cdisurf->clear(c);
-#else
-      int c = ( b ) + ( g << 8 ) + ( r << 16 ) + ( 255 << 24 );
-      cdisurf->clear(c);
-#endif
-
       drawStepSeq(dc, maindisp, leftpanel);
-
-      CPoint sp(0, 0);
-      CRect sr(size.left + splitpoint, size.top, size.right, size.bottom);
-      cdisurf->commit();
-      cdisurf->draw(dc, sr, sp);
    }
    else
    {
@@ -476,205 +459,178 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 {
    auto size = getViewSize();
 
-   int w = cdisurf->getWidth();
-   int h = cdisurf->getHeight();
-   
-   // I know I could do the math to convert these colors but I would rather leave them as literals for the compiler
-   // so we don't have to shift them at runtime. See issue #141 in surge github
-#if MAC
-#define PIX_COL( a, b ) b
-#else
-#define PIX_COL( a, b ) a
-#endif
-   // Step Sequencer Colors. Remember mac is 0xRRGGBBAA and win is 0xAABBGGRR
+   int w = size.getWidth() - splitpoint;
+   int h = size.getHeight();
 
-   auto skd = [this](std::string n, int def) -> int {
-                 if( this->skin->hasColor(n) )
-                 {
-                    auto c = this->skin->getColor( n, VSTGUI::kBlackCColor );
-#if MAC
-                    return ( c.red << 8 ) + ( c.green << 16 ) + ( c.blue << 24 ) + 255;
-#else
-                    return c.blue + ( c.green << 8 ) + ( c.red << 16 ) + ( 255 << 24 );
-#endif                    
-                 }
-#if MAC
-                 return def;
-#else
-                 // Source is in RGBA
-                 return
-                    ((def & 0xFF000000) >> 24) | //______RR
-                    ((def & 0x00FF0000) >>  8) | //____GG__
-                    ((def & 0x0000FF00) <<  8) | //__BB____
-                    ((def & 0x000000FF) << 24);  //AA______
-#endif                 
+   auto ssbg = skin->getColor( "lfo.stepseq.background", CColor( 0xFF, 0x90, 0x00 ) );
+   dc->setFillColor( ssbg );
+   dc->drawRect( CRect( 0, 0, w, h ), kDrawFilled );
+   
+
+   // This spec is legacy code from the bitmap days but for now keep it here so we can make sure our default
+   // colors and color names are unch in the port.
+   auto skd = [this](std::string n, int def) -> CColor {
+                 int b = ((def & 0xFF000000) >> 24);
+                 int g = ((def & 0x00FF0000) >> 16);
+                 int r = ((def & 0x0000FF00) >>  8);
+                 return this->skin->getColor( n, CColor( r, g, b ) );
               };
 
    
-   int cgray = skd( "lfo.stepseq.cgray", 0x9a9897ff );
-   int stepMarker = skd( "lfo.stepseq.stepmarker", 0x633412FF);
-   int disStepMarker = skd( "lfo.stepseq.disabledstepmarker", 0xeeccccff);
-   int loopRegionLo = skd( "lfo.stepseq.loopregionlo", 0xe0bf9aff);
-   int loopRegionHi = skd( "lfo.stepseq.loopregionhi", 0xefd0a9ff );
-   int loopRegionClick = skd( "lfo.stepseq.loopregionclick", 0xffe0b9ff );
-   int shadowcol = skd( "lfo.stepseq.shadowcol", 0x7d6d6dff );
+   auto cgray = skd( "lfo.stepseq.cgray", 0x9a9897ff );
+   auto stepMarker = skd( "lfo.stepseq.stepmarker", 0x633412FF);
+   auto disStepMarker = skd( "lfo.stepseq.disabledstepmarker", 0xffccbbff);
+   auto loopRegionLo = skd( "lfo.stepseq.loopregionlo", 0xe0bf9aff);
+   auto loopRegionHi = skd( "lfo.stepseq.loopregionhi", 0xefd0a9ff );
+   auto loopRegionClick = skd( "lfo.stepseq.loopregionclick", 0xffe0b9ff );
+   auto shadowcol = skd( "lfo.stepseq.shadowcol", 0x7d6d6dff );
 
-   int noLoopHi = skd( "lfo.stepseq.noloophi", 0xdfdfdfff );
-   int noLoopLo = skd( "lfo.stepseq.nolooplo", 0xcfcfcfff );
-   int grabMarker = skd( "lfo.stepseq.grabmarker", 0x633412ff );
-   int grabMarkerHi = skd( "lfo.stepseq.grabmarkerhi", 0x835432ff ); 
-   // But leave non-mac unch
-       
-   for (int i = 0; i < n_stepseqsteps; i++)
+   auto noLoopHi = skd( "lfo.stepseq.noloophi", 0xdfdfdfff );
+   auto noLoopLo = skd( "lfo.stepseq.nolooplo", 0xcfcfcfff );
+   auto grabMarker = skd( "lfo.stepseq.grabmarker", 0x633412ff );
+   auto grabMarkerHi = skd( "lfo.stepseq.grabmarkerhi", 0x835432ff ); 
+
+   auto fillr = [dc](CRect r,CColor c) {
+                   dc->setFillColor(c);
+                   dc->drawRect(r,kDrawFilled);
+                };
+   
+   // set my coordinate system so that 0,0 is at splitpoint
+   auto shiftTranslate = CGraphicsTransform().translate( size.left, size.top ).translate( splitpoint, 0 );
    {
-      CRect rstep(maindisp), gstep;
-      rstep.offset(-size.left - splitpoint, -size.top);
-      rstep.left += scale * i;
-      rstep.right = rstep.left + scale - 1;
-      rstep.bottom -= margin2 + 1;
-      CRect shadow(rstep);
-      shadow.inset(-1, -1);
-      cdisurf->fillRect(shadow, shadowcol);
-      if (edit_trigmask)
+      CDrawContext::Transform shiftTranslatetransform( *dc, shiftTranslate );
+      for (int i = 0; i < n_stepseqsteps; i++)
       {
-         gstep = rstep;
-         rstep.top += margin2;
-         gstep.bottom = rstep.top - 1;
-         gaterect[i] = gstep;
-         gaterect[i].offset(size.left + splitpoint, size.top);
-
-         int stepcolor, knobcolor;
-
-         if (ss->loop_end >= ss->loop_start)
+         CRect rstep( 1.f * i * scale, 1.f * margin, 1.f * ( i + 1 ) * scale - 1, 1.f * h - margin2 + 1 ), gstep;
+         
+         
+         // Draw an outline in the shadow color
+         CRect outline(rstep);
+         outline.inset( -1.f, -1.f );
+         fillr( outline, shadowcol );
+         
+         // Now draw the actual step
+         int sp = std::min( ss->loop_start, ss->loop_end );
+         int ep = std::max( ss->loop_start, ss->loop_end );
+         
+         CColor stepcolor, valuecolor, knobcolor;
+         
+         if ((i >= sp) && (i <= ep))
          {
-            if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            {
-               stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
-               knobcolor = stepMarker;
-            }
-            else
-            {
-               stepcolor = (i & 3 ) ? noLoopHi : noLoopLo;
-               knobcolor = disStepMarker;
-            }
+            stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
+            knobcolor = stepMarker;
+            valuecolor = stepMarker;
          }
          else
          {
-            if ((i > ss->loop_end) && (i < ss->loop_start))
-            {
-               stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
-               knobcolor = stepMarker;
-            }
-            else
-            {
-               stepcolor = (i & 3) ? noLoopHi : noLoopLo;
-               knobcolor = disStepMarker;
-            }
+            stepcolor = (i & 3 ) ? noLoopHi : noLoopLo;
+            knobcolor = disStepMarker;
+            valuecolor = disStepMarker;
          }
-
+         
+         
          if( controlstate == cs_trigtray_toggle && i == selectedSSrow )
          {
             stepcolor = loopRegionClick;
             knobcolor = grabMarkerHi;
          }
+         
+         // Code to put in place an editor for the envelope retrigger
+         if( edit_trigmask )
+         {
+            gstep = rstep;
+            rstep.top += margin2;
+            gstep.bottom = rstep.top - 1;
+            gaterect[i] = gstep;
             
-         if (ss->trigmask & (UINT64_C(1) << i))
-            cdisurf->fillRect(gstep, knobcolor);
-         else if( ss->trigmask & ( UINT64_C(1) << ( 16 + i ) ) )
-         {
-            // FIXME - an A or an F would be nice eh?
-            cdisurf->fillRect(gstep, stepcolor);
-            auto qrect = gstep;
-            qrect.right -= (qrect.getWidth() / 2 );
-            cdisurf->fillRect(qrect, knobcolor);
+            if (ss->trigmask & (UINT64_C(1) << i))
+            {
+               fillr(gstep, knobcolor);
+            }
+            else if( ss->trigmask & ( UINT64_C(1) << ( 16 + i ) ) )
+            {
+               // FIXME - an A or an F would be nice eh?
+               fillr(gstep, stepcolor);
+               auto qrect = gstep;
+               qrect.right -= (qrect.getWidth() / 2 );
+               fillr(qrect, knobcolor);
+            }
+            else if( ss->trigmask & ( UINT64_C(1) << ( 32 + i ) ) )
+            {
+               fillr(gstep, stepcolor);
+               auto qrect = gstep;
+               qrect.left += (qrect.getWidth() / 2 );
+               fillr(qrect, knobcolor);
+            }
+            else
+            {
+               fillr(gstep, stepcolor );
+            }
+            
          }
-         else if( ss->trigmask & ( UINT64_C(1) << ( 32 + i ) ) )
+         
+         fillr(rstep, stepcolor);
+         steprect[i] = rstep;
+         
+         // Now draw the value
+         CRect v(rstep);
+         int p1, p2;
+         if (lfodata->unipolar.val.b)
          {
-            cdisurf->fillRect(gstep, stepcolor);
-            auto qrect = gstep;
-            qrect.left += (qrect.getWidth() / 2 );
-            cdisurf->fillRect(qrect, knobcolor);
+            auto sv = std::max( ss->steps[i], 0.f );
+            v.top = v.bottom - (int)(v.getHeight() * sv );
          }
          else
-            cdisurf->fillRect(gstep, stepcolor );
+         {
+            p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.5f + 0.5f * ss->steps[i]));
+            p2 = (v.bottom + v.top) * 0.5;
+            v.top = min(p1, p2);
+            v.bottom = max(p1, p2) + 1;
+         }
+         
+         fillr( v, valuecolor );
       }
 
-      if (ss->loop_end >= ss->loop_start)
-      {
-         if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
-         else
-            cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
-      }
-      else
-      {
-         if ((i > ss->loop_end) && (i < ss->loop_start))
-            cdisurf->fillRect(rstep, (i & 3) ? loopRegionHi : loopRegionLo);
-         else
-            cdisurf->fillRect(rstep, (i & 3) ? noLoopHi : noLoopLo);
-      }
+      // Draw the loop markers
+      rect_ls = steprect[0];
+      rect_ls.bottom += margin2 - 2;
+      rect_ls.top = rect_ls.bottom - margin2 + 2;
+      rect_ls.right = rect_ls.left + margin2;
+      
+      rect_le = rect_ls;
 
-      steprect[i] = rstep;
-      steprect[i].offset(size.left + splitpoint, size.top);
-      CRect v(rstep);
-      int p1, p2;
-      if (lfodata->unipolar.val.b)
-      {
-         v.top = v.bottom - (int)(v.getHeight() * ss->steps[i]);
-      }
-      else
-      {
-         p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.5f + 0.5f * ss->steps[i]));
-         p2 = (v.bottom + v.top) * 0.5;
-         v.top = min(p1, p2);
-         v.bottom = max(p1, p2) + 1;
-      }
+      rect_ls.left  += scale * ss->loop_start - 1;
+      rect_ls.right += rect_ls.left;
+      
+      rect_le.left += scale * (ss->loop_end + 1) - margin2;
+      rect_le.right = rect_le.left + margin2;
 
-      if (ss->loop_end >= ss->loop_start)
-      {
-         if ((i >= ss->loop_start) && (i <= ss->loop_end))
-            cdisurf->fillRect(v, stepMarker);
-         else
-            cdisurf->fillRect(v, disStepMarker);
-      }
-      else
-      {
-         if ((i > ss->loop_end) && (i < ss->loop_start))
-            cdisurf->fillRect(v, stepMarker);
-         else
-            cdisurf->fillRect(v, disStepMarker);
-      }
+      fillr( rect_ls, grabMarker );
+      fillr( rect_le, grabMarker );
+
+      // and lines on either side of the loop
+      dc->setFrameColor( grabMarker );
+      dc->drawLine( CPoint( rect_ls.left, 0), CPoint( rect_ls.left, h-margin2 ) );
+      dc->drawLine( CPoint( rect_le.right, 0), CPoint( rect_le.right, h-margin2 ) );
+   }
+      
+   // These data structures are used for mouse hit detection so have to translate them back to screen
+   for( auto i=0; i<n_stepseqsteps; ++i )
+   {
+      shiftTranslate.transform( steprect[i] );
+      shiftTranslate.transform( gaterect[i] );
    }
 
-   
+   shiftTranslate.transform( rect_le );
+   shiftTranslate.transform( rect_ls );
+
    rect_steps = steprect[0];
    rect_steps.right = steprect[n_stepseqsteps - 1].right;
+   
    rect_steps_retrig = gaterect[0];
    rect_steps_retrig.right = gaterect[n_stepseqsteps - 1].right;
 
-   rect_ls = maindisp;
-   rect_ls.offset(-size.left - splitpoint, -size.top);
-   rect_ls.top = rect_ls.bottom - margin2;
-   rect_le = rect_ls;
 
-   rect_ls.left += scale * ss->loop_start - 1;
-   rect_ls.right = rect_ls.left + margin2;
-   rect_le.right = rect_le.left + scale * (ss->loop_end + 1);
-   rect_le.left = rect_le.right - margin2;
-
-   cdisurf->fillRect(rect_ls, grabMarker);
-   cdisurf->fillRect(rect_le, grabMarker);
-   CRect linerect(rect_ls);
-   linerect.top = maindisp.top - size.top;
-   linerect.right = linerect.left + 1;
-   cdisurf->fillRect(linerect, grabMarker);
-   linerect = rect_le;
-   linerect.top = maindisp.top - size.top;
-   linerect.left = linerect.right - 1;
-   cdisurf->fillRect(linerect, grabMarker);
-
-   rect_ls.offset(size.left + splitpoint, size.top);
-   rect_le.offset(size.left + splitpoint, size.top);
 
       
    CPoint sp(0, 0);
@@ -699,7 +655,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff )) );
    dc->drawRect(ss_shift_right, kDrawFilled);
    drawtri(ss_shift_right, dc, 1);
-   // ss_shift_left,ss_shift_right;
 }
 
 
@@ -915,11 +870,14 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 
             if (buttons & (kControl | kRButton)) {
-               f = 0; }
+               f = 0;
+            }
             else if (lfodata->unipolar.val.b) {
-               f = limit_range(f, 0.f, 1.f); }
+               f = limit_range(f, 0.f, 1.f);
+            }
             else {
-               f = limit_range(f * 2.f - 1.f, -1.f, 1.f); }
+               f = limit_range(f * 2.f - 1.f, -1.f, 1.f);
+            }
             
             // find out if a microtuning is loaded and store the scale length for Alt-drag
             // quantization to scale degrees
@@ -990,4 +948,28 @@ void CLFOGui::invalidateIfAnythingIsTemposynced()
    {
       invalid();
    }
+}
+
+bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const CButtonState &buttons )
+{
+   if (ss && lfodata->shape.val.i == ls_stepseq && rect_steps.pointInside(where) ) {
+      for (int i = 0; i < n_stepseqsteps; i++)
+      {
+         if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
+         {
+            // I am sure we will need to callibrate this and add scale gestures and stuff
+            if (buttons & kShift)
+            {
+               ss->steps[i] += distance / 30.0;
+            }
+            else
+            {
+               ss->steps[i] += distance / 10.0;
+            }
+            invalid();
+         }
+      }
+   }
+
+   return false;
 }
