@@ -1092,7 +1092,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       int oct_offset = 1;
       if (storage)
          oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
-      char notename[8];
+      char notename[16];
       sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
 
       break;
@@ -1106,7 +1106,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       int oct_offset = 1;
       if (storage)
          oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
-      char notename[8];
+      char notename[16];
       sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
 
       break;
@@ -1291,7 +1291,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          int oct_offset = 1;
          if (storage)
             oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
-         char notename[8];
+         char notename[16];
          sprintf(txt, "%s", get_notename(notename, val.i, oct_offset));
          break;
       }

@@ -333,7 +333,7 @@ void CNumberField::draw(CDrawContext* pContext)
       int oct_offset = 1;
       if (storage)
          oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
-      char notename[8];
+      char notename[16];
       sprintf(the_text, "%s", get_notename(notename, i_value, oct_offset));
    }
    break;

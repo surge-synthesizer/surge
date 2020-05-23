@@ -27,11 +27,11 @@ jobs:
         imageName: 'vs2017-win2016'
         isWindowsUnitTest: True
       linux-lv2:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         isLinux: True
         linuxProject: lv2
       linux-vst3:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         isLinux: True
         linuxProject: vst3
       linux-unittest:

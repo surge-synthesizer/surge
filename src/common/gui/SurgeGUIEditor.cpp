@@ -745,6 +745,11 @@ void SurgeGUIEditor::refresh_mod()
    }
    // ctnvg	frame->redraw();
    // frame->setDirty();
+#if LINUX
+   frame->invalid();
+   // Turns out linux is very bad with lots of little invalid rects in vstgui
+   // see github issue 1103
+#endif
 }
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
@@ -5048,7 +5053,7 @@ R"HTML(
        {
           int oct_offset = 1;
              oct_offset = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
-          char notename[8];
+          char notename[16];
 
           std::string rowstyle="";
           std::string tdopen="<td colspan=2>";
