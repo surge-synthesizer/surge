@@ -89,6 +89,8 @@ protected:
    bool edit_trigmask;
    int controlstate;
    int selectedSSrow = -1;
+
+   int draggedStep = -1;
    
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };
