@@ -5143,7 +5143,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
       inner->addView(ml);
    }
 
-   char ptext[256];
+   char ptext[512];
    sprintf( ptext, "current: %s", txt );
    
    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
