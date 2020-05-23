@@ -59,8 +59,8 @@ const int num_metaparameters = n_customcontrollers;
 extern float samplerate_inv;
 
 const char modsource_abberations_button[n_modsources][32] = {
-    "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitchbend", "Modwheel", "Ctrl 1",
-    "Ctrl 2",    "Ctrl 3",   "Ctrl 4",   "Ctrl 5",  "Ctrl 6",   "Ctrl 7",    "Ctrl 8",   "Amp EG",
+    "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitchbend", "Modwheel", "Macro 1",
+    "Macro 2",    "Macro 3",   "Macro 4",   "Macro 5",  "Macro 6",   "Macro 7",    "Macro 8",   "Amp EG",
     "Filter EG", "LFO 1",    "LFO 2",    "LFO 3",   "LFO 4",    "LFO 5",     "LFO 6",    "S-LFO 1",
     "S-LFO 2",    "S-LFO 3",   "S-LFO 4",   "S-LFO 5",  "S-LFO 6",   "Timbre", "Rel Velocity" /*,"Arpeggio"*/};
 
@@ -71,14 +71,14 @@ const char modsource_abberations[n_modsources][32] = {"Off",
                                                       "Channel Aftertouch",
                                                       "Pitch Bend",
                                                       "Modulation Wheel",
-                                                      "Control 1",
-                                                      "Control 2",
-                                                      "Control 3",
-                                                      "Control 4",
-                                                      "Control 5",
-                                                      "Control 6",
-                                                      "Control 7",
-                                                      "Control 8",
+                                                      "Macro 1",
+                                                      "Macro 2",
+                                                      "Macro 3",
+                                                      "Macro 4",
+                                                      "Macro 5",
+                                                      "Macro 6",
+                                                      "Macro 7",
+                                                      "Macro 8",
                                                       "Amp EG",
                                                       "Filter EG",
                                                       "Voice LFO 1",
