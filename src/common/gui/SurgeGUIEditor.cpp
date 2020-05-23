@@ -879,7 +879,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
       frame->addView(fc);
    }
 
-   int rws = 15;
    /* This loop bound is 1.6.* valid ONLY */
    for (int k = 1; k < /* n_modsources */ ms_releasevelocity; k++)
    {
@@ -2227,8 +2226,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          COptionMenu* contextMenu =
             new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
          int eid = 0;
-         int id_clearallmr = -1, id_learnctrl = -1, id_clearctrl = -1, id_bipolar = -1,
-            id_copy = -1, id_paste = -1, id_rename = -1;
 
          if( cms->hasAlternate )
          {
@@ -2852,8 +2849,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
 
             int n_ms = 0;
-            // int clear_ms[n_modsources];
-            bool is_modulated = false;
+
             for (int ms = 1; ms < n_modsources; ms++)
                if (synth->isActiveModulation(ptag, (modsources)ms))
                   n_ms++;
@@ -2938,7 +2934,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if( N > 0 )
                contextMenu->addSeparator(eid++);
 
-            auto currentMenu = contextMenu;
             std::deque<COptionMenu*> parentMenus;
             for (int i = 0; i < N; i++)
             {
@@ -4279,7 +4274,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     sct->setEnabled(! this->synth->storage.isStandardTuning );
 
-    auto *tfl = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Factory Tuning Library..."),
+    addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Factory Tuning Library..."),
                     [this]()
                     {
                        auto dpath = this->synth->storage.datapath;
@@ -4636,7 +4631,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
     ** It as used as we transitioned from 1.6.5 to 1.7 to do the first layout file which matched
     ** surge exactly
     */
-    auto *st = addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Dump Components to stdout and runtime.xml"),
+    addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Dump Components to stdout and runtime.xml"),
                     [this]()
                     {
                        std::ostringstream oss;
@@ -4802,7 +4797,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                           auto c = dynamic_cast<CViewContainer *>(e);
                           if( c )
                           {
-                             auto b = stk.size();
                              c->forEachChild( [&stk](CView *cc) { stk.push(cc); } );
                              // oss << "Added " << stk.size() - b << " elements" << std::endl;
                           }
@@ -5090,22 +5084,24 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    }
 
    bool ismod = ms > 0;
-   int boxht = 55;
+   int boxht = 56;
    auto cp = c->getViewSize();
+
    if( ismod )
-      boxht += 10;
+      boxht += 12;
+
    CRect typeinSize( cp.left, cp.top - boxht, cp.left + 120, cp.top - boxht + boxht  );
+
    if( cp.top - boxht < 0 )
    {
       typeinSize = CRect( cp.left, cp.top + c->getHeight(),
                           cp.left + 120, cp.top + c->getHeight() + boxht );
    }
 
-
    typeinModSource = ms;
    typeinEditControl = c;
-
    typeinResetCounter = -1;
+
    typeinDialog = new CViewContainer(typeinSize);
    typeinDialog->setBackgroundColor(currentSkin->getColor( "savedialog.border", VSTGUI::kBlackCColor) );
    typeinDialog->setVisible(false);
@@ -5119,7 +5115,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinDialog->addView(inner);
 
    std::string lab = p->get_full_name();
-   typeinLabel = new CTextLabel( CRect( 2, 2, 118-4, 14 ), lab.c_str() );
+   typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
    typeinLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
    typeinLabel->setTransparency(true);
    typeinLabel->setFont( displayFont );
@@ -5130,34 +5126,33 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
 
-      sprintf(txt, "%.*f", (detailedMode ? 6 : 3), synth->getModDepth(p->id, (modsources)ms));
+      sprintf(txt, "%.*f", (detailedMode ? 6 : 2), synth->getModDepth(p->id, (modsources)ms));
    }
    else
    {
       p->get_display(txt);
    }
 
-   char ptext[512];
-   sprintf( ptext, "current: %s", txt );
-   
-   typeinPriorValueLabel = new CTextLabel( CRect( 2, 15, 118-4, 27 ), ptext );
-   typeinPriorValueLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
-   typeinPriorValueLabel->setTransparency(true);
-   typeinPriorValueLabel->setFont( displayFont );
-   inner->addView(typeinPriorValueLabel);
-
    if( ismod )
    {
       std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
-      auto ml = new CTextLabel( CRect( 2, 15 + 10, 118-4, 36 ), mls.c_str() );
+      auto ml = new CTextLabel( CRect( 2, 10, 114, 27 ), mls.c_str() );
       ml->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
       ml->setTransparency(true);
       ml->setFont( displayFont );
       inner->addView(ml);
    }
 
+   char ptext[256];
+   sprintf( ptext, "current: %s", txt );
+   
+   typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
+   typeinPriorValueLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+   typeinPriorValueLabel->setTransparency(true);
+   typeinPriorValueLabel->setFont( displayFont );
+   inner->addView(typeinPriorValueLabel);
 
-   typeinValue = new CTextEdit( CRect( 2, 27 + ( ismod ? 10 : 0 ), 118-4, 51-2 + ( ismod ? 10 : 0 ) ), this, tag_value_typein, txt );
+   typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 12 : 0 ), 114, 50 + ( ismod ? 12 : 0 ) ), this, tag_value_typein, txt );
    typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
    typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
 
