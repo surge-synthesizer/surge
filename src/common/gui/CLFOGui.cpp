@@ -612,6 +612,69 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       dc->setFrameColor( grabMarker );
       dc->drawLine( CPoint( rect_ls.left, 0), CPoint( rect_ls.left, h-margin2 ) );
       dc->drawLine( CPoint( rect_le.right, 0), CPoint( rect_le.right, h-margin2 ) );
+
+      // Finally draw the drag label
+      if( controlstate == cs_steps && draggedStep >= 0 && draggedStep < n_stepseqsteps )
+      {
+         int prec = 3;
+         if( storage )
+         {
+            int detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+            if( detailedMode )
+            {
+               prec = 7;
+            }
+         }
+
+         int dragX, dragY;
+         int dragW = 28, dragH = 12;
+
+         if( prec > 4 )
+            dragW = 48;
+         
+         auto sr = steprect[draggedStep];
+         if( draggedStep < n_stepseqsteps / 2 )
+         {
+            // Draw to the right
+            dragX = sr.right;
+         }
+         else
+         {
+            dragX = sr.left - dragW;
+         }
+
+         float yTop;
+         if (lfodata->unipolar.val.b)
+         {
+            auto sv = std::max( ss->steps[draggedStep], 0.f );
+            yTop = sr.bottom - (int)(sr.getHeight() * sv );
+         }
+         else
+         {
+            yTop = sr.bottom - (int)((float)0.5f + sr.getHeight() * (0.5f + 0.5f * ss->steps[draggedStep]));
+         }
+
+         if( yTop > sr.getHeight() / 2 )
+         {
+            dragY = yTop - dragH;
+         }
+         else
+         {
+            dragY = yTop;
+         }
+
+         CRect labelR( dragX, dragY, dragX + dragW, dragY + dragH );
+         fillr( labelR, skin->getColor( "lfo.stepseq.valueborder", stepMarker ) );
+         labelR.inset( 1, 1 );
+         fillr( labelR, skin->getColor( "lfo.stepseq.valuebackground", kWhiteCColor ) );
+         dc->setFontColor( skin->getColor( "lfo.stepseq.valueforeground", stepMarker ) );
+         char txt[ 256 ];
+         sprintf( txt, "%.*f", prec, ss->steps[draggedStep] );
+
+         dc->setFont( lfoTypeFont );
+         labelR.left += 1;
+         dc->drawString(txt, labelR, VSTGUI::kLeftText, true );
+      }
    }
       
    // These data structures are used for mouse hit detection so have to translate them back to screen
@@ -801,6 +864,8 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
    {
       // onMouseMoved(where,buttons);
       controlstate = cs_null;
+      if( lfodata->shape.val.i == ls_stepseq )
+         invalid(); 
    }
    return kMouseEventHandled;
 }
@@ -867,6 +932,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
       {
          if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
          {
+            draggedStep = i;
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 
             if (buttons & (kControl | kRButton)) {
