@@ -48,10 +48,10 @@ inline float seconds_to_envtime(float in) // ff rev2
    return v;
 }
 
-inline char* get_notename(char* s, int i_value)
+inline char* get_notename(char* s, int i_value, int i_offset)
 {
-   int octave = (i_value / 12) - 2;
-   char notenames[12][3] = {"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "};
+   int octave = (i_value / 12) - i_offset;
+   char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
    sprintf(s, "%s%i", notenames[i_value % 12], octave);
    return s;
 }

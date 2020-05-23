@@ -110,7 +110,8 @@ public:
    CNumberField(const VSTGUI::CRect& size,
                 VSTGUI::IControlListener* listener = 0,
                 long tag = 0,
-                VSTGUI::CBitmap* pBackground = 0);
+                VSTGUI::CBitmap* pBackground = 0,
+                SurgeStorage* storage = nullptr);
    ~CNumberField();
 
    virtual void setFontColor(VSTGUI::CColor color);
@@ -238,6 +239,7 @@ public:
    
    virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
    bool altlook;
+   SurgeStorage* storage = nullptr;
 
 private:
    VSTGUI::CColor fontColor;

@@ -1088,9 +1088,13 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       float f = val.f;
       int i_value = (int)( f + 0.5 ) + 69; // that 1/2th centers us
       if( i_value < 0 ) i_value = 0; 
-      int octave = (i_value / 12) - 1;
-      char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-      sprintf(txt, "~%s%d", notenames[i_value % 12], octave);
+
+      int oct_offset = 1;
+      if (storage)
+         oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+      char notename[8];
+      sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
+
       break;
    }
    case ct_flangerpitch:
@@ -1098,9 +1102,13 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       float f = val.f;
       int i_value = (int)( f );
       if( i_value < 0 ) i_value = 0; 
-      int octave = (i_value / 12) - 1;
-      char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-      sprintf(txt, "~%s%d", notenames[i_value % 12], octave);
+
+      int oct_offset = 1;
+      if (storage)
+         oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+      char notename[8];
+      sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
+
       break;
    }
    case ct_countedset_percent:
@@ -1115,7 +1123,6 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       }
 
       break;
-
    }
 }
 
@@ -1266,8 +1273,28 @@ void Parameter::get_display(char* txt, bool external, float ef)
          i = (int)((1 / 0.99) * (ef - 0.005) * (float)(val_max.i - val_min.i) + 0.5) + val_min.i;
       else
          i = val.i;
+
       switch (ctrltype)
       {
+      case ct_midikey_or_channel:
+      {
+         auto sm = storage->getPatch().scenemode.val.i;
+
+         if (sm == sm_chsplit)
+         {
+            sprintf(txt, "Channel %d", (val.i / 8) + 1);
+            break;
+         }
+      }
+      case ct_midikey:
+      {
+         int oct_offset = 1;
+         if (storage)
+            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+         char notename[8];
+         sprintf(txt, "%s", get_notename(notename, val.i, oct_offset));
+         break;
+      }
       case ct_osctype:
          sprintf(txt, "%s", osctype_abberations[limit_range(i, 0, (int)num_osctypes - 1)]);
          break;
@@ -1731,12 +1758,38 @@ bool Parameter::set_value_from_string( std::string s )
 
    if( valtype == vt_int )
    {
-      auto ni = std::atoi( c );
-      if( ni >= val_min.i && ni <= val_max.i )
+      auto ni = std::atoi(c);
+
+      switch (ctrltype)
+      {
+      case ct_midikey_or_channel:
+      {
+         auto sm = storage->getPatch().scenemode.val.i;
+
+         if (sm == sm_chsplit)
+         {
+            const char* strip = &(c[0]);
+            while (*strip != '\0' && !std::isdigit(*strip))
+               ++strip;
+            ni = (std::atof(strip) * 8) - 1;
+         }
+
+         break;
+      }
+      case ct_midikey:
+      {
+         // TODO: parse note name text as valid integer input
+         
+         break;
+      }
+      }
+
+      if (ni >= val_min.i && ni <= val_max.i)
       {
          val.i = ni;
          return true;
       }
+
       return false;
    }
 
