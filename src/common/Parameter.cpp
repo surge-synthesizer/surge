@@ -1758,7 +1758,16 @@ bool Parameter::set_value_from_string( std::string s )
 
    if( valtype == vt_int )
    {
-      auto ni = std::atoi(c);
+      int ni = val_min.i - 1;   // default out of range value to test against later
+      
+      try
+      {
+         ni = std::stoi(c);
+      }
+      catch (std::invalid_argument const& e)
+      {
+         ni = val_min.i - 1;   // throw things out of range on invalid input
+      }
 
       switch (ctrltype)
       {
@@ -1772,14 +1781,78 @@ bool Parameter::set_value_from_string( std::string s )
             while (*strip != '\0' && !std::isdigit(*strip))
                ++strip;
             ni = (std::atof(strip) * 8) - 1;
-         }
 
-         break;
+            // breaks case after channel number input, but if we're in split mode we fall through to ct_midikey
+            break;
+         }
       }
       case ct_midikey:
       {
-         // TODO: parse note name text as valid integer input
-         
+         if (ni == val_min.i - 1)   // if integer input failed, try note recognition
+         {
+            std::string::size_type n;
+            std::string::size_type m;
+            std::string notes[7] = {"c", "d", "e", "f", "g", "a", "b"};
+            int pitches[7] = {0, 2, 4, 5, 7, 9, 11};
+            int val = 0;
+            int neg = 1;
+
+            // convert string to lowercase
+            std::for_each(s.begin(), s.end(),
+                [](char &c) { c = ::tolower(static_cast<unsigned char>(c)); });
+
+            // find the unmodified note
+            for (int i = 0; i < 7; i++)
+            {
+               n = s.find(notes[i]);
+               if (n != std::string::npos)
+               {
+                  val = pitches[i];
+                  break;
+               }
+            }
+
+            // check if the following character is sharp or flat, adjust val if so
+            n++;
+            if (m = s.find("#", n, 1) != std::string::npos)
+            {
+               val += 1;
+               n++;
+            }
+            else if (m = s.find("b", n, 1) != std::string::npos)
+            {
+               val -= 1;
+               n++;
+            }
+
+            // if neither note modifiers are found, check for minus
+            if (m = s.find("-", n, 1) != std::string::npos)
+            {
+               neg = -1;
+               n++;
+            }
+
+            // finally, octave number
+            s = s.substr(n, s.length() - n);   // trim the fat to the left of current char
+
+            int oct;
+            try
+            {
+               oct = std::stoi(s);
+            }
+            catch (std::invalid_argument const &e)
+            {
+               oct = -10;   // throw things out of range on invalid input
+            }
+
+             // construct the integer note value
+            int oct_offset = 1;
+            if (storage)
+               oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+
+            ni = ((oct + oct_offset) * 12 * neg) + val;
+         }
+
          break;
       }
       }
@@ -1793,7 +1866,7 @@ bool Parameter::set_value_from_string( std::string s )
       return false;
    }
 
-   auto nv = std::atof(c);
+   float nv = std::atof(c);
 
    switch (ctrltype)
    {
