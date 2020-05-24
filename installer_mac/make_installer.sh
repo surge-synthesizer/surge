@@ -130,6 +130,7 @@ cat > distribution.xml << XMLEND
 <installer-gui-script minSpecVersion="1">
     <title>Surge ${VERSION}</title>
     <license file="License.txt" />
+    <readme file="Readme.rtf" />
     ${VST3_PKG_REF}
     ${AU_PKG_REF}
     ${FXVST3_PKG_REF}
