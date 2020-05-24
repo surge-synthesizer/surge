@@ -593,16 +593,16 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
       // Draw the loop markers
       rect_ls = steprect[0];
-      rect_ls.bottom += margin2 - 2;
-      rect_ls.top = rect_ls.bottom - margin2 + 2;
+      rect_ls.bottom += margin2 - 1.f;
+      rect_ls.top = rect_ls.bottom - margin2 + 2.f;
       rect_ls.right = rect_ls.left + margin2;
       
       rect_le = rect_ls;
 
-      rect_ls.left  += scale * ss->loop_start - 1;
+      rect_ls.left  += scale * ss->loop_start - 1.f;
       rect_ls.right += rect_ls.left;
       
-      rect_le.left += scale * (ss->loop_end + 1) - margin2;
+      rect_le.left += scale * (ss->loop_end + 1.f) - margin2;
       rect_le.right = rect_le.left + margin2;
 
       fillr( rect_ls, grabMarker );
@@ -610,32 +610,31 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
       // and lines on either side of the loop
       dc->setFrameColor( grabMarker );
-      dc->drawLine( CPoint( rect_ls.left, 0), CPoint( rect_ls.left, h-margin2 ) );
-      dc->drawLine( CPoint( rect_le.right, 0), CPoint( rect_le.right, h-margin2 ) );
+      dc->drawLine( CPoint( rect_ls.left, 0.f), CPoint( rect_ls.left, h-3.f ) );
+      dc->drawLine( CPoint( rect_le.right - 1.f, 0.f), CPoint( rect_le.right - 1.f, h-3.f) );
 
       // Finally draw the drag label
       if( controlstate == cs_steps && draggedStep >= 0 && draggedStep < n_stepseqsteps )
       {
-         int prec = 3;
+         int prec = 2;
+
          if( storage )
          {
             int detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
             if( detailedMode )
             {
-               prec = 7;
+               prec = 6;
             }
          }
 
          int dragX, dragY;
-         int dragW = 28, dragH = 12;
-
-         if( prec > 4 )
-            dragW = 48;
-         
+         int dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
+      
          auto sr = steprect[draggedStep];
+
+         // Draw to the right in the second half of the seq table
          if( draggedStep < n_stepseqsteps / 2 )
          {
-            // Draw to the right
             dragX = sr.right;
          }
          else
@@ -664,16 +663,29 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          }
 
          CRect labelR( dragX, dragY, dragX + dragW, dragY + dragH );
-         fillr( labelR, skin->getColor( "lfo.stepseq.valueborder", stepMarker ) );
+
+         fillr( labelR, skin->getColor( "lfo.stepseq.valueborder", kBlackCColor ) );
          labelR.inset( 1, 1 );
          fillr( labelR, skin->getColor( "lfo.stepseq.valuebackground", kWhiteCColor ) );
-         dc->setFontColor( skin->getColor( "lfo.stepseq.valueforeground", stepMarker ) );
-         char txt[ 256 ];
-         sprintf( txt, "%.*f", prec, ss->steps[draggedStep] );
 
-         dc->setFont( lfoTypeFont );
          labelR.left += 1;
+         labelR.top -= (keyModMult > 0 ? 9 : 0);
+         
+         char txt[256];
+         sprintf(txt, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
+
+         dc->setFontColor(skin->getColor("lfo.stepseq.valueforeground", kBlackCColor ));
+         dc->setFont(lfoTypeFont);
          dc->drawString(txt, labelR, VSTGUI::kLeftText, true );
+
+         if (keyModMult > 0)
+         {
+            labelR.bottom += 18;
+
+            sprintf(txt, "%d/%d", (int) (floor(ss->steps[draggedStep] * keyModMult)) , keyModMult);
+            dc->drawString(txt, labelR, VSTGUI::kLeftText, true );
+         }
+
       }
    }
       
@@ -933,6 +945,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
          if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
          {
             draggedStep = i;
+
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 
             if (buttons & (kControl | kRButton)) {
@@ -947,6 +960,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
             
             // find out if a microtuning is loaded and store the scale length for Alt-drag
             // quantization to scale degrees
+            keyModMult = 0;
             int quantStep = 12;
             
             if (!storage->isStandardTuning && storage->currentScale.count > 1)
@@ -954,8 +968,11 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
             if (buttons & kShift)
             {
+               keyModMult = quantStep; // only shift pressed
+               
                if (buttons & kAlt)
-               {
+               {  
+                  keyModMult = quantStep * 2; // shift+alt pressed
                   f *= quantStep * 2;
                   f = floor(f);
                   f *= (1.f / (quantStep * 2));

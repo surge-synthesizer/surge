@@ -91,6 +91,7 @@ protected:
    int selectedSSrow = -1;
 
    int draggedStep = -1;
+   int keyModMult = 0;
    
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };

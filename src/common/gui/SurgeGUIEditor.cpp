@@ -745,11 +745,11 @@ void SurgeGUIEditor::refresh_mod()
    }
    // ctnvg	frame->redraw();
    // frame->setDirty();
-#if LINUX
-   frame->invalid();
-   // Turns out linux is very bad with lots of little invalid rects in vstgui
-   // see github issue 1103
-#endif
+   #if LINUX
+      frame->invalid();
+      // Turns out linux is very bad with lots of little invalid rects in vstgui
+      // see github issue 1103
+   #endif
 }
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
@@ -1848,6 +1848,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchTuningLabel = new CTextLabel(CRect(CPoint(96 + 22, 112 + (112-85) ), CPoint( 200, 21 )));
    patchTuningLabel->setText( "Save With Tuning" );
    patchTuningLabel->sizeToFit();
+
+   // fix the text selection rectangle background overhanging the borders on Windows
+   #if WINDOWS
+      patchName->setTextInset(CPoint(3, 0));
+      patchCategory->setTextInset(CPoint(3, 0));
+      patchCreator->setTextInset(CPoint(3, 0));
+      patchComment->setTextInset(CPoint(3, 0));
+   #endif   
 
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
@@ -4303,7 +4311,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
         new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
 
     int zid = 0;
-    for (auto s : {100, 125, 150, 200, 300}) // These are somewhat arbitrary reasonable defaults
+    for (auto s : {100, 125, 150, 175, 200, 300, 400}) // These are somewhat arbitrary reasonable defaults
     {
         std::ostringstream lab;
         lab << "Zoom to " << s << "%";
@@ -5192,6 +5200,11 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 12 : 0 ), 114, 50 + ( ismod ? 12 : 0 ) ), this, tag_value_typein, txt );
    typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
    typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+
+   // fix the text selection rectangle background overhanging the borders on Windows
+   #if WINDOWS
+      typeinValue->setTextInset(CPoint(3, 0));
+   #endif   
 
    if( ! p->can_setvalue_from_string() )
    {
