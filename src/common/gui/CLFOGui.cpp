@@ -527,14 +527,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             knobcolor = disStepMarker;
             valuecolor = disStepMarker;
          }
-         
-         
-         if( controlstate == cs_trigtray_toggle && i == selectedSSrow )
-         {
-            stepcolor = loopRegionClick;
-            knobcolor = grabMarkerHi;
-         }
-         
+                  
          // Code to put in place an editor for the envelope retrigger
          if( edit_trigmask )
          {
@@ -542,29 +535,35 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             rstep.top += margin2;
             gstep.bottom = rstep.top - 1;
             gaterect[i] = gstep;
-            
+            auto gatecolor = knobcolor;
+            auto gatebgcolor = stepcolor;
+            if( controlstate == cs_trigtray_toggle && i == selectedSSrow )
+            {
+               gatebgcolor = grabMarkerHi;
+            }
+   
             if (ss->trigmask & (UINT64_C(1) << i))
             {
-               fillr(gstep, knobcolor);
+               fillr(gstep, gatecolor);
             }
             else if( ss->trigmask & ( UINT64_C(1) << ( 16 + i ) ) )
             {
                // FIXME - an A or an F would be nice eh?
-               fillr(gstep, stepcolor);
+               fillr(gstep, gatebgcolor);
                auto qrect = gstep;
                qrect.right -= (qrect.getWidth() / 2 );
-               fillr(qrect, knobcolor);
+               fillr(qrect, gatecolor);
             }
             else if( ss->trigmask & ( UINT64_C(1) << ( 32 + i ) ) )
             {
-               fillr(gstep, stepcolor);
+               fillr(gstep, gatebgcolor);
                auto qrect = gstep;
                qrect.left += (qrect.getWidth() / 2 );
-               fillr(qrect, knobcolor);
+               fillr(qrect, gatecolor);
             }
             else
             {
-               fillr(gstep, stepcolor );
+               fillr(gstep, gatebgcolor );
             }
             
          }
