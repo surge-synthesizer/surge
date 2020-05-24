@@ -745,6 +745,11 @@ void SurgeGUIEditor::refresh_mod()
    }
    // ctnvg	frame->redraw();
    // frame->setDirty();
+   #if LINUX
+      frame->invalid();
+      // Turns out linux is very bad with lots of little invalid rects in vstgui
+      // see github issue 1103
+   #endif
 }
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
