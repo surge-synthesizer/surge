@@ -5061,7 +5061,7 @@ R"HTML(
        {
           int oct_offset = 1;
              oct_offset = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
-          char notename[8];
+          char notename[16];
 
           std::string rowstyle="";
           std::string tdopen="<td colspan=2>";
