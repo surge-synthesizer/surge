@@ -1764,11 +1764,11 @@ bool Parameter::set_value_from_string( std::string s )
       {
          ni = std::stoi(c);
       }
-      catch (std::invalid_argument)
+      catch (std::invalid_argument const &e)
       {
          ni = val_min.i - 1;   // set value of ni out of range on invalid input
       }
-      catch (std::out_of_range)
+      catch (std::out_of_range const &e)
       {
          ni = val_min.i - 1;   // same for out of range input
       }
