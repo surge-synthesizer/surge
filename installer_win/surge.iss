@@ -36,6 +36,10 @@ Compression=lzma
 SolidCompression=yes
 UninstallFilesDir={{commmonappdata}\Surge}
 
+;; since the fx bank is now a dir not a file we have to force delete the old version in case it was a file
+[InstallDelete]
+Type: filesandordirs; Name: "{cf}\VST3\SurgeEffectsBank.vst3"
+
 [Components]
 Name: Data; Description: Data files; Types: full compact custom; Flags: fixed
 Name: VST3; Description: VST3 Plug-in (64 bit); Types: full compact custom; Flags: checkablealone
@@ -45,7 +49,7 @@ Name: EffectsVST3; Description: SurgeEffectsBank VST3 Plug-in (64 bit); Types: f
 Source: ..\resources\data\*; DestDir: {commonappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
-Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3\*; DestDir: {cf}\VST3\SurgeEffectsBank.vst3; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3; DestDir: {cf}\VST3; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
