@@ -1764,11 +1764,11 @@ bool Parameter::set_value_from_string( std::string s )
       {
          ni = std::stoi(c);
       }
-      catch (std::invalid_argument const &e)
+      catch (const std::invalid_argument &e)
       {
          ni = val_min.i - 1;   // set value of ni out of range on invalid input
       }
-      catch (std::out_of_range const &e)
+      catch (const std::out_of_range &e)
       {
          ni = val_min.i - 1;   // same for out of range input
       }
@@ -1870,7 +1870,7 @@ bool Parameter::set_value_from_string( std::string s )
       return false;
    }
 
-   float nv = std::atof(c);
+   auto nv = std::atof(c);
 
    switch (ctrltype)
    {
