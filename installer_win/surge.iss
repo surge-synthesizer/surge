@@ -57,3 +57,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Icons]
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
+[Run]
+Filename: "{cmd}"; \
+    WorkingDir: "{cf}\VST3"; \
+    Parameters: "/C mklink /D /J  ""{cf}\VST3\SurgeData"" ""{commonappdata}\Surge"""; \
+    Description: "Install Surge portable by hard linking resources to VST3 Directory"; \
+    Flags: postinstall unchecked runascurrentuser
