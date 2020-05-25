@@ -26,6 +26,7 @@ fi
 # locations
 
 PRODUCTS="../products/"
+FXPRODUCTS="../surge-fx/build/product/"
 
 VST3="Surge.vst3"
 AU="Surge.component"
@@ -45,6 +46,7 @@ build_flavor()
     flavorprod=$2
     ident=$3
     loc=$4
+    proddir=$5
 
     echo --- BUILDING Surge_${flavor}.pkg ---
     
@@ -56,11 +58,11 @@ build_flavor()
     # by moving the product to a tmp dir
 
     mkdir -p $TMPDIR
-    mv $PRODUCTS/$flavorprod $TMPDIR
+    mv $proddir/$flavorprod $TMPDIR
 
     pkgbuild --root $TMPDIR --identifier $ident --version $VERSION --install-location $loc Surge_${flavor}.pkg || exit 1
 
-    mv $TMPDIR/${flavorprod} $PRODUCTS
+    mv $TMPDIR/${flavorprod} $proddir
     rmdir $TMPDIR
 }
 
@@ -68,23 +70,23 @@ build_flavor()
 # try to build VST3 package
 
 if [[ -d $PRODUCTS/$VST3 ]]; then
-    build_flavor "VST3" $VST3 "com.vemberaudio.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
+    build_flavor "VST3" $VST3 "com.vemberaudio.vst3.pkg" "/Library/Audio/Plug-Ins/VST3" $PRODUCTS
 fi
 
 # try to build AU package
 
 if [[ -d $PRODUCTS/$AU ]]; then
-    build_flavor "AU" $AU "com.vemberaudio.au.pkg" "/Library/Audio/Plug-Ins/Components"
+    build_flavor "AU" $AU "com.vemberaudio.au.pkg" "/Library/Audio/Plug-Ins/Components" $PRODUCTS
 fi
 
 # And the FXen
 
-if [[ -d $PRODUCTS/$FXAU ]]; then
-    build_flavor "FXAU" $FXAU "org.surge-synthesizer.fxau.pkg" "/Library/Audio/Plug-Ins/Components"
+if [[ -d $FXPRODUCTS/$FXAU ]]; then
+    build_flavor "FXAU" $FXAU "org.surge-synthesizer.fxau.pkg" "/Library/Audio/Plug-Ins/Components" $FXPRODUCTS
 fi
 
-if [[ -d $PRODUCTS/$FXVST3 ]]; then
-    build_flavor "FXVST3" $FXVST3 "org.surge-synthesizer.fxvst3.pkg" "/Library/Audio/Plug-Ins/VST3"
+if [[ -d $FXPRODUCTS/$FXVST3 ]]; then
+    build_flavor "FXVST3" $FXVST3 "org.surge-synthesizer.fxvst3.pkg" "/Library/Audio/Plug-Ins/VST3" $FXPRODUCTS
 fi
 
 # write build info to resources folder
@@ -96,6 +98,7 @@ echo "Commit: $(git rev-parse HEAD)" >> "$RSRCS/BuildInfo.txt"
 
 # build resources package
 
+echo --- BUILDING Resources pkg ---
 pkgbuild --root "$RSRCS" --identifier "com.vemberaudio.resources.pkg" --version $VERSION --scripts ResourcesPackageScript --install-location "/tmp/Surge" Surge_Resources.pkg
 
 # remove build info from resource folder
@@ -114,12 +117,12 @@ if [[ -d $PRODUCTS/$AU ]]; then
 	AU_CHOICE='<line choice="com.vemberaudio.au.pkg"/>'
 	AU_CHOICE_DEF="<choice id=\"com.vemberaudio.au.pkg\" visible=\"true\" start_selected=\"true\" title=\"Audio Unit\"><pkg-ref id=\"com.vemberaudio.au.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.au.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_AU.pkg</pkg-ref>"
 fi
-if [[ -d $PRODUCTS/$FXAU ]]; then
+if [[ -d $FXPRODUCTS/$FXAU ]]; then
 	FXAU_PKG_REF='<pkg-ref id="org.surge-synthesizer.fxau.pkg"/>'
 	FXAU_CHOICE='<line choice="org.surge-synthesizer.fxau.pkg"/>'
 	FXAU_CHOICE_DEF="<choice id=\"org.surge-synthesizer.fxau.pkg\" visible=\"true\" start_selected=\"true\" title=\"Audio Unit for Standalone FX\"><pkg-ref id=\"org.surge-synthesizer.fxau.pkg\"/></choice><pkg-ref id=\"org.surge-synthesizer.fxau.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_FXAU.pkg</pkg-ref>"
 fi
-if [[ -d $PRODUCTS/$FXVST3 ]]; then
+if [[ -d $FXPRODUCTS/$FXVST3 ]]; then
 	FXVST3_PKG_REF='<pkg-ref id="org.surge-synthesizer.fxvst3.pkg"/>'
 	FXVST3_CHOICE='<line choice="org.surge-synthesizer.fxvst3.pkg"/>'
 	FXVST3_CHOICE_DEF="<choice id=\"org.surge-synthesizer.fxvst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST3 for Standalone FX\"><pkg-ref id=\"org.surge-synthesizer.fxvst3.pkg\"/></choice><pkg-ref id=\"org.surge-synthesizer.fxvst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_FXVST3.pkg</pkg-ref>"

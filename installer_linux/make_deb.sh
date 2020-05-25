@@ -87,11 +87,14 @@ cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
 # Copy the VST3 bundld 
 cp -r ../products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
 
+if [[ -d ../surge-fx/build/product/ ]]; then
+    cp -r ../surge-fx/build/product/*vst3 ${PACKAGE_NAME}/usr/lib/vst3/
+fi
+
 # copy the lv2 bundle
 cp -r ../products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
 
 # set permissions on shared libraries
-chmod -R 0644 ${PACKAGE_NAME}/usr/lib/vst/${SURGE_NAME}.so
 find ${PACKAGE_NAME}/usr/lib/vst3/ -type f -iname "*.so" | xargs chmod 0644
 find ${PACKAGE_NAME}/usr/lib/lv2/ -type f -iname "*.so" | xargs chmod 0644
 
@@ -103,4 +106,3 @@ rm -rf ${PACKAGE_NAME}
 
 echo "Built DEB Package"
 pwd
-ls -l product

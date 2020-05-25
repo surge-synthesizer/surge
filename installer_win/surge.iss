@@ -34,6 +34,7 @@ SetupIconFile=surge.ico
 UsePreviousAppDir=no
 Compression=lzma
 SolidCompression=yes
+UninstallFilesDir={{commmonappdata}\Surge}
 
 [Components]
 Name: Data; Description: Data files; Types: full compact custom; Flags: fixed
@@ -41,10 +42,10 @@ Name: VST3; Description: VST3 Plug-in (64 bit); Types: full compact custom; Flag
 Name: EffectsVST3; Description: SurgeEffectsBank VST3 Plug-in (64 bit); Types: full compact custom; Flags: checkablealone
 
 [Files]
-Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
-Source: ..\fxbuild\surge-fx\Builds\VisualStudio2017\x64\Release\VST3\SurgeEffectsBank.vst3; DestDir: {cf}\VST3; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist
 Source: ..\resources\data\*; DestDir: {commonappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
+Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3\*; DestDir: {cf}\VST3\SurgeEffectsBank.vst3; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
