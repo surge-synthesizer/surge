@@ -71,7 +71,11 @@ namespace Surge
 class ScopedLocale {
 public:
     ScopedLocale() noexcept
-        : locale(::strdup(::setlocale(LC_NUMERIC, nullptr)))
+#if WINDOWS
+    : locale(::_strdup(::setlocale(LC_NUMERIC, nullptr)))
+#else    
+    : locale(::strdup(::setlocale(LC_NUMERIC, nullptr)))
+#endif
     {
         ::setlocale(LC_NUMERIC, "C");
     }
