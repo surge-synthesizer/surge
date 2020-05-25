@@ -49,6 +49,12 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 using namespace std;
 
+#if WINDOWS
+void dummyExportedWindowsToLookupDLL() {
+}
+#endif
+
+
 SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
    _patch.reset(new SurgePatch(this));
@@ -249,18 +255,63 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    datapath = suppliedDataPath;
 #else
    bool foundSurge = false;
-   PWSTR commonAppData;
-   if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
-   {
-      CHAR path[4096];
-      wsprintf(path, "%S\\Surge\\", commonAppData);
-      datapath = path;
-      if( fs::is_directory( fs::path( datapath ) ) )
-         foundSurge = true;
-      else
-         datapath = "";
-   }
 
+   // First check the portable mode sitting beside me
+   {
+      CHAR path[MAX_PATH];
+      HMODULE hm = NULL;
+
+      if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR) &dummyExportedWindowsToLookupDLL, &hm) == 0)
+      {
+         int ret = GetLastError();
+         printf( "GetModuleHandle failed, error = %d\n", ret);
+         // Return or however you want to handle an error.
+         goto bailOnPortable;
+      }
+      if (GetModuleFileName(hm, path, sizeof(path)) == 0)
+      {
+         int ret = GetLastError();
+         printf( "GetModuleFileName failed, error = %d\n", ret);
+         // Return or however you want to handle an error.
+         goto bailOnPortable;
+      }
+      
+      // The path variable should now contain the full filepath for this DLL.
+      std::string pn = path;
+      int ep;
+      if( (ep = pn.find( ".vst3" )) != string::npos )
+      {
+         auto spath = pn;
+         spath.replace( ep, 5, "Data\\" );
+         datapath = spath;
+         if( fs::is_directory( fs::path( spath ) ) )
+         {
+            foundSurge = true;
+         }
+         else
+         {
+            datapath = "";
+         }
+      }
+   }
+bailOnPortable:
+   
+   PWSTR commonAppData;
+   if( ! foundSurge ) {
+      if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
+      {
+         CHAR path[4096];
+         wsprintf(path, "%S\\Surge\\", commonAppData);
+         datapath = path;
+         if( fs::is_directory( fs::path( datapath ) ) )
+            foundSurge = true;
+         else
+            datapath = "";
+      }
+   }
+   
    if( ! foundSurge ) {
       PWSTR localAppData;
       if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
