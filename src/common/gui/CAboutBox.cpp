@@ -44,7 +44,7 @@ void CAboutBox::draw(CDrawContext* pContext)
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
 
       int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
-      std::string bittiness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + "-bit";
+      std::string bitness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + "-bit";
 
 #if TARGET_AUDIOUNIT      
       std::string flavor = "AU";
@@ -70,13 +70,13 @@ void CAboutBox::draw(CDrawContext* pContext)
 
       {
          std::vector< std::string > msgs = { {
-               std::string() + "Version " + FULL_VERSION_STR + " (" + bittiness + " " + platform + " " + flavor + ". Built " +
+               std::string() + "Version " + FULL_VERSION_STR + " (" + bitness + " " + platform + " " + flavor + ". Built " +
                __DATE__ + " " + __TIME__ + " on " + BUILD_HOST + ")",
                "Factory Data Path: " + dataPath,
                "User Data Path: " + userPath,
                "Released under the GNU General Public License, v3",
                "Copyright 2005-2020 by Vember Audio and individual contributors",
-               "Source, contributors and other information at https://github.com/surge-synthesizer/surge",
+               "Source, contributors and other information at",
                "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc."
             } };
          
@@ -90,6 +90,10 @@ void CAboutBox::draw(CDrawContext* pContext)
             pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
             yPos += strHeight + yMargin;
          }
+
+         // link to Surge github repo in another color because VSTGUI -_-
+         pContext->setFontColor(skin->getColor("aboutbox.link", CColor(46, 134, 255)));
+         pContext->drawString("https://github.com/surge-synthesizer/surge", CPoint(253, 506));
       }
 
       {
@@ -109,8 +113,8 @@ void CAboutBox::draw(CDrawContext* pContext)
          }
       }
 
-      CRect infobg(0, 395, 550, 540);
-      pContext->setFillColor(CColor(0xFF, 0xFF, 0xFF, 0x10));
+      CRect infobg(0, 395, 905, 545);
+      pContext->setFillColor(CColor(128, 128, 128, 24));
       pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
       
    }
