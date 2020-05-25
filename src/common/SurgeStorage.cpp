@@ -281,10 +281,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
       // The path variable should now contain the full filepath for this DLL.
       std::string pn = path;
       int ep;
-      if( (ep = pn.find( ".vst3" )) != string::npos )
+      if( (ep = pn.rfind( "\\" )) != string::npos )
       {
-         auto spath = pn;
-         spath.replace( ep, 5, "Data\\" );
+         auto spath = pn.substr( 0, ep ) + "\\SurgeData\\";
          datapath = spath;
          if( fs::is_directory( fs::path( spath ) ) )
          {
