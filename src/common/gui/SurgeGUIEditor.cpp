@@ -1,7 +1,6 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
-#define USE_DEV_MENU 1
 
 #include "SurgeGUIEditor.h"
 #include "resource.h"
@@ -29,6 +28,7 @@
 #include "SkinSupport.h"
 #include "UIInstrumentation.h"
 #include "guihelpers.h"
+#include "DebugHelpers.h"
 
 #include <iostream>
 #include <iomanip>
@@ -178,6 +178,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    // setIdleRate(25);
    // synth = ((SurgeProcessor*)effect)->getSurge();
 #endif
+
 
    patchname = 0;
    statuspanel = nullptr;
@@ -2110,6 +2111,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       return 0;
    if (!editor_open)
       return 0;
+   if (useDevMenu)
+   {
+      useDevMenu = false;
+      return 0;
+   }
    /*if((button&kRButton)&&modsource)
      {
      modsource = 0;
@@ -2147,7 +2153,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          menuRect.offset(where.x, where.y);
 
-         showSettingsMenu(menuRect, true);
+         useDevMenu = true;
+         showSettingsMenu(menuRect);
       }
 
       if (tag == tag_osc_select)
@@ -3267,7 +3274,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       menuRect.offset(where.x, where.y);
 
-      showSettingsMenu(menuRect, false);
+      useDevMenu = false;
+      showSettingsMenu(menuRect);
    }
    break;
    case tag_osc_select:
@@ -4033,7 +4041,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
 }
 
-void SurgeGUIEditor::showSettingsMenu(CRect &menuRect, bool showDevMenu)
+void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 {
     COptionMenu* settingsMenu =
     new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
@@ -4073,7 +4081,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect, bool showDevMenu)
     eid++;
     dataSubMenu->forget();
 
-    if (showDevMenu)
+    if (useDevMenu)
     {
         auto devSubMenu = makeDevMenu(menuRect);
         settingsMenu->addEntry(devSubMenu, Surge::UI::toOSCaseForMenu("Developer Options"));
@@ -4645,10 +4653,21 @@ void SurgeGUIEditor::reloadFromSkin()
 */
 VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 {
-    int tid=0;
+    int tid = 0;
+
     COptionMenu *devSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+#if WINDOWS
+    VSTGUI::CCommandMenuItem* conItem = nullptr;
+
+    conItem = addCallbackMenu(devSubMenu, "Debug console",
+        []() {
+                Surge::Debug::toggleConsole();
+             });
+    tid++;
+#endif
 
 #ifdef INSTRUMENT_UI
     addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show UI Instrumentation"),
@@ -4656,6 +4675,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                        Surge::Debug::report();
                     }
        );
+    tid++;
 #endif
 
     addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Queried Colors"),
