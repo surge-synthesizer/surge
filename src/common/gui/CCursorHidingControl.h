@@ -24,6 +24,8 @@ protected:
    void detachCursor(VSTGUI::CPoint& where);
    void attachCursor();
 
+   bool hideCursor = true;
+
 private:
    void doDetach(VSTGUI::CPoint& where);
    void doAttach();
@@ -32,6 +34,7 @@ private:
    bool _isDetatched = false;
 
    // OS specific (screen-space)
-   double _sumDX = 0, _sumDY = 0;
    double _hideX = 0, _hideY = 0;
+   // double _sumDX = 0, _sumDY = 0;    // this was there before but interfered with proper cursor hiding operation
+   // but you know, let's keep it here because we don't know if it might be necessary for something else!
 };

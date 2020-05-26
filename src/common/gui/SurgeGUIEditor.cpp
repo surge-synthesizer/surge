@@ -899,7 +899,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          state |= 4;
 
       gui_modsrc[ms] =
-         new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms, bitmapStore);
+         new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms, bitmapStore, &(synth->storage));
       ((CModulationSourceButton*)gui_modsrc[ms])->setSkin(currentSkin);
       ((CModulationSourceButton*)gui_modsrc[ms])
          ->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
@@ -1096,7 +1096,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          if( parentClassName == "CSurgeSlider" )
          {
             CSurgeSlider* hs =
-               new CSurgeSlider(CPoint(c->x, c->y), style, this, p->id + start_paramtags, true, bitmapStore);
+               new CSurgeSlider(CPoint(c->x, c->y), style, this, p->id + start_paramtags, true, bitmapStore, &(synth->storage));
             hs->setSkin(currentSkin,bitmapStore);
             hs->setAssociatedSkinControl(c);
             hs->setMoveRate(p->moverate);
@@ -1727,7 +1727,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                CSurgeSlider* hs =
                   new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs), style, this,
-                                   p->id + start_paramtags, true, bitmapStore);
+                                    p->id + start_paramtags, true, bitmapStore, &(synth->storage));
                hs->setSkin(currentSkin,bitmapStore);
                hs->setModMode(mod_editor ? 1 : 0);
                hs->setModValue(synth->getModulation(p->id, modsource));
@@ -1745,7 +1745,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                CSurgeSlider* hs =
                   new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs), style, this,
-                                   p->id + start_paramtags, false, bitmapStore);
+                                    p->id + start_paramtags, false, bitmapStore, &(synth->storage));
 
                // Even if current modsource isn't modulating me, something else may be
                hs->setModPresent(synth->isModDestUsed(p->id));
@@ -4458,6 +4458,15 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
    });
    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact));
    mid++;
+
+   mouseSubMenu->addSeparator(mid++);
+   
+   auto tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "showCursorWhileEditing", 0);
+
+   menuItem = addCallbackMenu(mouseSubMenu, Surge::UI::toOSCaseForMenu("Show Cursor While Editing"), [this, tsMode]() {
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "showCursorWhileEditing", 1 - tsMode);
+   });
+   menuItem->setChecked(tsMode);
 
    std::string mouseMenuName = Surge::UI::toOSCaseForMenu("Mouse Behavior");
 
