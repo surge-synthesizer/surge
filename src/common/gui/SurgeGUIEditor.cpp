@@ -4662,10 +4662,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 #if WINDOWS
     VSTGUI::CCommandMenuItem* conItem = nullptr;
 
+    static bool consoleState;
+
     conItem = addCallbackMenu(devSubMenu, "Debug console",
         []() {
-                Surge::Debug::toggleConsole();
+                consoleState = Surge::Debug::toggleConsole();
              });
+        conItem->setChecked(consoleState);
     tid++;
 #endif
 

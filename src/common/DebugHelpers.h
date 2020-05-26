@@ -13,7 +13,7 @@
 namespace Surge {
 namespace Debug {
 
-void toggleConsole(); // no-op on Linux and macOS; shows or closes console on Windows
+bool toggleConsole(); // no-op on Linux and macOS; shows or closes console on Windows
 
 void stackTraceToStdout(); // no-op on Windows; shows stack trace on macOS and Linunx
 

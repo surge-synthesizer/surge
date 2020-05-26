@@ -4,12 +4,12 @@
 #include "Windows.h"
 #endif
 
-void Surge::Debug::toggleConsole()
+bool Surge::Debug::toggleConsole()
 {
 #if WINDOWS
     static bool initialized = false;
 
-    FILE *fp;
+    static FILE *fp;
 
     if (!initialized)
     {
@@ -17,6 +17,7 @@ void Surge::Debug::toggleConsole()
 
         AllocConsole();
         freopen_s(&fp, "CONOUT$", "w", stdout);
+        printf("SURGE DEBUG CONSOLE\nThis console is for debug output. If you close it all bets are off!\n\n");
     }
     else
     {
@@ -24,6 +25,8 @@ void Surge::Debug::toggleConsole()
         fclose(fp);
         FreeConsole();
     }
+
+    return initialized;
 #endif
 }
 
