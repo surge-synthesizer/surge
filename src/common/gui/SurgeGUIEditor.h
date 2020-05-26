@@ -274,6 +274,7 @@ private:
    int clear_infoview_countdown = 0;
    float blinktimer = 0;
    bool blinkstate = false;
+   bool useDevMenu = false;
    void* _effect = nullptr;
    void* _userdata = nullptr;
    VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;

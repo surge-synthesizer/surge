@@ -94,6 +94,7 @@ set(SURGE_COMMON_SOURCES
   src/common/vt_dsp/halfratefilter.cpp
   src/common/vt_dsp/lipol.cpp
   src/common/vt_dsp/macspecific.cpp
+  src/common/DebugHelpers.cpp
   src/common/Parameter.cpp
   src/common/precompiled.cpp
   src/common/SurgeError.cpp
@@ -296,11 +297,11 @@ if( APPLE )
     )
 elseif( UNIX AND NOT APPLE )
   file(GLOB PIGGY_INPUTS assets/original-vector/SVG/exported/*svg)
-  add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S 
+  add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
                       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                       DEPENDS ${PIGGY_INPUTS}
                       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
-                      COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp 
+                      COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
                     )
 
   set(SURGE_OS_SOURCES
@@ -426,7 +427,7 @@ elseif( WIN32 )
     /wd4477   # blah blah wide strings after we made it work
     /wd4065   # standalone default in a switch with no case
     /wd4702   # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
-    
+
     /FIprecompiled.h
     /Zc:alignedNew
     /bigobj
@@ -467,7 +468,7 @@ if( BUILD_AU )
     ${SURGE_AU_LIBRARY_SOURCES}
     )
   add_dependencies(surge-au surge-shared)
-  
+
   target_compile_features(surge-au PRIVATE cxx_std_17 )
 
   target_compile_definitions(surge-au
@@ -526,7 +527,7 @@ if( BUILD_VST3 )
     ${SURGE_VST3_LIBRARY_SOURCES}
     )
   add_dependencies(surge-vst3  surge-shared)
-  
+
   target_compile_features(surge-vst3 PRIVATE cxx_std_17 )
 
   if( APPLE )
@@ -612,7 +613,7 @@ if( BUILD_VST2 )
     ${SURGE_VST2_LIBRARY_SOURCES}
     )
   add_dependencies(surge-vst2 surge-shared)
-  
+
   if( UNIX AND NOT APPLE )
     target_sources(surge-vst2 PRIVATE src/linux/linux-aeffguieditor.cpp )
 
@@ -704,7 +705,7 @@ if( BUILD_LV2 )
     ${SURGE_LV2_LIBRARY_SOURCES}
     )
   add_dependencies(surge-lv2 surge-shared)
-  
+
   target_compile_features(surge-lv2 PRIVATE cxx_std_17 )
 
   target_compile_definitions(surge-lv2
@@ -778,7 +779,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsTUN.cpp
     )
   add_dependencies(surge-headless surge-shared)
-  
+
   target_compile_features(surge-headless PRIVATE cxx_std_17 )
 
   target_compile_definitions(surge-headless
