@@ -32,5 +32,5 @@ bool Surge::Debug::toggleConsole()
 
 void Surge::Debug::stackTraceToStdout()
 {
-    printf("Hey @baconpaul do this!\n");
+    //printf("Hey @baconpaul do this!\n");
 }
