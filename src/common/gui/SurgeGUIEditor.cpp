@@ -2133,8 +2133,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    if (button & kDoubleClick)
       button |= kControl;
 
+
    if (button & kRButton)
    {
+
+      if (tag == tag_settingsmenu)
+      {
+         CRect r = control->getViewSize();
+         CRect menuRect;
+         CPoint where;
+         frame->getCurrentMouseLocation(where);
+         frame->localToFrame(where);
+
+         menuRect.offset(where.x, where.y);
+
+         showSettingsMenu(menuRect, true);
+      }
+
       if (tag == tag_osc_select)
       {
          CRect r = control->getViewSize();
@@ -3252,7 +3267,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       menuRect.offset(where.x, where.y);
 
-      showSettingsMenu(menuRect);
+      showSettingsMenu(menuRect, false);
    }
    break;
    case tag_osc_select:
@@ -4018,7 +4033,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
 }
 
-void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
+void SurgeGUIEditor::showSettingsMenu(CRect &menuRect, bool showDevMenu)
 {
     COptionMenu* settingsMenu =
     new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
@@ -4058,13 +4073,13 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     dataSubMenu->forget();
 
-
-#if USE_DEV_MENU
-    auto devSubMenu = makeDevMenu(menuRect);
-    settingsMenu->addEntry(devSubMenu, Surge::UI::toOSCaseForMenu("Developer Options"));
-    eid++;
-    devSubMenu->forget();
-#endif
+    if (showDevMenu)
+    {
+        auto devSubMenu = makeDevMenu(menuRect);
+        settingsMenu->addEntry(devSubMenu, Surge::UI::toOSCaseForMenu("Developer Options"));
+        eid++;
+        devSubMenu->forget();
+    }
 
     settingsMenu->addSeparator(eid++);
 

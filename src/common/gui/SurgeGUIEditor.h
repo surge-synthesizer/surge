@@ -145,7 +145,7 @@ private:
                              int startcategory);
 
 
-   void showSettingsMenu(VSTGUI::CRect &menuRect);
+   void showSettingsMenu(VSTGUI::CRect &menuRect, bool showDevMenu);
 
    /*
    ** Zoom Implementation 
