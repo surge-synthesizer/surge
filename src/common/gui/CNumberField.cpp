@@ -687,13 +687,17 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
 bool CNumberField::onWheel(const CPoint& where, const float& distance, const CButtonState& buttons)
 {
    beginEdit();
-   double mouseFactor = 0.01;
-   if( controlmode == cm_midichannel )
-   {
-      mouseFactor = 0.6; // these are all just empirical from trying them on my mbp
-   }
+   double mouseFactor = 1;
 
-   value += distance * mouseFactor;
+   if (controlmode == cm_midichannel_from_127)
+      mouseFactor = 7.5;
+  
+   if (buttons & kControl)
+      value += distance * 0.01;  
+   else
+      value += distance / (i_max - i_min) * mouseFactor;
+   
+
    i_value = (int)((1.f / 0.99f) * (value - 0.005f) * (float)(i_max - i_min) + 0.5) + i_min;
    bounceValue();
    invalid();
