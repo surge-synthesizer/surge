@@ -77,7 +77,10 @@ public:
    int id_mode, id_fb, id_fmlegacy, id_detune;
    float lastvalue[MAX_UNISON];
 
-   float valueFromSinAndCos(float svalue, float cvalue);
+   inline float valueFromSinAndCos(float svalue, float cvalue ) {
+      return valueFromSinAndCos(svalue, cvalue, localcopy[id_mode].i );
+   }
+   static float valueFromSinAndCos(float svalue, float cvalue, int mode);
    virtual void handleStreamingMismatches(int s, int synths) override;
 };
 

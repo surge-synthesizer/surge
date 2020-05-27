@@ -658,6 +658,8 @@ private:
 class RingModulatorEffect : public Effect
 {
 public:
+   static const int MAX_UNISON = 16;
+   
    RingModulatorEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~RingModulatorEffect();
    virtual const char* get_effectname() override
@@ -683,5 +685,6 @@ public:
 
 private:
    int ringout_value = -1;
-   float phase = 0;
+   float phase[MAX_UNISON], detune_offset[MAX_UNISON], panL[MAX_UNISON], panR[MAX_UNISON];
+   int last_unison = -1;
 };
