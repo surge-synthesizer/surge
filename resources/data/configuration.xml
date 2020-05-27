@@ -12,9 +12,9 @@
     <type i="5" name="FM3" />
     <type i="3" name="SH Noise" />
     <type i="4" name="Audio Input">
-        <snapshot name="Left" p0="-1.0" p1="0.0" />
-        <snapshot name="Right" p0="1.0" p1="0.0" />
-        <snapshot name="Stereo" p0="0.0" p1="0.0" />
+        <snapshot name="Left" p0="-1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" />
+        <snapshot name="Right" p0="1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" />
+        <snapshot name="Stereo" p0="0.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" />
     </type>
 </osc>
 <fx>

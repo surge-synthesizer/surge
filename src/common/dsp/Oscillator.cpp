@@ -642,14 +642,18 @@ osc_audioinput::~osc_audioinput()
 
 void osc_audioinput::init_ctrltypes(int scene, int osc)
 {
-   oscdata->p[0].set_name("Input");
+   oscdata->p[0].set_name("Audio In Channel");
    oscdata->p[0].set_type(ct_percent_bidirectional);
-   oscdata->p[1].set_name("Gain");
+   oscdata->p[1].set_name("Audio In Gain");
    oscdata->p[1].set_type(ct_decibel);
    if( scene == 1 )
    {
-      oscdata->p[2].set_name("Use SceneA as Source");
-      oscdata->p[2].set_type(ct_bool);
+      oscdata->p[2].set_name("Scene A Channel");
+      oscdata->p[2].set_type(ct_percent_bidirectional);
+      oscdata->p[3].set_name("Scene A Gain");
+      oscdata->p[3].set_type(ct_decibel);
+      oscdata->p[4].set_name("Audio In<>Scene A Mix");
+      oscdata->p[4].set_type(ct_percent);
    }
 }
 void osc_audioinput::init_default_values()
@@ -657,55 +661,61 @@ void osc_audioinput::init_default_values()
    oscdata->p[0].val.f = 0.0f;
    oscdata->p[1].val.f = 0.0f;
    if( isInSceneB )
-      oscdata->p[2].val.i = 0;
+      oscdata->p[2].val.f = 0.0f;
+      oscdata->p[3].val.f = 0.0f;
+      oscdata->p[4].val.f = 0.0f;
 }
 
 void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
    bool useOtherScene = false;
-   if( isInSceneB && localcopy[oscdata->p[2].param_id_in_scene].i && storage->audio_otherscene )
+   if( isInSceneB && localcopy[oscdata->p[4].param_id_in_scene].f > 0.f && storage->audio_otherscene )
    {
       useOtherScene = true;
    }
+
+   float inGain = db_to_linear(localcopy[oscdata->p[1].param_id_in_scene].f);
+   float inChMix = limit_range(localcopy[oscdata->p[0].param_id_in_scene].f, -1.f, 1.f);
+   float sceneGain = db_to_linear(localcopy[oscdata->p[3].param_id_in_scene].f);
+   float sceneChMix = limit_range(localcopy[oscdata->p[2].param_id_in_scene].f, -1.f, 1.f);
+   float sceneMix = localcopy[oscdata->p[4].param_id_in_scene].f;
+   float inverseMix = 1.f - sceneMix;
+
+   float l = inGain * (1.f - inChMix);
+   float r = inGain * (1.f + inChMix);
+ 
+            
+   float sl = sceneGain * (1.f - sceneChMix);
+   float sr = sceneGain * (1.f + sceneChMix);
+
    if (stereo)
    {
-      float g = db_to_linear(localcopy[oscdata->p[1].param_id_in_scene].f);
-      float inp = limit_range(localcopy[oscdata->p[0].param_id_in_scene].f, -1.f, 1.f);
-
-      float a = g * (1.f - inp);
-      float b = g * (1.f + inp);
-
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          if( useOtherScene )
          {
-            output[k] = a * storage->audio_otherscene[0][k];
-            outputR[k] = b * storage->audio_otherscene[1][k];
+            output[k] = (l * storage->audio_in[0][k] * inverseMix) + (sl * storage->audio_otherscene[0][k] * sceneMix);
+            outputR[k] = (r * storage->audio_in[1][k] * inverseMix) + (sr * storage->audio_otherscene[1][k] * sceneMix);
          }
          else
          {
-            output[k] = a * storage->audio_in[0][k];
-            outputR[k] = b * storage->audio_in[1][k];
+            output[k] = l * storage->audio_in[0][k];
+            outputR[k] = r * storage->audio_in[1][k];
          }
       }
    }
    else
    {
-      float g = db_to_linear(localcopy[oscdata->p[1].param_id_in_scene].f);
-      float inp = limit_range(localcopy[oscdata->p[0].param_id_in_scene].f, -1.f, 1.f);
-
-      float a = g * (1.f - inp);
-      float b = g * (1.f + inp);
-
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          if( useOtherScene )
          {
-            output[k] = a * storage->audio_otherscene[0][k] + b * storage->audio_otherscene[1][k];
+            output[k] = (((l * storage->audio_in[0][k]) + (r * storage->audio_in[1][k])) * inverseMix) +
+                        (((sl * storage->audio_otherscene[0][k]) + (sr * storage->audio_otherscene[1][k])) * sceneMix);
          }
          else
          {
-            output[k] = a * storage->audio_in[0][k] + b * storage->audio_in[1][k];
+            output[k] = l * storage->audio_in[0][k] + r * storage->audio_in[1][k];
          }
       }
    }
