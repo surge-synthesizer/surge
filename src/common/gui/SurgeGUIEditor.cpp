@@ -3026,8 +3026,40 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                }
                else
                {
-                  auto menu = addCallbackMenu(menuStack.top(), nm, [this, target, itag]() {
-                                                                      target->executeMenuItem(itag);
+                  struct TargetGuard { 
+                     TargetGuard( Steinberg::Vst::IContextMenuTarget *tg )
+                     {
+                        t = tg;
+                        
+                        int rc = -1;
+                        if( t )
+                           rc = t->addRef();
+                     }
+                     TargetGuard( const TargetGuard &other )
+                     {
+                        int rc = -1;
+                        if( t )
+                        {
+                           rc = t->release();
+                        }
+                        t = other.t;
+                        if( t )
+                        {
+                           rc = t->addRef();
+                        }
+                     }
+                     ~TargetGuard() {
+                        if( t )
+                        {
+                           auto rc = t->release();
+                        }
+                     }
+                     Steinberg::Vst::IContextMenuTarget *t = nullptr;
+                  };
+                  TargetGuard tg(target);
+ 
+                  auto menu = addCallbackMenu(menuStack.top(), nm, [this, tg, itag]() {
+                                                                      tg.t->executeMenuItem(itag);
                                                                    });
                   eidStack.top()++;
                   if( item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled )
