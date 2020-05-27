@@ -64,7 +64,7 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
          for( auto u=0; u < uni; ++u )
          {
             phase[u] = u * 1.f / ( uni );
-            detune_offset[u] = -1 + detune_bias * u;
+            detune_offset[u] = -1.f + detune_bias * u;
 
             panL[u] = u / (uni - 1.f );
             panR[u] = (uni - 1.f - u ) / (uni - 1.f);
@@ -73,12 +73,13 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
       }
    }
 
-   float gscale = 0.6 +  0.4 * ( 1.f / sqrtf( uni ) );
+   float gscale = 0.4 +  0.6 * ( 1.f / sqrtf( uni ) );
 
    for( int u=0; u<uni; ++u )
    {
       // need to calc this every time since carierfreq could change
-      dphase[u] = storage->note_to_pitch( *f[ rm_carrierfreq ] + fxdata->p[rm_unison_detune].get_extended(detune_offset[u]) ) * Tunings::MIDI_0_FREQ * samplerate_inv;
+      dphase[u] = storage->note_to_pitch( *f[ rm_carrierfreq ] + fxdata->p[rm_unison_detune].get_extended(fxdata->p[rm_unison_detune].val.f * detune_offset[u]) ) *
+         Tunings::MIDI_0_FREQ * samplerate_inv;
    }
    
    for( int i=0; i<BLOCK_SIZE; ++i )
