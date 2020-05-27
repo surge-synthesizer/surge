@@ -654,3 +654,34 @@ private:
    float sin_lfo_table[LFO_TABLE_SIZE];
    float saw_lfo_table[LFO_TABLE_SIZE]; // don't make it analytic since I want to smooth the edges
 };
+
+class RingModulatorEffect : public Effect
+{
+public:
+   RingModulatorEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
+   virtual ~RingModulatorEffect();
+   virtual const char* get_effectname() override
+   {
+      return "ringmodulator";
+   }
+   virtual void init() override;
+   virtual void process(float* dataL, float* dataR) override;
+   virtual void suspend() override;
+   void setvars(bool init);
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+
+   virtual const char* group_label(int id) override;
+   virtual int group_label_ypos(int id) override;
+
+   virtual int get_ringout_decay() override
+   {
+      return ringout_value;
+   }
+
+   float diode_sim( float x );
+
+private:
+   int ringout_value = -1;
+   float phase = 0;
+};

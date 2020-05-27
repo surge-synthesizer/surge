@@ -169,11 +169,12 @@ enum sub3_fxtypes
    //	fxt_emphasize,
    fxt_reverb2,
    fxt_flanger,
+   fxt_ringmod,
    num_fxtypes,
 };
 const char fxtype_abberations[num_fxtypes][16] = {
     "Off", "Delay",     "Reverb 1",      "Phaser", "Rotary",  "Distortion",
-    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger" };
+    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger", "Ring Mod" };
 
 enum fx_bypass
 {

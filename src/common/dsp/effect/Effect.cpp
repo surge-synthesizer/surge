@@ -30,6 +30,8 @@ Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd
       return new VocoderEffect(storage, fxdata, pd);
    case fxt_flanger:
       return new FlangerEffect(storage, fxdata, pd);
+   case fxt_ringmod:
+      return new RingModulatorEffect(storage, fxdata, pd);
    default:
       return 0;
    };
