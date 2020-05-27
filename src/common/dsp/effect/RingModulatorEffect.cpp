@@ -160,6 +160,7 @@ int RingModulatorEffect::group_label_ypos(int id)
    case 3:
       return 19;
    }
+   return 0;
 }
 
 void RingModulatorEffect::init_ctrltypes()
