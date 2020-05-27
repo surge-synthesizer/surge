@@ -31,7 +31,7 @@ public:
    }
    inline float pitch_to_omega(float x)
    {
-      // Wondering about that constant 16.35? It is the frequency of C0
+      // Wondering about that constant 16.35? It is the twice the frequency of C0 (since we have a 2 pi here)
       return (float)(M_PI * (16.35159783) * storage->note_to_pitch(x) * dsamplerate_os_inv);
    }
 
