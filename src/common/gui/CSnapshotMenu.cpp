@@ -489,6 +489,7 @@ void CFxMenu::copyFX()
     }
 
     fxCopyPaste[0] = fx->type.val.i;
+    //std::cout << "<snapshot ";
     for( int i=0; i<n_fx_params; ++i )
     {
         int vp = i * 3 + 1;
@@ -499,15 +500,18 @@ void CFxMenu::copyFX()
         {
         case vt_float:
             fxCopyPaste[vp] = fx->p[i].val.f;
+            //std::cout << " p" << i << "=\"" << fx->p[i].val.f << "\"";
             break;
         case vt_int:
             fxCopyPaste[vp] = fx->p[i].val.i;
+            //std::cout << " p" << i << "=\"" << fx->p[i].val.i << "\"";
             break;
         }
 
         fxCopyPaste[tp] = fx->p[i].temposync;
         fxCopyPaste[xp] = fx->p[i].extend_range;
     }
+    //std::cout << " name=\"Name This\"/>" << std::endl;
     memcpy((void*)fxbuffer,(void*)fx,sizeof(FxStorage));
     
 }
