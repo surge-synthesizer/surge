@@ -326,9 +326,8 @@ void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool 
    }
 }
 
-float osc_sine::valueFromSinAndCos(float sinx, float cosx)
+float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
 {
-   int wfMode = localcopy[id_mode].i;
    float pvalue = sinx;
 
    float sin2x = 2 * sinx * cosx;
