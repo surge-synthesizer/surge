@@ -15,7 +15,8 @@ public:
                 VSTGUI::IControlListener* listener,
                 long tag,
                 bool is_mod,
-                std::shared_ptr<SurgeBitmaps> bitmapStore);
+                std::shared_ptr<SurgeBitmaps> bitmapStore,
+                SurgeStorage* storage = nullptr);
    ~CSurgeSlider();
    virtual void draw(VSTGUI::CDrawContext*) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
@@ -75,6 +76,8 @@ public:
    bool is_mod;
    bool disabled;
    bool hasBeenDraggedDuringMouseGesture = false;
+
+   SurgeStorage* storage = nullptr;
    
    enum MoveRateState
    {

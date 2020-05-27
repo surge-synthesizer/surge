@@ -19,7 +19,8 @@ public:
                            long tag,
                            int state,
                            int msid,
-                           std::shared_ptr<SurgeBitmaps> bitmapStore);
+                           std::shared_ptr<SurgeBitmaps> bitmapStore,
+                           SurgeStorage* storage);
    ~CModulationSourceButton();
 
    virtual void setValue(float val) override
@@ -43,6 +44,8 @@ public:
    VSTGUI::CPoint LastPoint;
    VSTGUI::CPoint SourcePoint;
    float OldValue;
+
+   SurgeStorage* storage = nullptr;
 
    VSTGUI::CBitmap* bmp = nullptr;
 

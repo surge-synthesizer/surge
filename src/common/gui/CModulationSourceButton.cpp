@@ -5,6 +5,8 @@
 #include "ModulationSource.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
+#include "SurgeStorage.h"
+#include <UserDefaults.h>
 #include <vt_dsp/basic_dsp.h>
 #include <iostream>
 
@@ -19,6 +21,8 @@ enum
    cs_drag = 1,
 };
 
+class SurgeStorage;
+
 //------------------------------------------------------------------------------------------------
 
 CModulationSourceButton::CModulationSourceButton(const CRect& size,
@@ -26,11 +30,15 @@ CModulationSourceButton::CModulationSourceButton(const CRect& size,
                                                  long tag,
                                                  int state,
                                                  int msid,
-                                                 std::shared_ptr<SurgeBitmaps> bitmapStore)
+                                                 std::shared_ptr<SurgeBitmaps> bitmapStore,
+                                                 SurgeStorage* storage)
     : CCursorHidingControl(size, listener, tag, 0), OldValue(0.f)
 {
    this->state = state;
    this->msid = msid;
+   
+   this->storage = storage;
+
    tint = false;
    used = false;
    bipolar = false;
@@ -41,6 +49,7 @@ CModulationSourceButton::CModulationSourceButton(const CRect& size,
    label[0] = 0;
    blink = 0;
    bmp = bitmapStore->getBitmap(IDB_MODSRC_BG);
+   this->storage = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------
@@ -278,6 +287,9 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
 CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   if (storage)
+      this->hideCursor = Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+
    super::onMouseDown(where, buttons);
 
    if (!getMouseEnabled())

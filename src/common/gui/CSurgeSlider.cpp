@@ -7,6 +7,8 @@
 #include "MouseCursorControl.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
+#include "SurgeStorage.h"
+#include <UserDefaults.h>
 #include <iostream>
 
 using namespace VSTGUI;
@@ -20,6 +22,8 @@ enum
    cs_drag = 1,
 };
 
+class SurgeStorage;
+
 CSurgeSlider::MoveRateState CSurgeSlider::sliderMoveRateState = kUnInitialized;
 
 CSurgeSlider::CSurgeSlider(const CPoint& loc,
@@ -27,11 +31,14 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
                            IControlListener* listener,
                            long tag,
                            bool is_mod,
-                           std::shared_ptr<SurgeBitmaps> bitmapStore)
+                           std::shared_ptr<SurgeBitmaps> bitmapStore,
+                           SurgeStorage* storage)
     : CCursorHidingControl(CRect(loc, CPoint(1, 1)), listener, tag, 0)
 {
    this->style = stylee;
    this->is_mod = is_mod;
+   
+   this->storage = storage;
 
    modmode = 0;
    disabled = false;
@@ -536,6 +543,9 @@ bool CSurgeSlider::isInMouseInteraction()
 
 CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   if (storage)
+      this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+
    hasBeenDraggedDuringMouseGesture = false;
    if( wheelInitiatedEdit )
       while( editing )
