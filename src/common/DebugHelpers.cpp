@@ -4,6 +4,12 @@
 #include "Windows.h"
 #endif
 
+#if MAC || LINUX
+#include <execinfo.h>
+#include <stdio.h>
+#include <cstdlib>
+#endif
+
 bool Surge::Debug::toggleConsole()
 {
 #if WINDOWS
@@ -27,10 +33,22 @@ bool Surge::Debug::toggleConsole()
     }
 
     return initialized;
+#else
+    return false;
 #endif
 }
 
 void Surge::Debug::stackTraceToStdout()
 {
-    //printf("Hey @baconpaul do this!\n");
+#if MAC || LINUX
+    void* callstack[128];
+    int i, frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    printf( "-------- StackTrace (%d frames deep) --------\n", frames );
+    for (i = 1; i < frames; ++i) {
+        printf( "  [%3d]: %s\n", i, strs[i] );
+    }
+    free(strs);
+#endif
+
 }
