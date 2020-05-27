@@ -38,6 +38,39 @@
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/base/ustring.h"
+
+template< typename T >
+struct RememberForgetGuard { 
+   RememberForgetGuard( T *tg )
+   {
+      t = tg;
+      
+      int rc = -1;
+      if( t )
+         rc = t->addRef();
+   }
+   RememberForgetGuard( const RememberForgetGuard &other )
+   {
+      int rc = -1;
+      if( t )
+      {
+         rc = t->release();
+      }
+      t = other.t;
+      if( t )
+      {
+         rc = t->addRef();
+      }
+   }
+   ~RememberForgetGuard() {
+      if( t )
+      {
+         auto rc = t->release();
+      }
+   }
+   T *t = nullptr;
+};
+
 #endif
 
 #if TARGET_AUDIOUNIT
@@ -3026,39 +3059,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                }
                else
                {
-                  struct TargetGuard { 
-                     TargetGuard( Steinberg::Vst::IContextMenuTarget *tg )
-                     {
-                        t = tg;
-                        
-                        int rc = -1;
-                        if( t )
-                           rc = t->addRef();
-                     }
-                     TargetGuard( const TargetGuard &other )
-                     {
-                        int rc = -1;
-                        if( t )
-                        {
-                           rc = t->release();
-                        }
-                        t = other.t;
-                        if( t )
-                        {
-                           rc = t->addRef();
-                        }
-                     }
-                     ~TargetGuard() {
-                        if( t )
-                        {
-                           auto rc = t->release();
-                        }
-                     }
-                     Steinberg::Vst::IContextMenuTarget *t = nullptr;
-                  };
-                  TargetGuard tg(target);
  
-                  auto menu = addCallbackMenu(menuStack.top(), nm, [this, tg, itag]() {
+                  RememberForgetGuard<Steinberg::Vst::IContextMenuTarget> tg(target);
+                  RememberForgetGuard<Steinberg::Vst::IContextMenu> hm(hostMenu);
+
+                  auto menu = addCallbackMenu(menuStack.top(), nm, [this, hm, tg, itag]() {
+                                                                      std::cout << hm.t << std::endl;
                                                                       tg.t->executeMenuItem(itag);
                                                                    });
                   eidStack.top()++;
