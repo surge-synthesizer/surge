@@ -359,7 +359,8 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
    {
       fxbuffer->type.val.i = type;
       // storage->patch.update_controls();
-
+      selectedName = e->Attribute( "name" );
+      
       Effect* t_fx = spawn_effect(type, storage, fxbuffer, 0);
       if (t_fx)
       {

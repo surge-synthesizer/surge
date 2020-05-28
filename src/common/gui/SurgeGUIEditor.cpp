@@ -272,7 +272,10 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    fxmenu = 0;
    idleinc = 0;
    for( int i=0; i<8; ++i )
+   {
       selectedFX[i] = -1;
+      fxPresetName[i] = "Off";
+   }
 
    _effect = effect;
    _userdata = userdata;
@@ -1071,6 +1074,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_jogfx->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_jogfx);
 
+   fxPresetLabel = new CTextLabel( CRect( 759, 182+15, 759+131-39-2, 182+15+10 ), "Preset" );
+   fxPresetLabel->setFontColor(currentSkin->getColor( "effect.label.foreground", CColor( 76, 76, 76, 255 ) ));
+   fxPresetLabel->setTransparency(true);
+   fxPresetLabel->setFont( displayFont );
+   fxPresetLabel->setHoriAlign( kRightText );
+   frame->addView(fxPresetLabel);
+
    CHSwitch2* b_store = new CHSwitch2(CRect(547 - 37, 41, 547, 41 + 12), this, tag_store, 1, 12, 1,
                                       1, bitmapStore->getBitmap(IDB_BUTTON_STORE), nopoint, false);
    b_store->setSkin( currentSkin, bitmapStore );
@@ -1515,6 +1525,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                       &synth->fxsync[current_fx], current_fx);
             ((CFxMenu*)m)->setSkin(currentSkin,bitmapStore);
             ((CFxMenu*)m)->selectedIdx = this->selectedFX[current_fx];
+            fxPresetLabel->setText( this->fxPresetName[current_fx].c_str() );
             m->setValue(p->get_value_f01());
             frame->addView(m);
             fxmenu = m;
@@ -3295,6 +3306,12 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          {
             jog( -1 );
          }
+
+         if( fxPresetName )
+         {
+            fxPresetLabel->setText( fxm->selectedName.c_str() );
+            fxPresetName[this->current_fx] = fxm->selectedName;
+         }
       }
       else
       {
@@ -3358,6 +3375,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if( fxm && fxm->selectedIdx >= 0 )
       {
          selectedFX[current_fx] = fxm->selectedIdx;
+         fxPresetName[current_fx] = fxm->selectedName;
       }
 
       return;
@@ -5246,7 +5264,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
    std::string lab = p->get_full_name();
    typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
-   typeinLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+   typeinLabel->setFontColor(currentSkin->getColor( "slider.dark.label", kBlackCColor ));
    typeinLabel->setTransparency(true);
    typeinLabel->setFont( displayFont );
    inner->addView(typeinLabel);
