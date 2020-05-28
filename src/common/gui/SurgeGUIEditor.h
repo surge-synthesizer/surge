@@ -225,6 +225,7 @@ private:
    int minimumZoom;
 
    int selectedFX[8];
+   std::string fxPresetName[8];
    
    std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
 
@@ -250,6 +251,8 @@ private:
    int typeinResetCounter = -1;
    std::string typeinResetLabel = "";
 
+   VSTGUI::CTextLabel* fxPresetLabel = nullptr;
+   
    std::string modulatorName(int ms, bool forButton);
    
    Parameter *typeinEditTarget = nullptr;

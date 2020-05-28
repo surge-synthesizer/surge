@@ -32,6 +32,7 @@ public:
    }
 
    int selectedIdx = -1;
+   std::string selectedName = "";
 protected:
    void populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx);
    SurgeStorage* storage = nullptr;
