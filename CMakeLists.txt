@@ -700,10 +700,10 @@ if( BUILD_VST2 )
       )
    endif()
    if( WIN32 )
-     add_custom_target( surgev2-dll ALL )
-     add_dependencies( surgev2-dll surge-vst2 )
+     add_custom_target( Surge.vst2 ALL )
+     add_dependencies( Surge.vst2 surge-vst2 )
      add_custom_command(
-       TARGET surgev2-dll
+       TARGET Surge.vst2
        POST_BUILD
 
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
