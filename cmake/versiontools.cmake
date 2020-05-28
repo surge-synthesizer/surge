@@ -1,24 +1,31 @@
 
 find_package(Git)
-execute_process(
-  COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-  WORKING_DIRECTORY ${SURGESRC}
-  OUTPUT_VARIABLE GIT_BRANCH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
 
-execute_process(
-  COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
-  WORKING_DIRECTORY ${SURGESRC}
-  OUTPUT_VARIABLE GIT_COMMIT_HASH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
+if( DEFINED GIT_EXECUTABLE )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${SURGESRC}
+    OUTPUT_VARIABLE GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
+    WORKING_DIRECTORY ${SURGESRC}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else()
+  message( WARNING "Git isn't present in your path. Setting hashes to defaults" )
+  set( GIT_BRANCH "git-not-present" )
+  set( GIT_COMMIT_HASH "git-not-present" )
+endif()
 
 cmake_host_system_information(RESULT SURGE_BUILD_FQDN QUERY FQDN )
 
 message( STATUS "Setting up surge version" )
 message( STATUS "  git hash is ${GIT_COMMIT_HASH} and branch is ${GIT_BRANCH}" )
-message( STATUS "  buildhost is ${BUILD_FQDN}" )
+message( STATUS "  buildhost is ${SURGE_BUILD_FQDN}" )
 
 if( ${AZURE_PIPELINE} )
   message( STATUS "Azure Pipeline Build" )
