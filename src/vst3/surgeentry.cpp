@@ -46,7 +46,7 @@ DEF_CLASS2(INLINE_UID_FROM_FUID(SurgeProcessorUID),
            0, // Vst::kDistributable,	// means that component and controller could be distributed
               // on different computers
            "Instrument|Synth", // Subcategory for this Plug-in (to be changed)
-           FULL_VERSION_STR,   // Plug-in version (to be changed)
+           Surge::Build::FullVersionStr,   // Plug-in version (to be changed)
            kVstVersionString,  // the VST 3 SDK version (dont changed this, use always this define)
            SurgeVst3Processor::createInstance) // function pointer called when this component should
                                                // be instanciated

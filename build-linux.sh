@@ -152,7 +152,7 @@ run_clean_all()
     run_clean_builds
 
     echo "Cleaning additional assets"
-    rm -rf target products ${DEF_BUILD_DIR}
+    rm -rf ${DEF_BUILD_DIR}
 }
 
 run_uninstall()
@@ -227,10 +227,10 @@ fi
 
 if [ -z "$option_debug" ]; then
     config="config=release_x64"
-    vst2_src_path="products/Surge.so"
-    vst3_src_path="products/Surge.vst3"
+    vst2_src_path="${DEF_BUILD_DIR}/surge_products/Surge.so"
+    vst3_src_path="${DEF_BUILD_DIR}/surge_products/Surge.vst3"
     lv2_bundle_name="Surge.lv2"
-    lv2_src_path="products/$lv2_bundle_name"
+    lv2_src_path="${DEF_BUILD_DIR}/surge_products/$lv2_bundle_name"
     headless_src_path="${DEF_BUILD_DIR}/surge-headless"
     dest_plugin_name="Surge.so"
     dest_headless_name="Surge-Headless"

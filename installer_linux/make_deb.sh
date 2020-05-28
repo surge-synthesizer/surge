@@ -85,14 +85,14 @@ cp ../LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/copyright
 cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
 
 # Copy the VST3 bundld 
-cp -r ../products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
+cp -r ../build/surge_products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
 
 if [[ -d ../surge-fx/build/product/ ]]; then
     cp -r ../surge-fx/build/product/*vst3 ${PACKAGE_NAME}/usr/lib/vst3/
 fi
 
 # copy the lv2 bundle
-cp -r ../products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
+cp -r ../buid/surge_products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
 
 # set permissions on shared libraries
 find ${PACKAGE_NAME}/usr/lib/vst3/ -type f -iname "*.so" | xargs chmod 0644

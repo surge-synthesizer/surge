@@ -48,7 +48,7 @@ Name: EffectsVST3; Description: SurgeEffectsBank VST3 Plug-in (64 bit); Types: f
 [Files]
 Source: ..\resources\data\*; DestDir: {commonappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: ..\target\vst3\Release\Surge.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
+Source: ..\build\surge_products\Surge.vst3; DestDir: {cf}\VST3; Components: VST3; Flags: ignoreversion
 Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3; DestDir: {cf}\VST3; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 
 [Languages]

@@ -64,7 +64,7 @@ jobs:
 
   - bash: |
       ./build-osx.sh --build --verbose
-      ls -alFh products
+
     condition: variables.isMac
     displayName: macOS - build all assets
 

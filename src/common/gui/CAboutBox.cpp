@@ -70,8 +70,8 @@ void CAboutBox::draw(CDrawContext* pContext)
 
       {
          std::vector< std::string > msgs = { {
-               std::string() + "Version " + FULL_VERSION_STR + " (" + bitness + " " + platform + " " + flavor + ". Built " +
-               __DATE__ + " " + __TIME__ + " on " + BUILD_HOST + ")",
+               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + bitness + " " + platform + " " + flavor + ". Built " +
+               __DATE__ + " " + __TIME__ + " on " + Surge::Build::BuildLocation + " host '" + Surge::Build::BuildHost + "')",
                "Factory Data Path: " + dataPath,
                "User Data Path: " + userPath,
                "Released under the GNU General Public License, v3",
