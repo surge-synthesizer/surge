@@ -3832,7 +3832,15 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    if (buttons && forceMB)
       return; // don't draw via CC if MB is down
 
-   CRect r(0, 0, 148, 18);
+   // A heuristic
+   auto ml = ((CParameterTooltip*)infowindow)->getMaxLabelLen();
+   auto iff = 148;
+   if( ml > 26 )
+      iff += ( ml - 26 ) * 6;
+   
+
+   
+   CRect r(0, 0, iff, 18);
    if (modulate)
       r.bottom += 18;
    CRect r2 = control->getViewSize();
@@ -3840,9 +3848,13 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    r.offset((r2.left / 150) * 150, r2.bottom);
 
    int ao = 0;
-   if (r.bottom > WINDOW_SIZE_Y)
-      ao = (WINDOW_SIZE_Y - r.bottom);
+   if (r.bottom > WINDOW_SIZE_Y - 2)
+      ao = (WINDOW_SIZE_Y - 2 - r.bottom);
    r.offset(0, ao);
+
+   if (r.right > WINDOW_SIZE_X - 2)
+      ao = (WINDOW_SIZE_X - 2 - r.right);
+   r.offset(ao, 0);
 
    if (buttons || forceMB)
    {

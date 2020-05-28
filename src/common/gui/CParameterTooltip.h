@@ -34,6 +34,12 @@ public:
       setDirty(true);
    }
 
+   int getMaxLabelLen() {
+      auto l0len = strlen(label[0]);
+      auto l1len = strlen(label[1]) + strlen(label2left);
+      return std::max( l0len, l1len );
+   }
+   
    void Show()
    {
       visible = true;
