@@ -1079,12 +1079,12 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
                     }
 
                  };
-      if( accumDist > 1.0 )
+      if( accumDist > 0.5 )
       {
          jog(-1);
          accumDist = 0;
       }
-      else if( accumDist < -1.0 )
+      else if( accumDist < -0.5 )
       {
          jog(+1);
          accumDist = 0;
