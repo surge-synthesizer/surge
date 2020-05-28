@@ -1052,6 +1052,44 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
          }
       }
    }
+   else if (rect_shapes.pointInside(where))
+   {
+      static float accumDist = 0;
+      accumDist += distance;
+      
+      auto jog = [this](int d) {
+                    auto ps = this->lfodata->shape.val.i;
+                    auto ns = ps + d;
+                    if( ns < 0 )
+                       ns = 0;
+                    if( ns >= n_lfoshapes )
+                       ns = n_lfoshapes - 1;
+
+                    if( ns != this->lfodata->shape.val.i )
+                    {
+                       this->lfodata->shape.val.i = ns;
+                       this->invalid();
+                       // This is such a hack
+                       auto sge = dynamic_cast<SurgeGUIEditor *>(this->listener);
+                       if( sge )
+                       {
+                          sge->refresh_mod();
+                          sge->forceautomationchangefor(&(this->lfodata->shape));
+                       }
+                    }
+
+                 };
+      if( accumDist > 1.0 )
+      {
+         jog(-1);
+         accumDist = 0;
+      }
+      else if( accumDist < -1.0 )
+      {
+         jog(+1);
+         accumDist = 0;
+      }
+   }
 
    return false;
 }
