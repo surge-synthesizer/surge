@@ -13,7 +13,7 @@ EXEC_LOCATION="$1"
 #EXEC_LOCATION="target/vst2/Debug/Surge-Debug.dylib"
 
 # output configs
-OUTPUT_DIR=products
+OUTPUT_DIR="$2"
 BUNDLE_NAME="Surge.vst"
 BUNDLE_DIR="$OUTPUT_DIR/$BUNDLE_NAME"
 EXEC_TARGET_NAME="Surge"

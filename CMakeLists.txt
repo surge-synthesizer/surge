@@ -10,8 +10,27 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12 CACHE STRING "Build for 10.12")
 
 project(Surge VERSION 1.7.0.0 LANGUAGES CXX ASM)
 
-include( "cmake/versiontools.cmake" )
 add_custom_target(surge-shared)
+set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
+add_custom_command(
+  TARGET surge-shared
+  POST_BUILD
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR} )
+  
+
+add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/geninclude/version.cpp
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}  -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+                           -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
+                           -D AZURE_PIPELINE=${AZURE_PIPELINE}
+                           -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
+  DEPENDS always_rebuild
+  )
+add_custom_command(
+    OUTPUT always_rebuild
+    COMMAND ${CMAKE_COMMAND} -E echo
+    )
 
 
 set(CMAKE_BUILD_TYPE Release)
@@ -110,6 +129,8 @@ set(SURGE_COMMON_SOURCES
   libs/xml/tinyxmlparser.cpp
   libs/strnatcmp/strnatcmp.cpp
   libs/filesystem/filesystem.cpp
+
+  ${CMAKE_BINARY_DIR}/geninclude/version.cpp
   )
 
 set(SURGE_GUI_SOURCES
@@ -505,7 +526,7 @@ if( BUILD_AU )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Packaging up AU component"
-    COMMAND ./scripts/macOS/package-au.sh  ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-au.dylib
+    COMMAND ./scripts/macOS/package-au.sh  ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-au.dylib ${SURGE_PRODUCT_DIR}
     )
 
 endif()
@@ -575,7 +596,7 @@ if( BUILD_VST3 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
-      COMMAND ./scripts/macOS/package-vst3.sh ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst3.dylib
+      COMMAND ./scripts/macOS/package-vst3.sh ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst3.dylib ${SURGE_PRODUCT_DIR}
       )
    elseif( UNIX )
     add_custom_target( Surge.vst3 ALL )
@@ -586,7 +607,7 @@ if( BUILD_VST3 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
       COMMAND pwd
-      COMMAND ./scripts/linux/package-vst3.sh  ${CMAKE_BINARY_DIR}/libsurge-vst3.so
+      COMMAND ./scripts/linux/package-vst3.sh  ${CMAKE_BINARY_DIR}/libsurge-vst3.so ${SURGE_PRODUCT_DIR}
       )
     elseif( WIN32 )
      add_custom_target( Surge.vst3 ALL )
@@ -594,10 +615,8 @@ if( BUILD_VST3 )
      add_custom_command(
        TARGET Surge.vst3
        POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/target/vst3/Release
-
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst3.dll
-                                        ${CMAKE_CURRENT_SOURCE_DIR}/target/vst3/Release/${WIN_DLL_BASENAME}.vst3
+                                        ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3
      )
    endif()
 
@@ -666,7 +685,7 @@ if( BUILD_VST2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST2 component"
-      COMMAND ./scripts/macOS/package-vst.sh   ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst2.dylib
+      COMMAND ./scripts/macOS/package-vst.sh   ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst2.dylib ${SURGE_PRODUCT_DIR}
       )
    endif()
   if( UNIX AND NOT APPLE )
@@ -677,7 +696,7 @@ if( BUILD_VST2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-vst2.so ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.so
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-vst2.so ${SURGE_PRODUCT_DIR}/Surge.so
       )
    endif()
    if( WIN32 )
@@ -686,10 +705,8 @@ if( BUILD_VST2 )
      add_custom_command(
        TARGET surgev2-dll
        POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/target/vst2/Release
 
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll
-                                        ${CMAKE_CURRENT_SOURCE_DIR}/target/vst2/Release/${WIN_DLL_BASENAME}.dll
+       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
      )
    endif()
 
@@ -743,8 +760,8 @@ if( BUILD_LV2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-lv2.dylib ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2/Surge.dylib
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-lv2.dylib ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
       COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.dylib
       )
   elseif( UNIX AND NOT APPLE )
@@ -753,9 +770,9 @@ if( BUILD_LV2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-lv2.so ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2/Surge.so
-      COMMAND python scripts/linux/generate-lv2-ttl.py ${CMAKE_CURRENT_SOURCE_DIR}/products/Surge.lv2/Surge.so
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-lv2.so ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
+      COMMAND python scripts/linux/generate-lv2-ttl.py ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
       )
   endif()
 
@@ -833,18 +850,24 @@ if( BUILD_HEADLESS )
   endif()
 endif()
 
+add_custom_target( all-components )
+if( BUILD_VST2 )
+  add_dependencies(all-components Surge.vst2 )
+endif()
+if( BUILD_VST3 )
+  add_dependencies(all-components Surge.vst3 )
+endif()
+if( BUILD_AU )
+  add_dependencies(all-components Surge.component )
+endif()
+if( BUILD_HEADLESS )
+  add_dependencies(all-components surge-headless )
+endif()
+
 #
 # INSTALL RULES - currently implemented on APPLE only
 #
 if( APPLE )
-  add_custom_target( all-components )
-  if( BUILD_VST2 )
-    add_dependencies(all-components Surge.vst2 )
-  endif()
-  add_dependencies(all-components Surge.vst3 )
-  add_dependencies(all-components Surge.component )
-  add_dependencies(all-components surge-headless )
-
   add_custom_target( run-headless )
   add_dependencies( run-headless install-resources-local )
   add_dependencies( run-headless surge-headless )
@@ -872,7 +895,7 @@ if( APPLE )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Installing audio unit locally"
-    COMMAND rsync -r --delete "products/Surge.component/" "\${HOME}/Library/Audio/Plug-Ins/Components/Surge.component/"
+    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.component/" "\${HOME}/Library/Audio/Plug-Ins/Components/Surge.component/"
     )
 
   add_custom_target( validate-au )
@@ -893,7 +916,7 @@ if( APPLE )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Installing vst2 unit locally"
-      COMMAND rsync -r --delete "products/Surge.vst/" "\${HOME}/Library/Audio/Plug-Ins/VST/Surge.vst/"
+      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst/" "\${HOME}/Library/Audio/Plug-Ins/VST/Surge.vst/"
       )
   endif()
 
@@ -905,7 +928,7 @@ if( APPLE )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Installing vst3 unit locally"
-    COMMAND rsync -r --delete "products/Surge.vst3/" "\${HOME}/Library/Audio/Plug-Ins/VST3/Surge.vst3/"
+    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3/" "\${HOME}/Library/Audio/Plug-Ins/VST3/Surge.vst3/"
     )
 
   add_custom_target( install-everything-local )
