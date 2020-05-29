@@ -537,7 +537,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             gaterect[i] = gstep;
             auto gatecolor = knobcolor;
             auto gatebgcolor = stepcolor;
-            if( controlstate == cs_trigtray_toggle && i == selectedSSrow )
+            if( controlstate == cs_trigtray_toggle && ( i == selectedSSrow || draggedIntoTrigTray[i] ) )
             {
                gatebgcolor = grabMarkerHi;
             }
@@ -750,9 +750,12 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
 
             for (int i = 0; i < n_stepseqsteps; i++)
             {
+               draggedIntoTrigTray[i] = false;
                if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
                {
                   selectedSSrow = i;
+                  mouseDownTrigTray = i;
+                  draggedIntoTrigTray[i] = true;
                }
             }
             invalid();
@@ -814,16 +817,16 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
    if (controlstate == cs_trigtray_toggle)
    {
       selectedSSrow = -1;
+
+      bool bothOn = ss->trigmask & ( UINT64_C(1) << mouseDownTrigTray );
+      bool filtOn = ss->trigmask & ( UINT64_C(1) << ( 16 + mouseDownTrigTray ) );
+      bool ampOn = ss->trigmask & ( UINT64_C(1) << ( 32 + mouseDownTrigTray ) );
+      bool anyOn = bothOn || filtOn || ampOn;
+
       for (int i = 0; i < n_stepseqsteps; i++)
       {
-         if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
+         if (draggedIntoTrigTray[i])
          {
-            bool bothOn = ss->trigmask & ( UINT64_C(1) << i );
-            bool filtOn = ss->trigmask & ( UINT64_C(1) << ( 16 + i ) );
-            bool ampOn = ss->trigmask & ( UINT64_C(1) << ( 32 + i ) );
-
-            bool anyOn = bothOn || filtOn || ampOn;
-            
             uint64_t off = 0, on = 0;
             if( bothOn )
             {
@@ -988,6 +991,21 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
             invalid();
          }
       }
+   }
+   else if( controlstate == cs_trigtray_toggle )
+   {
+      bool change = false;
+      for (int i = 0; i < n_stepseqsteps; i++)
+      {
+         if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
+         {
+            if( ! draggedIntoTrigTray[i] )
+               change = true;
+            draggedIntoTrigTray[i] = true;
+         }
+      }
+      if( change )
+         invalid();
    }
    return kMouseEventHandled;
 }
