@@ -40,6 +40,9 @@ public:
       this->ss = ss;
       edit_trigmask = trigmaskedit;
       controlstate = 0;
+
+      for( int i=0; i<16; ++i )
+         draggedIntoTrigTray[i] = false;
    }
 
    void resetColorTable()
@@ -92,6 +95,9 @@ protected:
 
    int draggedStep = -1;
    int keyModMult = 0;
+
+   bool draggedIntoTrigTray[16];
+   int mouseDownTrigTray = -1;
    
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };
