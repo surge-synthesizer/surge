@@ -17,13 +17,7 @@
 #endif
 #include <tinyxml.h>
 
-#if LINUX
-#include <experimental/filesystem>
-#elif MAC || (WINDOWS && TARGET_RACK)
-#include <filesystem.h>
-#else
-#include <filesystem>
-#endif
+#include "ImportFilesystem.h"
 
 #include <fstream>
 #include <iterator>
@@ -31,13 +25,6 @@
 
 #include "Tunings.h"
 
-
-#if WINDOWS && ( _MSC_VER >= 1920 )
-// vs2019
-namespace fs = std::filesystem;
-#else
-namespace fs = std::experimental::filesystem;
-#endif
 
 #if WINDOWS
 #define PATH_SEPARATOR '\\'

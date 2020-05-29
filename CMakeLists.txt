@@ -46,7 +46,11 @@ set( BUILD_VST3 true )
 if( DEFINED ENV{VST2SDK_DIR} )
   set( BUILD_VST2 true )
   file( TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" VST2SDK_DIR )
-  message( WARNING " Building VST2 using " ${VST2SDK_DIR} " - this is an unsupported configuration" )
+  if( AZURE_PIPELINE )
+    message( ERROR " Building VST2 using " ${VST2SDK_DIR} " - VST2 pipeline builds not allowed" )
+  else()
+    message( WARNING " Building VST2 using " ${VST2SDK_DIR} " - this is an unsupported configuration" )
+  endif()
 else()
   set( BUILD_VST2 false )
 endif()
@@ -69,6 +73,28 @@ endif()
 # CMake Configuration for all platforms
 set(CMAKE_CXX_EXTENSIONS false)
 set(CMAKE_CXX_STANDARD 17)
+
+include(CheckCXXSymbolExists)
+CHECK_CXX_SYMBOL_EXISTS(std::filesystem::path::preferred_separator "filesystem" CXX_STD_FS)
+if( CXX_STD_FS )
+  set( FS_COMPILE_DEFINITIONS USE_STD_FILESYSTEM=1 )
+  message( STATUS "Using std::filesystem" )
+else()
+  CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "experimental/filesystem" CXX_EXP_STD_FS)
+  if( CXX_EXP_STD_FS )
+    set( FS_COMPILE_DEFINITIONS USE_STD_EXPERIMENTAL_FILESYSTEM=1 )
+    message( STATUS "Using std::experimental::filesystem" )
+  else()
+    CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "filesystem" CXX_EXP_STD_FS_FS_HDR)
+    if( CXX_EXP_STD_FS_FS_HDR )
+      set( FS_COMPILE_DEFINITIONS USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM=1 )
+      message( STATUS "Using std::experimental::filesystem but from <filesystem> header" )
+    else()
+      set( FS_COMPILE_DEFINITIONS USE_HOMEGROWN_FILESYSTEM=1 )
+      message( STATUS "Using homegrown filesystem" )
+    endif()
+  endif()
+endif()
 
 # Enumerate the sources into groups
 #    SURGE_COMMON_SOURCES
@@ -496,6 +522,7 @@ if( BUILD_AU )
   target_compile_definitions(surge-au
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
+    ${FS_COMPILE_DEFINITIONS}
     TARGET_AUDIOUNIT=1
     )
 
@@ -566,6 +593,7 @@ if( BUILD_VST3 )
   target_compile_definitions(surge-vst3
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
+    ${FS_COMPILE_DEFINITIONS}
     TARGET_VST3=1
     )
 
@@ -654,6 +682,7 @@ if( BUILD_VST2 )
   target_compile_definitions(surge-vst2
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
+    ${FS_COMPILE_DEFINITIONS}
     TARGET_VST2=1
     VSTGUI_ENABLE_DEPRECATED_METHODS=0
     )
@@ -729,6 +758,7 @@ if( BUILD_LV2 )
   target_compile_definitions(surge-lv2
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
+    ${FS_COMPILE_DEFINITIONS}
     TARGET_LV2=1
     )
 
@@ -803,6 +833,7 @@ if( BUILD_HEADLESS )
   target_compile_definitions(surge-headless
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
+    ${FS_COMPILE_DEFINITIONS}
     TARGET_HEADLESS=1
     LIBMIDIFILE=1
     )
