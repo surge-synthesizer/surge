@@ -6,6 +6,8 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h" // for TINYXML macro
+#include "PopupEditorSpawner.h"
+#include "ImportFilesystem.h"
 
 #include <iostream>
 #include <iomanip>
@@ -21,9 +23,10 @@ CSnapshotMenu::CSnapshotMenu(const CRect& size,
                              IControlListener* listener,
                              long tag,
                              SurgeStorage* storage)
-    : COptionMenu(size, listener, tag, 0)
+    : COptionMenu(size, nullptr, tag, 0)
 {
    this->storage = storage;
+   this->listenerNotForParent = listener;
 }
 CSnapshotMenu::~CSnapshotMenu()
 {}
@@ -91,8 +94,8 @@ bool CSnapshotMenu::loadSnapshotByIndex( int idx )
             {
                selectedIdx = idx;
                loadSnapshot( snapshotTypeID, snapshot, idx);
-               if( listener )
-                  listener->valueChanged( this );
+               if( listenerNotForParent )
+                  listenerNotForParent->valueChanged( this );
                return true;
             }
             snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
@@ -143,8 +146,8 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
         auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem* item) {
                          this->selectedIdx = idx;
                          this->loadSnapshot(snapshotTypeID, snapshot, idx);
-                         if( this->listener )
-                            this->listener->valueChanged( this );
+                         if( this->listenerNotForParent )
+                            this->listenerNotForParent->valueChanged( this );
         };
         idx++;
         
@@ -395,7 +398,7 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
       }
    }
 #if TARGET_LV2
-   auto *sge = dynamic_cast<SurgeGUIEditor *>(listener);
+   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
    if( sge )
    {
       sge->forceautomationchangefor( &(fxbuffer->type) );
@@ -457,10 +460,138 @@ void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
    }
 }
 
+bool CFxMenu::scanForUserPresets = true;
+std::vector<CFxMenu::UserPreset> CFxMenu::userPresets;
+
+void CFxMenu::rescanUserPresets()
+{
+   userPresets.clear();
+   scanForUserPresets = false;
+
+   std::ostringstream oss;
+   oss << storage->userDataPath
+#if WINDOWS
+       << "\\"
+#else
+       << "/"
+#endif      
+       << "FXSettings";
+   auto ud = oss.str();
+
+   if( fs::is_directory( fs::path( ud ) ) ) {
+      for( auto &d : fs::directory_iterator( fs::path( ud ) ) )
+      {
+         auto fn = d.path().generic_string();
+         std::string ending = ".srgfx";
+         if( fn.length() >= ending.length() && ( 0 == fn.compare( fn.length() - ending.length(), ending.length(), ending ) ) )
+         {
+            UserPreset preset;
+            preset.file = fn;
+            TiXmlDocument d;
+            int t;
+            
+            if( ! d.LoadFile( fn ) ) goto badPreset;
+            
+            auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild( "single-fx" ) );
+            if( ! r ) goto badPreset;
+            
+            auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild( "snapshot" ) );
+            if( ! s ) goto badPreset;
+            
+            if( ! s->Attribute( "name" ) ) goto badPreset;
+            preset.name = s->Attribute( "name" );
+            
+            if( s->QueryIntAttribute( "type", &t ) != TIXML_SUCCESS ) goto badPreset;
+            preset.type = t;
+            
+            for( int i=0; i<n_fx_params; ++i )
+            {
+               double fl;
+               std::string p = "p";
+               if( s->QueryDoubleAttribute( (p + std::to_string(i)).c_str(), &fl ) == TIXML_SUCCESS )
+               {
+                  preset.p[i] = fl;
+               }
+               if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_temposync" ).c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
+               {
+                  preset.ts[i] = true;
+               }
+               if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_extend_range").c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
+               {
+                  preset.er[i] = fl;
+               }
+            }
+            
+            userPresets.push_back(preset);
+         }
+      badPreset:
+         ;
+      }
+   }
+
+   std::sort( userPresets.begin(), userPresets.end(),
+              [](UserPreset a, UserPreset b)
+                 {
+                    if( a.type == b.type )
+                    {
+                       return _stricmp( a.name.c_str(), b.name.c_str() ) < 0;
+                    }
+                    else
+                    {
+                       return a.type < b.type;
+                    }
+                 }
+      );
+}
+
 void CFxMenu::populate()
 {
     CSnapshotMenu::populate();
 
+    /*
+    ** Are there user preets
+    */
+    if( scanForUserPresets || true ) // for now
+    {
+       rescanUserPresets();
+    }
+
+    if( userPresets.size() > 0 )
+    {
+       this->addSeparator();
+       auto userPMenu = new COptionMenu(getViewSize(), 0, 0, 0, 0, kNoDrawStyle );
+       COptionMenu *fxMenu = nullptr;
+       int lastType = -1;
+       for( auto ps : userPresets )
+       {
+          if( ps.type != lastType )
+          {
+             if( fxMenu ) {
+                userPMenu->addEntry( fxMenu, fxtype_abberations[lastType] );
+                fxMenu->forget();
+             }
+             lastType = ps.type;
+             fxMenu = new COptionMenu(getViewSize(), 0, 0, 0, 0, kNoDrawStyle );
+          }
+          auto i = new CCommandMenuItem(CCommandMenuItem::Desc(ps.name.c_str()));
+          i->setActions([this,ps](CCommandMenuItem *item)
+                           {
+                              this->loadUserPreset(ps);
+                           } );
+          fxMenu->addEntry(i);
+       }
+       if( fxMenu ) {
+          userPMenu->addEntry( fxMenu, fxtype_abberations[lastType]  );
+          fxMenu->forget();
+       }
+       addEntry( userPMenu, "User Presets" );
+       userPMenu->forget();
+    }
+    
+    /*
+    ** Add copy/paste/save
+    */
+    
     this->addSeparator();
 
     auto copyItem = new CCommandMenuItem(CCommandMenuItem::Desc("Copy"));
@@ -476,6 +607,15 @@ void CFxMenu::populate()
     };
     pasteItem->setActions(paste, nullptr);
     this->addEntry(pasteItem);
+
+    if( fx->type.val.i != fxt_off )
+    {
+       auto saveItem = new CCommandMenuItem(CCommandMenuItem::Desc("Save"));
+       saveItem->setActions([this](CCommandMenuItem *item) {
+                               this->saveFX();
+                            });
+       this->addEntry(saveItem);
+    }
 }
 
 
@@ -490,7 +630,6 @@ void CFxMenu::copyFX()
     }
 
     fxCopyPaste[0] = fx->type.val.i;
-    //std::cout << "<snapshot ";
     for( int i=0; i<n_fx_params; ++i )
     {
         int vp = i * 3 + 1;
@@ -501,18 +640,15 @@ void CFxMenu::copyFX()
         {
         case vt_float:
             fxCopyPaste[vp] = fx->p[i].val.f;
-            //std::cout << " p" << i << "=\"" << fx->p[i].val.f << "\"";
             break;
         case vt_int:
             fxCopyPaste[vp] = fx->p[i].val.i;
-            //std::cout << " p" << i << "=\"" << fx->p[i].val.i << "\"";
             break;
         }
 
         fxCopyPaste[tp] = fx->p[i].temposync;
         fxCopyPaste[xp] = fx->p[i].extend_range;
     }
-    //std::cout << " name=\"Name This\"/>" << std::endl;
     memcpy((void*)fxbuffer,(void*)fx,sizeof(FxStorage));
     
 }
@@ -564,4 +700,115 @@ void CFxMenu::pasteFX()
         fxbuffer->p[i].temposync = (int)fxCopyPaste[tp];
         fxbuffer->p[i].extend_range = (int)fxCopyPaste[xp];
     }
+
+    if( listenerNotForParent )
+       listenerNotForParent->valueChanged( this );
+
+}
+
+void CFxMenu::saveFX()
+{
+   // Rough implementation
+   char fxName[256];
+   fxName[0] = 0;
+   spawn_miniedit_text(fxName, 256);
+
+   std::ostringstream poss;
+   poss << storage->userDataPath
+#if WINDOWS
+        << "\\"
+#else
+        << "/"
+#endif
+        << "FXSettings";
+   std::string pn = poss.str();
+   fs::create_directories( pn );
+
+   std::ostringstream oss;
+   oss << pn
+#if WINDOWS
+        << "\\"
+#else
+        << "/"
+#endif
+       << fxName << ".srgfx";
+   auto fn = oss.str();
+   std::ofstream pfile( fn, std::ios::out );
+   if( ! pfile.is_open() )
+   {
+      Surge::UserInteractions::promptError( std::string( "Unable to open FX file '" ) + fn + "' for writing",
+                                            "Surge IO Error" );
+      return;
+   }
+
+   pfile << "<single-fx>\n";
+   pfile << "  <snapshot name=\"" << fxName << "\" \n";
+
+   pfile << "     type=\"" <<  fx->type.val.i << "\"\n";
+   for( int i=0; i<n_fx_params; ++i )
+   {
+      switch( fx->p[i].valtype )
+      {
+      case vt_float:
+         pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
+         break;
+      case vt_int:
+         pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
+         break;
+      }
+
+      if( fx->p[i].can_temposync() && fx->p[i].temposync )
+      {
+         pfile << "     p" << i << "_temposync=\"1\"\n";
+      }
+      if( fx->p[i].can_extend_range() && fx->p[i].extend_range )
+      {
+         pfile << "     p" << i << "_extend_range=\"1\"\n";
+      }
+   }
+
+   pfile << "  />\n";
+   pfile << "</single-fx>\n";
+   pfile.close();
+
+   scanForUserPresets = true;
+   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+   if( sge )
+      sge->queueRebuildUI();
+}
+
+void CFxMenu::loadUserPreset( const UserPreset &p )
+{
+   fxbuffer->type.val.i = p.type;
+
+   Effect* t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
+   if (t_fx)
+   {
+      t_fx->init_ctrltypes();
+      t_fx->init_default_values();
+      delete t_fx;
+   }
+
+   for (int i = 0; i < n_fx_params; i++)
+   {
+      switch( fxbuffer->p[i].valtype )
+      {
+      case vt_float:
+      {
+         fxbuffer->p[i].val.f = p.p[i];
+      }
+      break;
+      case vt_int:
+         fxbuffer->p[i].val.i = (int)p.p[i];
+         break;
+      default:
+         break;
+      }
+      fxbuffer->p[i].temposync = (int)p.ts[i];;
+      fxbuffer->p[i].extend_range = (int)p.er[i];
+   }
+
+   if( listenerNotForParent )
+      listenerNotForParent->valueChanged( this );
+
 }

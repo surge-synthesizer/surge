@@ -37,6 +37,10 @@ protected:
    void populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx);
    SurgeStorage* storage = nullptr;
    char mtype[16] = {0};
+
+   // The parent class is too chatty with the listener, calling a value changed every time I close which means non-swapping
+   // menus like copy and paste do the wrong thing
+   VSTGUI::IControlListener *listenerNotForParent;
 };
 
 class COscMenu : public CSnapshotMenu
@@ -84,6 +88,29 @@ protected:
 
    void copyFX();
    void pasteFX();
+   void saveFX();
 
+   // We know this runs on the UI thread to populate always so we can use a static for user presets
+   struct UserPreset {
+      UserPreset() {
+         for( int i=0; i<n_fx_params; ++i )
+         {
+            p[i] = 0.0;
+            ts[i] = false;
+            er[i] = false;
+         }
+      }
+      std::string file;
+      std::string name;
+      int type;
+      float p[n_fx_params];
+      bool ts[n_fx_params], er[n_fx_params];
+   };
+   static std::vector<UserPreset> userPresets;
+   static bool scanForUserPresets;
+   
+   void rescanUserPresets();
+   void loadUserPreset( const UserPreset &p );
+   
    CLASS_METHODS(CFxMenu, VSTGUI::CControl)
 };
