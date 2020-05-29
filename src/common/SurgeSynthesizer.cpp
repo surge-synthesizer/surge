@@ -176,16 +176,20 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
    mpeGlobalPitchBendRange = 0;
 
+#if TARGET_VST3 || TARGET_VST2 || TARGET_AUDIOUNIT 
+   // If we are in a daw hosted environment, choose a preset from the preset library
+   // Skip LV2 until we sort out the patch change dynamics there
    int pid = 0;
    for (auto p : storage.patch_list)
    {
       if (p.name == "Init Saw" && storage.patch_category[p.category].name == "Init")
       {
-         // patchid_queue = pid;
+         patchid_queue = pid;
          break;
       }
       pid++;
    }
+#endif   
 }
 
 SurgeSynthesizer::~SurgeSynthesizer()
