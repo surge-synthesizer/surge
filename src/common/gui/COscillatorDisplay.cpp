@@ -7,24 +7,11 @@
 #include "unitconversion.h"
 #include "UserInteractions.h"
 #include "guihelpers.h"
-
-#if MAC
-#include "filesystem.h"
-#elif LINUX
-#include "experimental/filesystem"
-#else
-#include "filesystem"
-#endif
 #include "PopupEditorSpawner.h"
 
-using namespace VSTGUI;
+#include "ImportFilesystem.h"
 
-#if WINDOWS && ( _MSC_VER >= 1920 )
-// vs2019
-namespace fs = std::filesystem;
-#else
-namespace fs = std::experimental::filesystem;
-#endif
+using namespace VSTGUI;
 
 const float disp_pitch = 90.15f - 48.f;
 const int wtbheight = 12;

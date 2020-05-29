@@ -5,26 +5,15 @@
 #include "DspUtilities.h"
 #include <time.h>
 #include <vt_dsp/vt_dsp_endian.h>
-#if LINUX
-#include <experimental/filesystem>
-#elif MAC || TARGET_RACK
-#include <filesystem.h>
-#else
-#include <filesystem>
-#endif
+
+#include "ImportFilesystem.h"
+
 #include <fstream>
 #include <iterator>
 #include "UserInteractions.h"
 
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
-#endif
-
-#if WINDOWS && ( _MSC_VER >= 1920 )
-// vs2019
-namespace fs = std::filesystem;
-#else
-namespace fs = std::experimental::filesystem;
 #endif
 
 #if AU

@@ -77,24 +77,12 @@ struct RememberForgetGuard {
 #include "aulayer.h"
 #endif
 
+#include "ImportFilesystem.h"
 
 #if LINUX
 #include "vstgui/lib/platform/platform_x11.h"
 #include "vstgui/lib/platform/linux/x11platform.h"
-#include <experimental/filesystem>
-#elif MAC || TARGET_RACK
-#include <filesystem.h>
-#else
-#include <filesystem>
 #endif
-
-#if WINDOWS && ( _MSC_VER >= 1920 )
-// vs2019
-namespace fs = std::filesystem;
-#else
-namespace fs = std::experimental::filesystem;
-#endif
-
 
 #if LINUX && TARGET_LV2
 namespace SurgeLv2

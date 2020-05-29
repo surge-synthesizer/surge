@@ -10,20 +10,10 @@
 #include "UIInstrumentation.h"
 #include "CScalableBitmap.h"
 
-#if LINUX
-#include <experimental/filesystem>
-#elif MAC || (WINDOWS && TARGET_RACK)
-#include <filesystem.h>
-#else
-#include <filesystem>
-#endif
+#include "ImportFilesystem.h"
 
 #include <iostream>
 #include <iomanip>
-
-#if !WINDOWS
-namespace fs = std::experimental::filesystem;
-#endif
 
 namespace Surge
 {

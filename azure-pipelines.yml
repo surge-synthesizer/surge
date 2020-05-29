@@ -35,7 +35,7 @@ jobs:
         isLinux: True
         linuxProject: vst3
       linux-unittest:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         isLinux: True
         linuxProject: headless
         runHeadless: True
