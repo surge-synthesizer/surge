@@ -1,7 +1,7 @@
 
 find_package(Git)
 
-if( DEFINED GIT_EXECUTABLE )
+if( Git_FOUND )
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
     WORKING_DIRECTORY ${SURGESRC}

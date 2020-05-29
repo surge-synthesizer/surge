@@ -255,6 +255,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    datapath = suppliedDataPath;
 #else
    bool foundSurge = false;
+   std::string dllPath = "";
 
    // First check the portable mode sitting beside me
    {
@@ -277,12 +278,13 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
          // Return or however you want to handle an error.
          goto bailOnPortable;
       }
-      
+
       // The path variable should now contain the full filepath for this DLL.
       std::string pn = path;
       int ep;
       if( (ep = pn.rfind( "\\" )) != string::npos )
       {
+         dllPath = pn.substr(0,ep);;
          auto spath = pn.substr( 0, ep ) + "\\SurgeData\\";
          datapath = spath;
          if( fs::is_directory( fs::path( spath ) ) )
@@ -322,12 +324,20 @@ bailOnPortable:
       }
    }
 
-   PWSTR documentsFolder;
-   if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
+   // Portable - first check for dllPath\\SurgeUserData
+   if( dllPath != "" && fs::is_directory( fs::path( dllPath + "\\SurgeUserData\\" )))
    {
-      CHAR path[4096];
-      wsprintf(path, "%S\\Surge\\", documentsFolder);
-      userDataPath = path;
+      userDataPath = dllPath + "\\SurgeUserData\\";
+   }
+   else 
+   {
+      PWSTR documentsFolder;
+      if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
+      {
+         CHAR path[4096];
+         wsprintf(path, "%S\\Surge\\", documentsFolder);
+         userDataPath = path;
+      }
    }
 #endif
 #endif
