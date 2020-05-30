@@ -184,7 +184,11 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    {
       if (p.name == "Init Saw" && storage.patch_category[p.category].name == "Init")
       {
-         patchid_queue = pid;
+         // patchid_queue = pid;
+         // This is the wrong thing to do. I *think* what we need to do here is to
+         // explicitly load the file directly inline on thread using loadPatchFromFile
+         // and set up the location int rather than defer the load. But do that
+         // later
          break;
       }
       pid++;
