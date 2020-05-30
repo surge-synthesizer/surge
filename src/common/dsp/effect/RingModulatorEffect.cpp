@@ -2,6 +2,7 @@
 #include "Tunings.h"
 #include "Oscillator.h"
 #include "DebugHelpers.h"
+#include "FastMath.h"
 
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 
@@ -88,7 +89,9 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
       for( int u=0; u<uni; ++u )
       {
          // TODO efficiency of course
-         auto vc = osc_sine::valueFromSinAndCos( sin( 2.0 * M_PI * phase[u] ), cos( 2.0 * M_PI * phase[u] ), *pdata_ival[rm_carriershape] );
+         auto vc = osc_sine::valueFromSinAndCos( Surge::DSP::fastsin( 2.0 * M_PI * ( phase[u] - 0.5 ) ),
+                                                 Surge::DSP::fastcos( 2.0 * M_PI * ( phase[u] - 0.5 ) ),
+                                                 *pdata_ival[rm_carriershape] );
          phase[u] += dphase[u];
          if( phase[u] > 1 )
          {
