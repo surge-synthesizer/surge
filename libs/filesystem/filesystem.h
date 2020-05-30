@@ -27,6 +27,7 @@
 namespace std::experimental::filesystem {
     class path {
     public:
+        static constexpr char preferred_separator = '/';
         std::string p;
         
         path();
