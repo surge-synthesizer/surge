@@ -1,3 +1,8 @@
+/*
+** This file is rebuilt and substitited every time you run a build.
+** Things which need to be per-build should be defined here, declared
+** in the version.h header, and then used wherever you want
+*/
 #include "version.h"
 
 namespace Surge
@@ -17,5 +22,8 @@ namespace Surge
    const char* Build::BuildHost = "@SURGE_BUILD_FQDN@";
 
    const char* Build::BuildLocation = "@SURGE_BUILD_LOCATION@";
+
+   const char* Build::BuildDate = "@SURGE_BUILD_DATE@";
+   const char* Build::BuildTime = "@SURGE_BUILD_TIME@";
 }
 

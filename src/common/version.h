@@ -18,6 +18,9 @@ namespace Surge {
       static const char* BuildHost;
 
       static const char* BuildLocation; // Local or Pipeline
+
+      static const char* BuildDate;
+      static const char* BuildTime;
    };
 }
 
