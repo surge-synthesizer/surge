@@ -19,6 +19,10 @@ jobs:
         imageName: 'vs2017-win2016'
         isWindows: True
         is64Bit: True
+      windows-x64-vs2019:
+        imageName: 'windows-2019'
+        isWindows: True
+        is64Bit: True
       windows-x86-plugins:
         imageName: 'vs2017-win2016'
         isWindows: True
@@ -32,6 +36,10 @@ jobs:
         linuxProject: lv2
       linux-vst3:
         imageName: 'ubuntu-18.04'
+        isLinux: True
+        linuxProject: vst3
+      linux-vst3-ubuntu-16:
+        imageName: 'ubuntu-16.04'
         isLinux: True
         linuxProject: vst3
       linux-unittest:
