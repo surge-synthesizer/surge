@@ -55,6 +55,9 @@ set( SURGE_RELEASE_NUMBER "${lverrel}" )
 set( SURGE_BUILD_HASH "${GIT_COMMIT_HASH}" )
 set( SURGE_BUILD_LOCATION "${lpipeline}" )
 
+string( TIMESTAMP SURGE_BUILD_DATE "%Y-%m-%d" )
+string( TIMESTAMP SURGE_BUILD_TIME "%H:%M:%S" )
+
 message( STATUS "Using SURGE_VERSION=${SURGE_FULL_VERSION}" )
 
 message( STATUS "Configuring ${SURGEBLD}/geninclude/version.cpp" )

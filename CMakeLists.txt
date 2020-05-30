@@ -653,6 +653,7 @@ if( BUILD_VST3 )
      add_custom_command(
        TARGET Surge.vst3
        POST_BUILD
+       COMMAND ${CMAKE_COMMAND} -E echo "copying ${CMAKE_BINARY_DIR}/Release/surge-vst3.dll to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3"
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst3.dll
                                         ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3
      )
@@ -744,7 +745,7 @@ if( BUILD_VST2 )
      add_custom_command(
        TARGET Surge.vst2
        POST_BUILD
-
+       COMMAND ${CMAKE_COMMAND} -E echo "copying ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll"
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2.dll ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
      )
    endif()
