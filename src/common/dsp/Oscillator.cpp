@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "Oscillator.h"
 #include "DspUtilities.h"
+#include "FastMath.h"
 #include <cmath>
 
 using namespace std;
@@ -110,7 +111,7 @@ void osc_sine::init(float pitch, bool is_display)
    for (int i = 0; i < n_unison; i++)
    {
       if (i > 0)
-         phase[i] = 2.0 * M_PI * rand() / RAND_MAX;
+         phase[i] = 2.0 * M_PI * rand() / RAND_MAX - M_PI; // phase in range -PI to PI
       else
          phase[i] = 0.f;
       lastvalue[i] = 0.f;
@@ -179,7 +180,13 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
           if (FM)
              p += FMdepth.v * master_osc[k];
 
-          float out_local = valueFromSinAndCos(sin(p), cos(p));
+          // Unlike ::sin and ::cos we are limited in accurate range
+          while( p > M_PI )
+             p -= 2.0 * M_PI;
+          while( p < -M_PI )
+             p += 2.0 * M_PI;
+          
+          float out_local = valueFromSinAndCos(Surge::DSP::fastsin(p), Surge::DSP::fastcos(p));
 
           outL += (panL[u] * out_local) * playingramp[u] * out_attenuation;
           outR += (panR[u] * out_local) * playingramp[u] * out_attenuation;
@@ -190,7 +197,8 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
              playingramp[u] = 1;
           
           phase[u] += omega[u];
-          if ( phase[u] > 2.0 * M_PI )
+          // phase in range -PI to PI
+          if ( phase[u] > M_PI )
           {
              phase[u] -= 2.0 * M_PI;
           }
@@ -247,7 +255,7 @@ void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool 
 
          for (int u = 0; u < n_unison; u++)
          {
-             float out_local = valueFromSinAndCos(sin(phase[u]), cos(phase[u]));
+             float out_local = valueFromSinAndCos(Surge::DSP::fastsin(phase[u]), Surge::DSP::fastcos(phase[u]));
 
              outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
              outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
@@ -259,7 +267,8 @@ void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool 
                 playingramp[u] = 1;
 
              phase[u] += omega[u] + master_osc[k] * FMdepth.v;
-             if (phase[u] > 2.0 * M_PI)
+             // phase in range -PI to PI
+             if (phase[u] > M_PI)
              {
                 phase[u] -= 2.0 * M_PI;
              }
