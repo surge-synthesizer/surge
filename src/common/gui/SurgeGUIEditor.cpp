@@ -3150,6 +3150,16 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       return;
    long tag = control->getTag();
 
+   if( typeinDialog != nullptr && tag != tag_value_typein )
+   {
+      typeinDialog->setVisible(false);
+      removeFromFrame.push_back(typeinDialog);
+      typeinDialog = nullptr;
+      typeinResetCounter = -1;
+      typeinEditTarget = nullptr;
+   }
+
+   
    if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
    {
       if (((CModulationSourceButton*)control)->event_is_drag)
