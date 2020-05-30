@@ -1079,6 +1079,14 @@ std::string Parameter::tempoSyncNotationValue(float f)
     return res;
 }
 
+void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth )
+{
+   int detailedMode = false;
+   if( storage )
+      detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+   sprintf(txt, "%.*f", (detailedMode ? 6 : 2), modulationDepth);
+}
+
 void Parameter::get_display_alt(char* txt, bool external, float ef)
 {
    

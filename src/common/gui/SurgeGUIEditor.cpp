@@ -2356,10 +2356,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
                    synth->isActiveModulation(md, thisms))
                {
-                  char tmptxt[256];
-                  sprintf(tmptxt, "%s -> %s: %.*f", (char*)modulatorName(thisms, true).c_str(),
+                  char modtxt[256];
+                  synth->storage.getPatch().param_ptr[md]->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms));
+                  char tmptxt[512]; // leave room for that ubuntu 20.0 error
+                  sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
                           synth->storage.getPatch().param_ptr[md]->get_full_name(),
-                          (detailedMode ? 6 : 2), synth->getModDepth(md, thisms));
+                          modtxt);
 
                   auto clearOp = [this, parameter, control, thisms]() {
                                     this->promptForUserValueEntry( parameter, control, thisms );
@@ -2932,10 +2934,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   modsources ms = (modsources)k;
                   if (synth->isActiveModulation(ptag, ms))
                   {
-                     char tmptxt[256];
-                     sprintf(tmptxt, "%s -> %s: %.*f", (char*)modulatorName(ms, true).c_str(),
-                             p->get_name(), (detailedMode ? 6 : 2),
-                             synth->getModDepth(ptag, (modsources)ms));
+                     char modtxt[256];
+                     p->get_display_of_modulation_depth( modtxt, synth->getModDepth(ptag, ms));
+
+                     char tmptxt[512];
+                     sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(ms, true).c_str(),
+                             p->get_name(), modtxt );
                      addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms ]() {
                                                              this->promptForUserValueEntry( p, control, ms );
                                                           });
@@ -3544,7 +3548,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
             synth->getParameterName(ptag, txt);
             sprintf(pname, "%s -> %s", modulatorName(thisms,true).c_str(), txt);
-            sprintf(pdisp, "%.*f", (detailedMode ? 6 : 2), synth->getModDepth(ptag, thisms));
+            p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms));
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
 
@@ -5282,9 +5286,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    char txt[256];
    if( ismod )
    {
-      int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
-
-      sprintf(txt, "%.*f", (detailedMode ? 6 : 2), synth->getModDepth(p->id, (modsources)ms));
+      p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms));
    }
    else
    {
