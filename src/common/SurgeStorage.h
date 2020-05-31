@@ -656,6 +656,8 @@ namespace Storage
 {
 bool isValidName(const std::string &name);
 
+std::string findReplaceSubstring(std::string &source, const std::string &from, const std::string &to);
+
 #if WINDOWS
 /*
 ** Windows filesystem names are properly wstrings which, if we want them to

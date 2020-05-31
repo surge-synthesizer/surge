@@ -152,29 +152,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
-string findReplaceSubstring(string& source, const string& from, const string& to)
-{
-   string newString;
-   newString.reserve(source.length()); // avoids a few memory allocations
-
-   string::size_type lastPos = 0;
-   string::size_type findPos;
-
-   while (string::npos != (findPos = source.find(from, lastPos)))
-   {
-      newString.append(source, lastPos, findPos - lastPos);
-      newString += to;
-      lastPos = findPos + from.length();
-   }
-
-   // care for the rest after last occurrence
-   newString += source.substr(lastPos);
-
-   source.swap(newString);
-
-   return newString;
-}
-
 bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMenu, bool single_category, int &main_e, bool rootCall )
 {
     bool amIChecked = false;
@@ -219,7 +196,7 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
             name = storage->patch_list[p].name;
 
             #if WINDOWS
-               findReplaceSubstring(name, string("&"), string("&&"));
+               Surge::Storage::findReplaceSubstring(name, string("&"), string("&&"));
             #endif
             
             auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name.c_str()));
@@ -272,7 +249,7 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
            name = "    " + name;
 
         #if WINDOWS
-           findReplaceSubstring(name, string("&"), string("&&"));
+           Surge::Storage::findReplaceSubstring(name, string("&"), string("&&"));
         #endif
 
         if (!single_category)
