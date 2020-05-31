@@ -186,6 +186,8 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
         auto action = [this, type_id](CCommandMenuItem* item) {
                          this->selectedIdx = 0;
                          this->loadSnapshot(type_id, nullptr, 0);
+                         if( this->listenerNotForParent )
+                            this->listenerNotForParent->valueChanged(this);
         };
 
         actionItem->setActions(action, nullptr);
