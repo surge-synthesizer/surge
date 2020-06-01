@@ -366,7 +366,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 {
    CHECK_INITIALIZED
 
-   if (data.numInputs == 0 || data.numOutputs == 0)
+   if (data.numOutputs == 0)
    {
       // nothing to do
       return kResultOk;
@@ -377,7 +377,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
    int32 numChannels = 2;
    int32 numSamples = data.numSamples;
 
-   surgeInstance->process_input = data.numInputs != 0;
+   surgeInstance->process_input = data.numInputs != 0 && data.inputs != nullptr;
 
    float** in = surgeInstance->process_input ? data.inputs[0].channelBuffers32 : nullptr;
    float** out = data.outputs[0].channelBuffers32;
@@ -433,7 +433,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
          surgeInstance->process();
       }
 
-      if (surgeInstance->process_input)
+      if (surgeInstance->process_input && in)
       {
          int inp;
          for (inp = 0; inp < N_INPUTS; inp++)
