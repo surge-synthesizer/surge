@@ -635,6 +635,16 @@ void CFxMenu::populate()
                             });
        this->addEntry(saveItem);
     }
+    
+    auto rescanItem = new CCommandMenuItem(CCommandMenuItem::Desc("Rescan FX"));
+    rescanItem->setActions([this](CCommandMenuItem *item) {
+                              scanForUserPresets = true;
+                              auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+                              if( sge )
+                                 sge->queueRebuildUI();
+                           });
+    this->addEntry(rescanItem);
+
 }
 
 
@@ -730,8 +740,18 @@ void CFxMenu::saveFX()
    // Rough implementation
    char fxName[256];
    fxName[0] = 0;
-   spawn_miniedit_text(fxName, 256);
+   spawn_miniedit_text(fxName, 256, "Enter name for user setting", "Surge FX" );
 
+   if( strlen( fxName ) == 0 )
+   {
+      return;
+   }
+
+   if( ! Surge::Storage::isValidName( fxName ) )
+   {
+      return;
+   }
+   
    std::ostringstream poss;
    poss << storage->userDataPath
 #if WINDOWS

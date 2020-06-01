@@ -10,14 +10,5 @@
 #include <string>
 #include <vector>
 
-float spawn_miniedit_float(float f, int ctype);
-int spawn_miniedit_int(int i, int ctype);
-void spawn_miniedit_text(char* c, int maxchars);
+void spawn_miniedit_text(char* c, int maxchars, const char *prompt = "Please Enter a Value", const char *title = "Surge");
 
-struct patchdata
-{
-   std::string name;
-   std::string category;
-   std::string comments;
-   std::string author;
-};

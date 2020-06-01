@@ -6,7 +6,7 @@ double CocoaUtils::getDoubleClickInterval()
    return [NSEvent doubleClickInterval];
 }
 
-void CocoaUtils::miniedit_text_impl( char *c, int maxchars )
+void CocoaUtils::miniedit_text_impl( char *c, int maxchars, const char *prompt, const char *title )
 {
     @autoreleasepool
     {
@@ -14,15 +14,17 @@ void CocoaUtils::miniedit_text_impl( char *c, int maxchars )
         NSAlert *msg = [[NSAlert alloc] init];
         [msg addButtonWithTitle:@"OK"];
         [msg addButtonWithTitle:@"Cancel"];
-        
-        [msg setMessageText:@"Please provide the value"];
+
+        [msg setInformativeText:[NSString stringWithUTF8String:prompt]];
+        [msg setMessageText:[NSString stringWithUTF8String:title]];
+
         
         NSTextField *txt = [[NSTextField alloc] init];
         [txt setFrame: NSMakeRect(0, 0, 200, 24 )];
         [txt setStringValue: [NSString stringWithCString:c encoding:NSASCIIStringEncoding] ];
         
         [msg setAccessoryView:txt];
-        
+
         auto response = [msg runModal];
         
         if (response == NSAlertFirstButtonReturn) {

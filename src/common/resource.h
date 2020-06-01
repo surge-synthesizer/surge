@@ -60,6 +60,7 @@
 #define IDC_DESCRIPTION 1003
 #define IDC_AUTHOR 1004
 #define IDC_TEDIT 1024
+#define IDC_TPROMPT 1025
 
 #define IDR_LATO_FONT 501
 

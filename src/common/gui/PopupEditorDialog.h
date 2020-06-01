@@ -7,7 +7,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#if !MAC
+#if WINDOWS
 
 #include <atlctrls.h>
 #include <atlCRACK.h>
@@ -29,6 +29,8 @@ public:
       TextDataSize = 256
    };
    char textdata[TextDataSize];
+
+   char prompt[TextDataSize], title[TextDataSize];
    int ivalue;
    float fvalue;
    int irange;
@@ -49,6 +51,15 @@ public:
       ce.AppendText(textdata);
       // ce.SetLimitText(16);
       ce.Detach();
+
+      WTL::CStatic cs;
+      cs.Attach(GetDlgItem(IDC_TPROMPT));
+      cs.SetWindowText(prompt);
+      // ce.SetLimitText(16);
+      cs.Detach();
+
+      SetWindowText( title );
+
       return 1;
    }
 

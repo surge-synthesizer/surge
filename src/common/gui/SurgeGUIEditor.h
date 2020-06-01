@@ -140,6 +140,14 @@ private:
    int lastTSNum = 0, lastTSDen = 0;
    void draw_infowindow(int ptag, VSTGUI::CControl* control, bool modulate, bool forceMB = false);
 
+   struct patchdata
+   {
+      std::string name;
+      std::string category;
+      std::string comments;
+      std::string author;
+   };
+
    bool showPatchStoreDialog(patchdata* p,
                              std::vector<PatchCategory>* patch_category,
                              int startcategory);
