@@ -5,7 +5,7 @@ class CocoaUtils
 {
 public:
     static double getDoubleClickInterval();
-    static void miniedit_text_impl( char *c, int maxchars );
+    static void miniedit_text_impl( char *c, int maxchars, const char *prompt, const char *title );
 };
 
 

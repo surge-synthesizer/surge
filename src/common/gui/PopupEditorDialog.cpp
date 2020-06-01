@@ -5,99 +5,17 @@
 //	Copyright 2004 Claes Johanson
 //
 //-------------------------------------------------------------------------------------------------------
-#if MAC_CARBON
 
-pascal OSStatus meinWindowCloseHandler(EventHandlerCallRef inRef, EventRef inEvent, void* userData)
-{
-   ControlRef control;
-   UInt32 cmd;
-   // get control hit by event
-   GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, NULL, sizeof(ControlRef),
-                     NULL, &control);
-   WindowRef window = GetControlOwner(control);
-   GetControlCommandID(control, &cmd);
+#include "PopupEditorSpawner.h"
 
-   switch (cmd)
-   {
-   case kHICommandCancel:
-   case kHICommandOK:
-      UInt32 result = (cmd == kHICommandOK) ? 1 : 0;
-      SetWindowProperty(window, 'VmbA', 'Rslt', sizeof(UInt32), &result);
-      QuitApplicationEventLoop();
-      break;
-   }
-
-   return noErr;
-}
-
-void spawn_miniedit_text(char* c, int maxchars)
-{
-   OSStatus err;
-   IBNibRef nibRef = 0;
-   WindowRef NibWindow;
-
-   static EventTypeSpec closeEvent = {kEventClassControl, kEventControlHit};
-
-   // setup interface from nib file
-   CreateNibReferenceWithCFBundle((CFBundleRef)VSTGUI::gBundleRef, CFSTR("surgesave"), &nibRef);
-   if (!nibRef)
-      return;
-   CreateWindowFromNib(nibRef, CFSTR("TextEntry"), &NibWindow);
-   DisposeNibReference(nibRef);
-   // install event handler for window to handle close box
-   InstallWindowEventHandler(NibWindow, NewEventHandlerUPP(meinWindowCloseHandler), 1, &closeEvent,
-                             0, NULL);
-
-   // set data
-   ControlID inID;
-   inID.signature = 'VmbA';
-   ControlRef* outControl;
-
-   HIViewRef hiroot = HIViewGetRoot(NibWindow);
-
-   HIViewRef nameedit;
-   inID.id = 1;
-   err = HIViewFindByID(hiroot, inID, &nameedit);
-   if (nameedit)
-   {
-      CFStringRef s = CFStringCreateWithCString(NULL, c, kCFStringEncodingUTF8);
-      HIViewSetText(nameedit, s);
-      CFRelease(s);
-   }
-
-   ShowWindow(NibWindow);
-
-   RunApplicationEventLoop();
-
-   // check wheter save or cancel was clicked
-   UInt32 result = 0;
-   err = GetWindowProperty(NibWindow, 'VmbA', 'Rslt', sizeof(UInt32), 0, &result);
-   if (err)
-      result = 0;
-   if (result)
-   {
-      char tmp[256];
-      // retrieve data
-      if (nameedit)
-      {
-         CFStringRef s = HIViewCopyText(nameedit);
-         err = CFStringGetCString(s, c, sizeof(char) * maxchars, kCFStringEncodingUTF8);
-         CFRelease(s);
-      }
-   }
-   CFRelease(nameedit);
-
-   HideWindow(NibWindow);
-   DisposeWindow(NibWindow);
-}
-#elif MAC_COCOA
+#if MAC
 
 #include "cocoa_utils.h"
 
-void spawn_miniedit_text(char* c, int maxchars)
+void spawn_miniedit_text(char* c, int maxchars, const char *prompt, const char *title)
 {
   // Bounce this over to objective C by using the CocoaUtils class
-  CocoaUtils::miniedit_text_impl( c, maxchars );
+   CocoaUtils::miniedit_text_impl( c, maxchars, prompt, title );
 }
 
 #elif WIN32
@@ -113,6 +31,7 @@ using namespace std;
 
 extern CAppModule _Module;
 
+#if 0
 float spawn_miniedit_float(float f, int ctype)
 {
    PopupEditorDialog me;
@@ -133,10 +52,13 @@ int spawn_miniedit_int(int i, int ctype)
       return me.ivalue;
    return i;
 }
+#endif
 
-void spawn_miniedit_text(char* c, int maxchars)
+void spawn_miniedit_text(char* c, int maxchars, const char* prompt, const char* title)
 {
    PopupEditorDialog me;
+   strcpy( me.prompt, prompt );
+   strcpy( me.title, title );
    me.SetText(c);
    me.DoModal(::GetActiveWindow(), NULL);
    if (me.updated)
@@ -149,11 +71,11 @@ void spawn_miniedit_text(char* c, int maxchars)
 #include "UserInteractions.h"
 #include <string.h>
 
-void spawn_miniedit_text(char* c, int maxchars)
+void spawn_miniedit_text(char* c, int maxchars, const char* prompt, const char* title)
 {
    // FIXME: Implement text edit popup on Linux.
    char cmd[1024];
-   snprintf(cmd, 1024, "zenity --entry --entry-text \"%s\"", c );
+   snprintf(cmd, 1024, "zenity --entry --entry-text \"%s\" --text \"%s\" --title \"%s\"", c, prompt, title );
    FILE *z = popen( cmd, "r" );
    if( ! z )
    {
