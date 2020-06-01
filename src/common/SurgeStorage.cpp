@@ -1514,6 +1514,29 @@ bool isValidName(const std::string &patchName)
     return valid;
 }
 
+string findReplaceSubstring(string& source, const string& from, const string& to)
+{
+   string newString;
+   newString.reserve(source.length()); // avoids a few memory allocations
+
+   string::size_type lastPos = 0;
+   string::size_type findPos;
+
+   while (string::npos != (findPos = source.find(from, lastPos)))
+   {
+      newString.append(source, lastPos, findPos - lastPos);
+      newString += to;
+      lastPos = findPos + from.length();
+   }
+
+   // care for the rest after last occurrence
+   newString += source.substr(lastPos);
+
+   source.swap(newString);
+
+   return newString;
+}
+
 #if WINDOWS
 std::string wstringToUTF8(const std::wstring &str)
 {

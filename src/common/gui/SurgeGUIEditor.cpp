@@ -1062,8 +1062,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_jogfx->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_jogfx);
 
-   fxPresetLabel = new CTextLabel( CRect( 759, 182+15, 759+131-39-2, 182+15+10 ), "Preset" );
-   fxPresetLabel->setFontColor(currentSkin->getColor( "effect.label.foreground", CColor( 76, 76, 76, 255 ) ));
+   fxPresetLabel = new CTextLabel( CRect( 759, 197, 847, 207 ), "Preset" );
+   fxPresetLabel->setFontColor(currentSkin->getColor( "effect.preset.name", CColor( 0, 0, 0, 255 ) ));
    fxPresetLabel->setTransparency(true);
    fxPresetLabel->setFont( displayFont );
    fxPresetLabel->setHoriAlign( kRightText );

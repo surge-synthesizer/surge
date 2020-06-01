@@ -5,9 +5,9 @@
 
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
     <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
-    
+
     <image id="STATUS_BUTTON" resource="SVG/StatusButton.svg"/>
-    
+
     <color id="lightgray" value="#B4B4B4"/>
     <color id="gray" value="#808080"/>
     <color id="darkblack" value="#050505"/>
@@ -16,9 +16,9 @@
     <color id="darkergray" value="#202020"/>
     <color id="surgeblue" value="#005CB6"/>
     <color id="surgeorange" value="#ff9000"/>
-    
-    <color id="buttonbg" value=#151515/>
-    
+
+    <color id="buttonbg" value="#151515"/>
+
     <color id="lfo.waveform.fill" value="#242424"/>
     <color id="lfo.waveform.font" value="$lightgray"/>
     <color id="lfo.waveform.rules" value="$lightgray"/>
@@ -27,14 +27,14 @@
     <color id="lfo.waveform.envelope" value="$darkgray"/>
     <color id="lfo.waveform.wave" value="$surgeblue"/>
     <color id="lfo.waveform.majordivisions" value="$black"/>
-    
+
     <color id="lfo.type.unselected.foreground" value="$lightgray"/>
     <color id="lfo.type.selected.foreground" value="#E5E5E5"/>
-    
+
     <color id="lfo.type.selected.background" value="$surgeblue"/>
 
     <color id="lfo.stepseq.background" value="$darkergray"/>
-    
+
     <color id="lfo.stepseq.stepmarker" value="$surgeblue"/>
     <color id="lfo.stepseq.loopregionlo" value="#000000"/>
     <color id="lfo.stepseq.loopregionhi" value="$buttonbg"/>
@@ -44,7 +44,7 @@
     <color id="lfo.stepseq.nolooplo" value="#303030"/>
     <color id="lfo.stepseq.grabmarker" value="$lightgray"/>
     <color id="lfo.stepseq.grabmarkerhi" value="$lightgray"/>
-    
+
     <color id="lfo.stepseq.button.border" value="$buttonbg"/>
     <color id="lfo.stepseq.button.fill" value="$darkergray"/>
     <color id="lfo.stepseq.button.arrow.fill" value="$lightgray"/>
@@ -61,6 +61,7 @@
 
     <color id="effect.label.hrule" value="#5E5E5E"/>
     <color id="effect.label.foreground" value="$lightgray"/>
+    <color id="effect.preset.name" value="$lightgray"/>
 
     <color id="patchbrowser.background" value="$lightgray"/>
     <color id="patchbrowser.foreground" value="$lightgray"/>
@@ -89,5 +90,5 @@
 
   <controls>
   </controls>
-  
+
 </surge-skin>

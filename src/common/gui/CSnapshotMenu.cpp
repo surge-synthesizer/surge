@@ -126,7 +126,7 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
     /*
     ** Begin by grabbing all the snapshot elements
     */
-    char txt[256];
+    std::string txt;
     int type_id = 0;
     type->Attribute("i", &type_id);
     sub = 0;
@@ -134,7 +134,12 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
     TiXmlElement* snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
     while (snapshot)
     {
-        strcpy(txt, snapshot->Attribute("name"));
+        txt = snapshot->Attribute("name");
+
+        #if WINDOWS
+            Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
+        #endif
+
         int snapshotTypeID = type_id;
         int tmpI;
         if (snapshot->Attribute("i", &tmpI) != nullptr)
@@ -142,7 +147,7 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
            snapshotTypeID = tmpI;
         }
 
-        auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt));
+        auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
         auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem* item) {
                          this->selectedIdx = idx;
                          this->loadSnapshot(snapshotTypeID, snapshot, idx);
@@ -175,14 +180,19 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
     /*
     ** Then add myself to parent
     */
-    strcpy(txt, type->Attribute("name"));
+    txt = type->Attribute("name");
+
+    #if WINDOWS
+        Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
+    #endif
+
     if (sub)
     {
-        parent->addEntry(subMenu, txt);
+        parent->addEntry(subMenu, txt.c_str());
     }
     else
     {
-        auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt));
+        auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
         auto action = [this, type_id](CCommandMenuItem* item) {
                          this->selectedIdx = 0;
                          this->loadSnapshot(type_id, nullptr, 0);
@@ -575,7 +585,14 @@ void CFxMenu::populate()
              lastType = ps.type;
              fxMenu = new COptionMenu(getViewSize(), 0, 0, 0, 0, kNoDrawStyle );
           }
-          auto i = new CCommandMenuItem(CCommandMenuItem::Desc(ps.name.c_str()));
+
+          std::string fxName = ps.name;
+
+          #if WINDOWS
+             Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
+          #endif
+
+          auto i = new CCommandMenuItem(CCommandMenuItem::Desc(fxName.c_str()));
           i->setActions([this,ps](CCommandMenuItem *item)
                            {
                               this->loadUserPreset(ps);
@@ -744,7 +761,16 @@ void CFxMenu::saveFX()
    }
 
    pfile << "<single-fx>\n";
-   pfile << "  <snapshot name=\"" << fxName << "\" \n";
+
+   // take care of 5 special XML characters
+   std::string fxNameSub(fxName);
+   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
+   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
+   Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
+   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
+   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
+   
+   pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\" \n";
 
    pfile << "     type=\"" <<  fx->type.val.i << "\"\n";
    for( int i=0; i<n_fx_params; ++i )
