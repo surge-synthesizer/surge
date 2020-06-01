@@ -570,6 +570,19 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          
          fillr(rstep, stepcolor);
          steprect[i] = rstep;
+
+         // draw the midline when not in unipolar mode
+         CRect mid(rstep);
+         int p;
+         
+         if (!lfodata->unipolar.val.b)
+         {
+            p = (mid.bottom + mid.top) * 0.5;
+            mid.top = p;
+            mid.bottom = p + 1;
+
+            fillr(mid, shadowcol);
+         }
          
          // Now draw the value
          CRect v(rstep);
@@ -581,10 +594,10 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          }
          else
          {
-            p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.5f + 0.5f * ss->steps[i]));
+            p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.50f + 0.5f * ss->steps[i]));
             p2 = (v.bottom + v.top) * 0.5;
             v.top = min(p1, p2);
-            v.bottom = max(p1, p2) + 1;
+            v.bottom = max(p1, p2);
          }
          
          fillr( v, valuecolor );
@@ -1060,11 +1073,11 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
             // I am sure we will need to callibrate this and add scale gestures and stuff
             if (buttons & kShift)
             {
-               ss->steps[i] += distance / 30.0;
+               ss->steps[i] = limit_range(ss->steps[i] + (distance / 30.f), -1.f, 1.f);
             }
             else
             {
-               ss->steps[i] += distance / 10.0;
+               ss->steps[i] = limit_range(ss->steps[i] + (distance / 10.f), -1.f, 1.f);
             }
             invalid();
          }
