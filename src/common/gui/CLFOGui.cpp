@@ -267,15 +267,109 @@ void CLFOGui::draw(CDrawContext* dc)
       dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
+      // calculate beat grid related data
+      auto bpm = storage->temposyncratio * 120;
+
+      auto denFactor = 4.0 / tsDen;
+      auto beatsPerSecond = bpm / 60.0;
+      auto secondsPerBeat = 1 / beatsPerSecond;
+      auto deltaBeat = secondsPerBeat / drawnTime * valScale * denFactor;
+
+      int nBeats = drawnTime * beatsPerSecond / denFactor;
+
+      auto measureLen = deltaBeat * tsNum;
+      int everyMeasure = 1;
+
+      while (measureLen < 4) // a hand selected parameter by playing around with it, tbh
+      {
+         measureLen *= 2;
+         everyMeasure *= 2;
+      }
+
+      if (drawBeats)
+      {
+         for (auto l = 0; l < nBeats; ++l)
+         {
+            auto xp = deltaBeat * l;
+
+            if (l % (tsNum * everyMeasure) == 0)
+            {
+               auto soff = 0.0;
+               if (l > 10)
+                  soff = 0.0;
+               CPoint vruleS(xp, valScale * .15), vruleE(xp, valScale * .85);
+               tf.transform(vruleS);
+               tf.transform(vruleE);
+               // major beat divisions on the lfo waveform bg 
+               dc->setFrameColor(
+                   skin->getColor("lfo.waveform.majordivisions", VSTGUI::CColor(0xE0, 0x80, 0x00)));
+               // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
+               dc->drawLine(vruleS, vruleE);
+            }
+         }
+      }
+
 #if LINUX
       dc->setLineWidth(50.0);
 #else
       dc->setLineWidth(1.3);
 #endif
-      //       lfo waveform itself
+      // lfo waveform itself
       dc->setFrameColor(skin->getColor("lfo.waveform.wave", VSTGUI::CColor( 0x00, 0x00, 0x00, 0xFF )));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
+      // top ruler
+      if (drawBeats)
+      {
+         for (auto l = 0; l < nBeats; ++l)
+         {
+            auto xp = deltaBeat * l;
+
+            if (l % (tsNum * everyMeasure) == 0)
+            {
+               auto soff = 0.0;
+               if (l > 10)
+                  soff = 0.0;
+               CPoint mp(xp + deltaBeat * (tsNum - 0.5), valScale * 0.01),
+                   mps(xp + deltaBeat * soff, valScale * 0.01), sp(xp, valScale * (.01)),
+                   ep(xp, valScale * (.1));
+               tf.transform(sp);
+               tf.transform(ep);
+               tf.transform(mp);
+               tf.transform(mps);
+               // ticks for major beats
+               dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::kBlackCColor));
+               dc->setLineWidth(1.0);
+               dc->drawLine(sp, ep);
+               dc->setLineWidth(1.0);
+
+               char s[256];
+               sprintf(s, "%d", l + 1);
+
+               CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10, 10));
+               tf.transform(tp);
+               dc->setFontColor(skin->getColor("lfo.waveform.font", VSTGUI::kBlackCColor));
+               dc->setFont(lfoTypeFont);
+               dc->drawString(s, tp, VSTGUI::kLeftText, true);
+            }
+            else if (everyMeasure == 1)
+            {
+               CPoint sp(xp, valScale * (.06)), ep(xp, valScale * (.1));
+               tf.transform(sp);
+               tf.transform(ep);
+               dc->setLineWidth(0.5);
+               if (l % tsNum == 0)
+                  dc->setFrameColor(VSTGUI::kBlackCColor);
+               else
+                  // small ticks for the ruler
+                  dc->setFrameColor(
+                      skin->getColor("lfo.waveform.rules", VSTGUI::CColor(0xB0, 0x60, 0x00)));
+               dc->drawLine(sp, ep);
+            }
+         }
+      }
+
+      // lower ruler calculation
       // find time delta
       int maxNumLabels = 5;
       std::vector<float> timeDeltas = {0.5, 1.0, 2.5, 5.0, 10.0};
@@ -315,82 +409,9 @@ void CLFOGui::draw(CDrawContext* dc)
          tf.transform(sp);
          tf.transform(ep);
          dc->setLineWidth(1.0);
-         // Lower ruler time ticks
+         // lower ruler time ticks
          dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::kBlackCColor));
          dc->drawLine(sp, ep);
-      }
-
-      if (drawBeats)
-      {
-         auto bpm = storage->temposyncratio * 120;
-
-         auto denFactor = 4.0 / tsDen;
-         auto beatsPerSecond = bpm / 60.0;
-         auto secondsPerBeat = 1 / beatsPerSecond;
-         auto deltaBeat = secondsPerBeat / drawnTime * valScale * denFactor;
-
-         int nBeats = drawnTime * beatsPerSecond / denFactor;
-
-         auto measureLen = deltaBeat * tsNum;
-         int everyMeasure = 1;
-         while (measureLen < 5) // a hand selected parameter by playing around with it, tbh
-         {
-            measureLen *= 2;
-            everyMeasure *= 2;
-         }
-
-         for (auto l = 0; l < nBeats; ++l)
-         {
-            auto xp = deltaBeat * l;
-            if (l % (tsNum * everyMeasure) == 0)
-            {
-               auto soff = 0.0;
-               if (l > 10)
-                  soff = 0.0;
-               CPoint mp(xp + deltaBeat * (tsNum - 0.5), valScale * 0.01),
-                   mps(xp + deltaBeat * soff, valScale * 0.01), sp(xp, valScale * (.01)),
-                   ep(xp, valScale * (.1)), vruleS(xp, valScale * .15), vruleE(xp, valScale * .85);
-               tf.transform(sp);
-               tf.transform(ep);
-               tf.transform(mp);
-               tf.transform(mps);
-               tf.transform(vruleS);
-               tf.transform(vruleE);
-               // Upper Ruler Beat Tick for major beats
-               dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::kBlackCColor));
-               dc->setLineWidth(1.0);
-               dc->drawLine(sp, ep);
-               dc->setLineWidth(1.0);
-               // On the lfo waveform bg major beat division
-               dc->setFrameColor(
-                   skin->getColor("lfo.waveform.majordivisions", VSTGUI::CColor(0xE0, 0x80, 0x00)));
-               // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
-               dc->drawLine(vruleS, vruleE);
-
-               char s[256];
-               sprintf(s, "%d", l + 1);
-
-               CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10, 10));
-               tf.transform(tp);
-               dc->setFontColor(skin->getColor("lfo.waveform.font", VSTGUI::kBlackCColor));
-               dc->setFont(lfoTypeFont);
-               dc->drawString(s, tp, VSTGUI::kLeftText, true);
-            }
-            else if (everyMeasure == 1)
-            {
-               CPoint sp(xp, valScale * (.06)), ep(xp, valScale * (.1));
-               tf.transform(sp);
-               tf.transform(ep);
-               dc->setLineWidth(0.5);
-               if (l % tsNum == 0)
-                  dc->setFrameColor(VSTGUI::kBlackCColor);
-               else
-                  // The small ticks for the ruler
-                  dc->setFrameColor(
-                      skin->getColor("lfo.waveform.rules", VSTGUI::CColor(0xB0, 0x60, 0x00)));
-               dc->drawLine(sp, ep);
-            }
-         }
       }
 
       dc->restoreGlobalState();
@@ -399,11 +420,11 @@ void CLFOGui::draw(CDrawContext* dc)
       edpath->forget();
    }
 
-   CColor cskugga = {0x5d, 0x5d, 0x5d, 0xff};
+   CColor cshadow = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cgray = {0x97, 0x98, 0x9a, 0xff};
    CColor cselected = skin->getColor( "lfo.type.selected.background", CColor( 0xfe, 0x98, 0x15, 0xff ) );
    // CColor blackColor (0, 0, 0, 0);
-   dc->setFrameColor(cskugga);
+   dc->setFrameColor(cshadow);
    dc->setFont(lfoTypeFont);
 
    rect_shapes = leftpanel;
