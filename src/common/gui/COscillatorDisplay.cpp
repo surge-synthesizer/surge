@@ -509,7 +509,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
                       {
                          char c[256];
                          strncpy( c, this->oscdata->wavetable_display_name, 256 );
-                         spawn_miniedit_text(c, 256);
+                         spawn_miniedit_text(c, 256, "Enter a custom wavetable display name:", "Wavetable Display Name");
                          strncpy( this->oscdata->wavetable_display_name, c, 256 );
                          invalid();
                       };
