@@ -6,6 +6,7 @@
 #include "LfoModulationSource.h"
 #include "UserDefaults.h"
 #include <chrono>
+#include "DebugHelpers.h"
 
 using namespace VSTGUI;
 using namespace std;
@@ -475,6 +476,8 @@ enum
 
 void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel)
 {
+   dc->setDrawMode(VSTGUI::kAntiAliasing);
+
    auto size = getViewSize();
 
    int w = size.getWidth() - splitpoint;
@@ -751,13 +754,19 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    ss_shift_left.inset(1, 1);
    ss_shift_left.bottom = ss_shift_left.top + 16;
 
-   dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff ) ) );
+   if( ss_shift_hover == 1 )
+      dc->setFillColor(skin->getColor( "lfo.stepseq.button.hover", VSTGUI::CColor( 0xAE, 0xAF, 0xBE, 0xff ) ) );
+   else
+      dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff ) ) );
    dc->drawRect(ss_shift_left, kDrawFilled);
    drawtri(ss_shift_left, dc, -1);
 
    ss_shift_right = ss_shift_left;
    ss_shift_right.offset(0, 16);
-   dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff )) );
+   if( ss_shift_hover == 2 )
+      dc->setFillColor(skin->getColor( "lfo.stepseq.button.hover", VSTGUI::CColor( 0xAE, 0xAF, 0xBE, 0xff ) ) );
+   else
+      dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff ) ) );
    dc->drawRect(ss_shift_right, kDrawFilled);
    drawtri(ss_shift_right, dc, 1);
 
@@ -798,6 +807,171 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          dc->drawPolygon( pl, kDrawFilled );
       }
    }
+
+   // OK now we have everything drawn we want to draw the LFO. This is similar to the LFO
+   // code above but with very different scaling in time since we need to match the steps no
+   // matter the rate
+
+   pdata tp[n_scene_params];
+   tp[lfodata->delay.param_id_in_scene].i = lfodata->delay.val.i;
+   tp[lfodata->attack.param_id_in_scene].i = lfodata->attack.val.i;
+   tp[lfodata->hold.param_id_in_scene].i = lfodata->hold.val.i;
+   tp[lfodata->decay.param_id_in_scene].i = lfodata->decay.val.i;
+   tp[lfodata->sustain.param_id_in_scene].i = lfodata->sustain.val.i;
+   tp[lfodata->release.param_id_in_scene].i = lfodata->release.val.i;
+   
+   tp[lfodata->magnitude.param_id_in_scene].i = lfodata->magnitude.val.i;
+   tp[lfodata->rate.param_id_in_scene].i = lfodata->rate.val.i;
+   tp[lfodata->shape.param_id_in_scene].i = lfodata->shape.val.i;
+   tp[lfodata->start_phase.param_id_in_scene].i = lfodata->start_phase.val.i;
+   tp[lfodata->deform.param_id_in_scene].i = lfodata->deform.val.i;
+   tp[lfodata->trigmode.param_id_in_scene].i = lm_keytrigger;
+
+
+   /*
+   ** First big difference - the total env time is basically 16 * the time of the rate
+   */
+   float freq = pow( 2.0, lfodata->rate.val.f ); // frequency in hz
+   float cyclesec = 1.0 / freq;
+   float totalSampleTime = cyclesec * n_stepseqsteps;
+   float susTime = 4.0 * cyclesec;
+   
+   LfoModulationSource* tlfo = new LfoModulationSource();
+   tlfo->assign(storage, lfodata, tp, 0, ss, true);
+   tlfo->attack();
+   CRect boxo(rect_steps);
+
+   int minSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
+   int totalSamples = std::max( (int)minSamples, (int)(totalSampleTime * samplerate / BLOCK_SIZE) );
+   float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
+   float cycleSamples = cyclesec * samplerate / BLOCK_SIZE;
+
+   
+   // OK so lets assume we want about 1000 pixels worth tops in
+   int averagingWindow = (int)(totalSamples/1000.0) + 1;
+
+#if LINUX
+   float valScale = 10000.0;
+#else
+   float valScale = 100.0;
+#endif
+   int susCountdown = -1;
+
+   CGraphicsPath *path = dc->createGraphicsPath();
+   CGraphicsPath *eupath = dc->createGraphicsPath();
+   CGraphicsPath *edpath = dc->createGraphicsPath();
+
+   float priorval = 0.f;
+   for (int i=0; i<totalSamples; i += averagingWindow )
+   {
+      float val = 0;
+      float eval = 0;
+      float minval = 1000000;
+      float maxval = -1000000;
+      float firstval;
+      float lastval;
+      for (int s = 0; s < averagingWindow; s++)
+      {
+         tlfo->process_block();
+         if( susCountdown < 0 && tlfo->env_state == lenv_stuck )
+         {
+            susCountdown = susTime * samplerate / BLOCK_SIZE;
+         }
+         else if( susCountdown == 0 && tlfo->env_state == lenv_stuck ) {
+            tlfo->release();
+         }
+         else if( susCountdown > 0 ) {
+            susCountdown --;
+         }
+         
+         val  += tlfo->output;
+         if( s == 0 ) firstval = tlfo->output;
+         if( s == averagingWindow - 1 ) lastval = tlfo->output;
+         minval = std::min(tlfo->output, minval);
+         maxval = std::max(tlfo->output, maxval);
+         eval += tlfo->env_val * lfodata->magnitude.val.f;
+      }
+      val = val / averagingWindow;
+      eval = eval / averagingWindow;
+      val  = ( ( - val + 1.0f ) * 0.5 ) * valScale;
+      float euval = ( ( - eval + 1.0f ) * 0.5 ) * valScale;
+      float edval = ( ( eval + 1.0f ) * 0.5  ) * valScale;
+      
+      float xc = valScale * i / ( cycleSamples * n_stepseqsteps);
+      if( i == 0 )
+      {
+         path->beginSubpath(xc, val );
+         eupath->beginSubpath(xc, euval);
+         if( ! lfodata->unipolar.val.b )
+            edpath->beginSubpath(xc, edval);
+         priorval = val;
+      }
+      else
+      {
+         if( maxval - minval > 0.2 )
+         {
+            minval  = ( ( - minval + 1.0f ) * 0.5 ) * valScale;
+            maxval  = ( ( - maxval + 1.0f ) * 0.5 ) * valScale;
+            // Windows is sensitive to out-of-order line draws in a way which causes spikes.
+            // Make sure we draw one closest to prior first. See #1438
+            float firstval = minval;
+            float secondval = maxval;
+            if( priorval - minval < maxval - priorval )
+            {
+               firstval = maxval;
+               secondval = minval;
+            }
+            path->addLine(xc - 0.1 * valScale / totalSamples, firstval );
+            path->addLine(xc + 0.1 * valScale / totalSamples, secondval );
+         }
+         else
+         {
+            path->addLine(xc, val );
+         }
+         priorval = val;
+         eupath->addLine(xc, euval);
+         edpath->addLine(xc, edval);
+      }
+   }
+   delete tlfo;
+
+   VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
+      .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
+      .translate(boxo.getTopLeft().x, boxo.getTopLeft().y );
+   //.translate(maindisp.getTopLeft().x, maindisp.getTopLeft().y );
+
+#if LINUX
+   auto xdisp = maindisp;
+   dc->getCurrentTransform().transform(xdisp);
+   VSTGUI::CGraphicsTransform tfpath = VSTGUI::CGraphicsTransform()
+      .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
+      .translate(boxo.getTopLeft().x, boxo.getTopLeft().y )
+      .translate(xdisp.getTopLeft().x, xdisp.getTopLeft().y );
+#else
+   auto tfpath = tf;
+#endif
+
+#if LINUX
+   dc->setLineWidth(40.0);
+#else
+   dc->setLineWidth(1.0);
+#endif
+
+   dc->setFrameColor( skin->getColor( "lfo.stepseq.envelope", shadowcol ) );
+   dc->drawGraphicsPath( eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+   dc->drawGraphicsPath( edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
+#if LINUX
+   dc->setLineWidth(50.0);
+#else
+   dc->setLineWidth(1.3);
+#endif
+   dc->setFrameColor( skin->getColor( "lfo.stepseq.wave", CColor( 0xDD, 0xDD, 0xFF) ) );
+   dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+   
+   path->forget();
+   eupath->forget();
+   edpath->forget();
 }
 
 
@@ -1007,25 +1181,28 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
 CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   int pss = ss_shift_hover;
+   ss_shift_hover = 0;
    if (rect_shapes.pointInside(where))
    {
       // getFrame()->setCursor( VSTGUI::kCursorHand );
    }
    else if (ss && lfodata->shape.val.i == ls_stepseq && (
-               rect_steps.pointInside(where) ||
-               rect_steps_retrig.pointInside(where) ||
                ss_shift_left.pointInside(where) ||
-               ss_shift_right.pointInside(where) ||
-               rect_ls.pointInside(where) ||
-               rect_le.pointInside(where)
+               ss_shift_right.pointInside(where)
                ))
    {
+      
+      ss_shift_hover = ss_shift_left.pointInside(where) ? 1 : 2;
       // getFrame()->setCursor( VSTGUI::kCursorHand );
    }
    else
    {
       // getFrame()->setCursor( VSTGUI::kCursorDefault );
    }
+   if( ss_shift_hover != pss )
+      invalid();
+   
    if (controlstate == cs_shape)
    {
       for (int i = 0; i < n_lfoshapes; i++)
