@@ -743,7 +743,39 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    if( controlstate == cs_linedrag )
    {
       dc->setFrameColor(skin->getColor( "lfo.stepseq.linedrag", VSTGUI::CColor( 0xdd, 0xdd, 0xff ) ) );
+      dc->setFillColor(skin->getColor( "lfo.stepseq.linedrag", VSTGUI::CColor( 0xdd, 0xdd, 0xff ) ) );
       dc->drawLine( rmStepStart, rmStepCurr );
+
+      CRect eStart( rmStepStart, VSTGUI::CPoint( 5, 5 ) );
+      eStart.offset( -2, -2 );
+      dc->drawEllipse( eStart, kDrawFilled );
+
+      // Draw an arrow. Thanks https://stackoverflow.com/questions/3010803/draw-arrow-on-line-algorithm
+      float dx = rmStepCurr.x - rmStepStart.x;
+      float dy = rmStepCurr.y - rmStepStart.y;
+      float dd = dx * dx + dy * dy;
+      if( dd > 0 )
+      {
+         float ds = sqrt( dd );
+         dx /= ds;
+         dy /= ds;
+         dx *= 6;
+         dy *= 6;
+
+         const double cosv = 0.866;
+         const double sinv = 0.500;
+         auto e1 = rmStepCurr;
+         auto e2 = rmStepCurr;
+         e1.offset( - ( dx * cosv + dy * -sinv ), - ( dx * sinv + dy * cosv  ) );
+         e2.offset( - ( dx * cosv + dy * sinv ), - ( dx * -sinv + dy * cosv ) );
+
+         std::vector<CPoint> pl;
+         pl.push_back( rmStepCurr );
+         pl.push_back( e1 );
+         pl.push_back( e2 );
+
+         dc->drawPolygon( pl, kDrawFilled );
+      }
    }
 }
 
@@ -900,6 +932,46 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
    if( controlstate == cs_linedrag )
    {
+      int startStep = -1;
+      int endStep = -1;
+      for( int i=0; i<16; ++i )
+      {
+         if( steprect[i].pointInside(rmStepStart) ) startStep = i;
+         if( steprect[i].pointInside(rmStepCurr ) ) endStep = i;
+      };
+      int s = startStep, e = endStep;
+      
+      if( s >= 0 && e >= 0 && s != e ) // s == e is the abort gesture
+      {
+         float fs = (float)(steprect[s].bottom - rmStepStart.y) / steprect[s].getHeight();
+         float fe = (float)(steprect[e].bottom - rmStepCurr.y) / steprect[e].getHeight();
+
+         if( e < s )
+         {
+            std::swap( e, s );
+            std::swap( fe, fs );
+         }
+         
+         if (lfodata->unipolar.val.b) {
+            fs = limit_range(fs, 0.f, 1.f);
+            fe = limit_range(fe, 0.f, 1.f);
+         }
+         else {
+            fs = limit_range(fs * 2.f - 1.f, -1.f, 1.f);
+            fe = limit_range(fe * 2.f - 1.f, -1.f, 1.f);
+         }
+
+         ss->steps[s] = fs;
+         if( s != e )
+         {
+            float ds = ( fs - fe ) / ( s - e );
+            for( int q = s; q <= e; q ++ )
+            {
+               ss->steps[q] = ss->steps[s] + ( q - s ) * ds;
+            }
+         }
+         invalid();
+      }
    }
    
    if (controlstate)
@@ -1038,47 +1110,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    else if( controlstate == cs_linedrag )
    {
       rmStepCurr = where;
-
-      int startStep = -1;
-      int endStep = -1;
-      for( int i=0; i<16; ++i )
-      {
-         if( steprect[i].pointInside(rmStepStart) ) startStep = i;
-         if( steprect[i].pointInside(rmStepCurr ) ) endStep = i;
-      };
-      int s = startStep, e = endStep;
-
-      if( s >= 0 && e >= 0 )
-      {
-         float fs = (float)(steprect[s].bottom - rmStepStart.y) / steprect[s].getHeight();
-         float fe = (float)(steprect[e].bottom - rmStepCurr.y) / steprect[e].getHeight();
-
-         if( e < s )
-         {
-            std::swap( e, s );
-            std::swap( fe, fs );
-         }
-         
-         if (lfodata->unipolar.val.b) {
-            fs = limit_range(fs, 0.f, 1.f);
-            fe = limit_range(fe, 0.f, 1.f);
-         }
-         else {
-            fs = limit_range(fs * 2.f - 1.f, -1.f, 1.f);
-            fe = limit_range(fe * 2.f - 1.f, -1.f, 1.f);
-         }
-
-         ss->steps[s] = fs;
-         if( s != e )
-         {
-            float ds = ( fs - fe ) / ( s - e );
-            for( int q = s; q <= e; q ++ )
-            {
-               ss->steps[q] = ss->steps[s] + ( q - s ) * ds;
-            }
-         }
-         invalid();
-      }
+      invalid();
    }
    return kMouseEventHandled;
 }
