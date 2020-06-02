@@ -28,12 +28,12 @@ void CLFOGui::drawtri(CRect r, CDrawContext* dc, int orientation)
    {
       std::swap( startx, endx );
    }
-   
+
    std::vector<CPoint> pl;
    pl.push_back( CPoint( startx, starty ) );
    pl.push_back( CPoint( endx, midy ) );
    pl.push_back( CPoint( startx, endy ) );
-   dc->setFillColor( skin->getColor( "lfo.stepseq.button.arrow.fill", kWhiteCColor ) ); 
+   dc->setFillColor( skin->getColor( "lfo.stepseq.button.arrow.fill", kWhiteCColor ) );
    dc->drawPolygon( pl, kDrawFilled );
 }
 
@@ -123,7 +123,7 @@ void CLFOGui::draw(CDrawContext* dc)
          boxI.left += lpsize + 4 + 15;
          lfoBgGlyph->draw( dc, boxI, CPoint( 0, 0 ), 0xff );
       }
-      
+
       int minSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
       int totalSamples = std::max( (int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE) );
       float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
@@ -137,7 +137,7 @@ void CLFOGui::draw(CDrawContext* dc)
       float valScale = 100.0;
 #endif
       int susCountdown = -1;
-      
+
       float priorval = 0.f;
       for (int i=0; i<totalSamples; i += averagingWindow )
       {
@@ -161,7 +161,7 @@ void CLFOGui::draw(CDrawContext* dc)
             {
                 susCountdown --;
             }
-            
+
             val  += tlfo->output;
             if( s == 0 ) firstval = tlfo->output;
             if( s == averagingWindow - 1 ) lastval = tlfo->output;
@@ -174,7 +174,7 @@ void CLFOGui::draw(CDrawContext* dc)
          val  = ( ( - val + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
          float euval = ( ( - eval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
          float edval = ( ( eval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
-      
+
          float xc = valScale * i / totalSamples;
 
          if( i == 0 )
@@ -232,8 +232,8 @@ void CLFOGui::draw(CDrawContext* dc)
 
       dc->saveGlobalState();
 
-  
-      // OK so draw the rules
+
+      // OK so draw the rulers
       CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
       CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
       CPoint bot0(0, valScale * 0.1), bot1(valScale,valScale * 0.1);
@@ -249,7 +249,7 @@ void CLFOGui::draw(CDrawContext* dc)
       // LFO bg center line
       dc->setFrameColor(skin->getColor( "lfo.waveform.centerline", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
       dc->drawLine(mid0, mid1);
-      
+
       dc->setLineWidth(1.0);
       // Lfo ruler bounds AKA the upper and lower horizontal lines that define the bounds that the waveform draws in
       dc->setFrameColor(skin->getColor( "lfo.waveform.bounds", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
@@ -300,7 +300,7 @@ void CLFOGui::draw(CDrawContext* dc)
                CPoint vruleS(xp, valScale * .15), vruleE(xp, valScale * .85);
                tf.transform(vruleS);
                tf.transform(vruleE);
-               // major beat divisions on the lfo waveform bg 
+               // major beat divisions on the lfo waveform bg
                dc->setFrameColor(
                    skin->getColor("lfo.waveform.majordivisions", VSTGUI::CColor(0xE0, 0x80, 0x00)));
                // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
@@ -338,7 +338,7 @@ void CLFOGui::draw(CDrawContext* dc)
                tf.transform(mp);
                tf.transform(mps);
                // ticks for major beats
-               dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::kBlackCColor));
+               dc->setFrameColor(skin->getColor("lfo.waveform.rulers", VSTGUI::kBlackCColor));
                dc->setLineWidth(1.0);
                dc->drawLine(sp, ep);
                dc->setLineWidth(1.0);
@@ -363,7 +363,7 @@ void CLFOGui::draw(CDrawContext* dc)
                else
                   // small ticks for the ruler
                   dc->setFrameColor(
-                      skin->getColor("lfo.waveform.rules", VSTGUI::CColor(0xB0, 0x60, 0x00)));
+                      skin->getColor("lfo.waveform.rulers", VSTGUI::CColor(0xB0, 0x60, 0x00)));
                dc->drawLine(sp, ep);
             }
          }
@@ -410,7 +410,7 @@ void CLFOGui::draw(CDrawContext* dc)
          tf.transform(ep);
          dc->setLineWidth(1.0);
          // lower ruler time ticks
-         dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::kBlackCColor));
+         dc->setFrameColor(skin->getColor("lfo.waveform.rulers", VSTGUI::kBlackCColor));
          dc->drawLine(sp, ep);
       }
 
@@ -483,7 +483,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    auto ssbg = skin->getColor( "lfo.stepseq.background", CColor( 0xFF, 0x90, 0x00 ) );
    dc->setFillColor( ssbg );
    dc->drawRect( CRect( 0, 0, w, h ), kDrawFilled );
-   
+
 
    // This spec is legacy code from the bitmap days but for now keep it here so we can make sure our default
    // colors and color names are unch in the port.
@@ -494,7 +494,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
                  return this->skin->getColor( n, CColor( r, g, b ) );
               };
 
-   
+
    auto cgray = skd( "lfo.stepseq.cgray", 0x9a9897ff );
    auto stepMarker = skd( "lfo.stepseq.stepmarker", 0x633412FF);
    auto disStepMarker = skd( "lfo.stepseq.disabledstepmarker", 0xffccbbff);
@@ -506,13 +506,13 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    auto noLoopHi = skd( "lfo.stepseq.noloophi", 0xdfdfdfff );
    auto noLoopLo = skd( "lfo.stepseq.nolooplo", 0xcfcfcfff );
    auto grabMarker = skd( "lfo.stepseq.grabmarker", 0x633412ff );
-   auto grabMarkerHi = skd( "lfo.stepseq.grabmarkerhi", 0x835432ff ); 
+   auto grabMarkerHi = skd( "lfo.stepseq.grabmarkerhi", 0x835432ff );
 
    auto fillr = [dc](CRect r,CColor c) {
                    dc->setFillColor(c);
                    dc->drawRect(r,kDrawFilled);
                 };
-   
+
    // set my coordinate system so that 0,0 is at splitpoint
    auto shiftTranslate = CGraphicsTransform().translate( size.left, size.top ).translate( splitpoint, 0 );
    {
@@ -520,19 +520,19 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       for (int i = 0; i < n_stepseqsteps; i++)
       {
          CRect rstep( 1.f * i * scale, 1.f * margin, 1.f * ( i + 1 ) * scale - 1, 1.f * h - margin2 + 1 ), gstep;
-         
-         
+
+
          // Draw an outline in the shadow color
          CRect outline(rstep);
          outline.inset( -1.f, -1.f );
          fillr( outline, shadowcol );
-         
+
          // Now draw the actual step
          int sp = std::min( ss->loop_start, ss->loop_end );
          int ep = std::max( ss->loop_start, ss->loop_end );
-         
+
          CColor stepcolor, valuecolor, knobcolor;
-         
+
          if ((i >= sp) && (i <= ep))
          {
             stepcolor = (i & 3) ? loopRegionHi : loopRegionLo;
@@ -545,7 +545,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             knobcolor = disStepMarker;
             valuecolor = disStepMarker;
          }
-                  
+
          // Code to put in place an editor for the envelope retrigger
          if( edit_trigmask )
          {
@@ -559,7 +559,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             {
                gatebgcolor = grabMarkerHi;
             }
-   
+
             if (ss->trigmask & (UINT64_C(1) << i))
             {
                fillr(gstep, gatecolor);
@@ -583,16 +583,16 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             {
                fillr(gstep, gatebgcolor );
             }
-            
+
          }
-         
+
          fillr(rstep, stepcolor);
          steprect[i] = rstep;
 
          // draw the midline when not in unipolar mode
          CRect mid(rstep);
          int p;
-         
+
          if (!lfodata->unipolar.val.b)
          {
             p = (mid.bottom + mid.top) * 0.5;
@@ -601,7 +601,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
             fillr(mid, shadowcol);
          }
-         
+
          // Now draw the value
          CRect v(rstep);
          int p1, p2;
@@ -617,7 +617,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             v.top = min(p1, p2);
             v.bottom = max(p1, p2);
          }
-         
+
          fillr( v, valuecolor );
       }
 
@@ -626,12 +626,12 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       rect_ls.bottom += margin2 - 1.f;
       rect_ls.top = rect_ls.bottom - margin2 + 2.f;
       rect_ls.right = rect_ls.left + margin2;
-      
+
       rect_le = rect_ls;
 
       rect_ls.left  += scale * ss->loop_start - 1.f;
       rect_ls.right += rect_ls.left;
-      
+
       rect_le.left += scale * (ss->loop_end + 1.f) - margin2;
       rect_le.right = rect_le.left + margin2;
 
@@ -659,7 +659,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
          int dragX, dragY;
          int dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
-      
+
          auto sr = steprect[draggedStep];
 
          // Draw to the right in the second half of the seq table
@@ -700,7 +700,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
          labelR.left += 1;
          labelR.top -= (keyModMult > 0 ? 9 : 0);
-         
+
          char txt[256];
          sprintf(txt, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
 
@@ -718,7 +718,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
       }
    }
-      
+
    // These data structures are used for mouse hit detection so have to translate them back to screen
    for( auto i=0; i<n_stepseqsteps; ++i )
    {
@@ -731,13 +731,13 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
    rect_steps = steprect[0];
    rect_steps.right = steprect[n_stepseqsteps - 1].right;
-   
+
    rect_steps_retrig = gaterect[0];
    rect_steps_retrig.right = gaterect[n_stepseqsteps - 1].right;
 
 
 
-      
+
    CPoint sp(0, 0);
    CRect sr(size.left + splitpoint, size.top, size.right, size.bottom);
 
@@ -944,7 +944,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
                   on = UINT64_C(1) << i;
                }
             }
-            
+
             ss->trigmask = (ss->trigmask & ~off) | on;
             invalid();
          }
@@ -961,7 +961,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
          if( steprect[i].pointInside(rmStepCurr ) ) endStep = i;
       };
       int s = startStep, e = endStep;
-      
+
       if( s >= 0 && e >= 0 && s != e ) // s == e is the abort gesture
       {
          float fs = (float)(steprect[s].bottom - rmStepStart.y) / steprect[s].getHeight();
@@ -972,7 +972,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
             std::swap( e, s );
             std::swap( fe, fs );
          }
-         
+
          if (lfodata->unipolar.val.b) {
             fs = limit_range(fs, 0.f, 1.f);
             fe = limit_range(fe, 0.f, 1.f);
@@ -994,13 +994,13 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
          invalid();
       }
    }
-   
+
    if (controlstate)
    {
       // onMouseMoved(where,buttons);
       controlstate = cs_null;
       if( lfodata->shape.val.i == ls_stepseq )
-         invalid(); 
+         invalid();
    }
    return kMouseEventHandled;
 }
@@ -1044,7 +1044,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                   sge->refresh_mod();
                   sge->forceautomationchangefor(&(lfodata->shape));
                }
-               
+
             }
          }
       }
@@ -1080,21 +1080,21 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
             else {
                f = limit_range(f * 2.f - 1.f, -1.f, 1.f);
             }
-            
+
             // find out if a microtuning is loaded and store the scale length for Alt-drag
             // quantization to scale degrees
             keyModMult = 0;
             int quantStep = 12;
-            
+
             if (!storage->isStandardTuning && storage->currentScale.count > 1)
                quantStep = storage->currentScale.count;
 
             if (buttons & kShift)
             {
                keyModMult = quantStep; // only shift pressed
-               
+
                if (buttons & kAlt)
-               {  
+               {
                   keyModMult = quantStep * 2; // shift+alt pressed
                   f *= quantStep * 2;
                   f = floor(f);
@@ -1140,7 +1140,7 @@ void CLFOGui::invalidateIfIdIsInRange(int id)
 {
    bool inRange = false;
    if( ! lfodata ) return;
-   
+
    auto *c = &lfodata->rate;
    auto *e = &lfodata->release;
    while( c <= e && ! inRange )
@@ -1200,7 +1200,7 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
    {
       static float accumDist = 0;
       accumDist += distance;
-      
+
       auto jog = [this](int d) {
                     auto ps = this->lfodata->shape.val.i;
                     auto ns = ps + d;

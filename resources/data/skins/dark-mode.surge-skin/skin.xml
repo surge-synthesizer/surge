@@ -21,7 +21,7 @@
 
     <color id="lfo.waveform.fill" value="#242424"/>
     <color id="lfo.waveform.font" value="$lightgray"/>
-    <color id="lfo.waveform.rules" value="$lightgray"/>
+    <color id="lfo.waveform.rulers" value="$lightgray"/>
     <color id="lfo.waveform.bounds" value="$darkgray"/>
     <color id="lfo.waveform.centerline" value="$black"/>
     <color id="lfo.waveform.envelope" value="$darkgray"/>
