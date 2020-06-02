@@ -98,6 +98,7 @@ protected:
 
    bool draggedIntoTrigTray[16];
    int mouseDownTrigTray = -1;
+   VSTGUI::CPoint rmStepStart, rmStepCurr;
    
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };

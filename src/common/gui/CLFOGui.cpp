@@ -449,7 +449,7 @@ enum
    cs_trigtray_toggle,
    cs_loopstart,
    cs_loopend,
-
+   cs_linedrag,
 };
 
 void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel)
@@ -739,6 +739,12 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff )) );
    dc->drawRect(ss_shift_right, kDrawFilled);
    drawtri(ss_shift_right, dc, 1);
+
+   if( controlstate == cs_linedrag )
+   {
+      dc->setFrameColor(skin->getColor( "lfo.stepseq.linedrag", VSTGUI::CColor( 0xdd, 0xdd, 0xff ) ) );
+      dc->drawLine( rmStepStart, rmStepCurr );
+   }
 }
 
 
@@ -750,7 +756,15 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
       {
          if (rect_steps.pointInside(where))
          {
-            controlstate = cs_steps;
+            if( buttons.isRightButton() )
+            {
+               rmStepStart = where;
+               controlstate = cs_linedrag;
+            }
+            else
+            {
+               controlstate = cs_steps;
+            }
             onMouseMoved(where, buttons);
             return kMouseEventHandled;
          }
@@ -883,6 +897,10 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
          }
       }
    }
+
+   if( controlstate == cs_linedrag )
+   {
+   }
    
    if (controlstate)
    {
@@ -960,7 +978,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 
-            if (buttons & (kControl | kRButton)) {
+            if (buttons & kControl) {
                f = 0;
             }
             else if (lfodata->unipolar.val.b) {
@@ -1016,6 +1034,51 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
       }
       if( change )
          invalid();
+   }
+   else if( controlstate == cs_linedrag )
+   {
+      rmStepCurr = where;
+
+      int startStep = -1;
+      int endStep = -1;
+      for( int i=0; i<16; ++i )
+      {
+         if( steprect[i].pointInside(rmStepStart) ) startStep = i;
+         if( steprect[i].pointInside(rmStepCurr ) ) endStep = i;
+      };
+      int s = startStep, e = endStep;
+
+      if( s >= 0 && e >= 0 )
+      {
+         float fs = (float)(steprect[s].bottom - rmStepStart.y) / steprect[s].getHeight();
+         float fe = (float)(steprect[e].bottom - rmStepCurr.y) / steprect[e].getHeight();
+
+         if( e < s )
+         {
+            std::swap( e, s );
+            std::swap( fe, fs );
+         }
+         
+         if (lfodata->unipolar.val.b) {
+            fs = limit_range(fs, 0.f, 1.f);
+            fe = limit_range(fe, 0.f, 1.f);
+         }
+         else {
+            fs = limit_range(fs * 2.f - 1.f, -1.f, 1.f);
+            fe = limit_range(fe * 2.f - 1.f, -1.f, 1.f);
+         }
+
+         ss->steps[s] = fs;
+         if( s != e )
+         {
+            float ds = ( fs - fe ) / ( s - e );
+            for( int q = s; q <= e; q ++ )
+            {
+               ss->steps[q] = ss->steps[s] + ( q - s ) * ds;
+            }
+         }
+         invalid();
+      }
    }
    return kMouseEventHandled;
 }
