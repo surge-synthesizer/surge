@@ -1313,77 +1313,44 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
       }
       else
       {
-         if (where.x < rect_steps.left || where.x > rect_steps.right)
-            rmStepCurr.y = where.y;
-         else
-            rmStepCurr.x = where.x;
-
-         if (where.y > rect_steps.bottom || where.y < rect_steps.top)
-            rmStepCurr.x = where.x;
-         else
-            rmStepCurr.y = where.y;
-
-         if (where.x < rect_steps.left && where.y < rect_steps.top)
+         // this is supposed to be better but doesn't quite work yet!
+         float rx, ry;
+         
+         if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                              rect_steps.left, rect_steps.top, rect_steps.right, rect_steps.top,
+                                              &rx, &ry))
          {
-            rmStepCurr.x = rect_steps.left;
-            rmStepCurr.y = rect_steps.top;
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
          }
-
-         if (where.x < rect_steps.left && where.y > rect_steps.bottom)
+         else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                                   rect_steps.left, rect_steps.top, rect_steps.left, rect_steps.bottom,
+                                                   &rx, &ry))
          {
-            rmStepCurr.x = rect_steps.left;
-            rmStepCurr.y = rect_steps.bottom;
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
          }
-
-         if (where.x > rect_steps.right && where.y < rect_steps.top)
+         else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                                   rect_steps.right, rect_steps.top, rect_steps.right, rect_steps.bottom,
+                                                   &rx, &ry))
          {
-            rmStepCurr.x = rect_steps.right;
-            rmStepCurr.y = rect_steps.top;
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
          }
-
-         if (where.x > rect_steps.right && where.y > rect_steps.bottom)
+         else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                                   rect_steps.left, rect_steps.bottom, rect_steps.right, rect_steps.bottom,
+                                                   &rx, &ry))
          {
-            rmStepCurr.x = rect_steps.right;
-            rmStepCurr.y = rect_steps.bottom;
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
          }
+         else if (rect_steps.pointInside(where))
+            rmStepCurr = where;
       }
-
-      // this is supposed to be better but doesn't quite work yet!
-      /*float rx, ry;
-
-      if (Surge::UI::get_line_intersection(rmStepStart.x, where.x, rmStepStart.y, where.y,
-                                           rect_steps.top, rect_steps.left, rect_steps.top, rect_steps.right,
-                                           &rx, &ry))
-      {
-         rmStepCurr.x = rx;
-         rmStepCurr.y = ry;
-      }
-      else if (Surge::UI::get_line_intersection(rmStepStart.x, where.x, rmStepStart.y, where.y,
-                                                rect_steps.top, rect_steps.left, rect_steps.bottom, rect_steps.left,
-                                                &rx, &ry))
-      {
-         rmStepCurr.x = rx;
-         rmStepCurr.y = ry;
-      }
-      else if (Surge::UI::get_line_intersection(rmStepStart.x, where.x, rmStepStart.y, where.y,
-                                                rect_steps.bottom, rect_steps.left, rect_steps.bottom, rect_steps.right,
-                                                &rx, &ry))
-      {
-         rmStepCurr.x = rx;
-         rmStepCurr.y = ry;
-      }
-      else if (Surge::UI::get_line_intersection(rmStepStart.x, where.x, rmStepStart.y, where.y,
-                                                rect_steps.bottom, rect_steps.right, rect_steps.top, rect_steps.right,
-                                                &rx, &ry))
-      {
-         rmStepCurr.x = rx;
-         rmStepCurr.y = ry;
-      }
-      else if (rect_steps.pointInside(where))
-         rmStepCurr = where;*/
-
+      
       invalid();
    }
+      
    return kMouseEventHandled;
 }
 
