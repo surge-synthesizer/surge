@@ -8,6 +8,7 @@
 #include "SurgeStorage.h" // for TINYXML macro
 #include "PopupEditorSpawner.h"
 #include "ImportFilesystem.h"
+#include "guihelpers.h"
 
 #include <iostream>
 #include <iomanip>
@@ -627,16 +628,21 @@ void CFxMenu::populate()
     pasteItem->setActions(paste, nullptr);
     this->addEntry(pasteItem);
 
+    this->addSeparator();
+
     if( fx->type.val.i != fxt_off )
     {
-       auto saveItem = new CCommandMenuItem(CCommandMenuItem::Desc("Save"));
+       auto saveItem = new CCommandMenuItem(
+           CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save FX Preset")));
        saveItem->setActions([this](CCommandMenuItem *item) {
                                this->saveFX();
                             });
        this->addEntry(saveItem);
     }
+
     
-    auto rescanItem = new CCommandMenuItem(CCommandMenuItem::Desc("Rescan FX"));
+    auto rescanItem = new CCommandMenuItem(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh FX Preset List")));
     rescanItem->setActions([this](CCommandMenuItem *item) {
                               scanForUserPresets = true;
                               auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
@@ -740,7 +746,7 @@ void CFxMenu::saveFX()
    // Rough implementation
    char fxName[256];
    fxName[0] = 0;
-   spawn_miniedit_text(fxName, 256, "Enter name for user setting", "Surge FX" );
+   spawn_miniedit_text(fxName, 256, "Enter a name for the FX preset:", "Save FX Preset" );
 
    if( strlen( fxName ) == 0 )
    {
@@ -775,7 +781,7 @@ void CFxMenu::saveFX()
    std::ofstream pfile( fn, std::ios::out );
    if( ! pfile.is_open() )
    {
-      Surge::UserInteractions::promptError( std::string( "Unable to open FX file '" ) + fn + "' for writing",
+      Surge::UserInteractions::promptError( std::string( "Unable to open FX preset file '" ) + fn + "' for writing!",
                                             "Surge IO Error" );
       return;
    }

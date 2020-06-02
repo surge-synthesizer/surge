@@ -2534,7 +2534,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             eid++;
 
             addCallbackMenu(contextMenu, "Rename", [this, control, ccid]() {
-                                                      spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid], 16);
+                                                      spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid], 16, "Enter a new name for macro controller:", "Rename Macro");
                                                       ((CModulationSourceButton*)control)
                                                          ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
                                                       control->setDirty();
@@ -4217,7 +4217,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
        // FIXME! This won't work on linux
        char c[256];
        snprintf(c, 256, "%d", synth->mpePitchBendRange);
-       spawn_miniedit_text(c, 16);
+       spawn_miniedit_text(c, 16, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range");
        int newVal = ::atoi(c);
        this->synth->mpePitchBendRange = newVal;
     });
@@ -4229,7 +4229,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
        // FIXME! This won't work on linux
        char c[256];
        snprintf(c, 256, "%d", synth->mpePitchBendRange);
-       spawn_miniedit_text(c, 16);
+       spawn_miniedit_text(c, 16, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range");
        int newVal = ::atoi(c);
        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
        this->synth->mpePitchBendRange = newVal;
@@ -4354,12 +4354,18 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
-    addCallbackMenu( tuningSubMenu, Surge::UI::toOSCaseForMenu("Remap A4 (MIDI note 69) directly to..."),
-                     [this]()
+    int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
+    string middle_A = "A" + to_string(oct);
+    
+    addCallbackMenu( tuningSubMenu, Surge::UI::toOSCaseForMenu("Remap " + middle_A + " (MIDI note 69) directly to..."),
+                     [this, middle_A]()
                         {
+                           char ma[256];
+                           sprintf(ma, "Remap %s Frequency", middle_A.c_str());
+
                            char c[256];
                            snprintf(c, 256, "440.0");
-                           spawn_miniedit_text(c, 16);
+                           spawn_miniedit_text(c, 16, "Remap MIDI note 69 frequency to: ", ma);
                            float freq = ::atof(c);
                            auto kb = Tunings::tuneA69To(freq);
                            if( ! this->synth->storage.remapToKeyboard(kb) )
@@ -4468,7 +4474,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
             // FIXME! This won't work on linux
             char c[256];
             snprintf(c, 256, "%d", this->zoomFactor);
-            spawn_miniedit_text(c, 16);
+            spawn_miniedit_text(c, 16, "Enter a default zoom level value:", "Set Default Zoom Level");
             int newVal = ::atoi(c);
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
             this->setZoomFactor(newVal);
