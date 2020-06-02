@@ -181,10 +181,10 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
              p += FMdepth.v * master_osc[k];
 
           // Unlike ::sin and ::cos we are limited in accurate range
-          while( p > M_PI )
-             p -= 2.0 * M_PI;
-          while( p < -M_PI )
-             p += 2.0 * M_PI;
+          if( p < -M_PI || p > M_PI )
+          {
+             p = std::fmod( p, M_PI );
+          }
           
           float out_local = valueFromSinAndCos(Surge::DSP::fastsin(p), Surge::DSP::fastcos(p));
 
