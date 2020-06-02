@@ -91,17 +91,17 @@ run_builds()
 {
     if [ ! -z "$option_vst2" ]; then
         run_cmake_if
-        run_build "Surge.vst2"
+        run_build "Surge-VST2-Packaged"
     fi
 
     if [ ! -z "$option_vst3" ]; then
         run_cmake_if
-        run_build "Surge.vst3"
+        run_build "Surge-VST3-Packaged"
     fi
 
     if [ ! -z "$option_lv2" ]; then
         run_cmake_if
-        run_build "Surge.lv2"
+        run_build "Surge-LV2-Packaged"
     fi
 
     if [ ! -z "$option_headless" ]; then
