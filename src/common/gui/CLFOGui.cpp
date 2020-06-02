@@ -935,24 +935,19 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    }
    delete tlfo;
 
+   auto q = boxo;
+#if LINUX   
+   dc->getCurrentTransform().transform(q);
+#endif
+   
    VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
       .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
-      .translate(boxo.getTopLeft().x, boxo.getTopLeft().y );
-   //.translate(maindisp.getTopLeft().x, maindisp.getTopLeft().y );
+      .translate(q.getTopLeft().x, q.getTopLeft().y );
 
-#if LINUX
-   auto xdisp = maindisp;
-   dc->getCurrentTransform().transform(xdisp);
-   VSTGUI::CGraphicsTransform tfpath = VSTGUI::CGraphicsTransform()
-      .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
-      .translate(boxo.getTopLeft().x, boxo.getTopLeft().y )
-      .translate(xdisp.getTopLeft().x, xdisp.getTopLeft().y );
-#else
    auto tfpath = tf;
-#endif
-
+   
 #if LINUX
-   dc->setLineWidth(40.0);
+   dc->setLineWidth(50.0);
 #else
    dc->setLineWidth(1.0);
 #endif
@@ -962,7 +957,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    dc->drawGraphicsPath( edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
 #if LINUX
-   dc->setLineWidth(50.0);
+   dc->setLineWidth(60.0);
 #else
    dc->setLineWidth(1.3);
 #endif
