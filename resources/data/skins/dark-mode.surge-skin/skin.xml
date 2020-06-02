@@ -47,8 +47,12 @@
 
     <color id="lfo.stepseq.button.border" value="$buttonbg"/>
     <color id="lfo.stepseq.button.fill" value="$darkergray"/>
+    <color id="lfo.stepseq.button.hover" value="$darkgray"/>
     <color id="lfo.stepseq.button.arrow.fill" value="$lightgray"/>
 
+    <color id="lfo.stepseq.envelope" value="$lightgray"/>
+    <colod id="lfo.stepseq.wave" value="#99EEFF"/>
+    
     <color id="mpetunstatus.title" value="$lightgray"/>
 
     <color id="savedialog.background" value="#303030"/>
