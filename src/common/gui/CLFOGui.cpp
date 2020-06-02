@@ -232,125 +232,7 @@ void CLFOGui::draw(CDrawContext* dc)
 
       dc->saveGlobalState();
 
-      // find time delta
-      int maxNumLabels = 5;
-      std::vector<float> timeDeltas = { 0.5, 1.0, 2.5, 5.0, 10.0 };
-      auto currDelta = timeDeltas.begin();
-      while( currDelta != timeDeltas.end() && ( drawnTime / *currDelta ) > maxNumLabels )
-      {
-          currDelta ++;
-      }
-      float delta = timeDeltas.back();
-      if( currDelta != timeDeltas.end() )
-          delta = *currDelta;
-
-      int nLabels = (int)(drawnTime / delta) + 1;
-      float dx = delta / drawnTime * valScale;
-
-      for( int l=0; l<nLabels; ++l )
-      {
-          float xp = dx * l;
-          float yp = valScale * 0.9;
-          float typ = yp;
-#if LINUX
-          typ = valScale * 0.95;
-#endif 
-          CRect tp(CPoint(xp + 1,typ), CPoint(10,10));
-          tf.transform(tp);
-          dc->setFontColor(skin->getColor( "lfo.waveform.font", VSTGUI::kBlackCColor ) );
-          dc->setFont(lfoTypeFont);
-          char txt[256];
-          float tv = delta * l;
-          if( fabs(roundf(tv) - tv) < 0.05 )
-              snprintf(txt, 256, "%d s", (int)round(delta * l) );
-          else
-              snprintf(txt, 256, "%.1f s", delta * l );
-          dc->drawString(txt, tp, VSTGUI::kLeftText, true );
-
-          CPoint sp(xp, valScale * 0.95), ep(xp, valScale * 0.9 );
-          tf.transform(sp);
-          tf.transform(ep);
-          dc->setLineWidth(1.0);
-          // Lower ruler time ticks
-          dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::kBlackCColor ) );
-          dc->drawLine(sp,ep);
-      }
-
-      
-      if( drawBeats )
-      {
-         auto bpm = storage->temposyncratio * 120;
-
-         auto denFactor = 4.0 / tsDen;
-         auto beatsPerSecond = bpm / 60.0;
-         auto secondsPerBeat = 1 / beatsPerSecond;
-         auto deltaBeat = secondsPerBeat / drawnTime * valScale * denFactor;
-
-         int nBeats = drawnTime * beatsPerSecond / denFactor;
-
-         auto measureLen = deltaBeat * tsNum;
-         int everyMeasure = 1;
-         while( measureLen < 5 ) // a hand selected parameter by playing around with it, tbh
-         {
-            measureLen *= 2;
-            everyMeasure *= 2;
-         }
-         
-         for( auto l=0; l<nBeats; ++l )
-         {
-            auto xp = deltaBeat * l;
-            if( l % ( tsNum * everyMeasure ) == 0 )
-            {
-               auto soff = 0.0;
-               if( l > 10 ) soff = 0.0;
-               CPoint mp( xp + deltaBeat * ( tsNum - 0.5 ), valScale * 0.01 ),
-                  mps( xp +  deltaBeat * soff, valScale * 0.01 ),
-                  sp(xp, valScale * (.01)),
-                  ep(xp, valScale * (.1) ),
-                  vruleS(xp, valScale * .15 ),
-                  vruleE(xp, valScale * .85 );
-               tf.transform(sp);
-               tf.transform(ep);
-               tf.transform(mp);
-               tf.transform(mps);
-               tf.transform(vruleS);
-               tf.transform(vruleE);
-               // Upper Ruler Beat Tick for major beats
-               dc->setFrameColor(skin->getColor( "lfo.waveform.rules", VSTGUI::kBlackCColor ) );
-               dc->setLineWidth(1.0);
-               dc->drawLine(sp,ep);
-               dc->setLineWidth(1.0);
-               // On the lfo waveform bg major beat division
-               dc->setFrameColor(skin->getColor( "lfo.waveform.majordivisions", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
-               // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
-               dc->drawLine(vruleS, vruleE );
-
-               char s[256];
-               sprintf(s, "%d", l+1 );
-               
-               CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10,10));
-               tf.transform(tp);
-               dc->setFontColor(skin->getColor( "lfo.waveform.font", VSTGUI::kBlackCColor ) );
-               dc->setFont(lfoTypeFont);
-               dc->drawString(s, tp, VSTGUI::kLeftText, true );
-            }
-            else if( everyMeasure == 1 )
-            {
-               CPoint sp(xp, valScale * (.06)), ep(xp, valScale * (.1) );
-               tf.transform(sp);
-               tf.transform(ep);
-               dc->setLineWidth(0.5);
-               if( l % tsNum == 0 )
-                  dc->setFrameColor(VSTGUI::kBlackCColor );
-               else
-                  // The small ticks for the ruler
-                  dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::CColor(0xB0, 0x60, 0x00 ) ) );
-               dc->drawLine(sp,ep);
-            }
-         }
-         
-      }
-   
+  
       // OK so draw the rules
       CPoint mid0(0, valScale/2.f), mid1(valScale,valScale/2.f);
       CPoint top0(0, valScale * 0.9), top1(valScale,valScale * 0.9);
@@ -394,7 +276,122 @@ void CLFOGui::draw(CDrawContext* dc)
       dc->setFrameColor(skin->getColor("lfo.waveform.wave", VSTGUI::CColor( 0x00, 0x00, 0x00, 0xFF )));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
+      // find time delta
+      int maxNumLabels = 5;
+      std::vector<float> timeDeltas = {0.5, 1.0, 2.5, 5.0, 10.0};
+      auto currDelta = timeDeltas.begin();
+      while (currDelta != timeDeltas.end() && (drawnTime / *currDelta) > maxNumLabels)
+      {
+         currDelta++;
+      }
+      float delta = timeDeltas.back();
+      if (currDelta != timeDeltas.end())
+         delta = *currDelta;
 
+      int nLabels = (int)(drawnTime / delta) + 1;
+      float dx = delta / drawnTime * valScale;
+
+      for (int l = 0; l < nLabels; ++l)
+      {
+         float xp = dx * l;
+         float yp = valScale * 0.9;
+         float typ = yp;
+#if LINUX
+         typ = valScale * 0.95;
+#endif
+         CRect tp(CPoint(xp + 0.5, typ + 0.5), CPoint(10, 10));
+         tf.transform(tp);
+         dc->setFontColor(skin->getColor("lfo.waveform.font", VSTGUI::kBlackCColor));
+         dc->setFont(lfoTypeFont);
+         char txt[256];
+         float tv = delta * l;
+         if (fabs(roundf(tv) - tv) < 0.05)
+            snprintf(txt, 256, "%d s", (int)round(delta * l));
+         else
+            snprintf(txt, 256, "%.1f s", delta * l);
+         dc->drawString(txt, tp, VSTGUI::kLeftText, true);
+
+         CPoint sp(xp, valScale * 0.95), ep(xp, valScale * 0.9);
+         tf.transform(sp);
+         tf.transform(ep);
+         dc->setLineWidth(1.0);
+         // Lower ruler time ticks
+         dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::kBlackCColor));
+         dc->drawLine(sp, ep);
+      }
+
+      if (drawBeats)
+      {
+         auto bpm = storage->temposyncratio * 120;
+
+         auto denFactor = 4.0 / tsDen;
+         auto beatsPerSecond = bpm / 60.0;
+         auto secondsPerBeat = 1 / beatsPerSecond;
+         auto deltaBeat = secondsPerBeat / drawnTime * valScale * denFactor;
+
+         int nBeats = drawnTime * beatsPerSecond / denFactor;
+
+         auto measureLen = deltaBeat * tsNum;
+         int everyMeasure = 1;
+         while (measureLen < 5) // a hand selected parameter by playing around with it, tbh
+         {
+            measureLen *= 2;
+            everyMeasure *= 2;
+         }
+
+         for (auto l = 0; l < nBeats; ++l)
+         {
+            auto xp = deltaBeat * l;
+            if (l % (tsNum * everyMeasure) == 0)
+            {
+               auto soff = 0.0;
+               if (l > 10)
+                  soff = 0.0;
+               CPoint mp(xp + deltaBeat * (tsNum - 0.5), valScale * 0.01),
+                   mps(xp + deltaBeat * soff, valScale * 0.01), sp(xp, valScale * (.01)),
+                   ep(xp, valScale * (.1)), vruleS(xp, valScale * .15), vruleE(xp, valScale * .85);
+               tf.transform(sp);
+               tf.transform(ep);
+               tf.transform(mp);
+               tf.transform(mps);
+               tf.transform(vruleS);
+               tf.transform(vruleE);
+               // Upper Ruler Beat Tick for major beats
+               dc->setFrameColor(skin->getColor("lfo.waveform.rules", VSTGUI::kBlackCColor));
+               dc->setLineWidth(1.0);
+               dc->drawLine(sp, ep);
+               dc->setLineWidth(1.0);
+               // On the lfo waveform bg major beat division
+               dc->setFrameColor(
+                   skin->getColor("lfo.waveform.majordivisions", VSTGUI::CColor(0xE0, 0x80, 0x00)));
+               // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
+               dc->drawLine(vruleS, vruleE);
+
+               char s[256];
+               sprintf(s, "%d", l + 1);
+
+               CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10, 10));
+               tf.transform(tp);
+               dc->setFontColor(skin->getColor("lfo.waveform.font", VSTGUI::kBlackCColor));
+               dc->setFont(lfoTypeFont);
+               dc->drawString(s, tp, VSTGUI::kLeftText, true);
+            }
+            else if (everyMeasure == 1)
+            {
+               CPoint sp(xp, valScale * (.06)), ep(xp, valScale * (.1));
+               tf.transform(sp);
+               tf.transform(ep);
+               dc->setLineWidth(0.5);
+               if (l % tsNum == 0)
+                  dc->setFrameColor(VSTGUI::kBlackCColor);
+               else
+                  // The small ticks for the ruler
+                  dc->setFrameColor(
+                      skin->getColor("lfo.waveform.rules", VSTGUI::CColor(0xB0, 0x60, 0x00)));
+               dc->drawLine(sp, ep);
+            }
+         }
+      }
 
       dc->restoreGlobalState();
       path->forget();
@@ -570,6 +567,19 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          
          fillr(rstep, stepcolor);
          steprect[i] = rstep;
+
+         // draw the midline when not in unipolar mode
+         CRect mid(rstep);
+         int p;
+         
+         if (!lfodata->unipolar.val.b)
+         {
+            p = (mid.bottom + mid.top) * 0.5;
+            mid.top = p;
+            mid.bottom = p + 1;
+
+            fillr(mid, shadowcol);
+         }
          
          // Now draw the value
          CRect v(rstep);
@@ -581,10 +591,10 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          }
          else
          {
-            p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.5f + 0.5f * ss->steps[i]));
+            p1 = v.bottom - (int)((float)0.5f + v.getHeight() * (0.50f + 0.5f * ss->steps[i]));
             p2 = (v.bottom + v.top) * 0.5;
             v.top = min(p1, p2);
-            v.bottom = max(p1, p2) + 1;
+            v.bottom = max(p1, p2);
          }
          
          fillr( v, valuecolor );
@@ -1060,11 +1070,11 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
             // I am sure we will need to callibrate this and add scale gestures and stuff
             if (buttons & kShift)
             {
-               ss->steps[i] += distance / 30.0;
+               ss->steps[i] = limit_range(ss->steps[i] + (distance / 30.f), -1.f, 1.f);
             }
             else
             {
-               ss->steps[i] += distance / 10.0;
+               ss->steps[i] = limit_range(ss->steps[i] + (distance / 10.f), -1.f, 1.f);
             }
             invalid();
          }
