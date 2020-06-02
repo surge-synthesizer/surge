@@ -7,6 +7,7 @@
 #include "UserDefaults.h"
 #include <chrono>
 #include "DebugHelpers.h"
+#include "guihelpers.h"
 
 using namespace VSTGUI;
 using namespace std;
@@ -109,12 +110,12 @@ void CLFOGui::draw(CDrawContext* dc)
       CRect boxo(maindisp);
       boxo.offset(-size.left - splitpoint, -size.top);
 
-      if( skin->hasColor( "lfo.waveform.fill" ) )
+      if( skin->hasColor( "lfo.waveform.background" ) )
       {
          CRect boxI(size);
          boxI.left += lpsize + 4 + 15;
-         // LFO Waveform BG Area
-         dc->setFillColor( skin->getColor( "lfo.waveform.fill", CColor( 0xFF, 0x90, 0x00 ) ) );
+         // LFO waveform bg area
+         dc->setFillColor( skin->getColor( "lfo.waveform.background", CColor( 0xFF, 0x90, 0x00 ) ) );
          dc->drawRect(boxI, CDrawStyle::kDrawFilled);
       }
       auto lfoBgGlyph = bitmapStore->getBitmapByStringID( "LFO_WAVE_BACKGROUND" );
@@ -129,7 +130,7 @@ void CLFOGui::draw(CDrawContext* dc)
       int totalSamples = std::max( (int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE) );
       float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
 
-      // OK so lets assume we want about 1000 pixels worth tops in
+      // OK so let's assume we want about 1000 pixels worth tops in
       int averagingWindow = (int)(totalSamples/1000.0) + 1;
 
 #if LINUX
@@ -252,7 +253,7 @@ void CLFOGui::draw(CDrawContext* dc)
       dc->drawLine(mid0, mid1);
 
       dc->setLineWidth(1.0);
-      // Lfo ruler bounds AKA the upper and lower horizontal lines that define the bounds that the waveform draws in
+      // LFO ruler bounds AKA the upper and lower horizontal lines that define the bounds that the waveform draws in
       dc->setFrameColor(skin->getColor( "lfo.waveform.bounds", VSTGUI::CColor(0xE0, 0x80, 0x00)) );
       dc->drawLine(top0, top1);
       dc->drawLine(bot0, bot1);
@@ -263,7 +264,7 @@ void CLFOGui::draw(CDrawContext* dc)
 #else
       dc->setLineWidth(1.0);
 #endif
-      // Lfo ruler bounds AKA the upper and lower horizontal lines that draw the envelope if enabled
+      // LFO ruler bounds AKA the upper and lower horizontal lines that draw the envelope if enabled
       dc->setFrameColor(skin->getColor("lfo.waveform.envelope", VSTGUI::CColor(0xB0, 0x60, 0x00, 0xFF)));
       dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
@@ -301,7 +302,7 @@ void CLFOGui::draw(CDrawContext* dc)
                CPoint vruleS(xp, valScale * .15), vruleE(xp, valScale * .85);
                tf.transform(vruleS);
                tf.transform(vruleE);
-               // major beat divisions on the lfo waveform bg
+               // major beat divisions on the LFO waveform bg
                dc->setFrameColor(
                    skin->getColor("lfo.waveform.majordivisions", VSTGUI::CColor(0xE0, 0x80, 0x00)));
                // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
@@ -315,7 +316,7 @@ void CLFOGui::draw(CDrawContext* dc)
 #else
       dc->setLineWidth(1.3);
 #endif
-      // lfo waveform itself
+      // LFO waveform itself
       dc->setFrameColor(skin->getColor("lfo.waveform.wave", VSTGUI::CColor( 0x00, 0x00, 0x00, 0xFF )));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
@@ -339,7 +340,7 @@ void CLFOGui::draw(CDrawContext* dc)
                tf.transform(mp);
                tf.transform(mps);
                // ticks for major beats
-               dc->setFrameColor(skin->getColor("lfo.waveform.rulers", VSTGUI::kBlackCColor));
+               dc->setFrameColor(skin->getColor("lfo.waveform.ruler.ticks", VSTGUI::kBlackCColor));
                dc->setLineWidth(1.0);
                dc->drawLine(sp, ep);
                dc->setLineWidth(1.0);
@@ -349,7 +350,7 @@ void CLFOGui::draw(CDrawContext* dc)
 
                CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10, 10));
                tf.transform(tp);
-               dc->setFontColor(skin->getColor("lfo.waveform.font", VSTGUI::kBlackCColor));
+               dc->setFontColor(skin->getColor("lfo.waveform.ruler.font", VSTGUI::kBlackCColor));
                dc->setFont(lfoTypeFont);
                dc->drawString(s, tp, VSTGUI::kLeftText, true);
             }
@@ -364,7 +365,7 @@ void CLFOGui::draw(CDrawContext* dc)
                else
                   // small ticks for the ruler
                   dc->setFrameColor(
-                      skin->getColor("lfo.waveform.rulers", VSTGUI::CColor(0xB0, 0x60, 0x00)));
+                      skin->getColor("lfo.waveform.ruler.ticks", VSTGUI::CColor(0xB0, 0x60, 0x00)));
                dc->drawLine(sp, ep);
             }
          }
@@ -396,7 +397,7 @@ void CLFOGui::draw(CDrawContext* dc)
 #endif
          CRect tp(CPoint(xp + 0.5, typ + 0.5), CPoint(10, 10));
          tf.transform(tp);
-         dc->setFontColor(skin->getColor("lfo.waveform.font", VSTGUI::kBlackCColor));
+         dc->setFontColor(skin->getColor("lfo.waveform.ruler.font", VSTGUI::kBlackCColor));
          dc->setFont(lfoTypeFont);
          char txt[256];
          float tv = delta * l;
@@ -411,7 +412,7 @@ void CLFOGui::draw(CDrawContext* dc)
          tf.transform(ep);
          dc->setLineWidth(1.0);
          // lower ruler time ticks
-         dc->setFrameColor(skin->getColor("lfo.waveform.rulers", VSTGUI::kBlackCColor));
+         dc->setFrameColor(skin->getColor("lfo.waveform.ruler.ticks", VSTGUI::kBlackCColor));
          dc->drawLine(sp, ep);
       }
 
@@ -422,9 +423,8 @@ void CLFOGui::draw(CDrawContext* dc)
    }
 
    CColor cshadow = {0x5d, 0x5d, 0x5d, 0xff};
-   CColor cgray = {0x97, 0x98, 0x9a, 0xff};
    CColor cselected = skin->getColor( "lfo.type.selected.background", CColor( 0xfe, 0x98, 0x15, 0xff ) );
-   // CColor blackColor (0, 0, 0, 0);
+
    dc->setFrameColor(cshadow);
    dc->setFont(lfoTypeFont);
 
@@ -452,7 +452,6 @@ void CLFOGui::draw(CDrawContext* dc)
          //std::cout << " OFF" << std::endl;
          dc->setFontColor(skin->getColor( "lfo.type.unselected.foreground", kBlackCColor) );
       }
-      // else dc->setFillColor(cgray);
       // dc->fillRect(tb);
       shaperect[i] = tb;
       // tb.offset(0,-1);
@@ -498,18 +497,15 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
               };
 
 
-   auto cgray = skd( "lfo.stepseq.cgray", 0x9a9897ff );
-   auto stepMarker = skd( "lfo.stepseq.stepmarker", 0x633412FF);
-   auto disStepMarker = skd( "lfo.stepseq.disabledstepmarker", 0xffccbbff);
-   auto loopRegionLo = skd( "lfo.stepseq.loopregionlo", 0xe0bf9aff);
-   auto loopRegionHi = skd( "lfo.stepseq.loopregionhi", 0xefd0a9ff );
-   auto loopRegionClick = skd( "lfo.stepseq.loopregionclick", 0xffe0b9ff );
-   auto shadowcol = skd( "lfo.stepseq.shadowcol", 0x7d6d6dff );
-
-   auto noLoopHi = skd( "lfo.stepseq.noloophi", 0xdfdfdfff );
-   auto noLoopLo = skd( "lfo.stepseq.nolooplo", 0xcfcfcfff );
-   auto grabMarker = skd( "lfo.stepseq.grabmarker", 0x633412ff );
-   auto grabMarkerHi = skd( "lfo.stepseq.grabmarkerhi", 0x835432ff );
+   auto shadowcol = skd( "lfo.stepseq.column.shadow", 0x7d6d6dff );
+   auto stepMarker = skd( "lfo.stepseq.step.fill", 0x633412FF);
+   auto disStepMarker = skd( "lfo.stepseq.step.fill.disabled", 0xffccbbff);
+   auto noLoopHi = skd( "lfo.stepseq.loop.outside.majorstep", 0xdfdfdfff );
+   auto noLoopLo = skd( "lfo.stepseq.loop.outside.minorstep", 0xcfcfcfff );
+   auto loopRegionLo = skd( "lfo.stepseq.loop.majorstep", 0xe0bf9aff);
+   auto loopRegionHi = skd( "lfo.stepseq.loop.minorstep", 0xefd0a9ff );
+   auto grabMarker = skd( "lfo.stepseq.loop.markers", 0x633412ff );
+   auto grabMarkerHi = skd( "lfo.stepseq.trigger.click", 0x835432ff );
 
    auto fillr = [dc](CRect r,CColor c) {
                    dc->setFillColor(c);
@@ -697,9 +693,9 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
          CRect labelR( dragX, dragY, dragX + dragW, dragY + dragH );
 
-         fillr( labelR, skin->getColor( "lfo.stepseq.valueborder", kBlackCColor ) );
+         fillr( labelR, skin->getColor( "lfo.stepseq.popup.border", kBlackCColor ) );
          labelR.inset( 1, 1 );
-         fillr( labelR, skin->getColor( "lfo.stepseq.valuebackground", kWhiteCColor ) );
+         fillr( labelR, skin->getColor( "lfo.stepseq.popup.background", kWhiteCColor ) );
 
          labelR.left += 1;
          labelR.top -= (keyModMult > 0 ? 9 : 0);
@@ -707,7 +703,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          char txt[256];
          sprintf(txt, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
 
-         dc->setFontColor(skin->getColor("lfo.stepseq.valueforeground", kBlackCColor ));
+         dc->setFontColor(skin->getColor("lfo.stepseq.popup.foreground", kBlackCColor ));
          dc->setFont(lfoTypeFont);
          dc->drawString(txt, labelR, VSTGUI::kLeftText, true );
 
@@ -769,44 +765,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       dc->setFillColor(skin->getColor( "lfo.stepseq.button.fill", VSTGUI::CColor( 0x97, 0x98, 0x9a, 0xff ) ) );
    dc->drawRect(ss_shift_right, kDrawFilled);
    drawtri(ss_shift_right, dc, 1);
-
-   if( controlstate == cs_linedrag )
-   {
-      dc->setFrameColor(skin->getColor( "lfo.stepseq.linedrag", VSTGUI::CColor( 0xdd, 0xdd, 0xff ) ) );
-      dc->setFillColor(skin->getColor( "lfo.stepseq.linedrag", VSTGUI::CColor( 0xdd, 0xdd, 0xff ) ) );
-      dc->drawLine( rmStepStart, rmStepCurr );
-
-      CRect eStart( rmStepStart, VSTGUI::CPoint( 5, 5 ) );
-      eStart.offset( -2, -2 );
-      dc->drawEllipse( eStart, kDrawFilled );
-
-      // Draw an arrow. Thanks https://stackoverflow.com/questions/3010803/draw-arrow-on-line-algorithm
-      float dx = rmStepCurr.x - rmStepStart.x;
-      float dy = rmStepCurr.y - rmStepStart.y;
-      float dd = dx * dx + dy * dy;
-      if( dd > 0 )
-      {
-         float ds = sqrt( dd );
-         dx /= ds;
-         dy /= ds;
-         dx *= 6;
-         dy *= 6;
-
-         const double cosv = 0.866;
-         const double sinv = 0.500;
-         auto e1 = rmStepCurr;
-         auto e2 = rmStepCurr;
-         e1.offset( - ( dx * cosv + dy * -sinv ), - ( dx * sinv + dy * cosv  ) );
-         e2.offset( - ( dx * cosv + dy * sinv ), - ( dx * -sinv + dy * cosv ) );
-
-         std::vector<CPoint> pl;
-         pl.push_back( rmStepCurr );
-         pl.push_back( e1 );
-         pl.push_back( e2 );
-
-         dc->drawPolygon( pl, kDrawFilled );
-      }
-   }
 
    // OK now we have everything drawn we want to draw the LFO. This is similar to the LFO
    // code above but with very different scaling in time since we need to match the steps no
@@ -959,7 +917,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 #if LINUX
    dc->setLineWidth(60.0);
 #else
-   dc->setLineWidth(1.3);
+   dc->setLineWidth(1.0);
 #endif
    dc->setFrameColor( skin->getColor( "lfo.stepseq.wave", CColor( 0xDD, 0xDD, 0xFF) ) );
    dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
@@ -967,6 +925,47 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    path->forget();
    eupath->forget();
    edpath->forget();
+
+   // draw the RMB drag line
+   if (controlstate == cs_linedrag)
+   {
+      dc->setFrameColor(skin->getColor("lfo.stepseq.drag.line", VSTGUI::CColor(0xdd, 0xdd, 0xff)));
+      dc->setFillColor(skin->getColor("lfo.stepseq.drag.line", VSTGUI::CColor(0xdd, 0xdd, 0xff)));
+      dc->drawLine(rmStepStart, rmStepCurr);
+
+      CRect eStart(rmStepStart, VSTGUI::CPoint(3, 3));
+      eStart.offset(-1, -1);
+      dc->drawEllipse(eStart, kDrawFilled);
+
+      // Draw an arrow. Thanks
+      // https://stackoverflow.com/questions/3010803/draw-arrow-on-line-algorithm
+      float dx = rmStepCurr.x - rmStepStart.x;
+      float dy = rmStepCurr.y - rmStepStart.y;
+      float dd = dx * dx + dy * dy;
+      if (dd > 0)
+      {
+         float ds = sqrt(dd);
+         dx /= ds;
+         dy /= ds;
+         dx *= 8;
+         dy *= 6;
+
+         const double cosv = 0.866;
+         const double sinv = 0.500;
+         auto e1 = rmStepCurr;
+         auto e2 = rmStepCurr;
+         e2.offset(1, 1);
+         e1.offset(-(dx * cosv + dy * -sinv), -(dx * sinv + dy * cosv));
+         e2.offset(-(dx * cosv + dy * sinv), -(dx * -sinv + dy * cosv));
+
+         std::vector<CPoint> pl;
+         pl.push_back(rmStepCurr);
+         pl.push_back(e1);
+         pl.push_back(e2);
+
+         dc->drawPolygon(pl, kDrawFilled);
+      }
+   }
 }
 
 
@@ -1302,9 +1301,51 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    }
    else if( controlstate == cs_linedrag )
    {
-      rmStepCurr = where;
+      // ED: this is gross, but works!
+      if (rect_steps.pointInside(where))
+      {
+         rmStepCurr = where;
+      }
+      else
+      {
+         // this is supposed to be better but doesn't quite work yet!
+         float rx, ry;
+         
+         if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                              rect_steps.left, rect_steps.top, rect_steps.right, rect_steps.top,
+                                              &rx, &ry))
+         {
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
+         }
+         else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                                   rect_steps.left, rect_steps.top, rect_steps.left, rect_steps.bottom,
+                                                   &rx, &ry))
+         {
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
+         }
+         else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                                   rect_steps.right, rect_steps.top, rect_steps.right, rect_steps.bottom,
+                                                   &rx, &ry))
+         {
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
+         }
+         else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                                   rect_steps.left, rect_steps.bottom, rect_steps.right, rect_steps.bottom,
+                                                   &rx, &ry))
+         {
+            rmStepCurr.x = rx;
+            rmStepCurr.y = ry;
+         }
+         else if (rect_steps.pointInside(where))
+            rmStepCurr = where;
+      }
+      
       invalid();
    }
+      
    return kMouseEventHandled;
 }
 
