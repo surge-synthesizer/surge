@@ -1087,6 +1087,12 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    sprintf(txt, "%.*f", (detailedMode ? 6 : 2), modulationDepth);
 }
 
+float Parameter::quantize_modulation( float inputval )
+{
+   float res = (float) ( (int)( inputval * 20 ) / 20.f ); // sure why not
+   return res;
+}
+
 void Parameter::get_display_alt(char* txt, bool external, float ef)
 {
    
