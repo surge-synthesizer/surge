@@ -1,4 +1,5 @@
 #include "LfoModulationSource.h"
+#include <cmath>
 
 using namespace std;
 
@@ -189,6 +190,8 @@ void LfoModulationSource::attack()
    {
       // fire up the engines
       wf_history[1] = ss->steps[step & (n_stepseqsteps - 1)];
+      wf_history[2] = ss->steps[(step+n_stepseqsteps-1) & (n_stepseqsteps - 1)];
+      wf_history[3] = ss->steps[(step+n_stepseqsteps-2) & (n_stepseqsteps - 1)];
 
       step++;
 
@@ -382,7 +385,16 @@ void LfoModulationSource::process_block()
 
    if (phase > 1)
    {
-      phase -= 1;
+      if( phase >= 2 )
+      {
+         float ipart;
+         phase = modf( phase, &ipart );
+      }
+      else
+      {
+         phase -= 1;
+      }
+
       switch (s)
       {
       case ls_snh:
