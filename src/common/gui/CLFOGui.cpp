@@ -946,6 +946,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    // draw the RMB drag line
    if (controlstate == cs_linedrag)
    {
+      dc->setLineWidth( 1.0 );
       dc->setFrameColor(skin->getColor("lfo.stepseq.drag.line", VSTGUI::CColor(0xdd, 0xdd, 0xff)));
       dc->setFillColor(skin->getColor("lfo.stepseq.drag.line", VSTGUI::CColor(0xdd, 0xdd, 0xff)));
       dc->drawLine(rmStepStart, rmStepCurr);
@@ -964,7 +965,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          float ds = sqrt(dd);
          dx /= ds;
          dy /= ds;
-         dx *= 8;
+         dx *= 6;
          dy *= 6;
 
          const double cosv = 0.866;
@@ -981,6 +982,9 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          pl.push_back(e2);
 
          dc->drawPolygon(pl, kDrawFilled);
+         dc->drawLine( rmStepCurr, e1 );
+         dc->drawLine( e1, e2 );
+         dc->drawLine( e2, rmStepCurr );
       }
    }
 }

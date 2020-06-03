@@ -198,7 +198,7 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
           
           phase[u] += omega[u];
           // phase in range -PI to PI
-          if ( phase[u] > M_PI )
+          while ( phase[u] > M_PI )
           {
              phase[u] -= 2.0 * M_PI;
           }
@@ -267,8 +267,8 @@ void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool 
                 playingramp[u] = 1;
 
              phase[u] += omega[u] + master_osc[k] * FMdepth.v;
-             // phase in range -PI to PI
-             if (phase[u] > M_PI)
+             // phase in range -PI to PI. Since there's FM here we can go beyond so if -> while for now. FIX for CPU
+             while (phase[u] > M_PI)
              {
                 phase[u] -= 2.0 * M_PI;
              }
