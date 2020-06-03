@@ -779,7 +779,19 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    tp[lfodata->release.param_id_in_scene].i = lfodata->release.val.i;
    
    tp[lfodata->magnitude.param_id_in_scene].i = lfodata->magnitude.val.i;
-   tp[lfodata->rate.param_id_in_scene].i = lfodata->rate.val.i;
+
+   // Min out the rate
+   float displayRate = lfodata->rate.val.f;
+   if( lfodata->rate.val.f < -3.5 )
+   {
+      tp[lfodata->rate.param_id_in_scene].f = - 3.5;
+      displayRate = -3.5;
+   }
+   else
+   {
+      tp[lfodata->rate.param_id_in_scene].i = lfodata->rate.val.i;
+   }
+   
    tp[lfodata->shape.param_id_in_scene].i = lfodata->shape.val.i;
    tp[lfodata->start_phase.param_id_in_scene].i = lfodata->start_phase.val.i;
    tp[lfodata->deform.param_id_in_scene].i = lfodata->deform.val.i;
@@ -789,11 +801,16 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    /*
    ** First big difference - the total env time is basically 16 * the time of the rate
    */
-   float freq = pow( 2.0, lfodata->rate.val.f ); // frequency in hz
+   float freq = pow( 2.0, displayRate ); // frequency in hz
+   if( lfodata->rate.temposync )
+   {
+      freq *= storage->temposyncratio;
+   }
+   
    float cyclesec = 1.0 / freq;
    float totalSampleTime = cyclesec * n_stepseqsteps;
    float susTime = 4.0 * cyclesec;
-   
+
    LfoModulationSource* tlfo = new LfoModulationSource();
    tlfo->assign(storage, lfodata, tp, 0, ss, true);
    tlfo->attack();
@@ -1316,20 +1333,20 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                                               &rx, &ry))
          {
             rmStepCurr.x = rx;
-            rmStepCurr.y = ry;
+            rmStepCurr.y = ry+1;
          }
          else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
                                                    rect_steps.left, rect_steps.top, rect_steps.left, rect_steps.bottom,
                                                    &rx, &ry))
          {
-            rmStepCurr.x = rx;
+            rmStepCurr.x = rx+1;
             rmStepCurr.y = ry;
          }
          else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
                                                    rect_steps.right, rect_steps.top, rect_steps.right, rect_steps.bottom,
                                                    &rx, &ry))
          {
-            rmStepCurr.x = rx;
+            rmStepCurr.x = rx-1;
             rmStepCurr.y = ry;
          }
          else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
@@ -1337,7 +1354,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                                                    &rx, &ry))
          {
             rmStepCurr.x = rx;
-            rmStepCurr.y = ry;
+            rmStepCurr.y = ry-1;
          }
          else if (rect_steps.pointInside(where))
             rmStepCurr = where;
