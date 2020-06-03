@@ -3542,7 +3542,15 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                if( cms->hasAlternate && cms->useAlternate )
                   thisms = (modsources) cms->alternateId;
             }
-            synth->setModulation(ptag, thisms, ((CSurgeSlider*)control)->getModValue());
+            bool quantize_mod = frame->getCurrentMouseButtons() & kControl;
+            float mv = ((CSurgeSlider*)control)->getModValue();
+            if( quantize_mod )
+            {
+               mv = p->quantize_modulation(mv);
+               // maybe setModValue here
+            }
+            
+            synth->setModulation(ptag, thisms, mv );
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
             ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms), synth->isBipolarModulation(thisms));
 
