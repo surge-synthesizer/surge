@@ -64,6 +64,7 @@ void spawn_miniedit_text(char* c, int maxchars, const char* prompt, const char* 
    if (me.updated)
    {
       strncpy(c, me.textdata, maxchars);
+      c[maxchars-1] = 0;
    }
 }
 #elif LINUX

@@ -39,6 +39,8 @@
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/base/ustring.h"
 
+#include "vstgui/lib/cvstguitimer.h"
+
 template< typename T >
 struct RememberForgetGuard { 
    RememberForgetGuard( T *tg )
@@ -2534,12 +2536,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             eid++;
 
             addCallbackMenu(contextMenu, "Rename", [this, control, ccid]() {
-                                                      spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid], 16, "Enter a new name for macro controller:", "Rename Macro");
-                                                      ((CModulationSourceButton*)control)
-                                                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                                                      control->setDirty();
-                                                      control->invalid();
-                                                      synth->updateDisplay();
+                                                      VSTGUI::Call::later( [this, control, ccid]() {
+                                                                              spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid] , 16,
+                                                                                                  "Enter a new name for macro controller:", "Rename Macro");
+                                                                              
+                                                                              ((CModulationSourceButton*)control)
+                                                                                 ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                                                                              
+                                                                              control->setDirty();
+                                                                              control->invalid();
+                                                                              synth->refresh_editor = true;
+                                                                              synth->updateDisplay();
+                                                                           }, 1 );
                                                    });
             eid++;
 
