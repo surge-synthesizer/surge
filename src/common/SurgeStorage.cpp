@@ -368,12 +368,8 @@ bailOnPortable:
    }
 #endif
 
-   TiXmlElement* e = TINYXML_SAFE_TO_ELEMENT(snapshotloader.FirstChild("autometa"));
-   if (e)
-   {
-      defaultname = e->Attribute("name");
-      defaultsig = e->Attribute("comment");
-   }
+   defaultname = Surge::Storage::getUserDefaultValue(this, "defaultPatchAuthor", "");
+   defaultsig = Surge::Storage::getUserDefaultValue(this, "defaultPatchComment", "");
 
    load_midi_controllers();
 

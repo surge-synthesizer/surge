@@ -301,7 +301,7 @@ private:
    VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeSkinMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeZoomMenu(VSTGUI::CRect &rect);
-   VSTGUI::COptionMenu* makeUIOptionsMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeUserSettingsMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDataMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
 

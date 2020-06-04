@@ -3388,19 +3388,39 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       p.name = synth->storage.getPatch().name;
       p.category = synth->storage.getPatch().category;
-      p.comments = synth->storage.getPatch().comment;
       p.author = synth->storage.getPatch().author;
+      p.comments = synth->storage.getPatch().comment;
 
-      string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "User");
-
-      if (p.author.empty())
-         p.author = synth->storage.defaultname;
+      string defaultAuthor = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "");
+      string defaultComment = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchComment", "");
+      string oldAuthor = "";
       
-      if (p.author != s)
-         p.author = s;
+      if (p.author == "" && defaultAuthor != "")
+      {
+         p.author = defaultAuthor;
+      }
+      
+      if (p.author != "" && defaultAuthor != "")
+      {
+         if (!stricmp(p.author.c_str(), defaultAuthor.c_str()))
+         {
+            oldAuthor = p.author;
+            p.author = defaultAuthor;
+         }
+      }
+      
+      if (p.comments == "" && defaultComment != "")
+      {
+         p.comments = defaultComment;
+      }
 
-      if (p.comments.empty())
-         p.comments = synth->storage.defaultsig;
+      if (oldAuthor != "")
+      {
+         if (p.comments == "")
+            p.comments = "Original patch by " + oldAuthor;
+         else
+            p.comments += " (Original patch by " + oldAuthor + ")";
+      }
 
       patchName->setText(p.name.c_str());
       patchCategory->setText(p.category.c_str());
@@ -4157,8 +4177,8 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     skinSubMenu->forget();
 
-    auto uiOptionsMenu = makeUIOptionsMenu(menuRect);
-    settingsMenu->addEntry(uiOptionsMenu, Surge::UI::toOSCaseForMenu("User Interface Options"));
+    auto uiOptionsMenu = makeUserSettingsMenu(menuRect);
+    settingsMenu->addEntry(uiOptionsMenu, Surge::UI::toOSCaseForMenu("User Settings"));
     uiOptionsMenu->forget();
     eid++;
 
@@ -4500,7 +4520,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
     return zoomSubMenu;
 }
 
-VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
+VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRect)
 {
    COptionMenu* uiOptionsMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                 VSTGUI::COptionMenu::kNoDrawStyle |
@@ -4566,7 +4586,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
    mouseSubMenu->forget();
 
    // Middle C submenu
-   int mcid = 0;
    COptionMenu* middleCSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                VSTGUI::COptionMenu::kNoDrawStyle |
                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
@@ -4580,33 +4599,56 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUIOptionsMenu(VSTGUI::CRect& menuRect)
       synth->refresh_editor = true;
    });
    mcItem->setChecked(mcValue == 2);
-   mcid++;
 
    mcItem = addCallbackMenu(middleCSubMenu, "C4", [this]() {
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 1);
       synth->refresh_editor = true;
    });
    mcItem->setChecked(mcValue == 1);
-   mcid++;
 
    mcItem = addCallbackMenu(middleCSubMenu, "C5", [this]() {
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 0);
       synth->refresh_editor = true;
    });
    mcItem->setChecked(mcValue == 0);
-   mcid++;
 
    uiOptionsMenu->addEntry(middleCSubMenu, "Middle C");
    middleCSubMenu->forget();
 
+   // patch defaults
+   int pdid = 0;
+   COptionMenu* patchDefMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                 VSTGUI::COptionMenu::kNoDrawStyle |
+                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
 
+   VSTGUI::CCommandMenuItem* pdItem = nullptr;
+
+   pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Author..."), [this]() {
+            string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "");
+            char txt[256];
+            strncpy(txt, s.c_str(), 256);
+            spawn_miniedit_text(txt, 256, "Enter default patch author name:", "Set Default Patch Author");
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", txt);
+            });
+
+   pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Comment..."), [this]() {
+            string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchComment", "");
+            char txt[256];
+            strncpy(txt, s.c_str(), 256);
+            spawn_miniedit_text(txt, 256, "Enter default patch comment text:", "Set Default Patch Comment");
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchComment", txt);
+            });
+
+   uiOptionsMenu->addEntry(patchDefMenu, Surge::UI::toOSCaseForMenu("Patch Defaults"));
+   patchDefMenu->forget();
+
+   // high precision value readouts
    auto precReadout = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
-      [this, precReadout]() {Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts",
-                                             precReadout ? 0 : 1);
+
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"), [this, precReadout]() {
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", precReadout ? 0 : 1);
    });
    menuItem->setChecked(precReadout);
-
 
    return uiOptionsMenu;
 }
@@ -4724,17 +4766,8 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
        });
    did++;
 
-   addCallbackMenu(
-       dataSubMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Author..."), [this]() {
-           string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "User");
-           char txt[256];
-           strncpy(txt, s.c_str(), 256);
-           spawn_miniedit_text(txt, 256, "Enter default patch author name:", "Set Default Patch Author");
-           Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", txt);
-       });
-   did++;
-
    dataSubMenu->addSeparator(did++);
+
 
    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Rescan All Data Folders"), [this]() {
       this->synth->storage.refresh_wtlist();
