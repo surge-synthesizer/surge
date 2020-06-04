@@ -641,81 +641,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       dc->setFrameColor( grabMarker );
       dc->drawLine( CPoint( rect_ls.left, 0.f), CPoint( rect_ls.left, h-3.f ) );
       dc->drawLine( CPoint( rect_le.right - 1.f, 0.f), CPoint( rect_le.right - 1.f, h-3.f) );
-
-      // Finally draw the drag label
-      if( controlstate == cs_steps && draggedStep >= 0 && draggedStep < n_stepseqsteps )
-      {
-         int prec = 2;
-
-         if( storage )
-         {
-            int detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
-            if( detailedMode )
-            {
-               prec = 6;
-            }
-         }
-
-         int dragX, dragY;
-         int dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
-
-         auto sr = steprect[draggedStep];
-
-         // Draw to the right in the second half of the seq table
-         if( draggedStep < n_stepseqsteps / 2 )
-         {
-            dragX = sr.right;
-         }
-         else
-         {
-            dragX = sr.left - dragW;
-         }
-
-         float yTop;
-         if (lfodata->unipolar.val.b)
-         {
-            auto sv = std::max( ss->steps[draggedStep], 0.f );
-            yTop = sr.bottom - (int)(sr.getHeight() * sv );
-         }
-         else
-         {
-            yTop = sr.bottom - (int)((float)0.5f + sr.getHeight() * (0.5f + 0.5f * ss->steps[draggedStep]));
-         }
-
-         if( yTop > sr.getHeight() / 2 )
-         {
-            dragY = yTop - dragH;
-         }
-         else
-         {
-            dragY = yTop;
-         }
-
-         CRect labelR( dragX, dragY, dragX + dragW, dragY + dragH );
-
-         fillr( labelR, skin->getColor( "lfo.stepseq.popup.border", kBlackCColor ) );
-         labelR.inset( 1, 1 );
-         fillr( labelR, skin->getColor( "lfo.stepseq.popup.background", kWhiteCColor ) );
-
-         labelR.left += 1;
-         labelR.top -= (keyModMult > 0 ? 9 : 0);
-
-         char txt[256];
-         sprintf(txt, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
-
-         dc->setFontColor(skin->getColor("lfo.stepseq.popup.foreground", kBlackCColor ));
-         dc->setFont(lfoTypeFont);
-         dc->drawString(txt, labelR, VSTGUI::kLeftText, true );
-
-         if (keyModMult > 0)
-         {
-            labelR.bottom += 18;
-
-            sprintf(txt, "%d/%d", (int) (floor(ss->steps[draggedStep] * keyModMult)) , keyModMult);
-            dc->drawString(txt, labelR, VSTGUI::kLeftText, true );
-         }
-
-      }
    }
 
    // These data structures are used for mouse hit detection so have to translate them back to screen
@@ -985,6 +910,82 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          dc->drawLine( rmStepCurr, e1 );
          dc->drawLine( e1, e2 );
          dc->drawLine( e2, rmStepCurr );
+      }
+   }
+
+   // Finally draw the drag label
+   if (controlstate == cs_steps && draggedStep >= 0 && draggedStep < n_stepseqsteps)
+   {
+      int prec = 2;
+
+      if (storage)
+      {
+         int detailedMode =
+             Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+         if (detailedMode)
+         {
+            prec = 6;
+         }
+      }
+
+      int dragX, dragY;
+      int dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
+
+      auto sr = steprect[draggedStep];
+
+      // Draw to the right in the second half of the seq table
+      if (draggedStep < n_stepseqsteps / 2)
+      {
+         dragX = sr.right;
+      }
+      else
+      {
+         dragX = sr.left - dragW;
+      }
+
+      float yTop;
+      if (lfodata->unipolar.val.b)
+      {
+         auto sv = std::max(ss->steps[draggedStep], 0.f);
+         yTop = sr.bottom - (int)(sr.getHeight() * sv);
+      }
+      else
+      {
+         yTop = sr.bottom -
+                (int)((float)0.5f + sr.getHeight() * (0.5f + 0.5f * ss->steps[draggedStep]));
+      }
+
+      if (yTop > sr.getHeight() / 2)
+      {
+         dragY = yTop - dragH;
+      }
+      else
+      {
+         dragY = yTop;
+      }
+
+      CRect labelR(dragX, dragY, dragX + dragW, dragY + dragH);
+
+      fillr(labelR, skin->getColor("lfo.stepseq.popup.border", kBlackCColor));
+      labelR.inset(1, 1);
+      fillr(labelR, skin->getColor("lfo.stepseq.popup.background", kWhiteCColor));
+
+      labelR.left += 1;
+      labelR.top -= (keyModMult > 0 ? 9 : 0);
+
+      char txt[256];
+      sprintf(txt, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
+
+      dc->setFontColor(skin->getColor("lfo.stepseq.popup.foreground", kBlackCColor));
+      dc->setFont(lfoTypeFont);
+      dc->drawString(txt, labelR, VSTGUI::kLeftText, true);
+
+      if (keyModMult > 0)
+      {
+         labelR.bottom += 18;
+
+         sprintf(txt, "%d/%d", (int)(floor(ss->steps[draggedStep] * keyModMult)), keyModMult);
+         dc->drawString(txt, labelR, VSTGUI::kLeftText, true);
       }
    }
 }
