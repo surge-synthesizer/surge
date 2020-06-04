@@ -368,13 +368,6 @@ bailOnPortable:
    }
 #endif
 
-   TiXmlElement* e = TINYXML_SAFE_TO_ELEMENT(snapshotloader.FirstChild("autometa"));
-   if (e)
-   {
-      defaultname = e->Attribute("name");
-      defaultsig = e->Attribute("comment");
-   }
-
    load_midi_controllers();
 
 #if !TARGET_RACK   
