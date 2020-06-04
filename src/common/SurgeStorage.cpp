@@ -368,9 +368,6 @@ bailOnPortable:
    }
 #endif
 
-   defaultname = Surge::Storage::getUserDefaultValue(this, "defaultPatchAuthor", "");
-   defaultsig = Surge::Storage::getUserDefaultValue(this, "defaultPatchComment", "");
-
    load_midi_controllers();
 
 #if !TARGET_RACK   

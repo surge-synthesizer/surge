@@ -3394,7 +3394,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       string defaultAuthor = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "");
       string defaultComment = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchComment", "");
       string oldAuthor = "";
-      
+
       if (p.author == "" && defaultAuthor != "")
       {
          p.author = defaultAuthor;
@@ -3402,7 +3402,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       
       if (p.author != "" && defaultAuthor != "")
       {
-         if (!stricmp(p.author.c_str(), defaultAuthor.c_str()))
+         if (_stricmp(p.author.c_str(), defaultAuthor.c_str()))
          {
             oldAuthor = p.author;
             p.author = defaultAuthor;
@@ -3417,7 +3417,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if (oldAuthor != "")
       {
          if (p.comments == "")
-            p.comments = "Original patch by " + oldAuthor;
+            p.comments += "Original patch by " + oldAuthor;
          else
             p.comments += " (Original patch by " + oldAuthor + ")";
       }
