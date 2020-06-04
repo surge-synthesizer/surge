@@ -3385,12 +3385,20 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    case tag_store:
    {
       patchdata p;
+
       p.name = synth->storage.getPatch().name;
       p.category = synth->storage.getPatch().category;
       p.comments = synth->storage.getPatch().comment;
       p.author = synth->storage.getPatch().author;
+
+      string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "User");
+
       if (p.author.empty())
          p.author = synth->storage.defaultname;
+      
+      if (p.author != s)
+         p.author = s;
+
       if (p.comments.empty())
          p.comments = synth->storage.defaultsig;
 
@@ -4713,6 +4721,16 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
           };
           Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath, "", "",
                                                         cb, true, true);
+       });
+   did++;
+
+   addCallbackMenu(
+       dataSubMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Author..."), [this]() {
+           string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "User");
+           char txt[256];
+           strncpy(txt, s.c_str(), 256);
+           spawn_miniedit_text(txt, 256, "Enter default patch author name:", "Set Default Patch Author");
+           Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", txt);
        });
    did++;
 
