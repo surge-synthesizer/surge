@@ -503,6 +503,12 @@ elseif( WIN32 )
     user32
     ../libs/libpng/win/x64/lib/libpng16_static
   )
+
+  add_executable( dllcheck 
+     src/windows/dllcheck/dllcheck.cpp
+     ${CMAKE_BINARY_DIR}/geninclude/version.cpp 
+  )
+  target_include_directories( dllcheck PRIVATE src/common )
 else()
   message(FATAL_ERROR "UNKNOWN OS. Please use lin mac or win" )
 endif()
