@@ -181,10 +181,7 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
              p += FMdepth.v * master_osc[k];
 
           // Unlike ::sin and ::cos we are limited in accurate range
-          while( p > M_PI )
-             p -= 2.0 * M_PI;
-          while( p < -M_PI )
-             p += 2.0 * M_PI;
+          p = Surge::DSP::clampToPiRange(p);
           
           float out_local = valueFromSinAndCos(Surge::DSP::fastsin(p), Surge::DSP::fastcos(p));
 
@@ -267,11 +264,7 @@ void osc_sine::process_block_legacy(float pitch, float drift, bool stereo, bool 
                 playingramp[u] = 1;
 
              phase[u] += omega[u] + master_osc[k] * FMdepth.v;
-             // phase in range -PI to PI. Since there's FM here we can go beyond so if -> while for now. FIX for CPU
-             while (phase[u] > M_PI)
-             {
-                phase[u] -= 2.0 * M_PI;
-             }
+             phase[u] = Surge::DSP::clampToPiRange(phase[u]);
          }
 
          FMdepth.process();
