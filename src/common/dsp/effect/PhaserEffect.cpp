@@ -67,12 +67,13 @@ void PhaserEffect::process_only_control()
 {
    float rate = envelope_rate_linear(-*f[pp_lforate]) *
                 (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
+
    lfophase += (float)slowrate * rate;
    if (lfophase > 1)
-      lfophase -= 1;
+      lfophase = fmod( lfophase, 1.0 ); // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
    float lfophaseR = lfophase + 0.5 * *f[pp_stereo];
    if (lfophaseR > 1)
-      lfophaseR -= 1;
+      lfophaseR = fmod( lfophaseR, 1.0 );
 }
 
 float basefreq[4] = {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12};
@@ -82,12 +83,14 @@ void PhaserEffect::setvars()
 {
    double rate = envelope_rate_linear(-*f[pp_lforate]) *
                  (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
+
    lfophase += (float)slowrate * rate;
    if (lfophase > 1)
-      lfophase -= 1;
+      lfophase = fmod( lfophase, 1.0 ); // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
    float lfophaseR = lfophase + 0.5 * *f[pp_stereo];
    if (lfophaseR > 1)
-      lfophaseR -= 1;
+      lfophaseR = fmod( lfophaseR, 1.0 );
+   
    double lfoout = 1.f - fabs(2.0 - 4.0 * lfophase);
    double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
 
