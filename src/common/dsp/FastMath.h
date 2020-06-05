@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 /*
 ** Fast Math Approximations to various Functions
 **
@@ -35,6 +37,19 @@ inline float fastcos( float x ) noexcept
    auto numerator = -(-39251520 + x2 * (18471600 + x2 * (-1075032 + 14615 * x2)));
    auto denominator = 39251520 + x2 * (1154160 + x2 * (16632 + x2 * 127));
    return numerator / denominator;
+}
+
+/*
+** Push x into -PI, PI periodically. There is probably a faster way to do this
+*/
+inline float clampToPiRange( float x )
+{
+    if( x <= M_PI && x >= -M_PI ) return x;
+    float y = x + M_PI; // so now I am 0,2PI
+    float p = fmod( y, 2.0 * M_PI );
+    if( p < 0 )
+        p += 2.0 * M_PI;
+    return p - M_PI;
 }
 
 }
