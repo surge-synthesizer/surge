@@ -485,6 +485,8 @@ elseif( WIN32 )
     /FIprecompiled.h
     /Zc:alignedNew
     /bigobj
+
+    /MT
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -508,6 +510,7 @@ elseif( WIN32 )
      src/windows/dllcheck/dllcheck.cpp
      ${CMAKE_BINARY_DIR}/geninclude/version.cpp 
   )
+  target_compile_options(dllcheck PRIVATE /MT)
   target_include_directories( dllcheck PRIVATE src/common )
 else()
   message(FATAL_ERROR "UNKNOWN OS. Please use lin mac or win" )
