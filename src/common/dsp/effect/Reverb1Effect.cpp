@@ -229,7 +229,9 @@ void Reverb1Effect::process(float* dataL, float* dataR)
                 (fxdata->p[rp_predelay].temposync ? storage->temposyncratio_inv : 1.f);
 
    const __m128 one4 = _mm_set1_ps(1.f);
-   __m128 damp4 = _mm_load1_ps(f[rp_damping]);
+   float dv = *(f[rp_damping]);
+   dv = limit_range( dv, 0.01f, 0.99f ); // this is a simple onepole damper, w * y[n] + ( 1-w ) y[n-1] so to be stable has to stay in range
+   __m128 damp4 = _mm_load1_ps(&dv);
    __m128 damp4m1 = _mm_sub_ps(one4, damp4);
 
    for (int k = 0; k < BLOCK_SIZE; k++)
