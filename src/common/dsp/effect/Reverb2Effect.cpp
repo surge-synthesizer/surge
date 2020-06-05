@@ -231,6 +231,8 @@ void Reverb2Effect::process(float* dataL, float* dataR)
       lfos[2] = -_lfo.r;
       lfos[3] = -_lfo.i;
 
+      auto hdc = limit_range( _hf_damp_coefficent.v, 0.01f, 0.99f );
+      auto ldc = limit_range( _hf_damp_coefficent.v, 0.01f, 0.99f );
       for (int b = 0; b < NUM_BLOCKS; b++)
       {
          x = x + in;
@@ -239,8 +241,8 @@ void Reverb2Effect::process(float* dataL, float* dataR)
             x = _allpass[b][c].process(x, _buildup.v);
          }
 
-         x = _hf_damper[b].process_lowpass(x, _hf_damp_coefficent.v);
-         x = _lf_damper[b].process_highpass(x, _lf_damp_coefficent.v);
+         x = _hf_damper[b].process_lowpass(x, hdc );
+         x = _lf_damper[b].process_highpass(x, ldc );
 
          int modulation = (int)(_modulation.v * lfos[b] * (float)DELAY_SUBSAMPLE_RANGE);
          float tap_outL = 0.f;
