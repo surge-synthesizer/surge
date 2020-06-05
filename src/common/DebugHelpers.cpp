@@ -10,29 +10,50 @@
 #include <cstdlib>
 #endif
 
+#include "version.h"
+#include <iostream>
+#include <iomanip>
+
+#if WINDOWS
+static bool winconinitialized = false;
+static FILE *confp;
+#endif
+
+bool Surge::Debug::openConsole()
+{
+#if WINDOWS   
+    if( ! winconinitialized )
+    {
+        winconinitialized = true;
+        AllocConsole();
+        freopen_s(&confp, "CONOUT$", "w", stdout);
+        std::cout << "Surge Debugging Console\n"
+                  << "This console shows stdout from the surge plugin. If you close it with X you might crash.\n"
+                  << "Version: " << Build::FullVersionStr << " built at " << Build::BuildDate << " " << Build::BuildTime
+                  << "\n\n" << std::endl;
+    }
+    return winconinitialized;
+#else
+    return true;
+#endif    
+}
 bool Surge::Debug::toggleConsole()
 {
 #if WINDOWS
-    static bool initialized = false;
-
-    static FILE *fp;
-
-    if (!initialized)
+    
+    
+    if (!winconinitialized)
     {
-        initialized = true;
-
-        AllocConsole();
-        freopen_s(&fp, "CONOUT$", "w", stdout);
-        printf("SURGE DEBUG CONSOLE\nThis console is for debug output. If you close it all bets are off!\n\n");
+        openConsole();
     }
     else
     {
-        initialized = false;
-        fclose(fp);
+        winconinitialized = false;
+        fclose(confp);
         FreeConsole();
     }
 
-    return initialized;
+    return winconinitialized;
 #else
     return false;
 #endif
