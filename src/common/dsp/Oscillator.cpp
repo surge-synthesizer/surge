@@ -601,6 +601,7 @@ void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynth
       oscdata->p[3].deactivated = true;
       oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
       oscdata->p[4].deactivated = true;
+      oscdata->p[1].set_type(ct_osc_feedback);
    }
    if( streamingRevision <= 10 )
    {
