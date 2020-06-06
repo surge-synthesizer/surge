@@ -177,6 +177,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
    if (has_modulation_current)
       typex = 2;
 
+   float slider_alpha = (disabled || deactivated) ? 0.35 : 1.0;
+
    if (pTray)
    {
       // CRect trect(0,0,pTray->getWidth(),pTray->getHeight());
@@ -193,12 +195,11 @@ void CSurgeSlider::draw(CDrawContext* dc)
       else
          trect.offset(2, 2);
 
-      float alpha = (disabled || deactivated) ? 0.35 : 1.0;
 
       if (style & CSlider::kHorizontal)
-         pTray->draw(dc, trect, CPoint(133 * typex, 14 * typey), alpha);
+         pTray->draw(dc, trect, CPoint(133 * typex, 14 * typey), slider_alpha);
       else
-         pTray->draw(dc, trect, CPoint(16 * typex, 75 * typey), alpha);
+         pTray->draw(dc, trect, CPoint(16 * typex, 75 * typey), slider_alpha);
    }
 
    CRect headrect;
@@ -392,24 +393,17 @@ void CSurgeSlider::draw(CDrawContext* dc)
       }
    }
    
-   if (pHandle && (deactivated || disabled))
-   {
-      if (style & CSlider::kHorizontal)
-         pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), 0.35);
-      else
-         pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), 0.35);
-   }
-   
-   else if (pHandle && (modmode != 2) && !(deactivated || disabled))
+
+   if (pHandle && (modmode != 2) && (!deactivated || !disabled))
    {
       if (style & CSlider::kHorizontal)
       {
-         pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0.f : 1.f);
+         pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0.5 : slider_alpha);
          if( is_temposync )
          {
             if( pTempoSyncHandle )
             {
-               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 1.f );
+               pTempoSyncHandle->draw(dc, hrect, CPoint(0, 0), slider_alpha);
             }
             else
             {
@@ -433,14 +427,14 @@ void CSurgeSlider::draw(CDrawContext* dc)
             }
          }
       }
-      else if (!(deactivated || disabled))
+      else if ((!deactivated || !disabled))
       {
-         pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0.5 : 1.f);
+         pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0.5 : slider_alpha);
          if( is_temposync )
          {
             if( pTempoSyncHandle )
             {
-               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 1.f );
+               pTempoSyncHandle->draw(dc, hrect, CPoint(0, 0), slider_alpha);
             }
             else
             {
@@ -471,7 +465,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    }
 
    // draw mod-fader
-   if (pHandle && modmode && !(deactivated || disabled))
+   if (pHandle && modmode && (!deactivated || !disabled))
    {
       CRect hrect(headrect);
       handle_rect = handle_rect_orig;
@@ -501,9 +495,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
       }
 
       if (style & CSlider::kHorizontal)
-         pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), 1.f);
+         pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), slider_alpha);
       else
-         pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), 1.f);
+         pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), slider_alpha);
    }
 
    setDirty(false);
@@ -558,8 +552,8 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    wheelInitiatedEdit = false;
    
    CCursorHidingControl::onMouseDown(where, buttons);
-   //if (disabled)
-   //   return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   if (disabled)
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    if (controlstate)
    {
 #if MAC
@@ -603,8 +597,8 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
    CCursorHidingControl::onMouseUp(where, buttons);
-   //if (disabled)
-   //   return kMouseEventHandled;
+   if (disabled)
+      return kMouseEventHandled;
    if (controlstate)
    {
 #if MAC
@@ -672,6 +666,9 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
                                     double dx,
                                     double dy)
 {
+   if (disabled)
+      return;
+
    if( controlstate != cs_drag )
    {
       // FIXME - deal with modulation

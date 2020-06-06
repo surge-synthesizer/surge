@@ -860,6 +860,14 @@ CRect positionForModulationGrid(modsources entry)
    return r;
 }
 
+void SurgeGUIEditor::setDisabledForParameter(Parameter* p, CSurgeSlider* s)
+{
+   if (p->id == synth->storage.getPatch().scene[current_scene].fm_depth.id)
+   {
+      s->disabled = !(synth->storage.getPatch().scene[current_scene].fm_switch.val.i);
+   }
+}
+
 void SurgeGUIEditor::openOrRecreateEditor()
 {
 #ifdef INSTRUMENT_UI
@@ -1145,7 +1153,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->deactivated = p->deactivated;
             else
                hs->deactivated = false;
-            
+
+            setDisabledForParameter(p, hs);
+
             if (synth->isValidModulation(p->id, modsource))
             {
                hs->setModMode(mod_editor ? 1 : 0);
@@ -1786,6 +1796,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                else
                   hs->deactivated = false;
 
+               setDisabledForParameter(p, hs);
+
                frame->addView(hs);
                param[i] = hs;
             }
@@ -1810,6 +1822,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = p->deactivated;
                else
                   hs->deactivated = false;
+
+               setDisabledForParameter(p, hs);
 
                frame->addView(hs);
                param[i] = hs;

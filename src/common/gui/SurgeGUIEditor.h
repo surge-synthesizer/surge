@@ -32,6 +32,8 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "vstcontrols.h"
 #include "SurgeSynthesizer.h"
 
+#include "CSurgeSlider.h"
+
 #include "SkinSupport.h"
 
 #include <vector>
@@ -122,6 +124,7 @@ public:
     */
    Steinberg::IPlugFrame *getIPlugFrame() { return plugFrame; }
 #endif
+   void setDisabledForParameter(Parameter* p, CSurgeSlider* s);
    
 private:
    void openOrRecreateEditor();
