@@ -51,7 +51,8 @@ const int gui_mid_topbar_y = 17;
 // 9 -> 10 added character parameter
 // 10 -> 11 (1.6.2 release) added DAW Extra State
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
-const int ff_revision = 12;
+// 12 -> 13 (1.7.0 release) deactivation; sine LP/HP
+const int ff_revision = 13;
 
 SurgePatch::SurgePatch(SurgeStorage* storage)
 {
@@ -1204,6 +1205,18 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             param_ptr[i]->temposync = true;
          else
             param_ptr[i]->temposync = false;
+         if ((p->QueryIntAttribute("deactivated", &j) == TIXML_SUCCESS))
+         {
+            if(j == 1)
+               param_ptr[i]->deactivated = true;
+            else
+               param_ptr[i]->deactivated = false;
+         }
+         else
+         {
+            if( param_ptr[i]->can_deactivate() )
+               param_ptr[i]->deactivated = true;
+         }
          if ((p->QueryIntAttribute("extend_range", &j) == TIXML_SUCCESS) && (j == 1))
             param_ptr[i]->extend_range = true;
          else
@@ -1754,6 +1767,8 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("extend_range", "1");
          if (param_ptr[i]->absolute)
             p.SetAttribute("absolute", "1");
+         if (param_ptr[i]->can_deactivate())
+            p.SetAttribute("deactivated", param_ptr[i]->deactivated ? "1" : "0" );
 
          // param_ptr[i]->val.i;
          parameters.InsertEndChild(p);

@@ -42,6 +42,7 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
 
    modmode = 0;
    disabled = false;
+   deactivated = false;
 
    label[0] = 0;
    leftlabel[0] = 0;
@@ -395,7 +396,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    }
    
 
-   if (pHandle && (modmode != 2))
+   if (pHandle && (modmode != 2) && ! deactivated)
    {
       if (style & CSlider::kHorizontal)
       {
@@ -428,7 +429,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
             }
          }
       }
-      else
+      else if( ! deactivated )
       {
          pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0x7f : 0xff);
          if( is_temposync )
@@ -466,7 +467,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    }
 
    // draw mod-fader
-   if (pHandle && modmode)
+   if (pHandle && modmode && ! deactivated)
    {
       CRect hrect(headrect);
       handle_rect = handle_rect_orig;

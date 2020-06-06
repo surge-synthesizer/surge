@@ -77,6 +77,9 @@ public:
    int id_mode, id_fb, id_fmlegacy, id_detune;
    float lastvalue[MAX_UNISON];
 
+   BiquadFilter lp, hp;
+   void applyFilter();
+   
    inline float valueFromSinAndCos(float svalue, float cvalue ) {
       return valueFromSinAndCos(svalue, cvalue, localcopy[id_mode].i );
    }
