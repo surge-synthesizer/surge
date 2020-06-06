@@ -1118,6 +1118,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_freq_mod:
          case ct_percent_bidirectional:
          case ct_freq_shift:
+         case ct_osc_feedback_negative:
             style |= kBipolar;
             break;
          };
@@ -1140,6 +1141,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hs->setModPresent(synth->isModDestUsed(p->id));
             hs->setDefaultValue(p->get_default_value_f01());
 
+            if( p->can_deactivate() )
+               hs->deactivated = p->deactivated;
+            else
+               hs->deactivated = false;
+            
             if (synth->isValidModulation(p->id, modsource))
             {
                hs->setModMode(mod_editor ? 1 : 0);
@@ -1286,6 +1292,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_decibel_extendable:
          case ct_freq_mod:
          case ct_percent_bidirectional:
+         case ct_osc_feedback_negative:
          case ct_freq_shift:
             style |= kBipolar;
             break;
@@ -1772,6 +1779,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->setMoveRate(p->moverate);
                if( p->can_temposync() )
                   hs->setTempoSync(p->temposync);
+
+               if( p->can_deactivate() )
+                  hs->deactivated = p->deactivated;
+               else
+                  hs->deactivated = false;
+
                frame->addView(hs);
                param[i] = hs;
             }
@@ -1791,6 +1804,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->setMoveRate(p->moverate);
                if( p->can_temposync() )
                   hs->setTempoSync(p->temposync);
+
+               if( p->can_deactivate() )
+                  hs->deactivated = p->deactivated;
+               else
+                  hs->deactivated = false;
+
                frame->addView(hs);
                param[i] = hs;
             }
@@ -2877,6 +2896,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             {
                addCallbackMenu(contextMenu, "Absolute", [this, p]() { p->absolute = !p->absolute; });
                contextMenu->checkEntry(eid, p->absolute);
+               eid++;
+            }
+            if (p->can_deactivate())
+            {
+               if( p->deactivated )
+               {
+                  addCallbackMenu(contextMenu, "Activate", [this, p]() { p->deactivated = false; this->synth->refresh_editor = true; } );
+               }
+               else
+               {
+                  addCallbackMenu(contextMenu, "Deactivate", [this, p]() { p->deactivated = true; this->synth->refresh_editor = true; } );
+
+               }
                eid++;
             }
 

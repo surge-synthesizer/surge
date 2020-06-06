@@ -44,6 +44,7 @@ enum ctrltypes
    ct_decibel_fmdepth,
    ct_decibel_extendable,
    ct_freq_audible,
+   ct_freq_audible_deactivatable,
    ct_freq_mod,
    ct_freq_hpf,
    ct_freq_shift,
@@ -103,6 +104,7 @@ enum ctrltypes
    ct_flangervoices,
    ct_flangerchord,
    ct_osc_feedback,
+   ct_osc_feedback_negative,
    ct_chorusmodtime,
    num_ctrltypes,
 };
@@ -244,6 +246,7 @@ public:
    bool can_temposync();
    bool can_extend_range();
    bool can_be_absolute();
+   bool can_deactivate();
    bool can_setvalue_from_string();
    void clear_flags();
    void set_type(int ctrltype);
@@ -298,7 +301,7 @@ public:
    bool affect_other_parameters;
    float moverate;
    bool per_voice_processing;
-   bool temposync, extend_range, absolute;
+   bool temposync, extend_range, absolute, deactivated;
    
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable

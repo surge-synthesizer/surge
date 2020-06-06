@@ -59,7 +59,7 @@ Oscillator::~Oscillator()
 /* sine osc */
 
 osc_sine::osc_sine(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
-    : Oscillator(storage, oscdata, localcopy)
+   : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {}
 
 void osc_sine::prepare_unison(int voices)
@@ -126,6 +126,12 @@ void osc_sine::init(float pitch, bool is_display)
    id_fb = oscdata->p[1].param_id_in_scene;
    id_fmlegacy = oscdata->p[2].param_id_in_scene;
    id_detune = oscdata->p[5].param_id_in_scene;
+
+   hp.coeff_instantize();
+   lp.coeff_instantize();
+
+   hp.coeff_HP(hp.calc_omega(oscdata->p[3].val.f / 12.0), 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[4].val.f / 12.0), 0.707);
 }
 
 osc_sine::~osc_sine()
@@ -136,6 +142,7 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
    if( localcopy[id_fmlegacy].i == 0 )
    {
        process_block_legacy(pitch, drift, stereo, FM, fmdepth );
+       applyFilter();
        return;
    }
    
@@ -213,6 +220,23 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
       }
       else
          output[k] = (outL + outR) / 2;
+   }
+   applyFilter();
+}
+
+void osc_sine::applyFilter()
+{
+   if( ! oscdata->p[3].deactivated )
+      hp.coeff_HP(hp.calc_omega(oscdata->p[3].val.f / 12.0), 0.707);
+   if( ! oscdata->p[4].deactivated )
+      lp.coeff_LP2B(lp.calc_omega(oscdata->p[4].val.f / 12.0), 0.707);
+
+   for (int k = 0; k < BLOCK_SIZE_OS; k+= BLOCK_SIZE )
+   {
+      if( ! oscdata->p[3].deactivated )
+         hp.process_block( &(output[k]), &(outputR[k]) );
+      if( ! oscdata->p[4].deactivated )
+         lp.process_block( &(output[k]), &(outputR[k]) );
    }
 }
 
@@ -571,15 +595,22 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
 
 void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
 {
-    if( streamingRevision <= 10 )
-    {
-        oscdata->p[1].val.f = 0;
-        oscdata->p[2].val.i = 0;
-    }
-    if( streamingRevision <= 9 )
-    {
-        oscdata->p[0].val.i = 0;
-    }
+   if( streamingRevision <= 12 )
+   {
+      oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
+      oscdata->p[3].deactivated = true;
+      oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
+      oscdata->p[4].deactivated = true;
+   }
+   if( streamingRevision <= 10 )
+   {
+      oscdata->p[1].val.f = 0;
+      oscdata->p[2].val.i = 0;
+   }
+   if( streamingRevision <= 9 )
+   {
+      oscdata->p[0].val.i = 0;
+   }
 }
 
 void osc_sine::init_ctrltypes()
@@ -588,10 +619,16 @@ void osc_sine::init_ctrltypes()
    oscdata->p[0].set_type(ct_sineoscmode);
 
    oscdata->p[1].set_name("Feedback");
-   oscdata->p[1].set_type(ct_osc_feedback);
+   oscdata->p[1].set_type(ct_osc_feedback_negative);
 
    oscdata->p[2].set_name("FM Behaviour");
    oscdata->p[2].set_type(ct_sinefmlegacy);
+
+   oscdata->p[3].set_name( "High Cut" );
+   oscdata->p[3].set_type(ct_freq_audible_deactivatable);
+
+   oscdata->p[4].set_name( "Low Cut" );
+   oscdata->p[4].set_type(ct_freq_audible_deactivatable);
 
    oscdata->p[5].set_name("Unison Detune");
    oscdata->p[5].set_type(ct_oscspread);
@@ -605,6 +642,12 @@ void osc_sine::init_default_values()
    oscdata->p[0].val.i = 0;
    oscdata->p[1].val.f = 0;
    oscdata->p[2].val.i = 1;
+   
+   oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
+   oscdata->p[3].deactivated = true;
+   oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
+   oscdata->p[4].deactivated = true;
+   
    oscdata->p[5].val.f = 0.2;
    oscdata->p[6].val.i = 1;
 }
