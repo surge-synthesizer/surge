@@ -193,10 +193,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       else
          trect.offset(2, 2);
 
-      int alpha = 0xff;
-
-      if (disabled)
-         return;
+      float alpha = (disabled || deactivated) ? 0.35 : 1.0;
 
       if (style & CSlider::kHorizontal)
          pTray->draw(dc, trect, CPoint(133 * typex, 14 * typey), alpha);
@@ -395,17 +392,24 @@ void CSurgeSlider::draw(CDrawContext* dc)
       }
    }
    
-
-   if (pHandle && (modmode != 2) && ! deactivated)
+   if (pHandle && (deactivated || disabled))
+   {
+      if (style & CSlider::kHorizontal)
+         pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), 0.35);
+      else
+         pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), 0.35);
+   }
+   
+   else if (pHandle && (modmode != 2) && !(deactivated || disabled))
    {
       if (style & CSlider::kHorizontal)
       {
-         pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0x7f : 0xff);
+         pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0.f : 1.f);
          if( is_temposync )
          {
             if( pTempoSyncHandle )
             {
-               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 0xff );
+               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 1.f );
             }
             else
             {
@@ -429,14 +433,14 @@ void CSurgeSlider::draw(CDrawContext* dc)
             }
          }
       }
-      else if( ! deactivated )
+      else if (!(deactivated || disabled))
       {
-         pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0x7f : 0xff);
+         pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0.5 : 1.f);
          if( is_temposync )
          {
             if( pTempoSyncHandle )
             {
-               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 0xff );
+               pTempoSyncHandle->draw( dc, hrect, CPoint( 0, 0 ), 1.f );
             }
             else
             {
@@ -467,7 +471,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    }
 
    // draw mod-fader
-   if (pHandle && modmode && ! deactivated)
+   if (pHandle && modmode && !(deactivated || disabled))
    {
       CRect hrect(headrect);
       handle_rect = handle_rect_orig;
@@ -497,9 +501,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
       }
 
       if (style & CSlider::kHorizontal)
-         pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), 0xff);
+         pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), 1.f);
       else
-         pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), 0xff);
+         pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), 1.f);
    }
 
    setDirty(false);
@@ -554,8 +558,8 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    wheelInitiatedEdit = false;
    
    CCursorHidingControl::onMouseDown(where, buttons);
-   if (disabled)
-      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   //if (disabled)
+   //   return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    if (controlstate)
    {
 #if MAC
@@ -599,8 +603,8 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
    CCursorHidingControl::onMouseUp(where, buttons);
-   if (disabled)
-      return kMouseEventHandled;
+   //if (disabled)
+   //   return kMouseEventHandled;
    if (controlstate)
    {
 #if MAC
@@ -668,9 +672,6 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
                                     double dx,
                                     double dy)
 {
-   if (disabled)
-      return;
-
    if( controlstate != cs_drag )
    {
       // FIXME - deal with modulation

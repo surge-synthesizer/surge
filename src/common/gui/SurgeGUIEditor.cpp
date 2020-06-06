@@ -1615,6 +1615,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hsw->setSkin( currentSkin, bitmapStore );
             frame->addView(hsw);
             nonmod_param[i] = hsw;
+            fmconfig_tag = p->id + start_paramtags;
          }
          break;
          case ct_scenemode:
@@ -3754,6 +3755,19 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       filtersubtype[idx]->setDirty();
       filtersubtype[idx]->invalid();
+   }
+
+   if (tag == fmconfig_tag)
+   {
+      // FM depth control
+      int i = synth->storage.getPatch().scene[current_scene].fm_depth.id;
+      if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
+         ((CSurgeSlider*)param[i])->disabled =
+             (synth->storage.getPatch().scene[current_scene].fm_switch.val.i ==
+              fm_off);
+
+      param[i]->setDirty();
+      param[i]->invalid();
    }
 
    if (tag == filterblock_tag)
