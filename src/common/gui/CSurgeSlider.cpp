@@ -552,8 +552,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    wheelInitiatedEdit = false;
    
    CCursorHidingControl::onMouseDown(where, buttons);
-   if (disabled)
-      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+
    if (controlstate)
    {
 #if MAC
@@ -597,8 +596,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
    CCursorHidingControl::onMouseUp(where, buttons);
-   if (disabled)
-      return kMouseEventHandled;
+
    if (controlstate)
    {
 #if MAC
@@ -666,9 +664,6 @@ void CSurgeSlider::onMouseMoveDelta(CPoint& where,
                                     double dx,
                                     double dy)
 {
-   if (disabled)
-      return;
-
    if( controlstate != cs_drag )
    {
       // FIXME - deal with modulation
