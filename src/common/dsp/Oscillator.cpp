@@ -625,10 +625,10 @@ void osc_sine::init_ctrltypes()
    oscdata->p[2].set_name("FM Behaviour");
    oscdata->p[2].set_type(ct_sinefmlegacy);
 
-   oscdata->p[3].set_name( "High Cut" );
+   oscdata->p[3].set_name("Low Cut");
    oscdata->p[3].set_type(ct_freq_audible_deactivatable);
 
-   oscdata->p[4].set_name( "Low Cut" );
+   oscdata->p[4].set_name("High Cut");
    oscdata->p[4].set_type(ct_freq_audible_deactivatable);
 
    oscdata->p[5].set_name("Unison Detune");
