@@ -74,7 +74,8 @@ public:
    CLASS_METHODS(CSurgeSlider, CControl)
 
    bool is_mod;
-   bool disabled;
+   bool disabled; // means it can't be used unless something else changes
+   bool deactivated; // means it has been turned off by user action
    bool hasBeenDraggedDuringMouseGesture = false;
 
    SurgeStorage* storage = nullptr;

@@ -193,6 +193,7 @@ void Parameter::clear_flags()
    temposync = false;
    extend_range = false;
    absolute = false;
+   deactivated = false;
 }
 
 bool Parameter::can_temposync()
@@ -219,6 +220,7 @@ bool Parameter::can_extend_range()
    case ct_decibel_narrow_extendable:
    case ct_oscspread:
    case ct_osc_feedback:
+   case ct_osc_feedback_negative:
       return true;
    }
    return false;
@@ -230,6 +232,16 @@ bool Parameter::can_be_absolute()
    {
    case ct_oscspread:
    case ct_pitch_semi7bp_absolutable:
+      return true;
+   }
+   return false;
+}
+
+bool Parameter::can_deactivate()
+{
+   switch(ctrltype)
+   {
+   case ct_freq_audible_deactivatable:
       return true;
    }
    return false;
@@ -306,6 +318,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_freq_audible:
+   case ct_freq_audible_deactivatable:
       valtype = vt_float;
       val_min.f = -60;
       val_max.f = 70;
@@ -684,6 +697,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
+   case ct_osc_feedback_negative:
+      val_min.f = -1;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
    default:
    case ct_none:
       sprintf(dispname, "-");
@@ -731,6 +750,7 @@ void Parameter::bound_value(bool force_integer)
       case ct_percent:
       case ct_percent_bidirectional:
       case ct_osc_feedback:
+      case ct_osc_feedback_negative:
       case ct_detuning:
       {
          val.f = floor(val.f * 100) / 100.0;
@@ -977,7 +997,9 @@ float Parameter::get_extended(float f)
    case ct_oscspread:
       return 12.f * f;
    case ct_osc_feedback:
-      return 8.f * f - 4.f;
+      return 8.f * f - 4.f * f;
+   case ct_osc_feedback_negative:
+      return 4.f * f;
    default:
       return f;
    }
@@ -1101,6 +1123,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
    {
    case ct_freq_hpf:
    case ct_freq_audible:
+   case ct_freq_audible_deactivatable:
    case ct_freq_vocoder_low:
    case ct_freq_vocoder_high:
    {
@@ -1252,6 +1275,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_freq_hpf:
       case ct_freq_audible:
+      case ct_freq_audible_deactivatable:
       case ct_freq_vocoder_low:
       case ct_freq_vocoder_high:
          sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 3), 440.f * powf(2.0f, f / 12.f));
@@ -1280,6 +1304,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
          break;
       case ct_osc_feedback:
+      case ct_osc_feedback_negative:
          sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), get_extended(f) * 100.f, '%');
          break;
       default:
@@ -1751,6 +1776,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_decibel_fmdepth:
    case ct_decibel_extendable:
    case ct_freq_audible:
+   case ct_freq_audible_deactivatable:
    case ct_freq_shift:
    case ct_freq_hpf:
    case ct_freq_vocoder_low:
@@ -1769,6 +1795,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_flangerpitch:
    case ct_flangervoices:
    case ct_osc_feedback:
+   case ct_osc_feedback_negative:
    case ct_chorusmodtime:
    case ct_pbdepth:
    case ct_polylimit:
@@ -1992,6 +2019,7 @@ bool Parameter::set_value_from_string( std::string s )
    }
    case ct_freq_hpf:
    case ct_freq_audible:
+   case ct_freq_audible_deactivatable:
    case ct_freq_vocoder_low:
    case ct_freq_vocoder_high:
    {  
@@ -2067,7 +2095,29 @@ bool Parameter::set_value_from_string( std::string s )
       else
       {
          if (nv < 0 || nv > 100) {
-            return false; }
+            return false;
+         }
+
+         val.f = nv / 100.f;
+      }
+
+      break;
+   }
+   case ct_osc_feedback_negative:
+   {
+      if (extend_range)
+      {
+         if (nv < -400 || nv > 400) {
+            return false;
+         }
+
+         val.f = (nv * 0.00125);
+      }
+      else
+      {
+         if (nv < -1000 || nv > 100) {
+            return false;
+         }
 
          val.f = nv / 100.f;
       }
