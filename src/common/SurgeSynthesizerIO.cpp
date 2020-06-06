@@ -158,6 +158,31 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
        (vt_read_int32BE(fxp.fxID) != 'cjs3'))
    {
       fclose(f);
+      auto cm = vt_read_int32BE(fxp.chunkMagic);
+      auto fm = vt_read_int32BE(fxp.fxMagic);
+      auto id = vt_read_int32BE(fxp.fxID);
+
+      std::ostringstream oss;
+      oss << "Unable to load patch " << patchName << ". ";
+      if( cm != 'CcnK' )
+      {
+         oss << "ChunkMagic is not 'CcnK'. ";
+      }
+      if( fm != 'FPCh' )
+      {
+         oss << "FxMagic is not 'FPCh'. ";
+      }
+      if( id != 'cjs3' )
+      {
+         union {
+            char c[4];
+            int id;
+         } q;
+         q.id = id;
+         oss << "Synth id is '" << q.c[0] << q.c[1] << q.c[2] << q.c[3] << "'; Surge expected 'cjs3'. ";
+      }
+      oss << "This error usually occurs when you attempt to load an .fxp file for an instrument other than Surge into Surge.";
+      Surge::UserInteractions::promptError( oss.str(), "Loading Non-Surge FXP" );
       return false;
    }
 
