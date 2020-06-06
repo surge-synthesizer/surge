@@ -32,11 +32,12 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "vstcontrols.h"
 #include "SurgeSynthesizer.h"
 
-#include "CSurgeSlider.h"
 
 #include "SkinSupport.h"
 
 #include <vector>
+ 
+class CSurgeSlider;
 
 class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
 {

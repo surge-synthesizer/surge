@@ -398,7 +398,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    {
       if (style & CSlider::kHorizontal)
       {
-         pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? 0.5 : slider_alpha);
+         pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
          if( is_temposync )
          {
             if( pTempoSyncHandle )
@@ -429,7 +429,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       }
       else if ((!deactivated || !disabled))
       {
-         pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? 0.5 : slider_alpha);
+         pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? slider_alpha : slider_alpha); // used to be 0x80 which was solid - lets keep taht for now
          if( is_temposync )
          {
             if( pTempoSyncHandle )
