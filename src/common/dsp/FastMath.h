@@ -46,7 +46,12 @@ inline float clampToPiRange( float x )
 {
     if( x <= M_PI && x >= -M_PI ) return x;
     float y = x + M_PI; // so now I am 0,2PI
-    float p = fmod( y, 2.0 * M_PI );
+
+    // float p = fmod( y, 2.0 * M_PI );
+
+    constexpr float oo2p = 1.0 / ( 2.0 * M_PI );
+    float p = y - 2.0 * M_PI * (int)( y * oo2p );
+
     if( p < 0 )
         p += 2.0 * M_PI;
     return p - M_PI;
