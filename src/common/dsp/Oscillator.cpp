@@ -130,8 +130,8 @@ void osc_sine::init(float pitch, bool is_display)
    hp.coeff_instantize();
    lp.coeff_instantize();
 
-   hp.coeff_HP(hp.calc_omega(oscdata->p[3].val.f / 12.0), 0.707);
-   lp.coeff_LP2B(lp.calc_omega(oscdata->p[4].val.f / 12.0), 0.707);
+   hp.coeff_HP(hp.calc_omega(oscdata->p[3].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[4].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
 }
 
 osc_sine::~osc_sine()
@@ -227,9 +227,9 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
 void osc_sine::applyFilter()
 {
    if( ! oscdata->p[3].deactivated )
-      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[3].param_id_in_scene].f / 12.0), 0.707);
+      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[3].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING , 0.707);
    if( ! oscdata->p[4].deactivated )
-      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[4].param_id_in_scene].f / 12.0), 0.707);
+      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[4].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
 
    for (int k = 0; k < BLOCK_SIZE_OS; k+= BLOCK_SIZE )
    {
