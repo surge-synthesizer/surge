@@ -1077,6 +1077,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    fxPresetLabel->setTransparency(true);
    fxPresetLabel->setFont( displayFont );
    fxPresetLabel->setHoriAlign( kRightText );
+   fxPresetLabel->setTextTruncateMode( CTextLabel::TextTruncateMode::kTruncateTail );
    frame->addView(fxPresetLabel);
 
    CHSwitch2* b_store = new CHSwitch2(CRect(547 - 37, 41, 547, 41 + 12), this, tag_store, 1, 12, 1,

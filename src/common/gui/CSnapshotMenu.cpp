@@ -57,7 +57,11 @@ void CSnapshotMenu::populate()
       while (type)
       {
          if( type->Value() && strcmp( type->Value(), "type" ) == 0  )
-            populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
+         {
+            auto sm = populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
+            if( sm )
+               addToTopLevelTypeMenu(type, sm);
+         }
          else if( type->Value() && strcmp( type->Value(), "separator" ) == 0 )
             addSeparator();
          type = type->NextSiblingElement();
@@ -125,7 +129,7 @@ bool CSnapshotMenu::loadSnapshotByIndex( int idx )
    return false;
 }
 
-void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx)
+VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx)
 {
     /*
     ** Begin by grabbing all the snapshot elements
@@ -209,48 +213,10 @@ void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::C
     }
 
     subMenu->forget();
-
-    /*if (canSave())
-      {
-      addEntry("-");
-      addEntry("Store Current");
-      }*/
-    /*
-      int32_t sel_id = contextMenu->get Last Result();
-      this is commented so put in spaces so my grep to kill all these doesn't flag it PW
-      int32_t sub_id, main_id;
-      COptionMenu *b = contextMenu->getLastItemMenu(sub_id);
-      if (b) main_id = b->getTag();
-
-      if ((sel_id >= 0) && (sel_id < contextMenu->getNbEntries()))
-      {
-      if (sel_id < main)
-      {
-      int type_id = 0; xpp[sel_id&(max_main - 1)]->Attribute("i", &type_id);		//
-      get "i" value from xmldata load_snapshot(type_id, 0);
-      }
-      else
-      {
-      char name[NAMECHARS];
-      sprintf(name, "default");
-
-      spawn_miniedit_text(name, NAMECHARS);
-      save_snapshot(sect, name);
-      storage->save_snapshots();
-      do_nothing = true;
-      }
-      }
-      else if (b && within_range(0, main_id, max_main) && within_range(0, sub_id, max_sub))
-      {
-      if (xp[main_id][sub_id])
-      {
-      int type_id = 0; xpp[main_id&(max_main - 1)]->Attribute("i", &type_id);		//
-      get "i" value from xmldata
-
-      load_snapshot(type_id, xp[main_id][sub_id]);
-      }
-      }
-      else do_nothing = true;*/
+    if( sub )
+       return subMenu; // OK to return forgoten since it has lifetime of parent
+    else
+       return nullptr;
 }
 
 // COscMenu
@@ -477,22 +443,14 @@ void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
 }
 
 bool CFxMenu::scanForUserPresets = true;
-std::vector<CFxMenu::UserPreset> CFxMenu::userPresets;
+std::unordered_map<int,std::vector<CFxMenu::UserPreset>> CFxMenu::userPresets;
 
 void CFxMenu::rescanUserPresets()
 {
    userPresets.clear();
    scanForUserPresets = false;
 
-   std::ostringstream oss;
-   oss << storage->userDataPath
-#if WINDOWS
-       << "\\"
-#else
-       << "/"
-#endif      
-       << "FXSettings";
-   auto ud = oss.str();
+   auto ud = storage->userFXPath;
 
    if( fs::is_directory( fs::path( ud ) ) ) {
       for( auto &d : fs::directory_iterator( fs::path( ud ) ) )
@@ -537,33 +495,33 @@ void CFxMenu::rescanUserPresets()
                   preset.er[i] = fl;
                }
             }
-            
-            userPresets.push_back(preset);
+            if( userPresets.find(preset.type) == userPresets.end() )
+               userPresets[preset.type] = std::vector<UserPreset>();
+            userPresets[preset.type].push_back(preset);
          }
       badPreset:
          ;
       }
    }
 
-   std::sort( userPresets.begin(), userPresets.end(),
-              [](UserPreset a, UserPreset b)
-                 {
-                    if( a.type == b.type )
+   for( auto &a : userPresets )
+      std::sort( a.second.begin(), a.second.end(),
+                 [](UserPreset a, UserPreset b)
                     {
-                       return _stricmp( a.name.c_str(), b.name.c_str() ) < 0;
+                       if( a.type == b.type )
+                       {
+                          return _stricmp( a.name.c_str(), b.name.c_str() ) < 0;
+                       }
+                       else
+                       {
+                          return a.type < b.type;
+                       }
                     }
-                    else
-                    {
-                       return a.type < b.type;
-                    }
-                 }
-      );
+         );
 }
 
 void CFxMenu::populate()
 {
-    CSnapshotMenu::populate();
-
     /*
     ** Are there user preets
     */
@@ -572,45 +530,8 @@ void CFxMenu::populate()
        rescanUserPresets();
     }
 
-    if( userPresets.size() > 0 )
-    {
-       this->addSeparator();
-       auto userPMenu = new COptionMenu(getViewSize(), 0, 0, 0, 0, kNoDrawStyle );
-       COptionMenu *fxMenu = nullptr;
-       int lastType = -1;
-       for( auto ps : userPresets )
-       {
-          if( ps.type != lastType )
-          {
-             if( fxMenu ) {
-                userPMenu->addEntry( fxMenu, fxtype_abberations[lastType] );
-                fxMenu->forget();
-             }
-             lastType = ps.type;
-             fxMenu = new COptionMenu(getViewSize(), 0, 0, 0, 0, kNoDrawStyle );
-          }
+    CSnapshotMenu::populate();
 
-          std::string fxName = ps.name;
-
-          #if WINDOWS
-             Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
-          #endif
-
-          auto i = new CCommandMenuItem(CCommandMenuItem::Desc(fxName.c_str()));
-          i->setActions([this,ps](CCommandMenuItem *item)
-                           {
-                              this->loadUserPreset(ps);
-                           } );
-          fxMenu->addEntry(i);
-       }
-       if( fxMenu ) {
-          userPMenu->addEntry( fxMenu, fxtype_abberations[lastType]  );
-          fxMenu->forget();
-       }
-       addEntry( userPMenu, "User Presets" );
-       userPMenu->forget();
-    }
-    
     /*
     ** Add copy/paste/save
     */
@@ -761,15 +682,7 @@ void CFxMenu::saveFX()
       return;
    }
    
-   std::ostringstream poss;
-   poss << storage->userDataPath
-#if WINDOWS
-        << "\\"
-#else
-        << "/"
-#endif
-        << "FXSettings";
-   std::string pn = poss.str();
+   std::string pn = storage->userFXPath;
    fs::create_directories( pn );
 
    std::ostringstream oss;
@@ -789,7 +702,7 @@ void CFxMenu::saveFX()
       return;
    }
 
-   pfile << "<single-fx>\n";
+   pfile << "<single-fx streaming_versio=\"" << ff_revision << "\">\n";
 
    // take care of 5 special XML characters
    std::string fxNameSub(fxName);
@@ -804,23 +717,26 @@ void CFxMenu::saveFX()
    pfile << "     type=\"" <<  fx->type.val.i << "\"\n";
    for( int i=0; i<n_fx_params; ++i )
    {
-      switch( fx->p[i].valtype )
+      if( fx->p[i].ctrltype != ct_none )
       {
-      case vt_float:
-         pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
-         break;
-      case vt_int:
-         pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
-         break;
-      }
-
-      if( fx->p[i].can_temposync() && fx->p[i].temposync )
-      {
-         pfile << "     p" << i << "_temposync=\"1\"\n";
-      }
-      if( fx->p[i].can_extend_range() && fx->p[i].extend_range )
-      {
-         pfile << "     p" << i << "_extend_range=\"1\"\n";
+         switch( fx->p[i].valtype )
+         {
+         case vt_float:
+            pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
+            break;
+         case vt_int:
+            pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
+            break;
+         }
+         
+         if( fx->p[i].can_temposync() && fx->p[i].temposync )
+         {
+            pfile << "     p" << i << "_temposync=\"1\"\n";
+         }
+         if( fx->p[i].can_extend_range() && fx->p[i].extend_range )
+         {
+            pfile << "     p" << i << "_extend_range=\"1\"\n";
+         }
       }
    }
 
@@ -868,4 +784,36 @@ void CFxMenu::loadUserPreset( const UserPreset &p )
    if( listenerNotForParent )
       listenerNotForParent->valueChanged( this );
 
+}
+
+void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *subMenu)
+{
+   auto factory_add = subMenu->addEntry("FACTORY PRESETS", 0);
+   factory_add->setEnabled(0);
+   if( ! type || ! subMenu ) return;
+   int type_id = 0;
+   type->Attribute("i", &type_id);
+
+   if( userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0 )
+      return;
+
+   subMenu->addSeparator();
+   auto user_add = subMenu->addEntry("USER PRESETS");
+   user_add->setEnabled(0);
+
+   for( auto &ps : userPresets[type_id] )
+   {
+      auto fxName = ps.name;
+      
+#if WINDOWS
+      Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
+#endif
+
+      auto i = new CCommandMenuItem(CCommandMenuItem::Desc(fxName.c_str()));
+      i->setActions([this,ps](CCommandMenuItem *item)
+                       {
+                          this->loadUserPreset(ps);
+                       } );
+      subMenu->addEntry(i);
+   }
 }
