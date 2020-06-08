@@ -46,7 +46,7 @@ void CSnapshotMenu::populate()
 {
    int main = 0, sub = 0;
    bool do_nothing = false;
-   const long max_main = 16, max_sub = 256;
+   const long max_main = 128, max_sub = 256;
 
    int idx = 0;
    TiXmlElement* sect = storage->getSnapshotSection(mtype);
