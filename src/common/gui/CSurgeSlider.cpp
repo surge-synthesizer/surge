@@ -177,15 +177,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    if (has_modulation_current)
       typex = 2;
 
-   float slider_alpha = disabled ? 0.35 : 1.0;
-   float tray_alpha = slider_alpha;
-#if LINUX
-   if( controlstate == cs_drag )
-   {
-      // work around a VSTGUI bug w
-      slider_alpha = 1.0;
-   }
-#endif
+   float slider_alpha = (disabled || deactivated) ? 0.35 : 1.0;
 
    if (pTray)
    {
@@ -205,9 +197,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
 
       if (style & CSlider::kHorizontal)
-         pTray->draw(dc, trect, CPoint(133 * typex, 14 * typey), tray_alpha);
+         pTray->draw(dc, trect, CPoint(133 * typex, 14 * typey), slider_alpha);
       else
-         pTray->draw(dc, trect, CPoint(16 * typex, 75 * typey), tray_alpha);
+         pTray->draw(dc, trect, CPoint(16 * typex, 75 * typey), slider_alpha);
    }
 
    CRect headrect;
@@ -265,7 +257,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       CRect trect = hrect;
       CColor ColBar = skin->getColor("slider.modulation", CColor(173, 255, 107, 255));
 
-      ColBar.alpha = (int)(tray_alpha * 255.f);
+      ColBar.alpha = (int)(slider_alpha * 255.f);
 
       // float moddist = modval * range;
       // We want modval + value to be bould by -1 and 1. So
@@ -624,11 +616,6 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 
       attachCursor();
    }
-#if LINUX
-   // again handle the vstgui bug
-   invalid();
-#endif 
-
    return kMouseEventHandled;
 }
 
