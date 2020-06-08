@@ -106,6 +106,8 @@ enum ctrltypes
    ct_osc_feedback,
    ct_osc_feedback_negative,
    ct_chorusmodtime,
+   ct_percent200,
+   ct_rotarydrive,
    num_ctrltypes,
 };
 

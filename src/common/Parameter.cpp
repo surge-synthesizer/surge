@@ -242,6 +242,7 @@ bool Parameter::can_deactivate()
    switch(ctrltype)
    {
    case ct_freq_audible_deactivatable:
+   case ct_rotarydrive:
       return true;
    }
    return false;
@@ -703,6 +704,18 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
+   case ct_percent200:
+      val_min.f = 0;
+      val_max.f = 2;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
+   case ct_rotarydrive:
+      val_min.f = 0;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
    default:
    case ct_none:
       sprintf(dispname, "-");
@@ -748,7 +761,9 @@ void Parameter::bound_value(bool force_integer)
       switch (ctrltype)
       {
       case ct_percent:
+      case ct_percent200:
       case ct_percent_bidirectional:
+      case ct_rotarydrive:
       case ct_osc_feedback:
       case ct_osc_feedback_negative:
       case ct_detuning:
@@ -1257,7 +1272,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), get_extended(f));
          break;
       case ct_percent:
+      case ct_percent200:
       case ct_percent_bidirectional:
+      case ct_rotarydrive:
       case ct_countedset_percent:
          sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), f * 100.f, '%');
          break;
@@ -1760,6 +1777,7 @@ bool Parameter::can_setvalue_from_string()
    switch( ctrltype )
    {
    case ct_percent:
+   case ct_percent200:
    case ct_percent_bidirectional:
    case ct_pitch_semi7bp:
    case ct_pitch_semi7bp_absolutable:
@@ -1801,6 +1819,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_polylimit:
    case ct_midikey:
    case ct_midikey_or_channel:
+   case ct_rotarydrive:
      {
       return true;
       break; }
@@ -1931,9 +1950,11 @@ bool Parameter::set_value_from_string( std::string s )
    switch (ctrltype)
    {
    case ct_percent:
+   case ct_percent200:
    case ct_percent_bidirectional:
    case ct_countedset_percent:
    case ct_detuning:
+   case ct_rotarydrive:
    {
       if (nv < val_min.f * 100 || nv > val_max.f * 100) {
          return false; }
