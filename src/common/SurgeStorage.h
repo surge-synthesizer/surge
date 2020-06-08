@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iterator>
 #include <functional>
+#include <unordered_map>
 
 #include "Tunings.h"
 
@@ -406,6 +407,9 @@ struct DAWExtraStateStorage
 
    bool hasMapping = false;
    std::string mappingContents = "";
+
+   std::unordered_map<int, int> midictrl_map; // param -> midictrl
+   std::unordered_map<int, int> customcontrol_map; // custom controller number -> midicontrol
 };
 
 

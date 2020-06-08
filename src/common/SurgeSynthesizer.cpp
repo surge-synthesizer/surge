@@ -2859,3 +2859,102 @@ PluginLayer* SurgeSynthesizer::getParent()
    assert(_parent != nullptr);
    return _parent;
 }
+
+void SurgeSynthesizer::populateDawExtraState() {
+   storage.getPatch().dawExtraState.isPopulated = true;
+   storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
+   storage.getPatch().dawExtraState.mpePitchBendRange = mpePitchBendRange;
+   
+   storage.getPatch().dawExtraState.hasTuning = !storage.isStandardTuning;
+   if( ! storage.isStandardTuning )
+      storage.getPatch().dawExtraState.tuningContents = storage.currentScale.rawText;
+   else
+      storage.getPatch().dawExtraState.tuningContents = "";
+   
+   storage.getPatch().dawExtraState.hasMapping = !storage.isStandardMapping;
+   if( ! storage.isStandardMapping )
+      storage.getPatch().dawExtraState.mappingContents = storage.currentMapping.rawText;
+   else
+      storage.getPatch().dawExtraState.mappingContents = "";
+
+   int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
+                                             // B will be duplicated on load)
+   for (int i = 0; i < n; i++)
+   {
+      if (storage.getPatch().param_ptr[i]->midictrl >= 0)
+      {
+         storage.getPatch().dawExtraState.midictrl_map[i] = storage.getPatch().param_ptr[i]->midictrl;
+      }
+   }
+
+   for (int i=0; i<n_customcontrollers; ++i )
+   {
+      storage.getPatch().dawExtraState.customcontrol_map[i] = storage.controllers[i];
+   }
+
+}
+
+void SurgeSynthesizer::loadFromDawExtraState() {
+   if( ! storage.getPatch().dawExtraState.isPopulated )
+      return;
+   mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
+   if( storage.getPatch().dawExtraState.mpePitchBendRange > 0 )
+      mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
+   
+   if( storage.getPatch().dawExtraState.hasTuning )
+   {
+      try {
+         auto sc = Tunings::parseSCLData(storage.getPatch().dawExtraState.tuningContents );
+         storage.retuneToScale(sc);
+      }
+      catch( Tunings::TuningError &e )
+      {
+         Surge::UserInteractions::promptError( e.what(), "Unable to restore tuning" );
+         storage.retuneToStandardTuning();
+      }
+   }
+   else
+   {
+      storage.retuneToStandardTuning();
+   }
+   
+   if( storage.getPatch().dawExtraState.hasMapping )
+   {
+      try
+      {
+         auto kb = Tunings::parseKBMData(storage.getPatch().dawExtraState.mappingContents );
+         storage.remapToKeyboard(kb);
+      }
+      catch( Tunings::TuningError &e )
+      {
+         Surge::UserInteractions::promptError( e.what(), "Unable to restore mapping" );
+         storage.retuneToStandardTuning();
+      }
+      
+   }
+   else
+   {
+      storage.remapToStandardKeyboard();
+   }
+
+   int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
+                                             // B will be duplicated on load)
+   for (int i = 0; i < n; i++)
+   {
+      if (storage.getPatch().dawExtraState.midictrl_map.find(i) != storage.getPatch().dawExtraState.midictrl_map.end() )
+      {
+         storage.getPatch().param_ptr[i]->midictrl =  storage.getPatch().dawExtraState.midictrl_map[i];
+         if( i >= n_global_params )
+         {
+            storage.getPatch().param_ptr[i + n_scene_params]->midictrl =  storage.getPatch().dawExtraState.midictrl_map[i];
+         }
+      }
+   }
+
+   for (int i=0; i<n_customcontrollers; ++i )
+   {
+      if( storage.getPatch().dawExtraState.customcontrol_map.find(i) != storage.getPatch().dawExtraState.midictrl_map.end() )
+         storage.controllers[i] = storage.getPatch().dawExtraState.customcontrol_map[i];
+   }
+
+}

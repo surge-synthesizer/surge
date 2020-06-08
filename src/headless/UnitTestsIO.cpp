@@ -232,6 +232,82 @@ TEST_CASE( "DAW Streaming and Unstreaming", "[io][mpe][tun]" )
 
    }
 
+   SECTION( "Save and Restore Param Midi Controls - Simple" )
+   {
+      auto surgeSrc = Surge::Headless::createSurge(44100);
+      auto surgeDest = Surge::Headless::createSurge(44100);
+
+      // Simplest case
+      surgeSrc->storage.getPatch().param_ptr[118]->midictrl = 57;
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[118]->midictrl == 57 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[118]->midictrl != 57 );
+
+      fromto( surgeSrc, surgeDest );
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[118]->midictrl == 57 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[118]->midictrl == 57 );
+   }
+
+   SECTION( "Save and Restore Param Midi Controls - Empty" )
+   {
+      auto surgeSrc = Surge::Headless::createSurge(44100);
+      auto surgeDest = Surge::Headless::createSurge(44100);
+
+      fromto( surgeSrc, surgeDest );
+      for( int i=0; i<n_global_params + n_scene_params; ++i )
+      {
+         REQUIRE( surgeSrc->storage.getPatch().param_ptr[i]->midictrl ==
+                  surgeDest->storage.getPatch().param_ptr[i]->midictrl );
+         REQUIRE( surgeSrc->storage.getPatch().param_ptr[i]->midictrl == -1 );
+      }
+   }
+
+   SECTION( "Save and Restore Param Midi Controls - Multi" )
+   {
+      auto surgeSrc = Surge::Headless::createSurge(44100);
+      auto surgeDest = Surge::Headless::createSurge(44100);
+
+      // Bigger Case
+      surgeSrc->storage.getPatch().param_ptr[118]->midictrl = 57;
+      surgeSrc->storage.getPatch().param_ptr[123]->midictrl = 59;
+      surgeSrc->storage.getPatch().param_ptr[172]->midictrl = 82;
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[118]->midictrl == 57 );
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[123]->midictrl == 59 );
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[172]->midictrl == 82 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[118]->midictrl != 57 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[123]->midictrl != 59 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[172]->midictrl != 82 );
+
+      fromto( surgeSrc, surgeDest );
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[118]->midictrl == 57 );
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[123]->midictrl == 59 );
+      REQUIRE( surgeSrc->storage.getPatch().param_ptr[172]->midictrl == 82 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[118]->midictrl == 57 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[123]->midictrl == 59 );
+      REQUIRE( surgeDest->storage.getPatch().param_ptr[172]->midictrl == 82 );
+   }
+
+   SECTION( "Save and Restore Custom Controllers" )
+   {
+      auto surgeSrc = Surge::Headless::createSurge(44100);
+      auto surgeDest = Surge::Headless::createSurge(44100);
+
+      for( int i=0; i<n_customcontrollers; ++i )
+      {
+         REQUIRE( surgeSrc->storage.controllers[i] == 41 + i );
+         REQUIRE( surgeDest->storage.controllers[i] == 41 + i );
+      }
+
+      surgeSrc->storage.controllers[2] = 75;
+      surgeSrc->storage.controllers[4] = 79;
+      fromto(surgeSrc, surgeDest );
+      for( int i=0; i<n_customcontrollers; ++i )
+      {
+         REQUIRE( surgeSrc->storage.controllers[i] == surgeDest->storage.controllers[i] );
+      }
+      REQUIRE( surgeDest->storage.controllers[2] == 75 );
+      REQUIRE( surgeDest->storage.controllers[4] == 79 );
+   }
+
 }
 
 TEST_CASE( "Stream WaveTable Names", "[io]" )
