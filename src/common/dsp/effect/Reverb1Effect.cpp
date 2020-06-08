@@ -357,7 +357,7 @@ void Reverb1Effect::init_ctrltypes()
    fxdata->p[rp_roomsize].modulateable = false;
    fxdata->p[rp_decaytime].set_name("Decay Time");
    fxdata->p[rp_decaytime].set_type(ct_reverbtime);
-   fxdata->p[rp_damping].set_name("HF Damp");
+   fxdata->p[rp_damping].set_name("HF Damping");
    fxdata->p[rp_damping].set_type(ct_percent);
 
    fxdata->p[rp_locut].set_name("Low Cut");

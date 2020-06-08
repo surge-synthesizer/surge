@@ -325,9 +325,9 @@ void Reverb2Effect::init_ctrltypes()
    fxdata->p[r2p_buildup].set_type(ct_percent);
    fxdata->p[r2p_modulation].set_name("Modulation");
    fxdata->p[r2p_modulation].set_type(ct_percent);
-   fxdata->p[r2p_hf_damping].set_name("HF Damp");
+   fxdata->p[r2p_hf_damping].set_name("HF Damping");
    fxdata->p[r2p_hf_damping].set_type(ct_percent);
-   fxdata->p[r2p_lf_damping].set_name("LF Damp");
+   fxdata->p[r2p_lf_damping].set_name("LF Damping");
    fxdata->p[r2p_lf_damping].set_type(ct_percent);
    fxdata->p[r2p_mix].set_name("Mix");
    fxdata->p[r2p_mix].set_type(ct_percent);
