@@ -52,15 +52,18 @@ void CSnapshotMenu::populate()
    TiXmlElement* sect = storage->getSnapshotSection(mtype);
    if (sect)
    {
-      TiXmlElement* type = TINYXML_SAFE_TO_ELEMENT(sect->FirstChild("type"));
+      TiXmlElement* type = sect->FirstChildElement();
 
       while (type)
       {
-          populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
-          type = TINYXML_SAFE_TO_ELEMENT(type->NextSibling("type"));
-          main++;
-          if (main >= max_main)
-              break;
+         if( type->Value() && strcmp( type->Value(), "type" ) == 0  )
+            populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
+         else if( type->Value() && strcmp( type->Value(), "separator" ) == 0 )
+            addSeparator();
+         type = type->NextSiblingElement();
+         main++;
+         if (main >= max_main)
+            break;
       }
    }
 }
