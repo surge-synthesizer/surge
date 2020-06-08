@@ -380,9 +380,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
           context->setClipRect(clipR);
 
 #if LINUX
-         if( alpha > 1.0 ) alpha /= 255.0;
-         if( alpha > 1.0 ) alpha = 1.0;
-         if( alpha < 0.0 ) alpha = 0.0;
+          alpha = 1.0;
 #endif
           offscreenCache[offset]->draw(context, drect, CPoint(0, 0), alpha);
           context->setClipRect(origClip);

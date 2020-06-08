@@ -232,7 +232,7 @@ void Reverb2Effect::process(float* dataL, float* dataR)
       lfos[3] = -_lfo.i;
 
       auto hdc = limit_range( _hf_damp_coefficent.v, 0.01f, 0.99f );
-      auto ldc = limit_range( _hf_damp_coefficent.v, 0.01f, 0.99f );
+      auto ldc = limit_range( _lf_damp_coefficent.v, 0.01f, 0.99f );
       for (int b = 0; b < NUM_BLOCKS; b++)
       {
          x = x + in;

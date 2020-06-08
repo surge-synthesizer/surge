@@ -1150,9 +1150,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hs->setDefaultValue(p->get_default_value_f01());
 
             if( p->can_deactivate() )
-               hs->disabled = p->deactivated;
+               hs->deactivated = p->deactivated;
             else
-               hs->disabled = false;
+               hs->deactivated = false;
 
             setDisabledForParameter(p, hs);
 
@@ -1792,9 +1792,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->setTempoSync(p->temposync);
 
                if( p->can_deactivate() )
-                  hs->disabled = p->deactivated;
+                  hs->deactivated = p->deactivated;
                else
-                  hs->disabled = false;
+                  hs->deactivated = false;
 
                setDisabledForParameter(p, hs);
 
@@ -1819,9 +1819,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->setTempoSync(p->temposync);
 
                if( p->can_deactivate() )
-                  hs->disabled = p->deactivated;
+                  hs->deactivated = p->deactivated;
                else
-                  hs->disabled = false;
+                  hs->deactivated = false;
 
                setDisabledForParameter(p, hs);
 
