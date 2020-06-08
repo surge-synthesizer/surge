@@ -1651,6 +1651,36 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                }
            }
 
+           p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("midictrl_map"));
+           if( p )
+           {
+              auto c = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "c" ) );
+              while( c )
+              {
+                 int p, v;
+                 if( c->QueryIntAttribute( "p", &p ) == TIXML_SUCCESS &&
+                     c->QueryIntAttribute( "v", &v ) == TIXML_SUCCESS )
+                 {
+                    dawExtraState.midictrl_map[p] = v;
+                 }
+                 c = TINYXML_SAFE_TO_ELEMENT(c->NextSibling( "c" ) );
+              }
+           }
+
+           p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("customcontrol_map"));
+           if( p )
+           {
+              auto c = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "c" ) );
+              while( c )
+              {
+                 int p, v;
+                 if( c->QueryIntAttribute( "p", &p ) == TIXML_SUCCESS &&
+                     c->QueryIntAttribute( "v", &v ) == TIXML_SUCCESS )
+                    dawExtraState.customcontrol_map[p] = v;
+                 c = TINYXML_SAFE_TO_ELEMENT(c->NextSibling( "c" ) );
+              }
+           }
+
        }
    }
                                               
@@ -1922,6 +1952,29 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
        mpc.SetAttribute("v", base64_encode( (unsigned const char *)dawExtraState.mappingContents.c_str(),
                                             dawExtraState.mappingContents.size() ).c_str() );
        dawExtraXML.InsertEndChild(mpc);
+
+       /*
+       ** Add the midi controls
+       */
+       TiXmlElement mcm("midictrl_map");
+       for( auto &p : dawExtraState.midictrl_map )
+       {
+          TiXmlElement c("c");
+          c.SetAttribute( "p", p.first );
+          c.SetAttribute( "v", p.second );
+          mcm.InsertEndChild(c);
+       }
+       dawExtraXML.InsertEndChild(mcm);
+       
+       TiXmlElement ccm("customcontrol_map");
+       for( auto &p : dawExtraState.customcontrol_map )
+       {
+          TiXmlElement c("c");
+          c.SetAttribute( "p", p.first );
+          c.SetAttribute( "v", p.second );
+          ccm.InsertEndChild(c);
+       }
+       dawExtraXML.InsertEndChild(ccm);
    }
    patch.InsertEndChild(dawExtraXML);
    

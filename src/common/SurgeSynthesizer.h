@@ -178,67 +178,9 @@ public:
 
    float vu_peak[8];
 
-   void populateDawExtraState() {
-       storage.getPatch().dawExtraState.isPopulated = true;
-       storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
-       storage.getPatch().dawExtraState.mpePitchBendRange = mpePitchBendRange;
-       
-       storage.getPatch().dawExtraState.hasTuning = !storage.isStandardTuning;
-       if( ! storage.isStandardTuning )
-           storage.getPatch().dawExtraState.tuningContents = storage.currentScale.rawText;
-       else
-           storage.getPatch().dawExtraState.tuningContents = "";
-
-       storage.getPatch().dawExtraState.hasMapping = !storage.isStandardMapping;
-       if( ! storage.isStandardMapping )
-           storage.getPatch().dawExtraState.mappingContents = storage.currentMapping.rawText;
-       else
-           storage.getPatch().dawExtraState.mappingContents = "";
-   }
+   void populateDawExtraState();
    
-   void loadFromDawExtraState() {
-       if( ! storage.getPatch().dawExtraState.isPopulated )
-           return;
-       mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
-       if( storage.getPatch().dawExtraState.mpePitchBendRange > 0 )
-          mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
-
-       if( storage.getPatch().dawExtraState.hasTuning )
-       {
-          try {
-             auto sc = Tunings::parseSCLData(storage.getPatch().dawExtraState.tuningContents );
-             storage.retuneToScale(sc);
-          }
-          catch( Tunings::TuningError &e )
-          {
-             Surge::UserInteractions::promptError( e.what(), "Unable to restore tuning" );
-             storage.retuneToStandardTuning();
-          }
-       }
-       else
-       {
-          storage.retuneToStandardTuning();
-       }
-       
-       if( storage.getPatch().dawExtraState.hasMapping )
-       {
-          try
-          {
-             auto kb = Tunings::parseKBMData(storage.getPatch().dawExtraState.mappingContents );
-             storage.remapToKeyboard(kb);
-          }
-          catch( Tunings::TuningError &e )
-          {
-             Surge::UserInteractions::promptError( e.what(), "Unable to restore mapping" );
-             storage.retuneToStandardTuning();
-          }
-
-       }
-       else
-       {
-          storage.remapToStandardKeyboard();
-       }
-   }
+   void loadFromDawExtraState();
    
 public:
    int CC0, CC32, PCH, patchid;
