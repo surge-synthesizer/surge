@@ -2531,9 +2531,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                cancellearn ? "Abort Macro MIDI Learn" : "MIDI Learn Macro...";
             addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, ccid] {
                                                       if (cancellearn)
-                                                         synth->learn_param = -1;
+                                                         synth->learn_custom = -1;
                                                       else
-                                                         synth->learn_param = ccid;
+                                                         synth->learn_custom = ccid;
                                                    });
             eid++;
 
