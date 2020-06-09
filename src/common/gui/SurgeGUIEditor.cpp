@@ -3944,24 +3944,45 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    if( ml > 26 )
       iff += ( ml - 26 ) * 6;
    
-
-   
    CRect r(0, 0, iff, 18);
    if (modulate)
       r.bottom += 18;
    CRect r2 = control->getViewSize();
 
-   r.offset((r2.left / 150) * 150, r2.bottom);
+   // OK this is a heuristic to stop deform overpainting and stuff 
+   if( r2.bottom > WINDOW_SIZE_Y - r.getHeight() - 2 )
+   {
+      // stick myself on top please
+      r.offset((r2.left / 150) * 150, r2.top - r.getHeight() - 2);
+      
+   }
+   else
+   {
+      r.offset((r2.left / 150) * 150, r2.bottom);
+   }
 
-   int ao = 0;
    if (r.bottom > WINDOW_SIZE_Y - 2)
-      ao = (WINDOW_SIZE_Y - 2 - r.bottom);
-   r.offset(0, ao);
+   {
+      int ao = (WINDOW_SIZE_Y - 2 - r.bottom);
+      r.offset(0, ao);
+   }
 
    if (r.right > WINDOW_SIZE_X - 2)
-      ao = (WINDOW_SIZE_X - 2 - r.right);
-   r.offset(ao, 0);
+   {
+      int ao = (WINDOW_SIZE_X - 2 - r.right);
+      r.offset(ao, 0);
+   }
 
+   if( r.left < 0 ) {
+      int ao = 2 - r.left;
+      r.offset( ao, 0 );
+   }
+
+   if( r.top < 0 ) {
+      int ao = 2 - r.top;
+      r.offset( 0, ao );
+   }
+   
    if (buttons || forceMB)
    {
       // make sure an infowindow doesn't appear twice
