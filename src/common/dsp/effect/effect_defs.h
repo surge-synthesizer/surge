@@ -235,7 +235,7 @@ protected:
    quadr_osc lfo;
    quadr_osc lf_lfo;
    lipol<float> dL, dR, hornamp[2];
-   lipol<float, true> drive;
+   lag<float, true> drive;
    bool first_run;
 };
 

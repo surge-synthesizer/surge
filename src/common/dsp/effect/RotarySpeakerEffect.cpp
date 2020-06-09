@@ -9,6 +9,7 @@ enum rsparams
    rsp_tremolo,
    rsp_rotor_rate,
    rsp_drive,
+   rsp_waveshape,
    rsp_width,
    rsp_mix,
    rsp_numparams
@@ -32,8 +33,6 @@ void RotarySpeakerEffect::init()
 
    xover.suspend();
    lowbass.suspend();
-
-   printf("%.8f\n", xover.calc_omega(0.862496f));
    
    xover.coeff_LP2B(xover.calc_omega(0.862496f), 0.707);    // 800 Hz
    lowbass.coeff_LP2B(xover.calc_omega(-1.14f), 0.707);     // 200 Hz
@@ -68,6 +67,7 @@ void RotarySpeakerEffect::init_default_values()
    fxdata->p[rsp_horn_rate].val.f = 1.f;
    fxdata->p[rsp_rotor_rate].val.f = 0.7;
    fxdata->p[rsp_drive].val.f = 0.f;
+   fxdata->p[rsp_waveshape].val.i = 0;
    fxdata->p[rsp_doppler].val.f = 0.25f;
    fxdata->p[rsp_tremolo].val.f = 0.5f;
    fxdata->p[rsp_width].val.f = 1.0f;
@@ -94,9 +94,9 @@ int RotarySpeakerEffect::group_label_ypos(int id)
    case 0:
       return 1;
    case 1:
-      return 9;
+      return 11;
    case 2:
-      return 15;
+      return 17;
    }
    return 0;
 }
@@ -111,6 +111,8 @@ void RotarySpeakerEffect::init_ctrltypes()
    fxdata->p[rsp_rotor_rate].set_type(ct_percent200);
    fxdata->p[rsp_drive].set_name("Drive");
    fxdata->p[rsp_drive].set_type(ct_rotarydrive);
+   fxdata->p[rsp_waveshape].set_name("Waveshaper");
+   fxdata->p[rsp_waveshape].set_type(ct_distortion_waveshape);
    fxdata->p[rsp_doppler].set_name("Doppler");
    fxdata->p[rsp_doppler].set_type(ct_percent);
    fxdata->p[rsp_tremolo].set_name("Tremolo");
@@ -125,9 +127,10 @@ void RotarySpeakerEffect::init_ctrltypes()
    fxdata->p[rsp_horn_rate].posy_offset = 1;
    fxdata->p[rsp_rotor_rate].posy_offset = -3;
    fxdata->p[rsp_drive].posy_offset = -3;
+   fxdata->p[rsp_waveshape].posy_offset = -3;
 
-   fxdata->p[rsp_doppler].posy_offset = 7;
-   fxdata->p[rsp_tremolo].posy_offset = 7;
+   fxdata->p[rsp_doppler].posy_offset = 9;
+   fxdata->p[rsp_tremolo].posy_offset = 9;
    
    fxdata->p[rsp_width].posy_offset = 5;
    fxdata->p[rsp_mix].posy_offset = 5;
@@ -192,6 +195,10 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
 
    drive.newValue(*f[rsp_drive]);
 
+   int ws = *pdata_ival[rsp_waveshape];
+   if (ws < 0 || ws >= n_ws_type)
+      ws = 0;
+
    for (k = 0; k < BLOCK_SIZE; k++)
    {
       float input;
@@ -199,7 +206,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
       if (!fxdata->p[rsp_drive].deactivated)
       {
           float drive_factor = 1.f + (drive.v * drive.v * 19.f);
-          input = tanh_fast(0.5f * (dataL[k] + dataR[k]) * drive_factor);
+          input = lookup_waveshape(ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor);
           input *= 1 / (drive_factor * 0.5);
           drive.process();
       }
@@ -283,6 +290,7 @@ void RotarySpeakerEffect::handleStreamingMismatches(int streamingRevision, int c
       fxdata->p[rsp_rotor_rate].val.f = 0.7;
       fxdata->p[rsp_drive].val.f = 0.f;
       fxdata->p[rsp_drive].deactivated = true;
+      fxdata->p[rsp_waveshape].val.i = 0;
       fxdata->p[rsp_width].val.f = 1.f;
       fxdata->p[rsp_mix].val.f = 1.f;
    }
