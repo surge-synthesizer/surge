@@ -81,8 +81,10 @@ const char* RotarySpeakerEffect::group_label(int id)
    case 0:
       return "Speaker";
    case 1:
-      return "Modulation";
+      return "Amp";
    case 2:
+      return "Modulation";
+   case 3:
       return "Output";
    }
    return 0;
@@ -94,9 +96,11 @@ int RotarySpeakerEffect::group_label_ypos(int id)
    case 0:
       return 1;
    case 1:
-      return 11;
+      return 7;
    case 2:
-      return 17;
+      return 13;
+   case 3:
+      return 19;
    }
    return 0;
 }
@@ -111,7 +115,7 @@ void RotarySpeakerEffect::init_ctrltypes()
    fxdata->p[rsp_rotor_rate].set_type(ct_percent200);
    fxdata->p[rsp_drive].set_name("Drive");
    fxdata->p[rsp_drive].set_type(ct_rotarydrive);
-   fxdata->p[rsp_waveshape].set_name("Waveshaper");
+   fxdata->p[rsp_waveshape].set_name("Mode");
    fxdata->p[rsp_waveshape].set_type(ct_distortion_waveshape);
    fxdata->p[rsp_doppler].set_name("Doppler");
    fxdata->p[rsp_doppler].set_type(ct_percent);
@@ -126,14 +130,15 @@ void RotarySpeakerEffect::init_ctrltypes()
 
    fxdata->p[rsp_horn_rate].posy_offset = 1;
    fxdata->p[rsp_rotor_rate].posy_offset = -3;
-   fxdata->p[rsp_drive].posy_offset = -3;
-   fxdata->p[rsp_waveshape].posy_offset = -3;
 
-   fxdata->p[rsp_doppler].posy_offset = 9;
-   fxdata->p[rsp_tremolo].posy_offset = 9;
+   fxdata->p[rsp_drive].posy_offset = -1;
+   fxdata->p[rsp_waveshape].posy_offset = -1;
+
+   fxdata->p[rsp_doppler].posy_offset = 11;
+   fxdata->p[rsp_tremolo].posy_offset = 11;
    
-   fxdata->p[rsp_width].posy_offset = 5;
-   fxdata->p[rsp_mix].posy_offset = 5;
+   fxdata->p[rsp_width].posy_offset = 7;
+   fxdata->p[rsp_mix].posy_offset = 7;
 }
 
 void RotarySpeakerEffect::process_only_control()
@@ -199,15 +204,51 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    if (ws < 0 || ws >= n_ws_type)
       ws = 0;
 
+   float gain_tweak, compensate, drive_factor, gain_comp_factor;
+
+   switch (ws + 1)
+   {
+   case wst_asym:
+   {
+      gain_tweak = 1.f;
+      compensate = 15.f;
+      break;
+   }
+   case wst_sinus:
+   {
+      gain_tweak = 4.f;
+      compensate = 10.f;
+      break;
+   }
+   case wst_digi:
+   {
+      gain_tweak = 1.f;
+      compensate = 4.f;
+      break;
+   }
+   default:
+   {
+      gain_tweak = 1.f;
+      compensate = 5.f;
+      break;
+   }
+   }
+
+   if (!fxdata->p[rsp_drive].deactivated)
+   {
+      drive_factor = 1.f + (drive.v * drive.v * 15.f);
+      gain_comp_factor = 1.f + (sqrt(drive.v * drive.v) * compensate);
+   }
+
    for (k = 0; k < BLOCK_SIZE; k++)
    {
       float input;
 
       if (!fxdata->p[rsp_drive].deactivated)
       {
-          float drive_factor = 1.f + (drive.v * drive.v * 19.f);
-          input = lookup_waveshape(ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor);
-          input *= 1 / (drive_factor * 0.5);
+          input = lookup_waveshape(ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;
+          input /= gain_comp_factor;
+
           drive.process();
       }
       else
