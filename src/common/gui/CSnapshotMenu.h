@@ -7,6 +7,8 @@
 #include "PopupEditorSpawner.h"
 #include "SurgeBitmaps.h"
 #include "SkinSupport.h"
+#include <unordered_map>
+#include <vector>
 
 class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumingComponnt
 {
@@ -34,7 +36,8 @@ public:
    int selectedIdx = -1;
    std::string selectedName = "";
 protected:
-   void populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx);
+   VSTGUI::COptionMenu *populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx);
+   virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu) { }
    SurgeStorage* storage = nullptr;
    char mtype[16] = {0};
 
@@ -82,6 +85,7 @@ public:
    virtual void populate() override;
    
 protected:
+   virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu) override;
    FxStorage *fx = nullptr, *fxbuffer = nullptr;
    static std::vector<float> fxCopyPaste; // OK this is a crap data structure for now. See the code.
    int slot = 0;
@@ -106,7 +110,7 @@ protected:
       float p[n_fx_params];
       bool ts[n_fx_params], er[n_fx_params];
    };
-   static std::vector<UserPreset> userPresets;
+   static std::unordered_map<int,std::vector<UserPreset>> userPresets; // from type to presets
    static bool scanForUserPresets;
    
    void rescanUserPresets();

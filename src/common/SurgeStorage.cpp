@@ -349,6 +349,24 @@ bailOnPortable:
    {
        userDataPath = userSpecifiedDataPath;
    }
+
+   userFXPath = userDataPath +
+#if WINDOWS
+      "\\"
+#else
+      "/"
+#endif
+      + "FXSettings";
+
+   
+   userMidiMappingsPath = userDataPath +
+#if WINDOWS
+      "\\"
+#else
+      "/"
+#endif
+      + "MIDIMappings";
+   
    
 #if LINUX
    if (!snapshotloader.Parse((const char*)&configurationXmlStart, 0,

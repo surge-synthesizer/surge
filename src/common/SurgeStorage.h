@@ -48,6 +48,25 @@ const int FIRoffset = FIRipol_N >> 1;
 const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
+// XML storage fileformat revision
+// 0 -> 1 new EG attack shapes (0>1, 1>2, 2>2)
+// 1 -> 2 new LFO EG stages (if (decay == max) sustain = max else sustain = min
+// 2 -> 3 filter subtypes added comb should default to 1 and moog to 3
+// 3 -> 4 comb+/- combined into 1 filtertype (subtype 0,0->0 0,1->1 1,0->2 1,1->3 )
+// 4 -> 5 stereo filterconf now have seperate pan controls
+// 5 -> 6 new filter sound in v1.2 (same parameters, but different sound & changed resonance
+// response).
+// 6 -> 7 custom controller state now stored (in seq. recall)
+// 7 -> 8 larger resonance
+// range (old filters are set to subtype 1), pan2 -> width
+// 8 -> 9 now 8 controls (offset ids larger
+// than ctrl7 by +1), custom controllers have names (guess for pre-rev9 patches)
+// 9 -> 10 added character parameter
+// 10 -> 11 (1.6.2 release) added DAW Extra State
+// 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
+// 12 -> 13 (1.7.0 release) deactivation; sine LP/HP
+const int ff_revision = 13;
+
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 extern short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
@@ -593,6 +612,8 @@ public:
    std::string datapath;
    std::string userDataPath;
    std::string userDefaultFilePath;
+   std::string userFXPath;
+   std::string userMidiMappingsPath;
 
    // float table_sin[512],table_sin_offset[512];
    Surge::CriticalSection CS_WaveTableData, CS_ModRouting;
