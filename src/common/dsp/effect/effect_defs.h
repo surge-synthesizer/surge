@@ -200,7 +200,7 @@ private:
 class RotarySpeakerEffect : public Effect
 {
 public:
-   lipol_ps mix alignas(16), width alignas(16);
+   lipol_ps width alignas(16), mix alignas(16);
 
    RotarySpeakerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~RotarySpeakerEffect();
@@ -234,7 +234,8 @@ protected:
    // f_rotor_lp[2][n_filter_parameters],f_xover[n_filter_parameters],f_lowbass[n_filter_parameters];
    quadr_osc lfo;
    quadr_osc lf_lfo;
-   lipol<float> dL, dR, drive, hornamp[2];
+   lipol<float> dL, dR, hornamp[2];
+   lipol<float, true> drive;
    bool first_run;
 };
 

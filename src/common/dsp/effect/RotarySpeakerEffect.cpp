@@ -43,11 +43,13 @@ void RotarySpeakerEffect::init()
 
 void RotarySpeakerEffect::setvars(bool init)
 {
+   drive.newValue(*f[rsp_drive]);
    width.set_target_smoothed(db_to_linear(*f[rsp_width]));
    mix.set_target_smoothed(*f[rsp_mix]);
 
    if (init)
    {
+      drive.instantize();
       width.instantize();
       mix.instantize();
    }
@@ -188,15 +190,18 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
 
    int k;
 
+   drive.newValue(*f[rsp_drive]);
+
    for (k = 0; k < BLOCK_SIZE; k++)
    {
       float input;
 
       if (!fxdata->p[rsp_drive].deactivated)
       {
-          float drive_factor = 1.f + ((*f[rsp_drive] * *f[rsp_drive]) * 19.f);
+          float drive_factor = 1.f + (drive.v * drive.v * 19.f);
           input = tanh_fast(0.5f * (dataL[k] + dataR[k]) * drive_factor);
           input *= 1 / (drive_factor * 0.5);
+          drive.process();
       }
       else
       {
