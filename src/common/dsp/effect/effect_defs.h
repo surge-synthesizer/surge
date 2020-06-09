@@ -200,6 +200,8 @@ private:
 class RotarySpeakerEffect : public Effect
 {
 public:
+   lipol_ps width alignas(16), mix alignas(16);
+
    RotarySpeakerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~RotarySpeakerEffect();
    virtual void process_only_control() override;
@@ -212,12 +214,15 @@ public:
    {
       return max_delay_length >> 5;
    }
+   void setvars(bool init);
    virtual void suspend() override;
    virtual void init() override;
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
    virtual const char* group_label(int id) override;
    virtual int group_label_ypos(int id) override;
+
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
 protected:
    float buffer[max_delay_length];
@@ -229,7 +234,8 @@ protected:
    // f_rotor_lp[2][n_filter_parameters],f_xover[n_filter_parameters],f_lowbass[n_filter_parameters];
    quadr_osc lfo;
    quadr_osc lf_lfo;
-   lipol<float> dL, dR, drive, hornamp[2];
+   lipol<float> dL, dR, hornamp[2];
+   lag<float, true> drive;
    bool first_run;
 };
 
