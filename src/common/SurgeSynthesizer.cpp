@@ -1622,6 +1622,20 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             }*/
 
             fx[s]->init();
+
+            /*
+            ** Clear modulation onto FX otherwise it hangs around from old ones, often with
+            ** disastrously bad meaning. #2036
+            */
+            for(int j=0; j<n_fx_params; j++)
+            {
+               auto p = &( storage.getPatch().fx[s].p[j] );
+               for( int ms=1; ms<n_modsources; ms++ )
+               {
+                  clearModulation(p->id, (modsources)ms );
+               }
+            }
+            
          }
          something_changed = true;
          refresh_editor = true;
