@@ -48,7 +48,7 @@ Additional pre-requisites:
 ### Install prerequisits
 
 * Install Git, Visual Studio 2017 or 2019
-* If you want to build an installerinstall Inno Setup. 
+* If you want to build an installer, install Inno Setup. 
 * When you  install Visual Studio, make sure to include the CLI tools and cmake, which are included in
 'optional CLI support' and 'toolset for desktop' install bundles.
 
@@ -86,7 +86,7 @@ cmake . -Bbuild
      of introductions to help with visual studio once here.
    * To build on the command line type 
 ```
-cmake --build build --config Release --target Surge-VST3-Packaged`
+cmake --build build --config Release --target Surge-VST3-Packaged
 ```
 
 * At the end of a succesful build the folder `build/surge_products` will contain `Surge.vst3` which you can use to replace 
