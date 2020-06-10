@@ -45,22 +45,30 @@ Additional pre-requisites:
 * [Visual Studio 15.5 (at least)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
-Install Git, Visual Studio 2017 or 2019, and (if you want to build an installer) Inno Setup. When you 
-install Visual Studio, make sure to include the CLI tools and cmake, which are included in
+### Install prerequisits
+
+* Install Git, Visual Studio 2017 or 2019
+* If you want to build an installerinstall Inno Setup. 
+* When you  install Visual Studio, make sure to include the CLI tools and cmake, which are included in
 'optional CLI support' and 'toolset for desktop' install bundles.
 
-You then want to start a visual studio prompt. This is a command like `x64 Native Tools Command Prompt for VS 2017` or similar installed by your visual studio install.
+### Check out the code
 
-After all this is done, make a fork of this repo, clone the repo and get the required 
-submodules with the following commands in that command shell.
-
+* Start a visual studio prompt. This is done by running a command like `x64 Native Tools Command Prompt for VS 2017` or similar which is installed when you install visual studio
+* Log into your github account and fork this repo
+* In the visual studio command, change to the writable directory you want to include your source
+* In the visual studio command, run these commands to check out the code
 ```
 git clone https://github.com/{your-user-name}/surge.git
 cd surge
 git submodule update --init --recursive
 ```
 
-If you have the VST2SDK and are building the VST2, set your environment. If not, don't worry.
+### Your first build
+
+All of these commands take place in your visual studio command shell
+
+* If you have the VST2SDK and are building the VST2, set your environment. If not, don't worry.
 You can build the VST3 on windows without any extra assets (we recommend all windows users
 use the VST3).
 
@@ -68,26 +76,37 @@ use the VST3).
 set VST2SDK_DIR=c:\path\to\vst2
 ```
 
-Next, run cmake to construct the appropriate build files
-
+* Run cmake to create a build directory
 ```
 cmake . -Bbuild
 ```
 
-After which you can open the freshly generated Visual Studio solution `build/Surge.sln`. You can also
-compile from the command line with
-
+* Choose to build in visual studio or the command line
+   * To build in visual studio open the file `build/Surge.sln` created in the prior step. The internet is full
+     of introductions to help with visual studio once here.
+   * To build on the command line type 
 ```
-msbuild buildtask.xml /p:Platform=x64
+cmake --build build --config Release --target Surge-VST3-Packaged`
 ```
 
-If you want to build 32 bit, build a separate solution file with
+* At the end of a succesful build the folder `build/surge_products` will contain `Surge.vst3` which you can use to replace 
+  surge in your DAW scan path. (Note: If you have never installed surge you also need to install assets)
 
+### Your first 32 bit build
+
+* 32 bit works exactly like 64 bit, just with a couple of extra arguments
+* When you run cmake add the `-A Win32` argument and choose a different target 
 ```
 cmake . -Bbuild32 -A Win32
 ```
 
-and the `build32` directory will contain your x86 solution. 
+* To build the dll, either open `build32\Surge.sln` or run the cmake build command with  `build32` as the directory
+```
+cmake --build build32 --config Release --target Surge-VST3-Packaged
+```
+
+### Building the windows installer
+
 
 If you want to build the installer, open the file `installer_win/surge.iss` by using `Inno Setup`. 
 `Inno Setup` will bake an installer and place it in `installer_win/Output/`
