@@ -796,7 +796,10 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       val  = ( ( - val + 1.0f ) * 0.5 ) * valScale;
       float euval = ( ( - eval + 1.0f ) * 0.5 ) * valScale;
       float edval = ( ( eval + 1.0f ) * 0.5  ) * valScale;
-      
+
+      if( lfodata->unipolar.val.b )
+         val = val * 2.0 - 1.0;
+
       float xc = valScale * i / ( cycleSamples * n_stepseqsteps);
       if( i == 0 )
       {

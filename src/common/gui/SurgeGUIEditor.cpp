@@ -3921,7 +3921,7 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
       else
       {
 #if LINUX
-         clear_infoview_countdown = 40;
+         clear_infoview_countdown = 15;
 #else
          clear_infoview_countdown = 15;
 #endif
