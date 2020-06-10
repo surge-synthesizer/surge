@@ -115,7 +115,7 @@ void RotarySpeakerEffect::init_ctrltypes()
    fxdata->p[rsp_rotor_rate].set_type(ct_percent200);
    fxdata->p[rsp_drive].set_name("Drive");
    fxdata->p[rsp_drive].set_type(ct_rotarydrive);
-   fxdata->p[rsp_waveshape].set_name("Mode");
+   fxdata->p[rsp_waveshape].set_name("Drive Model");
    fxdata->p[rsp_waveshape].set_type(ct_distortion_waveshape);
    fxdata->p[rsp_doppler].set_name("Doppler");
    fxdata->p[rsp_doppler].set_type(ct_percent);
@@ -204,20 +204,27 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    if (ws < 0 || ws >= n_ws_type)
       ws = 0;
 
+   /*
+   ** This is a set of completely empirical scaling settings to offset gain being too crazy
+   ** in the drive cycle. Theres no science really, just us playing with it and seeing
+   */
    float gain_tweak, compensate, drive_factor, gain_comp_factor;
-
+   float compensateStartsAt = 0.18;
+   
    switch (ws + 1)
    {
    case wst_asym:
    {
       gain_tweak = 1.f;
-      compensate = 15.f;
+      compensate = 10.f;
+      compensateStartsAt = 0.25;
       break;
    }
    case wst_sinus:
    {
       gain_tweak = 4.f;
       compensate = 10.f;
+      compensateStartsAt = 0.22;
       break;
    }
    case wst_digi:
@@ -226,10 +233,15 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
       compensate = 4.f;
       break;
    }
+   case wst_hard:
+   {
+      gain_tweak = 1.4;
+      compensate = 3.f;
+   }
    default:
    {
       gain_tweak = 1.f;
-      compensate = 5.f;
+      compensate = 4.f;
       break;
    }
    }
@@ -237,7 +249,10 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    if (!fxdata->p[rsp_drive].deactivated)
    {
       drive_factor = 1.f + (drive.v * drive.v * 15.f);
-      gain_comp_factor = 1.f + (sqrt(drive.v * drive.v) * compensate);
+      if( drive.v < compensateStartsAt )
+         gain_comp_factor = 1.0;
+      else
+         gain_comp_factor = 1.f + ((drive.v - compensateStartsAt) * compensate);
    }
 
    for (k = 0; k < BLOCK_SIZE; k++)
