@@ -115,7 +115,7 @@ void RotarySpeakerEffect::init_ctrltypes()
    fxdata->p[rsp_rotor_rate].set_type(ct_percent200);
    fxdata->p[rsp_drive].set_name("Drive");
    fxdata->p[rsp_drive].set_type(ct_rotarydrive);
-   fxdata->p[rsp_waveshape].set_name("Drive Model");
+   fxdata->p[rsp_waveshape].set_name("Model");
    fxdata->p[rsp_waveshape].set_type(ct_distortion_waveshape);
    fxdata->p[rsp_doppler].set_name("Doppler");
    fxdata->p[rsp_doppler].set_type(ct_percent);
@@ -206,37 +206,40 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
 
    /*
    ** This is a set of completely empirical scaling settings to offset gain being too crazy
-   ** in the drive cycle. Theres no science really, just us playing with it and seeing
+   ** in the drive cycle. There's no science really, just us playing with it and listening
    */
    float gain_tweak, compensate, drive_factor, gain_comp_factor;
    float compensateStartsAt = 0.18;
+   bool square_drive_comp = false;
    
    switch (ws + 1)
    {
+   case wst_hard:
+   {
+      gain_tweak = 1.4;
+      compensate = 3.f;
+   }
    case wst_asym:
    {
-      gain_tweak = 1.f;
-      compensate = 10.f;
-      compensateStartsAt = 0.25;
+      gain_tweak = 1.15;
+      compensate = 9.f;
+      compensateStartsAt = 0.05;
       break;
    }
    case wst_sinus:
    {
-      gain_tweak = 4.f;
+      gain_tweak = 4.4;
       compensate = 10.f;
-      compensateStartsAt = 0.22;
+      compensateStartsAt = 0.f;
+      square_drive_comp = true;
       break;
    }
    case wst_digi:
    {
       gain_tweak = 1.f;
       compensate = 4.f;
+      compensateStartsAt = 0.f;
       break;
-   }
-   case wst_hard:
-   {
-      gain_tweak = 1.4;
-      compensate = 3.f;
    }
    default:
    {
@@ -249,8 +252,10 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    if (!fxdata->p[rsp_drive].deactivated)
    {
       drive_factor = 1.f + (drive.v * drive.v * 15.f);
-      if( drive.v < compensateStartsAt )
+      if (drive.v < compensateStartsAt)
          gain_comp_factor = 1.0;
+      else if (square_drive_comp)
+         gain_comp_factor = 1.f + (((drive.v * drive.v) - compensateStartsAt) * compensate);
       else
          gain_comp_factor = 1.f + ((drive.v - compensateStartsAt) * compensate);
    }
