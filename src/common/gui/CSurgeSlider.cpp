@@ -792,7 +792,7 @@ bool CSurgeSlider::onWheel(const VSTGUI::CPoint& where, const float &distance, c
       beginEdit();
    }
    
-   if (isStepped == true && !(buttons & kControl))
+   if ( intRange && isStepped && !(buttons & kControl) )
    {
       *edit_value += distance / (intRange);
    }
