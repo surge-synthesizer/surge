@@ -693,4 +693,7 @@ private:
    int ringout_value = -1;
    float phase[MAX_UNISON], detune_offset[MAX_UNISON], panL[MAX_UNISON], panR[MAX_UNISON];
    int last_unison = -1;
+
+   HalfRateFilter halfbandOUT, halfbandIN;
+   BiquadFilter lp, hp;
 };
