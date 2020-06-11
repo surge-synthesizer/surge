@@ -542,6 +542,9 @@ ComponentResult aulayer::RestoreState(CFPropertyListRef plist)
       plugin_instance->loadFromDawExtraState();
       if( editor_instance )
           editor_instance->loadFromDAWExtraState(plugin_instance);
+
+      // This stops any prior factory loads from clobbering me. #2102
+      plugin_instance->patchid_queue = -1;
    }
    return noErr;
 }
