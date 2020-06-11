@@ -23,7 +23,10 @@ fi
 # Valid version for DEB start with a digit.
 DEB_VERSION=$VERSION
 if [[ ${DEB_VERSION:0:1} =~ [0-9] ]]; then
-    echo "DEB VERSION same as Version"
+    echo "DEB VERSION same as Version (${DEB_VERSION})"
+elif [[ ${DEB_VERSION} = NIGHTLY* ]]; then
+    DEB_VERSION="9.${VERSION}"
+    echo "NIGHTLY; DEB VERSION is ${DEB_VERSION}"
 else
     DEB_VERSION="0.${VERSION}"
     echo "DEB VERSION is ${DEB_VERSION}"
