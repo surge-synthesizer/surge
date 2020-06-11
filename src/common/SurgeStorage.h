@@ -23,6 +23,7 @@
 #include <iterator>
 #include <functional>
 #include <unordered_map>
+#include <map>
 
 #include "Tunings.h"
 
@@ -613,8 +614,13 @@ public:
    std::string userDataPath;
    std::string userDefaultFilePath;
    std::string userFXPath;
-   std::string userMidiMappingsPath;
 
+   std::string userMidiMappingsPath;
+   std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
+   void rescanUserMidiMappings();
+   void loadMidiMappingByName( std::string name );
+   void storeMidiMappingToName( std::string name );
+   
    // float table_sin[512],table_sin_offset[512];
    Surge::CriticalSection CS_WaveTableData, CS_ModRouting;
    Wavetable WindowWT;

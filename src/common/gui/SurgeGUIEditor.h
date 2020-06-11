@@ -308,6 +308,8 @@ private:
    VSTGUI::COptionMenu* makeUserSettingsMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDataMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeMidiMenu(VSTGUI::CRect &rect);
+   bool scannedForMidiPresets = false;
 
    void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c, int modulationSource = -1);
    
