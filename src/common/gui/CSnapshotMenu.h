@@ -111,8 +111,9 @@ protected:
       bool ts[n_fx_params], er[n_fx_params];
    };
    static std::unordered_map<int,std::vector<UserPreset>> userPresets; // from type to presets
+public:
    static bool scanForUserPresets;
-   
+protected:
    void rescanUserPresets();
    void loadUserPreset( const UserPreset &p );
    
