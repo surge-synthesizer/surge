@@ -1507,6 +1507,144 @@ bool SurgeStorage::remapToKeyboard(const Tunings::KeyboardMapping& k)
 bool SurgeStorage::skipLoadWtAndPatch = false;
 #endif
 
+void SurgeStorage::rescanUserMidiMappings()
+{
+   userMidiMappingsXMLByName.clear();
+   if( fs::is_directory( fs::path( userMidiMappingsPath ) ) ) {
+      for( auto &d : fs::directory_iterator( fs::path( userMidiMappingsPath ) ) )
+      {
+         auto fn = d.path().generic_string();
+         std::string ending = ".srgmid";
+         if( fn.length() >= ending.length() && ( 0 == fn.compare( fn.length() - ending.length(), ending.length(), ending ) ) )
+         {
+            TiXmlDocument doc;
+            if( ! doc.LoadFile( fn.c_str() ) ) continue;
+            auto r = TINYXML_SAFE_TO_ELEMENT( doc.FirstChild( "surge-midi" ) );
+            if( !r ) continue;
+            if( !r->Attribute( "name" ) ) continue;
+            
+            userMidiMappingsXMLByName[r->Attribute("name")] = doc;
+         }
+      }
+   }
+}
+
+void SurgeStorage::loadMidiMappingByName(std::string name)
+{
+   if( userMidiMappingsXMLByName.find(name) == userMidiMappingsXMLByName.end() )
+   {
+      // FIXME - why would this ever happen? Probably show an error
+      return;
+   }
+
+   auto doc = userMidiMappingsXMLByName[name];
+   auto sm = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild( "surge-midi" ) );
+   // We can do revisio nstuff here later if we need to
+   if( ! sm )
+   {
+      // Invalid XML Document. Show an error?
+      Surge::UserInteractions::promptError( "Unable to locate 'surge-midi' element in XML. Not a valid mid map", "Surge MIDI" );
+      return;
+   }
+
+   auto mc = TINYXML_SAFE_TO_ELEMENT(sm->FirstChild("midictrl"));
+
+   if( mc )
+   {
+      // Clear the current control mapping
+      for (int i = 0; i < n_total_params; i++)
+      {
+         getPatch().param_ptr[i]->midictrl = -1;
+      }
+
+      // Apply the new control mapping
+      
+      auto map = mc->FirstChildElement("map");
+      while( map )
+      {
+         int i, c;
+         if( map->QueryIntAttribute("p", &i ) == TIXML_SUCCESS &&
+             map->QueryIntAttribute( "cc", &c ) == TIXML_SUCCESS )
+         {
+            getPatch().param_ptr[i]->midictrl = c;
+            if( i >= n_global_params )
+            {
+               getPatch().param_ptr[i + n_scene_params]->midictrl = c;
+            }
+         }
+         map = map->NextSiblingElement("map");
+      }
+   }
+
+   auto cc = TINYXML_SAFE_TO_ELEMENT(sm->FirstChild("customctrl"));
+   if( cc )
+   {
+      auto ctrl = cc->FirstChildElement("ctrl" );
+      while( ctrl )
+      {
+         int i, cc;
+         if( ctrl->QueryIntAttribute("i", &i ) == TIXML_SUCCESS &&
+             ctrl->QueryIntAttribute("cc", &cc ) == TIXML_SUCCESS )
+         {
+            controllers[i] = cc;
+         }
+         ctrl = ctrl->NextSiblingElement("ctrl");
+      }
+   }
+}
+
+void SurgeStorage::storeMidiMappingToName(std::string name)
+{
+   TiXmlDocument doc;
+   TiXmlElement sm("surge-midi" );
+   sm.SetAttribute( "revision", ff_revision );
+   sm.SetAttribute( "name", name );
+
+   // Build the XML here
+   int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
+                                             // B will be duplicated on load)
+   TiXmlElement mc( "midictrl" );
+   for (int i = 0; i < n; i++)
+   {
+      if (getPatch().param_ptr[i]->midictrl >= 0)
+      {
+         TiXmlElement p( "map" );
+         p.SetAttribute( "p", i );
+         p.SetAttribute( "cc", getPatch().param_ptr[i]->midictrl );
+         mc.InsertEndChild( p );
+      }
+   }
+   sm.InsertEndChild(mc);
+
+   TiXmlElement cc( "customctrl" );
+   for (int i=0; i<n_customcontrollers; ++i )
+   {
+      TiXmlElement p( "ctrl" );
+      p.SetAttribute( "i", i );
+      p.SetAttribute( "cc", controllers[i] );
+      cc.InsertEndChild( p );
+   }
+   sm.InsertEndChild(cc);
+
+   doc.InsertEndChild( sm );
+
+   fs::create_directories( userMidiMappingsPath );
+   std::string fn = userMidiMappingsPath +
+#if WINDOWS
+      "\\"
+#else
+      "/"
+#endif
+      + name + ".srgmid";
+
+   if( ! doc.SaveFile( fn.c_str() ) )
+   {
+      std::ostringstream oss;
+      oss << "Unable to save midi settings '" << fn << "'";
+      Surge::UserInteractions::promptError( oss.str(), "Surge MIDI" );
+   }
+}
+
 namespace Surge
 {
 namespace Storage

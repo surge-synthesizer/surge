@@ -523,7 +523,7 @@ void CFxMenu::rescanUserPresets()
 void CFxMenu::populate()
 {
     /*
-    ** Are there user preets
+    ** Are there user presets
     */
     if( scanForUserPresets || true ) // for now
     {
@@ -788,16 +788,17 @@ void CFxMenu::loadUserPreset( const UserPreset &p )
 
 void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *subMenu)
 {
-   auto factory_add = subMenu->addEntry("FACTORY PRESETS", 0);
-   factory_add->setEnabled(0);
    if( ! type || ! subMenu ) return;
+
    int type_id = 0;
    type->Attribute("i", &type_id);
 
    if( userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0 )
       return;
 
-   subMenu->addSeparator();
+   auto factory_add = subMenu->addEntry("FACTORY PRESETS", 0);
+   factory_add->setEnabled(0);
+
    auto user_add = subMenu->addEntry("USER PRESETS");
    user_add->setEnabled(0);
 

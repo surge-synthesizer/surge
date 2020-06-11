@@ -178,6 +178,17 @@ void CSurgeSlider::draw(CDrawContext* dc)
       typex = 2;
 
    float slider_alpha = (disabled || deactivated) ? 0.35 : 1.0;
+   bool showHandle = true;
+#if LINUX
+   // linux transparency is a bit broken (i have it patched to ignored) as described in
+   // #2053. For now just disable handles on linux transparent sliders, which is a bummer
+   // but better than a mispaint, then come back to this after 1.7.0
+   if( disabled || deactivated )
+   {
+      showHandle = false;
+      slider_alpha = 1.0;
+   }
+#endif
 
    if (pTray)
    {
@@ -396,7 +407,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    }
    
 
-   if (pHandle && (modmode != 2) && (!deactivated || !disabled))
+   if (pHandle && showHandle && (modmode != 2) && (!deactivated || !disabled))
    {
       if (style & CSlider::kHorizontal)
       {
@@ -467,7 +478,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
    }
 
    // draw mod-fader
-   if (pHandle && modmode && (!deactivated || !disabled))
+   if (pHandle && showHandle && modmode && (!deactivated || !disabled))
    {
       CRect hrect(headrect);
       handle_rect = handle_rect_orig;

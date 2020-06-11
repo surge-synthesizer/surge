@@ -4310,6 +4310,11 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     eid++;
     dataSubMenu->forget();
 
+    auto midiSubMenu = makeMidiMenu(menuRect);
+    settingsMenu->addEntry(midiSubMenu, Surge::UI::toOSCaseForMenu("MIDI Settings"));
+    eid++;
+    midiSubMenu->forget();
+
     if (useDevMenu)
     {
         auto devSubMenu = makeDevMenu(menuRect);
@@ -4898,6 +4903,53 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
    });
 
    return dataSubMenu;
+}
+
+VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
+{
+   int did = 0;
+   COptionMenu* midiSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                              VSTGUI::COptionMenu::kNoDrawStyle |
+                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   addCallbackMenu(
+       midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mappings As..."),
+       [this]() {
+          VSTGUI::Call::later(
+             [this]() {
+                this->scannedForMidiPresets = false; // force a rescan
+                char msn[256];
+                msn[0] = 0;
+                spawn_miniedit_text(msn, 128, "MIDI Mapping Name", "Save MIDI Mapping");
+                this->synth->storage.storeMidiMappingToName( msn );
+             }, 1 );
+       });
+   did++;
+
+   if( ! scannedForMidiPresets )
+   {
+      scannedForMidiPresets = true;
+      synth->storage.rescanUserMidiMappings();
+   }
+
+   bool gotOne = false;
+   for( const auto & p : synth->storage.userMidiMappingsXMLByName )
+   {
+      if( ! gotOne )
+      {
+         gotOne = true;
+         midiSubMenu->addSeparator();
+         did++;
+      }
+      addCallbackMenu( midiSubMenu, p.first,
+                       [this, p] {
+                          this->synth->storage.loadMidiMappingByName(p.first);
+                       }
+         );
+   }
+
+   
+   return midiSubMenu;
 }
 
 void SurgeGUIEditor::reloadFromSkin()
