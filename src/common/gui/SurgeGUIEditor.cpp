@@ -1154,6 +1154,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->deactivated = p->deactivated;
             else
                hs->deactivated = false;
+		   
+		   
+		    if( p->valtype  == vt_int || p->valtype  == vt_bool) 
+			{ 
+			    hs->isStepped = true; 
+				hs->intRange = p->val_max.i - p->val_min.i;
+			}
+			else
+			{
+				hs->isStepped = false;
+			}
 
             setDisabledForParameter(p, hs);
 
@@ -1796,8 +1807,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = p->deactivated;
                else
                   hs->deactivated = false;
-
-               setDisabledForParameter(p, hs);
+			  
+			   
+			   if( p->valtype  == vt_int || p->valtype  == vt_bool) 
+			   { 
+				   hs->isStepped = true; 
+				   hs->intRange = p->val_max.i - p->val_min.i;
+			   }
+			   else
+			   {
+				   hs->isStepped = false;
+			   }
+			   
+			   setDisabledForParameter(p, hs);
 
                frame->addView(hs);
                param[i] = hs;
@@ -1823,6 +1845,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = p->deactivated;
                else
                   hs->deactivated = false;
+			  
+			  
+			   if( p->valtype  == vt_int || p->valtype  == vt_bool) 
+			   { 
+				   hs->isStepped = true; 
+				   hs->intRange = p->val_max.i - p->val_min.i;
+			   }
+			   else
+			   {
+				   hs->isStepped = false;
+			   }
+
 
                setDisabledForParameter(p, hs);
 

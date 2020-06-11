@@ -77,7 +77,10 @@ public:
    bool disabled; // means it can't be used unless something else changes
    bool deactivated; // means it has been turned off by user action
    bool hasBeenDraggedDuringMouseGesture = false;
-
+   
+   bool isStepped = false;
+   int intRange = 0;
+   
    SurgeStorage* storage = nullptr;
    
    enum MoveRateState
@@ -109,6 +112,8 @@ private:
    VSTGUI::CPoint lastpoint, sourcepoint;
    float oldVal, *edit_value;
    int drawcount_debug;
+   
+   
 
    float restvalue, restmodval;
    bool wheelInitiatedEdit = false;
