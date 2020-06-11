@@ -9,14 +9,13 @@
 enum ringmodparam
 {
    // Basic Control
-   rm_carrierfreq = 0, // Carrier Rate
-   rm_carriershape,
+   rm_carriershape = 0, // carrier shape
+   rm_carrierfreq,
+   rm_unison_detune,
+   rm_unison_voices,
 
    rm_diode_vb,
    rm_diode_vl,
-
-   rm_unison_detune,
-   rm_unison_voices,
    
    rm_mix,
    
@@ -143,8 +142,6 @@ const char* RingModulatorEffect::group_label(int id)
    case 1:
       return "Diode";
    case 2:
-      return "Carrier Unison";
-   case 3:
       return "Output";
    }
    return 0;
@@ -157,11 +154,9 @@ int RingModulatorEffect::group_label_ypos(int id)
    case 0:
       return 1;
    case 1:
-      return 7;
+      return 11;
    case 2:
-      return 13;
-   case 3:
-      return 19;
+      return 17;
    }
    return 0;
 }
@@ -170,30 +165,27 @@ void RingModulatorEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[rm_carrierfreq].set_name( "Pitch" );
-   fxdata->p[rm_carrierfreq].set_type( ct_flangerpitch );
-
    fxdata->p[rm_carriershape].set_name( "Shape" );
    fxdata->p[rm_carriershape].set_type( ct_sineoscmode );
-
-   fxdata->p[rm_diode_vb].set_name( "Forward Bias Voltage" );
-   fxdata->p[rm_diode_vb].set_type( ct_percent );
-   fxdata->p[rm_diode_vl].set_name( "Linear Regime Voltage" );
-   fxdata->p[rm_diode_vl].set_type( ct_percent );
-
+   fxdata->p[rm_carrierfreq].set_name( "Pitch" );
+   fxdata->p[rm_carrierfreq].set_type( ct_flangerpitch );
    fxdata->p[rm_unison_detune].set_name( "Unison Detune" );
    fxdata->p[rm_unison_detune].set_type( ct_oscspread );
    fxdata->p[rm_unison_voices].set_name( "Unison Voices" );
    fxdata->p[rm_unison_voices].set_type( ct_osccount );
 
+   fxdata->p[rm_diode_vb].set_name( "Forward Bias" );
+   fxdata->p[rm_diode_vb].set_type( ct_percent );
+   fxdata->p[rm_diode_vl].set_name( "Linear Region" );
+   fxdata->p[rm_diode_vl].set_type( ct_percent );
+
    fxdata->p[rm_mix].set_name( "Mix" );
    fxdata->p[rm_mix].set_type( ct_percent );
 
-   for( int i=rm_carrierfreq; i<rm_num_params; ++i )
+   for( int i=rm_carriershape; i<rm_num_params; ++i )
    {
       auto a = 1;
       if( i >= rm_diode_vb ) a += 2;
-      if( i >= rm_unison_detune ) a += 2;
       if( i >= rm_mix ) a += 2;
       fxdata->p[i].posy_offset = a;
    }
