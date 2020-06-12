@@ -967,6 +967,8 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          dragY = yTop;
       }
 
+      if( dragY < size.top + 2 ) dragY = size.top + 2;
+      
       CRect labelR(dragX, dragY, dragX + dragW, dragY + dragH);
 
       fillr(labelR, skin->getColor("lfo.stepseq.popup.border", kBlackCColor));
@@ -987,7 +989,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       {
          labelR.bottom += 18;
 
-         sprintf(txt, "%d/%d", (int)(floor(ss->steps[draggedStep] * keyModMult)), keyModMult);
+         sprintf(txt, "%d/%d", (int)(floor(ss->steps[draggedStep] * keyModMult + 0.5)), keyModMult);
          dc->drawString(txt, labelR, VSTGUI::kLeftText, true);
       }
    }
@@ -1299,7 +1301,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                else
                {
                   f *= quantStep;
-                  f = floor(f);
+                  f = floor(f + 0.5);
                   f *= (1.f / quantStep);
                }
             }
