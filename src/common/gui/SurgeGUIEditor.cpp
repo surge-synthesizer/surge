@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------------------------------
-//	Copyright 2005 Claes Johanson & Vember Audio
+// Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
 
 #include "SurgeGUIEditor.h"
@@ -130,7 +130,7 @@ enum special_tags
    tag_settingsmenu,
    tag_mp_jogfx,
    tag_value_typein,
-   //	tag_metaparam,
+   // tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
 };
@@ -698,7 +698,7 @@ void SurgeGUIEditor::idle()
       {
          ((CParameterTooltip*)infowindow)->Hide();
          // infowindow->getViewSize();
-         // ctnvg			frame->redrawRect(drawContext,r);
+         // ctnvg       frame->redrawRect(drawContext,r);
       }
 
       // frame->update(&drawContext);
@@ -770,7 +770,7 @@ void SurgeGUIEditor::refresh_mod()
          ((CModulationSourceButton*)gui_modsrc[i])->invalid();
       }
    }
-   // ctnvg	frame->redraw();
+   // ctnvg frame->redraw();
    // frame->setDirty();
    #if LINUX
       frame->invalid();
@@ -1154,17 +1154,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->deactivated = p->deactivated;
             else
                hs->deactivated = false;
-		   
-		   
-		    if( p->valtype  == vt_int || p->valtype  == vt_bool) 
-			{ 
-			    hs->isStepped = true; 
-				hs->intRange = p->val_max.i - p->val_min.i;
-			}
-			else
-			{
-				hs->isStepped = false;
-			}
+         
+         
+          if( p->valtype  == vt_int || p->valtype  == vt_bool) 
+         { 
+             hs->isStepped = true; 
+            hs->intRange = p->val_max.i - p->val_min.i;
+         }
+         else
+         {
+            hs->isStepped = false;
+         }
 
             setDisabledForParameter(p, hs);
 
@@ -1807,19 +1807,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = p->deactivated;
                else
                   hs->deactivated = false;
-			  
-			   
-			   if( p->valtype  == vt_int || p->valtype  == vt_bool) 
-			   { 
-				   hs->isStepped = true; 
-				   hs->intRange = p->val_max.i - p->val_min.i;
-			   }
-			   else
-			   {
-				   hs->isStepped = false;
-			   }
-			   
-			   setDisabledForParameter(p, hs);
+           
+            
+            if( p->valtype  == vt_int || p->valtype  == vt_bool) 
+            { 
+               hs->isStepped = true; 
+               hs->intRange = p->val_max.i - p->val_min.i;
+            }
+            else
+            {
+               hs->isStepped = false;
+            }
+            
+            setDisabledForParameter(p, hs);
 
                frame->addView(hs);
                param[i] = hs;
@@ -1845,17 +1845,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = p->deactivated;
                else
                   hs->deactivated = false;
-			  
-			  
-			   if( p->valtype  == vt_int || p->valtype  == vt_bool) 
-			   { 
-				   hs->isStepped = true; 
-				   hs->intRange = p->val_max.i - p->val_min.i;
-			   }
-			   else
-			   {
-				   hs->isStepped = false;
-			   }
+           
+           
+            if( p->valtype  == vt_int || p->valtype  == vt_bool) 
+            { 
+               hs->isStepped = true; 
+               hs->intRange = p->val_max.i - p->val_min.i;
+            }
+            else
+            {
+               hs->isStepped = false;
+            }
 
 
                setDisabledForParameter(p, hs);
@@ -2864,7 +2864,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          // Modulation and Learn semantics only apply to vt_float types in surge right now
          if( p->valtype == vt_float )
          {
-            // if(p->can_temposync() || p->can_extend_range())	contextMenu->addSeparator(eid++);
+            // if(p->can_temposync() || p->can_extend_range()) contextMenu->addSeparator(eid++);
             if (p->can_temposync())
             {
                auto r = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Tempo Sync"),
@@ -4900,6 +4900,11 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Rescan All Data Folders"), [this]() {
       this->synth->storage.refresh_wtlist();
       this->synth->storage.refresh_patchlist();
+      this->scannedForMidiPresets = false; 
+      CFxMenu::scanForUserPresets = true; // that's annoying now I see it side by side. But you know.
+
+      // Will need to rebuild the FX menu also so...
+      this->synth->refresh_editor = true;
    });
 
    return dataSubMenu;
@@ -4921,7 +4926,8 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
                 char msn[256];
                 msn[0] = 0;
                 spawn_miniedit_text(msn, 128, "MIDI Mapping Name", "Save MIDI Mapping");
-                this->synth->storage.storeMidiMappingToName( msn );
+                if( strlen( msn ) > 0 )
+                   this->synth->storage.storeMidiMappingToName( msn );
              }, 1 );
        });
    did++;
