@@ -506,12 +506,14 @@ elseif( WIN32 )
     ../libs/libpng/win/x64/lib/libpng16_static
   )
 
-  add_executable( dllcheck 
-     src/windows/dllcheck/dllcheck.cpp
-     ${CMAKE_BINARY_DIR}/geninclude/version.cpp 
-  )
-  target_compile_options(dllcheck PRIVATE /MT)
-  target_include_directories( dllcheck PRIVATE src/common )
+  if( ${BUILD_DLLCHECK} )
+    add_executable( dllcheck 
+      utils/dllcheck/dllcheck.cpp
+      ${CMAKE_BINARY_DIR}/geninclude/version.cpp 
+      )
+    target_compile_options(dllcheck PRIVATE /MT)
+    target_include_directories( dllcheck PRIVATE src/common )
+  endif()
 else()
   message(FATAL_ERROR "UNKNOWN OS. Please use lin mac or win" )
 endif()
@@ -987,3 +989,9 @@ if( APPLE )
 
 
 endif()
+
+# Extra packages and utils
+if( ${BUILD_SVGSHOW} )
+  add_subdirectory( utils/svgshow )
+endif()
+
