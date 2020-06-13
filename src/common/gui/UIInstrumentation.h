@@ -3,7 +3,7 @@
 #include <string>
 #include <chrono>
 
-#define INSTRUMENT_UI
+// #define INSTRUMENT_UI
 
 #ifdef INSTRUMENT_UI
 namespace Surge {
