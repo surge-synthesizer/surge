@@ -293,8 +293,12 @@ public:
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
    virtual ~WindowOscillator();
+   virtual void handleStreamingMismatches(int s, int synths) override;
 
 private:
+   BiquadFilter lp, hp;
+   void applyFilter();
+
    void ProcessSubOscs(bool stereo, bool FM);
    lag<double> FMdepth[wt2_suboscs];
 
