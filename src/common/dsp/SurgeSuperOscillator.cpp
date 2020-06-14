@@ -431,7 +431,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
       t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 + sync );
 
       // With extended range and low frequencies we can have an implied negative frequency; cut that off by setting a lower bound here.
-      if( t < 0.1 ) t = 0.1;
+      if( t < 0.01 ) t = 0.01;
    }
    else
        t = storage->note_to_pitch_inv_tuningctr(detune + sync);
