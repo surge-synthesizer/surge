@@ -14,7 +14,7 @@
 WindowOscillator::WindowOscillator(SurgeStorage* storage,
                                    OscillatorStorage* oscdata,
                                    pdata* localcopy)
-    : Oscillator(storage, oscdata, localcopy)
+   : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {}
 
 void WindowOscillator::init(float pitch, bool is_display)
@@ -63,6 +63,13 @@ void WindowOscillator::init(float pitch, bool is_display)
             Sub.Pos[i] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1))) << 16;
       }
    }
+
+   hp.coeff_instantize();
+   lp.coeff_instantize();
+
+   hp.coeff_HP(hp.calc_omega(oscdata->p[3].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[4].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
+
 }
 
 WindowOscillator::~WindowOscillator()
@@ -79,6 +86,11 @@ void WindowOscillator::init_ctrltypes()
    oscdata->p[2].set_name("Window");
    oscdata->p[2].set_type(ct_wt2window);
 
+   oscdata->p[3].set_name("Low Cut");
+   oscdata->p[3].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[4].set_name("High Cut");
+   oscdata->p[4].set_type(ct_freq_audible_deactivatable);
+
    oscdata->p[5].set_name("Unison Detune");
    oscdata->p[5].set_type(ct_oscspread);
    oscdata->p[6].set_name("Unison Voices");
@@ -89,6 +101,12 @@ void WindowOscillator::init_default_values()
    oscdata->p[0].val.f = 0.0f;
    oscdata->p[1].val.f = 0.0f;
    oscdata->p[2].val.i = 0;
+
+   oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
+   oscdata->p[3].deactivated = true;
+   oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
+   oscdata->p[4].deactivated = true;
+
    oscdata->p[5].val.f = 0.2f;
    oscdata->p[6].val.i = 1;
 }
@@ -313,5 +331,36 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
             _mm_store_ps(&output[i], _mm_mul_ps(_mm_cvtepi32_ps(*(__m128i*)&IOutputL[i]), scale));
          }
       }
+   }
+
+   applyFilter();
+}
+
+void WindowOscillator::applyFilter()
+{
+   if( ! oscdata->p[3].deactivated )
+      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[3].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING , 0.707);
+   if( ! oscdata->p[4].deactivated )
+      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[4].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
+
+   for (int k = 0; k < BLOCK_SIZE_OS; k+= BLOCK_SIZE )
+   {
+      if( ! oscdata->p[3].deactivated )
+         hp.process_block( &(output[k]), &(outputR[k]) );
+      if( ! oscdata->p[4].deactivated )
+         lp.process_block( &(output[k]), &(outputR[k]) );
+   }
+}
+
+
+void WindowOscillator::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+{
+   if( streamingRevision <= 12 )
+   {
+      oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
+      oscdata->p[3].deactivated = true;
+      oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
+      oscdata->p[4].deactivated = true;
+      oscdata->p[1].set_type(ct_osc_feedback);
    }
 }
