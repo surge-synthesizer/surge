@@ -59,7 +59,7 @@ void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
       sprintf(txt, "%s", prefix);
 }
 
-void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_entry)
+void Parameter::create_fullname(const char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_entry, const char *lfoPrefixOverride )
 {
    char prefix[32];
    bool useprefix = true;
@@ -80,10 +80,17 @@ void create_fullname(char* dn, char* fn, ControlGroup ctrlgroup, int ctrlgroup_e
    case cg_LFO:
    {
       int a = ctrlgroup_entry + 1 - ms_lfo1;
-      if (a > 6)
-         sprintf(prefix, "Scene LFO %i", a - 6);
+      if( lfoPrefixOverride )
+      {
+         strcpy( prefix, lfoPrefixOverride );
+      }
       else
-         sprintf(prefix, "LFO %i", a);
+      {
+         if (a > 6)
+            sprintf(prefix, "Scene LFO %i", a - 6);
+         else
+            sprintf(prefix, "LFO %i", a);
+      }
    }
    break;
    case cg_FX:

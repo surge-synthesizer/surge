@@ -281,6 +281,8 @@ public:
    void bound_value(bool force_integer = false);
    std::string tempoSyncNotationValue(float f);
    float quantize_modulation(float modvalue); // given a mod-value hand it back rounded to a 'reasonable' step size (used in ctrl-drag)
+
+   void create_fullname(const char* dn, char *fn, ControlGroup ctrlgroup, int ctrlgroup_entry, const char *lfoPrefixOverride = nullptr );
    
    pdata val, val_default, val_min, val_max;
    // You might be tempted to use a non-fixed-size member here, like a std::string, but

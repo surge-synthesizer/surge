@@ -2428,11 +2428,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char modtxt[256];
-                  synth->storage.getPatch().param_ptr[md]->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms));
+                  auto pmd = synth->storage.getPatch().param_ptr[md];
+                  pmd->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms));
                   char tmptxt[512]; // leave room for that ubuntu 20.0 error
-                  sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
-                          synth->storage.getPatch().param_ptr[md]->get_full_name(),
-                          modtxt);
+                  if( pmd->ctrlgroup == cg_LFO )
+                  {
+                     char pname[1024];
+                     pmd->create_fullname( pmd->get_name(), pname, pmd->ctrlgroup, pmd->ctrlgroup_entry, modulatorName(pmd->ctrlgroup_entry, true ).c_str() );
+                     sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
+                             pname,
+                             modtxt);
+                  }
+                  else
+                  {
+                     sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
+                             pmd->get_full_name(),
+                             modtxt);
+                  }
 
                   auto clearOp = [this, parameter, control, thisms]() {
                                     this->promptForUserValueEntry( parameter, control, thisms );
@@ -2459,8 +2471,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    synth->isActiveModulation(md, thisms))
                {
                   char tmptxt[256];
-                  sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName( thisms, true ).c_str(),
-                          synth->storage.getPatch().param_ptr[md]->get_full_name() );
+                  if( parameter->ctrlgroup == cg_LFO )
+                  {
+                     char pname[1024];
+                     parameter->create_fullname( parameter->get_name(), pname, parameter->ctrlgroup,
+                                                 parameter->ctrlgroup_entry, modulatorName(parameter->ctrlgroup_entry, true ).c_str() );
+                     sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName(thisms, true).c_str(),
+                             pname);
+                  }
+                  else
+                  {
+                     sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName(thisms, true).c_str(),
+                             parameter->get_full_name() );
+                  }
 
                   auto clearOp = [this, first_destination, md, n_total_md, thisms, control]() {
                                     bool resetName = false;   // Should I reset the name?
@@ -5522,7 +5545,18 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    inner->setBackgroundColor( bggr );
    typeinDialog->addView(inner);
 
-   std::string lab = p->get_full_name();
+   std::string lab = "";
+   if( p->ctrlgroup == cg_LFO )
+   {
+      char pname[1024];
+      p->create_fullname( p->get_name(), pname, p->ctrlgroup, p->ctrlgroup_entry, modulatorName(p->ctrlgroup_entry, true ).c_str() );
+      lab = pname;
+   }
+   else
+   {
+      lab = p->get_full_name();
+   }
+
    typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
    typeinLabel->setFontColor(currentSkin->getColor( "slider.dark.label", kBlackCColor ));
    typeinLabel->setTransparency(true);
