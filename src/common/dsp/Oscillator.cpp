@@ -586,7 +586,50 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
          pvalue = sinx;
          break;
       }
+
+      break;
    }
+   case 20:
+      switch (quadrant)
+      {
+      case 1:
+      case 3:
+         pvalue = sinx;
+         break;
+      case 2:
+         pvalue = 1;
+         break;
+      case 4:
+         pvalue = -1;
+         break;
+      }
+      break;
+   case 21:
+      switch (quadrant)
+      {
+      case 2:
+      case 4:
+         pvalue = sinx;
+         break;
+      case 1:
+         pvalue = 1;
+         break;
+      case 3:
+         pvalue = -1;
+         break;
+      }
+      break;
+   case 22:
+      if (quadrant == 2 || quadrant == 3)
+      {
+         pvalue = 0;
+      }
+      break;
+   case 23:
+      if (quadrant == 1 || quadrant == 4)
+      {
+         pvalue = 0;
+      }
       break;
 
    default:
@@ -597,6 +640,15 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
 
 void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
 {
+   if( streamingRevision <= 9 )
+   {
+      oscdata->p[0].val.i = oscdata->p[0].val_min.i;
+   }
+   if( streamingRevision <= 10 )
+   {
+      oscdata->p[1].val.f = 0;
+      oscdata->p[2].val.i = 0;
+   }
    if( streamingRevision <= 12 )
    {
       oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
@@ -605,18 +657,15 @@ void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynth
       oscdata->p[4].deactivated = true;
       oscdata->p[1].set_type(ct_osc_feedback);
 
-      // make sure old patches still point to the correct waveforms
-      int wave_remap[] = {0, 8, 9, 10, 1, 11, 4, 12, 13, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18, 19};
-      oscdata->p[0].val.i = wave_remap[oscdata->p[0].val.i];
-   }
-   if( streamingRevision <= 10 )
-   {
-      oscdata->p[1].val.f = 0;
-      oscdata->p[2].val.i = 0;
-   }
-   if( streamingRevision <= 9 )
-   {
-      oscdata->p[0].val.i = 0;
+      // range checking for garbage data
+      if (oscdata->p[0].val.i < oscdata->p[0].val_min.i || oscdata->p[0].val.i > oscdata->p[0].val_max.i)
+         oscdata->p[0].val.i = oscdata->p[0].val_min.i;
+      else
+      {
+         // make sure old patches still point to the correct waveforms
+         int wave_remap[] = {0, 8, 9, 10, 1, 11, 4, 12, 13, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18, 19};
+         oscdata->p[0].val.i = wave_remap[oscdata->p[0].val.i];
+      }
    }
 }
 

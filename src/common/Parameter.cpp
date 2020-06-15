@@ -642,7 +642,7 @@ void Parameter::set_type(int ctrltype)
       break;
    case ct_sineoscmode:
       val_min.i = 0;
-      val_max.i = 19;
+      val_max.i = 23;
       valtype = vt_int;
       val_default.i = 0;
       break;
