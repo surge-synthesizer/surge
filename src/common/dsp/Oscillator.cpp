@@ -660,7 +660,7 @@ void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynth
       int wave_remap[] = {0, 8, 9, 10, 1, 11, 4, 12, 13, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18, 19};
 
       // range checking for garbage data
-      if (oscdata->p[0].val.i < 0 || (oscdata->p[0].val.i > (sizeof wave_remap) / sizeof *wave_remap))
+      if (oscdata->p[0].val.i < 0 || (oscdata->p[0].val.i >= (sizeof wave_remap) / sizeof *wave_remap))
          oscdata->p[0].val.i = oscdata->p[0].val_min.i;
       else
       {
