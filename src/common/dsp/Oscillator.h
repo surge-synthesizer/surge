@@ -136,6 +136,11 @@ public:
       return false;
    }
    bool isInSceneB;
+   virtual void handleStreamingMismatches(int s, int synths) override;
+
+private:
+   BiquadFilter lp, hp;
+   void applyFilter();
 };
 
 class AbstractBlitOscillator : public Oscillator
@@ -215,8 +220,12 @@ public:
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
    virtual ~SampleAndHoldOscillator();
+   virtual void handleStreamingMismatches(int s, int synths) override;
 
 private:
+   BiquadFilter lp, hp;
+   void applyFilter();
+
    void convolute(int voice, bool FM, bool stereo);
    template <bool FM> void process_blockT(float pitch, float depth, float drift = 0);
    template <bool is_init> void update_lagvals();
