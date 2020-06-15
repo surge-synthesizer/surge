@@ -661,7 +661,7 @@ limiter?
 */
 
 osc_audioinput::osc_audioinput(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
-    : Oscillator(storage, oscdata, localcopy)
+    : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {
    isInSceneB = false;
    if( storage )
@@ -678,6 +678,11 @@ osc_audioinput::osc_audioinput(SurgeStorage* storage, OscillatorStorage* oscdata
 
 void osc_audioinput::init(float pitch, bool is_display)
 {
+   hp.coeff_instantize();
+   lp.coeff_instantize();
+
+   hp.coeff_HP(hp.calc_omega(oscdata->p[5].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[6].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 }
 
 osc_audioinput::~osc_audioinput()
@@ -701,15 +706,26 @@ void osc_audioinput::init_ctrltypes(int scene, int osc)
       oscdata->p[4].set_name("Audio In<>Scene A Mix");
       oscdata->p[4].set_type(ct_percent);
    }
+   oscdata->p[5].set_name("Low Cut");
+   oscdata->p[5].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[6].set_name("High Cut");
+   oscdata->p[6].set_type(ct_freq_audible_deactivatable);
 }
+
 void osc_audioinput::init_default_values()
 {
    oscdata->p[0].val.f = 0.0f;
    oscdata->p[1].val.f = 0.0f;
    if( isInSceneB )
+   {
       oscdata->p[2].val.f = 0.0f;
       oscdata->p[3].val.f = 0.0f;
       oscdata->p[4].val.f = 0.0f;
+   }
+   oscdata->p[5].val.f = oscdata->p[5].val_min.f; // high cut at the bottom
+   oscdata->p[5].deactivated = true;
+   oscdata->p[6].val.f = oscdata->p[6].val_max.f; // low cut at the top
+   oscdata->p[6].deactivated = true;
 }
 
 void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
@@ -764,5 +780,34 @@ void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool F
             output[k] = l * storage->audio_in[0][k] + r * storage->audio_in[1][k];
          }
       }
+   }
+
+   applyFilter();
+}
+
+void osc_audioinput::applyFilter()
+{
+   if (!oscdata->p[5].deactivated)
+      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[5].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[6].deactivated)
+      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[6].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+
+   for (int k = 0; k < BLOCK_SIZE_OS; k += BLOCK_SIZE)
+   {
+      if (!oscdata->p[5].deactivated)
+         hp.process_block(&(output[k]), &(outputR[k]));
+      if (!oscdata->p[6].deactivated)
+         lp.process_block(&(output[k]), &(outputR[k]));
+   }
+}
+
+void osc_audioinput::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+{
+   if (streamingRevision <= 12)
+   {
+      oscdata->p[5].val.f = oscdata->p[5].val_min.f; // high cut at the bottom
+      oscdata->p[5].deactivated = true;
+      oscdata->p[6].val.f = oscdata->p[6].val_max.f; // low cut at the top
+      oscdata->p[6].deactivated = true;
    }
 }

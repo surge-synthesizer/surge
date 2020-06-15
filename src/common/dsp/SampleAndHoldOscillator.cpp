@@ -20,7 +20,7 @@ const float hpf_cycle_loss = 0.995f;
 SampleAndHoldOscillator::SampleAndHoldOscillator(SurgeStorage* storage,
                                                  OscillatorStorage* oscdata,
                                                  pdata* localcopy)
-    : AbstractBlitOscillator(storage, oscdata, localcopy)
+    : AbstractBlitOscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {}
 
 SampleAndHoldOscillator::~SampleAndHoldOscillator()
@@ -93,6 +93,12 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
       driftlfo2[i] = 0.f;
       driftlfo[i] = 0.f;
    }
+
+   hp.coeff_instantize();
+   lp.coeff_instantize();
+
+   hp.coeff_HP(hp.calc_omega(oscdata->p[2].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[3].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 }
 
 void SampleAndHoldOscillator::init_ctrltypes()
@@ -102,10 +108,10 @@ void SampleAndHoldOscillator::init_ctrltypes()
    oscdata->p[1].set_name("Width");
    oscdata->p[1].set_type(ct_percent);
    oscdata->p[1].val_default.f = 0.5f;
-   oscdata->p[2].set_name("-");
-   oscdata->p[2].set_type(ct_none);
-   oscdata->p[3].set_name("-");
-   oscdata->p[3].set_type(ct_none);
+   oscdata->p[2].set_name("Low Cut");
+   oscdata->p[2].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[3].set_name("High Cut");
+   oscdata->p[3].set_type(ct_freq_audible_deactivatable);
    oscdata->p[4].set_name("Sync");
    oscdata->p[4].set_type(ct_syncpitch);
    oscdata->p[5].set_name("Unison Detune");
@@ -117,8 +123,10 @@ void SampleAndHoldOscillator::init_default_values()
 {
    oscdata->p[0].val.f = 0.f;
    oscdata->p[1].val.f = 0.5f;
-   oscdata->p[2].val.f = 0.f;
-   oscdata->p[3].val.f = 0.f;
+   oscdata->p[2].val.f = oscdata->p[2].val_min.f; // high cut at the bottom
+   oscdata->p[2].deactivated = true;
+   oscdata->p[3].val.f = oscdata->p[3].val_max.f; // low cut at the top
+   oscdata->p[4].deactivated = true;
    oscdata->p[4].val.f = 0.f;
    oscdata->p[5].val.f = 0.2f;
    oscdata->p[6].val.i = 1;
@@ -246,6 +254,22 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    oscstate[voice] += rate[voice];
    oscstate[voice] = max(0.f, oscstate[voice]);
    state[voice] = (state[voice] + 1) & 1;
+}
+
+void SampleAndHoldOscillator::applyFilter()
+{
+   if (!oscdata->p[2].deactivated)
+      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[2].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[3].deactivated)
+      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[3].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+
+   for (int k = 0; k < BLOCK_SIZE_OS; k += BLOCK_SIZE)
+   {
+      if (!oscdata->p[2].deactivated)
+         hp.process_block(&(output[k]), &(outputR[k]));
+      if (!oscdata->p[3].deactivated)
+         lp.process_block(&(output[k]), &(outputR[k]));
+   }
 }
 
 template <bool is_init> void SampleAndHoldOscillator::update_lagvals()
@@ -389,5 +413,18 @@ void SampleAndHoldOscillator::process_block(
             _mm_store_ps(&oscbufferR[OB_LENGTH + k], zero);
          }
       }
+   }
+
+   applyFilter();
+}
+
+void SampleAndHoldOscillator::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+{
+   if( streamingRevision <= 12 )
+   {
+      oscdata->p[2].val.f = oscdata->p[2].val_min.f; // high cut at the bottom
+      oscdata->p[2].deactivated = true;
+      oscdata->p[3].val.f = oscdata->p[3].val_max.f; // low cut at the top
+      oscdata->p[4].deactivated = true;
    }
 }
