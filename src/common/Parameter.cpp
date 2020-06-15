@@ -1419,28 +1419,14 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch (i)
          {
          case 0:
-            sprintf(txt, "Wave %d (TX 1)", i + 1);
-            break;
+         case 1:
+         case 2:
+         case 3:
          case 4:
-            sprintf(txt, "Wave %d (TX 2)", i + 1);
-            break;
+         case 5:
          case 6:
-            sprintf(txt, "Wave %d (TX 5)", i + 1);
-            break;
-         case 9:
-            sprintf(txt, "Wave %d (TX 3)", i + 1);
-            break;
-         case 10:
-            sprintf(txt, "Wave %d (TX 4)", i + 1);
-            break;
-         case 11:
-            sprintf(txt, "Wave %d (TX 6)", i + 1);
-            break;
-         case 12:
-            sprintf(txt, "Wave %d (TX 7)", i + 1);
-            break;
-         case 13:
-            sprintf(txt, "Wave %d (TX 8)", i + 1);
+         case 7:
+            sprintf(txt, "Wave %d (TX %d)", i + 1, i + 1);
             break;
          default:
             sprintf(txt, "Wave %d", i + 1);

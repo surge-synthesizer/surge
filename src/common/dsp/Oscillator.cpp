@@ -372,22 +372,11 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
    else
       quadrant = 4;
 
+   //   0, 4, 9, 10, 6, 11, 12, 13,  1, 2,  3,  5,  7,  8, 14, 15, 16, 17, 18, 19
+
    switch (wfMode)
    {
    case 1:
-      if (quadrant > 2)
-         pvalue = 0;
-      pvalue = 2 * pvalue - 1;
-      break;
-   case 2:
-      if (quadrant == 1 || quadrant == 3)
-         pvalue = 0;
-      break;
-   case 3:
-      if (quadrant == 2 || quadrant == 4)
-         pvalue = 0;
-      break;
-   case 4:
       switch (quadrant)
       {
       case 1:
@@ -404,7 +393,11 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
          break;
       }
       break;
-   case 5:
+   case 2:
+      if (quadrant > 2)
+         pvalue = 0;
+      break;
+   case 3:
       switch (quadrant)
       {
       case 1:
@@ -417,46 +410,15 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
          pvalue = 0;
          break;
       }
-      pvalue = 2 * pvalue - 1;
       break;
-   case 6:
+   case 4:
       if (quadrant <= 2)
          pvalue = sin2x;
       else
          pvalue = 0;
       break;
+   case 5:
    case 7:
-      pvalue = sin2x;
-      if (quadrant == 2 || quadrant == 3)
-         pvalue = -pvalue;
-      break;
-   case 8:
-      pvalue = sin2x;
-      if (quadrant == 2 || quadrant == 4)
-         pvalue = 0;
-      if (quadrant == 3)
-         pvalue = -pvalue;
-      break;
-   case 9:
-      if (quadrant > 2)
-         pvalue = 0;
-      break;
-   case 10:
-      switch (quadrant)
-      {
-      case 1:
-         pvalue = 1 - cosx;
-         break;
-      case 2:
-         pvalue = 1 + cosx;
-         break;
-      default:
-         pvalue = 0;
-         break;
-      }
-      break;
-   case 11:
-   case 13:
       if (sin2x > 0)
          if (cos2x > 0)
             octant = 1;
@@ -490,17 +452,57 @@ float osc_sine::valueFromSinAndCos(float sinx, float cosx, int wfMode)
          break;
       }
 
-      if (wfMode == 13)
+      if (wfMode == 7)
          pvalue = abs(pvalue);
 
       if (quadrant > 2)
          pvalue = 0;
 
       break;
-   case 12:
+   case 6:
       pvalue = abs(sin2x);
       if (quadrant > 2)
          pvalue = 0;
+      break;
+   case 8:
+      if (quadrant > 2)
+         pvalue = 0;
+      pvalue = 2 * pvalue - 1;
+      break;
+   case 9:
+      if (quadrant == 1 || quadrant == 3)
+         pvalue = 0;
+      break;
+   case 10:
+      if (quadrant == 2 || quadrant == 4)
+         pvalue = 0;
+      break;
+   case 11:
+      switch (quadrant)
+      {
+      case 1:
+         pvalue = 1 - cosx;
+         break;
+      case 2:
+         pvalue = 1 + cosx;
+         break;
+      default:
+         pvalue = 0;
+         break;
+      }
+      pvalue = 2 * pvalue - 1;
+      break;
+   case 12:
+      pvalue = sin2x;
+      if (quadrant == 2 || quadrant == 3)
+         pvalue = -pvalue;
+      break;
+   case 13:
+      pvalue = sin2x;
+      if (quadrant == 2 || quadrant == 4)
+         pvalue = 0;
+      if (quadrant == 3)
+         pvalue = -pvalue;
       break;
    case 14:
       pvalue = abs(cos2x);
@@ -602,6 +604,10 @@ void osc_sine::handleStreamingMismatches(int streamingRevision, int currentSynth
       oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
       oscdata->p[4].deactivated = true;
       oscdata->p[1].set_type(ct_osc_feedback);
+
+      // make sure old patches still point to the correct waveforms
+      int wave_remap[] = {0, 8, 9, 10, 1, 11, 4, 12, 13, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18, 19};
+      oscdata->p[0].val.i = wave_remap[oscdata->p[0].val.i];
    }
    if( streamingRevision <= 10 )
    {
