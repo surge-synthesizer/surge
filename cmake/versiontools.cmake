@@ -36,7 +36,7 @@ else()
 endif()
 
 if(${GIT_BRANCH} STREQUAL "main" )
-  if( ${AZURE_PIPELINES} )
+  if( ${AZURE_PIPELINE} )
     set( lverpatch "nightly" )
   else()
     set( lverpatch "main" )
