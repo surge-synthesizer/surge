@@ -159,7 +159,8 @@ Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
                              ControlGroup ctrlgroup,
                              int ctrlgroup_entry,
                              bool modulateable,
-                             int ctrlstyle)
+                             int ctrlstyle,
+                             bool defaultDeactivation)
 {
    this->id_promise = idp.get();
    this->id = -1;
@@ -185,6 +186,7 @@ Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
    else
       per_voice_processing = false;
    clear_flags();
+   deactivated = defaultDeactivation;
    midictrl = -1;
 
    set_type(ctrltype);
@@ -249,6 +251,7 @@ bool Parameter::can_deactivate()
    switch(ctrltype)
    {
    case ct_freq_audible_deactivatable:
+   case ct_lforate:
    case ct_rotarydrive:
       return true;
    }
