@@ -521,7 +521,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          py = gui_modsec_y - 10;
 
          sprintf(label, "lfo%i_rate", l);
-         a->push_back(scene[sc].lfo[l].rate.assign(p_id.next(), id_s++, label, "Rate", ct_lforate,
+         a->push_back(scene[sc].lfo[l].rate.assign(p_id.next(), id_s++, label, "Rate", ct_lforate_deactivatable,
                                                    "lfo.rate", px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
                                                    Surge::ParamConfig::kHorizontal | sceasy, false));
          py += gui_hfader_dist;

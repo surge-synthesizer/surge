@@ -2805,7 +2805,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   float tripoff = triplaboff;
                   float dotlaboff = log2(1.5);
                   float dotoff = dotlaboff;
-                  if( p->ctrltype == ct_lforate )
+                  if( p->ctrltype == ct_lforate || p->ctrltype == ct_lforate_deactivatable )
                   {
                      mul = -1.0;
                      triplaboff = log2(1.5);

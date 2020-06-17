@@ -211,6 +211,7 @@ bool Parameter::can_temposync()
    {
    case ct_portatime:
    case ct_lforate:
+   case ct_lforate_deactivatable:
    case ct_envtime:
    case ct_envtime_lfodecay:
       return true;
@@ -251,7 +252,7 @@ bool Parameter::can_deactivate()
    switch(ctrltype)
    {
    case ct_freq_audible_deactivatable:
-   case ct_lforate:
+   case ct_lforate_deactivatable:
    case ct_rotarydrive:
       return true;
    }
@@ -444,6 +445,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = -2;
       break;
    case ct_lforate:
+   case ct_lforate_deactivatable:
       valtype = vt_float;
       val_min.f = -7;
       val_max.f = 9;
@@ -876,6 +878,7 @@ void Parameter::bound_value(bool force_integer)
          }
          break;
       case ct_lforate:
+      case ct_lforate_deactivatable:
       {
          if (temposync)
          {
@@ -1249,6 +1252,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          }
          break;
       case ct_lforate:
+      case ct_lforate_deactivatable:
          if (temposync)
          {
             std::string res = tempoSyncNotationValue(-f);
@@ -1803,6 +1807,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_reverbpredelaytime:
    case ct_portatime:
    case ct_lforate:
+   case ct_lforate_deactivatable:
    case ct_detuning:
    case ct_oscspread:
    case ct_countedset_percent:
@@ -2073,6 +2078,7 @@ bool Parameter::set_value_from_string( std::string s )
    case ct_reverbpredelaytime:
    case ct_portatime:
    case ct_lforate:
+   case ct_lforate_deactivatable:
    case ct_chorusmodtime:
    {
       float oldval = val.f;
