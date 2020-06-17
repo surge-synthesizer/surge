@@ -354,6 +354,15 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                }
                else
                {
+                  if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
+                  {
+                     paramQueue->getPoint(numPoints - 1, offsetSamples, value);
+                     
+                     // VST3 wants to send me these events a LOT
+                     if( surgeInstance->getParameter01(id) != value )
+                        surgeInstance->setParameter01(id, value, true);
+                  }
+
                   // std::cerr << "Unable to handle parameter " << id << " with npoints " << numPoints << std::endl;
                }
             }
@@ -870,7 +879,7 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
 
 tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValue value)
 {
-   // std::cout << __LINE__ << " " << __func__ << " " << tag << std::endl;
+   // std::cout << __LINE__ << " " << __func__ << " " << tag << " " << value << std::endl;
    CHECK_INITIALIZED;
 
    if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
@@ -948,6 +957,7 @@ void SurgeVst3Processor::updateDisplay()
 
 void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
 {
+   // std::cout << "setParameterAutomated " << inputParam << " " << value << std::endl; 
    int externalparam;
    if( inputParam >= metaparam_offset && inputParam <= metaparam_offset + n_midi_controller_params )
    {
