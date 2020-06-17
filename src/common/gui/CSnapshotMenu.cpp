@@ -585,15 +585,16 @@ void CFxMenu::copyFX()
     */
     if( fxCopyPaste.size() == 0 )
     {
-        fxCopyPaste.resize( n_fx_params * 3 + 1 ); // type then (val; ts; extend)
+        fxCopyPaste.resize( n_fx_params * 4 + 1 ); // type then (val; ts; extend; deact)
     }
 
     fxCopyPaste[0] = fx->type.val.i;
     for( int i=0; i<n_fx_params; ++i )
     {
-        int vp = i * 3 + 1;
-        int tp = i * 3 + 2;
-        int xp = i * 3 + 3;
+        int vp = i * 4 + 1;
+        int tp = i * 4 + 2;
+        int xp = i * 4 + 3;
+        int dp = i * 4 + 4;
 
         switch( fx->p[i].valtype )
         {
@@ -607,6 +608,7 @@ void CFxMenu::copyFX()
 
         fxCopyPaste[tp] = fx->p[i].temposync;
         fxCopyPaste[xp] = fx->p[i].extend_range;
+        fxCopyPaste[dp] = fx->p[i].deactivated;
     }
     memcpy((void*)fxbuffer,(void*)fx,sizeof(FxStorage));
     
@@ -631,9 +633,10 @@ void CFxMenu::pasteFX()
 
     for (int i = 0; i < n_fx_params; i++)
     {
-        int vp = i * 3 + 1;
-        int tp = i * 3 + 2;
-        int xp = i * 3 + 3;
+        int vp = i * 4 + 1;
+        int tp = i * 4 + 2;
+        int xp = i * 4 + 3;
+        int dp = i * 4 + 4;
         
         switch( fxbuffer->p[i].valtype )
         {
@@ -658,6 +661,7 @@ void CFxMenu::pasteFX()
         }
         fxbuffer->p[i].temposync = (int)fxCopyPaste[tp];
         fxbuffer->p[i].extend_range = (int)fxCopyPaste[xp];
+        fxbuffer->p[i].deactivated = (int)fxCopyPaste[dp];
     }
 
     if( listenerNotForParent )

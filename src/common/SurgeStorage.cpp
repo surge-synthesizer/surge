@@ -1107,6 +1107,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
          getPatch().param_ptr[pid]->val.i = p.val.i;
          getPatch().param_ptr[pid]->temposync = p.temposync;
          getPatch().param_ptr[pid]->extend_range = p.extend_range;
+         getPatch().param_ptr[pid]->deactivated = p.deactivated;
       }
 
       switch (type)
