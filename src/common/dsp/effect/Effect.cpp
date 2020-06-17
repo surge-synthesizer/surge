@@ -410,8 +410,8 @@ template <int v> void ChorusEffect<v>::init_ctrltypes()
    fxdata->p[3].posy_offset = 5;
    fxdata->p[4].posy_offset = 7;
    fxdata->p[5].posy_offset = 7;
-   fxdata->p[6].posy_offset = 9;
-   fxdata->p[7].posy_offset = 9;
+   fxdata->p[6].posy_offset = 11;
+   fxdata->p[7].posy_offset = 7;
 }
 template <int v> const char* ChorusEffect<v>::group_label(int id)
 {
