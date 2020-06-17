@@ -523,7 +523,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          sprintf(label, "lfo%i_rate", l);
          a->push_back(scene[sc].lfo[l].rate.assign(p_id.next(), id_s++, label, "Rate", ct_lforate,
                                                    "lfo.rate", px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
-                                                   Surge::ParamConfig::kHorizontal | sceasy));
+                                                   Surge::ParamConfig::kHorizontal | sceasy, false));
          py += gui_hfader_dist;
          sprintf(label, "lfo%i_phase", l);
          a->push_back(scene[sc].lfo[l].start_phase.assign(p_id.next(), id_s++, label, "Phase / Shuffle",

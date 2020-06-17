@@ -275,6 +275,10 @@ void LfoModulationSource::process_block()
    int s = lfo->shape.val.i;
 
    float frate = envelope_rate_linear(-localcopy[rate].f);
+
+   if (lfo->rate.deactivated)
+      frate = 0.0;
+
    if (lfo->rate.temposync)
       frate *= storage->temposyncratio;
    phase += frate * ratemult;

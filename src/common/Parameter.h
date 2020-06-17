@@ -242,7 +242,8 @@ public:
                      ControlGroup ctrlgroup = cg_GLOBAL,
                      int ctrlgroup_entry = 0,
                      bool modulateable = true,
-                     int ctrlstyle = cs_off);
+                     int ctrlstyle = cs_off,
+                     bool defaultDeactivation = true);
    virtual ~Parameter();
 
    bool can_temposync();
