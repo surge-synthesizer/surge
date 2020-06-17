@@ -265,7 +265,7 @@ void LfoModulationSource::release()
 
 void LfoModulationSource::process_block()
 {
-   if( (! phaseInitialized) || (lfo->rate.deactivated) )
+   if( (! phaseInitialized) || lfo->rate.deactivated )
    {
       initPhaseFromStartPhase();
    }
