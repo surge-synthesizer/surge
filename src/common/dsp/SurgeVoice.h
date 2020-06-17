@@ -72,11 +72,14 @@ public:
            int tableIdx = (int)tableNote0;
            if( tableIdx > 0x1fe )
                tableIdx = 0x1fe;
-
+           float tableFrac = tableNote0 - tableIdx;
+           
            // so just iterate up. Deal with negative also of course. Since we will always be close just
            // do it brute force for now but later we can do a binary or some such.
-           float pitch0 = storage->table_pitch[tableIdx];
-           float targetPitch = pitch0 + fqShift * 32.0 / 261.626;
+           float pitch0 = storage->table_pitch[tableIdx] * ( 1.0 - tableFrac ) + storage->table_pitch[tableIdx + 1] * tableFrac;
+           float targetPitch = pitch0 + fqShift / Tunings::MIDI_0_FREQ;
+           if( targetPitch < 0 )
+              targetPitch = 0.01;
            
            if( fqShift > 0 )
            {
@@ -112,7 +115,8 @@ public:
            float frac = (targetPitch - storage->table_pitch[tableIdx]) /
                ( storage->table_pitch[tableIdx + 1] - storage->table_pitch[tableIdx] );
            // frac = 1 -> targetpitch = +1; frac = 0 -> targetPitch
-           
+
+           // std::cout << note0 << " " << tableIdx << " " << frac << " " << fqShift << " " << targetPitch << std::endl;
            return tableIdx + frac - 256;
        }
        else
