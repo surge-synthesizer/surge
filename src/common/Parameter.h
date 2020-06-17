@@ -60,6 +60,7 @@ enum ctrltypes
    ct_reverbpredelaytime,
    ct_portatime,
    ct_lforate,
+   ct_lforate_deactivatable,
    ct_lfoshape,
    ct_lfotrigmode,
    ct_detuning,
