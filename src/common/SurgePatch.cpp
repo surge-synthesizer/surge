@@ -523,7 +523,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          sprintf(label, "lfo%i_rate", l);
          a->push_back(scene[sc].lfo[l].rate.assign(p_id.next(), id_s++, label, "Rate", ct_lforate,
                                                    "lfo.rate", px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
-                                                   Surge::ParamConfig::kHorizontal | sceasy));
+                                                   Surge::ParamConfig::kHorizontal | sceasy, false));
          py += gui_hfader_dist;
          sprintf(label, "lfo%i_phase", l);
          a->push_back(scene[sc].lfo[l].start_phase.assign(p_id.next(), id_s++, label, "Phase / Shuffle",
@@ -703,6 +703,7 @@ void SurgePatch::init_default_values()
 
       for (int l = 0; l < n_lfos; l++)
       {
+         scene[sc].lfo[l].rate.deactivated = false;
          scene[sc].lfo[l].magnitude.val.f = 1.f;
          scene[sc].lfo[l].magnitude.val_default.f = 1.f;
          scene[sc].lfo[l].trigmode.val.i = 1;
@@ -1196,7 +1197,12 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          else
          {
             if( param_ptr[i]->can_deactivate() )
-               param_ptr[i]->deactivated = true;
+            {
+               if( param_ptr[i]->ctrlgroup == cg_LFO ) // this is the "RATE" special case
+                  param_ptr[i]->deactivated = false;
+               else
+                  param_ptr[i]->deactivated = true;
+            }
          }
          if ((p->QueryIntAttribute("extend_range", &j) == TIXML_SUCCESS) && (j == 1))
             param_ptr[i]->extend_range = true;
