@@ -186,7 +186,7 @@ Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
    else
       per_voice_processing = false;
    clear_flags();
-   deactivated = defaultDeactivation;
+   this->deactivated = defaultDeactivation;
    midictrl = -1;
 
    set_type(ctrltype);
