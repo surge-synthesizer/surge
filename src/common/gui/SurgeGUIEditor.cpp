@@ -658,6 +658,20 @@ void SurgeGUIEditor::idle()
                */
                CControl *cc = nonmod_param[ j ];
 
+               /*
+               ** Some state changes enable and disable sliders. If this is one of those state changes and a value has changed, then
+               ** we need to rebuild the UI. See #2056.
+               */
+               auto tag = cc->getTag();
+               auto sv = synth->getParameter01(j);
+               auto cv = cc->getValue();
+               if( ( tag == fmconfig_tag || tag == filterblock_tag ) &&
+                   ( sv != cv ) )
+               {
+                  // this is a bit heavy handed, but this is also an edge case
+                  synth->refresh_editor = true;
+               }
+                   
 #if TARGET_VST2
                /*
                ** This is a gross hack. The right thing is to have a remapper lambda on the control.
