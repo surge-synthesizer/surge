@@ -728,8 +728,14 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
-   default:
+   case ct_sendlevel:
+      val_min.f = 0;
+      val_max.f = 1.5874;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
    case ct_none:
+   default:
       sprintf(dispname, "-");
       valtype = vt_int;
 
@@ -830,6 +836,7 @@ void Parameter::bound_value(bool force_integer)
          break;
       }
       case ct_amplitude:
+      case ct_sendlevel:
       {
          if (val.f != 0)
          {
@@ -1132,9 +1139,97 @@ std::string Parameter::tempoSyncNotationValue(float f)
 void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth )
 {
    int detailedMode = false;
-   if( storage )
+   
+   if (storage)
       detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
-   sprintf(txt, "%.*f", (detailedMode ? 6 : 2), modulationDepth);
+
+   switch (ctrltype)
+   {
+   case ct_portatime:
+   case ct_reverbtime:
+      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 10.f * modulationDepth, '%');
+      break;
+   case ct_envtime:
+   case ct_envtime_lfodecay:
+      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), (100.f / 13.f) * modulationDepth, '%');
+      break;
+   case ct_reverbpredelaytime:
+      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 20.f * modulationDepth, '%');
+      break;
+   case ct_chorusmodtime:
+   case ct_delaymodtime:
+      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 12.5 * modulationDepth, '%');
+      break;
+   case ct_lforate:
+   case ct_lforate_deactivatable:
+      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 6.25 * modulationDepth, '%');
+      break;
+   case ct_amplitude:
+   case ct_sendlevel:
+      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(modulationDepth));
+      break;
+   case ct_decibel:
+   case ct_decibel_attenuation:
+   case ct_decibel_attenuation_large:
+   case ct_decibel_fmdepth:
+   case ct_decibel_narrow:
+   case ct_decibel_extra_narrow:
+      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), modulationDepth);
+      break;
+   case ct_decibel_extendable:
+   case ct_decibel_narrow_extendable:
+      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), modulationDepth);
+      break;
+   case ct_bandwidth:
+      sprintf(txt, "%.*f octaves", (detailedMode ? 6 : 2), modulationDepth);
+      break;
+   case ct_freq_shift:
+      sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), modulationDepth);
+      break;
+   case ct_oscspread:
+      if (absolute)
+         sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), modulationDepth * 16.f);
+      else
+         sprintf(txt, "%.*f cents", (detailedMode ? 6 : 2), modulationDepth * 100.f);
+      break;
+   case ct_detuning:
+      sprintf(txt, "%.*f cents", (detailedMode ? 6 : 2), modulationDepth * 100.f);
+      break;
+   case ct_stereowidth:
+      sprintf(txt, "%.*fº", (detailedMode ? 6 : 2), modulationDepth);
+      break;
+   case ct_pitch:
+   case ct_pitch_semi7bp:
+   case ct_syncpitch:
+   case ct_freq_mod:
+      sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), modulationDepth,
+              (storage && !storage->isStandardTuning ? "keys" : "semitones"));
+      break;
+   case ct_pitch_semi7bp_absolutable:
+      if (absolute)
+         sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), 10.f * modulationDepth);
+      else
+         sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), modulationDepth,
+                 (storage && !storage->isStandardTuning ? "keys" : "semitones"));
+      break;
+   case ct_fmratio:
+      sprintf(txt, "%.*f", (detailedMode ? 6 : 2), modulationDepth);
+      break;
+   case ct_flangerpitch:
+      sprintf(txt, "%.*f", (detailedMode ? 6 : 2), modulationDepth);
+      break;
+   case ct_freq_hpf:
+   case ct_freq_audible:
+   case ct_freq_audible_deactivatable:
+   case ct_freq_vocoder_low:
+   case ct_freq_vocoder_high:
+      sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), modulationDepth, "semitones");
+      break;
+   default:
+      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), modulationDepth * 100.f, '%');
+      break;
+   }
+
 }
 
 float Parameter::quantize_modulation( float inputval )
@@ -1262,6 +1357,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
             sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 3), powf(2.0f, f));
          break;
       case ct_amplitude:
+      case ct_sendlevel:
          if (f == 0)
             sprintf(txt, "-inf dB");
          else
@@ -1821,6 +1917,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_midikey:
    case ct_midikey_or_channel:
    case ct_rotarydrive:
+   case ct_sendlevel:
      {
       return true;
       break; }
@@ -1983,6 +2080,7 @@ bool Parameter::set_value_from_string( std::string s )
       break;
    }
    case ct_amplitude:
+   case ct_sendlevel:
    {
       // typing in the maximum value for send levels (12 dB) didn't work
       // probably because of float precision (or lack thereof)

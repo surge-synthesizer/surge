@@ -109,6 +109,7 @@ enum ctrltypes
    ct_chorusmodtime,
    ct_percent200,
    ct_rotarydrive,
+   ct_sendlevel,
    num_ctrltypes,
 };
 

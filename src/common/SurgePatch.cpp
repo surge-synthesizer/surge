@@ -257,19 +257,16 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                           Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       py += gui_hfader_dist;
       a->push_back(scene[sc].send_level[0].assign(p_id.next(), id_s++, "send_fx_1", "Send FX 1 Level",
-                                                  ct_amplitude,
+                                                  ct_sendlevel,
                                                   "global.send_fx_1", px, py,
                                                   sc_id, cg_GLOBAL, 0, true,
                                                   Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       py += gui_hfader_dist;
       a->push_back(scene[sc].send_level[1].assign(p_id.next(), id_s++, "send_fx_2", "Send FX 2 Level",
-                                                  ct_amplitude,
+                                                  ct_sendlevel,
                                                   "global.send_fx_2", px, py,
                                                   sc_id, cg_GLOBAL, 0, true,
                                                   Surge::ParamConfig::kHorizontal | kWhite | sceasy));
-      scene[sc].send_level[0].val_max.f = 1.5874f;
-      scene[sc].send_level[1].val_max.f = 1.5874f;
-
       px = gui_oscmix_x;
       py = gui_oscmix_y;
       int mof = -36, sof = mof + 10, rof = mof + 20;

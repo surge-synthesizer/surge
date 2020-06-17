@@ -391,8 +391,8 @@ void Reverb1Effect::init_ctrltypes()
    fxdata->p[rp_gain1].posy_offset = 5;
    fxdata->p[rp_hicut].posy_offset = 5;
 
-   fxdata->p[rp_mix].posy_offset = 7;
-   fxdata->p[rp_width].posy_offset = 7;
+   fxdata->p[rp_mix].posy_offset = 9;
+   fxdata->p[rp_width].posy_offset = 5;
 
    // sections
    // pre-delay

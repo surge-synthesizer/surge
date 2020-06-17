@@ -317,6 +317,9 @@ void Reverb2Effect::init_ctrltypes()
 
    fxdata->p[r2p_predelay].set_name("Pre-Delay");
    fxdata->p[r2p_predelay].set_type(ct_reverbpredelaytime);
+
+   fxdata->p[r2p_room_size].set_name("Room Size");
+   fxdata->p[r2p_room_size].set_type(ct_percent_bidirectional);
    fxdata->p[r2p_decay_time].set_name("Decay Time");
    fxdata->p[r2p_decay_time].set_type(ct_reverbtime);
    fxdata->p[r2p_diffusion].set_name("Diffusion");
@@ -325,16 +328,16 @@ void Reverb2Effect::init_ctrltypes()
    fxdata->p[r2p_buildup].set_type(ct_percent);
    fxdata->p[r2p_modulation].set_name("Modulation");
    fxdata->p[r2p_modulation].set_type(ct_percent);
+
    fxdata->p[r2p_hf_damping].set_name("HF Damping");
    fxdata->p[r2p_hf_damping].set_type(ct_percent);
    fxdata->p[r2p_lf_damping].set_name("LF Damping");
    fxdata->p[r2p_lf_damping].set_type(ct_percent);
+
+   fxdata->p[r2p_width].set_name("Width");
+   fxdata->p[r2p_width].set_type(ct_decibel_narrow);
    fxdata->p[r2p_mix].set_name("Mix");
    fxdata->p[r2p_mix].set_type(ct_percent);
-   fxdata->p[r2p_width].set_name("Width");
-   fxdata->p[r2p_width].set_type(ct_percent);
-   fxdata->p[r2p_room_size].set_name("Room Size");
-   fxdata->p[r2p_room_size].set_type(ct_percent_bidirectional);
 
    for( int i=r2p_predelay; i<r2p_num_params; ++i )
    {

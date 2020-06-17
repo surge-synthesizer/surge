@@ -299,8 +299,8 @@ void DualDelayEffect::init_ctrltypes()
 
    fxdata->p[8].posy_offset = -15;
 
-   fxdata->p[10].posy_offset = 7;
-   fxdata->p[11].posy_offset = 7;
+   fxdata->p[10].posy_offset = 9;
+   fxdata->p[11].posy_offset = 5;
 }
 void DualDelayEffect::init_default_values()
 {

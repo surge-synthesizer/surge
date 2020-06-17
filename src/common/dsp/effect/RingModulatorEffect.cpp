@@ -196,6 +196,8 @@ const char* RingModulatorEffect::group_label(int id)
    case 1:
       return "Diode";
    case 2:
+      return "EQ";
+   case 3:
       return "Output";
    }
    return 0;
@@ -211,6 +213,8 @@ int RingModulatorEffect::group_label_ypos(int id)
       return 11;
    case 2:
       return 17;
+   case 3:
+      return 23;
    }
    return 0;
 }
@@ -237,14 +241,16 @@ void RingModulatorEffect::init_ctrltypes()
    fxdata->p[rm_lowcut].set_type( ct_freq_audible );
    fxdata->p[rm_highcut].set_name( "High Cut" );
    fxdata->p[rm_highcut].set_type( ct_freq_audible );
+
    fxdata->p[rm_mix].set_name( "Mix" );
    fxdata->p[rm_mix].set_type( ct_percent );
 
-   for( int i=rm_carriershape; i<rm_num_params; ++i )
+   for( int i = rm_carriershape; i < rm_num_params; ++i )
    {
       auto a = 1;
       if( i >= rm_diode_vb ) a += 2;
       if( i >= rm_lowcut ) a += 2;
+      if( i >= rm_mix ) a += 2;
       fxdata->p[i].posy_offset = a;
    }
 
