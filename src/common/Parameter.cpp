@@ -1166,7 +1166,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
       break;
    case ct_amplitude:
    case ct_sendlevel:
-      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(modulationDepth));
+      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(modulationDepth + val.f) - amp_to_db(val.f));
       break;
    case ct_decibel:
    case ct_decibel_attenuation:

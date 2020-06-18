@@ -16,8 +16,8 @@ enum revparam
    r2p_lf_damping,
    r2p_hf_damping,
 
-   r2p_mix,
    r2p_width,
+   r2p_mix,
    r2p_num_params,
 };
 
@@ -203,8 +203,8 @@ void Reverb2Effect::process(float* dataL, float* dataR)
    _lf_damp_coefficent.newValue(0.2 * *f[r2p_lf_damping]);
    _modulation.newValue(*f[r2p_modulation] * samplerate * 0.001f * 5.f);
 
-   mix.set_target_smoothed(*f[r2p_mix]);
    width.set_target_smoothed(*f[r2p_width]);
+   mix.set_target_smoothed(*f[r2p_mix]);
 
    _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * dsamplerate_inv);
 
@@ -344,7 +344,7 @@ void Reverb2Effect::init_ctrltypes()
       auto a = 1;
       if( i >= r2p_room_size ) a += 2;
       if( i >= r2p_lf_damping ) a += 2;
-      if( i >= r2p_mix ) a += 2;
+      if( i >= r2p_width ) a += 2;
       fxdata->p[i].posy_offset = a;
    }
 }
@@ -354,7 +354,7 @@ void Reverb2Effect::init_default_values()
    fxdata->p[r2p_predelay].val.f = -4.f;
    fxdata->p[r2p_decay_time].val.f = 0.75f;
    fxdata->p[r2p_mix].val.f = 0.33f;
-   fxdata->p[r2p_width].val.f = 0.75f;
+   fxdata->p[r2p_width].val.f = 0.0f;
    fxdata->p[r2p_diffusion].val.f = 1.0f;
    fxdata->p[r2p_buildup].val.f = 1.0f;
    fxdata->p[r2p_modulation].val.f = 0.5f;
