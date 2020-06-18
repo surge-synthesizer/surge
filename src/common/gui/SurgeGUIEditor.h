@@ -39,6 +39,15 @@ typedef VSTGUI::PluginGUIEditor EditorType;
  
 class CSurgeSlider;
 
+#if TARGET_VST3
+namespace Steinberg
+{
+   namespace Vst {
+      class IContextMenu;
+   }
+}
+#endif
+
 class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
 {
 private:
@@ -234,6 +243,10 @@ private:
                                      float baseW, float baseH);
    
 private:
+#if TARGET_VST3
+   Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c, int ptag, int &eid); // just a noop if you aren't a vst3 of course
+#endif
+   
    std::function< void(SurgeGUIEditor *) > zoom_callback;
    bool zoomInvalid;
    int minimumZoom;
