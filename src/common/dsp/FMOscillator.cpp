@@ -131,7 +131,10 @@ void FMOscillator::init_default_values()
 
 void FMOscillator::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
 {
-   oscdata->p[fm_fb].set_type(ct_osc_feedback);
+   if (streamingRevision <= 12)
+   {
+      oscdata->p[fm_fb].set_type(ct_osc_feedback);
+   }
 }
 
 /* FM osc 2 */
