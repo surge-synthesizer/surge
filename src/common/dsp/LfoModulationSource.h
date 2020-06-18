@@ -62,7 +62,7 @@ private:
    bool phaseInitialized;
    void initPhaseFromStartPhase();
    
-   float phase, target, noise, noised1, env_phase;
+   float phase, target, noise, noised1, env_phase, priorPhase;
    float ratemult;
    float env_releasestart;
    float iout;

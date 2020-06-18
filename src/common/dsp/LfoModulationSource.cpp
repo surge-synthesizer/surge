@@ -30,7 +30,8 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    ratemult = 1.f;
    retrigger_FEG = false;
    retrigger_AEG = false;
-
+   priorPhase = -1000;
+   
    rate = lfo->rate.param_id_in_scene;
    magn = lfo->magnitude.param_id_in_scene;
    idelay = lfo->delay.param_id_in_scene;
@@ -265,7 +266,7 @@ void LfoModulationSource::release()
 
 void LfoModulationSource::process_block()
 {
-   if( ! phaseInitialized )
+   if( (! phaseInitialized) || lfo->rate.deactivated )
    {
       initPhaseFromStartPhase();
    }
@@ -283,6 +284,11 @@ void LfoModulationSource::process_block()
       frate *= storage->temposyncratio;
    phase += frate * ratemult;
 
+   if( frate == 0 && phase == 0 && s == ls_stepseq )
+   {
+      phase = 0.001; // step forward a smidge
+   }
+   
    /*if (lfo->trigmode.val.i == lm_freerun)
    {
    double ipart; //,tsrate = localcopy[rate].f;
@@ -486,27 +492,53 @@ void LfoModulationSource::process_block()
    case ls_stepseq:
       // iout = wf_history[0];
       {
+         // Support 0 rate scrubbing across all 16 steps
+         float calcPhase = phase;
+         if( frate == 0 )
+         {
+            /*
+            ** Alright so in 0 rate mode we want to scrub through tne entire sequence. So
+            */
+            float p16 = phase * ( n_stepseqsteps - 1 );
+            int pstep = (int)p16;
+            float sphase = ( p16 - pstep );
+
+            if( priorPhase != phase )
+            {
+               priorPhase = phase;
+
+               /*
+               ** So we want to load up the wf_history
+               */
+               for( int i=0; i<4; ++i )
+               {
+                  wf_history[i] = ss->steps[( pstep + 1 + n_stepseqsteps - i ) & (n_stepseqsteps - 1)];
+               }
+            }
+            
+            calcPhase = sphase;
+         }
          float df = localcopy[ideform].f;
          if (df > 0.5f)
          {
-            float linear = (1.f - phase) * wf_history[2] + phase * wf_history[1];
+            float linear = (1.f - calcPhase) * wf_history[2] + calcPhase * wf_history[1];
             float cubic =
-                CubicInterpolate(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
+                CubicInterpolate(wf_history[3], wf_history[2], wf_history[1], wf_history[0], calcPhase);
             iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
          }
          else if (df > -0.0001f)
          {
-            float cf = max(0.f, min(phase / (2.f * df + 0.00001f), 1.0f));
+            float cf = max(0.f, min(calcPhase / (2.f * df + 0.00001f), 1.0f));
             iout = (1.f - cf) * wf_history[2] + cf * wf_history[1];
          }
          else if (df > -0.5f)
          {
-            float cf = max(0.f, min((1.f - phase) / (-2.f * df + 0.00001f), 1.0f));
+            float cf = max(0.f, min((1.f - calcPhase) / (-2.f * df + 0.00001f), 1.0f));
             iout = (1.f - cf) * 0 + cf * wf_history[1];
          }
          else
          {
-            float cf = max(0.f, min(phase / (2.f + 2.f * df + 0.00001f), 1.0f));
+            float cf = max(0.f, min(calcPhase / (2.f + 2.f * df + 0.00001f), 1.0f));
             iout = (1.f - cf) * wf_history[1] + cf * 0;
          }
       }
