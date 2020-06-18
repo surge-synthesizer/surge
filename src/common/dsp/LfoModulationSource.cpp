@@ -76,7 +76,7 @@ float LfoModulationSource::bend2(float x)
 
 float LfoModulationSource::bend3(float x)
 {
-   float a = 0.5f * localcopy[ideform].f;
+   float a = 0.5f * limit_range( localcopy[ideform].f, -3.f, 3.f );
 
    x = x - a * x * x + a;
    x = x - a * x * x + a; // do twice for extra pleasure
@@ -559,5 +559,6 @@ void LfoModulationSource::process_block()
       }
    }
 
-   output = env_val * localcopy[magn].f * io2;
+   auto magnf = limit_range( localcopy[magn].f, -3.f, 3.f );
+   output = env_val * magnf * io2;
 }
