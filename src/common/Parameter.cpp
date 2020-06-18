@@ -1136,7 +1136,7 @@ std::string Parameter::tempoSyncNotationValue(float f)
     return res;
 }
 
-void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth )
+void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar )
 {
    int detailedMode = false;
    
@@ -2250,4 +2250,30 @@ bool Parameter::set_value_from_string( std::string s )
       return false;
    }
    return true;
+}
+
+/*
+** This function returns a value in range [-1.1] scaled by the mins and maxes
+*/
+float Parameter::calculate_modulation_value_from_string( const std::string &s )
+{
+   switch( ctrltype )
+   {
+   case ct_percent:
+   case ct_percent_bidirectional:
+   {
+      auto mv = (float)std::atof( s.c_str() ) * 0.01 / ( get_extended( val_max.f ) -
+                                                         get_extended( val_min.f ) );
+      return mv;
+   }
+   default:
+   {
+      // This works in all the linear cases so we need to handle fewer above than we'd think
+      auto mv = (float)std::atof( s.c_str() ) / ( get_extended( val_max.f ) -
+                                                  get_extended( val_min.f ) );
+      return mv;
+   }
+   }
+
+   return 0.0;
 }
