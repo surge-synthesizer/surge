@@ -1,5 +1,6 @@
 #include "LfoModulationSource.h"
 #include <cmath>
+#include "DebugHelpers.h"
 
 using namespace std;
 
@@ -185,7 +186,7 @@ void LfoModulationSource::attack()
       noise = 0.f;
       noised1 = 0.f;
       target = 0.f;
-      iout = correlated_noise_o2mk2(target, noised1, localcopy[ideform].f);
+      iout = correlated_noise_o2mk2(target, noised1, limit_range(localcopy[ideform].f,0.f,1.f));
       break;
    case ls_stepseq:
    {
@@ -220,10 +221,11 @@ void LfoModulationSource::attack()
       noise = 0.f;
       noised1 = 0.f;
       target = 0.f;
-      wf_history[3] = correlated_noise_o2mk2(target, noised1, localcopy[ideform].f) * phase;
-      wf_history[2] = correlated_noise_o2mk2(target, noised1, localcopy[ideform].f) * phase;
-      wf_history[1] = correlated_noise_o2mk2(target, noised1, localcopy[ideform].f) * phase;
-      wf_history[0] = correlated_noise_o2mk2(target, noised1, localcopy[ideform].f) * phase;
+      auto lid = limit_range(localcopy[ideform].f,0.f,1.f);
+      wf_history[3] = correlated_noise_o2mk2(target, noised1, lid) * phase;
+      wf_history[2] = correlated_noise_o2mk2(target, noised1, lid) * phase;
+      wf_history[1] = correlated_noise_o2mk2(target, noised1, lid) * phase;
+      wf_history[0] = correlated_noise_o2mk2(target, noised1, lid) * phase;
       /*wf_history[0] = 0.f;
       wf_history[1] = 0.f;
       wf_history[2] = 0.f;
@@ -409,7 +411,7 @@ void LfoModulationSource::process_block()
       {
       case ls_snh:
       {
-         iout = correlated_noise_o2mk2(target, noised1, localcopy[ideform].f);
+         iout = correlated_noise_o2mk2(target, noised1, limit_range(localcopy[ideform].f,0.f,1.f));
       }
       break;
       case ls_noise:
@@ -418,7 +420,7 @@ void LfoModulationSource::process_block()
          wf_history[2] = wf_history[1];
          wf_history[1] = wf_history[0];
 
-         wf_history[0] = correlated_noise_o2mk2(target, noised1, localcopy[ideform].f);
+         wf_history[0] = correlated_noise_o2mk2(target, noised1, limit_range( localcopy[ideform].f, 0.f, 1.f ) ); 
          // target = ((float) rand()/RAND_MAX)*2.f - 1.f;
       }
       break;
