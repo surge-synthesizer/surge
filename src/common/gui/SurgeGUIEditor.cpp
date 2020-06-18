@@ -4012,8 +4012,10 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    // A heuristic
    auto ml = ((CParameterTooltip*)infowindow)->getMaxLabelLen();
    auto iff = 148;
-   if( ml > 26 )
-      iff += ( ml - 26 ) * 6;
+   // This is just empirical. It would be lovely to use the actual string width but that needs a draw context
+   // of for these to be TextLabels so we can call sizeToFit
+   if( ml > 24 )
+      iff += ( ml - 24 ) * 5;
    
    CRect r(0, 0, iff, 18);
    if (modulate)
