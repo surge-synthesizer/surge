@@ -499,8 +499,8 @@ void LfoModulationSource::process_block()
             /*
             ** Alright so in 0 rate mode we want to scrub through tne entire sequence. So
             */
-            float p16 = phase * ( n_stepseqsteps - 1 );
-            int pstep = (int)p16;
+            float p16 = phase * n_stepseqsteps;
+            int pstep = ( (int)p16 ) & ( n_stepseqsteps - 1 );
             float sphase = ( p16 - pstep );
 
             if( priorPhase != phase )
