@@ -1831,7 +1831,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("loop_start", stepsequences[sc][l].loop_start);
             p.SetAttribute("loop_end", stepsequences[sc][l].loop_end);
             p.SetAttribute("shuffle", float_to_str(stepsequences[sc][l].shuffle, txt2));
-            if (l == 0)
+            if (l < n_lfos_voice )
             {
                uint64_t ttm = stepsequences[sc][l].trigmask;
 
