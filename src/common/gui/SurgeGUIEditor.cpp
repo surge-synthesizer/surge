@@ -2443,7 +2443,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                {
                   char modtxt[256];
                   auto pmd = synth->storage.getPatch().param_ptr[md];
-                  pmd->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms));
+                  pmd->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms), synth->isBipolarModulation(thisms));
                   char tmptxt[512]; // leave room for that ubuntu 20.0 error
                   if( pmd->ctrlgroup == cg_LFO )
                   {
@@ -3061,7 +3061,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char modtxt[256];
-                     p->get_display_of_modulation_depth( modtxt, synth->getModDepth(ptag, ms));
+                     p->get_display_of_modulation_depth( modtxt, synth->getModDepth(ptag, ms), synth->isBipolarModulation(ms));
 
                      char tmptxt[512];
                      sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(ms, true).c_str(),
@@ -3572,8 +3572,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          bool isInvalid = false;
          if( typeinModSource > 0 )
          {
-            auto mv = (float)std::atof( t.c_str() ) / ( typeinEditTarget->get_extended( typeinEditTarget->val_max.f ) -
-                                                        typeinEditTarget->get_extended( typeinEditTarget->val_min.f ) );
+            auto mv = typeinEditTarget->calculate_modulation_value_from_string( t );
+
             if( mv < -1.f || mv > 1.f )
             {
                isInvalid = true;
@@ -3710,7 +3710,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
             synth->getParameterName(ptag, txt);
             sprintf(pname, "%s -> %s", modulatorName(thisms,true).c_str(), txt);
-            p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms));
+            p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms), synth->isBipolarModulation(thisms));
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
 
@@ -5582,7 +5582,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    char txt[256];
    if( ismod )
    {
-      p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms));
+      p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms), synth->isBipolarModulation((modsources)ms));
    }
    else
    {
