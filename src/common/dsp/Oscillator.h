@@ -84,7 +84,7 @@ public:
       return valueFromSinAndCos(svalue, cvalue, localcopy[id_mode].i );
    }
    static float valueFromSinAndCos(float svalue, float cvalue, int mode);
-   virtual void handleStreamingMismatches(int s, int synths) override;
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 };
 
 class FMOscillator : public Oscillator
@@ -102,6 +102,7 @@ public:
    float driftlfo, driftlfo2;
    float fb_val;
    lag<double> FMdepth, AbsModDepth, RelModDepth1, RelModDepth2, FeedbackDepth;
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 };
 
 class FM2Oscillator : public Oscillator
@@ -119,6 +120,7 @@ public:
    float driftlfo, driftlfo2;
    float fb_val;
    lag<double> FMdepth, RelModDepth1, RelModDepth2, FeedbackDepth, PhaseOffset;
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 };
 
 class osc_audioinput : public Oscillator
@@ -136,7 +138,7 @@ public:
       return false;
    }
    bool isInSceneB;
-   virtual void handleStreamingMismatches(int s, int synths) override;
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
 private:
    BiquadFilter lp, hp;
@@ -220,7 +222,7 @@ public:
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
    virtual ~SampleAndHoldOscillator();
-   virtual void handleStreamingMismatches(int s, int synths) override;
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
 private:
    BiquadFilter lp, hp;
@@ -302,7 +304,7 @@ public:
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
    virtual ~WindowOscillator();
-   virtual void handleStreamingMismatches(int s, int synths) override;
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
 private:
    BiquadFilter lp, hp;
