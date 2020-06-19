@@ -203,7 +203,7 @@ void Reverb2Effect::process(float* dataL, float* dataR)
    _lf_damp_coefficent.newValue(0.2 * *f[r2p_lf_damping]);
    _modulation.newValue(*f[r2p_modulation] * samplerate * 0.001f * 5.f);
 
-   width.set_target_smoothed(*f[r2p_width]);
+   width.set_target_smoothed(db_to_linear(*f[r2p_width]));
    mix.set_target_smoothed(*f[r2p_mix]);
 
    _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * dsamplerate_inv);
