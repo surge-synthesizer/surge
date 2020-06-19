@@ -119,6 +119,7 @@ void LfoModulationSource::attack()
 
    env_val = 0.f;
    env_phase = 0;
+   ratemult = 1.f;
 
    if (localcopy[idelay].f == lfo->delay.val_min.f)
    {
@@ -278,7 +279,7 @@ void LfoModulationSource::process_block()
    int s = lfo->shape.val.i;
 
    float frate = envelope_rate_linear(-localcopy[rate].f);
-
+   
    if (lfo->rate.deactivated)
       frate = 0.0;
 
