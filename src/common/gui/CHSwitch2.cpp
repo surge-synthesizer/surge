@@ -133,32 +133,38 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
 
    if( doingHover )
    {
-      auto mouseableArea = getMouseableArea();
-      double coefX, coefY;
-      coefX = (double)mouseableArea.getWidth() / (double)columns;
-      coefY = (double)mouseableArea.getHeight() / (double)rows;
-
-      int y = (int)((where.y - mouseableArea.top) / coefY);
-      int x = (int)((where.x - mouseableArea.left) / coefX);
-
-      x = limit_range(x, 0, columns - 1);
-      y = limit_range(y, 0, rows - 1);
-
-      if (columns * rows > 1)
-      {
-         float nhoverValue = (float)(x + y * columns) / (float)(columns * rows - 1);
-
-         nhoverValue = limit_range( nhoverValue, 0.f, 1.f );
-
-         if( nhoverValue != hoverValue )
-         {
-            hoverValue = nhoverValue;
-            invalid();
-         }
-      }
+      calculateHoverValue( where );
    }
    
    return kMouseEventNotHandled;
+}
+
+void CHSwitch2::calculateHoverValue(const CPoint &where )
+{
+   auto mouseableArea = getMouseableArea();
+   double coefX, coefY;
+   coefX = (double)mouseableArea.getWidth() / (double)columns;
+   coefY = (double)mouseableArea.getHeight() / (double)rows;
+   
+   int y = (int)((where.y - mouseableArea.top) / coefY);
+   int x = (int)((where.x - mouseableArea.left) / coefX);
+   
+   x = limit_range(x, 0, columns - 1);
+   y = limit_range(y, 0, rows - 1);
+   
+   if (columns * rows > 1)
+   {
+      float nhoverValue = (float)(x + y * columns) / (float)(columns * rows - 1);
+      
+      nhoverValue = limit_range( nhoverValue, 0.f, 1.f );
+
+      
+      if( nhoverValue != hoverValue )
+      {
+         hoverValue = nhoverValue;
+         invalid();
+      }
+   }
 }
 bool CHSwitch2::onWheel(const CPoint& where, const float& distance, const CButtonState& buttons)
 {
