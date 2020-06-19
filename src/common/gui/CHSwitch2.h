@@ -4,6 +4,7 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SkinSupport.h"
+#include "DebugHelpers.h"
 
 class CHSwitch2 : public VSTGUI::CHorizontalSwitch, public Surge::UI::SkinConsumingComponnt
 {
@@ -58,8 +59,11 @@ public:
       // getFrame()->setCursor( VSTGUI::kCursorHand );
       doingHover = true;
       hoverValue = -1;
+      calculateHoverValue(where);
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
+   void calculateHoverValue( const VSTGUI::CPoint &where );
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorDefault );
       doingHover = false;
