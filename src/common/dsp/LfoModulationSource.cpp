@@ -395,12 +395,23 @@ void LfoModulationSource::process_block()
       };
    }
 
-   if (phase > 1)
+   if (phase > 1 || phase < 0 )
    {
       if( phase >= 2 )
       {
          float ipart;
          phase = modf( phase, &ipart );
+      }
+      else if( phase < 0 )
+      {
+         // -6.02 needs to go to .98
+         //
+         int p = (int) phase - 1;
+         float np = -p + phase;
+         if( np >= 0 && np < 1 )
+            phase = np;
+         else
+            phase = 0; // should never get here but something is already wierd with the mod stack
       }
       else
       {
