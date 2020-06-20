@@ -137,7 +137,7 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
          phase[u] += dphase[u];
          if( phase[u] > 1 )
          {
-            phase[u] -= 1;
+            phase[u] -= (int)phase[u];
          }
          for( int c=0; c<2; ++c )
          {
