@@ -41,7 +41,9 @@ float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
 float table_dB alignas(16)[512],
       table_envrate_lpf alignas(16)[512],
-      table_envrate_linear alignas(16)[512];
+      table_envrate_linear alignas(16)[512],
+      table_glide_exp alignas(16)[512],
+      table_glide_log alignas(16)[512];
 float waveshapers alignas(16)[8][1024];
 float samplerate = 0, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
@@ -1274,6 +1276,7 @@ void SurgeStorage::init_tables()
 {
    isStandardTuning = true;
    float db60 = powf(10.f, 0.05f * -60.f);
+   float _512th_x10 = (1.f / 512.f) * 10.f;
    for (int i = 0; i < 512; i++)
    {
       table_dB[i] = powf(10.f, 0.05f * ((float)i - 384.f));
@@ -1288,8 +1291,10 @@ void SurgeStorage::init_tables()
       table_note_omega_ignoring_tuning[0][i] = table_note_omega[0][i];
       table_note_omega_ignoring_tuning[1][i] = table_note_omega[1][i];
       double k = dsamplerate_os * pow(2.0, (((double)i - 256.0) / 16.0)) / (double)BLOCK_SIZE_OS;
+      table_envrate_linear[i] = (float)(1.f / k);
       table_envrate_lpf[i] = (float)(1.f - exp(log(db60) / k));
-      table_envrate_linear[i] = (float)1.f / k;
+      table_glide_log[i] = log2(1.0 + (i * _512th_x10)) / log2(11.f); // specifically used for portamento non-linear curve
+      table_glide_exp[511 - i] = 1.0 - table_glide_log[i];
    }
 
    double mult = 1.0 / 32.0;
@@ -1452,6 +1457,26 @@ float envelope_rate_linear(float x)
    float a = x - (float)e;
 
    return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
+}
+
+// this function is only valid for x = {0, 1}
+float glide_exp(float x)
+{
+   x *= 511.f;
+   int e = (int)x;
+   float a = x - (float)e;
+
+   return (1 - a) * table_glide_exp[e & 0x1ff] + a * table_glide_exp[(e + 1) & 0x1ff];
+}
+
+// this function is only valid for x = {0, 1}
+float glide_log(float x)
+{
+   x *= 511.f;
+   int e = (int)x;
+   float a = x - (float)e;
+
+   return (1 - a) * table_glide_log[e & 0x1ff] + a * table_glide_log[(e + 1) & 0x1ff];
 }
 
 bool SurgeStorage::retuneToScale(const Tunings::Scale& s)

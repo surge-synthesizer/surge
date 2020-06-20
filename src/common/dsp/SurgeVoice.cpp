@@ -4,6 +4,7 @@
 #include "SurgeVoice.h"
 #include "DspUtilities.h"
 #include "QuadFilterChain.h"
+#include <math.h>
 
 using namespace std;
 
@@ -188,6 +189,19 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    // oscillators which need the modulation state set in calc_ctrldata to get sample 0
    // right.
    switch_toggled();
+
+   //for (int i = 0; i < 128; i++)
+   //{
+   //   printf("%.7f %.7f %.7f %.7f\n", table_envrate_exp[(i * 4) + 0], table_envrate_exp[(i * 4) + 1],
+   //          table_envrate_exp[(i * 4) + 2], table_envrate_exp[(i * 4) + 3]);
+   //}
+   //printf("\n");
+   //for (int i = 0; i < 128; i++)
+   //{
+   //   printf("%.7f %.7f %.7f %.7f\n", table_envrate_linear[(i * 4) + 0],
+   //          table_envrate_linear[(i * 4) + 1], table_envrate_linear[(i * 4) + 2],
+   //          table_envrate_linear[(i * 4) + 3]);
+   //}
 }
 
 SurgeVoice::~SurgeVoice()
@@ -200,8 +214,25 @@ void SurgeVoice::legato(int key, int velocity, char detune)
       state.portasrc_key = state.getPitch();
    else
    {
-      state.portasrc_key =
-          ((1 - state.portaphase) * state.portasrc_key + state.portaphase * state.getPitch());
+      // exponential or linear key traversal for the portamento
+      float phase;
+      switch (scene->portamento.porta_exp)
+      {
+      case -1:
+         phase = glide_log(state.portaphase);
+         break;
+      case 0:
+         phase = state.portaphase;
+         break;
+      case 1:
+         phase = glide_exp(state.portaphase);
+         break;
+      }
+
+      state.portasrc_key = ((1 - phase) * state.portasrc_key + phase * state.getPitch());
+      
+      if (scene->portamento.porta_gliss) // quantize portamento to keys
+         state.pkey = floor(state.pkey + 0.5);
    }
 
    state.key = key;
@@ -330,15 +361,40 @@ void SurgeVoice::uber_release()
 
 void SurgeVoice::update_portamento()
 {
-   // float ratemult=1;
-   // if(zone->portamento_mode) ratemult = 12/(0.00001+fabs(key-portasrc_key));
+   float const_rate_factor = 1.0;
+   int quantStep = 12;
+   
+   if (!storage->isStandardTuning && storage->currentScale.count > 1)
+      quantStep = storage->currentScale.count;
+
+   // portamento constant rate mode (multiply portamento time with every octave traversed (or scale length in case of microtuning)
+   if (scene->portamento.porta_constrate)
+      const_rate_factor = (1.f / ((1.f / quantStep) * fabs(state.getPitch() - state.portasrc_key))) + 0.00000001;
+
    state.portaphase += envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
-                       (scene->portamento.temposync ? storage->temposyncratio : 1.f);
-   // powf(2,-zone->portamento)
+                           (scene->portamento.temposync ? storage->temposyncratio : 1.f) * const_rate_factor;
+
    if (state.portaphase < 1)
    {
-      state.pkey = (1.f - state.portaphase) * state.portasrc_key +
-                   (float)state.portaphase * state.getPitch();
+      // exponential or linear key traversal for the portamento
+      float phase;
+      switch (scene->portamento.porta_exp)
+      {
+      case -1:
+         phase = glide_log(state.portaphase);
+         break;
+      case 0:
+         phase = state.portaphase;
+         break;
+      case 1:
+         phase = glide_exp(state.portaphase);
+         break;
+      }
+
+      state.pkey = (1.f - phase) * state.portasrc_key + (float)phase * state.getPitch();
+
+      if (scene->portamento.porta_gliss)    // quantize portamento to keys
+         state.pkey = floor(state.pkey + 0.5);
    }
    else
       state.pkey = state.getPitch();

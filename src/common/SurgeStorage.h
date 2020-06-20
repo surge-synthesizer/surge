@@ -72,7 +72,9 @@ extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
 extern short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
 extern float table_envrate_lpf alignas(16)[512],
-             table_envrate_linear alignas(16)[512];
+             table_envrate_linear alignas(16)[512],
+             table_glide_exp alignas(16)[512],
+             table_glide_log alignas(16)[512];
 extern float table_note_omega alignas(16)[2][512];
 extern float waveshapers alignas(16)[8][1024];
 extern float samplerate, samplerate_inv;
@@ -679,6 +681,8 @@ float lookup_waveshape(int, float);
 float lookup_waveshape_warp(int, float);
 float envelope_rate_lpf(float);
 float envelope_rate_linear(float);
+float glide_log(float);
+float glide_exp(float);
 
 namespace Surge
 {
