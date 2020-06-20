@@ -31,6 +31,9 @@ public:
    onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse up event occurs
 
    virtual VSTGUI::CMouseEventResult
+   onMouseEntered(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   
+   virtual VSTGUI::CMouseEventResult
    onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    
    virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
@@ -73,6 +76,7 @@ public:
 
    CLASS_METHODS(CSurgeSlider, CControl)
 
+   bool in_hover = false;
    bool is_mod;
    bool disabled; // means it can't be used unless something else changes
    bool deactivated; // means it has been turned off by user action
@@ -95,7 +99,8 @@ public:
    static MoveRateState sliderMoveRateState;
 
 private:
-   VSTGUI::CBitmap *pHandle, *pTray, *pModHandle, *pTempoSyncHandle;
+   VSTGUI::CBitmap *pHandle, *pTray, *pModHandle, *pTempoSyncHandle, *pHandleHover;
+   bool lookedForHovers = false;
    VSTGUI::CRect handle_rect, handle_rect_orig;
    VSTGUI::CPoint offsetHandle;
    int range;
