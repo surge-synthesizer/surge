@@ -70,8 +70,10 @@ void VocoderEffect::setvars(bool init)
    std::cout << "Freq Low is " << *f[kFreqLo] << " " << 440.f * pow(2.f, *f[kFreqLo]/12.f) << std::endl;
    std::cout << "Freq High is " << *f[kFreqHi] << std::endl;
 #endif
-   float flo = *f[kFreqLo];
-   float fhi = *f[kFreqHi];
+   // We need to clamp these in reasonable ranges
+   float flo = limit_range( *f[kFreqLo], -36.f, 36.f );
+   float fhi = limit_range( *f[kFreqHi], 0.f, 60.f );
+   
    if( flo > fhi )
    {
        auto t = fhi;
