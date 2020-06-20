@@ -115,6 +115,13 @@ const char polymode_abberations[n_polymodes][64] = {"Poly",
                                                     "Mono (Single Trigger + Fingered Portamento)",
                                                     "Latch (Monophonic)"};
 
+enum porta_curve
+{
+    porta_log = -1,
+    porta_lin = 0,
+    porta_exp = 1,
+};
+
 enum sub3_lfomode
 {
    lm_freerun = 0,

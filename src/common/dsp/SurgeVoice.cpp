@@ -218,13 +218,13 @@ void SurgeVoice::legato(int key, int velocity, char detune)
       float phase;
       switch (scene->portamento.porta_curve)
       {
-      case -1:
+      case porta_log:
          phase = glide_log(state.portaphase);
          break;
-      case 0:
+      case porta_lin:
          phase = state.portaphase;
          break;
-      case 1:
+      case porta_exp:
          phase = glide_exp(state.portaphase);
          break;
       }
@@ -369,7 +369,7 @@ void SurgeVoice::update_portamento()
 
    // portamento constant rate mode (multiply portamento time with every octave traversed (or scale length in case of microtuning)
    if (scene->portamento.porta_constrate)
-      const_rate_factor = (1.f / ((1.f / quantStep) * fabs(state.getPitch() - state.portasrc_key))) + 0.00000001;
+      const_rate_factor = (1.f / ((1.f / quantStep) * fabs(state.getPitch() - state.portasrc_key) + 0.00001));
 
    state.portaphase += envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
                            (scene->portamento.temposync ? storage->temposyncratio : 1.f) * const_rate_factor;
@@ -380,13 +380,13 @@ void SurgeVoice::update_portamento()
       float phase;
       switch (scene->portamento.porta_curve)
       {
-      case -1:
+      case porta_log:
          phase = glide_log(state.portaphase);
          break;
-      case 0:
+      case porta_lin:
          phase = state.portaphase;
          break;
-      case 1:
+      case porta_exp:
          phase = glide_exp(state.portaphase);
          break;
       }
