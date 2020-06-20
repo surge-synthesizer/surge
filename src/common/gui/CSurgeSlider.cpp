@@ -67,12 +67,13 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
 
    CRect size;
 
+   pHandleHover = nullptr;
    if (style & CSlider::kHorizontal)
    {
       pTray = bitmapStore->getBitmap(IDB_FADERH_BG);
       pHandle = bitmapStore->getBitmap(IDB_FADERH_HANDLE);
       pTempoSyncHandle = bitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_OVERLAY" );
-      
+            
       if (style & kWhite)
          typehy = 1;
 
@@ -149,6 +150,18 @@ void CSurgeSlider::draw(CDrawContext* dc)
 	dc->setFillColor(c);
 	dc->fillRect(size);
 #endif
+
+   if( ! lookedForHovers )
+   {
+      lookedForHovers = true;
+      if( skin.get() )
+      {
+         pHandleHover = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl,
+                                                                    dynamic_cast<CScalableBitmap*>( pHandle ),
+                                                                    associatedBitmapStore,
+                                                                    Surge::UI::Skin::HoverType::HOVER);
+      }
+   }
 
    CRect size = getViewSize();
 
@@ -412,6 +425,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
       if (style & CSlider::kHorizontal)
       {
          pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
+         if( pHandleHover && in_hover )
+            pHandleHover->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
+
          if( is_temposync )
          {
             if( pTempoSyncHandle )
@@ -443,6 +459,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
       else if ((!deactivated || !disabled))
       {
          pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? slider_alpha : slider_alpha); // used to be 0x80 which was solid - lets keep taht for now
+         if( pHandleHover && in_hover )
+            pHandleHover->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? slider_alpha : slider_alpha); // used to be 0x80 which was solid - lets keep taht for now
+
          if( is_temposync )
          {
             if( pTempoSyncHandle )
@@ -508,9 +527,17 @@ void CSurgeSlider::draw(CDrawContext* dc)
       }
 
       if (style & CSlider::kHorizontal)
+      {
          pHandle->draw(dc, hrect, CPoint(28, 24 * typehy), slider_alpha);
+         if( pHandleHover && in_hover )
+            pHandleHover->draw(dc, hrect, CPoint(28, 24 * typehy), slider_alpha);
+      }
       else
+      {
          pHandle->draw(dc, hrect, CPoint(24, 28 * typehy), slider_alpha);
+         if( pHandleHover && in_hover )
+            pHandleHover->draw(dc, hrect, CPoint(24, 28 * typehy), slider_alpha);
+      }
    }
 
    setDirty(false);
@@ -630,13 +657,21 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
    return kMouseEventHandled;
 }
 
+VSTGUI::CMouseEventResult CSurgeSlider::onMouseEntered(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
+{
+   in_hover = true;
+   invalid();
+   return kMouseEventHandled;
+}
+
 VSTGUI::CMouseEventResult CSurgeSlider::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
 {
+   in_hover = false;
    if( wheelInitiatedEdit )
       while( editing )
          endEdit();
    wheelInitiatedEdit = false;
-
+   invalid();
    return kMouseEventHandled;
 }
 
