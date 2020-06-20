@@ -203,6 +203,9 @@ void Parameter::clear_flags()
    extend_range = false;
    absolute = false;
    deactivated = true; // CHOICE: if you are a deactivatble parameter make it so you are by default
+   porta_constrate = false;
+   porta_gliss = false;
+   porta_curve = porta_lin;
 }
 
 bool Parameter::can_temposync()
@@ -257,6 +260,14 @@ bool Parameter::can_deactivate()
       return true;
    }
    return false;
+}
+
+bool Parameter::has_portaoptions()
+{
+   if (ctrltype == ct_portatime)
+      return true;
+   else
+      return false;
 }
 
 void Parameter::set_user_data(ParamUserData* ud)

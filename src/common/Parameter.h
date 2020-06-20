@@ -254,6 +254,7 @@ public:
    bool can_deactivate();
    bool can_setvalue_from_string();
    void clear_flags();
+   bool has_portaoptions();
    void set_type(int ctrltype);
    void morph(Parameter* a, Parameter* b, float x);
    //	void morph(parameter *b, float x);
@@ -311,6 +312,8 @@ public:
    float moverate;
    bool per_voice_processing;
    bool temposync, extend_range, absolute, deactivated;
+   bool porta_constrate, porta_gliss;
+   int porta_curve;
    
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable

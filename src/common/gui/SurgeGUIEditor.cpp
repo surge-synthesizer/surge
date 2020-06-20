@@ -2984,6 +2984,38 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   eid++;
                }
             }
+            if (p->has_portaoptions())
+            {
+               contextMenu->addSeparator(eid++);
+
+               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Constant Rate"),
+                               [this, p]() { p->porta_constrate = !p->porta_constrate; });
+               contextMenu->checkEntry(eid, p->porta_constrate);
+               eid++;
+
+               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Glissando"),
+                               [this, p]() { p->porta_gliss = !p->porta_gliss; });
+               contextMenu->checkEntry(eid, p->porta_gliss);
+               eid++;
+               
+               contextMenu->addSeparator(eid++);
+
+               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Logarithmic Curve"),
+                               [this, p]() { p->porta_curve = -1; });
+               contextMenu->checkEntry(eid, (p->porta_curve == -1));
+               eid++;
+
+               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Linear Curve"),
+                               [this, p]() { p->porta_curve = 0; });
+               contextMenu->checkEntry(eid, (p->porta_curve == 0));
+               eid++;
+
+               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Exponential Curve"),
+                               [this, p]() { p->porta_curve = 1; });
+               contextMenu->checkEntry(eid, (p->porta_curve == 1));
+               eid++;
+
+            }
             if (p->can_extend_range())
             {
                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Extend Range"),

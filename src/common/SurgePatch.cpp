@@ -1165,6 +1165,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          int type;
          if (!(p->QueryIntAttribute("type", &type) == TIXML_SUCCESS))
             type = param_ptr[i]->valtype;
+
          if (type == (valtypes)vt_float)
          {
             if (p->QueryDoubleAttribute("value", &d) == TIXML_SUCCESS)
@@ -1184,6 +1185,50 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             param_ptr[i]->temposync = true;
          else
             param_ptr[i]->temposync = false;
+
+         if ((p->QueryIntAttribute("porta_const_rate", &j) == TIXML_SUCCESS))
+         {
+            if (j == 1)
+               param_ptr[i]->porta_constrate = true;
+            else
+               param_ptr[i]->porta_constrate = false;
+         }
+         else
+         {
+            if (param_ptr[i]->has_portaoptions())
+               param_ptr[i]->porta_constrate = false;
+         }
+
+         if ((p->QueryIntAttribute("porta_gliss", &j) == TIXML_SUCCESS))
+         {
+            if (j == 1)
+               param_ptr[i]->porta_gliss = true;
+            else
+               param_ptr[i]->porta_gliss = false;
+         }
+         else
+         {
+            if (param_ptr[i]->has_portaoptions())
+               param_ptr[i]->porta_gliss = false;
+         }
+
+         if ((p->QueryIntAttribute("porta_curve", &j) == TIXML_SUCCESS))
+         {
+            switch (j)
+            {
+            case porta_log:
+            case porta_lin:
+            case porta_exp:
+               param_ptr[i]->porta_curve = j;
+               break;
+            }
+         }
+         else
+         {
+            if (param_ptr[i]->has_portaoptions())
+               param_ptr[i]->porta_gliss = porta_lin;
+         }
+
          if ((p->QueryIntAttribute("deactivated", &j) == TIXML_SUCCESS))
          {
             if(j == 1)
@@ -1201,10 +1246,12 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                   param_ptr[i]->deactivated = true;
             }
          }
+
          if ((p->QueryIntAttribute("extend_range", &j) == TIXML_SUCCESS) && (j == 1))
             param_ptr[i]->extend_range = true;
          else
             param_ptr[i]->extend_range = false;
+
          if ((p->QueryIntAttribute("absolute", &j) == TIXML_SUCCESS) && (j == 1))
             param_ptr[i]->absolute = true;
          else
@@ -1783,6 +1830,12 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("absolute", "1");
          if (param_ptr[i]->can_deactivate())
             p.SetAttribute("deactivated", param_ptr[i]->deactivated ? "1" : "0" );
+         if (param_ptr[i]->has_portaoptions())
+         {
+            p.SetAttribute("porta_const_rate", param_ptr[i]->porta_constrate ? "1" : "0");
+            p.SetAttribute("porta_gliss", param_ptr[i]->porta_gliss ? "1" : "0");
+            p.SetAttribute("porta_curve", param_ptr[i]->porta_curve);
+         }
 
          // param_ptr[i]->val.i;
          parameters.InsertEndChild(p);
