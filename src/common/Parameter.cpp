@@ -205,7 +205,7 @@ void Parameter::clear_flags()
    deactivated = true; // CHOICE: if you are a deactivatble parameter make it so you are by default
    porta_constrate = false;
    porta_gliss = false;
-   porta_exp = 0;
+   porta_curve = 0;
 }
 
 bool Parameter::can_temposync()

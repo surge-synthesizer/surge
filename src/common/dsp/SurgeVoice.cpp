@@ -216,7 +216,7 @@ void SurgeVoice::legato(int key, int velocity, char detune)
    {
       // exponential or linear key traversal for the portamento
       float phase;
-      switch (scene->portamento.porta_exp)
+      switch (scene->portamento.porta_curve)
       {
       case -1:
          phase = glide_log(state.portaphase);
@@ -378,7 +378,7 @@ void SurgeVoice::update_portamento()
    {
       // exponential or linear key traversal for the portamento
       float phase;
-      switch (scene->portamento.porta_exp)
+      switch (scene->portamento.porta_curve)
       {
       case -1:
          phase = glide_log(state.portaphase);

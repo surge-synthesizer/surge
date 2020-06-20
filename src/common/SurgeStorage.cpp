@@ -1276,7 +1276,7 @@ void SurgeStorage::init_tables()
 {
    isStandardTuning = true;
    float db60 = powf(10.f, 0.05f * -60.f);
-   float _512th_x10 = (1.f / 512.f) * 10.f;
+   float _512th = 1.f / 512.f;
    for (int i = 0; i < 512; i++)
    {
       table_dB[i] = powf(10.f, 0.05f * ((float)i - 384.f));
@@ -1293,7 +1293,7 @@ void SurgeStorage::init_tables()
       double k = dsamplerate_os * pow(2.0, (((double)i - 256.0) / 16.0)) / (double)BLOCK_SIZE_OS;
       table_envrate_linear[i] = (float)(1.f / k);
       table_envrate_lpf[i] = (float)(1.f - exp(log(db60) / k));
-      table_glide_log[i] = log2(1.0 + (i * _512th_x10)) / log2(11.f); // specifically used for portamento non-linear curve
+      table_glide_log[i] = log2(1.0 + (i * _512th * 10.f)) / log2(1.f + 10.f);
       table_glide_exp[511 - i] = 1.0 - table_glide_log[i];
    }
 

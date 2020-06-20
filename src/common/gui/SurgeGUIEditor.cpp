@@ -3001,18 +3001,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                contextMenu->addSeparator(eid++);
 
                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Logarithmic Curve"),
-                               [this, p]() { p->porta_exp = -1; });
-               contextMenu->checkEntry(eid, (p->porta_exp == -1));
+                               [this, p]() { p->porta_curve = -1; });
+               contextMenu->checkEntry(eid, (p->porta_curve == -1));
                eid++;
 
                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Linear Curve"),
-                               [this, p]() { p->porta_exp = 0; });
-               contextMenu->checkEntry(eid, (p->porta_exp == 0));
+                               [this, p]() { p->porta_curve = 0; });
+               contextMenu->checkEntry(eid, (p->porta_curve == 0));
                eid++;
 
                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Exponential Curve"),
-                               [this, p]() { p->porta_exp = 1; });
-               contextMenu->checkEntry(eid, (p->porta_exp == 1));
+                               [this, p]() { p->porta_curve = 1; });
+               contextMenu->checkEntry(eid, (p->porta_curve == 1));
                eid++;
 
             }
