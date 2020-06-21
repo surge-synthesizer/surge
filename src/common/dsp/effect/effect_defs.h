@@ -680,7 +680,8 @@ private:
    lipol<float,true> voices, voice_detune, voice_chord;
    lipol<float,true> feedback, fb_lf_damping;
    float lfosandhtarget[2][COMBS_PER_CHANNEL];
-   
+   float vweights[2][COMBS_PER_CHANNEL];
+
    lipol_ps width;
    
    const static int LFO_TABLE_SIZE=8192;

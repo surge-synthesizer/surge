@@ -1,7 +1,7 @@
 #include "effect_defs.h"
 #include "Tunings.h"
-
-#define _D(x) " " << (#x) << "=" << x
+#include "DebugHelpers.h"
+#include <algorithm>
 
 enum flangparam
 {
@@ -90,7 +90,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
 {
    // So here is a flanger with everything fixed
 
-   float rate = envelope_rate_linear(-*f[flng_rate]) * (fxdata->p[flng_rate].temposync ? storage->temposyncratio : 1.f);
+   float rate = envelope_rate_linear(-limit_range( *f[flng_rate], -8.f, 10.f ) ) * (fxdata->p[flng_rate].temposync ? storage->temposyncratio : 1.f);
 
    longphase += rate;
    if( longphase >= COMBS_PER_CHANNEL ) longphase -= COMBS_PER_CHANNEL;
@@ -255,7 +255,18 @@ void FlangerEffect::process(float* dataL, float* dataR)
    
    depth.newValue( *f[flng_depth] );
    mix.newValue( *f[flng_mix] );
+   voices.newValue( limit_range( *f[flng_voices], 1.f, 4.f ) );
    float feedbackScale = 0.4;
+   if( mode == classic_tuned || mode == classic )
+   {
+      // OK so we want feedback to go up as voice goes down
+      // below we set gain = 1  - 1 / sqrt(7 - voices)
+      // so we want to increase feedback by that amount. We want
+      // about 0.45 at voices = 4 and about 0.85 at voices = 1.
+      float dv = ( voices.v - 1 );
+      feedbackScale += ( 3.0 - dv ) * 0.45 / 3.0;
+   }
+   
    if( mode == doppler_tuned || mode == doppler )
    {
       feedbackScale = 0.4;
@@ -269,14 +280,16 @@ void FlangerEffect::process(float* dataL, float* dataR)
       ringout_value = samplerate * 32.0;
    else
       ringout_value = 1024;
-   
-   fbv = fbv * fbv * fbv;
+
+   if( fbv < 0 ) fbv = fbv;
+   else if( fbv > 1 ) fbv = fbv;
+   else fbv = sqrt( fbv );
+
    feedback.newValue( feedbackScale * fbv ); 
    fb_lf_damping.newValue( 0.4 * *f[flng_fb_lf_damping ] );
    float combs alignas(16)[2][BLOCK_SIZE];
 
    // Obviously when we implement stereo spread this will be different
-   float vweights[2][COMBS_PER_CHANNEL];
    for( int c=0; c<2; ++c )
    {
       for( int i=0; i<COMBS_PER_CHANNEL; ++i )
@@ -309,7 +322,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
       }
       else
       {
-         float voices = *f[flng_voices];
+         float voices = limit_range( *f[flng_voices], 1.f, COMBS_PER_CHANNEL * 1.f );
          vweights[c][0] = 1.0;
          
          for( int i=0; i<voices && i < 4; ++i )
@@ -351,10 +364,11 @@ void FlangerEffect::process(float* dataL, float* dataR)
          fbr = 1.5 * fbr - 0.5 * fbr * fbr * fbr;
 
          // and now we have clipped, apply the damping. FIXME - move to one mul form
-         lpaL = lpaL * ( 1.0 - fb_lf_damping.v ) + fbl * fb_lf_damping.v;
+         float df = limit_range( fb_lf_damping.v, 0.01f, 0.99f );
+         lpaL = lpaL * ( 1.0 - df ) + fbl * df;
          fbl = fbl - lpaL;
 
-         lpaR = lpaR * ( 1.0 - fb_lf_damping.v ) + fbr * fb_lf_damping.v;
+         lpaR = lpaR * ( 1.0 - df ) + fbr * df;
          fbr = fbr - lpaR;
       }
       
@@ -376,7 +390,8 @@ void FlangerEffect::process(float* dataL, float* dataR)
       // Some gain heueirstics
       float gainadj = 0.0;
       if( mode == classic || mode == classic_tuned )
-         gainadj = - 1 / sqrt(6 - voices.v);
+         gainadj = - 1 / sqrt(7 - voices.v);
+      
       if( mode == doppler || mode == doppler_tuned )
          gainadj = - 1 / sqrt(8 - voices.v);
       gainadj -= 0.07 * mix.v;
@@ -397,6 +412,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
       mix.process();
       feedback.process();
       fb_lf_damping.process();
+      voices.process();
    }
 
    width.set_target_smoothed(db_to_linear(*f[flng_stereo_width]) / 3);
@@ -412,7 +428,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
 float FlangerEffect::InterpDelay::value( float delayBy )
 {
    // so if delayBy is 19.2
-   int itap = (int) delayBy; // this is 19
+   int itap = (int) std::min( delayBy, (float)(DELAY_SIZE-2) ); // this is 19
    float fractap = delayBy - itap; // this is .2
    int k0 = ( k + DELAY_SIZE - itap - 1 ) & DELAY_SIZE_MASK; // this is 20 back
    int k1 = ( k + DELAY_SIZE - itap     ) & DELAY_SIZE_MASK; // this is 19 back
