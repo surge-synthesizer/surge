@@ -362,6 +362,13 @@ void SurgeGUIEditor::idle()
       return;
    if (editor_open && frame && !synth->halt_engine)
    {
+      if( isFirstIdle )
+      {
+         // Linux VST3 in JUCE Hosts (maybe others?) sets up the run loop out of order, it seems
+         // sometimes missing the very first invalidation. Force a redraw on the first idle
+         isFirstIdle = false;
+         frame->invalid();
+      }
       for( auto c : removeFromFrame )
       {
          frame->removeView(c);
@@ -2121,6 +2128,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    _idleTimer = VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer>( new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false), false );
    _idleTimer->start();
 #endif
+   isFirstIdle = true;
 
    /*#if TARGET_AUDIOUNIT
      synth = (sub3_synth*)_effect;
@@ -2168,6 +2176,7 @@ void SurgeGUIEditor::close()
    _idleTimer->stop();
    _idleTimer = nullptr;
 #endif
+   isFirstIdle = false;
 
 #if TARGET_VST3
 #if LINUX
@@ -2444,10 +2453,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   char modtxt[256];
                   auto pmd = synth->storage.getPatch().param_ptr[md];
                   pmd->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms), synth->isBipolarModulation(thisms));
-                  char tmptxt[512]; // leave room for that ubuntu 20.0 error
+                  char tmptxt[1024]; // leave room for that ubuntu 20.0 error
                   if( pmd->ctrlgroup == cg_LFO )
                   {
-                     char pname[1024];
+                     char pname[256];
                      pmd->create_fullname( pmd->get_name(), pname, pmd->ctrlgroup, pmd->ctrlgroup_entry, modulatorName(pmd->ctrlgroup_entry, true ).c_str() );
                      sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
                              pname,
@@ -2484,10 +2493,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
                    synth->isActiveModulation(md, thisms))
                {
-                  char tmptxt[256];
+                  char tmptxt[1024];
                   if( parameter->ctrlgroup == cg_LFO )
                   {
-                     char pname[1024];
+                     char pname[512];
                      parameter->create_fullname( parameter->get_name(), pname, parameter->ctrlgroup,
                                                  parameter->ctrlgroup_entry, modulatorName(parameter->ctrlgroup_entry, true ).c_str() );
                      sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName(thisms, true).c_str(),
