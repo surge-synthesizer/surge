@@ -487,7 +487,8 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
             NSVGgradient* ngrad = shape->fill.gradient;
 
             float* x = ngrad->xform;
-            VSTGUI::CGraphicsTransform gradXform(x[0], x[1], x[2], x[3], x[4], x[5]);
+            // This re-order is on purpose; vstgui and nanosvg use different order for diagonals
+            VSTGUI::CGraphicsTransform gradXform(x[0], x[2], x[1], x[3], x[4], x[5]);
             VSTGUI::CGradient::ColorStopMap csm;
             VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
 
@@ -499,7 +500,7 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
             VSTGUI::CPoint s0(0, 0), s1(0, 1);
             VSTGUI::CPoint p0 = gradXform.inverse().transform(s0);
             VSTGUI::CPoint p1 = gradXform.inverse().transform(s1);
-
+            
             dc->fillLinearGradient(gp, *cg, p0, p1, evenOdd);
             cg->forget();
          }
@@ -509,7 +510,8 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
             NSVGgradient* ngrad = shape->fill.gradient;
 
             float* x = ngrad->xform;
-            VSTGUI::CGraphicsTransform gradXform(x[0], x[1], x[2], x[3], x[4], x[5]);
+            // This re-order is on purpose; vstgui and nanosvg use different order for diagonals
+            VSTGUI::CGraphicsTransform gradXform(x[0], x[2], x[1], x[3], x[4], x[5]);
             VSTGUI::CGradient::ColorStopMap csm;
             VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
 
