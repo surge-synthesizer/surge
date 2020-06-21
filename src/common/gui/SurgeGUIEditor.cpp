@@ -3006,7 +3006,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                [this, p]() { p->porta_gliss = !p->porta_gliss; });
                contextMenu->checkEntry(eid, p->porta_gliss);
                eid++;
-               
+
+               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Retrigger at Scale Degrees"),
+                               [this, p]() { p->porta_retrigger = !p->porta_retrigger; });
+               contextMenu->checkEntry(eid, p->porta_retrigger);
+               eid++;
+
                contextMenu->addSeparator(eid++);
 
                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Logarithmic Curve"),

@@ -312,7 +312,7 @@ public:
    float moverate;
    bool per_voice_processing;
    bool temposync, extend_range, absolute, deactivated;
-   bool porta_constrate, porta_gliss;
+   bool porta_constrate, porta_gliss, porta_retrigger;
    int porta_curve;
    
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type

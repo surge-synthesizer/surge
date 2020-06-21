@@ -205,6 +205,7 @@ void Parameter::clear_flags()
    deactivated = true; // CHOICE: if you are a deactivatble parameter make it so you are by default
    porta_constrate = false;
    porta_gliss = false;
+   porta_retrigger = false;
    porta_curve = porta_lin;
 }
 
