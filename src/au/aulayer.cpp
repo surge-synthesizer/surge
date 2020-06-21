@@ -115,6 +115,23 @@ void aulayer::InitializePlugin()
       // This allows us standalone performance mode. See issue #146 and comment below tagged with
       // issue number
       plugin_instance->time_data.ppqPos = 0;
+
+         sub3_synth* s = (sub3_synth*)plugin_instance;
+
+         // Generate preset list in an ordered fashion
+         presetOrderToPatchList.clear();
+         for (int i = 0; i < s->storage.firstThirdPartyCategory; i++)
+         {
+            // Remap index to the corresponding category in alphabetical order.
+            int c = s->storage.patchCategoryOrdering[i];
+            for (auto p : s->storage.patchOrdering)
+            {
+               if (s->storage.patch_list[p].category == c)
+               {
+                  presetOrderToPatchList.push_back(p);
+               }
+            }
+         }
    }
    assert(plugin_instance);
 }
@@ -599,7 +616,8 @@ ComponentResult aulayer::GetPresets(CFArrayRef* outData) const
       return noErr;
 
    sub3_synth* s = (sub3_synth*)plugin_instance;
-   UInt32 n_presets = s->storage.patch_list.size();
+
+   UInt32 n_presets = presetOrderToPatchList.size();
 
    CFMutableArrayRef newArray =
        CFArrayCreateMutable(kCFAllocatorDefault, n_presets, &kCFAUPresetArrayCallBacks);
@@ -608,10 +626,11 @@ ComponentResult aulayer::GetPresets(CFArrayRef* outData) const
 
    for (long i = 0; i < n_presets; i++)
    {
+      auto patch = s->storage.patch_list[presetOrderToPatchList[i]];
+      std::string nm = s->storage.patch_category[patch.category].name + " / " + patch.name;
       CFAUPresetRef newPreset =
           CFAUPresetCreate(kCFAllocatorDefault, i,
-                           CFStringCreateWithCString(NULL, s->storage.patch_list[i].name.c_str(),
-                                                     kCFStringEncodingUTF8));
+                           CFStringCreateWithCString(NULL, nm.c_str(), kCFStringEncodingUTF8));
       if (newPreset != NULL)
       {
          CFArrayAppendValue(newArray, newPreset);
@@ -634,7 +653,7 @@ OSStatus aulayer::NewFactoryPresetSet(const AUPreset& inNewFactoryPreset)
       return false;
    SetAFactoryPresetAsCurrent( inNewFactoryPreset );
    sub3_synth* s = (sub3_synth*)plugin_instance;
-   s->patchid_queue = inNewFactoryPreset.presetNumber;
+   s->patchid_queue = presetOrderToPatchList[inNewFactoryPreset.presetNumber];
    s->processThreadunsafeOperations();
    return true;
 }
