@@ -1212,6 +1212,19 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                param_ptr[i]->porta_gliss = false;
          }
 
+         if ((p->QueryIntAttribute("porta_retrigger", &j) == TIXML_SUCCESS))
+         {
+            if (j == 1)
+               param_ptr[i]->porta_retrigger = true;
+            else
+               param_ptr[i]->porta_retrigger = false;
+         }
+         else
+         {
+            if (param_ptr[i]->has_portaoptions())
+               param_ptr[i]->porta_retrigger = false;
+         }
+
          if ((p->QueryIntAttribute("porta_curve", &j) == TIXML_SUCCESS))
          {
             switch (j)
@@ -1226,7 +1239,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          else
          {
             if (param_ptr[i]->has_portaoptions())
-               param_ptr[i]->porta_gliss = porta_lin;
+               param_ptr[i]->porta_curve = porta_lin;
          }
 
          if ((p->QueryIntAttribute("deactivated", &j) == TIXML_SUCCESS))
@@ -1834,6 +1847,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
          {
             p.SetAttribute("porta_const_rate", param_ptr[i]->porta_constrate ? "1" : "0");
             p.SetAttribute("porta_gliss", param_ptr[i]->porta_gliss ? "1" : "0");
+            p.SetAttribute("porta_retrigger", param_ptr[i]->porta_retrigger ? "1" : "0");
             p.SetAttribute("porta_curve", param_ptr[i]->porta_curve);
          }
 

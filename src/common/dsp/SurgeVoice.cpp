@@ -94,7 +94,8 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
       state.portasrc_key = state.getPitch();
    else
       state.portasrc_key = storage->last_key[scene_id];
-
+   state.priorpkey = state.portasrc_key;
+   
    storage->last_key[scene_id] = key;
    state.portaphase = 0;
    noisegenL[0] = 0.f;
@@ -233,6 +234,14 @@ void SurgeVoice::legato(int key, int velocity, char detune)
       
       if (scene->portamento.porta_gliss) // quantize portamento to keys
          state.pkey = floor(state.pkey + 0.5);
+
+      state.porta_doretrigger = false;
+      if (scene->portamento.porta_retrigger)
+         if( floor( state.pkey + 0.5 ) != state.priorpkey )
+         {
+            state.priorpkey = floor( state.pkey + 0.5 );
+            state.porta_doretrigger = true;
+         }
    }
 
    state.key = key;
@@ -395,6 +404,14 @@ void SurgeVoice::update_portamento()
 
       if (scene->portamento.porta_gliss)    // quantize portamento to keys
          state.pkey = floor(state.pkey + 0.5);
+
+      state.porta_doretrigger = false;
+      if (scene->portamento.porta_retrigger)
+         if( floor( state.pkey + 0.5 ) != state.priorpkey )
+         {
+            state.priorpkey = floor( state.pkey + 0.5 );
+            state.porta_doretrigger = true;
+         }
    }
    else
       state.pkey = state.getPitch();
@@ -491,6 +508,13 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
    }
 
    update_portamento();
+   if( state.porta_doretrigger )
+   {
+      state.porta_doretrigger = false;
+      ((AdsrEnvelope*)modsources[ms_ampeg])->retrigger();
+      ((AdsrEnvelope*)modsources[ms_filtereg])->retrigger();
+   }
+
    float pb = modsources[ms_pitchbend]->output;
    if (pb > 0)
       pb *= (float)scene->pbrange_up.val.i;
