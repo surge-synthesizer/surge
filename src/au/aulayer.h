@@ -6,6 +6,7 @@
 #include "AUInstrumentBase.h"
 #include "surge_auversion.h"
 #include "SurgeStorage.h"
+#include <vector>
 
 class SurgeGUIEditor;
 class SurgeSynthesizer;
@@ -147,6 +148,7 @@ protected:
    AudioUnitParameterID parameterIDlist[n_total_params + num_metaparameters];
    CFStringRef parameterIDlist_CFString[n_total_params + num_metaparameters];
    float sampleRateCache;
+   std::vector<int> presetOrderToPatchList;
 };
 
 struct CFAUPreset
