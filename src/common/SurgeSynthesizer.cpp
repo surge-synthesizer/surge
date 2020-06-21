@@ -1736,9 +1736,15 @@ bool SurgeSynthesizer::isValidModulation(long ptag, modsources modsource)
       return false;
    if ((modsource == ms_keytrack) && (p == &storage.getPatch().scene[1].pitch))
       return false;
-   if ((p->ctrlgroup == cg_LFO) && (p->ctrlgroup_entry >= ms_lfo1) &&
-       !canModulateModulators(modsource))
+
+   /*
+     canModulateModulators is really a check at this point for "is amp or filter env" but
+     amp and filter env can modulate an VLFO so with 1.7 comment this out
+
+   if ((p->ctrlgroup == cg_LFO) && (p->ctrlgroup_entry >= ms_lfo1) && !canModulateModulators(modsource) )
       return false;
+   */
+
    if ((p->ctrlgroup == cg_LFO) && (p->ctrlgroup_entry == modsource))
       return false;
    if ((p->ctrlgroup == cg_LFO) && (p->ctrlgroup_entry >= ms_slfo1) && (!isScenelevel(modsource)))
