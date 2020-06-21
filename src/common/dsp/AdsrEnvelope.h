@@ -7,6 +7,7 @@
 #include "SurgeStorage.h"
 #include "SurgeVoiceState.h"
 #include "ModulationSource.h"
+#include "DebugHelpers.h"
 
 enum AdsrState
 {
@@ -265,7 +266,7 @@ public:
             phase = sustain;
             }*/
             float rate =
-                envelope_rate_linear(lc[d].f) * (adsr->d.temposync ? storage->temposyncratio : 1.f);
+               envelope_rate_linear(lc[d].f) * (adsr->d.temposync ? storage->temposyncratio : 1.f);
 
             float l_lo, l_hi;
 
@@ -276,11 +277,20 @@ public:
                float sx = sqrt(phase);
                l_lo = phase - 2 * sx * rate + rate * rate;
                l_hi = phase + 2 * sx * rate + rate * rate;
-               // That + rate * rate in both means at low sustain ( < 1e-3 or so) you end up with
-               // lo and hi both pushing us up off sustain. Unfortunatley we ned to handle that case
-               // specially by pushing lo down
+               /*
+               ** That + rate * rate in both means at low sustain ( < 1e-3 or so) you end up with
+               ** lo and hi both pushing us up off sustain. Unfortunatley we ned to handle that case
+               ** specially by pushing lo down
+               */
                if( lc[s].f < 1e-3 && phase < 1e-4 )
                   l_lo = 0;
+               /*
+               ** Similarly if the rate is very high - larger than one - we can push l_lo well above the
+               ** sustain, which can set back a feedback cycle where we bounce onto sustain and off again.
+               ** To understand this, remove this bound and play with test-data/patches/ADSR-Self-Oscillate.fxp
+               */
+               if( rate > 1.0 && l_lo > lc[s].f )
+                  l_lo = lc[s].f;
             }
             break;
             case 2:
@@ -298,6 +308,8 @@ public:
 
             phase = limit_range(lc[s].f, l_lo, l_hi);
             output = phase;
+
+
          }
          break;
          case (s_release):
