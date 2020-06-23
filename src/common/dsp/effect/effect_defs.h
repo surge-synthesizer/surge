@@ -285,7 +285,6 @@ public:
       KGain,
       KGateLevel,
       KRate,
-      // KUnvoicedThreshold,
       KQuality,
       KShift,
 
@@ -294,6 +293,8 @@ public:
       kFreqHi,
       kModExpand,
       kModCenter,
+
+      // KUnvoicedThreshold,
    };
 
    VocoderEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -331,7 +332,7 @@ private:
    float mVoicedLevel;
    float mUnvoicedLevel;
 
-   biquadunit
+   BiquadFilter
            mVoicedDetect,
            mUnvoicedDetect;
    */
