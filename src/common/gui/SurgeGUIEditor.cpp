@@ -501,6 +501,10 @@ void SurgeGUIEditor::idle()
 #if TARGET_AUDIOUNIT
         synth-> getParent()->setPresetByID(synth->patchid);
 #endif
+        for( int i=0; i<8; ++i )
+        {
+           fxPresetName[i] = "";
+        }
       }
 
 
@@ -1095,7 +1099,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_jogfx->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_jogfx);
 
-   fxPresetLabel = new CTextLabel( CRect( 759, 197, 847, 207 ), "Preset" );
+   fxPresetLabel = new CTextLabel( CRect( 759, 197, 759 + 131 - 39 - 3 , 207 ), "Preset" );
    fxPresetLabel->setFontColor(currentSkin->getColor( "effect.preset.name", CColor( 0, 0, 0, 255 ) ));
    fxPresetLabel->setTransparency(true);
    fxPresetLabel->setFont( displayFont );
@@ -3421,7 +3425,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             jog( -1 );
          }
 
-         if( fxPresetName )
+         if( fxPresetLabel )
          {
             fxPresetLabel->setText( fxm->selectedName.c_str() );
             fxPresetName[this->current_fx] = fxm->selectedName;
@@ -3468,6 +3472,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          current_fx = nfx;
          queue_refresh = true;
       }
+
       return;
    }
    case tag_osc_menu:
@@ -3490,6 +3495,11 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       {
          selectedFX[current_fx] = fxm->selectedIdx;
          fxPresetName[current_fx] = fxm->selectedName;
+      }
+      else if( fxPresetLabel )
+      {
+         fxPresetLabel->setText( fxm->selectedName.c_str() );
+         fxPresetName[this->current_fx] = fxm->selectedName;
       }
 
       return;
