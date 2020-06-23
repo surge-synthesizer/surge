@@ -2028,6 +2028,33 @@ void SurgeGUIEditor::openOrRecreateEditor()
    saveDialog->addView(patchTuning);
    saveDialog->addView(patchTuningLabel);
 
+
+   /*
+   ** Skin Labels
+   */
+   auto labels = currentSkin->getLabels();
+   for( auto &l : labels )
+   {
+      auto mtext = currentSkin->propertyValue( l, "text" );
+      if( mtext.isJust() )
+      {
+         auto fss = currentSkin->propertyValue( l, "font-size", "12" );
+         auto fs = std::atof( fss.c_str() );
+
+         auto coln = currentSkin->propertyValue( l, "color", "#00FF00" );
+         auto col = currentSkin->getColor( coln, kBlackCColor );
+         
+         auto lb = new CTextLabel( CRect( l->x, l->y, l->x + 100, l->y + 20 ), mtext.fromJust().c_str() );
+         lb->setHoriAlign(VSTGUI::kLeftText);
+         lb->setTransparency(true);
+         lb->setFontColor(col);
+         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fs);
+         lb->setFont( fnt );
+         lb->setAntialias( true );
+         frame->addView(lb);
+      }
+   }
+   
    refresh_mod();
 
    editor_open = true;
@@ -4799,7 +4826,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                              this->currentSkin = s;
                              this->bitmapStore.reset(new SurgeBitmaps());
                              this->bitmapStore->setupBitmapsForFrame(frame);
-                             this->currentSkin->reloadSkin(this->bitmapStore);
+                             if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
+                             {
+                                auto msg = std::string( "Unable to load skin. Returning to default. Skin error was '" )
+                                   + db.getAndResetErrorString() + "'";
+                                this->currentSkin = db.defaultSkin( &( this->synth->storage ) );
+                                this->currentSkin->reloadSkin(this->bitmapStore);
+                                Surge::UserInteractions::promptError( msg, "Skin Error" );
+                             }
                              reloadFromSkin();
                              this->synth->refresh_editor = true;
                              Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkin", entry.name );
@@ -4823,7 +4857,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                                 this->currentSkin = s;
                                 this->bitmapStore.reset(new SurgeBitmaps());
                                 this->bitmapStore->setupBitmapsForFrame(frame);
-                                this->currentSkin->reloadSkin(this->bitmapStore);
+                                if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
+                                {
+                                   auto msg = std::string( "Unable to load skin. Returning to default. Skin error was '" )
+                                      + db.getAndResetErrorString() + "'";
+                                   this->currentSkin = db.defaultSkin( &( this->synth->storage ) );
+                                   this->currentSkin->reloadSkin(this->bitmapStore);
+                                   Surge::UserInteractions::promptError( msg, "Skin Error" );
+                                }
+
                                 reloadFromSkin();
                                 this->synth->refresh_editor = true;
                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkin", entry.name );
@@ -4841,7 +4883,16 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                     [this]() {
                        this->bitmapStore.reset(new SurgeBitmaps());
                        this->bitmapStore->setupBitmapsForFrame(frame);
-                       this->currentSkin->reloadSkin(this->bitmapStore);
+                       if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
+                       {
+                          auto &db = Surge::UI::SkinDB::get();
+                          auto msg = std::string( "Unable to load skin. Returning to default. Skin error was '" )
+                             + db.getAndResetErrorString() + "'";
+                          this->currentSkin = db.defaultSkin( &( this->synth->storage ) );
+                          this->currentSkin->reloadSkin(this->bitmapStore);
+                          Surge::UserInteractions::promptError( msg, "Skin Error" );
+                       }
+
                        reloadFromSkin();
                        this->synth->refresh_editor = true;
                     } );
