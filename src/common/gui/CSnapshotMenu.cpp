@@ -60,7 +60,7 @@ void CSnapshotMenu::populate()
          {
             auto sm = populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
             if( sm )
-               addToTopLevelTypeMenu(type, sm);
+               addToTopLevelTypeMenu(type, sm, idx);
          }
          else if( type->Value() && strcmp( type->Value(), "separator" ) == 0 )
             addSeparator();
@@ -100,8 +100,8 @@ bool CSnapshotMenu::loadSnapshotByIndex( int idx )
 
             if( cidx == idx )
             {
-               selectedIdx = idx;
-               loadSnapshot( snapshotTypeID, snapshot, idx);
+               selectedIdx = cidx;
+               loadSnapshot( snapshotTypeID, snapshot, cidx);
                if( listenerNotForParent )
                   listenerNotForParent->valueChanged( this );
                return true;
@@ -300,6 +300,7 @@ CFxMenu::CFxMenu(const CRect& size,
    this->fx = fx;
    this->fxbuffer = fxbuffer;
    this->slot = slot;
+   selectedName = "";
    populate();
 }
 
@@ -664,6 +665,8 @@ void CFxMenu::pasteFX()
         fxbuffer->p[i].deactivated = (int)fxCopyPaste[dp];
     }
 
+    selectedName = std::string( "Copied " ) + fxtype_abberations[ fxbuffer->type.val.i ];
+    
     if( listenerNotForParent )
        listenerNotForParent->valueChanged( this );
 
@@ -785,12 +788,15 @@ void CFxMenu::loadUserPreset( const UserPreset &p )
       fxbuffer->p[i].extend_range = (int)p.er[i];
    }
 
+   selectedIdx = -1;
+   selectedName = p.name;
+   
    if( listenerNotForParent )
       listenerNotForParent->valueChanged( this );
 
 }
 
-void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *subMenu)
+void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *subMenu, int &idx)
 {
    if( ! type || ! subMenu ) return;
 
@@ -806,10 +812,11 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *sub
    auto user_add = subMenu->addEntry("USER PRESETS");
    user_add->setEnabled(0);
 
+   int fidx = idx + 10000;
    for( auto &ps : userPresets[type_id] )
    {
       auto fxName = ps.name;
-      
+
 #if WINDOWS
       Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
 #endif

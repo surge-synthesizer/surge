@@ -37,7 +37,7 @@ public:
    std::string selectedName = "";
 protected:
    VSTGUI::COptionMenu *populateSubmenuFromTypeElement(TiXmlElement *typeElement, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx);
-   virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu) { }
+   virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu, int &idx) { }
    SurgeStorage* storage = nullptr;
    char mtype[16] = {0};
 
@@ -85,7 +85,7 @@ public:
    virtual void populate() override;
    
 protected:
-   virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu) override;
+   virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu, int &idx) override;
    FxStorage *fx = nullptr, *fxbuffer = nullptr;
    static std::vector<float> fxCopyPaste; // OK this is a crap data structure for now. See the code.
    int slot = 0;
