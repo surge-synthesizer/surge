@@ -1634,7 +1634,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                   auto p = &( storage.getPatch().fx[s].p[j] );
                   for( int ms=1; ms<n_modsources; ms++ )
                   {
-                     clearModulation(p->id, (modsources)ms );
+                     clearModulation(p->id, (modsources)ms, true );
                   }
                }
             
@@ -2008,10 +2008,11 @@ void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
    storage.CS_ModRouting.leave();
 }
 
-void SurgeSynthesizer::clearModulation(long ptag, modsources modsource)
+void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, bool clearEvenIfInvalid)
 {
-   if (!isValidModulation(ptag, modsource))
+   if (!isValidModulation(ptag, modsource) && ! clearEvenIfInvalid )
       return;
+   
    int scene = storage.getPatch().param_ptr[ptag]->scene;
 
    vector<ModulationRouting>* modlist;

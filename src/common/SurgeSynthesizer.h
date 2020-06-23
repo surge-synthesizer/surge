@@ -138,7 +138,7 @@ public:
    bool setModulation(long ptag, modsources modsource, float value);
    float getModulation(long ptag, modsources modsource);
    float getModDepth(long ptag, modsources modsource);
-   void clearModulation(long ptag, modsources modsource);
+   void clearModulation(long ptag, modsources modsource, bool clearEvenIfInvalid = false);
    void clear_osc_modulation(
        int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
    int remapExternalApiToInternalId(unsigned int x);
