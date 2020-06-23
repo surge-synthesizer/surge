@@ -9,6 +9,7 @@
 #include <memory>
 #include <atomic>
 #include <iostream>
+#include <sstream>
 
 #include "vstgui/lib/ccolor.h"
 
@@ -32,7 +33,7 @@ namespace VSTGUI {
    class CFrame;
 }
 
-#define FIXMEERROR std::cout
+#define FIXMEERROR SkinDB::get().errorStream
 
 namespace Surge
 {
@@ -78,7 +79,7 @@ public:
    Skin(std::string root, std::string name);
    ~Skin();
 
-   void reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
+   bool reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
 
    std::string resourceName(std::string relativeName) {
       return root + name + "/" + relativeName;
@@ -108,6 +109,7 @@ public:
       typedef enum {
          ENUM,
          UIID,
+         LABEL,
       } Type;
       Type type;
       std::string classname;
@@ -184,6 +186,18 @@ public:
 
    CScalableBitmap *hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr_t c, CScalableBitmap *b, std::shared_ptr<SurgeBitmaps> bitmapStore, HoverType t );
 
+   std::vector<Skin::Control::ptr_t> getLabels() const {
+      std::vector<Skin::Control::ptr_t> labels;
+      for( auto ic : controls )
+      {
+         if( ic->type == Control::LABEL )
+         {
+            labels.push_back(ic);
+         }
+      }
+      return labels;
+   }
+   
    static const std::string defaultImageIDPrefix;
    
 private:
@@ -211,7 +225,7 @@ private:
    std::vector<Control::ptr_t> controls;
    std::unordered_map<std::string, ComponentClass::ptr_t> componentClasses;
 
-   void recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *groupList, std::string pfx="" );
+   bool recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *groupList, std::string pfx="" );
 };
    
 class SkinDB
@@ -241,6 +255,13 @@ public:
    Skin::ptr_t getSkin( const Entry &skinEntry );
    Skin::ptr_t defaultSkin(SurgeStorage *);
 
+   std::string getErrorString() { return errorStream.str(); };
+   std::string getAndResetErrorString() {
+      auto s = errorStream.str();
+      errorStream = std::ostringstream();
+      return s;
+   }
+   
 private:
    SkinDB();
    ~SkinDB();
@@ -253,6 +274,9 @@ private:
    bool foundDefaultSkinEntry = false;
    
    static std::shared_ptr<SkinDB> instance;
+   static std::ostringstream errorStream;
+
+   friend class Skin;
 };
 
 

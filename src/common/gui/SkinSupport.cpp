@@ -21,6 +21,7 @@ namespace UI
 {
 
 const std::string Skin::defaultImageIDPrefix = "DEFAULT/";
+std::ostringstream SkinDB::errorStream;
    
 SkinDB& Surge::UI::SkinDB::get()
 {
@@ -239,7 +240,7 @@ Skin::~Skin()
 #define TINYXML_SAFE_TO_ELEMENT(expr) ((expr) ? (expr)->ToElement() : NULL)
 #endif
 
-void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
+bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
 {
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "Skin::reloadSkin" );
@@ -257,13 +258,14 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       FIXMEERROR << "Unable to parse bskin.xml\nError is:\n"
                  << doc.ErrorDesc() << " at row=" << doc.ErrorRow() << " col=" << doc.ErrorCol()
                  << std::endl;
+      return false;
    }
 
    TiXmlElement* surgeskin = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-skin"));
    if (!surgeskin)
    {
       FIXMEERROR << "There is no top level suge-skin node in skin.xml" << std::endl;
-      return;
+      return true;
    }
    const char* a;
    displayName = name;
@@ -282,14 +284,17 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    if (!globalsxml)
    {
       FIXMEERROR << "surge-skin contains no globals element" << std::endl;
+      return false;
    }
    if(!componentclassesxml)
    {
       FIXMEERROR << "surge-skin contains no component-classes element" << std::endl;
+      return false;
    }
    if (!controlsxml)
    {
       FIXMEERROR << "surge-skin contains no controls element" << std::endl;
+      return false;
    }
 
    /*
@@ -328,7 +333,13 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
 
    controls.clear();
    rootControl = std::make_shared<ControlGroup>();
-   recursiveGroupParse( rootControl, controlsxml );
+   bool rgp = recursiveGroupParse( rootControl, controlsxml );
+   if( ! rgp )
+   {
+      FIXMEERROR << "Recursive Group Parse failed" << std::endl;
+      return false;
+   }
+    
 
    componentClasses.clear();
    for (auto gchild = componentclassesxml->FirstChild(); gchild; gchild = gchild->NextSibling())
@@ -349,11 +360,13 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       if( c->name == "" )
       {
          FIXMEERROR << "INVALUD NAME" << std::endl;
+         return false;
       }
 
       if( componentClasses.find( c->name ) != componentClasses.end() )
       {
          FIXMEERROR << "Double Definition" << std::endl;
+         return false;
       }
       
       for (auto a = lkid->FirstAttribute(); a; a = a->Next())
@@ -458,14 +471,15 @@ void Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          else
          {
             FIXMEERROR << "PARENT CLASS DOESN'T RESOLVE FOR " << c->ultimateparentclassname << std::endl;
+            return false;
             break;
          }
       }
    }
-  
+   return true;
 }
 
-void Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *controlsxml, std::string pfx )
+bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *controlsxml, std::string pfx )
 {
    // I know I am gross for copying these
    auto attrint = [](TiXmlElement* e, const char* a) {
@@ -498,9 +512,12 @@ void Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
          g->h = attrint( lkid, "h" );
          
          parent->childGroups.push_back(g);
-         recursiveGroupParse( g, lkid, pfx + "|--"  );
+         if (! recursiveGroupParse( g, lkid, pfx + "|--"  ) )
+         {
+            return false;
+         }
       }
-      else if (std::string(lkid->Value()) == "control")
+      else if ( (std::string(lkid->Value()) == "control") || (std::string(lkid->Value()) == "label" ))
       {
          auto c = std::make_shared<Skin::Control>();
          c->x = attrint(lkid, "x") + parent->x;
@@ -509,7 +526,11 @@ void Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
          c->h = attrint(lkid, "h");
 
          c->classname  = attrstr(lkid, "class" );
-         if( lkid->Attribute( "tag_value" ) )
+         if( std::string( lkid->Value() ) == "label" )
+         {
+            c->type = Control::Type::LABEL;
+         }
+         else if( lkid->Attribute( "tag_value" ) )
          {
             c->type = Control::Type::ENUM;
             c->enum_id = attrint( lkid, "tag_value" );
@@ -530,18 +551,23 @@ void Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
       else
       {
          FIXMEERROR << "INVALID CONTROL" << std::endl;
+         return false;
       }
    }
-
+   return true;
 }
 
 bool Skin::hasColor(std::string id)
 {
+   if( id[0] == '$' ) // when used as a value in a control you can have the $ or not, even though internally we strip it
+      id = std::string( id.c_str() + 1 );
    queried_colors.insert(id);
    return colors.find(id) != colors.end();
 }
 VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def, std::unordered_set<std::string> noLoops)
 {
+   if( id[0] == '$' )
+      id = std::string( id.c_str() + 1 );
    if( noLoops.find( id ) != noLoops.end() )
    {
       std::ostringstream oss;
