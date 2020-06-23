@@ -308,7 +308,7 @@ private:
    void* _effect = nullptr;
    void* _userdata = nullptr;
    VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;
-   bool isFirstIdle = false;
+   int firstIdleCountdown = 0;
 
    /*
    ** Utility Function

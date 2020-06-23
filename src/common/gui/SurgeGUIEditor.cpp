@@ -362,11 +362,13 @@ void SurgeGUIEditor::idle()
       return;
    if (editor_open && frame && !synth->halt_engine)
    {
-      if( isFirstIdle )
+      if( firstIdleCountdown )
       {
          // Linux VST3 in JUCE Hosts (maybe others?) sets up the run loop out of order, it seems
          // sometimes missing the very first invalidation. Force a redraw on the first idle
-         isFirstIdle = false;
+         // isFirstIdle = false;
+         firstIdleCountdown --;
+
          frame->invalid();
       }
       for( auto c : removeFromFrame )
@@ -2155,7 +2157,10 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    _idleTimer = VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer>( new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false), false );
    _idleTimer->start();
 #endif
-   isFirstIdle = true;
+   
+#if TARGET_VST3 && LINUX
+   firstIdleCountdown = 2;
+#endif
 
    /*#if TARGET_AUDIOUNIT
      synth = (sub3_synth*)_effect;
@@ -2203,7 +2208,7 @@ void SurgeGUIEditor::close()
    _idleTimer->stop();
    _idleTimer = nullptr;
 #endif
-   isFirstIdle = false;
+   firstIdleCountdown = 0;
 
 #if TARGET_VST3
 #if LINUX
