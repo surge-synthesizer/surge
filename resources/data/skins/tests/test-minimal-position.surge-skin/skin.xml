@@ -1,7 +1,12 @@
 <surge-skin name="Test: Minimal Position Change" author="Surge Synth Team" authorURL="https://surge-synth-team.org/">
   <globals>
+    <color id="white" value="#ffffff"/>
+    <defaultimage directory="SVG/"/>
+
+    <image id="alt-slider-h" resource="SVG/altHHandle.svg"/>
   </globals>
   <component-classes>
+    <class name="boompoop" parent="CSurgeSlider" handle_image="alt-slider-h"/>
   </component-classes>
   <controls>
     <!-- 
@@ -16,5 +21,18 @@
       <control ui_identifier="global.fx_bypass" x="0" y="15" w="135" h="27"  subpixmaps="4" rows="1" columns="4" class="CHSwitch2"  bg_id="144" />
     </group>
 
+    <group name="waveshaper group" x="388" y="300">
+      <label text="type" font-size="10" color="$white" x="22" y="3"/>
+      <control ui_identifier="filter.waveshaper_type" x="22" y="18" w="28" h="47" subpixmaps="6" rows="6" columns="1" class="CHSwitch2" bg_id="120"/>
+      <control ui_identifier="filter.waveshaper_drive" x="0" y="0" class="CSurgeSlider"/>
+    </group>
+
+    <!-- If you don't specify a position, it will use the default position for a slider (but only for a slider. Siwtches need full posn) -->
+    <control ui_identifier="filter.balance" class="boompoop"/>
+    <control ui_identifier="filter.cutoff_1" class="boompoop"/>
+    <control ui_identifier="filter.resonance_1" class="boompoop"/>
+    <control ui_identifier="filter.cutoff_2" class="boompoop"/>
+    <control ui_identifier="filter.resonance_2" class="boompoop"/>
+    
   </controls>
 </surge-skin>

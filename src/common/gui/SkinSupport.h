@@ -10,10 +10,9 @@
 #include <atomic>
 #include <iostream>
 #include <sstream>
+#include "DebugHelpers.h"
 
 #include "vstgui/lib/ccolor.h"
-
-#define _D(x) " " << (#x) << "=" << x
 
 /*
 ** Support for rudimentary skinning in Surge
@@ -115,6 +114,25 @@ public:
       std::string classname;
       std::string ultimateparentclassname;
       props_t allprops;
+
+      std::string toString() {
+         std::ostringstream oss;
+
+         switch( type )
+         {
+         case ENUM:
+            oss << "ENUM:" << enum_name;
+            break;
+         case UIID:
+            oss << "UIID:" << ui_id;
+            break;
+         case LABEL:
+            oss << "LABEL";
+            break;
+         }
+         oss << " (x=" << x << " y=" << y << " w=" << w << " h=" << h << ")";
+         return oss.str();
+      }
    };
 
    struct ControlGroup
@@ -152,6 +170,9 @@ public:
       if( c->allprops.find(key) != c->allprops.end() )
          return Maybe<std::string>(c->allprops[key]);
       auto cl = componentClasses[c->classname];
+
+      if( ! cl.get() )
+         return Maybe<std::string>();
 
       do {
          if( cl->allprops.find(key) != cl->allprops.end() )
@@ -284,13 +305,21 @@ class SkinConsumingComponnt {
 public:
    virtual ~SkinConsumingComponnt() {
    }
-   virtual void setSkin( Skin::ptr_t s ) { skin = s; }
+   virtual void setSkin( Skin::ptr_t s ) {
+      setSkin( s, nullptr, nullptr );
+   }
    virtual void setSkin( Skin::ptr_t s, std::shared_ptr<SurgeBitmaps> b ) {
+      setSkin( s, b, nullptr );
+   }
+   virtual void setSkin( Skin::ptr_t s, std::shared_ptr<SurgeBitmaps> b, Skin::Control::ptr_t c ) {
       skin = s;
       associatedBitmapStore = b;
+      skinControl = c;
+      onSkinChanged();
    }
-   virtual void setAssociatedSkinControl( Skin::Control::ptr_t c ) { skinControl = c; };
-   virtual void setAssociatedBitmapStore( std::shared_ptr<SurgeBitmaps> b ) { associatedBitmapStore = b; }
+
+   virtual void onSkinChanged() { }
+   
 protected:
    Skin::ptr_t skin = nullptr;
    Skin::Control::ptr_t skinControl = nullptr;

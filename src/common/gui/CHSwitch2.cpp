@@ -4,6 +4,7 @@
 #include "CHSwitch2.h"
 #include <vt_dsp/basic_dsp.h>
 #include "CScalableBitmap.h"
+#include "DebugHelpers.h"
 
 using namespace VSTGUI;
 

@@ -67,13 +67,8 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
 
    CRect size;
 
-   pHandleHover = nullptr;
    if (style & CSlider::kHorizontal)
    {
-      pTray = bitmapStore->getBitmap(IDB_FADERH_BG);
-      pHandle = bitmapStore->getBitmap(IDB_FADERH_HANDLE);
-      pTempoSyncHandle = bitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_OVERLAY" );
-            
       if (style & kWhite)
          typehy = 1;
 
@@ -87,10 +82,6 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
    {
       if (!(style & CSlider::kTop))
          style |= CSlider::kBottom; // CSlider::kBottom by default
-
-      pTray = bitmapStore->getBitmap(IDB_FADERV_BG);
-      pHandle = bitmapStore->getBitmap(IDB_FADERV_HANDLE);
-      pTempoSyncHandle = bitmapStore->getBitmapByStringID( "TEMPOSYNC_VERTICAL_OVERLAY" );
 
       if (style & kWhite)
          typehy = 0;
@@ -150,18 +141,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
 	dc->setFillColor(c);
 	dc->fillRect(size);
 #endif
-
-   if( ! lookedForHovers )
-   {
-      lookedForHovers = true;
-      if( skin.get() )
-      {
-         pHandleHover = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl,
-                                                                    dynamic_cast<CScalableBitmap*>( pHandle ),
-                                                                    associatedBitmapStore,
-                                                                    Surge::UI::Skin::HoverType::HOVER);
-      }
-   }
 
    CRect size = getViewSize();
 
@@ -856,4 +835,35 @@ bool CSurgeSlider::onWheel(const VSTGUI::CPoint& where, const float &distance, c
    */
    edit_value = nullptr;
    return true;
+}
+
+void CSurgeSlider::onSkinChanged()
+{
+   if (style & CSlider::kHorizontal)
+   {
+      pTray = associatedBitmapStore->getBitmap(IDB_FADERH_BG);
+      pHandle = associatedBitmapStore->getBitmap(IDB_FADERH_HANDLE);
+      pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_OVERLAY" );
+   }
+   else
+   {
+      pTray = associatedBitmapStore->getBitmap(IDB_FADERV_BG);
+      pHandle = associatedBitmapStore->getBitmap(IDB_FADERV_HANDLE);
+      pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_VERTICAL_OVERLAY" );
+   }
+
+   if( skinControl.get() )
+   {
+      auto hi = skin->propertyValue( skinControl, "handle_image" );
+      if( hi.isJust() )
+      {
+         pHandle = associatedBitmapStore->getBitmapByStringID(hi.fromJust());
+      }
+   }
+   
+   pHandleHover = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl,
+                                                              dynamic_cast<CScalableBitmap*>( pHandle ),
+                                                              associatedBitmapStore,
+                                                              Surge::UI::Skin::HoverType::HOVER);
+
 }

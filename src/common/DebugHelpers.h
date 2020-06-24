@@ -10,6 +10,10 @@
 
 #define _D(x) " " << (#x) << "=" << x
 
+#define _DUMPR(r)                                                                                   \
+   " " << (#r) << "=(x=" << r.getTopLeft().x << ",y=" << r.getTopLeft().y << ")+(w=" << r.getWidth() \
+         << ",h=" << r.getHeight() << ")"
+
 namespace Surge {
 namespace Debug {
 

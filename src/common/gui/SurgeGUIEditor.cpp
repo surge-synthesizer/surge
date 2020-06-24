@@ -1165,10 +1165,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
          // Would be great to change this to a switch by making it an enum. FIXME
          if( parentClassName == "CSurgeSlider" )
          {
+            // If we don't specify a positoin use the default
+            int px = ( c->x >= 0 ? c->x : p->posx );
+            int py = ( c->y >= 0 ? c->y : p->posy );
             CSurgeSlider* hs =
-               new CSurgeSlider(CPoint(c->x, c->y), style, this, p->id + start_paramtags, true, bitmapStore, &(synth->storage));
-            hs->setSkin(currentSkin,bitmapStore);
-            hs->setAssociatedSkinControl(c);
+               new CSurgeSlider(CPoint(px, py), style, this, p->id + start_paramtags, true, bitmapStore, &(synth->storage));
+            hs->setSkin(currentSkin,bitmapStore,c);
             hs->setMoveRate(p->moverate);
             if( p->can_temposync() )
                hs->setTempoSync(p->temposync);
@@ -1183,15 +1185,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->deactivated = false;
          
          
-          if( p->valtype  == vt_int || p->valtype  == vt_bool) 
-         { 
-             hs->isStepped = true; 
-            hs->intRange = p->val_max.i - p->val_min.i;
-         }
-         else
-         {
-            hs->isStepped = false;
-         }
+            if( p->valtype  == vt_int || p->valtype  == vt_bool) 
+            { 
+               hs->isStepped = true; 
+               hs->intRange = p->val_max.i - p->val_min.i;
+            }
+            else
+            {
+               hs->isStepped = false;
+            }
 
             setDisabledForParameter(p, hs);
 
@@ -1225,9 +1227,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
                   bitmapStore);
-               slfo->setSkin( currentSkin );
-               slfo->setAssociatedSkinControl(c);
-               slfo->setAssociatedBitmapStore(bitmapStore);
+               slfo->setSkin( currentSkin, bitmapStore, c );
                lfodisplay = slfo;
                frame->addView(slfo);
                nonmod_param[i] = slfo;
@@ -1244,8 +1244,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                CSwitchControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags, bmp );
                hsw->setValue(p->get_value_f01());
-               hsw->setSkin(currentSkin,bitmapStore);
-               hsw->setAssociatedSkinControl(c);
+               hsw->setSkin(currentSkin,bitmapStore,c);
                frame->addView(hsw);
                nonmod_param[i] = hsw;
 
@@ -1300,8 +1299,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hsw->setValue(p->get_value_f01());
                frame->addView(hsw);
                nonmod_param[i] = hsw;
-               hsw->setSkin( currentSkin, bitmapStore );
-               hsw->setAssociatedSkinControl(c);
+               hsw->setSkin( currentSkin, bitmapStore, c );
             }
 
          }
@@ -1710,8 +1708,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
                   bitmapStore);
-               slfo->setSkin( currentSkin );
-               slfo->setAssociatedBitmapStore( bitmapStore );
+               slfo->setSkin( currentSkin, bitmapStore );
                lfodisplay = slfo;
                frame->addView(slfo);
                nonmod_param[i] = slfo;

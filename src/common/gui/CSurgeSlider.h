@@ -96,11 +96,13 @@ public:
       kExact
    };
 
+   virtual void onSkinChanged() override;
+   
    static MoveRateState sliderMoveRateState;
 
 private:
-   VSTGUI::CBitmap *pHandle, *pTray, *pModHandle, *pTempoSyncHandle, *pHandleHover;
-   bool lookedForHovers = false;
+   VSTGUI::CBitmap *pHandle = nullptr, *pTray = nullptr,
+      *pModHandle = nullptr, *pTempoSyncHandle = nullptr, *pHandleHover = nullptr;
    VSTGUI::CRect handle_rect, handle_rect_orig;
    VSTGUI::CPoint offsetHandle;
    int range;
