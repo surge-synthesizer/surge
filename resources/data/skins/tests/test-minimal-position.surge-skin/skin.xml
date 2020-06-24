@@ -6,6 +6,7 @@
     <image id="alt-slider-h" resource="SVG/altHHandle.svg"/>
     <image id="alt-slider-h-hover" resource="SVG/altHoverHandle.svg"/>
     <image id="alt-slider-h-ts" resource="SVG/altTSHandle.svg"/>
+    <image id="ab-1530" resource="SVG/AB_15x30.svg"/>
   </globals>
   <component-classes>
     <class name="boompoop" parent="CSurgeSlider" handle_image="alt-slider-h" handle_hover_image="alt-slider-h-hover" handle_temposync_image="alt-slider-h-ts"/>
@@ -18,6 +19,9 @@
  
          To make the relative position clearer, enclose them in a group
     -->
+
+    <control ui_identifier="global.active_scene" x="5" y="12" w="30" h="15" subpixmaps="2" rows="1" columns="2" class="CHSwitch2" bg_resource="ab-1530"/>
+    
     <group name="fx and char" x="607" y="11">
       <control ui_identifier="global.character" x="0" y="0" w="135" h="12" subpixmaps="3" rows="1" columns="3" class="CHSwitch2"  bg_id="161" />
       <control ui_identifier="global.fx_bypass" x="0" y="15" w="135" h="27"  subpixmaps="4" rows="1" columns="4" class="CHSwitch2"  bg_id="144" />

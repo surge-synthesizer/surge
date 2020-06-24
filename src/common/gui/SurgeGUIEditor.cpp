@@ -1286,12 +1286,24 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             // Make this a function on skin
             auto bmp = currentSkin->backgroundBitmapForControl( c, bitmapStore );
+
+            auto defaultTag = p->id + start_paramtags;
+            switch( p->ctrltype )
+            {
+            case ct_scenesel:
+               defaultTag = tag_scene_select;
+               break;
+            default:
+               break;
+               // FIXME - we need to fill in the rest of these
+            }
+            
             if( bmp )
             {
                auto subpixmaps = currentSkin->propertyValue( c, "subpixmaps", "1" );
                auto rows = currentSkin->propertyValue( c, "rows", "1" );
                auto cols = currentSkin->propertyValue( c, "columns", "1" );
-               auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags,
+               auto hsw = new CHSwitch2(rect, this, defaultTag,
                                         std::atoi(subpixmaps.c_str()), c->h,
                                         std::atoi(rows.c_str()), std::atoi(cols.c_str()),
                                         bmp, nopoint,
@@ -4855,7 +4867,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     }
 
 
-    if( hasTests )
+    if( hasTests && useDevMenu )
     {
        COptionMenu *testSM = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
