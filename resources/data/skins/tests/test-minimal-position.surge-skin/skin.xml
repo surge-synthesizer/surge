@@ -4,9 +4,11 @@
     <defaultimage directory="SVG/"/>
 
     <image id="alt-slider-h" resource="SVG/altHHandle.svg"/>
+    <image id="alt-slider-h-hover" resource="SVG/altHoverHandle.svg"/>
+    <image id="alt-slider-h-ts" resource="SVG/altTSHandle.svg"/>
   </globals>
   <component-classes>
-    <class name="boompoop" parent="CSurgeSlider" handle_image="alt-slider-h"/>
+    <class name="boompoop" parent="CSurgeSlider" handle_image="alt-slider-h" handle_hover_image="alt-slider-h-hover" handle_temposync_image="alt-slider-h-ts"/>
   </component-classes>
   <controls>
     <!-- 
@@ -33,6 +35,7 @@
     <control ui_identifier="filter.resonance_1" class="boompoop"/>
     <control ui_identifier="filter.cutoff_2" class="boompoop"/>
     <control ui_identifier="filter.resonance_2" class="boompoop"/>
+    <control ui_identifier="lfo.rate" class="boompoop"/>
     
   </controls>
 </surge-skin>

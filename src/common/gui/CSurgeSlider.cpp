@@ -859,11 +859,22 @@ void CSurgeSlider::onSkinChanged()
       {
          pHandle = associatedBitmapStore->getBitmapByStringID(hi.fromJust());
       }
+      auto ho = skin->propertyValue( skinControl, "handle_hover_image" );
+      if( ho.isJust() )
+      {
+         pHandleHover = associatedBitmapStore->getBitmapByStringID(ho.fromJust());
+      }
+      auto ht = skin->propertyValue( skinControl, "handle_temposync_image" );
+      if( ht.isJust() )
+      {
+         pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID(ht.fromJust());
+      }
    }
    
-   pHandleHover = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl,
-                                                              dynamic_cast<CScalableBitmap*>( pHandle ),
-                                                              associatedBitmapStore,
-                                                              Surge::UI::Skin::HoverType::HOVER);
+   if( ! pHandleHover )
+      pHandleHover = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl,
+                                                                 dynamic_cast<CScalableBitmap*>( pHandle ),
+                                                                 associatedBitmapStore,
+                                                                 Surge::UI::Skin::HoverType::HOVER);
 
 }
