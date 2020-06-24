@@ -313,6 +313,8 @@ void CLFOGui::draw(CDrawContext* dc)
 
 #if LINUX
       dc->setLineWidth(50.0);
+#elif WINDOWS
+      dc->setLineWidth(1.0);
 #else
       dc->setLineWidth(1.3);
 #endif
