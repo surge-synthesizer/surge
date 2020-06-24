@@ -57,8 +57,7 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
 
-   virtual void setSkin( Surge::UI::Skin::ptr_t s ) override {
-      SkinConsumingComponnt::setSkin(s);
+   virtual void onSkinChanged() override {
       resetColorTable();
    }
    

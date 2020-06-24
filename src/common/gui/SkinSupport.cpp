@@ -624,7 +624,7 @@ CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr
    }
    if( c.get() )
    {
-      std::cout << "should ask control if it has an opinoin" << std::endl;
+      std::cout << "TODO: The component may have a name for a hover asset type=" << t << " component=" << c->toString() << std::endl;
    }
    if( ! b )
    {
