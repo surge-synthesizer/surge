@@ -158,6 +158,43 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
       Surge::UserInteractions::promptError( "Default skin not located. Surge is probably mis-installed",
                                             "Skin Support Error" );
    }
+
+   // Run over the skins parsing the name
+   for( auto &e : availableSkins )
+   {
+      auto x = e.root + e.name + "/skin.xml";
+
+      TiXmlDocument doc;
+      // Obviously fix this
+      doc.SetTabSize(4);
+      
+      if (!doc.LoadFile(x) || doc.Error())
+      {
+         e.displayName = e.name + " (parse error)";
+         continue;
+      }
+      TiXmlElement* surgeskin = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-skin"));
+      if (!surgeskin)
+      {
+         e.displayName = e.name + " (no skin element)";
+         continue;
+      }
+
+      const char* a;
+      if( ( a = surgeskin->Attribute("name") ) )
+      {
+         e.displayName = a;
+      }
+      else
+      {
+         e.displayName = e.name + " (no name att)";
+      }
+   }
+
+   std::sort( availableSkins.begin(), availableSkins.end(),
+              [](const SkinDB::Entry &a, const SkinDB::Entry &b) {
+                 return _stricmp( a.displayName.c_str(), b.displayName.c_str() ) < 0;
+              } );
 }
 
 // see scripts/misc/idmap.pl if you want to regen this
