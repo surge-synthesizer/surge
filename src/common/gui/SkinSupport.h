@@ -80,10 +80,10 @@ public:
 
    bool reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
 
-   std::string resourceName(std::string relativeName) {
+   std::string resourceName(const std::string &relativeName) {
       return root + name + "/" + relativeName;
    }
-   
+
    std::string root;
    std::string name;
 
@@ -220,7 +220,7 @@ public:
    }
    
    static const std::string defaultImageIDPrefix;
-   
+
 private:
    static std::atomic<int> instances;
    std::vector<std::pair<std::string, props_t>> globals;
@@ -257,7 +257,9 @@ public:
    struct Entry {
       std::string root;
       std::string name;
-
+      std::string displayName;
+      bool parseable;
+      
       // Since we want to use this as a map
       bool operator==(const Entry &o) const {
          return root == o.root && name == o.name;
@@ -269,6 +271,10 @@ public:
             return h(e.root) ^ h(e.name);
          }
       };
+
+      bool matchesSkin( const Skin::ptr_t s ) {
+         return s.get() && s->root == root && s->name == name;
+      }
    };
    
    void rescanForSkins(SurgeStorage *);
@@ -282,7 +288,8 @@ public:
       errorStream = std::ostringstream();
       return s;
    }
-   
+
+
 private:
    SkinDB();
    ~SkinDB();

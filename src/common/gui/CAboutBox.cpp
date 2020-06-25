@@ -99,7 +99,8 @@ void CAboutBox::draw(CDrawContext* pContext)
       {
          std::vector< std::string > msgs;
          msgs.push_back( std::string( ) + "Current Skin: " + skin->displayName );
-         msgs.push_back( std::string( ) + "Skin Author: " + skin->author + " " + skin->authorURL ); 
+         msgs.push_back( std::string( ) + "Skin Author: " + skin->author + " " + skin->authorURL );
+         msgs.push_back( std::string( ) + "Skin Root XML: " + skin->resourceName( "skin.xml" ) );
          
          int yMargin = 6;
          int yPos = strHeight * 2;
