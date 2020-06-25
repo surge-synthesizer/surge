@@ -127,6 +127,7 @@ enum ControlGroup
    cg_ENV = 5,
    cg_LFO = 6,
    cg_FX = 7,
+   endCG
 };
 
 struct ParamUserData

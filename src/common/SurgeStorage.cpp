@@ -431,6 +431,65 @@ bailOnPortable:
    // Tunings Library Support
    currentScale = Tunings::evenTemperament12NoteScale();
    currentMapping = Tunings::KeyboardMapping();
+
+   // Load the XML DocStrings
+   auto dsf = datapath + "paramdocumentation.xml";
+   TiXmlDocument doc;
+   if( ! doc.LoadFile(dsf) || doc.Error() )
+   {
+      std::cout << "Unable to load  '" << dsf << "'"
+                 << std::endl;
+      std::cout << "Unable to parse\nError is:\n"
+                 << doc.ErrorDesc() << " at row=" << doc.ErrorRow() << " col=" << doc.ErrorCol()
+                 << std::endl;
+   }
+   else
+   {
+      std::cout << "Loaded " << dsf << " without concern" << std::endl;
+      TiXmlElement* pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
+      if( ! pdoc )
+      {
+         Surge::UserInteractions::promptError( "Malformed top element in paramdocumentation.xml - not a param-doc", "Surge ERror" );
+      }
+      else
+      {
+         for( auto pchild = pdoc->FirstChildElement(); pchild; pchild = pchild->NextSiblingElement() )
+         {
+            if( strcmp( pchild->Value(),"ctrl_group" ) == 0 )
+            {
+               int g = 0;
+               if( pchild->QueryIntAttribute("group", &g ) == TIXML_SUCCESS )
+               {
+                  std::string help_url = pchild->Attribute( "help_url" );
+                  if( help_url.size() > 0 )
+                     helpURL_controlgroup[g] = help_url;
+               }
+            }
+            else if( strcmp( pchild->Value(), "param" ) == 0 )
+            {
+               std::string id = pchild->Attribute( "id" );
+               std::string help_url = pchild->Attribute( "help_url" );
+               int t = 0;
+               if( help_url.size() > 0 )
+               {
+                  if( pchild->QueryIntAttribute( "type", &t ) == TIXML_SUCCESS )
+                  {
+                     helpURL_paramidentifier_typespecialized[std::make_pair(id, t)] = help_url;
+                  }
+                  else
+                  {
+                     helpURL_paramidentifier[id] = help_url;
+                  }
+               }
+            }
+            else
+            {
+               std::cout << "UNKNOWN " << pchild->Value() << std::endl;
+            }
+         }
+      }
+
+   }
 }
 
 SurgePatch& SurgeStorage::getPatch()
@@ -1674,6 +1733,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
       Surge::UserInteractions::promptError( oss.str(), "Surge MIDI" );
    }
 }
+
 
 namespace Surge
 {

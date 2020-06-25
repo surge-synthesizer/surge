@@ -186,6 +186,7 @@ void BiquadFilter::coeff_peakEQ(double omega, double BW, double gain)
 
 void BiquadFilter::coeff_orfanidisEQ(double omega, double BW, double G, double GB, double G0)
 {
+   // For the curious http://eceweb1.rutgers.edu/~orfanidi/ece521/hpeq.pdf appears to be the source of this
    double limit = 0.95;
    double w0 = omega; // min(M_PI-0.000001,omega);
    BW = max(minBW, BW);

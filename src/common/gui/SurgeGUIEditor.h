@@ -325,6 +325,8 @@ private:
    VSTGUI::COptionMenu* makeMidiMenu(VSTGUI::CRect &rect);
    bool scannedForMidiPresets = false;
 
+   std::string helpURLFor( Parameter *p );
+   
    void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c, int modulationSource = -1);
    
    /*
