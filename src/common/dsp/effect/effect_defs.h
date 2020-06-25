@@ -133,8 +133,32 @@ private:
 class Eq3BandEffect : public Effect
 {
    lipol_ps gain alignas(16);
+   lipol_ps mix alignas(16);
+
+   float L alignas(16)[BLOCK_SIZE],
+         R alignas(16)[BLOCK_SIZE];
 
 public:
+   enum Params
+   {
+       eq3_gain1 = 0,
+       eq3_freq1,
+       eq3_bw1,
+
+       eq3_gain2,
+       eq3_freq2,
+       eq3_bw2,
+
+       eq3_gain3,
+       eq3_freq3,
+       eq3_bw3,
+
+       eq3_gain,
+       eq3_mix,
+
+       eq3_num_ctrls,
+   };
+
    Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~Eq3BandEffect();
    virtual const char* get_effectname() override
@@ -153,6 +177,9 @@ public:
    virtual void init_default_values() override;
    virtual const char* group_label(int id) override; 
    virtual int group_label_ypos(int id) override;
+
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+
 
 private:
    BiquadFilter band1, band2, band3;
@@ -280,7 +307,7 @@ const int NVocoderVec = n_vocoder_bands >> 2;
 class VocoderEffect : public Effect
 {
 public:
-   enum
+   enum Params
    {
       KGain,
       KGateLevel,
