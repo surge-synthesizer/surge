@@ -139,11 +139,8 @@ void Eq3BandEffect::process(float* dataL, float* dataR)
       setvars(false);
    bi = (bi + 1) & slowrate_m1;
 
-   for (int i = 0; i < BLOCK_SIZE; i++)
-   {
-       L[i] = dataL[i];
-       R[i] = dataR[i];
-   }
+   accumulate_block(dataL, L, BLOCK_SIZE_QUAD);
+   accumulate_block(dataR, R, BLOCK_SIZE_QUAD);
 
    band1.process_block(L, R);
    band2.process_block(L, R);
