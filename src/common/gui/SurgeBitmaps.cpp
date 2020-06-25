@@ -102,6 +102,8 @@ CScalableBitmap* SurgeBitmaps::getBitmap(int id)
 
 CScalableBitmap* SurgeBitmaps::getBitmapByPath(std::string path)
 {
+   if( bitmap_file_registry.find(path) == bitmap_file_registry.end() )
+      return nullptr;
    return bitmap_file_registry.at(path);
 }
 

@@ -668,6 +668,11 @@ public:
 
    std::atomic<int> otherscene_clients;
 
+   std::unordered_map<int, std::string> helpURL_controlgroup;
+   std::unordered_map<std::string, std::string> helpURL_paramidentifier;
+   // Alterhately make this unordered and provide a hash
+   std::map<std::pair<std::string,int>, std::string> helpURL_paramidentifier_typespecialized;
+   
 private:
    TiXmlDocument snapshotloader;
    std::vector<Parameter> clipboard_p;

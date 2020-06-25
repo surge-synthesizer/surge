@@ -2851,7 +2851,38 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
          int eid = 0;
 
-         contextMenu->addEntry((char*)p->get_full_name(), eid++);
+         // FIXME - only fail at this once
+         /* if( bitmapStore->getBitmapByPath( synth->storage.datapath + "skins/shared/help-24.svg" ) == nullptr )
+         {
+            std::cout << "LOADING BMP" << std::endl;
+            bitmapStore->loadBitmapByPath( synth->storage.datapath + "skins/shared/help-24.svg" );
+         }
+         auto helpbmp = bitmapStore->getBitmapByPath( synth->storage.datapath + "skins/shared/help-24.svg" );
+         std::cout << "HELPBMP is " << helpbmp << std::endl; */
+         //auto pp = IPlatformBitmap::createFromPath( (synth->storage.datapath + "skins/shared/help-14.png" ).c_str() );
+         //auto helpbmp = new CBitmap( pp );
+
+         std::string helpurl = helpURLFor(p);
+         if( helpurl == "" )
+         {
+            auto fnmi = contextMenu->addEntry((char *)p->get_full_name(), eid++);
+         }
+         else
+         {
+            std::string lurl = helpurl;
+            if( helpurl[0] == '#' )
+            {
+               lurl = "https://surge-synthesizer.github.io/manual/" + helpurl;
+            }
+            std::string helpstr = " [help...]";
+            auto fnmi = addCallbackMenu( contextMenu, std::string( p->get_full_name() + helpstr ).c_str(),
+                                         [lurl]()
+                                            {
+                                               Surge::UserInteractions::openURL( lurl );
+                                            }
+               );
+            eid++;
+         }
          contextMenu->addSeparator(eid++);
          char txt[256], txt2[512];
          p->get_display(txt);
@@ -5293,6 +5324,133 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
+    addCallbackMenu(devSubMenu, "Dump Documentation XML to Stdout and docstrings.xml",
+                    [this]()
+                       {
+                          std::ostringstream oss;
+
+                          oss << "<param-doc>\n";
+
+#define OSSCG(x) oss << "  <ctrl_group group=\"" << x << "\" group_name=\"" << (#x) << "\" help_url=\"\"/>\n";
+                          OSSCG( cg_GLOBAL );
+                          OSSCG( cg_OSC );
+                          OSSCG( cg_MIX );
+                          OSSCG( cg_FILTER );
+                          OSSCG( cg_ENV );
+                          OSSCG( cg_LFO );
+                          OSSCG( cg_FX );
+
+                          for( auto cg = (int)cg_GLOBAL; cg < (int)endCG; ++cg )
+                          {
+                             std::set<std::string> pn;
+                             for( auto p : this->synth->storage.getPatch().param_ptr )
+                             {
+                                if( p->ctrlgroup == cg )
+                                {
+                                   pn.insert( p->ui_identifier );
+                                }
+                             }
+                             if( pn.size() )
+                             {
+                                oss << "\n  <!-- Params for CG " << (int)cg << " -->\n";
+                                for( auto el : pn )
+                                {
+                                   oss << "  <param id=\"" << el << "\" help_url=\"\"/>\n";
+                                }
+
+                                if( cg == cg_OSC )
+                                {
+                                   for( int i=ot_classic; i<ot_WT2; ++i )
+                                   {
+                                      switch(i)
+                                      {
+                                      case ot_classic:
+                                         oss << "\n  <!-- special case oscillator params for Classic ";
+                                         break;
+                                      case ot_sinus:
+                                         oss << "\n  <!-- special case oscillator params for Sine ";
+                                         break;
+                                      case ot_wavetable:
+                                         oss << "\n  <!-- special case oscillator params for Wavetable ";
+                                         break;
+                                      case ot_shnoise:
+                                         oss << "\n  <!-- special case oscillator params for SHNoise ";
+                                         break;
+                                      case ot_audioinput:
+                                         oss << "\n  <!-- special case oscillator params for Audio Input ";
+                                         break;
+                                      case ot_FM:
+                                         oss << "\n  <!-- special case oscillator params for FM3 ";
+                                         break;
+                                      case ot_FM2:
+                                         oss << "\n  <!-- special case oscillator params for FM2 ";
+                                         break;
+                                      case ot_WT2:
+                                         oss << "\n  <!-- special case oscillator params for Window ";
+                                         break;
+                                      default:
+                                         oss << "\n  <!-- ERROR ";
+                                         break;
+                                      }
+                                      oss << "(" << i << ") -->\n";
+                                      for( auto n : pn )
+                                      {
+                                         if( n.find( "param" ) != string::npos )
+                                         {
+                                            oss << "  <param id=\"" << n << "\" type=\"" << i << "\" help_url=\"\"/>\n";
+                                         }
+                                      }
+                                   }
+                                }
+                                if( cg == cg_FX )
+                                {
+                                   for( int i=fxt_delay; i<num_fxtypes; ++i )
+                                   {
+#define CFX(x) case x: { oss << "\n  <!-- special case FX Param for " << (#x); break; }
+                                      switch(i)
+                                      {
+                                         CFX(fxt_delay)
+                                            CFX(fxt_reverb)
+                                            CFX(fxt_phaser)
+                                            CFX(fxt_rotaryspeaker)
+                                            CFX(fxt_distortion)
+                                            CFX(fxt_eq)
+                                            CFX(fxt_freqshift)
+                                            CFX(fxt_conditioner)
+                                            CFX(fxt_chorus4)
+                                            CFX(fxt_vocoder)
+                                            CFX(fxt_reverb2)
+                                            CFX(fxt_flanger)
+                                            CFX(fxt_ringmod)
+
+                                      default:
+                                         oss << "\n  <!-- ERROR ";
+                                         break;
+                                      }
+                                      oss << "(" << i << ") -->\n";
+                                      for( auto n : pn )
+                                      {
+                                         if( n.find( "param" ) != string::npos )
+                                         {
+                                            oss << "  <param id=\"" << n << "\" type=\"" << i << "\" help_url=\"\"/>\n";
+                                         }
+                                      }
+                                   }
+                                }
+
+                             }
+                          }
+                          
+                          oss << "</param-doc>\n";
+                          
+                          std::cout << oss.str();
+                          std::ofstream of( "docstrings.xml" );
+                          of << oss.str();
+                          of.close();
+                       }
+       );
+    tid++;
+    
     return devSubMenu;
 }
 
@@ -5811,3 +5969,42 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
    return hostMenu;
 }
 #endif
+
+std::string SurgeGUIEditor::helpURLFor( Parameter *p )
+{
+   auto storage = &(synth->storage);
+   std::string id = p->ui_identifier;
+   int type = -1;
+   if( p->ctrlgroup == cg_OSC )
+   {
+      type = storage->getPatch().scene[current_scene].osc[current_osc].type.val.i;
+   }
+   if( p->ctrlgroup == cg_FX )
+   {
+      type = storage->getPatch().fx[current_fx].type.val.i;
+   }
+   if( type >= 0 )
+   {
+      auto key = std::make_pair( id, type );
+      if( storage->helpURL_paramidentifier_typespecialized.find(key) != storage->helpURL_paramidentifier_typespecialized.end() )
+      {
+         auto r = storage->helpURL_paramidentifier_typespecialized[key];
+         if( r != "" )
+            return r;
+      }
+   }
+   if( storage->helpURL_paramidentifier.find(id) != storage->helpURL_paramidentifier.end() )
+   {
+      auto r = storage->helpURL_paramidentifier[id];
+      if( r != "" )
+         return r;
+   }
+   if( storage->helpURL_controlgroup.find(p->ctrlgroup) != storage->helpURL_controlgroup.end() )
+   {
+      auto r = storage->helpURL_controlgroup[p->ctrlgroup];
+      if( r != "" )
+         return r;
+   }
+   return "";
+}
+
