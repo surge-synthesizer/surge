@@ -2390,8 +2390,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int eid = 0;
 
          char txt[256];
-         sprintf(txt, "Scene %c", 'A' + a);
-         contextMenu->addEntry(txt, eid++);
+         auto hu = helpURLForSpecial( "scene-select" );
+         if( hu != "" )
+         {
+            sprintf(txt, "Scene %c [help...]", 'A' + a);
+            auto lurl = fullyResolvedHelpURL(hu);
+            addCallbackMenu(contextMenu, txt, [lurl]() {
+                                                 Surge::UserInteractions::openURL( lurl );
+                                              } );
+         }
+         else
+         {
+            sprintf(txt, "Scene %c", 'A' + a);
+            contextMenu->addEntry(txt, eid++);
+         }
          contextMenu->addSeparator(eid++);
 
          addCallbackMenu(contextMenu, "Copy",
@@ -2869,12 +2881,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
          else
          {
-            std::string lurl = helpurl;
-            if( helpurl[0] == '#' )
-            {
-               lurl = "https://surge-synthesizer.github.io/manual/" + helpurl;
-            }
             std::string helpstr = " [help...]";
+            auto lurl = fullyResolvedHelpURL(helpurl);
             auto fnmi = addCallbackMenu( contextMenu, std::string( p->get_full_name() + helpstr ).c_str(),
                                          [lurl]()
                                             {
@@ -4473,6 +4481,21 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
        this->synth->mpePitchBendRange = newVal;
     });
+
+    auto hu = helpURLForSpecial("mpe-menu");
+    if( hu != "" )
+    {
+       mpeSubMenu->addSeparator();
+       auto lurl = fullyResolvedHelpURL(hu);
+       addCallbackMenu(mpeSubMenu, "Help on MPE...",
+                       [lurl]()
+                          {
+                             Surge::UserInteractions::openURL(lurl);
+                          }
+          );
+    }
+    
+    
     return mpeSubMenu;
 }
 
@@ -4640,6 +4663,19 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                     }
         );
 
+    auto hu = helpURLForSpecial("tun-menu");
+    if( hu != "" )
+    {
+       tuningSubMenu->addSeparator();
+       auto lurl = fullyResolvedHelpURL(hu);
+       addCallbackMenu(tuningSubMenu, "Help on Tuning...",
+                       [lurl]()
+                          {
+                             Surge::UserInteractions::openURL(lurl);
+                          }
+          );
+    }
+
     return tuningSubMenu;
 }
 
@@ -4719,6 +4755,19 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
             this->setZoomFactor(newVal);
         });
     zid++;
+
+    auto hu = helpURLForSpecial("zoom-menu");
+    if( hu != "" )
+    {
+       zoomSubMenu->addSeparator();
+       auto lurl = fullyResolvedHelpURL(hu);
+       addCallbackMenu(zoomSubMenu, "Help on Zoom...",
+                       [lurl]()
+                          {
+                             Surge::UserInteractions::openURL(lurl);
+                          }
+          );
+    }
 
     return zoomSubMenu;
 }
@@ -6008,3 +6057,24 @@ std::string SurgeGUIEditor::helpURLFor( Parameter *p )
    return "";
 }
 
+std::string SurgeGUIEditor::helpURLForSpecial( std::string key )
+{
+   auto storage = &(synth->storage);
+   if( storage->helpURL_specials.find(key) != storage->helpURL_specials.end() )
+   {
+      auto r = storage->helpURL_specials[key];
+      if( r != "" )
+         return r;
+   }
+   return "";
+}
+
+std::string SurgeGUIEditor::fullyResolvedHelpURL( std::string helpurl )
+{
+   std::string lurl = helpurl;
+   if( helpurl[0] == '#' )
+   {
+      lurl = "https://surge-synthesizer.github.io/manual/" + helpurl;
+   }
+   return lurl;
+}

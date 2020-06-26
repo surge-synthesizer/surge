@@ -122,7 +122,7 @@ VSTGUI::CMouseEventResult CStatusPanel::onMouseDown(VSTGUI::CPoint& where, const
 
     if ( zoomBox.pointInside(where) && editor )
     {
-        if ( button & kLButton )
+        if ( button & kLButton || button & kRButton )
         {
             editor->showZoomMenu(where);
         }
