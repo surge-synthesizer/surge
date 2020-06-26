@@ -211,11 +211,11 @@ public:
    /*
    ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
    */
-   void showZoomMenu(VSTGUI::CPoint &where);
+   void showMPEMenu(VSTGUI::CPoint& where);
+   void showTuningMenu(VSTGUI::CPoint& where);
+   void showZoomMenu(VSTGUI::CPoint& where);
    void toggleMPE();
-   void showMPEMenu(VSTGUI::CPoint &where);
    void toggleTuning();
-   void showTuningMenu(VSTGUI::CPoint &where);
    void tuningFileDropped(std::string fn);
    void mappingFileDropped(std::string fn);
    std::string tuningCacheForToggle = "";
@@ -315,14 +315,14 @@ private:
    */
    VSTGUI::CCommandMenuItem*
    addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
-   VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect);
-   VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);
+   VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect& rect, bool showhelp);
+   VSTGUI::COptionMenu* makeZoomMenu(VSTGUI::CRect& rect, bool showhelp);
    VSTGUI::COptionMenu* makeSkinMenu(VSTGUI::CRect &rect);
-   VSTGUI::COptionMenu* makeZoomMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeUserSettingsMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDataMenu(VSTGUI::CRect &rect);
-   VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeMidiMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
    bool scannedForMidiPresets = false;
 
 public:

@@ -2393,17 +2393,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          auto hu = helpURLForSpecial( "scene-select" );
          if( hu != "" )
          {
-            sprintf(txt, "Scene %c [help...]", 'A' + a);
+            sprintf(txt, "[?] Scene %c", 'A' + a);
             auto lurl = fullyResolvedHelpURL(hu);
             addCallbackMenu(contextMenu, txt, [lurl]() {
                                                  Surge::UserInteractions::openURL( lurl );
                                               } );
+            eid++;
          }
          else
          {
             sprintf(txt, "Scene %c", 'A' + a);
             contextMenu->addEntry(txt, eid++);
          }
+
          contextMenu->addSeparator(eid++);
 
          addCallbackMenu(contextMenu, "Copy",
@@ -2881,9 +2883,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
          else
          {
-            std::string helpstr = " [help...]";
+            std::string helpstr = "[?] ";
             auto lurl = fullyResolvedHelpURL(helpurl);
-            auto fnmi = addCallbackMenu( contextMenu, std::string( p->get_full_name() + helpstr ).c_str(),
+            auto fnmi = addCallbackMenu(contextMenu, std::string(helpstr + p->get_full_name()).c_str(),
                                          [lurl]()
                                             {
                                                Surge::UserInteractions::openURL( lurl );
@@ -4170,11 +4172,11 @@ void SurgeGUIEditor::toggleMPE()
    if( statuspanel )
       ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::mpeMode, this->synth->mpeEnabled );
 }
-void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint &where)
+void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint& where)
 {
    CRect menuRect;
    menuRect.offset(where.x, where.y);
-   auto m = makeZoomMenu(menuRect);
+   auto m = makeZoomMenu(menuRect, true);
 
    frame->addView(m);
    m->setDirty();
@@ -4182,11 +4184,11 @@ void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint &where)
    frame->removeView(m, true);
 }
 
-void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint &where)
+void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint& where)
 {
    CRect menuRect;
    menuRect.offset(where.x, where.y);
-   auto m = makeMpeMenu(menuRect);
+   auto m = makeMpeMenu(menuRect, true);
 
    frame->addView(m);
    m->setDirty();
@@ -4225,11 +4227,11 @@ void SurgeGUIEditor::toggleTuning()
 
    this->synth->refresh_editor = true;
 }
-void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
+void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint& where)
 {
    CRect menuRect;
    menuRect.offset(where.x, where.y);
-   auto m = makeTuningMenu(menuRect);
+   auto m = makeTuningMenu(menuRect, true);
 
    frame->addView(m);
    m->setDirty();
@@ -4360,19 +4362,19 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     int eid = 0;
 
-    auto mpeSubMenu = makeMpeMenu(menuRect);
+    auto mpeSubMenu = makeMpeMenu(menuRect, false);
     settingsMenu->addEntry(mpeSubMenu, Surge::UI::toOSCaseForMenu("MPE Options"));
     eid++;
     mpeSubMenu->forget();
 
-    auto tuningSubMenu = makeTuningMenu(menuRect);
+    auto tuningSubMenu = makeTuningMenu(menuRect, false);
     settingsMenu->addEntry(tuningSubMenu, "Tuning");
     eid++;
     tuningSubMenu->forget();
 
     if (zoomEnabled)
     {
-        auto zoomMenu = makeZoomMenu(menuRect);
+        auto zoomMenu = makeZoomMenu(menuRect, false);
         settingsMenu->addEntry(zoomMenu, "Zoom");
         eid++;
         zoomMenu->forget();
@@ -4448,10 +4450,21 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 }
 
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
+VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhelp)
 {
+
     COptionMenu* mpeSubMenu =
     new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+
+    auto hu = helpURLForSpecial("mpe-menu");
+    if (hu != "" && showhelp)
+    {
+        auto lurl = fullyResolvedHelpURL(hu);
+        addCallbackMenu(mpeSubMenu, "[?] MPE",
+                      [lurl]() { Surge::UserInteractions::openURL(lurl); });
+        mpeSubMenu->addSeparator();
+    }
+    
     std::string endis = "Enable MPE";
     if (synth->mpeEnabled)
        endis = "Disable MPE";
@@ -4480,31 +4493,27 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect)
        int newVal = ::atoi(c);
        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
        this->synth->mpePitchBendRange = newVal;
-    });
-
-    auto hu = helpURLForSpecial("mpe-menu");
-    if( hu != "" )
-    {
-       mpeSubMenu->addSeparator();
-       auto lurl = fullyResolvedHelpURL(hu);
-       addCallbackMenu(mpeSubMenu, "Help on MPE...",
-                       [lurl]()
-                          {
-                             Surge::UserInteractions::openURL(lurl);
-                          }
-          );
-    }
-    
+    });   
     
     return mpeSubMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
+VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, bool showhelp)
 {
     int tid=0;
     COptionMenu *tuningSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+    auto hu = helpURLForSpecial("tun-menu");
+    if (hu != "" && showhelp)
+    {
+       auto lurl = fullyResolvedHelpURL(hu);
+       addCallbackMenu(tuningSubMenu, "[?] Tuning...",
+                       [lurl]() { Surge::UserInteractions::openURL(lurl); });
+       tid++;
+       tuningSubMenu->addSeparator();
+    }
 
     auto *st = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Tuning"),
                     [this]()
@@ -4663,28 +4672,27 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect)
                     }
         );
 
-    auto hu = helpURLForSpecial("tun-menu");
-    if( hu != "" )
-    {
-       tuningSubMenu->addSeparator();
-       auto lurl = fullyResolvedHelpURL(hu);
-       addCallbackMenu(tuningSubMenu, "Help on Tuning...",
-                       [lurl]()
-                          {
-                             Surge::UserInteractions::openURL(lurl);
-                          }
-          );
-    }
-
     return tuningSubMenu;
 }
 
-VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
+VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool showhelp)
 {
     COptionMenu* zoomSubMenu =
         new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
 
     int zid = 0;
+
+    auto hu = helpURLForSpecial("zoom-menu");
+    if (hu != "" && showhelp)
+    {
+       auto lurl = fullyResolvedHelpURL(hu);
+       addCallbackMenu(zoomSubMenu, "[?] Zoom",
+                       [lurl]() { Surge::UserInteractions::openURL(lurl); });
+       zid++;
+
+       zoomSubMenu->addSeparator(zid++);
+    }
+
     for (auto s : {100, 125, 150, 175, 200, 300, 400}) // These are somewhat arbitrary reasonable defaults
     {
         std::ostringstream lab;
@@ -4755,19 +4763,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect)
             this->setZoomFactor(newVal);
         });
     zid++;
-
-    auto hu = helpURLForSpecial("zoom-menu");
-    if( hu != "" )
-    {
-       zoomSubMenu->addSeparator();
-       auto lurl = fullyResolvedHelpURL(hu);
-       addCallbackMenu(zoomSubMenu, "Help on Zoom...",
-                       [lurl]()
-                          {
-                             Surge::UserInteractions::openURL(lurl);
-                          }
-          );
-    }
 
     return zoomSubMenu;
 }
