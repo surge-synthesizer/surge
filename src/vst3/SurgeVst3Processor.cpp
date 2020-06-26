@@ -711,8 +711,8 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
       auto ich = im % 16;
       auto icc = im / 16;
       
-      snprintf(nm8, 512, "MIDI CC %d Ch.%d", icc, ich );
-      swprintf( nm, 512, L"%s", nm8 );
+      snprintf(nm8, 512, "MIDI CC %d, Channel %d", icc, ich + 1);
+      swprintf(nm, 512, L"%s", nm8);
 #if MAC || LINUX
       std::copy(nm, nm + 128, info.title);
 #else

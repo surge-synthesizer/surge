@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
+#include "SurgeGUIEditor.h"
 #include "CPatchBrowser.h"
 #include "UserInteractions.h"
 #include "guihelpers.h"
-#include "SurgeGUIEditor.h"
 
 #include <vector>
 
