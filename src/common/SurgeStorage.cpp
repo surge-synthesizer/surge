@@ -482,6 +482,15 @@ bailOnPortable:
                   }
                }
             }
+            else if( strcmp( pchild->Value(), "special" ) == 0 )
+            {
+               std::string id = pchild->Attribute( "id" );
+               std::string help_url = pchild->Attribute( "help_url" );
+               if( help_url.size() > 0 )
+               {
+                  helpURL_specials[id] = help_url;
+               }
+            }
             else
             {
                std::cout << "UNKNOWN " << pchild->Value() << std::endl;

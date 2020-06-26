@@ -4,6 +4,7 @@
 #include "CPatchBrowser.h"
 #include "UserInteractions.h"
 #include "guihelpers.h"
+#include "SurgeGUIEditor.h"
 
 #include <vector>
 
@@ -144,6 +145,25 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    contentItem->setActions(contentAction,nullptr);
    contextMenu->addEntry(contentItem);
 
+
+   auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
+   if( sge )
+   {
+      auto hu = sge->helpURLForSpecial( "patch-browser" );
+      if( hu != "" )
+      {
+         auto lurl = sge->fullyResolvedHelpURL(hu);
+         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Help On The Patch Browser...")));
+         auto ca = [lurl](CCommandMenuItem *i)
+                      {
+                         Surge::UserInteractions::openURL(lurl);
+                      };
+         hi->setActions( ca, nullptr );
+         contextMenu->addEntry(hi);
+      }
+
+   }
+   
    getFrame()->addView(contextMenu); // add to frame
    contextMenu->setDirty();
    contextMenu->popup();

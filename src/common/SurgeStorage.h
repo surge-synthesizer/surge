@@ -670,6 +670,7 @@ public:
 
    std::unordered_map<int, std::string> helpURL_controlgroup;
    std::unordered_map<std::string, std::string> helpURL_paramidentifier;
+   std::unordered_map<std::string, std::string> helpURL_specials;
    // Alterhately make this unordered and provide a hash
    std::map<std::pair<std::string,int>, std::string> helpURL_paramidentifier_typespecialized;
    
