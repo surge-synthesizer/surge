@@ -705,13 +705,14 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
       info.unitId = 0; // meta.clump;
       
       // FIXME - set the title
+      char nm8[512];
       wchar_t nm[512];
       auto im = paramIndex - midi_controller_0;
       auto ich = im % 16;
       auto icc = im / 16;
       
-      swprintf(nm, 512, L"MIDI CC %d Ch.%d", icc, ich );
-
+      snprintf(nm8, 512, "MIDI CC %d Ch.%d", icc, ich );
+      swprintf( nm, 512, L"%s", nm8 );
 #if MAC || LINUX
       std::copy(nm, nm + 128, info.title);
 #else
