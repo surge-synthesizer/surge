@@ -27,30 +27,10 @@ enum flangparam
    flng_num_params,
 };
 
-enum flangermode // match this with the string gneerator in Parameter.cpp pls
-{
-   unisontri,
-   unisonsin,
-   unisonsaw,
-   unisonsandh,
-   
-   dopplertri,
-   dopplersin,
-   dopplersaw,
-   dopplersandh,
-
-   arptri,
-   arpsin,
-   arpsaw,
-   arpsandh,
-
-   n_flanger_modes
-};
-
 FlangerEffect::FlangerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd)
 {
-   init();
+   haveProcessed = false;
 }
 
 FlangerEffect::~FlangerEffect()
@@ -79,6 +59,7 @@ void FlangerEffect::init()
       auto lW = sqrt( ( piby2 - panAngle ) / piby2 * cos( panAngle ) );
       auto rW = sqrt( panAngle * sin( panAngle ) / piby2 );
    }
+   haveProcessed = false;
 }
 
 void FlangerEffect::setvars(bool init)
@@ -88,6 +69,13 @@ void FlangerEffect::setvars(bool init)
 
 void FlangerEffect::process(float* dataL, float* dataR)
 {
+   if( ! haveProcessed )
+   {
+      float v0 = *f[flng_voice_zero_pitch];
+      if( v0 > 0 )
+         haveProcessed = true;
+      vzeropitch.startValue(v0);
+   }
    // So here is a flanger with everything fixed
 
    float rate = envelope_rate_linear(-limit_range( *f[flng_rate], -8.f, 10.f ) ) * (fxdata->p[flng_rate].temposync ? storage->temposyncratio : 1.f);
@@ -112,20 +100,6 @@ void FlangerEffect::process(float* dataL, float* dataR)
    ** - Arp Tuned Mix - tune velocity, rotate voices, mix
    ** - Arp Tuned Bare - tune velocity, rotate voices, don't mix
    ** 
-   ** in classic and arpeggio the comb filter delay matches the frequency of the voice
-   ** 
-   ** Now we know the doppler equation is:
-   **
-   **   f_observed = f * ( 1 + dv / c )
-   **
-   ** We also know our dv/c is == max of rate, but the max of rate is the rate since we use
-   ** sin or slope 1 triangle as our oscillators. So f_observed = f * ( 1 + dv/c ). Great.
-   ** So our frequency shift f_observed - f = f * ( 1 + r ) - f = fr.
-   **
-   ** So since our delay is tuned to inverse of frequency, in tuned mode, we also want
-   ** to add the inverse of the rate to it.
-   **
-   ** and that should mean we end up tuned. We have to special case for r=0 of course.
    */
 
    int tuneToDelay = true;
@@ -133,6 +107,11 @@ void FlangerEffect::process(float* dataL, float* dataR)
       tuneToDelay = false;
    
    float v0 = *f[flng_voice_zero_pitch];
+   vzeropitch.newValue(v0);
+   vzeropitch.process();
+   v0 = vzeropitch.v;
+   float averageDelayBase = 0.0;
+   
    for( int c=0; c<2; ++c )
       for( int i=0; i<COMBS_PER_CHANNEL; ++i )
       {
@@ -167,10 +146,22 @@ void FlangerEffect::process(float* dataL, float* dataR)
             lfoout = (2.f * fabs(2.f * thisphase - 1.f) - 1.f);
             lfoval[c][i].newValue(lfoout);
             break;
-         case saww: // saw - but we gotta be gentler than a pure saw. So FIXME on this waveform
-            lfoout = thisphase * 2.0f - 1.f;
+         case saww: // saw - but we gotta be gentler than a pure saw. So do more like a heavily skewed triangle
+         {
+            float cutSawAt = 0.95;
+            if( thisphase < cutSawAt )
+            {
+               auto usephase = thisphase / cutSawAt;
+               lfoout = usephase * 2.0f - 1.f;
+            }
+            else
+            {
+               auto usephase = ( thisphase - cutSawAt ) / (1.0 - cutSawAt);
+               lfoout = (1.0-usephase) * 2.f - 1.f;
+            }
             lfoval[c][i].newValue(lfoout);
             break;
+         }
          case sandhw: // S&H random noise. Needs smoothing over the jump like the triangle
          {
             if( lforeset )
@@ -227,36 +218,37 @@ void FlangerEffect::process(float* dataL, float* dataR)
          pitch += *f[flng_voice_detune] * i;
 
          // Tuning goes here
+         float nv = 0;
          if( tuneToDelay )
          {
-            delaybase[c][i].newValue( samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch)) );
+            nv = samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
          }
          else
          {
-
-            auto pratio = storage->note_to_pitch(pitch) / storage->note_to_pitch( v0 );
-            float d0 = samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(v0));
-            float r = std::max( rate * samplerate / BLOCK_SIZE, 0.05f );
-
-            switch( mwave )
-            {
-            case sinw:
-               r *= 2.0 * M_PI;
-               break;
-            case triw:
-               r *= 2.0;
-               break;
-            default:
-               break;
-            }
-            delaybase[c][i].newValue( d0 * pratio / r );
+            // OK so now we have a base pitch and a chord. 
+            nv = samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
          }
+
+         // OK so biggest  tap = delaybase[c][i].v * ( 1.0 + lfoval[c][i].v * depth.v ) + 1;
+         // Assume lfoval is [-1,1] and depth is known
+         float maxtap = nv * ( 1.0 + limit_range( *f[flng_depth], 0.f, 2.f ) ) + 1;
+         if( maxtap >= InterpDelay::DELAY_SIZE )
+         {
+            nv = nv * 0.999 * InterpDelay::DELAY_SIZE / maxtap;
+         }
+         delaybase[c][i].newValue( nv );
+
+         averageDelayBase += delaybase[c][i].new_v;
       }
+   averageDelayBase /= ( 2 * COMBS_PER_CHANNEL );
+   vzeropitch.process();
    
-   depth.newValue( *f[flng_depth] );
+   float dApprox = rate * samplerate / BLOCK_SIZE * averageDelayBase * *f[flng_depth];
+   
+   depth.newValue( limit_range( *f[flng_depth], 0.f, 2.f ) );
    mix.newValue( *f[flng_mix] );
    voices.newValue( limit_range( *f[flng_voices], 1.f, 4.f ) );
-   float feedbackScale = 0.4;
+   float feedbackScale = 0.4 * sqrt( ( limit_range( dApprox, 2.f, 60.f ) + 30 ) / 100.0 );
    if( mode == classic_tuned || mode == classic )
    {
       // OK so we want feedback to go up as voice goes down
@@ -269,7 +261,8 @@ void FlangerEffect::process(float* dataL, float* dataR)
    
    if( mode == doppler_tuned || mode == doppler )
    {
-      feedbackScale = 0.4;
+      float dv = ( voices.v - 1 );
+      feedbackScale += ( 3.0 - dv ) * 0.45 / 3.0;
    }
    if( mode == arp_tuned || mode == arp_tuned_bare )
    {
@@ -281,6 +274,11 @@ void FlangerEffect::process(float* dataL, float* dataR)
    else
       ringout_value = 1024;
 
+   if( mwave == saww || mwave == sandhw )
+   {
+      feedbackScale *= 0.7;
+   }
+   
    if( fbv < 0 ) fbv = fbv;
    else if( fbv > 1 ) fbv = fbv;
    else fbv = sqrt( fbv );
@@ -396,9 +394,6 @@ void FlangerEffect::process(float* dataL, float* dataR)
          gainadj = - 1 / sqrt(8 - voices.v);
       gainadj -= 0.07 * mix.v;
 
-      if( *f[flng_stereo_width] > 8 )
-         gainadj -= (*f[flng_stereo_width] - 8 ) / 36.f;
-      
       outl = limit_range( (1.0f + gainadj ) * outl, -1.f, 1.f );
       outr = limit_range( (1.0f + gainadj ) * outr, -1.f, 1.f );
       

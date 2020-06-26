@@ -634,7 +634,7 @@ class FlangerEffect : public Effect
       // OK so lets say we want lowest tunable frequency to be 23.5hz at 96k
       // 96000/23.5 = 4084
       // And lets future proof a bit and make it a power of 2 so we can use & properly
-      static const int DELAY_SIZE=8192, DELAY_SIZE_MASK = DELAY_SIZE - 1;
+      static const int DELAY_SIZE=32768, DELAY_SIZE_MASK = DELAY_SIZE - 1;
       float line[DELAY_SIZE];
       int k = 0;
       InterpDelay() { reset(); }
@@ -679,10 +679,12 @@ private:
    lipol<float,true> depth, mix;
    lipol<float,true> voices, voice_detune, voice_chord;
    lipol<float,true> feedback, fb_lf_damping;
+   lag<float> vzeropitch;
    float lfosandhtarget[2][COMBS_PER_CHANNEL];
    float vweights[2][COMBS_PER_CHANNEL];
 
    lipol_ps width;
+   bool haveProcessed = false;
    
    const static int LFO_TABLE_SIZE=8192;
    const static int LFO_TABLE_MASK=LFO_TABLE_SIZE-1;
