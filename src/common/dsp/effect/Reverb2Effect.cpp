@@ -208,7 +208,7 @@ void Reverb2Effect::process(float* dataL, float* dataR)
 
    _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * dsamplerate_inv);
 
-   int pdt = (int)( samplerate * pow( 2.0, *f[r2p_predelay] ) );
+   int pdt = limit_range( (int)( samplerate * pow( 2.0, *f[r2p_predelay] ) ), 1, PREDELAY_BUFFER_SIZE_LIMIT - 1 );
 
    for (int k = 0; k < BLOCK_SIZE; k++)
    {
