@@ -1177,9 +1177,9 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
       }
       else
       {
-         float  v = val.f == val_min.f ? 0.f : powf(2.0f, val.f);
-         float mp = modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f + modulationDepth);
-         float mn = modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f - modulationDepth);
+         float  v = ( val.f == val_min.f ) ? 0.f : powf(2.0f, val.f);
+         float mp = ((val.f + modulationDepth) <= val_min.f) ? 0.f : powf(2.0f, val.f + modulationDepth);
+         float mn = ((val.f - modulationDepth) <= val_min.f) ? 0.f : powf(2.0f, val.f - modulationDepth);
 
          switch( displaymode )
          {
@@ -1187,18 +1187,15 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             sprintf( txt, "%.*f s", dp3, mp - v );
             break;
          case Menu:
-            sprintf( txt, "%.*f ... %.*f s", dp3, mn, dp3, mp );
+            if( isBipolar )
+               sprintf( txt, "%.*f ... %.*f s", dp3, mn, dp3, mp );
+            else
+               sprintf( txt, "%.*f ... %.*f s", dp3, v, dp3, mp );
             break;
          case InfoWindow:
          {
             if (isBipolar)
             {
-               /*
-                 This swap seems like a good idea but it hides the negative modulation
-               if (mp < mn || mn > mp)
-                  std::swap(mp, mn);
-               */
-               
                sprintf(txt, "%.*f %s %.*f %s %.*f s", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
             }
             else
@@ -1224,15 +1221,26 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
          if (mp > samplerate)
             mp = samplerate;
 
-         if (isBipolar)
+         switch( displaymode )
          {
-            if (mp < mn || mn > mp)
-               std::swap(mp, mn);
-
-            sprintf(txt, "%.*f %s %.*f %s %.*f Hz", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+         case TypeIn:
+            sprintf( txt, "%.*f Hz", dp3, mp - v );
+            break;
+         case Menu:
+            if (isBipolar)
+               sprintf( txt, "%.*f ... %.*f Hz", dp3, mn, dp3, mp );
+            else
+               sprintf( txt, "%.*f ... %.*f Hz", dp3, v, dp3, mp );
+            break;
+         case InfoWindow:
+            if (isBipolar)
+            {
+               sprintf(txt, "%.*f %s %.*f %s %.*f Hz", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+            }
+            else
+               sprintf(txt, "%.*f %s %.*f Hz", dp3, v, uppersep, dp3, mp);
+            break;
          }
-         else
-            sprintf(txt, "%.*f %s %.*f Hz", dp3, v, uppersep, dp3, mp);
       }
 
       break;
@@ -1244,25 +1252,43 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
       float mp = amp_to_db(val.f + modulationDepth);
       float mn = amp_to_db(val.f - modulationDepth);
 
+      std::string mval;
+
       if (isBipolar)
       {
-         if (mp < mn || mn > mp)
-            std::swap(mp, mn);
-
-         std::string mval;
-
-         if (mn == -192.f)
+         if (mn <= -192.f)
             mval = "-inf";
          else
          {
             std::string origval = std::to_string(mn);
             mval = origval.substr(0, origval.find(".") + dp2 + 1);
          }
-
-         sprintf(txt, "%s %s %.*f %s %.*f dB", mval.c_str(), lowersep, dp2, v, uppersep, dp2, mp);
       }
-      else
-         sprintf(txt, "%.*f %s %.*f dB", dp2, v, uppersep, dp2, mp);
+
+      switch( displaymode )
+      {
+      case TypeIn:
+         sprintf( txt, "%.*f dB", dp2, mp - v );
+         break;
+      case Menu:
+         if( isBipolar ) {
+            sprintf(txt, "%s ... %.*f dB", mval.c_str(),  dp2, mp);
+         }
+         else
+         {
+            sprintf(txt, "%.*f ... %.*f dB", dp2, v, dp2, mp);
+         }
+         break;
+      case InfoWindow:
+         if( isBipolar ) {
+            sprintf(txt, "%s %s %.*f %s %.*f dB", mval.c_str(), lowersep, dp2, v, uppersep, dp2, mp);
+         }
+         else
+         {
+            sprintf(txt, "%.*f %s %.*f dB", dp2, v, uppersep, dp2, mp);
+         }
+         break;
+      }
 
       break;
    }
@@ -1326,16 +1352,32 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
       float mp = 440.f * powf(2.0f, limit_range(val.f + modulationDepth, val_min.f, val_max.f) / 12.f);
       float mn = 440.f * powf(2.0f, limit_range(val.f - modulationDepth, val_min.f, val_max.f) / 12.f);
 
-      if (isBipolar)
+      switch( displaymode )
       {
-         if (mp < mn || mn > mp)
-            std::swap(mp, mn);
-
-         sprintf(txt, "%.*f %s %.*f %s %.*f Hz", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+      case TypeIn:
+         sprintf( txt, "%.*f Hz", dp3, mp - v );
+         break;
+      case Menu:
+      {
+         if (isBipolar)
+         {
+            sprintf(txt, "%.*f .. %.*f Hz", dp3, mn, dp3, mp);
+         }
+         else
+            sprintf(txt, "%.*f .. %.*f Hz", dp3, v, dp3, mp);
+         break;
       }
-      else
-         sprintf(txt, "%.*f %s %.*f Hz", dp3, v, uppersep, dp3, mp);
-
+      case InfoWindow:
+      {
+         if (isBipolar)
+         {
+            sprintf(txt, "%.*f %s %.*f %s %.*f Hz", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+         }
+         else
+            sprintf(txt, "%.*f %s %.*f Hz", dp3, v, uppersep, dp3, mp);
+      }
+      break;
+      }
       break;
    }
    default:
@@ -1344,15 +1386,30 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
       float mp = (val.f + modulationDepth) * 100.f;
       float mn = (val.f - modulationDepth) * 100.f;
 
-      if (isBipolar)
+      switch( displaymode )
       {
-         if (mp < mn || mn > mp)
-            std::swap(mp, mn);
-
-         sprintf(txt, "%.*f %s %.*f %s %.*f %c", dp2, mn, lowersep, dp2, v, uppersep, dp2, mp, '%');
+      case TypeIn:
+         sprintf( txt, "%.*f", dp2, mp - v );
+         break;
+      case Menu:
+         if (isBipolar)
+         {
+            sprintf(txt, "%.*f ... %.*f %c", dp2, mn,  dp2, mp, '%');
+         }
+         else
+            sprintf(txt, "%.*f ... %.*f %c", dp2, v, dp2, mp, '%');
+         break;
+      case InfoWindow:
+      {
+         if (isBipolar)
+         {
+            sprintf(txt, "%.*f %s %.*f %s %.*f %c", dp2, mn, lowersep, dp2, v, uppersep, dp2, mp, '%');
+         }
+         else
+            sprintf(txt, "%.*f %s %.*f %c", dp2, v, uppersep, dp2, mp, '%');
+         break;
       }
-      else
-         sprintf(txt, "%.*f %s %.*f %c", dp2, v, uppersep, dp2, mp, '%');
+      }
 
       break;
    }
@@ -2342,6 +2399,8 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
    case ct_envtime_lfodecay:
    case ct_chorusmodtime:
    case ct_delaymodtime:
+   case ct_lforate:
+   case ct_lforate_deactivatable:
    {
       if (temposync)
       {
@@ -2369,7 +2428,84 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
       auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
       return rmv;
       break;
-   }  
+   }
+   case ct_amplitude:
+   case ct_sendlevel:
+   {
+      /*
+      ** amp2db is 18 * log2(x)
+      **
+      ** we have 
+      ** d = mp - val
+      **   = 18 * ( log2( m + v ) - log2( v ) )
+      ** d / 18 + log2(v) = log2( m + v )
+      ** 2^(d/18 + log2(v) ) - v = m;
+      */
+      auto d = (float)std::atof( s.c_str() );
+      auto mv = powf( 2.0, ( d / 18.0 + log2f( val.f ) ) ) - val.f;
+      auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
+      return rmv;
+      break;
+   }
+
+   case ct_freq_hpf:
+   case ct_freq_audible:
+   case ct_freq_audible_deactivatable:
+   case ct_freq_vocoder_low:
+   case ct_freq_vocoder_high:
+   {
+      /* modulation is displayed as
+      **
+      ** d = mp - val
+      **   = 440 * (2^((v+m)/12) - 2^v/12_
+      ** d/440 + 2^v/12 = 2^(v+m)/12
+      ** 12 * log2( d + 2^v/12 ) = v + m
+      ** 12 * log2( d + 2^v/12 ) - v = m
+      */
+
+      auto d = (float)std::atof( s.c_str() );
+      auto mv = val_min.f;
+      if( d/440 + pow( 2.0, val.f/12 ) > 0 )
+         mv = 12 * log2f( d/440 + pow( 2.0, val.f / 12.f ) ) - val.f;
+      else
+         valid = false;
+      
+      auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
+      return rmv;
+      break;
+   }
+
+   case ct_oscspread:
+   {
+      auto mv = (float)std::atof( s.c_str() );
+      if( absolute )
+      {
+         mv /= 16;
+      }
+      else
+      {
+         mv /= 100;
+      }
+      auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
+      return rmv;
+   }
+   break;
+   case ct_pitch_semi7bp_absolutable:
+   {
+      auto mv = (float)std::atof( s.c_str() );
+      if( absolute )
+      {
+         mv /= 10;
+      }
+      else
+      {
+         mv /= 100;
+      }
+      auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
+      return rmv;
+   }
+   break;
+   case ct_detuning:
    case ct_percent:
    case ct_percent_bidirectional:
    {
