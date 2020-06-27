@@ -274,6 +274,11 @@ private:
    VSTGUI::CTextLabel* typeinLabel = nullptr;
    VSTGUI::CTextLabel* typeinPriorValueLabel = nullptr;
    VSTGUI::CControl* typeinEditControl = nullptr;
+   enum TypeInMode {
+      Inactive,
+      Param,
+      Control
+   } typeinMode = Inactive;
    std::vector<VSTGUI::CViewContainer*> removeFromFrame;
    int typeinResetCounter = -1;
    std::string typeinResetLabel = "";

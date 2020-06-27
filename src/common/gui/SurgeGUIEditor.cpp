@@ -832,6 +832,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
             typeinDialog->setVisible(false);
             removeFromFrame.push_back( typeinDialog );
             typeinDialog = nullptr;
+            typeinMode = Inactive;
             typeinResetCounter = -1;
 
 
@@ -2447,6 +2448,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
          int eid = 0;
 
+         std::string hu;
+         if( modsource >= ms_ctrl1 && modsource <= ms_ctrl8 )
+         {
+            hu = helpURLForSpecial( "macro-modbutton" );
+         }
+         else if( modsource >= ms_lfo1 && modsource <= ms_slfo6 )
+         {
+            hu = helpURLForSpecial( "lfo-modbutton" );
+         }
+         else
+         {
+            hu = helpURLForSpecial( "other-modbutton" );
+         }
+         
          if( cms->hasAlternate )
          {
             int idOn = modsource;
@@ -2458,7 +2473,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                idOff = t;
             }
 
-            contextMenu->addEntry((char*)modsource_abberations[idOn], eid++);
+            if( hu != "" )
+            {
+               auto lurl = fullyResolvedHelpURL(hu);
+               std::string hs = std::string( "[?] " ) + (char*)modsource_abberations[idOn];
+               addCallbackMenu( contextMenu, hs, [lurl]()
+                                                    {
+                                                       Surge::UserInteractions::openURL(lurl);
+                                                    }
+                  );
+               eid++;
+            }
+            else
+            {
+               contextMenu->addEntry((char*)modsource_abberations[idOn], eid++);
+            }
             std::string offLab = "Switch to ";
             offLab += modsource_abberations[idOff];
             bool activeMod = (cms->state & 3) == 2;
@@ -2475,7 +2504,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
          else
          {
-            contextMenu->addEntry((char*)modulatorName( modsource, false ).c_str(), eid++);
+            if( hu != "" )
+            {
+               auto lurl = fullyResolvedHelpURL(hu);
+               std::string hs = std::string( "[?] " ) + modulatorName(modsource, false);
+               addCallbackMenu( contextMenu, hs, [lurl]()
+                                                    {
+                                                       Surge::UserInteractions::openURL(lurl);
+                                                    }
+                  );
+               eid++;
+            }
+            else
+            {
+               contextMenu->addEntry((char*)modulatorName( modsource, false ).c_str(), eid++);
+            }
          }
 
          int n_total_md = synth->storage.getPatch().param_ptr.size();
@@ -2664,7 +2707,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          
          if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
          {
+            /*
+            ** This is the menu for the controls
+            */
+            
             ccid = modsource - ms_ctrl1;
+
+            auto cms = ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[modsource]);
+
+            contextMenu->addSeparator(eid++);
+            char vtxt[1024];
+            sprintf( vtxt, "Value: %.*f %%", (detailedMode ? 6 : 2 ), 100 * cms->get_output() );
+            addCallbackMenu( contextMenu, vtxt, [this, control, modsource]()
+                                                   {
+                                                      promptForUserValueEntry( nullptr, control, modsource );
+                                                   }
+               );
+            eid++;
             contextMenu->addSeparator(eid++);
             char txt[256];
 
@@ -3327,6 +3386,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       typeinDialog = nullptr;
       typeinResetCounter = -1;
       typeinEditTarget = nullptr;
+      typeinMode = Inactive;
    }
 
    
@@ -3612,14 +3672,14 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_value_typein:
    {
-      if( typeinDialog && typeinEditTarget )
+      if( typeinDialog && typeinMode != Inactive )
       {
          std::string t = typeinValue->getText().getString();
          bool isInvalid = false;
-         if( typeinModSource > 0 )
+         if( typeinMode == Param && typeinEditTarget && typeinModSource > 0 )
          {
             auto mv = typeinEditTarget->calculate_modulation_value_from_string( t );
-
+            
             if( mv < -1.f || mv > 1.f )
             {
                isInvalid = true;
@@ -3628,15 +3688,16 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
                synth->setModulation(typeinEditTarget->id, (modsources)typeinModSource, mv );
                synth->refresh_editor = true;
-
+               
                typeinDialog->setVisible(false);
                removeFromFrame.push_back(typeinDialog);
                typeinDialog = nullptr;
                typeinResetCounter = -1;
                typeinEditTarget = nullptr;
+               typeinMode = Inactive;
             }
          }
-         else if( typeinEditTarget->set_value_from_string( t ) )
+         else if( typeinMode == Param && typeinEditTarget && typeinEditTarget->set_value_from_string( t ) )
          {
             isInvalid = false;
             synth->refresh_editor = true;
@@ -3645,6 +3706,28 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             typeinDialog = nullptr;
             typeinResetCounter = -1;
             typeinEditTarget = nullptr;
+            typeinMode = Inactive;
+         }
+         else if( typeinMode == Control )
+         {
+            auto cms = ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[typeinModSource]);
+            bool bp = cms->is_bipolar();
+            float val = std::atof( t.c_str() ) / 100.0;
+            if( ( bp && val >= -1 && val <= 1 ) || ( val >= 0 && val <= 1 ) )
+            {
+               cms->output = val;
+               cms->target = val;
+               // This doesn't seem to work so hammer away
+               if( typeinEditControl )
+               {
+                  typeinEditControl->invalid();
+               }
+               synth->refresh_editor = true;
+            }
+            else
+            {
+               isInvalid = true;
+            }
          }
          else
          {
@@ -3652,7 +3735,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          }
 
          if( isInvalid ) {
-            std::cout << "Invalid Entry" << std::endl;
             auto l = typeinLabel->getText().getString();
             promptForUserValueEntry( typeinEditTarget, typeinEditControl, typeinModSource );
             typeinResetCounter = 20;
@@ -5767,7 +5849,17 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
       typeinResetCounter = -1;
    }
 
-   bool ismod = ms > 0;
+   if( p )
+   {
+      typeinMode = Param;
+   }
+   else
+   {
+      typeinMode = Control;
+   }
+   
+
+   bool ismod = p && ms > 0;
    int boxht = 56;
    auto cp = c->getViewSize();
 
@@ -5799,17 +5891,24 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinDialog->addView(inner);
 
    std::string lab = "";
-   if( p->ctrlgroup == cg_LFO )
+   if( p )
    {
-      char pname[1024];
-      p->create_fullname( p->get_name(), pname, p->ctrlgroup, p->ctrlgroup_entry, modulatorName(p->ctrlgroup_entry, true ).c_str() );
-      lab = pname;
+      if( p->ctrlgroup == cg_LFO )
+      {
+         char pname[1024];
+         p->create_fullname( p->get_name(), pname, p->ctrlgroup, p->ctrlgroup_entry, modulatorName(p->ctrlgroup_entry, true ).c_str() );
+         lab = pname;
+      }
+      else
+      {
+         lab = p->get_full_name();
+      }
    }
    else
    {
-      lab = p->get_full_name();
+      lab = modulatorName( ms, false );
    }
-
+   
    typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
    typeinLabel->setFontColor(currentSkin->getColor( "slider.dark.label", kBlackCColor ));
    typeinLabel->setTransparency(true);
@@ -5817,13 +5916,22 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    inner->addView(typeinLabel);
 
    char txt[256];
-   if( ismod )
+   if( p )
    {
-      p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms), synth->isBipolarModulation((modsources)ms));
+      if( ismod )
+      {
+         p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms), synth->isBipolarModulation((modsources)ms));
+      }
+      else
+      {
+         p->get_display(txt);
+      }
    }
    else
    {
-      p->get_display(txt);
+      int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+      auto cms = ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms]);
+      sprintf( txt, "%.*f %%", (detailedMode ? 6 : 2 ), 100.0 * cms->get_output() );
    }
 
    if( ismod )
@@ -5851,16 +5959,19 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
    // fix the text selection rectangle background overhanging the borders on Windows
    #if WINDOWS
-      typeinValue->setTextInset(CPoint(3, 0));
+   typeinValue->setTextInset(CPoint(3, 0));
    #endif   
 
-   if( ! p->can_setvalue_from_string() )
+   if( p )
    {
-      typeinValue->setFontColor( VSTGUI::kRedCColor );
-      typeinValue->setText( "edit coming soon" );
+      if( ! p->can_setvalue_from_string() )
+      {
+         typeinValue->setFontColor( VSTGUI::kRedCColor );
+         typeinValue->setText( "edit coming soon" );
+      }
    }
+   
    inner->addView(typeinValue);
-
    typeinEditTarget = p;
    typeinDialog->setVisible(true);
    typeinValue->takeFocus();
@@ -5892,6 +6003,19 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
          else
             sprintf( txt, "%s Step Sequencer %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
+      }
+   }
+
+   if( i >= ms_ctrl1 && i <= ms_ctrl8 )
+   {
+      std::string ccl = std::string(synth->storage.getPatch().CustomControllerLabel[i - ms_ctrl1]);
+      if( ccl == "-" )
+      {
+         return std::string( modsource_abberations[i] );
+      }
+      else
+      {
+         return ccl + " (" + modsource_abberations[i] + ")";
       }
    }
    if( button )

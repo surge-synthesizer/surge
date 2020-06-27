@@ -13,7 +13,11 @@
   <special id="tun-menu" help_url="#tuning-options"/>
   <special id="zoom-menu" help_url="#zoom"/>
   <special id="patch-browser" help_url="#patch-browser"/>
-  
+
+  <special id="macro-modbutton" help_url="#assignable-controllers"/>
+  <special id="lfo-modbutton" help_url="#lfos"/>
+  <special id="other-modbutton" help_url="#voice-and-note-properties"/>
+
   <!-- Params for CG 0 -->
   <param id="filter.balance" help_url="#filter-controls"/>
   <param id="filter.config" help_url="#filter-controls"/>
