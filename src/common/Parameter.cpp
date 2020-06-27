@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cctype>
 #include <UserDefaults.h>
+#include "DebugHelpers.h"
 
 Parameter::Parameter() : posx( PositionHolder::Axis::X ),
                          posy( PositionHolder::Axis::Y ),
@@ -1148,7 +1149,7 @@ std::string Parameter::tempoSyncNotationValue(float f)
     return res;
 }
 
-void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar )
+void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar, ModulationDisplayMode displaymode )
 {
    int detailedMode = false;
    
@@ -1171,22 +1172,40 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    case ct_delaymodtime:
    {
       if (temposync)
+      {
          sprintf(txt, "%.*f %c", dp2, 10.f * modulationDepth, '%');
+      }
       else
       {
          float  v = val.f == val_min.f ? 0.f : powf(2.0f, val.f);
-         float mp = val.f + modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f + modulationDepth);
-         float mn = val.f - modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f - modulationDepth);
+         float mp = modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f + modulationDepth);
+         float mn = modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f - modulationDepth);
 
-         if (isBipolar)
+         switch( displaymode )
          {
-            if (mp < mn || mn > mp)
-               std::swap(mp, mn);
-
-            sprintf(txt, "%.*f %s %.*f %s %.*f s", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+         case TypeIn:
+            sprintf( txt, "%.*f s", dp3, mp - v );
+            break;
+         case Menu:
+            sprintf( txt, "%.*f ... %.*f s", dp3, mn, dp3, mp );
+            break;
+         case InfoWindow:
+         {
+            if (isBipolar)
+            {
+               /*
+                 This swap seems like a good idea but it hides the negative modulation
+               if (mp < mn || mn > mp)
+                  std::swap(mp, mn);
+               */
+               
+               sprintf(txt, "%.*f %s %.*f %s %.*f s", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+            }
+            else
+               sprintf(txt, "%.*f %s %.*f s", dp3, v, uppersep, dp3, mp);
+            break;
          }
-         else
-            sprintf(txt, "%.*f %s %.*f s", dp3, v, uppersep, dp3, mp);
+         }
       }
 
       break;
@@ -2311,15 +2330,53 @@ bool Parameter::set_value_from_string( std::string s )
 /*
 ** This function returns a value in range [-1.1] scaled by the mins and maxes
 */
-float Parameter::calculate_modulation_value_from_string( const std::string &s )
+float Parameter::calculate_modulation_value_from_string( const std::string &s, bool &valid )
 {
+   valid = true;
    switch( ctrltype )
    {
+   case ct_envtime:
+   case ct_portatime:
+   case ct_reverbtime:
+   case ct_reverbpredelaytime:
+   case ct_envtime_lfodecay:
+   case ct_chorusmodtime:
+   case ct_delaymodtime:
+   {
+      if (temposync)
+      {
+         auto mv = (float)std::atof( s.c_str() ) / 10.0;
+         auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
+         return rmv;
+      }
+
+      /* modulation is displayed as
+      **
+      ** d = mp - val
+      **   = 2^(v+m) - 2^v
+      ** d + 2^v = 2^(v+m)
+      ** log2( d + 2^v ) = v + m
+      ** log2( d + 2^v ) - v = m
+      */
+
+      auto d = (float)std::atof( s.c_str() );
+      auto mv = val_min.f;
+      if( d + pow( 2.0, val.f ) > 0 )
+         mv = log2f( d + pow( 2.0, val.f ) ) - val.f;
+      else
+         valid = false;
+      
+      auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
+      return rmv;
+      break;
+   }  
    case ct_percent:
    case ct_percent_bidirectional:
    {
       auto mv = (float)std::atof( s.c_str() ) * 0.01 / ( get_extended( val_max.f ) -
                                                          get_extended( val_min.f ) );
+      if( mv < -1 || mv > 1 )
+         valid = false;
       return mv;
    }
    default:
@@ -2327,9 +2384,11 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s )
       // This works in all the linear cases so we need to handle fewer above than we'd think
       auto mv = (float)std::atof( s.c_str() ) / ( get_extended( val_max.f ) -
                                                   get_extended( val_min.f ) );
+      if( mv < -1 || mv > 1 )
+         valid = false;
       return mv;
    }
    }
-
+   valid = false;
    return 0.0;
 }
