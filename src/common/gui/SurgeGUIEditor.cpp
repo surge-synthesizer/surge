@@ -2992,7 +2992,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   char txt[256];
                   float ef = ( 1.0f * i - p->val_min.i) / ( p->val_max.i - p->val_min.i);
                   p->get_display(txt, true, ef );
-                  auto b =addCallbackMenu(contextMenu, txt,
+
+                  std::string displaytxt = txt;
+
+                  #if WINDOWS
+                     Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
+                  #endif
+
+                  auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
                                           [this,ef,p,i]() {
                                              synth->setParameter01( p->id, ef, false, false );
                                              synth->refresh_editor=true;

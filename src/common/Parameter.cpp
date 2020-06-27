@@ -1519,6 +1519,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_pitch:
       case ct_syncpitch:
       case ct_freq_mod:
+      case ct_flangerspacing:
          sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), f,
                  (storage && !storage->isStandardTuning ? "keys" : "semitones"));
          break;
@@ -1700,16 +1701,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mode )
          {
          case 0:
-            types = "All Combs and Signal";
+            types = "Dry Signal + Combs";
             break;
          case 1:
-            types = "All Combs Solo";
+            types = "Combs Only";
             break;
          case 2:
-            types = "Arpeggiated Combs and Signal";
+            types = "Dry Signal + Arpeggiated Combs";
             break;
          case 3:
-            types = "Arpeggiated Combs Solo";
+            types = "Arpeggiated Combs Only";
             break;
          }
          sprintf( txt, "%s", types.c_str() );
@@ -1720,16 +1721,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( i )
          {
          case 0:
-            sprintf( txt, "sin" );
+            sprintf( txt, "Sine" );
             break;
          case 1:
-            sprintf( txt, "tri" );
+            sprintf( txt, "Triangle" );
             break;
          case 2:
-            sprintf( txt, "saw" );
+            sprintf( txt, "Sawtooth" );
             break;
          case 3:
-            sprintf( txt, "s&h" );
+            sprintf( txt, "Sample & Hold" );
             break;
          }
       }
@@ -1962,6 +1963,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_countedset_percent:
    case ct_flangerpitch:
    case ct_flangervoices:
+   case ct_flangerspacing:
    case ct_osc_feedback:
    case ct_osc_feedback_negative:
    case ct_chorusmodtime:
@@ -2116,6 +2118,7 @@ bool Parameter::set_value_from_string( std::string s )
    }
    case ct_pitch_semi7bp:
    case ct_pitch_semi7bp_absolutable:
+   case ct_flangerspacing:
    case ct_pitch: {
       // factors 12 and 10 need to be consistent with get_extended and get_absolute returns for these ctypes
       // if those returns are changed at some point, the factors also need to be changed here
