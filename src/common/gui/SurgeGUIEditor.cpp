@@ -2554,19 +2554,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                {
                   char modtxt[256];
                   auto pmd = synth->storage.getPatch().param_ptr[md];
-                  pmd->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms), synth->isBipolarModulation(thisms));
+                  pmd->get_display_of_modulation_depth( modtxt, synth->getModDepth(md, thisms), synth->isBipolarModulation(thisms), Parameter::Menu);
                   char tmptxt[1024]; // leave room for that ubuntu 20.0 error
                   if( pmd->ctrlgroup == cg_LFO )
                   {
                      char pname[256];
                      pmd->create_fullname( pmd->get_name(), pname, pmd->ctrlgroup, pmd->ctrlgroup_entry, modulatorName(pmd->ctrlgroup_entry, true ).c_str() );
-                     sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
+                     sprintf(tmptxt, "Edit %s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
                              pname,
                              modtxt);
                   }
                   else
                   {
-                     sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
+                     sprintf(tmptxt, "Edit %s -> %s: %s", (char*)modulatorName(thisms, true).c_str(),
                              pmd->get_full_name(),
                              modtxt);
                   }
@@ -2717,7 +2717,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             contextMenu->addSeparator(eid++);
             char vtxt[1024];
-            sprintf( vtxt, "Value: %.*f %%", (detailedMode ? 6 : 2 ), 100 * cms->get_output() );
+            sprintf( vtxt, "Edit Value: %.*f %%", (detailedMode ? 6 : 2 ), 100 * cms->get_output() );
             addCallbackMenu( contextMenu, vtxt, [this, control, modsource]()
                                                    {
                                                       promptForUserValueEntry( nullptr, control, modsource );
@@ -2955,7 +2955,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          contextMenu->addSeparator(eid++);
          char txt[256], txt2[512];
          p->get_display(txt);
-         sprintf(txt2, "Value: %s", txt);
+         sprintf(txt2, "Edit Value: %s", txt);
          if( p->valtype == vt_float )
          {
             if( p->can_temposync() && p->temposync )
@@ -3272,10 +3272,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char modtxt[256];
-                     p->get_display_of_modulation_depth( modtxt, synth->getModDepth(ptag, ms), synth->isBipolarModulation(ms));
+                     p->get_display_of_modulation_depth( modtxt, synth->getModDepth(ptag, ms), synth->isBipolarModulation(ms), Parameter::Menu);
 
                      char tmptxt[512];
-                     sprintf(tmptxt, "%s -> %s: %s", (char*)modulatorName(ms, true).c_str(),
+                     sprintf(tmptxt, "Edit %s -> %s: %s", (char*)modulatorName(ms, true).c_str(),
                              p->get_name(), modtxt );
                      addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms ]() {
                                                              this->promptForUserValueEntry( p, control, ms );
@@ -3685,9 +3685,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          bool isInvalid = false;
          if( typeinMode == Param && typeinEditTarget && typeinModSource > 0 )
          {
-            auto mv = typeinEditTarget->calculate_modulation_value_from_string( t );
+            bool valid = false;
+            auto mv = typeinEditTarget->calculate_modulation_value_from_string( t, valid );
             
-            if( mv < -1.f || mv > 1.f )
+            if( ! valid )
             {
                isInvalid = true;
             }
@@ -3845,7 +3846,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
             synth->getParameterName(ptag, txt);
             sprintf(pname, "%s -> %s", modulatorName(thisms,true).c_str(), txt);
-            p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms), synth->isBipolarModulation(thisms));
+            p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms), synth->isBipolarModulation(thisms), Parameter::InfoWindow);
             ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
             modulate = true;
 
@@ -5923,15 +5924,20 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    inner->addView(typeinLabel);
 
    char txt[256];
+   char ptext[512];
    if( p )
    {
       if( ismod )
       {
-         p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms), synth->isBipolarModulation((modsources)ms));
+         char txt2[256];
+         p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms), synth->isBipolarModulation((modsources)ms), Parameter::TypeIn);
+         p->get_display(txt2);
+         sprintf( ptext, "%s from %s", txt, txt2 );
       }
       else
       {
          p->get_display(txt);
+         sprintf( ptext, "current: %s", txt );
       }
    }
    else
@@ -5939,6 +5945,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
       int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
       auto cms = ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms]);
       sprintf( txt, "%.*f %%", (detailedMode ? 6 : 2 ), 100.0 * cms->get_output() );
+      sprintf( ptext, "current: %s", txt );
    }
 
    if( ismod )
@@ -5951,8 +5958,6 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
       inner->addView(ml);
    }
 
-   char ptext[512];
-   sprintf( ptext, "current: %s", txt );
    
    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
    typeinPriorValueLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));

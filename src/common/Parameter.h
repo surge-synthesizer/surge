@@ -267,7 +267,12 @@ public:
    const char* get_storage_name();
    const wchar_t* getUnit() const;
    void get_display(char* txt, bool external = false, float ef = 0.f);
-   void get_display_of_modulation_depth(char* txt, float modulationDepth, bool isBipolar );
+   enum ModulationDisplayMode {
+      TypeIn,
+      Menu,
+      InfoWindow
+   };
+   void get_display_of_modulation_depth(char* txt, float modulationDepth, bool isBipolar, ModulationDisplayMode mode );
    void get_display_alt(char* txt, bool external = false, float ef = 0.f);
    char* get_storage_value(char*);
    void set_storage_value(int i);
@@ -283,7 +288,7 @@ public:
    get_modulation_f01(float mod);     // used by the gui to get the position of the modulated handle
    float set_modulation_f01(float v); // used by the gui to set the modulation to match the position
                                       // of the modulated handle
-   float calculate_modulation_value_from_string( const std::string &s );
+   float calculate_modulation_value_from_string( const std::string &s, bool &valid );
    
    void bound_value(bool force_integer = false);
    std::string tempoSyncNotationValue(float f);
