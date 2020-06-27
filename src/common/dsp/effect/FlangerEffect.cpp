@@ -6,14 +6,13 @@
 enum flangparam
 {
    // Basic Control
-   flng_rate = 0, // How quickly the oscillations happen
-   flng_depth, // How extreme the modulation of the delay is
-   flng_mode, // flange, phase-inverse-flange, arepeggio, vibrato
+   flng_mode = 0, // flange, phase-inverse-flange, arepeggio, vibrato
    flng_wave, // what's the wave shape
+   flng_rate, // How quickly the oscillations happen
+   flng_depth, // How extreme the modulation of the delay is
    
    // Voices
    flng_voices, // how many delay lines
-   
    flng_voice_zero_pitch, // tune the first max delay line to this (M = sr / f)
    flng_voice_spacing, // How far apart are the combs in pitch space
 
@@ -428,17 +427,17 @@ void FlangerEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[flng_rate].set_name( "Rate" );
-   fxdata->p[flng_rate].set_type( ct_lforate );
-
-   fxdata->p[flng_depth].set_name( "Depth" );
-   fxdata->p[flng_depth].set_type( ct_percent );
-
    fxdata->p[flng_mode].set_name( "Mode" );
    fxdata->p[flng_mode].set_type( ct_flangermode );
 
    fxdata->p[flng_wave].set_name( "Waveform" );
    fxdata->p[flng_wave].set_type( ct_flangerwave );
+
+   fxdata->p[flng_rate].set_name( "Rate" );
+   fxdata->p[flng_rate].set_type( ct_lforate );
+
+   fxdata->p[flng_depth].set_name( "Depth" );
+   fxdata->p[flng_depth].set_type( ct_percent );
 
    fxdata->p[flng_voices].set_name( "Count" );
    fxdata->p[flng_voices].set_type( ct_flangervoices );
@@ -446,13 +445,13 @@ void FlangerEffect::init_ctrltypes()
    fxdata->p[flng_voice_zero_pitch].set_name( "Base Pitch" );
    fxdata->p[flng_voice_zero_pitch].set_type( ct_flangerpitch );
 
-   fxdata->p[flng_voice_spacing].set_name( "Inter-Comb Spacing" );
+   fxdata->p[flng_voice_spacing].set_name( "Spacing" );
    fxdata->p[flng_voice_spacing].set_type( ct_flangerspacing );
 
    fxdata->p[flng_feedback].set_name( "Feedback" );
    fxdata->p[flng_feedback].set_type( ct_percent );
 
-   fxdata->p[flng_fb_lf_damping].set_name( "LF Damp" );
+   fxdata->p[flng_fb_lf_damping].set_name( "LF Damping" );
    fxdata->p[flng_fb_lf_damping].set_type( ct_percent );
 
    fxdata->p[flng_stereo_width].set_name( "Width" );
@@ -462,7 +461,7 @@ void FlangerEffect::init_ctrltypes()
    fxdata->p[flng_mix].set_type( ct_percent_bidirectional );
 
 
-   for( int i=flng_rate; i<flng_num_params; ++i )
+   for( int i=flng_mode; i<flng_num_params; ++i )
    {
       auto a = 1;
       if( i >= flng_voices ) a += 2;
@@ -477,19 +476,15 @@ void FlangerEffect::init_default_values()
 {
    fxdata->p[flng_rate].val.f = -2.f;
    fxdata->p[flng_depth].val.f = 1.f;
-   fxdata->p[flng_mix].val.f = 0.8f;
 
-   //flng_mode, // flange, phase-inverse-flange, arepeggio, vibrato
-
-   // Voices
-
-   fxdata->p[flng_voices].val.f = 4.0f;
+   fxdata->p[flng_voices].val.f = 4.f;
    fxdata->p[flng_voice_zero_pitch].val.f = 60.f;
-   fxdata->p[flng_voice_spacing].val.f = 0;
+   fxdata->p[flng_voice_spacing].val.f = 0.f;
    
-   //flng_feedback, // how much the output feeds back into the filters
    fxdata->p[flng_feedback].val.f = 0.f;
    fxdata->p[flng_fb_lf_damping].val.f = 0.1f;
-   fxdata->p[flng_stereo_width].val.f = 1.0f;
+   
+   fxdata->p[flng_stereo_width].val.f = 0.f;
+   fxdata->p[flng_mix].val.f = 0.8f;
 
 }
