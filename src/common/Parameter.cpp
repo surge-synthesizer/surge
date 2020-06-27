@@ -1155,91 +1155,188 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    if (storage)
       detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
 
+   int dp2 = (detailedMode ? 6 : 2);
+   int dp3 = (detailedMode ? 6 : 3);
+
+   const char *lowersep = "<", *uppersep = ">";
+
    switch (ctrltype)
    {
+   case ct_envtime:
    case ct_portatime:
    case ct_reverbtime:
-      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 10.f * modulationDepth, '%');
-      break;
-   case ct_envtime:
-   case ct_envtime_lfodecay:
-      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), (100.f / 13.f) * modulationDepth, '%');
-      break;
    case ct_reverbpredelaytime:
-      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 20.f * modulationDepth, '%');
-      break;
+   case ct_envtime_lfodecay:
    case ct_chorusmodtime:
    case ct_delaymodtime:
-      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 12.5 * modulationDepth, '%');
+   {
+      if (temposync)
+         sprintf(txt, "%.*f %c", dp2, 10.f * modulationDepth, '%');
+      else
+      {
+         float  v = val.f == val_min.f ? 0.f : powf(2.0f, val.f);
+         float mp = val.f + modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f + modulationDepth);
+         float mn = val.f - modulationDepth <= val_min.f ? 0.f : powf(2.0f, val.f - modulationDepth);
+
+         if (isBipolar)
+         {
+            if (mp < mn || mn > mp)
+               std::swap(mp, mn);
+
+            sprintf(txt, "%.*f %s %.*f %s %.*f s", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+         }
+         else
+            sprintf(txt, "%.*f %s %.*f s", dp3, v, uppersep, dp3, mp);
+      }
+
       break;
+   }
    case ct_lforate:
    case ct_lforate_deactivatable:
-      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), 6.25 * modulationDepth, '%');
+   {
+      if (temposync)
+         sprintf(txt, "%.*f %c", dp2, 10.f * modulationDepth, '%');
+      else
+      {
+         float v = powf(2.0f, val.f);
+         float mp = powf(2.0f, val.f + modulationDepth);
+         float mn = powf(2.0f, val.f - modulationDepth);
+
+         if (mp > samplerate)
+            mp = samplerate;
+
+         if (isBipolar)
+         {
+            if (mp < mn || mn > mp)
+               std::swap(mp, mn);
+
+            sprintf(txt, "%.*f %s %.*f %s %.*f Hz", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+         }
+         else
+            sprintf(txt, "%.*f %s %.*f Hz", dp3, v, uppersep, dp3, mp);
+      }
+
       break;
+   }
    case ct_amplitude:
    case ct_sendlevel:
-      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(modulationDepth + val.f) - amp_to_db(val.f));
+   {
+      float  v = amp_to_db(val.f);
+      float mp = amp_to_db(val.f + modulationDepth);
+      float mn = amp_to_db(val.f - modulationDepth);
+
+      if (isBipolar)
+      {
+         if (mp < mn || mn > mp)
+            std::swap(mp, mn);
+
+         std::string mval;
+
+         if (mn == -192.f)
+            mval = "-inf";
+         else
+         {
+            std::string origval = std::to_string(mn);
+            mval = origval.substr(0, origval.find(".") + dp2 + 1);
+         }
+
+         sprintf(txt, "%s %s %.*f %s %.*f dB", mval.c_str(), lowersep, dp2, v, uppersep, dp2, mp);
+      }
+      else
+         sprintf(txt, "%.*f %s %.*f dB", dp2, v, uppersep, dp2, mp);
+
       break;
+   }
    case ct_decibel:
    case ct_decibel_attenuation:
    case ct_decibel_attenuation_large:
    case ct_decibel_fmdepth:
    case ct_decibel_narrow:
    case ct_decibel_extra_narrow:
-      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), modulationDepth);
-      break;
    case ct_decibel_extendable:
    case ct_decibel_narrow_extendable:
-      sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), modulationDepth);
+      sprintf(txt, "%.*f dB", dp2, modulationDepth);
       break;
    case ct_bandwidth:
-      sprintf(txt, "%.*f octaves", (detailedMode ? 6 : 2), modulationDepth);
+      sprintf(txt, "%.*f octaves", dp2, modulationDepth);
       break;
    case ct_freq_shift:
-      sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), modulationDepth);
+      sprintf(txt, "%.*f Hz", dp2, modulationDepth);
       break;
    case ct_oscspread:
       if (absolute)
-         sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), modulationDepth * 16.f);
+         sprintf(txt, "%.*f Hz", dp2, modulationDepth * 16.f);
       else
-         sprintf(txt, "%.*f cents", (detailedMode ? 6 : 2), modulationDepth * 100.f);
+         sprintf(txt, "%.*f cents", dp2, modulationDepth * 100.f);
       break;
    case ct_detuning:
-      sprintf(txt, "%.*f cents", (detailedMode ? 6 : 2), modulationDepth * 100.f);
+      sprintf(txt, "%.*f cents", dp2, modulationDepth * 100.f);
       break;
    case ct_stereowidth:
-      sprintf(txt, "%.*fº", (detailedMode ? 6 : 2), modulationDepth);
+      sprintf(txt, "%.*fº", dp2, modulationDepth);
       break;
    case ct_pitch:
    case ct_pitch_semi7bp:
    case ct_syncpitch:
    case ct_freq_mod:
-      sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), modulationDepth,
+      sprintf(txt, "%.*f %s", dp2, modulationDepth,
               (storage && !storage->isStandardTuning ? "keys" : "semitones"));
       break;
    case ct_pitch_semi7bp_absolutable:
       if (absolute)
-         sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), 10.f * modulationDepth);
+         sprintf(txt, "%.*f Hz", dp2, 10.f * modulationDepth);
       else
-         sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), modulationDepth,
+         sprintf(txt, "%.*f %s", dp2, modulationDepth,
                  (storage && !storage->isStandardTuning ? "keys" : "semitones"));
       break;
    case ct_fmratio:
-      sprintf(txt, "%.*f", (detailedMode ? 6 : 2), modulationDepth);
+      sprintf(txt, "%.*f", dp2, modulationDepth);
       break;
    case ct_flangerpitch:
-      sprintf(txt, "%.*f", (detailedMode ? 6 : 2), modulationDepth);
+      sprintf(txt, "%.*f %s", dp2, modulationDepth,
+              (storage && !storage->isStandardTuning ? "keys" : "semitones"));
       break;
    case ct_freq_hpf:
    case ct_freq_audible:
    case ct_freq_audible_deactivatable:
    case ct_freq_vocoder_low:
    case ct_freq_vocoder_high:
-      sprintf(txt, "%.*f %s", (detailedMode ? 6 : 2), modulationDepth, "semitones");
+   {
+      float  v = 440.f * powf(2.0f, val.f / 12.f);
+      // we limit range here because we don't want to show crazy numbers way outside the parameter range, like 6 million Hz or whatever
+      float mp = 440.f * powf(2.0f, limit_range(val.f + modulationDepth, val_min.f, val_max.f) / 12.f);
+      float mn = 440.f * powf(2.0f, limit_range(val.f - modulationDepth, val_min.f, val_max.f) / 12.f);
+
+      if (isBipolar)
+      {
+         if (mp < mn || mn > mp)
+            std::swap(mp, mn);
+
+         sprintf(txt, "%.*f %s %.*f %s %.*f Hz", dp3, mn, lowersep, dp3, v, uppersep, dp3, mp);
+      }
+      else
+         sprintf(txt, "%.*f %s %.*f Hz", dp3, v, uppersep, dp3, mp);
+
       break;
+   }
    default:
-      sprintf(txt, "%.*f %c", (detailedMode ? 6 : 2), modulationDepth * 100.f, '%');
+   {
+      float v = val.f * 100.f;
+      float mp = (val.f + modulationDepth) * 100.f;
+      float mn = (val.f - modulationDepth) * 100.f;
+
+      if (isBipolar)
+      {
+         if (mp < mn || mn > mp)
+            std::swap(mp, mn);
+
+         sprintf(txt, "%.*f %s %.*f %s %.*f %c", dp2, mn, lowersep, dp2, v, uppersep, dp2, mp, '%');
+      }
+      else
+         sprintf(txt, "%.*f %s %.*f %c", dp2, v, uppersep, dp2, mp, '%');
+
       break;
+   }
    }
 
 }
