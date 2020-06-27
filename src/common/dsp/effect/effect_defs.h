@@ -506,7 +506,8 @@ class Reverb2Effect : public Effect
       DELAY_LEN_MASK = MAX_DELAY_LEN - 1,
       DELAY_SUBSAMPLE_BITS = 8,
       DELAY_SUBSAMPLE_RANGE = (1 << DELAY_SUBSAMPLE_BITS),
-      PREDELAY_BUFFER_SIZE = 48000 * 4 * 2; // max sample rate is 48000 * 4 probably
+      PREDELAY_BUFFER_SIZE = 48000 * 4 * 4, // max sample rate is 48000 * 4 probably
+      PREDELAY_BUFFER_SIZE_LIMIT = 48000 * 4 * 3; // allow for one second of diffusion
 
    class allpass
    {
@@ -542,7 +543,7 @@ class Reverb2Effect : public Effect
       }
       float process( float in, int tap ) {
          k = ( k + 1 ); if( k == PREDELAY_BUFFER_SIZE ) k = 0;
-         auto p = k - tap; if( p < 0 ) p += PREDELAY_BUFFER_SIZE;
+         auto p = k - tap; while( p < 0 ) p += PREDELAY_BUFFER_SIZE;
          auto res = _data[p];
          _data[k] = in;
          return res;
