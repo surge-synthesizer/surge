@@ -1240,7 +1240,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             mval = origval.substr(0, origval.find(".") + dp2 + 1);
          }
 
-         sprintf(txt, "%s %s %.*f %s %.*f dB", mval, lowersep, dp2, v, uppersep, dp2, mp);
+         sprintf(txt, "%s %s %.*f %s %.*f dB", mval.c_str(), lowersep, dp2, v, uppersep, dp2, mp);
       }
       else
          sprintf(txt, "%.*f %s %.*f dB", dp2, v, uppersep, dp2, mp);
