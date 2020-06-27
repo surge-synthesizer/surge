@@ -15,8 +15,7 @@ enum flangparam
    flng_voices, // how many delay lines
    
    flng_voice_zero_pitch, // tune the first max delay line to this (M = sr / f)
-   flng_voice_detune, // spread in cents among the delay lines   
-   flng_voice_chord, // tuning for the voices as a chord in tuning space
+   flng_voice_spacing, // How far apart are the combs in pitch space
 
    // Feedback and EQ
    flng_feedback, // how much the output feeds back into the filters
@@ -88,24 +87,6 @@ void FlangerEffect::process(float* dataL, float* dataR)
    int mode = *pdata_ival[flng_mode];
    int mwave = *pdata_ival[flng_wave];
    
-   /*
-   ** flanger tuning. Ahh a complicated topic.
-   **
-   ** Our modes map as follows
-   **
-   ** - Classic. Mix the flange tone; tune the comb filter frequency
-   ** - Classic Tuned. Mix the flange tone; Tune the comb filter velocity
-   ** - Doppler. Don't mix
-   ** - Doppler tuned. Don't mix; tune felocity
-   ** - Arp Tuned Mix - tune velocity, rotate voices, mix
-   ** - Arp Tuned Bare - tune velocity, rotate voices, don't mix
-   ** 
-   */
-
-   int tuneToDelay = true;
-   if( mode == classic_tuned || mode == doppler_tuned || mode == arp_tuned || mode == arp_tuned_bare )
-      tuneToDelay = false;
-   
    float v0 = *f[flng_voice_zero_pitch];
    vzeropitch.newValue(v0);
    vzeropitch.process();
@@ -125,7 +106,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
          }
          float lfoout = lfoval[c][i].v;
          float thisphase = lfophase[c][i];
-         if( mode == arp_tuned_bare || mode == arp_tuned )
+         if( mode == arp_mix || mode == arp_solo )
          {
             // arpeggio - everyone needs to use the same phase with the voice swap
             thisphase = longphase - (int)longphase;
@@ -177,57 +158,9 @@ void FlangerEffect::process(float* dataL, float* dataR)
          }
 
 
-         auto ichord = *pdata_ival[flng_voice_chord];
-         float pitch = v0;
-         switch( ichord )
-         {
-         case 0: // unisons
-            pitch = v0;
-            break;
-         case 1: // ocraves
-            pitch = v0 + i * storage->currentScale.count;
-            break;
-         case 2: // m2nds up to 5ths
-         case 3:
-         case 4:
-         case 5:
-         case 6:
-         case 7:
-         case 8:
-         {
-            auto step = ichord - 1;
-            pitch = v0 + step * i;
-         }
-            break;
-         case 9:
-            pitch = v0 + (i == 0 ? 0 : ( i == 1 ? 4 : ( i == 2 ?  7 : 12 ) ) );
-            break;
-         case 10:
-            pitch = v0 + ( i == 0 ? 0 : ( i == 1 ? 3 : ( i == 2 ?  7 : 12 ) ) );
-            break;
-         case 11:
-            pitch = v0 + ( i == 0 ? 0 : ( i == 1 ? 4 : ( i == 2 ?  7 : 10 ) ) );
-            break;
-         case 12:
-            pitch = v0 + ( i == 0 ? 0 : ( i == 1 ? 4 : ( i == 2 ?  7 : 11 ) ) );
-            break;
-         default:
-            pitch = v0;
-            break;
-         };
-         pitch += *f[flng_voice_detune] * i;
-
-         // Tuning goes here
-         float nv = 0;
-         if( tuneToDelay )
-         {
-            nv = samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
-         }
-         else
-         {
-            // OK so now we have a base pitch and a chord. 
-            nv = samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
-         }
+         auto combspace = *f[flng_voice_spacing];
+         float pitch = v0 + combspace * i;
+         float nv = samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
 
          // OK so biggest  tap = delaybase[c][i].v * ( 1.0 + lfoval[c][i].v * depth.v ) + 1;
          // Assume lfoval is [-1,1] and depth is known
@@ -249,25 +182,34 @@ void FlangerEffect::process(float* dataL, float* dataR)
    mix.newValue( *f[flng_mix] );
    voices.newValue( limit_range( *f[flng_voices], 1.f, 4.f ) );
    float feedbackScale = 0.4 * sqrt( ( limit_range( dApprox, 2.f, 60.f ) + 30 ) / 100.0 );
-   if( mode == classic_tuned || mode == classic )
+
+   // Feedbackadjust based on mode
+   switch( mode )
    {
-      // OK so we want feedback to go up as voice goes down
-      // below we set gain = 1  - 1 / sqrt(7 - voices)
-      // so we want to increase feedback by that amount. We want
-      // about 0.45 at voices = 4 and about 0.85 at voices = 1.
-      float dv = ( voices.v - 1 );
-      feedbackScale += ( 3.0 - dv ) * 0.45 / 3.0;
-   }
-   
-   if( mode == doppler_tuned || mode == doppler )
+   case classic:
    {
       float dv = ( voices.v - 1 );
       feedbackScale += ( 3.0 - dv ) * 0.45 / 3.0;
+      break;
    }
-   if( mode == arp_tuned || mode == arp_tuned_bare )
+   case doppler:
    {
-      feedbackScale = 0.9;
+      float dv = ( voices.v - 1 );
+      feedbackScale += ( 3.0 - dv ) * 0.45 / 3.0;
+      break;
    }
+   case arp_solo:
+   {
+      feedbackScale += 0.2; // this is one voice doppler basically
+   }
+   case arp_mix:
+   {
+      feedbackScale += 0.3; // this is one voice classic basically and the steady signal clamps away feedback more
+   }
+   default:
+      break;
+   }
+
    float fbv = *f[flng_feedback];
    if( fbv > 0 )
       ringout_value = samplerate * 32.0;
@@ -293,7 +235,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
       for( int i=0; i<COMBS_PER_CHANNEL; ++i )
          vweights[c][i] = 0;
       
-      if( mode == arp_tuned_bare || mode == arp_tuned )
+      if( mode == arp_mix || mode == arp_solo )
       {
          int ilp = (int)longphase;
          float flp = longphase - ilp;
@@ -376,7 +318,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
       idels[1].push( vr );
       
       auto origw = 1.f;
-      if( mode == doppler || mode == doppler_tuned || mode == arp_tuned_bare )
+      if( mode == doppler || mode == arp_solo )
       {
          // doppler modes
          origw = 0.f;
@@ -387,11 +329,22 @@ void FlangerEffect::process(float* dataL, float* dataR)
 
       // Some gain heueirstics
       float gainadj = 0.0;
-      if( mode == classic || mode == classic_tuned )
+      switch( mode )
+      {
+      case classic:
          gainadj = - 1 / sqrt(7 - voices.v);
-      
-      if( mode == doppler || mode == doppler_tuned )
+         break;
+      case doppler:
          gainadj = - 1 / sqrt(8 - voices.v);
+         break;
+      case arp_mix:
+         gainadj = -1 / sqrt(6);
+         break;
+      case arp_solo:
+         gainadj = -1 / sqrt(7);
+         break;
+      }
+      
       gainadj -= 0.07 * mix.v;
 
       outl = limit_range( (1.0f + gainadj ) * outl, -1.f, 1.f );
@@ -464,9 +417,9 @@ int FlangerEffect::group_label_ypos(int id)
    case 1:
       return 11;
    case 2:
-      return 21;
+      return 19;
    case 3:
-      return 27;
+      return 25;
    }
    return 0;
 }
@@ -493,11 +446,8 @@ void FlangerEffect::init_ctrltypes()
    fxdata->p[flng_voice_zero_pitch].set_name( "Base Pitch" );
    fxdata->p[flng_voice_zero_pitch].set_type( ct_flangerpitch );
 
-   fxdata->p[flng_voice_detune].set_name( "Detune" );
-   fxdata->p[flng_voice_detune].set_type( ct_percent_bidirectional );
-
-   fxdata->p[flng_voice_chord].set_name( "Chord" );
-   fxdata->p[flng_voice_chord].set_type( ct_flangerchord );
+   fxdata->p[flng_voice_spacing].set_name( "Inter-Comb Spacing" );
+   fxdata->p[flng_voice_spacing].set_type( ct_flangerspacing );
 
    fxdata->p[flng_feedback].set_name( "Feedback" );
    fxdata->p[flng_feedback].set_type( ct_percent );
@@ -535,8 +485,7 @@ void FlangerEffect::init_default_values()
 
    fxdata->p[flng_voices].val.f = 4.0f;
    fxdata->p[flng_voice_zero_pitch].val.f = 60.f;
-   fxdata->p[flng_voice_detune].val.f = 0;
-   fxdata->p[flng_voice_chord].val.i = 0;
+   fxdata->p[flng_voice_spacing].val.f = 0;
    
    //flng_feedback, // how much the output feeds back into the filters
    fxdata->p[flng_feedback].val.f = 0.f;

@@ -103,7 +103,7 @@ enum ctrltypes
    ct_flangermode,
    ct_flangerwave,
    ct_flangervoices,
-   ct_flangerchord,
+   ct_flangerspacing,
    ct_osc_feedback,
    ct_osc_feedback_negative,
    ct_chorusmodtime,
