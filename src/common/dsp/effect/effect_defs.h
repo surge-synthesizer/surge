@@ -616,11 +616,9 @@ class FlangerEffect : public Effect
 {
    enum Modes {
       classic,
-      classic_tuned,
       doppler,
-      doppler_tuned,
-      arp_tuned,
-      arp_tuned_bare
+      arp_mix,
+      arp_solo
    };
    enum Waves {
       sinw,

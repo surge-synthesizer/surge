@@ -701,7 +701,7 @@ void Parameter::set_type(int ctrltype)
       break;
    case ct_flangermode:
       val_min.i = 0;
-      val_max.i = 5; // classic, classic tuned, doppler, doppler tuned, arpeggio blend, arpeggio bare
+      val_max.i = 3; // classic, dopler, arpmix, arpsolo
       valtype = vt_int;
       val_default.i = 0;
       break;
@@ -710,11 +710,11 @@ void Parameter::set_type(int ctrltype)
       val_max.i = 3; // sin, tri, saw, s&h
       val_default.i = 0;
       break;
-   case ct_flangerchord:
-      val_min.i = 0;
-      val_max.i = 12;
-      valtype = vt_int;
-      val_default.i = 0;
+   case ct_flangerspacing:
+      val_min.f = 0;
+      val_max.f = 12;
+      valtype = vt_float;
+      val_default.f = 0;
       break;
    case ct_osc_feedback:
       val_min.f = 0;
@@ -1603,22 +1603,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mode )
          {
          case 0:
-            types = "Classic";
+            types = "All Combs and Signal";
             break;
          case 1:
-            types = "Classic Tuned";
+            types = "All Combs Solo";
             break;
          case 2:
-            types = "Doppler";
+            types = "Arpeggiated Combs and Signal";
             break;
          case 3:
-            types = "Doppler Tuned";
-            break;
-         case 4:
-            types = "Arpeggio Tuned Mixed";
-            break;
-         case 5:
-            types = "Arpeggio Tuned Bare";
+            types = "Arpeggiated Combs Solo";
             break;
          }
          sprintf( txt, "%s", types.c_str() );
@@ -1643,56 +1637,6 @@ void Parameter::get_display(char* txt, bool external, float ef)
          }
       }
       break;
-      case ct_flangerchord:
-      {
-         int mode = i;
-
-         std::string types;
-         switch( mode )
-         {
-         case 0:
-            types = "Unison";
-            break;
-         case 1:
-            types = "Octaves";
-            break;
-         case 2:
-            types = "Minor 2nds";
-            break;
-         case 3:
-            types = "Major 2nds";
-            break;
-         case 4:
-            types = "Diminished";
-            break;
-         case 5:
-            types = "Augmented";
-            break;
-         case 6:
-            types = "4ths";
-            break;
-         case 7:
-            types = "Tritones";
-            break;
-         case 8:
-            types = "5ths";
-            break;
-         case 9:
-            types = "Major";
-            break;
-         case 10:
-            types = "Minor";
-            break;
-         case 11:
-            types = "Dominant";
-            break;
-         case 12:
-            types = "Major 7th";
-            break;
-         }
-         sprintf( txt, "%s", types.c_str() );
-      }
-         break;
       default:
          sprintf(txt, "%i", i);
          break;
