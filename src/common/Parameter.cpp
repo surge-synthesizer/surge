@@ -783,7 +783,6 @@ void Parameter::set_type(int ctrltype)
    case ct_countedset_percent:
       displayType = LinearWithScale;
       sprintf(displayInfo.unit, "%%" );
-      displayInfo.decimals = 2;
       displayInfo.scale = 100;
       break;
 
@@ -792,7 +791,7 @@ void Parameter::set_type(int ctrltype)
        */
    case ct_pitch_semi7bp_absolutable:
       displayInfo.absoluteFactor = 10.0;
-      //displayInfo.absoluteUnit = "Hz";
+      sprintf( displayInfo.absoluteUnit, "Hz" );
    case ct_pitch_semi7bp:
    case ct_flangerspacing:
       displayInfo.extendFactor = 12.0;
@@ -802,8 +801,6 @@ void Parameter::set_type(int ctrltype)
    case ct_flangerpitch:
       displayType = LinearWithScale;
       displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
-      displayInfo.decimals = 2;
-      displayInfo.scale = 1;
       break;
    case ct_freq_hpf:
    case ct_freq_audible:
@@ -820,8 +817,6 @@ void Parameter::set_type(int ctrltype)
    case ct_freq_shift:
       displayType = LinearWithScale;
       sprintf(displayInfo.unit, "Hz" );
-      displayInfo.scale = 1.0;
-      displayInfo.decimals = 2;
       displayInfo.extendFactor = 100.0;
       break;
       
@@ -839,8 +834,7 @@ void Parameter::set_type(int ctrltype)
       displayInfo.customFeatures |= ParamDisplayFeatures::kHasCustomMinValue;
       displayInfo.minLabelValue = 0.f;
       displayInfo.tempoSyncNotationMultiplier = 1.f;
-      displayInfo.a = 1.0;
-      displayInfo.b = 1.0;
+      sprintf( displayInfo.unit, "s" );
       displayInfo.decimals = 3;
       break;
 
@@ -848,24 +842,19 @@ void Parameter::set_type(int ctrltype)
    case ct_lforate_deactivatable:
       displayType = ATwoToTheBx;
       displayInfo.decimals = 3;
-      displayInfo.a = 1.0;
-      displayInfo.b = 1.0;
       displayInfo.tempoSyncNotationMultiplier = -1.0f;
       displayInfo.modulationCap = 48000;
+      sprintf( displayInfo.unit, "Hz" );
       break;
 
    case ct_decibel_extendable:
       displayType = LinearWithScale;
-      displayInfo.scale = 1.0;
-      displayInfo.decimals = 2;
       sprintf( displayInfo.unit, "dB" );
       displayInfo.extendFactor = 5;
       break;
 
    case ct_decibel_narrow_extendable:
       displayType = LinearWithScale;
-      displayInfo.scale = 1.0;
-      displayInfo.decimals = 2;
       sprintf( displayInfo.unit, "dB");
       displayInfo.extendFactor = 3;
       break;
@@ -877,15 +866,11 @@ void Parameter::set_type(int ctrltype)
    case ct_decibel_narrow:
    case ct_decibel_extra_narrow:
       displayType = LinearWithScale;
-      displayInfo.scale = 1.0;
-      displayInfo.decimals = 2;
       sprintf(displayInfo.unit, "dB");
       break;
 
    case ct_bandwidth:
       displayType = LinearWithScale;
-      displayInfo.scale = 1.0;
-      displayInfo.decimals = 2;
       sprintf(displayInfo.unit, "octaves");
       break;
 
@@ -893,14 +878,12 @@ void Parameter::set_type(int ctrltype)
       displayType = LinearWithScale;
       displayInfo.scale = 100.0;
       sprintf(displayInfo.unit, "cents");
-      displayInfo.decimals = 2;
       break;
 
    case ct_stereowidth:
       displayType = LinearWithScale;
       displayInfo.scale = 1.0;
       sprintf(displayInfo.unit, "º");
-      displayInfo.decimals = 2;
       break;
 
    case ct_oscspread:
