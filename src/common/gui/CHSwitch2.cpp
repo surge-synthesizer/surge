@@ -50,7 +50,7 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
    if (mouseDowns > 1)
       return kMouseEventHandled;
 
-   if (listener && buttons & (kAlt | kShift | kRButton | kControl | kApple) && !(buttons & kLButton))
+   if (listener && buttons & (kAlt | kShift | kRButton | kControl | kApple))
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;

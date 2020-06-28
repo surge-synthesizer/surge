@@ -25,6 +25,8 @@ public:
       this->rows = rows;
       this->columns = columns;
       this->dragable = dragable;
+
+      mouseDowns = 0;
       imgoffset = 0;
       usesMouseWheel = true; // use mousewheel by default
    }
