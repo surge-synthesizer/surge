@@ -1252,17 +1252,35 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
       float mp = amp_to_db(val.f + modulationDepth);
       float mn = amp_to_db(val.f - modulationDepth);
 
-      std::string mval;
+      std::string posval;
+      std::string negval;
+      std::string val;
 
       if (isBipolar)
       {
          if (mn <= -192.f)
-            mval = "-inf";
+            negval = "-inf";
          else
          {
             std::string origval = std::to_string(mn);
-            mval = origval.substr(0, origval.find(".") + dp2 + 1);
+            negval = origval.substr(0, origval.find(".") + dp2 + 1);
          }
+      }
+
+      if (mp <= -192.f)
+         posval = "-inf";
+      else
+      {
+         std::string origval = std::to_string(mp);
+         posval = origval.substr(0, origval.find(".") + dp2 + 1);
+      }
+
+      if (v <= -192.f)
+         val = "-inf";
+      else
+      {
+         std::string origval = std::to_string(v);
+         val = origval.substr(0, origval.find(".") + dp2 + 1);
       }
 
       switch( displaymode )
@@ -1272,20 +1290,20 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
          break;
       case Menu:
          if( isBipolar ) {
-            sprintf(txt, "%s ... %.*f dB", mval.c_str(),  dp2, mp);
+            sprintf(txt, "%s ... %s dB", negval.c_str(), posval.c_str());
          }
          else
          {
-            sprintf(txt, "%.*f ... %.*f dB", dp2, v, dp2, mp);
+            sprintf(txt, "%s ... %s dB", val.c_str(), negval.c_str());
          }
          break;
       case InfoWindow:
          if( isBipolar ) {
-            sprintf(txt, "%s %s %.*f %s %.*f dB", mval.c_str(), lowersep, dp2, v, uppersep, dp2, mp);
+            sprintf(txt, "%s %s %s %s %s dB", negval.c_str(), lowersep, val.c_str(), uppersep, posval.c_str());
          }
          else
          {
-            sprintf(txt, "%.*f %s %.*f dB", dp2, v, uppersep, dp2, mp);
+            sprintf(txt, "%s %s %s dB", val.c_str(), uppersep, posval.c_str());
          }
          break;
       }
@@ -2368,7 +2386,7 @@ bool Parameter::set_value_from_string( std::string s )
       }
       else
       {
-         if (nv < -1000 || nv > 100) {
+         if (nv < -100 || nv > 100) {
             return false;
          }
 
@@ -2505,9 +2523,14 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
       return rmv;
    }
    break;
+   case ct_countedset_percent:
    case ct_detuning:
+   case ct_osc_feedback:
+   case ct_osc_feedback_negative:
    case ct_percent:
+   case ct_percent200:
    case ct_percent_bidirectional:
+   case ct_rotarydrive:
    {
       auto mv = (float)std::atof( s.c_str() ) * 0.01 / ( get_extended( val_max.f ) -
                                                          get_extended( val_min.f ) );
