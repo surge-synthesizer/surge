@@ -9,6 +9,7 @@
 
   <!-- Special controls - bit of a hack but here they are -->
   <special id="scene-select" help_url="#the-scene-concept"/>
+  <special id="osc-select" help_url="#oscillators"/>
   <special id="mpe-menu" help_url="#mpe"/>
   <special id="tun-menu" help_url="#tuning-options"/>
   <special id="zoom-menu" help_url="#zoom"/>
