@@ -766,6 +766,14 @@ void Parameter::set_type(int ctrltype)
    /*
    ** Setup display info here
    */
+   displayType = Custom;
+   DisplayInfo d; // reset everything to default
+   displayInfo = d;
+   displayInfo.unit[0] = 0;
+   displayInfo.absoluteUnit[0] = 0;
+   displayInfo.minLabel[0] = 0;
+   displayInfo.maxLabel[0] = 0;
+   
    switch( ctrltype )
    {
    case ct_percent:
