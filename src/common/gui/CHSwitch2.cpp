@@ -46,6 +46,10 @@ void CHSwitch2::draw(CDrawContext* dc)
 
 CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   mouseDowns++;
+   if (mouseDowns > 1)
+      return kMouseEventHandled;
+
    if (listener && buttons & (kAlt | kShift | kRButton | kControl | kApple))
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
@@ -93,6 +97,8 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
 }
 CMouseEventResult CHSwitch2::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+   mouseDowns--;
+
    if (dragable)
    {
       endEdit();

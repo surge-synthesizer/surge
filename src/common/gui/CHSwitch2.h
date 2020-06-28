@@ -25,6 +25,8 @@ public:
       this->rows = rows;
       this->columns = columns;
       this->dragable = dragable;
+
+      mouseDowns = 0;
       imgoffset = 0;
       usesMouseWheel = true; // use mousewheel by default
    }
@@ -33,6 +35,7 @@ public:
    // This matches the paint offset
    virtual int getIValue() { return (int)(value * (float)(rows * columns - 1) + 0.5f); }
    
+   int mouseDowns;
    int imgoffset;
    bool dragable;
    bool usesMouseWheel;
