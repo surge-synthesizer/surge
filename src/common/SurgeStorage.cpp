@@ -445,7 +445,6 @@ bailOnPortable:
    }
    else
    {
-      std::cout << "Loaded " << dsf << " without concern" << std::endl;
       TiXmlElement* pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
       if( ! pdoc )
       {

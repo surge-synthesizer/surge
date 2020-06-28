@@ -2345,8 +2345,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          int eid = 0;
 
          char txt[256];
-         sprintf(txt, "Osc %i", a + 1);
-         contextMenu->addEntry(txt, eid++);
+         auto hu = helpURLForSpecial( "osc-select" );
+         if( hu != "" )
+         {
+            sprintf(txt, "[?] Osc %i", a + 1);
+            auto lurl = fullyResolvedHelpURL(hu);
+            addCallbackMenu(contextMenu, txt, [lurl]() {
+                                                 Surge::UserInteractions::openURL( lurl );
+                                              } );
+            eid++;
+         }
+         else
+         {
+            sprintf(txt, "Osc %i", a + 1);
+            contextMenu->addEntry(txt, eid++);
+         }
+
          contextMenu->addSeparator(eid++);
          addCallbackMenu(contextMenu, "Copy",
                          [this, a]() { synth->storage.clipboard_copy(cp_osc, current_scene, a); });
@@ -5924,7 +5938,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    inner->addView(typeinLabel);
 
    char txt[256];
-   char ptext[512];
+   char ptext[1024];
    if( p )
    {
       if( ismod )

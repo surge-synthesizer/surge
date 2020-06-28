@@ -5,6 +5,8 @@
 #include "globals.h"
 #include <string>
 #include <memory>
+#include <cstdint>
+#include <functional>
 
 union pdata
 {
@@ -227,6 +229,12 @@ private:
 
 class SurgeStorage;
 
+/*
+** WARNING WARNING
+**
+** Parameter is copied with memcpy
+** Don't have complex types as members therefore
+*/
 class Parameter
 {
 public:
@@ -320,6 +328,39 @@ public:
    bool temposync, extend_range, absolute, deactivated;
    bool porta_constrate, porta_gliss, porta_retrigger;
    int porta_curve;
+
+   enum ParamDisplayType {
+      Custom,
+      LinearWithScale,
+      ATwoToTheBx,
+      Decibel
+   } displayType = Custom;
+
+   enum ParamDisplayFeatures {
+      kHasCustomMinString = 1 << 0,
+      kHasCustomMaxString = 1 << 1,
+      kHasCustomMinValue = 1 << 2,
+      kHasCustomMaxValue = 1 << 3,
+      kUnitsAreSemitonesOrKeys = 1 << 4
+   };
+   
+   struct DisplayInfo {
+      char unit[128], absoluteUnit[128];
+      float scale = 1;
+      float a = 1.0, b = 1.0;
+      int decimals = 2;
+      int64_t customFeatures = 0;
+
+      float tempoSyncNotationMultiplier = 1.f;
+      
+      char minLabel[128], maxLabel[128];
+      float minLabelValue = 0.f, maxLabelValue = 0.f;
+
+      float modulationCap = -1.f;
+      
+      float extendFactor = 1.0, absoluteFactor = 1.0; // set these to 1 in case we sneak by and divide by accident
+   } displayInfo;
+      
    
    ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable
