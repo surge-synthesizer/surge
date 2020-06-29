@@ -258,16 +258,21 @@ void CSurgeSlider::draw(CDrawContext* dc)
    if( modmode )
    {
       CRect trect = hrect;
+      CRect trect2 = hrect;
+
       CColor ColBar = skin->getColor("slider.modulation", CColor(173, 255, 107, 255));
+      CColor ColBar2 = skin->getColor("slider.negative.modulation", CColor(255, 144, 0, 255));
 
       ColBar.alpha = (int)(slider_alpha * 255.f);
 
       // float moddist = modval * range;
       // We want modval + value to be bould by -1 and 1. So
       float modup = modval;
-      bool overtop = false;
       float moddn = modval;
+      bool overtop = false;
       bool overbot = false;
+      bool overotherside = false;
+
       if( modup + value > 1.f )
       {
          overtop = true;
@@ -276,6 +281,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       if( modup + value < 0.f )
       {
          overbot = true;
+         overotherside = true;
          modup = 0.f - value;
       }
       if( value - moddn < 0.f )
@@ -286,6 +292,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       if( value - moddn > 1.f )
       {
          overtop = true;
+         overotherside = true;
          moddn = value - 1.f;
       }
       // at some point in the future draw something special with overtop and overbot
@@ -303,10 +310,15 @@ void CSurgeSlider::draw(CDrawContext* dc)
       */
 
       std::vector<CRect> drawThese;
+      std::vector<CRect> drawTheseToo;
+
       if (style & CSlider::kHorizontal)
       {
          trect.top += 8;
          trect.bottom = trect.top + 2;
+
+         trect2.top += 8;
+         trect2.bottom = trect2.top + 2;
 
          if( ! modulation_is_bipolar )
          {
@@ -318,10 +330,19 @@ void CSurgeSlider::draw(CDrawContext* dc)
             trect.left += 11;
             trect.right = trect.left + modup;
             trect.left -= moddn;
+            
+            trect2.right -= 17;
+            trect2.left = trect2.right - moddn;
          }
+
          if( trect.left > trect.right )
             std::swap( trect.left, trect.right );
+
+         if( trect2.left > trect2.right )
+            std::swap( trect2.left, trect2.right );
+         
          drawThese.push_back( trect );
+         drawTheseToo.push_back( trect2 );
 
          if( overtop )
          {
@@ -330,7 +351,11 @@ void CSurgeSlider::draw(CDrawContext* dc)
             topr.bottom = trect.bottom;
             topr.left = trect.right + 1;
             topr.right = topr.left + 3;
-            drawThese.push_back(topr);
+
+            if (overotherside)
+               drawTheseToo.push_back(topr);
+            else
+               drawThese.push_back(topr);
          }
 
          if( overbot )
@@ -340,7 +365,11 @@ void CSurgeSlider::draw(CDrawContext* dc)
             topr.bottom = trect.bottom;
             topr.left = trect.left - 4;
             topr.right = topr.left + 3;
-            drawThese.push_back(topr);
+
+            if (overotherside)
+               drawThese.push_back(topr);
+            else
+               drawTheseToo.push_back(topr);
          }
       }
       else
@@ -388,14 +417,14 @@ void CSurgeSlider::draw(CDrawContext* dc)
       {
          dc->setFillColor( ColBar );
          dc->drawRect( r, VSTGUI::kDrawFilled );
-         /*
-         dc->setLineWidth( 0.5 );
-         dc->setFrameColor( VSTGUI::kBlackCColor );
-         r.right += 0.9;
-         r.bottom += 0.9;
-         dc->drawRect( r, VSTGUI::kDrawStroked );
-         */
       }
+
+      if (modulation_is_bipolar)
+          for( auto n : drawTheseToo )
+          {
+             dc->setFillColor( ColBar2 );
+             dc->drawRect( n, VSTGUI::kDrawFilled );
+          }
    }
    
 

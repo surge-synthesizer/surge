@@ -89,6 +89,7 @@
     <color id="slider.light.label" value="$lightgray"/>
     <color id="slider.dark.label" value="$lightgray"/>
     <color id="slider.modulation" value="#FFBF00"/>
+    <color id="slider.negative.modulation" value="$gray"/>
 
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="$red"/>
