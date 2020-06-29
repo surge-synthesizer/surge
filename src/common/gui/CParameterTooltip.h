@@ -5,6 +5,7 @@
 #include "vstcontrols.h"
 #include "Parameter.h"
 #include <iostream>
+#include "UserDefaults.h"
 
 class CParameterTooltip : public VSTGUI::CControl
 {
@@ -105,17 +106,29 @@ public:
             VSTGUI::CRect tmid(trect);
             tmid.bottom = trect.bottom - 18;
             tmid.top = trect.top + 15;
+            if( ! extendedwsstrings )
+            {
+               tmid = tlower;
+            }
             if (label[0][0])
             {
                dc->drawString(label[0], tupper, VSTGUI::kLeftText, true);
             }
-            dc->drawString( iwstrings.val.c_str(), tmid, VSTGUI::kCenterText, true );
-            dc->drawString( iwstrings.valplus.c_str(), tmid, VSTGUI::kRightText, true );
-            dc->drawString( iwstrings.valminus.c_str(), tmid, VSTGUI::kLeftText, true );
 
-            dc->drawString( "width", tlower, VSTGUI::kCenterText, true );
-            dc->drawString( iwstrings.dvalplus.c_str(), tlower, VSTGUI::kRightText, true );
-            dc->drawString( iwstrings.dvalminus.c_str(), tlower, VSTGUI::kLeftText, true );
+            if( ! extendedwsstrings )
+            {
+               dc->drawString( iwstrings.val.c_str(), tmid, VSTGUI::kLeftText, true );
+               dc->drawString( iwstrings.dvalplus.c_str(), tmid, VSTGUI::kRightText, true );
+            }
+            else
+            {
+               dc->drawString( iwstrings.val.c_str(), tmid, VSTGUI::kCenterText, true );
+               dc->drawString( iwstrings.dvalplus.c_str(), tmid, VSTGUI::kRightText, true );
+               dc->drawString( iwstrings.dvalminus.c_str(), tmid, VSTGUI::kLeftText, true );
+               
+               dc->drawString( iwstrings.valplus.c_str(), tlower, VSTGUI::kRightText, true );
+               dc->drawString( iwstrings.valminus.c_str(), tlower, VSTGUI::kLeftText, true );
+            }
          }
          else
          {
@@ -143,6 +156,11 @@ public:
          hasiwstrings = true;
       }
 
+   void setExtendedMDIWS(bool b)
+      {
+         extendedwsstrings = b;
+      }
+   
    void clearMDIWS() { hasiwstrings = false; }
    bool hasMDIWS() { return hasiwstrings; }
    
@@ -150,9 +168,10 @@ protected:
    char label[2][256], label2left[256];
    bool visible;
    int last_tag;
-
+   
    ModulationDisplayInfoWindowStrings iwstrings;
    bool hasiwstrings = false;
+   bool extendedwsstrings = false;
    
    CLASS_METHODS(CParameterTooltip, VSTGUI::CControl)
 };

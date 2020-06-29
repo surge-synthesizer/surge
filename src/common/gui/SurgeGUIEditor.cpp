@@ -4194,10 +4194,13 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    // of for these to be TextLabels so we can call sizeToFit
    if( ml > 24 )
       iff += ( ml - 24 ) * 5;
-   
+
+   auto modValues = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", 0);
+
+   ((CParameterTooltip*)infowindow)->setExtendedMDIWS(modValues);
    CRect r(0, 0, iff, 18);
    if (modulate)
-      r.bottom += ( ((CParameterTooltip*)infowindow)->hasMDIWS() ? 36 : 18 );
+      r.bottom += ( ((CParameterTooltip*)infowindow)->hasMDIWS() & modValues ? 36 : 18 );
    
    CRect r2 = control->getViewSize();
 
@@ -5029,6 +5032,13 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", precReadout ? 0 : 1);
    });
    menuItem->setChecked(precReadout);
+
+   auto modValues = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", 0);
+
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Modulation Popup Shows Bounds"), [this, modValues]() {
+       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", modValues? 0 : 1);
+   });
+   menuItem->setChecked(modValues);
 
    return uiOptionsMenu;
 }

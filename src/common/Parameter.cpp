@@ -1365,8 +1365,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                sprintf( itxt, "%.*f %s", displayInfo.decimals, f, u.c_str() ); iw->val = itxt;
                sprintf( itxt, "%.*f", displayInfo.decimals, f+mf ); iw->valplus = itxt;
                sprintf( itxt, "%.*f", displayInfo.decimals, f-mf ); iw->valminus = itxt;
-               sprintf( itxt, "%.*f", displayInfo.decimals, +mf ); iw->dvalplus = itxt;
-               sprintf( itxt, "%.*f", displayInfo.decimals, -mf ); iw->dvalminus = itxt;
+               sprintf( itxt, "%s%.*f", (mf>0?"+":""), displayInfo.decimals, +mf ); iw->dvalplus = itxt;
+               sprintf( itxt, "%s%.*f", (mf>0?"+":""), displayInfo.decimals, -mf ); iw->dvalminus = itxt;
             }
             sprintf( txt, "%.*f %s %.*f %s %.*f %s", displayInfo.decimals, f - mf, lowersep, displayInfo.decimals, f, uppersep, displayInfo.decimals, f + mf, u.c_str() );
          }
@@ -1378,7 +1378,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                sprintf( itxt, "%.*f %s", displayInfo.decimals, f, u.c_str() ); iw->val = itxt;
                sprintf( itxt, "%.*f", displayInfo.decimals, f+mf ); iw->valplus = itxt;
                iw->valminus = "";
-               sprintf( itxt, "%.*f", displayInfo.decimals, +mf ); iw->dvalplus = itxt;
+               sprintf( itxt, "%s%.*f", (mf>0?"+":""), displayInfo.decimals,  mf ); iw->dvalplus = itxt;
                iw->dvalminus = "";
             }
             sprintf( txt, "%.*f %s %.*f %s", displayInfo.decimals, f, uppersep, displayInfo.decimals, f + mf, u.c_str() );
@@ -1431,10 +1431,10 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             sprintf( txt, "%.*f %s", displayInfo.decimals, mp - v, u.c_str() );
             break;
          case Menu:
-            if( isBipolar )
-               sprintf( txt, "%.*f / %.*f %s", displayInfo.decimals, mn-v, displayInfo.decimals, mp-v, u.c_str() );
-            else
-               sprintf( txt, "%.*f %s", displayInfo.decimals, mp-v, u.c_str() );
+            //if( isBipolar )
+            //   sprintf( txt, "%.*f / %.*f %s", displayInfo.decimals, mn-v, displayInfo.decimals, mp-v, u.c_str() );
+            //else
+            sprintf( txt, "%s%.*f %s",(mp-v>0)?"+":"", displayInfo.decimals, mp-v, u.c_str() );
             break;
          case InfoWindow:
          {
@@ -1446,8 +1446,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                   sprintf( itxt, "%.*f %s", displayInfo.decimals, v, u.c_str() ); iw->val = itxt;
                   sprintf( itxt, "%.*f", displayInfo.decimals, mp ); iw->valplus = itxt;
                   sprintf( itxt, "%.*f", displayInfo.decimals, mn ); iw->valminus = itxt;
-                  sprintf( itxt, "%.*f", displayInfo.decimals, mp-v ); iw->dvalplus = itxt;
-                  sprintf( itxt, "%.*f", displayInfo.decimals, v-mn ); iw->dvalminus = itxt;
+                  sprintf( itxt, "%s%.*f", (mp-v>0?"+":""), displayInfo.decimals, mp-v ); iw->dvalplus = itxt;
+                  sprintf( itxt, "%s%.*f", (mn-v>0?"+":""), displayInfo.decimals, mn-v ); iw->dvalminus = itxt;
                }
 
                sprintf(txt, "%.*f %s %.*f %s %.*f %s", displayInfo.decimals, mn, lowersep, displayInfo.decimals, v, uppersep, displayInfo.decimals, mp, u.c_str());
@@ -1460,7 +1460,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                   sprintf( itxt, "%.*f %s", displayInfo.decimals, v, u.c_str() ); iw->val = itxt;
                   sprintf( itxt, "%.*f", displayInfo.decimals, mn ); iw->valplus = itxt;
                   iw->valminus = "";
-                  sprintf( itxt, "%.*f", displayInfo.decimals, mp-v ); iw->dvalplus = itxt;
+                  sprintf( itxt, "%s%.*f", (mp-v>0?"+":""),displayInfo.decimals, mp-v ); iw->dvalplus = itxt;
                   iw->dvalminus = "";
                }
 
