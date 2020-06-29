@@ -812,6 +812,7 @@ void Parameter::set_type(int ctrltype)
       displayInfo.a = 440.0;
       displayInfo.b = 1.0f / 12.0f;
       displayInfo.decimals = 3;
+      displayInfo.modulationCap = 96000;
       break;
 
    case ct_freq_shift:

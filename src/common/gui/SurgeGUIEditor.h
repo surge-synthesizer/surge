@@ -223,6 +223,8 @@ public:
    std::string tuningToHtml();
 
    void queueRebuildUI() { queue_refresh = true; synth->refresh_editor = true; }
+
+   std::string midiMappingToHtml();
    
 private:
    /**
