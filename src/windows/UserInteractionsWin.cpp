@@ -61,7 +61,7 @@ void showHTML( const std::string &html )
 
     auto dwRetVal = GetTempPath(MAX_PATH, lpTempPathBuffer);
     std::ostringstream fns;
-    fns << lpTempPathBuffer << "surge-tuning." << rand() << ".html";
+    fns << lpTempPathBuffer << "surge-data." << rand() << ".html";
 
     FILE *f = fopen(fns.str().c_str(), "w" );
     if( f )
