@@ -5214,6 +5214,13 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
        });
    did++;
 
+   addCallbackMenu(
+      midiSubMenu, Surge::UI::toOSCaseForMenu( "Show MIDI Mappings..." ),
+      [this]() {
+         Surge::UserInteractions::showHTML( this->midiMappingToHtml() );
+      }
+      );
+   
    if( ! scannedForMidiPresets )
    {
       scannedForMidiPresets = true;
@@ -5883,6 +5890,104 @@ R"HTML(
 )HTML";
        }
        htmls << R"HTML(
+  </body>
+</html>
+      )HTML";
+
+  return htmls.str();
+}
+
+std::string SurgeGUIEditor::midiMappingToHtml()
+{
+   std::ostringstream htmls;
+
+   htmls <<
+      R"HTML(
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+    <style>
+table {
+  border-collapse: collapse;
+}
+
+td {
+  border: 1px solid #CDCED4;
+  padding: 2pt;
+}
+
+th {
+  padding: 4pt;
+  color: #123463;
+  background: #CDCED4;
+  border: 1px solid #123463;
+}
+</style>
+  </head>
+  <body style="margin: 0pt; background: #CDCED4;">
+    <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+      <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+        Surge MIDI Mapping
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+
+     )HTML";
+   // TODO - if there are none print differently
+   bool foundOne = false;
+   int n = n_global_params + n_scene_params;
+   for (int i = 0; i < n; i++)
+   {
+      if (synth->storage.getPatch().param_ptr[i]->midictrl >= 0)
+      {
+         if( ! foundOne )
+         {
+            foundOne = true;
+            htmls << "Individual parameter MIDI mappings<p>\n"
+                  << "<table><tr><th>CC</th><th>Parameter</th></tr>\n";
+         }
+         htmls << "<tr><td>CC " << synth->storage.getPatch().param_ptr[i]->midictrl << "</td><td> "
+               << synth->storage.getPatch().param_ptr[i]->get_full_name() << "</td></tr>\n";
+      }
+   }
+   if( foundOne )
+   {
+      htmls << "</table>\n";
+   }
+   else
+   {
+      htmls << "No parameter MIDI mappins present";
+   }
+   
+   
+   htmls << R"HTML(
+
+      </div>
+    </div>
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+         Macro Assignments<p>
+         <table><tr><th>CC</th><th>Macro</th></tr>
+     )HTML";
+   for( int i=0; i<n_customcontrollers; ++i )
+   {
+      std::string name = synth->storage.getPatch().CustomControllerLabel[i];
+      if( name == "-" )
+      {
+         name = "Macro " + std::to_string(i);
+      }
+      else
+      {
+         name += " (Macro " + std::to_string(i) + ")";
+      }
+      htmls << "<tr><td>" << synth->storage.controllers[i] << "</td><td>" << name << "</td></tr>" << std::endl;
+   }
+   htmls << R"HTML(
+         </table>
+      </div>
+    </div>
   </body>
 </html>
       )HTML";
