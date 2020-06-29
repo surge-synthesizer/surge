@@ -309,8 +309,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
                    << " md=" << moddn << std::endl;
       */
 
-      printf("Modup: %.3f | Moddn: %.3f\n", modup, moddn);
-
       std::vector<CRect> drawThese;
       std::vector<CRect> drawTheseToo;
 
