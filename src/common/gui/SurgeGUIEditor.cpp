@@ -701,8 +701,10 @@ void SurgeGUIEditor::idle()
                cc->setDirty();
                cc->invalid();
             }
+#if 0            
             /*
-            ** A set of special things which invalidate the entire UI
+            ** A set of special things which invalidate the entire UI.
+            ** See #2226 for why this is currently off.
             */
             else if( j == synth->storage.getPatch().scene_active.id )
             {
@@ -713,6 +715,7 @@ void SurgeGUIEditor::idle()
                }
 
             }
+#endif            
             else
             {
                // printf( "Bailing out of all possible refreshes on %d\n", j );
