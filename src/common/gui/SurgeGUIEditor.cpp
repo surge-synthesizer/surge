@@ -5210,7 +5210,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
 
    addCallbackMenu(
-       midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mappings As..."),
+       midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
        [this]() {
           VSTGUI::Call::later(
              [this]() {
@@ -5225,7 +5225,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
    did++;
 
    addCallbackMenu(
-      midiSubMenu, Surge::UI::toOSCaseForMenu( "Show MIDI Mappings..." ),
+      midiSubMenu, Surge::UI::toOSCaseForMenu( "Show Current MIDI Mapping..." ),
       [this]() {
          Surge::UserInteractions::showHTML( this->midiMappingToHtml() );
       }
@@ -5518,7 +5518,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
         );
     tid++;
 
-    addCallbackMenu(devSubMenu, "Dump Documentation XML to Stdout and docstrings.xml",
+    addCallbackMenu(
+        devSubMenu,
+        Surge::UI::toOSCaseForMenu("Dump Documentation XML to stdout and docstrings.xml"),
                     [this]()
                        {
                           std::ostringstream oss;
@@ -5568,7 +5570,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                          oss << "\n  <!-- special case oscillator params for Wavetable ";
                                          break;
                                       case ot_shnoise:
-                                         oss << "\n  <!-- special case oscillator params for SHNoise ";
+                                         oss << "\n  <!-- special case oscillator params for S&H Noise ";
                                          break;
                                       case ot_audioinput:
                                          oss << "\n  <!-- special case oscillator params for Audio Input ";
@@ -5923,7 +5925,11 @@ table {
 
 td {
   border: 1px solid #CDCED4;
-  padding: 2pt;
+  padding: 2pt 4px;
+}
+
+.center {
+  text-align: center;
 }
 
 th {
@@ -5956,9 +5962,9 @@ th {
          {
             foundOne = true;
             htmls << "Individual parameter MIDI mappings<p>\n"
-                  << "<table><tr><th>CC</th><th>Parameter</th></tr>\n";
+                  << "<table><tr><th>CC#</th><th>Parameter</th></tr>\n";
          }
-         htmls << "<tr><td>CC " << synth->storage.getPatch().param_ptr[i]->midictrl << "</td><td> "
+         htmls << "<tr><td class=\"center\">" << synth->storage.getPatch().param_ptr[i]->midictrl << "</td><td> "
                << synth->storage.getPatch().param_ptr[i]->get_full_name() << "</td></tr>\n";
       }
    }
@@ -5968,7 +5974,7 @@ th {
    }
    else
    {
-      htmls << "No parameter MIDI mappins present";
+      htmls << "No parameter MIDI mappings present!";
    }
    
    
@@ -5979,20 +5985,14 @@ th {
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
          Macro Assignments<p>
-         <table><tr><th>CC</th><th>Macro</th></tr>
+         <table><tr><th>CC#</th><th>Macro</th><th>Custom Name</th></tr>
      )HTML";
    for( int i=0; i<n_customcontrollers; ++i )
    {
-      std::string name = synth->storage.getPatch().CustomControllerLabel[i];
-      if( name == "-" )
-      {
-         name = "Macro " + std::to_string(i);
-      }
-      else
-      {
-         name += " (Macro " + std::to_string(i) + ")";
-      }
-      htmls << "<tr><td>" << synth->storage.controllers[i] << "</td><td>" << name << "</td></tr>" << std::endl;
+      string name = synth->storage.getPatch().CustomControllerLabel[i];
+      auto ccval = synth->storage.controllers[i];
+
+      htmls << "<tr><td class=\"center\">" << (ccval == -1 ? "N/A" : to_string(ccval)) << "</td><td class=\"center\">" << i + 1 << "</td><td>" << name << "</td></tr>" << std::endl;
    }
    htmls << R"HTML(
          </table>

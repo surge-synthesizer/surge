@@ -811,8 +811,8 @@ void Parameter::set_type(int ctrltype)
       sprintf(displayInfo.unit, "Hz");
       displayInfo.a = 440.0;
       displayInfo.b = 1.0f / 12.0f;
-      displayInfo.decimals = 3;
-      displayInfo.modulationCap = 96000;
+      displayInfo.decimals = 2;
+      displayInfo.modulationCap = 880.f * powf(2.0, (val_max.f) / 12.0f);
       break;
 
    case ct_freq_shift:
@@ -1170,9 +1170,6 @@ void Parameter::set_storage_value(float f)
 {
    switch (ctrltype)
    {
-   /*case ct_amplitude:
-           val.f = db_to_amp(f);
-           break;*/
    default: {
       val.f = f;
       break; }
@@ -1543,8 +1540,6 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
    switch (ctrltype)
    {
-   case ct_amplitude:
-   case ct_sendlevel:
    default:
    {
       float v = val.f * 100.f;
@@ -1675,7 +1670,6 @@ void Parameter::get_display(char* txt, bool external, float ef)
       {
       case Custom:
          // Custom cases are handled below
-         // handled below
          std::cout << "Got a custom display type=" << ctrltype << " name = " << get_full_name() << std::endl;
          break;
       case LinearWithScale:
