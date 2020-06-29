@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 #include "vstcontrols.h"
+#include "Parameter.h"
 #include <iostream>
 
 class CParameterTooltip : public VSTGUI::CControl
@@ -99,22 +100,59 @@ public:
          tupper.bottom = tupper.top + 13;
          tlower.top = tlower.bottom - 15;
 
-         if (label[0][0])
-             dc->drawString(label[0], tupper, VSTGUI::kLeftText, true);
-         // dc->drawString(label[1],tlower,false,label[0][0]?kRightText:kCenterText);
-         dc->drawString(label[1], tlower, VSTGUI::kRightText, true);
-         if( label2left[0] )
-            dc->drawString(label2left, tlower, VSTGUI::kLeftText, true);
+         if( hasiwstrings )
+         {
+            VSTGUI::CRect tmid(trect);
+            tmid.bottom = trect.bottom - 18;
+            tmid.top = trect.top + 15;
+            if (label[0][0])
+            {
+               dc->drawString(label[0], tupper, VSTGUI::kLeftText, true);
+            }
+            dc->drawString( iwstrings.val.c_str(), tmid, VSTGUI::kCenterText, true );
+            dc->drawString( iwstrings.valplus.c_str(), tmid, VSTGUI::kRightText, true );
+            dc->drawString( iwstrings.valminus.c_str(), tmid, VSTGUI::kLeftText, true );
+
+            dc->drawString( "width", tlower, VSTGUI::kCenterText, true );
+            dc->drawString( iwstrings.dvalplus.c_str(), tlower, VSTGUI::kRightText, true );
+            dc->drawString( iwstrings.dvalminus.c_str(), tlower, VSTGUI::kLeftText, true );
+         }
+         else
+         {
+            if (label[0][0])
+            {
+               dc->drawString(label[0], tupper, VSTGUI::kLeftText, true);
+            }
+            // dc->drawString(label[1],tlower,false,label[0][0]?kRightText:kCenterText);
+            dc->drawString(label[1], tlower, VSTGUI::kRightText, true);
+                     
+            if( label2left[0] )
+            {
+               dc->drawString(label2left, tlower, VSTGUI::kLeftText, true);
+            }
+         }
          // dc->copyFrom(dc1,smaller);
          // dc->forget();
       }
       setDirty(false);
    }
 
+   void setMDIWS( const ModulationDisplayInfoWindowStrings &i )
+      {
+         iwstrings = i;
+         hasiwstrings = true;
+      }
+
+   void clearMDIWS() { hasiwstrings = false; }
+   bool hasMDIWS() { return hasiwstrings; }
+   
 protected:
    char label[2][256], label2left[256];
    bool visible;
    int last_tag;
 
+   ModulationDisplayInfoWindowStrings iwstrings;
+   bool hasiwstrings = false;
+   
    CLASS_METHODS(CParameterTooltip, VSTGUI::CControl)
 };

@@ -227,6 +227,15 @@ private:
    int val;
 };
 
+// used to make the infowindow
+struct ModulationDisplayInfoWindowStrings {
+   std::string val;
+   std::string valplus;
+   std::string valminus;
+   std::string dvalplus;
+   std::string dvalminus;
+};
+
 class SurgeStorage;
 
 /*
@@ -280,7 +289,8 @@ public:
       Menu,
       InfoWindow
    };
-   void get_display_of_modulation_depth(char* txt, float modulationDepth, bool isBipolar, ModulationDisplayMode mode );
+
+   void get_display_of_modulation_depth(char* txt, float modulationDepth, bool isBipolar, ModulationDisplayMode mode, ModulationDisplayInfoWindowStrings *iw = nullptr );
    void get_display_alt(char* txt, bool external = false, float ef = 0.f);
    char* get_storage_value(char*);
    void set_storage_value(int i);
