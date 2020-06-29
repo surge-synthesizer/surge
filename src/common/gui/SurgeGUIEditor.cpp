@@ -3860,8 +3860,19 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
             synth->getParameterName(ptag, txt);
             sprintf(pname, "%s -> %s", modulatorName(thisms,true).c_str(), txt);
-            p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms), synth->isBipolarModulation(thisms), Parameter::InfoWindow);
-            ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
+            ModulationDisplayInfoWindowStrings mss;
+            p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms), synth->isBipolarModulation(thisms), Parameter::InfoWindow, &mss);
+            if( mss.val != "" )
+            {
+               ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
+               ((CParameterTooltip*)infowindow)->setMDIWS(mss);
+               
+            }
+            else
+            {
+               ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
+               ((CParameterTooltip*)infowindow)->clearMDIWS();
+            }
             modulate = true;
 
             if (isCustomController(modsource))
@@ -3940,6 +3951,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                char pdispalt[256];
                synth->getParameterDisplayAlt(ptag, pdispalt);
                ((CParameterTooltip*)infowindow)->setLabel(0, pdisp, pdispalt);
+               ((CParameterTooltip*)infowindow)->clearMDIWS();
                if (p->ctrltype == ct_polymode)
                   modulate = true;
             }
@@ -4169,7 +4181,8 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    
    CRect r(0, 0, iff, 18);
    if (modulate)
-      r.bottom += 18;
+      r.bottom += ( ((CParameterTooltip*)infowindow)->hasMDIWS() ? 36 : 18 );
+   
    CRect r2 = control->getViewSize();
 
    // OK this is a heuristic to stop deform overpainting and stuff 
