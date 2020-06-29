@@ -261,7 +261,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       CRect trect2 = hrect;
 
       CColor ColBar = skin->getColor("slider.modulation", CColor(173, 255, 107, 255));
-      CColor ColBar2 = skin->getColor("slider.negative.modulation", CColor(255, 144, 0, 255));
+      CColor ColBarNeg = skin->getColor("slider.negative.modulation", CColor(173, 255, 107, 255));
 
       ColBar.alpha = (int)(slider_alpha * 255.f);
 
@@ -422,7 +422,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       if (modulation_is_bipolar)
           for( auto n : drawTheseToo )
           {
-             dc->setFillColor( ColBar2 );
+             dc->setFillColor( ColBarNeg );
              dc->drawRect( n, VSTGUI::kDrawFilled );
           }
    }
