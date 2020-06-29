@@ -80,9 +80,14 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
        else
        {
           dc->setFontColor(ufg);
+          
        }
           
+#if WINDOWS || LINUX
+       dc->setFont(displayFont, 8, 0);
+#else
        dc->setFont(displayFont, 8, 2);
+#endif       
        auto sw = dc->getStringWidth(labs[i].c_str());
        dc->drawString(labs[i].c_str(), CPoint( xp + w/2.0 - sw/2.0, yp + h - 3.0 ), true );
    }
