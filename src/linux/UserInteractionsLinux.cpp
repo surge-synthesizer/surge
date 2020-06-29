@@ -152,7 +152,7 @@ void showHTML( const std::string &html )
 {
     // FIXME - there's proper APIs for this that crash on MacOS 
     std::ostringstream fns;
-    fns << "/tmp/surge-tuning." << rand() << ".html";
+    fns << "/tmp/surge-data." << rand() << ".html";
 
     FILE *f = fopen(fns.str().c_str(), "w" );
     if( f )

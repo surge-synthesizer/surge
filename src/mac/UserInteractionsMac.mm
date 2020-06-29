@@ -102,7 +102,7 @@ void showHTML( const std::string &html )
 {
     // Why does mktemp crash on macos I wonder?
     std::ostringstream fns;
-    fns << "/var/tmp/surge-tuning." << rand() << ".html";
+    fns << "/var/tmp/surge-data." << rand() << ".html";
 
     FILE *f = fopen(fns.str().c_str(), "w" );
     if( f )
