@@ -642,6 +642,7 @@ void SurgeGUIEditor::idle()
                {
                   ((CLFOGui*)lfodisplay)->invalidateIfIdIsInRange(j);
                }
+
             }
             else if ((j >= metaparam_offset) && (j < (metaparam_offset + n_customcontrollers)))
             {
@@ -699,6 +700,18 @@ void SurgeGUIEditor::idle()
 #endif
                cc->setDirty();
                cc->invalid();
+            }
+            /*
+            ** A set of special things which invalidate the entire UI
+            */
+            else if( j == synth->storage.getPatch().scene_active.id )
+            {
+               if( current_scene != synth->storage.getPatch().scene_active.val.i )
+               {
+                  synth->refresh_editor = true;
+                  current_scene = synth->storage.getPatch().scene_active.val.i;
+               }
+
             }
             else
             {
