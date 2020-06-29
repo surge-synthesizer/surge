@@ -47,8 +47,12 @@ void CHSwitch2::draw(CDrawContext* dc)
 CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
    mouseDowns++;
+#if 0
+   // Temporarily disabling this because we sometimes return a dontneedupevents so we need to
+   // do this differently.
    if (mouseDowns > 1)
       return kMouseEventHandled;
+#endif   
 
    if (listener && buttons & (kAlt | kShift | kRButton | kControl | kApple))
    {
