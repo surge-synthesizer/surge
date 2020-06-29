@@ -671,7 +671,7 @@ private:
    int ringout_value = -1;
    InterpDelay idels[2];
 
-   float lfophase[2][COMBS_PER_CHANNEL], longphase;
+   float lfophase[2][COMBS_PER_CHANNEL], longphase[2];
    float lpaL = 0.f, lpaR = 0.f; // state for the onepole LP filter
    
    lipol<float,true> lfoval[2][COMBS_PER_CHANNEL], delaybase[2][COMBS_PER_CHANNEL];

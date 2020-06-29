@@ -43,7 +43,8 @@ void FlangerEffect::init()
          lfophase[c][i] =  1.f * ( i + 0.5 * c ) / COMBS_PER_CHANNEL;
          lfosandhtarget[c][i] = 0.0;
       }
-   longphase = 0;
+   longphase[0] = 0;
+   longphase[1] = 0.5;
    
    for( int i=0; i<LFO_TABLE_SIZE; ++i )
    {
@@ -78,8 +79,11 @@ void FlangerEffect::process(float* dataL, float* dataR)
 
    float rate = envelope_rate_linear(-limit_range( *f[flng_rate], -8.f, 10.f ) ) * (fxdata->p[flng_rate].temposync ? storage->temposyncratio : 1.f);
 
-   longphase += rate;
-   if( longphase >= COMBS_PER_CHANNEL ) longphase -= COMBS_PER_CHANNEL;
+   for( int c=0; c<2; ++c )
+   {
+      longphase[c] += rate;
+      if( longphase[c] >= COMBS_PER_CHANNEL ) longphase[c] -= COMBS_PER_CHANNEL;
+   }
    
    const float oneoverFreq0 = 1.0f / Tunings::MIDI_0_FREQ;
 
@@ -108,7 +112,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
          if( mode == arp_mix || mode == arp_solo )
          {
             // arpeggio - everyone needs to use the same phase with the voice swap
-            thisphase = longphase - (int)longphase;
+            thisphase = longphase[c] - (int)longphase[c];
          }
          switch( mwave )
          {
@@ -236,8 +240,9 @@ void FlangerEffect::process(float* dataL, float* dataR)
       
       if( mode == arp_mix || mode == arp_solo )
       {
-         int ilp = (int)longphase;
-         float flp = longphase - ilp;
+         int ilp = (int)longphase[c];
+         float flp = longphase[c] - ilp;
+
          if( ilp == COMBS_PER_CHANNEL )
             ilp = 0;
          
