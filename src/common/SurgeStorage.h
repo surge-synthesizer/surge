@@ -694,6 +694,7 @@ float lookup_waveshape(int, float);
 float lookup_waveshape_warp(int, float);
 float envelope_rate_lpf(float);
 float envelope_rate_linear(float);
+float envelope_rate_linear_nowrap(float);
 float glide_log(float);
 float glide_exp(float);
 

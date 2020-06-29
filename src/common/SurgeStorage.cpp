@@ -1530,6 +1530,16 @@ float envelope_rate_linear(float x)
    return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
 }
 
+float envelope_rate_linear_nowrap(float x)
+{
+   x *= 16.f;
+   x += 256.f;
+   int e = limit_range( (int)x, 0, 0x1ff - 1 );;
+   float a = x - (float)e;
+
+   return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
+}
+
 // this function is only valid for x = {0, 1}
 float glide_exp(float x)
 {
