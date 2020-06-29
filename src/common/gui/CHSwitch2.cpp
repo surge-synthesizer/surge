@@ -46,18 +46,23 @@ void CHSwitch2::draw(CDrawContext* dc)
 
 CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   /*
+   ** If we have two mousedowns without an up, skip stuff. This means pressing left/right on
+   ** win doesn't confuse us. BUT if we return kMouseDownEventHandledButDontNeedMovedOrUpEvents
+   ** we won't ever get the up so this counter will be in trouble. This the --s scattered
+   ** throughout this code
+   */
    mouseDowns++;
-#if 0
-   // Temporarily disabling this because we sometimes return a dontneedupevents so we need to
-   // do this differently.
    if (mouseDowns > 1)
       return kMouseEventHandled;
-#endif   
 
    if (listener && buttons & (kAlt | kShift | kRButton | kControl | kApple))
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
+      {
+         mouseDowns--;
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+      }
    }
 
    if (!(buttons & kLButton))
@@ -89,14 +94,18 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
 
       endEdit();
 
+      mouseDowns--;
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
    else
    {
       beginEdit();
-      return onMouseMoved(where, buttons);
+      auto res = onMouseMoved(where, buttons);
+      if( res == kMouseDownEventHandledButDontNeedMovedOrUpEvents )
+         mouseDowns --;
+      return res;
    }
-
+   
    return kMouseEventNotHandled;
 }
 CMouseEventResult CHSwitch2::onMouseUp(CPoint& where, const CButtonState& buttons)
