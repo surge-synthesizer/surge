@@ -933,8 +933,8 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          }
       }
 
-      int dragX, dragY;
-      int dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
+      float dragX, dragY;
+      float dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
 
       auto sr = steprect[draggedStep];
 
@@ -952,12 +952,12 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       if (lfodata->unipolar.val.b)
       {
          auto sv = std::max(ss->steps[draggedStep], 0.f);
-         yTop = sr.bottom - (int)(sr.getHeight() * sv);
+         yTop = sr.bottom - (sr.getHeight() * sv);
       }
       else
       {
          yTop = sr.bottom -
-                (int)((float)0.5f + sr.getHeight() * (0.5f + 0.5f * ss->steps[draggedStep]));
+                ((float)0.5f + sr.getHeight() * (0.5f + 0.5f * ss->steps[draggedStep]));
       }
 
       if (yTop > sr.getHeight() / 2)
@@ -973,9 +973,13 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       
       CRect labelR(dragX, dragY, dragX + dragW, dragY + dragH);
 
-      fillr(labelR, skin->getColor("lfo.stepseq.popup.border", kBlackCColor));
+      auto iwbrc = skin->getColor( "infowindow.border", kBlackCColor );
+      auto iwbgc = skin->getColor( "infowindow.background", kWhiteCColor );
+      auto iwfgc = skin->getColor( "infowindow.foreground", kBlackCColor );
+      
+      fillr(labelR, skin->getColor("lfo.stepseq.popup.border", iwbrc));
       labelR.inset(1, 1);
-      fillr(labelR, skin->getColor("lfo.stepseq.popup.background", kWhiteCColor));
+      fillr(labelR, skin->getColor("lfo.stepseq.popup.background", iwbgc ));
 
       labelR.left += 1;
       labelR.top -= (keyModMult > 0 ? 9 : 0);
@@ -983,7 +987,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       char txt[256];
       sprintf(txt, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
 
-      dc->setFontColor(skin->getColor("lfo.stepseq.popup.foreground", kBlackCColor));
+      dc->setFontColor(skin->getColor("lfo.stepseq.popup.foreground", iwfgc ) );
       dc->setFont(lfoTypeFont);
       dc->drawString(txt, labelR, VSTGUI::kLeftText, true);
 
