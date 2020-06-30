@@ -3909,7 +3909,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   strncpy(lbl, p->get_name(), 15);
                   synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
                   ((CModulationSourceButton*)gui_modsrc[modsource])->setlabel(lbl);
-                  synth->updateDisplay();
+                  ((CModulationSourceButton*)gui_modsrc[modsource])->invalid();
                }
             }
          }
