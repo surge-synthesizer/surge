@@ -306,27 +306,27 @@ void LfoModulationSource::process_block()
       switch (env_state)
       {
       case lenv_delay:
-         envrate = envelope_rate_linear(localcopy[idelay].f);
+         envrate = envelope_rate_linear_nowrap(localcopy[idelay].f);
          if (lfo->delay.temposync)
             envrate *= storage->temposyncratio;
          break;
       case lenv_attack:
-         envrate = envelope_rate_linear(localcopy[iattack].f);
+         envrate = envelope_rate_linear_nowrap(localcopy[iattack].f);
          if (lfo->attack.temposync)
             envrate *= storage->temposyncratio;
          break;
       case lenv_hold:
-         envrate = envelope_rate_linear(localcopy[ihold].f);
+         envrate = envelope_rate_linear_nowrap(localcopy[ihold].f);
          if (lfo->hold.temposync)
             envrate *= storage->temposyncratio;
          break;
       case lenv_decay:
-         envrate = envelope_rate_linear(localcopy[idecay].f);
+         envrate = envelope_rate_linear_nowrap(localcopy[idecay].f);
          if (lfo->decay.temposync)
             envrate *= storage->temposyncratio;
          break;
       case lenv_release:
-         envrate = envelope_rate_linear(localcopy[irelease].f);
+         envrate = envelope_rate_linear_nowrap(localcopy[irelease].f);
          if (lfo->release.temposync)
             envrate *= storage->temposyncratio;
          break;

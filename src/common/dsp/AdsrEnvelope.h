@@ -235,7 +235,7 @@ public:
          case (s_attack):
          {
             phase +=
-                envelope_rate_linear(lc[a].f) * (adsr->a.temposync ? storage->temposyncratio : 1.f);
+                envelope_rate_linear_nowrap(lc[a].f) * (adsr->a.temposync ? storage->temposyncratio : 1.f);
             if (phase >= 1)
             {
                phase = 1;
@@ -266,7 +266,7 @@ public:
             phase = sustain;
             }*/
             float rate =
-               envelope_rate_linear(lc[d].f) * (adsr->d.temposync ? storage->temposyncratio : 1.f);
+               envelope_rate_linear_nowrap(lc[d].f) * (adsr->d.temposync ? storage->temposyncratio : 1.f);
 
             float l_lo, l_hi;
 
@@ -315,7 +315,7 @@ public:
          case (s_release):
          {
             phase -=
-                envelope_rate_linear(lc[r].f) * (adsr->r.temposync ? storage->temposyncratio : 1.f);
+                envelope_rate_linear_nowrap(lc[r].f) * (adsr->r.temposync ? storage->temposyncratio : 1.f);
             output = phase;
             for (int i = 0; i < lc[r_s].i; i++)
                output *= phase;
@@ -330,7 +330,7 @@ public:
          break;
          case (s_uberrelease):
          {
-            phase -= envelope_rate_linear(-6.5);
+            phase -= envelope_rate_linear_nowrap(-6.5);
             output = phase;
             for (int i = 0; i < lc[r_s].i; i++)
                output *= phase;
