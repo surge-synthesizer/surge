@@ -278,7 +278,7 @@ void LfoModulationSource::process_block()
    retrigger_AEG = false;
    int s = lfo->shape.val.i;
 
-   float frate = envelope_rate_linear(-localcopy[rate].f);
+   float frate = envelope_rate_linear_nowrap(-localcopy[rate].f);
    
    if (lfo->rate.deactivated)
       frate = 0.0;
