@@ -13,6 +13,7 @@
 
 using namespace VSTGUI;
 
+static int ct = 0;
 // Map Steinberg Vst Interface (Steinberg::Linux::IRunLoop) to VSTGUI Interface
 // (VSTGUI::X11::RunLoop)
 class RunLoop : public X11::IRunLoop, public AtomicReferenceCounted
@@ -24,7 +25,7 @@ public:
 
       void PLUGIN_API onFDIsSet(Steinberg::Linux::FileDescriptor) override
       {
-         // std::cout << __func__ << " " << handler << std::endl;
+         // std::cout << __func__ << " " << handler << " " << ct++ << std::endl;
          if (handler)
             handler->onEvent();
          // std::cout << __func__ << " END " << handler << std::endl;
@@ -120,6 +121,13 @@ public:
       // std::cout << "RunLoop is " << runLoop << " " << _runLoop << std::endl;
    }
 
+   void idle()
+   {
+      // See comment in LInuxVST3Idle below
+      for( auto h : eventHandlers )
+         h->handler->onEvent();
+   }
+
 private:
    using EventHandlers = std::vector<Steinberg::IPtr<EventHandler>>;
    using TimerHandlers = std::vector<Steinberg::IPtr<TimerHandler>>;
@@ -156,7 +164,7 @@ public:
       auto& instance = get();
       if (++instance.users == 1)
       {
-	 instance.running = true;
+	      instance.running = true;
          pthread_create(&instance.t, NULL, IdleUpdateHandler::doDefUp, NULL);
       }
    }
@@ -177,8 +185,8 @@ public:
       auto& instance = get();
       if (--instance.users == 0)
       {
-	instance.running = false;
-	pthread_join(instance.t, NULL);
+	      instance.running = false;
+	      pthread_join(instance.t, NULL);
       }
    }
 
@@ -218,5 +226,27 @@ void LinuxVST3Detatch()
 
   // We need to downcount the usage on the RunLoop to allow xcb to restart
   VSTGUI::X11::RunLoop::exit();
+}
+
+void LinuxVST3Idle()
+{
+   /*
+   ** Why is this here? With the VST3 runloop we should be
+   ** parsimoniously notified by file descriptor polls and stuff right?
+   ** Well, of course, that doesn't work. If you listen to every 
+   ** hover event somewhere in the bowls of vst3sdk, DAW runloops,
+   ** and so forth, you eventually hang up and lose events.
+   ** So what this does is, every idle, just give a kick to every
+   ** FDI poller to go and check. Basically just like VST2.
+   **
+   ** If you decide one day to eliminate this to optimize something
+   ** or another, make sure that in bitwig and the juce host that
+   ** as you mouse over hover assets they keep working forever and 
+   ** don't hang up after 10-50 seconds. See #1817
+   */
+   auto xrlp = VSTGUI::X11::RunLoop::get().get();
+   auto rlp = dynamic_cast<RunLoop*>(xrlp);
+   if( rlp )
+      rlp->idle();
 }
 #endif

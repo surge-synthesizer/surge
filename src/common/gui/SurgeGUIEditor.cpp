@@ -41,6 +41,7 @@
 
 #include "vstgui/lib/cvstguitimer.h"
 
+
 template< typename T >
 struct RememberForgetGuard { 
    RememberForgetGuard( T *tg )
@@ -99,6 +100,13 @@ const int yofs = 10;
 
 using namespace VSTGUI;
 using namespace std;
+
+#if LINUX && TARGET_VST3
+extern void LinuxVST3Init(Steinberg::Linux::IRunLoop* pf);
+extern void LinuxVST3Detatch();
+extern void LinuxVST3FrameOpen(CFrame* that, void*, const VSTGUI::PlatformType& pt);
+extern void LinuxVST3Idle();
+#endif
 
 CFontRef displayFont = NULL;
 CFontRef patchNameFont = NULL;
@@ -358,6 +366,10 @@ void SurgeGUIEditor::idle()
    if (!super::idle2())
       return;
 #endif
+#if TARGET_VST3 && LINUX
+   LinuxVST3Idle();
+#endif
+
    if (!synth)
       return;
    if (editor_open && frame && !synth->halt_engine)
@@ -2109,11 +2121,6 @@ VSTGUI::CControl *SurgeGUIEditor::layoutTagWithSkin( int tag )
    return nullptr;
 }
 
-#if LINUX && TARGET_VST3
-extern void LinuxVST3Init(Steinberg::Linux::IRunLoop* pf);
-extern void LinuxVST3Detatch();
-extern void LinuxVST3FrameOpen(CFrame* that, void*, const VSTGUI::PlatformType& pt);
-#endif
 
 #if !TARGET_VST3
 bool SurgeGUIEditor::open(void* parent)
