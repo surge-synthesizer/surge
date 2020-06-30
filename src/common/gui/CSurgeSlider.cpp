@@ -264,6 +264,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       CColor ColBarNeg = skin->getColor("slider.negative.modulation", CColor(173, 255, 107, 255));
 
       ColBar.alpha = (int)(slider_alpha * 255.f);
+      ColBarNeg.alpha = (int)(slider_alpha * 255.f);
 
       // float moddist = modval * range;
       // We want modval + value to be bould by -1 and 1. So
@@ -320,7 +321,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          trect2.top += 8;
          trect2.bottom = trect2.top + 2;
 
-         if( ! modulation_is_bipolar )
+         if (!modulation_is_bipolar)
          {
             trect.left += 11;
             trect.right = trect.left + modup;
@@ -329,54 +330,77 @@ void CSurgeSlider::draw(CDrawContext* dc)
          {
             trect.left += 11;
             trect.right = trect.left + modup;
-            trect.left -= moddn;
             
             trect2.right -= 17;
             trect2.left = trect2.right - moddn;
          }
 
-         if( trect.left > trect.right )
-            std::swap( trect.left, trect.right );
+         if (trect.left > trect.right)
+            std::swap(trect.left, trect.right);
 
-         if( trect2.left > trect2.right )
-            std::swap( trect2.left, trect2.right );
+         if (trect2.left > trect2.right)
+            std::swap(trect2.left, trect2.right);
          
-         drawThese.push_back( trect );
-         drawTheseToo.push_back( trect2 );
+         drawThese.push_back(trect);
+         drawTheseToo.push_back(trect2);
 
-         if( overtop )
+         if (overtop)
          {
             CRect topr;
-            topr.top = trect.top;
-            topr.bottom = trect.bottom;
-            topr.left = trect.right + 1;
-            topr.right = topr.left + 3;
 
             if (overotherside)
+            {
+               topr.top = trect2.top;
+               topr.bottom = trect2.bottom;
+               topr.left = trect2.right + 1;
+               topr.right = topr.left + 3;
+
                drawTheseToo.push_back(topr);
+            }
             else
+            {
+               topr.top = trect.top;
+               topr.bottom = trect.bottom;
+               topr.left = trect.right + 1;
+               topr.right = topr.left + 3;
+
                drawThese.push_back(topr);
+            }
          }
 
-         if( overbot )
+         if (overbot)
          {
             CRect topr;
-            topr.top = trect.top;
-            topr.bottom = trect.bottom;
-            topr.left = trect.left - 4;
-            topr.right = topr.left + 3;
 
             if (overotherside)
+            {
+               topr.top = trect.top;
+               topr.bottom = trect.bottom;
+               topr.left = trect.left - 4;
+               topr.right = topr.left + 3;
+
                drawThese.push_back(topr);
+            }
             else
+            {
+               topr.top = trect2.top;
+               topr.bottom = trect2.bottom;
+               topr.left = trect2.left - 4;
+               topr.right = topr.left + 3;
+
                drawTheseToo.push_back(topr);
+            }
          }
       }
       else
       {
          trect.left += 8;
          trect.right = trect.left + 2;
-         if( ! modulation_is_bipolar )
+
+         trect2.left += 8;
+         trect2.right = trect2.left + 2;
+
+         if (!modulation_is_bipolar)
          {
             trect.top += 11;
             trect.bottom = trect.top - modup;
@@ -385,46 +409,87 @@ void CSurgeSlider::draw(CDrawContext* dc)
          {
             trect.top += 11;
             trect.bottom = trect.top - modup;
-            trect.top += moddn;
+
+            trect2.bottom -= 17;
+            trect2.top = trect2.bottom + moddn;
          }
 
-         if( overbot )
+         if (trect.top < trect.bottom)
+            std::swap(trect.top, trect.bottom);
+
+         if (trect2.top < trect2.bottom)
+            std::swap(trect2.top, trect2.bottom);
+
+         if (overbot)
          {
             CRect topr;
-            topr.left = trect.left;
-            topr.right = trect.right;
-            topr.bottom = trect.top + 1;
-            topr.top = topr.bottom + 3;
-            drawThese.push_back(topr);
+
+            if (overotherside)
+            {
+               printf("overbot otherside\n");
+               topr.left = trect.left;
+               topr.right = trect.right;
+               topr.bottom = trect.top + 1;
+               topr.top = topr.bottom + 3;
+
+               drawThese.push_back(topr);
+            }
+            else
+            {
+               printf("overbot only\n");
+               topr.left = trect2.left;
+               topr.right = trect2.right;
+               topr.bottom = trect2.top + 1;
+               topr.top = topr.bottom + 3;
+
+               drawTheseToo.push_back(topr);
+            }
          }
 
-         if( overtop )
+         if (overtop)
          {
             CRect topr;
-            topr.left = trect.left;
-            topr.right = trect.right;
-            topr.top = trect.top - 1;
-            topr.bottom = topr.top - 3;
-            drawThese.push_back(topr);
+
+            if (overotherside)
+            {
+               printf("overtop otherside\n");
+               topr.left = trect2.left;
+               topr.right = trect2.right;
+               topr.bottom = trect2.bottom - 1;
+               topr.top = topr.bottom - 3;
+
+               drawTheseToo.push_back(topr);
+            }
+            else
+            {
+               printf("overtop only\n");
+               topr.left = trect.left;
+               topr.right = trect.right;
+               topr.bottom = trect.bottom - 1;
+               topr.top = topr.bottom - 3;
+
+               drawThese.push_back(topr);
+            }
          }
 
-         if( trect.top < trect.bottom )
-            std::swap( trect.top, trect.bottom );
-         drawThese.push_back( trect );
+         drawThese.push_back(trect);
+         drawTheseToo.push_back(trect2);
       }
 
-      for( auto r : drawThese )
+      for (auto r : drawThese)
       {
-         dc->setFillColor( ColBar );
-         dc->drawRect( r, VSTGUI::kDrawFilled );
+         dc->setFillColor(ColBar);
+         dc->drawRect(r, VSTGUI::kDrawFilled);
       }
 
       if (modulation_is_bipolar)
-          for( auto n : drawTheseToo )
+      {
+          for (auto r : drawTheseToo)
           {
-             dc->setFillColor( ColBarNeg );
-             dc->drawRect( n, VSTGUI::kDrawFilled );
+             dc->setFillColor(ColBarNeg);
+             dc->drawRect(r, VSTGUI::kDrawFilled);
           }
+      }
    }
    
 
