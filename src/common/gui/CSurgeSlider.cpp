@@ -330,7 +330,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
          {
             trect.left += 11;
             trect.right = trect.left + modup;
-            trect.left -= moddn;
             
             trect2.right -= 17;
             trect2.left = trect2.right - moddn;
@@ -348,29 +347,49 @@ void CSurgeSlider::draw(CDrawContext* dc)
          if (overtop)
          {
             CRect topr;
-            topr.top = trect.top;
-            topr.bottom = trect.bottom;
-            topr.left = trect.right + 1;
-            topr.right = topr.left + 3;
 
             if (overotherside)
+            {
+               topr.top = trect2.top;
+               topr.bottom = trect2.bottom;
+               topr.left = trect2.right + 1;
+               topr.right = topr.left + 3;
+
                drawTheseToo.push_back(topr);
+            }
             else
+            {
+               topr.top = trect.top;
+               topr.bottom = trect.bottom;
+               topr.left = trect.right + 1;
+               topr.right = topr.left + 3;
+
                drawThese.push_back(topr);
+            }
          }
 
          if (overbot)
          {
             CRect topr;
-            topr.top = trect.top;
-            topr.bottom = trect.bottom;
-            topr.left = trect.left - 4;
-            topr.right = topr.left + 3;
 
             if (overotherside)
+            {
+               topr.top = trect.top;
+               topr.bottom = trect.bottom;
+               topr.left = trect.left - 4;
+               topr.right = topr.left + 3;
+
                drawThese.push_back(topr);
+            }
             else
+            {
+               topr.top = trect2.top;
+               topr.bottom = trect2.bottom;
+               topr.left = trect2.left - 4;
+               topr.right = topr.left + 3;
+
                drawTheseToo.push_back(topr);
+            }
          }
       }
       else
@@ -390,38 +409,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
          {
             trect.top += 11;
             trect.bottom = trect.top - modup;
-            trect.top += moddn;
 
             trect2.bottom -= 17;
             trect2.top = trect2.bottom + moddn;
-         }
-
-         if (overbot)
-         {
-            CRect topr;
-            topr.left = trect.left;
-            topr.right = trect.right;
-            topr.bottom = trect.top + 1;
-            topr.top = topr.bottom + 3;
-
-            if (overotherside)
-               drawThese.push_back(topr);
-            else
-               drawTheseToo.push_back(topr);
-         }
-
-         if (overtop)
-         {
-            CRect topr;
-            topr.left = trect.left;
-            topr.right = trect.right;
-            topr.top = trect.top - 1;
-            topr.bottom = topr.top - 3;
-
-            if (overotherside)
-               drawTheseToo.push_back(topr);
-            else
-               drawThese.push_back(topr);
          }
 
          if (trect.top < trect.bottom)
@@ -429,6 +419,58 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
          if (trect2.top < trect2.bottom)
             std::swap(trect2.top, trect2.bottom);
+
+         if (overbot)
+         {
+            CRect topr;
+
+            if (overotherside)
+            {
+               printf("overbot otherside\n");
+               topr.left = trect.left;
+               topr.right = trect.right;
+               topr.bottom = trect.top + 1;
+               topr.top = topr.bottom + 3;
+
+               drawThese.push_back(topr);
+            }
+            else
+            {
+               printf("overbot only\n");
+               topr.left = trect2.left;
+               topr.right = trect2.right;
+               topr.bottom = trect2.top + 1;
+               topr.top = topr.bottom + 3;
+
+               drawTheseToo.push_back(topr);
+            }
+         }
+
+         if (overtop)
+         {
+            CRect topr;
+
+            if (overotherside)
+            {
+               printf("overtop otherside\n");
+               topr.left = trect2.left;
+               topr.right = trect2.right;
+               topr.bottom = trect2.bottom - 1;
+               topr.top = topr.bottom - 3;
+
+               drawTheseToo.push_back(topr);
+            }
+            else
+            {
+               printf("overtop only\n");
+               topr.left = trect.left;
+               topr.right = trect.right;
+               topr.bottom = trect.bottom - 1;
+               topr.top = topr.bottom - 3;
+
+               drawThese.push_back(topr);
+            }
+         }
 
          drawThese.push_back(trect);
          drawTheseToo.push_back(trect2);
