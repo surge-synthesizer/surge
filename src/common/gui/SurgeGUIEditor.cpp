@@ -4200,7 +4200,10 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    ((CParameterTooltip*)infowindow)->setExtendedMDIWS(modValues);
    CRect r(0, 0, iff, 18);
    if (modulate)
+   {
       r.bottom += ( ((CParameterTooltip*)infowindow)->hasMDIWS() & modValues ? 36 : 18 );
+      if( modValues ) r.right += 20;
+   }
    
    CRect r2 = control->getViewSize();
 

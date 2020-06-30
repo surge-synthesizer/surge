@@ -907,6 +907,7 @@ void Parameter::set_type(int ctrltype)
    case ct_amplitude:
    case ct_sendlevel:
       displayType = Decibel;
+      sprintf( displayInfo.unit, "dB" );
       break;
       
    }
@@ -1317,7 +1318,6 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    {
    case Custom:
       // handled below
-      std::cout << "MODULATION REQUEST Got a custom display type=" << ctrltype << " name = " << get_full_name() << std::endl;
       break;
    case LinearWithScale:
    {
@@ -1347,7 +1347,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
          return;
       case Menu:
          if( isBipolar )
-            sprintf( txt, "+/- %.*f %s", displayInfo.decimals, mf, u.c_str() );
+            sprintf( txt, "%s %.*f %s", ( mf >= 0 ? "+/-" : "-/+" ), displayInfo.decimals, fabs(mf), u.c_str() );
          else
             sprintf( txt, "%.*f %s", displayInfo.decimals, mf, u.c_str() );
          return;
@@ -1363,7 +1363,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                sprintf( itxt, "%.*f", displayInfo.decimals, f+mf ); iw->valplus = itxt;
                sprintf( itxt, "%.*f", displayInfo.decimals, f-mf ); iw->valminus = itxt;
                sprintf( itxt, "%s%.*f", (mf>0?"+":""), displayInfo.decimals, +mf ); iw->dvalplus = itxt;
-               sprintf( itxt, "%s%.*f", (mf>0?"+":""), displayInfo.decimals, -mf ); iw->dvalminus = itxt;
+               sprintf( itxt, "%s%.*f", (mf<0?"+":""), displayInfo.decimals, -mf ); iw->dvalminus = itxt;
             }
             sprintf( txt, "%.*f %s %.*f %s %.*f %s", displayInfo.decimals, f - mf, lowersep, displayInfo.decimals, f, uppersep, displayInfo.decimals, f + mf, u.c_str() );
          }
@@ -1432,6 +1432,12 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             //   sprintf( txt, "%.*f / %.*f %s", displayInfo.decimals, mn-v, displayInfo.decimals, mp-v, u.c_str() );
             //else
             sprintf( txt, "%s%.*f %s",(mp-v>0)?"+":"", displayInfo.decimals, mp-v, u.c_str() );
+            if( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString && mp > val_max.f )
+            {
+               sprintf( txt, "%s", displayInfo.maxLabel );
+            }
+         
+
             break;
          case InfoWindow:
          {
@@ -1445,6 +1451,16 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                   sprintf( itxt, "%.*f", displayInfo.decimals, mn ); iw->valminus = itxt;
                   sprintf( itxt, "%s%.*f", (mp-v>0?"+":""), displayInfo.decimals, mp-v ); iw->dvalplus = itxt;
                   sprintf( itxt, "%s%.*f", (mn-v>0?"+":""), displayInfo.decimals, mn-v ); iw->dvalminus = itxt;
+
+                  if( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString )
+                  {
+                     if( v >= val_max.f ) iw->val = displayInfo.maxLabel;
+                     if( val.f + modulationDepth >= val_max.f ) iw->valplus = displayInfo.maxLabel;
+                     if( val.f - modulationDepth >= val_max.f ) iw->valminus = displayInfo.maxLabel;
+                     if( val.f + modulationDepth >= val_max.f ) iw->dvalplus = displayInfo.maxLabel;
+                     if( val.f - modulationDepth >= val_max.f ) iw->dvalminus = displayInfo.maxLabel;
+                  }
+
                }
 
                sprintf(txt, "%.*f %s %.*f %s %.*f %s", displayInfo.decimals, mn, lowersep, displayInfo.decimals, v, uppersep, displayInfo.decimals, mp, u.c_str());
@@ -1477,58 +1493,51 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
       float mp = amp_to_db(val.f + modulationDepth);
       float mn = amp_to_db(val.f - modulationDepth);
 
-      std::string posval;
-      std::string negval;
-      std::string val;
+      char posval[256];
+      char negval[256];
+      char val[256];
 
-      if (isBipolar)
-      {
-         if (mn <= -192.f)
-            negval = "-inf";
-         else
-         {
-            std::string origval = std::to_string(mn);
-            negval = origval.substr(0, origval.find(".") + dp2 + 1);
-         }
-      }
+      if (mn <= -192.f)
+         sprintf( negval, "-inf %s", displayInfo.unit );
+      else
+         sprintf( negval, "%.*f %s", displayInfo.decimals, mn, displayInfo.unit );
 
       if (mp <= -192.f)
-         posval = "-inf";
+         sprintf( posval, "-inf %s", displayInfo.unit );
       else
-      {
-         std::string origval = std::to_string(mp);
-         posval = origval.substr(0, origval.find(".") + dp2 + 1);
-      }
+         sprintf( posval, "%.*f %s", displayInfo.decimals, mp, displayInfo.unit );
 
       if (v <= -192.f)
-         val = "-inf";
+         sprintf( val, "-inf %s", displayInfo.unit );
       else
-      {
-         std::string origval = std::to_string(v);
-         val = origval.substr(0, origval.find(".") + dp2 + 1);
-      }
+         sprintf( val, "%.*f %s", displayInfo.decimals, v, displayInfo.unit );
 
       switch( displaymode )
       {
       case TypeIn:
-         sprintf( txt, "%.*f dB", dp2, mp - v );
-         break;
       case Menu:
-         if( isBipolar ) {
-            sprintf(txt, "%s ... %s dB", negval.c_str(), posval.c_str());
-         }
-         else
-         {
-            sprintf(txt, "%s ... %s dB", val.c_str(), negval.c_str());
-         }
+         sprintf( txt, "%.*f %s", displayInfo.decimals, limit_range( mp, -192.f, 500.f ) - limit_range( v, -192.f, 500.f ), displayInfo.unit );
          break;
       case InfoWindow:
+         if( iw )
+         {
+            iw->val = val;
+            iw->valplus = posval;
+            iw->valminus = isBipolar ? negval : "";
+
+            char dtxt[256];
+            sprintf( dtxt, "%.*f %s", displayInfo.decimals, limit_range( mp, -192.f, 500.f ) - limit_range( v, -192.f, 500.f ), displayInfo.unit );
+            iw->dvalplus = dtxt;
+
+            sprintf( dtxt, "%.*f %s", displayInfo.decimals, limit_range( mn, -192.f, 500.f ) - limit_range( v, -192.f, 500.f ), displayInfo.unit );
+            iw->dvalminus = isBipolar ? dtxt : "";
+         }
          if( isBipolar ) {
-            sprintf(txt, "%s %s %s %s %s dB", negval.c_str(), lowersep, val.c_str(), uppersep, posval.c_str());
+            sprintf(txt, "%s %s %s %s %s dB", negval, lowersep, val, uppersep, posval);
          }
          else
          {
-            sprintf(txt, "%s %s %s dB", val.c_str(), uppersep, posval.c_str());
+            sprintf(txt, "%s %s %s dB", val, uppersep, posval);
          }
          break;
       }
@@ -1540,6 +1549,45 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
    switch (ctrltype)
    {
+   case ct_fmratio:
+   {
+      float mf = modulationDepth;
+      switch( displaymode )
+      {
+      case TypeIn:
+         sprintf( txt, "C: %.*f", 2, mf );
+         return;
+         break;
+      case Menu:
+         if( isBipolar )
+         {
+            sprintf( txt, "C: %s %.*f", (mf >= 0 ? "+/-" : "-/+" ), 2, fabs(mf) );
+         }
+         else
+         {
+            sprintf( txt, "C: %.*f", 2, mf );
+         }
+         return;
+         break;
+      case InfoWindow:
+         if( iw )
+         {
+            char dtxt[256];
+            sprintf( dtxt, "C: %.*f", 2, val.f ); iw->val = dtxt;
+            sprintf( dtxt, "%.*f", 2, val.f + mf ); iw->valplus = dtxt;
+            sprintf( dtxt, "%.*f", 2, mf ); iw->dvalplus = dtxt;
+            if( isBipolar )
+            {
+               sprintf( dtxt, "%.*f", 2, val.f - mf ); iw->valminus = dtxt;
+               sprintf( dtxt, "%.*f", 2, -mf ); iw->dvalminus = dtxt;
+            }
+         }
+         // not really used any more bot don't leave it uninit
+         sprintf( txt, "C: %.*f %s %.*f", 2, val.f, ( mf >=0 ? "+/-" : "-/+" ), 2, mf );
+         return;
+         break;
+      }
+   }
    default:
    {
       float v = val.f * 100.f;
@@ -1670,7 +1718,6 @@ void Parameter::get_display(char* txt, bool external, float ef)
       {
       case Custom:
          // Custom cases are handled below
-         std::cout << "Got a custom display type=" << ctrltype << " name = " << get_full_name() << std::endl;
          break;
       case LinearWithScale:
       {
@@ -2385,6 +2432,7 @@ bool Parameter::set_value_from_string( std::string s )
       const char *strip = &(c[0]);
       while( *strip != '\0' && ! std::isdigit( *strip ) ) ++strip;
       nv = std::atof( strip );
+      val.f = nv;
    }
    break;
 
