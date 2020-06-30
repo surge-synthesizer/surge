@@ -426,7 +426,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
             if (overotherside)
             {
-               printf("overbot otherside\n");
                topr.left = trect.left;
                topr.right = trect.right;
                topr.bottom = trect.top + 1;
@@ -436,7 +435,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
             }
             else
             {
-               printf("overbot only\n");
                topr.left = trect2.left;
                topr.right = trect2.right;
                topr.bottom = trect2.top + 1;
@@ -452,7 +450,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
             if (overotherside)
             {
-               printf("overtop otherside\n");
                topr.left = trect2.left;
                topr.right = trect2.right;
                topr.bottom = trect2.bottom - 1;
@@ -462,7 +459,6 @@ void CSurgeSlider::draw(CDrawContext* dc)
             }
             else
             {
-               printf("overtop only\n");
                topr.left = trect.left;
                topr.right = trect.right;
                topr.bottom = trect.bottom - 1;
