@@ -7,6 +7,14 @@
     <image id="alt-slider-h-hover" resource="SVG/altHoverHandle.svg"/>
     <image id="alt-slider-h-ts" resource="SVG/altTSHandle.svg"/>
     <image id="ab-1530" resource="SVG/AB_15x30.svg"/>
+
+    <color id="infowindow.border" value="#ff0000"/>
+    <color id="infowindow.background" value="#ffcccc"/>
+    <color id="infowindow.foreground" value="#0000ff"/>
+    <color id="infowindow.foreground.modulationpositive" value="#00ff00"/>
+    <color id="infowindow.foreground.modulationnegative" value="#ff0000"/>
+    <color id="infowindow.foreground.modulationvaluepositive" value="#00ffff"/>
+    <color id="infowindow.foreground.modulationvaluenegative" value="#ffff00"/>
   </globals>
   <component-classes>
     <class name="boompoop" parent="CSurgeSlider" handle_image="alt-slider-h" handle_hover_image="alt-slider-h-hover" handle_temposync_image="alt-slider-h-ts"/>

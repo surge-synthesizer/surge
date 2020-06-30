@@ -1974,6 +1974,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    frame->addView(b_settingsMenu);
 
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
+   ((CParameterTooltip *)infowindow)->setSkin( currentSkin );
    frame->addView(infowindow);
 
    CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);

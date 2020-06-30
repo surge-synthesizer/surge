@@ -5,9 +5,9 @@
 #include "vstcontrols.h"
 #include "Parameter.h"
 #include <iostream>
-#include "UserDefaults.h"
+#include "SkinSupport.h"
 
-class CParameterTooltip : public VSTGUI::CControl
+class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
 {
 public:
    CParameterTooltip(const VSTGUI::CRect& size) : VSTGUI::CControl(size, 0, 0, 0)
@@ -69,34 +69,30 @@ public:
    {
       if (visible)
       {
-         // COffscreenContext *dc =
-         // COffscreenContext::create(getFrame(),size.width(),size.height());
+         dc->setFont(VSTGUI::kNormalFontSmall);
 
-          dc->setFont(VSTGUI::kNormalFontSmall);
+         auto frameCol = skin->getColor( "infowindow.border", VSTGUI::kBlackCColor );
+         auto bgCol = skin->getColor( "infowindow.background", VSTGUI::kWhiteCColor );
 
-         VSTGUI::CRect smaller = getViewSize();
-         int shrink = 0;
-         /*if(!label[0][0])
-         {
-                 int width = dc->getStringWidth(label[1]);
-                 shrink = limit_range(150 - width,0,75);
-                 
-         }
-         //smaller.inset(shrink>>1,0);'
-         smaller.x += shrink;*/
-
+         auto txtCol = skin->getColor( "infowindow.foreground", VSTGUI::kBlackCColor );
+         auto mpCol = skin->getColor( "infowindow.foreground.modulationpositive", txtCol );
+         auto mnCol = skin->getColor( "infowindow.foreground.modulationnegative", txtCol );
+         auto mpValCol = skin->getColor( "infowindow.foreground.modulationvaluepositive", mpCol );
+         auto mnValCol = skin->getColor( "infowindow.foreground.modulationvaluenegative", mnCol );
+         
+         
+         
          auto size = getViewSize();
          size = size.inset(0.75, 0.75);
-         dc->setFrameColor(VSTGUI::kBlackCColor);
+         dc->setFrameColor(frameCol);
          dc->drawRect(size);
          VSTGUI::CRect sizem1(size);
          sizem1.inset(1, 1);
-         dc->setFillColor(VSTGUI::kWhiteCColor);
+         dc->setFillColor(bgCol);
          dc->drawRect(sizem1, VSTGUI::kDrawFilled);
-         dc->setFontColor(VSTGUI::kBlackCColor);
+         dc->setFontColor(txtCol);
          VSTGUI::CRect trect(size);
          trect.inset(4, 1);
-         trect.right -= shrink;
          VSTGUI::CRect tupper(trect), tlower(trect);
          tupper.bottom = tupper.top + 13;
          tlower.top = tlower.bottom - 15;
@@ -118,16 +114,23 @@ public:
             if( ! extendedwsstrings )
             {
                dc->drawString( iwstrings.val.c_str(), tmid, VSTGUI::kLeftText, true );
+               dc->setFontColor( mpCol );
                dc->drawString( iwstrings.dvalplus.c_str(), tmid, VSTGUI::kRightText, true );
+               dc->setFontColor( txtCol );
             }
             else
             {
                dc->drawString( iwstrings.val.c_str(), tmid, VSTGUI::kCenterText, true );
+               dc->setFontColor( mpCol );
                dc->drawString( iwstrings.dvalplus.c_str(), tmid, VSTGUI::kRightText, true );
+               dc->setFontColor( mnCol );
                dc->drawString( iwstrings.dvalminus.c_str(), tmid, VSTGUI::kLeftText, true );
-               
+
+               dc->setFontColor( mpValCol );
                dc->drawString( iwstrings.valplus.c_str(), tlower, VSTGUI::kRightText, true );
+               dc->setFontColor( mnValCol );
                dc->drawString( iwstrings.valminus.c_str(), tlower, VSTGUI::kLeftText, true );
+               dc->setFontColor( txtCol );
             }
          }
          else
@@ -144,8 +147,6 @@ public:
                dc->drawString(label2left, tlower, VSTGUI::kLeftText, true);
             }
          }
-         // dc->copyFrom(dc1,smaller);
-         // dc->forget();
       }
       setDirty(false);
    }
