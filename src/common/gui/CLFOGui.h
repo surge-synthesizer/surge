@@ -95,8 +95,10 @@ protected:
    int draggedStep = -1;
    int keyModMult = 0;
 
+
    bool draggedIntoTrigTray[16];
    int mouseDownTrigTray = -1;
+   VSTGUI::CButtonState trigTrayButtonState;
    VSTGUI::CPoint rmStepStart, rmStepCurr;
 
    int ss_shift_hover = 0;
