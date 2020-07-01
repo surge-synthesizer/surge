@@ -570,13 +570,18 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
                maski32 = ss->trigmask & (UINT64_C(1) << (mouseDownTrigTray + 32));
                if( ( bs & kLButton ) )
                {
-                  if( maski ) maski = 0; else maski = 1;
+                  if( maski | maski16 | maski32 ) {
+                     maski = 0;
+                     maski16 = 0;
+                     maski32 = 0;
+                  }
+                  else maski = 1;
                }
                else
                {
                   if( maski ) { maski = 0; maski16 = 1; }
                   else if( maski16 ) { maski16 = 0; maski32 = 1; }
-                  else if( maski32 ) { maski32 = 0; maski = 1; }
+                  else if( maski32 ) { maski32 = 0; maski16 = 1; }
                   else { maski16 = 1; }
                }
             }
@@ -1143,7 +1148,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
                }
                else if( ampOn )
                {
-                  on = UINT64_C(1) << i;
+                  on = UINT64_C(1) << ( 16 + i );
                }
             }
             else
