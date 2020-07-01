@@ -9,6 +9,7 @@
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/vst/vstpresetkeys.h"
 
 #include "CScalableBitmap.h"
 
@@ -183,15 +184,72 @@ tresult PLUGIN_API SurgeVst3Processor::setState(IBStream* state)
    void* data = malloc(maxsize);
    int32 numBytes = 0;
 
+   /*
+   ** I am leaving a substantial amount of debug code in here since
+   ** the fix we have placed below is tactical at best and we will
+   ** return to this. See #2110
+   */
+#if 0
+   Surge::Debug::openConsole();
+   printf( "------ VST3 SET STATE --------\n" ); 
+   FUnknownPtr<Steinberg::Vst::IStreamAttributes> sa(state);
+   if( ! sa )
+      printf( "No StreamAttributes\n" );
+   auto ga = [sa](const char* a, char *b) {
+                String128 gstring;
+                if( sa && sa->getAttributes()->getString( a, gstring, 128*sizeof(TChar)) == kResultTrue )
+                {
+                   UString128 t(gstring);
+                   char ascii[128];
+                   t.toAscii(b,128);
+                }
+                else
+                {
+                   b[0] = 0;
+                }
+             };
+   char val[256];
+   ga( Steinberg::Vst::PresetAttributes::kPlugInName, val ); printf( "PluginName      : '%s'\n", val );
+   ga( Steinberg::Vst::PresetAttributes::kName, val );       printf( "Name            : '%s'\n", val );
+   ga( Steinberg::Vst::PresetAttributes::kFileName, val );   printf( "FileName        : '%s'\n", val );
+   ga( Steinberg::Vst::PresetAttributes::kStateType, val );  printf( "StateType       : '%s'\n", val );
+#endif
+
+   
    tresult result = state->read(data, maxsize, &numBytes);
+
+   // printf( "numBytes is %d, result is %d\n", numBytes, result );
 
    if (result == kResultOk)
    {
-      surgeInstance->loadRaw(data, numBytes, false);
-      surgeInstance->loadFromDawExtraState();
-      for( auto e : viewsSet )
-          e->loadFromDAWExtraState(surgeInstance.get());
+#if 0      
+      printf( "First 150 bytes of memory chunk\n" );
+      for( auto c=0; c<10; ++c )
+      {
+         char* cd = (char *)data;
+         printf( "%4d  : ", c * 15 );
+         for( auto cc = 0; cc<15; ++cc )
+            printf( "%2x ", (unsigned short)cd[c * 15 + cc ] );
+         printf( "  |  " );
+         for( auto cc = 0; cc<15; ++cc )
+            printf( "%1c", (char)cd[c * 15 + cc ] );
+         printf ("\n");
+      }
+      fflush( stdout );
+#endif
+      bool isSub3 = ( memcmp(data, "sub3", 4 ) == 0 );
 
+      if( isSub3 )
+      {
+         surgeInstance->loadRaw(data, numBytes, false);
+         surgeInstance->loadFromDawExtraState();
+         for( auto e : viewsSet )
+            e->loadFromDAWExtraState(surgeInstance.get());
+      }
+      else
+      {
+         //printf( "Skipping load where I was handed non-sub3 block\n" );
+      }
    }
 
    free(data);
