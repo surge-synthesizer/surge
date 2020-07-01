@@ -1762,6 +1762,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
             if( storage && ! storage->isStandardTuning ) u = "keys";
          }
 
+         float dval = displayInfo.a * powf(2.0f, f * displayInfo.b);
          if( f >= val_max.f )
          {
             if( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString )
@@ -1771,7 +1772,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
             }
             if( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxValue )
             {
-               f = displayInfo.maxLabelValue;
+               dval = displayInfo.maxLabelValue;
             }
          }
          if( f <= val_min.f )
@@ -1783,10 +1784,10 @@ void Parameter::get_display(char* txt, bool external, float ef)
             }
             if( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinValue )
             {
-               f = displayInfo.minLabelValue;
+               dval = displayInfo.minLabelValue;
             }
          }
-         sprintf(txt, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), displayInfo.a * powf(2.0f, f * displayInfo.b), u.c_str());
+         sprintf(txt, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), dval, u.c_str());
          return;
          break;
       }
