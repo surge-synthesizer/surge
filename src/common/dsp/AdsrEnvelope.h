@@ -277,12 +277,14 @@ public:
                float sx = sqrt(phase);
                l_lo = phase - 2 * sx * rate + rate * rate;
                l_hi = phase + 2 * sx * rate + rate * rate;
+
                /*
                ** That + rate * rate in both means at low sustain ( < 1e-3 or so) you end up with
                ** lo and hi both pushing us up off sustain. Unfortunatley we ned to handle that case
-               ** specially by pushing lo down
+               ** specially by pushing lo down. These limits are pretty empirical. Git blame to see
+               ** the various issues around here which show the test cases.
                */
-               if( lc[s].f < 1e-3 && phase < 1e-4 )
+               if( ( lc[s].f < 1e-3 && phase < 1e-4 ) || ( lc[s].f == 0 && lc[d].f < -7 ) )
                   l_lo = 0;
                /*
                ** Similarly if the rate is very high - larger than one - we can push l_lo well above the
