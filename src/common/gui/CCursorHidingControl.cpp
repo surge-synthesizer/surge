@@ -43,7 +43,7 @@ CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint& where, const CButto
    double dy = where.y - _lastPos.y;
    _lastPos = where;
 
-   if (_isDetatched && !buttons.isTouch())
+   if (( scaleAnyway ||  _isDetatched ) && !buttons.isTouch())
    {
       double scaling = getMouseDeltaScaling(where, buttons);
 
@@ -83,6 +83,10 @@ void CCursorHidingControl::detachCursor(CPoint& where)
    {
       doDetach(where);
    }
+   if( ! hideCursor )
+   {
+      scaleAnyway = true;
+   }
 }
 
 void CCursorHidingControl::attachCursor()
@@ -90,6 +94,10 @@ void CCursorHidingControl::attachCursor()
    if (_isDetatched && hideCursor)
    {
       doAttach();
+   }
+   if( ! hideCursor )
+   {
+      scaleAnyway = false;
    }
 }
 
