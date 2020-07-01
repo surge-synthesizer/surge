@@ -8,6 +8,7 @@
 #include <chrono>
 #include "DebugHelpers.h"
 #include "guihelpers.h"
+#include <cstdint>
 
 using namespace VSTGUI;
 using namespace std;
@@ -556,37 +557,48 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             gaterect[i] = gstep;
             auto gatecolor = knobcolor;
             auto gatebgcolor = stepcolor;
-            bool trigtrayAlt = false;
+
+            uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
+            uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
+            uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
+            
             if( controlstate == cs_trigtray_toggle && ( i == selectedSSrow || draggedIntoTrigTray[i] ) )
             {
-               trigtrayAlt = true;
-               gatebgcolor = grabMarkerHi;
+               auto bs = trigTrayButtonState;
+               maski = ss->trigmask & (UINT64_C(1) << mouseDownTrigTray);
+               maski16 = ss->trigmask & (UINT64_C(1) << (mouseDownTrigTray + 16));
+               maski32 = ss->trigmask & (UINT64_C(1) << (mouseDownTrigTray + 32));
+               if( ( bs & kLButton ) )
+               {
+                  if( maski ) maski = 0; else maski = 1;
+               }
+               else
+               {
+                  if( maski ) { maski = 0; maski16 = 1; }
+                  else if( maski16 ) { maski16 = 0; maski32 = 1; }
+                  else if( maski32 ) { maski32 = 0; maski = 1; }
+                  else { maski16 = 1; }
+               }
             }
 
-            if (ss->trigmask & (UINT64_C(1) << i) && ! trigtrayAlt )
+            if (maski)
             {
                fillr(gstep, gatecolor);
             }
-            else if( ss->trigmask & ( UINT64_C(1) << ( 16 + i ) ) )
+            else if( maski16 )
             {
                // FIXME - an A or an F would be nice eh?
                fillr(gstep, gatebgcolor);
                auto qrect = gstep;
                qrect.right -= (qrect.getWidth() / 2 );
-               if( trigtrayAlt )
-                  fillr(qrect, gatebgcolor);
-               else
-                  fillr(qrect, gatecolor);
+               fillr(qrect, gatecolor);
             }
-            else if( ss->trigmask & ( UINT64_C(1) << ( 32 + i ) ) )
+            else if( maski32 )
             {
                fillr(gstep, gatebgcolor);
                auto qrect = gstep;
                qrect.left += (qrect.getWidth() / 2 );
-               if( trigtrayAlt )
-                  fillr(qrect, gatebgcolor);
-               else
-                  fillr(qrect, gatecolor);
+               fillr(qrect, gatecolor);
             }
             else
             {
@@ -1040,6 +1052,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
                {
                   selectedSSrow = i;
                   mouseDownTrigTray = i;
+                  trigTrayButtonState = buttons;
                   draggedIntoTrigTray[i] = true;
                }
             }
@@ -1110,25 +1123,13 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
       for (int i = 0; i < n_stepseqsteps; i++)
       {
+
          if (draggedIntoTrigTray[i])
          {
             uint64_t off = 0, on = 0;
-            if( bothOn )
-            {
-               off = UINT64_C(1) << i;
-            }
-            else if( filtOn )
-            {
-               off = UINT64_C(1) << ( 16 + i );
-            }
-            else if( ampOn )
-            {
-               off = UINT64_C(1) << ( 32 + i );
-            }
-            else
-            {
-               off = 0;
-            }
+            off = UINT64_C(1) << i |
+               UINT64_C(1) << ( i + 16 ) |
+               UINT64_C(1) << ( i + 32 );
 
             if( ( buttons & kShift ) | ( buttons & kRButton ) )
             {
