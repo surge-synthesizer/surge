@@ -25,6 +25,7 @@ protected:
    void attachCursor();
 
    bool hideCursor = true;
+   bool scaleAnyway = false;
 
 private:
    void doDetach(VSTGUI::CPoint& where);
