@@ -556,12 +556,14 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             gaterect[i] = gstep;
             auto gatecolor = knobcolor;
             auto gatebgcolor = stepcolor;
+            bool trigtrayAlt = false;
             if( controlstate == cs_trigtray_toggle && ( i == selectedSSrow || draggedIntoTrigTray[i] ) )
             {
+               trigtrayAlt = true;
                gatebgcolor = grabMarkerHi;
             }
 
-            if (ss->trigmask & (UINT64_C(1) << i))
+            if (ss->trigmask & (UINT64_C(1) << i) && ! trigtrayAlt )
             {
                fillr(gstep, gatecolor);
             }
@@ -571,20 +573,25 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
                fillr(gstep, gatebgcolor);
                auto qrect = gstep;
                qrect.right -= (qrect.getWidth() / 2 );
-               fillr(qrect, gatecolor);
+               if( trigtrayAlt )
+                  fillr(qrect, gatebgcolor);
+               else
+                  fillr(qrect, gatecolor);
             }
             else if( ss->trigmask & ( UINT64_C(1) << ( 32 + i ) ) )
             {
                fillr(gstep, gatebgcolor);
                auto qrect = gstep;
                qrect.left += (qrect.getWidth() / 2 );
-               fillr(qrect, gatecolor);
+               if( trigtrayAlt )
+                  fillr(qrect, gatebgcolor);
+               else
+                  fillr(qrect, gatecolor);
             }
             else
             {
                fillr(gstep, gatebgcolor );
             }
-
          }
 
          fillr(rstep, stepcolor);
