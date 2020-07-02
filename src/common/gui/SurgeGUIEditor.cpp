@@ -748,7 +748,7 @@ void SurgeGUIEditor::idle()
                ->get_target01());
          }
       }
-      clear_infoview_countdown--;
+      clear_infoview_countdown += clear_infoview_peridle;
       if (clear_infoview_countdown == 0)
       {
          ((CParameterTooltip*)infowindow)->Hide();
@@ -938,6 +938,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    CPoint nopoint(0, 0);
 
+   clear_infoview_peridle = -1;
+   
    /*
    ** There are a collection of member states we need to reset
    */

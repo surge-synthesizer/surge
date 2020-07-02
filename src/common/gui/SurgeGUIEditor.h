@@ -309,6 +309,9 @@ private:
    HWND ToolTipWnd;
 #endif
    int clear_infoview_countdown = 0;
+public:
+   int clear_infoview_peridle = -1;
+private:
    float blinktimer = 0;
    bool blinkstate = false;
    bool useDevMenu = false;

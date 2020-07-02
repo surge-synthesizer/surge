@@ -1,6 +1,7 @@
 //-------------------------------------------------------------------------------------------------------
 //	Copyright 2005 Claes Johanson & Vember Audio
 //-------------------------------------------------------------------------------------------------------
+#include "SurgeGUIEditor.h"
 #include "CSurgeSlider.h"
 #include "resource.h"
 #include "DspUtilities.h"
@@ -10,6 +11,7 @@
 #include "SurgeStorage.h"
 #include <UserDefaults.h>
 #include <iostream>
+
 
 using namespace VSTGUI;
 using namespace std;
@@ -651,6 +653,13 @@ bool CSurgeSlider::isInMouseInteraction()
 
 CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   {
+      auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+      if( sge )
+      {
+         sge->clear_infoview_peridle = 0;
+      }
+   }
    if (storage)
       this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
@@ -704,6 +713,14 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 
 CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+   {
+      auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+      if( sge )
+      {
+         sge->clear_infoview_peridle = -1;
+      }
+   }
+
    CCursorHidingControl::onMouseUp(where, buttons);
 
    if (controlstate)
