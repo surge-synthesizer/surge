@@ -34,6 +34,7 @@
 #include <iomanip>
 #include <sstream>
 #include <stack>
+#include <unordered_map>
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -686,16 +687,49 @@ void SurgeGUIEditor::idle()
 
                /*
                ** Some state changes enable and disable sliders. If this is one of those state changes and a value has changed, then
-               ** we need to rebuild the UI. See #2056.
+               ** we need to invalidate them. See #2056.
                */
                auto tag = cc->getTag();
                auto sv = synth->getParameter01(j);
                auto cv = cc->getValue();
-               if( ( tag == fmconfig_tag || tag == filterblock_tag ) &&
-                   ( sv != cv ) )
+
+               if ((sv == cv) && ((tag == fmconfig_tag || tag == filterblock_tag)))
                {
-                  // this is a bit heavy handed, but this is also an edge case
-                  synth->refresh_editor = true;
+                  std::unordered_map<int, bool> resetMap;
+
+                  if (tag == fmconfig_tag)
+                  {
+                     auto targetTag = synth->storage.getPatch().scene[current_scene].fm_depth.id + start_paramtags;
+                     auto targetState = ((int)(sv * n_fm_configuration) == fm_off);
+                     resetMap[targetTag] = targetState;
+                  }
+
+                  if (tag == filterblock_tag)
+                  {
+                     auto pval = (int)(sv * n_fb_configuration);
+                     
+                     auto targetTag = synth->storage.getPatch().scene[current_scene].feedback.id + start_paramtags;
+                     auto targetState = (pval == fb_serial);
+                     resetMap[targetTag] = targetState;
+
+                     targetTag = synth->storage.getPatch().scene[current_scene].width.id + start_paramtags;
+                     targetState = (pval != fb_stereo && pval != fb_wide);
+                     resetMap[targetTag] = targetState;
+                  }
+
+                  for (int i = 0; i < n_paramslots; i++)
+                  {
+                     if (param[i] && (resetMap.find(param[i]->getTag()) != resetMap.end()))
+                     {
+                        auto css = dynamic_cast<CSurgeSlider*>(param[i]);
+
+                        if (css)
+                        {
+                           css->disabled = resetMap[param[i]->getTag()];
+                           css->invalid();
+                        }
+                     }
+                  }
                }
                    
 #if TARGET_VST2
