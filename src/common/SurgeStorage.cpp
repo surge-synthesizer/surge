@@ -1771,6 +1771,73 @@ bool isValidName(const std::string &patchName)
     return valid;
 }
 
+bool isValidUTF8(const std::string &testThis )
+{
+   int pos = 0;
+   const char* data = testThis.c_str();
+
+   // https://helloacm.com/how-to-validate-utf-8-encoding-the-simple-utf-8-validation-algorithm/
+   // Valid UTF8 has a specific binary format. If it's a single byte UTF8 character, then it is
+   // always of form '0xxxxxxx', where 'x' is any binary digit. If it's a two byte UTF8 character, then it's always of form
+   // '110xxxxx10xxxxxx'. Similarly for three and four byte UTF8 characters it starts with '1110xxxx' and '11110xxx' followed by
+   // '10xxxxxx' one less times as there are bytes. This tool will locate mistakes in the encoding and tell you where they occured.
+
+   //    https://helloacm.com/how-to-validate-utf-8-encoding-the-simple-utf-8-validation-algorithm/
+
+   auto is10x = [](int a) {
+                   int bit1 = (a >> 7) & 1;
+                   int bit2 = (a >> 6) & 1;
+                   return (bit1 == 1) && (bit2 == 0);
+                };
+   size_t dsz = testThis.size();
+   for (int i = 0; i < dsz; ++ i) {
+      // 0xxxxxxx
+      int bit1 = (data[i] >> 7) & 1;
+      if (bit1 == 0) continue;
+      // 110xxxxx 10xxxxxx
+      int bit2 = (data[i] >> 6) & 1;
+      if (bit2 == 0) return false;
+      // 11
+      int bit3 = (data[i] >> 5) & 1;
+      if (bit3 == 0) {
+         // 110xxxxx 10xxxxxx
+         if ((++ i) < dsz) {
+            if (is10x(data[i])) {
+               continue;
+            }
+            return false;
+         } else {
+            return false;
+         }
+      }                        
+      int bit4 = (data[i] >> 4) & 1;
+      if (bit4 == 0) {
+         // 1110xxxx 10xxxxxx 10xxxxxx
+         if (i + 2 < dsz) {
+            if (is10x(data[i + 1]) && is10x(data[i + 2])) {
+               i += 2;
+               continue;
+            }
+            return false;
+         } else {
+            return false;
+         }                
+      }            
+      int bit5 = (data[i] >> 3) & 1;
+      if (bit5 == 1) return false;
+      if (i + 3 < dsz) {
+         if (is10x(data[i + 1]) && is10x(data[i + 2]) && is10x(data[i + 3])) {
+            i += 3;
+            continue;
+         }
+         return false;
+      } else {
+         return false;
+      }                            
+   }
+   return true;
+}
+
 string findReplaceSubstring(string& source, const string& from, const string& to)
 {
    string newString;

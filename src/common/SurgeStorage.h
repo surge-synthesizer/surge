@@ -703,7 +703,9 @@ namespace Surge
 namespace Storage
 {
 bool isValidName(const std::string &name);
-
+// is this really not in stdlib?
+bool isValidUTF8( const std::string &testThis);
+   
 std::string findReplaceSubstring(std::string &source, const std::string &from, const std::string &to);
 
 #if WINDOWS
