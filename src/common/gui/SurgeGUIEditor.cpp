@@ -3674,6 +3674,15 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       string defaultComment = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchComment", "");
       string oldAuthor = "";
 
+      if( ! Surge::Storage::isValidUTF8( defaultAuthor ) )
+      {
+         defaultAuthor = "";
+      }
+      if( ! Surge::Storage::isValidUTF8( defaultComment ) )
+      {
+         defaultComment = "";
+      }
+      
       if (p.author == "" && defaultAuthor != "")
       {
          p.author = defaultAuthor;
@@ -5022,7 +5031,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Author..."), [this]() {
             string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "");
             char txt[256];
-            strncpy(txt, s.c_str(), 256);
+            txt[0] = 0;
+            if( Surge::Storage::isValidUTF8( s ) )
+               strncpy(txt, s.c_str(), 256);
             spawn_miniedit_text(txt, 256, "Enter default patch author name:", "Set Default Patch Author");
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", txt);
             });
@@ -5030,7 +5041,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Comment..."), [this]() {
             string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchComment", "");
             char txt[256];
-            strncpy(txt, s.c_str(), 256);
+            txt[0] = 0;
+            if( Surge::Storage::isValidUTF8( s ) )
+               strncpy(txt, s.c_str(), 256);
             spawn_miniedit_text(txt, 256, "Enter default patch comment text:", "Set Default Patch Comment");
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchComment", txt);
             });
