@@ -529,6 +529,7 @@ void Parameter::set_type(int ctrltype)
       val_default.i = 1;
       break;
    case ct_envshape:
+   case ct_envshape_attack:
       valtype = vt_int;
       val_min.i = 0;
       val_max.i = 2;
@@ -651,6 +652,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 1;
       break;
    case ct_percent_bidirectional:
+   case ct_percent_bidirectional_stereo:
       val_min.f = -1;
       val_max.f = 1;
       valtype = vt_float;
@@ -783,6 +785,19 @@ void Parameter::set_type(int ctrltype)
    case ct_countedset_percent:
       displayType = LinearWithScale;
       sprintf(displayInfo.unit, "%%" );
+      displayInfo.scale = 100;
+      break;
+
+   case ct_percent_bidirectional_stereo:
+      displayType = LinearWithScale;
+      displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
+         ParamDisplayFeatures::kHasCustomMaxString |
+         ParamDisplayFeatures::kHasCustomDefaultString;
+      
+      sprintf(displayInfo.unit, "%%" );
+      sprintf( displayInfo.minLabel, "-100.00 %% (Left)" );
+      sprintf( displayInfo.defLabel, "0.00 %% (Stereo)" );
+      sprintf( displayInfo.maxLabel, "100.00 %% (Right)" );
       displayInfo.scale = 100;
       break;
 
@@ -948,6 +963,7 @@ void Parameter::bound_value(bool force_integer)
       case ct_percent:
       case ct_percent200:
       case ct_percent_bidirectional:
+      case ct_percent_bidirectional_stereo:
       case ct_rotarydrive:
       case ct_osc_feedback:
       case ct_osc_feedback_negative:
@@ -1739,6 +1755,19 @@ void Parameter::get_display(char* txt, bool external, float ef)
             u = displayInfo.absoluteUnit;
          }
          sprintf( txt, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals ), displayInfo.scale * f, u.c_str() );
+
+         if( f >= val_max.f && ( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString ) )
+         {
+            strcpy( txt, displayInfo.maxLabel );
+         }
+         if( f <= val_min.f && ( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString ) )
+         {
+            strcpy( txt, displayInfo.minLabel );
+         }
+         if( f == val_default.f && ( displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomDefaultString ) )
+         {
+            strcpy( txt, displayInfo.defLabel );
+         }
          return;
          break;
       }
@@ -1890,6 +1919,40 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_fmratio_int:
          sprintf(txt, "C : %d", i);
+         break;
+      case ct_envshape:
+         switch(i)
+         {
+         case 0:
+            sprintf( txt, "Linear" );
+            break;
+         case 1:
+            sprintf( txt, "Quadratic" );
+            break;
+         case 2:
+            sprintf( txt, "Cubic" );
+            break;
+         default:
+            sprintf( txt, "%d", i );
+            break;
+         }
+         break;
+      case ct_envshape_attack:
+         switch(i)
+         {
+         case 0:
+            sprintf( txt, "Sqrt" );
+            break;
+         case 1:
+            sprintf( txt, "Linear" );
+            break;
+         case 2:
+            sprintf( txt, "Quadratic" );
+            break;
+         default:
+            sprintf( txt, "%d", i );
+            break;
+         }
          break;
       case ct_sineoscmode:
          switch (i)
@@ -2192,6 +2255,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_percent:
    case ct_percent200:
    case ct_percent_bidirectional:
+   case ct_percent_bidirectional_stereo:
    case ct_pitch_semi7bp:
    case ct_pitch_semi7bp_absolutable:
    case ct_pitch:
