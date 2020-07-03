@@ -27,6 +27,7 @@ enum ctrltypes
    ct_none,
    ct_percent,
    ct_percent_bidirectional,
+   ct_percent_bidirectional_stereo, // a bidirectional with special string at -100% +100% and 0%
    ct_pitch_octave,
    ct_pitch_semi7bp,
    ct_pitch_semi7bp_absolutable,
@@ -56,6 +57,7 @@ enum ctrltypes
    ct_envtime,
    ct_envtime_lfodecay,
    ct_envshape,
+   ct_envshape_attack,
    ct_envmode,
    ct_delaymodtime,
    ct_reverbtime,
@@ -349,9 +351,10 @@ public:
    enum ParamDisplayFeatures {
       kHasCustomMinString = 1 << 0,
       kHasCustomMaxString = 1 << 1,
-      kHasCustomMinValue = 1 << 2,
-      kHasCustomMaxValue = 1 << 3,
-      kUnitsAreSemitonesOrKeys = 1 << 4
+      kHasCustomDefaultString = 1 << 2,
+      kHasCustomMinValue = 1 << 3,
+      kHasCustomMaxValue = 1 << 4,
+      kUnitsAreSemitonesOrKeys = 1 << 5
    };
    
    struct DisplayInfo {
@@ -363,7 +366,7 @@ public:
 
       float tempoSyncNotationMultiplier = 1.f;
       
-      char minLabel[128], maxLabel[128];
+      char minLabel[128], maxLabel[128], defLabel[128];
       float minLabelValue = 0.f, maxLabelValue = 0.f;
 
       float modulationCap = -1.f;

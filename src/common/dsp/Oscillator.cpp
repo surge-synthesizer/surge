@@ -749,14 +749,14 @@ osc_audioinput::~osc_audioinput()
 
 void osc_audioinput::init_ctrltypes(int scene, int osc)
 {
-   oscdata->p[0].set_name("Audio In Channel");
-   oscdata->p[0].set_type(ct_percent_bidirectional);
+   oscdata->p[0].set_name("Audio In L/R Channel");
+   oscdata->p[0].set_type(ct_percent_bidirectional_stereo);
    oscdata->p[1].set_name("Audio In Gain");
    oscdata->p[1].set_type(ct_decibel);
    if( scene == 1 )
    {
-      oscdata->p[2].set_name("Scene A Channel");
-      oscdata->p[2].set_type(ct_percent_bidirectional);
+      oscdata->p[2].set_name("Scene A L/R Channel");
+      oscdata->p[2].set_type(ct_percent_bidirectional_stereo);
       oscdata->p[3].set_name("Scene A Gain");
       oscdata->p[3].set_type(ct_decibel);
       oscdata->p[4].set_name("Audio In<>Scene A Mix");

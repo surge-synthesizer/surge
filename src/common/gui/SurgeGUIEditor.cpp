@@ -1218,6 +1218,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_decibel_extendable:
          case ct_freq_mod:
          case ct_percent_bidirectional:
+         case ct_percent_bidirectional_stereo:
          case ct_freq_shift:
          case ct_osc_feedback_negative:
             style |= kBipolar;
@@ -1416,6 +1417,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_decibel_extendable:
          case ct_freq_mod:
          case ct_percent_bidirectional:
+         case ct_percent_bidirectional_stereo:
          case ct_osc_feedback_negative:
          case ct_freq_shift:
             style |= kBipolar;
@@ -1510,6 +1512,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          }
          break;
          case ct_envshape:
+         case ct_envshape_attack:
          {
             bool hasShape = synth->storage.getPatch()
                .scene[current_scene]

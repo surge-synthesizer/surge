@@ -472,7 +472,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                  envs + "attack", px, py, sc_id, cg_ENV, e, true,
                                                  Surge::ParamConfig::kVertical | kWhite | sceasy));
          a->push_back(scene[sc].adsr[e].a_s.assign(p_id.next(), id_s++, "attack_shape", "Attack Shape",
-                                                   ct_envshape,
+                                                   ct_envshape_attack,
                                                    envs + "attack_shape", px, py + so, sc_id, cg_ENV, e,
                                                    false, kNoPopup));
          px += gui_vfader_dist;
