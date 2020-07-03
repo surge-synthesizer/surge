@@ -5122,7 +5122,28 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
        }
        else
        {
-          auto cb = addCallbackMenu(skinSubMenu, entry.displayName,
+          auto dname = entry.displayName;
+          if( useDevMenu )
+          {
+             dname += "(";
+             if( entry.root.find( synth->storage.datapath ) != std::string::npos )
+             {
+                dname += "factory/";
+             }
+             else if( entry.root.find( synth->storage.userDataPath ) != std::string::npos )
+             {
+                dname += "user/";
+             }
+             else
+             {
+                dname += "other/";
+             }
+             dname += entry.name;
+             
+             dname += ")";
+          }
+
+          auto cb = addCallbackMenu(skinSubMenu, dname,
                                     [this, entry, &db]() {
                                        auto s = db.getSkin(entry);
                                        this->currentSkin = s;
