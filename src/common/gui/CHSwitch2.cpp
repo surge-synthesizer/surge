@@ -121,6 +121,11 @@ CMouseEventResult CHSwitch2::onMouseUp(CPoint& where, const CButtonState& button
 }
 CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   if( doingHover )
+   {
+      calculateHoverValue( where );
+   }
+
    if (dragable && ( buttons.getButtonState() ))
    {
       auto mouseableArea = getMouseableArea();
@@ -151,10 +156,6 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
       return kMouseEventHandled;
    }
 
-   if( doingHover )
-   {
-      calculateHoverValue( where );
-   }
    
    return kMouseEventNotHandled;
 }
