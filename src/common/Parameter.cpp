@@ -2584,9 +2584,18 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
       **   = 18 * ( log2( m + v ) - log2( v ) )
       ** d / 18 + log2(v) = log2( m + v )
       ** 2^(d/18 + log2(v) ) - v = m;
+      **
+      ** But ther'e a gotcha. The minum db is -192 so we have to set the val.f accordingly.
+      ** That is we have some amp2db we have used called av. So
+      **
+      ** d = mv - av
+      **   = 18 ( log2(m+v) ) - av
+      ** d / 18 + av/18 = log2(m+v)
+      ** 2^(d/18 + mv/18) - v = m
       */
-      auto d = (float)std::atof( s.c_str() );
-      auto mv = powf( 2.0, ( d / 18.0 + log2f( val.f ) ) ) - val.f;
+      auto av = amp_to_db(val.f);
+      auto d  = (float)std::atof( s.c_str() );
+      auto mv = powf( 2.0, ( d / 18.0 + av/18.0 ) ) - val.f;
       auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
       return rmv;
       break;
