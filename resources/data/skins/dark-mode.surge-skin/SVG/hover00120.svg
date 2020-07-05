@@ -3,21 +3,21 @@
     <title>hover00120</title>
     <g id="hover00120" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="Group-6" transform="translate(0.000000, 220.000000)">
-            <rect id="Rectangle" fill="#399DFF" x="0" y="0" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#399DFF" x="1" y="2.84217094e-14" width="26" height="7" rx="1"></rect>
             <g id="Group-5" transform="translate(0.000000, 8.000000)"></g>
-            <rect id="Rectangle" fill="#399DFF" x="0" y="55" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#399DFF" x="1" y="55" width="26" height="7" rx="1"></rect>
         </g>
         <g id="Group-6">
-            <rect id="Rectangle" fill="#399DFF" x="0" y="0" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#399DFF" x="1" y="0" width="26" height="7" rx="1"></rect>
             <g id="Group-2" transform="translate(0.000000, 8.000000)"></g>
             <g id="Group-5" transform="translate(0.000000, 8.000000)"></g>
         </g>
         <g id="Group-6" transform="translate(0.000000, 55.000000)" fill="#399DFF">
-            <rect id="Rectangle" x="0" y="0" width="28" height="7" rx="1"></rect>
-            <rect id="Rectangle" x="0" y="55" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" x="1" y="0" width="26" height="7" rx="1"></rect>
+            <rect id="Rectangle" x="1" y="55" width="26" height="7" rx="1"></rect>
         </g>
         <g id="Group-6" transform="translate(0.000000, 118.000000)">
-            <rect id="Rectangle" fill="#399DFF" x="0" y="47" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#399DFF" x="1" y="47" width="26" height="7" rx="1"></rect>
             <g id="Group-5" transform="translate(0.000000, 8.000000)"></g>
         </g>
         <g id="Group-9" transform="translate(4.000000, 1.000000)"></g>

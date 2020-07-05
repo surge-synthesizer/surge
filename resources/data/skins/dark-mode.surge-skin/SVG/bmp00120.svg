@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="28px" height="282px" viewBox="0 0 28 282" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background: #151515;">
+<svg width="28px" height="282px" viewBox="0 0 28 282" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background: #242424;">
     <title>bmp00120</title>
     <g id="bmp00120" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect fill="#151515" x="0" y="0" width="28" height="282"></rect>
+        <rect fill="#242424" x="0" y="0" width="28" height="282"></rect>
         <g id="Group-6" transform="translate(0.000000, 220.000000)">
-            <rect id="Rectangle" fill="#FF9000" x="0" y="0" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#FF9000" x="1" y="0" width="26" height="7" rx="1"></rect>
             <g id="Group-5" transform="translate(0.000000, 8.000000)"></g>
-            <rect id="Rectangle" fill="#FF9000" x="0" y="55" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#FF9000" x="1" y="55" width="26" height="7" rx="1"></rect>
         </g>
         <g id="Group-6">
-            <rect id="Rectangle" fill="#FF9000" x="0" y="0" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#FF9000" x="1" y="-5.68434189e-14" width="26" height="7" rx="1"></rect>
             <g id="Group-2" transform="translate(0.000000, 8.000000)"></g>
             <g id="Group-5" transform="translate(0.000000, 8.000000)"></g>
         </g>
         <g id="Group-6" transform="translate(0.000000, 55.000000)" fill="#FF9000">
-            <rect id="Rectangle" x="0" y="0" width="28" height="7" rx="1"></rect>
-            <rect id="Rectangle" x="0" y="55" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" x="1" y="-2.84217094e-14" width="26" height="7" rx="1"></rect>
+            <rect id="Rectangle" x="1" y="55" width="26" height="7" rx="1"></rect>
         </g>
         <g id="Group-6" transform="translate(0.000000, 118.000000)">
-            <rect id="Rectangle" fill="#FF9000" x="0" y="47" width="28" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#FF9000" x="1" y="47" width="26" height="7" rx="1"></rect>
             <g id="Group-5" transform="translate(0.000000, 8.000000)"></g>
         </g>
         <g id="Group-9" transform="translate(4.000000, 1.000000)"></g>
