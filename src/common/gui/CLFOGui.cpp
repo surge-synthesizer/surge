@@ -1251,9 +1251,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
          {
             if (lfodata->shape.val.i != i)
             {
-               beginEdit();
                lfodata->shape.val.i = i;
-               endEdit();
                invalid();
 
                // This is such a hack
@@ -1472,9 +1470,7 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
 
                     if( ns != this->lfodata->shape.val.i )
                     {
-                       this->beginEdit();
                        this->lfodata->shape.val.i = ns;
-                       this->endEdit();
                        this->invalid();
                        // This is such a hack
                        auto sge = dynamic_cast<SurgeGUIEditor *>(this->listener);
