@@ -24,5 +24,21 @@
         <circle id="Oval" fill="url(#linearGradient-2)" cx="11.5" cy="32.5" r="5.5"></circle>
         <circle id="Oval" fill="url(#linearGradient-3)" cx="39.5" cy="8.5" r="5.5"></circle>
         <circle id="Oval" fill="url(#linearGradient-3)" cx="39.5" cy="32.5" r="5.5"></circle>
+        <g id="Group-3" transform="translate(11.500000, 9.000000) rotate(-90.000000) translate(-11.500000, -9.000000) translate(9.500000, 8.500000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0.75" y="0" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="1" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
+        <g id="Group-3" transform="translate(11.500000, 33.000000) rotate(-90.000000) translate(-11.500000, -33.000000) translate(9.500000, 32.500000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0.75" y="0" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="1" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
+        <g id="Group-3-Copy-2" transform="translate(39.500000, 9.000000) rotate(-90.000000) translate(-39.500000, -9.000000) translate(37.500000, 8.500000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0.75" y="0" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="1" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
+        <g id="Group-3-Copy" transform="translate(39.500000, 33.000000) rotate(-90.000000) translate(-39.500000, -33.000000) translate(37.500000, 32.500000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0.75" y="0" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="1" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
     </g>
 </svg>

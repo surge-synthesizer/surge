@@ -4,16 +4,16 @@
     <g id="hover00123" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="Group-6" transform="translate(0.000000, 47.000000)">
             <g id="Group-10">
-                <rect id="Rectangle" stroke="#41A1FF" fill="#399DFF" x="0" y="173" width="50" height="7" rx="1"></rect>
-                <rect id="Rectangle" stroke="#41A1FF" fill="#399DFF" x="0" y="228" width="50" height="7" rx="1"></rect>
-                <rect id="Rectangle" stroke="#41A1FF" fill="#399DFF" x="0" y="8" width="50" height="7" rx="1"></rect>
-                <rect id="Rectangle" stroke="#41A1FF" fill="#399DFF" x="0" y="63" width="50" height="7" rx="1"></rect>
-                <rect id="Rectangle" stroke="#41A1FF" fill="#399DFF" x="0" y="118" width="50" height="7" rx="1"></rect>
+                <rect id="Rectangle" fill="#399DFF" x="1" y="173" width="48" height="7" rx="1"></rect>
+                <rect id="Rectangle" fill="#399DFF" x="1" y="228" width="48" height="7" rx="1"></rect>
+                <rect id="Rectangle" fill="#399DFF" x="1" y="8" width="48" height="7" rx="1"></rect>
+                <rect id="Rectangle" fill="#399DFF" x="1" y="63" width="48" height="7" rx="1"></rect>
+                <rect id="Rectangle" fill="#399DFF" x="1" y="118" width="48" height="7" rx="1"></rect>
                 <g id="Group-11" transform="translate(2.000000, 1.000000)"></g>
             </g>
         </g>
         <g id="Stacked-Group">
-            <rect id="Rectangle" stroke="#41A1FF" fill="#399DFF" x="0" y="0" width="50" height="7" rx="1"></rect>
+            <rect id="Rectangle" fill="#399DFF" x="1" y="0" width="48" height="7" rx="1"></rect>
             <g id="Group" transform="translate(0.000000, 40.000000)"></g>
         </g>
         <g id="Stacked-Group-2" transform="translate(0.000000, 55.000000)">

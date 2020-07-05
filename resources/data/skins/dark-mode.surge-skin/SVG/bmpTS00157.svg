@@ -15,5 +15,9 @@
         <ellipse id="Oval-Copy" fill="url(#linearGradient-1)" cx="8.5" cy="14" rx="5.5" ry="6"></ellipse>
         <circle id="Oval" fill="url(#linearGradient-2)" cx="8.5" cy="11.5" r="5.5"></circle>
         <circle id="Oval" stroke="#0100DA" fill="#005CB6" cx="8.5" cy="11.5" r="3"></circle>
+        <g id="Group-3" transform="translate(7.000000, 11.000000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
     </g>
 </svg>
