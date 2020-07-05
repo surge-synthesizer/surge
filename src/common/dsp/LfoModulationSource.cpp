@@ -269,7 +269,7 @@ void LfoModulationSource::release()
 
 void LfoModulationSource::process_block()
 {
-   if( (! phaseInitialized) || lfo->rate.deactivated )
+   if( (! phaseInitialized) || ( lfo->trigmode.val.i == lm_keytrigger && lfo->rate.deactivated ) )
    {
       initPhaseFromStartPhase();
    }
