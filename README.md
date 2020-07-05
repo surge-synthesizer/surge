@@ -269,3 +269,4 @@ Azure pipelines for free to the open source community!
   * Most Surge-related conversation on the Surge Synth Slack. [You can join via this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/slack_invite_link)
   * IRC channel at #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
   * Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
+  * Chain icon on filter link from flaticon.com
