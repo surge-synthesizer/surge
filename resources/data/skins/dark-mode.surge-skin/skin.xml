@@ -36,10 +36,10 @@
     <color id="lfo.stepseq.background" value="$darkergray"/>
     <color id="lfo.stepseq.column.shadow" value="$darkblack"/>
     <color id="lfo.stepseq.step.fill" value="$surgeblue"/>
-    <color id="lfo.stepseq.step.fill.disabled" value="$darkgray"/>
-    <color id="lfo.stepseq.loop.outside.majorstep" value="#303030"/>
-    <color id="lfo.stepseq.loop.outside.minorstep" value="#303030"/>
-    <color id="lfo.stepseq.loop.majorstep" value="#000000"/>
+    <color id="lfo.stepseq.step.fill.disabled" value="#123463"/>
+    <color id="lfo.stepseq.loop.outside.majorstep" value="#202020"/>
+    <color id="lfo.stepseq.loop.outside.minorstep" value="#292929"/>
+    <color id="lfo.stepseq.loop.majorstep" value="#090909"/>
     <color id="lfo.stepseq.loop.minorstep" value="$buttonbg"/>
     <color id="lfo.stepseq.loop.markers" value="$lightgray"/>
     <color id="lfo.stepseq.trigger.click" value="$lightgray"/>
@@ -59,7 +59,7 @@
     <color id="savedialog.background" value="#242424"/>
 
     <color id="textfield.focuscolor" value="#2E2E5E"/>
-    
+
     <color id="savedialog.textfield.border" value="#0F0F0F"/>
     <color id="savedialog.textfield.background" value="#2E2E2E"/>
     <color id="savedialog.textfield.foreground" value="$lightgray"/>
@@ -104,9 +104,17 @@
   </globals>
 
   <component-classes>
+    <class name="dark-hslider" parent="CSurgeSlider" orientation="horizontal" white="false"/>
   </component-classes>
 
   <controls>
+    <control ui_identifier="filter.cutoff_2" x="599" y="213" w="140" h="26" class="dark-hslider"/>
+    <control ui_identifier="filter.resonance_2" x="599" y="234" w="140" h="26" class="dark-hslider"/>
+
+    <control ui_identifier="filter.f2_offset_mode" x="733" y="218" w="12" h="18" class="CSwitchControl" bg_id="121"/>
+    <control ui_identifier="filter.f2_link_resonance" x="733" y="239" w="12" h="18" class="CSwitchControl" bg_id="140"/>
+
+    <control tag_value="51" tag_name="tag_mp_jogfx" x="855" y="197" w="37" h="12" class="CHSwitch2"/>
   </controls>
 
 </surge-skin>
