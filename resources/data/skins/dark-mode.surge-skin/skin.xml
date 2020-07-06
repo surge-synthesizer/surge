@@ -1,4 +1,4 @@
-<surge-skin name="Surge Dark" author="Decoded Enterprises">
+<surge-skin name="Surge Dark" author="Decoded Enterprises" version="1">
   <globals>
     <!-- This means if there is a bmp00???.svg in this directory we use it over the built in for this skin -->
     <defaultimage directory="SVG/"/>
