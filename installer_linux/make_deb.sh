@@ -43,7 +43,7 @@ PACKAGE_NAME="$SURGE_NAME"
 # Cleanup from failed prior runs
 rm -rf ${PACKAGE_NAME} product
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
-mkdir -p ${PACKAGE_NAME}/usr/lib/lv2
+# mkdir -p ${PACKAGE_NAME}/usr/lib/lv2
 mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 mkdir -p ${PACKAGE_NAME}/DEBIAN
 chmod -R 0755 ${PACKAGE_NAME}
@@ -94,11 +94,11 @@ if [[ -d ../surge-fx/build/product/ ]]; then
 fi
 
 # copy the lv2 bundle
-cp -r ../build/surge_products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
+# cp -r ../build/surge_products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
 
 # set permissions on shared libraries
 find ${PACKAGE_NAME}/usr/lib/vst3/ -type f -iname "*.so" | xargs chmod 0644
-find ${PACKAGE_NAME}/usr/lib/lv2/ -type f -iname "*.so" | xargs chmod 0644
+# find ${PACKAGE_NAME}/usr/lib/lv2/ -type f -iname "*.so" | xargs chmod 0644
 
 echo "----- LIBRARY CONTENTS (except resource) -----"
 find ${PACKAGE_NAME}/usr/lib -print
