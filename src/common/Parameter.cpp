@@ -919,7 +919,7 @@ void Parameter::set_type(int ctrltype)
       displayInfo.scale = 100.0;
       sprintf(displayInfo.unit, "cents");
       sprintf(displayInfo.absoluteUnit, "Hz");
-      displayInfo.absoluteFactor = 16;
+      displayInfo.absoluteFactor = 0.16; // absolute factor also takes scale into account hence the /100
       displayInfo.extendFactor = 12;
       break;
 
