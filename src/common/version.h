@@ -30,7 +30,7 @@ namespace Surge {
 #define stringWebsite "https://surge-synthesizer.github.io/"
 #define stringFileDescription "Surge Synth Team Surge"
 #define stringCompanyName "Surge Synth Team\0"
-#define stringLegalCopyright "© 2017-2020 Surge Synth Team"
+#define stringLegalCopyright "© 2004-2020 Various Authors"
 #define stringLegalTrademarks "VST is a trademark of Steinberg Media Technologies GmbH"
 
 #endif //__version__
