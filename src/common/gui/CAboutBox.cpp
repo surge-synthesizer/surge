@@ -53,7 +53,7 @@ void CAboutBox::draw(CDrawContext* pContext)
 #elif TARGET_VST2
       std::string flavor = "VST2 (unsupported)";
 #elif TARGET_LV2
-      std::string flavor = "LV2";
+      std::string flavor = "LV2 (experimental)";
 #else
       std::string flavor = "Non-Plugin"; // for linux app
 #endif      
