@@ -1154,21 +1154,43 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    frame->addView(statuspanel);
 
+   int catx = 157, caty = 41;
+   auto catctrl = currentSkin->controlForEnumID( tag_mp_category );
+   if( catctrl )
+   {
+      catx = catctrl->x;
+      caty = catctrl->y;
+   }
+   
    CHSwitch2* mp_cat =
-      new CHSwitch2(CRect(157, 41, 157 + 37, 41 + 12), this, tag_mp_category, 2, 12, 1, 2,
+      new CHSwitch2(CRect(catx, caty, 157 + 37, 41 + 12), this, tag_mp_category, 2, 12, 1, 2,
                     bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
    mp_cat->setUsesMouseWheel(false); // mousewheel on category and patch buttons is undesirable
    mp_cat->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_cat);
 
+   int patchx = 242, patchy = 41;
+   auto patchctrl = currentSkin->controlForEnumID( tag_mp_patch );
+   if( patchctrl )
+   {
+      patchx = patchctrl->x;
+      patchy = patchctrl->y;
+   }
    CHSwitch2* mp_patch =
-      new CHSwitch2(CRect(242, 41, 242 + 37, 41 + 12), this, tag_mp_patch, 2, 12, 1, 2,
+      new CHSwitch2(CRect(patchx, patchy, 242 + 37, 41 + 12), this, tag_mp_patch, 2, 12, 1, 2,
                     bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
    mp_patch->setUsesMouseWheel(false);// mousewheel on category and patch buttons is undesirable
    mp_patch->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_patch);
 
    int jogx = 759 + 131 - 39, jogy = 182 + 15;
+   auto jogctrl = currentSkin->controlForEnumID( tag_mp_jogfx );
+   if( jogctrl )
+   {
+      jogx = jogctrl->x;
+      jogy = jogctrl->y;
+   }
+
    CHSwitch2* mp_jogfx =
       new CHSwitch2(CRect(jogx, jogy, jogx + 37, jogy + 12), this, tag_mp_jogfx, 2, 12, 1, 2,
                     bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);

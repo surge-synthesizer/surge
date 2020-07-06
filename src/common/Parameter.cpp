@@ -871,7 +871,7 @@ void Parameter::set_type(int ctrltype)
       displayType = ATwoToTheBx;
       displayInfo.decimals = 3;
       displayInfo.tempoSyncNotationMultiplier = -1.0f;
-      displayInfo.modulationCap = 48000;
+      displayInfo.modulationCap = 512 * 8;
       sprintf( displayInfo.unit, "Hz" );
       break;
 

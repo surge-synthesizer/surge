@@ -315,6 +315,19 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    if ( ( a = surgeskin->Attribute("authorURL") ) )
       authorURL = a;
 
+   int version = -1;
+   if( ! ( surgeskin->QueryIntAttribute( "version", &version ) == TIXML_SUCCESS ) )
+   {
+      FIXMEERROR << "Skin file does not contain a 'version' attribute. You must contain a version at most " << Skin::current_format_version << std::endl;
+      return false;
+   }
+   if( version > Skin::current_format_version )
+   {
+      FIXMEERROR << "Skin version '" << version << "' is greater than the max version '"
+                 << Skin::current_format_version << "' supported by this binary" << std::endl;
+      return false;
+   }
+   
    auto globalsxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("globals"));
    auto componentclassesxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("component-classes"));
    auto controlsxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("controls"));

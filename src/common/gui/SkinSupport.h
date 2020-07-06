@@ -70,6 +70,8 @@ class SkinDB;
 class Skin
 {
 public:
+   static constexpr int current_format_version = 1;
+   
    typedef std::shared_ptr<Skin> ptr_t;
    typedef std::unordered_map<std::string, std::string> props_t;
    
@@ -150,6 +152,19 @@ public:
    VSTGUI::CColor getColor( std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>() );
    std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
 
+   Skin::Control::ptr_t controlForEnumID( int enum_id ) {
+      // FIXME don't be stupid like this of course
+      for( auto ic : controls )
+      {
+         if( ic->type == Control::Type::ENUM && ic->enum_id == enum_id  )
+         {
+            return ic;
+         }
+      }
+      
+      return nullptr;
+   }
+   
    Skin::Control::ptr_t controlForUIID( std::string ui_id ) {
       // FIXME don't be stupid like this of course
       for( auto ic : controls )
