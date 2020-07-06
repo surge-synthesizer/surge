@@ -58,6 +58,8 @@
 
     <color id="savedialog.background" value="#242424"/>
 
+    <color id="textfield.focuscolor" value="#2E2E5E"/>
+    
     <color id="savedialog.textfield.border" value="#0F0F0F"/>
     <color id="savedialog.textfield.background" value="#2E2E2E"/>
     <color id="savedialog.textfield.foreground" value="$lightgray"/>

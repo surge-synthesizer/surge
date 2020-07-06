@@ -5364,6 +5364,10 @@ void SurgeGUIEditor::reloadFromSkin()
    CScalableBitmap *cbm = bitmapStore->getBitmap( IDB_BG );
    cbm->setExtraScaleFactor(getZoomFactor());
    frame->setBackground( cbm );
+
+   auto c = currentSkin->getColor( "textfield.focuscolor", VSTGUI::CColor( 170, 170, 230 ) );
+   frame->setFocusColor( c );
+
 }
 
 /*

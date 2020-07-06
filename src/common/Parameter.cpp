@@ -2312,6 +2312,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_midikey_or_channel:
    case ct_rotarydrive:
    case ct_sendlevel:
+   case ct_freq_mod:
    {
       return true;
       break;
