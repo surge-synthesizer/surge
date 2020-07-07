@@ -437,7 +437,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          py = gui_mainsec_slider_y;
          a->push_back(scene[sc].filterunit[f].cutoff.assign(
              p_id.next(), id_s++, "cutoff", "Cutoff", ct_freq_audible,
-             "filter.cutoff_" + std::to_string(f+1), px, py, sc_id, cg_FILTER, f, true,
+             "filter.cutoff_" + std::to_string(f+1), px - (6 * f), py, sc_id, cg_FILTER, f, true,
              Surge::ParamConfig::kHorizontal | sceasy));
          if (f == 1)
             a->push_back(scene[sc].f2_cutoff_is_offset.assign(
@@ -447,7 +447,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          py += gui_hfader_dist;
          a->push_back(scene[sc].filterunit[f].resonance.assign(
              p_id.next(), id_s++, "resonance", "Resonance", ct_percent,
-             "filter.resonance_" + std::to_string(f+1), px, py, sc_id, cg_FILTER, f,
+             "filter.resonance_" + std::to_string(f+1), px - (6 * f), py, sc_id, cg_FILTER, f,
              true, Surge::ParamConfig::kHorizontal | sceasy));
          if (f == 1)
             a->push_back(scene[sc].f2_link_resonance.assign(
