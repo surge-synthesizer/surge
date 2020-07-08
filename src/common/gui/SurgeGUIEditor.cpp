@@ -2380,11 +2380,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       return 0;
    if (!editor_open)
       return 0;
-   if (useDevMenu)
-   {
-      useDevMenu = false;
-      return 0;
-   }
    /*if((button&kRButton)&&modsource)
      {
      modsource = 0;
@@ -2424,6 +2419,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
          useDevMenu = true;
          showSettingsMenu(menuRect);
+         return 1;
       }
 
       if (tag == tag_osc_select)
