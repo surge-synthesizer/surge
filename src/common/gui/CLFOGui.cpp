@@ -1169,14 +1169,15 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
       if (!storage->isStandardTuning && storage->currentScale.count > 1)
          quantStep = storage->currentScale.count;
 
-      for( int i=0; i<16; ++i )
+      for (int i = 0; i < 16; ++i)
       {
          if( steprect[i].pointInside(rmStepStart) ) startStep = i;
          if( steprect[i].pointInside(rmStepCurr ) ) endStep = i;
       };
+
       int s = startStep, e = endStep;
 
-      if( s >= 0 && e >= 0 && s != e ) // s == e is the abort gesture
+      if (s >= 0 && e >= 0 && s != e) // s == e is the abort gesture
       {
          float fs = (float)(steprect[s].bottom - rmStepStart.y) / steprect[s].getHeight();
          float fe = (float)(steprect[e].bottom - rmStepCurr.y) / steprect[e].getHeight();
@@ -1187,42 +1188,46 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
             std::swap( fe, fs );
          }
 
-         if (lfodata->unipolar.val.b) {
+         if (lfodata->unipolar.val.b)
+         {
             fs = limit_range(fs, 0.f, 1.f);
             fe = limit_range(fe, 0.f, 1.f);
          }
-         else {
+         else
+         {
             fs = limit_range(fs * 2.f - 1.f, -1.f, 1.f);
             fe = limit_range(fe * 2.f - 1.f, -1.f, 1.f);
          }
 
-         if (buttons & kShift)
-         {
-            keyModMult = quantStep; // only shift pressed
-
-            if (buttons & kAlt)
-            {
-               keyModMult = quantStep * 2; // shift+alt pressed
-               fs *= quantStep * 2;
-               fs = floor(fs);
-               fs *= (1.f / (quantStep * 2));
-            }
-            else
-            {
-               fs *= quantStep;
-               fs = floor(fs + 0.5);
-               fs *= (1.f / quantStep);
-            }
-         }
-
          ss->steps[s] = fs;
 
-         if( s != e )
+         if (s != e)
          {
             float ds = ( fs - fe ) / ( s - e );
-            for( int q = s; q <= e; q ++ )
+            for (int q = s; q <= e; q ++)
             {
-               ss->steps[q] = ss->steps[s] + ( q - s ) * ds;
+               float f = ss->steps[s] + (q - s) * ds;
+               
+               if (buttons & kShift)
+               {
+                  keyModMult = quantStep; // only shift pressed
+
+                  if (buttons & kAlt)
+                  {
+                     keyModMult = quantStep * 2; // shift+alt pressed
+                     f *= quantStep * 2;
+                     f = floor(f + 0.5);
+                     f *= (1.f / (quantStep * 2));
+                  }
+                  else
+                  {
+                     f *= quantStep;
+                     f = floor(f + 0.5);
+                     f *= (1.f / quantStep);
+                  }
+               }
+
+               ss->steps[q] = f;
             }
          }
 
@@ -1338,7 +1343,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                {
                   keyModMult = quantStep * 2; // shift+alt pressed
                   f *= quantStep * 2;
-                  f = floor(f);
+                  f = floor(f + 0.5);
                   f *= (1.f / (quantStep * 2));
                }
                else
