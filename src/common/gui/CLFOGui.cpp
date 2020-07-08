@@ -917,7 +917,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          const double sinv = 0.500;
          auto e1 = rmStepCurr;
          auto e2 = rmStepCurr;
-         e2.offset(1, 1);
          e1.offset(-(dx * cosv + dy * -sinv), -(dx * sinv + dy * cosv));
          e2.offset(-(dx * cosv + dy * sinv), -(dx * -sinv + dy * cosv));
 
