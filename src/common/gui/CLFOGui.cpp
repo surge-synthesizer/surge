@@ -799,7 +799,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    CGraphicsPath *eupath = dc->createGraphicsPath();
    CGraphicsPath *edpath = dc->createGraphicsPath();
 
-   float priorval = 0.f;
    for (int i=0; i<totalSamples; i += averagingWindow )
    {
       float val = 0;
@@ -831,12 +830,13 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       }
       val = val / averagingWindow;
       eval = eval / averagingWindow;
-      val  = ( ( - val + 1.0f ) * 0.5 ) * valScale;
-      float euval = ( ( - eval + 1.0f ) * 0.5 ) * valScale;
-      float edval = ( ( eval + 1.0f ) * 0.5  ) * valScale;
 
       if( lfodata->unipolar.val.b )
          val = val * 2.0 - 1.0;
+
+      val  = ( ( - val + 1.0f ) * 0.5 ) * valScale;
+      float euval = ( ( - eval + 1.0f ) * 0.5 ) * valScale;
+      float edval = ( ( eval + 1.0f ) * 0.5  ) * valScale;
 
       float xc = valScale * i / ( cycleSamples * n_stepseqsteps);
       if( i == 0 )
@@ -845,31 +845,10 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          eupath->beginSubpath(xc, euval);
          if( ! lfodata->unipolar.val.b )
             edpath->beginSubpath(xc, edval);
-         priorval = val;
       }
       else
       {
-         if( maxval - minval > 0.2 )
-         {
-            minval  = ( ( - minval + 1.0f ) * 0.5 ) * valScale;
-            maxval  = ( ( - maxval + 1.0f ) * 0.5 ) * valScale;
-            // Windows is sensitive to out-of-order line draws in a way which causes spikes.
-            // Make sure we draw one closest to prior first. See #1438
-            float firstval = minval;
-            float secondval = maxval;
-            if( priorval - minval < maxval - priorval )
-            {
-               firstval = maxval;
-               secondval = minval;
-            }
-            path->addLine(xc - 0.1 * valScale / totalSamples, firstval );
-            path->addLine(xc + 0.1 * valScale / totalSamples, secondval );
-         }
-         else
-         {
-            path->addLine(xc, val );
-         }
-         priorval = val;
+         path->addLine(xc, val );
          eupath->addLine(xc, euval);
          edpath->addLine(xc, edval);
       }
@@ -902,7 +881,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 #else
    dc->setLineWidth(1.0);
 #endif
-   dc->setFrameColor( skin->getColor( "lfo.stepseq.wave", CColor( 0xDD, 0xDD, 0xFF) ) );
+   dc->setFrameColor( skin->getColor( "lfo.stepseq.wave", CColor( 0xFF, 0xFF, 0xFF) ) );
    dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
    
    path->forget();
@@ -1300,7 +1279,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 
-            if (buttons & kControl) {
+            if (( buttons & kControl ) || ( buttons & kDoubleClick )) {
                f = 0;
             }
             else if (lfodata->unipolar.val.b) {
