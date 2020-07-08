@@ -1160,6 +1160,15 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
    {
       int startStep = -1;
       int endStep = -1;
+
+      // find out if a microtuning is loaded and store the scale length for Alt-drag
+      // quantization to scale degrees
+      keyModMult = 0;
+      int quantStep = 12;
+
+      if (!storage->isStandardTuning && storage->currentScale.count > 1)
+         quantStep = storage->currentScale.count;
+
       for( int i=0; i<16; ++i )
       {
          if( steprect[i].pointInside(rmStepStart) ) startStep = i;
@@ -1187,7 +1196,27 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
             fe = limit_range(fe * 2.f - 1.f, -1.f, 1.f);
          }
 
+         if (buttons & kShift)
+         {
+            keyModMult = quantStep; // only shift pressed
+
+            if (buttons & kAlt)
+            {
+               keyModMult = quantStep * 2; // shift+alt pressed
+               fs *= quantStep * 2;
+               fs = floor(fs);
+               fs *= (1.f / (quantStep * 2));
+            }
+            else
+            {
+               fs *= quantStep;
+               fs = floor(fs + 0.5);
+               fs *= (1.f / quantStep);
+            }
+         }
+
          ss->steps[s] = fs;
+
          if( s != e )
          {
             float ds = ( fs - fe ) / ( s - e );
@@ -1196,6 +1225,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
                ss->steps[q] = ss->steps[s] + ( q - s ) * ds;
             }
          }
+
          invalid();
       }
    }
@@ -1271,6 +1301,14 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    }
    else if (controlstate == cs_steps)
    {
+      // find out if a microtuning is loaded and store the scale length for Alt-drag
+      // quantization to scale degrees
+      keyModMult = 0;
+      int quantStep = 12;
+
+      if (!storage->isStandardTuning && storage->currentScale.count > 1)
+          quantStep = storage->currentScale.count;
+
       for (int i = 0; i < n_stepseqsteps; i++)
       {
          if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
@@ -1279,23 +1317,18 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 
-            if (( buttons & kControl ) || ( buttons & kDoubleClick )) {
+            if (( buttons & kControl ) || ( buttons & kDoubleClick ))
+            {
                f = 0;
             }
-            else if (lfodata->unipolar.val.b) {
+            else if (lfodata->unipolar.val.b)
+            {
                f = limit_range(f, 0.f, 1.f);
             }
-            else {
+            else
+            {
                f = limit_range(f * 2.f - 1.f, -1.f, 1.f);
             }
-
-            // find out if a microtuning is loaded and store the scale length for Alt-drag
-            // quantization to scale degrees
-            keyModMult = 0;
-            int quantStep = 12;
-
-            if (!storage->isStandardTuning && storage->currentScale.count > 1)
-               quantStep = storage->currentScale.count;
 
             if (buttons & kShift)
             {
