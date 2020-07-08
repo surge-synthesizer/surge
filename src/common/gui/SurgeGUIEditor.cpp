@@ -705,7 +705,7 @@ void SurgeGUIEditor::idle()
                auto sv = synth->getParameter01(j);
                auto cv = cc->getValue();
 
-               if ((sv == cv) && ((tag == fmconfig_tag || tag == filterblock_tag)))
+               if ((sv != cv) && ((tag == fmconfig_tag || tag == filterblock_tag)))
                {
                   std::unordered_map<int, bool> resetMap;
 
