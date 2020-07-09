@@ -28,10 +28,10 @@ The .git file that you can clone, if you so choose, is http://github.com/example
 
 However, since you have already cloned the `surge-synthesizer/surge` onto your device, you can just add it as a remote. So type in `git remote add example-user https://github.com/example-user/surge.git` - again, please be sure to **replace** the `example-user` in both portions of that commandline entry with **your** username. After this, you can do a `git remote -vv` and, if you like type `git fetch example-user` (again remembering to **replace** `example-user` with **your** username.
 
-## Update your fork with master
+## Update your fork with main
 
 Often something will be changed in `surge-synthesizer/surge` and you will also want that in your local copy. To do this you need to merge
-your upstream into the master. [Github has good documentation on this](https://help.github.com/articles/syncing-a-fork/#platform-all)
+your upstream into the main. [Github has good documentation on this](https://help.github.com/articles/syncing-a-fork/#platform-all)
 but here are the steps
 
 ### Onetime only - add surge-synthesizer/surge as an upstream remote
@@ -60,22 +60,22 @@ upstream	https://github.com/surge-synthesizer/surge (push)
 
 ### Every time you want to update
 
-Your actions are to fetch upstream, reset your master to match upstream, and then push that out to your github.
+Your actions are to fetch upstream, reset your main to match upstream, and then push that out to your github.
 
 ```
 git fetch upstream   # You now have the diffs in surge-synthesizer/surge
-git checkout master  # you now are on your copy of master
-git reset upstream/master --hard # you now have integrated the upstream diffs into your copy 
-git push origin master # you now have pushed your updated master back to github
+git checkout main  # you now are on your copy of main
+git reset upstream/main --hard # you now have integrated the upstream diffs into your copy 
+git push origin main # you now have pushed your updated main back to github
 ```
 
 ## Developing
 
 OK so now you want to change your local copy somehow. There is one golden rule of doing this.
 
-**Never change your local copy in the master branch. Always make a branch for development**
+**Never change your local copy in the main branch. Always make a branch for development**
 
-If you break this rule, keeping your master in sync with the upstream master is a pain. There's
+If you break this rule, keeping your main in sync with the upstream main is a pain. There's
 a way around it, but it is a bit scary.
 
 ### Changing code on a feature branch
@@ -85,7 +85,7 @@ issue number in the name. So if you are fixing automation in github issue 247 yo
 like `automation-247`. Then create that branch as follows
 
 ```
-git checkout master
+git checkout main
 git checkout -b automation-247
 ```
 
@@ -123,19 +123,19 @@ git checkout example-user/example-branch
 ```
 
 This will give you a 'detached HEAD' message. Don't wory about that. It's beyond the scope of this exercise.
-And of course, to go back to your version you can just type `git checkout master`.
+And of course, to go back to your version you can just type `git checkout main`.
 
 
-### I broke the golden rule and developed in master. Help me fix it
+### I broke the golden rule and developed in main. Help me fix it
 
-Sigh. OK be careful. You are about to lose all your changes in master. Back them up somehow.
+Sigh. OK be careful. You are about to lose all your changes in main. Back them up somehow.
 Then:
 
 ```
 git fetch upstream
-git checkout master
-git reset --hard upstream/master
-git push origin master --force
+git checkout main
+git reset --hard upstream/main
+git push origin main --force
 ```
 
 More than enough people who end up in this situation also find [this stackoverflow answer](https://stackoverflow.com/questions/1628088/reset-local-repository-branch-to-be-just-like-remote-repository-head)
@@ -155,7 +155,7 @@ In any case, as maintainers, we would sooner have a small number of git commits 
 To accomplish this you can squash your commits into a single commit and write a good message. To do this
 you use `git rebase` which is generally a terrifying command, but in interactive mode, is not as bad.
 
-The easiest approach is, with your branch checked out and committed, to run `git rebase -i master`. This will
+The easiest approach is, with your branch checked out and committed, to run `git rebase -i main`. This will
 popup a first editor with all your commits. Have one set as "pick" (usually the first one) and set the rest to
 "squash". (There are other settings of course, but a use case of flatten to one commit is best done this way).
 Change the others to "squash" by just editing and writing the file. Then you get a change to restate your commit
@@ -177,7 +177,7 @@ concerns so you check out the branch again. At the outset you should see this:
 ```
 paul:~/dev/music/surge$ git checkout update-git-howto
 Already on 'update-git-howto'
-paul:~/dev/music/surge$ git cherry -v master
+paul:~/dev/music/surge$ git cherry -v main
 + 452b43d5e78119af80c68d0b2bf2ab47291ae3fd Add a section on code review rebase
 paul:~/dev/music/surge$ git status
 On branch update-git-howto
@@ -191,7 +191,7 @@ paul:~/dev/music/surge$ git add doc/
 paul:~/dev/music/surge$ git commit -m "Integrate Code Review Comments from @user"
 [update-git-howto d41af35] Integrate Code Review Comments from @user
  1 file changed, 14 insertions(+)
-paul:~/dev/music/surge$ git cherry -v master
+paul:~/dev/music/surge$ git cherry -v main
 + 452b43d5e78119af80c68d0b2bf2ab47291ae3fd Add a section on code review rebase
 + d41af35a0e4e9658a3bca6c593b5ec33c0b4848f Integrate Code Review Comments from @user
 ```
@@ -200,7 +200,7 @@ Now at this point you could push your branch (`git push origin update-git-howto`
 and would have two commits in it. The continous integration woudl run and voila. But the maintainers would probably
 squash those commits and rewrite your commit message. So you may want to squash down to one commit. Here's how you do it.
 
-First rebase interactively with `git rebase -i master`. You will see an editor which looks like this:
+First rebase interactively with `git rebase -i main`. You will see an editor which looks like this:
 
 
 ```
@@ -226,7 +226,7 @@ And then save it. You will then get an opportunity to rewrite your commit messag
 the union of the message of the two commits. But edit and save and you should see
 
 ```
-paul:~/dev/music/surge$ git cherry -v master
+paul:~/dev/music/surge$ git cherry -v main
 + c9ccb49e8c7972457a22a67ee3b799bb7a55f420 Add a section on code review rebase
 ```
 
