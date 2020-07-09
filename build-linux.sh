@@ -175,8 +175,7 @@ run_uninstall()
     fi
 
     if [ ! -z "$option_headless" ]; then
-	rm -vf $headless_dest_path/$dest_headless_name/Surge/$dest_headless_name
-	rmdir -v $headless_dest_path/$dest_headless_name/Surge $headless_dest_path/$dest_headless_name	
+	rm -vf $headless_dest_path/$dest_headless_name
     fi
 }
 
