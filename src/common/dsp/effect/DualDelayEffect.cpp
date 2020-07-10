@@ -272,11 +272,8 @@ void DualDelayEffect::init_ctrltypes()
    fxdata->p[6].set_type(ct_lforate);
    fxdata->p[7].set_name("Depth");
    fxdata->p[7].set_type(ct_detuning);
-   // fxdata->p[8].set_name("ducking");
-   // fxdata->p[8].set_type(ct_decibel_extra_narrow); fxdata->p[9].set_name("rate");
-   // fxdata->p[9].set_type(ct_envtime);
-   fxdata->p[8].set_name("Pan");
-   fxdata->p[8].set_type(ct_percent_bidirectional);
+   fxdata->p[8].set_name("L/R Channel");
+   fxdata->p[8].set_type(ct_percent_bidirectional_stereo);
 
    fxdata->p[10].set_name("Mix");
    fxdata->p[10].set_type(ct_percent);
@@ -293,10 +290,6 @@ void DualDelayEffect::init_ctrltypes()
 
    fxdata->p[6].posy_offset = 9;
    fxdata->p[7].posy_offset = 9;
-
-   // fxdata->p[8].posy_offset = 5;
-   // fxdata->p[9].posy_offset = 5;
-
    fxdata->p[8].posy_offset = -15;
 
    fxdata->p[10].posy_offset = 9;
@@ -313,7 +306,6 @@ void DualDelayEffect::init_default_values()
    fxdata->p[6].val.f = -2.f;
    fxdata->p[7].val.f = 0.f;
    fxdata->p[8].val.f = 0.f;
-   // fxdata->p[9].val.f = 0.f;
    fxdata->p[10].val.f = 1.f;
    fxdata->p[11].val.f = 0.f;
 }
