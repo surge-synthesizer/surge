@@ -50,8 +50,14 @@ Name: EffectsVST3; Description: SurgeEffectsBank VST3 (32-bit); Types: full comp
 [Files]
 Source: ..\resources\data\*; DestDir: {commonappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
+
+;; these two lines are used by Azure pipelines - if you want to build the installer locally, comment them out!
 Source: ..\build\surge_products\Surge_x86.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion
 Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+
+;; these two lines are used when building the installer locally - uncomment them if you want to do that!
+;;Source: ..\build32\surge_products\Surge_x86.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion
+;;Source: ..\surge-fx\build32\product\SurgeEffectsBank.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
