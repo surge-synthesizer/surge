@@ -163,7 +163,10 @@ void LfoModulationSource::attack()
          break;
       case lm_random:
          phase = (float)rand() / RAND_MAX;
-         step = (rand() % ss->loop_end) & (n_stepseqsteps - 1);
+         if( ss->loop_end == 0 )
+            step = 0;
+         else
+            step = (rand() % ss->loop_end) & (n_stepseqsteps - 1);
          break;
       case lm_freerun:
       {
@@ -513,9 +516,17 @@ void LfoModulationSource::process_block()
             /*
             ** Alright so in 0 rate mode we want to scrub through tne entire sequence. So
             */
-            float p16 = phase * n_stepseqsteps;
-            int pstep = ( (int)p16 ) & ( n_stepseqsteps - 1 );
+            int avail_seq = ss->loop_end - ss->loop_start + 1;
+            if( avail_seq < 0 ) avail_seq = -avail_seq;
+            if( avail_seq == 0 ) avail_seq = 1;
+            int sstart = std::min( ss->loop_start, ss->loop_end );
+            
+            
+            float p16 = phase * avail_seq;
+            int pstep = ( (int)p16 ) % max( 1, ( avail_seq  ) );
             float sphase = ( p16 - pstep );
+            pstep += sstart;
+            pstep = pstep & ( n_stepseqsteps - 1 );
 
             if( priorPhase != phase )
             {
