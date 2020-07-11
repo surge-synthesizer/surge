@@ -20,16 +20,16 @@
     <class name="boompoop" parent="CSurgeSlider" handle_image="alt-slider-h" handle_hover_image="alt-slider-h-hover" handle_temposync_image="alt-slider-h-ts"/>
   </component-classes>
   <controls>
-    <!-- 
-         Swap the location of the character. 
-            Original was y=11 h=27; y=41. So 41 = 11 + 27 + 3 so margin is 3 
+    <!--
+         Swap the location of the character.
+            Original was y=11 h=27; y=41. So 41 = 11 + 27 + 3 so margin is 3
             Since height of character is 12, 11 + 12 + 3 = 26 so char y == 11 and bybass y is 26
- 
+
          To make the relative position clearer, enclose them in a group
     -->
 
     <control ui_identifier="global.active_scene" x="5" y="12" w="30" h="15" subpixmaps="2" rows="1" columns="2" class="CHSwitch2" bg_resource="ab-1530"/>
-    
+
     <group name="fx and char" x="607" y="11">
       <control ui_identifier="global.character" x="0" y="0" w="135" h="12" subpixmaps="3" rows="1" columns="3" class="CHSwitch2"  bg_id="161" />
       <control ui_identifier="global.fx_bypass" x="0" y="15" w="135" h="27"  subpixmaps="4" rows="1" columns="4" class="CHSwitch2"  bg_id="144" />
@@ -41,7 +41,7 @@
       <control ui_identifier="filter.waveshaper_drive" x="0" y="0" class="CSurgeSlider"/>
     </group>
 
-    <!-- If you don't specify a position, it will use the default position for a slider (but only for a slider. Siwtches need full posn) -->
+    <!-- If you don't specify a position, it will use the default position for a slider (but only for a slider. Switches need full positions) -->
     <control ui_identifier="filter.balance" class="boompoop"/>
     <control ui_identifier="filter.cutoff_1" class="boompoop"/>
     <control ui_identifier="filter.resonance_1" class="boompoop"/>
