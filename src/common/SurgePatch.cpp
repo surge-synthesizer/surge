@@ -222,31 +222,31 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          }*/
       }
       a->push_back(scene[sc].polymode.assign(p_id.next(), id_s++, "polymode", "Play Mode", ct_polymode,
-                                             "global.playmode", gui_col2_x + 83, gui_uppersec_y + 9,
+                                             "scene.playmode", gui_col2_x + 83, gui_uppersec_y + 9,
                                              sc_id, cg_GLOBAL,
                                              0, false, Surge::ParamConfig::kVertical | kWhite | kNoPopup));
       a->push_back(scene[sc].fm_switch.assign(p_id.next(), id_s++, "fm_switch", "FM Routing",
                                               ct_fmconfig,
-                                              "global.fmrouting", gui_col3_x + 3, gui_topbar + 25,
+                                              "scene.fmrouting", gui_col3_x + 3, gui_topbar + 25,
                                               sc_id,
                                               cg_GLOBAL, 0, false));
       a->push_back(scene[sc].fm_depth.assign(p_id.next(), id_s++, "fm_depth", "FM Depth",
                                              ct_decibel_fmdepth,
-                                             "global.fmdepth", gui_col3_x, gui_uppersec_y + gui_hfader_dist * 4,
+                                             "scene.fmdepth", gui_col3_x, gui_uppersec_y + gui_hfader_dist * 4,
                                              sc_id, cg_GLOBAL,
                                              0, true, Surge::ParamConfig::kHorizontal | kWhite | sceasy));
 
       a->push_back(scene[sc].drift.assign(p_id.next(), id_s++, "drift", "Osc Drift", ct_percent,
-                                          "global.drift", gui_col2_x, gui_uppersec_y + gui_hfader_dist * 3,
+                                          "scene.drift", gui_col2_x, gui_uppersec_y + gui_hfader_dist * 3,
                                           sc_id,
                                           cg_GLOBAL, 0, true, Surge::ParamConfig::kHorizontal | kWhite));
       a->push_back(scene[sc].noise_colour.assign(
           p_id.next(), id_s++, "noisecol", "Noise Color", ct_percent_bidirectional,
-          "global.noise_color", gui_col2_x, gui_uppersec_y + gui_hfader_dist * 4, sc_id, cg_GLOBAL, 0, true,
+          "scene.noise_color", gui_col2_x, gui_uppersec_y + gui_hfader_dist * 4, sc_id, cg_GLOBAL, 0, true,
           Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       a->push_back(scene[sc].keytrack_root.assign(p_id.next(), id_s++, "ktrkroot", "Keytrack Root Key",
                                                   ct_midikey,
-                                                  "global.keytrack_root", 180 + 127, gui_topbar + 78 + 106 + 24,
+                                                  "scene.keytrack_root", 180 + 127, gui_topbar + 78 + 106 + 24,
                                                   sc_id, cg_GLOBAL, 0, false));
       // ct_midikey
       // drift,keytrack_root
@@ -254,29 +254,29 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       px = gui_col5_x;
       py = gui_uppersec_y;
       a->push_back(scene[sc].volume.assign(p_id.next(), id_s++, "volume", "Volume", ct_amplitude,
-                                           "global.volume", px, py,
+                                           "scene.volume", px, py,
                                            sc_id, cg_GLOBAL, 0, true,
                                            Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       py += gui_hfader_dist;
       a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan", ct_percent_bidirectional,
-                                        "global.pan", px, py,
+                                        "scene.pan", px, py,
                                         sc_id, cg_GLOBAL, 0, true,
                                         Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       py += gui_hfader_dist;
       a->push_back(scene[sc].width.assign(p_id.next(), id_s++, "pan2", "Width", ct_percent_bidirectional,
-                                          "global.width", px, py,
+                                          "scene.width", px, py,
                                           sc_id, cg_GLOBAL, 0, true,
                                           Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       py += gui_hfader_dist;
       a->push_back(scene[sc].send_level[0].assign(p_id.next(), id_s++, "send_fx_1", "Send FX 1 Level",
                                                   ct_sendlevel,
-                                                  "global.send_fx_1", px, py,
+                                                  "scene.send_fx_1", px, py,
                                                   sc_id, cg_GLOBAL, 0, true,
                                                   Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       py += gui_hfader_dist;
       a->push_back(scene[sc].send_level[1].assign(p_id.next(), id_s++, "send_fx_2", "Send FX 2 Level",
                                                   ct_sendlevel,
-                                                  "global.send_fx_2", px, py,
+                                                  "scene.send_fx_2", px, py,
                                                   sc_id, cg_GLOBAL, 0, true,
                                                   Surge::ParamConfig::kHorizontal | kWhite | sceasy));
       px = gui_oscmix_x;
@@ -373,22 +373,22 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       int pbx = 164, pby = 112;
       a->push_back(scene[sc].pbrange_up.assign(p_id.next(), id_s++, "pbrange_up",
                                                "Pitch Bend Up Range", ct_pbdepth,
-                                               "global.pbrange_up", pbx + 25, pby,
+                                               "scene.pbrange_up", pbx + 25, pby,
                                                sc_id, cg_GLOBAL, 0, true, kNoPopup));
       a->push_back(scene[sc].pbrange_dn.assign(p_id.next(), id_s++, "pbrange_dn",
                                                "Pitch Bend Down Range", ct_pbdepth,
-                                               "global.pbrange_dn", pbx, pby,
+                                               "scene.pbrange_dn", pbx, pby,
                                                sc_id, cg_GLOBAL, 0, true, kNoPopup));
 
       px = gui_envsec_x + gui_vfader_dist * 19 + 10;
       py = gui_envsec_y;
       a->push_back(scene[sc].vca_level.assign(p_id.next(), id_s++, "vca_level", "VCA Gain", ct_decibel,
-                                              "global.gain", px, py, sc_id, cg_GLOBAL, 0, true,
+                                              "scene.gain", px, py, sc_id, cg_GLOBAL, 0, true,
                                               Surge::ParamConfig::kVertical | kWhite | sceasy));
       px += gui_vfader_dist;
       a->push_back(scene[sc].vca_velsense.assign(p_id.next(), id_s++, "vca_velsense", "Velocity > VCA Gain",
                                                  ct_decibel_attenuation,
-                                                 "global.velocity_sensitivity", px, py, sc_id, cg_GLOBAL,
+                                                 "scene.velocity_sensitivity", px, py, sc_id, cg_GLOBAL,
                                                  0, false, Surge::ParamConfig::kVertical | kWhite));
       px += gui_vfader_dist;
 

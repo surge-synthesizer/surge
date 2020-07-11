@@ -5588,7 +5588,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                 }
                                 else
                                 {
-                                   oss << "rtti_class=\"" << typeid(*c).name() << "\" tag=\"" << tag << "\" ";
+                                   oss << " rtti_class=\"" << typeid(*c).name() << "\" tag=\"" << tag << "\" ";
                                 }
                                 oss << "/>\n";
                              }
