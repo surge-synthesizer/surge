@@ -15,7 +15,11 @@ lipol_ps::lipol_ps()
 
 void lipol_ps::set_blocksize(int bs)
 {
+#ifdef ARM_NEON
+   lipol_BLOCK_SIZE = vdupq_n_f32(bs);
+#else
    lipol_BLOCK_SIZE = _mm_cvt_si2ss(m128_zero, bs);
+#endif
    m128_bs4_inv = _mm_div_ss(m128_four, lipol_BLOCK_SIZE);
 }
 

@@ -9,7 +9,7 @@ using namespace std;
 
 int Min(int a, int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK
+#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    return min(a, b);
 #else
    __asm
@@ -23,7 +23,7 @@ int Min(int a, int b)
 }
 int Max(int a, int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK
+#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    return max(a, b);
 #else
    __asm
@@ -50,7 +50,7 @@ double Max(double a, double b)
 
 unsigned int Min(unsigned int a, unsigned int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK
+#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    return min(a, b);
 #else
    __asm
@@ -64,7 +64,7 @@ unsigned int Min(unsigned int a, unsigned int b)
 }
 unsigned int Max(unsigned int a, unsigned int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK
+#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    return max(a, b);
 #else
    __asm
@@ -79,7 +79,7 @@ unsigned int Max(unsigned int a, unsigned int b)
 
 int limit_range(int x, int l, int h)
 {
-#if _M_X64 || LINUX || MAC
+#if _M_X64 || LINUX || MAC || ARM_NEON
    return std::max(std::min(x, h), l);
 #else
    __asm
@@ -97,7 +97,7 @@ int limit_range(int x, int l, int h)
 
 int Wrap(int x, int L, int H)
 {
-#if _M_X64 || LINUX || TARGET_RACK
+#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    // don't remember what this was anymore...
    // int diff = H - L;
    // if(x > H) x = x-H;
@@ -129,7 +129,7 @@ int Wrap(int x, int L, int H)
 
 int Sign(int x)
 {
-#if _M_X64 || LINUX || TARGET_RACK
+#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    return (x < 0) ? -1 : 1;
 #else
    __asm
@@ -145,7 +145,7 @@ int Sign(int x)
 
 unsigned int limit_range(unsigned int x, unsigned int l, unsigned int h)
 {
-#if _M_X64 || LINUX || TARGET_RACK
+#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    return max(min(x, h), l);
 #else
    __asm
@@ -179,7 +179,11 @@ double limit_range(double x, double min, double max)
 
 int Float2Int(float x)
 {
+#ifdef ARM_NEON
+   return int(x + 0.5f );
+#else
    return _mm_cvt_ss2si(_mm_load_ss(&x));
+#endif
 }
 
 void float2i15_block(float* f, short* s, int n)
@@ -667,7 +671,7 @@ float sine_ss(unsigned int x) // using 24-bit range as [0..2PI] input
 
    return P * (y * abs(y) - y) + y;   // Q * y + P * y * abs(y)   */
 }
-#if !_M_X64
+#if !_M_X64 && ! defined(ARM_NEON)
 __m64 sine(__m64 x)
 {
    __m64 xabs = _mm_xor_si64(x, _mm_srai_pi16(x, 15));

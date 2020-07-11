@@ -1,4 +1,6 @@
+#ifndef ARM_NEON
 #include <emmintrin.h>
+#endif
 
 #include "globals.h"
 

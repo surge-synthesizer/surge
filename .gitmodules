@@ -17,3 +17,6 @@
 [submodule "libs/tuning-library"]
 	path = libs/tuning-library
 	url = https://github.com/surge-synthesizer/tuning-library
+[submodule "libs/sse2neon"]
+	path = libs/sse2neon
+	url = https://github.com/DLTcollab/sse2neon

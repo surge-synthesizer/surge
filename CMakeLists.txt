@@ -358,9 +358,15 @@ elseif( UNIX AND NOT APPLE )
                       COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
                     )
 
+  if( LINUX_ARM_CROSS )
+    set( cxml src/linux/ConfigurationXmlARM.S )
+  else()
+    set( cxml src/linux/ConfigurationXml.S )
+  endif()
+
   set(SURGE_OS_SOURCES
     src/linux/UserInteractionsLinux.cpp
-    src/linux/ConfigurationXml.S
+    ${cxml}
     ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
     )
 
@@ -390,8 +396,23 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
 
-  set(OS_COMPILE_OPTIONS
-    -msse2
+  if( LINUX_ARM_CROSS )
+    set(OS_COMPILE_OPTIONS
+    -march=armv7-a -marm -mfpu=neon
+    "-D_aligned_malloc(x,a)=malloc(x)"
+    "-D_aligned_free(x)=free(x)"
+    # -Werror
+    -Wno-multichar
+    -fvisibility=hidden
+    -fvisibility-inlines-hidden
+    -fdata-sections
+    -ffunction-sections
+    -flax-vector-conversions   # FIXME REMOVE THIS
+    ${CAIRO_CFLAGS_OTHER}
+    )
+  else()
+    set(OS_COMPILE_OPTIONS
+     -msse2
     "-D_aligned_malloc(x,a)=malloc(x)"
     "-D_aligned_free(x)=free(x)"
     -Werror
@@ -403,11 +424,23 @@ elseif( UNIX AND NOT APPLE )
 
     ${CAIRO_CFLAGS_OTHER}
     )
-
+  endif()
+  if( LINUX_ARM_CROSS )
+  set(OS_COMPILE_DEFINITIONS
+    ARM_NEON=1
+    LINUX=1
+    RELEASE=1
+    )
+  else()
   set(OS_COMPILE_DEFINITIONS
     LINUX=1
     RELEASE=1
     )
+  endif()
+
+  if( LINUX_ARM_CROSS)
+    set( LINUX_ARM_CROSS_INCLUDES libs/sse2neon )
+  endif()
 
   set(OS_INCLUDE_DIRECTORIES
     src/linux
@@ -421,9 +454,20 @@ elseif( UNIX AND NOT APPLE )
     ${XKBX11COMMON_INCLUDE_DIRS}
 
     ${CMAKE_BINARY_DIR}/lintemp
+    
+    ${LINUX_ARM_CROSS_INCLUDES}
     )
 
-  set(OS_LINK_LIBRARIES
+  if( LINUX_ARM_CROSS )
+    set(OS_LINK_LIBRARIES
+     pthread
+     stdc++fs
+     gcc_s
+     gcc
+     dl
+    )
+  else()
+    set(OS_LINK_LIBRARIES
      pthread
      stdc++fs
      gcc_s
@@ -437,6 +481,7 @@ elseif( UNIX AND NOT APPLE )
      ${XKBCOMMON_LDFLAGS}
      ${XKBX11COMMON_LDFLAGS}
     )
+  endif()
 
 elseif( WIN32 )
 
@@ -887,7 +932,11 @@ if( BUILD_HEADLESS )
 
   if( UNIX AND NOT APPLE )
     find_package(Threads REQUIRED)
-    target_sources( surge-headless PRIVATE src/linux/ConfigurationXml.S )
+    if( LINUX_ARM_CROSS )
+      target_sources( surge-headless PRIVATE src/linux/ConfigurationXmlARM.S )
+    else()
+      target_sources( surge-headless PRIVATE src/linux/ConfigurationXml.S )
+    endif()
     target_link_libraries(surge-headless
       PRIVATE
       stdc++fs
