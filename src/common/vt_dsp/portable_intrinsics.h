@@ -1,4 +1,4 @@
-#if LINUX
+#if LINUX && ! ARM_NEON
 #include <immintrin.h>
 #endif
 
