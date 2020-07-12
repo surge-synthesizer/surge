@@ -516,16 +516,14 @@ void LfoModulationSource::process_block()
             /*
             ** Alright so in 0 rate mode we want to scrub through tne entire sequence. So
             */
-            int avail_seq = ss->loop_end - ss->loop_start + 1;
-            if( avail_seq < 0 ) avail_seq = -avail_seq;
-            if( avail_seq == 0 ) avail_seq = 1;
-            int sstart = std::min( ss->loop_start, ss->loop_end );
-            
-            
-            float p16 = phase * avail_seq;
-            int pstep = ( (int)p16 ) % max( 1, ( avail_seq  ) );
+            float p16 = phase * n_stepseqsteps;
+            int pstep = ( (int)p16 ) & ( n_stepseqsteps - 1 );
             float sphase = ( p16 - pstep );
-            pstep += sstart;
+
+            // OK so pstep is now between 0 and ns-1. But if that is beyond the end we want to wrap
+            int last_step = std::max( ss->loop_end, ss->loop_start );
+            int loop_len = std::max( 1, abs( ss->loop_end - ss->loop_start ) + 1 );
+            while( pstep > last_step && pstep >= 0 ) pstep -= loop_len;
             pstep = pstep & ( n_stepseqsteps - 1 );
 
             if( priorPhase != phase )
