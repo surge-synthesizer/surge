@@ -334,7 +334,12 @@ if( APPLE )
     COCOA=1
     OBJC_OLD_DISPATCH_PROTOTYPES=1
     )
+  set(OS_LINK_LIBRARIES_NOGUI
+    "-framework CoreServices"
+    "-framework CoreFoundation"
+    )
   set(OS_LINK_LIBRARIES
+    ${OS_LINK_LIBRARIES_NOGUI}
     "-framework Accelerate"
     "-framework ApplicationServices"
     "-framework AudioUnit"
@@ -352,31 +357,31 @@ if( APPLE )
 elseif( UNIX AND NOT APPLE )
   file(GLOB PIGGY_INPUTS ${CMAKE_SOURCE_DIR}/assets/original-vector/SVG/exported/*svg)
   add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
-                      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                      DEPENDS ${PIGGY_INPUTS}
-                      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
-                      COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
-                    )
-
-  if( LINUX_ARM_CROSS )
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    DEPENDS ${PIGGY_INPUTS}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
+    COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
+    )
+  
+  if( LINUX_ON_ARM )
     set( cxml src/linux/ConfigurationXmlARM.S )
   else()
     set( cxml src/linux/ConfigurationXml.S )
   endif()
-
+  
   set(SURGE_OS_SOURCES
     src/linux/UserInteractionsLinux.cpp
     ${cxml}
     ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
     )
-
+  
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
-
+  
   # Our friends at steinberg have this maddening habig of using #warning DEPRECATED in linux code
   set_source_files_properties(${SURGE_VST3_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
   set_source_files_properties(${LINUX_VSTGUI_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
-
-
+  
+  
   set(SURGE_OS_GUI_SOURCES
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
@@ -386,7 +391,7 @@ elseif( UNIX AND NOT APPLE )
     vstgui.surge/vstgui/lib/platform/common/generictextedit.cpp
     ${LINUX_VSTGUI_GLOB}
     )
-
+  
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(CAIRO REQUIRED cairo)
   pkg_check_modules(XCB REQUIRED xcb)
@@ -395,52 +400,39 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XCBXKB REQUIRED xcb-xkb)
   pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
-
-  if( LINUX_ARM_CROSS )
-    set(OS_COMPILE_OPTIONS
-    -march=armv7-a -marm -mfpu=neon
+  
+  if( LINUX_ON_ARM )
+    set(ARCH_COMPILE_OPTIONS
+      ${LINUX_ON_ARM_COMPILE_OPTIONS}
+      )
+    set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1)
+    set(ARCH_INCLUDE_DIRECTORIES libs/sse2neon)
+  else()
+    set(ARCH_COMPILE_OPTIONS
+      -msse2
+      -Werror )
+    set(ARCH_COMPILE_DEFINITIONS INTEL_SSE=1)
+  endif()
+  
+  set(OS_COMPILE_OPTIONS
+    ${ARCH_COMPILE_OPTIONS}
     "-D_aligned_malloc(x,a)=malloc(x)"
     "-D_aligned_free(x)=free(x)"
-    # -Werror
+    
     -Wno-multichar
     -fvisibility=hidden
     -fvisibility-inlines-hidden
     -fdata-sections
     -ffunction-sections
-    -flax-vector-conversions   # FIXME REMOVE THIS
+    
     ${CAIRO_CFLAGS_OTHER}
     )
-  else()
-    set(OS_COMPILE_OPTIONS
-     -msse2
-    "-D_aligned_malloc(x,a)=malloc(x)"
-    "-D_aligned_free(x)=free(x)"
-    -Werror
-    -Wno-multichar
-    -fvisibility=hidden
-    -fvisibility-inlines-hidden
-    -fdata-sections
-    -ffunction-sections
-
-    ${CAIRO_CFLAGS_OTHER}
-    )
-  endif()
-  if( LINUX_ARM_CROSS )
+  
   set(OS_COMPILE_DEFINITIONS
-    ARM_NEON=1
+    ${ARCH_COMPILE_DEFINITIONS}
     LINUX=1
     RELEASE=1
     )
-  else()
-  set(OS_COMPILE_DEFINITIONS
-    LINUX=1
-    RELEASE=1
-    )
-  endif()
-
-  if( LINUX_ARM_CROSS)
-    set( LINUX_ARM_CROSS_INCLUDES libs/sse2neon )
-  endif()
 
   set(OS_INCLUDE_DIRECTORIES
     src/linux
@@ -455,33 +447,26 @@ elseif( UNIX AND NOT APPLE )
 
     ${CMAKE_BINARY_DIR}/lintemp
     
-    ${LINUX_ARM_CROSS_INCLUDES}
+    ${ARCH_INCLUDE_DIRECTORIES}
     )
 
-  if( LINUX_ARM_CROSS )
-    set(OS_LINK_LIBRARIES
-     pthread
-     stdc++fs
-     gcc_s
-     gcc
-     dl
+  set(OS_LINK_LIBRARIES_NOGUI
+    pthread
+    stdc++fs
+    gcc_s
+    gcc
+    dl
     )
-  else()
-    set(OS_LINK_LIBRARIES
-     pthread
-     stdc++fs
-     gcc_s
-     gcc
-     dl
-     ${CAIRO_LDFLAGS}
-     ${XCB_LDFLAGS}
-     ${XCBCURSOR_LDFLAGS}
-     ${XCBUTIL_LDFLAGS}
-     ${XCBXKB_LDFLAGS}
-     ${XKBCOMMON_LDFLAGS}
-     ${XKBX11COMMON_LDFLAGS}
+  set(OS_LINK_LIBRARIES
+    ${OS_LINK_LIBRARIES_NOGUI}
+    ${CAIRO_LDFLAGS}
+    ${XCB_LDFLAGS}
+    ${XCBCURSOR_LDFLAGS}
+    ${XCBUTIL_LDFLAGS}
+    ${XCBXKB_LDFLAGS}
+    ${XKBCOMMON_LDFLAGS}
+    ${XKBX11COMMON_LDFLAGS}
     )
-  endif()
 
 elseif( WIN32 )
 
@@ -540,14 +525,17 @@ elseif( WIN32 )
     libs/wtl
     )
 
+  set(OS_LINK_LIBRARIES_NOGUI
+    shell32
+    user32
+    )
   set(OS_LINK_LIBRARIES
+    ${OS_LINK_LIBRARIES_NOGUI}
     Winmm
     gdi32
     gdiplus
     ComDlg32
     ComCtl32
-    shell32
-    user32
     ../libs/libpng/win/x64/lib/libpng16_static
   )
 
@@ -921,7 +909,7 @@ if( BUILD_HEADLESS )
 
   target_link_libraries(surge-headless
     PRIVATE
-    ${OS_LINK_LIBRARIES}
+    ${OS_LINK_LIBRARIES_NOGUI}
     )
 
   target_compile_options(surge-headless
@@ -932,7 +920,7 @@ if( BUILD_HEADLESS )
 
   if( UNIX AND NOT APPLE )
     find_package(Threads REQUIRED)
-    if( LINUX_ARM_CROSS )
+    if( LINUX_ON_ARM )
       target_sources( surge-headless PRIVATE src/linux/ConfigurationXmlARM.S )
     else()
       target_sources( surge-headless PRIVATE src/linux/ConfigurationXml.S )
