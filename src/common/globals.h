@@ -25,19 +25,8 @@
 #include "vt_dsp/macspecific.h"
 #endif
 #if ARM_NEON
-#include "sse2neon.h"
-#define __m128d __m128
-#define _mm_mul_ss _mm_mul_ps
-#define _mm_sub_ss _mm_sub_ps
-#define _mm_set_ss _mm_set1_ps
-#define _mm_set_sd _mm_set_ss
-#define _mm_rcp_ss _mm_rcp_ps
-#define _mm_min_sd _mm_min_ss
-#define _mm_max_sd _mm_max_ss
-#define _mm_cmpgt_ss _mm_cmpgt_ps
-#define _mm_rsqrt_ss _mm_rsqrt_ps
-#define _mm_cvtsi32_ss(a,b) _mm_cvtepi32_ps(vdupq_n_s32(b)) /* this is wrong, but only used once, so whatever */
-
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include "simde/x86/sse2.h"
 #else
 #include <xmmintrin.h>
 
