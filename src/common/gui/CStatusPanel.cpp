@@ -16,8 +16,15 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
    labs[mpeMode] = "MPE";
    labs[tuningMode] = "Tune";
    labs[zoomOptions] = "Zoom";
+
+   std::string bmps[numDisplayFeatures];
+   bmps[mpeMode] = "STATUS_MPE";
+   bmps[tuningMode] = "STATUS_TUNING";
+   bmps[zoomOptions] = "STATUS_ZOOM";
+
    float y0 = 11;
    float boxSize = 13;
+
    for( int i=0; i<numDisplayFeatures; ++i )
    {
        float xp = size.left + 2;
@@ -25,11 +32,11 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
        float w = size.getWidth() - 4;;
        float h = boxSize - 2;
        if ( i == mpeMode )
-           mpeBox = CRect(xp,yp,xp+w,yp+h);
+           mpeBox = CRect(xp, yp, xp + w, yp + h);
        if ( i == tuningMode )
-           tuningBox = CRect(xp,yp,xp+w,yp+h);
+           tuningBox = CRect(xp, yp, xp + w, yp + h);
        if (i == zoomOptions)
-           zoomBox = CRect(xp,yp,xp+w,yp+h);
+           zoomBox = CRect(xp, yp, xp + w, yp + h);
 
        auto hlbg = true;
        auto ol = skin->getColor( "mpetunstatus.button.outline", CColor(0x97, 0x97, 0x97 ) );
@@ -37,54 +44,64 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
        auto fg = skin->getColor( "mpetunstatus.button.selected.foreground", kBlackCColor );
        auto ufg = skin->getColor( "mpetunstatus.button.unselected.foreground", kBlackCColor );
        auto hl = skin->getColor( "mpetunstatus.buttun.highlight", CColor(0xff, 0x9A, 0x10 ) );
-       if ( ! dispfeatures[i] )
+
+       if (!dispfeatures[i])
        {
            hlbg = false;
        }
 
-       if ( statusButtonGlyph != nullptr )
-       {
-          CRect wr = CRect(xp,yp,xp+w,yp+h);
+       auto btn = bitmapStore->getBitmapByStringID(bmps[i]);
 
-          statusButtonGlyph->draw( dc, wr, CPoint( 0, h * ( hlbg ? 1 : 0 ) ), 0xff );
+       if (btn)
+       {
+          CRect wr = CRect(xp, yp, xp + w, yp + h);
+          btn->draw(dc, wr, CPoint(0, h * (hlbg ? 1 : 0)), 0xff);
        }
        else
        {
-          dc->setDrawMode(VSTGUI::kAntiAliasing);
-          dc->setFrameColor(bg);;
-          auto p = dc->createRoundRectGraphicsPath(CRect(xp,yp,xp+w,yp+h), 5.f );
-          dc->setFillColor(bg);;
-          dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
-          dc->setFrameColor(ol);
-          dc->drawGraphicsPath(p, CDrawContext::kPathStroked);
-          p->forget();
-          
-          if ( hlbg )
+          if (statusButtonGlyph != nullptr)
           {
-             auto p = dc->createRoundRectGraphicsPath(CRect(xp+2,yp+2,xp+w-2,yp+h-2), 3 );
-             dc->setFillColor(hl);
-             dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
-             p->forget();
+             CRect wr = CRect(xp, yp, xp + w, yp + h);
+             statusButtonGlyph->draw( dc, wr, CPoint( 0, h * ( hlbg ? 1 : 0 ) ), 0xff );
           }
-       }
+          else
+          {
+             dc->setDrawMode(VSTGUI::kAntiAliasing);
+             dc->setFrameColor(bg);;
+             auto p = dc->createRoundRectGraphicsPath(CRect(xp, yp, xp + w, yp + h), 5.f );
+             dc->setFillColor(bg);;
+             dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
+             dc->setFrameColor(ol);
+             dc->drawGraphicsPath(p, CDrawContext::kPathStroked);
+             p->forget();
+          
+             if ( hlbg )
+             {
+                auto p = dc->createRoundRectGraphicsPath(CRect(xp + 2, yp + 2, xp + w - 2, yp + h - 2), 3 );
+                dc->setFillColor(hl);
+                dc->drawGraphicsPath(p, CDrawContext::kPathFilled);
+                p->forget();
+             }
+          }
 
-       if ( hlbg )
-       {
-           dc->setFontColor(fg);
+          if (hlbg)
+          {
+             dc->setFontColor(fg);
+          }
+          else
+          {
+             dc->setFontColor(ufg);
+          }
+        
+          #if WINDOWS || LINUX
+             dc->setFont(displayFont, 8, 0);
+          #else
+             dc->setFont(displayFont, 8, 2);
+          #endif       
+       
+          auto sw = dc->getStringWidth(labs[i].c_str());
+          dc->drawString(labs[i].c_str(), CPoint( xp + w/2.0 - sw/2.0, yp + h - 3.0 ), true );
        }
-       else
-       {
-          dc->setFontColor(ufg);
-          
-       }
-          
-#if WINDOWS || LINUX
-       dc->setFont(displayFont, 8, 0);
-#else
-       dc->setFont(displayFont, 8, 2);
-#endif       
-       auto sw = dc->getStringWidth(labs[i].c_str());
-       dc->drawString(labs[i].c_str(), CPoint( xp + w/2.0 - sw/2.0, yp + h - 3.0 ), true );
    }
 }
 

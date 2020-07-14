@@ -4735,7 +4735,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
     if (hu != "" && showhelp)
     {
        auto lurl = fullyResolvedHelpURL(hu);
-       addCallbackMenu(tuningSubMenu, "[?] Tuning...",
+       addCallbackMenu(tuningSubMenu, "[?] Tuning",
                        [lurl]() { Surge::UserInteractions::openURL(lurl); });
        tid++;
        tuningSubMenu->addSeparator();
@@ -5234,8 +5234,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
        testSM->forget();
     }
 
-    skinSubMenu->addSeparator();
-    tid++;
+    skinSubMenu->addSeparator(tid++);
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Reload Current Skin"),
                     [this]() {
@@ -5257,8 +5256,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     tid++;
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Rescan Skins"),
                     defaultNoOp );
+
     tid++;
-    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Developer Guide"),
+    skinSubMenu->addSeparator(tid++);
+
+    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
                     []() {
                        Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );
                     });
