@@ -34,7 +34,7 @@ SkinDB::SkinDB()
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "SkinDB::SkinDB" );
 #endif   
-   std::cout << "Constructing SkinDB" << std::endl;
+   // std::cout << "Constructing SkinDB" << std::endl;
 }
 
 SkinDB::~SkinDB()
@@ -44,7 +44,7 @@ SkinDB::~SkinDB()
 #endif   
    skins.clear(); // Not really necessary but means the skins are destroyed before the rest of the
                   // dtor runs
-   std::cout << "Destroying SkinDB" << std::endl;
+   // std::cout << "Destroying SkinDB" << std::endl;
 }
 
 std::shared_ptr<Skin> SkinDB::defaultSkin(SurgeStorage *storage)
@@ -260,7 +260,7 @@ Skin::Skin(std::string root, std::string name) : root(root), name(name)
    Surge::Debug::record( "Skin::Skin" );
 #endif   
    instances++;
-   std::cout << "Constructing a skin " << _D(root) << _D(name) << _D(instances) << std::endl;
+   // std::cout << "Constructing a skin " << _D(root) << _D(name) << _D(instances) << std::endl;
    imageIds = createIdNameMap();
 }
 
@@ -270,7 +270,7 @@ Skin::~Skin()
    Surge::Debug::record( "Skin::~Skin" );
 #endif   
    instances--;
-   std::cout << "Destroying a skin " << _D(instances) << std::endl;
+   // std::cout << "Destroying a skin " << _D(instances) << std::endl;
 }
 
 #if !defined(TINYXML_SAFE_TO_ELEMENT)
@@ -283,7 +283,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    Surge::Debug::record( "Skin::reloadSkin" );
    Surge::Debug::TimeThisBlock _trs_( "Skin::reloadSkin" );
 #endif   
-   std::cout << "Reloading skin " << _D(name) << std::endl;
+   // std::cout << "Reloading skin " << _D(name) << std::endl;
    TiXmlDocument doc;
    // Obviously fix this
    doc.SetTabSize(4);

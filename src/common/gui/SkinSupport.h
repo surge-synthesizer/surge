@@ -294,6 +294,16 @@ public:
    
    void rescanForSkins(SurgeStorage *);
    std::vector<Entry> getAvailableSkins() { return availableSkins; }
+   Maybe<Entry> getEntryByRootAndName( const std::string &r, const std::string &n ) {
+      for( auto &a : availableSkins )
+         if( a.root == r && a.name == n )
+            return Maybe<Entry>(a);
+      return Maybe<Entry>();
+   }
+   const Entry &getDefaultSkinEntry() const {
+      return defaultSkinEntry;
+   }
+   
    Skin::ptr_t getSkin( const Entry &skinEntry );
    Skin::ptr_t defaultSkin(SurgeStorage *);
 
