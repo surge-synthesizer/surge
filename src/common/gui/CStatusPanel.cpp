@@ -8,15 +8,10 @@ using namespace VSTGUI;
 
 void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
 {
-    auto size = getViewSize();
+   auto size = getViewSize();
 
-    auto statusButtonGlyph = bitmapStore->getBitmapByStringID( "STATUS_BUTTON" );
+   auto statusButtonGlyph = bitmapStore->getBitmapByStringID( "STATUS_BUTTON" );
 
-    dc->setFont(displayFont);
-    auto sw = dc->getStringWidth("Status");
-    dc->setFontColor(skin->getColor("mpetunstatus.title", kBlackCColor));
-    dc->drawString("Status", CPoint( size.left + size.getWidth()/2 - sw/2, size.top + 8 ), true );
-    
    std::string labs[numDisplayFeatures];
    labs[mpeMode] = "MPE";
    labs[tuningMode] = "Tune";
