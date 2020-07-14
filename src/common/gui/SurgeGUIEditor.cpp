@@ -1268,8 +1268,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             // If we don't specify a positoin use the default
             int px = ( c->x >= 0 ? c->x : p->posx );
             int py = ( c->y >= 0 ? c->y : p->posy );
+            bool is_mod = synth->isValidModulation(p->id, modsource);
             CSurgeSlider* hs =
-               new CSurgeSlider(CPoint(px, py), style, this, p->id + start_paramtags, true, bitmapStore, &(synth->storage));
+               new CSurgeSlider(CPoint(px, py), style, this, p->id + start_paramtags, is_mod, bitmapStore, &(synth->storage));
             hs->setSkin(currentSkin,bitmapStore,c);
             hs->setMoveRate(p->moverate);
             if( p->can_temposync() )
