@@ -5,7 +5,11 @@
 
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
     <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
+
     <image id="STATUS_BUTTON" resource="SVG/StatusButton.svg"/>
+    <image id="STATUS_MPE" resource="SVG/StatusMPE.svg"/>
+    <image id="STATUS_TUNING" resource="SVG/StatusTune.svg"/>
+    <image id="STATUS_ZOOM" resource="SVG/StatusZoom.svg"/>
 
     <color id="white" value="#FFFFFF"/>
     <color id="red" value="#FF0000"/>
