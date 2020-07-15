@@ -14,6 +14,7 @@ set(LINUX_ON_ARM_COMPILE_OPTIONS
   -march=armv7-a
   -marm
   -mfpu=neon
+  -Wno-psabi
   -flax-vector-conversions #FIXME - remove this
   )
 

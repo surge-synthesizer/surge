@@ -256,6 +256,51 @@ make -j 2 Surge.vst3
 
 will build the VST3 and deposit it in surge/products.
 
+## Building for ARM platforms
+
+With 1.7.0 we have merged changes needed to build with ARM platforms and have done some 
+raspberry pi testing. Due to a variety of choices an ARM user needs to make, and due to
+us not having a Pi in our pipeline (although we do do a cross-compile test), we are not
+building a binary of the ARM executable on Linux today, but you can build it easily.
+
+You need to install the pre-requisites which are listed in azure-pipeline (`grep apt-get azure-pipelines.yml`)
+and also install the packages `cairo-dev` and `libxcb-util0-dev `. Then 
+the steps to build using your native architecture on the Pi are:
+
+```
+cmake -Bbuild -DARM_NATIVE=native
+cmake --build build --config Release --target Surge-VST3-Packaged
+```
+
+The `-DARM_NATIVE=native` will include `cmake/arm-native.cmake` which sets up the native
+CPU flags. If you want specific flags, copy that file to `cmake/arm-whatever.cmake`,
+edit the flags, and use `-DARM_NATIVE=whatever`. If you set up an ARM build on a particular
+architecture we would appreciate you sharing the small cmake stub in a pull request.
+
+Targets available are `Surge-VST3-Packaged`, `Surge-LV2-Packaged`, `Surge-VST2-Packaged` (if you have
+the VST2 SDK) and `surge-headless`.
+
+These commands will place your final product in `build/surge_products`. Since we have 
+not updated the build-linux script for ARM yet you need to do a couple of extra steps:
+
+1. Copy the contents of `resources/data` to `/usr/share/Surge` or `~/.local/share/Surge`.
+   Put your plugin in the appropriate location.
+   For instance
+
+```
+cd resources/data/
+tar cf - . | ( cd ~/.local/share/Surge/; tar xf - )
+cd ../../build/surge_products
+mv Surge.vst3 ~/.vst3
+```
+
+2. There's a runtime requirement to install the free Lato font family which is not a build
+   requirement. `sudo apt-get install fonts-lato`
+
+And you should be good to go.
+
+We welcome PRs and contributions which improve the ARM build experience.
+
 # Continuous Integration
 
 In addition to the build commands above, we use Azure pipelines to do continuous integration.

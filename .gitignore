@@ -43,6 +43,7 @@ target/
 *.pdb
 packages.config
 CMakeSettings.json
+.vscode
 
 # XCode
 Surge.xcworkspace/
@@ -80,6 +81,7 @@ build32/
 buildlin/
 buildmac/
 buildwin/
+build-arm/
 
 # Reaper
 *.RPP-bak

@@ -40,6 +40,10 @@ find_package(LibMidiFile ${PACKAGE_OPTIONS})
 set( BUILD_HEADLESS true )
 set( BUILD_VST3 true )
 
+if( DEFINED ARM_NATIVE )
+   include( cmake/arm-${ARM_NATIVE}.cmake )
+endif()
+
 if( DEFINED ENV{VST2SDK_DIR} )
   set( BUILD_VST2 true )
   file( TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" VST2SDK_DIR )
@@ -404,20 +408,23 @@ elseif( UNIX AND NOT APPLE )
   if( LINUX_ON_ARM )
     set(ARCH_COMPILE_OPTIONS
       ${LINUX_ON_ARM_COMPILE_OPTIONS}
+      "-D_aligned_malloc(x,a)=aligned_alloc(a,x)"
+      "-D_aligned_free(x)=free(x)"
       )
     set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1)
-    set(ARCH_INCLUDE_DIRECTORIES libs/sse2neon)
+    set(ARCH_INCLUDE_DIRECTORIES libs/simde)
   else()
     set(ARCH_COMPILE_OPTIONS
       -msse2
-      -Werror )
+      -Werror 
+      "-D_aligned_malloc(x,a)=malloc(x)"
+      "-D_aligned_free(x)=free(x)"
+      )
     set(ARCH_COMPILE_DEFINITIONS INTEL_SSE=1)
   endif()
   
   set(OS_COMPILE_OPTIONS
     ${ARCH_COMPILE_OPTIONS}
-    "-D_aligned_malloc(x,a)=malloc(x)"
-    "-D_aligned_free(x)=free(x)"
     
     -Wno-multichar
     -fvisibility=hidden

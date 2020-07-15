@@ -21,11 +21,22 @@ else()
   set( GIT_COMMIT_HASH "git-not-present" )
 endif()
 
+if( WIN32 )
+  set( SURGE_BUILD_ARCH "Intel" )
+else()
+  execute_process(
+    COMMAND uname -m
+    OUTPUT_VARIABLE SURGE_BUILD_ARCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+endif()
+
 cmake_host_system_information(RESULT SURGE_BUILD_FQDN QUERY FQDN )
 
 message( STATUS "Setting up surge version" )
 message( STATUS "  git hash is ${GIT_COMMIT_HASH} and branch is ${GIT_BRANCH}" )
 message( STATUS "  buildhost is ${SURGE_BUILD_FQDN}" )
+message( STATUS "  buildarch is ${SURGE_BUILD_ARCH}" )
 
 if( ${AZURE_PIPELINE} )
   message( STATUS "Azure Pipeline Build" )

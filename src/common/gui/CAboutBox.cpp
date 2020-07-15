@@ -46,6 +46,8 @@ void CAboutBox::draw(CDrawContext* pContext)
       int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
       std::string bitness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + "-bit";
 
+      std::string chipmanu = Surge::Build::BuildArch;
+      
 #if TARGET_AUDIOUNIT      
       std::string flavor = "AU";
 #elif TARGET_VST3
@@ -70,7 +72,7 @@ void CAboutBox::draw(CDrawContext* pContext)
 
       {
          std::vector< std::string > msgs = { {
-               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + bitness + " " + platform + " " + flavor + ". Built " +
+               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + chipmanu + " " + bitness + " " + platform + " " + flavor + ". Built " +
                Surge::Build::BuildDate + " at " + Surge::Build::BuildTime + " on " + Surge::Build::BuildLocation + " host '" + Surge::Build::BuildHost + "')",
                "Factory Data Path: " + dataPath,
                "User Data Path: " + userPath,

@@ -20,10 +20,12 @@ namespace Surge
    
    const char* Build::FullVersionStr = "@SURGE_FULL_VERSION@";
    const char* Build::BuildHost = "@SURGE_BUILD_FQDN@";
+   const char* Build::BuildArch = "@SURGE_BUILD_ARCH@";
 
    const char* Build::BuildLocation = "@SURGE_BUILD_LOCATION@";
 
    const char* Build::BuildDate = "@SURGE_BUILD_DATE@";
    const char* Build::BuildTime = "@SURGE_BUILD_TIME@";
+
 }
 
