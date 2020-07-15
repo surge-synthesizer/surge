@@ -15,7 +15,7 @@ SurgeBitmaps::SurgeBitmaps()
    Surge::Debug::record( "SurgeBitmaps::SurgeBitmaps" );
 #endif   
 
-   std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
+   // std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 SurgeBitmaps::~SurgeBitmaps()
@@ -39,7 +39,7 @@ SurgeBitmaps::~SurgeBitmaps()
    bitmap_file_registry.clear();
    bitmap_stringid_registry.clear();
    instances --;
-   std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
+   // std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)

@@ -359,6 +359,7 @@ private:
    ** Skin support
    */
    Surge::UI::Skin::ptr_t currentSkin;
+   void setupSkinFromEntry( const Surge::UI::SkinDB::Entry &entry );
    void reloadFromSkin();
 
    /*
