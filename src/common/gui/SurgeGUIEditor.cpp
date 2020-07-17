@@ -128,6 +128,8 @@ const int yofs = 10;
 using namespace VSTGUI;
 using namespace std;
 
+#include "PatchDBViewer.h"
+
 enum special_tags
 {
     tag_scene_select = 1,
@@ -8915,6 +8917,26 @@ void SurgeGUIEditor::toggleMSEGEditor()
     else
     {
         showMSEGEditor();
+    }
+}
+
+void SurgeGUIEditor::showPatchBrowserDialog()
+{
+#if TARGET_JUCE_UI
+    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(750, 450)));
+    auto pt = std::make_unique<PatchDBViewer>(this, &(this->synth->storage));
+    c->juceComponent()->addAndMakeVisible(*pt);
+    pt->setBounds(0, 0, 750, 450);
+    c->takeOwnership(std::move(pt));
+    addEditorOverlay(c, "Patch Browser", PATCH_BROWSER, CPoint(50, 50), false, true, [this]() {});
+#endif
+}
+
+void SurgeGUIEditor::closePatchBrowserDialog()
+{
+    if (isAnyOverlayPresent(PATCH_BROWSER))
+    {
+        dismissEditorOfType(PATCH_BROWSER);
     }
 }
 

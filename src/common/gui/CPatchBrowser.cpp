@@ -83,6 +83,16 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     COptionMenu *contextMenu =
         new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
 
+    auto pdbF = std::make_shared<CCommandMenuItem>(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Patch DB...")));
+    pdbF->setActions([this](CCommandMenuItem *item) {
+        auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+        if (sge)
+            sge->showPatchBrowserDialog();
+    });
+    // contextMenu->addEntry(pdbF);
+    // contextMenu->addSeparator();
+
     int main_e = 0;
     // if RMB is down, only show the current category
     bool single_category = button & (kRButton | kControl), has_3rdparty = false;

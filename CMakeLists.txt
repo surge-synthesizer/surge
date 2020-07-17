@@ -131,6 +131,7 @@ add_subdirectory(libs/tinyxml)
 add_subdirectory(libs/escape-from-vstgui)
 add_subdirectory(libs/oddsound-mts)
 add_subdirectory(libs/libsamplerate EXCLUDE_FROM_ALL)
+add_subdirectory(libs/sqlite-3.23.3)
 
 juce_add_binary_data(surge-shared-binary
         NAMESPACE SurgeCoreBinary
@@ -146,6 +147,7 @@ set_target_properties(surge-shared-binary PROPERTIES
 target_link_libraries(surge-shared PUBLIC
   surge::airwindows
   surge::eurorack
+  surge::sqlite
   surge::filesystem
   surge::tinyxml
   surge::oddsound-mts
@@ -269,6 +271,7 @@ set(SURGE_SHARED_SOURCES
   src/common/DebugHelpers.cpp
   # src/common/DeferredAssetLoader.cpp
   src/common/Parameter.cpp
+  src/common/PatchDB.cpp
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp
@@ -321,6 +324,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/guihelpers.cpp
   src/common/ModulatorPresetManager.cpp
   src/common/gui/MSEGEditor.cpp
+  src/common/gui/PatchDBViewer.cpp
   src/common/gui/RuntimeFont.cpp
   src/common/gui/SkinFontLoader.cpp
   src/common/gui/SkinImageMaps.h
@@ -335,6 +339,7 @@ set(SURGE_COMMON_INCLUDES
   libs/
   libs/strnatcmp
   libs/tuning-library/include
+
   src/common
   src/common/dsp
   src/common/thread
