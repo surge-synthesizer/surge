@@ -402,8 +402,9 @@ bailOnPortable:
 
    load_midi_controllers();
 
-#if !TARGET_RACK   
    bool loadWtAndPatch = true;
+
+#if !TARGET_RACK   
 #if TARGET_LV2
    // skip loading during export, it pops up an irrelevant error dialog
    loadWtAndPatch = !skipLoadWtAndPatch;
@@ -444,71 +445,73 @@ bailOnPortable:
    currentScale = Tunings::evenTemperament12NoteScale();
    currentMapping = Tunings::KeyboardMapping();
 
-   // Load the XML DocStrings
-   auto dsf = datapath + "paramdocumentation.xml";
-   TiXmlDocument doc;
-   if( ! doc.LoadFile(dsf) || doc.Error() )
+   // Load the XML DocStrings if we are loading startup data
+   if( loadWtAndPatch )
    {
-      std::cout << "Unable to load  '" << dsf << "'"
-                 << std::endl;
-      std::cout << "Unable to parse\nError is:\n"
-                 << doc.ErrorDesc() << " at row=" << doc.ErrorRow() << " col=" << doc.ErrorCol()
-                 << std::endl;
-   }
-   else
-   {
-      TiXmlElement* pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
-      if( ! pdoc )
+      auto dsf = datapath + "paramdocumentation.xml";
+      TiXmlDocument doc;
+      if( ! doc.LoadFile(dsf) || doc.Error() )
       {
-         Surge::UserInteractions::promptError( "Malformed top element in paramdocumentation.xml - not a param-doc", "Surge ERror" );
+         std::cout << "Unable to load  '" << dsf << "'"
+                   << std::endl;
+         std::cout << "Unable to parse\nError is:\n"
+                   << doc.ErrorDesc() << " at row=" << doc.ErrorRow() << " col=" << doc.ErrorCol()
+                   << std::endl;
       }
       else
       {
-         for( auto pchild = pdoc->FirstChildElement(); pchild; pchild = pchild->NextSiblingElement() )
+         TiXmlElement* pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
+         if( ! pdoc )
          {
-            if( strcmp( pchild->Value(),"ctrl_group" ) == 0 )
+            Surge::UserInteractions::promptError( "Malformed top element in paramdocumentation.xml - not a param-doc", "Surge ERror" );
+         }
+         else
+         {
+            for( auto pchild = pdoc->FirstChildElement(); pchild; pchild = pchild->NextSiblingElement() )
             {
-               int g = 0;
-               if( pchild->QueryIntAttribute("group", &g ) == TIXML_SUCCESS )
+               if( strcmp( pchild->Value(),"ctrl_group" ) == 0 )
                {
+                  int g = 0;
+                  if( pchild->QueryIntAttribute("group", &g ) == TIXML_SUCCESS )
+                  {
+                     std::string help_url = pchild->Attribute( "help_url" );
+                     if( help_url.size() > 0 )
+                        helpURL_controlgroup[g] = help_url;
+                  }
+               }
+               else if( strcmp( pchild->Value(), "param" ) == 0 )
+               {
+                  std::string id = pchild->Attribute( "id" );
+                  std::string help_url = pchild->Attribute( "help_url" );
+                  int t = 0;
+                  if( help_url.size() > 0 )
+                  {
+                     if( pchild->QueryIntAttribute( "type", &t ) == TIXML_SUCCESS )
+                     {
+                        helpURL_paramidentifier_typespecialized[std::make_pair(id, t)] = help_url;
+                     }
+                     else
+                     {
+                        helpURL_paramidentifier[id] = help_url;
+                  }
+                  }
+               }
+               else if( strcmp( pchild->Value(), "special" ) == 0 )
+               {
+                  std::string id = pchild->Attribute( "id" );
                   std::string help_url = pchild->Attribute( "help_url" );
                   if( help_url.size() > 0 )
-                     helpURL_controlgroup[g] = help_url;
-               }
-            }
-            else if( strcmp( pchild->Value(), "param" ) == 0 )
-            {
-               std::string id = pchild->Attribute( "id" );
-               std::string help_url = pchild->Attribute( "help_url" );
-               int t = 0;
-               if( help_url.size() > 0 )
-               {
-                  if( pchild->QueryIntAttribute( "type", &t ) == TIXML_SUCCESS )
                   {
-                     helpURL_paramidentifier_typespecialized[std::make_pair(id, t)] = help_url;
-                  }
-                  else
-                  {
-                     helpURL_paramidentifier[id] = help_url;
+                     helpURL_specials[id] = help_url;
                   }
                }
-            }
-            else if( strcmp( pchild->Value(), "special" ) == 0 )
-            {
-               std::string id = pchild->Attribute( "id" );
-               std::string help_url = pchild->Attribute( "help_url" );
-               if( help_url.size() > 0 )
+               else
                {
-                  helpURL_specials[id] = help_url;
+                  std::cout << "UNKNOWN " << pchild->Value() << std::endl;
                }
-            }
-            else
-            {
-               std::cout << "UNKNOWN " << pchild->Value() << std::endl;
             }
          }
       }
-
    }
 }
 
