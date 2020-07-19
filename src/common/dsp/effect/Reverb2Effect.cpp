@@ -175,7 +175,7 @@ void Reverb2Effect::update_rtime()
 {
    float t = BLOCK_SIZE_INV * ( samplerate *
                                 ( std::max( 1.0f, powf(2.f, *f[r2p_decay_time]) ) * 2.f +
-                                  std::max( 0.1f, powf(2.f, *f[r2p_predelay]) ) * 2.f
+                                  std::max( 0.1f, powf(2.f, *f[r2p_predelay]) * ( fxdata->p[r2p_predelay].temposync ? storage->temposyncratio_inv : 1.f ) ) * 2.f
                                    ) ); // *2 is to get the db120 time
    ringout_time = (int)t;
 }
@@ -208,7 +208,10 @@ void Reverb2Effect::process(float* dataL, float* dataR)
 
    _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * dsamplerate_inv);
 
-   int pdt = limit_range( (int)( samplerate * pow( 2.0, *f[r2p_predelay] ) ), 1, PREDELAY_BUFFER_SIZE_LIMIT - 1 );
+   int pdt = limit_range( (int)( samplerate * pow( 2.0, *f[r2p_predelay] ) *
+                                 ( fxdata->p[r2p_predelay].temposync ? storage->temposyncratio_inv : 1.f ) ),
+                          1, PREDELAY_BUFFER_SIZE_LIMIT - 1 );
+
 
    for (int k = 0; k < BLOCK_SIZE; k++)
    {
