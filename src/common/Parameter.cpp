@@ -231,6 +231,7 @@ bool Parameter::can_temposync()
    case ct_lforate_deactivatable:
    case ct_envtime:
    case ct_envtime_lfodecay:
+   case ct_reverbpredelaytime:
       return true;
    }
    return false;
