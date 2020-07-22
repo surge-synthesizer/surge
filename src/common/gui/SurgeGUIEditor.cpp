@@ -2399,6 +2399,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    }
    long tag = control->getTag();
 
+   // In these cases just move along with success. RMB does nothing on these switches
+   if( tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store || tag == tag_store_cancel || tag == tag_store_ok )
+   {
+      return 1;
+   }
+   
    std::vector< std::string > clearControlTargetNames;
 
    if (button & kDoubleClick)
