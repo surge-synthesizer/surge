@@ -41,6 +41,9 @@ UninstallFilesDir={commonappdata}\Surge\uninstall\x86\
 Type: filesandordirs; Name: "{cf}\VST3\SurgeEffectsBank.vst3"
 ;; also since we're now putting the .vst3 file in SST subfolder, remove old one
 Type: files; Name: "{cf}\VST3\Surge.vst3"
+;; and since there have been changes in patch subfoldering for factory and 3rd party folders in Surge 1.7, delete them first to ensure clean slate
+Type: filesandordirs; Name: "{commonappdata}\Surge\patches_3rdparty"
+Type: filesandordirs; Name: "{commonappdata}\Surge\patches_factory"
 
 [Components]
 Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
