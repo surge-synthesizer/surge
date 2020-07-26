@@ -30,32 +30,32 @@
   <param id="filter.waveshaper_type" help_url="#other-parameters"/>
   <param id="global.active_scene" help_url="#scene-select-and-scene-mode"/>
   <param id="global.character" help_url="#fx-bypass-character-and-master-volume"/>
-  <param id="global.drift" help_url="#other-settings"/>
-  <param id="global.fmdepth" help_url="#other-parameters"/>
-  <param id="global.fmrouting" help_url="#other-parameters"/>
+  <param id="scene.drift" help_url="#other-sound-generation-parameters"/>
+  <param id="scene.fmdepth" help_url="#other-parameters"/>
+  <param id="scene.fmrouting" help_url="#other-parameters"/>
   <param id="global.fx1_return" help_url="#fx-section"/>
   <param id="global.fx2_return" help_url="#fx-section"/>
   <param id="global.fx_bypass" help_url="#fx-bypass-character-and-master-volume"/>
   <param id="global.fx_disable" help_url="#fx-section"/>
-  <param id="global.gain" help_url="#other-parameters"/>
-  <param id="global.keytrack_root" help_url="#other-parameters"/>
+  <param id="scene.gain" help_url="#other-parameters"/>
+  <param id="scene.keytrack_root" help_url="#other-parameters"/>
   <param id="global.master_volume" help_url="#fx-bypass-character-and-master-volume"/>
-  <param id="global.noise_color" help_url="#other-settings"/>
-  <param id="global.pan" help_url="#output-stage"/>
-  <param id="global.pbrange_dn" help_url="#other-settings"/>
-  <param id="global.pbrange_up" help_url="#other-settings"/>
-  <param id="global.playmode" help_url="#other-settings"/>
+  <param id="scene.noise_color" help_url="#other-sound-generation-parameters"/>
+  <param id="scene.pan" help_url="#output-stage"/>
+  <param id="scene.pbrange_dn" help_url="#other-sound-generation-parameters"/>
+  <param id="scene.pbrange_up" help_url="#other-sound-generation-parameters"/>
+  <param id="scene.playmode" help_url="#other-sound-generation-parameters"/>
   <param id="global.polylimit" help_url="#scene-select-and-scene-mode"/>
   <param id="global.scene_mode" help_url="#scene-select-and-scene-mode"/>
-  <param id="global.send_fx_1" help_url="#output-stage"/>
-  <param id="global.send_fx_2" help_url="#output-stage"/>
+  <param id="scene.send_fx_1" help_url="#output-stage"/>
+  <param id="scene.send_fx_2" help_url="#output-stage"/>
   <param id="global.splitkey" help_url="#scene-select-and-scene-mode"/>
-  <param id="global.velocity_sensitivity" help_url="#other-parameters"/>
-  <param id="global.volume" help_url="#output-stage"/>
-  <param id="global.width" help_url="#output-stage"/>
-  <param id="scene.octave" help_url="#other-settings"/>
-  <param id="scene.pitch" help_url="#other-settings"/>
-  <param id="scene.portatime" help_url="#other-settings"/>
+  <param id="scene.velocity_sensitivity" help_url="#other-parameters"/>
+  <param id="scene.volume" help_url="#output-stage"/>
+  <param id="scene.width" help_url="#output-stage"/>
+  <param id="scene.octave" help_url="#other-sound-generation-parameters"/>
+  <param id="scene.pitch" help_url="#other-sound-generation-parameters"/>
+  <param id="scene.portatime" help_url="#other-sound-generation-parameters"/>
 
   <!-- Params for CG 2 -->
   <param id="osc.keytrack" help_url=""/>
