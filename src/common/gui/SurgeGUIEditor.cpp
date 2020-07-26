@@ -3059,10 +3059,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             std::string helpstr = "[?] ";
             auto lurl = fullyResolvedHelpURL(helpurl);
             auto fnmi = addCallbackMenu(contextMenu, std::string(helpstr + p->get_full_name()).c_str(),
-                                         [lurl]()
-                                            {
-                                               Surge::UserInteractions::openURL( lurl );
-                                            }
+                                        [lurl]()
+                                           {
+                                              Surge::UserInteractions::openURL( lurl );
+                                           }
                );
             eid++;
          }
@@ -6447,6 +6447,31 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
 std::string SurgeGUIEditor::helpURLFor( Parameter *p )
 {
    auto storage = &(synth->storage);
+#if 0 // useful debug   
+   static bool once = false;
+   if( ! once )
+   {
+      once = true;
+      for( auto hp : storage->helpURL_paramidentifier )
+      {
+         auto k = hp.first;
+         bool found = false;
+         for (auto iter = synth->storage.getPatch().param_ptr.begin();
+              iter != synth->storage.getPatch().param_ptr.end(); iter++)
+         {
+            Parameter* q = *iter;
+            if( ! q ) break;
+            if( q->ui_identifier == k )
+            {
+               found = true;
+               break;
+            }
+         }
+         if( ! found )
+            std::cout << "UNFOUND : " << k << std::endl;
+      }
+   }
+#endif   
    std::string id = p->ui_identifier;
    int type = -1;
    if( p->ctrlgroup == cg_OSC )
