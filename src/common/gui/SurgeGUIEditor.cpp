@@ -4973,6 +4973,15 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
 
     zoomSubMenu->addSeparator(zid++);
 
+    auto dzf = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultZoom", this->zoomFactor );
+    std::ostringstream dss;
+    dss << "Zoom to Default (" << dzf << "%)";
+    CCommandMenuItem* todefaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(dss.str().c_str())));
+    todefaultZ->setActions([this, dzf](CCommandMenuItem* m) { this->setZoomFactor(dzf); });
+    zoomSubMenu->addEntry(todefaultZ);
+    zid++;
+
+
     std::ostringstream zss;
     zss << "Set " << zoomFactor << "% as Default";
     CCommandMenuItem* defaultZ = new CCommandMenuItem(
