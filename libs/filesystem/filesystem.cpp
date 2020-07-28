@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include "filesystem.h"
 
-namespace std::experimental::filesystem {
+namespace std { namespace experimental { namespace filesystem {
     // path class:
     path::path():
     path("")
@@ -228,7 +228,7 @@ namespace std::experimental::filesystem {
     {
         copy_recursive(src, target, [](path p) { return true; });
     }
-}
+}}}
 
 #endif
 #endif

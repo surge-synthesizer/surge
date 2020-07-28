@@ -6,9 +6,9 @@
 #
 
 cmake_minimum_required(VERSION 3.10)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12 CACHE STRING "Build for 10.12")
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
 
-project(Surge VERSION 1.7.0.0 LANGUAGES CXX ASM)
+project(Surge VERSION 1.7.1.0 LANGUAGES CXX ASM)
 message( STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}" )
 
 add_custom_target(surge-shared)
@@ -73,7 +73,13 @@ endif()
 
 # CMake Configuration for all platforms
 set(CMAKE_CXX_EXTENSIONS false)
-set(CMAKE_CXX_STANDARD 17)
+if( WIN32 )
+  set(CMAKE_CXX_STANDARD 17)
+  set(SURGE_CXX_STD_FLAG cxx_std_17)
+else()
+  set(CMAKE_CXX_STANDARD 14)
+  set(SURGE_CXX_STD_FLAG cxx_std_14)
+endif()
 
 include(CheckCXXSymbolExists)
 CHECK_CXX_SYMBOL_EXISTS(std::filesystem::path::preferred_separator "filesystem" CXX_STD_FS)
@@ -574,7 +580,7 @@ if( BUILD_AU )
     )
   add_dependencies(surge-au-dll surge-shared)
 
-  target_compile_features(surge-au-dll PRIVATE cxx_std_17 )
+  target_compile_features(surge-au-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-au-dll
     PRIVATE
@@ -636,7 +642,7 @@ if( BUILD_VST3 )
     )
   add_dependencies(surge-vst3-dll  surge-shared)
 
-  target_compile_features(surge-vst3-dll PRIVATE cxx_std_17 )
+  target_compile_features(surge-vst3-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   if( APPLE )
     target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/macmain.cpp)
@@ -737,7 +743,7 @@ if( BUILD_VST2 )
     target_link_options( surge-vst2-dll PUBLIC  "/DEF:..\\resources\\windows-vst2\\surge.def" )
   endif()
 
-  target_compile_features(surge-vst2-dll PRIVATE cxx_std_17 )
+  target_compile_features(surge-vst2-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-vst2-dll
     PRIVATE
@@ -814,7 +820,7 @@ if( BUILD_LV2 )
     )
   add_dependencies(surge-lv2-dll surge-shared)
 
-  target_compile_features(surge-lv2-dll PRIVATE cxx_std_17 )
+  target_compile_features(surge-lv2-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-lv2-dll
     PRIVATE
@@ -889,7 +895,7 @@ if( BUILD_HEADLESS )
     )
   add_dependencies(surge-headless surge-shared)
 
-  target_compile_features(surge-headless PRIVATE cxx_std_17 )
+  target_compile_features(surge-headless PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-headless
     PRIVATE
