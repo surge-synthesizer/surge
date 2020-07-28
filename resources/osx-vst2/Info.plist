@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>SURGE</string>
+	<string>Surge</string>
 	<key>CFBundleIconFile</key>
 	<string>surgeicon.icns</string>
 	<key>CFBundleIdentifier</key>
