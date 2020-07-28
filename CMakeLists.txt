@@ -611,6 +611,8 @@ if( BUILD_AU )
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Packaging up AU component"
     COMMAND ./scripts/macOS/package-au.sh  ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-au-dll.dylib ${SURGE_PRODUCT_DIR}
+    COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.component/
+    COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.component/
     )
 
 endif()
@@ -682,6 +684,8 @@ if( BUILD_VST3 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
       COMMAND ./scripts/macOS/package-vst3.sh ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst3-dll.dylib ${SURGE_PRODUCT_DIR}
+      COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst3/
+      COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst3/
       )
    elseif( UNIX )
     add_custom_target( Surge-VST3-Packaged ALL )
@@ -771,6 +775,8 @@ if( BUILD_VST2 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST2 component"
       COMMAND ./scripts/macOS/package-vst.sh   ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst2-dll.dylib ${SURGE_PRODUCT_DIR}
+      COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst2/
+      COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst2/
       )
    endif()
   if( UNIX AND NOT APPLE )
