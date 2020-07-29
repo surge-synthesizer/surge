@@ -758,6 +758,15 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 VSTGUI::CMouseEventResult CSurgeSlider::onMouseEntered(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
 {
    in_hover = true;
+
+   {
+      auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+      if( sge )
+      {
+         sge->sliderHoverStart( getTag() );
+      }
+   }
+
    invalid();
    return kMouseEventHandled;
 }
@@ -765,6 +774,15 @@ VSTGUI::CMouseEventResult CSurgeSlider::onMouseEntered(VSTGUI::CPoint& where, co
 VSTGUI::CMouseEventResult CSurgeSlider::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
 {
    in_hover = false;
+
+   {
+      auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+      if( sge )
+      {
+         sge->sliderHoverEnd( getTag() );
+      }
+   }
+   
    if( wheelInitiatedEdit )
       while( editing )
          endEdit();

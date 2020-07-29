@@ -164,7 +164,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       FontCol = UsedOrActive ? skin->getColor( "modbutton.inactive.font.hover", brighten( ColEdge )  ):
          skin->getColor( "modbutton.used.font.hover", brighten( ColSemiTint ) );
    }
-   
+
    if (ActiveModSource)
    {
       FrameCol = skin->getColor( "modbutton.active.frame", ColBlink ); // blink ? ColBlink : ColTint;
@@ -196,6 +196,16 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       if( hovered )
          FontCol = skin->getColor( "modbutton.used.font.hover", brighten( ColHover ) );
    }
+
+   if( secondaryHover )
+   {
+      FontCol = skin->getColor( "modbutton.secondaryhover", VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
+      if( ActiveModSource )
+         FontCol = skin->getColor( "modbutton.active.secondaryhover", FontCol );
+      if( SelectedModSource )
+         FontCol = skin->getColor( "modbutton.active.secondaryhover", kWhiteCColor );
+   }
+   
 
    CRect framer(sze);
    CRect fillr(framer);

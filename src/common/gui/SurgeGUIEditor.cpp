@@ -6626,3 +6626,33 @@ void SurgeGUIEditor::setupSkinFromEntry( const Surge::UI::SkinDB::Entry &entry )
    }
    reloadFromSkin();
 }
+
+void SurgeGUIEditor::sliderHoverStart( int tag )
+{
+   int ptag =  tag - start_paramtags;
+   for (int k = 1; k < n_modsources; k++)
+   {
+      modsources ms = (modsources)k;
+      if (synth->isActiveModulation(ptag, ms))
+      {
+         auto gms = dynamic_cast<CModulationSourceButton  *>(gui_modsrc[k]);
+         if( gms )
+         {
+            gms->setSecondaryHover(true);
+         }
+         
+      }
+   };
+}
+void SurgeGUIEditor::sliderHoverEnd( int tag )
+{
+   for (int k = 1; k < n_modsources; k++)
+   {
+      auto gms = dynamic_cast<CModulationSourceButton *>(gui_modsrc[k]);
+      if( gms )
+      {
+         gms->setSecondaryHover(false);
+      }
+   }   
+
+}
