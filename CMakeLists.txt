@@ -423,7 +423,6 @@ elseif( UNIX AND NOT APPLE )
   else()
     set(ARCH_COMPILE_OPTIONS
       -msse2
-      -Wno-implicit-int-float-conversion
       -Werror 
       "-D_aligned_malloc(x,a)=malloc(x)"
       "-D_aligned_free(x)=free(x)"

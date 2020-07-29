@@ -96,7 +96,7 @@ void WavetableOscillator::init(float pitch, bool is_display)
             s = 0.f; //(oscdata->startphase.val.f) * (float)oscdata->wt.size;
          else if (!is_display)
          {
-            float drand = (float)rand() / RAND_MAX;
+            float drand = (float)rand() / (float)RAND_MAX;
             oscstate[i] = drand; // * (float)oscdata->wt.size;
          }
 

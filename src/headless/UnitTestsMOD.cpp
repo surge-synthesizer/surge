@@ -213,10 +213,10 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                
                for( int rc=0;rc<10; ++rc )
                {
-                  auto a = rand() * 1.0 / RAND_MAX;
-                  auto d = rand() * 1.0 / RAND_MAX;
-                  auto s = 0.8 * rand() * 1.0 / RAND_MAX + 0.1; // we have tested the s=0 case above
-                  auto r = rand() * 1.0 / RAND_MAX;
+                  auto a = rand() * 1.0 / (float)RAND_MAX;
+                  auto d = rand() * 1.0 / (float)RAND_MAX;
+                  auto s = 0.8 * rand() * 1.0 / (float)RAND_MAX + 0.1; // we have tested the s=0 case above
+                  auto r = rand() * 1.0 / (float)RAND_MAX;
                   runCompare( a, d, s, r, as, ds, rs, false );
                }
             }
@@ -301,10 +301,10 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
       testAnalog( 0.1, 0.2, 0.0, 0.1 );
       for( int rc=0;rc<50; ++rc )
       {
-         auto a = rand() * 1.0 / RAND_MAX + 0.03;
-         auto d = rand() * 1.0 / RAND_MAX + 0.03;
-         auto s = 0.7 * rand() * 1.0 / RAND_MAX + 0.2; // we have tested the s=0 case above
-         auto r = rand() * 1.0 / RAND_MAX + 0.03;
+         auto a = rand() * 1.0 / (float)RAND_MAX + 0.03;
+         auto d = rand() * 1.0 / (float)RAND_MAX + 0.03;
+         auto s = 0.7 * rand() * 1.0 / (float)RAND_MAX + 0.2; // we have tested the s=0 case above
+         auto r = rand() * 1.0 / (float)RAND_MAX + 0.03;
          testAnalog( a, d, s, r);
       }
       
@@ -334,8 +334,8 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
 
       for( auto i=0; i<10; ++i )
       {
-         auto s1 = 0.95f * rand() / RAND_MAX + 0.02;
-         auto s2 = 0.95f * rand() / RAND_MAX + 0.02;
+         auto s1 = 0.95f * rand() / (float)RAND_MAX + 0.02;
+         auto s2 = 0.95f * rand() / (float)RAND_MAX + 0.02;
          testSusPush( s1, s2 );
       }
    }
@@ -450,10 +450,10 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
          
       for( int rc=0;rc<100; ++rc )
       {
-         float a = rand() * 1.0 / RAND_MAX + 0.03;
-         float d = rand() * 1.0 / RAND_MAX + 0.01;
-         float s = 0.7 * rand() * 1.0 / RAND_MAX + 0.1; // we have tested the s=0 case above
-         float r = rand() * 1.0 / RAND_MAX + 0.1; // smaller versions can get one bad point in the pipeline
+         float a = rand() * 1.0 / (float)RAND_MAX + 0.03;
+         float d = rand() * 1.0 / (float)RAND_MAX + 0.01;
+         float s = 0.7 * rand() * 1.0 / (float)RAND_MAX + 0.1; // we have tested the s=0 case above
+         float r = rand() * 1.0 / (float)RAND_MAX + 0.1; // smaller versions can get one bad point in the pipeline
          INFO(  "Testing " << rc << " with ADSR=" << a << " " << d << " " << s << " " << r );
          compareSrgRepl( a, d, s, r );
 
@@ -504,8 +504,8 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
       testSusPush( 0.3, 0.7 );
       for( auto i=0; i<10; ++i )
       {
-         auto s1 = 0.95f * rand() / RAND_MAX + 0.02;
-         auto s2 = 0.95f * rand() / RAND_MAX + 0.02;
+         auto s1 = 0.95f * rand() / (float)RAND_MAX + 0.02;
+         auto s2 = 0.95f * rand() / (float)RAND_MAX + 0.02;
          testSusPush( s1, s2 );
       }
    }

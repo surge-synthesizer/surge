@@ -52,7 +52,7 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    noised1 = 0.f;
    target = 0.f;
    for (int i = 0; i < 4; i++)
-      wf_history[i] = 0.f; //((float) rand()/RAND_MAX)*2.f - 1.f;
+      wf_history[i] = 0.f; //((float) rand()/(float)RAND_MAX)*2.f - 1.f;
 }
 
 float LfoModulationSource::bend1(float x)
@@ -162,7 +162,7 @@ void LfoModulationSource::attack()
          step = 0;
          break;
       case lm_random:
-         phase = (float)rand() / RAND_MAX;
+         phase = (float)rand() / (float)RAND_MAX;
          if( ss->loop_end == 0 )
             step = 0;
          else

@@ -229,7 +229,7 @@ TEST_CASE( "KBM File Remaps Center", "[tun]" )
 
       for( int i=0; i<50; ++i )
       {
-         auto fr = 1.0f * rand() / RAND_MAX;
+         auto fr = 1.0f * rand() / (float)RAND_MAX;
          if( fr > 0 )
          {
             surge->storage.remapToKeyboard(k440);
@@ -866,7 +866,7 @@ TEST_CASE( "Ignoring Tuning Tables are Correct", "[dsp][tun]" )
       auto surge = surgeOnSine();
       for( int i=0; i<1000; ++i )
       {
-         auto e = 512.f * rand() / RAND_MAX;
+         auto e = 512.f * rand() / (float)RAND_MAX;
          REQUIRE( surge->storage.note_to_pitch(e) == surge->storage.note_to_pitch_ignoring_tuning(e) );
          REQUIRE( surge->storage.note_to_pitch_inv(e) == surge->storage.note_to_pitch_inv_ignoring_tuning(e) );
 
@@ -887,7 +887,7 @@ TEST_CASE( "Ignoring Tuning Tables are Correct", "[dsp][tun]" )
 
       for( int i=0; i<1000; ++i )
       {
-         auto e = 512.f * rand() / RAND_MAX;
+         auto e = 512.f * rand() / (float)RAND_MAX;
          REQUIRE( surge->storage.note_to_pitch(e) == surgeTuned->storage.note_to_pitch_ignoring_tuning(e) );
          REQUIRE( surge->storage.note_to_pitch(e) != surgeTuned->storage.note_to_pitch(e) );
          
