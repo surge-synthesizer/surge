@@ -186,7 +186,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    if (oscdata->p[5].absolute)
    {
       // see the comment in SurgeSuperOscillator in the absolute branch
-      t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 );
+      t = storage->note_to_pitch_inv_ignoring_tuning( (detune + l_sync.v) * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 );
       if( t < 0.1 ) t = 0.1;
    }
    else

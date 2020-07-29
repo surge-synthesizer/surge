@@ -367,7 +367,16 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
       // double t = max(0.5,dsamplerate_os * (1/8.175798915) * storage->note_to_pitch_inv(pitch +
       // detune) * 2);
-      float t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
+      float t;
+      // See the extensive comment below
+      
+      if (! oscdata->p[5].absolute)
+         t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
+      else
+         // Copy the mysterious *2 and drop the +sync
+         t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 ) * 2;
+
+      
       state[voice] = 0;
       last_level[voice] += dc_uni[voice] * (oscstate[voice] - syncstate[voice]);
 
