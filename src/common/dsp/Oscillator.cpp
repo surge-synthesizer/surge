@@ -799,7 +799,7 @@ void osc_audioinput::init_default_values()
 void osc_audioinput::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
    bool useOtherScene = false;
-   if( isInSceneB && localcopy[oscdata->p[4].param_id_in_scene].f > 0.f && storage->audio_otherscene )
+   if( isInSceneB && localcopy[oscdata->p[4].param_id_in_scene].f > 0.f )
    {
       useOtherScene = true;
    }
