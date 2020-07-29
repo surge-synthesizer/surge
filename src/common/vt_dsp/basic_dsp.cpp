@@ -95,37 +95,6 @@ int limit_range(int x, int l, int h)
 #endif
 }
 
-int Wrap(int x, int L, int H)
-{
-#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
-   // don't remember what this was anymore...
-   // int diff = H - L;
-   // if(x > H) x = x-H;
-   assert(0);
-   return 0;
-#else
-   __asm
-   {
-		; load values
-		mov		ecx, H
-		mov		edx, ecx		
-		mov		eax, x
-		; calc diff		
-		sub		edx, L		
-		; prepare wrapped val 1	into ebx
-		mov		ebx, eax
-		sub		ebx, H	
-		; compare with H
-		cmp		eax, ecx
-		cmovg	eax, ebx				
-		; prepare wrapped val 2 into edx	
-		add		edx, eax	
-		; compare with L
-		cmp		eax, L
-		cmovl	eax, edx
-   }
-#endif
-}
 
 int Sign(int x)
 {

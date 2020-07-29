@@ -155,7 +155,11 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
    }
    if( ! foundDefaultSkinEntry )
    {
-      Surge::UserInteractions::promptError( "Default skin not located. Surge is probably mis-installed",
+      std::ostringstream oss;
+      oss << "Surge Default Skin was not located. This usually means Surge is mis-installed or using an incompatible "
+          << "set of assets. Surge looked in '" << storage->datapath << "' and '" << storage->userDataPath << "'. "
+          << "You can fix this by re-installing or removing the offending incompatible resources.";
+      Surge::UserInteractions::promptError( oss.str(),
                                             "Skin Support Error" );
    }
 

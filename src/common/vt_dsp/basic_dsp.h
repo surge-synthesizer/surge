@@ -11,7 +11,6 @@ unsigned int limit_range(unsigned int x, unsigned int low, unsigned int high);
 double limit_range(double x, double low, double high);
 int Float2Int(float x);
 unsigned int Float2UInt(float x);
-int Wrap(int x, int low, int high);
 int Sign(int x);
 
 void hardclip_block(float* x, unsigned int nquads);

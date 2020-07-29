@@ -508,66 +508,6 @@ __m128 SNHquad(QuadFilterUnitState* __restrict f, __m128 in)
    return f->R[1];
 }
 
-#if !_M_X64 && !defined(ARM_NEON)
-__m128 COMBquad_SSE1(QuadFilterUnitState* __restrict f, __m128 in)
-{
-   assert(FIRipol_M == 256); // changing the constant requires updating the code below
-   const __m128 m256 = _mm_set1_ps(256.f);
-   const __m128i m0xff = _mm_set1_epi32(0xff);
-
-   f->C[0] = _mm_add_ps(f->C[0], f->dC[0]);
-   f->C[1] = _mm_add_ps(f->C[1], f->dC[1]);
-
-   __m128 a = _mm_mul_ps(f->C[0], m256);
-   __m128 DBRead = _mm_setzero_ps();
-
-   for (int i = 0; i < 4; i++)
-   {
-      if (f->active[i])
-      {
-         int e = _mm_cvtss_si32(_mm_load_ss((float*)&a + i));
-         int DT = e >> 8;
-         int SE = (0xff - (e & 0xff)) * (FIRipol_N << 1);
-
-         int RP = (f->WP[i] - DT - FIRoffset) & (MAX_FB_COMB - 1);
-
-         // SINC interpolation (12 samples)
-         __m128 a = _mm_loadu_ps(&f->DB[i][RP]);
-         __m128 b = _mm_load_ps(&sinctable[SE]);
-         __m128 o = _mm_mul_ps(a, b);
-
-         a = _mm_loadu_ps(&f->DB[i][RP + 4]);
-         b = _mm_load_ps(&sinctable[SE + 4]);
-         o = _mm_add_ps(o, _mm_mul_ps(a, b));
-
-         a = _mm_loadu_ps(&f->DB[i][RP + 8]);
-         b = _mm_load_ps(&sinctable[SE + 8]);
-         o = _mm_add_ps(o, _mm_mul_ps(a, b));
-
-         _mm_store_ss((float*)&DBRead + i, sum_ps_to_ss(o));
-      }
-   }
-
-   __m128 d = _mm_add_ps(in, _mm_mul_ps(DBRead, f->C[1]));
-   d = softclip_ps(d);
-
-   for (int i = 0; i < 4; i++)
-   {
-      if (f->active[i])
-      {
-         // Write to delaybuffer (with "anti-wrapping")
-         __m128 t = _mm_load_ss((float*)&d + i);
-         _mm_store_ss(&f->DB[i][f->WP[i]], t);
-         if (f->WP[i] < FIRipol_N)
-            _mm_store_ss(&f->DB[i][f->WP[i] + MAX_FB_COMB], t);
-
-         // Increment write position
-         f->WP[i] = (f->WP[i] + 1) & (MAX_FB_COMB - 1);
-      }
-   }
-   return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
-}
-#endif
 
 __m128 COMBquad_SSE2(QuadFilterUnitState* __restrict f, __m128 in)
 {
@@ -653,24 +593,6 @@ __m128 DIGI_SSE2(__m128 in, __m128 drive)
    return _mm_mul_ps(drive, _mm_mul_ps(m16inv, _mm_sub_ps(_mm_cvtepi32_ps(a), mofs)));
 }
 
-#if !_M_X64 && !defined(ARM_NEON)
-__m128 DIGI_SSE1(__m128 in, __m128 drive)
-{
-   const __m128 mofs = _mm_set1_ps(0.5f);
-   const __m128 m16 = _mm_set1_ps(16.f);
-   const __m128 m16inv = _mm_set1_ps(0.0625f);
-
-   __m128 invdrive = _mm_rcp_ps(drive);
-   __m128 a = _mm_add_ps(mofs, _mm_mul_ps(invdrive, _mm_mul_ps(m16, in)));
-   __m64 a1 = _mm_cvtps_pi32(a);
-   __m64 a2 = _mm_cvtps_pi32(_mm_movehl_ps(a, a));
-   a = _mm_cvtpi32_ps(_mm_movelh_ps(a, _mm_cvtpi32_ps(a, a2)), a1);
-   __m128 b = _mm_mul_ps(drive, _mm_mul_ps(m16inv, _mm_sub_ps(a, mofs)));
-   _mm_empty();
-   return b;
-}
-#endif
-
 __m128 TANH(__m128 in, __m128 drive)
 {
    // Closer to ideal than TANH0
@@ -691,42 +613,6 @@ __m128 TANH(__m128 in, __m128 drive)
    return _mm_max_ps(_mm_min_ps(y, y_max), y_min);
 }
 
-#if !_M_X64 && !defined(ARM_NEON)
-__m128 SINUS_SSE1(__m128 in, __m128 drive)
-{
-   const __m128 one = _mm_set1_ps(1.f);
-   const __m128 m256 = _mm_set1_ps(256.f);
-   const __m128 m512 = _mm_set1_ps(512.f);
-
-   __m128 x = _mm_mul_ps(in, drive);
-   x = _mm_add_ps(_mm_mul_ps(x, m256), m512);
-
-   __m64 e1 = _mm_cvtps_pi32(x);
-   __m64 e2 = _mm_cvtps_pi32(_mm_movehl_ps(x, x));
-   __m128 a = _mm_sub_ps(x, _mm_cvtpi32_ps(_mm_movelh_ps(x, _mm_cvtpi32_ps(x, e2)), e1));
-   int e11 = *(int*)&e1;
-   int e12 = *((int*)&e1 + 1);
-   int e21 = *(int*)&e2;
-   int e22 = *((int*)&e2 + 1);
-
-   __m128 ws1 = _mm_load_ss(&waveshapers[3][e11 & 0x3ff]);
-   __m128 ws2 = _mm_load_ss(&waveshapers[3][e12 & 0x3ff]);
-   __m128 ws3 = _mm_load_ss(&waveshapers[3][e21 & 0x3ff]);
-   __m128 ws4 = _mm_load_ss(&waveshapers[3][e22 & 0x3ff]);
-   __m128 ws = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
-   ws1 = _mm_load_ss(&waveshapers[3][(e11 + 1) & 0x3ff]);
-   ws2 = _mm_load_ss(&waveshapers[3][(e12 + 1) & 0x3ff]);
-   ws3 = _mm_load_ss(&waveshapers[3][(e21 + 1) & 0x3ff]);
-   ws4 = _mm_load_ss(&waveshapers[3][(e22 + 1) & 0x3ff]);
-   __m128 wsn = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
-
-   x = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, a), ws), _mm_mul_ps(a, wsn));
-
-   _mm_empty();
-
-   return x;
-}
-#endif
 __m128 SINUS_SSE2(__m128 in, __m128 drive)
 {
    const __m128 one = _mm_set1_ps(1.f);
@@ -770,48 +656,6 @@ __m128 SINUS_SSE2(__m128 in, __m128 drive)
    return x;
 }
 
-#if !_M_X64 && !defined(ARM_NEON)
-__m128 ASYM_SSE1(__m128 in, __m128 drive)
-{
-   const __m128 one = _mm_set1_ps(1.f);
-   const __m128 m32 = _mm_set1_ps(32.f);
-   const __m128 m512 = _mm_set1_ps(512.f);
-   const __m64 LB = _mm_set1_pi16(0);
-   const __m64 UB = _mm_set1_pi16(0x3fe);
-
-   __m128 x = _mm_mul_ps(in, drive);
-   x = _mm_add_ps(_mm_mul_ps(x, m32), m512);
-
-   __m64 e1 = _mm_cvtps_pi32(x);
-   __m64 e2 = _mm_cvtps_pi32(_mm_movehl_ps(x, x));
-   __m128 a = _mm_sub_ps(x, _mm_cvtpi32_ps(_mm_movelh_ps(x, _mm_cvtpi32_ps(x, e2)), e1));
-
-   e1 = _mm_packs_pi32(e1, e2);
-   e1 = _mm_max_pi16(_mm_min_pi16(e1, UB), LB);
-
-   int e11 = *(int*)&e1;
-   int e12 = *((int*)&e1 + 1);
-   int e21 = *(int*)&e2;
-   int e22 = *((int*)&e2 + 1);
-
-   __m128 ws1 = _mm_load_ss(&waveshapers[2][e11 & 0x3ff]);
-   __m128 ws2 = _mm_load_ss(&waveshapers[2][e12 & 0x3ff]);
-   __m128 ws3 = _mm_load_ss(&waveshapers[2][e21 & 0x3ff]);
-   __m128 ws4 = _mm_load_ss(&waveshapers[2][e22 & 0x3ff]);
-   __m128 ws = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
-   ws1 = _mm_load_ss(&waveshapers[2][(e11 + 1) & 0x3ff]);
-   ws2 = _mm_load_ss(&waveshapers[2][(e12 + 1) & 0x3ff]);
-   ws3 = _mm_load_ss(&waveshapers[2][(e21 + 1) & 0x3ff]);
-   ws4 = _mm_load_ss(&waveshapers[2][(e22 + 1) & 0x3ff]);
-   __m128 wsn = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
-
-   x = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, a), ws), _mm_mul_ps(a, wsn));
-
-   _mm_empty();
-
-   return x;
-}
-#endif
 
 __m128 ASYM_SSE2(__m128 in, __m128 drive)
 {
