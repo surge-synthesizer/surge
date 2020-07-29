@@ -192,7 +192,7 @@ TEST_CASE( "Unison at Sample Rates", "[osc]" )
                             {
                                REQUIRE( surge->loadPatchByPath( pn, -1, "Test" ) );
                                int note = rand() % 70 + 22;
-                               float abss = rand() * 1.f / RAND_MAX * 0.8 + 0.15;
+                               float abss = rand() * 1.f / (float)RAND_MAX * 0.8 + 0.15;
                                auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[n_osc_params - 2]);
                                ap->set_value_f01(abss);
                                char txt[256];

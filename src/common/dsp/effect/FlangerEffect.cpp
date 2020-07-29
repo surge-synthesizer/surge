@@ -150,7 +150,7 @@ void FlangerEffect::process(float* dataL, float* dataR)
          {
             if( lforeset )
             {
-               lfosandhtarget[c][i] = 1.f * rand() / RAND_MAX  - 1.f;
+               lfosandhtarget[c][i] = 1.f * rand() / (float)RAND_MAX  - 1.f;
             }
             // FIXME - exponential creep up. We want to get there in a time related to our rate
             auto cv = lfoval[c][i].v;

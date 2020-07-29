@@ -25,8 +25,8 @@ namespace DSP
 inline float fastsin( float x ) noexcept
 {
    auto x2 = x * x;
-   auto numerator = -x * (-11511339840 + x2 * (1640635920 + x2 * (-52785432 + x2 * 479249)));
-   auto denominator = 11511339840 + x2 * (277920720 + x2 * (3177720 + x2 * 18361));
+   auto numerator = -x * (-(float)11511339840 + x2 * ((float)1640635920 + x2 * (-(float)52785432 + x2 * (float)479249)));
+   auto denominator = (float)11511339840 + x2 * ((float)277920720 + x2 * ((float)3177720 + x2 * (float)18361));
    return numerator / denominator;
 }
 
@@ -34,8 +34,8 @@ inline float fastsin( float x ) noexcept
 inline float fastcos( float x ) noexcept
 {
    auto x2 = x * x;
-   auto numerator = -(-39251520 + x2 * (18471600 + x2 * (-1075032 + 14615 * x2)));
-   auto denominator = 39251520 + x2 * (1154160 + x2 * (16632 + x2 * 127));
+   auto numerator = -(-(float)39251520 + x2 * ((float)18471600 + x2 * (-1075032 + 14615 * x2)));
+   auto denominator = (float)39251520 + x2 * (1154160 + x2 * (16632 + x2 * 127));
    return numerator / denominator;
 }
 
