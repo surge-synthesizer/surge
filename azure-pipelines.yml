@@ -38,6 +38,13 @@ jobs:
         imageName: 'ubuntu-18.04'
         isLinux: True
         linuxProject: vst3
+      linux-vst3-ub20:
+        imageName: 'ubuntu-20.04'
+        isLinux: True
+        linuxProject: vst3
+      linux-clang:
+        imageName: 'ubuntu-20.04'
+        isLinuxClang: True
       linux-vst3-ubuntu-16:
         imageName: 'ubuntu-16.04'
         isLinux: True
@@ -168,6 +175,22 @@ jobs:
 
     condition: variables.isLinux
     displayName: linux - build plugin
+
+  - bash: |
+      sudo apt-get install -y xcb
+      sudo apt-get install -y libxcb-util-dev
+      sudo apt-get install -y libxcb-cursor-dev
+      sudo apt-get install -y libxcb-keysyms1-dev
+      sudo apt-get install -y libxkbcommon-dev
+      sudo apt-get install -y libxkbcommon-x11-dev
+      sudo apt-get install -y devscripts
+      sudo apt-get install -y clang
+
+      cmake -Bbuild -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+      cmake --build build --config Release 
+
+    condition: variables.isLinuxClang
+    displayName: linux - clang
 
   - bash: |
       sudo apt-get update
