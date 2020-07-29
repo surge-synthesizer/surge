@@ -334,6 +334,7 @@ if( APPLE )
     -Werror=dynamic-class-memaccess
     -Werror=undefined-bool-conversion
     -Werror=bitwise-op-parentheses
+    -Werror=pointer-bool-conversion
     )
   set(OS_INCLUDE_DIRECTORIES
     src/mac
