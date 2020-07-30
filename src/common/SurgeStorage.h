@@ -77,7 +77,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 9 -> 10 added character parameter
 // 10 -> 11 (1.6.2 release) added DAW Extra State
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
-// 12 -> 13 (1.7.0 release) deactivation; sine LP/HP
+// 12 -> 13 (1.7.0 release) deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
 const int ff_revision = 13;
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
@@ -98,6 +98,8 @@ const int n_global_params = 113;
 const int n_global_postparams = 1;
 const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
 const int metaparam_offset = 20480; // has to be bigger than total + 16 * 130 for fake VST3 mapping
+const int n_scenes = 2;
+const int n_filterunits_per_scene = 2;
 
 enum sub3_scenemode
 {
@@ -195,7 +197,6 @@ enum sub3_fxtypes
    fxt_conditioner,
    fxt_chorus4,
    fxt_vocoder,
-   //	fxt_emphasize,
    fxt_reverb2,
    fxt_flanger,
    fxt_ringmod,
@@ -272,13 +273,18 @@ enum fu_type
    fut_br12,
    fut_comb,
    fut_SNH,
-   // fut_comb_neg,
-   // fut_apf,
    n_fu_type,
 };
 const char fut_abberations[n_fu_type][32] = {
-    "Off",           "Lowpass 12dB",  "Lowpass 24dB", "Lowpass 6-24dB Ladder",
-    "Highpass 12dB", "Highpass 24dB", "Bandpass",     "Notch",   "Comb", "Sample & Hold" /*,"APF"*/};
+    "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Ladder Lowpass",
+    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold" };
+
+const char fut_bp_subtypes[4][32] = {"Clean 12 dB/oct", "Driven 12 dB/oct", "Smooth 12 dB/oct", "Clean 24 dB/oct"};
+const char fut_br_subtypes[2][64] = {"Default", "Legacy"};
+const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet", "Negative, 50% Wet", "Negative, 100% Wet"};
+const char fut_def_subtypes[3][32] = {"Clean", "Driven", "Smooth"};
+const char fut_ldr_subtypes[4][32] = {"6 dB/oct", "12 dB/oct", "18 dB/oct", "24 dB/oct"};
+
 const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 4, 2, 4, 0};
 
 enum fu_subtype

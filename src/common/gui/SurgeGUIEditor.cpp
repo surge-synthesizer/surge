@@ -3024,6 +3024,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
       auto ctrl = dynamic_cast<CSurgeSlider*>(control);
 
+      // don't show RMB context menu for filter subtype if it's hidden/not applicable
+      auto f1type = synth->storage.getPatch().scene[current_scene].filterunit[0].type.val.i;
+      auto f2type = synth->storage.getPatch().scene[current_scene].filterunit[1].type.val.i;
+
+      if (tag == f1subtypetag && (f1type == fut_none || f1type == fut_SNH))
+         return 1;
+      if (tag == f2subtypetag && (f2type == fut_none || f2type == fut_SNH))
+         return 1;
+
       if ((button & kRButton) && !(p->ctrltype == ct_lfoshape)) // for LFO let CLFOGui handle it
       {
          CRect menuRect;
