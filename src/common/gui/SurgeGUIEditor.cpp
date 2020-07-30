@@ -4535,6 +4535,20 @@ bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
 
 void SurgeGUIEditor::setZoomFactor(int zf)
 {
+   zoomFactorRecursionGuard ++;
+
+   if( zoomFactorRecursionGuard > 3 )
+   {
+      std::ostringstream oss;
+      oss << "Surge has recursed into setZoomFactor too many times. This indicates an error in the interaction "
+          << "Surge, your Host's Zoom implementation, and your screen size. Please report this error to the "
+          << "Surge Synth Team on GitHub, since we think it should never happen. But it seems it has!";
+      // Choose to not show this error.  It only ever happens in Studio one. See issue 2397.
+      // Surge::UserInteractions::promptError( oss.str(), "Surge Software Zoom Error" );
+      zoomFactorRecursionGuard--;
+      return;
+   }
+   
    if (!zoomEnabled)
       zf = 100.0;
 
@@ -4585,6 +4599,8 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    int fullPhysicalZoomFactor = (int)(zf * dbs);
    if (bitmapStore != nullptr)
       bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
+
+   zoomFactorRecursionGuard--;
 }
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
