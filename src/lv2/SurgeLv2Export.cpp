@@ -154,9 +154,8 @@ void lv2_generate_ttl(const char* baseName)
               "                        ui:noUserResize ;\n"
               "    lv2:requiredFeature ui:idleInterface ,\n"
               "                        <" LV2_INSTANCE_ACCESS_URI "> ;\n"
-              "    opts:supportedOption ui:scaleFactor ;\n";
-              // This was in the code but unused so I commented it out rather than include it
-              //"    lv2:extensionData ui:idleInterface .\n";
+              "    opts:supportedOption ui:scaleFactor ;\n"
+              "    lv2:extensionData ui:idleInterface .\n";
    }
 }
 
