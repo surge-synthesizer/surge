@@ -426,12 +426,12 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          px = gui_col3_x + gui_sec_width * 2 * f;
          py = gui_mainsec_y;
 
-         a->push_back(scene[sc].filterunit[f].type.assign(p_id.next(), id_s++, "type", "Filter Type",
+         a->push_back(scene[sc].filterunit[f].type.assign(p_id.next(), id_s++, "type", "Type",
                                                           ct_filtertype,
                                                           "filter.type_" + std::to_string(f+1), px - 2, py + 1, sc_id,
                                                           cg_FILTER, f, false, Surge::ParamConfig::kHorizontal));
          a->push_back(scene[sc].filterunit[f].subtype.assign(
-             p_id.next(), id_s++, "subtype", "Filter Subtype", ct_filtersubtype,
+             p_id.next(), id_s++, "subtype", "Subtype", ct_filtersubtype,
              "filter.subtype_" + std::to_string(f+1), px - 3, py + 1, sc_id,
              cg_FILTER, f, false, Surge::ParamConfig::kHorizontal));
          py = gui_mainsec_slider_y;
@@ -441,7 +441,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
              Surge::ParamConfig::kHorizontal | sceasy));
          if (f == 1)
             a->push_back(scene[sc].f2_cutoff_is_offset.assign(
-                p_id.next(), id_s++, "f2_cf_is_offset", "F2 Offset Mode", ct_bool_relative_switch,
+                p_id.next(), id_s++, "f2_cf_is_offset", "Filter 2 Offset Mode", ct_bool_relative_switch,
                 "filter.f2_offset_mode", px,
                 py, sc_id, cg_GLOBAL, 0, false, kMeta));
          py += gui_hfader_dist;

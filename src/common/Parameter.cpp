@@ -1903,6 +1903,37 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_filtertype:
          sprintf(txt, "%s", fut_abberations[limit_range(i, 0, (int)n_fu_type - 1)]);
          break;
+      case ct_filtersubtype:
+      {
+         auto &patch = storage->getPatch();
+
+         for (int scene = 0; scene < n_scenes ; ++scene)
+            for (int unit = 0; unit < n_filterunits_per_scene; ++unit)
+               if (id == patch.scene[scene].filterunit[unit].subtype.id)
+               {
+                  int type = patch.scene[scene].filterunit[unit].type.val.i;
+
+                  switch (type)
+                  {
+                  case fut_lpmoog:
+                     sprintf(txt, "%s", fut_ldr_subtypes[i]);
+                     break;
+                  case fut_bp12:
+                     sprintf(txt, "%s", fut_bp_subtypes[i]);
+                     break;
+                  case fut_br12:
+                     sprintf(txt, "%s", fut_br_subtypes[i]);
+                     break;
+                  case fut_comb:
+                     sprintf(txt, "%s", fut_comb_subtypes[i]);
+                     break;
+                  default:
+                     sprintf(txt, "%s", fut_def_subtypes[i]);
+                     break;
+                  }
+               }
+         break;
+      }
       case ct_wstype:
          sprintf(txt, "%s", wst_abberations[limit_range(i, 0, (int)n_ws_type - 1)]);
          break;
@@ -1954,13 +1985,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch(i)
          {
          case 0:
-            sprintf( txt, "Sqrt" );
+            sprintf( txt, "Convex" );
             break;
          case 1:
             sprintf( txt, "Linear" );
             break;
          case 2:
-            sprintf( txt, "Quadratic" );
+            sprintf( txt, "Concave" );
             break;
          default:
             sprintf( txt, "%d", i );

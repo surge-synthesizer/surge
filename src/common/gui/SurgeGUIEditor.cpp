@@ -3024,6 +3024,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
       auto ctrl = dynamic_cast<CSurgeSlider*>(control);
 
+      // don't show RMB context menu for filter subtype if it's hidden/not applicable
+      auto f1type = synth->storage.getPatch().scene[current_scene].filterunit[0].type.val.i;
+      auto f2type = synth->storage.getPatch().scene[current_scene].filterunit[1].type.val.i;
+
+      if (tag == f1subtypetag && (f1type == fut_none || f1type == fut_SNH))
+         return 1;
+      if (tag == f2subtypetag && (f2type == fut_none || f2type == fut_SNH))
+         return 1;
+
       if ((button & kRButton) && !(p->ctrltype == ct_lfoshape)) // for LFO let CLFOGui handle it
       {
          CRect menuRect;
@@ -3158,12 +3167,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             else
             {
                int incr = 1;
+
                if( p->ctrltype == ct_vocoder_bandcount )
                   incr = 4;
-               for( int i=p->val_min.i; i<= p->val_max.i; i += incr )
+               
+               // we have a case where the number of menu entries to be generated depends on another parameter
+               // so instead of using val_max.i directly, store it to local var and modify its value
+               // when required
+               int max = p->val_max.i;
+
+               // currently we only have this case with filter subtypes - different filter types have a different number of them
+               // so let's do this!
+               if (p->ctrltype == ct_filtersubtype)
+                  max = fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i] - 1;
+
+               for( int i=p->val_min.i; i<= max; i += incr )
                {
                   char txt[256];
-                  float ef = ( 1.0f * i - p->val_min.i) / ( p->val_max.i - p->val_min.i);
+                  float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
                   p->get_display(txt, true, ef );
 
                   std::string displaytxt = txt;
