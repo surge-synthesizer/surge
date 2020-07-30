@@ -73,12 +73,12 @@ endif()
 
 # CMake Configuration for all platforms
 set(CMAKE_CXX_EXTENSIONS false)
-if( WIN32 )
-  set(CMAKE_CXX_STANDARD 17)
-  set(SURGE_CXX_STD_FLAG cxx_std_17)
-else()
+if( APPLE )
   set(CMAKE_CXX_STANDARD 14)
   set(SURGE_CXX_STD_FLAG cxx_std_14)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+  set(SURGE_CXX_STD_FLAG cxx_std_17)
 endif()
 
 include(CheckCXXSymbolExists)
