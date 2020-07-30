@@ -1903,6 +1903,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_filtertype:
          sprintf(txt, "%s", fut_abberations[limit_range(i, 0, (int)n_fu_type - 1)]);
          break;
+      case ct_filtersubtype:
+         sprintf(txt, "Subtype %d", i + 1);
+         break;
       case ct_wstype:
          sprintf(txt, "%s", wst_abberations[limit_range(i, 0, (int)n_ws_type - 1)]);
          break;
@@ -1954,13 +1957,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch(i)
          {
          case 0:
-            sprintf( txt, "Sqrt" );
+            sprintf( txt, "Convex" );
             break;
          case 1:
             sprintf( txt, "Linear" );
             break;
          case 2:
-            sprintf( txt, "Quadratic" );
+            sprintf( txt, "Concave" );
             break;
          default:
             sprintf( txt, "%d", i );

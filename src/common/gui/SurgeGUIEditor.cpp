@@ -3167,6 +3167,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   p->get_display(txt, true, ef );
 
                   std::string displaytxt = txt;
+                  printf("%s\n", txt);
 
                   #if WINDOWS
                      Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
