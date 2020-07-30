@@ -165,28 +165,28 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    {
        FSRef foundRef;
        OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &foundRef);
-       // or kUserDomain
        FSRefMakePath(&foundRef, (UInt8*)path, 1024);
-       datapath = path;
-       datapath += "/Surge/";
+       std::string localpath = path;
+       localpath += "/Surge/";
 
-       auto cxmlpath = datapath + "configuration.xml";
-       // check if the directory exist in the user domain (if it doesn't, fall back to the local domain)
-       // See #863 where I chaned this to dir exists and contains config
-       CFStringRef testpathCF = CFStringCreateWithCString(0, cxmlpath.c_str(), kCFStringEncodingUTF8);
-       CFURLRef testCat = CFURLCreateWithFileSystemPath(0, testpathCF, kCFURLPOSIXPathStyle, true);
-       CFRelease(testpathCF);
-       FSRef myfsRef;
-       Boolean works = CFURLGetFSRef(testCat, &myfsRef);
+       err = FSFindFolder(kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
+       FSRefMakePath(&foundRef, (UInt8*)path, 1024);
+       std::string rootpath = path;
+       rootpath += "/Surge/";
 
-       CFRelease(testCat); // don't need it anymore?!?
-       if (!works)
-       {
-           OSErr err = FSFindFolder(kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
-           FSRefMakePath(&foundRef, (UInt8*)path, 1024);
-           datapath = path;
-           datapath += "/Surge/";
-       }
+       struct stat linfo;
+       auto lxml = localpath + "configuration.xml";
+       int lstat = stat(lxml.c_str(), &linfo);
+
+       struct stat rinfo;
+       auto rxml = rootpath + "configuration.xml";
+       int rstat = stat(rxml.c_str(), &rinfo);
+
+       // if the local one is here, and either is newer than the root one, or the root one is missing
+       if( lstat == 0 && ( linfo.st_mtime > rinfo.st_mtime || rstat != 0 ) )
+          datapath = localpath; // use the local
+       else
+          datapath = rootpath; // else use the root. If both are missing we will blow up later.
    }
    else
    {
