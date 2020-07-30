@@ -1067,7 +1067,14 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
             Steinberg::ViewRect vr( 0, 0, newW, newH );
             Steinberg::tresult res = ipf->resizeView(e, &vr);
             if (res != Steinberg::kResultTrue)
-               Surge::UserInteractions::promptError("Your host failed to zoom VST3", "Host Error");
+            {
+               std::ostringstream oss;
+               oss << "Your host failed to zoom your VST3 to scale " << e->getZoomFactor() << ". "
+                   << "Surge will now attempt to reset your zoom to 100%. You may see several "
+                   << "other error messages in the course of this being resolved.";
+               Surge::UserInteractions::promptError(oss.str(), "Host VST3 Zoom Error" );
+               e->setZoomFactor(100);
+            }
         }
             
         /*
