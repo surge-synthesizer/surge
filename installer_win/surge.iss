@@ -41,6 +41,7 @@ UninstallFilesDir={commonappdata}\Surge\uninstall
 ;; since the fx bank is now a dir not a file we have to force delete the old version in case it was a file
 [InstallDelete]
 Type: filesandordirs; Name: "{cf}\VST3\SurgeEffectsBank.vst3"
+Type: filesandordirs; Name: "{cf}\VST3\Surge Synth Team\SurgeEffectsBank.vst3"
 ;; also since we're now putting the .vst3 file in SST subfolder, remove old one
 Type: files; Name: "{cf}\VST3\Surge.vst3"
 ;; and since there have been changes in patch subfoldering for factory and 3rd party folders in Surge 1.7, delete them first to ensure clean slate
