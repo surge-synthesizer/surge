@@ -13,7 +13,7 @@ If you would also like to participate in discussions, testing, and design of Sur
 details below and also in [the contributors section of the surge website](https://surge-synthesizer.github.io/#contributors).
 
 Surge currently builds on macOS as a 64-bit AU, VST2 and VST3, Windows as a 64- and 32-bit VST2 and VST3
-and Linux as a 64-bit VST2, VST3 and LV2.
+and Linux as a 64-bit VST2, VST3 and LV2. We provide binary distributions of the AU and VST3.
 
 This README serves as the root of developer documentation for the project.
 
