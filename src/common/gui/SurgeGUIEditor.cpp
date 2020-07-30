@@ -3158,16 +3158,27 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             else
             {
                int incr = 1;
+
                if( p->ctrltype == ct_vocoder_bandcount )
                   incr = 4;
-               for( int i=p->val_min.i; i<= p->val_max.i; i += incr )
+               
+               // we have a case where the number of menu entries to be generated depends on another parameter
+               // so instead of using val_max.i directly, store it to local var and modify its value
+               // when required
+               int max = p->val_max.i;
+
+               // currently we only have this case with filter subtypes - different filter types have a different number of them
+               // so let's do this!
+               if (p->ctrltype == ct_filtersubtype)
+                  max = fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i] - 1;
+
+               for( int i=p->val_min.i; i<= max; i += incr )
                {
                   char txt[256];
-                  float ef = ( 1.0f * i - p->val_min.i) / ( p->val_max.i - p->val_min.i);
+                  float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
                   p->get_display(txt, true, ef );
 
                   std::string displaytxt = txt;
-                  printf("%s\n", txt);
 
                   #if WINDOWS
                      Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
