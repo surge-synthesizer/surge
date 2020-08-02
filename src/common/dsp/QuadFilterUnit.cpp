@@ -751,7 +751,10 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       }
    }
    case fut_br12:
-      return IIR12Bquad;
+      if (subtype < st_BR24)
+         return IIR12Bquad;
+      else
+         return IIR24Bquad;
    case fut_lp24:
       if (subtype == st_SVF)
          return SVFLP24Aquad;
