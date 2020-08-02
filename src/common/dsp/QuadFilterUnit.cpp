@@ -728,15 +728,27 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
    }
    case fut_bp12:
    {
-      if (subtype == st_SVF)
+      switch (subtype)
+      {
+      case st_SVF:
          return SVFBP12Aquad;
-      else if (subtype == 3)
-         return SVFBP24Aquad;
-      else if (subtype == st_Rough)
+         break;
+      case st_Rough:
          return IIR12CFCquad;
-      //			else if(subtype==st_Medium)
-      //				return SVFBP24Aquad;
-      return IIR12Bquad;
+         break;
+      case st_Smooth:
+         return IIR12Bquad;
+         break;
+      case st_SVFBP24:
+         return SVFBP24Aquad;
+         break;
+      case st_RoughBP24:
+         return IIR24CFCquad;
+         break;
+      case st_SmoothBP24:
+         return IIR24Bquad;
+         break;
+      }
    }
    case fut_br12:
       return IIR12Bquad;

@@ -30,10 +30,12 @@ void FilterCoefficientMaker::MakeCoeffs(
          Coeff_HP12(Freq, Reso, SubType);
       break;
    case fut_bp12:
-      if ((SubType == st_SVF) || (SubType == 3))
+      if ((SubType == st_SVF) || (SubType == st_SVFBP24))
          Coeff_SVF(Freq, Reso, false);
-      else
+      else if (SubType == st_Rough || SubType == st_Smooth)
          Coeff_BP12(Freq, Reso, SubType);
+      else if (SubType == st_RoughBP24 || SubType == st_SmoothBP24)
+         Coeff_BP24(Freq, Reso, SubType);
       break;
    case fut_br12:
       Coeff_BR12(Freq, Reso, SubType);
@@ -67,8 +69,10 @@ float clipscale(float freq, int subtype)
    switch (subtype)
    {
    case st_Rough:
+   case st_RoughBP24:
       return (1.0f / 64.0f) * db_to_linear(freq * 0.55f);
    case st_Smooth:
+   case st_SmoothBP24:
       return (1.0f / 1024.0f); // * db_to_linear(freq*0.55f);
    };
    return 0;
@@ -115,10 +119,12 @@ double Map4PoleResonance(double reso, double freq, int subtype)
       reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
       return 0.99 - 0.9949 * limit_range((double)reso, 0.0, 1.0); // sqrt(1.01) = 1.004987562
    case st_Rough:
+   case st_RoughBP24:
       reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
       return (1.0 - 1.05 * limit_range((double)reso, 0.001, 1.0));
    default:
    case st_Smooth:
+   case st_SmoothBP24:
       return (2.5 - 2.3 * limit_range((double)reso, 0.0, 1.0));
    }
 }
@@ -145,8 +151,10 @@ double resoscale4Pole(double reso, int subtype)
    case st_Medium:
       return (1.0 - 0.75 * reso);
    case st_Rough:
+   case st_RoughBP24:
       return (1.0 - 0.5 * reso * reso);
    case st_Smooth:
+   case st_SmoothBP24:
       return (1.0 - 0.5 * reso);
    }
 
@@ -291,7 +299,7 @@ void FilterCoefficientMaker::Coeff_HP24(float freq, float reso, int subtype)
 void FilterCoefficientMaker::Coeff_BP12(float freq, float reso, int subtype)
 {
    float gain = resoscale(reso, subtype);
-   if (subtype == 1)
+   if (subtype == st_Rough)
       gain *= 2.f;
 
    boundfreq(freq)
@@ -318,6 +326,36 @@ void FilterCoefficientMaker::Coeff_BP12(float freq, float reso, int subtype)
       ToCoupledForm(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
 }
 
+void FilterCoefficientMaker::Coeff_BP24(float freq, float reso, int subtype)
+{
+   float gain = resoscale(reso, subtype);
+   if (subtype == st_RoughBP24)
+      gain *= 2.f;
+
+   boundfreq(freq)
+
+       double Q2inv = Map4PoleResonance(reso, freq, subtype);
+   double Q = 0.5 / Q2inv;
+   float cosi, sinu;
+   storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
+
+   double alpha = sinu * Q2inv;
+   if (subtype != 0)
+      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
+   double a0 = 1 + alpha, b0, b1, b2, a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha;
+
+   {
+      b0 = Q * alpha;
+      b1 = 0;
+      b2 = -Q * alpha;
+   }
+
+   if (subtype == st_SmoothBP24)
+      ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
+   else
+      ToCoupledForm(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
+}
+
 void FilterCoefficientMaker::Coeff_BR12(float freq, float reso, int subtype)
 {
    boundfreq(freq)
@@ -325,7 +363,7 @@ void FilterCoefficientMaker::Coeff_BR12(float freq, float reso, int subtype)
        // double Q2inv = (2.5-2.45*limit_range((double)(1-(1-reso)*(1-reso)),0.0,1.0));
        double Q2inv;
 
-   if (subtype == 1)
+   if (subtype == st_Rough)
       Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
    else
       Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
