@@ -298,9 +298,9 @@ enum fu_subtype
    st_RoughBP24 = 4,
    st_SmoothBP24 = 5,
    st_BR12 = 0,
-   st_BR12leg = 1,
+   st_BR12Mild = 1,
    st_BR24 = 2,
-   st_BR24leg = 3,
+   st_BR24Mild = 3,
 };
 
 enum ws_type

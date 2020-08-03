@@ -363,7 +363,7 @@ void FilterCoefficientMaker::Coeff_BR(float freq, float reso, int subtype)
        // double Q2inv = (2.5-2.45*limit_range((double)(1-(1-reso)*(1-reso)),0.0,1.0));
        double Q2inv;
 
-   if (subtype == st_BR12leg || subtype == st_BR24leg)
+   if (subtype == st_BR12Mild || subtype == st_BR24Mild)
       Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
    else
       Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
