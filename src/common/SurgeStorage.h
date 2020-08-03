@@ -281,12 +281,12 @@ const char fut_abberations[n_fu_type][32] = {
 
 const char fut_bp_subtypes[6][32] = {"Clean 12 dB/oct", "Driven 12 dB/oct", "Smooth 12 dB/oct", 
                                      "Clean 24 dB/oct", "Driven 24 dB/oct", "Smooth 24 dB/oct"};
-const char fut_br_subtypes[2][64] = {"Default", "Legacy"};
+const char fut_br_subtypes[4][32] = {"12 dB/oct", "12 dB/oct Mild", "24 dB/oct", "24 dB/oct Mild"};
 const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet", "Negative, 50% Wet", "Negative, 100% Wet"};
 const char fut_def_subtypes[3][32] = {"Clean", "Driven", "Smooth"};
 const char fut_ldr_subtypes[4][32] = {"6 dB/oct", "12 dB/oct", "18 dB/oct", "24 dB/oct"};
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 2, 4, 0};
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0};
 
 enum fu_subtype
 {
@@ -297,6 +297,10 @@ enum fu_subtype
    st_SVFBP24 = 3,
    st_RoughBP24 = 4,
    st_SmoothBP24 = 5,
+   st_BR12 = 0,
+   st_BR12Mild = 1,
+   st_BR24 = 2,
+   st_BR24Mild = 3,
 };
 
 enum ws_type

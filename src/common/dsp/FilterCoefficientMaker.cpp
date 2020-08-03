@@ -38,7 +38,7 @@ void FilterCoefficientMaker::MakeCoeffs(
          Coeff_BP24(Freq, Reso, SubType);
       break;
    case fut_br12:
-      Coeff_BR12(Freq, Reso, SubType);
+      Coeff_BR(Freq, Reso, SubType);
       break;
    case fut_lp24:
       if (SubType == st_SVF)
@@ -356,14 +356,14 @@ void FilterCoefficientMaker::Coeff_BP24(float freq, float reso, int subtype)
       ToCoupledForm(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
 }
 
-void FilterCoefficientMaker::Coeff_BR12(float freq, float reso, int subtype)
+void FilterCoefficientMaker::Coeff_BR(float freq, float reso, int subtype)
 {
    boundfreq(freq)
 
        // double Q2inv = (2.5-2.45*limit_range((double)(1-(1-reso)*(1-reso)),0.0,1.0));
        double Q2inv;
 
-   if (subtype == st_Rough)
+   if (subtype == st_BR12Mild || subtype == st_BR24Mild)
       Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
    else
       Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
