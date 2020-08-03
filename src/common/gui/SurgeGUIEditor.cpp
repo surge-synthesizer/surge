@@ -3389,6 +3389,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid++;
             }
 
+            // "Add modulation" menu entry if we're in mod assign mode and parameter doesn't have
+            // modulation assigned from currently selected modulator
+            modsources ms = modsource;
+            if (!synth->isActiveModulation(ptag, ms) && mod_editor)
+            {
+                contextMenu->addSeparator(eid++);
+
+                std:string ms_entry = "Add " + modulatorName(ms, true) + Surge::UI::toOSCaseForMenu(" Modulation...");
+
+                char tmptxt[512];
+                sprintf(tmptxt, "%s", ms_entry.c_str());
+                addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms]() {
+                    this->promptForUserValueEntry(p, control, ms);
+                });
+
+                eid++;
+            }
+
             int n_ms = 0;
 
             for (int ms = 1; ms < n_modsources; ms++)
@@ -3400,6 +3418,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                contextMenu->addSeparator(eid++);
 
                int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+
 
                for (int k = 1; k < n_modsources; k++)
                {
