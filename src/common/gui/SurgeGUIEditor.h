@@ -238,6 +238,12 @@ public:
    void queueRebuildUI() { queue_refresh = true; synth->refresh_editor = true; }
 
    std::string midiMappingToHtml();
+
+   /*
+   ** Modulation Hover Support 
+   */
+   void sliderHoverStart( int tag );
+   void sliderHoverEnd( int tag );
    
 private:
    /**

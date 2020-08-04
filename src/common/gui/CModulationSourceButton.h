@@ -99,5 +99,14 @@ public:
    }
    bool hovered = false;
 
+   bool secondaryHover = false;
+   void setSecondaryHover( bool sh ) {
+      if( sh != secondaryHover )
+      {
+         secondaryHover = sh;
+         invalid();
+      }
+   }
+   
    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };
