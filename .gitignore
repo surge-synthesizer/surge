@@ -79,6 +79,7 @@ cmake-stamp
 build/
 build32/
 buildlin/
+buildlin-*/
 buildmac/
 buildwin/
 build-arm/

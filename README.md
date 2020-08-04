@@ -218,8 +218,9 @@ git submodule update --init --recursive
 
 `build-linux.sh` is a wrapper on the various cmake and make commands needed to build Surge. As with
 macOS, it is getting smaller every day as we move more things direclty into cmake. 
-As of this Surge 1.7.1, `build-linux.sh` only works on intel platforms. If you are building on 
-ARM please keep reading below for directions on the ARM compile mechanism.
+As of Surge 1.7.1, `build-linux.sh` only works on intel platforms. If you are building on 
+ARM, please use the ARM specific instructions below or use the head of the codebase, where
+we are continuing to improve the ARM experience and build-linux is ARM aware.
 
 You can build with the command:
 
@@ -261,6 +262,9 @@ make -j 2 Surge.vst3
 will build the VST3 and deposit it in surge/products.
 
 ## Building for ARM platforms
+
+As of August 4, build-linux supports ARM builds. If you are building the 1.7.0 or
+1.7.1 release, though, you need to follow these instructions.
 
 With 1.7.0 we have merged changes needed to build with ARM platforms and have done some 
 raspberry pi testing. Due to a variety of choices an ARM user needs to make, and due to
