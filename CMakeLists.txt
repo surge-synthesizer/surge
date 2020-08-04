@@ -9,6 +9,7 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
 
 project(Surge VERSION 1.7.1.0 LANGUAGES CXX ASM)
+message( STATUS "CMake Version is ${CMAKE_VERSION}" )
 message( STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}" )
 
 add_custom_target(surge-shared)
