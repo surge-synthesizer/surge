@@ -3491,7 +3491,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                for (int k = 1; k < n_modsources; k++)
                {
-                  modsources ms = (modsources)k;
+                  modsources ms = (modsources)modsource_display_order[k];
                   if (!synth->isActiveModulation(ptag, (modsources)ms))
                   {
                      char tmptxt[512];
