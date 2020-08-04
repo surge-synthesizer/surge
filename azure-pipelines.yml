@@ -187,7 +187,8 @@ jobs:
       sudo apt-get install -y clang
 
       cmake -Bbuild -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-      cmake --build build --config Release 
+      # Build the LV2 since that's what the freebsd folks use, and I build the VSt3 on mac clang all the time
+      cmake --build build --config Release --target Surge-LV2-Packaged
 
     condition: variables.isLinuxClang
     displayName: linux - clang

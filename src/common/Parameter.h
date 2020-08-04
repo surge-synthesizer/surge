@@ -216,31 +216,6 @@ struct ParameterIDCounter
    }
 };
 
-/*
-** Similarly the "position" is part of the parameter and that's a nasty mistake - there should
-** be an indirection. Ideally we would remove posx and posy as members altogether but to allow
-** an incremental approach make a little class which casts to an int and can redirect (at some
-** future point) for position. At this current iteration it is simply a holder for an int.
-*/
-class PositionHolder
-{
-public:
-   typedef enum {
-      X,
-      Y,
-      YOFF
-   } Axis;
-   
-   PositionHolder(Axis a) : val(-1), axis(a)  { }
-
-   operator int() const { return val; }
-   PositionHolder& operator=(const int v) { val = v; return *this; }
-   
-private:
-   Axis axis;
-   int val;
-};
-
 // used to make the infowindow
 struct ModulationDisplayInfoWindowStrings {
    std::string val;
@@ -340,7 +315,7 @@ public:
    int valtype = 0;
    int scene; // 0 = patch, 1 = scene A, 2 = scene B
    int ctrltype;
-   PositionHolder posx, posy, posy_offset;
+   int posx, posy, posy_offset;
    ControlGroup ctrlgroup = cg_GLOBAL;
    int ctrlgroup_entry = 0;
    int ctrlstyle = cs_off;
