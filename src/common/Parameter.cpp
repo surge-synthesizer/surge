@@ -27,11 +27,11 @@
 #include <UserDefaults.h>
 #include "DebugHelpers.h"
 
-Parameter::Parameter() : posx( PositionHolder::Axis::X ),
-                         posy( PositionHolder::Axis::Y ),
-                         posy_offset( PositionHolder::Axis::YOFF )
+Parameter::Parameter()
 {
    val.i = 0;
+   posx = 0;
+   posy = 0;
    posy_offset = 0;
    storage = nullptr;
 }

@@ -203,7 +203,6 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
 CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
    : CBitmap(CResourceDescription(0)), svgImage(nullptr), frame(f)
 {
-   std::cout << "CSB for " << ifname << std::endl;
 #ifdef INSTRUMENT_UI   
     Surge::Debug::record( "CScalableBitmap::CScalableBitmap file" );
 #endif
@@ -216,7 +215,6 @@ CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
     std::string extension = "svg";
     if( fname.length() > 3 )
        extension = fname.substr( fname.length() - 3 );
-    std::cout << "extension is " << extension << std::endl;
 
     //pngImage = nullptr;
     if( _stricmp( extension.c_str(), "svg" ) == 0 )
