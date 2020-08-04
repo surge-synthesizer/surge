@@ -5462,9 +5462,21 @@ void SurgeGUIEditor::reloadFromSkin()
    float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
    bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 
-   CScalableBitmap *cbm = bitmapStore->getBitmap( IDB_BG );
-   cbm->setExtraScaleFactor(getZoomFactor());
-   frame->setBackground( cbm );
+   auto bg = currentSkin->customBackgroundImage();
+   
+   if( bg != "" )
+   {
+      std::cout << "SETTING BACKGROUND to " << bg << std::endl;
+      CScalableBitmap *cbm = bitmapStore->getBitmapByStringID( bg );
+      cbm->setExtraScaleFactor(getZoomFactor());
+      frame->setBackground( cbm );
+   }
+   else
+   {
+      CScalableBitmap *cbm = bitmapStore->getBitmap( IDB_BG );
+      cbm->setExtraScaleFactor(getZoomFactor());
+      frame->setBackground( cbm );
+   }
 
    auto c = currentSkin->getColor( "textfield.focuscolor", VSTGUI::CColor( 170, 170, 230 ) );
    frame->setFocusColor( c );
@@ -6603,8 +6615,11 @@ void SurgeGUIEditor::setupSkinFromEntry( const Surge::UI::SkinDB::Entry &entry )
    this->bitmapStore->setupBitmapsForFrame(frame);
    if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
    {
-      auto msg = std::string( "Unable to load skin. Returning to default. Skin error was '" )
-         + db.getAndResetErrorString() + "'";
+      std::ostringstream oss;
+      oss << "Unable to load skin '" << entry.root << "/" << entry.name << "'. Resetting skin to default.\n\nSkin Error:\n"
+          << db.getAndResetErrorString();
+
+      auto msg = std::string( oss.str() );
       this->currentSkin = db.defaultSkin( &( this->synth->storage ) );
       this->currentSkin->reloadSkin(this->bitmapStore);
       Surge::UserInteractions::promptError( msg, "Skin Error" );
