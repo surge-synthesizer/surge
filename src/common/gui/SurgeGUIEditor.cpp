@@ -2838,35 +2838,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                    }
                );
             eid++;
+
             contextMenu->addSeparator(eid++);
+
             char txt[256];
-
-            if (synth->learn_custom > -1)
-               cancellearn = true;
-
-            std::string learnTag =
-               cancellearn ? "Abort Macro MIDI Learn" : "MIDI Learn Macro...";
-            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, ccid] {
-                                                      if (cancellearn)
-                                                         synth->learn_custom = -1;
-                                                      else
-                                                         synth->learn_custom = ccid;
-                                                   });
-            eid++;
-
-            if (synth->storage.controllers[ccid] >= 0)
-            {
-               char txt4[16];
-               decode_controllerid(txt4, synth->storage.controllers[ccid]);
-               sprintf(txt, "Clear Macro (%s ", txt4);
-               addCallbackMenu(contextMenu,
-                               Surge::UI::toOSCaseForMenu(txt) + midicc_names[synth->storage.controllers[ccid]] + ")",
-                               [this, ccid]() {
-                                                    synth->storage.controllers[ccid] = -1;
-                                                    synth->storage.save_midi_controllers();
-                                                 });
-               eid++;
-            }
 
             // Construct submenus for explicit controller mapping
             COptionMenu* midiSub = new COptionMenu(menuRect, 0, 0, 0, 0,
@@ -2939,6 +2914,33 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Assign Macro To..."));
 
             eid++;
+
+            if (synth->learn_custom > -1)
+               cancellearn = true;
+
+            std::string learnTag =
+               cancellearn ? "Abort Macro MIDI Learn" : "MIDI Learn Macro...";
+            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, ccid] {
+                                                      if (cancellearn)
+                                                         synth->learn_custom = -1;
+                                                      else
+                                                         synth->learn_custom = ccid;
+                                                   });
+            eid++;
+
+            if (synth->storage.controllers[ccid] >= 0)
+            {
+               char txt4[16];
+               decode_controllerid(txt4, synth->storage.controllers[ccid]);
+               sprintf(txt, "Clear Macro (%s ", txt4);
+               addCallbackMenu(contextMenu,
+                               Surge::UI::toOSCaseForMenu(txt) + midicc_names[synth->storage.controllers[ccid]] + ")",
+                               [this, ccid]() {
+                                                    synth->storage.controllers[ccid] = -1;
+                                                    synth->storage.save_midi_controllers();
+                                                 });
+               eid++;
+            }
 
             contextMenu->addSeparator(eid++);
 
@@ -3349,45 +3351,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             contextMenu->addSeparator(eid++);
 
-            if (synth->learn_param > -1)
-                cancellearn = true;
-
-            std::string learnTag = cancellearn ? "Abort Parameter MIDI Learn" : "MIDI Learn Parameter...";
-            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, p] {
-                                                        if (cancellearn)
-                                                        synth->learn_param = -1;
-                                                        else
-                                                        synth->learn_param = p->id;
-                                                    });
-            eid++;
-
-            if (p->midictrl >= 0)
-            {
-               char txt4[16];
-               decode_controllerid(txt4, p->midictrl);
-               sprintf(txt, "Clear Learned MIDI (%s ", txt4);
-               addCallbackMenu(contextMenu,
-                               Surge::UI::toOSCaseForMenu(txt) + midicc_names[p->midictrl] + ")",
-                               [this, p, ptag]() {
-                                  if (ptag < n_global_params)
-                                  {
-                                     p->midictrl = -1;
-                                  }
-                                  else
-                                  {
-                                     int a = ptag;
-                                     if (ptag >= (n_global_params + n_scene_params))
-                                        a -= ptag;
-
-                                     synth->storage.getPatch().param_ptr[a]->midictrl = -1;
-                                     synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
-                                  }
-
-                                  synth->storage.save_midi_controllers();
-                               });
-               eid++;
-            }
-            
             // Construct submenus for explicit controller mapping
             COptionMenu* midiSub = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                    VSTGUI::COptionMenu::kNoDrawStyle |
@@ -3453,7 +3416,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                   auto added = currentSub->addEntry(cmd);
 
-                  if ((ptag < n_global_params && p->midictrl == mc) || (ptag > n_global_params && synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
+                  if ((ptag < n_global_params && p->midictrl == mc) ||
+                      (ptag > n_global_params &&
+                       synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
                   {
                      added->setChecked();
                      added_to_menu->setChecked();
@@ -3469,6 +3434,47 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Assign Parameter To..."));
 
+            eid++;
+
+            if (synth->learn_param > -1)
+                cancellearn = true;
+
+            std::string learnTag = cancellearn ? "Abort Parameter MIDI Learn" : "MIDI Learn Parameter...";
+            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, p] {
+                                                        if (cancellearn)
+                                                        synth->learn_param = -1;
+                                                        else
+                                                        synth->learn_param = p->id;
+                                                    });
+            eid++;
+
+            if (p->midictrl >= 0)
+            {
+               char txt4[16];
+               decode_controllerid(txt4, p->midictrl);
+               sprintf(txt, "Clear Learned MIDI (%s ", txt4);
+               addCallbackMenu(contextMenu,
+                               Surge::UI::toOSCaseForMenu(txt) + midicc_names[p->midictrl] + ")",
+                               [this, p, ptag]() {
+                                  if (ptag < n_global_params)
+                                  {
+                                     p->midictrl = -1;
+                                  }
+                                  else
+                                  {
+                                     int a = ptag;
+                                     if (ptag >= (n_global_params + n_scene_params))
+                                        a -= ptag;
+
+                                     synth->storage.getPatch().param_ptr[a]->midictrl = -1;
+                                     synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
+                                  }
+
+                                  synth->storage.save_midi_controllers();
+                               });
+               eid++;
+            }
+            
             // "Add modulation" menu entry if we're in mod assign mode and parameter doesn't have
             // modulation assigned from currently selected modulator
             modsources ms = modsource;
