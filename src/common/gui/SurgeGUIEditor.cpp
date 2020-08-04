@@ -2868,6 +2868,77 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid++;
             }
 
+            // Construct submenus for explicit controller mapping
+            COptionMenu* midiSub = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                   VSTGUI::COptionMenu::kNoDrawStyle |
+                                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
+            COptionMenu* currentSub = nullptr;
+
+            for (int subs = 0; subs < 7; ++subs)
+            {
+               if (currentSub)
+               {
+                  currentSub->forget();
+                  currentSub = nullptr;
+               }
+               currentSub = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                            VSTGUI::COptionMenu::kNoDrawStyle |
+                                                VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+               char name[16];
+
+               sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
+
+               auto added_to_menu = midiSub->addEntry(currentSub, name);
+
+               for (int item = 0; item < 20; ++item)
+               {
+                  int mc = (subs * 20) + item;
+                  int disabled = 0;
+
+                  // these CCs cannot be used for MIDI learn (see
+                  // SurgeSynthesizer::channelController)
+                  if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
+                      (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
+                      mc == 123)
+                     disabled = 1;
+
+                  // we don't have any more CCs to cover, so break the loop
+                  if (mc > 127)
+                     break;
+
+                  char name[128];
+
+                  sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc],
+                          (disabled == 1 ? "- RESERVED" : ""));
+
+                  CCommandMenuItem* cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+
+                  cmd->setActions([this, ccid, mc](CCommandMenuItem* men) {
+                     synth->storage.controllers[ccid] = mc;
+                     synth->storage.save_midi_controllers();
+                  });
+                  cmd->setEnabled(!disabled);
+
+                  auto added = currentSub->addEntry(cmd);
+
+                  if (synth->storage.controllers[ccid] == mc)
+                  {
+                     added->setChecked();
+                     added_to_menu->setChecked();
+                  }
+               }
+            }
+
+            if (currentSub)
+            {
+               currentSub->forget();
+               currentSub = nullptr;
+            }
+
+            contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Assign Macro To..."));
+
+            eid++;
 
             contextMenu->addSeparator(eid++);
 
@@ -2901,74 +2972,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                                            }, 1 );
                                                    });
             eid++;
-
-            contextMenu->addSeparator(eid++);
-
-            // Construct submenus for explicit controller mapping
-            COptionMenu* midiSub = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                   VSTGUI::COptionMenu::kNoDrawStyle |
-                                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
-            COptionMenu* currentSub = nullptr;
-
-            for (int subs = 0; subs < 7; ++subs)
-            {
-               if (currentSub)
-               {
-                  currentSub->forget();
-                  currentSub = nullptr;
-               }
-               currentSub = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                            VSTGUI::COptionMenu::kNoDrawStyle |
-                                                VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-               char name[16];
-
-               sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
-
-               auto added_to_menu = midiSub->addEntry(currentSub, name);
-
-               for (int item = 0; item < 20; ++item)
-               {
-                  int mc = (subs * 20) + item;
-                  int disabled = 0;
-
-                  // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
-                  if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 || (mc == 74 && synth->mpeEnabled) ||(mc >= 98 && mc <= 101) || mc == 120 || mc == 123)
-                     disabled = 1;
-
-                  // we don't have any more CCs to cover, so break the loop
-                  if (mc > 127)
-                     break;
-
-                  char name[128];
-
-                  sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc], (disabled == 1 ? "- RESERVED" : ""));
-
-                  CCommandMenuItem* cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
-
-                  cmd->setActions([this, ccid, mc](CCommandMenuItem* men) {
-                                synth->storage.controllers[ccid] = mc;
-                                synth->storage.save_midi_controllers();
-                                });
-                  cmd->setEnabled(!disabled);
-
-                  auto added = currentSub->addEntry(cmd);
-
-                  if (synth->storage.controllers[ccid] == mc)
-                  {
-                     added->setChecked();
-                     added_to_menu->setChecked();
-                  }
-               }
-            }
-
-            if (currentSub)
-            {
-               currentSub->forget();
-               currentSub = nullptr;
-            }
-
-            contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Set Macro To..."));
 
 #if TARGET_VST3            
             hostMenu = addVst3MenuForParams( contextMenu, modsource - ms_ctrl1 + metaparam_offset, eid);
@@ -3346,19 +3349,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             contextMenu->addSeparator(eid++);
 
-            {
-               if (synth->learn_param > -1)
-                  cancellearn = true;
-               std::string learnTag =
-                  cancellearn ? "Abort Parameter MIDI Learn" : "MIDI Learn Parameter...";
-               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, p] {
-                                                         if (cancellearn)
-                                                            synth->learn_param = -1;
-                                                         else
-                                                            synth->learn_param = p->id;
-                                                      });
-               eid++;
-            }
+            if (synth->learn_param > -1)
+                cancellearn = true;
+
+            std::string learnTag = cancellearn ? "Abort Parameter MIDI Learn" : "MIDI Learn Parameter...";
+            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag), [this, cancellearn, p] {
+                                                        if (cancellearn)
+                                                        synth->learn_param = -1;
+                                                        else
+                                                        synth->learn_param = p->id;
+                                                    });
+            eid++;
 
             if (p->midictrl >= 0)
             {
@@ -3368,12 +3369,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                addCallbackMenu(contextMenu,
                                Surge::UI::toOSCaseForMenu(txt) + midicc_names[p->midictrl] + ")",
                                [this, p, ptag]() {
-                                  // p->midictrl = -1;
-                                  // TODO add so parameter for both scenes are cleared!
                                   if (ptag < n_global_params)
                                   {
                                      p->midictrl = -1;
-                                     synth->storage.save_midi_controllers();
                                   }
                                   else
                                   {
@@ -3383,11 +3381,93 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                                      synth->storage.getPatch().param_ptr[a]->midictrl = -1;
                                      synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
-                                     synth->storage.save_midi_controllers();
                                   }
+
+                                  synth->storage.save_midi_controllers();
                                });
                eid++;
             }
+            
+            // Construct submenus for explicit controller mapping
+            COptionMenu* midiSub = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                   VSTGUI::COptionMenu::kNoDrawStyle |
+                                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
+            COptionMenu* currentSub = nullptr;
+
+            for (int subs = 0; subs < 7; ++subs)
+            {
+               if (currentSub)
+               {
+                  currentSub->forget();
+                  currentSub = nullptr;
+               }
+               currentSub = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                            VSTGUI::COptionMenu::kNoDrawStyle |
+                                                VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+               char name[16];
+
+               sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
+
+               auto added_to_menu = midiSub->addEntry(currentSub, name);
+
+               for (int item = 0; item < 20; ++item)
+               {
+                  int mc = (subs * 20) + item;
+                  int disabled = 0;
+
+                  // these CCs cannot be used for MIDI learn (see
+                  // SurgeSynthesizer::channelController)
+                  if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
+                      (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
+                      mc == 123)
+                     disabled = 1;
+
+                  // we don't have any more CCs to cover, so break the loop
+                  if (mc > 127)
+                     break;
+
+                  char name[128];
+
+                  sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc],
+                          (disabled == 1 ? "- RESERVED" : ""));
+
+                  CCommandMenuItem* cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+
+                  cmd->setActions([this, p, ptag, mc](CCommandMenuItem* men) {
+                     if (ptag < n_global_params)
+                        p->midictrl = mc;
+                     else
+                     {
+                        int a = ptag;
+                        if (ptag >= (n_global_params + n_scene_params))
+                           a -= ptag;
+
+                        synth->storage.getPatch().param_ptr[a]->midictrl = mc;
+                        synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = mc;
+                     }
+
+                     synth->storage.save_midi_controllers();
+                  });
+                  cmd->setEnabled(!disabled);
+
+                  auto added = currentSub->addEntry(cmd);
+
+                  if ((ptag < n_global_params && p->midictrl == mc) || (ptag > n_global_params && synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
+                  {
+                     added->setChecked();
+                     added_to_menu->setChecked();
+                  }
+               }
+            }
+
+            if (currentSub)
+            {
+               currentSub->forget();
+               currentSub = nullptr;
+            }
+
+            contextMenu->addEntry(midiSub, Surge::UI::toOSCaseForMenu("Assign Parameter To..."));
 
             // "Add modulation" menu entry if we're in mod assign mode and parameter doesn't have
             // modulation assigned from currently selected modulator
