@@ -79,5 +79,7 @@ private:
                 float alpha);
    VSTGUI::CColor svgColorToCColor(int svgColor, float opacity = 1.0);
 
+   std::unique_ptr<VSTGUI::CBitmap> pngBitmap; // fixme - scales
+   
    int currentPhysicalZoomFactor;
 };

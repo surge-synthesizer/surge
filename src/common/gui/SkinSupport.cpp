@@ -456,6 +456,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
 
    colors.clear();
    queried_colors.clear();
+   bgimg = "";
    for (auto g : globals)
    {
       if (g.first == "image")
@@ -468,6 +469,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          {
             if (id.size() > 0)
             {
+               std::cout << "Loading " << res << " into " << id << std::endl;
+               
                if( imageIds.find(id) != imageIds.end() )
                   bitmapStore->loadBitmapByPathForID(resourceName(res), imageIds[id]);
                else
@@ -508,6 +511,10 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          else {
             colors[id] = ColorStore( VSTGUI::CColor(255, 0, 0) );
          }
+      }
+      if( g.first == "background" && g.second.find( "image" ) != g.second.end() )
+      {
+         bgimg = g.second["image" ];
       }
    }
 

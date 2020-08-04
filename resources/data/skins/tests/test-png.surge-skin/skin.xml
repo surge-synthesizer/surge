@@ -1,0 +1,14 @@
+<surge-skin name="Test: PNG Assets" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+  <globals>
+    <color id="white" value="#ffffff"/>
+    <defaultimage directory="IMG/"/>
+
+    <image id="wave-bg" resource="IMG/bg904f.png"/>
+
+    <background image="wave-bg"/>
+  </globals>
+  <component-classes>
+  </component-classes>
+  <controls>
+  </controls>
+</surge-skin>

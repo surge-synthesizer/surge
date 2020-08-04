@@ -213,6 +213,10 @@ public:
          return defaultValue;
    }
 
+   std::string customBackgroundImage() {
+      return bgimg;
+   }
+   
    CScalableBitmap *backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore );
 
    typedef enum {
@@ -239,7 +243,8 @@ public:
 private:
    static std::atomic<int> instances;
    std::vector<std::pair<std::string, props_t>> globals;
-
+   std::string bgimg = "";
+   
    struct ColorStore {
       VSTGUI::CColor color;
       std::string alias;

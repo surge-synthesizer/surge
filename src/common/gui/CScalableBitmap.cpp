@@ -1,3 +1,4 @@
+#include "globals.h"
 #include "CScalableBitmap.h"
 #include "SurgeError.h"
 #include "UserInteractions.h"
@@ -202,24 +203,38 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame* f)
 CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
    : CBitmap(CResourceDescription(0)), svgImage(nullptr), frame(f)
 {
+   std::cout << "CSB for " << ifname << std::endl;
 #ifdef INSTRUMENT_UI   
     Surge::Debug::record( "CScalableBitmap::CScalableBitmap file" );
 #endif
 
+    // OK so we have to see what type of file we are
     fname = ifname;
-    
     instances++;
-    //std::cout << "  Construct CScalableBitmap. instances=" << instances << " fname=" << fname << std::endl;
-
     resourceID = -1;
+    
+    std::string extension = "svg";
+    if( fname.length() > 3 )
+       extension = fname.substr( fname.length() - 3 );
+    std::cout << "extension is " << extension << std::endl;
 
-    svgImage = nsvgParseFromFile(fname.c_str(), "px", 96);
-
-    if (!svgImage)
+    //pngImage = nullptr;
+    if( _stricmp( extension.c_str(), "svg" ) == 0 )
     {
-       std::cout << "Unable to load SVG Image " << fname << std::endl;
+       svgImage = nsvgParseFromFile(fname.c_str(), "px", 96);
+       
+       if (!svgImage)
+       {
+          std::cout << "Unable to load SVG Image " << fname << std::endl;
+       }
     }
 
+    if( _stricmp( extension.c_str(), "png" ) == 0 )
+    {
+       pngBitmap = std::make_unique<VSTGUI::CBitmap>(fname.c_str());
+       std::cout << "PNG is " << pngBitmap.get() << std::endl;
+    }
+    
     extraScaleFactor = 100;
     currentPhysicalZoomFactor = 100;
     lastSeenZoom = -1;
@@ -390,6 +405,16 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
        }
     }
 
+    if( pngBitmap )
+    {
+       CGraphicsTransform tf = CGraphicsTransform().scale(currentPhysicalZoomFactor / 100.0, currentPhysicalZoomFactor / 100.0);
+       
+       CDrawContext::Transform trsf(*context, tf);
+
+       pngBitmap->draw( context, rect, CPoint(0,0), alpha );
+       return;
+    }
+    
     /* SVG File is missing */
     context->setFillColor(VSTGUI::kBlueCColor);
     context->drawRect(rect, VSTGUI::kDrawFilled);

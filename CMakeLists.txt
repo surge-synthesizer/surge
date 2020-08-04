@@ -518,10 +518,13 @@ elseif( WIN32 )
 
   if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
     set( WIN_DLL_BASENAME "Surge_x86" )
+    set( PNG_LINK_DIR "libs/libpng/win/x86/lib" )
     list( APPEND OS_COMPILE_DEFINITIONS WIN_X86=1 )
   else()
     set( WIN_DLL_BASENAME "Surge" )
+    set( PNG_LINK_DIR "libs/libpng/win/x64/lib" )
   endif()
+  message( STATUS "Configuring PNG linkage from ${PNG_LINK_DIR}" )
 
 
   set(OS_COMPILE_OPTIONS
@@ -558,7 +561,7 @@ elseif( WIN32 )
     gdiplus
     ComDlg32
     ComCtl32
-    ../libs/libpng/win/x64/lib/libpng16_static
+    ${CMAKE_SOURCE_DIR}/${PNG_LINK_DIR}/libpng16_static.lib
   )
 
   if( ${BUILD_DLLCHECK} )
