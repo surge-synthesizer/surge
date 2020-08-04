@@ -417,7 +417,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                 gui_envsec_y + 13, sc_id, cg_GLOBAL, 0, false,
                                                 kNoPopup));
       a->push_back(scene[sc].wsunit.drive.assign(
-          p_id.next(), id_s++, "ws_drive", "Waveshaper Drive", ct_decibel_narrow,
+          p_id.next(), id_s++, "ws_drive", "Waveshaper Drive", ct_decibel_narrow_short_extendable,
           "filter.waveshaper_drive", gui_envsec_x + gui_vfader_dist * 5 + 10, gui_envsec_y, sc_id, cg_GLOBAL, 0, true,
           Surge::ParamConfig::kVertical | kWhite | sceasy));
 

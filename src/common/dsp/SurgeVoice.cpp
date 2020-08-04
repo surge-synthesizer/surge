@@ -859,7 +859,8 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
       break;
    }
 
-   float Drive = db_to_linear(localcopy[id_drive].f);
+   // HERE
+   float Drive = db_to_linear(scene->wsunit.drive.get_extended(localcopy[id_drive].f));
    float Gain = db_to_linear(localcopy[id_vca].f + localcopy[id_vcavel].f * (1.f - state.fvel)) *
                 modsources[ms_ampeg]->output;
    float FB = localcopy[id_feedback].f;

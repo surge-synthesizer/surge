@@ -1248,6 +1248,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_decibel:
          case ct_decibel_narrow:
          case ct_decibel_narrow_extendable:
+         case ct_decibel_narrow_short_extendable:
          case ct_decibel_extra_narrow:
          case ct_decibel_extendable:
          case ct_freq_mod:
@@ -1448,6 +1449,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_decibel:
          case ct_decibel_narrow:
          case ct_decibel_narrow_extendable:
+         case ct_decibel_narrow_short_extendable:
          case ct_decibel_extra_narrow:
          case ct_decibel_extendable:
          case ct_freq_mod:

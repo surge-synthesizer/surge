@@ -246,6 +246,7 @@ bool Parameter::can_extend_range()
    case ct_freq_shift:
    case ct_decibel_extendable:
    case ct_decibel_narrow_extendable:
+   case ct_decibel_narrow_short_extendable:
    case ct_oscspread:
    case ct_osc_feedback:
    case ct_osc_feedback_negative:
@@ -431,6 +432,7 @@ void Parameter::set_type(int ctrltype)
       break;
    case ct_decibel_narrow:
    case ct_decibel_narrow_extendable:
+   case ct_decibel_narrow_short_extendable:
       valtype = vt_float;
       val_min.f = -24;
       val_max.f = 24;
@@ -879,13 +881,19 @@ void Parameter::set_type(int ctrltype)
    case ct_decibel_extendable:
       displayType = LinearWithScale;
       sprintf( displayInfo.unit, "dB" );
-      displayInfo.extendFactor = 5;
+      displayInfo.extendFactor = 3;
       break;
 
    case ct_decibel_narrow_extendable:
       displayType = LinearWithScale;
       sprintf( displayInfo.unit, "dB");
-      displayInfo.extendFactor = 3;
+      displayInfo.extendFactor = 5;
+      break;
+
+   case ct_decibel_narrow_short_extendable:
+      displayType = LinearWithScale;
+      sprintf( displayInfo.unit, "dB");
+      displayInfo.extendFactor = 2;
       break;
 
    case ct_decibel:
@@ -1049,6 +1057,7 @@ void Parameter::bound_value(bool force_integer)
       case ct_decibel:
       case ct_decibel_narrow:
       case ct_decibel_narrow_extendable:
+      case ct_decibel_narrow_short_extendable:
       case ct_decibel_extra_narrow:
       case ct_decibel_attenuation:
       case ct_decibel_attenuation_large:
@@ -1222,6 +1231,8 @@ float Parameter::get_extended(float f)
       return 3.f * f;
    case ct_decibel_narrow_extendable:
       return 5.f * f;
+   case ct_decibel_narrow_short_extendable:
+      return 2.f * f;
    case ct_oscspread:
       return 12.f * f;
    case ct_osc_feedback:
@@ -2309,6 +2320,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_decibel:
    case ct_decibel_narrow:
    case ct_decibel_narrow_extendable:
+   case ct_decibel_narrow_short_extendable:
    case ct_decibel_extra_narrow:
    case ct_decibel_attenuation:
    case ct_decibel_attenuation_large:
