@@ -3474,30 +3474,44 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                });
                eid++;
             }
-            
-            // "Add modulation" menu entry if we're in mod assign mode and parameter doesn't have
-            // modulation assigned from currently selected modulator
-            modsources ms = modsource;
-            if (!synth->isActiveModulation(ptag, ms) && mod_editor)
-            {
-                contextMenu->addSeparator(eid++);
-
-                std:string ms_entry = "Add " + modulatorName(ms, true) + Surge::UI::toOSCaseForMenu(" Modulation...");
-
-                char tmptxt[512];
-                sprintf(tmptxt, "%s", ms_entry.c_str());
-                addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms]() {
-                    this->promptForUserValueEntry(p, control, ms);
-                });
-
-                eid++;
-            }
 
             int n_ms = 0;
 
             for (int ms = 1; ms < n_modsources; ms++)
                if (synth->isActiveModulation(ptag, (modsources)ms))
                   n_ms++;
+
+            // see if we have any modulators that are unassigned, then create "Add Modulation From..." menu
+            if (n_ms != n_modsources)
+            {
+               COptionMenu* addModSub = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                      VSTGUI::COptionMenu::kNoDrawStyle |
+                                                          VSTGUI::COptionMenu::kMultipleCheckStyle);
+               contextMenu->addSeparator(eid++);
+
+               for (int k = 1; k < n_modsources; k++)
+               {
+                  modsources ms = (modsources)modsource_display_order[k];
+                  if (!synth->isActiveModulation(ptag, (modsources)ms))
+                  {
+                     char tmptxt[512];
+                     sprintf(tmptxt, "%s", modulatorName(ms, false).c_str());
+                     addCallbackMenu(addModSub, tmptxt, [this, p, control, ms]() {
+                        this->promptForUserValueEntry(p, control, ms);
+                     });
+                  }
+               }
+
+               contextMenu->addEntry(addModSub, Surge::UI::toOSCaseForMenu("Add Modulation From..."));
+
+               if (addModSub)
+               {
+                  addModSub->forget();
+                  addModSub = nullptr;
+               }
+
+               eid++;
+            }
 
             if (n_ms)
             {

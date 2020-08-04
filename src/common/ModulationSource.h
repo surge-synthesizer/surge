@@ -55,15 +55,49 @@ enum modsources
    ms_slfo4,
    ms_slfo5,
    ms_slfo6,
-   // ms_arpeggiator,
    ms_timbre,
    ms_releasevelocity,
    n_modsources,
    /*ms_stepseq1,
    ms_stepseq2,
+   ms_arpeggiator,
    ms_feg1,
    ms_feg2,*/
+};
 
+const int modsource_display_order[n_modsources] =
+{
+    ms_original,
+    ms_velocity,
+    ms_releasevelocity,
+    ms_keytrack,
+    ms_polyaftertouch,
+    ms_aftertouch,
+    ms_modwheel,
+    ms_pitchbend,
+    ms_timbre,
+    ms_filtereg,
+    ms_ampeg,
+    ms_lfo1,
+    ms_lfo2,
+    ms_lfo3,
+    ms_lfo4,
+    ms_lfo5,
+    ms_lfo6,
+    ms_slfo1,
+    ms_slfo2,
+    ms_slfo3,
+    ms_slfo4,
+    ms_slfo5,
+    ms_slfo6,
+    ms_ctrl1,
+    ms_ctrl2,
+    ms_ctrl3,
+    ms_ctrl4,
+    ms_ctrl5,
+    ms_ctrl6,
+    ms_ctrl7,
+    ms_ctrl8,
 };
 
 const int n_customcontrollers = 8; // TODO remove this one
@@ -121,7 +155,7 @@ const int modsource_grid_xy[n_modsources][2] = {
     {6, 2}, {6, 4},                                                   // EGs
     {0, 2}, {1, 2}, {2, 2}, {3, 2},  {4, 2}, {5, 2},                  // LFO
     {0, 4}, {1, 4}, {2, 4}, {3, 4},  {4, 4}, {5, 4},                  // SLFO
-    {6, 0}, {0, 0}                                                            // Timbre, relvel is special
+    {6, 0}, {0, 0}                                                    // Timbre, relvel is special
 };
 
 inline bool isScenelevel(modsources ms)
