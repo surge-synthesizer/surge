@@ -199,11 +199,11 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
    if( secondaryHover )
    {
-      FontCol = skin->getColor( "modbutton.secondaryhover", VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
+      FontCol = skin->getColor( "modbutton.secondary.hover", VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
       if( ActiveModSource )
-         FontCol = skin->getColor( "modbutton.active.secondaryhover", FontCol );
+         FontCol = skin->getColor( "modbutton.active.secondary.hover", FontCol );
       if( SelectedModSource )
-         FontCol = skin->getColor( "modbutton.active.secondaryhover", kWhiteCColor );
+         FontCol = skin->getColor( "modbutton.selected.secondary.hover", kWhiteCColor );
    }
    
 

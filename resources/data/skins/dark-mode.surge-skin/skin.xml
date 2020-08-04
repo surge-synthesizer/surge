@@ -24,6 +24,10 @@
     <color id="surgeorange" value="#ff9000"/>
     <color id="buttonbg" value="#151515"/>
 
+    <color id="modbutton.secondary.hover" value="#ADFF6B"/>
+    <color id="modbutton.active.secondary.hover" value="#2E86FE"/>
+    <color id="modbutton.selected.secondary.hover" value="#ADFF6B"/>
+
     <color id="lfo.waveform.background" value="#242424"/>
     <color id="lfo.waveform.ruler.font" value="$lightgray"/>
     <color id="lfo.waveform.ruler.ticks" value="$lightgray"/>
