@@ -44,10 +44,10 @@ private:
    void doAttach();
 
    VSTGUI::CPoint _lastPos, _detachPos;
-   bool _isDetatched = false;
+   bool _isDetached = false;
 
    // OS specific (screen-space)
    double _hideX = 0, _hideY = 0;
-   // double _sumDX = 0, _sumDY = 0;    // this was there before but interfered with proper cursor hiding operation
+   double _sumDX = 0, _sumDY = 0;
    // but you know, let's keep it here because we don't know if it might be necessary for something else!
 };

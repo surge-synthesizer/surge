@@ -27,8 +27,8 @@ CCursorHidingControl::~CCursorHidingControl()
 CMouseEventResult CCursorHidingControl::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
    _lastPos = where;
-   //_sumDX = 0;
-   //_sumDY = 0;
+   _sumDX = 0;
+   _sumDY = 0;
    return kMouseEventHandled;
 }
 
@@ -43,21 +43,21 @@ CMouseEventResult CCursorHidingControl::onMouseMoved(CPoint& where, const CButto
    double dy = where.y - _lastPos.y;
    _lastPos = where;
 
-   if (( scaleAnyway ||  _isDetatched ) && !buttons.isTouch())
+   if (( scaleAnyway ||  _isDetached ) && !buttons.isTouch())
    {
       double scaling = getMouseDeltaScaling(where, buttons);
 
       dx *= scaling;
       dy *= scaling;
 
-      //_sumDX += dx;
-      //_sumDY += dy;
+      _sumDX += dx;
+      _sumDY += dy;
    }
 
    onMouseMoveDelta(where, buttons, dx, dy);
 
 #if WINDOWS
-   if (_isDetatched && !buttons.isTouch())
+   if (_isDetached && !buttons.isTouch())
    {
        double ddx = where.x - _detachPos.x;
        double ddy = where.y - _detachPos.y;
@@ -79,7 +79,7 @@ double CCursorHidingControl::getMouseDeltaScaling(CPoint& where, const CButtonSt
 
 void CCursorHidingControl::detachCursor(CPoint& where)
 {
-   if (!_isDetatched && hideCursor)
+   if (!_isDetached && hideCursor)
    {
       doDetach(where);
    }
@@ -91,7 +91,7 @@ void CCursorHidingControl::detachCursor(CPoint& where)
 
 void CCursorHidingControl::attachCursor()
 {
-   if (_isDetatched && hideCursor)
+   if (_isDetached && hideCursor)
    {
       doAttach();
    }
@@ -103,7 +103,7 @@ void CCursorHidingControl::attachCursor()
 
 void CCursorHidingControl::doDetach(CPoint& where)
 {
-   _isDetatched = true;
+   _isDetached = true;
    _detachPos = where;
 
 #if WINDOWS
@@ -123,13 +123,24 @@ void CCursorHidingControl::doDetach(CPoint& where)
 
 void CCursorHidingControl::doAttach()
 {
-   _isDetatched = false;
+   _isDetached = false;
 
 #if WINDOWS
-   double x = _hideX;
-   double y = _hideY;
+   double x = _hideX + _sumDX;
+   double y = _hideY + _sumDY;
 
-   SetCursorPos((int)x, (int)y);
+   CRect whereRect(CPoint(x, y), CPoint(1, 1));
+   CRect useRect = getViewSize();
+   printf("Cursor pos before hiding: %.1f, %.1f\n", _hideX, _hideY);
+   printf("Cursor delta: %.1f, %.1f\n\n", _sumDX, _sumDY);
+   printf("Where rect: (%.1f, %.1f) (%.1f, %.1f)\n", whereRect.left, whereRect.top, whereRect.right, whereRect.bottom);
+   printf("Control rect: (%.1f, %.1f) (%.1f, %.1f)\n", useRect.left, useRect.top, useRect.right, useRect.bottom);
+   whereRect.bound(useRect);
+   printf("Where bound: (%.1f, %.1f) (%.1f, %.1f)\n\n", whereRect.left, whereRect.top, whereRect.right, whereRect.bottom);
+
+   SetCursorPos(whereRect.top, whereRect.left);
+
+   //SetCursorPos((int)x, (int)y);
 
    ShowCursor(true);
 
