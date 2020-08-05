@@ -625,6 +625,8 @@ __m128 SINUS_SSE2(__m128 in, __m128 drive)
    __m128i e = _mm_cvtps_epi32(x);
    __m128 a = _mm_sub_ps(x, _mm_cvtepi32_ps(e));
    e = _mm_packs_epi32(e, e);
+   const __m128i UB = _mm_set1_epi16(0x3fe);
+   e = _mm_max_epi16(_mm_min_epi16(e, UB), _mm_setzero_si128());
 
 #if MAC
    // this should be very fast on C2D/C1D (and there are no macs with K8's)
