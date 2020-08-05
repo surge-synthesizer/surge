@@ -129,18 +129,41 @@ void CCursorHidingControl::doAttach()
    double x = _hideX + _sumDX;
    double y = _hideY + _sumDY;
 
-   CRect whereRect(CPoint(x, y), CPoint(1, 1));
-   CRect useRect = getViewSize();
-   printf("Cursor pos before hiding: %.1f, %.1f\n", _hideX, _hideY);
-   printf("Cursor delta: %.1f, %.1f\n\n", _sumDX, _sumDY);
-   printf("Where rect: (%.1f, %.1f) (%.1f, %.1f)\n", whereRect.left, whereRect.top, whereRect.right, whereRect.bottom);
-   printf("Control rect: (%.1f, %.1f) (%.1f, %.1f)\n", useRect.left, useRect.top, useRect.right, useRect.bottom);
-   whereRect.bound(useRect);
-   printf("Where bound: (%.1f, %.1f) (%.1f, %.1f)\n\n", whereRect.left, whereRect.top, whereRect.right, whereRect.bottom);
+   // get frame offset from top left of the screen space
+   auto f = getFrame();
+   CCoord fx, fy;
+   f->getPosition(fx, fy);
 
-   SetCursorPos(whereRect.top, whereRect.left);
+   printf("Frame position on screen is: %.2f, %.2f\n\n", fx, fy);
 
-   //SetCursorPos((int)x, (int)y);
+   // rectangle of the control we were operating
+   CRect widgetRect = getViewSize();
+
+   printf("Cursor pos before hiding: %.2f, %.2f\n", _hideX, _hideY);
+   printf("Cursor delta: %.2f, %.2f\n\n", _sumDX, _sumDY);
+   printf("Cursor + delta: (%.2f, %.2f)\n", x, y);
+   
+   printf("Widget rect: (%.2f, %.2f) (%.2f, %.2f)\n", widgetRect.left, widgetRect.top, widgetRect.right, widgetRect.bottom);
+
+   widgetRect.left += fx;
+   widgetRect.right += fx;
+   widgetRect.top += fy;
+   widgetRect.bottom += fy;
+      
+   printf("Widget rect + offset: (%.2f, %.2f) (%.2f, %.2f)\n", widgetRect.left, widgetRect.top, widgetRect.right, widgetRect.bottom);
+
+   if (x > widgetRect.right)
+      x = widgetRect.right;
+   if (x < widgetRect.left)
+      x = widgetRect.left;
+   if (y > widgetRect.bottom)
+      y = widgetRect.bottom;
+   if (y < widgetRect.top)
+      y = widgetRect.top;
+
+   printf("Cursor pos bound: (%.2f, %.2f)\n\n", x, y);
+
+   SetCursorPos((int)x, (int)y);
 
    ShowCursor(true);
 
