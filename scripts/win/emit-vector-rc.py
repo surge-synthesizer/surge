@@ -37,12 +37,12 @@
 # consistent.
 #
 # Finally the script is named 'emit-' rather than 'build-' or 'make-'
-# to avoid tab completion finding this instead of build-win.ps1 
+# to avoid tab completion finding this instead of build-win.ps1
 
 import os, re
 
-assetdir = "assets/original-vector/exported"
-svgassetdir = "assets/original-vector/SVG/exported"
+assetdir = "assets/Surge Classic/exported"
+svgassetdir = "assets/Surge Classic/exported"
 
 IDBs=[]
 digitToIDB = {}
@@ -126,7 +126,7 @@ for file in os.listdir( assetdir ):
             if( base != lastBase ):
                 subrc.write( "\n" );
                 lastBase = base
-                
+
             ofst = xtnToPostfix[matches.group(2)]
             subrc.write( base + ofst + " PNG \"" + assetdir + "/" + file + "\"\n" )
 
@@ -158,5 +158,5 @@ for file in os.listdir( svgassetdir ):
             base = digitToIDB[matches.group(1)]
             subrc.write( base + "_SCALE_SVG DATA \"" + svgassetdir + "/" + file + "\"\n" )
 
-            
+
 
