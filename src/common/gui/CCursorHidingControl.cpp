@@ -140,25 +140,37 @@ void CCursorHidingControl::doAttach()
    // rectangle of the control we were operating
    CRect widgetRect = getViewSize();
 
-   // transform it to screen coordinates (apply zoom level etc.)
+   // detect if we went off bounds, get the boundary margins and store that to a CPoint
+   auto off = CPoint(0, 0);
+   if (x > widgetRect.right)
+      off.x = minimumDistanceFromBoundRight();
+   if (x < widgetRect.left)
+      off.x = minimumDistanceFromBoundLeft();
+   if (y > widgetRect.bottom)
+      off.y = minimumDistanceFromBoundBottom();
+   if (y < widgetRect.top)
+      off.y = minimumDistanceFromBoundTop();
+
+   // transform to screen coordinates (apply zoom level etc.)
    f->getTransform().transform(widgetRect);
+   f->getTransform().transform(off);
 
    // apply frame offset
    widgetRect.left += fx;
    widgetRect.right += fx;
    widgetRect.top += fy;
    widgetRect.bottom += fy;
-      
+
    // restrict the cursor to the widget's rectangle
    // apply bound margin (overriden by specific UI widget class)
    if (x > widgetRect.right)
-      x = widgetRect.right - minimumDistanceFromBoundRight();
+      x = widgetRect.right - off.x;
    if (x < widgetRect.left)
-      x = widgetRect.left + minimumDistanceFromBoundLeft();
+      x = widgetRect.left + off.x;
    if (y > widgetRect.bottom)
-      y = widgetRect.bottom - minimumDistanceFromBoundBottom();
+      y = widgetRect.bottom - off.y;
    if (y < widgetRect.top)
-      y = widgetRect.top + minimumDistanceFromBoundTop();
+      y = widgetRect.top + off.y;
 
    SetCursorPos((int)x, (int)y);
 

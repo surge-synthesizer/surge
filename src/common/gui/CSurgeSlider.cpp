@@ -120,36 +120,36 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
 int CSurgeSlider::minimumDistanceFromBoundLeft()
 {
    if (style & CSlider::kHorizontal)
-      return 20;
+      return 10;
    else
-      return 17;
+      return 7;
 }
 
 // FIXME: adjust for skin engine here
 int CSurgeSlider::minimumDistanceFromBoundRight()
 {
    if (style & CSlider::kHorizontal)
-      return 25;
+      return 15;
    else
-      return 22;
+      return 12;
 }
 
 // FIXME: adjust for skin engine here
 int CSurgeSlider::minimumDistanceFromBoundTop()
 {
    if (style & CSlider::kHorizontal)
-      return 20;
+      return 10;
    else
-      return 18;
+      return 8;
 }
 
 // FIXME: adjust for skin engine here
 int CSurgeSlider::minimumDistanceFromBoundBottom()
 {
    if (style & CSlider::kHorizontal)
-      return 25;
+      return 15;
    else
-      return 25;
+      return 15;
 }
 
 void CSurgeSlider::setModValue(float val)
