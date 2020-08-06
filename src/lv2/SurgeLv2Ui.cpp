@@ -100,6 +100,13 @@ LV2UI_Handle SurgeLv2Ui::instantiate(const LV2UI_Descriptor* descriptor,
 
    std::unique_ptr<SurgeLv2Ui> ui(new SurgeLv2Ui(instance, parentWindow, featureUridMap,
                                                  featureResize, write_function, controller, uiScaleFactor));
+
+   // From LV2 documentation: The UI points this at its main widget, which has
+   // the type defined by the UI type in the data file.
+   if (widget != nullptr) {
+     *widget = ui->_editor->getFrame()->getPlatformFrame()->getPlatformRepresentation();
+   }
+
    return (LV2UI_Handle)ui.release();
 }
 
