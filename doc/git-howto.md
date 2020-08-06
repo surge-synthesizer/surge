@@ -14,6 +14,17 @@ better by having them included in this document, that's cool! This document lite
 a pull request. If you would like to share feedback about how your way is better and this is, in some sense, the Worst Git Guide Ever,
 hey maybe use that energy to close a bug instead! And with that said, onwards!
 
+## Before you read this document, do a build!
+
+This document talks about how to make changes to Surge, develop new features, and submit them as Pull Requests. It also talks
+about coding standards and reviews a bit. But it pre-supposes that you have built Surge once.
+
+The directions on how to build surge once are on our [README](https://github.com/surge-synthesizer/surge). Before you read that doc,
+please follow those directions, run the resulting synth, and make sure that the about screen shows it having been built on your system.
+Those directions are pretty bulletproof at this point, but if you find an error, please do let us know.
+
+And with that, onwards!
+
 ## Basics
 
 Register a new GitHub account, log in with your new account and go to [https://github.com/surge-synthesizer/surge](https://github.com/surge-synthesizer/surge). On the top right corner you will see a bunch of buttons, one of which says `Fork`. When you click on this, you will create a new fork of Surge onto your GitHub account.
