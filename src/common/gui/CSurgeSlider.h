@@ -30,6 +30,12 @@ public:
                 std::shared_ptr<SurgeBitmaps> bitmapStore,
                 SurgeStorage* storage = nullptr);
    ~CSurgeSlider();
+
+   virtual int minimumDistanceFromBoundLeft() override;
+   virtual int minimumDistanceFromBoundRight() override;
+   virtual int minimumDistanceFromBoundTop() override;
+   virtual int minimumDistanceFromBoundBottom() override;
+
    virtual void draw(VSTGUI::CDrawContext*) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    // virtual bool onWheel (VSTGUI::CDrawContext *pContext, const VSTGUI::CPoint &where, float distance);

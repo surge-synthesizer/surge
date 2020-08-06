@@ -18,6 +18,14 @@
 
 class CCursorHidingControl : public VSTGUI::CControl
 {
+
+public:
+
+   virtual int minimumDistanceFromBoundLeft() { return 0; }
+   virtual int minimumDistanceFromBoundRight() { return 0; }
+   virtual int minimumDistanceFromBoundTop() { return 0; }
+   virtual int minimumDistanceFromBoundBottom() { return 0; }
+
 protected:
    CCursorHidingControl(const VSTGUI::CRect& size,
                         VSTGUI::IControlListener* listener,
@@ -49,5 +57,4 @@ private:
    // OS specific (screen-space)
    double _hideX = 0, _hideY = 0;
    double _sumDX = 0, _sumDY = 0;
-   // but you know, let's keep it here because we don't know if it might be necessary for something else!
 };

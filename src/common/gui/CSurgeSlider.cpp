@@ -116,6 +116,42 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
    setMouseableArea(size);
 }
 
+// FIXME: adjust for skin engine here
+int CSurgeSlider::minimumDistanceFromBoundLeft()
+{
+   if (style & CSlider::kHorizontal)
+      return 20;
+   else
+      return 17;
+}
+
+// FIXME: adjust for skin engine here
+int CSurgeSlider::minimumDistanceFromBoundRight()
+{
+   if (style & CSlider::kHorizontal)
+      return 25;
+   else
+      return 22;
+}
+
+// FIXME: adjust for skin engine here
+int CSurgeSlider::minimumDistanceFromBoundTop()
+{
+   if (style & CSlider::kHorizontal)
+      return 20;
+   else
+      return 18;
+}
+
+// FIXME: adjust for skin engine here
+int CSurgeSlider::minimumDistanceFromBoundBottom()
+{
+   if (style & CSlider::kHorizontal)
+      return 25;
+   else
+      return 25;
+}
+
 void CSurgeSlider::setModValue(float val)
 {
    this->modval = val;

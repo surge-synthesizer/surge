@@ -126,15 +126,18 @@ void CCursorHidingControl::doAttach()
    _isDetached = false;
 
 #if WINDOWS
-   double x = _hideX + _sumDX;
-   double y = _hideY + _sumDY;
+   auto p = VSTGUI::CPoint(_sumDX, _sumDY);
+   p = getFrame()->getTransform().transform(p);
+
+   double x = _hideX + p.x;
+   double y = _hideY + p.y;
 
    // get frame offset from top left of the screen space
    auto f = getFrame();
    CCoord fx, fy;
    f->getPosition(fx, fy);
 
-      // rectangle of the control we were operating
+   // rectangle of the control we were operating
    CRect widgetRect = getViewSize();
 
    // transform it to screen coordinates (apply zoom level etc.)
@@ -147,14 +150,15 @@ void CCursorHidingControl::doAttach()
    widgetRect.bottom += fy;
       
    // restrict the cursor to the widget's rectangle
+   // apply bound margin (overriden by specific UI widget class)
    if (x > widgetRect.right)
-      x = widgetRect.right;
+      x = widgetRect.right - minimumDistanceFromBoundRight();
    if (x < widgetRect.left)
-      x = widgetRect.left;
+      x = widgetRect.left + minimumDistanceFromBoundLeft();
    if (y > widgetRect.bottom)
-      y = widgetRect.bottom;
+      y = widgetRect.bottom - minimumDistanceFromBoundBottom();
    if (y < widgetRect.top)
-      y = widgetRect.top;
+      y = widgetRect.top + minimumDistanceFromBoundTop();
 
    SetCursorPos((int)x, (int)y);
 
