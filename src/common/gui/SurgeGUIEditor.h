@@ -244,8 +244,14 @@ public:
    */
    void sliderHoverStart( int tag );
    void sliderHoverEnd( int tag );
+
+   int getWindowSizeX() { return wsx; }
+   int getWindowSizeY() { return wsy; }
    
 private:
+   int wsx = BASE_WINDOW_SIZE_X;
+   int wsy = BASE_WINDOW_SIZE_Y;
+
    /**
     * findLargestFittingZoomBetween
     *

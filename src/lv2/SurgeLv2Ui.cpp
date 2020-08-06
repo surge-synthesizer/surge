@@ -4,6 +4,7 @@
 #include "SurgeLv2Wrapper.h"
 #include "SurgeGUIEditor.h"
 #include <cassert>
+#include "DebugHelpers.h"
 
 #include "CScalableBitmap.h"
 
@@ -172,8 +173,8 @@ void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer)
    assert(e == _editor.get());
 
     float fzf = e->getZoomFactor() / 100.0;
-    int newW = WINDOW_SIZE_X * fzf;
-    int newH = WINDOW_SIZE_Y * fzf;
+    int newW = e->getWindowSizeX() * fzf;
+    int newH = e->getWindowSizeY() * fzf;
 
     // identical implementation to VST2, except for here
     if (_uiInitialized)

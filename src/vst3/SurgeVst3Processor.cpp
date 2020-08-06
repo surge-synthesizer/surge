@@ -1046,8 +1046,8 @@ void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
 void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
 {
     float fzf = e->getZoomFactor() / 100.0;
-    int newW = WINDOW_SIZE_X * fzf;
-    int newH = WINDOW_SIZE_Y * fzf;
+    int newW = e->getWindowSizeX() * fzf;
+    int newH = e->getWindowSizeY() * fzf;
 
 
     VSTGUI::CFrame *frame = e->getFrame();
