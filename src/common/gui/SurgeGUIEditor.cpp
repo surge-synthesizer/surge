@@ -252,11 +252,11 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    rect.left = 0;
    rect.top = 0;
 #if TARGET_VST2 || TARGET_VST3
-   rect.right = WINDOW_SIZE_X * zf;
-   rect.bottom = WINDOW_SIZE_Y * zf;
+   rect.right = getWindowSizeX() * zf;
+   rect.bottom = getWindowSizeY() * zf;
 #else
-   rect.right = WINDOW_SIZE_X;
-   rect.bottom = WINDOW_SIZE_Y;
+   rect.right = getWindowSizeX();
+   rect.bottom = getWindowSizeY();
 #endif
    editor_open = false;
    queue_refresh = false;
@@ -1070,7 +1070,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    /*// Comments
      {
-     CRect CommentsRect(6 + 150*4,528, WINDOW_SIZE_X, WINDOW_SIZE_Y);
+     CRect CommentsRect(6 + 150*4,528, getWindowSizeX(), getWindowSizeY());
      CTextLabel *Comments = new
      CTextLabel(CommentsRect,synth->storage.getPatch().comment.c_str());
      Comments->setTransparency(true);
@@ -2065,7 +2065,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ((CParameterTooltip *)infowindow)->setSkin( currentSkin );
    frame->addView(infowindow);
 
-   CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
+   CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
    aboutbox =
       new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
    ((CAboutBox *)aboutbox)->setSkin(currentSkin,bitmapStore);
@@ -2244,9 +2244,9 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
    float fzf = getZoomFactor() / 100.0;
 #if TARGET_VST2
-   CRect wsize(0, 0, WINDOW_SIZE_X * fzf, WINDOW_SIZE_Y * fzf);
+   CRect wsize(0, 0, currentSkin->getWindowSizeX() * fzf, currentSkin->getWindowSizeY() * fzf);
 #else
-   CRect wsize( 0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y );
+   CRect wsize( 0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() );
 #endif
 
    CFrame *nframe = new CFrame(wsize, this);
@@ -4443,7 +4443,7 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    CRect r2 = control->getViewSize();
 
    // OK this is a heuristic to stop deform overpainting and stuff 
-   if( r2.bottom > WINDOW_SIZE_Y - r.getHeight() - 2 )
+   if( r2.bottom > getWindowSizeY() - r.getHeight() - 2 )
    {
       // stick myself on top please
       r.offset((r2.left / 150) * 150, r2.top - r.getHeight() - 2);
@@ -4454,15 +4454,15 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
       r.offset((r2.left / 150) * 150, r2.bottom);
    }
 
-   if (r.bottom > WINDOW_SIZE_Y - 2)
+   if (r.bottom > getWindowSizeY() - 2)
    {
-      int ao = (WINDOW_SIZE_Y - 2 - r.bottom);
+      int ao = (getWindowSizeY() - 2 - r.bottom);
       r.offset(0, ao);
    }
 
-   if (r.right > WINDOW_SIZE_X - 2)
+   if (r.right > getWindowSizeX() - 2)
    {
-      int ao = (WINDOW_SIZE_X - 2 - r.right);
+      int ao = (getWindowSizeX() - 2 - r.right);
       r.offset(ao, 0);
    }
 
@@ -4642,8 +4642,8 @@ bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
 {
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
-   float baseW = WINDOW_SIZE_X;
-   float baseH = WINDOW_SIZE_Y;
+   float baseW = getWindowSizeX();
+   float baseH = getWindowSizeY();
 
    /*
    ** Window decoration takes up some of the screen so don't zoom to full screen dimensions.
@@ -5117,7 +5117,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
     biggestZ->setActions([this](CCommandMenuItem* m) {
         int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
                                                 90, // See comment in setZoomFactor
-                                                WINDOW_SIZE_X, WINDOW_SIZE_Y);
+                                                getWindowSizeX(), getWindowSizeY());
         setZoomFactor(newZF);
     });
     zoomSubMenu->addEntry(biggestZ);
@@ -5565,7 +5565,7 @@ void SurgeGUIEditor::reloadFromSkin()
    bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 
    auto bg = currentSkin->customBackgroundImage();
-   
+
    if( bg != "" )
    {
       std::cout << "SETTING BACKGROUND to " << bg << std::endl;
@@ -5583,6 +5583,23 @@ void SurgeGUIEditor::reloadFromSkin()
    auto c = currentSkin->getColor( "textfield.focuscolor", VSTGUI::CColor( 170, 170, 230 ) );
    frame->setFocusColor( c );
 
+   wsx = currentSkin->getWindowSizeX();
+   wsy = currentSkin->getWindowSizeY();
+
+   float sf = 1;
+#if TARGET_VST2
+   sf = getZoomFactor() / 100.0;
+#endif
+   frame->setSize( wsx * sf, wsy * sf );
+
+#if TARGET_VST3
+   sf = getZoomFactor() / 100.0;
+#endif
+
+   rect.right = wsx * sf;
+   rect.bottom = wsy * sf;
+
+   setZoomFactor( getZoomFactor() );
 }
 
 /*
@@ -6006,8 +6023,8 @@ VSTGUI::CCommandMenuItem* SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* t
 #if TARGET_VST3
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
 {
-   float izfx = newSize->getWidth() * 1.0 / WINDOW_SIZE_X * 100.0;
-   float izfy = newSize->getHeight() * 1.0 / WINDOW_SIZE_Y * 100.0;
+   float izfx = newSize->getWidth() * 1.0 / getWindowSizeX() * 100.0;
+   float izfy = newSize->getHeight() * 1.0 / getWindowSizeY() * 100.0;
    float izf = std::min(izfx, izfy);
    izf = std::max(izf, 1.0f*minimumZoom);
 
@@ -6021,8 +6038,8 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
    /*
    ** If the implied zoom factor changes my size by more than a pixel, resize
    */
-   auto zfdx = std::fabs( (izf - zoomFactor) * WINDOW_SIZE_X ) / 100.0;
-   auto zfdy = std::fabs( (izf - zoomFactor) * WINDOW_SIZE_Y ) / 100.0;
+   auto zfdx = std::fabs( (izf - zoomFactor) * getWindowSizeX() ) / 100.0;
+   auto zfdy = std::fabs( (izf - zoomFactor) * getWindowSizeY() ) / 100.0;
    auto zfd = std::max( zfdx, zfdy );
 
    if( zfd > 1 )
@@ -6034,14 +6051,14 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
 }
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect* newSize)
 {
-   // float tratio = 1.0 * WINDOW_SIZE_X / WINDOW_SIZE_Y;
+   // float tratio = 1.0 * getWindowSizeX() / getWindowSizeY();
    // float cratio = 1.0 * newSize->getWidth() / newSize->getHeight();
 
    // we want cratio == tration by adjusting height so
    // WSX / WSY = gW / gH
    // gH = gW * WSY / WSX
 
-   float newHeight = 1.0 * newSize->getWidth() * WINDOW_SIZE_Y / WINDOW_SIZE_X;
+   float newHeight = 1.0 * newSize->getWidth() * getWindowSizeY() / getWindowSizeX();
    newSize->bottom = newSize->top + std::ceil(newHeight);
    return Steinberg::kResultTrue;
 }

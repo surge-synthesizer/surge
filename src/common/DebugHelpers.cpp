@@ -19,6 +19,8 @@ static bool winconinitialized = false;
 static FILE *confp;
 #endif
 
+#include <atomic>
+
 bool Surge::Debug::openConsole()
 {
 #if WINDOWS   
@@ -72,4 +74,16 @@ void Surge::Debug::stackTraceToStdout()
     free(strs);
 #endif
 
+}
+
+static std::atomic<int> lcdepth(0);
+Surge::Debug::LifeCycleToConsole::LifeCycleToConsole(std::string st) : s(st) {
+   lcdepth ++;
+   for( int i=0; i<lcdepth; ++i ) printf( ">--" );
+   printf( "> %s\n", st.c_str() );
+}
+Surge::Debug::LifeCycleToConsole::~LifeCycleToConsole() {
+   for( int i=0; i<lcdepth; ++i ) printf( "<--" );
+   printf( "< %s\n", s.c_str() );
+   lcdepth --;
 }
