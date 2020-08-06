@@ -17,7 +17,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-assets_path = "assets/original-vector/SVG/exported"
+assets_path = "assets/Surge Classic/exported"
 
 source_file_path = sys.argv[2] + "/ScalablePiggy.S"
 header_file_path = sys.argv[2] + "/ScalablePiggy.h"
