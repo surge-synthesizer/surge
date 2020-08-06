@@ -122,7 +122,7 @@ int CSurgeSlider::minimumDistanceFromBoundLeft()
    if (style & CSlider::kHorizontal)
       return 10;
    else
-      return 7;
+      return 8;
 }
 
 // FIXME: adjust for skin engine here
@@ -131,7 +131,7 @@ int CSurgeSlider::minimumDistanceFromBoundRight()
    if (style & CSlider::kHorizontal)
       return 15;
    else
-      return 12;
+      return 13;
 }
 
 // FIXME: adjust for skin engine here
@@ -140,7 +140,7 @@ int CSurgeSlider::minimumDistanceFromBoundTop()
    if (style & CSlider::kHorizontal)
       return 10;
    else
-      return 8;
+      return 5;
 }
 
 // FIXME: adjust for skin engine here
