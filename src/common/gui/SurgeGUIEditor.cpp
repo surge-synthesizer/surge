@@ -151,6 +151,7 @@ enum special_tags
    tag_settingsmenu,
    tag_mp_jogfx,
    tag_value_typein,
+   tag_editor_overlay_close,
    // tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
@@ -1332,6 +1333,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   rect, lfo_id >= 0 && lfo_id <= ( ms_lfo6 - ms_lfo1 ), this, p->id + start_paramtags,
                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
+                  &synth->storage.getPatch().msegs[current_scene][lfo_id],
+                  &synth->storage.getPatch().formulamods[current_scene][lfo_id],
                   bitmapStore);
                slfo->setSkin( currentSkin, bitmapStore, c );
                lfodisplay = slfo;
@@ -1832,6 +1835,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   rect, lfo_id >= 0 && lfo_id <= ( ms_lfo6 - ms_lfo1 ) , this, p->id + start_paramtags,
                   &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
                   &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
+                  &synth->storage.getPatch().msegs[current_scene][lfo_id],
+                  &synth->storage.getPatch().formulamods[current_scene][lfo_id],
                   bitmapStore);
                slfo->setSkin( currentSkin, bitmapStore );
                lfodisplay = slfo;
@@ -3950,6 +3955,16 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       frame->setDirty();
    }
    break;
+   case tag_editor_overlay_close:
+   {
+      if( editorOverlay != nullptr )
+      {
+         editorOverlay->setVisible(false);
+         removeFromFrame.push_back(editorOverlay);
+         editorOverlayOnClose();
+         editorOverlay = nullptr;
+      }
+   }
    case tag_value_typein:
    {
       if( typeinDialog && typeinMode != Inactive )
@@ -6794,4 +6809,83 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
       }
    }
 
+}
+
+void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::function<void ()> onClose)
+{
+   if( ! c )
+      return;
+   auto vs = c->getViewSize();
+   auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
+
+   // add a screen size transparent thing into the editorOverlay
+   editorOverlay = new CViewContainer( fs );
+   editorOverlay->setBackgroundColor( currentSkin->getColor( "overlay.exterior", VSTGUI::CColor( 180,180,200,150) ) );
+   editorOverlay->setVisible(true);
+   frame->addView(editorOverlay);
+
+   const int header = 20;
+   const int margin = 4;
+   const int buttonwidth = 40;
+   
+   // add a solid outline thing which is bigger than the control with the title to that
+   auto containerSize = vs;
+   containerSize.right += margin;
+   containerSize.left -= margin;
+   containerSize.top -= margin + header;
+   containerSize.bottom += margin;
+   // of course centerinside doesn't work. So
+   containerSize = containerSize.centerInside(fs);
+
+   auto outerc = new CViewContainer(containerSize);
+   auto bordersCol = currentSkin->getColor( "overlay.border", kBlackCColor );
+   outerc->setBackgroundColor( bordersCol );
+   editorOverlay->addView( outerc );
+
+   containerSize = containerSize.inset( 1, 1 );
+   auto innerc = new CViewContainer(containerSize);
+   auto containerCol = currentSkin->getColor( "overlay.containerbackground", VSTGUI::CColor( 216, 216, 220 ) );
+   innerc->setBackgroundColor( containerCol );
+   editorOverlay->addView(innerc);
+
+   auto ls = containerSize;
+   ls.bottom = ls.top + header;
+   auto tl = new CTextLabel( ls, editorTitle.c_str() );
+   tl->setFontColor( currentSkin->getColor( "overlay.containertitle", kBlackCColor ) );
+   tl->setTransparency( true );
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 14);
+   tl->setFont( headerFont );
+   editorOverlay->addView( tl );
+
+
+   ls.left = ls.right - buttonwidth;
+   ls.inset(2,2);
+   auto b = new CTextButton( ls, this, tag_editor_overlay_close, "Close" );
+   b->setFont( displayFont );
+   editorOverlay->addView( b );
+   
+   
+   // add the control inside that in an outline
+   containerSize = vs;
+   containerSize.right += margin;
+   containerSize.left -= margin;
+   containerSize.top -= margin + header;
+   containerSize.bottom += margin;
+   containerSize = containerSize.centerInside(fs);
+   containerSize.top += header;
+
+   containerSize.inset( 3, 3 );
+   auto border = new CViewContainer(containerSize );
+   border->setBackgroundColor( bordersCol );
+   editorOverlay->addView( border );
+
+   containerSize.inset( 1, 1 );
+   c->setViewSize( containerSize );
+   c->setMouseableArea( containerSize ); // sigh
+   editorOverlay->addView(c);
+
+   
+
+   // save the onClose function
+   editorOverlayOnClose = onClose;
 }

@@ -143,7 +143,10 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    for (int i = 0; i < 6; i++)
    {
       lfo[i].assign(storage, &scene->lfo[i], localcopy, &state,
-                    &storage->getPatch().stepsequences[state.scene_id][i]);
+                    &storage->getPatch().stepsequences[state.scene_id][i],
+                    &storage->getPatch().msegs[state.scene_id][i],
+                    &storage->getPatch().formulamods[state.scene_id][i]
+         );
       modsources[ms_lfo1 + i] = &lfo[i];
    }
    modsources[ms_velocity] = &velocitySource;

@@ -257,11 +257,13 @@ enum lfoshapes
    ls_snh,
    ls_constant1,
    ls_stepseq,
+   ls_mseg,
+   // ls_formula,
    n_lfoshapes
 };
 
 const char ls_names[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Sawtooth",
-                                              "Noise", "S&H",      "Envelope", "Step Seq"};
+                                        "Noise", "S&H",      "Envelope", "Step Seq", "MSEG"};
 
 enum fu_type
 {
@@ -446,6 +448,31 @@ struct StepSequencerStorage
    uint64_t trigmask;
 };
 
+const int max_msegs = 128;
+struct MSEGStorage {
+   struct segment {
+      float duration;
+      float v0, v1;
+      float cpduration, cpv;
+      enum Type {
+         CONSTANT = 0,
+         LINEAR,
+         QUADBEZ,
+      } type;
+   };
+
+   int n_activeSegments = 0;
+   std::array<segment, max_msegs> segments;
+
+   // These are calculated values which derive from the segment which we cache for efficiency.
+   // If you edit the segments then MSEGModulationHelper::rebuildCache can rebuild them
+   float totalDuration;
+   std::array<float, max_msegs> segmentStart, segmentEnd;
+};
+
+struct FormulaModulatorStorage { // Currently an unused placeholder
+};
+
 /*
 ** There are a collection of things we want your DAW to save about your particular instance
 ** but don't want saved in your patch. So have this extra structure in the patch which we
@@ -512,6 +539,8 @@ public:
    Parameter character;
 
    StepSequencerStorage stepsequences[2][n_lfos];
+   MSEGStorage msegs[2][n_lfos];
+   FormulaModulatorStorage formulamods[2][n_lfos];
 
    PatchTuningStorage patchTuning;
    DAWExtraStateStorage dawExtraState;

@@ -43,6 +43,8 @@ public:
            LFOStorage* lfodata = 0,
            SurgeStorage* storage = 0,
            StepSequencerStorage* ss = 0,
+           MSEGStorage* ms = 0,
+           FormulaModulatorStorage* fs = 0,
            std::shared_ptr<SurgeBitmaps> ibms = nullptr)
       : VSTGUI::CControl(size, listener, tag, 0),
         bitmapStore( ibms )
@@ -50,11 +52,15 @@ public:
       this->lfodata = lfodata;
       this->storage = storage;
       this->ss = ss;
+      this->ms = ms;
+      this->fs = fs;
       edit_trigmask = trigmaskedit;
       controlstate = 0;
 
       for( int i=0; i<16; ++i )
          draggedIntoTrigTray[i] = false;
+
+      typeImg = nullptr;
    }
 
    void resetColorTable()
@@ -90,6 +96,8 @@ public:
 protected:
    LFOStorage* lfodata;
    StepSequencerStorage* ss;
+   MSEGStorage* ms;
+   FormulaModulatorStorage* fs;
    SurgeStorage* storage;
    std::shared_ptr<SurgeBitmaps> bitmapStore;
    int tsNum = 4, tsDen = 4;
@@ -114,6 +122,7 @@ protected:
    VSTGUI::CPoint rmStepStart, rmStepCurr;
 
    int ss_shift_hover = 0;
+   VSTGUI::CBitmap* typeImg;
    
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };

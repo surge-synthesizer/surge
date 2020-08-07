@@ -247,6 +247,10 @@ public:
 
    int getWindowSizeX() { return wsx; }
    int getWindowSizeY() { return wsy; }
+
+   void setEditorOverlay( VSTGUI::CView *c,
+                          std::string editorTitle,
+                          std::function<void()> onClose = [](){} );
    
 private:
    int wsx = BASE_WINDOW_SIZE_X;
@@ -310,6 +314,9 @@ private:
    int typeinResetCounter = -1;
    std::string typeinResetLabel = "";
 
+   VSTGUI::CViewContainer *editorOverlay = nullptr;
+   std::function<void()> editorOverlayOnClose = [](){};
+   
    VSTGUI::CTextLabel* fxPresetLabel = nullptr;
    
    std::string modulatorName(int ms, bool forButton);
