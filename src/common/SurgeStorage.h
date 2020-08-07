@@ -257,11 +257,13 @@ enum lfoshapes
    ls_snh,
    ls_constant1,
    ls_stepseq,
+   ls_mseg,
+   // ls_formula,
    n_lfoshapes
 };
 
 const char ls_names[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Sawtooth",
-                                              "Noise", "S&H",      "Envelope", "Step Seq"};
+                                        "Noise", "S&H",      "Envelope", "Step Seq", "MSEG"};
 
 enum fu_type
 {

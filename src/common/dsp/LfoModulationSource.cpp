@@ -101,6 +101,7 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 void LfoModulationSource::initPhaseFromStartPhase()
 {
    phase = localcopy[startphase].f;
+   unwrappedphase = phase;
    phaseInitialized = true;
    while( phase < 0.f )
       phase += 1.f;
@@ -136,7 +137,7 @@ void LfoModulationSource::attack()
    if (is_display)
    {
       phase = lfo->start_phase.val.f;
-      if (lfo->shape.val.i == ls_stepseq)
+      if (lfo->shape.val.i == ls_stepseq )
          phase = 0.f;
       step = 0;
    }
@@ -289,6 +290,7 @@ void LfoModulationSource::process_block()
    if (lfo->rate.temposync)
       frate *= storage->temposyncratio;
    phase += frate * ratemult;
+   unwrappedphase += frate * ratemult;
 
    if( frate == 0 && phase == 0 && s == ls_stepseq )
    {
@@ -565,6 +567,9 @@ void LfoModulationSource::process_block()
             iout = (1.f - cf) * wf_history[1] + cf * 0;
          }
       }
+      break;
+   case ls_mseg:
+      iout = msegHelper.valueAt( unwrappedphase,  localcopy[ideform].f );
       break;
    };
 

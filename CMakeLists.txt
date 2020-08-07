@@ -149,6 +149,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/FilterCoefficientMaker.cpp
   src/common/dsp/FMOscillator.cpp
   src/common/dsp/LfoModulationSource.cpp
+  src/common/dsp/MSEGModulationHelper.cpp
   src/common/dsp/Oscillator.cpp
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp

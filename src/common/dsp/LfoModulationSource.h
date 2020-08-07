@@ -20,6 +20,8 @@
 #include "SurgeVoiceState.h"
 #include "ModulationSource.h"
 
+#include "MSEGModulationHelper.h"
+
 enum lfoenv_state
 {
    lenv_off = 0,
@@ -34,6 +36,7 @@ enum lfoenv_state
 class LfoModulationSource : public ModulationSource
 {
 public:
+
    LfoModulationSource();
    void assign(SurgeStorage* storage,
                LFOStorage* lfo,
@@ -73,8 +76,10 @@ private:
    pdata* localcopy;
    bool phaseInitialized;
    void initPhaseFromStartPhase();
+
+   MSEGModulationHelper msegHelper;
    
-   float phase, target, noise, noised1, env_phase, priorPhase;
+   float phase, unwrappedphase, target, noise, noised1, env_phase, priorPhase;
    float ratemult;
    float env_releasestart;
    float iout;
