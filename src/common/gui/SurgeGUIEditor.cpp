@@ -6362,7 +6362,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    auto cp = c->getViewSize();
 
    if( ismod )
-      boxht += 12;
+      boxht += 22;
 
    CRect typeinSize( cp.left, cp.top - boxht, cp.left + 120, cp.top - boxht + boxht  );
 
@@ -6414,7 +6414,8 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    inner->addView(typeinLabel);
 
    char txt[256];
-   char ptext[1024];
+   char ptext[1024], ptext2[1024];
+   ptext2[0] = 0;
    if( p )
    {
       if( ismod )
@@ -6422,7 +6423,8 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
          char txt2[256];
          p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms), synth->isBipolarModulation((modsources)ms), Parameter::TypeIn);
          p->get_display(txt2);
-         sprintf( ptext, "%s from %s", txt, txt2 );
+         sprintf( ptext, "mod: %s", txt );
+         sprintf( ptext2, "current: %s", txt2 );
       }
       else
       {
@@ -6455,7 +6457,17 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinPriorValueLabel->setFont( displayFont );
    inner->addView(typeinPriorValueLabel);
 
-   typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 12 : 0 ), 114, 50 + ( ismod ? 12 : 0 ) ), this, tag_value_typein, txt );
+   if( ismod )
+   {
+      auto sl = new CTextLabel( CRect( 2, 29 + 11, 116, 36 + 11 ), ptext2 );
+      sl->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+      sl->setTransparency(true);
+      sl->setFont( displayFont );
+      inner->addView( sl );
+   }
+
+   
+   typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 22 : 0 ), 114, 50 + ( ismod ? 22 : 0 ) ), this, tag_value_typein, txt );
    typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
    typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
 
