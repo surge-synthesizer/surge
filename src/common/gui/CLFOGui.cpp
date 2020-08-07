@@ -20,6 +20,7 @@
 #include <chrono>
 #include "DebugHelpers.h"
 #include "guihelpers.h"
+#include "MSEGEditor.h"
 #include <cstdint>
 
 using namespace VSTGUI;
@@ -447,6 +448,7 @@ void CLFOGui::draw(CDrawContext* dc)
       CDrawContext::Transform shiftTranslatetransform( *dc, shiftTranslate );
       
       dc->setFillColor( kRedCColor );
+      // FIXME 30x10 here and in onmousedown
       dc->drawRect( CRect( 0, 0, 30, 10 ), kDrawFilled );
       dc->setFontColor( kWhiteCColor );
       dc->drawString( "Edit", CRect( 0, 0, 30, 10 ) );
@@ -1036,6 +1038,25 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
 {
    if (1) //(buttons & kLButton))
    {
+      if( lfodata->shape.val.i == ls_mseg )
+      {
+         auto size = getViewSize();
+
+         int wx = where.x - size.left - splitpoint;
+         int wy = where.y - size.top;
+         if( wx > 0 && wx < 30 && wy > 0 && wy < 10 )
+         {
+            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+            if( sge )
+            {
+               std::cout << "OPENING EDITOR" << std::endl;
+
+               sge->setEditorOverlay( new MSEGEditor(), "MSEG Editor", []() { std::cout << "MSE Closed" << std::endl; } );
+               return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+            }
+         }
+      }
+         
       if (ss && lfodata->shape.val.i == ls_stepseq)
       {
          if (rect_steps.pointInside(where))

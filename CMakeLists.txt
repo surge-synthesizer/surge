@@ -202,6 +202,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CSurgeSlider.cpp
   src/common/gui/CSurgeVuMeter.cpp
   src/common/gui/CSwitchControl.cpp
+  src/common/gui/MSEGEditor.cpp
   src/common/gui/PopupEditorDialog.cpp
   src/common/gui/SkinSupport.cpp
   src/common/gui/SurgeBitmaps.cpp

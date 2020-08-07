@@ -248,7 +248,7 @@ public:
    int getWindowSizeX() { return wsx; }
    int getWindowSizeY() { return wsy; }
 
-   void setEditorOverlay( VSTGUI::CControl *c,
+   void setEditorOverlay( VSTGUI::CView *c,
                           std::string editorTitle,
                           std::function<void()> onClose = [](){} );
    
@@ -314,8 +314,8 @@ private:
    int typeinResetCounter = -1;
    std::string typeinResetLabel = "";
 
-   VSTGUI::CControl *edtiorOverlay = nullptr;
-   VSTGUI::CControl *editorOverlayHolder = nullptr;
+   VSTGUI::CViewContainer *editorOverlay = nullptr;
+   std::function<void()> editorOverlayOnClose = [](){};
    
    VSTGUI::CTextLabel* fxPresetLabel = nullptr;
    

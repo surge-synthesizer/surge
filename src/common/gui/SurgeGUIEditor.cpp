@@ -151,6 +151,7 @@ enum special_tags
    tag_settingsmenu,
    tag_mp_jogfx,
    tag_value_typein,
+   tag_editor_overlay_close,
    // tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
@@ -3942,6 +3943,16 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       frame->setDirty();
    }
    break;
+   case tag_editor_overlay_close:
+   {
+      if( editorOverlay != nullptr )
+      {
+         editorOverlay->setVisible(false);
+         removeFromFrame.push_back(editorOverlay);
+         editorOverlayOnClose();
+         editorOverlay = nullptr;
+      }
+   }
    case tag_value_typein:
    {
       if( typeinDialog && typeinMode != Inactive )
@@ -6788,6 +6799,71 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 
 }
 
-void SurgeGUIEditor::setEditorOverlay(VSTGUI::CControl *c, std::string editorTitle, std::function<void ()> onClose)
+void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::function<void ()> onClose)
 {
+   if( ! c )
+      return;
+   auto vs = c->getViewSize();
+   auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
+
+   // add a screen size transparent thing into the editorOverlay
+   editorOverlay = new CViewContainer( fs );
+   editorOverlay->setBackgroundColor( VSTGUI::CColor( 180,180,200,150) );
+   editorOverlay->setVisible(true);
+   frame->addView(editorOverlay);
+   
+   // add a solid outline thing which is bigger than the control with the title to that
+   auto containerSize = vs;
+   containerSize.right += 4;
+   containerSize.left -= 4;
+   containerSize.top -= 20;
+   containerSize.bottom += 4;
+   // of course centerinside doesn't work. So
+   containerSize = containerSize.centerInside(fs);
+
+   auto outerc = new CViewContainer(containerSize);
+   outerc->setBackgroundColor( kBlackCColor );
+   editorOverlay->addView( outerc );
+
+   containerSize = containerSize.inset( 1, 1 );
+   auto innerc = new CViewContainer(containerSize);
+   innerc->setBackgroundColor( kWhiteCColor );
+   editorOverlay->addView(innerc);
+
+   auto ls = containerSize;
+   ls.top += 1;
+   ls.bottom = ls.top + 16;
+   auto tl = new CTextLabel( ls, editorTitle.c_str() );
+   tl->setFontColor( kBlueCColor );
+   tl->setTransparency( true );
+   tl->setFont( displayFont );
+   editorOverlay->addView( tl );
+
+   ls.left = ls.right - 40;
+   auto b = new CTextButton( ls, this, tag_editor_overlay_close, "Close" );
+   editorOverlay->addView( b );
+   
+   
+   // add the control inside that in an outline
+   containerSize = vs;
+   containerSize.right += 4;
+   containerSize.left -= 4;
+   containerSize.top -= 20;
+   containerSize.bottom += 4;
+   containerSize = containerSize.centerInside(fs);
+   containerSize.top += 16;
+
+   containerSize.inset( 3, 3 );
+   auto border = new CViewContainer(containerSize );
+   border->setBackgroundColor( kBlackCColor );
+   editorOverlay->addView( border );
+
+   containerSize.inset( 1, 1 );
+   c->setViewSize( containerSize );
+   editorOverlay->addView(c);
+
+   
+
+   // save the onClose function
+   editorOverlayOnClose = onClose;
 }
