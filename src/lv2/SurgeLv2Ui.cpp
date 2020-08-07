@@ -4,6 +4,7 @@
 #include "SurgeLv2Wrapper.h"
 #include "SurgeGUIEditor.h"
 #include <cassert>
+#include "DebugHelpers.h"
 
 #include "CScalableBitmap.h"
 
@@ -99,6 +100,13 @@ LV2UI_Handle SurgeLv2Ui::instantiate(const LV2UI_Descriptor* descriptor,
 
    std::unique_ptr<SurgeLv2Ui> ui(new SurgeLv2Ui(instance, parentWindow, featureUridMap,
                                                  featureResize, write_function, controller, uiScaleFactor));
+
+   // From LV2 documentation: The UI points this at its main widget, which has
+   // the type defined by the UI type in the data file.
+   if (widget != nullptr) {
+     *widget = ui->_editor->getFrame()->getPlatformFrame()->getPlatformRepresentation();
+   }
+
    return (LV2UI_Handle)ui.release();
 }
 
@@ -172,8 +180,8 @@ void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer)
    assert(e == _editor.get());
 
     float fzf = e->getZoomFactor() / 100.0;
-    int newW = WINDOW_SIZE_X * fzf;
-    int newH = WINDOW_SIZE_Y * fzf;
+    int newW = e->getWindowSizeX() * fzf;
+    int newH = e->getWindowSizeY() * fzf;
 
     // identical implementation to VST2, except for here
     if (_uiInitialized)

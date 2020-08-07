@@ -201,7 +201,7 @@ void LfoModulationSource::attack()
 
       step++;
 
-      if (ss->loop_end > ss->loop_start)
+      if (ss->loop_end >= ss->loop_start)
       {
           if (step > ss->loop_end)
              step = ss->loop_start;
@@ -465,7 +465,7 @@ void LfoModulationSource::process_block()
          else
             ratemult = 1.f / (1.f + 0.5f * lfo->start_phase.val.f);
 
-         if (ss->loop_end > ss->loop_start)
+         if (ss->loop_end >= ss->loop_start)
          {
             if (step > ss->loop_end)
                step = ss->loop_start;

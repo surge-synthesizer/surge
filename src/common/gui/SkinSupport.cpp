@@ -457,6 +457,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    colors.clear();
    queried_colors.clear();
    bgimg = "";
+   szx = BASE_WINDOW_SIZE_X;
+   szy = BASE_WINDOW_SIZE_Y;
    for (auto g : globals)
    {
       if (g.first == "image")
@@ -513,6 +515,20 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       if( g.first == "background" && g.second.find( "image" ) != g.second.end() )
       {
          bgimg = g.second["image" ];
+      }
+
+      if( g.first == "window-size" )
+      {
+         if( g.second.find( "x" ) != g.second.end() )
+         {
+            szx = std::atoi( g.second["x"].c_str() );
+            if( szx < 1 ) szx = BASE_WINDOW_SIZE_X;
+         }
+         if( g.second.find( "y" ) != g.second.end() )
+         {
+            szy = std::atoi( g.second["y" ].c_str() );
+            if( szy < 1 ) szy = BASE_WINDOW_SIZE_Y;
+         }
       }
    }
 

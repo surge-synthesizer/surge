@@ -56,11 +56,11 @@
 
 
 template< typename T >
-struct RememberForgetGuard { 
+struct RememberForgetGuard {
    RememberForgetGuard( T *tg )
    {
       t = tg;
-      
+
       int rc = -1;
       if( t )
          rc = t->addRef();
@@ -161,7 +161,7 @@ std::string specialTagToString( special_tags t )
    if( t >= tag_mod_source0 && t < tag_mod_source_end )
    {
       modsources modsource = (modsources)(t - tag_mod_source0);
-      std::string s = std::string( "tag_modsource" ) + modsource_abberations_short[modsource];
+      std::string s = std::string( "tag_modsource" ) + modsource_names_short[modsource];
       return s;
    }
 
@@ -252,11 +252,11 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    rect.left = 0;
    rect.top = 0;
 #if TARGET_VST2 || TARGET_VST3
-   rect.right = WINDOW_SIZE_X * zf;
-   rect.bottom = WINDOW_SIZE_Y * zf;
+   rect.right = getWindowSizeX() * zf;
+   rect.bottom = getWindowSizeY() * zf;
 #else
-   rect.right = WINDOW_SIZE_X;
-   rect.bottom = WINDOW_SIZE_Y;
+   rect.right = getWindowSizeX();
+   rect.bottom = getWindowSizeY();
 #endif
    editor_open = false;
    queue_refresh = false;
@@ -719,7 +719,7 @@ void SurgeGUIEditor::idle()
                   if (tag == filterblock_tag)
                   {
                      auto pval = (int)(sv * n_fb_configuration);
-                     
+
                      auto targetTag = synth->storage.getPatch().scene[current_scene].feedback.id + start_paramtags;
                      auto targetState = (pval == fb_serial);
                      resetMap[targetTag] = targetState;
@@ -743,7 +743,7 @@ void SurgeGUIEditor::idle()
                      }
                   }
                }
-                   
+
 #if TARGET_VST2
                /*
                ** This is a gross hack. The right thing is to have a remapper lambda on the control.
@@ -759,7 +759,7 @@ void SurgeGUIEditor::idle()
                cc->setDirty();
                cc->invalid();
             }
-#if 0            
+#if 0
             /*
             ** A set of special things which invalidate the entire UI.
             ** See #2226 for why this is currently off.
@@ -773,7 +773,7 @@ void SurgeGUIEditor::idle()
                }
 
             }
-#endif            
+#endif
             else
             {
                // printf( "Bailing out of all possible refreshes on %d\n", j );
@@ -985,7 +985,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    CPoint nopoint(0, 0);
 
    clear_infoview_peridle = -1;
-   
+
    /*
    ** There are a collection of member states we need to reset
    */
@@ -1061,7 +1061,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          if( ms == ms_velocity )
          {
             ((CModulationSourceButton*)gui_modsrc[ms])->setAlternate(ms_releasevelocity,
-                                                                     modsource_abberations_button[ms_releasevelocity]);
+                                                                     modsource_names_button[ms_releasevelocity]);
             ((CModulationSourceButton*)gui_modsrc[ms])->setUseAlternate(modsource_is_alternate[ms]);
          }
       }
@@ -1070,7 +1070,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    /*// Comments
      {
-     CRect CommentsRect(6 + 150*4,528, WINDOW_SIZE_X, WINDOW_SIZE_Y);
+     CRect CommentsRect(6 + 150*4,528, getWindowSizeX(), getWindowSizeY());
      CTextLabel *Comments = new
      CTextLabel(CommentsRect,synth->storage.getPatch().comment.c_str());
      Comments->setTransparency(true);
@@ -1161,7 +1161,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       catx = catctrl->x;
       caty = catctrl->y;
    }
-   
+
    CHSwitch2* mp_cat =
       new CHSwitch2(CRect(catx, caty, 157 + 37, 41 + 12), this, tag_mp_category, 2, 12, 1, 2,
                     bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
@@ -1285,11 +1285,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
                hs->deactivated = p->deactivated;
             else
                hs->deactivated = false;
-         
-         
-            if( p->valtype  == vt_int || p->valtype  == vt_bool) 
-            { 
-               hs->isStepped = true; 
+
+
+            if( p->valtype  == vt_int || p->valtype  == vt_bool)
+            {
+               hs->isStepped = true;
                hs->intRange = p->val_max.i - p->val_min.i;
             }
             else
@@ -1399,7 +1399,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                break;
                // FIXME - we need to fill in the rest of these
             }
-            
+
             if( bmp )
             {
                auto subpixmaps = currentSkin->propertyValue( c, "subpixmaps", "1" );
@@ -1948,18 +1948,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = p->deactivated;
                else
                   hs->deactivated = false;
-           
-            
-            if( p->valtype  == vt_int || p->valtype  == vt_bool) 
-            { 
-               hs->isStepped = true; 
+
+
+            if( p->valtype  == vt_int || p->valtype  == vt_bool)
+            {
+               hs->isStepped = true;
                hs->intRange = p->val_max.i - p->val_min.i;
             }
             else
             {
                hs->isStepped = false;
             }
-            
+
             setDisabledForParameter(p, hs);
 
                frame->addView(hs);
@@ -1986,11 +1986,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = p->deactivated;
                else
                   hs->deactivated = false;
-           
-           
-            if( p->valtype  == vt_int || p->valtype  == vt_bool) 
-            { 
-               hs->isStepped = true; 
+
+
+            if( p->valtype  == vt_int || p->valtype  == vt_bool)
+            {
+               hs->isStepped = true;
                hs->intRange = p->val_max.i - p->val_min.i;
             }
             else
@@ -2065,7 +2065,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ((CParameterTooltip *)infowindow)->setSkin( currentSkin );
    frame->addView(infowindow);
 
-   CRect wsize(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y);
+   CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
    aboutbox =
       new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
    ((CAboutBox *)aboutbox)->setSkin(currentSkin,bitmapStore);
@@ -2101,7 +2101,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       patchCategory->setTextInset(CPoint(3, 0));
       patchCreator->setTextInset(CPoint(3, 0));
       patchComment->setTextInset(CPoint(3, 0));
-   #endif   
+   #endif
 
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
@@ -2164,7 +2164,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
          auto coln = currentSkin->propertyValue( l, "color", "#00FF00" );
          auto col = currentSkin->getColor( coln, kBlackCColor );
-         
+
          auto lb = new CTextLabel( CRect( l->x, l->y, l->x + 100, l->y + 20 ), mtext.fromJust().c_str() );
          lb->setHoriAlign(VSTGUI::kLeftText);
          lb->setTransparency(true);
@@ -2175,7 +2175,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          frame->addView(lb);
       }
    }
-   
+
    refresh_mod();
 
    editor_open = true;
@@ -2244,9 +2244,9 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
    float fzf = getZoomFactor() / 100.0;
 #if TARGET_VST2
-   CRect wsize(0, 0, WINDOW_SIZE_X * fzf, WINDOW_SIZE_Y * fzf);
+   CRect wsize(0, 0, currentSkin->getWindowSizeX() * fzf, currentSkin->getWindowSizeY() * fzf);
 #else
-   CRect wsize( 0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y );
+   CRect wsize( 0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() );
 #endif
 
    CFrame *nframe = new CFrame(wsize, this);
@@ -2271,7 +2271,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    _idleTimer = VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer>( new CVSTGUITimer([this](CVSTGUITimer* timer) { idle(); }, 50, false), false );
    _idleTimer->start();
 #endif
-   
+
 #if TARGET_VST3 && LINUX
    firstIdleCountdown = 2;
 #endif
@@ -2406,7 +2406,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    {
       return 1;
    }
-   
+
    std::vector< std::string > clearControlTargetNames;
 
    if (button & kDoubleClick)
@@ -2577,7 +2577,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          {
             hu = helpURLForSpecial( "other-modbutton" );
          }
-         
+
          if( cms->hasAlternate )
          {
             int idOn = modsource;
@@ -2592,7 +2592,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if( hu != "" )
             {
                auto lurl = fullyResolvedHelpURL(hu);
-               std::string hs = std::string( "[?] " ) + (char*)modsource_abberations[idOn];
+               std::string hs = std::string( "[?] " ) + (char*)modsource_names[idOn];
                addCallbackMenu( contextMenu, hs, [lurl]()
                                                     {
                                                        Surge::UserInteractions::openURL(lurl);
@@ -2602,10 +2602,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
             else
             {
-               contextMenu->addEntry((char*)modsource_abberations[idOn], eid++);
+               contextMenu->addEntry((char*)modsource_names[idOn], eid++);
             }
             std::string offLab = "Switch to ";
-            offLab += modsource_abberations[idOff];
+            offLab += modsource_names[idOff];
             bool activeMod = (cms->state & 3) == 2;
 
             auto *mi = addCallbackMenu(
@@ -2820,13 +2820,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 #if TARGET_VST3
          Steinberg::Vst::IContextMenu *hostMenu = nullptr;
 #endif
-         
+
          if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
          {
             /*
             ** This is the menu for the controls
             */
-            
+
             ccid = modsource - ms_ctrl1;
 
             auto cms = ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[modsource]);
@@ -2965,10 +2965,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                       VSTGUI::Call::later( [this, control, ccid]() {
                                                                               spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid] , 16,
                                                                                                   "Enter a new name for macro controller:", "Rename Macro");
-                                                                              
+
                                                                               ((CModulationSourceButton*)control)
                                                                                  ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                                                                              
+
                                                                               control->setDirty();
                                                                               control->invalid();
                                                                               synth->refresh_editor = true;
@@ -2977,10 +2977,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                    });
             eid++;
 
-#if TARGET_VST3            
+#if TARGET_VST3
             hostMenu = addVst3MenuForParams( contextMenu, modsource - ms_ctrl1 + metaparam_offset, eid);
-#endif            
-            
+#endif
+
             midiSub->forget();
          }
 
@@ -3012,8 +3012,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
 #if TARGET_VST3
          if( hostMenu ) hostMenu->release();
-#endif         
-         
+#endif
+
          return 1;
       }
       return 0;
@@ -3177,7 +3177,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                if( p->ctrltype == ct_vocoder_bandcount )
                   incr = 4;
-               
+
                // we have a case where the number of menu entries to be generated depends on another parameter
                // so instead of using val_max.i directly, store it to local var and modify its value
                // when required
@@ -3579,7 +3579,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
 #if TARGET_VST3
          auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
-#endif         
+#endif
 
          frame->addView(contextMenu); // add to frame
          contextMenu->popup();
@@ -3652,7 +3652,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       typeinMode = Inactive;
    }
 
-   
+
    if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
    {
       if (((CModulationSourceButton*)control)->event_is_drag)
@@ -3898,12 +3898,12 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       {
          defaultComment = "";
       }
-      
+
       if (p.author == "" && defaultAuthor != "")
       {
          p.author = defaultAuthor;
       }
-      
+
       if (p.author != "" && defaultAuthor != "")
       {
          if (_stricmp(p.author.c_str(), defaultAuthor.c_str()))
@@ -3912,7 +3912,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             p.author = defaultAuthor;
          }
       }
-      
+
       if (p.comments == "" && defaultComment != "")
       {
          p.comments = defaultComment;
@@ -3952,7 +3952,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          {
             bool valid = false;
             auto mv = typeinEditTarget->calculate_modulation_value_from_string( t, valid );
-            
+
             if( ! valid )
             {
                isInvalid = true;
@@ -3961,7 +3961,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
                synth->setModulation(typeinEditTarget->id, (modsources)typeinModSource, mv );
                synth->refresh_editor = true;
-               
+
                typeinDialog->setVisible(false);
                removeFromFrame.push_back(typeinDialog);
                typeinDialog = nullptr;
@@ -4104,7 +4104,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                mv = p->quantize_modulation(mv);
                // maybe setModValue here
             }
-            
+
             synth->setModulation(ptag, thisms, mv );
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
             ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms), synth->isBipolarModulation(thisms));
@@ -4117,7 +4117,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
                ((CParameterTooltip*)infowindow)->setLabel(pname, pdisp);
                ((CParameterTooltip*)infowindow)->setMDIWS(mss);
-               
+
             }
             else
             {
@@ -4439,30 +4439,30 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
       r.bottom += ( ((CParameterTooltip*)infowindow)->hasMDIWS() & modValues ? 36 : 18 );
       if( modValues ) r.right += 20;
    }
-   
+
    CRect r2 = control->getViewSize();
 
-   // OK this is a heuristic to stop deform overpainting and stuff 
-   if( r2.bottom > WINDOW_SIZE_Y - r.getHeight() - 2 )
+   // OK this is a heuristic to stop deform overpainting and stuff
+   if( r2.bottom > getWindowSizeY() - r.getHeight() - 2 )
    {
       // stick myself on top please
       r.offset((r2.left / 150) * 150, r2.top - r.getHeight() - 2);
-      
+
    }
    else
    {
       r.offset((r2.left / 150) * 150, r2.bottom);
    }
 
-   if (r.bottom > WINDOW_SIZE_Y - 2)
+   if (r.bottom > getWindowSizeY() - 2)
    {
-      int ao = (WINDOW_SIZE_Y - 2 - r.bottom);
+      int ao = (getWindowSizeY() - 2 - r.bottom);
       r.offset(0, ao);
    }
 
-   if (r.right > WINDOW_SIZE_X - 2)
+   if (r.right > getWindowSizeX() - 2)
    {
-      int ao = (WINDOW_SIZE_X - 2 - r.right);
+      int ao = (getWindowSizeX() - 2 - r.right);
       r.offset(ao, 0);
    }
 
@@ -4475,7 +4475,7 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
       int ao = 2 - r.top;
       r.offset( 0, ao );
    }
-   
+
    if (buttons || forceMB)
    {
       // make sure an infowindow doesn't appear twice
@@ -4642,8 +4642,8 @@ bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
 {
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
-   float baseW = WINDOW_SIZE_X;
-   float baseH = WINDOW_SIZE_Y;
+   float baseW = getWindowSizeX();
+   float baseH = getWindowSizeY();
 
    /*
    ** Window decoration takes up some of the screen so don't zoom to full screen dimensions.
@@ -4690,7 +4690,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       zoomFactorRecursionGuard--;
       return;
    }
-   
+
    if (!zoomEnabled)
       zf = 100.0;
 
@@ -4854,7 +4854,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
                       [lurl]() { Surge::UserInteractions::openURL(lurl); });
         mpeSubMenu->addSeparator();
     }
-    
+
     std::string endis = "Enable MPE";
     if (synth->mpeEnabled)
        endis = "Disable MPE";
@@ -4883,8 +4883,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
        int newVal = ::atoi(c);
        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
        this->synth->mpePitchBendRange = newVal;
-    });   
-    
+    });
+
     return mpeSubMenu;
 }
 
@@ -5017,7 +5017,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
 
     int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
     string middle_A = "A" + to_string(oct);
-    
+
     addCallbackMenu( tuningSubMenu, Surge::UI::toOSCaseForMenu("Remap " + middle_A + " (MIDI note 69) directly to..."),
                      [this, middle_A]()
                         {
@@ -5117,7 +5117,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
     biggestZ->setActions([this](CCommandMenuItem* m) {
         int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
                                                 90, // See comment in setZoomFactor
-                                                WINDOW_SIZE_X, WINDOW_SIZE_Y);
+                                                getWindowSizeX(), getWindowSizeY());
         setZoomFactor(newZF);
     });
     zoomSubMenu->addEntry(biggestZ);
@@ -5218,7 +5218,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    mid++;
 
    mouseSubMenu->addSeparator(mid++);
-   
+
    auto tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "showCursorWhileEditing", 0);
 
    menuItem = addCallbackMenu(mouseSubMenu, Surge::UI::toOSCaseForMenu("Show Cursor While Editing"), [this, tsMode]() {
@@ -5344,7 +5344,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                 dname += "other/";
              }
              dname += entry.name;
-             
+
              dname += ")";
           }
 
@@ -5404,7 +5404,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                     [this]() {
                        auto r = this->currentSkin->root;
                        auto n = this->currentSkin->name;
-                       
+
                        auto &db = Surge::UI::SkinDB::get();
                        db.rescanForSkins( &(this->synth->storage) );
 
@@ -5473,16 +5473,16 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Rescan All Data Folders"), [this]() {
       this->synth->storage.refresh_wtlist();
       this->synth->storage.refresh_patchlist();
-      this->scannedForMidiPresets = false; 
+      this->scannedForMidiPresets = false;
       CFxMenu::scanForUserPresets = true; // that's annoying now I see it side by side. But you know.
 
       // Rescan for skins
       auto r = this->currentSkin->root;
       auto n = this->currentSkin->name;
-      
+
       auto &db = Surge::UI::SkinDB::get();
       db.rescanForSkins( &(this->synth->storage) );
-      
+
       // So go find the skin
       auto e = db.getEntryByRootAndName( r, n );
       if( e.isJust() )
@@ -5529,7 +5529,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
          Surge::UserInteractions::showHTML( this->midiMappingToHtml() );
       }
       );
-   
+
    if( ! scannedForMidiPresets )
    {
       scannedForMidiPresets = true;
@@ -5552,7 +5552,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
          );
    }
 
-   
+
    return midiSubMenu;
 }
 
@@ -5565,7 +5565,7 @@ void SurgeGUIEditor::reloadFromSkin()
    bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 
    auto bg = currentSkin->customBackgroundImage();
-   
+
    if( bg != "" )
    {
       std::cout << "SETTING BACKGROUND to " << bg << std::endl;
@@ -5583,6 +5583,23 @@ void SurgeGUIEditor::reloadFromSkin()
    auto c = currentSkin->getColor( "textfield.focuscolor", VSTGUI::CColor( 170, 170, 230 ) );
    frame->setFocusColor( c );
 
+   wsx = currentSkin->getWindowSizeX();
+   wsy = currentSkin->getWindowSizeY();
+
+   float sf = 1;
+#if TARGET_VST2
+   sf = getZoomFactor() / 100.0;
+#endif
+   frame->setSize( wsx * sf, wsy * sf );
+
+#if TARGET_VST3
+   sf = getZoomFactor() / 100.0;
+#endif
+
+   rect.right = wsx * sf;
+   rect.bottom = wsy * sf;
+
+   setZoomFactor( getZoomFactor() );
 }
 
 /*
@@ -5951,9 +5968,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 
                              }
                           }
-                          
+
                           oss << "</param-doc>\n";
-                          
+
                           std::cout << oss.str();
                           std::ofstream of( "docstrings.xml" );
                           of << oss.str();
@@ -5961,7 +5978,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                        }
        );
     tid++;
-    
+
     return devSubMenu;
 }
 
@@ -6006,8 +6023,8 @@ VSTGUI::CCommandMenuItem* SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* t
 #if TARGET_VST3
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
 {
-   float izfx = newSize->getWidth() * 1.0 / WINDOW_SIZE_X * 100.0;
-   float izfy = newSize->getHeight() * 1.0 / WINDOW_SIZE_Y * 100.0;
+   float izfx = newSize->getWidth() * 1.0 / getWindowSizeX() * 100.0;
+   float izfy = newSize->getHeight() * 1.0 / getWindowSizeY() * 100.0;
    float izf = std::min(izfx, izfy);
    izf = std::max(izf, 1.0f*minimumZoom);
 
@@ -6021,8 +6038,8 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
    /*
    ** If the implied zoom factor changes my size by more than a pixel, resize
    */
-   auto zfdx = std::fabs( (izf - zoomFactor) * WINDOW_SIZE_X ) / 100.0;
-   auto zfdy = std::fabs( (izf - zoomFactor) * WINDOW_SIZE_Y ) / 100.0;
+   auto zfdx = std::fabs( (izf - zoomFactor) * getWindowSizeX() ) / 100.0;
+   auto zfdy = std::fabs( (izf - zoomFactor) * getWindowSizeY() ) / 100.0;
    auto zfd = std::max( zfdx, zfdy );
 
    if( zfd > 1 )
@@ -6034,14 +6051,14 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
 }
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect* newSize)
 {
-   // float tratio = 1.0 * WINDOW_SIZE_X / WINDOW_SIZE_Y;
+   // float tratio = 1.0 * getWindowSizeX() / getWindowSizeY();
    // float cratio = 1.0 * newSize->getWidth() / newSize->getHeight();
 
    // we want cratio == tration by adjusting height so
    // WSX / WSY = gW / gH
    // gH = gW * WSY / WSX
 
-   float newHeight = 1.0 * newSize->getWidth() * WINDOW_SIZE_Y / WINDOW_SIZE_X;
+   float newHeight = 1.0 * newSize->getWidth() * getWindowSizeY() / getWindowSizeX();
    newSize->bottom = newSize->top + std::ceil(newHeight);
    return Steinberg::kResultTrue;
 }
@@ -6291,8 +6308,8 @@ th {
    {
       htmls << "No parameter MIDI mappings present!";
    }
-   
-   
+
+
    htmls << R"HTML(
 
       </div>
@@ -6338,14 +6355,14 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       typeinMode = Control;
    }
-   
+
 
    bool ismod = p && ms > 0;
    int boxht = 56;
    auto cp = c->getViewSize();
 
    if( ismod )
-      boxht += 12;
+      boxht += 22;
 
    CRect typeinSize( cp.left, cp.top - boxht, cp.left + 120, cp.top - boxht + boxht  );
 
@@ -6389,7 +6406,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       lab = modulatorName( ms, false );
    }
-   
+
    typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
    typeinLabel->setFontColor(currentSkin->getColor( "slider.dark.label", kBlackCColor ));
    typeinLabel->setTransparency(true);
@@ -6397,7 +6414,8 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    inner->addView(typeinLabel);
 
    char txt[256];
-   char ptext[1024];
+   char ptext[1024], ptext2[1024];
+   ptext2[0] = 0;
    if( p )
    {
       if( ismod )
@@ -6405,7 +6423,8 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
          char txt2[256];
          p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms), synth->isBipolarModulation((modsources)ms), Parameter::TypeIn);
          p->get_display(txt2);
-         sprintf( ptext, "%s from %s", txt, txt2 );
+         sprintf( ptext, "mod: %s", txt );
+         sprintf( ptext2, "current: %s", txt2 );
       }
       else
       {
@@ -6431,21 +6450,31 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
       inner->addView(ml);
    }
 
-   
+
    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
    typeinPriorValueLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
    typeinPriorValueLabel->setTransparency(true);
    typeinPriorValueLabel->setFont( displayFont );
    inner->addView(typeinPriorValueLabel);
 
-   typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 12 : 0 ), 114, 50 + ( ismod ? 12 : 0 ) ), this, tag_value_typein, txt );
+   if( ismod )
+   {
+      auto sl = new CTextLabel( CRect( 2, 29 + 11, 116, 36 + 11 ), ptext2 );
+      sl->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+      sl->setTransparency(true);
+      sl->setFont( displayFont );
+      inner->addView( sl );
+   }
+
+
+   typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 22 : 0 ), 114, 50 + ( ismod ? 22 : 0 ) ), this, tag_value_typein, txt );
    typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
    typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
 
    // fix the text selection rectangle background overhanging the borders on Windows
    #if WINDOWS
    typeinValue->setTextInset(CPoint(3, 0));
-   #endif   
+   #endif
 
    if( p )
    {
@@ -6455,7 +6484,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
          typeinValue->setText( "edit coming soon" );
       }
    }
-   
+
    inner->addView(typeinValue);
    typeinEditTarget = p;
    typeinDialog->setVisible(true);
@@ -6496,17 +6525,17 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       std::string ccl = std::string(synth->storage.getPatch().CustomControllerLabel[i - ms_ctrl1]);
       if( ccl == "-" )
       {
-         return std::string( modsource_abberations[i] );
+         return std::string( modsource_names[i] );
       }
       else
       {
-         return ccl + " (" + modsource_abberations[i] + ")";
+         return ccl + " (" + modsource_names[i] + ")";
       }
    }
    if( button )
-      return std::string( modsource_abberations_button[i] );
+      return std::string( modsource_names_button[i] );
    else
-      return std::string( modsource_abberations[i] );
+      return std::string( modsource_names[i] );
 
 }
 
@@ -6525,24 +6554,24 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
       menuStack.push(contextMenu);
       std::stack<int> eidStack;
       eidStack.push(eid);
-      
+
       Steinberg::Vst::ParamID param = ptag;
       hostMenu = componentHandler3->createContextMenu(this, &param);
-      
+
       int N = hostMenu ?  hostMenu->getItemCount() : 0;
       if( N > 0 )
       {
          contextMenu->addSeparator(); eid++;
       }
-      
+
       std::deque<COptionMenu*> parentMenus;
       for (int i = 0; i < N; i++)
       {
          Steinberg::Vst::IContextMenu::Item item = {0};
          Steinberg::Vst::IContextMenuTarget *target = {0};
-         
+
          hostMenu->getItem(i, item, &target );
-         
+
          char nm[1024];
          Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
          if( nm[0] == '-' ) // FL sends us this as a separator with no VST indication so just strip the '-'
@@ -6553,7 +6582,7 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
             std::string truncName( nm + pos );
             strcpy( nm, truncName.c_str() );
          }
-         
+
          int itag = item.tag;
          /*
          ** Leave this here so we can debug if another vst3 problem comes up
@@ -6576,7 +6605,7 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
             menuStack.push(subMenu);
             subMenu->forget();
             eidStack.push(0);
-            
+
             /*
               VSTGUI doesn't seem to allow a disabled or checked grouping menu.
               if( item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled )
@@ -6588,13 +6617,13 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
               subMenu->setChecked(true);
               }
             */
-            
+
          }
          else
          {
             RememberForgetGuard<Steinberg::Vst::IContextMenuTarget> tg(target);
             RememberForgetGuard<Steinberg::Vst::IContextMenu> hm(hostMenu);
-            
+
             auto menu = addCallbackMenu(menuStack.top(), nm, [this, hm, tg, itag]() {
                                                                 tg.t->executeMenuItem(itag);
                                                              });
@@ -6626,7 +6655,7 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
 std::string SurgeGUIEditor::helpURLFor( Parameter *p )
 {
    auto storage = &(synth->storage);
-#if 0 // useful debug   
+#if 0 // useful debug
    static bool once = false;
    if( ! once )
    {
@@ -6650,7 +6679,7 @@ std::string SurgeGUIEditor::helpURLFor( Parameter *p )
             std::cout << "UNFOUND : " << k << std::endl;
       }
    }
-#endif   
+#endif
    std::string id = p->ui_identifier;
    int type = -1;
    if( p->ctrlgroup == cg_OSC )
@@ -6742,7 +6771,7 @@ void SurgeGUIEditor::sliderHoverStart( int tag )
          {
             gms->setSecondaryHover(true);
          }
-         
+
       }
    };
 }
@@ -6755,6 +6784,6 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
       {
          gms->setSecondaryHover(false);
       }
-   }   
+   }
 
 }
