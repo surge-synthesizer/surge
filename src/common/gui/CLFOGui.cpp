@@ -437,6 +437,22 @@ void CLFOGui::draw(CDrawContext* dc)
       edpath->forget();
    }
 
+   if( lfodata->shape.val.i == ls_mseg )
+   {
+      auto size = getViewSize();
+      
+      int w = size.getWidth() - splitpoint;
+      int h = size.getHeight();
+      auto shiftTranslate = CGraphicsTransform().translate( size.left, size.top ).translate( splitpoint, 0 );
+      CDrawContext::Transform shiftTranslatetransform( *dc, shiftTranslate );
+      
+      dc->setFillColor( kRedCColor );
+      dc->drawRect( CRect( 0, 0, 30, 10 ), kDrawFilled );
+      dc->setFontColor( kWhiteCColor );
+      dc->drawString( "Edit", CRect( 0, 0, 30, 10 ) );
+
+   }
+      
    CColor cshadow = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cselected = skin->getColor( "lfo.type.selected.background", CColor( 0xfe, 0x98, 0x15, 0xff ) );
 

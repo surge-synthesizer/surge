@@ -25,7 +25,7 @@ MSEGModulationHelper::MSEGModulationHelper()
    { segment s; s.duration = 0.4; s.v0 = 0.5;           s.type=segment::CONSTANT; segments.push_back(s); }
    { segment s; s.duration = 0.3; s.v0 = -0.3;          s.type=segment::CONSTANT; segments.push_back(s); }
    { segment s; s.duration = 0.5; s.v0 = -0.3; s.v1 = 0.8; s.cpduration = 0.45; s.cpv = -0.3;   s.type=segment::QUADBEZ; segments.push_back(s); }
-   { segment s; s.duration = 0.8; s.v0 = 0.8; s.v1 = 0.0; s.cpduration = 0.1; s.cpv = -0.2;   s.type=segment::QUADBEZ; segments.push_back(s); }
+   { segment s; s.duration = 0.8; s.v0 = 0.8; s.v1 = 0.0; s.cpduration = 0.1; s.cpv = 0.9;   s.type=segment::QUADBEZ; segments.push_back(s); }
 }
 
 float MSEGModulationHelper::valueAt(float up, float df)
