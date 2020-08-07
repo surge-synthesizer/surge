@@ -166,12 +166,12 @@ void PhaserEffect::setvars()
 
    for (int i = 0; i < n_stages; i++)
    {
-      double omega = biquad[i]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
+      double omega = biquad[2 * i]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
                                            basespan[i] * lfoout * *f[pp_lfodepth]);
-      biquad[i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
-      omega = biquad[i + n_stages]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
+      biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+      omega = biquad[2 * i + 1]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
                                     basespan[i] * lfooutR * *f[pp_lfodepth]);
-      biquad[i + n_stages]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+      biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
    }
 
    feedback.newValue(0.95f * *f[pp_feedback]);
@@ -195,8 +195,8 @@ void PhaserEffect::process(float* dataL, float* dataR)
       
       for (int curr_stage = 0; curr_stage < n_stages; curr_stage++)
       {
-         dL = biquad[curr_stage]->process_sample(dL);
-         dR = biquad[n_stages + curr_stage]->process_sample(dR);
+         dL = biquad[2 * curr_stage]->process_sample(dL);
+         dR = biquad[2 * curr_stage + 1]->process_sample(dR);
       }
       L[i] = dL;
       R[i] = dR;
