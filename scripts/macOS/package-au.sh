@@ -6,7 +6,7 @@ RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-au"
 
 FONT_SRC_LOCATION="$RES_SRC_LOCATION/fonts"
-SVG_SRC_LOCATION="assets/original-vector/SVG/exported"
+SVG_SRC_LOCATION="assets/Surge Classic/exported"
 
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
 EXEC_LOCATION="$1"

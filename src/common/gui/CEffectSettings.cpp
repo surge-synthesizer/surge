@@ -6,40 +6,14 @@
 
 using namespace VSTGUI;
 
-const int blocks[8][2] = {{18, 1},  {44, 1},  {18, 41}, {44, 41},
-                          {18, 21}, {44, 21}, {89, 11}, {89, 31}};
+// positions of FX slots   A IFX1   A IFX2     B IFX1    B IFX2    Send 1    Send 2   Master 1  Master 2
+const int blocks[8][2] = {{18, 1},  {44, 1},  {18, 41}, {44, 41}, {18, 21}, {44, 21}, {89, 11}, {89, 31}};
 
+// since graphics asset for FX icons (bmp00136) has frames ordered according to fxt enum
+// just return FX id
 int get_fxtype(int id)
 {
-   switch (id)
-   {
-   case fxt_delay:
-      return 1;
-   case fxt_reverb:
-   case fxt_reverb2:
-      return 2;
-   case fxt_phaser:
-   case fxt_rotaryspeaker:
-   case fxt_chorus4:
-   case fxt_flanger:
-      return 3;
-   case fxt_distortion:
-      return 4;
-   case fxt_eq:
-      return 5;
-   case fxt_conditioner:
-      return 6;
-   case fxt_freqshift:
-   case fxt_ringmod:
-      return 8;
-   case fxt_off:
-      return 0;
-      /*return 6;  // dyn
-      return 7;  // fx
-      return 8;  // invader 1
-      return 9;  // invader 2*/
-   }
-   return 7;
+   return id;
 }
 
 CEffectSettings::CEffectSettings(const CRect& size,

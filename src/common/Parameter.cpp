@@ -595,7 +595,7 @@ void Parameter::set_type(int ctrltype)
    case ct_wstype:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_ws_type - 1; 
+      val_max.i = n_ws_type - 1;
       val_default.i = 0;
       break;
    case ct_midikey_or_channel:
@@ -796,7 +796,7 @@ void Parameter::set_type(int ctrltype)
    displayInfo.absoluteUnit[0] = 0;
    displayInfo.minLabel[0] = 0;
    displayInfo.maxLabel[0] = 0;
-   
+
    switch( ctrltype )
    {
    case ct_percent:
@@ -814,7 +814,7 @@ void Parameter::set_type(int ctrltype)
       displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
          ParamDisplayFeatures::kHasCustomMaxString |
          ParamDisplayFeatures::kHasCustomDefaultString;
-      
+
       sprintf(displayInfo.unit, "%%" );
       sprintf( displayInfo.minLabel, "-100.00 %% (Left)" );
       sprintf( displayInfo.defLabel, "0.00 %% (Stereo)" );
@@ -856,7 +856,7 @@ void Parameter::set_type(int ctrltype)
       sprintf(displayInfo.unit, "Hz" );
       displayInfo.extendFactor = 100.0;
       break;
-      
+
    case ct_envtime_lfodecay:
       sprintf( displayInfo.maxLabel, "Forever" );
       displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMaxString;
@@ -951,6 +951,7 @@ void Parameter::set_type(int ctrltype)
       displayType = Decibel;
       sprintf( displayInfo.unit, "dB" );
       break;
+
    case ct_phaser_n_stages:
       displayType = LinearWithScale;
       displayInfo.scale = 16;
@@ -1153,7 +1154,7 @@ void Parameter::bound_value(bool force_integer)
 
    if (ctrltype == ct_vocoder_bandcount) {
        val.i = val.i - val.i % 4; }
-   
+
    switch (valtype)
    {
    case vt_float: {
@@ -1260,7 +1261,7 @@ float Parameter::get_extended(float f)
 std::string Parameter::tempoSyncNotationValue(float f)
 {
     float a, b = modff(f, &a);
-    
+
     if (b >= 0)
     {
         b -= 1.0;
@@ -1270,7 +1271,7 @@ std::string Parameter::tempoSyncNotationValue(float f)
     float d, q;
     std::string nn, t;
     char tmp[1024];
-    
+
     if(f >= 1)
     {
         q = pow(2.0, f - 1);
@@ -1356,7 +1357,7 @@ std::string Parameter::tempoSyncNotationValue(float f)
 void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar, ModulationDisplayMode displaymode, ModulationDisplayInfoWindowStrings *iw )
 {
    int detailedMode = false;
-   
+
    if (storage)
       detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
 
@@ -1436,7 +1437,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
          break;
       }
       }
-      
+
       break;
    }
    case ATwoToTheBx:
@@ -1466,7 +1467,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             mp = std::min(mp, displayInfo.modulationCap );
             mn = std::min( mn, displayInfo.modulationCap );
          }
-         
+
          std::string u = displayInfo.unit;
          if( displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys )
          {
@@ -1488,7 +1489,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                sprintf( txt, "%s", displayInfo.maxLabel );
             }
-         
+
 
             break;
          case InfoWindow:
@@ -1685,7 +1686,7 @@ float Parameter::quantize_modulation( float inputval )
 
 void Parameter::get_display_alt(char* txt, bool external, float ef)
 {
-   
+
    txt[0] = 0;
    switch( ctrltype )
    {
@@ -1697,7 +1698,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
    {
       float f = val.f;
       int i_value = (int)( f + 0.5 ) + 69; // that 1/2th centers us
-      if( i_value < 0 ) i_value = 0; 
+      if( i_value < 0 ) i_value = 0;
 
       int oct_offset = 1;
       if (storage)
@@ -1711,7 +1712,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
    {
       float f = val.f;
       int i_value = (int)( f );
-      if( i_value < 0 ) i_value = 0; 
+      if( i_value < 0 ) i_value = 0;
 
       int oct_offset = 1;
       if (storage)
@@ -1753,7 +1754,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
    if (storage)
       detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
 
-   
+
    switch (valtype)
    {
    case vt_float:
@@ -1765,7 +1766,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
       {
          f = val.f;
       }
-      
+
       switch( displayType )
       {
       case Custom:
@@ -1905,26 +1906,26 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       }
       case ct_osctype:
-         sprintf(txt, "%s", osctype_abberations[limit_range(i, 0, (int)num_osctypes - 1)]);
+         sprintf(txt, "%s", osctype_names[limit_range(i, 0, (int)num_osctypes - 1)]);
          break;
       case ct_wt2window:
-         sprintf(txt, "%s", window_abberations[limit_range(i, 0, 8)]);
+         sprintf(txt, "%s", window_names[limit_range(i, 0, 8)]);
          break;
       case ct_osccount:
       case ct_osccountWT:
          sprintf(txt, "%d voice%s", i, (i > 1 ? "s" : ""));
          break;
       case ct_fxtype:
-         sprintf(txt, "%s", fxtype_abberations[limit_range(i, 0, (int)num_fxtypes - 1)]);
+         sprintf(txt, "%s", fxtype_names[limit_range(i, 0, (int)num_fxtypes - 1)]);
          break;
       case ct_reverbshape:
          sprintf(txt, "Type %d", i + 1);
          break;
       case ct_fxbypass:
-         sprintf(txt, "%s", fxbypass_abberations[limit_range(i, 0, (int)n_fx_bypass - 1)]);
+         sprintf(txt, "%s", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
          break;
       case ct_filtertype:
-         sprintf(txt, "%s", fut_abberations[limit_range(i, 0, (int)n_fu_type - 1)]);
+         sprintf(txt, "%s", fut_names[limit_range(i, 0, (int)n_fu_type - 1)]);
          break;
       case ct_filtersubtype:
       {
@@ -1958,31 +1959,31 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       }
       case ct_wstype:
-         sprintf(txt, "%s", wst_abberations[limit_range(i, 0, (int)n_ws_type - 1)]);
+         sprintf(txt, "%s", wst_names[limit_range(i, 0, (int)n_ws_type - 1)]);
          break;
       case ct_envmode:
-         sprintf(txt, "%s", em_abberations[limit_range(i, 0, (int)n_em_type - 1)]);
+         sprintf(txt, "%s", em_names[limit_range(i, 0, (int)n_em_type - 1)]);
          break;
       case ct_fbconfig:
-         sprintf(txt, "%s", fbc_abberations[limit_range(i, 0, (int)n_fb_configuration - 1)]);
+         sprintf(txt, "%s", fbc_names[limit_range(i, 0, (int)n_fb_configuration - 1)]);
          break;
       case ct_fmconfig:
-         sprintf(txt, "%s", fmc_abberations[limit_range(i, 0, (int)n_fm_configuration - 1)]);
+         sprintf(txt, "%s", fmc_names[limit_range(i, 0, (int)n_fm_configuration - 1)]);
          break;
       case ct_lfoshape:
-         sprintf(txt, "%s", ls_abberations[limit_range(i, 0, (int)n_lfoshapes - 1)]);
+         sprintf(txt, "%s", ls_names[limit_range(i, 0, (int)n_lfoshapes - 1)]);
          break;
       case ct_scenemode:
-         sprintf(txt, "%s", scenemode_abberations[limit_range(i, 0, (int)n_scenemodes - 1)]);
+         sprintf(txt, "%s", scenemode_names[limit_range(i, 0, (int)n_scenemodes - 1)]);
          break;
       case ct_polymode:
-         sprintf(txt, "%s", polymode_abberations[limit_range(i, 0, (int)n_polymodes - 1)]);
+         sprintf(txt, "%s", polymode_names[limit_range(i, 0, (int)n_polymodes - 1)]);
          break;
       case ct_lfotrigmode:
-         sprintf(txt, "%s", lfomode_abberations[limit_range(i, 0, (int)n_lfomodes - 1)]);
+         sprintf(txt, "%s", lfomode_names[limit_range(i, 0, (int)n_lfomodes - 1)]);
          break;
       case ct_character:
-         sprintf(txt, "%s", character_abberations[limit_range(i, 0, (int)n_charactermodes - 1)]);
+         sprintf(txt, "%s", character_names[limit_range(i, 0, (int)n_charactermodes - 1)]);
          break;
       case ct_fmratio_int:
          sprintf(txt, "C : %d", i);
@@ -2386,7 +2387,7 @@ bool Parameter::set_value_from_string( std::string s )
    if( valtype == vt_int )
    {
       int ni = val_min.i - 1;   // default out of range value to test against later
-      
+
       try
       {
          ni = std::stoi(c);
@@ -2520,14 +2521,14 @@ bool Parameter::set_value_from_string( std::string s )
       break;
    }
    case ATwoToTheBx:
-   {  
+   {
       /*
       ** v = a 2^bx
       ** log2(v/a) = bx
       ** log2(v/a)/b = x;
       */
       float res = log2f(nv / displayInfo.a) / displayInfo.b;
-      
+
       if (res < val_min.f || res > val_max.f)
       {
          return false;
@@ -2549,7 +2550,7 @@ bool Parameter::set_value_from_string( std::string s )
       {
          nv = db_to_amp(nv);
       }
-      
+
       if (nv < val_min.f || nv > val_max.f) {
          return false;
       }
@@ -2609,7 +2610,7 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
       if( rmv > 1 || rmv < -1 )
          valid = false;
       return rmv;
-      
+
       break;
    }
    case ATwoToTheBx:
@@ -2640,7 +2641,7 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
          mv = log2f( l2arg ) / b - val.f;
       else
          valid = false;
-      
+
       auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
       return rmv;
       break;
@@ -2650,7 +2651,7 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
       /*
       ** amp2db is 18 * log2(x)
       **
-      ** we have 
+      ** we have
       ** d = mp - val
       **   = 18 * ( log2( m + v ) - log2( v ) )
       ** d / 18 + log2(v) = log2( m + v )
@@ -2674,7 +2675,7 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
 
    }
 
-   
+
    switch( ctrltype )
    {
    default:

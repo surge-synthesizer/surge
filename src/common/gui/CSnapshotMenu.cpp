@@ -163,7 +163,7 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
                             this->listenerNotForParent->valueChanged( this );
         };
         idx++;
-        
+
         actionItem->setActions(action, nullptr);
         subMenu->addEntry(actionItem);
 
@@ -183,7 +183,7 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
         populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub, idx);
         subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
     }
-        
+
 
     /*
     ** Then add myself to parent
@@ -321,7 +321,7 @@ void CFxMenu::draw(CDrawContext* dc)
    txtbox.bottom += 2;
    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
    char fxname[NAMECHARS];
-   sprintf(fxname, "%s", fxtype_abberations[fx->type.val.i]);
+   sprintf(fxname, "%s", fxtype_names[fx->type.val.i]);
    dc->drawString(fxname, txtbox, kRightText, true);
 
    CPoint d(txtbox.right + 2, txtbox.top + 5);
@@ -346,7 +346,7 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
       fxbuffer->type.val.i = type;
       // storage->patch.update_controls();
       selectedName = e->Attribute( "name" );
-      
+
       Effect* t_fx = spawn_effect(type, storage, fxbuffer, 0);
       if (t_fx)
       {
@@ -389,7 +389,7 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
          sge->forceautomationchangefor( &(fxbuffer->p[i] ) );
    }
 #endif
-   
+
 }
 void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
 {
@@ -464,21 +464,21 @@ void CFxMenu::rescanUserPresets()
             preset.file = fn;
             TiXmlDocument d;
             int t;
-            
+
             if( ! d.LoadFile( fn ) ) goto badPreset;
-            
+
             auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild( "single-fx" ) );
             if( ! r ) goto badPreset;
-            
+
             auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild( "snapshot" ) );
             if( ! s ) goto badPreset;
-            
+
             if( ! s->Attribute( "name" ) ) goto badPreset;
             preset.name = s->Attribute( "name" );
-            
+
             if( s->QueryIntAttribute( "type", &t ) != TIXML_SUCCESS ) goto badPreset;
             preset.type = t;
-            
+
             for( int i=0; i<n_fx_params; ++i )
             {
                double fl;
@@ -536,7 +536,7 @@ void CFxMenu::populate()
     /*
     ** Add copy/paste/save
     */
-    
+
     this->addSeparator();
 
     auto copyItem = new CCommandMenuItem(CCommandMenuItem::Desc("Copy"));
@@ -565,7 +565,7 @@ void CFxMenu::populate()
        this->addEntry(saveItem);
     }
 
-    
+
     auto rescanItem = new CCommandMenuItem(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh FX Preset List")));
     rescanItem->setActions([this](CCommandMenuItem *item) {
@@ -612,7 +612,7 @@ void CFxMenu::copyFX()
         fxCopyPaste[dp] = fx->p[i].deactivated;
     }
     memcpy((void*)fxbuffer,(void*)fx,sizeof(FxStorage));
-    
+
 }
 
 void CFxMenu::pasteFX()
@@ -638,7 +638,7 @@ void CFxMenu::pasteFX()
         int tp = i * 4 + 2;
         int xp = i * 4 + 3;
         int dp = i * 4 + 4;
-        
+
         switch( fxbuffer->p[i].valtype )
         {
         case vt_float:
@@ -665,8 +665,8 @@ void CFxMenu::pasteFX()
         fxbuffer->p[i].deactivated = (int)fxCopyPaste[dp];
     }
 
-    selectedName = std::string( "Copied " ) + fxtype_abberations[ fxbuffer->type.val.i ];
-    
+    selectedName = std::string( "Copied " ) + fxtype_names[ fxbuffer->type.val.i ];
+
     if( listenerNotForParent )
        listenerNotForParent->valueChanged( this );
 
@@ -688,7 +688,7 @@ void CFxMenu::saveFX()
    {
       return;
    }
-   
+
    std::string pn = storage->userFXPath;
    fs::create_directories( pn );
 
@@ -718,7 +718,7 @@ void CFxMenu::saveFX()
    Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
-   
+
    pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\" \n";
 
    pfile << "     type=\"" <<  fx->type.val.i << "\"\n";
@@ -735,7 +735,7 @@ void CFxMenu::saveFX()
             pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
             break;
          }
-         
+
          if( fx->p[i].can_temposync() && fx->p[i].temposync )
          {
             pfile << "     p" << i << "_temposync=\"1\"\n";
@@ -790,7 +790,7 @@ void CFxMenu::loadUserPreset( const UserPreset &p )
 
    selectedIdx = -1;
    selectedName = p.name;
-   
+
    if( listenerNotForParent )
       listenerNotForParent->valueChanged( this );
 
