@@ -6787,3 +6787,7 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
    }
 
 }
+
+void SurgeGUIEditor::setEditorOverlay(VSTGUI::CControl *c, std::string editorTitle, std::function<void ()> onClose)
+{
+}
