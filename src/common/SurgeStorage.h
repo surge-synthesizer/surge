@@ -78,7 +78,9 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 10 -> 11 (1.6.2 release) added DAW Extra State
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
 // 12 -> 13 (1.7.0 release) deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
-const int ff_revision = 13;
+// 13 -> 14 add phaser number of stages parameter
+
+const int ff_revision = 14;
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];

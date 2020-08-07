@@ -16,7 +16,8 @@ enum phaseparam
    pp_lfodepth,
    pp_stereo,
    pp_mix,
-   pp_nparams,
+   pp_nstages,
+   pp_nparams
 };
 
 float bend(float x, float b)
@@ -33,6 +34,7 @@ PhaserEffect::PhaserEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
       memset(biquad[i], 0, sizeof(BiquadFilter));
       new (biquad[i]) BiquadFilter(storage);
    }
+   n_bq_units_initialised = n_bq_units;
    mix.set_blocksize(BLOCK_SIZE);
    feedback.setBlockSize(BLOCK_SIZE * slowrate);
    bi = 0;
@@ -40,7 +42,7 @@ PhaserEffect::PhaserEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
 
 PhaserEffect::~PhaserEffect()
 {
-   for (int i = 0; i < n_bq_units; i++)
+   for (int i = 0; i < n_bq_units_initialised; i++)
       _aligned_free(biquad[i]);
 }
 
@@ -48,7 +50,8 @@ void PhaserEffect::init()
 {
    lfophase = 0.25f;
    // setvars(true);
-   for (int i = 0; i < n_bq_units; i++)
+   
+   for (int i = 0; i < n_bq_units_initialised; i++)
    {
       // notch[i]->coeff_LP(1.0,1.0);
       biquad[i]->suspend();
@@ -65,6 +68,22 @@ void PhaserEffect::init()
 
 void PhaserEffect::process_only_control()
 {
+    n_stages = ceil(*f[pp_nstages] * 16);
+    n_bq_units = n_stages * 2;
+    
+    if (n_bq_units_initialised < n_bq_units)
+    {
+       // we need to increase the number of stages
+       for (int k = n_bq_units_initialised; k < n_bq_units; k++)
+       {
+          biquad[k] = (BiquadFilter*)_aligned_malloc(sizeof(BiquadFilter), 16);
+          memset(biquad[k], 0, sizeof(BiquadFilter));
+          new (biquad[k]) BiquadFilter(storage);
+       }
+       n_bq_units_initialised = n_bq_units;
+    }
+   
+   
    float rate = envelope_rate_linear(-*f[pp_lforate]) *
                 (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
 
@@ -75,12 +94,63 @@ void PhaserEffect::process_only_control()
    if (lfophaseR > 1)
       lfophaseR = fmod( lfophaseR, 1.0 );
 }
-
-float basefreq[4] = {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12};
-float basespan[4] = {2.0, 1.5, 1.0, 0.5};
+// in the original phaser we had {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12}
+float basefreq[16] = {
+   1.5  / 12,
+   19.5 / 12,
+   35   / 12,
+   50   / 12,
+   2.0,
+   3.80735492206,
+   1.0,
+   4.32192809489,
+   3.16992500144,
+   3.90689059561,
+   2.80735492206,
+   4.16992500144,
+   2.32192809489,
+   4.24792751344,
+   2.32192809489,
+   1.58496250072,
+};
+   
+// log_2((12000 - freq) / 2900) retaining first four from original code
+float basespan[16] = {
+   2.0,
+   1.5,
+   1.0,
+   0.5,
+   1.7858751946471525,
+   0.9233787183970875,
+   1.890211854461888,
+   0.04890960048094651,
+   1.4639470997597905,
+   0.7858751946471525,
+   1.5932301167047567,
+   0.4639470997597903,
+   1.7118746132033758,
+   0.2713020218173943,
+   1.7118746132033758,
+   1.8699394594356273
+};
 
 void PhaserEffect::setvars()
 {
+   n_stages = fxdata->p[pp_nstages].val.i;
+   n_bq_units = n_stages * 2;
+   
+   if (n_bq_units_initialised < n_bq_units)
+   {
+      // we need to increase the number of stages
+      for (int k = n_bq_units_initialised; k < n_bq_units; k++)
+      {
+         biquad[k] = (BiquadFilter*)_aligned_malloc(sizeof(BiquadFilter), 16);
+         memset(biquad[k], 0, sizeof(BiquadFilter));
+         new (biquad[k]) BiquadFilter(storage);
+      }
+      n_bq_units_initialised = n_bq_units;
+   }
+   
    double rate = envelope_rate_linear(-*f[pp_lforate]) *
                  (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
 
@@ -94,14 +164,14 @@ void PhaserEffect::setvars()
    double lfoout = 1.f - fabs(2.0 - 4.0 * lfophase);
    double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
 
-   for (int i = 0; i < n_bq; i++)
+   for (int i = 0; i < n_stages; i++)
    {
-      double omega = biquad[0]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
+      double omega = biquad[i]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
                                            basespan[i] * lfoout * *f[pp_lfodepth]);
       biquad[i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
-      omega = biquad[0]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
+      omega = biquad[i + n_stages]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
                                     basespan[i] * lfooutR * *f[pp_lfodepth]);
-      biquad[i + n_bq]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+      biquad[i + n_stages]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
    }
 
    feedback.newValue(0.95f * *f[pp_feedback]);
@@ -122,14 +192,12 @@ void PhaserEffect::process(float* dataL, float* dataR)
       dR = dataR[i] + dR * feedback.v;
       dL = limit_range(dL, -32.f, 32.f);
       dR = limit_range(dR, -32.f, 32.f);
-      dL = biquad[0]->process_sample(dL);
-      dL = biquad[1]->process_sample(dL);
-      dL = biquad[2]->process_sample(dL);
-      dL = biquad[3]->process_sample(dL);
-      dR = biquad[4]->process_sample(dR);
-      dR = biquad[5]->process_sample(dR);
-      dR = biquad[6]->process_sample(dR);
-      dR = biquad[7]->process_sample(dR);
+      
+      for (int curr_stage = 0; curr_stage < n_stages; curr_stage++)
+      {
+         dL = biquad[curr_stage]->process_sample(dL);
+         dR = biquad[n_stages + curr_stage]->process_sample(dR);
+      }
       L[i] = dL;
       R[i] = dR;
    }
@@ -173,7 +241,8 @@ int PhaserEffect::group_label_ypos(int id)
 void PhaserEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
-
+   fxdata->p[pp_nstages].set_name("Number of Stages");
+   fxdata->p[pp_nstages].set_type(ct_phaser_n_stages);
    fxdata->p[pp_base].set_name("Base Frequency");
    fxdata->p[pp_base].set_type(ct_percent_bidirectional);
    fxdata->p[pp_feedback].set_name("Feedback");
@@ -192,9 +261,17 @@ void PhaserEffect::init_ctrltypes()
    fxdata->p[pp_mix].set_type(ct_percent);
 
    for (int i = 0; i < pp_nparams; i++)
-      fxdata->p[i].posy_offset = 1 + ((i >= pp_lforate) ? 2 : 0) + ((i >= pp_mix) ? 2 : 0);
+      fxdata->p[i].posy_offset = 1 + ((i >= pp_lforate) ? 2 : 0) + ((i >= pp_nstages) ? 2 : 0);
 }
 void PhaserEffect::init_default_values()
 {
-   // fxdata->p[0].val.f = 0.f;
+    fxdata->p[pp_nstages].val.i = 4;
+}
+
+void PhaserEffect::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+{
+   if (streamingRevision < 14)
+   {
+      fxdata->p[pp_nstages].val.i = 4;
+   }
 }
