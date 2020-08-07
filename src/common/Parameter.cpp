@@ -756,6 +756,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
+   case ct_phaser_n_stages:
+      val_min.i = 2;
+      val_max.i = 16;
+      valtype = vt_int;
+      val_default.i = 4;
+      break;
    case ct_rotarydrive:
       val_min.f = 0;
       val_max.f = 1;
@@ -946,6 +952,14 @@ void Parameter::set_type(int ctrltype)
       sprintf( displayInfo.unit, "dB" );
       break;
 
+   case ct_phaser_n_stages:
+      displayType = LinearWithScale;
+      displayInfo.scale = 16;
+      sprintf(displayInfo.minLabel, "2");
+      sprintf(displayInfo.maxLabel, "16");
+      sprintf(displayInfo.unit, "Stages");
+      displayInfo.decimals = 0;
+      break;
    }
 }
 
@@ -2353,9 +2367,11 @@ bool Parameter::can_setvalue_from_string()
    case ct_polylimit:
    case ct_midikey:
    case ct_midikey_or_channel:
+   case ct_phaser_n_stages:
    case ct_rotarydrive:
    case ct_sendlevel:
    case ct_freq_mod:
+ 
    {
       return true;
       break;
