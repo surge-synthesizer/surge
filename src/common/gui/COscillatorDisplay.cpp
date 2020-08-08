@@ -61,14 +61,14 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
          // You'd think you could use this right? But you can't. These are NULL if you don't have a voice except scene ones
          // ModulationSource *ms = scene->modsources[modsource];
-         
+
          bool isUnipolar = true;
          double smt = 1.0 - ( mod_time - (int)mod_time ); // 1hz ramp
 
          std::ostringstream oss;
-         oss << modsource_abberations[modsource];
+         oss << modsource_names[modsource];
          olabel = oss.str();
-         
+
          if( modsource >= ms_lfo1 && modsource <= ms_slfo6 )
          {
              auto *lfo = &(scene->lfo[modsource-ms_lfo1]);
@@ -78,17 +78,17 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                  frate *= storage->temposyncratio;
 
              auto freq = powf(2.0f, frate );
-             
+
              smt = sin(M_PI * freq * mod_time);
              if( lfo->shape.val.i == ls_square )
                  smt = ( smt > 0 ? 1 : -1 );
-             
+
              if( lfo->unipolar.val.i )
              {
                  smt = 0.5 * ( smt + 1 );
              }
          }
-         
+
          while (iter != scene->modulation_voice.end())
          {
             int src_id = iter->source_id;
@@ -291,7 +291,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
       else
          dc->setFrameColor(skin->getColor( "osc.wave", VSTGUI::CColor(0xFF, 0x90, 0, 0xFF)) );
-      
+
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
       dc->restoreGlobalState();
 
@@ -402,7 +402,7 @@ bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
          drag->getData(0, fn, t);
          const char* fName = static_cast<const char*>(fn);
          fs::path fPath(fName);
-         if ((_stricmp(fPath.extension().generic_string().c_str(), ".wt") != 0) && 
+         if ((_stricmp(fPath.extension().generic_string().c_str(), ".wt") != 0) &&
              (_stricmp(fPath.extension().generic_string().c_str(), ".wav") != 0))
          {
             Surge::UserInteractions::promptError(
@@ -527,7 +527,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
                       };
    renameItem->setActions(rnaction, nullptr);
    contextMenu->addEntry(renameItem);
-   
+
    auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Wavetable From File...")));
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
@@ -720,7 +720,7 @@ void COscillatorDisplay::invalidateIfIdIsInRange(int id)
          oscInvalid = true;
       currOsc++;
    }
-   
+
    if( oscInvalid  )
    {
       invalid();

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include "DebugHelpers.h"
+#include "globals.h"
 
 #include "vstgui/lib/ccolor.h"
 
@@ -216,6 +217,9 @@ public:
    std::string customBackgroundImage() {
       return bgimg;
    }
+
+   int getWindowSizeX() { return szx; }
+   int getWindowSizeY() { return szy; }
    
    CScalableBitmap *backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore );
 
@@ -244,6 +248,7 @@ private:
    static std::atomic<int> instances;
    std::vector<std::pair<std::string, props_t>> globals;
    std::string bgimg = "";
+   int szx = BASE_WINDOW_SIZE_X, szy = BASE_WINDOW_SIZE_Y;
    
    struct ColorStore {
       VSTGUI::CColor color;

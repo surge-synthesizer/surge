@@ -471,7 +471,7 @@ void CLFOGui::draw(CDrawContext* dc)
       shaperect[i] = tb;
       // tb.offset(0,-1);
       tb.top += 1.6; // now the font is smaller and the box is square, smidge down the text
-      dc->drawString(ls_abberations[i], tb);
+      dc->drawString(ls_names[i], tb);
    }
 
    setDirty(false);
@@ -573,7 +573,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
             uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
             uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
-            
+
             if( controlstate == cs_trigtray_toggle && ( i == selectedSSrow || draggedIntoTrigTray[i] ) )
             {
                auto bs = trigTrayButtonState;
@@ -740,7 +740,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    tp[lfodata->decay.param_id_in_scene].i = lfodata->decay.val.i;
    tp[lfodata->sustain.param_id_in_scene].i = lfodata->sustain.val.i;
    tp[lfodata->release.param_id_in_scene].i = lfodata->release.val.i;
-   
+
    tp[lfodata->magnitude.param_id_in_scene].i = lfodata->magnitude.val.i;
 
    // Min out the rate
@@ -754,7 +754,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    {
       tp[lfodata->rate.param_id_in_scene].i = lfodata->rate.val.i;
    }
-   
+
    tp[lfodata->shape.param_id_in_scene].i = lfodata->shape.val.i;
    tp[lfodata->start_phase.param_id_in_scene].i = lfodata->start_phase.val.i;
    tp[lfodata->deform.param_id_in_scene].i = lfodata->deform.val.i;
@@ -769,7 +769,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    {
       freq *= storage->temposyncratio;
    }
-   
+
    float cyclesec = 1.0 / freq;
    float totalSampleTime = cyclesec * n_stepseqsteps;
    float susTime = 4.0 * cyclesec;
@@ -784,7 +784,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
    float cycleSamples = cyclesec * samplerate / BLOCK_SIZE;
 
-   
+
    // OK so lets assume we want about 1000 pixels worth tops in
    int averagingWindow = (int)(totalSamples/1000.0) + 1;
 
@@ -820,7 +820,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          else if( susCountdown > 0 ) {
             susCountdown --;
          }
-         
+
          val  += tlfo->output;
          if( s == 0 ) firstval = tlfo->output;
          if( s == averagingWindow - 1 ) lastval = tlfo->output;
@@ -856,16 +856,16 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    delete tlfo;
 
    auto q = boxo;
-#if LINUX   
+#if LINUX
    dc->getCurrentTransform().transform(q);
 #endif
-   
+
    VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
       .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
       .translate(q.getTopLeft().x, q.getTopLeft().y );
 
    auto tfpath = tf;
-   
+
 #if LINUX
    dc->setLineWidth(50.0);
 #else
@@ -883,7 +883,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 #endif
    dc->setFrameColor( skin->getColor( "lfo.stepseq.wave", CColor( 0xFF, 0xFF, 0xFF) ) );
    dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
-   
+
    path->forget();
    eupath->forget();
    edpath->forget();
@@ -984,13 +984,13 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
       }
 
       if( dragY < size.top + 2 ) dragY = size.top + 2;
-      
+
       CRect labelR(dragX, dragY, dragX + dragW, dragY + dragH);
 
       auto iwbrc = skin->getColor( "infowindow.border", kBlackCColor );
       auto iwbgc = skin->getColor( "infowindow.background", kWhiteCColor );
       auto iwfgc = skin->getColor( "infowindow.foreground", kBlackCColor );
-      
+
       fillr(labelR, skin->getColor("lfo.stepseq.popup.border", iwbrc));
       labelR.inset(1, 1);
       fillr(labelR, skin->getColor("lfo.stepseq.popup.background", iwbgc ));
@@ -1206,7 +1206,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
             for (int q = s; q <= e; q ++)
             {
                float f = ss->steps[s] + (q - s) * ds;
-               
+
                if (buttons & kShift)
                {
                   keyModMult = quantStep; // only shift pressed
@@ -1257,7 +1257,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                ss_shift_right.pointInside(where)
                ))
    {
-      
+
       ss_shift_hover = ss_shift_left.pointInside(where) ? 1 : 2;
       // getFrame()->setCursor( VSTGUI::kCursorHand );
    }
@@ -1267,7 +1267,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    }
    if( ss_shift_hover != pss )
       invalid();
-   
+
    if (controlstate == cs_shape)
    {
       for (int i = 0; i < n_lfoshapes; i++)
@@ -1384,7 +1384,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
       {
          // this is supposed to be better but doesn't quite work yet!
          float rx, ry;
-         
+
          if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
                                               rect_steps.left, rect_steps.top, rect_steps.right, rect_steps.top,
                                               &rx, &ry))
@@ -1416,10 +1416,10 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
          else if (rect_steps.pointInside(where))
             rmStepCurr = where;
       }
-      
+
       invalid();
    }
-      
+
    return kMouseEventHandled;
 }
 

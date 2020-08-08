@@ -375,7 +375,7 @@ if( APPLE )
     "-framework QuartzCore"
     )
 elseif( UNIX AND NOT APPLE )
-  file(GLOB PIGGY_INPUTS ${CMAKE_SOURCE_DIR}/assets/original-vector/SVG/exported/*svg)
+  file(GLOB PIGGY_INPUTS ${CMAKE_SOURCE_DIR}/assets/SurgeClassic/exported/*svg)
   add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${PIGGY_INPUTS}

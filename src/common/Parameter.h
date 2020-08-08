@@ -127,6 +127,7 @@ enum ctrltypes
    ct_percent200,
    ct_rotarydrive,
    ct_sendlevel,
+   ct_phaser_n_stages,
    num_ctrltypes,
 };
 

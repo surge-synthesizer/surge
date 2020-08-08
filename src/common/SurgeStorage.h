@@ -78,7 +78,9 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 10 -> 11 (1.6.2 release) added DAW Extra State
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
 // 12 -> 13 (1.7.0 release) deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
-const int ff_revision = 13;
+// 13 -> 14 add phaser number of stages parameter
+
+const int ff_revision = 14;
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -110,7 +112,7 @@ enum sub3_scenemode
    n_scenemodes,
 };
 
-const char scenemode_abberations[n_scenemodes][16] = {"Single", "Key Split", "Dual", "Channel Split"};
+const char scenemode_names[n_scenemodes][16] = {"Single", "Key Split", "Dual", "Channel Split"};
 
 enum sub3_polymode
 {
@@ -122,7 +124,7 @@ enum sub3_polymode
    pm_latch,
    n_polymodes,
 };
-const char polymode_abberations[n_polymodes][64] = {"Poly",
+const char polymode_names[n_polymodes][64] = {"Poly",
                                                     "Mono",
                                                     "Mono (Single Trigger)",
                                                     "Mono (Fingered Portamento)",
@@ -143,7 +145,7 @@ enum sub3_lfomode
    lm_random,
    n_lfomodes,
 };
-const char lfomode_abberations[n_lfomodes][16] = {"Freerun", "Keytrigger", "Random"};
+const char lfomode_names[n_lfomodes][16] = {"Freerun", "Keytrigger", "Random"};
 
 enum sub3_charactermode
 {
@@ -152,7 +154,7 @@ enum sub3_charactermode
    cm_bright,
    n_charactermodes,
 };
-const char character_abberations[n_charactermodes][16] = {"Warm", "Neutral", "Bright"};
+const char character_names[n_charactermodes][16] = {"Warm", "Neutral", "Bright"};
 
 enum sub3_osctypes
 {
@@ -166,10 +168,10 @@ enum sub3_osctypes
    ot_WT2,
    num_osctypes,
 };
-const char osctype_abberations[num_osctypes][16] = {"Classic",  "Sine", "Wavetable", "S&H Noise",
+const char osctype_names[num_osctypes][16] = {"Classic",  "Sine", "Wavetable", "S&H Noise",
                                                     "Audio In", "FM3",  "FM2",       "Window"};
 
-const char window_abberations[9][16] = {"Triangle", "Cosine",       "Blend 1",
+const char window_names[9][16] = {"Triangle", "Cosine",       "Blend 1",
                                         "Blend 2",    "Blend 3",      "Sawtooth",
                                         "Sine", "Square", "Rectangle"};
 
@@ -202,7 +204,7 @@ enum sub3_fxtypes
    fxt_ringmod,
    num_fxtypes,
 };
-const char fxtype_abberations[num_fxtypes][16] = {
+const char fxtype_names[num_fxtypes][16] = {
     "Off", "Delay",     "Reverb 1",      "Phaser", "Rotary",  "Distortion",
     "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger", "Ring Mod" };
 
@@ -215,7 +217,7 @@ enum fx_bypass
    n_fx_bypass,
 };
 
-const char fxbypass_abberations[n_fx_bypass][16] = {"All FX", "No Send FX", "Scene FX Only",
+const char fxbypass_names[n_fx_bypass][16] = {"All FX", "No Send FX", "Scene FX Only",
                                                     "All FX Off"};
 
 enum fb_configuration
@@ -231,7 +233,7 @@ enum fb_configuration
    n_fb_configuration,
 };
 
-const char fbc_abberations[n_fb_configuration][16] = {"Serial 1", "Serial 2", "Serial 3", "Dual 1",
+const char fbc_names[n_fb_configuration][16] = {"Serial 1", "Serial 2", "Serial 3", "Dual 1",
                                                       "Dual 2",   "Stereo",   "Ring",     "Wide"};
 
 enum fm_configuration
@@ -243,7 +245,7 @@ enum fm_configuration
    n_fm_configuration,
 };
 
-const char fmc_abberations[n_fm_configuration][16] = {"Off", "2 > 1", "3 > 2 > 1", "2 > 1 < 3"};
+const char fmc_names[n_fm_configuration][16] = {"Off", "2 > 1", "3 > 2 > 1", "2 > 1 < 3"};
 
 enum lfoshapes
 {
@@ -258,7 +260,7 @@ enum lfoshapes
    n_lfoshapes
 };
 
-const char ls_abberations[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Sawtooth",
+const char ls_names[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Sawtooth",
                                               "Noise", "S&H",      "Envelope", "Step Seq"};
 
 enum fu_type
@@ -275,11 +277,11 @@ enum fu_type
    fut_SNH,
    n_fu_type,
 };
-const char fut_abberations[n_fu_type][32] = {
+const char fut_names[n_fu_type][32] = {
     "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Ladder Lowpass",
     "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold" };
 
-const char fut_bp_subtypes[6][32] = {"Clean 12 dB/oct", "Driven 12 dB/oct", "Smooth 12 dB/oct", 
+const char fut_bp_subtypes[6][32] = {"Clean 12 dB/oct", "Driven 12 dB/oct", "Smooth 12 dB/oct",
                                      "Clean 24 dB/oct", "Driven 24 dB/oct", "Smooth 24 dB/oct"};
 const char fut_br_subtypes[4][32] = {"12 dB/oct", "12 dB/oct Mild", "24 dB/oct", "24 dB/oct Mild"};
 const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet", "Negative, 50% Wet", "Negative, 100% Wet"};
@@ -314,7 +316,7 @@ enum ws_type
    n_ws_type,
 };
 
-const char wst_abberations[n_ws_type][16] = {"Off",        "Soft", "Hard",
+const char wst_names[n_ws_type][16] = {"Off",        "Soft", "Hard",
                                              "Asymmetric", "Sine", "Digital"};
 
 enum env_mode_type
@@ -324,7 +326,7 @@ enum env_mode_type
    n_em_type,
 };
 
-const char em_abberations[n_em_type][16] = {"Digital", "Analog"};
+const char em_names[n_em_type][16] = {"Digital", "Analog"};
 
 struct MidiKeyState
 {
@@ -572,7 +574,7 @@ public:
    float audio_in_nonOS alignas(16)[2][BLOCK_SIZE];
    float audio_otherscene alignas(16)[2][BLOCK_SIZE_OS]; // this will be a pointer to an aligned 2 x BLOCK_SIZE_OS array
    //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
-   
+
 
    SurgeStorage(std::string suppliedDataPath="");
    float table_pitch alignas(16)[512];
@@ -655,7 +657,7 @@ public:
    void rescanUserMidiMappings();
    void loadMidiMappingByName( std::string name );
    void storeMidiMappingToName( std::string name );
-   
+
    // float table_sin[512],table_sin_offset[512];
    Surge::CriticalSection CS_WaveTableData, CS_ModRouting;
    Wavetable WindowWT;
@@ -699,7 +701,7 @@ public:
    std::unordered_map<std::string, std::string> helpURL_specials;
    // Alterhately make this unordered and provide a hash
    std::map<std::pair<std::string,int>, std::string> helpURL_paramidentifier_typespecialized;
-   
+
 private:
    TiXmlDocument snapshotloader;
    std::vector<Parameter> clipboard_p;
@@ -731,7 +733,7 @@ namespace Storage
 bool isValidName(const std::string &name);
 // is this really not in stdlib?
 bool isValidUTF8( const std::string &testThis);
-   
+
 std::string findReplaceSubstring(std::string &source, const std::string &from, const std::string &to);
 
 #if WINDOWS
