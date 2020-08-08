@@ -49,6 +49,9 @@ PhaserEffect::~PhaserEffect()
 
 void PhaserEffect::init()
 {
+   bi = 0;
+   dL = 0;
+   dR = 0;
    lfophase = 0.25f;
    
    for (int i = 0; i < n_bq_units_initialised; i++)
@@ -60,10 +63,6 @@ void PhaserEffect::init()
    mix.set_target(1.f);
    width.instantize();
    mix.instantize();
-   bi = 0;
-   dL = 0;
-   dR = 0;
-   bi = 0;
 }
 
 void PhaserEffect::process_only_control()
