@@ -48,6 +48,7 @@
 #define IDB_ABOUT 158
 #define IDB_BUTTON_ABOUT 159
 #define IDB_FILTERSUBTYPE 160
+#define IDB_LFOTYPE 161
 #define IDI_ICON1 164
 #define IDI_SURGE 164
 #define IDR_PNG1 165
@@ -61,6 +62,7 @@
 #define IDC_AUTHOR 1004
 #define IDC_TEDIT 1024
 #define IDC_TPROMPT 1025
+
 
 #define IDR_LATO_FONT 501
 

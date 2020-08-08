@@ -55,6 +55,9 @@ public:
 
       for( int i=0; i<16; ++i )
          draggedIntoTrigTray[i] = false;
+
+      typeImg = bitmapStore->getBitmap( IDB_LFOTYPE );
+      std::cout << _D(typeImg) << std::endl;
    }
 
    void resetColorTable()
@@ -114,6 +117,7 @@ protected:
    VSTGUI::CPoint rmStepStart, rmStepCurr;
 
    int ss_shift_hover = 0;
+   VSTGUI::CBitmap* typeImg;
    
    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };

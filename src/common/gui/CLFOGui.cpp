@@ -462,6 +462,11 @@ void CLFOGui::draw(CDrawContext* dc)
    dc->setFont(lfoTypeFont);
 
    rect_shapes = leftpanel;
+   if( typeImg )
+   {
+      std::cout << "Drawing typeImg" << std::endl;
+      typeImg->draw( dc, CRect( leftpanel.top, leftpanel.left, 50, 50 ), CPoint( 0, 0 ) );
+   }
    for (int i = 0; i < n_lfoshapes; i++)
    {
       CRect tb(leftpanel);
