@@ -65,22 +65,27 @@ void PhaserEffect::init()
    mix.instantize();
 }
 
+inline void PhaserEffect::init_stages()
+{
+   n_stages = fxdata->p[pp_stages].val.i;
+   n_bq_units = n_stages * 2;
+   
+   if (n_bq_units_initialised < n_bq_units)
+   {
+      // we need to increase the number of stages
+      for (int k = n_bq_units_initialised; k < n_bq_units; k++)
+      {
+         biquad[k] = (BiquadFilter*)_aligned_malloc(sizeof(BiquadFilter), 16);
+         memset(biquad[k], 0, sizeof(BiquadFilter));
+         new (biquad[k]) BiquadFilter(storage);
+      }
+      n_bq_units_initialised = n_bq_units;
+   }
+}
+
 void PhaserEffect::process_only_control()
 {
-    n_stages = ceil(*f[pp_stages] * 16);
-    n_bq_units = n_stages * 2;
-    
-    if (n_bq_units_initialised < n_bq_units)
-    {
-       // we need to increase the number of stages
-       for (int k = n_bq_units_initialised; k < n_bq_units; k++)
-       {
-          biquad[k] = (BiquadFilter*)_aligned_malloc(sizeof(BiquadFilter), 16);
-          memset(biquad[k], 0, sizeof(BiquadFilter));
-          new (biquad[k]) BiquadFilter(storage);
-       }
-       n_bq_units_initialised = n_bq_units;
-    }
+   init_stages();
    
    float rate = envelope_rate_linear(-*f[pp_lforate]) *
                 (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
@@ -98,56 +103,45 @@ float basefreq[16] = {
    19.5 / 12,
    35   / 12,
    50   / 12,
-   2.0,
-   3.80735492206,
-   1.0,
-   4.32192809489,
-   3.16992500144,
-   3.90689059561,
-   2.80735492206,
-   4.16992500144,
-   2.32192809489,
-   4.24792751344,
-   2.32192809489,
-   1.58496250072,
+   10.5 / 12,
+   29.25 / 12,
+   42.5 / 12,
+   24.375 / 12,
+   6 / 12,
+   32.15 / 12,
+   46.25 / 12,
+   3.75 / 12,
+   38.75 / 12,
+   14.5 / 12,
+   8.25  / 12,
+   53 / 12
 };
-   
-// log_2((12000 - freq) / 2900) retaining first four from original code
+
+
+// linear approximation with [2.05 - (1.5 / ((50/12) - (1.5/12)) * x) after the first 4 original values
 float basespan[16] = {
    2.0,
    1.5,
    1.0,
    0.5,
-   1.7858751946471525,
-   0.9233787183970875,
-   1.890211854461888,
-   0.04890960048094651,
-   1.4639470997597905,
-   0.7858751946471525,
-   1.5932301167047567,
-   0.4639470997597903,
-   1.7118746132033758,
-   0.2713020218173943,
-   1.7118746132033758,
-   1.8699394594356273
+   1.711290322580645,
+   1.1064516129032258,
+   0.6790322580645161,
+   1.2637096774193548,
+   2.05,
+   1.0129032258064514,
+   0.5580645161290321,
+   1.9290322580645158,
+   0.7999999999999998,
+   1.5822580645161288,
+   1.7838709677419353,
+   0.5016129032258063
 };
+
 
 void PhaserEffect::setvars()
 {
-   n_stages = fxdata->p[pp_stages].val.i;
-   n_bq_units = n_stages * 2;
-   
-   if (n_bq_units_initialised < n_bq_units)
-   {
-      // we need to increase the number of stages
-      for (int k = n_bq_units_initialised; k < n_bq_units; k++)
-      {
-         biquad[k] = (BiquadFilter*)_aligned_malloc(sizeof(BiquadFilter), 16);
-         memset(biquad[k], 0, sizeof(BiquadFilter));
-         new (biquad[k]) BiquadFilter(storage);
-      }
-      n_bq_units_initialised = n_bq_units;
-   }
+   init_stages();
    
    double rate = envelope_rate_linear(-*f[pp_lforate]) *
                  (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
@@ -163,12 +157,10 @@ void PhaserEffect::setvars()
    double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
 
    for (int i = 0; i < n_stages; i++)
-   {
-      double omega = biquad[2 * i]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
-                                           basespan[i] * lfoout * *f[pp_lfodepth]);
+   {      
+      double omega = biquad[2 * i]->calc_omega(2 * *f[pp_base] + basefreq[i] + basespan[i] * lfoout * *f[pp_lfodepth]);
       biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
-      omega = biquad[2 * i + 1]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
-                                    basespan[i] * lfooutR * *f[pp_lfodepth]);
+      omega = biquad[2 * i + 1]->calc_omega(2 * *f[pp_base] + basefreq[i] + basespan[i] * lfooutR * *f[pp_lfodepth]);
       biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
    }
 

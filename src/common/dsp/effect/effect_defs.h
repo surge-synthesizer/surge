@@ -237,6 +237,7 @@ private:
    BiquadFilter* biquad[max_stages * 2];
    float lfophase;
    int bi; // block increment (to keep track of events not occurring every n blocks)
+   void init_stages();
 };
 
 /*	rotary_speaker			*/
