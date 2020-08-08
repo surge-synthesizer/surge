@@ -17,7 +17,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-assets_path = "assets/Surge Classic/exported"
+assets_path = "assets/SurgeClassic/exported"
 
 source_file_path = sys.argv[2] + "/ScalablePiggy.S"
 header_file_path = sys.argv[2] + "/ScalablePiggy.h"
@@ -61,7 +61,7 @@ for name in os.listdir(sys.argv[1] + "/" + assets_path):
         continue
 
     path = os.path.join(assets_path, name)
-    size = os.stat(sys.argv[1] + "/" + path).st_size;
+    size = os.stat(sys.argv[1] + "/" + path).st_size
 
     source_file.write(u'    .incbin "%s/%s"%s' % (sys.argv[1], path, os.linesep))
     header_file.write(u'     {"svg/%s", %d, %d},%s' % (name, size, offset, os.linesep))
@@ -73,6 +73,7 @@ header_file.write(u"""    {NULL, 0}
 };
 """)
 
+
 def save_if_modified(path, contents):
     try:
         same = contents == open(path, 'r').read()
@@ -82,6 +83,7 @@ def save_if_modified(path, contents):
         open(path, 'w').write(contents)
     # else:
     #     sys.stderr.write('File identical, not saving: "%s"\n' % (path))
+
 
 save_if_modified(header_file_path, header_file.getvalue())
 save_if_modified(source_file_path, source_file.getvalue())

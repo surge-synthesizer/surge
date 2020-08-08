@@ -41,8 +41,8 @@
 
 import os, re
 
-assetdir = "assets/Surge Classic/exported"
-svgassetdir = "assets/Surge Classic/exported"
+assetdir = "assets/SurgeClassic/exported"
+svgassetdir = "assets/SurgeClassic/exported"
 
 IDBs=[]
 digitToIDB = {}

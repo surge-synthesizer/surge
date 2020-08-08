@@ -5,7 +5,7 @@
 RES_SRC_LOCATION="resources"
 PACKAGE_SRC_LOCATION="$RES_SRC_LOCATION/osx-vst2"
 
-SVG_SRC_LOCATION="assets/Surge Classic/exported"
+SVG_SRC_LOCATION="assets/SurgeClassic/exported"
 FONT_SRC_LOCATION="$RES_SRC_LOCATION/fonts"
 
 BUNDLE_RES_SRC_LOCATION="$RES_SRC_LOCATION/osx-resources"
