@@ -7,16 +7,16 @@ using namespace vt_dsp;
 enum phaseparam
 {
    pp_base = 0,
-   // pp_spread,
-   // pp_distribution,
-   // pp_count,
    pp_feedback,
    pp_q,
    pp_lforate,
    pp_lfodepth,
    pp_stereo,
    pp_mix,
-   pp_nstages,
+   pp_width,
+   pp_stages,
+   // pp_spread,
+   // pp_distribution,
    pp_nparams
 };
 
@@ -35,8 +35,9 @@ PhaserEffect::PhaserEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
       new (biquad[i]) BiquadFilter(storage);
    }
    n_bq_units_initialised = n_bq_units;
-   mix.set_blocksize(BLOCK_SIZE);
    feedback.setBlockSize(BLOCK_SIZE * slowrate);
+   width.set_blocksize(BLOCK_SIZE);
+   mix.set_blocksize(BLOCK_SIZE);
    bi = 0;
 }
 
@@ -48,22 +49,20 @@ PhaserEffect::~PhaserEffect()
 
 void PhaserEffect::init()
 {
+   bi = 0;
+   dL = 0;
+   dR = 0;
    lfophase = 0.25f;
-   // setvars(true);
    
    for (int i = 0; i < n_bq_units_initialised; i++)
    {
-      // notch[i]->coeff_LP(1.0,1.0);
       biquad[i]->suspend();
    }
    clear_block(L, BLOCK_SIZE_QUAD);
    clear_block(R, BLOCK_SIZE_QUAD);
    mix.set_target(1.f);
+   width.instantize();
    mix.instantize();
-   bi = 0;
-   dL = 0;
-   dR = 0;
-   bi = 0;
 }
 
 inline void PhaserEffect::init_stages()
@@ -83,8 +82,6 @@ inline void PhaserEffect::init_stages()
       n_bq_units_initialised = n_bq_units;
    }
 }
-
-
 
 void PhaserEffect::process_only_control()
 {
@@ -168,6 +165,7 @@ void PhaserEffect::setvars()
    }
 
    feedback.newValue(0.95f * *f[pp_feedback]);
+   width.set_target_smoothed(db_to_linear(*f[pp_width]));
 }
 
 void PhaserEffect::process(float* dataL, float* dataR)
@@ -175,9 +173,7 @@ void PhaserEffect::process(float* dataL, float* dataR)
    if (bi == 0)
       setvars();
    bi = (bi + 1) & slowrate_m1;
-   // feedback.multiply_2_blocks((__m128*)L,(__m128*)R, BLOCK_SIZE_QUAD);
-   // accumulate_block((__m128*)dataL, (__m128*)L, BLOCK_SIZE_QUAD);
-   // accumulate_block((__m128*)dataR, (__m128*)R, BLOCK_SIZE_QUAD);
+
    for (int i = 0; i < BLOCK_SIZE; i++)
    {
       feedback.process();
@@ -194,6 +190,12 @@ void PhaserEffect::process(float* dataL, float* dataR)
       L[i] = dL;
       R[i] = dR;
    }
+
+   // scale width
+   float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
+   encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
+   width.multiply_block(S, BLOCK_SIZE_QUAD);
+   decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
 
    mix.set_target_smoothed(limit_range(*f[pp_mix], 0.f, 1.f));
    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
@@ -224,9 +226,9 @@ int PhaserEffect::group_label_ypos(int id)
    case 0:
       return 1;
    case 1:
-      return 9;
+      return 11;
    case 2:
-      return 17;
+      return 19;
    }
    return 0;
 }
@@ -234,8 +236,8 @@ int PhaserEffect::group_label_ypos(int id)
 void PhaserEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
-   fxdata->p[pp_nstages].set_name("Number of Stages");
-   fxdata->p[pp_nstages].set_type(ct_phaser_n_stages);
+   fxdata->p[pp_stages].set_name("Stages");
+   fxdata->p[pp_stages].set_type(ct_phaser_stages);
    fxdata->p[pp_base].set_name("Base Frequency");
    fxdata->p[pp_base].set_type(ct_percent_bidirectional);
    fxdata->p[pp_feedback].set_name("Feedback");
@@ -250,21 +252,33 @@ void PhaserEffect::init_ctrltypes()
    fxdata->p[pp_stereo].set_name("Stereo");
    fxdata->p[pp_stereo].set_type(ct_percent);
 
+   fxdata->p[pp_width].set_name("Width");
+   fxdata->p[pp_width].set_type(ct_decibel_narrow);
    fxdata->p[pp_mix].set_name("Mix");
    fxdata->p[pp_mix].set_type(ct_percent);
 
-   for (int i = 0; i < pp_nparams; i++)
-      fxdata->p[i].posy_offset = 1 + ((i >= pp_lforate) ? 2 : 0) + ((i >= pp_nstages) ? 2 : 0);
+   fxdata->p[pp_stages].posy_offset = -15;
+   fxdata->p[pp_base].posy_offset = 3;
+   fxdata->p[pp_feedback].posy_offset = 3;
+   fxdata->p[pp_q].posy_offset = 3;
+   fxdata->p[pp_lforate].posy_offset = 5;
+   fxdata->p[pp_lfodepth].posy_offset = 5;
+   fxdata->p[pp_stereo].posy_offset = 5;
+   fxdata->p[pp_width].posy_offset = 5;
+   fxdata->p[pp_mix].posy_offset = 9;
+
 }
 void PhaserEffect::init_default_values()
 {
-    fxdata->p[pp_nstages].val.i = 4;
+   fxdata->p[pp_stages].val.i = 4;
+   fxdata->p[pp_width].val.f = 0.f;
 }
 
 void PhaserEffect::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
 {
    if (streamingRevision < 14)
    {
-      fxdata->p[pp_nstages].val.i = 4;
+      fxdata->p[pp_stages].val.i = 4;
+      fxdata->p[pp_width].val.f = 0.f;
    }
 }
