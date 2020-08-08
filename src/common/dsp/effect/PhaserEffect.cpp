@@ -66,75 +66,7 @@ void PhaserEffect::init()
    bi = 0;
 }
 
-void PhaserEffect::process_only_control()
-{
-    n_stages = ceil(*f[pp_nstages] * 16);
-    n_bq_units = n_stages * 2;
-    
-    if (n_bq_units_initialised < n_bq_units)
-    {
-       // we need to increase the number of stages
-       for (int k = n_bq_units_initialised; k < n_bq_units; k++)
-       {
-          biquad[k] = (BiquadFilter*)_aligned_malloc(sizeof(BiquadFilter), 16);
-          memset(biquad[k], 0, sizeof(BiquadFilter));
-          new (biquad[k]) BiquadFilter(storage);
-       }
-       n_bq_units_initialised = n_bq_units;
-    }
-   
-   
-   float rate = envelope_rate_linear(-*f[pp_lforate]) *
-                (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
-
-   lfophase += (float)slowrate * rate;
-   if (lfophase > 1)
-      lfophase = fmod( lfophase, 1.0 ); // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
-   float lfophaseR = lfophase + 0.5 * *f[pp_stereo];
-   if (lfophaseR > 1)
-      lfophaseR = fmod( lfophaseR, 1.0 );
-}
-// in the original phaser we had {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12}
-float basefreq[16] = {
-   1.5  / 12,
-   19.5 / 12,
-   35   / 12,
-   50   / 12,
-   2.0,
-   3.80735492206,
-   1.0,
-   4.32192809489,
-   3.16992500144,
-   3.90689059561,
-   2.80735492206,
-   4.16992500144,
-   2.32192809489,
-   4.24792751344,
-   2.32192809489,
-   1.58496250072,
-};
-   
-// log_2((12000 - freq) / 2900) retaining first four from original code
-float basespan[16] = {
-   2.0,
-   1.5,
-   1.0,
-   0.5,
-   1.7858751946471525,
-   0.9233787183970875,
-   1.890211854461888,
-   0.04890960048094651,
-   1.4639470997597905,
-   0.7858751946471525,
-   1.5932301167047567,
-   0.4639470997597903,
-   1.7118746132033758,
-   0.2713020218173943,
-   1.7118746132033758,
-   1.8699394594356273
-};
-
-void PhaserEffect::setvars()
+inline void PhaserEffect::init_stages()
 {
    n_stages = fxdata->p[pp_nstages].val.i;
    n_bq_units = n_stages * 2;
@@ -150,6 +82,67 @@ void PhaserEffect::setvars()
       }
       n_bq_units_initialised = n_bq_units;
    }
+}
+
+
+
+void PhaserEffect::process_only_control()
+{
+   init_stages();
+   
+   float rate = envelope_rate_linear(-*f[pp_lforate]) *
+                (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
+
+   lfophase += (float)slowrate * rate;
+   if (lfophase > 1)
+      lfophase = fmod( lfophase, 1.0 ); // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
+   float lfophaseR = lfophase + 0.5 * *f[pp_stereo];
+   if (lfophaseR > 1)
+      lfophaseR = fmod( lfophaseR, 1.0 );
+}
+// in the original phaser we had {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12}
+float basefreq[16] = {
+   479.0,
+   1357.0,
+   3322.0,
+   7902.0,
+   2000.0,
+   6500.0,
+   1250.0,
+   9000.0,
+   4000.0,
+   7000.0,
+   3250.0,
+   8000.0,
+   2500.0,
+   8500.0,
+   2500.0,
+   1400.0
+};
+   
+// (12000.0 - i) /  7  with original [1760.0, 1202.115425943868, 779.4754168100773, 505.42727619869544] first 4
+float basespan[16] = {
+   1760.0,
+   1202.115425943868,
+   779.4754168100773,
+   505.42727619869544,
+   1428.5714285714287,
+   785.7142857142857,
+   1535.7142857142858,
+   428.57142857142856,
+   1142.857142857143,
+   714.2857142857143,
+   1250.0,
+   571.4285714285714,
+   1357.142857142857,
+   500.0,
+   1357.142857142857,
+   1514.2857142857142
+};
+
+void PhaserEffect::setvars()
+{
+   init_stages();
    
    double rate = envelope_rate_linear(-*f[pp_lforate]) *
                  (fxdata->p[pp_lforate].temposync ? storage->temposyncratio : 1.f);
@@ -166,10 +159,10 @@ void PhaserEffect::setvars()
 
    for (int i = 0; i < n_stages; i++)
    {
-      double omega = biquad[2 * i]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
+      double omega = biquad[2 * i]->calc_omega_from_Hz(1760.0 * *f[pp_base] + basefreq[i] +
                                            basespan[i] * lfoout * *f[pp_lfodepth]);
       biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
-      omega = biquad[2 * i + 1]->calc_omega(2.0 * *f[pp_base] + basefreq[i] +
+      omega = biquad[2 * i + 1]->calc_omega_from_Hz(1760.0 * *f[pp_base] + basefreq[i] +
                                     basespan[i] * lfooutR * *f[pp_lfodepth]);
       biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
    }
