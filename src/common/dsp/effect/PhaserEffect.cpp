@@ -102,43 +102,45 @@ void PhaserEffect::process_only_control()
 }
 // in the original phaser we had {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12}
 float basefreq[16] = {
-   479.0,
-   1357.0,
-   3322.0,
-   7902.0,
-   2000.0,
-   6500.0,
-   1250.0,
-   9000.0,
-   4000.0,
-   7000.0,
-   3250.0,
-   8000.0,
-   2500.0,
-   8500.0,
-   2500.0,
-   1400.0
+   1.5  / 12,
+   19.5 / 12,
+   35   / 12,
+   50   / 12,
+   10.5 / 12,
+   29.25 / 12,
+   42.5 / 12,
+   24.375 / 12,
+   6 / 12,
+   32.15 / 12,
+   46.25 / 12,
+   3.75 / 12,
+   38.75 / 12,
+   14.5 / 12,
+   8.25  / 12,
+   53 / 12
 };
-   
-// (12000.0 - i) /  7  with original [1760.0, 1202.115425943868, 779.4754168100773, 505.42727619869544] first 4
+
+
+// linear approximation with [2.05 - (1.5 / ((50/12) - (1.5/12)) * x) after the first 4 original values
 float basespan[16] = {
-   1760.0,
-   1202.115425943868,
-   779.4754168100773,
-   505.42727619869544,
-   1428.5714285714287,
-   785.7142857142857,
-   1535.7142857142858,
-   428.57142857142856,
-   1142.857142857143,
-   714.2857142857143,
-   1250.0,
-   571.4285714285714,
-   1357.142857142857,
-   500.0,
-   1357.142857142857,
-   1514.2857142857142
+   2.0,
+   1.5,
+   1.0,
+   0.5,
+   1.711290322580645,
+   1.1064516129032258,
+   0.6790322580645161,
+   1.2637096774193548,
+   2.05,
+   1.0129032258064514,
+   0.5580645161290321,
+   1.9290322580645158,
+   0.7999999999999998,
+   1.5822580645161288,
+   1.7838709677419353,
+   0.5016129032258063
 };
+
 
 void PhaserEffect::setvars()
 {
@@ -158,12 +160,10 @@ void PhaserEffect::setvars()
    double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
 
    for (int i = 0; i < n_stages; i++)
-   {
-      double omega = biquad[2 * i]->calc_omega_from_Hz(1760.0 * *f[pp_base] + basefreq[i] +
-                                           basespan[i] * lfoout * *f[pp_lfodepth]);
+   {      
+      double omega = biquad[2 * i]->calc_omega(2 * *f[pp_base] + basefreq[i] + basespan[i] * lfoout * *f[pp_lfodepth]);
       biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
-      omega = biquad[2 * i + 1]->calc_omega_from_Hz(1760.0 * *f[pp_base] + basefreq[i] +
-                                    basespan[i] * lfooutR * *f[pp_lfodepth]);
+      omega = biquad[2 * i + 1]->calc_omega(2 * *f[pp_base] + basefreq[i] + basespan[i] * lfooutR * *f[pp_lfodepth]);
       biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
    }
 
