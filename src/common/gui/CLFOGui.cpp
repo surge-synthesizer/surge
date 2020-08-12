@@ -826,7 +826,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          if( s == averagingWindow - 1 ) lastval = tlfo->output;
          minval = std::min(tlfo->output, minval);
          maxval = std::max(tlfo->output, maxval);
-         eval += tlfo->env_val * lfodata->magnitude.val.f;
+         eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
       }
       val = val / averagingWindow;
       eval = eval / averagingWindow;
