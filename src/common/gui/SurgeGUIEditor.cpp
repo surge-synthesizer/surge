@@ -1258,6 +1258,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_osc_feedback_negative:
             style |= kBipolar;
             break;
+         case ct_lfoamplitude:
+            if (p->get_extended(p->extend_range))
+               style |= kBipolar;
+            break;
          };
 
          auto parentClassName = c->ultimateparentclassname;
@@ -1455,9 +1459,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_freq_mod:
          case ct_percent_bidirectional:
          case ct_percent_bidirectional_stereo:
-         case ct_osc_feedback_negative:
          case ct_freq_shift:
+         case ct_osc_feedback_negative:
             style |= kBipolar;
+            break;
+         case ct_lfoamplitude:
+            if (p->get_extended(p->extend_range))
+               style |= kBipolar;
             break;
          };
 
