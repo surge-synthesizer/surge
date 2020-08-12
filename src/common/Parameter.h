@@ -128,6 +128,7 @@ enum ctrltypes
    ct_rotarydrive,
    ct_sendlevel,
    ct_phaser_stages,
+   ct_lfoamplitude,
    num_ctrltypes,
 };
 

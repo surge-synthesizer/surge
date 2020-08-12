@@ -250,6 +250,7 @@ bool Parameter::can_extend_range()
    case ct_oscspread:
    case ct_osc_feedback:
    case ct_osc_feedback_negative:
+   case ct_lfoamplitude:
       return true;
    }
    return false;
@@ -661,6 +662,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_amplitude:
+   case ct_lfoamplitude:
       val_min.f = 0;
       val_max.f = 1;
       valtype = vt_float;
@@ -804,6 +806,7 @@ void Parameter::set_type(int ctrltype)
    case ct_percent_bidirectional:
    case ct_rotarydrive:
    case ct_countedset_percent:
+   case ct_lfoamplitude:
       displayType = LinearWithScale;
       sprintf(displayInfo.unit, "%%" );
       displayInfo.scale = 100;
@@ -1244,6 +1247,8 @@ float Parameter::get_extended(float f)
       return 8.f * f - 4.f * f;
    case ct_osc_feedback_negative:
       return 4.f * f;
+   case ct_lfoamplitude:
+      return (2.f * f) - 1.f;
    default:
       return f;
    }

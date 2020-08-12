@@ -582,6 +582,6 @@ void LfoModulationSource::process_block()
       }
    }
 
-   auto magnf = limit_range( localcopy[magn].f, -3.f, 3.f );
+   auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f );
    output = env_val * magnf * io2;
 }
