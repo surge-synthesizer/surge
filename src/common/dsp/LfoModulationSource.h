@@ -34,12 +34,15 @@ enum lfoenv_state
 class LfoModulationSource : public ModulationSource
 {
 public:
+
    LfoModulationSource();
    void assign(SurgeStorage* storage,
                LFOStorage* lfo,
                pdata* localcopy,
                SurgeVoiceState* state,
                StepSequencerStorage* ss,
+               MSEGStorage *ms,
+               FormulaModulatorStorage* fs,
                bool is_display = false);
    float bend1(float x);
    float bend2(float x);
@@ -70,11 +73,13 @@ private:
    SurgeVoiceState* state;
    SurgeStorage* storage;
    StepSequencerStorage* ss;
+   MSEGStorage* ms;
+   FormulaModulatorStorage *fs;
    pdata* localcopy;
    bool phaseInitialized;
    void initPhaseFromStartPhase();
-   
-   float phase, target, noise, noised1, env_phase, priorPhase;
+
+   float phase, unwrappedphase, target, noise, noised1, env_phase, priorPhase;
    float ratemult;
    float env_releasestart;
    float iout;

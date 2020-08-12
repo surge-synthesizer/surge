@@ -128,7 +128,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
          ((LfoModulationSource*)scene.modsources[ms_slfo1 + l])
             ->assign(&storage, &scene.lfo[n_lfos_voice + l],
             storage.getPatch().scenedata[sc], 0,
-            &patch.stepsequences[sc][n_lfos_voice + l]);
+            &patch.stepsequences[sc][n_lfos_voice + l],
+            &patch.msegs[sc][n_lfos_voice + l],
+            &patch.formulamods[sc][n_lfos_voice + l]
+               );
       }
    }
    for (int i = 0; i < n_customcontrollers; i++)

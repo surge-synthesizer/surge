@@ -47,6 +47,10 @@
 
 #include "strnatcmp.h"
 
+// FIXME probably remove this when we remove the hardcoded hack below
+#include "MSEGModulationHelper.h"
+// FIXME
+
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -513,6 +517,25 @@ bailOnPortable:
          }
       }
    }
+
+
+   /*
+   ** TEMPORARY HACK DO NOT MERGE
+   ** TEMPORARY HACK DO NOT MERGE
+   */
+   auto ms = &(_patch->msegs[0][0]);
+   ms->n_activeSegments = 6;
+   int segc = 0;
+   { MSEGStorage::segment s; s.duration = 0.2; s.v0 = 0; s.v1 = 1;   s.type=MSEGStorage::segment::LINEAR;   ms->segments[segc++] = s; }
+   { MSEGStorage::segment s; s.duration = 0.2; s.v0 = 0; s.v1 = -1 ; s.type=MSEGStorage::segment::LINEAR;   ms->segments[segc++] = s; }
+   { MSEGStorage::segment s; s.duration = 0.4; s.v0 = 0.5;           s.type=MSEGStorage::segment::CONSTANT; ms->segments[segc++] = s; }
+   { MSEGStorage::segment s; s.duration = 0.3; s.v0 = -0.3;          s.type=MSEGStorage::segment::CONSTANT; ms->segments[segc++] = s; }
+   { MSEGStorage::segment s; s.duration = 0.5; s.v0 = -0.3; s.v1 = 0.8; s.cpduration = 0.45; s.cpv = -0.3;   s.type=MSEGStorage::segment::QUADBEZ; ms->segments[segc++] = s; }
+   { MSEGStorage::segment s; s.duration = 0.8; s.v0 = 0.8; s.v1 = 0.0; s.cpduration = 0.1; s.cpv = 0.9;   s.type=MSEGStorage::segment::QUADBEZ; ms->segments[segc++] = s; }
+   MSEGModulationHelper::rebuildCache( ms );
+   /*
+   ** END TEMPORARY HACK
+   */
 }
 
 SurgePatch& SurgeStorage::getPatch()
