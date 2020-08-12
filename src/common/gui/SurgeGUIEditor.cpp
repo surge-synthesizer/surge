@@ -1259,7 +1259,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             style |= kBipolar;
             break;
          case ct_lfoamplitude:
-            if (p->get_extended(p->extend_range))
+            if (p->extend_range)
                style |= kBipolar;
             break;
          };
@@ -1464,7 +1464,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             style |= kBipolar;
             break;
          case ct_lfoamplitude:
-            if (p->get_extended(p->extend_range))
+            if (p->extend_range)
                style |= kBipolar;
             break;
          };
