@@ -519,23 +519,30 @@ bailOnPortable:
    }
 
 
-   /*
-   ** TEMPORARY HACK DO NOT MERGE
-   ** TEMPORARY HACK DO NOT MERGE
-   */
-   auto ms = &(_patch->msegs[0][0]);
-   ms->n_activeSegments = 6;
-   int segc = 0;
-   { MSEGStorage::segment s; s.duration = 0.2; s.v0 = 0; s.v1 = 1;   s.type=MSEGStorage::segment::LINEAR;   ms->segments[segc++] = s; }
-   { MSEGStorage::segment s; s.duration = 0.2; s.v0 = 0; s.v1 = -1 ; s.type=MSEGStorage::segment::LINEAR;   ms->segments[segc++] = s; }
-   { MSEGStorage::segment s; s.duration = 0.4; s.v0 = 0.5;           s.type=MSEGStorage::segment::CONSTANT; ms->segments[segc++] = s; }
-   { MSEGStorage::segment s; s.duration = 0.3; s.v0 = -0.3;          s.type=MSEGStorage::segment::CONSTANT; ms->segments[segc++] = s; }
-   { MSEGStorage::segment s; s.duration = 0.5; s.v0 = -0.3; s.v1 = 0.8; s.cpduration = 0.45; s.cpv = -0.3;   s.type=MSEGStorage::segment::QUADBEZ; ms->segments[segc++] = s; }
-   { MSEGStorage::segment s; s.duration = 0.8; s.v0 = 0.8; s.v1 = 0.0; s.cpduration = 0.1; s.cpv = 0.9;   s.type=MSEGStorage::segment::QUADBEZ; ms->segments[segc++] = s; }
-   MSEGModulationHelper::rebuildCache( ms );
-   /*
-   ** END TEMPORARY HACK
-   */
+   for( int s = 0; s < n_scenes; ++s )
+   {
+      for( int i = 0; i < n_lfos; ++i )
+      {
+         auto ms = &(_patch->msegs[s][i]);
+         ms->n_activeSegments = 3;
+         ms->segments[0].duration = 0.25;
+         ms->segments[0].type = MSEGStorage::segment::LINEAR;
+         ms->segments[0].v0 = -1.0;
+         ms->segments[0].v1 =  1.0;
+
+         ms->segments[1].duration = 0.25;
+         ms->segments[1].type = MSEGStorage::segment::CONSTANT;
+         ms->segments[1].v0 = 1.0;
+
+         ms->segments[2].duration = 0.5;
+         ms->segments[2].type = MSEGStorage::segment::QUADBEZ;
+         ms->segments[2].v0 = 1.0;
+         ms->segments[2].v1 = -1.0;
+         ms->segments[2].cpduration = 0.2;
+         ms->segments[2].cpv = -0.5;
+         MSEGModulationHelper::rebuildCache( ms );
+      }
+   }
 }
 
 SurgePatch& SurgeStorage::getPatch()
