@@ -6541,6 +6541,15 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
             sprintf( txt, "%s Step Sequencer %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
+      else if( lfodata->shape.val.i == ls_mseg )
+      {
+         char txt[64];
+         if( button )
+            sprintf( txt, "%sMSEG %d", (isS ? "S-" : "" ), fnum + 1 );
+         else
+            sprintf( txt, "%s MSEG %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+         return std::string( txt );
+      }
    }
 
    if( i >= ms_ctrl1 && i <= ms_ctrl8 )
