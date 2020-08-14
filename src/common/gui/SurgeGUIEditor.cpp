@@ -3257,7 +3257,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (p->ctrlgroup == cg_ENV || p->ctrlgroup == cg_LFO)
                {
                   char label[256];
-                  char prefix[32];
+                  char prefix[128];
+                  char pars[32];
 
                   int a = p->ctrlgroup_entry;
 
@@ -3297,18 +3298,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                   bool setTSTo;
 
+                  #if WINDOWS
+                     snprintf(pars, 32, "parameters");
+                  #else
+                     snprintf(pars, 32, "Parameters");
+                  #endif
+
                   if( p->temposync )
                   {
-                     snprintf(label, 256, "%s %s %s",
-                              Surge::UI::toOSCaseForMenu("Disable Tempo Sync for All").c_str(),
-                              prefix, Surge::UI::toOSCaseForMenu("Parameters").c_str());
+                     snprintf(label, 256, "%s %s %s", Surge::UI::toOSCaseForMenu("Disable Tempo Sync for All").c_str(), prefix, pars);
                      setTSTo = false;
                   }
                   else
                   {
-                     snprintf(label, 256, "%s %s %s",
-                              Surge::UI::toOSCaseForMenu("Enable Tempo Sync for All").c_str(),
-                              prefix, Surge::UI::toOSCaseForMenu("Parameters").c_str());
+                     snprintf(label, 256, "%s %s %s", Surge::UI::toOSCaseForMenu("Enable Tempo Sync for All").c_str(), prefix, pars);
                      setTSTo = true;
                   }
 
