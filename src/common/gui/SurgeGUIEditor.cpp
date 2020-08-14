@@ -3254,31 +3254,49 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   r->setChecked( true );
                eid++;
 
-               if( p->ctrlgroup == cg_LFO )
+               if (p->ctrlgroup == cg_ENV || p->ctrlgroup == cg_LFO)
                {
-                  char lab[256];
-                  char prefix[32];
+                  char label[256];
+                  char prefix[128];
+                  char pars[32];
 
-                  // WARNING - this won't work with Surge++
-                  int a = p->ctrlgroup_entry + 1 - ms_lfo1;
-                  if (a > 6)
-                     sprintf(prefix, "SLFO %i", a - 6);
-                  else
-                     sprintf(prefix, "LFO %i", a);
+                  int a = p->ctrlgroup_entry;
+
+                  if (p->ctrlgroup == cg_ENV)
+                  {
+                     if (a == 0)
+                        sprintf(prefix, "Amp EG");
+                     else
+                        sprintf(prefix, "Filter EG");
+                  }
+                  else if (p->ctrlgroup == cg_LFO)
+                  {
+                     if (a >= ms_lfo1 && a <= ms_lfo1 + n_lfos_voice)
+                        sprintf(prefix, "Voice LFO %i", a - ms_lfo1 + 1);
+                     else if (a >= ms_slfo1 && a <= ms_slfo1 + n_lfos_scene)
+                        sprintf(prefix, "Scene LFO %i", a - ms_slfo1 + 1);
+                  }
 
                   bool setTSTo;
+
+                  #if WINDOWS
+                     snprintf(pars, 32, "parameters");
+                  #else
+                     snprintf(pars, 32, "Parameters");
+                  #endif
+
                   if( p->temposync )
                   {
-                     snprintf(lab, 256, "Disable Tempo Sync for All %s Parameters", prefix);
+                     snprintf(label, 256, "%s %s %s", Surge::UI::toOSCaseForMenu("Disable Tempo Sync for All").c_str(), prefix, pars);
                      setTSTo = false;
                   }
                   else
                   {
-                     snprintf(lab, 256, "Enable Tempo Sync for All %s Parameters", prefix);
+                     snprintf(label, 256, "%s %s %s", Surge::UI::toOSCaseForMenu("Enable Tempo Sync for All").c_str(), prefix, pars);
                      setTSTo = true;
                   }
 
-                  addCallbackMenu( contextMenu, Surge::UI::toOSCaseForMenu(lab),
+                  addCallbackMenu( contextMenu, label,
                                    [this, p, setTSTo](){
                                       // There is surely a more efficient way but this is fine
                                       for (auto iter = this->synth->storage.getPatch().param_ptr.begin();

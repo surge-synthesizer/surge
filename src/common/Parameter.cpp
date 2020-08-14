@@ -86,9 +86,9 @@ void Parameter::create_fullname(const char* dn, char* fn, ControlGroup ctrlgroup
       break;
    case cg_ENV:
       if (ctrlgroup_entry)
-         sprintf(prefix, "FEG");
+         sprintf(prefix, "Filter EG");
       else
-         sprintf(prefix, "AEG");
+         sprintf(prefix, "Amp EG");
       break;
    case cg_LFO:
    {
