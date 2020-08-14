@@ -3262,38 +3262,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                   int a = p->ctrlgroup_entry;
 
-                  switch (a)
+                  if (p->ctrlgroup == cg_ENV)
                   {
-                  case 0:
-                  {
-                     sprintf(prefix, "Amp EG");
-                     break;
+                     if (a == 0)
+                        sprintf(prefix, "Amp EG");
+                     else
+                        sprintf(prefix, "Filter EG");
                   }
-                  case 1:
+                  else if (p->ctrlgroup == cg_LFO)
                   {
-                     sprintf(prefix, "Filter EG");
-                     break;
-                  }
-                  case ms_lfo1:
-                  case ms_lfo2:
-                  case ms_lfo3:
-                  case ms_lfo4:
-                  case ms_lfo5:
-                  case ms_lfo6:
-                  {
-                     sprintf(prefix, "Voice LFO %i", a - ms_lfo1 + 1);
-                     break;
-                  }
-                  case ms_slfo1:
-                  case ms_slfo2:
-                  case ms_slfo3:
-                  case ms_slfo4:
-                  case ms_slfo5:
-                  case ms_slfo6:
-                  {
-                     sprintf(prefix, "Scene LFO %i", a - ms_slfo1 + 1);
-                     break;
-                  }
+                     if (a >= ms_lfo1 && a <= ms_lfo1 + n_lfos_voice)
+                        sprintf(prefix, "Voice LFO %i", a - ms_lfo1 + 1);
+                     else if (a >= ms_slfo1 && a <= ms_slfo1 + n_lfos_scene)
+                        sprintf(prefix, "Scene LFO %i", a - ms_slfo1 + 1);
                   }
 
                   bool setTSTo;
