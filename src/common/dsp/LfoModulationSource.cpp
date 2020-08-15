@@ -1,6 +1,7 @@
 #include "LfoModulationSource.h"
 #include <cmath>
 #include "DebugHelpers.h"
+#include "MSEGModulationHelper.h"
 
 using namespace std;
 
@@ -12,6 +13,8 @@ void LfoModulationSource::assign(SurgeStorage* storage,
                                  pdata* localcopy,
                                  SurgeVoiceState* state,
                                  StepSequencerStorage* ss,
+                                 MSEGStorage *ms,
+                                 FormulaModulatorStorage *fs,
                                  bool is_display)
 {
    this->storage = storage;
@@ -19,6 +22,8 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    this->state = state;
    this->localcopy = localcopy;
    this->ss = ss;
+   this->ms = ms;
+   this->fs = fs;
    this->is_display = is_display;
 
    iout = 0;
@@ -101,6 +106,7 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 void LfoModulationSource::initPhaseFromStartPhase()
 {
    phase = localcopy[startphase].f;
+   unwrappedphase = phase;
    phaseInitialized = true;
    while( phase < 0.f )
       phase += 1.f;
@@ -136,7 +142,7 @@ void LfoModulationSource::attack()
    if (is_display)
    {
       phase = lfo->start_phase.val.f;
-      if (lfo->shape.val.i == ls_stepseq)
+      if (lfo->shape.val.i == ls_stepseq )
          phase = 0.f;
       step = 0;
    }
@@ -289,6 +295,7 @@ void LfoModulationSource::process_block()
    if (lfo->rate.temposync)
       frate *= storage->temposyncratio;
    phase += frate * ratemult;
+   unwrappedphase += frate * ratemult;
 
    if( frate == 0 && phase == 0 && s == ls_stepseq )
    {
@@ -566,6 +573,9 @@ void LfoModulationSource::process_block()
          }
       }
       break;
+   case ls_mseg:
+      iout = MSEGModulationHelper::valueAt( unwrappedphase, localcopy[ideform].f, ms );
+      break;
    };
 
    float io2 = iout;
@@ -582,6 +592,6 @@ void LfoModulationSource::process_block()
       }
    }
 
-   auto magnf = limit_range( localcopy[magn].f, -3.f, 3.f );
+   auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f );
    output = env_val * magnf * io2;
 }

@@ -19,6 +19,8 @@
 #include "effect/Effect.h"
 #include <list>
 #include <vt_dsp/vt_dsp_endian.h>
+#include "MSEGModulationHelper.h"
+#include "DebugHelpers.h"
 
 using namespace std;
 
@@ -543,7 +545,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          py += gui_hfader_dist;
          sprintf(label, "lfo%i_magnitude", l);
          a->push_back(scene[sc].lfo[l].magnitude.assign(p_id.next(), id_s++, label, "Amplitude",
-                                                        ct_percent,
+                                                        ct_lfoamplitude,
                                                         "lfo.amplitude", px, py, sc_id, cg_LFO,
                                                         ms_lfo1 + l, true, Surge::ParamConfig::kHorizontal | sceasy));
          py += gui_hfader_dist;
@@ -1583,6 +1585,63 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("sequence"));
    }
 
+   // restore msegs
+   for (auto& ms : msegs )
+      for (auto& l : ms )
+      {
+         ms->n_activeSegments = 0;
+         MSEGModulationHelper::rebuildCache(ms);
+      }
+
+   TiXmlElement* ms = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("msegs"));
+   if (ms)
+      p = TINYXML_SAFE_TO_ELEMENT(ms->FirstChild("mseg"));
+   else
+      p = nullptr;
+   while (p) {
+      int v;
+      auto sc = 0;
+      if( p->QueryIntAttribute( "scene", &v ) == TIXML_SUCCESS ) sc = v;;
+      auto mi = 0;
+      if( p->QueryIntAttribute( "i", &v ) == TIXML_SUCCESS ) mi = v;
+      auto *ms = &( msegs[sc][mi] );
+      ms->n_activeSegments = 0;
+      if( p->QueryIntAttribute( "activeSegments", &v ) == TIXML_SUCCESS ) ms->n_activeSegments = v;
+      auto segs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "segments" ));
+      if( segs )
+      {
+         auto seg = TINYXML_SAFE_TO_ELEMENT(segs->FirstChild( "segment" ) );
+         int idx = 0;
+         while( seg )
+         {
+            double d;
+#define MSGF(x) if( seg->QueryDoubleAttribute( #x, &d ) == TIXML_SUCCESS ) ms->segments[idx].x = d;
+            MSGF( duration );
+            MSGF( v0 );
+            MSGF( v1 );
+            MSGF( cpduration );
+            MSGF( cpv );
+            
+            int t = 0;
+            if( seg->QueryIntAttribute( "type", &v ) == TIXML_SUCCESS ) t = v;
+            ms->segments[idx].type = (MSEGStorage::segment::Type)t;
+            
+            seg = TINYXML_SAFE_TO_ELEMENT( seg->NextSibling( "segment" ) );
+            
+            idx++;
+         }
+         if( idx != ms->n_activeSegments )
+         {
+            std::cout << "BAD RESTORE " << _D(idx) << _D(ms->n_activeSegments) << std::endl;
+         }
+      }
+      // Rebuild cache
+      MSEGModulationHelper::rebuildCache(ms);
+      p = TINYXML_SAFE_TO_ELEMENT( p->NextSibling( "mseg" ) );
+   }
+
+   // end restore msegs
+   
    for (int i = 0; i < n_customcontrollers; i++)
       scene[0].modsources[ms_ctrl1 + i]->reset();
 
@@ -1931,6 +1990,41 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    }
    patch.InsertEndChild(ss);
 
+   TiXmlElement mseg( "msegs" );
+   for (int sc = 0; sc < 2; sc++)
+   {
+      for (int l = 0; l < n_lfos; l++)
+      {
+         if (scene[sc].lfo[l].shape.val.i == ls_mseg)
+         {
+            char txt[256], txt2[256];
+            TiXmlElement p("mseg");
+            p.SetAttribute("scene", sc);
+            p.SetAttribute("i", l);
+
+            auto *ms = &(msegs[sc][l]);
+            p.SetAttribute( "activeSegments", ms->n_activeSegments );
+
+            TiXmlElement segs( "segments" );
+            for( int s=0; s<ms->n_activeSegments; ++s )
+            {
+               TiXmlElement seg( "segment" );
+               seg.SetDoubleAttribute( "duration", ms->segments[s].duration );
+               seg.SetDoubleAttribute( "v0", ms->segments[s].v0 );
+               seg.SetDoubleAttribute( "v1", ms->segments[s].v1 );
+               seg.SetDoubleAttribute( "cpduration", ms->segments[s].cpduration );
+               seg.SetDoubleAttribute( "cpv", ms->segments[s].cpv );
+               seg.SetAttribute( "type", (int)( ms->segments[s].type ));
+               segs.InsertEndChild( seg );
+            }
+            p.InsertEndChild(segs);
+            
+            mseg.InsertEndChild( p );
+         }
+      }
+   }
+   patch.InsertEndChild(mseg);
+   
    TiXmlElement cc("customcontroller");
    for (int l = 0; l < n_customcontrollers; l++)
    {

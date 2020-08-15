@@ -86,9 +86,9 @@ void Parameter::create_fullname(const char* dn, char* fn, ControlGroup ctrlgroup
       break;
    case cg_ENV:
       if (ctrlgroup_entry)
-         sprintf(prefix, "FEG");
+         sprintf(prefix, "Filter EG");
       else
-         sprintf(prefix, "AEG");
+         sprintf(prefix, "Amp EG");
       break;
    case cg_LFO:
    {
@@ -250,6 +250,7 @@ bool Parameter::can_extend_range()
    case ct_oscspread:
    case ct_osc_feedback:
    case ct_osc_feedback_negative:
+   case ct_lfoamplitude:
       return true;
    }
    return false;
@@ -661,6 +662,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_amplitude:
+   case ct_lfoamplitude:
       val_min.f = 0;
       val_max.f = 1;
       valtype = vt_float;
@@ -756,7 +758,7 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
-   case ct_phaser_n_stages:
+   case ct_phaser_stages:
       val_min.i = 2;
       val_max.i = 16;
       valtype = vt_int;
@@ -804,6 +806,7 @@ void Parameter::set_type(int ctrltype)
    case ct_percent_bidirectional:
    case ct_rotarydrive:
    case ct_countedset_percent:
+   case ct_lfoamplitude:
       displayType = LinearWithScale;
       sprintf(displayInfo.unit, "%%" );
       displayInfo.scale = 100;
@@ -950,15 +953,6 @@ void Parameter::set_type(int ctrltype)
    case ct_sendlevel:
       displayType = Decibel;
       sprintf( displayInfo.unit, "dB" );
-      break;
-
-   case ct_phaser_n_stages:
-      displayType = LinearWithScale;
-      displayInfo.scale = 16;
-      sprintf(displayInfo.minLabel, "2");
-      sprintf(displayInfo.maxLabel, "16");
-      sprintf(displayInfo.unit, "Stages");
-      displayInfo.decimals = 0;
       break;
    }
 }
@@ -1253,6 +1247,8 @@ float Parameter::get_extended(float f)
       return 8.f * f - 4.f * f;
    case ct_osc_feedback_negative:
       return 4.f * f;
+   case ct_lfoamplitude:
+      return (2.f * f) - 1.f;
    default:
       return f;
    }
@@ -2367,7 +2363,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_polylimit:
    case ct_midikey:
    case ct_midikey_or_channel:
-   case ct_phaser_n_stages:
+   case ct_phaser_stages:
    case ct_rotarydrive:
    case ct_sendlevel:
    case ct_freq_mod:

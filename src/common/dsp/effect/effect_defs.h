@@ -200,7 +200,7 @@ private:
 
 class PhaserEffect : public Effect
 {
-   lipol_ps mix alignas(16);
+   lipol_ps width alignas(16), mix alignas(16);
    float L alignas(16)[BLOCK_SIZE],
          R alignas(16)[BLOCK_SIZE];
 
@@ -237,6 +237,7 @@ private:
    BiquadFilter* biquad[max_stages * 2];
    float lfophase;
    int bi; // block increment (to keep track of events not occurring every n blocks)
+   void init_stages();
 };
 
 /*	rotary_speaker			*/

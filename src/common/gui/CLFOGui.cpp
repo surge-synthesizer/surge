@@ -20,6 +20,7 @@
 #include <chrono>
 #include "DebugHelpers.h"
 #include "guihelpers.h"
+#include "MSEGEditor.h"
 #include <cstdint>
 
 using namespace VSTGUI;
@@ -118,7 +119,7 @@ void CLFOGui::draw(CDrawContext* dc)
           susTime;
 
       LfoModulationSource* tlfo = new LfoModulationSource();
-      tlfo->assign(storage, lfodata, tp, 0, ss, true);
+      tlfo->assign(storage, lfodata, tp, 0, ss, ms, fs, true);
       tlfo->attack();
       CRect boxo(maindisp);
       boxo.offset(-size.left - splitpoint, -size.top);
@@ -182,7 +183,7 @@ void CLFOGui::draw(CDrawContext* dc)
             if( s == averagingWindow - 1 ) lastval = tlfo->output;
             minval = std::min(tlfo->output, minval);
             maxval = std::max(tlfo->output, maxval);
-            eval += tlfo->env_val * lfodata->magnitude.val.f;
+            eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
          }
          val = val / averagingWindow;
          eval = eval / averagingWindow;
@@ -437,6 +438,23 @@ void CLFOGui::draw(CDrawContext* dc)
       edpath->forget();
    }
 
+   if( lfodata->shape.val.i == ls_mseg )
+   {
+      auto size = getViewSize();
+      
+      int w = size.getWidth() - splitpoint;
+      int h = size.getHeight();
+      auto shiftTranslate = CGraphicsTransform().translate( size.left, size.top ).translate( splitpoint, 0 );
+      CDrawContext::Transform shiftTranslatetransform( *dc, shiftTranslate );
+      
+      dc->setFillColor( kRedCColor );
+      // FIXME 30x10 here and in onmousedown
+      dc->drawRect( CRect( 0, 0, 30, 10 ), kDrawFilled );
+      dc->setFontColor( kWhiteCColor );
+      dc->drawString( "Edit", CRect( 0, 0, 30, 10 ) );
+
+   }
+      
    CColor cshadow = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cselected = skin->getColor( "lfo.type.selected.background", CColor( 0xfe, 0x98, 0x15, 0xff ) );
 
@@ -444,34 +462,54 @@ void CLFOGui::draw(CDrawContext* dc)
    dc->setFont(lfoTypeFont);
 
    rect_shapes = leftpanel;
-   for (int i = 0; i < n_lfoshapes; i++)
+   if( ! typeImg )
    {
-      CRect tb(leftpanel);
-      tb.top = leftpanel.top + 10 * i;
-      tb.bottom = tb.top + 10;
-      //std::cout << std::hex << this << std::dec << " CHECK " << i << " " << lfodata->shape.val.i;
-      if (i == lfodata->shape.val.i)
+      typeImg = bitmapStore->getBitmap( IDB_LFOTYPE );
+   }
+
+   if( typeImg )
+   {
+      auto off = lfodata->shape.val.i * 76;
+      typeImg->draw( dc, CRect( CPoint( leftpanel.left, leftpanel.top + 2), CPoint( 51, 76 ) ), CPoint( 0, off ) );
+
+      for( int i=0; i<n_lfoshapes; ++i )
       {
-         //std::cout << " ON" << std::endl;
-         CRect tb2(tb);
-         tb2.left++;
-         tb2.top += 0.5;
-         tb2.inset(2, 1);
-         tb2.offset(0, 1);
-         dc->setFillColor(cselected);
-         dc->drawRect(tb2, kDrawFilled);
-         dc->setFontColor(skin->getColor( "lfo.type.selected.foreground", kBlackCColor) );
+         int xp = ( i % 2 ) * 25 + leftpanel.left;
+         int yp = ( i / 2 ) * 15 + leftpanel.top;
+         shaperect[i] = CRect( xp, yp, xp+25, yp+15 );
       }
-      else
+   }
+   else
+   {
+      for (int i = 0; i < n_lfoshapes; i++)
       {
-         //std::cout << " OFF" << std::endl;
-         dc->setFontColor(skin->getColor( "lfo.type.unselected.foreground", kBlackCColor) );
+         CRect tb(leftpanel);
+         tb.top = leftpanel.top + 10 * i;
+         tb.bottom = tb.top + 10;
+         //std::cout << std::hex << this << std::dec << " CHECK " << i << " " << lfodata->shape.val.i;
+         if (i == lfodata->shape.val.i)
+         {
+            //std::cout << " ON" << std::endl;
+            CRect tb2(tb);
+            tb2.left++;
+            tb2.top += 0.5;
+            tb2.inset(2, 1);
+            tb2.offset(0, 1);
+            dc->setFillColor(cselected);
+            dc->drawRect(tb2, kDrawFilled);
+            dc->setFontColor(skin->getColor( "lfo.type.selected.foreground", kBlackCColor) );
+         }
+         else
+         {
+            //std::cout << " OFF" << std::endl;
+            dc->setFontColor(skin->getColor( "lfo.type.unselected.foreground", kBlackCColor) );
+         }
+         // dc->fillRect(tb);
+         shaperect[i] = tb;
+         // tb.offset(0,-1);
+         tb.top += 1.6; // now the font is smaller and the box is square, smidge down the text
+         dc->drawString(ls_names[i], tb);
       }
-      // dc->fillRect(tb);
-      shaperect[i] = tb;
-      // tb.offset(0,-1);
-      tb.top += 1.6; // now the font is smaller and the box is square, smidge down the text
-      dc->drawString(ls_names[i], tb);
    }
 
    setDirty(false);
@@ -775,7 +813,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    float susTime = 4.0 * cyclesec;
 
    LfoModulationSource* tlfo = new LfoModulationSource();
-   tlfo->assign(storage, lfodata, tp, 0, ss, true);
+   tlfo->assign(storage, lfodata, tp, 0, ss, ms, fs, true);
    tlfo->attack();
    CRect boxo(rect_steps);
 
@@ -826,7 +864,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
          if( s == averagingWindow - 1 ) lastval = tlfo->output;
          minval = std::min(tlfo->output, minval);
          maxval = std::max(tlfo->output, maxval);
-         eval += tlfo->env_val * lfodata->magnitude.val.f;
+         eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
       }
       val = val / averagingWindow;
       eval = eval / averagingWindow;
@@ -1020,6 +1058,25 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
 {
    if (1) //(buttons & kLButton))
    {
+      if( lfodata->shape.val.i == ls_mseg )
+      {
+         auto size = getViewSize();
+
+         int wx = where.x - size.left - splitpoint;
+         int wy = where.y - size.top;
+         if( wx > 0 && wx < 30 && wy > 0 && wy < 10 )
+         {
+            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+            if( sge )
+            {
+               std::cout << "OPENING EDITOR" << std::endl;
+               auto mse = new MSEGEditor(ms, skin);
+               sge->setEditorOverlay( mse, "MSEG Editor", []() { std::cout << "MSE Closed" << std::endl; } );
+               return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+            }
+         }
+      }
+         
       if (ss && lfodata->shape.val.i == ls_stepseq)
       {
          if (rect_steps.pointInside(where))
