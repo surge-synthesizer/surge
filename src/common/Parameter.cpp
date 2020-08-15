@@ -699,6 +699,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 20;
       break;
+   case ct_vocoder_modulator_mode:
+      val_min.i = 0;
+      val_max.i = 3;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
    case ct_distortion_waveshape:
       val_min.i = 0;
       val_max.i = n_ws_type - 2; // we want to skip none also
@@ -2125,6 +2131,27 @@ void Parameter::get_display(char* txt, bool external, float ef)
          }
       }
       break;
+      case ct_vocoder_modulator_mode:
+           {
+              std::string type;
+              switch(i)
+              {
+              case 0:
+                 type = "Mono";
+                 break;
+              case 1:
+                 type = "L";
+                 break;
+              case 2:
+                 type = "R";
+                 break;
+              case 3:
+                 type = "Stereo";
+                 break;
+              }
+              sprintf(txt, "%s", type.c_str());
+           }
+         break;
       default:
          sprintf(txt, "%i", i);
          break;

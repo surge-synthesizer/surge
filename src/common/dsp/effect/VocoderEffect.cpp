@@ -37,11 +37,12 @@ VocoderEffect::VocoderEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd
    mUnvoicedLevel = 0.f;*/
 
    active_bands = n_vocoder_bands;
-   mGain.set_blocksize(BLOCK_SIZE);
-
+   mGainLM.set_blocksize(BLOCK_SIZE);
+   mGainR.set_blocksize(BLOCK_SIZE);
    for (int i = 0; i < NVocoderVec; i++)
    {
-      mEnvF[i] = vZero;
+      mEnvFLM[i] = vZero;
+      mEnvFR[i] = vZero;
    }
 }
 
@@ -61,6 +62,8 @@ void VocoderEffect::init()
 
 void VocoderEffect::setvars(bool init)
 {
+   modulator_mode = *f[kModulatorMode];
+   wet = *f[kMix];
    float Freq[4], FreqM[4];
 
    const float Q = 20.f * (1.f + 0.5f * *f[KQuality]);
@@ -125,11 +128,13 @@ void VocoderEffect::setvars(bool init)
          mCarrierR[j].CopyCoeff(mCarrierL[j]);
          if( sepMod )
          {
-             mModulator[j].SetCoeff(FreqM, Q, Spread);
+             mModulatorLM[j].SetCoeff(FreqM, Q, Spread);
+             mModulatorR[j].SetCoeff(FreqM, Q, Spread);
          }
          else
          {
-             mModulator[j].CopyCoeff(mCarrierL[j]);
+             mModulatorLM[j].CopyCoeff(mCarrierL[j]);
+             mModulatorR[j].CopyCoeff(mCarrierR[j]);
          }
       }
       fb *= dhz;
@@ -150,22 +155,42 @@ void VocoderEffect::setvars(bool init)
 
 void VocoderEffect::process(float* dataL, float* dataR)
 {
-   mBI = (mBI + 1) & 0x3f;
+  mBI = (mBI + 1) & 0x3f;
 
    if (mBI == 0)
    {
       setvars(false);
    }
-
-   float modulator_in alignas(16)[BLOCK_SIZE];
-
-   add_block(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_in, BLOCK_SIZE_QUAD);
-
-   float Gain = *f[KGain] + 24.f;
-   mGain.set_target_smoothed(db_to_linear(Gain));
-   mGain.multiply_block(modulator_in, BLOCK_SIZE_QUAD);
-
+   modulator_mode = fxdata->p[kModulatorMode].val.i;
+   wet = *f[kMix];
    float EnvFRate = 0.001f * powf(2.f, 4.f * *f[KRate]);
+   
+   // the left channel variables are used for mono when stereo is disabled
+   float modulator_inLM alignas(16)[BLOCK_SIZE];
+   float modulator_inR alignas(16)[BLOCK_SIZE];
+   
+   if (modulator_mode == VOCODER_MODULATOR_MONO)
+   {
+      add_block(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_inLM, BLOCK_SIZE_QUAD);
+   } else {
+      copy_block(storage->audio_in_nonOS[0], modulator_inLM, BLOCK_SIZE_QUAD);
+      copy_block(storage->audio_in_nonOS[1], modulator_inR, BLOCK_SIZE_QUAD);
+   }
+   
+   float Gain = *f[KGain] + 24.f;
+   mGainLM.set_target_smoothed(db_to_linear(Gain));
+   mGainLM.multiply_block(modulator_inLM, BLOCK_SIZE_QUAD);
+
+   mGainR.set_target_smoothed(db_to_linear(Gain));
+   mGainR.multiply_block(modulator_inR, BLOCK_SIZE_QUAD);
+
+   vFloat Rate = vLoad1(EnvFRate);
+   vFloat Ratem1 = vLoad1(1.f - EnvFRate);
+
+   float Gate = db_to_linear(*f[KGateLevel] + Gain);
+   vFloat GateLevel = vLoad1(Gate * Gate);
+   
+   const vFloat MaxLevel = vLoad1(6.f);
 
    // Voiced / Unvoiced detection
 /*   mVoicedDetect.process_block_to(modulator_in, modulator_tbuf);
@@ -188,41 +213,78 @@ void VocoderEffect::process(float* dataL, float* dataR)
         dataR[i] = rand11;
      }*/
 
-   const vFloat MaxLevel = vLoad1(6.f);
-
-   vFloat Rate = vLoad1(EnvFRate);
-   vFloat Ratem1 = vLoad1(1.f - EnvFRate);
-
-   float Gate = db_to_linear(*f[KGateLevel] + Gain);
-   vFloat GateLevel = vLoad1(Gate * Gate);
-
-   for (int k = 0; k < BLOCK_SIZE; k++)
+   if (modulator_mode == VOCODER_MODULATOR_MONO || modulator_mode == VOCODER_MODULATOR_L || modulator_mode == VOCODER_MODULATOR_R)
    {
-      vFloat In = vLoad1(modulator_in[k]);
-      vFloat Left = vLoad1(dataL[k]);
-      vFloat Right = vLoad1(dataR[k]);
-
-      vFloat LeftSum = vZero;
-      vFloat RightSum = vZero;
-
-      for (int j = 0; j < (active_bands >> 2) && j < ( n_vocoder_bands >> 2 ) /*(NVocoderVec)*/; j++)
+      float* input;
+      if (modulator_mode == VOCODER_MODULATOR_MONO || modulator_mode == VOCODER_MODULATOR_L)
       {
-         vFloat Mod = mModulator[j].CalcBPF(In);
-         Mod = vMin(vMul(Mod, Mod), MaxLevel);
-
-         Mod = vAnd(Mod, vCmpGE(Mod, GateLevel));
-
-         mEnvF[j] = vMAdd(mEnvF[j], Ratem1, vMul(Rate, Mod));
-
-         Mod = vSqrtFast(mEnvF[j]);
-
-         LeftSum = vAdd(LeftSum, mCarrierL[j].CalcBPF(vMul(Left, Mod)));
-         RightSum = vAdd(RightSum, mCarrierR[j].CalcBPF(vMul(Right, Mod)));
+         input = modulator_inLM;
+      } else{
+         input = modulator_inR;
       }
+      
+      for (int k = 0; k < BLOCK_SIZE; k++)
+      {
+         vFloat In = vLoad1(input[k]);
+         
+         vFloat Left = vLoad1(dataL[k]);
+         vFloat Right = vLoad1(dataR[k]);
 
-      dataL[k] = vSum(LeftSum) * 4.f;
-      dataR[k] = vSum(RightSum) * 4.f;
+         vFloat LeftSum = vZero;
+         vFloat RightSum = vZero;
+
+         for (int j = 0; j < (active_bands >> 2) && j < ( n_vocoder_bands >> 2 ) /*(NVocoderVec)*/; j++)
+         {
+            vFloat Mod = mModulatorLM[j].CalcBPF(In);
+            Mod = vMin(vMul(Mod, Mod), MaxLevel);
+            Mod = vAnd(Mod, vCmpGE(Mod, GateLevel));
+            mEnvFLM[j] = vMAdd(mEnvFLM[j], Ratem1, vMul(Rate, Mod));
+            Mod = vSqrtFast(mEnvFLM[j]);
+
+            LeftSum = vAdd(LeftSum, mCarrierL[j].CalcBPF(vMul(Left, Mod)));
+            RightSum = vAdd(RightSum, mCarrierR[j].CalcBPF(vMul(Right, Mod)));
+         }
+
+         float inMul = 1.0 - wet;
+         dataL[k] = dataL[k] * inMul + wet * vSum(LeftSum) * 4.f;
+         dataR[k] = dataR[k] * inMul + wet * vSum(RightSum) * 4.f;
+      }
    }
+   else if (modulator_mode == VOCODER_MODULATOR_STEREO)
+   {
+       for (int k = 0; k < BLOCK_SIZE; k++)
+       {
+          vFloat InL = vLoad1(modulator_inLM[k]);
+          vFloat InR = vLoad1(modulator_inR[k]);
+          vFloat Left = vLoad1(dataL[k]);
+          vFloat Right = vLoad1(dataR[k]);
+
+          vFloat LeftSum = vZero;
+          vFloat RightSum = vZero;
+
+          for (int j = 0; j < (active_bands >> 2) && j < ( n_vocoder_bands >> 2 ); j++)
+         {
+             vFloat ModL = mModulatorLM[j].CalcBPF(InL);
+             vFloat ModR = mModulatorR[j].CalcBPF(InR);
+             ModL = vMin(vMul(ModL, ModL), MaxLevel);
+             ModR = vMin(vMul(ModR, ModR), MaxLevel);
+
+             ModL = vAnd(ModL, vCmpGE(ModL, GateLevel));
+             ModR = vAnd(ModR, vCmpGE(ModR, GateLevel));
+             
+             mEnvFLM[j] = vMAdd(mEnvFLM[j], Ratem1, vMul(Rate, ModL));
+             mEnvFR[j] = vMAdd(mEnvFR[j], Ratem1, vMul(Rate, ModR));
+             ModL = vSqrtFast(mEnvFLM[j]);
+             ModR = vSqrtFast(mEnvFR[j]);
+             LeftSum = vAdd(LeftSum, mCarrierL[j].CalcBPF(vMul(Left, ModL)));
+             RightSum = vAdd(RightSum, mCarrierR[j].CalcBPF(vMul(Right, ModR)));
+          }
+          
+          float inMul = 1.0 - wet;
+          dataL[k] = dataL[k] * inMul + wet * vSum(LeftSum) * 4.f;
+          dataR[k] = dataR[k] * inMul + wet * vSum(RightSum) * 4.f;
+       }
+    }
 }
 
 //------------------------------------------------------------------------------------------------
@@ -249,6 +311,9 @@ void VocoderEffect::init_default_values()
    
    fxdata->p[kModExpand].val.f = 0.f;
    fxdata->p[kModCenter].val.f = 0.f;
+   
+   fxdata->p[kModulatorMode].val.i = 0;
+   fxdata->p[kMix].val.f = 1.f;
 }
 
 //------------------------------------------------------------------------------------------------
@@ -332,6 +397,14 @@ void VocoderEffect::init_ctrltypes()
    fxdata->p[kModCenter].set_name("Mod Center");
    fxdata->p[kModCenter].set_type(ct_percent_bidirectional);
    fxdata->p[kModCenter].posy_offset = 5;
+   
+   fxdata->p[kModulatorMode].set_name("Modulator Input");
+   fxdata->p[kModulatorMode].set_type(ct_vocoder_modulator_mode);
+   fxdata->p[kModulatorMode].posy_offset = 5;
+   
+   fxdata->p[kMix].set_name("Mix");
+   fxdata->p[kMix].set_type(ct_percent);
+   fxdata->p[kMix].posy_offset = 7;
 
 }
 
@@ -346,6 +419,9 @@ void VocoderEffect::handleStreamingMismatches(int streamingRevision, int current
         
         fxdata->p[kModExpand].val.f = 0.f;
         fxdata->p[kModCenter].val.f = 0.f;
+       
+       fxdata->p[kModulatorMode].val.i = 0;
+       fxdata->p[kMix].val.f = 1.f;
     }
 }
 //------------------------------------------------------------------------------------------------

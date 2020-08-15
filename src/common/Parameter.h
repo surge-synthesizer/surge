@@ -115,6 +115,7 @@ enum ctrltypes
    ct_sinefmlegacy,
    ct_countedset_percent, // what % through a counted set are you
    ct_vocoder_bandcount,
+   ct_vocoder_modulator_mode,
    ct_distortion_waveshape,
    ct_flangerpitch,
    ct_flangermode,
