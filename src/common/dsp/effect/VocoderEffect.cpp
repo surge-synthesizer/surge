@@ -129,7 +129,12 @@ void VocoderEffect::setvars(bool init)
          if( sepMod )
          {
              mModulator[j].SetCoeff(FreqM, Q, Spread);
-             mModulatorR[j].SetCoeff(FreqM, Q, Spread);
+             if (modulator_mode == VOCODER_MODULATOR_STEREO)
+             {
+                 mModulatorR[j].SetCoeff(FreqM, Q, Spread);
+             } else {
+                 mModulatorR[j].CopyCoeff(mModulator[j]);
+             }
          }
          else
          {
