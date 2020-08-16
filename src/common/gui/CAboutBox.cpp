@@ -43,6 +43,12 @@ void CAboutBox::draw(CDrawContext* pContext)
    {
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
 
+      CRect infobg(0, 395, 905, 545);
+      CRect skininfobg(0, 0, 905, 80);
+      pContext->setFillColor(CColor(0, 0, 0, 255));
+      pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
+      pContext->drawRect(skininfobg, CDrawStyle::kDrawFilled);
+
       int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
       std::string bitness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + "-bit";
 
@@ -114,12 +120,7 @@ void CAboutBox::draw(CDrawContext* pContext)
             pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
             yPos += strHeight + yMargin;
          }
-      }
-
-      CRect infobg(0, 395, 905, 545);
-      pContext->setFillColor(CColor(128, 128, 128, 24));
-      pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
-      
+      }      
    }
    else
    {
