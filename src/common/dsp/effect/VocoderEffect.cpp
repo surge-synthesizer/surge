@@ -310,9 +310,6 @@ void VocoderEffect::init_default_values()
 
    fxdata->p[kNumBands].val.i = n_vocoder_bands;
 
-   // freq = 440 * 2^(v/12)
-   // log(freq/440)/log(2) = v/12
-   // 12 * log(freq/440) / log(2) = v;
    fxdata->p[kFreqLo].val.f = 12.f * log(vocoder_freq_vsm201[0]/440.f)/log(2.f);
    fxdata->p[kFreqHi].val.f = 12.f * log(vocoder_freq_vsm201[n_vocoder_bands-1]/440.f)/log(2.f);
    
@@ -405,11 +402,11 @@ void VocoderEffect::init_ctrltypes()
    fxdata->p[kModulatorMode].set_type(ct_vocoder_modulator_mode);
    fxdata->p[kModulatorMode].posy_offset = 5;
 
-   fxdata->p[kModExpand].set_name("Mod Range");
+   fxdata->p[kModExpand].set_name("Range");
    fxdata->p[kModExpand].set_type(ct_percent_bidirectional);
    fxdata->p[kModExpand].posy_offset = 5;
    
-   fxdata->p[kModCenter].set_name("Mod Center");
+   fxdata->p[kModCenter].set_name("Center");
    fxdata->p[kModCenter].set_type(ct_percent_bidirectional);
    fxdata->p[kModCenter].posy_offset = 5;
       

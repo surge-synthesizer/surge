@@ -2377,6 +2377,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_portatime:
    case ct_lforate:
    case ct_lforate_deactivatable:
+   case ct_lfoamplitude:
    case ct_detuning:
    case ct_oscspread:
    case ct_countedset_percent:
