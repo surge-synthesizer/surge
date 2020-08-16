@@ -320,14 +320,20 @@ private:
 
 const int n_vocoder_bands = 20;
 const int NVocoderVec = n_vocoder_bands >> 2;
-const int VOCODER_MODULATOR_MONO = 0;
-const int VOCODER_MODULATOR_L = 1;
-const int VOCODER_MODULATOR_R = 2;
-const int VOCODER_MODULATOR_STEREO = 3;
+
+enum VocoderModInput
+ {
+    VOCODER_MODULATOR_MONO,
+    VOCODER_MODULATOR_L,
+    VOCODER_MODULATOR_R,
+    VOCODER_MODULATOR_STEREO
+ };
 
 class VocoderEffect : public Effect
 {
 public:
+ 
+
    enum Params
    {
       KGain,
@@ -339,9 +345,9 @@ public:
       kNumBands,
       kFreqLo,
       kFreqHi,
+      kModulatorMode,
       kModExpand,
       kModCenter,
-      kModulatorMode,
       kMix,
       kNumParams
       
@@ -372,11 +378,11 @@ public:
 private:
    VectorizedSvfFilter mCarrierL alignas(16)[NVocoderVec];
    VectorizedSvfFilter mCarrierR alignas(16)[NVocoderVec];
-   VectorizedSvfFilter mModulatorLM alignas(16)[NVocoderVec];
+   VectorizedSvfFilter mModulator alignas(16)[NVocoderVec];
    VectorizedSvfFilter mModulatorR alignas(16)[NVocoderVec];
-   vFloat mEnvFLM alignas(16)[NVocoderVec];
+   vFloat mEnvF alignas(16)[NVocoderVec];
    vFloat mEnvFR alignas(16)[NVocoderVec];
-   lipol_ps mGainLM alignas(16);
+   lipol_ps mGain alignas(16);
    lipol_ps mGainR alignas(16);
    int modulator_mode;
    float wet;

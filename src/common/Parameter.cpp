@@ -2137,13 +2137,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
               switch(i)
               {
               case 0:
-                 type = "Mono";
+                 type = "Mono Sum";
                  break;
               case 1:
-                 type = "L";
+                 type = "Left Only";
                  break;
               case 2:
-                 type = "R";
+                 type = "Right Only";
                  break;
               case 3:
                  type = "Stereo";
