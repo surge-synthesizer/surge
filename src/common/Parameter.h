@@ -129,6 +129,7 @@ enum ctrltypes
    ct_sendlevel,
    ct_phaser_stages,
    ct_lfoamplitude,
+   ct_vocoder_modulator_mode,
    num_ctrltypes,
 };
 

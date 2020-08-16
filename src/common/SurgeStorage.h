@@ -79,6 +79,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
 // 12 -> 13 (1.7.0 release) deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
 // 13 -> 14 add phaser number of stages parameter
+// 13 -> 14 add ability to configure vocoder modulator mono/sterao/L/R
 
 const int ff_revision = 14;
 
