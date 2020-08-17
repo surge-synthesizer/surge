@@ -416,6 +416,8 @@ elseif( UNIX AND NOT APPLE )
   
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(CAIRO REQUIRED cairo)
+  pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
+  pkg_check_modules(X11 REQUIRED x11)
   pkg_check_modules(XCB REQUIRED xcb)
   pkg_check_modules(XCBCURSOR REQUIRED xcb-cursor)
   pkg_check_modules(XCBUTIL REQUIRED xcb-util)
@@ -463,6 +465,8 @@ elseif( UNIX AND NOT APPLE )
     src/linux
 
     ${CAIRO_INCLUDE_DIRS}
+    ${FONTCONFIG_INCLUDE_DIRS}
+    ${X11_INCLUDE_DIRS}
     ${XCB_INCLUDE_DIRS}
     ${XCBCURSOR_INCLUDE_DIRS}
     ${XCBUTIL_INCLUDE_DIRS}
@@ -486,6 +490,8 @@ elseif( UNIX AND NOT APPLE )
   set(OS_LINK_LIBRARIES
     ${OS_LINK_LIBRARIES_NOGUI}
     ${CAIRO_LDFLAGS}
+    ${FONTCONFIG_LDFLAGS}
+    ${X11_LDFLAGS}
     ${XCB_LDFLAGS}
     ${XCBCURSOR_LDFLAGS}
     ${XCBUTIL_LDFLAGS}
