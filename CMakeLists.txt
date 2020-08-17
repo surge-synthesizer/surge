@@ -481,6 +481,7 @@ elseif( UNIX AND NOT APPLE )
     gcc_s
     gcc
     dl
+    -Wl,--no-undefined
     )
   set(OS_LINK_LIBRARIES
     ${OS_LINK_LIBRARIES_NOGUI}
