@@ -2066,7 +2066,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
    }
 
-   CRect aboutbrect(892 - 37, 526, 892, 526 + 12);
+   CRect aboutbrect(892 - 50, 523, 892, 523 + 15);
 
    CHSwitch2* b_settingsMenu =
       new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
