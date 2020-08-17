@@ -33,6 +33,7 @@ DisableDirPage=yes
 LicenseFile=..\LICENSE
 OutputBaseFilename="{#MyAppName}-{#MyAppVersion}-Setup"
 SetupIconFile=surge.ico
+UninstallDisplayIcon=surge.ico
 UsePreviousAppDir=yes
 Compression=lzma
 SolidCompression=yes
