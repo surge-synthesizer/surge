@@ -1,7 +1,24 @@
 
 find_package(Git)
 
-if( Git_FOUND )
+if( EXISTS ${SURGESRC}/VERSION_GIT_INFO )
+  message( STATUS "VERSION_GIT_INFO file is present; using that rather than git query" )
+  # Line 2 is the branch, line 3 is the hash
+  execute_process(
+    COMMAND sed -n "2p" ${SURGESRC}/VERSION_GIT_INFO
+    WORKING_DIRECTORY ${SURGESRC}
+    OUTPUT_VARIABLE GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+  execute_process(
+    COMMAND sed -n "3p" ${SURGESRC}/VERSION_GIT_INFO
+    WORKING_DIRECTORY ${SURGESRC}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+elseif( Git_FOUND )
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
     WORKING_DIRECTORY ${SURGESRC}

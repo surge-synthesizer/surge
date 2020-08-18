@@ -88,3 +88,4 @@ build-arm/
 *.RPP-bak
 
 surge-fx
+VERSION_GIT_INFO
