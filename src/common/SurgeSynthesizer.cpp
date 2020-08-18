@@ -111,7 +111,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
 
    SurgePatch& patch = storage.getPatch();
 
-   patch.polylimit.val.i = 8;
+   patch.polylimit.val.i = 16;
    for (int sc = 0; sc < 2; sc++)
    {
       SurgeSceneStorage& scene = patch.scene[sc];
