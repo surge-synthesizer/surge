@@ -5360,6 +5360,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     auto &db = Surge::UI::SkinDB::get();
     bool hasTests = false;
+
     for( auto &entry : db.getAvailableSkins() )
     {
        if( entry.name.rfind( "test", 0 ) == 0 )
@@ -5371,22 +5372,27 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
           auto dname = entry.displayName;
           if( useDevMenu )
           {
-             dname += "(";
+             dname += " (";
              if( entry.root.find( synth->storage.datapath ) != std::string::npos )
              {
-                dname += "factory/";
+                dname += "factory";
              }
              else if( entry.root.find( synth->storage.userDataPath ) != std::string::npos )
              {
-                dname += "user/";
+                dname += "user";
              }
              else
              {
-                dname += "other/";
+                dname += "other";
              }
-             dname += entry.name;
 
-             dname += ")";
+             #if WINDOWS
+                dname += "\\";
+             #else
+                dname += "/";
+             #endif
+
+             dname += entry.name + ")";
           }
 
           auto cb = addCallbackMenu(skinSubMenu, dname,
@@ -5661,7 +5667,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 
     static bool consoleState;
 
-    conItem = addCallbackMenu(devSubMenu, "Debug console",
+    conItem = addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Debug Console"),
         []() {
                 consoleState = Surge::Debug::toggleConsole();
              });

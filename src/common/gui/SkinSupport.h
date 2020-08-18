@@ -84,7 +84,11 @@ public:
    bool reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
 
    std::string resourceName(const std::string &relativeName) {
-      return root + name + "/" + relativeName;
+      #if WINDOWS
+         return root + name + "\\" + relativeName;
+      #else
+         return root + name + "/" + relativeName;
+      #endif
    }
 
    std::string root;
