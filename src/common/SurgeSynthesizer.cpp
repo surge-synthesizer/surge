@@ -1850,7 +1850,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
       else
          return false;
    }
-   if( tms == ms_keytrack )
+   if( tms == ms_keytrack || tms == ms_pitchbend )
    {
       return true;
    }
