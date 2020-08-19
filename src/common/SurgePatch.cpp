@@ -106,7 +106,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                         0, cg_GLOBAL, 0, false,
                                         Surge::ParamConfig::kHorizontal | kNoPopup));
 
-   polylimit.val.i = 8;
+   polylimit.val.i = 16;
    splitkey.val.i = 60;
    volume.val.f = 0;
 
