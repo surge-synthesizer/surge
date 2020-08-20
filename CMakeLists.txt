@@ -21,6 +21,15 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR} )
   
 
+# We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
+# JUCE Cmake file list.
+execute_process( 
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}  -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+                           -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
+                           -D AZURE_PIPELINE=${AZURE_PIPELINE}
+                           -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
+                           )
 add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}  -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
@@ -181,9 +190,11 @@ set(SURGE_COMMON_SOURCES
   libs/xml/tinyxmlparser.cpp
   libs/strnatcmp/strnatcmp.cpp
   libs/filesystem/filesystem.cpp
-
-  ${CMAKE_BINARY_DIR}/geninclude/version.cpp
   )
+
+set( SURGE_GENERATED_SOURCES
+  ${CMAKE_BINARY_DIR}/geninclude/version.cpp
+  )  
 
 set(SURGE_GUI_SOURCES
   src/common/gui/CAboutBox.cpp
@@ -312,7 +323,6 @@ set(SURGE_COMMON_INCLUDES
   src/common/dsp
   src/common/thread
   src/common/vt_dsp
-  ${CMAKE_BINARY_DIR}/geninclude
   )
 
 set(SURGE_GUI_INCLUDES
@@ -557,6 +567,7 @@ elseif( WIN32 )
   set(OS_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}
     src/windows
+    ${CMAKE_BINARY_DIR}/geninclude
     libs/wtl
     )
 
@@ -594,6 +605,7 @@ if( BUILD_AU )
   add_library(surge-au-dll
     SHARED
     ${SURGE_COMMON_SOURCES}
+    ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
     ${SURGE_OS_GUI_SOURCES}
@@ -656,6 +668,7 @@ if( BUILD_VST3 )
   add_library(surge-vst3-dll
     SHARED
     ${SURGE_COMMON_SOURCES}
+    ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
     ${SURGE_OS_GUI_SOURCES}
@@ -742,6 +755,7 @@ if( BUILD_VST2 )
   add_library(surge-vst2-dll
     SHARED
     ${SURGE_COMMON_SOURCES}
+    ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
     ${SURGE_OS_GUI_SOURCES}
@@ -834,6 +848,7 @@ if( BUILD_LV2 )
   add_library(surge-lv2-dll
     SHARED
     ${SURGE_COMMON_SOURCES}
+    ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
     ${SURGE_OS_GUI_SOURCES}
@@ -900,6 +915,7 @@ endif()
 if( BUILD_HEADLESS )
   add_executable(surge-headless
     ${SURGE_COMMON_SOURCES}
+    ${SURGE_GENERATED_SOURCES}
     ${LIB_MIDIFILE_SOURCES}
     src/headless/main.cpp
     src/headless/UserInteractionsHeadless.cpp
@@ -1071,5 +1087,11 @@ endif()
 # Extra packages and utils
 if( ${BUILD_SVGSHOW} )
   add_subdirectory( utils/svgshow )
+endif()
+
+if( ${BUILD_SURGE_JUCE_PLUGINS} )
+  include( cmake/get-juce.cmake )
+  add_subdirectory( ${JUCE_LIB_DIR} )
+  add_subdirectory( src/juce_adapter )
 endif()
 

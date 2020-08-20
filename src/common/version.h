@@ -12,6 +12,9 @@ namespace Surge {
       static const char* ReleaseNumberStr;
       static const char* ReleaseStr;
 
+      static const char* GitHash;
+      static const char* GitBranch;
+      
       static const char* BuildNumberStr;
 
       static const char* FullVersionStr;

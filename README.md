@@ -317,6 +317,23 @@ and a clean build on all platforms is an obvious pre-requisite. If you have ques
 our CI tools, please ask on our Discord server. We are grateful to Microsoft for providing
 Azure pipelines for free to the open source community!
 
+# What about JUCE?
+
+The Surge team is considering moving Surge to JUCE in 2021. To begin that experiment we have
+started in-tree JUCE builds of Surge-related plugins. For now, this is a developer-only feature
+and does not result in a distributable executable.
+
+If you want to try to build the JUCE plugs though it's simple enough.
+
+```
+cmake -B(dir) (-G or -A as your platform requires) -DBUILD_JUCE_SURGE_PLUGS=True
+cmake --build build --config Release --target well-named-juce-assets
+```
+
+will deposit JUCE assets into your `(build)/surge_products` directory. 
+
+More here as 2021 progresses.
+
 # References
 
   * Most Surge-related conversation on the Surge Synthesizer Discord server. [You can join via this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link)

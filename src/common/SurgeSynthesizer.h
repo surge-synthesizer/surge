@@ -38,6 +38,9 @@ using PluginLayer = Vst2PluginInstance;
 #elif TARGET_LV2
 class SurgeLv2Wrapper;
 using PluginLayer = SurgeLv2Wrapper;
+#elif TARGET_JUCE
+class JUCEPluginLayerProxy;
+using PluginLayer = JUCEPluginLayerProxy;
 #elif TARGET_HEADLESS
 class HeadlessPluginLayerProxy;
 using PluginLayer = HeadlessPluginLayerProxy;
