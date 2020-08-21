@@ -89,3 +89,6 @@ build-arm/
 
 surge-fx
 VERSION_GIT_INFO
+
+# Juce until we add a submodule
+libs/juce-*

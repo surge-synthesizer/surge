@@ -35,6 +35,8 @@
 #elif TARGET_APP
 #include "PluginLayer.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
+#elif TARGET_JUCE
+#include "JUCEPluginLayerProxy.h"
 #elif TARGET_HEADLESS
 #include "HeadlessPluginLayerProxy.h"
 #else
