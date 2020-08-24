@@ -2017,6 +2017,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
                frame->addView(hs);
                param[i] = hs;
             }
+
+            // THIS CODE WILL DIE soon
+            if( p->ctrltype == ct_airwindow_fx )
+            {
+               // SET TYPE TO NON SLIDER
+            }
          }
          break;
          }
@@ -3201,27 +3207,80 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (p->ctrltype == ct_filtersubtype)
                   max = fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i] - 1;
 
-               for( int i=p->val_min.i; i<= max; i += incr )
+               auto dm = dynamic_cast<ParameterDiscreteIndexRemapper*>( p->user_data );
+
+               if( dm )
                {
-                  char txt[256];
-                  float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
-                  p->get_display(txt, true, ef );
-
-                  std::string displaytxt = txt;
-
-                  #if WINDOWS
+                  std::map<std::string, std::map<int,int>> reorderMap;
+                  for( int i=p->val_min.i; i<= max; i += incr )
+                  {
+                     int idx = dm->remapStreamedIndexToDisplayIndex( i );
+                     auto gn = dm->groupNameAtStreamedIndex(i);
+                     
+                     reorderMap[gn][idx] = i;
+                  }
+                  bool useSubMenus = dm->hasGroupNames();
+                  COptionMenu *sub = nullptr;
+                  for( auto grp : reorderMap )
+                  {
+                     bool checkSub = false;
+                     if( useSubMenus )
+                     {
+                        sub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+                     }
+                     for( auto rp : grp.second )
+                     {
+                        int i = rp.second;
+                        std::string displaytxt = dm->nameAtStreamedIndex(i);
+                     
+#if WINDOWS
+                        Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
+#endif
+                        
+                        auto b = addCallbackMenu( useSubMenus ? sub : contextMenu, displaytxt.c_str(),
+                                                 [this,p,i]() {
+                                                    std::cout << "Setting to " << i << std::endl;
+                                                    p->val.i = i;
+                                                    synth->refresh_editor = true;
+                                                 }
+                           );
+                        eid++;
+                        if( i == p->val.i ) {
+                           b->setChecked(true);
+                           checkSub = true;
+                        }
+                     }
+                     if( useSubMenus )
+                     {
+                        auto e = contextMenu->addEntry( sub, grp.first.c_str() ); sub->forget(); sub = nullptr;
+                        e->setChecked( checkSub );
+                     }
+                  }
+               }
+               else
+               {
+                  for( int i=p->val_min.i; i<= max; i += incr )
+                  {
+                     char txt[256];
+                     float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
+                     p->get_display(txt, true, ef );
+                     
+                     std::string displaytxt = txt;
+                     
+#if WINDOWS
                      Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
-                  #endif
-
-                  auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
-                                          [this,ef,p,i]() {
-                                             synth->setParameter01( p->id, ef, false, false );
-                                             synth->refresh_editor=true;
-                                          }
-                     );
-                  eid++;
-                  if( i == p->val.i )
-                     b->setChecked(true);
+#endif
+                     
+                     auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
+                                              [this,ef,p,i]() {
+                                                 synth->setParameter01( p->id, ef, false, false );
+                                                 synth->refresh_editor=true;
+                                              }
+                        );
+                     eid++;
+                     if( i == p->val.i )
+                        b->setChecked(true);
+                  }
                }
             }
          }

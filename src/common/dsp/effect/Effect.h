@@ -89,6 +89,12 @@ public:
        // No-op here.
    }
 
+   inline bool checkHasInvalidatedUI() {
+      auto x = hasInvalidated;
+      hasInvalidated = false;
+      return x;
+   }
+   
 protected:
    SurgeStorage* storage;
    FxStorage* fxdata;
@@ -96,6 +102,7 @@ protected:
    int ringout;
    float* f[n_fx_params];
    int* pdata_ival[n_fx_params]; // f is not a great choice for a member name, but 'i' woudl be worse!
+   bool hasInvalidated;
 };
 
 Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd);

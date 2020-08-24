@@ -43,7 +43,7 @@ void CAboutBox::draw(CDrawContext* pContext)
    {
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
 
-      CRect infobg(0, 395, 905, 545);
+      CRect infobg(0, 375, 905, 545);
       CRect skininfobg(0, 0, 905, 80);
       pContext->setFillColor(CColor(0, 0, 0, 255));
       pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
@@ -85,7 +85,8 @@ void CAboutBox::draw(CDrawContext* pContext)
                "Released under the GNU General Public License, v3",
                "Copyright 2005-2020 by Vember Audio and individual contributors",
                "Source, contributors and other information at",
-               "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc."
+               "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc.",
+               "Contains the Open Source Airwindows Plugins for some effects",
             } };
          
          int yMargin = 6;
@@ -101,7 +102,7 @@ void CAboutBox::draw(CDrawContext* pContext)
 
          // link to Surge github repo in another color because VSTGUI -_-
          pContext->setFontColor(skin->getColor("aboutbox.link", CColor(46, 134, 255)));
-         pContext->drawString("https://github.com/surge-synthesizer/surge", CPoint(253, 506));
+         pContext->drawString("https://github.com/surge-synthesizer/surge", CPoint(253, 506 - strHeight - yMargin));
       }
 
       {

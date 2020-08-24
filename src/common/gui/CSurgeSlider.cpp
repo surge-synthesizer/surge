@@ -752,6 +752,7 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 
       attachCursor();
    }
+
    return kMouseEventHandled;
 }
 
