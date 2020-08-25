@@ -130,6 +130,20 @@ else()
   endif()
 endif()
 
+
+### Set up the AirWindows integration
+include( libs/airwindows/CMakeLists.txt )
+list( TRANSFORM AIRWINDOWS_FX_SOURCES PREPEND "libs/airwindows/" )
+set( AIRWINDOWS_SOURCES
+  ${AIRWINDOWS_FX_SOURCES}
+  src/common/dsp/effect/airwindows/airwindows_adapter.cpp
+  src/common/dsp/effect/airwindows/airwindows_register.cpp
+  )
+set( AIRWINDOWS_INCLUDES
+  src/common/dsp/effect/airwindows
+  libs/airwindows/src
+  )
+
 # Enumerate the sources into groups
 #    SURGE_COMMON_SOURCES
 #    SURGE_GUI_SOURCES
@@ -190,6 +204,8 @@ set(SURGE_COMMON_SOURCES
   libs/xml/tinyxmlparser.cpp
   libs/strnatcmp/strnatcmp.cpp
   libs/filesystem/filesystem.cpp
+
+  ${AIRWINDOWS_SOURCES}
   )
 
 set( SURGE_GENERATED_SOURCES
@@ -323,6 +339,7 @@ set(SURGE_COMMON_INCLUDES
   src/common/dsp
   src/common/thread
   src/common/vt_dsp
+  ${AIRWINDOWS_INCLUDES}
   )
 
 set(SURGE_GUI_INCLUDES
@@ -330,6 +347,8 @@ set(SURGE_GUI_INCLUDES
   vstgui.surge
   libs/nanosvg/src
   )
+
+
 
 ### OS SPECIFIC SECTION
 if( APPLE )
@@ -350,6 +369,7 @@ if( APPLE )
     "-D_aligned_malloc(x,a)=malloc(x)"
     "-D_aligned_free(x)=free(x)"
     -Wno-deprecated-declarations
+    -Wno-unused-value
     -Werror=inconsistent-missing-override
     -Werror=logical-op-parentheses
     -Werror=dynamic-class-memaccess
@@ -446,6 +466,7 @@ elseif( UNIX AND NOT APPLE )
   else()
     set(ARCH_COMPILE_OPTIONS
       -msse2
+      -Wno-unused-value   # requiref for airwindows
       -Werror 
       "-D_aligned_malloc(x,a)=malloc(x)"
       "-D_aligned_free(x)=free(x)"

@@ -61,6 +61,8 @@ const int FIRoffset = FIRipol_N >> 1;
 const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
+const int n_fx_slots=8;
+
 // XML storage fileformat revision
 // 0 -> 1 new EG attack shapes (0>1, 1>2, 2>2)
 // 1 -> 2 new LFO EG stages (if (decay == max) sustain = max else sustain = min
@@ -203,11 +205,12 @@ enum sub3_fxtypes
    fxt_reverb2,
    fxt_flanger,
    fxt_ringmod,
+   fxt_airwindows,
    num_fxtypes,
 };
 const char fxtype_names[num_fxtypes][16] = {
     "Off", "Delay",     "Reverb 1",      "Phaser", "Rotary",  "Distortion",
-    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger", "Ring Mod" };
+    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger", "Ring Mod", "Airwindows" };
 
 enum fx_bypass
 {
@@ -530,7 +533,7 @@ public:
 
    // data
    SurgeSceneStorage scene[2], morphscene;
-   FxStorage fx[8];
+   FxStorage fx[n_fx_slots];
    // char name[NAMECHARS];
    int scene_start[2], scene_size;
    Parameter scene_active, scenemode, scenemorph, splitkey;

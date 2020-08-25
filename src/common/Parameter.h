@@ -130,6 +130,8 @@ enum ctrltypes
    ct_phaser_stages,
    ct_lfoamplitude,
    ct_vocoder_modulator_mode,
+   ct_airwindow_fx,
+   ct_airwindow_param,
    num_ctrltypes,
 };
 
@@ -152,13 +154,25 @@ enum ControlGroup
 
 struct ParamUserData
 {
-   virtual ~ParamUserData()
-   {}
+   virtual ~ParamUserData() = default;
 };
 
 struct CountedSetUserData : public ParamUserData
 {
    virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
+};
+
+struct ParameterExternalFormatter : public ParamUserData
+{
+   virtual void formatValue( float value, char *txt, int txtlen ) = 0;
+};
+
+struct ParameterDiscreteIndexRemapper : public ParamUserData
+{
+   virtual int remapStreamedIndexToDisplayIndex( int i ) = 0;
+   virtual std::string nameAtStreamedIndex( int i ) = 0;
+   virtual bool hasGroupNames() { return false; }
+   virtual std::string groupNameAtStreamedIndex( int i ) { return ""; } // If you want menu grouping
 };
 
 /*
@@ -336,7 +350,8 @@ public:
       Custom,
       LinearWithScale,
       ATwoToTheBx,
-      Decibel
+      Decibel,
+      DelegatedToFormatter
    } displayType = Custom;
 
    enum ParamDisplayFeatures {

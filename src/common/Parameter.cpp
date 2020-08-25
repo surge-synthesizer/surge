@@ -301,6 +301,16 @@ void Parameter::set_user_data(ParamUserData* ud)
          user_data = nullptr;
       }
       break;
+   case ct_airwindow_fx:
+      if( dynamic_cast<ParameterDiscreteIndexRemapper*>(ud))
+      {
+         user_data = ud;
+      }
+      else
+      {
+         user_data = nullptr;
+      }
+      break;
    default:
       std::cerr << "Setting userdata on a non-supporting param ignored" << std::endl;
       user_data = nullptr;
@@ -782,6 +792,19 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
+   case ct_airwindow_fx:
+      val_min.i = 0;
+      val_max.i = 10;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
+   case ct_airwindow_param:
+      val_min.f = 0;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
+      
    case ct_none:
    default:
       sprintf(dispname, "-");
@@ -959,6 +982,13 @@ void Parameter::set_type(int ctrltype)
    case ct_sendlevel:
       displayType = Decibel;
       sprintf( displayInfo.unit, "dB" );
+      break;
+
+   case ct_airwindow_param:
+      displayType = DelegatedToFormatter;
+      displayInfo.scale = 1.0;
+      displayInfo.unit[0] = 0;
+      displayInfo.decimals = 3;
       break;
    }
 }
@@ -1374,6 +1404,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    case Custom:
       // handled below
       break;
+   case DelegatedToFormatter:
+      // For now do LinearWithScale
    case LinearWithScale:
    {
       std::string u = displayInfo.unit;
@@ -1774,6 +1806,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case Custom:
          // Custom cases are handled below
          break;
+      case DelegatedToFormatter:
+      {
+         auto ef = dynamic_cast<ParameterExternalFormatter *>( user_data );
+         if( ef )
+         {
+            ef->formatValue( f, txt, 64 );
+            return;
+         }
+         // We do not break on purpose here. DelegatedToFormatter falls back to LInear with Scale
+      }
       case LinearWithScale:
       {
          std::string u = displayInfo.unit;
@@ -2529,6 +2571,7 @@ bool Parameter::set_value_from_string( std::string s )
    case Custom:
       // handled below
       break;
+   case DelegatedToFormatter:
    case LinearWithScale:
    {
       float ext_mul = ( can_extend_range() && extend_range ) ? displayInfo.extendFactor : 1.0;
@@ -2615,6 +2658,7 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
    {
    case Custom:
       break;
+   case DelegatedToFormatter:
    case LinearWithScale:
    {
       valid = true;

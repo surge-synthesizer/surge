@@ -137,6 +137,10 @@
         <snapshot p0="-4" p1="0.534785" p2="4.90419" p3="0.545083" p4="0.700273" p5="0.0826876" p6="0.0833598" p7="1" p8="6.000000" p9="0.820355" name="Anybody Canyon" />
         <snapshot p0="-1.99947" p1="-0.470558" p2="-1.60312" p3="0.140042" p4="0.234753" p5="0.0826876" p6="0.0833598" p7="1" p8="4.500000" p9="0.820355" name="Blurred Echo" />
     </type>
+    <separator/>
+    <type i="14" name="Airwindows">
+      <snapshot name="Init"/>
+    </type>
 </fx>
 <customctrl>
     <entry p="0" ctrl="41" />

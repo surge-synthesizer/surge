@@ -2561,13 +2561,17 @@ void SurgeSynthesizer::processControl()
 
    if (fx_suspend_bitmask)
    {
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          if (((1 << i) & fx_suspend_bitmask) && fx[i])
             fx[i]->suspend();
       }
       fx_suspend_bitmask = 0;
    }
+
+   for( int i=0; i<n_fx_slots; ++i )
+      if( fx[i] )
+         refresh_editor |= fx[i]->checkHasInvalidatedUI();
 }
 
 void SurgeSynthesizer::process()
