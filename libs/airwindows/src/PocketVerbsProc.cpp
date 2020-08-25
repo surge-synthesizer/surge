@@ -9181,10 +9181,10 @@ void PocketVerbs::processReplacing(float **inputs, float **outputs, VstInt32 sam
 		*out1 = inputSampleL;
 		*out2 = inputSampleR;
 		
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
@@ -18353,10 +18353,10 @@ void PocketVerbs::processDoubleReplacing(double **inputs, double **outputs, VstI
 		*out1 = inputSampleL;
 		*out2 = inputSampleR;
 		
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
