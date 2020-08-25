@@ -369,7 +369,6 @@ if( APPLE )
     "-D_aligned_malloc(x,a)=malloc(x)"
     "-D_aligned_free(x)=free(x)"
     -Wno-deprecated-declarations
-    -Wno-unused-value
     -Werror=inconsistent-missing-override
     -Werror=logical-op-parentheses
     -Werror=dynamic-class-memaccess
@@ -466,7 +465,6 @@ elseif( UNIX AND NOT APPLE )
   else()
     set(ARCH_COMPILE_OPTIONS
       -msse2
-      -Wno-unused-value   # requiref for airwindows
       -Werror 
       "-D_aligned_malloc(x,a)=malloc(x)"
       "-D_aligned_free(x)=free(x)"

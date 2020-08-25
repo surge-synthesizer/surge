@@ -564,10 +564,10 @@ void BlockParty::processReplacing(float **inputs, float **outputs, VstInt32 samp
 		*out1 = inputSampleL;
 		*out2 = inputSampleR;
 
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
@@ -1125,10 +1125,10 @@ void BlockParty::processDoubleReplacing(double **inputs, double **outputs, VstIn
 		*out1 = inputSampleL;
 		*out2 = inputSampleR;
 
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 

@@ -217,10 +217,10 @@ void BitGlitter::processReplacing(float **inputs, float **outputs, VstInt32 samp
 		*out1 = outputSampleL;
 		*out2 = outputSampleR;
 
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
@@ -433,10 +433,10 @@ void BitGlitter::processDoubleReplacing(double **inputs, double **outputs, VstIn
 		*out1 = outputSampleL;
 		*out2 = outputSampleR;
 		
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 

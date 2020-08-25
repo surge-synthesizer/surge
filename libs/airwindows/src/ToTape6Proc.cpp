@@ -337,10 +337,10 @@ void ToTape6::processReplacing(float **inputs, float **outputs, VstInt32 sampleF
 		*out1 = inputSampleL;
 		*out2 = inputSampleR;
 
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
@@ -671,10 +671,10 @@ void ToTape6::processDoubleReplacing(double **inputs, double **outputs, VstInt32
 		*out1 = inputSampleL;
 		*out2 = inputSampleR;
 
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
