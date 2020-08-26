@@ -251,6 +251,8 @@ public:
    void setEditorOverlay( VSTGUI::CView *c,
                           std::string editorTitle,
                           std::function<void()> onClose = [](){} );
+
+   std::string getDisplayForTag( long tag );
    
 private:
    int wsx = BASE_WINDOW_SIZE_X;

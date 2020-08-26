@@ -100,6 +100,11 @@
     <color id="slider.modulation" value="#FFBF00"/>
     <color id="slider.negative.modulation" value="$gray"/>
 
+    <color id="menuslider.value" value="$lightgray"/>
+    <color id="menuslider.value.hover" value="#D4C4B4"/>
+    <color id="menuslider.label" value="$lightgray"/>
+    
+        
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="$red"/>
     <color id="vumeter.background" value="$darkergray"/>

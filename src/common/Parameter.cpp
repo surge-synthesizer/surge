@@ -2194,6 +2194,21 @@ void Parameter::get_display(char* txt, bool external, float ef)
               sprintf(txt, "%s", type.c_str());
            }
          break;
+
+      case ct_airwindow_fx:
+      {
+         // These are all the ones with a ParameterDiscreteIndexRemapper
+         auto pd = dynamic_cast<ParameterDiscreteIndexRemapper*>(user_data);
+         if( pd )
+         {
+            sprintf(txt, "%s", pd->nameAtStreamedIndex(i).c_str() );
+         }
+         else
+         {
+            sprintf(txt, "%i", i);
+         }
+         break;
+      }
       default:
          sprintf(txt, "%i", i);
          break;
