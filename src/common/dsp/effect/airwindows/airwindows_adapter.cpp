@@ -57,7 +57,7 @@ int AirWindowsEffect::group_label_ypos(int id)
 void AirWindowsEffect::init_ctrltypes() {
    registerPlugins();
    Effect::init_ctrltypes();
-   fxdata->p[0].set_name( "FX Selector" );
+   fxdata->p[0].set_name( "FX" );
    fxdata->p[0].set_type( ct_airwindow_fx );
    fxdata->p[0].posy_offset = 1;
    fxdata->p[0].val_max.i = fxreg.size() - 1;

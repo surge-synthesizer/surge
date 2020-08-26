@@ -28,6 +28,7 @@
 #include "CLFOGui.h"
 #include "CEffectSettings.h"
 #include "CSurgeVuMeter.h"
+#include "CMenuAsSlider.h"
 #include "CEffectLabel.h"
 #include "CAboutBox.h"
 #include "vstcontrols.h"
@@ -827,16 +828,19 @@ void SurgeGUIEditor::refresh_mod()
    {
       if (param[i])
       {
-         CSurgeSlider* s = (CSurgeSlider*)param[i];
-         if (s->is_mod)
+         auto *s = dynamic_cast<CSurgeSlider*>(param[i]);
+         if( s )
          {
-            s->setModMode(mod_editor ? 1 : 0);
-            s->setModPresent(synth->isModDestUsed(i));
-            s->setModCurrent(synth->isActiveModulation(i, thisms), synth->isBipolarModulation(thisms));
+            if (s->is_mod)
+            {
+               s->setModMode(mod_editor ? 1 : 0);
+               s->setModPresent(synth->isModDestUsed(i));
+               s->setModCurrent(synth->isActiveModulation(i, thisms), synth->isBipolarModulation(thisms));
+            }
+            // s->setDirty();
+            s->setModValue(synth->getModulation(i, thisms));
+            s->invalid();
          }
-         // s->setDirty();
-         s->setModValue(synth->getModulation(i, thisms));
-         s->invalid();
       }
    }
 #if OSC_MOD_ANIMATION
@@ -1939,6 +1943,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
             polydisp = key;
          }
          break;
+         case ct_airwindow_fx:
+         case ct_flangermode:
+         case ct_flangerwave:
+         case ct_distortion_waveshape:
+         case ct_sinefmlegacy:
+         {
+            auto hs = new CMenuAsSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs),
+                                        this,
+                                        p->id + start_paramtags,
+                                        bitmapStore,
+                                        &(synth->storage));
+            hs->setSkin( currentSkin, bitmapStore );
+            hs->setLabel(p->get_name());
+            frame->addView( hs );
+            param[i] = hs;
+         }
+         break;
          default:
          {
             if (synth->isValidModulation(p->id, modsource))
@@ -1963,17 +1984,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = false;
 
 
-            if( p->valtype  == vt_int || p->valtype  == vt_bool)
-            {
-               hs->isStepped = true;
-               hs->intRange = p->val_max.i - p->val_min.i;
-            }
-            else
-            {
-               hs->isStepped = false;
-            }
-
-            setDisabledForParameter(p, hs);
+               if( p->valtype  == vt_int || p->valtype  == vt_bool)
+               {
+                  hs->isStepped = true;
+                  hs->intRange = p->val_max.i - p->val_min.i;
+               }
+               else
+               {
+                  hs->isStepped = false;
+               }
+               
+               setDisabledForParameter(p, hs);
 
                frame->addView(hs);
                param[i] = hs;
@@ -2001,27 +2022,21 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = false;
 
 
-            if( p->valtype  == vt_int || p->valtype  == vt_bool)
-            {
-               hs->isStepped = true;
-               hs->intRange = p->val_max.i - p->val_min.i;
-            }
-            else
-            {
-               hs->isStepped = false;
-            }
-
+               if( p->valtype  == vt_int || p->valtype  == vt_bool)
+               {
+                  hs->isStepped = true;
+                  hs->intRange = p->val_max.i - p->val_min.i;
+               }
+               else
+               {
+                  hs->isStepped = false;
+               }
+               
 
                setDisabledForParameter(p, hs);
 
                frame->addView(hs);
                param[i] = hs;
-            }
-
-            // THIS CODE WILL DIE soon
-            if( p->ctrltype == ct_airwindow_fx )
-            {
-               // SET TYPE TO NON SLIDER
             }
          }
          break;
@@ -2419,7 +2434,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       return 1;
    }
    long tag = control->getTag();
-
+   
    // In these cases just move along with success. RMB does nothing on these switches
    if( tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store || tag == tag_store_cancel || tag == tag_store_ok )
    {
@@ -3047,7 +3062,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()) )
    {
       Parameter* p = synth->storage.getPatch().param_ptr[ptag];
-
+      
       auto ctrl = dynamic_cast<CSurgeSlider*>(control);
 
       // don't show RMB context menu for filter subtype if it's hidden/not applicable
@@ -3059,7 +3074,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if (tag == f2subtypetag && (f2type == fut_none || f2type == fut_SNH))
          return 1;
 
-      if ((button & kRButton) && !(p->ctrltype == ct_lfoshape)) // for LFO let CLFOGui handle it
+      if (button & kRButton) 
       {
          CRect menuRect;
          CPoint where;
@@ -6980,4 +6995,24 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    // save the onClose function
    editorOverlayOnClose = onClose;
+}
+
+std::string SurgeGUIEditor::getDisplayForTag( long tag )
+{
+   if( tag < start_paramtags )
+      return "Non-param tag";
+   
+   int ptag = tag - start_paramtags;
+   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()) )
+   {
+      Parameter* p = synth->storage.getPatch().param_ptr[ptag];
+      if( p )
+      {
+         char txt[1024];
+         p->get_display( txt );
+         return txt;
+      }
+   }
+
+   return "Unknown";
 }

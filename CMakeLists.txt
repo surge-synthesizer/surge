@@ -219,6 +219,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CEffectSettings.cpp
   src/common/gui/CHSwitch2.cpp
   src/common/gui/CLFOGui.cpp
+  src/common/gui/CMenuAsSlider.cpp
   src/common/gui/CModulationSourceButton.cpp
   src/common/gui/CNumberField.cpp
   src/common/gui/COscillatorDisplay.cpp
