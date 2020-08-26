@@ -1955,6 +1955,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                         bitmapStore,
                                         &(synth->storage));
             hs->setSkin( currentSkin, bitmapStore );
+            hs->setValue( p->get_value_f01() );
+            hs->setMinMax( p->val_min.i, p->val_max.i );
             hs->setLabel(p->get_name());
             frame->addView( hs );
             param[i] = hs;
@@ -3253,11 +3255,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 #endif
                         
                         auto b = addCallbackMenu( useSubMenus ? sub : contextMenu, displaytxt.c_str(),
-                                                 [this,p,i]() {
-                                                    std::cout << "Setting to " << i << std::endl;
-                                                    p->val.i = i;
-                                                    synth->refresh_editor = true;
-                                                 }
+                                                  [this,p,i, tag]() {
+                                                     float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
+                                                     synth->setParameter01( p->id, ef, false, false );
+                                                     synth->refresh_editor=true;
+                                                  }
                            );
                         eid++;
                         if( i == p->val.i ) {

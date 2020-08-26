@@ -112,6 +112,22 @@ void CMenuAsSlider::onSkinChanged()
                                                               dynamic_cast<CScalableBitmap*>( pBackground ),
                                                               associatedBitmapStore,
                                                               Surge::UI::Skin::HoverType::HOVER);
-   std::cout << pBackground << " " << pBackgroundHover << std::endl;
-   
+}
+
+bool CMenuAsSlider::onWheel( const VSTGUI::CPoint &where, const float &distance, const VSTGUI::CButtonState &buttons ) {
+   wheelDistance += distance;
+   float dDistance = 1.f / std::max( ( iMax - iMin ), 1 );
+   if( wheelDistance > 1 ) {
+      wheelDistance -= 1;
+      setValue( limit_range( getValue() - dDistance, 0.f, 1.f ) );
+      if( listener )
+         listener->valueChanged(this);
+   }
+   if( wheelDistance < -1 ) {
+      wheelDistance += 1;
+      setValue( limit_range( getValue() + dDistance, 0.f, 1.f ) );
+      if( listener )
+         listener->valueChanged(this);
+   }
+   return true;
 }

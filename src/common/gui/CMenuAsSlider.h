@@ -32,7 +32,7 @@ public:
    virtual void draw(VSTGUI::CDrawContext*) override;
    void setLabel( const char* lab ) { label = lab; }
    
-   // virtual bool onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons) override;
+   virtual bool onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons) override;
 
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
@@ -43,6 +43,7 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
       {
          isHover = true;
+         wheelDistance = 0;
          invalid();
          return VSTGUI::kMouseEventHandled;
       }
@@ -50,11 +51,15 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
       {
          isHover = false;
+         wheelDistance = 0;
          invalid();
          return VSTGUI::kMouseEventHandled;
       }
 
 
+   void setMinMax( int i, int x ) {
+      iMin = i; iMax = x;
+   }
    
    CLASS_METHODS(CMenuAsSlider, CControl)
    bool in_hover = false;
@@ -66,5 +71,7 @@ private:
    VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr;
    std::string label = "";
    bool isHover = false;
-   bool wheelInitiatedEdit = false;
+   float wheelDistance = 0;
+   
+   int iMin = 0, iMax = 10;
 };
