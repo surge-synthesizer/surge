@@ -109,12 +109,12 @@ jobs:
   - bash: |
       set -e
       cmake -Bbuild $(cmakeArguments)
-    displayName: configure with cmake 
+    displayName: all - configure with cmake 
 
   - bash: |
       set -e
       cmake --build build --config Release --target $(cmakeTarget) --parallel 8
-    displayName: build with cmake 
+    displayName: all - build with cmake 
 
   - bash: | 
       set -e
@@ -135,12 +135,12 @@ jobs:
 
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
 
-      echo "Running HeadlessTest $(linuxProject)"
+      echo "Running HeadlessTest"
       export XDG_DATA_HOME=$AGENT_TEMPDIRECTORY/XH
       mkdir -p $XDG_DATA_HOME
       rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge/"
 
-      ./buildlin/surge-headless
+      ./build/surge-headless
     condition: variables.isLinuxUnitTest
     displayName: linux - run unit test
 
