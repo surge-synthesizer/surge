@@ -55,8 +55,39 @@ int AirWindowsEffect::group_label_ypos(int id)
 }
 
 void AirWindowsEffect::init_ctrltypes() {
-   registerPlugins();
+   /*
+   ** This looks odd right? Why not just call resetCtrlTypes?
+   ** Well: When we load if we are set to ct_none then we don't
+   ** stream values on. So what we do is we transiently make
+   ** every 1..n_fx a ct_airwindow_param so the unstream
+   ** can set values, then when we process later, resetCtrlTypes
+   ** will take those prior values and assign them as new (and that's
+   ** what is called if the value is changed). Also since the load
+   ** will often load to a sparate instance and copy the params over
+   ** we set the user_data to nullptr here to indicate that
+   ** after this inti we need to do something even if the value
+   ** of our FX hasn't changed.
+   */
    Effect::init_ctrltypes();
+   registerPlugins();
+
+   fxdata->p[0].set_name( "FX" );
+   fxdata->p[0].set_type( ct_airwindow_fx );
+   fxdata->p[0].posy_offset = 1;
+   fxdata->p[0].val_max.i = fxreg.size() - 1;
+   fxdata->p[0].set_user_data( nullptr );
+
+   for( int i=0; i<n_fx_params - 1; ++i )
+   {
+      fxdata->p[i+1].set_type( ct_airwindow_param );
+      std::string w = "Airwindow " + std::to_string(i);
+      fxdata->p[i+1].set_name( w.c_str() );
+   }
+
+   lastSelected = -1;
+}
+
+void AirWindowsEffect::resetCtrlTypes() {
    fxdata->p[0].set_name( "FX" );
    fxdata->p[0].set_type( ct_airwindow_fx );
    fxdata->p[0].posy_offset = 1;
@@ -70,9 +101,15 @@ void AirWindowsEffect::init_ctrltypes() {
       {
          char txt[1024];
          airwin->getParameterName( i, txt );
+         auto priorVal = fxdata->p[i+1].val.f;
          fxdata->p[i+1].set_name( txt );
          fxdata->p[i+1].set_type( ct_airwindow_param );
          fxdata->p[i+1].posy_offset = 3;
+         fxdata->p[i+1].val.f = priorVal;
+      }
+      for( int i=airwin->paramCount; i < n_fx_params; ++i )
+      {
+         fxdata->p[i+1].set_type( ct_none );
       }
    }
 
@@ -87,7 +124,7 @@ void AirWindowsEffect::init_default_values() {
 
 void AirWindowsEffect::process( float *dataL, float *dataR )
 {
-   if( fxdata->p[0].val.i != lastSelected )
+   if( fxdata->p[0].val.i != lastSelected || fxdata->p[0].user_data == nullptr )
    {
       setupSubFX( fxdata->p[0].val.i );
    }
@@ -124,6 +161,6 @@ void AirWindowsEffect::setupSubFX( int sfx )
    char fxname[1024];
    airwin->getEffectName(fxname);
    lastSelected = sfx;
-   init_ctrltypes();
+   resetCtrlTypes();
 }
 

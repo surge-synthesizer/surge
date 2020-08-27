@@ -2452,7 +2452,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_rotarydrive:
    case ct_sendlevel:
    case ct_freq_mod:
- 
+   case ct_airwindow_param:
    {
       return true;
       break;

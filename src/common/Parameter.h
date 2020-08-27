@@ -381,7 +381,7 @@ public:
    } displayInfo;
       
    
-   ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
+   ParamUserData* user_data = nullptr;    // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable
 
    /*
