@@ -82,6 +82,9 @@ void AirWindowsEffect::init_ctrltypes() {
       fxdata->p[i+1].set_type( ct_airwindow_param );
       std::string w = "Airwindow " + std::to_string(i);
       fxdata->p[i+1].set_name( w.c_str() );
+
+      if( ! fxFormatters[i] )
+         fxFormatters[i] = std::make_unique<AWFxParamFormatter>(this,i);
    }
 
    lastSelected = -1;
@@ -104,6 +107,7 @@ void AirWindowsEffect::resetCtrlTypes() {
          auto priorVal = fxdata->p[i+1].val.f;
          fxdata->p[i+1].set_name( txt );
          fxdata->p[i+1].set_type( ct_airwindow_param );
+         fxdata->p[i+1].set_user_data( fxFormatters[i].get() );
          fxdata->p[i+1].posy_offset = 3;
          fxdata->p[i+1].val.f = priorVal;
       }

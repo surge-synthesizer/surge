@@ -67,5 +67,28 @@ public:
       }
       AirWindowsEffect *fx;
    };
+
+   struct AWFxParamFormatter : public ParameterExternalFormatter {
+      AWFxParamFormatter( AirWindowsEffect *fx, int i ) : fx( fx ), idx( i ) { }
+      virtual void formatValue( float value, char *txt, int txtlen ) override {
+         if( fx && fx->airwin )
+         {
+            char lab[256], dis[256];
+            fx->airwin->getParameterLabel( idx, lab );
+            fx->airwin->getParameterDisplay( idx, dis );
+            sprintf( txt, "%s%s", dis, lab );
+         }
+         else
+         {
+            sprintf( txt, "AWA.ERROR %lf", value );
+         }
+      }
+      AirWindowsEffect *fx;
+      int idx;
+   };
+
+   std::array<std::unique_ptr<AWFxParamFormatter>, n_fx_params - 1> fxFormatters;
+   
+   
    std::unique_ptr<AWFxSelectorMapper> mapper;
 };

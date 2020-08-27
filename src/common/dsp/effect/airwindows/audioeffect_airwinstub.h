@@ -34,7 +34,9 @@ struct AirWinBaseClass {
    virtual void processReplacing( float **in, float **out, VstInt32 sampleFrames ) = 0;
 
    virtual void getParameterName(VstInt32 index, char *text) = 0;    // name of the parameter
-
+   virtual void getParameterLabel(VstInt32 index, char *txt) = 0;
+   virtual void getParameterDisplay(VstInt32 index, char *txt) = 0;
+   
    double getSampleRate() { return dsamplerate; }
 
    int paramCount = 0;
@@ -58,9 +60,12 @@ inline void int2string( int i, char *t, size_t num )
 {
    snprintf( t, num, "%d", i );
 }
-inline void dB2string( float C, char *t, size_t num )
+inline void dB2string( float value, char *t, size_t num )
 {
-   sprintf( t, "FIXME" );
+   if (value <= 0)
+      vst_strncpy (t, "-inf", num);
+   else
+      float2string ((float)(20. * log10 (value)), t, num);
 }
 
 typedef AirWinBaseClass AudioEffectX;
