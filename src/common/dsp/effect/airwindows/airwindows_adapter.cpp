@@ -123,7 +123,6 @@ void AirWindowsEffect::setupSubFX( int sfx )
    
    char fxname[1024];
    airwin->getEffectName(fxname);
-   std::cout << "Constructed " << fxname << " " << airwin->paramCount << std::endl;
    lastSelected = sfx;
    init_ctrltypes();
 }
