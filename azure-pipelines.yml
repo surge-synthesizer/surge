@@ -15,48 +15,54 @@ jobs:
       macOS:
         imageName: 'macos-10.14'
         isMac: True
-      windows-x64-plugins:
-        imageName: 'vs2017-win2016'
-        isWindows: True
-        is64Bit: True
-      windows-x64-vs2019:
+        isMacUnitTest: True
+        cmakeArguments: "-GXcode"
+        cmakeTarget: "all-components"
+      windows-x64:
         imageName: 'windows-2019'
         isWindows: True
-        is64Bit: True
-      windows-x86-plugins:
-        imageName: 'vs2017-win2016'
+        cmakeArguments: "-A x64"
+        cmakeTarget: "Surge-VST3-Packaged"
+      windows-x86:
+        imageName: 'windows-2019'
         isWindows: True
-        is32Bit: True
+        cmakeArguments: "-A Win32"
+        cmakeTarget: "Surge-VST3-Packaged"
       windows-unittest:
         imageName: 'vs2017-win2016'
+        isWindows: True
         isWindowsUnitTest: True
+        cmakeArguments: "-A x64"
+        cmakeTarget: "surge-headless"
       linux-lv2:
-        imageName: 'ubuntu-18.04'
-        isLinux: True
-        linuxProject: lv2
-      linux-vst3:
-        imageName: 'ubuntu-18.04'
-        isLinux: True
-        linuxProject: vst3
-      linux-vst3-ub20:
         imageName: 'ubuntu-20.04'
         isLinux: True
-        linuxProject: vst3
+        cmakeArguments: ""
+        cmakeTarget: "Surge-LV2-Packaged"
+      linux-vst3:
+        imageName: 'ubuntu-20.04'
+        isLinux: True
+        cmakeArguments: ""
+        cmakeTarget: "Surge-VST3-Packaged"
       linux-clang:
         imageName: 'ubuntu-20.04'
-        isLinuxClang: True
-      linux-vst3-ubuntu-16:
-        imageName: 'ubuntu-16.04'
         isLinux: True
-        linuxProject: vst3
+        aptGetExtras: "clang"
+        cmakeArguments: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        cmakeTarget: "Surge-LV2-Packaged"
       linux-arm-cross:
-        imageName: 'ubuntu-18.04'
-        isLinuxARM: True
-      linux-unittest:
-        imageName: 'ubuntu-18.04'
+        imageName: 'ubuntu-20.04'
         isLinux: True
-        linuxProject: headless
-        runHeadless: True
+        isLinuxARM: True
+        aptGetExtras: "libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf"
+        cmakeArguments: "-DCMAKE_TOOLCHAIN_FILE=cmake/linux-arm-ubuntu-crosscompile-toolchain.cmake"
+        cmakeTarget: "surge-headless"
+      linux-unittest:
+        imageName: 'ubuntu-20.04'
+        isLinux: True
+        isLinuxUnitTest: True
+        cmakeArguments: ""
+        cmakeTarget: "surge-headless"
 
   pool:
     vmImage: $(imageName)
@@ -67,8 +73,10 @@ jobs:
     # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
 
   - bash: |
-     echo "BUILD REASON = " $BUILD_REASON
-     echo "MAKE ASSETS = " $MAKEASSETS     
+     echo "BUILD REASON   = " $BUILD_REASON
+     echo "cmakeArguments = " $(cmakeArguments)
+     echo "cmakeTarget    = " $(cmakeTarget)
+     echo "aptGetExtras   = " $(aptGetExtras)
     displayName: all - details on build
     
   - bash: |
@@ -80,77 +88,37 @@ jobs:
       echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
     displayName: all - submodule init
 
-  - bash: |
-      ./build-osx.sh --build --verbose
-
-    condition: variables.isMac
-    displayName: macOS - build all assets
 
   - bash: |
-      export PATH=$AGENT_TEMPDIRECTORY:$PATH
-      
-      mkdir "$HOME/Library/Application Support/Surge"
-      rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
-      
-      ./build-osx.sh --build-headless
-      ./build/Release/surge-headless
-    condition: variables.isMac
-    displayName: macOS - run unit tests
+      set -e
+
+      sudo apt-get install -y xcb
+      sudo apt-get install -y libxcb-util-dev
+      sudo apt-get install -y libxcb-cursor-dev
+      sudo apt-get install -y libxcb-keysyms1-dev
+      sudo apt-get install -y libxkbcommon-dev
+      sudo apt-get install -y libxkbcommon-x11-dev
+      sudo apt-get install -y devscripts
+
+      echo "aptGetExtras are $(aptGetExtras)"
+      sudo apt-get install -y devscripts $(aptGetExtras)      
+
+    condition: variables.isLinux
+    displayName: linux - run apt-get
 
   - bash: |
-      mkdir -p build
-      cmake -Bbuild -A x64
-      ls -alFh
-
-    condition: and(variables.isWindows,variables.is64Bit)
-    displayName: windows - setup 64bit build for plugins
+      set -e
+      cmake -Bbuild $(cmakeArguments)
+    displayName: configure with cmake 
 
   - bash: |
-      mkdir -p build
-      cmake -Bbuild -A Win32
-      ls -alFh
-
-    condition: and(variables.isWindows,variables.is32Bit)
-    displayName: windows - setup 32 bit build for plugins
-
-  - task: MSBuild@1
-    inputs:
-      solution: 'buildtask.xml'
-      maximumCpuCount: true
-      platform: 'x64'
-    condition: and(variables.isWindows,variables.is64Bit)
-    displayName: windows - build x64 plugins
-
-  - task: MSBuild@1
-    inputs:
-      solution: 'buildtask.xml'
-      maximumCpuCount: true
-      platform: 'Win32'
-    condition: and(variables.isWindows,variables.is32Bit)
-    displayName: windows - build x86 plugins
-
-# https://github.com/Microsoft/azure-pipelines-tasks/issues/9737
-  - script: |
-      pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-      for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
-      popd
-
-      call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
-      cmake -S . -B build  -G "Visual Studio 15 2017 Win64"
-    condition: variables.isWindowsUnitTest
-    displayName: windows - run cmake
-
-  - task: MSBuild@1
-    inputs:
-      solution: 'build\surge-headless.vcxproj'
-      maximumCpuCount: true
-      platform: 'x64'
-      msbuildVersion: '15.0'
-      configuration: 'Release'
-    condition: variables.isWindowsUnitTest
-    displayName: windows - build unit tests
+      set -e
+      cmake -build build --config Release --target $(cmakeTarget) --parallel 8
+    displayName: build with cmake 
 
   - bash: | 
+      set -e
+
       mkdir -p "${LOCALAPPDATA}/Surge/"
       cd resources/data && tar cf - . | ( cd ${LOCALAPPDATA}/Surge && tar xf - ) && cd ../..
 
@@ -161,57 +129,10 @@ jobs:
     condition: variables.isWindowsUnitTest
     displayName: windows - run unit tests
 
-  - bash: |
-      sudo apt-get install -y xcb
-      sudo apt-get install -y libxcb-util-dev
-      sudo apt-get install -y libxcb-cursor-dev
-      sudo apt-get install -y libxcb-keysyms1-dev
-      sudo apt-get install -y libxkbcommon-dev
-      sudo apt-get install -y libxkbcommon-x11-dev
-      sudo apt-get install -y devscripts
-
-      echo "Building $(linuxProject)"
-      ./build-linux.sh clean && ./build-linux.sh build --project=$(linuxProject)
-
-    condition: variables.isLinux
-    displayName: linux - build plugin
 
   - bash: |
-      sudo apt-get install -y xcb
-      sudo apt-get install -y libxcb-util-dev
-      sudo apt-get install -y libxcb-cursor-dev
-      sudo apt-get install -y libxcb-keysyms1-dev
-      sudo apt-get install -y libxkbcommon-dev
-      sudo apt-get install -y libxkbcommon-x11-dev
-      sudo apt-get install -y devscripts
-      sudo apt-get install -y clang
+      set -e
 
-      cmake -Bbuild -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-      # Build the LV2 since that's what the freebsd folks use, and I build the VSt3 on mac clang all the time
-      cmake --build build --config Release --target Surge-LV2-Packaged
-
-    condition: variables.isLinuxClang
-    displayName: linux - clang
-
-  - bash: |
-      sudo apt-get update
-      sudo apt-get install -y xcb
-      sudo apt-get install -y libxcb-util-dev
-      sudo apt-get install -y libxcb-cursor-dev
-      sudo apt-get install -y libxcb-keysyms1-dev
-      sudo apt-get install -y libxkbcommon-dev
-      sudo apt-get install -y libxkbcommon-x11-dev
-      sudo apt-get install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc
-      sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-      sudo apt-get install -y devscripts
-
-      echo "Building ARM Headless"
-      cmake -Bbuild-arm -DCMAKE_TOOLCHAIN_FILE=cmake/linux-arm-ubuntu-crosscompile-toolchain.cmake
-      cmake --build build-arm --target surge-headless --config Release
-    condition: variables.isLinuxARM
-    displayName: linux - cross compile for ARM plugin
-
-  - bash: |
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
 
       echo "Running HeadlessTest $(linuxProject)"
@@ -220,11 +141,20 @@ jobs:
       rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge/"
 
       ./buildlin/surge-headless
+    condition: variables.isLinuxUnitTest
+    displayName: linux - run unit test
 
+  - bash: |
+      set -e
 
-    condition: and(variables.isLinux,variables.runHeadless)
-    displayName: linux - build and run unit test
-
+      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      
+      mkdir "$HOME/Library/Application Support/Surge"
+      rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
+      
+      ./build/Release/surge-headless
+    condition: variables.isMacUnitTest
+    displayName: macOS - run unit tests
 
 - job: NotifyReleases
   dependsOn: Build
