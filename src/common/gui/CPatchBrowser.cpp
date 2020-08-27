@@ -153,16 +153,21 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       );
    contextMenu->addEntry(showU);
 
+   std::string sep = "/";
+#if WINDOWS
+   sep = ""; // We already have an ending \ it seems
+#endif
+   
    auto showF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Factory Patch Folder..." )));
-   showF->setActions( [this](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + "/patches_factory" );
+   showF->setActions( [this, sep](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + sep + "patches_factory" );
                       }
       );
    contextMenu->addEntry(showF);
 
    auto show3 = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Third Party Patch Folder..." )));
-   show3->setActions( [this](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + "/patches_3rdparty" );
+   show3->setActions( [this, sep](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + sep + "patches_3rdparty" );
                       }
       );
    contextMenu->addEntry(show3);
