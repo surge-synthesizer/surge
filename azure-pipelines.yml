@@ -48,7 +48,7 @@ jobs:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: "clang"
-        cmakeArguments: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        cmakeArguments: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
         cmakeTarget: "Surge-LV2-Packaged"
       linux-arm-cross:
         imageName: 'ubuntu-20.04'
