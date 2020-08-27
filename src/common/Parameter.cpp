@@ -311,6 +311,16 @@ void Parameter::set_user_data(ParamUserData* ud)
          user_data = nullptr;
       }
       break;
+   case ct_airwindow_param:
+      if( dynamic_cast<ParameterExternalFormatter*>(ud))
+      {
+         user_data = ud;
+      }
+      else
+      {
+         user_data = nullptr;
+      }
+      break;
    default:
       std::cerr << "Setting userdata on a non-supporting param ignored" << std::endl;
       user_data = nullptr;
