@@ -113,7 +113,7 @@ jobs:
 
   - bash: |
       set -e
-      cmake -build build --config Release --target $(cmakeTarget) --parallel 8
+      cmake --build build --config Release --target $(cmakeTarget) --parallel 8
     displayName: build with cmake 
 
   - bash: | 
