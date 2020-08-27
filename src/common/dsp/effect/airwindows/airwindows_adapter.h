@@ -19,6 +19,8 @@ public:
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
 
+   void resetCtrlTypes();
+   
    virtual void process( float *dataL, float *dataR ) override;
 
    virtual const char* group_label(int id) override;
