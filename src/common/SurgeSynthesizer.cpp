@@ -51,6 +51,7 @@
 #include "SurgeParamConfig.h"
 
 #include "UserDefaults.h"
+#include "ImportFilesystem.h"
 
 using namespace std;
 
@@ -169,6 +170,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    masterfade = 1.f;
    current_category_id = -1;
    patchid_queue = -1;
+   has_patchid_file = false;
+   patchid_file[0] = 0;
    patchid = -1;
    CC0 = 0;
    CC32 = 0;
@@ -2406,10 +2409,21 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
    void* sy = lpParam;
 #endif
    SurgeSynthesizer* synth = (SurgeSynthesizer*)sy;
-   int patchid = synth->patchid_queue;
-   synth->patchid_queue = -1;
-   synth->allNotesOff();
-   synth->loadPatch(patchid);
+   if( synth->patchid_queue >= 0 )
+   {
+      int patchid = synth->patchid_queue;
+      synth->patchid_queue = -1;
+      synth->allNotesOff();
+      synth->loadPatch(patchid);
+   }
+   if( synth->has_patchid_file )
+   {
+      fs::path p(synth->patchid_file);
+      auto s = p.stem().generic_string();
+      synth->has_patchid_file = false;
+      synth->allNotesOff();
+      synth->loadPatchByPath( synth->patchid_file, -1, s.c_str() );
+   }
 #if TARGET_LV2
    synth->getParent()->patchChanged();
 #endif
@@ -2589,7 +2603,7 @@ void SurgeSynthesizer::process()
       clear_block(output[1], BLOCK_SIZE_QUAD);
       return;
    }
-   else if (patchid_queue >= 0)
+   else if (patchid_queue >= 0 || has_patchid_file)
    {
       masterfade = max(0.f, masterfade - 0.025f);
       mfade = masterfade * masterfade;

@@ -133,7 +133,40 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    }
    
    contextMenu->addSeparator();
+
+   auto loadF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Load Patch From File..." ) ) );
+   loadF->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::promptFileOpenDialog( "", "fxp", "Surge FXP Files",
+                                                                        [this](std::string fn) {
+                                                                           auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+                                                                           if( ! sge ) return;
+                                                                           sge->queuePatchFileLoad( fn );
+                                                                        });
+                      }
+      );
+   contextMenu->addEntry(loadF);
    
+   auto showU = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open User Patch Folder..." )));
+   showU->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->userDataPath );
+                      }
+      );
+   contextMenu->addEntry(showU);
+
+   auto showF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Factory Patch Folder..." )));
+   showF->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + "/patches_factory" );
+                      }
+      );
+   contextMenu->addEntry(showF);
+
+   auto show3 = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Third Party Patch Folder..." )));
+   show3->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + "/patches_3rdparty" );
+                      }
+      );
+   contextMenu->addEntry(show3);
+
    auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
    auto refreshAction = [this](CCommandMenuItem *item)
                            {
@@ -303,4 +336,43 @@ void CPatchBrowser::loadPatch(int id)
       sel_id = id;
       listener->valueChanged(this);
    }
+}
+
+bool CPatchBrowser::onDrop(VSTGUI::DragEventData data )
+{
+   auto drag = data.drag;
+   auto where = data.pos;
+   uint32_t ct = drag->getCount();
+   if (ct == 1)
+   {
+      IDataPackage::Type t = drag->getDataType(0);
+      if (t == IDataPackage::kFilePath)
+      {
+         const void* fn;
+         drag->getData(0, fn, t);
+         const char* fName = static_cast<const char*>(fn);
+         fs::path fPath(fName);
+         if ((_stricmp(fPath.extension().generic_string().c_str(), ".fxp") != 0) )
+         {
+            Surge::UserInteractions::promptError(
+               std::string( "Surge only supports drag-and-drop of .fxp files onto the Patch Browser. " ) +
+               "You dropped a file with extension " + fPath.extension().generic_string(),
+               "Please drag a valid file type!");
+         }
+         else
+         {
+            auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+            if( ! sge ) return false;
+            sge->queuePatchFileLoad( fName );
+         }
+      }
+      else
+      {
+         Surge::UserInteractions::promptError(
+             "Surge only supports drag-and-drop of files onto the Patch Browser.",
+             "Please drop a file!");
+      }
+   }
+
+   return true;
 }

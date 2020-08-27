@@ -13,8 +13,8 @@
 ** open source in September 2018.
 */
 
-#include "CMenuAsSlider.h"
 #include "SurgeGUIEditor.h"
+#include "CMenuAsSlider.h"
 #include "CScalableBitmap.h"
 #include <iostream>
 #include "DebugHelpers.h"

@@ -25,6 +25,7 @@ struct QuadFilterChainState;
 #include <list>
 #include <utility>
 #include <atomic>
+#include <cstdio>
 
 #if TARGET_AUDIOUNIT
 class aulayer;
@@ -190,6 +191,8 @@ public:
    float refresh_ctrl_queue_value[8];
    bool process_input;
    int patchid_queue;
+   bool has_patchid_file;
+   char patchid_file[FILENAME_MAX];
 
    float vu_peak[8];
 

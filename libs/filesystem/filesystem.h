@@ -43,7 +43,8 @@ namespace std { namespace experimental { namespace filesystem {
         std::string generic_string() const;
         
         path filename();
-        
+        path stem();
+       
         path extension();
     };
     
