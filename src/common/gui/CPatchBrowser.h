@@ -18,7 +18,7 @@
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 
-class CPatchBrowser : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CPatchBrowser : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponnt
 {
 public:
 
@@ -66,6 +66,21 @@ public:
          author = "";
       setDirty(true);
    }
+
+   virtual VSTGUI::DragOperation onDragEnter(VSTGUI::DragEventData data) override {
+      return VSTGUI::DragOperation::Copy;
+   }
+   virtual VSTGUI::DragOperation onDragMove(VSTGUI::DragEventData data) override
+   {
+       return VSTGUI::DragOperation::Copy;
+   }
+   virtual void onDragLeave(VSTGUI::DragEventData data) override
+   {
+   }
+
+   virtual bool onDrop(VSTGUI::DragEventData data) override;
+
+   virtual VSTGUI::SharedPointer<VSTGUI::IDropTarget> getDropTarget () override { return this; }
 
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;

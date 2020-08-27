@@ -453,58 +453,79 @@ void CFxMenu::rescanUserPresets()
 
    auto ud = storage->userFXPath;
 
-   if( fs::is_directory( fs::path( ud ) ) ) {
-      for( auto &d : fs::directory_iterator( fs::path( ud ) ) )
+   std::vector< fs::path > sfxfiles;
+
+   std::deque<fs::path> workStack;
+   workStack.push_back(fs::path(ud));
+   while (!workStack.empty())
+   {
+      auto top = workStack.front();
+      workStack.pop_front();
+      if( fs::is_directory(top) )
       {
-         auto fn = d.path().generic_string();
-         std::string ending = ".srgfx";
-         if( fn.length() >= ending.length() && ( 0 == fn.compare( fn.length() - ending.length(), ending.length(), ending ) ) )
+         for (auto& d : fs::directory_iterator(top))
          {
-            UserPreset preset;
-            preset.file = fn;
-            TiXmlDocument d;
-            int t;
-
-            if( ! d.LoadFile( fn ) ) goto badPreset;
-
-            auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild( "single-fx" ) );
-            if( ! r ) goto badPreset;
-
-            auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild( "snapshot" ) );
-            if( ! s ) goto badPreset;
-
-            if( ! s->Attribute( "name" ) ) goto badPreset;
-            preset.name = s->Attribute( "name" );
-
-            if( s->QueryIntAttribute( "type", &t ) != TIXML_SUCCESS ) goto badPreset;
-            preset.type = t;
-
-            for( int i=0; i<n_fx_params; ++i )
+            if (fs::is_directory(d))
             {
-               double fl;
-               std::string p = "p";
-               if( s->QueryDoubleAttribute( (p + std::to_string(i)).c_str(), &fl ) == TIXML_SUCCESS )
-               {
-                  preset.p[i] = fl;
-               }
-               if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_temposync" ).c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
-               {
-                  preset.ts[i] = true;
-               }
-               if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_extend_range").c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
-               {
-                  preset.er[i] = fl;
-               }
+               workStack.push_back(d);
             }
-            if( userPresets.find(preset.type) == userPresets.end() )
-               userPresets[preset.type] = std::vector<UserPreset>();
-            userPresets[preset.type].push_back(preset);
+            else if( d.path().extension().generic_string() == ".srgfx" )
+            {
+               sfxfiles.push_back( d.path() );
+            }
          }
-      badPreset:
-         ;
       }
    }
 
+   for( auto f : sfxfiles )
+   {
+      auto fn = f.generic_string();
+
+      {
+         UserPreset preset;
+         preset.file = fn;
+         TiXmlDocument d;
+         int t;
+         
+         if( ! d.LoadFile( fn ) ) goto badPreset;
+         
+         auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild( "single-fx" ) );
+         if( ! r ) goto badPreset;
+         
+         auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild( "snapshot" ) );
+         if( ! s ) goto badPreset;
+         
+         if( ! s->Attribute( "name" ) ) goto badPreset;
+         preset.name = s->Attribute( "name" );
+         
+         if( s->QueryIntAttribute( "type", &t ) != TIXML_SUCCESS ) goto badPreset;
+         preset.type = t;
+         
+         for( int i=0; i<n_fx_params; ++i )
+         {
+            double fl;
+            std::string p = "p";
+            if( s->QueryDoubleAttribute( (p + std::to_string(i)).c_str(), &fl ) == TIXML_SUCCESS )
+            {
+               preset.p[i] = fl;
+            }
+            if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_temposync" ).c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
+            {
+               preset.ts[i] = true;
+            }
+            if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_extend_range").c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
+            {
+               preset.er[i] = fl;
+            }
+         }
+         if( userPresets.find(preset.type) == userPresets.end() )
+            userPresets[preset.type] = std::vector<UserPreset>();
+         userPresets[preset.type].push_back(preset);
+      }
+   badPreset:
+            ;
+   }
+   
    for( auto &a : userPresets )
       std::sort( a.second.begin(), a.second.end(),
                  [](UserPreset a, UserPreset b)
@@ -689,18 +710,20 @@ void CFxMenu::saveFX()
       return;
    }
 
-   std::string pn = storage->userFXPath;
+
+   int ti = fx->type.val.i;
+   
+   std::ostringstream oss;
+   oss << storage->userFXPath
+#if WINDOWS
+       << "\\" << fxtype_names[ti] << "\\";
+#else
+       << "/" << fxtype_names[ti] << "/";
+#endif
+   auto pn = oss.str();
    fs::create_directories( pn );
 
-   std::ostringstream oss;
-   oss << pn
-#if WINDOWS
-        << "\\"
-#else
-        << "/"
-#endif
-       << fxName << ".srgfx";
-   auto fn = oss.str();
+   auto fn = pn + fxName + ".srgfx";
    std::ofstream pfile( fn, std::ios::out );
    if( ! pfile.is_open() )
    {

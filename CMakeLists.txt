@@ -837,8 +837,8 @@ if( BUILD_VST2 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST2 component"
       COMMAND ./scripts/macOS/package-vst.sh   ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst2-dll.dylib ${SURGE_PRODUCT_DIR}
-      COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst2/
-      COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst2/
+      COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst/
+      COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst/
       )
    endif()
   if( UNIX AND NOT APPLE )
