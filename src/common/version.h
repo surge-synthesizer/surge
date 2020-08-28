@@ -25,6 +25,9 @@ namespace Surge {
 
       static const char* BuildDate;
       static const char* BuildTime;
+
+      // Some features from cmake
+      static const char* CMAKE_INSTALL_PREFIX;
    };
 }
 
