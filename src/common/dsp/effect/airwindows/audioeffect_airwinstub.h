@@ -31,6 +31,12 @@ struct AirWinBaseClass {
    
    virtual float getParameter( VstInt32 index ) = 0;
    virtual void setParameter( VstInt32 index, float value ) = 0;
+
+   virtual bool parseParameterValueFromString( VstInt32 index, const char* str, float &f ) {
+      return false;
+   }
+   virtual bool isParameterBipolar( VstInt32 index ) { return false; }
+   
    virtual void processReplacing( float **in, float **out, VstInt32 sampleFrames ) = 0;
 
    virtual void getParameterName(VstInt32 index, char *text) = 0;    // name of the parameter

@@ -132,6 +132,7 @@ enum ctrltypes
    ct_vocoder_modulator_mode,
    ct_airwindow_fx,
    ct_airwindow_param,
+   ct_airwindow_param_bipolar,
    num_ctrltypes,
 };
 
@@ -165,6 +166,7 @@ struct CountedSetUserData : public ParamUserData
 struct ParameterExternalFormatter : public ParamUserData
 {
    virtual void formatValue( float value, char *txt, int txtlen ) = 0;
+   virtual bool stringToValue( const char* txt, float &outVal ) = 0;
 };
 
 struct ParameterDiscreteIndexRemapper : public ParamUserData

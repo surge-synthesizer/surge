@@ -312,6 +312,7 @@ void Parameter::set_user_data(ParamUserData* ud)
       }
       break;
    case ct_airwindow_param:
+   case ct_airwindow_param_bipolar:
       if( dynamic_cast<ParameterExternalFormatter*>(ud))
       {
          user_data = ud;
@@ -809,6 +810,7 @@ void Parameter::set_type(int ctrltype)
       val_default.i = 0;
       break;
    case ct_airwindow_param:
+   case ct_airwindow_param_bipolar: // it's still 0,1; this is just a display thing
       val_min.f = 0;
       val_max.f = 1;
       valtype = vt_float;
@@ -995,6 +997,7 @@ void Parameter::set_type(int ctrltype)
       break;
 
    case ct_airwindow_param:
+   case ct_airwindow_param_bipolar:
       displayType = DelegatedToFormatter;
       displayInfo.scale = 1.0;
       displayInfo.unit[0] = 0;
@@ -2463,6 +2466,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_sendlevel:
    case ct_freq_mod:
    case ct_airwindow_param:
+   case ct_airwindow_param_bipolar:
    {
       return true;
       break;
@@ -2597,6 +2601,19 @@ bool Parameter::set_value_from_string( std::string s )
       // handled below
       break;
    case DelegatedToFormatter:
+   {
+      auto ef = dynamic_cast<ParameterExternalFormatter *>( user_data );
+      if( ef )
+      {
+         float f;
+         if( ef->stringToValue( c, f ) )
+         {
+            val.f = limit_range( f, val_min.f, val_max.f );
+            return true;
+         }
+      }
+      // break; DO NOT break. Fall back
+   }
    case LinearWithScale:
    {
       float ext_mul = ( can_extend_range() && extend_range ) ? displayInfo.extendFactor : 1.0;
