@@ -23,7 +23,7 @@
 #include "CScalableBitmap.h"
 
 
-class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    const static int margin = 2;

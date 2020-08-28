@@ -18,7 +18,7 @@
 #include "vstcontrols.h"
 #include "SkinSupport.h"
 
-class CAboutBox : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CAboutBox : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CAboutBox(const VSTGUI::CRect& size,

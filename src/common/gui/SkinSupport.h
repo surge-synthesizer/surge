@@ -347,9 +347,9 @@ private:
 };
 
 
-class SkinConsumingComponnt {
+class SkinConsumingComponent {
 public:
-   virtual ~SkinConsumingComponnt() {
+   virtual ~SkinConsumingComponent() {
    }
    virtual void setSkin( Skin::ptr_t s ) {
       setSkin( s, nullptr, nullptr );

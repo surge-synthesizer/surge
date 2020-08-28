@@ -18,7 +18,7 @@
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 
-struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponnt {
+struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent {
    MSEGEditor(MSEGStorage *ms, Surge::UI::Skin::ptr_t skin);
    ~MSEGEditor() = default;
 };

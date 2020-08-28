@@ -20,7 +20,7 @@
 #include "SurgeParamConfig.h"
 #include "SkinSupport.h"
 
-class CMenuAsSlider : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CMenuAsSlider : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CMenuAsSlider(const VSTGUI::CPoint& loc,

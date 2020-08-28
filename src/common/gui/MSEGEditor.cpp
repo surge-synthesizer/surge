@@ -22,7 +22,7 @@ using namespace VSTGUI;
 
 struct MSEGCanvas;
 
-struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsumingComponnt, public VSTGUI::IControlListener {
+struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
    MSEGSegmentPanel(const CRect &size, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CViewContainer( size ) {
       setSkin( skin );
       this->ms = ms;
@@ -72,7 +72,7 @@ struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsuming
 };
 
 
-struct MSEGControlPanel : public CViewContainer, public Surge::UI::SkinConsumingComponnt, public VSTGUI::IControlListener {
+struct MSEGControlPanel : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
    MSEGControlPanel(const CRect &size, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CViewContainer( size ) {
       setSkin( skin );
       this->ms = ms;
@@ -113,7 +113,7 @@ struct MSEGControlPanel : public CViewContainer, public Surge::UI::SkinConsuming
    MSEGStorage *ms;
 };
 
-struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponnt {
+struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    MSEGCanvas(const CRect &size, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CControl( size ) {
       setSkin( skin );
       this->ms = ms;
