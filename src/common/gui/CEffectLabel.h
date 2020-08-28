@@ -19,7 +19,7 @@
 
 extern VSTGUI::CFontRef displayFont;
 
-class CEffectLabel : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CEffectLabel : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CEffectLabel(const VSTGUI::CRect& size) : VSTGUI::CControl(size, 0, 0, 0)

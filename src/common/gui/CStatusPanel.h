@@ -21,7 +21,7 @@
 
 class SurgeGUIEditor;
 
-class CStatusPanel : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponnt
+class CStatusPanel : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponent
 {
 public:
 

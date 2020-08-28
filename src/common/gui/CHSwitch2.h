@@ -18,7 +18,7 @@
 #include "SkinSupport.h"
 #include "DebugHelpers.h"
 
-class CHSwitch2 : public VSTGUI::CHorizontalSwitch, public Surge::UI::SkinConsumingComponnt
+class CHSwitch2 : public VSTGUI::CHorizontalSwitch, public Surge::UI::SkinConsumingComponent
 {
 public:
    CHSwitch2(const VSTGUI::CRect& size,

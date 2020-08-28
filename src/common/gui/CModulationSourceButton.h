@@ -20,7 +20,7 @@
 #include "SkinSupport.h"
 
 
-class CModulationSourceButton : public CCursorHidingControl, public Surge::UI::SkinConsumingComponnt
+class CModulationSourceButton : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
 {
 private:
    typedef CCursorHidingControl super;

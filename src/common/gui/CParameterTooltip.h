@@ -19,7 +19,7 @@
 #include <iostream>
 #include "SkinSupport.h"
 
-class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CParameterTooltip(const VSTGUI::CRect& size) : VSTGUI::CControl(size, 0, 0, 0)

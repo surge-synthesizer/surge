@@ -22,7 +22,7 @@
 
 #define OSC_MOD_ANIMATION 0
 
-class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponnt
+class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponent
 {
 public:
    COscillatorDisplay(const VSTGUI::CRect& size, OscillatorStorage* oscdata, SurgeStorage* storage)
