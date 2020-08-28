@@ -19,7 +19,7 @@ public:
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
 
-   void resetCtrlTypes();
+   void resetCtrlTypes( bool useStreamedValues );
    
    virtual void process( float *dataL, float *dataR ) override;
 
@@ -30,10 +30,10 @@ public:
 
    lag<float, true> param_lags[n_fx_params - 1];
    
-   void setupSubFX(int awfx);
+   void setupSubFX(int awfx, bool useStreamedValues );
    std::unique_ptr<AirWinBaseClass> airwin;
    int lastSelected = -1;
-
+   
    struct Registration {
       std::function<std::unique_ptr<AirWinBaseClass>()> generator;
       int id;

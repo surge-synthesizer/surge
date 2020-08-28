@@ -90,7 +90,7 @@ void AirWindowsEffect::init_ctrltypes() {
    lastSelected = -1;
 }
 
-void AirWindowsEffect::resetCtrlTypes() {
+void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
    fxdata->p[0].set_name( "FX" );
    fxdata->p[0].set_type( ct_airwindow_fx );
    fxdata->p[0].posy_offset = 1;
@@ -109,7 +109,11 @@ void AirWindowsEffect::resetCtrlTypes() {
          fxdata->p[i+1].set_type( ct_airwindow_param );
          fxdata->p[i+1].set_user_data( fxFormatters[i].get() );
          fxdata->p[i+1].posy_offset = 3;
-         fxdata->p[i+1].val.f = priorVal;
+
+         if( useStreamedValues )
+            fxdata->p[i+1].val.f = priorVal;
+         else
+            fxdata->p[i+1].val.f = airwin->getParameter( i );
       }
       for( int i=airwin->paramCount; i < n_fx_params; ++i )
       {
@@ -128,9 +132,25 @@ void AirWindowsEffect::init_default_values() {
 
 void AirWindowsEffect::process( float *dataL, float *dataR )
 {
-   if( fxdata->p[0].val.i != lastSelected || fxdata->p[0].user_data == nullptr )
+   if( !airwin || fxdata->p[0].val.i != lastSelected || fxdata->p[0].user_data == nullptr )
    {
-      setupSubFX( fxdata->p[0].val.i );
+      /*
+      ** So do we want to let airwindows set params as defaults or do we want 
+      ** to use the values on our params if we recreate? Well we have two cases.
+      ** If the userdata on p0 is null it means we have unstreamed somethign but
+      ** we have not set up airwindows. So this means we are loading an FXP, 
+      ** a config xml snapshot, or similar.
+      **
+      ** If the userdata is set up and the last selected is changed then that
+      ** means we have used a UI or automation gesture to re-modify a current
+      ** running airwindow, so apply the defaults
+      */
+      bool useStreamedValues = false; 
+      if( fxdata->p[0].user_data == nullptr )
+      {
+         useStreamedValues = true;
+      }
+      setupSubFX( fxdata->p[0].val.i, useStreamedValues );
    }
 
    if( ! airwin ) return;
@@ -157,7 +177,7 @@ void AirWindowsEffect::process( float *dataL, float *dataR )
    copy_block( outR, dataR, BLOCK_SIZE_QUAD );
 }
 
-void AirWindowsEffect::setupSubFX( int sfx )
+void AirWindowsEffect::setupSubFX( int sfx, bool useStreamedValues )
 {
    Registration r = fxreg[sfx];
    airwin = r.generator();
@@ -165,6 +185,6 @@ void AirWindowsEffect::setupSubFX( int sfx )
    char fxname[1024];
    airwin->getEffectName(fxname);
    lastSelected = sfx;
-   resetCtrlTypes();
+   resetCtrlTypes( useStreamedValues );
 }
 
