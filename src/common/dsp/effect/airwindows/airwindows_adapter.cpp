@@ -106,7 +106,14 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
          airwin->getParameterName( i, txt );
          auto priorVal = fxdata->p[i+1].val.f;
          fxdata->p[i+1].set_name( txt );
-         fxdata->p[i+1].set_type( ct_airwindow_param );
+         if( airwin->isParameterBipolar( i ) )
+         {
+            fxdata->p[i+1].set_type( ct_airwindow_param_bipolar );
+         }
+         else
+         {
+            fxdata->p[i+1].set_type( ct_airwindow_param );
+         }
          fxdata->p[i+1].set_user_data( fxFormatters[i].get() );
          fxdata->p[i+1].posy_offset = 3;
 

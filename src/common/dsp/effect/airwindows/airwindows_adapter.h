@@ -83,6 +83,19 @@ public:
             sprintf( txt, "AWA.ERROR %lf", value );
          }
       }
+
+      virtual bool stringToValue( const char* txt, float &outVal ) override {
+         if( fx && fx->airwin )
+         {
+            float v;
+            if( fx->airwin->parseParameterValueFromString( idx, txt, v ) )
+            {
+               outVal = v;
+               return true;
+            }
+         }
+         return false;
+      }
       AirWindowsEffect *fx;
       int idx;
    };

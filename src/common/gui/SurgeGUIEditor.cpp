@@ -1261,6 +1261,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_percent_bidirectional_stereo:
          case ct_freq_shift:
          case ct_osc_feedback_negative:
+         case ct_airwindow_param_bipolar:
             style |= kBipolar;
             break;
          case ct_lfoamplitude:
@@ -1468,6 +1469,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_percent_bidirectional_stereo:
          case ct_freq_shift:
          case ct_osc_feedback_negative:
+         case ct_airwindow_param_bipolar:
             style |= kBipolar;
             break;
          case ct_lfoamplitude:

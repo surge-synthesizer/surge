@@ -137,6 +137,27 @@ void BitGlitter::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool BitGlitter::parseParameterValueFromString( VstInt32 index, const char* txt, float &tf)
+{
+   float f = std::atof( txt );
+   switch( index ) {
+   case kParamA:
+   case kParamC:
+      tf = (f + 18.0)/36.0;
+      break;
+   default:
+      tf = f;
+      break;
+   }
+   return true;
+}
+
+bool BitGlitter::isParameterBipolar( VstInt32 index )
+{
+   if( index == kParamA || index == kParamC ) return true;
+   return false;
+}
+   
 void BitGlitter::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
