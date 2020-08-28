@@ -1028,7 +1028,7 @@ if( BUILD_HEADLESS )
 endif()
 
 #
-# INSTALL RULES - currently implemented on APPLE only
+# INSTALL RULES - currently implemented on APPLE and LINUX only
 #
 if( APPLE )
   add_custom_target( run-headless )
@@ -1050,6 +1050,15 @@ if( APPLE )
     COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge/"
     )
 
+  add_custom_target( install-resources-global )
+  add_custom_command(
+    TARGET install-resources-global
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing global resources"
+    COMMAND rsync -r --delete "resources/data/" "/Library/Application Support/Surge/"
+    )
+
   add_custom_target( install-au-local )
   add_dependencies( install-au-local Surge-AU-Packaged )
   add_dependencies( install-au-local install-resources-local )
@@ -1059,6 +1068,17 @@ if( APPLE )
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Installing audio unit locally"
     COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.component/" "\${HOME}/Library/Audio/Plug-Ins/Components/Surge.component/"
+    )
+
+  add_custom_target( install-au-global )
+  add_dependencies( install-au-global Surge-AU-Packaged )
+  add_dependencies( install-au-global install-resources-global )
+  add_custom_command(
+    TARGET install-au-global
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing audio unit globally"
+    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.component/" "/Library/Audio/Plug-Ins/Components/Surge.component/"
     )
 
   add_custom_target( validate-au )
@@ -1081,6 +1101,17 @@ if( APPLE )
       COMMAND echo "Installing vst2 unit locally"
       COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst/" "\${HOME}/Library/Audio/Plug-Ins/VST/Surge.vst/"
       )
+
+    add_custom_target( install-vst2-global )
+    add_dependencies( install-vst2-global Surge-VST2-Packaged )
+    add_dependencies( install-vst2-global install-resources-global )
+    add_custom_command(
+      TARGET install-vst2-global
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Installing vst2 unit globally"
+      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst/" "/Library/Audio/Plug-Ins/VST/Surge.vst/"
+      )
   endif()
 
   add_custom_target( install-vst3-local )
@@ -1094,11 +1125,109 @@ if( APPLE )
     COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3/" "\${HOME}/Library/Audio/Plug-Ins/VST3/Surge.vst3/"
     )
 
+  add_custom_target( install-vst3-global )
+  add_dependencies( install-vst3-global Surge-VST3-Packaged )
+  add_dependencies( install-vst3-global install-resources-global )
+  add_custom_command(
+    TARGET install-vst3-global
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing vst3 unit globally"
+    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3/" "/Library/Audio/Plug-Ins/VST3/Surge.vst3/"
+    )
+
   add_custom_target( install-everything-local )
   add_dependencies( install-everything-local install-au-local )
   add_dependencies( install-everything-local install-vst3-local )
   if( BUILD_VST2 )
     add_dependencies( install-everything-local install-vst2-local )
+  endif()
+
+  add_custom_target( install-everything-global )
+  add_dependencies( install-everything-global install-au-global )
+  add_dependencies( install-everything-global install-vst3-global )
+  if( BUILD_VST2 )
+    add_dependencies( install-everything-global install-vst2-global )
+  endif()
+  
+  
+elseif( UNIX AND NOT APPLE )
+  add_custom_target( install-resources-local )
+  add_custom_command(
+    TARGET install-resources-local
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing local resources into ~/.local/share/surge"
+    COMMAND rsync -r --delete "resources/data/" "\${HOME}/.local/share/surge/"
+    )
+
+  add_custom_target( install-resources-global )
+  add_custom_command(
+    TARGET install-resources-global
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing local resources into ${CMAKE_INSTALL_PREFIX}/share/surge"
+    COMMAND rsync -r --delete "resources/data/" "${CMAKE_INSTALL_PREFIX}/share/surge/"
+    )
+
+  if( BUILD_VST2 )
+    add_custom_target( install-vst2-local )
+    add_dependencies( install-vst2-local Surge-VST2-Packaged )
+    add_dependencies( install-vst2-local install-resources-local )
+    add_custom_command(
+      TARGET install-vst2-local
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Installing vst2 unit into ~/.vst"
+      COMMAND ${CMAKE_COMMAND} -E make_directory "\${HOME}/.vst"
+      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.so" "\${HOME}/.vst"
+      )
+
+    add_custom_target( install-vst2-global )
+    add_dependencies( install-vst2-global Surge-VST2-Packaged )
+    add_dependencies( install-vst2-global install-resources-global )
+    add_custom_command(
+      TARGET install-vst2-global
+      POST_BUILD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND echo "Installing vst2 unit into ${CMAKE_INSTALL_PREFIX}/lib/vst"
+      COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/vst"
+      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.so" "${CMAKE_INSTALL_PREFIX}/lib/vst"
+      )
+  endif()
+
+  add_custom_target( install-vst3-local )
+  add_dependencies( install-vst3-local Surge-VST3-Packaged )
+  add_dependencies( install-vst3-local install-resources-local )
+  add_custom_command(
+    TARGET install-vst3-local
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing vst3 unit locally into ~/.vst3"
+    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3" "\${HOME}/.vst3"
+    )
+
+  add_custom_target( install-vst3-global )
+  add_dependencies( install-vst3-global Surge-VST3-Packaged )
+  add_dependencies( install-vst3-global install-resources-global )
+  add_custom_command(
+    TARGET install-vst3-global
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Installing vst3 unit locally into ${CMAKE_INSTALL_PREFIX}/lib/vst3"
+    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3" "${CMAKE_INSTALL_PREFIX}/lib/vst3"
+    )
+
+  add_custom_target( install-everything-local )
+  add_dependencies( install-everything-local install-vst3-local )
+  if( BUILD_VST2 )
+    add_dependencies( install-everything-local install-vst2-local )
+  endif()
+
+  add_custom_target( install-everything-global )
+  add_dependencies( install-everything-global install-vst3-global )
+  if( BUILD_VST2 )
+    add_dependencies( install-everything-global install-vst2-global )
   endif()
 
 

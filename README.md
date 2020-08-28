@@ -34,9 +34,8 @@ tailored at Surge development.
 
 # Building Surge
 
-As of April 2020, Surge is built using CMake. Versions in the 1.6 family require premake5 to build but that is
-no longer required as of commit 6eaf2b2e20 or the 1.7 family. If you are generally familiar with and set up with CMake
-you can use CMake directly to build targets such as "Surge.vst3" or "Surge.au".
+As of April 2020, Surge is built using CMake. If you are familiar with CMake you can 
+skip to the section <a href="#cmake-targets">CMake Targets</a>
 
 ## Windows
 
@@ -309,6 +308,59 @@ And you should be good to go.
 
 We welcome PRs and contributions which improve the ARM build experience.
 
+## CMake Targets
+
+If you are familiar with CMake, you can use it directly to build on any of our platforms
+and use it to install the asset on Mac and Linux.
+
+As normal, a cmake process begins by generating make assets. 
+
+| OS    | CMake Generation |
+|-------|------------------|
+| mac   | `cmake -Bbuild -GXcode` |
+| win64 | `cmake -Bbuild` |
+| win32 | `cmake -Bbuild -A Win32` |
+| linux | `cmake -Bbuild -DCMAKE_INSTALL_PREFIX=/usr` |
+| linux-arm | `cmake -Bbuild -DARM_NATIVE=native` |
+
+At this point you will have a `build` directory. You can now build targets using the 
+standard command
+
+```
+cmake --build build --config Release --target (target-name)
+```
+
+Available build targets are
+
+| Target     | Description  |
+|------------|--------------|
+| Surge-VST3-Packaged | Produces the VST3 in `build/surge_products` |
+| Surge-VST2-Packaged | Produces the VST2 in `build/surge_products` (only if VST2 is enabled) |
+| Surge-AU-Packaged | Produces the AU in `build/surge_products` (mac only) |
+| Surge-LV2-Packaged | Produces the LV2 in `build/surge_products` (linux only) |
+| surge-headless | Builds the headless test component |
+| all-components | Builds everything available on your OS |
+
+On Mac and Linux the CMake file also provides installation targets
+
+| Target | Description |
+|--------|-------------|
+| install-everything-local | Install all components and resoures in the appropriate local location for your OS |
+| install-everything-global | Install all components and resources in the appropriate global location (driven by CMAKE_INSTALL_PREFIX on Linux) |
+| install-resources-(global|local) | Install just the resources locally or globally |
+| install-(vst2|vst3|au|lv2)-(global|local) | Install the plugin and associated resources locally and globally |
+
+A reasonable session, then, could be (say on linux)
+
+```
+cmake -Bbuild -DCMAKE_INSTALL_PREFIX=/g/ins 
+cmake --build build --config Release --target all-components
+sudo cmake --build build --config Release --target install-everything-global
+```
+
+which would result in the VST3 in `/g/ins/lib/vst3/Surge.vst3` and so on.
+
+
 # Continuous Integration
 
 In addition to the build commands above, we use Azure pipelines to do continuous integration.
@@ -339,4 +391,3 @@ More here as 2021 progresses.
   * Most Surge-related conversation on the Surge Synthesizer Discord server. [You can join via this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link)
   * IRC channel at #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
   * Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
-  * Chain icon on filter link from flaticon.com

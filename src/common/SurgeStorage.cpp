@@ -44,6 +44,7 @@
 #include <sstream>
 
 #include "UserDefaults.h"
+#include "version.h"
 
 #include "strnatcmp.h"
 
@@ -224,11 +225,22 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
        */
        if (! fs::is_directory(datapath))
        {
-          std::string systemDataPath = "/usr/share/surge/";
-          if ( fs::is_directory(systemDataPath) )
-             datapath = systemDataPath;
+          if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge" ) )
+          {
+             datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge";
+          }
+          else if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge" ) )
+          {
+             datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge";
+          }
           else
-             datapath = "/usr/share/Surge/";
+          {
+             std::string systemDataPath = "/usr/share/surge/";
+             if ( fs::is_directory(systemDataPath) )
+                datapath = systemDataPath;
+             else
+                datapath = "/usr/share/Surge/";
+          }
        }
    }
    else
