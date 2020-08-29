@@ -122,7 +122,7 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
          else
             fxdata->p[i+1].val.f = airwin->getParameter( i );
       }
-      for( int i=airwin->paramCount; i < n_fx_params; ++i )
+      for( int i=airwin->paramCount; i < n_fx_params - 1; ++i ) // -1 since we have +1 in the indexing since 0 is type
       {
          fxdata->p[i+1].set_type( ct_none );
       }
