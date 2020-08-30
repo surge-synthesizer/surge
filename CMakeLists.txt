@@ -19,11 +19,11 @@ add_custom_command(
   POST_BUILD
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR} )
-  
+
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
-execute_process( 
+execute_process(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}  -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
                            -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
@@ -37,7 +37,7 @@ add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cp
                            -D AZURE_PIPELINE=${AZURE_PIPELINE}
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
-add_dependencies( surge-shared git-info )                       
+add_dependencies( surge-shared git-info )
 
 
 set(CMAKE_BUILD_TYPE Release)
@@ -210,7 +210,7 @@ set(SURGE_COMMON_SOURCES
 
 set( SURGE_GENERATED_SOURCES
   ${CMAKE_BINARY_DIR}/geninclude/version.cpp
-  )  
+  )
 
 set(SURGE_GUI_SOURCES
   src/common/gui/CAboutBox.cpp
@@ -414,26 +414,26 @@ elseif( UNIX AND NOT APPLE )
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
     COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
     )
-  
+
   if( LINUX_ON_ARM )
     set( cxml src/linux/ConfigurationXmlARM.S )
   else()
     set( cxml src/linux/ConfigurationXml.S )
   endif()
-  
+
   set(SURGE_OS_SOURCES
     src/linux/UserInteractionsLinux.cpp
     ${cxml}
     ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
     )
-  
+
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
-  
+
   # Our friends at steinberg have this maddening habig of using #warning DEPRECATED in linux code
   set_source_files_properties(${SURGE_VST3_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
   set_source_files_properties(${LINUX_VSTGUI_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
-  
-  
+
+
   set(SURGE_OS_GUI_SOURCES
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
@@ -443,7 +443,7 @@ elseif( UNIX AND NOT APPLE )
     vstgui.surge/vstgui/lib/platform/common/generictextedit.cpp
     ${LINUX_VSTGUI_GLOB}
     )
-  
+
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(CAIRO REQUIRED cairo)
   pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
@@ -454,7 +454,7 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XCBXKB REQUIRED xcb-xkb)
   pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
-  
+
   if( LINUX_ON_ARM )
     set(ARCH_COMPILE_OPTIONS
       ${LINUX_ON_ARM_COMPILE_OPTIONS}
@@ -466,25 +466,25 @@ elseif( UNIX AND NOT APPLE )
   else()
     set(ARCH_COMPILE_OPTIONS
       -msse2
-      -Werror 
+      -Werror
       "-D_aligned_malloc(x,a)=malloc(x)"
       "-D_aligned_free(x)=free(x)"
       )
     set(ARCH_COMPILE_DEFINITIONS INTEL_SSE=1)
   endif()
-  
+
   set(OS_COMPILE_OPTIONS
     ${ARCH_COMPILE_OPTIONS}
-    
+
     -Wno-multichar
     -fvisibility=hidden
     -fvisibility-inlines-hidden
     -fdata-sections
     -ffunction-sections
-    
+
     ${CAIRO_CFLAGS_OTHER}
     )
-  
+
   set(OS_COMPILE_DEFINITIONS
     ${ARCH_COMPILE_DEFINITIONS}
     LINUX=1
@@ -505,7 +505,7 @@ elseif( UNIX AND NOT APPLE )
     ${XKBX11COMMON_INCLUDE_DIRS}
 
     ${CMAKE_BINARY_DIR}/lintemp
-    
+
     ${ARCH_INCLUDE_DIRECTORIES}
     )
 
@@ -606,9 +606,9 @@ elseif( WIN32 )
   )
 
   if( ${BUILD_DLLCHECK} )
-    add_executable( dllcheck 
+    add_executable( dllcheck
       utils/dllcheck/dllcheck.cpp
-      ${CMAKE_BINARY_DIR}/geninclude/version.cpp 
+      ${CMAKE_BINARY_DIR}/geninclude/version.cpp
       )
     target_compile_options(dllcheck PRIVATE /MT)
     target_include_directories( dllcheck PRIVATE src/common )
@@ -617,6 +617,24 @@ else()
   message(FATAL_ERROR "UNKNOWN OS. Please use lin mac or win" )
 endif()
 
+# Source Groups
+source_group( "Libraries" REGULAR_EXPRESSION "libs/" )
+source_group( "AirWindows" REGULAR_EXPRESSION "libs/airwindows/" )
+source_group( "Surge Core" REGULAR_EXPRESSION "src/common/.*\.cpp" )
+source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/(vt_dsp|dsp)" )
+source_group( "Surge FX" REGULAR_EXPRESSION "src/common/dsp/effect" )
+source_group( "Surge GUI" REGULAR_EXPRESSION "src/common/gui" )
+source_group( "Generated Code" REGULAR_EXPRESSION "version.cpp" )
+source_group( "AU Plugin" REGULAR_EXPRESSION "src/au" )
+source_group( "Headless" REGULAR_EXPRESSION "src/headless" )
+source_group( "Linux" REGULAR_EXPRESSION "src/linux" )
+source_group( "LV2 Plugin" REGULAR_EXPRESSION "src/lv2" )
+source_group( "macOS" REGULAR_EXPRESSION "src/mac" )
+source_group( "Windows" REGULAR_EXPRESSION "src/windows" )
+source_group( "VST2 Plugin" REGULAR_EXPRESSION "src/vst2" )
+source_group( "VST3 Plugin" REGULAR_EXPRESSION "src/vst3" )
+source_group( "VST3 SDK" REGULAR_EXPRESSION "vst3sdk" )
+source_group( "VSTGUI" REGULAR_EXPRESSION "vstgui.surge" )
 
 #
 # AUDIO UNIT
@@ -1149,8 +1167,8 @@ if( APPLE )
   if( BUILD_VST2 )
     add_dependencies( install-everything-global install-vst2-global )
   endif()
-  
-  
+
+
 elseif( UNIX AND NOT APPLE )
   add_custom_target( install-resources-local )
   add_custom_command(
