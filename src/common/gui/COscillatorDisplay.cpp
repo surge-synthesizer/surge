@@ -18,7 +18,7 @@
 #include <time.h>
 #include "unitconversion.h"
 #include "UserInteractions.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 #include "PopupEditorSpawner.h"
 
 #include "ImportFilesystem.h"

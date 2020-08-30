@@ -19,7 +19,7 @@
 #include "UserDefaults.h"
 #include <chrono>
 #include "DebugHelpers.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 #include "MSEGEditor.h"
 #include <cstdint>
 

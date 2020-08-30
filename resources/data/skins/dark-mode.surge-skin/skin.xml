@@ -87,6 +87,10 @@
     <color id="effect.label.foreground" value="$lightgray"/>
     <color id="effect.preset.name" value="$lightgray"/>
 
+    <color id="menuslider.label" value="$lightgray"/>
+    <color id="menuslider.value" value="$lightgray"/>
+    <color id="menuslider.value.hover" value="$white"/>
+
     <color id="patchbrowser.background" value="$lightgray"/>
     <color id="patchbrowser.foreground" value="$lightgray"/>
 
@@ -103,8 +107,8 @@
     <color id="menuslider.value" value="$lightgray"/>
     <color id="menuslider.value.hover" value="#D4C4B4"/>
     <color id="menuslider.label" value="$lightgray"/>
-    
-        
+
+
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="$red"/>
     <color id="vumeter.background" value="$darkergray"/>

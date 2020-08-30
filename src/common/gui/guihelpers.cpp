@@ -1,4 +1,4 @@
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 
 #include <cctype>
 

@@ -40,7 +40,7 @@
 #include "UserDefaults.h"
 #include "SkinSupport.h"
 #include "UIInstrumentation.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 #include "DebugHelpers.h"
 
 #include <iostream>

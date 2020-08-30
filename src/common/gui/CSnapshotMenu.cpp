@@ -8,7 +8,7 @@
 #include "SurgeStorage.h" // for TINYXML macro
 #include "PopupEditorSpawner.h"
 #include "ImportFilesystem.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 
 #include <iostream>
 #include <iomanip>
