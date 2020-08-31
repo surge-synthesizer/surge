@@ -144,6 +144,7 @@ set( AIRWINDOWS_INCLUDES
   libs/airwindows/src
   )
 
+
 # Enumerate the sources into groups
 #    SURGE_COMMON_SOURCES
 #    SURGE_GUI_SOURCES
@@ -207,6 +208,7 @@ set(SURGE_COMMON_SOURCES
 
   ${AIRWINDOWS_SOURCES}
   )
+
 
 set( SURGE_GENERATED_SOURCES
   ${CMAKE_BINARY_DIR}/geninclude/version.cpp
@@ -635,6 +637,14 @@ source_group( "VST2 Plugin" REGULAR_EXPRESSION "src/vst2" )
 source_group( "VST3 Plugin" REGULAR_EXPRESSION "src/vst3" )
 source_group( "VST3 SDK" REGULAR_EXPRESSION "vst3sdk" )
 source_group( "VSTGUI" REGULAR_EXPRESSION "vstgui.surge" )
+
+# Source Groups
+source_group( "Libraries" REGULAR_EXPRESSION "libs/" )
+source_group( "Airwindows" REGULAR_EXPRESSION "libs/airwindows/" )
+source_group( "vstgui" REGULAR_EXPRESSION "vstgui.surge" )
+source_group( "vst3" REGULAR_EXPRESSION "vst3sdk" )
+source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/(vt_dsp|dsp)" )
+source_group( "Surge GUI" REGULAR_EXPRESSION "src/common/gui" )
 
 #
 # AUDIO UNIT

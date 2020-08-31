@@ -1,4 +1,5 @@
 #include "airwindows_adapter.h"
+#include "UserDefaults.h"
 
 AirWindowsEffect::AirWindowsEffect( SurgeStorage *storage, FxStorage *fxdata, pdata *pd ) :
    Effect( storage, fxdata, pd )
@@ -188,6 +189,7 @@ void AirWindowsEffect::setupSubFX( int sfx, bool useStreamedValues )
 {
    Registration r = fxreg[sfx];
    airwin = r.generator();
+   airwin->storage = storage;
    
    char fxname[1024];
    airwin->getEffectName(fxname);

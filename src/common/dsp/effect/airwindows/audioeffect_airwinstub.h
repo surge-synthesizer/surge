@@ -6,12 +6,12 @@
 #define __audioeffect__
 
 #include "SurgeStorage.h"
+#include "UserDefaults.h"
 #include <cstdint>
 #include <cstring>
 
 typedef int32_t VstInt32;
 typedef int audioMasterCallback;
-
 
 struct AirWinBaseClass {
    
@@ -54,25 +54,34 @@ struct AirWinBaseClass {
 
    static constexpr int kPlugCategEffect = 0;
 
+   SurgeStorage *storage = nullptr;
+   
+   int airwindowsSurgeDisplayPrecision() {
+      int detailedMode = false;
+      
+      if (storage)
+         detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+      
+      int dp = (detailedMode ? 6 : 2);
+      return dp;
+   }
+
+   inline char *vst_strncpy ( char * destination, const char * source, size_t num ) { return strncpy( destination, source, num ); }
+   inline void  float2string( float f, char* t, size_t num ) {
+      auto dp = airwindowsSurgeDisplayPrecision();
+      snprintf( t, num, "%.*f", dp, f );
+   }
+   inline void int2string( int i, char *t, size_t num ) {
+      snprintf( t, num, "%d", i );
+   }
+   inline void dB2string( float value, char *t, size_t num ) {
+      if (value <= 0)
+         vst_strncpy (t, "-inf", num);
+      else
+         float2string ((float)(20. * log10 (value)), t, num);
+   }
 };
 
-
-inline char *vst_strncpy ( char * destination, const char * source, size_t num ) { return strncpy( destination, source, num ); }
-inline void  float2string( float f, char* t, size_t num )
-{
-   snprintf( t, num, "%8.3f", f );
-}
-inline void int2string( int i, char *t, size_t num )
-{
-   snprintf( t, num, "%d", i );
-}
-inline void dB2string( float value, char *t, size_t num )
-{
-   if (value <= 0)
-      vst_strncpy (t, "-inf", num);
-   else
-      float2string ((float)(20. * log10 (value)), t, num);
-}
 
 typedef AirWinBaseClass AudioEffectX;
 typedef long VstPlugCategory;

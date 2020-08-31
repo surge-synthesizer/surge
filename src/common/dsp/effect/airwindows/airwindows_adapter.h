@@ -76,7 +76,7 @@ public:
             char lab[256], dis[256];
             fx->airwin->getParameterLabel( idx, lab );
             fx->airwin->getParameterDisplay( idx, dis );
-            sprintf( txt, "%s%s", dis, lab );
+            sprintf( txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " " ), lab );
          }
          else
          {
