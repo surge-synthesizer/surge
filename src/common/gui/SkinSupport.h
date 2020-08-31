@@ -159,14 +159,22 @@ public:
       props_t allprops;
    };
    
-   bool hasColor( std::string id );
-   // private:
-   VSTGUI::CColor getColor( std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>() );
-   // public:
-   VSTGUI::CColor getColor( SkinColor id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>() ) {
-      // for now do this - later make it so we get them all by uncommenting the private: and public: above
-      return getColor( id.name, def, noLoops );
-   }
+   private:
+      VSTGUI::CColor getColor(std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>());
+      bool hasColor(std::string id);
+
+   public:
+      VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>())
+      {
+         // for now do this - later make it so we get them all by uncommenting the private: and public: above
+         return getColor( id.name, def, noLoops );
+      }
+
+      bool hasColor(const SkinColor &col)
+      {
+         return hasColor(col.name);
+      }
+
    std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
 
    Skin::Control::ptr_t controlForEnumID( int enum_id ) {

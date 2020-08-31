@@ -8,6 +8,7 @@
 #include "SurgeStorage.h" // for TINYXML macro
 #include "PopupEditorSpawner.h"
 #include "ImportFilesystem.h"
+#include "SkinColors.h"
 #include "guihelpers.h"
 
 #include <iostream>
@@ -310,7 +311,7 @@ void CFxMenu::draw(CDrawContext* dc)
    lbox.right--;
    lbox.bottom--;
 
-   auto fgc = skin->getColor( "fxmenu.foreground", kBlackCColor );
+   auto fgc = skin->getColor(Colors::Effect::Menu::Text, kBlackCColor);
    dc->setFontColor(fgc);
    dc->setFont(displayFont);
    CRect txtbox(lbox);

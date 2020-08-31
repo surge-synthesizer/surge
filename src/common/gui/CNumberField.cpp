@@ -21,6 +21,7 @@
 #include <math.h>
 #include "unitconversion.h"
 #include <iostream>
+#include "SkinColors.h"
 
 using namespace VSTGUI;
 
@@ -258,10 +259,10 @@ void CNumberField::setValue(float val)
 //------------------------------------------------------------------------
 void CNumberField::draw(CDrawContext* pContext)
 {
-   backColor = skin->getColor( "control.numberfield.background", CColor(255, 255, 255, 255) );
-   envColor = skin->getColor( "control.numberfield.env", CColor(214, 209, 198, 255) );
-   fontColor = skin->getColor( "control.numberfield.foreground", CColor(42, 42, 42, 255) );
-   lineColor = skin->getColor( "control.numberfield.rule", CColor(42, 42, 42, 255) );
+   backColor = skin->getColor(Colors::NumberField::Background, CColor(255, 255, 255, 255));
+   envColor = skin->getColor(Colors::NumberField::Env, CColor(214, 209, 198, 255));
+   fontColor = skin->getColor(Colors::NumberField::Text, CColor(42, 42, 42, 255));
+   lineColor = skin->getColor(Colors::NumberField::Border, CColor(42, 42, 42, 255));
 
    // COffscreenContext *tempContext = new
    // COffscreenContext(this->getFrame(),drawsize.width(),drawsize.height());

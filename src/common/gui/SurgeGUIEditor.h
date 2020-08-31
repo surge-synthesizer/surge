@@ -46,6 +46,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 
 
 #include "SkinSupport.h"
+#include "SkinColors.h"
 
 #include <vector>
  

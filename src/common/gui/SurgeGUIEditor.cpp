@@ -39,6 +39,7 @@
 #include "DisplayInfo.h"
 #include "UserDefaults.h"
 #include "SkinSupport.h"
+#include "SkinColors.h"
 #include "UIInstrumentation.h"
 #include "guihelpers.h"
 #include "DebugHelpers.h"
@@ -487,7 +488,7 @@ void SurgeGUIEditor::idle()
          if( typeinResetCounter <= 0 && typeinDialog )
          {
             typeinLabel->setText( typeinResetLabel.c_str() );
-            typeinLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+            typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
             typeinLabel->invalid();
          }
       }
@@ -1204,7 +1205,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    frame->addView(mp_jogfx);
 
    fxPresetLabel = new CTextLabel( CRect( 759, 197, jogx - 2, 207 ), "Preset" );
-   fxPresetLabel->setFontColor(currentSkin->getColor( "effect.preset.name", CColor( 0, 0, 0, 255 ) ));
+   fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name, CColor( 0, 0, 0, 255 ) ));
    fxPresetLabel->setTransparency(true);
    fxPresetLabel->setFont( displayFont );
    fxPresetLabel->setHoriAlign( kRightText );
@@ -2161,22 +2162,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCreator->setImmediateTextChange( true );
    patchComment->setImmediateTextChange( true );
 
-   patchName->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   patchCategory->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   patchCreator->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   patchComment->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
+   patchName->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   patchCategory->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   patchCreator->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   patchComment->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
 
-   patchName->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-   patchCategory->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-   patchCreator->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-   patchComment->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+   patchName->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
+   patchCategory->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
+   patchCreator->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
+   patchComment->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
 
-   patchName->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-   patchCategory->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-   patchCreator->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-   patchComment->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
+   patchName->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
+   patchCategory->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
+   patchCreator->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
+   patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
 
-   CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
+   CColor bggr = currentSkin->getColor(Colors::Dialog::Background, CColor(205, 206, 212));
    patchTuningLabel->setBackColor(bggr);
    patchTuningLabel->setFrameColor(bggr);
 
@@ -4133,7 +4134,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             typeinResetLabel = l;
             typeinLabel->setText( "Invalid Entry" );
             typeinValue->setText(t.c_str());
-            typeinLabel->setFontColor( currentSkin->getColor( "savedialog.textlabel.error", kRedCColor ) );
+            typeinLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Error, kRedCColor));
          }
 
       }
@@ -4632,11 +4633,11 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
    }
    else
    {
-      patchTuningLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+      patchTuningLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text, kBlackCColor));
       patchTuningLabel->setVisible(true);
-      patchTuning->setBoxFrameColor(currentSkin->getColor( "savedialog.checkbox.border", kBlackCColor ));
-      patchTuning->setBoxFillColor(currentSkin->getColor( "savedialog.checkbox.fill", kWhiteCColor ));
-      patchTuning->setCheckMarkColor(currentSkin->getColor( "savedialog.checkbox.tick", kBlackCColor));
+      patchTuning->setBoxFrameColor(currentSkin->getColor(Colors::Dialog::Checkbox::Border, kBlackCColor));
+      patchTuning->setBoxFillColor(currentSkin->getColor(Colors::Dialog::Checkbox::Background, kWhiteCColor));
+      patchTuning->setCheckMarkColor(currentSkin->getColor(Colors::Dialog::Checkbox::Tick, kBlackCColor));
       patchTuning->setValue(0);
       patchTuning->setMouseEnabled(true);
       patchTuning->setVisible(true);
@@ -5705,7 +5706,7 @@ void SurgeGUIEditor::reloadFromSkin()
       frame->setBackground( cbm );
    }
 
-   auto c = currentSkin->getColor( "textfield.focuscolor", VSTGUI::CColor( 170, 170, 230 ) );
+   auto c = currentSkin->getColor(Colors::Dialog::Entry::Focus, VSTGUI::CColor(170, 170, 230));
    frame->setFocusColor( c );
 
    wsx = currentSkin->getWindowSizeX();
@@ -6502,14 +6503,14 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinResetCounter = -1;
 
    typeinDialog = new CViewContainer(typeinSize);
-   typeinDialog->setBackgroundColor(currentSkin->getColor( "savedialog.border", VSTGUI::kBlackCColor) );
+   typeinDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border, VSTGUI::kBlackCColor));
    typeinDialog->setVisible(false);
    frame->addView(typeinDialog);
 
    CRect innerSize( 0, 0, typeinSize.getWidth(), typeinSize.getHeight() );
    innerSize.inset( 1, 1 );
    auto inner = new CViewContainer(innerSize);
-   CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
+   CColor bggr = currentSkin->getColor(Colors::Dialog::Background, CColor(205, 206, 212));
    inner->setBackgroundColor( bggr );
    typeinDialog->addView(inner);
 
@@ -6533,7 +6534,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    }
 
    typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
-   typeinLabel->setFontColor(currentSkin->getColor( "slider.dark.label", kBlackCColor ));
+   typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark, kBlackCColor));
    typeinLabel->setTransparency(true);
    typeinLabel->setFont( displayFont );
    inner->addView(typeinLabel);
@@ -6569,7 +6570,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
       auto ml = new CTextLabel( CRect( 2, 10, 114, 27 ), mls.c_str() );
-      ml->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+      ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
       ml->setTransparency(true);
       ml->setFont( displayFont );
       inner->addView(ml);
@@ -6577,7 +6578,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
 
    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
-   typeinPriorValueLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+   typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
    typeinPriorValueLabel->setTransparency(true);
    typeinPriorValueLabel->setFont( displayFont );
    inner->addView(typeinPriorValueLabel);
@@ -6585,7 +6586,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    if( ismod )
    {
       auto sl = new CTextLabel( CRect( 2, 29 + 11, 116, 36 + 11 ), ptext2 );
-      sl->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+      sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
       sl->setTransparency(true);
       sl->setFont( displayFont );
       inner->addView( sl );
@@ -6593,8 +6594,8 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
 
    typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 22 : 0 ), 114, 50 + ( ismod ? 22 : 0 ) ), this, tag_value_typein, txt );
-   typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+   typeinValue->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   typeinValue->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
 
    // fix the text selection rectangle background overhanging the borders on Windows
    #if WINDOWS
@@ -6606,7 +6607,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
       if( ! p->can_setvalue_from_string() )
       {
          typeinValue->setFontColor( VSTGUI::kRedCColor );
-         typeinValue->setText( "edit coming soon" );
+         typeinValue->setText( "Edit coming soon!" );
       }
    }
 
@@ -6931,7 +6932,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    // add a screen size transparent thing into the editorOverlay
    editorOverlay = new CViewContainer( fs );
-   editorOverlay->setBackgroundColor( currentSkin->getColor( "overlay.exterior", VSTGUI::CColor( 180,180,200,150) ) );
+   editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(180, 180, 200, 150)));
    editorOverlay->setVisible(true);
    frame->addView(editorOverlay);
 
@@ -6949,20 +6950,20 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    containerSize = containerSize.centerInside(fs);
 
    auto outerc = new CViewContainer(containerSize);
-   auto bordersCol = currentSkin->getColor( "overlay.border", kBlackCColor );
+   auto bordersCol = currentSkin->getColor(Colors::Overlay::Border, kBlackCColor);
    outerc->setBackgroundColor( bordersCol );
    editorOverlay->addView( outerc );
 
    containerSize = containerSize.inset( 1, 1 );
    auto innerc = new CViewContainer(containerSize);
-   auto containerCol = currentSkin->getColor( "overlay.containerbackground", VSTGUI::CColor( 216, 216, 220 ) );
+   auto containerCol = currentSkin->getColor(Colors::Overlay::Container::Background, VSTGUI::CColor(216, 216, 220));
    innerc->setBackgroundColor( containerCol );
    editorOverlay->addView(innerc);
 
    auto ls = containerSize;
    ls.bottom = ls.top + header;
    auto tl = new CTextLabel( ls, editorTitle.c_str() );
-   tl->setFontColor( currentSkin->getColor( "overlay.containertitle", kBlackCColor ) );
+   tl->setFontColor(currentSkin->getColor(Colors::Overlay::Container::TitleText, kBlackCColor));
    tl->setTransparency( true );
    VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 14);
    tl->setFont( headerFont );

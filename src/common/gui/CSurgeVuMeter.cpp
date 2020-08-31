@@ -50,7 +50,7 @@ void CSurgeVuMeter::setValueR(float f)
 
 void CSurgeVuMeter::draw(CDrawContext* dc)
 {
-   CColor vugreen = skin->getColor( Colors::VuMeter::Level, {5, 201, 13, 255} );
+   CColor vugreen = skin->getColor(Colors::VuMeter::Level, {5, 201, 13, 255});
    auto vured = skin->getColor( Colors::VuMeter::HighLevel, kRedCColor );
    CRect size = getViewSize();
    CRect lbox(size);
@@ -59,14 +59,14 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
    VSTGUI::CDrawMode newMode(VSTGUI::kAntiAliasing);
    dc->setDrawMode(newMode);
 
-   dc->setFillColor(skin->getColor( Colors::VuMeter::Background, VSTGUI::CColor(0xCD, 0xCE, 0xD4) )); // The light gray from origina-vector skin
+   dc->setFillColor(skin->getColor(Colors::VuMeter::Background, VSTGUI::CColor(0xCD, 0xCE, 0xD4))); // The light gray from origina-vector skin
    dc->drawRect(size, VSTGUI::kDrawFilled);
 
    CRect rectBox = lbox;
    rectBox.inset(1, 1);
    VSTGUI::CGraphicsPath* path = dc->createRoundRectGraphicsPath(rectBox, 2);
 
-   auto border = skin->getColor( Colors::VuMeter::Border, kBlackCColor );
+   auto border = skin->getColor(Colors::VuMeter::Border, kBlackCColor);
    dc->setFillColor(border);
    dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathFilled);
 
@@ -135,7 +135,7 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
       }
    }
 
-   dc->setFrameColor(skin->getColor( Colors::VuMeter::Background, VSTGUI::CColor(0xA1, 0xA4, 0xB7) )); // the dark gray from original vector skin
+   dc->setFrameColor(skin->getColor(Colors::VuMeter::Background, VSTGUI::CColor(0xA1, 0xA4, 0xB7))); // the dark gray from original vector skin
    dc->setLineWidth(1);
    dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathStroked);
 

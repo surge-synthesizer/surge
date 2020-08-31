@@ -18,6 +18,7 @@
 #include "Parameter.h"
 #include <iostream>
 #include "SkinSupport.h"
+#include "SkinColors.h"
 
 class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
@@ -83,14 +84,14 @@ public:
       {
          dc->setFont(VSTGUI::kNormalFontSmall);
 
-         auto frameCol = skin->getColor( "infowindow.border", VSTGUI::kBlackCColor );
-         auto bgCol = skin->getColor( "infowindow.background", VSTGUI::kWhiteCColor );
+         auto frameCol = skin->getColor(Colors::InfoWindow::Border, VSTGUI::kBlackCColor);
+         auto bgCol = skin->getColor(Colors::InfoWindow::Background, VSTGUI::kWhiteCColor);
 
-         auto txtCol = skin->getColor( "infowindow.foreground", VSTGUI::kBlackCColor );
-         auto mpCol = skin->getColor( "infowindow.foreground.modulationpositive", txtCol );
-         auto mnCol = skin->getColor( "infowindow.foreground.modulationnegative", txtCol );
-         auto mpValCol = skin->getColor( "infowindow.foreground.modulationvaluepositive", mpCol );
-         auto mnValCol = skin->getColor( "infowindow.foreground.modulationvaluenegative", mnCol );
+         auto txtCol = skin->getColor(Colors::InfoWindow::Text, VSTGUI::kBlackCColor);
+         auto mpCol = skin->getColor(Colors::InfoWindow::Modulation::Positive, txtCol);
+         auto mnCol = skin->getColor(Colors::InfoWindow::Modulation::Negative, txtCol);
+         auto mpValCol = skin->getColor(Colors::InfoWindow::Modulation::ValuePositive, mpCol);
+         auto mnValCol = skin->getColor(Colors::InfoWindow::Modulation::ValueNegative, mnCol);
          
          
          

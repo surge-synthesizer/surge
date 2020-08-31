@@ -296,8 +296,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    {
       FIXMEERROR << "Unable to load skin.xml resource '" << resourceName("skin.xml") << "'"
                  << std::endl;
-      FIXMEERROR << "Unable to parse bskin.xml\nError is:\n"
-                 << doc.ErrorDesc() << " at row=" << doc.ErrorRow() << " col=" << doc.ErrorCol()
+      FIXMEERROR << "Unable to parse skin.xml\nError is:\n"
+                 << doc.ErrorDesc() << " at row " << doc.ErrorRow() << ", column " << doc.ErrorCol()
                  << std::endl;
       return false;
    }
@@ -305,7 +305,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    TiXmlElement* surgeskin = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-skin"));
    if (!surgeskin)
    {
-      FIXMEERROR << "There is no top level suge-skin node in skin.xml" << std::endl;
+      FIXMEERROR << "There is no top level surge-skin node in skin.xml" << std::endl;
       return true;
    }
    const char* a;
@@ -369,7 +369,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    }
 
    /*
-   ** Pasrse the controls section
+   ** Parse the controls section
    */
    auto attrint = [](TiXmlElement* e, const char* a) {
       const char* av = e->Attribute(a);
@@ -413,7 +413,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       c->name = attrstr( lkid, "name" );
       if( c->name == "" )
       {
-         FIXMEERROR << "INVALUD NAME" << std::endl;
+         FIXMEERROR << "INVALID NAME" << std::endl;
          return false;
       }
 
@@ -639,6 +639,7 @@ bool Skin::hasColor(std::string id)
    queried_colors.insert(id);
    return colors.find(id) != colors.end();
 }
+
 VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def, std::unordered_set<std::string> noLoops)
 {
    if( id[0] == '$' )
