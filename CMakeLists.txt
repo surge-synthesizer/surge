@@ -234,6 +234,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CSwitchControl.cpp
   src/common/gui/MSEGEditor.cpp
   src/common/gui/PopupEditorDialog.cpp
+  src/common/gui/SkinColors.cpp
   src/common/gui/SkinSupport.cpp
   src/common/gui/SurgeBitmaps.cpp
   src/common/gui/SurgeGUIEditor.cpp

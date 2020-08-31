@@ -748,5 +748,11 @@ CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr
    return nullptr;
 }
 
+Surge::UI::SkinColor::SkinColor( std::string n ) : name( n ) {
+   static int uidstart = 1;
+   uid = uidstart++;
+}
+
 } // namespace UI
 } // namespace Surge
+

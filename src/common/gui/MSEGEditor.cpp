@@ -16,6 +16,7 @@
 #include "MSEGEditor.h"
 #include "MSEGModulationHelper.h"
 #include "DebugHelpers.h"
+#include "SkinColors.h"
 
 
 using namespace VSTGUI;
@@ -27,6 +28,7 @@ struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsuming
       setSkin( skin );
       this->ms = ms;
       rebuild();
+      std::cout << Colors::VuMeter::Level.name << std::endl;
    };
 
    void segmentChanged( int i ) {
