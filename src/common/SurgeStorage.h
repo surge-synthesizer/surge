@@ -472,6 +472,8 @@ struct MSEGStorage {
    // If you edit the segments then MSEGModulationHelper::rebuildCache can rebuild them
    float totalDuration;
    std::array<float, max_msegs> segmentStart, segmentEnd;
+
+   static constexpr float minimumDuration = 0.001;
 };
 
 struct FormulaModulatorStorage { // Currently an unused placeholder
