@@ -144,6 +144,7 @@ set( AIRWINDOWS_INCLUDES
   libs/airwindows/src
   )
 
+
 # Enumerate the sources into groups
 #    SURGE_COMMON_SOURCES
 #    SURGE_GUI_SOURCES
@@ -207,6 +208,7 @@ set(SURGE_COMMON_SOURCES
 
   ${AIRWINDOWS_SOURCES}
   )
+
 
 set( SURGE_GENERATED_SOURCES
   ${CMAKE_BINARY_DIR}/geninclude/version.cpp
@@ -617,6 +619,14 @@ else()
   message(FATAL_ERROR "UNKNOWN OS. Please use lin mac or win" )
 endif()
 
+
+# Source Groups
+source_group( "Libraries" REGULAR_EXPRESSION "libs/" )
+source_group( "Airwindows" REGULAR_EXPRESSION "libs/airwindows/" )
+source_group( "vstgui" REGULAR_EXPRESSION "vstgui.surge" )
+source_group( "vst3" REGULAR_EXPRESSION "vst3sdk" )
+source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/(vt_dsp|dsp)" )
+source_group( "Surge GUI" REGULAR_EXPRESSION "src/common/gui" )
 
 #
 # AUDIO UNIT
