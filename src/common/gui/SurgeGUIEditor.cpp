@@ -2438,7 +2438,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       return 1;
    }
    long tag = control->getTag();
-   
+
    // In these cases just move along with success. RMB does nothing on these switches
    if( tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store || tag == tag_store_cancel || tag == tag_store_ok )
    {
@@ -3078,7 +3078,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if (tag == f2subtypetag && (f2type == fut_none || f2type == fut_SNH))
          return 1;
 
-      if (button & kRButton) 
+      bool blockForLFO = false;
+      if( p->ctrltype == ct_lfoshape )
+      {
+         blockForLFO = true;
+         auto *clfo = dynamic_cast<CLFOGui*>(control);
+         if( clfo )
+         {
+            CPoint where;
+            frame->getCurrentMouseLocation(where);
+            frame->localToFrame(where);
+
+            blockForLFO = !clfo->insideTypeSelector(where);
+         }
+      }
+      if ((button & kRButton) && !blockForLFO )
       {
          CRect menuRect;
          CPoint where;
