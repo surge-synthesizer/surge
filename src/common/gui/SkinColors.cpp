@@ -106,6 +106,7 @@ namespace Colors
          namespace Step
          {
             const Surge::UI::SkinColor Fill("lfo.stepseq.step.fill"),
+                                       FillForDeactivatedRate("lfo.stepseq.step.fill.deactivatedrate"),
                                        OutsideFill("lfo.stepseq.step.fill.disabled");
          }
       }

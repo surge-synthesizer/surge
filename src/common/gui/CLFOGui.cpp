@@ -682,6 +682,14 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
             v.top = min(p1, p2);
             v.bottom = max(p1, p2);
          }
+         
+         if( lfodata->rate.deactivated && (int)(lfodata->start_phase.val.f * n_stepseqsteps) % n_stepseqsteps == i)
+         {
+            auto scolor = CColor( std::min( 255, (int)(valuecolor.red * 1.3 ) ),
+                                  std::min( 255, (int)(valuecolor.green * 1.3 ) ),
+                                  std::min( 255, (int)(valuecolor.blue * 1.3 ) ) );
+            valuecolor = skin->getColor( Colors::LFO::StepSeq::Step::FillForDeactivatedRate, scolor );
+         }
 
          fillr( v, valuecolor );
       }
