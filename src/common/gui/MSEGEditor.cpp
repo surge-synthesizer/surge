@@ -58,6 +58,7 @@ struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsuming
       addb( "Constant", seg_type_0 );
       addb( "Line", seg_type_0 + 1);
       addb( "Bezier", seg_type_0 + 2);
+      addb( "S-Curve", seg_type_0 + 3);
       addb( "Add Before", add_before );
       addb( "Add After", add_after );
       addb( "Delete", deletenode );
@@ -319,6 +320,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           
             break;
          }
+         case MSEGStorage::segment::SCURVE:
          case MSEGStorage::segment::QUADBEZ:
          {
             // We get a mousable point at the start of the line
@@ -649,6 +651,7 @@ void MSEGSegmentPanel::valueChanged(CControl *c) {
    case seg_type_0:
    case seg_type_0+1:
    case seg_type_0+2:
+   case seg_type_0+3:
    {
       if( currSeg >= 0 && canvas && c->getValue() == 1 )
       {
