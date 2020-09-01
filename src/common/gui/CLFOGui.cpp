@@ -452,6 +452,7 @@ void CLFOGui::draw(CDrawContext* dc)
       // FIXME 30x10 here and in onmousedown
       dc->drawRect( CRect( 0, 0, 30, 10 ), kDrawFilled );
       dc->setFontColor( kWhiteCColor );
+      dc->setFont( displayFont );
       dc->drawString( "Edit", CRect( 0, 0, 30, 10 ) );
 
    }
@@ -1067,8 +1068,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
             if( sge )
             {
-               std::cout << "OPENING EDITOR" << std::endl;
-               auto mse = new MSEGEditor(ms, skin);
+               auto mse = new MSEGEditor(lfodata, ms, skin);
                sge->setEditorOverlay( mse, "MSEG Editor", []() { std::cout << "MSE Closed" << std::endl; } );
                return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
             }

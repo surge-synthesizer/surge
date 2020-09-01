@@ -83,6 +83,10 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
    case MSEGStorage::segment::LINEAR:
    {
       float frac = pd / r.duration;
+      if( df < 0 )
+         frac = pow( frac, 1.0 + df * 0.7 );
+      if( df > 0 )
+         frac = pow( frac, 1.0 + df * 3 );
       res = frac * r.v1 + ( 1 - frac ) * r.v0;
       break;
    }
@@ -146,6 +150,11 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       else
       {
          float t = (-b + sqrt( b*b-4*a*c))/(2*a);
+         
+         if( df < 0 )
+            t = pow( t, 1.0 + df * 0.7 );
+         if( df > 0 )
+            t = pow( t, 1.0 + df * 3 );
 
          /*
          ** And now evaluate the bezier in y with that t
@@ -193,7 +202,13 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
          if( cx == 0 ) k = 20;
          else k = fabs( log( lna ) / cx );
 
-         res = r.v0 + ( r.v1 - r.v0 ) * 1 / ( 1 + exp( - k * x ) );
+         float a = 1;
+         if( df < 0 )
+            a = 1 + df * 0.5;
+         if( df > 0 )
+            a = 1 + df * 1.5;
+         
+         res = r.v0 + ( r.v1 - r.v0 ) * 1 / pow( ( 1 + exp( - k * x ) ), a );
       }
       
       break;
@@ -203,13 +218,24 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       int steps = (int)( r.cpduration / r.duration * 15 );
       float mul = ( 1 + 2 * steps ) * M_PI;
       auto f = pd/r.duration;
-      res = ( r.v0-r.v1 ) * ( cos( mul * f ) + 1 ) * 0.5 + r.v1;
+      float a = 1;
+      
+      if( df < 0 )
+         a = 1 + df * 0.5;
+      if( df > 0 )
+         a = 1 + df * 1.5;
+
+      res = ( r.v0-r.v1 ) * pow( ( cos( mul * f ) + 1 ) * 0.5, a ) + r.v1;
       break;
    }
 
    case MSEGStorage::segment::DIGILINE: {
       int steps = (int)( r.cpduration / r.duration * 18 ) + 2;
       float frac = (float)( (int)( steps * pd / r.duration ) ) / (steps-1);
+      if( df < 0 )
+         frac = pow( frac, 1.0 + df * 0.7 );
+      if( df > 0 )
+         frac = pow( frac, 1.0 + df * 3 );
       res = frac * r.v1 + ( 1 - frac ) * r.v0;
       break;
    }
