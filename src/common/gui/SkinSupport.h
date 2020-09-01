@@ -159,9 +159,9 @@ public:
       props_t allprops;
    };
    
-   private:
-      VSTGUI::CColor getColor(std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>());
+   //private:
       bool hasColor(std::string id);
+      VSTGUI::CColor getColor(std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>());
 
    public:
       VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>())

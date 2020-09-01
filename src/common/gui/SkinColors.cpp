@@ -242,8 +242,8 @@ namespace Colors
    {
       namespace Label
       {
-         const Surge::UI::SkinColor Light("slider.label.light"),
-                                    Dark("slider.label.dark");
+         const Surge::UI::SkinColor Light("slider.light.label"),
+                                    Dark("slider.dark.label");
       }
       namespace Modulation
       {

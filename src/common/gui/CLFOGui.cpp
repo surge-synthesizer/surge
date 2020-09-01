@@ -540,17 +540,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    dc->setFillColor( ssbg );
    dc->drawRect( CRect( 0, 0, w, h ), kDrawFilled );
 
-
-   // This spec is legacy code from the bitmap days but for now keep it here so we can make sure our default
-   // colors and color names are unch in the port.
-   //auto skd = [this](const std::string n, int def) -> CColor {
-   //              int b = ((def & 0xFF000000) >> 24);
-   //              int g = ((def & 0x00FF0000) >> 16);
-   //              int r = ((def & 0x0000FF00) >>  8);
-   //              return this->skin->getColor(n, CColor( r, g, b ) );
-   //           };
-
-
    auto shadowcol = skin->getColor(Colors::LFO::StepSeq::ColumnShadow, CColor(0x6d, 0x6d, 0x7d));
    auto stepMarker = skin->getColor(Colors::LFO::StepSeq::Step::Fill, CColor(0x12, 0x34, 0x63));
    auto disStepMarker = skin->getColor(Colors::LFO::StepSeq::Step::OutsideFill, CColor(0xbb, 0xcc, 0xff));
