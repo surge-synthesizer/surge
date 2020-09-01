@@ -12,6 +12,7 @@
     <image id="STATUS_ZOOM" resource="SVG/StatusZoom.svg"/>
 
     <color id="white" value="#FFFFFF"/>
+    <color id="black" value="#000000"/>
     <color id="red" value="#FF0000"/>
     <color id="lightgray" value="#B4B4B4"/>
     <color id="gray" value="#808080"/>
@@ -24,8 +25,8 @@
     <color id="surgeorange" value="#ff9000"/>
     <color id="buttonbg" value="#151515"/>
 
-    <color id="modbutton.secondary.hover" value="#ADFF6B"/>
     <color id="modbutton.active.secondary.hover" value="#2E86FE"/>
+    <color id="modbutton.inactive.secondary.hover" value="#ADFF6B"/>
     <color id="modbutton.selected.secondary.hover" value="#ADFF6B"/>
 
     <color id="lfo.waveform.background" value="#242424"/>
@@ -33,7 +34,7 @@
     <color id="lfo.waveform.ruler.ticks" value="$lightgray"/>
     <color id="lfo.waveform.bounds" value="$buttonbg"/>
     <color id="lfo.waveform.centerline" value="$buttonbg"/>
-    <color id="lfo.waveform.envelope" value="#000000"/>
+    <color id="lfo.waveform.envelope" value="$black"/>
     <color id="lfo.waveform.wave" value="$surgeblue"/>
     <color id="lfo.waveform.majordivisions" value="$buttonbg"/>
 
@@ -45,10 +46,10 @@
     <color id="lfo.stepseq.column.shadow" value="$darkblack"/>
     <color id="lfo.stepseq.step.fill" value="$surgeblue"/>
     <color id="lfo.stepseq.step.fill.disabled" value="$darkgray"/>
-    <color id="lfo.stepseq.loop.outside.majorstep" value="#303030"/>
+    <color id="lfo.stepseq.loop.outside.majorstep" value="#202020"/>
     <color id="lfo.stepseq.loop.outside.minorstep" value="#303030"/>
-    <color id="lfo.stepseq.loop.majorstep" value="#000000"/>
-    <color id="lfo.stepseq.loop.minorstep" value="$buttonbg"/>
+    <color id="lfo.stepseq.loop.majorstep" value="$buttonbg"/>
+    <color id="lfo.stepseq.loop.minorstep" value="$black"/>
     <color id="lfo.stepseq.loop.markers" value="$lightgray"/>
     <color id="lfo.stepseq.trigger.click" value="$lightgray"/>
     <color id="lfo.stepseq.drag.line" value="$lightgray"/>
@@ -76,20 +77,14 @@
     <color id="savedialog.checkbox.fill" value="#FFFFFF"/>
     <color id="savedialog.checkbox.tick" value="$darkergray"/>
 
-    <color id="mpetunstatus.title" value="$lightgray"/>
-    <color id="mpetunstatus.button.outline" value="#0F0F0F"/>
-    <color id="mpetunstatus.button.background" value="#181818"/>
-    <color id="mpetunstatus.button.selected.foreground" value="#000000"/>
-    <color id="mpetunstatus.button.unselected.foreground" value="$lightgray"/>
-    <color id="mpetunstatus.buttun.highlight" value="$surgeorange"/>
-
     <color id="effect.label.hrule" value="#5E5E5E"/>
     <color id="effect.label.foreground" value="$lightgray"/>
-    <color id="effect.preset.name" value="$lightgray"/>
+    <color id="effect.label.presetname" value="$lightgray"/>
 
-    <color id="menuslider.label" value="$lightgray"/>
-    <color id="menuslider.value" value="$lightgray"/>
-    <color id="menuslider.value.hover" value="$white"/>
+    <color id="menu.name" value="$lightgray"/>
+    <color id="menu.name.hover" value="$white"/>
+    <color id="menu.value" value="$lightgray"/>
+    <color id="menu.value.hover" value="$white"/>
 
     <color id="patchbrowser.background" value="$lightgray"/>
     <color id="patchbrowser.foreground" value="$lightgray"/>
@@ -103,11 +98,6 @@
     <color id="slider.dark.label" value="$lightgray"/>
     <color id="slider.modulation" value="#FFBF00"/>
     <color id="slider.negative.modulation" value="$gray"/>
-
-    <color id="menuslider.value" value="$lightgray"/>
-    <color id="menuslider.value.hover" value="#D4C4B4"/>
-    <color id="menuslider.label" value="$lightgray"/>
-
 
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="$red"/>

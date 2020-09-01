@@ -131,6 +131,7 @@ namespace Colors
    namespace Menu
    {
       const Surge::UI::SkinColor Name("menu.name"),
+                                 NameHover("menu.name.hover"),
                                  Value("menu.value"),
                                  ValueHover("menu.value.hover");
    }

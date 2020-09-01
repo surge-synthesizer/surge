@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="133px" height="18px" viewBox="0 0 133 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <desc>Created with Lunacy</desc>
+  <defs>
+    <linearGradient x1="0.5" y1="0" x2="0.5" y2="1" id="gradient_1">
+      <stop offset="0" stop-color="#3999FF" />
+      <stop offset="1" stop-color="#3999FF" />
+    </linearGradient>
+    <rect width="133" height="18" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="hover00167" clip-path="url(#clip_1)">
+    <path d="M0 4L0 2C0 1.44772 0.195262 0.976311 0.585786 0.585786C0.976311 0.195262 1.44772 0 2 0L126 0C126.552 0 127.024 0.195262 127.414 0.585786C127.805 0.976311 128 1.44772 128 2L128 12C128 12.5523 127.805 13.0237 127.414 13.4142C127.024 13.8047 126.552 14 126 14L2 14C1.44772 14 0.976311 13.8047 0.585786 13.4142C0.195262 13.0237 0 12.5523 0 12L0 4L0 4L0 4Z" transform="translate(2.499939 2)" id="Rectangle#45" fill="url(#gradient_1)" stroke="#0F0F0F" stroke-width="1" />
+    <path d="M2.25091 0L4.501 3.761L0 3.761L2.25091 0L2.25091 0Z" transform="matrix(0.507388 -0.8617177 0.8617177 0.507388 120.861755 9.091736)" id="Shape" fill="#FFFFFF" stroke="none" />
+  </g>
+</svg>
