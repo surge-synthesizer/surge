@@ -95,6 +95,8 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       }
       if( trunc ) tl += "...";
       auto labcol = skin->getColor(Colors::Menu::Name, kBlackCColor);
+      if (isHover)
+         labcol = skin->getColor(Colors::Menu::NameHover, CColor(60, 20, 0));
       dc->setFontColor( labcol );
       dc->drawString( tl.c_str(), l, kLeftText, true ); 
    }
