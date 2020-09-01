@@ -547,7 +547,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    auto noLoopLo = skin->getColor(Colors::LFO::StepSeq::Loop::OutsideMinorStep, CColor(0xcf, 0xcf, 0xcf));
    auto loopRegionHi = skin->getColor(Colors::LFO::StepSeq::Loop::MajorStep, CColor(0xa9, 0xd0, 0xef));
    auto loopRegionLo = skin->getColor(Colors::LFO::StepSeq::Loop::MinorStep, CColor(0x9a, 0xbf, 0xe0));
-   auto grabMarker = skin->getColor(Colors::LFO::StepSeq::Loop::MajorStep, CColor(0x12, 0x34, 0x63));
+   auto grabMarker = skin->getColor(Colors::LFO::StepSeq::Loop::Marker, CColor(0x12, 0x34, 0x63));
    auto grabMarkerHi = skin->getColor(Colors::LFO::StepSeq::TriggerClick, CColor(0x32, 0x54, 0x83));
 
    auto fillr = [dc](CRect r,CColor c) {
