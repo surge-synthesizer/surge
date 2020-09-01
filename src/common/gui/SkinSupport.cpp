@@ -495,6 +495,14 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             uint32_t rgb;
             sscanf(val.c_str() + 1, "%x", &rgb);
 
+            auto l = strlen( val.c_str() + 1 );
+            int a = 255;
+            if( l > 6 )
+            {
+               a = rgb % 256;
+               rgb = rgb >> 8;
+            }
+            
             int b = rgb % 256;
             rgb = rgb >> 8;
 
@@ -502,7 +510,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             rgb = rgb >> 8;
 
             int r = rgb % 256;
-            colors[id] = ColorStore( VSTGUI::CColor(r, g, b) );
+            
+            colors[id] = ColorStore( VSTGUI::CColor(r, g, b, a) );
          }
          else if( val[0] == '$' )
          {

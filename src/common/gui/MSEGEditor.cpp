@@ -17,6 +17,8 @@
 #include "MSEGModulationHelper.h"
 #include "DebugHelpers.h"
 #include "SkinColors.h"
+#include "basic_dsp.h" // for limit_range
+
 
 using namespace VSTGUI;
 
@@ -59,6 +61,7 @@ struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsuming
       addb( "Constant", seg_type_0 );
       addb( "Line", seg_type_0 + 1);
       addb( "Bezier", seg_type_0 + 2);
+      addb( "S-Curve", seg_type_0 + 3);
       addb( "Add Before", add_before );
       addb( "Add After", add_after );
       addb( "Delete", deletenode );
@@ -193,6 +196,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       float tscale = 1.f * drawArea.getWidth() / maxt;
       return [tscale](float t) { return t / tscale; };
    }
+
+   void offsetDuration( float &v, float d ) {
+      v = std::max( MSEGStorage::minimumDuration, v + d );
+   }
+   void offsetValue( float &v, float d ) {
+      v = limit_range( v + d, -1.f, 1.f );
+   }
    
    void recalcHotZones( const CPoint &where ) {
       hotzones.clear();
@@ -252,15 +262,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           [i,this,editmode,vscale,tscale](float dx, float dy) {
                              if( editmode == 0 || editmode == 2 )
                              {
-                                this->ms->segments[i].v0 -=  2 * dy / vscale;
+                                offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
                                 this->ms->segments[i].v1 = this->ms->segments[i].v0;
                              }
                              if( editmode == 1 || editmode == 2 )
                              {
                                 if( i != 0 )
                                 {
-                                   this->ms->segments[i-1].duration += dx / tscale;
-                                   this->ms->segments[i].duration -= dx / tscale;
+                                   offsetDuration( this->ms->segments[i-1].duration, dx/tscale );
+                                   offsetDuration( this->ms->segments[i].duration, -dx/tscale );
                                 }
                              }
                           } );
@@ -268,12 +278,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           [i,this,editmode,vscale,tscale](float dx, float dy) {
                              if( editmode == 0 || editmode == 2 )
                              {
-                                this->ms->segments[i].v0 -=  2 * dy / vscale;
+                                offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
                                 this->ms->segments[i].v1 = this->ms->segments[i].v0;
                              }
                              if( editmode == 1 || editmode == 2 )
                              {
-                                this->ms->segments[i].duration += dx / tscale;
+                                offsetDuration( this->ms->segments[i].duration, dx / tscale );
                              }
 
                           } );
@@ -286,14 +296,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           [i,this,vscale,tscale,editmode](float dx, float dy) {
                              if( editmode == 0 || editmode == 2 )
                              {
-                                this->ms->segments[i].v0 -= 2 * dy / vscale;
+                                offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
                              }
                              if( editmode == 1 || editmode == 2 )
                              {
                                 if( i != 0 )
                                 {
-                                   this->ms->segments[i-1].duration += dx / tscale;
-                                   this->ms->segments[i].duration -= dx / tscale;
+                                   offsetDuration( this->ms->segments[i-1].duration, dx/tscale );
+                                   offsetDuration( this->ms->segments[i].duration, -dx/tscale );
                                 }
                              }
 
@@ -302,17 +312,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           [i,this,vscale,tscale,editmode](float dx, float dy) {
                              if( editmode == 0 || editmode == 2 )
                              {
-                                this->ms->segments[i].v1 -= 2 * dy / vscale;
+                                offsetValue( this->ms->segments[i].v1, -2 * dy / vscale );
                              }
                              if( editmode == 1 || editmode == 2 )
                              {
-                                this->ms->segments[i].duration += dx / tscale;
+                                offsetDuration( this->ms->segments[i].duration, dx / tscale );
                              }
 
                           } );
                           
             break;
          }
+         case MSEGStorage::segment::SCURVE:
          case MSEGStorage::segment::QUADBEZ:
          {
             // We get a mousable point at the start of the line
@@ -320,14 +331,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           [i,this,vscale,tscale,editmode](float dx, float dy) {
                              if( editmode == 0 || editmode == 2 )
                              {
-                                this->ms->segments[i].v0 -= 2 * dy / vscale;
+                                offsetValue( this->ms->segments[i].v0,  -2 * dy / vscale );
                              }
                              if( editmode == 1 || editmode == 2 )
                              {
                                 if( i != 0 )
                                 {
-                                   this->ms->segments[i-1].duration += dx / tscale;
-                                   this->ms->segments[i].duration -= dx / tscale;
+                                   float cpvm = this->ms->segments[i-1].cpduration / this->ms->segments[i-1].duration;
+                                   float cpv0 = this->ms->segments[i].cpduration / this->ms->segments[i].duration;
+                                   offsetDuration( this->ms->segments[i-1].duration, dx/tscale );
+                                   offsetDuration( this->ms->segments[i].duration, -dx/tscale );
+                                   // Update control point proportionally
+                                   this->ms->segments[i-1].cpduration = this->ms->segments[i-1].duration * cpvm;
+                                   this->ms->segments[i].cpduration = this->ms->segments[i].duration * cpv0;
                                 }
                              }
                           } );
@@ -336,19 +352,24 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           [i,this,vscale,tscale,editmode](float dx, float dy) {
                              if( editmode == 0 || editmode == 2 )
                              {
-                                this->ms->segments[i].v1 -= 2 * dy / vscale;
+                                offsetValue( this->ms->segments[i].v1, -2 * dy / vscale );
                              }
                              if( editmode == 1 || editmode == 2 )
                              {
-                                this->ms->segments[i].duration += dx / tscale;
+                                float cpv0 = this->ms->segments[i].cpduration / this->ms->segments[i].duration;
+                                offsetDuration( this->ms->segments[i].duration, dx / tscale );
+                                this->ms->segments[i].cpduration = cpv0 * this->ms->segments[i].duration;
                              }
                           } );
 
             float tn = tpx(ms->segmentStart[i] + ms->segments[i].cpduration );
             rectForPoint( tn, s.cpv, -1, 1,
                           [i, this, tscale, vscale]( float dx, float dy ) {
-                             this->ms->segments[i].cpv -= 2 * dy / vscale;
+                             offsetValue( this->ms->segments[i].cpv, -2 * dy / vscale );
                              this->ms->segments[i].cpduration += dx / tscale;
+                             this->ms->segments[i].cpduration = limit_range( (float)this->ms->segments[i].cpduration,
+                                                                             (float)MSEGStorage::minimumDuration,
+                                                                             (float)(this->ms->segments[i].duration - MSEGStorage::minimumDuration) );
                           } );
                           
             // TODO control point
@@ -633,6 +654,7 @@ void MSEGSegmentPanel::valueChanged(CControl *c) {
    case seg_type_0:
    case seg_type_0+1:
    case seg_type_0+2:
+   case seg_type_0+3:
    {
       if( currSeg >= 0 && canvas && c->getValue() == 1 )
       {

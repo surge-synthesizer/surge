@@ -1145,16 +1145,8 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
       }
       else if (rect_shapes.pointInside(where))
       {
-         if( buttons & kRButton )
-         {
-            controlstate = cs_null;
-            listener->controlModifierClicked(this, buttons);
-         }
-         else
-         {
-            controlstate = cs_shape;
-            onMouseMoved(where, buttons);
-         }
+         controlstate = cs_shape;
+         onMouseMoved(where, buttons);
          return kMouseEventHandled;
       }
    }

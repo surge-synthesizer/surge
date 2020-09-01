@@ -94,6 +94,11 @@ public:
       tsDen = d;
    }
 
+   bool insideTypeSelector( const VSTGUI::CPoint &where ) {
+      return rect_shapes.pointInside(where);
+   }
+         
+   
 protected:
    LFOStorage* lfodata;
    StepSequencerStorage* ss;
