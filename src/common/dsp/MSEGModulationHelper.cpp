@@ -72,7 +72,7 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
 
    if( idx < 0 ) return 0;
    
-   auto pd = up - ms->segmentStart[idx];
+   float pd = up - ms->segmentStart[idx];
 
    float res = r.v0;
    switch( r.type )
@@ -98,6 +98,11 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       float cpv = r.cpv;
       float cpt = r.cpduration;
 
+      // If we are positioned exactly at the midpoint our calculateion below to find time will fail
+      // so walk off a smidge
+      if( fabs( cpt - r.duration * 0.5 ) < 1e-5 )
+         cpt += 1e-4;
+      
       // here's the midpoint along the connecting curve
       float tp = r.duration/2;
       float vp = (r.v1-r.v0)/2 + r.v0;
@@ -112,6 +117,8 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       float ttarget = pd;
       float px0 = 0, px1 = cpt, px2 = r.duration,
          py0 = r.v0, py1 = cpv, py2 = r.v1;
+
+
 
       /*
       ** OK so we want to find the bezier t corresponding to phase ttarget
@@ -129,15 +136,12 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       float b = 2 * px1;
       float c = -ttarget;
       float disc = b * b - 4 * a * c;
-      if( a == 0 )
+
+      if( a == 0 || disc < 0 )
       {
          // This means we have a line between v0 and v1
          float frac = pd / r.duration;
          res = frac * r.v1 + ( 1 - frac ) * r.v0;
-      }
-      else if( disc < 0 )
-      {
-         res = 0;
       }
       else
       {
@@ -152,6 +156,49 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       break;
    }
 
+   case MSEGStorage::segment::SCURVE:
+   {
+      float x = ( pd / r.duration - 0.5 ) * 2; // goes from -1 to 1
+
+      float eps = 0.01;
+      float cpc = r.cpv;
+      float mv = std::min( r.v0, r.v1 );
+      float xv = std::max( r.v0, r.v1 );
+      if( xv - mv < eps )
+      {
+         res = 0.5 * ( mv + xv );
+         break;
+      }
+      if( cpc < mv + eps ) cpc = mv + eps;
+      if( cpc > xv - eps ) cpc = xv - eps;
+      float cx = -( r.cpduration / r.duration - 0.5 ) * 2; // goes from -1 to 1
+
+      /* so cpc = r.v0 + ( r.v1 - r.v0 ) / ( 1 + e( -k cx ) ) solve for k
+      **
+      ** 1  + e( -k cx ) = (r.v1-r.v0)/(cpc - r.v0);
+      ** e( -k cx ) = (v1-v0)/(cpc-v0) - 1
+      ** k = ln( ( v1-v0)/(vpv-v0) - 1 ) / cx;
+      */
+
+      float lna = (r.v1-r.v0)/(cpc-r.v0) - 1;
+      if( lna <= 0 )
+      {
+         // Punt
+         float frac = pd / r.duration;
+         res = frac * r.v1 + ( 1 - frac ) * r.v0;
+      }
+      else
+      {
+         float k = 3;
+         if( cx == 0 ) k = 20;
+         else k = fabs( log( lna ) / cx );
+
+         res = r.v0 + ( r.v1 - r.v0 ) * 1 / ( 1 + exp( - k * x ) );
+      }
+      
+      break;
+   }
+   
    }
    //std::cout << _D(pd) << _D(r.type) << _D(r.duration) << _D(r.v0) << std::endl;
 

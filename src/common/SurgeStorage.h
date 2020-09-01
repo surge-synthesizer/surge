@@ -462,6 +462,7 @@ struct MSEGStorage {
          CONSTANT = 0,
          LINEAR,
          QUADBEZ,
+         SCURVE
       } type;
    };
 
