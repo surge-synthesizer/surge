@@ -198,6 +198,22 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       
       break;
    }
+
+   case MSEGStorage::segment::WAVE: {
+      int steps = (int)( r.cpduration / r.duration * 15 );
+      float mul = ( 1 + 2 * steps ) * M_PI;
+      auto f = pd/r.duration;
+      res = ( r.v0-r.v1 ) * ( cos( mul * f ) + 1 ) * 0.5 + r.v1;
+      break;
+   }
+
+   case MSEGStorage::segment::DIGILINE: {
+      int steps = (int)( r.cpduration / r.duration * 18 ) + 2;
+      float frac = (float)( (int)( steps * pd / r.duration ) ) / (steps-1);
+      res = frac * r.v1 + ( 1 - frac ) * r.v0;
+      break;
+   }
+
    
    }
    //std::cout << _D(pd) << _D(r.type) << _D(r.duration) << _D(r.v0) << std::endl;
