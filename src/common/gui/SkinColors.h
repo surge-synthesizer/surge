@@ -77,7 +77,7 @@ namespace Colors
          }
          namespace Step
          {
-            extern const Surge::UI::SkinColor Fill, OutsideFill;
+            extern const Surge::UI::SkinColor Fill, OutsideFill, FillForDeactivatedRate;
          }
       }
       namespace Waveform
