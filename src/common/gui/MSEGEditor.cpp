@@ -16,7 +16,9 @@
 #include "MSEGEditor.h"
 #include "MSEGModulationHelper.h"
 #include "DebugHelpers.h"
+#include "SkinColors.h"
 #include "basic_dsp.h" // for limit_range
+
 
 using namespace VSTGUI;
 
@@ -27,6 +29,7 @@ struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsuming
       setSkin( skin );
       this->ms = ms;
       rebuild();
+      std::cout << Colors::VuMeter::Level.name << std::endl;
    };
 
    void segmentChanged( int i ) {
@@ -100,7 +103,7 @@ struct MSEGControlPanel : public CViewContainer, public Surge::UI::SkinConsuming
                      this->addView( b );
                      pos += 19;
                   };
-      addb( "Edit Magn Only", mag_only );
+      addb( "Edit Amp Only", mag_only );
       addb( "Edit Dur Only", time_only );
       addb( "Edit Both", mag_and_time );
 
@@ -385,7 +388,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto tpx = timeToPx();
             
       dc->setLineWidth( 1 );
-      dc->setFrameColor( skin->getColor( "msegeditor.axis.line", CColor( 220, 220, 240 ) ) );
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line, CColor(220, 220, 240)));
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
@@ -399,7 +402,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       auto vaxisArea = getVAxisArea();
       dc->setLineWidth( 1 );
-      dc->setFrameColor( skin->getColor( "msegeditor.axis.line", CColor( 220, 220, 240 ) ) );
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line, CColor(220, 220, 240)));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
       for( float i=-1; i<=1; i += 0.25 )
@@ -432,12 +435,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       {
          if( h.active && h.type == hotzone::SEGMENT_BG )
          {
-            dc->setFillColor( skin->getColor( "msegeditor.hoversegment", CColor( 80, 80, 100, 128 ) ) );
+            dc->setFillColor( skin->getColor(Colors::MSEGEditor::Segment::Hover, CColor(80, 80, 100, 128)));
             dc->drawRect( h.rect, kDrawFilled );
          }
          if( h.selected && h.type == hotzone::SEGMENT_BG )
          {
-            dc->setFillColor( skin->getColor( "msegeditor.hoversegment", CColor( 120, 120, 180 ) ) );
+            dc->setFillColor( skin->getColor(Colors::MSEGEditor::Segment::Hover, CColor(120, 120, 180)));
             dc->drawRect( h.rect, kDrawFilled );
          }
       }
@@ -450,16 +453,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       // draw horizontal grid
       dc->setLineWidth( 1 );
       int skips = 4;
-      auto brightGridColor = skin->getColor( "msegeditor.grid.bright", CColor( 220, 220, 240 ) );
-      auto dimGridColor = skin->getColor( "msegeditor.grid.dim", CColor( 100, 100, 110 ) );
+      auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary, CColor(220, 220, 240));
+      auto secondaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Secondary, CColor(100, 100, 110));
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
          float t = 1.0f * gi / skips;
          float px = tpx( t );
          if( gi % skips == 0 )
-            dc->setFrameColor( brightGridColor );
+            dc->setFrameColor( primaryGridColor );
          else
-            dc->setFrameColor( dimGridColor );
+            dc->setFrameColor( secondaryGridColor );
          dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
       }
 
@@ -468,9 +471,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       {
          float v = valpx( 1.f * vi / skips - 1 );
          if( vi % skips == 0 )
-            dc->setFrameColor( brightGridColor );
+            dc->setFrameColor( primaryGridColor );
          else
-            dc->setFrameColor( dimGridColor );
+            dc->setFrameColor( secondaryGridColor );
          dc->drawLine( CPoint( drawArea.left, v ), CPoint( drawArea.right, v ) );
       }
       
@@ -504,14 +507,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       dc->setLineWidth( 3 );
       auto tfpath = CGraphicsTransform().translate( drawArea.left, 0 );
-      dc->setFrameColor( skin->getColor( "mseg.linecolor", kWhiteCColor ) );
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Line, kWhiteCColor));
       dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       path->forget();
 
       if( startedLoopPath )
       {
          dc->setLineWidth(1);
-         dc->setFrameColor( skin->getColor( "mseg.looplinecolor", CColor( 180, 180, 200 ) ) );
+         dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Line, CColor(180, 180, 200)));
          dc->drawGraphicsPath( looppath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
          looppath->forget();
       }

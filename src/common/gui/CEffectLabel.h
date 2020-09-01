@@ -16,6 +16,7 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SkinSupport.h"
+#include "SkinColors.h"
 
 extern VSTGUI::CFontRef displayFont;
 
@@ -32,11 +33,11 @@ public:
       bl.top = bl.bottom - 2;
 
       VSTGUI::CColor gray = {106, 106, 106, 255};
-      dc->setFillColor(skin->getColor("effect.label.hrule", gray));
+      dc->setFillColor(skin->getColor(Colors::Effect::Label::Line, gray));
       dc->drawRect(bl, VSTGUI::kDrawFilled);
 
       VSTGUI::CColor dgray = {76, 76, 76, 255};
-      dc->setFontColor(skin->getColor("effect.label.foreground", dgray));
+      dc->setFontColor(skin->getColor(Colors::Effect::Label::Text, dgray));
       dc->setFont(displayFont);
       dc->drawString(label.c_str(), size, VSTGUI::kLeftText, true);
 

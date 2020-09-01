@@ -17,6 +17,7 @@
 #include "CMenuAsSlider.h"
 #include "CScalableBitmap.h"
 #include <iostream>
+#include "SkinColors.h"
 #include "DebugHelpers.h"
 
 using namespace VSTGUI;
@@ -64,9 +65,9 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
    if( sge )
    {
       std::string dt = sge->getDisplayForTag( getTag() );
-      auto valcol = skin->getColor( "menuslider.value", kBlackCColor );
+      auto valcol = skin->getColor(Colors::Menu::Value, kBlackCColor);
       if( isHover )
-         valcol = skin->getColor( "menuslider.value.hover", CColor( 60, 20, 0 ) );
+         valcol = skin->getColor(Colors::Menu::ValueHover, CColor(60, 20, 0));
             
       dc->setFontColor( valcol );
       auto t = d;
@@ -93,7 +94,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
          trunc = true;
       }
       if( trunc ) tl += "...";
-      auto labcol = skin->getColor( "menuslider.label", kBlackCColor );
+      auto labcol = skin->getColor(Colors::Menu::Name, kBlackCColor);
       dc->setFontColor( labcol );
       dc->drawString( tl.c_str(), l, kLeftText, true ); 
    }

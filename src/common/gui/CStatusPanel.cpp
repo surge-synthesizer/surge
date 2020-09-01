@@ -2,7 +2,7 @@
 #include "CStatusPanel.h"
 #include "CScalableBitmap.h"
 #include "RuntimeFont.h"
-
+#include "SkinColors.h"
 
 using namespace VSTGUI;
 
@@ -39,11 +39,11 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
            zoomBox = CRect(xp, yp, xp + w, yp + h);
 
        auto hlbg = true;
-       auto ol = skin->getColor( "mpetunstatus.button.outline", CColor(0x97, 0x97, 0x97 ) );
-       auto bg = skin->getColor( "mpetunstatus.button.background", CColor(0xe3, 0xe3, 0xe3 ) );
-       auto fg = skin->getColor( "mpetunstatus.button.selected.foreground", kBlackCColor );
-       auto ufg = skin->getColor( "mpetunstatus.button.unselected.foreground", kBlackCColor );
-       auto hl = skin->getColor( "mpetunstatus.buttun.highlight", CColor(0xff, 0x9A, 0x10 ) );
+       auto ol = skin->getColor(Colors::StatusButton::Border, CColor(0x97, 0x97, 0x97));
+       auto bg = skin->getColor(Colors::StatusButton::Background, CColor(0xe3, 0xe3, 0xe3));
+       auto fg = skin->getColor(Colors::StatusButton::SelectedText, kBlackCColor);
+       auto ufg = skin->getColor(Colors::StatusButton::Text, kBlackCColor);
+       auto hl = skin->getColor(Colors::StatusButton::SelectedBackground, CColor(0xff, 0x9A, 0x10));
 
        if (!dispfeatures[i])
        {
