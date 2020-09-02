@@ -3,9 +3,12 @@
 
 // These are included only here
 #include "ADClip7.h"
+#include "Air.h"
 #include "BlockParty.h"
+#include "BussColors4.h"
 #include "ButterComp2.h"
 #include "Compresaturator.h"
+#include "Console6Buss.h"
 #include "Logical4.h"
 #include "Mojo.h"
 #include "OneCornerClip.h"
@@ -48,7 +51,7 @@
 #include "SingleEndedTriode.h"
 #include "IronOxide5.h"
 #include "ToTape6.h"
-
+#include "DrumSlam.h"
 
 void AirWindowsEffect::registerPlugins()
 {
@@ -122,4 +125,9 @@ void AirWindowsEffect::registerPlugins()
 
    registerAirwindow<IronOxide5::IronOxide5>( id++, 450, gnTape, "IronOxide5" );
    registerAirwindow<ToTape6::ToTape6>( id++, 460, gnTape, "ToTape6" );
+
+   registerAirwindow<Air::Air>( id++, 400, gnSpecial, "Air" );
+   registerAirwindow<BussColors4::BussColors4>( id++, 25, gnDynamics, "BussColors4" );
+   registerAirwindow<Console6Buss::Console6Buss>( id++, 45, gnDynamics, "Console6Buss" );
+   registerAirwindow<DrumSlam::DrumSlam>( id++, 46, gnDynamics, "DrumSlam" );
 }
