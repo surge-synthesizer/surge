@@ -17,6 +17,7 @@
 #include <cmath>
 #include <iostream>
 #include "DebugHelpers.h"
+#include "basic_dsp.h" // for limit_range
 
 void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
 {
@@ -57,6 +58,8 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
    
    while( up >= ms->totalDuration ) up -= ms->totalDuration;
 
+   df = limit_range( df, -1.f, 1.f );
+   
    float cd = 0;
    MSEGStorage::segment r;
    int idx = -1;
@@ -71,6 +74,13 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
    }
 
    if( idx < 0 ) return 0;
+
+   bool segInit = false;
+   if( idx != ms->lastSegmentEvaluated )
+   {
+      segInit = true;
+      ms->lastSegmentEvaluated = idx;
+   }
    
    float pd = up - ms->segmentStart[idx];
 
@@ -88,6 +98,33 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       if( df > 0 )
          frac = pow( frac, 1.0 + df * 3 );
       res = frac * r.v1 + ( 1 - frac ) * r.v0;
+      break;
+   }
+   case MSEGStorage::segment::BROWNIAN:
+   {
+      const float sdt = 0.001;
+      static constexpr int validx = 0, lasttime = 1;
+      if( segInit )
+      {
+         r.state[validx] = r.v0;
+         r.state[lasttime] = 0;
+      }
+      float targetTime = pd/r.duration;
+      while( r.state[lasttime] < targetTime )
+      {
+         float dt = std::min( dt, targetTime - r.state[lasttime] );
+
+         float lincoef  = ( r.v1 - r.state[validx] ) / ( 1 - r.state[lasttime] );
+         float randcoef = 0.1 * r.cpduration / r.duration;
+
+         r.state[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
+         r.state[lasttime] += dt;
+      }
+      res = r.state[validx];
+
+      ms->segments[idx].state[validx] = r.state[validx];
+      ms->segments[idx].state[lasttime] = r.state[lasttime];
+      
       break;
    }
    case MSEGStorage::segment::QUADBEZ:
