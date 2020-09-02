@@ -458,6 +458,7 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(X11 REQUIRED x11)
   pkg_check_modules(XCB REQUIRED xcb)
   pkg_check_modules(XCBCURSOR REQUIRED xcb-cursor)
+  pkg_check_modules(XCBKEYSYMS REQUIRED xcb-keysyms)
   pkg_check_modules(XCBUTIL REQUIRED xcb-util)
   pkg_check_modules(XCBXKB REQUIRED xcb-xkb)
   pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
@@ -507,6 +508,7 @@ elseif( UNIX AND NOT APPLE )
     ${X11_INCLUDE_DIRS}
     ${XCB_INCLUDE_DIRS}
     ${XCBCURSOR_INCLUDE_DIRS}
+    ${XCBKEYSYMS_INCLUDE_DIRS}
     ${XCBUTIL_INCLUDE_DIRS}
     ${XCBXKB_INCLUDE_DIRS}
     ${XKBCOMMON_INCLUDE_DIRS}
@@ -532,6 +534,7 @@ elseif( UNIX AND NOT APPLE )
     ${X11_LDFLAGS}
     ${XCB_LDFLAGS}
     ${XCBCURSOR_LDFLAGS}
+    ${XCBKEYSYMS_LDFLAGS}
     ${XCBUTIL_LDFLAGS}
     ${XCBXKB_LDFLAGS}
     ${XKBCOMMON_LDFLAGS}
