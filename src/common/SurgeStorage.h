@@ -458,13 +458,15 @@ struct MSEGStorage {
       float duration;
       float v0, v1;
       float cpduration, cpv;
+      float state[5]; // just some random variables we can use for state management if we want
       enum Type {
          CONSTANT = 0,
          LINEAR,
          QUADBEZ,
          SCURVE,
          WAVE,
-         DIGILINE
+         DIGILINE,
+         BROWNIAN
       } type;
    };
 
@@ -475,6 +477,7 @@ struct MSEGStorage {
    // If you edit the segments then MSEGModulationHelper::rebuildCache can rebuild them
    float totalDuration;
    std::array<float, max_msegs> segmentStart, segmentEnd;
+   size_t lastSegmentEvaluated = -1;
 
    static constexpr float minimumDuration = 0.001;
 };

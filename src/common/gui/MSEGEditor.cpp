@@ -29,7 +29,6 @@ struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsuming
       setSkin( skin );
       this->ms = ms;
       rebuild();
-      std::cout << Colors::VuMeter::Level.name << std::endl;
    };
 
    void segmentChanged( int i ) {
@@ -60,10 +59,16 @@ struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsuming
                   };
       addb( "Constant", seg_type_0 );
       addb( "Line", seg_type_0 + 1);
+      addb( "DigiLine", seg_type_0 + 5 );
+      pos += 10;
+      
       addb( "Bezier", seg_type_0 + 2);
       addb( "S-Curve", seg_type_0 + 3);
+      pos += 10;
+      
       addb( "Wave", seg_type_0 + 4);
-      addb( "DigiLine", seg_type_0 + 5 );
+      addb( "Brownain", seg_type_0 + 6 );
+      pos += 10;
       
       addb( "Add Before", add_before );
       addb( "Add After", add_after );
@@ -293,6 +298,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           } );
             break;
          }
+         // this is the no control point case
          case MSEGStorage::segment::LINEAR:
          {
             // We get a mousable point at the start of the line
@@ -331,6 +337,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          case MSEGStorage::segment::DIGILINE:
          case MSEGStorage::segment::WAVE:
          case MSEGStorage::segment::QUADBEZ:
+         case MSEGStorage::segment::BROWNIAN:
          {
             // We get a mousable point at the start of the line
             rectForPoint( t0, s.v0, 0, 2,
@@ -664,6 +671,8 @@ void MSEGSegmentPanel::valueChanged(CControl *c) {
    case seg_type_0+3:
    case seg_type_0+4:
    case seg_type_0+5:
+   case seg_type_0+6:
+   case seg_type_0+7:
    {
       if( currSeg >= 0 && canvas && c->getValue() == 1 )
       {
