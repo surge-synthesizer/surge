@@ -2422,12 +2422,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       return 0;
    if (!editor_open)
       return 0;
+
    /*if((button&kRButton)&&modsource)
      {
      modsource = 0;
      queue_refresh = true;
      return 1;
      }*/
+
    if (button & (kMButton | kButton4 | kButton5))
    {
       toggle_mod_editing();
@@ -2448,13 +2450,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    std::vector< std::string > clearControlTargetNames;
 
-   if (button & kDoubleClick)
-      button |= kControl;
-
-
    if (button & kRButton)
    {
-
       if (tag == tag_settingsmenu)
       {
          CRect r = control->getViewSize();
@@ -3060,11 +3057,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    if (tag < start_paramtags)
       return 0;
-   if (!(button & (kDoubleClick | kRButton)))
+
+   if (!(button & (kDoubleClick | kRButton | kControl)))
       return 0;
 
    int ptag = tag - start_paramtags;
-   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()) )
+   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
    {
       Parameter* p = synth->storage.getPatch().param_ptr[ptag];
       
@@ -3093,6 +3091,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             blockForLFO = !clfo->insideTypeSelector(where);
          }
       }
+
+      // all the RMB context menus
       if ((button & kRButton) && !blockForLFO )
       {
          CRect menuRect;
@@ -3267,9 +3267,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                         int i = rp.second;
                         std::string displaytxt = dm->nameAtStreamedIndex(i);
                      
-#if WINDOWS
-                        Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
-#endif
+                        #if WINDOWS
+                           Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
+                        #endif
                         
                         auto b = addCallbackMenu( useSubMenus ? sub : contextMenu, displaytxt.c_str(),
                                                   [this,p,i, tag]() {
@@ -3301,9 +3301,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      
                      std::string displaytxt = txt;
                      
-#if WINDOWS
-                     Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
-#endif
+                     #if WINDOWS
+                        Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
+                     #endif
                      
                      auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
                                               [this,ef,p,i]() {
@@ -3701,20 +3701,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
          } // end vt_float if statement
 
-#if TARGET_VST3
-         auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
-#endif
+         #if TARGET_VST3
+            auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
+         #endif
 
          frame->addView(contextMenu); // add to frame
          contextMenu->popup();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
-#if TARGET_VST3
-         if( hostMenu ) hostMenu->release();
-#endif
+         #if TARGET_VST3
+            if( hostMenu ) hostMenu->release();
+         #endif
+
          return 1;
       }
-      else if (button & kControl)
+      // reset to default value
+      else if (button & kDoubleClick)
       {
          if (synth->isValidModulation(ptag, modsource) && mod_editor)
          {
@@ -3734,7 +3736,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          else
          {
             /*
-            ** This code resets you to default if you double click or ctrl click
+            ** This code resets you to default if you double click on control
             ** but on the lfoshape UI this is undesirable; it means if you accidentally
             ** control click on step sequencer, say, you go back to sin and lose your
             ** edits. So supress
@@ -3751,6 +3753,47 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                return 0;
             }
          }
+      } 
+      // exclusive mute/solo in the mixer
+      else if (button & kControl)
+      {
+         if (p->ctrltype == ct_bool_mute)
+         {
+            Parameter* o1 = &(synth->storage.getPatch().scene[current_scene].mute_o1);
+            Parameter* r23 = &(synth->storage.getPatch().scene[current_scene].mute_ring_23);
+
+            auto curr = o1;
+
+            while (curr <= r23)
+            {
+               if (curr->id == p->id)
+                  curr->val.b = true;
+               else
+                  curr->val.b = false;
+
+               curr++;
+            }
+         }
+         else if (p->ctrltype == ct_bool_solo)
+         {
+            Parameter* o1 = &(synth->storage.getPatch().scene[current_scene].solo_o1);
+            Parameter* r23 = &(synth->storage.getPatch().scene[current_scene].solo_ring_23);
+
+            auto curr = o1;
+
+            while (curr <= r23)
+            {
+               if (curr->id == p->id)
+                  curr->val.b = true;
+               else
+                  curr->val.b = false;
+
+               curr++;
+            }
+         }
+
+         synth->refresh_editor = true;
+         return 1;
       }
       else
          return 0;
