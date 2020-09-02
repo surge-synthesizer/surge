@@ -4,6 +4,8 @@
 set( AIRWINDOWS_FX_SOURCES
 src/ADClip7.cpp
 src/ADClip7Proc.cpp
+src/Air.cpp
+src/AirProc.cpp
 src/Apicolypse.cpp
 src/ApicolypseProc.cpp
 src/BassDrive.cpp
@@ -16,12 +18,16 @@ src/BrassRider.cpp
 src/BrassRiderProc.cpp
 src/BrightAmbience2.cpp
 src/BrightAmbience2Proc.cpp
+src/BussColors4.cpp
+src/BussColors4Proc.cpp
 src/ButterComp2.cpp
 src/ButterComp2Proc.cpp
 src/Cojones.cpp
 src/CojonesProc.cpp
 src/Compresaturator.cpp
 src/CompresaturatorProc.cpp
+src/Console6Buss.cpp
+src/Console6BussProc.cpp
 src/CrunchyGrooveWear.cpp
 src/CrunchyGrooveWearProc.cpp
 src/DeBess.cpp
@@ -36,6 +42,8 @@ src/Density.cpp
 src/DensityProc.cpp
 src/Drive.cpp
 src/DriveProc.cpp
+src/DrumSlam.cpp
+src/DrumSlamProc.cpp
 src/DustBunny.cpp
 src/DustBunnyProc.cpp
 src/Focus.cpp
@@ -94,4 +102,4 @@ src/VariMu.cpp
 src/VariMuProc.cpp
 src/VoiceOfTheStarship.cpp
 src/VoiceOfTheStarshipProc.cpp
-   )
+  )
