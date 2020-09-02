@@ -2135,12 +2135,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchTuningLabel->sizeToFit();
 
    // fix the text selection rectangle background overhanging the borders on Windows
-   #if WINDOWS
+#if WINDOWS
       patchName->setTextInset(CPoint(3, 0));
       patchCategory->setTextInset(CPoint(3, 0));
       patchCreator->setTextInset(CPoint(3, 0));
       patchComment->setTextInset(CPoint(3, 0));
-   #endif
+#endif
 
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
@@ -3267,9 +3267,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                         int i = rp.second;
                         std::string displaytxt = dm->nameAtStreamedIndex(i);
                      
-                        #if WINDOWS
+#if WINDOWS
                            Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
-                        #endif
+#endif
                         
                         auto b = addCallbackMenu( useSubMenus ? sub : contextMenu, displaytxt.c_str(),
                                                   [this,p,i, tag]() {
@@ -3301,9 +3301,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      
                      std::string displaytxt = txt;
                      
-                     #if WINDOWS
+#if WINDOWS
                         Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
-                     #endif
+#endif
                      
                      auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
                                               [this,ef,p,i]() {
@@ -3372,11 +3372,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                   bool setTSTo;
 
-                  #if WINDOWS
+#if WINDOWS
                      snprintf(pars, 32, "parameters");
-                  #else
+#else
                      snprintf(pars, 32, "Parameters");
-                  #endif
+#endif
 
                   if( p->temposync )
                   {
@@ -3701,17 +3701,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
          } // end vt_float if statement
 
-         #if TARGET_VST3
+#if TARGET_VST3
             auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
-         #endif
+#endif
 
          frame->addView(contextMenu); // add to frame
          contextMenu->popup();
          frame->removeView(contextMenu, true); // remove from frame and forget
 
-         #if TARGET_VST3
+#if TARGET_VST3
             if( hostMenu ) hostMenu->release();
-         #endif
+#endif
 
          return 1;
       }
@@ -3773,6 +3773,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                curr++;
             }
+
+            synth->refresh_editor = true;
          }
          else if (p->ctrltype == ct_bool_solo)
          {
@@ -3790,9 +3792,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                curr++;
             }
+
+            synth->refresh_editor = true;
          }
 
-         synth->refresh_editor = true;
          return 1;
       }
       else
@@ -5137,11 +5140,11 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                         };
 
                         std::string scl_folder = "tuning-library";
-                        #if WINDOWS
+#if WINDOWS
                            scl_folder += "\\SCL";
-                        #else
+#else
                            scl_folder += "/SCL";
-                        #endif
+#endif
 
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + scl_folder, ".scl", "Scala microtuning files (*.scl)", cb);
                     }
@@ -5181,11 +5184,11 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                         };
 
                         std::string kbm_folder = "tuning-library";
-                        #if WINDOWS
+#if WINDOWS
                            kbm_folder += "\\KBM Concert Pitch";
-                        #else
+#else
                            kbm_folder += "/KBM Concert Pitch";
-                        #endif
+#endif
 
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + kbm_folder, ".kbm", "Scala keyboard mapping files (*.kbm)", cb);
                     }
@@ -5522,11 +5525,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                 dname += "other";
              }
 
-             #if WINDOWS
+#if WINDOWS
                 dname += "\\";
-             #else
+#else
                 dname += "/";
-             #endif
+#endif
 
              dname += entry.name + ")";
           }
@@ -6655,9 +6658,9 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinValue->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
 
    // fix the text selection rectangle background overhanging the borders on Windows
-   #if WINDOWS
+#if WINDOWS
    typeinValue->setTextInset(CPoint(3, 0));
-   #endif
+#endif
 
    if( p )
    {
