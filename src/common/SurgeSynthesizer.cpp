@@ -1538,6 +1538,8 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
          need_refresh = true;
          break;
       case ct_bool_solo:
+         // pre-1.7.2 unique (single) solo
+         /*
          if (storage.getPatch().param_ptr[index]->val.b)
          {
             int s = storage.getPatch().param_ptr[index]->scene - 1;
@@ -1552,6 +1554,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                storage.getPatch().param_ptr[index]->val.b = true;
             }
          }
+         */
          switch_toggled_queued = true;
          need_refresh = true; 
          break;

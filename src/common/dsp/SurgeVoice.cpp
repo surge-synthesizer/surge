@@ -318,6 +318,16 @@ void SurgeVoice::switch_toggled()
                 scene->solo_noise.val.b || scene->solo_ring_12.val.b || scene->solo_ring_23.val.b);
    if (solo)
    {
+      set_path(scene->solo_o1.val.b,
+               scene->solo_o2.val.b,
+               scene->solo_o3.val.b,
+               FM && scene->solo_o1.val.b,  // inter-osc FM should be enabled only if carrier (osc 1) is soloed, in case any solos are active
+               scene->solo_ring_12.val.b,
+               scene->solo_ring_23.val.b,
+               scene->solo_noise.val.b);
+
+      // pre-1.7.2 unique (single) solo paths:
+      /*   
       if (scene->solo_o1.val.b)
          set_path(true, false, false, false, false, false, false);
       else if (scene->solo_o2.val.b)
@@ -330,6 +340,7 @@ void SurgeVoice::switch_toggled()
          set_path(false, false, false, false, true, false, false);
       else if (scene->solo_ring_23.val.b)
          set_path(false, false, false, false, false, true, false);
+      */
    }
    else
    {
@@ -339,10 +350,11 @@ void SurgeVoice::switch_toggled()
       bool use_ring12 = (!scene->mute_ring_12.val.b);
       bool use_ring23 = (!scene->mute_ring_23.val.b);
       bool use_noise = (!scene->mute_noise.val.b);
+
       set_path(use_osc1, use_osc2, use_osc3, FM, use_ring12, use_ring23, use_noise);
    }
 
-   // Check the filtertype (kolla = check?)
+   // check the filtertype
    for (int u = 0; u < 2; u++)
    {
       if ((scene->filterunit[u].type.val.i != FBP.FU[u].type) ||
