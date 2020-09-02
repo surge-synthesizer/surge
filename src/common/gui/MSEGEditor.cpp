@@ -121,9 +121,10 @@ struct MSEGControlPanel : public CViewContainer, public Surge::UI::SkinConsuming
 };
 
 struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
-   MSEGCanvas(const CRect &size, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CControl( size ) {
+   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CControl( size ) {
       setSkin( skin );
       this->ms = ms;
+      this->lfodata = lfodata;
       MSEGModulationHelper::rebuildCache( ms );
    };
 
@@ -489,7 +490,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       for( int i=0; i<drawArea.getWidth(); ++i )
       {
          float up = pxt( i );
-         float v = MSEGModulationHelper::valueAt( up, 0, ms );
+         float v = MSEGModulationHelper::valueAt( up, lfodata->deform.val.f, ms );
          v = valpx( v );
          if( up <= ms->totalDuration )
          {
@@ -643,6 +644,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    }
    
    MSEGStorage *ms;
+   LFOStorage *lfodata;
    MSEGSegmentPanel *segmentpanel = nullptr;
    MSEGControlPanel *controlpanel = nullptr;
    
@@ -729,7 +731,7 @@ struct MSEGMainEd : public CViewContainer {
    int controlHeight = 60;
    int segmentWidth = 100;
    
-   MSEGMainEd(const CRect &size, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin) : CViewContainer(size) {
+   MSEGMainEd(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin) : CViewContainer(size) {
       this->ms = ms;
       this->skin = skin;
 
@@ -737,7 +739,7 @@ struct MSEGMainEd : public CViewContainer {
       auto segmentArea = new MSEGSegmentPanel(CRect( CPoint( size.getWidth() - segmentWidth, controlHeight ), CPoint( segmentWidth, size.getHeight() - controlHeight ) ),
                                                      ms, skin );
 
-      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, controlHeight ), CPoint( size.getWidth() - segmentWidth, size.getHeight() - controlHeight ) ), ms, skin );
+      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, controlHeight ), CPoint( size.getWidth() - segmentWidth, size.getHeight() - controlHeight ) ), lfodata, ms, skin );
       msegCanv->segmentpanel = segmentArea;
       msegCanv->controlpanel = controlArea;
       segmentArea->canvas = msegCanv;
@@ -753,9 +755,9 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(MSEGStorage *ms, Surge::UI::Skin::ptr_t skin) : CViewContainer( CRect( 0, 0, 720, 475 ) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin) : CViewContainer( CRect( 0, 0, 720, 475 ) )
 {
    setSkin( skin );
    setBackgroundColor( kRedCColor );
-   addView( new MSEGMainEd( getViewSize(), ms, skin ) );
+   addView( new MSEGMainEd( getViewSize(), lfodata, ms, skin ) );
 }

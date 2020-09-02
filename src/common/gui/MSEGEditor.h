@@ -19,6 +19,6 @@
 #include "SkinSupport.h"
 
 struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent {
-   MSEGEditor(MSEGStorage *ms, Surge::UI::Skin::ptr_t skin);
+   MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin);
    ~MSEGEditor() = default;
 };
