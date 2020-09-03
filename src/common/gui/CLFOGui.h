@@ -19,11 +19,12 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 #include "SkinSupport.h"
+#include "SkinColors.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 
 
-class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    const static int margin = 2;
@@ -65,8 +66,8 @@ public:
 
    void resetColorTable()
    {
-      auto c = skin->getColor( "lfo.waveform.fill", VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
-      auto d = skin->getColor( "lfo.waveform.wave", VSTGUI::CColor( 0x00, 0x00, 0x00 ) );
+      auto c = skin->getColor(Colors::LFO::Waveform::Fill, VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
+      auto d = skin->getColor(Colors::LFO::Waveform::Wave, VSTGUI::CColor(0x00, 0x00, 0x00));
       
    }
    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
@@ -93,6 +94,11 @@ public:
       tsDen = d;
    }
 
+   bool insideTypeSelector( const VSTGUI::CPoint &where ) {
+      return rect_shapes.pointInside(where);
+   }
+         
+   
 protected:
    LFOStorage* lfodata;
    StepSequencerStorage* ss;

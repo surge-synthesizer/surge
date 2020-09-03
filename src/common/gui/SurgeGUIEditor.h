@@ -46,6 +46,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 
 
 #include "SkinSupport.h"
+#include "SkinColors.h"
 
 #include <vector>
  
@@ -251,6 +252,14 @@ public:
    void setEditorOverlay( VSTGUI::CView *c,
                           std::string editorTitle,
                           std::function<void()> onClose = [](){} );
+
+   std::string getDisplayForTag( long tag );
+
+   void queuePatchFileLoad( std::string file )
+      {
+         strncpy( synth->patchid_file, file.c_str(), FILENAME_MAX );
+         synth->has_patchid_file = true;
+      }
    
 private:
    int wsx = BASE_WINDOW_SIZE_X;

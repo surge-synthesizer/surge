@@ -2,7 +2,7 @@
 
 Surge is an open source digital synthesizer, originally written and sold as a commercial product
 by @kurasu/Claes Johanson at [vember audio](http://vemberaudio.se). In September of 2018,
-Claes released a partially completed version of Surge 1.6 under GPL3, and a group
+Claes chose to release a partially completed version of Surge 1.6 under GPL3, and a group
 of developers have been improving it since. You can learn more about the team at https://surge-synth-team.org/
 
 **If you are a musician only looking to use Surge please download the appropriate binary
@@ -20,7 +20,7 @@ This README serves as the root of developer documentation for the project.
 # Developing Surge
 
 We welcome developers! Our workflow revolves around GitHub issues in this GitHub repository
-and conversations in our Slack and IRC chatrooms. You can read our developer guidelines
+and conversations at our Discord server and IRC chatroom. You can read our developer guidelines
 in [our developer guide doc](doc/Developer%20Guide.md).
 
 The developer guide also contains information about testing and debugging in particular hosts
@@ -34,22 +34,21 @@ tailored at Surge development.
 
 # Building Surge
 
-As of April 2020, Surge is built using cmake. Versions in the 1.6 family require premake5 to build but that is
-no longer required as of commit 6eaf2b2e20 or the 1.7 family. If you are generally familiar with and set up with cmake
-you can use cmake directly to build targets such as "Surge.vst3" or "Surge.au".
+As of April 2020, Surge is built using CMake. If you are familiar with CMake you can 
+skip to the section <a href="#cmake-targets">CMake Targets</a>
 
 ## Windows
 
 Additional pre-requisites:
 
-* [Visual Studio 2017 (version 15.5 at least)](https://visualstudio.microsoft.com/downloads/)
+* [Visual Studio 2017 (version 15.5 or newer)](https://visualstudio.microsoft.com/downloads/)
 * [Inno Setup](http://jrsoftware.org/isdl.php) for building the installer
 
 ### Install prerequisits
 
-* Install Git, Visual Studio 2017 or newer
+* Install git, Visual Studio 2017 or newer
 * If you want to build an installer, install Inno Setup
-* When you install Visual Studio, make sure to include CLI tools and cmake, which are included in
+* When you install Visual Studio, make sure to include CLI tools and CMake, which are included in
 'Optional CLI support' and 'Toolset for desktop' install bundles
 
 ### Check out the code
@@ -70,13 +69,13 @@ All of the following commands take place in Visual Studio command prompt.
 
 * If you have the VST2 SDK and want to build the VST2 plugin, set the path to it as a user environment variable. If not, don't worry.
 You can build the VST3 on Windows without any extra assets (we recommend all Windows users to
-use the VST3). If you don't want to set up an environment variable, you can tell cmake the path to VST2 SDK like so:
+use the VST3). If you don't want to set up an environment variable, you can tell CMake the path to VST2 SDK like so:
 
 ```
 set VST2SDK_DIR=c:\path\to\vst2
 ```
 
-* Now, run cmake to create a build directory:
+* Now, run CMake to create a build directory:
 
 ```
 cmake . -Bbuild
@@ -96,13 +95,13 @@ cmake --build build --config Release --target Surge-VST3-Packaged
 
 ### Your first 32-bit build
 
-* 32-bit build is done exactly like 64-bit build, just with a couple of extra arguments. When you run cmake, add the `-A Win32` argument and choose a different target:
+* 32-bit build is done exactly like 64-bit build, just with a couple of extra arguments. When you run CMake, add the `-A Win32` argument and choose a different target:
 
 ```
 cmake . -Bbuild32 -A Win32
 ```
 
-* To build the DLL, either open `build32\Surge.sln` or run the cmake build command with `build32` as the directory:
+* To build the DLL, either open `build32\Surge.sln` or run the CMake build command with `build32` as the directory:
 
 ```
 cmake --build build32 --config Release --target Surge-VST3-Packaged
@@ -117,14 +116,14 @@ Inno will bake an installer and place it in `installer_win/Output/`
 
 ## macOS
 
-To build on macOS, you need `Xcode`, `Xcode Command Line Utilities`, and cmake. Once you have installed
+To build on macOS, you need `Xcode`, `Xcode Command Line Utilities`, and CMake. Once you have installed
 `Xcode` from the App Store, the command line to install the `Xcode Command Line Utilities` is:
 
 ```
 xcode-select --install
 ```
 
-There are a variety of ways to install cmake. If you run [homebrew](https://brew.sh) you can:
+There are a variety of ways to install CMake. If you run [homebrew](https://brew.sh) you can:
 
 ```
 brew install cmake
@@ -141,7 +140,7 @@ git submodule update --init --recursive
 ### Building with build-osx.sh
 
 `build-osx.sh` has all the commands you need to build, test, locally install, validate, and package Surge on Mac.
-As of April 2020, it is a very thin wraper on cmake and Xcode.
+As of April 2020, it is a very thin wraper on CMake and Xcode.
 It's what the primary Mac developers use day to day. The simplest approach is to build everything with:
 
 ```
@@ -176,7 +175,7 @@ done a run without VST2, you will need to `./build-osx.sh --clean-all` to pick u
 ### Using Xcode
 
 If you would rather use Xcode directly, all of the install and build rules are exposed as targets.
-You simply need to run cmake and open the Xcode project. From the command line:
+You simply need to run CMake and open the Xcode project. From the command line:
 
 ```
 cd surge
@@ -189,7 +188,7 @@ These are the targets used by `build-osx.sh` from the command line.
 
 ## Linux
 
-Most linux systems have cmake and a modern C++ compiler installed. Make sure yours does.
+Most linux systems have CMake and a modern C++ compiler installed. Make sure yours does.
 You will also need to install a set of dependencies:
 
 - build-essential
@@ -216,9 +215,9 @@ git submodule update --init --recursive
 
 ### Building with build-linux.sh
 
-`build-linux.sh` is a wrapper on the various cmake and make commands needed to build Surge. As with
-macOS, it is getting smaller every day as we move more things direclty into cmake. 
-As of Surge 1.7.1, `build-linux.sh` only works on intel platforms. If you are building on 
+`build-linux.sh` is a wrapper on the various CMake and make commands needed to build Surge. As with
+macOS, it is getting smaller every day as we move more things direclty into CMake.
+As of Surge 1.7.1, `build-linux.sh` only works on intel platforms. If you are building on
 ARM, please use the ARM specific instructions below or use the head of the codebase, where
 we are continuing to improve the ARM experience and build-linux is ARM aware.
 
@@ -234,7 +233,7 @@ or if you prefer a specific flavor:
 ./build-linux.sh build --project=lv2
 ```
 
-which will run cmake and build the assets.
+which will run CMake and build the assets.
 
 To use the VST2, VST3, or LV2, you need to install it locally along with supporting files. You can do this manually
 if you desire, but the build script will also do it using the `install` option:
@@ -248,9 +247,9 @@ To change this, edit vst2_dest_path and so forth to taste. Without --local, file
 
 For other options, you can do `./build-linux.sh --help`.
 
-### Build using cmake directly
+### Build using CMake directly
 
-A build with cmake is also really simple:
+A build with CMake is also really simple:
 
 ```
 cd surge
@@ -266,13 +265,13 @@ will build the VST3 and deposit it in surge/products.
 As of August 4, build-linux supports ARM builds. If you are building the 1.7.0 or
 1.7.1 release, though, you need to follow these instructions.
 
-With 1.7.0 we have merged changes needed to build with ARM platforms and have done some 
+With 1.7.0 we have merged changes needed to build with ARM platforms and have done some
 raspberry pi testing. Due to a variety of choices an ARM user needs to make, and due to
 us not having a Pi in our pipeline (although we do do a cross-compile test), we are not
 building a binary of the ARM executable on Linux today, but you can build it easily.
 
 You need to install the pre-requisites which are listed in azure-pipeline (`grep apt-get azure-pipelines.yml`)
-and also install the packages `cairo-dev` and `libxcb-util0-dev `. Then 
+and also install the packages `cairo-dev` and `libxcb-util0-dev `. Then
 the steps to build using your native architecture on the Pi are:
 
 ```
@@ -283,12 +282,12 @@ cmake --build build --config Release --target Surge-VST3-Packaged
 The `-DARM_NATIVE=native` will include `cmake/arm-native.cmake` which sets up the native
 CPU flags. If you want specific flags, copy that file to `cmake/arm-whatever.cmake`,
 edit the flags, and use `-DARM_NATIVE=whatever`. If you set up an ARM build on a particular
-architecture we would appreciate you sharing the small cmake stub in a pull request.
+architecture we would appreciate you sharing the small CMake stub in a pull request.
 
 Targets available are `Surge-VST3-Packaged`, `Surge-LV2-Packaged`, `Surge-VST2-Packaged` (if you have
 the VST2 SDK) and `surge-headless`.
 
-These commands will place your final product in `build/surge_products`. Since we have 
+These commands will place your final product in `build/surge_products`. Since we have
 not updated the build-linux script for ARM yet you need to do a couple of extra steps:
 
 1. Copy the contents of `resources/data` to `/usr/share/Surge` or `~/.local/share/Surge`.
@@ -309,17 +308,86 @@ And you should be good to go.
 
 We welcome PRs and contributions which improve the ARM build experience.
 
+## CMake Targets
+
+If you are familiar with CMake, you can use it directly to build on any of our platforms
+and use it to install the asset on Mac and Linux.
+
+As normal, a cmake process begins by generating make assets. 
+
+| OS    | CMake Generation |
+|-------|------------------|
+| mac   | `cmake -Bbuild -GXcode` |
+| win64 | `cmake -Bbuild` |
+| win32 | `cmake -Bbuild -A Win32` |
+| linux | `cmake -Bbuild -DCMAKE_INSTALL_PREFIX=/usr` |
+| linux-arm | `cmake -Bbuild -DARM_NATIVE=native` |
+
+At this point you will have a `build` directory. You can now build targets using the 
+standard command
+
+```
+cmake --build build --config Release --target (target-name)
+```
+
+Available build targets are
+
+| Target     | Description  |
+|------------|--------------|
+| Surge-VST3-Packaged | Produces the VST3 in `build/surge_products` |
+| Surge-VST2-Packaged | Produces the VST2 in `build/surge_products` (only if VST2 is enabled) |
+| Surge-AU-Packaged | Produces the AU in `build/surge_products` (mac only) |
+| Surge-LV2-Packaged | Produces the LV2 in `build/surge_products` (linux only) |
+| surge-headless | Builds the headless test component |
+| all-components | Builds everything available on your OS |
+
+On Mac and Linux the CMake file also provides installation targets
+
+| Target | Description |
+|--------|-------------|
+| install-everything-local | Install all components and resoures in the appropriate local location for your OS |
+| install-everything-global | Install all components and resources in the appropriate global location (driven by CMAKE_INSTALL_PREFIX on Linux) |
+| install-resources-(global|local) | Install just the resources locally or globally |
+| install-(vst2|vst3|au|lv2)-(global|local) | Install the plugin and associated resources locally and globally |
+
+A reasonable session, then, could be (say on linux)
+
+```
+cmake -Bbuild -DCMAKE_INSTALL_PREFIX=/g/ins 
+cmake --build build --config Release --target all-components
+sudo cmake --build build --config Release --target install-everything-global
+```
+
+which would result in the VST3 in `/g/ins/lib/vst3/Surge.vst3` and so on.
+
+
 # Continuous Integration
 
 In addition to the build commands above, we use Azure pipelines to do continuous integration.
 This means each of your pull requests will be automatically built in all of our environments,
 and a clean build on all platforms is an obvious pre-requisite. If you have questions about
-our CI tools, please ask on our Slack channel. We are grateful to Microsoft for providing
+our CI tools, please ask on our Discord server. We are grateful to Microsoft for providing
 Azure pipelines for free to the open source community!
+
+# What about JUCE?
+
+The Surge team is considering moving Surge to JUCE in 2021. To begin that experiment we have
+started in-tree JUCE builds of Surge-related plugins. For now, this is a developer-only feature
+and does not result in a distributable executable.
+
+If you want to try to build the JUCE plugs though it's simple enough.
+
+```
+cmake -B(dir) (-G or -A as your platform requires) -DBUILD_JUCE_SURGE_PLUGS=True
+cmake --build build --config Release --target well-named-juce-assets
+```
+
+will deposit JUCE assets into your `(build)/surge_products` directory. 
+
+More here as 2021 progresses.
 
 # References
 
-  * Most Surge-related conversation on the Surge Synth Slack. [You can join via this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/slack_invite_link)
+  * Most Surge-related conversation on the Surge Synthesizer Discord server. [You can join via this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link)
   * IRC channel at #surgesynth at irc.freenode.net. The logs are available at https://freenode.logbot.info/surgesynth/.
   * Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
-  * Chain icon on filter link from flaticon.com

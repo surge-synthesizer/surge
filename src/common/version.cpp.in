@@ -27,5 +27,9 @@ namespace Surge
    const char* Build::BuildDate = "@SURGE_BUILD_DATE@";
    const char* Build::BuildTime = "@SURGE_BUILD_TIME@";
 
+   const char* Build::GitHash = "@GIT_COMMIT_HASH@";
+   const char* Build::GitBranch = "@GIT_BRANCH@";
+
+   const char* Build::CMAKE_INSTALL_PREFIX = "@CMAKE_INSTALL_PREFIX@";
 }
 

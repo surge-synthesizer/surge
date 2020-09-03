@@ -129,6 +129,10 @@ enum ctrltypes
    ct_sendlevel,
    ct_phaser_stages,
    ct_lfoamplitude,
+   ct_vocoder_modulator_mode,
+   ct_airwindow_fx,
+   ct_airwindow_param,
+   ct_airwindow_param_bipolar,
    num_ctrltypes,
 };
 
@@ -151,13 +155,26 @@ enum ControlGroup
 
 struct ParamUserData
 {
-   virtual ~ParamUserData()
-   {}
+   virtual ~ParamUserData() = default;
 };
 
 struct CountedSetUserData : public ParamUserData
 {
    virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
+};
+
+struct ParameterExternalFormatter : public ParamUserData
+{
+   virtual void formatValue( float value, char *txt, int txtlen ) = 0;
+   virtual bool stringToValue( const char* txt, float &outVal ) = 0;
+};
+
+struct ParameterDiscreteIndexRemapper : public ParamUserData
+{
+   virtual int remapStreamedIndexToDisplayIndex( int i ) = 0;
+   virtual std::string nameAtStreamedIndex( int i ) = 0;
+   virtual bool hasGroupNames() { return false; }
+   virtual std::string groupNameAtStreamedIndex( int i ) { return ""; } // If you want menu grouping
 };
 
 /*
@@ -335,7 +352,8 @@ public:
       Custom,
       LinearWithScale,
       ATwoToTheBx,
-      Decibel
+      Decibel,
+      DelegatedToFormatter
    } displayType = Custom;
 
    enum ParamDisplayFeatures {
@@ -365,7 +383,7 @@ public:
    } displayInfo;
       
    
-   ParamUserData* user_data;              // I know this is a bit gross but we have a runtime type
+   ParamUserData* user_data = nullptr;    // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable
 
    /*

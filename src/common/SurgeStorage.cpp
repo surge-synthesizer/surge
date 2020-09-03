@@ -44,6 +44,7 @@
 #include <sstream>
 
 #include "UserDefaults.h"
+#include "version.h"
 
 #include "strnatcmp.h"
 
@@ -224,11 +225,22 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
        */
        if (! fs::is_directory(datapath))
        {
-          std::string systemDataPath = "/usr/share/surge/";
-          if ( fs::is_directory(systemDataPath) )
-             datapath = systemDataPath;
+          if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge" ) )
+          {
+             datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge";
+          }
+          else if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge" ) )
+          {
+             datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge";
+          }
           else
-             datapath = "/usr/share/Surge/";
+          {
+             std::string systemDataPath = "/usr/share/surge/";
+             if ( fs::is_directory(systemDataPath) )
+                datapath = systemDataPath;
+             else
+                datapath = "/usr/share/Surge/";
+          }
        }
    }
    else
@@ -1089,6 +1101,8 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_stepseq)
          memcpy(&clipboard_stepsequences[0], &getPatch().stepsequences[scene][entry],
                 sizeof(StepSequencerStorage));
+      if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_mseg)
+         clipboard_msegs[0] = getPatch().msegs[scene][entry];
       break;
    case cp_scene:
    {
@@ -1096,8 +1110,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       includeall = true;
       id = getPatch().scene[scene].octave.id;
       for (int i = 0; i < n_lfos; i++)
+      {
          memcpy(&clipboard_stepsequences[i], &getPatch().stepsequences[scene][i],
                 sizeof(StepSequencerStorage));
+         clipboard_msegs[i] = getPatch().msegs[scene][i];
+      }
       for (int i = 0; i < n_oscs; i++)
       {
          clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
@@ -1198,8 +1215,11 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
    {
       id = getPatch().scene[scene].octave.id;
       for (int i = 0; i < n_lfos; i++)
+      {
          memcpy(&getPatch().stepsequences[scene][i], &clipboard_stepsequences[i],
                 sizeof(StepSequencerStorage));
+         getPatch().msegs[scene][i] = clipboard_msegs[i];
+      }
       for (int i = 0; i < n_oscs; i++)
       {
          getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
@@ -1262,6 +1282,9 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
          if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_stepseq)
             memcpy(&getPatch().stepsequences[scene][entry], &clipboard_stepsequences[0],
                    sizeof(StepSequencerStorage));
+         if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_mseg)
+            getPatch().msegs[scene][entry] = clipboard_msegs[0];
+
          break;
       case cp_scene:
       {

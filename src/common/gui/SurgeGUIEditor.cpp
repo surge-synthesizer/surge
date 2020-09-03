@@ -28,6 +28,7 @@
 #include "CLFOGui.h"
 #include "CEffectSettings.h"
 #include "CSurgeVuMeter.h"
+#include "CMenuAsSlider.h"
 #include "CEffectLabel.h"
 #include "CAboutBox.h"
 #include "vstcontrols.h"
@@ -38,6 +39,7 @@
 #include "DisplayInfo.h"
 #include "UserDefaults.h"
 #include "SkinSupport.h"
+#include "SkinColors.h"
 #include "UIInstrumentation.h"
 #include "guihelpers.h"
 #include "DebugHelpers.h"
@@ -486,7 +488,7 @@ void SurgeGUIEditor::idle()
          if( typeinResetCounter <= 0 && typeinDialog )
          {
             typeinLabel->setText( typeinResetLabel.c_str() );
-            typeinLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+            typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
             typeinLabel->invalid();
          }
       }
@@ -827,16 +829,19 @@ void SurgeGUIEditor::refresh_mod()
    {
       if (param[i])
       {
-         CSurgeSlider* s = (CSurgeSlider*)param[i];
-         if (s->is_mod)
+         auto *s = dynamic_cast<CSurgeSlider*>(param[i]);
+         if( s )
          {
-            s->setModMode(mod_editor ? 1 : 0);
-            s->setModPresent(synth->isModDestUsed(i));
-            s->setModCurrent(synth->isActiveModulation(i, thisms), synth->isBipolarModulation(thisms));
+            if (s->is_mod)
+            {
+               s->setModMode(mod_editor ? 1 : 0);
+               s->setModPresent(synth->isModDestUsed(i));
+               s->setModCurrent(synth->isActiveModulation(i, thisms), synth->isBipolarModulation(thisms));
+            }
+            // s->setDirty();
+            s->setModValue(synth->getModulation(i, thisms));
+            s->invalid();
          }
-         // s->setDirty();
-         s->setModValue(synth->getModulation(i, thisms));
-         s->invalid();
       }
    }
 #if OSC_MOD_ANIMATION
@@ -1200,7 +1205,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    frame->addView(mp_jogfx);
 
    fxPresetLabel = new CTextLabel( CRect( 759, 197, jogx - 2, 207 ), "Preset" );
-   fxPresetLabel->setFontColor(currentSkin->getColor( "effect.preset.name", CColor( 0, 0, 0, 255 ) ));
+   fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name, CColor( 0, 0, 0, 255 ) ));
    fxPresetLabel->setTransparency(true);
    fxPresetLabel->setFont( displayFont );
    fxPresetLabel->setHoriAlign( kRightText );
@@ -1257,6 +1262,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_percent_bidirectional_stereo:
          case ct_freq_shift:
          case ct_osc_feedback_negative:
+         case ct_airwindow_param_bipolar:
             style |= kBipolar;
             break;
          case ct_lfoamplitude:
@@ -1464,6 +1470,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_percent_bidirectional_stereo:
          case ct_freq_shift:
          case ct_osc_feedback_negative:
+         case ct_airwindow_param_bipolar:
             style |= kBipolar;
             break;
          case ct_lfoamplitude:
@@ -1478,16 +1485,25 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 129, 18);
             rect.offset(p->posx - 2, p->posy + 1);
+#if SURGE_EXTRA_FILTERS
+            rect.offset( -3, -2 );
+            auto hsw = new CMenuAsSlider( rect.getTopLeft(), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
+            hsw->setMinMax( p->val_min.i, p->val_max.i );
+            hsw->setLabel( p->get_name() );
+            hsw->setDeactivated( false );
+#else            
             auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 10, 18, 1, 10,
                                           bitmapStore->getBitmap(IDB_FILTERBUTTONS), nopoint, true);
             rect(3, 0, 124, 14);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
+#endif
             hsw->setValue(p->get_value_f01());
             hsw->setSkin( currentSkin, bitmapStore );
 
             frame->addView(hsw);
             nonmod_param[i] = hsw;
+
          }
          break;
          case ct_filtersubtype:
@@ -1939,6 +1955,28 @@ void SurgeGUIEditor::openOrRecreateEditor()
             polydisp = key;
          }
          break;
+         case ct_airwindow_fx:
+         case ct_flangermode:
+         case ct_flangerwave:
+         case ct_distortion_waveshape:
+         case ct_sinefmlegacy:
+         {
+            auto hs = new CMenuAsSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs),
+                                        this,
+                                        p->id + start_paramtags,
+                                        bitmapStore,
+                                        &(synth->storage));
+            hs->setSkin( currentSkin, bitmapStore );
+            hs->setValue( p->get_value_f01() );
+            hs->setMinMax( p->val_min.i, p->val_max.i );
+            hs->setLabel(p->get_name());
+            frame->addView( hs );
+            if( p->can_deactivate() )
+               hs->setDeactivated( p->deactivated );
+            
+            param[i] = hs;
+         }
+         break;
          default:
          {
             if (synth->isValidModulation(p->id, modsource))
@@ -1963,17 +2001,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = false;
 
 
-            if( p->valtype  == vt_int || p->valtype  == vt_bool)
-            {
-               hs->isStepped = true;
-               hs->intRange = p->val_max.i - p->val_min.i;
-            }
-            else
-            {
-               hs->isStepped = false;
-            }
-
-            setDisabledForParameter(p, hs);
+               if( p->valtype  == vt_int || p->valtype  == vt_bool)
+               {
+                  hs->isStepped = true;
+                  hs->intRange = p->val_max.i - p->val_min.i;
+               }
+               else
+               {
+                  hs->isStepped = false;
+               }
+               
+               setDisabledForParameter(p, hs);
 
                frame->addView(hs);
                param[i] = hs;
@@ -2001,16 +2039,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
                   hs->deactivated = false;
 
 
-            if( p->valtype  == vt_int || p->valtype  == vt_bool)
-            {
-               hs->isStepped = true;
-               hs->intRange = p->val_max.i - p->val_min.i;
-            }
-            else
-            {
-               hs->isStepped = false;
-            }
-
+               if( p->valtype  == vt_int || p->valtype  == vt_bool)
+               {
+                  hs->isStepped = true;
+                  hs->intRange = p->val_max.i - p->val_min.i;
+               }
+               else
+               {
+                  hs->isStepped = false;
+               }
+               
 
                setDisabledForParameter(p, hs);
 
@@ -2066,7 +2104,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
    }
 
-   CRect aboutbrect(892 - 37, 526, 892, 526 + 12);
+   CRect aboutbrect(892 - 50, 523, 892, 523 + 15);
 
    CHSwitch2* b_settingsMenu =
       new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
@@ -2109,12 +2147,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchTuningLabel->sizeToFit();
 
    // fix the text selection rectangle background overhanging the borders on Windows
-   #if WINDOWS
+#if WINDOWS
       patchName->setTextInset(CPoint(3, 0));
       patchCategory->setTextInset(CPoint(3, 0));
       patchCreator->setTextInset(CPoint(3, 0));
       patchComment->setTextInset(CPoint(3, 0));
-   #endif
+#endif
 
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
@@ -2136,22 +2174,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
    patchCreator->setImmediateTextChange( true );
    patchComment->setImmediateTextChange( true );
 
-   patchName->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   patchCategory->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   patchCreator->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   patchComment->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
+   patchName->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   patchCategory->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   patchCreator->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   patchComment->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
 
-   patchName->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-   patchCategory->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-   patchCreator->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
-   patchComment->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+   patchName->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
+   patchCategory->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
+   patchCreator->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
+   patchComment->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
 
-   patchName->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-   patchCategory->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-   patchCreator->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
-   patchComment->setFrameColor(currentSkin->getColor( "savedialog.textfield.border", kGreyCColor ));
+   patchName->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
+   patchCategory->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
+   patchCreator->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
+   patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, kGreyCColor));
 
-   CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
+   CColor bggr = currentSkin->getColor(Colors::Dialog::Background, CColor(205, 206, 212));
    patchTuningLabel->setBackColor(bggr);
    patchTuningLabel->setFrameColor(bggr);
 
@@ -2396,12 +2434,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       return 0;
    if (!editor_open)
       return 0;
+
    /*if((button&kRButton)&&modsource)
      {
      modsource = 0;
      queue_refresh = true;
      return 1;
      }*/
+
    if (button & (kMButton | kButton4 | kButton5))
    {
       toggle_mod_editing();
@@ -2422,13 +2462,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    std::vector< std::string > clearControlTargetNames;
 
-   if (button & kDoubleClick)
-      button |= kControl;
-
-
+   auto cmensl = dynamic_cast<CMenuAsSlider*>(control);
+   if( cmensl && cmensl->deactivated )
+      return 0;
+   
    if (button & kRButton)
    {
-
       if (tag == tag_settingsmenu)
       {
          CRect r = control->getViewSize();
@@ -3034,14 +3073,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    if (tag < start_paramtags)
       return 0;
-   if (!(button & (kDoubleClick | kRButton)))
+
+   if (!(button & (kDoubleClick | kRButton | kControl)))
       return 0;
 
    int ptag = tag - start_paramtags;
-   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()) )
+   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
    {
       Parameter* p = synth->storage.getPatch().param_ptr[ptag];
-
+      
       auto ctrl = dynamic_cast<CSurgeSlider*>(control);
 
       // don't show RMB context menu for filter subtype if it's hidden/not applicable
@@ -3053,7 +3093,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
       if (tag == f2subtypetag && (f2type == fut_none || f2type == fut_SNH))
          return 1;
 
-      if ((button & kRButton) && !(p->ctrltype == ct_lfoshape)) // for LFO let CLFOGui handle it
+      bool blockForLFO = false;
+      if( p->ctrltype == ct_lfoshape )
+      {
+         blockForLFO = true;
+         auto *clfo = dynamic_cast<CLFOGui*>(control);
+         if( clfo )
+         {
+            CPoint where;
+            frame->getCurrentMouseLocation(where);
+            frame->localToFrame(where);
+
+            blockForLFO = !clfo->insideTypeSelector(where);
+         }
+      }
+
+      // all the RMB context menus
+      if ((button & kRButton) && !blockForLFO )
       {
          CRect menuRect;
          CPoint where;
@@ -3201,27 +3257,80 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (p->ctrltype == ct_filtersubtype)
                   max = fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i] - 1;
 
-               for( int i=p->val_min.i; i<= max; i += incr )
+               auto dm = dynamic_cast<ParameterDiscreteIndexRemapper*>( p->user_data );
+
+               if( dm )
                {
-                  char txt[256];
-                  float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
-                  p->get_display(txt, true, ef );
-
-                  std::string displaytxt = txt;
-
-                  #if WINDOWS
-                     Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
-                  #endif
-
-                  auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
-                                          [this,ef,p,i]() {
-                                             synth->setParameter01( p->id, ef, false, false );
-                                             synth->refresh_editor=true;
-                                          }
-                     );
-                  eid++;
-                  if( i == p->val.i )
-                     b->setChecked(true);
+                  std::map<std::string, std::map<int,int>> reorderMap;
+                  for( int i=p->val_min.i; i<= max; i += incr )
+                  {
+                     int idx = dm->remapStreamedIndexToDisplayIndex( i );
+                     auto gn = dm->groupNameAtStreamedIndex(i);
+                     
+                     reorderMap[gn][idx] = i;
+                  }
+                  bool useSubMenus = dm->hasGroupNames();
+                  COptionMenu *sub = nullptr;
+                  for( auto grp : reorderMap )
+                  {
+                     bool checkSub = false;
+                     if( useSubMenus )
+                     {
+                        sub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+                     }
+                     for( auto rp : grp.second )
+                     {
+                        int i = rp.second;
+                        std::string displaytxt = dm->nameAtStreamedIndex(i);
+                     
+#if WINDOWS
+                           Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
+#endif
+                        
+                        auto b = addCallbackMenu( useSubMenus ? sub : contextMenu, displaytxt.c_str(),
+                                                  [this,p,i, tag]() {
+                                                     float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
+                                                     synth->setParameter01( p->id, ef, false, false );
+                                                     synth->refresh_editor=true;
+                                                  }
+                           );
+                        eid++;
+                        if( i == p->val.i ) {
+                           b->setChecked(true);
+                           checkSub = true;
+                        }
+                     }
+                     if( useSubMenus )
+                     {
+                        auto e = contextMenu->addEntry( sub, grp.first.c_str() ); sub->forget(); sub = nullptr;
+                        e->setChecked( checkSub );
+                     }
+                  }
+               }
+               else
+               {
+                  for( int i=p->val_min.i; i<= max; i += incr )
+                  {
+                     char txt[256];
+                     float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
+                     p->get_display(txt, true, ef );
+                     
+                     std::string displaytxt = txt;
+                     
+#if WINDOWS
+                        Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
+#endif
+                     
+                     auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
+                                              [this,ef,p,i]() {
+                                                 synth->setParameter01( p->id, ef, false, false );
+                                                 synth->refresh_editor=true;
+                                              }
+                        );
+                     eid++;
+                     if( i == p->val.i )
+                        b->setChecked(true);
+                  }
                }
             }
          }
@@ -3279,11 +3388,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                   bool setTSTo;
 
-                  #if WINDOWS
+#if WINDOWS
                      snprintf(pars, 32, "parameters");
-                  #else
+#else
                      snprintf(pars, 32, "Parameters");
-                  #endif
+#endif
 
                   if( p->temposync )
                   {
@@ -3609,7 +3718,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          } // end vt_float if statement
 
 #if TARGET_VST3
-         auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
+            auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
 #endif
 
          frame->addView(contextMenu); // add to frame
@@ -3617,11 +3726,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          frame->removeView(contextMenu, true); // remove from frame and forget
 
 #if TARGET_VST3
-         if( hostMenu ) hostMenu->release();
+            if( hostMenu ) hostMenu->release();
 #endif
+
          return 1;
       }
-      else if (button & kControl)
+      // reset to default value
+      else if (button & kDoubleClick)
       {
          if (synth->isValidModulation(ptag, modsource) && mod_editor)
          {
@@ -3641,7 +3752,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          else
          {
             /*
-            ** This code resets you to default if you double click or ctrl click
+            ** This code resets you to default if you double click on control
             ** but on the lfoshape UI this is undesirable; it means if you accidentally
             ** control click on step sequencer, say, you go back to sin and lose your
             ** edits. So supress
@@ -3658,6 +3769,50 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                return 0;
             }
          }
+      } 
+      // exclusive mute/solo in the mixer
+      else if (button & kControl)
+      {
+         if (p->ctrltype == ct_bool_mute)
+         {
+            Parameter* o1 = &(synth->storage.getPatch().scene[current_scene].mute_o1);
+            Parameter* r23 = &(synth->storage.getPatch().scene[current_scene].mute_ring_23);
+
+            auto curr = o1;
+
+            while (curr <= r23)
+            {
+               if (curr->id == p->id)
+                  curr->val.b = true;
+               else
+                  curr->val.b = false;
+
+               curr++;
+            }
+
+            synth->refresh_editor = true;
+         }
+         else if (p->ctrltype == ct_bool_solo)
+         {
+            Parameter* o1 = &(synth->storage.getPatch().scene[current_scene].solo_o1);
+            Parameter* r23 = &(synth->storage.getPatch().scene[current_scene].solo_ring_23);
+
+            auto curr = o1;
+
+            while (curr <= r23)
+            {
+               if (curr->id == p->id)
+                  curr->val.b = true;
+               else
+                  curr->val.b = false;
+
+               curr++;
+            }
+
+            synth->refresh_editor = true;
+         }
+
+         return 1;
       }
       else
          return 0;
@@ -4055,7 +4210,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             typeinResetLabel = l;
             typeinLabel->setText( "Invalid Entry" );
             typeinValue->setText(t.c_str());
-            typeinLabel->setFontColor( currentSkin->getColor( "savedialog.textlabel.error", kRedCColor ) );
+            typeinLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Error, kRedCColor));
          }
 
       }
@@ -4554,11 +4709,11 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
    }
    else
    {
-      patchTuningLabel->setFontColor(currentSkin->getColor( "savedialog.textlabel", kBlackCColor ));
+      patchTuningLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text, kBlackCColor));
       patchTuningLabel->setVisible(true);
-      patchTuning->setBoxFrameColor(currentSkin->getColor( "savedialog.checkbox.border", kBlackCColor ));
-      patchTuning->setBoxFillColor(currentSkin->getColor( "savedialog.checkbox.fill", kWhiteCColor ));
-      patchTuning->setCheckMarkColor(currentSkin->getColor( "savedialog.checkbox.tick", kBlackCColor));
+      patchTuning->setBoxFrameColor(currentSkin->getColor(Colors::Dialog::Checkbox::Border, kBlackCColor));
+      patchTuning->setBoxFillColor(currentSkin->getColor(Colors::Dialog::Checkbox::Background, kWhiteCColor));
+      patchTuning->setCheckMarkColor(currentSkin->getColor(Colors::Dialog::Checkbox::Tick, kBlackCColor));
       patchTuning->setValue(0);
       patchTuning->setMouseEnabled(true);
       patchTuning->setVisible(true);
@@ -5001,11 +5156,11 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                         };
 
                         std::string scl_folder = "tuning-library";
-                        #if WINDOWS
+#if WINDOWS
                            scl_folder += "\\SCL";
-                        #else
+#else
                            scl_folder += "/SCL";
-                        #endif
+#endif
 
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + scl_folder, ".scl", "Scala microtuning files (*.scl)", cb);
                     }
@@ -5045,11 +5200,11 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                         };
 
                         std::string kbm_folder = "tuning-library";
-                        #if WINDOWS
+#if WINDOWS
                            kbm_folder += "\\KBM Concert Pitch";
-                        #else
+#else
                            kbm_folder += "/KBM Concert Pitch";
-                        #endif
+#endif
 
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + kbm_folder, ".kbm", "Scala keyboard mapping files (*.kbm)", cb);
                     }
@@ -5360,6 +5515,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     auto &db = Surge::UI::SkinDB::get();
     bool hasTests = false;
+
     for( auto &entry : db.getAvailableSkins() )
     {
        if( entry.name.rfind( "test", 0 ) == 0 )
@@ -5371,22 +5527,27 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
           auto dname = entry.displayName;
           if( useDevMenu )
           {
-             dname += "(";
+             dname += " (";
              if( entry.root.find( synth->storage.datapath ) != std::string::npos )
              {
-                dname += "factory/";
+                dname += "factory";
              }
              else if( entry.root.find( synth->storage.userDataPath ) != std::string::npos )
              {
-                dname += "user/";
+                dname += "user";
              }
              else
              {
-                dname += "other/";
+                dname += "other";
              }
-             dname += entry.name;
 
-             dname += ")";
+#if WINDOWS
+                dname += "\\";
+#else
+                dname += "/";
+#endif
+
+             dname += entry.name + ")";
           }
 
           auto cb = addCallbackMenu(skinSubMenu, dname,
@@ -5621,7 +5782,7 @@ void SurgeGUIEditor::reloadFromSkin()
       frame->setBackground( cbm );
    }
 
-   auto c = currentSkin->getColor( "textfield.focuscolor", VSTGUI::CColor( 170, 170, 230 ) );
+   auto c = currentSkin->getColor(Colors::Dialog::Entry::Focus, VSTGUI::CColor(170, 170, 230));
    frame->setFocusColor( c );
 
    wsx = currentSkin->getWindowSizeX();
@@ -5661,7 +5822,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 
     static bool consoleState;
 
-    conItem = addCallbackMenu(devSubMenu, "Debug console",
+    conItem = addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Debug Console"),
         []() {
                 consoleState = Surge::Debug::toggleConsole();
              });
@@ -6418,14 +6579,14 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    typeinResetCounter = -1;
 
    typeinDialog = new CViewContainer(typeinSize);
-   typeinDialog->setBackgroundColor(currentSkin->getColor( "savedialog.border", VSTGUI::kBlackCColor) );
+   typeinDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border, VSTGUI::kBlackCColor));
    typeinDialog->setVisible(false);
    frame->addView(typeinDialog);
 
    CRect innerSize( 0, 0, typeinSize.getWidth(), typeinSize.getHeight() );
    innerSize.inset( 1, 1 );
    auto inner = new CViewContainer(innerSize);
-   CColor bggr = currentSkin->getColor( "savedialog.background", CColor(205,206,212) );
+   CColor bggr = currentSkin->getColor(Colors::Dialog::Background, CColor(205, 206, 212));
    inner->setBackgroundColor( bggr );
    typeinDialog->addView(inner);
 
@@ -6449,7 +6610,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    }
 
    typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
-   typeinLabel->setFontColor(currentSkin->getColor( "slider.dark.label", kBlackCColor ));
+   typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark, kBlackCColor));
    typeinLabel->setTransparency(true);
    typeinLabel->setFont( displayFont );
    inner->addView(typeinLabel);
@@ -6485,7 +6646,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
       auto ml = new CTextLabel( CRect( 2, 10, 114, 27 ), mls.c_str() );
-      ml->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+      ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
       ml->setTransparency(true);
       ml->setFont( displayFont );
       inner->addView(ml);
@@ -6493,7 +6654,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
 
    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
-   typeinPriorValueLabel->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+   typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
    typeinPriorValueLabel->setTransparency(true);
    typeinPriorValueLabel->setFont( displayFont );
    inner->addView(typeinPriorValueLabel);
@@ -6501,7 +6662,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    if( ismod )
    {
       auto sl = new CTextLabel( CRect( 2, 29 + 11, 116, 36 + 11 ), ptext2 );
-      sl->setFontColor(currentSkin->getColor( "slider.light.label", kBlackCColor ));
+      sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
       sl->setTransparency(true);
       sl->setFont( displayFont );
       inner->addView( sl );
@@ -6509,20 +6670,20 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
 
    typeinValue = new CTextEdit( CRect( 4, 31 + ( ismod ? 22 : 0 ), 114, 50 + ( ismod ? 22 : 0 ) ), this, tag_value_typein, txt );
-   typeinValue->setBackColor(currentSkin->getColor( "savedialog.textfield.background", kWhiteCColor ));
-   typeinValue->setFontColor(currentSkin->getColor( "savedialog.textfield.foreground", kBlackCColor ));
+   typeinValue->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   typeinValue->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
 
    // fix the text selection rectangle background overhanging the borders on Windows
-   #if WINDOWS
+#if WINDOWS
    typeinValue->setTextInset(CPoint(3, 0));
-   #endif
+#endif
 
    if( p )
    {
       if( ! p->can_setvalue_from_string() )
       {
          typeinValue->setFontColor( VSTGUI::kRedCColor );
-         typeinValue->setText( "edit coming soon" );
+         typeinValue->setText( "Edit coming soon!" );
       }
    }
 
@@ -6847,7 +7008,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    // add a screen size transparent thing into the editorOverlay
    editorOverlay = new CViewContainer( fs );
-   editorOverlay->setBackgroundColor( currentSkin->getColor( "overlay.exterior", VSTGUI::CColor( 180,180,200,150) ) );
+   editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(180, 180, 200, 150)));
    editorOverlay->setVisible(true);
    frame->addView(editorOverlay);
 
@@ -6865,20 +7026,20 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    containerSize = containerSize.centerInside(fs);
 
    auto outerc = new CViewContainer(containerSize);
-   auto bordersCol = currentSkin->getColor( "overlay.border", kBlackCColor );
+   auto bordersCol = currentSkin->getColor(Colors::Overlay::Border, kBlackCColor);
    outerc->setBackgroundColor( bordersCol );
    editorOverlay->addView( outerc );
 
    containerSize = containerSize.inset( 1, 1 );
    auto innerc = new CViewContainer(containerSize);
-   auto containerCol = currentSkin->getColor( "overlay.containerbackground", VSTGUI::CColor( 216, 216, 220 ) );
+   auto containerCol = currentSkin->getColor(Colors::Overlay::Container::Background, VSTGUI::CColor(216, 216, 220));
    innerc->setBackgroundColor( containerCol );
    editorOverlay->addView(innerc);
 
    auto ls = containerSize;
    ls.bottom = ls.top + header;
    auto tl = new CTextLabel( ls, editorTitle.c_str() );
-   tl->setFontColor( currentSkin->getColor( "overlay.containertitle", kBlackCColor ) );
+   tl->setFontColor(currentSkin->getColor(Colors::Overlay::Container::TitleText, kBlackCColor));
    tl->setTransparency( true );
    VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 14);
    tl->setFont( headerFont );
@@ -6915,4 +7076,24 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    // save the onClose function
    editorOverlayOnClose = onClose;
+}
+
+std::string SurgeGUIEditor::getDisplayForTag( long tag )
+{
+   if( tag < start_paramtags )
+      return "Non-param tag";
+   
+   int ptag = tag - start_paramtags;
+   if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()) )
+   {
+      Parameter* p = synth->storage.getPatch().param_ptr[ptag];
+      if( p )
+      {
+         char txt[1024];
+         p->get_display( txt );
+         return txt;
+      }
+   }
+
+   return "Unknown";
 }

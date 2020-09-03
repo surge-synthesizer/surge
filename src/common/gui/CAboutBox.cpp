@@ -6,6 +6,7 @@
 #include "version.h"
 
 #include "UserInteractions.h"
+#include "SkinColors.h"
 
 using namespace VSTGUI;
 
@@ -43,6 +44,12 @@ void CAboutBox::draw(CDrawContext* pContext)
    {
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
 
+      CRect infobg(0, 375, 905, 545);
+      CRect skininfobg(0, 0, 905, 80);
+      pContext->setFillColor(CColor(0, 0, 0, 255));
+      pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
+      pContext->drawRect(skininfobg, CDrawStyle::kDrawFilled);
+
       int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
       std::string bitness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + "-bit";
 
@@ -79,13 +86,14 @@ void CAboutBox::draw(CDrawContext* pContext)
                "Released under the GNU General Public License, v3",
                "Copyright 2005-2020 by Vember Audio and individual contributors",
                "Source, contributors and other information at",
-               "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc."
+               "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc.",
+               "Contains the Open Source Airwindows Plugins for some effects",
             } };
          
          int yMargin = 6;
          int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
          int xPos = strHeight;
-         pContext->setFontColor(skin->getColor( "aboutbox.text", kWhiteCColor) );
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text, kWhiteCColor));
          pContext->setFont(infoFont);
          for (auto s : msgs)
          {
@@ -94,32 +102,29 @@ void CAboutBox::draw(CDrawContext* pContext)
          }
 
          // link to Surge github repo in another color because VSTGUI -_-
-         pContext->setFontColor(skin->getColor("aboutbox.link", CColor(46, 134, 255)));
-         pContext->drawString("https://github.com/surge-synthesizer/surge", CPoint(253, 506));
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Link, CColor(46, 134, 255)));
+         pContext->drawString("https://github.com/surge-synthesizer/surge", CPoint(253, 506 - strHeight - yMargin));
       }
 
       {
          std::vector< std::string > msgs;
          msgs.push_back( std::string( ) + "Current Skin: " + skin->displayName );
          msgs.push_back( std::string( ) + "Skin Author: " + skin->author + " " + skin->authorURL );
-         msgs.push_back( std::string( ) + "Skin Root XML: " + skin->resourceName( "skin.xml" ) );
+         std::string skin_path = "Skin Root Folder: " + skin->resourceName("");
+         skin_path.pop_back();
+         msgs.push_back(skin_path);
          
          int yMargin = 6;
          int yPos = strHeight * 2;
          int xPos = strHeight;
-         pContext->setFontColor(skin->getColor( "aboutbox.text", kWhiteCColor) );
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text, kWhiteCColor));
          pContext->setFont(infoFont);
          for (auto s : msgs)
          {
             pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
             yPos += strHeight + yMargin;
          }
-      }
-
-      CRect infobg(0, 395, 905, 545);
-      pContext->setFillColor(CColor(128, 128, 128, 24));
-      pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
-      
+      }      
    }
    else
    {

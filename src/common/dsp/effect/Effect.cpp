@@ -1,4 +1,5 @@
 #include "effect_defs.h"
+#include "airwindows_adapter.h"
 
 using namespace std;
 
@@ -32,6 +33,8 @@ Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd
       return new FlangerEffect(storage, fxdata, pd);
    case fxt_ringmod:
       return new RingModulatorEffect(storage, fxdata, pd);
+   case fxt_airwindows:
+      return new AirWindowsEffect( storage, fxdata, pd );
    default:
       return 0;
    };

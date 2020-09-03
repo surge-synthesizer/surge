@@ -35,6 +35,8 @@
 #elif TARGET_APP
 #include "PluginLayer.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
+#elif TARGET_JUCE
+#include "JUCEPluginLayerProxy.h"
 #elif TARGET_HEADLESS
 #include "HeadlessPluginLayerProxy.h"
 #else
@@ -49,6 +51,7 @@
 #include "SurgeParamConfig.h"
 
 #include "UserDefaults.h"
+#include "ImportFilesystem.h"
 
 using namespace std;
 
@@ -111,7 +114,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
 
    SurgePatch& patch = storage.getPatch();
 
-   patch.polylimit.val.i = 8;
+   patch.polylimit.val.i = 16;
    for (int sc = 0; sc < 2; sc++)
    {
       SurgeSceneStorage& scene = patch.scene[sc];
@@ -167,6 +170,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    masterfade = 1.f;
    current_category_id = -1;
    patchid_queue = -1;
+   has_patchid_file = false;
+   patchid_file[0] = 0;
    patchid = -1;
    CC0 = 0;
    CC32 = 0;
@@ -1533,6 +1538,8 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
          need_refresh = true;
          break;
       case ct_bool_solo:
+         // pre-1.7.2 unique (single) solo
+         /*
          if (storage.getPatch().param_ptr[index]->val.b)
          {
             int s = storage.getPatch().param_ptr[index]->scene - 1;
@@ -1547,6 +1554,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                storage.getPatch().param_ptr[index]->val.b = true;
             }
          }
+         */
          switch_toggled_queued = true;
          need_refresh = true; 
          break;
@@ -1850,7 +1858,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
       else
          return false;
    }
-   if( tms == ms_keytrack )
+   if( tms == ms_keytrack || tms == ms_pitchbend )
    {
       return true;
    }
@@ -2404,10 +2412,21 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
    void* sy = lpParam;
 #endif
    SurgeSynthesizer* synth = (SurgeSynthesizer*)sy;
-   int patchid = synth->patchid_queue;
-   synth->patchid_queue = -1;
-   synth->allNotesOff();
-   synth->loadPatch(patchid);
+   if( synth->patchid_queue >= 0 )
+   {
+      int patchid = synth->patchid_queue;
+      synth->patchid_queue = -1;
+      synth->allNotesOff();
+      synth->loadPatch(patchid);
+   }
+   if( synth->has_patchid_file )
+   {
+      fs::path p(synth->patchid_file);
+      auto s = p.stem().generic_string();
+      synth->has_patchid_file = false;
+      synth->allNotesOff();
+      synth->loadPatchByPath( synth->patchid_file, -1, s.c_str() );
+   }
 #if TARGET_LV2
    synth->getParent()->patchChanged();
 #endif
@@ -2559,13 +2578,17 @@ void SurgeSynthesizer::processControl()
 
    if (fx_suspend_bitmask)
    {
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          if (((1 << i) & fx_suspend_bitmask) && fx[i])
             fx[i]->suspend();
       }
       fx_suspend_bitmask = 0;
    }
+
+   for( int i=0; i<n_fx_slots; ++i )
+      if( fx[i] )
+         refresh_editor |= fx[i]->checkHasInvalidatedUI();
 }
 
 void SurgeSynthesizer::process()
@@ -2583,7 +2606,7 @@ void SurgeSynthesizer::process()
       clear_block(output[1], BLOCK_SIZE_QUAD);
       return;
    }
-   else if (patchid_queue >= 0)
+   else if (patchid_queue >= 0 || has_patchid_file)
    {
       masterfade = max(0.f, masterfade - 0.025f);
       mfade = masterfade * masterfade;

@@ -61,6 +61,8 @@ const int FIRoffset = FIRipol_N >> 1;
 const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
+const int n_fx_slots=8;
+
 // XML storage fileformat revision
 // 0 -> 1 new EG attack shapes (0>1, 1>2, 2>2)
 // 1 -> 2 new LFO EG stages (if (decay == max) sustain = max else sustain = min
@@ -79,6 +81,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
 // 12 -> 13 (1.7.0 release) deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
 // 13 -> 14 add phaser number of stages parameter
+// 13 -> 14 add ability to configure vocoder modulator mono/sterao/L/R
 
 const int ff_revision = 14;
 
@@ -202,11 +205,12 @@ enum sub3_fxtypes
    fxt_reverb2,
    fxt_flanger,
    fxt_ringmod,
+   fxt_airwindows,
    num_fxtypes,
 };
 const char fxtype_names[num_fxtypes][16] = {
     "Off", "Delay",     "Reverb 1",      "Phaser", "Rotary",  "Distortion",
-    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger", "Ring Mod" };
+    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger", "Ring Mod", "Airwindows" };
 
 enum fx_bypass
 {
@@ -277,11 +281,18 @@ enum fu_type
    fut_br12,
    fut_comb,
    fut_SNH,
+#if SURGE_EXTRA_FILTERS
+   fut_rkmoog,
+#endif   
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] = {
     "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Ladder Lowpass",
-    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold" };
+    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold"
+#if SURGE_EXTRA_FILTERS    
+    , "Moog Ladder Runge Kutta"
+#endif    
+};
 
 const char fut_bp_subtypes[6][32] = {"Clean 12 dB/oct", "Driven 12 dB/oct", "Smooth 12 dB/oct",
                                      "Clean 24 dB/oct", "Driven 24 dB/oct", "Smooth 24 dB/oct"};
@@ -290,7 +301,15 @@ const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet"
 const char fut_def_subtypes[3][32] = {"Clean", "Driven", "Smooth"};
 const char fut_ldr_subtypes[4][32] = {"6 dB/oct", "12 dB/oct", "18 dB/oct", "24 dB/oct"};
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0};
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0
+#if SURGE_EXTRA_FILTERS                                     
+                                     , 3
+#endif
+};
+
+#if SURGE_EXTRA_FILTERS
+const char fut_rkmoog_subtypes[3][32] = { "Low Saturation", "Medium Saturation", "High Saturation" };
+#endif
 
 enum fu_subtype
 {
@@ -414,8 +433,8 @@ struct SurgeSceneStorage
    Parameter drift, noise_colour, keytrack_root;
    Parameter osc_solo;
    Parameter level_o1, level_o2, level_o3, level_noise, level_ring_12, level_ring_23, level_pfg;
-   Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12, mute_ring_23;
-   Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12, solo_ring_23;
+   Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12, mute_ring_23; // all mute parameters must be contiguous
+   Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12, solo_ring_23; // all solo parameters must be contiguous
    Parameter route_o1, route_o2, route_o3, route_noise, route_ring_12, route_ring_23;
    Parameter vca_level;
    Parameter pbrange_dn, pbrange_up;
@@ -454,10 +473,15 @@ struct MSEGStorage {
       float duration;
       float v0, v1;
       float cpduration, cpv;
+      float state[5]; // just some random variables we can use for state management if we want
       enum Type {
          CONSTANT = 0,
          LINEAR,
          QUADBEZ,
+         SCURVE,
+         WAVE,
+         DIGILINE,
+         BROWNIAN
       } type;
    };
 
@@ -468,6 +492,9 @@ struct MSEGStorage {
    // If you edit the segments then MSEGModulationHelper::rebuildCache can rebuild them
    float totalDuration;
    std::array<float, max_msegs> segmentStart, segmentEnd;
+   size_t lastSegmentEvaluated = -1;
+
+   static constexpr float minimumDuration = 0.001;
 };
 
 struct FormulaModulatorStorage { // Currently an unused placeholder
@@ -529,7 +556,7 @@ public:
 
    // data
    SurgeSceneStorage scene[2], morphscene;
-   FxStorage fx[8];
+   FxStorage fx[n_fx_slots];
    // char name[NAMECHARS];
    int scene_start[2], scene_size;
    Parameter scene_active, scenemode, scenemorph, splitkey;
@@ -736,6 +763,7 @@ private:
    std::vector<Parameter> clipboard_p;
    int clipboard_type;
    StepSequencerStorage clipboard_stepsequences[n_lfos];
+   MSEGStorage clipboard_msegs[n_lfos];
    std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice;
    Wavetable clipboard_wt[n_oscs];
 

@@ -55,6 +55,16 @@ namespace std { namespace experimental { namespace filesystem {
         path res(p.substr(idx));
         return res;
     }
+
+    path path::stem() {
+        auto idx = this->p.find_last_of("/");
+        auto q = this->p.substr(idx+1);
+        idx = q.find_last_of(".");
+        if( idx != std::string::npos )
+           q = q.substr( 0, idx );
+
+        return path( q );;
+    }
     // emd path class
 
     // file class:

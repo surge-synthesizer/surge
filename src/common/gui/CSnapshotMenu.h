@@ -22,7 +22,7 @@
 #include <unordered_map>
 #include <vector>
 
-class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumingComponnt
+class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumingComponent
 {
 public:
    CSnapshotMenu(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage);

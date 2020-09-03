@@ -164,6 +164,8 @@ if [[ ! -d ${TARGET_DIR} ]]; then
 	mkdir ${TARGET_DIR}
 fi
 productbuild --distribution distribution.xml --package-path "./" --resources Resources "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.pkg"
+Rez -append Resources/icns.rsrc -o "${TARGET_DIR}/${OUTPUT_BASE_FILENAME}.pkg"
+SetFile -a C "${TARGET_DIR}/${OUTPUT_BASE_FILENAME}.pkg"
 
 # create a DMG if required
 

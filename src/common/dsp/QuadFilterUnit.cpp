@@ -1,6 +1,9 @@
 #include "QuadFilterUnit.h"
 #include "SurgeStorage.h"
 #include <vt_dsp/basic_dsp.h>
+#include "DebugHelpers.h"
+
+#include "filters/RKMoog.h"
 
 __m128 SVFLP12Aquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
@@ -779,6 +782,10 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       return SNHquad;
    case fut_comb:
       return COMBquad_SSE2;
+#if SURGE_EXTRA_FILTERS      
+   case fut_rkmoog:
+      return RKMoog::process;
+#endif      
    }
    return 0;
 }

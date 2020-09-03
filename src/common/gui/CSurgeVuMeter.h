@@ -18,7 +18,7 @@
 #include "SurgeParamConfig.h"
 #include "SkinSupport.h"
 
-class CSurgeVuMeter : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CSurgeVuMeter : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CSurgeVuMeter(const VSTGUI::CRect& size);

@@ -274,6 +274,7 @@ bool Parameter::can_deactivate()
    case ct_freq_audible_deactivatable:
    case ct_lforate_deactivatable:
    case ct_rotarydrive:
+   case ct_airwindow_fx:
       return true;
    }
    return false;
@@ -293,6 +294,27 @@ void Parameter::set_user_data(ParamUserData* ud)
    {
    case ct_countedset_percent:
       if (dynamic_cast<CountedSetUserData*>(ud))
+      {
+         user_data = ud;
+      }
+      else
+      {
+         user_data = nullptr;
+      }
+      break;
+   case ct_airwindow_fx:
+      if( dynamic_cast<ParameterDiscreteIndexRemapper*>(ud))
+      {
+         user_data = ud;
+      }
+      else
+      {
+         user_data = nullptr;
+      }
+      break;
+   case ct_airwindow_param:
+   case ct_airwindow_param_bipolar:
+      if( dynamic_cast<ParameterExternalFormatter*>(ud))
       {
          user_data = ud;
       }
@@ -699,6 +721,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 20;
       break;
+   case ct_vocoder_modulator_mode:
+      val_min.i = 0;
+      val_max.i = 3;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
    case ct_distortion_waveshape:
       val_min.i = 0;
       val_max.i = n_ws_type - 2; // we want to skip none also
@@ -776,6 +804,20 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
+   case ct_airwindow_fx:
+      val_min.i = 0;
+      val_max.i = 10;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
+   case ct_airwindow_param:
+   case ct_airwindow_param_bipolar: // it's still 0,1; this is just a display thing
+      val_min.f = 0;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
+      
    case ct_none:
    default:
       sprintf(dispname, "-");
@@ -953,6 +995,14 @@ void Parameter::set_type(int ctrltype)
    case ct_sendlevel:
       displayType = Decibel;
       sprintf( displayInfo.unit, "dB" );
+      break;
+
+   case ct_airwindow_param:
+   case ct_airwindow_param_bipolar:
+      displayType = DelegatedToFormatter;
+      displayInfo.scale = 1.0;
+      displayInfo.unit[0] = 0;
+      displayInfo.decimals = 3;
       break;
    }
 }
@@ -1368,6 +1418,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    case Custom:
       // handled below
       break;
+   case DelegatedToFormatter:
+      // For now do LinearWithScale
    case LinearWithScale:
    {
       std::string u = displayInfo.unit;
@@ -1768,6 +1820,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case Custom:
          // Custom cases are handled below
          break;
+      case DelegatedToFormatter:
+      {
+         auto ef = dynamic_cast<ParameterExternalFormatter *>( user_data );
+         if( ef )
+         {
+            ef->formatValue( f, txt, 64 );
+            return;
+         }
+         // We do not break on purpose here. DelegatedToFormatter falls back to LInear with Scale
+      }
       case LinearWithScale:
       {
          std::string u = displayInfo.unit;
@@ -1947,6 +2009,11 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_comb:
                      sprintf(txt, "%s", fut_comb_subtypes[i]);
                      break;
+#if SURGE_EXTRA_FILTERS
+                  case fut_rkmoog:
+                     sprintf( txt, "%s", fut_rkmoog_subtypes[i]);
+                     break;
+#endif                     
                   default:
                      sprintf(txt, "%s", fut_def_subtypes[i]);
                      break;
@@ -2125,6 +2192,42 @@ void Parameter::get_display(char* txt, bool external, float ef)
          }
       }
       break;
+      case ct_vocoder_modulator_mode:
+           {
+              std::string type;
+              switch(i)
+              {
+              case 0:
+                 type = "Mono Sum";
+                 break;
+              case 1:
+                 type = "Left Only";
+                 break;
+              case 2:
+                 type = "Right Only";
+                 break;
+              case 3:
+                 type = "Stereo";
+                 break;
+              }
+              sprintf(txt, "%s", type.c_str());
+           }
+         break;
+
+      case ct_airwindow_fx:
+      {
+         // These are all the ones with a ParameterDiscreteIndexRemapper
+         auto pd = dynamic_cast<ParameterDiscreteIndexRemapper*>(user_data);
+         if( pd )
+         {
+            sprintf(txt, "%s", pd->nameAtStreamedIndex(i).c_str() );
+         }
+         else
+         {
+            sprintf(txt, "%i", i);
+         }
+         break;
+      }
       default:
          sprintf(txt, "%i", i);
          break;
@@ -2350,6 +2453,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_portatime:
    case ct_lforate:
    case ct_lforate_deactivatable:
+   case ct_lfoamplitude:
    case ct_detuning:
    case ct_oscspread:
    case ct_countedset_percent:
@@ -2367,7 +2471,8 @@ bool Parameter::can_setvalue_from_string()
    case ct_rotarydrive:
    case ct_sendlevel:
    case ct_freq_mod:
- 
+   case ct_airwindow_param:
+   case ct_airwindow_param_bipolar:
    {
       return true;
       break;
@@ -2501,6 +2606,20 @@ bool Parameter::set_value_from_string( std::string s )
    case Custom:
       // handled below
       break;
+   case DelegatedToFormatter:
+   {
+      auto ef = dynamic_cast<ParameterExternalFormatter *>( user_data );
+      if( ef )
+      {
+         float f;
+         if( ef->stringToValue( c, f ) )
+         {
+            val.f = limit_range( f, val_min.f, val_max.f );
+            return true;
+         }
+      }
+      // break; DO NOT break. Fall back
+   }
    case LinearWithScale:
    {
       float ext_mul = ( can_extend_range() && extend_range ) ? displayInfo.extendFactor : 1.0;
@@ -2587,6 +2706,7 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
    {
    case Custom:
       break;
+   case DelegatedToFormatter:
    case LinearWithScale:
    {
       valid = true;

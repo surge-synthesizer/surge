@@ -111,7 +111,7 @@ enum label_placement
    lp_above
 };
 
-class CNumberField : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponnt
+class CNumberField : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CNumberField(const VSTGUI::CRect& size,

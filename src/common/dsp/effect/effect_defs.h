@@ -321,9 +321,19 @@ private:
 const int n_vocoder_bands = 20;
 const int NVocoderVec = n_vocoder_bands >> 2;
 
+enum VocoderModInput
+ {
+    VOCODER_MODULATOR_MONO,
+    VOCODER_MODULATOR_L,
+    VOCODER_MODULATOR_R,
+    VOCODER_MODULATOR_STEREO
+ };
+
 class VocoderEffect : public Effect
 {
 public:
+ 
+
    enum Params
    {
       KGain,
@@ -335,9 +345,12 @@ public:
       kNumBands,
       kFreqLo,
       kFreqHi,
+      kModulatorMode,
       kModExpand,
       kModCenter,
-
+      kMix,
+      kNumParams
+      
       // KUnvoicedThreshold,
    };
 
@@ -366,9 +379,13 @@ private:
    VectorizedSvfFilter mCarrierL alignas(16)[NVocoderVec];
    VectorizedSvfFilter mCarrierR alignas(16)[NVocoderVec];
    VectorizedSvfFilter mModulator alignas(16)[NVocoderVec];
+   VectorizedSvfFilter mModulatorR alignas(16)[NVocoderVec];
    vFloat mEnvF alignas(16)[NVocoderVec];
+   vFloat mEnvFR alignas(16)[NVocoderVec];
    lipol_ps mGain alignas(16);
-
+   lipol_ps mGainR alignas(16);
+   int modulator_mode;
+   float wet;
    int mBI; // block increment (to keep track of events not occurring every n blocks)
    int active_bands;
    

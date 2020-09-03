@@ -12,6 +12,9 @@ namespace Surge {
       static const char* ReleaseNumberStr;
       static const char* ReleaseStr;
 
+      static const char* GitHash;
+      static const char* GitBranch;
+      
       static const char* BuildNumberStr;
 
       static const char* FullVersionStr;
@@ -22,6 +25,9 @@ namespace Surge {
 
       static const char* BuildDate;
       static const char* BuildTime;
+
+      // Some features from cmake
+      static const char* CMAKE_INSTALL_PREFIX;
    };
 }
 

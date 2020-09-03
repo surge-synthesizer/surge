@@ -19,7 +19,7 @@
 #include "SurgeParamConfig.h"
 #include "SkinSupport.h"
 
-class CSurgeSlider : public CCursorHidingControl, public Surge::UI::SkinConsumingComponnt
+class CSurgeSlider : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CSurgeSlider(const VSTGUI::CPoint& loc,

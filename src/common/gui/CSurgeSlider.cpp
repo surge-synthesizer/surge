@@ -21,6 +21,7 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h"
+#include "SkinColors.h"
 #include <UserDefaults.h>
 #include <iostream>
 
@@ -234,9 +235,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
       // if (label_id >= 0) pLabels->draw(dc,trect,CPoint(0,8*label_id),0xff);
 
       if (style & kWhite)
-         dc->setFontColor(skin->getColor( "slider.light.label", kWhiteCColor) );
+         dc->setFontColor(skin->getColor(Colors::Slider::Label::Light, kWhiteCColor));
       else
-         dc->setFontColor(skin->getColor( "slider.dark.label", kBlackCColor) );
+         dc->setFontColor(skin->getColor(Colors::Slider::Label::Dark, kBlackCColor));
       dc->setFont(displayFont);
 
       //		int a = 'a' + (rand()&31);
@@ -274,8 +275,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
       CRect trect = hrect;
       CRect trect2 = hrect;
 
-      CColor ColBar = skin->getColor("slider.modulation", CColor(173, 255, 107, 255));
-      CColor ColBarNeg = skin->getColor("slider.negative.modulation", CColor(173, 255, 107, 255));
+      CColor ColBar = skin->getColor(Colors::Slider::Modulation::Positive, CColor(173, 255, 107, 255));
+      CColor ColBarNeg = skin->getColor(Colors::Slider::Modulation::Negative, CColor(173, 255, 107, 255));
 
       ColBar.alpha = (int)(slider_alpha * 255.f);
       ColBarNeg.alpha = (int)(slider_alpha * 255.f);
@@ -752,6 +753,7 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 
       attachCursor();
    }
+
    return kMouseEventHandled;
 }
 

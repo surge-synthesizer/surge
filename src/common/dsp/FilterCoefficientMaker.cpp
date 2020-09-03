@@ -2,6 +2,8 @@
 #include "SurgeStorage.h"
 #include <vt_dsp/basic_dsp.h>
 
+#include "filters/RKMoog.h"
+
 using namespace std;
 
 const float smooth = 0.2f;
@@ -61,6 +63,11 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_SNH:
       Coeff_SNH(Freq, Reso, SubType);
       break;
+#if SURGE_EXTRA_FILTERS      
+   case fut_rkmoog:
+      RKMoog::makeCoefficients(this, Freq, Reso, SubType, storageI);
+      break;
+#endif      
    };
 }
 
@@ -527,3 +534,4 @@ void FilterCoefficientMaker::Reset()
 
    storage = nullptr;
 }
+
