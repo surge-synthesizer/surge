@@ -129,16 +129,31 @@ void CMenuAsSlider::onSkinChanged()
 
 bool CMenuAsSlider::onWheel( const VSTGUI::CPoint &where, const float &distance, const VSTGUI::CButtonState &buttons ) {
    wheelDistance += distance;
-   float dDistance = 1.f / std::max( ( iMax - iMin ), 1 );
-   if( wheelDistance > 1 ) {
-      wheelDistance -= 1;
-      setValue( limit_range( getValue() - dDistance, 0.f, 1.f ) );
+   Surge::Debug::stackTraceToStdout();
+   float threshold = 1;
+   auto fv = [this](float v, int inc)
+                {
+                   int iv = floor( getValue() * ( iMax - iMin ) + 0.5 );
+                   iv = iv + inc;
+                   if( iv < 0 ) iv = iMax;
+                   if( iv > iMax ) iv = 0;
+                   // This is the get_value_f01 code
+                   float r = 0.005 + 0.99 * ( iv - iMin ) / ( float) ( iMax - iMin );
+                   return r;
+
+                };
+#if WINDOWS
+   threshold = 0.33;
+#endif   
+   if( wheelDistance > threshold ) {
+      wheelDistance -= threshold;
+      setValue( fv( getValue(), -1 ) );
       if( listener )
          listener->valueChanged(this);
    }
-   if( wheelDistance < -1 ) {
-      wheelDistance += 1;
-      setValue( limit_range( getValue() + dDistance, 0.f, 1.f ) );
+   if( wheelDistance < -threshold ) {
+      wheelDistance += threshold;
+      setValue( fv( getValue(), +1 ) );
       if( listener )
          listener->valueChanged(this);
    }

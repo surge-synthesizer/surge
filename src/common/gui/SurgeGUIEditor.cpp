@@ -1488,7 +1488,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 #if SURGE_EXTRA_FILTERS
             rect.offset( -3, -2 );
             auto hsw = new CMenuAsSlider( rect.getTopLeft(), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
-            hsw->setMinMax( p->val_min.i, p->val_max.i );
+            hsw->setMinMax( 0, n_fu_type - 1 );
             hsw->setLabel( p->get_name() );
             hsw->setDeactivated( false );
 #else            
