@@ -1962,6 +1962,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hs->setMinMax( p->val_min.i, p->val_max.i );
             hs->setLabel(p->get_name());
             frame->addView( hs );
+            if( p->can_deactivate() )
+               hs->setDeactivated( p->deactivated );
+            
             param[i] = hs;
          }
          break;
@@ -2450,6 +2453,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    std::vector< std::string > clearControlTargetNames;
 
+   auto cmensl = dynamic_cast<CMenuAsSlider*>(control);
+   if( cmensl && cmensl->deactivated )
+      return;
+   
    if (button & kRButton)
    {
       if (tag == tag_settingsmenu)

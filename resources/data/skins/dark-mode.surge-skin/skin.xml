@@ -83,8 +83,10 @@
 
     <color id="menu.name" value="$lightgray"/>
     <color id="menu.name.hover" value="$white"/>
+    <color id="menu.name.deactivated" value="$gray"/>
     <color id="menu.value" value="$lightgray"/>
     <color id="menu.value.hover" value="$white"/>
+    <color id="menu.value.deactivated" value="$gray"/>
 
     <color id="patchbrowser.background" value="$lightgray"/>
     <color id="patchbrowser.foreground" value="$lightgray"/>

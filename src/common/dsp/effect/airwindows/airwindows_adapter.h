@@ -27,6 +27,12 @@ public:
    virtual int group_label_ypos(int id) override;
 
    // TODO ringout and only control and suspend
+   virtual void suspend() override
+   {
+      if( fxdata )
+         fxdata->p[0].deactivated = true;
+      hasInvalidated = true;
+   }
 
    lag<float, true> param_lags[n_fx_params - 1];
    
@@ -74,6 +80,8 @@ public:
          if( fx && fx->airwin )
          {
             char lab[256], dis[256];
+            if( fx->fxdata->p[0].deactivated )
+               fx->airwin->setParameter( idx, value );
             fx->airwin->getParameterLabel( idx, lab );
             fx->airwin->getParameterDisplay( idx, dis );
             sprintf( txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " " ), lab );

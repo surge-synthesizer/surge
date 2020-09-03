@@ -68,7 +68,10 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       auto valcol = skin->getColor(Colors::Menu::Value, kBlackCColor);
       if( isHover )
          valcol = skin->getColor(Colors::Menu::ValueHover, CColor(60, 20, 0));
-            
+
+      if( deactivated )
+         valcol = skin->getColor( Colors::Menu::ValueDeactivated, CColor( 180, 180, 180 ) );
+      
       dc->setFontColor( valcol );
       auto t = d;
       t.right -= 14;
@@ -97,14 +100,21 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       auto labcol = skin->getColor(Colors::Menu::Name, kBlackCColor);
       if (isHover)
          labcol = skin->getColor(Colors::Menu::NameHover, CColor(60, 20, 0));
+
+      if( deactivated )
+         labcol = skin->getColor( Colors::Menu::NameDeactivated, CColor( 180, 180, 180 ) );
+
       dc->setFontColor( labcol );
       dc->drawString( tl.c_str(), l, kLeftText, true ); 
    }
 }
 
 CMouseEventResult CMenuAsSlider::onMouseDown( CPoint &w, const CButtonState &buttons ) {
-   // fake up an RMB since we are a slider sit-in
-   listener->controlModifierClicked( this, buttons | kRButton );
+   if( ! deactivated )
+   {
+      // fake up an RMB since we are a slider sit-in
+      listener->controlModifierClicked( this, buttons | kRButton );
+   }
    return kMouseEventHandled;
 }
 

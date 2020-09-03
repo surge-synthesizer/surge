@@ -93,7 +93,7 @@ namespace Colors
 
    namespace Menu
    {
-      extern const Surge::UI::SkinColor Name, NameHover, Value, ValueHover;
+      extern const Surge::UI::SkinColor Name, NameHover, Value, ValueHover, ValueDeactivated, NameDeactivated;
    }
 
    namespace ModSource
