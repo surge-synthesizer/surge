@@ -2009,6 +2009,11 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_comb:
                      sprintf(txt, "%s", fut_comb_subtypes[i]);
                      break;
+#if SURGE_EXTRA_FILTERS
+                  case fut_rkmoog:
+                     sprintf( txt, "%s", fut_rkmoog_subtypes[i]);
+                     break;
+#endif                     
                   default:
                      sprintf(txt, "%s", fut_def_subtypes[i]);
                      break;

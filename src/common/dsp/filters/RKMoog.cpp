@@ -37,14 +37,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace RKMoog
 {
-   static constexpr int rkm_cutoff = 0, rkm_reso = 1;
+   static constexpr int rkm_cutoff = 0, rkm_reso = 1, rkm_sat = 2, rkm_satinv = 3;
 
-   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso )
+   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int sub, SurgeStorage *storage )
    {
-      cm->C[rkm_cutoff] = 440 * pow( 2.0, freq / 12.0 ) * 2.0 * M_PI;
+      // COnsideration: Do we want tuning aware or not?
+      auto pitch = storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ;
+      cm->C[rkm_cutoff] = pitch * 2.0 * M_PI;
       cm->C[rkm_reso] = reso * 10; // code says 0-10 is value
+      switch( sub )
+      {
+      case 0:
+         cm->C[rkm_sat] = 1.5;
+         cm->C[rkm_satinv ] = 0.66666666666666;
+         break;
+      case 2:
+         cm->C[rkm_sat] = 8.0;
+         cm->C[rkm_satinv ] = 0.125;
+         break;
+         break;
+      case 1:
+      default:
+         cm->C[rkm_sat] = 3.0;
+         cm->C[rkm_satinv ] = 0.3333333333;
+         break;
+      }
    }
-
+   
    inline float clip(float value, float saturation, float saturationinverse)
    {
       float v2 = (value * saturationinverse > 1 ? 1 :
@@ -54,10 +73,8 @@ namespace RKMoog
    }
 
 
-	void calculateDerivatives(float input, double * dstate, double * state, float cutoff, float resonance)
+   void calculateDerivatives(float input, double * dstate, double * state, float cutoff, float resonance, float saturation, float saturationInv )
 	{
-      static float constexpr saturation = 3.0, saturationInv = 1.0 / saturation;
-      
 		double satstate0 = clip(state[0], saturation, saturationInv);
 		double satstate1 = clip(state[1], saturation, saturationInv);
 		double satstate2 = clip(state[2], saturation, saturationInv);
@@ -68,29 +85,29 @@ namespace RKMoog
 		dstate[3] = cutoff * (satstate2 - clip(state[3], saturation, saturationInv));
 	}
 
-	void rungekutteSolver(float input, double * state, float cutoff, float resonance)
+	void rungekutteSolver(float input, double * state, float cutoff, float resonance, float sat, float satInv)
 	{
 		int i;
 		double deriv1[4], deriv2[4], deriv3[4], deriv4[4], tempState[4];
 
       auto stepSize = dsamplerate_os_inv;
       
-		calculateDerivatives(input, deriv1, state, cutoff, resonance);
+		calculateDerivatives(input, deriv1, state, cutoff, resonance, sat, satInv);
 		
 		for (i = 0; i < 4; i++)
 			tempState[i] = state[i] + 0.5 * stepSize * deriv1[i];
 		
-		calculateDerivatives(input, deriv2, tempState, cutoff, resonance);
+		calculateDerivatives(input, deriv2, tempState, cutoff, resonance, sat, satInv);
 		
 		for (i = 0; i < 4; i++)
 			tempState[i] = state[i] + 0.5 * stepSize * deriv2[i];
 		
-		calculateDerivatives(input, deriv3, tempState, cutoff, resonance);
+		calculateDerivatives(input, deriv3, tempState, cutoff, resonance, sat, satInv);
 		
 		for (i = 0; i < 4; i++)
 			tempState[i] = state[i] + stepSize * deriv3[i];
 		
-		calculateDerivatives(input, deriv4, tempState, cutoff, resonance);
+		calculateDerivatives(input, deriv4, tempState, cutoff, resonance, sat, satInv);
 		
 		for (i = 0; i < 4; i++)
 			state[i] += (1.0 / 6.0) * stepSize * (deriv1[i] + 2.0 * deriv2[i] + 2.0 * deriv3[i] + deriv4[i]);
@@ -99,7 +116,7 @@ namespace RKMoog
    
    __m128 process( QuadFilterUnitState * __restrict f, __m128 inm )
    {
-      static constexpr int ssew = 4, n_coef=2, n_state=4;
+      static constexpr int ssew = 4, n_coef=4, n_state=4;
       /*
       ** This demonstrates how to unroll SSE. At input each of the
       ** values (registers, coefficients, inputs) will be up to 4 wide
@@ -125,7 +142,7 @@ namespace RKMoog
          double dstate[n_state];
          for( int i=0; i<n_state; ++i ) dstate[i] = state[i][v];
          
-         rungekutteSolver( in[v], dstate, C[rkm_cutoff][v], C[rkm_reso][v] );
+         rungekutteSolver( in[v], dstate, C[rkm_cutoff][v], C[rkm_reso][v], C[rkm_sat][v], C[rkm_satinv][v] );
          out[v] = dstate[ n_state - 1 ];
 
          for( int i=0; i<n_state; ++i ) state[i][v] = dstate[i];
