@@ -136,6 +136,16 @@ else()
 endif()
 
 
+# Surge features at compile time
+if( NOT DEFINED SURGE_EXTRA_FILTERS )
+  set( SURGE_EXTRA_FILTERS False )
+  set( SURGE_EXTRA_FILTERS_DEFINITIONS SURGE_EXTRA_FILTERS=0 )
+else()
+  message( STATUS "Including Surge Extra Filters" )
+  set( SURGE_EXTRA_FILTERS True )
+  set( SURGE_EXTRA_FILTERS_DEFINITIONS SURGE_EXTRA_FILTERS=1 )
+endif()
+
 ### Set up the AirWindows integration
 include( libs/airwindows/CMakeLists.txt )
 list( TRANSFORM AIRWINDOWS_FX_SOURCES PREPEND "libs/airwindows/" )
@@ -171,6 +181,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/RingModulatorEffect.cpp
   src/common/dsp/effect/RotarySpeakerEffect.cpp
   src/common/dsp/effect/VocoderEffect.cpp
+  src/common/dsp/filters/RKMoog.cpp
   src/common/dsp/AdsrEnvelope.cpp
   src/common/dsp/BiquadFilter.cpp
   src/common/dsp/BiquadFilterSSE2.cpp
@@ -393,6 +404,7 @@ if( APPLE )
     MAC_COCOA=1
     COCOA=1
     OBJC_OLD_DISPATCH_PROTOTYPES=1
+    ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
   set(OS_LINK_LIBRARIES_NOGUI
     "-framework CoreServices"
@@ -498,6 +510,7 @@ elseif( UNIX AND NOT APPLE )
     ${ARCH_COMPILE_DEFINITIONS}
     LINUX=1
     RELEASE=1
+    ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -565,6 +578,7 @@ elseif( WIN32 )
     TIXML_USE_STL
     USE_LIBPNG
     _CRT_SECURE_NO_WARNINGS=1
+    ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
   if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
