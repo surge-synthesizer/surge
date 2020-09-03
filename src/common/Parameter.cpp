@@ -274,6 +274,7 @@ bool Parameter::can_deactivate()
    case ct_freq_audible_deactivatable:
    case ct_lforate_deactivatable:
    case ct_rotarydrive:
+   case ct_airwindow_fx:
       return true;
    }
    return false;

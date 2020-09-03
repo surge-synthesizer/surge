@@ -60,6 +60,9 @@ public:
    void setMinMax( int i, int x ) {
       iMin = i; iMax = x;
    }
+
+   void setDeactivated( bool d ) { deactivated = d; }
+   bool deactivated = false;
    
    CLASS_METHODS(CMenuAsSlider, CControl)
    bool in_hover = false;

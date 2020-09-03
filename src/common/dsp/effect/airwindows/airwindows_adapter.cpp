@@ -77,6 +77,7 @@ void AirWindowsEffect::init_ctrltypes() {
    fxdata->p[0].posy_offset = 1;
    fxdata->p[0].val_max.i = fxreg.size() - 1;
    fxdata->p[0].set_user_data( nullptr );
+   fxdata->p[0].deactivated = false;
 
    for( int i=0; i<n_fx_params - 1; ++i )
    {
@@ -140,6 +141,13 @@ void AirWindowsEffect::init_default_values() {
 
 void AirWindowsEffect::process( float *dataL, float *dataR )
 {
+   if( fxdata->p[0].deactivated )
+   {
+      // We are un-suspended
+      fxdata->p[0].deactivated = false;
+      hasInvalidated = true;
+   }
+   
    if( !airwin || fxdata->p[0].val.i != lastSelected || fxdata->p[0].user_data == nullptr )
    {
       /*
