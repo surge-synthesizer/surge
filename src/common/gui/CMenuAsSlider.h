@@ -62,7 +62,7 @@ public:
    }
 
    void setDeactivated( bool d ) { deactivated = d; }
-   bool deactivated;
+   bool deactivated = false;
    
    CLASS_METHODS(CMenuAsSlider, CControl)
    bool in_hover = false;
