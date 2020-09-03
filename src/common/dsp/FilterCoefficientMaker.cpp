@@ -65,7 +65,7 @@ void FilterCoefficientMaker::MakeCoeffs(
       break;
 #if SURGE_EXTRA_FILTERS      
    case fut_rkmoog:
-      RKMoog::makeCoefficients(this, Freq, Reso);
+      RKMoog::makeCoefficients(this, Freq, Reso, SubType, storageI);
       break;
 #endif      
    };

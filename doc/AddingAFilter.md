@@ -11,16 +11,18 @@
 
 3. In FilterCoefficientMaker.h you get an opportunity to set up state variables. You have 8 coefficients C[8] you can set to - well - anything.
    This should redirect to the makeCoefficients function you put in your namespace.
-   a. in FilterCoefficientMaker::MakeCoeffs call it in the switch
-   b. This is called at most once every BLOCK_SIZE_OS and then only when F or R change
+   1. in FilterCoefficientMaker::MakeCoeffs call it in the switch
+   2. This is called at most once every BLOCK_SIZE_OS and then only when F or R change
    
 4. In QuadFilterUnit.cpp you need to return a function which does the filtering from the setup.
-   a. It has to have the prototype `_m128 op( QuadFilterUnitState * __restrict, _m128 in )`
-   b. The function to return is your namespaced process function. It will get a QuadFilterUnitState which
+   1. It has to have the prototype `_m128 op( QuadFilterUnitState * __restrict, _m128 in )`
+   2. The function to return is your namespaced process function. It will get a QuadFilterUnitState which
       has the coefficients you set in make Coeff (the "C") and also an array of registers R you can use.
-   c. The most important thing about this code is it is called in parallel per voice. That is you may get
+   3. The most important thing about this code is it is called in parallel per voice. That is you may get
       it called with between 1 and 4 of the SSE channels populated. The f->active array tells you which voices
       are active. Each of the values (in, C, R) are also SSE-wide arrays. You can see the SSE implementations in QuadFilterUnit.cpp 
       and we should aspire to those. But for now you can also see a manual unroll in RKMoog.cpp
-      
+    
+5. If you are adding subtypes you also want to add the stringification to Parameter.cpp again in an ifdef. RKMoog shows this too.
+
 Then you can code up your filter. Again follow RKMoog as a worked example.
