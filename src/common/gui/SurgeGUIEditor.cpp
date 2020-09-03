@@ -1485,16 +1485,25 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 129, 18);
             rect.offset(p->posx - 2, p->posy + 1);
+#if SURGE_EXTRA_FILTERS
+            rect.offset( -3, -2 );
+            auto hsw = new CMenuAsSlider( rect.getTopLeft(), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
+            hsw->setMinMax( p->val_min.i, p->val_max.i );
+            hsw->setLabel( p->get_name() );
+            hsw->setDeactivated( false );
+#else            
             auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 10, 18, 1, 10,
                                           bitmapStore->getBitmap(IDB_FILTERBUTTONS), nopoint, true);
             rect(3, 0, 124, 14);
             rect.offset(p->posx, p->posy);
             hsw->setMouseableArea(rect);
+#endif
             hsw->setValue(p->get_value_f01());
             hsw->setSkin( currentSkin, bitmapStore );
 
             frame->addView(hsw);
             nonmod_param[i] = hsw;
+
          }
          break;
          case ct_filtersubtype:
