@@ -2455,7 +2455,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
    auto cmensl = dynamic_cast<CMenuAsSlider*>(control);
    if( cmensl && cmensl->deactivated )
-      return;
+      return 0;
    
    if (button & kRButton)
    {
