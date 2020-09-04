@@ -1942,7 +1942,37 @@ std::string wstringToUTF8(const std::wstring &str)
     return ret;
 }
 #endif    
-    
+
+std::string appendDirectory( const std::string &root, const std::string &path1 )
+{
+#if WINDOWS
+   if( root[root.size()-1] == '\\' ) {
+      return root + path1;
+   }
+   else
+   {
+      return root + "\\" + path1;
+   }
+#else
+   if( root[root.size()-1] == '/' ) {
+      return root + path1;
+   }
+   else
+   {
+      return root + "/" + path1;
+   }
+#endif   
+}
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2 )
+{
+   return appendDirectory( appendDirectory( root, path1 ), path2 );
+}
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2, const std::string &path3 )
+{
+   return appendDirectory( appendDirectory( root, path1, path2 ), path3 );
+}
+
+
 } // end ns Surge::Storage
 } // end ns Surge
 

@@ -565,6 +565,13 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    exportItem->setActions(exportAction,nullptr);
    contextMenu->addEntry(exportItem);
 
+   auto omi = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu("Open WAV Export Folder..." ) ) );
+   omi->setActions([this](CCommandMenuItem *i) {
+                      Surge::UserInteractions::openFolderInFileBrowser( Surge::Storage::appendDirectory( this->storage->userDataPath, "ExportedWaveTables" ) );
+                   }
+      );
+   contextMenu->addEntry( omi );
+   
    contextMenu->addSeparator();
 
    auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Download Additional Content...")));
