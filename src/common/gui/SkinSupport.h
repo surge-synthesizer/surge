@@ -20,7 +20,7 @@
 **
 ** SkinSupport provides a pair of classes, a SkinManager and a SkinDB
 ** The SkinManager singleton loads and applys the SkinDB to various places as
-** appropriate. The SkinDB has all the information you would need 
+** appropriate. The SkinDB has all the information you would need
 ** to skin yourself, and answers various queries.
 */
 
@@ -38,7 +38,7 @@ namespace VSTGUI {
 namespace Surge
 {
 
-   
+
 template <typename T>
 class Maybe {
 public:
@@ -52,17 +52,17 @@ public:
          throw "Cannot get value from Nothing";
       }
    }
-   
+
    bool isJust() const { return !_empty; }
    bool isNothing() const { return _empty; }
-   
+
    static bool isJust(Maybe &m) { return m.isJust(); }
    static bool isNothing(Maybe &m) { return m.isNothing(); }
 private:
    bool _empty;
    T _value;
 };
-   
+
 namespace UI
 {
 
@@ -78,10 +78,10 @@ class Skin
 {
 public:
    static constexpr int current_format_version = 1;
-   
+
    typedef std::shared_ptr<Skin> ptr_t;
    typedef std::unordered_map<std::string, std::string> props_t;
-   
+
    friend class SkinDB;
 
    Skin(std::string root, std::string name);
@@ -89,12 +89,13 @@ public:
 
    bool reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
 
-   std::string resourceName(const std::string &relativeName) {
-      #if WINDOWS
-         return root + name + "\\" + relativeName;
-      #else
-         return root + name + "/" + relativeName;
-      #endif
+   std::string resourceName(const std::string& relativeName)
+   {
+#if WINDOWS
+      return root + name + "\\" + relativeName;
+#else
+      return root + name + "/" + relativeName;
+#endif
    }
 
    std::string root;
@@ -155,10 +156,10 @@ public:
       std::vector<Control::ptr_t> childControls;
 
       int x = 0, y = 0, w = -1, h = -1;
-      
+
       props_t allprops;
    };
-   
+
    //private:
       bool hasColor(std::string id);
       VSTGUI::CColor getColor(std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>());
@@ -186,10 +187,10 @@ public:
             return ic;
          }
       }
-      
+
       return nullptr;
    }
-   
+
    Skin::Control::ptr_t controlForUIID( std::string ui_id ) {
       // FIXME don't be stupid like this of course
       for( auto ic : controls )
@@ -199,7 +200,7 @@ public:
             return ic;
          }
       }
-      
+
       return nullptr;
    }
 
@@ -244,7 +245,7 @@ public:
 
    int getWindowSizeX() { return szx; }
    int getWindowSizeY() { return szy; }
-   
+
    CScalableBitmap *backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore );
 
    typedef enum {
@@ -265,7 +266,7 @@ public:
       }
       return labels;
    }
-   
+
    static const std::string defaultImageIDPrefix;
 
 private:
@@ -273,7 +274,7 @@ private:
    std::vector<std::pair<std::string, props_t>> globals;
    std::string bgimg = "";
    int szx = BASE_WINDOW_SIZE_X, szy = BASE_WINDOW_SIZE_Y;
-   
+
    struct ColorStore {
       VSTGUI::CColor color;
       std::string alias;
@@ -297,7 +298,7 @@ private:
 
    bool recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *groupList, std::string pfx="" );
 };
-   
+
 class SkinDB
 {
 public:
@@ -308,7 +309,7 @@ public:
       std::string name;
       std::string displayName;
       bool parseable;
-      
+
       // Since we want to use this as a map
       bool operator==(const Entry &o) const {
          return root == o.root && name == o.name;
@@ -325,7 +326,7 @@ public:
          return s.get() && s->root == root && s->name == name;
       }
    };
-   
+
    void rescanForSkins(SurgeStorage *);
    std::vector<Entry> getAvailableSkins() { return availableSkins; }
    Maybe<Entry> getEntryByRootAndName( const std::string &r, const std::string &n ) {
@@ -337,7 +338,7 @@ public:
    const Entry &getDefaultSkinEntry() const {
       return defaultSkinEntry;
    }
-   
+
    Skin::ptr_t getSkin( const Entry &skinEntry );
    Skin::ptr_t defaultSkin(SurgeStorage *);
 
@@ -352,14 +353,14 @@ public:
 private:
    SkinDB();
    ~SkinDB();
-   SkinDB(const SkinDB&) = delete; 
-   SkinDB& operator=(const SkinDB&) = delete; 
-   
+   SkinDB(const SkinDB&) = delete;
+   SkinDB& operator=(const SkinDB&) = delete;
+
    std::vector<Entry> availableSkins;
    std::unordered_map<Entry,std::shared_ptr<Skin>, Entry::hash> skins;
    Entry defaultSkinEntry;
    bool foundDefaultSkinEntry = false;
-   
+
    static std::shared_ptr<SkinDB> instance;
    static std::ostringstream errorStream;
 
@@ -385,7 +386,7 @@ public:
    }
 
    virtual void onSkinChanged() { }
-   
+
 protected:
    Skin::ptr_t skin = nullptr;
    Skin::Control::ptr_t skinControl = nullptr;

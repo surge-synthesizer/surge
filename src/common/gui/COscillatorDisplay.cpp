@@ -635,13 +635,8 @@ bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
 
    if (!cat.isRoot)
    {
-#if WINDOWS
-      std::string pathSep = "\\";
-#else
-      std::string pathSep = "/";
-#endif
       std::string catName = storage->wt_category[categoryId].name;
-      std::size_t sepPos = catName.find_last_of(pathSep);
+      std::size_t sepPos = catName.find_last_of(PATH_SEPARATOR);
       if (sepPos != std::string::npos)
       {
          catName = catName.substr(sepPos + 1);

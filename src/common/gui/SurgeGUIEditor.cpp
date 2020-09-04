@@ -5155,14 +5155,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                             }
                         };
 
-                        std::string scl_folder = "tuning-library";
-#if WINDOWS
-                           scl_folder += "\\SCL";
-#else
-                           scl_folder += "/SCL";
-#endif
+                        auto scl_path = Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "SCL");
 
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + scl_folder, ".scl", "Scala microtuning files (*.scl)", cb);
+                        Surge::UserInteractions::promptFileOpenDialog(scl_path, ".scl", "Scala microtuning files (*.scl)", cb);
                     }
         );
     tid++;
@@ -5199,14 +5194,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
 
                         };
 
-                        std::string kbm_folder = "tuning-library";
-#if WINDOWS
-                           kbm_folder += "\\KBM Concert Pitch";
-#else
-                           kbm_folder += "/KBM Concert Pitch";
-#endif
+                        auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "KBM Concert Pitch");
 
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + kbm_folder, ".kbm", "Scala keyboard mapping files (*.kbm)", cb);
+                        Surge::UserInteractions::promptFileOpenDialog(kbm_path, ".kbm", "Scala keyboard mapping files (*.kbm)", cb);
                     }
         );
     tid++;
@@ -5246,15 +5236,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
     addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Factory Tuning Library..."),
                     [this]()
                     {
-                       auto dpath = this->synth->storage.datapath;
-                       std::string sep = "/";
-#if WINDOWS
-                       sep = "\\";
-                       if( dpath.back() == '\\' || dpath.back() == '/' )
-                         sep = "";
-#endif
-                       Surge::UserInteractions::openFolderInFileBrowser(
-                          dpath + sep + "tuning-library");
+                       auto dpath = Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library");
+
+                       Surge::UserInteractions::openFolderInFileBrowser(dpath);
                     }
         );
 
@@ -5541,13 +5525,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                 dname += "other";
              }
 
-#if WINDOWS
-                dname += "\\";
-#else
-                dname += "/";
-#endif
-
-             dname += entry.name + ")";
+             dname += PATH_SEPARATOR + entry.name + ")";
           }
 
           auto cb = addCallbackMenu(skinSubMenu, dname,

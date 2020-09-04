@@ -715,12 +715,8 @@ void CFxMenu::saveFX()
    int ti = fx->type.val.i;
    
    std::ostringstream oss;
-   oss << storage->userFXPath
-#if WINDOWS
-       << "\\" << fxtype_names[ti] << "\\";
-#else
-       << "/" << fxtype_names[ti] << "/";
-#endif
+   oss << storage->userFXPath << PATH_SEPARATOR << fxtype_names[ti] << PATH_SEPARATOR;
+
    auto pn = oss.str();
    fs::create_directories( pn );
 
