@@ -30,6 +30,7 @@ class alignas(16) SurgeVoice
 {
 public:
    float output alignas(16)[2][BLOCK_SIZE_OS];
+   float filt_byp_output alignas(16)[2][BLOCK_SIZE_OS];
    lipol_ps osclevels alignas(16)[7];
    pdata localcopy alignas(16)[n_scene_params];
    float fmbuffer alignas(16)[BLOCK_SIZE_OS];
