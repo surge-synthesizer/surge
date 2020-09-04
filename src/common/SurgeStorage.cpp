@@ -1785,7 +1785,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
    doc.InsertEndChild( sm );
 
    fs::create_directories( userMidiMappingsPath );
-   std::string fn = Surge::Storage::appendDirectory(userMidiMappingsPath, name, ".srgmid");
+   std::string fn = Surge::Storage::appendDirectory(userMidiMappingsPath, name + ".srgmid");
 
    if( ! doc.SaveFile( fn.c_str() ) )
    {
