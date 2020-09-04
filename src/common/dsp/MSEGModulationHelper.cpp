@@ -49,14 +49,20 @@ void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
       }
    }
    ms->totalDuration = totald;
-   
 }
 
-float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
+float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms)
 {
    if( ms->n_activeSegments == 0 ) return df;
-   
-   while( up >= ms->totalDuration ) up -= ms->totalDuration;
+
+   // This still has some problems but lets try this for now
+   double up = (double)ip + fup;
+   if( up >= ms->totalDuration ) {
+      double nup = up / ms->totalDuration;
+      up -= (int)nup * ms->totalDuration;
+      if( up < 0 )
+         up += ms->totalDuration;
+   }
 
    df = limit_range( df, -1.f, 1.f );
    

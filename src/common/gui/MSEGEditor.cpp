@@ -497,7 +497,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       for( int i=0; i<drawArea.getWidth(); ++i )
       {
          float up = pxt( i );
-         float v = MSEGModulationHelper::valueAt( up, lfodata->deform.val.f, ms );
+         float iup = (int)up;
+         float fup = up - iup;
+         float v = MSEGModulationHelper::valueAt( iup, fup, lfodata->deform.val.f, ms );
          v = valpx( v );
          if( up <= ms->totalDuration )
          {
