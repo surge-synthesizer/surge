@@ -2435,34 +2435,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    if (!editor_open)
       return 0;
 
-   /*if((button&kRButton)&&modsource)
-     {
-     modsource = 0;
-     queue_refresh = true;
-     return 1;
-     }*/
-
    if (button & (kMButton | kButton4 | kButton5))
    {
       toggle_mod_editing();
-
-      /*mod_editor = !mod_editor;
-        blinktimer = 0.f;
-        blinkstate = false;
-        refresh_mod();*/
       return 1;
    }
+
    long tag = control->getTag();
 
    // In these cases just move along with success. RMB does nothing on these switches
    if( tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store || tag == tag_store_cancel || tag == tag_store_ok )
-   {
       return 1;
-   }
 
    std::vector< std::string > clearControlTargetNames;
 
    auto cmensl = dynamic_cast<CMenuAsSlider*>(control);
+
    if( cmensl && cmensl->deactivated )
       return 0;
    
@@ -3811,11 +3799,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             synth->refresh_editor = true;
          }
-
-         return 1;
+         else
+            p->bound_value();
       }
-      else
-         return 0;
    }
    return 0;
 }
