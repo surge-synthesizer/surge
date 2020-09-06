@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="18px" height="198px" viewBox="0 0 18 198" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <polygon id="Fill-3" fill="#FF9915" points="4.66 9.634 13.66 9.634 13.66 8.634 4.66 8.634" stroke="none" stroke-width="1" fill-rule="evenodd"/>
+  <path d="M 5.458 24.33 L 9.172 24.33 C 9.172 24.33 11.958 25.394 11.958 28.83" id="Stroke-4" stroke="#FF9915" stroke-linejoin="round" stroke-width="1" fill="none" fill-rule="evenodd"/>
+  <polygon id="Stroke-17" stroke-opacity="0" stroke="#FF9915" stroke-linejoin="round" points="7.457 27.293 10.448 27.293 10.448 26.301 7.457 26.301" stroke-width="1" fill="none" fill-rule="evenodd"/>
+  <path d="M 5.119 43.274 L 8.833 43.274 C 8.833 43.274 11.619 44.338 11.619 47.774" id="Stroke-5" stroke="#FF9915" stroke-linejoin="round" stroke-width="1" fill="none" fill-rule="evenodd"/>
+  <polygon id="Fill-21" fill="#ED8F15" points="11.098 38.793 12.128 38.793 12.128 40.779 13.098 40.779 13.098 39.793 14.128 39.793 14.128 42.794 13.098 42.794 13.098 41.808 11.112 41.808 11.112 41.794 11.098 41.794" stroke="none" stroke-width="1" fill-rule="evenodd"/>
+  <path d="M 38.488 6.615 L 42.202 6.615 C 42.202 6.615 44.988 7.679 44.988 11.115" id="path-1" transform="matrix(1, 0, 0, 1, -33.857281, 55.378542)" stroke="#FF9915" stroke-linejoin="round" fill-opacity="0"/>
+  <polygon id="Fill-23" fill="#ED8F15" points="44.485 5.136 44.488 5.136 44.488 2.115 45.478 2.115 45.478 5.136 47.487 5.136 47.487 6.126 45.478 6.126 45.478 6.13 44.488 6.13 44.488 6.126 44.485 6.126" transform="matrix(1, 0, 0, 1, -33.857281, 55.378542)"/>
+  <path d="M 52.999 11.115 L 56.999 11.115 C 58.409 11.115 59.487 7.054 59.487 6.615" id="path-2" transform="matrix(-1, 0, 0, -1, 64.462301, 91.158988)" stroke="#FF9915" stroke-linejoin="round" fill-opacity="0"/>
+  <path d="M 6.544 102.899 L 10.544 102.899 C 11.954 102.899 13.032 98.838 13.032 98.399" id="Stroke-6" transform="matrix(-1, 0, 0, -1, 19.576, 201.298004)" stroke="#FF9915" stroke-linejoin="round" fill-opacity="0"/>
+  <polygon id="Fill-22" fill="#ED8F15" points="4.012 93.918 5.042 93.918 5.042 95.904 6.012 95.904 6.012 94.918 7.042 94.918 7.042 97.919 6.012 97.919 6.012 96.933 4.026 96.933 4.026 96.919 4.012 96.919"/>
+  <path d="M 4.16 132.95 C 4.16 132.95 8.665 132.467 8.665 137.437 L 8.662 137.437 C 8.662 132.467 13.16 132.95 13.16 132.95" id="Stroke-9" stroke="#FF9915" stroke-linejoin="round" fill-opacity="0"/>
+  <path d="M 5.034 119.694 C 5.034 116.264 8.986 115.202 8.986 115.202 L 8.993 115.202 C 8.993 115.202 13.034 116.273 13.034 119.702" id="Stroke-10" stroke="#FF9915" stroke-linejoin="round" fill-opacity="0"/>
+  <path d="M 5.03 149.437 C 5.03 150.018 5.03 150.852 5.03 151.939 C 5.038 153.604 5.372 154.437 6.03 154.437 C 7.53 154.437 6.53 149.937 8.03 149.937 C 9.53 149.937 8.526 154.437 10.03 154.437 C 11.533 154.437 10.53 149.937 12.03 149.937 C 13.043 149.937 13.043 152.437 13.043 154.937" id="Stroke-11" stroke="#FF9915" fill-opacity="0"/>
+  <path d="M 7.058 166.839 C 7.058 166.839 4.906 166.457 4.907 167.788 C 4.909 168.846 7.063 168.92 7.061 169.713 C 7.058 171.206 4.561 170.708 4.561 170.708" id="Stroke-19" stroke="#FF9D1F" stroke-linejoin="round" fill-opacity="0"/>
+  <path d="M 7.061 175.288 L 11.061 166.288" id="Stroke-20" stroke="#FF9D1F" stroke-linejoin="round"/>
+  <polygon id="Path" fill="#EA9013" points="11.561 172.288 12.561 172.288 12.561 170.288 13.561 170.288 13.561 175.288 12.561 175.288 12.561 173.288 11.561 173.288 11.561 175.288 10.561 175.288 10.561 170.288 11.561 170.288"/>
+  <path d="M 3.811 192.564 L 8.245 182.763" id="path-3" stroke="#FF9D1F" stroke-linejoin="round" style=""/>
+  <path d="M 8.454 194.289 L 12.948 184.507" id="path-4" stroke="#FF9D1F" stroke-linejoin="round" style=""/>
+  <path d="M 5.061 190.427 L 9.069 192.223" id="path-5" stroke="#FF9D1F" stroke-linejoin="round" style=""/>
+  <path d="M 5.887 188.478 L 9.895 190.274" id="path-6" stroke="#FF9D1F" stroke-linejoin="round" style=""/>
+  <path d="M 6.734 186.446 L 10.742 188.242" id="path-7" stroke="#FF9D1F" stroke-linejoin="round" style=""/>
+  <path d="M 7.681 184.693 L 11.689 186.489" id="path-8" stroke="#FF9D1F" stroke-linejoin="round" style=""/>
+</svg>

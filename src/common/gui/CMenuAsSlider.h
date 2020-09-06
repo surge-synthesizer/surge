@@ -35,10 +35,8 @@ public:
    virtual bool onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons) override;
 
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
-      {
-         return VSTGUI::kMouseEventHandled;
-      }
+   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
 
    virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
       {
@@ -67,13 +65,39 @@ public:
    CLASS_METHODS(CMenuAsSlider, CControl)
    bool in_hover = false;
    SurgeStorage* storage = nullptr;
+
+   int bgid = IDB_MENU_IN_SLIDER_BG;
+   void setBackgroundID(int q) { bgid = q; onSkinChanged(); }
+
+   bool filtermode = false;
+   void setFilterMode(bool b) {
+      filtermode = b;
+      invalid();
+   }
    
    virtual void onSkinChanged() override;
 
+   VSTGUI::CRect dragRegion;
+   bool hasDragRegion = false;
+   VSTGUI::CPoint dragStart;
+   void setDragRegion( const VSTGUI::CRect &dragRegion );
+
+   int dglphyid = -1, dglyphsize = -1;
+   void setDragGlyph( int id, int size = 18 ) {
+      dglphyid = id; dglyphsize = size; onSkinChanged();
+   }
+      
+   
 private:
-   VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr;
+   VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr, *pGlyph = nullptr, *pGlyphHover = nullptr;
    std::string label = "";
    bool isHover = false;
+   bool isDragRegionDrag = false;
+   enum {
+      unk,
+      dirx,
+      diry
+   } dragDir = unk;
    float wheelDistance = 0;
    
    int iMin = 0, iMax = 10;

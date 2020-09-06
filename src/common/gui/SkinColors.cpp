@@ -136,6 +136,9 @@ namespace Colors
                                  Value("menu.value"),
                                  ValueHover("menu.value.hover"),
                                  ValueDeactivated("menu.value.deactivated");
+
+      const Surge::UI::SkinColor FilterValue( "filtermenu.value" ),
+         FilterValueHover( "filtermenu.value.hover" );
    }
 
    namespace ModSource

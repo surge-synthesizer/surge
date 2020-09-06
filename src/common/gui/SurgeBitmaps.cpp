@@ -86,6 +86,8 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_BUTTON_MENU, f);
    addEntry(IDB_LFOTYPE, f);
    addEntry(IDB_MENU_IN_SLIDER_BG, f);
+   addEntry(IDB_MENU_IN_FILTER_BG, f);
+   addEntry(IDB_FILTER_GLYPHS, f);
 }
 
 void SurgeBitmaps::addEntry(int id, VSTGUI::CFrame* f)
