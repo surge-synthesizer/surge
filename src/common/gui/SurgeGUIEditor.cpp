@@ -1483,14 +1483,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
          case ct_filtertype:
          {
-            CRect rect(0, 0, 129, 18);
+            CRect rect(0, 0, 121, 18);
             rect.offset(p->posx - 2, p->posy + 1);
-#if SURGE_EXTRA_FILTERS
-            rect.offset( -3, -2 );
+#if 1 // SURGE_EXTRA_FILTERS
+            rect.offset( 1, -3 );
             auto hsw = new CMenuAsSlider( rect.getTopLeft(), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
             hsw->setMinMax( 0, n_fu_type - 1 );
             hsw->setLabel( p->get_name() );
             hsw->setDeactivated( false );
+            hsw->setBackgroundID( IDB_MENU_IN_FILTER_BG );
+            hsw->setFilterMode( true );
+            p->ctrlstyle = p->ctrlstyle | kNoPopup;
+
+            auto drr = rect;
+            drr.right = drr.left + 18;
+            hsw->setDragRegion( drr );
+            hsw->setDragGlyph( IDB_FILTER_GLYPHS, 18 );
 #else            
             auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 10, 18, 1, 10,
                                           bitmapStore->getBitmap(IDB_FILTERBUTTONS), nopoint, true);
@@ -1509,7 +1517,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_filtersubtype:
          {
             CRect rect(0, 0, 12, 18);
-            rect.offset(p->posx + 129, p->posy + 1);
+            rect.offset(p->posx + 129, p->posy + 1.5);
             auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
                                                bitmapStore->getBitmap(IDB_FILTERSUBTYPE));
             rect(1, 1, 9, 14);
@@ -1959,7 +1967,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_flangermode:
          case ct_flangerwave:
          case ct_distortion_waveshape:
-         case ct_sinefmlegacy:
          {
             auto hs = new CMenuAsSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs),
                                         this,
