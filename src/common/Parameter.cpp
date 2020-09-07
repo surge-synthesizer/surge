@@ -1745,14 +1745,15 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
    case ct_freq_vocoder_high:
    {
       float f = val.f;
-      int i_value = (int)( f + 0.5 ) + 69; // that 1/2th centers us
-      if( i_value < 0 ) i_value = 0;
+      int i_value = round(f) + 69;
+      if (i_value < 0)
+         i_value = 0;
 
       int oct_offset = 1;
       if (storage)
          oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
       char notename[16];
-      sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
+      sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
       break;
    }
@@ -1766,7 +1767,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       if (storage)
          oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
       char notename[16];
-      sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
+      sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
       break;
    }
