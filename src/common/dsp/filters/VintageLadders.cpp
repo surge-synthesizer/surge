@@ -4,19 +4,62 @@
 #include "FilterCoefficientMaker.h"
 #include "DebugHelpers.h"
 #include "SurgeStorage.h"
+#include "vt_dsp/basic_dsp.h"
+
+/*
+** This contains various adaptations of the models found at
+**
+** https://github.com/ddiakopoulos/MoogLadders/blob/master/src/RKSimulationModel.h
+**
+** Modifications include
+** 1. Modifying to make surge compatible with state mamagenemt
+** 2. SSe and so on
+** 3. Model specici changes per model
+*/
 
 namespace VintageLadder
 {
+   namespace Common
+   {
+      float clampedFrequency( float pitch, SurgeStorage *storage )
+      {
+         auto freq = storage->note_to_pitch_ignoring_tuning( pitch + 69 ) * Tunings::MIDI_0_FREQ;
+         freq = limit_range( (float)freq, 5.f, (float)( dsamplerate_os * 0.3f ) );
+         return freq;
+      }
+   }
+   
    namespace RK
    {
-
       /*
-      ** This code is based on the Rugne Kutta circuit cimulation from
+      ** Imitates a Moog resonant filter by Runge-Kutte numerical integration of
+      ** a differential equation approximately describing the dynamics of the circuit.
+      ** 
+      ** Useful references:
+      ** 
+      **  Tim Stilson
+      ** "Analyzing the Moog VCF with Considerations for Digital Implementation"
+		** Sections 1 and 2 are a reasonably good introduction but the 
+		** model they use is highly idealized.
       **
-      ** https://github.com/ddiakopoulos/MoogLadders/blob/master/src/RKSimulationModel.h
+      ** Timothy E. Stinchcombe
+      ** "Analysis of the Moog Transistor Ladder and Derivative Filters"
+		** Long, but a very thorough description of how the filter works including
+      ** 		its nonlinearities
       **
-      ** Modifications include
-      ** 1. List these
+      **	Antti Huovilainen
+      ** "Non-linear digital implementation of the moog ladder filter"
+		** Comes close to giving a differential equation for a reasonably realistic
+		** model of the filter
+      ** 
+      ** The differential equations are:
+      **
+      **  y1' = k * (S(x - r * y4) - S(y1))
+      **  y2' = k * (S(y1) - S(y2))
+      **  y3' = k * (S(y2) - S(y3))
+      **  y4' = k * (S(y3) - S(y4))
+      **
+      ** where k controls the cutoff frequency, r is feedback (<= 4 for stability), and S(x) is a saturation function.
       **
       ** Although the code is modified from that location here is the originaly copyright notice:
       **
@@ -49,7 +92,7 @@ namespace VintageLadder
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
       {
          // COnsideration: Do we want tuning aware or not?
-         auto pitch = storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ;
+         auto pitch = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[rkm_cutoff] = pitch * 2.0 * M_PI;
          cm->C[rkm_reso] = reso * 10; // code says 0-10 is value
          cm->C[rkm_sat] = 3.0;
@@ -175,11 +218,12 @@ namespace VintageLadder
       enum huov_regoffsets { h_stage = 0, h_steageTanh = 4, h_delay = 7 };
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage ) {
-         auto cutoff = storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ;
-
+         auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[h_cutoff] = cutoff;
+
+         reso = limit_range( reso, 0.0f, 0.994f );
          
-         double fc =  cutoff * dsamplerate_inv;
+         double fc =  cutoff * dsamplerate_os_inv;
          double f  =  fc * 0.5; // oversampled 
          double fc2 = fc * fc;
          double fc3 = fc * fc * fc;
@@ -269,4 +313,112 @@ namespace VintageLadder
       }
 
    }
+
+   namespace Improved {
+      /*
+        This model is based on a reference implementation of an algorithm developed by
+        Stefano D'Angelo and Vesa Valimaki, presented in a paper published at ICASSP in 2013.
+        This improved model is based on a circuit analysis and compared against a reference
+        Ngspice simulation. In the paper, it is noted that this particular model is
+        more accurate in preserving the self-oscillating nature of the real filter.
+        
+        References: "An Improved Virtual Analog Model of the Moog Ladder Filter"
+        Original Implementation: D'Angelo, Valimaki
+      */
+
+      enum imp_coeffs { i_cutoff = 0, i_reso, i_x, i_g, i_drive };
+      enum imp_regoffsets { h_V = 0, h_dV = 4, h_tV = 8 };
+      static constexpr float VT = 0.312;
+      
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
+      {
+         auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
+         cm->C[i_cutoff] = cutoff;
+         cm->C[i_reso ] = reso * 4;
+         cm->C[i_x] = M_PI * cutoff * dsamplerate_os_inv;
+         cm->C[i_g] = 4.0 * M_PI * VT * cutoff * ( 1.0 - cm->C[i_x] ) / ( 1.0 + cm->C[i_x] );
+         cm->C[i_drive] = 1.0;
+      }
+
+      double processCore( double in, double coeff[5], double V[4], double dV[4], double tV[4] )
+      {
+         double dV0, dV1, dV2, dV3;
+
+         double drive = coeff[i_drive];
+         double resonance = coeff[i_reso];
+         double g = coeff[i_g];
+         
+         dV0 = -g * (tanh((drive * in + resonance * V[3]) / (2.0 * VT)) + tV[0]);
+			V[0] += (dV0 + dV[0]) * 0.5 * dsamplerate_os_inv;
+			dV[0] = dV0;
+			tV[0] = tanh(V[0] / (2.0 * VT));
+			
+			dV1 = g * (tV[0] - tV[1]);
+			V[1] += (dV1 + dV[1]) * 0.5 * dsamplerate_os_inv;
+			dV[1] = dV1;
+			tV[1] = tanh(V[1] / (2.0 * VT));
+			
+			dV2 = g * (tV[1] - tV[2]);
+			V[2] += (dV2 + dV[2]) * 0.5 * dsamplerate_os_inv;
+			dV[2] = dV2;
+			tV[2] = tanh(V[2] / (2.0 * VT));
+			
+			dV3 = g * (tV[2] - tV[3]);
+			V[3] += (dV3 + dV[3]) * 0.5 * dsamplerate_os_inv;
+			dV[3] = dV3;
+			tV[3] = tanh(V[3] / (2.0 * VT));
+
+         return V[3];
+      }
+      
+      __m128 process( QuadFilterUnitState * __restrict f, __m128 inm )
+      {
+         static constexpr int ssew = 4, n_coef=5, n_state=12;
+
+         /*
+         ** This demonstrates how to unroll SSE. At input each of the
+         ** values (registers, coefficients, inputs) will be up to 4 wide
+         ** and will have values which need populating if f->active[i] != 0.
+         **
+         ** Ideally we would code SSE code. But this is a gross, slow, probably
+         ** not mergable unroll.
+         */
+         float in[ssew];
+         _mm_store_ps( in, inm );
+         
+         float C[n_coef][ssew];
+         for( int i=0; i<n_coef; ++i ) _mm_store_ps( C[i], f->C[i] );
+         
+         float state[n_state][ssew];
+         for( int i=0; i<n_state; ++i ) _mm_store_ps( state[i], f->R[i] );
+         
+         float out[ssew];
+         for( int v=0; v<ssew; ++v )
+         {
+            if( ! f->active[v] ) continue;
+            
+            double V[4], dV[4], tV[4];
+            for( int i=0; i<4; ++i ) V[i] = state[i][v];
+            for( int i=0; i<4; ++i ) dV[i] = state[i+4][v];
+            for( int i=0; i<4; ++i ) tV[i] = state[i+8][v];
+
+            double coeff[n_coef];
+            for( int i=0; i<n_coef; ++i ) coeff[i] = C[i][v];
+            
+            out[v] = processCore( in[v], coeff, V, dV, tV );
+            
+            for( int i=0; i<4; ++i ) state[i][v] = V[i];
+            for( int i=0; i<4; ++i ) state[i+4][v] = dV[i];
+            for( int i=0; i<4; ++i ) state[i+8][v] = tV[i];
+
+            
+         }
+         
+         __m128 outm = _mm_load_ps(out);
+         
+         for( int i=0; i<n_state; ++i ) f->R[i] = _mm_load_ps(state[i]);
+         return outm;
+      }
+   }
+
 }
