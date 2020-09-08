@@ -16,11 +16,6 @@ namespace VintageLadder
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
    }
 
-   namespace Kraj {
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
-   }
-
    namespace Improved {
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in );

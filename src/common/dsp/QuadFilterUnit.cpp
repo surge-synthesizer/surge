@@ -785,16 +785,15 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
    case fut_vintageladder:
       switch( subtype )
       {
+      case 0:
+         return VintageLadder::Huov::process;
       case 1:
          return VintageLadder::RK::process;
       case 2:
-         return VintageLadder::Kraj::process;
-      case 3:
          return VintageLadder::Improved::process;
-      case 0:
       default:
-         return VintageLadder::Huov::process;
-
+         // SOFTWARE ERROR
+         break;
       }
 
 #if SURGE_EXTRA_FILTERS      
