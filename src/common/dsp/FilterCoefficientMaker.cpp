@@ -67,20 +67,17 @@ void FilterCoefficientMaker::MakeCoeffs(
       switch( SubType )
       {
       case 1:
-         VintageLadder::Huov::makeCoefficients(this, Freq, Reso, storageI);
+         VintageLadder::RK::makeCoefficients(this, Freq, Reso, storageI);
          break;
       case 2:
          VintageLadder::Kraj::makeCoefficients(this, Freq, Reso, storageI);
-         break;
-      case 3:
-         VintageLadder::Stilson::makeCoefficients(this, Freq, Reso, storageI);
          break;
       case 4:
          VintageLadder::Improved::makeCoefficients(this, Freq, Reso, storageI);
          break;
       default:
       case 0:
-         VintageLadder::RK::makeCoefficients(this, Freq, Reso, storageI);
+         VintageLadder::Huov::makeCoefficients(this, Freq, Reso, storageI);
          break;
          
       }
