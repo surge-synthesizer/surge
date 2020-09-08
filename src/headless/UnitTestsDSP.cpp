@@ -420,6 +420,33 @@ TEST_CASE( "Check FastMath Functions", "[dsp]" )
       REQUIRE( md < 1e-4 );
       REQUIRE( sds < 1e-6 );
    }
+
+   SECTION( "fastTanh and fastTanhSSE" )
+   {
+      for( float x=-4.9; x < 4.9; x += 0.02 )
+      {
+         INFO( "Testing unclamped at " << x );
+         auto q = _mm_set_ps1( x );
+         auto r = Surge::DSP::fasttanhSSE( q );
+         auto rn = tanh( x );
+         auto rd = Surge::DSP::fasttanh( x );
+         union { __m128 v; float a[4]; } U;
+         U.v = r;
+         REQUIRE( U.a[0] == Approx( rn ).epsilon( 1e-4 ) );
+         REQUIRE( rd == Approx( rn ).epsilon( 1e-4 ) );
+      }
+
+      for( float x=-10; x < 10; x += 0.02 )
+      {
+         INFO( "Testing clamped at " << x );
+         auto q = _mm_set_ps1( x );
+         auto r = Surge::DSP::fasttanhSSEclamped( q );
+         auto cn = tanh( x );
+         union { __m128 v; float a[4]; } U;
+         U.v = r;
+         REQUIRE( U.a[0] == Approx( cn ).epsilon( 5e-4 ) );
+      }
+   }
 }
 
 // When we return to #1514 this is a good starting point

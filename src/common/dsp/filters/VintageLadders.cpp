@@ -5,6 +5,7 @@
 #include "DebugHelpers.h"
 #include "SurgeStorage.h"
 #include "vt_dsp/basic_dsp.h"
+#include "FastMath.h"
 
 /*
 ** This contains various adaptations of the models found at
@@ -94,7 +95,7 @@ namespace VintageLadder
          // COnsideration: Do we want tuning aware or not?
          auto pitch = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[rkm_cutoff] = pitch * 2.0 * M_PI;
-         cm->C[rkm_reso] = reso * 6; // code says 0-10 is value but above 6 it is just self-oscillation
+         cm->C[rkm_reso] = reso * 5; // code says 0-10 is value but above 6 it is just self-oscillation
          cm->C[rkm_sat] = 3.0;
          cm->C[rkm_satinv ] = 0.3333333333;
       }
@@ -160,6 +161,9 @@ namespace VintageLadder
          ** Ideally we would code SSE code. But this is a gross, slow, probably
          ** not mergable unroll.
          */
+         for( int j=0; j< n_coef; ++j )
+            f->C[j] = _mm_add_ps(f->C[j], f->dC[j]);
+         
          float in[ssew];
          _mm_store_ps( in, inm );
          
@@ -215,7 +219,7 @@ namespace VintageLadder
       */ 
 
       enum huov_coeffs { h_cutoff = 0, h_res, h_thermal, h_tune, h_acr, h_resquad };
-      enum huov_regoffsets { h_stage = 0, h_steageTanh = 4, h_delay = 7 };
+      enum huov_regoffsets { h_stage = 0, h_stageTanh = 4, h_delay = 7 };
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage ) {
          auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
@@ -238,80 +242,62 @@ namespace VintageLadder
 
          cm->C[h_res] = reso;
          cm->C[h_resquad] = 4.0 * reso * acr;
+
       }
 
-      double processCore( double in, double coeff[6], double stage[4], double stageTanh[3], double delay[6] )
+      __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
       {
-         auto resQuad = coeff[h_resquad];
-         auto thermal = coeff[h_thermal];
-         auto tune = coeff[h_tune];
+         for( int j=0; j<= h_resquad; ++j )
+            f->C[j] = _mm_add_ps(f->C[j], f->dC[j]);
+         
+         auto resQuad = f->C[h_resquad];
+         auto thermal = f->C[h_thermal];
+         auto tune    = f->C[h_tune];
+         for( int j=0; j<2; ++j )
+         {
+            
+#define M(a,b) _mm_mul_ps( a, b )
+#define A(a,b) _mm_add_ps( a, b )
+#define S(a,b) _mm_sub_ps( a, b )
+            
+				// float input = in - resQuad * delay[5];
+            auto input = _mm_sub_ps( in, _mm_mul_ps( resQuad, f->R[h_delay + 5] ) );
 
-			for (int j = 0; j < 2; j++) 
-			{
-				float input = in - resQuad * delay[5];
-				delay[0] = stage[0] = delay[0] + tune * (tanh(input * thermal) - stageTanh[0]);
-				for (int k = 1; k < 4; k++) 
+            // delay[0] = stage[0] = delay[0] + tune * (tanh(input * thermal) - stageTanh[0]);
+            f->R[h_stage + 0] = A( f->R[h_delay + 0], M( tune, S( Surge::DSP::fasttanhSSEclamped( M( input, thermal ) ), f->R[h_stageTanh + 0] ) ) );
+            f->R[h_delay + 0 ] = f->R[h_stage + 0 ];
+            
+            for (int k = 1; k < 4; k++) 
 				{
-					input = stage[k-1];
-					stage[k] = delay[k] + tune * ((stageTanh[k-1] = tanh(input * thermal)) - (k != 3 ? stageTanh[k] : tanh(delay[k] * thermal)));
-					delay[k] = stage[k];
+					// input = stage[k-1];
+               input = f->R[h_stage + k - 1 ];
+               
+					// stage[k] = delay[k] + tune * ((stageTanh[k-1] = tanh(input * thermal)) - (k != 3 ? stageTanh[k] : tanh(delay[k] * thermal)));
+               f->R[h_stageTanh + k - 1 ] = Surge::DSP::fasttanhSSEclamped( M( input, thermal ) );
+               f->R[h_stage + k ] = A( f->R[ h_delay + k ],
+                                       M( tune, S(
+                                             f->R[h_stageTanh + k - 1 ],
+                                             ( k != 3 ? f->R[h_stageTanh + k ] : Surge::DSP::fasttanhSSEclamped( M( f->R[h_delay + k ], thermal ) ) )
+                                             )
+                                          )
+                  );
+
+					// delay[k] = stage[k];
+               f->R[h_delay + k ] = f->R[h_stage + k];
 				}
 				// 0.5 sample delay for phase compensation
-				delay[5] = (stage[3] + delay[4]) * 0.5;
-				delay[4] = stage[3];
-			}
-			return delay[5];
-      }
-      
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 inm ) {
-         static constexpr int ssew = 4, n_coef=6, n_state=13;
+				// delay[5] = (stage[3] + delay[4]) * 0.5;
+            f->R[h_delay + 5] = M( _mm_set_ps1( 0.5 ), A( f->R[h_stage +3], f->R[h_delay + 4]) );
+				// delay[4] = stage[3];
+				f->R[h_delay +4] = f->R[h_stage +3];
 
-         /*
-         ** This demonstrates how to unroll SSE. At input each of the
-         ** values (registers, coefficients, inputs) will be up to 4 wide
-         ** and will have values which need populating if f->active[i] != 0.
-         **
-         ** Ideally we would code SSE code. But this is a gross, slow, probably
-         ** not mergable unroll.
-         */
-         float in[ssew];
-         _mm_store_ps( in, inm );
-         
-         float C[n_coef][ssew];
-         for( int i=0; i<n_coef; ++i ) _mm_store_ps( C[i], f->C[i] );
-         
-         float state[n_state][ssew];
-         for( int i=0; i<n_state; ++i ) _mm_store_ps( state[i], f->R[i] );
-         
-         float out[ssew];
-         for( int v=0; v<ssew; ++v )
-         {
-            if( ! f->active[v] ) continue;
-            
-            double stage[4], stageTanh[3], delay[6];
-            for( int i=0; i<4; ++i ) stage[i] = state[i][v];
-            for( int i=0; i<3; ++i ) stageTanh[i] = state[i+4][v];
-            for( int i=0; i<6; ++i ) delay[i] = state[i+7][v];
-
-            double coeff[n_coef];
-            for( int i=0; i<n_coef; ++i ) coeff[i] = C[i][v];
-            
-            out[v] = processCore( in[v], coeff, stage, stageTanh, delay );
-            
-            for( int i=0; i<4; ++i ) state[i][v] = stage[i];
-            for( int i=0; i<3; ++i ) state[i+4][v] = stageTanh[i];
-            for( int i=0; i<6; ++i ) state[i+7][v] = delay[i];
-
-            
+#undef M
+#undef A
+#undef S                                                         
          }
-         
-         __m128 outm = _mm_load_ps(out);
-         
-         for( int i=0; i<n_state; ++i ) f->R[i] = _mm_load_ps(state[i]);
-         return outm;
 
+         return f->R[h_delay + 5];
       }
-
    }
 
    namespace Kraj {
@@ -333,7 +319,7 @@ namespace VintageLadder
       ** Source: http://song-swap.com/MUMT618/aaron/Presentation/demo.html
       */
 
-      enum kj_coeffs { k_cutoff = 0, k_reso, k_wc, k_g, k_gRes, k_gComp, k_drive };
+      enum kj_coeffs { k_cutoff = 0, k_reso, k_wc, k_g, k_gRes, k_gComp, k_drive, n_kcoeffs };
       enum kj_regoffsets { h_state = 0, h_delay = 5 };
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
@@ -370,7 +356,7 @@ namespace VintageLadder
       
       __m128 process( QuadFilterUnitState * __restrict f, __m128 inm )
       {
-         static constexpr int ssew = 4, n_coef=7, n_state=10;
+         static constexpr int ssew = 4, n_coef=n_kcoeffs, n_state=10;
 
          /*
          ** This demonstrates how to unroll SSE. At input each of the
@@ -380,6 +366,9 @@ namespace VintageLadder
          ** Ideally we would code SSE code. But this is a gross, slow, probably
          ** not mergable unroll.
          */
+         for( int j=0; j< n_coef; ++j )
+            f->C[j] = _mm_add_ps(f->C[j], f->dC[j]);
+
          float in[ssew];
          _mm_store_ps( in, inm );
          
@@ -486,6 +475,10 @@ namespace VintageLadder
          ** Ideally we would code SSE code. But this is a gross, slow, probably
          ** not mergable unroll.
          */
+
+         for( int j=0; j< n_coef; ++j )
+            f->C[j] = _mm_add_ps(f->C[j], f->dC[j]);
+
          float in[ssew];
          _mm_store_ps( in, inm );
          
@@ -523,5 +516,4 @@ namespace VintageLadder
          return outm;
       }
    }
-
 }
