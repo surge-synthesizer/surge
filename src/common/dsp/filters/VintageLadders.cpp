@@ -220,6 +220,9 @@ namespace VintageLadder
 
       enum huov_coeffs { h_cutoff = 0, h_res, h_thermal, h_tune, h_acr, h_resquad };
       enum huov_regoffsets { h_stage = 0, h_stageTanh = 4, h_delay = 7 };
+
+      int extraOversample = 2;
+      float extraOversampleInv = 0.5;
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage ) {
          auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
@@ -227,7 +230,7 @@ namespace VintageLadder
 
          reso = limit_range( reso, 0.0f, 0.994f );
          
-         double fc =  cutoff * dsamplerate_os_inv;
+         double fc =  cutoff * dsamplerate_os_inv * extraOversampleInv;
          double f  =  fc * 0.5; // oversampled 
          double fc2 = fc * fc;
          double fc3 = fc * fc * fc;
@@ -247,14 +250,16 @@ namespace VintageLadder
 
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
       {
-         for( int j=0; j<= h_resquad; ++j )
-            f->C[j] = _mm_add_ps(f->C[j], f->dC[j]);
-         
-         auto resQuad = f->C[h_resquad];
-         auto thermal = f->C[h_thermal];
-         auto tune    = f->C[h_tune];
-         for( int j=0; j<2; ++j )
+         __m128 dFac = _mm_mul_ps( _mm_set_ps1( 0.5 ), _mm_set_ps1( extraOversampleInv ) );
+
+         for( int j=0; j<2 * extraOversample; ++j )
          {
+            auto resQuad = f->C[h_resquad];
+            auto thermal = f->C[h_thermal];
+            auto tune    = f->C[h_tune];
+
+            for( int k=0; k<= h_resquad; ++k )
+               f->C[k] = _mm_add_ps(f->C[k], _mm_mul_ps( dFac, f->dC[k]));
             
 #define M(a,b) _mm_mul_ps( a, b )
 #define A(a,b) _mm_add_ps( a, b )
@@ -300,112 +305,6 @@ namespace VintageLadder
       }
    }
 
-   namespace Kraj {
-      /*
-      ** This class implements Tim Stilson's MoogVCF filter
-      ** using 'compromise' poles at z = -0.3
-      ** 
-      ** Several improments are built in, such as corrections
-      ** for cutoff and resonance parameters, removal of the
-      ** necessity of the separation table, audio rate update
-      ** of cutoff and resonance and a smoothly saturating
-      ** tanh() function, clamping output and creating inherent
-      ** nonlinearities.
-      ** 
-      ** This code is Unlicensed (i.e. public domain); in an email exchange on
-      ** 4.21.2018 Aaron Krajeski stated: "That work is under no copyright. 
-      ** You may use it however you might like."
-      ** 
-      ** Source: http://song-swap.com/MUMT618/aaron/Presentation/demo.html
-      */
-
-      enum kj_coeffs { k_cutoff = 0, k_reso, k_wc, k_g, k_gRes, k_gComp, k_drive, n_kcoeffs };
-      enum kj_regoffsets { h_state = 0, h_delay = 5 };
-      
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
-      {
-         auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
-         reso = reso * 1.3;
-         cm->C[k_cutoff] = cutoff;
-         cm->C[k_reso ] = reso;
-         cm->C[k_wc] = 2 * M_PI * cutoff * dsamplerate_os_inv;
-         auto wc = cm->C[k_wc];
-         cm->C[k_g] = 0.9892 * wc - 0.4342 * pow(wc, 2) + 0.1381 * pow(wc, 3) - 0.0202 * pow(wc, 4);
-         cm->C[k_gRes] = reso * (1.0029 + 0.0526 * wc - 0.926 * pow(wc, 2) + 0.0218 * pow(wc, 3));
-         cm->C[k_drive] = 1.0;
-         cm->C[k_gComp] = 1.0;
-      }
-
-      double processCore( double in, double coeff[7], double state[5], double delay[5] )
-      {
-         auto drive = coeff[k_drive];
-         auto gRes = coeff[k_gRes];
-         auto gComp = coeff[k_gComp];
-         auto g = coeff[k_g];
-         
-         state[0] = tanh(drive * (in - 4 * gRes * (state[4] - gComp * in)));
-			
-			for(int i = 0; i < 4; i++)
-			{
-				state[i+1] = g * (0.3 / 1.3 * state[i] + 1 / 1.3 * delay[i] - state[i + 1]) + state[i + 1];
-				delay[i] = state[i];
-			}
-
-			return state[4];
-      }
-      
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 inm )
-      {
-         static constexpr int ssew = 4, n_coef=n_kcoeffs, n_state=10;
-
-         /*
-         ** This demonstrates how to unroll SSE. At input each of the
-         ** values (registers, coefficients, inputs) will be up to 4 wide
-         ** and will have values which need populating if f->active[i] != 0.
-         **
-         ** Ideally we would code SSE code. But this is a gross, slow, probably
-         ** not mergable unroll.
-         */
-         for( int j=0; j< n_coef; ++j )
-            f->C[j] = _mm_add_ps(f->C[j], f->dC[j]);
-
-         float in[ssew];
-         _mm_store_ps( in, inm );
-         
-         float C[n_coef][ssew];
-         for( int i=0; i<n_coef; ++i ) _mm_store_ps( C[i], f->C[i] );
-         
-         float state[n_state][ssew];
-         for( int i=0; i<n_state; ++i ) _mm_store_ps( state[i], f->R[i] );
-         
-         float out[ssew];
-         for( int v=0; v<ssew; ++v )
-         {
-            if( ! f->active[v] ) continue;
-            
-            double sstate[5], delay[5];
-            for( int i=0; i<5; ++i ) sstate[i] = state[i][v];
-            for( int i=0; i<5; ++i ) delay[i] = state[i+5][v];
-
-            double coeff[n_coef];
-            for( int i=0; i<n_coef; ++i ) coeff[i] = C[i][v];
-            
-            out[v] = processCore( in[v], coeff, sstate, delay );
-            
-            for( int i=0; i<5; ++i ) state[i][v] = sstate[i];
-            for( int i=0; i<5; ++i ) state[i+5][v] = delay[i];
-
-            
-         }
-         
-         __m128 outm = _mm_load_ps(out);
-         
-         for( int i=0; i<n_state; ++i ) f->R[i] = _mm_load_ps(state[i]);
-         return outm;
-      }
-   }
-
-
    namespace Improved {
       /*
         This model is based on a reference implementation of an algorithm developed by
@@ -421,13 +320,16 @@ namespace VintageLadder
       enum imp_coeffs { i_cutoff = 0, i_reso, i_x, i_g, i_drive };
       enum imp_regoffsets { h_V = 0, h_dV = 4, h_tV = 8 };
       static constexpr float VT = 0.312;
+
+      int extraOversample = 2;
+      float extraOversampleInv = 0.5;
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
       {
          auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[i_cutoff] = cutoff;
          cm->C[i_reso ] = reso * 4;
-         cm->C[i_x] = M_PI * cutoff * dsamplerate_os_inv;
+         cm->C[i_x] = M_PI * cutoff * dsamplerate_os_inv * extraOversampleInv;
          cm->C[i_g] = 4.0 * M_PI * VT * cutoff * ( 1.0 - cm->C[i_x] ) / ( 1.0 + cm->C[i_x] );
          cm->C[i_drive] = 1.0;
       }
@@ -439,27 +341,32 @@ namespace VintageLadder
          double drive = coeff[i_drive];
          double resonance = coeff[i_reso];
          double g = coeff[i_g];
-         
-         dV0 = -g * (tanh((drive * in + resonance * V[3]) / (2.0 * VT)) + tV[0]);
-			V[0] += (dV0 + dV[0]) * 0.5 * dsamplerate_os_inv;
-			dV[0] = dV0;
-			tV[0] = tanh(V[0] / (2.0 * VT));
-			
-			dV1 = g * (tV[0] - tV[1]);
-			V[1] += (dV1 + dV[1]) * 0.5 * dsamplerate_os_inv;
-			dV[1] = dV1;
-			tV[1] = tanh(V[1] / (2.0 * VT));
-			
-			dV2 = g * (tV[1] - tV[2]);
-			V[2] += (dV2 + dV[2]) * 0.5 * dsamplerate_os_inv;
-			dV[2] = dV2;
-			tV[2] = tanh(V[2] / (2.0 * VT));
-			
-			dV3 = g * (tV[2] - tV[3]);
-			V[3] += (dV3 + dV[3]) * 0.5 * dsamplerate_os_inv;
-			dV[3] = dV3;
-			tV[3] = tanh(V[3] / (2.0 * VT));
 
+         double sri = dsamplerate_os_inv * extraOversampleInv;
+
+         for( int i=0; i<extraOversample; ++i )
+         {
+            dV0 = -g * (tanh((drive * in + resonance * V[3]) / (2.0 * VT)) + tV[0]);
+            V[0] += (dV0 + dV[0]) * 0.5 * sri;
+            dV[0] = dV0;
+            tV[0] = tanh(V[0] / (2.0 * VT));
+            
+            dV1 = g * (tV[0] - tV[1]);
+            V[1] += (dV1 + dV[1]) * 0.5 * sri;
+            dV[1] = dV1;
+            tV[1] = tanh(V[1] / (2.0 * VT));
+            
+            dV2 = g * (tV[1] - tV[2]);
+            V[2] += (dV2 + dV[2]) * 0.5 * sri;
+            dV[2] = dV2;
+            tV[2] = tanh(V[2] / (2.0 * VT));
+            
+            dV3 = g * (tV[2] - tV[3]);
+            V[3] += (dV3 + dV[3]) * 0.5 * sri;
+            dV[3] = dV3;
+            tV[3] = tanh(V[3] / (2.0 * VT));
+         }
+         
          return V[3];
       }
       
