@@ -153,6 +153,7 @@ set( AIRWINDOWS_SOURCES
   ${AIRWINDOWS_FX_SOURCES}
   src/common/dsp/effect/airwindows/airwindows_adapter.cpp
   src/common/dsp/effect/airwindows/airwindows_register.cpp
+  src/common/dsp/effect/airwindows/audioeffect_airwinstub.cpp
   )
 set( AIRWINDOWS_INCLUDES
   src/common/dsp/effect/airwindows
