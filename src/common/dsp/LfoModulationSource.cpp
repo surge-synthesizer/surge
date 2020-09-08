@@ -542,6 +542,26 @@ void LfoModulationSource::process_block()
             while( pstep > last_step && pstep >= 0 ) pstep -= loop_len;
             pstep = pstep & ( n_stepseqsteps - 1 );
 
+            if( pstep != priorStep )
+            {
+               priorStep = pstep;
+               
+               if (ss->trigmask & (UINT64_C(1) << pstep))
+               {
+                  retrigger_FEG = true;
+                  retrigger_AEG = true;
+               }
+               if (ss->trigmask & (UINT64_C(1) << (16+pstep)))
+               {
+                  retrigger_FEG = true;
+               }
+               if (ss->trigmask & (UINT64_C(1) << (32+pstep)))
+               {
+                  retrigger_AEG = true;
+               }
+
+            }
+            
             if( priorPhase != phase )
             {
                priorPhase = phase;
