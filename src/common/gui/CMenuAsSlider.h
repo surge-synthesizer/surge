@@ -18,9 +18,10 @@
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
 #include "SurgeParamConfig.h"
+#include "CCursorHidingControl.h"
 #include "SkinSupport.h"
 
-class CMenuAsSlider : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CMenuAsSlider : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CMenuAsSlider(const VSTGUI::CPoint& loc,
@@ -31,6 +32,11 @@ public:
    virtual ~CMenuAsSlider();
    virtual void draw(VSTGUI::CDrawContext*) override;
    void setLabel( const char* lab ) { label = lab; }
+
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where,
+                                 const VSTGUI::CButtonState& buttons,
+                                 double dx,
+                                 double dy) override {}
    
    virtual bool onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons) override;
 

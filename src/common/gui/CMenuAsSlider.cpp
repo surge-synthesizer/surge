@@ -29,7 +29,7 @@ CMenuAsSlider::CMenuAsSlider(const VSTGUI::CPoint& loc,
                              long tag,
                              std::shared_ptr<SurgeBitmaps> bitmapStore,
                              SurgeStorage* storage) :
-   CControl(CRect( loc, CPoint( 133, 22 ) ), listener, tag )
+   CCursorHidingControl(CRect( loc, CPoint( 133, 22 ) ), listener, tag, nullptr )
 {
    // this->storage = storage;
    auto size = CRect( 0, 0, 133, 22);
@@ -48,6 +48,10 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
    auto d = r;
    d.top += 2; d.bottom -= 2; 
 
+   if (hasDragRegion)
+   {
+      d.left += dragRegion.getWidth();
+   }
 
    if( isHover && pBackgroundHover )
    {
@@ -122,6 +126,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
          dc->drawString( tl.c_str(), l, kLeftText, true );
       }
 
+
       if( hasDragRegion )
       {
          int iv = floor( getValue() * ( iMax - iMin ) + 0.5 );
@@ -147,6 +152,7 @@ CMouseEventResult CMenuAsSlider::onMouseDown( CPoint &w, const CButtonState &but
    if( hasDragRegion && dragRegion.pointInside( w ) )
    {
       std::cout << "Initiated Drag Region Drag" << std::endl;
+      detachCursor(w);
       isDragRegionDrag = true;
       dragStart = w;
       dragDir = unk;
@@ -208,6 +214,7 @@ CMouseEventResult CMenuAsSlider::onMouseUp( CPoint &w, const CButtonState &butto
    if( isDragRegionDrag )
    {
       std::cout << "End drag region drag" << std::endl;
+      attachCursor();
       isDragRegionDrag = false;
    }
    return kMouseEventHandled;
