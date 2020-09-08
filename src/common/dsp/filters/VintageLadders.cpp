@@ -94,7 +94,7 @@ namespace VintageLadder
          // COnsideration: Do we want tuning aware or not?
          auto pitch = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[rkm_cutoff] = pitch * 2.0 * M_PI;
-         cm->C[rkm_reso] = reso * 10; // code says 0-10 is value
+         cm->C[rkm_reso] = reso * 6; // code says 0-10 is value but above 6 it is just self-oscillation
          cm->C[rkm_sat] = 3.0;
          cm->C[rkm_satinv ] = 0.3333333333;
       }
@@ -313,6 +313,109 @@ namespace VintageLadder
       }
 
    }
+
+   namespace Kraj {
+      /*
+      ** This class implements Tim Stilson's MoogVCF filter
+      ** using 'compromise' poles at z = -0.3
+      ** 
+      ** Several improments are built in, such as corrections
+      ** for cutoff and resonance parameters, removal of the
+      ** necessity of the separation table, audio rate update
+      ** of cutoff and resonance and a smoothly saturating
+      ** tanh() function, clamping output and creating inherent
+      ** nonlinearities.
+      ** 
+      ** This code is Unlicensed (i.e. public domain); in an email exchange on
+      ** 4.21.2018 Aaron Krajeski stated: "That work is under no copyright. 
+      ** You may use it however you might like."
+      ** 
+      ** Source: http://song-swap.com/MUMT618/aaron/Presentation/demo.html
+      */
+
+      enum kj_coeffs { k_cutoff = 0, k_reso, k_wc, k_g, k_gRes, k_gComp, k_drive };
+      enum kj_regoffsets { h_state = 0, h_delay = 5 };
+      
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
+      {
+         auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
+         reso = reso * 1.3;
+         cm->C[k_cutoff] = cutoff;
+         cm->C[k_reso ] = reso;
+         cm->C[k_wc] = 2 * M_PI * cutoff * dsamplerate_os_inv;
+         auto wc = cm->C[k_wc];
+         cm->C[k_g] = 0.9892 * wc - 0.4342 * pow(wc, 2) + 0.1381 * pow(wc, 3) - 0.0202 * pow(wc, 4);
+         cm->C[k_gRes] = reso * (1.0029 + 0.0526 * wc - 0.926 * pow(wc, 2) + 0.0218 * pow(wc, 3));
+         cm->C[k_drive] = 1.0;
+         cm->C[k_gComp] = 1.0;
+      }
+
+      double processCore( double in, double coeff[7], double state[5], double delay[5] )
+      {
+         auto drive = coeff[k_drive];
+         auto gRes = coeff[k_gRes];
+         auto gComp = coeff[k_gComp];
+         auto g = coeff[k_g];
+         
+         state[0] = tanh(drive * (in - 4 * gRes * (state[4] - gComp * in)));
+			
+			for(int i = 0; i < 4; i++)
+			{
+				state[i+1] = g * (0.3 / 1.3 * state[i] + 1 / 1.3 * delay[i] - state[i + 1]) + state[i + 1];
+				delay[i] = state[i];
+			}
+
+			return state[4];
+      }
+      
+      __m128 process( QuadFilterUnitState * __restrict f, __m128 inm )
+      {
+         static constexpr int ssew = 4, n_coef=7, n_state=10;
+
+         /*
+         ** This demonstrates how to unroll SSE. At input each of the
+         ** values (registers, coefficients, inputs) will be up to 4 wide
+         ** and will have values which need populating if f->active[i] != 0.
+         **
+         ** Ideally we would code SSE code. But this is a gross, slow, probably
+         ** not mergable unroll.
+         */
+         float in[ssew];
+         _mm_store_ps( in, inm );
+         
+         float C[n_coef][ssew];
+         for( int i=0; i<n_coef; ++i ) _mm_store_ps( C[i], f->C[i] );
+         
+         float state[n_state][ssew];
+         for( int i=0; i<n_state; ++i ) _mm_store_ps( state[i], f->R[i] );
+         
+         float out[ssew];
+         for( int v=0; v<ssew; ++v )
+         {
+            if( ! f->active[v] ) continue;
+            
+            double sstate[5], delay[5];
+            for( int i=0; i<5; ++i ) sstate[i] = state[i][v];
+            for( int i=0; i<5; ++i ) delay[i] = state[i+5][v];
+
+            double coeff[n_coef];
+            for( int i=0; i<n_coef; ++i ) coeff[i] = C[i][v];
+            
+            out[v] = processCore( in[v], coeff, sstate, delay );
+            
+            for( int i=0; i<5; ++i ) state[i][v] = sstate[i];
+            for( int i=0; i<5; ++i ) state[i+5][v] = delay[i];
+
+            
+         }
+         
+         __m128 outm = _mm_load_ps(out);
+         
+         for( int i=0; i<n_state; ++i ) f->R[i] = _mm_load_ps(state[i]);
+         return outm;
+      }
+   }
+
 
    namespace Improved {
       /*
