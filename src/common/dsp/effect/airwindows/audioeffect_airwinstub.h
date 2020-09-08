@@ -5,13 +5,15 @@
 */
 #define __audioeffect__
 
-#include "SurgeStorage.h"
-#include "UserDefaults.h"
+#include <cstdio>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 
 typedef int32_t VstInt32;
 typedef int audioMasterCallback;
+
+class SurgeStorage;
 
 struct AirWinBaseClass {
    
@@ -43,7 +45,7 @@ struct AirWinBaseClass {
    virtual void getParameterLabel(VstInt32 index, char *txt) = 0;
    virtual void getParameterDisplay(VstInt32 index, char *txt) = 0;
    
-   double getSampleRate() { return dsamplerate; }
+   double getSampleRate();
 
    int paramCount = 0;
    
@@ -56,15 +58,7 @@ struct AirWinBaseClass {
 
    SurgeStorage *storage = nullptr;
    
-   int airwindowsSurgeDisplayPrecision() {
-      int detailedMode = false;
-      
-      if (storage)
-         detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
-      
-      int dp = (detailedMode ? 6 : 2);
-      return dp;
-   }
+   int airwindowsSurgeDisplayPrecision();
 
    inline char *vst_strncpy ( char * destination, const char * source, size_t num ) { return strncpy( destination, source, num ); }
    inline void  float2string( float f, char* t, size_t num ) {
