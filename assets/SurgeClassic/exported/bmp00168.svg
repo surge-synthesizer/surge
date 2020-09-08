@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="124px" height="18px" viewBox="0 0 124 18" version="1.1" xmlns="http://www.w3.org/2000/svg">
+<svg width="106px" height="18px" viewBox="0 0 106 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
   <desc>Created with Lunacy</desc>
   <defs>
-    <rect width="124" height="18" id="artboard_1"/>
+    <rect width="106" height="18" id="artboard_1" />
     <clipPath id="clip_1">
-      <rect width="124" height="18" transform="matrix(1, 0, 0, 1, 0, 0)" clip-rule="evenodd"/>
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
     </clipPath>
   </defs>
-  <g id="bmp00167" clip-path="url(#clip_1)" style="" transform="matrix(0.854419, -0.000876, 0, 1, 17.778488, 0.045491)">
-    <path d="M0 6.197C0 4.486 0.487515 3.025 1.46442 1.815C2.44039 0.605 3.6198 0 5.00078 0L115 0C116.381 0 117.56 0.605 118.537 1.815C119.512 3.025 120 4.486 120 6.197C120 7.908 119.512 9.369 118.537 10.579C117.56 11.789 116.381 12.394 115 12.394L5.00078 12.394C3.6198 12.394 2.44039 11.789 1.46442 10.579C0.487515 9.369 0 7.908 0 6.197L0 6.197L0 6.197L0 6.197Z" transform="translate(2.1210022 2.669983)" id="Rectangle#32" fill="#F4F4F5" fill-opacity="0" stroke="#5C5C5C" stroke-width="1"/>
-    <path d="M2.751 0L5.501 4.761L0 4.761L2.751 0L2.751 0Z" transform="matrix(0.507381 -0.861722 0.861722 0.507381 110.16785 9.169983)" id="Shape" fill="#FF9A16" stroke="none"/>
+  <g id="bmp00168" clip-path="url(#clip_1)">
+    <path d="M2.75098 0L5.501 4.761L0 4.76097L2.75098 0L2.75098 0L2.75098 0Z" transform="matrix(0.433516 -0.86216646 0.7362716 0.5066261 93.90796 9.118927)" id="Shape" fill="#FF9A16" stroke="none" />
+    <path d="M0 6.197C0 4.486 0.487515 3.025 1.46442 1.815C2.44039 0.605 3.6198 0 5.00078 0L115 0C116.381 0 117.56 0.605 118.537 1.815C119.512 3.025 120 4.486 120 6.197C120 7.908 119.512 9.369 118.537 10.579C117.56 11.789 116.381 12.394 115 12.394L5.00078 12.394C3.6198 12.394 2.44039 11.789 1.46442 10.579C0.487515 9.369 0 7.908 0 6.197L0 6.197L0 6.197L0 6.197L0 6.197Z" transform="matrix(0.854419 -0.000876 0 1 1.5906982 2.713562)" id="Rectangle#32" fill="#F4F4F5" fill-opacity="0" stroke="#5C5C5C" stroke-width="1" />
   </g>
 </svg>
