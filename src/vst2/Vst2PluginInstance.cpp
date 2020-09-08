@@ -370,19 +370,19 @@ void Vst2PluginInstance::getParameterLabel(VstInt32 index, char* label)
 
 bool Vst2PluginInstance::getEffectName(char* name)
 {
-   strcpy(name, stringProductName);
+   strcpy(name, "Surge");
    return true;
 }
 
 bool Vst2PluginInstance::getProductString(char* name)
 {
-   strcpy(name, stringProductName);
+   strcpy(name, "Surge");
    return true;
 }
 
 bool Vst2PluginInstance::getVendorString(char* text)
 {
-   strcpy(text, stringCompanyName);
+   strcpy(text, "Open Source Surge Synth Team");
    return true;
 }
 
