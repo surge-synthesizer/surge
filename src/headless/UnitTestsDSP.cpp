@@ -447,6 +447,32 @@ TEST_CASE( "Check FastMath Functions", "[dsp]" )
          REQUIRE( U.a[0] == Approx( cn ).epsilon( 5e-4 ) );
       }
    }
+
+   SECTION( "fastexp and fastexpSSE" )
+   {
+      for( float x=-3.9; x < 2.9; x += 0.02 )
+      {
+         INFO( "Testing fastexp at " << x );
+         auto q = _mm_set_ps1( x );
+         auto r = Surge::DSP::fastexpSSE( q );
+         auto rn = exp( x );
+         auto rd = Surge::DSP::fastexp( x );
+         union { __m128 v; float a[4]; } U;
+         U.v = r;
+
+         if( x < 0 )
+         {
+            REQUIRE( U.a[0] == Approx( rn ).margin( 1e-3 ) );
+            REQUIRE( rd == Approx( rn ).margin( 1e-3 ) );
+         }
+         else
+         {
+            REQUIRE( U.a[0] == Approx( rn ).epsilon( 1e-3 ) );
+            REQUIRE( rd == Approx( rn ).epsilon( 1e-3 ) );
+         }
+      }
+   }
+
 }
 
 // When we return to #1514 this is a good starting point

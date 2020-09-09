@@ -151,7 +151,6 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
 CMouseEventResult CMenuAsSlider::onMouseDown( CPoint &w, const CButtonState &buttons ) {
    if( hasDragRegion && dragRegion.pointInside( w ) )
    {
-      std::cout << "Initiated Drag Region Drag" << std::endl;
       detachCursor(w);
       isDragRegionDrag = true;
       dragStart = w;
@@ -213,7 +212,6 @@ CMouseEventResult CMenuAsSlider::onMouseMoved( CPoint &w, const CButtonState &bu
 CMouseEventResult CMenuAsSlider::onMouseUp( CPoint &w, const CButtonState &buttons ) {
    if( isDragRegionDrag )
    {
-      std::cout << "End drag region drag" << std::endl;
       attachCursor();
       isDragRegionDrag = false;
    }
