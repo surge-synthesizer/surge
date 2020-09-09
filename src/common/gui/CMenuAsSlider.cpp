@@ -78,7 +78,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
 
       if( filtermode )
       {
-         valcol = skin->getColor( Colors::Menu::FilterValue, CColor( 0xFF, 0x90, 0x00 ) );
+         valcol = skin->getColor( Colors::Menu::FilterValue, CColor( 0xFF, 0x9A, 0x10 ) );
          if( isHover )
             valcol = skin->getColor( Colors::Menu::FilterValueHover, kWhiteCColor );
       }
