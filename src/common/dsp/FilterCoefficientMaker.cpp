@@ -75,6 +75,9 @@ void FilterCoefficientMaker::MakeCoeffs(
       case 2:
          VintageLadder::Improved::makeCoefficients(this, Freq, Reso, storageI);
          break;
+      case 3:
+         VintageLadder::Simplified::makeCoefficients(this, Freq, Reso, storageI);
+         break;
       default:
          // SOFTWARE ERROR
          break;

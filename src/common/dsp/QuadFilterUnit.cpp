@@ -791,6 +791,8 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
          return VintageLadder::RK::process;
       case 2:
          return VintageLadder::Improved::process;
+      case 3:
+         return VintageLadder::Simplified::process;
       default:
          // SOFTWARE ERROR
          break;
