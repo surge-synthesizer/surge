@@ -7,22 +7,17 @@ class SurgeStorage;
 namespace VintageLadder
 {
    namespace RK {
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool applyGainCompensation, SurgeStorage *storage );
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
    }
 
    namespace Huov {
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool applyGainCompensation, SurgeStorage *storage );
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
    }
 
    namespace Improved {
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
-   }
-
-   namespace Simplified {
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso,  bool applyGainCompensation, SurgeStorage *storage );
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
    }
 }

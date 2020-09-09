@@ -88,19 +88,24 @@ namespace VintageLadder
       */
 
 
-      enum rkm_coeffs { rkm_cutoff = 0, rkm_reso = 1, n_rkcoeff };
+      enum rkm_coeffs { rkm_cutoff = 0, rkm_reso, rkm_gComp, n_rkcoeff };
 
-      int extraOversample = 3;
-      float extraOversampleInv = 0.333333;
+      int extraOversample = 4;
+      float extraOversampleInv = 0.25;
 
       float saturation = 3, saturationInverse = 0.333333333333;
+
+      float gainCompensation = 0.666;
       
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool applyGainCompensation, SurgeStorage *storage )
       {
          // COnsideration: Do we want tuning aware or not?
          auto pitch = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[rkm_cutoff] = pitch * 2.0 * M_PI;
          cm->C[rkm_reso] = limit_range( reso, 0.f, 1.f ) * 4.5; // code says 0-10 is value but above 4 it is just out of tune self-oscillation
+         cm->C[rkm_gComp] = 0.0;
+         if( applyGainCompensation )
+            cm->C[rkm_gComp] = gainCompensation;
       }
 
 #define F(a) _mm_set_ps1( a )         
@@ -121,16 +126,17 @@ namespace VintageLadder
          return res;
       }
       
-      
       //void calculateDerivatives(float input, double * dstate, double * state, float cutoff, float resonance, float saturation, float saturationInv )
-      inline void calculateDerivatives( __m128 input, __m128 *dstate, __m128 *state, __m128 cutoff, __m128 resonance, __m128 saturation, __m128 saturationInv )
+      inline void calculateDerivatives( __m128 input, __m128 *dstate, __m128 *state, __m128 cutoff, __m128 resonance, __m128 saturation, __m128 saturationInv, __m128 gComp )
       {
          auto satstate0 = clip( state[0], saturation, saturationInv );
          auto satstate1 = clip( state[1], saturation, saturationInv );
          auto satstate2 = clip( state[2], saturation, saturationInv );
 
          // dstate[0] = cutoff * (clip(input - resonance * state[3], saturation, saturationInv) - satstate0);
-         auto startstate = clip( S( input, M( resonance, state[3] ) ), saturation, saturationInv );
+         // Modify
+         // dstate[0] = cutoff * (clip(input - resonance * ( state[3] - gComp * input ), saturation, saturationInv) - satstate0);
+         auto startstate = clip( S( input, M( resonance, S( state[3], M( gComp, input ) ) ) ), saturation, saturationInv );
          dstate[0] = M( cutoff, S( startstate, satstate0 ) );
          
          // dstate[1] = cutoff * (satstate0 - satstate1);
@@ -150,8 +156,8 @@ namespace VintageLadder
 
          __m128 *state = &( f->R[0] );
 
-         auto stepSize = F( dsamplerate_os_inv * extraOversampleInv ),
-            halfStepSize = F( 0.5 * dsamplerate_os_inv * extraOversampleInv );
+         auto stepSize = F( dsamplerate_os_inv /* extraOversampleInv */ ),
+            halfStepSize = F( 0.5 * dsamplerate_os_inv /** extraOversampleInv */ );
 
          static const __m128 oneoversix = F( 1.0 / 6.0 ), two = F(2.0), dFac = F(extraOversampleInv),
             sat = F(saturation), satInv=F(saturationInverse);
@@ -163,20 +169,21 @@ namespace VintageLadder
 
             __m128 cutoff = f->C[rkm_cutoff];
             __m128 resonance = f->C[rkm_reso];
+            __m128 gComp = f->C[rkm_gComp];
 
-            calculateDerivatives( input, deriv1, state, cutoff, resonance, sat, satInv);
+            calculateDerivatives( input, deriv1, state, cutoff, resonance, sat, satInv, gComp);
             for (i = 0; i < 4; i++)
                tempState[i] = A( state[i], M( halfStepSize, deriv1[i] ) );
             
-            calculateDerivatives(input, deriv2, tempState, cutoff, resonance, sat, satInv);
+            calculateDerivatives(input, deriv2, tempState, cutoff, resonance, sat, satInv, gComp);
             for (i = 0; i < 4; i++)
                tempState[i] = A( state[i], M( halfStepSize, deriv2[i] ) );
 
-            calculateDerivatives(input, deriv3, tempState, cutoff, resonance, sat, satInv);
+            calculateDerivatives(input, deriv3, tempState, cutoff, resonance, sat, satInv, gComp);
             for (i = 0; i < 4; i++)
                tempState[i] = A( state[i], M( halfStepSize, deriv3[i] ) );
             
-            calculateDerivatives(input, deriv4, tempState, cutoff, resonance, sat, satInv);
+            calculateDerivatives(input, deriv4, tempState, cutoff, resonance, sat, satInv, gComp);
             for (i = 0; i < 4; i++)
                // state[i] +=(1.0 / 6.0) * stepSize * (deriv1[i] + 2.0 * deriv2[i] + 2.0 * deriv3[i] + deriv4[i]);
                state[i] = A(state[i], M( oneoversix, M( stepSize, A( deriv1[i], A( M( two, deriv2[i] ), A( M( two, deriv3[i] ), deriv4[i] ) ) ) ) ) );
@@ -184,7 +191,7 @@ namespace VintageLadder
             input = _mm_setzero_ps();
          }
          
-         return M( state[3], F(extraOversample) );
+         return state[3];
       }
 
 #undef F
@@ -218,24 +225,31 @@ namespace VintageLadder
       ** http://www.synthmaker.co.uk/dokuwiki/doku.php?id=tutorials:oversampling
       */ 
 
-      enum huov_coeffs { h_cutoff = 0, h_res, h_fc, n_hcoeffs };
+      enum huov_coeffs { h_cutoff = 0, h_res, h_fc, h_gComp, n_hcoeffs };
       enum huov_regoffsets { h_stage = 0, h_stageTanh = 4, h_delay = 7 };
 
       int extraOversample = 4;
       float extraOversampleInv = 0.25;
+
+      float gainCompensation = 0.5;
       
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage ) {
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso,  bool applyGainCompensation, SurgeStorage *storage ) {
          auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[h_cutoff] = cutoff;
 
          // Heueristically at higher cutoffs the resonance becomes less stable. This is purely ear tuned at 49khz with noise input
          float co = std::max( cutoff - samplerate * 0.33333, 0.0 ) * 0.1 * dsamplerate_os_inv;
+         float gctrim = applyGainCompensation ? 0.05 : 0.0;
 
-         reso = limit_range( reso, 0.0f, 0.994f - co );
+         reso = limit_range( reso, 0.0f, 0.994f - co - gctrim );
          cm->C[h_res] = reso;
          
          double fc =  cutoff * dsamplerate_os_inv * extraOversampleInv;
          cm->C[h_fc] = fc;
+
+         cm->C[h_gComp] = 0.0;
+         if( applyGainCompensation )
+            cm->C[h_gComp] = gainCompensation;
       }
 
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
@@ -286,7 +300,11 @@ namespace VintageLadder
 
             
 				// float input = in - resQuad * delay[5]. Model as an impulse stream
-            auto input = _mm_sub_ps( (j == 0 ? in : _mm_setzero_ps()) , _mm_mul_ps( resquad, f->R[h_delay + 5] ) );
+            // float input = in - resQuad * ( delay[5] - gComp * in ). Model as an impulse stream
+            auto input = _mm_sub_ps( in,  _mm_mul_ps( resquad, S( f->R[h_delay + 5], M( f->C[h_gComp], in ) ) ) );
+
+            // single sample in
+            in = _mm_setzero_ps();
 
             // delay[0] = stage[0] = delay[0] + tune * (tanh(input * thermal) - stageTanh[0]);
             f->R[h_stage + 0] = A( f->R[h_delay + 0], M( tune, S( Surge::DSP::fasttanhSSEclamped( M( input, thermal ) ), f->R[h_stageTanh + 0] ) ) );
@@ -338,20 +356,26 @@ namespace VintageLadder
         Original Implementation: D'Angelo, Valimaki
       */
 
-      enum imp_coeffs { i_cutoff = 0, i_reso, i_x, i_drive, n_icoeff };
+      enum imp_coeffs { i_cutoff = 0, i_reso, i_x, i_drive, i_gComp, n_icoeff };
       enum imp_regoffsets { h_V = 0, h_dV = 4, h_tV = 8 };
       static constexpr float VT = 0.312;
 
       int extraOversample = 2;
       float extraOversampleInv = 0.5;
+
+      float gainCompensation = 0.5;
       
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso,  bool applyGainCompensation, SurgeStorage *storage )
       {
          auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
          cm->C[i_cutoff] = cutoff;
          cm->C[i_reso ] = reso * 4;
          cm->C[i_x] = M_PI * cutoff * dsamplerate_os_inv * extraOversampleInv;
          cm->C[i_drive] = 1.0;
+
+         cm->C[i_gComp] = 0.0;
+         if( applyGainCompensation )
+            cm->C[i_gComp] = gainCompensation;
       }
 
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
@@ -388,7 +412,8 @@ namespace VintageLadder
 
 
             // dV0 = -g * (tanh((drive * in + resonance * V[3]) / (2.0 * VT)) + tV[0]);
-            dV0 = M( M( F(-1.f) , g ), A( Surge::DSP::fasttanhSSEclamped( M( A( M( drive, in ), M( resonance, f->R[h_V + 3] ) ), oneo2v2 ) ), f->R[h_tV + 0] ) );
+            // MODIFY to -g * (tanh((drive * in + resonance * (V[3]  + gComp * in)) / (2.0 * VT)) + tV[0]);
+            dV0 = M( M( F(-1.f) , g ), A( Surge::DSP::fasttanhSSEclamped( M( A( M( drive, in ), M( resonance, A(f->R[h_V + 3], M( f->C[i_gComp], in ) ) ) ), oneo2v2 ) ), f->R[h_tV + 0] ) );
             // This forces a 'zero stuffing' oversample
             in = _mm_setzero_ps();
             
@@ -436,109 +461,4 @@ namespace VintageLadder
 #undef S         
       }
    }
-
-   namespace Simplified {
-      /*
-        The simplified nonlinear Moog filter is based on the full Huovilainen model,
-        with five nonlinear (tanh) functions (4 first-order sections and a feedback).
-        Like the original, this model needs an oversampling factor of at least two when
-        these nonlinear functions are used to reduce possible aliasing. This model
-        maintains the ability to self oscillate when the feedback gain is >= 1.0.
-        
-        References: DAFX - Zolzer (ed) (2nd ed)
-        Original implementation: Valimaki, Bilbao, Smith, Abel, Pakarinen, Berners (DAFX)
-        This is a transliteration into C++ of the original matlab source (moogvcf.m)
-      */
-
-      enum simp_coeffs { s_cutoff = 0, s_reso, n_scoeffs };
-      enum simp_regoffsets { h_stage = 0, h_stageZ1 = 4, h_stagetanh = 8 };
-
-      int extraOversample = 4;
-      float extraOversampleInv = 0.25;
-
-      float gainCompensation = 0.5;
-         
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
-      {
-         auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
-         cm->C[s_cutoff] = cutoff;
-         cm->C[s_reso ] = reso * 10;
-      }
-
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
-      {
-#define F(a) _mm_set_ps1( a )         
-#define M(a,b) _mm_mul_ps( a, b )
-#define A(a,b) _mm_add_ps( a, b )
-#define S(a,b) _mm_sub_ps( a, b )
-
-         static const __m128 twopi = F( 2.0 * M_PI ),
-            oneover13 = F( 1.0 / 1.3 ),
-            p3over13 = F( 0.3 / 1.3 ),
-            piover13 = F( M_PI / 1.3 ),
-            dFac = F(extraOversampleInv),
-            gComp = F(0.5);
-
-         __m128 *stage = &(f->R[h_stage]), *stageZ1  = &(f->R[h_stageZ1]), *stageTanh = &(f->R[h_stagetanh]);
-
-         __m128 fs2i = M( F(dsamplerate_os_inv), F(extraOversampleInv ) );
-         
-         for( int i=0; i<extraOversample; ++i )
-         {
-            for( int j=0; j< n_scoeffs; ++j )
-               f->C[j] = A(f->C[j], M(dFac,f->dC[j]));
-
-            auto cutoff = f->C[s_cutoff];
-            auto resonance = f->C[s_reso];
-
-            //g = (2 * MOOG_PI) * cutoff / fs2; // feedback coefficient at fs*2 because of doublesampling
-            //g *= MOOG_PI / 1.3; // correction factor that allows _cutoff to be supplied Hertz
-            auto g = M( M( twopi, M( cutoff, fs2i ) ), piover13 );
-            auto h = M( oneover13, g );
-            auto h0 = M( p3over13, g );
-            
-            for (int stageIdx = 0; stageIdx < 4; ++stageIdx)
-            {
-               if (stageIdx)
-               {
-                  auto input = stage[stageIdx-1];
-                  stageTanh[stageIdx-1] = Surge::DSP::fasttanhSSEclamped(input);
-                  // stage[stageIdx] = (h * stageZ1[stageIdx] + h0 * stageTanh[stageIdx-1]) + (1.0 - g) * (stageIdx != 3 ? stageTanh[stageIdx] : Surge::DSP::fasttanhSSEclamped(stageZ1[stageIdx]));
-                  auto p1 = M( h, stageZ1[stageIdx] );
-                  auto p2 = M( h0, stageTanh[ stageIdx - 1 ] );
-                  auto p3 = M( S( F( 1.0 ), g ), (stageIdx != 3 ? stageTanh[stageIdx] : Surge::DSP::fasttanhSSEclamped(stageZ1[stageIdx])));
-                  stage[stageIdx] = A( p1, A( p2, p3 ) );
-               }
-               else
-               {
-                  __m128 input;
-                  if( i == 0 )
-                  {
-                     // input = samples[s] - ((4.0 * resonance) * (output - gainCompensation * samples[s]));
-                     input = S(in, M( M( F(4.0), resonance ), S( stage[3], M( gComp, in ) ) ) );
-                  }
-                  else
-                  {
-                     input = _mm_setzero_ps();
-                  }
-                  // stage[stageIdx] = (h * tanh(input) + h0 * stageZ1[stageIdx]) + (1.0 - g) * stageTanh[stageIdx];
-                  auto p1 = M( h, Surge::DSP::fasttanhSSEclamped( input ) );
-                  auto p2 = M( h0, stageZ1[stageIdx] );
-                  auto p3 = M( S( F(1.0), g ), stageTanh[stageIdx] );
-                  stage[stageIdx] = A( p1, A( p2, p3 ) );
-               }
-               
-               stageZ1[stageIdx] = stage[stageIdx];
-            }
-         }
-         return M( stage[3], F( extraOversample ) );
-      }
-
-      
-#undef F
-#undef M
-#undef A
-#undef S         
-   }
-
 }
