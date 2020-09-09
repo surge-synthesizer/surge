@@ -786,13 +786,14 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       switch( subtype )
       {
       case 0:
-         return VintageLadder::Huov::process;
       case 1:
          return VintageLadder::RK::process;
       case 2:
-         return VintageLadder::Improved::process;
       case 3:
-         return VintageLadder::Simplified::process;
+         return VintageLadder::Huov::process;
+      case 4:
+      case 5:
+         return VintageLadder::Improved::process;
       default:
          // SOFTWARE ERROR
          break;
