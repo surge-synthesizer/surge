@@ -57,6 +57,9 @@ inline float clampToPiRange( float x )
     return p - M_PI;
 }
 
+/*
+** Valid in range -5, 5
+*/
 inline float fasttanh (float x) noexcept
 {
    auto x2 = x * x;
@@ -93,6 +96,43 @@ inline __m128 fasttanhSSEclamped( __m128 x )
    auto xc = _mm_min_ps( _mm_set_ps1( 5 ), _mm_max_ps( _mm_set_ps1( -5 ), x ) );
    return fasttanhSSE(xc);
 }
+
+
+/*
+** Valid in range -6, 4
+*/
+inline float fastexp(float x) noexcept
+{
+   auto numerator = 1680 + x * (840 + x * (180 + x * (20 + x)));
+   auto denominator = 1680 + x *(-840 + x * (180 + x * (-20 + x)));
+   return numerator / denominator;
+}
+
+inline __m128 fastexpSSE( __m128 x ) noexcept
+{
+#define M(a,b) _mm_mul_ps( a, b )
+#define A(a,b) _mm_add_ps( a, b )
+#define F(a) _mm_set_ps1(a)
+   
+   static const __m128
+      m1680 = F(1680),
+      m840 = F(840),
+      mneg840 = F(-840),
+      m180 = F(180),
+      m20 = F(20),
+      mneg20 = F(-20);
+
+   auto num = A( m1680, M( x, A( m840, M( x, A( m180, M( x, A( m20, x ) ) ) ) ) ) );
+   auto den = A( m1680, M( x, A( mneg840, M( x, A( m180, M( x, A( mneg20, x ) ) ) ) ) ) );
+
+   return _mm_div_ps(num,den);
+
+#undef M
+#undef A
+#undef F   
+}
+
+
 
 }
 }
