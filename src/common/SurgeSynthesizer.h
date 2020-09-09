@@ -234,8 +234,13 @@ public:
 
    QuadFilterChainState* FBQ[2];
 
+   std::string hostProgram = "Unknown Host";
+   bool activateExtraOutputs = true;
+   void setupActivateExtraOutputs();
+   
    // these have to be thread-safe, so keep private
 private:
+   
    PluginLayer* _parent = nullptr;
 
    void switch_toggled();

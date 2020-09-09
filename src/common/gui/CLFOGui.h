@@ -22,9 +22,10 @@
 #include "SkinColors.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
+#include "CCursorHidingControl.h"
 
 
-class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CLFOGui : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    const static int margin = 2;
@@ -47,7 +48,7 @@ public:
            MSEGStorage* ms = 0,
            FormulaModulatorStorage* fs = 0,
            std::shared_ptr<SurgeBitmaps> ibms = nullptr)
-      : VSTGUI::CControl(size, listener, tag, 0),
+      : CCursorHidingControl(size, listener, tag, 0),
         bitmapStore( ibms )
    {
       this->lfodata = lfodata;
@@ -98,7 +99,8 @@ public:
       return rect_shapes.pointInside(where);
    }
          
-   
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override {}
+
 protected:
    LFOStorage* lfodata;
    StepSequencerStorage* ss;
@@ -130,5 +132,5 @@ protected:
    int ss_shift_hover = 0;
    VSTGUI::CBitmap* typeImg;
    
-   CLASS_METHODS(CLFOGui, VSTGUI::CControl)
+   CLASS_METHODS(CLFOGui, CCursorHidingControl)
 };

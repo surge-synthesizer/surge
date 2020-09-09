@@ -5018,7 +5018,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     addCallbackMenu(settingsMenu, "About Surge", [this]() {
        if (aboutbox)
-          ((CAboutBox*)aboutbox)->boxShow(this->synth->storage.datapath, this->synth->storage.userDataPath);
+          ((CAboutBox*)aboutbox)->boxShow(this->synth->storage.datapath, this->synth->storage.userDataPath, this->synth->hostProgram);
     });
     eid++;
 
@@ -5480,6 +5480,14 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    });
    menuItem->setChecked(modValues);
 
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Activate Extra Scene Outputs"),
+                              [this]() {
+                                 this->synth->activateExtraOutputs = ! this->synth->activateExtraOutputs;
+                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "activateExtraOutputs", this->synth->activateExtraOutputs ? 1 : 0 );
+                              }
+      );
+   menuItem->setChecked(synth->activateExtraOutputs);
+
    return uiOptionsMenu;
 }
 
@@ -5813,10 +5821,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
     addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Queried Colors"),
                     [this]()
                        {
-                          auto qc = this->currentSkin->getQueriedColors();
-                          std::set<std::string> ss( qc.begin(), qc.end() );
+                          // auto qc = this->currentSkin->getQueriedColors();
+                          std::set<std::string> ss; // ( qc.begin(), qc.end() );
                           std::ostringstream htmls;
-                          htmls << "<html><body><h1>Color Tags</h1>\n<table border=1><tr><th>tag</th><th>value in skin</th></tr>\n";
+                          htmls << "<html><body><h1>Will Be Back Soon in Nightly (see #2549)</h1>\n<table border=1><tr><th>tag</th><th>value in skin</th></tr>\n";
                           for( auto s : ss )
                           {
                              htmls << "<tr><td>" << s << "</td><td>";

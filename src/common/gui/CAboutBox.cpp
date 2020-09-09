@@ -79,7 +79,11 @@ void CAboutBox::draw(CDrawContext* pContext)
 
       {
          std::vector< std::string > msgs = { {
-               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + chipmanu + " " + bitness + " " + platform + " " + flavor + ". Built " +
+               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + chipmanu + " " + bitness + " " + platform + " " + flavor
+#if TARGET_VST2 || TARGET_VST3               
+               + " in " + host
+#endif               
+               + ". Built " +
                Surge::Build::BuildDate + " at " + Surge::Build::BuildTime + " on " + Surge::Build::BuildLocation + " host '" + Surge::Build::BuildHost + "')",
                "Factory Data Path: " + dataPath,
                "User Data Path: " + userPath,
@@ -144,10 +148,11 @@ bool CAboutBox::hitTest(const CPoint& where, const CButtonState& buttons)
 
 //------------------------------------------------------------------------
 
-void CAboutBox::boxShow(std::string dataPath, std::string userPath)
+void CAboutBox::boxShow(std::string dataPath, std::string userPath, std::string host)
 {
    this->dataPath = dataPath;
    this->userPath = userPath;
+   this->host = host;
    setViewSize(toDisplay);
    setMouseableArea(toDisplay);
    value = 1.f;

@@ -43,7 +43,7 @@ template <typename T>
 class Maybe {
 public:
    Maybe() : _empty(true){};
-   explicit Maybe(T value) : _empty(false), _value(value){};
+   explicit Maybe(const T &value) : _empty(false), _value(value){};
 
    T fromJust() const {
       if (isJust()) {
@@ -56,8 +56,8 @@ public:
    bool isJust() const { return !_empty; }
    bool isNothing() const { return _empty; }
 
-   static bool isJust(Maybe &m) { return m.isJust(); }
-   static bool isNothing(Maybe &m) { return m.isNothing(); }
+   static bool isJust(const Maybe &m)  { return m.isJust(); }
+   static bool isNothing(const Maybe &m)  { return m.isNothing(); }
 private:
    bool _empty;
    T _value;
@@ -69,7 +69,7 @@ namespace UI
 class SkinDB;
 
 struct SkinColor {
-   SkinColor(std::string n);
+   SkinColor(const std::string &n);
    std::string name;
    int uid;
 };
@@ -84,7 +84,7 @@ public:
 
    friend class SkinDB;
 
-   Skin(std::string root, std::string name);
+   Skin(const std::string &root, const std::string &name);
    ~Skin();
 
    bool reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
@@ -129,7 +129,7 @@ public:
       std::string ultimateparentclassname;
       props_t allprops;
 
-      std::string toString() {
+      std::string toString() const {
          std::ostringstream oss;
 
          switch( type )
@@ -161,24 +161,22 @@ public:
    };
 
    //private:
-      bool hasColor(std::string id);
-      VSTGUI::CColor getColor(std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>());
+      bool hasColor(const std::string &id) const;
+      VSTGUI::CColor getColor(const std::string &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const;
 
    public:
-      VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>())
+      VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
       {
          // for now do this - later make it so we get them all by uncommenting the private: and public: above
          return getColor( id.name, def, noLoops );
       }
 
-      bool hasColor(const SkinColor &col)
+      bool hasColor(const SkinColor &col) const
       {
          return hasColor(col.name);
       }
 
-   std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
-
-   Skin::Control::ptr_t controlForEnumID( int enum_id ) {
+   Skin::Control::ptr_t controlForEnumID( int enum_id ) const {
       // FIXME don't be stupid like this of course
       for( auto ic : controls )
       {
@@ -191,7 +189,7 @@ public:
       return nullptr;
    }
 
-   Skin::Control::ptr_t controlForUIID( std::string ui_id ) {
+   Skin::Control::ptr_t controlForUIID( const std::string &ui_id ) const {
       // FIXME don't be stupid like this of course
       for( auto ic : controls )
       {
@@ -204,7 +202,7 @@ public:
       return nullptr;
    }
 
-   Maybe<std::string> propertyValue( Skin::Control::ptr_t c, std::string key ) {
+   Maybe<std::string> propertyValue( Skin::Control::ptr_t c, const std::string &key ) {
       /*
       ** Traverse class heirarchy looking for value
       */
@@ -231,7 +229,7 @@ public:
       return Maybe<std::string>();
    }
 
-   std::string propertyValue( Skin::Control::ptr_t c, std::string key, std::string defaultValue ) {
+   std::string propertyValue( Skin::Control::ptr_t c, const std::string &key, const std::string &defaultValue ) {
       auto pv = propertyValue( c, key );
       if( pv.isJust() )
          return pv.fromJust();
@@ -239,12 +237,12 @@ public:
          return defaultValue;
    }
 
-   std::string customBackgroundImage() {
+   std::string customBackgroundImage() const {
       return bgimg;
    }
 
-   int getWindowSizeX() { return szx; }
-   int getWindowSizeY() { return szy; }
+   int getWindowSizeX() const { return szx; }
+   int getWindowSizeY() const { return szy; }
 
    CScalableBitmap *backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore );
 
@@ -290,7 +288,6 @@ private:
       ColorStore( std::string a ) : type( ALIAS ), alias( a ) { }
    };
    std::unordered_map<std::string, ColorStore> colors;
-   std::unordered_set<std::string> queried_colors;
    std::unordered_map<std::string, int> imageIds;
    ControlGroup::ptr_t rootControl;
    std::vector<Control::ptr_t> controls;
@@ -322,13 +319,13 @@ public:
          }
       };
 
-      bool matchesSkin( const Skin::ptr_t s ) {
+      bool matchesSkin( const Skin::ptr_t s ) const {
          return s.get() && s->root == root && s->name == name;
       }
    };
 
    void rescanForSkins(SurgeStorage *);
-   std::vector<Entry> getAvailableSkins() { return availableSkins; }
+   const std::vector<Entry> &getAvailableSkins() const { return availableSkins; }
    Maybe<Entry> getEntryByRootAndName( const std::string &r, const std::string &n ) {
       for( auto &a : availableSkins )
          if( a.root == r && a.name == n )

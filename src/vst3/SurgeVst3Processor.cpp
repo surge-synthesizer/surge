@@ -18,6 +18,7 @@
 #include <codecvt>
 #include <string.h>
 #include <cwchar>
+#include <stdlib.h>
 
 using namespace Steinberg::Vst;
 
@@ -53,21 +54,7 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
    }
 
    disableZoom = false;
-#if WINDOWS
-   Steinberg::FUnknownPtr<Steinberg::Vst::IHostApplication> hostApplication(context);
-   if (hostApplication)
-   {
-      String128 hostName;
-      hostApplication->getName(hostName);
-      char szString[256];
-      size_t nNumCharConverted;
-      wcstombs_s(&nNumCharConverted, szString, 256, hostName, 128);
-      std::string s(szString);
-      disableZoom = false;
-      //if (s == "Cakewalk")
-      //   disableZoom = true;
-   }
-#endif
+
 
    //---create Audio In/Out busses------
    // we want a SideChain Input and a Stereo Output
@@ -100,6 +87,17 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 
    midi_controller_0 = getParameterCountWithoutMappings();
    midi_controller_max = midi_controller_0 + n_midi_controller_params;
+
+   Steinberg::FUnknownPtr<Steinberg::Vst::IHostApplication> hostApplication(context);
+   if (hostApplication)
+   {
+      std::wstring_convert<std::codecvt_utf8<TChar>,TChar> cv;
+      String128 hostName;
+      hostApplication->getName(hostName);
+      std::string hn8 = cv.to_bytes(hostName);
+      surgeInstance->hostProgram = hn8;
+   }
+   surgeInstance->setupActivateExtraOutputs();
    
    return kResultOk;
 }
@@ -514,7 +512,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       {
          out[outp][i] = (float)surgeInstance->output[outp][blockpos];
       }
-      if( numOutputs == 3 )
+      if( numOutputs == 3 && surgeInstance->activateExtraOutputs )
       {
          float** outA = data.outputs[1].channelBuffers32;
          float** outB = data.outputs[2].channelBuffers32;
