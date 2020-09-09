@@ -90,8 +90,8 @@ namespace VintageLadder
 
       enum rkm_coeffs { rkm_cutoff = 0, rkm_reso, rkm_gComp, n_rkcoeff };
 
-      int extraOversample = 4;
-      float extraOversampleInv = 0.25;
+      int extraOversample = 2;
+      float extraOversampleInv = 0.5;
 
       float saturation = 3, saturationInverse = 0.333333333333;
 
@@ -156,8 +156,8 @@ namespace VintageLadder
 
          __m128 *state = &( f->R[0] );
 
-         auto stepSize = F( dsamplerate_os_inv /* extraOversampleInv */ ),
-            halfStepSize = F( 0.5 * dsamplerate_os_inv /** extraOversampleInv */ );
+         auto stepSize = F( dsamplerate_os_inv * extraOversampleInv  ),
+            halfStepSize = F( 0.5 * dsamplerate_os_inv * extraOversampleInv );
 
          static const __m128 oneoversix = F( 1.0 / 6.0 ), two = F(2.0), dFac = F(extraOversampleInv),
             sat = F(saturation), satInv=F(saturationInverse);
@@ -167,7 +167,7 @@ namespace VintageLadder
             for( int j=0; j< n_rkcoeff; ++j )
                f->C[j] = A(f->C[j], M(dFac,f->dC[j]));
 
-            __m128 cutoff = f->C[rkm_cutoff];
+            __m128 cutoff = M( f->C[rkm_cutoff],  F(extraOversample) );
             __m128 resonance = f->C[rkm_reso];
             __m128 gComp = f->C[rkm_gComp];
 
@@ -188,7 +188,7 @@ namespace VintageLadder
                // state[i] +=(1.0 / 6.0) * stepSize * (deriv1[i] + 2.0 * deriv2[i] + 2.0 * deriv3[i] + deriv4[i]);
                state[i] = A(state[i], M( oneoversix, M( stepSize, A( deriv1[i], A( M( two, deriv2[i] ), A( M( two, deriv3[i] ), deriv4[i] ) ) ) ) ) );
             
-            input = _mm_setzero_ps();
+            input = state[3];
          }
          
          return state[3];
@@ -360,8 +360,8 @@ namespace VintageLadder
       enum imp_regoffsets { h_V = 0, h_dV = 4, h_tV = 8 };
       static constexpr float VT = 0.312;
 
-      int extraOversample = 2;
-      float extraOversampleInv = 0.5;
+      int extraOversample = 3;
+      float extraOversampleInv = 0.33333333333;
 
       float gainCompensation = 0.5;
       
