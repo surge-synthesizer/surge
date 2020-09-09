@@ -462,14 +462,19 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
          if (replacing)
          {
             outputs[outp][i] = (float)_instance->output[outp][blockpos];
-            outputs[2 + outp][i] = (float)_instance->sceneout[0][outp][blockpos];
-            outputs[4 + outp][i] = (float)_instance->sceneout[1][outp][blockpos];
+            if( _instance->activateExtraOutputs )
+            {
+               outputs[2 + outp][i] = (float)_instance->sceneout[0][outp][blockpos];
+               outputs[4 + outp][i] = (float)_instance->sceneout[1][outp][blockpos];
+            }
          }
          else  // adding
          {
             outputs[outp][i] += (float)_instance->output[outp][blockpos]; 
-            outputs[2 + outp][i] += (float)_instance->sceneout[0][outp][blockpos];
-            outputs[4 + outp][i] += (float)_instance->sceneout[1][outp][blockpos];
+            if( _instance->activateExtraOutputs ) {
+               outputs[2 + outp][i] += (float)_instance->sceneout[0][outp][blockpos];
+               outputs[4 + outp][i] += (float)_instance->sceneout[1][outp][blockpos];
+            }
          }
       }
 
@@ -609,6 +614,7 @@ bool Vst2PluginInstance::tryInit()
    getHostProductString(product);
    VstInt32 hostversion = getHostVendorVersion();
 
+
    try {
       std::unique_ptr<SurgeSynthesizer> synthTmp(new SurgeSynthesizer(this));
       synthTmp->setSamplerate(this->getSampleRate());
@@ -618,6 +624,9 @@ bool Vst2PluginInstance::tryInit()
       _instance = synthTmp.release();
       _instance->audio_processing_active = true;
 
+      _instance->hostProgram = std::string( host ) + " " + product;
+      _instance->setupActivateExtraOutputs();
+      
       editor = editorTmp.release();
    } catch (std::bad_alloc err) {
       Surge::UserInteractions::promptError(err.what(), "Out of memory");

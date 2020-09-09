@@ -3019,3 +3019,12 @@ void SurgeSynthesizer::loadFromDawExtraState() {
    }
 
 }
+
+void SurgeSynthesizer::setupActivateExtraOutputs()
+{
+   bool defval = true;
+   if( hostProgram.find( "Fruit" ) == 0 ) // FruityLoops default off
+      defval = false;
+   
+   activateExtraOutputs = Surge::Storage::getUserDefaultValue( &(storage), "activateExtraOutputs", defval ? 1 : 0 );
+}

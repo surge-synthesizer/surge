@@ -1079,6 +1079,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
       {
          if (rect_steps.pointInside(where))
          {
+            detachCursor(where);
             if( buttons.isRightButton() )
             {
                rmStepStart = where;
@@ -1212,6 +1213,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
    if( controlstate == cs_linedrag )
    {
+      attachCursor();
       int startStep = -1;
       int endStep = -1;
 
@@ -1289,6 +1291,11 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
       }
    }
 
+   if( controlstate == cs_steps )
+   {
+      attachCursor();
+   }
+   
    if (controlstate)
    {
       // onMouseMoved(where,buttons);

@@ -258,7 +258,7 @@ std::unordered_map<std::string, int> createIdNameMap()
 
 std::atomic<int> Skin::instances( 0 );
 
-Skin::Skin(std::string root, std::string name) : root(root), name(name)
+Skin::Skin(const std::string &root, const std::string &name) : root(root), name(name)
 {
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "Skin::Skin" );
@@ -455,7 +455,6 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    }
 
    colors.clear();
-   queried_colors.clear();
    bgimg = "";
    szx = BASE_WINDOW_SIZE_X;
    szy = BASE_WINDOW_SIZE_Y;
@@ -641,16 +640,17 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
    return true;
 }
 
-bool Skin::hasColor(std::string id)
+bool Skin::hasColor(const std::string &iid) const
 {
+   auto id = iid;
    if( id[0] == '$' ) // when used as a value in a control you can have the $ or not, even though internally we strip it
       id = std::string( id.c_str() + 1 );
-   queried_colors.insert(id);
    return colors.find(id) != colors.end();
 }
 
-VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def, std::unordered_set<std::string> noLoops)
+VSTGUI::CColor Skin::getColor(const std::string &iid, const VSTGUI::CColor& def, std::unordered_set<std::string> noLoops) const
 {
+   auto id = iid;
    if( id[0] == '$' )
       id = std::string( id.c_str() + 1 );
    if( noLoops.find( id ) != noLoops.end() )
@@ -663,11 +663,11 @@ VSTGUI::CColor Skin::getColor(std::string id, const VSTGUI::CColor& def, std::un
       Surge::UserInteractions::promptError( oss.str(), "Skin Configuration Error" );
       return def;
    }
-   queried_colors.insert(id);
    noLoops.insert(id);
-   if (colors.find(id) != colors.end())
+   auto q = colors.find(id);
+   if (q != colors.end())
    {
-      auto c = colors[id];
+      auto c = q->second;
       switch( c.type )
       {
       case ColorStore::COLOR:
@@ -758,7 +758,7 @@ CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr
    return nullptr;
 }
 
-Surge::UI::SkinColor::SkinColor( std::string n ) : name( n ) {
+Surge::UI::SkinColor::SkinColor( const std::string &n ) : name( n ) {
    static int uidstart = 1;
    uid = uidstart++;
 }
