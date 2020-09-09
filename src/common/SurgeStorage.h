@@ -287,8 +287,8 @@ enum fu_type
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] = {
-    "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Ladder Lowpass",
-    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold", "Vintage Ladders"
+    "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Legacy Ladder",
+    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold", "Vintage Ladder"
 #if SURGE_EXTRA_FILTERS    
 #endif    
 };
@@ -299,7 +299,7 @@ const char fut_br_subtypes[4][32] = {"12 dB/oct", "12 dB/oct Mild", "24 dB/oct",
 const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet", "Negative, 50% Wet", "Negative, 100% Wet"};
 const char fut_def_subtypes[3][32] = {"Clean", "Driven", "Smooth"};
 const char fut_ldr_subtypes[4][32] = {"6 dB/oct", "12 dB/oct", "18 dB/oct", "24 dB/oct"};
-const char fut_vintageladder_subtypes[3][32] = { "Huovialainen", "Runge Kutta", "Improved" };
+const char fut_vintageladder_subtypes[3][32] = { "Huovilainen", "Runge-Kutta", "Improved" };
 
 const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 3
 #if SURGE_EXTRA_FILTERS                                     
