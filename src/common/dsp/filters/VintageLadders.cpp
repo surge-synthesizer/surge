@@ -250,7 +250,7 @@ namespace VintageLadder
 
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
       {
-         __m128 dFac = _mm_mul_ps( _mm_set_ps1( 0.5 ), _mm_set_ps1( extraOversampleInv ) );
+         static const __m128 dFac = _mm_mul_ps( _mm_set_ps1( 0.5 ), _mm_set_ps1( extraOversampleInv ) );
 
          for( int j=0; j<2 * extraOversample; ++j )
          {
@@ -317,7 +317,7 @@ namespace VintageLadder
         Original Implementation: D'Angelo, Valimaki
       */
 
-      enum imp_coeffs { i_cutoff = 0, i_reso, i_x, i_g, i_drive };
+      enum imp_coeffs { i_cutoff = 0, i_reso, i_x, i_g, i_drive, n_icoeff };
       enum imp_regoffsets { h_V = 0, h_dV = 4, h_tV = 8 };
       static constexpr float VT = 0.312;
 
@@ -334,93 +334,75 @@ namespace VintageLadder
          cm->C[i_drive] = 1.0;
       }
 
-      double processCore( double in, double coeff[5], double V[4], double dV[4], double tV[4] )
+      __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
       {
-         double dV0, dV1, dV2, dV3;
+         static const __m128 dFac = _mm_set_ps1( extraOversampleInv );
 
-         double drive = coeff[i_drive];
-         double resonance = coeff[i_reso];
-         double g = coeff[i_g];
+#define F(a) _mm_set_ps1( a )         
+#define M(a,b) _mm_mul_ps( a, b )
+#define A(a,b) _mm_add_ps( a, b )
+#define S(a,b) _mm_sub_ps( a, b )
 
-         double sri = dsamplerate_os_inv * extraOversampleInv;
+         __m128 dV0, dV1, dV2, dV3;
+         
+         __m128 halfsri = M( F(0.5), M( F( dsamplerate_os_inv ), F( extraOversampleInv ) ) );
+         static const __m128 oneo2v2 = _mm_div_ps( F(1.0), M( F(2.0), F(VT) ) );
 
          for( int i=0; i<extraOversample; ++i )
          {
-            dV0 = -g * (tanh((drive * in + resonance * V[3]) / (2.0 * VT)) + tV[0]);
-            V[0] += (dV0 + dV[0]) * 0.5 * sri;
-            dV[0] = dV0;
-            tV[0] = tanh(V[0] / (2.0 * VT));
+            for( int j=0; j< n_icoeff; ++j )
+               f->C[j] = A(f->C[j], M(dFac,f->dC[j]));
+
+            __m128 drive = f->C[i_drive];
+            __m128 resonance = f->C[i_reso];
+            __m128 g = f->C[i_g];
+
+
+
+            // dV0 = -g * (tanh((drive * in + resonance * V[3]) / (2.0 * VT)) + tV[0]);
+            dV0 = M( M( F(-1.f) , g ), A( Surge::DSP::fasttanhSSEclamped( M( A( M( drive, in ), M( resonance, f->R[h_V + 3] ) ), oneo2v2 ) ), f->R[h_tV + 0] ) );
+
+            //std::cout << _D(drive[0]) << _D(resonance[0]) << _D(g[0]) << _D(dV0[0]) << std::endl;
+
+            // V[0] += (dV0 + dV[0]) * 0.5 * sri;
+            f->R[h_V + 0  ] = A( f->R[h_V + 0], M( A( f->R[h_dV + 0], dV0 ), halfsri ) );
+            f->R[h_dV + 0 ] = dV0;
+            // tV[0] = tanh(V[0] / (2.0 * VT));
+            f->R[h_tV + 0 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 0], oneo2v2 ) );
+
             
-            dV1 = g * (tV[0] - tV[1]);
-            V[1] += (dV1 + dV[1]) * 0.5 * sri;
-            dV[1] = dV1;
-            tV[1] = tanh(V[1] / (2.0 * VT));
+            // dV1 = g * (tV[0] - tV[1]);
+            dV1 = M( g, S( f->R[h_tV + 0], f->R[h_tV + 1 ] ) );
+            // V[1] += (dV1 + dV[1]) * 0.5 * sri;
+            f->R[h_V + 1 ] = A( f->R[h_V + 1 ], M( A( f->R[h_dV + 1], dV1 ), halfsri ) );
+            f->R[h_dV + 1 ] = dV1;
+            // tV[1] = tanh(V[1] / (2.0 * VT));
+            f->R[h_tV + 1 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 1], oneo2v2 ) );
             
-            dV2 = g * (tV[1] - tV[2]);
-            V[2] += (dV2 + dV[2]) * 0.5 * sri;
-            dV[2] = dV2;
-            tV[2] = tanh(V[2] / (2.0 * VT));
+            // dV2 = g * (tV[1] - tV[2]);
+            dV2 = M( g, S( f->R[h_tV + 1], f->R[h_tV + 2 ] ) );
+            // V[2] += (dV2 + dV[2]) * 0.5 * sri;
+            f->R[h_V + 2 ] = A( f->R[h_V + 2 ], M( A( f->R[h_dV + 2], dV2 ), halfsri ) );
+            f->R[h_dV + 2 ] = dV2;
+            // tV[2] = tanh(V[2] / (2.0 * VT));
+            f->R[h_tV + 2 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 2], oneo2v2 ) );
+
             
-            dV3 = g * (tV[2] - tV[3]);
-            V[3] += (dV3 + dV[3]) * 0.5 * sri;
-            dV[3] = dV3;
-            tV[3] = tanh(V[3] / (2.0 * VT));
+            // dV3 = g * (tV[2] - tV[3]);
+            dV3 = M( g, S( f->R[h_tV + 2], f->R[h_tV + 3 ] ) );
+            // V[3] += (dV3 + dV[3]) * 0.5 * sri;
+            f->R[h_V + 3 ] = A( f->R[h_V + 3 ], M( A( f->R[h_dV + 3], dV3 ), halfsri ) );
+            f->R[h_dV + 3 ] = dV3;
+            // tV[2] = tanh(V[2] / (2.0 * VT));
+            f->R[h_tV + 3 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 3], oneo2v2 ) );
          }
-         
-         return V[3];
-      }
-      
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 inm )
-      {
-         static constexpr int ssew = 4, n_coef=5, n_state=12;
 
-         /*
-         ** This demonstrates how to unroll SSE. At input each of the
-         ** values (registers, coefficients, inputs) will be up to 4 wide
-         ** and will have values which need populating if f->active[i] != 0.
-         **
-         ** Ideally we would code SSE code. But this is a gross, slow, probably
-         ** not mergable unroll.
-         */
-
-         for( int j=0; j< n_coef; ++j )
-            f->C[j] = _mm_add_ps(f->C[j], f->dC[j]);
-
-         float in[ssew];
-         _mm_store_ps( in, inm );
+#undef F
+#undef M
+#undef A
+#undef S         
          
-         float C[n_coef][ssew];
-         for( int i=0; i<n_coef; ++i ) _mm_store_ps( C[i], f->C[i] );
-         
-         float state[n_state][ssew];
-         for( int i=0; i<n_state; ++i ) _mm_store_ps( state[i], f->R[i] );
-         
-         float out[ssew];
-         for( int v=0; v<ssew; ++v )
-         {
-            if( ! f->active[v] ) continue;
-            
-            double V[4], dV[4], tV[4];
-            for( int i=0; i<4; ++i ) V[i] = state[i][v];
-            for( int i=0; i<4; ++i ) dV[i] = state[i+4][v];
-            for( int i=0; i<4; ++i ) tV[i] = state[i+8][v];
-
-            double coeff[n_coef];
-            for( int i=0; i<n_coef; ++i ) coeff[i] = C[i][v];
-            
-            out[v] = processCore( in[v], coeff, V, dV, tV );
-            
-            for( int i=0; i<4; ++i ) state[i][v] = V[i];
-            for( int i=0; i<4; ++i ) state[i+4][v] = dV[i];
-            for( int i=0; i<4; ++i ) state[i+8][v] = tV[i];
-
-            
-         }
-         
-         __m128 outm = _mm_load_ps(out);
-         
-         for( int i=0; i<n_state; ++i ) f->R[i] = _mm_load_ps(state[i]);
-         return outm;
+         return f->R[h_V + 3];
       }
    }
 }
