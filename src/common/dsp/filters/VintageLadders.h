@@ -20,4 +20,9 @@ namespace VintageLadder
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
    }
+
+   namespace Simplified {
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage );
+      __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
+   }
 }
