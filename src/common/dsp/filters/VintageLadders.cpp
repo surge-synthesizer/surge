@@ -436,4 +436,109 @@ namespace VintageLadder
 #undef S         
       }
    }
+
+   namespace Simplified {
+      /*
+        The simplified nonlinear Moog filter is based on the full Huovilainen model,
+        with five nonlinear (tanh) functions (4 first-order sections and a feedback).
+        Like the original, this model needs an oversampling factor of at least two when
+        these nonlinear functions are used to reduce possible aliasing. This model
+        maintains the ability to self oscillate when the feedback gain is >= 1.0.
+        
+        References: DAFX - Zolzer (ed) (2nd ed)
+        Original implementation: Valimaki, Bilbao, Smith, Abel, Pakarinen, Berners (DAFX)
+        This is a transliteration into C++ of the original matlab source (moogvcf.m)
+      */
+
+      enum simp_coeffs { s_cutoff = 0, s_reso, n_scoeffs };
+      enum simp_regoffsets { h_stage = 0, h_stageZ1 = 4, h_stagetanh = 8 };
+
+      int extraOversample = 4;
+      float extraOversampleInv = 0.25;
+
+      float gainCompensation = 0.5;
+         
+      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
+      {
+         auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
+         cm->C[s_cutoff] = cutoff;
+         cm->C[s_reso ] = reso * 10;
+      }
+
+      __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
+      {
+#define F(a) _mm_set_ps1( a )         
+#define M(a,b) _mm_mul_ps( a, b )
+#define A(a,b) _mm_add_ps( a, b )
+#define S(a,b) _mm_sub_ps( a, b )
+
+         static const __m128 twopi = F( 2.0 * M_PI ),
+            oneover13 = F( 1.0 / 1.3 ),
+            p3over13 = F( 0.3 / 1.3 ),
+            piover13 = F( M_PI / 1.3 ),
+            dFac = F(extraOversampleInv),
+            gComp = F(0.5);
+
+         __m128 *stage = &(f->R[h_stage]), *stageZ1  = &(f->R[h_stageZ1]), *stageTanh = &(f->R[h_stagetanh]);
+
+         __m128 fs2i = M( F(dsamplerate_os_inv), F(extraOversampleInv ) );
+         
+         for( int i=0; i<extraOversample; ++i )
+         {
+            for( int j=0; j< n_scoeffs; ++j )
+               f->C[j] = A(f->C[j], M(dFac,f->dC[j]));
+
+            auto cutoff = f->C[s_cutoff];
+            auto resonance = f->C[s_reso];
+
+            //g = (2 * MOOG_PI) * cutoff / fs2; // feedback coefficient at fs*2 because of doublesampling
+            //g *= MOOG_PI / 1.3; // correction factor that allows _cutoff to be supplied Hertz
+            auto g = M( M( twopi, M( cutoff, fs2i ) ), piover13 );
+            auto h = M( oneover13, g );
+            auto h0 = M( p3over13, g );
+            
+            for (int stageIdx = 0; stageIdx < 4; ++stageIdx)
+            {
+               if (stageIdx)
+               {
+                  auto input = stage[stageIdx-1];
+                  stageTanh[stageIdx-1] = Surge::DSP::fasttanhSSEclamped(input);
+                  // stage[stageIdx] = (h * stageZ1[stageIdx] + h0 * stageTanh[stageIdx-1]) + (1.0 - g) * (stageIdx != 3 ? stageTanh[stageIdx] : Surge::DSP::fasttanhSSEclamped(stageZ1[stageIdx]));
+                  auto p1 = M( h, stageZ1[stageIdx] );
+                  auto p2 = M( h0, stageTanh[ stageIdx - 1 ] );
+                  auto p3 = M( S( F( 1.0 ), g ), (stageIdx != 3 ? stageTanh[stageIdx] : Surge::DSP::fasttanhSSEclamped(stageZ1[stageIdx])));
+                  stage[stageIdx] = A( p1, A( p2, p3 ) );
+               }
+               else
+               {
+                  __m128 input;
+                  if( i == 0 )
+                  {
+                     // input = samples[s] - ((4.0 * resonance) * (output - gainCompensation * samples[s]));
+                     input = S(in, M( M( F(4.0), resonance ), S( stage[3], M( gComp, in ) ) ) );
+                  }
+                  else
+                  {
+                     input = _mm_setzero_ps();
+                  }
+                  // stage[stageIdx] = (h * tanh(input) + h0 * stageZ1[stageIdx]) + (1.0 - g) * stageTanh[stageIdx];
+                  auto p1 = M( h, Surge::DSP::fasttanhSSEclamped( input ) );
+                  auto p2 = M( h0, stageZ1[stageIdx] );
+                  auto p3 = M( S( F(1.0), g ), stageTanh[stageIdx] );
+                  stage[stageIdx] = A( p1, A( p2, p3 ) );
+               }
+               
+               stageZ1[stageIdx] = stage[stageIdx];
+            }
+         }
+         return M( stage[3], F( extraOversample ) );
+      }
+
+      
+#undef F
+#undef M
+#undef A
+#undef S         
+   }
+
 }
