@@ -791,9 +791,6 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       case 2:
       case 3:
          return VintageLadder::Huov::process;
-      case 4:
-      case 5:
-         return VintageLadder::Improved::process;
       default:
          // SOFTWARE ERROR
          break;

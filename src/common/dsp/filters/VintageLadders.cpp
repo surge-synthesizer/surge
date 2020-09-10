@@ -90,8 +90,8 @@ namespace VintageLadder
 
       enum rkm_coeffs { rkm_cutoff = 0, rkm_reso, rkm_gComp, n_rkcoeff };
 
-      int extraOversample = 2;
-      float extraOversampleInv = 0.5;
+      static constexpr int extraOversample = 4;
+      static constexpr float extraOversampleInv = 0.25;
 
       float saturation = 3, saturationInverse = 0.333333333333;
 
@@ -161,13 +161,14 @@ namespace VintageLadder
 
          static const __m128 oneoversix = F( 1.0 / 6.0 ), two = F(2.0), dFac = F(extraOversampleInv),
             sat = F(saturation), satInv=F(saturationInverse);
-         
-         for( int i=0; i<extraOversample; ++i )
+
+         __m128 outputOS[extraOversample];
+         for( int osi=0; osi<extraOversample; ++osi )
          {
             for( int j=0; j< n_rkcoeff; ++j )
                f->C[j] = A(f->C[j], M(dFac,f->dC[j]));
 
-            __m128 cutoff = M( f->C[rkm_cutoff],  F(extraOversample) );
+            __m128 cutoff = f->C[rkm_cutoff];
             __m128 resonance = f->C[rkm_reso];
             __m128 gComp = f->C[rkm_gComp];
 
@@ -187,11 +188,22 @@ namespace VintageLadder
             for (i = 0; i < 4; i++)
                // state[i] +=(1.0 / 6.0) * stepSize * (deriv1[i] + 2.0 * deriv2[i] + 2.0 * deriv3[i] + deriv4[i]);
                state[i] = A(state[i], M( oneoversix, M( stepSize, A( deriv1[i], A( M( two, deriv2[i] ), A( M( two, deriv3[i] ), deriv4[i] ) ) ) ) ) );
-            
-            input = state[3];
+
+            outputOS[osi] = state[3];
+            // Zero stuffing
+            input = _mm_setzero_ps();
          }
-         
-         return state[3];
+
+         // See comment below
+         auto ov = _mm_setzero_ps();
+         __m128 windowFactors[4];
+         windowFactors[0] = F(-0.0636844 );
+         windowFactors[1] = _mm_setzero_ps();
+         windowFactors[2] = F(0.57315917 );
+         windowFactors[3] = F(1);
+         for( int i=0; i< extraOversample; ++i )
+            ov = A( ov, M( outputOS[i], windowFactors[i]) );
+         return M( F( 1.5 ), ov );
       }
 
 #undef F
@@ -228,8 +240,8 @@ namespace VintageLadder
       enum huov_coeffs { h_cutoff = 0, h_res, h_fc, h_gComp, n_hcoeffs };
       enum huov_regoffsets { h_stage = 0, h_stageTanh = 4, h_delay = 7 };
 
-      int extraOversample = 4;
-      float extraOversampleInv = 0.25;
+      static constexpr int extraOversample = 2;
+      static constexpr float extraOversampleInv = 0.5;
 
       float gainCompensation = 0.5;
       
@@ -241,7 +253,7 @@ namespace VintageLadder
          float co = std::max( cutoff - samplerate * 0.33333, 0.0 ) * 0.1 * dsamplerate_os_inv;
          float gctrim = applyGainCompensation ? 0.05 : 0.0;
 
-         reso = limit_range( reso, 0.0f, 0.994f - co - gctrim );
+         reso = limit_range( limit_range( reso, 0.0f, 0.9925f ), 0.0f, 0.994f - co - gctrim );
          cm->C[h_res] = reso;
          
          double fc =  cutoff * dsamplerate_os_inv * extraOversampleInv;
@@ -275,6 +287,7 @@ namespace VintageLadder
             neg2pi = F( -2.0 * M_PI );
 
 
+         __m128 outputOS[ 2 * extraOversample ];
          for( int j=0; j<2 * extraOversample; ++j )
          {
 
@@ -333,132 +346,35 @@ namespace VintageLadder
             f->R[h_delay + 5] = M( _mm_set_ps1( 0.5 ), A( f->R[h_stage +3], f->R[h_delay + 4]) );
 				// delay[4] = stage[3];
 				f->R[h_delay +4] = f->R[h_stage +3];
-
+            outputOS[j] = f->R[h_delay + 5];
          }
 
-         return _mm_mul_ps( F(2 * extraOversample ), f->R[h_delay + 5] );
+         __m128 ov = _mm_setzero_ps();
+
+         /*
+         ** OK this is a bit of a hack but... these are then lanczos factors
+         ** sinc( x ) sinc (x / 2 ) backwards only. Really we should do a proper little 
+         ** fir around the whole thing but this at least gives us a reconstruction with
+         ** some aliasing supression.
+         **
+         ** Not entirely valid but...
+         **
+         ** Anyway 2 sin( pi x ) sin ( pi x / 2 ) / ( pi^2 x^2 ) for points -1.5, -1, 0.5, and 0.
+         **
+         */ 
+         __m128 windowFactors[4];
+         windowFactors[0] = F(-0.0636844 );
+         windowFactors[1] = _mm_setzero_ps();
+         windowFactors[2] = F(0.57315917 );
+         windowFactors[3] = F(1);
+         for( int i=0; i<2 * extraOversample; ++i )
+            ov = A( ov, M( outputOS[i], windowFactors[i]) );
+         return M( F( 1.5 ), ov );
+
 #undef M
 #undef A
 #undef S
 #undef F                            
-      }
-   }
-
-   namespace Improved {
-      /*
-        This model is based on a reference implementation of an algorithm developed by
-        Stefano D'Angelo and Vesa Valimaki, presented in a paper published at ICASSP in 2013.
-        This improved model is based on a circuit analysis and compared against a reference
-        Ngspice simulation. In the paper, it is noted that this particular model is
-        more accurate in preserving the self-oscillating nature of the real filter.
-        
-        References: "An Improved Virtual Analog Model of the Moog Ladder Filter"
-        Original Implementation: D'Angelo, Valimaki
-      */
-
-      enum imp_coeffs { i_cutoff = 0, i_reso, i_x, i_drive, i_gComp, n_icoeff };
-      enum imp_regoffsets { h_V = 0, h_dV = 4, h_tV = 8 };
-      static constexpr float VT = 0.312;
-
-      int extraOversample = 3;
-      float extraOversampleInv = 0.33333333333;
-
-      float gainCompensation = 0.5;
-      
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso,  bool applyGainCompensation, SurgeStorage *storage )
-      {
-         auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
-         cm->C[i_cutoff] = cutoff;
-         cm->C[i_reso ] = reso * 4;
-         cm->C[i_x] = M_PI * cutoff * dsamplerate_os_inv * extraOversampleInv;
-         cm->C[i_drive] = 1.0;
-
-         cm->C[i_gComp] = 0.0;
-         if( applyGainCompensation )
-            cm->C[i_gComp] = gainCompensation;
-      }
-
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
-      {
-         static const __m128 dFac = _mm_set_ps1( extraOversampleInv );
-
-#define F(a) _mm_set_ps1( a )         
-#define M(a,b) _mm_mul_ps( a, b )
-#define A(a,b) _mm_add_ps( a, b )
-#define S(a,b) _mm_sub_ps( a, b )
-
-         __m128 dV0, dV1, dV2, dV3;
-         
-         __m128 halfsri = M( F(0.5), M( F( dsamplerate_os_inv ), F( extraOversampleInv ) ) );
-         static const __m128 oneo2v2 = _mm_div_ps( F(1.0), M( F(2.0), F(VT) ) );
-         static const __m128 fourpivt = M( F(4.0), M( F(M_PI), F(VT) ) );
-         static const __m128 one = F(1.0);
-
-         for( int i=0; i<extraOversample; ++i )
-         {
-            for( int j=0; j< n_icoeff; ++j )
-               f->C[j] = A(f->C[j], M(dFac,f->dC[j]));
-
-            __m128 drive = f->C[i_drive];
-            __m128 resonance = f->C[i_reso];
-
-            /*
-            ** Rather than caching this in a register calculate it in each loop since it is not a linear function of coefficients
-            ** but all the other coefficients are, so linear interpolation will work fine on them
-            */
-            // cm->C[i_g] = 4.0 * M_PI * VT * cutoff * ( 1.0 - cm->C[i_x] ) / ( 1.0 + cm->C[i_x] );
-            __m128 g = M( fourpivt, M( f->C[i_cutoff ], _mm_div_ps( S( one, f->C[i_x] ), A( one, f->C[i_x] ) ) ) );
-
-
-
-            // dV0 = -g * (tanh((drive * in + resonance * V[3]) / (2.0 * VT)) + tV[0]);
-            // MODIFY to -g * (tanh((drive * in + resonance * (V[3]  + gComp * in)) / (2.0 * VT)) + tV[0]);
-            dV0 = M( M( F(-1.f) , g ), A( Surge::DSP::fasttanhSSEclamped( M( A( M( drive, in ), M( resonance, A(f->R[h_V + 3], M( f->C[i_gComp], in ) ) ) ), oneo2v2 ) ), f->R[h_tV + 0] ) );
-            // This forces a 'zero stuffing' oversample
-            in = _mm_setzero_ps();
-            
-            //std::cout << _D(drive[0]) << _D(resonance[0]) << _D(g[0]) << _D(dV0[0]) << std::endl;
-
-            // V[0] += (dV0 + dV[0]) * 0.5 * sri;
-            f->R[h_V + 0  ] = A( f->R[h_V + 0], M( A( f->R[h_dV + 0], dV0 ), halfsri ) );
-            f->R[h_dV + 0 ] = dV0;
-            // tV[0] = tanh(V[0] / (2.0 * VT));
-            f->R[h_tV + 0 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 0], oneo2v2 ) );
-
-            
-            // dV1 = g * (tV[0] - tV[1]);
-            dV1 = M( g, S( f->R[h_tV + 0], f->R[h_tV + 1 ] ) );
-            // V[1] += (dV1 + dV[1]) * 0.5 * sri;
-            f->R[h_V + 1 ] = A( f->R[h_V + 1 ], M( A( f->R[h_dV + 1], dV1 ), halfsri ) );
-            f->R[h_dV + 1 ] = dV1;
-            // tV[1] = tanh(V[1] / (2.0 * VT));
-            f->R[h_tV + 1 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 1], oneo2v2 ) );
-            
-            // dV2 = g * (tV[1] - tV[2]);
-            dV2 = M( g, S( f->R[h_tV + 1], f->R[h_tV + 2 ] ) );
-            // V[2] += (dV2 + dV[2]) * 0.5 * sri;
-            f->R[h_V + 2 ] = A( f->R[h_V + 2 ], M( A( f->R[h_dV + 2], dV2 ), halfsri ) );
-            f->R[h_dV + 2 ] = dV2;
-            // tV[2] = tanh(V[2] / (2.0 * VT));
-            f->R[h_tV + 2 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 2], oneo2v2 ) );
-
-            
-            // dV3 = g * (tV[2] - tV[3]);
-            dV3 = M( g, S( f->R[h_tV + 2], f->R[h_tV + 3 ] ) );
-            // V[3] += (dV3 + dV[3]) * 0.5 * sri;
-            f->R[h_V + 3 ] = A( f->R[h_V + 3 ], M( A( f->R[h_dV + 3], dV3 ), halfsri ) );
-            f->R[h_dV + 3 ] = dV3;
-            // tV[2] = tanh(V[2] / (2.0 * VT));
-            f->R[h_tV + 3 ] = Surge::DSP::fasttanhSSEclamped( M( f->R[h_V + 3], oneo2v2 ) );
-         }
-
-                  
-         return M( F(extraOversample), f->R[h_V + 3] );
-
-#undef F
-#undef M
-#undef A
-#undef S         
       }
    }
 }

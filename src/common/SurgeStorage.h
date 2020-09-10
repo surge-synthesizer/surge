@@ -300,10 +300,9 @@ const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet"
 const char fut_def_subtypes[3][32] = {"Clean", "Driven", "Smooth"};
 const char fut_ldr_subtypes[4][32] = {"6 dB/oct", "12 dB/oct", "18 dB/oct", "24 dB/oct"};
 const char fut_vintageladder_subtypes[6][32] = { "Runge-Kutta",  "Runge-Kutta Compensated",
-                                                 "Huovilainen",  "Huovilainen Compensated",
-                                                 "Improved",     "Improved Compensated" };
+                                                 "Huovilainen",  "Huovilainen Compensated" };
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 6
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4
 #if SURGE_EXTRA_FILTERS                                     
 #endif
 };
