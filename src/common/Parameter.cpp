@@ -251,6 +251,7 @@ bool Parameter::can_extend_range()
    case ct_osc_feedback:
    case ct_osc_feedback_negative:
    case ct_lfoamplitude:
+   case ct_fmratio:
       return true;
    }
    return false;
@@ -1299,6 +1300,13 @@ float Parameter::get_extended(float f)
       return 4.f * f;
    case ct_lfoamplitude:
       return (2.f * f) - 1.f;
+   case ct_fmratio:
+   {
+      if( f > 16 )
+         return ( ( f - 16 ) * 2  + 1 );
+      else
+         return -( ( 16 - f ) * 2 + 1 );
+   }
    default:
       return f;
    }
@@ -1653,34 +1661,112 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    case ct_fmratio:
    {
       float mf = modulationDepth;
+      // OK so this is already handed to us extended and this one is wierd so
+      auto qq = mf;
+      if( extend_range )
+      {
+         if( mf < 0 )
+         {
+            qq = mf + 1;
+         }
+         else {
+            qq = mf - 1;
+         }
+         qq = ( qq + 32 ) / 64;
+      }
+      float exmf = qq;
+      int dp = (detailedMode ? 6 : 2);
       switch( displaymode )
       {
       case TypeIn:
-         sprintf( txt, "C: %.*f", 2, mf );
-         return;
-         break;
-      case Menu:
-         if( isBipolar )
+         if( extend_range )
          {
-            sprintf( txt, "C: %s %.*f", (mf >= 0 ? "+/-" : "-/+" ), 2, fabs(mf) );
+            sprintf( txt, "C : %.*f", dp, qq * 32 );
          }
          else
          {
-            sprintf( txt, "C: %.*f", 2, mf );
+            sprintf( txt, "C : %.*f", dp, mf );
          }
          return;
          break;
+      case Menu:
+      {
+         if( extend_range )
+         {
+            if( isBipolar )
+            {
+               sprintf( txt, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+" ), dp, fabs(qq * 32 ) );
+            }
+            else
+            {
+               sprintf( txt, "C : %.*f", dp, qq * 32  );
+            }
+
+         }
+         else
+         {
+            if( isBipolar )
+            {
+               sprintf( txt, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+" ), dp, fabs(mf) );
+            }
+            else
+            {
+               sprintf( txt, "C : %.*f", dp, mf );
+            }
+         }
+         return;
+         break;
+      }
       case InfoWindow:
          if( iw )
          {
-            char dtxt[256];
-            sprintf( dtxt, "C: %.*f", 2, val.f ); iw->val = dtxt;
-            sprintf( dtxt, "%.*f", 2, val.f + mf ); iw->valplus = dtxt;
-            sprintf( dtxt, "%.*f", 2, mf ); iw->dvalplus = dtxt;
-            if( isBipolar )
+            if( extend_range )
             {
-               sprintf( dtxt, "%.*f", 2, val.f - mf ); iw->valminus = dtxt;
-               sprintf( dtxt, "%.*f", 2, -mf ); iw->dvalminus = dtxt;
+               char dtxt[256];
+               float ev = get_extended(val.f);
+               if( ev < 0 )
+               {
+                  sprintf( dtxt, "C : 1 / %.*f", dp, -ev );
+               }
+               else
+               {
+                  sprintf( dtxt, "C : %.*f", dp, ev );
+               }
+               iw->val = dtxt;
+
+               auto upval = get_extended( val.f + ( qq * 32 ));
+               auto dnval = get_extended( val.f - ( qq * 32 ));
+
+               if( upval < 0 )
+                  sprintf( dtxt, "C : 1 / %.*f", dp, -upval );
+               else
+                  sprintf( dtxt, "C : %.*f", dp, upval );
+               iw->valplus = dtxt;
+               sprintf( dtxt, "%.*f", dp, qq * 32  ); iw->dvalplus = dtxt;
+               if( isBipolar )
+               {
+                  if( dnval < 0 )
+                     sprintf( dtxt, "C : 1/%.*f", dp, -dnval );
+                  else
+                     sprintf( dtxt, "C : %.*f", dp, dnval );
+                  iw->valminus = dtxt;
+                  
+                  sprintf( dtxt, "%.*f", dp, -( qq * 32 ) );
+                  iw->dvalminus = dtxt;
+               }
+
+            }
+            else
+            {
+               char dtxt[256];
+               sprintf( dtxt, "C : %.*f", dp, val.f ); iw->val = dtxt;
+               sprintf( dtxt, "%.*f", dp, val.f + mf ); iw->valplus = dtxt;
+               sprintf( dtxt, "%.*f", dp, mf ); iw->dvalplus = dtxt;
+               if( isBipolar )
+               {
+                  sprintf( dtxt, "%.*f", dp, val.f - mf ); iw->valminus = dtxt;
+                  sprintf( dtxt, "%.*f", dp, -mf ); iw->dvalminus = dtxt;
+               }
             }
          }
          // not really used any more bot don't leave it uninit
@@ -1930,8 +2016,18 @@ void Parameter::get_display(char* txt, bool external, float ef)
       switch (ctrltype)
       {
       case ct_fmratio:
-         sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), f);
+      {
+         auto q = get_extended(f);
+         if( extend_range && q < 0 )
+         {
+            sprintf(txt, "C : 1 / %.*f", (detailedMode ? 6 : 2), -get_extended(f));
+         }
+         else
+         {
+            sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), get_extended(f));
+         }
          break;
+      }
       default:
          sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
          break;
@@ -2683,8 +2779,41 @@ bool Parameter::set_value_from_string( std::string s )
    {
       // In this case we have to set nv differently
       const char *strip = &(c[0]);
-      while( *strip != '\0' && ! std::isdigit( *strip ) ) ++strip;
-      nv = std::atof( strip );
+      while( *strip != '\0' && ! std::isdigit( *strip ) && *strip != '.' ) ++strip;
+
+      // OK so do we contain a /?
+      const char *slp;
+      if( (slp = strstr( strip, "/" )) != nullptr )
+      {
+         float num = std::atof( strip );
+         float den = std::atof( slp + 1 );
+         if( den == 0 )
+            nv = 1;
+         else
+            nv = num / den;
+      }
+      else
+      {
+         nv = std::atof( strip );
+      }
+      if( extend_range )
+      {
+         if( nv < 1 )
+         {
+            float oonv = -1.0 / nv;
+            // oonv = - ( ( 16 - f ) * 2 + 1)
+            // -oonv-1 = (16-f)*2
+            // (1+oonv)/2 = f - 16;
+            // (1+oonv)/2 + 16 = f;
+            nv = 0.5 * ( 1 + oonv ) + 16;
+         }
+         else
+         {
+            // nv = ( f - 16 ) * 2 + 1
+            // (nv - 1)/2 + 16 = f
+            nv = ( nv - 1 ) / 2 + 16;
+         }
+      }
       val.f = nv;
    }
    break;
@@ -2795,6 +2924,13 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
 
    switch( ctrltype )
    {
+   case ct_fmratio:
+      if( extend_range )
+      {
+         auto mv = (float) std::atof( s.c_str() );
+         mv = mv / 32;
+         return mv;
+      }
    default:
    {
       // This works in all the linear cases so we need to handle fewer above than we'd think

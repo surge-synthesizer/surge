@@ -58,10 +58,13 @@ void FMOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
 
    double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
 
-   RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
-                              localcopy[oscdata->p[fm_m1ratio].param_id_in_scene].f));
-   RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
-                              localcopy[oscdata->p[fm_m2ratio].param_id_in_scene].f));
+   auto m1 = oscdata->p[fm_m1ratio].get_extended(localcopy[oscdata->p[fm_m1ratio].param_id_in_scene].f);
+   if( m1 < 0 ) m1 = 1.0 / m1;
+   RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m1 ) );
+
+   auto m2 = oscdata->p[fm_m2ratio].get_extended(localcopy[oscdata->p[fm_m2ratio].param_id_in_scene].f);
+   if( m2 < 0 ) m2 = 1.0 / m2;
+   RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m2 ) );
    AM.set_rate(min(
        M_PI, (double)pitch_to_omega(60.0 + localcopy[oscdata->p[fm_m3freq].param_id_in_scene].f)));
 
