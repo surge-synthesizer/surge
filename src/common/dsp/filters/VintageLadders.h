@@ -15,9 +15,4 @@ namespace VintageLadder
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool applyGainCompensation, SurgeStorage *storage );
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
    }
-
-   namespace Improved {
-      void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso,  bool applyGainCompensation, SurgeStorage *storage );
-      __m128 process( QuadFilterUnitState * __restrict f, __m128 in );
-   }
 }

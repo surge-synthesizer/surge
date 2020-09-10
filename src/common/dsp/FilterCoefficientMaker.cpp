@@ -74,10 +74,6 @@ void FilterCoefficientMaker::MakeCoeffs(
       case 3:
          VintageLadder::Huov::makeCoefficients(this, Freq, Reso, SubType == 3, storageI);
          break;
-      case 4:
-      case 5:
-         VintageLadder::Improved::makeCoefficients(this, Freq, Reso, SubType == 5, storageI);
-         break;
       default:
          // SOFTWARE ERROR
          break;
