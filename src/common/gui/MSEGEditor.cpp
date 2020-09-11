@@ -99,12 +99,26 @@ struct MSEGControlPanel : public CViewContainer, public Surge::UI::SkinConsuming
    
    void rebuild() {
       removeAll();
-      std::string s = "UNDER CONSTRUCTION IN NIGHTLIES COMING SOON";
-      auto cslab = new CTextLabel( CRect( CPoint( 0, 0 ), getViewSize().getSize() ), s.c_str() );
+      auto cslab = new CTextLabel( CRect( CPoint( 0, 0 ), getViewSize().getSize()), "" );
       cslab->setBackColor( kBlueCColor );
       cslab->setFontColor( kWhiteCColor );
       addView( cslab );
 
+      auto warningFont = new VSTGUI::CFontDesc("Lato", 16);
+      std::vector<std::string> v = { { "UNDER CONSTRUCTION IN NIGHTLIES COMING SOON", "This is radically incomplete alpha software", "Please see issues #2563 #2474 and #982" } };
+      int ypos = 0;
+      for( auto s : v )
+      {
+         auto p = getViewSize().getSize();
+         p.y = 20;
+         cslab = new CTextLabel( CRect( CPoint( 0, ypos ), p), s.c_str() );
+         ypos += 20;
+         cslab->setTransparency( true );
+         cslab->setFontColor( kWhiteCColor );
+         cslab->setFont( warningFont );
+         addView( cslab );
+      }
+      
       int pos = 2;
       auto addb = [&pos, this](std::string s, int t ) {
                      auto b = new CTextButton( CRect( CPoint( 3, pos ), CPoint( 100, 18 ) ), this, t, s.c_str() );
