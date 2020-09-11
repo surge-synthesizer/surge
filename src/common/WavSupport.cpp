@@ -23,6 +23,8 @@
 #include "UserInteractions.h"
 #include "SurgeStorage.h"
 #include <sstream>
+#include <cerrno>
+#include <cstring>
 
 #include "ImportFilesystem.h"
 
@@ -476,16 +478,16 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
 void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
 {
-   std::ostringstream oss;
-   oss << userDataPath << "/ExportedWaveTables";
-   fs::create_directories( oss.str() );
-   std::string dirName = oss.str();
+   std::string path;
+   path = Surge::Storage::appendDirectory(userDataPath, "Exported Wavetables");
+   fs::create_directories(path);
 
    auto fnamePre = fbase + ".wav";
-   auto fname = dirName + "/" + fbase + ".wav";
+   auto fname = Surge::Storage::appendDirectory(path, fbase + ".wav");
    int fnum = 1;
-   while( fs::exists( fs::path( fname ) ) ) {
-      fname = dirName + "/" + fbase + "_" + std::to_string(fnum) + ".wav";
+   while (fs::exists(fs::path(fname)))
+   {
+      fname = Surge::Storage::appendDirectory(path, fbase + "_" + std::to_string(fnum) + ".wav");
       fnamePre = fbase + "_" + std::to_string(fnum) + ".wav";
       fnum++;
    }
@@ -503,7 +505,9 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
       FILE *wfp = fopen( fname.c_str(), "wb" );
       if( ! wfp )
       {
-         errorMessage = "Unable to open file '" + fname + "'";
+         errorMessage = "Unable to open file " + fname + "!";
+         errorMessage += std::strerror(errno);
+
          goto error;
       }
       fguard.f = wfp;
@@ -523,7 +527,6 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
                     fwrite( fi, 1, 4, wfp );
                  };
 
-         
       auto w2i = [wfp](unsigned int v) {
                     unsigned char fi[2];
                     for( int i=0; i<2; ++i )
@@ -590,8 +593,9 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
       fguard.f = nullptr;
       refresh_wtlist();
 
-      Surge::UserInteractions::promptInfo( "Exported to your Surge Documents in `ExportedWaveTables/" + fnamePre + "'",
-                                           "Export Succeeded" );
+      Surge::UserInteractions::promptInfo(
+          "Exported to " + Surge::Storage::appendDirectory("Documents", "Exported Wavetables", fnamePre),
+                                           "Export Succeeded!" );
       
       return;
    }
