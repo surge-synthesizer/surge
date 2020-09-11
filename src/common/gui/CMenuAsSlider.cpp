@@ -34,6 +34,7 @@ CMenuAsSlider::CMenuAsSlider(const VSTGUI::CPoint& loc,
    // this->storage = storage;
    auto size = CRect( 0, 0, 133, 22);
    size.offset( loc.x, loc.y );
+
    setViewSize( size );
    setMouseableArea( size );
 }
@@ -52,6 +53,9 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
    {
       d.left += dragRegion.getWidth();
    }
+
+   if (filtermode)
+      d.right -= 10;
 
    if( isHover && pBackgroundHover )
    {
@@ -85,11 +89,18 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       
       dc->setFont( displayFont );
       dc->setFontColor( valcol );
-      auto t = d;
+
       bool trunc = false;
+      auto align = kRightText;
+      auto t = d;
+
       t.right -= 14;
       if( filtermode )
+      {
          t.right -= 10;
+         t.left += 6;
+         align = kLeftText;
+      }
       else
          t.left += splitPoint;
       auto td = dt;
@@ -99,8 +110,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
          trunc = true;
       }
       if( trunc ) td += "...";
-      dc->drawString( td.c_str(), t, kRightText, true );
-
+      dc->drawString( td.c_str(), t, align, true );
 
       if( ! filtermode )
       {
@@ -125,7 +135,6 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
          dc->setFontColor( labcol );
          dc->drawString( tl.c_str(), l, kLeftText, true );
       }
-
 
       if( hasDragRegion )
       {
