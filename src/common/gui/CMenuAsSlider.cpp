@@ -109,6 +109,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       {
          t.right -= 6;
          t.left += 6;
+         t.top += 1;
          align = kLeftText;
       }
       else
