@@ -25,10 +25,16 @@ class CMenuAsSlider : public CCursorHidingControl, public Surge::UI::SkinConsumi
 {
 public:
    CMenuAsSlider(const VSTGUI::CPoint& loc,
-                VSTGUI::IControlListener* listener,
-                long tag,
-                std::shared_ptr<SurgeBitmaps> bitmapStore,
-                SurgeStorage* storage = nullptr);
+                 VSTGUI::IControlListener* listener,
+                 long tag,
+                 std::shared_ptr<SurgeBitmaps> bitmapStore,
+                 SurgeStorage* storage = nullptr) : CMenuAsSlider( loc, VSTGUI::CPoint( 133, 22 ), listener, tag, bitmapStore, storage ) {}
+   CMenuAsSlider(const VSTGUI::CPoint& loc,
+                 const VSTGUI::CPoint& size,
+                 VSTGUI::IControlListener* listener,
+                 long tag,
+                 std::shared_ptr<SurgeBitmaps> bitmapStore,
+                 SurgeStorage* storage = nullptr);
    virtual ~CMenuAsSlider();
    virtual void draw(VSTGUI::CDrawContext*) override;
    void setLabel( const char* lab ) { label = lab; }

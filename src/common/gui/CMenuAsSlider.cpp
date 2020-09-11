@@ -25,14 +25,15 @@ using namespace VSTGUI;
 extern VSTGUI::CFontRef displayFont;
 
 CMenuAsSlider::CMenuAsSlider(const VSTGUI::CPoint& loc,
+                             const VSTGUI::CPoint &sz,
                              VSTGUI::IControlListener* listener,
                              long tag,
                              std::shared_ptr<SurgeBitmaps> bitmapStore,
                              SurgeStorage* storage) :
-   CCursorHidingControl(CRect( loc, CPoint( 133, 22 ) ), listener, tag, nullptr )
+   CCursorHidingControl(CRect( loc, sz ), listener, tag, nullptr )
 {
    // this->storage = storage;
-   auto size = CRect( 0, 0, 133, 22);
+   auto size = CRect( 0, 0, sz.x, sz.y );
    size.offset( loc.x, loc.y );
 
    setViewSize( size );
@@ -45,6 +46,18 @@ CMenuAsSlider::~CMenuAsSlider() {
 void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
 {
    auto r = getViewSize();
+#if DEBUGLAYOUT
+   if( isHover )
+   {
+      dc->setFillColor( kRedCColor );
+      dc->drawRect( r, kDrawFilled );
+   }
+   else
+   {
+      dc->setFillColor( kGreenCColor );
+      dc->drawRect( r, kDrawFilled );
+   }
+#endif   
 
    auto d = r;
    d.top += 2; d.bottom -= 2; 
@@ -53,9 +66,6 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
    {
       d.left += dragRegion.getWidth();
    }
-
-   if (filtermode)
-      d.right -= 10;
 
    if( isHover && pBackgroundHover )
    {
@@ -97,7 +107,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       t.right -= 14;
       if( filtermode )
       {
-         t.right -= 10;
+         t.right -= 6;
          t.left += 6;
          align = kLeftText;
       }
