@@ -1488,7 +1488,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 #if 1 // SURGE_EXTRA_FILTERS
             rect.offset( 1, -3 );
 
-            auto hsw = new CMenuAsSlider( rect.getTopLeft(), CPoint( 124, 20 ), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
+            auto hsw = new CMenuAsSlider( rect.getTopLeft(), CPoint( 124, 21 ), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
             hsw->setMinMax( 0, n_fu_type - 1 );
             hsw->setLabel( p->get_name() );
             hsw->setDeactivated( false );
@@ -3619,7 +3619,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (synth->isActiveModulation(ptag, (modsources)ms))
                   n_ms++;
 
-            // see if we have any modulators that are unassigned, then create "Add Modulation From..." menu
+            // see if we have any modulators that are unassigned, then create "Add Modulation from..." menu
             if (n_ms != n_modsources)
             {
                COptionMenu* addModSub = new COptionMenu(menuRect, 0, 0, 0, 0,
@@ -3640,7 +3640,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   }
                }
 
-               contextMenu->addEntry(addModSub, Surge::UI::toOSCaseForMenu("Add Modulation From..."));
+               contextMenu->addEntry(addModSub, Surge::UI::toOSCaseForMenu("Add Modulation from..."));
 
                if (addModSub)
                {
