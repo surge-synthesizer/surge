@@ -546,12 +546,12 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          sprintf(label, "lfo%i_magnitude", l);
          a->push_back(scene[sc].lfo[l].magnitude.assign(p_id.next(), id_s++, label, "Amplitude",
                                                         ct_lfoamplitude,
-                                                        "lfo.amplitude", px, py, sc_id, cg_LFO,
+                                                        "lfo.amplitude", px, py + gui_hfader_dist, sc_id, cg_LFO,
                                                         ms_lfo1 + l, true, Surge::ParamConfig::kHorizontal | sceasy));
          py += gui_hfader_dist;
          sprintf(label, "lfo%i_deform", l);
          a->push_back(scene[sc].lfo[l].deform.assign(p_id.next(), id_s++, label, "Deform",
-                                                     ct_percent_bidirectional, "lfo.deform", px, py, sc_id,
+                                                     ct_percent_bidirectional, "lfo.deform", px, py - gui_hfader_dist, sc_id,
                                                      cg_LFO, ms_lfo1 + l, true, Surge::ParamConfig::kHorizontal));
 
          px += gui_sec_width;
