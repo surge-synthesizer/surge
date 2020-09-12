@@ -1269,6 +1269,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
             if (p->extend_range)
                style |= kBipolar;
             break;
+         case ct_fmratio:
+            if( p->extend_range )
+               style |= kBipolar;
+            break;
          };
 
          auto parentClassName = c->ultimateparentclassname;
@@ -1475,6 +1479,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
          case ct_lfoamplitude:
             if (p->extend_range)
+               style |= kBipolar;
+            break;
+         case ct_fmratio:
+            if( p->extend_range )
                style |= kBipolar;
             break;
          };
