@@ -3014,7 +3014,8 @@ void SurgeSynthesizer::loadFromDawExtraState() {
 
    for (int i=0; i<n_customcontrollers; ++i )
    {
-      if( storage.getPatch().dawExtraState.customcontrol_map.find(i) != storage.getPatch().dawExtraState.midictrl_map.end() )
+      if (storage.getPatch().dawExtraState.customcontrol_map.find(i) !=
+          storage.getPatch().dawExtraState.customcontrol_map.end())
          storage.controllers[i] = storage.getPatch().dawExtraState.customcontrol_map[i];
    }
 
