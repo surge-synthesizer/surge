@@ -88,6 +88,13 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_MENU_IN_SLIDER_BG, f);
    addEntry(IDB_MENU_IN_FILTER_BG, f);
    addEntry(IDB_FILTER_GLYPHS, f);
+
+   // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
+   addEntry(IDB_MSEG_SEGMENT_HANDLES, f);
+   addEntry(IDB_MSEG_MOVEMENT, f);
+   addEntry(IDB_MSEG_EDITMODE, f);
+   // == /SVG == Do not remove this comment
+
 }
 
 void SurgeBitmaps::addEntry(int id, VSTGUI::CFrame* f)

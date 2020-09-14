@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <circle style="fill: #AA6000;" cx="6" cy="6" r="4"/>
+    <g>
+      <circle style="fill: #AA6000;" cx="18" cy="6" r="4"/>
+      <rect x="18" y="2" width="4" height="8" style="fill: #AA6000;"/>
+    </g>
+    <g>
+      <circle style="fill: #AA6000;" cx="30" cy="6" r="4"/>
+      <rect x="26" y="2" width="4" height="8" style="fill: #AA6000;"/>
+    </g>
+    <rect x="38" y="2" width="8" height="8" style="fill: #AA6000;"/>
+  </g>
+  <g transform="matrix(1, 0, 0, 1, 0.0, 12)">
+    <circle style="fill: #FFDDAA;" cx="6" cy="6" r="4"/>
+    <g>
+      <circle style="fill: #FFDDAA;" cx="18" cy="6" r="4"/>
+      <rect x="18" y="2" width="4" height="8" style="fill: #FFDDAA;"/>
+    </g>
+    <g>
+      <circle style="fill: #FFDDAA;" cx="30" cy="6" r="4"/>
+      <rect x="26" y="2" width="4" height="8" style="fill: #FFDDAA;"/>
+    </g>
+    <rect x="38" y="2" width="8" height="8" style="fill: #FFDDAA;"/>
+  </g>
+  <g transform="matrix(1, 0, 0, 1, 0.0, 24)">
+    <circle style="fill: #FF9000;" cx="6" cy="6" r="4"/>
+    <g>
+      <circle style="fill: #FF9000;" cx="18" cy="6" r="4"/>
+      <rect x="18" y="2" width="4" height="8" style="fill: #FF9000;"/>
+    </g>
+    <g>
+      <circle style="fill: #FF9000;" cx="30" cy="6" r="4"/>
+      <rect x="26" y="2" width="4" height="8" style="fill: #FF9000;"/>
+    </g>
+    <rect x="38" y="2" width="8" height="8" style="fill: #FF9000;"/>
+  </g>
+</svg>
