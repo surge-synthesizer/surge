@@ -751,7 +751,7 @@ if( BUILD_VST3 )
          src/linux/LinuxVST3Helpers.cpp)
   elseif( WIN32 )
     target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/dllmain.cpp)
-    target_link_options( surge-vst3-dll PUBLIC  "/DEF:..\\resources\\windows-vst3\\surge.def" )
+    target_link_options(surge-vst3-dll PUBLIC "/DEF:${CMAKE_SOURCE_DIR}\\resources\\windows-vst3\\surge.def")
   endif()
 
   target_compile_definitions(surge-vst3-dll
@@ -840,7 +840,7 @@ if( BUILD_VST2 )
     target_compile_definitions( surge-vst2-dll PRIVATE "__cdecl=" )
   endif()
   if( WIN32 )
-    target_link_options( surge-vst2-dll PUBLIC  "/DEF:..\\resources\\windows-vst2\\surge.def" )
+    target_link_options(surge-vst2-dll PUBLIC "/DEF:${CMAKE_SOURCE_DIR}\\resources\\windows-vst2\\surge.def")
   endif()
 
   target_compile_features(surge-vst2-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
