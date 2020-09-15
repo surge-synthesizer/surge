@@ -52,6 +52,9 @@
 #include "MSEGModulationHelper.h"
 // FIXME
 
+#if __cplusplus < 201703L
+constexpr float MSEGStorage::minimumDuration;
+#endif
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
