@@ -3,17 +3,17 @@
   <desc>Created with Lunacy</desc>
   <defs>
     <linearGradient x1="0.5" y1="0.023572976" x2="0.5" y2="1" id="gradient_1">
-      <stop offset="0" stop-color="#FFA72E" />
-      <stop offset="0.16311117" stop-color="#FFA72E" />
-      <stop offset="0.18797827" stop-color="#FF9A10" />
-      <stop offset="1" stop-color="#FF9A10" />
+      <stop offset="0" stop-color="#FFD75E" stop-opacity="0.8" />
+      <stop offset="0.16311117" stop-color="#FFE79E" stop-opacity="0.8" />
+      <stop offset="0.18797827" stop-color="#FFEA90" stop-opacity="0.8" />
+      <stop offset="1" stop-color="#FFFA80" stop-opacity="0.8" />
     </linearGradient>
     <rect width="12" height="128" id="artboard_1" />
     <clipPath id="clip_1">
       <use xlink:href="#artboard_1" clip-rule="evenodd" />
     </clipPath>
   </defs>
-  <g id="bmp00160" clip-path="url(#clip_1)">
+  <g id="hover00160" clip-path="url(#clip_1)">
     <g id="Backgrounds" transform="translate(0 19.000061)">
       <g id="Group-6" transform="translate(0 90)">
         <path d="M0 0L11 0L11 11L0 11L0 0L0 0Z" transform="translate(0 1)" id="Rectangle#3" fill="url(#gradient_1)" fill-rule="evenodd" stroke="none" />
