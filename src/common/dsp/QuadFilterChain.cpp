@@ -33,7 +33,6 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
    const __m128 hb_c = _mm_set1_ps(0.5f); // If this is changed from 0.5, make sure to change
                                           // this in the code because it is assumed to be half
    const __m128 one = _mm_set1_ps(1.0f);
-   const __m128 half = _mm_set1_ps(0.5f);
 
    switch (config)
    {
@@ -67,10 +66,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          x = _mm_add_ps(_mm_mul_ps(x, _mm_sub_ps(one, d.Mix2)), _mm_mul_ps(y, d.Mix2));
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
          __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
-         __m128 outpb = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
-
-         __m128 bp = _mm_and_ps( mask, _mm_mul_ps( d.Gain, _mm_mul_ps( half, _mm_add_ps( d.BPL[k], d.BPR[k] ) ) ) );
-         __m128 out = _mm_add_ps( bp, outpb );
+         __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
 
          // output stage
          MWriteOutputs(out)
@@ -108,11 +104,8 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          x = _mm_add_ps(_mm_mul_ps(x, _mm_sub_ps(one, d.Mix2)), _mm_mul_ps(y, d.Mix2));
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
          __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
-         __m128 outpb = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
-         d.FBlineL = outpb;
-
-         __m128 bp = _mm_and_ps( mask, _mm_mul_ps( d.Gain, _mm_mul_ps( half, _mm_add_ps( d.BPL[k], d.BPR[k] ) ) ) );
-         __m128 out = _mm_add_ps( bp, outpb );
+         __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
+         d.FBlineL = out;
 
          // output stage
          MWriteOutputs(out)
@@ -147,12 +140,9 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          x = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
 
-         __m128 bp = _mm_and_ps( mask, _mm_mul_ps( d.Gain, _mm_mul_ps( half, _mm_add_ps( d.BPL[k], d.BPR[k] ) ) ) );
-         __m128 xout = _mm_add_ps( bp, x );
+         MWriteOutputs(x)
 
-         MWriteOutputs(xout);
-
-         y = _mm_add_ps(x, y);
+             y = _mm_add_ps(x, y);
 
          if (B)
             y = g.FU2ptr(&d.FU[1], y);
@@ -193,11 +183,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          d.FBlineL = out;
          // output stage
-
-         __m128 bp = _mm_and_ps( mask, _mm_mul_ps( d.Gain, _mm_mul_ps( half, _mm_add_ps( d.BPL[k], d.BPR[k] ) ) ) );
-         __m128 xout = _mm_add_ps( bp, out );
-
-         MWriteOutputs(xout)
+         MWriteOutputs(out)
       }
       break;
    case fb_dual2:
@@ -230,10 +216,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          d.FBlineL = out;
          // output stage
-         __m128 bp = _mm_and_ps( mask, _mm_mul_ps( d.Gain, _mm_mul_ps( half, _mm_add_ps( d.BPL[k], d.BPR[k] ) ) ) );
-         __m128 xout = _mm_add_ps( bp, out );
-
-         MWriteOutputs(xout)
+         MWriteOutputs(out)
       }
       break;
    case fb_ring:
@@ -268,11 +251,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          d.FBlineL = out;
          // output stage
-
-         __m128 bp = _mm_and_ps( mask, _mm_mul_ps( d.Gain, _mm_mul_ps( half, _mm_add_ps( d.BPL[k], d.BPR[k] ) ) ) );
-         __m128 xout = _mm_add_ps( bp, out );
-
-         MWriteOutputs(xout)
+         MWriteOutputs(out)
       }
       break;
    case fb_stereo:
@@ -308,10 +287,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          d.FBlineL = _mm_add_ps(x, y);
 
          // output stage
-         auto outx = _mm_and_ps( mask, _mm_add_ps( x, _mm_mul_ps( d.Gain, d.BPL[k] ) ) );
-         auto outy = _mm_and_ps( mask, _mm_add_ps( y, _mm_mul_ps( d.Gain, d.BPR[k] ) ) );
-         MWriteOutputsDual(outx, outy);
-         AssertReasonableAudioFloat(OutL[k]);
+         MWriteOutputsDual(x, y) AssertReasonableAudioFloat(OutL[k]);
          AssertReasonableAudioFloat(OutR[k]);
       }
       break;
@@ -366,11 +342,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          d.FBlineR = y;
 
          // output stage
-         auto outx = _mm_and_ps( mask, _mm_add_ps( x, _mm_mul_ps( d.Gain, d.BPL[k] ) ) );
-         auto outy = _mm_and_ps( mask, _mm_add_ps( y, _mm_mul_ps( d.Gain, d.BPR[k] ) ) );
-
-         MWriteOutputsDual(outx, outy);
-         AssertReasonableAudioFloat(OutL[k]);
+         MWriteOutputsDual(x, y) AssertReasonableAudioFloat(OutL[k]);
          AssertReasonableAudioFloat(OutR[k]);
       }
       break;

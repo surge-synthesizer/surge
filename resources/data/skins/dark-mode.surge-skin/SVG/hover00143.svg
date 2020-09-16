@@ -1,50 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="22px" height="60px" viewBox="0 0 22 60" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <desc>Created with Lunacy</desc>
-  <defs>
-    <path d="M0 0L4 0L4 7L0 7L0 0Z" id="path_1" />
-    <path d="M0 0L4 0L4 7L0 7L0 0Z" transform="translate(5 0)" id="path_2" />
-    <path d="M0 0L4 0L4 7L0 7L0 0Z" transform="translate(10 0)" id="path_3" />
-    <rect width="22" height="60" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-    <clipPath id="clip_2">
-      <use xlink:href="#path_1" />
-    </clipPath>
-    <clipPath id="clip_3">
-      <use xlink:href="#path_2" />
-    </clipPath>
-    <clipPath id="clip_4">
-      <use xlink:href="#path_3" />
-    </clipPath>
-  </defs>
-  <g id="hover00143" clip-path="url(#clip_1)">
-    <g id="Bypass-Filters" transform="translate(4 49.5)">
-      <g id="F1">
-        <g clip-path="url(#clip_2)">
-          <use xlink:href="#path_1" fill="none" stroke="#399DFF" stroke-width="2" />
-        </g>
-      </g>
-      <g id="F1+2">
-        <g clip-path="url(#clip_3)">
-          <use xlink:href="#path_2" fill="none" stroke="#399DFF" stroke-width="2" />
-        </g>
-      </g>
-      <g id="F2">
-        <g clip-path="url(#clip_4)">
-          <use xlink:href="#path_3" fill="none" stroke="#399DFF" stroke-width="2" />
-        </g>
-      </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="22px" height="45px" viewBox="0 0 22 45" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>hover00143</title>
+    <g id="hover00143" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Rectangle" fill="#399DFF" x="4" y="4" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#399DFF" x="9" y="19" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#399DFF" x="14" y="34" width="4" height="7"></rect>
     </g>
-    <g id="Filter-2" transform="translate(14 34.5)">
-      <path d="M0 0L4 0L4 7L0 7L0 0Z" id="F2" fill="#399DFF" stroke="none" />
-    </g>
-    <g id="Both-Filters" transform="translate(9 19.5)">
-      <path d="M0 0L4 0L4 7L0 7L0 0Z" id="F1+2" fill="#399DFF" stroke="none" />
-    </g>
-    <g id="Filter-1" transform="translate(4 4.5)">
-      <path d="M0 0L4 0L4 7L0 7L0 0Z" id="F1" fill="#399DFF" stroke="none" />
-    </g>
-  </g>
 </svg>

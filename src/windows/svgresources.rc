@@ -50,8 +50,6 @@ IDB_ABOUT_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00158.svg"
 IDB_BUTTON_MENU_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00164.svg"
 IDB_BUTTON_ABOUT_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00159.svg"
 IDB_SCENEMODE_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00114.svg"
-IDB_FILTER_SELECT_BINARY_SVG DATA "assets/SurgeClassic/exported/bmp00170.svg"
-
 IDB_BG_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00102.svg"
 IDB_OCTAVES_OSC_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00117.svg"
 IDB_SCENESWITCH_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00113.svg"

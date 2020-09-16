@@ -233,7 +233,6 @@ set( SURGE_GENERATED_SOURCES
 
 set(SURGE_GUI_SOURCES
   src/common/gui/CAboutBox.cpp
-  src/common/gui/CBinaryCounterSwitch.cpp
   src/common/gui/CCursorHidingControl.cpp
   src/common/gui/CDIBitmap.cpp
   src/common/gui/CEffectSettings.cpp

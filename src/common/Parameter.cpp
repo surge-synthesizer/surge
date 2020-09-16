@@ -564,7 +564,7 @@ void Parameter::set_type(int ctrltype)
    case ct_oscroute:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = 3;
+      val_max.i = 2;
       val_default.i = 1;
       break;
    case ct_envshape:
@@ -2244,9 +2244,6 @@ void Parameter::get_display(char* txt, bool external, float ef)
             break;
          case 2:
             sprintf(txt, "Filter 2");
-            break;
-         case 3:
-            sprintf(txt, "Bypass Filters");
             break;
          }
          break;
