@@ -18,6 +18,7 @@
 #include "resource.h"
 #include "CSurgeSlider.h"
 #include "CHSwitch2.h"
+#include "CBinaryCounterSwitch.h"
 #include "CSwitchControl.h"
 #include "CParameterTooltip.h"
 #include "CPatchBrowser.h"
@@ -1584,8 +1585,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect rect(0, 0, 22, 15);
             rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 15, 1, 3,
-                                          bitmapStore->getBitmap(IDB_OSCROUTE), nopoint, true);
+            /* auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 15, 1, 4,
+               bitmapStore->getBitmap(IDB_OSCROUTE), nopoint, true); */
+            auto hsw = new CBinaryCounterSwitch( rect, this, p->id + start_paramtags, 2, IDB_FILTER_SELECT_BINARY );
+            /*
+            ** so the control is F1 F2. The internal values are: 0 = F1, 1 = F1/F2; 2 = F3, 3 = neither
+            ** that means the bitflips for ths switches are 0->1, 1->3, 2->2, 3-> 0
+            */
+            hsw->valueRemap[0] = 1;
+            hsw->valueRemap[1] = 3;
+            hsw->valueRemap[2] = 2;
+            hsw->valueRemap[3] = 0;
+
+            p->ctrlstyle = p->ctrlstyle | kNoPopup;
+
             hsw->setValue(p->get_value_f01());
             hsw->setSkin( currentSkin, bitmapStore );
             frame->addView(hsw);

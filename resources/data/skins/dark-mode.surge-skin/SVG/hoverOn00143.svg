@@ -1,9 +1,26 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="22px" height="45px" viewBox="0 0 22 45" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>hoverOn00143</title>
-    <g id="hoverOn00143" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect id="Rectangle" stroke="#FFFFFF" fill="#1DD23B" x="4.5" y="4.5" width="3" height="6"></rect>
-        <rect id="Rectangle" stroke="#FFFFFF" fill="#1DD23B" x="9.5" y="19.5" width="3" height="6"></rect>
-        <rect id="Rectangle" stroke="#FFFFFF" fill="#1DD23B" x="14.5" y="34.5" width="3" height="6"></rect>
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="22px" height="60px" viewBox="0 0 22 60" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <desc>Created with Lunacy</desc>
+  <defs>
+    <rect width="22" height="60" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="hoverOn00143" clip-path="url(#clip_1)">
+    <g id="Bypass-Filters" transform="translate(4 49.5)">
+      <path d="M0 0L4 0L4 7L0 7L0 0Z" id="F1" fill="#30663A" stroke="#FFFFFF" stroke-width="1" />
+      <path d="M0 0L4 0L4 7L0 7L0 0Z" transform="translate(5 0)" id="F1+2" fill="#30663A" stroke="#FFFFFF" stroke-width="1" />
+      <path d="M0 0L4 0L4 7L0 7L0 0Z" transform="translate(10 0)" id="F2" fill="#30663A" stroke="#FFFFFF" stroke-width="1" />
     </g>
+    <g id="Filter-2" transform="translate(14 34.5)">
+      <path d="M0 0L4 0L4 7L0 7L0 0Z" id="F2" fill="#1DD23B" stroke="#FFFFFF" stroke-width="1" />
+    </g>
+    <g id="Both-Filters" transform="translate(9 19.5)">
+      <path d="M0 0L4 0L4 7L0 7L0 0Z" id="F1+2" fill="#1DD23B" stroke="#FFFFFF" stroke-width="1" />
+    </g>
+    <g id="Filter-1" transform="translate(4 4.5)">
+      <path d="M0 0L4 0L4 7L0 7L0 0Z" id="F1" fill="#1DD23B" stroke="#FFFFFF" stroke-width="1" />
+    </g>
+  </g>
 </svg>
