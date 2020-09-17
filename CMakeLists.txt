@@ -607,6 +607,7 @@ elseif( WIN32 )
     /Zc:alignedNew
     /bigobj
 
+    /MP # Build with Multiple Processes
     $<IF:$<CONFIG:DEBUG>,/MTd,/MT> # Link static runtime (poor man's MSVC_RUNTIME_LIBRARY for CMake <3.15)
     )
 
