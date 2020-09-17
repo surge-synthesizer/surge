@@ -100,27 +100,28 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       voices_usedby[1][i] = 0;
    }
 
-   FBQ[0] =
-       (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
-   FBQ[1] =
-       (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
+   FBQ[0] = (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
+   FBQ[1] = (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
 
-   for(int i=0; i<(MAX_VOICES >> 2); ++i)
+   for (int i = 0; i < (MAX_VOICES >> 2); ++i)
    {
        InitQuadFilterChainStateToZero(&(FBQ[0][i]));
        InitQuadFilterChainStateToZero(&(FBQ[1][i]));
    }
 
-
    SurgePatch& patch = storage.getPatch();
 
    patch.polylimit.val.i = 16;
+
    for (int sc = 0; sc < 2; sc++)
    {
       SurgeSceneStorage& scene = patch.scene[sc];
+
       scene.modsources.resize(n_modsources);
+
       for (int i = 0; i < n_modsources; i++)
          scene.modsources[i] = 0;
+      
       scene.modsources[ms_modwheel] = new ControllerModulationSource();
       scene.modsources[ms_aftertouch] = new ControllerModulationSource();
       scene.modsources[ms_pitchbend] = new ControllerModulationSource();
@@ -133,15 +134,14 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
             storage.getPatch().scenedata[sc], 0,
             &patch.stepsequences[sc][n_lfos_voice + l],
             &patch.msegs[sc][n_lfos_voice + l],
-            &patch.formulamods[sc][n_lfos_voice + l]
-               );
+            &patch.formulamods[sc][n_lfos_voice + l]);
       }
    }
+
    for (int i = 0; i < n_customcontrollers; i++)
    {
       patch.scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource();
-      patch.scene[1].modsources[ms_ctrl1 + i] =
-         patch.scene[0].modsources[ms_ctrl1 + i];
+      patch.scene[1].modsources[ms_ctrl1 + i] = patch.scene[0].modsources[ms_ctrl1 + i];
    }
 
    amp.set_blocksize(BLOCK_SIZE);
@@ -155,7 +155,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    polydisplay = 0;
    refresh_editor = false;
    patch_loaded = false;
-   storage.getPatch().category = "Init";
+   storage.getPatch().category = "Templates";
    storage.getPatch().name = "Init";
    storage.getPatch().comment = "";
    storage.getPatch().author = "";
@@ -176,11 +176,13 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    CC0 = 0;
    CC32 = 0;
    PCH = 0;
+
    for (int i = 0; i < 8; i++)
    {
       refresh_ctrl_queue[i] = -1;
       refresh_parameter_queue[i] = -1;
    }
+
    for (int i = 0; i < 8; i++)
       vu_peak[i] = 0.f;
    learn_param = -1;

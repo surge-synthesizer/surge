@@ -673,11 +673,11 @@ void SurgePatch::init_default_values()
       scene[sc].volume.val.f = 0.890899f;
       scene[sc].width.val.f = 1.f; // width
 
-      scene[sc].mute_o2.val.b = true;
-      scene[sc].mute_o3.val.b = true;
-      scene[sc].mute_noise.val.b = true;
-      scene[sc].mute_ring_12.val.b = true;
-      scene[sc].mute_ring_23.val.b = true;
+      scene[sc].level_o2.val.f = 0.f;
+      scene[sc].level_o3.val.f = 0.f;
+      scene[sc].level_ring_12.val.f = 0.f;
+      scene[sc].level_ring_23.val.f = 0.f;
+      scene[sc].level_noise.val.f = 0.f;
       scene[sc].route_o1.val.i = 1;
       scene[sc].route_o2.val.i = 1;
       scene[sc].route_o3.val.i = 1;
