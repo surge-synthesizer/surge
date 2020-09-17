@@ -8,6 +8,10 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+endif()
+
 project(Surge VERSION 1.7.1.0 LANGUAGES CXX ASM)
 message( STATUS "CMake Version is ${CMAKE_VERSION}" )
 message( STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}" )
@@ -43,9 +47,6 @@ add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cp
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_dependencies( surge-shared git-info )
-
-
-set(CMAKE_BUILD_TYPE Release)
 
 # Set up external packages
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
@@ -510,7 +511,6 @@ elseif( UNIX AND NOT APPLE )
   set(OS_COMPILE_DEFINITIONS
     ${ARCH_COMPILE_DEFINITIONS}
     LINUX=1
-    RELEASE=1
     ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
@@ -607,7 +607,7 @@ elseif( WIN32 )
     /Zc:alignedNew
     /bigobj
 
-    /MT
+    $<IF:$<CONFIG:DEBUG>,/MTd,/MT> # Link static runtime (poor man's MSVC_RUNTIME_LIBRARY for CMake <3.15)
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -759,6 +759,8 @@ if( BUILD_VST3 )
     ${OS_COMPILE_DEFINITIONS}
     ${FS_COMPILE_DEFINITIONS}
     TARGET_VST3=1
+    $<IF:$<CONFIG:DEBUG>,DEVELOPMENT,RELEASE>=1
+    DEBUG=$<CONFIG:DEBUG>
     )
 
   target_compile_options(surge-vst3-dll
@@ -788,7 +790,7 @@ if( BUILD_VST3 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
-      COMMAND ./scripts/macOS/package-vst3.sh ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst3-dll.dylib ${SURGE_PRODUCT_DIR}
+      COMMAND ./scripts/macOS/package-vst3.sh $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}
       COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst3/
       COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst3/
       )
@@ -801,16 +803,14 @@ if( BUILD_VST3 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
       COMMAND pwd
-      COMMAND ./scripts/linux/package-vst3.sh  ${CMAKE_BINARY_DIR}/libsurge-vst3-dll.so ${SURGE_PRODUCT_DIR}
+      COMMAND ./scripts/linux/package-vst3.sh  $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}
       )
     elseif( WIN32 )
       add_custom_target( Surge-VST3-Packaged ALL
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS surge-vst3-dll
-        COMMAND ${CMAKE_COMMAND} -E echo "copying ${CMAKE_BINARY_DIR}/Release/surge-vst3-dll.dll to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3"
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst3-dll.dll
-                                    ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3
-                                    )
+        COMMAND ${CMAKE_COMMAND} -E echo "copying $<TARGET_FILE:surge-vst3-dll> to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3
+        )
    endif()
 
 endif()
@@ -880,7 +880,7 @@ if( BUILD_VST2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST2 component"
-      COMMAND ./scripts/macOS/package-vst.sh   ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst2-dll.dylib ${SURGE_PRODUCT_DIR}
+      COMMAND ./scripts/macOS/package-vst.sh $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}
       COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst/
       COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst/
       )
@@ -893,17 +893,15 @@ if( BUILD_VST2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-vst2-dll.so ${SURGE_PRODUCT_DIR}/Surge.so
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}/Surge.so
       )
    endif()
    if( WIN32 )
       add_custom_target( Surge-VST2-Packaged ALL
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS surge-vst2-dll
-        COMMAND ${CMAKE_COMMAND} -E echo "copying ${CMAKE_BINARY_DIR}/Release/surge-vst2-dll.dll to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll"
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2-dll.dll
-                                    ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
-                                    )
+        COMMAND ${CMAKE_COMMAND} -E echo "copying $<TARGET_FILE:surge-vst2-dll> to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
+        )
    endif()
 
 endif()
@@ -959,8 +957,8 @@ if( BUILD_LV2 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-lv2-dll.dylib ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
-      COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.dylib
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
+      COMMAND python scripts/linux/generate-lv2-ttl.py ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
       )
   elseif( UNIX AND NOT APPLE )
     add_custom_command(
@@ -969,7 +967,7 @@ if( BUILD_LV2 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-lv2-dll.so ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
       COMMAND python scripts/linux/generate-lv2-ttl.py ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
       )
   endif()
@@ -1082,7 +1080,7 @@ if( APPLE )
     TARGET run-headless
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND ${CMAKE_BINARY_DIR}/Release/surge-headless
+    COMMAND $<TARGET_FILE:surge-headless>
     )
 
   add_custom_target( install-resources-local )

@@ -41,12 +41,7 @@ distribution.
 #include <string.h>
 #include <assert.h>
 
-// Help out windows:
-#if defined( _DEBUG ) && !defined( DEBUG )
-#define DEBUG
-#endif
-
-#if defined( DEBUG ) && defined( _MSC_VER )
+#if defined( _DEBUG ) && defined( _MSC_VER )
 #include <windows.h>
 #define TIXML_LOG OutputDebugString
 #else
