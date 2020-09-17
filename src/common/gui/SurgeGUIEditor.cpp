@@ -3867,10 +3867,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
             case 0:
                modsource = newsource;
-
-               mod_editor = false;
-               // mod_editor = true;
-               queue_refresh = true;
+               mod_editor = true;
                refresh_mod();
                break;
             case 1:
@@ -3888,7 +3885,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                break;
             };
          }
-         //((gui_modsrcbutton*)control)->
 
          if (isLFO(newsource) && !(buttons & kShift))
          {
