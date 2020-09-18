@@ -348,6 +348,17 @@ TEST_CASE( "lipol_ps class", "[dsp]" )
 
 TEST_CASE( "Check FastMath Functions", "[dsp]" )
 {
+   SECTION( "Clamp to -PI,PI" )
+   {
+      for( float f = -2132.7; f < 37424.3; f += 0.741 )
+      {
+         float q = Surge::DSP::clampToPiRange( f );
+         INFO( "Clamping " << f << " to " << q );
+         REQUIRE( q > -M_PI );
+         REQUIRE( q < M_PI );
+      }
+   }
+   
    SECTION( "fastSin and fastCos in range -PI, PI" )
    {
       float sds = 0, md = 0;
