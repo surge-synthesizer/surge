@@ -3867,21 +3867,21 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
             case 0:
                modsource = newsource;
-               mod_editor = true;
+               if (mod_editor)
+                  mod_editor = true;
+               else
+                  mod_editor = false;
                refresh_mod();
                break;
             case 1:
                modsource = newsource;
                mod_editor = true;
                refresh_mod();
-               // queue_refresh = true;
                break;
             case 2:
                modsource = newsource;
-               // modsource = 0;
                mod_editor = false;
                refresh_mod();
-               // queue_refresh = true;
                break;
             };
          }
