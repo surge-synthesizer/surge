@@ -1068,7 +1068,6 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
             if( sge )
             {
-               std::cout <<"ABMS is " << associatedBitmapStore.get() << std::endl;
                auto mse = new MSEGEditor(lfodata, ms, skin, associatedBitmapStore);
                sge->setEditorOverlay( mse, "MSEG Editor", []() { std::cout << "MSE Closed" << std::endl; } );
                return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
