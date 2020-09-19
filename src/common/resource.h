@@ -60,6 +60,13 @@
 #define IDB_MENU_IN_FILTER_BG 168
 #define IDB_FILTER_GLYPHS 169
 
+// == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
+#define IDB_MSEG_SEGMENT_HANDLES 301
+#define IDB_MSEG_MOVEMENT 302
+#define IDB_MSEG_EDITMODE 303
+// == /SVG == Do not remove this comment
+
+
 #define IDC_NAME 1001
 #define IDC_CATEGORY 1002
 #define IDC_DESCRIPTION 1003
