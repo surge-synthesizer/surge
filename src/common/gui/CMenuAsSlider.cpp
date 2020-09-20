@@ -171,10 +171,19 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
 CMouseEventResult CMenuAsSlider::onMouseDown( CPoint &w, const CButtonState &buttons ) {
    if( hasDragRegion && dragRegion.pointInside( w ) )
    {
-      detachCursor(w);
-      isDragRegionDrag = true;
-      dragStart = w;
-      dragDir = unk;
+      if( buttons & kDoubleClick )
+      {
+         setValue(0);
+         if( listener )
+            listener->valueChanged(this);
+      }
+      else
+      {
+         detachCursor(w);
+         isDragRegionDrag = true;
+         dragStart = w;
+         dragDir = unk;
+      }
       return kMouseEventHandled;
    }
    if( ! deactivated )
