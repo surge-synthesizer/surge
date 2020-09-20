@@ -14,6 +14,7 @@
   <special id="tun-menu" help_url="#tuning-options"/>
   <special id="zoom-menu" help_url="#zoom"/>
   <special id="patch-browser" help_url="#patch-browser"/>
+  <special id="wavetables" help_url="#wavetable"/>
 
   <special id="macro-modbutton" help_url="#assignable-controllers"/>
   <special id="lfo-modbutton" help_url="#lfos"/>

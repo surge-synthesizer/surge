@@ -1131,7 +1131,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    }
 
    // CRect(12,62,140,159)
-   oscdisplay = new COscillatorDisplay(CRect(6, 81, 142, 180),
+   oscdisplay = new COscillatorDisplay(CRect(6, 81, 142, 180), this,
                                        &synth->storage.getPatch()
                                        .scene[synth->storage.getPatch().scene_active.val.i]
                                        .osc[current_osc],

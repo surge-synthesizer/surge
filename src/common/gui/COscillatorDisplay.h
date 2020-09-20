@@ -25,8 +25,8 @@
 class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponent
 {
 public:
-   COscillatorDisplay(const VSTGUI::CRect& size, OscillatorStorage* oscdata, SurgeStorage* storage)
-       : VSTGUI::CControl(size, 0, 0, 0)
+   COscillatorDisplay(const VSTGUI::CRect& size, VSTGUI::IControlListener *l, OscillatorStorage* oscdata, SurgeStorage* storage)
+       : VSTGUI::CControl(size, l, 0, 0)
    {
       this->oscdata = oscdata;
       this->storage = storage;
