@@ -13,6 +13,7 @@
 ** open source in September 2018.
 */
 
+#include "SurgeGUIEditor.h"
 #include "COscillatorDisplay.h"
 #include "Oscillator.h"
 #include <time.h>
@@ -478,7 +479,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
 }
 
 void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem)
-{
+{   
    int idx = 0;
    bool needToAddSep = false;
    for (auto c : storage->wtCategoryOrdering)
@@ -571,6 +572,25 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
                    }
       );
    contextMenu->addEntry( omi );
+
+   auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
+   if( sge )
+   {
+      auto hu = sge->helpURLForSpecial( "wavetables" );
+      if( hu != "" )
+      {
+         auto lurl = sge->fullyResolvedHelpURL(hu);
+         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc("[?] Wavetables"));
+         auto ca = [lurl](CCommandMenuItem *i)
+                      {
+                         Surge::UserInteractions::openURL(lurl);
+                      };
+         hi->setActions( ca, nullptr );
+         contextMenu->addSeparator();
+         contextMenu->addEntry(hi);
+      }
+   }
+
 }
 
 bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
