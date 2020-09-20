@@ -470,17 +470,18 @@ const int max_msegs = 128;
 struct MSEGStorage {
    struct segment {
       float duration;
-      float v0, v1;
+      float v0;
+      float nv1; // this is the v0 of the neighbor and is here just for convenience. MSEGModulationHelper::rebuildCache will set it
       float cpduration, cpv;
       float state[5]; // just some random variables we can use for state management if we want
       enum Type {
-         CONSTANT = 0,
-         LINEAR,
+         LINEAR = 1,
          QUADBEZ,
          SCURVE,
-         WAVE,
+         SINWAVE,
          DIGILINE,
-         BROWNIAN
+         BROWNIAN,
+         SQUAREWAVE,
       } type;
    };
 

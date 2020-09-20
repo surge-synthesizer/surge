@@ -159,6 +159,8 @@ enum special_tags
    start_paramtags,
 };
 
+int SurgeGUIEditor::start_paramtag_value = start_paramtags;
+
 std::string specialTagToString( special_tags t )
 {
    if( t >= tag_mod_source0 && t < tag_mod_source_end )

@@ -69,6 +69,9 @@ private:
 public:
    SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
    virtual ~SurgeGUIEditor();
+
+   static int start_paramtag_value;
+   
 #if TARGET_AUDIOUNIT | TARGET_VST2 | TARGET_LV2
    void idle() override;
 #else

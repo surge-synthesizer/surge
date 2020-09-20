@@ -19,7 +19,10 @@
 #include "DebugHelpers.h"
 #include "basic_dsp.h" // for limit_range
 
-void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
+namespace Surge {
+namespace MSEG {
+
+void rebuildCache( MSEGStorage *ms )
 {
    float totald = 0;
    for( int i=0; i<ms->n_activeSegments; ++i )
@@ -28,19 +31,17 @@ void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
       totald += ms->segments[i].duration;
       ms->segmentEnd[i] = totald;
 
+      int nextseg = i+1;
+      if( nextseg >= ms->n_activeSegments )
+         nextseg = 0;
+      ms->segments[i].nv1 = ms->segments[nextseg].v0;
+      
       // set up some aux points for convenience
       switch( ms->segments[i].type )
       {
-      case MSEGStorage::segment::CONSTANT:
-      {
-         ms->segments[i].v1 = ms->segments[i].v0;
-         ms->segments[i].cpv = ms->segments[i].v0;
-         ms->segments[i].cpduration = ms->segments[i].duration / 2;
-         break;
-      }
       case MSEGStorage::segment::LINEAR:
       {
-         ms->segments[i].cpv = 0.5 * ( ms->segments[i].v0 + ms->segments[i].v1 );
+         ms->segments[i].cpv = 0.5 * ( ms->segments[i].v0 + ms->segments[i].nv1 );
          ms->segments[i].cpduration = ms->segments[i].duration / 2;
          break;
       }
@@ -52,7 +53,7 @@ void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
    ms->lastSegmentEvaluated = -1;
 }
 
-float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms)
+float valueAt(int ip, float fup, float df, MSEGStorage *ms)
 {
    if( ms->n_activeSegments == 0 ) return df;
 
@@ -94,9 +95,6 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
    float res = r.v0;
    switch( r.type )
    {
-   case MSEGStorage::segment::CONSTANT:
-      res = r.v0;
-      break;
    case MSEGStorage::segment::LINEAR:
    {
       float frac = pd / r.duration;
@@ -104,7 +102,7 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
          frac = pow( frac, 1.0 + df * 0.7 );
       if( df > 0 )
          frac = pow( frac, 1.0 + df * 3 );
-      res = frac * r.v1 + ( 1 - frac ) * r.v0;
+      res = frac * r.nv1 + ( 1 - frac ) * r.v0;
       break;
    }
    case MSEGStorage::segment::BROWNIAN:
@@ -119,7 +117,7 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
       float targetTime = pd/r.duration;
       if( targetTime >= 1 )
       {
-         res = r.v1;
+         res = r.nv1;
       }
       else if( targetTime <= 0 )
       {
@@ -137,14 +135,14 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
             
             if( r.state[lasttime] < 1 )
             {
-               float lincoef  = ( r.v1 - r.state[validx] ) / ( 1 - r.state[lasttime] );
+               float lincoef  = ( r.nv1 - r.state[validx] ) / ( 1 - r.state[lasttime] );
                float randcoef = 0.1 * r.cpduration / r.duration;
                
                r.state[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
                r.state[lasttime] += dt;
             }
             else
-               r.state[validx] = r.v1;
+               r.state[validx] = r.nv1;
          }
          res = r.state[validx];
       }
@@ -173,7 +171,7 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
       
       // here's the midpoint along the connecting curve
       float tp = r.duration/2;
-      float vp = (r.v1-r.v0)/2 + r.v0;
+      float vp = (r.nv1-r.v0)/2 + r.v0;
 
       // The distance from tp,vp to cpt,cpv
       float dt = (cpt-tp), dy = (cpv-vp);
@@ -184,7 +182,7 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
       // B = (1-t)^2 P0 + 2 t (1-t) P1 + t^2 P2
       float ttarget = pd;
       float px0 = 0, px1 = cpt, px2 = r.duration,
-         py0 = r.v0, py1 = cpv, py2 = r.v1;
+         py0 = r.v0, py1 = cpv, py2 = r.nv1;
 
 
 
@@ -207,9 +205,9 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
 
       if( a == 0 || disc < 0 )
       {
-         // This means we have a line between v0 and v1
+         // This means we have a line between v0 and nv1
          float frac = pd / r.duration;
-         res = frac * r.v1 + ( 1 - frac ) * r.v0;
+         res = frac * r.nv1 + ( 1 - frac ) * r.v0;
       }
       else
       {
@@ -234,8 +232,8 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
       float x = ( pd / r.duration - 0.5 ) * 2; // goes from -1 to 1
 
       float eps = 0.01;
-      float mv = r.v0; //std::min( r.v0, r.v1 );
-      float xv = r.v1; // std::max( r.v0, r.v1 );
+      float mv = r.v0; //std::min( r.v0, r.nv1 );
+      float xv = r.nv1; // std::max( r.v0, r.nv1 );
       if( fabs(xv - mv) < eps )
       {
          res = 0.5 * ( mv + xv );
@@ -253,7 +251,7 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
       if( k == 0 ) 
       {
          float frac = pd / r.duration;
-         res = frac * r.v1 + ( 1 - frac ) * r.v0;
+         res = frac * r.nv1 + ( 1 - frac ) * r.v0;
          break;
       }
 
@@ -292,9 +290,9 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
       break;
    }
 
-   case MSEGStorage::segment::WAVE: {
+   case MSEGStorage::segment::SINWAVE: 
+   case MSEGStorage::segment::SQUAREWAVE: {
       int steps = (int)( r.cpduration / r.duration * 15 );
-      float mul = ( 1 + 2 * steps ) * M_PI;
       auto f = pd/r.duration;
       float a = 1;
       
@@ -303,7 +301,20 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
       if( df > 0 )
          a = 1 + df * 1.5;
 
-      res = ( r.v0-r.v1 ) * pow( ( cos( mul * f ) + 1 ) * 0.5, a ) + r.v1;
+      float kernel = 0;
+      if( r.type == MSEGStorage::segment::SINWAVE )
+      {
+         float mul = ( 1 + 2 * steps ) * M_PI;
+         kernel = cos( mul * f );
+      }
+      if( r.type == MSEGStorage::segment::SQUAREWAVE )
+      {
+         float mul = ( 2 * steps );
+         int ifm = (int)( mul * f );
+         kernel = ( ifm % 2 == 0 ? 1 : -1 );
+      }
+      
+      res = ( r.v0-r.nv1 ) * pow( ( kernel + 1 ) * 0.5, a ) + r.nv1;
       break;
    }
 
@@ -314,7 +325,7 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
          frac = pow( frac, 1.0 + df * 0.7 );
       if( df > 0 )
          frac = pow( frac, 1.0 + df * 3 );
-      res = frac * r.v1 + ( 1 - frac ) * r.v0;
+      res = frac * r.nv1 + ( 1 - frac ) * r.v0;
       break;
    }
 
@@ -324,4 +335,159 @@ float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms
 
    
    return res;
+}
+
+
+int timeToSegment( MSEGStorage *ms, float t ) {
+   if( ms->totalDuration < MSEGStorage::minimumDuration ) return -1;
+   
+   while( t > ms->totalDuration ) t -= ms->totalDuration;
+   while( t < 0 ) t += ms->totalDuration;
+   
+   int idx = -1;
+   for( int i=0; i<ms->n_activeSegments; ++i ) 
+   {
+      if( t >= ms->segmentStart[i] && t < ms->segmentEnd[i] )
+      {
+         idx = i;
+         break;
+      }
+   }
+   return idx;
+}
+
+void changeTypeAt( MSEGStorage *ms, float t, MSEGStorage::segment::Type type ) {
+   auto idx = timeToSegment( ms, t );
+   if( idx < ms->n_activeSegments )
+   {
+      ms->segments[idx].type = type;
+   }
+}
+
+void insertAtIndex( MSEGStorage *ms, int insertIndex ) {
+   for( int i=std::max( ms->n_activeSegments + 1, max_msegs - 1 ); i > insertIndex; --i )
+   {
+      ms->segments[i] = ms->segments[i-1];
+   }
+   ms->segments[insertIndex].type = MSEGStorage::segment::LINEAR;
+   ms->segments[insertIndex].v0 = 0;
+   ms->segments[insertIndex].duration = 0.25;
+   ms->n_activeSegments ++;
+}
+   
+
+void insertAfter( MSEGStorage *ms, float t ) {
+   auto idx = timeToSegment( ms, t );
+   if( idx < 0 ) idx = 0;
+   idx++;
+   insertAtIndex( ms, idx );
+}
+
+void insertBefore( MSEGStorage *ms, float t ) {
+   auto idx = timeToSegment( ms, t );
+   if( idx < 0 ) idx = 0;
+   insertAtIndex( ms, idx );
+}
+
+void extendTo( MSEGStorage *ms, float t, float nv ) {
+   if( t < ms->totalDuration ) return;
+   
+   insertAtIndex( ms, ms->n_activeSegments );
+
+   auto sn = ms->n_activeSegments - 1;
+   ms->segments[sn].type = MSEGStorage::segment::LINEAR;
+   if( sn == 0 )
+      ms->segments[sn].v0 = 0;
+   else
+      ms->segments[sn].v0 = ms->segments[sn-1].nv1;
+
+   // The first point has to match where I just clicked
+   ms->segments[0].v0 = nv;
+   
+   float dt = t - ms->totalDuration;
+   ms->segments[sn].duration = dt;
+}
+
+void splitSegment( MSEGStorage *ms, float t, float nv ) {
+   int idx = timeToSegment( ms, t );
+   if( idx >= 0 )
+   {
+      while( t > ms->totalDuration ) t -= ms->totalDuration;
+      while( t < 0 ) t += ms->totalDuration;
+      
+      float dt = (t - ms->segmentStart[idx]) / ( ms->segments[idx].duration);
+      auto q = ms->segments[idx]; // take a copy
+      insertAtIndex(ms, idx + 1);
+      
+      ms->segments[idx].duration *= dt;
+      ms->segments[idx+1].duration = q.duration * ( 1 - dt );
+      
+      ms->segments[idx+1].v0 = nv;
+      ms->segments[idx+1].type = ms->segments[idx].type;
+      
+      ms->segments[idx].cpduration = std::min( ms->segments[idx].duration, ms->segments[idx].cpduration );
+      ms->segments[idx+1].cpduration = std::min( ms->segments[idx+1].duration, ms->segments[idx+1].cpduration );
+   }
+}
+
+
+void unsplitSegment( MSEGStorage *ms, float t ) {
+   int idx = timeToSegment( ms, t );
+   int prior = idx;;
+   if( ( ms->segmentEnd[idx] - t < t - ms->segmentStart[idx] ) || t >= ms->totalDuration )
+   {
+      if( idx == ms->n_activeSegments - 1 )
+      {
+         // We are just deleting the last segment
+         deleteSegment( ms, t );
+         return;
+      }
+      idx++;
+      prior = idx - 1;
+   }
+   else
+   {
+      prior = idx - 1;
+   }
+   if( prior < 0 ) prior = ms->n_activeSegments - 1;
+   if( prior == idx ) return;
+   
+   // ms->segments[prior].v1 = ms->segments[idx].v1;
+   ms->segments[prior].duration += ms->segments[idx].duration;
+   
+   for( int i=idx; i<ms->n_activeSegments - 1; ++i )
+   {
+      ms->segments[i] = ms->segments[i+1];
+   }
+   ms->n_activeSegments --;
+}
+   
+void deleteSegment( MSEGStorage *ms, float t ) {
+   auto idx = timeToSegment( ms, t );
+   
+   for( int i=idx; i<ms->n_activeSegments - 1; ++i )
+   {
+      ms->segments[i] = ms->segments[i+1];
+   }
+   ms->n_activeSegments --;
+   
+   int prior = idx - 1;
+   if( prior < 0 )
+      prior = ms->n_activeSegments;
+   
+   // if( prior != idx )
+      //ms->segments[idx].v0 = ms->segments[prior].nv1;
+}
+
+void resetControlPoint( MSEGStorage *ms, float t )
+{
+   auto idx = timeToSegment( ms, t );
+   if( idx >= 0 && idx < ms->n_activeSegments )
+   {
+      ms->segments[idx].cpduration = ms->segments[idx].duration * 0.5;
+      ms->segments[idx].cpv = ( ms->segments[idx].v0 + ms->segments[idx].nv1 ) * 0.5;
+   }
+}
+
+}
 }
