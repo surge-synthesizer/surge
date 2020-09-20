@@ -133,7 +133,11 @@ public:
             }
             else
             {
-               dc->drawString( iwstrings.val.c_str(), tmid, VSTGUI::kCenterText, true );
+               auto valalign = VSTGUI::kCenterText;
+               if( iwstrings.dvalminus.size() == 0 && iwstrings.valminus.size() == 0 )
+                  valalign = VSTGUI::kLeftText;
+               
+               dc->drawString( iwstrings.val.c_str(), tmid, valalign, true );
                dc->setFontColor( mpCol );
                dc->drawString( iwstrings.dvalplus.c_str(), tmid, VSTGUI::kRightText, true );
                dc->setFontColor( mnCol );
