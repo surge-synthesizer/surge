@@ -384,7 +384,10 @@ bool Vst2PluginInstance::getProductString(char* name)
 
 bool Vst2PluginInstance::getVendorString(char* text)
 {
-   strcpy(text, "Open Source Surge Synth Team");
+   if( isFruity )
+      strcpy(text, "Open Source Surge Synth Team");
+   else
+      strcpy(text, "Surge Synth Team");
    return true;
 }
 
@@ -400,12 +403,14 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
    s->process_input = (!plug_is_synth || input_connected);
 
 
-   if( checkNamesEvery++ == 20 )
+   checkNamesEvery++;
+   if( checkNamesEvery * 2 * sampleFrames >= dsamplerate ) // every half second
    {
       checkNamesEvery = 0;
       if( std::atomic_exchange( &parameterNameUpdated, false ) )
       {
-         updateDisplay();
+         if( ! isFruity )
+            updateDisplay();
       }
    }
 
@@ -637,6 +642,13 @@ bool Vst2PluginInstance::tryInit()
       _instance->audio_processing_active = true;
 
       _instance->hostProgram = std::string( host ) + " " + product;
+
+      isFruity = false;
+      if( _instance->hostProgram.find( "Fruit" ) != std::string::npos )
+      {
+         isFruity = true;
+      }
+      
       _instance->setupActivateExtraOutputs();
       
       editor = editorTmp.release();
