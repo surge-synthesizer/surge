@@ -157,6 +157,7 @@ void Parameter::set_name(const char* n)
 {
    strncpy(dispname, n, NAMECHARS);
    create_fullname(dispname, fullname, ctrlgroup, ctrlgroup_entry);
+   parameterNameUpdated = true;
 }
 
 Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
@@ -2944,3 +2945,5 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
    valid = false;
    return 0.0;
 }
+
+std::atomic<bool> parameterNameUpdated( false );

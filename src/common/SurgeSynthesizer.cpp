@@ -1604,6 +1604,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
          for (int j = 0; j < n_fx_params; j++)
          {
             storage.getPatch().fx[s].p[j].set_type(ct_none);
+            std::string n = "Param ";
+            n += std::to_string( j + 1 );
+            storage.getPatch().fx[s].p[j].set_name(n.c_str());
             storage.getPatch().fx[s].p[j].val.i = 0;
             storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].i = 0;
          }
