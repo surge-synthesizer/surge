@@ -21,7 +21,6 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "CHSwitch2.h"
-#include "CSurgeSlider.h"
 #include "SurgeGUIEditor.h"
 
 /*
@@ -600,7 +599,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          auto tf = pxToTime( );
          auto t = tf( where.x );
          auto pv = pxToVal();
-         auto v = pv( where.y );
+         auto v = limit_range( pv( where.y ), -1.f, 1.f );
 
          int seg = Surge::MSEG::timeToSegment( this->ms, t );
 
@@ -665,6 +664,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             {
                gotOne = true;
                h.onDrag( where.x - mouseDownOrigin.x, where.y - mouseDownOrigin.y );
+               modelChanged(); // HACK FIXME
                mouseDownOrigin = where;
                break;
             }
@@ -738,7 +738,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    void modelChanged() {
       Surge::MSEG::rebuildCache( ms );
       recalcHotZones(mouseDownOrigin); // FIXME
-      invalid();
+      // Do this more heavy handed version
+      getFrame()->invalid();
+      // invalid();
    }
    
    MSEGStorage *ms;
@@ -750,30 +752,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    CLASS_METHODS( MSEGCanvas, CControl );
 };
 
-
-struct MSEGModulatorOutput : public CControl, public Surge::UI::SkinConsumingComponent {
-
-   MSEGModulatorOutput(const CRect &size, LFOStorage *lfodata,  Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CControl( size ) {
-      setSkin( skin, b );
-      this->lfodata = lfodata;
-   };
-
-   virtual void draw( CDrawContext *dc) override {
-      dc->setFillColor( CColor( 0xcc, 0xcc, 0xcc ) );
-      dc->drawRect( getViewSize(), kDrawFilled );
-      dc->setFontColor( kRedCColor );
-
-      auto labelFont = new VSTGUI::CFontDesc( "Lato", 20 );
-      dc->setFont( labelFont );
-      dc->drawString( "SOON MODULATOR OUTPUT", getViewSize(), kCenterText, true );
-
-
-   }
-
-   LFOStorage *lfodata;
-   
-   CLASS_METHODS( MSEGModulatorOutput, CControl );
-};
 
 
 void MSEGControlRegion::valueChanged( CControl *p )
@@ -807,28 +785,6 @@ void MSEGControlRegion::rebuild()
       int marginPos = xpos + margin;
       int ypos = margin;
 
-      auto addS = [&](Parameter *p)
-                     {
-                        auto hs = new CSurgeSlider( CPoint( marginPos, ypos ), p->ctrlstyle, this,
-                                                    p->id + SurgeGUIEditor::start_paramtag_value, true, associatedBitmapStore, nullptr );
-                        hs->setSkin( skin, associatedBitmapStore );
-                        hs->setValue( p->get_value_f01() );
-                        hs->setLabel( p->get_name() );
-                        hs->setMoveRate( p->moverate );
-                        hs->setModMode( 0 );
-                        if( p->can_temposync() )
-                           hs->setTempoSync( p->temposync );
-                        
-                        addView( hs );
-                        ypos += 20;
-                     };
-
-      addS( &( lfodata->rate ) );
-      addS( &( lfodata->start_phase ) );
-      addS( &( lfodata->magnitude ) );
-      addS( &( lfodata->deform ) );
-      //CSurgeSlider *hs
-      
       auto envAndLoop = new CTextLabel( CRect( CPoint( marginPos, ypos ), CPoint( sliderWidth, height - ypos ) ), "Loop" );
       envAndLoop->setFont( labelFont );
       envAndLoop->setFontColor( kWhiteCColor );
@@ -959,15 +915,13 @@ struct MSEGMainEd : public CViewContainer {
       this->ms = ms;
       this->skin = skin;
 
-      int controlHeight = 140;
+      int controlHeight = 85;
       int outputWidth = 320;
       auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, skin, bmp );
             
-      auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  outputWidth, controlHeight ) ), msegCanv,
+      auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,
                                                lfodata, ms, skin, bmp );
 
-      auto modulatorOutput = new MSEGModulatorOutput( CRect( CPoint( outputWidth, size.getHeight() - controlHeight ), CPoint( size.getWidth() - outputWidth, controlHeight ) ), lfodata, skin, bmp );
-      addView( modulatorOutput );
 
       msegCanv->controlregion = msegControl;
       msegControl->canvas = msegCanv;
@@ -981,7 +935,7 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 480 ) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 380 ) )
 {
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );
