@@ -1068,7 +1068,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
             if( sge )
             {
-               auto mse = new MSEGEditor(lfodata, ms, skin);
+               auto mse = new MSEGEditor(lfodata, ms, skin, associatedBitmapStore);
                sge->setEditorOverlay( mse, "MSEG Editor", []() { std::cout << "MSE Closed" << std::endl; } );
                return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
             }
@@ -1079,6 +1079,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
       {
          if (rect_steps.pointInside(where))
          {
+            detachCursor(where);
             if( buttons.isRightButton() )
             {
                rmStepStart = where;
@@ -1212,6 +1213,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
    if( controlstate == cs_linedrag )
    {
+      attachCursor();
       int startStep = -1;
       int endStep = -1;
 
@@ -1289,6 +1291,11 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
       }
    }
 
+   if( controlstate == cs_steps )
+   {
+      attachCursor();
+   }
+   
    if (controlstate)
    {
       // onMouseMoved(where,buttons);

@@ -81,7 +81,7 @@ void AirWindowsEffect::init_ctrltypes() {
 
    for( int i=0; i<n_fx_params - 1; ++i )
    {
-      fxdata->p[i+1].set_type( ct_airwindow_param );
+      fxdata->p[i+1].set_type( ct_none );
       std::string w = "Airwindow " + std::to_string(i);
       fxdata->p[i+1].set_name( w.c_str() );
 

@@ -53,6 +53,8 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
    setNumInputs(2);  // stereo in
    setNumOutputs(6); // stereo out, scene A out, scene B out
 
+   checkNamesEvery = 0;
+   
 #if MAC || LINUX
    isSynth();
    plug_is_synth = true;
@@ -370,19 +372,19 @@ void Vst2PluginInstance::getParameterLabel(VstInt32 index, char* label)
 
 bool Vst2PluginInstance::getEffectName(char* name)
 {
-   strcpy(name, stringProductName);
+   strcpy(name, "Surge");
    return true;
 }
 
 bool Vst2PluginInstance::getProductString(char* name)
 {
-   strcpy(name, stringProductName);
+   strcpy(name, "Surge");
    return true;
 }
 
 bool Vst2PluginInstance::getVendorString(char* text)
 {
-   strcpy(text, stringCompanyName);
+   strcpy(text, "Open Source Surge Synth Team");
    return true;
 }
 
@@ -396,6 +398,16 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
 
    SurgeSynthesizer* s = (SurgeSynthesizer*)_instance;
    s->process_input = (!plug_is_synth || input_connected);
+
+
+   if( checkNamesEvery++ == 20 )
+   {
+      checkNamesEvery = 0;
+      if( std::atomic_exchange( &parameterNameUpdated, false ) )
+      {
+         updateDisplay();
+      }
+   }
 
    // do each buffer
    VstTimeInfo* timeinfo = getTimeInfo(kVstPpqPosValid | kVstTempoValid | kVstTransportPlaying);
@@ -462,14 +474,19 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
          if (replacing)
          {
             outputs[outp][i] = (float)_instance->output[outp][blockpos];
-            outputs[2 + outp][i] = (float)_instance->sceneout[0][outp][blockpos];
-            outputs[4 + outp][i] = (float)_instance->sceneout[1][outp][blockpos];
+            if( _instance->activateExtraOutputs )
+            {
+               outputs[2 + outp][i] = (float)_instance->sceneout[0][outp][blockpos];
+               outputs[4 + outp][i] = (float)_instance->sceneout[1][outp][blockpos];
+            }
          }
          else  // adding
          {
             outputs[outp][i] += (float)_instance->output[outp][blockpos]; 
-            outputs[2 + outp][i] += (float)_instance->sceneout[0][outp][blockpos];
-            outputs[4 + outp][i] += (float)_instance->sceneout[1][outp][blockpos];
+            if( _instance->activateExtraOutputs ) {
+               outputs[2 + outp][i] += (float)_instance->sceneout[0][outp][blockpos];
+               outputs[4 + outp][i] += (float)_instance->sceneout[1][outp][blockpos];
+            }
          }
       }
 
@@ -609,6 +626,7 @@ bool Vst2PluginInstance::tryInit()
    getHostProductString(product);
    VstInt32 hostversion = getHostVendorVersion();
 
+
    try {
       std::unique_ptr<SurgeSynthesizer> synthTmp(new SurgeSynthesizer(this));
       synthTmp->setSamplerate(this->getSampleRate());
@@ -618,6 +636,9 @@ bool Vst2PluginInstance::tryInit()
       _instance = synthTmp.release();
       _instance->audio_processing_active = true;
 
+      _instance->hostProgram = std::string( host ) + " " + product;
+      _instance->setupActivateExtraOutputs();
+      
       editor = editorTmp.release();
    } catch (std::bad_alloc err) {
       Surge::UserInteractions::promptError(err.what(), "Out of memory");

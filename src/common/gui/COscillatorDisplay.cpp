@@ -13,6 +13,7 @@
 ** open source in September 2018.
 */
 
+#include "SurgeGUIEditor.h"
 #include "COscillatorDisplay.h"
 #include "Oscillator.h"
 #include <time.h>
@@ -478,7 +479,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
 }
 
 void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem)
-{
+{   
    int idx = 0;
    bool needToAddSep = false;
    for (auto c : storage->wtCategoryOrdering)
@@ -510,13 +511,6 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    // Add direct open here
    contextMenu->addSeparator();
 
-   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Wavetable List")));
-   auto refresh = [this](CCommandMenuItem* item) { this->storage->refresh_wtlist(); };
-   refreshItem->setActions(refresh, nullptr);
-   contextMenu->addEntry(refreshItem);
-
-   contextMenu->addSeparator();
-
    auto renameItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Change Wavetable Display Name..." )));
    auto rnaction = [this](CCommandMenuItem *item)
                       {
@@ -529,7 +523,14 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    renameItem->setActions(rnaction, nullptr);
    contextMenu->addEntry(renameItem);
 
-   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Wavetable From File...")));
+   auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Wavetable List")));
+   auto refresh = [this](CCommandMenuItem* item) { this->storage->refresh_wtlist(); };
+   refreshItem->setActions(refresh, nullptr);
+   contextMenu->addEntry(refreshItem);
+
+   contextMenu->addSeparator();
+
+   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Wavetable from File...")));
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
    contextMenu->addEntry(actionItem);
@@ -554,7 +555,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
           }
           if( scene == -1 || oscNum == -1 )
           {
-             Surge::UserInteractions::promptError( "Unable to determine which oscillator I have data for in export", "Export" );
+             Surge::UserInteractions::promptError( "Unable to determine which oscillator has data for export", "Export" );
           }
           else
           {
@@ -565,15 +566,30 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    exportItem->setActions(exportAction,nullptr);
    contextMenu->addEntry(exportItem);
 
-   contextMenu->addSeparator();
+   auto omi = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu("Open Exported Wavetables Folder..." ) ) );
+   omi->setActions([this](CCommandMenuItem *i) {
+                      Surge::UserInteractions::openFolderInFileBrowser( Surge::Storage::appendDirectory( this->storage->userDataPath, "Exported Wavetables" ) );
+                   }
+      );
+   contextMenu->addEntry( omi );
 
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Download Additional Content...")));
-   auto contentAction = [](CCommandMenuItem *item)
-       {
-           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
-       };
-   contentItem->setActions(contentAction,nullptr);
-   contextMenu->addEntry(contentItem);
+   auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
+   if( sge )
+   {
+      auto hu = sge->helpURLForSpecial( "wavetables" );
+      if( hu != "" )
+      {
+         auto lurl = sge->fullyResolvedHelpURL(hu);
+         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc("[?] Wavetables"));
+         auto ca = [lurl](CCommandMenuItem *i)
+                      {
+                         Surge::UserInteractions::openURL(lurl);
+                      };
+         hi->setActions( ca, nullptr );
+         contextMenu->addSeparator();
+         contextMenu->addEntry(hi);
+      }
+   }
 
 }
 
@@ -628,13 +644,8 @@ bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
 
    if (!cat.isRoot)
    {
-#if WINDOWS
-      std::string pathSep = "\\";
-#else
-      std::string pathSep = "/";
-#endif
       std::string catName = storage->wt_category[categoryId].name;
-      std::size_t sepPos = catName.find_last_of(pathSep);
+      std::size_t sepPos = catName.find_last_of(PATH_SEPARATOR);
       if (sepPos != std::string::npos)
       {
          catName = catName.substr(sepPos + 1);

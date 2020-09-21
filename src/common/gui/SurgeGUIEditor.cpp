@@ -1131,7 +1131,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    }
 
    // CRect(12,62,140,159)
-   oscdisplay = new COscillatorDisplay(CRect(6, 81, 142, 180),
+   oscdisplay = new COscillatorDisplay(CRect(6, 81, 142, 180), this,
                                        &synth->storage.getPatch()
                                        .scene[synth->storage.getPatch().scene_active.val.i]
                                        .osc[current_osc],
@@ -1267,6 +1267,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
          case ct_lfoamplitude:
             if (p->extend_range)
+               style |= kBipolar;
+            break;
+         case ct_fmratio:
+            if( p->extend_range )
                style |= kBipolar;
             break;
          };
@@ -1477,20 +1481,33 @@ void SurgeGUIEditor::openOrRecreateEditor()
             if (p->extend_range)
                style |= kBipolar;
             break;
+         case ct_fmratio:
+            if( p->extend_range )
+               style |= kBipolar;
+            break;
          };
 
          switch (p->ctrltype)
          {
          case ct_filtertype:
          {
-            CRect rect(0, 0, 129, 18);
+            CRect rect(0, 0, 121, 18);
             rect.offset(p->posx - 2, p->posy + 1);
-#if SURGE_EXTRA_FILTERS
-            rect.offset( -3, -2 );
-            auto hsw = new CMenuAsSlider( rect.getTopLeft(), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
-            hsw->setMinMax( p->val_min.i, p->val_max.i );
+#if 1 // SURGE_EXTRA_FILTERS
+            rect.offset( 1, -3 );
+
+            auto hsw = new CMenuAsSlider( rect.getTopLeft(), CPoint( 124, 21 ), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
+            hsw->setMinMax( 0, n_fu_type - 1 );
             hsw->setLabel( p->get_name() );
             hsw->setDeactivated( false );
+            hsw->setBackgroundID( IDB_MENU_IN_FILTER_BG );
+            hsw->setFilterMode( true );
+            p->ctrlstyle = p->ctrlstyle | kNoPopup;
+
+            auto drr = rect;
+            drr.right = drr.left + 18;
+            hsw->setDragRegion( drr );
+            hsw->setDragGlyph( IDB_FILTER_GLYPHS, 18 );
 #else            
             auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 10, 18, 1, 10,
                                           bitmapStore->getBitmap(IDB_FILTERBUTTONS), nopoint, true);
@@ -1509,7 +1526,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_filtersubtype:
          {
             CRect rect(0, 0, 12, 18);
-            rect.offset(p->posx + 129, p->posy + 1);
+            rect.offset(p->posx + 129, p->posy + 1.5);
             auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
                                                bitmapStore->getBitmap(IDB_FILTERSUBTYPE));
             rect(1, 1, 9, 14);
@@ -1959,7 +1976,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_flangermode:
          case ct_flangerwave:
          case ct_distortion_waveshape:
-         case ct_sinefmlegacy:
          {
             auto hs = new CMenuAsSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs),
                                         this,
@@ -2435,34 +2451,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    if (!editor_open)
       return 0;
 
-   /*if((button&kRButton)&&modsource)
-     {
-     modsource = 0;
-     queue_refresh = true;
-     return 1;
-     }*/
-
    if (button & (kMButton | kButton4 | kButton5))
    {
       toggle_mod_editing();
-
-      /*mod_editor = !mod_editor;
-        blinktimer = 0.f;
-        blinkstate = false;
-        refresh_mod();*/
       return 1;
    }
+
    long tag = control->getTag();
 
    // In these cases just move along with success. RMB does nothing on these switches
    if( tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store || tag == tag_store_cancel || tag == tag_store_ok )
-   {
       return 1;
-   }
 
    std::vector< std::string > clearControlTargetNames;
 
    auto cmensl = dynamic_cast<CMenuAsSlider*>(control);
+
    if( cmensl && cmensl->deactivated )
       return 0;
    
@@ -3623,7 +3627,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                if (synth->isActiveModulation(ptag, (modsources)ms))
                   n_ms++;
 
-            // see if we have any modulators that are unassigned, then create "Add Modulation From..." menu
+            // see if we have any modulators that are unassigned, then create "Add Modulation from..." menu
             if (n_ms != n_modsources)
             {
                COptionMenu* addModSub = new COptionMenu(menuRect, 0, 0, 0, 0,
@@ -3644,7 +3648,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   }
                }
 
-               contextMenu->addEntry(addModSub, Surge::UI::toOSCaseForMenu("Add Modulation From..."));
+               contextMenu->addEntry(addModSub, Surge::UI::toOSCaseForMenu("Add Modulation from..."));
 
                if (addModSub)
                {
@@ -3811,11 +3815,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             synth->refresh_editor = true;
          }
-
-         return 1;
+         else
+            p->bound_value();
       }
-      else
-         return 0;
    }
    return 0;
 }
@@ -3865,9 +3867,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
             case 0:
                modsource = newsource;
-
-               mod_editor = false;
-               // mod_editor = true;
+               if (mod_editor)
+                  mod_editor = true;
+               else
+                  mod_editor = false;
                queue_refresh = true;
                refresh_mod();
                break;
@@ -3875,18 +3878,14 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                modsource = newsource;
                mod_editor = true;
                refresh_mod();
-               // queue_refresh = true;
                break;
             case 2:
                modsource = newsource;
-               // modsource = 0;
                mod_editor = false;
                refresh_mod();
-               // queue_refresh = true;
                break;
             };
          }
-         //((gui_modsrcbutton*)control)->
 
          if (isLFO(newsource) && !(buttons & kShift))
          {
@@ -5025,7 +5024,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     addCallbackMenu(settingsMenu, "About Surge", [this]() {
        if (aboutbox)
-          ((CAboutBox*)aboutbox)->boxShow(this->synth->storage.datapath, this->synth->storage.userDataPath);
+          ((CAboutBox*)aboutbox)->boxShow(this->synth->storage.datapath, this->synth->storage.userDataPath, this->synth->hostProgram);
     });
     eid++;
 
@@ -5155,14 +5154,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                             }
                         };
 
-                        std::string scl_folder = "tuning-library";
-#if WINDOWS
-                           scl_folder += "\\SCL";
-#else
-                           scl_folder += "/SCL";
-#endif
+                        auto scl_path = Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "SCL");
 
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + scl_folder, ".scl", "Scala microtuning files (*.scl)", cb);
+                        Surge::UserInteractions::promptFileOpenDialog(scl_path, ".scl", "Scala microtuning files (*.scl)", cb);
                     }
         );
     tid++;
@@ -5199,14 +5193,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
 
                         };
 
-                        std::string kbm_folder = "tuning-library";
-#if WINDOWS
-                           kbm_folder += "\\KBM Concert Pitch";
-#else
-                           kbm_folder += "/KBM Concert Pitch";
-#endif
+                        auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "KBM Concert Pitch");
 
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.datapath + kbm_folder, ".kbm", "Scala keyboard mapping files (*.kbm)", cb);
+                        Surge::UserInteractions::promptFileOpenDialog(kbm_path, ".kbm", "Scala keyboard mapping files (*.kbm)", cb);
                     }
         );
     tid++;
@@ -5246,15 +5235,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
     addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Factory Tuning Library..."),
                     [this]()
                     {
-                       auto dpath = this->synth->storage.datapath;
-                       std::string sep = "/";
-#if WINDOWS
-                       sep = "\\";
-                       if( dpath.back() == '\\' || dpath.back() == '/' )
-                         sep = "";
-#endif
-                       Surge::UserInteractions::openFolderInFileBrowser(
-                          dpath + sep + "tuning-library");
+                       auto dpath = Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library");
+
+                       Surge::UserInteractions::openFolderInFileBrowser(dpath);
                     }
         );
 
@@ -5503,6 +5486,14 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    });
    menuItem->setChecked(modValues);
 
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Activate Extra Scene Outputs"),
+                              [this]() {
+                                 this->synth->activateExtraOutputs = ! this->synth->activateExtraOutputs;
+                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "activateExtraOutputs", this->synth->activateExtraOutputs ? 1 : 0 );
+                              }
+      );
+   menuItem->setChecked(synth->activateExtraOutputs);
+
    return uiOptionsMenu;
 }
 
@@ -5541,13 +5532,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                 dname += "other";
              }
 
-#if WINDOWS
-                dname += "\\";
-#else
-                dname += "/";
-#endif
-
-             dname += entry.name + ")";
+             dname += PATH_SEPARATOR + entry.name + ")";
           }
 
           auto cb = addCallbackMenu(skinSubMenu, dname,
@@ -5842,10 +5827,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
     addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Queried Colors"),
                     [this]()
                        {
-                          auto qc = this->currentSkin->getQueriedColors();
-                          std::set<std::string> ss( qc.begin(), qc.end() );
+                          // auto qc = this->currentSkin->getQueriedColors();
+                          std::set<std::string> ss; // ( qc.begin(), qc.end() );
                           std::ostringstream htmls;
-                          htmls << "<html><body><h1>Color Tags</h1>\n<table border=1><tr><th>tag</th><th>value in skin</th></tr>\n";
+                          htmls << "<html><body><h1>Will Be Back Soon in Nightly (see #2549)</h1>\n<table border=1><tr><th>tag</th><th>value in skin</th></tr>\n";
                           for( auto s : ss )
                           {
                              htmls << "<tr><td>" << s << "</td><td>";

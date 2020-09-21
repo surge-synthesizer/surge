@@ -183,8 +183,17 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
 
       omega[l] = min(M_PI, (double)pitch_to_omega(pitch + detune));
    }
+
+   float fv = 32.0 * M_PI * fmdepth * fmdepth * fmdepth;
+
+   /*
+   ** See issue 2619. At worst case we move phase by fv * 1. Since we
+   ** need phase to be in -Pi,Pi, that means if fv / Pi > 1e5 or so
+   ** we have float precision problems. So lets clamp fv.
+   */
+   fv = limit_range( fv, -1.0e6f, 1.0e6f );
    
-   FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
+   FMdepth.newValue(fv);
    FB.newValue(abs(fb_val));
 
    for (int k = 0; k < BLOCK_SIZE_OS; k++)
@@ -194,14 +203,14 @@ void osc_sine::process_block(float pitch, float drift, bool stereo, bool FM, flo
       for (int u = 0; u < n_unison; u++)
       {
           // Replicate FM2 exactly
-          auto p = phase[u] + lastvalue[u];
+          float p = phase[u] + lastvalue[u];
             
           if (FM)
              p += FMdepth.v * master_osc[k];
 
           // Unlike ::sin and ::cos we are limited in accurate range
           p = Surge::DSP::clampToPiRange(p);
-          
+
           float out_local = valueFromSinAndCos(Surge::DSP::fastsin(p), Surge::DSP::fastcos(p));
 
           outL += (panL[u] * out_local) * playingramp[u] * out_attenuation;

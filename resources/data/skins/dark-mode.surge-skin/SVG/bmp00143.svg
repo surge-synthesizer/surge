@@ -2,14 +2,14 @@
 <svg width="22px" height="45px" viewBox="0 0 22 45" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>bmp00143</title>
     <g id="bmp00143" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect id="Rectangle" fill="#1DD23B" x="4" y="4" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#30663A" x="9" y="4" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#30663A" x="14" y="4" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#1DD23B" x="9" y="19" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#1DD23B" x="14" y="34" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#30663A" x="4" y="19" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#30663A" x="14" y="19" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#30663A" x="4" y="34" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#30663A" x="9" y="34" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" x="4" y="4" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="9" y="4" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="14" y="4" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" x="9" y="19" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" x="14" y="34" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="4" y="19" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="14" y="19" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="4" y="34" width="4" height="7"></rect>
+        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="9" y="34" width="4" height="7"></rect>
     </g>
 </svg>

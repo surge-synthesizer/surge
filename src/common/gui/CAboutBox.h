@@ -38,7 +38,7 @@ public:
                const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
    virtual void unSplash();
 
-   void boxShow(std::string dataPath, std::string userPath);
+   void boxShow(std::string dataPath, std::string userPath, std::string host);
    void boxHide(bool invalidateframe = true);
 
    CLASS_METHODS(CAboutBox, VSTGUI::CControl)
@@ -49,7 +49,7 @@ protected:
    VSTGUI::CPoint offset;
    VSTGUI::SharedPointer<VSTGUI::CBitmap> _aboutBitmap;
    bool bvalue;
-   std::string dataPath, userPath;
+   std::string dataPath, userPath, host;
 
    static VSTGUI::SharedPointer<VSTGUI::CFontDesc> infoFont;
 };

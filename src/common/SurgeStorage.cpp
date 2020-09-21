@@ -52,6 +52,9 @@
 #include "MSEGModulationHelper.h"
 // FIXME
 
+#if __cplusplus < 201703L
+constexpr float MSEGStorage::minimumDuration;
+#endif
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -380,23 +383,9 @@ bailOnPortable:
        userDataPath = userSpecifiedDataPath;
    }
 
-   userFXPath = userDataPath +
-#if WINDOWS
-      "\\"
-#else
-      "/"
-#endif
-      + "FXSettings";
-
+   userFXPath = Surge::Storage::appendDirectory(userDataPath, "FXSettings");
    
-   userMidiMappingsPath = userDataPath +
-#if WINDOWS
-      "\\"
-#else
-      "/"
-#endif
-      + "MIDIMappings";
-   
+   userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDIMappings");
    
 #if LINUX
    if (!snapshotloader.Parse((const char*)&configurationXmlStart, 0,
@@ -747,21 +736,16 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
    for (auto& pc : local_categories)
       nameToLocalIndex[pc.name] = idx++;
 
-   std::string pathSep = "/";
-#if WINDOWS
-   pathSep = "\\";
-#endif
-
    for (auto& pc : local_categories)
    {
-       if (pc.name.find(pathSep) == std::string::npos)
+       if (pc.name.find(PATH_SEPARATOR) == std::string::npos)
        {
            pc.isRoot = true;
        }
        else
        {
            pc.isRoot = false;
-           std::string parent = pc.name.substr(0, pc.name.find_last_of(pathSep) );
+           std::string parent = pc.name.substr(0, pc.name.find_last_of(PATH_SEPARATOR) );
            local_categories[nameToLocalIndex[parent]].children.push_back(pc);
        }
    }
@@ -1804,13 +1788,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
    doc.InsertEndChild( sm );
 
    fs::create_directories( userMidiMappingsPath );
-   std::string fn = userMidiMappingsPath +
-#if WINDOWS
-      "\\"
-#else
-      "/"
-#endif
-      + name + ".srgmid";
+   std::string fn = Surge::Storage::appendDirectory(userMidiMappingsPath, name + ".srgmid");
 
    if( ! doc.SaveFile( fn.c_str() ) )
    {
@@ -1942,7 +1920,24 @@ std::string wstringToUTF8(const std::wstring &str)
     return ret;
 }
 #endif    
-    
+
+std::string appendDirectory( const std::string &root, const std::string &path1 )
+{
+   if (root[root.size()-1] == PATH_SEPARATOR)
+      return root + path1;
+   else
+      return root + PATH_SEPARATOR + path1;
+}
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2 )
+{
+   return appendDirectory( appendDirectory( root, path1 ), path2 );
+}
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2, const std::string &path3 )
+{
+   return appendDirectory( appendDirectory( root, path1, path2 ), path3 );
+}
+
+
 } // end ns Surge::Storage
 } // end ns Surge
 

@@ -105,7 +105,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    }
    else
    {
-       auto factory_add = contextMenu->addEntry("FACTORY PRESETS");
+       auto factory_add = contextMenu->addEntry("FACTORY PATCHES");
        factory_add->setEnabled(0);
 
        for (int i = 0; i < storage->patch_category.size(); i++)
@@ -117,9 +117,9 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
                    string txt;
 
                    if (i == storage->firstThirdPartyCategory)
-                      txt = "THIRD PARTY PRESETS";
+                      txt = "THIRD PARTY PATCHES";
                    else
-                      txt = "USER PRESETS";
+                      txt = "USER PATCHES";
 
                    auto add = contextMenu->addEntry(txt.c_str());
                    add->setEnabled(0);
@@ -135,7 +135,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    
    contextMenu->addSeparator();
 
-   auto loadF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Load Patch From File..." ) ) );
+   auto loadF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Load Patch from File..." ) ) );
    loadF->setActions( [this](CCommandMenuItem *item) {
                          Surge::UserInteractions::promptFileOpenDialog( "", "fxp", "Surge FXP Files",
                                                                         [this](std::string fn) {
@@ -147,32 +147,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       );
    contextMenu->addEntry(loadF);
    
-   auto showU = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open User Patch Folder..." )));
-   showU->setActions( [this](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->userDataPath );
-                      }
-      );
-   contextMenu->addEntry(showU);
-
-   std::string sep = "/";
-#if WINDOWS
-   sep = ""; // We already have an ending \ it seems
-#endif
-   
-   auto showF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Factory Patch Folder..." )));
-   showF->setActions( [this, sep](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + sep + "patches_factory" );
-                      }
-      );
-   contextMenu->addEntry(showF);
-
-   auto show3 = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Third Party Patch Folder..." )));
-   show3->setActions( [this, sep](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + sep + "patches_3rdparty" );
-                      }
-      );
-   contextMenu->addEntry(show3);
-
    auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
    auto refreshAction = [this](CCommandMenuItem *item)
                            {
@@ -181,21 +155,31 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    refreshItem->setActions(refreshAction,nullptr);
    contextMenu->addEntry(refreshItem);
 
- /*
-    TODO: add menu entries for opening factory and user patch folders!
- */
+   contextMenu->addSeparator();
+
+   auto showU = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open User Patches Folder..." )));
+   showU->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->userDataPath );
+                      }
+      );
+   contextMenu->addEntry(showU);
+   
+   auto showF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Factory Patches Folder..." )));
+   showF->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser(Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"));
+                      }
+      );
+   contextMenu->addEntry(showF);
+
+   auto show3 = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Third Party Patches Folder..." )));
+   show3->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser(Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
+                      }
+      );
+   contextMenu->addEntry(show3);
 
 
    contextMenu->addSeparator();
-
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Download Additional Content...")));
-   auto contentAction = [](CCommandMenuItem *item)
-       {
-           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
-       };
-   contentItem->setActions(contentAction,nullptr);
-   contextMenu->addEntry(contentItem);
-
 
    auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
    if( sge )
@@ -204,7 +188,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       if( hu != "" )
       {
          auto lurl = sge->fullyResolvedHelpURL(hu);
-         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Help On The Patch Browser...")));
+         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc("[?] Patch Browser"));
          auto ca = [lurl](CCommandMenuItem *i)
                       {
                          Surge::UserInteractions::openURL(lurl);
@@ -212,7 +196,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
          hi->setActions( ca, nullptr );
          contextMenu->addEntry(hi);
       }
-
    }
    
    getFrame()->addView(contextMenu); // add to frame
@@ -301,14 +284,9 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         }
         
         string menuName = storage->patch_category[c].name;
-        string pathSep = "/";
 
-        #if WINDOWS
-           pathSep = "\\";
-        #endif
-
-        if (menuName.find_last_of(pathSep) != string::npos)
-            menuName = menuName.substr(menuName.find_last_of(pathSep) + 1);
+        if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
+            menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
         
         if (n_subc > 1)
            name = menuName.c_str() + (subc + 1);

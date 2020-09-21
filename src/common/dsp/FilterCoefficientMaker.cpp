@@ -2,7 +2,7 @@
 #include "SurgeStorage.h"
 #include <vt_dsp/basic_dsp.h>
 
-#include "filters/RKMoog.h"
+#include "filters/VintageLadders.h"
 
 using namespace std;
 
@@ -63,10 +63,24 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_SNH:
       Coeff_SNH(Freq, Reso, SubType);
       break;
-#if SURGE_EXTRA_FILTERS      
-   case fut_rkmoog:
-      RKMoog::makeCoefficients(this, Freq, Reso, SubType, storageI);
+   case fut_vintageladder:
+      switch( SubType )
+      {
+      case 0:
+      case 1:
+         VintageLadder::RK::makeCoefficients(this, Freq, Reso, SubType == 1, storageI);
+         break;
+      case 2:
+      case 3:
+         VintageLadder::Huov::makeCoefficients(this, Freq, Reso, SubType == 3, storageI);
+         break;
+      default:
+         // SOFTWARE ERROR
+         break;
+      }
+
       break;
+#if SURGE_EXTRA_FILTERS      
 #endif      
    };
 }

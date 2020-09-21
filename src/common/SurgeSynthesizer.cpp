@@ -1604,6 +1604,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
          for (int j = 0; j < n_fx_params; j++)
          {
             storage.getPatch().fx[s].p[j].set_type(ct_none);
+            std::string n = "Param ";
+            n += std::to_string( j + 1 );
+            storage.getPatch().fx[s].p[j].set_name(n.c_str());
             storage.getPatch().fx[s].p[j].val.i = 0;
             storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].i = 0;
          }
@@ -3014,8 +3017,18 @@ void SurgeSynthesizer::loadFromDawExtraState() {
 
    for (int i=0; i<n_customcontrollers; ++i )
    {
-      if( storage.getPatch().dawExtraState.customcontrol_map.find(i) != storage.getPatch().dawExtraState.midictrl_map.end() )
+      if (storage.getPatch().dawExtraState.customcontrol_map.find(i) !=
+          storage.getPatch().dawExtraState.customcontrol_map.end())
          storage.controllers[i] = storage.getPatch().dawExtraState.customcontrol_map[i];
    }
 
+}
+
+void SurgeSynthesizer::setupActivateExtraOutputs()
+{
+   bool defval = true;
+   if( hostProgram.find( "Fruit" ) == 0 ) // FruityLoops default off
+      defval = false;
+   
+   activateExtraOutputs = Surge::Storage::getUserDefaultValue( &(storage), "activateExtraOutputs", defval ? 1 : 0 );
 }

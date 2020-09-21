@@ -4,5 +4,5 @@
 
 struct MSEGModulationHelper {
    static void rebuildCache(MSEGStorage *s);
-   static float valueAt(float unwrappedPhase, float deform, MSEGStorage *s );
+   static float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s );
 };

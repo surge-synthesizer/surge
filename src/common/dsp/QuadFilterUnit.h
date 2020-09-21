@@ -3,7 +3,7 @@
 #include "globals.h"
 
 
-const int n_filter_registers = 5;
+const int n_filter_registers = 16;
 
 struct QuadFilterUnitState
 {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="106px" height="18px" viewBox="0 0 106 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <desc>Created with Lunacy</desc>
+  <defs>
+    <rect width="106" height="18" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="hover00168" clip-path="url(#clip_1)">
+    <path d="M0 4L0 2C0 1.44772 0.155599 0.976311 0.466798 0.585786C0.777998 0.195262 1.15365 0 1.59375 0L100.406 0C100.847 0 101.222 0.195262 101.533 0.585786C101.844 0.976311 102 1.44772 102 2L102 12C102 12.5523 101.844 13.0237 101.533 13.4142C101.222 13.8047 100.847 14 100.406 14L1.59375 14C1.15365 14 0.777998 13.8047 0.466798 13.4142C0.155599 13.0237 0 12.5523 0 12L0 4L0 4L0 4L0 4L0 4Z" transform="translate(1.9998779 2)" id="Rectangle#45" fill="#399DFF" stroke="#FFFFFF" stroke-width="1" />
+    <path d="M2.25091 0L4.501 3.761L0 3.761L2.25091 0L2.25091 0L2.25091 0L2.25091 0Z" transform="matrix(0.507388 -0.8617177 0.8617177 0.507388 94.361694 9.091736)" id="Shape" fill="#FFFFFF" stroke="none" />
+  </g>
+</svg>

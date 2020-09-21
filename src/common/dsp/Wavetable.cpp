@@ -221,6 +221,12 @@ bool Wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
       {
          vt_copyblock_W_LE(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
                            &((short*)wdata)[this->size * j], this->size);
+         if( this->flags & wtf_int16_is_16 )
+         {
+            i16toi15_block(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
+                           &this->TableI16WeakPointers[0][j][FIRoffsetI16],
+                           this->size);
+         }
          i152float_block(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
                          this->TableF32WeakPointers[0][j], this->size);
       }

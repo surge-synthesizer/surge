@@ -203,7 +203,6 @@ void CModulationSourceButton::draw(CDrawContext* dc)
          FontCol = skin->getColor(Colors::ModSource::Selected::UsedHover, kWhiteCColor);
    }
    
-
    CRect framer(sze);
    CRect fillr(framer);
    fillr.inset(1, 1);
@@ -212,7 +211,11 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    dc->setFrameColor(FrameCol);
    dc->setFillColor(FillCol);
    CRect txtbox(sze);
+#if WINDOWS
+   txtbox.inset(1, 0.6);
+#else
    txtbox.inset(1, 1);
+#endif
    txtbox.bottom = txtbox.top + 13;
 
    dc->setFillColor(FrameCol);

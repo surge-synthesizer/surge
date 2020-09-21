@@ -5,7 +5,12 @@ for dirpath, dirnames, files in os.walk("resources/data"):
         if name.lower().endswith(".wt"):
             wt = os.path.join(dirpath, name)
             with open(wt, "rb") as f:
-                f.read(4)
-                wsize = int.from_bytes(f.read(4), 'little')
-                if(wsize == 128):
-                    print(wt)
+                header = {}
+                header["ident"] = f.read(4)
+                # FIXME: Check that this is actually vawt
+
+                header["wavsz"] = f.read(4)
+                header["wavct"] = f.read(2)
+                header["flags"] = f.read(2)
+
+                print( wt, " ", header["flags" ][0], header["flags"][1] );

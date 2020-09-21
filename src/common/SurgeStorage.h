@@ -281,16 +281,15 @@ enum fu_type
    fut_br12,
    fut_comb,
    fut_SNH,
+   fut_vintageladder,
 #if SURGE_EXTRA_FILTERS
-   fut_rkmoog,
 #endif   
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] = {
-    "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Ladder Lowpass",
-    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold"
+    "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Legacy Ladder",
+    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold", "Vintage Ladder"
 #if SURGE_EXTRA_FILTERS    
-    , "Moog Ladder Runge Kutta"
 #endif    
 };
 
@@ -300,15 +299,15 @@ const char fut_br_subtypes[4][32] = {"12 dB/oct", "12 dB/oct Mild", "24 dB/oct",
 const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet", "Negative, 50% Wet", "Negative, 100% Wet"};
 const char fut_def_subtypes[3][32] = {"Clean", "Driven", "Smooth"};
 const char fut_ldr_subtypes[4][32] = {"6 dB/oct", "12 dB/oct", "18 dB/oct", "24 dB/oct"};
+const char fut_vintageladder_subtypes[6][32] = { "Runge-Kutta",  "Runge-Kutta Compensated",
+                                                 "Huovilainen",  "Huovilainen Compensated" };
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4
 #if SURGE_EXTRA_FILTERS                                     
-                                     , 3
 #endif
 };
 
 #if SURGE_EXTRA_FILTERS
-const char fut_rkmoog_subtypes[3][32] = { "Low Saturation", "Medium Saturation", "High Saturation" };
 #endif
 
 enum fu_subtype
@@ -801,6 +800,10 @@ std::string findReplaceSubstring(std::string &source, const std::string &from, c
 */
 std::string wstringToUTF8(const std::wstring &ws);
 #endif
+
+std::string appendDirectory( const std::string &root, const std::string &path1 );
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2 );
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2, const std::string &path3 );
 }
 }
 

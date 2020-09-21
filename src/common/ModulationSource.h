@@ -105,7 +105,7 @@ const int num_metaparameters = n_customcontrollers;
 extern float samplerate_inv;
 
 const char modsource_names_button[n_modsources][32] = {
-    "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitchbend", "Modwheel", "Macro 1",
+    "Off",       "Velocity", "Keytrack", "Poly AT", "Channel AT", "Pitch Bend", "Modwheel", "Macro 1",
     "Macro 2",    "Macro 3",   "Macro 4",   "Macro 5",  "Macro 6",   "Macro 7",    "Macro 8",   "Amp EG",
     "Filter EG", "LFO 1",    "LFO 2",    "LFO 3",   "LFO 4",    "LFO 5",     "LFO 6",    "S-LFO 1",
     "S-LFO 2",    "S-LFO 3",   "S-LFO 4",   "S-LFO 5",  "S-LFO 6",   "Timbre", "Rel Velocity" /*,"Arpeggio"*/};

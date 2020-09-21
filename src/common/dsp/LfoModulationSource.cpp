@@ -106,12 +106,12 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 void LfoModulationSource::initPhaseFromStartPhase()
 {
    phase = localcopy[startphase].f;
-   unwrappedphase = phase;
    phaseInitialized = true;
    while( phase < 0.f )
       phase += 1.f;
    while( phase > 1.f )
       phase -= 1.f;
+   unwrappedphase_intpart = 0;
 }
 
 void LfoModulationSource::attack()
@@ -249,7 +249,10 @@ void LfoModulationSource::attack()
       {
          phase += 0.25;
          if (phase > 1.f)
+         {
             phase -= 1.f;
+            unwrappedphase_intpart ++;
+         }
       }
    }
    break;
@@ -259,7 +262,10 @@ void LfoModulationSource::attack()
       {
          phase += 0.75;
          if (phase > 1.f)
+         {
             phase -= 1.f;
+            unwrappedphase_intpart ++;
+         }
       }
    }
    break;
@@ -295,7 +301,6 @@ void LfoModulationSource::process_block()
    if (lfo->rate.temposync)
       frate *= storage->temposyncratio;
    phase += frate * ratemult;
-   unwrappedphase += frate * ratemult;
 
    if( frate == 0 && phase == 0 && s == ls_stepseq )
    {
@@ -412,6 +417,7 @@ void LfoModulationSource::process_block()
       {
          float ipart;
          phase = modf( phase, &ipart );
+         unwrappedphase_intpart += ipart;
       }
       else if( phase < 0 )
       {
@@ -419,14 +425,17 @@ void LfoModulationSource::process_block()
          //
          int p = (int) phase - 1;
          float np = -p + phase;
-         if( np >= 0 && np < 1 )
+         if( np >= 0 && np < 1 ) {
             phase = np;
+            unwrappedphase_intpart += p;
+         }
          else
             phase = 0; // should never get here but something is already wierd with the mod stack
       }
       else
       {
          phase -= 1;
+         unwrappedphase_intpart ++;
       }
 
       switch (s)
@@ -533,6 +542,26 @@ void LfoModulationSource::process_block()
             while( pstep > last_step && pstep >= 0 ) pstep -= loop_len;
             pstep = pstep & ( n_stepseqsteps - 1 );
 
+            if( pstep != priorStep )
+            {
+               priorStep = pstep;
+               
+               if (ss->trigmask & (UINT64_C(1) << pstep))
+               {
+                  retrigger_FEG = true;
+                  retrigger_AEG = true;
+               }
+               if (ss->trigmask & (UINT64_C(1) << (16+pstep)))
+               {
+                  retrigger_FEG = true;
+               }
+               if (ss->trigmask & (UINT64_C(1) << (32+pstep)))
+               {
+                  retrigger_AEG = true;
+               }
+
+            }
+            
             if( priorPhase != phase )
             {
                priorPhase = phase;
@@ -574,7 +603,7 @@ void LfoModulationSource::process_block()
       }
       break;
    case ls_mseg:
-      iout = MSEGModulationHelper::valueAt( unwrappedphase, localcopy[ideform].f, ms );
+      iout = MSEGModulationHelper::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms );
       break;
    };
 

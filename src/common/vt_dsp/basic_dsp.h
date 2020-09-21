@@ -38,6 +38,7 @@ float get_squaremax(float* d, unsigned int nquads);
 float get_absmax_2(float* d1, float* d2, unsigned int nquads);
 void float2i15_block(float*, short*, int);
 void i152float_block(short*, float*, int);
+void i16toi15_block(short*, short*, int);
 
 float sine_ss(unsigned int x);
 int sine(int x);

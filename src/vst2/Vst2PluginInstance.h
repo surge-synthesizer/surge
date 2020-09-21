@@ -121,5 +121,7 @@ public:
    int input_connected;
    FpuState _fpuState;
 
+   int checkNamesEvery = 0;
+   
    bool tryInit();
 };

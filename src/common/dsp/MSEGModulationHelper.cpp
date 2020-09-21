@@ -49,14 +49,21 @@ void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
       }
    }
    ms->totalDuration = totald;
-   
+   ms->lastSegmentEvaluated = -1;
 }
 
-float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
+float MSEGModulationHelper::valueAt(int ip, float fup, float df, MSEGStorage *ms)
 {
    if( ms->n_activeSegments == 0 ) return df;
-   
-   while( up >= ms->totalDuration ) up -= ms->totalDuration;
+
+   // This still has some problems but lets try this for now
+   double up = (double)ip + fup;
+   if( up >= ms->totalDuration ) {
+      double nup = up / ms->totalDuration;
+      up -= (int)nup * ms->totalDuration;
+      if( up < 0 )
+         up += ms->totalDuration;
+   }
 
    df = limit_range( df, -1.f, 1.f );
    
@@ -110,17 +117,37 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
          r.state[lasttime] = 0;
       }
       float targetTime = pd/r.duration;
-      while( r.state[lasttime] < targetTime )
+      if( targetTime >= 1 )
       {
-         float dt = std::min( dt, targetTime - r.state[lasttime] );
-
-         float lincoef  = ( r.v1 - r.state[validx] ) / ( 1 - r.state[lasttime] );
-         float randcoef = 0.1 * r.cpduration / r.duration;
-
-         r.state[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
-         r.state[lasttime] += dt;
+         res = r.v1;
       }
-      res = r.state[validx];
+      else if( targetTime <= 0 )
+      {
+         res = r.v0;
+      }
+      else if( targetTime <= r.state[lasttime] )
+      {
+         res = r.state[validx];
+      }
+      else
+      {
+         while( r.state[lasttime] < targetTime && r.state[lasttime] < 1 )
+         {
+            float dt = std::min( sdt, targetTime - r.state[lasttime] );
+            
+            if( r.state[lasttime] < 1 )
+            {
+               float lincoef  = ( r.v1 - r.state[validx] ) / ( 1 - r.state[lasttime] );
+               float randcoef = 0.1 * r.cpduration / r.duration;
+               
+               r.state[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
+               r.state[lasttime] += dt;
+            }
+            else
+               r.state[validx] = r.v1;
+         }
+         res = r.state[validx];
+      }
 
       ms->segments[idx].state[validx] = r.state[validx];
       ms->segments[idx].state[lasttime] = r.state[lasttime];
@@ -207,45 +234,59 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       float x = ( pd / r.duration - 0.5 ) * 2; // goes from -1 to 1
 
       float eps = 0.01;
-      float cpc = r.cpv;
-      float mv = std::min( r.v0, r.v1 );
-      float xv = std::max( r.v0, r.v1 );
-      if( xv - mv < eps )
+      float mv = r.v0; //std::min( r.v0, r.v1 );
+      float xv = r.v1; // std::max( r.v0, r.v1 );
+      if( fabs(xv - mv) < eps )
       {
          res = 0.5 * ( mv + xv );
          break;
       }
-      if( cpc < mv + eps ) cpc = mv + eps;
-      if( cpc > xv - eps ) cpc = xv - eps;
-      float cx = -( r.cpduration / r.duration - 0.5 ) * 2; // goes from -1 to 1
 
-      /* so cpc = r.v0 + ( r.v1 - r.v0 ) / ( 1 + e( -k cx ) ) solve for k
-      **
-      ** 1  + e( -k cx ) = (r.v1-r.v0)/(cpc - r.v0);
-      ** e( -k cx ) = (v1-v0)/(cpc-v0) - 1
-      ** k = ln( ( v1-v0)/(vpv-v0) - 1 ) / cx;
+      float cx = ( r.cpduration / r.duration - 0.5 ) * 2; // goes from -1 to 1
+      
+      /*
+      ** OK so now we have either x = 1/(1+exp(-kx)) if k > 0 or the mirror of that around the line
+      ** but we always want it to hit -1,1 (and then scale later)
       */
-
-      float lna = (r.v1-r.v0)/(cpc-r.v0) - 1;
-      if( lna <= 0 )
+      float kmax = 20;
+      float k = cx * kmax;
+      if( k == 0 ) 
       {
-         // Punt
          float frac = pd / r.duration;
          res = frac * r.v1 + ( 1 - frac ) * r.v0;
+         break;
+      }
+
+      if( k < 0 )
+      {
+         // Logit function on 0,1
+         x = ( x + 1 ) * 0.5; // 0,1
+
+         float scale = 0.9999 - 0.5 * ( (kmax + k) / kmax );
+         float off = ( 1 - scale ) * 0.5;
+         x = x * scale + off;
+
+         float upv = -log( 1/(scale+off) - 1 );
+         float dnv = -log( 1 / off - 1 );
+         float val = -log( 1/x - 1 );
+         val = ( val - dnv ) / ( upv - dnv );
+         val = ( xv - mv ) * val + mv;
+         res = val;
       }
       else
       {
-         float k = 3;
-         if( cx == 0 ) k = 20;
-         else k = fabs( log( lna ) / cx );
+         // sigmoid
+         float xp = 1/(1+exp(-k));
+         float xm = 1/(1+exp(k));
+         float distance = xp - xm;
+      
 
-         float a = 1;
-         if( df < 0 )
-            a = 1 + df * 0.5;
-         if( df > 0 )
-            a = 1 + df * 1.5;
+         float val = 1 / ( 1 + exp( -k * x ) ); // between xm and xp
+      
+         val = ( val - xm ) / ( xp - xm ); // between 0 and 1
          
-         res = r.v0 + ( r.v1 - r.v0 ) * 1 / pow( ( 1 + exp( - k * x ) ), a );
+         val = ( xv - mv ) * val + mv;
+         res = val;
       }
       
       break;

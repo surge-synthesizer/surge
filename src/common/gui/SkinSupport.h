@@ -20,7 +20,7 @@
 **
 ** SkinSupport provides a pair of classes, a SkinManager and a SkinDB
 ** The SkinManager singleton loads and applys the SkinDB to various places as
-** appropriate. The SkinDB has all the information you would need 
+** appropriate. The SkinDB has all the information you would need
 ** to skin yourself, and answers various queries.
 */
 
@@ -38,12 +38,12 @@ namespace VSTGUI {
 namespace Surge
 {
 
-   
+
 template <typename T>
 class Maybe {
 public:
    Maybe() : _empty(true){};
-   explicit Maybe(T value) : _empty(false), _value(value){};
+   explicit Maybe(const T &value) : _empty(false), _value(value){};
 
    T fromJust() const {
       if (isJust()) {
@@ -52,24 +52,24 @@ public:
          throw "Cannot get value from Nothing";
       }
    }
-   
+
    bool isJust() const { return !_empty; }
    bool isNothing() const { return _empty; }
-   
-   static bool isJust(Maybe &m) { return m.isJust(); }
-   static bool isNothing(Maybe &m) { return m.isNothing(); }
+
+   static bool isJust(const Maybe &m)  { return m.isJust(); }
+   static bool isNothing(const Maybe &m)  { return m.isNothing(); }
 private:
    bool _empty;
    T _value;
 };
-   
+
 namespace UI
 {
 
 class SkinDB;
 
 struct SkinColor {
-   SkinColor(std::string n);
+   SkinColor(const std::string &n);
    std::string name;
    int uid;
 };
@@ -78,23 +78,24 @@ class Skin
 {
 public:
    static constexpr int current_format_version = 1;
-   
+
    typedef std::shared_ptr<Skin> ptr_t;
    typedef std::unordered_map<std::string, std::string> props_t;
-   
+
    friend class SkinDB;
 
-   Skin(std::string root, std::string name);
+   Skin(const std::string &root, const std::string &name);
    ~Skin();
 
    bool reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
 
-   std::string resourceName(const std::string &relativeName) {
-      #if WINDOWS
-         return root + name + "\\" + relativeName;
-      #else
-         return root + name + "/" + relativeName;
-      #endif
+   std::string resourceName(const std::string& relativeName)
+   {
+#if WINDOWS
+      return root + name + "\\" + relativeName;
+#else
+      return root + name + "/" + relativeName;
+#endif
    }
 
    std::string root;
@@ -128,7 +129,7 @@ public:
       std::string ultimateparentclassname;
       props_t allprops;
 
-      std::string toString() {
+      std::string toString() const {
          std::ostringstream oss;
 
          switch( type )
@@ -155,29 +156,27 @@ public:
       std::vector<Control::ptr_t> childControls;
 
       int x = 0, y = 0, w = -1, h = -1;
-      
+
       props_t allprops;
    };
-   
+
    //private:
-      bool hasColor(std::string id);
-      VSTGUI::CColor getColor(std::string id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>());
+      bool hasColor(const std::string &id) const;
+      VSTGUI::CColor getColor(const std::string &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const;
 
    public:
-      VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>())
+      VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
       {
          // for now do this - later make it so we get them all by uncommenting the private: and public: above
          return getColor( id.name, def, noLoops );
       }
 
-      bool hasColor(const SkinColor &col)
+      bool hasColor(const SkinColor &col) const
       {
          return hasColor(col.name);
       }
 
-   std::unordered_set<std::string> getQueriedColors() { return queried_colors; }
-
-   Skin::Control::ptr_t controlForEnumID( int enum_id ) {
+   Skin::Control::ptr_t controlForEnumID( int enum_id ) const {
       // FIXME don't be stupid like this of course
       for( auto ic : controls )
       {
@@ -186,11 +185,11 @@ public:
             return ic;
          }
       }
-      
+
       return nullptr;
    }
-   
-   Skin::Control::ptr_t controlForUIID( std::string ui_id ) {
+
+   Skin::Control::ptr_t controlForUIID( const std::string &ui_id ) const {
       // FIXME don't be stupid like this of course
       for( auto ic : controls )
       {
@@ -199,11 +198,11 @@ public:
             return ic;
          }
       }
-      
+
       return nullptr;
    }
 
-   Maybe<std::string> propertyValue( Skin::Control::ptr_t c, std::string key ) {
+   Maybe<std::string> propertyValue( Skin::Control::ptr_t c, const std::string &key ) {
       /*
       ** Traverse class heirarchy looking for value
       */
@@ -230,7 +229,7 @@ public:
       return Maybe<std::string>();
    }
 
-   std::string propertyValue( Skin::Control::ptr_t c, std::string key, std::string defaultValue ) {
+   std::string propertyValue( Skin::Control::ptr_t c, const std::string &key, const std::string &defaultValue ) {
       auto pv = propertyValue( c, key );
       if( pv.isJust() )
          return pv.fromJust();
@@ -238,13 +237,13 @@ public:
          return defaultValue;
    }
 
-   std::string customBackgroundImage() {
+   std::string customBackgroundImage() const {
       return bgimg;
    }
 
-   int getWindowSizeX() { return szx; }
-   int getWindowSizeY() { return szy; }
-   
+   int getWindowSizeX() const { return szx; }
+   int getWindowSizeY() const { return szy; }
+
    CScalableBitmap *backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore );
 
    typedef enum {
@@ -265,7 +264,7 @@ public:
       }
       return labels;
    }
-   
+
    static const std::string defaultImageIDPrefix;
 
 private:
@@ -273,7 +272,7 @@ private:
    std::vector<std::pair<std::string, props_t>> globals;
    std::string bgimg = "";
    int szx = BASE_WINDOW_SIZE_X, szy = BASE_WINDOW_SIZE_Y;
-   
+
    struct ColorStore {
       VSTGUI::CColor color;
       std::string alias;
@@ -289,7 +288,6 @@ private:
       ColorStore( std::string a ) : type( ALIAS ), alias( a ) { }
    };
    std::unordered_map<std::string, ColorStore> colors;
-   std::unordered_set<std::string> queried_colors;
    std::unordered_map<std::string, int> imageIds;
    ControlGroup::ptr_t rootControl;
    std::vector<Control::ptr_t> controls;
@@ -297,7 +295,7 @@ private:
 
    bool recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *groupList, std::string pfx="" );
 };
-   
+
 class SkinDB
 {
 public:
@@ -308,7 +306,7 @@ public:
       std::string name;
       std::string displayName;
       bool parseable;
-      
+
       // Since we want to use this as a map
       bool operator==(const Entry &o) const {
          return root == o.root && name == o.name;
@@ -321,13 +319,13 @@ public:
          }
       };
 
-      bool matchesSkin( const Skin::ptr_t s ) {
+      bool matchesSkin( const Skin::ptr_t s ) const {
          return s.get() && s->root == root && s->name == name;
       }
    };
-   
+
    void rescanForSkins(SurgeStorage *);
-   std::vector<Entry> getAvailableSkins() { return availableSkins; }
+   const std::vector<Entry> &getAvailableSkins() const { return availableSkins; }
    Maybe<Entry> getEntryByRootAndName( const std::string &r, const std::string &n ) {
       for( auto &a : availableSkins )
          if( a.root == r && a.name == n )
@@ -337,7 +335,7 @@ public:
    const Entry &getDefaultSkinEntry() const {
       return defaultSkinEntry;
    }
-   
+
    Skin::ptr_t getSkin( const Entry &skinEntry );
    Skin::ptr_t defaultSkin(SurgeStorage *);
 
@@ -352,14 +350,14 @@ public:
 private:
    SkinDB();
    ~SkinDB();
-   SkinDB(const SkinDB&) = delete; 
-   SkinDB& operator=(const SkinDB&) = delete; 
-   
+   SkinDB(const SkinDB&) = delete;
+   SkinDB& operator=(const SkinDB&) = delete;
+
    std::vector<Entry> availableSkins;
    std::unordered_map<Entry,std::shared_ptr<Skin>, Entry::hash> skins;
    Entry defaultSkinEntry;
    bool foundDefaultSkinEntry = false;
-   
+
    static std::shared_ptr<SkinDB> instance;
    static std::ostringstream errorStream;
 
@@ -385,7 +383,7 @@ public:
    }
 
    virtual void onSkinChanged() { }
-   
+
 protected:
    Skin::ptr_t skin = nullptr;
    Skin::Control::ptr_t skinControl = nullptr;
