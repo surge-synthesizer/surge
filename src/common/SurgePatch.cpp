@@ -1590,7 +1590,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       for (auto& l : ms )
       {
          ms->n_activeSegments = 0;
-         MSEGModulationHelper::rebuildCache(ms);
+         Surge::MSEG::rebuildCache(ms);
       }
 
    TiXmlElement* ms = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("msegs"));
@@ -1618,7 +1618,6 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 #define MSGF(x) if( seg->QueryDoubleAttribute( #x, &d ) == TIXML_SUCCESS ) ms->segments[idx].x = d;
             MSGF( duration );
             MSGF( v0 );
-            MSGF( v1 );
             MSGF( cpduration );
             MSGF( cpv );
             
@@ -1636,7 +1635,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          }
       }
       // Rebuild cache
-      MSEGModulationHelper::rebuildCache(ms);
+      Surge::MSEG::rebuildCache(ms);
       p = TINYXML_SAFE_TO_ELEMENT( p->NextSibling( "mseg" ) );
    }
 
@@ -2011,7 +2010,6 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
                TiXmlElement seg( "segment" );
                seg.SetDoubleAttribute( "duration", ms->segments[s].duration );
                seg.SetDoubleAttribute( "v0", ms->segments[s].v0 );
-               seg.SetDoubleAttribute( "v1", ms->segments[s].v1 );
                seg.SetDoubleAttribute( "cpduration", ms->segments[s].cpduration );
                seg.SetDoubleAttribute( "cpv", ms->segments[s].cpv );
                seg.SetAttribute( "type", (int)( ms->segments[s].type ));

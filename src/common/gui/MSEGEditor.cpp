@@ -21,6 +21,8 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "CHSwitch2.h"
+#include "CSurgeSlider.h"
+#include "SurgeGUIEditor.h"
 
 /*
 ** The SVG MSEG Ids
@@ -37,9 +39,10 @@ struct MSEGCanvas;
 
 // This is 720 x 120
 struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
-   MSEGControlRegion(const CRect &size, MSEGCanvas *c, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
+   MSEGControlRegion(const CRect &size, MSEGCanvas *c, LFOStorage *lfos, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
       setSkin( skin, b );
       this->ms = ms;
+      this->lfodata = lfos;
       this->canvas = c;
       setBackgroundColor( VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
       rebuild();
@@ -61,6 +64,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
    
    MSEGStorage *ms = nullptr;
    MSEGCanvas *canvas = nullptr;
+   LFOStorage *lfodata = nullptr;
 };
 
 
@@ -70,7 +74,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       setSkin( skin, b );
       this->ms = ms;
       this->lfodata = lfodata;
-      MSEGModulationHelper::rebuildCache( ms );
+      Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
    };
 
@@ -83,7 +87,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       int associatedSegment;
       bool active = false;
       bool dragging = false;
-
+      
       // More coming soon
       enum Type
       {
@@ -93,9 +97,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       enum SegmentMousableType
       {
-         SEGMENT_JOINED,
-         SEGMENT_END,
-         SEGMENT_START,
+         SEGMENT_ENDPOINT,
          SEGMENT_CONTROL
       } mousableNodeType = SEGMENT_CONTROL;
       
@@ -180,15 +182,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    {
       RIPPLE,
       CONSTRAINED,
-      FIXED_TIME,
+      DRAW_MODE,
    } timeEditMode = CONSTRAINED;
 
-   enum NodeEdit
-   {
-      ENDPOINTS_JOINED,
-      ENDPOINTS_INDEPENDENT
-   } nodeEditMode = ENDPOINTS_JOINED;
-   
    void recalcHotZones( const CPoint &where ) {
       hotzones.clear();
 
@@ -221,11 +217,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          // Now add the mousable zones
          auto &s = ms->segments[i];
 
-         auto rectForPoint = [&]( float t, float v, float xmul1, float xmul2, hotzone::SegmentMousableType mt, std::function<void(float,float)> onDrag ){
+         auto rectForPoint = [&]( float t, float v, hotzone::SegmentMousableType mt, std::function<void(float,float)> onDrag ){
                                 auto h = hotzone();
-                                h.rect = CRect( t + xmul1 * handleRadius,
+                                h.rect = CRect( t - handleRadius,
                                                 valpx(v) - handleRadius,
-                                                t + xmul2 * handleRadius,
+                                                t + handleRadius,
                                                 valpx(v) + handleRadius );
                                 h.type = hotzone::Type::MOUSABLE_NODE;
                                 if( h.rect.pointInside( where ) )
@@ -239,189 +235,77 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          auto timeConstraint = [&]( int prior, int next, float dx ) {
                                   switch( this->timeEditMode )
                                   {
-                                  case FIXED_TIME:
+                                  case DRAW_MODE:
                                      break;
                                   case RIPPLE:
                                      if( prior >= 0 )
+                                     {
+                                        auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
                                         offsetDuration( this->ms->segments[prior].duration, dx);
+                                        this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
+                                     }
                                      break;
                                   case CONSTRAINED:
                                      if( prior >= 0 && (this->ms->segments[prior].duration+dx) <= MSEGStorage::minimumDuration && dx < 0 ) dx = 0;
                                      if( next < ms->n_activeSegments && (this->ms->segments[next].duration-dx) <= MSEGStorage::minimumDuration && dx > 0 ) dx = 0;
 
                                      if( prior >= 0 )
-                                        offsetDuration( this->ms->segments[prior].duration, dx );
+                                     {
+                                        auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
+                                        offsetDuration( this->ms->segments[prior].duration, dx);
+                                        this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
+                                     }
                                      if( next < ms->n_activeSegments )
+                                     {
+                                        auto rcv = this->ms->segments[next].cpduration / this->ms->segments[next].duration;
                                         offsetDuration( this->ms->segments[next].duration, -dx );
+                                        this->ms->segments[next].cpduration = this->ms->segments[next].duration * rcv;
+                                     }
                                      
                                      break;
                                   }
                                };
 
-           
-         int offp = ( nodeEditMode == ENDPOINTS_INDEPENDENT ? 2 : 1 );
-         int offm = ( nodeEditMode == ENDPOINTS_INDEPENDENT ? 0 : -1 );
-         auto smt = ( nodeEditMode == ENDPOINTS_INDEPENDENT ? hotzone::SEGMENT_START : hotzone::SEGMENT_JOINED );
-         auto sme = ( nodeEditMode == ENDPOINTS_INDEPENDENT ? hotzone::SEGMENT_END : hotzone::SEGMENT_JOINED );
 
-         auto resetPrior = [this](int prior, int i )
-                              {
-                                 if( prior >= 0 && prior != i )
-                                 {
-                                    this->ms->segments[prior].v1 = this->ms->segments[i].v0;
-                                    while( this->nodeEditMode == ENDPOINTS_JOINED && this->ms->segments[prior].type == MSEGStorage::segment::CONSTANT && prior != i )
-                                    {
-                                       this->ms->segments[prior].v0 = this->ms->segments[prior].v1;
-                                       auto pprior = prior - 1;
-                                       if( pprior < 0 ) pprior = ms->n_activeSegments - 1;
-                                       this->ms->segments[pprior].v1 = this->ms->segments[prior].v0;
-                                       prior = pprior;
-                                    }
-                                 }
-
-                              };
-         
-         switch( s.type )
-         {
-         case MSEGStorage::segment::CONSTANT:
-         {
-            // We get a mousable point at the start of the line
-            rectForPoint( t0, s.v0, offm, offp, smt,
-                          [i,this,resetPrior,timeConstraint,vscale,tscale](float dx, float dy) {
-                             offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
-                             if( this->nodeEditMode == ENDPOINTS_JOINED )
-                             {
-                                int prior = i-1;
-                                if( prior < 0 ) prior = ms->n_activeSegments - 1;
-                                resetPrior( prior, i );
-                             }
-                             this->ms->segments[i].v1 = this->ms->segments[i].v0;
-                             // Push it over also
-                             int curr = i;
-                             while( this->nodeEditMode == ENDPOINTS_JOINED && this->ms->segments[curr].type == MSEGStorage::segment::CONSTANT && curr != i-1)
-                             {
-                                this->ms->segments[curr].v1 = this->ms->segments[curr].v0;
-                                int nxt = curr+1;
-                                if( nxt >= ms->n_activeSegments ) nxt = 0;
-                                
-                                this->ms->segments[nxt].v0 = this->ms->segments[i].v1;
-                                curr = nxt;
-                             }
-
-                             if( i != 0 )
-                                timeConstraint( i-1, i, dx/tscale );
-                          } );
-
-            if( nodeEditMode == ENDPOINTS_INDEPENDENT || i == ms->n_activeSegments - 1 )
-            {
-               rectForPoint( t1, s.v0, -offp, -offm, sme,
-                             [i,this,timeConstraint,vscale,tscale](float dx, float dy) {
-                                offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
-                                if( this->nodeEditMode == ENDPOINTS_JOINED )
-                                {
-                                   this->ms->segments[0].v0 = this->ms->segments[i].v0;
-                                }
-                                this->ms->segments[i].v1 = this->ms->segments[i].v0;
-                                timeConstraint( i, i+1, dx/tscale );
-                             } );
-            }
-            break;
-         }
-         // this is the no control point case
-         case MSEGStorage::segment::LINEAR:
-         {
-            // We get a mousable point at the start of the line
-            rectForPoint( t0, s.v0, offm, offp, smt, 
-                          [i,this,vscale,tscale,resetPrior, timeConstraint](float dx, float dy) {
-                             offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
-
-                             if( this->nodeEditMode == ENDPOINTS_JOINED )
-                             {
-                                int prior = i-1;
-                                if( prior < 0 ) prior = ms->n_activeSegments - 1;
-                                resetPrior( prior, i );
-                             }
-
-                             if( i != 0 )
-                             {
-                                timeConstraint( i-1, i, dx/tscale );
-                             }
-                          } );
-            if( nodeEditMode == ENDPOINTS_INDEPENDENT || i == ms->n_activeSegments - 1 )
-               rectForPoint( t1, s.v1, -offp, -offm, sme,
-                             [i,this,vscale,tscale,timeConstraint](float dx, float dy) {
-                                offsetValue( this->ms->segments[i].v1, -2 * dy / vscale );
-                                if( this->nodeEditMode == ENDPOINTS_JOINED )
-                                {
-                                   this->ms->segments[0].v0 = this->ms->segments[i].v1;
-                                }
-
-                                timeConstraint( i, i + 1, dx/tscale );
-                             } );
+         // We get a mousable point at the start of the line
+         rectForPoint( t0, s.v0, hotzone::SEGMENT_ENDPOINT,
+                       [i,this,vscale,tscale,timeConstraint](float dx, float dy) {
+                          offsetValue( this->ms->segments[i].v0,  -2 * dy / vscale );
                           
-            break;
-         }
-         case MSEGStorage::segment::SCURVE:
-         case MSEGStorage::segment::DIGILINE:
-         case MSEGStorage::segment::WAVE:
-         case MSEGStorage::segment::QUADBEZ:
-         case MSEGStorage::segment::BROWNIAN:
-         {
-            // We get a mousable point at the start of the line
-            rectForPoint( t0, s.v0, offm, offp, smt,
-                          [i,this,vscale,tscale,resetPrior, timeConstraint](float dx, float dy) {
-                             offsetValue( this->ms->segments[i].v0,  -2 * dy / vscale );
-
-                             if( this->nodeEditMode == ENDPOINTS_JOINED )
-                             {
-                                int prior = i-1;
-                                if( prior < 0 ) prior = ms->n_activeSegments - 1;
-                                resetPrior(prior, i );
-                             }
-
-                             if( i != 0 )
-                             {
-                                float cpvm = this->ms->segments[i-1].cpduration / this->ms->segments[i-1].duration;
-                                float cpv0 = this->ms->segments[i].cpduration / this->ms->segments[i].duration;
-                                timeConstraint( i-1, i, dx/tscale );
-                                // Update control point proportionally
-                                this->ms->segments[i-1].cpduration = this->ms->segments[i-1].duration * cpvm;
-                                this->ms->segments[i].cpduration = this->ms->segments[i].duration * cpv0;
-                             }
-                          } );
-
-            if( nodeEditMode == ENDPOINTS_INDEPENDENT || i == ms->n_activeSegments - 1)
-            {
-               rectForPoint( t1, s.v1, -offp, -offm, sme,
-                             [i,this,vscale,tscale,timeConstraint](float dx, float dy) {
-                                offsetValue( this->ms->segments[i].v1, -2 * dy / vscale );
-                                float cpv0 = this->ms->segments[i].cpduration / this->ms->segments[i].duration;
-                                
-                                if( this->nodeEditMode == ENDPOINTS_JOINED )
-                                {
-                                   this->ms->segments[0].v0 = this->ms->segments[i].v1;
-                                }
-
-                                timeConstraint( i, i+1, dx/tscale );
-                                this->ms->segments[i].cpduration = cpv0 * this->ms->segments[i].duration;
-                             } );
-            }
-            
-            float tn = tpx(ms->segmentStart[i] + ms->segments[i].cpduration );
-            rectForPoint( tn, s.cpv, -1, 1, hotzone::SEGMENT_CONTROL,
-                          [i, this, tscale, vscale]( float dx, float dy ) {
-                             offsetValue( this->ms->segments[i].cpv, -2 * dy / vscale );
-                             this->ms->segments[i].cpduration += dx / tscale;
-                             this->ms->segments[i].cpduration = limit_range( (float)this->ms->segments[i].cpduration,
-                                                                             (float)MSEGStorage::minimumDuration,
-                                                                             (float)(this->ms->segments[i].duration - MSEGStorage::minimumDuration) );
-                          } );
                           
-            // TODO control point
-            break;
-         }
+                          if( i != 0 )
+                          {
+                             timeConstraint( i-1, i, dx/tscale );
+                          }
+                       } );
+
+
+         // Control point editor
+         float tn = tpx(ms->segmentStart[i] + ms->segments[i].cpduration );
+         rectForPoint( tn, s.cpv, hotzone::SEGMENT_CONTROL,
+                       [i, this, tscale, vscale]( float dx, float dy ) {
+                          offsetValue( this->ms->segments[i].cpv, -2 * dy / vscale );
+                          this->ms->segments[i].cpduration += dx / tscale;
+                          this->ms->segments[i].cpduration = limit_range( (float)this->ms->segments[i].cpduration,
+                                                                          (float)MSEGStorage::minimumDuration,
+                                                                          (float)(this->ms->segments[i].duration - MSEGStorage::minimumDuration) );
+                       } );
+
+         // Specially we have to add an endpoint editor
+         if( i == ms->n_activeSegments - 1 )
+         {
+            rectForPoint( tpx(ms->totalDuration), ms->segments[0].v0, hotzone::SEGMENT_ENDPOINT,
+                          [this,vscale,tscale](float dx, float dy) {
+                             offsetValue( this->ms->segments[0].v0, -2 * dy / vscale );
+
+                             // We need to deal with the cpduration also
+                             auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
+                             offsetDuration( this->ms->segments[ms->n_activeSegments-1].duration, dx/tscale );
+                             this->ms->segments[ms->n_activeSegments-1].cpduration = this->ms->segments[ms->n_activeSegments-1].duration * cpv;
+                          } );
          }
       }
+                
    }
 
    
@@ -499,7 +383,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          float up = pxt( i + drawArea.left );
          float iup = (int)up;
          float fup = up - iup;
-         float v = MSEGModulationHelper::valueAt( iup, fup, lfodata->deform.val.f, ms );
+         float v = Surge::MSEG::valueAt( iup, fup, lfodata->deform.val.f, ms );
          v = valpx( v );
          if( up <= ms->totalDuration )
          {
@@ -597,7 +481,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          if( h.type == hotzone::MOUSABLE_NODE )
          {
             int sz = 12;
-            int offx = (int)h.mousableNodeType;
+            int offx = 0;
+            if( h.mousableNodeType == hotzone::SEGMENT_CONTROL )
+               offx = 3;
             int offy = 0;
             if( h.active )
             {
@@ -622,6 +508,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
    CPoint mouseDownOrigin;
    bool inDrag = false;
+   bool inDrawDrag = false;
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
       if( buttons & kRButton )
       {
@@ -634,34 +521,72 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          auto t = tf( where.x );
          auto pv = pxToVal();
          auto v = pv( where.y );
+
+         // Check if I'm on a hotzone
+         for( auto &h : hotzones )
+         {
+            if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+            {
+               switch( h.mousableNodeType )
+               {
+               case hotzone::SEGMENT_ENDPOINT:
+               {
+                  Surge::MSEG::unsplitSegment( ms, t );
+                  modelChanged();
+                  return kMouseEventHandled;
+               }
+               case hotzone::SEGMENT_CONTROL:
+               {
+                  // Reset the controlpoint to duration half value middle
+                  Surge::MSEG::resetControlPoint( ms, t );
+                  modelChanged();
+                  return kMouseEventHandled;
+               }
+               }
+            }
+         }
+         
          if( t < ms->totalDuration )
          {
-            splitSegment( t, v );
+            Surge::MSEG::splitSegment( ms, t, v );
+            modelChanged();
+            return kMouseEventHandled;
          }
          else
          {
-            extendTo( t, v );
+            Surge::MSEG::extendTo( ms, t, v );
+            modelChanged();
+            return kMouseEventHandled;
          }
       }
 
-      mouseDownOrigin = where;
-      inDrag = true;
-      for( auto &h : hotzones )
+      if( timeEditMode == DRAW_MODE )
       {
-         if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
-         {
-            h.active = true;
-            h.dragging = true;
-            invalid();
-            break;
-         }
+         inDrawDrag = true;
+         return kMouseEventHandled;
       }
+      else
+      {
+         mouseDownOrigin = where;
+         inDrag = true;
+         for( auto &h : hotzones )
+         {
+            if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+            {
+               h.active = true;
+               h.dragging = true;
+               invalid();
+               break;
+            }
+         }
 
-      return kMouseEventHandled;
+         return kMouseEventHandled;
+      }
    }
 
    virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons ) override {
       inDrag = false;
+      inDrawDrag = false;
       for( auto &h : hotzones )
       {
          h.dragging = false;
@@ -670,6 +595,40 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    }
 
    virtual CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons ) override {
+      if( inDrawDrag )
+      {
+         auto tf = pxToTime( );
+         auto t = tf( where.x );
+         auto pv = pxToVal();
+         auto v = pv( where.y );
+
+         int seg = Surge::MSEG::timeToSegment( this->ms, t );
+
+         if( seg >= 0 && seg < ms->n_activeSegments && t <= ms->totalDuration + MSEGStorage::minimumDuration )
+         {
+            bool ch = false;
+            // OK are we near the endpoint of that segment
+            if( t - ms->segmentStart[seg] < std::max( ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration ) )
+            {
+               ms->segments[seg].v0 = v;
+               ch = true;
+            }
+            else if( ms->segmentEnd[seg] - t < std::max( ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration ) )
+            {
+               int nx = seg + 1;
+               if( nx >= ms->n_activeSegments )
+                  nx = 0;
+               ms->segments[nx].v0 = v;
+               ch = true;
+            }
+            if( ch )
+               modelChanged();
+         }
+
+         
+         return kMouseEventHandled;
+      }
+
       bool flip = false;
       for( auto &h : hotzones )
       {
@@ -692,7 +651,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             }
          }
       }
-
+      
       if( flip )
          invalid();
 
@@ -712,7 +671,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             idx++;
          }
          if( gotOne ) {
-            MSEGModulationHelper::rebuildCache(ms);
+            Surge::MSEG::rebuildCache(ms);
             recalcHotZones(where);
             hotzones[idx].dragging = true;
             invalid();
@@ -744,21 +703,28 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto pv = pxToVal();
       auto v = pv( iw.y );
       
-      addCb( contextMenu,  "Insert Before", [this, t](){ this->insertBefore( t ); } );
-      addCb( contextMenu,  "Insert After", [this, t](){ this->insertAfter( t ); } );
-      addCb( contextMenu,  "Split", [this, t, v](){ this->splitSegment( t, v );} );
-      addCb( contextMenu,  "Delete", [this,t ]() { this->deleteSegment( t ); } );
+      addCb( contextMenu,  "Split", [this, t, v](){
+                                       Surge::MSEG::splitSegment( this->ms, t, v );
+                                       modelChanged();
+                                    } );
+      addCb( contextMenu,  "Delete", [this,t ]() {
+                                        Surge::MSEG::deleteSegment( this->ms, t );
+                                        modelChanged();
+                                     } );
 
       contextMenu->addSeparator();
 
       auto typeTo = [this, contextMenu, t, addCb](std::string n, MSEGStorage::segment::Type type) {
-                       addCb( contextMenu, n, [this,t, type]() { this->changeTypeAt( t, type ); } );
+                       addCb( contextMenu, n, [this,t, type]() {
+                                                 Surge::MSEG::changeTypeAt( this->ms, t, type );
+                                                 modelChanged();
+                                              } );
                     };
-      typeTo( "Constant", MSEGStorage::segment::Type::CONSTANT );
       typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
       typeTo( "Quadratic Bezier", MSEGStorage::segment::Type::QUADBEZ );
       typeTo( "S-Curve", MSEGStorage::segment::Type::SCURVE );
-      typeTo( "Wave", MSEGStorage::segment::Type::WAVE );
+      typeTo( "Sin Wave", MSEGStorage::segment::Type::SINWAVE );
+      typeTo( "Square Wave", MSEGStorage::segment::Type::SQUAREWAVE );
       typeTo( "Quantized Line", MSEGStorage::segment::Type::DIGILINE );
       typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
             
@@ -769,131 +735,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       getFrame()->removeView(contextMenu, true);
    }
 
-   int timeToSegment( float t ) {
-      if( ms->totalDuration < MSEGStorage::minimumDuration ) return -1;
-
-      while( t > ms->totalDuration ) t -= ms->totalDuration;
-      while( t < 0 ) t += ms->totalDuration;
-
-      int idx = -1;
-      for( int i=0; i<ms->n_activeSegments; ++i ) 
-      {
-         if( t >= ms->segmentStart[i] && t < ms->segmentEnd[i] )
-         {
-            idx = i;
-            break;
-         }
-      }
-      return idx;
-   }
-
-   void changeTypeAt( float t, MSEGStorage::segment::Type type ) {
-      auto idx = timeToSegment( t );
-      if( idx < ms->n_activeSegments )
-      {
-         ms->segments[idx].type = type;
-         if( type == MSEGStorage::segment::CONSTANT && nodeEditMode == ENDPOINTS_JOINED )
-         {
-            ms->segments[idx].v1 = ms->segments[idx].v0;
-            int nxt = idx + 1;
-            if( nxt >= ms->n_activeSegments )
-               nxt = 0;
-            ms->segments[nxt].v0 = ms->segments[idx].v1;
-         }
-      }
-
-
-      modelChanged();
-   }
-   
-   void insertAfter( float t ) {
-      auto idx = timeToSegment( t );
-      if( idx < 0 ) idx = 0;
-      idx++;
-      insertAtIndex( idx );
-      modelChanged();
-   }
-
-   void insertBefore( float t ) {
-      auto idx = timeToSegment( t );
-      if( idx < 0 ) idx = 0;
-      insertAtIndex( idx );
-      modelChanged();
-   }
-
-   void extendTo( float t, float nv ) {
-      if( t < ms->totalDuration ) return;
-
-      insertAtIndex( ms->n_activeSegments );
-      modelChanged();
-      
-      auto sn = ms->n_activeSegments - 1;
-      ms->segments[sn].type = MSEGStorage::segment::LINEAR;
-      if( sn == 0 )
-         ms->segments[sn].v0 = 0;
-      else
-         ms->segments[sn].v0 = ms->segments[sn-1].v1;
-
-      ms->segments[sn].v1 = nv;
-      
-      float dt = t - ms->totalDuration;
-      ms->segments[sn].duration += dt;
-
-      modelChanged();
-   }
-   void splitSegment( float t, float nv ) {
-      int idx = timeToSegment( t );
-      if( idx >= 0 )
-      {
-         while( t > ms->totalDuration ) t -= ms->totalDuration;
-         while( t < 0 ) t += ms->totalDuration;
-         
-         float dt = (t - ms->segmentStart[idx]) / ( ms->segments[idx].duration);
-         auto q = ms->segments[idx]; // take a copy
-         insertAtIndex(idx + 1);
-
-         if( ms->segments[idx].type == MSEGStorage::segment::CONSTANT )
-            ms->segments[idx].type = MSEGStorage::segment::LINEAR;
-         
-         ms->segments[idx].duration *= dt;
-         ms->segments[idx+1].duration = q.duration * ( 1 - dt );
-
-         ms->segments[idx+1].v0 = nv;
-         ms->segments[idx+1].v1 = q.v1;
-         ms->segments[idx].v1 = nv;
-         ms->segments[idx+1].type = ms->segments[idx].type;
-
-         ms->segments[idx].cpduration = std::min( ms->segments[idx].duration, ms->segments[idx].cpduration );
-         ms->segments[idx+1].cpduration = std::min( ms->segments[idx+1].duration, ms->segments[idx+1].cpduration );
-         
-         modelChanged();
-      }
-   }
-
-   void deleteSegment( float t ) {
-      auto idx = timeToSegment( t );
-      for( int i=idx; i<ms->n_activeSegments - 1; ++i )
-      {
-         ms->segments[i] = ms->segments[i+1];
-      }
-      ms->n_activeSegments --;
-      modelChanged();
-   }
-   
-   void insertAtIndex( int insertIndex ) {
-      for( int i=std::max( ms->n_activeSegments + 1, max_msegs - 1 ); i > insertIndex; --i )
-      {
-         ms->segments[i] = ms->segments[i-1];
-      }
-      ms->segments[insertIndex].type = MSEGStorage::segment::CONSTANT;
-      ms->segments[insertIndex].v0 = -1.f * rand() / ((float)RAND_MAX);
-      ms->segments[insertIndex].v1 = ms->segments[insertIndex].v0;
-      ms->segments[insertIndex].duration = 0.25;
-      ms->n_activeSegments ++;
-   }
-   
    void modelChanged() {
-      MSEGModulationHelper::rebuildCache( ms );
+      Surge::MSEG::rebuildCache( ms );
       recalcHotZones(mouseDownOrigin); // FIXME
       invalid();
    }
@@ -906,6 +749,32 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    
    CLASS_METHODS( MSEGCanvas, CControl );
 };
+
+
+struct MSEGModulatorOutput : public CControl, public Surge::UI::SkinConsumingComponent {
+
+   MSEGModulatorOutput(const CRect &size, LFOStorage *lfodata,  Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CControl( size ) {
+      setSkin( skin, b );
+      this->lfodata = lfodata;
+   };
+
+   virtual void draw( CDrawContext *dc) override {
+      dc->setFillColor( CColor( 0xcc, 0xcc, 0xcc ) );
+      dc->drawRect( getViewSize(), kDrawFilled );
+      dc->setFontColor( kRedCColor );
+
+      auto labelFont = new VSTGUI::CFontDesc( "Lato", 20 );
+      dc->setFont( labelFont );
+      dc->drawString( "SOON MODULATOR OUTPUT", getViewSize(), kCenterText, true );
+
+
+   }
+
+   LFOStorage *lfodata;
+   
+   CLASS_METHODS( MSEGModulatorOutput, CControl );
+};
+
 
 void MSEGControlRegion::valueChanged( CControl *p )
 {
@@ -921,15 +790,6 @@ void MSEGControlRegion::valueChanged( CControl *p )
       canvas->invalid();
    }
       break;
-   case tag_segment_nodeedit_mode:
-   {
-      if( val > 0.5 )
-         canvas->nodeEditMode = MSEGCanvas::NodeEdit::ENDPOINTS_INDEPENDENT;
-      else
-         canvas->nodeEditMode = MSEGCanvas::NodeEdit::ENDPOINTS_JOINED;
-      canvas->recalcHotZones( CPoint( 0, 0 ) );
-      canvas->invalid();
-   }
       break;
    }
 }
@@ -937,59 +797,63 @@ void MSEGControlRegion::rebuild()
 {
    auto labelFont = new VSTGUI::CFontDesc( "Lato", 12 );
    
-   int height = 120;
+   int height = getViewSize().getHeight();
    
    int xpos = 0;
    // sliders are the first 150 px
-   int sliderWidth = 160;
-   auto sliders = new CTextLabel( CRect( CPoint( xpos, 0 ), CPoint( sliderWidth, height ) ), "Sliders Go Here soon" );
-   sliders->setFont( labelFont );
-   sliders->setFontColor( kWhiteCColor );
-   sliders->setBackColor( VSTGUI::CColor( 0xAA, 0xAA, 0xFF ) );
-   addView( sliders );
-   xpos += sliderWidth;
-   
-   // Envelope and Loop next for 130 px
-   int envWidth = 140;
-   auto envAndLoop = new CTextLabel( CRect( CPoint( xpos, 0 ), CPoint( envWidth, height ) ), "Envelope/Loop" );
-   envAndLoop->setFont( labelFont );
-   envAndLoop->setFontColor( kWhiteCColor );
-   envAndLoop->setBackColor( VSTGUI::CColor( 0xAA, 0xFF, 0xAA ) );
-   addView( envAndLoop );
-   xpos += envWidth;
+   {
+      int sliderWidth = 150;
+      int margin = 5;
+      int marginPos = xpos + margin;
+      int ypos = margin;
+
+      auto addS = [&](Parameter *p)
+                     {
+                        auto hs = new CSurgeSlider( CPoint( marginPos, ypos ), p->ctrlstyle, this,
+                                                    p->id + SurgeGUIEditor::start_paramtag_value, true, associatedBitmapStore, nullptr );
+                        hs->setSkin( skin, associatedBitmapStore );
+                        hs->setValue( p->get_value_f01() );
+                        hs->setLabel( p->get_name() );
+                        hs->setMoveRate( p->moverate );
+                        hs->setModMode( 0 );
+                        if( p->can_temposync() )
+                           hs->setTempoSync( p->temposync );
+                        
+                        addView( hs );
+                        ypos += 20;
+                     };
+
+      addS( &( lfodata->rate ) );
+      addS( &( lfodata->start_phase ) );
+      addS( &( lfodata->magnitude ) );
+      addS( &( lfodata->deform ) );
+      //CSurgeSlider *hs
+      
+      auto envAndLoop = new CTextLabel( CRect( CPoint( marginPos, ypos ), CPoint( sliderWidth, height - ypos ) ), "Loop" );
+      envAndLoop->setFont( labelFont );
+      envAndLoop->setFontColor( kWhiteCColor );
+      envAndLoop->setTransparency( true );
+      addView( envAndLoop );
+      xpos += sliderWidth;
+   }
    
    // Now the segment controls which are 130 wide
    {
       int segWidth = 140;
-      int margin = 5;
+      int margin = 2;
       int marginPos = xpos + margin;
       int marginWidth = segWidth - 2 * margin;
       int ypos = margin;
-      auto sml = new CTextLabel( CRect( CPoint( marginPos, ypos ), CPoint( marginWidth, 20 ) ), "Segment editing mode" );
-      sml->setTransparency( true );
-      sml->setFont( labelFont );
-      sml->setFontColor( kBlackCColor );
-      sml->setHoriAlign( kLeftText );
-      addView( sml );
-      ypos += margin + 20;
-      
-      // Now the button
-      auto sw = new CHSwitch2( CRect( CPoint( marginPos, ypos ), CPoint( 120, 20 ) ),
-                               this, tag_segment_nodeedit_mode,
-                               2, 20, 1, 2,
-                               associatedBitmapStore->getBitmap( IDB_MSEG_EDITMODE ), CPoint( 0, 0 ), true );
-      addView( sw );
-      sw->setValue( canvas->nodeEditMode );
-      ypos += margin + 20;
-      
+      int labelHeight = 18;
+
       // Now the movement label
-      auto mml = new CTextLabel( CRect( CPoint( marginPos, ypos ), CPoint( marginWidth, 20 ) ), "Movement mode" );
+      auto mml = new CTextLabel( CRect( CPoint( marginPos, ypos ), CPoint( marginWidth, labelHeight ) ), "Movement mode" );
       mml->setTransparency( true );
       mml->setFont( labelFont );
       mml->setFontColor( kBlackCColor );
       mml->setHoriAlign( kLeftText );
       addView( mml );
-      ypos += margin + 20;
+      ypos += margin + labelHeight;
       
       // now the button
       auto mw = new CHSwitch2( CRect( CPoint( marginPos, ypos ), CPoint( 120, 20 ) ),
@@ -1001,18 +865,13 @@ void MSEGControlRegion::rebuild()
       
       ypos += margin + 20;
       
+      auto snapC = new CTextLabel( CRect( CPoint( xpos, ypos ), CPoint( segWidth, height-ypos ) ), "Snap" );
+      snapC->setFont( labelFont );
+      snapC->setFontColor( kWhiteCColor );
+      snapC->setTransparency( true );
+      addView( snapC );
       xpos += segWidth;
    }
-   
-   
-   // and finally the snap
-   int snapWidth = 140;
-   auto snapC = new CTextLabel( CRect( CPoint( xpos, 0 ), CPoint( snapWidth, height ) ), "Snap" );
-   snapC->setFont( labelFont );
-   snapC->setFontColor( kWhiteCColor );
-   snapC->setBackColor( VSTGUI::CColor( 0xAA, 0xAA, 0xFF ) );
-   addView( snapC );
-   xpos += snapWidth;
 }
 
 #if 0
@@ -1100,11 +959,15 @@ struct MSEGMainEd : public CViewContainer {
       this->ms = ms;
       this->skin = skin;
 
-      int controlHeight = 120;
+      int controlHeight = 140;
+      int outputWidth = 320;
       auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, skin, bmp );
             
-      auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint( size.getWidth(), controlHeight ) ), msegCanv,
-                                               ms, skin, bmp );
+      auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  outputWidth, controlHeight ) ), msegCanv,
+                                               lfodata, ms, skin, bmp );
+
+      auto modulatorOutput = new MSEGModulatorOutput( CRect( CPoint( outputWidth, size.getHeight() - controlHeight ), CPoint( size.getWidth() - outputWidth, controlHeight ) ), lfodata, skin, bmp );
+      addView( modulatorOutput );
 
       msegCanv->controlregion = msegControl;
       msegControl->canvas = msegCanv;
@@ -1118,7 +981,7 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 720, 475 ) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 480 ) )
 {
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );

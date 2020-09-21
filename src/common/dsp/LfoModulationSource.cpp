@@ -603,7 +603,7 @@ void LfoModulationSource::process_block()
       }
       break;
    case ls_mseg:
-      iout = MSEGModulationHelper::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms );
+      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms );
       break;
    };
 

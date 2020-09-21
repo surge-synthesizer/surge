@@ -525,23 +525,25 @@ bailOnPortable:
       for( int i = 0; i < n_lfos; ++i )
       {
          auto ms = &(_patch->msegs[s][i]);
-         ms->n_activeSegments = 3;
+         ms->n_activeSegments = 4;
          ms->segments[0].duration = 0.25;
          ms->segments[0].type = MSEGStorage::segment::LINEAR;
-         ms->segments[0].v0 = -1.0;
-         ms->segments[0].v1 =  1.0;
+         ms->segments[0].v0 = 0.0;
 
          ms->segments[1].duration = 0.25;
-         ms->segments[1].type = MSEGStorage::segment::CONSTANT;
+         ms->segments[1].type = MSEGStorage::segment::LINEAR;
          ms->segments[1].v0 = 1.0;
 
-         ms->segments[2].duration = 0.5;
-         ms->segments[2].type = MSEGStorage::segment::QUADBEZ;
-         ms->segments[2].v0 = 1.0;
-         ms->segments[2].v1 = -1.0;
-         ms->segments[2].cpduration = 0.2;
-         ms->segments[2].cpv = -0.5;
-         MSEGModulationHelper::rebuildCache( ms );
+         ms->segments[2].duration = MSEGStorage::minimumDuration;
+         ms->segments[2].type = MSEGStorage::segment::LINEAR;
+         ms->segments[2].v0 = 0.7;
+
+         ms->segments[3].duration = 0.5;
+         ms->segments[3].type = MSEGStorage::segment::SCURVE;
+         ms->segments[3].v0 = -0.7;
+         ms->segments[3].cpduration = 0.4;
+         ms->segments[3].cpv = -0.3;
+         Surge::MSEG::rebuildCache( ms );
       }
    }
 }

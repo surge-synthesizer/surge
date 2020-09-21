@@ -10,7 +10,7 @@
       <circle style="fill: #AA6000;" cx="30" cy="6" r="4"/>
       <rect x="26" y="2" width="4" height="8" style="fill: #AA6000;"/>
     </g>
-    <rect x="38" y="2" width="8" height="8" style="fill: #AA6000;"/>
+    <rect x="38" y="2" width="8" height="8" style="stroke-width: 1; stroke: rgb(170, 96, 0); fill-opacity: 0;"/>
   </g>
   <g transform="matrix(1, 0, 0, 1, 0.0, 12)">
     <circle style="fill: #FFDDAA;" cx="6" cy="6" r="4"/>
