@@ -122,6 +122,7 @@ public:
    FpuState _fpuState;
 
    int checkNamesEvery = 0;
+   bool isFruity = false;
    
    bool tryInit();
 };
