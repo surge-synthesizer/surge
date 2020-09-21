@@ -53,6 +53,8 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
    setNumInputs(2);  // stereo in
    setNumOutputs(6); // stereo out, scene A out, scene B out
 
+   checkNamesEvery = 0;
+   
 #if MAC || LINUX
    isSynth();
    plug_is_synth = true;
@@ -396,6 +398,16 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
 
    SurgeSynthesizer* s = (SurgeSynthesizer*)_instance;
    s->process_input = (!plug_is_synth || input_connected);
+
+
+   if( checkNamesEvery++ == 20 )
+   {
+      checkNamesEvery = 0;
+      if( std::atomic_exchange( &parameterNameUpdated, false ) )
+      {
+         updateDisplay();
+      }
+   }
 
    // do each buffer
    VstTimeInfo* timeinfo = getTimeInfo(kVstPpqPosValid | kVstTempoValid | kVstTransportPlaying);
