@@ -987,6 +987,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
       return;
    assert(frame);
 
+   if( editorOverlay != nullptr )
+      editorOverlay->remember();
+   
    if (editor_open)
       close_editor();
 
@@ -2245,6 +2248,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
    }
 
+   if( editorOverlay )
+   {
+      frame->addView( editorOverlay );
+      editorOverlay->forget();
+   }
+   
    refresh_mod();
 
    editor_open = true;
@@ -4426,6 +4435,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
                lfodisplay->setDirty();
                lfodisplay->invalid();
+            }
+            if( editorOverlay )
+            {
+               editorOverlay->invalid();
             }
          }
       }
@@ -6986,22 +6999,15 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 
 }
 
-void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::function<void ()> onClose)
+void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
 {
-   if( ! c )
-      return;
-   auto vs = c->getViewSize();
-   auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
-
-   // add a screen size transparent thing into the editorOverlay
-   editorOverlay = new CViewContainer( fs );
-   editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(180, 180, 200, 150)));
-   editorOverlay->setVisible(true);
-   frame->addView(editorOverlay);
-
    const int header = 20;
    const int margin = 4;
    const int buttonwidth = 40;
+   
+   if( ! c )
+      return;
+   auto vs = c->getViewSize();
    
    // add a solid outline thing which is bigger than the control with the title to that
    auto containerSize = vs;
@@ -7009,9 +7015,32 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    containerSize.left -= margin;
    containerSize.top -= margin + header;
    containerSize.bottom += margin;
-   // of course centerinside doesn't work. So
-   containerSize = containerSize.centerInside(fs);
 
+   if( ! modalOverlay )
+   {
+      containerSize.offset( -containerSize.left + topLeft.x,
+                            -containerSize.top + topLeft.y );
+   }
+   
+   auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
+   if( ! modalOverlay )
+      fs = containerSize;
+
+   // add a screen size transparent thing into the editorOverlay
+   editorOverlay = new CViewContainer( fs );
+   editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(180, 180, 200, 150)));
+   editorOverlay->setVisible(true);
+   frame->addView(editorOverlay);
+
+   if( modalOverlay )
+   {
+      containerSize = containerSize.centerInside(fs);
+   }
+   else
+   {
+      containerSize.moveTo( CPoint( 0, 0 ) );
+   }
+   
    auto outerc = new CViewContainer(containerSize);
    auto bordersCol = currentSkin->getColor(Colors::Overlay::Border, kBlackCColor);
    outerc->setBackgroundColor( bordersCol );
@@ -7041,15 +7070,24 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    
    
    // add the control inside that in an outline
-   containerSize = vs;
-   containerSize.right += margin;
-   containerSize.left -= margin;
-   containerSize.top -= margin + header;
-   containerSize.bottom += margin;
-   containerSize = containerSize.centerInside(fs);
-   containerSize.top += header;
+   if( modalOverlay )
+   {
+      containerSize = vs;
+      
+      containerSize.right += margin;
+      containerSize.left -= margin;
+      containerSize.top -= margin + header;
+      containerSize.bottom += margin;
+      containerSize = containerSize.centerInside(fs);
+      containerSize.top += header;
+      containerSize.inset( 3, 3 );
+   }
+   else
+   {
+      CRect cSize = vs.extend( 1, 1 ).moveTo( 0, 0 ).moveTo( editorOverlay->getViewSize().getTopLeft() ).moveTo( margin, margin + header );
+      containerSize = cSize;
+   }
 
-   containerSize.inset( 3, 3 );
    auto border = new CViewContainer(containerSize );
    border->setBackgroundColor( bordersCol );
    editorOverlay->addView( border );
@@ -7058,8 +7096,6 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    c->setViewSize( containerSize );
    c->setMouseableArea( containerSize ); // sigh
    editorOverlay->addView(c);
-
-   
 
    // save the onClose function
    editorOverlayOnClose = onClose;

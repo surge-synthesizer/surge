@@ -254,7 +254,10 @@ public:
 
    void setEditorOverlay( VSTGUI::CView *c,
                           std::string editorTitle,
+                          const VSTGUI::CPoint &topleft = VSTGUI::CPoint( 0, 0 ),
+                          bool modalOverlay = true,
                           std::function<void()> onClose = [](){} );
+
 
    std::string getDisplayForTag( long tag );
 
