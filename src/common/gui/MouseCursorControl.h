@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  *  cursormanipulation.h
  *
