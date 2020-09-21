@@ -400,7 +400,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
    s->process_input = (!plug_is_synth || input_connected);
 
 
-   if( checkNamesEvery++ == 20 )
+   if( checkNamesEvery++ == 350 )
    {
       checkNamesEvery = 0;
       if( std::atomic_exchange( &parameterNameUpdated, false ) )
