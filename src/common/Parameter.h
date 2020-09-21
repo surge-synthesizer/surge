@@ -19,6 +19,7 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
+#include <atomic>
 
 union pdata
 {
@@ -396,3 +397,6 @@ public:
    */
    SurgeStorage *storage = nullptr;
 };
+
+// I don't make this a member since param needs to be copyable with memcpy.
+extern std::atomic<bool> parameterNameUpdated;

@@ -36,6 +36,7 @@ using namespace Steinberg::Vst;
 
 SurgeVst3Processor::SurgeVst3Processor() : blockpos(0), surgeInstance()
 {
+   checkNamesEvery = 0;
 }
 
 SurgeVst3Processor::~SurgeVst3Processor()
@@ -461,6 +462,19 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       surgeInstance->time_data.ppqPos = data.processContext->projectTimeMusic;
    }
 
+   if( checkNamesEvery++ == 20 )
+   {
+      checkNamesEvery = 0;
+      if( std::atomic_exchange( &parameterNameUpdated, false ) )
+      {
+         auto comph = getComponentHandler();
+         if( comph )
+         {
+            comph->restartComponent( kParamTitlesChanged );
+         }
+      }
+   }
+   
    for (i = 0; i < numSamples; i++)
    {
       if (blockpos == 0)
