@@ -1,3 +1,5 @@
+#pragma once
+
 inline __m128 tanh_taylor3_ss(__m128 in)
 {
    const __m128 a = _mm_set_ss(-1.f / 3.f);
