@@ -66,13 +66,13 @@ void AirWindowsEffect::registerPlugins()
 
    // Set up some group names
    std::string gnDynamics = "Dynamics";
-   std::string gnLoFi = "LoFi and Noise";
+   std::string gnLoFi = "Lo-Fi and Noise";
    std::string gnReverb = "Reverb and Diffusion";
    std::string gnSaturation = "Saturation";
    std::string gnSpecial = "Special";
    std::string gnTape = "Tape";
 
-   int id=0; // Like really on add at the end to this list OK!
+   int id=0; // only add new effects at the end of this list!
 
    registerAirwindow<ADClip7::ADClip7>( id++, 10, gnDynamics, "ADClip7" );
    registerAirwindow<BlockParty::BlockParty>( id++, 20, gnDynamics, "BlockParty" );
