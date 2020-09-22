@@ -35,22 +35,15 @@ void rebuildCache( MSEGStorage *ms )
       if( nextseg >= ms->n_activeSegments )
          nextseg = 0;
       ms->segments[i].nv1 = ms->segments[nextseg].v0;
-      
-      // set up some aux points for convenience
-      switch( ms->segments[i].type )
-      {
-      case MSEGStorage::segment::LINEAR:
-      {
-         ms->segments[i].cpv = 0.5 * ( ms->segments[i].v0 + ms->segments[i].nv1 );
-         ms->segments[i].cpduration = ms->segments[i].duration / 2;
-         break;
-      }
-      default:
-         break;
-      }
    }
+
    ms->totalDuration = totald;
    ms->lastSegmentEvaluated = -1;
+
+   for( int i=0; i<ms->n_activeSegments; ++i )
+   {
+      constrainControlPointAt( ms, i );
+   }
 }
 
 float valueAt(int ip, float fup, float df, MSEGStorage *ms)
@@ -372,6 +365,21 @@ void insertAtIndex( MSEGStorage *ms, int insertIndex ) {
    ms->segments[insertIndex].type = MSEGStorage::segment::LINEAR;
    ms->segments[insertIndex].v0 = 0;
    ms->segments[insertIndex].duration = 0.25;
+
+   int nxt = insertIndex + 1;
+   if( nxt >= ms->n_activeSegments )
+      nxt = 0;
+   if( nxt == insertIndex )
+   {
+      ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
+      ms->segments[insertIndex].cpduration = 0.125;
+   }
+   else
+   {
+      ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
+      ms->segments[insertIndex].cpduration = 0.125;
+   }
+   
    ms->n_activeSegments ++;
 }
    
@@ -401,11 +409,22 @@ void extendTo( MSEGStorage *ms, float t, float nv ) {
    else
       ms->segments[sn].v0 = ms->segments[sn-1].nv1;
 
-   // The first point has to match where I just clicked
-   ms->segments[0].v0 = nv;
-   
    float dt = t - ms->totalDuration;
    ms->segments[sn].duration = dt;
+
+   ms->segments[sn].cpduration = dt/2;
+   ms->segments[sn].cpv = ( ms->segments[sn].v0 + nv ) * 0.5;
+
+   // The first point has to match where I just clicked. Adjust it and its control point
+   float cpdratio = ms->segments[0].cpduration / ms->segments[0].duration;
+   float cpvratio = 0.5;
+   if( ms->segments[0].nv1 != ms->segments[0].v0 )
+      cpvratio = ( ms->segments[0].cpv - ms->segments[0].v0 ) / ( ms->segments[0].nv1 - ms->segments[0].v0 );
+
+   ms->segments[0].v0 = nv;
+   
+   ms->segments[0].cpduration = cpdratio * ms->segments[0].duration;
+   ms->segments[0].cpv = (ms->segments[0].nv1 - ms->segments[0].v0 ) * cpvratio + ms->segments[0].v0;
 }
 
 void splitSegment( MSEGStorage *ms, float t, float nv ) {
@@ -414,19 +433,31 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
    {
       while( t > ms->totalDuration ) t -= ms->totalDuration;
       while( t < 0 ) t += ms->totalDuration;
+
+      float pv1 = ms->segments[idx].nv1;
+      
+      float cpdratio = ms->segments[idx].cpduration / ms->segments[idx].duration;
+      
+      float cpvratio = 0.5;
+      if( ms->segments[idx].nv1 != ms->segments[idx].v0 )
+         cpvratio = ( ms->segments[idx].cpv - ms->segments[idx].v0 ) / ( ms->segments[idx].nv1 - ms->segments[idx].v0 );
       
       float dt = (t - ms->segmentStart[idx]) / ( ms->segments[idx].duration);
       auto q = ms->segments[idx]; // take a copy
       insertAtIndex(ms, idx + 1);
-      
+
+      ms->segments[idx].nv1 = nv;
       ms->segments[idx].duration *= dt;
-      ms->segments[idx+1].duration = q.duration * ( 1 - dt );
-      
+
       ms->segments[idx+1].v0 = nv;
       ms->segments[idx+1].type = ms->segments[idx].type;
+      ms->segments[idx+1].nv1 = pv1;
+      ms->segments[idx+1].duration = q.duration * ( 1 - dt );
       
-      ms->segments[idx].cpduration = std::min( ms->segments[idx].duration, ms->segments[idx].cpduration );
-      ms->segments[idx+1].cpduration = std::min( ms->segments[idx+1].duration, ms->segments[idx+1].cpduration );
+      ms->segments[idx].cpduration = cpdratio * ms->segments[idx].duration;
+      ms->segments[idx].cpv = (ms->segments[idx].nv1 - ms->segments[idx].v0 ) * cpvratio + ms->segments[idx].v0;
+      ms->segments[idx+1].cpduration = cpdratio * ms->segments[idx+1].duration;
+      ms->segments[idx+1].cpv = (ms->segments[idx+1].nv1 - ms->segments[idx+1].v0 ) * cpvratio + ms->segments[idx+1].v0;
    }
 }
 
@@ -452,8 +483,19 @@ void unsplitSegment( MSEGStorage *ms, float t ) {
    if( prior < 0 ) prior = ms->n_activeSegments - 1;
    if( prior == idx ) return;
    
-   // ms->segments[prior].v1 = ms->segments[idx].v1;
+   
+   float cpdratio = ms->segments[prior].cpduration / ms->segments[prior].duration;
+   
+   float cpvratio = 0.5;
+   if( ms->segments[prior].nv1 != ms->segments[prior].v0 )
+      cpvratio = ( ms->segments[prior].cpv - ms->segments[prior].v0 ) / ( ms->segments[prior].nv1 - ms->segments[prior].v0 );
+   
    ms->segments[prior].duration += ms->segments[idx].duration;
+   ms->segments[prior].nv1 = ms->segments[idx].nv1;
+
+   ms->segments[prior].cpduration = cpdratio * ms->segments[prior].duration;
+   ms->segments[prior].cpv = (ms->segments[prior].nv1 - ms->segments[prior].v0 ) * cpvratio + ms->segments[prior].v0;
+
    
    for( int i=idx; i<ms->n_activeSegments - 1; ++i )
    {
@@ -489,5 +531,36 @@ void resetControlPoint( MSEGStorage *ms, float t )
    }
 }
 
+void constrainControlPointAt( MSEGStorage *ms, int idx )
+{
+   switch( ms->segments[idx].type )
+   {
+   case MSEGStorage::segment::LINEAR:
+   {
+      // constrain time and value
+      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
+      auto l = std::min(ms->segments[idx].v0, ms->segments[idx].nv1 );
+      auto h = std::max(ms->segments[idx].v0, ms->segments[idx].nv1 );
+      ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, l, h );
+   }
+   break;
+   case MSEGStorage::segment::QUADBEZ:
+   {
+      // Constrain time but space is in -1,1
+      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
+      ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
+
+   }
+   break;
+   default:
+   {
+      // constrain time and stay at the midpoint
+      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
+      ms->segments[idx].cpv = 0.5 * (ms->segments[idx].v0 + ms->segments[idx].nv1);
+   }
+   break;
+   }
+}
+   
 }
 }

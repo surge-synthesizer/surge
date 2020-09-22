@@ -987,11 +987,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
       return;
    assert(frame);
 
-   if( editorOverlay != nullptr )
-      editorOverlay->remember();
-   
    if (editor_open)
+   {
+      if( editorOverlay != nullptr )
+      {
+         editorOverlay->remember();
+         frame->removeView( editorOverlay );
+      }
+   
       close_editor();
+   }
 
    CPoint nopoint(0, 0);
 
@@ -2252,7 +2257,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    if( editorOverlay )
    {
       frame->addView( editorOverlay );
-      editorOverlay->forget();
    }
    
    refresh_mod();
