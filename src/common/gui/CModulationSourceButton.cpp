@@ -282,7 +282,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    if (msid >= ms_lfo1 && msid <= ms_slfo6)
    {
       CPoint where;
-      where.x = 0;
+      where.x = -9;
       if (state >= 4)
          where.y = 8 * rh;
       else

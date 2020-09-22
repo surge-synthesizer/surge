@@ -51,6 +51,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include <vector>
  
 class CSurgeSlider;
+class CModulationSourceButton;
 
 #if TARGET_VST3
 namespace Steinberg
@@ -346,7 +347,7 @@ private:
    static const int n_paramslots = 1024;
    VSTGUI::CControl* param[n_paramslots] = {};
    VSTGUI::CControl* nonmod_param[n_paramslots] = {}; 
-   VSTGUI::CControl* gui_modsrc[n_modsources] = {};
+   CModulationSourceButton* gui_modsrc[n_modsources] = {};
    VSTGUI::CControl* metaparam[n_customcontrollers] = {};
    VSTGUI::CControl* lfodisplay = nullptr;
    VSTGUI::CControl* filtersubtype[2] = {};

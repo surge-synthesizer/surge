@@ -45,7 +45,7 @@ const int gui_mainsec_slider_y =
 const int gui_envsec_x = 309, gui_envsec_y = 236 + gui_topbar;
 const int gui_oscmix_x = 154, gui_oscmix_y = gui_envsec_y;
 const int gui_voicemode_x = 184, gui_voicemode_y = gui_topbar + 20;
-const int gui_modsec_x = 6, gui_modsec_y = 398 + gui_topbar;
+const int gui_modsec_x = 6, gui_modsec_y = 425 + gui_topbar;   // 27px increase in height for extra modulator row, was 398
 
 const int gui_mid_topbar_y = 17;
 
