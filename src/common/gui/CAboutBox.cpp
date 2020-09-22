@@ -43,9 +43,8 @@ void CAboutBox::draw(CDrawContext* pContext)
    if (value)
    {
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
-
-      CRect infobg(0, 375, 905, 545);
-      CRect skininfobg(0, 0, 905, 80);
+      CRect infobg(0, skin->getWindowSizeY() - 167, skin->getWindowSizeX(), skin->getWindowSizeY());
+      CRect skininfobg(0, 0, BASE_WINDOW_SIZE_X, 80);
       pContext->setFillColor(CColor(0, 0, 0, 255));
       pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
       pContext->drawRect(skininfobg, CDrawStyle::kDrawFilled);
@@ -107,7 +106,8 @@ void CAboutBox::draw(CDrawContext* pContext)
 
          // link to Surge github repo in another color because VSTGUI -_-
          pContext->setFontColor(skin->getColor(Colors::AboutBox::Link, CColor(46, 134, 255)));
-         pContext->drawString("https://github.com/surge-synthesizer/surge", CPoint(253, 506 - strHeight - yMargin));
+         pContext->drawString("https://github.com/surge-synthesizer/surge",
+                              CPoint(253, skin->getWindowSizeY() - 36 - strHeight - yMargin));
       }
 
       {
@@ -174,9 +174,10 @@ CAboutBox::onMouseDown(CPoint& where,
                        const CButtonState& button) ///< called when a mouse down event occurs
 {
    if (!(button & kLButton))
-      return kMouseEventNotHandled;
+      return kMouseEventHandled;
 
-   if (where.x >= 250 && where.x <= 480 && where.y >= 496 && where.y <= 510)
+   if (where.x >= 252 && where.x <= 480 && (where.y >= skin->getWindowSizeY() - 66) &&
+             where.y <= (skin->getWindowSizeY() - 50))
       Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
    else
       boxHide();

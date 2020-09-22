@@ -948,26 +948,36 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
 CRect positionForModulationGrid(modsources entry)
 {
    bool isMacro = isCustomController(entry);
-   const int width = isMacro ? 93 : 74;
+   int gridX = modsource_grid_xy[entry][0];
+   int gridY = modsource_grid_xy[entry][1];
+   int width = isMacro ? 93 : 74;
+
+   // to ensure the same gap between the modbuttons,
+   // make the first and last non-macro button wider 2px
+   if ((!isMacro) && ((gridX == 0) || (gridX == 9)))
+      width += 2;
 
    CRect r(2, 1, width, 14 + 1);
 
    if (isMacro)
       r.bottom += 8;
 
-   int gridX = modsource_grid_xy[entry][0];
-   int gridY = modsource_grid_xy[entry][1];
    int offsetX = 1;
 
    for (int i = 0; i < gridX; i++)
    {
-      offsetX += width;
+      if ((!isMacro) && (i == 0))
+         offsetX += 2;
 
-      if ((!isMacro) && (i % 2 == 1))
-         offsetX++;
+      // gross hack for accumulated 2 px horizontal offsets from the previous if clause
+      // needed to align the last column nicely
+      if ((!isMacro) && (i == 8))
+         offsetX -= 18;
+
+      offsetX += width;
    }
 
-   r.offset(offsetX, 401 + 8 * gridY);
+   r.offset(offsetX, 401 + (8 * gridY));
 
    return r;
 }
@@ -2135,7 +2145,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
    }
 
-   CRect aboutbrect(892 - 50, 523, 892, 523 + 15);
+   CRect aboutbrect(900 - 50, 523+27, 900, 523+27 + 15);
 
    CHSwitch2* b_settingsMenu =
       new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
