@@ -14,8 +14,6 @@ src/BitGlitter.cpp
 src/BitGlitterProc.cpp
 src/BlockParty.cpp
 src/BlockPartyProc.cpp
-src/BrassRider.cpp
-src/BrassRiderProc.cpp
 src/BrightAmbience2.cpp
 src/BrightAmbience2Proc.cpp
 src/BussColors4.cpp
@@ -26,8 +24,6 @@ src/Cojones.cpp
 src/CojonesProc.cpp
 src/Compresaturator.cpp
 src/CompresaturatorProc.cpp
-src/Console6Buss.cpp
-src/Console6BussProc.cpp
 src/CrunchyGrooveWear.cpp
 src/CrunchyGrooveWearProc.cpp
 src/DeBess.cpp
@@ -80,16 +76,12 @@ src/Pop.cpp
 src/PopProc.cpp
 src/Pressure4.cpp
 src/Pressure4Proc.cpp
-src/PurestDrive.cpp
-src/PurestDriveProc.cpp
 src/PyeWacket.cpp
 src/PyeWacketProc.cpp
 src/SingleEndedTriode.cpp
 src/SingleEndedTriodeProc.cpp
-src/Spiral.cpp
 src/Spiral2.cpp
 src/Spiral2Proc.cpp
-src/SpiralProc.cpp
 src/StarChild.cpp
 src/StarChildProc.cpp
 src/Surge.cpp

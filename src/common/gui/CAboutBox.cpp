@@ -91,7 +91,7 @@ void CAboutBox::draw(CDrawContext* pContext)
                "Copyright 2005-2020 by Vember Audio and individual contributors",
                "Source, contributors and other information at",
                "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc.",
-               "Contains the Open Source Airwindows Plugins for some effects",
+               "Airwindows open source effects by Chris Johnson, licensed under MIT license",
             } };
          
          int yMargin = 6;
