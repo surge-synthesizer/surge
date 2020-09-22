@@ -374,15 +374,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       CGraphicsPath *path = dc->createGraphicsPath();
       CGraphicsPath *fillpath = dc->createGraphicsPath();
-      CGraphicsPath *looppath = dc->createGraphicsPath();
-      bool startedLoopPath = 0;
       float pathFirstY, pathLastX, pathLastY, minpx = 1000000;
       for( int i=0; i<drawArea.getWidth(); ++i )
       {
          float up = pxt( i + drawArea.left );
          float iup = (int)up;
          float fup = up - iup;
-         float v = Surge::MSEG::valueAt( iup, fup, lfodata->deform.val.f, ms );
+         float v = Surge::MSEG::valueAt( iup, fup, 0, ms );
          v = valpx( v );
          if( up <= ms->totalDuration )
          {
@@ -399,16 +397,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             }
             pathLastX = i; pathLastY = v;
             minpx = std::min( v, minpx );
-         }
-         else
-         {
-            if( ! startedLoopPath )
-            {
-               startedLoopPath = true;
-               looppath->beginSubpath( i, v );
-            }
-            else
-               looppath->addLine( i, v );
          }
       }
 
@@ -465,14 +453,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       
       path->forget();
-
-      if( startedLoopPath )
-      {
-         dc->setLineWidth(1);
-         dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Line, CColor(180, 180, 200)));
-         dc->drawGraphicsPath( looppath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
-         looppath->forget();
-      }
 
       dc->setLineWidth(1);
       for( const auto &h : hotzones )
@@ -937,7 +917,13 @@ struct MSEGMainEd : public CViewContainer {
 
 MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 380 ) )
 {
+   // Leave these in for now
+   std::cout << "MSEG Editor Constructed" << std::endl;
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );
    addView( new MSEGMainEd( getViewSize(), lfodata, ms, skin, b ) );
+}
+
+MSEGEditor::~MSEGEditor() {
+   std::cout << "MSEG Editor Destroyed" << std::endl;
 }

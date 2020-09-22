@@ -20,5 +20,5 @@
 
 struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent {
    MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
-   ~MSEGEditor() = default;
+   ~MSEGEditor();
 };
