@@ -256,6 +256,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SkinSupport.cpp
   src/common/gui/SurgeBitmaps.cpp
   src/common/gui/SurgeGUIEditor.cpp
+  src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/common/gui/UIInstrumentation.cpp
   src/common/gui/guihelpers.cpp
   )
