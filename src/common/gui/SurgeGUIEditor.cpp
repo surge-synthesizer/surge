@@ -1988,6 +1988,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             hs->setValue( p->get_value_f01() );
             hs->setMinMax( p->val_min.i, p->val_max.i );
             hs->setLabel(p->get_name());
+            p->ctrlstyle = p->ctrlstyle | kNoPopup;
             frame->addView( hs );
             if( p->can_deactivate() )
                hs->setDeactivated( p->deactivated );
