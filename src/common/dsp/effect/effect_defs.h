@@ -214,10 +214,7 @@ public:
    virtual void init() override;
    virtual void process_only_control() override;
    virtual void process(float* dataL, float* dataR) override;
-   virtual int get_ringout_decay() override
-   {
-      return 1000;
-   }
+   virtual int get_ringout_decay() override;
    virtual void suspend() override;
    void setvars();
    virtual void init_ctrltypes() override;
