@@ -21,7 +21,6 @@
 #include "UserInteractions.h"
 #include "guihelpers.h"
 #include "SkinColors.h"
-#include "PopupEditorSpawner.h"
 
 #include "ImportFilesystem.h"
 
@@ -516,9 +515,16 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
                       {
                          char c[256];
                          strncpy( c, this->oscdata->wavetable_display_name, 256 );
-                         spawn_miniedit_text(c, 256, "Enter a custom wavetable display name:", "Wavetable Display Name");
-                         strncpy( this->oscdata->wavetable_display_name, c, 256 );
-                         invalid();
+                         auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
+                         if( sge )
+                         {
+                            sge->promptForMiniEdit(c, "Enter a custom wavetable display name:", "Wavetable Display Name",
+                                                   [this](const std::string &s) {
+                                                      strncpy( this->oscdata->wavetable_display_name, s.c_str(), 256 );
+                                                      this->invalid();
+                                                   }
+                               );
+                         }
                       };
    renameItem->setActions(rnaction, nullptr);
    contextMenu->addEntry(renameItem);

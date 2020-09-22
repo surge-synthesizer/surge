@@ -6,7 +6,6 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h" // for TINYXML macro
-#include "PopupEditorSpawner.h"
 #include "ImportFilesystem.h"
 #include "SkinColors.h"
 #include "guihelpers.h"
@@ -696,11 +695,21 @@ void CFxMenu::pasteFX()
 
 void CFxMenu::saveFX()
 {
-   // Rough implementation
+   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+   if( sge )
+   {
+      sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
+                             [this](const std::string &s) { this->saveFXIn( s ); } );
+   }
+
+
+}
+void CFxMenu::saveFXIn( const std::string &s )
+{
    char fxName[256];
    fxName[0] = 0;
-   spawn_miniedit_text(fxName, 256, "Enter a name for the FX preset:", "Save FX Preset" );
-
+   strncpy( fxName, s.c_str(), 256 );
+   
    if( strlen( fxName ) == 0 )
    {
       return;
