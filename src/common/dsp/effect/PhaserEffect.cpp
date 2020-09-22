@@ -282,3 +282,15 @@ void PhaserEffect::handleStreamingMismatches(int streamingRevision, int currentS
       fxdata->p[pp_width].val.f = 0.f;
    }
 }
+
+int PhaserEffect::get_ringout_decay()
+{
+   auto fb = fxdata->p[pp_feedback].val.f;
+   // The ringout is longer at high feedbacks. This is just a heuristic based on
+   // testing with the patch in #2663
+   if( fb > 0.9 || fb < -0.9 )
+      return 5000;
+   if( fb > 0.5 || fb < -0.5 )
+      return 3000;
+   return 1000;
+}
