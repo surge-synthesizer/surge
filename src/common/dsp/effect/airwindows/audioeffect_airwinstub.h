@@ -38,6 +38,8 @@ struct AirWinBaseClass {
       return false;
    }
    virtual bool isParameterBipolar( VstInt32 index ) { return false; }
+   virtual bool isParameterIntegral( VstInt32 index ) { return false; }
+   virtual int parameterIntegralUpperBound( VstInt32 index ) { return -1; }
    
    virtual void processReplacing( float **in, float **out, VstInt32 sampleFrames ) = 0;
 

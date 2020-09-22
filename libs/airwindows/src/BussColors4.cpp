@@ -166,6 +166,18 @@ void BussColors4::getParameterLabel(VstInt32 index, char *text) {
     }
 }
 
+bool BussColors4::isParameterIntegral(VstInt32 index)
+{
+   if( index == kParamA ) return true;
+   return false;
+}
+
+int BussColors4::parameterIntegralUpperBound( VstInt32 index )
+{
+   if( index == kParamA ) return 7;
+   return -1;
+}
+
 VstInt32 BussColors4::canDo(char *text) 
 { return (_canDo.find(text) == _canDo.end()) ? -1: 1; } // 1 = yes, -1 = no, 0 = don't know
 

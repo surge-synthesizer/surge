@@ -316,6 +316,7 @@ void Parameter::set_user_data(ParamUserData* ud)
       break;
    case ct_airwindow_param:
    case ct_airwindow_param_bipolar:
+   case ct_airwindow_param_integral:
       if( dynamic_cast<ParameterExternalFormatter*>(ud))
       {
          user_data = ud;
@@ -819,7 +820,14 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
-      
+
+   case ct_airwindow_param_integral:
+      val_min.i = 0;
+      val_max.i = 1;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
+
    case ct_none:
    default:
       sprintf(dispname, "-");
@@ -1001,6 +1009,7 @@ void Parameter::set_type(int ctrltype)
 
    case ct_airwindow_param:
    case ct_airwindow_param_bipolar:
+   case ct_airwindow_param_integral:
       displayType = DelegatedToFormatter;
       displayInfo.scale = 1.0;
       displayInfo.unit[0] = 0;
@@ -2035,11 +2044,26 @@ void Parameter::get_display(char* txt, bool external, float ef)
       }
       break;
    case vt_int:
+   {
       if (external)
          i = (int)((1 / 0.99) * (ef - 0.005) * (float)(val_max.i - val_min.i) + 0.5) + val_min.i;
       else
          i = val.i;
 
+      if( displayType == DelegatedToFormatter )
+      {
+         float fv = 0.005 + 0.99 * ((float)(i - val_min.i)) / ((float)(val_max.i - val_min.i));
+
+         char vt[64];
+
+         auto ef = dynamic_cast<ParameterExternalFormatter *>( user_data );
+         if( ef )
+         {
+            ef->formatValue( fv, vt, 64 );
+            sprintf( txt, "%s", vt );
+            return;
+         }
+      }
       switch (ctrltype)
       {
       case ct_midikey_or_channel:
@@ -2331,6 +2355,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       };
       break;
+   }
    case vt_bool:
       if (external)
          b = ef > 0.5f;
