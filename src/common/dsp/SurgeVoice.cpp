@@ -165,7 +165,13 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_filtereg] = &filterEGSource;
 
    modsources[ms_modwheel] = oscene->modsources[ms_modwheel];
+   modsources[ms_breath] = oscene->modsources[ms_breath];
+   modsources[ms_expression] = oscene->modsources[ms_expression];
+   modsources[ms_sustain] = oscene->modsources[ms_sustain]; 
    modsources[ms_aftertouch] = &monoAftertouchSource;
+   modsources[ms_lowest_key] = oscene->modsources[ms_lowest_key];
+   modsources[ms_highest_key] = oscene->modsources[ms_highest_key];
+   modsources[ms_latest_key] = oscene->modsources[ms_latest_key];
    monoAftertouchSource.output = state.voiceChannelState->pressure;
    modsources[ms_timbre] = &timbreSource;
    timbreSource.output = state.voiceChannelState->timbre;
@@ -179,6 +185,11 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_slfo5] = oscene->modsources[ms_slfo5];
    modsources[ms_slfo6] = oscene->modsources[ms_slfo6];
 
+   modsources[ms_random_bipolar] = oscene->modsources[ms_random_bipolar];
+   modsources[ms_random_unipolar] = oscene->modsources[ms_random_unipolar];
+   modsources[ms_alternate_bipolar] = oscene->modsources[ms_alternate_bipolar];
+   modsources[ms_alternate_unipolar] = oscene->modsources[ms_alternate_unipolar];
+   
    id_cfa = scene->filterunit[0].cutoff.param_id_in_scene;
    id_cfb = scene->filterunit[1].cutoff.param_id_in_scene;
    id_kta = scene->filterunit[0].keytrack.param_id_in_scene;

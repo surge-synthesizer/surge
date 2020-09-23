@@ -2,6 +2,7 @@
   <globals>
     <!-- This means if there is a bmp00???.svg in this directory we use it over the built in for this skin -->
     <defaultimage directory="SVG/"/>
+    <window-size x="904" y="569"/>
 
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
     <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>

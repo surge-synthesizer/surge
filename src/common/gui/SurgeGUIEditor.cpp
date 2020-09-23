@@ -168,7 +168,7 @@ std::string specialTagToString( special_tags t )
    if( t >= tag_mod_source0 && t < tag_mod_source_end )
    {
       modsources modsource = (modsources)(t - tag_mod_source0);
-      std::string s = std::string( "tag_modsource" ) + modsource_names_short[modsource];
+      std::string s = std::string( "tag_modsource_" ) + modsource_names_tag[modsource];
       return s;
    }
 
@@ -470,8 +470,8 @@ void SurgeGUIEditor::idle()
 #endif
          for (int i = 1; i < n_modsources; i++)
          {
-            if( gui_modsrc[i] )
-               ((CModulationSourceButton*)gui_modsrc[i])->setblink(blinkstate);
+            if (gui_modsrc[i])
+               gui_modsrc[i]->setblink(blinkstate);
          }
          blinkstate = !blinkstate;
       }
@@ -681,9 +681,7 @@ void SurgeGUIEditor::idle()
                int cc = j - metaparam_offset;
                gui_modsrc[ms_ctrl1 + cc]->setValue(
                   ((ControllerModulationSource*)synth->storage.getPatch()
-                   .scene[current_scene]
-                   .modsources[ms_ctrl1 + i])
-                  ->get_target01());
+                   .scene[current_scene].modsources[ms_ctrl1 + i])->get_target01());
             }
             else if((j>=0) && (j < n_total_params) && nonmod_param[j])
             {
@@ -790,15 +788,10 @@ void SurgeGUIEditor::idle()
       }
       for (int i = 0; i < n_customcontrollers; i++)
       {
-         if (((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 +
-                                                                                                     i])
-             ->has_changed(true))
+         if (((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + i])->has_changed(true))
          {
             gui_modsrc[ms_ctrl1 + i]->setValue(
-               ((ControllerModulationSource*)synth->storage.getPatch()
-                .scene[current_scene]
-                .modsources[ms_ctrl1 + i])
-               ->get_target01());
+               ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + i])->get_target01());
          }
       }
       clear_infoview_countdown += clear_infoview_peridle;
@@ -822,7 +815,7 @@ void SurgeGUIEditor::toggle_mod_editing()
 
 void SurgeGUIEditor::refresh_mod()
 {
-   CModulationSourceButton *cms = (CModulationSourceButton *)gui_modsrc[modsource];
+   CModulationSourceButton *cms = gui_modsrc[modsource];
 
    modsources thisms = modsource;
    if( cms->hasAlternate && cms->useAlternate )
@@ -867,18 +860,18 @@ void SurgeGUIEditor::refresh_mod()
       if (i == modsource_editor)
          state |= 4;
 
-      if( gui_modsrc[i] )
+      if (gui_modsrc[i])
       {
          // this could change if I cleared the last one
-         ((CModulationSourceButton*)gui_modsrc[i])->used = synth->isModsourceUsed( (modsources)i );
-         ((CModulationSourceButton*)gui_modsrc[i])->state = state;
+         gui_modsrc[i]->used = synth->isModsourceUsed( (modsources)i );
+         gui_modsrc[i]->state = state;
 
          if( i < ms_ctrl1 || i > ms_ctrl8 )
          {
             auto mn = modulatorName(i, true);
-            ((CModulationSourceButton*)gui_modsrc[i])->setlabel(mn.c_str() );
+            gui_modsrc[i]->setlabel(mn.c_str() );
          }
-         ((CModulationSourceButton*)gui_modsrc[i])->invalid();
+         gui_modsrc[i]->invalid();
       }
    }
    // ctnvg frame->redraw();
@@ -956,18 +949,37 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
 
 CRect positionForModulationGrid(modsources entry)
 {
-   const int width = isCustomController(entry) ? 75 : 64;
-   CRect r(2, 1, width, 14 + 1);
-
-   if (isCustomController(entry))
-      r.bottom += 8;
+   bool isMacro = isCustomController(entry);
    int gridX = modsource_grid_xy[entry][0];
    int gridY = modsource_grid_xy[entry][1];
-   r.offset(0, 399 + 8 * gridY);
+   int width = isMacro ? 93 : 74;
+
+   // to ensure the same gap between the modbuttons,
+   // make the first and last non-macro button wider 2px
+   if ((!isMacro) && ((gridX == 0) || (gridX == 9)))
+      width += 2;
+
+   CRect r(2, 1, width, 14 + 1);
+
+   if (isMacro)
+      r.bottom += 8;
+
+   int offsetX = 1;
+
    for (int i = 0; i < gridX; i++)
    {
-      r.offset((i >= 7) ? 75 : 64, 0);
+      if ((!isMacro) && (i == 0))
+         offsetX += 2;
+
+      // gross hack for accumulated 2 px horizontal offsets from the previous if clause
+      // needed to align the last column nicely
+      if ((!isMacro) && (i == 8))
+         offsetX -= 18;
+
+      offsetX += width;
    }
+
+   r.offset(offsetX, 401 + (8 * gridY));
 
    return r;
 }
@@ -1041,49 +1053,51 @@ void SurgeGUIEditor::openOrRecreateEditor()
       frame->addView(fc);
    }
 
-   /* This loop bound is 1.6.* valid ONLY */
-   for (int k = 1; k < /* n_modsources */ ms_releasevelocity; k++)
+   for (int k = 1; k < n_modsources; k++)
    {
-      modsources ms = (modsources)k;
-
-      CRect r = positionForModulationGrid(ms);
-
-      int state = 0;
-      if (ms == modsource)
-         state = mod_editor ? 2 : 1;
-      if (ms == modsource_editor)
-         state |= 4;
-
-      gui_modsrc[ms] =
-         new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms, bitmapStore, &(synth->storage));
-      ((CModulationSourceButton*)gui_modsrc[ms])->setSkin(currentSkin);
-      ((CModulationSourceButton*)gui_modsrc[ms])
-         ->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
-      if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
+      if ((k != ms_random_unipolar) && (k != ms_alternate_unipolar))
       {
-         ((CModulationSourceButton*)gui_modsrc[ms])
-            ->setlabel(synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
-         ((CModulationSourceButton*)gui_modsrc[ms])->set_ismeta(true);
-         ((CModulationSourceButton*)gui_modsrc[ms])
-            ->setBipolar(synth->storage.getPatch().scene[current_scene].modsources[ms]->is_bipolar());
-         gui_modsrc[ms]->setValue(
-            ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms])
-            ->get_target01());
-      }
-      else
-      {
-         ((CModulationSourceButton*)gui_modsrc[ms])->setlabel(modulatorName(ms, true).c_str() );
-         /*
-         ** Velocity special case for 1.6.* vintage
-         */
-         if( ms == ms_velocity )
+         modsources ms = (modsources)k;
+
+         CRect r = positionForModulationGrid(ms);
+
+         int state = 0;
+         if (ms == modsource)
+            state = mod_editor ? 2 : 1;
+         if (ms == modsource_editor)
+            state |= 4;
+
+         gui_modsrc[ms] = new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms, bitmapStore, &(synth->storage));
+
+         gui_modsrc[ms]->setSkin(currentSkin);
+         gui_modsrc[ms]->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
+      
+         if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
          {
-            ((CModulationSourceButton*)gui_modsrc[ms])->setAlternate(ms_releasevelocity,
-                                                                     modsource_names_button[ms_releasevelocity]);
-            ((CModulationSourceButton*)gui_modsrc[ms])->setUseAlternate(modsource_is_alternate[ms]);
+            gui_modsrc[ms]->setlabel(synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
+            gui_modsrc[ms]->set_ismeta(true);
+            gui_modsrc[ms]->setBipolar(synth->storage.getPatch().scene[current_scene].modsources[ms]->is_bipolar());
+            gui_modsrc[ms]->setValue(((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[ms])->get_target01());
          }
+         else
+         {
+            gui_modsrc[ms]->setlabel(modulatorName(ms, true).c_str() );
+
+            if (ms == ms_random_bipolar)
+            {
+               gui_modsrc[ms]->setAlternate(ms_random_unipolar, modsource_names_button[ms_random_unipolar]);
+               gui_modsrc[ms]->setUseAlternate(modsource_is_alternate[ms]);
+            }
+
+            if (ms == ms_alternate_bipolar)
+            {
+               gui_modsrc[ms]->setAlternate(ms_alternate_unipolar, modsource_names_button[ms_alternate_unipolar]);
+               gui_modsrc[ms]->setUseAlternate(modsource_is_alternate[ms]);
+            }
+         }
+
+         frame->addView(gui_modsrc[ms]);
       }
-      frame->addView(gui_modsrc[ms]);
    }
 
    /*// Comments
@@ -2133,11 +2147,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
    }
 
-   CRect aboutbrect(892 - 50, 523, 892, 523 + 15);
+   int menuX = 844, menuY = 550, menuW = 50, menuH = 15;
+   CRect menurect(menuX, menuY, menuX + menuW, menuY + menuH);
 
    CHSwitch2* b_settingsMenu =
-      new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
-                    bitmapStore->getBitmap(IDB_BUTTON_MENU), nopoint, false);
+      new CHSwitch2(menurect, this, tag_settingsmenu, 1, 27, 1, 1, bitmapStore->getBitmap(IDB_BUTTON_MENU), nopoint, false);
    b_settingsMenu->setSkin( currentSkin, bitmapStore );
    frame->addView(b_settingsMenu);
 
@@ -2147,7 +2161,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
    aboutbox =
-      new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
+      new CAboutBox(menurect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
    ((CAboutBox *)aboutbox)->setSkin(currentSkin,bitmapStore);
 
    frame->addView(aboutbox);

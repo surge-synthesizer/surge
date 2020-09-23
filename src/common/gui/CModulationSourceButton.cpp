@@ -126,8 +126,6 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    const CColor ColSemiTint = CColor(32, 93, 176, 255);
    const CColor ColBlink = CColor(173, 255, 107, 255);
 
-   const int rh = 16;
-
    /*
         state
         0 - nothing
@@ -279,10 +277,13 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       }
    }
 
+   const int rh = 16;
+
+   // show LFO parameters arrow
    if (msid >= ms_lfo1 && msid <= ms_slfo6)
    {
       CPoint where;
-      where.x = 0;
+      where.x = - 9;
       if (state >= 4)
          where.y = 8 * rh;
       else
@@ -349,7 +350,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    }
    else if (buttons & kLButton)
    {
-      click_is_editpart = loc.x > 53;
+      click_is_editpart = loc.x > (size.getWidth() - 11);   // click area for show LFO parameters arrow
       event_is_drag = false;
       if (listener)
          listener->valueChanged(this);

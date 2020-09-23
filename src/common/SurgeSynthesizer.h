@@ -94,6 +94,7 @@ public:
    void programChange(char channel, int value);
    void allNotesOff();
    void setSamplerate(float sr);
+   void updateHighLowKeys(int scene);
    int getNumInputs()
    {
       return N_INPUTS;
