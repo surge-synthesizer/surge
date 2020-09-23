@@ -93,6 +93,7 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_MSEG_SEGMENT_HANDLES, f);
    addEntry(IDB_MSEG_MOVEMENT, f);
    addEntry(IDB_MSEG_EDITMODE, f);
+   addEntry(IDB_MINIEDIT_BG, f);
    // == /SVG == Do not remove this comment
 
 }

@@ -251,7 +251,6 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CSurgeVuMeter.cpp
   src/common/gui/CSwitchControl.cpp
   src/common/gui/MSEGEditor.cpp
-  src/common/gui/PopupEditorDialog.cpp
   src/common/gui/SkinColors.cpp
   src/common/gui/SkinSupport.cpp
   src/common/gui/SurgeBitmaps.cpp
@@ -616,7 +615,6 @@ elseif( WIN32 )
     ${CMAKE_CURRENT_SOURCE_DIR}
     src/windows
     ${CMAKE_BINARY_DIR}/geninclude
-    libs/wtl
     )
 
   set(OS_LINK_LIBRARIES_NOGUI

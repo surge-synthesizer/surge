@@ -16,7 +16,6 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SurgeStorage.h"
-#include "PopupEditorSpawner.h"
 #include "SurgeBitmaps.h"
 #include "SkinSupport.h"
 #include <unordered_map>
@@ -105,6 +104,7 @@ protected:
    void copyFX();
    void pasteFX();
    void saveFX();
+   void saveFXIn( const std::string &s );
 
    // We know this runs on the UI thread to populate always so we can use a static for user presets
    struct UserPreset {

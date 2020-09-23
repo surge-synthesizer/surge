@@ -154,6 +154,8 @@ enum special_tags
    tag_mp_jogfx,
    tag_value_typein,
    tag_editor_overlay_close,
+   tag_miniedit_ok,
+   tag_miniedit_cancel,
    // tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
@@ -3035,16 +3037,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             addCallbackMenu(contextMenu, "Rename", [this, control, ccid]() {
                                                       VSTGUI::Call::later( [this, control, ccid]() {
-                                                                              spawn_miniedit_text(synth->storage.getPatch().CustomControllerLabel[ccid] , 16,
-                                                                                                  "Enter a new name for macro controller:", "Rename Macro");
+                                                                              promptForMiniEdit(synth->storage.getPatch().CustomControllerLabel[ccid] ,
+                                                                                                "Enter a new name for macro controller:", "Rename Macro",
+                                                                                                [this, control, ccid](const std::string & s )
+                                                                                                   {
+                                                                                                      strncpy( synth->storage.getPatch().CustomControllerLabel[ccid],
+                                                                                                               s.c_str(),
+                                                                                                               16 );
+                                                                                                      ((CModulationSourceButton*)control)
+                                                                                                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
 
-                                                                              ((CModulationSourceButton*)control)
-                                                                                 ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-
-                                                                              control->setDirty();
-                                                                              control->invalid();
-                                                                              synth->refresh_editor = true;
-                                                                              synth->updateDisplay();
+                                                                                                      control->setDirty();
+                                                                                                      control->invalid();
+                                                                                                      synth->refresh_editor = true;
+                                                                                                      synth->updateDisplay();
+                                                                                                   });
                                                                            }, 1 );
                                                    });
             eid++;
@@ -4153,6 +4160,23 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          editorOverlay = nullptr;
       }
    }
+   case tag_miniedit_ok:
+   case tag_miniedit_cancel:
+   {
+      if( minieditOverlay != nullptr )
+      {
+         if( minieditTypein )
+         {
+            auto q = minieditTypein->getText().getString();
+            if( tag == tag_miniedit_ok )
+            {
+               minieditOverlayDone( q.c_str() );
+            }
+         }
+         minieditOverlay->setVisible( false );
+         removeFromFrame.push_back( minieditOverlay );
+      }
+   }
    case tag_value_typein:
    {
       if( typeinDialog && typeinMode != Inactive )
@@ -5082,9 +5106,12 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
        // FIXME! This won't work on linux
        char c[256];
        snprintf(c, 256, "%d", synth->mpePitchBendRange);
-       spawn_miniedit_text(c, 16, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range");
-       int newVal = ::atoi(c);
-       this->synth->mpePitchBendRange = newVal;
+       promptForMiniEdit(c,  "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
+                         [this](const std::string &c) {
+                            int newVal = ::atoi(c.c_str());
+                            this->synth->mpePitchBendRange = newVal;
+                         }
+          );
     });
 
     std::ostringstream oss2;
@@ -5094,10 +5121,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
        // FIXME! This won't work on linux
        char c[256];
        snprintf(c, 256, "%d", synth->mpePitchBendRange);
-       spawn_miniedit_text(c, 16, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range");
-       int newVal = ::atoi(c);
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
-       this->synth->mpePitchBendRange = newVal;
+       promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
+                         [this](const std::string &s )
+                            {
+                               int newVal = ::atoi(s.c_str());
+                               Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
+                               this->synth->mpePitchBendRange = newVal;
+                            }
+          );
     });
 
     return mpeSubMenu;
@@ -5231,14 +5262,18 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
 
                            char c[256];
                            snprintf(c, 256, "440.0");
-                           spawn_miniedit_text(c, 16, "Remap MIDI note 69 frequency to: ", ma);
-                           float freq = ::atof(c);
-                           auto kb = Tunings::tuneA69To(freq);
-                           if( ! this->synth->storage.remapToKeyboard(kb) )
-                           {
-                              Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
-                              return;
-                           }
+                           promptForMiniEdit(c, "Remap MIDI note 69 frequency to: ", ma,
+                                             [this](const std::string &s )
+                                                {
+                                                   float freq = ::atof(s.c_str());
+                                                   auto kb = Tunings::tuneA69To(freq);
+                                                   if( ! this->synth->storage.remapToKeyboard(kb) )
+                                                   {
+                                                      Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
+                                                      return;
+                                                   }
+                                                }
+                              );
                         }
        );
 
@@ -5355,10 +5390,13 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
             // FIXME! This won't work on linux
             char c[256];
             snprintf(c, 256, "%d", this->zoomFactor);
-            spawn_miniedit_text(c, 16, "Enter a default zoom level value:", "Set Default Zoom Level");
-            int newVal = ::atoi(c);
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
-            this->setZoomFactor(newVal);
+            promptForMiniEdit(c, "Enter a default zoom level value:", "Set Default Zoom Level",
+                              [this](const std::string &s )
+                                 {
+                                    int newVal = ::atoi(s.c_str());
+                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
+                                    this->setZoomFactor(newVal);
+                                 });
         });
     zid++;
 
@@ -5474,8 +5512,12 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
             txt[0] = 0;
             if( Surge::Storage::isValidUTF8( s ) )
                strncpy(txt, s.c_str(), 256);
-            spawn_miniedit_text(txt, 256, "Enter default patch author name:", "Set Default Patch Author");
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", txt);
+            promptForMiniEdit(txt, "Enter default patch author name:", "Set Default Patch Author",
+                              [this](const std::string &s )
+                                 {
+                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", s );
+                                 }
+               );
             });
 
    pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Comment..."), [this]() {
@@ -5484,8 +5526,12 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
             txt[0] = 0;
             if( Surge::Storage::isValidUTF8( s ) )
                strncpy(txt, s.c_str(), 256);
-            spawn_miniedit_text(txt, 256, "Enter default patch comment text:", "Set Default Patch Comment");
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchComment", txt);
+            promptForMiniEdit(txt, "Enter default patch comment text:", "Set Default Patch Comment",
+                              [this](const std::string &s )
+                                 {
+                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchComment", s);
+                                 }
+               );
             });
 
    uiOptionsMenu->addEntry(patchDefMenu, Surge::UI::toOSCaseForMenu("Patch Defaults"));
@@ -5723,9 +5769,11 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
                 this->scannedForMidiPresets = false; // force a rescan
                 char msn[256];
                 msn[0] = 0;
-                spawn_miniedit_text(msn, 128, "MIDI Mapping Name", "Save MIDI Mapping");
-                if( strlen( msn ) > 0 )
-                   this->synth->storage.storeMidiMappingToName( msn );
+                promptForMiniEdit(msn, "MIDI Mapping Name", "Save MIDI Mapping",
+                                  [this](const std::string &s )
+                                     {
+                                        this->synth->storage.storeMidiMappingToName( s );
+                                     });
              }, 1 );
        });
    did++;
@@ -6862,4 +6910,87 @@ std::string SurgeGUIEditor::getDisplayForTag( long tag )
    }
 
    return "Unknown";
+}
+
+void SurgeGUIEditor::promptForMiniEdit( const std::string &value, const std::string &msg, const std::string &title, std::function<void( const std::string & )> onOK )
+{
+   auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
+   minieditOverlay = new CViewContainer( fs );
+   minieditOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(180, 180, 200, 150)));
+   minieditOverlay->setVisible(true);
+   frame->addView( minieditOverlay );
+
+   CPoint where;
+   frame->getCurrentMouseLocation(where);
+   frame->localToFrame(where);
+   
+   int wd = 240;
+   int ht = 100;
+   auto rr = CRect( CPoint( where.x - fs.left, where.y - fs.top ), CPoint( wd, ht ) );
+
+   if( rr.top < 0 ) rr = rr.offset( 0, 10 - rr.top );
+   if( rr.bottom > fs.getHeight() )
+   {
+      rr.offset( 0, - rr.bottom + fs.getHeight() - 10 );
+   }
+   if( rr.left < 0 ) rr = rr.offset( 10 - rr.left, 0 );
+   if( rr.right > fs.getWidth() )
+   {
+      rr.offset( - rr.right + fs.getWidth() - 10, 0 );
+   }
+
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 12);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnts = new VSTGUI::CFontDesc("Lato", 10);
+
+   auto cvc = new CViewContainer( rr );
+   cvc->setBackground( bitmapStore->getBitmap( IDB_MINIEDIT_BG ) );
+   cvc->setBackgroundColor( kBlackCColor );
+   cvc->setVisible( true );
+   minieditOverlay->addView( cvc );
+
+   int bw = 60;
+   auto b1r = CRect( CPoint( wd - 2 * bw, ht - 20 ), CPoint( bw-3, 17 ) );
+   auto b2r = CRect( CPoint( wd - 1 * bw, ht - 20 ), CPoint( bw-3, 17 ) );
+   auto kb = new CTextButton( b1r, this, tag_miniedit_ok, "OK" );
+   kb->setVisible( true );
+   kb->setFont(fnt);
+   cvc->addView( kb );
+
+   auto cb = new CTextButton( b2r, this, tag_miniedit_cancel, "Cancel" );
+   cb->setVisible( true );
+   cb->setFont(fnt);
+   cvc->addView( cb );
+
+   auto t1r = CRect( CPoint( 0, 0 ), CPoint( wd, 20 ) );
+   t1r = t1r.inset(1,1 );
+   auto tl1 = new CTextLabel( t1r, title.c_str());
+   tl1->setTransparency( true );
+   tl1->setFontColor( kWhiteCColor );
+   tl1->setFont(fnt);
+   cvc->addView( tl1 );
+
+   auto t2r = CRect( CPoint( 0, 22 ), CPoint( wd, 20 ) );
+   t2r.inset( 4, 0 );
+   auto tl2 = new CTextLabel( t2r, msg.c_str());
+   tl2->setTransparency( true );
+   tl2->setFontColor( kBlackCColor );
+   tl2->setFont(fnts);
+   tl2->setHoriAlign( kLeftText );
+   cvc->addView( tl2 );
+
+   auto mer = CRect( CPoint( 0, 46 ), CPoint( wd, 29 )  );
+   mer.inset( 4, 2 );
+   minieditTypein = new CTextEdit( mer, this, tag_miniedit_ok, value.c_str() );
+
+   minieditTypein->setBackColor( VSTGUI::CColor( 0x20,0x20,0x30) );
+   cvc->addView( minieditTypein );
+   minieditTypein->setBackColor( kWhiteCColor );
+   minieditTypein->setFontColor( kBlackCColor );
+   minieditTypein->setFont( fnt );
+#if WINDOWS
+   minieditTypein->setTextInset(CPoint(3, 0));
+#endif
+   minieditTypein->takeFocus();
+
+   minieditOverlayDone = onOK;
 }

@@ -39,7 +39,6 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
-#include "PopupEditorSpawner.h"
 
 #include "vstcontrols.h"
 #include "SurgeSynthesizer.h"
@@ -331,6 +330,13 @@ private:
 
    VSTGUI::CViewContainer *editorOverlay = nullptr;
    std::function<void()> editorOverlayOnClose = [](){};
+
+   VSTGUI::CViewContainer *minieditOverlay = nullptr;
+   VSTGUI::CTextEdit *minieditTypein = nullptr;
+   std::function<void( const char* )> minieditOverlayDone = [](const char *){};
+public:
+   void promptForMiniEdit( const std::string &value, const std::string & prompt, const std::string & title, std::function<void( const std::string & )> onOK );
+private:
    
    VSTGUI::CTextLabel* fxPresetLabel = nullptr;
    
