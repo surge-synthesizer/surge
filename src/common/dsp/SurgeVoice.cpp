@@ -165,6 +165,9 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_filtereg] = &filterEGSource;
 
    modsources[ms_modwheel] = oscene->modsources[ms_modwheel];
+   modsources[ms_breath] = oscene->modsources[ms_breath];
+   modsources[ms_expression] = oscene->modsources[ms_expression];
+   modsources[ms_sustain] = oscene->modsources[ms_sustain];
    modsources[ms_aftertouch] = &monoAftertouchSource;
    monoAftertouchSource.output = state.voiceChannelState->pressure;
    modsources[ms_timbre] = &timbreSource;
