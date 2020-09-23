@@ -655,6 +655,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
       storage.getPatch().scene[scene].modsources[ms_latest_key]->output = (newKey - ktRoot) * twelfth;
    else
       storage.getPatch().scene[scene].modsources[ms_latest_key]->output = 0.f;
+
+   //printf("Lowest: %.2f | Highest: %.2f | Latest: %.2f\n", (lowest->state.pkey - ktRoot), (highest->state.pkey - ktRoot), (newKey - ktRoot));
 }
 
 void SurgeSynthesizer::releaseScene(int s)
