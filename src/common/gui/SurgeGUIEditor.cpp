@@ -2145,11 +2145,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
    }
 
-   CRect aboutbrect(900 - 50, 523+27, 900, 523+27 + 15);
+   int menuX = 844, menuY = 550, menuW = 50, menuH = 15;
+   CRect menurect(menuX, menuY, menuX + menuW, menuY + menuH);
 
    CHSwitch2* b_settingsMenu =
-      new CHSwitch2(aboutbrect, this, tag_settingsmenu, 1, 27, 1, 1,
-                    bitmapStore->getBitmap(IDB_BUTTON_MENU), nopoint, false);
+      new CHSwitch2(menurect, this, tag_settingsmenu, 1, 27, 1, 1, bitmapStore->getBitmap(IDB_BUTTON_MENU), nopoint, false);
    b_settingsMenu->setSkin( currentSkin, bitmapStore );
    frame->addView(b_settingsMenu);
 
@@ -2159,7 +2159,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
    aboutbox =
-      new CAboutBox(aboutbrect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
+      new CAboutBox(menurect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
    ((CAboutBox *)aboutbox)->setSkin(currentSkin,bitmapStore);
 
    frame->addView(aboutbox);
