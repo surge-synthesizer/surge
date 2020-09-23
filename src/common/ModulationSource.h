@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include <random>
+
 enum modsrctype
 {
    mst_undefined = 0,
@@ -454,4 +456,45 @@ public:
    int id; // can be used to assign the controller to a parameter id
    bool bipolar;
    bool changed;
+};
+
+class RandomModulationSource : public ModulationSource
+{
+public:
+   RandomModulationSource( bool bp ) : bipolar(bp) {
+      std::random_device rd;
+      gen = std::minstd_rand(rd());
+      if( bp ) dis = std::uniform_real_distribution<float>(-1.0,1.0);
+      else dis = std::uniform_real_distribution<float>(0.0,1.0);
+   }
+
+   virtual void attack() override {
+      output = dis(gen);
+   }
+   
+   bool bipolar;
+   std::minstd_rand gen;
+   std::uniform_real_distribution<float> dis;
+};
+
+class AlternateModulationSource : public ModulationSource
+{
+public:
+   AlternateModulationSource(bool bp) : state(false) {
+      if( bp ) nv = -1;
+      else nv = 0;
+
+      pv = 1;
+   }
+
+   virtual void attack() override{
+      if( state )
+         output = pv;
+      else
+         output = nv;
+      state = ! state;
+   }
+   
+   bool state;
+   float nv, pv;
 };

@@ -131,6 +131,11 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       scene.modsources[ms_highest_key] = new ControllerModulationSource();
       scene.modsources[ms_latest_key] = new ControllerModulationSource();
 
+      scene.modsources[ms_random_bipolar] = new RandomModulationSource( true );
+      scene.modsources[ms_random_unipolar] = new RandomModulationSource( false );
+      scene.modsources[ms_alternate_bipolar] = new AlternateModulationSource( true );
+      scene.modsources[ms_alternate_unipolar] = new AlternateModulationSource( false );
+      
       for (int l = 0; l < n_lfos_scene; l++)
       {
          scene.modsources[ms_slfo1 + l] = new LfoModulationSource();
@@ -240,6 +245,12 @@ SurgeSynthesizer::~SurgeSynthesizer()
       delete storage.getPatch().scene[sc].modsources[ms_lowest_key];
       delete storage.getPatch().scene[sc].modsources[ms_highest_key];
       delete storage.getPatch().scene[sc].modsources[ms_latest_key];
+
+      delete storage.getPatch().scene[sc].modsources[ms_random_bipolar];
+      delete storage.getPatch().scene[sc].modsources[ms_random_unipolar];
+      delete storage.getPatch().scene[sc].modsources[ms_alternate_bipolar];
+      delete storage.getPatch().scene[sc].modsources[ms_alternate_unipolar];
+      
       for (int i = 0; i < n_lfos_scene; i++)
          delete storage.getPatch().scene[sc].modsources[ms_slfo1 + i];
    }
@@ -496,6 +507,11 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
       for (int l = 0; l < n_lfos_scene; l++)
          storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->attack();
    }
+   
+   for( int i=ms_random_bipolar; i <= ms_alternate_unipolar; ++i )
+   {
+      storage.getPatch().scene[scene].modsources[i]->attack();
+   }
 
    int excessVoices =
        max(0, (int)getNonUltrareleaseVoices(scene) - storage.getPatch().polylimit.val.i + 1);
@@ -608,55 +624,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
    break;
    }
 
-   // assign values to scene keytrack modulators
-   SurgeVoice *lowest = nullptr, *highest = nullptr, *newest = nullptr;
-
-   float newKey, lowKey = 1000.f, highKey = -1000.f, maxAge = 10000000;
-
-   for (const auto& v : voices[scene])
-   {
-      if (v->state.gate)
-      {
-         if (v->state.pkey < lowKey)
-         {
-            lowKey = v->state.pkey;
-            lowest = v;
-         }
-
-         if (v->state.pkey > highKey)
-         {
-            highKey = v->state.pkey;
-            highest = v;
-         }
-
-         if (v->age < maxAge)
-         {
-            newKey = v->state.pkey;
-            maxAge = v->age;
-            newest = v;
-         }
-      }
-   }
-
-   float ktRoot = (float)storage.getPatch().scene[scene].keytrack_root.val.i;
-   float twelfth = 1.f / 12.f;
-
-   if (lowest)
-      storage.getPatch().scene[scene].modsources[ms_lowest_key]->output = (lowest->state.pkey - ktRoot) * twelfth;
-   else
-      storage.getPatch().scene[scene].modsources[ms_lowest_key]->output = 0.f;
-
-   if (highest)
-      storage.getPatch().scene[scene].modsources[ms_highest_key]->output = (highest->state.pkey - ktRoot) * twelfth;
-   else
-      storage.getPatch().scene[scene].modsources[ms_highest_key]->output = 0.f;
-
-   if (newest)
-      storage.getPatch().scene[scene].modsources[ms_latest_key]->output = (newKey - ktRoot) * twelfth;
-   else
-      storage.getPatch().scene[scene].modsources[ms_latest_key]->output = 0.f;
-
-   //printf("Lowest: %.2f | Highest: %.2f | Latest: %.2f\n", (lowest->state.pkey - ktRoot), (highest->state.pkey - ktRoot), (newKey - ktRoot));
+   updateHighLowKeys(scene);
 }
 
 void SurgeSynthesizer::releaseScene(int s)
@@ -846,6 +814,20 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
       }
    }
 
+   updateHighLowKeys(scene);
+
+   // Used to be a scene loop here
+   {
+      if (getNonReleasedVoices(scene) == 0)
+      {
+         for (int l = 0; l < n_lfos_scene; l++)
+            storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->release();
+      }
+   }
+}
+
+void SurgeSynthesizer::updateHighLowKeys(int scene)
+{
    SurgeVoice *lowest = nullptr, *highest = nullptr, *newest = nullptr;
 
    float newKey, lowKey = 1000.f, highKey = -1000.f, maxAge = 10000000;
@@ -879,27 +861,22 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
    float twelfth = 1.f / 12.f;
 
    if (lowest)
-      storage.getPatch().scene[scene].modsources[ms_lowest_key]->output = (lowest->state.pkey - ktRoot) * twelfth;
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init((lowest->state.pkey - ktRoot) * twelfth );
    else
-      storage.getPatch().scene[scene].modsources[ms_lowest_key]->output = 0.f;
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init( 0.f );
 
    if (highest)
-      storage.getPatch().scene[scene].modsources[ms_highest_key]->output = (highest->state.pkey - ktRoot) * twelfth;
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( (highest->state.pkey - ktRoot) * twelfth );
    else
-      storage.getPatch().scene[scene].modsources[ms_highest_key]->output = 0.f;
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( 0.f );
 
    if (newest)
-      storage.getPatch().scene[scene].modsources[ms_latest_key]->output = (newKey - ktRoot) * twelfth;
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( (newKey - ktRoot) * twelfth );
    else
-      storage.getPatch().scene[scene].modsources[ms_latest_key]->output = 0.f;
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( 0.f );
 
-   {
-      if (getNonReleasedVoices(scene) == 0)
-      {
-         for (int l = 0; l < n_lfos_scene; l++)
-            storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->release();
-      }
-   }
+   // if( lowest && highest )
+   // printf("Lowest: %.2f | Highest: %.2f | Latest: %.2f\n", (lowest->state.pkey - ktRoot), (highest->state.pkey - ktRoot), (newKey - ktRoot));
 }
 
 void SurgeSynthesizer::pitchBend(char channel, int value)
@@ -1968,7 +1945,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
       else
          return false;
    }
-   if (tms == ms_keytrack || tms == ms_lowest_key || tms == ms_highest_key || tms == ms_latest_key || tms == ms_pitchbend)
+   if (tms == ms_keytrack || tms == ms_lowest_key || tms == ms_highest_key || tms == ms_latest_key || tms == ms_pitchbend || tms == ms_random_bipolar || tms == ms_alternate_bipolar )
       return true;
    else
       return false;
@@ -2640,13 +2617,23 @@ void SurgeSynthesizer::processControl()
          if (storage.getPatch().scene[s].modsource_doprocess[ms_sustain])
             storage.getPatch().scene[s].modsources[ms_sustain]->process_block();
          if (storage.getPatch().scene[s].modsource_doprocess[ms_aftertouch])
-            storage.getPatch().scene[s].modsources[ms_aftertouch]->process_block();
+            storage.getPatch().scene[s].modsources[ms_aftertouch]->process_block(); 
          if (storage.getPatch().scene[s].modsource_doprocess[ms_lowest_key])
             storage.getPatch().scene[s].modsources[ms_lowest_key]->process_block();
          if (storage.getPatch().scene[s].modsource_doprocess[ms_highest_key])
             storage.getPatch().scene[s].modsources[ms_highest_key]->process_block();
          if (storage.getPatch().scene[s].modsource_doprocess[ms_latest_key])
             storage.getPatch().scene[s].modsources[ms_latest_key]->process_block();
+
+         if (storage.getPatch().scene[s].modsource_doprocess[ms_random_unipolar])
+            storage.getPatch().scene[s].modsources[ms_random_unipolar]->process_block();
+         if (storage.getPatch().scene[s].modsource_doprocess[ms_random_bipolar])
+            storage.getPatch().scene[s].modsources[ms_random_bipolar]->process_block();
+         if (storage.getPatch().scene[s].modsource_doprocess[ms_alternate_bipolar])
+            storage.getPatch().scene[s].modsources[ms_alternate_bipolar]->process_block();
+         if (storage.getPatch().scene[s].modsource_doprocess[ms_alternate_unipolar])
+            storage.getPatch().scene[s].modsources[ms_alternate_unipolar]->process_block();
+
          storage.getPatch().scene[s].modsources[ms_pitchbend]->process_block();
 
          for (int i = 0; i < n_customcontrollers; i++)
