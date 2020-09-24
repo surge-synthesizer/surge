@@ -241,7 +241,8 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    blinktimer = 0.f;
    blinkstate = false;
    aboutbox = 0;
-
+   patchCountdown = -1;
+   
    mod_editor = false;
 
    // init the size of the plugin
@@ -392,6 +393,7 @@ void SurgeGUIEditor::idle()
 
    if (!synth)
       return;
+
    if (editor_open && frame && !synth->halt_engine)
    {
       if( firstIdleCountdown )
@@ -408,6 +410,22 @@ void SurgeGUIEditor::idle()
          frame->removeView(c);
       }
 
+
+      if( patchCountdown >= 0 )
+      {
+         patchCountdown --;
+         if( patchCountdown < 0 && synth->patchid_queue >= 0 )
+         {
+            std::ostringstream oss;
+
+            oss << "Patch load of patch number " <<  synth->patchid_queue << " has not occured after 30 idles cycles. "
+                << "This usually means your DAW does not have the audio system running. Running the audio system is "
+                << "required to load Surge patches.";
+            Surge::UserInteractions::promptError(oss.str(), "Surge Did Not Load Patch" );
+
+         }
+      }
+      
       removeFromFrame.clear();
 
       if(zoomInvalid)
@@ -3972,6 +3990,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       // synth->load_patch(id);
       synth->patchid_queue = id;
       synth->processThreadunsafeOperations();
+      patchCountdown = 30;
       return;
    }
    break;
