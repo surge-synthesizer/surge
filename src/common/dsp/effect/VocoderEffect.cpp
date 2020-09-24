@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "VocoderEffect.h"
 #include <algorithm>
 
 /* vocoder */

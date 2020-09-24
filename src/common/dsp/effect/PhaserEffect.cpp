@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "PhaserEffect.h"
 
 /* phaser			*/
 

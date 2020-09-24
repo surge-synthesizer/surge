@@ -1,3 +1,4 @@
+#pragma once
 
 template <int dt> class AllpassFilter
 {

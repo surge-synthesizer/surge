@@ -13,8 +13,9 @@
 ** open source in September 2018.
 */
 
-#include "Oscillator.h"
+#include "SurgeSuperOscillator.h"
 #include "DspUtilities.h"
+
 
 /*
 **

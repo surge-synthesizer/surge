@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "DistortionEffect.h"
 #include <vt_dsp/halfratefilter.h>
 
 /* distortion			*/

@@ -12,7 +12,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 
-project(Surge VERSION 1.7.1.0 LANGUAGES CXX ASM)
+project(Surge VERSION 1.8.0.0 LANGUAGES CXX ASM)
 message( STATUS "CMake Version is ${CMAKE_VERSION}" )
 message( STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}" )
 if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
@@ -175,6 +175,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/DistortionEffect.cpp
   src/common/dsp/effect/DualDelayEffect.cpp
   src/common/dsp/effect/Effect.cpp
+  src/common/dsp/effect/Eq3BandEffect.cpp
   src/common/dsp/effect/FreqshiftEffect.cpp
   src/common/dsp/effect/FlangerEffect.cpp
   src/common/dsp/effect/PhaserEffect.cpp
@@ -185,17 +186,20 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/VocoderEffect.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/AdsrEnvelope.cpp
+  src/common/dsp/AudioInputOscillator.cpp
   src/common/dsp/BiquadFilter.cpp
   src/common/dsp/BiquadFilterSSE2.cpp
   src/common/dsp/DspUtilities.cpp
   src/common/dsp/FilterCoefficientMaker.cpp
-  src/common/dsp/FMOscillator.cpp
+  src/common/dsp/FM2Oscillator.cpp
+  src/common/dsp/FM3Oscillator.cpp
   src/common/dsp/LfoModulationSource.cpp
   src/common/dsp/MSEGModulationHelper.cpp
   src/common/dsp/Oscillator.cpp
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp
   src/common/dsp/SampleAndHoldOscillator.cpp
+  src/common/dsp/SinOscillator.cpp
   src/common/dsp/SurgeSuperOscillator.cpp
   src/common/dsp/SurgeVoice.cpp
   src/common/dsp/VectorizedSvfFilter.cpp

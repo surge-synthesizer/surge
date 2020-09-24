@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "Reverb1Effect.h"
 
 using namespace std;
 

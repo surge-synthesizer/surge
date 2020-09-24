@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "ConditionerEffect.h"
 #include <vt_dsp/basic_dsp.h>
 #include "SurgeParamConfig.h"
 

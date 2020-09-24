@@ -13,10 +13,13 @@
 ** open source in September 2018.
 */
 
-#include "Oscillator.h"
+#include "WindowOscillator.h"
+#include "DspUtilities.h"
+
 #if !MAC && !LINUX
 #include <intrin.h>
 #endif
+
 #if LINUX
 #include <stdint.h>
 #endif
