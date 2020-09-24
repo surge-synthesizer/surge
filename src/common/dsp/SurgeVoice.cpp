@@ -153,6 +153,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_releasevelocity] = &releaseVelocitySource;
    modsources[ms_keytrack] = &keytrackSource;
    modsources[ms_polyaftertouch] = &polyAftertouchSource;
+
    polyAftertouchSource.init(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
 
    velocitySource.output = state.fvel;
@@ -185,10 +186,21 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_slfo5] = oscene->modsources[ms_slfo5];
    modsources[ms_slfo6] = oscene->modsources[ms_slfo6];
 
-   modsources[ms_random_bipolar] = oscene->modsources[ms_random_bipolar];
-   modsources[ms_random_unipolar] = oscene->modsources[ms_random_unipolar];
-   modsources[ms_alternate_bipolar] = oscene->modsources[ms_alternate_bipolar];
-   modsources[ms_alternate_unipolar] = oscene->modsources[ms_alternate_unipolar];
+   /*
+   ** We want to snap the rnd and alt
+   */
+   rndUni.output = oscene->modsources[ms_random_unipolar]->output;
+   modsources[ms_random_unipolar] = &rndUni;
+
+   rndBi.output = oscene->modsources[ms_random_bipolar]->output;
+   modsources[ms_random_bipolar] = &rndBi;
+
+   altUni.output = oscene->modsources[ms_alternate_unipolar]->output;
+   modsources[ms_alternate_unipolar] = &altUni;
+
+   altBi.output = oscene->modsources[ms_alternate_bipolar]->output;
+   modsources[ms_alternate_bipolar] = &altBi;
+
    
    id_cfa = scene->filterunit[0].cutoff.param_id_in_scene;
    id_cfb = scene->filterunit[1].cutoff.param_id_in_scene;
