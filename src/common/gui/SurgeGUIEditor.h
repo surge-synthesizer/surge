@@ -196,6 +196,8 @@ private:
    int zoomFactor;
    bool zoomEnabled = true;
 
+   int patchCountdown = -1;
+   
 public:
 
    void populateDawExtraState(SurgeSynthesizer *synth) {
