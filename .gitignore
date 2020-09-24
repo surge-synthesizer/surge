@@ -83,6 +83,7 @@ buildlin-*/
 buildmac/
 buildwin/
 build-arm/
+buildiwyu/
 
 # Reaper
 *.RPP-bak
