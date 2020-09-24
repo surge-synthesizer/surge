@@ -3022,7 +3022,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             {
                char txt4[16];
                decode_controllerid(txt4, synth->storage.controllers[ccid]);
-               sprintf(txt, "Clear Macro (%s ", txt4);
+               sprintf(txt, "Clear Learned MIDI (%s ", txt4);
                addCallbackMenu(contextMenu,
                                Surge::UI::toOSCaseForMenu(txt) + midicc_names[synth->storage.controllers[ccid]] + ")",
                                [this, ccid]() {
@@ -3034,7 +3034,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             contextMenu->addSeparator(eid++);
 
-            addCallbackMenu(contextMenu, "Bipolar", [this, control, ccid]() {
+            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Bipolar Mode"), [this, control, ccid]() {
                                                        bool bp =
                                                           !synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->is_bipolar();
                                                        synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->set_bipolar(bp);
@@ -3049,7 +3049,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid, synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->is_bipolar());
             eid++;
 
-            addCallbackMenu(contextMenu, "Rename", [this, control, ccid]() {
+            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Rename Macro..."), [this, control, ccid]() {
                                                       VSTGUI::Call::later( [this, control, ccid]() {
                                                                               promptForMiniEdit(synth->storage.getPatch().CustomControllerLabel[ccid] ,
                                                                                                 "Enter a new name for macro controller:", "Rename Macro",
@@ -3647,7 +3647,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                   {
                                      int a = ptag;
                                      if (ptag >= (n_global_params + n_scene_params))
-                                        a -= ptag;
+                                        a -= n_scene_params;
 
                                      synth->storage.getPatch().param_ptr[a]->midictrl = -1;
                                      synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
@@ -5793,9 +5793,25 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
    did++;
 
    addCallbackMenu(
-      midiSubMenu, Surge::UI::toOSCaseForMenu( "Show Current MIDI Mapping..." ),
+      midiSubMenu, Surge::UI::toOSCaseForMenu("Show Current MIDI Mapping..."),
       [this]() {
          Surge::UserInteractions::showHTML( this->midiMappingToHtml() );
+      }
+      );
+
+   did++;
+
+   addCallbackMenu(
+      midiSubMenu, Surge::UI::toOSCaseForMenu("Clear Current MIDI Mapping"),
+      [this]() {
+          int n = n_global_params + n_scene_params;
+
+          for (int i = 0; i < n; i++)
+          {
+             this->synth->storage.getPatch().param_ptr[i]->midictrl = -1;
+             if (i > n_global_params)
+                this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
+          }
       }
       );
 
