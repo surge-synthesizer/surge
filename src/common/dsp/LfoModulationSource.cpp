@@ -293,15 +293,36 @@ void LfoModulationSource::process_block()
    retrigger_AEG = false;
    int s = lfo->shape.val.i;
 
-   float frate = envelope_rate_linear_nowrap(-localcopy[rate].f);
-   
+   float frate = 0;
+
+   if( ! lfo->rate.temposync)
+   {
+      frate = envelope_rate_linear_nowrap(-localcopy[rate].f);
+   }
+   else
+   {
+      /*
+      ** The approximation above drifts quite a lot especially on things like dotted-quarters-vs-beat-at-not-120bpm
+      ** See #2675 for sample patches. So do the calculation exactly.
+      **
+      ** envrate is blocksize / samplerate 2^-x
+      ** so lets just do that
+      */
+      frate = (double)BLOCK_SIZE_OS * dsamplerate_os_inv * pow( 2.0, localcopy[rate].f ); // since x = -localcopy, -x == localcopy
+   }
+
+
+   //if( lfo->rate.temposync )
+   //std::cout << _D(localcopy[rate].f) << _D(frate) << _D(fratea);
    if (lfo->rate.deactivated)
       frate = 0.0;
 
    if (lfo->rate.temposync)
       frate *= storage->temposyncratio;
-   phase += frate * ratemult;
 
+   phase += frate * ratemult;
+   //if( lfo->rate.temposync )
+   //std::cout << _D(phase) << _D(frate) << _D(ratemult) << _D(storage->temposyncratio) << std::endl;
    if( frate == 0 && phase == 0 && s == ls_stepseq )
    {
       phase = 0.001; // step forward a smidge
