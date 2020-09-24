@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "Oscillator.h"
+#include "WavetableOscillator.h"
 #include "DspUtilities.h"
 
 using namespace std;

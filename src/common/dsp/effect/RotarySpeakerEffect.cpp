@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "RotarySpeakerEffect.h"
 
 using namespace std;
 

@@ -166,7 +166,7 @@ enum sub3_osctypes
    ot_wavetable,
    ot_shnoise,
    ot_audioinput,
-   ot_FM,
+   ot_FM3, // it used to just bhe FM; then the UI called it FM3 so name it this way but this order has to stick
    ot_FM2,
    ot_WT2,
    num_osctypes,

@@ -6176,7 +6176,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                       case ot_audioinput:
                                          oss << "\n  <!-- special case oscillator params for Audio Input ";
                                          break;
-                                      case ot_FM:
+                                      case ot_FM3:
                                          oss << "\n  <!-- special case oscillator params for FM3 ";
                                          break;
                                       case ot_FM2:

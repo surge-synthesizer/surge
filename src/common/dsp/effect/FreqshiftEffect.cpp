@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "FreqshiftEffect.h"
 
 using namespace std;
 

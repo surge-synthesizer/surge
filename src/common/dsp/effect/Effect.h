@@ -18,6 +18,7 @@
 #include "DspUtilities.h"
 #include "SurgeStorage.h"
 
+
 /*	base class			*/
 
 class alignas(16) Effect
@@ -104,5 +105,11 @@ protected:
    int* pdata_ival[n_fx_params]; // f is not a great choice for a member name, but 'i' woudl be worse!
    bool hasInvalidated;
 };
+
+// Some common constants
+const int max_delay_length = 1 << 18;
+const int slowrate = 8;
+const int slowrate_m1 = slowrate - 1;
+
 
 Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
