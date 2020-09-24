@@ -3647,12 +3647,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                   {
                                      int a = ptag;
                                      if (ptag >= (n_global_params + n_scene_params))
-                                        a -= ptag;
+                                        a -= n_scene_params;
 
                                      synth->storage.getPatch().param_ptr[a]->midictrl = -1;
                                      synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
-                                     synth->storage.getPatch().dawExtraState.midictrl_map[a] = -1;
-                                     synth->storage.getPatch().dawExtraState.midictrl_map[a + n_scene_params] = -1;
                                   }
 
                                   synth->storage.save_midi_controllers();
@@ -5811,8 +5809,8 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
           for (int i = 0; i < n; i++)
           {
              this->synth->storage.getPatch().param_ptr[i]->midictrl = -1;
-             this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
-             this->synth->storage.getPatch().dawExtraState.midictrl_map[i] = -1;
+             if (i > n_global_params)
+                this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
           }
       }
       );
