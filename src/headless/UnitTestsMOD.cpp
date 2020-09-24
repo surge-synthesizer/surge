@@ -704,3 +704,44 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
 
 }
 
+TEST_CASE( "LfoTempoSync Latch Drift", "[mod]" )
+{
+   SECTION( "Latch Drift" )
+   {
+      auto surge = Surge::Headless::createSurge( 44100 );
+
+      int64_t bpm = 120;
+      surge->time_data.tempo = bpm;
+      
+      REQUIRE( surge );
+
+      auto lfo = std::make_unique<LfoModulationSource>();
+      auto ss = std::make_unique<StepSequencerStorage>();
+      auto lfostorage = &(surge->storage.getPatch().scene[0].lfo[0]);
+      lfostorage->rate.temposync = true;
+      surge->setParameter01( lfostorage->rate.id, 0.455068, false, false );
+      lfostorage->shape.val.i = ls_square;
+
+      surge->storage.getPatch().copy_scenedata(surge->storage.getPatch().scenedata[0], 0 );
+      
+      lfo->assign( &( surge->storage ), lfostorage, surge->storage.getPatch().scenedata[0], nullptr, ss.get(), nullptr, nullptr );
+      lfo->attack();
+      lfo->process_block();
+
+      float p = -1000;
+      for( int64_t i=0; i<10000000; ++i )
+      {
+         if( lfo->output > p )
+         {
+            double time = i * dsamplerate_inv * BLOCK_SIZE;
+            double beats = time * bpm / 60;
+            int bt2 = round( beats * 2 );
+            double drift = fabs( beats * 2- bt2 );
+            // std::cout << time / 60.0 <<  " " << drift << std::endl;
+         }
+         p = lfo->output;
+         lfo->process_block();
+      }
+
+   }
+}
