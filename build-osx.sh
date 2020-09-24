@@ -259,6 +259,16 @@ run_package()
     echo
 }
 
+build_iwyu()
+{
+    set -x
+    mkdir buildiwyu
+    IWYU=/usr/local/bin/include-what-you-use
+    cd buildiwyu
+    CC="clang" CXX="clang++" cmake -DCMAKE_CXX_INCLUDE_WHAT_YOU_USE="${IWYU};-Xiwyu;any;-Xiwyu;iwyu;-Xiwyu;args" -G Ninja ..
+    cmake --build . > iwyu.output
+}
+
 get_and_build_fx()
 {
     set -x
@@ -349,6 +359,9 @@ case $command in
         ;;
     --get-and-build-fx)
         get_and_build_fx
+        ;;
+    --build-iwyu)
+        build_iwyu
         ;;
     "")
         default_action
