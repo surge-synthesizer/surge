@@ -55,6 +55,10 @@ namespace Colors
    
    namespace LFO
    {
+      namespace Title
+      {
+         extern const Surge::UI::SkinColor Text;
+      }
       namespace Type
       {
          extern const Surge::UI::SkinColor Text, SelectedText, SelectedBackground;

@@ -870,13 +870,30 @@ void SurgeGUIEditor::refresh_mod()
 #endif
 
    synth->storage.CS_ModRouting.leave();
+
    for (int i = 1; i < n_modsources; i++)
    {
       int state = 0;
+      
       if (i == modsource)
          state = mod_editor ? 2 : 1;
+      
       if (i == modsource_editor)
+      {
          state |= 4;
+
+         // update the LFO title label
+         std::string modname = modulatorName(modsource_editor, true);
+
+         // gross!
+         Surge::Storage::findReplaceSubstring(modname, std::string("-"), std::string(""));
+         Surge::Storage::findReplaceSubstring(modname, std::string(" "), std::string(""));
+         
+         // one letter per row
+         Surge::Storage::makeStringVertical(modname);
+
+         lfoNameLabel->setText(modname.c_str());
+      }
 
       if (gui_modsrc[i])
       {
@@ -1247,6 +1264,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_jogfx->setUsesMouseWheel(false); // mousewheel on category and patch buttons is undesirable
    mp_jogfx->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_jogfx);
+
+   lfoNameLabel = new CMultiLineTextLabel(CRect(8, 480, 19, 563));
+   lfoNameLabel->setLineLayout(CMultiLineTextLabel::LineLayout::wrap);
+   lfoNameLabel->setTransparency(true);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
+   lfoNameLabel->setFont(fnt);
+   lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text, CColor(0, 0, 0, 192)));
+   lfoNameLabel->setHoriAlign(kCenterText);
+   frame->addView(lfoNameLabel);
 
    fxPresetLabel = new CTextLabel( CRect( 759, 197, jogx - 2, 207 ), "Preset" );
    fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name, CColor( 0, 0, 0, 255 ) ));

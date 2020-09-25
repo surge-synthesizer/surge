@@ -30,6 +30,8 @@
     <color id="modbutton.inactive.secondary.hover" value="#ADFF6B"/>
     <color id="modbutton.selected.secondary.hover" value="#ADFF6B"/>
 
+    <color id="lfo.title.foreground" value="#B4B4B490"/>
+
     <color id="lfo.waveform.background" value="#242424"/>
     <color id="lfo.waveform.ruler.font" value="$lightgray"/>
     <color id="lfo.waveform.ruler.ticks" value="$lightgray"/>

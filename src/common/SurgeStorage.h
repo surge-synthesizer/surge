@@ -792,6 +792,7 @@ bool isValidName(const std::string &name);
 bool isValidUTF8( const std::string &testThis);
 
 std::string findReplaceSubstring(std::string &source, const std::string &from, const std::string &to);
+std::string makeStringVertical(std::string &source);
 
 #if WINDOWS
 /*
