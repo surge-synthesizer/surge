@@ -528,8 +528,8 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                     "lfo.shape", px, py, sc_id, cg_LFO, ms_lfo1 + l, true,
                                                     Surge::ParamConfig::kHorizontal));
 
-         px = gui_modsec_x;
-         py = gui_modsec_y - 10;
+         px = gui_modsec_x + 17;
+         py = gui_modsec_y - 11;
 
          sprintf(label, "lfo%i_rate", l);
          a->push_back(scene[sc].lfo[l].rate.assign(p_id.next(), id_s++, label, "Rate", ct_lforate_deactivatable,
@@ -554,19 +554,19 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                      ct_percent_bidirectional, "lfo.deform", px, py - gui_hfader_dist, sc_id,
                                                      cg_LFO, ms_lfo1 + l, true, Surge::ParamConfig::kHorizontal));
 
-         px += gui_sec_width;
-         py = gui_modsec_y;
+         px += gui_sec_width - 8;
+         py = gui_modsec_y - 1;
          sprintf(label, "lfo%i_trigmode", l);
          a->push_back(scene[sc].lfo[l].trigmode.assign(p_id.next(), id_s++, label, "Trigger Mode",
                                                        ct_lfotrigmode, "lfo.triggermode", px + 5, py - 4, sc_id,
                                                        cg_LFO, ms_lfo1 + l, false, kNoPopup));
-         py += 44;
+         py += 61;
          sprintf(label, "lfo%i_unipolar", l);
          a->push_back(scene[sc].lfo[l].unipolar.assign(p_id.next(), id_s++, label, "Unipolar",
                                                        ct_bool_unipolar, "lfo.unipolar", px + 5, py - 4, sc_id,
                                                        cg_LFO, ms_lfo1 + l, false));
 
-         px += 3 * gui_sec_width + 8;
+         px += 3 * gui_sec_width - 4;
          py = gui_modsec_y + 5;
          sprintf(label, "lfo%i_delay", l);
          a->push_back(scene[sc].lfo[l].delay.assign(p_id.next(), id_s++, label, "Delay", ct_envtime, "lfo.delay", px,

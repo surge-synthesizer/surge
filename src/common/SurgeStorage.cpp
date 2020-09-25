@@ -1909,6 +1909,19 @@ string findReplaceSubstring(string& source, const string& from, const string& to
    return newString;
 }
 
+string makeStringVertical(string& source)
+{
+   std::ostringstream oss;
+   std::string pre = "";
+
+   for (auto c : source)
+   {
+      oss << pre << c;
+      pre = "\n";
+   }
+   return oss.str();
+}
+
 #if WINDOWS
 std::string wstringToUTF8(const std::wstring &str)
 {

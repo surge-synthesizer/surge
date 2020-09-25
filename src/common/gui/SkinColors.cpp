@@ -67,6 +67,11 @@ namespace Colors
 
    namespace LFO
    {
+      namespace Title
+      {
+          const Surge::UI::SkinColor Text("lfo.title.foreground");
+      }
+
       namespace Type
       {
          const Surge::UI::SkinColor Text("lfo.type.unselected.foreground"),
