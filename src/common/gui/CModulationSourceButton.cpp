@@ -119,6 +119,11 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 {
    CRect sze = getViewSize();
    // sze.offset(-size.left,-size.top);
+   
+   #if WINDOWS
+      auto priorDrawMode = dc->getDrawMode();
+      dc->setDrawMode(kAntiAliasing | kNonIntegralMode);
+   #endif
 
    const CColor ColHover = CColor(103, 167, 253, 255);
    const CColor ColEdge = CColor(46, 134, 254, 255);
@@ -290,6 +295,10 @@ void CModulationSourceButton::draw(CDrawContext* dc)
          where.y = 7 * rh;
       bmp->draw(dc, sze, where, 0xff);
    }
+
+   #if WINDOWS
+      dc->setDrawMode(priorDrawMode);
+   #endif
 
    setDirty(false);
 }
