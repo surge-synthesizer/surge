@@ -466,6 +466,7 @@ CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CB
          l->setVisible( true );
          getFrame()->addView(l);
          dragLabel = l;
+         dragOffset = where - getViewSize().getTopLeft();
       }
       controlstate = cs_swap;
       return kMouseEventHandled;
@@ -474,7 +475,7 @@ CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CB
    {
       auto s = dragLabel->getViewSize();
       auto r = s;
-      s = s.moveTo( where );
+      s = s.moveTo( where - dragOffset );
       dragLabel->setViewSize( s );
       dragLabel->invalid();
       r.extend( 10, 10 );
