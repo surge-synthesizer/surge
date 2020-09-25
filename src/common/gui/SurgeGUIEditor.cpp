@@ -7081,6 +7081,6 @@ void SurgeGUIEditor::openModTypeinOnDrop( int modt, CControl *sl, int slidertag 
    auto p =  synth->storage.getPatch().param_ptr[slidertag-start_paramtags];
    int ms = modt - tag_mod_source0;
 
-   if( synth->isValidModulation( p->id, modsource ) )
+   if( synth->isValidModulation( p->id, (modsources)ms ) )
        promptForUserValueEntry( p, sl, ms );
 }
