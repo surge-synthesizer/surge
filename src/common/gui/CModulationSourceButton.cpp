@@ -367,7 +367,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
       ** If you uncomment this if and have all paths set controstrate to cs_maybeswap
       ** modulators wll also drop onto targets if you also uncomment the sge->openBlah below
       */
-      if( is_metacontroller )
+      if( is_metacontroller || ( buttons & kControl ) )
          controlstate = cs_maybeswap;
       return kMouseEventHandled;
    }
@@ -405,7 +405,8 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
          if( s )
          {
             // See comment above when state is set to maybeswap
-            // sge->openModTypeinOnDrop( getTag(), s,  s->getTag() );
+            if( buttons & kControl )
+               sge->openModTypeinOnDrop( getTag(), s,  s->getTag() );
          }
       }
 

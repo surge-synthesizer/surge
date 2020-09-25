@@ -7052,8 +7052,9 @@ void SurgeGUIEditor::swapControllers( int t1, int t2 )
 
 void SurgeGUIEditor::openModTypeinOnDrop( int modt, CControl *sl, int slidertag )
 {
-   // check is valid modulation before I proceed
    auto p =  synth->storage.getPatch().param_ptr[slidertag-start_paramtags];
    int ms = modt - tag_mod_source0;
-   promptForUserValueEntry( p, sl, ms );
+
+   if( synth->isValidModulation( p->id, modsource ) )
+       promptForUserValueEntry( p, sl, ms );
 }
