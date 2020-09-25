@@ -407,8 +407,12 @@ void SurgeGUIEditor::idle()
       }
       for( auto c : removeFromFrame )
       {
-         frame->removeView(c);
+         if( frame->isChild( c ) )
+         {
+            frame->removeView(c);
+         }
       }
+      removeFromFrame.clear();
 
 
       if( patchCountdown >= 0 )
@@ -425,8 +429,6 @@ void SurgeGUIEditor::idle()
 
          }
       }
-      
-      removeFromFrame.clear();
 
       if(zoomInvalid)
       {
@@ -1036,6 +1038,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
       return;
    assert(frame);
 
+   removeFromFrame.clear();
+
    if (editor_open)
    {
       if( editorOverlay != nullptr )
@@ -1058,7 +1062,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
    lfodisplay = 0;
    fxmenu = 0;
    typeinDialog = nullptr;
-   removeFromFrame.clear();
+   minieditOverlay = nullptr;
+   
    for( int i=0; i<16; ++i ) vu[i] = 0;
 
    current_scene = synth->storage.getPatch().scene_active.val.i;
@@ -3094,24 +3099,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             eid++;
 
             addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Rename Macro..."), [this, control, ccid]() {
-                                                      VSTGUI::Call::later( [this, control, ccid]() {
-                                                                              promptForMiniEdit(synth->storage.getPatch().CustomControllerLabel[ccid] ,
-                                                                                                "Enter a new name for macro controller:", "Rename Macro",
-                                                                                                [this, control, ccid](const std::string & s )
-                                                                                                   {
-                                                                                                      strncpy( synth->storage.getPatch().CustomControllerLabel[ccid],
-                                                                                                               s.c_str(),
-                                                                                                               16 );
-                                                                                                      ((CModulationSourceButton*)control)
-                                                                                                         ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-
-                                                                                                      control->setDirty();
-                                                                                                      control->invalid();
-                                                                                                      synth->refresh_editor = true;
-                                                                                                      synth->updateDisplay();
-                                                                                                   });
-                                                                           }, 1 );
-                                                   });
+                                                                                           promptForMiniEdit(synth->storage.getPatch().CustomControllerLabel[ccid] ,
+                                                                                                             "Enter a new name for macro controller:", "Rename Macro",
+                                                                                                             [this, control, ccid](const std::string & s )
+                                                                                                             {
+                                                                                                                strncpy( synth->storage.getPatch().CustomControllerLabel[ccid],
+                                                                                                                         s.c_str(),
+                                                                                                                         16 );
+                                                                                                                ((CModulationSourceButton*)control)
+                                                                                                                   ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                                                                                                                
+                                                                                                                control->setDirty();
+                                                                                                                control->invalid();
+                                                                                                                synth->refresh_editor = true;
+                                                                                                                // synth->updateDisplay();
+                                                                                                             });
+                                                                                        });
             eid++;
 
 #if TARGET_VST3
@@ -4232,6 +4235,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             {
                minieditOverlayDone( q.c_str() );
             }
+            minieditTypein->looseFocus();
          }
          minieditOverlay->setVisible( false );
          removeFromFrame.push_back( minieditOverlay );
@@ -5826,17 +5830,14 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
    addCallbackMenu(
        midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
        [this]() {
-          VSTGUI::Call::later(
-             [this]() {
-                this->scannedForMidiPresets = false; // force a rescan
-                char msn[256];
-                msn[0] = 0;
-                promptForMiniEdit(msn, "MIDI Mapping Name", "Save MIDI Mapping",
-                                  [this](const std::string &s )
-                                     {
-                                        this->synth->storage.storeMidiMappingToName( s );
-                                     });
-             }, 1 );
+          this->scannedForMidiPresets = false; // force a rescan
+          char msn[256];
+          msn[0] = 0;
+          promptForMiniEdit(msn, "MIDI Mapping Name", "Save MIDI Mapping",
+                            [this](const std::string &s )
+                               {
+                                  this->synth->storage.storeMidiMappingToName( s );
+                               });
        });
    did++;
 
