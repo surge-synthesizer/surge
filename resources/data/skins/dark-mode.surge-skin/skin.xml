@@ -68,7 +68,16 @@
     <color id="lfo.stepseq.popup.background" value="$white"/>
     <color id="lfo.stepseq.popup.foreground" value="$black"/>
 
+    <color id="overlay.background" value="#000000C0"/>
+
     <color id="savedialog.background" value="#242424"/>
+    <color id="savedialog.border" value="#0F0F0F"/>
+
+    <color id="dialog.titlebar.background" value="#0F0F0F"/>
+    <color id="dialog.titlebar.text" value="$white"/>
+    <color id="dialog.button.background" value="#404040"/>
+    <color id="dialog.button.border" value="#0F0F0F"/>
+    <color id="dialog.button.textlabel" value="$lightgray"/>
 
     <color id="textfield.focuscolor" value="#2E2E5E"/>
     <color id="savedialog.textfield.border" value="#0F0F0F"/>

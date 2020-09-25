@@ -66,7 +66,7 @@
 #define IDB_MSEG_SEGMENT_HANDLES 301
 #define IDB_MSEG_MOVEMENT 302
 #define IDB_MSEG_EDITMODE 303
-#define IDB_MINIEDIT_BG 170
+#define IDB_MINIEDIT_ICON 170
 // == /SVG == Do not remove this comment
 
 

@@ -3100,7 +3100,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Rename Macro..."), [this, control, ccid]() {
                                                                                            promptForMiniEdit(synth->storage.getPatch().CustomControllerLabel[ccid] ,
-                                                                                                             "Enter a new name for macro controller:", "Rename Macro",
+                                                                                                             "Enter a new name for the macro:", "Rename Macro",
                                                                                                              [this, control, ccid](const std::string & s )
                                                                                                              {
                                                                                                                 strncpy( synth->storage.getPatch().CustomControllerLabel[ccid],
@@ -6995,7 +6995,7 @@ void SurgeGUIEditor::promptForMiniEdit( const std::string &value, const std::str
 {
    auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
    minieditOverlay = new CViewContainer( fs );
-   minieditOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(180, 180, 200, 150)));
+   minieditOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(0, 0, 0, 204)));
    minieditOverlay->setVisible(true);
    frame->addView( minieditOverlay );
 
@@ -7003,75 +7003,113 @@ void SurgeGUIEditor::promptForMiniEdit( const std::string &value, const std::str
    frame->getCurrentMouseLocation(where);
    frame->localToFrame(where);
    
-   int wd = 240;
-   int ht = 100;
+   int wd = 160;
+   int ht = 80;
    auto rr = CRect( CPoint( where.x - fs.left, where.y - fs.top ), CPoint( wd, ht ) );
 
-   if( rr.top < 0 ) rr = rr.offset( 0, 10 - rr.top );
+   if( rr.top < 0 )
+      rr = rr.offset( 0, 10 - rr.top );
    if( rr.bottom > fs.getHeight() )
-   {
+
       rr.offset( 0, - rr.bottom + fs.getHeight() - 10 );
-   }
-   if( rr.left < 0 ) rr = rr.offset( 10 - rr.left, 0 );
+   if( rr.left < 0 )
+      rr = rr.offset( 10 - rr.left, 0 );
    if( rr.right > fs.getWidth() )
-   {
+
       rr.offset( - rr.right + fs.getWidth() - 10, 0 );
-   }
 
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 12);
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnts = new VSTGUI::CFontDesc("Lato", 10);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnts = new VSTGUI::CFontDesc("Lato", 9);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fntt = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
 
-   auto cvc = new CViewContainer( rr );
-   cvc->setBackground( bitmapStore->getBitmap( IDB_MINIEDIT_BG ) );
-   cvc->setBackgroundColor( kBlackCColor );
-   cvc->setVisible( true );
-   minieditOverlay->addView( cvc );
+   auto window = new CViewContainer(rr);
+   window->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border, CColor(0xA1, 0xA4, 0xB7)));
+   window->setVisible(true);
+   minieditOverlay->addView(window);
+   
+   auto titlebar = new CViewContainer(CRect(0, 0, wd, 18));
+   titlebar->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background, CColor(0xA1, 0xA4, 0xB7)));
+   titlebar->setVisible(true);
+   window->addView(titlebar);
 
-   int bw = 60;
-   auto b1r = CRect( CPoint( wd - 2 * bw, ht - 20 ), CPoint( bw-3, 17 ) );
-   auto b2r = CRect( CPoint( wd - 1 * bw, ht - 20 ), CPoint( bw-3, 17 ) );
-   auto kb = new CTextButton( b1r, this, tag_miniedit_ok, "OK" );
-   kb->setVisible( true );
-   kb->setFont(fnt);
-   cvc->addView( kb );
+   auto titlerect = CRect(CPoint(0, 0), CPoint(wd, 16));
+   auto titletxt = new CTextLabel(titlerect, title.c_str());
+   titletxt->setTransparency(true);
+   titletxt->setFontColor(currentSkin->getColor(Colors::Dialog::Titlebar::Text, kWhiteCColor));
+   titletxt->setFont(fntt);
+   titlebar->addView(titletxt);
+   
+   auto iconrect = CRect(CPoint(3, 2), CPoint(15, 15));
+   auto icon = new CViewContainer(iconrect);
+   icon->setBackground(bitmapStore->getBitmap(IDB_MINIEDIT_ICON));
+   icon->setVisible(true);
+   titlebar->addView(icon);
 
-   auto cb = new CTextButton( b2r, this, tag_miniedit_cancel, "Cancel" );
-   cb->setVisible( true );
-   cb->setFont(fnt);
-   cvc->addView( cb );
+   auto bgrect = CRect(CPoint(1, 18), CPoint(wd - 2, ht - 19));
+   auto bg = new CViewContainer(bgrect);
+   bg->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Background, CColor(0xCD, 0xCE, 0xD4)));
+   bg->setVisible(true);
+   window->addView(bg);
 
-   auto t1r = CRect( CPoint( 0, 0 ), CPoint( wd, 20 ) );
-   t1r = t1r.inset(1,1 );
-   auto tl1 = new CTextLabel( t1r, title.c_str());
-   tl1->setTransparency( true );
-   tl1->setFontColor( kWhiteCColor );
-   tl1->setFont(fnt);
-   cvc->addView( tl1 );
+   auto msgrect = CRect(CPoint(0, 2), CPoint(wd, 14));
+   msgrect.inset(5, 0);
+   auto msgtxt = new CTextLabel(msgrect, msg.c_str());
+   msgtxt->setTransparency(true);
+   msgtxt->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text, kBlackCColor));
+   msgtxt->setFont(fnts);
+   msgtxt->setHoriAlign(kLeftText);
+   bg->addView(msgtxt);
 
-   auto t2r = CRect( CPoint( 0, 22 ), CPoint( wd, 20 ) );
-   t2r.inset( 4, 0 );
-   auto tl2 = new CTextLabel( t2r, msg.c_str());
-   tl2->setTransparency( true );
-   tl2->setFontColor( kBlackCColor );
-   tl2->setFont(fnts);
-   tl2->setHoriAlign( kLeftText );
-   cvc->addView( tl2 );
-
-   auto mer = CRect( CPoint( 0, 46 ), CPoint( wd, 29 )  );
-   mer.inset( 4, 2 );
-   minieditTypein = new CTextEdit( mer, this, tag_miniedit_ok, value.c_str() );
-
-   minieditTypein->setBackColor( VSTGUI::CColor( 0x20,0x20,0x30) );
-   cvc->addView( minieditTypein );
-   minieditTypein->setBackColor( kWhiteCColor );
-   minieditTypein->setFontColor( kBlackCColor );
-   minieditTypein->setFont( fnt );
+   auto mer = CRect(CPoint(0, 18), CPoint(wd - 2, 22));
+   mer.inset(4, 2);
+   minieditTypein = new CTextEdit(mer, this, tag_miniedit_ok, value.c_str());
+   minieditTypein->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background, kWhiteCColor));
+   minieditTypein->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border, CColor(160, 160, 160)));
+   minieditTypein->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text, kBlackCColor));
+   minieditTypein->setFont(fnt);
 #if WINDOWS
    minieditTypein->setTextInset(CPoint(3, 0));
 #endif
+   bg->addView(minieditTypein);
    minieditTypein->takeFocus();
 
    minieditOverlayDone = onOK;
+
+   int bw = 44;
+   auto b1r = CRect(CPoint(wd - (bw * 2) - 9, bgrect.bottom - 36), CPoint(bw, 14));
+   auto b2r = CRect(CPoint(wd - bw - 6, bgrect.bottom - 36), CPoint(bw, 14));
+
+   auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background, CColor(227, 227, 227));
+   auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border, CColor(160, 160, 160));
+   auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text, kBlackCColor);
+
+   VSTGUI::CGradient::ColorStopMap csm;
+   VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
+   cg->addColorStop(0, btnbg);
+
+   auto cb = new CTextButton(b1r, this, tag_miniedit_cancel, "Cancel");
+   cb->setVisible(true);
+   cb->setFont(fnts);
+   cb->setGradient(cg);
+   cb->setFrameColor(btnborder);
+   cb->setTextColor(btntext);
+   cb->setGradientHighlighted(cg);
+   cb->setFrameColorHighlighted(btnborder);
+   cb->setTextColorHighlighted(btntext);
+   cb->setRoundRadius(CCoord(3.f));
+   bg->addView(cb);
+
+   auto kb = new CTextButton(b2r, this, tag_miniedit_ok, "OK");
+   kb->setVisible(true);
+   kb->setFont(fnts);
+   kb->setGradient(cg);
+   kb->setFrameColor(btnborder);
+   kb->setTextColor(btntext);
+   kb->setGradientHighlighted(cg);
+   kb->setFrameColorHighlighted(btnborder);
+   kb->setTextColorHighlighted(btntext);
+   kb->setRoundRadius(CCoord(3.f));
+   bg->addView(kb);
 }
 
 void SurgeGUIEditor::swapControllers( int t1, int t2 )
