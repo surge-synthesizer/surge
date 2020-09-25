@@ -7043,3 +7043,17 @@ void SurgeGUIEditor::promptForMiniEdit( const std::string &value, const std::str
 
    minieditOverlayDone = onOK;
 }
+
+void SurgeGUIEditor::swapControllers( int t1, int t2 )
+{
+   synth->swapMetaControllers( t1 - tag_mod_source0 - ms_ctrl1,
+                               t2 - tag_mod_source0 - ms_ctrl1 );
+}
+
+void SurgeGUIEditor::openModTypeinOnDrop( int modt, CControl *sl, int slidertag )
+{
+   // check is valid modulation before I proceed
+   auto p =  synth->storage.getPatch().param_ptr[slidertag-start_paramtags];
+   int ms = modt - tag_mod_source0;
+   promptForUserValueEntry( p, sl, ms );
+}

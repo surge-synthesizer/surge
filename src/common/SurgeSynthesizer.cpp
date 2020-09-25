@@ -3133,3 +3133,67 @@ void SurgeSynthesizer::setupActivateExtraOutputs()
    
    activateExtraOutputs = Surge::Storage::getUserDefaultValue( &(storage), "activateExtraOutputs", defval ? 1 : 0 );
 }
+
+void SurgeSynthesizer::swapMetaControllers( int c1, int c2 )
+{
+   char nt[20];
+   strncpy( nt, storage.getPatch().CustomControllerLabel[c1], 16 );
+   strncpy( storage.getPatch().CustomControllerLabel[c1], storage.getPatch().CustomControllerLabel[c2], 16 );
+   strncpy( storage.getPatch().CustomControllerLabel[c2], nt, 16 );
+
+   storage.CS_ModRouting.enter();
+
+   auto tmp1 = storage.getPatch().scene[0].modsources[ms_ctrl1 + c1];
+   auto tmp2 = storage.getPatch().scene[0].modsources[ms_ctrl1 + c2];
+
+   for( int sc=0; sc<n_scenes; ++sc )
+   {
+      storage.getPatch().scene[sc].modsources[ms_ctrl1+c2] = tmp1;
+      storage.getPatch().scene[sc].modsources[ms_ctrl1+c1] = tmp2;
+   }
+
+   // Now swap the routings
+   for( int sc=0; sc< n_scenes; ++sc )
+   {
+      for( int vt=0; vt<3; ++vt )
+      {
+         std::vector<ModulationRouting> *mv = nullptr;
+         if( sc == 0 && vt == 0 )
+         {
+            mv = &( storage.getPatch().modulation_global );
+         }
+         else if( vt == 1 )
+         {
+            mv = &( storage.getPatch().scene[sc].modulation_scene );
+         }
+         else if( vt == 2 )
+         {
+            mv = &( storage.getPatch().scene[sc].modulation_voice );
+         }
+
+         if( mv )
+         {
+            int n = mv->size();
+            for( int i=0; i<n; ++i )
+            {
+               if( mv->at(i).source_id == ms_ctrl1 + c1 )
+               {
+                  auto q = mv->at(i);
+                  q.source_id = ms_ctrl1 + c2;
+                  mv->at(i) = q;
+               }
+               else if( mv->at(i).source_id == ms_ctrl1 + c2 )
+               {
+                  auto q = mv->at(i);
+                  q.source_id = ms_ctrl1 + c1;
+                  mv->at(i) = q;
+               }
+            }
+         }
+      }
+   }
+
+   storage.CS_ModRouting.leave();
+
+   refresh_editor = true;
+}

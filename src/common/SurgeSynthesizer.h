@@ -176,6 +176,8 @@ public:
    void incrementPatch(bool nextPrev);
    void incrementCategory(bool nextPrev);
 
+   void swapMetaControllers( int ct1, int ct2 );
+   
    std::string getUserPatchDirectory();
    std::string getLegacyUserPatchDirectory();
 

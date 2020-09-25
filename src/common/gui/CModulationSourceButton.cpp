@@ -1,10 +1,12 @@
 #include "CModulationSourceButton.h"
+#include "CSurgeSlider.h"
 #include "Colors.h"
 #include "MouseCursorControl.h"
 #include "globals.h"
 #include "ModulationSource.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
+#include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
 #include "SkinColors.h"
 #include <UserDefaults.h>
@@ -20,6 +22,8 @@ enum
 {
    cs_none = 0,
    cs_drag = 1,
+   cs_maybeswap = 2,
+   cs_swap = 3
 };
 
 class SurgeStorage;
@@ -359,11 +363,13 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    }
    else if (buttons & kLButton)
    {
-      click_is_editpart = loc.x > (size.getWidth() - 11);   // click area for show LFO parameters arrow
-      event_is_drag = false;
-      if (listener)
-         listener->valueChanged(this);
-      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+      /*
+      ** If you uncomment this if and have all paths set controstrate to cs_maybeswap
+      ** modulators wll also drop onto targets if you also uncomment the sge->openBlah below
+      */
+      if( is_metacontroller )
+         controlstate = cs_maybeswap;
+      return kMouseEventHandled;
    }
 
    return kMouseEventHandled;
@@ -375,6 +381,49 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
 {
    super::onMouseUp(where, buttons);
 
+   if( controlstate == cs_swap && dragLabel )
+   {
+      dragLabel->setVisible( false );
+      getFrame()->removeView( dragLabel );
+      dragLabel = nullptr;
+      controlstate = cs_none;
+
+      auto p = getFrame()->getViewSize();
+      auto wa = where - p.getTopLeft();
+      wa = getFrame()->getTransform().transform( wa );
+      auto v = getFrame()->getViewAt(wa);
+      auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+      if( sge )
+      {
+         auto c = dynamic_cast<CModulationSourceButton *>(v);
+         if( c && c->is_metacontroller )
+         {
+            sge->swapControllers( getTag(), c->getTag() );
+         }
+
+         auto s = dynamic_cast<CSurgeSlider *>(v);
+         if( s )
+         {
+            // See comment above when state is set to maybeswap
+            // sge->openModTypeinOnDrop( getTag(), s,  s->getTag() );
+         }
+      }
+
+      controlstate = cs_none;
+   }
+   else if( controlstate == cs_none || controlstate == cs_maybeswap )
+   {
+      auto size = getViewSize();
+      CPoint loc(where);
+      loc.offset(-size.left, -size.top);
+
+      click_is_editpart = loc.x > (size.getWidth() - 11);   // click area for show LFO parameters arrow
+      event_is_drag = false;
+      if (listener)
+         listener->valueChanged(this);
+   }
+   
+   
    if (controlstate)
    {
       endEdit();
@@ -383,6 +432,58 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
       attachCursor();
    }
    return kMouseEventHandled;
+}
+
+CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CButtonState &buttons ) 
+{
+   if( controlstate == cs_maybeswap )
+   {
+      if( dragLabel == nullptr )
+      {
+         std::string lb = label;
+         if( hasAlternate && useAlternate )
+         {
+            lb = alternateLabel;
+         }
+
+         if( lb == "-" ) lb = "Drag Macro";
+
+         auto l = new CTextLabel( getViewSize(), lb.c_str() );
+         l->setTransparency(false);
+
+         CColor FrameCol, FillCol, FontCol;
+         const CColor ColEdge = CColor(46, 134, 254, 255);
+
+         FillCol = skin->getColor(Colors::ModSource::Inactive::Background, CColor(18, 52, 99, 255));
+         FrameCol = skin->getColor( Colors::ModSource::Inactive::Border, ColEdge );
+         FontCol = skin->getColor(Colors::ModSource::Inactive::Text, ColEdge); 
+
+         l->setFont( displayFont );
+         l->setBackColor( FillCol );
+         l->setFontColor( FontCol );
+         l->setFrameColor( FrameCol );
+         l->setVisible( true );
+         getFrame()->addView(l);
+         dragLabel = l;
+      }
+      controlstate = cs_swap;
+      return kMouseEventHandled;
+   }
+   else if( controlstate == cs_swap && dragLabel )
+   {
+      auto s = dragLabel->getViewSize();
+      auto r = s;
+      s = s.moveTo( where );
+      dragLabel->setViewSize( s );
+      dragLabel->invalid();
+      r.extend( 10, 10 );
+      getFrame()->invalid();
+      return kMouseEventHandled;
+   }
+   else
+   {
+      return CCursorHidingControl::onMouseMoved( where, buttons );
+   }
 }
 
 //------------------------------------------------------------------------------------------------
