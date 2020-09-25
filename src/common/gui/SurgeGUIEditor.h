@@ -241,6 +241,9 @@ public:
    std::string mappingCacheForToggle = "";
    std::string tuningToHtml();
 
+   void swapControllers( int t1, int t2 );
+   void openModTypeinOnDrop( int ms, VSTGUI::CControl *sl, int tgt );
+   
    void queueRebuildUI() { queue_refresh = true; synth->refresh_editor = true; }
 
    std::string midiMappingToHtml();
