@@ -4219,6 +4219,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          editorOverlay = nullptr;
       }
    }
+   break;
    case tag_miniedit_ok:
    case tag_miniedit_cancel:
    {
@@ -4234,8 +4235,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          }
          minieditOverlay->setVisible( false );
          removeFromFrame.push_back( minieditOverlay );
+         minieditOverlay = nullptr;
       }
    }
+   break;
    case tag_value_typein:
    {
       if( typeinDialog && typeinMode != Inactive )
