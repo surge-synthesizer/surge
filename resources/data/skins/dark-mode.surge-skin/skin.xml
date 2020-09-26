@@ -130,7 +130,7 @@
   </component-classes>
 
   <controls>
-    <control tag_value="51" tag_name="tag_mp_jogfx" x="855" y="197" w="37" h="12" class="CHSwitch2" bg_id="149" subpixmaps="2" rows="1" columns="2"/>
+    <control tag_value="61" tag_name="tag_mp_jogfx" x="855" y="202" w="37" h="12" class="CHSwitch2" bg_id="149" subpixmaps="2" rows="1" columns="2"/>
   </controls>
 
 </surge-skin>

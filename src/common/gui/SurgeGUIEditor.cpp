@@ -2052,7 +2052,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          case ct_flangerwave:
          case ct_distortion_waveshape:
          {
-            auto hs = new CMenuAsSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs),
+            auto hs = new CMenuAsSlider(CPoint(p->posx, p->posy + (p->posy_offset * yofs) + 2),
                                         this,
                                         p->id + start_paramtags,
                                         bitmapStore,
