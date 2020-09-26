@@ -13,6 +13,17 @@ namespace Colors
       const Surge::UI::SkinColor Background("savedialog.background"),
                                  Border("savedialog.border");
 
+      namespace Titlebar
+      {
+         const Surge::UI::SkinColor Background("dialog.titlebar.background"),
+                                    Text("dialog.titlebar.textlabel");
+      }
+      namespace Button
+      {
+         const Surge::UI::SkinColor Background("dialog.button.background"),
+                                    Border("dialog.button.border"),
+                                    Text("dialog.button.textlabel");
+      }
       namespace Checkbox
       {
          const Surge::UI::SkinColor Background("savedialog.checkbox.fill"),

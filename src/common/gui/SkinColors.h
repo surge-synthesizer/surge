@@ -13,6 +13,14 @@ namespace Colors
    {
       extern const Surge::UI::SkinColor Background, Border;
 
+      namespace Titlebar
+      {
+         extern const Surge::UI::SkinColor Background, Text;
+      }
+      namespace Button
+      {
+         extern const Surge::UI::SkinColor Background, Border, Text;
+      }
       namespace Checkbox
       {
          extern const Surge::UI::SkinColor Background, Border, Tick;
