@@ -896,7 +896,6 @@ struct MSEGMainEd : public CViewContainer {
       this->skin = skin;
 
       int controlHeight = 85;
-      int outputWidth = 320;
       auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, skin, bmp );
             
       auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,

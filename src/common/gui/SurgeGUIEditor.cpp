@@ -83,7 +83,7 @@ struct RememberForgetGuard {
    ~RememberForgetGuard() {
       if( t )
       {
-         auto rc = t->release();
+         t->release();
       }
    }
    T *t = nullptr;
@@ -214,8 +214,6 @@ std::string specialTagToString( special_tags t )
    default:
       return "ERROR";
    }
-   return "ERROR";
-
 }
 
 SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
@@ -2487,7 +2485,6 @@ void SurgeGUIEditor::setParameter(long index, float value)
       return;
    if (index > synth->storage.getPatch().param_ptr.size())
       return;
-   Parameter* p = synth->storage.getPatch().param_ptr[index];
 
    // if(param[index])
    {
@@ -3170,8 +3167,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    {
       Parameter* p = synth->storage.getPatch().param_ptr[ptag];
       
-      auto ctrl = dynamic_cast<CSurgeSlider*>(control);
-
       // don't show RMB context menu for filter subtype if it's hidden/not applicable
       auto f1type = synth->storage.getPatch().scene[current_scene].filterunit[0].type.val.i;
       auto f2type = synth->storage.getPatch().scene[current_scene].filterunit[1].type.val.i;
@@ -3225,18 +3220,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          std::string helpurl = helpURLFor(p);
          if( helpurl == "" )
          {
-            auto fnmi = contextMenu->addEntry((char *)p->get_full_name(), eid++);
+            contextMenu->addEntry((char*)p->get_full_name(), eid++);
          }
          else
          {
             std::string helpstr = "[?] ";
             auto lurl = fullyResolvedHelpURL(helpurl);
-            auto fnmi = addCallbackMenu(contextMenu, std::string(helpstr + p->get_full_name()).c_str(),
-                                        [lurl]()
-                                           {
-                                              Surge::UserInteractions::openURL( lurl );
-                                           }
-               );
+            addCallbackMenu(contextMenu, std::string(helpstr + p->get_full_name()).c_str(),
+                            [lurl]() { Surge::UserInteractions::openURL(lurl); });
             eid++;
          }
          contextMenu->addSeparator(eid++);
@@ -3746,9 +3737,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             if (n_ms)
             {
                contextMenu->addSeparator(eid++);
-
-               int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
-
 
                for (int k = 1; k < n_modsources; k++)
                {
@@ -4378,8 +4366,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    default:
    {
       int ptag = tag - start_paramtags;
-
-      int detailedMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
 
       if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
       {
@@ -5565,7 +5551,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    middleCSubMenu->forget();
 
    // patch defaults
-   int pdid = 0;
    COptionMenu* patchDefMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);

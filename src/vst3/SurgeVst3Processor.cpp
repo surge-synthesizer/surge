@@ -440,7 +440,6 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    _fpuState.set();
 
-   int32 numChannels = 2;
    int32 numSamples = data.numSamples;
 
    surgeInstance->process_input = data.numInputs != 0 && data.inputs != nullptr;
@@ -450,7 +449,6 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    int i;
    int numOutputs = data.numOutputs;
-   int numInputs = data.numInputs;
    int noteEventIndex = 0;
    int parameterEventIndex = 0;
 
@@ -489,7 +487,6 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
             }
 
             // move clock
-            timedata* td = &(surgeInstance->time_data);
             surgeInstance->time_data.tempo = tempo;
             surgeInstance->time_data.ppqPos +=
                 (double)BLOCK_SIZE * tempo / (60. * data.processContext->sampleRate);

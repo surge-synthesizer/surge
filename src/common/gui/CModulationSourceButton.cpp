@@ -145,7 +145,6 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
    // source position in bitmap
 
-   bool ActiveArrow = state > 4;
    bool SelectedModSource = (state & 3) == 1;
    bool ActiveModSource = (state & 3) == 2;
    bool UsedOrActive = used || (state & 3);

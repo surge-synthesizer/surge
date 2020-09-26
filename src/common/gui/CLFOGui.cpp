@@ -443,8 +443,6 @@ void CLFOGui::draw(CDrawContext* dc)
    {
       auto size = getViewSize();
       
-      int w = size.getWidth() - splitpoint;
-      int h = size.getHeight();
       auto shiftTranslate = CGraphicsTransform().translate( size.left, size.top ).translate( splitpoint, 0 );
       CDrawContext::Transform shiftTranslatetransform( *dc, shiftTranslate );
       
@@ -818,7 +816,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
    int minSamples = ( 1 << 3 ) * (int)( boxo.right - boxo.left );
    int totalSamples = std::max( (int)minSamples, (int)(totalSampleTime * samplerate / BLOCK_SIZE) );
-   float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
    float cycleSamples = cyclesec * samplerate / BLOCK_SIZE;
 
 

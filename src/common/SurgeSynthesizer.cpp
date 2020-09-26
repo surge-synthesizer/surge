@@ -1228,8 +1228,6 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
       }
    }
 
-   int n = storage.getPatch().param_ptr.size();
-
    if (learn_param >= 0)
    {
       if (learn_param < n_global_params)
@@ -1471,8 +1469,6 @@ ControllerModulationSource* SurgeSynthesizer::AddControlInterpolator(int Id, boo
 
 void SurgeSynthesizer::setParameterSmoothed(long index, float value)
 {
-   float oldval = storage.getPatch().param_ptr[index]->get_value_f01();
-
    bool AlreadyExisted;
    ControllerModulationSource* mc = AddControlInterpolator(index, AlreadyExisted);
 
@@ -2429,8 +2425,6 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta& pm)
    }
    else if (index >= metaparam_offset)
    {
-      int c = index - metaparam_offset;
-
       pm.flags = 0;
       pm.fmin = 0.f;
       pm.fmax = 1.f;

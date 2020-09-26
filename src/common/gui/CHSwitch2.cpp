@@ -117,8 +117,6 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
          mouseDowns --;
       return res;
    }
-   
-   return kMouseEventNotHandled;
 }
 CMouseEventResult CHSwitch2::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
