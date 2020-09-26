@@ -398,7 +398,18 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
          auto c = dynamic_cast<CModulationSourceButton *>(v);
          if( c && c->is_metacontroller )
          {
-            sge->swapControllers( getTag(), c->getTag() );
+            if( c->getTag() == getTag() )
+            {
+               // We've dropped onto ourself. Treat like an ARM toggle for now
+               click_is_editpart = false;
+               event_is_drag = false;
+               if (listener)
+                  listener->valueChanged(this);
+            }
+            else
+            {
+               sge->swapControllers( getTag(), c->getTag() );
+            }
          }
 
          auto s = dynamic_cast<CSurgeSlider *>(v);
