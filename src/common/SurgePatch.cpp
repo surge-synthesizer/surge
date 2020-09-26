@@ -117,7 +117,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       param_ptr.push_back(this->fx[fx].type.assign(p_id.next(), 0, "type", "FX Type", ct_fxtype,
                                                    "FX.fxtype", px, py - 2,
                                                    0, cg_FX, fx, false, Surge::ParamConfig::kHorizontal));
-      py += 20;
+      py += 30;
       for (int p = 0; p < n_fx_params; p++)
       {
          char label[16];

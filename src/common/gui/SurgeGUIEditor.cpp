@@ -1186,7 +1186,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect vr(vurect);
             vr.top += 1;
-            vr.offset(0, 9);
+            vr.offset(0, 19);
             vr.offset(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
             CEffectLabel* lb = new CEffectLabel(vr);
             lb->setLabel(label);
@@ -1255,7 +1255,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_patch->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_patch);
 
-   int jogx = 759 + 131 - 39, jogy = 182 + 15;
+   int jogx = 759 + 131 - 39, jogy = 182 + 20;
    auto jogctrl = currentSkin->controlForEnumID( tag_mp_jogfx );
    if( jogctrl )
    {
@@ -1279,12 +1279,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
    lfoNameLabel->setHoriAlign(kCenterText);
    frame->addView(lfoNameLabel);
 
-   fxPresetLabel = new CTextLabel( CRect( 759, 197, jogx - 2, 207 ), "Preset" );
+   fxPresetLabel = new CTextLabel(CRect(759, jogy + 1, jogx - 2, jogy + 11), "Preset");
    fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name, CColor( 0, 0, 0, 255 ) ));
    fxPresetLabel->setTransparency(true);
-   fxPresetLabel->setFont( displayFont );
-   fxPresetLabel->setHoriAlign( kRightText );
-   fxPresetLabel->setTextTruncateMode( CTextLabel::TextTruncateMode::kTruncateTail );
+   fxPresetLabel->setFont(displayFont);
+   fxPresetLabel->setHoriAlign(kRightText);
+   fxPresetLabel->setTextTruncateMode(CTextLabel::TextTruncateMode::kTruncateTail);
    frame->addView(fxPresetLabel);
 
    CHSwitch2* b_store = new CHSwitch2(CRect(547 - 37, 41, 547, 41 + 12), this, tag_store, 1, 12, 1,
