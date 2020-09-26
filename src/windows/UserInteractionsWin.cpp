@@ -59,7 +59,9 @@ void showHTML( const std::string &html )
 {
     TCHAR lpTempPathBuffer[MAX_PATH];
 
-    auto dwRetVal = GetTempPath(MAX_PATH, lpTempPathBuffer);
+    if (!GetTempPath(MAX_PATH, lpTempPathBuffer))
+       return;
+
     std::ostringstream fns;
     fns << lpTempPathBuffer << "surge-data." << rand() << ".html";
 

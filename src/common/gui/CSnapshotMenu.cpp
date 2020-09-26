@@ -45,7 +45,6 @@ bool CSnapshotMenu::canSave()
 void CSnapshotMenu::populate()
 {
    int main = 0, sub = 0;
-   bool do_nothing = false;
    const long max_main = 128, max_sub = 256;
 
    int idx = 0;
@@ -85,13 +84,11 @@ bool CSnapshotMenu::loadSnapshotByIndex( int idx )
       {
          auto type = typeD.front();
          typeD.pop();
-         auto tn = type->Attribute( "name" );
          int type_id = 0;
          type->Attribute("i", &type_id);
          TiXmlElement* snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
          while (snapshot)
          {
-            auto n = snapshot->Attribute("name");
             int snapshotTypeID = type_id, tmpI = 0;
             if (snapshot->Attribute("i", &tmpI) != nullptr)
             {
@@ -841,7 +838,6 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *sub
    auto user_add = subMenu->addEntry("USER PRESETS");
    user_add->setEnabled(0);
 
-   int fidx = idx + 10000;
    for( auto &ps : userPresets[type_id] )
    {
       auto fxName = ps.name;

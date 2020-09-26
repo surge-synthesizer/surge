@@ -1996,7 +1996,6 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
       {
          if (scene[sc].lfo[l].shape.val.i == ls_mseg)
          {
-            char txt[256], txt2[256];
             TiXmlElement p("mseg");
             p.SetAttribute("scene", sc);
             p.SetAttribute("i", l);

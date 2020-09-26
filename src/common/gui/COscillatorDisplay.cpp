@@ -125,11 +125,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    if (uses_wavetabledata(oscdata->type.val.i))
       h -= wtbheight;
 
-   int midline = h >> 1;
-   int topline = midline - 0.4f * h;
-   int bottomline = midline + 0.4f * h;
-
-
    int totalSamples = ( 1 << 4 ) * (int)getWidth();
    int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be an integer multiple of it
 
@@ -167,7 +162,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                float f1 = storage->note_to_pitch(bracket);
                float f2 = storage->note_to_pitch(bracket+1);
                float frac = (pit - f1)/ (f2-f1);
-               float newp = storage->note_to_pitch(bracket + frac);
                disp_pitch_rs = bracket + frac;
             }
             else
