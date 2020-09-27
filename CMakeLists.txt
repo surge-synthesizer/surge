@@ -391,6 +391,7 @@ if( APPLE )
     )
 
   set(OS_COMPILE_OPTIONS
+    -fasm-blocks
     -msse2
     "-D_aligned_malloc(x,a)=malloc(x)"
     "-D_aligned_free(x)=free(x)"
@@ -717,7 +718,7 @@ if( BUILD_AU )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Packaging up AU component"
-    COMMAND ./scripts/macOS/package-au.sh  ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-au-dll.dylib ${SURGE_PRODUCT_DIR}
+    COMMAND ./scripts/macOS/package-au.sh  $<TARGET_FILE:surge-au-dll> ${SURGE_PRODUCT_DIR}
     COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.component/
     COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.component/
     )
