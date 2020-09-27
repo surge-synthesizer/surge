@@ -126,7 +126,9 @@ void LfoModulationSource::attack()
    env_val = 0.f;
    env_phase = 0;
    ratemult = 1.f;
-
+   msegLastEvaluated = -1;
+   for( int i=0; i<5; ++i )
+      msegEvaluationState[i] = 0.f;
    if (localcopy[idelay].f == lfo->delay.val_min.f)
    {
       env_state = lenv_attack;
@@ -624,7 +626,7 @@ void LfoModulationSource::process_block()
       }
       break;
    case ls_mseg:
-      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms );
+      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms, msegLastEvaluated, msegEvaluationState );
       break;
    };
 

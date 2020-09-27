@@ -6,7 +6,7 @@ namespace Surge
 {
    namespace MSEG {
       void rebuildCache(MSEGStorage *s);
-      float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s );
+      float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s, int &lastEval, float msegState[5] );
 
       /*
       ** Edit and Utility functions. After the call to all of these you will want to rebuild cache

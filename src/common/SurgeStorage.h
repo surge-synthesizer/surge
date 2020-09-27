@@ -470,10 +470,11 @@ const int max_msegs = 128;
 struct MSEGStorage {
    struct segment {
       float duration;
+      float dragDuration; // Snap Mode Helper
       float v0;
+      float dragv0; // in snap mode, this is the location we are dragged to. It is just convenience storage.
       float nv1; // this is the v0 of the neighbor and is here just for convenience. MSEGModulationHelper::rebuildCache will set it
-      float cpduration, cpv;
-      float state[5]; // just some random variables we can use for state management if we want
+      float cpduration, cpv, dragcpv;
       enum Type {
          LINEAR = 1,
          QUADBEZ,
@@ -492,7 +493,9 @@ struct MSEGStorage {
    // If you edit the segments then MSEGModulationHelper::rebuildCache can rebuild them
    float totalDuration;
    std::array<float, max_msegs> segmentStart, segmentEnd;
-   size_t lastSegmentEvaluated = -1;
+
+   // These are values used by the editor which are per mseg but not persisted
+   float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.05;
 
    static constexpr float minimumDuration = 0.001;
 };

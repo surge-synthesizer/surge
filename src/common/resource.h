@@ -67,6 +67,8 @@
 #define IDB_MSEG_MOVEMENT 302
 #define IDB_MSEG_EDITMODE 303
 #define IDB_MINIEDIT_ICON 170
+#define IDB_MSEG_VERTICAL_SNAP 304
+#define IDB_MSEG_HORIZONTAL_SNAP 305
 // == /SVG == Do not remove this comment
 
 
