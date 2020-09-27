@@ -202,10 +202,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       if( cpvNotV0 )
       {
          offsetValue( ms->segments[idx].dragcpv, d );
-         if( snapResolution <= 0 )
-            ms->segments[idx].cpv = ms->segments[idx].dragcpv;
-         else
-            ms->segments[idx].cpv = limit_range( (float)(round(ms->segments[idx].dragcpv / snapResolution) * snapResolution ), -1.f, 1.f );
       }
       else
       {
@@ -213,7 +209,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          if( snapResolution <= 0 )
             ms->segments[idx].v0 = ms->segments[idx].dragv0;
          else
-            ms->segments[idx].v0 = limit_range( (float)(round(ms->segments[idx].dragv0 / snapResolution) * snapResolution ), -1.f, 1.f );
+         {
+            float q = ms->segments[idx].dragv0 + 1;
+            float pos = round( q / snapResolution ) * snapResolution;
+            float adj = pos - 1.0;
+            ms->segments[idx].v0 = limit_range(adj, -1.f, 1.f );
+         }
       }
    }
 
@@ -337,7 +338,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                              adjustValue( 0, false, -2 * dy / vscale, ms->vSnap );
                              // We need to deal with the cpduration also
                              auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
-                             offsetDuration( this->ms->segments[ms->n_activeSegments-1].duration, dx/tscale );
+
+                             adjustDuration(ms->n_activeSegments-1, dx/tscale, ms->hSnap, 0 );
                              this->ms->segments[ms->n_activeSegments-1].cpduration = this->ms->segments[ms->n_activeSegments-1].duration * cpv;
                           } );
          }
@@ -793,7 +795,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
    case tag_vertical_value:
    {
       // FIXME locales
-      auto fv = std::atof( ((CTextEdit *)p)->getText() );
+      auto fv = 2.f / ( std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 )  ); // -1 to 1 remeber
       ms->vSnapDefault = fv;
       if( ms->vSnap > 0 )
          ms->vSnap = ms->vSnapDefault;
@@ -801,7 +803,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
       break;
    case tag_horizontal_value:
    {
-      auto fv = std::atof( ((CTextEdit *)p)->getText() );
+      auto fv = 1.f / ( std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 ) );
       ms->hSnapDefault = fv;
       if( ms->hSnap > 0 )
          ms->hSnap = ms->hSnapDefault;
@@ -887,7 +889,7 @@ void MSEGControlRegion::rebuild()
       vbut->setValue( ms->vSnap < 0.001? 0 : 1 );
 
       char svt[256];
-      snprintf(svt, 255, "%5.3lf", ms->vSnapDefault );
+      snprintf(svt, 255, "%5d", (int)round( 2.f / ms->vSnapDefault ));
       auto vtxt = new CTextEdit( CRect( CPoint( xpos + 80 + margin , ypos ), CPoint( 70, controlHeight ) ), this, tag_vertical_value, svt );
       vtxt->setFontColor(kBlackCColor);
       vtxt->setFrameColor(kBlackCColor);
@@ -899,7 +901,7 @@ void MSEGControlRegion::rebuild()
       auto hbut = new CSwitchControl(CRect( CPoint( xpos, ypos ), CPoint( 80, controlHeight)), this, tag_horizontal_snap, associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
       addView( hbut );
       hbut->setValue( ms->hSnap  < 0.001? 0 : 1 );
-      snprintf(svt, 255, "%5.3lf", ms->hSnapDefault );
+      snprintf(svt, 255, "%5d", (int)round( 1.f / ms->hSnapDefault ));
       auto htxt = new CTextEdit( CRect( CPoint( xpos + 80 + margin , ypos ), CPoint( 70, controlHeight ) ), this, tag_horizontal_value, svt );
       htxt->setFontColor(kBlackCColor);
       htxt->setFrameColor(kBlackCColor);
