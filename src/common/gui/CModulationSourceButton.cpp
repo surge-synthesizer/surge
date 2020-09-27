@@ -367,7 +367,10 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
       ** modulators wll also drop onto targets if you also uncomment the sge->openBlah below
       */
       if( is_metacontroller || ( buttons & kControl ) )
+      {
          controlstate = cs_maybeswap;
+         dragStart = where;
+      }
       return kMouseEventHandled;
    }
 
@@ -449,6 +452,14 @@ CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CB
 {
    if( controlstate == cs_maybeswap )
    {
+      float thresh = 0;
+      thresh += (where.x - dragStart.x) * (where.x - dragStart.x);
+      thresh += (where.y - dragStart.y) * (where.y - dragStart.y);
+      thresh = sqrt(thresh);
+      if (thresh < 3)
+      {
+         return CCursorHidingControl::onMouseMoved(where, buttons);
+      }
       if( dragLabel == nullptr )
       {
          std::string lb = label;
@@ -505,7 +516,7 @@ void CModulationSourceButton::onMouseMoveDelta(CPoint& where,
                                                double dx,
                                                double dy)
 {
-   if ((controlstate) && (buttons & kLButton))
+   if ((controlstate == cs_drag) && (buttons & kLButton))
    {
       value += dx / (double)(getWidth());
       value = limit_range(value, 0.f, 1.f);

@@ -23,6 +23,7 @@
 #include "CPatchBrowser.h"
 #include "CStatusPanel.h"
 #include "COscillatorDisplay.h"
+#include "CVerticalLabel.h"
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
 #include "CLFOGui.h"
@@ -885,13 +886,6 @@ void SurgeGUIEditor::refresh_mod()
          // update the LFO title label
          std::string modname = modulatorName(modsource_editor, true);
 
-         // gross!
-         Surge::Storage::findReplaceSubstring(modname, std::string("-"), std::string(""));
-         Surge::Storage::findReplaceSubstring(modname, std::string(" "), std::string(""));
-         
-         // one letter per row
-         Surge::Storage::makeStringVertical(modname);
-
          lfoNameLabel->setText(modname.c_str());
       }
 
@@ -1268,8 +1262,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_jogfx->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_jogfx);
 
-   lfoNameLabel = new CMultiLineTextLabel(CRect(8, 480, 19, 563));
-   lfoNameLabel->setLineLayout(CMultiLineTextLabel::LineLayout::wrap);
+   lfoNameLabel = new CVerticalLabel(CRect(8, 480, 19, 563), "" );
    lfoNameLabel->setTransparency(true);
    VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
    lfoNameLabel->setFont(fnt);

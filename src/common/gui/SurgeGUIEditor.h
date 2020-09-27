@@ -344,7 +344,7 @@ public:
    void promptForMiniEdit( const std::string &value, const std::string & prompt, const std::string & title, std::function<void( const std::string & )> onOK );
 private:
    
-   VSTGUI::CMultiLineTextLabel* lfoNameLabel = nullptr;
+   VSTGUI::CTextLabel* lfoNameLabel = nullptr;
    VSTGUI::CTextLabel* fxPresetLabel = nullptr;
 
    std::string modulatorName(int ms, bool forButton);

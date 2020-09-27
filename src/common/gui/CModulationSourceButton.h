@@ -109,7 +109,7 @@ public:
    }
 
    VSTGUI::CControl *dragLabel = nullptr;
-   VSTGUI::CPoint dragOffset;
+   VSTGUI::CPoint dragOffset, dragStart;
    
    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };
