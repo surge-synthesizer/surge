@@ -262,7 +262,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/common/gui/UIInstrumentation.cpp
   src/common/gui/guihelpers.cpp
-  )
+        src/common/gui/CVerticalLabel.cpp)
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp
