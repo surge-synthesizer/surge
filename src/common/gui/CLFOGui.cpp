@@ -1065,6 +1065,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
             if( sge )
             {
+               // FIXME - press this button twice and you end up hosed
                auto mse = new MSEGEditor(lfodata, ms, skin, associatedBitmapStore);
                auto vs = mse->getViewSize().getWidth();
                float xp = (skin->getWindowSizeX() - (vs + 8)) * 0.5;

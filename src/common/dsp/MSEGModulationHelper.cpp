@@ -38,7 +38,6 @@ void rebuildCache( MSEGStorage *ms )
    }
 
    ms->totalDuration = totald;
-   ms->lastSegmentEvaluated = -1;
 
    for( int i=0; i<ms->n_activeSegments; ++i )
    {
@@ -46,7 +45,7 @@ void rebuildCache( MSEGStorage *ms )
    }
 }
 
-float valueAt(int ip, float fup, float df, MSEGStorage *ms)
+float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEvaluated, float msegState[5])
 {
    if( ms->n_activeSegments == 0 ) return df;
 
@@ -77,10 +76,10 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms)
    if( idx < 0 ) return 0;
 
    bool segInit = false;
-   if( idx != ms->lastSegmentEvaluated )
+   if( idx != lastSegmentEvaluated )
    {
       segInit = true;
-      ms->lastSegmentEvaluated = idx;
+      lastSegmentEvaluated = idx;
    }
    
    float pd = up - ms->segmentStart[idx];
@@ -100,12 +99,12 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms)
    }
    case MSEGStorage::segment::BROWNIAN:
    {
-      const float sdt = 0.001;
-      static constexpr int validx = 0, lasttime = 1;
+      static constexpr int validx = 0, lasttime = 1, outidx = 2;
       if( segInit )
       {
-         r.state[validx] = r.v0;
-         r.state[lasttime] = 0;
+         msegState[validx] = r.v0;
+         msegState[outidx] = r.v0;
+         msegState[lasttime] = 0;
       }
       float targetTime = pd/r.duration;
       if( targetTime >= 1 )
@@ -116,32 +115,46 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms)
       {
          res = r.v0;
       }
-      else if( targetTime <= r.state[lasttime] )
+      else if( targetTime <= msegState[lasttime] )
       {
-         res = r.state[validx];
+         res = msegState[outidx];
       }
       else
       {
-         while( r.state[lasttime] < targetTime && r.state[lasttime] < 1 )
+         while( msegState[lasttime] < targetTime && msegState[lasttime] < 1 )
          {
-            float dt = std::min( sdt, targetTime - r.state[lasttime] );
-            
-            if( r.state[lasttime] < 1 )
+            auto ncd = r.cpduration / r.duration; // 0-1
+            // OK so the closer this is to 1 the more spiky we should be, which is basically
+            // increasing the dt.
+
+            // The slowest is 5 steps (max dt is 0.2)
+            float sdt = 0.2f * ( 1 - ncd ) * ( 1 - ncd );
+            float dt = std::min( std::max( sdt, 0.0001f ), 1 - msegState[lasttime] );
+
+            if( msegState[lasttime] < 1 )
             {
-               float lincoef  = ( r.nv1 - r.state[validx] ) / ( 1 - r.state[lasttime] );
-               float randcoef = 0.1 * r.cpduration / r.duration;
+               float lincoef  = ( r.nv1 - msegState[validx] ) / ( 1 - msegState[lasttime] );
+               float randcoef = 0.1 * r.cpv; // CPV is on -1,1
                
-               r.state[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
-               r.state[lasttime] += dt;
+               msegState[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
+               msegState[lasttime] += dt;
             }
             else
-               r.state[validx] = r.nv1;
+               msegState[validx] = r.nv1;
          }
-         res = r.state[validx];
+         if( r.cpv < 0 )
+         {
+            // Snap to between 1 and 24 values.
+            int a = floor( - r.cpv * 24 ) + 1;
+            msegState[outidx] = floor( msegState[validx] * a ) * 1.f / a;
+         }
+         else
+         {
+            msegState[outidx] = msegState[validx];
+         }
+         msegState[outidx] = limit_range(msegState[outidx],-1.f, 1.f );
+         res = msegState[outidx];
       }
-
-      ms->segments[idx].state[validx] = r.state[validx];
-      ms->segments[idx].state[lasttime] = r.state[lasttime];
       
       break;
    }
@@ -545,6 +558,7 @@ void constrainControlPointAt( MSEGStorage *ms, int idx )
    }
    break;
    case MSEGStorage::segment::QUADBEZ:
+   case MSEGStorage::segment::BROWNIAN:
    {
       // Constrain time but space is in -1,1
       ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );

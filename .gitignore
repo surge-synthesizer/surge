@@ -84,6 +84,9 @@ buildmac/
 buildwin/
 build-arm/
 buildiwyu/
+cmake-build/
+cmake-build-debug/
+cmake-build-release/
 
 # Reaper
 *.RPP-bak
