@@ -736,6 +736,15 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 
    CCursorHidingControl::onMouseUp(where, buttons);
 
+   // "elastic edit" - resets to the value before the drag started if Alt is held
+   if (buttons & kAlt)
+   {
+      *edit_value = oldVal;
+      setDirty();
+      if (isDirty() && listener)
+         listener->valueChanged(this);
+   }
+
    if (controlstate)
    {
 #if MAC
@@ -750,6 +759,7 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       // getFrame()->setCursor( VSTGUI::kCursorDefault );
       
       edit_value = nullptr;
+
 
       attachCursor();
    }
