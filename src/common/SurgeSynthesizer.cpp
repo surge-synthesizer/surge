@@ -3065,7 +3065,7 @@ void SurgeSynthesizer::loadFromDawExtraState() {
       }
       catch( Tunings::TuningError &e )
       {
-         Surge::UserInteractions::promptError( e.what(), "Unable to restore tuning" );
+         Surge::UserInteractions::promptError( e.what(), "Unable to restore tuning!" );
          storage.retuneToStandardTuning();
       }
    }
@@ -3083,7 +3083,7 @@ void SurgeSynthesizer::loadFromDawExtraState() {
       }
       catch( Tunings::TuningError &e )
       {
-         Surge::UserInteractions::promptError( e.what(), "Unable to restore mapping" );
+         Surge::UserInteractions::promptError( e.what(), "Unable to restore mapping!" );
          storage.retuneToStandardTuning();
       }
       

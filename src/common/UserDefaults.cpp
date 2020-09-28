@@ -58,7 +58,7 @@ void readDefaultsFile(std::string fn, bool forceRead=false)
                 std::ostringstream oss;
                 oss << "This version of Surge only reads version 1 defaults. You user defaults version is "
                     << version << ". Defaults ignored";
-                Surge::UserInteractions::promptError(oss.str(), "Defaults File Version Error");
+                Surge::UserInteractions::promptError(oss.str(), "File Version Error");
                 return;
             }
 

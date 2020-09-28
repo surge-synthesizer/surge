@@ -175,26 +175,26 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
       auto id = vt_read_int32BE(fxp.fxID);
 
       std::ostringstream oss;
-      oss << "Unable to load patch " << patchName << ". ";
-      if( cm != 'CcnK' )
-      {
-         oss << "ChunkMagic is not 'CcnK'. ";
-      }
-      if( fm != 'FPCh' )
-      {
-         oss << "FxMagic is not 'FPCh'. ";
-      }
-      if( id != 'cjs3' )
-      {
-         union {
-            char c[4];
-            int id;
-         } q;
-         q.id = id;
-         oss << "Synth id is '" << q.c[0] << q.c[1] << q.c[2] << q.c[3] << "'; Surge expected 'cjs3'. ";
-      }
-      oss << "This error usually occurs when you attempt to load an .fxp file for an instrument other than Surge into Surge.";
-      Surge::UserInteractions::promptError( oss.str(), "Loading Non-Surge FXP" );
+      oss << "Unable to load " << patchName << ".fxp!";
+      //if( cm != 'CcnK' )
+      //{
+      //   oss << "ChunkMagic is not 'CcnK'. ";
+      //}
+      //if( fm != 'FPCh' )
+      //{
+      //   oss << "FxMagic is not 'FPCh'. ";
+      //}
+      //if( id != 'cjs3' )
+      //{
+      //   union {
+      //      char c[4];
+      //      int id;
+      //   } q;
+      //   q.id = id;
+      //   oss << "Synth ID is '" << q.c[0] << q.c[1] << q.c[2] << q.c[3] << "'; Surge expected 'cjs3'. ";
+      //}
+      oss << "This error usually occurs when you attempt to load an .fxp that belongs to another plugin into Surge.";
+      Surge::UserInteractions::promptError( oss.str(), "Unknown FXP File" );
       return false;
    }
 
@@ -204,7 +204,7 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
    size_t actual_cs = fread(data, 1, cs, f);
    int error = ferror(f);
    if (error)
-      perror("error while loading patch");
+      perror("Error while loading patch!");
    fclose(f);
 
    storage.getPatch().comment = "";
@@ -215,7 +215,7 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
    }
    else
    {
-      storage.getPatch().category = "direct-load";
+      storage.getPatch().category = "Drag & Drop";
    }
    current_category_id = categoryId;
    storage.getPatch().name = patchName;
@@ -239,16 +239,16 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
           }
           catch( Tunings::TuningError &e )
           {
-             Surge::UserInteractions::promptError( e.what(), "Error restoring tunings" );
+             Surge::UserInteractions::promptError( e.what(), "Error restoring tuning!" );
              storage.retuneToStandardTuning();
           }
        }
        else
        {
-           auto okc = Surge::UserInteractions::promptOKCancel(std::string("The patch you loaded contains a recommended tuning, but you ") +
-                                                              "already have a tuning in place. Do you want to override your current tuning " +
-                                                              "with the patch sugeested tuning?",
-                                                              "Replace Tuning? (The rest of the patch will still load).");
+           auto okc = Surge::UserInteractions::promptOKCancel(std::string("Loaded patch contains a custom tuning, but there is ") +
+                                                              "already a user-selected tuning in place. Do you want to replace the currently loaded tuning " +
+                                                              "with the tuning stored in the patch? (The rest of the patch will load normally.)",
+                                                              "Replace Tuning");
            if( okc == Surge::UserInteractions::MessageResult::OK )
            {
               try {
@@ -260,7 +260,7 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
               }
               catch( Tunings::TuningError &e )
               {
-                 Surge::UserInteractions::promptError( e.what(), "Error restoring tunings" );
+                 Surge::UserInteractions::promptError( e.what(), "Error Restoring Tuning" );
                  storage.retuneToStandardTuning();
               }
            }
@@ -338,18 +338,14 @@ string SurgeSynthesizer::getUserPatchDirectory()
 }
 string SurgeSynthesizer::getLegacyUserPatchDirectory()
 {
-#if MAC || LINUX
-   return storage.datapath + "patches_user/";
-#else
-   return storage.datapath + "patches_user\\";
-#endif
+   return storage.datapath + "patches_user" + PATH_SEPARATOR;
 }
 
 
 void SurgeSynthesizer::savePatch()
 {
    if (storage.getPatch().category.empty())
-      storage.getPatch().category = "default";
+      storage.getPatch().category = "Default";
 
    fs::path savepath = getUserPatchDirectory();
    savepath.append(storage.getPatch().category);

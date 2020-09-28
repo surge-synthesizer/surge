@@ -114,8 +114,8 @@ void SurgeVst3Processor::createSurge()
 
    if (!surgeInstance.get())
    {
-      Surge::UserInteractions::promptError("Unable to allocate SurgeSynthesizer",
-                                           "Out of memory");
+      Surge::UserInteractions::promptError("Unable to allocate SurgeSynthesizer!",
+                                           "Out Of Memory");
 
       return;
    }
@@ -1078,10 +1078,10 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
             if (res != Steinberg::kResultTrue)
             {
                std::ostringstream oss;
-               oss << "Your host failed to zoom your VST3 to scale " << e->getZoomFactor() << ". "
-                   << "Surge will now attempt to reset your zoom to 100%. You may see several "
+               oss << "Your host failed to zoom VST3 to " << e->getZoomFactor() << " scale. "
+                   << "Surge will now attempt to reset the zoom level to 100%. You may see several "
                    << "other error messages in the course of this being resolved.";
-               Surge::UserInteractions::promptError(oss.str(), "Host VST3 Zoom Error" );
+               Surge::UserInteractions::promptError(oss.str(), "VST3 Host Zoom Error" );
                e->setZoomFactor(100);
             }
         }

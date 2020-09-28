@@ -653,7 +653,7 @@ bool Vst2PluginInstance::tryInit()
       
       editor = editorTmp.release();
    } catch (std::bad_alloc err) {
-      Surge::UserInteractions::promptError(err.what(), "Out of memory");
+      Surge::UserInteractions::promptError(err.what(), "Out of memory!");
       state = DEAD;
       return false;
    } catch (Surge::Error err) {

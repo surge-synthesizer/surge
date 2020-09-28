@@ -401,10 +401,8 @@ bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
              (_stricmp(fPath.extension().generic_string().c_str(), ".wav") != 0))
          {
             Surge::UserInteractions::promptError(
-                std::string(
-                    "Surge only supports drag-and-drop of .wt or .wav wavetables onto the oscillator.") +
-                "You dropped a file with extension " + fPath.extension().generic_string(),
-                "Please drag a valid file type!");
+                std::string("Surge only supports drag-and-drop of .wt or .wav wavetable files onto the oscillator! You have dropped a file with extension ") + fPath.extension().generic_string() + ".",
+                "Wavetable Import Error");
          }
          else
          {
@@ -414,8 +412,8 @@ bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
       else
       {
          Surge::UserInteractions::promptError(
-             "Surge only supports drag-and-drop of files onto the oscillator.",
-             "Please drop a file!");
+             "Surge only supports drag-and-drop of .wt or .wav wavetable files onto the oscillator!",
+             "Wavetable Import Error");
       }
    }
 
@@ -555,7 +553,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
           }
           if( scene == -1 || oscNum == -1 )
           {
-             Surge::UserInteractions::promptError( "Unable to determine which oscillator has data for export", "Export" );
+             Surge::UserInteractions::promptError( "Unable to determine which oscillator has wavetable data ready for export!", "Export Error" );
           }
           else
           {
