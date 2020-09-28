@@ -240,7 +240,9 @@ public:
    std::string hostProgram = "Unknown Host";
    bool activateExtraOutputs = true;
    void setupActivateExtraOutputs();
-   
+
+   void changeModulatorSmoothing( ControllerModulationSource::SmoothingMode m );
+
    // these have to be thread-safe, so keep private
 private:
    
@@ -249,7 +251,7 @@ private:
    void switch_toggled();
 
    // midicontrol-interpolators
-   static const int num_controlinterpolators = 32;
+   static const int num_controlinterpolators = 128;
    ControllerModulationSource mControlInterpolator[num_controlinterpolators];
    bool mControlInterpolatorUsed[num_controlinterpolators];
 
@@ -258,4 +260,6 @@ private:
    void ReleaseControlInterpolator(int Idx);
    ControllerModulationSource* ControlInterpolator(int Idx);
    ControllerModulationSource* AddControlInterpolator(int Idx, bool& AlreadyExisted);
+
+   ControllerModulationSource::SmoothingMode smoothingMode;
 };
