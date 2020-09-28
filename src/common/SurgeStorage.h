@@ -426,8 +426,8 @@ const char fut_vintageladder_subtypes[6][32] =
 {
    "Strong",
    "Strong Compensated",
-   "Mild",
-   "Mild Compensated",
+   "Dampened",
+   "Dampened Compensated",
 };
 
 const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4};
