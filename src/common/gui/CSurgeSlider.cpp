@@ -739,6 +739,7 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
    // "elastic edit" - resets to the value before the drag started if Alt is held
    if (buttons & kAlt)
    {
+      hasBeenDraggedDuringMouseGesture = false;
       *edit_value = oldVal;
       setDirty();
       if (isDirty() && listener)
