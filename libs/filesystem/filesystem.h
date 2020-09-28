@@ -37,15 +37,16 @@ namespace std { namespace experimental { namespace filesystem {
         operator std::string();
         
         void append(std::string s);
+        path& operator /=(const path& path) { append(path.p); return *this; }
         
         const char* c_str();
         
         std::string generic_string() const;
         
-        path filename();
-        path stem();
+        path filename() const;
+        path stem() const;
        
-        path extension();
+        path extension() const;
     };
     
     class file {

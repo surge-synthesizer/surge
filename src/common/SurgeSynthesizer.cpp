@@ -2502,8 +2502,8 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
    }
    if( synth->has_patchid_file )
    {
-      fs::path p(synth->patchid_file);
-      auto s = p.stem().generic_string();
+      auto p(string_to_path(synth->patchid_file));
+      auto s = path_to_string(p.stem());
       synth->has_patchid_file = false;
       synth->allNotesOff();
       synth->loadPatchByPath( synth->patchid_file, -1, s.c_str() );

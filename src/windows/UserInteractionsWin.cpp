@@ -1,26 +1,89 @@
+#include "UserInteractions.h"
+#include "SurgeError.h"
+
 #include <windows.h>
 #include <shlobj.h>
 #include <commdlg.h>
 #include <string>
-#include <iostream>
+#include <fstream>
 #include <sstream>
+#include <system_error>
 
-#include "UserInteractions.h"
-#include "SurgeGUIEditor.h"
-
-namespace Surge
+namespace
 {
 
-namespace UserInteractions
+std::string wideToUtf8(const std::wstring& wide)
+{
+   if (wide.empty())
+      return std::string();
+
+   const auto size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, wide.c_str(), wide.size(),
+                                         nullptr, 0, nullptr, nullptr);
+   if (size)
+   {
+      std::string utf8;
+      utf8.resize(size);
+      if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, wide.c_str(), wide.size(), &utf8[0],
+                              utf8.size(), nullptr, nullptr))
+         return utf8;
+   }
+   throw std::system_error(GetLastError(), std::system_category());
+}
+
+std::wstring utf8ToWide(const std::string& utf8)
+{
+   if (utf8.empty())
+      return std::wstring();
+
+   const auto size =
+       MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.c_str(), utf8.size(), nullptr, 0);
+   if (size)
+   {
+      std::wstring wide;
+      wide.resize(size);
+      if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.c_str(), utf8.size(), &wide[0],
+                              wide.size()))
+         return wide;
+   }
+   throw std::system_error(GetLastError(), std::system_category());
+}
+
+void browseFolder(const std::string& initialDirectory,
+                  const std::function<void(std::string)>& callbackOnOpen)
+{
+   static auto browseCallbackProc = [](HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData) {
+      if (uMsg == BFFM_INITIALIZED)
+         SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+      return 0;
+   };
+
+   auto path_param = utf8ToWide(initialDirectory);
+
+   BROWSEINFO bi{};
+   bi.lpszTitle = L"Browse for folder...";
+   bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+   bi.lpfn = browseCallbackProc;
+   bi.lParam = LPARAM(path_param.c_str());
+
+   if (auto pidl = SHBrowseForFolder(&bi))
+   {
+      WCHAR path[MAX_PATH];
+      SHGetPathFromIDList(&*pidl, path);
+      CoTaskMemFree(pidl);
+      callbackOnOpen(wideToUtf8(path));
+   }
+}
+
+} // anonymous namespace
+
+namespace Surge::UserInteractions
 {
 
 void promptError(const std::string &message, const std::string &title,
                  SurgeGUIEditor *guiEditor)
 {
-    MessageBox(::GetActiveWindow(),
-               message.c_str(),
-               title.c_str(),
-               MB_OK | MB_ICONERROR );
+   MessageBox(::GetActiveWindow(), utf8ToWide(message).c_str(), utf8ToWide(title).c_str(),
+              MB_OK | MB_ICONERROR);
 }
 
 void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
@@ -31,103 +94,47 @@ void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
 void promptInfo(const std::string &message, const std::string &title,
                 SurgeGUIEditor *guiEditor)
 {
-    MessageBox(::GetActiveWindow(),
-               message.c_str(),
-               title.c_str(),
-               MB_OK | MB_ICONINFORMATION );
+   MessageBox(::GetActiveWindow(), utf8ToWide(message).c_str(), utf8ToWide(title).c_str(),
+              MB_OK | MB_ICONINFORMATION);
 }
-
 
 MessageResult promptOKCancel(const std::string &message, const std::string &title,
                              SurgeGUIEditor *guiEditor)
 {
-    if (MessageBox(::GetActiveWindow(),
-                   message.c_str(),
-                   title.c_str(),
-                   MB_YESNO | MB_ICONQUESTION) != IDYES)
-        return UserInteractions::CANCEL;
+   if (MessageBox(::GetActiveWindow(), utf8ToWide(message).c_str(), utf8ToWide(title).c_str(),
+                  MB_YESNO | MB_ICONQUESTION) != IDYES)
+      return UserInteractions::CANCEL;
 
-    return UserInteractions::OK;
+   return UserInteractions::OK;
 }
 
 void openURL(const std::string &url)
 {
-    ShellExecute(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+   ShellExecute(nullptr, L"open", utf8ToWide(url).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
 void showHTML( const std::string &html )
 {
-    TCHAR lpTempPathBuffer[MAX_PATH];
+   WCHAR pathBuf[MAX_PATH];
+   if (!GetTempPath(MAX_PATH, pathBuf))
+      return;
 
-    if (!GetTempPath(MAX_PATH, lpTempPathBuffer))
-       return;
+   // Prepending file:// opens in the browser instead of the associated app for .html (which might
+   // be unset)
+   std::wostringstream fns;
+   fns << L"file://" << pathBuf << L"surge-data." << rand() << L".html";
 
-    std::ostringstream fns;
-    fns << lpTempPathBuffer << "surge-data." << rand() << ".html";
-
-    FILE *f = fopen(fns.str().c_str(), "w" );
-    if( f )
-    {
-        fprintf( f, "%s", html.c_str());
-        fclose(f);
-        std::string url = std::string("file:///") + fns.str();
-        openURL(url);
-    }
+   auto fileName(fns.str());
+   std::ofstream out(fileName.c_str() + 7);
+   if (out << html << std::flush)
+      ShellExecute(nullptr, L"open", fileName.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
 void openFolderInFileBrowser(const std::string& folder)
 {
-   std::string url = "file://" + folder;
-   UserInteractions::openURL(url);
+   openURL(folder);
 }
 
-// thanks https://stackoverflow.com/questions/12034943/win32-select-directory-dialog-from-c-c  
-static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM lParam, LPARAM lpData)
-{
-
-    if(uMsg == BFFM_INITIALIZED)
-    {
-        std::string tmp = (const char *) lpData;
-        std::cout << "path: " << tmp << std::endl;
-        SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
-    }
-
-    return 0;
-}
-
-void BrowseFolder(std::string saved_path, std::function<void(std::string)> cb)
-{
-    TCHAR path[MAX_PATH];
-
-    const char * path_param = saved_path.c_str();
-
-    BROWSEINFO bi = { 0 };
-    bi.lpszTitle  = ("Browse for folder...");
-    bi.ulFlags    = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-    bi.lpfn       = BrowseCallbackProc;
-    bi.lParam     = (LPARAM) path_param;
-
-    LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
-
-    if ( pidl != 0 )
-    {
-        //get the name of the folder and put it in path
-        SHGetPathFromIDList ( pidl, path );
-
-        //free memory used
-        IMalloc * imalloc = 0;
-        if ( SUCCEEDED( SHGetMalloc ( &imalloc )) )
-        {
-            imalloc->Free ( pidl );
-            imalloc->Release ( );
-        }
-
-        cb( path );
-    }
-}
-
-
-  
 void promptFileOpenDialog(const std::string& initialDirectory,
                           const std::string& filterSuffix,
                           const std::string& filterDescription,
@@ -136,44 +143,40 @@ void promptFileOpenDialog(const std::string& initialDirectory,
                           bool canCreateDirectories,
                           SurgeGUIEditor* guiEditor)
 {
-  if( canSelectDirectories )
-    {
-      BrowseFolder( initialDirectory, callbackOnOpen );
+   if (canSelectDirectories)
+   {
+      browseFolder(initialDirectory, callbackOnOpen);
       return;
-    }
+   }
+
    // With many thanks to
    // https://www.daniweb.com/programming/software-development/code/217307/a-simple-getopenfilename-example
 
    // this also helped!
    // https://stackoverflow.com/questions/34201213/c-lpstr-and-string-trouble-with-zero-terminated-strings
+   std::wstring fullFilter;
+   fullFilter.append(utf8ToWide(filterDescription));
+   fullFilter.push_back(0);
+   fullFilter.append(utf8ToWide("*" + filterSuffix));
+   fullFilter.push_back(0);
 
-   std::string fullFilter;
-   fullFilter.append(filterDescription);
-   fullFilter.push_back('\0');
-   fullFilter.append("*" + filterSuffix);
-   fullFilter.push_back('\0');
-
-   char szFile[1024];
-   OPENFILENAME ofn;
-   ZeroMemory(&ofn, sizeof(ofn));
+   std::wstring initialDirectoryNative(utf8ToWide(initialDirectory));
+   WCHAR szFile[1024];
+   OPENFILENAME ofn = {};
    ofn.lStructSize = sizeof(ofn);
-   ofn.hwndOwner = NULL;
+   ofn.hwndOwner = nullptr;
    ofn.lpstrFile = szFile;
-   ofn.lpstrFile[0] = '\0';
-   ofn.nMaxFile = sizeof(szFile);
+   ofn.lpstrFile[0] = 0;
+   ofn.nMaxFile = std::size(szFile);
    ofn.lpstrFilter = fullFilter.c_str();
    ofn.nFilterIndex = 0;
-   ofn.lpstrFileTitle = NULL;
+   ofn.lpstrFileTitle = nullptr;
    ofn.nMaxFileTitle = 0;
-   ofn.lpstrInitialDir = initialDirectory.c_str();
+   ofn.lpstrInitialDir = initialDirectoryNative.c_str();
    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
    if (GetOpenFileName(&ofn))
-   {
-      callbackOnOpen(ofn.lpstrFile);
-   }
+      callbackOnOpen(wideToUtf8(ofn.lpstrFile));
 }
-};
 
-};
-
+} // namespace Surge::UserInteractions
