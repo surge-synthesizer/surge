@@ -1268,7 +1268,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          {
             if( param_ptr[i]->can_deactivate() )
             {
-               if( param_ptr[i]->ctrlgroup == cg_LFO ) // this is the "RATE" special case
+               if ((param_ptr[i]->ctrlgroup == cg_LFO) || // this is the LFO rate special case
+                   (param_ptr[i]->ctrlgroup == cg_GLOBAL && param_ptr[i]->ctrltype == ct_freq_hpf)) // this is the global highpass special case 
                   param_ptr[i]->deactivated = false;
                else
                   param_ptr[i]->deactivated = true;
