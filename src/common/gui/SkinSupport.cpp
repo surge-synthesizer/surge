@@ -656,7 +656,7 @@ VSTGUI::CColor Skin::getColor(const std::string &iid, const VSTGUI::CColor& def,
    if( noLoops.find( id ) != noLoops.end() )
    {
       std::ostringstream oss;
-      oss << "Resoving color '" << id << "' resulted in a loop. Please check your XML. Colors which were visited during traversal are: ";
+      oss << "Resoving color '" << id << "' resulted in a loop. Please check the skin definition XML file. Colors which were visited during traversal are: ";
       for( auto l : noLoops )
          oss << "'" << l << "' ";
       // FIXME ERROR

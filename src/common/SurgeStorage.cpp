@@ -430,10 +430,10 @@ bailOnPortable:
    {
       WindowWT.size = 0;
       std::ostringstream oss;
-      oss << "Unable to load " << datapath << "/windows.wt. This file is required for Surge to work "
+      oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for Surge to work "
           << "properly. This occurs when Surge is incorrectly installed and its resources are not found at "
 #if MAC
-          << "the global or user local Library/Application Support/Surge directory."
+          << "the global or local user Library/Application Support/Surge directory."
 #endif
 #if WINDOWS
           << "%ProgramData%\\Surge directory."
@@ -456,10 +456,10 @@ bailOnPortable:
       TiXmlDocument doc;
       if( ! doc.LoadFile(dsf) || doc.Error() )
       {
-         std::cout << "Unable to load  '" << dsf << "'"
+         std::cout << "Unable to load  '" << dsf << "'!"
                    << std::endl;
-         std::cout << "Unable to parse\nError is:\n"
-                   << doc.ErrorDesc() << " at row=" << doc.ErrorRow() << " col=" << doc.ErrorCol()
+         std::cout << "Unable to parse!\nError is:\n"
+                   << doc.ErrorDesc() << " at row " << doc.ErrorRow() << ", column " << doc.ErrorCol()
                    << std::endl;
       }
       else
@@ -577,8 +577,8 @@ void SurgeStorage::refresh_patchlist()
    if(totalFactory == 0)
    {
       std::ostringstream ss;
-      ss << "Surge was unable to load factory patches from " << datapath
-         << ". Please reinstall Surge!";
+      ss << "Surge was unable to load factory patches from '" << datapath
+         << "'. Please reinstall Surge!";
       Surge::UserInteractions::promptError(ss.str(),
                                            "Surge Installation Error");
 
@@ -814,8 +814,8 @@ void SurgeStorage::refresh_wtlist()
    if (wt_category.size() == 0 || wt_list.size() == 0)
    {
       std::ostringstream ss;
-      ss << "Surge was unable to load wavetables from " << datapath
-         << ". Please reinstall Surge!";
+      ss << "Surge was unable to load wavetables from '" << datapath
+         << "'. Please reinstall Surge!";
       Surge::UserInteractions::promptError(ss.str(),
                                            "Surge Installation Error" );
    }
@@ -969,7 +969,7 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt, OscillatorStorage *os
    else
    {
        std::ostringstream oss;
-       oss << "Unable to load file with extension " << extension << ". Surge only supports .wav and .wt wavetable files!";
+       oss << "Unable to load file with extension " << extension << "! Surge only supports .wav and .wt wavetable files!";
        Surge::UserInteractions::promptError(oss.str(), "Error" );
    }
 }
@@ -1794,7 +1794,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
    if( ! doc.SaveFile( fn.c_str() ) )
    {
       std::ostringstream oss;
-      oss << "Unable to save MIDI settings '" << fn << "'";
+      oss << "Unable to save MIDI settings to '" << fn << "'!";
       Surge::UserInteractions::promptError( oss.str(), "Error" );
    }
 }

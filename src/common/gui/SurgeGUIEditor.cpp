@@ -421,7 +421,7 @@ void SurgeGUIEditor::idle()
          {
             std::ostringstream oss;
 
-            oss << "Loading  of patch number " <<  synth->patchid_queue << " has not occured after 30 idle cycles. "
+            oss << "Loading patch " <<  synth->patchid_queue << " has not occured after 30 idle cycles. "
                 << "This usually means that the audio system is not running in your host. Audio system has to be "
                 << "running in order to load Surge patches.";
             Surge::UserInteractions::promptError(oss.str(), "Patch Loading Error" );
@@ -4865,7 +4865,7 @@ void SurgeGUIEditor::toggleTuning()
             this->synth->storage.remapToKeyboard(Tunings::parseKBMData(mappingCacheForToggle));
       } catch( Tunings::TuningError &e )
       {
-         Surge::UserInteractions::promptError( e.what(), "Error When Toggling Tuning" );
+         Surge::UserInteractions::promptError( e.what(), "Microtuning Error" );
       }
 
    }
@@ -4906,7 +4906,7 @@ void SurgeGUIEditor::tuningFileDropped(std::string fn)
    }
    catch( Tunings::TuningError &e )
    {
-      Surge::UserInteractions::promptError( e.what(), "Tuning Error Applying Scale" );
+      Surge::UserInteractions::promptError( e.what(), "SCL Error" );
    }
 }
 
@@ -4918,7 +4918,7 @@ void SurgeGUIEditor::mappingFileDropped(std::string fn)
    }
    catch( Tunings::TuningError &e )
    {
-      Surge::UserInteractions::promptError( e.what(), "Tuning Error Applying Mapping" );
+      Surge::UserInteractions::promptError( e.what(), "KBM Error" );
    }
 }
 
@@ -4966,8 +4966,8 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    if( zoomFactorRecursionGuard > 3 )
    {
       std::ostringstream oss;
-      oss << "Surge has recursed into setZoomFactor too many times. This indicates an error in the interaction "
-          << "Surge, your Host's Zoom implementation, and your screen size. Please report this error to the "
+      oss << "Surge has recursed into setZoomFactor too many times. This indicates an error in the interaction between "
+          << "Surge, your host's zoom implementation, and your screen size. Please report this error to the "
           << "Surge Synth Team on GitHub, since we think it should never happen. But it seems it has!";
       // Choose to not show this error.  It only ever happens in Studio one. See issue 2397.
       // Surge::UserInteractions::promptError( oss.str(), "Surge Software Zoom Error" );
@@ -5686,7 +5686,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                        if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
                        {
                           auto &db = Surge::UI::SkinDB::get();
-                          auto msg = std::string( "Unable to load skin. Reverting the skin to Surge Classic.\n\nSkin error:\n" )
+                          auto msg = std::string( "Unable to load skin! Reverting the skin to Surge Classic.\n\nSkin error:\n" )
                              + db.getAndResetErrorString();
                           this->currentSkin = db.defaultSkin( &( this->synth->storage ) );
                           this->currentSkin->reloadSkin(this->bitmapStore);
@@ -6806,7 +6806,7 @@ void SurgeGUIEditor::setupSkinFromEntry( const Surge::UI::SkinDB::Entry &entry )
    if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
    {
       std::ostringstream oss;
-      oss << "Unable to load skin '" << entry.root << "/" << entry.name << "'. Reverting the skin to Surge Classic.\n\nSkin Error:\n"
+      oss << "Unable to load " << entry.root << entry.name << " skin! Reverting the skin to Surge Classic.\n\nSkin Error:\n"
           << db.getAndResetErrorString();
 
       auto msg = std::string( oss.str() );

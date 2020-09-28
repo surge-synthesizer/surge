@@ -339,7 +339,7 @@ bool CPatchBrowser::onDrop(VSTGUI::DragEventData data )
          if ((_stricmp(fPath.extension().generic_string().c_str(), ".fxp") != 0) )
          {
             Surge::UserInteractions::promptError(
-               std::string( "Surge only supports drag-and-drop of .fxp files onto the patch browser. You have dropped a file with extension ") + fPath.extension().generic_string() + ".",
+               std::string( "Surge only supports drag-and-drop of .fxp files onto the patch browser! You have dropped a file with extension ") + fPath.extension().generic_string() + ".",
                "Patch Import Error");
          }
          else
@@ -352,7 +352,7 @@ bool CPatchBrowser::onDrop(VSTGUI::DragEventData data )
       else
       {
          Surge::UserInteractions::promptError(
-             "Surge only supports drag-and-drop of .fxp files onto the patch browser.",
+             "Surge only supports drag-and-drop of .fxp files onto the patch browser!",
              "Patch Import Error");
       }
    }

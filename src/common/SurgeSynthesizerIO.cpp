@@ -245,9 +245,9 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
        }
        else
        {
-           auto okc = Surge::UserInteractions::promptOKCancel(std::string("The patch you loaded contains a recommended tuning, but you ") +
-                                                              "already have a tuning in place. Do you want to override your current tuning " +
-                                                              "with the patch suggested tuning? (The rest of the patch will still load)",
+           auto okc = Surge::UserInteractions::promptOKCancel(std::string("Loaded patch contains a custom tuning, but there is ") +
+                                                              "already a user-selected tuning in place. Do you want to replace the currently loaded tuning " +
+                                                              "with the tuning stored in the patch? (The rest of the patch will load normally.)",
                                                               "Replace Tuning");
            if( okc == Surge::UserInteractions::MessageResult::OK )
            {
@@ -260,7 +260,7 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
               }
               catch( Tunings::TuningError &e )
               {
-                 Surge::UserInteractions::promptError( e.what(), "Error restoring tuning" );
+                 Surge::UserInteractions::promptError( e.what(), "Error Restoring Tuning" );
                  storage.retuneToStandardTuning();
               }
            }

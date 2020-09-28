@@ -71,7 +71,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if( ! fp )
     {
         std::ostringstream oss;
-        oss << "Unable to open file " << fn << "!";
+        oss << "Unable to open file '" << fn << "'!";
         Surge::UserInteractions::promptError(oss.str(), uitag );
         return;
     }
@@ -84,9 +84,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if (hds != 12)
     {
        std::ostringstream oss;
-       oss << fn << " does not contain a valid RIFF header chunk!";
-       Surge::UserInteractions::promptError(oss.str(),
-                                            uitag );
+       oss << "'" << fn << "' does not contain a valid RIFF header chunk!";
+       Surge::UserInteractions::promptError(oss.str(), uitag );
        return;
     }
 
@@ -94,7 +93,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         ! four_chars(wav,  'W', 'A', 'V', 'E' ) )
     {
        std::ostringstream oss;
-       oss << fn << " is not a standard RIFF/WAVE file. Header is: [" << riff[0] << riff[1] << riff[2]
+       oss << "'" << fn << "' is not a standard RIFF/WAVE file. Header is: " << riff[0] << riff[1] << riff[2]
            << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ".";
        Surge::UserInteractions::promptError(oss.str(), uitag );
        return;
