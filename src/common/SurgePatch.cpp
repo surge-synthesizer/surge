@@ -687,6 +687,7 @@ void SurgePatch::init_default_values()
       scene[sc].pbrange_up.val.i = 2.f;
       scene[sc].pbrange_dn.val.i = 2.f;
       scene[sc].lowcut.val.f = scene[sc].lowcut.val_min.f;
+      scene[sc].lowcut.deactivated = false;
       scene[sc].lowcut.per_voice_processing = false;
 
       scene[sc].adsr[0].a.val.f = scene[sc].adsr[0].a.val_min.f;
@@ -1267,7 +1268,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          {
             if( param_ptr[i]->can_deactivate() )
             {
-               if( param_ptr[i]->ctrlgroup == cg_LFO ) // this is the "RATE" special case
+               if ((param_ptr[i]->ctrlgroup == cg_LFO) || // this is the LFO rate special case
+                   (param_ptr[i]->ctrlgroup == cg_GLOBAL && param_ptr[i]->ctrltype == ct_freq_hpf)) // this is the global highpass special case 
                   param_ptr[i]->deactivated = false;
                else
                   param_ptr[i]->deactivated = true;

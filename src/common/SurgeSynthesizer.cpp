@@ -2838,7 +2838,7 @@ void SurgeSynthesizer::process()
          bool resume = v->process_block(FBQ[s][FBentry[s] >> 2], FBentry[s] & 3);
          FBentry[s]++;
 
-         vcount ++;
+         vcount++;
 
          if (!resume)
          {
@@ -2876,14 +2876,13 @@ void SurgeSynthesizer::process()
          ProcessQuadFB(FBQ[s][e >> 2], g, sceneout[s][0], sceneout[s][1]);
       }
 
-      if( s == 0 && storage.otherscene_clients > 0 )
+      if (s == 0 && storage.otherscene_clients > 0)
       {
-         // Make available for scene b 
+         // Make available for scene b
          copy_block(sceneout[0][0], storage.audio_otherscene[0], BLOCK_SIZE_OS_QUAD);
          copy_block(sceneout[0][1], storage.audio_otherscene[1], BLOCK_SIZE_OS_QUAD);
       }
 
-      
       iter = voices[s].begin();
       while (iter != voices[s].end())
       {
@@ -2913,18 +2912,16 @@ void SurgeSynthesizer::process()
       halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
    }
 
-   hpA.coeff_HP(
-       hpA.calc_omega(
-           storage.getPatch().scenedata[0][storage.getPatch().scene[0].lowcut.param_id_in_scene].f /
-           12.0),
-       0.4); // var 0.707
-   hpB.coeff_HP(
-       hpB.calc_omega(
-           storage.getPatch().scenedata[1][storage.getPatch().scene[1].lowcut.param_id_in_scene].f /
-           12.0),
-       0.4);
-   hpA.process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
-   hpB.process_block(sceneout[1][0], sceneout[1][1]);
+   if (storage.getPatch().scene[0].lowcut.deactivated == false)
+   {
+      hpA.coeff_HP(hpA.calc_omega(storage.getPatch().scenedata[0][storage.getPatch().scene[0].lowcut.param_id_in_scene].f / 12.0), 0.4); // var 0.707
+      hpA.process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
+   }
+   if (storage.getPatch().scene[1].lowcut.deactivated == false)
+   {
+      hpB.coeff_HP(hpB.calc_omega(storage.getPatch().scenedata[1][storage.getPatch().scene[1].lowcut.param_id_in_scene].f / 12.0), 0.4);
+      hpB.process_block(sceneout[1][0], sceneout[1][1]);
+   }
 
    bool sc_a = play_scene[0];
    bool sc_b = play_scene[1];
