@@ -273,6 +273,7 @@ bool Parameter::can_deactivate()
 {
    switch(ctrltype)
    {
+   case ct_freq_hpf:
    case ct_freq_audible_deactivatable:
    case ct_lforate_deactivatable:
    case ct_rotarydrive:
