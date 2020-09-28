@@ -23,6 +23,7 @@
 #include "CHSwitch2.h"
 #include "CSwitchControl.h"
 #include "SurgeGUIEditor.h"
+#include "RuntimeFont.h"
 
 /*
 ** The SVG MSEG Ids
@@ -104,7 +105,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          SEGMENT_CONTROL
       } mousableNodeType = SEGMENT_CONTROL;
       
-      std::function<void(float,float)> onDrag;
+      std::function<void(float,float, const CPoint &)> onDrag;
    };
    std::vector<hotzone> hotzones;
 
@@ -113,7 +114,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    inline float drawDuration() {
       if( ms->n_activeSegments == 0 )
          return 1.0;
-      return std::ceil( ms->totalDuration );
+      return std::max( 1.0f, ms->totalDuration );
    }
    
    inline CRect getDrawArea() {
@@ -201,7 +202,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    {
       if( cpvNotV0 )
       {
-         offsetValue( ms->segments[idx].dragcpv, d );
+         offsetValue( ms->segments[idx].cpv, d );
       }
       else
       {
@@ -247,7 +248,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
          // Now add the mousable zones
          auto &s = ms->segments[i];
-         auto rectForPoint = [&]( float t, float v, hotzone::SegmentMousableType mt, std::function<void(float,float)> onDrag ){
+         auto rectForPoint = [&]( float t, float v, hotzone::SegmentMousableType mt, std::function<void(float,float, const CPoint &)> onDrag ){
                                 auto h = hotzone();
                                 h.rect = CRect( t - handleRadius,
                                                 valpx(v) - handleRadius,
@@ -308,7 +309,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
          // We get a mousable point at the start of the line
          rectForPoint( t0, s.v0, hotzone::SEGMENT_ENDPOINT,
-                       [i,this,vscale,tscale,timeConstraint](float dx, float dy) {
+                       [i,this,vscale,tscale,timeConstraint](float dx, float dy, const CPoint &where) {
                           adjustValue(i, false, -2 * dy / vscale, ms->vSnap );
 
                           if( i != 0 )
@@ -321,7 +322,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          // Control point editor
          float tn = tpx(ms->segmentStart[i] + ms->segments[i].cpduration );
          rectForPoint( tn, s.cpv, hotzone::SEGMENT_CONTROL,
-                       [i, this, tscale, vscale]( float dx, float dy ) {
+                       [i, this, tscale, vscale]( float dx, float dy, const CPoint &where) {
                           adjustValue(i, true, -2 * dy / vscale, 0.0 ); // we never want to snap CPV
 
                           this->ms->segments[i].cpduration += dx / tscale;
@@ -334,10 +335,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          if( i == ms->n_activeSegments - 1 )
          {
             rectForPoint( tpx(ms->totalDuration), ms->segments[0].v0, hotzone::SEGMENT_ENDPOINT,
-                          [this,vscale,tscale](float dx, float dy) {
+                          [this,vscale,tscale](float dx, float dy, const CPoint &where) {
                              adjustValue( 0, false, -2 * dy / vscale, ms->vSnap );
                              // We need to deal with the cpduration also
                              auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
+
+                             if( !this->getViewSize().pointInside(where))
+                             {
+                                auto howFar = where.x - this->getViewSize().right;
+                                if( howFar > 0 )
+                                   dx *= howFar * 0.1; // this is really just a speedup as our axes shrinks. Just a fudge
+                             }
 
                              adjustDuration(ms->n_activeSegments-1, dx/tscale, ms->hSnap, 0 );
                              this->ms->segments[ms->n_activeSegments-1].cpduration = this->ms->segments[ms->n_activeSegments-1].duration * cpv;
@@ -354,7 +362,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       float maxt = drawDuration();
       int skips = 4;
       auto tpx = timeToPx();
-            
+
+      dc->setFont( displayFont );
+      dc->setFontColor( kWhiteCColor );
       dc->setLineWidth( 1 );
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line, CColor(220, 220, 240)));
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
@@ -366,6 +376,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          if( gi % skips == 0 )
             off = 0;
          dc->drawLine( CPoint( px, haxisArea.top ), CPoint( px, haxisArea.bottom - off ) );
+         char txt[16];
+         snprintf( txt, 16, "%5.2f", t );
+         int xoff =0;
+         if( maxt < 1.1 && t > 0.99 )
+            xoff = -25;
+         dc->drawString( txt, CRect( CPoint( px + 4 + xoff, haxisArea.top + 2), CPoint( 15, 10 )));
       }
 
       auto vaxisArea = getVAxisArea();
@@ -379,7 +395,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          float off = vaxisArea.getWidth() / 2;
          if( i == -1 || i == 0 || i == 1 )
             off = 0;
-         dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) ); 
+         dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
+         char txt[16];
+         snprintf( txt, 16, "%4.2f", i );
+         dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
       }
    }
    
@@ -682,7 +701,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             if( h.dragging )
             {
                gotOne = true;
-               h.onDrag( where.x - mouseDownOrigin.x, where.y - mouseDownOrigin.y );
+               h.onDrag( where.x - mouseDownOrigin.x, where.y - mouseDownOrigin.y, where );
                modelChanged(); // HACK FIXME
                mouseDownOrigin = where;
                break;
