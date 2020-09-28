@@ -1905,9 +1905,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             /*
             ** SceneMode is special now because we have a streaming vs UI difference.
-            ** The streamed integer value is 0, 1, 2, 3 which matches the sub3_scenemode
+            ** The streamed integer value is 0, 1, 2, 3 which matches the scene_mode
             ** SurgeStorage enum. But our display would look gross in that order, so
-            ** our display order is singple, split, chsplit, dual which is 0, 1, 3, 2.
+            ** our display order is single, split, channel split, dual which is 0, 1, 3, 2.
             ** Fine. So just deal with that here.
             */
             auto guiscenemode = p->val.i;

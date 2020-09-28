@@ -318,7 +318,7 @@ void CFxMenu::draw(CDrawContext* dc)
    txtbox.bottom += 2;
    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
    char fxname[NAMECHARS];
-   sprintf(fxname, "%s", fxtype_names[fx->type.val.i]);
+   sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);
    dc->drawString(fxname, txtbox, kRightText, true);
 
    CPoint d(txtbox.right + 2, txtbox.top + 5);
@@ -683,7 +683,7 @@ void CFxMenu::pasteFX()
         fxbuffer->p[i].deactivated = (int)fxCopyPaste[dp];
     }
 
-    selectedName = std::string( "Copied " ) + fxtype_names[ fxbuffer->type.val.i ];
+    selectedName = std::string( "Copied " ) + fx_type_names[ fxbuffer->type.val.i ];
 
     if( listenerNotForParent )
        listenerNotForParent->valueChanged( this );
@@ -721,7 +721,7 @@ void CFxMenu::saveFXIn( const std::string &s )
    int ti = fx->type.val.i;
    
    std::ostringstream oss;
-   oss << storage->userFXPath << PATH_SEPARATOR << fxtype_names[ti] << PATH_SEPARATOR;
+   oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
 
    auto pn = oss.str();
    fs::create_directories( pn );
