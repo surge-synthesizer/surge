@@ -424,10 +424,10 @@ const char fut_ldr_subtypes[4][32] =
 
 const char fut_vintageladder_subtypes[6][32] =
 {
-   "Runge-Kutta",
-   "Runge-Kutta Compensated",
-   "Dampened",
-   "Dampened Compensated",
+   "Strong",
+   "Strong Compensated",
+   "Mild",
+   "Mild Compensated",
 };
 
 const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4};
