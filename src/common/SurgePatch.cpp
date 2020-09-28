@@ -102,7 +102,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                         0, cg_GLOBAL, 0, false,
                                         Surge::ParamConfig::kHorizontal | kNoPopup));
    param_ptr.push_back(fx_bypass.assign(p_id.next(), 0, "fx_bypass", "FX Bypass", ct_fxbypass,
-                                        "global.fx_bypass", 607, gui_mid_topbar_y - 6,
+                                        "global.fx_bypass", 607, gui_mid_topbar_y - 5,
                                         0, cg_GLOBAL, 0, false,
                                         Surge::ParamConfig::kHorizontal | kNoPopup));
 
