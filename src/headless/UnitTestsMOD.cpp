@@ -745,3 +745,105 @@ TEST_CASE( "LfoTempoSync Latch Drift", "[mod]" )
 
    }
 }
+
+TEST_CASE( "CModulationSources", "[mod]" )
+{
+   SECTION( "Legacy Mode")
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+      ControllerModulationSource a(ControllerModulationSource::SmoothingMode::LEGACY);
+      a.init( 0.5f );
+      REQUIRE( a.output == 0.5f );
+      float t = 0.6;
+      a.set_target( t );
+      float priorO = a.output;
+      float dO = 100000;
+      for( int i=0; i<100; ++i )
+      {
+         a.process_block();
+         REQUIRE( t - a.output < t - priorO );
+         REQUIRE( a.output - priorO < dO );
+         dO = a.output - priorO;
+         priorO = a.output;
+      }
+   }
+
+   SECTION( "Fast Exp Mode gets there")
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+
+      ControllerModulationSource a(ControllerModulationSource::SmoothingMode::FAST_EXP);
+      a.init( 0.5f );
+      REQUIRE( a.output == 0.5f );
+      float t = 0.6;
+      a.set_target( t );
+      float priorO = a.output;
+      float dO = 100000;
+      for( int i=0; i<200; ++i )
+      {
+         a.process_block();
+         REQUIRE( t - a.output <= t - priorO );
+         REQUIRE( ( ( a.output == t ) || ( a.output - priorO < dO ) ) );
+         dO = a.output - priorO;
+         priorO = a.output;
+      }
+      REQUIRE( a.output == t );
+   }
+
+   SECTION( "Slow Exp Mode gets there eventually")
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+
+      ControllerModulationSource a(ControllerModulationSource::SmoothingMode::SLOW_EXP);
+      a.init( 0.5f );
+      REQUIRE( a.output == 0.5f );
+      float t = 0.6;
+      a.set_target( t );
+      int idx = 0;
+      while( a.output != t && idx < 10000 )
+      {
+         a.process_block();
+         idx++;
+      }
+      REQUIRE( a.output == t );
+      REQUIRE( idx < 1000 );
+   }
+
+   SECTION( "Go as a Line" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+
+      ControllerModulationSource a(ControllerModulationSource::SmoothingMode::FAST_LINE);
+      a.init( 0.5f );
+      for( int i=0; i<10; ++i )
+      {
+         float r = rand() / ((float)RAND_MAX);
+         a.set_target(r);
+         for( int j=0; j<60; ++j )
+         {
+            a.process_block();
+         }
+         REQUIRE( a.output == r );
+      }
+   }
+
+   SECTION( "Direct is Direct" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+
+      ControllerModulationSource a(ControllerModulationSource::SmoothingMode::DIRECT);
+      a.init( 0.5f );
+      for( int i=0; i<100; ++i )
+      {
+         float r = rand() / ((float)RAND_MAX);
+         a.set_target(r);
+         a.process_block();
+         REQUIRE( a.output == r );
+      }
+   }
+}

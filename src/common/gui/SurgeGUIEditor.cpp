@@ -5800,10 +5800,33 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
 
 VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
 {
-   int did = 0;
    COptionMenu* midiSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
+                                              VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+
+   int did = 0;
+   COptionMenu *smoothMenu = new COptionMenu( menuRect, 0, 0, 0, 0,
+                                                VSTGUI::COptionMenu::kNoDrawStyle |
+                                                VSTGUI::COptionMenu::kMultipleCheckStyle );
+
+   int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), "smoothingMode", (int)ControllerModulationSource::SmoothingMode::LEGACY );
+
+   auto asmt = [this, smoothMenu, smoothing]( const char* label, ControllerModulationSource::SmoothingMode md )
+   {
+     auto me = addCallbackMenu(smoothMenu, label,
+                        [this, md]() {this->resetSmoothing(md);});
+     me->setChecked( smoothing == md );
+   };
+   asmt( "Legacy", ControllerModulationSource::SmoothingMode::LEGACY );
+   asmt( "Slow Smooth", ControllerModulationSource::SmoothingMode::SLOW_EXP );
+   asmt( "Fast Smooth", ControllerModulationSource::SmoothingMode::FAST_EXP );
+   asmt( "Fast Line", ControllerModulationSource::SmoothingMode::FAST_LINE );
+   asmt( "Direct (unsmoothed)", ControllerModulationSource::SmoothingMode::DIRECT );
+   midiSubMenu->addEntry( smoothMenu, "Controller Smoothing" );
+   did++;
+   midiSubMenu->addSeparator();
+   did++;
 
    addCallbackMenu(
        midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
@@ -5822,8 +5845,8 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
    addCallbackMenu(
       midiSubMenu, Surge::UI::toOSCaseForMenu("Show Current MIDI Mapping..."),
       [this]() {
-         Surge::UserInteractions::showHTML( this->midiMappingToHtml() );
-      }
+            Surge::UserInteractions::showHTML( this->midiMappingToHtml() );
+         }
       );
 
    did++;
@@ -7103,4 +7126,10 @@ void SurgeGUIEditor::openModTypeinOnDrop( int modt, CControl *sl, int slidertag 
 
    if( synth->isValidModulation( p->id, (modsources)ms ) )
        promptForUserValueEntry( p, sl, ms );
+}
+
+void SurgeGUIEditor::resetSmoothing( ControllerModulationSource::SmoothingMode t )
+{
+   Surge::Storage::updateUserDefaultValue(&(synth->storage), "smoothingMode", (int)t );
+   synth->changeModulatorSmoothing( t );
 }

@@ -395,6 +395,8 @@ private:
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
    bool scannedForMidiPresets = false;
 
+   void resetSmoothing( ControllerModulationSource::SmoothingMode t );
+
 public:
    std::string helpURLFor( Parameter *p );
    std::string helpURLForSpecial( std::string special );
