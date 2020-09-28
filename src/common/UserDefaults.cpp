@@ -58,7 +58,7 @@ void readDefaultsFile(std::string fn, bool forceRead=false)
                 std::ostringstream oss;
                 oss << "This version of Surge only reads version 1 defaults. You user defaults version is "
                     << version << ". Defaults ignored";
-                Surge::UserInteractions::promptError(oss.str(), "Defaults File Version Error");
+                Surge::UserInteractions::promptError(oss.str(), "File Version Error");
                 return;
             }
 
@@ -109,7 +109,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
     if (!dFile.is_open())
     {
         std::ostringstream emsg;
-        emsg << "Unable to open defaults file '" << defaultsFileName(storage) << "' for writing.";
+        emsg << "Unable to open defaults file " << defaultsFileName(storage) << " for writing.";
         Surge::UserInteractions::promptError(emsg.str(), "Defaults Not Saved");
         return false;
     }

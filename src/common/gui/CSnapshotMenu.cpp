@@ -731,7 +731,7 @@ void CFxMenu::saveFXIn( const std::string &s )
    if( ! pfile.is_open() )
    {
       Surge::UserInteractions::promptError( std::string( "Unable to open FX preset file '" ) + fn + "' for writing!",
-                                            "Surge IO Error" );
+                                            "Error" );
       return;
    }
 

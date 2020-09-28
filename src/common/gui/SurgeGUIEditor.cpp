@@ -421,10 +421,10 @@ void SurgeGUIEditor::idle()
          {
             std::ostringstream oss;
 
-            oss << "Patch load of patch number " <<  synth->patchid_queue << " has not occured after 30 idles cycles. "
-                << "This usually means your DAW does not have the audio system running. Running the audio system is "
-                << "required to load Surge patches.";
-            Surge::UserInteractions::promptError(oss.str(), "Surge Did Not Load Patch" );
+            oss << "Loading  of patch number " <<  synth->patchid_queue << " has not occured after 30 idle cycles. "
+                << "This usually means that the audio system is not running in your host. Audio system has to be "
+                << "running in order to load Surge patches.";
+            Surge::UserInteractions::promptError(oss.str(), "Patch Loading Error" );
 
          }
       }
@@ -1293,7 +1293,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       if( i == n_paramslots )
       {
          // This would only happen if a dev added params. But with 1.7 a dev might so lets at least put this here.
-         Surge::UserInteractions::promptError( "INTERNAL ERROR - params larger than paramslots.  Up n_paramslots in SGE.h", "SOFTWARE ERROR" );
+         Surge::UserInteractions::promptError( "INTERNAL ERROR: List of parameters is larger than maximum number of parameter slots. Increase n_paramslots in SurgeGUIEditor.h!", "Error");
       }
       Parameter* p = *iter;
 
@@ -4327,7 +4327,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          Surge::UserInteractions::promptError(std::string("Unable to store a patch due to invalid ") +
                                               whatIsBlank + ". Please save again and provide a complete " +
                                               whatIsBlank + ".",
-                                              "Error Saving Patch");
+                                              "Patch Saving Error");
       }
       else
       {
@@ -4981,9 +4981,9 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    if (zf < minimumZoom)
    {
       std::ostringstream oss;
-      oss << "The smallest zoom on your platform is " << minimumZoom
-          << "%. Sorry, you can't make Surge any smaller.";
-      Surge::UserInteractions::promptError(oss.str(), "No Teensy Surge For You!");
+      oss << "The smallest zoom level possible on your platform is " << minimumZoom
+          << "%. Sorry, you cannot make Surge any smaller!";
+      Surge::UserInteractions::promptError(oss.str(), "Zoom Level Error");
       zf = minimumZoom;
    }
 
@@ -5010,13 +5010,13 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       zoomFactor = newZf;
 
       std::ostringstream msg;
-      msg << "Surge limits the maximum zoom level in order to prevent the interface becoming larger than available screen area. "
+      msg << "Surge adjusts the maximum zoom level in order to prevent the interface becoming larger than available screen area. "
           << "Your screen resolution is " << screenDim.getWidth() << "x" << screenDim.getHeight() << " "
           << "for which the target zoom level of " << zf << "% would be too large."
           << std::endl << std::endl
           << "Surge chose the largest fitting zoom level of " << zoomFactor << "%.";
       Surge::UserInteractions::promptError(msg.str(),
-                                           "Zoom Level Limited");
+                                           "Zoom Level Adjusted");
    }
 
    zoom_callback(this);
@@ -5246,7 +5246,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                             }
                             catch( Tunings::TuningError &e )
                             {
-                               Surge::UserInteractions::promptError( e.what(), "Error Loading .scl" );
+                               Surge::UserInteractions::promptError( e.what(), "Loading Error" );
                             }
                         };
 
@@ -5284,7 +5284,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                             }
                             catch( Tunings::TuningError &e )
                             {
-                               Surge::UserInteractions::promptError( e.what(), "Error Loading .kbm" );
+                               Surge::UserInteractions::promptError( e.what(), "Loading Error" );
                             }
 
                         };
@@ -5686,11 +5686,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                        if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
                        {
                           auto &db = Surge::UI::SkinDB::get();
-                          auto msg = std::string( "Unable to load skin. Returning to default. Skin error was '" )
-                             + db.getAndResetErrorString() + "'";
+                          auto msg = std::string( "Unable to load skin. Reverting the skin to Surge Classic.\n\nSkin error:\n" )
+                             + db.getAndResetErrorString();
                           this->currentSkin = db.defaultSkin( &( this->synth->storage ) );
                           this->currentSkin->reloadSkin(this->bitmapStore);
-                          Surge::UserInteractions::promptError( msg, "Skin Error" );
+                          Surge::UserInteractions::promptError( msg, "Skin Loading Error" );
                        }
 
                        reloadFromSkin();
@@ -6806,13 +6806,13 @@ void SurgeGUIEditor::setupSkinFromEntry( const Surge::UI::SkinDB::Entry &entry )
    if( ! this->currentSkin->reloadSkin(this->bitmapStore) )
    {
       std::ostringstream oss;
-      oss << "Unable to load skin '" << entry.root << "/" << entry.name << "'. Resetting skin to default.\n\nSkin Error:\n"
+      oss << "Unable to load skin '" << entry.root << "/" << entry.name << "'. Reverting the skin to Surge Classic.\n\nSkin Error:\n"
           << db.getAndResetErrorString();
 
       auto msg = std::string( oss.str() );
       this->currentSkin = db.defaultSkin( &( this->synth->storage ) );
       this->currentSkin->reloadSkin(this->bitmapStore);
-      Surge::UserInteractions::promptError( msg, "Skin Error" );
+      Surge::UserInteractions::promptError( msg, "Skin Loading Error" );
    }
    reloadFromSkin();
 }

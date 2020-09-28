@@ -430,20 +430,19 @@ bailOnPortable:
    {
       WindowWT.size = 0;
       std::ostringstream oss;
-      oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for surge to operate "
-          << "properly. This occurs when Surge is mis-installed and shared resources are not in the "
-          << "os-specific shared directory, which on your OS is a directory called 'Surge' in "
+      oss << "Unable to load " << datapath << "/windows.wt. This file is required for Surge to work "
+          << "properly. This occurs when Surge is incorrectly installed and its resources are not found at "
 #if MAC
-          << "the global or user local `Library/Application Support` directory."
+          << "the global or user local Library/Application Support/Surge directory."
 #endif
 #if WINDOWS
-          << "your %LocalAppData% directory."
+          << "%ProgramData%\\Surge directory."
 #endif
 #if LINUX
-          << "/usr/share or ~/.local/share."
+          << "/usr/share/Surge or ~/.local/share/Surge."
 #endif
-          << " Please install shared assets correctly and restart.";
-      Surge::UserInteractions::promptError(oss.str(), "Unable to load windows.wt");
+          << " Please reinstall Surge and try again!";
+      Surge::UserInteractions::promptError(oss.str(), "Surge Resources Loading Error");
    }
 
    // Tunings Library Support
@@ -468,7 +467,7 @@ bailOnPortable:
          TiXmlElement* pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
          if( ! pdoc )
          {
-            Surge::UserInteractions::promptError( "Malformed top element in paramdocumentation.xml - not a param-doc", "Surge ERror" );
+            Surge::UserInteractions::promptError( "Unknown top element in paramdocumentation.xml - not a parameter documentation XML file!", "Error" );
          }
          else
          {
@@ -578,8 +577,8 @@ void SurgeStorage::refresh_patchlist()
    if(totalFactory == 0)
    {
       std::ostringstream ss;
-      ss << "Surge was unable to load factory patches from '" << datapath
-         << "'. Surge found 0 factory patches. Please reinstall using the Surge installer.";
+      ss << "Surge was unable to load factory patches from " << datapath
+         << ". Please reinstall Surge!";
       Surge::UserInteractions::promptError(ss.str(),
                                            "Surge Installation Error");
 
@@ -815,8 +814,8 @@ void SurgeStorage::refresh_wtlist()
    if (wt_category.size() == 0 || wt_list.size() == 0)
    {
       std::ostringstream ss;
-      ss << "Surge was unable to load wavetables from '" << datapath
-         << "'. The directory contains no wavetables. Please reinstall using the Surge installer.";
+      ss << "Surge was unable to load wavetables from " << datapath
+         << ". Please reinstall Surge!";
       Surge::UserInteractions::promptError(ss.str(),
                                            "Surge Installation Error" );
    }
@@ -970,8 +969,8 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt, OscillatorStorage *os
    else
    {
        std::ostringstream oss;
-       oss << "Unable to load file with extension '" << extension << "'. Surge only supports .wav and .wt files";
-       Surge::UserInteractions::promptError(oss.str(), "load_wt error" );
+       oss << "Unable to load file with extension " << extension << ". Surge only supports .wav and .wt wavetable files!";
+       Surge::UserInteractions::promptError(oss.str(), "Error" );
    }
 }
 
@@ -1012,15 +1011,15 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    if (!wasBuilt)
    {
        std::ostringstream oss;
-       oss << "Your wavetable was unable to build. This often means that it has too many samples or tables."
-           << " You provided " << wh.n_tables << " tables of size " << wh.n_samples << " vs max limits of "
-           << max_subtables << " tables and " << max_wtable_size << " samples."
-           << " In some cases, Surge detects this situation inconsistently leading to this message. Surge is now"
-           << " in a potentially inconsistent state. We recommend you restart Surge and do not load the wavetable again."
-           << " If you would like, please attach the wavetable which caused this message to a new github issue at "
+       oss << "Wavetable could not be built, which means it has too many samples or frames."
+           << " You provided " << wh.n_tables << " frames of " << wh.n_samples << "samples, while limit is "
+           << max_subtables << " frames and " << max_wtable_size << " samples."
+           << " In some cases, Surge detects this situation inconsistently. Surge is now in a potentially "
+           << " inconsistent state. It is recommended to restart Surge and not load the problematic wavetable again."
+           << " If you would like, please attach the wavetable which caused this message to a new GitHub issue at "
            << " https://github.com/surge-synthesizer/surge/";
        Surge::UserInteractions::promptError( oss.str(),
-                                             "Software Error on WT Load" );
+                                             "Wavetable Loading Error" );
        fclose(f);
        return false;
    }
@@ -1704,7 +1703,7 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
    if( ! sm )
    {
       // Invalid XML Document. Show an error?
-      Surge::UserInteractions::promptError( "Unable to locate 'surge-midi' element in XML. Not a valid mid map", "Surge MIDI" );
+      Surge::UserInteractions::promptError( "Unable to locate surge-midi element in XML. Not a valid MIDI mapping!", "Surge MIDI" );
       return;
    }
 
@@ -1795,8 +1794,8 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
    if( ! doc.SaveFile( fn.c_str() ) )
    {
       std::ostringstream oss;
-      oss << "Unable to save midi settings '" << fn << "'";
-      Surge::UserInteractions::promptError( oss.str(), "Surge MIDI" );
+      oss << "Unable to save MIDI settings '" << fn << "'";
+      Surge::UserInteractions::promptError( oss.str(), "Error" );
    }
 }
 
