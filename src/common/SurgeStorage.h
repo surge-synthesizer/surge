@@ -39,14 +39,13 @@
 
 #include "Tunings.h"
 
-
 #if WINDOWS
 #define PATH_SEPARATOR '\\'
 #else
 #define PATH_SEPARATOR '/'
 #endif
 
-/* PATCH layer			*/
+// patch layer
 
 const int n_oscs = 3;
 const int n_lfos_voice = 6;
@@ -106,7 +105,7 @@ const int metaparam_offset = 20480; // has to be bigger than total + 16 * 130 fo
 const int n_scenes = 2;
 const int n_filterunits_per_scene = 2;
 
-enum sub3_scenemode
+enum scene_mode
 {
    sm_single = 0,
    sm_split,
@@ -115,9 +114,15 @@ enum sub3_scenemode
    n_scenemodes,
 };
 
-const char scenemode_names[n_scenemodes][16] = {"Single", "Key Split", "Dual", "Channel Split"};
+const char scene_mode_names[n_scenemodes][16] =
+{
+   "Single",
+   "Key Split",
+   "Dual",
+   "Channel Split",
+};
 
-enum sub3_polymode
+enum play_mode
 {
    pm_poly = 0,
    pm_mono,
@@ -127,12 +132,15 @@ enum sub3_polymode
    pm_latch,
    n_polymodes,
 };
-const char polymode_names[n_polymodes][64] = {"Poly",
-                                                    "Mono",
-                                                    "Mono (Single Trigger)",
-                                                    "Mono (Fingered Portamento)",
-                                                    "Mono (Single Trigger + Fingered Portamento)",
-                                                    "Latch (Monophonic)"};
+const char play_mode_names[n_polymodes][64] =
+{
+   "Poly",
+   "Mono",
+   "Mono (Single Trigger)",
+   "Mono (Fingered Portamento)",
+   "Mono (Single Trigger + Fingered Portamento)",
+   "Latch (Monophonic)",
+};
 
 enum porta_curve
 {
@@ -141,42 +149,71 @@ enum porta_curve
     porta_exp = 1,
 };
 
-enum sub3_lfomode
+enum lfo_mode
 {
    lm_freerun = 0,
    lm_keytrigger,
    lm_random,
    n_lfomodes,
 };
-const char lfomode_names[n_lfomodes][16] = {"Freerun", "Keytrigger", "Random"};
 
-enum sub3_charactermode
+const char lfo_mode_names[n_lfomodes][16] =
+{
+   "Freerun",
+   "Keytrigger",
+   "Random",
+};
+
+enum character_mode
 {
    cm_warm = 0,
    cm_neutral,
    cm_bright,
    n_charactermodes,
 };
-const char character_names[n_charactermodes][16] = {"Warm", "Neutral", "Bright"};
+const char character_names[n_charactermodes][16] =
+{
+   "Warm",
+   "Neutral",
+   "Bright",
+};
 
-enum sub3_osctypes
+enum osc_types
 {
    ot_classic = 0,
    ot_sinus,
    ot_wavetable,
    ot_shnoise,
    ot_audioinput,
-   ot_FM3, // it used to just bhe FM; then the UI called it FM3 so name it this way but this order has to stick
+   ot_FM3, // it used to just FM, then the UI called it FM3, so name it this way but this order has to stick
    ot_FM2,
    ot_WT2,
    num_osctypes,
 };
-const char osctype_names[num_osctypes][16] = {"Classic",  "Sine", "Wavetable", "S&H Noise",
-                                                    "Audio In", "FM3",  "FM2",       "Window"};
+const char osc_type_names[num_osctypes][16] =
+{
+   "Classic",
+   "Sine",
+   "Wavetable",
+   "S&H Noise",
+   "Audio In",
+   "FM3",
+   "FM2",
+   "Window",
+};
 
-const char window_names[9][16] = {"Triangle", "Cosine",       "Blend 1",
-                                        "Blend 2",    "Blend 3",      "Sawtooth",
-                                        "Sine", "Square", "Rectangle"};
+const char window_names[9][16] =
+{
+   "Triangle",
+   "Cosine",
+   "Blend 1",
+   "Blend 2",
+   "Blend 3",
+   "Sawtooth",
+   "Sine",
+   "Square",
+   "Rectangle",
+};
 
 inline bool uses_wavetabledata(int i)
 {
@@ -189,7 +226,7 @@ inline bool uses_wavetabledata(int i)
    return false;
 }
 
-enum sub3_fxtypes
+enum fx_types
 {
    fxt_off = 0,
    fxt_delay,
@@ -208,9 +245,24 @@ enum sub3_fxtypes
    fxt_airwindows,
    num_fxtypes,
 };
-const char fxtype_names[num_fxtypes][16] = {
-    "Off", "Delay",     "Reverb 1",      "Phaser", "Rotary",  "Distortion",
-    "EQ",  "Freq Shift", "Conditioner", "Chorus", "Vocoder", "Reverb 2", "Flanger", "Ring Mod", "Airwindows" };
+const char fx_type_names[num_fxtypes][16] =
+{
+   "Off",
+   "Delay",
+   "Reverb 1",
+   "Phaser",
+   "Rotary",
+   "Distortion",
+   "EQ",
+   "Freq Shift",
+   "Conditioner",
+   "Chorus",
+   "Vocoder",
+   "Reverb 2",
+   "Flanger",
+   "Ring Mod",
+   "Airwindows",
+};
 
 enum fx_bypass
 {
@@ -221,8 +273,13 @@ enum fx_bypass
    n_fx_bypass,
 };
 
-const char fxbypass_names[n_fx_bypass][16] = {"All FX", "No Send FX", "Scene FX Only",
-                                                    "All FX Off"};
+const char fxbypass_names[n_fx_bypass][16] =
+{
+   "All FX",
+   "No Send FX",
+   "Scene FX Only",
+   "All FX Off",
+};
 
 enum fb_configuration
 {
@@ -237,8 +294,17 @@ enum fb_configuration
    n_fb_configuration,
 };
 
-const char fbc_names[n_fb_configuration][16] = {"Serial 1", "Serial 2", "Serial 3", "Dual 1",
-                                                      "Dual 2",   "Stereo",   "Ring",     "Wide"};
+const char fbc_names[n_fb_configuration][16] =
+{
+   "Serial 1",
+   "Serial 2",
+   "Serial 3",
+   "Dual 1",
+   "Dual 2",
+   "Stereo",
+   "Ring",
+   "Wide",
+};
 
 enum fm_configuration
 {
@@ -249,7 +315,13 @@ enum fm_configuration
    n_fm_configuration,
 };
 
-const char fmc_names[n_fm_configuration][16] = {"Off", "2 > 1", "3 > 2 > 1", "2 > 1 < 3"};
+const char fmc_names[n_fm_configuration][16] =
+{
+   "Off",
+   "2 > 1",
+   "3 > 2 > 1",
+   "2 > 1 < 3",
+};
 
 enum lfoshapes
 {
@@ -266,8 +338,18 @@ enum lfoshapes
    n_lfoshapes
 };
 
-const char ls_names[n_lfoshapes][16] = {"Sine",  "Triangle", "Square",   "Sawtooth",
-                                        "Noise", "S&H",      "Envelope", "Step Seq", "MSEG"};
+const char ls_names[n_lfoshapes][16] =
+{
+   "Sine",
+   "Triangle",
+   "Square",
+   "Sawtooth",
+   "Noise",
+   "Sample & Hold",
+   "Envelope",
+   "Step Sequencer",
+   "MSEG",
+};
 
 enum fu_type
 {
@@ -281,34 +363,74 @@ enum fu_type
    fut_br12,
    fut_comb,
    fut_SNH,
-   fut_vintageladder,
-#if SURGE_EXTRA_FILTERS
-#endif   
+   fut_vintageladder, 
    n_fu_type,
 };
-const char fut_names[n_fu_type][32] = {
-    "Off",           "Lowpass 12 dB/oct",  "Lowpass 24 dB/oct", "Legacy Ladder",
-    "Highpass 12 dB/oct", "Highpass 24 dB/oct", "Bandpass",     "Notch",   "Comb", "Sample & Hold", "Vintage Ladder"
-#if SURGE_EXTRA_FILTERS    
-#endif    
+const char fut_names[n_fu_type][32] =
+{
+   "Off",
+   "Lowpass 12 dB/oct",
+   "Lowpass 24 dB/oct",
+   "Legacy Ladder",
+   "Highpass 12 dB/oct",
+   "Highpass 24 dB/oct",
+   "Bandpass",
+   "Notch",
+   "Comb",
+   "Sample & Hold",
+   "Vintage Ladder",
 };
 
-const char fut_bp_subtypes[6][32] = {"Clean 12 dB/oct", "Driven 12 dB/oct", "Smooth 12 dB/oct",
-                                     "Clean 24 dB/oct", "Driven 24 dB/oct", "Smooth 24 dB/oct"};
-const char fut_br_subtypes[4][32] = {"12 dB/oct", "12 dB/oct Mild", "24 dB/oct", "24 dB/oct Mild"};
-const char fut_comb_subtypes[4][64] = {"Positive, 50% Wet", "Positive, 100% Wet", "Negative, 50% Wet", "Negative, 100% Wet"};
-const char fut_def_subtypes[3][32] = {"Clean", "Driven", "Smooth"};
-const char fut_ldr_subtypes[4][32] = {"6 dB/oct", "12 dB/oct", "18 dB/oct", "24 dB/oct"};
-const char fut_vintageladder_subtypes[6][32] = { "Runge-Kutta",  "Runge-Kutta Compensated",
-                                                 "Huovilainen",  "Huovilainen Compensated" };
-
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4
-#if SURGE_EXTRA_FILTERS                                     
-#endif
+const char fut_bp_subtypes[6][32] =
+{
+   "Clean 12 dB/oct",
+   "Driven 12 dB/oct",
+   "Smooth 12 dB/oct",
+   "Clean 24 dB/oct",
+   "Driven 24 dB/oct",
+   "Smooth 24 dB/oct",
 };
 
-#if SURGE_EXTRA_FILTERS
-#endif
+const char fut_br_subtypes[4][32] =
+{
+   "12 dB/oct",
+   "12 dB/oct Mild",
+   "24 dB/oct",
+   "24 dB/oct Mild",
+};
+
+const char fut_comb_subtypes[4][64] =
+{
+   "Positive, 50% Wet",
+   "Positive, 100% Wet",
+   "Negative, 50% Wet",
+   "Negative, 100% Wet",
+};
+
+const char fut_def_subtypes[3][32] =
+{
+   "Clean",
+   "Driven",
+   "Smooth",
+};
+
+const char fut_ldr_subtypes[4][32] =
+{
+   "6 dB/oct",
+   "12 dB/oct",
+   "18 dB/oct",
+   "24 dB/oct",
+};
+
+const char fut_vintageladder_subtypes[6][32] =
+{
+   "Strong",
+   "Strong Compensated",
+   "Dampened",
+   "Dampened Compensated",
+};
+
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4};
 
 enum fu_subtype
 {
@@ -336,8 +458,15 @@ enum ws_type
    n_ws_type,
 };
 
-const char wst_names[n_ws_type][16] = {"Off",        "Soft", "Hard",
-                                             "Asymmetric", "Sine", "Digital"};
+const char wst_names[n_ws_type][16] =
+{
+   "Off",
+   "Soft",
+   "Hard",
+   "Asymmetric",
+   "Sine",
+   "Digital",
+};
 
 enum env_mode_type
 {
@@ -346,7 +475,11 @@ enum env_mode_type
    n_em_type,
 };
 
-const char em_names[n_em_type][16] = {"Digital", "Analog"};
+const char em_names[n_em_type][16] =
+{
+   "Digital",
+   "Analog",
+};
 
 struct MidiKeyState
 {
@@ -614,7 +747,7 @@ struct PatchCategory
    int numberOfPatchesInCategoryAndChildren;
 };
 
-enum sub3_copysource
+enum surge_copysource
 {
    cp_off = 0,
    cp_scene,

@@ -2087,7 +2087,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       }
       case ct_osctype:
-         sprintf(txt, "%s", osctype_names[limit_range(i, 0, (int)num_osctypes - 1)]);
+         sprintf(txt, "%s", osc_type_names[limit_range(i, 0, (int)num_osctypes - 1)]);
          break;
       case ct_wt2window:
          sprintf(txt, "%s", window_names[limit_range(i, 0, 8)]);
@@ -2097,7 +2097,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%d voice%s", i, (i > 1 ? "s" : ""));
          break;
       case ct_fxtype:
-         sprintf(txt, "%s", fxtype_names[limit_range(i, 0, (int)num_fxtypes - 1)]);
+         sprintf(txt, "%s", fx_type_names[limit_range(i, 0, (int)num_fxtypes - 1)]);
          break;
       case ct_reverbshape:
          sprintf(txt, "Type %d", i + 1);
@@ -2160,13 +2160,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%s", ls_names[limit_range(i, 0, (int)n_lfoshapes - 1)]);
          break;
       case ct_scenemode:
-         sprintf(txt, "%s", scenemode_names[limit_range(i, 0, (int)n_scenemodes - 1)]);
+         sprintf(txt, "%s", scene_mode_names[limit_range(i, 0, (int)n_scenemodes - 1)]);
          break;
       case ct_polymode:
-         sprintf(txt, "%s", polymode_names[limit_range(i, 0, (int)n_polymodes - 1)]);
+         sprintf(txt, "%s", play_mode_names[limit_range(i, 0, (int)n_polymodes - 1)]);
          break;
       case ct_lfotrigmode:
-         sprintf(txt, "%s", lfomode_names[limit_range(i, 0, (int)n_lfomodes - 1)]);
+         sprintf(txt, "%s", lfo_mode_names[limit_range(i, 0, (int)n_lfomodes - 1)]);
          break;
       case ct_character:
          sprintf(txt, "%s", character_names[limit_range(i, 0, (int)n_charactermodes - 1)]);
