@@ -60,12 +60,12 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
    plug_is_synth = true;
    setUniqueID('cjs3'); // identify
 #else
-   char path[1024];
+   WCHAR path[MAX_PATH];
    extern void* hInstance;
-   GetModuleFileName((HMODULE)hInstance, path, 1024);
-   _strlwr(path);
+   GetModuleFileName((HMODULE)hInstance, path, std::size(path));
+   _wcslwr(path);
 
-   if (strstr(path, "_fx") || strstr(path, "_FX"))
+   if (wcsstr(path, L"_fx"))
    {
       plug_is_synth = false;
       setUniqueID('cjsx'); // identify
@@ -484,6 +484,12 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
                outputs[2 + outp][i] = (float)_instance->sceneout[0][outp][blockpos];
                outputs[4 + outp][i] = (float)_instance->sceneout[1][outp][blockpos];
             }
+            else
+            {
+               outputs[2 + outp][i] = 0.f;
+               outputs[4 + outp][i] = 0.f;
+            }
+
          }
          else  // adding
          {
@@ -491,7 +497,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
             if( _instance->activateExtraOutputs ) {
                outputs[2 + outp][i] += (float)_instance->sceneout[0][outp][blockpos];
                outputs[4 + outp][i] += (float)_instance->sceneout[1][outp][blockpos];
-            }
+            } // adding 0 is the same as doing nothing so no else here
          }
       }
 

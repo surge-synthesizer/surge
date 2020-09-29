@@ -378,13 +378,10 @@ set(SURGE_GUI_INCLUDES
 
 ### OS SPECIFIC SECTION
 if( APPLE )
-  set(SURGE_OS_SOURCES
-    src/mac/UserInteractionsMac.mm
-    )
-
   set(SURGE_OS_GUI_SOURCES
     src/mac/DisplayInfoMac.mm
     src/mac/RuntimeFontMac.cpp
+    src/mac/UserInteractionsMac.mm
     src/mac/cocoa_utils.mm
     vstgui.surge/vstgui/vstgui_mac.mm
     vstgui.surge/vstgui/vstgui_uidescription_mac.mm
@@ -448,12 +445,6 @@ elseif( UNIX AND NOT APPLE )
     set( cxml src/linux/ConfigurationXml.S )
   endif()
 
-  set(SURGE_OS_SOURCES
-    src/linux/UserInteractionsLinux.cpp
-    ${cxml}
-    ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
-    )
-
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
 
   # Our friends at steinberg have this maddening habig of using #warning DEPRECATED in linux code
@@ -462,13 +453,16 @@ elseif( UNIX AND NOT APPLE )
 
 
   set(SURGE_OS_GUI_SOURCES
+    ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
+    ${LINUX_VSTGUI_GLOB}
+    ${cxml}
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
-    vstgui.surge/vstgui/vstgui.cpp
-    vstgui.surge/vstgui/vstgui_uidescription.cpp
+    src/linux/UserInteractionsLinux.cpp
     vstgui.surge/vstgui/lib/platform/common/genericoptionmenu.cpp
     vstgui.surge/vstgui/lib/platform/common/generictextedit.cpp
-    ${LINUX_VSTGUI_GLOB}
+    vstgui.surge/vstgui/vstgui.cpp
+    vstgui.surge/vstgui/vstgui_uidescription.cpp
     )
 
   find_package(PkgConfig REQUIRED)
@@ -563,12 +557,13 @@ elseif( UNIX AND NOT APPLE )
 elseif( WIN32 )
 
   set(SURGE_OS_SOURCES
-    src/windows/UserInteractionsWin.cpp
+    src/windows/surge_win_fopen_utf8.cpp
     )
 
   set(SURGE_OS_GUI_SOURCES
     src/windows/DisplayInfoWin.cpp
     src/windows/RuntimeFontWin.cpp
+    src/windows/UserInteractionsWin.cpp
     src/windows/surge.rc
     vstgui.surge/vstgui/vstgui_win32.cpp
     vstgui.surge/vstgui/vstgui_uidescription_win32.cpp
@@ -584,6 +579,8 @@ elseif( WIN32 )
     TIXML_USE_STL
     USE_LIBPNG
     _CRT_SECURE_NO_WARNINGS=1
+    UNICODE
+    _UNICODE
     ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
@@ -981,6 +978,7 @@ endif()
 if( BUILD_HEADLESS )
   add_executable(surge-headless
     ${SURGE_COMMON_SOURCES}
+    ${SURGE_OS_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     ${LIB_MIDIFILE_SOURCES}
     src/headless/main.cpp
@@ -1057,17 +1055,21 @@ if( BUILD_HEADLESS )
 endif()
 
 add_custom_target( all-components )
+add_custom_target( pipeline-components )
 if( BUILD_VST2 )
   add_dependencies(all-components Surge-VST2-Packaged )
 endif()
 if( BUILD_VST3 )
   add_dependencies(all-components Surge-VST3-Packaged )
+  add_dependencies(pipeline-components Surge-VST3-Packaged)
 endif()
 if( BUILD_AU )
   add_dependencies(all-components Surge-AU-Packaged )
+  add_dependencies(pipeline-components Surge-AU-Packaged)
 endif()
 if( BUILD_LV2 )
   add_dependencies(all-components Surge-LV2-Packaged )
+  add_dependencies(pipeline-components Surge-LV2-Packaged)
 endif()
 if( BUILD_HEADLESS )
   add_dependencies(all-components surge-headless )

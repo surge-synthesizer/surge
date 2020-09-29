@@ -287,24 +287,23 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 #if TARGET_RACK
    datapath = suppliedDataPath;
 #else
-   bool foundSurge = false;
-   std::string dllPath = "";
+   fs::path dllPath;
 
    // First check the portable mode sitting beside me
    {
-      CHAR path[MAX_PATH];
+      WCHAR pathBuf[MAX_PATH];
       HMODULE hm = NULL;
 
-      if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
-                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            (LPCSTR) &dummyExportedWindowsToLookupDLL, &hm) == 0)
+      if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            reinterpret_cast<LPCTSTR>(&dummyExportedWindowsToLookupDLL), &hm) == 0)
       {
          int ret = GetLastError();
          printf( "GetModuleHandle failed, error = %d\n", ret);
          // Return or however you want to handle an error.
          goto bailOnPortable;
       }
-      if (GetModuleFileName(hm, path, sizeof(path)) == 0)
+      if (GetModuleFileName(hm, pathBuf, std::size(pathBuf)) == 0)
       {
          int ret = GetLastError();
          printf( "GetModuleFileName failed, error = %d\n", ret);
@@ -312,64 +311,56 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
          goto bailOnPortable;
       }
 
-      // The path variable should now contain the full filepath for this DLL.
-      std::string pn = path;
-      int ep;
-      if( (ep = pn.rfind( "\\" )) != string::npos )
+      // The pathBuf variable should now contain the full filepath for this DLL.
+      fs::path path(pathBuf);
+      path.remove_filename();
+      dllPath = path;
+      path /= L"SurgeData";
+      if (fs::is_directory(path))
       {
-         dllPath = pn.substr(0,ep);;
-         auto spath = pn.substr( 0, ep ) + "\\SurgeData\\";
-         datapath = spath;
-         if( fs::is_directory( fs::path( spath ) ) )
-         {
-            foundSurge = true;
-         }
-         else
-         {
-            datapath = "";
-         }
+         datapath = path_to_string(path);
       }
    }
 bailOnPortable:
-   
-   PWSTR commonAppData;
-   if( ! foundSurge ) {
+
+   if (datapath.empty())
+   {
+      PWSTR commonAppData;
       if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
       {
-         CHAR path[4096];
-         wsprintf(path, "%S\\Surge\\", commonAppData);
-         datapath = path;
-         if( fs::is_directory( fs::path( datapath ) ) )
-            foundSurge = true;
-         else
-            datapath = "";
+         fs::path path(commonAppData);
+         path /= L"Surge";
+         if (fs::is_directory(path))
+         {
+            datapath = path_to_string(path);
+         }
       }
    }
-   
-   if( ! foundSurge ) {
+
+   if (datapath.empty())
+   {
       PWSTR localAppData;
       if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
       {
-         CHAR path[4096];
-         wsprintf(path, "%S\\Surge\\", localAppData);
-         datapath = path;
-         foundSurge = true;
+         fs::path path(localAppData);
+         path /= L"Surge";
+         datapath = path_to_string(path);
       }
    }
 
    // Portable - first check for dllPath\\SurgeUserData
-   if( dllPath != "" && fs::is_directory( fs::path( dllPath + "\\SurgeUserData\\" )))
+   if (!dllPath.empty() && fs::is_directory(dllPath / L"SurgeUserData"))
    {
-      userDataPath = dllPath + "\\SurgeUserData\\";
+      userDataPath = path_to_string(dllPath / L"SurgeUserData");
    }
    else 
    {
       PWSTR documentsFolder;
       if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
       {
-         CHAR path[4096];
-         wsprintf(path, "%S\\Surge\\", documentsFolder);
-         userDataPath = path;
+         fs::path path(documentsFolder);
+         path /= L"Surge";
+         userDataPath = path_to_string(path);
       }
    }
 #endif
@@ -382,6 +373,10 @@ bailOnPortable:
    {
        userDataPath = userSpecifiedDataPath;
    }
+
+   // append separator if not present
+   userDataPath = Surge::Storage::appendDirectory(userDataPath, std::string());
+   datapath = Surge::Storage::appendDirectory(datapath, std::string());
 
    userFXPath = Surge::Storage::appendDirectory(userDataPath, "FXSettings");
    
@@ -640,9 +635,9 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
 {
    int category = categories.size();
 
-   fs::path patchpath = (userDir ? userDataPath : datapath);
+   fs::path patchpath = string_to_path(userDir ? userDataPath : datapath);
    if (!subdir.empty())
-      patchpath.append(subdir);
+      patchpath /= string_to_path(subdir);
 
    if (!fs::is_directory(patchpath))
    {
@@ -678,46 +673,31 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
    ** with a substr in the main loop, so get the length once
    */
    std::vector<PatchCategory> local_categories;
-   int patchpathSubstrLength= patchpath.generic_string().size() + 1;
-   if (patchpath.generic_string().back() == '/' || patchpath.generic_string().back() == '\\')
-       patchpathSubstrLength --;
+   auto patchpathStr(path_to_string(patchpath));
+   auto patchpathSubstrLength = patchpathStr.size() + 1;
+   if (patchpathStr.back() == '/' || patchpathStr.back() == '\\')
+      patchpathSubstrLength--;
    
    for (auto &p : alldirs )
    {
       PatchCategory c;
-#if WINDOWS && ! TARGET_RACK
-      /*
-      ** Windows filesystem names are properly wstrings which, if we want them to 
-      ** display properly in vstgui, need to be converted to UTF8 using the 
-      ** windows widechar API. Linux and Mac do not require this.
-      */
-      std::wstring str = p.wstring().substr(patchpathSubstrLength);
-      c.name = Surge::Storage::wstringToUTF8(str);
-#else
-      c.name = p.generic_string().substr(patchpathSubstrLength);
-#endif
+      c.name = path_to_string(p).substr(patchpathSubstrLength);
       c.internalid = category;
 
       c.numberOfPatchesInCatgory = 0;
       for (auto& f : fs::directory_iterator(p))
       {
-         std::string xtn = f.path().extension().generic_string();
+         std::string xtn = path_to_string(f.path().extension());
          if (filterOp(xtn))
          {
             Patch e;
             e.category = category;
             e.path = f.path();
-#if WINDOWS && ! TARGET_RACK
-              std::wstring str = f.path().filename().wstring();
-              str = str.substr(0, str.size() - xtn.length());
-              e.name = Surge::Storage::wstringToUTF8(str);
-#else
-              e.name = f.path().filename().generic_string();
-              e.name = e.name.substr(0, e.name.size() - xtn.length());
-#endif
-              items.push_back(e);
+            e.name = path_to_string(f.path().filename());
+            e.name = e.name.substr(0, e.name.size() - xtn.length());
+            items.push_back(e);
 
-              c.numberOfPatchesInCatgory ++;
+            c.numberOfPatchesInCatgory++;
          }
       }
 
@@ -933,7 +913,7 @@ void SurgeStorage::load_wt(int id, Wavetable* wt, OscillatorStorage *osc)
    if (!wt)
       return;
 
-   load_wt(wt_list[id].path.generic_string(), wt, osc);
+   load_wt(path_to_string(wt_list[id].path), wt, osc);
 
    if( osc )
    {
@@ -946,10 +926,7 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt, OscillatorStorage *os
 {
    if( osc )
    {
-      char sep = '/';
-#if WINDOWS
-      sep = '\\';
-#endif
+      char sep = PATH_SEPARATOR;
       auto fn = filename.substr(filename.find_last_of(sep) + 1, filename.npos);
       std::string fnnoext = fn.substr( 0, fn.find_last_of('.' ) );
       
@@ -1673,7 +1650,7 @@ void SurgeStorage::rescanUserMidiMappings()
    if( fs::is_directory( fs::path( userMidiMappingsPath ) ) ) {
       for( auto &d : fs::directory_iterator( fs::path( userMidiMappingsPath ) ) )
       {
-         auto fn = d.path().generic_string();
+         auto fn = path_to_string(d.path());
          std::string ending = ".srgmid";
          if( fn.length() >= ending.length() && ( 0 == fn.compare( fn.length() - ending.length(), ending.length(), ending ) ) )
          {
@@ -1920,20 +1897,6 @@ string makeStringVertical(string& source)
    }
    return oss.str();
 }
-
-#if WINDOWS
-std::string wstringToUTF8(const std::wstring &str)
-{
-    std::string ret;
-    int len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0, NULL, NULL);
-    if (len > 0)
-    {
-        ret.resize(len);
-        WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len, NULL, NULL);
-    }
-    return ret;
-}
-#endif    
 
 std::string appendDirectory( const std::string &root, const std::string &path1 )
 {

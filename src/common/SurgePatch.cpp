@@ -566,7 +566,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                        ct_bool_unipolar, "lfo.unipolar", px + 5, py - 4, sc_id,
                                                        cg_LFO, ms_lfo1 + l, false));
 
-         px += 3 * gui_sec_width - 4;
+         px += 3 * gui_sec_width - 2;
          py = gui_modsec_y + 5;
          sprintf(label, "lfo%i_delay", l);
          a->push_back(scene[sc].lfo[l].delay.assign(p_id.next(), id_s++, label, "Delay", ct_envtime, "lfo.delay", px,

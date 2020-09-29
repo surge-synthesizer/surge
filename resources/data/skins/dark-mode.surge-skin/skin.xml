@@ -26,9 +26,9 @@
     <color id="surgeorange" value="#ff9000"/>
     <color id="buttonbg" value="#151515"/>
 
-    <color id="modbutton.active.secondary.hover" value="#2E86FE"/>
-    <color id="modbutton.inactive.secondary.hover" value="#ADFF6B"/>
-    <color id="modbutton.selected.secondary.hover" value="#ADFF6B"/>
+    <color id="modbutton.armed.font.usedmod.hover" value="#2E86FE"/>
+    <color id="modbutton.used.font.usedmod.hover" value="#ADFF6B"/>
+    <color id="modbutton.selected.font.usedmod.hover" value="#ADFF6B"/>
 
     <color id="lfo.title.foreground" value="#B4B4B490"/>
 

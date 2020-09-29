@@ -179,12 +179,13 @@ bool CStatusPanel::onDrop(VSTGUI::DragEventData data )
          drag->getData(0, fn, t);
          const char* fName = static_cast<const char*>(fn);
          fs::path fPath(fName);
-         if ((_stricmp(fPath.extension().generic_string().c_str(), ".scl") == 0))
+         std::string fExt(path_to_string(fPath.extension()));
+         if ((_stricmp(fExt.c_str(), ".scl") == 0))
          {
             if ( editor )
                editor->tuningFileDropped(fName);
          }
-         if ((_stricmp(fPath.extension().generic_string().c_str(), ".kbm") == 0))
+         if ((_stricmp(fExt.c_str(), ".kbm") == 0))
          {
             if ( editor )
                editor->mappingFileDropped(fName);

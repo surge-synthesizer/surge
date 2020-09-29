@@ -44,6 +44,11 @@ static inline int _stricmp(const char *s1, const char *s2)
 }
 #endif
 
+#if WINDOWS && !TARGET_RACK
+FILE* surge_win_fopen_utf8(const char* pathname, const char* mode);
+#define fopen(pathname, mode) surge_win_fopen_utf8((pathname), (mode))
+#endif
+
 #define _SURGE_STR(x) #x
 #define SURGE_STR(x) _SURGE_STR(x)
 

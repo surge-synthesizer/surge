@@ -396,12 +396,13 @@ bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
          const void* fn;
          drag->getData(0, fn, t);
          const char* fName = static_cast<const char*>(fn);
-         fs::path fPath(fName);
-         if ((_stricmp(fPath.extension().generic_string().c_str(), ".wt") != 0) &&
-             (_stricmp(fPath.extension().generic_string().c_str(), ".wav") != 0))
+         fs::path fPath(string_to_path(fName));
+         auto extStr(path_to_string(fPath.extension()));
+         if ((_stricmp(extStr.c_str(), ".wt") != 0) &&
+             (_stricmp(extStr.c_str(), ".wav") != 0))
          {
             Surge::UserInteractions::promptError(
-                std::string("Surge only supports drag-and-drop of .wt or .wav wavetable files onto the oscillator! You have dropped a file with extension ") + fPath.extension().generic_string() + ".",
+                std::string("Surge only supports drag-and-drop of .wt or .wav wavetable files onto the oscillator! You have dropped a file with extension ") + extStr + ".",
                 "Wavetable Import Error");
          }
          else

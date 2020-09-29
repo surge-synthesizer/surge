@@ -930,15 +930,6 @@ bool isValidUTF8( const std::string &testThis);
 std::string findReplaceSubstring(std::string &source, const std::string &from, const std::string &to);
 std::string makeStringVertical(std::string &source);
 
-#if WINDOWS
-/*
-** Windows filesystem names are properly wstrings which, if we want them to
-** display properly in vstgui, need to be converted to UTF8 using the
-** windows widechar API. Linux and Mac do not require this.
-*/
-std::string wstringToUTF8(const std::wstring &ws);
-#endif
-
 std::string appendDirectory( const std::string &root, const std::string &path1 );
 std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2 );
 std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2, const std::string &path3 );

@@ -159,23 +159,22 @@ namespace Colors
 
    namespace ModSource
    {
-      namespace Active
+      namespace Unused
       {
-         const Surge::UI::SkinColor Background("modbutton.active.fill"),
-                                    Border("modbutton.active.frame"),
-                                    BorderHover("modbutton.active.frame.hover"),
-                                    Text("modbutton.active.font"),
-                                    TextHover("modbutton.active.font.hover"),
-                                    UsedHover("modbutton.active.secondary.hover");
+         const Surge::UI::SkinColor Background("modbutton.unused.fill"),
+                                    Border("modbutton.unused.frame"),
+                                    BorderHover("modbutton.unused.frame.hover"),
+                                    Text("modbutton.unused.font"),
+                                    TextHover("modbutton.unused.font.hover");
       }
-      namespace Inactive
+      namespace Used
       {
-         const Surge::UI::SkinColor Background("modbutton.inactive.fill"),
-                                    Border("modbutton.inactive.frame"),
-                                    BorderHover("modbutton.inactive.frame.hover"),
-                                    Text("modbutton.inactive.font"),
-                                    TextHover("modbutton.inactive.font.hover"),
-                                    UsedHover("modbutton.inactive.secondary.hover");
+         const Surge::UI::SkinColor Background("modbutton.used.fill"),
+                                    Border("modbutton.used.frame"),
+                                    BorderHover("modbutton.used.frame.hover"),
+                                    Text("modbutton.used.font"),
+                                    TextHover("modbutton.used.font.hover"),
+                                    UsedHover("modbutton.used.font.usedmod.hover");
       }
       namespace Selected
       {
@@ -184,15 +183,16 @@ namespace Colors
                                     BorderHover("modbutton.selected.frame.hover"),
                                     Text("modbutton.selected.font"),
                                     TextHover("modbutton.selected.font.hover"),
-                                    UsedHover("modbutton.selected.secondary.hover");
+                                    UsedHover("modbutton.selected.font.usedmod.hover");
       }
-      namespace Used
+      namespace Armed
       {
-         const Surge::UI::SkinColor Background("modbutton.used.fill"),
-                                    Border("modbutton.used.frame"),
-                                    BorderHover("modbutton.used.frame.hover"),
-                                    Text("modbutton.used.font"),
-                                    TextHover("modbutton.used.font.hover");
+         const Surge::UI::SkinColor Background("modbutton.armed.fill"),
+                                    Border("modbutton.armed.frame"),
+                                    BorderHover("modbutton.armed.frame.hover"),
+                                    Text("modbutton.armed.font"),
+                                    TextHover("modbutton.armed.font.hover"),
+                                    UsedHover("modbutton.armed.font.usedmod.hover");
       }
    }
 
@@ -207,7 +207,7 @@ namespace Colors
       namespace Grid
       {
          const Surge::UI::SkinColor Primary("msegeditor.grid.primary"),
-                                    Secondary("msegeditor.grid.secondary");
+                                    Secondary("msegeditor.grid.usedmod");
       }
       namespace Loop
       {
