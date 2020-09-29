@@ -322,7 +322,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    CPoint loc(where);
    loc.offset(-size.left, -size.top);
 
-   if (controlstate)
+   if (controlstate != cs_none )
    {
 #if MAC
 //		if(buttons & kRButton) statezoom = 0.1f;
@@ -337,7 +337,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if (is_metacontroller && (buttons & kDoubleClick) && MCRect.pointInside(where) && !controlstate)
+   if (is_metacontroller && (buttons & kDoubleClick) && MCRect.pointInside(where) && controlstate == cs_none )
    {
       if (bipolar)
          value = 0.5;
@@ -351,7 +351,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if (is_metacontroller && MCRect.pointInside(where) && (buttons & kLButton) && !controlstate)
+   if (is_metacontroller && MCRect.pointInside(where) && (buttons & kLButton) && controlstate == cs_none)
    {
       beginEdit();
       controlstate = cs_drag;
@@ -438,13 +438,14 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
    }
    
    
-   if (controlstate)
+   if (controlstate == cs_drag)
    {
       endEdit();
-      controlstate = cs_none;
 
       attachCursor();
    }
+   controlstate = cs_none;
+
    return kMouseEventHandled;
 }
 
