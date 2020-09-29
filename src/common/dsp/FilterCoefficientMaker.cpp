@@ -3,6 +3,7 @@
 #include <vt_dsp/basic_dsp.h>
 
 #include "filters/VintageLadders.h"
+#include "filters/Obxd.h"
 
 using namespace std;
 
@@ -12,6 +13,8 @@ FilterCoefficientMaker::FilterCoefficientMaker()
 {
    Reset();
 }
+
+
 
 void FilterCoefficientMaker::MakeCoeffs(
     float Freq, float Reso, int Type, int SubType, SurgeStorage* storageI)
@@ -78,7 +81,9 @@ void FilterCoefficientMaker::MakeCoeffs(
          // SOFTWARE ERROR
          break;
       }
-
+      break;
+   case fut_obxd:
+      ObxdFilter::makeCoefficients(this, Freq, Reso, SubType, storageI);
       break;
 #if SURGE_EXTRA_FILTERS      
 #endif      

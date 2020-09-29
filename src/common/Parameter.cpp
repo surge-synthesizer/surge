@@ -2110,6 +2110,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_vintageladder:
                      sprintf( txt, "%s", fut_vintageladder_subtypes[i]);
                      break;
+                  case fut_obxd:
+                     sprintf( txt, "%s", fut_obxd_subtypes[i]);
+                     break;
 #if SURGE_EXTRA_FILTERS
 #endif                     
                   default:

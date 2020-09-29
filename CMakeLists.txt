@@ -184,6 +184,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/RotarySpeakerEffect.cpp
   src/common/dsp/effect/VocoderEffect.cpp
   src/common/dsp/filters/VintageLadders.cpp
+  src/common/dsp/filters/Obxd.cpp
   src/common/dsp/AdsrEnvelope.cpp
   src/common/dsp/BiquadFilter.cpp
   src/common/dsp/BiquadFilterSSE2.cpp
