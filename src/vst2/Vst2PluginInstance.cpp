@@ -60,12 +60,12 @@ Vst2PluginInstance::Vst2PluginInstance(audioMasterCallback audioMaster)
    plug_is_synth = true;
    setUniqueID('cjs3'); // identify
 #else
-   char path[1024];
+   WCHAR path[MAX_PATH];
    extern void* hInstance;
-   GetModuleFileName((HMODULE)hInstance, path, 1024);
-   _strlwr(path);
+   GetModuleFileName((HMODULE)hInstance, path, std::size(path));
+   _wcslwr(path);
 
-   if (strstr(path, "_fx") || strstr(path, "_FX"))
+   if (wcsstr(path, L"_fx"))
    {
       plug_is_synth = false;
       setUniqueID('cjsx'); // identify
