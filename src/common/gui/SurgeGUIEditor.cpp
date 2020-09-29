@@ -5819,11 +5819,11 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
      me->setChecked( smoothing == md );
    };
    asmt( "Legacy", ControllerModulationSource::SmoothingMode::LEGACY );
-   asmt( "Slow Smooth", ControllerModulationSource::SmoothingMode::SLOW_EXP );
-   asmt( "Fast Smooth", ControllerModulationSource::SmoothingMode::FAST_EXP );
-   asmt( "Fast Line", ControllerModulationSource::SmoothingMode::FAST_LINE );
-   asmt( "Direct (unsmoothed)", ControllerModulationSource::SmoothingMode::DIRECT );
-   midiSubMenu->addEntry( smoothMenu, "Controller Smoothing" );
+   asmt( "Slow Exponential", ControllerModulationSource::SmoothingMode::SLOW_EXP );
+   asmt( "Fast Exponential", ControllerModulationSource::SmoothingMode::FAST_EXP );
+   asmt( "Fast Linear", ControllerModulationSource::SmoothingMode::FAST_LINE );
+   asmt( "No Smoothing", ControllerModulationSource::SmoothingMode::DIRECT );
+   midiSubMenu->addEntry(smoothMenu, Surge::UI::toOSCaseForMenu ("Controller Smoothing"));
    did++;
    midiSubMenu->addSeparator();
    did++;
