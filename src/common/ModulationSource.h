@@ -120,6 +120,7 @@ const int modsource_display_order[n_modsources] =
 const int n_customcontrollers = 8;
 const int num_metaparameters = n_customcontrollers;
 extern float samplerate_inv;
+extern float samplerate;
 
 const char modsource_names_button[n_modsources][32] =
 {
@@ -359,18 +360,34 @@ public:
 class ControllerModulationSource : public ModulationSource
 {
 public:
+   // Smoothing and Shaping Behaviors
+   enum SmoothingMode {
+      LEGACY=-1, // This is (1) the exponential backoff and (2) not streamed.
+      SLOW_EXP, // Legacy with a sigma clamp
+      FAST_EXP, // Faster Legacy with a sigma clamp
+      FAST_LINE, // Linearly move
+      DIRECT  // Apply the value directly
+   } smoothingMode = LEGACY;
+
    ControllerModulationSource()
    {
       target = 0.f;
       output = 0.f;
       bipolar = false;
       changed = true;
+      smoothingMode = LEGACY;
    }
+   ControllerModulationSource(SmoothingMode mode) : ControllerModulationSource()
+   {
+      smoothingMode = mode;
+   }
+
    virtual ~ControllerModulationSource()
    {}
    void set_target(float f)
    {
       target = f;
+      startingpoint = output;
       changed = true;
    }
 
@@ -378,6 +395,7 @@ public:
    {
       target = f;
       output = f;
+      startingpoint = f;
       changed = true;
    }
 
@@ -387,7 +405,7 @@ public:
          target = 2.f * f - 1.f;
       else
          target = f;
-
+      startingpoint = output;
       if (updatechanged)
          changed = true;
    }
@@ -423,24 +441,59 @@ public:
       output = 0.f;
       bipolar = false;
    }
+   inline void processSmoothing( SmoothingMode mode, float sigma )
+   {
+      if (mode == LEGACY || mode == SLOW_EXP || mode == FAST_EXP)
+      {
+         float b = fabs(target - output);
+         if (b < sigma && mode != LEGACY)
+         {
+            output = target;
+         }
+         else
+         {
+            float a = (mode == FAST_EXP ? 0.99f : 0.9f) * 44100 * samplerate_inv * b;
+            output = (1 - a) * output + a * target;
+         }
+         return;
+      };
+      if (mode == FAST_LINE)
+      {
+         /*
+          * Apply a constant change until we get there.
+          * Rate is set so we cover the entire range (0,1)
+          * in 50 blocks at 44k
+          */
+         float sampf = samplerate / 44100;
+         float da = ( target - startingpoint ) / ( 50 * sampf );
+         float b = target - output;
+         if( fabs( b ) < fabs( da ) )
+         {
+            output = target;
+         }
+         else
+         {
+            output += da;
+         }
+      }
+      if( mode == DIRECT )
+      {
+         output = target;
+      }
+   }
    virtual void process_block() override
    {
-      float b = fabs(target - output);
-      float a = 0.9f * 44100 * samplerate_inv * b;
-      output = (1 - a) * output + a * target;
+      processSmoothing( smoothingMode, smoothingMode == FAST_EXP ? 0.005f : 0.0025f );
    }
 
    virtual bool process_block_until_close(float sigma)
    {
-      float b = fabs(target - output);
-      if (b < sigma)
-      {
-         output = target;
-         return false; // this interpolator has reached it's target and is no longer needed
-      }
-      float a = 0.9f * 44100 * samplerate_inv * b;
-      output = (1 - a) * output + a * target;
-      return true; // continue
+      if( smoothingMode == LEGACY )
+         processSmoothing(SLOW_EXP, sigma);
+      else
+         processSmoothing(smoothingMode, sigma);
+
+      return (output != target ); // continue
    }
 
    virtual bool is_bipolar() override
@@ -452,10 +505,12 @@ public:
       bipolar = b;
    }
 
-   float target;
+   float target, startingpoint;
    int id; // can be used to assign the controller to a parameter id
    bool bipolar;
    bool changed;
+
+
 };
 
 class RandomModulationSource : public ModulationSource
