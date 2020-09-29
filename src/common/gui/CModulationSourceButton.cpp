@@ -159,25 +159,25 @@ void CModulationSourceButton::draw(CDrawContext* dc)
                                         std::min( (int)(c.blue * fac), 255 ) );
                       };
 
-   FillCol = skin->getColor(Colors::ModSource::Inactive::Background, CColor(18, 52, 99, 255));
-   FrameCol = UsedOrActive ? skin->getColor( Colors::ModSource::Inactive::Border, ColEdge ) : skin->getColor(Colors::ModSource::Used::Border, ColSemiTint);
-   FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Inactive::Text, ColEdge) : skin->getColor(Colors::ModSource::Used::Text, ColSemiTint);
+   FillCol = skin->getColor(Colors::ModSource::Used::Background, CColor(18, 52, 99, 255));
+   FrameCol = UsedOrActive ? skin->getColor( Colors::ModSource::Used::Border, ColEdge ) : skin->getColor(Colors::ModSource::Unused::Border, ColSemiTint);
+   FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::Text, ColEdge) : skin->getColor(Colors::ModSource::Unused::Text, ColSemiTint);
    if( hovered )
    {
-      FrameCol = UsedOrActive ? skin->getColor(Colors::ModSource::Inactive::BorderHover, brighten(FrameCol)) : skin->getColor(Colors::ModSource::Used::BorderHover, brighten(FrameCol));
-      FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Inactive::TextHover, brighten(ColEdge)) : skin->getColor(Colors::ModSource::Used::TextHover, brighten(ColSemiTint));
+      FrameCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::BorderHover, brighten(FrameCol)) : skin->getColor(Colors::ModSource::Unused::BorderHover, brighten(FrameCol));
+      FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::TextHover, brighten(ColEdge)) : skin->getColor(Colors::ModSource::Unused::TextHover, brighten(ColSemiTint));
    }
 
    if (ActiveModSource)
    {
-      FrameCol = skin->getColor(Colors::ModSource::Active::Border, ColBlink);
+      FrameCol = skin->getColor(Colors::ModSource::Armed::Border, ColBlink);
       if( hovered )
-         FrameCol = skin->getColor(Colors::ModSource::Active::BorderHover, brighten(FrameCol));
+         FrameCol = skin->getColor(Colors::ModSource::Armed::BorderHover, brighten(FrameCol));
       
-      FillCol = skin->getColor(Colors::ModSource::Active::Background, ColBlink);
-      FontCol = skin->getColor(Colors::ModSource::Active::Text, CColor(18, 52, 99, 255));
+      FillCol = skin->getColor(Colors::ModSource::Armed::Background, ColBlink);
+      FontCol = skin->getColor(Colors::ModSource::Armed::Text, CColor(18, 52, 99, 255));
       if( hovered )
-         FontCol = skin->getColor(Colors::ModSource::Active::TextHover, brighten(CColor(18, 52, 99, 255)));
+         FontCol = skin->getColor(Colors::ModSource::Armed::TextHover, brighten(CColor(18, 52, 99, 255)));
    }
    else if (SelectedModSource)
    {
@@ -191,20 +191,20 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    }
    else if (tint)
    {
-      FillCol = skin->getColor(Colors::ModSource::Used::Background, FillCol);
-      FrameCol = skin->getColor(Colors::ModSource::Used::Border, ColHover);
+      FillCol = skin->getColor(Colors::ModSource::Unused::Background, FillCol);
+      FrameCol = skin->getColor(Colors::ModSource::Unused::Border, ColHover);
       if( hovered )
-         FrameCol = skin->getColor(Colors::ModSource::Used::BorderHover, brighten(FrameCol));
-      FontCol = skin->getColor(Colors::ModSource::Used::Text, ColHover);
+         FrameCol = skin->getColor(Colors::ModSource::Unused::BorderHover, brighten(FrameCol));
+      FontCol = skin->getColor(Colors::ModSource::Unused::Text, ColHover);
       if( hovered )
-         FontCol = skin->getColor(Colors::ModSource::Used::TextHover, brighten(ColHover));
+         FontCol = skin->getColor(Colors::ModSource::Unused::TextHover, brighten(ColHover));
    }
 
    if( secondaryHover )
    {
-      FontCol = skin->getColor(Colors::ModSource::Inactive::UsedHover, VSTGUI::CColor(0xFF, 0x90, 0x00));
+      FontCol = skin->getColor(Colors::ModSource::Used::UsedHover, VSTGUI::CColor(0xFF, 0x90, 0x00));
       if( ActiveModSource )
-         FontCol = skin->getColor(Colors::ModSource::Active::UsedHover, FontCol);
+         FontCol = skin->getColor(Colors::ModSource::Armed::UsedHover, FontCol);
       if( SelectedModSource )
          FontCol = skin->getColor(Colors::ModSource::Selected::UsedHover, kWhiteCColor);
    }
@@ -246,7 +246,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       MCRect.top += 12;
       MCRect.bottom--;
       MCRect.right--;
-      dc->setFillColor(skin->getColor(Colors::ModSource::Inactive::Background, CColor(18, 52, 99, 255)));
+      dc->setFillColor(skin->getColor(Colors::ModSource::Used::Background, CColor(18, 52, 99, 255)));
       dc->drawRect(MCRect, kDrawFilled);
       CRect brect(MCRect);
       brect.inset(1, 1);
@@ -477,9 +477,9 @@ CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CB
          CColor FrameCol, FillCol, FontCol;
          const CColor ColEdge = CColor(46, 134, 254, 255);
 
-         FillCol = skin->getColor(Colors::ModSource::Inactive::Background, CColor(18, 52, 99, 255));
-         FrameCol = skin->getColor( Colors::ModSource::Inactive::Border, ColEdge );
-         FontCol = skin->getColor(Colors::ModSource::Inactive::Text, ColEdge); 
+         FillCol = skin->getColor(Colors::ModSource::Used::Background, CColor(18, 52, 99, 255));
+         FrameCol = skin->getColor( Colors::ModSource::Used::Border, ColEdge );
+         FontCol = skin->getColor(Colors::ModSource::Used::Text, ColEdge); 
 
          l->setFont( displayFont );
          l->setBackColor( FillCol );
