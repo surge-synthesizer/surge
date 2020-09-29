@@ -111,11 +111,11 @@ namespace Colors
 
    namespace ModSource
    {
-      namespace Active
+      namespace Unused
       {
-          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedHover;
+          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover;
       }
-      namespace Inactive
+      namespace Used
       {
           extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedHover;
       }
@@ -123,9 +123,9 @@ namespace Colors
       {
           extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedHover;
       }
-      namespace Used
+      namespace Armed
       {
-          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover;
+          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedHover;
       }
    }
 
