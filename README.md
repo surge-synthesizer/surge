@@ -4,7 +4,7 @@ Surge is an open source digital synthesizer, originally written and sold as a co
 by @kurasu/Claes Johanson at [vember audio](http://vemberaudio.se). In September of 2018,
 Claes chose to release a partially completed version of Surge 1.6 under GPL3, and a group
 of developers have been improving it since. You can learn more about the team at https://surge-synth-team.org/ or
-connect with us on our Discord.
+connect with us on Discord.
 
 **If you are a musician only looking to use Surge please download the appropriate binary
 [from our website](https://surge-synthesizer.github.io). The Surge developer team makes regular binary releases for all supported platforms
