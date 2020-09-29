@@ -155,7 +155,7 @@ void SurgeSynthesizer::loadPatch(int id)
    patchid = id;
 
    Patch e = storage.patch_list[id];
-   loadPatchByPath( e.path.generic_string().c_str(), e.category, e.name.c_str() );
+   loadPatchByPath(path_to_string(e.path).c_str(), e.category, e.name.c_str());
 }
 
 bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, const char* patchName )
@@ -347,8 +347,8 @@ void SurgeSynthesizer::savePatch()
    if (storage.getPatch().category.empty())
       storage.getPatch().category = "Default";
 
-   fs::path savepath = getUserPatchDirectory();
-   savepath.append(storage.getPatch().category);
+   fs::path savepath = string_to_path(getUserPatchDirectory());
+   savepath /= (string_to_path(storage.getPatch().category));
 
    create_directories(savepath);
 
@@ -376,7 +376,7 @@ void SurgeSynthesizer::savePatch()
    }
 
    fs::path filename = savepath;
-   filename.append(legalname + ".fxp");
+   filename /= string_to_path(legalname + ".fxp");
 
    if (fs::exists(filename))
    {

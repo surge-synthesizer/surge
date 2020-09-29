@@ -466,7 +466,7 @@ void CFxMenu::rescanUserPresets()
             {
                workStack.push_back(d);
             }
-            else if( d.path().extension().generic_string() == ".srgfx" )
+            else if (path_to_string(d.path().extension()) == ".srgfx")
             {
                sfxfiles.push_back( d.path() );
             }
@@ -476,7 +476,7 @@ void CFxMenu::rescanUserPresets()
 
    for( auto f : sfxfiles )
    {
-      auto fn = f.generic_string();
+      auto fn = path_to_string(f);
 
       {
          UserPreset preset;

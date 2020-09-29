@@ -12,6 +12,7 @@
 
 #include "ImportFilesystem.h"
 
+#include <array>
 #include <iostream>
 #include <iomanip>
 
@@ -80,13 +81,11 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
 #endif   
    availableSkins.clear();
 
-   std::vector<std::string> paths = {storage->datapath, storage->userDataPath};
+   std::array<fs::path, 2> paths = {string_to_path(storage->datapath),
+                                    string_to_path(storage->userDataPath)};
 
-   for (auto sourceS : paths)
+   for (auto& source : paths)
    {
-      fs::path source(sourceS);
-      std::vector<fs::path> candidates;
-
       std::vector<fs::path> alldirs;
       std::deque<fs::path> workStack;
       workStack.push_back(source);
@@ -110,17 +109,7 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
       for (auto& p : alldirs)
       {
          std::string name;
-#if WINDOWS && !TARGET_RACK
-         /*
-         ** Windows filesystem names are properly wstrings which, if we want them to
-         ** display properly in vstgui, need to be converted to UTF8 using the
-         ** windows widechar API. Linux and Mac do not require this.
-         */
-         std::wstring str = p.wstring();
-         name = Surge::Storage::wstringToUTF8(str);
-#else
-         name = p.generic_string();
-#endif
+         name = path_to_string(p);
 
          std::string ending = ".surge-skin";
          if (name.length() >= ending.length() &&
@@ -435,20 +424,21 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    {
       if (g.first == "defaultimage")
       {
-         auto path = resourceName(g.second["directory"]);
-         fs::path source(path);
-         for (auto& d : fs::directory_iterator(source))
+         const auto path = resourceName(g.second["directory"]);
+         fs::path source(string_to_path(path));
+         for (const fs::path& d : fs::directory_iterator(source))
          {
-            auto pos = d.path().generic_string().find("bmp001");
+            const auto pathStr = path_to_string(d);
+            const auto pos = pathStr.find("bmp001");
             if (pos != std::string::npos)
             {
-               int idx = std::atoi(d.path().generic_string().c_str() + pos + 3);
-               bitmapStore->loadBitmapByPathForID(d.path().generic_string(), idx);
+               int idx = std::atoi(pathStr.c_str() + pos + 3);
+               bitmapStore->loadBitmapByPathForID(pathStr, idx);
             }
             else
             {
-               std::string id = defaultImageIDPrefix + d.path().filename().generic_string();
-               bitmapStore->loadBitmapByPathForStringID(d.path().generic_string(), id);
+               std::string id = defaultImageIDPrefix + path_to_string(d.filename());
+               bitmapStore->loadBitmapByPathForStringID(pathStr, id);
             }
          }
       }

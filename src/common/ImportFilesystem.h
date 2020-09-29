@@ -23,3 +23,21 @@ namespace fs = std::experimental::filesystem;
 #else
 #error FILESYSTEM is not configured by build system
 #endif
+
+inline std::string path_to_string(const fs::path& path)
+{
+#if WINDOWS && !TARGET_RACK
+   return path.u8string();
+#else
+   return path.generic_string();
+#endif
+}
+
+inline fs::path string_to_path(const std::string& path)
+{
+#if WINDOWS && !TARGET_RACK
+   return fs::u8path(path);
+#else
+   return fs::path(path);
+#endif
+}

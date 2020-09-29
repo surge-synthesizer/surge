@@ -66,7 +66,8 @@ TEST_CASE( "All .wt and .wav factory assets load", "[io]" )
       auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
       wt->size = -1;
       wt->n_tables = -1;
-      surge->storage.load_wt(p.path.generic_string(), wt, &(surge->storage.getPatch().scene[0].osc[0]) );
+      surge->storage.load_wt(path_to_string(p.path), wt,
+                             &(surge->storage.getPatch().scene[0].osc[0]));
       REQUIRE( wt->size > 0 );
       REQUIRE( wt->n_tables > 0 );
    }

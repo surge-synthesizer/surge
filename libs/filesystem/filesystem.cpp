@@ -41,13 +41,13 @@ namespace std { namespace experimental { namespace filesystem {
         return p;
     }
     
-    path path::filename() {
+    path path::filename() const {
         auto idx = this->p.find_last_of("/");
         path p(this->p.substr(idx+1));
         return p;
     }
     
-    path path::extension() {
+    path path::extension() const {
         auto idx = this->p.find_last_of(".");
         if( idx == std::string::npos )
             return path( "" );
@@ -56,7 +56,7 @@ namespace std { namespace experimental { namespace filesystem {
         return res;
     }
 
-    path path::stem() {
+    path path::stem() const {
         auto idx = this->p.find_last_of("/");
         auto q = this->p.substr(idx+1);
         idx = q.find_last_of(".");
