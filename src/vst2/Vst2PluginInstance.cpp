@@ -484,6 +484,12 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
                outputs[2 + outp][i] = (float)_instance->sceneout[0][outp][blockpos];
                outputs[4 + outp][i] = (float)_instance->sceneout[1][outp][blockpos];
             }
+            else
+            {
+               outputs[2 + outp][i] = 0.f;
+               outputs[4 + outp][i] = 0.f;
+            }
+
          }
          else  // adding
          {
@@ -491,7 +497,7 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
             if( _instance->activateExtraOutputs ) {
                outputs[2 + outp][i] += (float)_instance->sceneout[0][outp][blockpos];
                outputs[4 + outp][i] += (float)_instance->sceneout[1][outp][blockpos];
-            }
+            } // adding 0 is the same as doing nothing so no else here
          }
       }
 
