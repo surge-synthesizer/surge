@@ -5,7 +5,9 @@
 # See issue 1206 for our working list to get this finished
 #
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0091 NEW)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -185,6 +187,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/RotarySpeakerEffect.cpp
   src/common/dsp/effect/VocoderEffect.cpp
   src/common/dsp/filters/VintageLadders.cpp
+  src/common/dsp/filters/Obxd.cpp
   src/common/dsp/AdsrEnvelope.cpp
   src/common/dsp/AudioInputOscillator.cpp
   src/common/dsp/BiquadFilter.cpp
@@ -609,7 +612,6 @@ elseif( WIN32 )
     /bigobj
 
     /MP # Build with Multiple Processes
-    $<IF:$<CONFIG:DEBUG>,/MTd,/MT> # Link static runtime (poor man's MSVC_RUNTIME_LIBRARY for CMake <3.15)
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -637,7 +639,6 @@ elseif( WIN32 )
       utils/dllcheck/dllcheck.cpp
       ${CMAKE_BINARY_DIR}/geninclude/version.cpp
       )
-    target_compile_options(dllcheck PRIVATE /MT)
     target_include_directories( dllcheck PRIVATE src/common )
   endif()
 else()
@@ -685,6 +686,7 @@ if( BUILD_AU )
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
     ${FS_COMPILE_DEFINITIONS}
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
     TARGET_AUDIOUNIT=1
     )
 
@@ -761,6 +763,7 @@ if( BUILD_VST3 )
     ${FS_COMPILE_DEFINITIONS}
     TARGET_VST3=1
     $<IF:$<CONFIG:DEBUG>,DEVELOPMENT,RELEASE>=1
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
     DEBUG=$<CONFIG:DEBUG>
     )
 
@@ -852,7 +855,8 @@ if( BUILD_VST2 )
     ${FS_COMPILE_DEFINITIONS}
     TARGET_VST2=1
     VSTGUI_ENABLE_DEPRECATED_METHODS=0
-    )
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+  )
 
   target_compile_options(surge-vst2-dll
     PRIVATE
@@ -927,7 +931,8 @@ if( BUILD_LV2 )
     ${OS_COMPILE_DEFINITIONS}
     ${FS_COMPILE_DEFINITIONS}
     TARGET_LV2=1
-    )
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+  )
 
   target_compile_options(surge-lv2-dll
     PRIVATE
@@ -1005,7 +1010,8 @@ if( BUILD_HEADLESS )
     ${FS_COMPILE_DEFINITIONS}
     TARGET_HEADLESS=1
     LIBMIDIFILE=1
-    )
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+  )
 
   target_include_directories(surge-headless
     PRIVATE

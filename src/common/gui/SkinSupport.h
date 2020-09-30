@@ -70,8 +70,10 @@ class SkinDB;
 
 struct SkinColor {
    SkinColor(const std::string &n);
+   SkinColor(const std::string &n, const VSTGUI::CColor &col);
    std::string name;
    int uid;
+   VSTGUI::CColor defaultColor = VSTGUI::kBlackCColor;
 };
 
 class Skin
@@ -164,11 +166,17 @@ public:
       bool hasColor(const std::string &id) const;
       VSTGUI::CColor getColor(const std::string &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const;
 
+   //private: make this private instead of public to see if you got em all
    public:
       VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
       {
          // for now do this - later make it so we get them all by uncommenting the private: and public: above
          return getColor( id.name, def, noLoops );
+      }
+   public:
+      VSTGUI::CColor getColor( const SkinColor &id, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
+      {
+         return getColor( id, id.defaultColor, noLoops );
       }
 
       bool hasColor(const SkinColor &col) const

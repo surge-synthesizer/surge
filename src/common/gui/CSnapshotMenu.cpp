@@ -696,7 +696,7 @@ void CFxMenu::saveFX()
    if( sge )
    {
       sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
-                             [this](const std::string &s) { this->saveFXIn( s ); } );
+                             CPoint(-1,-1), [this](const std::string& s) { this->saveFXIn(s); });
    }
 
 
