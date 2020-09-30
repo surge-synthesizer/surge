@@ -5,7 +5,9 @@
 # See issue 1206 for our working list to get this finished
 #
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0091 NEW)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -610,7 +612,6 @@ elseif( WIN32 )
     /bigobj
 
     /MP # Build with Multiple Processes
-    $<IF:$<CONFIG:DEBUG>,/MTd,/MT> # Link static runtime (poor man's MSVC_RUNTIME_LIBRARY for CMake <3.15)
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -638,7 +639,6 @@ elseif( WIN32 )
       utils/dllcheck/dllcheck.cpp
       ${CMAKE_BINARY_DIR}/geninclude/version.cpp
       )
-    target_compile_options(dllcheck PRIVATE /MT)
     target_include_directories( dllcheck PRIVATE src/common )
   endif()
 else()
