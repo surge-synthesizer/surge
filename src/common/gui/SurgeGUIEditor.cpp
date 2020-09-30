@@ -3101,22 +3101,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid, synth->storage.getPatch().scene[current_scene].modsources[ms_ctrl1 + ccid]->is_bipolar());
             eid++;
 
-            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Rename Macro..."), [this, control, ccid]() {
-                                                                                           promptForMiniEdit(synth->storage.getPatch().CustomControllerLabel[ccid] ,
-                                                                                                             "Enter a new name for the macro:", "Rename Macro",
-                                                                                                             [this, control, ccid](const std::string & s )
-                                                                                                             {
-                                                                                                                strncpy( synth->storage.getPatch().CustomControllerLabel[ccid],
-                                                                                                                         s.c_str(),
-                                                                                                                         16 );
-                                                                                                                ((CModulationSourceButton*)control)
-                                                                                                                   ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
-                                                                                                                
-                                                                                                                control->setDirty();
-                                                                                                                control->invalid();
-                                                                                                                synth->refresh_editor = true;
-                                                                                                                // synth->updateDisplay();
-                                                                                                             });
+            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Rename Macro..."), [this, control, ccid, menuRect]() {
+                   std::string pval = synth->storage.getPatch().CustomControllerLabel[ccid];
+                   if( pval == "-" ) pval = "";
+                   promptForMiniEdit(
+                       pval,
+                       "Enter a new name for the macro:", "Rename Macro", menuRect.getTopLeft(),
+                       [this, control, ccid](const std::string& s) {
+                          auto useS = s;
+                          if( useS == "" ) useS = "-";
+                          strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], useS.c_str(),
+                                  16);
+                          ((CModulationSourceButton*)control)
+                              ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+
+                          control->setDirty();
+                          control->invalid();
+                          synth->refresh_editor = true;
+                          // synth->updateDisplay();
+                       });
                                                                                         });
             eid++;
 
@@ -5160,33 +5163,31 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
 
     std::ostringstream oss;
     oss << "Change MPE Pitch Bend Range (Current: " << synth->mpePitchBendRange << " Semitones)";
-    addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss.str().c_str()), [this]() {
+    addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss.str().c_str()), [this,menuRect]() {
        // FIXME! This won't work on linux
        char c[256];
        snprintf(c, 256, "%d", synth->mpePitchBendRange);
-       promptForMiniEdit(c,  "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
-                         [this](const std::string &c) {
+       promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
+                         menuRect.getTopLeft(), [this](const std::string& c) {
                             int newVal = ::atoi(c.c_str());
                             this->synth->mpePitchBendRange = newVal;
-                         }
-          );
+                         });
     });
 
     std::ostringstream oss2;
     int def = Surge::Storage::getUserDefaultValue( &(synth->storage), "mpePitchBendRange", 48 );
     oss2 << "Change Default MPE Pitch Bend Range (Current: " << def << " Semitones)";
-    addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss2.str().c_str()), [this]() {
+    addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss2.str().c_str()), [this, menuRect]() {
        // FIXME! This won't work on linux
        char c[256];
        snprintf(c, 256, "%d", synth->mpePitchBendRange);
        promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
-                         [this](const std::string &s )
-                            {
-                               int newVal = ::atoi(s.c_str());
-                               Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "mpePitchBendRange", newVal);
-                               this->synth->mpePitchBendRange = newVal;
-                            }
-          );
+                         menuRect.getTopLeft(), [this](const std::string& s) {
+                            int newVal = ::atoi(s.c_str());
+                            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                   "mpePitchBendRange", newVal);
+                            this->synth->mpePitchBendRange = newVal;
+                         });
     });
 
     return mpeSubMenu;
@@ -5313,7 +5314,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
     string middle_A = "A" + to_string(oct);
 
     addCallbackMenu( tuningSubMenu, Surge::UI::toOSCaseForMenu("Remap " + middle_A + " (MIDI note 69) directly to..."),
-                     [this, middle_A]()
+                     [this, middle_A, menuRect]()
                         {
                            char ma[256];
                            sprintf(ma, "Remap %s Frequency", middle_A.c_str());
@@ -5321,17 +5322,17 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                            char c[256];
                            snprintf(c, 256, "440.0");
                            promptForMiniEdit(c, "Remap MIDI note 69 frequency to: ", ma,
-                                             [this](const std::string &s )
+                                             menuRect.getTopLeft(), [this](const std::string& s) {
+                                                float freq = ::atof(s.c_str());
+                                                auto kb = Tunings::tuneA69To(freq);
+                                                if (!this->synth->storage.remapToKeyboard(kb))
                                                 {
-                                                   float freq = ::atof(s.c_str());
-                                                   auto kb = Tunings::tuneA69To(freq);
-                                                   if( ! this->synth->storage.remapToKeyboard(kb) )
-                                                   {
-                                                      Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
-                                                      return;
-                                                   }
+                                                   Surge::UserInteractions::promptError(
+                                                       "This .kbm file is not valid!",
+                                                       "File Format Error");
+                                                   return;
                                                 }
-                              );
+                                             });
                         }
        );
 
@@ -5444,17 +5445,17 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
     zid++;
 
     addCallbackMenu(
-        zoomSubMenu, Surge::UI::toOSCaseForMenu("Set Default Zoom Level to..."), [this]() {
+        zoomSubMenu, Surge::UI::toOSCaseForMenu("Set Default Zoom Level to..."), [this,menuRect]() {
             // FIXME! This won't work on linux
             char c[256];
             snprintf(c, 256, "%d", this->zoomFactor);
             promptForMiniEdit(c, "Enter a default zoom level value:", "Set Default Zoom Level",
-                              [this](const std::string &s )
-                                 {
-                                    int newVal = ::atoi(s.c_str());
-                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
-                                    this->setZoomFactor(newVal);
-                                 });
+                              menuRect.getTopLeft(), [this](const std::string& s) {
+                                 int newVal = ::atoi(s.c_str());
+                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                        "defaultZoom", newVal);
+                                 this->setZoomFactor(newVal);
+                              });
         });
     zid++;
 
@@ -5563,32 +5564,30 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
 
    VSTGUI::CCommandMenuItem* pdItem = nullptr;
 
-   pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Author..."), [this]() {
+   pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Author..."), [this, menuRect]() {
             string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", "");
             char txt[256];
             txt[0] = 0;
             if( Surge::Storage::isValidUTF8( s ) )
                strncpy(txt, s.c_str(), 256);
             promptForMiniEdit(txt, "Enter default patch author name:", "Set Default Patch Author",
-                              [this](const std::string &s )
-                                 {
-                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchAuthor", s );
-                                 }
-               );
+                              menuRect.getTopLeft(), [this](const std::string& s) {
+                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                        "defaultPatchAuthor", s);
+                              });
             });
 
-   pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Comment..."), [this]() {
+   pdItem = addCallbackMenu(patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Comment..."), [this, menuRect]() {
             string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultPatchComment", "");
             char txt[256];
             txt[0] = 0;
             if( Surge::Storage::isValidUTF8( s ) )
                strncpy(txt, s.c_str(), 256);
             promptForMiniEdit(txt, "Enter default patch comment text:", "Set Default Patch Comment",
-                              [this](const std::string &s )
-                                 {
-                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultPatchComment", s);
-                                 }
-               );
+                              menuRect.getTopLeft(), [this](const std::string& s) {
+                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                        "defaultPatchComment", s);
+                              });
             });
 
    uiOptionsMenu->addEntry(patchDefMenu, Surge::UI::toOSCaseForMenu("Patch Defaults"));
@@ -5843,15 +5842,13 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
 
    addCallbackMenu(
        midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
-       [this]() {
+       [this,menuRect]() {
           this->scannedForMidiPresets = false; // force a rescan
           char msn[256];
           msn[0] = 0;
-          promptForMiniEdit(msn, "MIDI Mapping Name", "Save MIDI Mapping",
-                            [this](const std::string &s )
-                               {
-                                  this->synth->storage.storeMidiMappingToName( s );
-                               });
+          promptForMiniEdit(
+              msn, "MIDI Mapping Name", "Save MIDI Mapping", menuRect.getTopLeft(),
+              [this](const std::string& s) { this->synth->storage.storeMidiMappingToName(s); });
        });
    did++;
 
@@ -7005,7 +7002,11 @@ std::string SurgeGUIEditor::getDisplayForTag( long tag )
    return "Unknown";
 }
 
-void SurgeGUIEditor::promptForMiniEdit( const std::string &value, const std::string &msg, const std::string &title, std::function<void( const std::string & )> onOK )
+void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
+                                       const std::string& prompt,
+                                       const std::string& title,
+                                       const VSTGUI::CPoint& iwhere,
+                                       std::function<void(const std::string&)> onOK)
 {
    auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
    minieditOverlay = new CViewContainer( fs );
@@ -7013,10 +7014,13 @@ void SurgeGUIEditor::promptForMiniEdit( const std::string &value, const std::str
    minieditOverlay->setVisible(true);
    frame->addView( minieditOverlay );
 
-   CPoint where;
-   frame->getCurrentMouseLocation(where);
-   frame->localToFrame(where);
-   
+   auto where = iwhere;
+   if( where.x < 0 || where.y < 0 )
+   {
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+   }
+
    int wd = 160;
    int ht = 80;
    auto rr = CRect( CPoint( where.x - fs.left, where.y - fs.top ), CPoint( wd, ht ) );
@@ -7067,7 +7071,7 @@ void SurgeGUIEditor::promptForMiniEdit( const std::string &value, const std::str
 
    auto msgrect = CRect(CPoint(0, 2), CPoint(wd, 14));
    msgrect.inset(5, 0);
-   auto msgtxt = new CTextLabel(msgrect, msg.c_str());
+   auto msgtxt = new CTextLabel(msgrect, prompt.c_str());
    msgtxt->setTransparency(true);
    msgtxt->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text, kBlackCColor));
    msgtxt->setFont(fnts);

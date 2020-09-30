@@ -511,12 +511,13 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
                          auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
                          if( sge )
                          {
-                            sge->promptForMiniEdit(c, "Enter a custom wavetable display name:", "Wavetable Display Name",
-                                                   [this](const std::string &s) {
-                                                      strncpy( this->oscdata->wavetable_display_name, s.c_str(), 256 );
-                                                      this->invalid();
-                                                   }
-                               );
+                            sge->promptForMiniEdit(
+                                c,
+                                "Enter a custom wavetable display name:", "Wavetable Display Name",
+                                CPoint( -1, -1 ), [this](const std::string& s) {
+                                   strncpy(this->oscdata->wavetable_display_name, s.c_str(), 256);
+                                   this->invalid();
+                                });
                          }
                       };
    renameItem->setActions(rnaction, nullptr);
