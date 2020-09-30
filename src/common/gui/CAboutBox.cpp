@@ -107,7 +107,7 @@ void CAboutBox::draw(CDrawContext* pContext)
          int yMargin = 6;
          int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
          int xPos = strHeight;
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text, kWhiteCColor));
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text));
          pContext->setFont(infoFont);
          for (auto s : msgs)
          {
@@ -116,7 +116,7 @@ void CAboutBox::draw(CDrawContext* pContext)
          }
 
          // link to Surge github repo in another color because VSTGUI -_-
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Link, CColor(46, 134, 255)));
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Link));
          pContext->drawString("https://github.com/surge-synthesizer/surge",
                               CPoint(253, skin->getWindowSizeY() - 36 - strHeight - yMargin));
       }
