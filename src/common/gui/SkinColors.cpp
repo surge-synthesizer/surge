@@ -4,8 +4,8 @@ namespace Colors
 {
    namespace AboutBox
    {
-      const Surge::UI::SkinColor Text("aboutbox.text"),
-                                 Link("aboutbox.link");
+      const Surge::UI::SkinColor Text("aboutbox.text", VSTGUI::kWhiteCColor),
+                                 Link("aboutbox.link", VSTGUI::CColor(46, 134, 255));
    }
 
    namespace Dialog
