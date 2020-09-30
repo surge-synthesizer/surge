@@ -37,7 +37,8 @@ namespace ObxdFilter {
       rcor24Inv,
       g,
       R,
-      R24
+      R24,
+      n_obxd_coeff
     };
 
    enum Params {
@@ -67,9 +68,12 @@ namespace ObxdFilter {
    const __m128 mmt = _mm_sub_ps(_mm_mul_ps(mm, _mm_set1_ps(3.0f)), mmch);
    const __m128 selfOscPush = _mm_set1_ps(0.0);
    const __m128 bandPass = _mm_set1_ps(0.0);
-   
 
-   inline __m128 diodePairResistanceApprox(__m128 x)
+   const __m128 gainAdjustment2Pole = _mm_set1_ps( 0.7937005259 ); // pow( 2, -1/3 ) aka -6db using our db scaling here
+   const __m128 gainAdjustment4Pole = _mm_set1_ps( 0.6299605249 ); // pow( 2, -2/3 ) aka -12db using our db scaling here
+
+
+inline __m128 diodePairResistanceApprox(__m128 x)
    {
       //return (((((0.0103592f)*x + 0.00920833f)*x + 0.185f)*x + 0.05f )*x + 1.0f);
       return _mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(one_zero_three, x), nine_two_zero), x), one_eight_five), x), zero_zero_five), x), one);
@@ -99,7 +103,9 @@ namespace ObxdFilter {
 
    __m128 process_2_pole(QuadFilterUnitState * __restrict f, __m128 sample)
    {
-      
+      for( int i=0; i<n_obxd_coeff; ++i )
+         f->C[i] = _mm_add_ps( f->C[i], f->dC[i] );
+
       //float v = ((sample- R * s1*2 - g2*s1 - s2)/(1+ R*g1*2 + g1*g2));
       __m128 v = NR(sample, f);
       //float y1 = v * g + s1;
@@ -121,7 +127,7 @@ namespace ObxdFilter {
       //__m128 bp_true = _mm_add_ps(_mm_and_ps( mask, val1 ), _mm_andnot_ps( mask, val2));
       //mc =_mm_add_ps(_mm_and_ps(mask_bp, bp_false), _mm_andnot_ps(mask_bp, bp_true));
       mc = bp_false;
-      return mc;
+      return _mm_mul_ps( mc, gainAdjustment2Pole );
    }
 
    void makeCoefficients(FilterCoefficientMaker *cm, Poles p, float freq, float reso, int sub, SurgeStorage *storage)
@@ -160,6 +166,9 @@ namespace ObxdFilter {
 
    __m128 process_4_pole(QuadFilterUnitState * __restrict f, __m128 sample)
    {
+      for( int i=0; i<n_obxd_coeff; ++i )
+         f->C[i] = _mm_add_ps( f->C[i], f->dC[i] );
+
       //float lpc = f->C[g] / (1 + f->C[g]);
      __m128 lpc = _mm_div_ps(f->C[g], _mm_add_ps(one, f->C[g]));
       
@@ -220,7 +229,8 @@ namespace ObxdFilter {
       
       mc = zero_val;
       //half volume comp
-      return _mm_mul_ps(mc, _mm_add_ps(one, _mm_mul_ps(f->C[R24], zero_four_five)));
+      auto out = _mm_mul_ps(mc, _mm_add_ps(one, _mm_mul_ps(f->C[R24], zero_four_five)));
+      return _mm_mul_ps( out, gainAdjustment4Pole );
    }
 
 }
