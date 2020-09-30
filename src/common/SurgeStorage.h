@@ -363,7 +363,8 @@ enum fu_type
    fut_br12,
    fut_comb,
    fut_SNH,
-   fut_vintageladder, 
+   fut_vintageladder,
+   fut_obxd,
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] =
@@ -379,6 +380,7 @@ const char fut_names[n_fu_type][32] =
    "Comb",
    "Sample & Hold",
    "Vintage Ladder",
+   "Obxd"
 };
 
 const char fut_bp_subtypes[6][32] =
@@ -429,8 +431,9 @@ const char fut_vintageladder_subtypes[6][32] =
    "Dampened",
    "Dampened Compensated",
 };
+const char fut_obxd_subtypes[2][32] = {"12 dB/oct", "24 dB/oct"};
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4};
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 2};
 
 enum fu_subtype
 {
