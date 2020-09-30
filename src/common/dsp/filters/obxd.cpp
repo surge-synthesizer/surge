@@ -65,14 +65,14 @@ namespace ObxdFilter {
    const __m128 mm = _mm_set1_ps(0.0);
    const __m128 mmch = _mm_set1_ps(0.0);
    const __m128 mmt = _mm_sub_ps(_mm_mul_ps(mm, _mm_set1_ps(3.0f)), mmch);
-   const __m128 selfOscPush = _mm_set1_ps(1.0);
+   const __m128 selfOscPush = _mm_set1_ps(0.0);
    const __m128 bandPass = _mm_set1_ps(0.0);
    
 
    inline __m128 diodePairResistanceApprox(__m128 x)
    {
       //return (((((0.0103592f)*x + 0.00920833f)*x + 0.185f)*x + 0.05f )*x + 1.0f);
-      return _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(_mm_mul_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(one_zero_three, x), nine_two_zero), x), one_eight_five), x), zero_zero_five), x), one);
+      return _mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(_mm_add_ps(_mm_mul_ps(one_zero_three, x), nine_two_zero), x), one_eight_five), x), zero_zero_five), x), one);
       //Taylor approx of slightly mismatched diode pair
    }
    
@@ -85,10 +85,10 @@ namespace ObxdFilter {
 
       // Self osc currently always on - commented out lines are so we can bring back the switch later
       //__m128 selfOscEnabledMask = _mm_cmpeq_ps(selfOscPush, zero);
-      //__m128 selfOscOffVal =  _mm_sub_ps(diodePairResistanceApprox(_mm_mul_ps(f->R[s1], eight_seven_six)), one);
-      __m128 selfOscOnVal = _mm_sub_ps(diodePairResistanceApprox(_mm_mul_ps(f->R[s1], eight_seven_six)), one_three_five);
+      __m128 selfOscOffVal =  _mm_sub_ps(diodePairResistanceApprox(_mm_mul_ps(f->R[s1], eight_seven_six)), one);
+      //__m128 selfOscOnVal = _mm_sub_ps(diodePairResistanceApprox(_mm_mul_ps(f->R[s1], eight_seven_six)), one_three_five);
       //tCfb = _mm_add_ps(_mm_and_ps(selfOscEnabledMask, selfOscOnVal), _mm_andnot_ps(selfOscEnabledMask, selfOscOffVal));
-      tCfb = selfOscOnVal;
+      tCfb = selfOscOffVal;
 
       //resolve linear feedback
       //float y = ((sample - 2*(s1*(R+tCfb)) - g*s1  - s2)/(1+ g*(2*(R+tCfb)+ g)));
@@ -126,21 +126,18 @@ namespace ObxdFilter {
 
    void makeCoefficients(FilterCoefficientMaker *cm, float freq, float reso, int sub, SurgeStorage *storage)
    {
-      float SampleRate = 1.0 / dsamplerate_inv;
-      float rcrate = sqrt((44000/SampleRate));
+      float rcrate = sqrt((44000 * dsamplerate_inv));
       float rcor = (500.0 / 44000) * rcrate;
       cm->C[rcor24]  = (970.0 / 44000) * rcrate;
-      cm->C[rcor24Inv] = 1.0 / rcor24;
-      float cutoff = storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ * dsamplerate_inv * M_PI;
+      cm->C[rcor24Inv] = 1.0 / cm->C[rcor24];
+      float cutoff = fmin(storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ, 22000.0) * dsamplerate_inv * M_PI;
       cm->C[g] = tanf(cutoff);
       cm->C[R] = 1.0 - reso;
       cm->C[R24] = 3.5 * reso;
-      
    }
    
    inline __m128 NR24(__m128 sample, __m128 lpc, QuadFilterUnitState * __restrict f)
    {
-
       //float ml = 1 / (1+g);
      __m128 ml = _mm_div_ps(one, _mm_add_ps(one, f->C[g]));
       //float S = (lpc * (lpc * (lpc * f->R[s1] + f->R[s2]) + f->R[s3]) + f->R[s4]) * ml;
@@ -155,7 +152,6 @@ namespace ObxdFilter {
    
    inline static __m128 tptpc(__m128& state,__m128 inp, __m128 cutoff)
    {
-      
       __m128 v = _mm_div_ps(_mm_mul_ps(_mm_sub_ps(inp, state), cutoff), _mm_add_ps(one, cutoff));
       __m128 res = _mm_add_ps(v,  state);
       state = _mm_add_ps(res, v);
