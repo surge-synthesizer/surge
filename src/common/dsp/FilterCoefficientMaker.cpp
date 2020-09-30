@@ -82,10 +82,13 @@ void FilterCoefficientMaker::MakeCoeffs(
          break;
       }
       break;
-   case fut_obxd:
-      ObxdFilter::makeCoefficients(this, Freq, Reso, SubType, storageI);
+   case fut_obxd_2pole:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType, storageI);
       break;
-#if SURGE_EXTRA_FILTERS      
+   case fut_obxd_4pole:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::FOUR_POLE, Freq, Reso, SubType, storageI);
+      break;
+#if SURGE_EXTRA_FILTERS
 #endif      
    };
 }

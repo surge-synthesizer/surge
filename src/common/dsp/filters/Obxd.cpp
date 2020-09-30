@@ -124,7 +124,7 @@ namespace ObxdFilter {
       return mc;
    }
 
-   void makeCoefficients(FilterCoefficientMaker *cm, float freq, float reso, int sub, SurgeStorage *storage)
+   void makeCoefficients(FilterCoefficientMaker *cm, Poles p, float freq, float reso, int sub, SurgeStorage *storage)
    {
       float rcrate = sqrt((44000 * dsamplerate_os_inv));
       float rcor = (500.0 / 44000) * rcrate;

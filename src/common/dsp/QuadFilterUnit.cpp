@@ -794,15 +794,12 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
          return VintageLadder::Huov::process;
       }
       break;
-   case fut_obxd:
-         switch(subtype)
-         {
-         case 0:
-            return ObxdFilter::process_2_pole;
-         case 1:
-            return ObxdFilter::process_4_pole;
-         }
-         break;
+   case fut_obxd_2pole:
+      return ObxdFilter::process_2_pole;
+      break;
+   case fut_obxd_4pole:
+      return ObxdFilter::process_4_pole;
+      break;
    default:
       // SOFTWARE ERROR
       break;
