@@ -126,11 +126,11 @@ namespace ObxdFilter {
 
    void makeCoefficients(FilterCoefficientMaker *cm, float freq, float reso, int sub, SurgeStorage *storage)
    {
-      float rcrate = sqrt((44000 * dsamplerate_inv));
+      float rcrate = sqrt((44000 * dsamplerate_os_inv));
       float rcor = (500.0 / 44000) * rcrate;
       cm->C[rcor24]  = (970.0 / 44000) * rcrate;
       cm->C[rcor24Inv] = 1.0 / cm->C[rcor24];
-      float cutoff = fmin(storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ, 22000.0) * dsamplerate_inv * M_PI;
+      float cutoff = fmin(storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ, 22000.0) * dsamplerate_os_inv * M_PI;
       cm->C[g] = tanf(cutoff);
       cm->C[R] = 1.0 - reso;
       cm->C[R24] = 3.5 * reso;
