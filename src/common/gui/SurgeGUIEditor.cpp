@@ -2309,7 +2309,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
          frame->addView(lb);
       }
    }
-
+#if BUILD_IS_DEBUG
+   /*
+    * This code is here JUST because baconpaul keeps developing surge and then swapping
+    * to make music and wondering why LPX is stuttering. Please don't remove it!
+    */
+   auto lb = new CTextLabel( CRect( CPoint( 321, 39 ), CPoint( 100, 15 ) ), "DEBUG BUILD" );
+   lb->setTransparency( false );
+   lb->setBackColor( kRedCColor );
+   lb->setFontColor( kWhiteCColor );
+   lb->setFont( patchNameFont );
+   lb->setHoriAlign(VSTGUI::kCenterText);
+   lb->setAntialias(true);
+   frame->addView(lb);
+#endif
    if( editorOverlay )
    {
       frame->addView( editorOverlay );

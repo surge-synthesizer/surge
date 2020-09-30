@@ -45,7 +45,15 @@ void CAboutBox::draw(CDrawContext* pContext)
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
       CRect infobg(0, skin->getWindowSizeY() - 167, skin->getWindowSizeX(), skin->getWindowSizeY());
       CRect skininfobg(0, 0, BASE_WINDOW_SIZE_X, 80);
+#if BUILD_IS_DEBUG
+      /*
+       * This code is here JUST because baconpaul keeps developing surge and then swapping
+       * to make music and wondering why LPX is stuttering. Please don't remove it!
+       */
+      pContext->setFillColor(CColor(120, 80, 80, 255));
+#else
       pContext->setFillColor(CColor(0, 0, 0, 255));
+#endif
       pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
       pContext->drawRect(skininfobg, CDrawStyle::kDrawFilled);
 
@@ -81,7 +89,10 @@ void CAboutBox::draw(CDrawContext* pContext)
                std::string() + "Version " + Surge::Build::FullVersionStr + " (" + chipmanu + " " + bitness + " " + platform + " " + flavor
 #if TARGET_VST2 || TARGET_VST3               
                + " in " + host
-#endif               
+#endif
+#if BUILD_IS_DEBUG
+                 + " - DEBUG BUILD"
+#endif
                + ". Built " +
                Surge::Build::BuildDate + " at " + Surge::Build::BuildTime + " on " + Surge::Build::BuildLocation + " host '" + Surge::Build::BuildHost + "')",
                "Factory Data Path: " + dataPath,
