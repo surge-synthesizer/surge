@@ -100,12 +100,14 @@ namespace VintageLadder
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool applyGainCompensation, SurgeStorage *storage )
       {
          // COnsideration: Do we want tuning aware or not?
+         float lc[n_cm_coeffs];
          auto pitch = VintageLadder::Common::clampedFrequency( freq, storage );
-         cm->C[rkm_cutoff] = pitch * 2.0 * M_PI;
-         cm->C[rkm_reso] = limit_range( reso, 0.f, 1.f ) * 4.5; // code says 0-10 is value but above 4 it is just out of tune self-oscillation
-         cm->C[rkm_gComp] = 0.0;
+         lc[rkm_cutoff] = pitch * 2.0 * M_PI;
+         lc[rkm_reso] = limit_range( reso, 0.f, 1.f ) * 4.5; // code says 0-10 is value but above 4 it is just out of tune self-oscillation
+         lc[rkm_gComp] = 0.0;
          if( applyGainCompensation )
-            cm->C[rkm_gComp] = gainCompensation;
+            lc[rkm_gComp] = gainCompensation;
+         cm->FromDirect(lc);
       }
 
 #define F(a) _mm_set_ps1( a )         
@@ -246,22 +248,25 @@ namespace VintageLadder
       float gainCompensation = 0.5;
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso,  bool applyGainCompensation, SurgeStorage *storage ) {
+         float lC[n_cm_coeffs];
          auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
-         cm->C[h_cutoff] = cutoff;
+         lC[h_cutoff] = cutoff;
 
          // Heueristically at higher cutoffs the resonance becomes less stable. This is purely ear tuned at 49khz with noise input
          float co = std::max( cutoff - samplerate * 0.33333, 0.0 ) * 0.1 * dsamplerate_os_inv;
          float gctrim = applyGainCompensation ? 0.05 : 0.0;
 
          reso = limit_range( limit_range( reso, 0.0f, 0.9925f ), 0.0f, 0.994f - co - gctrim );
-         cm->C[h_res] = reso;
+         lC[h_res] = reso;
          
          double fc =  cutoff * dsamplerate_os_inv * extraOversampleInv;
-         cm->C[h_fc] = fc;
+         lC[h_fc] = fc;
 
-         cm->C[h_gComp] = 0.0;
+         lC[h_gComp] = 0.0;
          if( applyGainCompensation )
-            cm->C[h_gComp] = gainCompensation;
+            lC[h_gComp] = gainCompensation;
+
+         cm->FromDirect(lC);
       }
 
       __m128 process( QuadFilterUnitState * __restrict f, __m128 in )
