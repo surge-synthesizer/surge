@@ -136,7 +136,7 @@ inline __m128 diodePairResistanceApprox(__m128 x)
       float rcrate = sqrt((44000 * dsamplerate_os_inv));
       float rcor = (500.0 / 44000) * rcrate;
       lC[rcor24]  = (970.0 / 44000) * rcrate;
-      lC[rcor24Inv] = 1.0 / cm->C[rcor24];
+      lC[rcor24Inv] = 1.0 / lC[rcor24];
       float cutoff = fmin(storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ, 22000.0) * dsamplerate_os_inv * M_PI;
       lC[g] = tanf(cutoff);
       lC[R] = 1.0 - reso;
