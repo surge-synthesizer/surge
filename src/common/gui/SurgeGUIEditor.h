@@ -368,10 +368,6 @@ private:
    VSTGUI::CControl* lfodisplay = nullptr;
    VSTGUI::CControl* filtersubtype[2] = {};
    VSTGUI::CControl* fxmenu = nullptr;
-#if MAC || LINUX
-#else
-   HWND ToolTipWnd;
-#endif
    int clear_infoview_countdown = 0;
 public:
    int clear_infoview_peridle = -1;

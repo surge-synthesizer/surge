@@ -185,10 +185,10 @@ void COscillatorDisplay::draw(CDrawContext* dc)
             {
                if (uses_wavetabledata(oscdata->type.val.i))
                {
-                  storage->CS_WaveTableData.enter();
+                  storage->waveTableDataMutex.lock();
                   osc->process_block(disp_pitch_rs);
                   block_pos = 0;
-                  storage->CS_WaveTableData.leave();
+                  storage->waveTableDataMutex.unlock();
                }
                else
                {
@@ -304,7 +304,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       rmenu.inset(14, 0);
       char wttxt[256];
 
-      storage->CS_WaveTableData.enter();
+      storage->waveTableDataMutex.lock();
 
       int wtid = oscdata->wt.current_id;
       if( oscdata->wavetable_display_name[0] != '\0' )
@@ -324,7 +324,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          strcpy(wttxt, "(Patch Wavetable)");
       }
 
-      storage->CS_WaveTableData.leave();
+      storage->waveTableDataMutex.unlock();
 
       char* r = strrchr(wttxt, '.');
       if (r)

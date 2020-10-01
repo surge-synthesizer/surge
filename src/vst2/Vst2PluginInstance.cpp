@@ -28,6 +28,8 @@
 #include <fenv.h>
 #include <AvailabilityMacros.h>
 #pragma STDC FENV_ACCESS on
+#elif WINDOWS
+#include <windows.h>
 #endif
 
 using namespace std;

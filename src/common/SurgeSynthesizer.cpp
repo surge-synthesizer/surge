@@ -2087,7 +2087,7 @@ float SurgeSynthesizer::getModulation(long ptag, modsources modsource)
 
 void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
 {
-   storage.CS_ModRouting.enter();
+   storage.modRoutingMutex.lock();
    vector<ModulationRouting>::iterator iter;
 
    int pid = storage.getPatch().scene[scene].osc[entry].p[0].param_id_in_scene;
@@ -2111,7 +2111,7 @@ void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
       else
          iter++;
    }
-   storage.CS_ModRouting.leave();
+   storage.modRoutingMutex.unlock();
 }
 
 void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, bool clearEvenIfInvalid)
@@ -2144,9 +2144,9 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, bool cle
    {
       if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource))
       {
-         storage.CS_ModRouting.enter();
+         storage.modRoutingMutex.lock();
          modlist->erase(modlist->begin() + i);
-         storage.CS_ModRouting.leave();
+         storage.modRoutingMutex.unlock();
          return;
       }
    }
@@ -2173,7 +2173,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
          modlist = &storage.getPatch().scene[scene - 1].modulation_voice;
    }
 
-   storage.CS_ModRouting.enter();
+   storage.modRoutingMutex.lock();
 
    int id = storage.getPatch().param_ptr[ptag]->param_id_in_scene;
    if (!scene)
@@ -2211,7 +2211,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
          modlist->at(found_id).depth = value;
       }
    }
-   storage.CS_ModRouting.leave();
+   storage.modRoutingMutex.unlock();
 
    return true;
 }
@@ -2786,8 +2786,7 @@ void SurgeSynthesizer::process()
       clear_block_antidenormalnoise(fxsendout[1][1], BLOCK_SIZE_QUAD);
    }
 
-   // CS ENTER
-   storage.CS_ModRouting.enter();
+   storage.modRoutingMutex.lock();
    processControl();
 
    amp.set_target_smoothed(db_to_linear(storage.getPatch().volume.val.f));
@@ -2854,7 +2853,7 @@ void SurgeSynthesizer::process()
             iter++;
       }
 
-      storage.CS_ModRouting.leave();
+      storage.modRoutingMutex.unlock();
 
       fbq_global g;
       g.FU1ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[0].type.val.i,
@@ -2895,11 +2894,10 @@ void SurgeSynthesizer::process()
          v->GetQFB(); // save filter state in voices after quad processing is done
          iter++;
       }
-      storage.CS_ModRouting.enter();
+      storage.modRoutingMutex.lock();
    }
 
-   // CS LEAVE
-   storage.CS_ModRouting.leave();
+   storage.modRoutingMutex.unlock();
    polydisplay = vcount;
 
    if (play_scene[0])
@@ -3136,7 +3134,7 @@ void SurgeSynthesizer::swapMetaControllers( int c1, int c2 )
    strncpy( storage.getPatch().CustomControllerLabel[c1], storage.getPatch().CustomControllerLabel[c2], 16 );
    strncpy( storage.getPatch().CustomControllerLabel[c2], nt, 16 );
 
-   storage.CS_ModRouting.enter();
+   storage.modRoutingMutex.lock();
 
    auto tmp1 = storage.getPatch().scene[0].modsources[ms_ctrl1 + c1];
    auto tmp2 = storage.getPatch().scene[0].modsources[ms_ctrl1 + c2];
@@ -3188,7 +3186,7 @@ void SurgeSynthesizer::swapMetaControllers( int c1, int c2 )
       }
    }
 
-   storage.CS_ModRouting.leave();
+   storage.modRoutingMutex.unlock();
 
    refresh_editor = true;
 }

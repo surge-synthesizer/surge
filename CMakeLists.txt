@@ -209,7 +209,6 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/Wavetable.cpp
   src/common/dsp/WavetableOscillator.cpp
   src/common/dsp/WindowOscillator.cpp
-  src/common/thread/CriticalSection.cpp
   src/common/util/FpuState.cpp
   src/common/vt_dsp/basic_dsp.cpp
   src/common/vt_dsp/halfratefilter.cpp

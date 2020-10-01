@@ -19,8 +19,8 @@
 #include "ModulationSource.h"
 #include "Wavetable.h"
 #include <vector>
-#include <thread/CriticalSection.h>
 #include <memory>
+#include <mutex>
 #include <atomic>
 #include <stdint.h>
 
@@ -857,7 +857,7 @@ public:
    void storeMidiMappingToName( std::string name );
 
    // float table_sin[512],table_sin_offset[512];
-   Surge::CriticalSection CS_WaveTableData, CS_ModRouting;
+   std::mutex waveTableDataMutex, modRoutingMutex;
    Wavetable WindowWT;
 
    float note_to_pitch(float x);

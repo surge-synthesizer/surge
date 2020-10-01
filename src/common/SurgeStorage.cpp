@@ -978,10 +978,10 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    data = malloc(ds);
    read = fread(data, 1, ds, f);
    // FIXME - error if read != ds
-   
-   CS_WaveTableData.enter();
+
+   waveTableDataMutex.lock();
    bool wasBuilt = wt->BuildWT(data, wh, false);
-   CS_WaveTableData.leave();
+   waveTableDataMutex.unlock();
    free(data);
 
    if (!wasBuilt)
@@ -1086,8 +1086,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       return;
    }
 
-   // CS ENTER
-   CS_ModRouting.enter();
+   modRoutingMutex.lock();
    {
 
       clipboard_p.clear();
@@ -1138,8 +1137,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
          }
       }
    }
-   // CS LEAVE
-   CS_ModRouting.leave();
+   modRoutingMutex.unlock();
 }
 
 void SurgeStorage::clipboard_paste(int type, int scene, int entry)
@@ -1191,8 +1189,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
       return;
    }
 
-   // CS ENTER
-   CS_ModRouting.enter();
+   modRoutingMutex.lock();
    {
 
       for (int i = start; i < n; i++)
@@ -1274,8 +1271,8 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
       }
       }
    }
-   // CS LEAVE
-   CS_ModRouting.leave();
+
+   modRoutingMutex.unlock();
 }
 
 TiXmlElement* SurgeStorage::getSnapshotSection(const char* name)
