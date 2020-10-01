@@ -132,14 +132,16 @@ inline __m128 diodePairResistanceApprox(__m128 x)
 
    void makeCoefficients(FilterCoefficientMaker *cm, Poles p, float freq, float reso, int sub, SurgeStorage *storage)
    {
+      float lC[n_cm_coeffs];
       float rcrate = sqrt((44000 * dsamplerate_os_inv));
       float rcor = (500.0 / 44000) * rcrate;
-      cm->C[rcor24]  = (970.0 / 44000) * rcrate;
-      cm->C[rcor24Inv] = 1.0 / cm->C[rcor24];
+      lC[rcor24]  = (970.0 / 44000) * rcrate;
+      lC[rcor24Inv] = 1.0 / lC[rcor24];
       float cutoff = fmin(storage->note_to_pitch( freq + 69 ) * Tunings::MIDI_0_FREQ, 22000.0) * dsamplerate_os_inv * M_PI;
-      cm->C[g] = tanf(cutoff);
-      cm->C[R] = 1.0 - reso;
-      cm->C[R24] = 3.5 * reso;
+      lC[g] = tanf(cutoff);
+      lC[R] = 1.0 - reso;
+      lC[R24] = 3.5 * reso;
+      cm->FromDirect(lC);
    }
    
    inline __m128 NR24(__m128 sample, __m128 lpc, QuadFilterUnitState * __restrict f)
