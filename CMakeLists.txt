@@ -288,7 +288,7 @@ set(SURGE_COMMON_SOURCES
   libs/filesystem/filesystem.cpp
 
   ${AIRWINDOWS_SOURCES}
-  )
+        src/common/SkinModel.cpp src/common/SkinModelImpl.cpp)
 
 
 set( SURGE_GENERATED_SOURCES
@@ -309,7 +309,6 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CPatchBrowser.cpp
   src/common/gui/CScalableBitmap.cpp
   src/common/gui/CSnapshotMenu.cpp
-  src/common/gui/CStatusPanel.cpp
   src/common/gui/CSurgeSlider.cpp
   src/common/gui/CSurgeVuMeter.cpp
   src/common/gui/CSwitchControl.cpp

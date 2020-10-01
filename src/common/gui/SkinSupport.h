@@ -14,6 +14,9 @@
 #include "globals.h"
 
 #include "vstgui/lib/ccolor.h"
+#include "vstgui/lib/crect.h"
+#include "vstgui/lib/cpoint.h"
+#include "SkinModel.h"
 
 /*
 ** Support for rudimentary skinning in Surge
@@ -102,6 +105,7 @@ public:
 
    std::string root;
    std::string name;
+   std::string category;
 
    std::string displayName;
    std::string author;
@@ -119,10 +123,8 @@ public:
       typedef std::shared_ptr<Control> ptr_t;
       int x, y, w, h;
 
-      int enum_id;
-      std::string ui_id, enum_name;
+      std::string ui_id;
       typedef enum {
-         ENUM,
          UIID,
          LABEL,
       } Type;
@@ -136,9 +138,6 @@ public:
 
          switch( type )
          {
-         case ENUM:
-            oss << "ENUM:" << enum_name;
-            break;
          case UIID:
             oss << "UIID:" << ui_id;
             break;
@@ -149,6 +148,12 @@ public:
          oss << " (x=" << x << " y=" << y << " w=" << w << " h=" << h << ")";
          return oss.str();
       }
+
+      VSTGUI::CRect getRect() const
+      {
+         return VSTGUI::CRect( VSTGUI::CPoint( x, y ), VSTGUI::CPoint( w, h ) );
+      }
+      void copyFromConnector( const Surge::Skin::Connector &c );
    };
 
    struct ControlGroup
@@ -181,18 +186,6 @@ public:
          return hasColor(col.name);
       }
 
-   Skin::Control::ptr_t controlForEnumID( int enum_id ) const {
-      // FIXME don't be stupid like this of course
-      for( auto ic : controls )
-      {
-         if( ic->type == Control::Type::ENUM && ic->enum_id == enum_id  )
-         {
-            return ic;
-         }
-      }
-
-      return nullptr;
-   }
 
    Skin::Control::ptr_t controlForUIID( const std::string &ui_id ) const {
       // FIXME don't be stupid like this of course
@@ -205,6 +198,30 @@ public:
       }
 
       return nullptr;
+   }
+
+   Skin::Control::ptr_t getOrCreateControlForConnector( const std::string &s )
+   {
+      return getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID(s));
+   }
+   Skin::Control::ptr_t getOrCreateControlForConnector(const Surge::Skin::Connector &c )
+   {
+      auto res = controlForUIID(c.payload->id);
+      if( ! res )
+      {
+         res = std::make_shared<Surge::UI::Skin::Control>();
+         res->copyFromConnector(c);
+         resolveBaseParentOffsets( res );
+         controls.push_back(res);
+      }
+      return res;
+   }
+
+   void resolveBaseParentOffsets(Skin::Control::ptr_t );
+
+
+   void addControl( Skin::Control::ptr_t c ) {
+      controls.push_back( c );
    }
 
    Maybe<std::string> propertyValue( Skin::Control::ptr_t c, const std::string &key ) {
@@ -310,6 +327,7 @@ public:
       std::string root;
       std::string name;
       std::string displayName;
+      std::string category;
       bool parseable;
 
       // Since we want to use this as a map

@@ -21,7 +21,6 @@
 #include "CSwitchControl.h"
 #include "CParameterTooltip.h"
 #include "CPatchBrowser.h"
-#include "CStatusPanel.h"
 #include "COscillatorDisplay.h"
 #include "CVerticalLabel.h"
 #include "CModulationSourceButton.h"
@@ -138,7 +137,6 @@ enum special_tags
    tag_fx_select,
    tag_fx_menu,
    tag_patchname,
-   tag_statuspanel,
    tag_mp_category,
    tag_mp_patch,
    tag_store,
@@ -157,9 +155,72 @@ enum special_tags
    tag_editor_overlay_close,
    tag_miniedit_ok,
    tag_miniedit_cancel,
+
+   tag_status_mpe,
+   tag_status_zoom,
+   tag_status_tune,
    // tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
+};
+
+// TODO: CHECK REFERENCE COUNTING
+struct SGEDropAdapter : public VSTGUI::IDropTarget, public VSTGUI::ReferenceCounted<int> {
+   SurgeGUIEditor *buddy = nullptr;
+   SGEDropAdapter( SurgeGUIEditor *buddy ) {
+      this->buddy = buddy;
+   }
+   ~SGEDropAdapter()
+   {
+
+   }
+
+   std::string singleFileFName(VSTGUI::DragEventData data)
+   {
+      auto drag = data.drag;
+      auto where = data.pos;
+      uint32_t ct = drag->getCount();
+      if (ct == 1)
+      {
+         IDataPackage::Type t = drag->getDataType(0);
+         if (t == IDataPackage::kFilePath)
+         {
+            const void* fn;
+            drag->getData(0, fn, t);
+            const char* fName = static_cast<const char*>(fn);
+            return fName;
+         }
+      }
+      return "";
+   }
+
+   virtual VSTGUI::DragOperation onDragEnter(VSTGUI::DragEventData data) override {
+      auto fn = singleFileFName( data );
+
+      if( buddy && buddy->canDropTarget(fn) )
+         return VSTGUI::DragOperation::Copy;
+      // Hand this decision off to SGE
+      return VSTGUI::DragOperation::None;
+   }
+   virtual VSTGUI::DragOperation onDragMove(VSTGUI::DragEventData data) override
+   {
+      auto fn = singleFileFName( data );
+
+      if( buddy && buddy->canDropTarget(fn) )
+         return VSTGUI::DragOperation::Copy;
+
+      return VSTGUI::DragOperation::None;
+   }
+   virtual void onDragLeave(VSTGUI::DragEventData data) override
+   {
+   }
+   virtual bool onDrop (VSTGUI::DragEventData data) override
+   {
+      auto fn = singleFileFName(data);
+      if( buddy )
+         return buddy->onDrop( fn );
+      return false;
+   }
 };
 
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
@@ -178,7 +239,6 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 
 
    patchname = 0;
-   statuspanel = nullptr;
    current_scene = 1;
    current_fx = 0;
    modsource = ms_lfo1;
@@ -186,6 +246,8 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    blinkstate = false;
    aboutbox = 0;
    patchCountdown = -1;
+   dropAdapter = new SGEDropAdapter(this);
+   dropAdapter->remember();
 
    for (int i = 0; i < n_scenes; i++)
    {
@@ -220,6 +282,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    queue_refresh = false;
    memset(param, 0, n_paramslots * sizeof(void*));
    polydisp = 0; // FIXME - when changing skins and rebuilding we need to reset these state variables too
+   splitkeyControl = 0;
    clear_infoview_countdown = -1;
    vu[0] = 0;
    vu[1] = 0;
@@ -321,6 +384,12 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+   if( dropAdapter )
+   {
+      dropAdapter->buddy = nullptr;
+      dropAdapter->forget();
+   }
+
    if (frame)
    {
       getFrame()->unregisterKeyboardHook(this);
@@ -464,11 +533,26 @@ void SurgeGUIEditor::idle()
          patchChanged = ((CPatchBrowser *)patchname)->sel_id != synth->patchid;
       }
 
-      if( statuspanel )
+      if( statusMPE )
       {
-         CStatusPanel *pb = (CStatusPanel *)statuspanel;
-         pb->setDisplayFeature(CStatusPanel::mpeMode, synth->mpeEnabled);
-         pb->setDisplayFeature(CStatusPanel::tuningMode, ! synth->storage.isStandardTuning);
+         auto v = statusMPE->getValue();
+         if( ( v < 0.5 && synth->mpeEnabled) ||
+             ( v > 0.5 && ! synth->mpeEnabled) )
+         {
+            statusMPE->setValue( synth->mpeEnabled ? 0 : 1 );
+            statusMPE->invalid();
+         }
+      }
+
+      if( statusTune )
+      {
+         auto v = statusTune->getValue();
+         if( ( v < 0.5 && ! synth->storage.isStandardTuning ) ||
+             ( v > 0.5 && synth->storage.isStandardTuning ) )
+         {
+            statusTune->setValue( ! synth->storage.isStandardTuning );
+            statusTune->invalid();
+         }
       }
 
       if( patchChanged )
@@ -900,7 +984,7 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
    }
 }
 
-CRect positionForModulationGrid(modsources entry)
+CRect SurgeGUIEditor::positionForModulationGrid(modsources entry)
 {
    bool isMacro = isCustomController(entry);
    int gridX = modsource_grid_xy[entry][0];
@@ -912,7 +996,12 @@ CRect positionForModulationGrid(modsources entry)
    if ((!isMacro) && ((gridX == 0) || (gridX == 9)))
       width += 2;
 
-   CRect r(2, 1, width, 14 + 1);
+   auto skinCtrl = currentSkin->controlForUIID("controls.modulationpanel");
+   if( ! skinCtrl )
+   {
+      skinCtrl = currentSkin->getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID("controls.modulationpanel"));
+   }
+   CRect r(CPoint(skinCtrl->x, skinCtrl->y), CPoint( width-1, 14) );
 
    if (isMacro)
       r.bottom += 8;
@@ -932,7 +1021,7 @@ CRect positionForModulationGrid(modsources entry)
       offsetX += width;
    }
 
-   r.offset(offsetX, 401 + (8 * gridY));
+   r.offset(offsetX,  (8 * gridY));
 
    return r;
 }
@@ -966,7 +1055,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    
       close_editor();
    }
-
    CPoint nopoint(0, 0);
 
    clear_infoview_peridle = -1;
@@ -984,31 +1072,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    current_scene = synth->storage.getPatch().scene_active.val.i;
 
-   CControl *skinTagControl;
-   if( ( skinTagControl = layoutTagWithSkin( tag_osc_select ) ) == nullptr ) {
-      CRect rect(0, 0, 75, 13);
-      rect.offset(104 - 36, 69);
-      auto oscswitch = new CHSwitch2(rect, this, tag_osc_select, 3, 13, 1, 3,
-                                          bitmapStore->getBitmap(IDB_OSCSELECT), nopoint);
-      oscswitch->setValue((float)current_osc[current_scene] / 2.0f);
-      frame->addView(oscswitch);
-      oscswitch->setSkin(currentSkin,bitmapStore);
-   }
 
-   if( ( skinTagControl = layoutTagWithSkin( tag_fx_select ) ) == nullptr ) {
-      CRect rect(0, 0, 119, 51);
-      rect.offset(764 + 3, 71);
-      CEffectSettings* fc = new CEffectSettings(rect, this, tag_fx_select, current_fx, bitmapStore);
-      ccfxconf = fc;
-      for (int i = 0; i < 8; i++)
-      {
-         fc->set_type(i, synth->storage.getPatch().fx[i].type.val.i);
-      }
-      fc->set_bypass(synth->storage.getPatch().fx_bypass.val.i);
-      fc->set_disable(synth->storage.getPatch().fx_disable.val.i);
-      frame->addView(fc);
-   }
 
+   /*
+    * In Surge 1.8, the skin engine can change the position of this panel as a whole
+    * but not anything else about it. The skin query happens inside positionForModulationGrid
+    */
    for (int k = 1; k < n_modsources; k++)
    {
       if ((k != ms_random_unipolar) && (k != ms_alternate_unipolar))
@@ -1067,27 +1136,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
      frame->addView(Comments);
      }*/
 
-   // main vu-meter
-   CRect vurect(763, 0, 763 + 123, 13);
-   vurect.offset(0, 14);
-   vu[0] = new CSurgeVuMeter(vurect);
-   ((CSurgeVuMeter*)vu[0])->setSkin(currentSkin,bitmapStore);
-   ((CSurgeVuMeter*)vu[0])->setType(vut_vu_stereo);
-   frame->addView(vu[0]);
 
-   // fx vu-meters & labels
-
-   vurect.offset(0, 162 + 8);
+   // fx vu-meters & labels. This is all a bit hacky still
    if (synth->fx[current_fx])
    {
+      auto fxpp = currentSkin->getOrCreateControlForConnector("FX.param.panel");
+      CRect fxRect = CRect( CPoint( fxpp->x, fxpp->y ), CPoint( 123, 13 ) );
       for (int i = 0; i < 8; i++)
       {
          int t = synth->fx[current_fx]->vu_type(i);
          if (t)
          {
-            CRect vr(vurect);
-            vr.offset(0, yofs * synth->fx[current_fx]->vu_ypos(i));
-            vr.offset(0, 7);
+            CRect vr(fxRect); // FIXME (vurect);
+            vr.offset(6, yofs * synth->fx[current_fx]->vu_ypos(i));
+            vr.offset(0, -14);
             vu[i + 1] = new CSurgeVuMeter(vr);
             ((CSurgeVuMeter*)vu[i + 1])->setSkin(currentSkin,bitmapStore);
             ((CSurgeVuMeter*)vu[i + 1])->setType(t);
@@ -1100,9 +1162,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
          if (label)
          {
-            CRect vr(vurect);
+            CRect vr(fxRect); // (vurect);
             vr.top += 1;
-            vr.offset(0, 19);
+            vr.offset(5, -12);
             vr.offset(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
             CEffectLabel* lb = new CEffectLabel(vr);
             lb->setLabel(label);
@@ -1112,100 +1174,141 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
    }
 
-   // CRect(12,62,140,159)
-   oscdisplay = new COscillatorDisplay(CRect(6, 81, 142, 180), this,
-                                       &synth->storage.getPatch()
-                                       .scene[synth->storage.getPatch().scene_active.val.i]
-                                       .osc[current_osc[current_scene]],
-                                       &synth->storage);
-   ((COscillatorDisplay*)oscdisplay)->setSkin( currentSkin, bitmapStore );
-   frame->addView(oscdisplay);
-
-   // 150*b - 16 = 434 (b=3)
-   patchname =
-      new CPatchBrowser(CRect(156, 11, 547, 11 + 28), this, tag_patchname, &synth->storage);
-   ((CPatchBrowser*)patchname)->setSkin( currentSkin, bitmapStore );
-   ((CPatchBrowser*)patchname)->setLabel(synth->storage.getPatch().name);
-   ((CPatchBrowser*)patchname)->setCategory(synth->storage.getPatch().category);
-   ((CPatchBrowser*)patchname)->setIDs(synth->current_category_id, synth->patchid);
-   ((CPatchBrowser*)patchname)->setAuthor(synth->storage.getPatch().author);
-   frame->addView(patchname);
-
-   statuspanel = new CStatusPanel(CRect( 560, 1, 595, 54 ), this, tag_statuspanel, &synth->storage, bitmapStore);
+   /*
+    * Loop over the non-associated controls
+    */
+   for( auto i=Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED + 1;
+        i < Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED;
+        ++i )
    {
-      CStatusPanel *pb = (CStatusPanel *)statuspanel;
-      pb->setSkin( currentSkin, bitmapStore );
-      pb->setDisplayFeature(CStatusPanel::mpeMode, synth->mpeEnabled);
-      pb->setDisplayFeature(CStatusPanel::tuningMode, ! synth->storage.isStandardTuning);
-      pb->setEditor(this);
+      Surge::Skin::Connector::NonParameterConnection npc = (Surge::Skin::Connector::NonParameterConnection)i;
+      auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+      auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
+      if( ! skinCtrl )
+      {
+         std::cout << "Unable to find SkinCtrl" << std::endl;
+         continue;
+      }
+      /*
+       * Many of the controls are special and so require non-generalizable constructors
+       * handled here. Some are standard and so once we know the tag we can use layoutComponentForSkin
+       * but it's not worth generalizing the OSCILLATOR_DISPLAY beyond this, say.
+       */
+      switch( npc )
+      {
+      case Surge::Skin::Connector::NonParameterConnection::OSCILLATOR_DISPLAY: {
+         auto od = new COscillatorDisplay(
+             CRect(CPoint(skinCtrl->x, skinCtrl->y), CPoint(skinCtrl->w, skinCtrl->h)), this,
+             &synth->storage.getPatch()
+                  .scene[synth->storage.getPatch().scene_active.val.i]
+                  .osc[current_osc[current_scene]],
+             &synth->storage);
+         od->setSkin(currentSkin, bitmapStore);
+         frame->addView(od);
+         oscdisplay = od;
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU: {
+         layoutComponentForSkin(skinCtrl, tag_settingsmenu);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::OSCILLATOR_SELECT: {
+         auto oscswitch = layoutComponentForSkin(skinCtrl, tag_osc_select );
+         oscswitch->setValue((float)current_osc[current_scene] / 2.0f);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::JOG_PATCHCATEGORY: {
+         layoutComponentForSkin(skinCtrl, tag_mp_category);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::JOG_PATCH: {
+         layoutComponentForSkin(skinCtrl, tag_mp_patch);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::JOG_FX: {
+         layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::STATUS_MPE: {
+         statusMPE  = layoutComponentForSkin(skinCtrl, tag_status_mpe);
+         statusMPE->setValue( synth->mpeEnabled ? 0 : 1 );
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::STATUS_TUNE: {
+         // FIXME - drag and drop onto this?
+         statusTune  = layoutComponentForSkin(skinCtrl, tag_status_tune);
+         statusTune->setValue( synth->storage.isStandardTuning ? 1 : 0 );
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::STATUS_ZOOM: {
+         statusZoom  = layoutComponentForSkin(skinCtrl, tag_status_zoom);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::STORE_PATCH: {
+         layoutComponentForSkin( skinCtrl, tag_store );
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::LFO_LABEL: {
+         // Room for improvement, obviously
+         lfoNameLabel = new CVerticalLabel(skinCtrl->getRect(), "" );
+         lfoNameLabel->setTransparency(true);
+         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 10, kBoldFace);
+         lfoNameLabel->setFont(fnt);
+         lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text));
+         lfoNameLabel->setHoriAlign(kCenterText);
+         frame->addView(lfoNameLabel);
+
+         break;
+      }
+
+      case Surge::Skin::Connector::NonParameterConnection::FXPRESET_LABEL: {
+         // Room for improvement, obviously
+         fxPresetLabel = new CTextLabel(skinCtrl->getRect(), "Preset");
+         fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name));
+         fxPresetLabel->setTransparency(true);
+         fxPresetLabel->setFont(displayFont);
+         fxPresetLabel->setHoriAlign(kRightText);
+         fxPresetLabel->setTextTruncateMode(CTextLabel::TextTruncateMode::kTruncateTail);
+         frame->addView(fxPresetLabel);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER: {
+         patchname =
+             new CPatchBrowser(skinCtrl->getRect(), this, tag_patchname, &synth->storage);
+         ((CPatchBrowser*)patchname)->setSkin(currentSkin, bitmapStore);
+         ((CPatchBrowser*)patchname)->setLabel(synth->storage.getPatch().name);
+         ((CPatchBrowser*)patchname)->setCategory(synth->storage.getPatch().category);
+         ((CPatchBrowser*)patchname)->setIDs(synth->current_category_id, synth->patchid);
+         ((CPatchBrowser*)patchname)->setAuthor(synth->storage.getPatch().author);
+         frame->addView(patchname);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR: {
+         CEffectSettings* fc = new CEffectSettings(skinCtrl->getRect(), this, tag_fx_select, current_fx, bitmapStore);
+         ccfxconf = fc;
+         for (int i = 0; i < 8; i++)
+         {
+            fc->set_type(i, synth->storage.getPatch().fx[i].type.val.i);
+         }
+         fc->set_bypass(synth->storage.getPatch().fx_bypass.val.i);
+         fc->set_disable(synth->storage.getPatch().fx_disable.val.i);
+         frame->addView(fc);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER: { // main vu-meter
+         vu[0] = new CSurgeVuMeter(skinCtrl->getRect());
+         ((CSurgeVuMeter*)vu[0])->setSkin(currentSkin,bitmapStore);
+         ((CSurgeVuMeter*)vu[0])->setType(vut_vu_stereo);
+         frame->addView(vu[0]);
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
+      case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
+         break;
+      }
+
    }
-
-   frame->addView(statuspanel);
-
-   int catx = 157, caty = 41;
-   auto catctrl = currentSkin->controlForEnumID( tag_mp_category );
-   if( catctrl )
-   {
-      catx = catctrl->x;
-      caty = catctrl->y;
-   }
-
-   CHSwitch2* mp_cat =
-      new CHSwitch2(CRect(catx, caty, 157 + 37, 41 + 12), this, tag_mp_category, 2, 12, 1, 2,
-                    bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
-   mp_cat->setUsesMouseWheel(false); // mousewheel on category and patch buttons is undesirable
-   mp_cat->setSkin( currentSkin, bitmapStore );
-   frame->addView(mp_cat);
-
-   int patchx = 242, patchy = 41;
-   auto patchctrl = currentSkin->controlForEnumID( tag_mp_patch );
-   if( patchctrl )
-   {
-      patchx = patchctrl->x;
-      patchy = patchctrl->y;
-   }
-   CHSwitch2* mp_patch =
-      new CHSwitch2(CRect(patchx, patchy, 242 + 37, 41 + 12), this, tag_mp_patch, 2, 12, 1, 2,
-                    bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
-   mp_patch->setUsesMouseWheel(false);// mousewheel on category and patch buttons is undesirable
-   mp_patch->setSkin( currentSkin, bitmapStore );
-   frame->addView(mp_patch);
-
-   int jogx = 759 + 131 - 39, jogy = 182 + 20;
-   auto jogctrl = currentSkin->controlForEnumID( tag_mp_jogfx );
-   if( jogctrl )
-   {
-      jogx = jogctrl->x;
-      jogy = jogctrl->y;
-   }
-
-   CHSwitch2* mp_jogfx =
-      new CHSwitch2(CRect(jogx, jogy, jogx + 37, jogy + 12), this, tag_mp_jogfx, 2, 12, 1, 2,
-                    bitmapStore->getBitmap(IDB_BUTTON_MINUSPLUS), nopoint, false);
-   mp_jogfx->setUsesMouseWheel(false); // mousewheel on category and patch buttons is undesirable
-   mp_jogfx->setSkin( currentSkin, bitmapStore );
-   frame->addView(mp_jogfx);
-
-   lfoNameLabel = new CVerticalLabel(CRect(6, 485, 15, 568), "" );
-   lfoNameLabel->setTransparency(true);
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 10, kBoldFace);
-   lfoNameLabel->setFont(fnt);
-   lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text));
-   lfoNameLabel->setHoriAlign(kCenterText);
-   frame->addView(lfoNameLabel);
-
-   fxPresetLabel = new CTextLabel(CRect(759, jogy + 1, jogx - 2, jogy + 11), "Preset");
-   fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name));
-   fxPresetLabel->setTransparency(true);
-   fxPresetLabel->setFont(displayFont);
-   fxPresetLabel->setHoriAlign(kRightText);
-   fxPresetLabel->setTextTruncateMode(CTextLabel::TextTruncateMode::kTruncateTail);
-   frame->addView(fxPresetLabel);
-
-   CHSwitch2* b_store = new CHSwitch2(CRect(547 - 37, 41, 547, 41 + 12), this, tag_store, 1, 12, 1,
-                                      1, bitmapStore->getBitmap(IDB_BUTTON_STORE), nopoint, false);
-   b_store->setSkin( currentSkin, bitmapStore );
-   frame->addView(b_store);
 
    memset(param, 0, n_paramslots * sizeof(void*));
    memset(nonmod_param, 0, n_paramslots * sizeof(void*));
@@ -1214,859 +1317,70 @@ void SurgeGUIEditor::openOrRecreateEditor()
    for (iter = synth->storage.getPatch().param_ptr.begin();
         iter != synth->storage.getPatch().param_ptr.end(); iter++)
    {
-      if( i == n_paramslots )
+      if (i == n_paramslots)
       {
-         // This would only happen if a dev added params. But with 1.7 a dev might so lets at least put this here.
-         Surge::UserInteractions::promptError( "INTERNAL ERROR: List of parameters is larger than maximum number of parameter slots. Increase n_paramslots in SurgeGUIEditor.h!", "Error");
+         // This would only happen if a dev added params.
+         Surge::UserInteractions::promptError(
+             "INTERNAL ERROR: List of parameters is larger than maximum number of parameter slots. Increase n_paramslots in SurgeGUIEditor.h!",
+             "Error");
       }
       Parameter* p = *iter;
-
       bool paramIsVisible = ((p->scene == (current_scene + 1)) || (p->scene == 0)) &&
-         isControlVisible(p->ctrlgroup, p->ctrlgroup_entry) && (p->ctrltype != ct_none);
+                            isControlVisible(p->ctrlgroup, p->ctrlgroup_entry) && (p->ctrltype != ct_none);
 
+      auto conn = Surge::Skin::Connector::connectorByID(p->ui_identifier);
       std::string uiid = p->ui_identifier;
 
-      bool handledBySkins = false;
-
-      /*
-      ** OK so we basically have two paths here. One which is skin specified, and one which is
-      ** default specified. The skin specified one delegates almost all the decisions to the skin
-      ** engine data structure if it can find it
-      */
-      auto c = currentSkin->controlForUIID(uiid);
-      if( c.get() && paramIsVisible )
+      long style = p->ctrlstyle;
+      switch (p->ctrltype)
       {
-         // borrow from 1.6.6
-         long style = p->ctrlstyle;
-
-         switch (p->ctrltype)
-         {
-         case ct_decibel:
-         case ct_decibel_narrow:
-         case ct_decibel_narrow_extendable:
-         case ct_decibel_narrow_short_extendable:
-         case ct_decibel_extra_narrow:
-         case ct_decibel_extendable:
-         case ct_freq_mod:
-         case ct_percent_bidirectional:
-         case ct_percent_bidirectional_stereo:
-         case ct_freq_shift:
-         case ct_osc_feedback_negative:
-         case ct_airwindow_param_bipolar:
+      case ct_decibel:
+      case ct_decibel_narrow:
+      case ct_decibel_narrow_extendable:
+      case ct_decibel_narrow_short_extendable:
+      case ct_decibel_extra_narrow:
+      case ct_decibel_extendable:
+      case ct_freq_mod:
+      case ct_percent_bidirectional:
+      case ct_percent_bidirectional_stereo:
+      case ct_freq_shift:
+      case ct_osc_feedback_negative:
+      case ct_airwindow_param_bipolar:
+         style |= kBipolar;
+         break;
+      case ct_lfoamplitude:
+         if (p->extend_range)
             style |= kBipolar;
-            break;
-         case ct_lfoamplitude:
-            if (p->extend_range)
-               style |= kBipolar;
-            break;
-         case ct_fmratio:
-            if( p->extend_range )
-               style |= kBipolar;
-            break;
-         };
+         break;
+      case ct_fmratio:
+         if (p->extend_range)
+            style |= kBipolar;
+         break;
+      };
 
-         auto parentClassName = c->ultimateparentclassname;
-         handledBySkins = true; // by default assume we are handled
-
-         // Would be great to change this to a switch by making it an enum. FIXME
-         if( parentClassName == "CSurgeSlider" )
-         {
-            // If we don't specify a positoin use the default
-            int px = ( c->x >= 0 ? c->x : p->posx );
-            int py = ( c->y >= 0 ? c->y : p->posy );
-            bool is_mod = synth->isValidModulation(p->id, modsource);
-            CSurgeSlider* hs =
-               new CSurgeSlider(CPoint(px, py), style, this, p->id + start_paramtags, is_mod, bitmapStore, &(synth->storage));
-            hs->setSkin(currentSkin,bitmapStore,c);
-            hs->setMoveRate(p->moverate);
-            if( p->can_temposync() )
-               hs->setTempoSync(p->temposync);
-            hs->setValue(p->get_value_f01());
-            hs->setLabel(p->get_name());
-            hs->setModPresent(synth->isModDestUsed(p->id));
-            hs->setDefaultValue(p->get_default_value_f01());
-
-            if( p->can_deactivate() )
-               hs->deactivated = p->deactivated;
-            else
-               hs->deactivated = false;
-
-
-            if( p->valtype  == vt_int || p->valtype  == vt_bool)
-            {
-               hs->isStepped = true;
-               hs->intRange = p->val_max.i - p->val_min.i;
-            }
-            else
-            {
-               hs->isStepped = false;
-            }
-
-            setDisabledForParameter(p, hs);
-
-            if (synth->isValidModulation(p->id, modsource))
-            {
-               hs->setModMode(mod_editor ? 1 : 0);
-               hs->setModValue(synth->getModulation(p->id, modsource));
-               hs->setModCurrent(synth->isActiveModulation(p->id, modsource), synth->isBipolarModulation(modsource));
-            }
-            else
-            {
-               // Even if current modsource isn't modulating me, something else may be
-            }
-            frame->addView(hs);
-            param[i] = hs;
-
-         }
-         else if( parentClassName == "CLFOGui" )
-         {
-            if( p->ctrltype != ct_lfoshape )
-            {
-               // FIXME - warning?
-            }
-            CRect rect(0, 0, c->w, c->h);
-            rect.offset(c->x, c->y);
-            int lfo_id = p->ctrlgroup_entry - ms_lfo1;
-            if ((lfo_id >= 0) && (lfo_id < n_lfos))
-            {
-               CLFOGui* slfo = new CLFOGui(
-                  rect, lfo_id >= 0 && lfo_id <= ( ms_lfo6 - ms_lfo1 ), this, p->id + start_paramtags,
-                  &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
-                  &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
-                  &synth->storage.getPatch().msegs[current_scene][lfo_id],
-                  &synth->storage.getPatch().formulamods[current_scene][lfo_id],
-                  bitmapStore);
-               slfo->setSkin( currentSkin, bitmapStore, c );
-               lfodisplay = slfo;
-               frame->addView(slfo);
-               nonmod_param[i] = slfo;
-            }
-         }
-         else if( parentClassName == "CSwitchControl" )
-         {
-            CRect rect(0, 0, c->w, c->h);
-            rect.offset(c->x, c->y);
-
-            // Make this a function on skin
-            auto bmp = currentSkin->backgroundBitmapForControl( c, bitmapStore );
-            if( bmp )
-            {
-               CSwitchControl* hsw = new CSwitchControl(rect, this, p->id + start_paramtags, bmp );
-               hsw->setValue(p->get_value_f01());
-               hsw->setSkin(currentSkin,bitmapStore,c);
-               frame->addView(hsw);
-               nonmod_param[i] = hsw;
-
-               // Carry over this filter type special case from the default control path
-               if( p->ctrltype == ct_filtertype )
-               {
-                  ((CSwitchControl*)hsw)->is_itype = true;
-                  ((CSwitchControl*)hsw)->imax = 3;
-                  ((CSwitchControl*)hsw)->ivalue = p->val.i + 1;
-                  if (fut_subcount[synth->storage.getPatch()
-                                   .scene[current_scene]
-                                   .filterunit[p->ctrlgroup_entry]
-                                   .type.val.i] == 0)
-                     ((CSwitchControl*)hsw)->ivalue = 0;
-
-                  if (p->ctrlgroup_entry == 1)
-                  {
-                     f2subtypetag = p->id + start_paramtags;
-                     filtersubtype[1] = hsw;
-                  }
-                  else
-                  {
-                     f1subtypetag = p->id + start_paramtags;
-                     filtersubtype[0] = hsw;
-                  }
-               }
-
-            }
-            else
-            {
-               std::cout << "Couldn't make CSwitch Control for ID '" << uiid << "'" << std::endl;
-            }
-
-         }
-         else if( parentClassName == "CHSwitch2" )
-         {
-            CRect rect(0, 0, c->w, c->h);
-            rect.offset(c->x, c->y);
-
-            // Make this a function on skin
-            auto bmp = currentSkin->backgroundBitmapForControl( c, bitmapStore );
-
-            auto defaultTag = p->id + start_paramtags;
-            switch( p->ctrltype )
-            {
-            case ct_scenesel:
-               defaultTag = tag_scene_select;
-               break;
-            default:
-               break;
-               // FIXME - we need to fill in the rest of these
-            }
-
-            if( bmp )
-            {
-               auto subpixmaps = currentSkin->propertyValue( c, "subpixmaps", "1" );
-               auto rows = currentSkin->propertyValue( c, "rows", "1" );
-               auto cols = currentSkin->propertyValue( c, "columns", "1" );
-               auto hsw = new CHSwitch2(rect, this, defaultTag,
-                                        std::atoi(subpixmaps.c_str()), c->h,
-                                        std::atoi(rows.c_str()), std::atoi(cols.c_str()),
-                                        bmp, nopoint,
-                                        true); // FIXME - this needs parameterization
-               hsw->setValue(p->get_value_f01());
-               frame->addView(hsw);
-               nonmod_param[i] = hsw;
-               hsw->setSkin( currentSkin, bitmapStore, c );
-            }
-
-         }
-         else
-         {
-            handledBySkins = false; /* FIXME: currentSkin->fallbackToDefaultSkin() */
-            std::cout << "Was able to get a control for the uiid '" << c->ui_id  << "' class is '" << c->classname << "' upc='" << parentClassName << "'" << std::endl;
-         }
-
-
-         /*
-           switch( parentClass )
-           {
-           case Surge::UI::Skin::Control::CSurgeSlider:
-           case Surge::UI::t lSkin::Control::CHSwitch2:
-           default:
-           std::cout << "UNKNOWN PARENT CLASS " << parentClass <<  std::endl;
-           break;
-           }
-         */
-      }
-
-      if (! handledBySkins && p->posx != 0 && paramIsVisible)
+      if (p->hasSkinConnector && conn.payload->defaultComponent != Surge::Skin::Connector::NONE && paramIsVisible )
       {
          /*
-         **  This is the legacy/1.6.6 codepath
-         */
-         long style = p->ctrlstyle;
-         /*if(p->ctrlstyle == cs_hori) style = kHorizontal;
-           else if(p->ctrlstyle == cs_vert) style = kVertical | kBottom;*/
-         switch (p->ctrltype)
-         {
-         case ct_decibel:
-         case ct_decibel_narrow:
-         case ct_decibel_narrow_extendable:
-         case ct_decibel_narrow_short_extendable:
-         case ct_decibel_extra_narrow:
-         case ct_decibel_extendable:
-         case ct_freq_mod:
-         case ct_percent_bidirectional:
-         case ct_percent_bidirectional_stereo:
-         case ct_freq_shift:
-         case ct_osc_feedback_negative:
-         case ct_airwindow_param_bipolar:
-            style |= kBipolar;
-            break;
-         case ct_lfoamplitude:
-            if (p->extend_range)
-               style |= kBipolar;
-            break;
-         case ct_fmratio:
-            if( p->extend_range )
-               style |= kBipolar;
-            break;
-         };
+          * Some special cases where we don't add a control
+          */
+         bool addControl = true;
 
-         switch (p->ctrltype)
+         // Case: Analog envelopes have no shapers
+         if( p->ctrltype == ct_envshape || p->ctrltype == ct_envshape_attack )
          {
-         case ct_filtertype:
-         {
-            CRect rect(0, 0, 121, 18);
-            rect.offset(p->posx - 2, p->posy + 1);
-#if 1 // SURGE_EXTRA_FILTERS
-            rect.offset( 1, -3 );
+            addControl = synth->storage.getPatch()
+                                .scene[current_scene]
+                                .adsr[p->ctrlgroup_entry]
+                                .mode.val.i == emt_digital;
+         }
 
-            auto hsw = new CMenuAsSlider( rect.getTopLeft(), CPoint( 124, 21 ), this, p->id + start_paramtags, bitmapStore, &(synth->storage) );
-            hsw->setMinMax( 0, n_fu_type - 1 );
-            hsw->setLabel( p->get_name() );
-            hsw->setDeactivated( false );
-            hsw->setBackgroundID( IDB_MENU_IN_FILTER_BG );
-            hsw->setFilterMode( true );
-            p->ctrlstyle = p->ctrlstyle | kNoPopup;
-
-            auto drr = rect;
-            drr.right = drr.left + 18;
-            hsw->setDragRegion( drr );
-            hsw->setDragGlyph( IDB_FILTER_GLYPHS, 18 );
-#else            
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 10, 18, 1, 10,
-                                          bitmapStore->getBitmap(IDB_FILTERBUTTONS), nopoint, true);
-            rect(3, 0, 124, 14);
-            rect.offset(p->posx, p->posy);
-            hsw->setMouseableArea(rect);
-#endif
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin( currentSkin, bitmapStore );
-
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-
-         }
-         break;
-         case ct_filtersubtype:
+         if( addControl )
          {
-            CRect rect(0, 0, 12, 18);
-            rect.offset(p->posx + 129, p->posy + 1.5);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_FILTERSUBTYPE));
-            rect(1, 1, 9, 14);
-            ((CSwitchControl*)hsw)->is_itype = true;
-            ((CSwitchControl*)hsw)->imax = 3;
-            ((CSwitchControl*)hsw)->ivalue = p->val.i + 1;
-            if (fut_subcount[synth->storage.getPatch()
-                             .scene[current_scene]
-                             .filterunit[p->ctrlgroup_entry]
-                             .type.val.i] == 0)
-               ((CSwitchControl*)hsw)->ivalue = 0;
-            rect.offset(p->posx + 129, p->posy + 1);
-            hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin(currentSkin,bitmapStore);
-            frame->addView(hsw);
-
-            if (p->ctrlgroup_entry == 1)
-            {
-               f2subtypetag = p->id + start_paramtags;
-               filtersubtype[1] = hsw;
-            }
-            else
-            {
-               f1subtypetag = p->id + start_paramtags;
-               filtersubtype[0] = hsw;
-            }
-         }
-         break;
-         case ct_bool_keytrack:
-         {
-            CRect rect(0, 0, 43, 7);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_SWITCH_KTRK));
-            hsw->setSkin(currentSkin,bitmapStore);
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_bool_retrigger:
-         {
-            CRect rect(0, 0, 43, 7);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_SWITCH_RETRIGGER));
-            hsw->setSkin(currentSkin,bitmapStore);
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_oscroute:
-         {
-            CRect rect(0, 0, 22, 15);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 15, 1, 3,
-                                          bitmapStore->getBitmap(IDB_OSCROUTE), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin( currentSkin, bitmapStore );
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_envshape:
-         case ct_envshape_attack:
-         {
-            bool hasShape = synth->storage.getPatch()
-               .scene[current_scene]
-               .adsr[p->ctrlgroup_entry]
-               .mode.val.i == emt_digital;
-
-            if (hasShape)
-            {
-               CRect rect(0, 0, 20, 14);
-               rect.offset(p->posx, p->posy);
-               CHSwitch2* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 14, 1, 3,
-                                              bitmapStore->getBitmap(IDB_ENVSHAPE), nopoint, true);
-               hsw->setValue(p->get_value_f01());
-               hsw->setSkin( currentSkin, bitmapStore );
-               if (p->name[0] == 'd')
-                  hsw->imgoffset = 3;
-               else if (p->name[0] == 'r')
-                  hsw->imgoffset = 6;
-
-               frame->addView(hsw);
-               nonmod_param[i] = hsw;
-            }
-         }
-         break;
-         case ct_envmode:
-         {
-            CRect rect(0, 0, 34, 15);
-            rect.offset(p->posx, p->posy);
-            CHSwitch2* hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 2, 15, 2, 1,
-                                           bitmapStore->getBitmap(IDB_ENVMODE), nopoint, false);
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin( currentSkin, bitmapStore );
-
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_lfotrigmode:
-         {
-            CRect rect(0, 0, 51, 39);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 39, 3, 1,
-                                          bitmapStore->getBitmap(IDB_LFOTRIGGER), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin( currentSkin, bitmapStore );
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_bool_mute:
-         {
-            CRect rect(0, 0, 22, 15);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_SWITCH_MUTE));
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin(currentSkin,bitmapStore);
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_bool_solo:
-         {
-            CRect rect(0, 0, 22, 15);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_SWITCH_SOLO));
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin(currentSkin,bitmapStore);
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_bool_unipolar:
-         {
-            CRect rect(0, 0, 51, 15);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_UNIPOLAR));
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin(currentSkin,bitmapStore);
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_bool_relative_switch:
-         {
-            CRect rect(0, 0, 12, 18);
-            rect.offset(p->posx + 129, p->posy + 5);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_RELATIVE_TOGGLE));
-            hsw->setSkin(currentSkin,bitmapStore);
-            rect(1, 1, 9, 14);
-            rect.offset(p->posx + 129, p->posy + 5);
-            hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-         }
-         break;
-         case ct_bool_link_switch:
-         {
-            CRect rect(0, 0, 12, 18);
-            rect.offset(p->posx + 129, p->posy + 5);
-            auto hsw = new CSwitchControl(rect, this, p->id + start_paramtags,
-                                               bitmapStore->getBitmap(IDB_SWITCH_LINK));
-            hsw->setSkin(currentSkin,bitmapStore);
-            rect(1, 1, 9, 14);
-            rect.offset(p->posx + 129, p->posy + 5);
-            hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-         }
-         break;
-         case ct_osctype:
-         {
-            CRect rect(0, 0, 41, 18);
-            rect.offset(p->posx + 96, p->posy + 1);
-            CControl* hsw = new COscMenu(
-               rect, this, tag_osc_menu, &synth->storage,
-               &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]], bitmapStore);
-            ((COscMenu*)hsw)->setSkin(currentSkin,bitmapStore);
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-         }
-         break;
-         case ct_fxtype:
-         {
-            CRect rect(6, 0, 131, 15);
-            rect.offset(p->posx, p->posy);
-            // CControl *m = new
-            // CFxMenu(rect,this,tag_fx_menu,&synth->storage,&synth->storage.getPatch().fx[current_fx],current_fx);
-            CControl* m = new CFxMenu(rect, this, tag_fx_menu, &synth->storage,
-                                      &synth->storage.getPatch().fx[current_fx],
-                                      &synth->fxsync[current_fx], current_fx);
-            ((CFxMenu*)m)->setSkin(currentSkin,bitmapStore);
-            ((CFxMenu*)m)->selectedIdx = this->selectedFX[current_fx];
-            fxPresetLabel->setText( this->fxPresetName[current_fx].c_str() );
-            m->setValue(p->get_value_f01());
-            frame->addView(m);
-            fxmenu = m;
-         }
-         break;
-         case ct_wstype:
-         {
-            CRect rect(0, 0, 28, 47);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 6, 47, 6, 1,
-                                          bitmapStore->getBitmap(IDB_WAVESHAPER), nopoint, true);
-            rect(0, 0, 28, 47);
-            rect.offset(p->posx, p->posy);
-            hsw->setMouseableArea(rect);
-            hsw->setSkin( currentSkin, bitmapStore );
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_polymode:
-         {
-            CRect rect(0, 0, 50, 47);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 6, 47, 6, 1,
-                                          bitmapStore->getBitmap(IDB_POLYMODE), nopoint, true);
-            rect(0, 0, 50, 47);
-            rect.offset(p->posx, p->posy);
-            hsw->setSkin( currentSkin, bitmapStore );
-            hsw->setMouseableArea(rect);
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_fxbypass:
-         {
-            CRect rect(0, 0, 135, 27);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 27, 1, 4,
-                                          bitmapStore->getBitmap(IDB_FXBYPASS), nopoint, true);
-            fxbypass_tag = p->id + start_paramtags;
-            rect(2, 2, 133, 25);
-            rect.offset(p->posx, p->posy);
-            hsw->setMouseableArea(rect);
-            hsw->setSkin( currentSkin, bitmapStore );
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_pitch_octave:
-         {
-            int oid = IDB_OCTAVES;
-            if( p->ctrlgroup == cg_OSC )
-               oid = IDB_OCTAVES_OSC;
-            CRect rect(0, 0, 96, 18);
-            rect.offset(p->posx, p->posy + 1);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 7, 18, 1, 7,
-                                          bitmapStore->getBitmap(oid), nopoint, true);
-            rect(1, 0, 91, 14);
-            rect.offset(p->posx, p->posy);
-            hsw->setMouseableArea(rect);
-            hsw->setSkin( currentSkin, bitmapStore );
-            hsw->setValue(p->get_value_f01());
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_fbconfig:
-         {
-            CRect rect(0, 0, 134, 52);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 8, 52, 1, 8,
-                                          bitmapStore->getBitmap(IDB_FBCONFIG), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin( currentSkin, bitmapStore );
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-            filterblock_tag = p->id + start_paramtags;
-         }
-         break;
-         case ct_fmconfig:
-         {
-            CRect rect(0, 0, 134, 52);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 52, 1, 4,
-                                          bitmapStore->getBitmap(IDB_FMCONFIG), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin( currentSkin, bitmapStore );
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-            fmconfig_tag = p->id + start_paramtags;
-         }
-         break;
-         case ct_scenemode:
-         {
-            CRect rect(0, 0, 36, 33);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 4, 33, 4, 1,
-                                          bitmapStore->getBitmap(IDB_SCENEMODE), nopoint, true);
-            rect(1, 1, 35, 32);
-            rect.offset(p->posx, p->posy);
-            hsw->setMouseableArea(rect);
-            hsw->setSkin( currentSkin, bitmapStore );
-
-            /*
-            ** SceneMode is special now because we have a streaming vs UI difference.
-            ** The streamed integer value is 0, 1, 2, 3 which matches the scene_mode
-            ** SurgeStorage enum. But our display would look gross in that order, so
-            ** our display order is single, split, channel split, dual which is 0, 1, 3, 2.
-            ** Fine. So just deal with that here.
-            */
-            auto guiscenemode = p->val.i;
-            if( guiscenemode == 3 ) guiscenemode = 2;
-            else if( guiscenemode == 2 ) guiscenemode = 3;
-            auto fscenemode = 0.005 + 0.99 * ( (float)( guiscenemode ) / (n_scenemodes-1) );
-            hsw->setValue(fscenemode);
-            /*
-            ** end special case
-            */
-
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_lfoshape:
-         {
-            CRect rect(0, 0, 359, 85);
-            rect.offset(p->posx, p->posy - 2);
-            int lfo_id = p->ctrlgroup_entry - ms_lfo1;
-            if ((lfo_id >= 0) && (lfo_id < n_lfos))
-            {
-               CLFOGui* slfo = new CLFOGui(
-                  rect, lfo_id >= 0 && lfo_id <= ( ms_lfo6 - ms_lfo1 ) , this, p->id + start_paramtags,
-                  &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
-                  &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
-                  &synth->storage.getPatch().msegs[current_scene][lfo_id],
-                  &synth->storage.getPatch().formulamods[current_scene][lfo_id],
-                  bitmapStore);
-               slfo->setSkin( currentSkin, bitmapStore );
-               lfodisplay = slfo;
-               frame->addView(slfo);
-               nonmod_param[i] = slfo;
-            }
-         }
-         break;
-         case ct_scenesel:
-         {
-            CRect rect(0, 0, 51, 27);
-            rect.offset(p->posx, p->posy);
-            auto sceneswitch = new CHSwitch2(rect, this, tag_scene_select, 2, 27, 1, 2,
-                                                  bitmapStore->getBitmap(IDB_SCENESWITCH), nopoint);
-            sceneswitch->setSkin( currentSkin, bitmapStore );
-            sceneswitch->setValue(p->get_value_f01());
-            rect(1, 1, 50, 26);
-            rect.offset(p->posx, p->posy);
-            sceneswitch->setMouseableArea(rect);
-            frame->addView(sceneswitch);
-         }
-         break;
-         case ct_character:
-         {
-            CRect rect(0, 0, 135, 12);
-            rect.offset(p->posx, p->posy);
-            auto hsw = new CHSwitch2(rect, this, p->id + start_paramtags, 3, 12, 1, 3,
-                                          bitmapStore->getBitmap(IDB_CHARACTER), nopoint, true);
-            hsw->setValue(p->get_value_f01());
-            hsw->setSkin( currentSkin, bitmapStore );
-            frame->addView(hsw);
-            nonmod_param[i] = hsw;
-         }
-         break;
-         case ct_midikey_or_channel:
-         {
-            CRect rect(0, 0, 43, 14);
-            rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
-            key->setSkin(currentSkin,bitmapStore);
-            auto sm = this->synth->storage.getPatch().scenemode.val.i;
-
-            switch(sm)
-            {
-            case sm_single:
-            case sm_dual:
-               key->setControlMode(cm_none);
-               break;
-            case sm_split:
-               key->setControlMode(cm_notename);
-               break;
-            case sm_chsplit:
-               key->setControlMode(cm_midichannel_from_127);
-               break;
-            }
-
-            // key->altlook = true;
-            key->setValue(p->get_value_f01());
-            splitkeyControl = key;
-            frame->addView(key);
-            nonmod_param[i] = key;
-         }
-         break;
-         case ct_midikey:
-         {
-            CRect rect(0, 0, 43, 14);
-            rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
-            key->setSkin(currentSkin,bitmapStore);
-            key->setControlMode(cm_notename);
-            // key->altlook = true;
-            key->setValue(p->get_value_f01());
-            frame->addView(key);
-            nonmod_param[i] = key;
-         }
-         break;
-         case ct_pbdepth:
-         {
-            CRect rect(0, 0, 24, 10);
-            rect.offset(p->posx, p->posy);
-            CNumberField* pbd = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
-            pbd->setSkin(currentSkin,bitmapStore);
-            pbd->altlook = true;
-            pbd->setControlMode(cm_pbdepth);
-            pbd->setValue(p->get_value_f01());
-            frame->addView(pbd);
-         }
-         break;
-         case ct_polylimit:
-         {
-            CRect rect(0, 0, 43, 14);
-            rect.offset(p->posx, p->posy);
-            CNumberField* key = new CNumberField(rect, this, p->id + start_paramtags, nullptr, &(synth->storage));
-            key->setSkin(currentSkin,bitmapStore);
-            key->setControlMode(cm_polyphony);
-            // key->setLabel("POLY");
-            // key->setLabelPlacement(lp_below);
-            key->setValue(p->get_value_f01());
-            frame->addView(key);
-            polydisp = key;
-         }
-         break;
-         case ct_airwindow_fx:
-         case ct_flangermode:
-         case ct_flangerwave:
-         case ct_distortion_waveshape:
-         {
-            auto hs = new CMenuAsSlider(CPoint(p->posx, p->posy + (p->posy_offset * yofs) + 2),
-                                        this,
-                                        p->id + start_paramtags,
-                                        bitmapStore,
-                                        &(synth->storage));
-            hs->setSkin( currentSkin, bitmapStore );
-            hs->setValue( p->get_value_f01() );
-            hs->setMinMax( p->val_min.i, p->val_max.i );
-            hs->setLabel(p->get_name());
-            p->ctrlstyle = p->ctrlstyle | kNoPopup;
-            frame->addView( hs );
-            if( p->can_deactivate() )
-               hs->setDeactivated( p->deactivated );
-            
-            param[i] = hs;
-         }
-         break;
-         default:
-         {
-            if (synth->isValidModulation(p->id, modsource))
-            {
-               CSurgeSlider* hs =
-                  new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs), style, this,
-                                    p->id + start_paramtags, true, bitmapStore, &(synth->storage));
-               hs->setSkin(currentSkin,bitmapStore);
-               hs->setModMode(mod_editor ? 1 : 0);
-               hs->setModValue(synth->getModulation(p->id, modsource));
-               hs->setModPresent(synth->isModDestUsed(p->id));
-               hs->setModCurrent(synth->isActiveModulation(p->id, modsource), synth->isBipolarModulation(modsource));
-               hs->setValue(p->get_value_f01());
-               hs->setLabel(p->get_name());
-               hs->setMoveRate(p->moverate);
-               if( p->can_temposync() )
-                  hs->setTempoSync(p->temposync);
-
-               if( p->can_deactivate() )
-                  hs->deactivated = p->deactivated;
-               else
-                  hs->deactivated = false;
-
-
-               if( p->valtype  == vt_int || p->valtype  == vt_bool)
-               {
-                  hs->isStepped = true;
-                  hs->intRange = p->val_max.i - p->val_min.i;
-               }
-               else
-               {
-                  hs->isStepped = false;
-               }
-               
-               setDisabledForParameter(p, hs);
-
-               frame->addView(hs);
-               param[i] = hs;
-            }
-            else
-            {
-               CSurgeSlider* hs =
-                  new CSurgeSlider(CPoint(p->posx, p->posy + p->posy_offset * yofs), style, this,
-                                    p->id + start_paramtags, false, bitmapStore, &(synth->storage));
-
-               // Even if current modsource isn't modulating me, something else may be
-               hs->setModPresent(synth->isModDestUsed(p->id));
-
-               hs->setSkin(currentSkin,bitmapStore);
-               hs->setValue(p->get_value_f01());
-               hs->setDefaultValue(p->get_default_value_f01());
-               hs->setLabel(p->get_name());
-               hs->setMoveRate(p->moverate);
-               if( p->can_temposync() )
-                  hs->setTempoSync(p->temposync);
-
-               if( p->can_deactivate() )
-                  hs->deactivated = p->deactivated;
-               else
-                  hs->deactivated = false;
-
-
-               if( p->valtype  == vt_int || p->valtype  == vt_bool)
-               {
-                  hs->isStepped = true;
-                  hs->intRange = p->val_max.i - p->val_min.i;
-               }
-               else
-               {
-                  hs->isStepped = false;
-               }
-               
-
-               setDisabledForParameter(p, hs);
-
-               frame->addView(hs);
-               param[i] = hs;
-            }
-         }
-         break;
+            auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+            layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
+                                   style | conn.payload->controlStyleFlags);
          }
       }
-      i++;
    }
 
    // resonance link mode
@@ -2114,11 +1428,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    int menuX = 844, menuY = 550, menuW = 50, menuH = 15;
    CRect menurect(menuX, menuY, menuX + menuW, menuY + menuH);
 
-   CHSwitch2* b_settingsMenu =
-      new CHSwitch2(menurect, this, tag_settingsmenu, 1, 27, 1, 1, bitmapStore->getBitmap(IDB_BUTTON_MENU), nopoint, false);
-   b_settingsMenu->setSkin( currentSkin, bitmapStore );
-   frame->addView(b_settingsMenu);
-
    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
    ((CParameterTooltip *)infowindow)->setSkin( currentSkin );
    frame->addView(infowindow);
@@ -2130,82 +1439,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    frame->addView(aboutbox);
 
-
-   CRect dialogSize(148, 53, 598, 53 + 182);
-   saveDialog = new CViewContainer(dialogSize);
-   saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
-   saveDialog->setVisible(false);
-   frame->addView(saveDialog);
-
-   CHSwitch2* cancelButton = new CHSwitch2(CRect(CPoint(305, 147), CPoint(62, 25)), this,
-                                           tag_store_cancel, 1, 25, 1, 1, nullptr, nopoint, false);
-   saveDialog->addView(cancelButton);
-   CHSwitch2* okButton = new CHSwitch2(CRect(CPoint(373, 147), CPoint(62, 25)), this, tag_store_ok,
-                                       1, 25, 1, 1, nullptr, nopoint, false);
-   saveDialog->addView(okButton);
-
-   patchName = new CTextEdit(CRect(CPoint(96, 31), CPoint(340, 21)), this, tag_store_name);
-   patchCategory = new CTextEdit(CRect(CPoint(96, 58), CPoint(340, 21)), this, tag_store_category);
-   patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
-   patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
-   patchTuning = new CCheckBox(CRect(CPoint(96, 112 + (112-85) ), CPoint( 21, 21 )), this, tag_store_tuning);
-   patchTuningLabel = new CTextLabel(CRect(CPoint(96 + 22, 112 + (112-85) ), CPoint( 200, 21 )));
-   patchTuningLabel->setText( "Save With Tuning" );
-   patchTuningLabel->sizeToFit();
-
-   // fix the text selection rectangle background overhanging the borders on Windows
-#if WINDOWS
-      patchName->setTextInset(CPoint(3, 0));
-      patchCategory->setTextInset(CPoint(3, 0));
-      patchCreator->setTextInset(CPoint(3, 0));
-      patchComment->setTextInset(CPoint(3, 0));
-#endif
+   setupSaveDialog();
 
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
       CSurgeSlider::sliderMoveRateState =
-         (CSurgeSlider::MoveRateState)Surge::Storage::getUserDefaultValue(
-            &(synth->storage), "sliderMoveRateState", (int)CSurgeSlider::kClassic);
+          (CSurgeSlider::MoveRateState)Surge::Storage::getUserDefaultValue(
+              &(synth->storage), "sliderMoveRateState", (int)CSurgeSlider::kClassic);
 
-   /*
-    * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac hosts.
-    * This leads to the odd behaviour when you click out of a box that in some hosts - Logic Pro for
-    * instance - there is no looseFocus event and so the value doesn't update. We could fix that
-    * a variety of ways I imagine, but since we don't really mind the value being updated as we
-    * go, we can just set the editors to immediate and correct the problem.
-    *
-    * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan 2019.
-    */
-   patchName->setImmediateTextChange( true );
-   patchCategory->setImmediateTextChange( true );
-   patchCreator->setImmediateTextChange( true );
-   patchComment->setImmediateTextChange( true );
-
-   patchName->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-   patchCategory->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-   patchCreator->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-   patchComment->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-
-   patchName->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-   patchCategory->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-   patchCreator->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-   patchComment->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-
-   patchName->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-   patchCategory->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-   patchCreator->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-   patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-
-   CColor bggr = currentSkin->getColor(Colors::Dialog::Background);
-   patchTuningLabel->setBackColor(bggr);
-   patchTuningLabel->setFrameColor(bggr);
-
-   saveDialog->addView(patchName);
-   saveDialog->addView(patchCategory);
-   saveDialog->addView(patchCreator);
-   saveDialog->addView(patchComment);
-   saveDialog->addView(patchTuning);
-   saveDialog->addView(patchTuningLabel);
 
 
    /*
@@ -2268,11 +1509,6 @@ void SurgeGUIEditor::close_editor()
    setzero(param);
 }
 
-VSTGUI::CControl *SurgeGUIEditor::layoutTagWithSkin( int tag )
-{
-   return nullptr;
-}
-
 
 #if !TARGET_VST3
 bool SurgeGUIEditor::open(void* parent)
@@ -2331,6 +1567,21 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    bitmapStore->setupBitmapsForFrame(nframe);
    currentSkin->reloadSkin(bitmapStore);
    nframe->setZoom(fzf);
+   /*
+    * OK so WTF is this? Well:
+    * CFrame is a CView so it can be a drop thing
+    * but CFrame is final so you can't subclass it
+    * You could call setDropTarget on it but that's not what CViewContainers use
+    * They instead use this attribute, kCViewContainerDropTargetAttribute
+    * but that's not public so copy its value here
+    * and add a comment
+    * and think - sigh. VSTGUI.
+    */
+   IDropTarget *dt = nullptr;
+   nframe->getAttribute( 'vcdt', dt );
+   if( dt ) dt->forget();
+   nframe->setAttribute('vcdt', dropAdapter );
+
    frame = nframe;
 
 #if LINUX && TARGET_VST3
@@ -2470,6 +1721,34 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    // In these cases just move along with success. RMB does nothing on these switches
    if( tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store || tag == tag_store_cancel || tag == tag_store_ok )
       return 1;
+
+   if( tag == tag_status_zoom )
+   {
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+
+      showZoomMenu(where);
+      return 1;
+   }
+   if( tag == tag_status_mpe )
+   {
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+
+      showMPEMenu(where);
+      return 1;
+   }
+   if( tag == tag_status_tune )
+   {
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+
+      showTuningMenu(where);
+      return 1;
+   }
 
    std::vector< std::string > clearControlTargetNames;
 
@@ -3845,6 +3124,26 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       typeinMode = Inactive;
    }
 
+   if( tag == tag_status_zoom )
+   {
+      control->setValue(0);
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+
+      showZoomMenu(where);
+      return;
+   }
+   if( tag == tag_status_mpe )
+   {
+      toggleMPE();
+      return;
+   }
+   if( tag == tag_status_tune )
+   {
+      toggleTuning();
+      return;
+   }
 
    if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
    {
@@ -4789,8 +4088,11 @@ long SurgeGUIEditor::unapplyParameterOffset(long id)
 void SurgeGUIEditor::toggleMPE()
 {
    this->synth->mpeEnabled = ! this->synth->mpeEnabled;
-   if( statuspanel )
-      ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::mpeMode, this->synth->mpeEnabled );
+   if( statusMPE )
+   {
+      statusMPE->setValue(this->synth->mpeEnabled);
+      statusMPE->invalid();
+   }
 }
 void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint& where)
 {
@@ -4842,8 +4144,8 @@ void SurgeGUIEditor::toggleTuning()
       this->synth->storage.init_tables();
    }
 
-   if( statuspanel )
-      ((CStatusPanel *)statuspanel)->setDisplayFeature(CStatusPanel::tuningMode, !this->synth->storage.isStandardTuning );
+   if( statusTune )
+      statusTune->setValue( this->synth->storage.isStandardTuning ? 1 : 0 );
 
    this->synth->refresh_editor = true;
 }
@@ -5592,23 +4894,32 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     auto &db = Surge::UI::SkinDB::get();
     bool hasTests = false;
 
+    // TODO: Later allow nesting
+    std::map<std::string, std::vector<Surge::UI::SkinDB::Entry>> entryByCategory;
     for( auto &entry : db.getAvailableSkins() )
     {
-       if( entry.name.rfind( "test", 0 ) == 0 )
+       entryByCategory[entry.category].push_back( entry );
+    }
+
+    for( auto pr : entryByCategory )
+    {
+       auto addToThis = skinSubMenu;
+       auto cat = pr.first;
+       if( cat != "" )
        {
-          hasTests = true;
+          addToThis = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle );
        }
-       else
+       for (auto& entry : pr.second)
        {
           auto dname = entry.displayName;
-          if( useDevMenu )
+          if (useDevMenu)
           {
              dname += " (";
-             if( entry.root.find( synth->storage.datapath ) != std::string::npos )
+             if (entry.root.find(synth->storage.datapath) != std::string::npos)
              {
                 dname += "factory";
              }
-             else if( entry.root.find( synth->storage.userDataPath ) != std::string::npos )
+             else if (entry.root.find(synth->storage.userDataPath) != std::string::npos)
              {
                 dname += "user";
              }
@@ -5620,39 +4931,23 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
              dname += PATH_SEPARATOR + entry.name + ")";
           }
 
-          auto cb = addCallbackMenu(skinSubMenu, dname,
-                                    [this, entry]() {
-                                       setupSkinFromEntry(entry);
-                                       this->synth->refresh_editor = true;
-                                       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkin", entry.name );
-                                    });
-          cb->setChecked( entry.matchesSkin( currentSkin ) );
+          auto cb = addCallbackMenu(addToThis, dname, [this, entry]() {
+             setupSkinFromEntry(entry);
+             this->synth->refresh_editor = true;
+             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkin",
+                                                    entry.name);
+          });
+          cb->setChecked(entry.matchesSkin(currentSkin));
           tid++;
        }
-    }
-
-
-    if( hasTests && useDevMenu )
-    {
-       COptionMenu *testSM = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                 VSTGUI::COptionMenu::kNoDrawStyle |
-                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
-       for( auto &entry : db.getAvailableSkins() )
+       if( cat != "" )
        {
-          if( entry.name.rfind( "test", 0 ) == 0 )
-             addCallbackMenu(testSM, entry.displayName,
-                             [this, entry]() {
-                                setupSkinFromEntry(entry);
-                                this->synth->refresh_editor = true;
-                                Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkin", entry.name );
-                             });
-
+          skinSubMenu->addEntry( addToThis, cat.c_str());
+          addToThis->forget();
        }
-       skinSubMenu->addEntry( testSM, Surge::UI::toOSCaseForMenu("Test Skins"));
-       testSM->forget();
     }
 
-    skinSubMenu->addSeparator(tid++);
+    skinSubMenu->addSeparator();
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Reload Current Skin"),
                     [this]() {
@@ -6160,7 +5455,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
       auto ml = new CTextLabel( CRect( 2, 10, 114, 27 ), mls.c_str() );
-      ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
+      ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
       ml->setTransparency(true);
       ml->setFont( displayFont );
       inner->addView(ml);
@@ -6168,7 +5463,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
 
    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
-   typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
+   typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
    typeinPriorValueLabel->setTransparency(true);
    typeinPriorValueLabel->setFont( displayFont );
    inner->addView(typeinPriorValueLabel);
@@ -6176,7 +5471,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    if( ismod )
    {
       auto sl = new CTextLabel( CRect( 2, 29 + 11, 116, 36 + 11 ), ptext2 );
-      sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
+      sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
       sl->setTransparency(true);
       sl->setFont( displayFont );
       inner->addView( sl );
@@ -6787,4 +6082,458 @@ void SurgeGUIEditor::resetSmoothing( ControllerModulationSource::SmoothingMode t
    // Reset the default value and tell the synth it is updated
    Surge::Storage::updateUserDefaultValue(&(synth->storage), "smoothingMode", (int)t );
    synth->changeModulatorSmoothing( t );
+}
+
+void SurgeGUIEditor::setupSaveDialog()
+{
+   CRect dialogSize(148, 53, 598, 53 + 182);
+   auto nopoint = CPoint(0,0);
+   saveDialog = new CViewContainer(dialogSize);
+   saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
+   saveDialog->setVisible(false);
+   frame->addView(saveDialog);
+
+   CHSwitch2* cancelButton = new CHSwitch2(CRect(CPoint(305, 147), CPoint(62, 25)), this,
+                                           tag_store_cancel, 1, 25, 1, 1, nullptr, nopoint, false);
+   saveDialog->addView(cancelButton);
+   CHSwitch2* okButton = new CHSwitch2(CRect(CPoint(373, 147), CPoint(62, 25)), this, tag_store_ok,
+                                       1, 25, 1, 1, nullptr, nopoint, false);
+   saveDialog->addView(okButton);
+
+   patchName = new CTextEdit(CRect(CPoint(96, 31), CPoint(340, 21)), this, tag_store_name);
+   patchCategory = new CTextEdit(CRect(CPoint(96, 58), CPoint(340, 21)), this, tag_store_category);
+   patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
+   patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
+   patchTuning = new CCheckBox(CRect(CPoint(96, 112 + (112-85) ), CPoint( 21, 21 )), this, tag_store_tuning);
+   patchTuningLabel = new CTextLabel(CRect(CPoint(96 + 22, 112 + (112-85) ), CPoint( 200, 21 )));
+   patchTuningLabel->setText( "Save With Tuning" );
+   patchTuningLabel->sizeToFit();
+
+   // fix the text selection rectangle background overhanging the borders on Windows
+#if WINDOWS
+   patchName->setTextInset(CPoint(3, 0));
+      patchCategory->setTextInset(CPoint(3, 0));
+      patchCreator->setTextInset(CPoint(3, 0));
+      patchComment->setTextInset(CPoint(3, 0));
+#endif
+
+
+   /*
+    * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac hosts.
+    * This leads to the odd behaviour when you click out of a box that in some hosts - Logic Pro for
+    * instance - there is no looseFocus event and so the value doesn't update. We could fix that
+    * a variety of ways I imagine, but since we don't really mind the value being updated as we
+    * go, we can just set the editors to immediate and correct the problem.
+    *
+    * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan 2019.
+    */
+   patchName->setImmediateTextChange( true );
+   patchCategory->setImmediateTextChange( true );
+   patchCreator->setImmediateTextChange( true );
+   patchComment->setImmediateTextChange( true );
+
+   patchName->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
+   patchCategory->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
+   patchCreator->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
+   patchComment->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
+
+   patchName->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
+   patchCategory->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
+   patchCreator->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
+   patchComment->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
+
+   patchName->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
+   patchCategory->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
+   patchCreator->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
+   patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
+
+   CColor bggr = currentSkin->getColor(Colors::Dialog::Background);
+   patchTuningLabel->setBackColor(bggr);
+   patchTuningLabel->setFrameColor(bggr);
+
+   saveDialog->addView(patchName);
+   saveDialog->addView(patchCategory);
+   saveDialog->addView(patchCreator);
+   saveDialog->addView(patchComment);
+   saveDialog->addView(patchTuning);
+   saveDialog->addView(patchTuningLabel);
+
+}
+VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
+                                            long tag,
+                                            int paramIndex,
+                                            Parameter *p,
+                                            int style)
+{
+   // Special cases to preserve things
+   if( p && p->ctrltype == ct_fmconfig )
+   {
+      fmconfig_tag = tag;
+   }
+   if( p && p->ctrltype == ct_fbconfig )
+   {
+      filterblock_tag = tag;
+   }
+
+   // Basically put this in a function
+   if (skinCtrl->ultimateparentclassname == "CSurgeSlider")
+   {
+      if (!p)
+      {
+         // FIXME ERROR
+         return nullptr;
+      }
+
+      CPoint loc(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs );
+
+      // This is still a bit of a special case
+      if( p->ctrltype == ct_airwindow_fx ||
+          p->ctrltype == ct_flangermode ||
+          p->ctrltype == ct_flangerwave ||
+          p->ctrltype == ct_distortion_waveshape )
+      {
+         loc.offset( 0, 2 );
+         auto hs = new CMenuAsSlider(loc,
+                                     this,
+                                     p->id + start_paramtags,
+                                     bitmapStore,
+                                     &(synth->storage));
+         hs->setSkin( currentSkin, bitmapStore );
+         hs->setValue( p->get_value_f01() );
+         hs->setMinMax( p->val_min.i, p->val_max.i );
+         hs->setLabel(p->get_name());
+         p->ctrlstyle = p->ctrlstyle | kNoPopup;
+         frame->addView( hs );
+         if( p->can_deactivate() )
+            hs->setDeactivated( p->deactivated );
+
+         param[paramIndex] = hs;
+         return hs;
+      }
+      bool is_mod = p && synth->isValidModulation(p->id, modsource);
+
+      auto hs = new CSurgeSlider(loc,
+                                 style, this, tag, is_mod,
+                                 bitmapStore, &(synth->storage));
+      hs->setSkin(currentSkin, bitmapStore, skinCtrl);
+      hs->setMoveRate(p->moverate);
+
+      if (p->can_temposync())
+         hs->setTempoSync(p->temposync);
+      hs->setValue(p->get_value_f01());
+      hs->setLabel(p->get_name());
+      hs->setModPresent(synth->isModDestUsed(p->id));
+      hs->setDefaultValue(p->get_default_value_f01());
+
+      if (p->can_deactivate())
+         hs->deactivated = p->deactivated;
+      else
+         hs->deactivated = false;
+
+      if (p->valtype == vt_int || p->valtype == vt_bool)
+      {
+         hs->isStepped = true;
+         hs->intRange = p->val_max.i - p->val_min.i;
+      }
+      else
+      {
+         hs->isStepped = false;
+      }
+
+      setDisabledForParameter(p, hs);
+
+      if (synth->isValidModulation(p->id, modsource))
+      {
+         hs->setModMode(mod_editor ? 1 : 0);
+         hs->setModValue(synth->getModulation(p->id, modsource));
+         hs->setModCurrent(synth->isActiveModulation(p->id, modsource),
+                           synth->isBipolarModulation(modsource));
+      }
+      else
+      {
+         // Even if current modsource isn't modulating me, something else may be
+      }
+      frame->addView(hs);
+      if( paramIndex >= 0 ) param[paramIndex] = hs;
+      return hs;
+   }
+   if (skinCtrl->ultimateparentclassname == "CHSwitch2")
+   {
+      CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
+      rect.offset(skinCtrl->x, skinCtrl->y);
+
+      // Make this a function on skin
+      auto bmp = currentSkin->backgroundBitmapForControl(skinCtrl, bitmapStore);
+
+      if (bmp)
+      {
+         // Special case that scene select parameter is "odd"
+         if( p && p->ctrltype == ct_scenesel )
+            tag = tag_scene_select;
+
+         auto subpixmaps = currentSkin->propertyValue(skinCtrl, "subpixmaps", "1");
+         auto rows = currentSkin->propertyValue(skinCtrl, "rows", "1");
+         auto cols = currentSkin->propertyValue(skinCtrl, "columns", "1");
+         auto imgoff = currentSkin->propertyValue(skinCtrl, "imgoffset", "0" );
+         auto hsw = new CHSwitch2(rect, this, tag, std::atoi(subpixmaps.c_str()), skinCtrl->h,
+                                  std::atoi(rows.c_str()), std::atoi(cols.c_str()), bmp, CPoint(0,0),
+                                  true); // FIXME - this needs parameterization
+         if( p )
+         {
+            auto fval = p->get_value_f01();
+
+            if( p->ctrltype == ct_scenemode )
+            {
+               /*
+               ** SceneMode is special now because we have a streaming vs UI difference.
+               ** The streamed integer value is 0, 1, 2, 3 which matches the scene_mode
+               ** SurgeStorage enum. But our display would look gross in that order, so
+               ** our display order is single, split, channel split, dual which is 0, 1, 3, 2.
+               ** Fine. So just deal with that here.
+               */
+               auto guiscenemode = p->val.i;
+               if (guiscenemode == 3)
+                  guiscenemode = 2;
+               else if (guiscenemode == 2)
+                  guiscenemode = 3;
+               fval = 0.005 + 0.99 * ((float)(guiscenemode) / (n_scenemodes - 1));
+            }
+            hsw->setValue( fval );
+         }
+         frame->addView(hsw);
+         if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;
+         hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
+         hsw->setMouseableArea(rect);
+         hsw->imgoffset = std::atoi(imgoff.c_str());
+         return hsw;
+      }
+   }
+   if( skinCtrl->ultimateparentclassname == "CSwitchControl" )
+   {
+      CRect rect(CPoint( skinCtrl->x, skinCtrl->y), CPoint( skinCtrl->w, skinCtrl->h ) );
+      auto bmp = currentSkin->backgroundBitmapForControl(skinCtrl, bitmapStore);
+      if (bmp)
+      {
+         CSwitchControl* hsw =
+             new CSwitchControl(rect, this, tag, bmp);
+         hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
+         hsw->setMouseableArea(rect);
+         frame->addView(hsw);
+         if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;
+         if( p )
+         {
+            hsw->setValue(p->get_value_f01());
+
+            // Carry over this filter type special case from the default control path
+            if (p->ctrltype == ct_filtersubtype)
+            {
+               hsw->is_itype = true;
+               hsw->imax = 3;
+               hsw->ivalue = p->val.i + 1;
+               if (fut_subcount[synth->storage.getPatch()
+                                    .scene[current_scene]
+                                    .filterunit[p->ctrlgroup_entry]
+                                    .type.val.i] == 0)
+                  hsw->ivalue = 0;
+
+               if (p->ctrlgroup_entry == 1)
+               {
+                  f2subtypetag = p->id + start_paramtags;
+                  filtersubtype[1] = hsw;
+               }
+               else
+               {
+                  f1subtypetag = p->id + start_paramtags;
+                  filtersubtype[0] = hsw;
+               }
+            }
+         }
+         return hsw;
+      }
+   }
+   if( skinCtrl->ultimateparentclassname == "CLFOGui" )
+   {
+      if( ! p )
+         return nullptr;
+      if (p->ctrltype != ct_lfoshape)
+      {
+         // FIXME - warning?
+      }
+      CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
+      rect.offset(skinCtrl->x, skinCtrl->y);
+      int lfo_id = p->ctrlgroup_entry - ms_lfo1;
+      if ((lfo_id >= 0) && (lfo_id < n_lfos))
+      {
+         CLFOGui* slfo = new CLFOGui(
+             rect, lfo_id >= 0 && lfo_id <= (ms_lfo6 - ms_lfo1), this, p->id + start_paramtags,
+             &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
+             &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
+             &synth->storage.getPatch().msegs[current_scene][lfo_id],
+             &synth->storage.getPatch().formulamods[current_scene][lfo_id], bitmapStore);
+         slfo->setSkin(currentSkin, bitmapStore, skinCtrl);
+         lfodisplay = slfo;
+         frame->addView(slfo);
+         nonmod_param[paramIndex] = slfo;
+         return slfo;
+      }
+   }
+   if( skinCtrl->ultimateparentclassname == "COSCMenu" )
+   {
+      CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
+      rect.offset(skinCtrl->x, skinCtrl->y);
+      auto hsw = new COscMenu(
+          rect, this, tag_osc_menu, &synth->storage,
+          &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]], bitmapStore);
+      hsw->setSkin(currentSkin,bitmapStore);
+      if( p ) hsw->setValue(p->get_value_f01());
+      // TODO: This was not on before skinnification. Why?
+      // if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;
+
+      frame->addView(hsw);
+      return hsw;
+   }
+   if( skinCtrl->ultimateparentclassname == "CFXMenu" )
+   {
+      CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
+      rect.offset(skinCtrl->x, skinCtrl->y);
+      // CControl *m = new
+      // CFxMenu(rect,this,tag_fx_menu,&synth->storage,&synth->storage.getPatch().fx[current_fx],current_fx);
+      CControl* m = new CFxMenu(rect, this, tag_fx_menu, &synth->storage,
+                                &synth->storage.getPatch().fx[current_fx],
+                                &synth->fxsync[current_fx], current_fx);
+      ((CFxMenu*)m)->setSkin(currentSkin,bitmapStore);
+      ((CFxMenu*)m)->selectedIdx = this->selectedFX[current_fx];
+      fxPresetLabel->setText( this->fxPresetName[current_fx].c_str() );
+      m->setValue(p->get_value_f01());
+      frame->addView(m);
+      fxmenu = m;
+      return m;
+   }
+   if( skinCtrl->ultimateparentclassname == "CNumberField" )
+   {
+      CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
+      rect.offset(skinCtrl->x, skinCtrl->y);
+      CNumberField* pbd = new CNumberField(rect, this, tag, nullptr, &(synth->storage));
+      pbd->setSkin(currentSkin,bitmapStore);
+
+      pbd->altlook = ( ( style & kWhite ) != 0 );
+
+      // TODO extra from properties
+      auto nfcm = currentSkin->propertyValue(skinCtrl, "numberfield_controlmode", std::to_string( cm_none ));
+      pbd->setControlMode(std::atoi(nfcm.c_str()));
+
+      pbd->setValue(p->get_value_f01());
+      frame->addView(pbd);
+      nonmod_param[paramIndex] = pbd;
+
+      if( p && p->ctrltype == ct_midikey_or_channel )
+      {
+         auto sm = this->synth->storage.getPatch().scenemode.val.i;
+
+         switch (sm)
+         {
+         case sm_single:
+         case sm_dual:
+            pbd->setControlMode(cm_none);
+            break;
+         case sm_split:
+            pbd->setControlMode(cm_notename);
+            break;
+         case sm_chsplit:
+            pbd->setControlMode(cm_midichannel_from_127);
+            break;
+         }
+      }
+
+      // Save some of these for later reference
+      switch( p->ctrltype )
+      {
+      case ct_polylimit:
+         polydisp = pbd;
+         break;
+      case ct_midikey_or_channel:
+         splitkeyControl = pbd;
+         break;
+      default:
+         break;
+      }
+      return pbd;
+   }
+   if( skinCtrl->ultimateparentclassname == "FilterSelector" )
+   {
+      // Obviously exposing this widget as a controllable widget would be better
+      if( ! p ) return nullptr;
+
+      auto rect = skinCtrl->getRect();
+      auto hsw = new CMenuAsSlider(rect.getTopLeft(), CPoint(124, 21), this,
+                                   p->id + start_paramtags, bitmapStore, &(synth->storage));
+      hsw->setMinMax(0, n_fu_type - 1);
+      hsw->setLabel(p->get_name());
+      hsw->setDeactivated(false);
+      hsw->setBackgroundID(IDB_MENU_IN_FILTER_BG);
+      hsw->setFilterMode(true);
+      p->ctrlstyle = p->ctrlstyle | kNoPopup;
+
+      auto drr = rect;
+      drr.right = drr.left + 18;
+      hsw->setDragRegion(drr);
+      hsw->setDragGlyph(IDB_FILTER_GLYPHS, 18);
+
+      hsw->setValue(p->get_value_f01());
+      hsw->setSkin(currentSkin, bitmapStore);
+
+      frame->addView(hsw);
+      nonmod_param[paramIndex] = hsw;
+      return hsw;
+   }
+   std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname << std::endl;
+   return nullptr;
+}
+
+bool SurgeGUIEditor::canDropTarget(const std::string& fname)
+{
+   static std::unordered_set<std::string> extensions;
+   if( extensions.empty() )
+   {
+      extensions.insert( ".scl" );
+      extensions.insert( ".kbm" );
+      extensions.insert( ".wav" );
+      extensions.insert( ".wt" );
+      extensions.insert( ".fxp" );
+   }
+
+   fs::path fPath(fname);
+   std::string fExt(path_to_string(fPath.extension()));
+   std::transform(fExt.begin(), fExt.end(), fExt.begin(),
+                  [](unsigned char c){ return std::tolower(c); });
+   if( extensions.find(fExt) != extensions.end() )
+      return true;
+   return false;
+}
+bool SurgeGUIEditor::onDrop( const std::string& fname)
+{
+   std::cout << "Dropped " << fname << std::endl;
+   fs::path fPath(fname);
+   std::string fExt(path_to_string(fPath.extension()));
+   std::transform(fExt.begin(), fExt.end(), fExt.begin(),
+                  [](unsigned char c){ return std::tolower(c); });
+   if( fExt == ".wav" || fExt == ".wt" )
+   {
+      strncpy(synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]].wt.queue_filename,
+              fname.c_str(), 255);
+   }
+   else if( fExt == ".scl" )
+   {
+      tuningFileDropped( fname );
+   }
+   else if( fExt == ".kbm" )
+   {
+      mappingFileDropped( fname );
+   }
+   else if( fExt == ".fxp" )
+   {
+      queuePatchFileLoad(fname);
+   }
+
+   return true;
 }

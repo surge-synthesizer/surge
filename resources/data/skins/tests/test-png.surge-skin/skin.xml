@@ -1,4 +1,4 @@
-<surge-skin name="Test: PNG Assets" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+<surge-skin name="Test: PNG Assets" category="Tests" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
     <color id="white" value="#ffffff"/>
     <defaultimage directory="IMG/"/>

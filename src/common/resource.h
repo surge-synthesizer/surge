@@ -68,6 +68,9 @@
 #define IDB_MINIEDIT_ICON 170
 #define IDB_MSEG_VERTICAL_SNAP 303
 #define IDB_MSEG_HORIZONTAL_SNAP 304
+#define IDB_MPE_BUTTON 171
+#define IDB_ZOOM_BUTTON 172
+#define IDB_TUNE_BUTTON 173
 // == /SVG == Do not remove this comment
 
 
