@@ -975,7 +975,7 @@ void SurgePatch::load_patch(const void* data, int datasize, bool preset)
 
                void* d = (void*)((char*)dr + sizeof(wt_header));
 
-               storage->CS_WaveTableData.enter();
+               storage->waveTableDataMutex.lock();
                scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
                if( scene[sc].osc[osc].wavetable_display_name[0] == '\0' )
                {
@@ -988,7 +988,7 @@ void SurgePatch::load_patch(const void* data, int datasize, bool preset)
                      strncpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Wavetable)", 256);
                   }
                }
-               storage->CS_WaveTableData.leave();
+               storage->waveTableDataMutex.unlock();
 
                dr += ph->wtsize[sc][osc];
             }

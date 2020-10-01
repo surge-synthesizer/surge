@@ -51,6 +51,10 @@
 #include <stack>
 #include <unordered_map>
 
+#if WINDOWS
+#include <windows.h>
+#endif
+
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/base/ustring.h"
@@ -246,8 +250,6 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    _userdata = userdata;
    this->synth = synth;
 
-   // ToolTipWnd = 0;
-
    minimumZoom = 50;
 #if LINUX
    minimumZoom = 100; // See github issue #628
@@ -394,7 +396,7 @@ void SurgeGUIEditor::idle()
          int ptag = ((CControl*)v)->getTag() - start_paramtags;
          if (ptag >= 0)
          {
-            synth->storage.CS_ModRouting.enter();
+            synth->storage.modRoutingMutex.lock();
 
             for (int i = 1; i < n_modsources; i++)
             {
@@ -403,19 +405,19 @@ void SurgeGUIEditor::idle()
                      ->update_rt_vals(synth->isActiveModulation(ptag, (modsources)i), 0,
                                       synth->isModsourceUsed((modsources)i));
             }
-            synth->storage.CS_ModRouting.leave();
+            synth->storage.modRoutingMutex.unlock();
          }
       }
       else
       {
-         synth->storage.CS_ModRouting.enter();
+         synth->storage.modRoutingMutex.lock();
          for (int i = 1; i < n_modsources; i++)
          {
             if( gui_modsrc[i] )
                ((CModulationSourceButton*)gui_modsrc[i])
                   ->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
          }
-         synth->storage.CS_ModRouting.leave();
+         synth->storage.modRoutingMutex.unlock();
       }
 #if MAC
       idleinc++;
@@ -787,7 +789,7 @@ void SurgeGUIEditor::refresh_mod()
    if( cms->hasAlternate && cms->useAlternate )
       thisms = (modsources)cms->alternateId;
 
-   synth->storage.CS_ModRouting.enter();
+   synth->storage.modRoutingMutex.lock();
    for (int i = 0; i < n_paramslots; i++)
    {
       if (param[i])
@@ -817,7 +819,7 @@ void SurgeGUIEditor::refresh_mod()
    }
 #endif
 
-   synth->storage.CS_ModRouting.leave();
+   synth->storage.modRoutingMutex.unlock();
 
    for (int i = 1; i < n_modsources; i++)
    {

@@ -463,11 +463,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     if( wavdata && wt )
     {
-        CS_WaveTableData.enter();
-        
+        waveTableDataMutex.lock();
         wt->BuildWT(wavdata, wh, wh.flags & wtf_is_sample);
-        
-        CS_WaveTableData.leave();
+        waveTableDataMutex.unlock();
         free( wavdata );
     }
     return;
