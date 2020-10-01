@@ -375,7 +375,6 @@ bailOnPortable:
    }
 
    // append separator if not present
-   userDataPath = Surge::Storage::appendDirectory(userDataPath, std::string());
    datapath = Surge::Storage::appendDirectory(datapath, std::string());
 
    userFXPath = Surge::Storage::appendDirectory(userDataPath, "FXSettings");
