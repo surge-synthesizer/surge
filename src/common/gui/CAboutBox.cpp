@@ -132,7 +132,7 @@ void CAboutBox::draw(CDrawContext* pContext)
          int yMargin = 6;
          int yPos = strHeight * 2;
          int xPos = strHeight;
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text, kWhiteCColor));
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text));
          pContext->setFont(infoFont);
          for (auto s : msgs)
          {

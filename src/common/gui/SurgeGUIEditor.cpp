@@ -458,7 +458,7 @@ void SurgeGUIEditor::idle()
          if( typeinResetCounter <= 0 && typeinDialog )
          {
             typeinLabel->setText( typeinResetLabel.c_str() );
-            typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
+            typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
             typeinLabel->invalid();
          }
       }
@@ -2246,7 +2246,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          auto coln = currentSkin->propertyValue( l, "color", "#00FF00" );
          auto col = currentSkin->getColor( coln, kBlackCColor );
 
-         auto lb = new CTextLabel( CRect( l->x, l->y, l->x + 100, l->y + 20 ), mtext.fromJust().c_str() );
+         auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), mtext.fromJust().c_str() );
          lb->setHoriAlign(VSTGUI::kLeftText);
          lb->setTransparency(true);
          lb->setFontColor(col);
@@ -6108,7 +6108,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    }
 
    typeinLabel = new CTextLabel( CRect( 2, 2, 114, 14 ), lab.c_str() );
-   typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark, kBlackCColor));
+   typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
    typeinLabel->setTransparency(true);
    typeinLabel->setFont( displayFont );
    inner->addView(typeinLabel);
@@ -6144,7 +6144,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    {
       std::string mls = std::string( "by " ) + (char*)modulatorName(ms, true).c_str();
       auto ml = new CTextLabel( CRect( 2, 10, 114, 27 ), mls.c_str() );
-      ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
+      ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
       ml->setTransparency(true);
       ml->setFont( displayFont );
       inner->addView(ml);
@@ -6152,7 +6152,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
 
    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
-   typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
+   typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
    typeinPriorValueLabel->setTransparency(true);
    typeinPriorValueLabel->setFont( displayFont );
    inner->addView(typeinPriorValueLabel);
@@ -6160,7 +6160,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
    if( ismod )
    {
       auto sl = new CTextLabel( CRect( 2, 29 + 11, 116, 36 + 11 ), ptext2 );
-      sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light, kBlackCColor));
+      sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
       sl->setTransparency(true);
       sl->setFont( displayFont );
       inner->addView( sl );
@@ -6526,7 +6526,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    // add a screen size transparent thing into the editorOverlay
    editorOverlay = new CViewContainer( fs );
-   editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(180, 180, 200, 150)));
+   editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background));
    editorOverlay->setVisible(true);
    frame->addView(editorOverlay);
 
@@ -6540,20 +6540,20 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    }
    
    auto outerc = new CViewContainer(containerSize);
-   auto bordersCol = currentSkin->getColor(Colors::Overlay::Border, kBlackCColor);
+   auto bordersCol = currentSkin->getColor(Colors::Overlay::Border);
    outerc->setBackgroundColor( bordersCol );
    editorOverlay->addView( outerc );
 
    containerSize = containerSize.inset( 1, 1 );
    auto innerc = new CViewContainer(containerSize);
-   auto containerCol = currentSkin->getColor(Colors::Overlay::Container::Background, VSTGUI::CColor(216, 216, 220));
+   auto containerCol = currentSkin->getColor(Colors::Overlay::Container::Background);
    innerc->setBackgroundColor( containerCol );
    editorOverlay->addView(innerc);
 
    auto ls = containerSize;
    ls.bottom = ls.top + header;
    auto tl = new CTextLabel( ls, editorTitle.c_str() );
-   tl->setFontColor(currentSkin->getColor(Colors::Overlay::Container::TitleText, kBlackCColor));
+   tl->setFontColor(currentSkin->getColor(Colors::Overlay::Container::TitleText));
    tl->setTransparency( true );
    VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 14);
    tl->setFont( headerFont );
@@ -6627,7 +6627,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
 {
    auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
    minieditOverlay = new CViewContainer( fs );
-   minieditOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background, VSTGUI::CColor(0, 0, 0, 204)));
+   minieditOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background));
    minieditOverlay->setVisible(true);
    frame->addView( minieditOverlay );
 

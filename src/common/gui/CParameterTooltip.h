@@ -88,10 +88,10 @@ public:
          auto bgCol = skin->getColor(Colors::InfoWindow::Background);
 
          auto txtCol = skin->getColor(Colors::InfoWindow::Text);
-         auto mpCol = skin->getColor(Colors::InfoWindow::Modulation::Positive, txtCol);
-         auto mnCol = skin->getColor(Colors::InfoWindow::Modulation::Negative, txtCol);
-         auto mpValCol = skin->getColor(Colors::InfoWindow::Modulation::ValuePositive, mpCol);
-         auto mnValCol = skin->getColor(Colors::InfoWindow::Modulation::ValueNegative, mnCol);
+         auto mpCol = skin->getColor(Colors::InfoWindow::Modulation::Positive);
+         auto mnCol = skin->getColor(Colors::InfoWindow::Modulation::Negative);
+         auto mpValCol = skin->getColor(Colors::InfoWindow::Modulation::ValuePositive);
+         auto mnValCol = skin->getColor(Colors::InfoWindow::Modulation::ValueNegative);
          
          
          

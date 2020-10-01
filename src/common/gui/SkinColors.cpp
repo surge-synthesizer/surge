@@ -149,149 +149,150 @@ namespace Colors
 
    namespace Menu
    {
-      const Surge::UI::SkinColor Name("menu.name"),
-                                 NameHover("menu.name.hover"),
-                                 NameDeactivated("menu.name.deactivated"),
-                                 Value("menu.value"),
-                                 ValueHover("menu.value.hover"),
-                                 ValueDeactivated("menu.value.deactivated");
+      const Surge::UI::SkinColor Name("menu.name", kBlackCColor),
+                                 NameHover("menu.name.hover", CColor(60, 20, 0)),
+                                 NameDeactivated("menu.name.deactivated", CColor(180, 180, 180)),
+                                 Value("menu.value", kBlackCColor),
+                                 ValueHover("menu.value.hover", CColor(60, 20, 0)),
+                                 ValueDeactivated("menu.value.deactivated", CColor(180, 180, 180));
 
-      const Surge::UI::SkinColor FilterValue("filtermenu.value"),
-                                 FilterValueHover("filtermenu.value.hover");
+      const Surge::UI::SkinColor FilterValue("filtermenu.value", CColor(255, 154, 16)),
+                                 FilterValueHover("filtermenu.value.hover", kWhiteCColor);
    }
 
    namespace ModSource
    {
       namespace Unused
       {
-         const Surge::UI::SkinColor Background("modbutton.unused.fill"),
-                                    Border("modbutton.unused.frame"),
-                                    BorderHover("modbutton.unused.frame.hover"),
-                                    Text("modbutton.unused.font"),
-                                    TextHover("modbutton.unused.font.hover");
+         const Surge::UI::SkinColor Background("modbutton.unused.fill", CColor(18, 52, 99)),
+                                    Border("modbutton.unused.frame", CColor(32, 93, 176)),
+                                    BorderHover("modbutton.unused.frame.hover", CColor(45, 130, 246)),
+                                    Text("modbutton.unused.font", CColor(37, 106, 204)),
+                                    TextHover("modbutton.unused.font.hover", CColor(46, 134, 254));
       }
       namespace Used
       {
-         const Surge::UI::SkinColor Background("modbutton.used.fill"),
-                                    Border("modbutton.used.frame"),
-                                    BorderHover("modbutton.used.frame.hover"),
-                                    Text("modbutton.used.font"),
-                                    TextHover("modbutton.used.font.hover"),
-                                    UsedHover("modbutton.used.font.usedmod.hover");
+         const Surge::UI::SkinColor Background("modbutton.used.fill", CColor(18, 52, 99)),
+                                    Border("modbutton.used.frame", CColor(46, 134, 254)),
+                                    BorderHover("modbutton.used.frame.hover", CColor(64, 188, 255)),
+                                    Text("modbutton.used.font", CColor(46, 134, 254)),
+                                    TextHover("modbutton.used.font.hover", CColor(64, 188, 255)),
+                                    UsedHover("modbutton.used.font.usedmod.hover", CColor(173, 255, 107));
       }
       namespace Selected
       {
-         const Surge::UI::SkinColor Background("modbutton.selected.fill"),
-                                    Border("modbutton.selected.frame"),
-                                    BorderHover("modbutton.selected.frame.hover"),
-                                    Text("modbutton.selected.font"),
-                                    TextHover("modbutton.selected.font.hover"),
-                                    UsedHover("modbutton.selected.font.usedmod.hover");
+         const Surge::UI::SkinColor Background("modbutton.selected.fill", CColor(46, 134, 254)),
+                                    Border("modbutton.selected.frame", CColor(46, 134, 254)),
+                                    BorderHover("modbutton.selected.frame.hover", CColor(64, 188, 255)),
+                                    Text("modbutton.selected.font", CColor(18, 52, 99)),
+                                    TextHover("modbutton.selected.font.hover", CColor(18, 52, 99)),
+                                    UsedHover("modbutton.selected.font.usedmod.hover", CColor(173, 255, 107));
       }
       namespace Armed
       {
-         const Surge::UI::SkinColor Background("modbutton.armed.fill"),
-                                    Border("modbutton.armed.frame"),
-                                    BorderHover("modbutton.armed.frame.hover"),
-                                    Text("modbutton.armed.font"),
-                                    TextHover("modbutton.armed.font.hover"),
-                                    UsedHover("modbutton.armed.font.usedmod.hover");
+         const Surge::UI::SkinColor Background("modbutton.armed.fill", CColor(173, 255, 107)),
+                                    Border("modbutton.armed.frame", CColor(173, 255, 107)),
+                                    BorderHover("modbutton.armed.frame.hover", CColor(242, 255, 150)),
+                                    Text("modbutton.armed.font", CColor(18, 52, 99)),
+                                    TextHover("modbutton.armed.font.hover", CColor(18, 52, 99)),
+                                    UsedHover("modbutton.armed.font.usedmod.hover", CColor(46, 134, 254));
       }
    }
 
    namespace MSEGEditor
    {
-      const Surge::UI::SkinColor Line("msegeditor.line");
+   const Surge::UI::SkinColor Line("msegeditor.line", kWhiteCColor);
 
       namespace Axis
       {
-         const Surge::UI::SkinColor Line("msegeditor.axis.line");
+         const Surge::UI::SkinColor Line("msegeditor.axis.line", CColor(220, 220, 240));
+      }
+      namespace GradientFill
+      {
+         const Surge::UI::SkinColor StartColor("msegeditor.fill.gradient.start", CColor(255, 144, 0, 128)),
+                                    EndColor("msegeditor.fill.gradient.end", CColor(255, 144, 0, 16));
       }
       namespace Grid
       {
-         const Surge::UI::SkinColor Primary("msegeditor.grid.primary"),
-                                    Secondary("msegeditor.grid.usedmod");
+         const Surge::UI::SkinColor Primary("msegeditor.grid.primary", CColor(220, 220, 240)),
+                                    Secondary("msegeditor.grid.secondary", CColor(100, 100, 110));
       }
       namespace Loop
       {
-         const Surge::UI::SkinColor Line("msegeditor.loop.line");
-      }
-      namespace Segment
-      {
-         const Surge::UI::SkinColor Hover("msegeditor.segment.hover");
+         const Surge::UI::SkinColor Line("msegeditor.loop.line", CColor(255, 144, 0));
       }
    }
 
    namespace NumberField
    {
-      const Surge::UI::SkinColor Background("control.numberfield.background"),
-                                 Text("control.numberfield.foreground"),
-                                 Border("control.numberfield.rule"),
-                                 Env("control.numberfield.env");
+      const Surge::UI::SkinColor Background("control.numberfield.background", kWhiteCColor),
+                                 Text("control.numberfield.foreground", CColor(42, 42, 42)),
+                                 Border("control.numberfield.rule", CColor(42, 42, 42)),
+                                 Env("control.numberfield.env", CColor(214, 209, 198));
    }
 
    namespace Osc
    {
       namespace Display
       {
-         const Surge::UI::SkinColor Bounds("osc.topline"),
-                                    CenterLine("osc.midline"),
-                                    AnimatedWave("osc.label"),
-                                    Wave("osc.wave");
+         const Surge::UI::SkinColor Bounds("osc.topline", CColor(70, 70, 70)),
+                                    CenterLine("osc.midline", CColor(90, 90, 90)),
+                                    AnimatedWave("osc.label", kWhiteCColor),
+                                    Wave("osc.wave", CColor(255, 144, 0));
       }
       namespace Filename
       {
-         const Surge::UI::SkinColor Background("osc.wavename.background"),
-                                    Text("osc.wavename.foreground");
+         const Surge::UI::SkinColor Background("osc.wavename.background", CColor(255, 160, 16)),
+                                    Text("osc.wavename.foreground", kBlackCColor);
       }
    }
 
    namespace Overlay
    {
-      const Surge::UI::SkinColor Background("overlay.background"),
-                                 Border("overlay.border");
+      const Surge::UI::SkinColor Background("overlay.background", CColor(0, 0, 0, 204)),
+                                 Border("overlay.border", kBlackCColor);
 
       namespace Container
       {
-         const Surge::UI::SkinColor Background("overlay.container.background"),
-                                    TitleText("overlay.container.title");
+         const Surge::UI::SkinColor Background("overlay.container.background", CColor(216, 216, 220)),
+                                    TitleText("overlay.container.title", kBlackCColor);
       }
    }
 
    namespace PatchBrowser
    {
-      const Surge::UI::SkinColor Background("patchbrowser.background"),
-                                 Text("patchbrowser.foreground");
+      const Surge::UI::SkinColor Background("patchbrowser.background", kWhiteCColor),
+                                 Text("patchbrowser.foreground", kBlackCColor);
    }
 
    namespace Slider
    {
       namespace Label
       {
-         const Surge::UI::SkinColor Light("slider.light.label"),
-                                    Dark("slider.dark.label");
+         const Surge::UI::SkinColor Light("slider.light.label", kBlackCColor),
+                                    Dark("slider.dark.label", kBlackCColor);
       }
       namespace Modulation
       {
-         const Surge::UI::SkinColor Positive("slider.modulation"),
-                                    Negative("slider.negative.modulation");
+         const Surge::UI::SkinColor Positive("slider.modulation", CColor(173, 255, 107)),
+                                    Negative("slider.negative.modulation", CColor(173, 255, 107));
       }
    }
 
    namespace StatusButton
    {
-      const Surge::UI::SkinColor Background("status.button.background"),
-                                 Border("status.button.outline"),
-                                 Text("status.button.unselected.foreground"),
-                                 SelectedBackground("status.button.highlight"),
-                                 SelectedText("status.button.selected.foreground");
+      const Surge::UI::SkinColor Background("status.button.background", CColor(227, 227, 227)),
+                                 Border("status.button.outline", CColor(151, 151, 151)),
+                                 Text("status.button.unselected.foreground", kBlackCColor),
+                                 SelectedBackground("status.button.highlight", CColor(255, 154, 16)),
+                                 SelectedText("status.button.selected.foreground", kBlackCColor);
    }
 
    namespace VuMeter
    {
-      const Surge::UI::SkinColor Level("vumeter.level"),
-                                 HighLevel("vumeter.highlevel"),
-                                 Background("vumeter.background"),
-                                 Border("vumeter.border");
+      const Surge::UI::SkinColor Level("vumeter.level", CColor(5, 201, 13)),
+                                 HighLevel("vumeter.highlevel", kRedCColor),
+                                 Background("vumeter.background", CColor(205, 206, 212)),
+                                 Border("vumeter.border", kBlackCColor);
    }
 }

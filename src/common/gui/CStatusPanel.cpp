@@ -39,11 +39,11 @@ void CStatusPanel::draw( VSTGUI::CDrawContext *dc )
            zoomBox = CRect(xp, yp, xp + w, yp + h);
 
        auto hlbg = true;
-       auto ol = skin->getColor(Colors::StatusButton::Border, CColor(0x97, 0x97, 0x97));
-       auto bg = skin->getColor(Colors::StatusButton::Background, CColor(0xe3, 0xe3, 0xe3));
-       auto fg = skin->getColor(Colors::StatusButton::SelectedText, kBlackCColor);
-       auto ufg = skin->getColor(Colors::StatusButton::Text, kBlackCColor);
-       auto hl = skin->getColor(Colors::StatusButton::SelectedBackground, CColor(0xff, 0x9A, 0x10));
+       auto ol = skin->getColor(Colors::StatusButton::Border);
+       auto bg = skin->getColor(Colors::StatusButton::Background);
+       auto fg = skin->getColor(Colors::StatusButton::SelectedText);
+       auto ufg = skin->getColor(Colors::StatusButton::Text);
+       auto hl = skin->getColor(Colors::StatusButton::SelectedBackground);
 
        if (!dispfeatures[i])
        {
