@@ -307,7 +307,7 @@ void CFxMenu::draw(CDrawContext* dc)
    lbox.right--;
    lbox.bottom--;
 
-   auto fgc = skin->getColor(Colors::Effect::Menu::Text, kBlackCColor);
+   auto fgc = skin->getColor(Colors::Effect::Menu::Text);
    dc->setFontColor(fgc);
    dc->setFont(displayFont);
    CRect txtbox(lbox);

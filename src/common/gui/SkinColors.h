@@ -89,7 +89,7 @@ namespace Colors
          }
          namespace Step
          {
-            extern const Surge::UI::SkinColor Fill, OutsideFill, FillForDeactivatedRate;
+            extern const Surge::UI::SkinColor Fill, OutsideFill, FillDeactivated;
          }
       }
       namespace Waveform
@@ -98,7 +98,7 @@ namespace Colors
 
          namespace Ruler
          {
-            extern const Surge::UI::SkinColor Text, Ticks;
+            extern const Surge::UI::SkinColor Text, Ticks, SmallTicks;
          }
       }
    }

@@ -32,12 +32,10 @@ public:
       VSTGUI::CRect bl(size);
       bl.top = bl.bottom - 2;
 
-      VSTGUI::CColor gray = {106, 106, 106, 255};
-      dc->setFillColor(skin->getColor(Colors::Effect::Label::Line, gray));
+      dc->setFillColor(skin->getColor(Colors::Effect::Label::Line));
       dc->drawRect(bl, VSTGUI::kDrawFilled);
 
-      VSTGUI::CColor dgray = {76, 76, 76, 255};
-      dc->setFontColor(skin->getColor(Colors::Effect::Label::Text, dgray));
+      dc->setFontColor(skin->getColor(Colors::Effect::Label::Text));
       dc->setFont(displayFont);
       dc->drawString(label.c_str(), size, VSTGUI::kLeftText, true);
 

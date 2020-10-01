@@ -84,10 +84,10 @@ public:
       {
          dc->setFont(VSTGUI::kNormalFontSmall);
 
-         auto frameCol = skin->getColor(Colors::InfoWindow::Border, VSTGUI::kBlackCColor);
-         auto bgCol = skin->getColor(Colors::InfoWindow::Background, VSTGUI::kWhiteCColor);
+         auto frameCol = skin->getColor(Colors::InfoWindow::Border);
+         auto bgCol = skin->getColor(Colors::InfoWindow::Background);
 
-         auto txtCol = skin->getColor(Colors::InfoWindow::Text, VSTGUI::kBlackCColor);
+         auto txtCol = skin->getColor(Colors::InfoWindow::Text);
          auto mpCol = skin->getColor(Colors::InfoWindow::Modulation::Positive, txtCol);
          auto mnCol = skin->getColor(Colors::InfoWindow::Modulation::Negative, txtCol);
          auto mpValCol = skin->getColor(Colors::InfoWindow::Modulation::ValuePositive, mpCol);
