@@ -69,8 +69,8 @@ namespace ObxdFilter {
    const __m128 selfOscPush = _mm_set1_ps(0.0);
    const __m128 bandPass = _mm_set1_ps(0.0);
 
-   const __m128 gainAdjustment2Pole = _mm_set1_ps( 0.7937005259 ); // pow( 2, -1/3 ) aka -6db using our db scaling here
-   const __m128 gainAdjustment4Pole = _mm_set1_ps( 0.6299605249 ); // pow( 2, -2/3 ) aka -12db using our db scaling here
+   const __m128 gainAdjustment2Pole = _mm_set1_ps(0.74);
+   const __m128 gainAdjustment4Pole = _mm_set1_ps(0.6);
 
 
 inline __m128 diodePairResistanceApprox(__m128 x)
