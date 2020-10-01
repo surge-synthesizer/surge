@@ -83,18 +83,18 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
    if( sge )
    {
       std::string dt = sge->getDisplayForTag( getTag() );
-      auto valcol = skin->getColor(Colors::Menu::Value, kBlackCColor);
+      auto valcol = skin->getColor(Colors::Menu::Value);
       if( isHover )
-         valcol = skin->getColor(Colors::Menu::ValueHover, CColor(60, 20, 0));
+         valcol = skin->getColor(Colors::Menu::ValueHover);
 
       if( deactivated )
-         valcol = skin->getColor( Colors::Menu::ValueDeactivated, CColor( 180, 180, 180 ) );
+         valcol = skin->getColor(Colors::Menu::ValueDeactivated);
 
       if( filtermode )
       {
-         valcol = skin->getColor( Colors::Menu::FilterValue, CColor( 0xFF, 0x9A, 0x10 ) );
+         valcol = skin->getColor(Colors::Menu::FilterValue);
          if( isHover )
-            valcol = skin->getColor( Colors::Menu::FilterValueHover, kWhiteCColor );
+            valcol = skin->getColor(Colors::Menu::FilterValueHover);
       }
       
       dc->setFont( displayFont );
@@ -136,12 +136,12 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
             trunc = true;
          }
          if( trunc ) tl += "...";
-         auto labcol = skin->getColor(Colors::Menu::Name, kBlackCColor);
+         auto labcol = skin->getColor(Colors::Menu::Name);
          if (isHover)
-            labcol = skin->getColor(Colors::Menu::NameHover, CColor(60, 20, 0));
+            labcol = skin->getColor(Colors::Menu::NameHover);
          
          if( deactivated )
-            labcol = skin->getColor( Colors::Menu::NameDeactivated, CColor( 180, 180, 180 ) );
+            labcol = skin->getColor( Colors::Menu::NameDeactivated);
          
          dc->setFontColor( labcol );
          dc->drawString( tl.c_str(), l, kLeftText, true );

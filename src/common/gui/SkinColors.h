@@ -89,7 +89,7 @@ namespace Colors
          }
          namespace Step
          {
-            extern const Surge::UI::SkinColor Fill, OutsideFill, FillForDeactivatedRate;
+            extern const Surge::UI::SkinColor Fill, OutsideFill, FillDeactivated;
          }
       }
       namespace Waveform
@@ -98,7 +98,7 @@ namespace Colors
 
          namespace Ruler
          {
-            extern const Surge::UI::SkinColor Text, Ticks;
+            extern const Surge::UI::SkinColor Text, Ticks, SmallTicks;
          }
       }
    }
@@ -137,6 +137,10 @@ namespace Colors
       {
           extern const Surge::UI::SkinColor Line;
       }
+      namespace GradientFill
+      {
+          extern const Surge::UI::SkinColor StartColor, EndColor;
+      }
       namespace Grid
       {
           extern const Surge::UI::SkinColor Primary, Secondary;
@@ -144,10 +148,6 @@ namespace Colors
       namespace Loop
       {
           extern const Surge::UI::SkinColor Line;
-      }
-      namespace Segment
-      {
-          extern const Surge::UI::SkinColor Hover;
       }
    }
 

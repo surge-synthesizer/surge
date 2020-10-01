@@ -38,7 +38,7 @@ void CPatchBrowser::draw(CDrawContext* dc)
    // dc->fillRect(ar);
    ar = size;
    ar.inset(2, 2);
-   dc->setFillColor(skin->getColor(Colors::PatchBrowser::Background, kWhiteCColor));
+   dc->setFillColor(skin->getColor(Colors::PatchBrowser::Background));
    // dc->fillRect(ar);
    // ar.top += 2;
    CRect al(ar);
@@ -48,7 +48,7 @@ void CPatchBrowser::draw(CDrawContext* dc)
    al.left += 3;
    // al.top += 2;
    al.bottom = al.top + 12;
-   dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text, kBlackCColor));
+   dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text));
    dc->setFont(patchNameFont);
    dc->drawString(pname.c_str(), ar, kCenterText, true);
 

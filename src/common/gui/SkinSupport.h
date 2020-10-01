@@ -162,15 +162,12 @@ public:
       props_t allprops;
    };
 
-   //private:
-      bool hasColor(const std::string &id) const;
-      VSTGUI::CColor getColor(const std::string &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const;
+   bool hasColor(const std::string &id) const;
+   VSTGUI::CColor getColor(const std::string &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const;
 
-   //private: make this private instead of public to see if you got em all
-   public:
+   private:
       VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
       {
-         // for now do this - later make it so we get them all by uncommenting the private: and public: above
          return getColor( id.name, def, noLoops );
       }
    public:

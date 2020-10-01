@@ -256,18 +256,18 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          dc->setDrawMode(VSTGUI::kAntiAliasing);
 
          dc->setLineWidth(1.0);
-         dc->setFrameColor(skin->getColor(Colors::Osc::Display::CenterLine, VSTGUI::CColor(90, 90, 90)));
+         dc->setFrameColor(skin->getColor(Colors::Osc::Display::CenterLine));
          dc->drawLine(mid0, mid1);
 
          dc->setLineWidth(1.0);
-         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Bounds, VSTGUI::CColor(70, 70, 70)));
+         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Bounds));
          dc->drawLine(top0, top1);
          dc->drawLine(bot0, bot1);
 
          // OK so now the label
          if( osces[1] )
          {
-            dc->setFontColor(skin->getColor(Colors::Osc::Display::AnimatedWave, kWhiteCColor));
+            dc->setFontColor(skin->getColor(Colors::Osc::Display::AnimatedWave));
             dc->setFont(displayFont);
             CPoint lab0(0, valScale * 0.1 - 10);
             tf.transform(lab0);
@@ -285,7 +285,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       if (c == 1)
          dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
       else
-         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Wave, VSTGUI::CColor(0xFF, 0x90, 0, 0xFF)));
+         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Wave));
 
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
       dc->restoreGlobalState();
@@ -330,10 +330,10 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       if (r)
          *r = 0;
       // VSTGUI::CColor fgcol = cdisurf->int_to_ccol(coltable[255]);
-      VSTGUI::CColor fgcol = skin->getColor(Colors::Osc::Filename::Background, VSTGUI::CColor(0xff, 0xA0, 0x10, 0xff));
+      VSTGUI::CColor fgcol = skin->getColor(Colors::Osc::Filename::Background);
       dc->setFillColor(fgcol);
       dc->drawRect(rmenu, kDrawFilled);
-      dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text, kBlackCColor));
+      dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text));
       dc->setFont(displayFont);
       // strupr(wttxt);
       dc->drawString(wttxt, rmenu, kCenterText, true);
