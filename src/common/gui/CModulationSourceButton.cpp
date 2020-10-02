@@ -95,18 +95,6 @@ void CModulationSourceButton::setBipolar(bool b)
    setDirty();
 }
 
-//------------------------------------------------------------------------------------------------
-
-void CModulationSourceButton::setblink(bool nblink)
-{
-   bool changed = ((blink && !nblink) || (!blink && nblink)) && ((state & 3) == 2);
-   blink = nblink;
-
-   if (changed)
-   {
-      invalid();
-   }
-}
 
 //------------------------------------------------------------------------------------------------
 

@@ -51,10 +51,6 @@
 #include <stack>
 #include <unordered_map>
 
-#if WINDOWS
-#include <windows.h>
-#endif
-
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/base/ustring.h"
@@ -239,7 +235,6 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    vu[15] = 0;
    lfodisplay = 0;
    fxmenu = 0;
-   idleinc = 0;
    for( int i=0; i<8; ++i )
    {
       selectedFX[i] = -1;
@@ -418,30 +413,6 @@ void SurgeGUIEditor::idle()
                   ->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
          }
          synth->storage.modRoutingMutex.unlock();
-      }
-#if MAC
-      idleinc++;
-      if (idleinc > 15)
-      {
-         idleinc = 0;
-#elif LINUX // slow down the blinking on linux a bit
-      idleinc++;
-      if (idleinc > 50)
-      {
-         idleinc = 0;
-#else
-      SYSTEMTIME st;
-      GetSystemTime(&st);
-
-      if (((st.wMilliseconds > 500) && blinkstate) || ((st.wMilliseconds <= 500) && !blinkstate))
-      {
-#endif
-         for (int i = 1; i < n_modsources; i++)
-         {
-            if (gui_modsrc[i])
-               gui_modsrc[i]->setblink(blinkstate);
-         }
-         blinkstate = !blinkstate;
       }
 
       if (synth->storage.getPatch().scene[current_scene].osc[current_osc].wt.refresh_display)
@@ -6642,6 +6613,10 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
 
    int wd = 160;
    int ht = 80;
+
+   // We want to center the text on where. The 0.4 just 'feels better' than 0.5
+   where = where.offset( -wd * 0.4, -ht * 0.5 );
+
    auto rr = CRect( CPoint( where.x - fs.left, where.y - fs.top ), CPoint( wd, ht ) );
 
    if( rr.top < 0 )

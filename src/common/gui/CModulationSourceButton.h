@@ -61,7 +61,6 @@ public:
 
    VSTGUI::CBitmap* bmp = nullptr;
 
-   void setblink(bool state);
    void setlabel(const char*);
    void set_ismeta(bool);
    virtual void setBipolar(bool);
