@@ -158,10 +158,10 @@ private:
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
    SurgeSynthesizer* synth = nullptr;
-   int current_scene = 0, current_osc = 0, current_fx = 0;
+   int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
    bool editor_open = false;
    bool mod_editor = false;
-   modsources modsource = ms_original, modsource_editor = ms_original;
+   modsources modsource = ms_original, modsource_editor[n_scenes] = {ms_original};
    int fxbypass_tag = 0, resolink_tag = 0, f1resotag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0, fmconfig_tag = 0;
    double lastTempo = 0;
