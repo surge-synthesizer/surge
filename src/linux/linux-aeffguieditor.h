@@ -41,7 +41,7 @@ public :
 	#endif
 
 	// get the effect attached to this editor
-	AudioEffect* getEffect () { return effect; }
+	AudioEffect* getEffect () override { return effect; }
 
 	// get version of this VSTGUI
 	int32_t getVstGuiVersion () { return (VSTGUI_VERSION_MAJOR << 16) + VSTGUI_VERSION_MINOR; }
