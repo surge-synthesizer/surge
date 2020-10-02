@@ -180,14 +180,18 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    patchname = 0;
    statuspanel = nullptr;
    current_scene = 1;
-   current_osc = 0;
    current_fx = 0;
    modsource = ms_lfo1;
-   modsource_editor = ms_lfo1;
    blinktimer = 0.f;
    blinkstate = false;
    aboutbox = 0;
    patchCountdown = -1;
+
+   for (int i = 0; i < n_scenes; i++)
+   {
+      current_osc[i] = 0;
+      modsource_editor[i] = ms_lfo1;
+   }
    
    mod_editor = false;
 
@@ -415,9 +419,9 @@ void SurgeGUIEditor::idle()
          synth->storage.modRoutingMutex.unlock();
       }
 
-      if (synth->storage.getPatch().scene[current_scene].osc[current_osc].wt.refresh_display)
+      if (synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]].wt.refresh_display)
       {
-         synth->storage.getPatch().scene[current_scene].osc[current_osc].wt.refresh_display = false;
+         synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]].wt.refresh_display = false;
          if (oscdisplay)
          {
             oscdisplay->setDirty(true);
@@ -799,12 +803,12 @@ void SurgeGUIEditor::refresh_mod()
       if (i == modsource)
          state = mod_editor ? 2 : 1;
       
-      if (i == modsource_editor)
+      if (i == modsource_editor[current_scene])
       {
          state |= 4;
 
          // update the LFO title label
-         std::string modname = modulatorName(modsource_editor, true);
+         std::string modname = modulatorName(modsource_editor[current_scene], true);
 
          lfoNameLabel->setText(modname.c_str());
       }
@@ -886,9 +890,9 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
    switch (controlGroup)
    {
    case cg_OSC:
-      return (controlGroupEntry == current_osc);
+      return (controlGroupEntry == current_osc[current_scene]);
    case cg_LFO:
-      return (controlGroupEntry == modsource_editor);
+      return (controlGroupEntry == modsource_editor[current_scene]);
    case cg_FX:
       return (controlGroupEntry == current_fx);
    default:
@@ -986,7 +990,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       rect.offset(104 - 36, 69);
       auto oscswitch = new CHSwitch2(rect, this, tag_osc_select, 3, 13, 1, 3,
                                           bitmapStore->getBitmap(IDB_OSCSELECT), nopoint);
-      oscswitch->setValue((float)current_osc / 2.0f);
+      oscswitch->setValue((float)current_osc[current_scene] / 2.0f);
       frame->addView(oscswitch);
       oscswitch->setSkin(currentSkin,bitmapStore);
    }
@@ -1016,7 +1020,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          int state = 0;
          if (ms == modsource)
             state = mod_editor ? 2 : 1;
-         if (ms == modsource_editor)
+         if (ms == modsource_editor[current_scene])
             state |= 4;
 
          gui_modsrc[ms] = new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms, bitmapStore, &(synth->storage));
@@ -1112,7 +1116,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    oscdisplay = new COscillatorDisplay(CRect(6, 81, 142, 180), this,
                                        &synth->storage.getPatch()
                                        .scene[synth->storage.getPatch().scene_active.val.i]
-                                       .osc[current_osc],
+                                       .osc[current_osc[current_scene]],
                                        &synth->storage);
    ((COscillatorDisplay*)oscdisplay)->setSkin( currentSkin, bitmapStore );
    frame->addView(oscdisplay);
@@ -1182,9 +1186,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
    mp_jogfx->setSkin( currentSkin, bitmapStore );
    frame->addView(mp_jogfx);
 
-   lfoNameLabel = new CVerticalLabel(CRect(8, 480, 19, 563), "" );
+   lfoNameLabel = new CVerticalLabel(CRect(6, 485, 15, 568), "" );
    lfoNameLabel->setTransparency(true);
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 10, kBoldFace);
    lfoNameLabel->setFont(fnt);
    lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text));
    lfoNameLabel->setHoriAlign(kCenterText);
@@ -1699,7 +1703,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             rect.offset(p->posx + 96, p->posy + 1);
             CControl* hsw = new COscMenu(
                rect, this, tag_osc_menu, &synth->storage,
-               &synth->storage.getPatch().scene[current_scene].osc[current_osc], bitmapStore);
+               &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]], bitmapStore);
             ((COscMenu*)hsw)->setSkin(currentSkin,bitmapStore);
             hsw->setValue(p->get_value_f01());
             frame->addView(hsw);
@@ -3890,9 +3894,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
          if (isLFO(newsource) && !(buttons & kShift))
          {
-            if (modsource_editor != newsource)
+            if (modsource_editor[current_scene] != newsource)
             {
-               modsource_editor = newsource;
+               modsource_editor[current_scene] = newsource;
                queue_refresh = true;
             }
          }
@@ -4013,7 +4017,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_osc_select:
    {
-      current_osc = (int)(control->getValue() * 2.f + 0.5f);
+      auto tabPosMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "rememberTabPositionsPerScene", 0);
+
+      if (tabPosMem)
+         current_osc[current_scene] = (int)(control->getValue() * 2.f + 0.5f);
+      else
+      {
+         for (int i = 0; i < n_scenes; i++)
+         {
+            current_osc[i] = (int)(control->getValue() * 2.f + 0.5f);
+         }
+      }
+
       queue_refresh = true;
       return;
    }
@@ -5516,23 +5531,40 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    // high precision value readouts
    auto precReadout = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
 
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"), [this, precReadout]() {
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", precReadout ? 0 : 1);
-   });
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
+       [this, precReadout]()
+       {
+          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", precReadout ? 0 : 1);
+       });
    menuItem->setChecked(precReadout);
 
+   // modulation value readout shows bounds
    auto modValues = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", 0);
 
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Modulation Popup Shows Bounds"), [this, modValues]() {
-       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", modValues? 0 : 1);
-   });
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Modulation Value Readout Shows Bounds"),
+       [this, modValues]()
+       {
+          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", modValues ? 0 : 1);
+       });
    menuItem->setChecked(modValues);
 
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Activate Extra Scene Outputs"),
-                              [this]() {
-                                 this->synth->activateExtraOutputs = ! this->synth->activateExtraOutputs;
-                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "activateExtraOutputs", this->synth->activateExtraOutputs ? 1 : 0 );
-                              }
+   // remember tab positions per scene
+   auto tabPosMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "rememberTabPositionsPerScene", 0);
+
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Remember Tab Positions Per Scene"),
+       [this, tabPosMem]()
+       {
+          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "rememberTabPositionsPerScene", tabPosMem ? 0 : 1);
+       });
+   menuItem->setChecked(tabPosMem);
+
+   // activate individual scene outputs
+   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Activate Individual Scene Outputs"),
+       [this]()
+       {
+          this->synth->activateExtraOutputs = ! this->synth->activateExtraOutputs;
+          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "activateExtraOutputs", this->synth->activateExtraOutputs ? 1 : 0 );
+       }
       );
    menuItem->setChecked(synth->activateExtraOutputs);
 
@@ -6366,7 +6398,7 @@ std::string SurgeGUIEditor::helpURLFor( Parameter *p )
    int type = -1;
    if( p->ctrlgroup == cg_OSC )
    {
-      type = storage->getPatch().scene[current_scene].osc[current_osc].type.val.i;
+      type = storage->getPatch().scene[current_scene].osc[current_osc[current_scene]].type.val.i;
    }
    if( p->ctrlgroup == cg_FX )
    {
