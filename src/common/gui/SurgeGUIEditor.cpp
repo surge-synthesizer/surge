@@ -3896,7 +3896,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          {
             if (modsource_editor[current_scene] != newsource)
             {
-               modsource_editor[current_scene] = newsource;
+               auto tabPosMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "rememberTabPositionsPerScene", 0);
+               
+               if (tabPosMem)
+                  modsource_editor[current_scene] = newsource;
+               else
+               {
+                  for (int i = 0; i < n_scenes; i++)
+                  {
+                     modsource_editor[i] = newsource;
+                  }
+               }
+
                queue_refresh = true;
             }
          }
