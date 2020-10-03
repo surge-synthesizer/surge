@@ -26,11 +26,11 @@
 #include "RuntimeFont.h"
 
 /*
-** The SVG MSEG Ids
+** MSEG SVG IDs
 **
-** 301 - IDB_MSEG_SEGMENT_HANDLES 48x36, 3 rows (unhover, hover, grab) x 4 columns (center, leftside, rightside, cp) for the mseg grab handles
+** 301 - IDB_MSEG_SEGMENT_HANDLES 24x36, 3 rows (normal, hover, pressed) x 2 columns (segment node, control point) for the MSEG handles
 ** 302 - IDB_MSEG_MOVEMENT 120x60 3 rows (ripple, bound, draw) x 3 columns (the states)
-** 303 - IDB_MSEG_EDITMODE 120x40 2 rows (simple/advanced) x 2 columns
+** 303 - IDB_MSEG_MOVEMENT 120x60 3 rows (ripple, bound, draw) x 3 columns (the states)
 */
 
 
@@ -497,15 +497,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       }
       
 
-      
-      dc->setLineWidth( 2 );
+      // draw segment curve
+      dc->setLineWidth( 1.5 );
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Line));
       dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
-
-      
       path->forget();
 
-      dc->setLineWidth(1);
       for( const auto &h : hotzones )
       {
          if( h.type == hotzone::MOUSABLE_NODE )
@@ -513,7 +510,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             int sz = 12;
             int offx = 0;
             if( h.mousableNodeType == hotzone::SEGMENT_CONTROL )
-               offx = 3;
+               offx = 1;
             int offy = 0;
             if( h.active )
             {
@@ -727,7 +724,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       auto tf = pxToTime( );
       auto t = tf( iw.x );
-      contextMenu->addEntry( "[?] MSEG Segments" );
+      contextMenu->addEntry( "[?] MSEG Segment" );
       contextMenu->addSeparator();
 
 
@@ -758,12 +755,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                                                  modelChanged();
                                               } );
                     };
-      typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
-      typeTo( "Quadratic Bezier", MSEGStorage::segment::Type::QUADBEZ );
+      typeTo( "Line", MSEGStorage::segment::Type::LINEAR );
+      typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
       typeTo( "S-Curve", MSEGStorage::segment::Type::SCURVE );
-      typeTo( "Sin Wave", MSEGStorage::segment::Type::SINWAVE );
-      typeTo( "Square Wave", MSEGStorage::segment::Type::SQUAREWAVE );
-      typeTo( "Quantized Line", MSEGStorage::segment::Type::DIGILINE );
+      typeTo( "Sine", MSEGStorage::segment::Type::SINE );
+      typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
+      typeTo( "Steps", MSEGStorage::segment::Type::STEPS );
       typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
             
       
@@ -814,7 +811,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
    case tag_vertical_value:
    {
       // FIXME locales
-      auto fv = 2.f / ( std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 )  ); // -1 to 1 remeber
+      auto fv = 1.f / (std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 ) ); // -1 to 1 remeber
       ms->vSnapDefault = fv;
       if( ms->vSnap > 0 )
          ms->vSnap = ms->vSnapDefault;
@@ -866,8 +863,7 @@ void MSEGControlRegion::rebuild()
       int ypos = margin;
 
       // Now the movement label
-      auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(marginWidth, labelHeight)),
-                                "Movement mode");
+      auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(marginWidth, labelHeight)), "Movement Mode");
       mml->setTransparency(true);
       mml->setFont(labelFont);
       mml->setFontColor(kBlackCColor);
@@ -894,7 +890,7 @@ void MSEGControlRegion::rebuild()
       int marginWidth = segWidth - 2 * margin;
       int ypos = margin;
 
-      auto snapC = new CTextLabel( CRect( CPoint( xpos, ypos ), CPoint( segWidth, labelHeight) ), "Snap to Grid" );
+      auto snapC = new CTextLabel( CRect( CPoint( xpos, ypos ), CPoint( segWidth, labelHeight) ), "Snapping" );
       snapC->setFont( labelFont );
       snapC->setFontColor( kBlackCColor );
       snapC->setHoriAlign(kLeftText);
@@ -908,8 +904,11 @@ void MSEGControlRegion::rebuild()
       vbut->setValue( ms->vSnap < 0.001? 0 : 1 );
 
       char svt[256];
-      snprintf(svt, 255, "%5d", (int)round( 2.f / ms->vSnapDefault ));
-      auto vtxt = new CTextEdit( CRect( CPoint( xpos + 80 + margin , ypos ), CPoint( 70, controlHeight ) ), this, tag_vertical_value, svt );
+      snprintf(svt, 255, "%5d", (int)round( 1.f / ms->vSnapDefault ));
+      auto vtxt = new CTextEdit( CRect( CPoint( xpos + 80 + margin , ypos ), CPoint( 32, controlHeight ) ), this, tag_vertical_value, svt );
+#if WINDOWS
+      vtxt->setTextInset(CPoint(3, 0));
+#endif
       vtxt->setFontColor(kBlackCColor);
       vtxt->setFrameColor(kBlackCColor);
       vtxt->setBackColor(kWhiteCColor);
@@ -921,7 +920,10 @@ void MSEGControlRegion::rebuild()
       addView( hbut );
       hbut->setValue( ms->hSnap  < 0.001? 0 : 1 );
       snprintf(svt, 255, "%5d", (int)round( 1.f / ms->hSnapDefault ));
-      auto htxt = new CTextEdit( CRect( CPoint( xpos + 80 + margin , ypos ), CPoint( 70, controlHeight ) ), this, tag_horizontal_value, svt );
+      auto htxt = new CTextEdit( CRect( CPoint( xpos + 80 + margin , ypos ), CPoint( 32, controlHeight ) ), this, tag_horizontal_value, svt );
+#if WINDOWS
+      htxt->setTextInset(CPoint(3, 0));
+#endif
       htxt->setFontColor(kBlackCColor);
       htxt->setFrameColor(kBlackCColor);
       htxt->setBackColor(kWhiteCColor);

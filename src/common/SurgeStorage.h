@@ -616,12 +616,12 @@ struct MSEGStorage {
       float cpduration, cpv, dragcpv;
       enum Type {
          LINEAR = 1,
-         QUADBEZ,
+         QUAD_BEZIER,
          SCURVE,
-         SINWAVE,
-         DIGILINE,
+         SINE,
+         STEPS,
          BROWNIAN,
-         SQUAREWAVE,
+         SQUARE,
       } type;
    };
 

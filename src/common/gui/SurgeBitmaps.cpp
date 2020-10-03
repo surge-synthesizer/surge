@@ -92,7 +92,6 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
    addEntry(IDB_MSEG_SEGMENT_HANDLES, f);
    addEntry(IDB_MSEG_MOVEMENT, f);
-   addEntry(IDB_MSEG_EDITMODE, f);
    addEntry(IDB_MINIEDIT_ICON, f);
    addEntry(IDB_MSEG_VERTICAL_SNAP, f);
    addEntry(IDB_MSEG_HORIZONTAL_SNAP, f);
