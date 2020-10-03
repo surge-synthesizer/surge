@@ -27,15 +27,20 @@ elseif( Git_FOUND )
     )
 
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
     WORKING_DIRECTORY ${SURGESRC}
     OUTPUT_VARIABLE GIT_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-else()
-  message( WARNING "Git isn't present in your path. Setting hashes to defaults" )
-  set( GIT_BRANCH "git-not-present" )
-  set( GIT_COMMIT_HASH "git-not-present" )
+endif()
+
+if("${GIT_BRANCH}" STREQUAL "")
+  message(WARNING "Could not determine Git branch, using placeholder.")
+  set(GIT_BRANCH "git-no-branch")
+endif()
+if ("${GIT_COMMIT_HASH}" STREQUAL "")
+  message(WARNING "Could not determine Git commit hash, using placeholder.")
+  set(GIT_COMMIT_HASH "git-no-commit")
 endif()
 
 if( WIN32 )
