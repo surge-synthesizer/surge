@@ -56,9 +56,9 @@ IDB_SCENESWITCH_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00113.svg"
 IDB_FBCONFIG_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00112.svg"
 IDB_FADERV_BG_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00105.svg"
 
+IDB_MINIEDIT_ICON_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00170.svg"
+
 IDB_MSEG_SEGMENT_HANDLES_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00301.svg"
 IDB_MSEG_MOVEMENT_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00302.svg"
-IDB_MSEG_EDITMODE_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00303.svg"
-IDB_MINIEDIT_ICON_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00170.svg"
-IDB_MSEG_VERTICAL_SNAP_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00304.svg"
-IDB_MSEG_HORIZONTAL_SNAP_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00305.svg"
+IDB_MSEG_VERTICAL_SNAP_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00303.svg"
+IDB_MSEG_HORIZONTAL_SNAP_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00304.svg"

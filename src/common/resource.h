@@ -56,7 +56,7 @@
 #define IDB_CHARACTER 161
 #define IDB_ENVMODE 162
 #define IDB_STOREPATCH 163
-#define IDB_BUTTON_MENU 164 
+#define IDB_BUTTON_MENU 164
 #define IDB_LFOTYPE 166
 #define IDB_MENU_IN_SLIDER_BG 167
 #define IDB_MENU_IN_FILTER_BG 168
@@ -65,10 +65,9 @@
 // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
 #define IDB_MSEG_SEGMENT_HANDLES 301
 #define IDB_MSEG_MOVEMENT 302
-#define IDB_MSEG_EDITMODE 303
 #define IDB_MINIEDIT_ICON 170
-#define IDB_MSEG_VERTICAL_SNAP 304
-#define IDB_MSEG_HORIZONTAL_SNAP 305
+#define IDB_MSEG_VERTICAL_SNAP 303
+#define IDB_MSEG_HORIZONTAL_SNAP 304
 // == /SVG == Do not remove this comment
 
 

@@ -90,11 +90,15 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    case MSEGStorage::segment::LINEAR:
    {
       float frac = pd / r.duration;
+
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
+
       if( df > 0 )
          frac = pow( frac, 1.0 + df * 3 );
+
       res = frac * r.nv1 + ( 1 - frac ) * r.v0;
+
       break;
    }
    case MSEGStorage::segment::BROWNIAN:
@@ -158,7 +162,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       
       break;
    }
-   case MSEGStorage::segment::QUADBEZ:
+   case MSEGStorage::segment::QUAD_BEZIER:
    {
       /*
       ** First lets correct the control point so that the
@@ -296,9 +300,9 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       break;
    }
 
-   case MSEGStorage::segment::SINWAVE: 
-   case MSEGStorage::segment::SQUAREWAVE: {
-      int steps = (int)( r.cpduration / r.duration * 15 );
+   case MSEGStorage::segment::SINE: 
+   case MSEGStorage::segment::SQUARE: {
+      int steps = (int)( r.cpduration / r.duration * 100 );
       auto f = pd/r.duration;
       float a = 1;
       
@@ -308,12 +312,12 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
          a = 1 + df * 1.5;
 
       float kernel = 0;
-      if( r.type == MSEGStorage::segment::SINWAVE )
+      if( r.type == MSEGStorage::segment::SINE )
       {
          float mul = ( 1 + 2 * steps ) * M_PI;
          kernel = cos( mul * f );
       }
-      if( r.type == MSEGStorage::segment::SQUAREWAVE )
+      if( r.type == MSEGStorage::segment::SQUARE )
       {
          float mul = ( 2 * steps );
          int ifm = (int)( mul * f );
@@ -324,8 +328,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       break;
    }
 
-   case MSEGStorage::segment::DIGILINE: {
-      int steps = (int)( r.cpduration / r.duration * 18 ) + 2;
+   case MSEGStorage::segment::STEPS: {
+      int steps = (int)( r.cpduration / r.duration * 100 ) + 2;
       float frac = (float)( (int)( steps * pd / r.duration ) ) / (steps-1);
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
@@ -557,7 +561,7 @@ void constrainControlPointAt( MSEGStorage *ms, int idx )
       ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, l, h );
    }
    break;
-   case MSEGStorage::segment::QUADBEZ:
+   case MSEGStorage::segment::QUAD_BEZIER:
    case MSEGStorage::segment::BROWNIAN:
    {
       // Constrain time but space is in -1,1
