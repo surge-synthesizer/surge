@@ -7,8 +7,8 @@
             <stop stop-color="#000000" stop-opacity="0.0876311189" offset="100%"></stop>
         </linearGradient>
         <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
-            <stop stop-color="#E0E0E0" offset="0%"></stop>
-            <stop stop-color="#A0A0A0" offset="100%"></stop>
+            <stop stop-color="#FFBF00" offset="0%"></stop>
+            <stop stop-color="#FF9000" offset="100%"></stop>
         </linearGradient>
     </defs>
     <g id="bmpTS00153" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">

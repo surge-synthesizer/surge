@@ -17,16 +17,18 @@
       <path d="M0 0L18 0L18 10L0 10L0 0Z" transform="translate(43 20)" id="Rectangle#3" fill="none" fill-rule="evenodd" stroke="#A0A0A0" stroke-width="1" />
       <path d="M0 0L18 0L18 10L0 10L0 0Z" transform="translate(88 10)" id="Rectangle#4" fill="none" fill-rule="evenodd" stroke="#A0A0A0" stroke-width="1" />
       <path d="M0 0L18 0L18 10L0 10L0 0Z" transform="translate(88 30)" id="Rectangle#5" fill="none" fill-rule="evenodd" stroke="#A0A0A0" stroke-width="1" />
-      <path d="M0 0L5 0L5 1L0 1L0 0Z" transform="translate(60.5 4.5)" id="Rectangle#6" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L1 0L1 20L0 20L0 0Z" transform="translate(64.5 4.5)" id="Rectangle#7" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L47 0L47 1L0 1L0 0Z" transform="translate(18.5 12.5)" id="Rectangle#8" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L15 0L15 1L0 1L0 0Z" transform="translate(60.5 4.5)" id="Rectangle#6" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L1 0L1 11L0 11L0 0Z" transform="translate(74.5 4.5)" id="Rectangle#7" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L1 0L1 9L0 9L0 0Z" transform="translate(66.5 4.5)" id="Rectangle#7-Copy" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L42 0L42 1L0 1L0 0Z" transform="translate(25.5 12.5)" id="Rectangle#8" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L18 0L18 10L0 10L0 0Z" transform="translate(17 40)" id="Rectangle#9" fill="none" fill-rule="evenodd" stroke="#A0A0A0" stroke-width="1" />
       <path d="M0 0L18 0L18 10L0 10L0 0Z" transform="translate(43 40)" id="Rectangle#10" fill="none" fill-rule="evenodd" stroke="#A0A0A0" stroke-width="1" />
       <path d="M0 0L9 0L9 10L0 10L0 0Z" id="Rectangle#11" fill="none" fill-rule="evenodd" stroke="#A0A0A0" stroke-width="1" />
       <path d="M0 0L9 0L9 10L0 10L0 0Z" transform="translate(0 40)" id="Rectangle#12" fill="none" fill-rule="evenodd" stroke="#A0A0A0" stroke-width="1" />
-      <path d="M0 0L46 0L46 1L0 1L0 0Z" transform="translate(19.5 36.5)" id="Rectangle#13" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L1 0L1 20L0 20L0 0Z" transform="translate(64.5 25.5)" id="Rectangle#14" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L5 0L5 1L0 1L0 0Z" transform="translate(60.5 44.5)" id="Rectangle#17" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L42 0L42 1L0 1L0 0Z" transform="translate(25.5 36.5)" id="Rectangle#13" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L1 0L1 9L0 9L0 0Z" transform="translate(66.5 36.5)" id="Rectangle#14" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L1 0L1 10L0 10L0 0Z" transform="translate(74.5 35.5)" id="Rectangle#14-Copy" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L15 0L15 1L0 1L0 0Z" transform="translate(60.5 44.5)" id="Rectangle#17" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L4 0L4 1L0 1L0 0Z" transform="translate(79 24.5)" id="Rectangle#20" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L1 0L1 11L0 11L0 0Z" transform="translate(82.5 14.5)" id="Rectangle#21" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L6 0L6 1L0 1L0 0Z" transform="translate(82.5 14.5)" id="Rectangle#22" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
@@ -34,12 +36,14 @@
       <path d="M0 0L1 0L1 11L0 11L0 0Z" transform="translate(110.5 24.5)" id="Rectangle#29" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
     </g>
     <path d="M2 0L6 2.5L2 5L2 3L0 3L0 2L2 2L2 0L2 0Z" transform="translate(10 3.0000002)" id="Combined-Shape#1" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-    <path d="M5 2L2.5 6L0 2L2 2L2 0L3 0L3 2L5 2L5 2Z" transform="translate(17 13)" id="Combined-Shape#2" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-    <path d="M5 2L2.5 6L0 2L2 2L2 0L3 0L3 2L5 2L5 2Z" transform="translate(43 13)" id="Combined-Shape#3" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+    <path d="M5 2L2.5 6L0 2L2 2L2 0L3 0L3 2L5 2L5 2Z" transform="translate(24 13)" id="Combined-Shape#2" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+    <path d="M5 2L2.5 6L0 2L2 2L2 0L3 0L3 2L5 2L5 2Z" transform="translate(50 13)" id="Combined-Shape#3" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+    <path d="M5 2L2.5 6L0 2L2 2L2 0L3 0L3 2L5 2L5 2Z" transform="translate(73 14.5)" id="Combined-Shape#3-Copy-2" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+    <path d="M5 2L2.5 6L0 2L2 2L2 0L3 0L3 2L5 2L5 2Z" transform="matrix(1 0 0 -1 73 36.5)" id="Combined-Shape#3-Copy-3" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
     <path d="M5 4.5L2.5 8.5L0 4.5L2 4.5L2 0L3 0L3 4.5L5 4.5L5 4.5Z" transform="translate(95 20.5)" id="Combined-Shape#3-Copy" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
     <path d="M0 0L3 2.5L0 5L0 0L0 0Z" transform="translate(67.5 23)" id="Combined-Shape#4" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-    <path d="M0 4L2.5 0L5 4L3 4L3 6L2 6L2 4L0 4L0 4Z" transform="translate(17 32)" id="Combined-Shape#5" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
-    <path d="M0 4L2.5 0L5 4L3 4L3 6L2 6L2 4L0 4L0 4Z" transform="translate(43 32)" id="Combined-Shape#7" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+    <path d="M0 4L2.5 0L5 4L3 4L3 6L2 6L2 4L0 4L0 4Z" transform="translate(24 32)" id="Combined-Shape#5" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
+    <path d="M0 4L2.5 0L5 4L3 4L3 6L2 6L2 4L0 4L0 4Z" transform="translate(50 32)" id="Combined-Shape#7" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
     <path d="M2 0L6 2.5L2 5L2 3L0 3L0 2L2 2L2 0L2 0Z" transform="translate(36 3)" id="Combined-Shape#8" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
     <path d="M2 0L6 2.5L2 5L2 3L0 3L0 2L2 2L2 0L2 0Z" transform="translate(10 43)" id="Combined-Shape#9" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
     <path d="M2 0L6 2.5L2 5L2 3L0 3L0 2L2 2L2 0L2 0Z" transform="translate(36 43)" id="Combined-Shape#10" fill="#A0A0A0" fill-rule="evenodd" stroke="none" />
