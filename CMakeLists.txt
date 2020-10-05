@@ -392,8 +392,6 @@ if( APPLE )
   set(OS_COMPILE_OPTIONS
     -fasm-blocks
     -msse2
-    "-D_aligned_malloc(x,a)=malloc(x)"
-    "-D_aligned_free(x)=free(x)"
     -Wno-deprecated-declarations
     -Werror=inconsistent-missing-override
     -Werror=logical-op-parentheses
@@ -482,8 +480,6 @@ elseif( UNIX AND NOT APPLE )
   if( LINUX_ON_ARM )
     set(ARCH_COMPILE_OPTIONS
       ${LINUX_ON_ARM_COMPILE_OPTIONS}
-      "-D_aligned_malloc(x,a)=aligned_alloc(a,x)"
-      "-D_aligned_free(x)=free(x)"
       )
     set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1)
     set(ARCH_INCLUDE_DIRECTORIES libs/simde)
@@ -491,8 +487,6 @@ elseif( UNIX AND NOT APPLE )
     set(ARCH_COMPILE_OPTIONS
       -msse2
       -Werror
-      "-D_aligned_malloc(x,a)=malloc(x)"
-      "-D_aligned_free(x)=free(x)"
       )
     set(ARCH_COMPILE_DEFINITIONS INTEL_SSE=1)
   endif()
