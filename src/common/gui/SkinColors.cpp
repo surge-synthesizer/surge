@@ -177,25 +177,35 @@ namespace Colors
                                     BorderHover("modbutton.used.frame.hover", CColor(144, 216, 255)),
                                     Text("modbutton.used.font", CColor(64, 173, 255)),
                                     TextHover("modbutton.used.font.hover", CColor(144, 216, 255)),
-                                    UsedHover("modbutton.used.font.usedmod.hover", CColor(154, 225, 95));
+                                    UsedModHover("modbutton.used.font.usedmod.hover", CColor(154, 225, 95));
       }
       namespace Selected
       {
-         const Surge::UI::SkinColor Background("modbutton.selected.fill", CColor(46, 134, 254)),
+         const Surge::UI::SkinColor Background("modbutton.selected.fill", CColor(35, 100, 192)),
                                     Border("modbutton.selected.frame", CColor(46, 134, 254)),
                                     BorderHover("modbutton.selected.frame.hover", CColor(144, 216, 255)),
                                     Text("modbutton.selected.font", CColor(18, 52, 99)),
                                     TextHover("modbutton.selected.font.hover", CColor(144, 216, 255)),
-                                    UsedHover("modbutton.selected.font.usedmod.hover", CColor(154, 225, 95));
+                                    UsedModHover("modbutton.selected.font.usedmod.hover", CColor(154, 225, 95));
+         namespace Used
+         {
+            const Surge::UI::SkinColor Background("modbutton.selected.used.fill", CColor(35, 100, 192)),
+                                       Border("modbutton.selected.used.frame", CColor(64, 173, 255)),
+                                       BorderHover("modbutton.selected.used.frame.hover", CColor(144, 216, 255)),
+                                       Text("modbutton.selected.used.font", CColor(64, 173, 255)),
+                                       TextHover("modbutton.selected.used.font.hover", CColor(144, 216, 255)),
+                                       UsedModHover("modbutton.selected.used.font.usedmod.hover", CColor(154, 225, 95));
+          }
+
       }
       namespace Armed
       {
-         const Surge::UI::SkinColor Background("modbutton.armed.fill", CColor(154, 225, 95)),
-                                    Border("modbutton.armed.frame", CColor(154, 225, 95)),
+         const Surge::UI::SkinColor Background("modbutton.armed.fill", CColor(130, 192, 80)),
+                                    Border("modbutton.armed.frame", CColor(173, 255, 107)),
                                     BorderHover("modbutton.armed.frame.hover", CColor(255, 255, 255)),
                                     Text("modbutton.armed.font", CColor(18, 52, 99)),
                                     TextHover("modbutton.armed.font.hover", CColor(255, 255, 255)),
-                                    UsedHover("modbutton.armed.font.usedmod.hover", CColor(46, 134, 254));
+                                    UsedModHover("modbutton.armed.font.usedmod.hover", CColor(46, 134, 254));
       }
    }
 

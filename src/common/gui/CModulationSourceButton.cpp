@@ -161,13 +161,13 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    }
    else if (SelectedModSource)
    {
-      FrameCol = skin->getColor(Colors::ModSource::Selected::Border);
+      FrameCol = used ? skin->getColor(Colors::ModSource::Selected::Used::Border) : skin->getColor(Colors::ModSource::Selected::Border);
       if( hovered )
-         FrameCol = skin->getColor(Colors::ModSource::Selected::BorderHover);
-      FillCol = skin->getColor(Colors::ModSource::Selected::Background);
-      FontCol = skin->getColor(Colors::ModSource::Selected::Text);
+         FrameCol = used ? skin->getColor(Colors::ModSource::Selected::Used::BorderHover) : skin->getColor(Colors::ModSource::Selected::BorderHover);
+      FillCol = used ? skin->getColor(Colors::ModSource::Selected::Used::Background) : skin->getColor(Colors::ModSource::Selected::Background);
+      FontCol = used ? skin->getColor(Colors::ModSource::Selected::Used::Text) : skin->getColor(Colors::ModSource::Selected::Text);
       if( hovered )
-         FontCol = skin->getColor(Colors::ModSource::Selected::TextHover);
+         FontCol = used ? skin->getColor(Colors::ModSource::Selected::Used::TextHover) : skin->getColor(Colors::ModSource::Selected::TextHover);
    }
    else if (tint)
    {
@@ -182,11 +182,11 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
    if( secondaryHover )
    {
-      FontCol = skin->getColor(Colors::ModSource::Used::UsedHover);
+      FontCol = skin->getColor(Colors::ModSource::Used::UsedModHover);
       if( ActiveModSource )
-         FontCol = skin->getColor(Colors::ModSource::Armed::UsedHover);
+         FontCol = skin->getColor(Colors::ModSource::Armed::UsedModHover);
       if( SelectedModSource )
-         FontCol = skin->getColor(Colors::ModSource::Selected::UsedHover);
+         FontCol = skin->getColor(Colors::ModSource::Selected::UsedModHover);
    }
    
    CRect framer(sze);
