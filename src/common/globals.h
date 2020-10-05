@@ -49,6 +49,14 @@ FILE* surge_win_fopen_utf8(const char* pathname, const char* mode);
 #define fopen(pathname, mode) surge_win_fopen_utf8((pathname), (mode))
 #endif
 
+#if MAC
+#define _aligned_malloc(size, alignment) malloc(size)
+#define _aligned_free(memblock) free(memblock)
+#elif LINUX
+#define _aligned_malloc(size, alignment) aligned_alloc((alignment), (size))
+#define _aligned_free(memblock) free(memblock)
+#endif
+
 #define _SURGE_STR(x) #x
 #define SURGE_STR(x) _SURGE_STR(x)
 
