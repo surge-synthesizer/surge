@@ -16,37 +16,7 @@
     <color id="surgebluetrans" value="#005CB680"/>
     <color id="surgeorange" value="#ff9000"/>
     <color id="buttonbg" value="#151515"/>
-    <color id="modarmed" value="#9AE15F"/>
     <color id="modblue" value="#2E86FE"/>
-    <color id="modbtndef" value="#123463"/>
-    <color id="modbtnhover" value="#90D8FF"/>
-
-    <color id="modbutton.unused.fill" value="$modbtndef"/>
-    <color id="modbutton.unused.frame" value="#205DB0"/>
-    <color id="modbutton.unused.frame.hover" value="$modbtnhover"/>
-    <color id="modbutton.unused.font" value="$modblue"/>
-    <color id="modbutton.unused.font.hover" value="$modbtnhover"/>
-
-    <color id="modbutton.used.fill" value="$modbtndef"/>
-    <color id="modbutton.used.frame" value="#40ADFF"/>
-    <color id="modbutton.used.frame.hover" value="$modbtnhover"/>
-    <color id="modbutton.used.font" value="#40ADFF"/>
-    <color id="modbutton.used.font.hover" value="$modbtnhover"/>
-    <color id="modbutton.used.font.usedmod.hover" value="$modarmed"/>
-
-    <color id="modbutton.selected.fill" value="$modblue"/>
-    <color id="modbutton.selected.frame" value="$modblue"/>
-    <color id="modbutton.selected.frame.hover" value="$modbtnhover"/>
-    <color id="modbutton.selected.font" value="$modbtndef"/>
-    <color id="modbutton.selected.font.hover" value="$modbtnhover"/>
-    <color id="modbutton.selected.font.usedmod.hover" value="$modarmed"/>
-
-    <color id="modbutton.armed.fill" value="$modarmed"/>
-    <color id="modbutton.armed.frame" value="$modarmed"/>
-    <color id="modbutton.armed.frame.hover" value="$white"/>
-    <color id="modbutton.armed.font" value="$modbtndef"/>
-    <color id="modbutton.armed.font.hover" value="$white"/>
-    <color id="modbutton.armed.font.usedmod.hover" value="$modblue"/>
 
     <color id="lfo.title.foreground" value="#B4B4B490"/>
 

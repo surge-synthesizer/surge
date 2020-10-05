@@ -117,15 +117,20 @@ namespace Colors
       }
       namespace Used
       {
-          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedHover;
+          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedModHover;
       }
       namespace Selected
       {
-          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedHover;
+          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedModHover;
+
+          namespace Used
+          {
+              extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedModHover;
+          }
       }
       namespace Armed
       {
-          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedHover;
+          extern const Surge::UI::SkinColor Background, Border, BorderHover, Text, TextHover, UsedModHover;
       }
    }
 
