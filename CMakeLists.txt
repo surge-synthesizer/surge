@@ -15,6 +15,74 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 project(Surge VERSION 1.8.0.0 LANGUAGES CXX ASM)
+
+set(CMAKE_CXX_EXTENSIONS OFF)
+if(APPLE)
+  set(CMAKE_CXX_STANDARD 14)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+  # Any Clang or any GCC
+  add_compile_options(
+    -Wno-multichar
+
+    # PE/COFF doesn't support visibility
+    $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
+    $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility-inlines-hidden>
+  )
+  # FIXME: Find a proper way or move to i686 toolchain file
+  if(NOT DEFINED LINUX_ON_ARM)
+    add_compile_options(-msse2)
+  endif()
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Any Clang
+    add_compile_options(
+      -Wno-deprecated-declarations
+      -Werror=inconsistent-missing-override
+      -Werror=logical-op-parentheses
+      -Werror=dynamic-class-memaccess
+      -Werror=undefined-bool-conversion
+      -Werror=bitwise-op-parentheses
+      -Werror=pointer-bool-conversion
+    )
+    if (CMAKE_CXX_COMPILER_ID MATCHES "^AppleClang$")
+      # Apple Clang only
+      add_compile_options(
+        -fasm-blocks
+      )
+    endif()
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
+    # GCC only
+  endif()
+endif()
+
+if(MSVC)
+  # MSVC and pretenders
+  add_compile_options(
+    # MSVC-only warnings, Clang-cl silently ignores these
+    /wd4244   # float to double
+    /wd4305   # truncation of variable
+    /wd4267   # int and size_t
+    /wd4018   # signed unsigned mismatch
+    /wd4388   # signed unsigned mismatch in comparison
+    /wd4477   # blah blah wide strings after we made it work
+    /wd4065   # standalone default in a switch with no case
+    /wd4702   # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
+
+    # Clang-cl-only warnings
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-microsoft-exception-spec>
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-pragma-pack>
+
+    /Zc:alignedNew
+    /bigobj
+
+    # Build with Multiple Processes (Clang-cl builds use Ninja instead)
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+  )
+endif()
+
 message( STATUS "CMake Version is ${CMAKE_VERSION}" )
 message( STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}" )
 if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
@@ -86,17 +154,6 @@ elseif( APPLE )
   set( BUILD_LV2 false )  # Status as of Apr 26. This CMake will build 'something' in products/Surge.lv2 but :shrug:
 else()
   set( BUILD_LV2 false )
-endif()
-
-
-# CMake Configuration for all platforms
-set(CMAKE_CXX_EXTENSIONS false)
-if( APPLE )
-  set(CMAKE_CXX_STANDARD 14)
-  set(SURGE_CXX_STD_FLAG cxx_std_14)
-else()
-  set(CMAKE_CXX_STANDARD 17)
-  set(SURGE_CXX_STD_FLAG cxx_std_17)
 endif()
 
 include(CheckCXXSymbolExists)
@@ -389,17 +446,6 @@ if( APPLE )
     vstgui.surge/vstgui/vstgui_uidescription_mac.mm
     )
 
-  set(OS_COMPILE_OPTIONS
-    -fasm-blocks
-    -msse2
-    -Wno-deprecated-declarations
-    -Werror=inconsistent-missing-override
-    -Werror=logical-op-parentheses
-    -Werror=dynamic-class-memaccess
-    -Werror=undefined-bool-conversion
-    -Werror=bitwise-op-parentheses
-    -Werror=pointer-bool-conversion
-    )
   set(OS_INCLUDE_DIRECTORIES
     src/mac
     )
@@ -478,30 +524,9 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
 
   if( LINUX_ON_ARM )
-    set(ARCH_COMPILE_OPTIONS
-      ${LINUX_ON_ARM_COMPILE_OPTIONS}
-      )
     set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1)
     set(ARCH_INCLUDE_DIRECTORIES libs/simde)
-  else()
-    set(ARCH_COMPILE_OPTIONS
-      -msse2
-      -Werror
-      )
-    set(ARCH_COMPILE_DEFINITIONS INTEL_SSE=1)
   endif()
-
-  set(OS_COMPILE_OPTIONS
-    ${ARCH_COMPILE_OPTIONS}
-
-    -Wno-multichar
-    -fvisibility=hidden
-    -fvisibility-inlines-hidden
-    -fdata-sections
-    -ffunction-sections
-
-    ${CAIRO_CFLAGS_OTHER}
-    )
 
   set(OS_COMPILE_DEFINITIONS
     ${ARCH_COMPILE_DEFINITIONS}
@@ -589,24 +614,6 @@ elseif( WIN32 )
   endif()
   message( STATUS "Configuring PNG linkage from ${PNG_LINK_DIR}" )
 
-
-  set(OS_COMPILE_OPTIONS
-    /wd4244   # float to double
-    /wd4305   # truncation of variable
-    /wd4267   # int and size_t
-    /wd4018   # signed unsigned mismatch
-    /wd4388   # signed unsigned mismatch in comparison
-    /wd4477   # blah blah wide strings after we made it work
-    /wd4065   # standalone default in a switch with no case
-    /wd4702   # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
-
-    /FIprecompiled.h
-    /Zc:alignedNew
-    /bigobj
-
-    /MP # Build with Multiple Processes
-    )
-
   set(OS_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}
     src/windows
@@ -673,19 +680,12 @@ if( BUILD_AU )
     )
   add_dependencies(surge-au-dll surge-shared)
 
-  target_compile_features(surge-au-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
-
   target_compile_definitions(surge-au-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
     ${FS_COMPILE_DEFINITIONS}
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
     TARGET_AUDIOUNIT=1
-    )
-
-  target_compile_options(surge-au-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
     )
 
   target_include_directories(surge-au-dll
@@ -737,8 +737,6 @@ if( BUILD_VST3 )
     )
   add_dependencies(surge-vst3-dll  surge-shared)
 
-  target_compile_features(surge-vst3-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
-
   if( APPLE )
     target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/macmain.cpp)
   elseif( UNIX AND NOT APPLE )
@@ -758,11 +756,6 @@ if( BUILD_VST3 )
     $<IF:$<CONFIG:DEBUG>,DEVELOPMENT,RELEASE>=1
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
     DEBUG=$<CONFIG:DEBUG>
-    )
-
-  target_compile_options(surge-vst3-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
     )
 
   target_include_directories(surge-vst3-dll
@@ -840,8 +833,6 @@ if( BUILD_VST2 )
     target_link_options(surge-vst2-dll PUBLIC "/DEF:${CMAKE_SOURCE_DIR}\\resources\\windows-vst2\\surge.def")
   endif()
 
-  target_compile_features(surge-vst2-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
-
   target_compile_definitions(surge-vst2-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
@@ -850,11 +841,6 @@ if( BUILD_VST2 )
     VSTGUI_ENABLE_DEPRECATED_METHODS=0
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
   )
-
-  target_compile_options(surge-vst2-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
-    )
 
   target_include_directories(surge-vst2-dll
     PRIVATE
@@ -917,8 +903,6 @@ if( BUILD_LV2 )
     )
   add_dependencies(surge-lv2-dll surge-shared)
 
-  target_compile_features(surge-lv2-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
-
   target_compile_definitions(surge-lv2-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
@@ -926,11 +910,6 @@ if( BUILD_LV2 )
     TARGET_LV2=1
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
   )
-
-  target_compile_options(surge-lv2-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
-    )
 
   target_include_directories(surge-lv2-dll
     PRIVATE
@@ -995,8 +974,6 @@ if( BUILD_HEADLESS )
     )
   add_dependencies(surge-headless surge-shared)
 
-  target_compile_features(surge-headless PRIVATE ${SURGE_CXX_STD_FLAG} )
-
   target_compile_definitions(surge-headless
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
@@ -1031,12 +1008,6 @@ if( BUILD_HEADLESS )
     PRIVATE
     ${OS_LINK_LIBRARIES_NOGUI}
     )
-
-  target_compile_options(surge-headless
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
-    )
-
 
   if( UNIX AND NOT APPLE )
     find_package(Threads REQUIRED)
@@ -1291,3 +1262,14 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
   add_subdirectory( src/juce_adapter )
 endif()
 
+# Hack: For now, native Windows binaries need implicit globals.h.
+# This can't go into the global compile options, so tack it on here.
+if(MSVC)
+  get_property(targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+  foreach(target ${targets})
+    get_target_property(target_type ${target} TYPE)
+    if (target_type MATCHES "EXECUTABLE|SHARED_LIBRARY")
+      target_compile_options(${target} PRIVATE /FIprecompiled.h)
+    endif()
+  endforeach()
+endif()
