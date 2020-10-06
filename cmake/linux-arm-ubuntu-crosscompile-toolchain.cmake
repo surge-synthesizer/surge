@@ -10,16 +10,13 @@ set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
 set(LINUX_ON_ARM True)
-set(FLAGS
+set(LINUX_ON_ARM_COMPILE_OPTIONS
   -march=armv7-a
   -marm
   -mfpu=neon
   -Wno-psabi
   -flax-vector-conversions #FIXME - remove this
   )
-string(REPLACE ";" " " FLAGS "${FLAGS}")
-set(CMAKE_C_FLAGS_INIT "${FLAGS}" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS_INIT "${FLAGS}" CACHE STRING "" FORCE)
 
 set(CMAKE_SYSROOT /usr/bin)
 set(CMAKE_STAGING_PREFIX /home/devel/stage)
