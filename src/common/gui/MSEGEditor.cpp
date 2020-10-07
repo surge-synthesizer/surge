@@ -45,7 +45,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
       this->ms = ms;
       this->lfodata = lfos;
       this->canvas = c;
-      setBackgroundColor( VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
+      setBackgroundColor(skin->getColor(Colors::MSEGEditor::Panel));
       rebuild();
    };
 
@@ -63,7 +63,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
 
    virtual void draw( CDrawContext *dc) override {
       auto r = getViewSize();
-      dc->setFillColor( VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
+      dc->setFillColor(skin->getColor(Colors::MSEGEditor::Panel));
       dc->drawRect( r, kDrawFilled );
    }
    
@@ -409,10 +409,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       {
          recalcHotZones( CPoint( vs.left, vs.top ) );
       }
-      /* 
-      dc->setFillColor( kYellowCColor );
+
+      dc->setFillColor(skin->getColor(Colors::MSEGEditor::Background));
       dc->drawRect( vs, kDrawFilled );
-      */
       
       auto valpx = valToPx();
       auto tpx = timeToPx();

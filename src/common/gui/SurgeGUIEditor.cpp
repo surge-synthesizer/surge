@@ -6516,99 +6516,99 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
 {
    const int header = 20;
-   const int margin = 4;
    const int buttonwidth = 40;
    
    if( ! c )
       return;
+
    auto vs = c->getViewSize();
    
    // add a solid outline thing which is bigger than the control with the title to that
    auto containerSize = vs;
-   containerSize.right += margin;
-   containerSize.left -= margin;
-   containerSize.top -= margin + header;
-   containerSize.bottom += margin;
+   containerSize.top -= header;
 
    if( ! modalOverlay )
-   {
-      containerSize.offset( -containerSize.left + topLeft.x,
-                            -containerSize.top + topLeft.y );
-   }
+      containerSize.offset(-containerSize.left + topLeft.x, -containerSize.top + topLeft.y);
    
-   auto fs = CRect( 0, 0, getWindowSizeX(), getWindowSizeY() );
+   auto fs = CRect(0, 0, getWindowSizeX(), getWindowSizeY());
    if( ! modalOverlay )
       fs = containerSize;
 
    // add a screen size transparent thing into the editorOverlay
-   editorOverlay = new CViewContainer( fs );
+   editorOverlay = new CViewContainer(fs);
    editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background));
    editorOverlay->setVisible(true);
    frame->addView(editorOverlay);
 
    if( modalOverlay )
-   {
       containerSize = containerSize.centerInside(fs);
-   }
    else
-   {
-      containerSize.moveTo( CPoint( 0, 0 ) );
-   }
+      containerSize.moveTo(CPoint(0, 0));
+
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> btnFont = new VSTGUI::CFontDesc("Lato", 9);
    
    auto outerc = new CViewContainer(containerSize);
-   auto bordersCol = currentSkin->getColor(Colors::Overlay::Border);
-   outerc->setBackgroundColor( bordersCol );
-   editorOverlay->addView( outerc );
+   outerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
+   editorOverlay->addView(outerc);
 
-   containerSize = containerSize.inset( 1, 1 );
+   containerSize = containerSize.inset(1, 1);
    auto innerc = new CViewContainer(containerSize);
-   auto containerCol = currentSkin->getColor(Colors::Overlay::Container::Background);
-   innerc->setBackgroundColor( containerCol );
+   innerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
    editorOverlay->addView(innerc);
-
-   auto ls = containerSize;
+   
+   auto ls = containerSize.extend(2, 2);
    ls.bottom = ls.top + header;
-   auto tl = new CTextLabel( ls, editorTitle.c_str() );
-   tl->setFontColor(currentSkin->getColor(Colors::Overlay::Container::TitleText));
-   tl->setTransparency( true );
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 14);
-   tl->setFont( headerFont );
-   editorOverlay->addView( tl );
+   auto tl = new CTextLabel(ls, editorTitle.c_str());
+   tl->setBackColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
+   tl->setFontColor(currentSkin->getColor(Colors::Dialog::Titlebar::Text));
+   tl->setFont(headerFont);
+   editorOverlay->addView(tl);
 
+   auto iconrect = CRect(CPoint(3, 2), CPoint(15, 15));
+   auto icon = new CViewContainer(iconrect);
+   icon->setBackground(bitmapStore->getBitmap(IDB_MINIEDIT_ICON));
+   icon->setVisible(true);
+   editorOverlay->addView(icon);
+
+   auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
+   auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
+   auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
+
+   VSTGUI::CGradient::ColorStopMap csm;
+   VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
+   cg->addColorStop(0, btnbg);
 
    ls.left = ls.right - buttonwidth;
-   ls.inset(2,2);
-   auto b = new CTextButton( ls, this, tag_editor_overlay_close, "Close" );
-   b->setFont( displayFont );
-   editorOverlay->addView( b );
-   
-   
+   ls.inset(3, 3);
+   auto b = new CTextButton(ls, this, tag_editor_overlay_close, "Close");
+   b->setVisible(true);
+   b->setFont(btnFont);
+   b->setGradient(cg);
+   b->setFrameColor(btnborder);
+   b->setTextColor(btntext);
+   b->setGradientHighlighted(cg);
+   b->setFrameColorHighlighted(btnborder);
+   b->setTextColorHighlighted(btntext);
+   b->setRoundRadius(CCoord(3.f));
+   editorOverlay->addView(b);
+ 
    // add the control inside that in an outline
    if( modalOverlay )
    {
       containerSize = vs;
-      
-      containerSize.right += margin;
-      containerSize.left -= margin;
-      containerSize.top -= margin + header;
-      containerSize.bottom += margin;
+      containerSize.top -= header;
       containerSize = containerSize.centerInside(fs);
       containerSize.top += header;
-      containerSize.inset( 3, 3 );
+      containerSize.inset(3, 3);
    }
    else
    {
-      CRect cSize = vs.extend( 1, 1 ).moveTo( 0, 0 ).moveTo( editorOverlay->getViewSize().getTopLeft() ).moveTo( margin, margin + header );
-      containerSize = cSize;
+      containerSize = vs.moveTo(0, header - 1).inset(1, 0);
    }
 
-   auto border = new CViewContainer(containerSize );
-   border->setBackgroundColor( bordersCol );
-   editorOverlay->addView( border );
-
-   containerSize.inset( 1, 1 );
-   c->setViewSize( containerSize );
-   c->setMouseableArea( containerSize ); // sigh
+   c->setViewSize(containerSize);
+   c->setMouseableArea(containerSize); // sigh
    editorOverlay->addView(c);
 
    // save the onClose function

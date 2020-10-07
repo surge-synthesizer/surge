@@ -210,7 +210,9 @@ namespace Colors
 
    namespace MSEGEditor
    {
-   const Surge::UI::SkinColor Line("msegeditor.line", kWhiteCColor);
+      const Surge::UI::SkinColor Background("msegeditor.background", CColor(17, 17, 17)),
+                                 Line("msegeditor.line", kWhiteCColor),
+                                 Panel("msegeditor.panel", CColor(205, 206, 212));
 
       namespace Axis
       {
@@ -261,10 +263,10 @@ namespace Colors
       const Surge::UI::SkinColor Background("overlay.background", CColor(0, 0, 0, 204)),
                                  Border("overlay.border", kBlackCColor);
 
-      namespace Container
+      namespace Titlebar
       {
-         const Surge::UI::SkinColor Background("overlay.container.background", CColor(216, 216, 220)),
-                                    TitleText("overlay.container.title", kBlackCColor);
+         const Surge::UI::SkinColor Background("overlay.titlebar.background", CColor(216, 216, 220)),
+                                    Text("overlay.titlebar.textlabel", kWhiteCColor);
       }
    }
 

@@ -136,7 +136,7 @@ namespace Colors
 
    namespace MSEGEditor
    {
-      extern const Surge::UI::SkinColor Line;
+      extern const Surge::UI::SkinColor Background, Line, Panel;
 
       namespace Axis
       {
@@ -177,9 +177,9 @@ namespace Colors
    {
       extern const Surge::UI::SkinColor Background, Border;
 
-      namespace Container
+      namespace Titlebar
       {
-         extern const Surge::UI::SkinColor Background, TitleText;
+         extern const Surge::UI::SkinColor Background, Text;
       }
    }
 
