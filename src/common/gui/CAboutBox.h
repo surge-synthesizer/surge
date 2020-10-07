@@ -46,6 +46,8 @@ public:
 protected:
    VSTGUI::CRect toDisplay;
    VSTGUI::CRect keepSize;
+   VSTGUI::CRect copyBox;
+   std::string identifierLine;
    VSTGUI::CPoint offset;
    VSTGUI::SharedPointer<VSTGUI::CBitmap> _aboutBitmap;
    bool bvalue;
