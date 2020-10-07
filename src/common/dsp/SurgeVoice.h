@@ -184,7 +184,7 @@ private:
    ModulationSource velocitySource, releaseVelocitySource;
    ModulationSource keytrackSource;
    ControllerModulationSource polyAftertouchSource;
-   ModulationSource monoAftertouchSource;
+   ControllerModulationSource monoAftertouchSource;
    ModulationSource timbreSource;
    ModulationSource rndUni, rndBi, altUni, altBi;
    AdsrEnvelope ampEGSource;
