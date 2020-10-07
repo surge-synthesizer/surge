@@ -7,7 +7,6 @@
 
 #include "UserInteractions.h"
 #include "SkinColors.h"
-#include "DebugHelpers.h"
 
 using namespace VSTGUI;
 
@@ -191,7 +190,6 @@ CAboutBox::onMouseDown(CPoint& where,
    if (!(button & kLButton))
       return kMouseEventHandled;
 
-   std::cout << "CLICK " << where.x << " " << where.y << " " << _DUMPR(copyBox) << std::endl;
    if (where.x >= 252 && where.x <= 480 && (where.y >= skin->getWindowSizeY() - 66) &&
              where.y <= (skin->getWindowSizeY() - 50))
       Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");

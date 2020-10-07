@@ -1210,7 +1210,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          break;
       }
       case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU: {
-         layoutComponentForSkin(skinCtrl, tag_settingsmenu);
+         auto q = layoutComponentForSkin(skinCtrl, tag_settingsmenu);
          break;
       }
       case Surge::Skin::Connector::NonParameterConnection::OSCILLATOR_SELECT: {
@@ -6276,9 +6276,10 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
          auto rows = currentSkin->propertyValue(skinCtrl, "rows", "1");
          auto cols = currentSkin->propertyValue(skinCtrl, "columns", "1");
          auto imgoff = currentSkin->propertyValue(skinCtrl, "imgoffset", "0" );
+         auto drgb = currentSkin->propertyValue( skinCtrl, "dragable", "1" );
          auto hsw = new CHSwitch2(rect, this, tag, std::atoi(subpixmaps.c_str()), skinCtrl->h,
                                   std::atoi(rows.c_str()), std::atoi(cols.c_str()), bmp, CPoint(0,0),
-                                  true); // FIXME - this needs parameterization
+                                  std::atoi( drgb.c_str() ) );
          if( p )
          {
             auto fval = p->get_value_f01();
@@ -6301,11 +6302,13 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
             }
             hsw->setValue( fval );
          }
-         frame->addView(hsw);
-         if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;
          hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
          hsw->setMouseableArea(rect);
          hsw->imgoffset = std::atoi(imgoff.c_str());
+
+         frame->addView(hsw);
+         if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;
+
          return hsw;
       }
    }
@@ -6386,6 +6389,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
           rect, this, tag_osc_menu, &synth->storage,
           &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]], bitmapStore);
       hsw->setSkin(currentSkin,bitmapStore);
+      hsw->setMouseableArea( rect );
       if( p ) hsw->setValue(p->get_value_f01());
       // TODO: This was not on before skinnification. Why?
       // if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;
@@ -6402,6 +6406,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       CControl* m = new CFxMenu(rect, this, tag_fx_menu, &synth->storage,
                                 &synth->storage.getPatch().fx[current_fx],
                                 &synth->fxsync[current_fx], current_fx);
+      m->setMouseableArea(rect);
       ((CFxMenu*)m)->setSkin(currentSkin,bitmapStore);
       ((CFxMenu*)m)->selectedIdx = this->selectedFX[current_fx];
       fxPresetLabel->setText( this->fxPresetName[current_fx].c_str() );
@@ -6416,6 +6421,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       rect.offset(skinCtrl->x, skinCtrl->y);
       CNumberField* pbd = new CNumberField(rect, this, tag, nullptr, &(synth->storage));
       pbd->setSkin(currentSkin,bitmapStore);
+      pbd->setMouseableArea(rect);
 
       pbd->altlook = ( ( style & kWhite ) != 0 );
 
@@ -6469,6 +6475,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       auto hsw = new CMenuAsSlider(rect.getTopLeft(), CPoint(124, 21), this,
                                    p->id + start_paramtags, bitmapStore, &(synth->storage));
       hsw->setMinMax(0, n_fu_type - 1);
+      hsw->setMouseableArea(rect);
       hsw->setLabel(p->get_name());
       hsw->setDeactivated(false);
       hsw->setBackgroundID(IDB_MENU_IN_FILTER_BG);

@@ -111,7 +111,8 @@ namespace Surge
             COLUMNS,
             SUBPIXMAPS,
             IMGOFFSET,
-            NUMBERFIELD_CONTROLMODE
+            NUMBERFIELD_CONTROLMODE,
+            DRAGABLE_HSWITCH
          };
 
          /*

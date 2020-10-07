@@ -832,6 +832,7 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector& c
       transferPropertyIf( Surge::Skin::Connector::COLUMNS, "columns" );
       transferPropertyIf( Surge::Skin::Connector::SUBPIXMAPS, "subpixmaps" );
       transferPropertyIf( Surge::Skin::Connector::IMGOFFSET, "imgoffset" );
+      transferPropertyIf( Surge::Skin::Connector::DRAGABLE_HSWITCH, "dragable" );
       break;
    }
    case Surge::Skin::Connector::SWITCH: {

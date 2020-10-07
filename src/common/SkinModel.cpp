@@ -253,12 +253,14 @@ namespace Surge
        */
       namespace OtherControls {
          Connector surgeMenu = Connector( "controls.surgemenu", 844, 550, 50, 15, Connector::HSWITCH2, Connector::SURGE_MENU )
-                                 .withProperty(Connector::BACKGROUND, IDB_BUTTON_MENU );
+                                 .withProperty(Connector::BACKGROUND, IDB_BUTTON_MENU )
+                                 .withProperty( Connector::DRAGABLE_HSWITCH, false );
 
          Connector patchCategoryJog = Connector( "controls.patch.categoryjog", 157, 41, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
          Connector patchJog = Connector( "controls.patch.jog", 242, 41, Connector::JOG_PATCH ).asJogPlusMinus();
          Connector patchStore = Connector( "controls.patch.store", 510, 41, 37, 12, Connector::HSWITCH2, Connector::STORE_PATCH)
-                        .withHSwitch2Properties(IDB_BUTTON_STORE, 1, 1, 1 );
+                        .withHSwitch2Properties(IDB_BUTTON_STORE, 1, 1, 1 )
+                        .withProperty( Connector::DRAGABLE_HSWITCH, false );
 
          Connector mainVUMeter = Connector( "controls.vumeter", 763, 14, 123, 13, Connector::VU_METER, Connector::MAIN_VU_METER);
 
