@@ -504,7 +504,15 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
       }
    }
 
-   monoAftertouchSource.set_target(state.voiceChannelState->pressure);
+   if (mpeEnabled) {
+       monoAftertouchSource.set_target(state.voiceChannelState->pressure);
+   }
+   else {
+       // When not in MPE mode, channel aftertouch is already smoothed at scene level.
+       // Do not smooth it again, force the output to the current value.
+       monoAftertouchSource.output = state.voiceChannelState->pressure;
+   }
+
    modsources[ms_timbre]->output = state.voiceChannelState->timbre;
 
    modsources[ms_ampeg]->process_block();
@@ -587,7 +595,11 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
           ->set_target(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
       ((ControllerModulationSource*)modsources[ms_polyaftertouch])->process_block();
    }
-   monoAftertouchSource.process_block();
+
+   if (scene->modsource_doprocess[ms_aftertouch] && mpeEnabled)
+   {
+       monoAftertouchSource.process_block();
+   }
 
    float o1 = amp_to_linear(localcopy[lag_id[le_osc1]].f);
    float o2 = amp_to_linear(localcopy[lag_id[le_osc2]].f);
