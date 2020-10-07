@@ -7,6 +7,7 @@
 
 #include "UserInteractions.h"
 #include "SkinColors.h"
+#include "DebugHelpers.h"
 
 using namespace VSTGUI;
 
@@ -103,9 +104,10 @@ void CAboutBox::draw(CDrawContext* pContext)
                "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc.",
                "Airwindows open source effects by Chris Johnson, licensed under MIT license",
             } };
-         
+         identifierLine = msgs[0];
          int yMargin = 6;
          int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
+         int iyPos = yPos;
          int xPos = strHeight;
          pContext->setFontColor(skin->getColor(Colors::AboutBox::Text));
          pContext->setFont(infoFont);
@@ -117,10 +119,12 @@ void CAboutBox::draw(CDrawContext* pContext)
 
          // link to Surge github repo in another color because VSTGUI -_-
          pContext->setFontColor(skin->getColor(Colors::AboutBox::Link));
+         pContext->drawString( "Copy", CPoint( toDisplay.getWidth() - 50, iyPos ) );
+         copyBox = CRect( CPoint( toDisplay.getWidth() - 50, iyPos - strHeight  ), CPoint( 48, 2 * strHeight ) );
+         std::cout << _DUMPR( copyBox ) << std::endl;
          pContext->drawString("https://github.com/surge-synthesizer/surge",
                               CPoint(253, skin->getWindowSizeY() - 36 - strHeight - yMargin));
       }
-
       {
          std::vector< std::string > msgs;
          msgs.push_back( std::string( ) + "Current Skin: " + skin->displayName );
@@ -187,9 +191,15 @@ CAboutBox::onMouseDown(CPoint& where,
    if (!(button & kLButton))
       return kMouseEventHandled;
 
+   std::cout << "CLICK " << where.x << " " << where.y << " " << _DUMPR(copyBox) << std::endl;
    if (where.x >= 252 && where.x <= 480 && (where.y >= skin->getWindowSizeY() - 66) &&
              where.y <= (skin->getWindowSizeY() - 50))
       Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
+   else if( copyBox.pointInside(where) ){
+
+      auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
+      getFrame()->setClipboard(a);
+   }
    else
       boxHide();
 
