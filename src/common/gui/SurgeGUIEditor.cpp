@@ -1381,6 +1381,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                    style | conn.payload->controlStyleFlags);
          }
       }
+      i++;
    }
 
    // resonance link mode
