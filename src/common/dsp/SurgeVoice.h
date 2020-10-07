@@ -185,7 +185,7 @@ private:
    ModulationSource keytrackSource;
    ControllerModulationSource polyAftertouchSource;
    ControllerModulationSource monoAftertouchSource;
-   ModulationSource timbreSource;
+   ControllerModulationSource timbreSource;
    ModulationSource rndUni, rndBi, altUni, altBi;
    AdsrEnvelope ampEGSource;
    AdsrEnvelope filterEGSource;
