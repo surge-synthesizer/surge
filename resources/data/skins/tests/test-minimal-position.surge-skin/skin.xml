@@ -1,4 +1,4 @@
-<surge-skin name="Test: Minimal Position Change" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+<surge-skin name="Test: Minimal Position Change" category="Tests" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
     <color id="white" value="#ffffff"/>
     <defaultimage directory="SVG/"/>
@@ -42,7 +42,7 @@
     </group>
 
     <!-- If you don't specify a position, it will use the default position for a slider (but only for a slider. Switches need full positions) -->
-    <control ui_identifier="filter.balance" class="boompoop"/>
+    <control ui_identifier="filter.balance" y="210"/>
     <control ui_identifier="filter.cutoff_1" class="boompoop"/>
     <control ui_identifier="filter.resonance_1" class="boompoop"/>
     <control ui_identifier="filter.cutoff_2" class="boompoop"/>

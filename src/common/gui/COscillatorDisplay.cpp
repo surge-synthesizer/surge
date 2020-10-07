@@ -378,49 +378,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    setDirty(false);
 }
 
-
-bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
-{
-   doingDrag = false;
-   /* invalid();
-      setDirty(true); */
-
-   auto drag = data.drag;
-   auto where = data.pos;
-   uint32_t ct = drag->getCount();
-   if (ct == 1)
-   {
-      IDataPackage::Type t = drag->getDataType(0);
-      if (t == IDataPackage::kFilePath)
-      {
-         const void* fn;
-         drag->getData(0, fn, t);
-         const char* fName = static_cast<const char*>(fn);
-         fs::path fPath(string_to_path(fName));
-         auto extStr(path_to_string(fPath.extension()));
-         if ((_stricmp(extStr.c_str(), ".wt") != 0) &&
-             (_stricmp(extStr.c_str(), ".wav") != 0))
-         {
-            Surge::UserInteractions::promptError(
-                std::string("Surge only supports drag-and-drop of .wt or .wav wavetable files onto the oscillator! You have dropped a file with extension ") + extStr + ".",
-                "Wavetable Import Error");
-         }
-         else
-         {
-            strncpy(oscdata->wt.queue_filename, fName, 255);
-         }
-      }
-      else
-      {
-         Surge::UserInteractions::promptError(
-             "Surge only supports drag-and-drop of .wt or .wav wavetable files onto the oscillator!",
-             "Wavetable Import Error");
-      }
-   }
-
-   return true;
-}
-
 CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonState& button)
 {
    if (!((button & kLButton) || (button & kRButton)))

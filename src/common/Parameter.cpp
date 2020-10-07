@@ -16,14 +16,14 @@
 #include "SurgeStorage.h"
 #include "Parameter.h"
 #include "DspUtilities.h"
-#include <string.h>
-#include <math.h>
+#include <cstring>
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <cstdlib>
 #include <algorithm>
 #include <cctype>
+#include <utility>
 #include <UserDefaults.h>
 #include "DebugHelpers.h"
 
@@ -36,9 +36,7 @@ Parameter::Parameter()
    storage = nullptr;
 }
 
-Parameter::~Parameter()
-{
-}
+Parameter::~Parameter() = default;
 
 void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
@@ -160,6 +158,27 @@ void Parameter::set_name(const char* n)
    parameterNameUpdated = true;
 }
 
+Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
+                             int pid,
+                             const char* name,
+                             const char* dispname,
+                             int ctrltype,
+
+                             const Surge::Skin::Connector &c,
+
+                             int scene,
+                             ControlGroup ctrlgroup,
+                             int ctrlgroup_entry,
+                             bool modulateable,
+                             int ctrlstyle,
+                             bool defaultDeactivation)
+{
+   assert( c.payload );
+   auto r = assign( idp, pid, name, dispname, ctrltype,
+                   c.payload->id, c.payload->posx, c.payload->posy, scene, ctrlgroup, ctrlgroup_entry, modulateable, ctrlstyle, defaultDeactivation);
+   r->hasSkinConnector = true;
+   return r;
+}
 Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
                              int pid,
                              const char* name,

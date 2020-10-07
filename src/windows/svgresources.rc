@@ -62,3 +62,6 @@ IDB_MSEG_SEGMENT_HANDLES_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00301.s
 IDB_MSEG_MOVEMENT_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00302.svg"
 IDB_MSEG_VERTICAL_SNAP_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00303.svg"
 IDB_MSEG_HORIZONTAL_SNAP_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00304.svg"
+IDB_MPE_BUTTON_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00171.svg"
+IDB_ZOOM_BUTTON_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00172.svg"
+IDB_TUNE_BUTTON_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00173.svg"

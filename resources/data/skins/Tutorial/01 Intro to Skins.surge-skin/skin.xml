@@ -1,0 +1,42 @@
+<!--[doc]
+ The Surge Skin Engine allows designers control over the positioning, rendering, and in some more limited cases
+ action of components which make up the Surge UI. These tutorials comprise the documentation for the skin engine
+ at this time.
+
+ The basic structure of a surge skin is a directory named "Something.surge-skin" which contains at least a single
+ file "skin.xml" describing the contents of the skin directory and the desired behaviour of the resulting surge UI.
+ We call a ".surge-skin" directory and its contents a "skin", "skin bundle" or "bundle" interchangably.
+
+ The skin bundle can be placed either in the user's surge documents directory (the location where user patches
+ are saved, as shown by the 'show user folder' menu item) or in the Surge central data folder if it is a
+ skin distributed with Surge.  Surge will search recursively for skins through both the factory and
+ user data areas.
+
+ The "skin.xml" file contains 4 key items
+ * The `surge-skin` tag with core attributes describing the skin
+ * The `globals` section defining global variables such as image directories and colors
+ * The `component classes` section, defining user-defined classes for components
+ * The `controls` section, which lays out the controls that build the UI
+
+ Surge compiles the Classic User Interface, including the images, control type, and layout
+ information, into the Surge DLL. As such, the `skin.xml` file is overriding or modifying parts
+ of the default layout. While you can change every element of the UI, you can also choose to change
+ nothing at all, and you will get the simplest built in version of the Surge Classic UI.
+
+ So this is the simplest "skin.xml" file. It defines a `surge-skin` with a name, category, author, authorURL
+ and version (which as of this writing must be "1"), and then declares empty globals, component-classes, and controls
+ sections.
+
+ It is worth noting that the Surge default skin is actually a bit larger than this file. Since the skin engine
+ activates features like hover overlays for some controls, the `default.surge-skin` surge uses a couple of features
+ shared in later tutorials. If you load this skin, you will get a UI with correct layout and functionality but no hover
+ images (some built in controls will display hover; more on that later).
+[doc]-->
+<surge-skin name="01 Intro to Skins" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+  <globals>
+  </globals>
+  <component-classes>
+  </component-classes>
+  <controls>
+  </controls>
+</surge-skin>

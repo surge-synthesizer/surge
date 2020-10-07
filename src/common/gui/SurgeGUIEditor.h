@@ -61,7 +61,11 @@ namespace Steinberg
 }
 #endif
 
-class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
+struct SGEDropAdapter;
+
+class SurgeGUIEditor : public EditorType,
+                       public VSTGUI::IControlListener,
+                       public VSTGUI::IKeyboardHook
 {
 private:
    using super = EditorType;
@@ -154,7 +158,7 @@ public:
    
 private:
    void openOrRecreateEditor();
-   VSTGUI::CControl * layoutTagWithSkin( int tag );
+   void setupSaveDialog();
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
    SurgeSynthesizer* synth = nullptr;
@@ -272,6 +276,13 @@ public:
       }
    
 private:
+   SGEDropAdapter *dropAdapter;
+   friend class SGEDropAdapter;
+   bool canDropTarget(const std::string& fname); // these come as const char* from vstgui
+   bool onDrop( const std::string& fname);
+
+   VSTGUI::CRect positionForModulationGrid(modsources entry);
+
    int wsx = BASE_WINDOW_SIZE_X;
    int wsy = BASE_WINDOW_SIZE_Y;
 
@@ -309,7 +320,8 @@ private:
    bool modsource_is_alternate[n_modsources];
 
    VSTGUI::CControl* vu[16];
-   VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr, *statuspanel = nullptr;
+   VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
+   VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;
    VSTGUI::CControl* aboutbox = nullptr;
    VSTGUI::CViewContainer* saveDialog = nullptr;
    VSTGUI::CTextEdit* patchName = nullptr;
@@ -410,6 +422,12 @@ private:
    Surge::UI::Skin::ptr_t currentSkin;
    void setupSkinFromEntry( const Surge::UI::SkinDB::Entry &entry );
    void reloadFromSkin();
+   VSTGUI::CControl *layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
+                               long tag,
+                               int paramIndex = -1,
+                               Parameter *p = nullptr,
+                               int style = 0
+                               );
 
    /*
    ** General MIDI CC names

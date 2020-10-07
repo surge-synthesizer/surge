@@ -22,7 +22,7 @@
 
 #define OSC_MOD_ANIMATION 0
 
-class COscillatorDisplay : public VSTGUI::CControl, public VSTGUI::IDropTarget, public Surge::UI::SkinConsumingComponent
+class COscillatorDisplay : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    COscillatorDisplay(const VSTGUI::CRect& size, VSTGUI::IControlListener *l, OscillatorStorage* oscdata, SurgeStorage* storage)
@@ -79,28 +79,6 @@ public:
       delete cdisurf;
    }
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-
-   virtual VSTGUI::DragOperation onDragEnter(VSTGUI::DragEventData data) override
-   {
-       doingDrag = true;
-       /* invalid();
-          setDirty(true); */
-
-       return VSTGUI::DragOperation::Copy;
-   }
-   virtual VSTGUI::DragOperation onDragMove(VSTGUI::DragEventData data) override
-   {
-       return VSTGUI::DragOperation::Copy;
-   }
-   virtual void onDragLeave(VSTGUI::DragEventData data) override
-   {
-       doingDrag = false;
-       /* invalid();
-          setDirty(true); */
-   }
-   virtual bool onDrop(VSTGUI::DragEventData data) override;
-   
-   virtual VSTGUI::SharedPointer<VSTGUI::IDropTarget> getDropTarget () override { return this; }
 
    void loadWavetable(int id);
    void loadWavetableFromFile();
