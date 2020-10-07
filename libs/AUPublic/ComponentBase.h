@@ -272,18 +272,18 @@ public:
 // It is only for backwards compatibility with Lion and Snow Leopard.
 // This macro registers both an Audio Component plugin and a Carbon Component Manager version.
 #define AUDIOCOMPONENT_ENTRY(FactoryType, Class) \
-    extern "C" OSStatus Class##Entry(ComponentParameters *params, Class *obj); \
+    extern "C" __attribute__((visibility("default"))) OSStatus Class##Entry(ComponentParameters *params, Class *obj); \
     extern "C" OSStatus Class##Entry(ComponentParameters *params, Class *obj) { \
         return ComponentEntryPoint<Class>::Dispatch(params, obj); \
     } \
-    extern "C" void * Class##Factory(const AudioComponentDescription *inDesc); \
+    extern "C" __attribute__((visibility("default"))) void * Class##Factory(const AudioComponentDescription *inDesc); \
     extern "C" void * Class##Factory(const AudioComponentDescription *inDesc) { \
         return FactoryType<Class>::Factory(inDesc); \
     }
     // the only component we still support are the carbon based view components
     // you should be using this macro now to exclusively register those types
 #define VIEW_COMPONENT_ENTRY(Class) \
-    extern "C" OSStatus Class##Entry(ComponentParameters *params, Class *obj); \
+    extern "C" __attribute__((visibility("default"))) OSStatus Class##Entry(ComponentParameters *params, Class *obj); \
     extern "C" OSStatus Class##Entry(ComponentParameters *params, Class *obj) { \
         return ComponentEntryPoint<Class>::Dispatch(params, obj); \
     }
@@ -304,7 +304,7 @@ public:
 // This macro is used to generate the Entry Point for a given Audio Component.
 // You should be using this macro now.
 #define AUDIOCOMPONENT_ENTRY(FactoryType, Class) \
-    extern "C" void * Class##Factory(const AudioComponentDescription *inDesc); \
+    extern "C" __attribute__((visibility("default"))) void * Class##Factory(const AudioComponentDescription *inDesc); \
     extern "C" void * Class##Factory(const AudioComponentDescription *inDesc) { \
         return FactoryType<Class>::Factory(inDesc); \
     }
