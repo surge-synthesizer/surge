@@ -175,7 +175,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_latest_key] = oscene->modsources[ms_latest_key];
    monoAftertouchSource.init(state.voiceChannelState->pressure);
    modsources[ms_timbre] = &timbreSource;
-   timbreSource.output = state.voiceChannelState->timbre;
+   timbreSource.init(state.voiceChannelState->timbre);
    modsources[ms_pitchbend] = oscene->modsources[ms_pitchbend];
    for (int i = 0; i < n_customcontrollers; i++)
       modsources[ms_ctrl1 + i] = oscene->modsources[ms_ctrl1 + i];
@@ -504,17 +504,6 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
       }
    }
 
-   if (mpeEnabled) {
-       monoAftertouchSource.set_target(state.voiceChannelState->pressure);
-   }
-   else {
-       // When not in MPE mode, channel aftertouch is already smoothed at scene level.
-       // Do not smooth it again, force the output to the current value.
-       monoAftertouchSource.output = state.voiceChannelState->pressure;
-   }
-
-   modsources[ms_timbre]->output = state.voiceChannelState->timbre;
-
    modsources[ms_ampeg]->process_block();
    modsources[ms_filtereg]->process_block();
    if (((AdsrEnvelope*)modsources[ms_ampeg])->is_idle())
@@ -563,6 +552,21 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
            }
            iter++;
        }
+
+       monoAftertouchSource.set_target(state.voiceChannelState->pressure);
+       timbreSource.set_target(state.voiceChannelState->timbre);
+
+       if (scene->modsource_doprocess[ms_aftertouch])
+       {
+           monoAftertouchSource.process_block();
+       }
+       timbreSource.process_block();
+   }
+   else {
+       // When not in MPE mode, channel aftertouch is already smoothed at scene level.
+       // Do not smooth it again, force the output to the current value.
+       monoAftertouchSource.output = state.voiceChannelState->pressure;
+       // Currently timbre only works in MPE mode, so no need to do anything when not in MPE mode.
    }
 
    update_portamento();
@@ -594,11 +598,6 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
       ((ControllerModulationSource*)modsources[ms_polyaftertouch])
           ->set_target(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
       ((ControllerModulationSource*)modsources[ms_polyaftertouch])->process_block();
-   }
-
-   if (scene->modsource_doprocess[ms_aftertouch] && mpeEnabled)
-   {
-       monoAftertouchSource.process_block();
    }
 
    float o1 = amp_to_linear(localcopy[lag_id[le_osc1]].f);
