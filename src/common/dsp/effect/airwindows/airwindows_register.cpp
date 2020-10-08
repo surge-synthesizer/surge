@@ -12,6 +12,7 @@
 #include "BrightAmbience2.h"
 #include "BussColors4.h"
 #include "ButterComp2.h"
+#include "Capacitor.h"
 #include "Cojones.h"
 #include "Compresaturator.h"
 #include "CrunchyGrooveWear.h"
@@ -42,6 +43,8 @@
 #include "Pressure4.h"
 #include "PyeWacket.h"
 #include "SingleEndedTriode.h"
+#include "Slew.h"
+#include "Slew2.h"
 #include "Spiral2.h"
 #include "StarChild.h"
 #include "Surge.h"
@@ -62,6 +65,7 @@ void AirWindowsEffect::registerPlugins()
    */
 
    // Set up some group names
+   std::string gnClipping = "Clipping";
    std::string gnDynamics = "Dynamics";
    std::string gnFilter = "Filter";
    std::string gnLoFi = "Lo-Fi";
@@ -72,13 +76,13 @@ void AirWindowsEffect::registerPlugins()
 
    int id=0; // add new effects only at the end of this list!
 
-   registerAirwindow<ADClip7::ADClip7>( id++, 10, gnDynamics, "AD Clip" );
+   registerAirwindow<ADClip7::ADClip7>( id++, 10, gnClipping, "AD Clip" );
    registerAirwindow<BlockParty::BlockParty>( id++, 20, gnDynamics, "Block Party" );
    registerAirwindow<ButterComp2::ButterComp2>( id++, 30, gnDynamics, "Butter Comp" );
    registerAirwindow<Compresaturator::Compresaturator>( id++, 40, gnDynamics, "Compresaturator" );
    registerAirwindow<Logical4::Logical4>( id++, 50, gnDynamics, "Logical" );
    registerAirwindow<Mojo::Mojo>( id++, 60, gnDynamics, "Mojo" );
-   registerAirwindow<OneCornerClip::OneCornerClip>( id++, 70, gnDynamics, "One Corner Clip" );
+   registerAirwindow<OneCornerClip::OneCornerClip>( id++, 70, gnClipping, "One Corner Clip" );
    registerAirwindow<Point::Point>( id++, 80, gnDynamics, "Point" );
    registerAirwindow<Pop::Pop>( id++, 90, gnDynamics, "Pop" );
    registerAirwindow<Pressure4::Pressure4>( id++, 100, gnDynamics, "Pressure" );
@@ -127,4 +131,8 @@ void AirWindowsEffect::registerPlugins()
 
    registerAirwindow<BussColors4::BussColors4>(id++, 25, gnSaturation, "Buss Colors");
    registerAirwindow<DrumSlam::DrumSlam>( id++, 46, gnDynamics, "Drum Slam" );
+
+   registerAirwindow<Capacitor::Capacitor>( id++, 415, gnFilter, "Capacitor" );
+   registerAirwindow<Slew::Slew>( id++, 113, gnClipping, "Slew 1" );
+   registerAirwindow<Slew2::Slew2>( id++, 114, gnClipping, "Slew 2" );
 }
