@@ -12,7 +12,7 @@
 #if defined(TARGET_OS_MAC) || TARGET_RACK
 
 #include <sys/stat.h>
-#include "filesystem.h"
+#include "filesystem/filesystem.h"
 
 namespace std { namespace experimental { namespace filesystem {
     // path class:
@@ -104,8 +104,7 @@ namespace std { namespace experimental { namespace filesystem {
     void create_directories(path p) {
         mode_t nMode = 0755; // UNIX style permissions
         int nError = 0;
-#if ! TARGET_RACK
-	// FIX THAT
+        // FIXME
 #if defined(_WIN32) 
         nError = _mkdir(p.c_str()); // can be used on Windows
 #else
@@ -125,7 +124,6 @@ namespace std { namespace experimental { namespace filesystem {
         }
         // and clean up the end
         nError = mkdir(file_path, nMode );
-#endif
 #endif
         if (nError != 0) {
             // handle your error here
