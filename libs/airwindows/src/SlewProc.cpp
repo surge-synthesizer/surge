@@ -94,10 +94,10 @@ void Slew::processReplacing(float **inputs, float **outputs, VstInt32 sampleFram
 		*out1 = outputSampleL;
 		*out2 = outputSampleR;
 
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
@@ -183,10 +183,10 @@ void Slew::processDoubleReplacing(double **inputs, double **outputs, VstInt32 sa
 		*out1 = outputSampleL;
 		*out2 = outputSampleR;
 
-		*in1++;
-		*in2++;
-		*out1++;
-		*out2++;
+		in1++;
+		in2++;
+		out1++;
+		out2++;
     }
 }
 
