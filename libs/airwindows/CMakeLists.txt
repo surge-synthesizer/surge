@@ -20,6 +20,8 @@ src/BussColors4.cpp
 src/BussColors4Proc.cpp
 src/ButterComp2.cpp
 src/ButterComp2Proc.cpp
+src/Capacitor.cpp
+src/CapacitorProc.cpp
 src/Cojones.cpp
 src/CojonesProc.cpp
 src/Compresaturator.cpp
@@ -80,6 +82,10 @@ src/PyeWacket.cpp
 src/PyeWacketProc.cpp
 src/SingleEndedTriode.cpp
 src/SingleEndedTriodeProc.cpp
+src/Slew.cpp
+src/SlewProc.cpp
+src/Slew2.cpp
+src/Slew2Proc.cpp
 src/Spiral2.cpp
 src/Spiral2Proc.cpp
 src/StarChild.cpp
