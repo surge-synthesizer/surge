@@ -87,19 +87,14 @@ target_compile_definitions( surge-patch-player PUBLIC
   JUCE_JACK=1
   
   ${OS_COMPILE_DEFINITIONS}
-  ${FS_COMPILE_DEFINITIONS}
 
   TARGET_HEADLESS=1
   TARGET_JUCE=1
   )
 
-target_compile_options( surge-patch-player PUBLIC
-  ${OS_COMPILE_OPTIONS}
-  )
-
-
 target_link_libraries(surge-patch-player PRIVATE
   surge-patch-player-binary
+  surge-shared
   juce::juce_analytics
   juce::juce_audio_utils
   juce::juce_audio_processors

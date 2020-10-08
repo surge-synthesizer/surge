@@ -9,6 +9,7 @@ cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
@@ -91,14 +92,10 @@ else()
   message( STATUS "Building in 64 bit configuration" )
 endif()
 
-add_custom_target(surge-shared)
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
-add_custom_command(
-  TARGET surge-shared
-  POST_BUILD
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR} )
+file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
+add_library(surge-shared INTERFACE)
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
@@ -163,7 +160,7 @@ if( CXX_STD_FS )
   if( UNIX AND NOT APPLE )
     set (CMAKE_REQUIRED_FLAGS "-std=c++17")
   endif()
-  set( FS_COMPILE_DEFINITIONS USE_STD_FILESYSTEM=1 )
+  target_compile_definitions(surge-shared INTERFACE USE_STD_FILESYSTEM=1)
   if( UNIX AND NOT APPLE )
     set (CMAKE_REQUIRED_FLAGS "")
   endif()
@@ -181,15 +178,17 @@ else()
   endif()
 
   if( CXX_EXP_STD_FS )
-    set( FS_COMPILE_DEFINITIONS USE_STD_EXPERIMENTAL_FILESYSTEM=1 )
+    target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM=1)
     message( STATUS "Using std::experimental::filesystem" )
   else()
     CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "filesystem" CXX_EXP_STD_FS_FS_HDR)
     if( CXX_EXP_STD_FS_FS_HDR )
-      set( FS_COMPILE_DEFINITIONS USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM=1 )
+      target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM=1)
       message( STATUS "Using std::experimental::filesystem but from <filesystem> header" )
     else()
-      set( FS_COMPILE_DEFINITIONS USE_HOMEGROWN_FILESYSTEM=1 )
+      add_subdirectory(libs/filesystem)
+      target_link_libraries(surge-shared INTERFACE surge::filesystem)
+      target_compile_definitions(surge-shared INTERFACE USE_HOMEGROWN_FILESYSTEM=1)
       message( STATUS "Using homegrown filesystem" )
     endif()
   endif()
@@ -285,7 +284,6 @@ set(SURGE_COMMON_SOURCES
   libs/xml/tinyxmlerror.cpp
   libs/xml/tinyxmlparser.cpp
   libs/strnatcmp/strnatcmp.cpp
-  libs/filesystem/filesystem.cpp
 
   ${AIRWINDOWS_SOURCES}
         src/common/SkinModel.cpp src/common/SkinModelImpl.cpp)
@@ -414,7 +412,6 @@ set( SURGE_LV2_SOURCES
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
   libs/
-  libs/filesystem
   libs/xml
   libs/catch2
   libs/strnatcmp
@@ -677,12 +674,10 @@ if( BUILD_AU )
     ${SURGE_AU_SOURCES}
     ${SURGE_AU_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-au-dll surge-shared)
 
   target_compile_definitions(surge-au-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
     TARGET_AUDIOUNIT=1
     )
@@ -699,6 +694,7 @@ if( BUILD_AU )
 
   target_link_libraries(surge-au-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -734,7 +730,6 @@ if( BUILD_VST3 )
     ${SURGE_VST3_SOURCES}
     ${SURGE_VST3_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-vst3-dll  surge-shared)
 
   if( APPLE )
     target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/macmain.cpp)
@@ -750,7 +745,6 @@ if( BUILD_VST3 )
   target_compile_definitions(surge-vst3-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_VST3=1
     $<IF:$<CONFIG:DEBUG>,DEVELOPMENT,RELEASE>=1
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
@@ -768,6 +762,7 @@ if( BUILD_VST3 )
 
   target_link_libraries(surge-vst3-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -815,7 +810,6 @@ if( BUILD_VST2 )
     ${SURGE_VST2_SOURCES}
     ${SURGE_VST2_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-vst2-dll surge-shared)
 
   if( UNIX AND NOT APPLE )
     target_sources(surge-vst2-dll PRIVATE src/linux/linux-aeffguieditor.cpp )
@@ -835,7 +829,6 @@ if( BUILD_VST2 )
   target_compile_definitions(surge-vst2-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_VST2=1
     VSTGUI_ENABLE_DEPRECATED_METHODS=0
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
@@ -852,6 +845,7 @@ if( BUILD_VST2 )
 
   target_link_libraries(surge-vst2-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -900,12 +894,10 @@ if( BUILD_LV2 )
     ${SURGE_LV2_SOURCES}
     ${SURGE_LV2_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-lv2-dll surge-shared)
 
   target_compile_definitions(surge-lv2-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_LV2=1
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
   )
@@ -921,6 +913,7 @@ if( BUILD_LV2 )
 
   target_link_libraries(surge-lv2-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -971,12 +964,10 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
     )
-  add_dependencies(surge-headless surge-shared)
 
   target_compile_definitions(surge-headless
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_HEADLESS=1
     LIBMIDIFILE=1
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
@@ -1000,11 +991,12 @@ if( BUILD_HEADLESS )
       LIBSNDFILE=1
       )
     target_link_libraries(surge-headless PRIVATE ${LIBSNDFILE_LIBRARIES})
-    include_directories(surge-headless ${LIBSNDFILE_INCLUDE_DIRS})
+    target_include_directories(surge-headless PRIVATE ${LIBSNDFILE_INCLUDE_DIRS})
   endif()
 
   target_link_libraries(surge-headless
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES_NOGUI}
     )
 

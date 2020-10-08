@@ -15,15 +15,13 @@ target_include_directories( svgshow PRIVATE ${SVGSHOW_INCLUDE} )
 target_compile_definitions( svgshow
   PRIVATE
   ${OS_COMPILE_DEFINITIONS}
-  ${FS_COMPILE_DEFINITIONS}
   )
 
 if( WIN32 )
   list( FILTER OS_LINK_LIBRARIES EXCLUDE REGEX "libpng" )
 endif()
 
-target_link_libraries( svgshow ${OS_LINK_LIBRARIES} )
-
+target_link_libraries(svgshow ${OS_LINK_LIBRARIES} surge-shared)
 
 if( APPLE )
   # macOS
