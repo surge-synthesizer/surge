@@ -71,8 +71,8 @@ namespace Surge
 
          Connector attack = Connector( "AEG.attack", 0, 31 ).asVertical().asWhite().inParent( "AEG.panel" );;
          Connector decay = Connector( "AEG.decay", 20, 31 ).asVertical().asWhite().inParent( "AEG.panel" );;
-         Connector release = Connector( "AEG.release", 40, 31 ).asVertical().asWhite().inParent( "AEG.panel" );;
-         Connector sustain = Connector( "AEG.sustain", 60, 31 ).asVertical().asWhite().inParent( "AEG.panel" );;
+         Connector sustain = Connector( "AEG.sustain", 40, 31 ).asVertical().asWhite().inParent( "AEG.panel" );;
+         Connector release = Connector( "AEG.release", 60, 31 ).asVertical().asWhite().inParent( "AEG.panel" );;
       }
 
       namespace FX { // DONE except VU but still with the terrible API
@@ -148,17 +148,21 @@ namespace Surge
       }
 
       namespace LFO { // DONE
-         Connector amplitude = Connector( "lfo.amplitude", 23, 541 ).asHorizontal();
-         Connector attack = Connector( "lfo.attack", 633, 494 );
-         Connector decay = Connector( "lfo.decay", 673, 494 );
-         Connector deform = Connector( "lfo.deform", 23, 520 ).asHorizontal();
-         Connector delay = Connector( "lfo.delay", 613, 494 );
-         Connector hold = Connector( "lfo.hold", 653, 494 );
-         Connector phase = Connector( "lfo.phase", 23, 499 ).asHorizontal();
-         Connector rate = Connector( "lfo.rate", 23, 478 ).asHorizontal();
-         Connector release = Connector( "lfo.release", 713, 494 );
+         Connector lfoRatePanel = Connector( "lfo.rate.panel", 23, 478, Connector::GROUP );
+         Connector rate = Connector( "lfo.rate", 0, 0 ).asHorizontal().inParent("lfo.rate.panel");
+         Connector phase = Connector( "lfo.phase", 0, 21 ).asHorizontal().inParent("lfo.rate.panel");
+         Connector deform = Connector( "lfo.deform", 0, 42 ).asHorizontal().inParent("lfo.rate.panel");
+         Connector amplitude = Connector( "lfo.amplitude", 0, 63 ).asHorizontal().inParent("lfo.rate.panel");
+
+         Connector lfoEnvelopePanel = Connector( "lfo.envelope.panel", 613, 494, Connector::GROUP );
+         Connector delay = Connector( "lfo.delay", 0, 0 ).inParent( "lfo.envelope.panel" );
+         Connector attack = Connector( "lfo.attack", 20, 0 ).inParent( "lfo.envelope.panel" );
+         Connector hold = Connector( "lfo.hold", 40, 0 ).inParent( "lfo.envelope.panel" );
+         Connector decay = Connector( "lfo.decay", 60, 0 ).inParent( "lfo.envelope.panel" );
+         Connector sustain = Connector( "lfo.sustain", 80, 0 ).inParent( "lfo.envelope.panel" );
+         Connector release = Connector( "lfo.release", 100, 0 ).inParent( "lfo.envelope.panel" );
+
          Connector shape = Connector( "lfo.shape", 235, 482, 359, 85, Connector::LFO );
-         Connector sustain = Connector( "lfo.sustain", 693, 494 );
          Connector triggermode = Connector( "lfo.triggermode", 170, 484, 51, 39, Connector::HSWITCH2 )
              .withHSwitch2Properties(IDB_LFOTRIGGER, 3, 3, 1);
          Connector unipolar = Connector( "lfo.unipolar", 170, 545, 51, 15, Connector::SWITCH )
@@ -166,31 +170,37 @@ namespace Surge
       }
 
       namespace Mix { // Done
-         Connector level_noise = Connector( "mix.level_noise", 254, 300 ).asVertical().asWhite();
-         Connector level_o1 = Connector( "mix.level_o1", 154, 300 ).asVertical().asWhite();
-         Connector level_o2 = Connector( "mix.level_o2", 174, 300 ).asVertical().asWhite();
-         Connector level_o3 = Connector( "mix.level_o3", 194, 300 ).asVertical().asWhite();
-         Connector level_prefiltergain = Connector( "mix.level_prefiltergain", 274, 300 ).asVertical().asWhite();
-         Connector level_ring12 = Connector( "mix.level_ring12", 214, 300 ).asVertical().asWhite();
-         Connector level_ring23 = Connector( "mix.level_ring23", 234, 300 ).asVertical().asWhite();
-         Connector mute_noise = Connector( "mix.mute_noise", 254, 264 ).asMixerMute();
-         Connector mute_o1 = Connector( "mix.mute_o1", 154, 264 ).asMixerMute();
-         Connector mute_o2 = Connector( "mix.mute_o2", 174, 264 ).asMixerMute();
-         Connector mute_o3 = Connector( "mix.mute_o3", 194, 264 ).asMixerMute();
-         Connector mute_ring12 = Connector( "mix.mute_ring12", 214, 264 ).asMixerMute();
-         Connector mute_ring23 = Connector( "mix.mute_ring23", 234, 264 ).asMixerMute();
-         Connector route_noise = Connector( "mix.route_noise", 254, 284 ).asMixerRoute();
-         Connector route_o1 = Connector( "mix.route_o1", 154, 284 ).asMixerRoute();
-         Connector route_o2 = Connector( "mix.route_o2", 174, 284 ).asMixerRoute();
-         Connector route_o3 = Connector( "mix.route_o3", 194, 284 ).asMixerRoute();
-         Connector route_ring12 = Connector( "mix.route_ring12", 214, 284 ).asMixerRoute();
-         Connector route_ring23 = Connector( "mix.route_ring23", 234, 284 ).asMixerRoute();
-         Connector solo_noise = Connector( "mix.solo_noise", 254, 274 ).asMixerSolo();
-         Connector solo_o1 = Connector( "mix.solo_o1", 154, 274 ).asMixerSolo();
-         Connector solo_o2 = Connector( "mix.solo_o2", 174, 274 ).asMixerSolo();
-         Connector solo_o3 = Connector( "mix.solo_o3", 194, 274 ).asMixerSolo();
-         Connector solo_ring12 = Connector( "mix.solo_ring12", 214, 274 ).asMixerSolo();
-         Connector solo_ring23 = Connector( "mix.solo_ring23", 234, 274 ).asMixerSolo();
+         Connector mixerPanel = Connector( "mix.panel", 154, 264, Connector::GROUP );
+
+         Connector mute_o1 = Connector( "mix.mute_o1", 0, 0 ).asMixerMute().inParent( "mix.panel" );
+         Connector mute_o2 = Connector( "mix.mute_o2", 20, 0 ).asMixerMute().inParent( "mix.panel" );
+         Connector mute_o3 = Connector( "mix.mute_o3", 40, 0 ).asMixerMute().inParent( "mix.panel" );
+         Connector mute_ring12 = Connector( "mix.mute_ring12", 60, 0 ).asMixerMute().inParent( "mix.panel" );
+         Connector mute_ring23 = Connector( "mix.mute_ring23", 80, 0 ).asMixerMute().inParent( "mix.panel" );
+         Connector mute_noise = Connector( "mix.mute_noise", 100, 0 ).asMixerMute().inParent( "mix.panel" );
+
+         Connector solo_o1 = Connector( "mix.solo_o1", 0, 10 ).asMixerSolo().inParent( "mix.panel" );
+         Connector solo_o2 = Connector( "mix.solo_o2", 20, 10 ).asMixerSolo().inParent( "mix.panel" );
+         Connector solo_o3 = Connector( "mix.solo_o3", 40, 10 ).asMixerSolo().inParent( "mix.panel" );
+         Connector solo_ring12 = Connector( "mix.solo_ring12", 60, 10 ).asMixerSolo().inParent( "mix.panel" );
+         Connector solo_ring23 = Connector( "mix.solo_ring23", 80, 10 ).asMixerSolo().inParent( "mix.panel" );
+         Connector solo_noise = Connector( "mix.solo_noise", 100, 10 ).asMixerSolo().inParent( "mix.panel" );
+
+         Connector route_o1 = Connector( "mix.route_o1", 0, 20 ).asMixerRoute().inParent( "mix.panel" );
+         Connector route_o2 = Connector( "mix.route_o2", 20, 20 ).asMixerRoute().inParent( "mix.panel" );
+         Connector route_o3 = Connector( "mix.route_o3", 40, 20 ).asMixerRoute().inParent( "mix.panel" );
+         Connector route_ring12 = Connector( "mix.route_ring12", 60, 20 ).asMixerRoute().inParent( "mix.panel" );
+         Connector route_ring23 = Connector( "mix.route_ring23", 80, 20 ).asMixerRoute().inParent( "mix.panel" );
+         Connector route_noise = Connector( "mix.route_noise", 100, 20 ).asMixerRoute().inParent( "mix.panel" );
+
+         Connector level_o1 = Connector( "mix.level_o1", 0, 36 ).asVertical().asWhite().inParent( "mix.panel" );
+         Connector level_o2 = Connector( "mix.level_o2", 20, 36 ).asVertical().asWhite().inParent( "mix.panel" );
+         Connector level_o3 = Connector( "mix.level_o3", 40, 36 ).asVertical().asWhite().inParent( "mix.panel" );
+         Connector level_ring12 = Connector( "mix.level_ring12", 60, 36 ).asVertical().asWhite().inParent( "mix.panel" );
+         Connector level_ring23 = Connector( "mix.level_ring23", 80, 36 ).asVertical().asWhite().inParent( "mix.panel" );
+         Connector level_noise = Connector( "mix.level_noise", 100, 36 ).asVertical().asWhite().inParent( "mix.panel" );
+
+         Connector level_prefiltergain = Connector( "mix.level_prefiltergain", 120, 36 ).asVertical().asWhite().inParent( "mix.panel" );
       }
 
       namespace Osc { // All Done
@@ -229,7 +239,6 @@ namespace Surge
          Connector noise_color = Connector( "scene.noise_color", 156, 162 ).asHorizontal().asWhite();
          Connector octave = Connector( "scene.octave", 202, 193, 96, 18, Connector::HSWITCH2 )
                .withHSwitch2Properties(IDB_OCTAVES, 7, 1, 7 );
-         Connector pan = Connector( "scene.pan", 606, 99 ).asHorizontal().asWhite();
          Connector pbrange_dn = Connector( "scene.pbrange_dn", 164, 112, 24, 10, Connector::NUMBERFIELD )
              .withProperty( Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth ).asWhite();
          Connector pbrange_up = Connector( "scene.pbrange_up", 189, 112, 24, 10, Connector::NUMBERFIELD )
@@ -238,11 +247,14 @@ namespace Surge
          Connector playmode = Connector("scene.playmode", 239, 87, 50, 47, Connector::HSWITCH2)
                                   .withHSwitch2Properties(IDB_POLYMODE,6,6,1);
          Connector portatime = Connector( "scene.portatime", 156, 234 ).asHorizontal();
-         Connector send_fx_1 = Connector( "scene.send_fx_1", 606, 141 ).asHorizontal().asWhite();
-         Connector send_fx_2 = Connector( "scene.send_fx_2", 606, 162 ).asHorizontal().asWhite();
          Connector velocity_sensitivity = Connector( "scene.velocity_sensitivity", 719, 300 ).asVertical().asWhite();
-         Connector volume = Connector( "scene.volume", 606, 78 ).asHorizontal().asWhite();
-         Connector width = Connector( "scene.width", 606, 120 ).asHorizontal().asWhite();
+
+         Connector sceneOutputPanel = Connector( "scene.output.panel", 606, 78, Connector::GROUP );
+         Connector volume = Connector( "scene.volume", 0, 0 ).asHorizontal().asWhite().inParent( "scene.output.panel" );
+         Connector pan = Connector( "scene.pan", 0, 21 ).asHorizontal().asWhite().inParent( "scene.output.panel" );
+         Connector width = Connector( "scene.width", 0, 42 ).asHorizontal().asWhite().inParent( "scene.output.panel");
+         Connector send_fx_1 = Connector( "scene.send_fx_1", 0, 63 ).asHorizontal().asWhite().inParent( "scene.output.panel" );
+         Connector send_fx_2 = Connector( "scene.send_fx_2", 0, 84 ).asHorizontal().asWhite().inParent( "scene.output.panel" );
       }
 
       /*
@@ -264,12 +276,13 @@ namespace Surge
 
          Connector mainVUMeter = Connector( "controls.vumeter", 763, 14, 123, 13, Connector::VU_METER, Connector::MAIN_VU_METER);
 
-         Connector statusMPE = Connector( "controls.status.mpe", 562, 12, 31, 13, Connector::SWITCH, Connector::STATUS_MPE )
-               .withBackground( IDB_MPE_BUTTON );
-         Connector statusTune = Connector( "controls.status.tune", 562, 27, 31, 13, Connector::SWITCH, Connector::STATUS_TUNE )
-             .withBackground( IDB_TUNE_BUTTON );
-         Connector statusZoom = Connector( "controls.status.zoom", 562, 42, 31, 13, Connector::SWITCH, Connector::STATUS_ZOOM )
-             .withBackground( IDB_ZOOM_BUTTON );
+         Connector statusPanel = Connector( "controls.status.panel", 562, 13, Connector::GROUP );
+         Connector statusMPE = Connector( "controls.status.mpe", 0, 0, 31, 12, Connector::SWITCH, Connector::STATUS_MPE )
+               .withBackground( IDB_MPE_BUTTON ).inParent( "controls.status.panel" );
+         Connector statusTune = Connector( "controls.status.tune", 0, 14, 31, 12, Connector::SWITCH, Connector::STATUS_TUNE )
+             .withBackground( IDB_TUNE_BUTTON ).inParent( "controls.status.panel");
+         Connector statusZoom = Connector( "controls.status.zoom", 0, 28, 31, 12, Connector::SWITCH, Connector::STATUS_ZOOM )
+             .withBackground( IDB_ZOOM_BUTTON ).inParent( "controls.status.panel");
 
          // For now these two have component 'CUSTOM' and we hadn pick a component in the code
          Connector lfoLabel = Connector( "controls.lfo.label", 6, 485, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL );
