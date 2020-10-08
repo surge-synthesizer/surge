@@ -134,6 +134,7 @@ struct SvgBrowser : public VSTGUI::IKeyboardHook
          auto subsz = sz;
          subsz.top += 20;
          svg = new SurgeSVGRenderComponent(subsz, f, l);
+         svg->zoom = 4.00;
          f->addView( svg );
          
          f->registerKeyboardHook( this );

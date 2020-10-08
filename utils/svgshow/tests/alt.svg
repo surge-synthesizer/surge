@@ -1,0 +1,64 @@
+<svg width="48" height="56" viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="paint0_linear" x1="9" y1="20.5" x2="9" y2="2.59929" gradientUnits="userSpaceOnUse">
+<stop stop-color="#656565"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.840975" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#D9D9D9"/>
+</linearGradient>
+<linearGradient id="paint1_linear" x1="33" y1="20.5" x2="33" y2="2.59929" gradientUnits="userSpaceOnUse">
+<stop stop-color="#656565"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.840975" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#D9D9D9"/>
+</linearGradient>
+<linearGradient id="paint2_linear" x1="9" y1="49" x2="9" y2="31.0993" gradientUnits="userSpaceOnUse">
+<stop stop-color="#656565"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.840975" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#D9D9D9"/>
+</linearGradient>
+<linearGradient id="paint3_linear" x1="33" y1="49" x2="33" y2="31.0993" gradientUnits="userSpaceOnUse">
+<stop stop-color="#656565"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.840975" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#D9D9D9"/>
+</linearGradient>
+</defs>
+<g id="bmp00157">
+<g id="Slider/HandleGroup/Vertical">
+<g id="Slider/Handle/ModInactive">
+<path id="Rectangle" d="M15.5 15.5V7.5C15.5 4.73858 13.2614 2.5 10.5 2.5H7.5C4.73858 2.5 2.5 4.73858 2.5 7.5V15.5C2.5 18.2614 4.73858 20.5 7.5 20.5H10.5C13.2614 20.5 15.5 18.2614 15.5 15.5Z" fill="url(#paint0_linear)" stroke="#2F1C04"/>
+<path id="Path 12" d="M4 17C4 11.6667 4 8.33333 4 7C4 5 6 4 7 4C7.66667 4 9.33333 4 12 4" stroke="white" stroke-opacity="0.15" stroke-width="2"/>
+<path id="Rectangle_2" d="M14 12V11H4V12H14Z" fill="#434650"/>
+</g>
+<g id="Slider/Handle/ModActive">
+<g id="Slider/Handle/ModInactive_2">
+<path id="Rectangle_3" d="M39.5 15.5V7.5C39.5 4.73858 37.2614 2.5 34.5 2.5H31.5C28.7386 2.5 26.5 4.73858 26.5 7.5V15.5C26.5 18.2614 28.7386 20.5 31.5 20.5H34.5C37.2614 20.5 39.5 18.2614 39.5 15.5Z" fill="url(#paint1_linear)" stroke="#2F1C04"/>
+<path id="Path 12_2" d="M28 17C28 11.6667 28 8.33333 28 7C28 5 30 4 31 4C31.6667 4 33.3333 4 36 4" stroke="white" stroke-opacity="0.15" stroke-width="2"/>
+<path id="Rectangle_4" d="M38 12V11H28V12H38Z" fill="#434650"/>
+</g>
+<g id="Gradient">
+<path d="M39.5 15.5L39.5 7.5C39.5 4.73858 37.2614 2.5 34.5 2.5L31.5 2.5C28.7386 2.5 26.5 4.73858 26.5 7.5L26.5 15.5C26.5 18.2614 28.7386 20.5 31.5 20.5L34.5 20.5C37.2614 20.5 39.5 18.2614 39.5 15.5Z" fill="#0043FF" fill-opacity="0.25" style="mix-blend-mode:lighten"/>
+<path d="M39.5 15.5L39.5 7.5C39.5 4.73858 37.2614 2.5 34.5 2.5L31.5 2.5C28.7386 2.5 26.5 4.73858 26.5 7.5L26.5 15.5C26.5 18.2614 28.7386 20.5 31.5 20.5L34.5 20.5C37.2614 20.5 39.5 18.2614 39.5 15.5Z" stroke="black"/>
+</g>
+</g>
+<g id="Slider/Handle/ModInactive_3">
+<path id="Rectangle_5" d="M15.5 44V36C15.5 33.2386 13.2614 31 10.5 31H7.5C4.73858 31 2.5 33.2386 2.5 36V44C2.5 46.7614 4.73858 49 7.5 49H10.5C13.2614 49 15.5 46.7614 15.5 44Z" fill="url(#paint2_linear)" stroke="#2F1C04"/>
+<path id="Path 12_3" d="M4 45.5C4 40.1667 4 36.8333 4 35.5C4 33.5 6 32.5 7 32.5C7.66667 32.5 9.33333 32.5 12 32.5" stroke="white" stroke-opacity="0.15" stroke-width="2"/>
+<path id="Rectangle_6" d="M14 40.5V39.5H4V40.5H14Z" fill="#434650"/>
+</g>
+<g id="Slider/Handle/ModActive_2">
+<g id="Slider/Handle/ModInactive_4">
+<path id="Rectangle_7" d="M39.5 44V36C39.5 33.2386 37.2614 31 34.5 31H31.5C28.7386 31 26.5 33.2386 26.5 36V44C26.5 46.7614 28.7386 49 31.5 49H34.5C37.2614 49 39.5 46.7614 39.5 44Z" fill="url(#paint3_linear)" stroke="#2F1C04"/>
+<path id="Path 12_4" d="M28 45.5C28 40.1667 28 36.8333 28 35.5C28 33.5 30 32.5 31 32.5C31.6667 32.5 33.3333 32.5 36 32.5" stroke="white" stroke-opacity="0.15" stroke-width="2"/>
+<path id="Rectangle_8" d="M38 40.5V39.5H28V40.5H38Z" fill="#434650"/>
+</g>
+<g id="Gradient_2">
+<path d="M39.5 44L39.5 36C39.5 33.2386 37.2614 31 34.5 31L31.5 31C28.7386 31 26.5 33.2386 26.5 36L26.5 44C26.5 46.7614 28.7386 49 31.5 49L34.5 49C37.2614 49 39.5 46.7614 39.5 44Z" fill="#0043FF" fill-opacity="0.25" style="mix-blend-mode:lighten"/>
+<path d="M39.5 44L39.5 36C39.5 33.2386 37.2614 31 34.5 31L31.5 31C28.7386 31 26.5 33.2386 26.5 36L26.5 44C26.5 46.7614 28.7386 49 31.5 49L34.5 49C37.2614 49 39.5 46.7614 39.5 44Z" stroke="black"/>
+</g>
+</g>
+</g>
+</g>
+</svg>
