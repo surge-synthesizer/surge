@@ -1578,7 +1578,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
     * and add a comment
     * and think - sigh. VSTGUI.
     */
-   IDropTarget *dt = nullptr;
+   VSTGUI::IDropTarget *dt = nullptr;
    nframe->getAttribute( 'vcdt', dt );
    if( dt ) dt->forget();
    nframe->setAttribute('vcdt', dropAdapter );
