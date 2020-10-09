@@ -91,7 +91,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
     ** See SurgeSytnehsizer::savePatch for instance
     ** and so we have to do the same here
     */
-    fs::create_directories(storage->userDefaultFilePath);
+    fs::create_directories(string_to_path(storage->userDefaultFilePath));
 
     
     UserDefaultValue v;

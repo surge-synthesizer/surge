@@ -5016,7 +5016,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
 
    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
       // make it if it isn't there
-      fs::create_directories(this->synth->storage.userDataPath);
+      fs::create_directories(string_to_path(this->synth->storage.userDataPath));
       Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
    });
    did++;

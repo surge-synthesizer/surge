@@ -724,7 +724,7 @@ void CFxMenu::saveFXIn( const std::string &s )
    oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
 
    auto pn = oss.str();
-   fs::create_directories( pn );
+   fs::create_directories(string_to_path(pn));
 
    auto fn = pn + fxName + ".srgfx";
    std::ofstream pfile( fn, std::ios::out );

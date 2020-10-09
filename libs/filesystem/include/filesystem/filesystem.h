@@ -19,7 +19,7 @@ namespace Surge { namespace filesystem {
         
         path();
 
-        path(std::string filePath);
+        explicit path(std::string filePath); // Hint: Did you mean to use string_to_path()?
         
         operator std::string();
         
