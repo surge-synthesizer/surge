@@ -5,26 +5,13 @@
 //  Created by Keith Zantow on 10/2/18.
 //
 
-#ifndef Filesystem_h
-#define Filesystem_h
+#pragma once
 
 #include <functional>
-
-#if defined(__APPLE__) || TARGET_RACK
-#ifdef __APPLE__
-#include "TargetConditionals.h"
-#endif
-
-#if defined(TARGET_OS_MAC) || TARGET_RACK
-
 #include <string>
 #include <vector>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <fstream>
 
-namespace std { namespace experimental { namespace filesystem {
+namespace Surge { namespace filesystem {
     class path {
     public:
         static constexpr char preferred_separator = '/';
@@ -91,11 +78,6 @@ namespace std { namespace experimental { namespace filesystem {
     void copy_recursive(const path& src, const path& target, const std::function<bool(path)>& predicate) noexcept;
 
     void copy_recursive(const path& src, const path& target) noexcept;
-}}}
+} // namespace filesystem
 
-#endif
-#else
-#include <filesystem>
-#endif
-
-#endif /* Filesystem_h */
+} // namespace Surge

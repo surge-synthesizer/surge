@@ -17,9 +17,9 @@ namespace fs = std::experimental::filesystem;
 #elif USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM
 #include <filesystem>
 namespace fs = std::experimental::filesystem;
-#elif USE_HOMEGROWN_FILESYSTEM || TARGET_RACK
+#elif USE_FALLBACK_FILESYSTEM || TARGET_RACK
 #include "filesystem/filesystem.h"
-namespace fs = std::experimental::filesystem;
+namespace fs = Surge::filesystem;
 #else
 #error FILESYSTEM is not configured by build system
 #endif
