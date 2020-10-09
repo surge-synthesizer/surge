@@ -213,7 +213,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
        {
            datapath = std::string(xdgDataPath) + "/surge/";
        }
-       else if ( fs::is_directory(localDataPath) )
+       else if (fs::is_directory(string_to_path(localDataPath)))
        {
            datapath = localDataPath;
        }
@@ -226,20 +226,20 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
        ** If local directory doesn't exists - we probably came here through an installer -
        ** check for /usr/share/surge and use /usr/share/Surge as our last guess
        */
-       if (! fs::is_directory(datapath))
+       if (!fs::is_directory(string_to_path(datapath)))
        {
-          if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge" ) )
+          if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX) + "/share/surge")))
           {
              datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge";
           }
-          else if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge" ) )
+          else if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX) + "/share/Surge")))
           {
              datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge";
           }
           else
           {
              std::string systemDataPath = "/usr/share/surge/";
-             if ( fs::is_directory(systemDataPath) )
+             if (fs::is_directory(string_to_path(systemDataPath)))
                 datapath = systemDataPath;
              else
                 datapath = "/usr/share/Surge/";
@@ -264,15 +264,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    std::string dotSurge = std::string(homePath) + "/.Surge";
    std::string documents = std::string(homePath) + "/Documents/";
 
-   if( fs::is_directory(documentsSurge) )
+   if (fs::is_directory(string_to_path(documentsSurge)))
    { 
       userDataPath = documentsSurge;
    }
-   else if( fs::is_directory(dotSurge) )
+   else if (fs::is_directory(string_to_path(dotSurge)))
    {
       userDataPath = dotSurge;
    }
-   else if( fs::is_directory(documents) )
+   else if (fs::is_directory(string_to_path(documents)))
    {
       userDataPath = documentsSurge;
    }
@@ -1761,7 +1761,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
 
    doc.InsertEndChild( sm );
 
-   fs::create_directories( userMidiMappingsPath );
+   fs::create_directories(string_to_path(userMidiMappingsPath));
    std::string fn = Surge::Storage::appendDirectory(userMidiMappingsPath, name + ".srgmid");
 
    if( ! doc.SaveFile( fn.c_str() ) )
