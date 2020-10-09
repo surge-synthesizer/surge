@@ -6515,7 +6515,7 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 
 void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
 {
-   const int header = 20;
+   const int header = 18;
    const int buttonwidth = 40;
    
    if( ! c )
@@ -6552,46 +6552,55 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    outerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
    editorOverlay->addView(outerc);
 
-   containerSize = containerSize.inset(1, 1);
-   auto innerc = new CViewContainer(containerSize);
+   auto csz = containerSize;
+   csz.bottom = csz.top + header;
+   auto innerc = new CViewContainer(csz);
    innerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
    editorOverlay->addView(innerc);
-   
-   auto ls = containerSize.extend(2, 2);
-   ls.bottom = ls.top + header;
-   auto tl = new CTextLabel(ls, editorTitle.c_str());
+
+   auto tl = new CTextLabel(csz, editorTitle.c_str());
    tl->setBackColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
+   tl->setFrameColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
    tl->setFontColor(currentSkin->getColor(Colors::Dialog::Titlebar::Text));
    tl->setFont(headerFont);
-   editorOverlay->addView(tl);
+   innerc->addView(tl);
 
    auto iconrect = CRect(CPoint(3, 2), CPoint(15, 15));
    auto icon = new CViewContainer(iconrect);
    icon->setBackground(bitmapStore->getBitmap(IDB_MINIEDIT_ICON));
    icon->setVisible(true);
-   editorOverlay->addView(icon);
+   innerc->addView(icon);
 
    auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
    auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
    auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
 
+   auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
+   auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
+   auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
+
    VSTGUI::CGradient::ColorStopMap csm;
    VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
    cg->addColorStop(0, btnbg);
 
-   ls.left = ls.right - buttonwidth;
-   ls.inset(3, 3);
-   auto b = new CTextButton(ls, this, tag_editor_overlay_close, "Close");
+   VSTGUI::CGradient::ColorStopMap hovcsm;
+   VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
+   hovcg->addColorStop(0, hovbtnbg);
+
+   csz.left = csz.right - buttonwidth;
+   csz.inset(3, 3);
+   csz.bottom++;
+   auto b = new CTextButton(csz, this, tag_editor_overlay_close, "Close");
    b->setVisible(true);
    b->setFont(btnFont);
    b->setGradient(cg);
    b->setFrameColor(btnborder);
    b->setTextColor(btntext);
-   b->setGradientHighlighted(cg);
-   b->setFrameColorHighlighted(btnborder);
-   b->setTextColorHighlighted(btntext);
+   b->setGradientHighlighted(hovcg);
+   b->setFrameColorHighlighted(hovbtnborder);
+   b->setTextColorHighlighted(hovbtntext);
    b->setRoundRadius(CCoord(3.f));
-   editorOverlay->addView(b);
+   innerc->addView(b);
  
    // add the control inside that in an outline
    if( modalOverlay )
@@ -6604,7 +6613,8 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    }
    else
    {
-      containerSize = vs.moveTo(0, header - 1).inset(1, 0);
+      containerSize = vs.moveTo(0, header).inset(2, 0);
+      containerSize.bottom -= 2;
    }
 
    c->setViewSize(containerSize);
@@ -6731,16 +6741,24 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
    minieditOverlayDone = onOK;
 
    int bw = 44;
-   auto b1r = CRect(CPoint(wd - (bw * 2) - 9, bgrect.bottom - 36), CPoint(bw, 14));
-   auto b2r = CRect(CPoint(wd - bw - 6, bgrect.bottom - 36), CPoint(bw, 14));
+   auto b1r = CRect(CPoint(wd - (bw * 2) - 9, bgrect.bottom - 36), CPoint(bw, 13));
+   auto b2r = CRect(CPoint(wd - bw - 6, bgrect.bottom - 36), CPoint(bw, 13));
 
    auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
    auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
    auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
 
+   auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
+   auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
+   auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
+
    VSTGUI::CGradient::ColorStopMap csm;
    VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
    cg->addColorStop(0, btnbg);
+
+   VSTGUI::CGradient::ColorStopMap hovcsm;
+   VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
+   hovcg->addColorStop(0, hovbtnbg);
 
    auto cb = new CTextButton(b1r, this, tag_miniedit_cancel, "Cancel");
    cb->setVisible(true);
@@ -6748,9 +6766,9 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
    cb->setGradient(cg);
    cb->setFrameColor(btnborder);
    cb->setTextColor(btntext);
-   cb->setGradientHighlighted(cg);
-   cb->setFrameColorHighlighted(btnborder);
-   cb->setTextColorHighlighted(btntext);
+   cb->setGradientHighlighted(hovcg);
+   cb->setFrameColorHighlighted(hovbtnborder);
+   cb->setTextColorHighlighted(hovbtntext);
    cb->setRoundRadius(CCoord(3.f));
    bg->addView(cb);
 

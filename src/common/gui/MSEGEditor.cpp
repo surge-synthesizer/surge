@@ -30,7 +30,8 @@
 **
 ** 301 - IDB_MSEG_SEGMENT_HANDLES 24x36, 3 rows (normal, hover, pressed) x 2 columns (segment node, control point) for the MSEG handles
 ** 302 - IDB_MSEG_MOVEMENT 120x60 3 rows (ripple, bound, draw) x 3 columns (the states)
-** 303 - IDB_MSEG_MOVEMENT 120x60 3 rows (ripple, bound, draw) x 3 columns (the states)
+** 303 - IDB_MSEG_VERTICAL_SNAP 80x40 2 rows (off, on)
+** 304 - IDB_MSEG_HORIZONTAL_SNAP 80x40 2 rows (off, on)
 */
 
 
@@ -109,7 +110,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    };
    std::vector<hotzone> hotzones;
 
-   static constexpr int drawInsertX = 10, drawInsertY = 10, axisSpace = 20;
+   static constexpr int drawInsertX = 10, drawInsertY = 10, axisSpaceX = 18, axisSpaceY = 8;
 
    inline float drawDuration() {
       if( ms->n_activeSegments == 0 )
@@ -120,23 +121,24 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    inline CRect getDrawArea() {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
-      drawArea.bottom -= axisSpace;
-      drawArea.left += axisSpace;
+      drawArea.bottom -= axisSpaceY;
+      drawArea.left += axisSpaceX;
+      drawArea.top += 5;
       return drawArea;
    }
 
    inline CRect getHAxisArea() {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
-      drawArea.top = drawArea.bottom - axisSpace;
-      drawArea.left += axisSpace;
+      drawArea.top = drawArea.bottom - axisSpaceY;
+      drawArea.left += axisSpaceX;
       return drawArea;
    }
    inline CRect getVAxisArea() {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
-      drawArea.right = drawArea.left + axisSpace;
-      drawArea.bottom -= axisSpace;
+      drawArea.right = drawArea.left + axisSpaceX;
+      drawArea.bottom -= axisSpaceY;
       return drawArea;
    }
 
@@ -355,8 +357,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                 
    }
 
-   
-
    inline void drawAxis( CDrawContext *dc ) {
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
@@ -364,7 +364,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto tpx = timeToPx();
 
       dc->setFont( displayFont );
-      dc->setFontColor( kWhiteCColor );
+      dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
       dc->setLineWidth( 1 );
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
@@ -455,10 +455,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       VSTGUI::CGradient::ColorStopMap csm;
       VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
       cg->addColorStop(0, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
-      cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+      cg->addColorStop(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+      cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
 
-      fillpath->addLine( pathLastX, valpx( -1 ) );
-      fillpath->addLine( 0, valpx( -1 ) );
+      fillpath->addLine( pathLastX, valpx(0) );
+      fillpath->addLine( 0, valpx(0) );
       fillpath->addLine( 0, pathFirstY );
       dc->fillLinearGradient( fillpath, *cg, CPoint( 0, minpx ), CPoint( 0, valpx( -1 ) ), false, &tfpath );
       fillpath->forget();
@@ -498,7 +499,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       // draw segment curve
       dc->setLineWidth( 1.5 );
-      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Line));
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
       dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
       path->forget();
 
@@ -830,9 +831,9 @@ void MSEGControlRegion::valueChanged( CControl *p )
 }
 void MSEGControlRegion::rebuild()
 {
-   auto labelFont = new VSTGUI::CFontDesc( "Lato", 12 );
+   auto labelFont = new VSTGUI::CFontDesc( "Lato", 10 );
    
-   int height = getViewSize().getHeight();
+   int height = getViewSize().getHeight() - 100;
    int margin = 2;
    int labelHeight = 18;
    int controlHeight = 20;
@@ -840,14 +841,14 @@ void MSEGControlRegion::rebuild()
    int xpos = 0;
    // sliders are the first 150 px
    {
-      int sliderWidth = 150;
+      int sliderWidth = 100;
       int margin = 5;
       int marginPos = xpos + margin;
       int ypos = margin;
 
       auto envAndLoop = new CTextLabel( CRect( CPoint( marginPos, ypos ), CPoint( sliderWidth, height - ypos ) ), "Loop" );
       envAndLoop->setFont( labelFont );
-      envAndLoop->setFontColor( kWhiteCColor );
+      envAndLoop->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
       envAndLoop->setTransparency( true );
       addView( envAndLoop );
       xpos += sliderWidth;
@@ -865,7 +866,7 @@ void MSEGControlRegion::rebuild()
       auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(marginWidth, labelHeight)), "Movement Mode");
       mml->setTransparency(true);
       mml->setFont(labelFont);
-      mml->setFontColor(kBlackCColor);
+      mml->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
       mml->setHoriAlign(kLeftText);
       addView(mml);
       ypos += margin + labelHeight;
@@ -891,7 +892,7 @@ void MSEGControlRegion::rebuild()
 
       auto snapC = new CTextLabel( CRect( CPoint( xpos, ypos ), CPoint( segWidth, labelHeight) ), "Snapping" );
       snapC->setFont( labelFont );
-      snapC->setFontColor( kBlackCColor );
+      snapC->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
       snapC->setHoriAlign(kLeftText);
       snapC->setTransparency( true );
       addView( snapC );
@@ -928,7 +929,7 @@ void MSEGControlRegion::rebuild()
       htxt->setBackColor(kWhiteCColor);
       addView( htxt );
 
-      xpos += segWidth;
+      //xpos += segWidth;
    }
 }
 
@@ -1017,7 +1018,7 @@ struct MSEGMainEd : public CViewContainer {
       this->ms = ms;
       this->skin = skin;
 
-      int controlHeight = 85;
+      int controlHeight = 50;
       auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, skin, bmp );
             
       auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,
@@ -1036,7 +1037,7 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 405 ) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 400 ) )
 {
    // Leave these in for now
    std::cout << "MSEG Editor Constructed" << std::endl;
