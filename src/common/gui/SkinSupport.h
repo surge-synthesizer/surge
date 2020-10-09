@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 #include <memory>
 #include <atomic>
 #include <iostream>
@@ -291,7 +292,12 @@ public:
 
 private:
    static std::atomic<int> instances;
-   std::vector<std::pair<std::string, props_t>> globals;
+   struct GlobalPayload {
+      GlobalPayload( const props_t &p ) : props(p) {}
+      props_t props;
+      std::vector<std::pair<std::string, props_t>> children;
+   };
+   std::vector<std::pair<std::string, GlobalPayload>> globals;
    std::string bgimg = "";
    int szx = BASE_WINDOW_SIZE_X, szy = BASE_WINDOW_SIZE_Y;
 

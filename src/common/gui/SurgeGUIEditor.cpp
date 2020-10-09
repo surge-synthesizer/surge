@@ -5174,8 +5174,11 @@ void SurgeGUIEditor::reloadFromSkin()
    {
       std::cout << "SETTING BACKGROUND to " << bg << std::endl;
       CScalableBitmap *cbm = bitmapStore->getBitmapByStringID( bg );
-      cbm->setExtraScaleFactor(getZoomFactor());
-      frame->setBackground( cbm );
+      if( cbm )
+      {
+         cbm->setExtraScaleFactor(getZoomFactor());
+         frame->setBackground(cbm);
+      }
    }
    else
    {

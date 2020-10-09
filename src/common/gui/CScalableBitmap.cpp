@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <DebugHelpers.h>
 /*
 ** CScalableBitmap is the only file which uses the SVG Implementatoin so it is also the one
 ** and only one which ejexts the link symbols.
@@ -216,7 +217,6 @@ CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
     if( fname.length() > 3 )
        extension = fname.substr( fname.length() - 3 );
 
-    //pngImage = nullptr;
     if( _stricmp( extension.c_str(), "svg" ) == 0 )
     {
        svgImage = nsvgParseFromFile(fname.c_str(), "px", 96);
@@ -229,8 +229,7 @@ CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
 
     if( _stricmp( extension.c_str(), "png" ) == 0 )
     {
-       pngBitmap = std::make_unique<VSTGUI::CBitmap>(fname.c_str());
-       std::cout << "PNG is " << pngBitmap.get() << std::endl;
+       pngZooms[100] = std::make_unique<VSTGUI::CBitmap>(fname.c_str());
     }
     
     extraScaleFactor = 100;
@@ -259,11 +258,6 @@ CScalableBitmap::~CScalableBitmap()
    instances--;
    //std::cout << "  Destroy CScalableBitmap. instances=" << instances << " id=" << resourceID << " fn=" << fname << std::endl;
 }
-
-
-#define DUMPR(r)                                                                                   \
-   "(x=" << r.getTopLeft().x << ",y=" << r.getTopLeft().y << ")+(w=" << r.getWidth()               \
-         << ",h=" << r.getHeight() << ")"
 
 void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoint& offset, float alpha )
 {
@@ -301,7 +295,7 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
        return;
     }
 
-    if (svgImage)
+    if (svgImage || (pngZooms.find(100) != pngZooms.end() ) )
     {
        /*
        ** Plan of attack here is to use coffscreencontext into a physicalzoomfactor scaled version
@@ -355,8 +349,35 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
              CDrawContext::Transform trsf(*offscreen, tf);
              CDrawContext::Transform xtrsf(*offscreen, ixtf);
 
-             drawSVG(offscreen, newRect, offset, alpha);
+             if( svgImage )
+             {
+                drawSVG(offscreen, newRect, offset, alpha);
+             }
+             else
+             {
+                // OK so look through our zoom PNGs looking for the one above cpz
+                int zoomScan = 100;
 
+                for (auto &zl : pngZooms)
+                {
+                   zoomScan = zl.first;
+                   if (zoomScan >= currentPhysicalZoomFactor)
+                   {
+                      break;
+                   }
+                }
+                auto etf =
+                    VSTGUI::CGraphicsTransform()
+                        .scale(extraScaleFactor / 100.0, extraScaleFactor / 100.0);
+                VSTGUI::CDrawContext::Transform t1(*offscreen, etf);
+
+                auto ztf = VSTGUI::CGraphicsTransform()
+                           .scale( 100.0 / zoomScan, 100.0 / zoomScan );
+                VSTGUI::CDrawContext::Transform t2(*offscreen, ztf);
+
+                ztf.inverse().transform( newRect );
+                pngZooms[zoomScan]->draw(offscreen, newRect, offset, 1.0);
+             }
              offscreen->endDraw();
              CBitmap* tmp = offscreen->getBitmap();
              if (tmp)
@@ -403,16 +424,6 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
        }
     }
 
-    if( pngBitmap )
-    {
-       CGraphicsTransform tf = CGraphicsTransform().scale(currentPhysicalZoomFactor / 100.0, currentPhysicalZoomFactor / 100.0);
-       
-       CDrawContext::Transform trsf(*context, tf);
-
-       pngBitmap->draw( context, rect, CPoint(0,0), alpha );
-       return;
-    }
-    
     /* SVG File is missing */
     context->setFillColor(VSTGUI::kBlueCColor);
     context->drawRect(rect, VSTGUI::kDrawFilled);
@@ -594,4 +605,11 @@ VSTGUI::CColor CScalableBitmap::svgColorToCColor(int svgColor, float opacity)
    int g = (svgColor & 0x0000FF00) >> 8;
    int r = (svgColor & 0x000000FF);
    return VSTGUI::CColor(r, g, b, a);
+}
+
+void CScalableBitmap::addPNGForZoomLevel(std::string fname, int zoomLevel)
+{
+   auto p = std::make_unique<VSTGUI::CBitmap>(fname.c_str());
+   if( p )
+      pngZooms[zoomLevel] = std::move(p);
 }

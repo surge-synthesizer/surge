@@ -362,7 +362,22 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          props_t amap;
          for (auto a = lkid->FirstAttribute(); a; a = a->Next())
             amap[a->Name()] = a->Value();
-         globals.push_back(std::make_pair(key, amap));
+
+         auto r = GlobalPayload(amap);
+         for( auto qchild = lkid->FirstChild(); qchild; qchild = qchild->NextSibling())
+         {
+            auto qkid = TINYXML_SAFE_TO_ELEMENT(qchild);
+            if( qkid )
+            {
+               std::string k = qkid->Value();
+               props_t kmap;
+               for( auto a = qkid->FirstAttribute(); a; a = a->Next() )
+                  kmap[a->Name()] = a->Value();
+               r.children.push_back(std::make_pair(k,kmap));
+            }
+         }
+
+         globals.push_back(std::make_pair(key, r));
       }
    }
 
@@ -433,7 +448,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    {
       if (g.first == "defaultimage")
       {
-         const auto path = resourceName(g.second["directory"]);
+         const auto path = resourceName(g.second.props["directory"]);
          fs::path source(string_to_path(path));
          for (const fs::path& d : fs::directory_iterator(source))
          {
@@ -461,7 +476,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    {
       if (g.first == "image")
       {
-         auto p = g.second;
+         auto p = g.second.props;
          auto id = p["id"];
          auto res = p["resource"];
          // FIXME = error handling
@@ -482,9 +497,64 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             }
          }
       }
+      if( g.first == "multi-image" )
+      {
+         // FIXME error checking
+         auto props = g.second.props;
+         if( props.find( "id" ) == props.end() )
+         {
+            FIXMEERROR << "multi-image must contain an id";
+         }
+         auto id = props["id"];
+
+         if( id.size() > 0 )
+         {
+            bool validKids = true;
+            auto kids = g.second.children;
+            // Go find the 100 one first
+            CScalableBitmap *bm = nullptr;
+            for( auto k : kids ) {
+               if( k.second.find( "zoom-level" ) == k.second.end() ||
+                   k.second.find("resource") == k.second.end()
+                   )
+               {
+                  validKids = false;
+                  for( auto kk : k.second )
+                     std::cout << _D(kk.first) << _D(kk.second) << std::endl;
+                  FIXMEERROR << "Each subchild of a multi-image must ontain a zoom-level and resource";
+                  break;
+               }
+               else if( k.second["zoom-level"] == "100" )
+               {
+                  auto res = k.second["resource"];
+                  if( imageIds.find(id) != imageIds.end() )
+                     bm = bitmapStore->loadBitmapByPathForID(resourceName(res), imageIds[id]);
+                  else
+                  {
+                     bm = bitmapStore->loadBitmapByPathForStringID(resourceName(res), id );
+                  }
+               }
+            }
+            if( bm && validKids )
+            {
+               for (auto k : kids)
+               {
+                  auto zl = k.second["zoom-level"];
+                  auto zli = std::atoi( zl.c_str() );
+                  auto r = k.second["resource"];
+                  if( zli != 100 )
+                  {
+                     bm->addPNGForZoomLevel(resourceName(r), zli );
+                  }
+               }
+            } else {
+               FIXMEERROR << "invalid multi-image for some reason";
+            }
+         }
+      }
       if (g.first == "color")
       {
-         auto p = g.second;
+         auto p = g.second.props;
          auto id = p["id"];
          auto val = p["value"];
          auto r = VSTGUI::CColor();
@@ -519,21 +589,21 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             colors[id] = ColorStore( VSTGUI::CColor(255, 0, 0) );
          }
       }
-      if( g.first == "background" && g.second.find( "image" ) != g.second.end() )
+      if( g.first == "background" && g.second.props.find( "image" ) != g.second.props.end() )
       {
-         bgimg = g.second["image" ];
+         bgimg = g.second.props["image" ];
       }
 
       if( g.first == "window-size" )
       {
-         if( g.second.find( "x" ) != g.second.end() )
+         if( g.second.props.find( "x" ) != g.second.props.end() )
          {
-            szx = std::atoi( g.second["x"].c_str() );
+            szx = std::atoi( g.second.props["x"].c_str() );
             if( szx < 1 ) szx = BASE_WINDOW_SIZE_X;
          }
-         if( g.second.find( "y" ) != g.second.end() )
+         if( g.second.props.find( "y" ) != g.second.props.end() )
          {
-            szy = std::atoi( g.second["y" ].c_str() );
+            szy = std::atoi( g.second.props["y" ].c_str() );
             if( szy < 1 ) szy = BASE_WINDOW_SIZE_Y;
          }
       }
@@ -645,8 +715,22 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
          if( ccn != "" )
             control->classname = ccn;
 
+         std::vector<std::string> removeThese;
          for (auto a = lkid->FirstAttribute(); a; a = a->Next())
+         {
+            /*
+             * A special case: bg_id and bg_resource are paired and in your skin
+             * you only say one, but if you say bg_resource you may have picked up
+             * a bg_id from the default. So queue up some removals.
+             */
+            if( std::string( a->Name() ) == "bg_resource" )
+               removeThese.push_back( "bg_id" );
             control->allprops[a->Name()] = a->Value();
+         }
+         for( auto &c : removeThese )
+         {
+            control->allprops.erase(c);
+         }
 
          controls.push_back(control);
          parent->childControls.push_back(control);

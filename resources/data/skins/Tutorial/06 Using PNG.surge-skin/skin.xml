@@ -1,10 +1,75 @@
 <!--[doc]
+   Up until now we have defined classes with SVG assets. SVG assets are great, inasmuch as
+   they are scalable vector images, but they do pose design constraints. Surge also supports
+   PNG images.
+
+   Surge PNG images take two forms
+
+   1. Single resolution images which the image engine will scale
+   2. Multi resolution images, which the image engine will scale,
+      but which will choose the nearest resolution
+
+   Clearly the second class of image results in better skins and we
+   recommend everyone use it; but we show both here. Also, we recommend
+   unless strictly necessary, you try to use SVG images.
+
+   The PNG background image provides another option, which is to constrain
+   zoom. It is the skin designers choice whether to do this, but if blah blah
+
+   Unlike SVG images, which can override by name, PNG images cannot. You need
+   to specify them for your controls specifically.
 [doc]-->
 <surge-skin name="06 Using PNG" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
+    <!--[doc]
+        Here we set up a single resolution image which we later apply to the scene switch.
+        This image is the appropriate 100% low resolution (in this case 51x54) and has the
+        same sprite structure as the SVG, but has a single resolution and, as such, will
+        look like garbage. But you get a fish and a soccer ball!
+    [doc]-->
+    <image id="scene-switch" resource="PNG/scene_selector.png"/>
+
+    <!--[doc]
+        A key to making PNG images work is to use multiple resolutions and let the system
+        decide which to pick at various zoom levels. By default surge always has unconstrained
+        zooms (but more on that below) so a good scattering of resolutions is recommended.
+
+        To specify a multi-resolution PNG image, use the tag <multi-image rather than <image
+        whih has image children with a zoom level tag. If you do not have the "100" tag the
+        skin engine will raise an error.
+
+        We generally try to use the naming convention "name_ZZZ.png" where ZZZ is the soom
+        level but you can use anything.
+
+        Using the technique described in Tutorial 02, we are replacing the default horizontal
+        slider handle image in with this scalable image.
+    [doc]-->
+    <multi-image id="FADERH_HANDLE">
+      <image zoom-level="100" resource="PNG/horiz_handles_100.png"/>
+      <image zoom-level="200" resource="PNG/horiz_handles_200.png"/>
+      <image zoom-level="400" resource="PNG/horiz_handles_400.png"/>
+    </multi-image>
+
+    <!--[doc]
+      The same aplies to a background image, of course, which we set
+      with the special global tag 'background'
+    [doc]-->
+    <multi-image id="frac-bg">
+      <image zoom-level="100" resource="PNG/fracbg_100.png"/>
+      <image zoom-level="125" resource="PNG/fracbg_125.png"/>
+      <image zoom-level="150" resource="PNG/fracbg_150.png"/>
+      <image zoom-level="200" resource="PNG/fracbg_200.png"/>
+      <image zoom-level="250" resource="PNG/fracbg_250.png"/>
+      <image zoom-level="300" resource="PNG/fracbg_300.png"/>
+      <image zoom-level="400" resource="PNG/fracbg_400.png"/>
+    </multi-image>
+
+    <background image="frac-bg"/>
   </globals>
   <component-classes>
+
   </component-classes>
   <controls>
+    <control ui_identifier="global.active_scene" bg_resource="scene-switch"/>
   </controls>
 </surge-skin>
