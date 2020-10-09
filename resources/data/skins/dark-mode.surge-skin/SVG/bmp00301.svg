@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="24px" height="36px" viewBox="0 0 24 36" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <desc>Created with Lunacy</desc>
+  <defs>
+    <rect width="24" height="36" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="bmp00301" clip-path="url(#clip_1)">
+    <g id="Group" transform="translate(3 2.9644651)">
+      <path d="M0 3C0 1.34315 1.34315 0 3 0C4.65685 0 6 1.34315 6 3C6 4.65685 4.65685 6 3 6C1.34315 6 0 4.65685 0 3Z" transform="translate(0 0.03553486)" id="Circle" fill="#40ADFF" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L4 0L4 4L0 4L0 0Z" transform="matrix(0.70710677 0.70710677 -0.70710677 0.70710677 15 5.9604645E-08)" id="Rectangle" fill="none" fill-rule="evenodd" stroke="#1D8ADC" stroke-width="1" />
+    </g>
+    <g id="Group" transform="translate(0.5 12.5)">
+      <path d="M0 3C0 1.34315 1.34315 0 3 0C4.65685 0 6 1.34315 6 3C6 4.65685 4.65685 6 3 6C1.34315 6 0 4.65685 0 3Z" transform="translate(2.5 2.5)" id="Circle" fill="#C0EBFF" fill-rule="evenodd" stroke="none" />
+      <path d="M0 5.5C0 2.46243 2.46243 0 5.5 0C8.53757 0 11 2.46243 11 5.5C11 8.53757 8.53757 11 5.5 11C2.46243 11 0 8.53757 0 5.5Z" id="Ellipse" fill="none" fill-rule="evenodd" stroke="#C0EBFF" stroke-width="1" />
+      <path d="M0 0L5 0L5 5L0 5L0 0Z" transform="matrix(0.70710677 0.70710677 -0.70710677 0.70710677 17.5 2)" id="Rectangle" fill="#9DC8DC" fill-rule="evenodd" stroke="none" />
+    </g>
+    <g id="Group" transform="translate(0.5 24.5)">
+      <path d="M0 3C0 1.34315 1.34315 0 3 0C4.65685 0 6 1.34315 6 3C6 4.65685 4.65685 6 3 6C1.34315 6 0 4.65685 0 3Z" transform="translate(2.5 2.5)" id="Circle" fill="#FFFFFF" fill-rule="evenodd" stroke="none" />
+      <path d="M0 5.5C0 2.46243 2.46243 0 5.5 0C8.53757 0 11 2.46243 11 5.5C11 8.53757 8.53757 11 5.5 11C2.46243 11 0 8.53757 0 5.5Z" id="Ellipse-Copy" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" />
+      <path d="M0 0L5 0L5 5L0 5L0 0Z" transform="matrix(0.70710677 0.70710677 -0.70710677 0.70710677 17.5 2)" id="Rectangle" fill="#FFFFFF" fill-rule="evenodd" stroke="none" />
+    </g>
+  </g>
+</svg>

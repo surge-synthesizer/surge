@@ -12,37 +12,40 @@ namespace Colors
 
    namespace Dialog
    {
-      const Surge::UI::SkinColor Background("savedialog.background", CColor(205, 206, 212)),
-                                 Border("savedialog.border", CColor(160, 164, 183));
+      const Surge::UI::SkinColor Background("dialog.background", CColor(205, 206, 212)),
+                                 Border("dialog.border", CColor(160, 164, 183));
 
       namespace Titlebar
       {
          const Surge::UI::SkinColor Background("dialog.titlebar.background", CColor(160, 164, 183)),
-                                    Text("dialog.titlebar.textlabel", kWhiteCColor);
+                                    Text("dialog.titlebar.font", kWhiteCColor);
       }
       namespace Button
       {
          const Surge::UI::SkinColor Background("dialog.button.background", CColor(227, 227, 227)),
                                     Border("dialog.button.border", CColor(160, 160, 160)),
-                                    Text("dialog.button.textlabel", kBlackCColor);
+                                    Text("dialog.button.font", kBlackCColor),
+                                    BackgroundHover("dialog.button.hover.background", CColor(255, 144, 0)),
+                                    BorderHover("dialog.button.hover.border", CColor(160, 160, 160)),
+                                    TextHover("dialog.button.hover.font", kWhiteCColor);
       }
       namespace Checkbox
       {
-         const Surge::UI::SkinColor Background("savedialog.checkbox.fill", kWhiteCColor),
-                                    Border("savedialog.checkbox.border", kBlackCColor),
-                                    Tick("savedialog.checkbox.tick", kBlackCColor);
+         const Surge::UI::SkinColor Background("dialog.checkbox.fill", kWhiteCColor),
+                                    Border("dialog.checkbox.border", kBlackCColor),
+                                    Tick("dialog.checkbox.tick", kBlackCColor);
       }
       namespace Entry
       {
-         const Surge::UI::SkinColor Background("savedialog.textfield.background", kWhiteCColor),
-                                    Border("savedialog.textfield.border", CColor(160, 160, 160)),
-                                    Focus("textfield.focuscolor", CColor(170, 170, 230)),
-                                    Text("savedialog.textfield.foreground", kBlackCColor);
+         const Surge::UI::SkinColor Background("dialog.textfield.background", kWhiteCColor),
+                                    Border("dialog.textfield.border", CColor(160, 160, 160)),
+                                    Focus("dialog.textfield.focuscolor", CColor(170, 170, 230)),
+                                    Text("dialog.textfield.font", kBlackCColor);
       }
       namespace Label
       {
-         const Surge::UI::SkinColor Error("savedialog.textlabel.error", kRedCColor),
-                                    Text("savedialog.textlabel", kBlackCColor);
+         const Surge::UI::SkinColor Error("dialog.label.error.font", kRedCColor),
+                                    Text("dialog.label.font", kBlackCColor);
       }
    }
 
@@ -50,7 +53,7 @@ namespace Colors
    {
       namespace Label
       {
-         const Surge::UI::SkinColor Text("effect.label.foreground", CColor(76, 76, 76)),
+         const Surge::UI::SkinColor Text("effect.label.font", CColor(76, 76, 76)),
                                     Line("effect.label.hrule", CColor(106, 106, 106));
       }
       namespace Preset
@@ -59,7 +62,7 @@ namespace Colors
       }
       namespace Menu
       {
-         const Surge::UI::SkinColor Text("fxmenu.foreground", kBlackCColor);
+         const Surge::UI::SkinColor Text("fxmenu.font", kBlackCColor);
       }
    }
 
@@ -71,10 +74,10 @@ namespace Colors
 
       namespace Modulation
       {
-         const Surge::UI::SkinColor Negative("infowindow.foreground.modulationnegative", kBlackCColor),
-                                    Positive("infowindow.foreground.modulationpositive", kBlackCColor),
-                                    ValueNegative("infowindow.foreground.modulationvaluenegative", kBlackCColor),
-                                    ValuePositive("infowindow.foreground.modulationvaluepositive", kBlackCColor);
+         const Surge::UI::SkinColor Negative("infowindow.font.modulationnegative", kBlackCColor),
+                                    Positive("infowindow.font.modulationpositive", kBlackCColor),
+                                    ValueNegative("infowindow.font.modulationvaluenegative", kBlackCColor),
+                                    ValuePositive("infowindow.font.modulationvaluepositive", kBlackCColor);
       }
    }
 
@@ -82,13 +85,13 @@ namespace Colors
    {
       namespace Title
       {
-          const Surge::UI::SkinColor Text("lfo.title.foreground", CColor(0, 0, 0, 192));
+          const Surge::UI::SkinColor Text("lfo.title.font", CColor(0, 0, 0, 192));
       }
 
       namespace Type
       {
-         const Surge::UI::SkinColor Text("lfo.type.unselected.foreground", kBlackCColor),
-                                    SelectedText("lfo.type.selected.foreground", kBlackCColor),
+         const Surge::UI::SkinColor Text("lfo.type.unselected.font", kBlackCColor),
+                                    SelectedText("lfo.type.selected.font", kBlackCColor),
                                     SelectedBackground("lfo.type.selected.background", CColor(255, 152, 21));
       }
       namespace StepSeq
@@ -111,7 +114,7 @@ namespace Colors
          {
             const Surge::UI::SkinColor Background("lfo.stepseq.popup.background", kWhiteCColor),
                                        Border("lfo.stepseq.popup.border", kBlackCColor),
-                                       Text("lfo.stepseq.popup.foreground", kBlackCColor);
+                                       Text("lfo.stepseq.popup.font", kBlackCColor);
          }
          namespace Loop
          {
@@ -210,11 +213,15 @@ namespace Colors
 
    namespace MSEGEditor
    {
-   const Surge::UI::SkinColor Line("msegeditor.line", kWhiteCColor);
+      const Surge::UI::SkinColor Background("msegeditor.background", CColor(17, 17, 17)),
+                                 Curve("msegeditor.curve", kWhiteCColor),
+                                 Panel("msegeditor.panel", CColor(205, 206, 212)),
+                                 Text("msegeditor.panel.font", kBlackCColor);
 
       namespace Axis
       {
-         const Surge::UI::SkinColor Line("msegeditor.axis.line", CColor(220, 220, 240));
+         const Surge::UI::SkinColor Line("msegeditor.axis.line", CColor(220, 220, 240)),
+                                    Text("msegeditor.axis.font", kWhiteCColor);
       }
       namespace GradientFill
       {
@@ -235,7 +242,7 @@ namespace Colors
    namespace NumberField
    {
       const Surge::UI::SkinColor Background("control.numberfield.background", kWhiteCColor),
-                                 Text("control.numberfield.foreground", CColor(42, 42, 42)),
+                                 Text("control.numberfield.font", CColor(42, 42, 42)),
                                  Border("control.numberfield.rule", CColor(42, 42, 42)),
                                  Env("control.numberfield.env", CColor(214, 209, 198));
    }
@@ -252,26 +259,19 @@ namespace Colors
       namespace Filename
       {
          const Surge::UI::SkinColor Background("osc.wavename.background", CColor(255, 160, 16)),
-                                    Text("osc.wavename.foreground", kBlackCColor);
+                                    Text("osc.wavename.font", kBlackCColor);
       }
    }
 
    namespace Overlay
    {
-      const Surge::UI::SkinColor Background("overlay.background", CColor(0, 0, 0, 204)),
-                                 Border("overlay.border", kBlackCColor);
-
-      namespace Container
-      {
-         const Surge::UI::SkinColor Background("overlay.container.background", CColor(216, 216, 220)),
-                                    TitleText("overlay.container.title", kBlackCColor);
-      }
+      const Surge::UI::SkinColor Background("overlay.background", CColor(0, 0, 0, 204));
    }
 
    namespace PatchBrowser
    {
       const Surge::UI::SkinColor Background("patchbrowser.background", kWhiteCColor),
-                                 Text("patchbrowser.foreground", kBlackCColor);
+                                 Text("patchbrowser.font", kBlackCColor);
    }
 
    namespace Slider
@@ -292,9 +292,9 @@ namespace Colors
    {
       const Surge::UI::SkinColor Background("status.button.background", CColor(227, 227, 227)),
                                  Border("status.button.outline", CColor(151, 151, 151)),
-                                 Text("status.button.unselected.foreground", kBlackCColor),
+                                 Text("status.button.unselected.font", kBlackCColor),
                                  SelectedBackground("status.button.highlight", CColor(255, 154, 16)),
-                                 SelectedText("status.button.selected.foreground", kBlackCColor);
+                                 SelectedText("status.button.selected.font", kBlackCColor);
    }
 
    namespace VuMeter

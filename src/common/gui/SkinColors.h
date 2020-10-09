@@ -19,7 +19,7 @@ namespace Colors
       }
       namespace Button
       {
-         extern const Surge::UI::SkinColor Background, Border, Text;
+         extern const Surge::UI::SkinColor Background, Border, Text, BackgroundHover, BorderHover, TextHover;
       }
       namespace Checkbox
       {
@@ -136,11 +136,11 @@ namespace Colors
 
    namespace MSEGEditor
    {
-      extern const Surge::UI::SkinColor Line;
+      extern const Surge::UI::SkinColor Background, Curve, Panel, Text;
 
       namespace Axis
       {
-          extern const Surge::UI::SkinColor Line;
+          extern const Surge::UI::SkinColor Line, Text;
       }
       namespace GradientFill
       {
@@ -175,12 +175,7 @@ namespace Colors
 
    namespace Overlay
    {
-      extern const Surge::UI::SkinColor Background, Border;
-
-      namespace Container
-      {
-         extern const Surge::UI::SkinColor Background, TitleText;
-      }
+      extern const Surge::UI::SkinColor Background;
    }
 
    namespace PatchBrowser

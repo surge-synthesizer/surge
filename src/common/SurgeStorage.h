@@ -634,7 +634,7 @@ struct MSEGStorage {
    std::array<float, max_msegs> segmentStart, segmentEnd;
 
    // These are values used by the editor which are per mseg but not persisted
-   float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.05;
+   float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.1;
 
    static constexpr float minimumDuration = 0.001;
 };

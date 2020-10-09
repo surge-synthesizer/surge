@@ -18,7 +18,7 @@
     <color id="buttonbg" value="#151515"/>
     <color id="modblue" value="#2E86FE"/>
 
-    <color id="lfo.title.foreground" value="#B4B4B490"/>
+    <color id="lfo.title.font" value="#B4B4B490"/>
 
     <color id="lfo.waveform.background" value="#242424"/>
     <color id="lfo.waveform.ruler.font" value="$lightgray"/>
@@ -31,8 +31,8 @@
     <color id="lfo.waveform.majordivisions" value="$buttonbg"/>
 
     <color id="lfo.type.selected.background" value="$surgeblue"/>
-    <color id="lfo.type.selected.foreground" value="#E5E5E5"/>
-    <color id="lfo.type.unselected.foreground" value="$lightgray"/>
+    <color id="lfo.type.selected.font" value="#E5E5E5"/>
+    <color id="lfo.type.unselected.font" value="$lightgray"/>
 
     <color id="lfo.stepseq.background" value="$darkergray"/>
     <color id="lfo.stepseq.column.shadow" value="$almostblack"/>
@@ -55,31 +55,39 @@
 
     <color id="lfo.stepseq.popup.border" value="$darkestgray"/>
     <color id="lfo.stepseq.popup.background" value="$white"/>
-    <color id="lfo.stepseq.popup.foreground" value="$darkestgray"/>
+    <color id="lfo.stepseq.popup.font" value="$darkestgray"/>
 
     <color id="overlay.background" value="#000000C0"/>
 
-    <color id="savedialog.background" value="#242424"/>
-    <color id="savedialog.border" value="#0F0F0F"/>
+    <color id="msegeditor.background" value="#202020"/>
+    <color id="msegeditor.curve" value="$modblue"/>
+    <color id="msegeditor.panel" value="#2D2D2D"/>
+    <color id="msegeditor.panel.font" value="$lightgray"/>
+    <color id="msegeditor.axis.font" value="$lightgray"/>
+    <color id="msegeditor.fill.gradient.start" value="#2E86FE80"/>
+    <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
+
+    <color id="dialog.background" value="#242424"/>
+    <color id="dialog.border" value="#0F0F0F"/>
 
     <color id="dialog.titlebar.background" value="#0F0F0F"/>
     <color id="dialog.titlebar.text" value="$white"/>
     <color id="dialog.button.background" value="#404040"/>
     <color id="dialog.button.border" value="#0F0F0F"/>
-    <color id="dialog.button.textlabel" value="$lightgray"/>
+    <color id="dialog.button.font" value="$lightgray"/>
 
-    <color id="textfield.focuscolor" value="#2E2E5E"/>
-    <color id="savedialog.textfield.border" value="#0F0F0F"/>
-    <color id="savedialog.textfield.background" value="#2E2E2E"/>
-    <color id="savedialog.textfield.foreground" value="$lightgray"/>
-    <color id="savedialog.textlabel" value="$lightgray"/>
+    <color id="dialog.textfield.focuscolor" value="#2E2E5E"/>
+    <color id="dialog.textfield.border" value="#0F0F0F"/>
+    <color id="dialog.textfield.background" value="#2E2E2E"/>
+    <color id="dialog.textfield.font" value="$lightgray"/>
+    <color id="dialog.label.font" value="$lightgray"/>
 
-    <color id="savedialog.checkbox.border" value="$lightgray"/>
-    <color id="savedialog.checkbox.fill" value="$white"/>
-    <color id="savedialog.checkbox.tick" value="$darkergray"/>
+    <color id="dialog.checkbox.border" value="$lightgray"/>
+    <color id="dialog.checkbox.fill" value="$white"/>
+    <color id="dialog.checkbox.tick" value="$darkergray"/>
 
     <color id="effect.label.hrule" value="#5E5E5E"/>
-    <color id="effect.label.foreground" value="$lightgray"/>
+    <color id="effect.label.font" value="$lightgray"/>
     <color id="effect.label.presetname" value="$lightgray"/>
 
     <color id="menu.name" value="$lightgray"/>
@@ -93,10 +101,10 @@
     <color id="filtermenu.value.hover" value="$white"/>
 
     <color id="patchbrowser.background" value="$lightgray"/>
-    <color id="patchbrowser.foreground" value="$lightgray"/>
+    <color id="patchbrowser.font" value="$lightgray"/>
 
     <color id="control.numberfield.background" value="$lightgray"/>
-    <color id="control.numberfield.foreground" value="$lightgray"/>
+    <color id="control.numberfield.font" value="$lightgray"/>
     <color id="control.numberfield.env" value="$lightgray"/>
     <color id="control.numberfield.rule" value="$lightgray"/>
 
@@ -112,7 +120,7 @@
 
     <color id="osc.label" value="$lightgray"/>
 
-    <color id="fxmenu.foreground" value="$lightgray"/>
+    <color id="fxmenu.font" value="$lightgray"/>
 
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
     <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
