@@ -453,7 +453,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          for (const fs::path& d : fs::directory_iterator(source))
          {
             const auto pathStr = path_to_string(d);
-            const auto pos = pathStr.find("bmp001");
+            const auto pos = pathStr.find("bmp00");
             if (pos != std::string::npos)
             {
                int idx = std::atoi(pathStr.c_str() + pos + 3);
