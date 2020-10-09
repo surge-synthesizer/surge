@@ -1,6 +1,6 @@
 #pragma once
 
-// #include "catch2.hpp" // do NOT include this here since we want it included by
+// #include "catch2/catch2.hpp" // do NOT include this here since we want it included by
 // the includer so we can set CATCH_CONFIG_RUNNER properly
 
 #include "SurgeSynthesizer.h"

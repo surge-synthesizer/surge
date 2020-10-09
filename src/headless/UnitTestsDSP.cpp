@@ -7,7 +7,7 @@
 #include "Player.h"
 #include "SurgeError.h"
 
-#include "catch2.hpp"
+#include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
 #include "FastMath.h"
