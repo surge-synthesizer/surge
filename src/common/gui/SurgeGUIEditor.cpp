@@ -6531,6 +6531,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
       containerSize.offset(-containerSize.left + topLeft.x, -containerSize.top + topLeft.y);
    
    auto fs = CRect(0, 0, getWindowSizeX(), getWindowSizeY());
+
    if( ! modalOverlay )
       fs = containerSize;
 

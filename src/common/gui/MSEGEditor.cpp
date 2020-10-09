@@ -833,7 +833,7 @@ void MSEGControlRegion::rebuild()
 {
    auto labelFont = new VSTGUI::CFontDesc( "Lato", 10 );
    
-   int height = getViewSize().getHeight() - 100;
+   int height = getViewSize().getHeight();
    int margin = 2;
    int labelHeight = 18;
    int controlHeight = 20;
@@ -1018,7 +1018,8 @@ struct MSEGMainEd : public CViewContainer {
       this->ms = ms;
       this->skin = skin;
 
-      int controlHeight = 50;
+      int controlHeight = 35;
+
       auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, skin, bmp );
             
       auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,
@@ -1037,7 +1038,7 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 400 ) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 366) )
 {
    // Leave these in for now
    std::cout << "MSEG Editor Constructed" << std::endl;
