@@ -5,16 +5,16 @@
 //  Created by Keith Zantow on 10/2/18.
 //
 
-#if defined(__APPLE__) || TARGET_RACK
-#ifdef __APPLE__
-#include "TargetConditionals.h"
-#endif
-#if defined(TARGET_OS_MAC) || TARGET_RACK
-
-#include <sys/stat.h>
 #include "filesystem/filesystem.h"
 
-namespace std { namespace experimental { namespace filesystem {
+#include <climits>
+#include <cstring>
+#include <fstream>
+
+#include <dirent.h>
+#include <sys/stat.h>
+
+namespace Surge { namespace filesystem {
     // path class:
     path::path():
     path("")
@@ -161,7 +161,7 @@ namespace std { namespace experimental { namespace filesystem {
 #else
         struct dirent dirp, *entry;
         while ( (readdir_r(dp, &dirp, &entry) == 0) && entry != NULL) {
-          string fname(dirp.d_name);
+          std::string fname(dirp.d_name);
 #endif
           // Skip . and .. : https://github.com/kurasu/surge/issues/77
           if (fname.compare(".") == 0 || fname.compare("..") == 0) {
@@ -236,7 +236,6 @@ namespace std { namespace experimental { namespace filesystem {
     {
         copy_recursive(src, target, [](path p) { return true; });
     }
-}}}
+} // namespace filesystem
 
-#endif
-#endif
+} // namespace Surge
