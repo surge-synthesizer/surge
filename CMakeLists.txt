@@ -95,7 +95,10 @@ endif()
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
+add_subdirectory(libs/catch2)
+
 add_library(surge-shared INTERFACE)
+add_library(surge-tests INTERFACE)
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
@@ -422,7 +425,6 @@ set( SURGE_LV2_SOURCES
 set(SURGE_COMMON_INCLUDES
   libs/
   libs/xml
-  libs/catch2
   libs/strnatcmp
   libs/tuning-library/include
   src/common
@@ -1006,6 +1008,8 @@ if( BUILD_HEADLESS )
   target_link_libraries(surge-headless
     PRIVATE
     surge-shared
+    surge-tests
+    surge::catch2
     ${OS_LINK_LIBRARIES_NOGUI}
     )
 
