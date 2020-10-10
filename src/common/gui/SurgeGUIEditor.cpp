@@ -5814,6 +5814,12 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 
 void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
 {
+   if( editorOverlay != nullptr )
+   {
+      editorOverlayOnClose();
+      frame->removeView(editorOverlay);
+   }
+
    const int header = 18;
    const int buttonwidth = 40;
    
