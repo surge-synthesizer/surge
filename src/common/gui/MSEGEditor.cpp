@@ -1049,7 +1049,7 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 366) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 365) )
 {
    // Leave these in for now
    std::cout << "MSEG Editor Constructed" << std::endl;
