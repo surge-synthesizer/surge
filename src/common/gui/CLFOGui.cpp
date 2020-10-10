@@ -1065,7 +1065,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
                auto mse = new MSEGEditor(lfodata, ms, skin, associatedBitmapStore);
                auto vs = mse->getViewSize().getWidth();
                float xp = (skin->getWindowSizeX() - (vs + 8)) * 0.5;
-               sge->setEditorOverlay( mse, "MSEG Editor", CPoint( xp, 56 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
+               sge->setEditorOverlay( mse, "MSEG Editor", CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
                return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
             }
          }
