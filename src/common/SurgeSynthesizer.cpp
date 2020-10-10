@@ -1221,12 +1221,6 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
       {
          ((ControllerModulationSource*)storage.getPatch().scene[0].modsources[ms_ctrl1 + i])
              ->set_target01(fval);
-#if !TARGET_LV2
-         sendParameterAutomation(i + metaparam_offset, fval);
-#else
-         // LV2 must not modify its own control input; just set the value.
-         setParameter01(i + metaparam_offset, fval);
-#endif
       }
    }
 
