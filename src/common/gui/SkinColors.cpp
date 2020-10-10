@@ -64,6 +64,10 @@ namespace Colors
       {
          const Surge::UI::SkinColor Text("fxmenu.font", kBlackCColor);
       }
+      namespace SelectorPanel
+      {
+         const Surge::UI::SkinColor LabelBorder( "effect.selectorpanel.labelborder", kBlackCColor );
+      }
    }
 
    namespace InfoWindow

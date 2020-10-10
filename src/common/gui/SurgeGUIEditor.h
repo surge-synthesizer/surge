@@ -230,6 +230,8 @@ public:
       setZoomFactor(100);
    }
 
+   void swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m );
+
    /*
    ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
    */

@@ -49,6 +49,9 @@ namespace Colors
       {
          extern const Surge::UI::SkinColor Text;
       }
+      namespace SelectorPanel {
+         extern const Surge::UI::SkinColor LabelBorder;
+      }
    }
 
    namespace InfoWindow

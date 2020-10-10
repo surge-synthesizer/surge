@@ -2669,6 +2669,9 @@ void SurgeSynthesizer::processControl()
       switch_toggled_queued = false;
    }
 
+   if( reorderFxQueue.m != FXReorderMode::NONE )
+      reorderFx();
+
    if (load_fx_needed)
       loadFx(false, false);
 
@@ -3199,4 +3202,34 @@ void SurgeSynthesizer::changeModulatorSmoothing( ControllerModulationSource::Smo
          }
       }
    }
+}
+
+void SurgeSynthesizer::reorderFx()
+{
+#if 0
+   if( reorderFxQueue.m == FXReorderMode::NONE ) return;
+   auto source = reorderFxQueue.s;
+   auto target = reorderFxQueue.t;
+   auto m = reorderFxQueue.m;
+   reorderFxQueue.m = FXReorderMode::NONE;
+
+   auto os = &(fxsync[source].type);
+   auto ot = &(fxsync[target].type);
+
+   while( true )
+   {
+      Parameter tmp = *ot;
+      *ot = *os;
+      if( m == FXReorderMode::SWAP )
+         *os = tmp;
+
+      if( os == &(fxsync[source].p[n_fx_params-1])) break;
+      os++;
+      ot++;
+   }
+   if( m == FXReorderMode::MOVE )
+      fxsync[source].type.val.i = fxt_off;
+   load_fx_needed = true;
+   refresh_editor = true;
+#endif
 }
