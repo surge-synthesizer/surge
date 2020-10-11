@@ -2530,6 +2530,20 @@ void SurgeSynthesizer::processThreadunsafeOperations()
    }
 }
 
+void SurgeSynthesizer::resetStateFromTimeData()
+{
+   storage.songpos = time_data.ppqPos;
+   if( time_data.tempo > 0 )
+   {
+      storage.temposyncratio = time_data.tempo / 120.f;
+      storage.temposyncratio_inv = 1.f / storage.temposyncratio;
+   }
+   else
+   {
+      storage.temposyncratio = 1.f;
+      storage.temposyncratio_inv = 1.f;
+   }
+}
 void SurgeSynthesizer::processControl()
 {
    storage.perform_queued_wtloads();

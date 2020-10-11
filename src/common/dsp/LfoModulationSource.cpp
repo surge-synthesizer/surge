@@ -122,7 +122,6 @@ void LfoModulationSource::attack()
    {
       initPhaseFromStartPhase();
    }
-
    env_state = lenv_delay;
 
    env_val = 0.f;
