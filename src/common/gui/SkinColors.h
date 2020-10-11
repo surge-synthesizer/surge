@@ -39,7 +39,7 @@ namespace Colors
    {
       namespace Label
       {
-         extern const Surge::UI::SkinColor Text, Line;
+         extern const Surge::UI::SkinColor Text, Separator;
       }
       namespace Preset
       {
@@ -88,20 +88,20 @@ namespace Colors
          }
          namespace Loop
          {
-            extern const Surge::UI::SkinColor Marker, MinorStep, MajorStep, OutsideMinorStep, OutsideMajorStep;
+            extern const Surge::UI::SkinColor Marker, PrimaryStep, SecondaryStep, OutsidePrimaryStep, OutsideSecondaryStep;
          }
          namespace Step
          {
-            extern const Surge::UI::SkinColor Fill, OutsideFill, FillDeactivated;
+            extern const Surge::UI::SkinColor Fill, FillDeactivated, FillOutside;
          }
       }
       namespace Waveform
       {
-         extern const Surge::UI::SkinColor Background, Bounds, CenterLine, Envelope, Fill, MajorDivisions, Wave, DeactivatedWave;
+         extern const Surge::UI::SkinColor Background, Bounds, Center, Envelope, Wave, DeactivatedWave;
 
          namespace Ruler
          {
-            extern const Surge::UI::SkinColor Text, Ticks, SmallTicks;
+            extern const Surge::UI::SkinColor Text, Ticks, ExtendedTicks, SmallTicks;
          }
       }
    }
@@ -157,6 +157,10 @@ namespace Colors
       {
           extern const Surge::UI::SkinColor Line;
       }
+      namespace NumberField
+      {
+         extern const Surge::UI::SkinColor Background, Text, Border;
+      }
    }
 
    namespace NumberField
@@ -168,7 +172,7 @@ namespace Colors
    {
       namespace Display
       {
-         extern const Surge::UI::SkinColor Bounds, CenterLine, AnimatedWave, Wave;
+         extern const Surge::UI::SkinColor Bounds, Center, AnimatedWave, Wave;
       }
       namespace Filename
       {

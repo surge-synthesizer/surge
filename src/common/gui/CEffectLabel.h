@@ -32,7 +32,7 @@ public:
       VSTGUI::CRect bl(size);
       bl.top = bl.bottom - 2;
 
-      dc->setFillColor(skin->getColor(Colors::Effect::Label::Line));
+      dc->setFillColor(skin->getColor(Colors::Effect::Label::Separator));
       dc->drawRect(bl, VSTGUI::kDrawFilled);
 
       dc->setFontColor(skin->getColor(Colors::Effect::Label::Text));

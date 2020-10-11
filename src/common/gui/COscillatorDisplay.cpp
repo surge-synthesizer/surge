@@ -256,7 +256,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          dc->setDrawMode(VSTGUI::kAntiAliasing);
 
          dc->setLineWidth(1.0);
-         dc->setFrameColor(skin->getColor(Colors::Osc::Display::CenterLine));
+         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Center));
          dc->drawLine(mid0, mid1);
 
          dc->setLineWidth(1.0);

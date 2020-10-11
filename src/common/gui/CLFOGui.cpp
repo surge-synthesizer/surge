@@ -296,7 +296,7 @@ void CLFOGui::draw(CDrawContext* dc)
 
       dc->setLineWidth(1.0);
       // LFO bg center line
-      dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::CenterLine));
+      dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Center));
       dc->drawLine(mid0, mid1);
 
       dc->setLineWidth(1.0);
@@ -350,8 +350,7 @@ void CLFOGui::draw(CDrawContext* dc)
                tf.transform(vruleS);
                tf.transform(vruleE);
                // major beat divisions on the LFO waveform bg
-               dc->setFrameColor(
-                   skin->getColor(Colors::LFO::Waveform::MajorDivisions));
+               dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Ruler::ExtendedTicks));
                // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
                dc->drawLine(vruleS, vruleE);
             }
@@ -600,11 +599,11 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
    auto shadowcol = skin->getColor(Colors::LFO::StepSeq::ColumnShadow);
    auto stepMarker = skin->getColor(Colors::LFO::StepSeq::Step::Fill);
-   auto disStepMarker = skin->getColor(Colors::LFO::StepSeq::Step::OutsideFill);
-   auto noLoopHi = skin->getColor(Colors::LFO::StepSeq::Loop::OutsideMajorStep);
-   auto noLoopLo = skin->getColor(Colors::LFO::StepSeq::Loop::OutsideMinorStep);
-   auto loopRegionHi = skin->getColor(Colors::LFO::StepSeq::Loop::MajorStep);
-   auto loopRegionLo = skin->getColor(Colors::LFO::StepSeq::Loop::MinorStep);
+   auto disStepMarker = skin->getColor(Colors::LFO::StepSeq::Step::FillOutside);
+   auto noLoopHi = skin->getColor(Colors::LFO::StepSeq::Loop::OutsidePrimaryStep);
+   auto noLoopLo = skin->getColor(Colors::LFO::StepSeq::Loop::OutsideSecondaryStep);
+   auto loopRegionHi = skin->getColor(Colors::LFO::StepSeq::Loop::PrimaryStep);
+   auto loopRegionLo = skin->getColor(Colors::LFO::StepSeq::Loop::SecondaryStep);
    auto grabMarker = skin->getColor(Colors::LFO::StepSeq::Loop::Marker);
    auto grabMarkerHi = skin->getColor(Colors::LFO::StepSeq::TriggerClick);
 
