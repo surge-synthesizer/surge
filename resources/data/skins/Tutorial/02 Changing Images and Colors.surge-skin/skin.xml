@@ -2,6 +2,9 @@
 [doc]-->
 <surge-skin name="02 Changing Images and Colors" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
+    <color id="hotpink" value="#FF69B4"/>
+
+    <color id="lfo.waveform.background" value="hotpink"/>
   </globals>
   <component-classes>
   </component-classes>

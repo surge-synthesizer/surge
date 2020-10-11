@@ -307,13 +307,15 @@ private:
 
       typedef enum {
          COLOR,
-         ALIAS
+         ALIAS,
+         UNRESOLVED_ALIAS
       } Type;
 
       Type type;
       ColorStore() : type( COLOR ), color( VSTGUI::kBlackCColor ) { }
       ColorStore( VSTGUI::CColor c ) : type( COLOR ), color( c ) { }
       ColorStore( std::string a ) : type( ALIAS ), alias( a ) { }
+      ColorStore( std::string a, Type t ) : type( t ), alias( a ) { }
    };
    std::unordered_map<std::string, ColorStore> colors;
    std::unordered_map<std::string, int> imageIds;

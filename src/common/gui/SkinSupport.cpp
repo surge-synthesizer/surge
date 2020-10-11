@@ -583,12 +583,14 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          }
          else if( val[0] == '$' )
          {
-            colors[id] = ColorStore( val.c_str() + 1 );
+            colors[id] = ColorStore( val.c_str() + 1, ColorStore::UNRESOLVED_ALIAS );
          }
          else {
-            colors[id] = ColorStore( VSTGUI::CColor(255, 0, 0) );
+            // Look me up later
+            colors[id] = ColorStore( val, ColorStore::UNRESOLVED_ALIAS );
          }
       }
+
       if( g.first == "background" && g.second.props.find( "image" ) != g.second.props.end() )
       {
          bgimg = g.second.props["image" ];
@@ -605,6 +607,24 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          {
             szy = std::atoi( g.second.props["y" ].c_str() );
             if( szy < 1 ) szy = BASE_WINDOW_SIZE_Y;
+         }
+      }
+   }
+
+
+   // Resolve color aliases.
+   for( auto &c : colors )
+   {
+      if( c.second.type == ColorStore::UNRESOLVED_ALIAS )
+      {
+         if( colors.find( c.second.alias ) != colors.end() )
+         {
+            c.second.type = ColorStore::ALIAS;
+         }
+         else
+         {
+            c.second.type = ColorStore::COLOR;
+            c.second.color = VSTGUI::kRedCColor;
          }
       }
    }
@@ -783,6 +803,8 @@ VSTGUI::CColor Skin::getColor(const std::string &iid, const VSTGUI::CColor& def,
          return c.color;
       case ColorStore::ALIAS:
          return getColor( c.alias, def, noLoops );
+      case ColorStore::UNRESOLVED_ALIAS: // This should never occur
+         return VSTGUI::kRedCColor;
       }
    }
    return def;
