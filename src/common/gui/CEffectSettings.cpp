@@ -138,7 +138,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint& where, const CButtonState& 
    else if( mouseActionMode == click )
    {
       mouseActionMode = none;
-      if (!buttons.isLeftButton() && !buttons.isRightButton())
+      if( ! ( ( buttons.getButtonState() & kLButton ) || ( buttons.getButtonState() & kRButton ) ) )
          return kMouseEventHandled;
 
       for (int i = 0; i < 8; i++)
@@ -149,7 +149,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint& where, const CButtonState& 
          r.offset(blocks[i][0], blocks[i][1]);
          if (r.pointInside(where))
          {
-            if (buttons.isRightButton())
+            if (buttons.getButtonState() & kRButton )
                disabled ^= (1 << i);
             else
                current = i;
