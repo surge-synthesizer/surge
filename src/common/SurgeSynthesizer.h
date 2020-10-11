@@ -122,6 +122,18 @@ public:
    bool loadFx(bool initp, bool force_reload_all);
    bool loadOscalgos();
    bool load_fx_needed;
+
+   // We have to push this onto the audio thread so have an enqueue and so on
+   enum FXReorderMode { NONE, SWAP, COPY, MOVE };
+   struct { int s; int t; FXReorderMode m; } reorderFxQueue;
+   void enqueuReorderFx( int source, int target, FXReorderMode m )
+   {
+      reorderFxQueue.s = source;
+      reorderFxQueue.t = target;
+      reorderFxQueue.m = m;
+   }
+   void reorderFx();
+
    void playVoice(int scene, char channel, char key, char velocity, char detune);
    void releaseScene(int s);
    int calculateChannelMask(int channel, int key);

@@ -3,6 +3,7 @@
 #include "CEffectSettings.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
+#include "SurgeGUIEditor.h"
 
 using namespace VSTGUI;
 
@@ -69,14 +70,23 @@ void CEffectSettings::draw(CDrawContext* dc)
          labels->draw(dc, r, CPoint(17 * stype, 9 * get_fxtype(type[i])), 0xff);
       }
    }
+
+   if( mouseActionMode == drag )
+   {
+      auto r = CRect( dragCurrent - dragCornerOff, CPoint( 17, 9 ) );
+      auto q = r;
+      q = q.extend(1,1);
+      dc->setFillColor(skin->getColor( Colors::Effect::SelectorPanel::LabelBorder));
+      dc->drawRect( q, kDrawFilled );
+      labels->draw( dc, r, CPoint( 17, 9 * get_fxtype(type[dragSource])), 0xff );
+   }
    setDirty(false);
 }
 
 CMouseEventResult CEffectSettings::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
-   if (!buttons.isLeftButton() && !buttons.isRightButton())
-      return kMouseEventHandled;
-
+   mouseActionMode = click;
+   dragStart = where;
    for (int i = 0; i < 8; i++)
    {
       CRect size = getViewSize();
@@ -85,44 +95,91 @@ CMouseEventResult CEffectSettings::onMouseDown(CPoint& where, const CButtonState
       r.offset(blocks[i][0], blocks[i][1]);
       if (r.pointInside(where))
       {
-         if (buttons.isRightButton())
-            disabled ^= (1 << i);
-         else
-            current = i;
-         invalid();
+         dragSource = i;
+         dragCornerOff = where - r.getTopLeft();
       }
    }
-
-   if (listener)
-      listener->valueChanged(this);
    return kMouseEventHandled;
 }
 
 CMouseEventResult CEffectSettings::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+   if( mouseActionMode == drag )
+   {
+      int droppedOn = -1;
+      for (int i = 0; i < 8; i++)
+      {
+         CRect size = getViewSize();
+         CRect r(0, 0, 17, 9);
+         r.offset(size.left, size.top);
+         r.offset(blocks[i][0], blocks[i][1]);
+         if (r.pointInside(where))
+         {
+            droppedOn = i;
+         }
+      }
+      auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+      if( sge && droppedOn >= 0 )
+      {
+         auto m = SurgeSynthesizer::FXReorderMode::SWAP;
+         if( buttons & kControl )
+            m = SurgeSynthesizer::FXReorderMode::COPY;
+         if( buttons & kShift )
+            m = SurgeSynthesizer::FXReorderMode::MOVE;
+         sge->swapFX(dragSource, droppedOn, m);
+
+         current = droppedOn;
+         if (listener)
+            listener->valueChanged(this);
+      }
+      mouseActionMode = none;
+      invalid();
+   }
+   else if( mouseActionMode == click )
+   {
+      mouseActionMode = none;
+      if (!buttons.isLeftButton() && !buttons.isRightButton())
+         return kMouseEventHandled;
+
+      for (int i = 0; i < 8; i++)
+      {
+         CRect size = getViewSize();
+         CRect r(0, 0, 17, 9);
+         r.offset(size.left, size.top);
+         r.offset(blocks[i][0], blocks[i][1]);
+         if (r.pointInside(where))
+         {
+            if (buttons.isRightButton())
+               disabled ^= (1 << i);
+            else
+               current = i;
+            invalid();
+         }
+      }
+
+      if (listener)
+         listener->valueChanged(this);
+   }
    return kMouseEventHandled;
 }
 
 CMouseEventResult CEffectSettings::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
-   bool isInside = false;
-   for (int i = 0; i < 8; i++)
+   if( mouseActionMode == click )
    {
-      CRect size = getViewSize();
-      CRect r(0, 0, 17, 9);
-      r.offset(size.left, size.top);
-      r.offset(blocks[i][0], blocks[i][1]);
-      if (r.pointInside(where))
-      {
-         isInside = true;
+      float dx = dragStart.x - where.x;
+      float dy = dragStart.y - where.y;
+      float dist = sqrt( dx * dx + dy * dy );
+
+      if( dist > 3 ) {
+         mouseActionMode = drag;
       }
    }
-   /*
-   if( isInside )
-      getFrame()->setCursor( VSTGUI::kCursorHand );
-   else
-      getFrame()->setCursor( VSTGUI::kCursorDefault );
-   */
-   
+
+   if( mouseActionMode == drag )
+   {
+      dragCurrent = where;
+      invalid();
+   }
    return kMouseEventHandled;
 }

@@ -558,6 +558,7 @@ struct LFOStorage
 
 struct FxStorage
 {
+   // Just a heads up if you change this please go look at fx_reorder in SurgeSorage too
    Parameter type;
    Parameter return_level;
    Parameter p[n_fx_params];

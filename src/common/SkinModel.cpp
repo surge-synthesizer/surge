@@ -131,7 +131,7 @@ namespace Surge
       namespace Global {
          Connector active_scene = Connector( "global.active_scene", 7, 15, 51, 27, Connector::HSWITCH2 )
                   .withHSwitch2Properties(IDB_SCENESWITCH, 2, 1, 2 );
-         Connector character = Connector( "global.character", 607, 41, 132, 12, Connector::HSWITCH2 )
+         Connector character = Connector( "global.character", 607, 41, 135, 12, Connector::HSWITCH2 )
              .withHSwitch2Properties(IDB_CHARACTER, 3, 1, 3 );
          Connector fx1_return = Connector( "global.fx1_return", 759, 124 ); // check
          Connector fx2_return = Connector( "global.fx2_return", 759, 145 ); // check

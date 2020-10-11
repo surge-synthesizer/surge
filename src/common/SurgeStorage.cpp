@@ -1275,6 +1275,8 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
    modRoutingMutex.unlock();
 }
 
+
+
 TiXmlElement* SurgeStorage::getSnapshotSection(const char* name)
 {
    TiXmlElement* e = TINYXML_SAFE_TO_ELEMENT(snapshotloader.FirstChild(name));

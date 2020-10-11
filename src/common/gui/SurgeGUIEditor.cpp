@@ -539,7 +539,7 @@ void SurgeGUIEditor::idle()
          if( ( v < 0.5 && synth->mpeEnabled) ||
              ( v > 0.5 && ! synth->mpeEnabled) )
          {
-            statusMPE->setValue( synth->mpeEnabled ? 0 : 1 );
+            statusMPE->setValue( synth->mpeEnabled ? 1 : 0 );
             statusMPE->invalid();
          }
       }
@@ -1232,7 +1232,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
       case Surge::Skin::Connector::NonParameterConnection::STATUS_MPE: {
          statusMPE  = layoutComponentForSkin(skinCtrl, tag_status_mpe);
-         statusMPE->setValue( synth->mpeEnabled ? 0 : 1 );
+         statusMPE->setValue( synth->mpeEnabled ? 1 : 0 );
          break;
       }
       case Surge::Skin::Connector::NonParameterConnection::STATUS_TUNE: {
@@ -1286,6 +1286,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
       case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR: {
          CEffectSettings* fc = new CEffectSettings(skinCtrl->getRect(), this, tag_fx_select, current_fx, bitmapStore);
+         fc->setSkin(currentSkin, bitmapStore);
          ccfxconf = fc;
          for (int i = 0; i < 8; i++)
          {
@@ -3843,7 +3844,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       // switch-statement
    {
       if (ccfxconf)
+      {
          ((CEffectSettings*)ccfxconf)->set_bypass(synth->storage.getPatch().fx_bypass.val.i);
+         ccfxconf->invalid();
+      }
 
       switch (synth->storage.getPatch().fx_bypass.val.i)
       {
@@ -4091,7 +4095,7 @@ void SurgeGUIEditor::toggleMPE()
    this->synth->mpeEnabled = ! this->synth->mpeEnabled;
    if( statusMPE )
    {
-      statusMPE->setValue(this->synth->mpeEnabled);
+      statusMPE->setValue(this->synth->mpeEnabled ? 1 : 0 );
       statusMPE->invalid();
    }
 }
@@ -6572,4 +6576,11 @@ bool SurgeGUIEditor::onDrop( const std::string& fname)
    }
 
    return true;
+}
+
+void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
+{
+   std::cout << "Swapping " << source << " and " << target << " mode=" << m << std::endl;
+   // synth->enqueuReorderFx(source, target, m );
+   Surge::UserInteractions::promptError( "Drag and Drop FX coming in Surge 1.8", "Not quite done yet" );
 }
