@@ -332,6 +332,9 @@ private:
    VSTGUI::CTextEdit* patchComment = nullptr;
    VSTGUI::CCheckBox* patchTuning = nullptr;
    VSTGUI::CTextLabel* patchTuningLabel = nullptr;
+#if BUILD_IS_DEBUG
+   VSTGUI::CTextLabel* debugLabel = nullptr;
+#endif
 
    VSTGUI::CViewContainer* typeinDialog = nullptr;
    VSTGUI::CTextEdit* typeinValue = nullptr;
