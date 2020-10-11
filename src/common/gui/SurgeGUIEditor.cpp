@@ -832,6 +832,23 @@ void SurgeGUIEditor::idle()
       // frame->update(&drawContext);
       // frame->idle();
   }
+
+#if BUILD_IS_DEBUG
+  if( debugLabel )
+  {
+     /*
+      * We can do debuggy stuff here to get an indea about internal state on the screen
+      */
+
+   /*
+     auto t = std::to_string( synth->storage.songpos );
+     debugLabel->setText(t.c_str());
+     debugLabel->invalid();
+     */
+
+
+  }
+#endif
 }
 
 void SurgeGUIEditor::toggle_mod_editing()
@@ -1480,8 +1497,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
    /*
     * This code is here JUST because baconpaul keeps developing surge and then swapping
     * to make music and wondering why LPX is stuttering. Please don't remove it!
+    *
+    * UPDATE: Might as well keep a reference to the object though so we can touch it in idle
     */
-   auto lb = new CTextLabel( CRect( CPoint( 321, 39 ), CPoint( 100, 15 ) ), "DEBUG BUILD" );
+   auto lb = new CTextLabel( CRect( CPoint( 310, 39 ), CPoint( 195, 15 ) ), "DEBUG BUILD" );
    lb->setTransparency( false );
    lb->setBackColor( kRedCColor );
    lb->setFontColor( kWhiteCColor );
@@ -1489,6 +1508,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    lb->setHoriAlign(VSTGUI::kCenterText);
    lb->setAntialias(true);
    frame->addView(lb);
+   debugLabel = lb;
 #endif
    if( editorOverlay )
    {

@@ -179,10 +179,28 @@ void LfoModulationSource::attack()
       case lm_freerun:
       {
          double ipart; //,tsrate = localcopy[rate].f;
-         phase = (float)modf(
-             phaseslider + 0.5f * storage->songpos * pow(2.0, (double)localcopy[rate].f), &ipart);
+
+         // Get our rate from the parameter and temposync
+         float lrate = pow( 2.0, (double)localcopy[rate].f);
+         if (lfo->rate.temposync)
+            lrate *= storage->temposyncratio;
+
+         /*
+          * Get our time from songpos. So songpos is in beats, which means
+          * songpos / tempo / 60 is the time. But temposyncratio is tempo/120 so
+          * songpos / ( 2 * temposyncratio ) is the time
+          */
+         double timePassed = storage->songpos * storage->temposyncratio_inv * 0.5;
+
+         /*
+          * And so the total phase is timePassed * rate + phase0
+          */
+         float totalPhase = phaseslider + timePassed * lrate;
+
+         // Mod that for phase; and get the step also by step length
+         phase = (float)modf( totalPhase, &ipart);
          int i = (int)ipart;
-         step = (i % max(1, (ss->loop_end - ss->loop_start))) + ss->loop_start;
+         step = (i % max(1, (ss->loop_end - ss->loop_start + 1 ))) + ss->loop_start;
       }
       break;
       default:
