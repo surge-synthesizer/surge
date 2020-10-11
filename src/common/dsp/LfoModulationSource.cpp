@@ -107,6 +107,8 @@ void LfoModulationSource::initPhaseFromStartPhase()
 {
    phase = localcopy[startphase].f;
    phaseInitialized = true;
+   if( lfo->shape.val.i == ls_tri && lfo->rate.deactivated && ! lfo->unipolar.val.b )
+      phase += 0.25;
    while( phase < 0.f )
       phase += 1.f;
    while( phase > 1.f )
