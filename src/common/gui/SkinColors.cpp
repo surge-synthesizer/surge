@@ -139,7 +139,8 @@ namespace Colors
                                     Envelope("lfo.waveform.envelope", CColor(176, 96, 0)),
                                     Fill("lfo.waveform.fill", CColor(255, 144, 0)),
                                     MajorDivisions("lfo.waveform.majordivisions", CColor(224, 128, 0)),
-                                    Wave("lfo.waveform.wave", kBlackCColor);
+                                    Wave("lfo.waveform.wave", kBlackCColor),
+                                    DeactivatedWave( "lfo.waveform.deactivatedwave", CColor( 176, 96, 0 ) );
 
          namespace Ruler
          {

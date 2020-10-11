@@ -94,7 +94,7 @@ namespace Colors
       }
       namespace Waveform
       {
-         extern const Surge::UI::SkinColor Background, Bounds, CenterLine, Envelope, Fill, MajorDivisions, Wave;
+         extern const Surge::UI::SkinColor Background, Bounds, CenterLine, Envelope, Fill, MajorDivisions, Wave, DeactivatedWave;
 
          namespace Ruler
          {
