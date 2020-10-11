@@ -505,12 +505,15 @@ void CLFOGui::draw(CDrawContext* dc)
    if( ! typeImg )
    {
       typeImg = bitmapStore->getBitmap( IDB_LFOTYPE );
+      typeImgHover = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl, typeImg, bitmapStore, Surge::UI::Skin::HOVER );
+      typeImgHoverOn = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl, typeImg, bitmapStore, Surge::UI::Skin::HOVER_OVER_ON );
    }
 
    if( typeImg )
    {
+      auto type = lfodata->shape.val.i;
       auto off = lfodata->shape.val.i * 76;
-      typeImg->draw( dc, CRect( CPoint( leftpanel.left, leftpanel.top + 2), CPoint( 51, 76 ) ), CPoint( 0, off ) );
+      typeImg->draw( dc, CRect( CPoint( leftpanel.left, leftpanel.top + 2), CPoint( 51, 76 ) ), CPoint( 0, off ), 0xff );
 
       for( int i=0; i<n_lfoshapes; ++i )
       {
@@ -518,6 +521,22 @@ void CLFOGui::draw(CDrawContext* dc)
          int yp = ( i / 2 ) * 15 + leftpanel.top;
          shaperect[i] = CRect( xp, yp, xp+25, yp+15 );
       }
+      if( lfo_type_hover >= 0 )
+      {
+         auto off = lfo_type_hover * 76;
+
+         if( lfo_type_hover == type )
+         {
+            if( typeImgHoverOn )
+            {
+               typeImgHoverOn->draw( dc, CRect( CPoint( leftpanel.left, leftpanel.top + 2), CPoint( 51, 76 ) ), CPoint( 0, off ), 0xff );
+            }
+         }
+         else if( typeImgHover ) {
+            typeImgHover->draw( dc, CRect( CPoint( leftpanel.left, leftpanel.top + 2), CPoint( 51, 76 ) ), CPoint( 0, off ), 0xff );
+         }
+      }
+
    }
    else
    {
@@ -1199,6 +1218,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
 }
 CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+   lfo_type_hover = -1;
    if (controlstate == cs_trigtray_toggle)
    {
       selectedSSrow = -1;
@@ -1210,7 +1230,6 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
       for (int i = 0; i < n_stepseqsteps; i++)
       {
-
          if (draggedIntoTrigTray[i])
          {
             uint64_t off = 0, on = 0;
@@ -1344,6 +1363,18 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
 CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   int plt = lfo_type_hover;
+   lfo_type_hover = -1;
+   for( int i=0; i<n_lfoshapes; ++i )
+   {
+      if( shaperect[i].pointInside(where) )
+         lfo_type_hover = i;
+   }
+   if( plt != lfo_type_hover )
+   {
+      invalid();
+   }
+
    int pss = ss_shift_hover;
    ss_shift_hover = 0;
    if (rect_shapes.pointInside(where))
