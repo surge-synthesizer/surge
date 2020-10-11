@@ -79,10 +79,11 @@ void CLFOGui::draw(CDrawContext* dc)
    {
       bool drawBeats = false;
       CGraphicsPath *path = dc->createGraphicsPath();
+      CGraphicsPath *deactPath = dc->createGraphicsPath();
       CGraphicsPath *eupath = dc->createGraphicsPath();
       CGraphicsPath *edpath = dc->createGraphicsPath();
 
-      pdata tp[n_scene_params];
+      pdata tp[n_scene_params], tpd[n_scene_params];
       {
          tp[lfodata->delay.param_id_in_scene].i = lfodata->delay.val.i;
          tp[lfodata->attack.param_id_in_scene].i = lfodata->attack.val.i;
@@ -120,8 +121,27 @@ void CLFOGui::draw(CDrawContext* dc)
           susTime;
 
       LfoModulationSource* tlfo = new LfoModulationSource();
+      LfoModulationSource* tFullWave = nullptr;
       tlfo->assign(storage, lfodata, tp, 0, ss, ms, fs, true);
       tlfo->attack();
+
+      LFOStorage deactivateStorage;
+      if( lfodata->rate.deactivated )
+      {
+         memcpy( (void*)(&deactivateStorage), (void*)lfodata, sizeof( LFOStorage ));
+         memcpy( (void*)tpd, (void*)tp, n_scene_params * sizeof( pdata ) );
+
+         auto desiredRate = log2( 1.f / totalEnvTime );
+
+         deactivateStorage.rate.deactivated = false;
+         deactivateStorage.rate.val.f = desiredRate;
+         deactivateStorage.start_phase.val.f = 0;
+         tpd[lfodata->start_phase.param_id_in_scene].f = 0;
+         tpd[lfodata->rate.param_id_in_scene].f = desiredRate;
+         tFullWave = new LfoModulationSource();
+         tFullWave->assign(storage, &deactivateStorage, tpd, 0, ss, ms, fs, true );
+         tFullWave->attack();
+      }
       CRect boxo(maindisp);
       boxo.offset(-size.left - splitpoint, -size.top);
 
@@ -159,6 +179,7 @@ void CLFOGui::draw(CDrawContext* dc)
       for (int i=0; i<totalSamples; i += averagingWindow )
       {
          float val = 0;
+         float wval = 0;
          float eval = 0;
          float minval = 1000000;
          float maxval = -1000000;
@@ -167,12 +188,14 @@ void CLFOGui::draw(CDrawContext* dc)
          for (int s = 0; s < averagingWindow; s++)
          {
             tlfo->process_block();
+            if( tFullWave ) tFullWave->process_block();
             if( susCountdown < 0 && tlfo->env_state == lenv_stuck )
             {
                 susCountdown = susTime * samplerate / BLOCK_SIZE;
             }
             else if( susCountdown == 0 && tlfo->env_state == lenv_stuck ) {
                 tlfo->release();
+                if( tFullWave ) tFullWave->release();
             }
             else if( susCountdown > 0 )
             {
@@ -180,6 +203,7 @@ void CLFOGui::draw(CDrawContext* dc)
             }
 
             val  += tlfo->output;
+            if( tFullWave ) wval += tFullWave->output;
             if( s == 0 ) firstval = tlfo->output;
             if( s == averagingWindow - 1 ) lastval = tlfo->output;
             minval = std::min(tlfo->output, minval);
@@ -187,8 +211,10 @@ void CLFOGui::draw(CDrawContext* dc)
             eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
          }
          val = val / averagingWindow;
+         wval = wval / averagingWindow;
          eval = eval / averagingWindow;
          val  = ( ( - val + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
+         wval = ( ( - wval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
          float euval = ( ( - eval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
          float edval = ( ( eval + 1.0f ) * 0.5 * 0.8 + 0.1 ) * valScale;
 
@@ -200,6 +226,7 @@ void CLFOGui::draw(CDrawContext* dc)
              eupath->beginSubpath(xc, euval);
              if( ! lfodata->unipolar.val.b )
                 edpath->beginSubpath(xc, edval);
+             if( tFullWave ) deactPath->beginSubpath(xc, wval );
              priorval = val;
          }
          else
@@ -227,9 +254,14 @@ void CLFOGui::draw(CDrawContext* dc)
              priorval = val;
              eupath->addLine(xc, euval);
              edpath->addLine(xc, edval);
+
+             // We can skip the ordering thing since we know we ahve set rate here to a low rate
+             if( tFullWave ) deactPath->addLine( xc, wval );
          }
       }
       delete tlfo;
+      if( tFullWave )
+         delete tFullWave;
 
       VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
           .scale(boxo.getWidth()/valScale, boxo.getHeight() / valScale )
@@ -333,6 +365,13 @@ void CLFOGui::draw(CDrawContext* dc)
 #else
       dc->setLineWidth(1.3);
 #endif
+
+      if( lfodata->rate.deactivated )
+      {
+         dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::DeactivatedWave));
+         dc->drawGraphicsPath(deactPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
+      }
+
       // LFO waveform itself
       dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Wave));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
@@ -435,6 +474,7 @@ void CLFOGui::draw(CDrawContext* dc)
 
       dc->restoreGlobalState();
       path->forget();
+      deactPath->forget();
       eupath->forget();
       edpath->forget();
    }

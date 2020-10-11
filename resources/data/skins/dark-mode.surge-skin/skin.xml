@@ -28,6 +28,7 @@
     <color id="lfo.waveform.centerline" value="$buttonbg"/>
     <color id="lfo.waveform.envelope" value="$surgebluetrans"/>
     <color id="lfo.waveform.wave" value="$modblue"/>
+    <color id="lfo.waveform.deactivatedwave" value="$surgebluetrans"/>
     <color id="lfo.waveform.majordivisions" value="$buttonbg"/>
 
     <color id="lfo.type.selected.background" value="$surgeblue"/>
