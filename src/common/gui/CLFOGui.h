@@ -25,6 +25,8 @@
 #include "CCursorHidingControl.h"
 
 
+class CScalableBitmap;
+
 class CLFOGui : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
 {
 public:
@@ -130,7 +132,8 @@ protected:
    VSTGUI::CPoint rmStepStart, rmStepCurr;
 
    int ss_shift_hover = 0;
-   VSTGUI::CBitmap* typeImg;
+   int lfo_type_hover = -1;
+   CScalableBitmap *typeImg, *typeImgHover, *typeImgHoverOn;
    
    CLASS_METHODS(CLFOGui, CCursorHidingControl)
 };
