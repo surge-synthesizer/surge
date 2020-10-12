@@ -69,9 +69,7 @@ public:
 
    void resetColorTable()
    {
-      auto c = skin->getColor(Colors::LFO::Waveform::Fill);
       auto d = skin->getColor(Colors::LFO::Waveform::Wave);
-      
    }
    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;

@@ -919,9 +919,10 @@ void MSEGControlRegion::rebuild()
       htxt->setTextInset(CPoint(3, 1));
 #endif
       htxt->setFont(editFont);
-      htxt->setFontColor(kBlackCColor);
-      htxt->setFrameColor(kBlackCColor);
-      htxt->setBackColor(kWhiteCColor);
+      htxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+      htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
+      htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
+      htxt->setRoundRectRadius(CCoord(3.f));
       addView(htxt);
 
       xpos += segWidth;
@@ -937,9 +938,10 @@ void MSEGControlRegion::rebuild()
       vtxt->setTextInset(CPoint(3, 1));
 #endif
       vtxt->setFont(editFont);
-      vtxt->setFontColor(kBlackCColor);
-      vtxt->setFrameColor(kBlackCColor);
-      vtxt->setBackColor(kWhiteCColor);
+      vtxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+      vtxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
+      vtxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
+      vtxt->setRoundRectRadius(CCoord(3.f));
       addView(vtxt);
    }
 }
