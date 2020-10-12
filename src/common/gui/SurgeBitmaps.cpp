@@ -98,6 +98,9 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_MPE_BUTTON, f);
    addEntry(IDB_ZOOM_BUTTON, f);
    addEntry(IDB_TUNE_BUTTON, f);
+   addEntry(IDB_POLYSPLIT_NUM_BG, f);
+   addEntry(IDB_PITCHBEND_NUM_BG, f);
+   addEntry(IDB_KEYTRACKROOT_BG, f);
    // == /SVG == Do not remove this comment
 
 }

@@ -67,6 +67,8 @@ enum label_placement
    lp_above
 };
 
+class CScalableBitmap;
+
 class CNumberField : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
@@ -76,38 +78,6 @@ public:
                 VSTGUI::CBitmap* pBackground = 0,
                 SurgeStorage* storage = nullptr);
    ~CNumberField();
-
-   virtual void setFontColor(VSTGUI::CColor color);
-   VSTGUI::CColor getFontColor()
-   {
-      return fontColor;
-   }
-
-   virtual void setBackColor(VSTGUI::CColor color);
-   VSTGUI::CColor getBackColor()
-   {
-      return backColor;
-   }
-
-   virtual void setLineColor(VSTGUI::CColor color);
-   VSTGUI::CColor getLineColor()
-   {
-      return lineColor;
-   }
-
-   // virtual void setTxtFace (VSTGUI::CTxtFace val);
-   VSTGUI::CTxtFace getTxtFace()
-   {
-      return txtFace;
-   }
-
-   /*virtual void setFont (CFont fontID);
-   CFont getFont () { return fontID; }*/
-
-   void setBgcolor(VSTGUI::CColor bgcol)
-   {
-      envColor = bgcol;
-   }
 
    virtual void bounceValue() override;
 
@@ -182,35 +152,28 @@ public:
       return f_max;
    }
 
-   virtual void setLabel(char* newlabel);
-   virtual void setLabelPlacement(int placement);
-
    virtual void draw(VSTGUI::CDrawContext*) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
 
+   bool hovered = false;
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorHand );
+      hovered = true;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorDefault );
+      hovered = false;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    
    virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
-   bool altlook;
    SurgeStorage* storage = nullptr;
 
 private:
-   VSTGUI::CColor fontColor;
-   VSTGUI::CColor backColor;
-   VSTGUI::CColor lineColor;
-   VSTGUI::CColor envColor;
-   //	CFont   fontID;
-   VSTGUI::CTxtFace txtFace;
    int controlmode, controlstate;
    int i_min, i_max, i_stepsize;
    float f_movespeed;
@@ -218,10 +181,12 @@ private:
    int i_value;
    int i_default;
    int i_poly;
-   char label[32];
    int labelplacement;
    VSTGUI::CRect drawsize;
    VSTGUI::CPoint lastmousepos;
+
+   CScalableBitmap *bg = nullptr, *hoverBg = nullptr;
+   bool triedToLoadBg = false;
 
    CLASS_METHODS(CNumberField, VSTGUI::CControl)
 };

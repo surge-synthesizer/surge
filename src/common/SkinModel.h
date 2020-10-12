@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <memory>
 #include "SurgeParamConfig.h"
+#include "SkinColors.h"
 
 /*
  * # SKIN MODEL / SKIN / PARAMETER / SURGEGUIEDITOR COLLABORATION
@@ -112,7 +113,9 @@ namespace Surge
             SUBPIXMAPS,
             IMGOFFSET,
             NUMBERFIELD_CONTROLMODE,
-            DRAGABLE_HSWITCH
+            DRAGABLE_HSWITCH,
+            TEXT_COLOR,
+            TEXT_HOVER_COLOR
          };
 
          /*

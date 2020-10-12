@@ -120,6 +120,13 @@
     <color id="vumeter.background" value="darkergray"/>
     <color id="vumeter.border" value="bordergray"/>
 
+    <color id="pitchbend.text" value="lightgray"/>
+    <color id="pitchbend.text.hover" value="white"/>
+    <color id="splitpoly.text" value="lightgray"/>
+    <color id="splitpoly.text.hover" value="white"/>
+    <color id="keytrack.text" value="lightgray"/>
+    <color id="keytrack.text.hover" value="white"/>
+
     <color id="fxmenu.text" value="lightgray"/>
 
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>

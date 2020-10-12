@@ -17,9 +17,10 @@
 #include <unordered_map>
 #include <map>
 #include "resource.h"
+#include "SkinColors.h"
 
 /*
- * This file implements the innards of the Connector class.
+ * This file implements the innards of the Connector class and the SkinColor class
  *
  * If you want to add a new connection, add it to SkinModel.h/SkinModel.cpp
  * not here.
@@ -33,6 +34,7 @@ namespace Skin
 
 std::unordered_map<std::string, std::shared_ptr<Connector::Payload>> *idmap;
 std::unordered_map<Connector::NonParameterConnection, std::shared_ptr<Connector::Payload>> *npcMap;
+std::unordered_map<std::string, Surge::Skin::Color> *colMap;
 
 void guaranteeMap()
 {
@@ -41,6 +43,7 @@ void guaranteeMap()
    {
       idmap = new std::unordered_map<std::string, std::shared_ptr<Connector::Payload>>();
       npcMap = new std::unordered_map<Connector::NonParameterConnection, std::shared_ptr<Connector::Payload>>();
+      colMap = new std::unordered_map<std::string, Surge::Skin::Color>();
       firstTime = false;
    }
 }
@@ -50,6 +53,7 @@ struct HarvestMaps {
    ~HarvestMaps() {
       delete idmap;
       delete npcMap;
+      delete colMap;
    }
 };
 
@@ -153,5 +157,23 @@ Connector Connector::connectorByNonParameterConnection(NonParameterConnection n)
       c.payload = npcMap->at(n);
    return c;
 }
+
+Color::Color( std::string name, int r, int g, int b ) : name(name), r(r), g(g), b(b), a(255) {
+   guaranteeMap();
+   colMap->insert( std::make_pair(name, *this ));
+}
+Color::Color( std::string name, int r, int g, int b, int a ) : name(name), r(r), g(g), b(b), a(a) {
+   guaranteeMap();
+   colMap->insert( std::make_pair(name, *this ));
+}
+
+Color Color::colorByName(const std::string &n )
+{
+   guaranteeMap();
+   if( colMap->find(n) != colMap->end() )
+      return colMap->at(n);
+   return Color( n, 255, 0, 0 );
 }
 }
+}
+
