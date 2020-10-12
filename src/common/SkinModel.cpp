@@ -162,10 +162,10 @@ namespace Surge
          Connector sustain = Connector( "lfo.sustain", 80, 0 ).inParent( "lfo.envelope.panel" );
          Connector release = Connector( "lfo.release", 100, 0 ).inParent( "lfo.envelope.panel" );
 
-         Connector shape = Connector( "lfo.shape", 235, 482, 359, 85, Connector::LFO );
-         Connector triggermode = Connector( "lfo.triggermode", 170, 484, 51, 39, Connector::HSWITCH2 )
+         Connector shape = Connector( "lfo.shape", 235, 481, 359, 84, Connector::LFO );
+         Connector triggermode = Connector( "lfo.triggermode", 170, 485, 51, 39, Connector::HSWITCH2 )
              .withHSwitch2Properties(IDB_LFOTRIGGER, 3, 3, 1);
-         Connector unipolar = Connector( "lfo.unipolar", 170, 545, 51, 15, Connector::SWITCH )
+         Connector unipolar = Connector( "lfo.unipolar", 170, 546, 51, 15, Connector::SWITCH )
                .withBackground( IDB_UNIPOLAR );
       }
 

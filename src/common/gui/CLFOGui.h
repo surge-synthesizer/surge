@@ -34,8 +34,6 @@ public:
    const static int margin2 = 7;
    const static int lpsize = 50;
    const static int scale = 18;
-   const static int shadowoffset = 1;
-   const static int skugga = 0xff5d5d5d;
    const static int splitpoint = lpsize + 20;
     
    void drawtri(VSTGUI::CRect r, VSTGUI::CDrawContext* context, int orientation);
