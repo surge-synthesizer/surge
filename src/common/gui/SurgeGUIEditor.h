@@ -253,6 +253,16 @@ public:
 
    std::string midiMappingToHtml();
 
+
+   // These are unused right now
+   enum SkinInspectorFlags {
+      COLORS = 1 << 0,
+      COMPONENTS = 1 << 1,
+
+      ALL = COLORS | COMPONENTS
+   };
+   std::string skinInspectorHtml( SkinInspectorFlags f = ALL );
+
    /*
    ** Modulation Hover Support 
    */
