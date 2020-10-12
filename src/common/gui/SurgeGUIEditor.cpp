@@ -6472,10 +6472,8 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
       rect.offset(skinCtrl->x, skinCtrl->y);
       CNumberField* pbd = new CNumberField(rect, this, tag, nullptr, &(synth->storage));
-      pbd->setSkin(currentSkin,bitmapStore);
+      pbd->setSkin(currentSkin,bitmapStore, skinCtrl);
       pbd->setMouseableArea(rect);
-
-      pbd->altlook = ( ( style & kWhite ) != 0 );
 
       // TODO extra from properties
       auto nfcm = currentSkin->propertyValue(skinCtrl, "numberfield_controlmode", std::to_string( cm_none ));

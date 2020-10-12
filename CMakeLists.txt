@@ -298,7 +298,11 @@ set(SURGE_COMMON_SOURCES
   libs/strnatcmp/strnatcmp.cpp
 
   ${AIRWINDOWS_SOURCES}
-        src/common/SkinModel.cpp src/common/SkinModelImpl.cpp)
+
+  src/common/SkinModel.cpp
+  src/common/SkinModelImpl.cpp
+  src/common/SkinColors.cpp)
+
 
 
 set( SURGE_GENERATED_SOURCES
@@ -323,7 +327,6 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CSurgeVuMeter.cpp
   src/common/gui/CSwitchControl.cpp
   src/common/gui/MSEGEditor.cpp
-  src/common/gui/SkinColors.cpp
   src/common/gui/SkinSupport.cpp
   src/common/gui/SurgeBitmaps.cpp
   src/common/gui/SurgeGUIEditor.cpp

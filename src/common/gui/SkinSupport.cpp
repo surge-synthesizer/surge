@@ -890,16 +890,6 @@ CScalableBitmap *Skin::hoverBitmapOverlayForBackgroundBitmap( Skin::Control::ptr
    return nullptr;
 }
 
-Surge::UI::SkinColor::SkinColor( const std::string &n ) : name( n ), defaultColor( VSTGUI::kRedCColor ) {
-   static int uidstart = 1;
-   uid = uidstart++;
-}
-
-Surge::UI::SkinColor::SkinColor( const std::string &n, const VSTGUI::CColor &c ) : name( n ), defaultColor(c) {
-   static int uidstart = 1;
-   uid = uidstart++;
-}
-
 void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector& c)
 {
    x = c.payload->posx;
@@ -944,7 +934,7 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector& c
    case Surge::Skin::Connector::SWITCH: {
       classname = "CSwitchControl";
       ultimateparentclassname = "CSwitchControl";
-      transferPropertyIf( Surge::Skin::Connector::BACKGROUND, "bg_id" );\
+      transferPropertyIf( Surge::Skin::Connector::BACKGROUND, "bg_id" );
       break;
    }
    case Surge::Skin::Connector::LFO: {
@@ -966,6 +956,9 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector& c
       classname = "CNumberField";
       ultimateparentclassname = "CNumberField";
       transferPropertyIf( Surge::Skin::Connector::NUMBERFIELD_CONTROLMODE, "numberfield_controlmode" );
+      transferPropertyIf( Surge::Skin::Connector::BACKGROUND, "bg_id" );
+      transferPropertyIf( Surge::Skin::Connector::TEXT_COLOR, "text_color" );
+      transferPropertyIf( Surge::Skin::Connector::TEXT_HOVER_COLOR, "text_color.hover" );
       break;
    }
    case Surge::Skin::Connector::VU_METER: {

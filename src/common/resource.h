@@ -71,6 +71,9 @@
 #define IDB_MPE_BUTTON 171
 #define IDB_ZOOM_BUTTON 172
 #define IDB_TUNE_BUTTON 173
+#define IDB_POLYSPLIT_NUM_BG 174
+#define IDB_PITCHBEND_NUM_BG 175
+#define IDB_KEYTRACKROOT_BG 176
 // == /SVG == Do not remove this comment
 
 

@@ -18,6 +18,7 @@
 #include "vstgui/lib/crect.h"
 #include "vstgui/lib/cpoint.h"
 #include "SkinModel.h"
+#include "SkinColors.h"
 
 /*
 ** Support for rudimentary skinning in Surge
@@ -71,14 +72,6 @@ namespace UI
 {
 
 class SkinDB;
-
-struct SkinColor {
-   SkinColor(const std::string &n);
-   SkinColor(const std::string &n, const VSTGUI::CColor &col);
-   std::string name;
-   int uid;
-   VSTGUI::CColor defaultColor = VSTGUI::kBlackCColor;
-};
 
 class Skin
 {
@@ -170,19 +163,27 @@ public:
 
    bool hasColor(const std::string &id) const;
    VSTGUI::CColor getColor(const std::string &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const;
+   VSTGUI::CColor getColor(const std::string &id, const Surge::Skin::Color &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
+   {
+      return getColor( id, VSTGUI::CColor( def.r, def.g, def.b, def.a ), noLoops );
+   }
 
+   VSTGUI::CColor getColor( const std::string &id )
+   {
+      return getColor( id, Surge::Skin::Color::colorByName(id));
+   }
    private:
-      VSTGUI::CColor getColor(const SkinColor &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
+      VSTGUI::CColor getColor(const Surge::Skin::Color &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
       {
          return getColor( id.name, def, noLoops );
       }
    public:
-      VSTGUI::CColor getColor( const SkinColor &id, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
+      VSTGUI::CColor getColor( const Surge::Skin::Color &id, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
       {
-         return getColor( id, id.defaultColor, noLoops );
+         return getColor( id, VSTGUI::CColor( id.r, id.g, id.b, id.a), noLoops );
       }
 
-      bool hasColor(const SkinColor &col) const
+      bool hasColor(const Surge::Skin::Color &col) const
       {
          return hasColor(col.name);
       }
