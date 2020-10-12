@@ -5283,11 +5283,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
     addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Skin Inspector"),
                     [this]()
                        {
-                          // auto qc = this->currentSkin->getQueriedColors();
-                          std::ostringstream htmls;
-                          htmls << "<html><body><h1>Will Be Back Soon</h1><a href=\"https://github.com/surge-synthesizer/surge/issues/2747\">See Issue #2747</a>\n\n";
-                          htmls << "</body></html>\n";
-                          Surge::UserInteractions::showHTML( htmls.str() );
+                          Surge::UserInteractions::showHTML( skinInspectorHtml() );
                        }
        );
     tid++;
