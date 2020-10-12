@@ -24,49 +24,6 @@ LANGUAGE LANG_NEUTRAL,
 #pragma code_page(1252)
 #endif //_WIN32
 
-        /////////////////////////////////////////////////////////////////////////////
-        //
-        // PNG
-        //
-#if INCLUDE_PNG_WHICH_WE_DONT
-        IDB_FILTERBUTTONS PNG
-    "resources/bitmaps/bmp00108.png" IDB_FBCONFIG PNG
-    "resources/bitmaps/bmp00112.png" IDB_SCENESWITCH PNG
-    "resources/bitmaps/bmp00113.png" IDB_SCENEMODE PNG
-    "resources/bitmaps/bmp00114.png" IDB_OCTAVES PNG
-    "resources/bitmaps/bmp00118.png" IDB_OSCMENU PNG
-    "resources/bitmaps/bmp00119.png" IDB_WAVESHAPER PNG
-    "resources/bitmaps/bmp00120.png" IDB_RELATIVE_TOGGLE PNG
-    "resources/bitmaps/bmp00121.png" IDB_OSCSELECT PNG
-    "resources/bitmaps/bmp00122.png" IDB_POLYMODE PNG
-    "resources/bitmaps/bmp00123.png" IDB_MODSRC_BG PNG
-    "resources/bitmaps/bmp00124.png" IDB_SWITCH_KTRK PNG
-    "resources/bitmaps/bmp00125.png" IDB_SWITCH_RETRIGGER PNG
-    "resources/bitmaps/bmp00126.png" IDB_SWITCH_SOLO PNG
-    "resources/bitmaps/bmp00132.png" IDB_SWITCH_MUTE PNG
-    "resources/bitmaps/bmp00134.png" IDB_FXCONF PNG
-    "resources/bitmaps/bmp00137.png" IDB_FXCONF_SYMBOLS PNG
-    "resources/bitmaps/bmp00136.png" IDB_SWITCH_LINK PNG
-    "resources/bitmaps/bmp00140.png" IDB_OSCROUTE PNG
-    "resources/bitmaps/bmp00143.png" IDB_ENVSHAPE PNG
-    "resources/bitmaps/bmp00145.png" IDB_FXBYPASS PNG "resources/bitmaps/bmp00144.png" IDB_BG PNG
-    "resources/bitmaps/bmp00102.png" IDB_LFOTRIGGER PNG
-    "resources/bitmaps/bmp00146.png" IDB_BUTTON_STORE PNG
-    "resources/bitmaps/bmp00148.png" IDB_BUTTON_MINUSPLUS PNG
-    "resources/bitmaps/bmp00149.png" IDB_UNIPOLAR PNG
-    "resources/bitmaps/bmp00152.png" IDB_FADERV_HANDLE PNG
-    "resources/bitmaps/bmp00157.png" IDB_FADERH_BG PNG
-    "resources/bitmaps/bmp00154.png" IDB_FADERH_HANDLE PNG
-    "resources/bitmaps/bmp00153.png" IDB_FADERV_BG PNG
-    "resources/bitmaps/bmp00105.png" IDB_FMCONFIG PNG "resources/bitmaps/bmp00151.png" IDB_ABOUT PNG
-    "resources/bitmaps/bmp00158.png" IDB_BUTTON_ABOUT PNG
-    "resources/bitmaps/bmp00159.png" IDB_FILTERSUBTYPE PNG
-    "resources/bitmaps/bmp00160.png" IDB_CHARACTER PNG
-    "resources/bitmaps/bmp00161.png" IDB_ENVMODE PNG
-    "resources/bitmaps/bmp00162.png" IDB_STOREPATCH PNG "resources/bitmaps/bmp00163.png"
-     IDB_BUTTON_MENU PNG "resources/bitmaps/bmp00164.png"    
-
-#endif 
 #include "svgresources.rc"
 
     /////////////////////////////////////////////////////////////////////////////
