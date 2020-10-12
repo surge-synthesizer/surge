@@ -809,7 +809,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
    }
    break;
    case tag_horizontal_snap:
-      if( val < 0.5 ) ms->hSnap = 0; else ms->hSnap = 0.1;
+      if( val < 0.5 ) ms->hSnap = 0; else ms->hSnap = ms->hSnapDefault;
       break;
    case tag_vertical_snap:
       if( val < 0.5 ) ms->vSnap = 0; else ms->vSnap = ms->vSnapDefault;
