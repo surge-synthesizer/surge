@@ -459,6 +459,26 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
    {
       surgeInstance->time_data.ppqPos = data.processContext->projectTimeMusic;
    }
+   if (data.processContext && data.processContext->state & ProcessContext::kTimeSigValid)
+   {
+      surgeInstance->time_data.timeSigNumerator = data.processContext->timeSigNumerator;
+      surgeInstance->time_data.timeSigDenominator = data.processContext->timeSigDenominator;
+   }
+   else
+   {
+      surgeInstance->time_data.timeSigNumerator = 4;
+      surgeInstance->time_data.timeSigDenominator = 4;
+   }
+
+   double tempo = 120;
+   if (data.processContext && data.processContext->state & ProcessContext::kTempoValid)
+   {
+      tempo = data.processContext->tempo;
+   }
+
+   // move clock
+   surgeInstance->time_data.tempo = tempo;
+   surgeInstance->resetStateFromTimeData();
 
    if( checkNamesEvery++ == 20 )
    {
@@ -479,28 +499,8 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       {
          if (data.processContext)
          {
-            double tempo = 120;
-
-            if (data.processContext->state & ProcessContext::kTempoValid)
-            {
-               tempo = data.processContext->tempo;
-            }
-
-            // move clock
-            surgeInstance->time_data.tempo = tempo;
             surgeInstance->time_data.ppqPos +=
                 (double)BLOCK_SIZE * tempo / (60. * data.processContext->sampleRate);
-
-            if (data.processContext->state & ProcessContext::kTimeSigValid)
-            {
-               surgeInstance->time_data.timeSigNumerator = data.processContext->timeSigNumerator;
-               surgeInstance->time_data.timeSigDenominator = data.processContext->timeSigDenominator;
-            }
-            else
-            {
-               surgeInstance->time_data.timeSigNumerator = 4;
-               surgeInstance->time_data.timeSigDenominator = 4;
-            }
          }
 
          processEvents(i, data.inputEvents, noteEventIndex);

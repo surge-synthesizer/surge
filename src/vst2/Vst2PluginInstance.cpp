@@ -27,7 +27,6 @@
 #if MAC
 #include <fenv.h>
 #include <AvailabilityMacros.h>
-#pragma STDC FENV_ACCESS on
 #elif WINDOWS
 #include <windows.h>
 #endif
@@ -417,24 +416,29 @@ void Vst2PluginInstance::processT(float** inputs, float** outputs, VstInt32 samp
    }
 
    // do each buffer
-   VstTimeInfo* timeinfo = getTimeInfo(kVstPpqPosValid | kVstTempoValid | kVstTransportPlaying);
+   VstTimeInfo* timeinfo = getTimeInfo(kVstTransportChanged | kVstTempoValid | kVstTransportPlaying | kVstPpqPosValid );
    if (timeinfo)
    {
       if (timeinfo->flags & kVstTempoValid)
          _instance->time_data.tempo = timeinfo->tempo;
-      if (timeinfo->flags & kVstTransportPlaying)
+      if (timeinfo->flags & kVstTransportPlaying || timeinfo->flags & kVstTransportChanged )
       {
          if (timeinfo->flags & kVstPpqPosValid)
+         {
             _instance->time_data.ppqPos = timeinfo->ppqPos;
+         }
       }
+
       if (timeinfo->flags & kVstTimeSigValid )
       {
          _instance->time_data.timeSigNumerator = timeinfo->timeSigNumerator;
          _instance->time_data.timeSigDenominator = timeinfo->timeSigDenominator;
       }
+      _instance->resetStateFromTimeData();
    }
    else
    {
+      std::cout << "TIMEPOS IS UNKNOWABLE" << std::endl;
       _instance->time_data.tempo = 120;
    }
 

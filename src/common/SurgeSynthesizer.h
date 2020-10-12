@@ -117,6 +117,7 @@ public:
    void onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int msbValue);
    void onNRPN(int channel, int lsbNRPN, int msbNRPN, int lsbValue, int msbValue);
 
+   void resetStateFromTimeData();
    void processControl();
    void processThreadunsafeOperations();
    bool loadFx(bool initp, bool force_reload_all);

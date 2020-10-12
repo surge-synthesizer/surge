@@ -428,6 +428,8 @@ ComponentResult aulayer::Render(AudioUnitRenderActionFlags& ioActionFlags,
       // See github issue #146
       if (isPlaying)
          plugin_instance->time_data.ppqPos = CurrentBeat;
+
+      plugin_instance->resetStateFromTimeData();
    }
    else
    {
