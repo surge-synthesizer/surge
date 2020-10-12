@@ -196,60 +196,8 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
               } );
 }
 
-// see scripts/misc/idmap.pl if you want to regen this
-std::unordered_map<std::string, int> createIdNameMap()
-{
-   std::unordered_map<std::string, int> res;
-   res["BG"] = 102;
-   res["FADERV_BG"] = 105;
-   res["FILTERBUTTONS"] = 108;
-   res["OSCSWITCH"] = 110;
-   res["FBCONFIG"] = 112;
-   res["SCENESWITCH"] = 113;
-   res["SCENEMODE"] = 114;
-   res["OCTAVES_OSC"] = 117;
-   res["OCTAVES"] = 118;
-   res["OSCMENU"] = 119;
-   res["WAVESHAPER"] = 120;
-   res["RELATIVE_TOGGLE"] = 121;
-   res["OSCSELECT"] = 122;
-   res["POLYMODE"] = 123;
-   res["MODSRC_BG"] = 124;
-   res["SWITCH_KTRK"] = 125;
-   res["SWITCH_RETRIGGER"] = 126;
-   res["NUMBERS"] = 127;
-   res["MODSRC_SYMBOL"] = 128;
-   res["FADERH_LABELS"] = 131;
-   res["SWITCH_SOLO"] = 132;
-   res["SWITCH_FM"] = 133;
-   res["SWITCH_MUTE"] = 134;
-   res["CONF"] = 135;
-   res["FXCONF_SYMBOLS"] = 136;
-   res["FXCONF"] = 137;
-   res["SWITCH_TEMPOSYNC"] = 140;
-   res["SWITCH_LINK"] = 140;
-   res["VFADER_MINI_BG_BLACK"] = 141;
-   res["OSCROUTE"] = 143;
-   res["FXBYPASS"] = 144;
-   res["ENVSHAPE"] = 145;
-   res["LFOTRIGGER"] = 146;
-   res["BUTTON_STORE"] = 148;
-   res["BUTTON_MINUSPLUS"] = 149;
-   res["BUTTON_CHECK"] = 150;
-   res["FMCONFIG"] = 151;
-   res["UNIPOLAR"] = 152;
-   res["FADERH_HANDLE"] = 153;
-   res["FADERH_BG"] = 154;
-   res["FADERV_HANDLE"] = 157;
-   res["ABOUT"] = 158;
-   res["BUTTON_ABOUT"] = 159;
-   res["FILTERSUBTYPE"] = 160;
-   res["CHARACTER"] = 161;
-   res["ENVMODE"] = 162;
-   res["STOREPATCH"] = 163;
-   res["BUTTON_MENU"] = 164;
-   return res;
-}
+// Define the inverse maps
+#include "SkinImageMaps.h"
 
 std::atomic<int> Skin::instances( 0 );
 
@@ -260,7 +208,8 @@ Skin::Skin(const std::string &root, const std::string &name) : root(root), name(
 #endif   
    instances++;
    // std::cout << "Constructing a skin " << _D(root) << _D(name) << _D(instances) << std::endl;
-   imageIds = createIdNameMap();
+   imageStringToId = createIdNameMap();
+   imageAllowedIds = allowedImageIds();
 }
 
 Skin::~Skin()
@@ -453,11 +402,19 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          for (const fs::path& d : fs::directory_iterator(source))
          {
             const auto pathStr = path_to_string(d);
-            const auto pos = pathStr.find("bmp00");
+            const auto pos = pathStr.find("bmp");
             if (pos != std::string::npos)
             {
+               auto postbmp = pathStr.substr(pos+3);
                int idx = std::atoi(pathStr.c_str() + pos + 3);
-               bitmapStore->loadBitmapByPathForID(pathStr, idx);
+               // We epxpect 5 digits and a .svg or .png
+               auto xtn = pathStr.substr( pos + 8 );
+
+               if( ( xtn == ".svg" || xtn == ".png" ) &&
+                   ( imageAllowedIds.find(idx) != imageAllowedIds.end()))
+               {
+                  bitmapStore->loadBitmapByPathForID(pathStr, idx);
+               }
             }
             else
             {
@@ -484,8 +441,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          {
             if (id.size() > 0)
             {
-               if( imageIds.find(id) != imageIds.end() )
-                  bitmapStore->loadBitmapByPathForID(resourceName(res), imageIds[id]);
+               if( imageStringToId.find(id) != imageStringToId.end() )
+                  bitmapStore->loadBitmapByPathForID(resourceName(res), imageStringToId[id]);
                else
                {
                   bitmapStore->loadBitmapByPathForStringID(resourceName(res), id );
@@ -527,8 +484,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                else if( k.second["zoom-level"] == "100" )
                {
                   auto res = k.second["resource"];
-                  if( imageIds.find(id) != imageIds.end() )
-                     bm = bitmapStore->loadBitmapByPathForID(resourceName(res), imageIds[id]);
+                  if( imageStringToId.find(id) != imageStringToId.end() )
+                     bm = bitmapStore->loadBitmapByPathForID(resourceName(res), imageStringToId[id]);
                   else
                   {
                      bm = bitmapStore->loadBitmapByPathForStringID(resourceName(res), id );

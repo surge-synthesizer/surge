@@ -319,7 +319,8 @@ private:
       ColorStore( std::string a, Type t ) : type( t ), alias( a ) { }
    };
    std::unordered_map<std::string, ColorStore> colors;
-   std::unordered_map<std::string, int> imageIds;
+   std::unordered_map<std::string, int> imageStringToId;
+   std::unordered_set<int> imageAllowedIds;
    ControlGroup::ptr_t rootControl;
    std::vector<Control::ptr_t> controls;
    std::unordered_map<std::string, ComponentClass::ptr_t> componentClasses;
