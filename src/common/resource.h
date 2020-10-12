@@ -96,20 +96,6 @@
 #endif
 
 #if WINDOWS
-/*
-** Each of the bitmaps is also available in scaled form. The ID of the scaled bitmaps
-** is ID_BG+SCALABLE_200_OFFSET for the 200% image.
-**
-** Do NOT change the values of these constants without understanding scripts/win/emit-vector-rc.py
-**
-** This is windows only. Mac and Linux use different resource approaches
-*/
-#define SCALABLE_100_OFFSET 70000
-#define SCALABLE_125_OFFSET 71000
-#define SCALABLE_150_OFFSET 72000
-#define SCALABLE_200_OFFSET 73000
-#define SCALABLE_300_OFFSET 74000
-#define SCALABLE_400_OFFSET 75000
 #define SCALABLE_SVG_OFFSET 80000
 
 #include "scalableresource.h" // found in src/windows
