@@ -115,6 +115,8 @@
     <color id="slider.modulation.positive" value="#82BF50"/>
     <color id="slider.modulation.negative" value="gray"/>
 
+    <color id="numberfield.text" value="lightgray"/>
+
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="red"/>
     <color id="vumeter.background" value="darkergray"/>
