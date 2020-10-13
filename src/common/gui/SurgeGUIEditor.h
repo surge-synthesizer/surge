@@ -288,7 +288,7 @@ public:
       }
    
 private:
-   SGEDropAdapter *dropAdapter;
+   SGEDropAdapter *dropAdapter = nullptr;
    friend class SGEDropAdapter;
    bool canDropTarget(const std::string& fname); // these come as const char* from vstgui
    bool onDrop( const std::string& fname);
