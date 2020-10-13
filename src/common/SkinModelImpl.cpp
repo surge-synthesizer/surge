@@ -16,6 +16,9 @@
 #include "SkinModel.h"
 #include <unordered_map>
 #include <map>
+#include <vector>
+#include <algorithm>
+#include <cstring>
 #include "resource.h"
 #include "SkinColors.h"
 
@@ -173,6 +176,16 @@ Color Color::colorByName(const std::string &n )
    if( colMap->find(n) != colMap->end() )
       return colMap->at(n);
    return Color( n, 255, 0, 0 );
+}
+
+std::vector<Color> Color::getAllColors()
+{
+   guaranteeMap();
+   auto res = std::vector<Color>();
+   for( auto c : *colMap )
+      res.push_back(c.second);
+   std::sort( res.begin(), res.end(), [](const Color &a, const Color &b ) { return strcmp( a.name.c_str(), b.name.c_str() ) < 0;});
+   return res;
 }
 }
 }

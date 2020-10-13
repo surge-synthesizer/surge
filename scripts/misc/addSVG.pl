@@ -77,3 +77,5 @@ print OUT "\n\n#define ${id}_SCALE_SVG $q\n";
 close( IN );
 close( OUT );
 system( "mv hacktmp4.h src/windows/scalableresource.h" );
+
+system( "cat src/common/resource.h | perl scripts/misc/idmap.pl > src/common/gui/SkimImageMaps.h" );
