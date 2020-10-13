@@ -100,11 +100,11 @@
       <path d="M0 0L2 0L2 159L0 159L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 384.909 7)" id="Rectangle#26" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L2 0L2 16L0 16L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 604.909 7)" id="Rectangle#27" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L2 0L2 19L0 19L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 721.909 7)" id="Rectangle#28" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L2 0L2 51L0 51L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 752.909 6.9999905)" id="Rectangle#29" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L2 0L2 51L0 51L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 752.909 6.9999886)" id="Rectangle#29" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L2 0L2 134L0 134L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 757.909 66)" id="Rectangle#30" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L2 0L2 134L0 134L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 757.9089 177)" id="Rectangle#31" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
       <path d="M0 5C0 3.61929 0.512563 2.44078 1.53769 1.46447C2.56282 0.488155 3.80025 0 5.25 0L120.75 0C122.2 0 123.437 0.488155 124.463 1.46447C125.488 2.44078 126 3.61929 126 5C126 6.38071 125.488 7.55922 124.463 8.53553C123.437 9.51184 122.2 10 120.75 10L5.25 10C3.80025 10 2.56282 9.51184 1.53769 8.53553C0.512563 7.55922 0 6.38071 0 5L0 5L0 5L0 5L0 5Z" transform="translate(762.409 184.5)" id="Rectangle#32" fill="#F4F4F5" fill-rule="evenodd" stroke="#919192" stroke-width="1" />
-      <path d="M0 0L2 0L2 51L0 51L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 839.909 6.9999905)" id="Rectangle#33" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L2 0L2 51L0 51L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 839.909 6.9999886)" id="Rectangle#33" fill="#A1A4B7" fill-rule="evenodd" stroke="none" />
     </g>
     <g id="Route" transform="translate(0 398)">
       <path d="M0 0L747.5 0" transform="translate(0 0.5)" id="Line" fill="none" fill-rule="evenodd" stroke="#2F87FF" stroke-width="1" stroke-linecap="square" />
@@ -213,11 +213,10 @@
       <path d="M61 4C61 1.79086 59.2091 0 57 0L4 0C1.79086 0 0 1.79086 0 4L0 104C0 106.209 1.79086 108 4 108L57 108C59.2091 108 61 106.209 61 104L61 4L61 4ZM5 29L35 29L35 78L5 78L5 29L5 29Z" transform="translate(81.5 20.5)" id="Combined-Shape#1" fill="#FFFFFF" fill-opacity="0.2" fill-rule="evenodd" stroke="none" />
       <g id="Group-17" transform="translate(124 114)">
         <path d="M0 0L10 0L10 1L0 1L0 0L0 0L0 0L0 0Z" transform="translate(0 4.5)" id="Rectangle#80" fill="#B06D34" fill-rule="evenodd" stroke="none" />
-        <path d="M0 0L10 0L10 1L0 1L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 4.4999976 10)" id="Rectangle#81" fill="#B06D34" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L10 0L10 1L0 1L0 0L0 0L0 0L0 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 4.499997 10)" id="Rectangle#81" fill="#B06D34" fill-rule="evenodd" stroke="none" />
         <path d="M0 0L10 0L10 10L0 10L0 0L0 0L0 0L0 0Z" id="Rectangle#82" fill="none" fill-rule="evenodd" stroke="#FF9E4C" stroke-width="1" />
         <path d="M7 0C5.677 0 5.0155 0 5.0155 0C3.5 0 3.5 4 2.00476 4C2.00476 4 1.33651 4 0 4" transform="translate(1.5 3)" id="Path-14" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" />
       </g>
-      <path d="M0 0L41 0L41 9L0 9L0 0L0 0L0 0L0 0Z" transform="translate(8.5 12.5)" id="Rectangle#83" fill="#D7D8DA" fill-rule="evenodd" stroke="none" />
       <path d="M2.5 0L5 3L0 3L2.5 0L2.5 0L2.5 0L2.5 0Z" transform="matrix(-4.371139E-08 1 -1 -4.371139E-08 14.5 116.5)" id="Triangle#4" fill="#D8D8D8" fill-rule="evenodd" stroke="none" />
       <path d="M2.5 0L5 3L0 3L2.5 0L2.5 0L2.5 0L2.5 0Z" transform="matrix(-4.371139E-08 1 -1 -4.371139E-08 33.5 116.5)" id="Triangle#5" fill="#D8D8D8" fill-rule="evenodd" stroke="none" />
     </g>
