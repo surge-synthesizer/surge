@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 /*
  * For a discussion of why this is in src/common rather than src/common/gui
@@ -18,7 +19,9 @@ namespace Surge
          Color(std::string name, int r, int g, int b);
          Color(std::string name, int r, int g, int b, int a);
 
-         static Color colorByName(const std::string &name);
+         static Color colorByName( const std::string &name );
+         static std::vector<Color> getAllColors();
+
          std::string name;
          int r, g, b, a;
       };

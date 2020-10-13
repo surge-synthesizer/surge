@@ -585,6 +585,10 @@ elseif( UNIX AND NOT APPLE )
     ${XKBX11COMMON_LDFLAGS}
     )
 
+    if (CMAKE_SYSTEM_NAME MATCHES "BSD")
+      set(OS_LINK_LIBRARIES ${OS_LINK_LIBRARIES} execinfo)
+    endif()
+
 elseif( WIN32 )
 
   set(SURGE_OS_SOURCES
@@ -1028,6 +1032,10 @@ if( BUILD_HEADLESS )
       stdc++fs
       Threads::Threads
       )
+
+    if (CMAKE_SYSTEM_NAME MATCHES "BSD")
+      target_link_libraries(surge-headless PRIVATE execinfo)
+    endif()
   endif()
 endif()
 

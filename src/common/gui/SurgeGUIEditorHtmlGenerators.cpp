@@ -345,3 +345,77 @@ th {
   return htmls.str();
 }
 
+std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
+{
+   std::ostringstream htmls;
+
+   htmls << R"HTML(
+   <html>
+   <head>
+   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+                                               <style>
+                                               table {
+                                                   border-collapse: collapse;
+                                               }
+
+   td {
+       border: 1px solid #CDCED4;
+       padding: 2pt 4px;
+   }
+
+       .center {
+      text-align: center;
+   }
+
+   th {
+       padding: 4pt;
+       color: #123463;
+       background: #CDCED4;
+       border: 1px solid #123463;
+   }
+   </style>
+     </head>
+       <body style="margin: 0pt; background: #CDCED4;">
+                   <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+                              <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+                                         Surge Skin Inspector
+                   </div>
+                     </div>
+
+                       <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+                                  <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+   )HTML";
+
+   htmls << "<table><tr><th>Color Name</th><th colspan=2>Default Color</th><th colspan=2>Current Color</th></tr>\n";
+   auto cols = Surge::Skin::Color::getAllColors();
+
+   auto htmlBlob = [](int r, int g, int b, int a )
+   {
+      std::ostringstream rs;
+      // rs << "rgba(" << r << "," << g << "," << b << "," << a << ") / ";
+      rs << "#" << std::hex << std::setw(2) << std::setfill('0') << r
+         << std::setw(2) << std::setfill('0') << g
+         << std::setw(2) << std::setfill('0')<< b;
+      if( a != 255 ) rs << std::setw(2) << std::setfill('0') << a;
+      auto colh= rs.str();
+
+      std::ostringstream cells;
+      cells << "<td>" << colh << "</td><td width=10 style=\"background-color: " << colh << "\">&nbsp;</td>";
+      return cells.str();
+   };
+
+   for( auto &c : cols )
+   {
+      auto skincol = currentSkin->getColor(c);
+      htmls << "<tr><td>" << c.name << "</td>" << htmlBlob( c.r, c.g, c.b, c.a )  << htmlBlob( skincol.red, skincol.green, skincol.blue, skincol.alpha ) << "</tr>\n";
+   }
+   htmls << "</table>";
+
+   htmls << R"HTML(
+      </div>
+    </div>
+  </body>
+</html>
+      )HTML";
+   return htmls.str();
+}

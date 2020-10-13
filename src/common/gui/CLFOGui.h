@@ -99,6 +99,14 @@ public:
          
    virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override {}
 
+
+   virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
+      ss_shift_hover = 0;
+      lfo_type_hover = -1;
+      invalid();
+      return VSTGUI::kMouseEventHandled;
+   }
+
 protected:
    LFOStorage* lfodata;
    StepSequencerStorage* ss;

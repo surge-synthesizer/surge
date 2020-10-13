@@ -376,7 +376,9 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
                 VSTGUI::CDrawContext::Transform t2(*offscreen, ztf);
 
                 ztf.inverse().transform( newRect );
-                pngZooms[zoomScan]->draw(offscreen, newRect, offset, 1.0);
+                auto offs = offset;
+                ztf.inverse().transform( offs );
+                pngZooms[zoomScan]->draw(offscreen, newRect, offs, 1.0);
              }
              offscreen->endDraw();
              CBitmap* tmp = offscreen->getBitmap();
