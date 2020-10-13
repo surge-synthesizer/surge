@@ -284,13 +284,13 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
          channelmask = 3;
          break;
       case sm_split:
-         if (key < storage.getPatch().splitpoint.val.i)
+         if (key < storage.getPatch().splitkey.val.i)
             channelmask = 1;
          else
             channelmask = 2;
          break;
       case sm_chsplit:
-         if( channel < ( (int)( storage.getPatch().splitpoint.val.i / 8 ) + 1 ) )
+         if( channel < ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
             channelmask = 1;
          else
             channelmask = 2;
@@ -682,9 +682,9 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
          if (storage.getPatch().scenemode.val.i == sm_split)
          {
             if (v->state.scene_id == 0)
-               hikey = storage.getPatch().splitpoint.val.i - 1;
+               hikey = storage.getPatch().splitkey.val.i - 1;
             else
-               lowkey = storage.getPatch().splitpoint.val.i;
+               lowkey = storage.getPatch().splitkey.val.i;
          }
 
          switch (storage.getPatch().scene[v->state.scene_id].polymode.val.i)
@@ -1153,7 +1153,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
          }
          else
          {
-            if( channel < ( (int)( storage.getPatch().splitpoint.val.i / 8 ) + 1 ) )
+            if( channel < ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
                purgeHoldbuffer(0);
             else
                purgeHoldbuffer(1);

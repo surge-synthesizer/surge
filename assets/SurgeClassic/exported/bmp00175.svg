@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg viewBox="0 0 24 10" width="24" height="10" xmlns="http://www.w3.org/2000/svg">
-  <path d="M0 0L24 0L24 10L0 10L0 0L0 0L0 0L0 0Z" id="Rectangle#77" fill="#2F1C04" fill-rule="evenodd" stroke="none"/>
+  <defs>
+    <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient_5">
+      <stop offset="0" stop-color="#6D4410"/>
+      <stop offset="0.4449" stop-color="#6D4410"/>
+      <stop offset="0.4466" stop-color="#6E4511"/>
+      <stop offset="1" stop-color="#6E4511"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 0L24 0L24 10L0 10L0 0L0 0L0 0L0 0Z" id="Rectangle#77" fill="url(#gradient_5)" fill-rule="evenodd" stroke="none"/>
 </svg>

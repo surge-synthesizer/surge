@@ -249,7 +249,7 @@ namespace Surge
           keytrack_1, keytrack_2, resonance_1, resonance_2, subtype_1, subtype_2, type_1, type_2, waveshaper_drive, waveshaper_type;
       }
       namespace Global {
-         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, polylimit, scene_mode, splitpoint;
+         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, polylimit, scene_mode, splitkey;
       }
       namespace LFO {
          extern Surge::Skin::Connector amplitude, attack, decay, deform, delay, hold, phase, rate, release, shape, sustain, triggermode, unipolar;

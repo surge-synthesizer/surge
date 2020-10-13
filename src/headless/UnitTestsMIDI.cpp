@@ -25,7 +25,7 @@ TEST_CASE( "Channel Split Routes on Channel", "[midi]" )
       for( auto splitChan = 2; splitChan < 14; splitChan ++ )
       {
          auto smc = splitChan * 8;
-         surge->storage.getPatch().splitpoint.val.i = smc;
+         surge->storage.getPatch().splitkey.val.i = smc;
          for( auto mc=0; mc<16; ++mc )
          {
             auto fr = frequencyForNote( surge, 69, 2, 0, mc );
@@ -42,7 +42,7 @@ TEST_CASE( "Channel Split Routes on Channel", "[midi]" )
       for( auto splitChan = 2; splitChan < 14; splitChan ++ )
       {
          auto smc = splitChan * 8;
-         surge->storage.getPatch().splitpoint.val.i = smc;
+         surge->storage.getPatch().splitkey.val.i = smc;
          for( auto mc=0; mc<16; ++mc )
          {
             auto fr = frequencyForNote( surge, 69, 2, 0, mc );
