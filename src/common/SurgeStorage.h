@@ -702,7 +702,7 @@ public:
    FxStorage fx[n_fx_slots];
    // char name[NAMECHARS];
    int scene_start[2], scene_size;
-   Parameter scene_active, scenemode, scenemorph, splitpoint;
+   Parameter scene_active, scenemode, scenemorph, splitpoint;   // streaming name for splitpoint is splitkey (due to legacy)
    Parameter volume;
    Parameter polylimit;
    Parameter fx_bypass, fx_disable;
