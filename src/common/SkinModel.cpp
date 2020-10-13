@@ -240,7 +240,7 @@ namespace Surge
          Connector fmrouting = Connector( "scene.fmrouting", 309, 89, 134, 52, Connector::HSWITCH2 )
              .withHSwitch2Properties(IDB_FMCONFIG, 4, 1, 4 );
          Connector gain = Connector( "scene.gain", 699, 300 ).asVertical().asWhite();
-         Connector keytrack_root = Connector( "scene.keytrack_root", 307, 272, 43, 14, Connector::NUMBERFIELD )
+         Connector keytrack_root = Connector( "scene.keytrack_root", 309, 272, 43, 14, Connector::NUMBERFIELD )
              .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_notename )
              .withBackground(IDB_KEYTRACKROOT_BG)
              .withProperty(Connector::TEXT_COLOR, "scene.keytrackroot.text")
