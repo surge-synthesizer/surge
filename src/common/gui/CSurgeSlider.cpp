@@ -235,9 +235,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
       // if (label_id >= 0) pLabels->draw(dc,trect,CPoint(0,8*label_id),0xff);
 
       if (style & kWhite)
-         dc->setFontColor(skin->getColor(Colors::Slider::Label::Light, kWhiteCColor));
+         dc->setFontColor(skin->getColor(Colors::Slider::Label::Light));
       else
-         dc->setFontColor(skin->getColor(Colors::Slider::Label::Dark, kBlackCColor));
+         dc->setFontColor(skin->getColor(Colors::Slider::Label::Dark));
       dc->setFont(displayFont);
 
       //		int a = 'a' + (rand()&31);
@@ -275,8 +275,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
       CRect trect = hrect;
       CRect trect2 = hrect;
 
-      CColor ColBar = skin->getColor(Colors::Slider::Modulation::Positive, CColor(173, 255, 107, 255));
-      CColor ColBarNeg = skin->getColor(Colors::Slider::Modulation::Negative, CColor(173, 255, 107, 255));
+      CColor ColBar = skin->getColor(Colors::Slider::Modulation::Positive);
+      CColor ColBarNeg = skin->getColor(Colors::Slider::Modulation::Negative);
 
       ColBar.alpha = (int)(slider_alpha * 255.f);
       ColBarNeg.alpha = (int)(slider_alpha * 255.f);
@@ -736,6 +736,16 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
 
    CCursorHidingControl::onMouseUp(where, buttons);
 
+   // "elastic edit" - resets to the value before the drag started if Alt is held
+   if (buttons & kAlt)
+   {
+      hasBeenDraggedDuringMouseGesture = false;
+      *edit_value = oldVal;
+      setDirty();
+      if (isDirty() && listener)
+         listener->valueChanged(this);
+   }
+
    if (controlstate)
    {
 #if MAC
@@ -750,6 +760,7 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       // getFrame()->setCursor( VSTGUI::kCursorDefault );
       
       edit_value = nullptr;
+
 
       attachCursor();
    }

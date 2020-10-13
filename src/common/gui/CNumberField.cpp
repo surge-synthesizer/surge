@@ -22,6 +22,7 @@
 #include "unitconversion.h"
 #include <iostream>
 #include "SkinColors.h"
+#include "CScalableBitmap.h"
 
 using namespace VSTGUI;
 
@@ -89,11 +90,8 @@ CNumberField::CNumberField(const CRect& size,
    f_max = 1.0f;
    f_movespeed = 0.01;
    value = 0.0f;
-   label[0] = 0;
    drawsize = size;
-   setLabelPlacement(lp_left);
    i_poly = 0;
-   altlook = false;
    this->storage = storage;
 }
 
@@ -259,55 +257,40 @@ void CNumberField::setValue(float val)
 //------------------------------------------------------------------------
 void CNumberField::draw(CDrawContext* pContext)
 {
-   backColor = skin->getColor(Colors::NumberField::Background, CColor(255, 255, 255, 255));
-   envColor = skin->getColor(Colors::NumberField::Env, CColor(214, 209, 198, 255));
-   fontColor = skin->getColor(Colors::NumberField::Text, CColor(42, 42, 42, 255));
-   lineColor = skin->getColor(Colors::NumberField::Border, CColor(42, 42, 42, 255));
+   auto colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::DefaultText.name );
+   auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::DefaultHoverText.name );
 
-   // COffscreenContext *tempContext = new
-   // COffscreenContext(this->getFrame(),drawsize.width(),drawsize.height());
-
-   CRect sze(drawsize);
-   /*sze.offset(-sze.x,-sze.y);
-   sze.bottom--;
-   sze.right--;*/
-
-   /*sze.right--;
-   sze.bottom--;*/
-
-   pContext->setFillColor(backColor);
-   /*#ifdef _DEBUG
-   CColor randomcol;
-   randomcol.red = rand() & 255;
-   randomcol.green = rand() & 255;
-   randomcol.blue = rand() & 255;
-   tempContext->setFillColor(randomcol);
-   #endif*/
-
-   pContext->setFrameColor(lineColor);
-
-   pContext->setFont(displayFont);
-   // tempContext->fillRect(sze);
-   /*if(!altlook)
+   auto fontColor = kRedCColor;
+   if( hovered )
    {
-           pContext->setFillColor(col_black);
-           CRect tr(sze);
-           tr.inset(1,0);
-           pContext->fillRect(tr);
-           tr = sze;
-           tr.inset(0,1);
-           pContext->fillRect(tr);
-   }*/
-   // VSTGUI::CColor orange = {255,160,61,0};
-   CColor orange = CColor(163, 104, 58, 255);
-   if (altlook)
-      pContext->setFillColor(orange);
+      fontColor = skin->getColor(hoverColorName );
+   }
    else
    {
-      pContext->setFillColor(col_white);
-      sze.inset(2, 2);
+      fontColor = skin->getColor(colorName );
    }
-   // pContext->fillRect(sze);
+
+   // cache this of course
+   if( ! triedToLoadBg )
+   {
+      bg = skin->backgroundBitmapForControl(skinControl, associatedBitmapStore);
+      hoverBg = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl, bg, associatedBitmapStore, Surge::UI::Skin::HOVER );
+      triedToLoadBg = true;
+   }
+   if( hovered && hoverBg )
+   {
+      hoverBg->draw( pContext, getViewSize(), CPoint(), 0xff );
+   }
+   else if( bg )
+   {
+      bg->draw( pContext, getViewSize(), CPoint(), 0xff );
+   }
+   else
+   {
+      pContext->setFrameColor(kRedCColor);
+      pContext->setFillColor(VSTGUI::CColor(100, 100, 200));
+      pContext->drawRect(getViewSize(), kDrawFilledAndStroked);
+   }
 
    char the_text[32];
    switch (controlmode)
@@ -505,54 +488,10 @@ void CNumberField::draw(CDrawContext* pContext)
       break;
    }
 
-   if (altlook)
-      pContext->setFontColor(kWhiteCColor);
-   else
-      pContext->setFontColor(fontColor);
+   pContext->setFont(displayFont);
+   pContext->setFontColor(fontColor);
 
-   CRect labelSize(sze);
-   labelSize.top++;
-   pContext->drawString(the_text, labelSize, kCenterText, true);
-   CRect cpysize(drawsize);
-   cpysize.right++;
-   cpysize.bottom++;
-
-   if (label[0])
-   {
-      // draw label
-      pContext->setFillColor(envColor);
-      // pContext->setFontColor(fontColor);
-      // pContext->setFont(this->fontID);
-      CRect labelbox(drawsize);
-      if (altlook)
-         pContext->setFontColor(kWhiteCColor);
-      else
-         pContext->setFontColor(fontColor);
-
-      switch (labelplacement)
-      {
-      case lp_left:
-         labelbox.right = labelbox.left - margin;
-         labelbox.left = labelbox.right - width;
-         pContext->drawString(label, labelbox, kRightText, true);
-         break;
-      case lp_right:
-         labelbox.left = labelbox.right + margin;
-         labelbox.right = labelbox.left + width;
-         pContext->drawString(label, labelbox, kLeftText, true);
-         break;
-      case lp_above:
-         labelbox.bottom = labelbox.top - vmargin;
-         labelbox.top = labelbox.bottom - height;
-         pContext->drawString(label, labelbox, kCenterText, true);
-         break;
-      case lp_below:
-         labelbox.top = labelbox.bottom + vmargin;
-         labelbox.bottom = labelbox.top + height;
-         pContext->drawString(label, labelbox, kCenterText, true);
-         break;
-      }
-   }
+   pContext->drawString(the_text, getViewSize(), kCenterText, true);
 
    setDirty(false);
 }
@@ -715,194 +654,4 @@ bool CNumberField::onWheel(const CPoint& where, const float& distance, const CBu
 
    endEdit();
    return true;
-}
-//------------------------------------------------------------------------
-/*void CParamEdit::mouse (CDrawContext *pContext, CPoint &where, long buttons)
-{
-        if (!bMouseEnabled)
-                return;
-
-        if (controlmode == cm_int_menu) return;
-
-        if (controlmode == cm_noyes)
-        {
-                i_value = !i_value;
-                if (listener)
-                        listener->valueChanged (this);
-
-                setDirty();
-                return;
-        }
-
-        if (listener && buttons & (kAlt | kRButton | kMButton | kShift | kControl | kApple))
-        {
-                if (listener->controlModifierClicked (this, buttons) != 0)
-                {
-                        setDirty();
-                        return;
-                }
-        }
-
-        if (pContext->waitDoubleClick())
-        {
-                if (listener) listener->controlModifierClicked (this, kControl);
-                {
-                        setDirty();
-                        return;
-                }
-        }
-        
-        long button = pContext->getMouseButtons ();
-        
-        // allow left mousebutton only
-        if ((button & kLButton)&&(drawsize.pointInside(where)))
-        {
-                if (button & kControl)
-                {
-                        value = defaultValue;
-                        i_value = i_default;
-                        if (listener) listener->valueChanged (this);
-                        setDirty();
-                        return;
-                }
-
-                delta = where.h;
-                // begin of edit parameter
-                beginEdit ();
-                
-                int oldvalue = i_value;
-                float old_fvalue = value;
-                long  oldButton = button;
-
-                int lastvalue = i_value;
-                float last_fvalue = value;
-                
-                while (1)
-                {
-                        button = pContext->getMouseButtons ();
-                        if (!(button & kLButton))
-                                break;
-
-                        // shift has been toggled
-                        if ((oldButton & (kShift|kRButton)) != (button & (kShift|kRButton)))
-                        {
-                                if (button & (kShift|kRButton))
-                                {
-                                        oldvalue = i_value;
-                                        old_fvalue = value;
-                                        oldButton = button;
-                                        delta = where.h;
-                                }
-                                else if (!(button & (kShift|kRButton)))
-                                {
-                                        oldvalue = i_value;
-                                        old_fvalue = value;
-                                        delta = where.h;
-                                        oldButton = button;
-                                }
-                        }
-                        
-                        if (button & (kShift|kRButton))
-                        {
-                                i_value = oldvalue + ((where.h - delta)/15)*i_stepsize;
-                                //value = old_fvalue + (float)(where.h - delta)*0.05f*f_movespeed;
-                                
-                        }
-                        else
-                        {
-                                i_value = oldvalue + ((where.h - delta)/3)*i_stepsize;
-                                //value = old_fvalue + (float)(where.h - delta)*f_movespeed;
-                        }
-                        
-                        value = 0.005 + 0.99*((float)(i_value-i_min))/((float)(i_max - i_min));
-                        bounceValue ();
-
-                        if ((lastvalue!=i_value)||(last_fvalue!=value))
-                        {
-                                last_fvalue = value;
-                                lastvalue = i_value;
-                                setDirty();
-
-                                if (listener)
-                                        listener->valueChanged ( this);
-                        }
-
-                        getMouseLocation(pContext,where);
-                        doIdleStuff ();
-                }
-
-                // end of edit parameter
-                endEdit();
-                if (listener)
-                        listener->valueChanged (this);
-                setDirty();
-        }
-}*/
-//------------------------------------------------------------------------
-/*void CParamEdit::setFont (CFont fontID)
-{
-        // to force the redraw
-        if (this->fontID != fontID)
-                setDirty ();
-        this->fontID = fontID;
-}
-//------------------------------------------------------------------------
-void CParamEdit::setTxtFace (CTxtFace txtFace)
-{
-        // to force the redraw
-        if (this->txtFace != txtFace)
-                setDirty ();
-        this->txtFace = txtFace;
-}*/
-//------------------------------------------------------------------------
-void CNumberField::setFontColor(CColor color)
-{
-   // to force the redraw
-   if (fontColor != color)
-      setDirty();
-   fontColor = color;
-}
-//------------------------------------------------------------------------
-void CNumberField::setBackColor(CColor color)
-{
-   // to force the redraw
-   if (backColor != color)
-      setDirty();
-   backColor = color;
-}
-
-//------------------------------------------------------------------------
-void CNumberField::setLineColor(CColor color)
-{
-   // to force the redraw
-   if (lineColor != color)
-      setDirty();
-   lineColor = color;
-}
-//------------------------------------------------------------------------
-
-void CNumberField::setLabelPlacement(int placement)
-{
-   labelplacement = placement;
-
-   CRect newsize = drawsize;
-   if (label[0])
-   {
-      if (labelplacement == lp_left)
-         newsize.left -= width + margin;
-      if (labelplacement == lp_right)
-         newsize.right += width + margin;
-      if (labelplacement == lp_above)
-         newsize.top -= height + vmargin;
-      if (labelplacement == lp_below)
-         newsize.bottom += height + vmargin;
-   }
-
-   setViewSize(newsize);
-}
-
-void CNumberField::setLabel(char* newlabel)
-{
-   strcpy(label, newlabel);
-   setLabelPlacement(labelplacement); // update rect
 }

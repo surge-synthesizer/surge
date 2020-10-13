@@ -38,7 +38,7 @@ void CPatchBrowser::draw(CDrawContext* dc)
    // dc->fillRect(ar);
    ar = size;
    ar.inset(2, 2);
-   dc->setFillColor(skin->getColor(Colors::PatchBrowser::Background, kWhiteCColor));
+   dc->setFillColor(skin->getColor(Colors::PatchBrowser::Background));
    // dc->fillRect(ar);
    // ar.top += 2;
    CRect al(ar);
@@ -48,7 +48,7 @@ void CPatchBrowser::draw(CDrawContext* dc)
    al.left += 3;
    // al.top += 2;
    al.bottom = al.top + 12;
-   dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text, kBlackCColor));
+   dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text));
    dc->setFont(patchNameFont);
    dc->drawString(pname.c_str(), ar, kCenterText, true);
 
@@ -105,7 +105,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    }
    else
    {
-       auto factory_add = contextMenu->addEntry("FACTORY PRESETS");
+       auto factory_add = contextMenu->addEntry("FACTORY PATCHES");
        factory_add->setEnabled(0);
 
        for (int i = 0; i < storage->patch_category.size(); i++)
@@ -117,9 +117,9 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
                    string txt;
 
                    if (i == storage->firstThirdPartyCategory)
-                      txt = "THIRD PARTY PRESETS";
+                      txt = "THIRD PARTY PATCHES";
                    else
-                      txt = "USER PRESETS";
+                      txt = "USER PATCHES";
 
                    auto add = contextMenu->addEntry(txt.c_str());
                    add->setEnabled(0);
@@ -135,7 +135,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    
    contextMenu->addSeparator();
 
-   auto loadF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Load Patch From File..." ) ) );
+   auto loadF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Load Patch from File..." ) ) );
    loadF->setActions( [this](CCommandMenuItem *item) {
                          Surge::UserInteractions::promptFileOpenDialog( "", "fxp", "Surge FXP Files",
                                                                         [this](std::string fn) {
@@ -147,32 +147,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       );
    contextMenu->addEntry(loadF);
    
-   auto showU = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open User Patch Folder..." )));
-   showU->setActions( [this](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->userDataPath );
-                      }
-      );
-   contextMenu->addEntry(showU);
-
-   std::string sep = "/";
-#if WINDOWS
-   sep = ""; // We already have an ending \ it seems
-#endif
-   
-   auto showF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Factory Patch Folder..." )));
-   showF->setActions( [this, sep](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + sep + "patches_factory" );
-                      }
-      );
-   contextMenu->addEntry(showF);
-
-   auto show3 = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Third Party Patch Folder..." )));
-   show3->setActions( [this, sep](CCommandMenuItem *item) {
-                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->datapath + sep + "patches_3rdparty" );
-                      }
-      );
-   contextMenu->addEntry(show3);
-
    auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
    auto refreshAction = [this](CCommandMenuItem *item)
                            {
@@ -181,21 +155,31 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
    refreshItem->setActions(refreshAction,nullptr);
    contextMenu->addEntry(refreshItem);
 
- /*
-    TODO: add menu entries for opening factory and user patch folders!
- */
+   contextMenu->addSeparator();
+
+   auto showU = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open User Patches Folder..." )));
+   showU->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser( this->storage->userDataPath );
+                      }
+      );
+   contextMenu->addEntry(showU);
+   
+   auto showF = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Factory Patches Folder..." )));
+   showF->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser(Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"));
+                      }
+      );
+   contextMenu->addEntry(showF);
+
+   auto show3 = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu( "Open Third Party Patches Folder..." )));
+   show3->setActions( [this](CCommandMenuItem *item) {
+                         Surge::UserInteractions::openFolderInFileBrowser(Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
+                      }
+      );
+   contextMenu->addEntry(show3);
 
 
    contextMenu->addSeparator();
-
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Download Additional Content...")));
-   auto contentAction = [](CCommandMenuItem *item)
-       {
-           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
-       };
-   contentItem->setActions(contentAction,nullptr);
-   contextMenu->addEntry(contentItem);
-
 
    auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
    if( sge )
@@ -204,7 +188,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       if( hu != "" )
       {
          auto lurl = sge->fullyResolvedHelpURL(hu);
-         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Help On The Patch Browser...")));
+         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc("[?] Patch Browser"));
          auto ca = [lurl](CCommandMenuItem *i)
                       {
                          Surge::UserInteractions::openURL(lurl);
@@ -212,7 +196,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
          hi->setActions( ca, nullptr );
          contextMenu->addEntry(hi);
       }
-
    }
    
    getFrame()->addView(contextMenu); // add to frame
@@ -301,14 +284,9 @@ bool CPatchBrowser::populatePatchMenuForCategory( int c, COptionMenu *contextMen
         }
         
         string menuName = storage->patch_category[c].name;
-        string pathSep = "/";
 
-        #if WINDOWS
-           pathSep = "\\";
-        #endif
-
-        if (menuName.find_last_of(pathSep) != string::npos)
-            menuName = menuName.substr(menuName.find_last_of(pathSep) + 1);
+        if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
+            menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
         
         if (n_subc > 1)
            name = menuName.c_str() + (subc + 1);
@@ -342,43 +320,4 @@ void CPatchBrowser::loadPatch(int id)
       sel_id = id;
       listener->valueChanged(this);
    }
-}
-
-bool CPatchBrowser::onDrop(VSTGUI::DragEventData data )
-{
-   auto drag = data.drag;
-   auto where = data.pos;
-   uint32_t ct = drag->getCount();
-   if (ct == 1)
-   {
-      IDataPackage::Type t = drag->getDataType(0);
-      if (t == IDataPackage::kFilePath)
-      {
-         const void* fn;
-         drag->getData(0, fn, t);
-         const char* fName = static_cast<const char*>(fn);
-         fs::path fPath(fName);
-         if ((_stricmp(fPath.extension().generic_string().c_str(), ".fxp") != 0) )
-         {
-            Surge::UserInteractions::promptError(
-               std::string( "Surge only supports drag-and-drop of .fxp files onto the Patch Browser. " ) +
-               "You dropped a file with extension " + fPath.extension().generic_string(),
-               "Please drag a valid file type!");
-         }
-         else
-         {
-            auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
-            if( ! sge ) return false;
-            sge->queuePatchFileLoad( fName );
-         }
-      }
-      else
-      {
-         Surge::UserInteractions::promptError(
-             "Surge only supports drag-and-drop of files onto the Patch Browser.",
-             "Please drop a file!");
-      }
-   }
-
-   return true;
 }

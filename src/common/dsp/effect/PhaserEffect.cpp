@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "PhaserEffect.h"
 
 /* phaser			*/
 
@@ -281,4 +281,20 @@ void PhaserEffect::handleStreamingMismatches(int streamingRevision, int currentS
       fxdata->p[pp_stages].val.i = 4;
       fxdata->p[pp_width].val.f = 0.f;
    }
+}
+
+int PhaserEffect::get_ringout_decay()
+{
+   auto fb = *f[pp_feedback];
+   // The ringout is longer at high feedbacks. This is just a heuristic based on
+   // testing with the patch in #2663. Note that at feedbacks above 1 (from
+   // modulation or control pushes) you can get infinite self modulation
+   // so run forever then
+   if( fb > 1 || fb < -1 )
+      return -1;
+   if( fb > 0.9 || fb < -0.9 )
+      return 5000;
+   if( fb > 0.5 || fb < -0.5 )
+      return 3000;
+   return 1000;
 }

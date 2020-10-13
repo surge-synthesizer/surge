@@ -22,17 +22,18 @@
 #include "SkinColors.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
+#include "CCursorHidingControl.h"
 
 
-class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CScalableBitmap;
+
+class CLFOGui : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    const static int margin = 2;
    const static int margin2 = 7;
    const static int lpsize = 50;
    const static int scale = 18;
-   const static int shadowoffset = 1;
-   const static int skugga = 0xff5d5d5d;
    const static int splitpoint = lpsize + 20;
     
    void drawtri(VSTGUI::CRect r, VSTGUI::CDrawContext* context, int orientation);
@@ -47,7 +48,7 @@ public:
            MSEGStorage* ms = 0,
            FormulaModulatorStorage* fs = 0,
            std::shared_ptr<SurgeBitmaps> ibms = nullptr)
-      : VSTGUI::CControl(size, listener, tag, 0),
+      : CCursorHidingControl(size, listener, tag, 0),
         bitmapStore( ibms )
    {
       this->lfodata = lfodata;
@@ -66,9 +67,7 @@ public:
 
    void resetColorTable()
    {
-      auto c = skin->getColor(Colors::LFO::Waveform::Fill, VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
-      auto d = skin->getColor(Colors::LFO::Waveform::Wave, VSTGUI::CColor(0x00, 0x00, 0x00));
-      
+      auto d = skin->getColor(Colors::LFO::Waveform::Wave);
    }
    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
@@ -98,7 +97,16 @@ public:
       return rect_shapes.pointInside(where);
    }
          
-   
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override {}
+
+
+   virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
+      ss_shift_hover = 0;
+      lfo_type_hover = -1;
+      invalid();
+      return VSTGUI::kMouseEventHandled;
+   }
+
 protected:
    LFOStorage* lfodata;
    StepSequencerStorage* ss;
@@ -128,7 +136,8 @@ protected:
    VSTGUI::CPoint rmStepStart, rmStepCurr;
 
    int ss_shift_hover = 0;
-   VSTGUI::CBitmap* typeImg;
+   int lfo_type_hover = -1;
+   CScalableBitmap *typeImg, *typeImgHover, *typeImgHoverOn;
    
-   CLASS_METHODS(CLFOGui, VSTGUI::CControl)
+   CLASS_METHODS(CLFOGui, CCursorHidingControl)
 };

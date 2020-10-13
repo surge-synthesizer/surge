@@ -3,7 +3,8 @@
 #include <vt_dsp/basic_dsp.h>
 #include "DebugHelpers.h"
 
-#include "filters/RKMoog.h"
+#include "filters/VintageLadders.h"
+#include "filters/Obxd.h"
 
 __m128 SVFLP12Aquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
@@ -782,9 +783,28 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       return SNHquad;
    case fut_comb:
       return COMBquad_SSE2;
+   case fut_vintageladder:
+      switch( subtype )
+      {
+      case 0:
+      case 1:
+         return VintageLadder::RK::process;
+      case 2:
+      case 3:
+         return VintageLadder::Huov::process;
+      }
+      break;
+   case fut_obxd_2pole:
+      return ObxdFilter::process_2_pole;
+      break;
+   case fut_obxd_4pole:
+      return ObxdFilter::process_4_pole;
+      break;
+   default:
+      // SOFTWARE ERROR
+      break;
+         
 #if SURGE_EXTRA_FILTERS      
-   case fut_rkmoog:
-      return RKMoog::process;
 #endif      
    }
    return 0;

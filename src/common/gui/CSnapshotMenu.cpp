@@ -6,7 +6,6 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h" // for TINYXML macro
-#include "PopupEditorSpawner.h"
 #include "ImportFilesystem.h"
 #include "SkinColors.h"
 #include "guihelpers.h"
@@ -46,7 +45,6 @@ bool CSnapshotMenu::canSave()
 void CSnapshotMenu::populate()
 {
    int main = 0, sub = 0;
-   bool do_nothing = false;
    const long max_main = 128, max_sub = 256;
 
    int idx = 0;
@@ -86,13 +84,11 @@ bool CSnapshotMenu::loadSnapshotByIndex( int idx )
       {
          auto type = typeD.front();
          typeD.pop();
-         auto tn = type->Attribute( "name" );
          int type_id = 0;
          type->Attribute("i", &type_id);
          TiXmlElement* snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
          while (snapshot)
          {
-            auto n = snapshot->Attribute("name");
             int snapshotTypeID = type_id, tmpI = 0;
             if (snapshot->Attribute("i", &tmpI) != nullptr)
             {
@@ -311,7 +307,7 @@ void CFxMenu::draw(CDrawContext* dc)
    lbox.right--;
    lbox.bottom--;
 
-   auto fgc = skin->getColor(Colors::Effect::Menu::Text, kBlackCColor);
+   auto fgc = skin->getColor(Colors::Effect::Menu::Text);
    dc->setFontColor(fgc);
    dc->setFont(displayFont);
    CRect txtbox(lbox);
@@ -322,7 +318,7 @@ void CFxMenu::draw(CDrawContext* dc)
    txtbox.bottom += 2;
    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
    char fxname[NAMECHARS];
-   sprintf(fxname, "%s", fxtype_names[fx->type.val.i]);
+   sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);
    dc->drawString(fxname, txtbox, kRightText, true);
 
    CPoint d(txtbox.right + 2, txtbox.top + 5);
@@ -470,7 +466,7 @@ void CFxMenu::rescanUserPresets()
             {
                workStack.push_back(d);
             }
-            else if( d.path().extension().generic_string() == ".srgfx" )
+            else if (path_to_string(d.path().extension()) == ".srgfx")
             {
                sfxfiles.push_back( d.path() );
             }
@@ -480,7 +476,7 @@ void CFxMenu::rescanUserPresets()
 
    for( auto f : sfxfiles )
    {
-      auto fn = f.generic_string();
+      auto fn = path_to_string(f);
 
       {
          UserPreset preset;
@@ -687,7 +683,7 @@ void CFxMenu::pasteFX()
         fxbuffer->p[i].deactivated = (int)fxCopyPaste[dp];
     }
 
-    selectedName = std::string( "Copied " ) + fxtype_names[ fxbuffer->type.val.i ];
+    selectedName = std::string( "Copied " ) + fx_type_names[ fxbuffer->type.val.i ];
 
     if( listenerNotForParent )
        listenerNotForParent->valueChanged( this );
@@ -696,11 +692,21 @@ void CFxMenu::pasteFX()
 
 void CFxMenu::saveFX()
 {
-   // Rough implementation
+   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+   if( sge )
+   {
+      sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
+                             CPoint(-1,-1), [this](const std::string& s) { this->saveFXIn(s); });
+   }
+
+
+}
+void CFxMenu::saveFXIn( const std::string &s )
+{
    char fxName[256];
    fxName[0] = 0;
-   spawn_miniedit_text(fxName, 256, "Enter a name for the FX preset:", "Save FX Preset" );
-
+   strncpy( fxName, s.c_str(), 256 );
+   
    if( strlen( fxName ) == 0 )
    {
       return;
@@ -715,21 +721,17 @@ void CFxMenu::saveFX()
    int ti = fx->type.val.i;
    
    std::ostringstream oss;
-   oss << storage->userFXPath
-#if WINDOWS
-       << "\\" << fxtype_names[ti] << "\\";
-#else
-       << "/" << fxtype_names[ti] << "/";
-#endif
+   oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
+
    auto pn = oss.str();
-   fs::create_directories( pn );
+   fs::create_directories(string_to_path(pn));
 
    auto fn = pn + fxName + ".srgfx";
    std::ofstream pfile( fn, std::ios::out );
    if( ! pfile.is_open() )
    {
       Surge::UserInteractions::promptError( std::string( "Unable to open FX preset file '" ) + fn + "' for writing!",
-                                            "Surge IO Error" );
+                                            "Error" );
       return;
    }
 
@@ -836,7 +838,6 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *sub
    auto user_add = subMenu->addEntry("USER PRESETS");
    user_add->setEnabled(0);
 
-   int fidx = idx + 10000;
    for( auto &ps : userPresets[type_id] )
    {
       auto fxName = ps.name;

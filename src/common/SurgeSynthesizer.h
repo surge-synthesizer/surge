@@ -94,6 +94,7 @@ public:
    void programChange(char channel, int value);
    void allNotesOff();
    void setSamplerate(float sr);
+   void updateHighLowKeys(int scene);
    int getNumInputs()
    {
       return N_INPUTS;
@@ -116,11 +117,24 @@ public:
    void onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int msbValue);
    void onNRPN(int channel, int lsbNRPN, int msbNRPN, int lsbValue, int msbValue);
 
+   void resetStateFromTimeData();
    void processControl();
    void processThreadunsafeOperations();
    bool loadFx(bool initp, bool force_reload_all);
    bool loadOscalgos();
    bool load_fx_needed;
+
+   // We have to push this onto the audio thread so have an enqueue and so on
+   enum FXReorderMode { NONE, SWAP, COPY, MOVE };
+   struct { int s; int t; FXReorderMode m; } reorderFxQueue;
+   void enqueuReorderFx( int source, int target, FXReorderMode m )
+   {
+      reorderFxQueue.s = source;
+      reorderFxQueue.t = target;
+      reorderFxQueue.m = m;
+   }
+   void reorderFx();
+
    void playVoice(int scene, char channel, char key, char velocity, char detune);
    void releaseScene(int s);
    int calculateChannelMask(int channel, int key);
@@ -175,6 +189,8 @@ public:
    void incrementPatch(bool nextPrev);
    void incrementCategory(bool nextPrev);
 
+   void swapMetaControllers( int ct1, int ct2 );
+   
    std::string getUserPatchDirectory();
    std::string getLegacyUserPatchDirectory();
 
@@ -234,14 +250,21 @@ public:
 
    QuadFilterChainState* FBQ[2];
 
+   std::string hostProgram = "Unknown Host";
+   bool activateExtraOutputs = true;
+   void setupActivateExtraOutputs();
+
+   void changeModulatorSmoothing( ControllerModulationSource::SmoothingMode m );
+
    // these have to be thread-safe, so keep private
 private:
+   
    PluginLayer* _parent = nullptr;
 
    void switch_toggled();
 
    // midicontrol-interpolators
-   static const int num_controlinterpolators = 32;
+   static const int num_controlinterpolators = 128;
    ControllerModulationSource mControlInterpolator[num_controlinterpolators];
    bool mControlInterpolatorUsed[num_controlinterpolators];
 
@@ -250,4 +273,6 @@ private:
    void ReleaseControlInterpolator(int Idx);
    ControllerModulationSource* ControlInterpolator(int Idx);
    ControllerModulationSource* AddControlInterpolator(int Idx, bool& AlreadyExisted);
+
+   ControllerModulationSource::SmoothingMode smoothingMode;
 };

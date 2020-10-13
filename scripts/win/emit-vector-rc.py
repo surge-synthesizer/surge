@@ -49,16 +49,11 @@ digitToIDB = {}
 IDBtoDigit = {}
 scaleToOffset = {}
 
-scales = [ "100", "125", "150", "200", "300", "400", "SVG" ]
-xtnToPostfix = { "":       "_SCALE_100",
-                 "@125x":  "_SCALE_125",
-                 "@15x":   "_SCALE_150",
-                 "@2x":    "_SCALE_200",
-                 "@3x":    "_SCALE_300",
-                 "@4x":    "_SCALE_400" }
+scales = [ "SVG" ]
+xtnToPostfix = { };
 
 
-with open( "src\\common\\resource.h", "r" ) as r:
+with open( "src/common/resource.h", "r" ) as r:
     for line in r:
         matches = re.match( '#define (IDB\\S+) (\\d+)', line )
         if( matches ):
@@ -69,8 +64,7 @@ with open( "src\\common\\resource.h", "r" ) as r:
         if( matchscale ):
             scaleToOffset[ matchscale.group( 1 ) ] = int( matchscale.group( 2 ) )
 
-
-subRes = open( "src\\windows\\scalableresource.h", "w" )
+subRes = open( "src/windows/scalableresource.h", "w" )
 subRes.write( """
 /*
 ** THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT
@@ -98,41 +92,8 @@ subRes.close()
 # Create the resource extras
 
 
-# Create the rc file
-subrc = open( "src\\windows\\scalableui.rc", "w" );
-subrc.write( """
-/*
-** THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT
-**
-** If you need to modify this file, please read the comment
-** in scripts/win/emit-vector-rc.py
-**
-** This file imports the appropriate scaled PNG files
-** for each of the identifiers in scalableresource.h.
-**
-** You can address these items as IDB_BG_SCALE_300 or
-** IDB_BG + SCALE_OFFSET_300 in your non-rc code.
-*/
-
-""")
-
-lastBase = ""
-for file in os.listdir( assetdir ):
-    if file.endswith(".png"):
-        fn = os.path.join(assetdir, file )
-        matches = re.match( 'bmp00(\\d+)(.*).png', file );
-        if( matches ):
-            base = digitToIDB[matches.group(1)]
-            if( base != lastBase ):
-                subrc.write( "\n" );
-                lastBase = base
-
-            ofst = xtnToPostfix[matches.group(2)]
-            subrc.write( base + ofst + " PNG \"" + assetdir + "/" + file + "\"\n" )
-
-
 # Create the SVG rc file
-subrc = open( "src\\windows\\svgresources.rc", "w" );
+subrc = open( "src/windows/svgresources.rc", "w" );
 subrc.write( """
 /*
 ** THIS IS AN AUTOMATICALLY GENERATED FILE. DO NOT EDIT IT

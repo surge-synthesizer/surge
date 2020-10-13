@@ -52,6 +52,9 @@
 #include "MSEGModulationHelper.h"
 // FIXME
 
+#if __cplusplus < 201703L
+constexpr float MSEGStorage::minimumDuration;
+#endif
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -210,7 +213,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
        {
            datapath = std::string(xdgDataPath) + "/surge/";
        }
-       else if ( fs::is_directory(localDataPath) )
+       else if (fs::is_directory(string_to_path(localDataPath)))
        {
            datapath = localDataPath;
        }
@@ -223,20 +226,20 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
        ** If local directory doesn't exists - we probably came here through an installer -
        ** check for /usr/share/surge and use /usr/share/Surge as our last guess
        */
-       if (! fs::is_directory(datapath))
+       if (!fs::is_directory(string_to_path(datapath)))
        {
-          if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge" ) )
+          if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX) + "/share/surge")))
           {
              datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge";
           }
-          else if( fs::is_directory( std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge" ) )
+          else if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX) + "/share/Surge")))
           {
              datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge";
           }
           else
           {
              std::string systemDataPath = "/usr/share/surge/";
-             if ( fs::is_directory(systemDataPath) )
+             if (fs::is_directory(string_to_path(systemDataPath)))
                 datapath = systemDataPath;
              else
                 datapath = "/usr/share/Surge/";
@@ -261,15 +264,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    std::string dotSurge = std::string(homePath) + "/.Surge";
    std::string documents = std::string(homePath) + "/Documents/";
 
-   if( fs::is_directory(documentsSurge) )
+   if (fs::is_directory(string_to_path(documentsSurge)))
    { 
       userDataPath = documentsSurge;
    }
-   else if( fs::is_directory(dotSurge) )
+   else if (fs::is_directory(string_to_path(dotSurge)))
    {
       userDataPath = dotSurge;
    }
-   else if( fs::is_directory(documents) )
+   else if (fs::is_directory(string_to_path(documents)))
    {
       userDataPath = documentsSurge;
    }
@@ -284,24 +287,23 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 #if TARGET_RACK
    datapath = suppliedDataPath;
 #else
-   bool foundSurge = false;
-   std::string dllPath = "";
+   fs::path dllPath;
 
    // First check the portable mode sitting beside me
    {
-      CHAR path[MAX_PATH];
+      WCHAR pathBuf[MAX_PATH];
       HMODULE hm = NULL;
 
-      if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
-                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            (LPCSTR) &dummyExportedWindowsToLookupDLL, &hm) == 0)
+      if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            reinterpret_cast<LPCTSTR>(&dummyExportedWindowsToLookupDLL), &hm) == 0)
       {
          int ret = GetLastError();
          printf( "GetModuleHandle failed, error = %d\n", ret);
          // Return or however you want to handle an error.
          goto bailOnPortable;
       }
-      if (GetModuleFileName(hm, path, sizeof(path)) == 0)
+      if (GetModuleFileName(hm, pathBuf, std::size(pathBuf)) == 0)
       {
          int ret = GetLastError();
          printf( "GetModuleFileName failed, error = %d\n", ret);
@@ -309,64 +311,56 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
          goto bailOnPortable;
       }
 
-      // The path variable should now contain the full filepath for this DLL.
-      std::string pn = path;
-      int ep;
-      if( (ep = pn.rfind( "\\" )) != string::npos )
+      // The pathBuf variable should now contain the full filepath for this DLL.
+      fs::path path(pathBuf);
+      path.remove_filename();
+      dllPath = path;
+      path /= L"SurgeData";
+      if (fs::is_directory(path))
       {
-         dllPath = pn.substr(0,ep);;
-         auto spath = pn.substr( 0, ep ) + "\\SurgeData\\";
-         datapath = spath;
-         if( fs::is_directory( fs::path( spath ) ) )
-         {
-            foundSurge = true;
-         }
-         else
-         {
-            datapath = "";
-         }
+         datapath = path_to_string(path);
       }
    }
 bailOnPortable:
-   
-   PWSTR commonAppData;
-   if( ! foundSurge ) {
+
+   if (datapath.empty())
+   {
+      PWSTR commonAppData;
       if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
       {
-         CHAR path[4096];
-         wsprintf(path, "%S\\Surge\\", commonAppData);
-         datapath = path;
-         if( fs::is_directory( fs::path( datapath ) ) )
-            foundSurge = true;
-         else
-            datapath = "";
+         fs::path path(commonAppData);
+         path /= L"Surge";
+         if (fs::is_directory(path))
+         {
+            datapath = path_to_string(path);
+         }
       }
    }
-   
-   if( ! foundSurge ) {
+
+   if (datapath.empty())
+   {
       PWSTR localAppData;
       if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
       {
-         CHAR path[4096];
-         wsprintf(path, "%S\\Surge\\", localAppData);
-         datapath = path;
-         foundSurge = true;
+         fs::path path(localAppData);
+         path /= L"Surge";
+         datapath = path_to_string(path);
       }
    }
 
    // Portable - first check for dllPath\\SurgeUserData
-   if( dllPath != "" && fs::is_directory( fs::path( dllPath + "\\SurgeUserData\\" )))
+   if (!dllPath.empty() && fs::is_directory(dllPath / L"SurgeUserData"))
    {
-      userDataPath = dllPath + "\\SurgeUserData\\";
+      userDataPath = path_to_string(dllPath / L"SurgeUserData");
    }
    else 
    {
       PWSTR documentsFolder;
       if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
       {
-         CHAR path[4096];
-         wsprintf(path, "%S\\Surge\\", documentsFolder);
-         userDataPath = path;
+         fs::path path(documentsFolder);
+         path /= L"Surge";
+         userDataPath = path_to_string(path);
       }
    }
 #endif
@@ -380,23 +374,12 @@ bailOnPortable:
        userDataPath = userSpecifiedDataPath;
    }
 
-   userFXPath = userDataPath +
-#if WINDOWS
-      "\\"
-#else
-      "/"
-#endif
-      + "FXSettings";
+   // append separator if not present
+   datapath = Surge::Storage::appendDirectory(datapath, std::string());
 
+   userFXPath = Surge::Storage::appendDirectory(userDataPath, "FXSettings");
    
-   userMidiMappingsPath = userDataPath +
-#if WINDOWS
-      "\\"
-#else
-      "/"
-#endif
-      + "MIDIMappings";
-   
+   userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDIMappings");
    
 #if LINUX
    if (!snapshotloader.Parse((const char*)&configurationXmlStart, 0,
@@ -441,20 +424,19 @@ bailOnPortable:
    {
       WindowWT.size = 0;
       std::ostringstream oss;
-      oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for surge to operate "
-          << "properly. This occurs when Surge is mis-installed and shared resources are not in the "
-          << "os-specific shared directory, which on your OS is a directory called 'Surge' in "
+      oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for Surge to work "
+          << "properly. This occurs when Surge is incorrectly installed and its resources are not found at "
 #if MAC
-          << "the global or user local `Library/Application Support` directory."
+          << "the global or local user Library/Application Support/Surge directory."
 #endif
 #if WINDOWS
-          << "your %LocalAppData% directory."
+          << "%ProgramData%\\Surge directory."
 #endif
 #if LINUX
-          << "/usr/share or ~/.local/share."
+          << "/usr/share/Surge or ~/.local/share/Surge."
 #endif
-          << " Please install shared assets correctly and restart.";
-      Surge::UserInteractions::promptError(oss.str(), "Unable to load windows.wt");
+          << " Please reinstall Surge and try again!";
+      Surge::UserInteractions::promptError(oss.str(), "Surge Resources Loading Error");
    }
 
    // Tunings Library Support
@@ -468,10 +450,10 @@ bailOnPortable:
       TiXmlDocument doc;
       if( ! doc.LoadFile(dsf) || doc.Error() )
       {
-         std::cout << "Unable to load  '" << dsf << "'"
+         std::cout << "Unable to load  '" << dsf << "'!"
                    << std::endl;
-         std::cout << "Unable to parse\nError is:\n"
-                   << doc.ErrorDesc() << " at row=" << doc.ErrorRow() << " col=" << doc.ErrorCol()
+         std::cout << "Unable to parse!\nError is:\n"
+                   << doc.ErrorDesc() << " at row " << doc.ErrorRow() << ", column " << doc.ErrorCol()
                    << std::endl;
       }
       else
@@ -479,7 +461,7 @@ bailOnPortable:
          TiXmlElement* pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
          if( ! pdoc )
          {
-            Surge::UserInteractions::promptError( "Malformed top element in paramdocumentation.xml - not a param-doc", "Surge ERror" );
+            Surge::UserInteractions::promptError( "Unknown top element in paramdocumentation.xml - not a parameter documentation XML file!", "Error" );
          }
          else
          {
@@ -536,23 +518,25 @@ bailOnPortable:
       for( int i = 0; i < n_lfos; ++i )
       {
          auto ms = &(_patch->msegs[s][i]);
-         ms->n_activeSegments = 3;
+         ms->n_activeSegments = 4;
          ms->segments[0].duration = 0.25;
          ms->segments[0].type = MSEGStorage::segment::LINEAR;
-         ms->segments[0].v0 = -1.0;
-         ms->segments[0].v1 =  1.0;
+         ms->segments[0].v0 = 0.0;
 
          ms->segments[1].duration = 0.25;
-         ms->segments[1].type = MSEGStorage::segment::CONSTANT;
+         ms->segments[1].type = MSEGStorage::segment::LINEAR;
          ms->segments[1].v0 = 1.0;
 
-         ms->segments[2].duration = 0.5;
-         ms->segments[2].type = MSEGStorage::segment::QUADBEZ;
-         ms->segments[2].v0 = 1.0;
-         ms->segments[2].v1 = -1.0;
-         ms->segments[2].cpduration = 0.2;
-         ms->segments[2].cpv = -0.5;
-         MSEGModulationHelper::rebuildCache( ms );
+         ms->segments[2].duration = MSEGStorage::minimumDuration;
+         ms->segments[2].type = MSEGStorage::segment::LINEAR;
+         ms->segments[2].v0 = 0.7;
+
+         ms->segments[3].duration = 0.5;
+         ms->segments[3].type = MSEGStorage::segment::SCURVE;
+         ms->segments[3].v0 = -0.7;
+         ms->segments[3].cpduration = 0.4;
+         ms->segments[3].cpv = -0.3;
+         Surge::MSEG::rebuildCache( ms );
       }
    }
 }
@@ -588,7 +572,7 @@ void SurgeStorage::refresh_patchlist()
    {
       std::ostringstream ss;
       ss << "Surge was unable to load factory patches from '" << datapath
-         << "'. Surge found 0 factory patches. Please reinstall using the Surge installer.";
+         << "'. Please reinstall Surge!";
       Surge::UserInteractions::promptError(ss.str(),
                                            "Surge Installation Error");
 
@@ -650,9 +634,9 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
 {
    int category = categories.size();
 
-   fs::path patchpath = (userDir ? userDataPath : datapath);
+   fs::path patchpath = string_to_path(userDir ? userDataPath : datapath);
    if (!subdir.empty())
-      patchpath.append(subdir);
+      patchpath /= string_to_path(subdir);
 
    if (!fs::is_directory(patchpath))
    {
@@ -688,46 +672,31 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
    ** with a substr in the main loop, so get the length once
    */
    std::vector<PatchCategory> local_categories;
-   int patchpathSubstrLength= patchpath.generic_string().size() + 1;
-   if (patchpath.generic_string().back() == '/' || patchpath.generic_string().back() == '\\')
-       patchpathSubstrLength --;
+   auto patchpathStr(path_to_string(patchpath));
+   auto patchpathSubstrLength = patchpathStr.size() + 1;
+   if (patchpathStr.back() == '/' || patchpathStr.back() == '\\')
+      patchpathSubstrLength--;
    
    for (auto &p : alldirs )
    {
       PatchCategory c;
-#if WINDOWS && ! TARGET_RACK
-      /*
-      ** Windows filesystem names are properly wstrings which, if we want them to 
-      ** display properly in vstgui, need to be converted to UTF8 using the 
-      ** windows widechar API. Linux and Mac do not require this.
-      */
-      std::wstring str = p.wstring().substr(patchpathSubstrLength);
-      c.name = Surge::Storage::wstringToUTF8(str);
-#else
-      c.name = p.generic_string().substr(patchpathSubstrLength);
-#endif
+      c.name = path_to_string(p).substr(patchpathSubstrLength);
       c.internalid = category;
 
       c.numberOfPatchesInCatgory = 0;
       for (auto& f : fs::directory_iterator(p))
       {
-         std::string xtn = f.path().extension().generic_string();
+         std::string xtn = path_to_string(f.path().extension());
          if (filterOp(xtn))
          {
             Patch e;
             e.category = category;
             e.path = f.path();
-#if WINDOWS && ! TARGET_RACK
-              std::wstring str = f.path().filename().wstring();
-              str = str.substr(0, str.size() - xtn.length());
-              e.name = Surge::Storage::wstringToUTF8(str);
-#else
-              e.name = f.path().filename().generic_string();
-              e.name = e.name.substr(0, e.name.size() - xtn.length());
-#endif
-              items.push_back(e);
+            e.name = path_to_string(f.path().filename());
+            e.name = e.name.substr(0, e.name.size() - xtn.length());
+            items.push_back(e);
 
-              c.numberOfPatchesInCatgory ++;
+            c.numberOfPatchesInCatgory++;
          }
       }
 
@@ -747,21 +716,16 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir,
    for (auto& pc : local_categories)
       nameToLocalIndex[pc.name] = idx++;
 
-   std::string pathSep = "/";
-#if WINDOWS
-   pathSep = "\\";
-#endif
-
    for (auto& pc : local_categories)
    {
-       if (pc.name.find(pathSep) == std::string::npos)
+       if (pc.name.find(PATH_SEPARATOR) == std::string::npos)
        {
            pc.isRoot = true;
        }
        else
        {
            pc.isRoot = false;
-           std::string parent = pc.name.substr(0, pc.name.find_last_of(pathSep) );
+           std::string parent = pc.name.substr(0, pc.name.find_last_of(PATH_SEPARATOR) );
            local_categories[nameToLocalIndex[parent]].children.push_back(pc);
        }
    }
@@ -830,7 +794,7 @@ void SurgeStorage::refresh_wtlist()
    {
       std::ostringstream ss;
       ss << "Surge was unable to load wavetables from '" << datapath
-         << "'. The directory contains no wavetables. Please reinstall using the Surge installer.";
+         << "'. Please reinstall Surge!";
       Surge::UserInteractions::promptError(ss.str(),
                                            "Surge Installation Error" );
    }
@@ -948,7 +912,7 @@ void SurgeStorage::load_wt(int id, Wavetable* wt, OscillatorStorage *osc)
    if (!wt)
       return;
 
-   load_wt(wt_list[id].path.generic_string(), wt, osc);
+   load_wt(path_to_string(wt_list[id].path), wt, osc);
 
    if( osc )
    {
@@ -961,10 +925,7 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt, OscillatorStorage *os
 {
    if( osc )
    {
-      char sep = '/';
-#if WINDOWS
-      sep = '\\';
-#endif
+      char sep = PATH_SEPARATOR;
       auto fn = filename.substr(filename.find_last_of(sep) + 1, filename.npos);
       std::string fnnoext = fn.substr( 0, fn.find_last_of('.' ) );
       
@@ -984,8 +945,8 @@ void SurgeStorage::load_wt(string filename, Wavetable* wt, OscillatorStorage *os
    else
    {
        std::ostringstream oss;
-       oss << "Unable to load file with extension '" << extension << "'. Surge only supports .wav and .wt files";
-       Surge::UserInteractions::promptError(oss.str(), "load_wt error" );
+       oss << "Unable to load file with extension " << extension << "! Surge only supports .wav and .wt wavetable files!";
+       Surge::UserInteractions::promptError(oss.str(), "Error" );
    }
 }
 
@@ -1017,24 +978,24 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable* wt)
    data = malloc(ds);
    read = fread(data, 1, ds, f);
    // FIXME - error if read != ds
-   
-   CS_WaveTableData.enter();
+
+   waveTableDataMutex.lock();
    bool wasBuilt = wt->BuildWT(data, wh, false);
-   CS_WaveTableData.leave();
+   waveTableDataMutex.unlock();
    free(data);
 
    if (!wasBuilt)
    {
        std::ostringstream oss;
-       oss << "Your wavetable was unable to build. This often means that it has too many samples or tables."
-           << " You provided " << wh.n_tables << " tables of size " << wh.n_samples << " vs max limits of "
-           << max_subtables << " tables and " << max_wtable_size << " samples."
-           << " In some cases, Surge detects this situation inconsistently leading to this message. Surge is now"
-           << " in a potentially inconsistent state. We recommend you restart Surge and do not load the wavetable again."
-           << " If you would like, please attach the wavetable which caused this message to a new github issue at "
+       oss << "Wavetable could not be built, which means it has too many samples or frames."
+           << " You provided " << wh.n_tables << " frames of " << wh.n_samples << "samples, while limit is "
+           << max_subtables << " frames and " << max_wtable_size << " samples."
+           << " In some cases, Surge detects this situation inconsistently. Surge is now in a potentially "
+           << " inconsistent state. It is recommended to restart Surge and not load the problematic wavetable again."
+           << " If you would like, please attach the wavetable which caused this message to a new GitHub issue at "
            << " https://github.com/surge-synthesizer/surge/";
        Surge::UserInteractions::promptError( oss.str(),
-                                             "Software Error on WT Load" );
+                                             "Wavetable Loading Error" );
        fclose(f);
        return false;
    }
@@ -1125,8 +1086,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       return;
    }
 
-   // CS ENTER
-   CS_ModRouting.enter();
+   modRoutingMutex.lock();
    {
 
       clipboard_p.clear();
@@ -1177,8 +1137,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
          }
       }
    }
-   // CS LEAVE
-   CS_ModRouting.leave();
+   modRoutingMutex.unlock();
 }
 
 void SurgeStorage::clipboard_paste(int type, int scene, int entry)
@@ -1230,8 +1189,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
       return;
    }
 
-   // CS ENTER
-   CS_ModRouting.enter();
+   modRoutingMutex.lock();
    {
 
       for (int i = start; i < n; i++)
@@ -1313,9 +1271,11 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
       }
       }
    }
-   // CS LEAVE
-   CS_ModRouting.leave();
+
+   modRoutingMutex.unlock();
 }
+
+
 
 TiXmlElement* SurgeStorage::getSnapshotSection(const char* name)
 {
@@ -1688,7 +1648,7 @@ void SurgeStorage::rescanUserMidiMappings()
    if( fs::is_directory( fs::path( userMidiMappingsPath ) ) ) {
       for( auto &d : fs::directory_iterator( fs::path( userMidiMappingsPath ) ) )
       {
-         auto fn = d.path().generic_string();
+         auto fn = path_to_string(d.path());
          std::string ending = ".srgmid";
          if( fn.length() >= ending.length() && ( 0 == fn.compare( fn.length() - ending.length(), ending.length(), ending ) ) )
          {
@@ -1718,7 +1678,7 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
    if( ! sm )
    {
       // Invalid XML Document. Show an error?
-      Surge::UserInteractions::promptError( "Unable to locate 'surge-midi' element in XML. Not a valid mid map", "Surge MIDI" );
+      Surge::UserInteractions::promptError( "Unable to locate surge-midi element in XML. Not a valid MIDI mapping!", "Surge MIDI" );
       return;
    }
 
@@ -1803,20 +1763,14 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
 
    doc.InsertEndChild( sm );
 
-   fs::create_directories( userMidiMappingsPath );
-   std::string fn = userMidiMappingsPath +
-#if WINDOWS
-      "\\"
-#else
-      "/"
-#endif
-      + name + ".srgmid";
+   fs::create_directories(string_to_path(userMidiMappingsPath));
+   std::string fn = Surge::Storage::appendDirectory(userMidiMappingsPath, name + ".srgmid");
 
    if( ! doc.SaveFile( fn.c_str() ) )
    {
       std::ostringstream oss;
-      oss << "Unable to save midi settings '" << fn << "'";
-      Surge::UserInteractions::promptError( oss.str(), "Surge MIDI" );
+      oss << "Unable to save MIDI settings to '" << fn << "'!";
+      Surge::UserInteractions::promptError( oss.str(), "Error" );
    }
 }
 
@@ -1929,20 +1883,36 @@ string findReplaceSubstring(string& source, const string& from, const string& to
    return newString;
 }
 
-#if WINDOWS
-std::string wstringToUTF8(const std::wstring &str)
+string makeStringVertical(string& source)
 {
-    std::string ret;
-    int len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0, NULL, NULL);
-    if (len > 0)
-    {
-        ret.resize(len);
-        WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len, NULL, NULL);
-    }
-    return ret;
+   std::ostringstream oss;
+   std::string pre = "";
+
+   for (auto c : source)
+   {
+      oss << pre << c;
+      pre = "\n";
+   }
+   return oss.str();
 }
-#endif    
-    
+
+std::string appendDirectory( const std::string &root, const std::string &path1 )
+{
+   if (root[root.size()-1] == PATH_SEPARATOR)
+      return root + path1;
+   else
+      return root + PATH_SEPARATOR + path1;
+}
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2 )
+{
+   return appendDirectory( appendDirectory( root, path1 ), path2 );
+}
+std::string appendDirectory( const std::string &root, const std::string &path1, const std::string &path2, const std::string &path3 )
+{
+   return appendDirectory( appendDirectory( root, path1, path2 ), path3 );
+}
+
+
 } // end ns Surge::Storage
 } // end ns Surge
 

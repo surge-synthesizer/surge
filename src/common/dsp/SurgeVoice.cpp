@@ -153,6 +153,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_releasevelocity] = &releaseVelocitySource;
    modsources[ms_keytrack] = &keytrackSource;
    modsources[ms_polyaftertouch] = &polyAftertouchSource;
+
    polyAftertouchSource.init(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
 
    velocitySource.output = state.fvel;
@@ -165,10 +166,16 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_filtereg] = &filterEGSource;
 
    modsources[ms_modwheel] = oscene->modsources[ms_modwheel];
+   modsources[ms_breath] = oscene->modsources[ms_breath];
+   modsources[ms_expression] = oscene->modsources[ms_expression];
+   modsources[ms_sustain] = oscene->modsources[ms_sustain]; 
    modsources[ms_aftertouch] = &monoAftertouchSource;
-   monoAftertouchSource.output = state.voiceChannelState->pressure;
+   modsources[ms_lowest_key] = oscene->modsources[ms_lowest_key];
+   modsources[ms_highest_key] = oscene->modsources[ms_highest_key];
+   modsources[ms_latest_key] = oscene->modsources[ms_latest_key];
+   monoAftertouchSource.init(state.voiceChannelState->pressure);
    modsources[ms_timbre] = &timbreSource;
-   timbreSource.output = state.voiceChannelState->timbre;
+   timbreSource.init(state.voiceChannelState->timbre);
    modsources[ms_pitchbend] = oscene->modsources[ms_pitchbend];
    for (int i = 0; i < n_customcontrollers; i++)
       modsources[ms_ctrl1 + i] = oscene->modsources[ms_ctrl1 + i];
@@ -179,6 +186,22 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_slfo5] = oscene->modsources[ms_slfo5];
    modsources[ms_slfo6] = oscene->modsources[ms_slfo6];
 
+   /*
+   ** We want to snap the rnd and alt
+   */
+   rndUni.output = oscene->modsources[ms_random_unipolar]->output;
+   modsources[ms_random_unipolar] = &rndUni;
+
+   rndBi.output = oscene->modsources[ms_random_bipolar]->output;
+   modsources[ms_random_bipolar] = &rndBi;
+
+   altUni.output = oscene->modsources[ms_alternate_unipolar]->output;
+   modsources[ms_alternate_unipolar] = &altUni;
+
+   altBi.output = oscene->modsources[ms_alternate_bipolar]->output;
+   modsources[ms_alternate_bipolar] = &altBi;
+
+   
    id_cfa = scene->filterunit[0].cutoff.param_id_in_scene;
    id_cfb = scene->filterunit[1].cutoff.param_id_in_scene;
    id_kta = scene->filterunit[0].keytrack.param_id_in_scene;
@@ -481,9 +504,6 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
       }
    }
 
-   modsources[ms_aftertouch]->output = state.voiceChannelState->pressure;
-   modsources[ms_timbre]->output = state.voiceChannelState->timbre;
-
    modsources[ms_ampeg]->process_block();
    modsources[ms_filtereg]->process_block();
    if (((AdsrEnvelope*)modsources[ms_ampeg])->is_idle())
@@ -532,6 +552,21 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
            }
            iter++;
        }
+
+       monoAftertouchSource.set_target(state.voiceChannelState->pressure);
+       timbreSource.set_target(state.voiceChannelState->timbre);
+
+       if (scene->modsource_doprocess[ms_aftertouch])
+       {
+           monoAftertouchSource.process_block();
+       }
+       timbreSource.process_block();
+   }
+   else {
+       // When not in MPE mode, channel aftertouch is already smoothed at scene level.
+       // Do not smooth it again, force the output to the current value.
+       monoAftertouchSource.output = state.voiceChannelState->pressure;
+       // Currently timbre only works in MPE mode, so no need to do anything when not in MPE mode.
    }
 
    update_portamento();

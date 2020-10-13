@@ -44,11 +44,24 @@ static inline int _stricmp(const char *s1, const char *s2)
 }
 #endif
 
+#if WINDOWS && !TARGET_RACK
+FILE* surge_win_fopen_utf8(const char* pathname, const char* mode);
+#define fopen(pathname, mode) surge_win_fopen_utf8((pathname), (mode))
+#endif
+
+#if MAC
+#define _aligned_malloc(size, alignment) malloc(size)
+#define _aligned_free(memblock) free(memblock)
+#elif LINUX
+#define _aligned_malloc(size, alignment) aligned_alloc((alignment), (size))
+#define _aligned_free(memblock) free(memblock)
+#endif
+
 #define _SURGE_STR(x) #x
 #define SURGE_STR(x) _SURGE_STR(x)
 
 const int BASE_WINDOW_SIZE_X = 904;
-const int BASE_WINDOW_SIZE_Y = 542;
+const int BASE_WINDOW_SIZE_Y = 569;
 const int NAMECHARS = 64;
 const int BLOCK_SIZE = 32;
 const int OSC_OVERSAMPLING = 2;

@@ -23,6 +23,8 @@
 #include "UserInteractions.h"
 #include "SurgeStorage.h"
 #include <sstream>
+#include <cerrno>
+#include <cstring>
 
 #include "ImportFilesystem.h"
 
@@ -69,7 +71,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if( ! fp )
     {
         std::ostringstream oss;
-        oss << "Unable to open file '" << fn << "'";
+        oss << "Unable to open file '" << fn << "'!";
         Surge::UserInteractions::promptError(oss.str(), uitag );
         return;
     }
@@ -82,9 +84,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if (hds != 12)
     {
        std::ostringstream oss;
-       oss << "File does not contain a valid RIFF header chunk. file='" << fn << "'";
-       Surge::UserInteractions::promptError(oss.str(),
-                                            uitag );
+       oss << "'" << fn << "' does not contain a valid RIFF header chunk!";
+       Surge::UserInteractions::promptError(oss.str(), uitag );
        return;
     }
 
@@ -92,8 +93,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         ! four_chars(wav,  'W', 'A', 'V', 'E' ) )
     {
        std::ostringstream oss;
-       oss << "File is not a standard RIFF/WAVE file. Header is: [" << riff[0] << riff[1] << riff[2]
-           << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ". file='" << fn << "'";
+       oss << "'" << fn << "' is not a standard RIFF/WAVE file. Header is: " << riff[0] << riff[1] << riff[2]
+           << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ".";
        Surge::UserInteractions::promptError(oss.str(), uitag );
        return;
     }
@@ -176,7 +177,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
                 std::ostringstream oss;
                 oss << "Currently, Surge only supports 16-bit PCM or 32-bit float mono WAV files. "
                     << " You provided a " << bitsPerSample << "-bit " << formname << " "
-                    << numChannels << "-channel file, " << fn;
+                    << numChannels << "-channel file.";
                 
                 Surge::UserInteractions::promptError( oss.str(), uitag );
                 return;
@@ -331,8 +332,8 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if( loopLen == 0 )
     {
         std::ostringstream oss;
-        oss << "Sorry, Surge cannot understand this particular wav file. Please consult the surge wiki for"
-            << " information on wav file metadata.";
+        oss << "Surge cannot understand this particular .wav file. Please consult the Surge Wiki for"
+            << " information on .wav file metadata.";
 
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
@@ -406,7 +407,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     {
         std::ostringstream oss;
         oss << "Currently, Surge only supports wavetables with at least 2 frames of up to 4096 samples each in power-of-two increments."
-            << " You provided a wavetable with " << loopCount << (loopCount==1?" loop" : " loops" ) << " of " << loopLen << " samples. '" << fn << "'";
+            << " You provided a wavetable with " << loopCount << (loopCount==1?" frame" : " frames" ) << " of " << loopLen << " samples. '" << fn << "'";
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
         if (wavdata) free(wavdata);
@@ -450,11 +451,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     else
     {
         std::ostringstream oss;
-        oss << "Sorry, Surge only supports 16-bit PCM or 32-bit IEEE float mono wav files. "
-            << " You provided a wav with format=" << audioFormat
-            << " bitsPerSample=" << bitsPerSample
-            << " and numChannels=" << numChannels
-            << ". file='" << fn << "'";
+       oss << "Currently, Surge only supports 16-bit PCM or 32-bit float mono .wav files. "
+           << " You provided a " << bitsPerSample << "-bit" << audioFormat << " " << numChannels
+           << "-channel file.";
 
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
@@ -464,11 +463,9 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     if( wavdata && wt )
     {
-        CS_WaveTableData.enter();
-        
+        waveTableDataMutex.lock();
         wt->BuildWT(wavdata, wh, wh.flags & wtf_is_sample);
-        
-        CS_WaveTableData.leave();
+        waveTableDataMutex.unlock();
         free( wavdata );
     }
     return;
@@ -476,16 +473,16 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
 void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
 {
-   std::ostringstream oss;
-   oss << userDataPath << "/ExportedWaveTables";
-   fs::create_directories( oss.str() );
-   std::string dirName = oss.str();
+   std::string path;
+   path = Surge::Storage::appendDirectory(userDataPath, "Exported Wavetables");
+   fs::create_directories(string_to_path(path));
 
    auto fnamePre = fbase + ".wav";
-   auto fname = dirName + "/" + fbase + ".wav";
+   auto fname = Surge::Storage::appendDirectory(path, fbase + ".wav");
    int fnum = 1;
-   while( fs::exists( fs::path( fname ) ) ) {
-      fname = dirName + "/" + fbase + "_" + std::to_string(fnum) + ".wav";
+   while (fs::exists(fs::path(fname)))
+   {
+      fname = Surge::Storage::appendDirectory(path, fbase + "_" + std::to_string(fnum) + ".wav");
       fnamePre = fbase + "_" + std::to_string(fnum) + ".wav";
       fnum++;
    }
@@ -496,14 +493,16 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
          if( f ) fclose( f );
       }
    };
-   std::string errorMessage = "Unknown Error";
+   std::string errorMessage = "Unknown error!";
    FG fguard;
    
    {
       FILE *wfp = fopen( fname.c_str(), "wb" );
       if( ! wfp )
       {
-         errorMessage = "Unable to open file '" + fname + "'";
+         errorMessage = "Unable to open file " + fname + "!";
+         errorMessage += std::strerror(errno);
+
          goto error;
       }
       fguard.f = wfp;
@@ -523,7 +522,6 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
                     fwrite( fi, 1, 4, wfp );
                  };
 
-         
       auto w2i = [wfp](unsigned int v) {
                     unsigned char fi[2];
                     for( int i=0; i<2; ++i )
@@ -590,14 +588,15 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
       fguard.f = nullptr;
       refresh_wtlist();
 
-      Surge::UserInteractions::promptInfo( "Exported to your Surge Documents in `ExportedWaveTables/" + fnamePre + "'",
-                                           "Export Succeeded" );
+      Surge::UserInteractions::promptInfo(
+          "Exported to " + Surge::Storage::appendDirectory("Documents", "Exported Wavetables", fnamePre),
+                                           "Export Succeeded!" );
       
       return;
    }
    
 error:
-   Surge::UserInteractions::promptError( errorMessage, "Export" );
+   Surge::UserInteractions::promptError( errorMessage, "Wavetable Export" );
    return;
    
    

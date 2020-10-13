@@ -61,7 +61,6 @@ public:
 
    VSTGUI::CBitmap* bmp = nullptr;
 
-   void setblink(bool state);
    void setlabel(const char*);
    void set_ismeta(bool);
    virtual void setBipolar(bool);
@@ -85,7 +84,7 @@ public:
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       hovered = true;
@@ -107,6 +106,9 @@ public:
          invalid();
       }
    }
+
+   VSTGUI::CControl *dragLabel = nullptr;
+   VSTGUI::CPoint dragOffset, dragStart;
    
    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };

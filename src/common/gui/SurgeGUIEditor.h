@@ -39,7 +39,6 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
-#include "PopupEditorSpawner.h"
 
 #include "vstcontrols.h"
 #include "SurgeSynthesizer.h"
@@ -51,6 +50,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include <vector>
  
 class CSurgeSlider;
+class CModulationSourceButton;
 
 #if TARGET_VST3
 namespace Steinberg
@@ -61,7 +61,11 @@ namespace Steinberg
 }
 #endif
 
-class SurgeGUIEditor : public EditorType, public VSTGUI::IControlListener, public VSTGUI::IKeyboardHook
+struct SGEDropAdapter;
+
+class SurgeGUIEditor : public EditorType,
+                       public VSTGUI::IControlListener,
+                       public VSTGUI::IKeyboardHook
 {
 private:
    using super = EditorType;
@@ -69,6 +73,9 @@ private:
 public:
    SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
    virtual ~SurgeGUIEditor();
+
+   static int start_paramtag_value;
+   
 #if TARGET_AUDIOUNIT | TARGET_VST2 | TARGET_LV2
    void idle() override;
 #else
@@ -151,15 +158,14 @@ public:
    
 private:
    void openOrRecreateEditor();
-   VSTGUI::CControl * layoutTagWithSkin( int tag );
+   void setupSaveDialog();
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
    SurgeSynthesizer* synth = nullptr;
-   int current_scene = 0, current_osc = 0, current_fx = 0;
+   int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
    bool editor_open = false;
    bool mod_editor = false;
-   modsources modsource = ms_original, modsource_editor = ms_original;
-   unsigned int idleinc = 0;
+   modsources modsource = ms_original, modsource_editor[n_scenes] = {ms_original};
    int fxbypass_tag = 0, resolink_tag = 0, f1resotag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0, fmconfig_tag = 0;
    double lastTempo = 0;
@@ -193,6 +199,8 @@ private:
    int zoomFactor;
    bool zoomEnabled = true;
 
+   int patchCountdown = -1;
+   
 public:
 
    void populateDawExtraState(SurgeSynthesizer *synth) {
@@ -222,6 +230,8 @@ public:
       setZoomFactor(100);
    }
 
+   void swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m );
+
    /*
    ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
    */
@@ -236,9 +246,22 @@ public:
    std::string mappingCacheForToggle = "";
    std::string tuningToHtml();
 
+   void swapControllers( int t1, int t2 );
+   void openModTypeinOnDrop( int ms, VSTGUI::CControl *sl, int tgt );
+   
    void queueRebuildUI() { queue_refresh = true; synth->refresh_editor = true; }
 
    std::string midiMappingToHtml();
+
+
+   // These are unused right now
+   enum SkinInspectorFlags {
+      COLORS = 1 << 0,
+      COMPONENTS = 1 << 1,
+
+      ALL = COLORS | COMPONENTS
+   };
+   std::string skinInspectorHtml( SkinInspectorFlags f = ALL );
 
    /*
    ** Modulation Hover Support 
@@ -251,7 +274,10 @@ public:
 
    void setEditorOverlay( VSTGUI::CView *c,
                           std::string editorTitle,
+                          const VSTGUI::CPoint &topleft = VSTGUI::CPoint( 0, 0 ),
+                          bool modalOverlay = true,
                           std::function<void()> onClose = [](){} );
+
 
    std::string getDisplayForTag( long tag );
 
@@ -262,6 +288,13 @@ public:
       }
    
 private:
+   SGEDropAdapter *dropAdapter;
+   friend class SGEDropAdapter;
+   bool canDropTarget(const std::string& fname); // these come as const char* from vstgui
+   bool onDrop( const std::string& fname);
+
+   VSTGUI::CRect positionForModulationGrid(modsources entry);
+
    int wsx = BASE_WINDOW_SIZE_X;
    int wsy = BASE_WINDOW_SIZE_Y;
 
@@ -299,7 +332,8 @@ private:
    bool modsource_is_alternate[n_modsources];
 
    VSTGUI::CControl* vu[16];
-   VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr, *statuspanel = nullptr;
+   VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
+   VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;
    VSTGUI::CControl* aboutbox = nullptr;
    VSTGUI::CViewContainer* saveDialog = nullptr;
    VSTGUI::CTextEdit* patchName = nullptr;
@@ -308,6 +342,9 @@ private:
    VSTGUI::CTextEdit* patchComment = nullptr;
    VSTGUI::CCheckBox* patchTuning = nullptr;
    VSTGUI::CTextLabel* patchTuningLabel = nullptr;
+#if BUILD_IS_DEBUG
+   VSTGUI::CTextLabel* debugLabel = nullptr;
+#endif
 
    VSTGUI::CViewContainer* typeinDialog = nullptr;
    VSTGUI::CTextEdit* typeinValue = nullptr;
@@ -325,9 +362,21 @@ private:
 
    VSTGUI::CViewContainer *editorOverlay = nullptr;
    std::function<void()> editorOverlayOnClose = [](){};
+
+   VSTGUI::CViewContainer *minieditOverlay = nullptr;
+   VSTGUI::CTextEdit *minieditTypein = nullptr;
+   std::function<void( const char* )> minieditOverlayDone = [](const char *){};
+public:
+   void promptForMiniEdit(const std::string& value,
+                          const std::string& prompt,
+                          const std::string& title,
+                          const VSTGUI::CPoint& where,
+                          std::function<void(const std::string&)> onOK);
+private:
    
+   VSTGUI::CTextLabel* lfoNameLabel = nullptr;
    VSTGUI::CTextLabel* fxPresetLabel = nullptr;
-   
+
    std::string modulatorName(int ms, bool forButton);
    
    Parameter *typeinEditTarget = nullptr;
@@ -340,15 +389,11 @@ private:
    static const int n_paramslots = 1024;
    VSTGUI::CControl* param[n_paramslots] = {};
    VSTGUI::CControl* nonmod_param[n_paramslots] = {}; 
-   VSTGUI::CControl* gui_modsrc[n_modsources] = {};
+   CModulationSourceButton* gui_modsrc[n_modsources] = {};
    VSTGUI::CControl* metaparam[n_customcontrollers] = {};
    VSTGUI::CControl* lfodisplay = nullptr;
    VSTGUI::CControl* filtersubtype[2] = {};
    VSTGUI::CControl* fxmenu = nullptr;
-#if MAC || LINUX
-#else
-   HWND ToolTipWnd;
-#endif
    int clear_infoview_countdown = 0;
 public:
    int clear_infoview_peridle = -1;
@@ -376,6 +421,8 @@ private:
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
    bool scannedForMidiPresets = false;
 
+   void resetSmoothing( ControllerModulationSource::SmoothingMode t );
+
 public:
    std::string helpURLFor( Parameter *p );
    std::string helpURLForSpecial( std::string special );
@@ -390,6 +437,12 @@ private:
    Surge::UI::Skin::ptr_t currentSkin;
    void setupSkinFromEntry( const Surge::UI::SkinDB::Entry &entry );
    void reloadFromSkin();
+   VSTGUI::CControl *layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
+                               long tag,
+                               int paramIndex = -1,
+                               Parameter *p = nullptr,
+                               int style = 0
+                               );
 
    /*
    ** General MIDI CC names

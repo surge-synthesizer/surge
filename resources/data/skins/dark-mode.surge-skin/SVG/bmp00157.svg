@@ -11,8 +11,8 @@
             <stop stop-color="#FF9000" offset="100%"></stop>
         </linearGradient>
         <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-3">
-            <stop stop-color="#036DD4" offset="0%"></stop>
-            <stop stop-color="#005CB6" offset="100%"></stop>
+            <stop stop-color="#8bcc56" offset="0%"></stop>
+            <stop stop-color="#71a646" offset="100%"></stop>
         </linearGradient>
     </defs>
     <g id="bmp00157" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">

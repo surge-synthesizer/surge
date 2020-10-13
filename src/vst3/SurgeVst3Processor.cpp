@@ -18,6 +18,7 @@
 #include <codecvt>
 #include <string.h>
 #include <cwchar>
+#include <stdlib.h>
 
 using namespace Steinberg::Vst;
 
@@ -35,6 +36,7 @@ using namespace Steinberg::Vst;
 
 SurgeVst3Processor::SurgeVst3Processor() : blockpos(0), surgeInstance()
 {
+   checkNamesEvery = 0;
 }
 
 SurgeVst3Processor::~SurgeVst3Processor()
@@ -53,21 +55,7 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
    }
 
    disableZoom = false;
-#if WINDOWS
-   Steinberg::FUnknownPtr<Steinberg::Vst::IHostApplication> hostApplication(context);
-   if (hostApplication)
-   {
-      String128 hostName;
-      hostApplication->getName(hostName);
-      char szString[256];
-      size_t nNumCharConverted;
-      wcstombs_s(&nNumCharConverted, szString, 256, hostName, 128);
-      std::string s(szString);
-      disableZoom = false;
-      //if (s == "Cakewalk")
-      //   disableZoom = true;
-   }
-#endif
+
 
    //---create Audio In/Out busses------
    // we want a SideChain Input and a Stereo Output
@@ -100,6 +88,17 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
 
    midi_controller_0 = getParameterCountWithoutMappings();
    midi_controller_max = midi_controller_0 + n_midi_controller_params;
+
+   Steinberg::FUnknownPtr<Steinberg::Vst::IHostApplication> hostApplication(context);
+   if (hostApplication)
+   {
+      std::wstring_convert<std::codecvt_utf8<TChar>,TChar> cv;
+      String128 hostName;
+      hostApplication->getName(hostName);
+      std::string hn8 = cv.to_bytes(hostName);
+      surgeInstance->hostProgram = hn8;
+   }
+   surgeInstance->setupActivateExtraOutputs();
    
    return kResultOk;
 }
@@ -115,8 +114,8 @@ void SurgeVst3Processor::createSurge()
 
    if (!surgeInstance.get())
    {
-      Surge::UserInteractions::promptError("Unable to allocate SurgeSynthesizer",
-                                           "Out of memory");
+      Surge::UserInteractions::promptError("Unable to allocate SurgeSynthesizer!",
+                                           "Out Of Memory");
 
       return;
    }
@@ -441,7 +440,6 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    _fpuState.set();
 
-   int32 numChannels = 2;
    int32 numSamples = data.numSamples;
 
    surgeInstance->process_input = data.numInputs != 0 && data.inputs != nullptr;
@@ -451,7 +449,6 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    int i;
    int numOutputs = data.numOutputs;
-   int numInputs = data.numInputs;
    int noteEventIndex = 0;
    int parameterEventIndex = 0;
 
@@ -462,36 +459,48 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
    {
       surgeInstance->time_data.ppqPos = data.processContext->projectTimeMusic;
    }
+   if (data.processContext && data.processContext->state & ProcessContext::kTimeSigValid)
+   {
+      surgeInstance->time_data.timeSigNumerator = data.processContext->timeSigNumerator;
+      surgeInstance->time_data.timeSigDenominator = data.processContext->timeSigDenominator;
+   }
+   else
+   {
+      surgeInstance->time_data.timeSigNumerator = 4;
+      surgeInstance->time_data.timeSigDenominator = 4;
+   }
 
+   double tempo = 120;
+   if (data.processContext && data.processContext->state & ProcessContext::kTempoValid)
+   {
+      tempo = data.processContext->tempo;
+   }
+
+   // move clock
+   surgeInstance->time_data.tempo = tempo;
+   surgeInstance->resetStateFromTimeData();
+
+   if( checkNamesEvery++ == 20 )
+   {
+      checkNamesEvery = 0;
+      if( std::atomic_exchange( &parameterNameUpdated, false ) )
+      {
+         auto comph = getComponentHandler();
+         if( comph )
+         {
+            comph->restartComponent( kParamTitlesChanged );
+         }
+      }
+   }
+   
    for (i = 0; i < numSamples; i++)
    {
       if (blockpos == 0)
       {
          if (data.processContext)
          {
-            double tempo = 120;
-
-            if (data.processContext->state & ProcessContext::kTempoValid)
-            {
-               tempo = data.processContext->tempo;
-            }
-
-            // move clock
-            timedata* td = &(surgeInstance->time_data);
-            surgeInstance->time_data.tempo = tempo;
             surgeInstance->time_data.ppqPos +=
                 (double)BLOCK_SIZE * tempo / (60. * data.processContext->sampleRate);
-
-            if (data.processContext->state & ProcessContext::kTimeSigValid)
-            {
-               surgeInstance->time_data.timeSigNumerator = data.processContext->timeSigNumerator;
-               surgeInstance->time_data.timeSigDenominator = data.processContext->timeSigDenominator;
-            }
-            else
-            {
-               surgeInstance->time_data.timeSigNumerator = 4;
-               surgeInstance->time_data.timeSigDenominator = 4;
-            }
          }
 
          processEvents(i, data.inputEvents, noteEventIndex);
@@ -518,10 +527,21 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       {
          float** outA = data.outputs[1].channelBuffers32;
          float** outB = data.outputs[2].channelBuffers32;
-         for(int c=0;c<2;++c)
+         if (surgeInstance->activateExtraOutputs)
          {
-            outA[c][i] = (float)surgeInstance->sceneout[0][c][blockpos];
-            outB[c][i] = (float)surgeInstance->sceneout[1][c][blockpos];
+            for (int c = 0; c < 2; ++c)
+            {
+               outA[c][i] = (float)surgeInstance->sceneout[0][c][blockpos];
+               outB[c][i] = (float)surgeInstance->sceneout[1][c][blockpos];
+            }
+         }
+         else
+         {
+            for( int c=0; c<2; ++c )
+            {
+               outA[c][i] = 0.f;
+               outB[c][i] = 0.f;
+            }
          }
       }
 
@@ -1069,10 +1089,10 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
             if (res != Steinberg::kResultTrue)
             {
                std::ostringstream oss;
-               oss << "Your host failed to zoom your VST3 to scale " << e->getZoomFactor() << ". "
-                   << "Surge will now attempt to reset your zoom to 100%. You may see several "
+               oss << "Your host failed to zoom VST3 to " << e->getZoomFactor() << " scale. "
+                   << "Surge will now attempt to reset the zoom level to 100%. You may see several "
                    << "other error messages in the course of this being resolved.";
-               Surge::UserInteractions::promptError(oss.str(), "Host VST3 Zoom Error" );
+               Surge::UserInteractions::promptError(oss.str(), "VST3 Host Zoom Error" );
                e->setZoomFactor(100);
             }
         }

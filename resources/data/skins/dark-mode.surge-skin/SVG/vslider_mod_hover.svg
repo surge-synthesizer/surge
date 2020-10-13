@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48px" height="56px" viewBox="0 0 48 56" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>hover00157</title>
+    <defs>
+        <linearGradient x1="50%" y1="50%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#000000" offset="0%"></stop>
+            <stop stop-color="#000000" stop-opacity="0.0876311189" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#2E86FE" offset="0%"></stop>
+            <stop stop-color="#005CB6" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-3">
+            <stop stop-color="#9ce560" offset="0%"></stop>
+            <stop stop-color="#71a646" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-4">
+            <stop stop-color="#0171D8" offset="0%"></stop>
+            <stop stop-color="#006BCC" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="hover00157" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <ellipse id="Oval-Copy-3" fill="url(#linearGradient-1)" cx="32.5" cy="14" rx="5.5" ry="6"></ellipse>
+        <ellipse id="Oval-Copy-2" fill="url(#linearGradient-1)" cx="32.5" cy="42" rx="5.5" ry="6"></ellipse>
+        <ellipse id="Oval-Copy-5" fill="url(#linearGradient-1)" cx="8.5" cy="14" rx="5.5" ry="6"></ellipse>
+        <ellipse id="Oval-Copy-4" fill="url(#linearGradient-1)" cx="8.5" cy="42" rx="5.5" ry="6"></ellipse>
+
+        <circle id="Oval" fill-opacity="0.35" fill="#0091FF" cx="8.5" cy="11.5" r="8.5"></circle>
+        <circle id="Oval" fill-opacity="0.35" fill="#0091FF" cx="8.5" cy="39.5" r="8.5"></circle>
+        <circle id="Oval" fill-opacity="0.35" fill="#9ce560" cx="32.5" cy="11.5" r="8.5"></circle>
+        <circle id="Oval" fill-opacity="0.35" fill="#9ce560" cx="32.5" cy="39.5" r="8.5"></circle>
+
+        <circle id="Oval" fill="url(#linearGradient-2)" cx="8.5" cy="11.5" r="5.5"></circle>
+        <circle id="Oval" fill="url(#linearGradient-2)" cx="8.5" cy="39.5" r="5.5"></circle>
+        <circle id="Oval" fill="url(#linearGradient-3)" cx="32.5" cy="11.5" r="5.5"></circle>
+        <circle id="Oval" fill="url(#linearGradient-3)" cx="32.5" cy="39.5" r="5.5"></circle>
+
+        <g id="Group-3" transform="translate(7.000000, 11.000000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
+        <g id="Group-3" transform="translate(7.000000, 39.000000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
+        <g id="Group-3-Copy-2" transform="translate(31.000000, 11.000000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
+        <g id="Group-3-Copy" transform="translate(31.000000, 39.000000)">
+            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
+            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
+        </g>
+    </g>
+</svg>

@@ -29,9 +29,15 @@ public:
    // TODO ringout and only control and suspend
    virtual void suspend() override
    {
-      if( fxdata )
-         fxdata->p[0].deactivated = true;
       hasInvalidated = true;
+
+      if( fxdata ) {
+         fxdata->p[0].deactivated = true;
+         if( fxdata->p[1].ctrltype == ct_none )
+         {
+            setupSubFX( fxdata->p[0].val.i, true );
+         }
+      }
    }
 
    lag<float, true> param_lags[n_fx_params - 1];
@@ -110,6 +116,6 @@ public:
 
    std::array<std::unique_ptr<AWFxParamFormatter>, n_fx_params - 1> fxFormatters;
    
-   
+
    std::unique_ptr<AWFxSelectorMapper> mapper;
 };

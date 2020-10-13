@@ -172,6 +172,15 @@ void i152float_block(short* s, float* f, int n)
    }
 }
 
+
+void i16toi15_block(short* s, short* o, int n)
+{
+   for (int i = 0; i < n; i++)
+   {
+      o[i] = s[i] >> 1;
+   }
+}
+
 void hardclip_block(float* x, unsigned int nquads)
 {
    const __m128 x_min = _mm_set1_ps(-1.0f);

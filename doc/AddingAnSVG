@@ -3,6 +3,7 @@
 We have some 'well named' SVGs which compile into the bundle. These are all in
 assets/SurgeClassic/exported. What happens if you want to add one?
 
-1. Add the ID to the IDB_ in resource.h. You are now done for mac and linux actually!
-2. Add the IDB_BLAH_SVG_DATA in svgresources.rc
-3. Add the IDB_MENU_IN_SLIDER_SCALE_BLAH defines to scalableresource.h
+1. Add the ID to the IDB_ in resource.h. 
+2. add the addEntry in SurgeBitmaps.cpp. You are now done for mac and linux actually!
+3. Add the IDB_BLAH_SVG_DATA in svgresources.rc
+4. Add the IDB_MENU_IN_SLIDER_SCALE_BLAH defines to scalableresource.h

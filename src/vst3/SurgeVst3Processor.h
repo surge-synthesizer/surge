@@ -108,20 +108,11 @@ public:
    void updateDisplay();
    void setParameterAutomated(int externalparam, float value);
 
-#if WIN_X86
-   // For some undebuggable reason, 32 bit windows doesn't like hte PLUGIN_API
-   // 32 bit vst3 is worth 0 time debugging; this fix makes it work. 
-   virtual tresult beginEdit(Steinberg::Vst::ParamID id);
-   virtual tresult performEdit(Steinberg::Vst::ParamID id,
-                               Steinberg::Vst::ParamValue valueNormalized);
-   virtual tresult endEdit(Steinberg::Vst::ParamID id);
-#else
-   virtual tresult PLUGIN_API beginEdit(Steinberg::Vst::ParamID id) override;
-   virtual tresult PLUGIN_API performEdit(Steinberg::Vst::ParamID id,
-                               Steinberg::Vst::ParamValue valueNormalized) override;
-   virtual tresult PLUGIN_API endEdit(Steinberg::Vst::ParamID id) override;
-#endif
-    
+   tresult beginEdit(Steinberg::Vst::ParamID id) override;
+   tresult performEdit(Steinberg::Vst::ParamID id,
+                       Steinberg::Vst::ParamValue valueNormalized) override;
+   tresult endEdit(Steinberg::Vst::ParamID id) override;
+
 protected:
    void createSurge();
    void destroySurge();
@@ -145,6 +136,8 @@ protected:
 
    int midi_controller_0, midi_controller_max;
    const int n_midi_controller_params = 16 * (Steinberg::Vst::ControllerNumbers::kCountCtrlNumber);
+
+   int checkNamesEvery = 0;
    
 public:
    OBJ_METHODS(SurgeVst3Processor, Steinberg::Vst::SingleComponentEffect)

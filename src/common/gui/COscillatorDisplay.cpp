@@ -13,6 +13,7 @@
 ** open source in September 2018.
 */
 
+#include "SurgeGUIEditor.h"
 #include "COscillatorDisplay.h"
 #include "Oscillator.h"
 #include <time.h>
@@ -20,7 +21,6 @@
 #include "UserInteractions.h"
 #include "guihelpers.h"
 #include "SkinColors.h"
-#include "PopupEditorSpawner.h"
 
 #include "ImportFilesystem.h"
 
@@ -125,11 +125,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    if (uses_wavetabledata(oscdata->type.val.i))
       h -= wtbheight;
 
-   int midline = h >> 1;
-   int topline = midline - 0.4f * h;
-   int bottomline = midline + 0.4f * h;
-
-
    int totalSamples = ( 1 << 4 ) * (int)getWidth();
    int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be an integer multiple of it
 
@@ -167,7 +162,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                float f1 = storage->note_to_pitch(bracket);
                float f2 = storage->note_to_pitch(bracket+1);
                float frac = (pit - f1)/ (f2-f1);
-               float newp = storage->note_to_pitch(bracket + frac);
                disp_pitch_rs = bracket + frac;
             }
             else
@@ -191,10 +185,10 @@ void COscillatorDisplay::draw(CDrawContext* dc)
             {
                if (uses_wavetabledata(oscdata->type.val.i))
                {
-                  storage->CS_WaveTableData.enter();
+                  storage->waveTableDataMutex.lock();
                   osc->process_block(disp_pitch_rs);
                   block_pos = 0;
-                  storage->CS_WaveTableData.leave();
+                  storage->waveTableDataMutex.unlock();
                }
                else
                {
@@ -262,18 +256,18 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          dc->setDrawMode(VSTGUI::kAntiAliasing);
 
          dc->setLineWidth(1.0);
-         dc->setFrameColor(skin->getColor(Colors::Osc::Display::CenterLine, VSTGUI::CColor(90, 90, 90)));
+         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Center));
          dc->drawLine(mid0, mid1);
 
          dc->setLineWidth(1.0);
-         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Bounds, VSTGUI::CColor(70, 70, 70)));
+         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Bounds));
          dc->drawLine(top0, top1);
          dc->drawLine(bot0, bot1);
 
          // OK so now the label
          if( osces[1] )
          {
-            dc->setFontColor(skin->getColor(Colors::Osc::Display::AnimatedWave, kWhiteCColor));
+            dc->setFontColor(skin->getColor(Colors::Osc::Display::AnimatedWave));
             dc->setFont(displayFont);
             CPoint lab0(0, valScale * 0.1 - 10);
             tf.transform(lab0);
@@ -291,7 +285,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       if (c == 1)
          dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
       else
-         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Wave, VSTGUI::CColor(0xFF, 0x90, 0, 0xFF)));
+         dc->setFrameColor(skin->getColor(Colors::Osc::Display::Wave));
 
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
       dc->restoreGlobalState();
@@ -310,7 +304,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       rmenu.inset(14, 0);
       char wttxt[256];
 
-      storage->CS_WaveTableData.enter();
+      storage->waveTableDataMutex.lock();
 
       int wtid = oscdata->wt.current_id;
       if( oscdata->wavetable_display_name[0] != '\0' )
@@ -330,16 +324,16 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          strcpy(wttxt, "(Patch Wavetable)");
       }
 
-      storage->CS_WaveTableData.leave();
+      storage->waveTableDataMutex.unlock();
 
       char* r = strrchr(wttxt, '.');
       if (r)
          *r = 0;
       // VSTGUI::CColor fgcol = cdisurf->int_to_ccol(coltable[255]);
-      VSTGUI::CColor fgcol = skin->getColor(Colors::Osc::Filename::Background, VSTGUI::CColor(0xff, 0xA0, 0x10, 0xff));
+      VSTGUI::CColor fgcol = skin->getColor(Colors::Osc::Filename::Background);
       dc->setFillColor(fgcol);
       dc->drawRect(rmenu, kDrawFilled);
-      dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text, kBlackCColor));
+      dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text));
       dc->setFont(displayFont);
       // strupr(wttxt);
       dc->drawString(wttxt, rmenu, kCenterText, true);
@@ -382,50 +376,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    }
 
    setDirty(false);
-}
-
-
-bool COscillatorDisplay::onDrop(VSTGUI::DragEventData data )
-{
-   doingDrag = false;
-   /* invalid();
-      setDirty(true); */
-
-   auto drag = data.drag;
-   auto where = data.pos;
-   uint32_t ct = drag->getCount();
-   if (ct == 1)
-   {
-      IDataPackage::Type t = drag->getDataType(0);
-      if (t == IDataPackage::kFilePath)
-      {
-         const void* fn;
-         drag->getData(0, fn, t);
-         const char* fName = static_cast<const char*>(fn);
-         fs::path fPath(fName);
-         if ((_stricmp(fPath.extension().generic_string().c_str(), ".wt") != 0) &&
-             (_stricmp(fPath.extension().generic_string().c_str(), ".wav") != 0))
-         {
-            Surge::UserInteractions::promptError(
-                std::string(
-                    "Surge only supports drag-and-drop of .wt or .wav wavetables onto the oscillator.") +
-                "You dropped a file with extension " + fPath.extension().generic_string(),
-                "Please drag a valid file type!");
-         }
-         else
-         {
-            strncpy(oscdata->wt.queue_filename, fName, 255);
-         }
-      }
-      else
-      {
-         Surge::UserInteractions::promptError(
-             "Surge only supports drag-and-drop of files onto the oscillator.",
-             "Please drop a file!");
-      }
-   }
-
-   return true;
 }
 
 CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonState& button)
@@ -478,7 +428,7 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
 }
 
 void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem)
-{
+{   
    int idx = 0;
    bool needToAddSep = false;
    for (auto c : storage->wtCategoryOrdering)
@@ -510,6 +460,26 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    // Add direct open here
    contextMenu->addSeparator();
 
+   auto renameItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Change Wavetable Display Name..." )));
+   auto rnaction = [this](CCommandMenuItem *item)
+                      {
+                         char c[256];
+                         strncpy( c, this->oscdata->wavetable_display_name, 256 );
+                         auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
+                         if( sge )
+                         {
+                            sge->promptForMiniEdit(
+                                c,
+                                "Enter a custom wavetable display name:", "Wavetable Display Name",
+                                CPoint( -1, -1 ), [this](const std::string& s) {
+                                   strncpy(this->oscdata->wavetable_display_name, s.c_str(), 256);
+                                   this->invalid();
+                                });
+                         }
+                      };
+   renameItem->setActions(rnaction, nullptr);
+   contextMenu->addEntry(renameItem);
+
    auto refreshItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Wavetable List")));
    auto refresh = [this](CCommandMenuItem* item) { this->storage->refresh_wtlist(); };
    refreshItem->setActions(refresh, nullptr);
@@ -517,19 +487,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
 
    contextMenu->addSeparator();
 
-   auto renameItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Change Wavetable Display Name..." )));
-   auto rnaction = [this](CCommandMenuItem *item)
-                      {
-                         char c[256];
-                         strncpy( c, this->oscdata->wavetable_display_name, 256 );
-                         spawn_miniedit_text(c, 256, "Enter a custom wavetable display name:", "Wavetable Display Name");
-                         strncpy( this->oscdata->wavetable_display_name, c, 256 );
-                         invalid();
-                      };
-   renameItem->setActions(rnaction, nullptr);
-   contextMenu->addEntry(renameItem);
-
-   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Wavetable From File...")));
+   auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Wavetable from File...")));
    auto action = [this](CCommandMenuItem* item) { this->loadWavetableFromFile(); };
    actionItem->setActions(action, nullptr);
    contextMenu->addEntry(actionItem);
@@ -554,7 +512,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
           }
           if( scene == -1 || oscNum == -1 )
           {
-             Surge::UserInteractions::promptError( "Unable to determine which oscillator I have data for in export", "Export" );
+             Surge::UserInteractions::promptError( "Unable to determine which oscillator has wavetable data ready for export!", "Export Error" );
           }
           else
           {
@@ -565,15 +523,30 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
    exportItem->setActions(exportAction,nullptr);
    contextMenu->addEntry(exportItem);
 
-   contextMenu->addSeparator();
+   auto omi = new CCommandMenuItem( CCommandMenuItem::Desc( Surge::UI::toOSCaseForMenu("Open Exported Wavetables Folder..." ) ) );
+   omi->setActions([this](CCommandMenuItem *i) {
+                      Surge::UserInteractions::openFolderInFileBrowser( Surge::Storage::appendDirectory( this->storage->userDataPath, "Exported Wavetables" ) );
+                   }
+      );
+   contextMenu->addEntry( omi );
 
-   auto contentItem = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Download Additional Content...")));
-   auto contentAction = [](CCommandMenuItem *item)
-       {
-           Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Additional-Content");
-       };
-   contentItem->setActions(contentAction,nullptr);
-   contextMenu->addEntry(contentItem);
+   auto *sge = dynamic_cast<SurgeGUIEditor*>(listener);
+   if( sge )
+   {
+      auto hu = sge->helpURLForSpecial( "wavetables" );
+      if( hu != "" )
+      {
+         auto lurl = sge->fullyResolvedHelpURL(hu);
+         auto hi = new CCommandMenuItem( CCommandMenuItem::Desc("[?] Wavetables"));
+         auto ca = [lurl](CCommandMenuItem *i)
+                      {
+                         Surge::UserInteractions::openURL(lurl);
+                      };
+         hi->setActions( ca, nullptr );
+         contextMenu->addSeparator();
+         contextMenu->addEntry(hi);
+      }
+   }
 
 }
 
@@ -628,13 +601,8 @@ bool COscillatorDisplay::populateMenuForCategory(COptionMenu* contextMenu,
 
    if (!cat.isRoot)
    {
-#if WINDOWS
-      std::string pathSep = "\\";
-#else
-      std::string pathSep = "/";
-#endif
       std::string catName = storage->wt_category[categoryId].name;
-      std::size_t sepPos = catName.find_last_of(pathSep);
+      std::size_t sepPos = catName.find_last_of(PATH_SEPARATOR);
       if (sepPos != std::string::npos)
       {
          catName = catName.substr(sepPos + 1);

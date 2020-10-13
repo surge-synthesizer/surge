@@ -106,12 +106,14 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 void LfoModulationSource::initPhaseFromStartPhase()
 {
    phase = localcopy[startphase].f;
-   unwrappedphase = phase;
    phaseInitialized = true;
+   if( lfo->shape.val.i == ls_tri && lfo->rate.deactivated && ! lfo->unipolar.val.b )
+      phase += 0.25;
    while( phase < 0.f )
       phase += 1.f;
    while( phase > 1.f )
       phase -= 1.f;
+   unwrappedphase_intpart = 0;
 }
 
 void LfoModulationSource::attack()
@@ -120,13 +122,14 @@ void LfoModulationSource::attack()
    {
       initPhaseFromStartPhase();
    }
-
    env_state = lenv_delay;
 
    env_val = 0.f;
    env_phase = 0;
    ratemult = 1.f;
-
+   msegLastEvaluated = -1;
+   for( int i=0; i<5; ++i )
+      msegEvaluationState[i] = 0.f;
    if (localcopy[idelay].f == lfo->delay.val_min.f)
    {
       env_state = lenv_attack;
@@ -177,10 +180,28 @@ void LfoModulationSource::attack()
       case lm_freerun:
       {
          double ipart; //,tsrate = localcopy[rate].f;
-         phase = (float)modf(
-             phaseslider + 0.5f * storage->songpos * pow(2.0, (double)localcopy[rate].f), &ipart);
+
+         // Get our rate from the parameter and temposync
+         float lrate = pow( 2.0, (double)localcopy[rate].f);
+         if (lfo->rate.temposync)
+            lrate *= storage->temposyncratio;
+
+         /*
+          * Get our time from songpos. So songpos is in beats, which means
+          * songpos / tempo / 60 is the time. But temposyncratio is tempo/120 so
+          * songpos / ( 2 * temposyncratio ) is the time
+          */
+         double timePassed = storage->songpos * storage->temposyncratio_inv * 0.5;
+
+         /*
+          * And so the total phase is timePassed * rate + phase0
+          */
+         float totalPhase = phaseslider + timePassed * lrate;
+
+         // Mod that for phase; and get the step also by step length
+         phase = (float)modf( totalPhase, &ipart);
          int i = (int)ipart;
-         step = (i % max(1, (ss->loop_end - ss->loop_start))) + ss->loop_start;
+         step = (i % max(1, (ss->loop_end - ss->loop_start + 1 ))) + ss->loop_start;
       }
       break;
       default:
@@ -249,7 +270,10 @@ void LfoModulationSource::attack()
       {
          phase += 0.25;
          if (phase > 1.f)
+         {
             phase -= 1.f;
+            unwrappedphase_intpart ++;
+         }
       }
    }
    break;
@@ -259,7 +283,10 @@ void LfoModulationSource::attack()
       {
          phase += 0.75;
          if (phase > 1.f)
+         {
             phase -= 1.f;
+            unwrappedphase_intpart ++;
+         }
       }
    }
    break;
@@ -287,16 +314,36 @@ void LfoModulationSource::process_block()
    retrigger_AEG = false;
    int s = lfo->shape.val.i;
 
-   float frate = envelope_rate_linear_nowrap(-localcopy[rate].f);
-   
+   float frate = 0;
+
+   if( ! lfo->rate.temposync)
+   {
+      frate = envelope_rate_linear_nowrap(-localcopy[rate].f);
+   }
+   else
+   {
+      /*
+      ** The approximation above drifts quite a lot especially on things like dotted-quarters-vs-beat-at-not-120bpm
+      ** See #2675 for sample patches. So do the calculation exactly.
+      **
+      ** envrate is blocksize / samplerate 2^-x
+      ** so lets just do that
+      */
+      frate = (double)BLOCK_SIZE_OS * dsamplerate_os_inv * pow( 2.0, localcopy[rate].f ); // since x = -localcopy, -x == localcopy
+   }
+
+
+   //if( lfo->rate.temposync )
+   //std::cout << _D(localcopy[rate].f) << _D(frate) << _D(fratea);
    if (lfo->rate.deactivated)
       frate = 0.0;
 
    if (lfo->rate.temposync)
       frate *= storage->temposyncratio;
-   phase += frate * ratemult;
-   unwrappedphase += frate * ratemult;
 
+   phase += frate * ratemult;
+   //if( lfo->rate.temposync )
+   //std::cout << _D(phase) << _D(frate) << _D(ratemult) << _D(storage->temposyncratio) << std::endl;
    if( frate == 0 && phase == 0 && s == ls_stepseq )
    {
       phase = 0.001; // step forward a smidge
@@ -412,6 +459,7 @@ void LfoModulationSource::process_block()
       {
          float ipart;
          phase = modf( phase, &ipart );
+         unwrappedphase_intpart += ipart;
       }
       else if( phase < 0 )
       {
@@ -419,14 +467,17 @@ void LfoModulationSource::process_block()
          //
          int p = (int) phase - 1;
          float np = -p + phase;
-         if( np >= 0 && np < 1 )
+         if( np >= 0 && np < 1 ) {
             phase = np;
+            unwrappedphase_intpart += p;
+         }
          else
             phase = 0; // should never get here but something is already wierd with the mod stack
       }
       else
       {
          phase -= 1;
+         unwrappedphase_intpart ++;
       }
 
       switch (s)
@@ -533,6 +584,26 @@ void LfoModulationSource::process_block()
             while( pstep > last_step && pstep >= 0 ) pstep -= loop_len;
             pstep = pstep & ( n_stepseqsteps - 1 );
 
+            if( pstep != priorStep )
+            {
+               priorStep = pstep;
+               
+               if (ss->trigmask & (UINT64_C(1) << pstep))
+               {
+                  retrigger_FEG = true;
+                  retrigger_AEG = true;
+               }
+               if (ss->trigmask & (UINT64_C(1) << (16+pstep)))
+               {
+                  retrigger_FEG = true;
+               }
+               if (ss->trigmask & (UINT64_C(1) << (32+pstep)))
+               {
+                  retrigger_AEG = true;
+               }
+
+            }
+            
             if( priorPhase != phase )
             {
                priorPhase = phase;
@@ -574,7 +645,7 @@ void LfoModulationSource::process_block()
       }
       break;
    case ls_mseg:
-      iout = MSEGModulationHelper::valueAt( unwrappedphase, localcopy[ideform].f, ms );
+      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms, msegLastEvaluated, msegEvaluationState );
       break;
    };
 

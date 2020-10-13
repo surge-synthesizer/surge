@@ -16,14 +16,14 @@
 #include "SurgeStorage.h"
 #include "Parameter.h"
 #include "DspUtilities.h"
-#include <string.h>
-#include <math.h>
+#include <cstring>
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <cstdlib>
 #include <algorithm>
 #include <cctype>
+#include <utility>
 #include <UserDefaults.h>
 #include "DebugHelpers.h"
 
@@ -36,9 +36,7 @@ Parameter::Parameter()
    storage = nullptr;
 }
 
-Parameter::~Parameter()
-{
-}
+Parameter::~Parameter() = default;
 
 void get_prefix(char* txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
@@ -157,8 +155,30 @@ void Parameter::set_name(const char* n)
 {
    strncpy(dispname, n, NAMECHARS);
    create_fullname(dispname, fullname, ctrlgroup, ctrlgroup_entry);
+   parameterNameUpdated = true;
 }
 
+Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
+                             int pid,
+                             const char* name,
+                             const char* dispname,
+                             int ctrltype,
+
+                             const Surge::Skin::Connector &c,
+
+                             int scene,
+                             ControlGroup ctrlgroup,
+                             int ctrlgroup_entry,
+                             bool modulateable,
+                             int ctrlstyle,
+                             bool defaultDeactivation)
+{
+   assert( c.payload );
+   auto r = assign( idp, pid, name, dispname, ctrltype,
+                   c.payload->id, c.payload->posx, c.payload->posy, scene, ctrlgroup, ctrlgroup_entry, modulateable, ctrlstyle, defaultDeactivation);
+   r->hasSkinConnector = true;
+   return r;
+}
 Parameter* Parameter::assign(ParameterIDCounter::promise_t idp,
                              int pid,
                              const char* name,
@@ -251,6 +271,7 @@ bool Parameter::can_extend_range()
    case ct_osc_feedback:
    case ct_osc_feedback_negative:
    case ct_lfoamplitude:
+   case ct_fmratio:
       return true;
    }
    return false;
@@ -271,6 +292,7 @@ bool Parameter::can_deactivate()
 {
    switch(ctrltype)
    {
+   case ct_freq_hpf:
    case ct_freq_audible_deactivatable:
    case ct_lforate_deactivatable:
    case ct_rotarydrive:
@@ -314,6 +336,7 @@ void Parameter::set_user_data(ParamUserData* ud)
       break;
    case ct_airwindow_param:
    case ct_airwindow_param_bipolar:
+   case ct_airwindow_param_integral:
       if( dynamic_cast<ParameterExternalFormatter*>(ud))
       {
          user_data = ud;
@@ -817,7 +840,14 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
-      
+
+   case ct_airwindow_param_integral:
+      val_min.i = 0;
+      val_max.i = 1;
+      valtype = vt_int;
+      val_default.i = 0;
+      break;
+
    case ct_none:
    default:
       sprintf(dispname, "-");
@@ -999,6 +1029,7 @@ void Parameter::set_type(int ctrltype)
 
    case ct_airwindow_param:
    case ct_airwindow_param_bipolar:
+   case ct_airwindow_param_integral:
       displayType = DelegatedToFormatter;
       displayInfo.scale = 1.0;
       displayInfo.unit[0] = 0;
@@ -1047,6 +1078,7 @@ void Parameter::bound_value(bool force_integer)
       case ct_osc_feedback:
       case ct_osc_feedback_negative:
       case ct_detuning:
+      case ct_lfoamplitude:
       {
          val.f = floor(val.f * 100) / 100.0;
          break;
@@ -1299,6 +1331,13 @@ float Parameter::get_extended(float f)
       return 4.f * f;
    case ct_lfoamplitude:
       return (2.f * f) - 1.f;
+   case ct_fmratio:
+   {
+      if( f > 16 )
+         return ( ( f - 16 ) * 2  + 1 );
+      else
+         return -( ( 16 - f ) * 2 + 1 );
+   }
    default:
       return f;
    }
@@ -1653,34 +1692,112 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    case ct_fmratio:
    {
       float mf = modulationDepth;
+      // OK so this is already handed to us extended and this one is wierd so
+      auto qq = mf;
+      if( extend_range )
+      {
+         if( mf < 0 )
+         {
+            qq = mf + 1;
+         }
+         else {
+            qq = mf - 1;
+         }
+         qq = ( qq + 32 ) / 64;
+      }
+      float exmf = qq;
+      int dp = (detailedMode ? 6 : 2);
       switch( displaymode )
       {
       case TypeIn:
-         sprintf( txt, "C: %.*f", 2, mf );
-         return;
-         break;
-      case Menu:
-         if( isBipolar )
+         if( extend_range )
          {
-            sprintf( txt, "C: %s %.*f", (mf >= 0 ? "+/-" : "-/+" ), 2, fabs(mf) );
+            sprintf( txt, "C : %.*f", dp, qq * 32 );
          }
          else
          {
-            sprintf( txt, "C: %.*f", 2, mf );
+            sprintf( txt, "C : %.*f", dp, mf );
          }
          return;
          break;
+      case Menu:
+      {
+         if( extend_range )
+         {
+            if( isBipolar )
+            {
+               sprintf( txt, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+" ), dp, fabs(qq * 32 ) );
+            }
+            else
+            {
+               sprintf( txt, "C : %.*f", dp, qq * 32  );
+            }
+
+         }
+         else
+         {
+            if( isBipolar )
+            {
+               sprintf( txt, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+" ), dp, fabs(mf) );
+            }
+            else
+            {
+               sprintf( txt, "C : %.*f", dp, mf );
+            }
+         }
+         return;
+         break;
+      }
       case InfoWindow:
          if( iw )
          {
-            char dtxt[256];
-            sprintf( dtxt, "C: %.*f", 2, val.f ); iw->val = dtxt;
-            sprintf( dtxt, "%.*f", 2, val.f + mf ); iw->valplus = dtxt;
-            sprintf( dtxt, "%.*f", 2, mf ); iw->dvalplus = dtxt;
-            if( isBipolar )
+            if( extend_range )
             {
-               sprintf( dtxt, "%.*f", 2, val.f - mf ); iw->valminus = dtxt;
-               sprintf( dtxt, "%.*f", 2, -mf ); iw->dvalminus = dtxt;
+               char dtxt[256];
+               float ev = get_extended(val.f);
+               if( ev < 0 )
+               {
+                  sprintf( dtxt, "C : 1 / %.*f", dp, -ev );
+               }
+               else
+               {
+                  sprintf( dtxt, "C : %.*f", dp, ev );
+               }
+               iw->val = dtxt;
+
+               auto upval = get_extended( val.f + ( qq * 32 ));
+               auto dnval = get_extended( val.f - ( qq * 32 ));
+
+               if( upval < 0 )
+                  sprintf( dtxt, "C : 1 / %.*f", dp, -upval );
+               else
+                  sprintf( dtxt, "C : %.*f", dp, upval );
+               iw->valplus = dtxt;
+               sprintf( dtxt, "%.*f", dp, qq * 32  ); iw->dvalplus = dtxt;
+               if( isBipolar )
+               {
+                  if( dnval < 0 )
+                     sprintf( dtxt, "C : 1/%.*f", dp, -dnval );
+                  else
+                     sprintf( dtxt, "C : %.*f", dp, dnval );
+                  iw->valminus = dtxt;
+                  
+                  sprintf( dtxt, "%.*f", dp, -( qq * 32 ) );
+                  iw->dvalminus = dtxt;
+               }
+
+            }
+            else
+            {
+               char dtxt[256];
+               sprintf( dtxt, "C : %.*f", dp, val.f ); iw->val = dtxt;
+               sprintf( dtxt, "%.*f", dp, val.f + mf ); iw->valplus = dtxt;
+               sprintf( dtxt, "%.*f", dp, mf ); iw->dvalplus = dtxt;
+               if( isBipolar )
+               {
+                  sprintf( dtxt, "%.*f", dp, val.f - mf ); iw->valminus = dtxt;
+                  sprintf( dtxt, "%.*f", dp, -mf ); iw->dvalminus = dtxt;
+               }
             }
          }
          // not really used any more bot don't leave it uninit
@@ -1745,14 +1862,15 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
    case ct_freq_vocoder_high:
    {
       float f = val.f;
-      int i_value = (int)( f + 0.5 ) + 69; // that 1/2th centers us
-      if( i_value < 0 ) i_value = 0;
+      int i_value = round(f) + 69;
+      if (i_value < 0)
+         i_value = 0;
 
       int oct_offset = 1;
       if (storage)
          oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
       char notename[16];
-      sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
+      sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
       break;
    }
@@ -1766,7 +1884,7 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
       if (storage)
          oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
       char notename[16];
-      sprintf(txt, "%s", get_notename(notename, i_value, oct_offset));
+      sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
       break;
    }
@@ -1929,19 +2047,44 @@ void Parameter::get_display(char* txt, bool external, float ef)
       switch (ctrltype)
       {
       case ct_fmratio:
-         sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), f);
+      {
+         auto q = get_extended(f);
+         if( extend_range && q < 0 )
+         {
+            sprintf(txt, "C : 1 / %.*f", (detailedMode ? 6 : 2), -get_extended(f));
+         }
+         else
+         {
+            sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), get_extended(f));
+         }
          break;
+      }
       default:
          sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
          break;
       }
       break;
    case vt_int:
+   {
       if (external)
          i = (int)((1 / 0.99) * (ef - 0.005) * (float)(val_max.i - val_min.i) + 0.5) + val_min.i;
       else
          i = val.i;
 
+      if( displayType == DelegatedToFormatter )
+      {
+         float fv = 0.005 + 0.99 * ((float)(i - val_min.i)) / ((float)(val_max.i - val_min.i));
+
+         char vt[64];
+
+         auto ef = dynamic_cast<ParameterExternalFormatter *>( user_data );
+         if( ef )
+         {
+            ef->formatValue( fv, vt, 64 );
+            sprintf( txt, "%s", vt );
+            return;
+         }
+      }
       switch (ctrltype)
       {
       case ct_midikey_or_channel:
@@ -1964,7 +2107,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       }
       case ct_osctype:
-         sprintf(txt, "%s", osctype_names[limit_range(i, 0, (int)num_osctypes - 1)]);
+         sprintf(txt, "%s", osc_type_names[limit_range(i, 0, (int)num_osctypes - 1)]);
          break;
       case ct_wt2window:
          sprintf(txt, "%s", window_names[limit_range(i, 0, 8)]);
@@ -1974,7 +2117,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%d voice%s", i, (i > 1 ? "s" : ""));
          break;
       case ct_fxtype:
-         sprintf(txt, "%s", fxtype_names[limit_range(i, 0, (int)num_fxtypes - 1)]);
+         sprintf(txt, "%s", fx_type_names[limit_range(i, 0, (int)num_fxtypes - 1)]);
          break;
       case ct_reverbshape:
          sprintf(txt, "Type %d", i + 1);
@@ -2009,10 +2152,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_comb:
                      sprintf(txt, "%s", fut_comb_subtypes[i]);
                      break;
-#if SURGE_EXTRA_FILTERS
-                  case fut_rkmoog:
-                     sprintf( txt, "%s", fut_rkmoog_subtypes[i]);
+                  case fut_vintageladder:
+                     sprintf( txt, "%s", fut_vintageladder_subtypes[i]);
                      break;
+                  case fut_obxd_2pole:
+                     sprintf( txt, "%s", fut_obxd_2p_subtypes[i]);
+                     break;
+                  case fut_obxd_4pole:
+                     sprintf( txt, "%s", fut_obxd_4p_subtypes[i]);
+                     break;
+#if SURGE_EXTRA_FILTERS
 #endif                     
                   default:
                      sprintf(txt, "%s", fut_def_subtypes[i]);
@@ -2037,13 +2186,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%s", ls_names[limit_range(i, 0, (int)n_lfoshapes - 1)]);
          break;
       case ct_scenemode:
-         sprintf(txt, "%s", scenemode_names[limit_range(i, 0, (int)n_scenemodes - 1)]);
+         sprintf(txt, "%s", scene_mode_names[limit_range(i, 0, (int)n_scenemodes - 1)]);
          break;
       case ct_polymode:
-         sprintf(txt, "%s", polymode_names[limit_range(i, 0, (int)n_polymodes - 1)]);
+         sprintf(txt, "%s", play_mode_names[limit_range(i, 0, (int)n_polymodes - 1)]);
          break;
       case ct_lfotrigmode:
-         sprintf(txt, "%s", lfomode_names[limit_range(i, 0, (int)n_lfomodes - 1)]);
+         sprintf(txt, "%s", lfo_mode_names[limit_range(i, 0, (int)n_lfomodes - 1)]);
          break;
       case ct_character:
          sprintf(txt, "%s", character_names[limit_range(i, 0, (int)n_charactermodes - 1)]);
@@ -2233,6 +2382,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       };
       break;
+   }
    case vt_bool:
       if (external)
          b = ef > 0.5f;
@@ -2682,8 +2832,41 @@ bool Parameter::set_value_from_string( std::string s )
    {
       // In this case we have to set nv differently
       const char *strip = &(c[0]);
-      while( *strip != '\0' && ! std::isdigit( *strip ) ) ++strip;
-      nv = std::atof( strip );
+      while( *strip != '\0' && ! std::isdigit( *strip ) && *strip != '.' ) ++strip;
+
+      // OK so do we contain a /?
+      const char *slp;
+      if( (slp = strstr( strip, "/" )) != nullptr )
+      {
+         float num = std::atof( strip );
+         float den = std::atof( slp + 1 );
+         if( den == 0 )
+            nv = 1;
+         else
+            nv = num / den;
+      }
+      else
+      {
+         nv = std::atof( strip );
+      }
+      if( extend_range )
+      {
+         if( nv < 1 )
+         {
+            float oonv = -1.0 / nv;
+            // oonv = - ( ( 16 - f ) * 2 + 1)
+            // -oonv-1 = (16-f)*2
+            // (1+oonv)/2 = f - 16;
+            // (1+oonv)/2 + 16 = f;
+            nv = 0.5 * ( 1 + oonv ) + 16;
+         }
+         else
+         {
+            // nv = ( f - 16 ) * 2 + 1
+            // (nv - 1)/2 + 16 = f
+            nv = ( nv - 1 ) / 2 + 16;
+         }
+      }
       val.f = nv;
    }
    break;
@@ -2794,6 +2977,13 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
 
    switch( ctrltype )
    {
+   case ct_fmratio:
+      if( extend_range )
+      {
+         auto mv = (float) std::atof( s.c_str() );
+         mv = mv / 32;
+         return mv;
+      }
    default:
    {
       // This works in all the linear cases so we need to handle fewer above than we'd think
@@ -2807,3 +2997,5 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
    valid = false;
    return 0.0;
 }
+
+std::atomic<bool> parameterNameUpdated( false );

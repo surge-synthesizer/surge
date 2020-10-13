@@ -81,7 +81,7 @@ void AirWindowsEffect::init_ctrltypes() {
 
    for( int i=0; i<n_fx_params - 1; ++i )
    {
-      fxdata->p[i+1].set_type( ct_airwindow_param );
+      fxdata->p[i+1].set_type( ct_none );
       std::string w = "Airwindow " + std::to_string(i);
       fxdata->p[i+1].set_name( w.c_str() );
 
@@ -108,7 +108,17 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
          airwin->getParameterName( i, txt );
          auto priorVal = fxdata->p[i+1].val.f;
          fxdata->p[i+1].set_name( txt );
-         if( airwin->isParameterBipolar( i ) )
+         if( airwin->isParameterIntegral( i ) )
+         {
+            fxdata->p[i+1].set_type( ct_airwindow_param_integral );
+            fxdata->p[i+1].val_min.i = 0;
+            fxdata->p[i+1].val_max.i = airwin->parameterIntegralUpperBound( i );
+
+            if( useStreamedValues )
+               fxdata->p[i+1].val.i = (int)( priorVal * (airwin->parameterIntegralUpperBound(i) + 0.999) );
+            else
+               fxdata->p[i+1].val.i = (int)( airwin->getParameter( i ) * (airwin->parameterIntegralUpperBound(i) + 0.999) );
+         } else if( airwin->isParameterBipolar( i ) )
          {
             fxdata->p[i+1].set_type( ct_airwindow_param_bipolar );
          }
@@ -174,7 +184,14 @@ void AirWindowsEffect::process( float *dataL, float *dataR )
    for( int i=0; i<airwin->paramCount && i < n_fx_params - 1; ++i )
    {
       param_lags[i].newValue( limit_range( *f[i+1], 0.f, 1.f ) );
-      airwin->setParameter( i, param_lags[i].v );
+      if( fxdata->p[i+1].ctrltype == ct_airwindow_param_integral )
+      {
+         airwin->setParameter( i, fxdata->p[i+1].get_value_f01() );
+      }
+      else
+      {
+         airwin->setParameter( i, param_lags[i].v );
+      }
       param_lags[i].process();
    }
 

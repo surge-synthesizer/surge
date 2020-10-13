@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "Reverb2Effect.h"
 
 /* reverb 2			*/
 /* allpass loop design */

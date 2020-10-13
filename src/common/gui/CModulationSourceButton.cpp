@@ -1,10 +1,12 @@
 #include "CModulationSourceButton.h"
+#include "CSurgeSlider.h"
 #include "Colors.h"
 #include "MouseCursorControl.h"
 #include "globals.h"
 #include "ModulationSource.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
+#include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
 #include "SkinColors.h"
 #include <UserDefaults.h>
@@ -20,6 +22,8 @@ enum
 {
    cs_none = 0,
    cs_drag = 1,
+   cs_maybeswap = 2,
+   cs_swap = 3
 };
 
 class SurgeStorage;
@@ -91,18 +95,6 @@ void CModulationSourceButton::setBipolar(bool b)
    setDirty();
 }
 
-//------------------------------------------------------------------------------------------------
-
-void CModulationSourceButton::setblink(bool nblink)
-{
-   bool changed = ((blink && !nblink) || (!blink && nblink)) && ((state & 3) == 2);
-   blink = nblink;
-
-   if (changed)
-   {
-      invalid();
-   }
-}
 
 //------------------------------------------------------------------------------------------------
 
@@ -119,14 +111,17 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 {
    CRect sze = getViewSize();
    // sze.offset(-size.left,-size.top);
+   
+   #if WINDOWS
+      auto priorDrawMode = dc->getDrawMode();
+      dc->setDrawMode(kAntiAliasing | kNonIntegralMode);
+   #endif
 
    const CColor ColHover = CColor(103, 167, 253, 255);
    const CColor ColEdge = CColor(46, 134, 254, 255);
    const CColor ColTint = CColor(46, 134, 254, 255);
    const CColor ColSemiTint = CColor(32, 93, 176, 255);
    const CColor ColBlink = CColor(173, 255, 107, 255);
-
-   const int rh = 16;
 
    /*
         state
@@ -138,72 +133,62 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
    // source position in bitmap
 
-   bool ActiveArrow = state > 4;
    bool SelectedModSource = (state & 3) == 1;
    bool ActiveModSource = (state & 3) == 2;
    bool UsedOrActive = used || (state & 3);
 
    CColor FrameCol, FillCol, FontCol;
 
-   auto brighten = [](const CColor &c) -> CColor
-                      {
-                         auto fac = 1.4f;
-                         return CColor( std::min( (int)(c.red * fac), 255 ),
-                                        std::min( (int)(c.green * fac), 255 ),
-                                        std::min( (int)(c.blue * fac), 255 ) );
-                      };
-
-   FillCol = skin->getColor(Colors::ModSource::Inactive::Background, CColor(18, 52, 99, 255));
-   FrameCol = UsedOrActive ? skin->getColor( Colors::ModSource::Inactive::Border, ColEdge ) : skin->getColor(Colors::ModSource::Used::Border, ColSemiTint);
-   FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Inactive::Text, ColEdge) : skin->getColor(Colors::ModSource::Used::Text, ColSemiTint);
+   FillCol = skin->getColor(Colors::ModSource::Used::Background);
+   FrameCol = UsedOrActive ? skin->getColor( Colors::ModSource::Used::Border) : skin->getColor(Colors::ModSource::Unused::Border);
+   FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::Text) : skin->getColor(Colors::ModSource::Unused::Text);
    if( hovered )
    {
-      FrameCol = UsedOrActive ? skin->getColor(Colors::ModSource::Inactive::BorderHover, brighten(FrameCol)) : skin->getColor(Colors::ModSource::Used::BorderHover, brighten(FrameCol));
-      FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Inactive::TextHover, brighten(ColEdge)) : skin->getColor(Colors::ModSource::Used::TextHover, brighten(ColSemiTint));
+      FrameCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::BorderHover) : skin->getColor(Colors::ModSource::Unused::BorderHover);
+      FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::TextHover) : skin->getColor(Colors::ModSource::Unused::TextHover);
    }
 
    if (ActiveModSource)
    {
-      FrameCol = skin->getColor(Colors::ModSource::Active::Border, ColBlink);
+      FrameCol = skin->getColor(Colors::ModSource::Armed::Border);
       if( hovered )
-         FrameCol = skin->getColor(Colors::ModSource::Active::BorderHover, brighten(FrameCol));
+         FrameCol = skin->getColor(Colors::ModSource::Armed::BorderHover);
       
-      FillCol = skin->getColor(Colors::ModSource::Active::Background, ColBlink);
-      FontCol = skin->getColor(Colors::ModSource::Active::Text, CColor(18, 52, 99, 255));
+      FillCol = skin->getColor(Colors::ModSource::Armed::Background);
+      FontCol = skin->getColor(Colors::ModSource::Armed::Text);
       if( hovered )
-         FontCol = skin->getColor(Colors::ModSource::Active::TextHover, brighten(CColor(18, 52, 99, 255)));
+         FontCol = skin->getColor(Colors::ModSource::Armed::TextHover);
    }
    else if (SelectedModSource)
    {
-      FrameCol = skin->getColor(Colors::ModSource::Selected::Border, ColTint);
+      FrameCol = used ? skin->getColor(Colors::ModSource::Selected::Used::Border) : skin->getColor(Colors::ModSource::Selected::Border);
       if( hovered )
-         FrameCol = skin->getColor(Colors::ModSource::Selected::BorderHover, brighten(FrameCol));
-      FillCol = skin->getColor(Colors::ModSource::Selected::Background, ColTint);
-      FontCol = skin->getColor(Colors::ModSource::Selected::Text, CColor(18, 52, 99, 255));
+         FrameCol = used ? skin->getColor(Colors::ModSource::Selected::Used::BorderHover) : skin->getColor(Colors::ModSource::Selected::BorderHover);
+      FillCol = used ? skin->getColor(Colors::ModSource::Selected::Used::Background) : skin->getColor(Colors::ModSource::Selected::Background);
+      FontCol = used ? skin->getColor(Colors::ModSource::Selected::Used::Text) : skin->getColor(Colors::ModSource::Selected::Text);
       if( hovered )
-         FontCol = skin->getColor(Colors::ModSource::Selected::TextHover, brighten(CColor(18, 52, 99, 255)));
+         FontCol = used ? skin->getColor(Colors::ModSource::Selected::Used::TextHover) : skin->getColor(Colors::ModSource::Selected::TextHover);
    }
    else if (tint)
    {
-      FillCol = skin->getColor(Colors::ModSource::Used::Background, FillCol);
-      FrameCol = skin->getColor(Colors::ModSource::Used::Border, ColHover);
+      FillCol = skin->getColor(Colors::ModSource::Unused::Background);
+      FrameCol = skin->getColor(Colors::ModSource::Unused::Border);
       if( hovered )
-         FrameCol = skin->getColor(Colors::ModSource::Used::BorderHover, brighten(FrameCol));
-      FontCol = skin->getColor(Colors::ModSource::Used::Text, ColHover);
+         FrameCol = skin->getColor(Colors::ModSource::Unused::BorderHover);
+      FontCol = skin->getColor(Colors::ModSource::Unused::Text);
       if( hovered )
-         FontCol = skin->getColor(Colors::ModSource::Used::TextHover, brighten(ColHover));
+         FontCol = skin->getColor(Colors::ModSource::Unused::TextHover);
    }
 
    if( secondaryHover )
    {
-      FontCol = skin->getColor(Colors::ModSource::Inactive::UsedHover, VSTGUI::CColor(0xFF, 0x90, 0x00));
+      FontCol = skin->getColor(Colors::ModSource::Used::UsedModHover);
       if( ActiveModSource )
-         FontCol = skin->getColor(Colors::ModSource::Active::UsedHover, FontCol);
+         FontCol = skin->getColor(Colors::ModSource::Armed::UsedModHover);
       if( SelectedModSource )
-         FontCol = skin->getColor(Colors::ModSource::Selected::UsedHover, kWhiteCColor);
+         FontCol = skin->getColor(Colors::ModSource::Selected::UsedModHover);
    }
    
-
    CRect framer(sze);
    CRect fillr(framer);
    fillr.inset(1, 1);
@@ -212,7 +197,11 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    dc->setFrameColor(FrameCol);
    dc->setFillColor(FillCol);
    CRect txtbox(sze);
+#if WINDOWS
+   txtbox.inset(1, 0.6);
+#else
    txtbox.inset(1, 1);
+#endif
    txtbox.bottom = txtbox.top + 13;
 
    dc->setFillColor(FrameCol);
@@ -237,7 +226,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       MCRect.top += 12;
       MCRect.bottom--;
       MCRect.right--;
-      dc->setFillColor(skin->getColor(Colors::ModSource::Inactive::Background, CColor(18, 52, 99, 255)));
+      dc->setFillColor(skin->getColor(Colors::ModSource::Used::Background));
       dc->drawRect(MCRect, kDrawFilled);
       CRect brect(MCRect);
       brect.inset(1, 1);
@@ -276,16 +265,23 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       }
    }
 
+   const int rh = 16;
+
+   // show LFO parameters arrow
    if (msid >= ms_lfo1 && msid <= ms_slfo6)
    {
       CPoint where;
-      where.x = 0;
+      where.x = - 9;
       if (state >= 4)
          where.y = 8 * rh;
       else
          where.y = 7 * rh;
       bmp->draw(dc, sze, where, 0xff);
    }
+
+   #if WINDOWS
+      dc->setDrawMode(priorDrawMode);
+   #endif
 
    setDirty(false);
 }
@@ -306,7 +302,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    CPoint loc(where);
    loc.offset(-size.left, -size.top);
 
-   if (controlstate)
+   if (controlstate != cs_none )
    {
 #if MAC
 //		if(buttons & kRButton) statezoom = 0.1f;
@@ -321,7 +317,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if (is_metacontroller && (buttons & kDoubleClick) && MCRect.pointInside(where) && !controlstate)
+   if (is_metacontroller && (buttons & kDoubleClick) && MCRect.pointInside(where) && controlstate == cs_none )
    {
       if (bipolar)
          value = 0.5;
@@ -335,7 +331,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if (is_metacontroller && MCRect.pointInside(where) && (buttons & kLButton) && !controlstate)
+   if (is_metacontroller && MCRect.pointInside(where) && (buttons & kLButton) && controlstate == cs_none)
    {
       beginEdit();
       controlstate = cs_drag;
@@ -346,11 +342,16 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    }
    else if (buttons & kLButton)
    {
-      click_is_editpart = loc.x > 53;
-      event_is_drag = false;
-      if (listener)
-         listener->valueChanged(this);
-      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+      /*
+      ** If you uncomment this if and have all paths set controstrate to cs_maybeswap
+      ** modulators wll also drop onto targets if you also uncomment the sge->openBlah below
+      */
+      if( is_metacontroller || ( buttons & kControl ) )
+      {
+         controlstate = cs_maybeswap;
+         dragStart = where;
+      }
+      return kMouseEventHandled;
    }
 
    return kMouseEventHandled;
@@ -362,14 +363,131 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
 {
    super::onMouseUp(where, buttons);
 
-   if (controlstate)
+   if( controlstate == cs_swap && dragLabel )
+   {
+      dragLabel->setVisible( false );
+      getFrame()->removeView( dragLabel );
+      dragLabel = nullptr;
+      controlstate = cs_none;
+
+      auto p = getFrame()->getViewSize();
+      auto wa = where - p.getTopLeft();
+      wa = getFrame()->getTransform().transform( wa );
+      auto v = getFrame()->getViewAt(wa);
+      auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+      if( sge )
+      {
+         auto c = dynamic_cast<CModulationSourceButton *>(v);
+         if( c && c->is_metacontroller )
+         {
+            if( c->getTag() == getTag() )
+            {
+               // We've dropped onto ourself. Treat like an ARM toggle for now
+               click_is_editpart = false;
+               event_is_drag = false;
+               if (listener)
+                  listener->valueChanged(this);
+            }
+            else
+            {
+               sge->swapControllers( getTag(), c->getTag() );
+            }
+         }
+
+         auto s = dynamic_cast<CSurgeSlider *>(v);
+         if( s )
+         {
+            // See comment above when state is set to maybeswap
+            if( buttons & kControl )
+               sge->openModTypeinOnDrop( getTag(), s,  s->getTag() );
+         }
+      }
+
+      controlstate = cs_none;
+   }
+   else if( controlstate == cs_none || controlstate == cs_maybeswap )
+   {
+      auto size = getViewSize();
+      CPoint loc(where);
+      loc.offset(-size.left, -size.top);
+
+      click_is_editpart = loc.x > (size.getWidth() - 11);   // click area for show LFO parameters arrow
+      event_is_drag = false;
+      if (listener)
+         listener->valueChanged(this);
+   }
+   
+   
+   if (controlstate == cs_drag)
    {
       endEdit();
-      controlstate = cs_none;
 
       attachCursor();
    }
+   controlstate = cs_none;
+
    return kMouseEventHandled;
+}
+
+CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CButtonState &buttons ) 
+{
+   if( controlstate == cs_maybeswap )
+   {
+      float thresh = 0;
+      thresh += (where.x - dragStart.x) * (where.x - dragStart.x);
+      thresh += (where.y - dragStart.y) * (where.y - dragStart.y);
+      thresh = sqrt(thresh);
+      if (thresh < 3)
+      {
+         return CCursorHidingControl::onMouseMoved(where, buttons);
+      }
+      if( dragLabel == nullptr )
+      {
+         std::string lb = label;
+         if( hasAlternate && useAlternate )
+         {
+            lb = alternateLabel;
+         }
+
+         if( lb == "-" ) lb = "Drag Macro";
+
+         auto l = new CTextLabel( getViewSize(), lb.c_str() );
+         l->setTransparency(false);
+
+         CColor FrameCol, FillCol, FontCol;
+         const CColor ColEdge = CColor(46, 134, 254, 255);
+
+         FillCol = skin->getColor(Colors::ModSource::Used::Background);
+         FrameCol = skin->getColor( Colors::ModSource::Used::Border );
+         FontCol = skin->getColor(Colors::ModSource::Used::Text); 
+
+         l->setFont( displayFont );
+         l->setBackColor( FillCol );
+         l->setFontColor( FontCol );
+         l->setFrameColor( FrameCol );
+         l->setVisible( true );
+         getFrame()->addView(l);
+         dragLabel = l;
+         dragOffset = where - getViewSize().getTopLeft();
+      }
+      controlstate = cs_swap;
+      return kMouseEventHandled;
+   }
+   else if( controlstate == cs_swap && dragLabel )
+   {
+      auto s = dragLabel->getViewSize();
+      auto r = s;
+      s = s.moveTo( where - dragOffset );
+      dragLabel->setViewSize( s );
+      dragLabel->invalid();
+      r.extend( 10, 10 );
+      getFrame()->invalid();
+      return kMouseEventHandled;
+   }
+   else
+   {
+      return CCursorHidingControl::onMouseMoved( where, buttons );
+   }
 }
 
 //------------------------------------------------------------------------------------------------
@@ -379,7 +497,7 @@ void CModulationSourceButton::onMouseMoveDelta(CPoint& where,
                                                double dx,
                                                double dy)
 {
-   if ((controlstate) && (buttons & kLButton))
+   if ((controlstate == cs_drag) && (buttons & kLButton))
    {
       value += dx / (double)(getWidth());
       value = limit_range(value, 0.f, 1.f);

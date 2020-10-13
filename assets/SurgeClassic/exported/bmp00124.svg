@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="73px" height="144px" viewBox="0 0 73 144" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <g id="bmp00124" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-    <path d="M55.5,119.5 L55.5,116.5 L57.5,116.5 L57.5,119.5 L60.0675208,119.5 L56.5,123.781025 L52.9324792,119.5 L55.5,119.5 Z" id="Path" stroke="#123462" fill="#2E86FE"/>
-    <path d="M55.5,135.5 L55.5,132.5 L57.5,132.5 L57.5,135.5 L60.0675208,135.5 L56.5,139.781025 L52.9324792,135.5 L55.5,135.5 Z" id="Path" stroke="#113363" fill="#FF8F02"/>
-    <rect id="Rectangle" stroke="#2E86FE" fill="#FFFFFF" x="0.5" y="0.5" width="72" height="15"/>
-    <rect id="Rectangle" stroke="#2E86FE" fill="#FFFFFF" x="0.5" y="16.5" width="72" height="15"/>
-    <rect id="Rectangle" fill="#2E86FE" x="0" y="33" width="73" height="14"/>
-    <rect id="Rectangle" fill="#2E86FE" x="0" y="49" width="73" height="14"/>
-    <rect id="Rectangle" fill="#ADFF6B" x="0" y="81" width="73" height="14"/>
-    <rect id="Rectangle" stroke-opacity="0.278560915" stroke="#FFFFFF" x="1.5" y="98.5" width="70" height="11"/>
-    <rect id="Rectangle" stroke-opacity="0.501415308" stroke="#FFFFFF" x="0.5" y="97.5" width="72" height="13"/>
-    <path d="M-0.5,96.5 L-0.5,111.5 L73.5,111.5 L73.5,96.5 L-0.5,96.5 Z" id="Path" stroke-opacity="0.278560915" stroke="#FFFFFF"/>
+<svg width="73px" height="144px" viewBox="0 0 73 144" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <desc>Created with Lunacy</desc>
+  <defs>
+    <rect width="73" height="144" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="bmp00124" clip-path="url(#clip_1)">
+    <path d="M4.56708 0L2.56708 0L2.56708 2.99925L0 3.00053L3.56708 7.28103L7.1346 3L4.56708 3L4.56708 0L4.56708 0Z" transform="translate(52.5 116)" id="Combined-Shape" fill="#2E86FE" fill-rule="evenodd" stroke="#123462" stroke-width="1" />
+    <path d="M4.56708 0L2.56708 0L2.56708 2.99925L0 3.00053L3.56708 7.28102L7.1346 3L4.56708 3L4.56708 0L4.56708 0Z" transform="translate(52.5 132)" id="Combined-Shape#1" fill="#113363" fill-rule="evenodd" stroke="#FF8F02" stroke-width="1" />
+    <path d="M0 0L72 0L72 15L0 15L0 0Z" transform="translate(0.5 0.5)" id="Rectangle" fill="#FFFFFF" fill-rule="evenodd" stroke="#2E86FE" stroke-width="1" />
+    <path d="M0 0L72 0L72 15L0 15L0 0Z" transform="translate(0.5 16.5)" id="Rectangle#1" fill="#FFFFFF" fill-rule="evenodd" stroke="#2E86FE" stroke-width="1" />
+    <path d="M0 0L73 0L73 14L0 14L0 0Z" transform="translate(0 33)" id="Rectangle#2" fill="#2E86FE" fill-rule="evenodd" stroke="none" />
+    <path d="M0 0L73 0L73 14L0 14L0 0Z" transform="translate(0 49)" id="Rectangle#3" fill="#2E86FE" fill-rule="evenodd" stroke="none" />
+    <path d="M0 0L73 0L73 14L0 14L0 0Z" transform="translate(0 81)" id="Rectangle#4" fill="#ADFF6B" fill-rule="evenodd" stroke="none" />
+    <g id="Group" transform="translate(-0.5 96.5)">
+      <path d="M0 0L70 0L70 11L0 11L0 0Z" transform="translate(2 2)" id="Rectangle#5" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-opacity="0.2784314" stroke-width="1" />
+      <path d="M0 0L72 0L72 13L0 13L0 0Z" transform="translate(1 1)" id="Rectangle#6" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-opacity="0.5019608" stroke-width="1" />
+      <path d="M74 0L0 0L0 15L74 15L74 0L74 0Z" id="Rectangle-2" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-opacity="0.2784314" stroke-width="1" />
+    </g>
   </g>
 </svg>

@@ -2,7 +2,8 @@
 #include "SurgeStorage.h"
 #include <vt_dsp/basic_dsp.h>
 
-#include "filters/RKMoog.h"
+#include "filters/VintageLadders.h"
+#include "filters/Obxd.h"
 
 using namespace std;
 
@@ -12,6 +13,8 @@ FilterCoefficientMaker::FilterCoefficientMaker()
 {
    Reset();
 }
+
+
 
 void FilterCoefficientMaker::MakeCoeffs(
     float Freq, float Reso, int Type, int SubType, SurgeStorage* storageI)
@@ -63,10 +66,29 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_SNH:
       Coeff_SNH(Freq, Reso, SubType);
       break;
-#if SURGE_EXTRA_FILTERS      
-   case fut_rkmoog:
-      RKMoog::makeCoefficients(this, Freq, Reso, SubType, storageI);
+   case fut_vintageladder:
+      switch( SubType )
+      {
+      case 0:
+      case 1:
+         VintageLadder::RK::makeCoefficients(this, Freq, Reso, SubType == 1, storageI);
+         break;
+      case 2:
+      case 3:
+         VintageLadder::Huov::makeCoefficients(this, Freq, Reso, SubType == 3, storageI);
+         break;
+      default:
+         // SOFTWARE ERROR
+         break;
+      }
       break;
+   case fut_obxd_2pole:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType, storageI);
+      break;
+   case fut_obxd_4pole:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::FOUR_POLE, Freq, Reso, SubType, storageI);
+      break;
+#if SURGE_EXTRA_FILTERS
 #endif      
    };
 }

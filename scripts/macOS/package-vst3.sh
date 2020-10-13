@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # If no vectors are specified, use the original-vector by default
 echo "$1 is bin"
 # input config

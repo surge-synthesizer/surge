@@ -19,6 +19,8 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
+#include <atomic>
+#include "SkinModel.h"
 
 union pdata
 {
@@ -133,6 +135,7 @@ enum ctrltypes
    ct_airwindow_fx,
    ct_airwindow_param,
    ct_airwindow_param_bipolar,
+   ct_airwindow_param_integral,
    num_ctrltypes,
 };
 
@@ -192,15 +195,13 @@ struct ParameterIDCounter
       ParameterIDPromise() : next(nullptr)
       {
       }
-      ~ParameterIDPromise()
-      {
-      }
+      ~ParameterIDPromise() = default;
       long value = -1;
    };
 
    ParameterIDCounter()
    {
-      head.reset(new ParameterIDPromise());
+      head = std::make_shared<ParameterIDPromise>();
       tail = head;
    }
    ~ParameterIDCounter()
@@ -224,7 +225,7 @@ struct ParameterIDCounter
       return ret;
    };
 
-   void resolve()
+   void resolve() const
    {
       auto h = head;
       int val = 0;
@@ -257,6 +258,7 @@ class Parameter
 {
 public:
    Parameter();
+private:
    Parameter* assign(ParameterIDCounter::promise_t id,
                      int pid,
                      const char* name,
@@ -267,6 +269,21 @@ public:
                      int posx,
                      int posy,
                      
+                     int scene = 0,
+                     ControlGroup ctrlgroup = cg_GLOBAL,
+                     int ctrlgroup_entry = 0,
+                     bool modulateable = true,
+                     int ctrlstyle = cs_off,
+                     bool defaultDeactivation = true);
+public:
+   Parameter* assign(ParameterIDCounter::promise_t id,
+                     int pid,
+                     const char* name,
+                     const char* dispname,
+                     int ctrltype,
+
+                     const Surge::Skin::Connector &c,
+
                      int scene = 0,
                      ControlGroup ctrlgroup = cg_GLOBAL,
                      int ctrlgroup_entry = 0,
@@ -323,30 +340,30 @@ public:
 
    void create_fullname(const char* dn, char *fn, ControlGroup ctrlgroup, int ctrlgroup_entry, const char *lfoPrefixOverride = nullptr );
    
-   pdata val, val_default, val_min, val_max;
+   pdata val{}, val_default{}, val_min{}, val_max{};
    // You might be tempted to use a non-fixed-size member here, like a std::string, but
    // this class gets pre-c++ memcopied so thats not an option which is why I do this wonky
    // pointer thing and strncpy from a string onto ui_identifier
-   ParameterIDCounter::promise_ptr_t id_promise;
-   int id;
-   char name[NAMECHARS], dispname[NAMECHARS], name_storage[NAMECHARS], fullname[NAMECHARS];
-   char ui_identifier[NAMECHARS];
-   bool modulateable;
+   ParameterIDCounter::promise_ptr_t id_promise{};
+   int id{};
+   char name[NAMECHARS]{}, dispname[NAMECHARS]{}, name_storage[NAMECHARS]{}, fullname[NAMECHARS]{};
+   char ui_identifier[NAMECHARS]{};
+   bool modulateable{};
    int valtype = 0;
-   int scene; // 0 = patch, 1 = scene A, 2 = scene B
-   int ctrltype;
+   int scene{}; // 0 = patch, 1 = scene A, 2 = scene B
+   int ctrltype{};
    int posx, posy, posy_offset;
    ControlGroup ctrlgroup = cg_GLOBAL;
    int ctrlgroup_entry = 0;
    int ctrlstyle = cs_off;
-   int midictrl;
-   int param_id_in_scene;
-   bool affect_other_parameters;
-   float moverate;
-   bool per_voice_processing;
-   bool temposync, extend_range, absolute, deactivated;
-   bool porta_constrate, porta_gliss, porta_retrigger;
-   int porta_curve;
+   int midictrl{};
+   int param_id_in_scene{};
+   bool affect_other_parameters{};
+   float moverate{};
+   bool per_voice_processing{};
+   bool temposync{}, extend_range{}, absolute{}, deactivated{};
+   bool porta_constrate{}, porta_gliss{}, porta_retrigger{};
+   int porta_curve{};
 
    enum ParamDisplayType {
       Custom,
@@ -357,16 +374,16 @@ public:
    } displayType = Custom;
 
    enum ParamDisplayFeatures {
-      kHasCustomMinString = 1 << 0,
-      kHasCustomMaxString = 1 << 1,
-      kHasCustomDefaultString = 1 << 2,
-      kHasCustomMinValue = 1 << 3,
-      kHasCustomMaxValue = 1 << 4,
-      kUnitsAreSemitonesOrKeys = 1 << 5
+      kHasCustomMinString = 1U << 0U,
+      kHasCustomMaxString = 1U << 1U,
+      kHasCustomDefaultString = 1U << 2U,
+      kHasCustomMinValue = 1U << 3U,
+      kHasCustomMaxValue = 1U << 4U,
+      kUnitsAreSemitonesOrKeys = 1U << 5U
    };
    
    struct DisplayInfo {
-      char unit[128], absoluteUnit[128];
+      char unit[128]{}, absoluteUnit[128]{};
       float scale = 1;
       float a = 1.0, b = 1.0;
       int decimals = 2;
@@ -374,7 +391,7 @@ public:
 
       float tempoSyncNotationMultiplier = 1.f;
       
-      char minLabel[128], maxLabel[128], defLabel[128];
+      char minLabel[128]{}, maxLabel[128]{}, defLabel[128]{};
       float minLabelValue = 0.f, maxLabelValue = 0.f;
 
       float modulationCap = -1.f;
@@ -382,9 +399,10 @@ public:
       float extendFactor = 1.0, absoluteFactor = 1.0; // set these to 1 in case we sneak by and divide by accident
    } displayInfo;
       
-   
    ParamUserData* user_data = nullptr;    // I know this is a bit gross but we have a runtime type
    void set_user_data(ParamUserData* ud); // I take a shallow copy and don't assume ownership and assume i am referencable
+
+   bool hasSkinConnector = false;
 
    /*
    ** Parameter has a pointer to the storage that manages the patch that contains it
@@ -396,3 +414,6 @@ public:
    */
    SurgeStorage *storage = nullptr;
 };
+
+// I don't make this a member since param needs to be copyable with memcpy.
+extern std::atomic<bool> parameterNameUpdated;

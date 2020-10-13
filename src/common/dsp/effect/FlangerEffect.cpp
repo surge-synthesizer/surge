@@ -1,4 +1,4 @@
-#include "effect_defs.h"
+#include "FlangerEffect.h"
 #include "Tunings.h"
 #include "DebugHelpers.h"
 #include <algorithm>

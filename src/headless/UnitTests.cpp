@@ -1,6 +1,6 @@
 
 #define CATCH_CONFIG_RUNNER
-#include "catch2.hpp"
+#include "catch2/catch2.hpp"
 
 /*
 ** All moved to UnitTestsBLAH.cpp

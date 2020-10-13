@@ -29,7 +29,7 @@ public:
              long rows,
              long columns,
              VSTGUI::CBitmap* background,
-             VSTGUI::CPoint& offset,
+             const VSTGUI::CPoint& offset,
              bool dragable = false)
        : CHorizontalSwitch(
              size, listener, tag, subPixmaps, heightOfOneImage, subPixmaps, background, offset)

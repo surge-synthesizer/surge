@@ -43,10 +43,17 @@ void CAboutBox::draw(CDrawContext* pContext)
    if (value)
    {
       _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
-
-      CRect infobg(0, 375, 905, 545);
-      CRect skininfobg(0, 0, 905, 80);
+      CRect infobg(0, skin->getWindowSizeY() - 167, skin->getWindowSizeX(), skin->getWindowSizeY());
+      CRect skininfobg(0, 0, BASE_WINDOW_SIZE_X, 80);
+#if BUILD_IS_DEBUG
+      /*
+       * This code is here JUST because baconpaul keeps developing surge and then swapping
+       * to make music and wondering why LPX is stuttering. Please don't remove it!
+       */
+      pContext->setFillColor(CColor(120, 80, 80, 255));
+#else
       pContext->setFillColor(CColor(0, 0, 0, 255));
+#endif
       pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
       pContext->drawRect(skininfobg, CDrawStyle::kDrawFilled);
 
@@ -79,7 +86,14 @@ void CAboutBox::draw(CDrawContext* pContext)
 
       {
          std::vector< std::string > msgs = { {
-               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + chipmanu + " " + bitness + " " + platform + " " + flavor + ". Built " +
+               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + chipmanu + " " + bitness + " " + platform + " " + flavor
+#if TARGET_VST2 || TARGET_VST3               
+               + " in " + host
+#endif
+#if BUILD_IS_DEBUG
+                 + " - DEBUG BUILD"
+#endif
+               + ". Built " +
                Surge::Build::BuildDate + " at " + Surge::Build::BuildTime + " on " + Surge::Build::BuildLocation + " host '" + Surge::Build::BuildHost + "')",
                "Factory Data Path: " + dataPath,
                "User Data Path: " + userPath,
@@ -87,13 +101,14 @@ void CAboutBox::draw(CDrawContext* pContext)
                "Copyright 2005-2020 by Vember Audio and individual contributors",
                "Source, contributors and other information at",
                "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc.",
-               "Contains the Open Source Airwindows Plugins for some effects",
+               "Airwindows open source effects by Chris Johnson, licensed under MIT license",
             } };
-         
+         identifierLine = msgs[0];
          int yMargin = 6;
          int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
+         int iyPos = yPos;
          int xPos = strHeight;
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text, kWhiteCColor));
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text));
          pContext->setFont(infoFont);
          for (auto s : msgs)
          {
@@ -102,10 +117,13 @@ void CAboutBox::draw(CDrawContext* pContext)
          }
 
          // link to Surge github repo in another color because VSTGUI -_-
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Link, CColor(46, 134, 255)));
-         pContext->drawString("https://github.com/surge-synthesizer/surge", CPoint(253, 506 - strHeight - yMargin));
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Link));
+         pContext->drawString( "Copy", CPoint( toDisplay.getWidth() - 50, iyPos ) );
+         copyBox = CRect( CPoint( toDisplay.getWidth() - 50, iyPos - strHeight  ), CPoint( 48, 2 * strHeight ) );
+         std::cout << _DUMPR( copyBox ) << std::endl;
+         pContext->drawString("https://github.com/surge-synthesizer/surge",
+                              CPoint(253, skin->getWindowSizeY() - 36 - strHeight - yMargin));
       }
-
       {
          std::vector< std::string > msgs;
          msgs.push_back( std::string( ) + "Current Skin: " + skin->displayName );
@@ -117,7 +135,7 @@ void CAboutBox::draw(CDrawContext* pContext)
          int yMargin = 6;
          int yPos = strHeight * 2;
          int xPos = strHeight;
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text, kWhiteCColor));
+         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text));
          pContext->setFont(infoFont);
          for (auto s : msgs)
          {
@@ -144,10 +162,11 @@ bool CAboutBox::hitTest(const CPoint& where, const CButtonState& buttons)
 
 //------------------------------------------------------------------------
 
-void CAboutBox::boxShow(std::string dataPath, std::string userPath)
+void CAboutBox::boxShow(std::string dataPath, std::string userPath, std::string host)
 {
    this->dataPath = dataPath;
    this->userPath = userPath;
+   this->host = host;
    setViewSize(toDisplay);
    setMouseableArea(toDisplay);
    value = 1.f;
@@ -169,10 +188,16 @@ CAboutBox::onMouseDown(CPoint& where,
                        const CButtonState& button) ///< called when a mouse down event occurs
 {
    if (!(button & kLButton))
-      return kMouseEventNotHandled;
+      return kMouseEventHandled;
 
-   if (where.x >= 250 && where.x <= 480 && where.y >= 496 && where.y <= 510)
+   if (where.x >= 252 && where.x <= 480 && (where.y >= skin->getWindowSizeY() - 66) &&
+             where.y <= (skin->getWindowSizeY() - 50))
       Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
+   else if( copyBox.pointInside(where) ){
+
+      auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
+      getFrame()->setClipboard(a);
+   }
    else
       boxHide();
 

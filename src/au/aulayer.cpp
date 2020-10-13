@@ -13,6 +13,7 @@ aulayer::aulayer(AudioUnit au) : AUInstrumentBase(au, 1, 1)
 {
    plugin_instance = 0;
    editor_instance = 0;
+   checkNamesEvery = 0;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -348,6 +349,24 @@ ComponentResult aulayer::Render(AudioUnitRenderActionFlags& ioActionFlags,
    SurgeSynthesizer* s = (SurgeSynthesizer*)plugin_instance;
    s->process_input = 0;
 
+   if( checkNamesEvery++ == 20 )
+   {
+      checkNamesEvery = 0;
+      if( std::atomic_exchange( &parameterNameUpdated, false ) )
+      {
+         /*
+           What's the right magic for here I wonder?
+           https://www.kvraudio.com/forum/viewtopic.php?t=198125&start=30
+           AudioUnitParameter param;
+           param.mAudioUnit = GetComponentInstance();
+           param.mParameterID = kAUParameterListener_AnyParameter;
+           
+           AUParameterListenerNotify (nullptr, nullptr, &param);
+         */
+      }
+   }
+
+   
    float sampleRate = sampleRateCache;
    float* outputs[N_OUTPUTS];
    float* inputs[N_INPUTS];
@@ -409,6 +428,8 @@ ComponentResult aulayer::Render(AudioUnitRenderActionFlags& ioActionFlags,
       // See github issue #146
       if (isPlaying)
          plugin_instance->time_data.ppqPos = CurrentBeat;
+
+      plugin_instance->resetStateFromTimeData();
    }
    else
    {

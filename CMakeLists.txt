@@ -5,10 +5,85 @@
 # See issue 1206 for our working list to get this finished
 #
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0091 NEW)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-project(Surge VERSION 1.7.1.0 LANGUAGES CXX ASM)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+endif()
+
+project(Surge VERSION 1.8.0.0 LANGUAGES CXX ASM)
+
+set(CMAKE_CXX_EXTENSIONS OFF)
+if(APPLE)
+  set(CMAKE_CXX_STANDARD 14)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+  # Any Clang or any GCC
+  add_compile_options(
+    -Wno-multichar
+
+    # PE/COFF doesn't support visibility
+    $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
+    $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility-inlines-hidden>
+  )
+  # FIXME: Find a proper way or move to i686 toolchain file
+  if(NOT DEFINED LINUX_ON_ARM)
+    add_compile_options(-msse2)
+  endif()
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Any Clang
+    add_compile_options(
+      -Wno-deprecated-declarations
+      -Werror=inconsistent-missing-override
+      -Werror=logical-op-parentheses
+      -Werror=dynamic-class-memaccess
+      -Werror=undefined-bool-conversion
+      -Werror=bitwise-op-parentheses
+      -Werror=pointer-bool-conversion
+    )
+    if (CMAKE_CXX_COMPILER_ID MATCHES "^AppleClang$")
+      # Apple Clang only
+      add_compile_options(
+        -fasm-blocks
+      )
+    endif()
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
+    # GCC only
+  endif()
+endif()
+
+if(MSVC)
+  # MSVC and pretenders
+  add_compile_options(
+    # MSVC-only warnings, Clang-cl silently ignores these
+    /wd4244   # float to double
+    /wd4305   # truncation of variable
+    /wd4267   # int and size_t
+    /wd4018   # signed unsigned mismatch
+    /wd4388   # signed unsigned mismatch in comparison
+    /wd4477   # blah blah wide strings after we made it work
+    /wd4065   # standalone default in a switch with no case
+    /wd4702   # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
+
+    # Clang-cl-only warnings
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-microsoft-exception-spec>
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-pragma-pack>
+
+    /Zc:alignedNew
+    /bigobj
+
+    # Build with Multiple Processes (Clang-cl builds use Ninja instead)
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+  )
+endif()
+
 message( STATUS "CMake Version is ${CMAKE_VERSION}" )
 message( STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}" )
 if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
@@ -17,14 +92,13 @@ else()
   message( STATUS "Building in 64 bit configuration" )
 endif()
 
-add_custom_target(surge-shared)
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
-add_custom_command(
-  TARGET surge-shared
-  POST_BUILD
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR} )
+file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
+add_subdirectory(libs/catch2)
+
+add_library(surge-shared INTERFACE)
+add_library(surge-tests INTERFACE)
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
@@ -43,9 +117,6 @@ add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cp
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_dependencies( surge-shared git-info )
-
-
-set(CMAKE_BUILD_TYPE Release)
 
 # Set up external packages
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
@@ -85,56 +156,56 @@ else()
   set( BUILD_LV2 false )
 endif()
 
+function(use_fallback_fs)
+  add_subdirectory(libs/filesystem)
+  target_link_libraries(surge-shared INTERFACE surge::filesystem)
+  target_compile_definitions(surge-shared INTERFACE USE_FALLBACK_FILESYSTEM=1)
+  message(STATUS "Using fallback filesystem")
+endfunction()
 
-# CMake Configuration for all platforms
-set(CMAKE_CXX_EXTENSIONS false)
-if( APPLE )
-  set(CMAKE_CXX_STANDARD 14)
-  set(SURGE_CXX_STD_FLAG cxx_std_14)
+set(SURGE_DEVEL_FORCE_FALLBACK_FS OFF CACHE BOOL "Force fallback std::filesystem impl (development only)")
+mark_as_advanced(FORCE SURGE_DEVEL_FORCE_FALLBACK_FS)
+if (${SURGE_DEVEL_FORCE_FALLBACK_FS})
+  use_fallback_fs()
 else()
-  set(CMAKE_CXX_STANDARD 17)
-  set(SURGE_CXX_STD_FLAG cxx_std_17)
-endif()
-
-include(CheckCXXSymbolExists)
-CHECK_CXX_SYMBOL_EXISTS(std::filesystem::path::preferred_separator "filesystem" CXX_STD_FS)
-if( CXX_STD_FS )
-  # This is not strictly necessary but since we build with 17 on unix lets check with 17 here
-  if( UNIX AND NOT APPLE )
-    set (CMAKE_REQUIRED_FLAGS "-std=c++17")
-  endif()
-  set( FS_COMPILE_DEFINITIONS USE_STD_FILESYSTEM=1 )
-  if( UNIX AND NOT APPLE )
-    set (CMAKE_REQUIRED_FLAGS "")
-  endif()
-  message( STATUS "Using std::filesystem" )
-else()
-  # if that check failed we are on one of the wonky gccs in te 7 and 5 family which need to check this with 11 and link stdc++fs
-  if( UNIX AND NOT APPLE )
-    set (CMAKE_REQUIRED_FLAGS "-std=c++11")
-    set (CMAKE_REQUIRED_LIBRARIES "stdc++fs")
-  endif()
-  CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "experimental/filesystem" CXX_EXP_STD_FS)
-  if( UNIX AND NOT APPLE )
-    set (CMAKE_REQUIRED_FLAGS "")
-    set (CMAKE_REQUIRED_LIBRARIES "")
-  endif()
-
-  if( CXX_EXP_STD_FS )
-    set( FS_COMPILE_DEFINITIONS USE_STD_EXPERIMENTAL_FILESYSTEM=1 )
-    message( STATUS "Using std::experimental::filesystem" )
+  include(CheckCXXSymbolExists)
+  CHECK_CXX_SYMBOL_EXISTS(std::filesystem::path::preferred_separator "filesystem" CXX_STD_FS)
+  if( CXX_STD_FS )
+    # This is not strictly necessary but since we build with 17 on unix lets check with 17 here
+    if( UNIX AND NOT APPLE )
+      set (CMAKE_REQUIRED_FLAGS "-std=c++17")
+    endif()
+    target_compile_definitions(surge-shared INTERFACE USE_STD_FILESYSTEM=1)
+    if( UNIX AND NOT APPLE )
+      set (CMAKE_REQUIRED_FLAGS "")
+    endif()
+    message( STATUS "Using std::filesystem" )
   else()
-    CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "filesystem" CXX_EXP_STD_FS_FS_HDR)
-    if( CXX_EXP_STD_FS_FS_HDR )
-      set( FS_COMPILE_DEFINITIONS USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM=1 )
-      message( STATUS "Using std::experimental::filesystem but from <filesystem> header" )
+    # if that check failed we are on one of the wonky gccs in te 7 and 5 family which need to check this with 11 and link stdc++fs
+    if( UNIX AND NOT APPLE )
+      set (CMAKE_REQUIRED_FLAGS "-std=c++11")
+      set (CMAKE_REQUIRED_LIBRARIES "stdc++fs")
+    endif()
+    CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "experimental/filesystem" CXX_EXP_STD_FS)
+    if( UNIX AND NOT APPLE )
+      set (CMAKE_REQUIRED_FLAGS "")
+      set (CMAKE_REQUIRED_LIBRARIES "")
+    endif()
+
+    if( CXX_EXP_STD_FS )
+      target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM=1)
+      message( STATUS "Using std::experimental::filesystem" )
     else()
-      set( FS_COMPILE_DEFINITIONS USE_HOMEGROWN_FILESYSTEM=1 )
-      message( STATUS "Using homegrown filesystem" )
+      CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "filesystem" CXX_EXP_STD_FS_FS_HDR)
+      if( CXX_EXP_STD_FS_FS_HDR )
+        target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM=1)
+        message( STATUS "Using std::experimental::filesystem but from <filesystem> header" )
+      else()
+        use_fallback_fs()
+      endif()
     endif()
   endif()
 endif()
-
 
 # Surge features at compile time
 if( NOT DEFINED SURGE_EXTRA_FILTERS )
@@ -153,6 +224,7 @@ set( AIRWINDOWS_SOURCES
   ${AIRWINDOWS_FX_SOURCES}
   src/common/dsp/effect/airwindows/airwindows_adapter.cpp
   src/common/dsp/effect/airwindows/airwindows_register.cpp
+  src/common/dsp/effect/airwindows/audioeffect_airwinstub.cpp
   )
 set( AIRWINDOWS_INCLUDES
   src/common/dsp/effect/airwindows
@@ -173,6 +245,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/DistortionEffect.cpp
   src/common/dsp/effect/DualDelayEffect.cpp
   src/common/dsp/effect/Effect.cpp
+  src/common/dsp/effect/Eq3BandEffect.cpp
   src/common/dsp/effect/FreqshiftEffect.cpp
   src/common/dsp/effect/FlangerEffect.cpp
   src/common/dsp/effect/PhaserEffect.cpp
@@ -181,26 +254,29 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/RingModulatorEffect.cpp
   src/common/dsp/effect/RotarySpeakerEffect.cpp
   src/common/dsp/effect/VocoderEffect.cpp
-  src/common/dsp/filters/RKMoog.cpp
+  src/common/dsp/filters/VintageLadders.cpp
+  src/common/dsp/filters/Obxd.cpp
   src/common/dsp/AdsrEnvelope.cpp
+  src/common/dsp/AudioInputOscillator.cpp
   src/common/dsp/BiquadFilter.cpp
   src/common/dsp/BiquadFilterSSE2.cpp
   src/common/dsp/DspUtilities.cpp
   src/common/dsp/FilterCoefficientMaker.cpp
-  src/common/dsp/FMOscillator.cpp
+  src/common/dsp/FM2Oscillator.cpp
+  src/common/dsp/FM3Oscillator.cpp
   src/common/dsp/LfoModulationSource.cpp
   src/common/dsp/MSEGModulationHelper.cpp
   src/common/dsp/Oscillator.cpp
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp
   src/common/dsp/SampleAndHoldOscillator.cpp
+  src/common/dsp/SinOscillator.cpp
   src/common/dsp/SurgeSuperOscillator.cpp
   src/common/dsp/SurgeVoice.cpp
   src/common/dsp/VectorizedSvfFilter.cpp
   src/common/dsp/Wavetable.cpp
   src/common/dsp/WavetableOscillator.cpp
   src/common/dsp/WindowOscillator.cpp
-  src/common/thread/CriticalSection.cpp
   src/common/util/FpuState.cpp
   src/common/vt_dsp/basic_dsp.cpp
   src/common/vt_dsp/halfratefilter.cpp
@@ -220,10 +296,13 @@ set(SURGE_COMMON_SOURCES
   libs/xml/tinyxmlerror.cpp
   libs/xml/tinyxmlparser.cpp
   libs/strnatcmp/strnatcmp.cpp
-  libs/filesystem/filesystem.cpp
 
   ${AIRWINDOWS_SOURCES}
-  )
+
+  src/common/SkinModel.cpp
+  src/common/SkinModelImpl.cpp
+  src/common/SkinColors.cpp)
+
 
 
 set( SURGE_GENERATED_SOURCES
@@ -244,19 +323,17 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CPatchBrowser.cpp
   src/common/gui/CScalableBitmap.cpp
   src/common/gui/CSnapshotMenu.cpp
-  src/common/gui/CStatusPanel.cpp
   src/common/gui/CSurgeSlider.cpp
   src/common/gui/CSurgeVuMeter.cpp
   src/common/gui/CSwitchControl.cpp
   src/common/gui/MSEGEditor.cpp
-  src/common/gui/PopupEditorDialog.cpp
-  src/common/gui/SkinColors.cpp
   src/common/gui/SkinSupport.cpp
   src/common/gui/SurgeBitmaps.cpp
   src/common/gui/SurgeGUIEditor.cpp
+  src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/common/gui/UIInstrumentation.cpp
   src/common/gui/guihelpers.cpp
-  )
+        src/common/gui/CVerticalLabel.cpp)
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp
@@ -350,9 +427,7 @@ set( SURGE_LV2_SOURCES
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
   libs/
-  libs/filesystem
   libs/xml
-  libs/catch2
   libs/strnatcmp
   libs/tuning-library/include
   src/common
@@ -372,30 +447,15 @@ set(SURGE_GUI_INCLUDES
 
 ### OS SPECIFIC SECTION
 if( APPLE )
-  set(SURGE_OS_SOURCES
-    src/mac/UserInteractionsMac.mm
-    )
-
   set(SURGE_OS_GUI_SOURCES
     src/mac/DisplayInfoMac.mm
     src/mac/RuntimeFontMac.cpp
+    src/mac/UserInteractionsMac.mm
     src/mac/cocoa_utils.mm
     vstgui.surge/vstgui/vstgui_mac.mm
     vstgui.surge/vstgui/vstgui_uidescription_mac.mm
     )
 
-  set(OS_COMPILE_OPTIONS
-    -msse2
-    "-D_aligned_malloc(x,a)=malloc(x)"
-    "-D_aligned_free(x)=free(x)"
-    -Wno-deprecated-declarations
-    -Werror=inconsistent-missing-override
-    -Werror=logical-op-parentheses
-    -Werror=dynamic-class-memaccess
-    -Werror=undefined-bool-conversion
-    -Werror=bitwise-op-parentheses
-    -Werror=pointer-bool-conversion
-    )
   set(OS_INCLUDE_DIRECTORIES
     src/mac
     )
@@ -441,12 +501,6 @@ elseif( UNIX AND NOT APPLE )
     set( cxml src/linux/ConfigurationXml.S )
   endif()
 
-  set(SURGE_OS_SOURCES
-    src/linux/UserInteractionsLinux.cpp
-    ${cxml}
-    ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
-    )
-
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
 
   # Our friends at steinberg have this maddening habig of using #warning DEPRECATED in linux code
@@ -455,13 +509,16 @@ elseif( UNIX AND NOT APPLE )
 
 
   set(SURGE_OS_GUI_SOURCES
+    ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
+    ${LINUX_VSTGUI_GLOB}
+    ${cxml}
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
-    vstgui.surge/vstgui/vstgui.cpp
-    vstgui.surge/vstgui/vstgui_uidescription.cpp
+    src/linux/UserInteractionsLinux.cpp
     vstgui.surge/vstgui/lib/platform/common/genericoptionmenu.cpp
     vstgui.surge/vstgui/lib/platform/common/generictextedit.cpp
-    ${LINUX_VSTGUI_GLOB}
+    vstgui.surge/vstgui/vstgui.cpp
+    vstgui.surge/vstgui/vstgui_uidescription.cpp
     )
 
   find_package(PkgConfig REQUIRED)
@@ -477,39 +534,13 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
 
   if( LINUX_ON_ARM )
-    set(ARCH_COMPILE_OPTIONS
-      ${LINUX_ON_ARM_COMPILE_OPTIONS}
-      "-D_aligned_malloc(x,a)=aligned_alloc(a,x)"
-      "-D_aligned_free(x)=free(x)"
-      )
     set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1)
     set(ARCH_INCLUDE_DIRECTORIES libs/simde)
-  else()
-    set(ARCH_COMPILE_OPTIONS
-      -msse2
-      -Werror
-      "-D_aligned_malloc(x,a)=malloc(x)"
-      "-D_aligned_free(x)=free(x)"
-      )
-    set(ARCH_COMPILE_DEFINITIONS INTEL_SSE=1)
   endif()
-
-  set(OS_COMPILE_OPTIONS
-    ${ARCH_COMPILE_OPTIONS}
-
-    -Wno-multichar
-    -fvisibility=hidden
-    -fvisibility-inlines-hidden
-    -fdata-sections
-    -ffunction-sections
-
-    ${CAIRO_CFLAGS_OTHER}
-    )
 
   set(OS_COMPILE_DEFINITIONS
     ${ARCH_COMPILE_DEFINITIONS}
     LINUX=1
-    RELEASE=1
     ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
@@ -557,12 +588,13 @@ elseif( UNIX AND NOT APPLE )
 elseif( WIN32 )
 
   set(SURGE_OS_SOURCES
-    src/windows/UserInteractionsWin.cpp
+    src/windows/surge_win_fopen_utf8.cpp
     )
 
   set(SURGE_OS_GUI_SOURCES
     src/windows/DisplayInfoWin.cpp
     src/windows/RuntimeFontWin.cpp
+    src/windows/UserInteractionsWin.cpp
     src/windows/surge.rc
     vstgui.surge/vstgui/vstgui_win32.cpp
     vstgui.surge/vstgui/vstgui_uidescription_win32.cpp
@@ -578,42 +610,24 @@ elseif( WIN32 )
     TIXML_USE_STL
     USE_LIBPNG
     _CRT_SECURE_NO_WARNINGS=1
+    UNICODE
+    _UNICODE
     ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
   if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
     set( WIN_DLL_BASENAME "Surge_x86" )
     set( PNG_LINK_DIR "libs/libpng/win/x86/lib" )
-    list( APPEND OS_COMPILE_DEFINITIONS WIN_X86=1 )
   else()
     set( WIN_DLL_BASENAME "Surge" )
     set( PNG_LINK_DIR "libs/libpng/win/x64/lib" )
   endif()
   message( STATUS "Configuring PNG linkage from ${PNG_LINK_DIR}" )
 
-
-  set(OS_COMPILE_OPTIONS
-    /wd4244   # float to double
-    /wd4305   # truncation of variable
-    /wd4267   # int and size_t
-    /wd4018   # signed unsigned mismatch
-    /wd4388   # signed unsigned mismatch in comparison
-    /wd4477   # blah blah wide strings after we made it work
-    /wd4065   # standalone default in a switch with no case
-    /wd4702   # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
-
-    /FIprecompiled.h
-    /Zc:alignedNew
-    /bigobj
-
-    /MT
-    )
-
   set(OS_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}
     src/windows
     ${CMAKE_BINARY_DIR}/geninclude
-    libs/wtl
     )
 
   set(OS_LINK_LIBRARIES_NOGUI
@@ -635,7 +649,6 @@ elseif( WIN32 )
       utils/dllcheck/dllcheck.cpp
       ${CMAKE_BINARY_DIR}/geninclude/version.cpp
       )
-    target_compile_options(dllcheck PRIVATE /MT)
     target_include_directories( dllcheck PRIVATE src/common )
   endif()
 else()
@@ -675,20 +688,12 @@ if( BUILD_AU )
     ${SURGE_AU_SOURCES}
     ${SURGE_AU_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-au-dll surge-shared)
-
-  target_compile_features(surge-au-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-au-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
     TARGET_AUDIOUNIT=1
-    )
-
-  target_compile_options(surge-au-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
     )
 
   target_include_directories(surge-au-dll
@@ -703,6 +708,7 @@ if( BUILD_AU )
 
   target_link_libraries(surge-au-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -713,7 +719,7 @@ if( BUILD_AU )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Packaging up AU component"
-    COMMAND ./scripts/macOS/package-au.sh  ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-au-dll.dylib ${SURGE_PRODUCT_DIR}
+    COMMAND ./scripts/macOS/package-au.sh  $<TARGET_FILE:surge-au-dll> ${SURGE_PRODUCT_DIR}
     COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.component/
     COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.component/
     )
@@ -738,9 +744,6 @@ if( BUILD_VST3 )
     ${SURGE_VST3_SOURCES}
     ${SURGE_VST3_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-vst3-dll  surge-shared)
-
-  target_compile_features(surge-vst3-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   if( APPLE )
     target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/macmain.cpp)
@@ -750,19 +753,16 @@ if( BUILD_VST3 )
          src/linux/LinuxVST3Helpers.cpp)
   elseif( WIN32 )
     target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/dllmain.cpp)
-    target_link_options( surge-vst3-dll PUBLIC  "/DEF:..\\resources\\windows-vst3\\surge.def" )
+    target_link_options(surge-vst3-dll PUBLIC "/DEF:${CMAKE_SOURCE_DIR}\\resources\\windows-vst3\\surge.def")
   endif()
 
   target_compile_definitions(surge-vst3-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_VST3=1
-    )
-
-  target_compile_options(surge-vst3-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
+    $<IF:$<CONFIG:DEBUG>,DEVELOPMENT,RELEASE>=1
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+    DEBUG=$<CONFIG:DEBUG>
     )
 
   target_include_directories(surge-vst3-dll
@@ -776,6 +776,7 @@ if( BUILD_VST3 )
 
   target_link_libraries(surge-vst3-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -787,7 +788,7 @@ if( BUILD_VST3 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
-      COMMAND ./scripts/macOS/package-vst3.sh ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst3-dll.dylib ${SURGE_PRODUCT_DIR}
+      COMMAND ./scripts/macOS/package-vst3.sh $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}
       COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst3/
       COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst3/
       )
@@ -800,16 +801,14 @@ if( BUILD_VST3 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
       COMMAND pwd
-      COMMAND ./scripts/linux/package-vst3.sh  ${CMAKE_BINARY_DIR}/libsurge-vst3-dll.so ${SURGE_PRODUCT_DIR}
+      COMMAND ./scripts/linux/package-vst3.sh  $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}
       )
     elseif( WIN32 )
       add_custom_target( Surge-VST3-Packaged ALL
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS surge-vst3-dll
-        COMMAND ${CMAKE_COMMAND} -E echo "copying ${CMAKE_BINARY_DIR}/Release/surge-vst3-dll.dll to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3"
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst3-dll.dll
-                                    ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3
-                                    )
+        COMMAND ${CMAKE_COMMAND} -E echo "copying $<TARGET_FILE:surge-vst3-dll> to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3
+        )
    endif()
 
 endif()
@@ -825,7 +824,6 @@ if( BUILD_VST2 )
     ${SURGE_VST2_SOURCES}
     ${SURGE_VST2_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-vst2-dll surge-shared)
 
   if( UNIX AND NOT APPLE )
     target_sources(surge-vst2-dll PRIVATE src/linux/linux-aeffguieditor.cpp )
@@ -839,23 +837,16 @@ if( BUILD_VST2 )
     target_compile_definitions( surge-vst2-dll PRIVATE "__cdecl=" )
   endif()
   if( WIN32 )
-    target_link_options( surge-vst2-dll PUBLIC  "/DEF:..\\resources\\windows-vst2\\surge.def" )
+    target_link_options(surge-vst2-dll PUBLIC "/DEF:${CMAKE_SOURCE_DIR}\\resources\\windows-vst2\\surge.def")
   endif()
-
-  target_compile_features(surge-vst2-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-vst2-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_VST2=1
     VSTGUI_ENABLE_DEPRECATED_METHODS=0
-    )
-
-  target_compile_options(surge-vst2-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
-    )
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+  )
 
   target_include_directories(surge-vst2-dll
     PRIVATE
@@ -868,6 +859,7 @@ if( BUILD_VST2 )
 
   target_link_libraries(surge-vst2-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -879,7 +871,7 @@ if( BUILD_VST2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST2 component"
-      COMMAND ./scripts/macOS/package-vst.sh   ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-vst2-dll.dylib ${SURGE_PRODUCT_DIR}
+      COMMAND ./scripts/macOS/package-vst.sh $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}
       COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst/
       COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst/
       )
@@ -892,17 +884,15 @@ if( BUILD_VST2 )
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-vst2-dll.so ${SURGE_PRODUCT_DIR}/Surge.so
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}/Surge.so
       )
    endif()
    if( WIN32 )
       add_custom_target( Surge-VST2-Packaged ALL
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS surge-vst2-dll
-        COMMAND ${CMAKE_COMMAND} -E echo "copying ${CMAKE_BINARY_DIR}/Release/surge-vst2-dll.dll to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll"
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/Release/surge-vst2-dll.dll
-                                    ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
-                                    )
+        COMMAND ${CMAKE_COMMAND} -E echo "copying $<TARGET_FILE:surge-vst2-dll> to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
+        )
    endif()
 
 endif()
@@ -918,21 +908,13 @@ if( BUILD_LV2 )
     ${SURGE_LV2_SOURCES}
     ${SURGE_LV2_LIBRARY_SOURCES}
     )
-  add_dependencies(surge-lv2-dll surge-shared)
-
-  target_compile_features(surge-lv2-dll PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-lv2-dll
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_LV2=1
-    )
-
-  target_compile_options(surge-lv2-dll
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
-    )
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+  )
 
   target_include_directories(surge-lv2-dll
     PRIVATE
@@ -945,6 +927,7 @@ if( BUILD_LV2 )
 
   target_link_libraries(surge-lv2-dll
     PRIVATE
+    surge-shared
     ${OS_LINK_LIBRARIES}
     )
 
@@ -958,8 +941,8 @@ if( BUILD_LV2 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libsurge-lv2-dll.dylib ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
-      COMMAND python scripts/linux/generate-lv2-ttl.py products/Surge.lv2/Surge.dylib
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
+      COMMAND python scripts/linux/generate-lv2-ttl.py ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
       )
   elseif( UNIX AND NOT APPLE )
     add_custom_command(
@@ -968,7 +951,7 @@ if( BUILD_LV2 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up LV2 component"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/libsurge-lv2-dll.so ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
       COMMAND python scripts/linux/generate-lv2-ttl.py ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
       )
   endif()
@@ -978,6 +961,7 @@ endif()
 if( BUILD_HEADLESS )
   add_executable(surge-headless
     ${SURGE_COMMON_SOURCES}
+    ${SURGE_OS_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     ${LIB_MIDIFILE_SOURCES}
     src/headless/main.cpp
@@ -994,17 +978,14 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
     )
-  add_dependencies(surge-headless surge-shared)
-
-  target_compile_features(surge-headless PRIVATE ${SURGE_CXX_STD_FLAG} )
 
   target_compile_definitions(surge-headless
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    ${FS_COMPILE_DEFINITIONS}
     TARGET_HEADLESS=1
     LIBMIDIFILE=1
-    )
+    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+  )
 
   target_include_directories(surge-headless
     PRIVATE
@@ -1024,19 +1005,16 @@ if( BUILD_HEADLESS )
       LIBSNDFILE=1
       )
     target_link_libraries(surge-headless PRIVATE ${LIBSNDFILE_LIBRARIES})
-    include_directories(surge-headless ${LIBSNDFILE_INCLUDE_DIRS})
+    target_include_directories(surge-headless PRIVATE ${LIBSNDFILE_INCLUDE_DIRS})
   endif()
 
   target_link_libraries(surge-headless
     PRIVATE
+    surge-shared
+    surge-tests
+    surge::catch2
     ${OS_LINK_LIBRARIES_NOGUI}
     )
-
-  target_compile_options(surge-headless
-    PRIVATE
-    ${OS_COMPILE_OPTIONS}
-    )
-
 
   if( UNIX AND NOT APPLE )
     find_package(Threads REQUIRED)
@@ -1054,17 +1032,21 @@ if( BUILD_HEADLESS )
 endif()
 
 add_custom_target( all-components )
+add_custom_target( pipeline-components )
 if( BUILD_VST2 )
   add_dependencies(all-components Surge-VST2-Packaged )
 endif()
 if( BUILD_VST3 )
   add_dependencies(all-components Surge-VST3-Packaged )
+  add_dependencies(pipeline-components Surge-VST3-Packaged)
 endif()
 if( BUILD_AU )
   add_dependencies(all-components Surge-AU-Packaged )
+  add_dependencies(pipeline-components Surge-AU-Packaged)
 endif()
 if( BUILD_LV2 )
   add_dependencies(all-components Surge-LV2-Packaged )
+  add_dependencies(pipeline-components Surge-LV2-Packaged)
 endif()
 if( BUILD_HEADLESS )
   add_dependencies(all-components surge-headless )
@@ -1081,7 +1063,7 @@ if( APPLE )
     TARGET run-headless
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND ${CMAKE_BINARY_DIR}/Release/surge-headless
+    COMMAND $<TARGET_FILE:surge-headless>
     )
 
   add_custom_target( install-resources-local )
@@ -1287,3 +1269,14 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
   add_subdirectory( src/juce_adapter )
 endif()
 
+# Hack: For now, native Windows binaries need implicit globals.h.
+# This can't go into the global compile options, so tack it on here.
+if(MSVC)
+  get_property(targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+  foreach(target ${targets})
+    get_target_property(target_type ${target} TYPE)
+    if (target_type MATCHES "EXECUTABLE|SHARED_LIBRARY")
+      target_compile_options(${target} PRIVATE /FIprecompiled.h)
+    endif()
+  endforeach()
+endif()

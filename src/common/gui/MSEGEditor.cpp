@@ -18,119 +18,70 @@
 #include "DebugHelpers.h"
 #include "SkinColors.h"
 #include "basic_dsp.h" // for limit_range
+#include "CScalableBitmap.h"
+#include "SurgeBitmaps.h"
+#include "CHSwitch2.h"
+#include "CSwitchControl.h"
+#include "SurgeGUIEditor.h"
+#include "RuntimeFont.h"
+
+/*
+** MSEG SVG IDs
+**
+** 301 - IDB_MSEG_SEGMENT_HANDLES 24x36, 3 rows (normal, hover, pressed) x 2 columns (segment node, control point) for the MSEG handles
+** 302 - IDB_MSEG_MOVEMENT 120x60 3 rows (ripple, bound, draw) x 3 columns (the states)
+** 303 - IDB_MSEG_VERTICAL_SNAP 80x40 2 rows (off, on)
+** 304 - IDB_MSEG_HORIZONTAL_SNAP 80x40 2 rows (off, on)
+*/
 
 
 using namespace VSTGUI;
 
 struct MSEGCanvas;
 
-struct MSEGSegmentPanel : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
-   MSEGSegmentPanel(const CRect &size, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CViewContainer( size ) {
-      setSkin( skin );
+// This is 720 x 120
+struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
+   MSEGControlRegion(const CRect &size, MSEGCanvas *c, LFOStorage *lfos, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
+      setSkin( skin, b );
       this->ms = ms;
+      this->lfodata = lfos;
+      this->canvas = c;
+      setBackgroundColor(skin->getColor(Colors::MSEGEditor::Panel));
       rebuild();
    };
 
-   void segmentChanged( int i ) {
-      currSeg = i;
-      rebuild();
-   }
-
-   enum tags {
-      seg_type_0 = 0,
-      add_before = 10000,
-      add_after,
-      deletenode
-   };
+   enum {
+      tag_segment_nodeedit_mode = 300000,
+      tag_segment_movement_mode,
+      tag_vertical_snap,
+      tag_vertical_value,
+      tag_horizontal_snap,
+      tag_horizontal_value,
+   } tags;
    
-   void rebuild() {
-      removeAll();
+   void rebuild();
+   virtual void valueChanged( CControl *p ) override;
 
-      std::string s = "Segment " + std::to_string(currSeg);
-
-      auto l = new CTextLabel( CRect( CPoint( 3, 2 ), CPoint( getViewSize().getWidth()-6, 18 ) ), s.c_str() );
-      addView( l );
-      
-      int pos = 24;
-      auto addb = [&pos, this](std::string s, int t ) {
-                     auto b = new CTextButton( CRect( CPoint( 3, pos ), CPoint( getViewSize().getWidth() - 6, 18 ) ), this, t, s.c_str() );
-                     this->addView( b );
-                     pos += 20;
-                  };
-      addb( "Constant", seg_type_0 );
-      addb( "Line", seg_type_0 + 1);
-      addb( "DigiLine", seg_type_0 + 5 );
-      pos += 10;
-      
-      addb( "Bezier", seg_type_0 + 2);
-      addb( "S-Curve", seg_type_0 + 3);
-      pos += 10;
-      
-      addb( "Wave", seg_type_0 + 4);
-      addb( "Brownain", seg_type_0 + 6 );
-      pos += 10;
-      
-      addb( "Add Before", add_before );
-      addb( "Add After", add_after );
-      addb( "Delete", deletenode );
+   virtual void draw( CDrawContext *dc) override {
+      auto r = getViewSize();
+      dc->setFillColor(skin->getColor(Colors::MSEGEditor::Panel));
+      dc->drawRect( r, kDrawFilled );
    }
-
-   virtual void valueChanged( VSTGUI::CControl *control ) override;
-   virtual int32_t controlModifierClicked(CControl *p, CButtonState b ) override { return 0; }
    
-   int currSeg = -1;
-   MSEGStorage *ms;
+   MSEGStorage *ms = nullptr;
    MSEGCanvas *canvas = nullptr;
+   LFOStorage *lfodata = nullptr;
 };
 
 
-struct MSEGControlPanel : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
-   MSEGControlPanel(const CRect &size, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CViewContainer( size ) {
-      setSkin( skin );
-      this->ms = ms;
-      rebuild();
-   };
-
-   enum button_tag {
-      mag_only,
-      time_only,
-      mag_and_time,
-   };
-   
-   void rebuild() {
-      removeAll();
-      std::string s = "UNDER CONSTRUCTION IN NIGHTLIES COMING SOON";
-      auto cslab = new CTextLabel( CRect( CPoint( 0, 0 ), getViewSize().getSize() ), s.c_str() );
-      cslab->setBackColor( kBlueCColor );
-      cslab->setFontColor( kWhiteCColor );
-      addView( cslab );
-
-      int pos = 2;
-      auto addb = [&pos, this](std::string s, int t ) {
-                     auto b = new CTextButton( CRect( CPoint( 3, pos ), CPoint( 100, 18 ) ), this, t, s.c_str() );
-                     this->addView( b );
-                     pos += 19;
-                  };
-      addb( "Edit Amp Only", mag_only );
-      addb( "Edit Dur Only", time_only );
-      addb( "Edit Both", mag_and_time );
-
-   }
-
-   int editmode = mag_only;
-   virtual void valueChanged( VSTGUI::CControl *control ) override;
-      
-
-   MSEGCanvas *canvas = nullptr;
-   MSEGStorage *ms;
-};
 
 struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
-   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin ): CControl( size ) {
-      setSkin( skin );
+   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CControl( size ) {
+      setSkin( skin, b );
       this->ms = ms;
       this->lfodata = lfodata;
-      MSEGModulationHelper::rebuildCache( ms );
+      Surge::MSEG::rebuildCache( ms );
+      handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
    };
 
    /*
@@ -142,46 +93,52 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       int associatedSegment;
       bool active = false;
       bool dragging = false;
-      bool selected = false;
+      
       // More coming soon
       enum Type
       {
-         SEGMENT_BG,
          MOUSABLE_NODE,
       } type;
 
-      std::function<void(float,float)> onDrag;
+      enum SegmentMousableType
+      {
+         SEGMENT_ENDPOINT,
+         SEGMENT_CONTROL
+      } mousableNodeType = SEGMENT_CONTROL;
+      
+      std::function<void(float,float, const CPoint &)> onDrag;
    };
    std::vector<hotzone> hotzones;
 
-   static constexpr int drawInsertX = 10, drawInsertY = 10, axisSpace = 20;
+   static constexpr int drawInsertX = 10, drawInsertY = 10, axisSpaceX = 18, axisSpaceY = 8;
 
    inline float drawDuration() {
       if( ms->n_activeSegments == 0 )
          return 1.0;
-      return std::ceil( ms->totalDuration );
+      return std::max( 1.0f, ms->totalDuration );
    }
    
    inline CRect getDrawArea() {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
-      drawArea.bottom -= axisSpace;
-      drawArea.left += axisSpace;
+      drawArea.bottom -= axisSpaceY;
+      drawArea.left += axisSpaceX;
+      drawArea.top += 5;
       return drawArea;
    }
 
    inline CRect getHAxisArea() {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
-      drawArea.top = drawArea.bottom - axisSpace;
-      drawArea.left += axisSpace;
+      drawArea.top = drawArea.bottom - axisSpaceY;
+      drawArea.left += axisSpaceX;
       return drawArea;
    }
    inline CRect getVAxisArea() {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
-      drawArea.right = drawArea.left + axisSpace;
-      drawArea.bottom -= axisSpace;
+      drawArea.right = drawArea.left + axisSpaceX;
+      drawArea.bottom -= axisSpaceY;
       return drawArea;
    }
 
@@ -191,6 +148,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       return [vscale, drawArea](float vp) {
                 auto v = 1 - ( vp + 1 ) * 0.5;
                 return v * vscale + drawArea.top;
+             };
+   }
+   std::function<float(float)> pxToVal() {
+      auto drawArea = getDrawArea();
+      float vscale = drawArea.getHeight();
+      return [vscale, drawArea](float vx) {
+                auto v = ( vx - drawArea.top ) / vscale;
+                auto vp = ( 1 - v ) * 2 - 1;
+                return vp;
              };
    }
    std::function<float(float)> timeToPx() {
@@ -203,27 +169,72 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto drawArea = getDrawArea();
       float maxt = drawDuration();
       float tscale = 1.f * drawArea.getWidth() / maxt;
-      return [tscale](float t) { return t / tscale; };
+
+      // So px = t * tscale + drawarea;
+      // So t = ( px - drawarea ) / tscale;
+      return [tscale, drawArea](float px) {
+                return (px - drawArea.left) / tscale;
+             };
    }
 
    void offsetDuration( float &v, float d ) {
       v = std::max( MSEGStorage::minimumDuration, v + d );
    }
+   void adjustDuration( int idx, float d, float snapResolution, float upperBound)
+   {
+      if( snapResolution <= 0 )
+      {
+         offsetDuration(ms->segments[idx].duration, d);
+      }
+      else
+      {
+         offsetDuration( ms->segments[idx].dragDuration, d );
+         auto target = (float)(round( ( ms->segmentStart[idx] + ms->segments[idx].dragDuration ) / snapResolution ) * snapResolution ) - ms->segmentStart[idx];
+         if( upperBound > 0 && target > upperBound )
+            target = ms->segments[idx].duration;
+         if( target < MSEGStorage::minimumDuration )
+            target = ms->segments[idx].duration;
+         ms->segments[idx].duration = target;
+      }
+   }
    void offsetValue( float &v, float d ) {
       v = limit_range( v + d, -1.f, 1.f );
    }
-   
+   void adjustValue( int idx, bool cpvNotV0, float d, float snapResolution )
+   {
+      if( cpvNotV0 )
+      {
+         offsetValue( ms->segments[idx].cpv, d );
+      }
+      else
+      {
+         offsetValue( ms->segments[idx].dragv0, d );
+         if( snapResolution <= 0 )
+            ms->segments[idx].v0 = ms->segments[idx].dragv0;
+         else
+         {
+            float q = ms->segments[idx].dragv0 + 1;
+            float pos = round( q / snapResolution ) * snapResolution;
+            float adj = pos - 1.0;
+            ms->segments[idx].v0 = limit_range(adj, -1.f, 1.f );
+         }
+      }
+   }
+
+   enum TimeEdit
+   {
+      SINGLE,   // movement bound between two neighboring nodes
+      SHIFT,    // shifts all following nodes along, relatively
+      DRAW,     // only change amplitude of nodes as the cursor passes along the timeline
+   } timeEditMode = SHIFT;
+
    void recalcHotZones( const CPoint &where ) {
       hotzones.clear();
 
       auto drawArea = getDrawArea();
       
-      int handleRadius = 5;
+      int handleRadius = 6;
 
-      int editmode = 0; // mag, time, mag + time
-      if( controlpanel )
-         editmode = controlpanel->editmode;
-      
       float maxt = drawDuration();
       float tscale = 1.f * drawArea.getWidth() / maxt;
       float vscale = drawArea.getHeight();
@@ -236,172 +247,126 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          auto t1 = tpx( ms->segmentEnd[i] );
 
          auto segrec = CRect( t0, drawArea.top, t1, drawArea.bottom );
-         auto h = hotzone();
-         h.rect = segrec;
-         h.type = hotzone::Type::SEGMENT_BG;
-         h.associatedSegment = i;
-         if( segrec.pointInside( where ) )
-            h.active = true;
-
-         hotzones.push_back( h );
 
          // Now add the mousable zones
          auto &s = ms->segments[i];
-
-         auto rectForPoint = [&]( float t, float v, float xmul1, float xmul2, std::function<void(float,float)> onDrag ){
+         auto rectForPoint = [&]( float t, float v, hotzone::SegmentMousableType mt, std::function<void(float,float, const CPoint &)> onDrag ){
                                 auto h = hotzone();
-                                h.rect = CRect( t + xmul1 * handleRadius,
+                                h.rect = CRect( t - handleRadius,
                                                 valpx(v) - handleRadius,
-                                                t + xmul2 * handleRadius,
+                                                t + handleRadius,
                                                 valpx(v) + handleRadius );
                                 h.type = hotzone::Type::MOUSABLE_NODE;
                                 if( h.rect.pointInside( where ) )
                                    h.active = true;
                                 h.onDrag = onDrag;
                                 h.associatedSegment = i;
+                                h.mousableNodeType = mt;
                                 hotzones.push_back(h);
                              };
-           
-         switch( s.type )
+
+         auto timeConstraint = [&]( int prior, int next, float dx ) {
+                                  switch( this->timeEditMode )
+                                  {
+                                  case DRAW:
+                                     break;
+                                  case SHIFT:
+                                     if( prior >= 0 )
+                                     {
+                                        auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
+                                        adjustDuration( prior, dx, ms->hSnap, 0);
+                                        this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
+                                     }
+                                     break;
+                                  case SINGLE:
+                                     if( prior >= 0 && (this->ms->segments[prior].duration+dx) <= MSEGStorage::minimumDuration && dx < 0 ) dx = 0;
+                                     if( next < ms->n_activeSegments && (this->ms->segments[next].duration-dx) <= MSEGStorage::minimumDuration && dx > 0 ) dx = 0;
+
+                                     auto csum = 0.f, pd = 0.f;
+                                     if( prior >= 0 ) {
+                                        csum += ms->segments[prior].duration;
+                                        pd = ms->segments[prior].duration;
+                                     }
+                                     if( next < ms->n_activeSegments ) csum += ms->segments[next].duration;
+                                     if( prior >= 0 )
+                                     {
+                                        auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
+                                        adjustDuration( prior, dx, ms->hSnap, csum);
+                                        this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
+                                        pd = ms->segments[prior].duration;
+                                     }
+                                     if( next < ms->n_activeSegments )
+                                     {
+                                        auto rcv = this->ms->segments[next].cpduration / this->ms->segments[next].duration;
+
+                                        // offsetDuration( this->ms->segments[next].duration, -dx );
+                                        this->ms->segments[next].duration = csum - pd;
+                                        this->ms->segments[next].cpduration = this->ms->segments[next].duration * rcv;
+                                     }
+                                     
+                                     break;
+                                  }
+                               };
+
+
+         // We get a mousable point at the start of the line
+         rectForPoint( t0, s.v0, hotzone::SEGMENT_ENDPOINT,
+                       [i,this,vscale,tscale,timeConstraint](float dx, float dy, const CPoint &where) {
+                          adjustValue(i, false, -2 * dy / vscale, ms->vSnap );
+
+                          if( i != 0 )
+                          {
+                             timeConstraint( i-1, i, dx/tscale );
+                          }
+                       } );
+
+
+         // Control point editor
+         float tn = tpx(ms->segmentStart[i] + ms->segments[i].cpduration );
+         rectForPoint( tn, s.cpv, hotzone::SEGMENT_CONTROL,
+                       [i, this, tscale, vscale]( float dx, float dy, const CPoint &where) {
+                          adjustValue(i, true, -2 * dy / vscale, 0.0 ); // we never want to snap CPV
+
+                          this->ms->segments[i].cpduration += dx / tscale;
+                          this->ms->segments[i].cpduration = limit_range( (float)this->ms->segments[i].cpduration,
+                                                                          (float)MSEGStorage::minimumDuration,
+                                                                          (float)(this->ms->segments[i].duration - MSEGStorage::minimumDuration) );
+                       } );
+
+         // Specially we have to add an endpoint editor
+         if( i == ms->n_activeSegments - 1 )
          {
-         case MSEGStorage::segment::CONSTANT:
-         {
-            // We get a mousable point at the start of the line
-            rectForPoint( t0, s.v0, 0, 2,
-                          [i,this,editmode,vscale,tscale](float dx, float dy) {
-                             if( editmode == 0 || editmode == 2 )
+            rectForPoint( tpx(ms->totalDuration), ms->segments[0].v0, hotzone::SEGMENT_ENDPOINT,
+                          [this,vscale,tscale](float dx, float dy, const CPoint &where) {
+                             adjustValue( 0, false, -2 * dy / vscale, ms->vSnap );
+                             // We need to deal with the cpduration also
+                             auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
+
+                             if( !this->getViewSize().pointInside(where))
                              {
-                                offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
-                                this->ms->segments[i].v1 = this->ms->segments[i].v0;
-                             }
-                             if( editmode == 1 || editmode == 2 )
-                             {
-                                if( i != 0 )
-                                {
-                                   offsetDuration( this->ms->segments[i-1].duration, dx/tscale );
-                                   offsetDuration( this->ms->segments[i].duration, -dx/tscale );
-                                }
-                             }
-                          } );
-            rectForPoint( t1, s.v0, -2, 0,
-                          [i,this,editmode,vscale,tscale](float dx, float dy) {
-                             if( editmode == 0 || editmode == 2 )
-                             {
-                                offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
-                                this->ms->segments[i].v1 = this->ms->segments[i].v0;
-                             }
-                             if( editmode == 1 || editmode == 2 )
-                             {
-                                offsetDuration( this->ms->segments[i].duration, dx / tscale );
+                                auto howFar = where.x - this->getViewSize().right;
+                                if( howFar > 0 )
+                                   dx *= howFar * 0.1; // this is really just a speedup as our axes shrinks. Just a fudge
                              }
 
+                             adjustDuration(ms->n_activeSegments-1, dx/tscale, ms->hSnap, 0 );
+                             this->ms->segments[ms->n_activeSegments-1].cpduration = this->ms->segments[ms->n_activeSegments-1].duration * cpv;
                           } );
-            break;
-         }
-         // this is the no control point case
-         case MSEGStorage::segment::LINEAR:
-         {
-            // We get a mousable point at the start of the line
-            rectForPoint( t0, s.v0, 0, 2,  
-                          [i,this,vscale,tscale,editmode](float dx, float dy) {
-                             if( editmode == 0 || editmode == 2 )
-                             {
-                                offsetValue( this->ms->segments[i].v0, -2 * dy / vscale );
-                             }
-                             if( editmode == 1 || editmode == 2 )
-                             {
-                                if( i != 0 )
-                                {
-                                   offsetDuration( this->ms->segments[i-1].duration, dx/tscale );
-                                   offsetDuration( this->ms->segments[i].duration, -dx/tscale );
-                                }
-                             }
-
-                          } );
-            rectForPoint( t1, s.v1, -2, 0,
-                          [i,this,vscale,tscale,editmode](float dx, float dy) {
-                             if( editmode == 0 || editmode == 2 )
-                             {
-                                offsetValue( this->ms->segments[i].v1, -2 * dy / vscale );
-                             }
-                             if( editmode == 1 || editmode == 2 )
-                             {
-                                offsetDuration( this->ms->segments[i].duration, dx / tscale );
-                             }
-
-                          } );
-                          
-            break;
-         }
-         case MSEGStorage::segment::SCURVE:
-         case MSEGStorage::segment::DIGILINE:
-         case MSEGStorage::segment::WAVE:
-         case MSEGStorage::segment::QUADBEZ:
-         case MSEGStorage::segment::BROWNIAN:
-         {
-            // We get a mousable point at the start of the line
-            rectForPoint( t0, s.v0, 0, 2,
-                          [i,this,vscale,tscale,editmode](float dx, float dy) {
-                             if( editmode == 0 || editmode == 2 )
-                             {
-                                offsetValue( this->ms->segments[i].v0,  -2 * dy / vscale );
-                             }
-                             if( editmode == 1 || editmode == 2 )
-                             {
-                                if( i != 0 )
-                                {
-                                   float cpvm = this->ms->segments[i-1].cpduration / this->ms->segments[i-1].duration;
-                                   float cpv0 = this->ms->segments[i].cpduration / this->ms->segments[i].duration;
-                                   offsetDuration( this->ms->segments[i-1].duration, dx/tscale );
-                                   offsetDuration( this->ms->segments[i].duration, -dx/tscale );
-                                   // Update control point proportionally
-                                   this->ms->segments[i-1].cpduration = this->ms->segments[i-1].duration * cpvm;
-                                   this->ms->segments[i].cpduration = this->ms->segments[i].duration * cpv0;
-                                }
-                             }
-                          } );
-                          
-            rectForPoint( t1, s.v1, -2, 0,
-                          [i,this,vscale,tscale,editmode](float dx, float dy) {
-                             if( editmode == 0 || editmode == 2 )
-                             {
-                                offsetValue( this->ms->segments[i].v1, -2 * dy / vscale );
-                             }
-                             if( editmode == 1 || editmode == 2 )
-                             {
-                                float cpv0 = this->ms->segments[i].cpduration / this->ms->segments[i].duration;
-                                offsetDuration( this->ms->segments[i].duration, dx / tscale );
-                                this->ms->segments[i].cpduration = cpv0 * this->ms->segments[i].duration;
-                             }
-                          } );
-
-            float tn = tpx(ms->segmentStart[i] + ms->segments[i].cpduration );
-            rectForPoint( tn, s.cpv, -1, 1,
-                          [i, this, tscale, vscale]( float dx, float dy ) {
-                             offsetValue( this->ms->segments[i].cpv, -2 * dy / vscale );
-                             this->ms->segments[i].cpduration += dx / tscale;
-                             this->ms->segments[i].cpduration = limit_range( (float)this->ms->segments[i].cpduration,
-                                                                             (float)MSEGStorage::minimumDuration,
-                                                                             (float)(this->ms->segments[i].duration - MSEGStorage::minimumDuration) );
-                          } );
-                          
-            // TODO control point
-            break;
-         }
          }
       }
+                
    }
-
-   
 
    inline void drawAxis( CDrawContext *dc ) {
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
       int skips = 4;
       auto tpx = timeToPx();
-            
+
+      dc->setFont( displayFont );
+      dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
       dc->setLineWidth( 1 );
-      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line, CColor(220, 220, 240)));
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
@@ -411,11 +376,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          if( gi % skips == 0 )
             off = 0;
          dc->drawLine( CPoint( px, haxisArea.top ), CPoint( px, haxisArea.bottom - off ) );
+         char txt[16];
+         snprintf( txt, 16, "%5.2f", t );
+         int xoff =0;
+         if( maxt < 1.1 && t > 0.99 )
+            xoff = -25;
+         dc->drawString( txt, CRect( CPoint( px + 4 + xoff, haxisArea.top + 2), CPoint( 15, 10 )));
       }
 
       auto vaxisArea = getVAxisArea();
       dc->setLineWidth( 1 );
-      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line, CColor(220, 220, 240)));
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
       for( float i=-1; i<=1; i += 0.25 )
@@ -424,50 +395,89 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          float off = vaxisArea.getWidth() / 2;
          if( i == -1 || i == 0 || i == 1 )
             off = 0;
-         dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) ); 
+         dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
+         char txt[16];
+         snprintf( txt, 16, "%4.2f", i );
+         dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
       }
    }
    
    virtual void draw( CDrawContext *dc) override {
-      dc->setDrawMode(kAntiAliasing);
       auto vs = getViewSize();
-      if( hotzones.empty() )
-      {
+
+      if (hotzones.empty())
          recalcHotZones( CPoint( vs.left, vs.top ) );
-      }
-      /* 
-      dc->setFillColor( kYellowCColor );
+
+      dc->setFillColor(skin->getColor(Colors::MSEGEditor::Background));
       dc->drawRect( vs, kDrawFilled );
-      */
+      
+      // we want to draw the background rectangle always filling the area without smearing
+      // so draw the rect first then set AA drawing mode
+      dc->setDrawMode(kAntiAliasing);
       
       auto valpx = valToPx();
       auto tpx = timeToPx();
       auto pxt = pxToTime();
 
-      for( const auto &h : hotzones )
+      auto drawArea = getDrawArea();
+      float maxt = drawDuration();
+      float msegEvaluationState[5];
+      int lseval = -1;
+
+      CGraphicsPath *path = dc->createGraphicsPath();
+      CGraphicsPath *fillpath = dc->createGraphicsPath();
+
+      float pathFirstY, pathLastX, pathLastY;
+
+      for( int i=0; i<drawArea.getWidth(); ++i )
       {
-         if( h.active && h.type == hotzone::SEGMENT_BG )
+         float up = pxt( i + drawArea.left );
+         float iup = (int)up;
+         float fup = up - iup;
+         float v = Surge::MSEG::valueAt( iup, fup, 0, ms, lseval, msegEvaluationState );
+         v = valpx( v );
+         if( up <= ms->totalDuration )
          {
-            dc->setFillColor( skin->getColor(Colors::MSEGEditor::Segment::Hover, CColor(80, 80, 100, 128)));
-            dc->drawRect( h.rect, kDrawFilled );
-         }
-         if( h.selected && h.type == hotzone::SEGMENT_BG )
-         {
-            dc->setFillColor( skin->getColor(Colors::MSEGEditor::Segment::Hover, CColor(120, 120, 180)));
-            dc->drawRect( h.rect, kDrawFilled );
+            if( i == 0 )
+            {
+               path->beginSubpath( i, v  );
+               fillpath->beginSubpath( i, v );
+               pathFirstY = v;
+            }
+            else
+            {
+               path->addLine( i, v );
+               fillpath->addLine( i, v );
+            }
+            pathLastX = i; pathLastY = v;
          }
       }
 
-      auto drawArea = getDrawArea();
-      float maxt = drawDuration();
+      auto tfpath = CGraphicsTransform().translate(drawArea.left, 0);
 
-      drawAxis( dc );
+      VSTGUI::CGradient::ColorStopMap csm;
+      VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
+      cg->addColorStop(0, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
+      cg->addColorStop(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+      cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
+
+
+      fillpath->addLine(pathLastX, valpx(0));
+      fillpath->addLine(0, valpx(0));
+      fillpath->addLine(0, pathFirstY);
+      dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
+      fillpath->forget();
+      cg->forget();
+
+      // Draw the axis here after the gradient fill
+      drawAxis(dc);
       
       // draw horizontal grid
-      dc->setLineWidth( 1 );
+      dc->setLineWidth(1);
       int skips = 4;
-      auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary, CColor(220, 220, 240));
-      auto secondaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Secondary, CColor(100, 100, 110));
+      auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary);
+      auto secondaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Secondary);
+
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
          float t = 1.0f * gi / skips;
@@ -477,6 +487,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          else
             dc->setFrameColor( secondaryGridColor );
          dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
+         // std::cout << _D(t) << _D(px) << _D(pxt(px)) << std::endl;
       }
 
       // draw vertical grid
@@ -489,101 +500,133 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             dc->setFrameColor( secondaryGridColor );
          dc->drawLine( CPoint( drawArea.left, v ), CPoint( drawArea.right, v ) );
       }
-      
 
-      CGraphicsPath *path = dc->createGraphicsPath();
-      CGraphicsPath *looppath = dc->createGraphicsPath();
-      bool startedLoopPath = 0;
-      for( int i=0; i<drawArea.getWidth(); ++i )
-      {
-         float up = pxt( i );
-         float v = MSEGModulationHelper::valueAt( up, lfodata->deform.val.f, ms );
-         v = valpx( v );
-         if( up <= ms->totalDuration )
-         {
-            if( i == 0 )
-               path->beginSubpath( i, v  );
-            else
-               path->addLine( i, v );
-         }
-         else
-         {
-            if( ! startedLoopPath )
-            {
-               startedLoopPath = true;
-               looppath->beginSubpath( i, v );
-            }
-            else
-               looppath->addLine( i, v );
-         }
-      }
-
-      dc->setLineWidth( 3 );
-      auto tfpath = CGraphicsTransform().translate( drawArea.left, 0 );
-      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Line, kWhiteCColor));
+      // draw segment curve
+      dc->setLineWidth(1.5);
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
       dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
       path->forget();
 
-      if( startedLoopPath )
-      {
-         dc->setLineWidth(1);
-         dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Line, CColor(180, 180, 200)));
-         dc->drawGraphicsPath( looppath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
-         looppath->forget();
-      }
-
-      dc->setLineWidth(1);
       for( const auto &h : hotzones )
       {
          if( h.type == hotzone::MOUSABLE_NODE )
          {
+            int sz = 12;
+            int offx = 0;
+
+            if( h.mousableNodeType == hotzone::SEGMENT_CONTROL )
+               offx = 1;
+
+            int offy = 0;
+
             if( h.active )
-            {
-               dc->setFillColor( kYellowCColor );
-               dc->drawRect( h.rect, kDrawFilled );
-            }
+               offy = 1;
+
             if( h.dragging )
+               offy = 2;
+
+            if( ! handleBmp )
             {
-               dc->setFillColor( kGreenCColor );
-               dc->drawRect( h.rect, kDrawFilled );
+               dc->setFrameColor( kRedCColor );
+               dc->drawRect( h.rect, kDrawStroked );
             }
-            dc->setFrameColor( kRedCColor );
-            dc->drawRect( h.rect, kDrawStroked );
+            else
+            {
+               handleBmp->draw( dc, h.rect, CPoint( offx * sz, offy * sz ), 0xFF );
+            }
          }
       }
    }
 
    CPoint mouseDownOrigin;
    bool inDrag = false;
+   bool inDrawDrag = false;
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
-      mouseDownOrigin = where;
-      inDrag = true;
-      for( auto &h : hotzones )
+      if( buttons & kRButton )
       {
-         if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+         openPopup( where );
+         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+      }
+      if( buttons & kDoubleClick )
+      {
+         auto tf = pxToTime( );
+         auto t = tf( where.x );
+         auto pv = pxToVal();
+         auto v = pv( where.y );
+
+         // Check if I'm on a hotzone
+         for( auto &h : hotzones )
          {
-            h.active = true;
-            h.dragging = true;
-            invalid();
-            break;
+            if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+            {
+               switch( h.mousableNodeType )
+               {
+               case hotzone::SEGMENT_ENDPOINT:
+               {
+                  Surge::MSEG::unsplitSegment( ms, t );
+                  modelChanged();
+                  return kMouseEventHandled;
+               }
+               case hotzone::SEGMENT_CONTROL:
+               {
+                  // Reset the controlpoint to duration half value middle
+                  Surge::MSEG::resetControlPoint( ms, t );
+                  modelChanged();
+                  return kMouseEventHandled;
+               }
+               }
+            }
          }
-         if( h.type == hotzone::SEGMENT_BG )
+         
+         if( t < ms->totalDuration )
          {
-            bool old = h.selected;
-            h.selected = h.rect.pointInside( where );
-            if( old != h.selected )
-               invalid();
-            if( h.selected && segmentpanel )
-               segmentpanel->segmentChanged( h.associatedSegment );
-               
+            Surge::MSEG::splitSegment( ms, t, v );
+            modelChanged();
+            return kMouseEventHandled;
+         }
+         else
+         {
+            Surge::MSEG::extendTo( ms, t, v );
+            modelChanged();
+            return kMouseEventHandled;
          }
       }
 
-      return kMouseEventHandled;
+      for( auto &s : ms->segments )
+      {
+         s.dragv0 = s.v0;
+         s.dragcpv = s.cpv;
+         s.dragDuration = s.duration;
+      }
+
+      if( timeEditMode == DRAW )
+      {
+         inDrawDrag = true;
+         return kMouseEventHandled;
+      }
+      else
+      {
+         mouseDownOrigin = where;
+         inDrag = true;
+         for( auto &h : hotzones )
+         {
+            if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+            {
+               h.active = true;
+               h.dragging = true;
+               invalid();
+               break;
+            }
+         }
+
+         return kMouseEventHandled;
+      }
    }
 
    virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons ) override {
       inDrag = false;
+      inDrawDrag = false;
       for( auto &h : hotzones )
       {
          h.dragging = false;
@@ -592,6 +635,40 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    }
 
    virtual CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons ) override {
+      if( inDrawDrag )
+      {
+         auto tf = pxToTime( );
+         auto t = tf( where.x );
+         auto pv = pxToVal();
+         auto v = limit_range( pv( where.y ), -1.f, 1.f );
+
+         int seg = Surge::MSEG::timeToSegment( this->ms, t );
+
+         if( seg >= 0 && seg < ms->n_activeSegments && t <= ms->totalDuration + MSEGStorage::minimumDuration )
+         {
+            bool ch = false;
+            // OK are we near the endpoint of that segment
+            if( t - ms->segmentStart[seg] < std::max( ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration ) )
+            {
+               ms->segments[seg].v0 = v;
+               ch = true;
+            }
+            else if( ms->segmentEnd[seg] - t < std::max( ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration ) )
+            {
+               int nx = seg + 1;
+               if( nx >= ms->n_activeSegments )
+                  nx = 0;
+               ms->segments[nx].v0 = v;
+               ch = true;
+            }
+            if( ch )
+               modelChanged();
+         }
+
+         
+         return kMouseEventHandled;
+      }
+
       bool flip = false;
       for( auto &h : hotzones )
       {
@@ -614,7 +691,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             }
          }
       }
-
+      
       if( flip )
          invalid();
 
@@ -627,14 +704,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             if( h.dragging )
             {
                gotOne = true;
-               h.onDrag( where.x - mouseDownOrigin.x, where.y - mouseDownOrigin.y );
+               h.onDrag( where.x - mouseDownOrigin.x, where.y - mouseDownOrigin.y, where );
+               modelChanged(); // HACK FIXME
                mouseDownOrigin = where;
                break;
             }
             idx++;
          }
          if( gotOne ) {
-            MSEGModulationHelper::rebuildCache(ms);
+            Surge::MSEG::rebuildCache(ms);
             recalcHotZones(where);
             hotzones[idx].dragging = true;
             invalid();
@@ -644,20 +722,231 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       return kMouseEventHandled;
    }
 
+   void openPopup(const VSTGUI::CPoint &iw) {
+      CPoint w = iw;
+      localToFrame(w);
+
+      COptionMenu* contextMenu = new COptionMenu(CRect( w, CPoint(0,0)), 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+
+      auto tf = pxToTime( );
+      auto t = tf( iw.x );
+      contextMenu->addEntry( "[?] MSEG Segment" );
+      contextMenu->addSeparator();
+
+
+      auto addCb = [](COptionMenu *p, const std::string &l, std::function<void()> op ) -> CCommandMenuItem * {
+                      auto m = new CCommandMenuItem( CCommandMenuItem::Desc( l.c_str() ) );
+                      m->setActions([op](CCommandMenuItem* m) { op(); });
+                      p->addEntry( m );
+                      return m;
+                   };
+
+      auto pv = pxToVal();
+      auto v = pv( iw.y );
+      
+      addCb( contextMenu,  "Split", [this, t, v](){
+                                       Surge::MSEG::splitSegment( this->ms, t, v );
+                                       modelChanged();
+                                    } );
+      addCb( contextMenu,  "Delete", [this,t ]() {
+                                        Surge::MSEG::deleteSegment( this->ms, t );
+                                        modelChanged();
+                                     } );
+
+      contextMenu->addSeparator();
+
+      auto typeTo = [this, contextMenu, t, addCb](std::string n, MSEGStorage::segment::Type type) {
+                       addCb( contextMenu, n, [this,t, type]() {
+                                                 Surge::MSEG::changeTypeAt( this->ms, t, type );
+                                                 modelChanged();
+                                              } );
+                    };
+      typeTo( "Line", MSEGStorage::segment::Type::LINEAR );
+      typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
+      typeTo( "S-Curve", MSEGStorage::segment::Type::SCURVE );
+      typeTo( "Sine", MSEGStorage::segment::Type::SINE );
+      typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
+      typeTo( "Steps", MSEGStorage::segment::Type::STEPS );
+      typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
+            
+      
+      getFrame()->addView( contextMenu );
+      contextMenu->setDirty();
+      contextMenu->popup();
+      getFrame()->removeView(contextMenu, true);
+   }
+
    void modelChanged() {
-      MSEGModulationHelper::rebuildCache( ms );
+      Surge::MSEG::rebuildCache( ms );
       recalcHotZones(mouseDownOrigin); // FIXME
-      invalid();
+      // Do this more heavy handed version
+      getFrame()->invalid();
+      // invalid();
    }
    
    MSEGStorage *ms;
    LFOStorage *lfodata;
-   MSEGSegmentPanel *segmentpanel = nullptr;
-   MSEGControlPanel *controlpanel = nullptr;
+   MSEGControlRegion *controlregion = nullptr;
+
+   CScalableBitmap *handleBmp;
    
    CLASS_METHODS( MSEGCanvas, CControl );
 };
 
+
+
+void MSEGControlRegion::valueChanged( CControl *p )
+{
+   auto tag = p->getTag();
+   auto val = p->getValue();
+   switch( tag )
+   {
+   case tag_segment_movement_mode: {
+      int m = floor(val * 2 + 0.5);
+      canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
+      canvas->recalcHotZones(CPoint(0, 0));
+      canvas->invalid();
+   }
+   break;
+   case tag_horizontal_snap:
+      if( val < 0.5 ) ms->hSnap = 0; else ms->hSnap = ms->hSnapDefault;
+      break;
+   case tag_vertical_snap:
+      if( val < 0.5 ) ms->vSnap = 0; else ms->vSnap = ms->vSnapDefault;
+      break;
+   case tag_vertical_value:
+   {
+      // FIXME locales
+      auto fv = 1.f / (std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 ) ); // -1 to 1 remeber
+      ms->vSnapDefault = fv;
+      if( ms->vSnap > 0 )
+         ms->vSnap = ms->vSnapDefault;
+   }
+      break;
+   case tag_horizontal_value:
+   {
+      auto fv = 1.f / ( std::max( std::atoi(((CTextEdit *)p)->getText()), 1 ) );
+      ms->hSnapDefault = fv;
+      if( ms->hSnap > 0 )
+         ms->hSnap = ms->hSnapDefault;
+   }
+      break;
+   default:
+      break;
+   }
+}
+void MSEGControlRegion::rebuild()
+{
+   auto labelFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
+   auto editFont = new VSTGUI::CFontDesc("Lato", 9);
+   
+   int height = getViewSize().getHeight();
+   int margin = 2;
+   int labelHeight = 12;
+   int controlHeight = 12;
+   int xpos = 10;
+
+   // loop mode
+   {
+      int segWidth = 100;
+      int marginPos = xpos + margin;
+      int ypos = 1;
+
+      auto lpl = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Loop Mode");
+      lpl->setFont(labelFont);
+      lpl->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
+      lpl->setTransparency(true);
+      lpl->setHoriAlign(kLeftText);
+      addView(lpl);
+
+      xpos += segWidth;
+   }
+   
+   // movement modes
+   {
+      int segWidth = 110;
+
+      int marginPos = xpos + margin;
+      int btnWidth = 94;
+      int ypos = 1;
+
+      // label
+      auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(btnWidth, labelHeight)), "Movement Mode");
+      mml->setTransparency(true);
+      mml->setFont(labelFont);
+      mml->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
+      mml->setHoriAlign(kLeftText);
+      addView(mml);
+      
+      ypos += margin + labelHeight;
+
+      // button
+      auto btnrect = CRect(CPoint(marginPos, ypos), CPoint(btnWidth, controlHeight));
+      auto mw = new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, controlHeight, 1, 3,
+                        associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT), CPoint(0, 0), true);
+      addView(mw);
+      mw->setValue(canvas->timeEditMode / 2.f);
+
+      xpos += segWidth;
+   }
+
+   // Snap Section
+   {
+      int btnWidth = 49, editWidth = 32;
+      int margin = 2;
+      int segWidth = btnWidth + editWidth + 10;
+      int ypos = 1;
+      char svt[256];
+
+      auto snapC = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth * 2 - 5, labelHeight)), "Snap To Grid");
+      snapC->setTransparency(true);
+      snapC->setFont(labelFont);
+      snapC->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
+      snapC->setHoriAlign(kLeftText);
+      addView(snapC);
+
+      ypos += margin + labelHeight;
+
+      auto hbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_horizontal_snap,
+                                     associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
+      addView(hbut);
+      hbut->setValue(ms->hSnap < 0.001 ? 0 : 1);
+
+      snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
+      auto htxt = new CTextEdit(CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight)),
+                                this, tag_horizontal_value, svt);
+#if WINDOWS
+      htxt->setTextInset(CPoint(3, 1));
+#endif
+      htxt->setFont(editFont);
+      htxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+      htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
+      htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
+      htxt->setRoundRectRadius(CCoord(3.f));
+      addView(htxt);
+
+      xpos += segWidth;
+
+      auto vbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_vertical_snap,
+                                     associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP));
+      addView( vbut );
+      vbut->setValue( ms->vSnap < 0.001? 0 : 1 );
+
+      snprintf(svt, 255, "%d", (int)round( 1.f / ms->vSnapDefault));
+      auto vtxt = new CTextEdit(CRect(CPoint(xpos + 52 + margin , ypos), CPoint(editWidth, controlHeight)), this, tag_vertical_value, svt);
+#if WINDOWS
+      vtxt->setTextInset(CPoint(3, 1));
+#endif
+      vtxt->setFont(editFont);
+      vtxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+      vtxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
+      vtxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
+      vtxt->setRoundRectRadius(CCoord(3.f));
+      addView(vtxt);
+   }
+}
+
+#if 0
 void MSEGSegmentPanel::valueChanged(CControl *c) {
    auto tag = c->getTag();
 
@@ -734,29 +1023,27 @@ void MSEGControlPanel::valueChanged( CControl *control ) {
       }
    }
 }
+#endif
 
 struct MSEGMainEd : public CViewContainer {
 
-   int controlHeight = 60;
-   int segmentWidth = 100;
-   
-   MSEGMainEd(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin) : CViewContainer(size) {
+   MSEGMainEd(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bmp) : CViewContainer(size) {
       this->ms = ms;
       this->skin = skin;
 
-      auto controlArea = new MSEGControlPanel( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), controlHeight ) ), ms, skin );
-      auto segmentArea = new MSEGSegmentPanel(CRect( CPoint( size.getWidth() - segmentWidth, controlHeight ), CPoint( segmentWidth, size.getHeight() - controlHeight ) ),
-                                                     ms, skin );
+      int controlHeight = 35;
 
-      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, controlHeight ), CPoint( size.getWidth() - segmentWidth, size.getHeight() - controlHeight ) ), lfodata, ms, skin );
-      msegCanv->segmentpanel = segmentArea;
-      msegCanv->controlpanel = controlArea;
-      segmentArea->canvas = msegCanv;
-      controlArea->canvas = msegCanv;
+      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, skin, bmp );
+            
+      auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,
+                                               lfodata, ms, skin, bmp );
+
+
+      msegCanv->controlregion = msegControl;
+      msegControl->canvas = msegCanv;
       
       addView( msegCanv );
-      addView( segmentArea );
-      addView( controlArea );
+      addView( msegControl );
    }
 
    Surge::UI::Skin::ptr_t skin;
@@ -764,9 +1051,15 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin) : CViewContainer( CRect( 0, 0, 720, 475 ) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 365) )
 {
-   setSkin( skin );
+   // Leave these in for now
+   std::cout << "MSEG Editor Constructed" << std::endl;
+   setSkin( skin, b );
    setBackgroundColor( kRedCColor );
-   addView( new MSEGMainEd( getViewSize(), lfodata, ms, skin ) );
+   addView( new MSEGMainEd( getViewSize(), lfodata, ms, skin, b ) );
+}
+
+MSEGEditor::~MSEGEditor() {
+   std::cout << "MSEG Editor Destroyed" << std::endl;
 }

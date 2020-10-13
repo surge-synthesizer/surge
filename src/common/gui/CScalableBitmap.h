@@ -26,6 +26,11 @@ public:
                      float alpha);
 
    /*
+    * CSBMs can pick PNGs at different zoom levels
+    */
+   virtual void addPNGForZoomLevel( std::string fname, int zoomLevel );
+
+   /*
    ** The 'zoom factor' is set statically across all bitmaps since it is a
    ** function of the current editor which contains them.
    **
@@ -66,6 +71,7 @@ private:
 
    std::map<VSTGUI::CPoint, VSTGUI::CBitmap*, CPointCompare> offscreenCache;
    static std::atomic<int> instances;
+
    
    int lastSeenZoom, bestFitScaleGroup;
    int extraScaleFactor;
@@ -79,7 +85,11 @@ private:
                 float alpha);
    VSTGUI::CColor svgColorToCColor(int svgColor, float opacity = 1.0);
 
-   std::unique_ptr<VSTGUI::CBitmap> pngBitmap; // fixme - scales
-   
+   /*
+    * The zoom 100 bitmap and optional higher resolution bitmaps for zooms
+    * map vs unordered is on purpose here - we need this ordered for our zoom search
+    */
+   std::map<int, std::unique_ptr<VSTGUI::CBitmap>> pngZooms;
+
    int currentPhysicalZoomFactor;
 };

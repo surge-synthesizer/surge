@@ -17,52 +17,8 @@
 
 #include "vstcontrols.h"
 #include "SkinSupport.h"
+#include "SurgeParamConfig.h"
 
-enum ctrl_mode
-{
-   cm_none = 0,
-   cm_integer,
-   cm_notename,
-   cm_float,
-   cm_percent,
-   cm_percent_bipolar,
-   cm_decibel,
-   cm_decibel_squared,
-   cm_envelopetime,
-   cm_lforate,
-   cm_midichannel,
-   cm_midichannel_from_127,
-   cm_mutegroup,
-   cm_lag,
-   cm_pbdepth,
-   cm_frequency20_20k,
-   cm_frequency50_50k,
-   cm_bitdepth_16,
-   cm_frequency0_2k,
-   cm_decibelboost12,
-   cm_octaves3,
-   cm_frequency1hz,
-   cm_time1s,
-   cm_frequency_audible,
-   cm_frequency_samplerate,
-   cm_frequency_khz,
-   cm_frequency_khz_bi,
-   cm_frequency_hz_bi,
-   cm_eq_bandwidth,
-   cm_stereowidth,
-   cm_mod_decibel,
-   cm_mod_pitch,
-   cm_mod_freq,
-   cm_mod_percent,
-   cm_mod_time,
-   cm_polyphony,
-   cm_envshape,
-   cm_osccount,
-   cm_count4,
-   cm_noyes,
-   cm_temposync,
-   cm_int_menu,
-};
 
 inline int get_mod_mode(int ct)
 {
@@ -111,6 +67,8 @@ enum label_placement
    lp_above
 };
 
+class CScalableBitmap;
+
 class CNumberField : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
@@ -120,38 +78,6 @@ public:
                 VSTGUI::CBitmap* pBackground = 0,
                 SurgeStorage* storage = nullptr);
    ~CNumberField();
-
-   virtual void setFontColor(VSTGUI::CColor color);
-   VSTGUI::CColor getFontColor()
-   {
-      return fontColor;
-   }
-
-   virtual void setBackColor(VSTGUI::CColor color);
-   VSTGUI::CColor getBackColor()
-   {
-      return backColor;
-   }
-
-   virtual void setLineColor(VSTGUI::CColor color);
-   VSTGUI::CColor getLineColor()
-   {
-      return lineColor;
-   }
-
-   // virtual void setTxtFace (VSTGUI::CTxtFace val);
-   VSTGUI::CTxtFace getTxtFace()
-   {
-      return txtFace;
-   }
-
-   /*virtual void setFont (CFont fontID);
-   CFont getFont () { return fontID; }*/
-
-   void setBgcolor(VSTGUI::CColor bgcol)
-   {
-      envColor = bgcol;
-   }
 
    virtual void bounceValue() override;
 
@@ -226,35 +152,28 @@ public:
       return f_max;
    }
 
-   virtual void setLabel(char* newlabel);
-   virtual void setLabelPlacement(int placement);
-
    virtual void draw(VSTGUI::CDrawContext*) override;
    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
 
+   bool hovered = false;
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorHand );
+      hovered = true;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorDefault );
+      hovered = false;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    
    virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
-   bool altlook;
    SurgeStorage* storage = nullptr;
 
 private:
-   VSTGUI::CColor fontColor;
-   VSTGUI::CColor backColor;
-   VSTGUI::CColor lineColor;
-   VSTGUI::CColor envColor;
-   //	CFont   fontID;
-   VSTGUI::CTxtFace txtFace;
    int controlmode, controlstate;
    int i_min, i_max, i_stepsize;
    float f_movespeed;
@@ -262,10 +181,12 @@ private:
    int i_value;
    int i_default;
    int i_poly;
-   char label[32];
    int labelplacement;
    VSTGUI::CRect drawsize;
    VSTGUI::CPoint lastmousepos;
+
+   CScalableBitmap *bg = nullptr, *hoverBg = nullptr;
+   bool triedToLoadBg = false;
 
    CLASS_METHODS(CNumberField, VSTGUI::CControl)
 };

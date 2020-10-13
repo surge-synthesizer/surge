@@ -161,6 +161,8 @@ protected:
    CFStringRef parameterIDlist_CFString[n_total_params + num_metaparameters];
    float sampleRateCache;
    std::vector<int> presetOrderToPatchList;
+
+   int checkNamesEvery = 0;
 };
 
 struct CFAUPreset

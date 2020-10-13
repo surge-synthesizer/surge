@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="24px" viewBox="0 0 28 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>bmpTS00153</title>
+    <defs>
+        <linearGradient x1="50%" y1="50%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#000000" offset="0%"></stop>
+            <stop stop-color="#000000" stop-opacity="0.0876311189" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#2E86FE" offset="0%"></stop>
+            <stop stop-color="#005CB6" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="bmpTS00153" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <ellipse id="Oval-Copy" fill="url(#linearGradient-1)" cx="11.5" cy="11" rx="5.5" ry="6"></ellipse>
+        <circle id="Oval" fill="url(#linearGradient-2)" cx="11.5" cy="8.5" r="5.5"></circle>
+        <circle id="Oval" stroke="#999999" fill="#FFFFFF" cx="11.5" cy="8.5" r="3"></circle>
+        <g id="Group-3" transform="translate(11.000000, 7.000000)">
+            <path d="M-0.5,1.25 L1.5,1.25 C1.77614237,1.25 2,1.47385763 2,1.75 C2,2.02614237 1.77614237,2.25 1.5,2.25 L-0.5,2.25 C-0.776142375,2.25 -1,2.02614237 -1,1.75 C-1,1.47385763 -0.776142375,1.25 -0.5,1.25 Z" id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" transform="translate(0.500000, 1.750000) rotate(-90.000000) translate(-0.500000, -1.750000) "></path>
+            <path d="M-0.5,1 L1.5,1 C1.77614237,1 2,1.22385763 2,1.5 C2,1.77614237 1.77614237,2 1.5,2 L-0.5,2 C-0.776142375,2 -1,1.77614237 -1,1.5 C-1,1.22385763 -0.776142375,1 -0.5,1 Z" id="Rectangle-Copy" fill="#1F1F1F" transform="translate(0.500000, 1.500000) rotate(-90.000000) translate(-0.500000, -1.500000) "></path>
+        </g>
+    </g>
+</svg>

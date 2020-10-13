@@ -19,7 +19,10 @@
 #include "DebugHelpers.h"
 #include "basic_dsp.h" // for limit_range
 
-void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
+namespace Surge {
+namespace MSEG {
+
+void rebuildCache( MSEGStorage *ms )
 {
    float totald = 0;
    for( int i=0; i<ms->n_activeSegments; ++i )
@@ -28,35 +31,32 @@ void MSEGModulationHelper::rebuildCache( MSEGStorage *ms )
       totald += ms->segments[i].duration;
       ms->segmentEnd[i] = totald;
 
-      // set up some aux points for convenience
-      switch( ms->segments[i].type )
-      {
-      case MSEGStorage::segment::CONSTANT:
-      {
-         ms->segments[i].v1 = ms->segments[i].v0;
-         ms->segments[i].cpv = ms->segments[i].v0;
-         ms->segments[i].cpduration = ms->segments[i].duration / 2;
-         break;
-      }
-      case MSEGStorage::segment::LINEAR:
-      {
-         ms->segments[i].cpv = 0.5 * ( ms->segments[i].v0 + ms->segments[i].v1 );
-         ms->segments[i].cpduration = ms->segments[i].duration / 2;
-         break;
-      }
-      default:
-         break;
-      }
+      int nextseg = i+1;
+      if( nextseg >= ms->n_activeSegments )
+         nextseg = 0;
+      ms->segments[i].nv1 = ms->segments[nextseg].v0;
    }
+
    ms->totalDuration = totald;
-   
+
+   for( int i=0; i<ms->n_activeSegments; ++i )
+   {
+      constrainControlPointAt( ms, i );
+   }
 }
 
-float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
+float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEvaluated, float msegState[5])
 {
    if( ms->n_activeSegments == 0 ) return df;
-   
-   while( up >= ms->totalDuration ) up -= ms->totalDuration;
+
+   // This still has some problems but lets try this for now
+   double up = (double)ip + fup;
+   if( up >= ms->totalDuration ) {
+      double nup = up / ms->totalDuration;
+      up -= (int)nup * ms->totalDuration;
+      if( up < 0 )
+         up += ms->totalDuration;
+   }
 
    df = limit_range( df, -1.f, 1.f );
    
@@ -76,10 +76,10 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
    if( idx < 0 ) return 0;
 
    bool segInit = false;
-   if( idx != ms->lastSegmentEvaluated )
+   if( idx != lastSegmentEvaluated )
    {
       segInit = true;
-      ms->lastSegmentEvaluated = idx;
+      lastSegmentEvaluated = idx;
    }
    
    float pd = up - ms->segmentStart[idx];
@@ -87,47 +87,82 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
    float res = r.v0;
    switch( r.type )
    {
-   case MSEGStorage::segment::CONSTANT:
-      res = r.v0;
-      break;
    case MSEGStorage::segment::LINEAR:
    {
       float frac = pd / r.duration;
+
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
+
       if( df > 0 )
          frac = pow( frac, 1.0 + df * 3 );
-      res = frac * r.v1 + ( 1 - frac ) * r.v0;
+
+      res = frac * r.nv1 + ( 1 - frac ) * r.v0;
+
       break;
    }
    case MSEGStorage::segment::BROWNIAN:
    {
-      const float sdt = 0.001;
-      static constexpr int validx = 0, lasttime = 1;
+      static constexpr int validx = 0, lasttime = 1, outidx = 2;
       if( segInit )
       {
-         r.state[validx] = r.v0;
-         r.state[lasttime] = 0;
+         msegState[validx] = r.v0;
+         msegState[outidx] = r.v0;
+         msegState[lasttime] = 0;
       }
       float targetTime = pd/r.duration;
-      while( r.state[lasttime] < targetTime )
+      if( targetTime >= 1 )
       {
-         float dt = std::min( dt, targetTime - r.state[lasttime] );
-
-         float lincoef  = ( r.v1 - r.state[validx] ) / ( 1 - r.state[lasttime] );
-         float randcoef = 0.1 * r.cpduration / r.duration;
-
-         r.state[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
-         r.state[lasttime] += dt;
+         res = r.nv1;
       }
-      res = r.state[validx];
+      else if( targetTime <= 0 )
+      {
+         res = r.v0;
+      }
+      else if( targetTime <= msegState[lasttime] )
+      {
+         res = msegState[outidx];
+      }
+      else
+      {
+         while( msegState[lasttime] < targetTime && msegState[lasttime] < 1 )
+         {
+            auto ncd = r.cpduration / r.duration; // 0-1
+            // OK so the closer this is to 1 the more spiky we should be, which is basically
+            // increasing the dt.
 
-      ms->segments[idx].state[validx] = r.state[validx];
-      ms->segments[idx].state[lasttime] = r.state[lasttime];
+            // The slowest is 5 steps (max dt is 0.2)
+            float sdt = 0.2f * ( 1 - ncd ) * ( 1 - ncd );
+            float dt = std::min( std::max( sdt, 0.0001f ), 1 - msegState[lasttime] );
+
+            if( msegState[lasttime] < 1 )
+            {
+               float lincoef  = ( r.nv1 - msegState[validx] ) / ( 1 - msegState[lasttime] );
+               float randcoef = 0.1 * r.cpv; // CPV is on -1,1
+               
+               msegState[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
+               msegState[lasttime] += dt;
+            }
+            else
+               msegState[validx] = r.nv1;
+         }
+         if( r.cpv < 0 )
+         {
+            // Snap to between 1 and 24 values.
+            int a = floor( - r.cpv * 24 ) + 1;
+            msegState[outidx] = floor( msegState[validx] * a ) * 1.f / a;
+         }
+         else
+         {
+            msegState[outidx] = msegState[validx];
+         }
+         msegState[outidx] = limit_range(msegState[outidx],-1.f, 1.f );
+         res = msegState[outidx];
+      }
       
       break;
    }
-   case MSEGStorage::segment::QUADBEZ:
+   case MSEGStorage::segment::QUAD_BEZIER:
    {
       /*
       ** First lets correct the control point so that the
@@ -146,7 +181,7 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       
       // here's the midpoint along the connecting curve
       float tp = r.duration/2;
-      float vp = (r.v1-r.v0)/2 + r.v0;
+      float vp = (r.nv1-r.v0)/2 + r.v0;
 
       // The distance from tp,vp to cpt,cpv
       float dt = (cpt-tp), dy = (cpv-vp);
@@ -157,7 +192,7 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       // B = (1-t)^2 P0 + 2 t (1-t) P1 + t^2 P2
       float ttarget = pd;
       float px0 = 0, px1 = cpt, px2 = r.duration,
-         py0 = r.v0, py1 = cpv, py2 = r.v1;
+         py0 = r.v0, py1 = cpv, py2 = r.nv1;
 
 
 
@@ -180,9 +215,9 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
 
       if( a == 0 || disc < 0 )
       {
-         // This means we have a line between v0 and v1
+         // This means we have a line between v0 and nv1
          float frac = pd / r.duration;
-         res = frac * r.v1 + ( 1 - frac ) * r.v0;
+         res = frac * r.nv1 + ( 1 - frac ) * r.v0;
       }
       else
       {
@@ -207,53 +242,67 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       float x = ( pd / r.duration - 0.5 ) * 2; // goes from -1 to 1
 
       float eps = 0.01;
-      float cpc = r.cpv;
-      float mv = std::min( r.v0, r.v1 );
-      float xv = std::max( r.v0, r.v1 );
-      if( xv - mv < eps )
+      float mv = r.v0; //std::min( r.v0, r.nv1 );
+      float xv = r.nv1; // std::max( r.v0, r.nv1 );
+      if( fabs(xv - mv) < eps )
       {
          res = 0.5 * ( mv + xv );
          break;
       }
-      if( cpc < mv + eps ) cpc = mv + eps;
-      if( cpc > xv - eps ) cpc = xv - eps;
-      float cx = -( r.cpduration / r.duration - 0.5 ) * 2; // goes from -1 to 1
 
-      /* so cpc = r.v0 + ( r.v1 - r.v0 ) / ( 1 + e( -k cx ) ) solve for k
-      **
-      ** 1  + e( -k cx ) = (r.v1-r.v0)/(cpc - r.v0);
-      ** e( -k cx ) = (v1-v0)/(cpc-v0) - 1
-      ** k = ln( ( v1-v0)/(vpv-v0) - 1 ) / cx;
+      float cx = ( r.cpduration / r.duration - 0.5 ) * 2; // goes from -1 to 1
+      
+      /*
+      ** OK so now we have either x = 1/(1+exp(-kx)) if k > 0 or the mirror of that around the line
+      ** but we always want it to hit -1,1 (and then scale later)
       */
-
-      float lna = (r.v1-r.v0)/(cpc-r.v0) - 1;
-      if( lna <= 0 )
+      float kmax = 20;
+      float k = cx * kmax;
+      if( k == 0 ) 
       {
-         // Punt
          float frac = pd / r.duration;
-         res = frac * r.v1 + ( 1 - frac ) * r.v0;
+         res = frac * r.nv1 + ( 1 - frac ) * r.v0;
+         break;
+      }
+
+      if( k < 0 )
+      {
+         // Logit function on 0,1
+         x = ( x + 1 ) * 0.5; // 0,1
+
+         float scale = 0.9999 - 0.5 * ( (kmax + k) / kmax );
+         float off = ( 1 - scale ) * 0.5;
+         x = x * scale + off;
+
+         float upv = -log( 1/(scale+off) - 1 );
+         float dnv = -log( 1 / off - 1 );
+         float val = -log( 1/x - 1 );
+         val = ( val - dnv ) / ( upv - dnv );
+         val = ( xv - mv ) * val + mv;
+         res = val;
       }
       else
       {
-         float k = 3;
-         if( cx == 0 ) k = 20;
-         else k = fabs( log( lna ) / cx );
+         // sigmoid
+         float xp = 1/(1+exp(-k));
+         float xm = 1/(1+exp(k));
+         float distance = xp - xm;
+      
 
-         float a = 1;
-         if( df < 0 )
-            a = 1 + df * 0.5;
-         if( df > 0 )
-            a = 1 + df * 1.5;
+         float val = 1 / ( 1 + exp( -k * x ) ); // between xm and xp
+      
+         val = ( val - xm ) / ( xp - xm ); // between 0 and 1
          
-         res = r.v0 + ( r.v1 - r.v0 ) * 1 / pow( ( 1 + exp( - k * x ) ), a );
+         val = ( xv - mv ) * val + mv;
+         res = val;
       }
       
       break;
    }
 
-   case MSEGStorage::segment::WAVE: {
-      int steps = (int)( r.cpduration / r.duration * 15 );
-      float mul = ( 1 + 2 * steps ) * M_PI;
+   case MSEGStorage::segment::SINE: 
+   case MSEGStorage::segment::SQUARE: {
+      int steps = (int)( r.cpduration / r.duration * 100 );
       auto f = pd/r.duration;
       float a = 1;
       
@@ -262,18 +311,31 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
       if( df > 0 )
          a = 1 + df * 1.5;
 
-      res = ( r.v0-r.v1 ) * pow( ( cos( mul * f ) + 1 ) * 0.5, a ) + r.v1;
+      float kernel = 0;
+      if( r.type == MSEGStorage::segment::SINE )
+      {
+         float mul = ( 1 + 2 * steps ) * M_PI;
+         kernel = cos( mul * f );
+      }
+      if( r.type == MSEGStorage::segment::SQUARE )
+      {
+         float mul = ( 2 * steps );
+         int ifm = (int)( mul * f );
+         kernel = ( ifm % 2 == 0 ? 1 : -1 );
+      }
+      
+      res = ( r.v0-r.nv1 ) * pow( ( kernel + 1 ) * 0.5, a ) + r.nv1;
       break;
    }
 
-   case MSEGStorage::segment::DIGILINE: {
-      int steps = (int)( r.cpduration / r.duration * 18 ) + 2;
+   case MSEGStorage::segment::STEPS: {
+      int steps = (int)( r.cpduration / r.duration * 100 ) + 2;
       float frac = (float)( (int)( steps * pd / r.duration ) ) / (steps-1);
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
       if( df > 0 )
          frac = pow( frac, 1.0 + df * 3 );
-      res = frac * r.v1 + ( 1 - frac ) * r.v0;
+      res = frac * r.nv1 + ( 1 - frac ) * r.v0;
       break;
    }
 
@@ -283,4 +345,240 @@ float MSEGModulationHelper::valueAt(float up, float df, MSEGStorage *ms)
 
    
    return res;
+}
+
+
+int timeToSegment( MSEGStorage *ms, float t ) {
+   if( ms->totalDuration < MSEGStorage::minimumDuration ) return -1;
+   
+   while( t > ms->totalDuration ) t -= ms->totalDuration;
+   while( t < 0 ) t += ms->totalDuration;
+   
+   int idx = -1;
+   for( int i=0; i<ms->n_activeSegments; ++i ) 
+   {
+      if( t >= ms->segmentStart[i] && t < ms->segmentEnd[i] )
+      {
+         idx = i;
+         break;
+      }
+   }
+   return idx;
+}
+
+void changeTypeAt( MSEGStorage *ms, float t, MSEGStorage::segment::Type type ) {
+   auto idx = timeToSegment( ms, t );
+   if( idx < ms->n_activeSegments )
+   {
+      ms->segments[idx].type = type;
+   }
+}
+
+void insertAtIndex( MSEGStorage *ms, int insertIndex ) {
+   for( int i=std::max( ms->n_activeSegments + 1, max_msegs - 1 ); i > insertIndex; --i )
+   {
+      ms->segments[i] = ms->segments[i-1];
+   }
+   ms->segments[insertIndex].type = MSEGStorage::segment::LINEAR;
+   ms->segments[insertIndex].v0 = 0;
+   ms->segments[insertIndex].duration = 0.25;
+
+   int nxt = insertIndex + 1;
+   if( nxt >= ms->n_activeSegments )
+      nxt = 0;
+   if( nxt == insertIndex )
+   {
+      ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
+      ms->segments[insertIndex].cpduration = 0.125;
+   }
+   else
+   {
+      ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
+      ms->segments[insertIndex].cpduration = 0.125;
+   }
+   
+   ms->n_activeSegments ++;
+}
+   
+
+void insertAfter( MSEGStorage *ms, float t ) {
+   auto idx = timeToSegment( ms, t );
+   if( idx < 0 ) idx = 0;
+   idx++;
+   insertAtIndex( ms, idx );
+}
+
+void insertBefore( MSEGStorage *ms, float t ) {
+   auto idx = timeToSegment( ms, t );
+   if( idx < 0 ) idx = 0;
+   insertAtIndex( ms, idx );
+}
+
+void extendTo( MSEGStorage *ms, float t, float nv ) {
+   if( t < ms->totalDuration ) return;
+   
+   insertAtIndex( ms, ms->n_activeSegments );
+
+   auto sn = ms->n_activeSegments - 1;
+   ms->segments[sn].type = MSEGStorage::segment::LINEAR;
+   if( sn == 0 )
+      ms->segments[sn].v0 = 0;
+   else
+      ms->segments[sn].v0 = ms->segments[sn-1].nv1;
+
+   float dt = t - ms->totalDuration;
+   ms->segments[sn].duration = dt;
+
+   ms->segments[sn].cpduration = dt/2;
+   ms->segments[sn].cpv = ( ms->segments[sn].v0 + nv ) * 0.5;
+
+   // The first point has to match where I just clicked. Adjust it and its control point
+   float cpdratio = ms->segments[0].cpduration / ms->segments[0].duration;
+   float cpvratio = 0.5;
+   if( ms->segments[0].nv1 != ms->segments[0].v0 )
+      cpvratio = ( ms->segments[0].cpv - ms->segments[0].v0 ) / ( ms->segments[0].nv1 - ms->segments[0].v0 );
+
+   ms->segments[0].v0 = nv;
+   
+   ms->segments[0].cpduration = cpdratio * ms->segments[0].duration;
+   ms->segments[0].cpv = (ms->segments[0].nv1 - ms->segments[0].v0 ) * cpvratio + ms->segments[0].v0;
+}
+
+void splitSegment( MSEGStorage *ms, float t, float nv ) {
+   int idx = timeToSegment( ms, t );
+   if( idx >= 0 )
+   {
+      while( t > ms->totalDuration ) t -= ms->totalDuration;
+      while( t < 0 ) t += ms->totalDuration;
+
+      float pv1 = ms->segments[idx].nv1;
+      
+      float cpdratio = ms->segments[idx].cpduration / ms->segments[idx].duration;
+      
+      float cpvratio = 0.5;
+      if( ms->segments[idx].nv1 != ms->segments[idx].v0 )
+         cpvratio = ( ms->segments[idx].cpv - ms->segments[idx].v0 ) / ( ms->segments[idx].nv1 - ms->segments[idx].v0 );
+      
+      float dt = (t - ms->segmentStart[idx]) / ( ms->segments[idx].duration);
+      auto q = ms->segments[idx]; // take a copy
+      insertAtIndex(ms, idx + 1);
+
+      ms->segments[idx].nv1 = nv;
+      ms->segments[idx].duration *= dt;
+
+      ms->segments[idx+1].v0 = nv;
+      ms->segments[idx+1].type = ms->segments[idx].type;
+      ms->segments[idx+1].nv1 = pv1;
+      ms->segments[idx+1].duration = q.duration * ( 1 - dt );
+      
+      ms->segments[idx].cpduration = cpdratio * ms->segments[idx].duration;
+      ms->segments[idx].cpv = (ms->segments[idx].nv1 - ms->segments[idx].v0 ) * cpvratio + ms->segments[idx].v0;
+      ms->segments[idx+1].cpduration = cpdratio * ms->segments[idx+1].duration;
+      ms->segments[idx+1].cpv = (ms->segments[idx+1].nv1 - ms->segments[idx+1].v0 ) * cpvratio + ms->segments[idx+1].v0;
+   }
+}
+
+
+void unsplitSegment( MSEGStorage *ms, float t ) {
+   int idx = timeToSegment( ms, t );
+   int prior = idx;;
+   if( ( ms->segmentEnd[idx] - t < t - ms->segmentStart[idx] ) || t >= ms->totalDuration )
+   {
+      if( idx == ms->n_activeSegments - 1 )
+      {
+         // We are just deleting the last segment
+         deleteSegment( ms, t );
+         return;
+      }
+      idx++;
+      prior = idx - 1;
+   }
+   else
+   {
+      prior = idx - 1;
+   }
+   if( prior < 0 ) prior = ms->n_activeSegments - 1;
+   if( prior == idx ) return;
+   
+   
+   float cpdratio = ms->segments[prior].cpduration / ms->segments[prior].duration;
+   
+   float cpvratio = 0.5;
+   if( ms->segments[prior].nv1 != ms->segments[prior].v0 )
+      cpvratio = ( ms->segments[prior].cpv - ms->segments[prior].v0 ) / ( ms->segments[prior].nv1 - ms->segments[prior].v0 );
+   
+   ms->segments[prior].duration += ms->segments[idx].duration;
+   ms->segments[prior].nv1 = ms->segments[idx].nv1;
+
+   ms->segments[prior].cpduration = cpdratio * ms->segments[prior].duration;
+   ms->segments[prior].cpv = (ms->segments[prior].nv1 - ms->segments[prior].v0 ) * cpvratio + ms->segments[prior].v0;
+
+   
+   for( int i=idx; i<ms->n_activeSegments - 1; ++i )
+   {
+      ms->segments[i] = ms->segments[i+1];
+   }
+   ms->n_activeSegments --;
+}
+   
+void deleteSegment( MSEGStorage *ms, float t ) {
+   auto idx = timeToSegment( ms, t );
+   
+   for( int i=idx; i<ms->n_activeSegments - 1; ++i )
+   {
+      ms->segments[i] = ms->segments[i+1];
+   }
+   ms->n_activeSegments --;
+   
+   int prior = idx - 1;
+   if( prior < 0 )
+      prior = ms->n_activeSegments;
+   
+   // if( prior != idx )
+      //ms->segments[idx].v0 = ms->segments[prior].nv1;
+}
+
+void resetControlPoint( MSEGStorage *ms, float t )
+{
+   auto idx = timeToSegment( ms, t );
+   if( idx >= 0 && idx < ms->n_activeSegments )
+   {
+      ms->segments[idx].cpduration = ms->segments[idx].duration * 0.5;
+      ms->segments[idx].cpv = ( ms->segments[idx].v0 + ms->segments[idx].nv1 ) * 0.5;
+   }
+}
+
+void constrainControlPointAt( MSEGStorage *ms, int idx )
+{
+   switch( ms->segments[idx].type )
+   {
+   case MSEGStorage::segment::LINEAR:
+   {
+      // constrain time and value
+      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
+      auto l = std::min(ms->segments[idx].v0, ms->segments[idx].nv1 );
+      auto h = std::max(ms->segments[idx].v0, ms->segments[idx].nv1 );
+      ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, l, h );
+   }
+   break;
+   case MSEGStorage::segment::QUAD_BEZIER:
+   case MSEGStorage::segment::BROWNIAN:
+   {
+      // Constrain time but space is in -1,1
+      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
+      ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
+
+   }
+   break;
+   default:
+   {
+      // constrain time and stay at the midpoint
+      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
+      ms->segments[idx].cpv = 0.5 * (ms->segments[idx].v0 + ms->segments[idx].nv1);
+   }
+   break;
+   }
+}
+   
+}
 }

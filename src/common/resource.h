@@ -1,3 +1,5 @@
+#pragma once
+
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by surge.rc
@@ -54,9 +56,26 @@
 #define IDB_CHARACTER 161
 #define IDB_ENVMODE 162
 #define IDB_STOREPATCH 163
-#define IDB_BUTTON_MENU 164 
+#define IDB_BUTTON_MENU 164
 #define IDB_LFOTYPE 166
 #define IDB_MENU_IN_SLIDER_BG 167
+#define IDB_MENU_IN_FILTER_BG 168
+#define IDB_FILTER_GLYPHS 169
+
+// == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
+#define IDB_MSEG_SEGMENT_HANDLES 301
+#define IDB_MSEG_MOVEMENT 302
+#define IDB_MINIEDIT_ICON 170
+#define IDB_MSEG_VERTICAL_SNAP 303
+#define IDB_MSEG_HORIZONTAL_SNAP 304
+#define IDB_MPE_BUTTON 171
+#define IDB_ZOOM_BUTTON 172
+#define IDB_TUNE_BUTTON 173
+#define IDB_POLYSPLIT_NUM_BG 174
+#define IDB_PITCHBEND_NUM_BG 175
+#define IDB_KEYTRACKROOT_BG 176
+// == /SVG == Do not remove this comment
+
 
 #define IDC_NAME 1001
 #define IDC_CATEGORY 1002
@@ -80,20 +99,6 @@
 #endif
 
 #if WINDOWS
-/*
-** Each of the bitmaps is also available in scaled form. The ID of the scaled bitmaps
-** is ID_BG+SCALABLE_200_OFFSET for the 200% image.
-**
-** Do NOT change the values of these constants without understanding scripts/win/emit-vector-rc.py
-**
-** This is windows only. Mac and Linux use different resource approaches
-*/
-#define SCALABLE_100_OFFSET 70000
-#define SCALABLE_125_OFFSET 71000
-#define SCALABLE_150_OFFSET 72000
-#define SCALABLE_200_OFFSET 73000
-#define SCALABLE_300_OFFSET 74000
-#define SCALABLE_400_OFFSET 75000
 #define SCALABLE_SVG_OFFSET 80000
 
 #include "scalableresource.h" // found in src/windows

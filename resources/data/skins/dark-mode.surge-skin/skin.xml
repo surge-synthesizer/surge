@@ -1,121 +1,200 @@
-<surge-skin name="Surge Dark" author="Decoded Enterprises" version="1">
+<surge-skin name="Surge Dark" author="Decoded Enterprises, EvilDragon, Jon Spruyt" version="1">
   <globals>
-    <!-- This means if there is a bmp00???.svg in this directory we use it over the built in for this skin -->
     <defaultimage directory="SVG/"/>
-
-    <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
-    <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
-
-    <image id="STATUS_BUTTON" resource="SVG/StatusButton.svg"/>
-    <image id="STATUS_MPE" resource="SVG/StatusMPE.svg"/>
-    <image id="STATUS_TUNING" resource="SVG/StatusTune.svg"/>
-    <image id="STATUS_ZOOM" resource="SVG/StatusZoom.svg"/>
 
     <color id="white" value="#FFFFFF"/>
     <color id="black" value="#000000"/>
     <color id="red" value="#FF0000"/>
     <color id="lightgray" value="#B4B4B4"/>
     <color id="gray" value="#808080"/>
-    <color id="darkblack" value="#050505"/>
-    <color id="black" value="#131313"/>
+    <color id="almostblack" value="#050505"/>
+    <color id="bggray" value="#242424"/>
+    <color id="bordergray" value="#0F0F0F"/>
+    <color id="darkestgray" value="#131313"/>
     <color id="moregray" value="#4f4f4f"/>
     <color id="darkgray" value="#3c3c3c"/>
     <color id="darkergray" value="#202020"/>
     <color id="surgeblue" value="#005CB6"/>
+    <color id="surgebluetrans" value="#005CB680"/>
     <color id="surgeorange" value="#ff9000"/>
     <color id="buttonbg" value="#151515"/>
+    <color id="modblue" value="#2E86FE"/>
 
-    <color id="modbutton.active.secondary.hover" value="#2E86FE"/>
-    <color id="modbutton.inactive.secondary.hover" value="#ADFF6B"/>
-    <color id="modbutton.selected.secondary.hover" value="#ADFF6B"/>
+    <color id="lfo.title.text" value="#B4B4B490"/>
 
-    <color id="lfo.waveform.background" value="#242424"/>
-    <color id="lfo.waveform.ruler.font" value="$lightgray"/>
-    <color id="lfo.waveform.ruler.ticks" value="$lightgray"/>
-    <color id="lfo.waveform.bounds" value="$buttonbg"/>
-    <color id="lfo.waveform.centerline" value="$buttonbg"/>
-    <color id="lfo.waveform.envelope" value="$black"/>
-    <color id="lfo.waveform.wave" value="$surgeblue"/>
-    <color id="lfo.waveform.majordivisions" value="$buttonbg"/>
+    <color id="lfo.waveform.background" value="bggray"/>
+    <color id="lfo.waveform.ruler.text" value="lightgray"/>
+    <color id="lfo.waveform.ruler.ticks" value="buttonbg"/>
+    <color id="lfo.waveform.ruler.ticks.small" value="surgebluetrans"/>
+    <color id="lfo.waveform.ruler.ticks.extended" value="buttonbg"/>
+    <color id="lfo.waveform.bounds" value="buttonbg"/>
+    <color id="lfo.waveform.center" value="buttonbg"/>
+    <color id="lfo.waveform.envelope" value="surgebluetrans"/>
+    <color id="lfo.waveform.wave" value="modblue"/>
+    <color id="lfo.waveform.wave.deactivated" value="#2E86FE90"/>
 
-    <color id="lfo.type.selected.background" value="$surgeblue"/>
-    <color id="lfo.type.selected.foreground" value="#E5E5E5"/>
-    <color id="lfo.type.unselected.foreground" value="$lightgray"/>
+    <color id="lfo.type.selected.background" value="surgeblue"/>
+    <color id="lfo.type.selected.text" value="#E5E5E5"/>
+    <color id="lfo.type.unselected.text" value="lightgray"/>
 
-    <color id="lfo.stepseq.background" value="$darkergray"/>
-    <color id="lfo.stepseq.column.shadow" value="$darkblack"/>
-    <color id="lfo.stepseq.step.fill" value="$surgeblue"/>
-    <color id="lfo.stepseq.step.fill.disabled" value="$darkgray"/>
-    <color id="lfo.stepseq.loop.outside.majorstep" value="#202020"/>
-    <color id="lfo.stepseq.loop.outside.minorstep" value="#303030"/>
-    <color id="lfo.stepseq.loop.majorstep" value="$buttonbg"/>
-    <color id="lfo.stepseq.loop.minorstep" value="$black"/>
-    <color id="lfo.stepseq.loop.markers" value="$lightgray"/>
-    <color id="lfo.stepseq.trigger.click" value="$lightgray"/>
-    <color id="lfo.stepseq.drag.line" value="$lightgray"/>
-    <color id="lfo.stepseq.envelope" value="$moregray"/>
-    <color id="lfo.stepseq.wave" value="$lightgray"/>
+    <color id="lfo.stepseq.background" value="darkergray"/>
+    <color id="lfo.stepseq.column.shadow" value="almostblack"/>
+    <color id="lfo.stepseq.step.fill" value="surgeblue"/>
+    <color id="lfo.stepseq.step.fill.disabled" value="moregray"/>
+    <color id="lfo.stepseq.step.fill.outside" value="moregray"/>
+    <color id="lfo.stepseq.loop.outside.step.primary" value="darkergray"/>
+    <color id="lfo.stepseq.loop.outside.step.secondary" value="#303030"/>
+    <color id="lfo.stepseq.loop.step.primary" value="buttonbg"/>
+    <color id="lfo.stepseq.loop.step.secondary" value="black"/>
+    <color id="lfo.stepseq.loop.markers" value="modblue"/>
+    <color id="lfo.stepseq.trigger.click" value="lightgray"/>
+    <color id="lfo.stepseq.drag.line" value="lightgray"/>
+    <color id="lfo.stepseq.envelope" value="surgebluetrans"/>
+    <color id="lfo.stepseq.wave" value="modblue"/>
 
-    <color id="lfo.stepseq.button.border" value="$buttonbg"/>
-    <color id="lfo.stepseq.button.fill" value="$darkergray"/>
-    <color id="lfo.stepseq.button.hover" value="$darkgray"/>
-    <color id="lfo.stepseq.button.arrow.fill" value="$lightgray"/>
+    <color id="lfo.stepseq.button.background" value="darkergray"/>
+    <color id="lfo.stepseq.button.border" value="buttonbg"/>
+    <color id="lfo.stepseq.button.hover" value="darkgray"/>
+    <color id="lfo.stepseq.button.arrow" value="lightgray"/>
 
-    <color id="lfo.stepseq.popup.border" value="$black"/>
-    <color id="lfo.stepseq.popup.background" value="$white"/>
-    <color id="lfo.stepseq.popup.foreground" value="$black"/>
+    <color id="lfo.stepseq.popup.background" value="white"/>
+    <color id="lfo.stepseq.popup.border" value="darkestgray"/>
+    <color id="lfo.stepseq.popup.text" value="darkestgray"/>
 
-    <color id="savedialog.background" value="#242424"/>
+    <color id="overlay.background" value="#000000C0"/>
 
-    <color id="textfield.focuscolor" value="#2E2E5E"/>
-    <color id="savedialog.textfield.border" value="#0F0F0F"/>
-    <color id="savedialog.textfield.background" value="#2E2E2E"/>
-    <color id="savedialog.textfield.foreground" value="$lightgray"/>
-    <color id="savedialog.textlabel" value="$lightgray"/>
+    <color id="msegeditor.background" value="#202020"/>
+    <color id="msegeditor.curve" value="modblue"/>
+    <color id="msegeditor.panel" value="#2D2D2D"/>
+    <color id="msegeditor.panel.text" value="lightgray"/>
+    <color id="msegeditor.axis.text" value="lightgray"/>
+    <color id="msegeditor.fill.gradient.start" value="#2E86FE80"/>
+    <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
+    <color id="msegeditor.numberfield.background" value="bggray"/>
+    <color id="msegeditor.numberfield.border" value="bordergray"/>
+    <color id="msegeditor.numberfield.text" value="lightgray"/>
 
-    <color id="savedialog.checkbox.border" value="$lightgray"/>
-    <color id="savedialog.checkbox.fill" value="#FFFFFF"/>
-    <color id="savedialog.checkbox.tick" value="$darkergray"/>
+    <color id="dialog.background" value="bggray"/>
+    <color id="dialog.border" value="bordergray"/>
 
-    <color id="effect.label.hrule" value="#5E5E5E"/>
-    <color id="effect.label.foreground" value="$lightgray"/>
-    <color id="effect.label.presetname" value="$lightgray"/>
+    <color id="dialog.titlebar.background" value="bordergray"/>
+    <color id="dialog.titlebar.text" value="white"/>
+    <color id="dialog.button.background" value="#404040"/>
+    <color id="dialog.button.border" value="bordergray"/>
+    <color id="dialog.button.text" value="lightgray"/>
 
-    <color id="menu.name" value="$lightgray"/>
-    <color id="menu.name.hover" value="$white"/>
-    <color id="menu.name.deactivated" value="$gray"/>
-    <color id="menu.value" value="$lightgray"/>
-    <color id="menu.value.hover" value="$white"/>
-    <color id="menu.value.deactivated" value="$gray"/>
+    <color id="dialog.textfield.focus" value="red"/>
+    <color id="dialog.textfield.border" value="bordergray"/>
+    <color id="dialog.textfield.background" value="#2E2E2E"/>
+    <color id="dialog.textfield.text" value="lightgray"/>
+    <color id="dialog.label.text" value="lightgray"/>
 
-    <color id="patchbrowser.background" value="$lightgray"/>
-    <color id="patchbrowser.foreground" value="$lightgray"/>
+    <color id="dialog.checkbox.background" value="white"/>
+    <color id="dialog.checkbox.border" value="lightgray"/>
+    <color id="dialog.checkbox.tick" value="darkergray"/>
 
-    <color id="control.numberfield.background" value="$lightgray"/>
-    <color id="control.numberfield.foreground" value="$lightgray"/>
-    <color id="control.numberfield.env" value="$lightgray"/>
-    <color id="control.numberfield.rule" value="$lightgray"/>
+    <color id="effect.label.separator" value="#5E5E5E"/>
+    <color id="effect.label.text" value="lightgray"/>
+    <color id="effect.label.presetname" value="lightgray"/>
 
-    <color id="slider.light.label" value="$lightgray"/>
-    <color id="slider.dark.label" value="$lightgray"/>
-    <color id="slider.modulation" value="#FFBF00"/>
-    <color id="slider.negative.modulation" value="$gray"/>
+    <color id="menu.name" value="lightgray"/>
+    <color id="menu.name.hover" value="white"/>
+    <color id="menu.name.deactivated" value="gray"/>
+    <color id="menu.value" value="lightgray"/>
+    <color id="menu.value.hover" value="white"/>
+    <color id="menu.value.deactivated" value="gray"/>
+
+    <color id="filtermenu.value" value="white"/>
+    <color id="filtermenu.value.hover" value="white"/>
+
+    <color id="patchbrowser.background" value="lightgray"/>
+    <color id="patchbrowser.text" value="lightgray"/>
+
+    <color id="slider.light.label" value="lightgray"/>
+    <color id="slider.dark.label" value="lightgray"/>
+    <color id="slider.modulation.positive" value="#82BF50"/>
+    <color id="slider.modulation.negative" value="gray"/>
 
     <color id="vumeter.level" value="#0055B0"/>
-    <color id="vumeter.highlevel" value="$red"/>
-    <color id="vumeter.background" value="$darkergray"/>
-    <color id="vumeter.border" value="#0F0F0F"/>
+    <color id="vumeter.highlevel" value="red"/>
+    <color id="vumeter.background" value="darkergray"/>
+    <color id="vumeter.border" value="bordergray"/>
 
-    <color id="osc.label" value="$lightgray"/>
+    <color id="pitchbend.text" value="lightgray"/>
+    <color id="pitchbend.text.hover" value="white"/>
+    <color id="splitpoly.text" value="lightgray"/>
+    <color id="splitpoly.text.hover" value="white"/>
+    <color id="keytrack.text" value="lightgray"/>
+    <color id="keytrack.text.hover" value="white"/>
 
-    <color id="fxmenu.foreground" value="$lightgray"/>
+    <color id="fxmenu.text" value="lightgray"/>
+
+    <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
+    <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
+
+    <image id="mod-norm-h" resource="SVG/hslider_mod.svg"/>
+    <image id="mod-ts-h" resource="SVG/hslider_mod_ts.svg"/>
+    <image id="mod-hover-h" resource="SVG/hslider_mod_hover.svg"/>
+
+    <image id="mod-norm-v" resource="SVG/vslider_mod.svg"/>
+    <image id="mod-ts-v" resource="SVG/vslider_mod_ts.svg"/>
+    <image id="mod-hover-v" resource="SVG/vslider_mod_hover.svg"/>
+
+    <image id="def-norm-h" resource="SVG/hslider_def.svg"/>
+    <image id="def-ts-h" resource="SVG/hslider_def_ts.svg"/>
+    <image id="def-hover-h" resource="SVG/hslider_def_hover.svg"/>
   </globals>
 
   <component-classes>
+    <class name="mod-hslider" parent="CSurgeSlider" handle_image="mod-norm-h" handle_hover_image="mod-hover-h" handle_temposync_image="mod-ts-h"/>
+    <class name="mod-vslider" parent="CSurgeSlider" handle_image="mod-norm-v" handle_hover_image="mod-hover-v" handle_temposync_image="mod-ts-v"/>
+    <class name="def-hslider" parent="CSurgeSlider" handle_image="def-norm-h" handle_hover_image="def-hover-h" handle_temposync_image="def-ts-h"/>
   </component-classes>
 
   <controls>
-    <control tag_value="51" tag_name="tag_mp_jogfx" x="855" y="197" w="37" h="12" class="CHSwitch2" bg_id="149" subpixmaps="2" rows="1" columns="2"/>
-  </controls>
+    <control ui_identifier="global.master_volume" class="def-hslider"/>
 
+    <control ui_identifier="scene.drift" class="def-hslider"/>
+    <control ui_identifier="scene.noise_color" class="def-hslider"/>
+
+    <control ui_identifier="scene.fmdepth" class="def-hslider"/>
+
+    <control ui_identifier="scene.volume" class="def-hslider"/>
+    <control ui_identifier="scene.pan" class="def-hslider"/>
+    <control ui_identifier="scene.width" class="def-hslider"/>
+    <control ui_identifier="scene.send_fx_1" class="def-hslider"/>
+    <control ui_identifier="scene.send_fx_2" class="def-hslider"/>
+
+    <control ui_identifier="scene.portatime" class="def-hslider"/>
+    <control ui_identifier="scene.pitch" class="def-hslider"/>
+
+    <control ui_identifier="filter.cutoff_1" class="def-hslider"/>
+    <control ui_identifier="filter.resonance_1" class="def-hslider"/>
+    <control ui_identifier="filter.cutoff_2" class="def-hslider"/>
+    <control ui_identifier="filter.resonance_2" class="def-hslider"/>
+    <control ui_identifier="filter.balance" class="def-hslider"/>
+    <control ui_identifier="filter.feedback" class="def-hslider"/>
+
+    <control ui_identifier="osc.pitch" class="def-hslider"/>
+    <control ui_identifier="osc.param_1" class="def-hslider"/>
+    <control ui_identifier="osc.param_2" class="def-hslider"/>
+    <control ui_identifier="osc.param_3" class="def-hslider"/>
+    <control ui_identifier="osc.param_4" class="def-hslider"/>
+    <control ui_identifier="osc.param_5" class="def-hslider"/>
+    <control ui_identifier="osc.param_6" class="def-hslider"/>
+    <control ui_identifier="osc.param_7" class="def-hslider"/>
+
+    <control ui_identifier="lfo.rate" class="mod-hslider"/>
+    <control ui_identifier="lfo.phase" class="mod-hslider"/>
+    <control ui_identifier="lfo.amplitude" class="mod-hslider"/>
+    <control ui_identifier="lfo.deform" class="mod-hslider"/>
+    <control ui_identifier="lfo.delay" class="mod-vslider"/>
+    <control ui_identifier="lfo.attack" class="mod-vslider"/>
+    <control ui_identifier="lfo.hold" class="mod-vslider"/>
+    <control ui_identifier="lfo.decay" class="mod-vslider"/>
+    <control ui_identifier="lfo.sustain" class="mod-vslider"/>
+    <control ui_identifier="lfo.release" class="mod-vslider"/>
+
+    <control tag_value="61" tag_name="tag_mp_jogfx" x="855" y="202" w="37" h="12" class="CHSwitch2" bg_id="149" subpixmaps="2" rows="1" columns="2"/>
+  </controls>
 </surge-skin>

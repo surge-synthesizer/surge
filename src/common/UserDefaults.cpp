@@ -58,7 +58,7 @@ void readDefaultsFile(std::string fn, bool forceRead=false)
                 std::ostringstream oss;
                 oss << "This version of Surge only reads version 1 defaults. You user defaults version is "
                     << version << ". Defaults ignored";
-                Surge::UserInteractions::promptError(oss.str(), "Defaults File Version Error");
+                Surge::UserInteractions::promptError(oss.str(), "File Version Error");
                 return;
             }
 
@@ -91,7 +91,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
     ** See SurgeSytnehsizer::savePatch for instance
     ** and so we have to do the same here
     */
-    fs::create_directories(storage->userDefaultFilePath);
+    fs::create_directories(string_to_path(storage->userDefaultFilePath));
 
     
     UserDefaultValue v;

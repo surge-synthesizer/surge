@@ -8,6 +8,7 @@ the rest of the data is in little-endian types
         0002: loop sample
         0004: if clear, wave data is in float32 format
               if set, wave data is in int16 format
+        0008: if set, int16 data is in range 2^16; if not set it is in range 2^15 (legacy)
 12-end	wave data
         float32 format: 4*wave_size*wave_count bytes
         int16 format: 2*wave_size*wave_count bytes

@@ -16,8 +16,9 @@
 #pragma once
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
+#include "SkinSupport.h"
 
-class CEffectSettings : public VSTGUI::CControl
+class CEffectSettings : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CEffectSettings(const VSTGUI::CRect& size,
@@ -33,6 +34,14 @@ public:
    onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse up event occurs
 
    virtual VSTGUI::CMouseEventResult onMouseMoved( VSTGUI::CPoint &where, const VSTGUI::CButtonState &buttons ) override;
+
+   enum MouseActionMode {
+      none,
+      click,
+      drag
+   } mouseActionMode = none;
+   VSTGUI::CPoint dragStart, dragCurrent, dragCornerOff;
+   int dragSource = -1;
 
    int current;
    VSTGUI::CBitmap *bg, *labels;
