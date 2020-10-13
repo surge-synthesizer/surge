@@ -3,10 +3,10 @@
 #include <string>
 
 /*
- * For a discussino of why this is in src/common rather than src/common/gui
+ * For a discussion of why this is in src/common rather than src/common/gui
  *
  * 1. It is consumed by the SkinModel.cpp
- * 2. So see the discussion in SkinModel.h
+ * 2. See the discussion in SkinModel.h
  *
  */
 
@@ -15,10 +15,10 @@ namespace Surge
    namespace Skin
    {
       struct Color {
-         Color( std::string name, int r, int g, int b );
-         Color( std::string name, int r, int g, int b, int a );
+         Color(std::string name, int r, int g, int b);
+         Color(std::string name, int r, int g, int b, int a);
 
-         static Color colorByName( const std::string &name );
+         static Color colorByName(const std::string &name);
          std::string name;
          int r, g, b, a;
       };
@@ -71,8 +71,9 @@ namespace Colors
       {
          extern const Surge::Skin::Color Text;
       }
-      namespace SelectorPanel {
-         extern const Surge::Skin::Color LabelBorder;
+      namespace Grid
+      {
+         extern const Surge::Skin::Color Border;
       }
    }
 
@@ -130,8 +131,7 @@ namespace Colors
 
    namespace Menu
    {
-      extern const Surge::Skin::Color Name, NameHover, Value, ValueHover, ValueDeactivated, NameDeactivated;
-      extern const Surge::Skin::Color FilterValue, FilterValueHover;
+      extern const Surge::Skin::Color Name, NameHover, NameDeactivated, Value, ValueHover, ValueDeactivated, FilterValue, FilterValueHover;
    }
 
    namespace ModSource
@@ -187,16 +187,7 @@ namespace Colors
 
    namespace NumberField
    {
-      extern const Surge::Skin::Color DefaultText, DefaultHoverText;
-   }
-
-   namespace Scene {
-      extern const Surge::Skin::Color PitchBendText,
-                  PitchBendTextHover,
-                  SplitPolyText,
-                  SplitPolyTextHover,
-                  KeytrackText,
-                  KeytrackTextHover;
+      extern const Surge::Skin::Color Text, TextHover;
    }
 
    namespace Osc
@@ -221,6 +212,22 @@ namespace Colors
       extern const Surge::Skin::Color Background, Text;
    }
 
+   namespace Scene
+   {
+      namespace PitchBendRange
+      {
+         extern const Surge::Skin::Color Text, HoverText;
+      }
+      namespace SplitPoint
+      {
+         extern const Surge::Skin::Color Text, HoverText;
+      }
+      namespace KeytrackRoot
+      {
+         extern const Surge::Skin::Color Text, HoverText;
+      }
+   }
+
    namespace Slider
    {
       namespace Label
@@ -233,14 +240,8 @@ namespace Colors
       }
    }
 
-   namespace StatusButton
-   {
-      extern const Surge::Skin::Color Background, Border, Text, SelectedBackground, SelectedText;
-   }
-
    namespace VuMeter
    {
       extern const Surge::Skin::Color Level, HighLevel, Border, Background;
    }
-
 }
