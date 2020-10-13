@@ -161,6 +161,7 @@ namespace Surge
 
          static Connector connectorByID(const std::string &id);
          static Connector connectorByNonParameterConnection( NonParameterConnection n );
+         static std::vector<Connector> connectorsByComponentType( Component c );
 
          Connector & withControlStyle(unsigned int flags ) noexcept
          {
@@ -232,6 +233,8 @@ namespace Surge
             std::unordered_map<Properties,std::string> properties; // since we are base for XML where it's all strings
          };
          std::shared_ptr<Payload> payload;
+         Connector(std::shared_ptr<Payload> p) : payload(p) {}
+
       };
 
       namespace AEG {
@@ -249,7 +252,7 @@ namespace Surge
           keytrack_1, keytrack_2, resonance_1, resonance_2, subtype_1, subtype_2, type_1, type_2, waveshaper_drive, waveshaper_type;
       }
       namespace Global {
-         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, polylimit, scene_mode, splitkey;
+         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, polylimit, scene_mode, splitpoint;
       }
       namespace LFO {
          extern Surge::Skin::Connector amplitude, attack, decay, deform, delay, hold, phase, rate, release, shape, sustain, triggermode, unipolar;

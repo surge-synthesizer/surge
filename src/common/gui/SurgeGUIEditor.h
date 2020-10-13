@@ -384,7 +384,7 @@ private:
    
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;
-   VSTGUI::CControl* splitkeyControl = nullptr;
+   VSTGUI::CControl* splitpointControl = nullptr;
 
    static const int n_paramslots = 1024;
    VSTGUI::CControl* param[n_paramslots] = {};

@@ -257,8 +257,8 @@ void CNumberField::setValue(float val)
 //------------------------------------------------------------------------
 void CNumberField::draw(CDrawContext* pContext)
 {
-   auto colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::DefaultText.name );
-   auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::DefaultHoverText.name );
+   auto colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::Text.name );
+   auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::TextHover.name );
 
    auto fontColor = kRedCColor;
    if( hovered )

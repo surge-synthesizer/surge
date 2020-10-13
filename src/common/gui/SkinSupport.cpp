@@ -719,7 +719,38 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
       }
    }
 
-   for( auto c : controls )
+   /*
+    * We now need to create all the base parent objects before we go
+    * and resolve them, since that resolutino can be recursive when
+    * looping over controls, and we don't want to actually modify controls
+    * while resolving.
+    */
+   std::set<std::string> baseParents;
+   for( auto &c : Surge::Skin::Connector::connectorsByComponentType(Surge::Skin::Connector::GROUP))
+      baseParents.insert( c.payload->id );
+   do {
+      for( auto &bp : baseParents )
+      {
+         getOrCreateControlForConnector(bp);
+      }
+      baseParents.clear();
+      for( auto c : controls )
+      {
+         if( c->allprops.find("base_parent") != c->allprops.end() )
+         {
+            auto bp = c->allprops["base_parent"];
+            auto pc = controlForUIID(bp);
+
+            if (!pc)
+            {
+               baseParents.insert(bp);
+            }
+         }
+      }
+   } while( ! baseParents.empty() );
+
+   controls.shrink_to_fit();
+   for( auto &c : controls )
    {
       resolveBaseParentOffsets(c);
    }
@@ -952,24 +983,29 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector& c
 
 void Surge::UI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
 {
+   if( c->parentResolved ) return;
+   // When we enter here, all the objects will ahve been created by the loop above
    if( c->allprops.find("base_parent") != c->allprops.end() )
    {
+      // std::cout << "Control Parent " << _D(c->x) << _D(c->y) << std::endl;
       auto bp = c->allprops["base_parent"];
-      auto pc = getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID(bp));
+      auto pc = controlForUIID(bp);
       while( pc )
       {
          c->x += pc->x;
          c->y += pc->y;
          if( pc->allprops.find( "base_parent" ) != pc->allprops.end() )
          {
-            pc = getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID(pc->allprops["base_parent"]));
+            pc = controlForUIID(pc->allprops["base_parent"]);
          }
          else
          {
             pc = nullptr;
          }
       }
+      // std::cout << "Control POSTPar " << _D(c->x) << _D(c->y) << std::endl;
    }
+   c->parentResolved = true;
 }
 
 } // namespace UI
