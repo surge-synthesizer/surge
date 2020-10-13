@@ -76,7 +76,7 @@ void CEffectSettings::draw(CDrawContext* dc)
       auto r = CRect( dragCurrent - dragCornerOff, CPoint( 17, 9 ) );
       auto q = r;
       q = q.extend(1,1);
-      dc->setFillColor(skin->getColor( Colors::Effect::SelectorPanel::LabelBorder));
+      dc->setFillColor(skin->getColor( Colors::Effect::Grid::Border));
       dc->drawRect( q, kDrawFilled );
       labels->draw( dc, r, CPoint( 17, 9 * get_fxtype(type[dragSource])), 0xff );
    }

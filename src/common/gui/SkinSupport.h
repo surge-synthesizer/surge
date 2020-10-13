@@ -127,6 +127,8 @@ public:
       std::string ultimateparentclassname;
       props_t allprops;
 
+      bool parentResolved = false;
+
       std::string toString() const {
          std::ostringstream oss;
 
@@ -213,7 +215,7 @@ public:
       {
          res = std::make_shared<Surge::UI::Skin::Control>();
          res->copyFromConnector(c);
-         resolveBaseParentOffsets( res );
+         // resolveBaseParentOffsets( res );
          controls.push_back(res);
       }
       return res;
