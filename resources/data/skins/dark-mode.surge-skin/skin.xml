@@ -117,8 +117,8 @@
     <color id="slider.modulation.positive" value="#82BF50"/>
     <color id="slider.modulation.negative" value="gray"/>
 
-    <color id="scene.splitpoint.text" value="lightgray"/>
-    <color id="scene.splitpoint.text.hover" value="white"/>
+    <color id="global.split_poly.text" value="lightgray"/>
+    <color id="global.split_poly.text.hover" value="white"/>
     <color id="scene.pbrange.text" value="lightgray"/>
     <color id="scene.pbrange.text.hover" value="white"/>
     <color id="scene.keytrackroot.text" value="lightgray"/>
@@ -195,10 +195,11 @@
     <control ui_identifier="lfo.sustain" class="mod-vslider"/>
     <control ui_identifier="lfo.release" class="mod-vslider"/>
 
-    <control tag_value="61" tag_name="tag_mp_jogfx" x="855" y="202" w="37" h="12" class="CHSwitch2" bg_id="149" subpixmaps="2" rows="1" columns="2"/>
+    <control ui_identifier="FX.jog" x="855"/>
+    <control ui_identifier="FX.presetlabel" x="762"/>
 
  	<control ui_identifier="global.polylimit" x="100" y="32" w="44"/>
- 	<control ui_identifier="global.splitkey" x="100" y="11" w="44"/>
+ 	<control ui_identifier="global.splitpoint" x="100" y="11" w="44"/>
     <control ui_identifier="scene.pbrange_dn" x="162" w="26" h="12"/>
     <control ui_identifier="scene.pbrange_up" x="186" w="25" h="12"/>
     <control ui_identifier="scene.keytrack_root" x="308"/>

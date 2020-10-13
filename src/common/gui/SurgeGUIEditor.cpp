@@ -282,7 +282,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    queue_refresh = false;
    memset(param, 0, n_paramslots * sizeof(void*));
    polydisp = 0; // FIXME - when changing skins and rebuilding we need to reset these state variables too
-   splitkeyControl = 0;
+   splitpointControl = 0;
    clear_infoview_countdown = -1;
    vu[0] = 0;
    vu[1] = 0;
@@ -3725,7 +3725,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                /*
                ** Now I also need to toggle the split key state
                */
-               auto nf = dynamic_cast<CNumberField *>(splitkeyControl);
+               auto nf = dynamic_cast<CNumberField *>(splitpointControl);
                if( nf )
                {
                   int cm = nf->getControlMode();
@@ -6509,7 +6509,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
          polydisp = pbd;
          break;
       case ct_midikey_or_channel:
-         splitkeyControl = pbd;
+         splitpointControl = pbd;
          break;
       default:
          break;

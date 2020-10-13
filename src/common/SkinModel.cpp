@@ -76,10 +76,10 @@ namespace Surge
       }
 
       namespace FX { // DONE except VU but still with the terrible API
-         Connector fxJog = Connector( "FX.jog", 759+131-39, 182+20, Connector::JOG_FX ).asJogPlusMinus();
-         Connector fxPreset = Connector( "FX.presetlabel", 759, 203, 91, 12, Connector::CUSTOM, Connector::FXPRESET_LABEL );
+         Connector fxJog = Connector( "FX.jog", 854, 201, Connector::JOG_FX ).asJogPlusMinus();
+         Connector fxPreset = Connector( "FX.presetlabel", 761, 201, 91, 12, Connector::CUSTOM, Connector::FXPRESET_LABEL );
          Connector fxSelector = Connector( "FX.selector", 767, 71, 123, 51, Connector::CUSTOM, Connector::FX_SELECTOR );
-         Connector fxtype = Connector( "FX.fxtype", 765, 182, 131, 15, Connector::FXMENU );
+         Connector fxtype = Connector( "FX.fxtype", 763, 182, 131, 15, Connector::FXMENU );
 
          Connector fxParamPanel = Connector( "FX.param.panel", 759, 214, Connector::GROUP );
          Connector param_1 = Connector( "FX.param_1", 0, 0 ).inParent( "FX.param.panel" );
@@ -146,7 +146,7 @@ namespace Surge
              .withProperty(Connector::TEXT_HOVER_COLOR, "global.split_poly.text.hover");
          Connector scene_mode = Connector( "global.scene_mode", 62, 12, 36, 33, Connector::HSWITCH2 )
              .withHSwitch2Properties(IDB_SCENEMODE, 4, 4, 1 );
-         Connector splitkey = Connector( "global.splitkey", 99, 10, 43, 14, Connector::NUMBERFIELD )
+         Connector splitpoint = Connector( "global.splitpoint", 99, 11, 43, 14, Connector::NUMBERFIELD )
              .withBackground(IDB_POLYSPLIT_NUM_BG)
              .withProperty(Connector::TEXT_COLOR, "global.split_poly.text")
              .withProperty(Connector::TEXT_HOVER_COLOR, "global.split_poly.text.hover");
