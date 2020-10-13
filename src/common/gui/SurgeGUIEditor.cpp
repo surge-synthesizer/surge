@@ -379,9 +379,6 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
       modsource_is_alternate[i] = false;
 
    currentSkin = Surge::UI::SkinDB::get().defaultSkin(&(this->synth->storage));
-
-   // Prevent this from being left uninitialised
-   dropAdapter = nullptr;
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
