@@ -719,6 +719,35 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
       }
    }
 
+   /*
+    * We now need to create all the base parent objects before we go
+    * and resolve them, since that resolutino can be recursive when
+    * looping over controls, and we don't want to actually modify controls
+    * while resolving.
+    */
+   std::vector<std::string> baseParents;
+   do {
+      for( auto &bp : baseParents )
+      {
+         getOrCreateControlForConnector(bp);
+      }
+      baseParents.clear();
+      for( auto &c : controls )
+      {
+         if( c->allprops.find("base_parent") != c->allprops.end() )
+         {
+            auto bp = c->allprops["base_parent"];
+            auto pc = controlForUIID(bp);
+
+            if (!pc)
+            {
+               baseParents.push_back(bp);
+            }
+         }
+      }
+   } while( ! baseParents.empty() );
+
+   controls.shrink_to_fit();
    for( auto c : controls )
    {
       resolveBaseParentOffsets(c);
@@ -952,17 +981,18 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector& c
 
 void Surge::UI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
 {
+   // When we enter here, all the objects will ahve been created by the loop above
    if( c->allprops.find("base_parent") != c->allprops.end() )
    {
       auto bp = c->allprops["base_parent"];
-      auto pc = getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID(bp));
+      auto pc = controlForUIID(bp);
       while( pc )
       {
          c->x += pc->x;
          c->y += pc->y;
          if( pc->allprops.find( "base_parent" ) != pc->allprops.end() )
          {
-            pc = getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID(pc->allprops["base_parent"]));
+            pc = controlForUIID(pc->allprops["base_parent"]);
          }
          else
          {
