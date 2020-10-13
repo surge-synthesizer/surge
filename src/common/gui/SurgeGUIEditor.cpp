@@ -1258,6 +1258,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
          // FIXME - drag and drop onto this?
          statusTune  = layoutComponentForSkin(skinCtrl, tag_status_tune);
          statusTune->setValue( synth->storage.isStandardTuning ? 1 : 0 );
+
+         auto csc = dynamic_cast<CSwitchControl *>(statusTune);
+         if( csc && synth->storage.isStandardTuning )
+         {
+            csc->unValueClickable = ( tuningCacheForToggle.size() == 0 && mappingCacheForToggle.size() == 0 );
+         }
          break;
       }
       case Surge::Skin::Connector::NonParameterConnection::STATUS_ZOOM: {
@@ -4503,6 +4509,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                     {
                         this->synth->storage.init_tables();
                         tuningCacheForToggle = "";
+                        this->synth->refresh_editor = true;
                     }
         );
     st->setEnabled(!this->synth->storage.isStandardTuning || tuningCacheForToggle.size() > 0);
@@ -4513,6 +4520,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                     {
                         this->synth->storage.remapToStandardKeyboard();
                         mappingCacheForToggle = "";
+                        this->synth->refresh_editor = true;
                     }
         );
     kst->setEnabled(!this->synth->storage.isStandardMapping || mappingCacheForToggle.size() > 0);
@@ -4545,6 +4553,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                                   Surge::UserInteractions::promptError( "This .scl file is not valid!", "File Format Error" );
                                   return;
                                }
+                               this->synth->refresh_editor = true;
                             }
                             catch( Tunings::TuningError &e )
                             {
@@ -4583,6 +4592,8 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
                                   Surge::UserInteractions::promptError( "This .kbm file is not valid!", "File Format Error" );
                                   return;
                                }
+
+                               this->synth->refresh_editor = true;
                             }
                             catch( Tunings::TuningError &e )
                             {
@@ -6238,7 +6249,10 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
    {
       filterblock_tag = tag;
    }
-
+   if( p && p->ctrltype == ct_fxbypass )
+   {
+      fxbypass_tag = tag;
+   }
    // Basically put this in a function
    if (skinCtrl->ultimateparentclassname == "CSurgeSlider")
    {

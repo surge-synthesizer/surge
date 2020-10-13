@@ -53,6 +53,9 @@ public:
    bool doingHover = false;
    CScalableBitmap *hoverBmp = nullptr;
 
+   // This is different from mouseEnabled since we still allow RMB
+   bool unValueClickable = false;
+
 private:
    bool down;
    float heightOfSingleImage;

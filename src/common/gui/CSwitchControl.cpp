@@ -72,6 +72,9 @@ CMouseEventResult CSwitchControl::onMouseDown(CPoint& where, const CButtonState&
    if (!(buttons & kLButton))
       return kMouseEventNotHandled;
 
+   if( unValueClickable )
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+
    beginEdit();
 
    if (is_itype)
