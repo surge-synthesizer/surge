@@ -61,7 +61,8 @@ namespace Colors
       }
       namespace Menu
       {
-         const Surge::Skin::Color Text("effect.menu.text", 0, 0, 0);
+         const Surge::Skin::Color Text("effect.menu.text", 0, 0, 0),
+                                  TextHover( "effect.menu.hover.text", 0, 0, 0 );
       }
       namespace Grid
       {

@@ -4207,6 +4207,7 @@ void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint& where)
    frame->removeView(m, true);
 }
 
+
 void SurgeGUIEditor::tuningFileDropped(std::string fn)
 {
    try

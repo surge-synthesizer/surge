@@ -72,7 +72,7 @@ namespace Colors
       }
       namespace Menu
       {
-         extern const Surge::Skin::Color Text;
+         extern const Surge::Skin::Color Text, TextHover;
       }
       namespace Grid
       {
