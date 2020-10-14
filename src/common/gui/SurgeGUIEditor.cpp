@@ -1257,7 +1257,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       case Surge::Skin::Connector::NonParameterConnection::STATUS_TUNE: {
          // FIXME - drag and drop onto this?
          statusTune  = layoutComponentForSkin(skinCtrl, tag_status_tune);
-         statusTune->setValue( synth->storage.isStandardTuning ? 1 : 0 );
+         statusTune->setValue( synth->storage.isStandardTuning ? 0 : 1 );
 
          auto csc = dynamic_cast<CSwitchControl *>(statusTune);
          if( csc && synth->storage.isStandardTuning )
@@ -4191,7 +4191,7 @@ void SurgeGUIEditor::toggleTuning()
    }
 
    if( statusTune )
-      statusTune->setValue( this->synth->storage.isStandardTuning ? 1 : 0 );
+      statusTune->setValue( this->synth->storage.isStandardTuning ? 0 : 1 );
 
    this->synth->refresh_editor = true;
 }
