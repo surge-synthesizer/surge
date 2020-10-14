@@ -1181,6 +1181,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          {
             CRect vr(fxRect); // (vurect);
             vr.top += 1;
+            vr.right += 5;
             vr.offset(5, -12);
             vr.offset(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
             CEffectLabel* lb = new CEffectLabel(vr);
@@ -6271,7 +6272,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
           p->ctrltype == ct_flangerwave ||
           p->ctrltype == ct_distortion_waveshape )
       {
-         loc.offset( 0, 2 );
+         loc.offset( 2, 2 );
          auto hs = new CMenuAsSlider(loc,
                                      this,
                                      p->id + start_paramtags,

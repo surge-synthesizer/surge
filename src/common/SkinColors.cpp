@@ -62,7 +62,7 @@ namespace Colors
       namespace Menu
       {
          const Surge::Skin::Color Text("effect.menu.text", 0, 0, 0),
-                                  TextHover( "effect.menu.hover.text", 0, 0, 0 );
+                                  TextHover("effect.menu.text.hover", 0, 0, 0);
       }
       namespace Grid
       {
@@ -79,9 +79,9 @@ namespace Colors
       namespace Modulation
       {
          const Surge::Skin::Color Negative("infowindow.text.modulation.negative", 0, 0, 0),
-                                    Positive("infowindow.text.modulation.positive", 0, 0, 0),
-                                    ValueNegative("infowindow.text.modulation.value.negative", 0, 0, 0),
-                                    ValuePositive("infowindow.text.modulation.value.positive", 0, 0, 0);
+                                  Positive("infowindow.text.modulation.positive", 0, 0, 0),
+                                  ValueNegative("infowindow.text.modulation.value.negative", 0, 0, 0),
+                                  ValuePositive("infowindow.text.modulation.value.positive", 0, 0, 0);
       }
    }
 

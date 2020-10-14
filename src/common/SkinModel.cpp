@@ -79,7 +79,7 @@ namespace Surge
          Connector fxJog = Connector( "FX.jog", 854, 201, Connector::JOG_FX ).asJogPlusMinus();
          Connector fxPreset = Connector( "FX.presetlabel", 761, 201, 91, 12, Connector::CUSTOM, Connector::FXPRESET_LABEL );
          Connector fxSelector = Connector( "FX.selector", 767, 71, 123, 51, Connector::CUSTOM, Connector::FX_SELECTOR );
-         Connector fxtype = Connector( "FX.fxtype", 759, 182, 131, 14, Connector::FXMENU );
+         Connector fxtype = Connector( "FX.fxtype", 761, 181, 133, 18, Connector::FXMENU );
 
          Connector fxParamPanel = Connector( "FX.param.panel", 759, 214, Connector::GROUP );
          Connector param_1 = Connector( "FX.param_1", 0, 0 ).inParent( "FX.param.panel" );
@@ -221,7 +221,7 @@ namespace Surge
          Connector retrigger = Connector( "osc.retrigger", 56, 185, 43, 7, Connector::SWITCH )
                .withBackground( IDB_SWITCH_RETRIGGER);
 
-         Connector osctype = Connector( "osc.osctype", 105, 194, 41, 18, Connector::OSCMENU );
+         Connector osctype = Connector( "osc.osctype", 101, 193, 45, 18, Connector::OSCMENU );
 
          Connector oscParamPanel = Connector( "osc.param.panel", 6, 213, Connector::GROUP );
          Connector pitch = Connector( "osc.pitch", 0, 0 ).asHorizontal().inParent("osc.param.panel");

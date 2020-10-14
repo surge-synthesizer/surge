@@ -19,10 +19,6 @@
       <stop offset="1" stop-color="#1C1C1C" />
     </linearGradient>
     <linearGradient x1="0.5" y1="0" x2="0.5" y2="1" id="gradient_5">
-      <stop offset="0" stop-color="#434343" />
-      <stop offset="1" stop-color="#303030" />
-    </linearGradient>
-    <linearGradient x1="0.5" y1="0" x2="0.5" y2="1" id="gradient_6">
       <stop offset="0" stop-color="#151515" />
       <stop offset="1" stop-color="#101010" />
     </linearGradient>
@@ -122,9 +118,6 @@
       <path d="M0 0L148 0L148 1L0 1L0 0L0 0L0 0L0 0Z" id="Rectangle#40" fill="#000000" fill-rule="evenodd" stroke="none" />
       <path d="M0 0L148 0L148 1L0 1L0 0L0 0L0 0L0 0Z" transform="translate(0 1)" id="Rectangle-Copy#4" fill="#FFFFFF" fill-opacity="0.101960786" fill-rule="evenodd" stroke="none" />
     </g>
-    <g id="button/smallButton#8" transform="translate(763.5 182.5)">
-      <path d="M0 4L0 2C0 1.44772 0.195262 0.976311 0.585786 0.585786C0.976311 0.195262 1.44772 0 2 0L126 0C126.552 0 127.024 0.195262 127.414 0.585786C127.805 0.976311 128 1.44772 128 2L128 12C128 12.5523 127.805 13.0237 127.414 13.4142C127.024 13.8047 126.552 14 126 14L2 14C1.44772 14 0.976311 13.8047 0.585786 13.4142C0.195262 13.0237 0 12.5523 0 12L0 4L0 4L0 4L0 4Z" id="Rectangle#45" fill="url(#gradient_5)" fill-rule="evenodd" stroke="#0F0F0F" stroke-width="1" />
-    </g>
     <path d="M4 0L8 4L0 4L4 0L4 0L4 0L4 0Z" transform="matrix(-4.371139E-08 -1 1 -4.371139E-08 449.99997 206)" id="Triangle" fill="#E0E0E0" fill-rule="evenodd" stroke="none" />
     <path d="M4 0L8 4L0 4L4 0L4 0L4 0L4 0Z" transform="matrix(4.371139E-08 -1 -1 -4.371139E-08 598 206)" id="Triangle#1" fill="#E0E0E0" fill-rule="evenodd" stroke="none" />
     <path d="M3 0L6 4L0 4L3 0L3 0L3 0L3 0Z" transform="matrix(-4.371139E-08 1 -1 -4.371139E-08 574.99994 378.50674)" id="Triangle#2" fill="#B4B4B4" fill-rule="evenodd" stroke="none" />
@@ -132,7 +125,7 @@
     <path d="M3 0L6 4L0 4L3 0L3 0L3 0L3 0Z" transform="matrix(-4.371139E-08 1 -1 -4.371139E-08 333.99997 378.5067)" id="Triangle#4" fill="#B4B4B4" fill-rule="evenodd" stroke="none" />
     <path d="M3 0L6 4L0 4L3 0L3 0L3 0L3 0Z" transform="matrix(-4.371139E-08 1 -1 -4.371139E-08 314.99997 378.5067)" id="Triangle#5" fill="#B4B4B4" fill-rule="evenodd" stroke="none" />
     <path d="M0 2L0 1C0 0.723858 0.0976311 0.488155 0.292893 0.292893C0.488155 0.0976311 0.723858 0 1 0L29 0C29.2761 0 29.5118 0.0976311 29.7071 0.292893C29.9024 0.488155 30 0.723858 30 1L30 48C30 48.2761 29.9024 48.5118 29.7071 48.7071C29.5118 48.9024 29.2761 49 29 49L1 49C0.723858 49 0.488155 48.9024 0.292893 48.7071C0.0976311 48.5118 0 48.2761 0 48L0 2L0 2L0 2L0 2Z" transform="translate(386.99997 312.5)" id="Rectangle#48" fill="#FFFFFF" fill-opacity="0.101960786" fill-rule="evenodd" stroke="none" />
-    <path d="M0 2L0 1C0 0.723858 0.0976311 0.488155 0.292893 0.292893C0.488155 0.0976311 0.723858 0 1 0L29 0C29.2761 0 29.5118 0.0976311 29.7071 0.292893C29.9024 0.488155 30 0.723858 30 1L30 48C30 48.2761 29.9024 48.5118 29.7071 48.7071C29.5118 48.9024 29.2761 49 29 49L1 49C0.723858 49 0.488155 48.9024 0.292893 48.7071C0.0976311 48.5118 0 48.2761 0 48L0 2L0 2L0 2L0 2Z" transform="translate(386.99997 312)" id="Rectangle-Copy-2" fill="url(#gradient_6)" fill-rule="evenodd" stroke="none" />
+    <path d="M0 2L0 1C0 0.723858 0.0976311 0.488155 0.292893 0.292893C0.488155 0.0976311 0.723858 0 1 0L29 0C29.2761 0 29.5118 0.0976311 29.7071 0.292893C29.9024 0.488155 30 0.723858 30 1L30 48C30 48.2761 29.9024 48.5118 29.7071 48.7071C29.5118 48.9024 29.2761 49 29 49L1 49C0.723858 49 0.488155 48.9024 0.292893 48.7071C0.0976311 48.5118 0 48.2761 0 48L0 2L0 2L0 2L0 2Z" transform="translate(386.99997 312)" id="Rectangle-Copy-2" fill="url(#gradient_5)" fill-rule="evenodd" stroke="none" />
     <path d="M0 0L10 0L10 10L0 10L0 0L0 0L0 0L0 0Z" transform="translate(423.49997 376.5)" id="Rectangle#49" fill="none" fill-rule="evenodd" stroke="#FF9000" stroke-width="1" />
     <path d="M0 0L1 0L1 11L0 11L0 0L0 0L0 0L0 0Z" transform="translate(427.99997 376)" id="Rectangle#50" fill="#FF9415" fill-rule="evenodd" stroke="none" />
     <path d="M0 0L11 0L11 1L0 1L0 0L0 0L0 0L0 0Z" transform="translate(422.99997 381)" id="Rectangle#51" fill="#FF9000" fill-rule="evenodd" stroke="none" />
