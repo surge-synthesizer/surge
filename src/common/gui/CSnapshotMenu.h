@@ -37,13 +37,24 @@ public:
 
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorHand );
+      isHovered = true;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorDefault );
+      isHovered = false;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
 
+   bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override
+   {
+      // TODO - mousehweel support when these things can jog and maintain state
+      return true;
+   }
+
+   bool isHovered = false;
    int selectedIdx = -1;
    std::string selectedName = "";
 protected:
@@ -71,7 +82,8 @@ public:
 
 protected:
    OscillatorStorage* osc = nullptr;
-   VSTGUI::CBitmap* bmp = nullptr;
+   VSTGUI::CBitmap* bmp = nullptr, *hoverBmp = nullptr;
+   bool attemptedHoverLoad = false;
 
    CLASS_METHODS(COscMenu, VSTGUI::CControl)
 };
@@ -128,6 +140,9 @@ public:
 protected:
    void rescanUserPresets();
    void loadUserPreset( const UserPreset &p );
+
+   bool triedToLoadBmp = false;
+   CScalableBitmap *pBackground, *pBackgroundHover;
    
    CLASS_METHODS(CFxMenu, VSTGUI::CControl)
 };
