@@ -88,7 +88,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                    0, cg_FX, fx, false, Surge::ParamConfig::kHorizontal));
       for (int p = 0; p < n_fx_params; p++)
       {
-         auto conn = Surge::Skin::Connector::connectorByID("FX.param_" + std::to_string(p+1) );
+         auto conn = Surge::Skin::Connector::connectorByID("fx.param_" + std::to_string(p+1) );
 
          char label[16];
          sprintf(label, "p%i", p);
@@ -407,9 +407,9 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       // scene[sc].filterunit[0].type.val.i = 1;
       for (int e = 0; e < 2; e++)
       {
-         std::string envs = "AEG.";
+         std::string envs = "aeg.";
          if( e == 1 )
-            envs = "FEG.";
+            envs = "feg.";
 
          /*
           * Since the connectors are in a namespace and here we have a loop over two
