@@ -184,7 +184,7 @@ void DistortionEffect::init_ctrltypes()
    fxdata->p[4].set_type(ct_decibel_narrow_extendable);
    fxdata->p[5].set_name("Feedback");
    fxdata->p[5].set_type(ct_percent_bidirectional);
-   fxdata->p[11].set_name("Waveshaper");
+   fxdata->p[11].set_name("Model");
    fxdata->p[11].set_type(ct_distortion_waveshape);
 
    fxdata->p[6].set_name("Gain");

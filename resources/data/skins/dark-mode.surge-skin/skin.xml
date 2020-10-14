@@ -98,7 +98,7 @@
     <color id="effect.label.presetname" value="lightgray"/>
 
     <color id="effect.menu.text" value="lightgray"/>
-    <color id="effect.menu.hover.text" value="white"/>
+    <color id="effect.menu.text.hover" value="white"/>
 
     <color id="menu.name" value="lightgray"/>
     <color id="menu.name.hover" value="white"/>

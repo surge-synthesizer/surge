@@ -126,7 +126,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       if( ! filtermode )
       {
          auto l = d;
-         l.left += 5;
+         l.left += 6;
          l.right = d.left + splitPoint;
          auto tl = label;
          trunc = false;

@@ -343,9 +343,8 @@ void CFxMenu::draw(CDrawContext* dc)
    dc->setFont(displayFont);
    CRect txtbox(getViewSize());
    txtbox.inset( 2, 2 );
-   txtbox.top += 2;
-   txtbox.left += 3;
-   txtbox.right -= 10;
+   txtbox.left += 4;
+   txtbox.right -= 12;
    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
    char fxname[NAMECHARS];
    sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);

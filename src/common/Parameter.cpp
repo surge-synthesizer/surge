@@ -2253,7 +2253,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_sinefmlegacy:
          if (i == 0)
-             sprintf( txt, "Legacy (before v1.6.2)");
+             sprintf( txt, "Legacy (< v1.6.2)");
          else
              sprintf( txt, "Consistent with FM2/3" );
          break;
@@ -2307,16 +2307,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mode )
          {
          case 0:
-            types = "Dry Signal + Combs";
+            types = "Dry + Combs";
             break;
          case 1:
             types = "Combs Only";
             break;
          case 2:
-            types = "Dry Signal + Arpeggiated Combs";
+            types = "Dry + Arp Combs";
             break;
          case 3:
-            types = "Arpeggiated Combs Only";
+            types = "Arp Combs Only";
             break;
          }
          sprintf( txt, "%s", types.c_str() );
@@ -2347,7 +2347,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
               switch(i)
               {
               case 0:
-                 type = "Mono Sum";
+                 type = "Monosum";
                  break;
               case 1:
                  type = "Left Only";
