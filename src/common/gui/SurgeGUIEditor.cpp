@@ -1013,10 +1013,10 @@ CRect SurgeGUIEditor::positionForModulationGrid(modsources entry)
    if ((!isMacro) && ((gridX == 0) || (gridX == 9)))
       width += 2;
 
-   auto skinCtrl = currentSkin->controlForUIID("controls.modulationpanel");
+   auto skinCtrl = currentSkin->controlForUIID("controls.modulation.panel");
    if( ! skinCtrl )
    {
-      skinCtrl = currentSkin->getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID("controls.modulationpanel"));
+      skinCtrl = currentSkin->getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID("controls.modulation.panel"));
    }
    CRect r(CPoint(skinCtrl->x, skinCtrl->y), CPoint( width-1, 14) );
 
@@ -1157,7 +1157,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    // fx vu-meters & labels. This is all a bit hacky still
    if (synth->fx[current_fx])
    {
-      auto fxpp = currentSkin->getOrCreateControlForConnector("FX.param.panel");
+      auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
       CRect fxRect = CRect( CPoint( fxpp->x, fxpp->y ), CPoint( 123, 13 ) );
       for (int i = 0; i < 8; i++)
       {
