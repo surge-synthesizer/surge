@@ -32,9 +32,16 @@ void rebuildCache( MSEGStorage *ms )
       ms->segmentEnd[i] = totald;
 
       int nextseg = i+1;
+
       if( nextseg >= ms->n_activeSegments )
-         nextseg = 0;
-      ms->segments[i].nv1 = ms->segments[nextseg].v0;
+      {
+         if( ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+            ms->segments[i].nv1 = ms->segments[0].v0;
+      }
+      else
+      {
+         ms->segments[i].nv1 = ms->segments[nextseg].v0;
+      }
    }
 
    ms->totalDuration = totald;
@@ -51,6 +58,11 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
 
    // This still has some problems but lets try this for now
    double up = (double)ip + fup;
+
+   // If a oneshot is done, it is done
+   if( up >= ms->totalDuration && ms->loopMode == MSEGStorage::LoopMode::ONESHOT )
+      return ms->segments[ms->n_activeSegments - 1].nv1;
+
    if( up >= ms->totalDuration ) {
       double nup = up / ms->totalDuration;
       up -= (int)nup * ms->totalDuration;
@@ -81,6 +93,10 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       segInit = true;
       lastSegmentEvaluated = idx;
    }
+
+   if( ! ms->segments[idx].useDeform )
+      df = 0;
+
    
    float pd = up - ms->segmentStart[idx];
 
@@ -382,6 +398,7 @@ void insertAtIndex( MSEGStorage *ms, int insertIndex ) {
    ms->segments[insertIndex].type = MSEGStorage::segment::LINEAR;
    ms->segments[insertIndex].v0 = 0;
    ms->segments[insertIndex].duration = 0.25;
+   ms->segments[insertIndex].useDeform = true;
 
    int nxt = insertIndex + 1;
    if( nxt >= ms->n_activeSegments )
@@ -431,17 +448,23 @@ void extendTo( MSEGStorage *ms, float t, float nv ) {
 
    ms->segments[sn].cpduration = dt/2;
    ms->segments[sn].cpv = ( ms->segments[sn].v0 + nv ) * 0.5;
+   ms->segments[sn].nv1 = nv;
 
-   // The first point has to match where I just clicked. Adjust it and its control point
-   float cpdratio = ms->segments[0].cpduration / ms->segments[0].duration;
-   float cpvratio = 0.5;
-   if( ms->segments[0].nv1 != ms->segments[0].v0 )
-      cpvratio = ( ms->segments[0].cpv - ms->segments[0].v0 ) / ( ms->segments[0].nv1 - ms->segments[0].v0 );
+   if( ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+   {
+      // The first point has to match where I just clicked. Adjust it and its control point
+      float cpdratio = ms->segments[0].cpduration / ms->segments[0].duration;
+      float cpvratio = 0.5;
+      if (ms->segments[0].nv1 != ms->segments[0].v0)
+         cpvratio = (ms->segments[0].cpv - ms->segments[0].v0) /
+                    (ms->segments[0].nv1 - ms->segments[0].v0);
 
-   ms->segments[0].v0 = nv;
-   
-   ms->segments[0].cpduration = cpdratio * ms->segments[0].duration;
-   ms->segments[0].cpv = (ms->segments[0].nv1 - ms->segments[0].v0 ) * cpvratio + ms->segments[0].v0;
+      ms->segments[0].v0 = nv;
+
+      ms->segments[0].cpduration = cpdratio * ms->segments[0].duration;
+      ms->segments[0].cpv =
+          (ms->segments[0].nv1 - ms->segments[0].v0) * cpvratio + ms->segments[0].v0;
+   }
 }
 
 void splitSegment( MSEGStorage *ms, float t, float nv ) {
@@ -470,6 +493,7 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
       ms->segments[idx+1].type = ms->segments[idx].type;
       ms->segments[idx+1].nv1 = pv1;
       ms->segments[idx+1].duration = q.duration * ( 1 - dt );
+      ms->segments[idx+1].useDeform = ms->segments[idx].useDeform;
       
       ms->segments[idx].cpduration = cpdratio * ms->segments[idx].duration;
       ms->segments[idx].cpv = (ms->segments[idx].nv1 - ms->segments[idx].v0 ) * cpvratio + ms->segments[idx].v0;

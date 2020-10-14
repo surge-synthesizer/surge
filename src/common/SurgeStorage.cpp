@@ -534,6 +534,7 @@ bailOnPortable:
          ms->segments[3].duration = 0.5;
          ms->segments[3].type = MSEGStorage::segment::SCURVE;
          ms->segments[3].v0 = -0.7;
+         ms->segments[3].nv1 = 0; // Have to set this now due to endpoint mode
          ms->segments[3].cpduration = 0.4;
          ms->segments[3].cpv = -0.3;
          Surge::MSEG::rebuildCache( ms );

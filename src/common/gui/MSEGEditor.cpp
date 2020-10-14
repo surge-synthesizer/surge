@@ -336,9 +336,29 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          // Specially we have to add an endpoint editor
          if( i == ms->n_activeSegments - 1 )
          {
-            rectForPoint( tpx(ms->totalDuration), ms->segments[0].v0, hotzone::SEGMENT_ENDPOINT,
+            rectForPoint( tpx(ms->totalDuration), ms->segments[ms->n_activeSegments-1].nv1, /* which is [0].v0 in lock mode only */
+                         hotzone::SEGMENT_ENDPOINT,
                           [this,vscale,tscale](float dx, float dy, const CPoint &where) {
-                             adjustValue( 0, false, -2 * dy / vscale, ms->vSnap );
+                             if( ms->endpointMode == MSEGStorage::EndpointMode::FREE )
+                             {
+                                float d = -2 * dy / vscale;
+                                float snapResolution = ms->vSnap;
+                                int idx = ms->n_activeSegments - 1;
+                                offsetValue( ms->segments[idx].dragv1, d );
+                                if( snapResolution <= 0 )
+                                   ms->segments[idx].nv1 = ms->segments[idx].dragv1;
+                                else
+                                {
+                                   float q = ms->segments[idx].dragv1+ 1;
+                                   float pos = round( q / snapResolution ) * snapResolution;
+                                   float adj = pos - 1.0;
+                                   ms->segments[idx].nv1= limit_range(adj, -1.f, 1.f );
+                                }
+                             }
+                             else
+                             {
+                                adjustValue(0, false, -2 * dy / vscale, ms->vSnap);
+                             }
                              // We need to deal with the cpduration also
                              auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
 
@@ -596,6 +616,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       for( auto &s : ms->segments )
       {
          s.dragv0 = s.v0;
+         s.dragv1 = s.nv1;
          s.dragcpv = s.cpv;
          s.dragDuration = s.duration;
       }
@@ -726,7 +747,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       CPoint w = iw;
       localToFrame(w);
 
-      COptionMenu* contextMenu = new COptionMenu(CRect( w, CPoint(0,0)), 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+      COptionMenu* contextMenu = new COptionMenu(CRect( w, CPoint(0,0)), 0, 0, 0, 0,
+                                                 VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
 
       auto tf = pxToTime( );
       auto t = tf( iw.x );
@@ -768,7 +790,34 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
       typeTo( "Steps", MSEGStorage::segment::Type::STEPS );
       typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
-            
+
+      contextMenu->addSeparator();
+      auto tts = Surge::MSEG::timeToSegment(ms, t );
+      if( tts >= 0 )
+      {
+         auto def = ms->segments[tts].useDeform;
+         auto cm = addCb( contextMenu, "Respond to Deform", [this,tts]() {
+            this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
+            modelChanged();
+         });
+         cm->setChecked(def);
+      }
+
+      if( tts == 0 || tts == ms->n_activeSegments - 1 )
+      {
+         auto cm = addCb( contextMenu, "End Locks with Start",
+                         [this]() {
+                            if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+                               this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+                            else
+                            {
+                               this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
+                               this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
+                               this->modelChanged();
+                            }
+                         });
+         cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
+      }
       
       getFrame()->addView( contextMenu );
       contextMenu->setDirty();
