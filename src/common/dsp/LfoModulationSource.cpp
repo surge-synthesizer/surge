@@ -301,6 +301,10 @@ void LfoModulationSource::release()
       env_releasestart = env_val;
       env_phase = 0;
    }
+   else if( lfo->shape.val.i == ls_mseg )
+   {
+      env_state = lenv_msegrelease;
+   }
 }
 
 void LfoModulationSource::process_block()
@@ -356,7 +360,7 @@ void LfoModulationSource::process_block()
    //phase = storage->songpos?
    }*/
 
-   if (env_state != lenv_stuck)
+   if (env_state != lenv_stuck && env_state != lenv_msegrelease )
    {
       float envrate = 0;
 
@@ -645,7 +649,8 @@ void LfoModulationSource::process_block()
       }
       break;
    case ls_mseg:
-      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms, msegLastEvaluated, msegEvaluationState );
+      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms,
+                                  msegLastEvaluated, msegEvaluationState, env_state == lenv_release || env_state == lenv_msegrelease );
       break;
    };
 
