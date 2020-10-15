@@ -74,6 +74,7 @@
 #define IDB_POLYSPLIT_NUM_BG 174
 #define IDB_PITCHBEND_NUM_BG 175
 #define IDB_KEYTRACKROOT_BG 176
+#define IDB_MSEG_LOOP_MODES 305
 // == /SVG == Do not remove this comment
 
 
