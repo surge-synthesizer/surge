@@ -275,7 +275,8 @@ public:
    int getWindowSizeY() { return wsy; }
 
    void setEditorOverlay( VSTGUI::CView *c,
-                          std::string editorTitle,
+                          std::string editorTitle, // A window display title - whatever you want
+                          std::string editorTag, // A tag by editor class. Please unique, no spaces.
                           const VSTGUI::CPoint &topleft = VSTGUI::CPoint( 0, 0 ),
                           bool modalOverlay = true,
                           std::function<void()> onClose = [](){} );
@@ -364,6 +365,7 @@ private:
 
    VSTGUI::CViewContainer *editorOverlay = nullptr;
    std::function<void()> editorOverlayOnClose = [](){};
+   std::string editorOverlayTag;
 
    VSTGUI::CViewContainer *minieditOverlay = nullptr;
    VSTGUI::CTextEdit *minieditTypein = nullptr;

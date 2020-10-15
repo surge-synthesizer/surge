@@ -3235,13 +3235,14 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    if( tag == tag_mseg_edit )
    {
       // FIXME - press this button twice and you end up hosed
-      auto lfo_id = modsource_editor[current_scene];
+      auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
       auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
       auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
       auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
       auto vs = mse->getViewSize().getWidth();
       float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
-      setEditorOverlay( mse, "MSEG Editor", CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
+      setEditorOverlay( mse, "MSEG Editor", "msegEditor",
+                       CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
       return;
    }
 
@@ -5945,7 +5946,8 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 
 }
 
-void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
+void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::string editorTag,
+                                      const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
 {
    if( editorOverlay != nullptr )
    {
@@ -6062,6 +6064,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    // save the onClose function
    editorOverlayOnClose = onClose;
+   editorOverlayTag = editorTag;
 }
 
 std::string SurgeGUIEditor::getDisplayForTag( long tag )
