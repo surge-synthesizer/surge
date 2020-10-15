@@ -33,6 +33,7 @@
 ** 302 - IDB_MSEG_MOVEMENT 120x60 3 rows (ripple, bound, draw) x 3 columns (the states)
 ** 303 - IDB_MSEG_VERTICAL_SNAP 80x40 2 rows (off, on)
 ** 304 - IDB_MSEG_HORIZONTAL_SNAP 80x40 2 rows (off, on)
+** 305 - IDB_MSEG_LOOP_MODES 120x60 3 rows (off, on, gate) x 3 columns (the states)
 */
 
 
@@ -58,6 +59,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
       tag_vertical_value,
       tag_horizontal_snap,
       tag_horizontal_value,
+      tag_loop_mode,
    } tags;
    
    void rebuild();
@@ -788,8 +790,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
       typeTo( "S-Curve", MSEGStorage::segment::Type::SCURVE );
       typeTo( "Sine", MSEGStorage::segment::Type::SINE );
-      typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
       typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
+      typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
       typeTo( "Steps", MSEGStorage::segment::Type::STEPS );
       typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
 
@@ -852,6 +854,12 @@ void MSEGControlRegion::valueChanged( CControl *p )
    auto val = p->getValue();
    switch( tag )
    {
+   case tag_loop_mode: {
+      int m = floor((val * 3) + 1);
+      ms->loopMode = (MSEGStorage::LoopMode)m;
+      canvas->modelChanged();
+   }
+   break;
    case tag_segment_movement_mode: {
       int m = floor(val * 2 + 0.5);
       canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
@@ -899,8 +907,8 @@ void MSEGControlRegion::rebuild()
 
    // loop mode
    {
-      int segWidth = 100;
-      int marginPos = xpos + margin;
+      int segWidth = 110;
+      int btnWidth = 94;
       int ypos = 1;
 
       auto lpl = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Loop Mode");
@@ -910,13 +918,21 @@ void MSEGControlRegion::rebuild()
       lpl->setHoriAlign(kLeftText);
       addView(lpl);
 
+      ypos += margin + labelHeight;
+
+      // button
+      auto btnrect = CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight));
+      auto lw = new CHSwitch2(btnrect, this, tag_loop_mode, 3, controlHeight, 1, 3,
+                        associatedBitmapStore->getBitmap(IDB_MSEG_LOOP_MODES), CPoint(0, 0), true);
+      addView(lw);
+      lw->setValue((ms->loopMode - 1) / 2.f);
+
       xpos += segWidth;
    }
    
    // movement modes
    {
       int segWidth = 110;
-
       int marginPos = xpos + margin;
       int btnWidth = 94;
       int ypos = 1;

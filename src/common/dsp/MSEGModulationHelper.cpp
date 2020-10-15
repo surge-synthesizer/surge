@@ -181,7 +181,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    case MSEGStorage::segment::QUAD_BEZIER:
    {
       /*
-      ** First lets correct the control point so that the
+      ** First let's correct the control point so that the
       ** user specified one is through the curve. This means
       ** that the line from the center of the segment connecting
       ** the endpoints to the control point pushes out 2x
@@ -190,7 +190,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       float cpv = r.cpv;
       float cpt = r.cpduration;
 
-      // If we are positioned exactly at the midpoint our calculateion below to find time will fail
+      // If we are positioned exactly at the midpoint our calculation below to find time will fail
       // so walk off a smidge
       if( fabs( cpt - r.duration * 0.5 ) < 1e-5 )
          cpt += 1e-4;
@@ -337,8 +337,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       }
       if( r.type == MSEGStorage::segment::TRIANGLE )
       {
-         f += 1.25;
-         //steps = steps / 2;
+         steps += 1;
          kernel = 2 * fabs(2 * ((f * steps) - floor((f * steps) + 0.5))) - 1;
       }
       if( r.type == MSEGStorage::segment::SQUARE )
