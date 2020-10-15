@@ -65,6 +65,8 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    res["PITCHBEND_NUM_BG"] = 175;
    res["KEYTRACKROOT_BG"] = 176;
    res["MSEG_LOOP_MODES"] = 305;
+   res["LFO_MSEG_EDIT"] = 177;
+   res["LFO_PRESETS"] = 178;
    return res;
 }
 
@@ -134,6 +136,8 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert( 175 );
    allowed.insert( 176 );
    allowed.insert( 305 );
+   allowed.insert( 177 );
+   allowed.insert( 178 );
 
    return allowed;
 }

@@ -75,6 +75,8 @@
 #define IDB_PITCHBEND_NUM_BG 175
 #define IDB_KEYTRACKROOT_BG 176
 #define IDB_MSEG_LOOP_MODES 305
+#define IDB_LFO_MSEG_EDIT 177
+#define IDB_LFO_PRESETS 178
 // == /SVG == Do not remove this comment
 
 
