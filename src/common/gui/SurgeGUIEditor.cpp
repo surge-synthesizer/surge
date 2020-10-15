@@ -1281,8 +1281,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       }
       case Surge::Skin::Connector::NonParameterConnection::MSEG_EDIT: {
          auto q = modsource_editor[current_scene];
-         if( ( q >= ms_lfo1 && q <= ms_lfo6  ) ||
-             ( q >= ms_slfo1 && q <= ms_slfo6 ) )
+         if( ( q >= ms_lfo1 && q <= ms_lfo6  ) || ( q >= ms_slfo1 && q <= ms_slfo6 ) )
          {
             auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ q - ms_lfo1 ] );
             if( lfodata->shape.val.i == ls_mseg )
@@ -3241,8 +3240,13 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
       auto vs = mse->getViewSize().getWidth();
       float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
-      setEditorOverlay( mse, "MSEG Editor", "msegEditor",
-                       CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
+
+      std::string title = modsource_names[(int)lfo_id];
+      title += " Editor";
+      Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
+
+      setEditorOverlay( mse, title, "msegEditor", CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
+
       return;
    }
 
@@ -4513,7 +4517,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 {
    COptionMenu* lfoSubMenu =
        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-   addCallbackMenu(lfoSubMenu, "[?] LFO", [](){} );
+   addCallbackMenu(lfoSubMenu, "[?] LFO Presets", [](){} );
    lfoSubMenu->addSeparator();
    addCallbackMenu(lfoSubMenu, "Menu", [](){} );
    addCallbackMenu(lfoSubMenu, "Coming", [](){} );
