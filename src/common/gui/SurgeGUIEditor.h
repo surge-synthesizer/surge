@@ -238,6 +238,8 @@ public:
    void showMPEMenu(VSTGUI::CPoint& where);
    void showTuningMenu(VSTGUI::CPoint& where);
    void showZoomMenu(VSTGUI::CPoint& where);
+   void showLfoMenu( VSTGUI::CPoint &menuRect );
+
    void toggleMPE();
    void toggleTuning();
    void tuningFileDropped(std::string fn);
@@ -419,6 +421,7 @@ private:
    VSTGUI::COptionMenu* makeDataMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeMidiMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeLfoMenu(VSTGUI::CRect &rect);
    bool scannedForMidiPresets = false;
 
    void resetSmoothing( ControllerModulationSource::SmoothingMode t );

@@ -49,6 +49,7 @@
 #include <sstream>
 #include <stack>
 #include <unordered_map>
+#include "MSEGEditor.h"
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -159,6 +160,9 @@ enum special_tags
    tag_status_mpe,
    tag_status_zoom,
    tag_status_tune,
+
+   tag_mseg_edit,
+   tag_lfo_menu,
    // tag_metaparam,
    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
    start_paramtags,
@@ -1275,6 +1279,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
          layoutComponentForSkin( skinCtrl, tag_store );
          break;
       }
+      case Surge::Skin::Connector::NonParameterConnection::MSEG_EDIT: {
+         auto q = modsource_editor[current_scene];
+         if( ( q >= ms_lfo1 && q <= ms_lfo6  ) ||
+             ( q >= ms_slfo1 && q <= ms_slfo6 ) )
+         {
+            auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ q - ms_lfo1 ] );
+            if( lfodata->shape.val.i == ls_mseg )
+               layoutComponentForSkin( skinCtrl, tag_mseg_edit );
+         }
+         break;
+      }
+      case Surge::Skin::Connector::NonParameterConnection::LFO_MENU: {
+         layoutComponentForSkin( skinCtrl, tag_lfo_menu );
+
+         break;
+      }
       case Surge::Skin::Connector::NonParameterConnection::LFO_LABEL: {
          // Room for improvement, obviously
          lfoNameLabel = new CVerticalLabel(skinCtrl->getRect(), "" );
@@ -1765,6 +1785,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
    // In these cases just move along with success. RMB does nothing on these switches
    if( tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store || tag == tag_store_cancel || tag == tag_store_ok )
       return 1;
+
+   if( tag == tag_lfo_menu )
+   {
+      control->setValue(0);
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+
+      showLfoMenu(where);
+      return 1;
+   }
 
    if( tag == tag_status_zoom )
    {
@@ -3178,6 +3209,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       showZoomMenu(where);
       return;
    }
+
+   if( tag == tag_lfo_menu )
+   {
+      control->setValue(0);
+      CPoint where;
+      frame->getCurrentMouseLocation(where);
+      frame->localToFrame(where);
+
+      showLfoMenu(where);
+      return;
+   }
+
    if( tag == tag_status_mpe )
    {
       toggleMPE();
@@ -3186,6 +3229,19 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    if( tag == tag_status_tune )
    {
       toggleTuning();
+      return;
+   }
+
+   if( tag == tag_mseg_edit )
+   {
+      // FIXME - press this button twice and you end up hosed
+      auto lfo_id = modsource_editor[current_scene];
+      auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
+      auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
+      auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
+      auto vs = mse->getViewSize().getWidth();
+      float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
+      setEditorOverlay( mse, "MSEG Editor", CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
       return;
    }
 
@@ -3669,8 +3725,13 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       {
          Parameter* p = synth->storage.getPatch().param_ptr[ptag];
 
+         std::cout << p->get_full_name() << " " << p->ctrltype << " " << ct_lfoshape << std::endl;
          char pname[256], pdisp[128], txt[128];
          bool modulate = false;
+
+         // This allows us to turn on and off the editor. FIXME mseg check it
+         if( p->ctrltype == ct_lfoshape )
+            synth->refresh_editor = true;
 
          if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
              dynamic_cast<CSurgeSlider*>(control) != nullptr)
@@ -4164,6 +4225,18 @@ void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint& where)
    m->popup();
    frame->removeView(m, true);
 }
+void SurgeGUIEditor::showLfoMenu(VSTGUI::CPoint& where)
+{
+   CRect menuRect;
+   menuRect.offset(where.x, where.y);
+   auto m = makeLfoMenu(menuRect);
+
+   frame->addView(m);
+   m->setDirty();
+   m->popup();
+   frame->removeView(m, true);
+}
+
 
 void SurgeGUIEditor::toggleTuning()
 {
@@ -4433,6 +4506,18 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->setDirty();
     settingsMenu->popup();
     frame->removeView(settingsMenu, true);
+}
+
+VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
+{
+   COptionMenu* lfoSubMenu =
+       new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+   addCallbackMenu(lfoSubMenu, "[?] LFO", [](){} );
+   lfoSubMenu->addSeparator();
+   addCallbackMenu(lfoSubMenu, "Menu", [](){} );
+   addCallbackMenu(lfoSubMenu, "Coming", [](){} );
+   addCallbackMenu(lfoSubMenu, "Soon", [](){} );
+   return lfoSubMenu;
 }
 
 
