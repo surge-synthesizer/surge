@@ -457,7 +457,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          float up = pxt( i + drawArea.left );
          float iup = (int)up;
          float fup = up - iup;
-         float v = Surge::MSEG::valueAt( iup, fup, 0, ms, lseval, msegEvaluationState );
+         float v = Surge::MSEG::valueAt( iup, fup, 0, ms, lseval, msegEvaluationState, false );
          v = valpx( v );
          if( up <= ms->totalDuration )
          {
@@ -780,11 +780,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       contextMenu->addSeparator();
 
-      auto typeTo = [this, contextMenu, t, addCb](std::string n, MSEGStorage::segment::Type type) {
-                       addCb( contextMenu, n, [this,t, type]() {
+      auto tts = Surge::MSEG::timeToSegment(ms, t );
+
+      auto typeTo = [this, contextMenu, t, addCb, tts](std::string n, MSEGStorage::segment::Type type) {
+                       auto m = addCb( contextMenu, n, [this,t, type]() {
                                                  Surge::MSEG::changeTypeAt( this->ms, t, type );
                                                  modelChanged();
                                               } );
+                       if( tts >= 0 )
+                          m->setChecked( this->ms->segments[tts].type == type );
                     };
       typeTo( "Line", MSEGStorage::segment::Type::LINEAR );
       typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
@@ -796,7 +800,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
 
       contextMenu->addSeparator();
-      auto tts = Surge::MSEG::timeToSegment(ms, t );
       if( tts >= 0 )
       {
          auto def = ms->segments[tts].useDeform;
@@ -924,6 +927,7 @@ void MSEGControlRegion::rebuild()
       auto btnrect = CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight));
       auto lw = new CHSwitch2(btnrect, this, tag_loop_mode, 3, controlHeight, 1, 3,
                         associatedBitmapStore->getBitmap(IDB_MSEG_LOOP_MODES), CPoint(0, 0), true);
+      lw->setSkin(skin,associatedBitmapStore);
       addView(lw);
       lw->setValue((ms->loopMode - 1) / 2.f);
 
@@ -951,6 +955,7 @@ void MSEGControlRegion::rebuild()
       auto btnrect = CRect(CPoint(marginPos, ypos), CPoint(btnWidth, controlHeight));
       auto mw = new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, controlHeight, 1, 3,
                         associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT), CPoint(0, 0), true);
+      mw->setSkin(skin,associatedBitmapStore);
       addView(mw);
       mw->setValue(canvas->timeEditMode / 2.f);
 
@@ -976,6 +981,7 @@ void MSEGControlRegion::rebuild()
 
       auto hbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_horizontal_snap,
                                      associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
+      hbut->setSkin(skin,associatedBitmapStore);
       addView(hbut);
       hbut->setValue(ms->hSnap < 0.001 ? 0 : 1);
 
@@ -996,6 +1002,7 @@ void MSEGControlRegion::rebuild()
 
       auto vbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_vertical_snap,
                                      associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP));
+      vbut->setSkin(skin,associatedBitmapStore);
       addView( vbut );
       vbut->setValue( ms->vSnap < 0.001? 0 : 1 );
 

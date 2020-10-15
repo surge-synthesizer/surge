@@ -28,6 +28,7 @@ enum lfoenv_state
    lenv_hold,
    lenv_decay,
    lenv_release,
+   lenv_msegrelease,
    lenv_stuck,
 };
 

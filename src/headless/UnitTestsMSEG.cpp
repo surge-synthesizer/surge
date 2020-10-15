@@ -18,7 +18,7 @@ struct msegObservation {
    float phase;
 };
 
-std::vector<msegObservation> runMSEG( MSEGStorage *ms, float dPhase, float phaseMax, float deform = 0 )
+std::vector<msegObservation> runMSEG( MSEGStorage *ms, float dPhase, float phaseMax, float deform = 0, bool release = false )
 {
    auto res = std::vector<msegObservation>();
    double phase = 0.0;
@@ -27,7 +27,7 @@ std::vector<msegObservation> runMSEG( MSEGStorage *ms, float dPhase, float phase
    float state[6];
    while( phase + iphase < phaseMax )
    {
-      auto r = Surge::MSEG::valueAt(iphase, phase, deform, ms, lastSeg, state );
+      auto r = Surge::MSEG::valueAt(iphase, phase, deform, ms, lastSeg, state, release );
       res.push_back( msegObservation( iphase, phase, r ));
       phase += dPhase;
       if( phase > 1 ) { phase -= 1; iphase += 1; }

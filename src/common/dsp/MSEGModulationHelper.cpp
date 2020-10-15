@@ -52,7 +52,7 @@ void rebuildCache( MSEGStorage *ms )
    }
 }
 
-float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEvaluated, float msegState[5])
+float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEvaluated, float msegState[5], bool isReleased)
 {
    if( ms->n_activeSegments == 0 ) return df;
 
@@ -99,6 +99,10 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
 
    
    float pd = up - ms->segmentStart[idx];
+
+
+   if( ms->segments[idx].duration <= MSEGStorage::minimumDuration )
+      return ( ms->segments[idx].v0 + ms->segments[idx].nv1 ) * 0.5;
 
    float res = r.v0;
    switch( r.type )
@@ -319,8 +323,23 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    case MSEGStorage::segment::SINE: 
    case MSEGStorage::segment::TRIANGLE: 
    case MSEGStorage::segment::SQUARE: {
-      int steps = (int)(r.cpduration / r.duration * 100);
-      auto f = pd / r.duration;
+      float pct = r.cpduration / r.duration;
+      /*
+       * We want an exponential map roughly like
+       *  0 -> 0
+       * .5 -> .05
+       *  1 -> 1
+       *
+       *  screwing around in desmos that gives us
+       *  (e^(ax^n)-1)/(e^a-1)
+       *  with a = 5 and n= 1
+       */
+      float as = 5.0;
+      float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
+      int steps = (int)( scaledpct * 100 );
+      auto f = pd/r.duration;
+
+
       float a = 1;
       
       if( df < 0 )
@@ -330,21 +349,48 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
 
       float kernel = 0;
 
+      /*
+       * At this point you need to generate a waveform which starts at 1,
+       * ends at -1, and has 'steps' oscillations in between, spanning
+       * the phase space f=[0,1].
+       */
       if( r.type == MSEGStorage::segment::SINE )
       {
-         float mul = (1 + 2 * steps) * M_PI;
-         kernel = cos(mul * f);
+         /*
+          * To meet the -1, 1 constraint on the endpoints we use cos, not sine, so
+          * the first point is one, and multiply the frequency by 3pi, 5pi, 7pi etc...
+          * so we get one and a half waveforms
+          */
+         float mul = ( 1 + 2 * steps ) * M_PI;
+         kernel = cos( mul * f );
       }
       if( r.type == MSEGStorage::segment::TRIANGLE )
       {
-         steps += 1;
-         kernel = 2 * fabs(2 * ((f * steps) - floor((f * steps) + 0.5))) - 1;
+         double mul = ( 0.5 + steps );
+         double phase = mul * f;
+         double dphase = phase - (int)phase;
+         if( dphase < 0.5 )
+         {
+            // line 1 @ 0 to -1 @ 1/2
+            kernel = 1 - 4 * dphase;
+         }
+         else
+         {
+            auto qphase = dphase - 0.5;
+            // line -1 @ 0 to 1 @ 1/2
+            kernel = 4 * qphase - 1;
+         }
       }
       if( r.type == MSEGStorage::segment::SQUARE )
       {
-         float mul = (2 * steps);
-         int ifm = (int)(mul * f);
-         kernel = (ifm % 2 == 0 ? 1 : -1);
+         /*
+          * A square wave naturally starts at 1 and ends at -1, so we don't need
+          * the odd oscillations. Here we multiply the frequency by 2*steps and then
+          * use even/odd for +/-
+          */
+         float mul = ( 2 * steps ) + 1;
+         int ifm = (int)( mul * f );
+         kernel = ( ifm % 2 == 0 ? 1 : -1 );
       }
       
       res = (r.v0 - r.nv1) * pow((kernel + 1) * 0.5, a) + r.nv1;
@@ -460,7 +506,9 @@ void extendTo( MSEGStorage *ms, float t, float nv ) {
    if( ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
    {
       // The first point has to match where I just clicked. Adjust it and its control point
-      float cpdratio = ms->segments[0].cpduration / ms->segments[0].duration;
+      float cpdratio = 0.5;
+      if( ms->segments[0].duration > 0 )
+         cpdratio = ms->segments[0].cpduration / ms->segments[0].duration;
       float cpvratio = 0.5;
       if (ms->segments[0].nv1 != ms->segments[0].v0)
          cpvratio = (ms->segments[0].cpv - ms->segments[0].v0) /
@@ -483,7 +531,9 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
 
       float pv1 = ms->segments[idx].nv1;
       
-      float cpdratio = ms->segments[idx].cpduration / ms->segments[idx].duration;
+      float cpdratio = 0.5;
+      if( ms->segments[idx].duration > 0 )
+         cpdratio = ms->segments[idx].cpduration / ms->segments[idx].duration;
       
       float cpvratio = 0.5;
       if( ms->segments[idx].nv1 != ms->segments[idx].v0 )
