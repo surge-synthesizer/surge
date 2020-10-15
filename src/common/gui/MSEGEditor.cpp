@@ -15,6 +15,7 @@
 
 #include "MSEGEditor.h"
 #include "MSEGModulationHelper.h"
+#include "guihelpers.h"
 #include "DebugHelpers.h"
 #include "SkinColors.h"
 #include "basic_dsp.h" // for limit_range
@@ -788,6 +789,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       typeTo( "S-Curve", MSEGStorage::segment::Type::SCURVE );
       typeTo( "Sine", MSEGStorage::segment::Type::SINE );
       typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
+      typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
       typeTo( "Steps", MSEGStorage::segment::Type::STEPS );
       typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
 
@@ -796,7 +798,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       if( tts >= 0 )
       {
          auto def = ms->segments[tts].useDeform;
-         auto cm = addCb( contextMenu, "Respond to Deform", [this,tts]() {
+         auto cm = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
             this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
             modelChanged();
          });
@@ -805,7 +807,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       if( tts == 0 || tts == ms->n_activeSegments - 1 )
       {
-         auto cm = addCb( contextMenu, "End Locks with Start",
+         auto cm = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
                          [this]() {
                             if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
                                this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;

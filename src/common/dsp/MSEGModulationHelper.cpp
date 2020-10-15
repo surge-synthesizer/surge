@@ -317,9 +317,10 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    }
 
    case MSEGStorage::segment::SINE: 
+   case MSEGStorage::segment::TRIANGLE: 
    case MSEGStorage::segment::SQUARE: {
-      int steps = (int)( r.cpduration / r.duration * 100 );
-      auto f = pd/r.duration;
+      int steps = (int)(r.cpduration / r.duration * 100);
+      auto f = pd / r.duration;
       float a = 1;
       
       if( df < 0 )
@@ -328,19 +329,26 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
          a = 1 + df * 1.5;
 
       float kernel = 0;
+
       if( r.type == MSEGStorage::segment::SINE )
       {
-         float mul = ( 1 + 2 * steps ) * M_PI;
-         kernel = cos( mul * f );
+         float mul = (1 + 2 * steps) * M_PI;
+         kernel = cos(mul * f);
+      }
+      if( r.type == MSEGStorage::segment::TRIANGLE )
+      {
+         f += 1.25;
+         //steps = steps / 2;
+         kernel = 2 * fabs(2 * ((f * steps) - floor((f * steps) + 0.5))) - 1;
       }
       if( r.type == MSEGStorage::segment::SQUARE )
       {
-         float mul = ( 2 * steps );
-         int ifm = (int)( mul * f );
-         kernel = ( ifm % 2 == 0 ? 1 : -1 );
+         float mul = (2 * steps);
+         int ifm = (int)(mul * f);
+         kernel = (ifm % 2 == 0 ? 1 : -1);
       }
       
-      res = ( r.v0-r.nv1 ) * pow( ( kernel + 1 ) * 0.5, a ) + r.nv1;
+      res = (r.v0 - r.nv1) * pow((kernel + 1) * 0.5, a) + r.nv1;
       break;
    }
 

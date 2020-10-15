@@ -625,6 +625,7 @@ struct MSEGStorage {
          STEPS,
          BROWNIAN,
          SQUARE,
+         TRIANGLE,
       } type;
    };
 
@@ -637,12 +638,12 @@ struct MSEGStorage {
    // These values are streamed so please don't change the integer values
    enum LoopMode {
       ONESHOT = 1, // Play the MSEG front to back and then output the final value
-      LOOP = 2, // Play the mseg Front to Loop End and then return to Loop Start
-      GATED_LOOP = 3 // Play the mseg front to loop end, then return to loo pstart; but if at any time
-          // a release is generated, jump to loop end at current value and progress to end once
+      LOOP = 2, // Play the MSEG front to loop end and then return to loop start
+      GATED_LOOP = 3 // Play the MSEG front to loop end, then return to loop start, but if at any time
+                     // a note off is generated, jump to loop end at current value and progress to end once
    } loopMode = LOOP;
 
-   int loop_start = -1, loop_end = -1; // -1 signifies the entire mseg in this context
+   int loop_start = -1, loop_end = -1; // -1 signifies the entire MSEG in this context
 
    int n_activeSegments = 0;
    std::array<segment, max_msegs> segments;
