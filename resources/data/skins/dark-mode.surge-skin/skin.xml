@@ -196,6 +196,9 @@
     <control ui_identifier="lfo.sustain" class="mod-vslider"/>
     <control ui_identifier="lfo.release" class="mod-vslider"/>
 
+    <control ui_identifier="lfo.presets" y="478"/>
+    <control ui_identifier="lfo.msegedit" y="478"/>
+
     <control ui_identifier="FX.jog" x="855"/>
     <control ui_identifier="FX.presetlabel" x="762"/>
 

@@ -3241,7 +3241,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       auto vs = mse->getViewSize().getWidth();
       float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 
-      std::string title = modsource_names[(int)lfo_id];
+      std::string title = modsource_names[modsource_editor[current_scene]];
       title += " Editor";
       Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
