@@ -147,6 +147,9 @@ namespace Surge
 
             MAIN_VU_METER,
 
+            MSEG_EDIT,
+            LFO_MENU,
+
             N_NONCONNECTED
          };
 
@@ -256,6 +259,7 @@ namespace Surge
       }
       namespace LFO {
          extern Surge::Skin::Connector amplitude, attack, decay, deform, delay, hold, phase, rate, release, shape, sustain, triggermode, unipolar;
+         extern Surge::Skin::Connector lfoMenuButton, msegEditButton, lfoLabel;
       }
       namespace Mix {
          extern Surge::Skin::Connector level_noise, level_o1, level_o2, level_o3, level_prefiltergain, level_ring12, level_ring23,
@@ -287,7 +291,6 @@ namespace Surge
          extern Surge::Skin::Connector mainVUMeter;
 
          // These active labels are actually controls
-         extern Surge::Skin::Connector lfoLabel;
 
          extern Surge::Skin::Connector patchBrowser;
 

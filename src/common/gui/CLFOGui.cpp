@@ -21,7 +21,6 @@
 #include "DebugHelpers.h"
 #include "guihelpers.h"
 #include "SkinColors.h"
-#include "MSEGEditor.h"
 #include <cstdint>
 
 using namespace VSTGUI;
@@ -478,22 +477,6 @@ void CLFOGui::draw(CDrawContext* dc)
       edpath->forget();
    }
 
-   if( lfodata->shape.val.i == ls_mseg )
-   {
-      auto size = getViewSize();
-      
-      auto shiftTranslate = CGraphicsTransform().translate( size.left, size.top ).translate( splitpoint, 0 );
-      CDrawContext::Transform shiftTranslatetransform( *dc, shiftTranslate );
-      
-      dc->setFillColor( kRedCColor );
-      // FIXME 30x10 here and in onmousedown
-      dc->drawRect( CRect( 0, 0, 30, 10 ), kDrawFilled );
-      dc->setFontColor( kWhiteCColor );
-      dc->setFont( displayFont );
-      dc->drawString( "Edit", CRect( 0, 0, 30, 10 ) );
-
-   }
-      
    CColor cshadow = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cselected = skin->getColor(Colors::LFO::Type::SelectedBackground);
 
@@ -1108,27 +1091,6 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
 {
    if (1) //(buttons & kLButton))
    {
-      if( lfodata->shape.val.i == ls_mseg )
-      {
-         auto size = getViewSize();
-
-         int wx = where.x - size.left - splitpoint;
-         int wy = where.y - size.top;
-         if( wx > 0 && wx < 30 && wy > 0 && wy < 10 )
-         {
-            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-            if( sge )
-            {
-               // FIXME - press this button twice and you end up hosed
-               auto mse = new MSEGEditor(lfodata, ms, skin, associatedBitmapStore);
-               auto vs = mse->getViewSize().getWidth();
-               float xp = (skin->getWindowSizeX() - (vs + 8)) * 0.5;
-               sge->setEditorOverlay( mse, "MSEG Editor", CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
-               return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-            }
-         }
-      }
-         
       if (ss && lfodata->shape.val.i == ls_stepseq)
       {
          if (rect_steps.pointInside(where))
@@ -1403,6 +1365,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    {
       for (int i = 0; i < n_lfoshapes; i++)
       {
+         auto prior = lfodata->shape.val.i;
          if (shaperect[i].pointInside(where))
          {
             if (lfodata->shape.val.i != i)
@@ -1416,6 +1379,12 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                {
                   sge->refresh_mod();
                   sge->forceautomationchangefor(&(lfodata->shape));
+               }
+
+               // this is less of a hack.
+               if( prior == ls_mseg || i == ls_mseg )
+               {
+                  sge->queueRebuildUI();
                }
 
             }

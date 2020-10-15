@@ -173,6 +173,14 @@ namespace Surge
              .withHSwitch2Properties(IDB_LFOTRIGGER, 3, 3, 1);
          Connector unipolar = Connector( "lfo.unipolar", 170, 546, 51, 15, Connector::SWITCH )
                .withBackground( IDB_UNIPOLAR );
+
+         Connector msegEditButton = Connector( "lfo.msegeditbutton", 597, 481, 11, 11, Connector::SWITCH, Connector::MSEG_EDIT )
+               .withBackground(IDB_LFO_MSEG_EDIT );
+         // For now these two have component 'CUSTOM' and we hadn pick a component in the code
+         Connector lfoLabel = Connector( "lfo.name", 6, 485, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL );
+         Connector lfoMenuButton = Connector( "lfo.menubutton", 6, 481, 11, 11, Connector::SWITCH, Connector::LFO_MENU )
+               .withBackground(IDB_LFO_PRESETS);
+
       }
 
       namespace Mix { // Done
@@ -299,8 +307,6 @@ namespace Surge
          Connector statusZoom = Connector( "controls.status.zoom", 0, 28, 31, 12, Connector::SWITCH, Connector::STATUS_ZOOM )
              .withBackground( IDB_ZOOM_BUTTON ).inParent( "controls.status.panel");
 
-         // For now these two have component 'CUSTOM' and we hadn pick a component in the code
-         Connector lfoLabel = Connector( "lfo.name", 6, 485, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL );
 
          // modulationPanel is special so shows up as 'CUSTOM' with no connector and is special cased in SGE
          Connector modulationPanel = Connector( "controls.modulation.panel", 2, 402, Connector::CUSTOM );
