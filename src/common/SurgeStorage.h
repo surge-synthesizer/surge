@@ -614,7 +614,9 @@ struct MSEGStorage {
       float v0;
       float dragv0; // in snap mode, this is the location we are dragged to. It is just convenience storage.
       float nv1; // this is the v0 of the neighbor and is here just for convenience. MSEGModulationHelper::rebuildCache will set it
+      float dragv1; // only used in the endpoint
       float cpduration, cpv, dragcpv;
+      bool  useDeform = true;
       enum Type {
          LINEAR = 1,
          QUAD_BEZIER,
@@ -625,6 +627,22 @@ struct MSEGStorage {
          SQUARE,
       } type;
    };
+
+   // These values are streamed so please don't change the integer values
+   enum EndpointMode {
+      LOCKED = 1,
+      FREE = 2
+   } endpointMode = FREE;
+
+   // These values are streamed so please don't change the integer values
+   enum LoopMode {
+      ONESHOT = 1, // Play the MSEG front to back and then output the final value
+      LOOP = 2, // Play the mseg Front to Loop End and then return to Loop Start
+      GATED_LOOP = 3 // Play the mseg front to loop end, then return to loo pstart; but if at any time
+          // a release is generated, jump to loop end at current value and progress to end once
+   } loopMode = LOOP;
+
+   int loop_start = -1, loop_end = -1; // -1 signifies the entire mseg in this context
 
    int n_activeSegments = 0;
    std::array<segment, max_msegs> segments;

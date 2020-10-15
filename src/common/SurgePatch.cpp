@@ -1569,6 +1569,25 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       auto *ms = &( msegs[sc][mi] );
       ms->n_activeSegments = 0;
       if( p->QueryIntAttribute( "activeSegments", &v ) == TIXML_SUCCESS ) ms->n_activeSegments = v;
+      if( p->QueryIntAttribute("endpointMode", &v) == TIXML_SUCCESS )
+         ms->endpointMode = (MSEGStorage::EndpointMode)v;
+      else
+         ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+      if( p->QueryIntAttribute( "loopMode", &v ) == TIXML_SUCCESS )
+         ms->loopMode = (MSEGStorage::LoopMode)v;
+      else
+         ms->loopMode = MSEGStorage::LoopMode::LOOP;
+      if( p->QueryIntAttribute( "loopStart", &v ) == TIXML_SUCCESS )
+         ms->loop_start = v;
+      else
+         ms->loop_start = -1;
+
+      if( p->QueryIntAttribute( "loopEnd", &v ) == TIXML_SUCCESS )
+         ms->loop_end = v;
+      else
+         ms->loop_end = -1;
+
+
       auto segs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "segments" ));
       if( segs )
       {
@@ -1582,11 +1601,17 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             MSGF( v0 );
             MSGF( cpduration );
             MSGF( cpv );
+            MSGF( nv1 );
             
             int t = 0;
             if( seg->QueryIntAttribute( "type", &v ) == TIXML_SUCCESS ) t = v;
             ms->segments[idx].type = (MSEGStorage::segment::Type)t;
-            
+
+            if( seg->QueryIntAttribute( "useDeform", &v) == TIXML_SUCCESS )
+               ms->segments[idx].useDeform = v;
+            else
+               ms->segments[idx].useDeform = true;
+
             seg = TINYXML_SAFE_TO_ELEMENT( seg->NextSibling( "segment" ) );
             
             idx++;
@@ -1964,6 +1989,10 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
 
             auto *ms = &(msegs[sc][l]);
             p.SetAttribute( "activeSegments", ms->n_activeSegments );
+            p.SetAttribute( "endpointMode", ms->endpointMode );
+            p.SetAttribute( "loopMode", ms->loopMode );
+            p.SetAttribute( "loopStart", ms->loop_start);
+            p.SetAttribute( "loopEnd", ms->loop_end );
 
             TiXmlElement segs( "segments" );
             for( int s=0; s<ms->n_activeSegments; ++s )
@@ -1971,9 +2000,11 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
                TiXmlElement seg( "segment" );
                seg.SetDoubleAttribute( "duration", ms->segments[s].duration );
                seg.SetDoubleAttribute( "v0", ms->segments[s].v0 );
+               seg.SetDoubleAttribute( "nv1", ms->segments[s].nv1 );
                seg.SetDoubleAttribute( "cpduration", ms->segments[s].cpduration );
                seg.SetDoubleAttribute( "cpv", ms->segments[s].cpv );
                seg.SetAttribute( "type", (int)( ms->segments[s].type ));
+               seg.SetAttribute( "useDeform", (int)(ms->segments[s].useDeform));
                segs.InsertEndChild( seg );
             }
             p.InsertEndChild(segs);
