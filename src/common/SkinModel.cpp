@@ -174,11 +174,11 @@ namespace Surge
          Connector unipolar = Connector( "lfo.unipolar", 170, 546, 51, 15, Connector::SWITCH )
                .withBackground( IDB_UNIPOLAR );
 
-         Connector msegEditButton = Connector( "lfo.msegeditbutton", 597, 481, 11, 11, Connector::SWITCH, Connector::MSEG_EDIT )
+         Connector msegEditButton = Connector( "lfo.msegedit", 597, 483, 11, 11, Connector::SWITCH, Connector::MSEG_EDIT )
                .withBackground(IDB_LFO_MSEG_EDIT );
          // For now these two have component 'CUSTOM' and we hadn pick a component in the code
          Connector lfoLabel = Connector( "lfo.name", 6, 485, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL );
-         Connector lfoMenuButton = Connector( "lfo.menubutton", 6, 481, 11, 11, Connector::SWITCH, Connector::LFO_MENU )
+         Connector lfoMenuButton = Connector( "lfo.presets", 5, 481, 13, 11, Connector::SWITCH, Connector::LFO_MENU )
                .withBackground(IDB_LFO_PRESETS);
 
       }
