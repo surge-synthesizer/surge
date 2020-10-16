@@ -35,6 +35,13 @@ std::vector<msegObservation> runMSEG( MSEGStorage *ms, float dPhase, float phase
    return res;
 }
 
+void resetCP( MSEGStorage *ms )
+{
+   Surge::MSEG::rebuildCache(ms);
+   for( int i=0; i<ms->n_activeSegments; ++i )
+      Surge::MSEG::resetControlPoint(ms, i );
+}
+
 /*
  * These tests test the relationship between configuration of MSEG Storage and the phase evaluator
  */
@@ -61,6 +68,7 @@ TEST_CASE( "Basic MSEG Evaluation", "[mseg]" )
       ms.segments[3].type = MSEGStorage::segment::LINEAR;
       ms.segments[3].v0 = -1.0;
 
+      resetCP(&ms);
       Surge::MSEG::rebuildCache(&ms);
 
       // OK so lets go ahead and run it at a variety of forward phases
@@ -95,6 +103,7 @@ TEST_CASE( "Basic MSEG Evaluation", "[mseg]" )
       ms.segments[3].type = MSEGStorage::segment::LINEAR;
       ms.segments[3].v0 = -1.0;
 
+      resetCP(&ms);
       Surge::MSEG::rebuildCache(&ms);
 
       // OK so lets go ahead and run it at a variety of forward phases
@@ -130,6 +139,7 @@ TEST_CASE( "Unlocked Endpoitns", "[mseg]" )
       ms.segments[2].type = MSEGStorage::segment::LINEAR;
       ms.segments[2].v0 = -1.0;
 
+      resetCP(&ms);
       Surge::MSEG::rebuildCache(&ms);
 
       // OK so lets go ahead and run it at a variety of forward phases
@@ -139,7 +149,7 @@ TEST_CASE( "Unlocked Endpoitns", "[mseg]" )
          if( c.fPhase < 0.5 - MSEGStorage::minimumDuration )
             REQUIRE( c.v == 1 );
          if( c.fPhase > 0.5 &&  c.fPhase < 1 - MSEGStorage::minimumDuration )
-            REQUIRE( c.v > -1 );
+            REQUIRE( c.v >= -1 );
       }
    }
 
@@ -161,6 +171,7 @@ TEST_CASE( "Unlocked Endpoitns", "[mseg]" )
       ms.segments[2].v0 = -1.0;
       ms.segments[2].nv1 = -1.0; // The free mode will preserve this
 
+      resetCP(&ms);
       Surge::MSEG::rebuildCache(&ms);
 
       // OK so lets go ahead and run it at a variety of forward phases
@@ -190,6 +201,7 @@ TEST_CASE( "Deform per Segment", "[mseg]" )
       ms.segments[1].type = MSEGStorage::segment::LINEAR;
       ms.segments[1].v0 = 1.0;
 
+      resetCP(&ms);
       Surge::MSEG::rebuildCache(&ms);
 
       // OK so lets go ahead and run it at a variety of forward phases
@@ -238,6 +250,7 @@ TEST_CASE("OneShot vs Loop", "[mseg]" )
       ms.segments[1].type = MSEGStorage::segment::LINEAR;
       ms.segments[1].v0 = 1.0;
 
+      resetCP(&ms);
       Surge::MSEG::rebuildCache(&ms);
 
       // OK so lets go ahead and run it at a variety of forward phases
