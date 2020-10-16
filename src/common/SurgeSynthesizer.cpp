@@ -945,9 +945,8 @@ void SurgeSynthesizer::programChange(char channel, int value)
 
 void SurgeSynthesizer::updateDisplay()
 {
-#if ! TARGET_AUDIOUNIT
-   getParent()->updateDisplay();
-#endif
+   // This used to (in VSt2) call udpateDisplay but that did an Audio -> UI thread cross. Just mark
+   // the flag as true.
    refresh_editor = true;
 }
 
