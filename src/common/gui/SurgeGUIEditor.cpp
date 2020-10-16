@@ -3739,7 +3739,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       {
          Parameter* p = synth->storage.getPatch().param_ptr[ptag];
 
-         std::cout << p->get_full_name() << " " << p->ctrltype << " " << ct_lfoshape << std::endl;
          char pname[256], pdisp[128], txt[128];
          bool modulate = false;
 

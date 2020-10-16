@@ -18,6 +18,7 @@
 #include <iostream>
 #include "DebugHelpers.h"
 #include "basic_dsp.h" // for limit_range
+#include "FastMath.h"
 
 namespace Surge {
 namespace MSEG {
@@ -159,8 +160,19 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
             {
                float lincoef  = ( r.nv1 - msegState[validx] ) / ( 1 - msegState[lasttime] );
                float randcoef = 0.1 * r.cpv; // CPV is on -1,1
-               
-               msegState[validx] += lincoef * dt + randcoef * ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
+               /*
+               * Modification to standard bridge. We want to move away from 1,-1 so lets
+               * explicitly bounce away from them if random will push us over
+               */
+               auto uniformRand = ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
+               auto linstp = msegState[validx] + lincoef * dt;
+               float randup = randcoef;
+               float randdn = randcoef;
+               if( linstp + randup > 1 ) randup = 1 - linstp;
+               else if( linstp - randdn < -1 ) randdn = linstp + 1;
+               auto randadj = ( uniformRand > 0 ? randup * uniformRand : randdn * uniformRand );
+
+               msegState[validx] += limit_range( lincoef * dt + randadj, -1.f, 1.f );
                msegState[lasttime] += dt;
             }
             else
@@ -177,7 +189,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
             msegState[outidx] = msegState[validx];
          }
          msegState[outidx] = limit_range(msegState[outidx],-1.f, 1.f );
-         res = msegState[outidx];
+         // so basically softclip it
+         res  = msegState[outidx];
       }
       
       break;
@@ -384,13 +397,13 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       if( r.type == MSEGStorage::segment::SQUARE )
       {
          /*
-          * A square wave naturally starts at 1 and ends at -1, so we don't need
-          * the odd oscillations. Here we multiply the frequency by 2*steps and then
-          * use even/odd for +/-
+          * Deform does PWM here
           */
-         float mul = ( 2 * steps ) + 1;
-         int ifm = (int)( mul * f );
-         kernel = ( ifm % 2 == 0 ? 1 : -1 );
+         float mul = steps + 1;
+         float tphase = mul * f;
+         float phase = tphase - (int)tphase;
+         float pw = ( df + 1 ) / 2.0; // so now 0 -> 1
+         kernel = ( phase < pw ? 1 : -1 );
       }
       
       res = (r.v0 - r.nv1) * pow((kernel + 1) * 0.5, a) + r.nv1;
@@ -398,7 +411,11 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    }
 
    case MSEGStorage::segment::STEPS: {
-      int steps = (int)( r.cpduration / r.duration * 100 ) + 2;
+      float pct = r.cpduration / r.duration;
+      float as = 5.0;
+      float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
+      int steps = (int)( scaledpct * 100 ) + 2;
+
       float frac = (float)( (int)( steps * pd / r.duration ) ) / (steps-1);
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
