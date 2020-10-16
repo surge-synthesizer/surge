@@ -642,9 +642,14 @@ void resetControlPoint( MSEGStorage *ms, float t )
    auto idx = timeToSegment( ms, t );
    if( idx >= 0 && idx < ms->n_activeSegments )
    {
-      ms->segments[idx].cpduration = ms->segments[idx].duration * 0.5;
-      ms->segments[idx].cpv = ( ms->segments[idx].v0 + ms->segments[idx].nv1 ) * 0.5;
+      resetControlPoint( ms, idx );
    }
+}
+
+void resetControlPoint( MSEGStorage *ms, int idx )
+{
+   ms->segments[idx].cpduration = ms->segments[idx].duration * 0.5;
+   ms->segments[idx].cpv = (ms->segments[idx].v0 + ms->segments[idx].nv1) * 0.5;
 }
 
 void constrainControlPointAt( MSEGStorage *ms, int idx )
