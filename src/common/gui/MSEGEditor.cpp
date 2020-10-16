@@ -467,11 +467,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       auto drawArea = getDrawArea();
       float maxt = drawDuration();
-      float msegEvaluationState[5];
-      int lseval = -1;
 
-      float dfmsegEvaluationState[5];
-      int dflseval = -1;
+      Surge::MSEG::EvaluatorState es, esdf;
 
       CGraphicsPath *path = dc->createGraphicsPath();
       CGraphicsPath *highlightPath = dc->createGraphicsPath();
@@ -488,16 +485,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          {
             float iup = (int)up;
             float fup = up - iup;
-            float v = Surge::MSEG::valueAt( iup, fup, 0, ms, lseval, msegEvaluationState, false );
-            float vdef = Surge::MSEG::valueAt( iup, fup, lfodata->deform.val.f, ms, dflseval, dfmsegEvaluationState, false );
+            float v = Surge::MSEG::valueAt( iup, fup, 0, ms, &es, true );
+            float vdef = Surge::MSEG::valueAt( iup, fup, lfodata->deform.val.f, ms, &esdf, true );
 
             v = valpx( v );
             vdef = valpx( vdef );
             // Brownian doesn't deform and the second display is confusing since it is indepdently random
-            if( dflseval >= 0 && dflseval <= ms->n_activeSegments - 1 && ms->segments[dflseval].type == MSEGStorage::segment::Type::BROWNIAN )
+            if( es.lastEval >= 0 && es.lastEval <= ms->n_activeSegments - 1 && ms->segments[es.lastEval].type == MSEGStorage::segment::Type::BROWNIAN )
                vdef = v;
 
-            if( lseval == hoveredSegment )
+            if( es.lastEval == hoveredSegment )
             {
                if( !hlpathUsed )
                {
@@ -876,10 +873,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                                        Surge::MSEG::splitSegment( this->ms, t, v );
                                        modelChanged();
                                     } );
-      addCb( contextMenu,  "Delete", [this,t ]() {
+      auto deleteMenu = addCb( contextMenu,  "Delete", [this,t ]() {
                                         Surge::MSEG::deleteSegment( this->ms, t );
                                         modelChanged();
                                      } );
+      if( ms->n_activeSegments <= 1 ) deleteMenu->setEnabled(false);
 
       contextMenu->addSeparator();
 
