@@ -280,6 +280,7 @@ public:
                           const VSTGUI::CPoint &topleft = VSTGUI::CPoint( 0, 0 ),
                           bool modalOverlay = true,
                           std::function<void()> onClose = [](){} );
+   void dismissEditorOverlay();
 
 
    std::string getDisplayForTag( long tag );
@@ -289,7 +290,8 @@ public:
          strncpy( synth->patchid_file, file.c_str(), FILENAME_MAX );
          synth->has_patchid_file = true;
       }
-   
+
+   void lfoShapeChanged(int prior, int curr);
 private:
    SGEDropAdapter *dropAdapter = nullptr;
    friend class SGEDropAdapter;
@@ -345,6 +347,7 @@ private:
    VSTGUI::CTextEdit* patchComment = nullptr;
    VSTGUI::CCheckBox* patchTuning = nullptr;
    VSTGUI::CTextLabel* patchTuningLabel = nullptr;
+   VSTGUI::CControl *msegEditSwitch = nullptr;
 #if BUILD_IS_DEBUG
    VSTGUI::CTextLabel* debugLabel = nullptr;
 #endif

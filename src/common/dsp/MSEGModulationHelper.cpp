@@ -486,7 +486,7 @@ void insertBefore( MSEGStorage *ms, float t ) {
 
 void extendTo( MSEGStorage *ms, float t, float nv ) {
    if( t < ms->totalDuration ) return;
-   
+   nv = limit_range( nv, -1.f, 1.f );
    insertAtIndex( ms, ms->n_activeSegments );
 
    auto sn = ms->n_activeSegments - 1;
@@ -524,6 +524,7 @@ void extendTo( MSEGStorage *ms, float t, float nv ) {
 
 void splitSegment( MSEGStorage *ms, float t, float nv ) {
    int idx = timeToSegment( ms, t );
+   nv = limit_range( nv, -1.f, 1.f );
    if( idx >= 0 )
    {
       while( t > ms->totalDuration ) t -= ms->totalDuration;
