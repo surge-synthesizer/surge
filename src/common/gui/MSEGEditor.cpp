@@ -224,6 +224,28 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       }
    }
 
+   /*
+    * This little struct acts as a SmapGuard so that shift drags can reset snap and
+    * unreset snap
+    */
+   struct SnapGuard {
+      SnapGuard( MSEGStorage *ms, MSEGCanvas *c ) : ms(ms), c(c) {
+         hSnapO = ms->hSnap;
+         vSnapO = ms->vSnap;
+         c->invalid();
+      }
+      ~SnapGuard() {
+         ms->hSnap = hSnapO;
+         ms->vSnap = vSnapO;
+         c->invalid();
+      }
+      MSEGStorage *ms;
+      MSEGCanvas *c;
+      float hSnapO, vSnapO;
+   };
+   std::shared_ptr<SnapGuard> snapGuard;
+
+
    enum TimeEdit
    {
       SINGLE,   // movement bound between two neighboring nodes
@@ -383,7 +405,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    inline void drawAxis( CDrawContext *dc ) {
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
-      int skips = 4;
+      int skips = (ms->hSnap > 0 ? 1/ms->hSnap : 4 );
       auto tpx = timeToPx();
 
       dc->setFont( displayFont );
@@ -412,7 +434,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
-      for( float i=-1; i<=1; i += 0.25 )
+      float step = (ms->vSnap > 0 ? ms->vSnap : 0.25 );
+      for( float i=-1; i<=1.001 /* for things like "3" rounding*/; i += step )
       {
          float p = valpx( i );
          float off = vaxisArea.getWidth() / 2;
@@ -447,10 +470,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       float msegEvaluationState[5];
       int lseval = -1;
 
+      float dfmsegEvaluationState[5];
+      int dflseval = -1;
+
       CGraphicsPath *path = dc->createGraphicsPath();
+      CGraphicsPath *defpath = dc->createGraphicsPath();
       CGraphicsPath *fillpath = dc->createGraphicsPath();
 
-      float pathFirstY, pathLastX, pathLastY;
+      float pathFirstY, pathLastX, pathLastY, pathLastDef;
 
       for( int i=0; i<drawArea.getWidth(); ++i )
       {
@@ -458,21 +485,28 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          float iup = (int)up;
          float fup = up - iup;
          float v = Surge::MSEG::valueAt( iup, fup, 0, ms, lseval, msegEvaluationState, false );
+         float vdef = Surge::MSEG::valueAt( iup, fup, lfodata->deform.val.f, ms, dflseval, dfmsegEvaluationState, false );
          v = valpx( v );
+         vdef = valpx( vdef );
+         // Brownian doesn't deform and the second display is confusing since it is indepdently random
+         if( dflseval >= 0 && dflseval <= ms->n_activeSegments - 1 && ms->segments[dflseval].type == MSEGStorage::segment::Type::BROWNIAN )
+            vdef = v;
          if( up <= ms->totalDuration )
          {
             if( i == 0 )
             {
                path->beginSubpath( i, v  );
+               defpath->beginSubpath( i, vdef );
                fillpath->beginSubpath( i, v );
                pathFirstY = v;
             }
             else
             {
                path->addLine( i, v );
+               defpath->addLine( i, vdef );
                fillpath->addLine( i, v );
             }
-            pathLastX = i; pathLastY = v;
+            pathLastX = i; pathLastY = v; pathLastDef = vdef;
          }
       }
 
@@ -497,7 +531,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       
       // draw horizontal grid
       dc->setLineWidth(1);
-      int skips = 4;
+      int skips = (ms->hSnap > 0 ? 1.f / ms->hSnap : 4 );
       auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary);
       auto secondaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Secondary);
 
@@ -513,6 +547,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          // std::cout << _D(t) << _D(px) << _D(pxt(px)) << std::endl;
       }
 
+      skips = (ms->vSnap > 0 ? 1.f / ms->vSnap : 4 );
       // draw vertical grid
       for( int vi = 0; vi < 2 * skips + 1; vi ++ )
       {
@@ -525,11 +560,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       }
 
       // draw segment curve
+      dc->setLineWidth( 1.0 );
+      dc->setFrameColor( skin->getColor( Colors::MSEGEditor::DeformCurve));
+      dc->drawGraphicsPath( defpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
       dc->setLineWidth(1.5);
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
       dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
       path->forget();
+      defpath->forget();
 
       for( const auto &h : hotzones )
       {
@@ -640,6 +680,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                h.active = true;
                h.dragging = true;
                invalid();
+
+               /*
+                * Activate temporary snap
+                */
+               bool s = buttons & kShift;
+               bool c = buttons & kControl;
+               if( s || c  )
+               {
+                  snapGuard = std::make_shared<SnapGuard>(ms, this);
+                  if( c ) ms->hSnap = ms->hSnapDefault;
+                  if( s ) ms->vSnap = ms->vSnapDefault;
+               }
                break;
             }
          }
@@ -655,6 +707,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       {
          h.dragging = false;
       }
+      snapGuard = nullptr;
       return kMouseEventHandled;
    }
 
@@ -680,9 +733,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             else if( ms->segmentEnd[seg] - t < std::max( ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration ) )
             {
                int nx = seg + 1;
-               if( nx >= ms->n_activeSegments )
-                  nx = 0;
-               ms->segments[nx].v0 = v;
+               if( ms->endpointMode == MSEGStorage::EndpointMode::FREE )
+               {
+                  if( nx == ms->n_activeSegments  )
+                     ms->segments[seg].nv1 = v;
+                  else
+                     ms->segments[nx].v0 = v;
+               }
+               else
+               {
+                  if( nx >= ms->n_activeSegments )
+                     nx = 0;
+                  ms->segments[nx].v0 = v;
+               }
                ch = true;
             }
             if( ch )
@@ -872,9 +935,11 @@ void MSEGControlRegion::valueChanged( CControl *p )
    break;
    case tag_horizontal_snap:
       if( val < 0.5 ) ms->hSnap = 0; else ms->hSnap = ms->hSnapDefault;
+      canvas->invalid();
       break;
    case tag_vertical_snap:
       if( val < 0.5 ) ms->vSnap = 0; else ms->vSnap = ms->vSnapDefault;
+      canvas->invalid();
       break;
    case tag_vertical_value:
    {
@@ -883,6 +948,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
       ms->vSnapDefault = fv;
       if( ms->vSnap > 0 )
          ms->vSnap = ms->vSnapDefault;
+      canvas->invalid();
    }
       break;
    case tag_horizontal_value:
@@ -891,6 +957,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
       ms->hSnapDefault = fv;
       if( ms->hSnap > 0 )
          ms->hSnap = ms->hSnapDefault;
+      canvas->invalid();
    }
       break;
    default:

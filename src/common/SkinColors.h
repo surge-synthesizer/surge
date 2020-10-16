@@ -164,7 +164,7 @@ namespace Colors
 
    namespace MSEGEditor
    {
-      extern const Surge::Skin::Color Background, Curve, Panel, Text;
+      extern const Surge::Skin::Color Background, Curve, DeformCurve, Panel, Text;
 
       namespace Axis
       {
