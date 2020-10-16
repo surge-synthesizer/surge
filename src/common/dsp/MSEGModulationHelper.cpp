@@ -110,7 +110,24 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    {
    case MSEGStorage::segment::LINEAR:
    {
+      if( r.v0 == r.nv1 ) return r.v0;
       float frac = pd / r.duration;
+
+      // So we want to handle control points
+      auto cpd = r.cpduration / r.duration;
+      auto cpv = ( r.cpv - r.v0 ) / ( r.nv1 - r.v0 );
+
+      /*
+       * find some n such that cpv = cpd^n
+       * log_cpd cpv = n
+       * log(cpv) / log(cpd) = n
+       * but limit those puppies
+       */
+      float cpn = 1;
+      cpv = limit_range( cpv, 0.02f, 0.98f );
+      cpd = limit_range( cpd, 0.02f, 0.98f );
+      if( fabs(cpv-cpd) > 0.001 )
+         cpn = log(cpv) / log(cpd);
 
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
@@ -118,8 +135,12 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       if( df > 0 )
          frac = pow( frac, 1.0 + df * 3 );
 
-      res = frac * r.nv1 + ( 1 - frac ) * r.v0;
+      // OK so frac is the 0,1 line point
+      auto cpline = pow( frac, cpn );
 
+
+      // cpline will still be 0,1 so now we need to transform it
+      res = cpline * ( r.nv1 - r.v0 ) + r.v0;
       break;
    }
    case MSEGStorage::segment::BROWNIAN:
