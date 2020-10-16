@@ -220,6 +220,7 @@ namespace Colors
       const Surge::Skin::Color Background("msegeditor.background", 17, 17, 17),
                                Curve("msegeditor.curve", 255, 255, 255),
                                DeformCurve("msegeditor.deformcurve", 120, 120, 120),
+                               CurveUnderHighlight( "msegeditor.curve.highlight", 255, 90, 0, 128 ),
                                Panel("msegeditor.panel", 205, 206, 212),
                                Text("msegeditor.panel.text", 0, 0, 0);
 

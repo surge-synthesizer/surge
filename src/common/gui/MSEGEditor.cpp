@@ -474,25 +474,42 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       int dflseval = -1;
 
       CGraphicsPath *path = dc->createGraphicsPath();
+      CGraphicsPath *highlightPath = dc->createGraphicsPath();
       CGraphicsPath *defpath = dc->createGraphicsPath();
       CGraphicsPath *fillpath = dc->createGraphicsPath();
+      bool hlpathUsed = false;
 
       float pathFirstY, pathLastX, pathLastY, pathLastDef;
 
       for( int i=0; i<drawArea.getWidth(); ++i )
       {
          float up = pxt( i + drawArea.left );
-         float iup = (int)up;
-         float fup = up - iup;
-         float v = Surge::MSEG::valueAt( iup, fup, 0, ms, lseval, msegEvaluationState, false );
-         float vdef = Surge::MSEG::valueAt( iup, fup, lfodata->deform.val.f, ms, dflseval, dfmsegEvaluationState, false );
-         v = valpx( v );
-         vdef = valpx( vdef );
-         // Brownian doesn't deform and the second display is confusing since it is indepdently random
-         if( dflseval >= 0 && dflseval <= ms->n_activeSegments - 1 && ms->segments[dflseval].type == MSEGStorage::segment::Type::BROWNIAN )
-            vdef = v;
          if( up <= ms->totalDuration )
          {
+            float iup = (int)up;
+            float fup = up - iup;
+            float v = Surge::MSEG::valueAt( iup, fup, 0, ms, lseval, msegEvaluationState, false );
+            float vdef = Surge::MSEG::valueAt( iup, fup, lfodata->deform.val.f, ms, dflseval, dfmsegEvaluationState, false );
+
+            v = valpx( v );
+            vdef = valpx( vdef );
+            // Brownian doesn't deform and the second display is confusing since it is indepdently random
+            if( dflseval >= 0 && dflseval <= ms->n_activeSegments - 1 && ms->segments[dflseval].type == MSEGStorage::segment::Type::BROWNIAN )
+               vdef = v;
+
+            if( lseval == hoveredSegment )
+            {
+               if( !hlpathUsed )
+               {
+                  highlightPath->beginSubpath(i, v);
+                  hlpathUsed = true;
+               }
+               else
+               {
+                  highlightPath->addLine( i, v );
+               }
+            }
+
             if( i == 0 )
             {
                path->beginSubpath( i, v  );
@@ -564,9 +581,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->setFrameColor( skin->getColor( Colors::MSEGEditor::DeformCurve));
       dc->drawGraphicsPath( defpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
+      dc->setLineWidth( 6 );
+      dc->setFrameColor(skin->getColor( Colors::MSEGEditor::CurveUnderHighlight) );
+      dc->drawGraphicsPath( highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
       dc->setLineWidth(1.5);
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
       dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+
 
       path->forget();
       defpath->forget();
@@ -712,6 +734,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    }
 
    virtual CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons ) override {
+      auto tf = pxToTime( );
+      auto t = tf( where.x );
+      auto ohs = hoveredSegment;
+      hoveredSegment = Surge::MSEG::timeToSegment(ms, t);
+      if( hoveredSegment != ohs )
+         invalid();
+
       if( inDrawDrag )
       {
          auto tf = pxToTime( );
@@ -759,7 +788,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       bool flip = false;
       for( auto &h : hotzones )
       {
-         if( h.dragging ) continue;
+         if( h.dragging ) {
+            hoveredSegment = h.associatedSegment;
+            continue;
+         }
          
          if( h.rect.pointInside(where) )
          {
@@ -768,6 +800,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                h.active = true;
                flip = true;
             }
+
+            hoveredSegment = h.associatedSegment;
          }
          else
          {
@@ -818,6 +852,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       auto tf = pxToTime( );
       auto t = tf( iw.x );
+      auto tts = Surge::MSEG::timeToSegment(ms, t );
+      if( hoveredSegment >= 0 && tts != hoveredSegment )
+      {
+         tts = hoveredSegment;
+         t = ms->segmentStart[tts];
+      }
       contextMenu->addEntry( "[?] MSEG Segment" );
       contextMenu->addSeparator();
 
@@ -843,7 +883,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       contextMenu->addSeparator();
 
-      auto tts = Surge::MSEG::timeToSegment(ms, t );
 
       auto typeTo = [this, contextMenu, t, addCb, tts](std::string n, MSEGStorage::segment::Type type) {
                        auto m = addCb( contextMenu, n, [this,t, type]() {
@@ -902,7 +941,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       getFrame()->invalid();
       // invalid();
    }
-   
+
+   int hoveredSegment = -1;
    MSEGStorage *ms;
    LFOStorage *lfodata;
    MSEGControlRegion *controlregion = nullptr;
