@@ -1088,6 +1088,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    fxmenu = 0;
    typeinDialog = nullptr;
    minieditOverlay = nullptr;
+   msegEditSwitch = nullptr;
    
    for( int i=0; i<16; ++i ) vu[i] = 0;
 
@@ -1280,12 +1281,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
          break;
       }
       case Surge::Skin::Connector::NonParameterConnection::MSEG_EDIT: {
+         msegEditSwitch = layoutComponentForSkin( skinCtrl, tag_mseg_edit );
+         msegEditSwitch->setVisible( false );
+         msegEditSwitch->setValue( editorOverlay != nullptr && editorOverlayTag == "msegEditor" );
          auto q = modsource_editor[current_scene];
          if( ( q >= ms_lfo1 && q <= ms_lfo6  ) || ( q >= ms_slfo1 && q <= ms_slfo6 ) )
          {
             auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ q - ms_lfo1 ] );
             if( lfodata->shape.val.i == ls_mseg )
-               layoutComponentForSkin( skinCtrl, tag_mseg_edit );
+               msegEditSwitch->setVisible( true );
          }
          break;
       }
@@ -3233,20 +3237,25 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
    if( tag == tag_mseg_edit )
    {
-      // FIXME - press this button twice and you end up hosed
-      auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
-      auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
-      auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
-      auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
-      auto vs = mse->getViewSize().getWidth();
-      float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
+      std::cout << "VALUE is " << control->getValue() << std::endl;
+      if( control->getValue() > 0.5 )
+      {
+         auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
+         auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
+         auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
+         auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
+         auto vs = mse->getViewSize().getWidth();
+         float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 
-      std::string title = modsource_names[modsource_editor[current_scene]];
-      title += " Editor";
-      Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
+         std::string title = modsource_names[modsource_editor[current_scene]];
+         title += " Editor";
+         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
-      setEditorOverlay( mse, title, "msegEditor", CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
-
+         setEditorOverlay(mse, title, "msegEditor", CPoint(xp, 57), false,
+                          []() { std::cout << "MSE Closed" << std::endl; });
+      } else if( editorOverlayTag == "msegEditor" ) {
+         dismissEditorOverlay( );
+      }
       return;
    }
 
@@ -5950,14 +5959,21 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 
 }
 
-void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::string editorTag,
-                                      const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
+void SurgeGUIEditor::dismissEditorOverlay()
 {
    if( editorOverlay != nullptr )
    {
+      editorOverlay->setVisible(false);
       editorOverlayOnClose();
-      frame->removeView(editorOverlay);
+      removeFromFrame.push_back( editorOverlay );
+      editorOverlay = nullptr;
    }
+}
+
+void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::string editorTag,
+                                      const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
+{
+   dismissEditorOverlay();
 
    const int header = 18;
    const int buttonwidth = 40;
@@ -6720,4 +6736,15 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
    std::cout << "Swapping " << source << " and " << target << " mode=" << m << std::endl;
    // synth->enqueuReorderFx(source, target, m );
    Surge::UserInteractions::promptError( "Drag and Drop FX coming in Surge 1.8", "Not quite done yet" );
+}
+
+void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
+{
+   if( prior != curr || prior == ls_mseg || curr == ls_mseg )
+   {
+      if( msegEditSwitch )
+      {
+         msegEditSwitch->setVisible( curr == ls_mseg );
+      }
+   }
 }

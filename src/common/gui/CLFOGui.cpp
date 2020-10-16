@@ -1382,10 +1382,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                }
 
                // this is less of a hack.
-               if( prior == ls_mseg || i == ls_mseg )
-               {
-                  sge->queueRebuildUI();
-               }
+               sge->lfoShapeChanged( prior, i );
 
             }
          }
