@@ -23,6 +23,7 @@ namespace Surge
       void deleteSegment( MSEGStorage *s, float t );
 
       void resetControlPoint( MSEGStorage *s, float t );
+      void resetControlPoint( MSEGStorage *s, int idx );
       void constrainControlPointAt( MSEGStorage *s, int idx );
    }
 }
