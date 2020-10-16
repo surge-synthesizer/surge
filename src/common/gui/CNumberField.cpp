@@ -566,7 +566,7 @@ CMouseEventResult CNumberField::onMouseDown(CPoint& where, const CButtonState& b
    if (buttons & kDoubleClick)
    {
       if (listener)
-         listener->controlModifierClicked(this, kControl);
+         listener->controlModifierClicked(this, buttons);
       {
          setDirty();
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
