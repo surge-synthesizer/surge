@@ -1093,7 +1093,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
    {
       auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
       if( sge )
-         sge->showMSEGEditor();
+         sge->toggleMSEGEditor();
    }
    if (1) //(buttons & kLButton))
    {

@@ -293,6 +293,8 @@ public:
 
    void lfoShapeChanged(int prior, int curr);
    void showMSEGEditor();
+   void closeMSEGEditor();
+   void toggleMSEGEditor();
 
 private:
    SGEDropAdapter *dropAdapter = nullptr;
