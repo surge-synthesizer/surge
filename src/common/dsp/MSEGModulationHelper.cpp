@@ -25,6 +25,9 @@ namespace MSEG {
 
 void rebuildCache( MSEGStorage *ms )
 {
+   if( ms->loop_start > ms->n_activeSegments - 1 ) ms->loop_start = -1;
+   if( ms->loop_end > ms->n_activeSegments - 1 ) ms->loop_end = -1;
+
    float totald = 0;
    for( int i=0; i<ms->n_activeSegments; ++i )
    {
@@ -51,9 +54,16 @@ void rebuildCache( MSEGStorage *ms )
    {
       constrainControlPointAt( ms, i );
    }
+
+   ms->durationToLoopEnd = ms->totalDuration;
+   if( ms->loop_end >= 0 )
+      ms->durationToLoopEnd = ms->segmentEnd[ms->loop_end];
+
+   ms->durationLoopStartToLoopEnd = ms->segmentEnd[(ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 )] -
+      ms->segmentStart[(ms->loop_start >= 0 ? ms->loop_start : 0 )];
 }
 
-float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEvaluated, float msegState[5], bool isReleased)
+float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, bool forceOneShot )
 {
    if( ms->n_activeSegments == 0 ) return df;
 
@@ -61,45 +71,30 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    double up = (double)ip + fup;
 
    // If a oneshot is done, it is done
-   if( up >= ms->totalDuration && ms->loopMode == MSEGStorage::LoopMode::ONESHOT )
+   if( up >= ms->totalDuration && ( ms->loopMode == MSEGStorage::LoopMode::ONESHOT || forceOneShot ) )
       return ms->segments[ms->n_activeSegments - 1].nv1;
 
-   if( up >= ms->totalDuration ) {
-      double nup = up / ms->totalDuration;
-      up -= (int)nup * ms->totalDuration;
-      if( up < 0 )
-         up += ms->totalDuration;
-   }
 
    df = limit_range( df, -1.f, 1.f );
-   
-   float cd = 0;
-   MSEGStorage::segment r;
-   int idx = -1;
-   for( int i=0; i<ms->n_activeSegments; ++i ) 
-   {
-      if( up >= ms->segmentStart[i] && up < ms->segmentEnd[i] )
-      {
-         r = ms->segments[i];
-         idx = i;
-         break;
-      }
-   }
 
-   if( idx < 0 ) return 0;
+   float timeAlongSegment = 0;
 
+   int idx = timeToSegment( ms, up, forceOneShot, timeAlongSegment);
+
+   if( idx < 0 || idx >= ms->n_activeSegments ) return 0;
+   auto r = ms->segments[idx];
+   // std::cout << up << " " << idx << std::endl;
    bool segInit = false;
-   if( idx != lastSegmentEvaluated )
+   if( idx != es->lastEval)
    {
       segInit = true;
-      lastSegmentEvaluated = idx;
+      es->lastEval = idx;
    }
 
    if( ! ms->segments[idx].useDeform )
       df = 0;
 
    
-   float pd = up - ms->segmentStart[idx];
 
 
    if( ms->segments[idx].duration <= MSEGStorage::minimumDuration )
@@ -111,23 +106,71 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
    case MSEGStorage::segment::LINEAR:
    {
       if( r.v0 == r.nv1 ) return r.v0;
-      float frac = pd / r.duration;
+      float frac = timeAlongSegment / r.duration;
 
       // So we want to handle control points
       auto cpd = r.cpduration / r.duration;
       auto cpv = ( r.cpv - r.v0 ) / ( r.nv1 - r.v0 );
 
-      /*
-       * find some n such that cpv = cpd^n
-       * log_cpd cpv = n
-       * log(cpv) / log(cpd) = n
-       * but limit those puppies
-       */
-      float cpn = 1;
-      cpv = limit_range( cpv, 0.02f, 0.98f );
-      cpd = limit_range( cpd, 0.02f, 0.98f );
-      if( fabs(cpv-cpd) > 0.001 )
-         cpn = log(cpv) / log(cpd);
+      float a = es->msegSegmentState[idx][3];
+      if( es->msegSegmentState[idx][0] != cpd || es->msegSegmentState[idx][1] != cpv )
+      {
+         es->msegSegmentState[idx][0] = cpd;
+         es->msegSegmentState[idx][1] = cpv;
+
+         /*
+          * We want to find the a such that
+          * (e^ax-1)/(e^a-1) = y
+          * but we have to solve for that so cache it when CV changes
+          */
+         auto x = cpd;
+         auto y = cpv;
+         float a0 = 0, a1 = 0;
+         if( y > x ) // -ve a
+         {
+            a0 = -40;
+            a1 = -1e-4;
+         }
+         else
+         {
+            a0 = 1e-4;
+            a1 = 40;
+         }
+         auto stepsize = 40;
+         auto ev = [x,y](float a) { return ( exp(a*x)-1)/(exp(a)-1) - y; };
+
+         int it = 0;
+         float p0 = ev(a0);
+         float p1 = ev(a1);
+         if( fabs( cpv-cpd) < .01 ) {
+            a = 0;
+         } else if( p0 * p1 > 0 ) // they have the same sign
+         {
+            if( y > x ) a = -40;
+            else a = 40;
+         }
+         else
+         {
+            while (fabs(a1 - a0) > 1e-3 && it < 30)
+            {
+               auto mida = (a1 + a0) / 2;
+               float midp = ev(mida);
+               if (p0 * midp > 0) // same sign
+               {
+                  p0 = midp;
+                  a0 = mida;
+               }
+               else
+               {
+                  p1 = midp;
+                  a1 = mida;
+               }
+               ++it;
+            }
+            a = (a1 + a0) / 2;
+         }
+         es->msegSegmentState[idx][3] = a;
+      }
 
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
@@ -136,7 +179,9 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
          frac = pow( frac, 1.0 + df * 3 );
 
       // OK so frac is the 0,1 line point
-      auto cpline = pow( frac, cpn );
+      auto cpline = frac;
+      if( fabs(a) > 1e-3 )
+         cpline = ( exp( a * frac ) - 1 ) / ( exp( a ) - 1 );
 
 
       // cpline will still be 0,1 so now we need to transform it
@@ -148,11 +193,11 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       static constexpr int validx = 0, lasttime = 1, outidx = 2;
       if( segInit )
       {
-         msegState[validx] = r.v0;
-         msegState[outidx] = r.v0;
-         msegState[lasttime] = 0;
+         es->msegState[validx] = r.v0;
+         es->msegState[outidx] = r.v0;
+         es->msegState[lasttime] = 0;
       }
-      float targetTime = pd/r.duration;
+      float targetTime = timeAlongSegment /r.duration;
       if( targetTime >= 1 )
       {
          res = r.nv1;
@@ -161,13 +206,13 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       {
          res = r.v0;
       }
-      else if( targetTime <= msegState[lasttime] )
+      else if( targetTime <= es->msegState[lasttime] )
       {
-         res = msegState[outidx];
+         res = es->msegState[outidx];
       }
       else
       {
-         while( msegState[lasttime] < targetTime && msegState[lasttime] < 1 )
+         while( es->msegState[lasttime] < targetTime && es->msegState[lasttime] < 1 )
          {
             auto ncd = r.cpduration / r.duration; // 0-1
             // OK so the closer this is to 1 the more spiky we should be, which is basically
@@ -175,43 +220,43 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
 
             // The slowest is 5 steps (max dt is 0.2)
             float sdt = 0.2f * ( 1 - ncd ) * ( 1 - ncd );
-            float dt = std::min( std::max( sdt, 0.0001f ), 1 - msegState[lasttime] );
+            float dt = std::min( std::max( sdt, 0.0001f ), 1 - es->msegState[lasttime] );
 
-            if( msegState[lasttime] < 1 )
+            if( es->msegState[lasttime] < 1 )
             {
-               float lincoef  = ( r.nv1 - msegState[validx] ) / ( 1 - msegState[lasttime] );
+               float lincoef  = ( r.nv1 - es->msegState[validx] ) / ( 1 - es->msegState[lasttime] );
                float randcoef = 0.1 * r.cpv; // CPV is on -1,1
                /*
                * Modification to standard bridge. We want to move away from 1,-1 so lets
                * explicitly bounce away from them if random will push us over
                */
                auto uniformRand = ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
-               auto linstp = msegState[validx] + lincoef * dt;
+               auto linstp = es->msegState[validx] + lincoef * dt;
                float randup = randcoef;
                float randdn = randcoef;
                if( linstp + randup > 1 ) randup = 1 - linstp;
                else if( linstp - randdn < -1 ) randdn = linstp + 1;
                auto randadj = ( uniformRand > 0 ? randup * uniformRand : randdn * uniformRand );
 
-               msegState[validx] += limit_range( lincoef * dt + randadj, -1.f, 1.f );
-               msegState[lasttime] += dt;
+               es->msegState[validx] += limit_range( lincoef * dt + randadj, -1.f, 1.f );
+               es->msegState[lasttime] += dt;
             }
             else
-               msegState[validx] = r.nv1;
+               es->msegState[validx] = r.nv1;
          }
          if( r.cpv < 0 )
          {
             // Snap to between 1 and 24 values.
             int a = floor( - r.cpv * 24 ) + 1;
-            msegState[outidx] = floor( msegState[validx] * a ) * 1.f / a;
+            es->msegState[outidx] = floor( es->msegState[validx] * a ) * 1.f / a;
          }
          else
          {
-            msegState[outidx] = msegState[validx];
+            es->msegState[outidx] = es->msegState[validx];
          }
-         msegState[outidx] = limit_range(msegState[outidx],-1.f, 1.f );
+         es->msegState[outidx] = limit_range(es->msegState[outidx],-1.f, 1.f );
          // so basically softclip it
-         res  = msegState[outidx];
+         res  = es->msegState[outidx];
       }
       
       break;
@@ -244,7 +289,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       cpt = tp + 2 * dt;
       
       // B = (1-t)^2 P0 + 2 t (1-t) P1 + t^2 P2
-      float ttarget = pd;
+      float ttarget = timeAlongSegment;
       float px0 = 0, px1 = cpt, px2 = r.duration,
          py0 = r.v0, py1 = cpv, py2 = r.nv1;
 
@@ -270,7 +315,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       if( a == 0 || disc < 0 )
       {
          // This means we have a line between v0 and nv1
-         float frac = pd / r.duration;
+         float frac = timeAlongSegment / r.duration;
          res = frac * r.nv1 + ( 1 - frac ) * r.v0;
       }
       else
@@ -293,7 +338,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
 
    case MSEGStorage::segment::SCURVE:
    {
-      float x = ( pd / r.duration - 0.5 ) * 2; // goes from -1 to 1
+      float x = (timeAlongSegment / r.duration - 0.5 ) * 2; // goes from -1 to 1
 
       float eps = 0.01;
       float mv = r.v0; //std::min( r.v0, r.nv1 );
@@ -314,7 +359,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       float k = cx * kmax;
       if( k == 0 ) 
       {
-         float frac = pd / r.duration;
+         float frac = timeAlongSegment / r.duration;
          res = frac * r.nv1 + ( 1 - frac ) * r.v0;
          break;
       }
@@ -371,7 +416,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       float as = 5.0;
       float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
       int steps = (int)( scaledpct * 100 );
-      auto f = pd/r.duration;
+      auto f = timeAlongSegment /r.duration;
 
 
       float a = 1;
@@ -437,7 +482,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
       float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
       int steps = (int)( scaledpct * 100 ) + 2;
 
-      float frac = (float)( (int)( steps * pd / r.duration ) ) / (steps-1);
+      float frac = (float)( (int)( steps * timeAlongSegment / r.duration ) ) / (steps-1);
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
       if( df > 0 )
@@ -448,29 +493,82 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, int &lastSegmentEval
 
    
    }
-   //std::cout << _D(pd) << _D(r.type) << _D(r.duration) << _D(r.v0) << std::endl;
+   //std::cout << _D(timeAlongSegment) << _D(r.type) << _D(r.duration) << _D(r.v0) << std::endl;
 
    
    return res;
 }
 
+int timeToSegment( MSEGStorage *ms, double t )
+{
+   float x;
+   return timeToSegment(ms, t, true, x);
+}
 
-int timeToSegment( MSEGStorage *ms, float t ) {
+int timeToSegment( MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlongSegment )
+{
    if( ms->totalDuration < MSEGStorage::minimumDuration ) return -1;
-   
-   while( t > ms->totalDuration ) t -= ms->totalDuration;
-   while( t < 0 ) t += ms->totalDuration;
-   
-   int idx = -1;
-   for( int i=0; i<ms->n_activeSegments; ++i ) 
+
+   if( ignoreLoops )
    {
-      if( t >= ms->segmentStart[i] && t < ms->segmentEnd[i] )
+      if (t >= ms->totalDuration)
       {
-         idx = i;
-         break;
+         double nup = t / ms->totalDuration;
+         t -= (int)nup * ms->totalDuration;
+         if (t < 0)
+            t += ms->totalDuration;
       }
+
+      int idx = -1;
+      for (int i = 0; i < ms->n_activeSegments; ++i)
+      {
+         if (t >= ms->segmentStart[i] && t < ms->segmentEnd[i])
+         {
+            idx = i;
+            amountAlongSegment = t - ms->segmentStart[i];
+            break;
+         }
+      }
+
+      return idx;
    }
-   return idx;
+   else
+   {
+      // The loop case is more tedious
+      int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
+      int ls = (ms->loop_start >= 0 ? ms->loop_start : 0 );
+      // So are we before the first loop end point
+      if( t <= ms->durationToLoopEnd )
+      {
+         for( int i=0; i<ms->n_activeSegments; ++i )
+            if( t >= ms->segmentStart[i] && t <= ms->segmentEnd[i])
+            {
+               amountAlongSegment = t - ms->segmentStart[i];
+               return i;
+            }
+      }
+      else
+      {
+         double nt = t - ms->durationToLoopEnd;
+         // OK so now we have a cycle which has length durationFromStartToEnd;
+         double nup = nt / ms->durationLoopStartToLoopEnd;
+         nt -= (int)nup * ms->durationLoopStartToLoopEnd;
+         if (nt < 0)
+            nt += ms->durationLoopStartToLoopEnd;
+
+         // and we need to offset it by the starting point
+         nt += ms->segmentStart[ls];
+
+         for( int i=0; i<ms->n_activeSegments; ++i )
+            if( nt >= ms->segmentStart[i] && nt <= ms->segmentEnd[i])
+            {
+               amountAlongSegment = nt - ms->segmentStart[i];
+               return i;
+            }
+      }
+
+      return 0;
+   }
 }
 
 void changeTypeAt( MSEGStorage *ms, float t, MSEGStorage::segment::Type type ) {
@@ -600,6 +698,9 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
 
 
 void unsplitSegment( MSEGStorage *ms, float t ) {
+   // Can't unsplit a single segment
+   if( ms->n_activeSegments - 1 == 0 ) return;
+
    int idx = timeToSegment( ms, t );
    int prior = idx;;
    if( ( ms->segmentEnd[idx] - t < t - ms->segmentStart[idx] ) || t >= ms->totalDuration )
@@ -642,6 +743,9 @@ void unsplitSegment( MSEGStorage *ms, float t ) {
 }
    
 void deleteSegment( MSEGStorage *ms, float t ) {
+   // Can't delete the last segment
+   if( ms->n_activeSegments <= 1 ) return;
+
    auto idx = timeToSegment( ms, t );
    
    for( int i=idx; i<ms->n_activeSegments - 1; ++i )

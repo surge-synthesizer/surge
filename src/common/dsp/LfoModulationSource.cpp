@@ -649,8 +649,8 @@ void LfoModulationSource::process_block()
       }
       break;
    case ls_mseg:
-      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms,
-                                  msegLastEvaluated, msegEvaluationState, env_state == lenv_release || env_state == lenv_msegrelease );
+      msegstate.released =  ( env_state == lenv_release || env_state == lenv_msegrelease );
+      iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms, &msegstate );
       break;
    };
 

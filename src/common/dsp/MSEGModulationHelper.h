@@ -6,12 +6,21 @@ namespace Surge
 {
    namespace MSEG {
       void rebuildCache(MSEGStorage *s);
-      float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s, int &lastEval, float msegState[5], bool isReleased );
+
+      struct EvaluatorState {
+         int lastEval = -1;
+         float msegState[6] = {0};
+         float msegSegmentState[max_msegs][6] = {0};
+         bool released = false;
+      };
+      float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s,
+                    EvaluatorState *state, bool forceOneShot = false);
 
       /*
       ** Edit and Utility functions. After the call to all of these you will want to rebuild cache
       */
-      int timeToSegment( MSEGStorage *s, float t );
+      int timeToSegment( MSEGStorage *s, double t ); // these are double to deal with very long phases
+      int timeToSegment( MSEGStorage *s, double t, bool ignoreLoops, float &timeAlongSegment );
       void changeTypeAt( MSEGStorage *s, float t, MSEGStorage::segment::Type type );
       void insertAfter( MSEGStorage *s, float t );
       void insertBefore( MSEGStorage *s, float t );
