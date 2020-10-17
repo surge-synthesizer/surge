@@ -430,6 +430,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          dc->drawString( txt, CRect( CPoint( px + 4 + xoff, haxisArea.top + 2), CPoint( 15, 10 )));
       }
 
+      // draw loop markers
+      int ls = ( ms->loop_start >= 0 ? ms->loop_start : 0 );
+      int le = ( ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 );
+      float pxs = tpx( ms->segmentStart[ls] );
+      float pxe = tpx(ms->segmentEnd[le]);
+      auto r = VSTGUI::CRect( CPoint( pxs-10, haxisArea.top), CPoint( 10, 10 ));
+      dc->setFillColor( kGreenCColor );
+      dc->drawRect( r, kDrawFilled );
+
+      r = VSTGUI::CRect( CPoint( pxe, haxisArea.top), CPoint( 10, 10 ));
+      dc->setFillColor( kRedCColor );
+      dc->drawRect( r, kDrawFilled );
+
       auto vaxisArea = getVAxisArea();
       dc->setLineWidth( 1 );
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
@@ -445,7 +458,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
          char txt[16];
          snprintf( txt, 16, "%4.2f", i );
-         dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
+         if( off == 0 )
+            dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
       }
    }
    
@@ -889,6 +903,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       contextMenu->addSeparator();
 
+      addCb( contextMenu, "Start Loop", [this,tts]() {
+         ms->loop_start = std::min( ms->loop_end + 1, tts );
+         modelChanged();
+      });
+
+      addCb( contextMenu, "End Loop", [this,tts]() {
+        ms->loop_end = tts;
+        modelChanged();
+      });
+
+      contextMenu->addSeparator();
+
+
 
       auto typeTo = [this, contextMenu, t, addCb, tts](std::string n, MSEGStorage::segment::Type type) {
                        auto m = addCb( contextMenu, n, [this,t, type]() {
@@ -967,7 +994,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
    switch( tag )
    {
    case tag_loop_mode: {
-      int m = floor((val * 3) + 1);
+      int m = floor( val * 2 + 0.1 ) + 1;
       ms->loopMode = (MSEGStorage::LoopMode)m;
       canvas->modelChanged();
    }
