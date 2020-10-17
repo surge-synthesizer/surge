@@ -1,241 +1,143 @@
-//
-//  filesystem.cpp
-//  surge-vst2
-//
-//  Created by Keith Zantow on 10/2/18.
-//
+/*
+** Surge Synthesizer is Free and Open Source Software
+**
+** Surge is made available under the Gnu General Public License, v3.0
+** https://www.gnu.org/licenses/gpl-3.0.en.html
+**
+** Copyright 2004-2020 by various individuals as described by the Git transaction log
+**
+** All source at: https://github.com/surge-synthesizer/surge.git
+**
+** Surge was a commercial product from 2004-2018, with Copyright and ownership
+** in that period held by Claes Johanson at Vember Audio. Claes made Surge
+** open source in September 2018.
+*/
 
 #include "filesystem/filesystem.h"
 
-#include <climits>
+#include <cerrno>
+#include <cstdio>
 #include <cstring>
-#include <fstream>
 
-#include <dirent.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace Surge { namespace filesystem {
-    // path class:
-    path::path():
-    path("")
-    {}
-    
-    path::path(std::string filePath):
-    p(filePath)
-    {}
-    
-    path::operator std::string() {
-        return p;
-    }
-    
-    void path::append(std::string s) {
-        p.append("/");
-        p.append(s);
-    }
-    
-    const char* path::c_str() {
-        return p.c_str();
-    }
-    
-    std::string path::generic_string() const {
-        return p;
-    }
-    
-    path path::filename() const {
-        auto idx = this->p.find_last_of("/");
-        path p(this->p.substr(idx+1));
-        return p;
-    }
-    
-    path path::extension() const {
-        auto idx = this->p.find_last_of(".");
-        if( idx == std::string::npos )
-            return path( "" );
 
-        path res(p.substr(idx));
-        return res;
-    }
+namespace {
+bool is_type_set_errno(char const* p, mode_t typemask)
+{
+   errno = 0;
+   struct stat statbuf;
+   return !::stat(p, &statbuf) && ((statbuf.st_mode & S_IFMT) == typemask);
+}
 
-    path path::stem() const {
-        auto idx = this->p.find_last_of("/");
-        auto q = this->p.substr(idx+1);
-        idx = q.find_last_of(".");
-        if( idx != std::string::npos )
-           q = q.substr( 0, idx );
+bool is_type(const path& p, mode_t typemask)
+{
+   if (is_type_set_errno(p.c_str(), typemask))
+      return true;
+   if (!errno || errno == ENOENT || errno == ENOTDIR)
+      return false;
+   throw filesystem_error{errno, std::string{"could not get type of path \""} + p.native() + '\"'};
+}
 
-        return path( q );;
-    }
-    // emd path class
+bool do_create_directory(const char* p)
+{
+   if (!::mkdir(p, 0777))
+      return true;
+   if (errno == EEXIST)
+      return false;
+   throw filesystem_error{errno, std::string{"could not create directory \""} + p + '\"'};
+}
+} // anonymous namespace
 
-    // file class:
-    file::file(std::string filePath):
-    p(filePath)
-    {}
-    
-    file::operator class path() {
-        return p;
-    }
-    
-    path file::path() const {
-        return p;
-    }
-    // end file class
-    
-    // directory_entry class:
-    directory_entry::directory_entry(class path p):
-    p(p)
-    {}
-    
-    path directory_entry::path() const {
-        return p;
-    }
-    // end directory_entry
-    
-    bool exists(path p) {
-        FILE *file;
-        if ((file = fopen(p.p.c_str(), "r")))
-        {
-            fclose(file);
-            return true;
-        }
-        return false;
-    }
-    
-    void create_directories(path p) {
-        mode_t nMode = 0755; // UNIX style permissions
-        int nError = 0;
-        // FIXME
-#if defined(_WIN32) 
-        nError = _mkdir(p.c_str()); // can be used on Windows
-#else
-        // create_directories is recursive so this solution
-        // nError = mkdir(p.c_str(), nMode); // can be used on non-Windows
-        // doesn't work if you are creating two or 3 layers.
-        // From: https://stackoverflow.com/questions/2336242/recursive-mkdir-system-call-on-unix
-        char* pos;
-        char file_path[PATH_MAX];
-        sprintf( file_path, "%s", p.c_str() ); // I need a non-const char* so have to copy
-        for (pos=strchr(file_path+1, '/'); pos; pos=strchr(pos+1, '/')) {
-            *pos='\0';
-            if (mkdir(file_path, nMode)==-1) {
-                if (errno!=EEXIST) { *pos='/'; return; }
-            }
-            *pos='/';
-        }
-        // and clean up the end
-        nError = mkdir(file_path, nMode );
-#endif
-        if (nError != 0) {
-            // handle your error here
-        }
-    }
-    
-    bool is_directory(path p) {
-        DIR *dp;
-        bool isDir = false;
-        if((dp  = opendir(p.c_str())) != NULL && readdir(dp) != NULL) {
-            isDir = true;
-        }
-        if( dp != NULL )
-        {
-            closedir(dp);
-        }
-        return isDir;
-    }
-    
-    std::vector<file> directory_iterator(path p) {
-        std::vector<file> files;
-        DIR *dp;
-        if((dp  = opendir(p.c_str())) == NULL) {
-//            std::cout << "Error(" << errno << ") opening " << p.generic_string() << std::endl;
-          return files;
-        }
-        
-        // this needs to return the full path not just the relative path
-#if WINDOWS
-        // This code is only used in WINDOWS on Rack; and on Rack mingw is using a posix impl
-        // without readdir_r. So do the old fashioned way
-        struct dirent *dirp;
-        while( (dirp = readdir(dp)) != NULL ) {
-          string fname(dirp->d_name);
-#else
-        struct dirent dirp, *entry;
-        while ( (readdir_r(dp, &dirp, &entry) == 0) && entry != NULL) {
-          std::string fname(dirp.d_name);
-#endif
-          // Skip . and .. : https://github.com/kurasu/surge/issues/77
-          if (fname.compare(".") == 0 || fname.compare("..") == 0) {
-              continue;
-          }
-            
-          file res(p.generic_string() + '/' + fname);
+bool create_directories(const path& p)
+{
+   auto pth{p.native()};
+   auto* const begin = &*pth.begin();
+   auto* end = begin;
+   while (*++end == path::preferred_separator) {}
+   while (end && (end = std::strchr(end, path::preferred_separator)))
+   {
+      *end = '\0';
+      if (!do_create_directory(begin) && !is_type_set_errno(begin, S_IFDIR))
+         throw filesystem_error{ENOTDIR, std::string{"could not create directories \""} + p.native() + '\"'};
+      *end = path::preferred_separator;
+      while (*++end == path::preferred_separator) {}
+   }
+   if (do_create_directory(begin))
+      return true;
+   if (is_type_set_errno(p.c_str(), S_IFDIR))
+      return false;
+   throw filesystem_error{EEXIST, std::string{"could not create directories \""} + p.native() + '\"'};
+}
 
-          files.push_back(res);
-        }
+bool create_directory(const path& p)
+{
+   return do_create_directory(p.c_str());
+}
 
-        closedir(dp);
-        
-        return files;
-    }
-    
-    std::vector<directory_entry> recursive_directory_iterator(const path& src) {
-        std::vector<directory_entry> entries;
-        for(const auto& entry : directory_iterator(src)) {
-            const auto& p = entry.path();
-            directory_entry e(p);
-            entries.emplace_back(e);
-            if (is_directory(p)) {
-                std::vector<directory_entry> subdir = recursive_directory_iterator(p);
-                for(const auto& subdirEntry : subdir) {
-                    entries.emplace_back(subdirEntry);
-                }
-            }
-        }
-        return entries;
-    }
-    
-    path relative(const path& p, const path& root) {
-        return path(p.generic_string().substr(root.generic_string().length()));
-    }
-    
-    void copy(const path& src, const path& dst, const copy_options options) {
-        std::ifstream in(src.generic_string());
-        std::ofstream out(dst.generic_string());
-        out << in.rdbuf();
-    }
-    
-    void copy_recursive(const path& src, const path& target, const std::function<bool(path)>& predicate) noexcept
-    {
-        try
-        {
-            for (const auto& dirEntry : recursive_directory_iterator(src))
-            {
-                const auto& p = dirEntry.path();
-                if (predicate(p))
-                {
-                    // Create path in target, if not existing.
-                    const auto relativeSrc = relative(p, src);
-                    auto targetStr = target.generic_string() + '/' + relativeSrc.generic_string();
-                    path targetPath(targetStr);
-                    if (is_directory(p)) {
-                        create_directories(targetPath);
-                    } else {
-                        // Copy to the targetParentPath which we just created.
-                        copy(p, targetPath, copy_options::overwrite_existing);
-                    }
-                }
-            }
-        }
-        catch (std::exception& e)
-        {
-            //        std::cout << e.what();
-        }
-    }
-    
-    void copy_recursive(const path& src, const path& target) noexcept
-    {
-        copy_recursive(src, target, [](path p) { return true; });
-    }
+bool exists(const path& p)
+{
+   if (!::access(p.c_str(), F_OK))
+      return true;
+   if (errno == ENOENT || errno == ENOTDIR)
+      return false;
+   throw filesystem_error{errno, std::string{"could not access \""} + p.native() + '\"'};
+}
+
+std::uintmax_t file_size(const path& p)
+{
+   auto errnum{ENOTSUP};
+   struct stat statbuf;
+   if (::stat(p.c_str(), &statbuf))
+      errnum = errno;
+   else if (S_ISREG(statbuf.st_mode))
+      return std::uintmax_t(statbuf.st_size);
+   else if (S_ISDIR(statbuf.st_mode))
+      errnum = EISDIR;
+   throw filesystem_error{errnum, std::string{"could not get size of file \""} + p.native() + '\"'};
+}
+
+bool is_directory(const path& p)
+{
+   return is_type(p, S_IFDIR);
+}
+
+bool is_regular_file(const path& p)
+{
+   return is_type(p, S_IFREG);
+}
+
+bool remove(const path& p)
+{
+   if (!std::remove(p.c_str()))
+      return true;
+   if (errno == ENOENT)
+      return false;
+   throw filesystem_error{errno, std::string{"could not remove path \""} + p.native() + '\"'};
+}
+
+std::uintmax_t remove_all(const path& p)
+{
+   std::uintmax_t result{};
+   std::error_code ec;
+   directory_iterator it{p, ec};
+   if (it != directory_iterator{})
+   {
+      for (const path& subp : it)
+         result += remove_all(subp);
+   }
+   // Ignoring permission_denied on the next line would delete empty directories just fine even
+   // without permissions, but libc++ throws here, so we do too...
+   else if (ec && ec != std::errc::not_a_directory && ec != std::errc::no_such_file_or_directory)
+      throw filesystem_error{std::string{"could not remove path \""} + p.native() + '\"', ec};
+   if (remove(p))
+      ++result;
+   return result;
+}
+
 } // namespace filesystem
 
 } // namespace Surge

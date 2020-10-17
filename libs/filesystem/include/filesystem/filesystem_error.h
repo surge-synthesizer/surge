@@ -15,24 +15,20 @@
 
 #pragma once
 
-#include "filesystem/filesystem_error.h"
-#include "filesystem/path.h"
-#include "filesystem/directory_iterator.h"
-#include "filesystem/recursive_directory_iterator.h"
-
-#include <cstdint>
+#include <system_error>
 
 namespace Surge { namespace filesystem {
 
-// filesystem operations                                                               [fs.op.funcs]
-bool create_directories(const path& p);
-bool create_directory(const path& p);
-bool exists(const path& p);
-std::uintmax_t file_size(const path& p);
-bool is_directory(const path& p);
-bool is_regular_file(const path& p);
-bool remove(const path& p);
-std::uintmax_t remove_all(const path& p);
+class filesystem_error : public std::system_error //                     [fs.class.filesystem_error]
+{
+public:
+   filesystem_error(const std::string& what_arg, std::error_code ec)
+   : system_error(ec, std::string{"filesystem error: "} + what_arg) {}
+
+   filesystem_error(int errnum, const std::string& what_arg) // non-standard convenience overload
+   : filesystem_error(what_arg, std::error_code(errnum, std::generic_category()))
+   {}
+};
 
 } // namespace filesystem
 
