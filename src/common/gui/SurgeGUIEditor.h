@@ -292,6 +292,8 @@ public:
       }
 
    void lfoShapeChanged(int prior, int curr);
+   void showMSEGEditor();
+
 private:
    SGEDropAdapter *dropAdapter = nullptr;
    friend class SGEDropAdapter;

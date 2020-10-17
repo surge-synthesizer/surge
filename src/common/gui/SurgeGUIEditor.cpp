@@ -3240,19 +3240,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       std::cout << "VALUE is " << control->getValue() << std::endl;
       if( control->getValue() > 0.5 )
       {
-         auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
-         auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
-         auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
-         auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
-         auto vs = mse->getViewSize().getWidth();
-         float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
-
-         std::string title = modsource_names[modsource_editor[current_scene]];
-         title += " Editor";
-         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
-
-         setEditorOverlay(mse, title, "msegEditor", CPoint(xp, 57), false,
-                          []() { std::cout << "MSE Closed" << std::endl; });
+         showMSEGEditor();
       } else if( editorOverlayTag == "msegEditor" ) {
          dismissEditorOverlay( );
       }
@@ -6756,5 +6744,28 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
       {
          msegEditSwitch->setVisible( curr == ls_mseg );
       }
+   }
+}
+
+void SurgeGUIEditor::showMSEGEditor()
+{
+   auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
+   auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
+   auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
+   auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
+   auto vs = mse->getViewSize().getWidth();
+   float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
+
+   std::string title = modsource_names[modsource_editor[current_scene]];
+   title += " Editor";
+   Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
+
+   setEditorOverlay(mse, title, "msegEditor", CPoint(xp, 57), false,
+                    [this]() { this->synth->refresh_editor = true; });
+
+   if( msegEditSwitch )
+   {
+      msegEditSwitch->setValue( 1.0 );
+      msegEditSwitch->invalid();
    }
 }
