@@ -1101,20 +1101,20 @@ void MSEGControlRegion::rebuild()
       snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
       
       auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
-      //auto htxt = new CTextEdit(hsrect, this, tag_horizontal_value, svt);
-      auto* htxt = new CNumberField(hsrect, this, tag_horizontal_value, nullptr /*, ref to storage?*/);
-      htxt->setControlMode(cm_mseg_snap_h);
-      htxt->setSkin(skin, associatedBitmapStore);
-      htxt->setMouseableArea(hsrect);
+      auto htxt = new CTextEdit(hsrect, this, tag_horizontal_value, svt);
+      //auto* htxt = new CNumberField(hsrect, this, tag_horizontal_value, nullptr /*, ref to storage?*/);
+      //htxt->setControlMode(cm_mseg_snap_h);
+      //htxt->setSkin(skin, associatedBitmapStore);
+      //htxt->setMouseableArea(hsrect);
       
-//#if WINDOWS
-      //htxt->setTextInset(CPoint(3, 1));
-//#endif
-      //htxt->setFont(editFont);
-      //htxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
-      //htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
-      //htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
-      //htxt->setRoundRectRadius(CCoord(3.f));
+#if WINDOWS
+      htxt->setTextInset(CPoint(3, 1));
+#endif
+      htxt->setFont(editFont);
+      htxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+      htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
+      htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
+      htxt->setRoundRectRadius(CCoord(3.f));
       addView(htxt);
 
       xpos += segWidth;
@@ -1126,7 +1126,10 @@ void MSEGControlRegion::rebuild()
       vbut->setValue( ms->vSnap < 0.001? 0 : 1 );
 
       snprintf(svt, 255, "%d", (int)round( 1.f / ms->vSnapDefault));
-      auto vtxt = new CTextEdit(CRect(CPoint(xpos + 52 + margin , ypos), CPoint(editWidth, controlHeight)), this, tag_vertical_value, svt);
+
+      auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
+      auto vtxt = new CTextEdit(vsrect, this, tag_vertical_value, svt);
+
 #if WINDOWS
       vtxt->setTextInset(CPoint(3, 1));
 #endif
