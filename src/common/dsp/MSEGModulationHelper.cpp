@@ -110,67 +110,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
       // So we want to handle control points
       auto cpd = r.cpduration / r.duration;
-      auto cpv = ( r.cpv - r.v0 ) / ( r.nv1 - r.v0 );
 
-      float a = es->msegSegmentState[idx][3];
-      if( es->msegSegmentState[idx][0] != cpd || es->msegSegmentState[idx][1] != cpv )
-      {
-         es->msegSegmentState[idx][0] = cpd;
-         es->msegSegmentState[idx][1] = cpv;
-
-         /*
-          * We want to find the a such that
-          * (e^ax-1)/(e^a-1) = y
-          * but we have to solve for that so cache it when CV changes
-          */
-         auto x = cpd;
-         auto y = cpv;
-         float a0 = 0, a1 = 0;
-         if( y > x ) // -ve a
-         {
-            a0 = -40;
-            a1 = -1e-4;
-         }
-         else
-         {
-            a0 = 1e-4;
-            a1 = 40;
-         }
-         auto stepsize = 40;
-         auto ev = [x,y](float a) { return ( exp(a*x)-1)/(exp(a)-1) - y; };
-
-         int it = 0;
-         float p0 = ev(a0);
-         float p1 = ev(a1);
-         if( fabs( cpv-cpd) < .01 ) {
-            a = 0;
-         } else if( p0 * p1 > 0 ) // they have the same sign
-         {
-            if( y > x ) a = -40;
-            else a = 40;
-         }
-         else
-         {
-            while (fabs(a1 - a0) > 1e-3 && it < 30)
-            {
-               auto mida = (a1 + a0) / 2;
-               float midp = ev(mida);
-               if (p0 * midp > 0) // same sign
-               {
-                  p0 = midp;
-                  a0 = mida;
-               }
-               else
-               {
-                  p1 = midp;
-                  a1 = mida;
-               }
-               ++it;
-            }
-            a = (a1 + a0) / 2;
-         }
-         es->msegSegmentState[idx][3] = a;
-      }
+      float a = 40 * cpd - 20.0;
 
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
@@ -781,15 +722,7 @@ void constrainControlPointAt( MSEGStorage *ms, int idx )
 {
    switch( ms->segments[idx].type )
    {
-   case MSEGStorage::segment::LINEAR:
-   {
-      // constrain time and value
-      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
-      auto l = std::min(ms->segments[idx].v0, ms->segments[idx].nv1 );
-      auto h = std::max(ms->segments[idx].v0, ms->segments[idx].nv1 );
-      ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, l, h );
-   }
-   break;
+   // 2D motion
    case MSEGStorage::segment::QUAD_BEZIER:
    case MSEGStorage::segment::BROWNIAN:
    {
