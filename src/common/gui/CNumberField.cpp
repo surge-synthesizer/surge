@@ -266,14 +266,8 @@ void CNumberField::setValue(float val)
 //------------------------------------------------------------------------
 void CNumberField::draw(CDrawContext* pContext)
 {
-   auto colorName = Colors::NumberField::Text.name;
-   auto hoverColorName = Colors::NumberField::TextHover.name;
-
-   if (skinControl)
-   {
-      colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::Text.name);
-      hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::TextHover.name );
-   }
+   auto colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::Text.name);
+   auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::TextHover.name );
 
    auto fontColor = kRedCColor;
    if( hovered )
@@ -494,6 +488,10 @@ void CNumberField::draw(CDrawContext* pContext)
       else
          sprintf(the_text, "no");
       break;
+   case cm_mseg_snap_h:
+   case cm_mseg_snap_v:
+      sprintf( the_text, "%i", i_value );
+      break;
    case cm_none:
       sprintf(the_text, "-");
       break;
@@ -634,9 +632,8 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
 
       
       bounceValue();
-      // invalid();
-      // setDirty();
-      if (isDirty() && listener)
+      invalid();
+      if (listener)
          listener->valueChanged(this);
    }
    return kMouseEventHandled;

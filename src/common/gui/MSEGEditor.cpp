@@ -989,9 +989,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
       break;
    case tag_vertical_value:
    {
-      // FIXME locales
-      auto fv = 1.f / (std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 ) ); // -1 to 1 remeber
-      //auto fv = 1.f / p->getValue();  // for CNF
+      auto fv = 1.f / std::max( 1, static_cast<CNumberField*>(p)->getIntValue() );
       ms->vSnapDefault = fv;
       if( ms->vSnap > 0 )
          ms->vSnap = ms->vSnapDefault;
@@ -1000,8 +998,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
       break;
    case tag_horizontal_value:
    {
-      auto fv = 1.f / (std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 ) ); // -1 to 1 remeber
-      //auto fv = 1.f / p->getValue();  // for CNF
+      auto fv = 1.f / std::max( 1, static_cast<CNumberField*>(p)->getIntValue() );
       ms->hSnapDefault = fv;
       if( ms->hSnap > 0 )
          ms->hSnap = ms->hSnapDefault;
@@ -1103,22 +1100,22 @@ void MSEGControlRegion::rebuild()
       snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
       
       auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
-      auto htxt = new CTextEdit(hsrect, this, tag_horizontal_value, svt);
-      //auto* htxt = new CNumberField(hsrect, this, tag_horizontal_value, nullptr /*, ref to storage?*/);
-      //htxt->setControlMode(cm_mseg_snap_h);
-      //htxt->setSkin(skin, associatedBitmapStore);
-      //htxt->setMouseableArea(hsrect);
-      
-#if WINDOWS
-      htxt->setTextInset(CPoint(3, 1));
-#endif
-      htxt->setFont(editFont);
-      htxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
-      htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
-      htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
-      htxt->setRoundRectRadius(CCoord(3.f));
 
-      addView(htxt);
+      /*
+       * CNF responds to skih objects and we are not skin driven here. We could to two things
+       * 1. Add a lot of ifs to CNF
+       * 2. Make a proxky skin control
+       * I choose 2.
+       */
+      auto cnfSkinCtrl = std::make_shared<Surge::UI::Skin::Control>();
+      cnfSkinCtrl->allprops["bg_id"] = std::to_string( IDB_MSEG_NUMBERFIELDBG );
+      auto* hnf = new CNumberField(hsrect, this, tag_horizontal_value, nullptr /*, ref to storage?*/);
+      hnf->setControlMode(cm_mseg_snap_h);
+      hnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
+      hnf->setMouseableArea(hsrect);
+      hnf->setIntValue( 4 );
+
+      addView(hnf);
 
       xpos += segWidth;
 
@@ -1131,103 +1128,15 @@ void MSEGControlRegion::rebuild()
       snprintf(svt, 255, "%d", (int)round( 1.f / ms->vSnapDefault));
 
       auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
-      auto vtxt = new CTextEdit(vsrect, this, tag_vertical_value, svt);
-      // auto* vtxt = new CNumberField(vsrect, this, tag_vertical_value, nullptr /*, ref to storage?*/);
-      // vtxt->setControlMode(cm_mseg_snap_h);
-      // vtxt->setSkin(skin, associatedBitmapStore);
-      // vtxt->setMouseableArea(vsrect);
+      auto* vnf = new CNumberField(vsrect, this, tag_vertical_value, nullptr /*, ref to storage?*/);
+      vnf->setControlMode(cm_mseg_snap_v);
+      vnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
+      vnf->setMouseableArea(vsrect);
+      vnf->setIntValue( 10 );
 
-#if WINDOWS
-      vtxt->setTextInset(CPoint(3, 1));
-#endif
-      vtxt->setFont(editFont);
-      vtxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
-      vtxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
-      vtxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
-      vtxt->setRoundRectRadius(CCoord(3.f));
-
-      addView(vtxt);
+      addView(vnf);
    }
 }
-
-#if 0
-void MSEGSegmentPanel::valueChanged(CControl *c) {
-   auto tag = c->getTag();
-
-   int addAfterSeg = currSeg;
-   
-   switch(tag )
-   {
-   case seg_type_0:
-   case seg_type_0+1:
-   case seg_type_0+2:
-   case seg_type_0+3:
-   case seg_type_0+4:
-   case seg_type_0+5:
-   case seg_type_0+6:
-   case seg_type_0+7:
-   {
-      if( currSeg >= 0 && canvas && c->getValue() == 1 )
-      {
-         ms->segments[currSeg].type = (MSEGStorage::segment::Type)(tag - seg_type_0);
-         canvas->modelChanged();
-      }
-      break;
-   }
-   case add_after:
-   {
-      addAfterSeg ++;
-   }
-   case add_before:
-   {
-      if( addAfterSeg < 0 ) addAfterSeg = 0;
-      if( c->getValue() == 1 )
-      {
-         for( int i=std::max( ms->n_activeSegments + 1, max_msegs - 1 ); i > addAfterSeg; --i )
-         {
-            ms->segments[i] = ms->segments[i-1];
-         }
-         ms->segments[addAfterSeg].type = MSEGStorage::segment::LINEAR;
-         ms->segments[addAfterSeg].v0 = -0.5;
-         ms->segments[addAfterSeg].v1 = 0.5;
-         ms->segments[addAfterSeg].duration = 0.25;
-         ms->n_activeSegments ++;
-         
-         if( canvas ) canvas->modelChanged();
-      }
-      break;
-   }
-   case deletenode:
-   {
-      if( c->getValue() == 1 )
-      {
-         if( currSeg >= 0 && ms->n_activeSegments > 0 )
-         {
-            for( int i = currSeg + 1; i < ms->n_activeSegments; ++i )
-               ms->segments[i-1] = ms->segments[i];
-            ms->n_activeSegments --;
-            if( canvas ) canvas->modelChanged();
-         }
-      }
-   }
-   }
-   
-}
-
-void MSEGControlPanel::valueChanged( CControl *control ) {
-   if( control->getValue() == 1 )
-   {
-      if( control->getTag() == mag_only ||
-          control->getTag() == time_only ||
-          control->getTag() == mag_and_time )
-      {
-         editmode = control->getTag();
-         if( canvas )
-            canvas->modelChanged();
-      }
-   }
-}
-#endif
 
 struct MSEGMainEd : public CViewContainer {
 
