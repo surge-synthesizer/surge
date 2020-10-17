@@ -1924,7 +1924,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
    if (tms >= ms_lfo1 && tms <= ms_slfo6)
    {
       bool isup = storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].unipolar.val.i ||
-         storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].shape.val.i == ls_constant1;
+         storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].shape.val.i == ls_envelope;
       
       // For now
       return !isup;

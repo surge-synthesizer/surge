@@ -5661,7 +5661,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       int fnum = idx % 6;
       auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ i - ms_lfo1 ] );
 
-      if( lfodata->shape.val.i == ls_constant1 )
+      if( lfodata->shape.val.i == ls_envelope )
       {
          char txt[64];
          if( button )
@@ -5686,6 +5686,15 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
             sprintf( txt, "%sMSEG %d", (isS ? "S-" : "" ), fnum + 1 );
          else
             sprintf( txt, "%s MSEG %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+         return std::string( txt );
+      }
+      else if( lfodata->shape.val.i == ls_function)
+      {
+         char txt[64];
+         if( button )
+            sprintf( txt, "%sFUN %d", (isS ? "S-" : "" ), fnum + 1 );
+         else
+            sprintf( txt, "%s Function %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
    }

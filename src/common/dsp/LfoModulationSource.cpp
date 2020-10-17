@@ -398,8 +398,8 @@ void LfoModulationSource::process_block()
       // sustainlevel = sustainlevel*(1.f + localcopy[ideform].f) -
       // sustainlevel*sustainlevel*localcopy[ideform].f; sustainlevel = sustainlevel /
       // (sustainlevel*localcopy[ideform].f + 1 - localcopy[ideform].f); float dd =
-      // (localcopy[ideform].f - 1); if (s == ls_constant1) sustainlevel = 0.5f *
-      // (sqrt(4.f*sustainlevel + dd*dd) + dd); if (s == ls_constant1) sustainlevel = 1.f / (1.f +
+      // (localcopy[ideform].f - 1); if (s == ls_envelope) sustainlevel = 0.5f *
+      // (sqrt(4.f*sustainlevel + dd*dd) + dd); if (s == ls_envelope) sustainlevel = 1.f / (1.f +
       // localcopy[ideform].f); a = (1.f-localcopy[ideform].f) + localcopy[ideform].f*env_val;
       // u = e*a;
 
@@ -547,7 +547,8 @@ void LfoModulationSource::process_block()
 
    switch (s)
    {
-   case ls_constant1:
+   case ls_envelope:
+   case ls_function:
       iout = (1.f - localcopy[ideform].f) + localcopy[ideform].f * env_val;
       break;
    case ls_sine:

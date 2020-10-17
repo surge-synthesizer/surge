@@ -121,8 +121,8 @@ namespace Surge
          Connector subtype_2 = Connector( "filter.subtype_2", 732, 194, 12, 18, Connector::SWITCH )
                .withBackground(IDB_FILTERSUBTYPE);
          // FIXME - we should really expose the menu slider fully but for now make a composite FILTERSELECTOR
-         Connector type_1 = Connector( "filter.type_1", 305, 190, 124, 21, Connector::FILTERSELECTOR );
-         Connector type_2 = Connector( "filter.type_2", 605, 190, 124, 21, Connector::FILTERSELECTOR );
+         Connector type_1 = Connector( "filter.type_1", 305, 191, 124, 21, Connector::FILTERSELECTOR );
+         Connector type_2 = Connector( "filter.type_2", 605, 191, 124, 21, Connector::FILTERSELECTOR );
          Connector waveshaper_drive = Connector( "filter.waveshaper_drive", 419, 300 ).asVertical().asWhite();
          Connector waveshaper_type = Connector( "filter.waveshaper_type", 388, 313, 28, 47, Connector::HSWITCH2 )
                .withHSwitch2Properties(IDB_WAVESHAPER, 6, 6, 1 );
@@ -224,12 +224,12 @@ namespace Surge
 
          Connector keytrack = Connector( "osc.keytrack", 8, 185, 43, 7, Connector::SWITCH )
                .withBackground( IDB_SWITCH_KTRK );
-         Connector octave = Connector( "osc.octave", 3, 193, 96, 18, Connector::HSWITCH2 )
+         Connector octave = Connector( "osc.octave", 3, 194, 96, 18, Connector::HSWITCH2 )
                .withHSwitch2Properties(IDB_OCTAVES_OSC, 7, 1, 7 );
          Connector retrigger = Connector( "osc.retrigger", 56, 185, 43, 7, Connector::SWITCH )
                .withBackground( IDB_SWITCH_RETRIGGER);
 
-         Connector osctype = Connector( "osc.type", 101, 193, 45, 18, Connector::OSCMENU );
+         Connector osctype = Connector( "osc.type", 101, 194, 45, 18, Connector::OSCMENU );
 
          Connector oscParamPanel = Connector( "osc.param.panel", 6, 213, Connector::GROUP );
          Connector pitch = Connector( "osc.pitch", 0, 0 ).asHorizontal().inParent("osc.param.panel");
@@ -254,7 +254,7 @@ namespace Surge
              .withProperty(Connector::TEXT_COLOR, "scene.keytrackroot.text")
              .withProperty(Connector::TEXT_HOVER_COLOR, "scene.keytrackroot.text.hover");
          Connector noise_color = Connector( "scene.noise_color", 156, 162 ).asHorizontal().asWhite();
-         Connector octave = Connector( "scene.octave", 202, 193, 96, 18, Connector::HSWITCH2 )
+         Connector octave = Connector( "scene.octave", 202, 194, 96, 18, Connector::HSWITCH2 )
                .withHSwitch2Properties(IDB_OCTAVES, 7, 1, 7 );
          Connector pbrange_dn = Connector( "scene.pbrange_dn", 164, 112, 24, 10, Connector::NUMBERFIELD )
              .withProperty( Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth )
