@@ -5692,9 +5692,11 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       {
          char txt[64];
          if( button )
-            sprintf( txt, "%sFUN %d", (isS ? "S-" : "" ), fnum + 1 );
+            sprintf( txt, "%sENV %d", (isS ? "S-" : "" ), fnum + 1 );
+            //sprintf( txt, "%sFUN %d", (isS ? "S-" : "" ), fnum + 1 );
          else
-            sprintf( txt, "%s Function %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+            sprintf( txt, "%s Envelope %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+            //sprintf( txt, "%s Function %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
    }
