@@ -3241,8 +3241,8 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if( control->getValue() > 0.5 )
       {
          showMSEGEditor();
-      } else if( editorOverlayTag == "msegEditor" ) {
-         dismissEditorOverlay( );
+      } else {
+         closeMSEGEditor();
       }
       return;
    }
@@ -3564,6 +3564,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          removeFromFrame.push_back(editorOverlay);
          editorOverlayOnClose();
          editorOverlay = nullptr;
+         editorOverlayTag = "";
       }
    }
    break;
@@ -5965,6 +5966,7 @@ void SurgeGUIEditor::dismissEditorOverlay()
       editorOverlayOnClose();
       removeFromFrame.push_back( editorOverlay );
       editorOverlay = nullptr;
+      editorOverlayTag = "";
    }
 }
 
@@ -6744,6 +6746,24 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
       {
          msegEditSwitch->setVisible( curr == ls_mseg );
       }
+   }
+}
+
+void SurgeGUIEditor::closeMSEGEditor()
+{
+   if( editorOverlayTag == "msegEditor" ) {
+      dismissEditorOverlay( );
+   }
+}
+void SurgeGUIEditor::toggleMSEGEditor()
+{
+   if( editorOverlayTag == "msegEditor" )
+   {
+      closeMSEGEditor();
+   }
+   else
+   {
+      showMSEGEditor();
    }
 }
 
