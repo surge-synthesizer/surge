@@ -991,6 +991,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
    {
       // FIXME locales
       auto fv = 1.f / (std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 ) ); // -1 to 1 remeber
+      //auto fv = 1.f / p->getValue();  // for CNF
       ms->vSnapDefault = fv;
       if( ms->vSnap > 0 )
          ms->vSnap = ms->vSnapDefault;
@@ -999,7 +1000,8 @@ void MSEGControlRegion::valueChanged( CControl *p )
       break;
    case tag_horizontal_value:
    {
-      auto fv = 1.f / p->getValue();
+      auto fv = 1.f / (std::max( std::atoi( ((CTextEdit *)p)->getText() ), 1 ) ); // -1 to 1 remeber
+      //auto fv = 1.f / p->getValue();  // for CNF
       ms->hSnapDefault = fv;
       if( ms->hSnap > 0 )
          ms->hSnap = ms->hSnapDefault;
@@ -1115,6 +1117,7 @@ void MSEGControlRegion::rebuild()
       htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
       htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
       htxt->setRoundRectRadius(CCoord(3.f));
+
       addView(htxt);
 
       xpos += segWidth;
@@ -1129,6 +1132,10 @@ void MSEGControlRegion::rebuild()
 
       auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
       auto vtxt = new CTextEdit(vsrect, this, tag_vertical_value, svt);
+      // auto* vtxt = new CNumberField(vsrect, this, tag_vertical_value, nullptr /*, ref to storage?*/);
+      // vtxt->setControlMode(cm_mseg_snap_h);
+      // vtxt->setSkin(skin, associatedBitmapStore);
+      // vtxt->setMouseableArea(vsrect);
 
 #if WINDOWS
       vtxt->setTextInset(CPoint(3, 1));
@@ -1138,6 +1145,7 @@ void MSEGControlRegion::rebuild()
       vtxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
       vtxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
       vtxt->setRoundRectRadius(CCoord(3.f));
+
       addView(vtxt);
    }
 }
