@@ -65,6 +65,8 @@
 
     <color id="msegeditor.background" value="#202020"/>
     <color id="msegeditor.curve" value="modblue"/>
+    <color id="msegeditor.curve.deformed" value="#2E86FE80"/>
+    <color id="msegeditor.curve.highlight" value="#40ADFF"/>
     <color id="msegeditor.panel" value="#2D2D2D"/>
     <color id="msegeditor.panel.text" value="lightgray"/>
     <color id="msegeditor.axis.text" value="lightgray"/>

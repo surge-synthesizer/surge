@@ -19,6 +19,7 @@
 #include "DebugHelpers.h"
 #include "SkinColors.h"
 #include "basic_dsp.h" // for limit_range
+#include "CNumberField.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "CHSwitch2.h"
@@ -405,7 +406,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    inline void drawAxis( CDrawContext *dc ) {
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
-      int skips = (ms->hSnap > 0 ? 1/ms->hSnap : 4 );
+      int skips = 1.f / ms->hSnapDefault;
       auto tpx = timeToPx();
 
       dc->setFont( displayFont );
@@ -434,7 +435,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
-      float step = (ms->vSnap > 0 ? ms->vSnap : 0.25 );
+      float step = ms->vSnapDefault;
       for( float i=-1; i<=1.001 /* for things like "3" rounding*/; i += step )
       {
          float p = valpx( i );
@@ -539,16 +540,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
       fillpath->forget();
       cg->forget();
-
-      // Draw the axis here after the gradient fill
-      drawAxis(dc);
       
-      // draw horizontal grid
       dc->setLineWidth(1);
-      int skips = (ms->hSnap > 0 ? 1.f / ms->hSnap : 4 );
-      auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary);
-      auto secondaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Secondary);
 
+      // draw vertical grid
+      auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary);
+      auto secondaryHGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal);
+      auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
+
+      int skips = 1.f / ms->hSnapDefault;
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
          float t = 1.0f * gi / skips;
@@ -556,36 +556,44 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          if( gi % skips == 0 )
             dc->setFrameColor( primaryGridColor );
          else
-            dc->setFrameColor( secondaryGridColor );
+            dc->setFrameColor(secondaryVGridColor);
          dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
-         // std::cout << _D(t) << _D(px) << _D(pxt(px)) << std::endl;
       }
 
-      skips = (ms->vSnap > 0 ? 1.f / ms->vSnap : 4 );
-      // draw vertical grid
+      // draw horizontal grid
+      skips = 1.f / ms->vSnapDefault;
       for( int vi = 0; vi < 2 * skips + 1; vi ++ )
       {
          float v = valpx( 1.f * vi / skips - 1 );
          if( vi % skips == 0 )
+         {
             dc->setFrameColor( primaryGridColor );
+            dc->setLineStyle(kLineSolid);
+         }
          else
-            dc->setFrameColor( secondaryGridColor );
+         {
+            dc->setFrameColor(secondaryHGridColor);
+            CCoord dashes[] = {2, 5};
+            dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
+         }
          dc->drawLine( CPoint( drawArea.left, v ), CPoint( drawArea.right, v ) );
       }
 
-      // draw segment curve
-      dc->setLineWidth( 1.0 );
-      dc->setFrameColor( skin->getColor( Colors::MSEGEditor::DeformCurve));
-      dc->drawGraphicsPath( defpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+      // Draw the axes here after the gradient fill and gridlines
+      drawAxis(dc);
 
-      dc->setLineWidth( 6 );
-      dc->setFrameColor(skin->getColor( Colors::MSEGEditor::CurveUnderHighlight) );
-      dc->drawGraphicsPath( highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+      // draw segment curve
+      dc->setLineWidth(1.0);
+      dc->setFrameColor(skin->getColor( Colors::MSEGEditor::DeformCurve));
+      dc->drawGraphicsPath(defpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
       dc->setLineWidth(1.5);
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
-      dc->drawGraphicsPath( path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
+      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
+      //dc->setLineWidth(3.0);
+      dc->setFrameColor(skin->getColor( Colors::MSEGEditor::CurveHighlight) );
+      dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
       path->forget();
       defpath->forget();
@@ -703,8 +711,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                /*
                 * Activate temporary snap
                 */
-               bool s = buttons & kShift;
-               bool c = buttons & kControl;
+               bool c = buttons & kShift;
+               bool s = buttons & kControl;
                if( s || c  )
                {
                   snapGuard = std::make_shared<SnapGuard>(ms, this);
@@ -991,7 +999,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
       break;
    case tag_horizontal_value:
    {
-      auto fv = 1.f / ( std::max( std::atoi(((CTextEdit *)p)->getText()), 1 ) );
+      auto fv = 1.f / p->getValue();
       ms->hSnapDefault = fv;
       if( ms->hSnap > 0 )
          ms->hSnap = ms->hSnapDefault;
@@ -1091,16 +1099,22 @@ void MSEGControlRegion::rebuild()
       hbut->setValue(ms->hSnap < 0.001 ? 0 : 1);
 
       snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
-      auto htxt = new CTextEdit(CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight)),
-                                this, tag_horizontal_value, svt);
-#if WINDOWS
-      htxt->setTextInset(CPoint(3, 1));
-#endif
-      htxt->setFont(editFont);
-      htxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
-      htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
-      htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
-      htxt->setRoundRectRadius(CCoord(3.f));
+      
+      auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
+      //auto htxt = new CTextEdit(hsrect, this, tag_horizontal_value, svt);
+      auto* htxt = new CNumberField(hsrect, this, tag_horizontal_value, nullptr /*, ref to storage?*/);
+      htxt->setControlMode(cm_mseg_snap_h);
+      htxt->setSkin(skin, associatedBitmapStore);
+      htxt->setMouseableArea(hsrect);
+      
+//#if WINDOWS
+      //htxt->setTextInset(CPoint(3, 1));
+//#endif
+      //htxt->setFont(editFont);
+      //htxt->setFontColor(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+      //htxt->setFrameColor(skin->getColor(Colors::MSEGEditor::NumberField::Border));
+      //htxt->setBackColor(skin->getColor(Colors::MSEGEditor::NumberField::Background));
+      //htxt->setRoundRectRadius(CCoord(3.f));
       addView(htxt);
 
       xpos += segWidth;

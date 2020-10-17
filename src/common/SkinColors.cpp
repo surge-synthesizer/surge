@@ -219,8 +219,8 @@ namespace Colors
    {
       const Surge::Skin::Color Background("msegeditor.background", 17, 17, 17),
                                Curve("msegeditor.curve", 255, 255, 255),
-                               DeformCurve("msegeditor.deformcurve", 120, 120, 120),
-                               CurveUnderHighlight( "msegeditor.curve.highlight", 255, 90, 0, 128 ),
+                               DeformCurve("msegeditor.curve.deformed", 128, 128, 128),
+                               CurveHighlight("msegeditor.curve.highlight", 255, 144, 0),
                                Panel("msegeditor.panel", 205, 206, 212),
                                Text("msegeditor.panel.text", 0, 0, 0);
 
@@ -236,8 +236,9 @@ namespace Colors
       }
       namespace Grid
       {
-         const Surge::Skin::Color Primary("msegeditor.grid.primary", 220, 220, 240),
-                                  Secondary("msegeditor.grid.secondary", 100, 100, 110);
+         const Surge::Skin::Color Primary("msegeditor.grid.primary", 255, 255, 255, 192),
+                                  SecondaryHorizontal("msegeditor.grid.secondary.horizontal", 255, 255, 255, 48),
+                                  SecondaryVertical("msegeditor.grid.secondary.vertical", 255, 255, 255, 96);
       }
       namespace Loop
       {

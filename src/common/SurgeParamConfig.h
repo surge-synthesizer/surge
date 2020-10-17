@@ -98,4 +98,6 @@ enum ctrl_mode
    cm_noyes,
    cm_temposync,
    cm_int_menu,
+   cm_mseg_snap_h,
+   cm_mseg_snap_v,
 };

@@ -237,6 +237,15 @@ void CNumberField::setControlMode(int mode)
       setIntMax(1);
       setIntDefaultValue(0);
       break;
+   case cm_mseg_snap_h:
+   case cm_mseg_snap_v:
+      setIntMin(1);
+      setIntMax(100);
+      if (mode == cm_mseg_snap_h)
+         setIntDefaultValue(10);
+      else
+         setIntDefaultValue(4);
+      break;
    default:
       setFloatMin(0.f);
       setFloatMax(1.f);
@@ -257,18 +266,20 @@ void CNumberField::setValue(float val)
 //------------------------------------------------------------------------
 void CNumberField::draw(CDrawContext* pContext)
 {
-   auto colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::Text.name );
-   auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::TextHover.name );
+   auto colorName = Colors::NumberField::Text.name;
+   auto hoverColorName = Colors::NumberField::TextHover.name;
+
+   if (skinControl)
+   {
+      colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::Text.name);
+      hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::TextHover.name );
+   }
 
    auto fontColor = kRedCColor;
    if( hovered )
-   {
       fontColor = skin->getColor(hoverColorName );
-   }
    else
-   {
       fontColor = skin->getColor(colorName );
-   }
 
    // cache this of course
    if( ! triedToLoadBg )
