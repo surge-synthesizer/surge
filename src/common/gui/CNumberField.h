@@ -86,6 +86,10 @@ public:
    void setIntValue(int ival)
    {
       i_value = ival;
+      if( i_max != i_min )
+         value = 1.f * (i_value - i_min) / ( i_max - i_min );
+      else
+         value = 0;
       bounceValue();
       setDirty();
    }
