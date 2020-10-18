@@ -46,6 +46,12 @@ jobs:
         aptGetExtras: ""
         cmakeArguments: "-GNinja"
         cmakeTarget: "Surge-VST3-Packaged"
+      linux-vst3-ubuntu18:
+        imageName: 'ubuntu-18.04'
+        isLinux: True
+        aptGetExtras: ""
+        cmakeArguments: "-GNinja"
+        cmakeTarget: "Surge-VST3-Packaged"
       linux-clang:
         imageName: 'ubuntu-20.04'
         isLinux: True
