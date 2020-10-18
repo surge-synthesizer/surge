@@ -3237,7 +3237,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
    if( tag == tag_mseg_edit )
    {
-      std::cout << "VALUE is " << control->getValue() << std::endl;
       if( control->getValue() > 0.5 )
       {
          showMSEGEditor();

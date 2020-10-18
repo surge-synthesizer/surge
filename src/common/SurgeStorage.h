@@ -616,7 +616,7 @@ struct MSEGStorage {
       float dragv0; // in snap mode, this is the location we are dragged to. It is just convenience storage.
       float nv1; // this is the v0 of the neighbor and is here just for convenience. MSEGModulationHelper::rebuildCache will set it
       float dragv1; // only used in the endpoint
-      float cpduration, cpv, dragcpv;
+      float cpduration, cpv, dragcpv, dragcpratio = 0.5;
       bool  useDeform = true;
       enum Type {
          LINEAR = 1,

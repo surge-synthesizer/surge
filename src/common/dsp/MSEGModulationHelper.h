@@ -9,8 +9,15 @@ namespace Surge
 
       struct EvaluatorState {
          int lastEval = -1;
+         float lastOutput = 0;
          float msegState[6] = {0};
          bool released = false;
+         enum LoopState {
+            PLAYING,
+            RELEASING
+         } loopState = PLAYING;
+         double releaseStartPhase;
+         float releaseStartValue;
       };
       float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s,
                     EvaluatorState *state, bool forceOneShot = false);

@@ -28,7 +28,7 @@ std::vector<msegObservation> runMSEG( MSEGStorage *ms, float dPhase, float phase
    while( phase + iphase < phaseMax )
    {
       bool release = false;
-      if( releaseAfter >= 0 && phase + iphase > releaseAfter ) release = true;
+      if( releaseAfter >= 0 && phase + iphase >= releaseAfter ) release = true;
       es.released = release;
 
       auto r = Surge::MSEG::valueAt(iphase, phase, deform, ms, &es, false );
@@ -339,12 +339,14 @@ TEST_CASE( "Loop Test Cases", "[mseg]" )
          }
       }
    }
-#if 0
+
    SECTION( "Gated Loop over a Ramp" )
    {
       // This is an attack up from -1 over 0.5, then a ramp in 0,1and we loop over the end
       MSEGStorage ms;
       ms.n_activeSegments = 5;
+      ms.loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+
       ms.endpointMode = MSEGStorage::EndpointMode::FREE;
       ms.segments[0].duration = 0.5;
       ms.segments[0].type = MSEGStorage::segment::LINEAR;
@@ -373,7 +375,7 @@ TEST_CASE( "Loop Test Cases", "[mseg]" )
       resetCP(&ms);
       Surge::MSEG::rebuildCache(&ms);
 
-      auto runOne = runMSEG(&ms, 0.0321, 3, 0, 1);
+      auto runOne = runMSEG(&ms, 0.025, 3, 0, 1); /* pick a round dPhase so we hit releaseAfter exactly in this test */
       for (auto c : runOne)
       {
          // make this more robust obviously but for now this will fail
@@ -381,6 +383,7 @@ TEST_CASE( "Loop Test Cases", "[mseg]" )
          {
             float rampPhase = ( c.phase - 0.5 ) * 4;
             rampPhase = rampPhase - (int)rampPhase;
+            if( c.phase == 0.75 ) rampPhase = 1; // Special case which side we pick
             float rampValue = 1.0 - rampPhase;
             INFO( "At " << c.phase << " " << rampPhase << " comparing with ramp" );
             REQUIRE(c.v == Approx( rampValue ));
@@ -396,14 +399,116 @@ TEST_CASE( "Loop Test Cases", "[mseg]" )
                // release segment 2 (segment 4) from -1 to 0 in 0.25
                auto rampPhase = ( c.phase - 1.25 ) * 4;
                auto rampValue = -1.0 + rampPhase;
-               REQUIRE( c.v == rampValue );
+               INFO( "At " << c.phase << " and rampPhase " << rampPhase );
+               REQUIRE( c.v == Approx( rampValue ).margin(1e-4) );
             }
             else
             {
-               // release segment 1 but the ramp segment will be started
+               // release segment 1 but the ramp segment will be started at 0
+               // so we should be a ramp from 0 to -1, not from 1 to -1
+               // This is a bit fragile though since we run every .025 the release
+               // will not be when we've exactly hit 0 but rather when we are at
+               // 0.09999 still
+               auto rampPhase = ( c.phase - 1.0 ) * 4;
+               auto rampValue = - rampPhase * 1.0999999 + 0.0999999;
+               INFO( "In first envelope At " << c.phase << " and rampPhase " << rampPhase );
+               REQUIRE( c.v == Approx( rampValue ).margin( 1e-4 ) );
             }
          }
       }
    }
-#endif
 }
+
+TEST_CASE( "Zero size loops", "[mseg]" )
+{
+   SECTION( "Zero Size Non Gated" )
+   {
+      MSEGStorage ms;
+      ms.n_activeSegments = 3;
+      ms.loopMode = MSEGStorage::LoopMode::LOOP;
+      ms.endpointMode = MSEGStorage::EndpointMode::FREE;
+
+      // A simple ADSR where the S is made by a size 0 loop after the decay
+      ms.segments[0].duration = 0.25;
+      ms.segments[0].type = MSEGStorage::segment::LINEAR;
+      ms.segments[0].v0 = 0;
+
+      ms.segments[1].duration = 0.25;
+      ms.segments[1].type = MSEGStorage::segment::LINEAR;
+      ms.segments[1].v0 = 1.0;
+
+      ms.segments[2].duration = 0.25;
+      ms.segments[2].type = MSEGStorage::segment::LINEAR;
+      ms.segments[2].v0 = 0.75;
+      ms.segments[2].nv1 = 0.0;
+
+      ms.loop_start = 2;
+      ms.loop_end = 1;
+
+      resetCP(&ms);
+      Surge::MSEG::rebuildCache(&ms);
+
+      // OK so this is loop so it should just push the 0.75 out the back after 0.5
+      auto runOne = runMSEG(&ms, 0.025, 2, 0, 1); /* pick a round dPhase so we hit releaseAfter exactly in this test */
+      for( auto c : runOne )
+      {
+         if( c.phase > 0.5 )
+            REQUIRE( c.v == 0.75 );
+      }
+   }
+
+   SECTION( "Zero Size Gated" )
+   {
+      MSEGStorage ms;
+      ms.n_activeSegments = 3;
+      ms.loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+      ms.endpointMode = MSEGStorage::EndpointMode::FREE;
+
+      // A simple ADSR where the S is made by a size 0 loop after the decay
+      ms.segments[0].duration = 0.25;
+      ms.segments[0].type = MSEGStorage::segment::LINEAR;
+      ms.segments[0].v0 = 0;
+
+      ms.segments[1].duration = 0.25;
+      ms.segments[1].type = MSEGStorage::segment::LINEAR;
+      ms.segments[1].v0 = 1.0;
+
+      ms.segments[2].duration = 0.25;
+      ms.segments[2].type = MSEGStorage::segment::LINEAR;
+      ms.segments[2].v0 = 0.75;
+      ms.segments[2].nv1 = 0.0;
+
+      ms.loop_start = 2;
+      ms.loop_end = 1;
+
+      resetCP(&ms);
+      Surge::MSEG::rebuildCache(&ms);
+
+      // OK so this is loop so it should just push the 0.75 out the back after 0.5
+      auto runOne = runMSEG(&ms, 0.025, 2, 0, 1); /* pick a round dPhase so we hit releaseAfter exactly in this test */
+      for( auto c : runOne )
+      {
+         if( c.phase > 0.5 && c.phase <= 1.0 )
+            REQUIRE( c.v == 0.75 );
+         if( c.phase > 1.0 && c.phase <= 1.25 )
+         {
+            auto rp = ( c.phase - 1.0 ) * 4;
+            REQUIRE( c.v == Approx(  0.75 * ( 1.0 - rp ) ).margin( 1e-4));
+         }
+         if( c.phase > 1.25 )
+            REQUIRE( c.v == 0 );
+      }
+   }
+}
+
+/*
+ * Tests to add
+ * - loop point 0 (start = end + 1)
+ * - loop start at 0
+ * - maniulation routines
+ *    - insert
+ *    - delete
+ *    - split
+ *    - unsplit
+ *  - each of those with loop preservation also
+ */
