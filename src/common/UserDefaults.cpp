@@ -9,7 +9,7 @@
 #include <sstream>
 #include <fstream>
 
-#include "filesystem/import.h"
+#include "ImportFilesystem.h"
 
 namespace Surge
 {
