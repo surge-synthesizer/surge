@@ -48,6 +48,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "SkinColors.h"
 
 #include <vector>
+#include "MSEGEditor.h"
  
 class CSurgeSlider;
 class CModulationSourceButton;
@@ -295,6 +296,7 @@ public:
    void showMSEGEditor();
    void closeMSEGEditor();
    void toggleMSEGEditor();
+   MSEGEditor::State msegEditState[n_lfos];
 
 private:
    SGEDropAdapter *dropAdapter = nullptr;
