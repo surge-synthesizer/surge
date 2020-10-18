@@ -136,6 +136,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    if( ! ms->segments[idx].useDeform )
       df = 0;
 
+   if (ms->segments[idx].invertDeform)
+      df = -df;
 
    if( ms->segments[idx].duration <= MSEGStorage::minimumDuration )
       return ( ms->segments[idx].v0 + ms->segments[idx].nv1 ) * 0.5;
@@ -159,6 +161,12 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    }
    switch( r.type )
    {
+   case MSEGStorage::segment::HOLD:
+   {
+      es->lastOutput = lv0;
+      return lv0;
+      break;
+   }
    case MSEGStorage::segment::LINEAR:
    {
       if( lv0 == lv1 ) return lv0;
@@ -593,6 +601,7 @@ void insertAtIndex( MSEGStorage *ms, int insertIndex ) {
    ms->segments[insertIndex].v0 = 0;
    ms->segments[insertIndex].duration = 0.25;
    ms->segments[insertIndex].useDeform = true;
+   ms->segments[insertIndex].invertDeform = false;
 
    int nxt = insertIndex + 1;
    if( nxt >= ms->n_activeSegments )
@@ -702,6 +711,7 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
       ms->segments[idx+1].nv1 = pv1;
       ms->segments[idx+1].duration = q.duration * ( 1 - dt );
       ms->segments[idx+1].useDeform = ms->segments[idx].useDeform;
+      ms->segments[idx+1].invertDeform = ms->segments[idx].invertDeform;
       
       ms->segments[idx].cpduration = cpdratio * ms->segments[idx].duration;
       ms->segments[idx].cpv = (ms->segments[idx].nv1 - ms->segments[idx].v0 ) * cpvratio + ms->segments[idx].v0;

@@ -1612,6 +1612,11 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             else
                ms->segments[idx].useDeform = true;
 
+            if( seg->QueryIntAttribute( "invertDeform", &v) == TIXML_SUCCESS )
+               ms->segments[idx].invertDeform = v;
+            else
+               ms->segments[idx].invertDeform = false;
+
             seg = TINYXML_SAFE_TO_ELEMENT( seg->NextSibling( "segment" ) );
             
             idx++;
@@ -2005,6 +2010,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
                seg.SetDoubleAttribute( "cpv", ms->segments[s].cpv );
                seg.SetAttribute( "type", (int)( ms->segments[s].type ));
                seg.SetAttribute( "useDeform", (int)(ms->segments[s].useDeform));
+               seg.SetAttribute( "invertDeform", (int)(ms->segments[s].invertDeform));
                segs.InsertEndChild( seg );
             }
             p.InsertEndChild(segs);
