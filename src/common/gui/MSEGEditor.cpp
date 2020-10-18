@@ -403,11 +403,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                 
    }
 
+   // grid thinning
+   const int gridMaxHSteps = 20, gridMaxVSteps = 10;
+
    inline void drawAxis( CDrawContext *dc ) {
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
-      int skips = 1.f / ms->hSnapDefault;
+      int skips = round( 1.f / ms->hSnapDefault );
       auto tpx = timeToPx();
+
+      while( maxt * skips > gridMaxHSteps )
+      {
+         skips = skips >> 1;
+      }
 
       dc->setFont( displayFont );
       dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
@@ -448,12 +456,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
-      float step = ms->vSnapDefault;
+      skips = round( 1.f/ms->vSnapDefault);
+      while( skips > gridMaxVSteps )
+         skips = skips >> 1;
+
+      float step = 1.f / skips;
       for( float i=-1; i<=1.001 /* for things like "3" rounding*/; i += step )
       {
          float p = valpx( i );
          float off = vaxisArea.getWidth() / 2;
-         if( i == -1 || i == 0 || i == 1 )
+         if( i == -1 || fabs( i ) < 1e-3 || fabs(i-1) < 1e-3 )
             off = 0;
          dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
          char txt[16];
@@ -562,7 +574,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto secondaryHGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal);
       auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
-      int skips = 1.f / ms->hSnapDefault;
+      int skips = round( 1.f / ms->hSnapDefault );
+      while( maxt * skips > gridMaxHSteps )
+      {
+         skips = skips >> 1;
+      }
+
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
          float t = 1.0f * gi / skips;
@@ -574,8 +591,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
       }
 
-      // draw horizontal grid
-      skips = 1.f / ms->vSnapDefault;
+      skips = round( 1.f / ms->vSnapDefault );
+      while( skips > gridMaxVSteps )
+      {
+         skips = skips >> 1;
+      }
+
       for( int vi = 0; vi < 2 * skips + 1; vi ++ )
       {
          float v = valpx( 1.f * vi / skips - 1 );
@@ -723,7 +744,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                invalid();
 
                /*
-                * Activate temporary snap
+                * Activate temporary snap. Note this is also handled similarly in
+                * onMouseMove so if you change shift/ctrl here or what not change it
+                * there too.
                 */
                bool c = buttons & kShift;
                bool s = buttons & kControl;
@@ -857,6 +880,23 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             hotzones[idx].dragging = true;
             invalid();
          }
+         /*
+          * Activate temporary snap. NOte this is also checked in onMoueDown
+          * so if you change shift/ctrl whatever here change it there too
+          */
+         bool c = buttons & kShift;
+         bool s = buttons & kControl;
+         if( ( s || c ) && ! snapGuard )
+         {
+            snapGuard = std::make_shared<SnapGuard>(ms, this);
+            if( c ) ms->hSnap = ms->hSnapDefault;
+            if( s ) ms->vSnap = ms->vSnapDefault;
+         }
+         else if( ! ( s || c ) && snapGuard )
+         {
+            snapGuard = nullptr;
+         }
+
       }
       
       return kMouseEventHandled;
@@ -1194,12 +1234,10 @@ struct MSEGMainEd : public CViewContainer {
 MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 365) )
 {
    // Leave these in for now
-   std::cout << "MSEG Editor Constructed" << std::endl;
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );
    addView( new MSEGMainEd( getViewSize(), lfodata, ms, skin, b ) );
 }
 
 MSEGEditor::~MSEGEditor() {
-   std::cout << "MSEG Editor Destroyed" << std::endl;
 }
