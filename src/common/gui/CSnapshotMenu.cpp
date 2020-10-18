@@ -6,7 +6,7 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h" // for TINYXML macro
-#include "filesystem/import.h"
+#include "ImportFilesystem.h"
 #include "SkinColors.h"
 #include "guihelpers.h"
 

@@ -26,7 +26,7 @@
 #include <cerrno>
 #include <cstring>
 
-#include "filesystem/import.h"
+#include "ImportFilesystem.h"
 
 
 // Sigh - lets write a portable ntol by hand

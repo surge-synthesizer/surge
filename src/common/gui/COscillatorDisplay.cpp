@@ -22,7 +22,7 @@
 #include "guihelpers.h"
 #include "SkinColors.h"
 
-#include "filesystem/import.h"
+#include "ImportFilesystem.h"
 
 using namespace VSTGUI;
 
