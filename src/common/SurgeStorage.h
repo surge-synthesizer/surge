@@ -618,6 +618,7 @@ struct MSEGStorage {
       float dragv1; // only used in the endpoint
       float cpduration, cpv, dragcpv, dragcpratio = 0.5;
       bool  useDeform = true;
+      bool  invertDeform = false;
       enum Type {
          LINEAR = 1,
          QUAD_BEZIER,
@@ -627,6 +628,7 @@ struct MSEGStorage {
          BROWNIAN,
          SQUARE,
          TRIANGLE,
+         HOLD,
       } type;
    };
 

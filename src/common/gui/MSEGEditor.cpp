@@ -947,50 +947,23 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       contextMenu->addSeparator();
 
-      addCb( contextMenu, "Start Loop", [this,tts]() {
-         ms->loop_start = std::min( ms->loop_end + 1, tts );
+      addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop Start"), [this, tts]() {
+         if (ms->loop_end == -1)
+            ms->loop_start = tts;
+         else
+            ms->loop_start = std::min(ms->loop_end + 1, tts);
          modelChanged();
       });
 
-      addCb( contextMenu, "End Loop", [this,tts]() {
+      addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts]() {
         ms->loop_end = tts;
         modelChanged();
       });
 
-      contextMenu->addSeparator();
-
-
-
-      auto typeTo = [this, contextMenu, t, addCb, tts](std::string n, MSEGStorage::segment::Type type) {
-                       auto m = addCb( contextMenu, n, [this,t, type]() {
-                                                 Surge::MSEG::changeTypeAt( this->ms, t, type );
-                                                 modelChanged();
-                                              } );
-                       if( tts >= 0 )
-                          m->setChecked( this->ms->segments[tts].type == type );
-                    };
-      typeTo( "Line", MSEGStorage::segment::Type::LINEAR );
-      typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
-      typeTo( "S-Curve", MSEGStorage::segment::Type::SCURVE );
-      typeTo( "Sine", MSEGStorage::segment::Type::SINE );
-      typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
-      typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
-      typeTo( "Steps", MSEGStorage::segment::Type::STEPS );
-      typeTo( "Brownian Bridge", MSEGStorage::segment::Type::BROWNIAN );
-
-      contextMenu->addSeparator();
-      if( tts >= 0 )
-      {
-         auto def = ms->segments[tts].useDeform;
-         auto cm = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
-            this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
-            modelChanged();
-         });
-         cm->setChecked(def);
-      }
-
       if( tts == 0 || tts == ms->n_activeSegments - 1 )
       {
+         contextMenu->addSeparator();
+
          auto cm = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
                          [this]() {
                             if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
@@ -1004,7 +977,46 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                          });
          cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
       }
-      
+
+      contextMenu->addSeparator();
+
+      if( tts >= 0 )
+      {
+         auto def = ms->segments[tts].useDeform;
+         auto dm = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
+            this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
+            modelChanged();
+         });
+         dm->setChecked(def);
+
+         auto invdef = ms->segments[tts].invertDeform;
+         auto im = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Invert Deform Value"), [this, tts]() {
+            this->ms->segments[tts].invertDeform = ! this->ms->segments[tts].invertDeform;
+            modelChanged();
+         });
+         im->setChecked(invdef);
+      }
+
+      contextMenu->addSeparator();
+
+      auto typeTo = [this, contextMenu, t, addCb, tts](std::string n, MSEGStorage::segment::Type type) {
+                       auto m = addCb( contextMenu, n, [this,t, type]() {
+                                                 Surge::MSEG::changeTypeAt( this->ms, t, type );
+                                                 modelChanged();
+                                              } );
+                       if( tts >= 0 )
+                          m->setChecked( this->ms->segments[tts].type == type );
+                    };
+      typeTo( "Hold", MSEGStorage::segment::Type::HOLD );
+      typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
+      typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
+      typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
+      typeTo( "Sine", MSEGStorage::segment::Type::SINE );
+      typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
+      typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
+      typeTo( "Stairs", MSEGStorage::segment::Type::STEPS );
+      typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
+     
       getFrame()->addView( contextMenu );
       contextMenu->setDirty();
       contextMenu->popup();

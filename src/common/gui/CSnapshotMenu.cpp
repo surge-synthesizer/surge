@@ -276,6 +276,9 @@ void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
 bool COscMenu::onWheel( const VSTGUI::CPoint &where, const float &distance, const VSTGUI::CButtonState &buttons )
 {
    accumWheel += distance;
+#if WINDOWS // rough hack but it still takes too many mousewheel clicks to get outside of Classic osc subfolder onto other osc types!
+   accumWheel += distance;
+#endif
 
    if( accumWheel < -1 )
    {
