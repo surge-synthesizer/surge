@@ -95,10 +95,13 @@ endif()
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
-add_subdirectory(libs/catch2)
-
 add_library(surge-shared INTERFACE)
 add_library(surge-tests INTERFACE)
+
+add_subdirectory(libs/catch2)
+add_subdirectory(libs/filesystem)
+
+target_link_libraries(surge-shared INTERFACE surge::filesystem)
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
@@ -154,57 +157,6 @@ elseif( APPLE )
   set( BUILD_LV2 false )  # Status as of Apr 26. This CMake will build 'something' in products/Surge.lv2 but :shrug:
 else()
   set( BUILD_LV2 false )
-endif()
-
-function(use_fallback_fs)
-  add_subdirectory(libs/filesystem)
-  target_link_libraries(surge-shared INTERFACE surge::filesystem)
-  target_compile_definitions(surge-shared INTERFACE USE_FALLBACK_FILESYSTEM=1)
-  message(STATUS "Using fallback filesystem")
-endfunction()
-
-set(SURGE_DEVEL_FORCE_FALLBACK_FS OFF CACHE BOOL "Force fallback std::filesystem impl (development only)")
-mark_as_advanced(FORCE SURGE_DEVEL_FORCE_FALLBACK_FS)
-if (${SURGE_DEVEL_FORCE_FALLBACK_FS})
-  use_fallback_fs()
-else()
-  include(CheckCXXSymbolExists)
-  CHECK_CXX_SYMBOL_EXISTS(std::filesystem::path::preferred_separator "filesystem" CXX_STD_FS)
-  if( CXX_STD_FS )
-    # This is not strictly necessary but since we build with 17 on unix lets check with 17 here
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "-std=c++17")
-    endif()
-    target_compile_definitions(surge-shared INTERFACE USE_STD_FILESYSTEM=1)
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "")
-    endif()
-    message( STATUS "Using std::filesystem" )
-  else()
-    # if that check failed we are on one of the wonky gccs in te 7 and 5 family which need to check this with 11 and link stdc++fs
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "-std=c++11")
-      set (CMAKE_REQUIRED_LIBRARIES "stdc++fs")
-    endif()
-    CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "experimental/filesystem" CXX_EXP_STD_FS)
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "")
-      set (CMAKE_REQUIRED_LIBRARIES "")
-    endif()
-
-    if( CXX_EXP_STD_FS )
-      target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM=1)
-      message( STATUS "Using std::experimental::filesystem" )
-    else()
-      CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "filesystem" CXX_EXP_STD_FS_FS_HDR)
-      if( CXX_EXP_STD_FS_FS_HDR )
-        target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM=1)
-        message( STATUS "Using std::experimental::filesystem but from <filesystem> header" )
-      else()
-        use_fallback_fs()
-      endif()
-    endif()
-  endif()
 endif()
 
 # Surge features at compile time
@@ -565,9 +517,6 @@ elseif( UNIX AND NOT APPLE )
 
   set(OS_LINK_LIBRARIES_NOGUI
     pthread
-    stdc++fs
-    gcc_s
-    gcc
     dl
     -Wl,--no-undefined
     )
@@ -1030,7 +979,6 @@ if( BUILD_HEADLESS )
     endif()
     target_link_libraries(surge-headless
       PRIVATE
-      stdc++fs
       Threads::Threads
       )
 

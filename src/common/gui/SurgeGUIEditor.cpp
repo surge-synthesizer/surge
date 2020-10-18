@@ -96,7 +96,7 @@ struct RememberForgetGuard {
 #include "aulayer.h"
 #endif
 
-#include "ImportFilesystem.h"
+#include "filesystem/import.h"
 
 #if LINUX
 #include "vstgui/lib/platform/platform_x11.h"

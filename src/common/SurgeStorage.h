@@ -29,7 +29,7 @@
 #endif
 #include <tinyxml.h>
 
-#include "ImportFilesystem.h"
+#include "filesystem/import.h"
 
 #include <fstream>
 #include <iterator>
