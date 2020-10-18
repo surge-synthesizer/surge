@@ -69,6 +69,7 @@ void CSnapshotMenu::populate()
             break;
       }
    }
+   maxIdx = idx;
 }
 
 bool CSnapshotMenu::loadSnapshotByIndex( int idx )
@@ -152,6 +153,8 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
            snapshotTypeID = tmpI;
         }
 
+        if( firstSnapshotByType.find(snapshotTypeID) == firstSnapshotByType.end() )
+           firstSnapshotByType[snapshotTypeID] = idx;
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
         auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem* item) {
                          this->selectedIdx = idx;
@@ -159,6 +162,7 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
                          if( this->listenerNotForParent )
                             this->listenerNotForParent->valueChanged( this );
         };
+        loadArgsByIndex.push_back(std::make_pair(snapshotTypeID, snapshot));
         idx++;
 
         actionItem->setActions(action, nullptr);
@@ -198,13 +202,19 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     else
     {
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
-        auto action = [this, type_id](CCommandMenuItem* item) {
+
+       if( firstSnapshotByType.find(type_id) == firstSnapshotByType.end() )
+          firstSnapshotByType[type_id] = idx;
+
+        auto action = [this, type_id, idx](CCommandMenuItem* item) {
                          this->selectedIdx = 0;
-                         this->loadSnapshot(type_id, nullptr, 0);
+                         this->loadSnapshot(type_id, nullptr, idx);
                          if( this->listenerNotForParent )
                             this->listenerNotForParent->valueChanged(this);
         };
 
+        loadArgsByIndex.push_back(std::make_pair(type_id, nullptr));
+        idx++;
         actionItem->setActions(action, nullptr);
         parent->addEntry(actionItem);
     }
@@ -231,6 +241,10 @@ COscMenu::COscMenu(const CRect& size,
    auto tb = bitmapStore->getBitmap(IDB_OSCMENU);
    bmp = tb;
    populate();
+
+   currentIdx = 0;
+   if( firstSnapshotByType.find(osc->type.val.i ) != firstSnapshotByType.end() )
+      currentIdx = firstSnapshotByType[osc->type.val.i];
 }
 
 void COscMenu::draw(CDrawContext* dc)
@@ -257,6 +271,27 @@ void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
    assert(within_range(0, type, num_osctypes));
    osc->queue_type = type;
    osc->queue_xmldata = e;
+}
+
+bool COscMenu::onWheel( const VSTGUI::CPoint &where, const float &distance, const VSTGUI::CButtonState &buttons )
+{
+   accumWheel += distance;
+
+   if( accumWheel < -1 )
+   {
+      currentIdx = std::min( maxIdx - 1, currentIdx + 1 );
+      accumWheel = 0;
+      auto args = loadArgsByIndex[currentIdx];
+      loadSnapshot( args.first, args.second, currentIdx );
+   }
+   else if( accumWheel > 1 )
+   {
+      currentIdx = std::max( 0, currentIdx - 1 );
+      accumWheel = 0;
+      auto args = loadArgsByIndex[currentIdx];
+      loadSnapshot( args.first, args.second, currentIdx );
+   }
+   return true;
 }
 
 /*void COscMenu::load_snapshot(int type, TiXmlElement *e)

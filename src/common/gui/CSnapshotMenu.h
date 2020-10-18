@@ -20,6 +20,7 @@
 #include "SkinSupport.h"
 #include <unordered_map>
 #include <vector>
+#include <map>
 
 class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumingComponent
 {
@@ -62,6 +63,9 @@ protected:
    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu, int &idx) { }
    SurgeStorage* storage = nullptr;
    char mtype[16] = {0};
+   std::map<int,int> firstSnapshotByType;
+   std::vector<std::pair<int , TiXmlElement *>> loadArgsByIndex;
+   int maxIdx;
 
    // The parent class is too chatty with the listener, calling a value changed every time I close which means non-swapping
    // menus like copy and paste do the wrong thing
@@ -80,10 +84,14 @@ public:
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
 
+   virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
+
 protected:
    OscillatorStorage* osc = nullptr;
    VSTGUI::CBitmap* bmp = nullptr, *hoverBmp = nullptr;
    bool attemptedHoverLoad = false;
+   int currentIdx;
+   float accumWheel = 0;
 
    CLASS_METHODS(COscMenu, VSTGUI::CControl)
 };
