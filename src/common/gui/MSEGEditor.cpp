@@ -44,9 +44,10 @@ struct MSEGCanvas;
 
 // This is 720 x 120
 struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
-   MSEGControlRegion(const CRect &size, MSEGCanvas *c, LFOStorage *lfos, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
+   MSEGControlRegion(const CRect &size, MSEGCanvas *c, LFOStorage *lfos, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
       setSkin( skin, b );
       this->ms = ms;
+      this->eds = eds;
       this->lfodata = lfos;
       this->canvas = c;
       setBackgroundColor(skin->getColor(Colors::MSEGEditor::Panel));
@@ -73,6 +74,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
    }
    
    MSEGStorage *ms = nullptr;
+   MSEGEditor::State *eds = nullptr;
    MSEGCanvas *canvas = nullptr;
    LFOStorage *lfodata = nullptr;
 };
@@ -80,12 +82,14 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
 
 
 struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
-   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CControl( size ) {
+   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CControl( size ) {
       setSkin( skin, b );
       this->ms = ms;
+      this->eds = eds;
       this->lfodata = lfodata;
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
+      timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
    };
 
    /*
@@ -230,17 +234,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
     * unreset snap
     */
    struct SnapGuard {
-      SnapGuard( MSEGStorage *ms, MSEGCanvas *c ) : ms(ms), c(c) {
-         hSnapO = ms->hSnap;
-         vSnapO = ms->vSnap;
+      SnapGuard( MSEGEditor::State *eds, MSEGCanvas *c ) : eds(eds), c(c) {
+         hSnapO = eds->hSnap;
+         vSnapO = eds->vSnap;
          c->invalid();
       }
       ~SnapGuard() {
-         ms->hSnap = hSnapO;
-         ms->vSnap = vSnapO;
+         eds->hSnap = hSnapO;
+         eds->vSnap = vSnapO;
          c->invalid();
       }
-      MSEGStorage *ms;
+      MSEGEditor::State *eds;
       MSEGCanvas *c;
       float hSnapO, vSnapO;
    };
@@ -300,7 +304,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                                      if( prior >= 0 )
                                      {
                                         auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
-                                        adjustDuration( prior, dx, ms->hSnap, 0);
+                                        adjustDuration( prior, dx, eds->hSnap, 0);
                                         this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
                                      }
                                      break;
@@ -317,7 +321,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                                      if( prior >= 0 )
                                      {
                                         auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
-                                        adjustDuration( prior, dx, ms->hSnap, csum);
+                                        adjustDuration( prior, dx, eds->hSnap, csum);
                                         this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
                                         pd = ms->segments[prior].duration;
                                      }
@@ -338,7 +342,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          // We get a mousable point at the start of the line
          rectForPoint( t0, s.v0, hotzone::SEGMENT_ENDPOINT,
                        [i,this,vscale,tscale,timeConstraint](float dx, float dy, const CPoint &where) {
-                          adjustValue(i, false, -2 * dy / vscale, ms->vSnap );
+                          adjustValue(i, false, -2 * dy / vscale, eds->vSnap );
 
                           if( i != 0 )
                           {
@@ -368,7 +372,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                              if( ms->endpointMode == MSEGStorage::EndpointMode::FREE )
                              {
                                 float d = -2 * dy / vscale;
-                                float snapResolution = ms->vSnap;
+                                float snapResolution = eds->vSnap;
                                 int idx = ms->n_activeSegments - 1;
                                 offsetValue( ms->segments[idx].dragv1, d );
                                 if( snapResolution <= 0 )
@@ -383,7 +387,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                              }
                              else
                              {
-                                adjustValue(0, false, -2 * dy / vscale, ms->vSnap);
+                                adjustValue(0, false, -2 * dy / vscale, eds->vSnap);
                              }
                              // We need to deal with the cpduration also
                              auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
@@ -395,7 +399,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                                    dx *= howFar * 0.1; // this is really just a speedup as our axes shrinks. Just a fudge
                              }
 
-                             adjustDuration(ms->n_activeSegments-1, dx/tscale, ms->hSnap, 0 );
+                             adjustDuration(ms->n_activeSegments-1, dx/tscale, eds->hSnap, 0 );
                              this->ms->segments[ms->n_activeSegments-1].cpduration = this->ms->segments[ms->n_activeSegments-1].duration * cpv;
                           } );
          }
@@ -409,7 +413,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    inline void drawAxis( CDrawContext *dc ) {
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
-      int skips = round( 1.f / ms->hSnapDefault );
+      int skips = round( 1.f / eds->hSnapDefault );
       auto tpx = timeToPx();
 
       while( maxt * skips > gridMaxHSteps )
@@ -456,7 +460,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
-      skips = round( 1.f/ms->vSnapDefault);
+      skips = round( 1.f/eds->vSnapDefault);
       while( skips > gridMaxVSteps )
          skips = skips >> 1;
 
@@ -574,7 +578,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto secondaryHGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal);
       auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
-      int skips = round( 1.f / ms->hSnapDefault );
+      int skips = round( 1.f / eds->hSnapDefault );
       while( maxt * skips > gridMaxHSteps )
       {
          skips = skips >> 1;
@@ -591,7 +595,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
       }
 
-      skips = round( 1.f / ms->vSnapDefault );
+      skips = round( 1.f / eds->vSnapDefault );
       while( skips > gridMaxVSteps )
       {
          skips = skips >> 1;
@@ -752,9 +756,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                bool s = buttons & kControl;
                if( s || c  )
                {
-                  snapGuard = std::make_shared<SnapGuard>(ms, this);
-                  if( c ) ms->hSnap = ms->hSnapDefault;
-                  if( s ) ms->vSnap = ms->vSnapDefault;
+                  snapGuard = std::make_shared<SnapGuard>(eds, this);
+                  if( c ) eds->hSnap = eds->hSnapDefault;
+                  if( s ) eds->vSnap = eds->vSnapDefault;
                }
                break;
             }
@@ -888,9 +892,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          bool s = buttons & kControl;
          if( ( s || c ) && ! snapGuard )
          {
-            snapGuard = std::make_shared<SnapGuard>(ms, this);
-            if( c ) ms->hSnap = ms->hSnapDefault;
-            if( s ) ms->vSnap = ms->vSnapDefault;
+            snapGuard = std::make_shared<SnapGuard>(eds, this);
+            if( c ) eds->hSnap = eds->hSnapDefault;
+            if( s ) eds->vSnap = eds->vSnapDefault;
          }
          else if( ! ( s || c ) && snapGuard )
          {
@@ -1017,6 +1021,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
    int hoveredSegment = -1;
    MSEGStorage *ms;
+   MSEGEditor::State *eds;
    LFOStorage *lfodata;
    MSEGControlRegion *controlregion = nullptr;
 
@@ -1041,34 +1046,35 @@ void MSEGControlRegion::valueChanged( CControl *p )
    break;
    case tag_segment_movement_mode: {
       int m = floor(val * 2 + 0.5);
+      eds->timeEditMode = m;
       canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
       canvas->recalcHotZones(CPoint(0, 0));
       canvas->invalid();
    }
    break;
    case tag_horizontal_snap:
-      if( val < 0.5 ) ms->hSnap = 0; else ms->hSnap = ms->hSnapDefault;
+      if( val < 0.5 ) eds->hSnap = 0; else eds->hSnap = eds->hSnapDefault;
       canvas->invalid();
       break;
    case tag_vertical_snap:
-      if( val < 0.5 ) ms->vSnap = 0; else ms->vSnap = ms->vSnapDefault;
+      if( val < 0.5 ) eds->vSnap = 0; else eds->vSnap = eds->vSnapDefault;
       canvas->invalid();
       break;
    case tag_vertical_value:
    {
       auto fv = 1.f / std::max( 1, static_cast<CNumberField*>(p)->getIntValue() );
-      ms->vSnapDefault = fv;
-      if( ms->vSnap > 0 )
-         ms->vSnap = ms->vSnapDefault;
+      eds->vSnapDefault = fv;
+      if( eds->vSnap > 0 )
+         eds->vSnap = eds->vSnapDefault;
       canvas->invalid();
    }
       break;
    case tag_horizontal_value:
    {
       auto fv = 1.f / std::max( 1, static_cast<CNumberField*>(p)->getIntValue() );
-      ms->hSnapDefault = fv;
-      if( ms->hSnap > 0 )
-         ms->hSnap = ms->hSnapDefault;
+      eds->hSnapDefault = fv;
+      if( eds->hSnap > 0 )
+         eds->hSnap = eds->hSnapDefault;
       canvas->invalid();
    }
       break;
@@ -1162,9 +1168,9 @@ void MSEGControlRegion::rebuild()
                                      associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
       hbut->setSkin(skin,associatedBitmapStore);
       addView(hbut);
-      hbut->setValue(ms->hSnap < 0.001 ? 0 : 1);
+      hbut->setValue(eds->hSnap < 0.001 ? 0 : 1);
 
-      snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
+      snprintf(svt, 255, "%d", (int)round(1.f / eds->hSnapDefault));
       
       auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
 
@@ -1180,7 +1186,7 @@ void MSEGControlRegion::rebuild()
       hnf->setControlMode(cm_mseg_snap_h);
       hnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
       hnf->setMouseableArea(hsrect);
-      hnf->setIntValue( 4 );
+      hnf->setIntValue( round( 1.f / eds->hSnapDefault ) );
 
       addView(hnf);
 
@@ -1190,16 +1196,16 @@ void MSEGControlRegion::rebuild()
                                      associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP));
       vbut->setSkin(skin,associatedBitmapStore);
       addView( vbut );
-      vbut->setValue( ms->vSnap < 0.001? 0 : 1 );
+      vbut->setValue( eds->vSnap < 0.001? 0 : 1 );
 
-      snprintf(svt, 255, "%d", (int)round( 1.f / ms->vSnapDefault));
+      snprintf(svt, 255, "%d", (int)round( 1.f / eds->vSnapDefault));
 
       auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
       auto* vnf = new CNumberField(vsrect, this, tag_vertical_value, nullptr /*, ref to storage?*/);
       vnf->setControlMode(cm_mseg_snap_v);
       vnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
       vnf->setMouseableArea(vsrect);
-      vnf->setIntValue( 10 );
+      vnf->setIntValue( round( 1.f / eds->vSnapDefault ));
 
       addView(vnf);
    }
@@ -1207,16 +1213,16 @@ void MSEGControlRegion::rebuild()
 
 struct MSEGMainEd : public CViewContainer {
 
-   MSEGMainEd(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bmp) : CViewContainer(size) {
+   MSEGMainEd(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bmp) : CViewContainer(size) {
       this->ms = ms;
       this->skin = skin;
 
       int controlHeight = 35;
 
-      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, skin, bmp );
+      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, eds, skin, bmp );
             
       auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,
-                                               lfodata, ms, skin, bmp );
+                                               lfodata, ms, eds, skin, bmp );
 
 
       msegCanv->controlregion = msegControl;
@@ -1231,12 +1237,12 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 365) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 365) )
 {
    // Leave these in for now
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );
-   addView( new MSEGMainEd( getViewSize(), lfodata, ms, skin, b ) );
+   addView( new MSEGMainEd( getViewSize(), lfodata, ms, eds, skin, b ) );
 }
 
 MSEGEditor::~MSEGEditor() {

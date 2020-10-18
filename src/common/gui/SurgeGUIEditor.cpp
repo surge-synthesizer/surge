@@ -6771,7 +6771,7 @@ void SurgeGUIEditor::showMSEGEditor()
    auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
    auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
    auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
-   auto mse = new MSEGEditor(lfodata, ms, currentSkin, bitmapStore);
+   auto mse = new MSEGEditor(lfodata, ms, &msegEditState[lfo_id], currentSkin, bitmapStore);
    auto vs = mse->getViewSize().getWidth();
    float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 
