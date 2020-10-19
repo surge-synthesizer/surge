@@ -89,6 +89,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       this->lfodata = lfodata;
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
+      controlBmp = b->getBitmap( IDB_MSEG_CONTROLPOINT );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
    };
 
@@ -98,6 +99,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    */
    struct hotzone {
       CRect rect;
+      CRect drawRect;
+      bool useDrawRect = false;
       int associatedSegment;
       bool active = false;
       bool dragging = false;
@@ -106,6 +109,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       enum Type
       {
          MOUSABLE_NODE,
+         INACTIVE_NODE // To keep the array the same size add dummis when you supress controls
       } type;
 
       enum SegmentMousableType
@@ -113,7 +117,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          SEGMENT_ENDPOINT,
          SEGMENT_CONTROL
       } mousableNodeType = SEGMENT_CONTROL;
-      
+
+      enum SegmentControlDirection
+      {
+         VERTICAL_ONLY = 1,
+         HORIZONTAL_ONLY,
+         BOTH_DIRECTIONS
+      } segmentDirection = VERTICAL_ONLY;
       std::function<void(float,float, const CPoint &)> onDrag;
    };
    std::vector<hotzone> hotzones;
@@ -273,95 +283,190 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          
       for( int i=0; i<ms->n_activeSegments; ++i )
       {
-         auto t0 = tpx( ms->segmentStart[i] );
-         auto t1 = tpx( ms->segmentEnd[i] );
+         auto t0 = tpx(ms->segmentStart[i]);
+         auto t1 = tpx(ms->segmentEnd[i]);
 
-         auto segrec = CRect( t0, drawArea.top, t1, drawArea.bottom );
+         auto segrec = CRect(t0, drawArea.top, t1, drawArea.bottom);
 
          // Now add the mousable zones
-         auto &s = ms->segments[i];
-         auto rectForPoint = [&]( float t, float v, hotzone::SegmentMousableType mt, std::function<void(float,float, const CPoint &)> onDrag ){
-                                auto h = hotzone();
-                                h.rect = CRect( t - handleRadius,
-                                                valpx(v) - handleRadius,
-                                                t + handleRadius,
-                                                valpx(v) + handleRadius );
-                                h.type = hotzone::Type::MOUSABLE_NODE;
-                                if( h.rect.pointInside( where ) )
-                                   h.active = true;
-                                h.onDrag = onDrag;
-                                h.associatedSegment = i;
-                                h.mousableNodeType = mt;
-                                hotzones.push_back(h);
-                             };
+         auto& s = ms->segments[i];
+         auto rectForPoint = [&](float t, float v, hotzone::SegmentMousableType mt,
+                                 std::function<void(float, float, const CPoint&)> onDrag) {
+            auto h = hotzone();
+            h.rect = CRect(t - handleRadius, valpx(v) - handleRadius, t + handleRadius,
+                           valpx(v) + handleRadius);
+            h.type = hotzone::Type::MOUSABLE_NODE;
+            if (h.rect.pointInside(where))
+               h.active = true;
+            h.onDrag = onDrag;
+            h.associatedSegment = i;
+            h.mousableNodeType = mt;
+            hotzones.push_back(h);
+         };
 
-         auto timeConstraint = [&]( int prior, int next, float dx ) {
-                                  switch( this->timeEditMode )
-                                  {
-                                  case DRAW:
-                                     break;
-                                  case SHIFT:
-                                     if( prior >= 0 )
-                                     {
-                                        auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
-                                        adjustDuration( prior, dx, eds->hSnap, 0);
-                                        this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
-                                     }
-                                     break;
-                                  case SINGLE:
-                                     if( prior >= 0 && (this->ms->segments[prior].duration+dx) <= MSEGStorage::minimumDuration && dx < 0 ) dx = 0;
-                                     if( next < ms->n_activeSegments && (this->ms->segments[next].duration-dx) <= MSEGStorage::minimumDuration && dx > 0 ) dx = 0;
+         auto timeConstraint = [&](int prior, int next, float dx) {
+            switch (this->timeEditMode)
+            {
+            case DRAW:
+               break;
+            case SHIFT:
+               if (prior >= 0)
+               {
+                  auto rcv =
+                      this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
+                  adjustDuration(prior, dx, eds->hSnap, 0);
+                  this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
+               }
+               break;
+            case SINGLE:
+               if (prior >= 0 &&
+                   (this->ms->segments[prior].duration + dx) <= MSEGStorage::minimumDuration &&
+                   dx < 0)
+                  dx = 0;
+               if (next < ms->n_activeSegments &&
+                   (this->ms->segments[next].duration - dx) <= MSEGStorage::minimumDuration &&
+                   dx > 0)
+                  dx = 0;
 
-                                     auto csum = 0.f, pd = 0.f;
-                                     if( prior >= 0 ) {
-                                        csum += ms->segments[prior].duration;
-                                        pd = ms->segments[prior].duration;
-                                     }
-                                     if( next < ms->n_activeSegments ) csum += ms->segments[next].duration;
-                                     if( prior >= 0 )
-                                     {
-                                        auto rcv = this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
-                                        adjustDuration( prior, dx, eds->hSnap, csum);
-                                        this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
-                                        pd = ms->segments[prior].duration;
-                                     }
-                                     if( next < ms->n_activeSegments )
-                                     {
-                                        auto rcv = this->ms->segments[next].cpduration / this->ms->segments[next].duration;
+               auto csum = 0.f, pd = 0.f;
+               if (prior >= 0)
+               {
+                  csum += ms->segments[prior].duration;
+                  pd = ms->segments[prior].duration;
+               }
+               if (next < ms->n_activeSegments)
+                  csum += ms->segments[next].duration;
+               if (prior >= 0)
+               {
+                  auto rcv =
+                      this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
+                  adjustDuration(prior, dx, eds->hSnap, csum);
+                  this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
+                  pd = ms->segments[prior].duration;
+               }
+               if (next < ms->n_activeSegments)
+               {
+                  auto rcv =
+                      this->ms->segments[next].cpduration / this->ms->segments[next].duration;
 
-                                        // offsetDuration( this->ms->segments[next].duration, -dx );
-                                        this->ms->segments[next].duration = csum - pd;
-                                        this->ms->segments[next].cpduration = this->ms->segments[next].duration * rcv;
-                                     }
-                                     
-                                     break;
-                                  }
-                               };
+                  // offsetDuration( this->ms->segments[next].duration, -dx );
+                  this->ms->segments[next].duration = csum - pd;
+                  this->ms->segments[next].cpduration = this->ms->segments[next].duration * rcv;
+               }
 
+               break;
+            }
+         };
 
          // We get a mousable point at the start of the line
-         rectForPoint( t0, s.v0, hotzone::SEGMENT_ENDPOINT,
-                       [i,this,vscale,tscale,timeConstraint](float dx, float dy, const CPoint &where) {
-                          adjustValue(i, false, -2 * dy / vscale, eds->vSnap );
+         rectForPoint(
+             t0, s.v0, hotzone::SEGMENT_ENDPOINT,
+             [i, this, vscale, tscale, timeConstraint](float dx, float dy, const CPoint& where) {
+                adjustValue(i, false, -2 * dy / vscale, eds->vSnap);
 
-                          if( i != 0 )
-                          {
-                             timeConstraint( i-1, i, dx/tscale );
-                          }
-                       } );
-
+                if (i != 0)
+                {
+                   timeConstraint(i - 1, i, dx / tscale);
+                }
+             });
 
          // Control point editor
-         float tn = tpx(ms->segmentStart[i] + ms->segments[i].cpduration );
-         rectForPoint( tn, s.cpv, hotzone::SEGMENT_CONTROL,
-                       [i, this, tscale, vscale]( float dx, float dy, const CPoint &where) {
-                          adjustValue(i, true, -2 * dy / vscale, 0.0 ); // we never want to snap CPV
+         if (ms->segments[i].duration > 0.01 &&
+             fabs(ms->segments[i].nv1 - ms->segments[i].v0) > 0.01)
+         {
+            /*
+             * Drop in a control point. But where and moving how?
+             *
+             * Here's some good defaults
+             */
+            bool verticalMotion = true;
+            bool horizontalMotion = false;
+            bool verticalScaleByValues = false;
 
-                          this->ms->segments[i].cpduration += dx / tscale;
-                          this->ms->segments[i].cpduration = limit_range( (float)this->ms->segments[i].cpduration,
-                                                                          (float)MSEGStorage::minimumDuration,
-                                                                          (float)(this->ms->segments[i].duration - MSEGStorage::minimumDuration) );
-                       } );
+            switch (ms->segments[i].type)
+            {
+            // Ones where we scan the entire square
+            case MSEGStorage::segment::QUAD_BEZIER:
+               horizontalMotion = true;
+               break;
+            case MSEGStorage::segment::BROWNIAN:
+               horizontalMotion = true;
+               break;
+            // Ones where we stay within the range
+            case MSEGStorage::segment::LINEAR:
+               verticalScaleByValues = true;
+               break;
+            default:
+               break;
+            }
+
+            // Follow the mouse with scaling of course
+
+            float vLocation = ms->segments[i].cpv;
+            if( verticalScaleByValues )
+               vLocation = 0.5 * (vLocation + 1) * ( ms->segments[i].nv1 - ms->segments[i].v0 ) + ms->segments[i].v0;
+
+            float tLocation = 0.5 * ms->segments[i].duration + ms->segmentStart[i];
+            if( horizontalMotion )
+               tLocation = ms->segments[i].cpduration * ms->segments[i].duration + ms->segmentStart[i];
+
+            // std::cout << _D(i) << _D(ms->segments[i].type) << _D(ms->segments[i].cpv) << _D(ms->segments[i].cpduration) << _D(verticalMotion) << _D(verticalScaleByValues) << _D(horizontalMotion) << _D(vLocation ) << _D(tLocation) << _D(ms->segmentStart[i] ) << std::endl;
+
+            float t = tpx( tLocation );
+            float v = valpx( vLocation );
+            auto h = hotzone();
+            h.rect = CRect(t - handleRadius, v - handleRadius, t + handleRadius,
+                           v + handleRadius);
+            h.type = hotzone::Type::MOUSABLE_NODE;
+            if (h.rect.pointInside(where))
+               h.active = true;
+
+            h.useDrawRect = false;
+            if( ( verticalMotion && ! horizontalMotion && ms->segments[i].type != MSEGStorage::segment::LINEAR ) ||
+                ms->segments[i].type == MSEGStorage::segment::BROWNIAN )
+            {
+               float t = tpx( 0.5 * ms->segments[i].duration + ms->segmentStart[i] );
+               float v = valpx( 0.5 * (ms->segments[i].nv1 + ms->segments[i].v0 ) );
+               h.drawRect = CRect(t - handleRadius, v - handleRadius, t + handleRadius,
+                                  v + handleRadius);
+               h.rect = h.drawRect;
+               h.useDrawRect = true;
+            }
+
+            float segdt = ms->segmentEnd[i] - ms->segmentStart[i];
+            float segdx = ms->segments[i].nv1 - ms->segments[i].v0;
+
+            h.onDrag = [this, i, tscale, vscale, verticalMotion, horizontalMotion, verticalScaleByValues, segdt , segdx](float dx, float dy, const CPoint &where) {
+               if( verticalMotion )
+               {
+                  if( verticalScaleByValues)
+                     ms->segments[i].cpv += -2 * dy / vscale / (0.5 * segdx );
+                  else
+                     ms->segments[i].cpv += -2 * dy / vscale;
+               }
+               if( horizontalMotion )
+                  ms->segments[i].cpduration += dx / tscale / segdt;
+               Surge::MSEG::constrainControlPointAt(ms, i);
+               modelChanged();
+            };
+            h.associatedSegment = i;
+            h.mousableNodeType = hotzone::SEGMENT_CONTROL;
+            if( verticalMotion && horizontalMotion )
+               h.segmentDirection = hotzone::BOTH_DIRECTIONS;
+            else if( horizontalMotion )
+               h.segmentDirection = hotzone::HORIZONTAL_ONLY;
+            else
+               h.segmentDirection = hotzone::VERTICAL_ONLY;
+
+            hotzones.push_back(h);
+         }
+         else
+         {
+            std::cout << "Skipping control point at " << i << " " << ms->segments[i].type << std::endl;
+            hotzone h;
+            h.type = hotzone::INACTIVE_NODE;
+            hotzones.push_back(h);
+         }
 
          // Specially we have to add an endpoint editor
          if( i == ms->n_activeSegments - 1 )
@@ -509,10 +614,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
       float pathFirstY, pathLastX, pathLastY, pathLastDef;
 
+      bool drawnLast = false; // this slightly odd construct means we always draw beyond the last point
       for( int i=0; i<drawArea.getWidth(); ++i )
       {
          float up = pxt( i + drawArea.left );
-         if( up <= ms->totalDuration )
+         if( ! drawnLast )
          {
             float iup = (int)up;
             float fup = up - iup;
@@ -553,6 +659,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             }
             pathLastX = i; pathLastY = v; pathLastDef = vdef;
          }
+         drawnLast = up > ms->totalDuration;
       }
 
       auto tfpath = CGraphicsTransform().translate(drawArea.left, 0);
@@ -644,9 +751,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             int sz = 12;
             int offx = 0;
 
-            if( h.mousableNodeType == hotzone::SEGMENT_CONTROL )
-               offx = 1;
-
             int offy = 0;
 
             if( h.active )
@@ -655,10 +759,27 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             if( h.dragging )
                offy = 2;
 
-            if( ! handleBmp )
+            if( ! handleBmp || h.mousableNodeType == hotzone::SEGMENT_CONTROL )
             {
-               dc->setFrameColor( kRedCColor );
-               dc->drawRect( h.rect, kDrawStroked );
+               offx = 0;
+               offy = 0;
+               if( h.active || h.dragging )
+                  switch( h.segmentDirection )
+                  {
+                  case hotzone::VERTICAL_ONLY:
+                     offx = 1;
+                     break;
+                  case hotzone::HORIZONTAL_ONLY:
+                     offx = 2;
+                     break;
+                  case hotzone::BOTH_DIRECTIONS:
+                     offx = 3;
+                     break;
+                  }
+               if( h.useDrawRect )
+                  controlBmp->draw( dc, h.drawRect, CPoint( offx * sz, offy * sz ), 0xFF );
+               else
+                  controlBmp->draw( dc, h.rect, CPoint( offx * sz, offy * sz ), 0xFF );
             }
             else
             {
@@ -684,7 +805,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          auto pv = pxToVal();
          auto v = pv( where.y );
 
-         // Check if I'm on a hotzone
+         // Check if I'm on a hotzoneo
          for( auto &h : hotzones )
          {
             if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
@@ -1037,7 +1158,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    LFOStorage *lfodata;
    MSEGControlRegion *controlregion = nullptr;
 
-   CScalableBitmap *handleBmp;
+   CScalableBitmap *handleBmp, *controlBmp;
    
    CLASS_METHODS( MSEGCanvas, CControl );
 };

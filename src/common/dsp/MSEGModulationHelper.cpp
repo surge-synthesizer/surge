@@ -181,21 +181,60 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       float frac = timeAlongSegment / r.duration;
 
       // So we want to handle control points
-      auto cpd = r.cpduration / r.duration;
+      auto cpd = r.cpv;
 
-      float a = 40 * cpd - 20.0;
+      /*
+       * Alright so we have a functional form (e^ax-1)/(e^a-1) = y;
+       * We also know that since we have veritcal only motion here x = 1/2 and y is where we want
+       * to hit ( specifically since we are generating a 0,1 line and cpv is -1,1 then
+       * here we get y = 0.5 * cpv + 0.5.
+       *
+       * Fine so lets show our work. I'm going to use X and V for now
+       *
+       * (e^aX-1)/(e^a-1) = V  @ x=1/2
+       * introduce Q = e^a/2
+       * (Q - 1) / ( Q^2 - 1 ) = V
+       * Q - 1 = V Q^2 - V
+       * V Q^2 - Q + ( 1-V ) = 0
+       *
+       * OK cool we know how to solve that (for V != 0)
+       *
+       * Q = (1 +/- sqrt( 1 - 4 * V * (1-V) )) / 2 V
+       *
+       * and since Q = e^a/2
+       *
+       * a = 2 * log(Q)
+       *
+       */
 
-      if( df < 0 )
-         frac = pow( frac, 1.0 + df * 0.7 );
-
-      if( df > 0 )
-         frac = pow( frac, 1.0 + df * 3 );
+      float V = 0.5 * r.cpv + 0.5;
+      float amul = 1;
+      if( V < 0.5 )
+      {
+         amul = -1;
+         V = 1 - V;
+      }
+      float disc = ( 1 - 4 * V * ( 1-V) );
+      float a = 0;
+      if( fabs(V) > 1e-3 )
+      {
+         float Q = limit_range( ( 1 - sqrt( disc ) ) / ( 2 * V ), 0.00001f, 100000.f );
+         a = amul * 2 * log( Q );
+      }
 
       // OK so frac is the 0,1 line point
       auto cpline = frac;
       if( fabs(a) > 1e-3 )
          cpline = ( exp( a * frac ) - 1 ) / ( exp( a ) - 1 );
 
+      // This is the equivalent of LFOModulationSource.cpp::bend3
+      float dfa = 0.5f * limit_range( df, -3.f, 3.f );
+
+      float x = 2 * cpline - 1;
+      x = x - dfa * x * x + dfa;
+      x = x - dfa * x * x + dfa; // do twice because bend3 does it twice
+
+      cpline = 0.5 * ( x + 1 );
 
       // cpline will still be 0,1 so now we need to transform it
       res = cpline * ( lv1 - lv0 ) + lv0;
@@ -227,7 +266,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       {
          while( es->msegState[lasttime] < targetTime && es->msegState[lasttime] < 1 )
          {
-            auto ncd = r.cpduration / r.duration; // 0-1
+            auto ncd = r.cpduration; // 0-1
             // OK so the closer this is to 1 the more spiky we should be, which is basically
             // increasing the dt.
 
@@ -284,7 +323,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       */
 
       float cpv = lcpv;
-      float cpt = r.cpduration;
+      float cpt = r.cpduration * r.duration;
 
       // If we are positioned exactly at the midpoint our calculation below to find time will fail
       // so walk off a smidge
@@ -362,7 +401,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
          break;
       }
 
-      float cx = ( r.cpduration / r.duration - 0.5 ) * 2; // goes from -1 to 1
+      float cx = r.cpv;
       
       /*
       ** OK so now we have either x = 1/(1+exp(-kx)) if k > 0 or the mirror of that around the line
@@ -415,17 +454,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    case MSEGStorage::segment::SINE: 
    case MSEGStorage::segment::TRIANGLE: 
    case MSEGStorage::segment::SQUARE: {
-      float pct = r.cpduration / r.duration;
-      /*
-       * We want an exponential map roughly like
-       *  0 -> 0
-       * .5 -> .05
-       *  1 -> 1
-       *
-       *  screwing around in desmos that gives us
-       *  (e^(ax^n)-1)/(e^a-1)
-       *  with a = 5 and n= 1
-       */
+      float pct = ( r.cpv + 1 ) * 0.5;
       float as = 5.0;
       float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
       int steps = (int)( scaledpct * 100 );
@@ -490,7 +519,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    }
 
    case MSEGStorage::segment::STEPS: {
-      float pct = r.cpduration / r.duration;
+      float pct = ( r.cpv + 1 ) * 0.5;
       float as = 5.0;
       float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
       int steps = (int)( scaledpct * 100 ) + 2;
@@ -666,8 +695,8 @@ void extendTo( MSEGStorage *ms, float t, float nv ) {
    float dt = t - ms->totalDuration;
    ms->segments[sn].duration = dt;
 
-   ms->segments[sn].cpduration = dt/2;
-   ms->segments[sn].cpv = ( ms->segments[sn].v0 + nv ) * 0.5;
+   ms->segments[sn].cpduration = 0.5;
+   ms->segments[sn].cpv = 0;
    ms->segments[sn].nv1 = nv;
 
    if( ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
@@ -698,15 +727,7 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
       while( t < 0 ) t += ms->totalDuration;
 
       float pv1 = ms->segments[idx].nv1;
-      
-      float cpdratio = 0.5;
-      if( ms->segments[idx].duration > 0 )
-         cpdratio = ms->segments[idx].cpduration / ms->segments[idx].duration;
-      
-      float cpvratio = 0.5;
-      if( ms->segments[idx].nv1 != ms->segments[idx].v0 )
-         cpvratio = ( ms->segments[idx].cpv - ms->segments[idx].v0 ) / ( ms->segments[idx].nv1 - ms->segments[idx].v0 );
-      
+
       float dt = (t - ms->segmentStart[idx]) / ( ms->segments[idx].duration);
       auto q = ms->segments[idx]; // take a copy
       insertAtIndex(ms, idx + 1);
@@ -720,11 +741,12 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
       ms->segments[idx+1].duration = q.duration * ( 1 - dt );
       ms->segments[idx+1].useDeform = ms->segments[idx].useDeform;
       ms->segments[idx+1].invertDeform = ms->segments[idx].invertDeform;
-      
-      ms->segments[idx].cpduration = cpdratio * ms->segments[idx].duration;
-      ms->segments[idx].cpv = (ms->segments[idx].nv1 - ms->segments[idx].v0 ) * cpvratio + ms->segments[idx].v0;
-      ms->segments[idx+1].cpduration = cpdratio * ms->segments[idx+1].duration;
-      ms->segments[idx+1].cpv = (ms->segments[idx+1].nv1 - ms->segments[idx+1].v0 ) * cpvratio + ms->segments[idx+1].v0;
+
+      // Now these are normalized this is easy
+      ms->segments[idx].cpduration = q.cpduration;
+      ms->segments[idx].cpv = q.cpv;
+      ms->segments[idx+1].cpduration = q.cpduration;
+      ms->segments[idx+1].cpv = q.cpv;
    }
 }
 
@@ -804,31 +826,20 @@ void resetControlPoint( MSEGStorage *ms, float t )
 
 void resetControlPoint( MSEGStorage *ms, int idx )
 {
-   ms->segments[idx].cpduration = ms->segments[idx].duration * 0.5;
-   ms->segments[idx].cpv = (ms->segments[idx].v0 + ms->segments[idx].nv1) * 0.5;
+   ms->segments[idx].cpduration = 0.5;
+   ms->segments[idx].cpv = 0.0;
+   if( ms->segments[idx].type == MSEGStorage::segment::QUAD_BEZIER )
+      ms->segments[idx].cpv = 0.5 * ( ms->segments[idx].v0 + ms->segments[idx].nv1 );
 }
 
 void constrainControlPointAt( MSEGStorage *ms, int idx )
 {
+   // With the new model this is way easier
+   ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, 1.f );
+   ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
+
    switch( ms->segments[idx].type )
    {
-   // 2D motion
-   case MSEGStorage::segment::QUAD_BEZIER:
-   case MSEGStorage::segment::BROWNIAN:
-   {
-      // Constrain time but space is in -1,1
-      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
-      ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
-
-   }
-   break;
-   default:
-   {
-      // constrain time and stay at the midpoint
-      ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, ms->segments[idx].duration );
-      ms->segments[idx].cpv = 0.5 * (ms->segments[idx].v0 + ms->segments[idx].nv1);
-   }
-   break;
    }
 }
    
