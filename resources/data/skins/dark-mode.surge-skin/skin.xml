@@ -72,9 +72,8 @@
     <color id="msegeditor.axis.text" value="lightgray"/>
     <color id="msegeditor.fill.gradient.start" value="#2E86FE80"/>
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
-    <color id="msegeditor.numberfield.background" value="bggray"/>
-    <color id="msegeditor.numberfield.border" value="bordergray"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
+    <color id="msegeditor.numberfield.text.hover" value="white"/>
 
     <color id="dialog.background" value="bggray"/>
     <color id="dialog.border" value="bordergray"/>

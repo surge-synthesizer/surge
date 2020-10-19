@@ -184,7 +184,7 @@ namespace Colors
       }
       namespace NumberField
       {
-         extern const Surge::Skin::Color Background, Text, Border;
+         extern const Surge::Skin::Color Text, TextHover;
       }
    }
 
