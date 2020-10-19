@@ -225,9 +225,9 @@ TEST_CASE( "Deform per Segment", "[mseg]" )
       for( auto c : runDef )
       {
          if( c.fPhase < 0.5 && c.v != -1 )
-            REQUIRE( c.v > 2 * c.fPhase / 0.5 - 1 );
+            REQUIRE( c.v < 2 * c.fPhase / 0.5 - 1 );
          if( c.fPhase > 0.5 && c.v != 1 )
-            REQUIRE( c.v < 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
+            REQUIRE( c.v > 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
       }
 
       ms.segments[0].useDeform = false;
@@ -237,7 +237,7 @@ TEST_CASE( "Deform per Segment", "[mseg]" )
          if( c.fPhase < 0.5 && c.v != -1 )
             REQUIRE( c.v == Approx( 2 * c.fPhase / 0.5 - 1 ) );
          if( c.fPhase > 0.5 && c.v != 1 )
-            REQUIRE( c.v < 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
+            REQUIRE( c.v > 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
       }
    }
 }

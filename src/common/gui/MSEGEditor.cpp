@@ -89,7 +89,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       this->lfodata = lfodata;
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
-      controlBmp = b->getBitmap( IDB_MSEG_CONTROLPOINT );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
    };
 
@@ -440,10 +439,43 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             h.onDrag = [this, i, tscale, vscale, verticalMotion, horizontalMotion, verticalScaleByValues, segdt , segdx](float dx, float dy, const CPoint &where) {
                if( verticalMotion )
                {
+                  float dv = 0;
                   if( verticalScaleByValues)
-                     ms->segments[i].cpv += -2 * dy / vscale / (0.5 * segdx );
+                     dv = -2 * dy / vscale / (0.5 * segdx );
                   else
-                     ms->segments[i].cpv += -2 * dy / vscale;
+                     dv = -2 * dy / vscale;
+
+                  /*
+                   * OK we have some special case edge scalings for sensitive types.
+                   * If this ends up applying to more than linear then I would be surprised
+                   * but write a switch anyway :)
+                   */
+                  switch( ms->segments[i].type )
+                  {
+                  case MSEGStorage::segment::LINEAR:
+                  {
+                     // Slowdown parameters. Basically slow down mouse -> delta linearly near edge
+                     float slowdownInTheLast = 0.15;
+                     float slowdownAtMostTo = 0.05;
+                     float adj = 1;
+
+                     if( ms->segments[i].cpv > (1.0-slowdownInTheLast) )
+                     {
+                        auto lin = (ms->segments[i].cpv - slowdownInTheLast)/(1.0-slowdownInTheLast);
+                        adj = ( 1.0 - (1.0-slowdownAtMostTo) * lin);
+                     }
+                     else if( ms->segments[i].cpv < (-1.0 + slowdownInTheLast ))
+                     {
+                        auto lin = (ms->segments[i].cpv + slowdownInTheLast)/(-1.0+slowdownInTheLast);
+                        adj = ( 1.0 - (1.0-slowdownAtMostTo) * lin);
+                     }
+                     dv *= adj;
+                  }
+                  default:
+                     break;
+                  }
+
+                  ms->segments[i].cpv += dv;
                }
                if( horizontalMotion )
                   ms->segments[i].cpduration += dx / tscale / segdt;
@@ -525,6 +557,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       {
          skips = skips >> 1;
       }
+      skips = std::max( 1, skips );
 
       dc->setFont( displayFont );
       dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
@@ -568,6 +601,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       skips = round( 1.f/eds->vSnapDefault);
       while( skips > gridMaxVSteps )
          skips = skips >> 1;
+      skips = std::max( 1, skips );
 
       float step = 1.f / skips;
       for( float i=-1; i<=1.001 /* for things like "3" rounding*/; i += step )
@@ -690,6 +724,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       {
          skips = skips >> 1;
       }
+      skips = std::max( skips, 1 );
 
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
@@ -707,6 +742,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       {
          skips = skips >> 1;
       }
+      skips = std::max( skips, 1 );
 
       for( int vi = 0; vi < 2 * skips + 1; vi ++ )
       {
@@ -762,44 +798,43 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             if( h.dragging )
                offy = 2;
 
+            if( h.mousableNodeType == hotzone::SEGMENT_CONTROL )
+               offx = 1;
 
-            if( ! handleBmp || h.mousableNodeType == hotzone::SEGMENT_CONTROL )
+            if( h.active || h.dragging )
             {
-               offx = 0;
-               offy = 0;
 
-               auto nextCursor = VSTGUI::kCursorDefault;
-               if( h.active || h.dragging )
+               if (h.mousableNodeType == hotzone::SEGMENT_CONTROL)
                {
-                  switch (h.segmentDirection)
+                  auto nextCursor = VSTGUI::kCursorDefault;
+                  if (h.active || h.dragging)
                   {
-                  case hotzone::VERTICAL_ONLY:
-                     nextCursor = kCursorVSize;
-                     offx = 1;
-                     break;
-                  case hotzone::HORIZONTAL_ONLY:
-                     nextCursor = kCursorHSize;
-                     offx = 2;
-                     break;
-                  case hotzone::BOTH_DIRECTIONS:
-                     nextCursor = kCursorSizeAll;
-                     offx = 3;
-                     break;
+                     switch (h.segmentDirection)
+                     {
+                     case hotzone::VERTICAL_ONLY:
+                        nextCursor = kCursorVSize;
+                        break;
+                     case hotzone::HORIZONTAL_ONLY:
+                        nextCursor = kCursorHSize;
+                        break;
+                     case hotzone::BOTH_DIRECTIONS:
+                        nextCursor = kCursorSizeAll;
+                        break;
+                     }
+
+                     getFrame()->setCursor(nextCursor);
                   }
-
-                  getFrame()->setCursor( nextCursor );
                }
-
-               if( h.useDrawRect )
-                  controlBmp->draw( dc, h.drawRect, CPoint( offx * sz, offy * sz ), 0xFF );
-               else
-                  controlBmp->draw( dc, h.rect, CPoint( offx * sz, offy * sz ), 0xFF );
+               if (h.mousableNodeType == hotzone::SEGMENT_ENDPOINT)
+                  getFrame()->setCursor(kCursorSizeAll);
             }
-            else
+
+            if( handleBmp )
             {
-               handleBmp->draw( dc, h.rect, CPoint( offx * sz, offy * sz ), 0xFF );
-               if( h.active || h.dragging )
-                  getFrame()->setCursor( kCursorSizeAll );
+               if( h.useDrawRect )
+                  handleBmp->draw( dc, h.drawRect, CPoint( offx * sz, offy * sz ), 0xFF );
+               else
+                  handleBmp->draw( dc, h.rect, CPoint( offx * sz, offy * sz ), 0xFF );
             }
          }
       }
@@ -1175,7 +1210,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    LFOStorage *lfodata;
    MSEGControlRegion *controlregion = nullptr;
 
-   CScalableBitmap *handleBmp, *controlBmp;
+   CScalableBitmap *handleBmp;
    
    CLASS_METHODS( MSEGCanvas, CControl );
 };

@@ -6746,6 +6746,11 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
          msegEditSwitch->setVisible( curr == ls_mseg );
       }
    }
+
+   // update the LFO title label
+   std::string modname = modulatorName(modsource_editor[current_scene], true);
+   lfoNameLabel->setText(modname.c_str());
+   lfoNameLabel->invalid();
 }
 
 void SurgeGUIEditor::closeMSEGEditor()
