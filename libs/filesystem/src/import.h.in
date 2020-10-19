@@ -10,6 +10,8 @@
 #include @FS_HEADER@
 namespace fs = @FS_NAMESPACE@;
 
+#include <utility>
+
 inline std::string path_to_string(const fs::path& path)
 {
 #ifdef _WIN32
@@ -19,12 +21,13 @@ inline std::string path_to_string(const fs::path& path)
 #endif
 }
 
-inline fs::path string_to_path(const std::string& path)
+template<typename T>
+inline fs::path string_to_path(T&& path)
 {
 #ifdef _WIN32
-   return fs::u8path(path);
+   return fs::u8path(std::forward<T>(path));
 #else
-   return fs::path(path);
+   return fs::path(std::forward<T>(path));
 #endif
 }
 
