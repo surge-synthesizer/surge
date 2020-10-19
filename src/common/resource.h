@@ -78,6 +78,7 @@
 #define IDB_LFO_MSEG_EDIT 177
 #define IDB_LFO_PRESETS 178
 #define IDB_MSEG_NUMBERFIELDBG 306
+#define IDB_MSEG_CONTROLPOINT 307
 // == /SVG == Do not remove this comment
 
 

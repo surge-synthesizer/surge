@@ -43,7 +43,9 @@ void resetCP( MSEGStorage *ms )
 {
    Surge::MSEG::rebuildCache(ms);
    for( int i=0; i<ms->n_activeSegments; ++i )
-      Surge::MSEG::resetControlPoint(ms, i );
+   {
+      Surge::MSEG::resetControlPoint(ms, i);
+   }
 }
 
 /*
@@ -223,9 +225,9 @@ TEST_CASE( "Deform per Segment", "[mseg]" )
       for( auto c : runDef )
       {
          if( c.fPhase < 0.5 && c.v != -1 )
-            REQUIRE( c.v < 2 * c.fPhase / 0.5 - 1 );
+            REQUIRE( c.v > 2 * c.fPhase / 0.5 - 1 );
          if( c.fPhase > 0.5 && c.v != 1 )
-            REQUIRE( c.v > 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
+            REQUIRE( c.v < 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
       }
 
       ms.segments[0].useDeform = false;
@@ -235,7 +237,7 @@ TEST_CASE( "Deform per Segment", "[mseg]" )
          if( c.fPhase < 0.5 && c.v != -1 )
             REQUIRE( c.v == Approx( 2 * c.fPhase / 0.5 - 1 ) );
          if( c.fPhase > 0.5 && c.v != 1 )
-            REQUIRE( c.v > 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
+            REQUIRE( c.v < 1 - 2 * (c.fPhase - 0.5 ) / 0.5 );
       }
    }
 }
