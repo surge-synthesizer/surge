@@ -372,7 +372,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
 
          // Control point editor
          if (ms->segments[i].duration > 0.01 &&
-             fabs(ms->segments[i].nv1 - ms->segments[i].v0) > 0.01)
+             fabs(ms->segments[i].nv1 - ms->segments[i].v0) > 0.01 &&
+             ms->segments[i].type != MSEGStorage::segment::HOLD )
          {
             /*
              * Drop in a control point. But where and moving how?
@@ -462,7 +463,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          }
          else
          {
-            std::cout << "Skipping control point at " << i << " " << ms->segments[i].type << std::endl;
             hotzone h;
             h.type = hotzone::INACTIVE_NODE;
             hotzones.push_back(h);
@@ -744,6 +744,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       path->forget();
       defpath->forget();
 
+      if( ! inDrag )
+         getFrame()->setCursor(kCursorDefault);
+
       for( const auto &h : hotzones )
       {
          if( h.type == hotzone::MOUSABLE_NODE )
@@ -759,23 +762,34 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             if( h.dragging )
                offy = 2;
 
+
             if( ! handleBmp || h.mousableNodeType == hotzone::SEGMENT_CONTROL )
             {
                offx = 0;
                offy = 0;
+
+               auto nextCursor = VSTGUI::kCursorDefault;
                if( h.active || h.dragging )
-                  switch( h.segmentDirection )
+               {
+                  switch (h.segmentDirection)
                   {
                   case hotzone::VERTICAL_ONLY:
+                     nextCursor = kCursorVSize;
                      offx = 1;
                      break;
                   case hotzone::HORIZONTAL_ONLY:
+                     nextCursor = kCursorHSize;
                      offx = 2;
                      break;
                   case hotzone::BOTH_DIRECTIONS:
+                     nextCursor = kCursorSizeAll;
                      offx = 3;
                      break;
                   }
+
+                  getFrame()->setCursor( nextCursor );
+               }
+
                if( h.useDrawRect )
                   controlBmp->draw( dc, h.drawRect, CPoint( offx * sz, offy * sz ), 0xFF );
                else
@@ -784,6 +798,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             else
             {
                handleBmp->draw( dc, h.rect, CPoint( offx * sz, offy * sz ), 0xFF );
+               if( h.active || h.dragging )
+                  getFrame()->setCursor( kCursorSizeAll );
             }
          }
       }
@@ -890,6 +906,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    }
 
    virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons ) override {
+      getFrame()->setCursor( kCursorDefault );
       inDrag = false;
       inDrawDrag = false;
       for( auto &h : hotzones )
