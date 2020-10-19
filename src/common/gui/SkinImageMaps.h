@@ -67,6 +67,7 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    res["MSEG_LOOP_MODES"] = 305;
    res["LFO_MSEG_EDIT"] = 177;
    res["LFO_PRESETS"] = 178;
+   res["MSEG_NUMBERFIELDBG"] = 306;
    return res;
 }
 
@@ -138,6 +139,7 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert( 305 );
    allowed.insert( 177 );
    allowed.insert( 178 );
+   allowed.insert( 306 );
 
    return allowed;
 }
