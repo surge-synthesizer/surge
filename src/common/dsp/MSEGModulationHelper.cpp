@@ -25,51 +25,59 @@ namespace MSEG {
 
 void rebuildCache( MSEGStorage *ms )
 {
-   if( ms->loop_start > ms->n_activeSegments - 1 ) ms->loop_start = -1;
-   if( ms->loop_end > ms->n_activeSegments - 1 ) ms->loop_end = -1;
+   if (ms->loop_start > ms->n_activeSegments - 1)
+      ms->loop_start = -1;
+   if (ms->loop_end > ms->n_activeSegments - 1)
+      ms->loop_end = -1;
 
    float totald = 0;
-   for( int i=0; i<ms->n_activeSegments; ++i )
+   for (int i = 0; i < ms->n_activeSegments; ++i)
    {
       ms->segmentStart[i] = totald;
       totald += ms->segments[i].duration;
       ms->segmentEnd[i] = totald;
 
-      int nextseg = i+1;
+      int nextseg = i + 1;
 
-      if( nextseg >= ms->n_activeSegments )
+      if (nextseg >= ms->n_activeSegments)
       {
-         if( ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+         if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
             ms->segments[i].nv1 = ms->segments[0].v0;
       }
       else
       {
          ms->segments[i].nv1 = ms->segments[nextseg].v0;
       }
-      if( ms->segments[i].nv1 != ms->segments[i].v0 )
+      if (ms->segments[i].nv1 != ms->segments[i].v0)
       {
-         ms->segments[i].dragcpratio = ( ms->segments[i].cpv - ms->segments[i].v0) / (ms->segments[i].nv1 - ms->segments[i].v0 );
+         ms->segments[i].dragcpratio = (ms->segments[i].cpv - ms->segments[i].v0) /
+                                       (ms->segments[i].nv1 - ms->segments[i].v0);
       }
    }
 
    ms->totalDuration = totald;
 
-   for( int i=0; i<ms->n_activeSegments; ++i )
+   for (int i = 0; i < ms->n_activeSegments; ++i)
    {
-      constrainControlPointAt( ms, i );
+      constrainControlPointAt(ms, i);
    }
 
    ms->durationToLoopEnd = ms->totalDuration;
-   if( ms->loop_end >= 0 )
-      ms->durationToLoopEnd = ms->segmentEnd[ms->loop_end];
+   ms->durationLoopStartToLoopEnd = ms->totalDuration;
 
-   ms->durationLoopStartToLoopEnd = ms->segmentEnd[(ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 )] -
-      ms->segmentStart[(ms->loop_start >= 0 ? ms->loop_start : 0 )];
+   if (ms->n_activeSegments > 0)
+   {
+      if (ms->loop_end >= 0)
+         ms->durationToLoopEnd = ms->segmentEnd[ms->loop_end];
+      ms->durationLoopStartToLoopEnd =
+          ms->segmentEnd[(ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1)] -
+          ms->segmentStart[(ms->loop_start >= 0 ? ms->loop_start : 0)];
+   }
 }
 
 float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, bool forceOneShot )
 {
-   if( ms->n_activeSegments == 0 ) return df;
+   if( ms->n_activeSegments <= 0 ) return df;
 
    // This still has some problems but lets try this for now
    double up = (double)ip + fup;
