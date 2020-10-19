@@ -246,9 +246,8 @@ namespace Colors
       }
       namespace NumberField
       {
-         const Surge::Skin::Color Background("msegeditor.numberfield.background", 216, 216, 216),
-                                  Text("msegeditor.numberfield.text", 0, 0, 0),
-                                  Border("msegeditor.numberfield.border", 151, 151, 151);
+         const Surge::Skin::Color Text("msegeditor.numberfield.text", 0, 0, 0),
+                                  TextHover("msegeditor.numberfield.text.hover", 0, 0, 0);
       }
    }
 
