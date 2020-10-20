@@ -1690,6 +1690,13 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
 void SurgeGUIEditor::close()
 {
+   if( editorOverlay )
+   {
+      frame->removeView( editorOverlay );
+      editorOverlayOnClose();
+      editorOverlayTag = "";
+      editorOverlay = nullptr;
+   }
 #if TARGET_VST2 // && WINDOWS
    // We may need this in other hosts also; but for now
    if (frame)

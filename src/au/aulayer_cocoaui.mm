@@ -195,12 +195,15 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
 
 - (void) doIdle
 {
-    editController->idle();
+   if( editController )
+      editController->idle();
 }
 
 - (void) dealloc
 {
-    editController->close();
+   // You would think we want to editor->close() here, but we don't; by this point there's a good chance
+   // the AU host has killed our underlying editor object anyway.
+    editController = nullptr;
     if( idleTimer )
     {
         CFRunLoopTimerInvalidate( idleTimer );
