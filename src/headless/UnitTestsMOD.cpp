@@ -625,10 +625,14 @@ TEST_CASE( "Pitch Bend and Tuning", "[mod][tun]" )
 TEST_CASE( "MPE pitch bend", "[mod]" )
 {
    SECTION( "Channel 0 bends should be a correct global bend" )
-   {
+   { // note that this test actually checks if channel 0 bends behave like non-MPE bends
       auto surge = surgeOnSine();
       surge->mpeEnabled = true;
       surge->mpePitchBendRange = 48;
+
+      // hack around multiple copies of mpePitchBendRange, we should fix this properly!
+      surge->populateDawExtraState();
+
       surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
       surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
       
@@ -654,6 +658,10 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       auto sbs = 8192 * 1.f / pbr;
       
       surge->mpePitchBendRange = pbr;
+
+      // hack around multiple copies of mpePitchBendRange, we should fix this properly!
+      surge->populateDawExtraState();
+
       surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
       surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
 
@@ -673,8 +681,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
                                  on.data1 = n;
                                  on.data2 = 100;
                                  on.atSample = 100;
-                                 
-                                 off.type = Surge::Headless::Event::NOTE_ON;
+
+                                 off.type = Surge::Headless::Event::NOTE_OFF;
                                  off.channel = 1;
                                  off.data1 = n;
                                  off.data2 = 100;
@@ -690,8 +698,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
                                  events.push_back( bend );
                                  events.push_back( off );
 
-                                 return frequencyForEvents( surge, events, 0,
-                                                            2000, 44100 * 2 - 8000 );
+                                 return frequencyForEvents(surge, events, 0, 4000,
+                                                           44100 * 2 - 8000);
                               };
 
 

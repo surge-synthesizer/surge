@@ -883,7 +883,7 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
 
 void SurgeSynthesizer::pitchBend(char channel, int value)
 {
-   if (mpeEnabled)
+   if (mpeEnabled && channel != 0)
    {
       channelState[channel].pitchBend = value;
 
@@ -894,6 +894,8 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
       ** currently channelState[].pitchBendInSemitones is now unused, but it hasn't been removed
       *from
       ** the code yet for this reason.
+      ** For now, we ignore channel zero here so it functions like the old code did in practice when
+      ** mpeGlobalPitchBendRange remained at zero.
       */
    }
 
