@@ -629,6 +629,7 @@ struct MSEGStorage {
          SQUARE,
          TRIANGLE,
          HOLD,
+         SAWTOOTH,
       } type;
    };
 

@@ -185,7 +185,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
       /*
        * Alright so we have a functional form (e^ax-1)/(e^a-1) = y;
-       * We also know that since we have veritcal only motion here x = 1/2 and y is where we want
+       * We also know that since we have vertical only motion here x = 1/2 and y is where we want
        * to hit ( specifically since we are generating a 0,1 line and cpv is -1,1 then
        * here we get y = 0.5 * cpv + 0.5.
        *
@@ -464,6 +464,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    }
 
    case MSEGStorage::segment::SINE: 
+   case MSEGStorage::segment::SAWTOOTH: 
    case MSEGStorage::segment::TRIANGLE: 
    case MSEGStorage::segment::SQUARE: {
       float pct = ( r.cpv + 1 ) * 0.5;
@@ -471,7 +472,6 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
       int steps = (int)( scaledpct * 100 );
       auto f = timeAlongSegment /r.duration;
-
 
       float a = 1;
       
@@ -496,6 +496,13 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
           */
          float mul = ( 1 + 2 * steps ) * M_PI;
          kernel = cos( mul * f );
+      }
+      if( r.type == MSEGStorage::segment::SAWTOOTH )
+      {
+         double mul = steps + 1;
+         double phase = mul * f;
+         double dphase = phase - (int)phase;
+         kernel = 1 - 2 * dphase;
       }
       if( r.type == MSEGStorage::segment::TRIANGLE )
       {
