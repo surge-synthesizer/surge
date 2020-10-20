@@ -103,7 +103,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    state.voiceChannelState = voiceChannelState;
 
    state.mpePitchBendRange = storage->mpePitchBendRange;
-   state.mpePitchBend = ControllerModulationSource(storage->smoothingMode);
+   state.mpePitchBend = ControllerModulationSource(ControllerModulationSource::SmoothingMode::FAST_LINE);
    state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 
    if ((scene->polymode.val.i == pm_mono_st_fp) ||

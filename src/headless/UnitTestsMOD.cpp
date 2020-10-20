@@ -655,8 +655,7 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       auto sbs = 8192 * 1.f / pbr;
       
       surge->storage.mpePitchBendRange = pbr;
-      surge->changeModulatorSmoothing(ControllerModulationSource::SmoothingMode::DIRECT);
-
+      
       surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
       surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
 
