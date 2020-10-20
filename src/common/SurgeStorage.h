@@ -914,6 +914,8 @@ public:
    bool isStandardMapping = true;
    float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
 
+   ControllerModulationSource::SmoothingMode smoothingMode = ControllerModulationSource::SmoothingMode::LEGACY;
+
    std::atomic<int> otherscene_clients;
 
    std::unordered_map<int, std::string> helpURL_controlgroup;
