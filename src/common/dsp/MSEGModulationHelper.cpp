@@ -265,7 +265,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
          cpline = 0.5 * (x + 1);
       }
 
-      // OK and now we have to dup it if we are in scruve
+      // OK and now we have to dup it if we are in s-curve
       if( r.type == MSEGStorage::segment::SCURVE )
       {
          if( ! scurveMirrored )

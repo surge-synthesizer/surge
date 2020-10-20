@@ -442,6 +442,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             h.onDrag = [this, i, tscale, vscale, verticalMotion, horizontalMotion, verticalScaleByValues, segdt , segdx](float dx, float dy, const CPoint &where) {
                if( verticalMotion )
                {
+                  printf("%.4f\n", ms->segments[i].cpv);
                   float dv = 0;
                   if( verticalScaleByValues)
                      dv = -2 * dy / vscale / (0.5 * segdx );
@@ -459,8 +460,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                   case MSEGStorage::segment::SCURVE:
                   {
                      // Slowdown parameters. Basically slow down mouse -> delta linearly near edge
-                     float slowdownInTheLast = 0.18;
-                     float slowdownAtMostTo = 0.02;
+                     float slowdownInTheLast = 0.15;
+                     float slowdownAtMostTo = 0.015;
                      float adj = 1;
 
                      if( ms->segments[i].cpv > (1.0-slowdownInTheLast) )
@@ -1118,14 +1119,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto tf = pxToTime( );
       auto t = tf( iw.x );
       auto tts = Surge::MSEG::timeToSegment(ms, t );
+
       if( hoveredSegment >= 0 && tts != hoveredSegment )
       {
          tts = hoveredSegment;
          t = ms->segmentStart[tts];
       }
-      contextMenu->addEntry( "[?] MSEG Segment" );
-      contextMenu->addSeparator();
-
 
       auto addCb = [](COptionMenu *p, const std::string &l, std::function<void()> op ) -> CCommandMenuItem * {
                       auto m = new CCommandMenuItem( CCommandMenuItem::Desc( l.c_str() ) );
@@ -1134,18 +1133,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                       return m;
                    };
 
-      auto pv = pxToVal();
-      auto v = pv( iw.y );
-      
-      addCb( contextMenu,  "Split", [this, t, v](){
-                                       Surge::MSEG::splitSegment( this->ms, t, v );
-                                       modelChanged();
-                                    } );
-      auto deleteMenu = addCb( contextMenu,  "Delete", [this,t ]() {
-                                        Surge::MSEG::deleteSegment( this->ms, t );
-                                        modelChanged();
-                                     } );
-      if( ms->n_activeSegments <= 1 ) deleteMenu->setEnabled(false);
+      contextMenu->addEntry( "[?] MSEG Segment" );
 
       contextMenu->addSeparator();
 
@@ -1162,71 +1150,134 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
         modelChanged();
       });
 
-      if( tts == 0 || tts == ms->n_activeSegments - 1 )
-      {
-         contextMenu->addSeparator();
-
-         auto cm = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
-                         [this]() {
-                            if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
-                               this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
-                            else
-                            {
-                               this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
-                               this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
-                               this->modelChanged();
-                            }
-                         });
-         cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
-      }
-
       contextMenu->addSeparator();
 
       if( tts >= 0 )
       {
+         COptionMenu* actionsMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
+                                                    VSTGUI::COptionMenu::kNoDrawStyle |
+                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+         auto pv = pxToVal();
+         auto v = pv( iw.y );
+         
+         addCb( actionsMenu,  "Split", [this, t, v](){
+                                          Surge::MSEG::splitSegment( this->ms, t, v );
+                                          modelChanged();
+                                       } );
+         auto deleteMenu = addCb( actionsMenu,  "Delete", [this, t]() {
+                                           Surge::MSEG::deleteSegment( this->ms, t );
+                                           modelChanged();
+                                        } );
+         if( ms->n_activeSegments <= 1 ) deleteMenu->setEnabled(false);
+         
+         actionsMenu->addSeparator();
+
+         addCb( actionsMenu, "Duplicate", [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+         addCb( actionsMenu, "Halve", [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+         
+         actionsMenu->addSeparator();
+
+         addCb( actionsMenu, "Invert", [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+         addCb( actionsMenu, "Mirror", [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+
+         actionsMenu->addSeparator();
+
+         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"), [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"), [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"), [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+
+         contextMenu->addEntry(actionsMenu, "Actions");
+
+         COptionMenu* settingsMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
+                                                     VSTGUI::COptionMenu::kNoDrawStyle |
+                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+         if( tts == 0 || tts == ms->n_activeSegments - 1 )
+         {
+            auto cm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
+                            [this]() {
+                               if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+                                  this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+                               else
+                               {
+                                  this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
+                                  this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
+                                  this->modelChanged();
+                               }
+                            });
+            cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
+
+            settingsMenu->addSeparator();
+         }
+
          auto def = ms->segments[tts].useDeform;
-         auto dm = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
+         auto dm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
             this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
             modelChanged();
          });
          dm->setChecked(def);
 
          auto invdef = ms->segments[tts].invertDeform;
-         auto im = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Invert Deform Value"), [this, tts]() {
+         auto im = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Invert Deform Value"), [this, tts]() {
             this->ms->segments[tts].invertDeform = ! this->ms->segments[tts].invertDeform;
             modelChanged();
          });
          im->setChecked(invdef);
+
+         contextMenu->addEntry(settingsMenu, "Settings");
+
+         contextMenu->addSeparator();
+
+         auto typeTo = [this, contextMenu, t, addCb, tts](std::string n, MSEGStorage::segment::Type type) {
+                          auto m = addCb( contextMenu, n, [this,t, type]() {
+                                                    Surge::MSEG::changeTypeAt( this->ms, t, type );
+                                                    modelChanged();
+                                                 } );
+                          if( tts >= 0 )
+                             m->setChecked( this->ms->segments[tts].type == type );
+                       };
+         typeTo( "Hold", MSEGStorage::segment::Type::HOLD );
+         typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
+         typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
+         typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
+         typeTo( "Sine", MSEGStorage::segment::Type::SINE );
+         typeTo( "Sawtooth", MSEGStorage::segment::Type::SAWTOOTH );
+         typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
+         typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
+         typeTo( "Stairs", MSEGStorage::segment::Type::STEPS );
+         typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
+        
+         getFrame()->addView( contextMenu );
+         contextMenu->setDirty();
+         contextMenu->popup();
+         getFrame()->removeView(contextMenu, true);
       }
-
-      contextMenu->addSeparator();
-
-      auto typeTo = [this, contextMenu, t, addCb, tts](std::string n, MSEGStorage::segment::Type type) {
-                       auto m = addCb( contextMenu, n, [this,t, type]() {
-                                                 Surge::MSEG::changeTypeAt( this->ms, t, type );
-                                                 modelChanged();
-                                              } );
-                       if( tts >= 0 )
-                          m->setChecked( this->ms->segments[tts].type == type );
-                    };
-      typeTo( "Hold", MSEGStorage::segment::Type::HOLD );
-      typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
-      typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
-      typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
-      typeTo( "Sine", MSEGStorage::segment::Type::SINE );
-      typeTo( "Sawtooth", MSEGStorage::segment::Type::SAWTOOTH );
-      typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
-      typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
-      typeTo( "Stairs", MSEGStorage::segment::Type::STEPS );
-      typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
-     
-      getFrame()->addView( contextMenu );
-      contextMenu->setDirty();
-      contextMenu->popup();
-      getFrame()->removeView(contextMenu, true);
    }
 
-   void modelChanged() {
+   void modelChanged()
+   {
       Surge::MSEG::rebuildCache( ms );
       recalcHotZones(mouseDownOrigin); // FIXME
       // Do this more heavy handed version
