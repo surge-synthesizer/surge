@@ -1185,6 +1185,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
       typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
       typeTo( "Sine", MSEGStorage::segment::Type::SINE );
+      typeTo( "Sawtooth", MSEGStorage::segment::Type::SAWTOOTH );
       typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
       typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
       typeTo( "Stairs", MSEGStorage::segment::Type::STEPS );
