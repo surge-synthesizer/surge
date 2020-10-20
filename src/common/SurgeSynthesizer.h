@@ -226,7 +226,6 @@ public:
    MidiChannelState channelState[16];
    bool mpeEnabled = false;
    int mpeVoices = 0;
-   int mpePitchBendRange = 0;
    int mpeGlobalPitchBendRange = 0;
 
    int current_category_id = 0;

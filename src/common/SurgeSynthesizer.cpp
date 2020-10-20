@@ -206,7 +206,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
 
    mpeEnabled = false;
    mpeVoices = 0;
-   mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+   storage.mpePitchBendRange = (float)Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
    mpeGlobalPitchBendRange = 0;
 
 #if TARGET_VST3 || TARGET_VST2 || TARGET_AUDIOUNIT 
@@ -883,19 +883,20 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
 
 void SurgeSynthesizer::pitchBend(char channel, int value)
 {
-   if (mpeEnabled)
+   if (mpeEnabled && channel != 0)
    {
-      float bendNormalized = value / 8192.f;
       channelState[channel].pitchBend = value;
 
-      if (channel == 0)
-      {
-         channelState[channel].pitchBendInSemitones = bendNormalized * mpeGlobalPitchBendRange;
-      }
-      else
-      {
-         channelState[channel].pitchBendInSemitones = bendNormalized * mpePitchBendRange;
-      }
+      /*
+      ** todo: handling of channel 0 and mpeGlobalPitchBendRange were broken with the addition
+      ** of smoothing. we should probably add that back in if it turns out someone actually uses it
+      *:)
+      ** currently channelState[].pitchBendInSemitones is now unused, but it hasn't been removed
+      *from
+      ** the code yet for this reason.
+      ** For now, we ignore channel zero here so it functions like the old code did in practice when
+      ** mpeGlobalPitchBendRange remained at zero.
+      */
    }
 
    /*
@@ -1009,7 +1010,7 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
    {
       if (channel == 1)
       {
-         mpePitchBendRange = msbValue;
+         storage.mpePitchBendRange = msbValue;
       }
       else if (channel == 0)
       {
@@ -1020,8 +1021,8 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
    {
       mpeEnabled = msbValue > 0;
       mpeVoices = msbValue & 0xF;
-      if( mpePitchBendRange < 0 )
-         mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+      if( storage.mpePitchBendRange < 0.0f )
+         storage.mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
       mpeGlobalPitchBendRange = 0;
       return;
    }
@@ -3031,7 +3032,7 @@ PluginLayer* SurgeSynthesizer::getParent()
 void SurgeSynthesizer::populateDawExtraState() {
    storage.getPatch().dawExtraState.isPopulated = true;
    storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
-   storage.getPatch().dawExtraState.mpePitchBendRange = mpePitchBendRange;
+   storage.getPatch().dawExtraState.mpePitchBendRange = storage.mpePitchBendRange;
    
    storage.getPatch().dawExtraState.hasTuning = !storage.isStandardTuning;
    if( ! storage.isStandardTuning )
@@ -3067,7 +3068,7 @@ void SurgeSynthesizer::loadFromDawExtraState() {
       return;
    mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
    if( storage.getPatch().dawExtraState.mpePitchBendRange > 0 )
-      mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
+      storage.mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
    
    if( storage.getPatch().dawExtraState.hasTuning )
    {

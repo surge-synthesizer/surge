@@ -27,5 +27,10 @@ struct SurgeVoiceState
    float portasrc_key, portaphase;
    bool porta_doretrigger;
 
+   // note that this does not replace the regular pitch bend modulator, only used to smooth MPE
+   // pitch
+   ControllerModulationSource mpePitchBend;
+   float mpePitchBendRange;
+
    float getPitch();
 };

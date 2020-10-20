@@ -4551,15 +4551,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
                     [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
 
     std::ostringstream oss;
-    oss << "Change MPE Pitch Bend Range (Current: " << synth->mpePitchBendRange << " Semitones)";
+    oss << "Change MPE Pitch Bend Range (Current: " << synth->storage.mpePitchBendRange << " Semitones)";
     addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss.str().c_str()), [this,menuRect]() {
        // FIXME! This won't work on linux
        char c[256];
-       snprintf(c, 256, "%d", synth->mpePitchBendRange);
+       snprintf(c, 256, "%d", synth->storage.mpePitchBendRange);
        promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
                          menuRect.getTopLeft(), [this](const std::string& c) {
                             int newVal = ::atoi(c.c_str());
-                            this->synth->mpePitchBendRange = newVal;
+                            this->synth->storage.mpePitchBendRange = newVal;
                          });
     });
 
@@ -4569,13 +4569,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss2.str().c_str()), [this, menuRect]() {
        // FIXME! This won't work on linux
        char c[256];
-       snprintf(c, 256, "%d", synth->mpePitchBendRange);
+       snprintf(c, 256, "%d", synth->storage.mpePitchBendRange);
        promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
                          menuRect.getTopLeft(), [this](const std::string& s) {
                             int newVal = ::atoi(s.c_str());
                             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                                    "mpePitchBendRange", newVal);
-                            this->synth->mpePitchBendRange = newVal;
+                            this->synth->storage.mpePitchBendRange = newVal;
                          });
     });
 
