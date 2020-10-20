@@ -102,7 +102,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    state.mainChannelState = mainChannelState;
    state.voiceChannelState = voiceChannelState;
 
-   state.mpePitchBendRange = storage->getPatch().dawExtraState.mpePitchBendRange;
+   state.mpePitchBendRange = storage->mpePitchBendRange;
    state.mpePitchBend = ControllerModulationSource(storage->smoothingMode);
    state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 

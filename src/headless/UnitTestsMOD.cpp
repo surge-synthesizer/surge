@@ -628,10 +628,7 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
    { // note that this test actually checks if channel 0 bends behave like non-MPE bends
       auto surge = surgeOnSine();
       surge->mpeEnabled = true;
-      surge->mpePitchBendRange = 48;
-
-      // hack around multiple copies of mpePitchBendRange, we should fix this properly!
-      surge->populateDawExtraState();
+      surge->storage.mpePitchBendRange = 48;
 
       surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
       surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
@@ -657,11 +654,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       auto pbr = 48;
       auto sbs = 8192 * 1.f / pbr;
       
-      surge->mpePitchBendRange = pbr;
+      surge->storage.mpePitchBendRange = pbr;
       surge->changeModulatorSmoothing(ControllerModulationSource::SmoothingMode::DIRECT);
-
-      // hack around multiple copies of mpePitchBendRange, we should fix this properly!
-      surge->populateDawExtraState();
 
       surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
       surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
