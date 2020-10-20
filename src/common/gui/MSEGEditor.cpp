@@ -1146,19 +1146,38 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          actionsMenu->addSeparator();
 
          addCb( actionsMenu, "Duplicate", [this](){
-                                           modelChanged();
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
                                        } );
          addCb( actionsMenu, "Halve", [this](){
-                                           modelChanged();
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
                                        } );
          
          actionsMenu->addSeparator();
 
          addCb( actionsMenu, "Invert", [this](){
-                                           modelChanged();
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
                                        } );
          addCb( actionsMenu, "Mirror", [this](){
-                                           modelChanged();
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+
+         actionsMenu->addSeparator();
+
+         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"), [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"), [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
+                                       } );
+         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"), [this](){
+                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
+                                           //modelChanged();
                                        } );
 
          contextMenu->addEntry(actionsMenu, "Actions");
