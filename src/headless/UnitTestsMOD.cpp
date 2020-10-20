@@ -692,7 +692,7 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
                                  events.push_back( bend );
                                  events.push_back( off );
 
-                                 return frequencyForEvents(surge, events, 0, 2000,
+                                 return frequencyForEvents(surge, events, 0, 4000,
                                                            44100 * 2 - 8000);
                               };
 
