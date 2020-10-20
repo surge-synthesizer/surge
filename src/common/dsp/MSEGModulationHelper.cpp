@@ -218,7 +218,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       float a = 0;
       if( fabs(V) > 1e-3 )
       {
-         float Q = limit_range( ( 1 - sqrt( disc ) ) / ( 2 * V ), 0.00001f, 100000.f );
+         float Q = limit_range( ( 1 - sqrt( disc ) ) / ( 2 * V ), 0.00001f, 1000000.f );
          a = amul * 2 * log( Q );
       }
 
@@ -228,9 +228,9 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
          cpline = ( exp( a * frac ) - 1 ) / ( exp( a ) - 1 );
 
       // This is the equivalent of LFOModulationSource.cpp::bend3
-      float dfa = 0.5f * limit_range( df, -3.f, 3.f );
+      float dfa = -0.5f * limit_range( df, -3.f, 3.f );
 
-      float x = 2 * cpline - 1;
+      float x = (2 * cpline - 1);
       x = x - dfa * x * x + dfa;
       x = x - dfa * x * x + dfa; // do twice because bend3 does it twice
 
@@ -401,6 +401,15 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
          break;
       }
 
+      if( df != 0 )
+      {
+         // Shift the center, retain the endpoints
+         float udf = df * 8;
+         x = ( x + 1 ) * 0.5;
+         x = (exp(udf * x) - 1) / (exp(udf) - 1);
+         x = ( x - 0.5 ) * 2;
+      }
+
       float cx = r.cpv;
       
       /*
@@ -418,10 +427,13 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
       if( k < 0 )
       {
-         // Logit function on 0,1
+         // Logit function on 0,1. So the problem here is that k is 'too slow' since
+         // logit scales differently. So since cx is in -1,0 try this
+         kmax = 20;
+         k = -pow( -r.cpv, 0.2 ) * kmax ;
          x = ( x + 1 ) * 0.5; // 0,1
 
-         float scale = 0.9999 - 0.5 * ( (kmax + k) / kmax );
+         float scale = 0.99999 - 0.5 * ( (kmax + k) / kmax );
          float off = ( 1 - scale ) * 0.5;
          x = x * scale + off;
 
