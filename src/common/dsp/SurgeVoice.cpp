@@ -48,11 +48,11 @@ inline float get1f(__m128 m, int i)
 
 float SurgeVoiceState::getPitch()
 {
+   float mpeBend = mpePitchBend.output * mpePitchBendRange;
    /*
    ** For this commented out section, see the comment on MPE global pitch bend in SurgeSynthesizer::pitchBend
    */
-   return key + /* mainChannelState->pitchBendInSemitones + */ voiceChannelState->pitchBendInSemitones +
-          detune;
+   return key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
 }
 
 SurgeVoice::SurgeVoice()
@@ -101,6 +101,11 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    state.keyState = keyState;
    state.mainChannelState = mainChannelState;
    state.voiceChannelState = voiceChannelState;
+
+   state.mpePitchBendRange = storage->getPatch().dawExtraState.mpePitchBendRange;
+   state.mpePitchBend = ControllerModulationSource(storage->smoothingMode);
+   state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
+
    if ((scene->polymode.val.i == pm_mono_st_fp) ||
        (scene->portamento.val.f == scene->portamento.val_min.f))
       state.portasrc_key = state.getPitch();
@@ -565,6 +570,10 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
            monoAftertouchSource.process_block();
        }
        timbreSource.process_block();
+
+       float bendNormalized = state.voiceChannelState->pitchBend / 8192.f;
+       state.mpePitchBend.set_target(bendNormalized);
+       state.mpePitchBend.process_block();
    }
    else {
        // When not in MPE mode, channel aftertouch is already smoothed at scene level.

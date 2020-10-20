@@ -885,17 +885,16 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
 {
    if (mpeEnabled)
    {
-      float bendNormalized = value / 8192.f;
       channelState[channel].pitchBend = value;
 
-      if (channel == 0)
-      {
-         channelState[channel].pitchBendInSemitones = bendNormalized * mpeGlobalPitchBendRange;
-      }
-      else
-      {
-         channelState[channel].pitchBendInSemitones = bendNormalized * mpePitchBendRange;
-      }
+      /*
+      ** todo: handling of channel 0 and mpeGlobalPitchBendRange were broken with the addition
+      ** of smoothing. we should probably add that back in if it turns out someone actually uses it
+      *:)
+      ** currently channelState[].pitchBendInSemitones is now unused, but it hasn't been removed
+      *from
+      ** the code yet for this reason.
+      */
    }
 
    /*
