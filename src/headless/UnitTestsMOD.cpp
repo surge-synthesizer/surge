@@ -658,6 +658,7 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       auto sbs = 8192 * 1.f / pbr;
       
       surge->mpePitchBendRange = pbr;
+      surge->changeModulatorSmoothing(ControllerModulationSource::SmoothingMode::FAST_LINE);
 
       // hack around multiple copies of mpePitchBendRange, we should fix this properly!
       surge->populateDawExtraState();
