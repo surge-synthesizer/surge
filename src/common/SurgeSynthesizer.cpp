@@ -114,7 +114,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
 
    SurgePatch& patch = storage.getPatch();
 
-   smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue( &storage, "smoothingMode", (int)( ControllerModulationSource::SmoothingMode::LEGACY ));
+   storage.smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue( &storage, "smoothingMode", (int)( ControllerModulationSource::SmoothingMode::LEGACY ));
 
    patch.polylimit.val.i = 16;
    for (int sc = 0; sc < 2; sc++)
@@ -123,15 +123,15 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       scene.modsources.resize(n_modsources);
       for (int i = 0; i < n_modsources; i++)
          scene.modsources[i] = 0;
-      scene.modsources[ms_modwheel] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_breath] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_expression] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_sustain] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_aftertouch] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_pitchbend] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_lowest_key] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_highest_key] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_latest_key] = new ControllerModulationSource(smoothingMode);
+      scene.modsources[ms_modwheel] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_breath] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_expression] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_sustain] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_aftertouch] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_pitchbend] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_lowest_key] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_highest_key] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_latest_key] = new ControllerModulationSource(storage.smoothingMode);
 
       scene.modsources[ms_random_bipolar] = new RandomModulationSource( true );
       scene.modsources[ms_random_unipolar] = new RandomModulationSource( false );
@@ -152,7 +152,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    }
    for (int i = 0; i < n_customcontrollers; i++)
    {
-      patch.scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource(smoothingMode);
+      patch.scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource(storage.smoothingMode);
       patch.scene[1].modsources[ms_ctrl1 + i] =
          patch.scene[0].modsources[ms_ctrl1 + i];
    }
@@ -1455,7 +1455,7 @@ ControllerModulationSource* SurgeSynthesizer::AddControlInterpolator(int Id, boo
       mControlInterpolator[Index].id = Id;
       mControlInterpolatorUsed[Index] = true;
 
-      mControlInterpolator[Index].smoothingMode = smoothingMode; // IMPLEMENT THIS HERE
+      mControlInterpolator[Index].smoothingMode = storage.smoothingMode; // IMPLEMENT THIS HERE
       return &mControlInterpolator[Index];
    }
 
@@ -3203,7 +3203,7 @@ void SurgeSynthesizer::swapMetaControllers( int c1, int c2 )
 
 void SurgeSynthesizer::changeModulatorSmoothing( ControllerModulationSource::SmoothingMode m )
 {
-   smoothingMode = m;
+   storage.smoothingMode = m;
    for (int sc = 0; sc < n_scenes; ++sc)
    {
       for( int q = 0; q<n_modsources; ++q )

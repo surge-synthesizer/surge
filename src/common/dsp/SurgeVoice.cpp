@@ -126,6 +126,14 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    }
    memset(&FBP, 0, sizeof(FBP));
 
+   polyAftertouchSource = ControllerModulationSource(storage->smoothingMode);
+   monoAftertouchSource = ControllerModulationSource(storage->smoothingMode);
+   timbreSource         = ControllerModulationSource(storage->smoothingMode);
+
+   polyAftertouchSource.init(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
+   timbreSource.init(state.voiceChannelState->timbre);
+   monoAftertouchSource.init(state.voiceChannelState->pressure);
+
    lag_id[le_osc1] = scene->level_o1.param_id_in_scene;
    lag_id[le_osc2] = scene->level_o2.param_id_in_scene;
    lag_id[le_osc3] = scene->level_o3.param_id_in_scene;
@@ -154,8 +162,6 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_keytrack] = &keytrackSource;
    modsources[ms_polyaftertouch] = &polyAftertouchSource;
 
-   polyAftertouchSource.init(storage->poly_aftertouch[state.scene_id & 1][state.key & 127]);
-
    velocitySource.output = state.fvel;
    releaseVelocitySource.output = state.freleasevel;
    keytrackSource.output = 0;
@@ -173,9 +179,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    modsources[ms_lowest_key] = oscene->modsources[ms_lowest_key];
    modsources[ms_highest_key] = oscene->modsources[ms_highest_key];
    modsources[ms_latest_key] = oscene->modsources[ms_latest_key];
-   monoAftertouchSource.init(state.voiceChannelState->pressure);
    modsources[ms_timbre] = &timbreSource;
-   timbreSource.init(state.voiceChannelState->timbre);
    modsources[ms_pitchbend] = oscene->modsources[ms_pitchbend];
    for (int i = 0; i < n_customcontrollers; i++)
       modsources[ms_ctrl1 + i] = oscene->modsources[ms_ctrl1 + i];

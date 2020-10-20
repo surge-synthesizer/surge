@@ -273,6 +273,4 @@ private:
    void ReleaseControlInterpolator(int Idx);
    ControllerModulationSource* ControlInterpolator(int Idx);
    ControllerModulationSource* AddControlInterpolator(int Idx, bool& AlreadyExisted);
-
-   ControllerModulationSource::SmoothingMode smoothingMode;
 };
