@@ -658,7 +658,7 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       auto sbs = 8192 * 1.f / pbr;
       
       surge->mpePitchBendRange = pbr;
-      surge->changeModulatorSmoothing(ControllerModulationSource::SmoothingMode::FAST_LINE);
+      surge->changeModulatorSmoothing(ControllerModulationSource::SmoothingMode::DIRECT);
 
       // hack around multiple copies of mpePitchBendRange, we should fix this properly!
       surge->populateDawExtraState();
@@ -699,7 +699,7 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
                                  events.push_back( bend );
                                  events.push_back( off );
 
-                                 return frequencyForEvents(surge, events, 0, 4000,
+                                 return frequencyForEvents(surge, events, 0, 2000,
                                                            44100 * 2 - 8000);
                               };
 
