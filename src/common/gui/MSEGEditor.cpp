@@ -453,10 +453,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                   switch( ms->segments[i].type )
                   {
                   case MSEGStorage::segment::LINEAR:
+                  case MSEGStorage::segment::SCURVE:
                   {
                      // Slowdown parameters. Basically slow down mouse -> delta linearly near edge
-                     float slowdownInTheLast = 0.15;
-                     float slowdownAtMostTo = 0.05;
+                     float slowdownInTheLast = 0.18;
+                     float slowdownAtMostTo = 0.02;
                      float adj = 1;
 
                      if( ms->segments[i].cpv > (1.0-slowdownInTheLast) )
