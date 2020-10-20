@@ -17,21 +17,29 @@ namespace fs = Surge::filesystem;
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 namespace {
-std::string temp_name()
+struct TmpDir : fs::path
 {
-   char temp_late[] = "/tmp/surge-tests-filesystem-XXXXXX";
-   REQUIRE(mktemp(temp_late)[0]);
-   return temp_late;
-}
+   void ensureInitialized()
+   {
+      if (empty())
+      {
+         char temp_late[] = "/tmp/surge-tests-filesystem-XXXXXX";
+         REQUIRE(mkdtemp(temp_late) != nullptr);
+         fs::path::operator=(fs::path{temp_late});
+         REQUIRE(!empty());
+         REQUIRE(fs::is_directory(*this));
+      }
+   }
 
-std::string temp_mkdir(mode_t mode)
-{
-   std::string name{temp_name()};
-   REQUIRE(mkdir(name.c_str(), mode) == 0);
-   return name;
-}
+   ~TmpDir()
+   {
+      if (!empty())
+         fs::remove(*this);
+   }
+} tmpDir;
 } // anonymous namespace
 
 // Less noise than with an exception matcher
@@ -42,6 +50,8 @@ std::string temp_mkdir(mode_t mode)
 
 TEST_CASE("Filesystem", "[filesystem]")
 {
+   tmpDir.ensureInitialized();
+
    SECTION("Directory Iterators")
    {
       SECTION("Reports errors at construction")
@@ -64,9 +74,10 @@ TEST_CASE("Filesystem", "[filesystem]")
 
       SECTION("Reports errors during recursion")
       {
-         fs::path p{temp_mkdir(0777)};
-         fs::path denied{p / fs::path("denied")};
-         fs::create_directories(denied);
+         const fs::path p{tmpDir / fs::path{"dir"}};
+         REQUIRE(fs::create_directory(p));
+         const fs::path denied{p / fs::path{"denied"}};
+         REQUIRE(fs::create_directory(denied));
          REQUIRE(chmod(denied.c_str(), 0) == 0);
          fs::recursive_directory_iterator it{p};
          REQUIRE_THROWS_FS_ERROR(++it, permission_denied);
@@ -78,7 +89,8 @@ TEST_CASE("Filesystem", "[filesystem]")
       SECTION("Skips . and ..")
       {
          std::error_code ec;
-         fs::path p{temp_mkdir(0777)};
+         const fs::path p{tmpDir / fs::path{"dir"}};
+         REQUIRE(fs::create_directory(p));
          SECTION("directory_iterator")
          {
             REQUIRE(fs::directory_iterator{p} == fs::directory_iterator{});
@@ -110,16 +122,17 @@ TEST_CASE("Filesystem", "[filesystem]")
          std::set<std::string> filenames;
          std::transform(paths.begin(), paths.end(), std::inserter(filenames, filenames.begin()),
                         [](const auto& p) {
-                           auto fn(fs::path(p).filename());
+                           auto fn(fs::path{p}.filename());
                            REQUIRE_FALSE(fn.empty());
                            return fn.native();
                         });
          REQUIRE(filenames.size() == paths.size());
 
-         fs::path rootdir{temp_mkdir(0777)};
+         const fs::path rootdir{tmpDir / fs::path{"dir"}};
+         REQUIRE(fs::create_directory(rootdir));
          for (auto& pp : paths)
          {
-            fs::path p{rootdir / fs::path{pp}};
+            const fs::path p{rootdir / fs::path{pp}};
             if (p.extension().native() == ".file")
             {
                fs::path f{p};
@@ -159,7 +172,7 @@ TEST_CASE("Filesystem", "[filesystem]")
          {
             for (auto& pp : paths)
             {
-               fs::path dir{(rootdir / fs::path{pp}).remove_filename()};
+               const fs::path dir{(rootdir / fs::path{pp}).remove_filename()};
                fs::directory_iterator it{dir};
                iterate(it);
             }
@@ -183,9 +196,8 @@ TEST_CASE("Filesystem", "[filesystem]")
          REQUIRE_THROWS_FS_ERROR(fs::create_directories(fs::path{"/dev/null"}), file_exists);
          REQUIRE_THROWS_FS_ERROR(fs::create_directories(fs::path{"/dev/null/dir"}), not_a_directory);
 
-         const fs::path basep{temp_name()};
-         REQUIRE_FALSE(fs::exists(basep));
-         const fs::path p{basep / fs::path("this/is/a/test")};
+         const fs::path basep{tmpDir / fs::path{"dir"}};
+         const fs::path p{basep / fs::path{"this/is//a///test"}};
          REQUIRE(fs::create_directories(p));
          REQUIRE(fs::is_directory(p));
          REQUIRE(fs::create_directories(p) == 0);
@@ -200,7 +212,7 @@ TEST_CASE("Filesystem", "[filesystem]")
          REQUIRE_FALSE(fs::create_directory(fs::path{"/dev/null"}));
          REQUIRE_THROWS_FS_ERROR(fs::create_directory(fs::path{"/dev/null/dir"}), not_a_directory);
 
-         const fs::path p{temp_name()};
+         const fs::path p{tmpDir / fs::path{"dir"}};
          REQUIRE_FALSE(fs::exists(p));
          REQUIRE(fs::create_directory(p));
          REQUIRE_FALSE(fs::create_directory(p));
@@ -213,7 +225,9 @@ TEST_CASE("Filesystem", "[filesystem]")
       SECTION("exists")
       {
          REQUIRE(fs::exists(fs::path{"."}));
-         const fs::path p{temp_mkdir(0)};
+         const fs::path p{tmpDir / fs::path{"dir"}};
+         REQUIRE(fs::create_directory(p));
+         REQUIRE(chmod(p.c_str(), 0) == 0);
          REQUIRE_THROWS_FS_ERROR(fs::exists(p / fs::path{"file"}), permission_denied);
          REQUIRE(fs::remove(p));
          REQUIRE_FALSE(fs::remove(p));
@@ -224,7 +238,7 @@ TEST_CASE("Filesystem", "[filesystem]")
          REQUIRE_THROWS_FS_ERROR(fs::file_size(fs::path{"."}), is_a_directory);
          REQUIRE_THROWS_FS_ERROR(fs::file_size(fs::path{"/dev/null"}), not_supported);
 
-         const fs::path p{temp_name()};
+         const fs::path p{tmpDir / fs::path{"file"}};
          const char testdata[] = "testdata";
          std::ofstream of{p};
          REQUIRE(of.good());
@@ -246,7 +260,7 @@ TEST_CASE("Filesystem", "[filesystem]")
 
       SECTION("is_regular_file")
       {
-         const fs::path p{temp_name()};
+         const fs::path p{tmpDir / fs::path{"file"}};
          const std::ofstream of{p};
          REQUIRE(of.good());
          REQUIRE(fs::is_regular_file(p));
@@ -262,19 +276,20 @@ TEST_CASE("Filesystem", "[filesystem]")
       SECTION("remove")
       {
          {
-            const fs::path p{temp_name()};
+            const fs::path p{tmpDir / fs::path{"file"}};
             const std::ofstream of{p};
             REQUIRE(of.good());
             REQUIRE(fs::remove(p));
             REQUIRE_FALSE(fs::remove(p));
          }
          {
-            const fs::path p{temp_mkdir(0777)};
-            REQUIRE(fs::remove(p / fs::path("")));
-            REQUIRE_FALSE(fs::remove(p / fs::path("")));
+            const fs::path p{tmpDir / fs::path{"dir"}};
+            REQUIRE(fs::create_directory(p));
+            REQUIRE(fs::remove(p / fs::path{}));
+            REQUIRE_FALSE(fs::remove(p / fs::path{}));
          }
          {
-            const fs::path p{temp_mkdir(0777)};
+            const fs::path p{tmpDir / fs::path{"dir"}};
             REQUIRE(fs::create_directories(p / fs::path{"dir"}));
             REQUIRE_THROWS_FS_ERROR(fs::remove(p), directory_not_empty);
             REQUIRE(fs::remove_all(p) == 2);
@@ -283,7 +298,7 @@ TEST_CASE("Filesystem", "[filesystem]")
 
       SECTION("remove_all")
       {
-         const fs::path p{temp_name()};
+         const fs::path p{tmpDir / fs::path{"file"}};
          const std::ofstream of{p};
          REQUIRE(of.good());
          REQUIRE(fs::remove_all(p) == 1);
@@ -295,14 +310,14 @@ TEST_CASE("Filesystem", "[filesystem]")
    {
       SECTION("operator /=, /")
       {
-         REQUIRE((fs::path("foo") / fs::path("/bar")).native() == "/bar");
-         REQUIRE((fs::path("foo") /= fs::path("/bar")).native() == "/bar");
-         REQUIRE((fs::path("foo") / fs::path()).native() == "foo/");
-         REQUIRE((fs::path("foo") /= fs::path()).native() == "foo/");
-         REQUIRE((fs::path("foo") / fs::path("bar")).native() == "foo/bar");
-         REQUIRE((fs::path("foo") /= fs::path("bar")).native() == "foo/bar");
-         REQUIRE((fs::path("foo/") / fs::path("bar")).native() == "foo/bar");
-         REQUIRE((fs::path("foo/") /= fs::path("bar")).native() == "foo/bar");
+         REQUIRE((fs::path{"foo"} / fs::path{"/bar"}).native() == "/bar");
+         REQUIRE((fs::path{"foo"} /= fs::path{"/bar"}).native() == "/bar");
+         REQUIRE((fs::path{"foo"} / fs::path{}).native() == "foo/");
+         REQUIRE((fs::path{"foo"} /= fs::path{}).native() == "foo/");
+         REQUIRE((fs::path{"foo"} / fs::path{"bar"}).native() == "foo/bar");
+         REQUIRE((fs::path{"foo"} /= fs::path{"bar"}).native() == "foo/bar");
+         REQUIRE((fs::path{"foo/"} / fs::path{"bar"}).native() == "foo/bar");
+         REQUIRE((fs::path{"foo/"} /= fs::path{"bar"}).native() == "foo/bar");
       }
 
       SECTION("remove_filename")
@@ -317,112 +332,114 @@ TEST_CASE("Filesystem", "[filesystem]")
 
       SECTION("filename, has_filename")
       {
-         REQUIRE(fs::path().filename().native() == "");
-         REQUIRE_FALSE(fs::path().has_filename());
+         REQUIRE(fs::path{}.filename().native() == "");
+         REQUIRE_FALSE(fs::path{}.has_filename());
 
          // https://en.cppreference.com/w/cpp/filesystem/path/filename
-         REQUIRE(fs::path("/foo/bar.txt").filename().native() == "bar.txt");
-         REQUIRE(fs::path("/foo/bar.txt").has_filename());
+         REQUIRE(fs::path{"/foo/bar.txt"}.filename().native() == "bar.txt");
+         REQUIRE(fs::path{"/foo/bar.txt"}.has_filename());
 
-         REQUIRE(fs::path("/foo/.bar").filename().native() == ".bar");
-         REQUIRE(fs::path("/foo/.bar").has_filename());
+         REQUIRE(fs::path{"/foo/.bar"}.filename().native() == ".bar");
+         REQUIRE(fs::path{"/foo/.bar"}.has_filename());
 
-         REQUIRE(fs::path("/foo/bar/").filename().native() == "");
-         REQUIRE_FALSE(fs::path("/foo/bar/").has_filename());
+         REQUIRE(fs::path{"/foo/bar/"}.filename().native() == "");
+         REQUIRE_FALSE(fs::path{"/foo/bar/"}.has_filename());
 
-         REQUIRE(fs::path("/foo/.").filename().native() == ".");
-         REQUIRE(fs::path("/foo/.").has_filename());
+         REQUIRE(fs::path{"/foo/."}.filename().native() == ".");
+         REQUIRE(fs::path{"/foo/."}.has_filename());
 
-         REQUIRE(fs::path("/foo/..").filename().native() == "..");
-         REQUIRE(fs::path("/foo/..").has_filename());
+         REQUIRE(fs::path{"/foo/.."}.filename().native() == "..");
+         REQUIRE(fs::path{"/foo/.."}.has_filename());
 
-         REQUIRE(fs::path(".").filename().native() == ".");
-         REQUIRE(fs::path(".").has_filename());
+         REQUIRE(fs::path{"."}.filename().native() == ".");
+         REQUIRE(fs::path{"."}.has_filename());
 
-         REQUIRE(fs::path("..").filename().native() == "..");
-         REQUIRE(fs::path("..").has_filename());
+         REQUIRE(fs::path{".."}.filename().native() == "..");
+         REQUIRE(fs::path{".."}.has_filename());
 
-         REQUIRE(fs::path("/").filename().native() == "");
-         REQUIRE_FALSE(fs::path("/").has_filename());
+         REQUIRE(fs::path{"/"}.filename().native() == "");
+         REQUIRE_FALSE(fs::path{"/"}.has_filename());
 
-         REQUIRE(fs::path("//host").filename().native() == "host");
-         REQUIRE(fs::path("//host").has_filename());
+         REQUIRE(fs::path{"//host"}.filename().native() == "host");
+         REQUIRE(fs::path{"//host"}.has_filename());
       }
 
       SECTION("stem, has_stem")
       {
-         REQUIRE(fs::path().stem().native() == "");
-         REQUIRE_FALSE(fs::path().has_stem());
+         REQUIRE(fs::path{}.stem().native() == "");
+         REQUIRE_FALSE(fs::path{}.has_stem());
 
-         REQUIRE(fs::path(".").stem().native() == ".");
-         REQUIRE(fs::path(".").has_stem());
+         REQUIRE(fs::path{"."}.stem().native() == ".");
+         REQUIRE(fs::path{"."}.has_stem());
 
-         REQUIRE(fs::path("..").stem().native() == "..");
-         REQUIRE(fs::path("..").has_stem());
+         REQUIRE(fs::path{".."}.stem().native() == "..");
+         REQUIRE(fs::path{".."}.has_stem());
 
-         REQUIRE(fs::path("...").stem().native() == "..");
-         REQUIRE(fs::path("...").has_stem());
+         REQUIRE(fs::path{"..."}.stem().native() == "..");
+         REQUIRE(fs::path{"..."}.has_stem());
 
          // https://en.cppreference.com/w/cpp/filesystem/path/stem
-         REQUIRE(fs::path("/foo/bar.txt").stem().native() == "bar");
-         REQUIRE(fs::path("/foo/bar.txt").has_stem());
+         REQUIRE(fs::path{"/foo/bar.txt"}.stem().native() == "bar");
+         REQUIRE(fs::path{"/foo/bar.txt"}.has_stem());
 
-         REQUIRE(fs::path("/foo/.bar").stem().native() == ".bar");
-         REQUIRE(fs::path("/foo/.bar").has_stem());
+         REQUIRE(fs::path{"/foo/.bar"}.stem().native() == ".bar");
+         REQUIRE(fs::path{"/foo/.bar"}.has_stem());
 
-         REQUIRE(fs::path("foo.bar.baz.tar").stem().native() == "foo.bar.baz");
-         REQUIRE(fs::path("foo.bar.baz.tar").has_stem());
+         REQUIRE(fs::path{"foo.bar.baz.tar"}.stem().native() == "foo.bar.baz");
+         REQUIRE(fs::path{"foo.bar.baz.tar"}.has_stem());
       }
 
       SECTION("extension, has_extension")
       {
-         REQUIRE(fs::path().extension().native() == "");
-         REQUIRE_FALSE(fs::path().has_extension());
+         REQUIRE(fs::path{}.extension().native() == "");
+         REQUIRE_FALSE(fs::path{}.has_extension());
 
          // https://en.cppreference.com/w/cpp/filesystem/path/extension
-         REQUIRE(fs::path("/foo/bar.txt").extension().native() == ".txt");
-         REQUIRE(fs::path("/foo/bar.txt").has_extension());
+         REQUIRE(fs::path{"/foo/bar.txt"}.extension().native() == ".txt");
+         REQUIRE(fs::path{"/foo/bar.txt"}.has_extension());
 
-         REQUIRE(fs::path("/foo/bar.").extension().native() == ".");
-         REQUIRE(fs::path("/foo/bar.").has_extension());
+         REQUIRE(fs::path{"/foo/bar."}.extension().native() == ".");
+         REQUIRE(fs::path{"/foo/bar."}.has_extension());
 
-         REQUIRE(fs::path("/foo/bar").extension().native() == "");
-         REQUIRE_FALSE(fs::path("/foo/bar").has_extension());
+         REQUIRE(fs::path{"/foo/bar"}.extension().native() == "");
+         REQUIRE_FALSE(fs::path{"/foo/bar"}.has_extension());
 
-         REQUIRE(fs::path("/foo/bar.txt/bar.cc").extension().native() == ".cc");
-         REQUIRE(fs::path("/foo/bar.txt/bar.cc").has_extension());
+         REQUIRE(fs::path{"/foo/bar.txt/bar.cc"}.extension().native() == ".cc");
+         REQUIRE(fs::path{"/foo/bar.txt/bar.cc"}.has_extension());
 
-         REQUIRE(fs::path("/foo/bar.txt/bar.").extension().native() == ".");
-         REQUIRE(fs::path("/foo/bar.txt/bar.").has_extension());
+         REQUIRE(fs::path{"/foo/bar.txt/bar."}.extension().native() == ".");
+         REQUIRE(fs::path{"/foo/bar.txt/bar."}.has_extension());
 
-         REQUIRE(fs::path("/foo/bar.txt/bar").extension().native() == "");
-         REQUIRE_FALSE(fs::path("/foo/bar.txt/bar").has_extension());
+         REQUIRE(fs::path{"/foo/bar.txt/bar"}.extension().native() == "");
+         REQUIRE_FALSE(fs::path{"/foo/bar.txt/bar"}.has_extension());
 
-         REQUIRE(fs::path("/foo/.").extension().native() == "");
-         REQUIRE_FALSE(fs::path("/foo/.").has_extension());
+         REQUIRE(fs::path{"/foo/."}.extension().native() == "");
+         REQUIRE_FALSE(fs::path{"/foo/."}.has_extension());
 
-         REQUIRE(fs::path("/foo/..").extension().native() == "");
-         REQUIRE_FALSE(fs::path("/foo/..").has_extension());
+         REQUIRE(fs::path{"/foo/.."}.extension().native() == "");
+         REQUIRE_FALSE(fs::path{"/foo/.."}.has_extension());
 
-         REQUIRE(fs::path("/foo/.hidden").extension().native() == "");
-         REQUIRE_FALSE(fs::path("/foo/.hidden").has_extension());
+         REQUIRE(fs::path{"/foo/.hidden"}.extension().native() == "");
+         REQUIRE_FALSE(fs::path{"/foo/.hidden"}.has_extension());
 
-         REQUIRE(fs::path("/foo/..bar").extension().native() == ".bar");
-         REQUIRE(fs::path("/foo/..bar").has_extension());
+         REQUIRE(fs::path{"/foo/..bar"}.extension().native() == ".bar");
+         REQUIRE(fs::path{"/foo/..bar"}.has_extension());
       }
 
       SECTION("is_absolute, is_relative")
       {
-         REQUIRE_FALSE(fs::path("").is_absolute());
-         REQUIRE(fs::path("").is_relative());
-         REQUIRE(fs::path("/").is_absolute());
-         REQUIRE_FALSE(fs::path("/").is_relative());
-         REQUIRE(fs::path("/dir/").is_absolute());
-         REQUIRE_FALSE(fs::path("/dir/").is_relative());
-         REQUIRE(fs::path("/file").is_absolute());
-         REQUIRE_FALSE(fs::path("/file").is_relative());
-         REQUIRE_FALSE(fs::path("file").is_absolute());
-         REQUIRE(fs::path("file").is_relative());
+         REQUIRE_FALSE(fs::path{}.is_absolute());
+         REQUIRE(fs::path{}.is_relative());
+         REQUIRE(fs::path{"/"}.is_absolute());
+         REQUIRE_FALSE(fs::path{"/"}.is_relative());
+         REQUIRE(fs::path{"/dir/"}.is_absolute());
+         REQUIRE_FALSE(fs::path{"/dir/"}.is_relative());
+         REQUIRE(fs::path{"/file"}.is_absolute());
+         REQUIRE_FALSE(fs::path{"/file"}.is_relative());
+         REQUIRE_FALSE(fs::path{"file"}.is_absolute());
+         REQUIRE(fs::path{"file"}.is_relative());
       }
    }
+
+   REQUIRE(fs::directory_iterator{tmpDir} == fs::directory_iterator{});
 }
