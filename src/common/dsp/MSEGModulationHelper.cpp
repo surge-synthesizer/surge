@@ -175,10 +175,36 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       return lv0;
       break;
    }
+   case MSEGStorage::segment::SCURVE: // Wuh? S-Curve and Linear are the same? Well kinda
    case MSEGStorage::segment::LINEAR:
    {
       if( lv0 == lv1 ) return lv0;
       float frac = timeAlongSegment / r.duration;
+      float actualTime = frac;
+
+      /*
+       * Here is where they are the same. The S-Curve is just two copies of the
+       * deformed line, with one inverted, pushed to the next quadrant.
+       */
+      bool scurveMirrored = false;
+      if( r.type == MSEGStorage::segment::SCURVE )
+      {
+         if( df != 0 )
+         {
+            // Deform moves the center point
+            auto adf = df  * 10;
+            frac = ( exp( adf * frac ) - 1 ) / ( exp( adf ) - 1 );
+         }
+         if( frac > 0.5 )
+         {
+            frac = 1 - (frac - 0.5 ) * 2;
+            scurveMirrored = true;
+         }
+         else
+         {
+            frac = frac * 2;
+         }
+      }
 
       // So we want to handle control points
       auto cpd = r.cpv;
@@ -227,14 +253,26 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       if( fabs(a) > 1e-3 )
          cpline = ( exp( a * frac ) - 1 ) / ( exp( a ) - 1 );
 
-      // This is the equivalent of LFOModulationSource.cpp::bend3
-      float dfa = -0.5f * limit_range( df, -3.f, 3.f );
 
-      float x = (2 * cpline - 1);
-      x = x - dfa * x * x + dfa;
-      x = x - dfa * x * x + dfa; // do twice because bend3 does it twice
+      if( r.type == MSEGStorage::segment::LINEAR )
+      {
+         // This is the equivalent of LFOModulationSource.cpp::bend3
+         float dfa = -0.5f * limit_range( df, -3.f, 3.f );
 
-      cpline = 0.5 * ( x + 1 );
+         float x = (2 * cpline - 1);
+         x = x - dfa * x * x + dfa;
+         x = x - dfa * x * x + dfa; // do twice because bend3 does it twice
+         cpline = 0.5 * (x + 1);
+      }
+
+      // OK and now we have to dup it if we are in scruve
+      if( r.type == MSEGStorage::segment::SCURVE )
+      {
+         if( ! scurveMirrored )
+            cpline *= 0.5;
+         else
+            cpline = 1.0 - 0.5 * cpline;
+      }
 
       // cpline will still be 0,1 so now we need to transform it
       res = cpline * ( lv1 - lv0 ) + lv0;
@@ -385,81 +423,6 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
          res = (1-t)*(1-t)*py0 + 2 * ( 1-t ) * t * py1 + t * t * py2;
       }
 
-      break;
-   }
-
-   case MSEGStorage::segment::SCURVE:
-   {
-      float x = (timeAlongSegment / r.duration - 0.5 ) * 2; // goes from -1 to 1
-
-      float eps = 0.01;
-      float mv = lv0; //std::min( lv0, lv1 );
-      float xv = lv1; // std::max( lv0, lv1 );
-      if( fabs(xv - mv) < eps )
-      {
-         res = 0.5 * ( mv + xv );
-         break;
-      }
-
-      if( df != 0 )
-      {
-         // Shift the center, retain the endpoints
-         float udf = df * 8;
-         x = ( x + 1 ) * 0.5;
-         x = (exp(udf * x) - 1) / (exp(udf) - 1);
-         x = ( x - 0.5 ) * 2;
-      }
-
-      float cx = r.cpv;
-      
-      /*
-      ** OK so now we have either x = 1/(1+exp(-kx)) if k > 0 or the mirror of that around the line
-      ** but we always want it to hit -1,1 (and then scale later)
-      */
-      float kmax = 20;
-      float k = cx * kmax;
-      if( k == 0 ) 
-      {
-         float frac = timeAlongSegment / r.duration;
-         res = frac * lv1 + ( 1 - frac ) * lv0;
-         break;
-      }
-
-      if( k < 0 )
-      {
-         // Logit function on 0,1. So the problem here is that k is 'too slow' since
-         // logit scales differently. So since cx is in -1,0 try this
-         kmax = 20;
-         k = -pow( -r.cpv, 0.2 ) * kmax ;
-         x = ( x + 1 ) * 0.5; // 0,1
-
-         float scale = 0.99999 - 0.5 * ( (kmax + k) / kmax );
-         float off = ( 1 - scale ) * 0.5;
-         x = x * scale + off;
-
-         float upv = -log( 1/(scale+off) - 1 );
-         float dnv = -log( 1 / off - 1 );
-         float val = -log( 1/x - 1 );
-         val = ( val - dnv ) / ( upv - dnv );
-         val = ( xv - mv ) * val + mv;
-         res = val;
-      }
-      else
-      {
-         // sigmoid
-         float xp = 1/(1+exp(-k));
-         float xm = 1/(1+exp(k));
-         float distance = xp - xm;
-      
-
-         float val = 1 / ( 1 + exp( -k * x ) ); // between xm and xp
-      
-         val = ( val - xm ) / ( xp - xm ); // between 0 and 1
-         
-         val = ( xv - mv ) * val + mv;
-         res = val;
-      }
-      
       break;
    }
 
