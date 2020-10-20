@@ -26,6 +26,7 @@
 #include "CSwitchControl.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
+#include "CursorControlGuard.h"
 
 /*
 ** MSEG SVG IDs
@@ -91,6 +92,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
    };
+
+   std::shared_ptr<Surge::UI::CursorControlGuard> cchg;
 
    /*
    ** We make a list of hotzones when we draw so we don't have to recalculate the 
@@ -916,6 +919,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          {
             if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
             {
+               auto wf = where;
+               wf = localToFrame(wf);
+               cchg = std::make_shared<Surge::UI::CursorControlGuard>(getFrame(), wf);
+
                h.active = true;
                h.dragging = true;
                invalid();
@@ -947,9 +954,29 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       inDrawDrag = false;
       for( auto &h : hotzones )
       {
+         if( h.dragging )
+         {
+            if( h.type == hotzone::MOUSABLE_NODE )
+            {
+               if( h.mousableNodeType == hotzone::SEGMENT_ENDPOINT && cchg )
+               {
+                  auto w = h.rect.getCenter();
+                  w = localToFrame(w);
+                  cchg->setShowLocationFromFrameLocation(getFrame(), w);
+               }
+               if( h.mousableNodeType == hotzone::SEGMENT_CONTROL && !h.useDrawRect && cchg )
+               {
+                  auto w = h.rect.getCenter();
+                  w = localToFrame( w );
+                  cchg->setShowLocationFromFrameLocation(getFrame(), w );
+               }
+            }
+
+         }
          h.dragging = false;
       }
       snapGuard = nullptr;
+      cchg = nullptr;
       return kMouseEventHandled;
    }
 
@@ -1079,6 +1106,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       
       return kMouseEventHandled;
    }
+
 
    void openPopup(const VSTGUI::CPoint &iw) {
       CPoint w = iw;
