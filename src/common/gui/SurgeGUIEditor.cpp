@@ -4562,8 +4562,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     oss << "Change MPE Pitch Bend Range (Current: " << synth->storage.mpePitchBendRange << " Semitones)";
     addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss.str().c_str()), [this,menuRect]() {
        // FIXME! This won't work on linux
-       char c[256];
-       snprintf(c, 256, "%.0f", synth->storage.mpePitchBendRange);
+       const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
        promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
                          menuRect.getTopLeft(), [this](const std::string& c) {
                             int newVal = ::atoi(c.c_str());
@@ -4576,8 +4575,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     oss2 << "Change Default MPE Pitch Bend Range (Current: " << def << " Semitones)";
     addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss2.str().c_str()), [this, menuRect]() {
        // FIXME! This won't work on linux
-       char c[256];
-       snprintf(c, 256, "%.0f", synth->storage.mpePitchBendRange);
+       const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
        promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
                          menuRect.getTopLeft(), [this](const std::string& s) {
                             int newVal = ::atoi(s.c_str());
