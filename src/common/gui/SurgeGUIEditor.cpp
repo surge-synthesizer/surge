@@ -3090,7 +3090,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
          } // end vt_float if statement
 
-         if (p->ctrltype = ct_decibel_attenuation && !strcmp(p->name, "volume")){
+         if (p->ctrltype == ct_decibel_attenuation_clipper){
              const char* tmptxt = synth->hardclipEnabled ? "Disable Hardclip" : "Enable Hardclip";
              addCallbackMenu(contextMenu, tmptxt, [this]() {
                      synth->hardclipEnabled = !synth->hardclipEnabled;
