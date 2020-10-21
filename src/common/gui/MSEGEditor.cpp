@@ -779,11 +779,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
       //dc->setLineWidth(3.0);
-      dc->setFrameColor(skin->getColor( Colors::MSEGEditor::CurveHighlight) );
-      dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
+      if( hlpathUsed )
+      {
+         dc->setFrameColor(skin->getColor(Colors::MSEGEditor::CurveHighlight));
+         dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
+                              &tfpath);
+      }
 
       path->forget();
       defpath->forget();
+      highlightPath->forget();
 
       if( ! inDrag )
          getFrame()->setCursor(kCursorDefault);
