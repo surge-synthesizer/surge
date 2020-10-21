@@ -15,6 +15,8 @@
 
 #pragma once
 #include "vstgui/vstgui.h"
+#include "SurgeStorage.h"
+#include "UserDefaults.h"
 
 namespace Surge
 {
@@ -46,10 +48,82 @@ struct CursorControlGuard
    ~CursorControlGuard();
 
    void setShowLocationFromFrameLocation( VSTGUI::CFrame *, const VSTGUI::CPoint &where );
+   void setShowLocationFromViewLocation( VSTGUI::CView *, const VSTGUI::CPoint &where );
+   bool resetToShowLocation();
 
 private:
    void doHide();
 
+};
+
+/*
+ * There's a common pattern where we want to manipulate the guard in a common way
+ * including reading the hiding preference and so forth. Add this class to your
+ * class as a base class and you get what you need. This is the approach we recommend
+ * to cursor hiding in surge, although the class above is a public API.
+ *
+ * The use cases are 'startCursorHide(CPoint & )' or 'startCursorHide()'
+ * and then 'endCursorHide( CPoint &)' or 'endCursorHide()'.
+ *
+ * The intent is you make this a base clase of yourself with yourself as
+ * the template arg (the curiosly reocurring pattern thing), that the
+ * "T" is a CView, and then everything here works in view local coordinates.
+ */
+
+template <typename T> // We assume T is a CView subclass
+struct CursorControlAdapter {
+   CursorControlAdapter( SurgeStorage *s )
+   {
+      if( s )
+         hideCursor = !Surge::Storage::getUserDefaultValue(s, "showCursorWhileEditing", 0);
+   }
+
+   void startCursorHide()
+   {
+      if( hideCursor )
+      {
+         ccadapterGuard = std::make_shared<CursorControlGuard>();
+      }
+   }
+
+   void startCursorHide( const VSTGUI::CPoint &where )
+   {
+      if( hideCursor )
+      {
+         ccadapterGuard = std::make_shared<CursorControlGuard>();
+         ccadapterGuard->setShowLocationFromViewLocation(asT(), where);
+      }
+   }
+
+   void setCursorLocation( const VSTGUI::CPoint &where )
+   {
+      if( ccadapterGuard )
+         ccadapterGuard->setShowLocationFromViewLocation(asT(), where );
+   }
+
+   bool resetToShowLocation()
+   {
+      if( ccadapterGuard  )
+         return ccadapterGuard->resetToShowLocation();
+      return false;
+   }
+
+   void endCursorHide()
+   {
+      ccadapterGuard = nullptr;
+   }
+
+   void endCursorHide( const VSTGUI::CPoint &where )
+   {
+      if( ccadapterGuard )
+         ccadapterGuard->setShowLocationFromViewLocation(asT(), where );
+      ccadapterGuard = nullptr;
+   }
+
+   T* asT() { return static_cast<T*>( this ); }
+
+   bool hideCursor = true;
+   std::shared_ptr<CursorControlGuard> ccadapterGuard;
 };
 
 }

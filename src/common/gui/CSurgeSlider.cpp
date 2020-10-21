@@ -48,7 +48,7 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
                            bool is_mod,
                            std::shared_ptr<SurgeBitmaps> bitmapStore,
                            SurgeStorage* storage)
-    : CCursorHidingControl(CRect(loc, CPoint(1, 1)), listener, tag, 0)
+    : CControl(CRect(loc, CPoint(1, 1)), listener, tag, 0), Surge::UI::CursorControlAdapter<CSurgeSlider>(storage)
 {
    this->style = stylee;
    this->is_mod = is_mod;
@@ -506,11 +506,14 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
    if (pHandle && showHandle && (modmode != 2) && (!deactivated || !disabled))
    {
+      draghandlecenter = hrect.getCenter();
+
       if (style & CSlider::kHorizontal)
       {
          pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
          if( pHandleHover && in_hover )
             pHandleHover->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
+
 
          if( is_temposync )
          {
@@ -622,6 +625,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          if( pHandleHover && in_hover )
             pHandleHover->draw(dc, hrect, CPoint(24, 28 * typehy), slider_alpha);
       }
+      draghandlecenter = hrect.getCenter();
    }
 
    setDirty(false);
@@ -676,13 +680,13 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    if (storage)
       this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
+   deltapoint = where;
+
    hasBeenDraggedDuringMouseGesture = false;
    if( wheelInitiatedEdit )
       while( editing )
          endEdit();
    wheelInitiatedEdit = false;
-   
-   CCursorHidingControl::onMouseDown(where, buttons);
 
    if (controlstate)
    {
@@ -718,7 +722,8 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
       if( listener )
          listener->valueChanged( this );
       
-      detachCursor(where);
+      // detachCursor(where);
+      startCursorHide(where);
       return kMouseEventHandled;
    }
    return kMouseEventHandled;
@@ -733,8 +738,6 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
          sge->clear_infoview_peridle = -1;
       }
    }
-
-   CCursorHidingControl::onMouseUp(where, buttons);
 
    // "elastic edit" - resets to the value before the drag started if Alt is held
    if (buttons & kAlt)
@@ -762,7 +765,8 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       edit_value = nullptr;
 
 
-      attachCursor();
+      endCursorHide(draghandlecenter);
+      //attachCursor();
    }
 
    return kMouseEventHandled;
