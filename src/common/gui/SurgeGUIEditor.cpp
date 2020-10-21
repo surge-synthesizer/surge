@@ -3059,7 +3059,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char tmptxt[256];
-                     sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName(ms, true).c_str(),
+                     snprintf(tmptxt, 256, "Clear %s -> %s", (char*)modulatorName(ms, true).c_str(),
                              p->get_name() );
                      // clear_ms[ms] = eid;
                      // contextMenu->addEntry(tmptxt, eid++);
@@ -3089,6 +3089,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                }
             }
          } // end vt_float if statement
+
+         if (p->ctrltype = ct_decibel_attenuation && !strcmp(p->name, "volume")){
+             char tmptxt[256];
+             snprintf(tmptxt, 256, "%sable hardclipping", synth->hardclipEnabled ? "Dis" : "En");
+             addCallbackMenu(contextMenu, tmptxt, [this]() {
+                     synth->hardclipEnabled = !synth->hardclipEnabled;
+                     });
+         }
 
 #if TARGET_VST3
             auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
@@ -4555,7 +4563,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss.str().c_str()), [this,menuRect]() {
        // FIXME! This won't work on linux
        char c[256];
-       snprintf(c, 256, "%d", synth->storage.mpePitchBendRange);
+       snprintf(c, 256, "%.0f", synth->storage.mpePitchBendRange);
        promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
                          menuRect.getTopLeft(), [this](const std::string& c) {
                             int newVal = ::atoi(c.c_str());
@@ -4569,7 +4577,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     addCallbackMenu(mpeSubMenu, Surge::UI::toOSCaseForMenu(oss2.str().c_str()), [this, menuRect]() {
        // FIXME! This won't work on linux
        char c[256];
-       snprintf(c, 256, "%d", synth->storage.mpePitchBendRange);
+       snprintf(c, 256, "%.0f", synth->storage.mpePitchBendRange);
        promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
                          menuRect.getTopLeft(), [this](const std::string& s) {
                             int newVal = ::atoi(s.c_str());
