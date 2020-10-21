@@ -3091,11 +3091,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          } // end vt_float if statement
 
          if (p->ctrltype = ct_decibel_attenuation && !strcmp(p->name, "volume")){
-             char tmptxt[256];
-             snprintf(tmptxt, 256, "%sable hardclipping", synth->hardclipEnabled ? "Dis" : "En");
+             const char* tmptxt = synth->hardclipEnabled ? "Disable Hardclip" : "Enable Hardclip";
              addCallbackMenu(contextMenu, tmptxt, [this]() {
                      synth->hardclipEnabled = !synth->hardclipEnabled;
                      });
+             eid++;
          }
 
 #if TARGET_VST3
