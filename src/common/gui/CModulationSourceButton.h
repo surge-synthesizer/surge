@@ -18,13 +18,13 @@
 #include "SurgeBitmaps.h"
 #include <iostream>
 #include "SkinSupport.h"
+#include "CursorControlGuard.h"
 
 
-class CModulationSourceButton : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
+class CModulationSourceButton : public VSTGUI::CControl,
+                                public Surge::UI::SkinConsumingComponent,
+                                public Surge::UI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>
 {
-private:
-   typedef CCursorHidingControl super;
-
 public:
    CModulationSourceButton(const VSTGUI::CRect& size,
                            VSTGUI::IControlListener* listener,
@@ -42,8 +42,8 @@ public:
       value = val;
    }
 
-   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override;
-   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual void onMouseMoveDelta(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
+   virtual double getMouseDeltaScaling(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual bool onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons) override;
 
    int state, msid, controlstate;
@@ -108,7 +108,7 @@ public:
    }
 
    VSTGUI::CControl *dragLabel = nullptr;
-   VSTGUI::CPoint dragOffset, dragStart;
+   VSTGUI::CPoint dragOffset, dragStart, lastBarDraw;
    
    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };

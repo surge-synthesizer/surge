@@ -37,7 +37,8 @@ CModulationSourceButton::CModulationSourceButton(const CRect& size,
                                                  int msid,
                                                  std::shared_ptr<SurgeBitmaps> bitmapStore,
                                                  SurgeStorage* storage)
-    : CCursorHidingControl(size, listener, tag, 0), OldValue(0.f)
+    : CControl(size, listener, tag, 0), OldValue(0.f),
+      Surge::UI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>(storage)
 {
    this->state = state;
    this->msid = msid;
@@ -236,6 +237,8 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       int midx = brect.left + ((brect.getWidth() - 1) * 0.5);
       int barx = brect.left + (value * (float)brect.getWidth());
 
+      lastBarDraw = CPoint( barx, (brect.top + brect.bottom) * 0.5);
+
       if (bipolar)
       {
          dc->setFillColor(ColTint);
@@ -293,7 +296,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    if (storage)
       this->hideCursor = Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
-   super::onMouseDown(where, buttons);
+   onMouseDownCursorHelper(where);
 
    if (!getMouseEnabled())
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
@@ -336,7 +339,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
       beginEdit();
       controlstate = cs_drag;
 
-      detachCursor(where);
+      startCursorHide(where);
 
       return kMouseEventHandled;
    }
@@ -361,8 +364,6 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
 
 CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
-   super::onMouseUp(where, buttons);
-
    if( controlstate == cs_swap && dragLabel )
    {
       dragLabel->setVisible( false );
@@ -422,7 +423,7 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
    {
       endEdit();
 
-      attachCursor();
+      endCursorHide(lastBarDraw);
    }
    controlstate = cs_none;
 
@@ -439,7 +440,7 @@ CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CB
       thresh = sqrt(thresh);
       if (thresh < 3)
       {
-         return CCursorHidingControl::onMouseMoved(where, buttons);
+         onMouseMovedCursorHelper(where, buttons);
       }
       if( dragLabel == nullptr )
       {
@@ -486,13 +487,13 @@ CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CB
    }
    else
    {
-      return CCursorHidingControl::onMouseMoved( where, buttons );
+      return onMouseMovedCursorHelper(where, buttons );
    }
 }
 
 //------------------------------------------------------------------------------------------------
 
-void CModulationSourceButton::onMouseMoveDelta(CPoint& where,
+void CModulationSourceButton::onMouseMoveDelta(const CPoint& where,
                                                const CButtonState& buttons,
                                                double dx,
                                                double dy)
@@ -508,7 +509,7 @@ void CModulationSourceButton::onMouseMoveDelta(CPoint& where,
    }
 }
 
-double CModulationSourceButton::getMouseDeltaScaling(CPoint& where, const CButtonState& buttons)
+double CModulationSourceButton::getMouseDeltaScaling(const CPoint& where, const CButtonState& buttons)
 {
    double scaling = 0.25f;
 

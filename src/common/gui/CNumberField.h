@@ -18,7 +18,7 @@
 #include "vstcontrols.h"
 #include "SkinSupport.h"
 #include "SurgeParamConfig.h"
-
+#include "CursorControlGuard.h"
 
 inline int get_mod_mode(int ct)
 {
@@ -69,7 +69,8 @@ enum label_placement
 
 class CScalableBitmap;
 
-class CNumberField : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CNumberField : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent,
+                     public Surge::UI::CursorControlAdapter<CNumberField>
 {
 public:
    CNumberField(const VSTGUI::CRect& size,
@@ -187,7 +188,7 @@ private:
    int i_poly;
    int labelplacement;
    VSTGUI::CRect drawsize;
-   VSTGUI::CPoint lastmousepos;
+   VSTGUI::CPoint lastmousepos, startmousepos;
 
    CScalableBitmap *bg = nullptr, *hoverBg = nullptr;
    bool triedToLoadBg = false;
