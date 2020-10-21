@@ -2913,15 +2913,19 @@ void SurgeSynthesizer::process()
 
    if (play_scene[0])
    {
-      hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-      hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+      if (hardclipEnabled){ 
+         hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+         hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+      }
       halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1]);
    }
 
    if (play_scene[1])
    {
-      hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-      hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+      if (hardclipEnabled){
+         hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+         hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+      }
       halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
    }
 

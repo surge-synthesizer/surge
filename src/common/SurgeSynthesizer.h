@@ -228,6 +228,8 @@ public:
    int mpeVoices = 0;
    int mpeGlobalPitchBendRange = 0;
 
+   bool hardclipEnabled = true;
+
    int current_category_id = 0;
    bool modsourceused[n_modsources];
    bool midiprogramshavechanged = false;

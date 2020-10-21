@@ -3059,7 +3059,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if (synth->isActiveModulation(ptag, ms))
                   {
                      char tmptxt[256];
-                     sprintf(tmptxt, "Clear %s -> %s", (char*)modulatorName(ms, true).c_str(),
+                     snprintf(tmptxt, 256, "Clear %s -> %s", (char*)modulatorName(ms, true).c_str(),
                              p->get_name() );
                      // clear_ms[ms] = eid;
                      // contextMenu->addEntry(tmptxt, eid++);
@@ -3089,6 +3089,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                }
             }
          } // end vt_float if statement
+
+         if (p->ctrltype == ct_decibel_attenuation_clipper){
+             const char* tmptxt = synth->hardclipEnabled ? "Disable Hardclip" : "Enable Hardclip";
+             addCallbackMenu(contextMenu, tmptxt, [this]() {
+                     synth->hardclipEnabled = !synth->hardclipEnabled;
+                     });
+             eid++;
+         }
 
 #if TARGET_VST3
             auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
