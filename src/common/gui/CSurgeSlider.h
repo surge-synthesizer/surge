@@ -18,9 +18,8 @@
 #include "SurgeBitmaps.h"
 #include "SurgeParamConfig.h"
 #include "SkinSupport.h"
-#include "CursorControlGuard.h"
 
-class CSurgeSlider : public VSTGUI::CControl, public Surge::UI::CursorControlAdapter<CSurgeSlider>, public Surge::UI::SkinConsumingComponent
+class CSurgeSlider : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CSurgeSlider(const VSTGUI::CPoint& loc,
@@ -49,16 +48,8 @@ public:
    virtual VSTGUI::CMouseEventResult
    onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    
-   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
-   {
-      auto scale = getMouseDeltaScaling(where, buttons);
-      onMouseMoveDelta(where, buttons, scale * ( where.x - deltapoint.x ), scale * ( where.y - deltapoint.y ) );
-      if( ! resetToShowLocation() ) deltapoint = where;
-      return VSTGUI::kMouseEventHandled;
-   }
-
-   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
+   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override;
 
    virtual void setLabel(const char* txt);
    virtual void setModValue(float val);
@@ -137,7 +128,7 @@ private:
    int typehx, typehy;
    bool has_modulation, has_modulation_current, modulation_is_bipolar = false;
    bool is_temposync = false;
-   VSTGUI::CPoint lastpoint, sourcepoint, deltapoint, draghandlecenter;
+   VSTGUI::CPoint lastpoint, sourcepoint;
    float oldVal, *edit_value;
    int drawcount_debug;
    

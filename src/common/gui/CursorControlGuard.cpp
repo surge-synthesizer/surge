@@ -60,36 +60,22 @@ CursorControlGuard::~CursorControlGuard()
    hideCount--;
    if( hideCount == 0 )
    {
-      resetToShowLocation();
 #if MAC
       CGDisplayShowCursor(kCGDirectMainDisplay);
+      if( motionMode == SHOW_AT_LOCATION )
+      {
+         CGWarpMouseCursorPosition(CGPointMake(showLocation.x, showLocation.y));
+      }
 #elif WINDOWS
+      if( motionMode == SHOW_AT_LOCATION )
+      {
+         SetCursorPos( showLocation.x, showLocation.y );
+      }
       ShowCursor( true );
+
 #elif LINUX
 #endif
    }
-}
-
-bool CursorControlGuard::resetToShowLocation()
-{
-#if MAC
-   if( motionMode == SHOW_AT_LOCATION )
-   {
-      CGAssociateMouseAndMouseCursorPosition(false);
-      CGWarpMouseCursorPosition(CGPointMake(showLocation.x, showLocation.y));
-      CGAssociateMouseAndMouseCursorPosition(true);
-      return true;
-   }
-
-#elif WINDOWS
-   if( motionMode == SHOW_AT_LOCATION )
-   {
-      SetCursorPos( showLocation.x, showLocation.y );
-     return true;
-   }
-#elif LINUX
-#endif
-   return false;
 }
 
 void CursorControlGuard::doHide()
@@ -110,15 +96,6 @@ void CursorControlGuard::setShowLocationFromFrameLocation(VSTGUI::CFrame* f, con
 
    showLocation = f->getTransform().transform(showLocation);
    showLocation = showLocation.offset(px, py);
-   motionMode = SHOW_AT_LOCATION;
 }
-
-void CursorControlGuard::setShowLocationFromViewLocation(VSTGUI::CView *v, const VSTGUI::CPoint& where)
-{
-   auto r = where;
-   r = v->localToFrame(r);
-   setShowLocationFromFrameLocation(v->getFrame(), r );
-}
-
 }
 }

@@ -78,8 +78,7 @@ CNumberField::CNumberField(const CRect& size,
                            long tag,
                            CBitmap* pBackground,
                            SurgeStorage* storage)
-    : CControl(size, listener, tag, pBackground),
-      Surge::UI::CursorControlAdapter<CNumberField>( storage )
+    : CControl(size, listener, tag, pBackground)
 {
    i_value = 60;
    controlmode = cm_integer;
@@ -585,7 +584,6 @@ CMouseEventResult CNumberField::onMouseDown(CPoint& where, const CButtonState& b
 
    if ((buttons & kLButton) && (drawsize.pointInside(where)))
    {
-      startCursorHide(where);
       controlstate = cs_drag;
       lastmousepos = where;
       f_min = 0.f;
@@ -602,7 +600,6 @@ CMouseEventResult CNumberField::onMouseUp(CPoint& where, const CButtonState& but
    if (controlstate)
    {
       endEdit();
-      endCursorHide();
       controlstate = cs_null;
    }
    return kMouseEventHandled;
@@ -615,9 +612,8 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
       float dy = where.y - lastmousepos.y;
       
       float delta = dx - dy; // for now lets try this. Remenber y 'up' in logical space is 'down' in pixel space
-
-      if( ! resetToShowLocation() )
-         lastmousepos = where;
+      
+      lastmousepos = where;
 
       if (buttons & kShift)
          delta *= 0.1;
