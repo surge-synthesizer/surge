@@ -129,7 +129,7 @@ private:
    float modval, qdvalue;
    char label[256], leftlabel[256];
    int modmode;
-   float moverate, statezoom;
+   float moverate;
    int typex, typey;
    int typehx, typehy;
    bool has_modulation, has_modulation_current, modulation_is_bipolar = false;
@@ -137,8 +137,6 @@ private:
    VSTGUI::CPoint lastpoint, sourcepoint, draghandlecenter;
    float oldVal, *edit_value;
    int drawcount_debug;
-   
-   
 
    float restvalue, restmodval;
    bool wheelInitiatedEdit = false;
