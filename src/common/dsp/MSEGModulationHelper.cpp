@@ -518,7 +518,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    
    }
    //std::cout << _D(timeAlongSegment) << _D(r.type) << _D(r.duration) << _D(lv0) << std::endl;
-
+   res = limit_range(res, -1.f, 1.f);
    es->lastOutput = res;
    return res;
 }

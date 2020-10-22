@@ -551,15 +551,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    const int gridMaxHSteps = 20, gridMaxVSteps = 10;
 
    inline void drawAxis( CDrawContext *dc ) {
+      auto uni = lfodata->unipolar.val.b;
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
       int skips = round( 1.f / eds->hSnapDefault );
       auto tpx = timeToPx();
 
       while( maxt * skips > gridMaxHSteps )
-      {
          skips = skips >> 1;
-      }
+
       skips = std::max( 1, skips );
 
       dc->setFont( displayFont );
@@ -596,32 +596,52 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       dc->setFillColor( kRedCColor );
       dc->drawRect( r, kDrawFilled );
 
+      // vertical axis
       auto vaxisArea = getVAxisArea();
       dc->setLineWidth( 1 );
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
-      skips = round( 1.f/eds->vSnapDefault);
-      while( skips > gridMaxVSteps )
+
+      skips = round(1.f / eds->vSnapDefault);
+
+      while (skips > (gridMaxVSteps * (1 + uni)))
          skips = skips >> 1;
+
       skips = std::max( 1, skips );
 
-      float step = 1.f / skips;
+      float step = (1.f / skips);
+
+      if (uni)
+         step *= 2;
+
       for( float i=-1; i<=1.001 /* for things like "3" rounding*/; i += step )
       {
-         float p = valpx( i );
+         float p = valpx(i);
+
          float off = vaxisArea.getWidth() / 2;
-         if( i == -1 || fabs( i ) < 1e-3 || fabs(i-1) < 1e-3 )
+
+         if (i == -1 || fabs(i - 1) < 1e-3 || (fabs(i) < 1e-3 && !uni))
             off = 0;
+
          dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
-         char txt[16];
-         snprintf( txt, 16, "%4.2f", i );
+
          if( off == 0 )
+         {
+            char txt[16];
+            auto value = uni ? (i + 1.f) * 0.5 : round(i);
+
+            if (value == 0.f & std::signbit(value))
+                value = -value;
+
+            snprintf(txt, 16, "%5.1f", value);
             dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
+         }
       }
    }
    
    virtual void draw( CDrawContext *dc) override {
+      auto uni = lfodata->unipolar.val.b;
       auto vs = getViewSize();
 
       if (hotzones.empty())
@@ -699,18 +719,27 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          drawnLast = up > ms->totalDuration;
       }
 
+      int uniLimit = 0;
       auto tfpath = CGraphicsTransform().translate(drawArea.left, 0);
 
       VSTGUI::CGradient::ColorStopMap csm;
       VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
+      
       cg->addColorStop(0, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
-      cg->addColorStop(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
-      cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
+      if (uni)
+      {
+         uniLimit = -1;
+         cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+      }
+      else
+      {
+         cg->addColorStop(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+         cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
+      }
 
-
-      fillpath->addLine(pathLastX, valpx(0));
-      fillpath->addLine(0, valpx(0));
-      fillpath->addLine(0, pathFirstY);
+      fillpath->addLine(pathLastX, valpx(uniLimit));
+      fillpath->addLine(uniLimit, valpx(uniLimit));
+      fillpath->addLine(uniLimit, pathFirstY);
       dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
       fillpath->forget();
       cg->forget();
@@ -723,10 +752,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
       int skips = round( 1.f / eds->hSnapDefault );
+
       while( maxt * skips > gridMaxHSteps )
-      {
          skips = skips >> 1;
-      }
+
       skips = std::max( skips, 1 );
 
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
@@ -741,16 +770,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
 
       skips = round( 1.f / eds->vSnapDefault );
-      while( skips > gridMaxVSteps )
-      {
+
+      while( skips > (gridMaxVSteps * (1 + uni)) )
          skips = skips >> 1;
-      }
+
       skips = std::max( skips, 1 );
 
-      for( int vi = 0; vi < 2 * skips + 1; vi ++ )
+      auto uniskips = skips / (1.f + uni);
+
+      for (int vi = 0; vi < 2 * skips + 1; vi++)
       {
-         float v = valpx( 1.f * vi / skips - 1 );
-         if( vi % skips == 0 )
+         float v = valpx(1.f * vi / uniskips - 1.f);
+
+         if (vi % skips == 0)
          {
             dc->setFrameColor( primaryGridColor );
             dc->setLineStyle(kLineSolid);
@@ -761,6 +793,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             CCoord dashes[] = {2, 5};
             dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
          }
+
          dc->drawLine( CPoint( drawArea.left, v ), CPoint( drawArea.right, v ) );
       }
 
