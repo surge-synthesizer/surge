@@ -359,11 +359,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
          };
 
+         auto unipolarFactor = 1 + lfodata->unipolar.val.b;
+
          // We get a mousable point at the start of the line
          rectForPoint(
              t0, s.v0, hotzone::SEGMENT_ENDPOINT,
-             [i, this, vscale, tscale, timeConstraint](float dx, float dy, const CPoint& where) {
-                adjustValue(i, false, -2 * dy / vscale, eds->vSnap);
+             [i, this, vscale, tscale, timeConstraint, unipolarFactor](float dx, float dy, const CPoint& where) {
+                adjustValue(i, false, -2 * dy / vscale, eds->vSnap * unipolarFactor);
 
                 if (i != 0)
                 {
@@ -372,9 +374,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
              });
 
          // Control point editor
-         if (ms->segments[i].duration > 0.01 &&
-             fabs(ms->segments[i].nv1 - ms->segments[i].v0) > 0.01 &&
-             ms->segments[i].type != MSEGStorage::segment::HOLD )
+         if (ms->segments[i].duration > 0.01 && ms->segments[i].type != MSEGStorage::segment::HOLD )
          {
             /*
              * Drop in a control point. But where and moving how?
@@ -389,8 +389,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
             // Ones where we scan the entire square
             case MSEGStorage::segment::QUAD_BEZIER:
-               horizontalMotion = true;
-               break;
             case MSEGStorage::segment::BROWNIAN:
                horizontalMotion = true;
                break;
@@ -508,11 +506,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             rectForPoint( tpx(ms->totalDuration), ms->segments[ms->n_activeSegments-1].nv1, /* which is [0].v0 in lock mode only */
                          hotzone::SEGMENT_ENDPOINT,
-                          [this,vscale,tscale](float dx, float dy, const CPoint &where) {
+                          [this, vscale, tscale, unipolarFactor](float dx, float dy, const CPoint &where) {
                              if( ms->endpointMode == MSEGStorage::EndpointMode::FREE )
                              {
                                 float d = -2 * dy / vscale;
-                                float snapResolution = eds->vSnap;
+                                float snapResolution = eds->vSnap * unipolarFactor;
                                 int idx = ms->n_activeSegments - 1;
                                 offsetValue( ms->segments[idx].dragv1, d );
                                 if( snapResolution <= 0 )
@@ -1293,6 +1291,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
          typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
          typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
+         typeTo( "Spike", MSEGStorage::segment::Type::SPIKE);
          typeTo( "Sine", MSEGStorage::segment::Type::SINE );
          typeTo( "Sawtooth", MSEGStorage::segment::Type::SAWTOOTH );
          typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
