@@ -166,12 +166,14 @@ public:
    bool hovered = false;
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       hovered = true;
+      getFrame()->setCursor(VSTGUI::kCursorVSize);
       invalid();
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       hovered = false;
       invalid();
+      getFrame()->setCursor( VSTGUI::kCursorDefault);
       return VSTGUI::kMouseEventHandled;
    }
    

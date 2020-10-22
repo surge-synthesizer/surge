@@ -680,28 +680,25 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    if (storage)
       this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
-   onMouseDownCursorHelper(where);
-
    hasBeenDraggedDuringMouseGesture = false;
    if( wheelInitiatedEdit )
       while( editing )
          endEdit();
    wheelInitiatedEdit = false;
 
-   if (controlstate)
-   {
-#if MAC
-      if (buttons & kRButton)
-         statezoom = 0.1f;
-#endif
-      return kMouseEventHandled;
-   }
 
    if (listener &&
        buttons & (kAlt | kRButton | kMButton | kButton4 | kButton5 | kShift | kControl | kApple | kDoubleClick))
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
-         return kMouseEventHandled;
+         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+
+   onMouseDownCursorHelper(where);
+
+   if (controlstate)
+   {
+      return kMouseEventHandled;
    }
 
    if ((buttons & kLButton) && !controlstate)
@@ -709,7 +706,6 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
       beginEdit();
       controlstate = cs_drag;
       // getFrame()->setCursor( VSTGUI::kCursorHand );
-      statezoom = 1.f;
 
       edit_value = modmode ? &modval : &value;
       oldVal = *edit_value;
@@ -731,6 +727,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 
 CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+
    {
       auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
       if( sge )
@@ -739,10 +736,13 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       }
    }
 
+   bool resetPosition = hasBeenDraggedDuringMouseGesture;
+
    // "elastic edit" - resets to the value before the drag started if Alt is held
    if (buttons & kAlt)
    {
       hasBeenDraggedDuringMouseGesture = false;
+      resetPosition = false;
       *edit_value = oldVal;
       setDirty();
       if (isDirty() && listener)
@@ -765,7 +765,10 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       edit_value = nullptr;
 
 
-      endCursorHide(draghandlecenter);
+      if( resetPosition )
+         endCursorHide(draghandlecenter);
+      else
+         endCursorHide();
       //attachCursor();
    }
 
