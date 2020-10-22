@@ -1104,7 +1104,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
             if (storage)
                this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
-            detachCursor(where);
+            startCursorHide(where);
             if( buttons.isRightButton() )
             {
                rmStepStart = where;
@@ -1238,7 +1238,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
    if( controlstate == cs_linedrag )
    {
-      attachCursor();
+      endCursorHide(rmStepCurr);
       int startStep = -1;
       int endStep = -1;
 
@@ -1318,7 +1318,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
    if( controlstate == cs_steps )
    {
-      attachCursor();
+      endCursorHide(barDragTop);
    }
    
    if (controlstate)
@@ -1421,6 +1421,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
          if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
          {
             draggedStep = i;
+            barDragTop = where;
 
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 

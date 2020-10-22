@@ -82,8 +82,9 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
 
 
 
-struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
-   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CControl( size ) {
+struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, public Surge::UI::CursorControlAdapter<MSEGCanvas> {
+   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ):
+         CControl( size ), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr) {
       setSkin( skin, b );
       this->ms = ms;
       this->eds = eds;
@@ -92,8 +93,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
    };
-
-   std::shared_ptr<Surge::UI::CursorControlGuard> cchg;
 
    /*
    ** We make a list of hotzones when we draw so we don't have to recalculate the 
@@ -442,7 +441,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             h.onDrag = [this, i, tscale, vscale, verticalMotion, horizontalMotion, verticalScaleByValues, segdt , segdx](float dx, float dy, const CPoint &where) {
                if( verticalMotion )
                {
-                  printf("%.4f\n", ms->segments[i].cpv);
                   float dv = 0;
                   if( verticalScaleByValues)
                      dv = -2 * dy / vscale / (0.5 * segdx );
@@ -925,10 +923,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          {
             if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
             {
-               auto wf = where;
-               wf = localToFrame(wf);
-               cchg = std::make_shared<Surge::UI::CursorControlGuard>(getFrame(), wf);
-
+               startCursorHide(where);
                h.active = true;
                h.dragging = true;
                invalid();
@@ -958,23 +953,20 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       getFrame()->setCursor( kCursorDefault );
       inDrag = false;
       inDrawDrag = false;
+
       for( auto &h : hotzones )
       {
          if( h.dragging )
          {
             if( h.type == hotzone::MOUSABLE_NODE )
             {
-               if( h.mousableNodeType == hotzone::SEGMENT_ENDPOINT && cchg )
+               if( h.mousableNodeType == hotzone::SEGMENT_ENDPOINT )
                {
-                  auto w = h.rect.getCenter();
-                  w = localToFrame(w);
-                  cchg->setShowLocationFromFrameLocation(getFrame(), w);
+                  setCursorLocation(h.rect.getCenter());
                }
-               if( h.mousableNodeType == hotzone::SEGMENT_CONTROL && !h.useDrawRect && cchg )
+               if( h.mousableNodeType == hotzone::SEGMENT_CONTROL && !h.useDrawRect )
                {
-                  auto w = h.rect.getCenter();
-                  w = localToFrame( w );
-                  cchg->setShowLocationFromFrameLocation(getFrame(), w );
+                  setCursorLocation(h.rect.getCenter());
                }
             }
 
@@ -982,7 +974,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          h.dragging = false;
       }
       snapGuard = nullptr;
-      cchg = nullptr;
+      endCursorHide();
+
       return kMouseEventHandled;
    }
 
