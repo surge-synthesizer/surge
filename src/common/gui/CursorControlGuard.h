@@ -138,9 +138,6 @@ struct CursorControlAdapterWithMouseDelta : public CursorControlAdapter<T>
    }
    VSTGUI::CMouseEventResult onMouseMovedCursorHelper( const VSTGUI::CPoint &where, const VSTGUI::CButtonState &buttons )
    {
-      if( ! CursorControlAdapter<T>::ccadapterGuard )
-         return VSTGUI::kMouseEventHandled;
-
       auto scale = CursorControlAdapter<T>::asT()->getMouseDeltaScaling(where, buttons);
       float dx = (where.x -deltapoint.x);
       float dy = (where.y - deltapoint.y);
