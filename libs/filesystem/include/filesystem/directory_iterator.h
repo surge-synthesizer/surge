@@ -34,7 +34,7 @@ public:
    using reference = const value_type&;
 
    // member functions                                                          [fs.dir.itr.members]
-   directory_iterator() noexcept = default;
+   directory_iterator() = default;
    explicit directory_iterator(const path& p);
    directory_iterator(const path& p, std::error_code& ec) noexcept;
 

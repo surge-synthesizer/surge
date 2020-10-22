@@ -23,7 +23,7 @@ class directory_entry //                                                  [fs.cl
 {
 public:
    // constructors and destructor                                                [fs.dir.entry.cons]
-   directory_entry() noexcept = default;
+   directory_entry() = default;
    explicit directory_entry(const path& p) : pth(p) {}
 
    // modifiers                                                                  [fs.dir.entry.mods]
