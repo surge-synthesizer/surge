@@ -375,9 +375,26 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
       break;
    }
-   case MSEGStorage::segment::SINE: 
-   case MSEGStorage::segment::SAWTOOTH: 
-   case MSEGStorage::segment::TRIANGLE: 
+   case MSEGStorage::segment::BUMP:
+   {
+      auto t = timeAlongSegment / r.duration;
+      
+      auto d = (-df * 0.5) + 0.5;
+      auto deform = 20.f + ((d * d * d) * 500.f);
+
+      auto c = r.cpv;
+
+      auto g = exp(-deform * (t - 0.5) * (t - 0.5));
+      auto l = ((lv1 - lv0) * t) + lv0;
+      auto q = c - ((lv0 + lv1) * 0.5);
+
+      res = l + (q * g);
+
+      break;
+   }
+   case MSEGStorage::segment::SINE:
+   case MSEGStorage::segment::SAWTOOTH:
+   case MSEGStorage::segment::TRIANGLE:
    case MSEGStorage::segment::SQUARE: {
       float pct = ( r.cpv + 1 ) * 0.5;
       float as = 5.0;
