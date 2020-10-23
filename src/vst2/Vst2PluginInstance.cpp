@@ -332,7 +332,9 @@ void Vst2PluginInstance::setParameter(VstInt32 index, float value)
    if (!tryInit())
       return;
 
-   _instance->setParameter01(_instance->remapExternalApiToInternalId(index), value, true);
+   SurgeSynthesizer::ID did;
+   if( _instance->fromDAWSideIndex(index, did ))
+      _instance->setParameter01(did, value, true);
 
    // flyttat till sub3_synth
    /*if(editor)
@@ -347,7 +349,11 @@ float Vst2PluginInstance::getParameter(VstInt32 index)
    if (!tryInit())
       return 0;
 
-   return _instance->getParameter01(_instance->remapExternalApiToInternalId(index));
+   SurgeSynthesizer::ID did;
+   if( _instance->fromDAWSideIndex(index, did ))
+      return _instance->getParameter01(did);
+
+   return 0;
 }
 
 void Vst2PluginInstance::getParameterName(VstInt32 index, char* label)
@@ -355,7 +361,10 @@ void Vst2PluginInstance::getParameterName(VstInt32 index, char* label)
    if (!tryInit())
       return;
 
-   _instance->getParameterName(_instance->remapExternalApiToInternalId(index), label);
+   label[0] = 0;
+   SurgeSynthesizer::ID did;
+   if( _instance->fromDAWSideIndex(index, did ))
+      _instance->getParameterName(did, label);
 }
 
 void Vst2PluginInstance::getParameterDisplay(VstInt32 index, char* text)
@@ -363,7 +372,10 @@ void Vst2PluginInstance::getParameterDisplay(VstInt32 index, char* text)
    if (!tryInit())
       return;
 
-   _instance->getParameterDisplay(_instance->remapExternalApiToInternalId(index), text);
+   text[0] = 0;
+   SurgeSynthesizer::ID did;
+   if( _instance->fromDAWSideIndex(index, did ))
+      _instance->getParameterDisplay(did, text);
 }
 
 void Vst2PluginInstance::getParameterLabel(VstInt32 index, char* label)
@@ -617,16 +629,30 @@ VstInt32 Vst2PluginInstance::setChunk(void* data, VstInt32 byteSize, bool isPres
    return 1;
 }
 
+/*
+ * These are both now mapped by the parent to the right ID
+ */
 bool Vst2PluginInstance::beginEdit( VstInt32 index )
 {
-   return AudioEffectX::beginEdit(
-       SurgeGUIEditor::applyParameterOffset(_instance->remapExternalApiToInternalId(index)));
+   int id = index;
+   SurgeSynthesizer::ID did;
+   if( SurgeGUIEditor::fromSynthGUITag(_instance, index, did ) )
+   {
+      id = did.getDawSideIndex();
+   }
+   return AudioEffectX::beginEdit(id);
 }
 
 bool Vst2PluginInstance::endEdit( VstInt32 index )
 {
-   return AudioEffectX::endEdit(
-       SurgeGUIEditor::applyParameterOffset(_instance->remapExternalApiToInternalId(index)));
+   int id = index;
+   SurgeSynthesizer::ID did;
+   if( SurgeGUIEditor::fromSynthGUITag(_instance, index, did ) )
+   {
+      id = did.getDawSideIndex();
+   }
+
+   return AudioEffectX::endEdit(id);
 }
 
 bool Vst2PluginInstance::tryInit()

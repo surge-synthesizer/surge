@@ -86,8 +86,9 @@ void SurgeLv2Wrapper::activate(LV2_Handle instance)
 
    for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
    {
-      unsigned index = s->remapExternalApiToInternalId(pNth);
-      self->_oldControlValues[pNth] = s->getParameter01(index);
+      SurgeSynthesizer::ID did;
+      if( s->fromDAWSideIndex(pNth, did ))
+        self->_oldControlValues[pNth] = s->getParameter01(did);
 #if DEBUG_STARTUP_SETS      
       if( index == 118 )
          std::cout << "ACTIVATE " << pNth << " " << self->_oldControlValues[pNth] << std::endl;
@@ -115,9 +116,10 @@ void SurgeLv2Wrapper::run(LV2_Handle instance, uint32_t sample_count)
          if( pNth == 118 )
             std::cout << "LV2 at " << pNth << " portValue=" << portValue
                       << " ocv=" << self->_oldControlValues[pNth] << std::endl;
-#endif         
-         unsigned index = s->remapExternalApiToInternalId(pNth);
-         s->setParameter01(index, portValue);
+#endif
+         SurgeSynthesizer::ID did;
+         if( s->fromDAWSideIndex(pNth, did ))
+            s->setParameter01(did, portValue);
          self->_oldControlValues[pNth] = portValue;
       }
    }
@@ -361,8 +363,10 @@ LV2_State_Status SurgeLv2Wrapper::restoreState(LV2_Handle instance, LV2_State_Re
    // Restore the port-cache-check with the loadRaw state since the synth is now in good shape
    for (unsigned pNth = 0; pNth < n_total_params; ++pNth)
    {
-      unsigned index = s->remapExternalApiToInternalId(pNth);
-      float v = s->getParameter01(index);
+      SurgeSynthesizer::ID did;
+      float v = 0;
+      if( s->fromDAWSideIndex(pNth, did ))
+         v = s->getParameter01(did);
 #if DEBUG_STARTUP_SETS
       if( index == 118 )
          std::cout << "after restore old control values set to " << v << std::endl;

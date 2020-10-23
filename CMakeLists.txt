@@ -241,6 +241,7 @@ set(SURGE_COMMON_SOURCES
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/SurgeSynthesizer.cpp
+        src/common/SurgeSynthesizerIDManagement.cpp
   src/common/SurgeSynthesizerIO.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp

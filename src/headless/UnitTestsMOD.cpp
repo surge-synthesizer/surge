@@ -721,7 +721,9 @@ TEST_CASE( "LfoTempoSync Latch Drift", "[mod]" )
       auto ss = std::make_unique<StepSequencerStorage>();
       auto lfostorage = &(surge->storage.getPatch().scene[0].lfo[0]);
       lfostorage->rate.temposync = true;
-      surge->setParameter01( lfostorage->rate.id, 0.455068, false, false );
+      SurgeSynthesizer::ID rid;
+      surge->fromSynthSideId(lfostorage->rate.id, rid );
+      surge->setParameter01( rid, 0.455068, false, false );
       lfostorage->shape.val.i = ls_square;
 
       surge->storage.getPatch().copy_scenedata(surge->storage.getPatch().scenedata[0], 0 );

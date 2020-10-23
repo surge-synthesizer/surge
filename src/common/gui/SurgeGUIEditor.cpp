@@ -230,6 +230,12 @@ struct SGEDropAdapter : public VSTGUI::IDropTarget, public VSTGUI::ReferenceCoun
 
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
 
+bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID& q)
+{
+   // This is wrong for macros and params but is close
+   return synth->fromSynthSideIdWithGuiOffset(tag, start_paramtags, tag_mod_source0 + ms_ctrl1, q );
+}
+
 SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
 {
 #ifdef INSTRUMENT_UI
@@ -641,8 +647,12 @@ void SurgeGUIEditor::idle()
             if (param[j])
             {
                char pname[256], pdisp[256];
-               synth->getParameterName(j, pname);
-               synth->getParameterDisplay(j, pdisp);
+               SurgeSynthesizer::ID jid;
+               if( synth->fromSynthSideId(j, jid) )
+               {
+                  synth->getParameterName(jid, pname);
+                  synth->getParameterDisplay(jid, pdisp);
+               }
 
                /*if(i == 0)
                  {
@@ -693,7 +703,9 @@ void SurgeGUIEditor::idle()
             synth->refresh_parameter_queue[i] = -1;
             if ((j < n_total_params) && param[j])
             {
-               param[j]->setValue(synth->getParameter01(j));
+               SurgeSynthesizer::ID jid;
+               if( synth->fromSynthSideId(j, jid ))
+                  param[j]->setValue(synth->getParameter01(jid));
                frame->invalidRect(param[j]->getViewSize());
 
                if( oscdisplay )
@@ -738,7 +750,11 @@ void SurgeGUIEditor::idle()
                ** we need to invalidate them. See #2056.
                */
                auto tag = cc->getTag();
-               auto sv = synth->getParameter01(j);
+               SurgeSynthesizer::ID jid;
+
+               auto sv = 0;
+               if( synth->fromSynthSideId(j, jid ))
+                  sv = synth->getParameter01(jid);
                auto cv = cc->getValue();
 
                if ((sv != cv) && ((tag == fmconfig_tag || tag == filterblock_tag)))
@@ -788,9 +804,9 @@ void SurgeGUIEditor::idle()
                ** so you get a dance. Since we don't really care if scenemode is automatable for now we just do
                */
                if( synth->storage.getPatch().param_ptr[j]->ctrltype != ct_scenemode )
-                  cc->setValue(synth->getParameter01(j));
+                  cc->setValue(synth->getParameter01(jid));
 #else
-               cc->setValue(synth->getParameter01(j));
+               cc->setValue(synth->getParameter01(jid));
 #endif
                cc->setDirty();
                cc->invalid();
@@ -2412,7 +2428,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             eid++;
 
 #if TARGET_VST3
-            hostMenu = addVst3MenuForParams( contextMenu, modsource - ms_ctrl1 + metaparam_offset, eid);
+            // hostMenu = addVst3MenuForParams( contextMenu, modsource - ms_ctrl1 + metaparam_offset, eid);
 #endif
 
             midiSub->forget();
@@ -2596,8 +2612,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             // FIXME - make this a checked toggle
             auto b = addCallbackMenu(contextMenu, txt2,
                             [this,p,control]() {
-                               synth->setParameter01( p->id, !p->val.b, false, false );
-                               synth->refresh_editor=true;
+                                        SurgeSynthesizer::ID pid;
+                                        if( synth->fromSynthSideId(p->id, pid ) )
+                                        {
+                                           synth->setParameter01(pid, !p->val.b, false, false);
+                                           synth->refresh_editor = true;
+                                        }
                             }
                );
             eid++;
@@ -2666,9 +2686,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                         auto b = addCallbackMenu( useSubMenus ? sub : contextMenu, displaytxt.c_str(),
                                                   [this,p,i, tag]() {
                                                      float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
-                                                     synth->setParameter01( p->id, ef, false, false );
-                                                     synth->refresh_editor=true;
-                                                  }
+                                                     synth->setParameter01(synth->idForParameter(p), ef, false,
+                                                                              false);
+                                                     synth->refresh_editor = true;
+                                                    }
                            );
                         eid++;
                         if( i == p->val.i ) {
@@ -2699,7 +2720,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      
                      auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
                                               [this,ef,p,i]() {
-                                                 synth->setParameter01( p->id, ef, false, false );
+                                                 synth->setParameter01( synth->idForParameter(p), ef, false, false );
                                                  synth->refresh_editor=true;
                                               }
                         );
@@ -3100,7 +3121,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          }
 
 #if TARGET_VST3
-            auto hostMenu = addVst3MenuForParams(contextMenu, ptag, eid );
+         auto hostMenu = addVst3MenuForParams(contextMenu, synth->idForParameter(p), eid );
 #endif
 
          frame->addView(contextMenu); // add to frame
@@ -3270,8 +3291,11 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          ((ControllerModulationSource*)synth->storage.getPatch().scene[current_scene].modsources[t])
             ->set_target01(control->getValue(), false);
 
-         synth->sendParameterAutomation(t + metaparam_offset - ms_ctrl1, control->getValue());
-
+         SurgeSynthesizer::ID tid;
+         if( synth->fromSynthSideId(t + metaparam_offset - ms_ctrl1, tid ) )
+         {
+            synth->sendParameterAutomation(tid, control->getValue());
+         }
          return;
       }
       else
@@ -3772,7 +3796,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             ((CSurgeSlider*)control)->setModPresent(synth->isModDestUsed(p->id));
             ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms), synth->isBipolarModulation(thisms));
 
-            synth->getParameterName(ptag, txt);
+            SurgeSynthesizer::ID ptagid;
+            if( synth->fromSynthSideId(ptag, ptagid ))
+               synth->getParameterName(ptagid, txt);
             sprintf(pname, "%s -> %s", modulatorName(thisms,true).c_str(), txt);
             ModulationDisplayInfoWindowStrings mss;
             p->get_display_of_modulation_depth(pdisp, synth->getModDepth(ptag, thisms), synth->isBipolarModulation(thisms), Parameter::InfoWindow, &mss);
@@ -3847,23 +3873,25 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             }
 
             bool force_integer = frame->getCurrentMouseButtons() & kControl;
-            if (synth->setParameter01(ptag, val, false, force_integer))
+            SurgeSynthesizer::ID ptagid;
+            synth->fromSynthSideId(ptag, ptagid);
+            if (synth->setParameter01(ptagid, val, false, force_integer))
             {
                queue_refresh = true;
                return;
             }
             else
             {
-               synth->sendParameterAutomation(ptag, synth->getParameter01(ptag));
+               synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
 
                if (dynamic_cast<CSurgeSlider*>(control) != nullptr)
                   ((CSurgeSlider*)control)->SetQuantitizedDispValue(p->get_value_f01());
                else
                   control->invalid();
-               synth->getParameterName(ptag, pname);
-               synth->getParameterDisplay(ptag, pdisp);
+               synth->getParameterName(ptagid, pname);
+               synth->getParameterDisplay(ptagid, pdisp);
                char pdispalt[256];
-               synth->getParameterDisplayAlt(ptag, pdispalt);
+               synth->getParameterDisplayAlt(ptagid, pdispalt);
                ((CParameterTooltip*)infowindow)->setLabel(0, pdisp, pdispalt);
                ((CParameterTooltip*)infowindow)->clearMDIWS();
                if (p->ctrltype == ct_polymode)
@@ -3989,35 +4017,37 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
 //------------------------------------------------------------------------------------------------
 
-void SurgeGUIEditor::beginEdit(long index)
+void SurgeGUIEditor::beginEdit(long tag)
 {
-   if (index < start_paramtags)
+   if (tag < start_paramtags)
    {
       return;
    }
 
-   int externalparam = synth->remapInternalToExternalApiId(index - start_paramtags);
+   int synthidx = tag - start_paramtags;
+   SurgeSynthesizer::ID did;
 
-   if (externalparam >= 0)
+   if ( synth->fromSynthSideId( synthidx, did ) )
    {
-      super::beginEdit(externalparam);
+      super::beginEdit(did.getDawSideId());
    }
 }
 
 //------------------------------------------------------------------------------------------------
 
-void SurgeGUIEditor::endEdit(long index)
+void SurgeGUIEditor::endEdit(long tag)
 {
-   if (index < start_paramtags)
+   if (tag < start_paramtags)
    {
       return;
    }
 
-   int externalparam = synth->remapInternalToExternalApiId(index - start_paramtags);
+   int synthidx = tag - start_paramtags;
+   SurgeSynthesizer::ID did;
 
-   if (externalparam >= 0)
+   if ( synth->fromSynthSideId( synthidx, did ) )
    {
-      super::endEdit(externalparam);
+      super::endEdit(did.getDawSideId());
    }
 }
 
@@ -4032,14 +4062,19 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
    if( tag >= tag_mod_source0 + ms_ctrl1 && tag <= tag_mod_source0 + ms_ctrl8 )
    {
       ptag = metaparam_offset + tag - tag_mod_source0 - ms_ctrl1;
-      synth->getParent()->ParameterBeginEdit(ptag);
+      SurgeSynthesizer::ID did;
+      if( synth->fromSynthSideId(ptag, did ))
+      {
+         synth->getParent()->ParameterBeginEdit(did.getDawSideIndex());
+      }
    }
    else if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
    {
-      int externalparam = synth->remapInternalToExternalApiId(ptag);
-      if (externalparam >= 0)
+      SurgeSynthesizer::ID did;
+
+      if ( synth->fromSynthSideId( ptag, did ) )
       {
-         synth->getParent()->ParameterBeginEdit(externalparam);
+         synth->getParent()->ParameterBeginEdit(did.getDawSideIndex());
       }
    }
 
@@ -4056,14 +4091,17 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl* control)
    if( tag >= tag_mod_source0 + ms_ctrl1 && tag <= tag_mod_source0 + ms_ctrl8 )
    {
       ptag = metaparam_offset + tag - tag_mod_source0 - ms_ctrl1;
-      synth->getParent()->ParameterEndEdit(ptag);
+      SurgeSynthesizer::ID did;
+      if( synth->fromSynthSideId(ptag, did ))
+         synth->getParent()->ParameterEndEdit(did.getDawSideIndex());
    }
    else if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
    {
-      int externalparam = synth->remapInternalToExternalApiId(ptag);
-      if (externalparam >= 0)
+      SurgeSynthesizer::ID did;
+
+      if ( synth->fromSynthSideId( ptag, did ) )
       {
-         synth->getParent()->ParameterEndEdit(externalparam);
+         synth->getParent()->ParameterEndEdit(did.getDawSideIndex());
       }
    }
 #endif
@@ -5508,7 +5546,7 @@ void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
 {
 #if TARGET_LV2
    // revisit this for non-LV2 outside 1.6.6
-   synth->sendParameterAutomation(p->id, synth->getParameter01(p->id));
+   synth->sendParameterAutomation(synth->idForParameter(p), synth->getParameter01(synth->idForParameter(p)));
 #endif
 }
 //------------------------------------------------------------------------------------------------
@@ -5736,8 +5774,9 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
 
 }
 
-#ifdef TARGET_VST3
-Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COptionMenu *contextMenu, int ptag, int &eid)
+#if TARGET_VST3
+Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COptionMenu *contextMenu,
+                                                                   const SurgeSynthesizer::ID &pid, int &eid)
 {
    CRect menuRect;
    Steinberg::Vst::IComponentHandler* componentHandler =
@@ -5752,7 +5791,7 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
       std::stack<int> eidStack;
       eidStack.push(eid);
 
-      Steinberg::Vst::ParamID param = ptag;
+      Steinberg::Vst::ParamID param = pid.getDawSideId();
       hostMenu = componentHandler3->createContextMenu(this, &param);
 
       int N = hostMenu ?  hostMenu->getItemCount() : 0;
@@ -5780,7 +5819,7 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
             strcpy( nm, truncName.c_str() );
          }
 
-         int itag = item.tag;
+         auto itag = item.tag;
          /*
          ** Leave this here so we can debug if another vst3 problem comes up
          std::cout << nm << " FL=" << item.flags << " jGS=" << Steinberg::Vst::IContextMenuItem::kIsGroupStart

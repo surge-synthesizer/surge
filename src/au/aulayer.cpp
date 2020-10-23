@@ -716,14 +716,15 @@ ComponentResult aulayer::GetParameterInfo(AudioUnitScope inScope,
    sprintf(outParameterInfo.name, "-");
    // outParameterInfo.unitName
 
-   inParameterID = plugin_instance->remapExternalApiToInternalId(inParameterID);
-
    if (inScope != kAudioUnitScope_Global)
       return kAudioUnitErr_InvalidParameter;
    if (!IsInitialized())
       return kAudioUnitErr_Uninitialized; // return defaults
 
-   plugin_instance->getParameterName(inParameterID, outParameterInfo.name);
+   SurgeSynthesizer::ID pid;
+   plugin_instance->fromDAWSideIndex(inParameterID, pid );
+
+   plugin_instance->getParameterName(pid, outParameterInfo.name);
    outParameterInfo.flags |= kAudioUnitParameterFlag_HasCFNameString |
                              kAudioUnitParameterFlag_CFNameRelease |
                              kAudioUnitParameterFlag_HasClump | kAudioUnitParameterFlag_HasName;
@@ -731,7 +732,7 @@ ComponentResult aulayer::GetParameterInfo(AudioUnitScope inScope,
        CFStringCreateWithCString(NULL, outParameterInfo.name, kCFStringEncodingUTF8);
 
    parametermeta pm;
-   plugin_instance->getParameterMeta(inParameterID, pm);
+   plugin_instance->getParameterMeta(pid, pm);
    outParameterInfo.minValue = pm.fmin;
    outParameterInfo.maxValue = pm.fmax;
    outParameterInfo.defaultValue = pm.fdefault;
@@ -758,7 +759,9 @@ ComponentResult aulayer::GetParameter(AudioUnitParameterID inID,
       return kAudioUnitErr_InvalidParameter;
    if (!IsInitialized())
       return kAudioUnitErr_Uninitialized;
-   outValue = plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(inID));
+   SurgeSynthesizer::ID iid;
+   if( plugin_instance->fromDAWSideIndex(inID, iid))
+      outValue = plugin_instance->getParameter01(iid);
    return noErr;
 }
 
@@ -776,8 +779,9 @@ ComponentResult aulayer::SetParameter(AudioUnitParameterID inID,
       return kAudioUnitErr_InvalidParameter;
    if (!IsInitialized())
       return kAudioUnitErr_Uninitialized;
-   plugin_instance->setParameter01(plugin_instance->remapExternalApiToInternalId(inID), inValue,
-                                   true);
+   SurgeSynthesizer::ID iid;
+   if( plugin_instance->fromDAWSideIndex(inID, iid ))
+      plugin_instance->setParameter01(iid, inValue,true);
    return noErr;
 }
 
@@ -795,7 +799,7 @@ bool aulayer::ParameterBeginEdit(int p)
    AudioUnitEvent event;
    event.mEventType = kAudioUnitEvent_BeginParameterChangeGesture;
    event.mArgument.mParameter.mAudioUnit = GetComponentInstance();
-   event.mArgument.mParameter.mParameterID = plugin_instance->remapInternalToExternalApiId(p);
+   event.mArgument.mParameter.mParameterID = p; // plugin_instance->remapInternalToExternalApiId(p);
    event.mArgument.mParameter.mScope = kAudioUnitScope_Global;
    event.mArgument.mParameter.mElement = 0;
    AUEventListenerNotify(NULL, NULL, &event);
@@ -809,7 +813,7 @@ bool aulayer::ParameterEndEdit(int p)
    AudioUnitEvent event;
    event.mEventType = kAudioUnitEvent_EndParameterChangeGesture;
    event.mArgument.mParameter.mAudioUnit = GetComponentInstance();
-   event.mArgument.mParameter.mParameterID = plugin_instance->remapInternalToExternalApiId(p);
+   event.mArgument.mParameter.mParameterID = p; // plugin_instance->remapInternalToExternalApiId(p);
    event.mArgument.mParameter.mScope = kAudioUnitScope_Global;
    event.mArgument.mParameter.mElement = 0;
    AUEventListenerNotify(NULL, NULL, &event);
@@ -823,7 +827,7 @@ bool aulayer::ParameterUpdate(int p)
    AudioUnitEvent event;
    event.mEventType = kAudioUnitEvent_ParameterValueChange;
    event.mArgument.mParameter.mAudioUnit = GetComponentInstance();
-   event.mArgument.mParameter.mParameterID = plugin_instance->remapInternalToExternalApiId(p);
+   event.mArgument.mParameter.mParameterID = p; // plugin_instance->remapInternalToExternalApiId(p);
    event.mArgument.mParameter.mScope = kAudioUnitScope_Global;
    event.mArgument.mParameter.mElement = 0;
    AUEventListenerNotify(NULL, NULL, &event);
