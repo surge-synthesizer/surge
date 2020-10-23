@@ -421,8 +421,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if (h.rect.pointInside(where))
                h.active = true;
 
+
             h.useDrawRect = false;
-            if( ( verticalMotion && ! horizontalMotion && ms->segments[i].type != MSEGStorage::segment::LINEAR ) ||
+            if( ( verticalMotion && ! horizontalMotion &&
+                (ms->segments[i].type != MSEGStorage::segment::LINEAR &&
+                  ms->segments[i].type != MSEGStorage::segment::BUMP ) ) ||
                 ms->segments[i].type == MSEGStorage::segment::BROWNIAN )
             {
                float t = tpx( 0.5 * ms->segments[i].duration + ms->segmentStart[i] );
@@ -629,7 +632,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             char txt[16];
             auto value = uni ? (i + 1.f) * 0.5 : round(i);
 
-            if (value == 0.f & std::signbit(value))
+            if (value == 0.f && std::signbit(value))
                 value = -value;
 
             snprintf(txt, 16, "%5.1f", value);
