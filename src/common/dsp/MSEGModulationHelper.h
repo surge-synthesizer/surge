@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "SurgeStorage.h"
+#include <random>
 
 namespace Surge
 {
@@ -8,6 +9,12 @@ namespace Surge
       void rebuildCache(MSEGStorage *s);
 
       struct EvaluatorState {
+         EvaluatorState()
+         {
+            std::random_device rd;
+            gen = std::minstd_rand(rd());
+            urd = std::uniform_real_distribution<float>(-1.0,1.0);
+         }
          int lastEval = -1;
          float lastOutput = 0;
          float msegState[6] = {0};
@@ -18,6 +25,13 @@ namespace Surge
          } loopState = PLAYING;
          double releaseStartPhase;
          float releaseStartValue;
+         std::minstd_rand gen;
+         std::uniform_real_distribution<float> urd;
+
+         void seed( long l )
+         {
+            gen = std::minstd_rand(l);
+         }
       };
       float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s,
                     EvaluatorState *state, bool forceOneShot = false);

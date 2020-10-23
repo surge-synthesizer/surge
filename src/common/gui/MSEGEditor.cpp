@@ -663,6 +663,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       float maxt = drawDuration();
 
       Surge::MSEG::EvaluatorState es, esdf;
+      es.seed( 8675309 ); // This is different from the number in LFOMS::assign in draw mode on purpose
+      esdf.seed( 8675309 );
 
       CGraphicsPath *path = dc->createGraphicsPath();
       CGraphicsPath *highlightPath = dc->createGraphicsPath();

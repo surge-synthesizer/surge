@@ -77,8 +77,6 @@ private:
    StepSequencerStorage* ss;
    MSEGStorage* ms;
    Surge::MSEG::EvaluatorState msegstate;
-   float msegEvaluationState[5];
-   int msegLastEvaluated;
    FormulaModulatorStorage *fs;
    pdata* localcopy;
    bool phaseInitialized;
