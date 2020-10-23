@@ -631,6 +631,7 @@ struct MSEGStorage {
          HOLD,
          SAWTOOTH,
          SPIKE,
+         BUMP,
       } type;
    };
 
