@@ -406,7 +406,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( verticalScaleByValues )
                vLocation = 0.5 * (vLocation + 1) * ( ms->segments[i].nv1 - ms->segments[i].v0 ) + ms->segments[i].v0;
 
-            float tLocation = 0.5 * ms->segments[i].duration + ms->segmentStart[i];
+
+            // we want to have the control point for Spike where the spike is
+            // but make a switch in case some other curves need the fixed control point in other places horizontally
+            float fixtLocation;
+            switch (ms->segments[i].type)
+            {
+            case MSEGStorage::segment::SPIKE:
+               fixtLocation = 0.f;
+               break;
+            default:
+               fixtLocation = 0.5;
+               break;
+            }
+
+            float tLocation = fixtLocation * ms->segments[i].duration + ms->segmentStart[i];
+
             if( horizontalMotion )
                tLocation = ms->segments[i].cpduration * ms->segments[i].duration + ms->segmentStart[i];
 
@@ -425,7 +440,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             h.useDrawRect = false;
             if( ( verticalMotion && ! horizontalMotion &&
                 (ms->segments[i].type != MSEGStorage::segment::LINEAR &&
-                  ms->segments[i].type != MSEGStorage::segment::BUMP ) ) ||
+                 ms->segments[i].type != MSEGStorage::segment::BUMP &&
+                 ms->segments[i].type != MSEGStorage::segment::SPIKE )) ||
                 ms->segments[i].type == MSEGStorage::segment::BROWNIAN )
             {
                float t = tpx( 0.5 * ms->segments[i].duration + ms->segmentStart[i] );
@@ -1292,17 +1308,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                           if( tts >= 0 )
                              m->setChecked( this->ms->segments[tts].type == type );
                        };
-         typeTo( "Hold", MSEGStorage::segment::Type::HOLD );
-         typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
-         typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
+         typeTo("Hold", MSEGStorage::segment::Type::HOLD);
+         typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
+         typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
          typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
-         typeTo( "Spike", MSEGStorage::segment::Type::SPIKE);
-         typeTo( "Bump", MSEGStorage::segment::Type::BUMP );
-         typeTo( "Sine", MSEGStorage::segment::Type::SINE );
-         typeTo( "Sawtooth", MSEGStorage::segment::Type::SAWTOOTH );
-         typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
-         typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
-         typeTo( "Stairs", MSEGStorage::segment::Type::STEPS );
+         typeTo("Spike", MSEGStorage::segment::Type::SPIKE);
+         typeTo("Bump", MSEGStorage::segment::Type::BUMP);
+         typeTo("Sine", MSEGStorage::segment::Type::SINE);
+         typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);
+         typeTo("Triangle", MSEGStorage::segment::Type::TRIANGLE);
+         typeTo("Square", MSEGStorage::segment::Type::SQUARE);
+         typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
+         typeTo(Surge::UI::toOSCaseForMenu("Smooth Stairs"), MSEGStorage::segment::Type::SMOOTH_STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
         
          getFrame()->addView( contextMenu );

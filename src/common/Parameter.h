@@ -58,7 +58,6 @@ enum ctrltypes
    ct_decibel_narrow_short_extendable, // shorter extend range
    ct_decibel_extra_narrow,
    ct_decibel_attenuation,
-   ct_decibel_attenuation_clipper,
    ct_decibel_attenuation_large,
    ct_decibel_fmdepth,
    ct_decibel_extendable,
@@ -137,6 +136,7 @@ enum ctrltypes
    ct_airwindow_param,
    ct_airwindow_param_bipolar,
    ct_airwindow_param_integral,
+   ct_amplitude_clipper,
    num_ctrltypes,
 };
 

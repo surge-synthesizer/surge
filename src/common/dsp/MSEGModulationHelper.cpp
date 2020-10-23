@@ -395,7 +395,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    case MSEGStorage::segment::SINE:
    case MSEGStorage::segment::SAWTOOTH:
    case MSEGStorage::segment::TRIANGLE:
-   case MSEGStorage::segment::SQUARE: {
+   case MSEGStorage::segment::SQUARE:
+   {
       float pct = ( r.cpv + 1 ) * 0.5;
       float as = 5.0;
       float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
@@ -464,18 +465,43 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       break;
    }
 
-   case MSEGStorage::segment::STEPS: {
-      float pct = ( r.cpv + 1 ) * 0.5;
-      float as = 5.0;
-      float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
-      int steps = (int)( scaledpct * 100 ) + 2;
+   case MSEGStorage::segment::STAIRS:
+   {
+      auto pct = ( r.cpv + 1 ) * 0.5;
+      auto as = 5.0;
+      auto scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
+      auto steps = (int)(scaledpct * 100) + 2;
 
-      float frac = (float)( (int)( steps * timeAlongSegment / r.duration ) ) / (steps-1);
+      auto frac = (float)( (int)( steps * timeAlongSegment / r.duration ) ) / (steps-1);
+
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
       if( df > 0 )
-         frac = pow( frac, 1.0 + df * 3 );
+         frac = pow( frac, 1.0 + df * 3.0 );
+
       res = frac * lv1 + ( 1 - frac ) * lv0;
+
+      break;
+   }
+   case MSEGStorage::segment::SMOOTH_STAIRS:
+   {
+      auto pct = (r.cpv + 1) * 0.5;
+      auto as = 5.0;
+      auto scaledpct = (exp(as * pct) - 1) / (exp(as) - 1);
+      auto steps = (int)(scaledpct * 100) + 2;
+      auto frac = timeAlongSegment / r.duration;
+
+      auto c = df < 0.f ? 1.0 + df * 0.7 : 1.0 + df * 3.0;
+      auto z = pow(frac, c);
+
+      auto q = floor(z * steps) / steps;
+
+      auto r = ((z - q) * steps);
+      auto b = r * 2 - 1;
+
+      res = ((((b * b * b) + 1) / (2 * steps)) + q);
+      res = (res * (lv1 - lv0)) + lv0;
+
       break;
    }
    case MSEGStorage::segment::BROWNIAN:
