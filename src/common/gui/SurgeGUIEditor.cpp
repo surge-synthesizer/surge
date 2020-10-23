@@ -3090,11 +3090,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
          } // end vt_float if statement
 
-         if (p->ctrltype == ct_decibel_attenuation_clipper){
-             const char* tmptxt = synth->hardclipEnabled ? "Disable Hardclip" : "Enable Hardclip";
-             addCallbackMenu(contextMenu, tmptxt, [this]() {
+         if (p->ctrltype == ct_amplitude_clipper){
+             contextMenu->addSeparator(eid++);
+             addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Hard Clip Signals Over 0 dBFS"), [this]() {
                      synth->hardclipEnabled = !synth->hardclipEnabled;
                      });
+             contextMenu->checkEntry(eid, synth->hardclipEnabled);
              eid++;
          }
 

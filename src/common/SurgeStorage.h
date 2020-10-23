@@ -624,7 +624,7 @@ struct MSEGStorage {
          QUAD_BEZIER,
          SCURVE,
          SINE,
-         STEPS,
+         STAIRS,
          BROWNIAN,
          SQUARE,
          TRIANGLE,
@@ -632,6 +632,7 @@ struct MSEGStorage {
          SAWTOOTH,
          SPIKE,
          BUMP,
+         SMOOTH_STAIRS,
       } type;
    };
 
