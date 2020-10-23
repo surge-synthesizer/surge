@@ -52,7 +52,11 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    phaseInitialized = false;
 
    if (is_display)
+   {
       srand(17);
+      msegstate.seed( 2112 ); // this number is different than the one in the canvas on purpose
+               // so since they are random the displays differ
+   }
    noise = 0.f;
    noised1 = 0.f;
    target = 0.f;
@@ -127,9 +131,6 @@ void LfoModulationSource::attack()
    env_val = 0.f;
    env_phase = 0;
    ratemult = 1.f;
-   msegLastEvaluated = -1;
-   for( int i=0; i<5; ++i )
-      msegEvaluationState[i] = 0.f;
    if (localcopy[idelay].f == lfo->delay.val_min.f)
    {
       env_state = lenv_attack;

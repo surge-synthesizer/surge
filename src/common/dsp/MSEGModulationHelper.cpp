@@ -520,7 +520,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
                * Modification to standard bridge. We want to move away from 1,-1 so lets
                * explicitly bounce away from them if random will push us over
                */
-               auto uniformRand = ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
+               auto uniformRand = es->urd(es->gen);
                auto linstp = es->msegState[validx] + lincoef * dt;
                float randup = randcoef;
                float randdn = randcoef;
@@ -855,10 +855,6 @@ void constrainControlPointAt( MSEGStorage *ms, int idx )
    // With the new model this is way easier
    ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, 1.f );
    ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
-
-   switch( ms->segments[idx].type )
-   {
-   }
 }
    
 }
