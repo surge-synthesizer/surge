@@ -424,6 +424,13 @@ private:
    */
    VSTGUI::CCommandMenuItem*
    addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
+
+   VSTGUI::COptionMenu*
+   makeSmoothMenu(VSTGUI::CRect& menuRect,
+                  const std::string& key,
+                  int defaultValue,
+                  std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
+
    VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);
    VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect& rect, bool showhelp);
    VSTGUI::COptionMenu* makeZoomMenu(VSTGUI::CRect& rect, bool showhelp);
@@ -436,6 +443,7 @@ private:
    bool scannedForMidiPresets = false;
 
    void resetSmoothing( ControllerModulationSource::SmoothingMode t );
+   void resetPitchSmoothing(ControllerModulationSource::SmoothingMode t);
 
 public:
    std::string helpURLFor( Parameter *p );
