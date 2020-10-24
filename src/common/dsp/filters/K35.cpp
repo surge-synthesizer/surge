@@ -64,10 +64,9 @@ namespace K35Filter
    };
 
    enum k35_state {
-      k35_l1z, // LPF1 z-1 storage
-      k35_l2z, // LPF2 z-1 storage
-      k35_h1z, // HPF1 z-1 storage
-      k35_h2z, // HPF2 z-1 storage
+      k35_lz, // LPF1 z-1 storage
+      k35_hz, // HPF1 z-1 storage
+      k35_2z, // xPF2 z-1 storage
    };
 
    void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool is_lowpass, SurgeStorage *storage )
@@ -100,15 +99,15 @@ namespace K35Filter
 
    __m128 process_lp( QuadFilterUnitState * __restrict f, __m128 input )
    {
-      const __m128 y1 = doLpf(f->C[k35_G], input, f->R[k35_l1z]);
+      const __m128 y1 = doLpf(f->C[k35_G], input, f->R[k35_lz]);
       // (lpf beta * lpf2 feedback) + (hpf beta * hpf1 feedback)
-      const __m128 s35 = A(M(f->C[k35_lb], f->R[k35_l2z]), M(f->C[k35_hb], f->R[k35_h1z]));
+      const __m128 s35 = A(M(f->C[k35_lb], f->R[k35_2z]), M(f->C[k35_hb], f->R[k35_hz]));
       // alpha * (y1 + s35)
       const __m128 u = M(f->C[k35_alpha], A(y1, s35));
 
       // mk * lpf2(u)
-      const __m128 y = M(f->C[k35_k], doLpf(f->C[k35_G], u, f->R[k35_l2z]));
-      doHpf(f->C[k35_G], y, f->R[k35_h1z]);
+      const __m128 y = M(f->C[k35_k], doLpf(f->C[k35_G], u, f->R[k35_2z]));
+      doHpf(f->C[k35_G], y, f->R[k35_hz]);
 
       const __m128 result = D(y, f->C[k35_k]);
 
@@ -119,15 +118,15 @@ namespace K35Filter
 
    __m128 process_hp( QuadFilterUnitState * __restrict f, __m128 input )
    {
-      const __m128 y1 = doHpf(f->C[k35_G], input, f->R[k35_h1z]);
+      const __m128 y1 = doHpf(f->C[k35_G], input, f->R[k35_hz]);
       // (lpf beta * lpf2 feedback) + (hpf beta * hpf1 feedback)
-      const __m128 s35 = A(M(f->C[k35_hb], f->R[k35_h2z]), M(f->C[k35_lb], f->R[k35_l1z]));
+      const __m128 s35 = A(M(f->C[k35_hb], f->R[k35_2z]), M(f->C[k35_lb], f->R[k35_lz]));
       // alpha * (y1 + s35)
       const __m128 u = M(f->C[k35_alpha], A(y1, s35));
 
       // mk * lpf2(u)
       const __m128 y = M(f->C[k35_k], u);
-      doLpf(f->C[k35_G], doHpf(f->C[k35_G], y, f->R[k35_h2z]), f->R[k35_l1z]);
+      doLpf(f->C[k35_G], doHpf(f->C[k35_G], y, f->R[k35_2z]), f->R[k35_lz]);
 
       const __m128 result = D(y, f->C[k35_k]);
 
