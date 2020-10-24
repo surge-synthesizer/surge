@@ -436,6 +436,7 @@ private:
    bool scannedForMidiPresets = false;
 
    void resetSmoothing( ControllerModulationSource::SmoothingMode t );
+   void resetPitchSmoothing(ControllerModulationSource::SmoothingMode t);
 
 public:
    std::string helpURLFor( Parameter *p );

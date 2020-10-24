@@ -115,6 +115,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    SurgePatch& patch = storage.getPatch();
 
    storage.smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue( &storage, "smoothingMode", (int)( ControllerModulationSource::SmoothingMode::LEGACY ));
+   storage.pitchSmoothingMode =
+       (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
+           &storage, "pitchSmoothingMode",
+           (int)(ControllerModulationSource::SmoothingMode::DIRECT));
 
    patch.polylimit.val.i = 16;
    for (int sc = 0; sc < 2; sc++)

@@ -919,6 +919,8 @@ public:
    float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
 
    ControllerModulationSource::SmoothingMode smoothingMode = ControllerModulationSource::SmoothingMode::LEGACY;
+   ControllerModulationSource::SmoothingMode pitchSmoothingMode =
+       ControllerModulationSource::SmoothingMode::LEGACY;
    float mpePitchBendRange = -1.0f;
 
    std::atomic<int> otherscene_clients;

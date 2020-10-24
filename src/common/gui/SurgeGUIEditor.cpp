@@ -5229,25 +5229,37 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
 
 
    int did = 0;
-   COptionMenu *smoothMenu = new COptionMenu( menuRect, 0, 0, 0, 0,
-                                                VSTGUI::COptionMenu::kNoDrawStyle |
-                                                VSTGUI::COptionMenu::kMultipleCheckStyle );
+   auto addSmoothMenu =
+       [&](const std::string& key, const std::string& menuName, int defaultValue,
+           std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth) {
+          COptionMenu* smoothMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                    VSTGUI::COptionMenu::kNoDrawStyle |
+                                                        VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-   int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), "smoothingMode", (int)ControllerModulationSource::SmoothingMode::LEGACY );
+          int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), key, defaultValue);
 
-   auto asmt = [this, smoothMenu, smoothing]( const char* label, ControllerModulationSource::SmoothingMode md )
-   {
-     auto me = addCallbackMenu(smoothMenu, label,
-                        [this, md]() {this->resetSmoothing(md);});
-     me->setChecked( smoothing == md );
-   };
-   asmt( "Legacy", ControllerModulationSource::SmoothingMode::LEGACY );
-   asmt( "Slow Exponential", ControllerModulationSource::SmoothingMode::SLOW_EXP );
-   asmt( "Fast Exponential", ControllerModulationSource::SmoothingMode::FAST_EXP );
-   asmt( "Fast Linear", ControllerModulationSource::SmoothingMode::FAST_LINE );
-   asmt( "No Smoothing", ControllerModulationSource::SmoothingMode::DIRECT );
-   midiSubMenu->addEntry(smoothMenu, Surge::UI::toOSCaseForMenu ("Controller Smoothing"));
-   did++;
+          auto asmt = [this, smoothMenu, smoothing,
+                       setSmooth](const char* label, ControllerModulationSource::SmoothingMode md) {
+             auto me = addCallbackMenu(smoothMenu, label, [setSmooth, md]() { setSmooth(md); });
+             me->setChecked(smoothing == md);
+          };
+          asmt("Legacy", ControllerModulationSource::SmoothingMode::LEGACY);
+          asmt("Slow Exponential", ControllerModulationSource::SmoothingMode::SLOW_EXP);
+          asmt("Fast Exponential", ControllerModulationSource::SmoothingMode::FAST_EXP);
+          asmt("Fast Linear", ControllerModulationSource::SmoothingMode::FAST_LINE);
+          asmt("No Smoothing", ControllerModulationSource::SmoothingMode::DIRECT);
+          midiSubMenu->addEntry(smoothMenu, Surge::UI::toOSCaseForMenu(menuName));
+          did++;
+       };
+
+   addSmoothMenu("smoothingMode", "Controller Smoothing",
+                 (int)ControllerModulationSource::SmoothingMode::LEGACY,
+                 [this](auto md) { this->resetSmoothing(md); });
+
+   addSmoothMenu("pitchSmoothingMode", "MPE-mode Pitch Bend Smoothing",
+                 (int)ControllerModulationSource::SmoothingMode::DIRECT,
+                 [this](auto md) { this->resetPitchSmoothing(md); });
+
    midiSubMenu->addSeparator();
    did++;
 
@@ -6280,6 +6292,13 @@ void SurgeGUIEditor::resetSmoothing( ControllerModulationSource::SmoothingMode t
    // Reset the default value and tell the synth it is updated
    Surge::Storage::updateUserDefaultValue(&(synth->storage), "smoothingMode", (int)t );
    synth->changeModulatorSmoothing( t );
+}
+
+void SurgeGUIEditor::resetPitchSmoothing(ControllerModulationSource::SmoothingMode t)
+{
+   // Reset the default value and update it in storage for newly created voices to use
+   Surge::Storage::updateUserDefaultValue(&(synth->storage), "pitchSmoothingMode", (int)t);
+   synth->storage.pitchSmoothingMode = t;
 }
 
 void SurgeGUIEditor::setupSaveDialog()
