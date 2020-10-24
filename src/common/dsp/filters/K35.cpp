@@ -61,6 +61,9 @@ namespace K35Filter
       k35_hb,    // HPF beta
       k35_k,     // k (m_k_modded)
       k35_alpha, // aka m_alpha
+      k35_saturation, // amount of saturation to apply (scaling before tanh)
+      k35_saturation_blend, // above but clamped to 0..1, used to blend tanh version when <1
+      k35_saturation_blend_inv, // above but inverted, used to blend non-tanh version when <1
    };
 
    enum k35_state {
@@ -69,7 +72,7 @@ namespace K35Filter
       k35_2z, // xPF2 z-1 storage
    };
 
-   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool is_lowpass, SurgeStorage *storage )
+   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool is_lowpass, float saturation, SurgeStorage *storage )
    {
       const double wd = clampedFrequency( freq, storage ) * 2.0 * M_PI;
       const double wa = (2.0 * dsamplerate_os) * fastdtan(wd * dsamplerate_os_inv * 0.5);
@@ -95,6 +98,10 @@ namespace K35Filter
       cm->C[k35_k] = mk;
 
       cm->C[k35_alpha] = 1.0 / (1.0 - mk * G + mk * G * G);
+
+      cm->C[k35_saturation] = saturation;
+      cm->C[k35_saturation_blend] = fminf(saturation, 1.0);
+      cm->C[k35_saturation_blend_inv] = 1.0 - cm->C[k35_saturation_blend];
    }
 
    __m128 process_lp( QuadFilterUnitState * __restrict f, __m128 input )
@@ -103,15 +110,15 @@ namespace K35Filter
       // (lpf beta * lpf2 feedback) + (hpf beta * hpf1 feedback)
       const __m128 s35 = A(M(f->C[k35_lb], f->R[k35_2z]), M(f->C[k35_hb], f->R[k35_hz]));
       // alpha * (y1 + s35)
-      const __m128 u = M(f->C[k35_alpha], A(y1, s35));
+      const __m128 u_clean = M(f->C[k35_alpha], A(y1, s35));
+      const __m128 u_driven = Surge::DSP::fasttanhSSEclamped(M(u_clean, f->C[k35_saturation]));
+      const __m128 u = A(M(u_clean, f->C[k35_saturation_blend_inv]), M(u_driven, f->C[k35_saturation_blend]));
 
       // mk * lpf2(u)
       const __m128 y = M(f->C[k35_k], doLpf(f->C[k35_G], u, f->R[k35_2z]));
       doHpf(f->C[k35_G], y, f->R[k35_hz]);
 
       const __m128 result = D(y, f->C[k35_k]);
-
-      // todo: apply overdrive? we don't have a way to supply the saturation level
 
       return result;
    }
@@ -125,15 +132,17 @@ namespace K35Filter
       const __m128 u = M(f->C[k35_alpha], A(y1, s35));
 
       // mk * lpf2(u)
-      const __m128 y = M(f->C[k35_k], u);
+      const __m128 y_clean = M(f->C[k35_k], u);
+      const __m128 y_driven = Surge::DSP::fasttanhSSEclamped(M(y_clean, f->C[k35_saturation]));
+      const __m128 y = A(M(y_clean, f->C[k35_saturation_blend_inv]), M(y_driven, f->C[k35_saturation_blend]));
+
       doLpf(f->C[k35_G], doHpf(f->C[k35_G], y, f->R[k35_2z]), f->R[k35_lz]);
 
       const __m128 result = D(y, f->C[k35_k]);
 
-      // todo: apply overdrive? we don't have a way to supply the saturation level
-
       return result;
    }
+#undef overdrive
 #undef F
 #undef M
 #undef D

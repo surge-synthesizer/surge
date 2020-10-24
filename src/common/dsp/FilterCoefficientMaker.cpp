@@ -90,10 +90,10 @@ void FilterCoefficientMaker::MakeCoeffs(
       ObxdFilter::makeCoefficients(this, ObxdFilter::FOUR_POLE, Freq, Reso, SubType, storageI);
       break;
    case fut_k35_lp:
-      K35Filter::makeCoefficients(this, Freq, Reso, true, storageI);
+      K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType], storageI);
       break;
    case fut_k35_hp:
-      K35Filter::makeCoefficients(this, Freq, Reso, false, storageI);
+      K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType], storageI);
       break;
 #if SURGE_EXTRA_FILTERS
 #endif      

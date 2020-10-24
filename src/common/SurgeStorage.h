@@ -441,9 +441,21 @@ const char fut_vintageladder_subtypes[6][32] =
 const char fut_obxd_2p_subtypes[1][32] = {"12 dB/oct"};
 const char fut_obxd_4p_subtypes[1][32] = {"24 dB/oct"};
 
-const char fut_k35_subtypes[1][32] = {"12 dB/oct"};
+const char fut_k35_subtypes[4][32] = {
+   "No Saturation",
+   "1 Saturation",
+   "2 Saturation",
+   "3 Saturation"
+};
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0 };
+const float fut_k35_saturations[4] = {
+   0.0f,
+   1.0f,
+   2.0f,
+   3.0f
+};
+
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 4, 4 };
 
 enum fu_subtype
 {
