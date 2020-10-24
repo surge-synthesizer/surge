@@ -59,7 +59,7 @@ public:
 
    SurgeStorage* storage = nullptr;
 
-   VSTGUI::CBitmap* bmp = nullptr;
+   VSTGUI::CBitmap *bmp = nullptr, *arrow = nullptr;
 
    void setlabel(const char*);
    void set_ismeta(bool);

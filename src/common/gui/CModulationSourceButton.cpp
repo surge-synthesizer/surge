@@ -55,6 +55,7 @@ CModulationSourceButton::CModulationSourceButton(const CRect& size,
    label[0] = 0;
    blink = 0;
    bmp = bitmapStore->getBitmap(IDB_MODSRC_BG);
+   arrow = bitmapStore->getBitmap(IDB_MODSRC_SHOW_LFO);
    this->storage = nullptr;
 }
 
@@ -273,13 +274,14 @@ void CModulationSourceButton::draw(CDrawContext* dc)
    // show LFO parameters arrow
    if (msid >= ms_lfo1 && msid <= ms_slfo6)
    {
+      CRect arwsze = sze;
+      arwsze.left = sze.right - 14;
+      arwsze.setWidth(14);
+      arwsze.setHeight(16);
       CPoint where;
-      where.x = - 9;
-      if (state >= 4)
-         where.y = 8 * rh;
-      else
-         where.y = 7 * rh;
-      bmp->draw(dc, sze, where, 0xff);
+      where.y = state >= 4 ? rh : 0;
+
+      arrow->draw(dc, arwsze, where, 0xff);
    }
 
    #if WINDOWS
@@ -412,7 +414,7 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
       CPoint loc(where);
       loc.offset(-size.left, -size.top);
 
-      click_is_editpart = loc.x > (size.getWidth() - 11);   // click area for show LFO parameters arrow
+      click_is_editpart = loc.x >= (size.getWidth() - 14);   // click area for show LFO parameters arrow
       event_is_drag = false;
       if (listener)
          listener->valueChanged(this);
