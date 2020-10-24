@@ -89,15 +89,28 @@ bool exists(const path& p)
 
 std::uintmax_t file_size(const path& p)
 {
-   auto errnum{ENOTSUP};
+   std::error_code ec;
+   const auto result = file_size(p, ec);
+   if (!ec)
+      return result;
+   throw filesystem_error{std::string{"could not get size of file \""} + p.native() + '\"', ec};
+}
+
+std::uintmax_t file_size(const path& p, std::error_code& ec) noexcept
+{
    struct stat statbuf;
    if (::stat(p.c_str(), &statbuf))
-      errnum = errno;
+      ec.assign(errno, std::system_category());
    else if (S_ISREG(statbuf.st_mode))
+   {
+      ec.clear();
       return std::uintmax_t(statbuf.st_size);
+   }
    else if (S_ISDIR(statbuf.st_mode))
-      errnum = EISDIR;
-   throw filesystem_error{errnum, std::string{"could not get size of file \""} + p.native() + '\"'};
+      ec.assign(EISDIR, std::generic_category());
+   else
+      ec.assign(ENOTSUP, std::generic_category());
+   return std::uintmax_t(-1);
 }
 
 bool is_directory(const path& p)

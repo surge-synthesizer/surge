@@ -29,18 +29,14 @@ struct slice
    const path::value_type* const p;
    const path::string_type::size_type len;
 
-   bool empty() const noexcept { return !p || !*p; }
+   bool empty() const noexcept { return !len; }
 
-   path::string_type as_string() const
+   path as_path() const
    {
-      if (!p)
-         return path::string_type{};
-      if (!len)
-         return path::string_type{p};
-      return path::string_type{p, len};
+      if (empty())
+         return path{};
+      return path{path::string_type{p, len}};
    }
-
-   path as_path() const { return path{as_string()}; }
 };
 
 const path::value_type* filename_internal(const path& p) noexcept
@@ -62,7 +58,7 @@ slice stem_internal(const path& p) noexcept
          if (*x == '.')
             return slice{filename, path::string_type::size_type(x - filename)};
    }
-   return slice{filename};
+   return slice{filename, path::string_type::size_type(&*pth.end() - filename)};
 }
 
 const path::value_type* extension_internal(const path& p) noexcept
@@ -99,6 +95,29 @@ path& path::operator/=(const path& rhs)
 path& path::remove_filename()
 {
    pth.resize(filename_internal(*this) - pth.c_str());
+   return *this;
+}
+
+path& path::replace_filename(const path& replacement)
+{
+   if (replacement.is_absolute())
+      clear();
+   else
+      remove_filename();
+   pth += replacement.pth;
+   return *this;
+}
+
+path& path::replace_extension(const path& replacement)
+{
+   if (auto* const pext = extension_internal(*this))
+      pth.resize(pext - pth.c_str());
+   if (!replacement.empty())
+   {
+      if (replacement.pth.front() != '.')
+         pth.push_back('.');
+      pth += replacement.pth;
+   }
    return *this;
 }
 

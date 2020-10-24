@@ -41,6 +41,11 @@ public:
    void clear() noexcept { pth.clear(); }
    path& make_preferred() noexcept { return *this; }
    path& remove_filename();
+   path& replace_filename(const path& replacement);
+   path& replace_extension(const path& replacement = path{});
+
+   // concatenation                                                                 [fs.path.concat]
+   path& operator+=(const path& p) { pth += p.pth; return *this; }
 
    // native format observers                                                   [fs.path.native.obs]
    const string_type& native() const noexcept { return pth; }
