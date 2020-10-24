@@ -61,7 +61,6 @@ namespace K35Filter
       k35_hb,    // HPF beta
       k35_k,     // k (m_k_modded)
       k35_alpha, // aka m_alpha
-      k35_isLP   // is lowpass?
    };
 
    enum k35_state {
@@ -88,12 +87,10 @@ namespace K35Filter
       if(is_lowpass) {
          cm->C[k35_lb] = (mk - mk * G) / gp1;
          cm->C[k35_hb] = -1.0 / gp1;
-         cm->C[k35_isLP] = 1.0;
       }
       else {
          cm->C[k35_lb] =  1.0 / gp1;
          cm->C[k35_hb] = -G / gp1;
-         cm->C[k35_isLP] = 0.0;
       }
 
       cm->C[k35_k] = mk;
