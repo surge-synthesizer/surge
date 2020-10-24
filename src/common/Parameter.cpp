@@ -2164,6 +2164,10 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_obxd_4pole:
                      sprintf( txt, "%s", fut_obxd_4p_subtypes[i]);
                      break;
+                  case fut_k35_lp:
+                  case fut_k35_hp:
+                     sprintf( txt, "%s", fut_k35_subtypes[i]);
+                     break;
 #if SURGE_EXTRA_FILTERS
 #endif                     
                   default:
