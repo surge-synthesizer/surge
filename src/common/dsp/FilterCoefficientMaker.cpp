@@ -4,6 +4,7 @@
 
 #include "filters/VintageLadders.h"
 #include "filters/Obxd.h"
+#include "filters/K35.h"
 
 using namespace std;
 
@@ -87,6 +88,12 @@ void FilterCoefficientMaker::MakeCoeffs(
       break;
    case fut_obxd_4pole:
       ObxdFilter::makeCoefficients(this, ObxdFilter::FOUR_POLE, Freq, Reso, SubType, storageI);
+      break;
+   case fut_k35_lp:
+      K35Filter::makeCoefficients(this, Freq, Reso, true, storageI);
+      break;
+   case fut_k35_hp:
+      K35Filter::makeCoefficients(this, Freq, Reso, false, storageI);
       break;
 #if SURGE_EXTRA_FILTERS
 #endif      
