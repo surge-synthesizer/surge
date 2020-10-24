@@ -68,6 +68,16 @@ inline float fasttanh (float x) noexcept
    return numerator / denominator;
 }
 
+// Valid in range (-PI/2, PI/2)
+inline float fasttan(float x) noexcept
+{
+   auto x2 = x * x;
+   auto numerator = x * (-135135 + x2 * (17325 + x2 * (-378 + x2)));
+   auto denominator = -135135 + x2 * (62370 + x2 * (-3150 + 28 * x2));
+   return numerator / denominator;
+}
+
+
 inline __m128 fasttanhSSE( __m128 x )
 {
    static const __m128

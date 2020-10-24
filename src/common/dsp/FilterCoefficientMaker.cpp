@@ -15,8 +15,6 @@ FilterCoefficientMaker::FilterCoefficientMaker()
    Reset();
 }
 
-
-
 void FilterCoefficientMaker::MakeCoeffs(
     float Freq, float Reso, int Type, int SubType, SurgeStorage* storageI)
 {

@@ -19,17 +19,6 @@ static float clampedFrequency( float pitch, SurgeStorage *storage )
    return freq;
 }
 
-// like in FastMath.h this is from
-// https://github.com/juce-framework/JUCE/blob/master/modules/juce_dsp/maths/juce_FastMathApproximations.h
-// but it's kept here because we only need the double version here
-static inline double fastdtan(double x) noexcept
-{
-   auto x2 = x * x;
-   auto numerator = x * (-135135 + x2 * (17325 + x2 * (-378 + x2)));
-   auto denominator = -135135 + x2 * (62370 + x2 * (-3150 + 28 * x2));
-   return numerator / denominator;
-}
-
 #define F(a) _mm_set_ps1( a )         
 #define M(a,b) _mm_mul_ps( a, b )
 #define D(a,b) _mm_div_ps( a, b )
@@ -74,38 +63,49 @@ namespace K35Filter
 
    void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool is_lowpass, float saturation, SurgeStorage *storage )
    {
-      const double wd = clampedFrequency( freq, storage ) * 2.0 * M_PI;
-      const double wa = (2.0 * dsamplerate_os) * fastdtan(wd * dsamplerate_os_inv * 0.5);
-      const double g  = wa * dsamplerate_os_inv * 0.5;
-      const double gp1= (1.0 + g); // g plus 1
-      const double G  = g / gp1;
+      float C[n_cm_coeffs];
 
-      const double k = reso * 2.0;
+      const float wd = clampedFrequency( freq, storage ) * 2.0f * M_PI;
+      const float wa = (2.0f * dsamplerate_os) * Surge::DSP::fasttan(wd * dsamplerate_os_inv * 0.5);
+      const float g  = wa * dsamplerate_os_inv * 0.5f;
+      const float gp1= (1.0f + g); // g plus 1
+      const float G  = g / gp1;
+
+      const float k = reso * 2.0f;
       // clamp to [0.01..1.96]
-      const double mk = (k > 1.96) ? 1.96 : ((k < 0.01) ? 0.01 : k);
+      const float mk = (k > 1.96f) ? 1.96f : ((k < 0.01f) ? 0.01f : k);
 
-      cm->C[k35_G] = G;
+      C[k35_G] = G;
 
       if(is_lowpass) {
-         cm->C[k35_lb] = (mk - mk * G) / gp1;
-         cm->C[k35_hb] = -1.0 / gp1;
+         C[k35_lb] = (mk - mk * G) / gp1;
+         C[k35_hb] = -1.0f / gp1;
       }
       else {
-         cm->C[k35_lb] =  1.0 / gp1;
-         cm->C[k35_hb] = -G / gp1;
+         C[k35_lb] =  1.0f / gp1;
+         C[k35_hb] = -G / gp1;
       }
 
-      cm->C[k35_k] = mk;
+      C[k35_k] = mk;
 
-      cm->C[k35_alpha] = 1.0 / (1.0 - mk * G + mk * G * G);
+      C[k35_alpha] = 1.0f / (1.0f - mk * G + mk * G * G);
 
-      cm->C[k35_saturation] = saturation;
-      cm->C[k35_saturation_blend] = fminf(saturation, 1.0);
-      cm->C[k35_saturation_blend_inv] = 1.0 - cm->C[k35_saturation_blend];
+      C[k35_saturation] = saturation;
+      C[k35_saturation_blend] = fminf(saturation, 1.0f);
+      C[k35_saturation_blend_inv] = 1.0f - C[k35_saturation_blend];
+
+      cm->FromDirect(C);
+   }
+
+#define process_coeffs() \
+   for(int i=0; i < n_cm_coeffs; ++i){ \
+      f->C[i] = A(f->C[i], f->dC[i]); \
    }
 
    __m128 process_lp( QuadFilterUnitState * __restrict f, __m128 input )
    {
+      process_coeffs();
+
       const __m128 y1 = doLpf(f->C[k35_G], input, f->R[k35_lz]);
       // (lpf beta * lpf2 feedback) + (hpf beta * hpf1 feedback)
       const __m128 s35 = A(M(f->C[k35_lb], f->R[k35_2z]), M(f->C[k35_hb], f->R[k35_hz]));
@@ -125,6 +125,8 @@ namespace K35Filter
 
    __m128 process_hp( QuadFilterUnitState * __restrict f, __m128 input )
    {
+      process_coeffs();
+
       const __m128 y1 = doHpf(f->C[k35_G], input, f->R[k35_hz]);
       // (lpf beta * lpf2 feedback) + (hpf beta * hpf1 feedback)
       const __m128 s35 = A(M(f->C[k35_hb], f->R[k35_2z]), M(f->C[k35_lb], f->R[k35_lz]));
