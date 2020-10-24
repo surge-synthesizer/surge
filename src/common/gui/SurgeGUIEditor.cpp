@@ -4558,6 +4558,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
        endis = "Disable MPE";
     addCallbackMenu(mpeSubMenu, endis.c_str(),
                     [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
+    mpeSubMenu->addSeparator();
 
     std::ostringstream oss;
     oss << "Change MPE Pitch Bend Range (Current: " << synth->storage.mpePitchBendRange << " Semitones)";
@@ -4585,6 +4586,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
                             this->synth->storage.mpePitchBendRange = newVal;
                          });
     });
+
+    mpeSubMenu->addEntry(makeSmoothMenu(menuRect, "pitchSmoothingMode",
+                                        (int)ControllerModulationSource::SmoothingMode::DIRECT,
+                                        [this](auto md) { this->resetPitchSmoothing(md); }),
+                         Surge::UI::toOSCaseForMenu("MPE Pitch Bend Smoothing"));
 
     return mpeSubMenu;
 }
@@ -5221,47 +5227,47 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeDataMenu(VSTGUI::CRect& menuRect)
    return dataSubMenu;
 }
 
+// builds a menu for setting controller smoothing, used in ::makeMidiMenu and ::makeMpeMenu
+// key is the key given to getUserDefaultValue,
+// default is a value to default to,
+// setSmooth is a function called to set the smoothing value
+VSTGUI::COptionMenu* SurgeGUIEditor::makeSmoothMenu(
+    VSTGUI::CRect& menuRect,
+    const std::string& key,
+    int defaultValue,
+    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth)
+{
+   COptionMenu* smoothMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                             VSTGUI::COptionMenu::kNoDrawStyle |
+                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), key, defaultValue);
+
+   auto asmt = [this, smoothMenu, smoothing,
+                setSmooth](const char* label, ControllerModulationSource::SmoothingMode md) {
+      auto me = addCallbackMenu(smoothMenu, label, [setSmooth, md]() { setSmooth(md); });
+      me->setChecked(smoothing == md);
+   };
+   asmt("Legacy", ControllerModulationSource::SmoothingMode::LEGACY);
+   asmt("Slow Exponential", ControllerModulationSource::SmoothingMode::SLOW_EXP);
+   asmt("Fast Exponential", ControllerModulationSource::SmoothingMode::FAST_EXP);
+   asmt("Fast Linear", ControllerModulationSource::SmoothingMode::FAST_LINE);
+   asmt("No Smoothing", ControllerModulationSource::SmoothingMode::DIRECT);
+   return smoothMenu;
+};
+
 VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
 {
    COptionMenu* midiSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                               VSTGUI::COptionMenu::kNoDrawStyle |
                                               VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-
-   int did = 0;
-   auto addSmoothMenu =
-       [&](const std::string& key, const std::string& menuName, int defaultValue,
-           std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth) {
-          COptionMenu* smoothMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                    VSTGUI::COptionMenu::kNoDrawStyle |
-                                                        VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-          int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), key, defaultValue);
-
-          auto asmt = [this, smoothMenu, smoothing,
-                       setSmooth](const char* label, ControllerModulationSource::SmoothingMode md) {
-             auto me = addCallbackMenu(smoothMenu, label, [setSmooth, md]() { setSmooth(md); });
-             me->setChecked(smoothing == md);
-          };
-          asmt("Legacy", ControllerModulationSource::SmoothingMode::LEGACY);
-          asmt("Slow Exponential", ControllerModulationSource::SmoothingMode::SLOW_EXP);
-          asmt("Fast Exponential", ControllerModulationSource::SmoothingMode::FAST_EXP);
-          asmt("Fast Linear", ControllerModulationSource::SmoothingMode::FAST_LINE);
-          asmt("No Smoothing", ControllerModulationSource::SmoothingMode::DIRECT);
-          midiSubMenu->addEntry(smoothMenu, Surge::UI::toOSCaseForMenu(menuName));
-          did++;
-       };
-
-   addSmoothMenu("smoothingMode", "Controller Smoothing",
-                 (int)ControllerModulationSource::SmoothingMode::LEGACY,
-                 [this](auto md) { this->resetSmoothing(md); });
-
-   addSmoothMenu("pitchSmoothingMode", "MPE-mode Pitch Bend Smoothing",
-                 (int)ControllerModulationSource::SmoothingMode::DIRECT,
-                 [this](auto md) { this->resetPitchSmoothing(md); });
+   midiSubMenu->addEntry(makeSmoothMenu(menuRect, "smoothingMode",
+                                        (int)ControllerModulationSource::SmoothingMode::LEGACY,
+                                        [this](auto md) { this->resetSmoothing(md); }),
+                         Surge::UI::toOSCaseForMenu("Controller Smoothing"));
 
    midiSubMenu->addSeparator();
-   did++;
 
    addCallbackMenu(
        midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
@@ -5273,7 +5279,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
               msn, "MIDI Mapping Name", "Save MIDI Mapping", menuRect.getTopLeft(),
               [this](const std::string& s) { this->synth->storage.storeMidiMappingToName(s); });
        });
-   did++;
 
    addCallbackMenu(
       midiSubMenu, Surge::UI::toOSCaseForMenu("Show Current MIDI Mapping..."),
@@ -5281,8 +5286,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
             Surge::UserInteractions::showHTML( this->midiMappingToHtml() );
          }
       );
-
-   did++;
 
    addCallbackMenu(
       midiSubMenu, Surge::UI::toOSCaseForMenu("Clear Current MIDI Mapping"),
@@ -5311,7 +5314,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
       {
          gotOne = true;
          midiSubMenu->addSeparator();
-         did++;
       }
       addCallbackMenu( midiSubMenu, p.first,
                        [this, p] {
