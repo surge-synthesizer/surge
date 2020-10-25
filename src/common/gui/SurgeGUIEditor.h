@@ -156,7 +156,9 @@ public:
    Steinberg::IPlugFrame *getIPlugFrame() { return plugFrame; }
 #endif
    void setDisabledForParameter(Parameter* p, CSurgeSlider* s);
-   
+
+   static bool fromSynthGUITag( SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q );
+
 private:
    void openOrRecreateEditor();
    void setupSaveDialog();
@@ -328,7 +330,9 @@ private:
    
 private:
 #if TARGET_VST3
-   Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c, int ptag, int &eid); // just a noop if you aren't a vst3 of course
+   Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c,
+                                                      const SurgeSynthesizer::ID &,
+                                                      int &eid); // just a noop if you aren't a vst3 of course
 #endif
    
    std::function< void(SurgeGUIEditor *) > zoom_callback;
