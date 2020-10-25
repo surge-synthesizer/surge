@@ -2616,6 +2616,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                         if( synth->fromSynthSideId(p->id, pid ) )
                                         {
                                            synth->setParameter01(pid, !p->val.b, false, false);
+                                           repushAutomationFor(p);
                                            synth->refresh_editor = true;
                                         }
                             }
@@ -2688,6 +2689,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                                      float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
                                                      synth->setParameter01(synth->idForParameter(p), ef, false,
                                                                               false);
+                                                     repushAutomationFor(p);
                                                      synth->refresh_editor = true;
                                                     }
                            );
@@ -2721,6 +2723,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      auto b = addCallbackMenu(contextMenu, displaytxt.c_str(),
                                               [this,ef,p,i]() {
                                                  synth->setParameter01( synth->idForParameter(p), ef, false, false );
+                                                 repushAutomationFor(p);
                                                  synth->refresh_editor=true;
                                               }
                         );
@@ -3657,6 +3660,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          }
          else if( typeinMode == Param && typeinEditTarget && typeinEditTarget->set_value_from_string( t ) )
          {
+            repushAutomationFor(typeinEditTarget);
             isInvalid = false;
             synth->refresh_editor = true;
             typeinDialog->setVisible(false);
@@ -6866,4 +6870,17 @@ void SurgeGUIEditor::showMSEGEditor()
       msegEditSwitch->setValue( 1.0 );
       msegEditSwitch->invalid();
    }
+}
+
+void SurgeGUIEditor::repushAutomationFor(Parameter* p)
+{
+   auto id = synth->idForParameter(p);
+   synth->sendParameterAutomation(id, synth->getParameter01(id));
+
+#if TARGET_AUDIOUNIT
+   synth->getParent()->ParameterBeginEdit( id.getDawSideIndex());
+   synth->getParent()->ParameterUpdate( id.getDawSideIndex());
+   synth->getParent()->ParameterEndEdit(id.getDawSideIndex());
+#endif
+
 }
