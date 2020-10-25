@@ -175,7 +175,7 @@ bool SurgeSynthesizer::fromSynthSideIdWithGuiOffset(int i,
                                                     ID& q)
 {
    bool res = false;
-   if( i >= start_paramtags )
+   if( i >= start_paramtags  && i <= start_paramtags + n_total_params )
       res = fromSynthSideId(i-start_paramtags, q ); // wrong for macros and stuff
    else if( i >= start_metacontrol_tag && i <= start_metacontrol_tag + num_metaparameters )
       res = fromSynthSideId(i-start_metacontrol_tag+metaparam_offset, q );
