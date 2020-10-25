@@ -227,7 +227,8 @@ namespace Colors
       namespace Axis
       {
          const Surge::Skin::Color Line("msegeditor.axis.line", 220, 220, 240),
-                                  Text("msegeditor.axis.text", 255, 255, 255);
+                                  Text("msegeditor.axis.text", 255, 255, 255),
+                                  SecondaryText("msegeditor.axis.text.secondary", 255, 255, 255, 128);
       }
       namespace GradientFill
       {
@@ -237,8 +238,8 @@ namespace Colors
       namespace Grid
       {
          const Surge::Skin::Color Primary("msegeditor.grid.primary", 255, 255, 255, 192),
-                                  SecondaryHorizontal("msegeditor.grid.secondary.horizontal", 255, 255, 255, 48),
-                                  SecondaryVertical("msegeditor.grid.secondary.vertical", 255, 255, 255, 96);
+                                  SecondaryHorizontal("msegeditor.grid.secondary.horizontal", 255, 255, 255, 64),
+                                  SecondaryVertical("msegeditor.grid.secondary.vertical", 255, 255, 255, 128);
       }
       namespace Loop
       {
