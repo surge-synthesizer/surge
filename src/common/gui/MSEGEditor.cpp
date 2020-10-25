@@ -568,6 +568,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    const int gridMaxHSteps = 20, gridMaxVSteps = 10;
 
    inline void drawAxis( CDrawContext *dc ) {
+
+      auto primaryFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
+      auto secondaryFont = new VSTGUI::CFontDesc("Lato", 7);
+
       auto uni = lfodata->unipolar.val.b;
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
@@ -579,25 +583,48 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       skips = std::max( 1, skips );
 
-      dc->setFont( displayFont );
-      dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
       dc->setLineWidth( 1 );
-      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
+
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
       {
          float t = 1.0f * gi / skips;
-         float px = tpx( t );
+         float px = tpx(t);
          float off = haxisArea.getHeight() / 2;
+         int xoff = 0;
+
          if( gi % skips == 0 )
+         {
             off = 0;
-         dc->drawLine( CPoint( px, haxisArea.top ), CPoint( px, haxisArea.bottom - off ) );
+            dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
+         }
+         else
+            dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+
+         dc->drawLine( CPoint( px, haxisArea.top), CPoint( px, haxisArea.bottom - off ) );
+
          char txt[16];
-         snprintf( txt, 16, "%5.2f", t );
-         int xoff =0;
-         if( maxt < 1.1 && t > 0.99 )
-            xoff = -25;
-         dc->drawString( txt, CRect( CPoint( px + 4 + xoff, haxisArea.top + 2), CPoint( 15, 10 )));
+
+         if (floor(t) == t)
+         {
+            dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
+            dc->setFont(primaryFont);
+            snprintf( txt, 16, "%d", (int)t );
+
+            if (gi != 0)
+               xoff = 0;
+
+            if( maxt < 1.1 && t > 0.99 )
+               xoff = -13;
+         }
+         else
+         {
+            dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
+            dc->setFont(secondaryFont);
+            snprintf( txt, 16, "%5.2f", t );
+            xoff = -7;
+         }
+         dc->drawString( txt, CRect( CPoint( px + xoff, haxisArea.top + 5), CPoint( 15, 10 )));
       }
 
       // draw loop markers
@@ -605,20 +632,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       int le = ( ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 );
       float pxs = tpx( ms->segmentStart[ls] );
       float pxe = tpx(ms->segmentEnd[le]);
-      auto r = VSTGUI::CRect( CPoint( pxs-10, haxisArea.top), CPoint( 10, 10 ));
-      dc->setFillColor( kGreenCColor );
+      
+      auto r = VSTGUI::CRect( CPoint( pxs, haxisArea.top + 1), CPoint( 10, 10 ));
+      dc->setFillColor(CColor(0, 255, 0, 128));
       dc->drawRect( r, kDrawFilled );
 
-      r = VSTGUI::CRect( CPoint( pxe, haxisArea.top), CPoint( 10, 10 ));
-      dc->setFillColor( kRedCColor );
+      r = VSTGUI::CRect( CPoint( pxe - 8, haxisArea.top + 1), CPoint( 10, 10 ));
+      dc->setFillColor(CColor(255, 0, 0, 128));
       dc->drawRect( r, kDrawFilled );
 
       // vertical axis
       auto vaxisArea = getVAxisArea();
-      dc->setLineWidth( 1 );
-      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-      dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
+
+      dc->setFont(primaryFont);
+      dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
+      dc->setLineWidth( 1 );
 
       skips = round(1.f / eds->vSnapDefault);
 
@@ -640,6 +669,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          if (i == -1 || fabs(i - 1) < 1e-3 || (fabs(i) < 1e-3 && !uni))
             off = 0;
+
+         if( off == 0 )
+            dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
+         else
+            dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
 
          dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
 
@@ -985,13 +1019,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                 * onMouseMove so if you change shift/ctrl here or what not change it
                 * there too.
                 */
-               bool c = buttons & kShift;
-               bool s = buttons & kControl;
+               bool s = buttons & kShift;
+               bool c = buttons & kControl;
                if( s || c  )
                {
                   snapGuard = std::make_shared<SnapGuard>(eds, this);
-                  if( c ) eds->hSnap = eds->hSnapDefault;
-                  if( s ) eds->vSnap = eds->vSnapDefault;
+                  if( s ) eds->hSnap = eds->hSnapDefault;
+                  if( c ) eds->vSnap = eds->vSnapDefault;
                }
                break;
             }
@@ -1137,16 +1171,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             invalid();
          }
          /*
-          * Activate temporary snap. NOte this is also checked in onMoueDown
+          * Activate temporary snap. Note this is also checked in onMouseDown
           * so if you change shift/ctrl whatever here change it there too
           */
-         bool c = buttons & kShift;
-         bool s = buttons & kControl;
+         bool s = buttons & kShift;
+         bool c = buttons & kControl;
          if( ( s || c ) && ! snapGuard )
          {
             snapGuard = std::make_shared<SnapGuard>(eds, this);
-            if( c ) eds->hSnap = eds->hSnapDefault;
-            if( s ) eds->vSnap = eds->vSnapDefault;
+            if( s ) eds->hSnap = eds->hSnapDefault;
+            if( c ) eds->vSnap = eds->vSnapDefault;
          }
          else if( ! ( s || c ) && snapGuard )
          {
@@ -1412,6 +1446,37 @@ void MSEGControlRegion::rebuild()
    int controlHeight = 12;
    int xpos = 10;
 
+   // movement modes
+   {
+      int segWidth = 110;
+      int marginPos = xpos + margin;
+      int btnWidth = 94;
+      int ypos = 1;
+
+      // label
+      auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(btnWidth, labelHeight)), "Movement Mode");
+      mml->setTransparency(true);
+      mml->setFont(labelFont);
+      mml->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
+      mml->setHoriAlign(kLeftText);
+      addView(mml);
+
+      ypos += margin + labelHeight;
+
+      // button
+      auto btnrect = CRect(CPoint(marginPos, ypos), CPoint(btnWidth, controlHeight));
+      auto mw =
+          new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, controlHeight, 1, 3,
+                        associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT), CPoint(0, 0), true);
+      mw->setSkin(skin, associatedBitmapStore);
+      addView(mw);
+      mw->setValue(canvas->timeEditMode / 2.f);
+
+      // this value centers the loop mode and snap sections against the MSEG editor width
+      // if more controls are to be added to that center section, reduce this value
+      xpos += 225;
+   }
+
    // loop mode
    {
       int segWidth = 110;
@@ -1438,34 +1503,6 @@ void MSEGControlRegion::rebuild()
       xpos += segWidth;
    }
    
-   // movement modes
-   {
-      int segWidth = 110;
-      int marginPos = xpos + margin;
-      int btnWidth = 94;
-      int ypos = 1;
-
-      // label
-      auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(btnWidth, labelHeight)), "Movement Mode");
-      mml->setTransparency(true);
-      mml->setFont(labelFont);
-      mml->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
-      mml->setHoriAlign(kLeftText);
-      addView(mml);
-      
-      ypos += margin + labelHeight;
-
-      // button
-      auto btnrect = CRect(CPoint(marginPos, ypos), CPoint(btnWidth, controlHeight));
-      auto mw = new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, controlHeight, 1, 3,
-                        associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT), CPoint(0, 0), true);
-      mw->setSkin(skin,associatedBitmapStore);
-      addView(mw);
-      mw->setValue(canvas->timeEditMode / 2.f);
-
-      xpos += segWidth;
-   }
-
    // Snap Section
    {
       int btnWidth = 49, editWidth = 32;

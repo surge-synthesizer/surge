@@ -70,6 +70,7 @@
     <color id="msegeditor.panel" value="#2D2D2D"/>
     <color id="msegeditor.panel.text" value="lightgray"/>
     <color id="msegeditor.axis.text" value="lightgray"/>
+    <color id="msegeditor.axis.text.secondary" value="#B4B4B4C0"/>
     <color id="msegeditor.fill.gradient.start" value="#2E86FE80"/>
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
