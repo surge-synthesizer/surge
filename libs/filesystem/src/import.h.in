@@ -31,3 +31,4 @@ inline fs::path string_to_path(T&& path)
 #endif
 }
 
+void string_to_path(fs::path) = delete;

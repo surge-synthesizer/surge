@@ -41,14 +41,16 @@ public:
    void clear() noexcept { pth.clear(); }
    path& make_preferred() noexcept { return *this; }
    path& remove_filename();
+   path& replace_filename(const path& replacement);
+   path& replace_extension(const path& replacement = path{});
+
+   // concatenation                                                                 [fs.path.concat]
+   path& operator+=(const path& p) { pth += p.pth; return *this; }
 
    // native format observers                                                   [fs.path.native.obs]
    const string_type& native() const noexcept { return pth; }
    const value_type* c_str() const noexcept { return pth.c_str(); }
-#if __cplusplus < 201703L
-   // Pre-C++17 fstream compatibility. Otherwise disabled because this is unsafe on Windows.
    operator string_type() const { return pth; }
-#endif
    const std::string& string() const noexcept { return pth; }
    const std::string& u8string() const noexcept { return pth; }
 

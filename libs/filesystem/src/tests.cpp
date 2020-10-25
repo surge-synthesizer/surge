@@ -235,8 +235,15 @@ TEST_CASE("Filesystem", "[filesystem]")
 
       SECTION("file_size")
       {
+         std::error_code ec;
+
          REQUIRE_THROWS_FS_ERROR(fs::file_size(fs::path{"."}), is_a_directory);
+         REQUIRE(fs::file_size(fs::path{"."}, ec) == std::uintmax_t(-1));
+         REQUIRE(ec == std::errc::is_a_directory);
+
          REQUIRE_THROWS_FS_ERROR(fs::file_size(fs::path{"/dev/null"}), not_supported);
+         REQUIRE(fs::file_size(fs::path{"/dev/null"}, ec) == std::uintmax_t(-1));
+         REQUIRE(ec == std::errc::not_supported);
 
          const fs::path p{tmpDir / fs::path{"file"}};
          const char testdata[] = "testdata";
@@ -246,6 +253,8 @@ TEST_CASE("Filesystem", "[filesystem]")
          of << testdata;
          of.close();
          REQUIRE(fs::file_size(p) == sizeof(testdata) - 1);
+         REQUIRE(fs::file_size(p, ec) == sizeof(testdata) - 1);
+         REQUIRE(!ec);
          REQUIRE(fs::remove(p));
          REQUIRE_FALSE(fs::remove(p));
       }
@@ -320,6 +329,14 @@ TEST_CASE("Filesystem", "[filesystem]")
          REQUIRE((fs::path{"foo/"} /= fs::path{"bar"}).native() == "foo/bar");
       }
 
+      SECTION("operator +=")
+      {
+         REQUIRE((fs::path{} += fs::path{}).native() == "");
+         REQUIRE((fs::path{"foo"} += fs::path{"bar"}).native() == "foobar");
+         REQUIRE((fs::path{"foo"} += fs::path{"///bar"}).native() == "foo///bar");
+         REQUIRE((fs::path{"file"} += fs::path{".extension"}).native() == "file.extension");
+      }
+
       SECTION("remove_filename")
       {
          // https://en.cppreference.com/w/cpp/filesystem/path/remove_filename
@@ -328,6 +345,38 @@ TEST_CASE("Filesystem", "[filesystem]")
          REQUIRE(fs::path{"/foo"}.remove_filename().native() == "/");
          REQUIRE(fs::path{"/"}.remove_filename().native() == "/");
          REQUIRE(fs::path{}.remove_filename().native() == "");
+      }
+
+      SECTION("replace_filename")
+      {
+         REQUIRE(fs::path{}.replace_filename(fs::path{}).native() == "");
+         REQUIRE(fs::path{"/"}.replace_filename(fs::path{}).native() == "/");
+         REQUIRE(fs::path{"/"}.replace_filename(fs::path{"file.ext"}).native() == "/file.ext");
+         REQUIRE(fs::path{"file.ext"}.replace_filename(fs::path{"other.file"}).native() == "other.file");
+         REQUIRE(fs::path{"/foo/bar.txt"}.replace_filename(fs::path{"baz.mid"}).native() == "/foo/baz.mid");
+         REQUIRE(fs::path{"/foo/bar.txt"}.replace_filename(fs::path{"baz/qux.mid"}).native() == "/foo/baz/qux.mid");
+         REQUIRE(fs::path{"/foo/bar.txt"}.replace_filename(fs::path{"/baz/qux.mid"}).native() == "/baz/qux.mid");
+         REQUIRE(fs::path{"/foo/bar.txt"}.replace_filename(fs::path{}).native() == "/foo/");
+         REQUIRE(fs::path{"/foo//bar.txt"}.replace_filename(fs::path{}).native() == "/foo//");
+      }
+
+      SECTION("replace_extension")
+      {
+         REQUIRE(fs::path{"file.ext"}.replace_extension().native() == "file");
+         REQUIRE(fs::path{"file.ext"}.replace_extension(fs::path{"newext"}).native() == "file.newext");
+         REQUIRE(fs::path{"file.ext"}.replace_extension(fs::path{".newext"}).native() == "file.newext");
+         REQUIRE(fs::path{"file.ext"}.replace_extension(fs::path{"..newext"}).native() == "file..newext");
+         REQUIRE(fs::path{"file.ext"}.replace_extension(fs::path{"/"}).native() == "file./");
+         REQUIRE(fs::path{"file.ext"}.replace_extension(fs::path{"./"}).native() == "file./");
+         REQUIRE(fs::path{"file"}.replace_extension().native() == "file");
+         REQUIRE(fs::path{".file"}.replace_extension().native() == ".file");
+         REQUIRE(fs::path{".file."}.replace_extension().native() == ".file");
+         REQUIRE(fs::path{".file.ext"}.replace_extension().native() == ".file");
+         REQUIRE(fs::path{".file..ext"}.replace_extension().native() == ".file.");
+         REQUIRE(fs::path{"."}.replace_extension().native() == ".");
+         REQUIRE(fs::path{".."}.replace_extension().native() == "..");
+         REQUIRE(fs::path{"/."}.replace_extension().native() == "/.");
+         REQUIRE(fs::path{"/.."}.replace_extension().native() == "/..");
       }
 
       SECTION("filename, has_filename")

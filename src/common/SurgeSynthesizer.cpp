@@ -115,6 +115,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    SurgePatch& patch = storage.getPatch();
 
    storage.smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue( &storage, "smoothingMode", (int)( ControllerModulationSource::SmoothingMode::LEGACY ));
+   storage.pitchSmoothingMode =
+       (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
+           &storage, "pitchSmoothingMode",
+           (int)(ControllerModulationSource::SmoothingMode::DIRECT));
 
    patch.polylimit.val.i = 16;
    for (int sc = 0; sc < 2; sc++)
@@ -953,25 +957,19 @@ void SurgeSynthesizer::updateDisplay()
 
 void SurgeSynthesizer::sendParameterAutomation(long index, float value)
 {
-   int externalparam = remapInternalToExternalApiId(index);
+   ID eid;
+   if( ! fromSynthSideId(index, eid ) )
+      return;
 
-#if TARGET_VST3 || TARGET_AUDIOUNIT
-   if( index >= metaparam_offset )
-      externalparam = index;
-#endif
-
-   if (externalparam >= 0)
-   {
 #if TARGET_AUDIOUNIT
-      getParent()->ParameterUpdate(externalparam);
+   getParent()->ParameterUpdate(eid.getDawSideIndex());
 #elif TARGET_VST3
-      getParent()->setParameterAutomated(externalparam, value);
+   getParent()->setParameterAutomated(index, value);
 #elif TARGET_HEADLESS || TARGET_APP
-      // NO OP
+   // NO OP
 #else
-      getParent()->setParameterAutomated(externalparam, value);
+   getParent()->setParameterAutomated(eid.getDawSideIndex(), value);
 #endif
-   }
 }
 
 void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int msbValue)
@@ -2210,6 +2208,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
    return true;
 }
 
+#if 0
 int SurgeSynthesizer::remapExternalApiToInternalId(unsigned int x)
 {
    if (x < n_customcontrollers)
@@ -2227,6 +2226,7 @@ int SurgeSynthesizer::remapInternalToExternalApiId(unsigned int x)
       return x + n_total_params;
    return x;
 }
+#endif
 
 float SurgeSynthesizer::getParameter01(long index)
 {
@@ -2913,15 +2913,19 @@ void SurgeSynthesizer::process()
 
    if (play_scene[0])
    {
-      hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-      hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+      if (hardclipEnabled){ 
+         hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+         hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+      }
       halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1]);
    }
 
    if (play_scene[1])
    {
-      hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-      hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+      if (hardclipEnabled){
+         hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+         hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+      }
       halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
    }
 

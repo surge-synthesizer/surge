@@ -312,10 +312,18 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
                 if(!IsInitialized()) return kAudioUnitErr_Uninitialized;
                 AudioUnitParameterValueName *aup = (AudioUnitParameterValueName*)outData;
                 char tmptxt[64];
-                float f;
+                float f = 0;
                 if(aup->inValue) f = *(aup->inValue);
-                else f = plugin_instance->getParameter01(plugin_instance->remapExternalApiToInternalId(aup->inParamID));
-                plugin_instance->getParameterDisplay(plugin_instance->remapExternalApiToInternalId(aup->inParamID),tmptxt,f);
+                else {
+                   SurgeSynthesizer::ID iid;
+                   if( plugin_instance->fromDAWSideIndex(aup->inParamID, iid))
+                     f = plugin_instance->getParameter01(iid);
+                }
+               SurgeSynthesizer::ID iid;
+               if( plugin_instance->fromDAWSideIndex(aup->inParamID, iid))
+               {
+                  plugin_instance->getParameterDisplay(iid, tmptxt, f);
+               }
                 aup->outName = CFStringCreateWithCString(NULL,tmptxt,kCFStringEncodingUTF8);
                 return noErr;
             }

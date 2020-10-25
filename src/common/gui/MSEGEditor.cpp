@@ -82,8 +82,9 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
 
 
 
-struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
-   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CControl( size ) {
+struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, public Surge::UI::CursorControlAdapter<MSEGCanvas> {
+   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ):
+         CControl( size ), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr) {
       setSkin( skin, b );
       this->ms = ms;
       this->eds = eds;
@@ -92,8 +93,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
    };
-
-   std::shared_ptr<Surge::UI::CursorControlGuard> cchg;
 
    /*
    ** We make a list of hotzones when we draw so we don't have to recalculate the 
@@ -360,11 +359,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             }
          };
 
+         auto unipolarFactor = 1 + lfodata->unipolar.val.b;
+
          // We get a mousable point at the start of the line
          rectForPoint(
              t0, s.v0, hotzone::SEGMENT_ENDPOINT,
-             [i, this, vscale, tscale, timeConstraint](float dx, float dy, const CPoint& where) {
-                adjustValue(i, false, -2 * dy / vscale, eds->vSnap);
+             [i, this, vscale, tscale, timeConstraint, unipolarFactor](float dx, float dy, const CPoint& where) {
+                adjustValue(i, false, -2 * dy / vscale, eds->vSnap * unipolarFactor);
 
                 if (i != 0)
                 {
@@ -373,9 +374,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
              });
 
          // Control point editor
-         if (ms->segments[i].duration > 0.01 &&
-             fabs(ms->segments[i].nv1 - ms->segments[i].v0) > 0.01 &&
-             ms->segments[i].type != MSEGStorage::segment::HOLD )
+         if (ms->segments[i].duration > 0.01 && ms->segments[i].type != MSEGStorage::segment::HOLD )
          {
             /*
              * Drop in a control point. But where and moving how?
@@ -390,8 +389,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             {
             // Ones where we scan the entire square
             case MSEGStorage::segment::QUAD_BEZIER:
-               horizontalMotion = true;
-               break;
             case MSEGStorage::segment::BROWNIAN:
                horizontalMotion = true;
                break;
@@ -409,7 +406,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             if( verticalScaleByValues )
                vLocation = 0.5 * (vLocation + 1) * ( ms->segments[i].nv1 - ms->segments[i].v0 ) + ms->segments[i].v0;
 
-            float tLocation = 0.5 * ms->segments[i].duration + ms->segmentStart[i];
+
+            // we want to have the control point for Spike where the spike is
+            // but make a switch in case some other curves need the fixed control point in other places horizontally
+            float fixtLocation;
+            switch (ms->segments[i].type)
+            {
+            case MSEGStorage::segment::SPIKE:
+               fixtLocation = 0.f;
+               break;
+            default:
+               fixtLocation = 0.5;
+               break;
+            }
+
+            float tLocation = fixtLocation * ms->segments[i].duration + ms->segmentStart[i];
+
             if( horizontalMotion )
                tLocation = ms->segments[i].cpduration * ms->segments[i].duration + ms->segmentStart[i];
 
@@ -424,8 +436,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             if (h.rect.pointInside(where))
                h.active = true;
 
+
             h.useDrawRect = false;
-            if( ( verticalMotion && ! horizontalMotion && ms->segments[i].type != MSEGStorage::segment::LINEAR ) ||
+            if( ( verticalMotion && ! horizontalMotion &&
+                (ms->segments[i].type != MSEGStorage::segment::LINEAR &&
+                 ms->segments[i].type != MSEGStorage::segment::BUMP &&
+                 ms->segments[i].type != MSEGStorage::segment::SPIKE )) ||
                 ms->segments[i].type == MSEGStorage::segment::BROWNIAN )
             {
                float t = tpx( 0.5 * ms->segments[i].duration + ms->segmentStart[i] );
@@ -442,7 +458,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             h.onDrag = [this, i, tscale, vscale, verticalMotion, horizontalMotion, verticalScaleByValues, segdt , segdx](float dx, float dy, const CPoint &where) {
                if( verticalMotion )
                {
-                  printf("%.4f\n", ms->segments[i].cpv);
                   float dv = 0;
                   if( verticalScaleByValues)
                      dv = -2 * dy / vscale / (0.5 * segdx );
@@ -510,11 +525,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          {
             rectForPoint( tpx(ms->totalDuration), ms->segments[ms->n_activeSegments-1].nv1, /* which is [0].v0 in lock mode only */
                          hotzone::SEGMENT_ENDPOINT,
-                          [this,vscale,tscale](float dx, float dy, const CPoint &where) {
+                          [this, vscale, tscale, unipolarFactor](float dx, float dy, const CPoint &where) {
                              if( ms->endpointMode == MSEGStorage::EndpointMode::FREE )
                              {
                                 float d = -2 * dy / vscale;
-                                float snapResolution = eds->vSnap;
+                                float snapResolution = eds->vSnap * unipolarFactor;
                                 int idx = ms->n_activeSegments - 1;
                                 offsetValue( ms->segments[idx].dragv1, d );
                                 if( snapResolution <= 0 )
@@ -553,15 +568,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
    const int gridMaxHSteps = 20, gridMaxVSteps = 10;
 
    inline void drawAxis( CDrawContext *dc ) {
+      auto uni = lfodata->unipolar.val.b;
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
       int skips = round( 1.f / eds->hSnapDefault );
       auto tpx = timeToPx();
 
       while( maxt * skips > gridMaxHSteps )
-      {
          skips = skips >> 1;
-      }
+
       skips = std::max( 1, skips );
 
       dc->setFont( displayFont );
@@ -598,32 +613,52 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->setFillColor( kRedCColor );
       dc->drawRect( r, kDrawFilled );
 
+      // vertical axis
       auto vaxisArea = getVAxisArea();
       dc->setLineWidth( 1 );
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
       auto valpx = valToPx();
-      skips = round( 1.f/eds->vSnapDefault);
-      while( skips > gridMaxVSteps )
+
+      skips = round(1.f / eds->vSnapDefault);
+
+      while (skips > (gridMaxVSteps * (1 + uni)))
          skips = skips >> 1;
+
       skips = std::max( 1, skips );
 
-      float step = 1.f / skips;
+      float step = (1.f / skips);
+
+      if (uni)
+         step *= 2;
+
       for( float i=-1; i<=1.001 /* for things like "3" rounding*/; i += step )
       {
-         float p = valpx( i );
+         float p = valpx(i);
+
          float off = vaxisArea.getWidth() / 2;
-         if( i == -1 || fabs( i ) < 1e-3 || fabs(i-1) < 1e-3 )
+
+         if (i == -1 || fabs(i - 1) < 1e-3 || (fabs(i) < 1e-3 && !uni))
             off = 0;
+
          dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
-         char txt[16];
-         snprintf( txt, 16, "%4.2f", i );
+
          if( off == 0 )
+         {
+            char txt[16];
+            auto value = uni ? (i + 1.f) * 0.5 : round(i);
+
+            if (value == 0.f && std::signbit(value))
+                value = -value;
+
+            snprintf(txt, 16, "%5.1f", value);
             dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
+         }
       }
    }
    
    virtual void draw( CDrawContext *dc) override {
+      auto uni = lfodata->unipolar.val.b;
       auto vs = getViewSize();
 
       if (hotzones.empty())
@@ -644,6 +679,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       float maxt = drawDuration();
 
       Surge::MSEG::EvaluatorState es, esdf;
+      es.seed( 8675309 ); // This is different from the number in LFOMS::assign in draw mode on purpose
+      esdf.seed( 8675309 );
 
       CGraphicsPath *path = dc->createGraphicsPath();
       CGraphicsPath *highlightPath = dc->createGraphicsPath();
@@ -701,18 +738,27 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          drawnLast = up > ms->totalDuration;
       }
 
+      int uniLimit = 0;
       auto tfpath = CGraphicsTransform().translate(drawArea.left, 0);
 
       VSTGUI::CGradient::ColorStopMap csm;
       VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
+      
       cg->addColorStop(0, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
-      cg->addColorStop(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
-      cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
+      if (uni)
+      {
+         uniLimit = -1;
+         cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+      }
+      else
+      {
+         cg->addColorStop(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+         cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
+      }
 
-
-      fillpath->addLine(pathLastX, valpx(0));
-      fillpath->addLine(0, valpx(0));
-      fillpath->addLine(0, pathFirstY);
+      fillpath->addLine(pathLastX, valpx(uniLimit));
+      fillpath->addLine(uniLimit, valpx(uniLimit));
+      fillpath->addLine(uniLimit, pathFirstY);
       dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
       fillpath->forget();
       cg->forget();
@@ -725,10 +771,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
       int skips = round( 1.f / eds->hSnapDefault );
+
       while( maxt * skips > gridMaxHSteps )
-      {
          skips = skips >> 1;
-      }
+
       skips = std::max( skips, 1 );
 
       for( int gi = 0; gi < maxt * skips + 1; ++gi )
@@ -743,16 +789,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       }
 
       skips = round( 1.f / eds->vSnapDefault );
-      while( skips > gridMaxVSteps )
-      {
+
+      while( skips > (gridMaxVSteps * (1 + uni)) )
          skips = skips >> 1;
-      }
+
       skips = std::max( skips, 1 );
 
-      for( int vi = 0; vi < 2 * skips + 1; vi ++ )
+      auto uniskips = skips / (1.f + uni);
+
+      for (int vi = 0; vi < 2 * skips + 1; vi++)
       {
-         float v = valpx( 1.f * vi / skips - 1 );
-         if( vi % skips == 0 )
+         float v = valpx(1.f * vi / uniskips - 1.f);
+
+         if (vi % skips == 0)
          {
             dc->setFrameColor( primaryGridColor );
             dc->setLineStyle(kLineSolid);
@@ -763,6 +812,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
             CCoord dashes[] = {2, 5};
             dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
          }
+
          dc->drawLine( CPoint( drawArea.left, v ), CPoint( drawArea.right, v ) );
       }
 
@@ -779,11 +829,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
       //dc->setLineWidth(3.0);
-      dc->setFrameColor(skin->getColor( Colors::MSEGEditor::CurveHighlight) );
-      dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
+      if( hlpathUsed )
+      {
+         dc->setFrameColor(skin->getColor(Colors::MSEGEditor::CurveHighlight));
+         dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
+                              &tfpath);
+      }
 
       path->forget();
       defpath->forget();
+      highlightPath->forget();
 
       if( ! inDrag )
          getFrame()->setCursor(kCursorDefault);
@@ -920,10 +975,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          {
             if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
             {
-               auto wf = where;
-               wf = localToFrame(wf);
-               cchg = std::make_shared<Surge::UI::CursorControlGuard>(getFrame(), wf);
-
+               startCursorHide(where);
                h.active = true;
                h.dragging = true;
                invalid();
@@ -953,23 +1005,20 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
       getFrame()->setCursor( kCursorDefault );
       inDrag = false;
       inDrawDrag = false;
+
       for( auto &h : hotzones )
       {
          if( h.dragging )
          {
             if( h.type == hotzone::MOUSABLE_NODE )
             {
-               if( h.mousableNodeType == hotzone::SEGMENT_ENDPOINT && cchg )
+               if( h.mousableNodeType == hotzone::SEGMENT_ENDPOINT )
                {
-                  auto w = h.rect.getCenter();
-                  w = localToFrame(w);
-                  cchg->setShowLocationFromFrameLocation(getFrame(), w);
+                  setCursorLocation(h.rect.getCenter());
                }
-               if( h.mousableNodeType == hotzone::SEGMENT_CONTROL && !h.useDrawRect && cchg )
+               if( h.mousableNodeType == hotzone::SEGMENT_CONTROL && !h.useDrawRect )
                {
-                  auto w = h.rect.getCenter();
-                  w = localToFrame( w );
-                  cchg->setShowLocationFromFrameLocation(getFrame(), w );
+                  setCursorLocation(h.rect.getCenter());
                }
             }
 
@@ -977,7 +1026,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
          h.dragging = false;
       }
       snapGuard = nullptr;
-      cchg = nullptr;
+      endCursorHide();
+
       return kMouseEventHandled;
    }
 
@@ -1258,15 +1308,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent {
                           if( tts >= 0 )
                              m->setChecked( this->ms->segments[tts].type == type );
                        };
-         typeTo( "Hold", MSEGStorage::segment::Type::HOLD );
-         typeTo( "Linear", MSEGStorage::segment::Type::LINEAR );
-         typeTo( "Bezier", MSEGStorage::segment::Type::QUAD_BEZIER );
+         typeTo("Hold", MSEGStorage::segment::Type::HOLD);
+         typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
+         typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
          typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
-         typeTo( "Sine", MSEGStorage::segment::Type::SINE );
-         typeTo( "Sawtooth", MSEGStorage::segment::Type::SAWTOOTH );
-         typeTo( "Triangle", MSEGStorage::segment::Type::TRIANGLE );
-         typeTo( "Square", MSEGStorage::segment::Type::SQUARE );
-         typeTo( "Stairs", MSEGStorage::segment::Type::STEPS );
+         typeTo("Spike", MSEGStorage::segment::Type::SPIKE);
+         typeTo("Bump", MSEGStorage::segment::Type::BUMP);
+         typeTo("Sine", MSEGStorage::segment::Type::SINE);
+         typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);
+         typeTo("Triangle", MSEGStorage::segment::Type::TRIANGLE);
+         typeTo("Square", MSEGStorage::segment::Type::SQUARE);
+         typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
+         typeTo(Surge::UI::toOSCaseForMenu("Smooth Stairs"), MSEGStorage::segment::Type::SMOOTH_STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
         
          getFrame()->addView( contextMenu );

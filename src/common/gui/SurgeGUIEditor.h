@@ -156,12 +156,15 @@ public:
    Steinberg::IPlugFrame *getIPlugFrame() { return plugFrame; }
 #endif
    void setDisabledForParameter(Parameter* p, CSurgeSlider* s);
-   
+
+   static bool fromSynthGUITag( SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q );
+
 private:
    void openOrRecreateEditor();
    void setupSaveDialog();
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
+   void repushAutomationFor( Parameter *p );
    SurgeSynthesizer* synth = nullptr;
    int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
    bool editor_open = false;
@@ -328,7 +331,9 @@ private:
    
 private:
 #if TARGET_VST3
-   Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c, int ptag, int &eid); // just a noop if you aren't a vst3 of course
+   Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c,
+                                                      const SurgeSynthesizer::ID &,
+                                                      int &eid); // just a noop if you aren't a vst3 of course
 #endif
    
    std::function< void(SurgeGUIEditor *) > zoom_callback;
@@ -424,6 +429,13 @@ private:
    */
    VSTGUI::CCommandMenuItem*
    addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
+
+   VSTGUI::COptionMenu*
+   makeSmoothMenu(VSTGUI::CRect& menuRect,
+                  const std::string& key,
+                  int defaultValue,
+                  std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
+
    VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);
    VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect& rect, bool showhelp);
    VSTGUI::COptionMenu* makeZoomMenu(VSTGUI::CRect& rect, bool showhelp);
@@ -436,6 +448,7 @@ private:
    bool scannedForMidiPresets = false;
 
    void resetSmoothing( ControllerModulationSource::SmoothingMode t );
+   void resetPitchSmoothing(ControllerModulationSource::SmoothingMode t);
 
 public:
    std::string helpURLFor( Parameter *p );

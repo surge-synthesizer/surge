@@ -24,10 +24,7 @@
 #include <atomic>
 #include <stdint.h>
 
-#ifndef TIXML_USE_STL
-#define TIXML_USE_STL
-#endif
-#include <tinyxml.h>
+#include "tinyxml/tinyxml.h"
 
 #include "filesystem/import.h"
 
@@ -375,6 +372,8 @@ enum fu_type
    fut_vintageladder,
    fut_obxd_2pole,
    fut_obxd_4pole,
+   fut_k35_lp,
+   fut_k35_hp,
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] =
@@ -392,6 +391,8 @@ const char fut_names[n_fu_type][32] =
    "Vintage Ladder",
    "OB-Xd 12 dB/oct",
    "OB-Xd 24 dB/oct",
+   "Sallen-Key Lowpass",
+   "Sallen-Key Highpass",
 };
 
 const char fut_bp_subtypes[6][32] =
@@ -445,7 +446,23 @@ const char fut_vintageladder_subtypes[6][32] =
 const char fut_obxd_2p_subtypes[1][32] = {"12 dB/oct"};
 const char fut_obxd_4p_subtypes[1][32] = {"24 dB/oct"};
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0 };
+const char fut_k35_subtypes[5][32] = {
+   "No Saturation",
+   "Mild Saturation",
+   "Moderate Saturation",
+   "Heavy Saturation",
+   "Extreme Saturation"
+};
+
+const float fut_k35_saturations[5] = {
+   0.0f,
+   1.0f,
+   2.0f,
+   3.0f,
+   4.0f
+};
+
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 5, 5 };
 
 enum fu_subtype
 {
@@ -632,12 +649,15 @@ struct MSEGStorage {
          QUAD_BEZIER,
          SCURVE,
          SINE,
-         STEPS,
+         STAIRS,
          BROWNIAN,
          SQUARE,
          TRIANGLE,
          HOLD,
          SAWTOOTH,
+         SPIKE,
+         BUMP,
+         SMOOTH_STAIRS,
       } type;
    };
 
@@ -924,6 +944,8 @@ public:
    float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
 
    ControllerModulationSource::SmoothingMode smoothingMode = ControllerModulationSource::SmoothingMode::LEGACY;
+   ControllerModulationSource::SmoothingMode pitchSmoothingMode =
+       ControllerModulationSource::SmoothingMode::LEGACY;
    float mpePitchBendRange = -1.0f;
 
    std::atomic<int> otherscene_clients;

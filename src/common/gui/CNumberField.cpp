@@ -78,7 +78,8 @@ CNumberField::CNumberField(const CRect& size,
                            long tag,
                            CBitmap* pBackground,
                            SurgeStorage* storage)
-    : CControl(size, listener, tag, pBackground)
+    : CControl(size, listener, tag, pBackground),
+      Surge::UI::CursorControlAdapter<CNumberField>( storage )
 {
    i_value = 60;
    controlmode = cm_integer;
@@ -584,8 +585,10 @@ CMouseEventResult CNumberField::onMouseDown(CPoint& where, const CButtonState& b
 
    if ((buttons & kLButton) && (drawsize.pointInside(where)))
    {
+      startCursorHide(where);
       controlstate = cs_drag;
       lastmousepos = where;
+      startmousepos = where;
       f_min = 0.f;
       f_max = 1.f;
       value = ((float)(i_value - i_min)) / ((float)(i_max - i_min));
@@ -600,6 +603,7 @@ CMouseEventResult CNumberField::onMouseUp(CPoint& where, const CButtonState& but
    if (controlstate)
    {
       endEdit();
+      endCursorHide();
       controlstate = cs_null;
    }
    return kMouseEventHandled;
@@ -612,8 +616,22 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
       float dy = where.y - lastmousepos.y;
       
       float delta = dx - dy; // for now lets try this. Remenber y 'up' in logical space is 'down' in pixel space
-      
-      lastmousepos = where;
+
+      float odx = where.x - startmousepos.x;
+      float ody = where.y - startmousepos.y;
+      float odelt = sqrt( odx * odx + ody * ody );
+
+      if( odelt > 10 )
+      {
+         if (resetToShowLocation())
+            lastmousepos = startmousepos;
+         else
+            lastmousepos = where;
+      }
+      else
+      {
+         lastmousepos = where;
+      }
 
       if (buttons & kShift)
          delta *= 0.1;

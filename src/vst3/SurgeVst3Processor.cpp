@@ -399,28 +399,19 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
             else
             {
                int id = paramQueue->getParameterId();
-               if ( id < getParameterCountWithoutMappings() )
+               // In theory the return false should be all we need here
+               SurgeSynthesizer::ID did;
+               if( surgeInstance->fromDAWSideId( id, did ) )
                {
-                  // Make a choice to use the latest point not the earliest. I think that's right. (I actually
-                  // don't think it matters all that much but hey...)
                   paramQueue->getPoint(numPoints - 1, offsetSamples, value);
 
                   // VST3 wants to send me these events a LOT
-                  if( surgeInstance->getParameter01(id) != value )
-                     surgeInstance->setParameter01(id, value, true);
+                  if( surgeInstance->getParameter01(did) != value )
+                     surgeInstance->setParameter01(did, value, true);
                }
                else
                {
-                  if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
-                  {
-                     paramQueue->getPoint(numPoints - 1, offsetSamples, value);
-                     
-                     // VST3 wants to send me these events a LOT
-                     if( surgeInstance->getParameter01(id) != value )
-                        surgeInstance->setParameter01(id, value, true);
-                  }
-
-                  // std::cerr << "Unable to handle parameter " << id << " with npoints " << numPoints << std::endl;
+                  // std::cout << "SKIPPING SETPARM on " << id << " - probably a midi cc" << std::endl;
                }
             }
          }
@@ -623,35 +614,27 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
    return nullptr;
 }
 
-tresult SurgeVst3Processor::beginEdit(ParamID id)
+// This is now called with the dawID
+tresult SurgeVst3Processor::beginEdit(ParamID synid)
 {
+   SurgeSynthesizer::ID did;
+
+   if( !SurgeGUIEditor::fromSynthGUITag(surgeInstance.get(), synid, did ))
+      return kResultFalse;
+   char txt[256];
+   surgeInstance->getParameterName(did, txt);
+
+   int id = did.getDawSideId();
+
    if( beginEditGuard.find(id) == beginEditGuard.end() )
    {
        beginEditGuard[id] = 0;
    }
    beginEditGuard[id] ++;
 
-   int mappedId =
-       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
-
-   if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
-   {
-      mappedId = id;
-   }
-   else if (id >= getParameterCount() || mappedId < 0 )
-   {
-      return kInvalidArgument;
-   }
-   else if( id >= getParameterCountWithoutMappings() )
-   {
-      return kResultOk;
-   }
-
-   
    if( beginEditGuard[id] == 1 )
    {
-      // std::cout << "BeginEdit " << mappedId << std::endl;
-       return Steinberg::Vst::SingleComponentEffect::beginEdit(mappedId);
+       return Steinberg::Vst::SingleComponentEffect::beginEdit(id);
    }
    else
    {
@@ -659,46 +642,29 @@ tresult SurgeVst3Processor::beginEdit(ParamID id)
    }
 }
 
-tresult SurgeVst3Processor::performEdit(ParamID id, Steinberg::Vst::ParamValue valueNormalized)
+tresult SurgeVst3Processor::performEdit(ParamID synid, Steinberg::Vst::ParamValue valueNormalized)
 {
-   int mappedId =
-       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+   SurgeSynthesizer::ID did;
 
-   if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
-   {
-      mappedId = id;
-   }
-   else if (id >= getParameterCount() || mappedId < 0 )
-   {
-      return kInvalidArgument;
-   }
-   else if( id >= getParameterCountWithoutMappings() )
-   {
-      return kResultOk;
-   }
+   if( !SurgeGUIEditor::fromSynthGUITag(surgeInstance.get(), synid, did ))
+      return kResultFalse;
 
-   // std::cout << "PerformEdit " << mappedId << std::endl;
-         
-   return Steinberg::Vst::SingleComponentEffect::performEdit(mappedId, valueNormalized);
+   int id = did.getDawSideId();
+
+   char txt[256];
+   surgeInstance->getParameterName(did, txt);
+
+   return Steinberg::Vst::SingleComponentEffect::performEdit(id, valueNormalized);
 }
 
-tresult SurgeVst3Processor::endEdit(ParamID id)
+tresult SurgeVst3Processor::endEdit(ParamID synid)
 {
-   int mappedId =
-       SurgeGUIEditor::applyParameterOffset(surgeInstance->remapExternalApiToInternalId(id));
+   SurgeSynthesizer::ID did;
 
-   if( id >= metaparam_offset && id <= metaparam_offset + n_midi_controller_params )
-   {
-      mappedId = id;
-   }
-   else if (id >= getParameterCount() && mappedId < 0 )
-   {
-      return kInvalidArgument;
-   }
-   else if( id >= getParameterCountWithoutMappings() )
-   {
-      return kResultOk;
-   }
+   if( !SurgeGUIEditor::fromSynthGUITag(surgeInstance.get(), synid, did ))
+      return kResultFalse;
+
+   int id = did.getDawSideId();
 
    auto endcount = -1;
    if( beginEditGuard.find(id) == beginEditGuard.end() )
@@ -716,7 +682,7 @@ tresult SurgeVst3Processor::endEdit(ParamID id)
    if( endcount == 0 )
    {
       // std::cout << "EndEdit " << mappedId << std::endl;
-      return Steinberg::Vst::SingleComponentEffect::endEdit(mappedId);
+      return Steinberg::Vst::SingleComponentEffect::endEdit(id);
    }
    else
    {
@@ -800,12 +766,17 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
    }
    else
    {
-      int id = surgeInstance->remapExternalApiToInternalId(paramIndex);
-      
+      SurgeSynthesizer::ID did;
+      if( ! surgeInstance->fromDAWSideIndex(paramIndex, did ) )
+      {
+         // std::cout << "UNABLE TO GET by Index" << std::endl;
+         return kInvalidArgument;
+      }
+
       parametermeta meta;
-      surgeInstance->getParameterMeta(id, meta);
+      surgeInstance->getParameterMeta(did, meta);
       
-      info.id = id;
+      info.id = did.getDawSideId();
       
       /*
       ** String128 is a TChar[128] is a char16[128]. On mac, wchar is a char32 so
@@ -815,21 +786,21 @@ tresult PLUGIN_API SurgeVst3Processor::getParameterInfo(int32 paramIndex, Parame
       ** but in the end decided to just copy the bytes
       */
       wchar_t tmpwchar[512];
-      surgeInstance->getParameterNameW(id, tmpwchar);
+      surgeInstance->getParameterNameW(did, tmpwchar);
 #if MAC || LINUX
       std::copy(tmpwchar, tmpwchar + 128, info.title);
 #else
       swprintf(reinterpret_cast<wchar_t *>(info.title), 128, L"%S", tmpwchar);
 #endif   
       
-      surgeInstance->getParameterShortNameW(id, tmpwchar);
+      surgeInstance->getParameterShortNameW(did, tmpwchar);
 #if MAC || LINUX
       std::copy(tmpwchar, tmpwchar + 128, info.shortTitle);
 #else
       swprintf(reinterpret_cast<wchar_t *>(info.shortTitle), 128, L"%S", tmpwchar);
 #endif   
       
-      surgeInstance->getParameterUnitW(id, tmpwchar);
+      surgeInstance->getParameterUnitW(did, tmpwchar);
 #if MAC || LINUX
       std::copy(tmpwchar, tmpwchar + 128, info.units);
 #else
@@ -870,13 +841,16 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
    }
    
    wchar_t tmpwchar[ 512 ];
-   surgeInstance->getParameterStringW(tag, valueNormalized, tmpwchar);
+   SurgeSynthesizer::ID did;
+   if( surgeInstance->fromDAWSideId(tag, did ))
+   {
+      surgeInstance->getParameterStringW(did, valueNormalized, tmpwchar);
 #if MAC || LINUX
-   std::copy(tmpwchar, tmpwchar+128, ontostring );
+      std::copy(tmpwchar, tmpwchar + 128, ontostring);
 #else
-   swprintf(reinterpret_cast<wchar_t *>(ontostring), 128, L"%S", tmpwchar);
-#endif   
-
+      swprintf(reinterpret_cast<wchar_t*>(ontostring), 128, L"%S", tmpwchar);
+#endif
+   }
    return kResultOk;
 }
 
@@ -901,19 +875,11 @@ ParamValue PLUGIN_API SurgeVst3Processor::normalizedParamToPlain(ParamID tag,
    // std::cout << __LINE__ << " " << __func__ << " " << tag << std::endl;
    ABORT_IF_NOT_INITIALIZED;
 
-   if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
-   {
-   }
-   else if (tag >= getParameterCount())
-   {
-      return kInvalidArgument;
-   }
-   else if( tag >= getParameterCountWithoutMappings())
-   {
-      return 0;
-   }
-
-   return surgeInstance->normalizedToValue(tag, valueNormalized);
+   ParamValue v = 0;
+   SurgeSynthesizer::ID did;
+   if( surgeInstance->fromDAWSideId(tag, did ))
+      v = surgeInstance->normalizedToValue(did, valueNormalized);
+   return v;
 }
 
 ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, ParamValue plainValue)
@@ -921,19 +887,12 @@ ParamValue PLUGIN_API SurgeVst3Processor::plainParamToNormalized(ParamID tag, Pa
    // std::cout << __LINE__ << " " << __func__ << " " << tag << " " << plainValue << std::endl;
    ABORT_IF_NOT_INITIALIZED
 
-   if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
-   {
-   }
-   else if (tag >= getParameterCountWithoutMappings())
-   {
-       // return kInvalidArgument;
-       // kInvalidArgument is not a ParamValue. In this case just
-       return 0;
-   }
-
-   auto res = surgeInstance->valueToNormalized(tag, plainValue);
+   ParamValue v = 0;
+   SurgeSynthesizer::ID did;
+   if( surgeInstance->fromDAWSideId(tag, did ))
+      v = surgeInstance->valueToNormalized(did, plainValue);
    // std::cout << __LINE__ << " " << __func__ << " " << tag << " " << plainValue << " = " << res << std::endl;
-   return res;
+   return v;
 }
 
 ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
@@ -941,16 +900,10 @@ ParamValue PLUGIN_API SurgeVst3Processor::getParamNormalized(ParamID tag)
    // std::cout << __LINE__ << " getParamNormalized " << tag << std::endl;
    ABORT_IF_NOT_INITIALIZED;
 
-   if(tag >= getParameterCountWithoutMappings() &&
-      ! ( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters )
-      )
-   {
-      // return kInvalidArgument;
-      // kInvalidArgument is not a ParamValue. In this case just
-      return 0;
-   }
-
-   auto res = surgeInstance->getParameter01(tag);
+   ParamValue res = 0;
+   SurgeSynthesizer::ID did;
+   if( surgeInstance->fromDAWSideId(tag, did ))
+      res = surgeInstance->getParameter01(did);
    //std::cout << __LINE__ << " getParamNormalized " << tag << " = " << res << " " << floatBytes(res) << std::endl;
    //stackToInfo();
    return res;
@@ -961,34 +914,15 @@ tresult PLUGIN_API SurgeVst3Processor::setParamNormalized(ParamID tag, ParamValu
    // std::cout << __LINE__ << " " << __func__ << " " << tag << " " << value << std::endl;
    CHECK_INITIALIZED;
 
-   if( tag >= metaparam_offset && tag <= metaparam_offset + num_metaparameters ) 
+   ParamValue v = 0;
+   SurgeSynthesizer::ID did;
+   if( surgeInstance->fromDAWSideId(tag, did ))
    {
-   }
-   else if (tag >= getParameterCount())
-   {
-      return kInvalidArgument;
-   }
-   else if( tag >= getParameterCountWithoutMappings() )
-   {
+      surgeInstance->setParameter01(did, value, true);
       return kResultOk;
    }
 
-   /*
-   ** Priod code had this:
-   **
-   ** surgeInstance->setParameter01(surgeInstance->remapExternalApiToInternalId(tag), value);
-   **
-   ** which remaps "control 0" -> 2048. I think that's right for the VST2 but for the VST3 where
-   ** we are specially dealing with midi controls it is the wrong thing to do; it makes the FX
-   ** control and the control 0 the same. So here just pass the tag on directly.
-   */
-   
-   if( value != surgeInstance->getParameter01(tag) )
-   {
-      surgeInstance->setParameter01(tag, value, true);
-   }
-
-   return kResultOk;
+   return kResultFalse;
 }
 
 SurgeSynthesizer* SurgeVst3Processor::getSurge()
@@ -1036,31 +970,27 @@ void SurgeVst3Processor::updateDisplay()
 
 void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
 {
-   // std::cout << "setParameterAutomated " << inputParam << " " << value << std::endl; 
-   int externalparam;
-   if( inputParam >= metaparam_offset && inputParam <= metaparam_offset + n_midi_controller_params )
-   {
-      externalparam = inputParam;
-   }
-   else
-   {
-      if( inputParam >= getParameterCountWithoutMappings() ) return;
-   
-      externalparam = SurgeGUIEditor::unapplyParameterOffset(
-         surgeInstance->remapExternalApiToInternalId(inputParam));
-   }
-
-   
    /*
    ** This particular choice of implementation is why we have nested
    ** begin/end pairs with the guard. We discovered this clsoing in on
    ** 1.6.2 and decided to leave it and add the guard, but a future version
    ** of ourselves should think deeply about how we want to implement this,
    ** since neither AU or VST2 use this approach
+    *
+    * More over with DAW interface, we get called here with a different ID
+    * structure (the dawID in this case) than the raw GUI beginedit so expand
+    * the implementation
    */
-   beginEdit(externalparam);
-   performEdit(externalparam, value);
-   endEdit(externalparam);
+   if( beginEditGuard.find(inputParam) == beginEditGuard.end() )
+   {
+      Steinberg::Vst::SingleComponentEffect::beginEdit(inputParam);
+      Steinberg::Vst::SingleComponentEffect::performEdit(inputParam, value);
+      Steinberg::Vst::SingleComponentEffect::endEdit(inputParam);
+   }
+   else
+   {
+      Steinberg::Vst::SingleComponentEffect::performEdit(inputParam, value);
+   }
 }
 
 void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)

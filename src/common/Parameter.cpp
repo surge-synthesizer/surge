@@ -316,7 +316,7 @@ bool Parameter::has_deformoptions()
       return true;
    else
       return false;
-   
+
 }
 
 void Parameter::set_user_data(ParamUserData* ud)
@@ -716,12 +716,16 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_amplitude:
+<<<<<<< HEAD
    case ct_lfodeform:
       val_min.f = -1;
       val_max.f = 1;
       valtype = vt_float;
       val_default.f = 0;
       break;
+=======
+   case ct_amplitude_clipper:
+>>>>>>> 423a6f152f006d09b295733e31349f0a0872e77b
    case ct_lfoamplitude:
       val_min.f = 0;
       val_max.f = 1;
@@ -1037,6 +1041,7 @@ void Parameter::set_type(int ctrltype)
       break;
 
    case ct_amplitude:
+   case ct_amplitude_clipper:
    case ct_sendlevel:
       displayType = Decibel;
       sprintf( displayInfo.unit, "dB" );
@@ -1146,6 +1151,7 @@ void Parameter::bound_value(bool force_integer)
          break;
       }
       case ct_amplitude:
+      case ct_amplitude_clipper:
       case ct_sendlevel:
       {
          if (val.f != 0)
@@ -1797,7 +1803,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                   else
                      sprintf( dtxt, "C : %.*f", dp, dnval );
                   iw->valminus = dtxt;
-                  
+
                   sprintf( dtxt, "%.*f", dp, -( qq * 32 ) );
                   iw->dvalminus = dtxt;
                }
@@ -2177,8 +2183,12 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_obxd_4pole:
                      sprintf( txt, "%s", fut_obxd_4p_subtypes[i]);
                      break;
+                  case fut_k35_lp:
+                  case fut_k35_hp:
+                     sprintf( txt, "%s", fut_k35_subtypes[i]);
+                     break;
 #if SURGE_EXTRA_FILTERS
-#endif                     
+#endif
                   default:
                      sprintf(txt, "%s", fut_def_subtypes[i]);
                      break;
@@ -2595,6 +2605,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_fmratio:
    case ct_syncpitch:
    case ct_amplitude:
+   case ct_amplitude_clipper:
    case ct_decibel:
    case ct_decibel_narrow:
    case ct_decibel_narrow_extendable:

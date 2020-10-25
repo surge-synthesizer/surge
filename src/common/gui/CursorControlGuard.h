@@ -15,6 +15,8 @@
 
 #pragma once
 #include "vstgui/vstgui.h"
+#include "SurgeStorage.h"
+#include "UserDefaults.h"
 
 namespace Surge
 {
@@ -46,10 +48,126 @@ struct CursorControlGuard
    ~CursorControlGuard();
 
    void setShowLocationFromFrameLocation( VSTGUI::CFrame *, const VSTGUI::CPoint &where );
+   void setShowLocationFromViewLocation( VSTGUI::CView *, const VSTGUI::CPoint &where );
+   bool resetToShowLocation();
 
 private:
    void doHide();
 
+};
+
+/*
+ * There's a common pattern where we want to manipulate the guard in a common way
+ * including reading the hiding preference and so forth. Add this class to your
+ * class as a base class and you get what you need. This is the approach we recommend
+ * to cursor hiding in surge, although the class above is a public API.
+ *
+ * The use cases are 'startCursorHide(CPoint & )' or 'startCursorHide()'
+ * and then 'endCursorHide( CPoint &)' or 'endCursorHide()'.
+ *
+ * The intent is you make this a base clase of yourself with yourself as
+ * the template arg (the curiosly reocurring pattern thing), that the
+ * "T" is a CView, and then everything here works in view local coordinates.
+ */
+
+template <typename T> // We assume T is a CView subclass
+struct CursorControlAdapter {
+   CursorControlAdapter( SurgeStorage *s )
+   {
+      if( s )
+         hideCursor = !Surge::Storage::getUserDefaultValue(s, "showCursorWhileEditing", 0);
+   }
+
+   void startCursorHide()
+   {
+      if( hideCursor )
+      {
+         ccadapterGuard = std::make_shared<CursorControlGuard>();
+      }
+   }
+
+   void startCursorHide( const VSTGUI::CPoint &where )
+   {
+      if( hideCursor )
+      {
+         ccadapterGuard = std::make_shared<CursorControlGuard>();
+         ccadapterGuard->setShowLocationFromViewLocation(asT(), where);
+      }
+   }
+
+   void setCursorLocation( const VSTGUI::CPoint &where )
+   {
+      if( ccadapterGuard )
+         ccadapterGuard->setShowLocationFromViewLocation(asT(), where );
+   }
+
+   bool resetToShowLocation()
+   {
+      if( ccadapterGuard  )
+         return ccadapterGuard->resetToShowLocation();
+      return false;
+   }
+
+   void endCursorHide()
+   {
+      ccadapterGuard = nullptr;
+   }
+
+   void endCursorHide( const VSTGUI::CPoint &where )
+   {
+      if( ccadapterGuard )
+         ccadapterGuard->setShowLocationFromViewLocation(asT(), where );
+      ccadapterGuard = nullptr;
+   }
+
+   T* asT() { return static_cast<T*>( this ); }
+
+   bool hideCursor = true;
+   std::shared_ptr<CursorControlGuard> ccadapterGuard;
+};
+
+template <typename T>
+struct CursorControlAdapterWithMouseDelta : public CursorControlAdapter<T>
+{
+   CursorControlAdapterWithMouseDelta(SurgeStorage *s) : CursorControlAdapter<T>(s) {}
+
+   void onMouseDownCursorHelper( const VSTGUI::CPoint &where )
+   {
+      deltapoint = where;
+      origdeltapoint = where;
+   }
+   VSTGUI::CMouseEventResult onMouseMovedCursorHelper( const VSTGUI::CPoint &where, const VSTGUI::CButtonState &buttons )
+   {
+      auto scale = CursorControlAdapter<T>::asT()->getMouseDeltaScaling(where, buttons);
+      float dx = (where.x -deltapoint.x);
+      float dy = (where.y - deltapoint.y);
+      CursorControlAdapter<T>::asT()->onMouseMoveDelta(where, buttons, scale * (where.x - deltapoint.x),
+                       scale * (where.y - deltapoint.y));
+      auto odx = where.x - origdeltapoint.x;
+      auto ody = where.y - origdeltapoint.y;
+      auto delt = sqrt( odx * odx + ody * ody );
+
+      /*
+       * Windows10 and macos don't need this but Windows8.1 really
+       * craps out with fractional cursor moves so make sure we have
+       * something big move wise before we reset.
+       */
+      if( delt > 10 )
+      {
+         if (CursorControlAdapter<T>::asT()->resetToShowLocation())
+            deltapoint = origdeltapoint;
+         else
+            deltapoint = where;
+      }
+      else
+      {
+         deltapoint = where;
+      }
+      return VSTGUI::kMouseEventHandled;
+   }
+
+private:
+   VSTGUI::CPoint deltapoint, origdeltapoint;
 };
 
 }

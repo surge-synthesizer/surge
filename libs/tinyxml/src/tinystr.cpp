@@ -22,7 +22,7 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
-#include "tinyxml.h"
+#include "tinyxml/tinyxml.h"
 
 #ifndef TIXML_USE_STL
 
@@ -31,7 +31,7 @@ distribution.
 #include <string.h>
 #include <ctype.h>
 
-#include "tinystr.h"
+#include "tinyxml/tinystr.h"
 
 // TiXmlString constructor, based on a C string
 TiXmlString::TiXmlString (const char* instring)

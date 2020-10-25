@@ -126,11 +126,11 @@ void SurgeLv2Ui::portEvent(
    {
       assert(buffer_size == sizeof(float));
 
-      unsigned index = s->remapExternalApiToInternalId(port_index);
+      SurgeSynthesizer::ID did;
       float value = *(const float*)buffer;
       bool external = true;
-
-      s->setParameter01(index, value, external);
+      if( s->fromDAWSideIndex(port_index, did ))
+         s->setParameter01(did, value, external);
    }
 }
 
@@ -161,9 +161,12 @@ int SurgeLv2Ui::uiIdle(LV2UI_Handle ui)
       SurgeSynthesizer *s = instance->synthesizer();
       for (unsigned int i = 0; i < n_total_params; i++)
       {
-         unsigned index = s->remapExternalApiToInternalId(i);
-         float value = s->getParameter01(index);
-         self->setParameterAutomated(i, value);
+         SurgeSynthesizer::ID did;
+         if( s->fromDAWSideIndex(i, did ))
+         {
+            float value = s->getParameter01(did);
+            self->setParameterAutomated(did.getDawSideIndex(), value);
+         }
       }
    }
 

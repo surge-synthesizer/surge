@@ -167,16 +167,16 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
          cpratio = ( r.cpv - r.v0 ) / ( r.nv1 - r.v0 );
       lcpv = cpratio * ( r.nv1 - lv0 ) + lv0;
    }
+
    switch( r.type )
    {
    case MSEGStorage::segment::HOLD:
    {
-      es->lastOutput = lv0;
-      return lv0;
+      res = lv0;
       break;
    }
-   case MSEGStorage::segment::SCURVE: // Wuh? S-Curve and Linear are the same? Well kinda
    case MSEGStorage::segment::LINEAR:
+   case MSEGStorage::segment::SCURVE: // Wuh? S-Curve and Linear are the same? Well kinda
    {
       if( lv0 == lv1 ) return lv0;
       float frac = timeAlongSegment / r.duration;
@@ -278,79 +278,6 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       res = cpline * ( lv1 - lv0 ) + lv0;
       break;
    }
-   case MSEGStorage::segment::BROWNIAN:
-   {
-      static constexpr int validx = 0, lasttime = 1, outidx = 2;
-      if( segInit )
-      {
-         es->msegState[validx] = lv0;
-         es->msegState[outidx] = lv0;
-         es->msegState[lasttime] = 0;
-      }
-      float targetTime = timeAlongSegment /r.duration;
-      if( targetTime >= 1 )
-      {
-         res = lv1;
-      }
-      else if( targetTime <= 0 )
-      {
-         res = lv0;
-      }
-      else if( targetTime <= es->msegState[lasttime] )
-      {
-         res = es->msegState[outidx];
-      }
-      else
-      {
-         while( es->msegState[lasttime] < targetTime && es->msegState[lasttime] < 1 )
-         {
-            auto ncd = r.cpduration; // 0-1
-            // OK so the closer this is to 1 the more spiky we should be, which is basically
-            // increasing the dt.
-
-            // The slowest is 5 steps (max dt is 0.2)
-            float sdt = 0.2f * ( 1 - ncd ) * ( 1 - ncd );
-            float dt = std::min( std::max( sdt, 0.0001f ), 1 - es->msegState[lasttime] );
-
-            if( es->msegState[lasttime] < 1 )
-            {
-               float lincoef  = ( lv1 - es->msegState[validx] ) / ( 1 - es->msegState[lasttime] );
-               float randcoef = 0.1 * lcpv; // CPV is on -1,1
-               /*
-               * Modification to standard bridge. We want to move away from 1,-1 so lets
-               * explicitly bounce away from them if random will push us over
-               */
-               auto uniformRand = ( ( 2.f * rand() ) / (float)(RAND_MAX) - 1 );
-               auto linstp = es->msegState[validx] + lincoef * dt;
-               float randup = randcoef;
-               float randdn = randcoef;
-               if( linstp + randup > 1 ) randup = 1 - linstp;
-               else if( linstp - randdn < -1 ) randdn = linstp + 1;
-               auto randadj = ( uniformRand > 0 ? randup * uniformRand : randdn * uniformRand );
-
-               es->msegState[validx] += limit_range( lincoef * dt + randadj, -1.f, 1.f );
-               es->msegState[lasttime] += dt;
-            }
-            else
-               es->msegState[validx] = lv1;
-         }
-         if( lcpv < 0 )
-         {
-            // Snap to between 1 and 24 values.
-            int a = floor( - lcpv * 24 ) + 1;
-            es->msegState[outidx] = floor( es->msegState[validx] * a ) * 1.f / a;
-         }
-         else
-         {
-            es->msegState[outidx] = es->msegState[validx];
-         }
-         es->msegState[outidx] = limit_range(es->msegState[outidx],-1.f, 1.f );
-         // so basically softclip it
-         res  = es->msegState[outidx];
-      }
-      
-      break;
-   }
    case MSEGStorage::segment::QUAD_BEZIER:
    {
       /*
@@ -425,23 +352,56 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
       break;
    }
+   case MSEGStorage::segment::SPIKE: 
+   {
+      auto t = timeAlongSegment / r.duration;
 
-   case MSEGStorage::segment::SINE: 
-   case MSEGStorage::segment::SAWTOOTH: 
-   case MSEGStorage::segment::TRIANGLE: 
-   case MSEGStorage::segment::SQUARE: {
+      // this part is if we want 2D adjustment of control point
+      //auto cpd = r.cpduration;
+      //auto a = 50.f - ((1.f - (cpd * cpd)) * 44.f);
+
+      // but decided to do it via deform
+      auto deform = df < 0 ? -df * 40.f : -df * 6.f;
+      auto a = 10.f + deform;
+      auto g = exp(-a * t);
+      auto c = r.cpv;
+
+      auto q = c * g;
+
+      auto pos = q * (1 - r.nv1) + r.nv1;
+      auto neg = ((1 + r.nv1) * q) + r.nv1;
+
+      res = c > 0 ? pos : neg;
+
+      break;
+   }
+   case MSEGStorage::segment::BUMP:
+   {
+      auto t = timeAlongSegment / r.duration;
+      
+      auto d = (-df * 0.5) + 0.5;
+      auto deform = 20.f + ((d * d * d) * 500.f);
+
+      auto c = r.cpv;
+
+      auto g = exp(-deform * (t - 0.5) * (t - 0.5));
+      auto l = ((lv1 - lv0) * t) + lv0;
+      auto q = c - ((lv0 + lv1) * 0.5);
+
+      res = l + (q * g);
+
+      break;
+   }
+   case MSEGStorage::segment::SINE:
+   case MSEGStorage::segment::SAWTOOTH:
+   case MSEGStorage::segment::TRIANGLE:
+   case MSEGStorage::segment::SQUARE:
+   {
       float pct = ( r.cpv + 1 ) * 0.5;
       float as = 5.0;
       float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
       int steps = (int)( scaledpct * 100 );
-      auto f = timeAlongSegment /r.duration;
-
-      float a = 1;
-      
-      if( df < 0 )
-         a = 1 + df * 0.5;
-      if( df > 0 )
-         a = 1 + df * 1.5;
+      auto frac = timeAlongSegment /r.duration;
 
       float kernel = 0;
 
@@ -458,19 +418,19 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
           * so we get one and a half waveforms
           */
          float mul = ( 1 + 2 * steps ) * M_PI;
-         kernel = cos( mul * f );
+         kernel = cos( mul * frac );
       }
       if( r.type == MSEGStorage::segment::SAWTOOTH )
       {
          double mul = steps + 1;
-         double phase = mul * f;
+         double phase = mul * frac;
          double dphase = phase - (int)phase;
          kernel = 1 - 2 * dphase;
       }
       if( r.type == MSEGStorage::segment::TRIANGLE )
       {
          double mul = ( 0.5 + steps );
-         double phase = mul * f;
+         double phase = mul * frac;
          double dphase = phase - (int)phase;
          if( dphase < 0.5 )
          {
@@ -486,39 +446,141 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       }
       if( r.type == MSEGStorage::segment::SQUARE )
       {
-         /*
-          * Deform does PWM here
-          */
+         // dDeform does PWM here
          float mul = steps + 1;
-         float tphase = mul * f;
+         float tphase = mul * frac;
          float phase = tphase - (int)tphase;
          float pw = ( df + 1 ) / 2.0; // so now 0 -> 1
          kernel = ( phase < pw ? 1 : -1 );
       }
+
+      // This is the equivalent of LFOModulationSource.cpp::bend3
+      float a = -0.5f * limit_range(df, -3.f, 3.f);
+
+      kernel = kernel - a * kernel * kernel + a;
+      kernel = kernel - a * kernel * kernel + a; // do twice because bend3 does it twice
       
-      res = (lv0 - lv1) * pow((kernel + 1) * 0.5, a) + lv1;
+      res = (lv0 - lv1) * ((kernel + 1) * 0.5) + lv1;
+
       break;
    }
 
-   case MSEGStorage::segment::STEPS: {
-      float pct = ( r.cpv + 1 ) * 0.5;
-      float as = 5.0;
-      float scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
-      int steps = (int)( scaledpct * 100 ) + 2;
+   case MSEGStorage::segment::STAIRS:
+   {
+      auto pct = ( r.cpv + 1 ) * 0.5;
+      auto as = 5.0;
+      auto scaledpct = ( exp( as * pct ) - 1 ) / (exp(as)-1);
+      auto steps = (int)(scaledpct * 100) + 2;
 
-      float frac = (float)( (int)( steps * timeAlongSegment / r.duration ) ) / (steps-1);
+      auto frac = (float)( (int)( steps * timeAlongSegment / r.duration ) ) / (steps-1);
+
       if( df < 0 )
          frac = pow( frac, 1.0 + df * 0.7 );
       if( df > 0 )
-         frac = pow( frac, 1.0 + df * 3 );
+         frac = pow( frac, 1.0 + df * 3.0 );
+
       res = frac * lv1 + ( 1 - frac ) * lv0;
+
       break;
    }
+   case MSEGStorage::segment::SMOOTH_STAIRS:
+   {
+      auto pct = (r.cpv + 1) * 0.5;
+      auto as = 5.0;
+      auto scaledpct = (exp(as * pct) - 1) / (exp(as) - 1);
+      auto steps = (int)(scaledpct * 100) + 2;
+      auto frac = timeAlongSegment / r.duration;
 
-   
+      auto c = df < 0.f ? 1.0 + df * 0.7 : 1.0 + df * 3.0;
+      auto z = pow(frac, c);
+
+      auto q = floor(z * steps) / steps;
+
+      auto r = ((z - q) * steps);
+      auto b = r * 2 - 1;
+
+      res = ((((b * b * b) + 1) / (2 * steps)) + q);
+      res = (res * (lv1 - lv0)) + lv0;
+
+      break;
    }
-   //std::cout << _D(timeAlongSegment) << _D(r.type) << _D(r.duration) << _D(lv0) << std::endl;
+   case MSEGStorage::segment::BROWNIAN:
+   {
+      static constexpr int validx = 0, lasttime = 1, outidx = 2;
+      if( segInit )
+      {
+         es->msegState[validx] = lv0;
+         es->msegState[outidx] = lv0;
+         es->msegState[lasttime] = 0;
+      }
+      float targetTime = timeAlongSegment /r.duration;
+      if( targetTime >= 1 )
+      {
+         res = lv1;
+      }
+      else if( targetTime <= 0 )
+      {
+         res = lv0;
+      }
+      else if( targetTime <= es->msegState[lasttime] )
+      {
+         res = es->msegState[outidx];
+      }
+      else
+      {
+         while( es->msegState[lasttime] < targetTime && es->msegState[lasttime] < 1 )
+         {
+            auto ncd = r.cpduration; // 0-1
+            // OK so the closer this is to 1 the more spiky we should be, which is basically
+            // increasing the dt.
 
+            // The slowest is 5 steps (max dt is 0.2)
+            float sdt = 0.2f * ( 1 - ncd ) * ( 1 - ncd );
+            float dt = std::min( std::max( sdt, 0.0001f ), 1 - es->msegState[lasttime] );
+
+            if( es->msegState[lasttime] < 1 )
+            {
+               float lincoef  = ( lv1 - es->msegState[validx] ) / ( 1 - es->msegState[lasttime] );
+               float randcoef = 0.1 * lcpv; // CPV is on -1,1
+               /*
+               * Modification to standard bridge. We want to move away from 1,-1 so lets
+               * explicitly bounce away from them if random will push us over
+               */
+               auto uniformRand = es->urd(es->gen);
+               auto linstp = es->msegState[validx] + lincoef * dt;
+               float randup = randcoef;
+               float randdn = randcoef;
+               if( linstp + randup > 1 ) randup = 1 - linstp;
+               else if( linstp - randdn < -1 ) randdn = linstp + 1;
+               auto randadj = ( uniformRand > 0 ? randup * uniformRand : randdn * uniformRand );
+
+               es->msegState[validx] += limit_range( lincoef * dt + randadj, -1.f, 1.f );
+               es->msegState[lasttime] += dt;
+            }
+            else
+               es->msegState[validx] = lv1;
+         }
+         if( lcpv < 0 )
+         {
+            // Snap to between 1 and 24 values.
+            int a = floor( - lcpv * 24 ) + 1;
+            es->msegState[outidx] = floor( es->msegState[validx] * a ) * 1.f / a;
+         }
+         else
+         {
+            es->msegState[outidx] = es->msegState[validx];
+         }
+         es->msegState[outidx] = limit_range(es->msegState[outidx],-1.f, 1.f );
+         // so basically softclip it
+         res  = es->msegState[outidx];
+      }
+      
+      break;
+   }
+   }
+
+   //std::cout << _D(timeAlongSegment) << _D(r.type) << _D(r.duration) << _D(lv0) << std::endl;
+   res = limit_range(res, -1.f, 1.f);
    es->lastOutput = res;
    return res;
 }
@@ -819,10 +881,6 @@ void constrainControlPointAt( MSEGStorage *ms, int idx )
    // With the new model this is way easier
    ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, 1.f );
    ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
-
-   switch( ms->segments[idx].type )
-   {
-   }
 }
    
 }
