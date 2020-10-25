@@ -164,6 +164,7 @@ private:
    void setupSaveDialog();
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
+   void repushAutomationFor( Parameter *p );
    SurgeSynthesizer* synth = nullptr;
    int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
    bool editor_open = false;
