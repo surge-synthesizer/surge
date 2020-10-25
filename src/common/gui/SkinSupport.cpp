@@ -161,7 +161,7 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
       // Obviously fix this
       doc.SetTabSize(4);
       
-      if (!doc.LoadFile(x) || doc.Error())
+      if (!doc.LoadFile(string_to_path(x)))
       {
          e.displayName = e.name + " (parse error)";
          continue;
@@ -236,7 +236,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    // Obviously fix this
    doc.SetTabSize(4);
 
-   if (!doc.LoadFile(resourceName("skin.xml")) || doc.Error())
+   if (!doc.LoadFile(string_to_path(resourceName("skin.xml"))))
    {
       FIXMEERROR << "Unable to load skin.xml resource '" << resourceName("skin.xml") << "'"
                  << std::endl;

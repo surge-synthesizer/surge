@@ -544,17 +544,15 @@ void CFxMenu::rescanUserPresets()
       }
    }
 
-   for( auto f : sfxfiles )
+   for(const auto& f : sfxfiles)
    {
-      auto fn = path_to_string(f);
-
       {
          UserPreset preset;
-         preset.file = fn;
+         preset.file = path_to_string(f);
          TiXmlDocument d;
          int t;
          
-         if( ! d.LoadFile( fn ) ) goto badPreset;
+         if( ! d.LoadFile( f ) ) goto badPreset;
          
          auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild( "single-fx" ) );
          if( ! r ) goto badPreset;
