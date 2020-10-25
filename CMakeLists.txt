@@ -100,8 +100,12 @@ add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/catch2)
 add_subdirectory(libs/filesystem)
+add_subdirectory(libs/tinyxml)
 
-target_link_libraries(surge-shared INTERFACE surge::filesystem)
+target_link_libraries(surge-shared INTERFACE
+  surge::filesystem
+  surge::tinyxml
+)
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
@@ -245,9 +249,6 @@ set(SURGE_COMMON_SOURCES
   src/common/SurgeSynthesizerIO.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp
-  libs/xml/tinyxml.cpp
-  libs/xml/tinyxmlerror.cpp
-  libs/xml/tinyxmlparser.cpp
   libs/strnatcmp/strnatcmp.cpp
 
   ${AIRWINDOWS_SOURCES}
@@ -379,7 +380,6 @@ set( SURGE_LV2_SOURCES
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
   libs/
-  libs/xml
   libs/strnatcmp
   libs/tuning-library/include
   src/common
@@ -560,7 +560,6 @@ elseif( WIN32 )
     _WIN32_WINNT=0x0601
     _USRDLL
     VA_SUBTRACTIVE_EXPORTS
-    TIXML_USE_STL
     USE_LIBPNG
     _CRT_SECURE_NO_WARNINGS=1
     UNICODE

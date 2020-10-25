@@ -24,10 +24,7 @@
 #include <atomic>
 #include <stdint.h>
 
-#ifndef TIXML_USE_STL
-#define TIXML_USE_STL
-#endif
-#include <tinyxml.h>
+#include "tinyxml/tinyxml.h"
 
 #include "filesystem/import.h"
 

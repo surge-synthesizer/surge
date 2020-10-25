@@ -22,10 +22,18 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
-#include "tinyxml.h"
+#include "tinyxml/tinyxml.h"
+
 #include <ctype.h>
 
 //#define DEBUG_PARSER
+
+#if defined( _DEBUG ) && defined( _MSC_VER )
+#include <windows.h>
+#define TIXML_LOG OutputDebugString
+#else
+#define TIXML_LOG printf
+#endif
 
 // Note tha "PutString" hardcodes the same list. This
 // is less flexible than it appears. Changing the entries

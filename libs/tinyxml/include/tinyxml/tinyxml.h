@@ -22,33 +22,14 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
-#ifndef TIXML_USE_STL
-#define TIXML_USE_STL 1
-#endif
-
-
 #ifndef TINYXML_INCLUDED
 #define TINYXML_INCLUDED
 
-#ifdef _MSC_VER
-#pragma warning( disable : 4530 )
-#pragma warning( disable : 4786 )
-#endif
-
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
-#if defined( _DEBUG ) && defined( _MSC_VER )
-#include <windows.h>
-#define TIXML_LOG OutputDebugString
-#else
-#define TIXML_LOG printf
-#endif
+#include <cassert>
+#include <cstring>
 
 #ifdef TIXML_USE_STL
+	#include "filesystem/import.h"
 	#include <string>
  	#include <iostream>
 	#define TIXML_STRING	std::string
@@ -137,12 +118,12 @@ public:
 	TiXmlBase()	:	userData(0) {}
 	virtual ~TiXmlBase()					{}
 
-	/**	All TinyXml classes can print themselves to a filestream.
+	/**	All TinyXml classes can print themselves to a stream.
 		This is a formatted print, and will insert tabs and newlines.
 		
 		(For an unformatted stream, use the << operator.)
 	*/
-	virtual void Print( FILE* cfile, int depth ) const = 0;
+	virtual void Print( TIXML_OSTREAM& cfile, int depth ) const = 0;
 
 	/**	The world does not agree on whether white space should be kept or
 		not. In order to make everyone happy, these global, static functions
@@ -752,8 +733,8 @@ public:
 	*/
 	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
-	// Prints this Attribute to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const override;
+	// Prints this Attribute to a stream.
+	virtual void Print( TIXML_OSTREAM& cfile, int depth ) const override;
 
 	virtual void StreamOut( TIXML_OSTREAM * out ) const override;
 	// [internal use]
@@ -924,8 +905,8 @@ public:
 
 	/// Creates a new Element and returns it - the returned element is a copy.
 	virtual TiXmlNode* Clone() const override;
-	// Print the Element to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const override;
+	// Print the Element to a stream.
+	virtual void Print( TIXML_OSTREAM& cfile, int depth ) const override;
 
 	/*	Attribtue parsing starts: next char past '<'
 						 returns: next char past '>'
@@ -969,8 +950,8 @@ public:
 
 	/// Returns a copy of this Comment.
 	virtual TiXmlNode* Clone() const override;
-	/// Write this Comment to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const override;
+	/// Write this Comment to a stream.
+	virtual void Print( TIXML_OSTREAM& cfile, int depth ) const override;
 
 	/*	Attribtue parsing starts: at the ! of the !--
 						 returns: next char past '>'
@@ -1015,8 +996,8 @@ public:
 	TiXmlText( const TiXmlText& copy ) : TiXmlNode( TiXmlNode::TEXT )	{ copy.CopyTo( this ); }
 	void operator=( const TiXmlText& base )							 	{ base.CopyTo( this ); }
 
-	/// Write this text object to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const override;
+	/// Write this text object to a stream.
+	virtual void Print( TIXML_OSTREAM& cfile, int depth ) const override;
 
 	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
@@ -1081,8 +1062,8 @@ public:
 
 	/// Creates a copy of this Declaration and returns it.
 	virtual TiXmlNode* Clone() const override;
-	/// Print this declaration to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const override;
+	/// Print this declaration to a stream.
+	virtual void Print( TIXML_OSTREAM& cfile, int depth ) const override;
 
 	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
@@ -1120,8 +1101,8 @@ public:
 
 	/// Creates a copy of this Unknown and returns it.
 	virtual TiXmlNode* Clone() const override;
-	/// Print this Unknown to a FILE stream.
-	virtual void Print( FILE* cfile, int depth ) const override;
+	/// Print this Unknown to a stream.
+	virtual void Print( TIXML_OSTREAM& cfile, int depth ) const override;
 
 	virtual const char* Parse( const char* p, TiXmlParsingData* data, TiXmlEncoding encoding ) override;
 
@@ -1167,23 +1148,15 @@ public:
 	bool LoadFile( TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
 	/// Save a file using the current document value. Returns true if successful.
 	bool SaveFile() const;
+#ifndef TIXML_USE_STL
 	/// Load a file using the given filename. Returns true if successful.
 	bool LoadFile( const char * filename, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
 	/// Save a file using the given filename. Returns true if successful.
 	bool SaveFile( const char * filename ) const;
-
-	#ifdef TIXML_USE_STL
-	bool LoadFile( const std::string& filename, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING )			///< STL std::string version.
-	{
-		StringToBuffer f( filename );
-		return ( f.buffer && LoadFile( f.buffer, encoding ));
-	}
-	bool SaveFile( const std::string& filename ) const		///< STL std::string version.
-	{
-		StringToBuffer f( filename );
-		return ( f.buffer && SaveFile( f.buffer ));
-	}
-	#endif
+#else // !TIXML_USE_STL
+	bool LoadFile( const fs::path& filename, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
+	bool SaveFile( const fs::path& filename ) const;
+#endif // TIXML_USE_STL
 
 	/** Parse the given null terminated block of xml data. Passing in an encoding to this
 		method (either TIXML_ENCODING_LEGACY or TIXML_ENCODING_UTF8 will force TinyXml
@@ -1257,11 +1230,8 @@ public:
 												//errorLocation.last = 0; 
 											}
 
-	/** Dump the document to standard out. */
-	void Print() const						{ Print( stdout, 0 ); }
-
-	/// Print this Document to a FILE stream.
-	virtual void Print( FILE* cfile, int depth = 0 ) const override;
+	/// Print this Document to a stream.
+	virtual void Print( TIXML_OSTREAM& cfile, int depth = 0 ) const override;
 	// [internal use]
 	void SetError( int err, const char* errorLocation, TiXmlParsingData* prevData, TiXmlEncoding encoding );
 
