@@ -56,7 +56,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
    };
 
    enum {
-      tag_segment_nodeedit_mode = 300000,
+      tag_segment_nodeedit_mode = metaparam_offset + 1000, // Just to push outside any ID range
       tag_segment_movement_mode,
       tag_vertical_snap,
       tag_vertical_value,
