@@ -310,6 +310,15 @@ bool Parameter::has_portaoptions()
       return false;
 }
 
+bool Parameter::has_deformoptions()
+{
+   if (ctrltype == ct_lfodeform)
+      return true;
+   else
+      return false;
+   
+}
+
 void Parameter::set_user_data(ParamUserData* ud)
 {
    switch (ctrltype)
@@ -707,6 +716,12 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_amplitude:
+   case ct_lfodeform:
+      val_min.f = -1;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
    case ct_lfoamplitude:
       val_min.f = 0;
       val_max.f = 1;
@@ -876,6 +891,7 @@ void Parameter::set_type(int ctrltype)
    case ct_percent:
    case ct_percent200:
    case ct_percent_bidirectional:
+   case ct_lfodeform:
    case ct_rotarydrive:
    case ct_countedset_percent:
    case ct_lfoamplitude:
@@ -883,7 +899,6 @@ void Parameter::set_type(int ctrltype)
       sprintf(displayInfo.unit, "%%" );
       displayInfo.scale = 100;
       break;
-
    case ct_percent_bidirectional_stereo:
       displayType = LinearWithScale;
       displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
@@ -1083,6 +1098,7 @@ void Parameter::bound_value(bool force_integer)
          val.f = floor(val.f * 100) / 100.0;
          break;
       }
+      case ct_lfodeform:
       case ct_pitch:
       case ct_pitch_semi7bp:
       case ct_syncpitch:
@@ -2604,6 +2620,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_lforate:
    case ct_lforate_deactivatable:
    case ct_lfoamplitude:
+   case ct_lfodeform:
    case ct_detuning:
    case ct_oscspread:
    case ct_countedset_percent:

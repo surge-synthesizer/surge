@@ -1205,6 +1205,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
          getPatch().param_ptr[pid]->porta_gliss = p.porta_gliss;
          getPatch().param_ptr[pid]->porta_retrigger = p.porta_retrigger;
          getPatch().param_ptr[pid]->porta_curve = p.porta_curve;
+         getPatch().param_ptr[pid]->deform_type = p.deform_type;
       }
 
       switch (type)

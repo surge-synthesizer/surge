@@ -149,6 +149,14 @@ enum porta_curve
     porta_exp = 1,
 };
 
+enum deform_type
+{
+    type_1,
+    type_2,
+    type_3,
+    n_types,
+};
+
 enum lfo_mode
 {
    lm_freerun = 0,

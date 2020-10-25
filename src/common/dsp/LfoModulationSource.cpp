@@ -62,11 +62,10 @@ void LfoModulationSource::assign(SurgeStorage* storage,
 
 float LfoModulationSource::bend1(float x)
 {
-   float a = localcopy[ideform].f;
+   float a = 0.5f * limit_range(localcopy[ideform].f, -3.f, 3.f);
 
-   x += 0.25;
-   x += a * sin(x * 2.f * M_PI) / (2.f * M_PI);
-   x -= 0.25;
+   x = x - a * x * x + a;
+   x = x - a * x * x + a; // do twice for extra pleasure
 
    return x;
 }
@@ -75,20 +74,23 @@ float LfoModulationSource::bend2(float x)
 {
    float a = localcopy[ideform].f;
 
-   x += a * sin(x * 2.f * M_PI) / (2.f * M_PI);
+   x += 4.5 * a * sin(x * 2.f * M_PI) / (2.f * M_PI);
 
    return x;
 }
 
 float LfoModulationSource::bend3(float x)
 {
-   float a = 0.5f * limit_range( localcopy[ideform].f, -3.f, 3.f );
+   float a = localcopy[ideform].f;
 
-   x = x - a * x * x + a;
-   x = x - a * x * x + a; // do twice for extra pleasure
+   x += 0.25;
+   x += 4.5 * a * sin(x * 2.f * M_PI) / (2.f * M_PI);
+   x -= 0.25 + (localcopy[ideform].f / (2.f * M_PI));
 
    return x;
 }
+
+
 
 float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 {
@@ -549,26 +551,99 @@ void LfoModulationSource::process_block()
    {
    case ls_envelope:
    case ls_function:
-      iout = (1.f - localcopy[ideform].f) + localcopy[ideform].f * env_val;
+      switch (lfo->deform.deform_type)
+      {
+      case type_1:
+         iout = (1.f - localcopy[ideform].f) + localcopy[ideform].f * (env_val);
+         break;
+
+      case type_2:
+          // if (localcopy[ideform].f < 0)
+          //iout = pow(env_val, 1.0 + localcopy[ideform].f * 0.7);
+
+          // if (localcopy[ideform].f > 0)
+          // iout = pow(env_val, 1.0 + localcopy[ideform].f * 3);
+          
+         //iout = pow(env_val, 1.0 + localcopy[ideform].f * 0.7);
+         iout = pow(env_val, 1 / localcopy[ideform].f);
+         break;
+      }
       break;
+
    case ls_sine:
-      iout = bend3(lookup_waveshape_warp(3, 2.f - 4.f * phase));
-      break;
+      switch (lfo->deform.deform_type)
+      {
+      case type_1:
+         iout = bend1(lookup_waveshape_warp(3, 2.f - 4.f * phase));
+         break;
+      case type_2:
+         if (localcopy[ideform].f >= -1 / 4.5)
+            iout = bend2(lookup_waveshape_warp(3, 2.f - 4.f * phase));
+         else
+            iout = bend2(lookup_waveshape_warp(3, 2.f - 4.f * phase)) / (1 -
+                   ((localcopy[ideform].f + (1 / 4.5)) / 1.6 ));    
+         break;
+      case type_3:
+         iout = ( bend3(lookup_waveshape_warp(3, 2.f - 4.f * phase)) / 
+             (1.f + 0.5 * abs(localcopy[ideform].f)) - (0.06 * localcopy[ideform].f) );
+         break;
+      }               
+   break;
+   
    case ls_tri:
-      iout = bend3(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase));
-      break;
+      switch (lfo->deform.deform_type)
+      {
+      case type_1:
+         iout = bend1(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase)); 
+         break;
+      case type_2:
+         if (localcopy[ideform].f >= -1 / 4.5)
+            iout = bend2(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase));
+         else
+            iout = bend2(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase)) /
+                   (1 - ((localcopy[ideform].f + (1 / 4.5)) / 1.6));
+         break;
+      case type_3:
+         iout = ( bend3(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase)) / 
+             (1.f + 0.5 * abs(localcopy[ideform].f)) - (0.06 * localcopy[ideform].f) ); 
+         break;
+      }
+   break;
+   
    case ls_ramp:
-      iout = bend3(1.f - 2.f * phase);
+      switch (lfo->deform.deform_type)
+      {
+      case type_1:
+         iout = bend1(1.f - 2.f * phase);
+         break;
+      case type_2:
+         if (localcopy[ideform].f >= -1 / 4.5)
+            iout = bend2(1.f - 2.f * phase);
+         else
+            iout = bend2(1.f - 2.f * phase) / (1 - ((localcopy[ideform].f + 
+                (1 / 4.5)) / 1.6));
+         break;
+      case type_3:;
+         iout = ( bend3(1.f - 2.f * phase) / (1.f + 0.5 * abs(localcopy[ideform].f)) 
+             - (0.06 * localcopy[ideform].f) );
+         break;
+      }
+       
+       
       break;
+   
    case ls_square:
+
       iout = (phase > (0.5f + 0.5f * localcopy[ideform].f)) ? -1.f : 1.f;
       break;
+   
    case ls_noise:
    {
       // iout = noise*(1-phase) + phase*target;
       iout = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
    }
    break;
+   
    case ls_stepseq:
       // iout = wf_history[0];
       {
@@ -649,6 +724,7 @@ void LfoModulationSource::process_block()
          }
       }
       break;
+   
    case ls_mseg:
       msegstate.released =  ( env_state == lenv_release || env_state == lenv_msegrelease );
       iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms, &msegstate );
