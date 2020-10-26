@@ -922,7 +922,8 @@ public:
    void storeMidiMappingToName( std::string name );
 
    // float table_sin[512],table_sin_offset[512];
-   std::mutex waveTableDataMutex, modRoutingMutex;
+   std::mutex waveTableDataMutex;
+   std::recursive_mutex modRoutingMutex;
    Wavetable WindowWT;
 
    float note_to_pitch(float x);
