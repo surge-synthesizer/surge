@@ -252,8 +252,8 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    auto des = &(synth->storage.getPatch().dawExtraState);
    patchname = 0;
    current_scene = des->editor.current_scene;
-   current_fx = 0;
-   modsource = ms_lfo1;
+   current_fx = des->editor.current_fx;
+   modsource = des->editor.modsource;
    blinktimer = 0.f;
    blinkstate = false;
    aboutbox = 0;
@@ -262,7 +262,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    for (int i = 0; i < n_scenes; i++)
    {
       current_osc[i] = des->editor.current_osc[i];
-      modsource_editor[i] = ms_lfo1;
+      modsource_editor[i] = des->editor.modsource_editor[i];
    }
    
    mod_editor = false;

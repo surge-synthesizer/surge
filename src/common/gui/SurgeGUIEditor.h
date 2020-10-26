@@ -169,7 +169,7 @@ private:
    int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
    bool editor_open = false;
    bool mod_editor = false;
-   modsources modsource = ms_original, modsource_editor[n_scenes] = {ms_original};
+   modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1};
    int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0, fmconfig_tag = 0;
    double lastTempo = 0;
@@ -213,9 +213,12 @@ public:
       des->isPopulated = true;
       des->editor.instanceZoomFactor = zoomFactor;
       des->editor.current_scene = current_scene;
+      des->editor.current_fx = current_fx;
+      des->editor.modsource = modsource;
       for( int i=0; i<n_scenes; ++i )
       {
          des->editor.current_osc[i] = current_osc[i];
+         des->editor.modsource_editor[i] = modsource_editor[i];
       }
    }
    void loadFromDAWExtraState(SurgeSynthesizer *synth) {
@@ -226,9 +229,12 @@ public:
            if( sz > 0 )
                setZoomFactor(sz);
            current_scene = des->editor.current_scene;
+           current_fx = des->editor.current_fx;
+           modsource = des->editor.modsource;
            for( int i=0; i<n_scenes; ++i )
            {
               current_osc[i] = des->editor.current_osc[i];
+              modsource_editor[i] = des->editor.modsource_editor[i];
            }
        }
    }
