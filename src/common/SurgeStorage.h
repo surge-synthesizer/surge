@@ -710,8 +710,10 @@ struct DAWExtraStateStorage
    struct EditorState
    {
       int instanceZoomFactor = -1;
-      int current_scene = 1;
-      int current_osc[2] = {0};
+      int current_scene = 0;
+      int current_fx = 0;
+      int current_osc[n_scenes] = {0};
+      modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
    } editor;
 
 

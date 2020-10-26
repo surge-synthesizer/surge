@@ -267,7 +267,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       SINGLE,   // movement bound between two neighboring nodes
       SHIFT,    // shifts all following nodes along, relatively
       DRAW,     // only change amplitude of nodes as the cursor passes along the timeline
-   } timeEditMode = SHIFT;
+   } timeEditMode = SINGLE;
 
    void recalcHotZones( const CPoint &where ) {
       hotzones.clear();
@@ -1399,7 +1399,9 @@ void MSEGControlRegion::valueChanged( CControl *p )
    break;
    case tag_segment_movement_mode: {
       int m = floor(val * 2 + 0.5);
+      
       eds->timeEditMode = m;
+
       canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
       canvas->recalcHotZones(CPoint(0, 0));
       canvas->invalid();
