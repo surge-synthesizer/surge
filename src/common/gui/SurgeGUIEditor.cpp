@@ -1233,6 +1233,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          std::cout << "Unable to find SkinCtrl" << std::endl;
          continue;
       }
+      if( skinCtrl->classname == Surge::UI::NoneClassName )
+         continue;
+
       /*
        * Many of the controls are special and so require non-generalizable constructors
        * handled here. Some are standard and so once we know the tag we can use layoutComponentForSkin
@@ -6758,7 +6761,8 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       nonmod_param[paramIndex] = hsw;
       return hsw;
    }
-   std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname << std::endl;
+   if( skinCtrl->ultimateparentclassname != Surge::UI::NoneClassName )
+      std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname << std::endl;
    return nullptr;
 }
 

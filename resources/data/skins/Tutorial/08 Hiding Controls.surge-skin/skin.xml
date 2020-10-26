@@ -1,5 +1,12 @@
 <!--[doc]
-Make sure you can't hide menu
+Hiding a control is remarkably easy. Just find a control and give it class "none". This works
+for sliders, switches, and also for special types and panels. If for a panel you set a class
+'none' it pushes to the children of the panel, effectively hiding the entire group.
+
+This example simply ides the LFO deform and amplitude sliders, the Oscillator display, and the
+entire mixer section. That's not a very useful skin practically, but combined with the move
+and resize examples shown in other tutorials, it gives an idea of how to generate 'compact' or
+'player' skins.
 [doc]-->
 <surge-skin name="08 Hiding Controls" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
@@ -7,5 +14,21 @@ Make sure you can't hide menu
   <component-classes>
   </component-classes>
   <controls>
+    <!--[doc]
+    Here we hide a couple of sliders. We could do the same with switches and so on of course.
+    [doc]-->
+    <control ui_identifier="lfo.deform" class="none"/>
+    <control ui_identifier="lfo.amplitude" class="none"/>
+
+    <!--[doc]
+    But you can also hide more special non-slider controls. Here's the osc.display being hidden.
+    [doc]-->
+    <control ui_identifier="osc.display" class="none"/>
+
+    <!--[doc]
+    Finally, the skin model places items into groups, and so assigning a group a class of 'none'
+    hides all the components inside the panel.
+    [doc]-->
+    <control ui_identifier="mix.panel" class="none"/>
   </controls>
 </surge-skin>
