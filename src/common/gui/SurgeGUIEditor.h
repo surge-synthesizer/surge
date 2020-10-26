@@ -208,15 +208,28 @@ private:
 public:
 
    void populateDawExtraState(SurgeSynthesizer *synth) {
-       synth->storage.getPatch().dawExtraState.isPopulated = true;
-       synth->storage.getPatch().dawExtraState.instanceZoomFactor = zoomFactor;
+      auto des = &(synth->storage.getPatch().dawExtraState);
+
+      des->isPopulated = true;
+      des->editor.instanceZoomFactor = zoomFactor;
+      des->editor.current_scene = current_scene;
+      for( int i=0; i<n_scenes; ++i )
+      {
+         des->editor.current_osc[i] = current_osc[i];
+      }
    }
    void loadFromDAWExtraState(SurgeSynthesizer *synth) {
-       if( synth->storage.getPatch().dawExtraState.isPopulated )
+      auto des = &(synth->storage.getPatch().dawExtraState);
+      if( des->isPopulated )
        {
-           auto sz = synth->storage.getPatch().dawExtraState.instanceZoomFactor;
+           auto sz = des->editor.instanceZoomFactor;
            if( sz > 0 )
                setZoomFactor(sz);
+           current_scene = des->editor.current_scene;
+           for( int i=0; i<n_scenes; ++i )
+           {
+              current_osc[i] = des->editor.current_osc[i];
+           }
        }
    }
    
@@ -300,6 +313,8 @@ public:
    void closeMSEGEditor();
    void toggleMSEGEditor();
    MSEGEditor::State msegEditState[n_lfos];
+
+   void updateStateOnSynth();
 
 private:
    SGEDropAdapter *dropAdapter = nullptr;

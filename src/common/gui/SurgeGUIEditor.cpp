@@ -249,8 +249,9 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 #endif
 
 
+   auto des = &(synth->storage.getPatch().dawExtraState);
    patchname = 0;
-   current_scene = 1;
+   current_scene = des->editor.current_scene;
    current_fx = 0;
    modsource = ms_lfo1;
    blinktimer = 0.f;
@@ -260,7 +261,7 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 
    for (int i = 0; i < n_scenes; i++)
    {
-      current_osc[i] = 0;
+      current_osc[i] = des->editor.current_osc[i];
       modsource_editor[i] = ms_lfo1;
    }
    
@@ -270,12 +271,10 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
    float zf = userDefaultZoomFactor / 100.0;
 
-   if( synth->storage.getPatch().dawExtraState.isPopulated &&
-       synth->storage.getPatch().dawExtraState.instanceZoomFactor > 0
-       )
+   if( synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor > 0 )
    {
        // If I restore state before I am constructed I need to do this
-       zf = synth->storage.getPatch().dawExtraState.instanceZoomFactor / 100.0;
+       zf = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor / 100.0;
    }
 
    rect.left = 0;
@@ -393,6 +392,9 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+   auto isPop = synth->storage.getPatch().dawExtraState.isPopulated;
+   populateDawExtraState(synth); // If I must die, leave my state for future generations
+   synth->storage.getPatch().dawExtraState.isPopulated = isPop;
    if (frame)
    {
       getFrame()->unregisterKeyboardHook(this);
@@ -6882,5 +6884,10 @@ void SurgeGUIEditor::repushAutomationFor(Parameter* p)
    synth->getParent()->ParameterUpdate( id.getDawSideIndex());
    synth->getParent()->ParameterEndEdit(id.getDawSideIndex());
 #endif
+
+}
+
+void updateStateOnSynth()
+{
 
 }
