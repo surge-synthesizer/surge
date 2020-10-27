@@ -54,5 +54,9 @@ namespace Surge
       void resetControlPoint( MSEGStorage *s, float t );
       void resetControlPoint( MSEGStorage *s, int idx );
       void constrainControlPointAt( MSEGStorage *s, int idx );
+
+      void scaleDurations(MSEGStorage* s, float factor);
+      void scaleValues(MSEGStorage* s, float factor);
+      void setAllDurationsTo(MSEGStorage* s, float value);
    }
 }

@@ -1262,16 +1262,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Double Size"),
                             [this](){
-                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
-                                          this->ms->segments[i].duration *= 2.f;
-
+                                       Surge::MSEG::scaleDurations(this->ms, 2.0);
                                        modelChanged();
                                     });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Half Size"),
                             [this](){
-                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
-                                          this->ms->segments[i].duration *= 0.5;
-
+                                       Surge::MSEG::scaleDurations(this->ms, 0.5);
                                        modelChanged();
                                     });
          
@@ -1279,9 +1275,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Vertically"),
                             [this](){
-                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
-                                          this->ms->segments[i].v0 *= -1;
-
+                                       Surge::MSEG::scaleValues(this->ms, -1);
                                        modelChanged();
                                     });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Horizontally"),
@@ -1294,16 +1288,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
                             [this](){
-                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
-                                          this->ms->segments[i].duration = eds->hSnapDefault;
-
+                                       Surge::MSEG::setAllDurationsTo(this->ms, eds->hSnapDefault);
                                        modelChanged();
                                     });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"),
                             [this](){
-                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
-                                          this->ms->segments[i].duration = 1.f;
-
+                                       Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
                                        modelChanged();
                                     });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"),
@@ -1312,12 +1302,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                        for (int i = 0; i < this->ms->n_activeSegments; i++)
                                           totalLen += this->ms->segments[i].duration;
 
-                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
-                                          this->ms->segments[i].duration = totalLen / this->ms->n_activeSegments;
-
+                                       Surge::MSEG::setAllDurationsTo(this->ms, totalLen / this->ms->n_activeSegments);
                                        modelChanged();
                                     });
-
 
          contextMenu->addEntry(actionsMenu, "Actions");
 

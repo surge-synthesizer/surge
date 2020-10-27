@@ -884,6 +884,24 @@ void constrainControlPointAt( MSEGStorage *ms, int idx )
    ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, 1.f );
    ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
 }
+
+void scaleDurations(MSEGStorage *ms, float factor)
+{
+   for (int i = 0; i < ms->n_activeSegments; i++)
+      ms->segments[i].duration *= factor;
+}
    
+void scaleValues(MSEGStorage *ms, float factor)
+{
+   for (int i = 0; i < ms->n_activeSegments; i++)
+      ms->segments[i].v0 *= factor;
+}
+
+void setAllDurationsTo(MSEGStorage *ms, float value)
+{
+   for (int i = 0; i < ms->n_activeSegments; i++)
+      ms->segments[i].duration = value;
+}
+
 }
 }
