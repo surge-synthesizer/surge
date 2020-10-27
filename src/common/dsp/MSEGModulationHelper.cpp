@@ -800,6 +800,8 @@ void unsplitSegment( MSEGStorage *ms, float t ) {
    if( ms->n_activeSegments - 1 == 0 ) return;
 
    int idx = timeToSegment( ms, t );
+   if( idx < 0 ) idx = 0;
+   if( idx >= ms->n_activeSegments - 1 ) idx = ms->n_activeSegments - 1;
    int prior = idx;;
    if( ( ms->segmentEnd[idx] - t < t - ms->segmentStart[idx] ) || t >= ms->totalDuration )
    {
