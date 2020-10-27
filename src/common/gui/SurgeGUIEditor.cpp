@@ -697,7 +697,35 @@ void SurgeGUIEditor::idle()
          }
       }
 
-      for (int i = 0; i < 8; i++)
+      if( synth->refresh_overflow )
+      {
+         // Basicall yreset everything and repaint.
+         synth->refresh_overflow = false;
+         for( int i=0; i<8; ++i )
+            synth->refresh_parameter_queue[i] = -1;
+         for( int i=0; i<n_total_params; ++i )
+         {
+            auto p = param[i];
+            if( ! p ) p = nonmod_param[i];
+            if( p )
+            {
+               SurgeSynthesizer::ID jid;
+               if( synth->fromSynthSideId(i, jid ))
+                  if( synth->getParameter01(jid) != p->getValue() )
+                     p->setValue(synth->getParameter01(jid));
+            }
+
+         }
+         for( int i=0; i<n_customcontrollers; ++i )
+         {
+            gui_modsrc[ms_ctrl1 + i]->setValue(
+                ((ControllerModulationSource*)synth->storage.getPatch()
+                    .scene[current_scene].modsources[ms_ctrl1 + i])->get_target01());
+
+         }
+         frame->invalid();
+      }
+      else for (int i = 0; i < 8; i++)
       {
          if (synth->refresh_parameter_queue[i] >= 0)
          {

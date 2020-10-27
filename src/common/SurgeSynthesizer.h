@@ -334,6 +334,7 @@ public:
    int learn_param, learn_custom;
    int refresh_ctrl_queue[8];
    int refresh_parameter_queue[8];
+   bool refresh_overflow = false;
    float refresh_ctrl_queue_value[8];
    bool process_input;
    int patchid_queue;
