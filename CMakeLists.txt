@@ -98,11 +98,13 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 add_library(surge-shared INTERFACE)
 add_library(surge-tests INTERFACE)
 
+add_subdirectory(libs/airwindows)
 add_subdirectory(libs/catch2)
 add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 
 target_link_libraries(surge-shared INTERFACE
+  surge::airwindows
   surge::filesystem
   surge::tinyxml
 )
@@ -173,21 +175,6 @@ else()
   set( SURGE_EXTRA_FILTERS_DEFINITIONS SURGE_EXTRA_FILTERS=1 )
 endif()
 
-### Set up the AirWindows integration
-include( libs/airwindows/CMakeLists.txt )
-list( TRANSFORM AIRWINDOWS_FX_SOURCES PREPEND "libs/airwindows/" )
-set( AIRWINDOWS_SOURCES
-  ${AIRWINDOWS_FX_SOURCES}
-  src/common/dsp/effect/airwindows/airwindows_adapter.cpp
-  src/common/dsp/effect/airwindows/airwindows_register.cpp
-  src/common/dsp/effect/airwindows/audioeffect_airwinstub.cpp
-  )
-set( AIRWINDOWS_INCLUDES
-  src/common/dsp/effect/airwindows
-  libs/airwindows/src
-  )
-
-
 # Enumerate the sources into groups
 #    SURGE_COMMON_SOURCES
 #    SURGE_GUI_SOURCES
@@ -210,6 +197,9 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/RingModulatorEffect.cpp
   src/common/dsp/effect/RotarySpeakerEffect.cpp
   src/common/dsp/effect/VocoderEffect.cpp
+  src/common/dsp/effect/airwindows/AirWinBaseClass.cpp
+  src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
+  src/common/dsp/effect/airwindows/AirWindowsEffect.h
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/filters/Obxd.cpp
   src/common/dsp/filters/K35.cpp
@@ -251,8 +241,6 @@ set(SURGE_COMMON_SOURCES
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp
   libs/strnatcmp/strnatcmp.cpp
-
-  ${AIRWINDOWS_SOURCES}
 
   src/common/SkinModel.cpp
   src/common/SkinModelImpl.cpp
@@ -387,7 +375,6 @@ set(SURGE_COMMON_INCLUDES
   src/common/dsp
   src/common/thread
   src/common/vt_dsp
-  ${AIRWINDOWS_INCLUDES}
   )
 
 set(SURGE_GUI_INCLUDES
