@@ -669,7 +669,11 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
          }
          else
          {
-            auto uid = attrstr(lkid, "ui_identifier");
+            // allow using case insensitive UI identifiers
+            auto str = attrstr(lkid, "ui_identifier");
+            std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
+
+            auto uid = str;
             auto conn = Surge::Skin::Connector::connectorByID(uid);
             if( !conn.payload || conn.payload->defaultComponent == Surge::Skin::Connector::NONE )
             {
@@ -679,7 +683,7 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
             {
                control->copyFromConnector(conn);
                control->type = Control::Type::UIID;
-               control->ui_id = attrstr(lkid, "ui_identifier");
+               control->ui_id = uid;
             }
          }
 
