@@ -21,6 +21,8 @@ namespace Surge
 namespace UI
 {
 
+
+const std::string NoneClassName = "none";
 const std::string Skin::defaultImageIDPrefix = "DEFAULT/";
 std::ostringstream SkinDB::errorStream;
    
@@ -992,6 +994,15 @@ void Surge::UI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
       auto pc = controlForUIID(bp);
       while( pc )
       {
+         /*
+          * A special case: If a group has control type 'none' then my control adopts it
+          * This is the case only for none.
+          */
+         if( pc->classname == NoneClassName )
+         {
+            c->classname = NoneClassName;
+            c->ultimateparentclassname = NoneClassName;
+         }
          c->x += pc->x;
          c->y += pc->y;
          if( pc->allprops.find( "base_parent" ) != pc->allprops.end() )
