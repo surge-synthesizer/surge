@@ -149,9 +149,12 @@ add_library(${PROJECT_NAME}
   src/VoiceOfTheStarship.h
   src/VoiceOfTheStarshipProc.cpp
   src/AirWinBaseClass_pluginRegistry.cpp
-  src/audioeffectx.h
   include/${PROJECT_NAME}/AirWinBaseClass.h
 )
-target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+  AudioEffectX=AirWinBaseClass
+  VstPlugCategory=long
+  _USE_MATH_DEFINES
+)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
