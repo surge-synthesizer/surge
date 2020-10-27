@@ -3356,6 +3356,16 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   }
                }
 
+               if(editorOverlay && editorOverlayTag == "msegEditor" )
+               {
+                  auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[newsource-ms_lfo1]);
+                  if( ld->shape.val.i == ls_mseg )
+                  {
+                     showMSEGEditor();
+                  }
+               }
+
+
                queue_refresh = true;
             }
          }
@@ -6831,6 +6841,17 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
       }
    }
 
+   if( curr == ls_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   {
+      // We have the MSEGEditor open and have swapped to the MSEG here
+      showMSEGEditor();
+   }
+   else if( prior == ls_mseg && curr != ls_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   {
+      // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
+      closeMSEGEditor();
+   }
+
    // update the LFO title label
    std::string modname = modulatorName(modsource_editor[current_scene], true);
    lfoNameLabel->setText(modname.c_str());
@@ -6864,7 +6885,9 @@ void SurgeGUIEditor::showMSEGEditor()
    auto vs = mse->getViewSize().getWidth();
    float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 
-   std::string title = modsource_names[modsource_editor[current_scene]];
+   std::string title = "Scene ";
+   title += current_scene == 0 ? "A " : "B ";
+   title += modsource_names[modsource_editor[current_scene]];
    title += " Editor";
    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
