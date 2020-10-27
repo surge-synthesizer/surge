@@ -8,7 +8,7 @@
 #define __Pyewacket_H
 
 #ifndef __audioeffect__
-#include "audioeffectx.h"
+#include "airwindows/AirWinBaseClass.h"
 #endif
 
 #include <set>

@@ -1,4 +1,5 @@
-// -*-c++-*-
+#pragma once
+
 /*
 ** We copy the AirWindows VST2s but we don't need the VST2 API; we just need the process and
 ** param methods. So this is a minimal header that lets us compile
