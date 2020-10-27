@@ -8,7 +8,7 @@
 #define __BrightAmbience2_H
 
 #ifndef __audioeffect__
-#include "audioeffect_airwinstub.h"
+#include "audioeffectx.h"
 #endif
 
 #include <set>

@@ -11,7 +11,7 @@
 #include "Reverb2Effect.h"
 #include "FlangerEffect.h"
 #include "RingModulatorEffect.h"
-#include "airwindows_adapter.h"
+#include "airwindows/AirWindowsEffect.h"
 
 using namespace std;
 
