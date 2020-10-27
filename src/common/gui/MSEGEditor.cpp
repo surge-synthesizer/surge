@@ -1245,52 +1245,79 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto pv = pxToVal();
          auto v = pv( iw.y );
          
-         addCb( actionsMenu,  "Split", [this, t, v](){
-                                          Surge::MSEG::splitSegment( this->ms, t, v );
-                                          modelChanged();
-                                       } );
-         auto deleteMenu = addCb( actionsMenu,  "Delete", [this, t]() {
-                                           Surge::MSEG::deleteSegment( this->ms, t );
-                                           modelChanged();
-                                        } );
-         if( ms->n_activeSegments <= 1 ) deleteMenu->setEnabled(false);
+         addCb(actionsMenu, "Split",
+                            [this, t, v](){
+                                             Surge::MSEG::splitSegment( this->ms, t, v );
+                                             modelChanged();
+                                          });
+         auto deleteMenu = addCb(actionsMenu, "Delete", 
+                                              [this, t](){
+                                                            Surge::MSEG::deleteSegment( this->ms, t );
+                                                            modelChanged();
+                                                         });
+         if (ms->n_activeSegments <= 1)
+            deleteMenu->setEnabled(false);
          
          actionsMenu->addSeparator();
 
-         addCb( actionsMenu, "Duplicate", [this](){
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
-                                       } );
-         addCb( actionsMenu, "Halve", [this](){
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
-                                       } );
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Double Size"),
+                            [this](){
+                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
+                                          this->ms->segments[i].duration *= 2.f;
+
+                                       modelChanged();
+                                    });
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Half Size"),
+                            [this](){
+                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
+                                          this->ms->segments[i].duration *= 0.5;
+
+                                       modelChanged();
+                                    });
          
          actionsMenu->addSeparator();
 
-         addCb( actionsMenu, "Invert", [this](){
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Vertically"),
+                            [this](){
+                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
+                                          this->ms->segments[i].v0 *= -1;
+
+                                       modelChanged();
+                                    });
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Horizontally"),
+                            [this]() {
                                            Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
                                            //modelChanged();
-                                       } );
-         addCb( actionsMenu, "Mirror", [this](){
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
-                                       } );
+                                     });
 
          actionsMenu->addSeparator();
 
-         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"), [this](){
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
-                                       } );
-         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"), [this](){
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
-                                       } );
-         addCb( actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"), [this](){
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
-                                       } );
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
+                            [this](){
+                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
+                                          this->ms->segments[i].duration = eds->hSnapDefault;
+
+                                       modelChanged();
+                                    });
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"),
+                            [this](){
+                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
+                                          this->ms->segments[i].duration = 1.f;
+
+                                       modelChanged();
+                                    });
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"),
+                            [this](){  
+                                       auto totalLen = 0.f;
+                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
+                                          totalLen += this->ms->segments[i].duration;
+
+                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
+                                          this->ms->segments[i].duration = totalLen / this->ms->n_activeSegments;
+
+                                       modelChanged();
+                                    });
+
 
          contextMenu->addEntry(actionsMenu, "Actions");
 
