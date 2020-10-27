@@ -1650,14 +1650,18 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
    }
    if (external && !need_refresh)
    {
+      bool got = false;
       for (int i = 0; i < 8; i++)
       {
          if (refresh_parameter_queue[i] < 0)
          {
             refresh_parameter_queue[i] = index;
+            got = true;
             break;
          }
       }
+      if( ! got )
+         refresh_overflow = true;
    }
    return need_refresh;
 }
