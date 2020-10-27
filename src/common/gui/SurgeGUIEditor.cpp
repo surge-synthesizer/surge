@@ -5235,6 +5235,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     tid++;
     skinSubMenu->addSeparator(tid++);
 
+    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
+                    [this]() {
+                       Surge::UserInteractions::openFolderInFileBrowser(this->currentSkin->root + this->currentSkin->name);
+                    });
+    tid++;
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
                     []() {
                        Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );
