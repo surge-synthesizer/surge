@@ -407,14 +407,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                vLocation = 0.5 * (vLocation + 1) * ( ms->segments[i].nv1 - ms->segments[i].v0 ) + ms->segments[i].v0;
 
 
-            // we want to have the control point for Spike where the spike is
-            // but make a switch in case some other curves need the fixed control point in other places horizontally
+            // switch is here in case some other curves need the fixed control point in other places horizontally
             float fixtLocation;
             switch (ms->segments[i].type)
             {
-            case MSEGStorage::segment::SPIKE:
-               fixtLocation = 0.f;
-               break;
             default:
                fixtLocation = 0.5;
                break;
@@ -440,8 +436,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             h.useDrawRect = false;
             if( ( verticalMotion && ! horizontalMotion &&
                 (ms->segments[i].type != MSEGStorage::segment::LINEAR &&
-                 ms->segments[i].type != MSEGStorage::segment::BUMP &&
-                 ms->segments[i].type != MSEGStorage::segment::SPIKE )) ||
+                 ms->segments[i].type != MSEGStorage::segment::BUMP)) ||
                 ms->segments[i].type == MSEGStorage::segment::BROWNIAN )
             {
                float t = tpx( 0.5 * ms->segments[i].duration + ms->segmentStart[i] );
@@ -1280,8 +1275,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                     });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Horizontally"),
                             [this]() {
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
+                                        Surge::MSEG::mirrorMSEG(this->ms);
+                                        modelChanged();
                                      });
 
          actionsMenu->addSeparator();
@@ -1312,24 +1307,21 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                                      VSTGUI::COptionMenu::kNoDrawStyle |
                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-         if( tts == 0 || tts == ms->n_activeSegments - 1 )
-         {
-            auto cm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
-                            [this]() {
-                               if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
-                                  this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
-                               else
-                               {
-                                  this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
-                                  this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
-                                  this->modelChanged();
-                               }
-                            });
-            cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
-
-            settingsMenu->addSeparator();
-         }
-
+         auto cm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
+                         [this]() {
+                             if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+                                 this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+                             else
+                             {
+                                 this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
+                                 this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
+                                 this->modelChanged();
+                             }
+                         });
+         cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
+ 
+         settingsMenu->addSeparator();
+ 
          auto def = ms->segments[tts].useDeform;
          auto dm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
             this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
@@ -1360,7 +1352,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
          typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
          typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
-         typeTo("Spike", MSEGStorage::segment::Type::SPIKE);
          typeTo("Bump", MSEGStorage::segment::Type::BUMP);
          typeTo("Sine", MSEGStorage::segment::Type::SINE);
          typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);

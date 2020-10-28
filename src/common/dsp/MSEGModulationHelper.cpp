@@ -352,29 +352,6 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
       break;
    }
-   case MSEGStorage::segment::SPIKE: 
-   {
-      auto t = timeAlongSegment / r.duration;
-
-      // this part is if we want 2D adjustment of control point
-      //auto cpd = r.cpduration;
-      //auto a = 50.f - ((1.f - (cpd * cpd)) * 44.f);
-
-      // but decided to do it via deform
-      auto deform = df < 0 ? -df * 40.f : -df * 6.f;
-      auto a = 10.f + deform;
-      auto g = exp(-a * t);
-      auto c = r.cpv;
-
-      auto q = c * g;
-
-      auto pos = q * (1 - r.nv1) + r.nv1;
-      auto neg = ((1 + r.nv1) * q) + r.nv1;
-
-      res = c > 0 ? pos : neg;
-
-      break;
-   }
    case MSEGStorage::segment::BUMP:
    {
       auto t = timeAlongSegment / r.duration;
@@ -889,18 +866,69 @@ void scaleDurations(MSEGStorage *ms, float factor)
 {
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].duration *= factor;
+
+   Surge::MSEG::rebuildCache(ms);
 }
    
 void scaleValues(MSEGStorage *ms, float factor)
 {
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].v0 *= factor;
+
+   if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
+      ms->segments[ms->n_activeSegments - 1].nv1 *= factor;
+
+   Surge::MSEG::rebuildCache(ms);
 }
 
 void setAllDurationsTo(MSEGStorage *ms, float value)
 {
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].duration = value;
+
+   Surge::MSEG::rebuildCache(ms);
+}
+
+void mirrorMSEG(MSEGStorage *ms)
+{
+   int h = 0, t = ms->n_activeSegments - 1;
+   auto v0 = ms->segments[0].v0;
+
+   while (h < t)
+   {
+      // endponts become starting points
+      std::swap(ms->segments[h], ms->segments[t]);
+      ms->segments[h].v0 = ms->segments[h].nv1;
+      ms->segments[t].v0 = ms->segments[t].nv1;
+
+      // move the tail and head closer
+      h++;
+      t--;
+   };
+
+   // special case when we have an odd number of nodes
+   if (h = t)
+      ms->segments[h].v0 = ms->segments[h].nv1;
+
+   // special case end node in start/end unlinked mode
+   if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
+      ms->segments[ms->n_activeSegments - 1].nv1 = v0;
+
+   // adjust curvature to flip it the other way around for curve types that need this
+   for (int i = 0; i < ms->n_activeSegments; i++)
+   {
+      switch (ms->segments[i].type)
+      {
+      case MSEGStorage::segment::Type::LINEAR:
+         ms->segments[i].cpv *= -1.f;
+         break;
+      case MSEGStorage::segment::Type::QUAD_BEZIER:
+         ms->segments[i].cpduration = 1.f - ms->segments[i].cpduration;
+         break;
+      }
+   }
+
+   Surge::MSEG::rebuildCache(ms);
 }
 
 }
