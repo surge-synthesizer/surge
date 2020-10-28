@@ -847,6 +847,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       // Draw the axes here after the gradient fill and gridlines
       drawAxis(dc);
+      dc->setLineStyle(CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
 
       // draw segment curve
       dc->setLineWidth(1.0);
