@@ -249,10 +249,11 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 #endif
 
 
+   auto des = &(synth->storage.getPatch().dawExtraState);
    patchname = 0;
-   current_scene = 1;
-   current_fx = 0;
-   modsource = ms_lfo1;
+   current_scene = des->editor.current_scene;
+   current_fx = des->editor.current_fx;
+   modsource = des->editor.modsource;
    blinktimer = 0.f;
    blinkstate = false;
    aboutbox = 0;
@@ -260,8 +261,8 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 
    for (int i = 0; i < n_scenes; i++)
    {
-      current_osc[i] = 0;
-      modsource_editor[i] = ms_lfo1;
+      current_osc[i] = des->editor.current_osc[i];
+      modsource_editor[i] = des->editor.modsource_editor[i];
    }
    
    mod_editor = false;
@@ -270,12 +271,10 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
    int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
    float zf = userDefaultZoomFactor / 100.0;
 
-   if( synth->storage.getPatch().dawExtraState.isPopulated &&
-       synth->storage.getPatch().dawExtraState.instanceZoomFactor > 0
-       )
+   if( synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor > 0 )
    {
        // If I restore state before I am constructed I need to do this
-       zf = synth->storage.getPatch().dawExtraState.instanceZoomFactor / 100.0;
+       zf = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor / 100.0;
    }
 
    rect.left = 0;
@@ -393,6 +392,9 @@ SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* user
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+   auto isPop = synth->storage.getPatch().dawExtraState.isPopulated;
+   populateDawExtraState(synth); // If I must die, leave my state for future generations
+   synth->storage.getPatch().dawExtraState.isPopulated = isPop;
    if (frame)
    {
       getFrame()->unregisterKeyboardHook(this);
@@ -695,7 +697,35 @@ void SurgeGUIEditor::idle()
          }
       }
 
-      for (int i = 0; i < 8; i++)
+      if( synth->refresh_overflow )
+      {
+         // Basicall yreset everything and repaint.
+         synth->refresh_overflow = false;
+         for( int i=0; i<8; ++i )
+            synth->refresh_parameter_queue[i] = -1;
+         for( int i=0; i<n_total_params; ++i )
+         {
+            auto p = param[i];
+            if( ! p ) p = nonmod_param[i];
+            if( p )
+            {
+               SurgeSynthesizer::ID jid;
+               if( synth->fromSynthSideId(i, jid ))
+                  if( synth->getParameter01(jid) != p->getValue() )
+                     p->setValue(synth->getParameter01(jid));
+            }
+
+         }
+         for( int i=0; i<n_customcontrollers; ++i )
+         {
+            gui_modsrc[ms_ctrl1 + i]->setValue(
+                ((ControllerModulationSource*)synth->storage.getPatch()
+                    .scene[current_scene].modsources[ms_ctrl1 + i])->get_target01());
+
+         }
+         frame->invalid();
+      }
+      else for (int i = 0; i < 8; i++)
       {
          if (synth->refresh_parameter_queue[i] >= 0)
          {
@@ -1231,6 +1261,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          std::cout << "Unable to find SkinCtrl" << std::endl;
          continue;
       }
+      if( skinCtrl->classname == Surge::UI::NoneClassName )
+         continue;
+
       /*
        * Many of the controls are special and so require non-generalizable constructors
        * handled here. Some are standard and so once we know the tag we can use layoutComponentForSkin
@@ -3394,6 +3427,16 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   }
                }
 
+               if(editorOverlay && editorOverlayTag == "msegEditor" )
+               {
+                  auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[newsource-ms_lfo1]);
+                  if( ld->shape.val.i == ls_mseg )
+                  {
+                     showMSEGEditor();
+                  }
+               }
+
+
                queue_refresh = true;
             }
          }
@@ -5235,6 +5278,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     tid++;
     skinSubMenu->addSeparator(tid++);
 
+    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
+                    [this]() {
+                       Surge::UserInteractions::openFolderInFileBrowser(this->currentSkin->root + this->currentSkin->name);
+                    });
+    tid++;
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
                     []() {
                        Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );
@@ -6799,7 +6847,8 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       nonmod_param[paramIndex] = hsw;
       return hsw;
    }
-   std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname << std::endl;
+   if( skinCtrl->ultimateparentclassname != Surge::UI::NoneClassName )
+      std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname << std::endl;
    return nullptr;
 }
 
@@ -6868,6 +6917,17 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
       }
    }
 
+   if( curr == ls_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   {
+      // We have the MSEGEditor open and have swapped to the MSEG here
+      showMSEGEditor();
+   }
+   else if( prior == ls_mseg && curr != ls_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   {
+      // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
+      closeMSEGEditor();
+   }
+
    // update the LFO title label
    std::string modname = modulatorName(modsource_editor[current_scene], true);
    lfoNameLabel->setText(modname.c_str());
@@ -6901,7 +6961,9 @@ void SurgeGUIEditor::showMSEGEditor()
    auto vs = mse->getViewSize().getWidth();
    float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 
-   std::string title = modsource_names[modsource_editor[current_scene]];
+   std::string title = "Scene ";
+   title += current_scene == 0 ? "A " : "B ";
+   title += modsource_names[modsource_editor[current_scene]];
    title += " Editor";
    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
@@ -6925,5 +6987,10 @@ void SurgeGUIEditor::repushAutomationFor(Parameter* p)
    synth->getParent()->ParameterUpdate( id.getDawSideIndex());
    synth->getParent()->ParameterEndEdit(id.getDawSideIndex());
 #endif
+
+}
+
+void updateStateOnSynth()
+{
 
 }

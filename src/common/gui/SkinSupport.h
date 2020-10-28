@@ -71,6 +71,7 @@ private:
 namespace UI
 {
 
+extern const std::string NoneClassName;
 class SkinDB;
 
 class Skin

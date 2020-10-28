@@ -702,7 +702,29 @@ struct DAWExtraStateStorage
 {
    bool isPopulated = false;
 
-   int instanceZoomFactor = -1;
+   /*
+    * Here's the prescription to add something to the editor state
+    *
+    * 1. Add it here with a reasonable default.
+    * 2. In the SurgeGUIEditor Constructor, read off the value
+    * 3. In SurgeGUIEditor::populateDawExtraState write it
+    * 4. In SurgeGUIEditor::loadDawExtraState read it (this will probably be pretty similar to
+    *    the constructor code in step 4, but this is the step when restoring, as opposed to creating
+    *    an object).
+    * 5. In SurgePatch load/save XML write and read it
+    *
+    * Then the state will survive create/destroy and save/restore
+    */
+   struct EditorState
+   {
+      int instanceZoomFactor = -1;
+      int current_scene = 0;
+      int current_fx = 0;
+      int current_osc[n_scenes] = {0};
+      modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
+   } editor;
+
+
    bool mpeEnabled = false;
    int mpePitchBendRange = -1;
 
@@ -908,7 +930,8 @@ public:
    void storeMidiMappingToName( std::string name );
 
    // float table_sin[512],table_sin_offset[512];
-   std::mutex waveTableDataMutex, modRoutingMutex;
+   std::mutex waveTableDataMutex;
+   std::recursive_mutex modRoutingMutex;
    Wavetable WindowWT;
 
    float note_to_pitch(float x);

@@ -168,7 +168,7 @@ namespace Colors
 
       namespace Axis
       {
-          extern const Surge::Skin::Color Line, Text;
+          extern const Surge::Skin::Color Line, Text, SecondaryText;
       }
       namespace GradientFill
       {

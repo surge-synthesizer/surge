@@ -2,7 +2,7 @@
 #include "SurgeStorage.h"
 #include "UserDefaults.h"
 
-#include "audioeffect_airwinstub.h"
+#include "airwindows/AirWinBaseClass.h"
 
 int AirWinBaseClass::airwindowsSurgeDisplayPrecision() {
    int detailedMode = false;

@@ -20,15 +20,16 @@ aulayer::aulayer(AudioUnit au) : AUInstrumentBase(au, 1, 1)
 
 aulayer::~aulayer()
 {
+   // Editor refers to synth so delete it first
+   if (editor_instance)
+   {
+      delete editor_instance;
+   }
+
    if (plugin_instance)
    {
       plugin_instance->~plugin();
       _aligned_free(plugin_instance);
-   }
-
-   if (editor_instance)
-   {
-      delete editor_instance;
    }
 }
 

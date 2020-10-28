@@ -800,6 +800,8 @@ void unsplitSegment( MSEGStorage *ms, float t ) {
    if( ms->n_activeSegments - 1 == 0 ) return;
 
    int idx = timeToSegment( ms, t );
+   if( idx < 0 ) idx = 0;
+   if( idx >= ms->n_activeSegments - 1 ) idx = ms->n_activeSegments - 1;
    int prior = idx;;
    if( ( ms->segmentEnd[idx] - t < t - ms->segmentStart[idx] ) || t >= ms->totalDuration )
    {
@@ -882,6 +884,24 @@ void constrainControlPointAt( MSEGStorage *ms, int idx )
    ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, 1.f );
    ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
 }
+
+void scaleDurations(MSEGStorage *ms, float factor)
+{
+   for (int i = 0; i < ms->n_activeSegments; i++)
+      ms->segments[i].duration *= factor;
+}
    
+void scaleValues(MSEGStorage *ms, float factor)
+{
+   for (int i = 0; i < ms->n_activeSegments; i++)
+      ms->segments[i].v0 *= factor;
+}
+
+void setAllDurationsTo(MSEGStorage *ms, float value)
+{
+   for (int i = 0; i < ms->n_activeSegments; i++)
+      ms->segments[i].duration = value;
+}
+
 }
 }

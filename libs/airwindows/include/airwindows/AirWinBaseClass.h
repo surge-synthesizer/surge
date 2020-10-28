@@ -1,14 +1,17 @@
-// -*-c++-*-
+#pragma once
+
 /*
 ** We copy the AirWindows VST2s but we don't need the VST2 API; we just need the process and
 ** param methods. So this is a minimal header that lets us compile
 */
-#define __audioeffect__
 
 #include <cstdio>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <memory>
+#include <string>
+#include <vector>
 
 typedef int32_t VstInt32;
 typedef int audioMasterCallback;
@@ -76,8 +79,19 @@ struct AirWinBaseClass {
       else
          float2string ((float)(20. * log10 (value)), t, num);
    }
+   struct Registration {
+      std::unique_ptr<AirWinBaseClass> (* const create)(int);
+      const int id, displayOrder;
+      const std::string groupName, name;
+      Registration(std::unique_ptr<AirWinBaseClass> (*create)(int),
+                   int id,
+                   int displayOrder,
+                   std::string groupName,
+                   std::string name)
+      : create(create)
+      , id(id), displayOrder(displayOrder)
+      , groupName(std::move(groupName)), name(std::move(name))
+      {}
+   };
+   static std::vector<Registration> pluginRegistry();
 };
-
-
-typedef AirWinBaseClass AudioEffectX;
-typedef long VstPlugCategory;

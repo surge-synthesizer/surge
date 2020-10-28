@@ -3,7 +3,7 @@
 #pragma once
 
 #include "../Effect.h"
-#include "audioeffect_airwinstub.h"
+#include "airwindows/AirWinBaseClass.h"
 
 #include <vector>
 
@@ -46,22 +46,7 @@ public:
    std::unique_ptr<AirWinBaseClass> airwin;
    int lastSelected = -1;
    
-   struct Registration {
-      std::function<std::unique_ptr<AirWinBaseClass>()> generator;
-      int id;
-      int displayOrder;
-      std::string name, groupName;
-   };
-   std::vector<Registration> fxreg;
-
-   void registerPlugins();
-   template<typename T> void registerAirwindow( int id, int order, std::string gn, std::string name )
-   {
-      Registration r;
-      r.id = id; r.displayOrder = order; r.name = name; r.groupName = gn;
-      r.generator = [id]() { return std::make_unique<T>(id); };
-      fxreg.push_back(r);
-   }
+   std::vector<AirWinBaseClass::Registration> fxreg;
 
    struct AWFxSelectorMapper : public ParameterDiscreteIndexRemapper {
       AWFxSelectorMapper( AirWindowsEffect *fx ) { this->fx = fx; };

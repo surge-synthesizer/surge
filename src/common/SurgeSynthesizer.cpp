@@ -1650,14 +1650,18 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
    }
    if (external && !need_refresh)
    {
+      bool got = false;
       for (int i = 0; i < 8; i++)
       {
          if (refresh_parameter_queue[i] < 0)
          {
             refresh_parameter_queue[i] = index;
+            got = true;
             break;
          }
       }
+      if( ! got )
+         refresh_overflow = true;
    }
    return need_refresh;
 }
@@ -1937,7 +1941,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
       else
          return false;
    }
-   if (tms == ms_keytrack || tms == ms_lowest_key || tms == ms_highest_key || tms == ms_latest_key || tms == ms_pitchbend || tms == ms_random_bipolar || tms == ms_alternate_bipolar )
+   if (tms == ms_keytrack || tms == ms_lowest_key || tms == ms_highest_key || tms == ms_latest_key || tms == ms_pitchbend || tms == ms_random_bipolar || tms == ms_alternate_bipolar || tms == ms_timbre )
       return true;
    else
       return false;

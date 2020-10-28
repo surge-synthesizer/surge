@@ -10,7 +10,7 @@ open( OUT, "> src/$pl.h" );
 $openNS = 0;
 while( <IN> )
 {
-    s/audioeffectx.h/audioeffect_airwinstub.h/;
+    s/audioeffectx.h/airwindows\/AirWinBaseClass.h/;
     if( m/enum/ && !$openNS )
     {
         $openNS = 1;

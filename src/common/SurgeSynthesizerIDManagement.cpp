@@ -15,7 +15,7 @@
 */
 
 /*
-** This file also includes the 2020 non fiction work, "A Short Essay on Indices in
+** This file also includes the 2020 non-fiction work, "A Short Essay on Indices in
 ** Surge".
 **
 ** A Short Essay on Indices in Surge
@@ -27,51 +27,51 @@
 ** 2. The SurgeStorage object indicates a layout of types and subtypes, but the
 **    code is full of implicit and explicit assumptions that the parameter indices
 **    of those parameters are adjacent. That is, the parameters in OSCStorage
-**    are a contiguious non-overlapping bunch of parameter ids. Moreover, SurgeStorage
-**    assumes everywhere that given a parameter with id, that param_ptr[p->id] is that
-**    param, so the internal IDs are also the array indices.
+**    are a contiguious non-overlapping bunch of parameter IDs. Moreover, SurgeStorage
+**    assumes everywhere that given a parameter with ID, that param_ptr[p->id] is that
+**    parameter, so the internal IDs are also the array indices.
 ** 3. The DAWs expose a variety of phantom IDs. For instance, the Macros are
 **    the first 8 DAW parameters, but they are not actually parameters at all
-**    in surge
-** 4. SurgeGUIEditor uses the VSTGUI concept of 'tag' on a control but some controls
-**    also don't bind to parameters (like the menu button) so it has a collection
+**    in Surge.
+** 4. SurgeGUIEditor uses the VSTGUI concept of 'tag' on a control, but some controls
+**    also don't bind to parameters (like the Menu button) so it has a collection
 **    of control tags which are 'up front' in tag space. That means a SurgeGUIEditor
-**    tag from control->getTag() will either be internal (if c->gT() < start_paramtags)
+**    tag from control->getTag() will either be internal (if c->getTag() < start_paramtags)
 **    or refer to an internal parameter index (control->getTag() - start_paramtags is an index
 **    into the synth->param_ptr array).
-** 5. The VST3 makes it worse since, as VST3 doesn't support midi control inputs, we
-**    have had to create midi control port virtual parameters above the end of surge
+** 5. The VST3 makes it worse since, as VST3 doesn't support MIDI control inputs, we
+**    have had to create MIDI control port virtual parameters after the end of Surge
 **    params, so the VST3 is full of ifs which work but are not very well documented.
 **
 ** Luckily, patch streaming is immune to all of this since patches (and LV2 control ports)
 ** use the streaming name. So this problem only really rears its hed if those DAW phantom
-** IDs align with the Parameter IDs as 1:1 offsets. If that was the case, then adding
-** a param would change VST IDs. And that is the case in surge 1.7.1 and earlier.
+** IDs align with the parameter IDs as 1:1 offsets. If that was the case, then adding
+** a parameter would change VST IDs. And that is the case in Surge 1.7.1 and earlier.
 **
-** So what does it mean to add a parameter? Well lets consider adding a parameter to
+** So what does it mean to add a parameter? Well let's consider adding a parameter to
 ** OSCStorage so oscillators had 8, not 7, slots each. If you just did that willy nilly
-** today here's what would happen.
+** today here's what would happen:
 **
-** 1. You would change n_osc_params from 7 to 8 and recomile. Great. Everything would work
+** 1. You would change n_osc_params from 7 to 8 and recompile. Great. Everything would work
 **    in headless and the synth would come up no problem and load patches and run. If we had
-**    some place put in a '7' rather than an 'n_osc_params' you woudl have to find and fix that.
+**    some place put in a '7' rather than an 'n_osc_params' you would have to find and fix that.
 ** 2. The VST2/3/AU ID of every item after scene 1 / osc 1 would increase by 3 (in scene A)
 **    and 6 (in scene B)
 ** 3. So almost all your old automation would map to the wrong spot in your DAW.
 **
-** So this file exists to "not have that happen" (or more accurately "make it so that can not
+** So this file exists to "not have that happen" (or more accurately "make it so that cannot
  * happen when we expand"). How does it work?
  *
- * Well first SurgeSynthesizer has had all of its internal APIs to do things like get and set
+ * Well first, SurgeSynthesizer has had all of its internal APIs to do things like get and set
  * parameters converted from int as index to an ID object as index. This solves one of the biggest
- * confusing points, which is "is the int I am taking about the param index, the gui index, the daw
- * index, or the daw id". Once that's done you get obvious constructors for those, which are the
+ * confusing points, which is "is the int I am taking about the param index, the GUI index, the DAW
+ * index, or the DAW ID". Once that's done you get obvious constructors for those, which are the
  * from methods. (Note the fromGUITag is a static on SurgeGUIEditor since that requires GUI information
- * but also is only called from GUI aware clients).
+ * but also is only called from GUI-aware clients).
  *
  * And then you have two strategies.
  *
- * For hosts which match the DAW index and DAW id (! PLUGIN_ID_AND_INDEX_ARE_DISTINCT, which in
+ * For hosts which match the DAW index and DAW ID (! PLUGIN_ID_AND_INDEX_ARE_DISTINCT, which in
  * this implementation are the VST2, LV2 and AU) you build everything on the DAWSideIndex and
  * the SynthID and basically convert back and forth using get methods at control points.
  *
@@ -85,9 +85,9 @@
  *    DAW params 0->7 map to the custom controls, which have SynthID metaparam_offset_i
  *    DAW params 8->n_params map to the params, which have identical SynthID values
  *    DAW params n_params -> n_params + 7 map to the first 8 params, displaces by the controls, which have
- *         synthid 0-7.
+ *         SynthID 0-7.
  *
- *  The ID version basically keeps the DAWID and the SYnthID the same for now. In a future version
+ *  The ID version basically keeps the DAW ID and the SynthID the same for now. In a future version
  *  where we expand SynthIDs (which remember will need to be continugous) that constraint will break
  *  to preserve streaming.
 */
@@ -175,7 +175,7 @@ bool SurgeSynthesizer::fromSynthSideIdWithGuiOffset(int i,
                                                     ID& q)
 {
    bool res = false;
-   if( i >= start_paramtags )
+   if( i >= start_paramtags  && i <= start_paramtags + n_total_params )
       res = fromSynthSideId(i-start_paramtags, q ); // wrong for macros and stuff
    else if( i >= start_metacontrol_tag && i <= start_metacontrol_tag + num_metaparameters )
       res = fromSynthSideId(i-start_metacontrol_tag+metaparam_offset, q );

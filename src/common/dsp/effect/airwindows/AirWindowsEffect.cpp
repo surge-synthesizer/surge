@@ -1,4 +1,4 @@
-#include "airwindows_adapter.h"
+#include "AirWindowsEffect.h"
 #include "UserDefaults.h"
 
 AirWindowsEffect::AirWindowsEffect( SurgeStorage *storage, FxStorage *fxdata, pdata *pd ) :
@@ -70,7 +70,7 @@ void AirWindowsEffect::init_ctrltypes() {
    ** of our FX hasn't changed.
    */
    Effect::init_ctrltypes();
-   registerPlugins();
+   fxreg = AirWinBaseClass::pluginRegistry();
 
    fxdata->p[0].set_name( "FX" );
    fxdata->p[0].set_type( ct_airwindow_fx );
@@ -212,8 +212,8 @@ void AirWindowsEffect::process( float *dataL, float *dataR )
 
 void AirWindowsEffect::setupSubFX( int sfx, bool useStreamedValues )
 {
-   Registration r = fxreg[sfx];
-   airwin = r.generator();
+   const auto& r = fxreg[sfx];
+   airwin = r.create(r.id);
    airwin->storage = storage;
    
    char fxname[1024];
@@ -221,4 +221,3 @@ void AirWindowsEffect::setupSubFX( int sfx, bool useStreamedValues )
    lastSelected = sfx;
    resetCtrlTypes( useStreamedValues );
 }
-

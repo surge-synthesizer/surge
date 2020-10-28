@@ -21,6 +21,8 @@ namespace Surge
 namespace UI
 {
 
+
+const std::string NoneClassName = "none";
 const std::string Skin::defaultImageIDPrefix = "DEFAULT/";
 std::ostringstream SkinDB::errorStream;
    
@@ -667,7 +669,11 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
          }
          else
          {
-            auto uid = attrstr(lkid, "ui_identifier");
+            // allow using case insensitive UI identifiers
+            auto str = attrstr(lkid, "ui_identifier");
+            std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
+
+            auto uid = str;
             auto conn = Surge::Skin::Connector::connectorByID(uid);
             if( !conn.payload || conn.payload->defaultComponent == Surge::Skin::Connector::NONE )
             {
@@ -677,7 +683,7 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
             {
                control->copyFromConnector(conn);
                control->type = Control::Type::UIID;
-               control->ui_id = attrstr(lkid, "ui_identifier");
+               control->ui_id = uid;
             }
          }
 
@@ -992,6 +998,15 @@ void Surge::UI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
       auto pc = controlForUIID(bp);
       while( pc )
       {
+         /*
+          * A special case: If a group has control type 'none' then my control adopts it
+          * This is the case only for none.
+          */
+         if( pc->classname == NoneClassName )
+         {
+            c->classname = NoneClassName;
+            c->ultimateparentclassname = NoneClassName;
+         }
          c->x += pc->x;
          c->y += pc->y;
          if( pc->allprops.find( "base_parent" ) != pc->allprops.end() )

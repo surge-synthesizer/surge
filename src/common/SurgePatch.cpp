@@ -1723,10 +1723,38 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
        {
            int ival;
            TiXmlElement *p;
+
+           // This has a lecacy name since it was from before we moved into the editor object
            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("instanceZoomFactor"));
            if( p &&
                p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
-               dawExtraState.instanceZoomFactor = ival;
+               dawExtraState.editor.instanceZoomFactor = ival;
+
+           // This is the non-legacy way to save editor state
+           p = TINYXML_SAFE_TO_ELEMENT( de->FirstChild( "editor" ) );
+           if( p )
+           {
+              if( p->QueryIntAttribute( "current_scene", &ival ) == TIXML_SUCCESS )
+                 dawExtraState.editor.current_scene = ival;
+
+              if( p->QueryIntAttribute( "current_fx", &ival ) == TIXML_SUCCESS )
+                 dawExtraState.editor.current_fx = ival;
+
+              if( p->QueryIntAttribute( "modsource", &ival ) == TIXML_SUCCESS )
+                 dawExtraState.editor.modsource = (modsources)ival;
+
+              for( int sc=0; sc<n_scenes; sc++ )
+              {
+                 std::string con = "current_osc_" + std::to_string( sc );
+                 if( p->QueryIntAttribute( con.c_str(), &ival ) == TIXML_SUCCESS )
+                    dawExtraState.editor.current_osc[sc] = ival;
+                 con = "modsource_editor_" + std::to_string( sc );
+                 if( p->QueryIntAttribute( con.c_str(), &ival ) == TIXML_SUCCESS )
+                    dawExtraState.editor.modsource_editor[sc] = (modsources)ival;
+              }
+
+           }
+
 
            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpeEnabled"));
            if( p &&
@@ -2087,9 +2115,24 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    
    if( dawExtraState.isPopulated )
    {
+      // This has a lecacy name since it was from before we moved into the editor object
        TiXmlElement izf("instanceZoomFactor");
-       izf.SetAttribute( "v", dawExtraState.instanceZoomFactor );
+       izf.SetAttribute( "v", dawExtraState.editor.instanceZoomFactor );
        dawExtraXML.InsertEndChild(izf);
+
+       TiXmlElement eds( "editor" );
+       eds.SetAttribute( "current_scene", dawExtraState.editor.current_scene );
+       eds.SetAttribute( "current_fx", dawExtraState.editor.current_fx );
+       eds.SetAttribute( "modsource", dawExtraState.editor.modsource );
+       for( int sc=0; sc<n_scenes; sc++ )
+       {
+          std::string con = "current_osc_" + std::to_string( sc );
+          eds.SetAttribute( con.c_str(), dawExtraState.editor.current_osc[sc]);
+          con = "modsource_editor_" + std::to_string( sc );
+          eds.SetAttribute( con.c_str(), dawExtraState.editor.modsource_editor[sc]);
+       }
+
+       dawExtraXML.InsertEndChild(eds);
 
        TiXmlElement mpe("mpeEnabled");
        mpe.SetAttribute("v", dawExtraState.mpeEnabled ? 1 : 0 );
