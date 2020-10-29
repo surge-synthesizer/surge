@@ -18,7 +18,25 @@
 #include "vstcontrols.h"
 #include "SkinSupport.h"
 
-class CAboutBox : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class SurgeGUIEditor;
+
+class CAboutBox : public VSTGUI::CViewContainer, public VSTGUI::IControlListener
+{
+public:
+   CAboutBox( const VSTGUI::CRect &size, SurgeGUIEditor *editor,
+             Surge::UI::Skin::ptr_t skin,
+             std::shared_ptr<SurgeBitmaps> bitmapStore );
+   VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where,
+                                       const VSTGUI::CButtonState& buttons) override;
+   VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where,
+                                         const VSTGUI::CButtonState& buttons) override;
+   void valueChanged(VSTGUI::CControl* pControl) override;
+
+   SurgeGUIEditor *editor;
+};
+
+#if 0
+class CAboutBoxBG : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
    CAboutBox(const VSTGUI::CRect& size,
@@ -55,3 +73,4 @@ protected:
 
    static VSTGUI::SharedPointer<VSTGUI::CFontDesc> infoFont;
 };
+#endif

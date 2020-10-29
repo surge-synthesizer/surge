@@ -470,8 +470,6 @@ void SurgeGUIEditor::idle()
          zoomInvalid = false;
       }
 
-      if (aboutbox && (aboutbox->getValue() > 0.5f))
-         return;
       /*static CDrawContext drawContext
         (frame, NULL, systemWindow);*/
       // CDrawContext *drawContext = frame->createDrawContext();
@@ -1539,12 +1537,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ((CParameterTooltip *)infowindow)->setSkin( currentSkin );
    frame->addView(infowindow);
 
-   CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
-   aboutbox =
-      new CAboutBox(menurect, this, 0, 0, wsize, nopoint, bitmapStore->getBitmap(IDB_ABOUT));
-   ((CAboutBox *)aboutbox)->setSkin(currentSkin,bitmapStore);
-
-   frame->addView(aboutbox);
 
    setupSaveDialog();
 
@@ -4605,8 +4597,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->addSeparator(eid++);
 
     addCallbackMenu(settingsMenu, "About Surge", [this]() {
-       if (aboutbox)
-          ((CAboutBox*)aboutbox)->boxShow(this->synth->storage.datapath, this->synth->storage.userDataPath, this->synth->hostProgram);
+       this->showAboutBox();
     });
     eid++;
 
@@ -6953,7 +6944,23 @@ void SurgeGUIEditor::repushAutomationFor(Parameter* p)
 
 }
 
-void updateStateOnSynth()
+void SurgeGUIEditor::showAboutBox()
 {
+   std::cout << "Show About Box" << std::endl;
 
+   CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
+   aboutbox = new CAboutBox(wsize, this, currentSkin, bitmapStore );
+   aboutbox->setVisible( true );
+   getFrame()->addView( aboutbox );
+}
+
+void SurgeGUIEditor::hideAboutBox()
+{
+   std::cout << "Hide About box" << std::endl;
+   if( aboutbox )
+   {
+      aboutbox->setVisible( false );
+      removeFromFrame.push_back( aboutbox );
+      aboutbox = nullptr;
+   }
 }

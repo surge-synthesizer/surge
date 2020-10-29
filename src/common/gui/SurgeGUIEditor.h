@@ -57,6 +57,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
  
 class CSurgeSlider;
 class CModulationSourceButton;
+class CAboutBox;
 
 #if TARGET_VST3
 namespace Steinberg
@@ -354,7 +355,11 @@ private:
     */
    int findLargestFittingZoomBetween(int zoomLow, int zoomHigh, int zoomQuanta, int percentageOfScreenAvailable,
                                      float baseW, float baseH);
-   
+
+public:
+   void showAboutBox();
+   void hideAboutBox();
+
 private:
 #if TARGET_VST3
    Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c,
@@ -376,7 +381,7 @@ private:
    VSTGUI::CControl* vu[16];
    VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
    VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;
-   VSTGUI::CControl* aboutbox = nullptr;
+   CAboutBox* aboutbox = nullptr;
    VSTGUI::CViewContainer* saveDialog = nullptr;
    VSTGUI::CTextEdit* patchName = nullptr;
    VSTGUI::CTextEdit* patchCategory = nullptr;
