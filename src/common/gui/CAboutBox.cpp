@@ -159,10 +159,12 @@ CAboutBox::CAboutBox(const VSTGUI::CRect& size, SurgeGUIEditor* editor, Surge::U
    auto toph = new CTextLabel( infobg );
    toph->setTransparency(false);
    toph->setBackColor(CColor(0, 0, 0, 255));
+   toph->setMouseableArea(CRect());
    addView(toph);
    toph = new CTextLabel( skininfobg );
    toph->setTransparency(false);
    toph->setBackColor(CColor(0, 0, 0, 255));
+   toph->setMouseableArea(CRect());
    addView(toph);
 
    // Here's a temporary thing o trigger a copy. Fix this widget
