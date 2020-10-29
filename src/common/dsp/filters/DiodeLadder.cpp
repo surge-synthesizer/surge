@@ -94,9 +94,12 @@ namespace DiodeLadderFilter
 
       const float G = g / (1.0 + g);
 
-      const float k = reso * 16.0f;
+      // Odin multiplies its resonance by 16, but when we do that the filter explodes.
+      // Experimentally, a limit of 3 worked okay... but it's a bit concerning that there's
+      // a difference to Odin.
+      const float k = reso * 3.0f;
       // clamp to [0..16]
-      const float km = (k > 16.f) ? 16.f : ((k < 0.f) ? 0.f : k);
+      const float km = (k > 3.f) ? 3.f : ((k < 0.f) ? 0.f : k);
 
       C[dlf_alpha] = G;
       C[dlf_gamma] = m_gamma;
