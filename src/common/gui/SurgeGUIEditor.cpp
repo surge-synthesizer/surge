@@ -57,6 +57,8 @@
 
 #include "vstgui/lib/cvstguitimer.h"
 
+#include "SurgeVst3Processor.h"
+
 
 template< typename T >
 struct RememberForgetGuard {
@@ -236,7 +238,7 @@ bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynt
    return synth->fromSynthSideIdWithGuiOffset(tag, start_paramtags, tag_mod_source0 + ms_ctrl1, q );
 }
 
-SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
+SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
 {
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "SurgeGUIEditor::SurgeGUIEditor" );
@@ -417,6 +419,10 @@ void SurgeGUIEditor::idle()
 #endif
 #if TARGET_VST3 && LINUX
    LinuxVST3Idle();
+#endif
+#if TARGET_VST3
+   if( _effect )
+      _effect->uithreadIdleActivity();
 #endif
 
    if (!synth)

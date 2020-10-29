@@ -471,19 +471,6 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
    surgeInstance->time_data.tempo = tempo;
    surgeInstance->resetStateFromTimeData();
 
-   if( checkNamesEvery++ == 20 )
-   {
-      checkNamesEvery = 0;
-      if( std::atomic_exchange( &parameterNameUpdated, false ) )
-      {
-         auto comph = getComponentHandler();
-         if( comph )
-         {
-            comph->restartComponent( kParamTitlesChanged );
-         }
-      }
-   }
-   
    for (i = 0; i < numSamples; i++)
    {
       if (blockpos == 0)
@@ -1049,4 +1036,20 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
         haveZoomed = true;
         lastZoom = e->getZoomFactor();
     }
+}
+
+void SurgeVst3Processor::uithreadIdleActivity()
+{
+   if (checkNamesEvery++ == 2)
+   {
+      checkNamesEvery = 0;
+      if (std::atomic_exchange(&parameterNameUpdated, false))
+      {
+         auto comph = getComponentHandler();
+         if (comph)
+         {
+            comph->restartComponent(kParamTitlesChanged | kParamValuesChanged);
+         }
+      }
+   }
 }
