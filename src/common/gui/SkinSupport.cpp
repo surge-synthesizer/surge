@@ -45,8 +45,7 @@ SkinDB::~SkinDB()
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "SkinDB::~SkinDB" );
 #endif   
-   skins.clear(); // Not really necessary but means the skins are destroyed before the rest of the
-                  // dtor runs
+   skins.clear(); // Not really necessary but means the skins are destroyed before the rest of the dtor runs
    // std::cout << "Destroying SkinDB" << std::endl;
 }
 
@@ -478,8 +477,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                    )
                {
                   validKids = false;
-                  for( auto kk : k.second )
-                     std::cout << _D(kk.first) << _D(kk.second) << std::endl;
+                  //for( auto kk : k.second )
+                     //std::cout << _D(kk.first) << _D(kk.second) << std::endl;
                   FIXMEERROR << "Each subchild of a multi-image must ontain a zoom-level and resource";
                   break;
                }
@@ -980,8 +979,7 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector& c
    default: {
       classname = "UNKNOWN";
       ultimateparentclassname = "UNKNOWN";
-      std::cout << "SOFTWARE ERROR " << __LINE__ << " " << __FILE__ << " '" << ui_id << "' "
-                << c.payload->defaultComponent << std::endl;
+      //std::cout << "SOFTWARE ERROR " << __LINE__ << " " << __FILE__ << " '" << ui_id << "' " << c.payload->defaultComponent << std::endl;
       break;
    }
    }
