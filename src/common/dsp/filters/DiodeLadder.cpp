@@ -179,13 +179,13 @@ namespace DiodeLadderFilter
       // (comp - km * sigma) / (km * gamma + 1.0)
       const __m128 u = D(S(comp, M(f->C[dlf_km], sigma)), A(M(f->C[dlf_km], f->C[dlf_gamma]), one));
 
-      const __m128 result1 = doLpf(      u, f->C[dlf_alpha], beta1, gamma1, g, f->C[dlf_G2], one, feedback1,
+      const __m128 result1 = doLpf(      u, f->C[dlf_alpha], beta1, gamma1,    g, f->C[dlf_G2],  one, feedback1,
             getFO(beta1,    g, feedback1, f->R[dlf_z1]), f->R[dlf_z1]);
       const __m128 result2 = doLpf(result1, f->C[dlf_alpha], beta2, gamma2,   hg, f->C[dlf_G3], half, feedback2,
             getFO(beta2,   hg, feedback2, f->R[dlf_z2]), f->R[dlf_z2]);
-      const __m128 result3 = doLpf(result2, f->C[dlf_alpha], beta1, gamma3,   hg, f->C[dlf_G4], half, feedback3,
+      const __m128 result3 = doLpf(result2, f->C[dlf_alpha], beta3, gamma3,   hg, f->C[dlf_G4], half, feedback3,
             getFO(beta3,   hg, feedback3, f->R[dlf_z3]), f->R[dlf_z3]);
-      const __m128 result  = doLpf(result1, f->C[dlf_alpha], beta1,    one, zero,         zero, half, zero,
+      const __m128 result  = doLpf(result3, f->C[dlf_alpha], beta4,    one, zero,         zero, half, zero,
             getFO(beta4, zero,      zero, f->R[dlf_z4]), f->R[dlf_z4]);
 
       return result;
