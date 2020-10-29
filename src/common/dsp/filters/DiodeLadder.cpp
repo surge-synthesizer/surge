@@ -126,8 +126,8 @@ namespace DiodeLadderFilter
       const __m128 half = F(0.5f);
 
       const __m128 sg3 = f->C[dlf_G4];
-      const __m128 sg2 = sg3 * f->C[dlf_G3];
-      const __m128 sg1 = sg2 * f->C[dlf_G2];
+      const __m128 sg2 = M(sg3, f->C[dlf_G3]);
+      const __m128 sg1 = M(sg2, f->C[dlf_G2]);
       // sg4 is 1.0, just inline it
       
       const __m128 g = f->C[dlf_g];
