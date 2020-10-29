@@ -94,12 +94,9 @@ namespace DiodeLadderFilter
 
       const float G = g / (1.0 + g);
 
-      // Odin multiplies its resonance by 16, but when we do that the filter explodes.
-      // Experimentally, a limit of 3 worked okay... but it's a bit concerning that there's
-      // a difference to Odin.
-      const float k = reso * 3.0f;
+      const float k = reso * 16.0f;
       // clamp to [0..16]
-      const float km = (k > 3.f) ? 3.f : ((k < 0.f) ? 0.f : k);
+      const float km = (k > 16.f) ? 16.f : ((k < 0.f) ? 0.f : k);
 
       C[dlf_alpha] = G;
       C[dlf_gamma] = m_gamma;
@@ -163,7 +160,7 @@ namespace DiodeLadderFilter
       // feedback4 is always zero, inline it
       const __m128 feedback3 = getFO(beta4, zero, zero, f->R[dlf_z4]);
       const __m128 feedback2 = getFO(beta3, hg, f->R[dlf_feedback3], f->R[dlf_z3]);
-      const __m128 feedback1 = getFO(beta2, hg, f->R[dlf_feedback2], f->R[dlf_z1]);
+      const __m128 feedback1 = getFO(beta2, hg, f->R[dlf_feedback2], f->R[dlf_z2]);
 
       const __m128 sigma =
          A(A(A(
