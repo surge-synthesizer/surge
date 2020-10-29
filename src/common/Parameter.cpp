@@ -715,17 +715,14 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
-   case ct_amplitude:
-<<<<<<< HEAD
    case ct_lfodeform:
       val_min.f = -1;
       val_max.f = 1;
       valtype = vt_float;
       val_default.f = 0;
       break;
-=======
+   case ct_amplitude:
    case ct_amplitude_clipper:
->>>>>>> 423a6f152f006d09b295733e31349f0a0872e77b
    case ct_lfoamplitude:
       val_min.f = 0;
       val_max.f = 1;

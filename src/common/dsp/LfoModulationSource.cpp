@@ -559,13 +559,6 @@ void LfoModulationSource::process_block()
          break;
 
       case type_2:
-          // if (localcopy[ideform].f < 0)
-          //iout = pow(env_val, 1.0 + localcopy[ideform].f * 0.7);
-
-          // if (localcopy[ideform].f > 0)
-          // iout = pow(env_val, 1.0 + localcopy[ideform].f * 3);
-          
-         //iout = pow(env_val, 1.0 + localcopy[ideform].f * 0.7);
          iout = pow(env_val, 1 / localcopy[ideform].f);
          break;
       }
