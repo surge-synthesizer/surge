@@ -24,6 +24,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #elif TARGET_VST3
 #include "public.sdk/source/vst/vstguieditor.h"
 typedef Steinberg::Vst::VSTGUIEditor EditorType;
+#define PARENT_PLUGIN_TYPE SurgeVst3Processor
 #elif TARGET_VST2
 #if LINUX
 #include "../linux/linux-aeffguieditor.h"
@@ -35,6 +36,10 @@ typedef VSTGUI::AEffGUIEditor EditorType;
 #else
 #include "vstgui/plugin-bindings/plugguieditor.h"
 typedef VSTGUI::PluginGUIEditor EditorType;
+#endif
+
+#ifndef PARENT_PLUGIN_TYPE
+#define PARENT_PLUGIN_TYPE void
 #endif
 
 #include "SurgeStorage.h"
@@ -72,7 +77,7 @@ private:
    using super = EditorType;
 
 public:
-   SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
+   SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
    virtual ~SurgeGUIEditor();
 
    static int start_paramtag_value;
@@ -440,7 +445,7 @@ private:
    float blinktimer = 0;
    bool blinkstate = false;
    bool useDevMenu = false;
-   void* _effect = nullptr;
+   PARENT_PLUGIN_TYPE* _effect = nullptr;
    void* _userdata = nullptr;
    VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;
    int firstIdleCountdown = 0;

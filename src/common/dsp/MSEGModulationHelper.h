@@ -58,5 +58,6 @@ namespace Surge
       void scaleDurations(MSEGStorage* s, float factor);
       void scaleValues(MSEGStorage* s, float factor);
       void setAllDurationsTo(MSEGStorage* s, float value);
+      void mirrorMSEG(MSEGStorage* s);
    }
 }

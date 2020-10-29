@@ -57,6 +57,8 @@
 
 #include "vstgui/lib/cvstguitimer.h"
 
+#include "SurgeVst3Processor.h"
+
 
 template< typename T >
 struct RememberForgetGuard {
@@ -236,7 +238,7 @@ bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynt
    return synth->fromSynthSideIdWithGuiOffset(tag, start_paramtags, tag_mod_source0 + ms_ctrl1, q );
 }
 
-SurgeGUIEditor::SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
+SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* synth, void* userdata) : super(effect)
 {
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "SurgeGUIEditor::SurgeGUIEditor" );
@@ -417,6 +419,10 @@ void SurgeGUIEditor::idle()
 #endif
 #if TARGET_VST3 && LINUX
    LinuxVST3Idle();
+#endif
+#if TARGET_VST3
+   if( _effect )
+      _effect->uithreadIdleActivity();
 #endif
 
    if (!synth)
@@ -782,7 +788,7 @@ void SurgeGUIEditor::idle()
                auto tag = cc->getTag();
                SurgeSynthesizer::ID jid;
 
-               auto sv = 0;
+               auto sv = 0.f;
                if( synth->fromSynthSideId(j, jid ))
                   sv = synth->getParameter01(jid);
                auto cv = cc->getValue();
@@ -794,13 +800,13 @@ void SurgeGUIEditor::idle()
                   if (tag == fmconfig_tag)
                   {
                      auto targetTag = synth->storage.getPatch().scene[current_scene].fm_depth.id + start_paramtags;
-                     auto targetState = ((int)(sv * n_fm_configuration) == fm_off);
+                     auto targetState = (round(sv * n_fm_configuration) == fm_off);
                      resetMap[targetTag] = targetState;
                   }
 
                   if (tag == filterblock_tag)
                   {
-                     auto pval = (int)(sv * n_fb_configuration);
+                     auto pval = round(sv * n_fb_configuration);
 
                      auto targetTag = synth->storage.getPatch().scene[current_scene].feedback.id + start_paramtags;
                      auto targetState = (pval == fb_serial);

@@ -71,7 +71,7 @@ namespace K35Filter
       const float gp1= (1.0f + g); // g plus 1
       const float G  = g / gp1;
 
-      const float k = reso * 2.0f;
+      const float k = reso * 1.96f;
       // clamp to [0.01..1.96]
       const float mk = (k > 1.96f) ? 1.96f : ((k < 0.01f) ? 0.01f : k);
 

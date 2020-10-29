@@ -372,12 +372,11 @@ void CLFOGui::draw(CDrawContext* dc)
 
       // LFO waveform itself
       CRect cr;
-      dc->getClipRect(cr);
       auto axesbox = CRect( top0.x, top0.y, bot1.x, bot1.y );
-      dc->setClipRect(axesbox);
       dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Wave));
+      dc->setLineStyle(CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
-      dc->setClipRect(cr);
+
       // top ruler
       if (drawBeats)
       {

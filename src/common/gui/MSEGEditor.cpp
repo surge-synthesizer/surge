@@ -63,6 +63,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
       tag_horizontal_snap,
       tag_horizontal_value,
       tag_loop_mode,
+      tag_edit_mode,
    } tags;
    
    void rebuild();
@@ -407,14 +408,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                vLocation = 0.5 * (vLocation + 1) * ( ms->segments[i].nv1 - ms->segments[i].v0 ) + ms->segments[i].v0;
 
 
-            // we want to have the control point for Spike where the spike is
-            // but make a switch in case some other curves need the fixed control point in other places horizontally
+            // switch is here in case some other curves need the fixed control point in other places horizontally
             float fixtLocation;
             switch (ms->segments[i].type)
             {
-            case MSEGStorage::segment::SPIKE:
-               fixtLocation = 0.f;
-               break;
             default:
                fixtLocation = 0.5;
                break;
@@ -440,8 +437,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             h.useDrawRect = false;
             if( ( verticalMotion && ! horizontalMotion &&
                 (ms->segments[i].type != MSEGStorage::segment::LINEAR &&
-                 ms->segments[i].type != MSEGStorage::segment::BUMP &&
-                 ms->segments[i].type != MSEGStorage::segment::SPIKE )) ||
+                 ms->segments[i].type != MSEGStorage::segment::BUMP)) ||
                 ms->segments[i].type == MSEGStorage::segment::BROWNIAN )
             {
                float t = tpx( 0.5 * ms->segments[i].duration + ms->segmentStart[i] );
@@ -852,6 +848,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       // Draw the axes here after the gradient fill and gridlines
       drawAxis(dc);
+      dc->setLineStyle(CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
 
       // draw segment curve
       dc->setLineWidth(1.0);
@@ -1280,8 +1277,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                     });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Horizontally"),
                             [this]() {
-                                           Surge::UserInteractions::promptError("Work In Progress", "Coming soon!");
-                                           //modelChanged();
+                                        Surge::MSEG::mirrorMSEG(this->ms);
+                                        modelChanged();
                                      });
 
          actionsMenu->addSeparator();
@@ -1312,24 +1309,21 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                                      VSTGUI::COptionMenu::kNoDrawStyle |
                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-         if( tts == 0 || tts == ms->n_activeSegments - 1 )
-         {
-            auto cm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
-                            [this]() {
-                               if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
-                                  this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
-                               else
-                               {
-                                  this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
-                                  this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
-                                  this->modelChanged();
-                               }
-                            });
-            cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
-
-            settingsMenu->addSeparator();
-         }
-
+         auto cm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"),
+                         [this]() {
+                             if( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+                                 this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+                             else
+                             {
+                                 this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
+                                 this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
+                                 this->modelChanged();
+                             }
+                         });
+         cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
+ 
+         settingsMenu->addSeparator();
+ 
          auto def = ms->segments[tts].useDeform;
          auto dm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
             this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
@@ -1360,7 +1354,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
          typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
          typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
-         typeTo("Spike", MSEGStorage::segment::Type::SPIKE);
          typeTo("Bump", MSEGStorage::segment::Type::BUMP);
          typeTo("Sine", MSEGStorage::segment::Type::SINE);
          typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);
@@ -1403,50 +1396,70 @@ void MSEGControlRegion::valueChanged( CControl *p )
 {
    auto tag = p->getTag();
    auto val = p->getValue();
-   switch( tag )
+
+   switch (tag)
    {
-   case tag_loop_mode: {
-      int m = floor( val * 2 + 0.1 ) + 1;
+   case tag_edit_mode:
+   {
+      ms->editMode = (MSEGStorage::EditMode)val;
+      canvas->modelChanged();
+
+      break;
+   }
+   case tag_loop_mode:
+   {
+      int m = floor((val * 2) + 0.1) + 1;
       ms->loopMode = (MSEGStorage::LoopMode)m;
       canvas->modelChanged();
+
+      break;
    }
-   break;
-   case tag_segment_movement_mode: {
-      int m = floor(val * 2 + 0.5);
+   case tag_segment_movement_mode:
+   {
+      int m = floor((val * 2) + 0.5);
       
       eds->timeEditMode = m;
 
       canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
       canvas->recalcHotZones(CPoint(0, 0));
       canvas->invalid();
+
+      break;
    }
-   break;
    case tag_horizontal_snap:
-      if( val < 0.5 ) eds->hSnap = 0; else eds->hSnap = eds->hSnapDefault;
+   {
+      eds->hSnap = (val < 0.5) ? 0.f : eds->hSnap = eds->hSnapDefault;
       canvas->invalid();
+
       break;
+   }
    case tag_vertical_snap:
-      if( val < 0.5 ) eds->vSnap = 0; else eds->vSnap = eds->vSnapDefault;
+   {
+      eds->vSnap = (val < 0.5) ? 0.f : eds->vSnap = eds->vSnapDefault;
       canvas->invalid();
+
       break;
+   }
    case tag_vertical_value:
    {
-      auto fv = 1.f / std::max( 1, static_cast<CNumberField*>(p)->getIntValue() );
+      auto fv = 1.f / std::max(1, static_cast<CNumberField*>(p)->getIntValue());
       eds->vSnapDefault = fv;
-      if( eds->vSnap > 0 )
+      if (eds->vSnap > 0)
          eds->vSnap = eds->vSnapDefault;
       canvas->invalid();
-   }
+
       break;
+   }
    case tag_horizontal_value:
    {
-      auto fv = 1.f / std::max( 1, static_cast<CNumberField*>(p)->getIntValue() );
+      auto fv = 1.f / std::max(1, static_cast<CNumberField*>(p)->getIntValue());
       eds->hSnapDefault = fv;
-      if( eds->hSnap > 0 )
+      if (eds->hSnap > 0)
          eds->hSnap = eds->hSnapDefault;
       canvas->invalid();
-   }
+
       break;
+   }
    default:
       break;
    }
@@ -1490,7 +1503,33 @@ void MSEGControlRegion::rebuild()
 
       // this value centers the loop mode and snap sections against the MSEG editor width
       // if more controls are to be added to that center section, reduce this value
-      xpos += 225;
+      xpos += 173;
+   }
+
+   // edit mode
+   {
+      int segWidth = 107;
+      int btnWidth = 91;
+      int ypos = 1;
+
+      auto eml = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Edit Mode");
+      eml->setFont(labelFont);
+      eml->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
+      eml->setTransparency(true);
+      eml->setHoriAlign(kLeftText);
+      addView(eml);
+
+      ypos += margin + labelHeight;
+
+      // button
+      auto btnrect = CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight));
+      auto ew = new CHSwitch2(btnrect, this, tag_edit_mode, 2, controlHeight, 1, 2,
+                        associatedBitmapStore->getBitmap(IDB_MSEG_EDIT_MODE), CPoint(0, 0), true);
+      ew->setSkin(skin, associatedBitmapStore);
+      addView(ew);
+      ew->setValue(ms->editMode);
+
+      xpos += segWidth;
    }
 
    // loop mode
@@ -1512,14 +1551,14 @@ void MSEGControlRegion::rebuild()
       auto btnrect = CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight));
       auto lw = new CHSwitch2(btnrect, this, tag_loop_mode, 3, controlHeight, 1, 3,
                         associatedBitmapStore->getBitmap(IDB_MSEG_LOOP_MODES), CPoint(0, 0), true);
-      lw->setSkin(skin,associatedBitmapStore);
+      lw->setSkin(skin, associatedBitmapStore);
       addView(lw);
       lw->setValue((ms->loopMode - 1) / 2.f);
 
       xpos += segWidth;
    }
    
-   // Snap Section
+   // snap to grid
    {
       int btnWidth = 49, editWidth = 32;
       int margin = 2;
@@ -1538,7 +1577,7 @@ void MSEGControlRegion::rebuild()
 
       auto hbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_horizontal_snap,
                                      associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
-      hbut->setSkin(skin,associatedBitmapStore);
+      hbut->setSkin(skin, associatedBitmapStore);
       addView(hbut);
       hbut->setValue(eds->hSnap < 0.001 ? 0 : 1);
 
@@ -1566,7 +1605,7 @@ void MSEGControlRegion::rebuild()
 
       auto vbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_vertical_snap,
                                      associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP));
-      vbut->setSkin(skin,associatedBitmapStore);
+      vbut->setSkin(skin, associatedBitmapStore);
       addView( vbut );
       vbut->setValue( eds->vSnap < 0.001? 0 : 1 );
 

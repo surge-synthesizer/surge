@@ -374,6 +374,7 @@ enum fu_type
    fut_obxd_4pole,
    fut_k35_lp,
    fut_k35_hp,
+   fut_diode,
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] =
@@ -393,6 +394,7 @@ const char fut_names[n_fu_type][32] =
    "OB-Xd 24 dB/oct",
    "Sallen-Key Lowpass",
    "Sallen-Key Highpass",
+   "Diode Ladder",
 };
 
 const char fut_bp_subtypes[6][32] =
@@ -462,7 +464,9 @@ const float fut_k35_saturations[5] = {
    4.0f
 };
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 5, 5 };
+const char fut_diode_subtypes[1][32] = {"24 dB/oct"};
+
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 5, 5, 0 };
 
 enum fu_subtype
 {
@@ -655,7 +659,7 @@ struct MSEGStorage {
          TRIANGLE,
          HOLD,
          SAWTOOTH,
-         SPIKE,
+         RESERVED,  // used to be Spike, but it broke some MSEG model constraints, so we ditched it - can add a different curve type later on!
          BUMP,
          SMOOTH_STAIRS,
       } type;
@@ -668,11 +672,17 @@ struct MSEGStorage {
    } endpointMode = FREE;
 
    // These values are streamed so please don't change the integer values
+   enum EditMode {
+       ENVELOPE = 0,    // no constraints on horizontal time axis
+       LFO = 1,         // MSEG editing is constrained to just one phase unit (0 ... 1), useful for single cycle waveform editing
+   } editMode = ENVELOPE;
+
+   // These values are streamed so please don't change the integer values
    enum LoopMode {
-      ONESHOT = 1, // Play the MSEG front to back and then output the final value
-      LOOP = 2, // Play the MSEG front to loop end and then return to loop start
-      GATED_LOOP = 3 // Play the MSEG front to loop end, then return to loop start, but if at any time
-                     // a note off is generated, jump to loop end at current value and progress to end once
+      ONESHOT = 1,      // Play the MSEG front to back and then output the final value
+      LOOP = 2,         // Play the MSEG front to loop end and then return to loop start
+      GATED_LOOP = 3    // Play the MSEG front to loop end, then return to loop start, but if at any time
+                        // a note off is generated, jump to loop end at current value and progress to end once
    } loopMode = LOOP;
 
    int loop_start = -1, loop_end = -1; // -1 signifies the entire MSEG in this context
