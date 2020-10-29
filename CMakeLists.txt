@@ -203,6 +203,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/filters/Obxd.cpp
   src/common/dsp/filters/K35.cpp
+  src/common/dsp/filters/DiodeLadder.cpp
   src/common/dsp/AdsrEnvelope.cpp
   src/common/dsp/AudioInputOscillator.cpp
   src/common/dsp/BiquadFilter.cpp

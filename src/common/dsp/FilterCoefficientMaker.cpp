@@ -5,6 +5,7 @@
 #include "filters/VintageLadders.h"
 #include "filters/Obxd.h"
 #include "filters/K35.h"
+#include "filters/DiodeLadder.h"
 
 using namespace std;
 
@@ -92,6 +93,9 @@ void FilterCoefficientMaker::MakeCoeffs(
       break;
    case fut_k35_hp:
       K35Filter::makeCoefficients(this, Freq, Reso, false, fut_k35_saturations[SubType], storageI);
+      break;
+   case fut_diode:
+      DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
       break;
 #if SURGE_EXTRA_FILTERS
 #endif      

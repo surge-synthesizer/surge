@@ -366,6 +366,7 @@ enum fu_type
    fut_obxd_4pole,
    fut_k35_lp,
    fut_k35_hp,
+   fut_diode,
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] =
@@ -385,6 +386,7 @@ const char fut_names[n_fu_type][32] =
    "OB-Xd 24 dB/oct",
    "Sallen-Key Lowpass",
    "Sallen-Key Highpass",
+   "Diode Ladder",
 };
 
 const char fut_bp_subtypes[6][32] =
@@ -454,7 +456,9 @@ const float fut_k35_saturations[5] = {
    4.0f
 };
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 5, 5 };
+const char fut_diode_subtypes[1][32] = {"24 dB/oct"};
+
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 5, 5, 0 };
 
 enum fu_subtype
 {
