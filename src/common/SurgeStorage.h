@@ -664,11 +664,17 @@ struct MSEGStorage {
    } endpointMode = FREE;
 
    // These values are streamed so please don't change the integer values
+   enum EditMode {
+       ENVELOPE = 0,    // no constraints on horizontal time axis
+       LFO = 1,         // MSEG editing is constrained to just one phase unit (0 ... 1), useful for single cycle waveform editing
+   } editMode = ENVELOPE;
+
+   // These values are streamed so please don't change the integer values
    enum LoopMode {
-      ONESHOT = 1, // Play the MSEG front to back and then output the final value
-      LOOP = 2, // Play the MSEG front to loop end and then return to loop start
-      GATED_LOOP = 3 // Play the MSEG front to loop end, then return to loop start, but if at any time
-                     // a note off is generated, jump to loop end at current value and progress to end once
+      ONESHOT = 1,      // Play the MSEG front to back and then output the final value
+      LOOP = 2,         // Play the MSEG front to loop end and then return to loop start
+      GATED_LOOP = 3    // Play the MSEG front to loop end, then return to loop start, but if at any time
+                        // a note off is generated, jump to loop end at current value and progress to end once
    } loopMode = LOOP;
 
    int loop_start = -1, loop_end = -1; // -1 signifies the entire MSEG in this context

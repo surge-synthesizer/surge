@@ -79,6 +79,7 @@
 #define IDB_LFO_PRESETS 178
 #define IDB_MSEG_NUMBERFIELDBG 306
 #define IDB_MODSRC_SHOW_LFO 179
+#define IDB_MSEG_EDIT_MODE 307
 // == /SVG == Do not remove this comment
 
 
