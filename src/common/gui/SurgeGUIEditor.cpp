@@ -788,7 +788,7 @@ void SurgeGUIEditor::idle()
                auto tag = cc->getTag();
                SurgeSynthesizer::ID jid;
 
-               auto sv = 0;
+               auto sv = 0.f;
                if( synth->fromSynthSideId(j, jid ))
                   sv = synth->getParameter01(jid);
                auto cv = cc->getValue();
