@@ -2169,7 +2169,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
                      sprintf( txt, "%s", fut_k35_subtypes[i]);
                      break;
                   case fut_diode:
-                     sprintf( txt, "%s", fut_obxd_4p_subtypes[i]);
+                     sprintf( txt, "%s", fut_diode_subtypes[i]);
                      break;
 #if SURGE_EXTRA_FILTERS
 #endif                     
