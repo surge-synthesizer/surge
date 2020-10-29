@@ -2910,7 +2910,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                auto q = modsource_editor[current_scene];
                auto* lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
 
-               if (lfodata->shape.val.i >= ls_sine && lfodata->shape.val.i <= ls_ramp)
+               if (lfodata->shape.val.i == ls_sine || lfodata->shape.val.i == ls_tri ||
+                   lfodata->shape.val.i == ls_ramp)
                {
                   contextMenu->addSeparator(eid++);
 
