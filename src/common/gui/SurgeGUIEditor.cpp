@@ -794,13 +794,13 @@ void SurgeGUIEditor::idle()
                   if (tag == fmconfig_tag)
                   {
                      auto targetTag = synth->storage.getPatch().scene[current_scene].fm_depth.id + start_paramtags;
-                     auto targetState = ((int)(sv * n_fm_configuration) == fm_off);
+                     auto targetState = (round(sv * n_fm_configuration) == fm_off);
                      resetMap[targetTag] = targetState;
                   }
 
                   if (tag == filterblock_tag)
                   {
-                     auto pval = (int)(sv * n_fb_configuration);
+                     auto pval = round(sv * n_fb_configuration);
 
                      auto targetTag = synth->storage.getPatch().scene[current_scene].feedback.id + start_paramtags;
                      auto targetState = (pval == fb_serial);
