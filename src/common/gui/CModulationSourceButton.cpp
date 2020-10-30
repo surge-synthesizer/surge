@@ -298,8 +298,6 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
    if (storage)
       this->hideCursor = Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
-   onMouseDownCursorHelper(where);
-
    if (!getMouseEnabled())
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 
@@ -321,6 +319,9 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
       if (listener->controlModifierClicked(this, buttons) != 0)
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
+
+
+   onMouseDownCursorHelper(where);
 
    if (is_metacontroller && (buttons & kDoubleClick) && MCRect.pointInside(where) && controlstate == cs_none )
    {
@@ -425,7 +426,10 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
    {
       endEdit();
 
-      endCursorHide(lastBarDraw);
+      if( event_is_drag )
+         endCursorHide(lastBarDraw);
+      else
+         endCursorHide();
    }
    controlstate = cs_none;
 
