@@ -32,6 +32,15 @@ CSnapshotMenu::CSnapshotMenu(const CRect& size,
 CSnapshotMenu::~CSnapshotMenu()
 {}
 
+CMouseEventResult CSnapshotMenu::onMouseDown(CPoint& where, const CButtonState& button)
+{
+   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, button);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+}
+
 void CSnapshotMenu::draw(CDrawContext* dc)
 {
    setDirty(false);
@@ -247,6 +256,15 @@ COscMenu::COscMenu(const CRect& size,
       currentIdx = firstSnapshotByType[osc->type.val.i];
 }
 
+CMouseEventResult COscMenu::onMouseDown(CPoint& where, const CButtonState& button)
+{
+   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, button);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+}
+
 void COscMenu::draw(CDrawContext* dc)
 {
    if( ! attemptedHoverLoad )
@@ -346,6 +364,15 @@ CFxMenu::CFxMenu(const CRect& size,
    this->slot = slot;
    selectedName = "";
    populate();
+}
+
+CMouseEventResult CFxMenu::onMouseDown(CPoint& where, const CButtonState& button)
+{
+   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, button);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
 }
 
 void CFxMenu::draw(CDrawContext* dc)

@@ -49,6 +49,8 @@ public:
       return VSTGUI::kMouseEventHandled;
    }
 
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
+
    bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override
    {
       // TODO - mousehweel support when these things can jog and maintain state
@@ -84,6 +86,7 @@ public:
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
 
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
    virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
 
 protected:
@@ -114,6 +117,7 @@ public:
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
    virtual void saveSnapshot(TiXmlElement* e, const char* name) override;
    virtual void populate() override;
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
    
 protected:
    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu, int &idx) override;
