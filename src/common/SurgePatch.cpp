@@ -1232,16 +1232,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
 
          if ((p->QueryIntAttribute("deform_type", &j) == TIXML_SUCCESS))
-         {
-            switch (j)
-            {
-            case type_1:
-            case type_2:
-            case type_3:
-               param_ptr[i]->deform_type = j;
-               break;
-            }
-         }
+            param_ptr[i]->deform_type = j;
          else
          {
             if (param_ptr[i]->has_deformoptions())
