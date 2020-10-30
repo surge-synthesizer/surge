@@ -847,6 +847,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 0;
       break;
+   case ct_phaser_spread:
+      val_min.f = 0;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0.5;
+      break;
 
    case ct_none:
    default:
@@ -2618,6 +2624,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_midikey:
    case ct_midikey_or_channel:
    case ct_phaser_stages:
+   case ct_phaser_spread:
    case ct_rotarydrive:
    case ct_sendlevel:
    case ct_freq_mod:

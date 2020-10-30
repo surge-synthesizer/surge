@@ -136,6 +136,7 @@ enum ctrltypes
    ct_airwindow_param,
    ct_airwindow_param_bipolar,
    ct_airwindow_param_integral,
+   ct_phaser_spread,
    num_ctrltypes,
 };
 

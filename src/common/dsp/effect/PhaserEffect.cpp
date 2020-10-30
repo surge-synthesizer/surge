@@ -15,8 +15,7 @@ enum phaseparam
    pp_mix,
    pp_width,
    pp_stages,
-   // pp_spread,
-   // pp_distribution,
+   pp_spread,
    pp_nparams
 };
 
@@ -97,45 +96,20 @@ void PhaserEffect::process_only_control()
    if (lfophaseR > 1)
       lfophaseR = fmod( lfophaseR, 1.0 );
 }
+
 // in the original phaser we had {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12}
-float basefreq[16] = {
+float legacy_freq[4] = {
    1.5  / 12,
    19.5 / 12,
    35   / 12,
    50   / 12,
-   10.5 / 12,
-   29.25 / 12,
-   42.5 / 12,
-   24.375 / 12,
-   6 / 12,
-   32.15 / 12,
-   46.25 / 12,
-   3.75 / 12,
-   38.75 / 12,
-   14.5 / 12,
-   8.25  / 12,
-   53 / 12
 };
 
-
-// linear approximation with [2.05 - (1.5 / ((50/12) - (1.5/12)) * x) after the first 4 original values
-float basespan[16] = {
+float legacy_span[4] = {
    2.0,
    1.5,
    1.0,
    0.5,
-   1.711290322580645,
-   1.1064516129032258,
-   0.6790322580645161,
-   1.2637096774193548,
-   2.05,
-   1.0129032258064514,
-   0.5580645161290321,
-   1.9290322580645158,
-   0.7999999999999998,
-   1.5822580645161288,
-   1.7838709677419353,
-   0.5016129032258063
 };
 
 
@@ -155,15 +129,32 @@ void PhaserEffect::setvars()
    
    double lfoout = 1.f - fabs(2.0 - 4.0 * lfophase);
    double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
-
-   for (int i = 0; i < n_stages; i++)
-   {      
-      double omega = biquad[2 * i]->calc_omega(2 * *f[pp_base] + basefreq[i] + basespan[i] * lfoout * *f[pp_lfodepth]);
-      biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
-      omega = biquad[2 * i + 1]->calc_omega(2 * *f[pp_base] + basefreq[i] + basespan[i] * lfooutR * *f[pp_lfodepth]);
-      biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+   
+   
+   // if stages is set to 2 to indicate we are in legacy mode, use legacy freqs and spans
+   if (n_stages <= 2)
+   {
+      // 4 stages in original phaser mode
+      for (int i = 0; i < 2; i++)
+      {
+         double omega = biquad[2 * i]->calc_omega(2 * *f[pp_base] + legacy_freq[i] + legacy_span[i] * lfoout * *f[pp_lfodepth]);
+         biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+         omega = biquad[2 * i + 1]->calc_omega(2 * *f[pp_base] + legacy_freq[i] + legacy_span[i] * lfooutR * *f[pp_lfodepth]);
+         biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+      }
    }
-
+   else
+   {
+      for (int i = 0; i < n_stages; i++)
+       {
+          double centre = powf(2, (i + 1.0) * 2  / n_stages);
+          double omega = biquad[2 * i]->calc_omega(2 * *f[pp_base] + *f[pp_spread] * centre + 2.0 / (i + 1) * lfoout * *f[pp_lfodepth]);
+          biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+          omega = biquad[2 * i + 1]->calc_omega(2 * *f[pp_base] + *f[pp_spread] * centre * (2.0 / (i + 1) * lfooutR * *f[pp_lfodepth]));
+          biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[pp_q]);
+       }
+   }
+   
    feedback.newValue(0.95f * *f[pp_feedback]);
    width.set_target_smoothed(db_to_linear(*f[pp_width]));
 }
@@ -228,7 +219,7 @@ int PhaserEffect::group_label_ypos(int id)
    case 1:
       return 11;
    case 2:
-      return 19;
+      return 21;
    }
    return 0;
 }
@@ -240,6 +231,8 @@ void PhaserEffect::init_ctrltypes()
    fxdata->p[pp_stages].set_type(ct_phaser_stages);
    fxdata->p[pp_base].set_name("Base Frequency");
    fxdata->p[pp_base].set_type(ct_percent_bidirectional);
+   fxdata->p[pp_spread].set_name("Spread");
+   fxdata->p[pp_spread].set_type(ct_percent);
    fxdata->p[pp_feedback].set_name("Feedback");
    fxdata->p[pp_feedback].set_type(ct_percent_bidirectional);
    fxdata->p[pp_q].set_name("Q");
@@ -258,20 +251,22 @@ void PhaserEffect::init_ctrltypes()
    fxdata->p[pp_mix].set_type(ct_percent);
 
    fxdata->p[pp_stages].posy_offset = -15;
-   fxdata->p[pp_base].posy_offset = 3;
-   fxdata->p[pp_feedback].posy_offset = 3;
+   fxdata->p[pp_spread].posy_offset = -13;
+   fxdata->p[pp_feedback].posy_offset = 15;
    fxdata->p[pp_q].posy_offset = 3;
+   fxdata->p[pp_base].posy_offset = 3;
    fxdata->p[pp_lforate].posy_offset = 5;
    fxdata->p[pp_lfodepth].posy_offset = 5;
    fxdata->p[pp_stereo].posy_offset = 5;
-   fxdata->p[pp_width].posy_offset = 5;
-   fxdata->p[pp_mix].posy_offset = 9;
+   fxdata->p[pp_width].posy_offset = 7;
+   fxdata->p[pp_mix].posy_offset = 11;
 
 }
 void PhaserEffect::init_default_values()
 {
    fxdata->p[pp_stages].val.i = 4;
    fxdata->p[pp_width].val.f = 0.f;
+   fxdata->p[pp_spread].val.f = 0.f;
 }
 
 void PhaserEffect::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
