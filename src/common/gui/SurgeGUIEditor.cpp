@@ -1250,7 +1250,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect vr(fxRect); // FIXME (vurect);
             vr.offset(6, yofs * synth->fx[current_fx]->vu_ypos(i));
             vr.offset(0, -14);
-            vu[i + 1] = new CSurgeVuMeter(vr);
+            vu[i + 1] = new CSurgeVuMeter(vr, this);
             ((CSurgeVuMeter*)vu[i + 1])->setSkin(currentSkin,bitmapStore);
             ((CSurgeVuMeter*)vu[i + 1])->setType(t);
             frame->addView(vu[i + 1]);
@@ -1428,7 +1428,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          break;
       }
       case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER: { // main vu-meter
-         vu[0] = new CSurgeVuMeter(skinCtrl->getRect());
+         vu[0] = new CSurgeVuMeter(skinCtrl->getRect(), this);
          ((CSurgeVuMeter*)vu[0])->setSkin(currentSkin,bitmapStore);
          ((CSurgeVuMeter*)vu[0])->setType(vut_vu_stereo);
          frame->addView(vu[0]);

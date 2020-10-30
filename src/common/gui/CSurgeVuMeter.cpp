@@ -4,7 +4,7 @@
 
 using namespace VSTGUI;
 
-CSurgeVuMeter::CSurgeVuMeter(const CRect& size) : CControl(size, 0, 0, 0)
+CSurgeVuMeter::CSurgeVuMeter(const CRect& size, VSTGUI::IControlListener *listener) : CControl(size, listener, 0, 0)
 {
    stereo = true;
    valueR = 0.0;
@@ -21,7 +21,6 @@ CMouseEventResult CSurgeVuMeter::onMouseDown(CPoint& where, const CButtonState& 
 {
    if (listener && (button & (kMButton | kButton4 | kButton5)))
    {
-      printf("I'm a VU meter and I was clicked!\n");
       listener->controlModifierClicked(this, button);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }

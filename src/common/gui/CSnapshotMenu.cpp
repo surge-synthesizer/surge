@@ -34,13 +34,12 @@ CSnapshotMenu::~CSnapshotMenu()
 
 CMouseEventResult CSnapshotMenu::onMouseDown(CPoint& where, const CButtonState& button)
 {
-   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   if (listenerNotForParent && (button & (kMButton | kButton4 | kButton5)))
    {
-      printf("I'm a snapshot menu and I was clicked!\n");
-      listener->controlModifierClicked(this, button);
+      listenerNotForParent->controlModifierClicked(this, button);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
-   return CControl::onMouseDown(where, button);
+   return COptionMenu::onMouseDown(where, button);
 }
 
 void CSnapshotMenu::draw(CDrawContext* dc)
