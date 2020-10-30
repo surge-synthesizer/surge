@@ -22,6 +22,8 @@
 #include "MSEGModulationHelper.h"
 #include "DebugHelpers.h"
 #include "SkinModel.h"
+#include "UserInteractions.h"
+#include "version.h"
 
 using namespace std;
 
@@ -1082,6 +1084,17 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    patch->QueryIntAttribute("revision", &revision);
    streamingRevision = revision;
    currentSynthStreamingRevision = ff_revision;
+
+   if( revision > ff_revision )
+   {
+      std::ostringstream oss;
+      oss << "The version of Surge you are running is older than the version with which this patch "
+          << "was created. Your version of surge (" << Surge::Build::FullVersionStr << ") has a "
+          << "streaming revision of " << ff_revision << ", whereas the patch you are loading was "
+          << "created with " << revision << ". Features of the patch will not be available in your "
+          << "session. You can always find the latest Surge at https://surge-synthesizer.github.io/";
+      Surge::UserInteractions::promptError( oss.str(), "Surge Version is Older than Patch" );
+   }
    
    TiXmlElement* meta =  TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));
    if (meta)
