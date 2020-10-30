@@ -1633,8 +1633,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    editor_open = true;
    queue_refresh = false;
+
+   /* When we rebuild, the onMouseEntered event is not re-sent to the new component by VSTGui;
+    * Maybe this is a bug in VSTG? But it screws up our hover states so force an onMouseEntered
+    * if we are over a coponent
+    */
+   CPoint tr;
+   frame->getCurrentMouseLocation(tr);
+   frame->getTransform().transform( tr );
+   auto v = frame->getViewAt(tr);
+   if( v )
+   {
+      v->onMouseEntered(tr, 0);
+   }
+
    frame->setDirty();
    frame->invalid();
+
 }
 
 void SurgeGUIEditor::close_editor()
