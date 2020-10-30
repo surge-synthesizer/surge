@@ -2140,8 +2140,11 @@ void Parameter::get_display(char* txt, bool external, float ef)
                if (id == patch.scene[scene].filterunit[unit].subtype.id)
                {
                   int type = patch.scene[scene].filterunit[unit].type.val.i;
-
-                  switch (type)
+                  if (i >= fut_subcount[type])
+                  {
+                     sprintf( txt, "None" );
+                  }
+                  else switch (type)
                   {
                   case fut_lpmoog:
                      sprintf(txt, "%s", fut_ldr_subtypes[i]);
