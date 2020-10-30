@@ -36,6 +36,7 @@ CMouseEventResult CSnapshotMenu::onMouseDown(CPoint& where, const CButtonState& 
 {
    if (listener && (button & (kMButton | kButton4 | kButton5)))
    {
+      printf("I'm a snapshot menu and I was clicked!\n");
       listener->controlModifierClicked(this, button);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
