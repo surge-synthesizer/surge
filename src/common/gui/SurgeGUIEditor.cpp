@@ -3493,6 +3493,10 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   {
                      showMSEGEditor();
                   }
+                  else
+                  {
+                     closeMSEGEditor();
+                  }
                }
 
 
@@ -3526,9 +3530,24 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
    case tag_scene_select:
    {
+      current_scene = (int)(control->getValue() * 1.f) + 0.5f;
       synth->release_if_latched[synth->storage.getPatch().scene_active.val.i] = true;
-      synth->storage.getPatch().scene_active.val.i = (int)(control->getValue() * 1.f + 0.5f);
+      synth->storage.getPatch().scene_active.val.i = current_scene;
       // synth->storage.getPatch().param_ptr[scene_select_pid]->set_value_f01(control->getValue());
+
+      if (editorOverlay && editorOverlayTag == "msegEditor")
+      {
+         auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[modsource_editor[current_scene] - ms_lfo1]);
+         if (ld->shape.val.i == ls_mseg)
+         {
+            showMSEGEditor();
+         }
+         else
+         {
+            closeMSEGEditor();
+         }
+      }
+
       queue_refresh = true;
       return;
    }
@@ -7020,13 +7039,11 @@ void SurgeGUIEditor::showMSEGEditor()
    auto vs = mse->getViewSize().getWidth();
    float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 
-   std::string title = "Scene ";
-   title += current_scene == 0 ? "A " : "B ";
-   title += modsource_names[modsource_editor[current_scene]];
+   std::string title = modsource_names[modsource_editor[current_scene]];
    title += " Editor";
    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
-   setEditorOverlay(mse, title, "msegEditor", CPoint(xp, 57), false,
+   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false,
                     [this]() { this->synth->refresh_editor = true; });
 
    if( msegEditSwitch )
