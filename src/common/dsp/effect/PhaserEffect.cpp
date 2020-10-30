@@ -131,8 +131,8 @@ void PhaserEffect::setvars()
    double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
    
    
-   // if stages is set to 2 to indicate we are in legacy mode, use legacy freqs and spans
-   if (n_stages <= 2)
+   // if stages is set to 1 to indicate we are in legacy mode, use legacy freqs and spans
+   if (n_stages < 2)
    {
       // 4 stages in original phaser mode
       for (int i = 0; i < 2; i++)

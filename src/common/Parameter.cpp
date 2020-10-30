@@ -810,7 +810,7 @@ void Parameter::set_type(int ctrltype)
       val_default.f = 0;
       break;
    case ct_phaser_stages:
-      val_min.i = 2;
+      val_min.i = 1;
       val_max.i = 16;
       valtype = vt_int;
       val_default.i = 4;
@@ -2206,6 +2206,17 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_fmratio_int:
          sprintf(txt, "C : %d", i);
          break;
+      case ct_phaser_stages:
+         if (i == 1)
+         {
+            sprintf(txt, "Legacy (4 stages)");
+         }
+         else
+         {
+            sprintf(txt, "%d", i);
+         }
+            break;
+         
       case ct_envshape:
          switch(i)
          {
