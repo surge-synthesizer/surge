@@ -1401,7 +1401,8 @@ void MSEGControlRegion::valueChanged( CControl *p )
    {
    case tag_edit_mode:
    {
-      ms->editMode = (MSEGStorage::EditMode)val;
+      int m = val > 0.5 ? 1 : 0;
+      ms->editMode = (MSEGStorage::EditMode)m;
       canvas->modelChanged();
 
       break;
