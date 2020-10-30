@@ -111,7 +111,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       enum Type
       {
          MOUSABLE_NODE,
-         INACTIVE_NODE // To keep the array the same size add dummis when you supress controls
+         INACTIVE_NODE // To keep the array the same size add dummies when you supress controls
       } type;
 
       enum SegmentMousableType
@@ -1480,7 +1480,7 @@ void MSEGControlRegion::rebuild()
       int segWidth = 110;
       int marginPos = xpos + margin;
       int btnWidth = 94;
-      int ypos = 1;
+      int ypos = 2;
 
       // label
       auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(btnWidth, labelHeight)), "Movement Mode");
@@ -1510,7 +1510,7 @@ void MSEGControlRegion::rebuild()
    {
       int segWidth = 107;
       int btnWidth = 91;
-      int ypos = 1;
+      int ypos = 2;
 
       auto eml = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Edit Mode");
       eml->setFont(labelFont);
@@ -1536,7 +1536,7 @@ void MSEGControlRegion::rebuild()
    {
       int segWidth = 110;
       int btnWidth = 94;
-      int ypos = 1;
+      int ypos = 2;
 
       auto lpl = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Loop Mode");
       lpl->setFont(labelFont);
@@ -1563,7 +1563,7 @@ void MSEGControlRegion::rebuild()
       int btnWidth = 49, editWidth = 32;
       int margin = 2;
       int segWidth = btnWidth + editWidth + 10;
-      int ypos = 1;
+      int ypos = 2;
       char svt[256];
 
       auto snapC = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth * 2 - 5, labelHeight)), "Snap To Grid");
@@ -1648,7 +1648,7 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 760, 365) )
+MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 750, 365) )
 {
    // Leave these in for now
    setSkin( skin, b );
