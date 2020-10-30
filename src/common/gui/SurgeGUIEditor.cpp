@@ -2960,7 +2960,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Type 1"), [this, p]() {
                        p->deform_type = 0;
                        if (frame)
-                       frame->invalid();
+                           frame->invalid();
                    });
                    contextMenu->checkEntry(eid, (p->deform_type == 0));
                    eid++;
