@@ -844,6 +844,17 @@ void SurgeGUIEditor::idle()
 #else
                cc->setValue(synth->getParameter01(jid));
 #endif
+
+               // Integer switches also work differently
+               auto assw = dynamic_cast<CSwitchControl *>(cc);
+               if( assw )
+               {
+                  if( assw->is_itype )
+                  {
+                     assw->ivalue = synth->storage.getPatch().param_ptr[j]->val.i + 1;
+                  }
+               }
+
                cc->setDirty();
                cc->invalid();
             }
@@ -1647,7 +1658,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
       v->onMouseEntered(tr, 0);
    }
 
-   frame->setDirty();
    frame->invalid();
 
 }

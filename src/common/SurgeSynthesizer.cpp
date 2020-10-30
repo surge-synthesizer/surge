@@ -1543,6 +1543,8 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       case ct_filtertype:
          switch_toggled_queued = true;
          {
+            // Oh my goodness this is deeply sketchy code to not document! It assumes that subtype
+            // is right after type in ID space without documenting it. So now documented!
             switch (storage.getPatch().param_ptr[index]->val.i)
             {
             case fut_lpmoog:
@@ -1583,8 +1585,17 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       case ct_bool_fm:
       case ct_fbconfig:
       case ct_filtersubtype:
-         switch_toggled_queued = true;
-         break;
+         // See above: We know the filter type for this subtype is at index - 1. Cap max to be the fut-subtype
+         {
+            auto filterType = storage.getPatch().param_ptr[index-1]->val.i;
+            auto maxIVal = fut_subcount[filterType];
+            if( maxIVal == 0 )
+               storage.getPatch().param_ptr[index]->val.i = 0;
+            else
+               storage.getPatch().param_ptr[index]->val.i = std::min( maxIVal-1,
+                                                                     storage.getPatch().param_ptr[index]->val.i );
+            break;
+         }
       case ct_fxtype:
          switch_toggled_queued = true;
          load_fx_needed = true;

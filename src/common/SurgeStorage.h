@@ -550,7 +550,7 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
 struct FilterStorage
 {
    Parameter type;
-   Parameter subtype;
+   Parameter subtype; // NOTE: In SurgeSynthesizer we assume that type and subtype are adjacent in param space. See comment there.
    Parameter cutoff;
    Parameter resonance;
    Parameter envmod;
