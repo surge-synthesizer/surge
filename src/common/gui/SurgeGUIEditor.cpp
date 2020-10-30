@@ -1107,6 +1107,29 @@ void SurgeGUIEditor::setDisabledForParameter(Parameter* p, CSurgeSlider* s)
    }
 }
 
+class LastChanceEventCapture : public CControl {
+public:
+   LastChanceEventCapture(const CPoint &sz, SurgeGUIEditor *ed ) : CControl( CRect( CPoint( 0, 0 ), sz )), editor(ed) {}
+   void draw(CDrawContext* pContext) override
+   {
+      return;
+   }
+
+   CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
+   {
+      if (buttons & (kMButton | kButton4 | kButton5))
+      {
+         if( editor) editor->toggle_mod_editing();
+         return kMouseEventHandled;
+      }
+      return kMouseEventNotHandled;
+   }
+
+private:
+   SurgeGUIEditor *editor = nullptr;
+   CLASS_METHODS( LastChanceEventCapture, CControl );
+};
+
 void SurgeGUIEditor::openOrRecreateEditor()
 {
 #ifdef INSTRUMENT_UI
@@ -1129,6 +1152,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
       close_editor();
    }
    CPoint nopoint(0, 0);
+   CPoint sz( getWindowSizeX(), getWindowSizeY() );
+   auto lcb = new LastChanceEventCapture(sz, this);
+   frame->addView( lcb );
 
    clear_infoview_peridle = -1;
 
