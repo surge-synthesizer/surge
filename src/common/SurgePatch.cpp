@@ -477,7 +477,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                         sceasy));
          sprintf(label, "lfo%i_deform", l);
          a->push_back(scene[sc].lfo[l].deform.assign(p_id.next(), id_s++, label, "Deform",
-                                                     ct_percent_bidirectional,
+                                                     ct_lfodeform,
                                                      Surge::Skin::LFO::deform, sc_id,
                                                      cg_LFO, ms_lfo1 + l, true));
 
@@ -1230,6 +1230,16 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                param_ptr[i]->porta_curve = porta_lin;
          }
 
+
+         if ((p->QueryIntAttribute("deform_type", &j) == TIXML_SUCCESS))
+            param_ptr[i]->deform_type = j;
+         else
+         {
+            if (param_ptr[i]->has_deformoptions())
+               param_ptr[i]->deform_type = type_1;
+         }
+
+
          if ((p->QueryIntAttribute("deactivated", &j) == TIXML_SUCCESS))
          {
             if(j == 1)
@@ -1953,6 +1963,8 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("porta_retrigger", param_ptr[i]->porta_retrigger ? "1" : "0");
             p.SetAttribute("porta_curve", param_ptr[i]->porta_curve);
          }
+         if (param_ptr[i]->has_deformoptions())
+            p.SetAttribute("deform_type", param_ptr[i]->deform_type);
 
          // param_ptr[i]->val.i;
          parameters.InsertEndChild(p);

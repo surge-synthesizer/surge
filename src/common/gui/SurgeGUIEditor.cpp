@@ -2954,6 +2954,51 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid++;
 
             }
+            
+            if (p->has_deformoptions())
+            {                
+               
+               auto q = modsource_editor[current_scene];
+               auto* lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
+
+               switch (lfodata->shape.val.i) {
+               case ls_sine:
+               case ls_tri:
+               case ls_ramp:
+                   contextMenu->addSeparator(eid++);
+
+                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Type 1"), [this, p]() {
+                       p->deform_type = 0;
+                       if (frame)
+                           frame->invalid();
+                   });
+                   contextMenu->checkEntry(eid, (p->deform_type == 0));
+                   eid++;
+               
+
+
+                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Type 2"), [this, p]() {
+                    
+                       p->deform_type = 1;
+                       if (frame)
+                           frame->invalid();
+                   });
+                   contextMenu->checkEntry(eid, (p->deform_type == 1));
+                   eid++;
+
+
+                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Type 3"), [this, p]() { 
+                       p->deform_type = 2; 
+                       if (frame)
+                           frame->invalid();
+                       });
+
+                   contextMenu->checkEntry(eid, (p->deform_type == 2));
+                   eid++;
+               }
+            }
+
+
             if (p->can_extend_range())
             {
                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Extend Range"),

@@ -80,6 +80,7 @@ enum ctrltypes
    ct_portatime,
    ct_lforate,
    ct_lforate_deactivatable,
+   ct_lfodeform,
    ct_lfoshape,
    ct_lfotrigmode,
    ct_detuning,
@@ -300,6 +301,7 @@ public:
    bool can_setvalue_from_string();
    void clear_flags();
    bool has_portaoptions();
+   bool has_deformoptions();
    void set_type(int ctrltype);
    void morph(Parameter* a, Parameter* b, float x);
    //	void morph(parameter *b, float x);
@@ -365,6 +367,7 @@ public:
    bool temposync{}, extend_range{}, absolute{}, deactivated{};
    bool porta_constrate{}, porta_gliss{}, porta_retrigger{};
    int porta_curve{};
+   int deform_type{};
 
    enum ParamDisplayType {
       Custom,
