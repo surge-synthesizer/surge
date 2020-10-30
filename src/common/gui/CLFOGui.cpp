@@ -349,6 +349,9 @@ void CLFOGui::draw(CDrawContext* dc)
                tf.transform(vruleS);
                tf.transform(vruleE);
                // major beat divisions on the LFO waveform bg
+#if LINUX
+               dc->setLineWidth(1);
+#endif
                dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Ruler::ExtendedTicks));
                // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
                dc->drawLine(vruleS, vruleE);
