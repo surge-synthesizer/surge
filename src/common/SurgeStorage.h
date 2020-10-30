@@ -223,6 +223,19 @@ inline bool uses_wavetabledata(int i)
    return false;
 }
 
+const char fxslot_names[8][NAMECHARS] =
+{
+   "A Insert FX 1",
+   "A Insert FX 2",
+   "B Insert FX 1",
+   "B Insert FX 2",
+   "Send FX 1",
+   "Send FX 2",
+   "Master FX 1",
+   "Master FX 2",
+};
+
+
 enum fx_types
 {
    fxt_off = 0,

@@ -17,14 +17,15 @@ float scale(float x)
    return powf(x, 0.3333333333f);
 }
 
-//CMouseEventResult CVuMeter::onMouseDown(CPoint& where, const CButtonState& button)
-//{
-//   if (listener && (button & (kMButton | kButton4 | kButton5)))
-//   {
-//      listener->controlModifierClicked(this, button);
-//      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-//   }
-//}
+CMouseEventResult CSurgeVuMeter::onMouseDown(CPoint& where, const CButtonState& button)
+{
+   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, button);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+   return CControl::onMouseDown(where, button);
+}
 
 void CSurgeVuMeter::setType(int vutype)
 {

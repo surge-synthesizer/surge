@@ -39,6 +39,7 @@ CMouseEventResult CSnapshotMenu::onMouseDown(CPoint& where, const CButtonState& 
       listener->controlModifierClicked(this, button);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
+   return CControl::onMouseDown(where, button);
 }
 
 void CSnapshotMenu::draw(CDrawContext* dc)
@@ -256,15 +257,6 @@ COscMenu::COscMenu(const CRect& size,
       currentIdx = firstSnapshotByType[osc->type.val.i];
 }
 
-CMouseEventResult COscMenu::onMouseDown(CPoint& where, const CButtonState& button)
-{
-   if (listener && (button & (kMButton | kButton4 | kButton5)))
-   {
-      listener->controlModifierClicked(this, button);
-      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-   }
-}
-
 void COscMenu::draw(CDrawContext* dc)
 {
    if( ! attemptedHoverLoad )
@@ -344,9 +336,6 @@ j;
 
 // CFxMenu
 
-const char fxslot_names[8][NAMECHARS] = {"A Insert FX 1", "A Insert FX 2", "B Insert FX 1", "B Insert FX 2",
-                                         "Send FX 1",  "Send FX 2",  "Master FX 1",   "Master FX 2"};
-
 std::vector<float> CFxMenu::fxCopyPaste;
 
 CFxMenu::CFxMenu(const CRect& size,
@@ -366,14 +355,6 @@ CFxMenu::CFxMenu(const CRect& size,
    populate();
 }
 
-CMouseEventResult CFxMenu::onMouseDown(CPoint& where, const CButtonState& button)
-{
-   if (listener && (button & (kMButton | kButton4 | kButton5)))
-   {
-      listener->controlModifierClicked(this, button);
-      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-   }
-}
 
 void CFxMenu::draw(CDrawContext* dc)
 {

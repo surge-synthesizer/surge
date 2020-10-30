@@ -28,13 +28,14 @@ public:
    CSnapshotMenu(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage);
    virtual ~CSnapshotMenu();
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-   // virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual void populate();
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx){};
    virtual bool loadSnapshotByIndex(int idx);
 
    virtual void saveSnapshot(TiXmlElement* e, const char* name){};
    virtual bool canSave();
+   
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
 
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorHand );
@@ -48,8 +49,6 @@ public:
       invalid();
       return VSTGUI::kMouseEventHandled;
    }
-
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
 
    bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override
    {
@@ -86,7 +85,6 @@ public:
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
 
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
    virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
 
 protected:
@@ -117,7 +115,6 @@ public:
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
    virtual void saveSnapshot(TiXmlElement* e, const char* name) override;
    virtual void populate() override;
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
    
 protected:
    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu, int &idx) override;

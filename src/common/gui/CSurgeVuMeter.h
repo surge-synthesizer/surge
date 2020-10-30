@@ -32,7 +32,7 @@ public:
    }
    bool stereo;
 
-   //virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
 
 private:
    float valueR;
