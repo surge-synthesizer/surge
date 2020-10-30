@@ -4,7 +4,7 @@
 
 using namespace VSTGUI;
 
-CSurgeVuMeter::CSurgeVuMeter(const CRect& size) : CControl(size, 0, 0, 0)
+CSurgeVuMeter::CSurgeVuMeter(const CRect& size, VSTGUI::IControlListener *listener) : CControl(size, listener, 0, 0)
 {
    stereo = true;
    valueR = 0.0;
@@ -15,6 +15,16 @@ float scale(float x)
 {
    x = limit_range(0.5f * x, 0.f, 1.f);
    return powf(x, 0.3333333333f);
+}
+
+CMouseEventResult CSurgeVuMeter::onMouseDown(CPoint& where, const CButtonState& button)
+{
+   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, button);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+   return CControl::onMouseDown(where, button);
 }
 
 void CSurgeVuMeter::setType(int vutype)

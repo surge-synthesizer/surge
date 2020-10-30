@@ -113,6 +113,8 @@ public:
                        Steinberg::Vst::ParamValue valueNormalized) override;
    tresult endEdit(Steinberg::Vst::ParamID id) override;
 
+   void uithreadIdleActivity();
+
 protected:
    void createSurge();
    void destroySurge();

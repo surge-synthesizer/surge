@@ -13,7 +13,7 @@ SurgeBitmaps::SurgeBitmaps()
    instances++;
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "SurgeBitmaps::SurgeBitmaps" );
-#endif   
+#endif
 
    // std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
 }
@@ -22,7 +22,7 @@ SurgeBitmaps::~SurgeBitmaps()
 {
 #ifdef INSTRUMENT_UI
    Surge::Debug::record( "SurgeBitmaps::~SurgeBitmaps" );
-#endif   
+#endif
    for (auto pair : bitmap_registry)
    {
       pair.second->forget();
@@ -101,6 +101,12 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_POLYSPLIT_NUM_BG, f);
    addEntry(IDB_PITCHBEND_NUM_BG, f);
    addEntry(IDB_KEYTRACKROOT_BG, f);
+   addEntry(IDB_MSEG_LOOP_MODES, f);
+   addEntry(IDB_LFO_MSEG_EDIT, f);
+   addEntry(IDB_LFO_PRESETS, f);
+   addEntry(IDB_MSEG_NUMBERFIELDBG, f);
+   addEntry(IDB_MODSRC_SHOW_LFO, f);
+   addEntry(IDB_MSEG_EDIT_MODE, f);
    // == /SVG == Do not remove this comment
 
 }

@@ -24,6 +24,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #elif TARGET_VST3
 #include "public.sdk/source/vst/vstguieditor.h"
 typedef Steinberg::Vst::VSTGUIEditor EditorType;
+#define PARENT_PLUGIN_TYPE SurgeVst3Processor
 #elif TARGET_VST2
 #if LINUX
 #include "../linux/linux-aeffguieditor.h"
@@ -37,6 +38,10 @@ typedef VSTGUI::AEffGUIEditor EditorType;
 typedef VSTGUI::PluginGUIEditor EditorType;
 #endif
 
+#ifndef PARENT_PLUGIN_TYPE
+#define PARENT_PLUGIN_TYPE void
+#endif
+
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
 
@@ -48,6 +53,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 #include "SkinColors.h"
 
 #include <vector>
+#include "MSEGEditor.h"
  
 class CSurgeSlider;
 class CModulationSourceButton;
@@ -71,7 +77,7 @@ private:
    using super = EditorType;
 
 public:
-   SurgeGUIEditor(void* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
+   SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* synth, void* userdata = nullptr);
    virtual ~SurgeGUIEditor();
 
    static int start_paramtag_value;
@@ -155,18 +161,21 @@ public:
    Steinberg::IPlugFrame *getIPlugFrame() { return plugFrame; }
 #endif
    void setDisabledForParameter(Parameter* p, CSurgeSlider* s);
-   
+
+   static bool fromSynthGUITag( SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q );
+
 private:
    void openOrRecreateEditor();
    void setupSaveDialog();
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
+   void repushAutomationFor( Parameter *p );
    SurgeSynthesizer* synth = nullptr;
    int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
    bool editor_open = false;
    bool mod_editor = false;
-   modsources modsource = ms_original, modsource_editor[n_scenes] = {ms_original};
-   int fxbypass_tag = 0, resolink_tag = 0, f1resotag = 0, f1subtypetag = 0, f2subtypetag = 0,
+   modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1};
+   int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0, fmconfig_tag = 0;
    double lastTempo = 0;
    int lastTSNum = 0, lastTSDen = 0;
@@ -204,15 +213,34 @@ private:
 public:
 
    void populateDawExtraState(SurgeSynthesizer *synth) {
-       synth->storage.getPatch().dawExtraState.isPopulated = true;
-       synth->storage.getPatch().dawExtraState.instanceZoomFactor = zoomFactor;
+      auto des = &(synth->storage.getPatch().dawExtraState);
+
+      des->isPopulated = true;
+      des->editor.instanceZoomFactor = zoomFactor;
+      des->editor.current_scene = current_scene;
+      des->editor.current_fx = current_fx;
+      des->editor.modsource = modsource;
+      for( int i=0; i<n_scenes; ++i )
+      {
+         des->editor.current_osc[i] = current_osc[i];
+         des->editor.modsource_editor[i] = modsource_editor[i];
+      }
    }
    void loadFromDAWExtraState(SurgeSynthesizer *synth) {
-       if( synth->storage.getPatch().dawExtraState.isPopulated )
+      auto des = &(synth->storage.getPatch().dawExtraState);
+      if( des->isPopulated )
        {
-           auto sz = synth->storage.getPatch().dawExtraState.instanceZoomFactor;
+           auto sz = des->editor.instanceZoomFactor;
            if( sz > 0 )
                setZoomFactor(sz);
+           current_scene = des->editor.current_scene;
+           current_fx = des->editor.current_fx;
+           modsource = des->editor.modsource;
+           for( int i=0; i<n_scenes; ++i )
+           {
+              current_osc[i] = des->editor.current_osc[i];
+              modsource_editor[i] = des->editor.modsource_editor[i];
+           }
        }
    }
    
@@ -238,6 +266,8 @@ public:
    void showMPEMenu(VSTGUI::CPoint& where);
    void showTuningMenu(VSTGUI::CPoint& where);
    void showZoomMenu(VSTGUI::CPoint& where);
+   void showLfoMenu( VSTGUI::CPoint &menuRect );
+
    void toggleMPE();
    void toggleTuning();
    void tuningFileDropped(std::string fn);
@@ -273,10 +303,12 @@ public:
    int getWindowSizeY() { return wsy; }
 
    void setEditorOverlay( VSTGUI::CView *c,
-                          std::string editorTitle,
+                          std::string editorTitle, // A window display title - whatever you want
+                          std::string editorTag, // A tag by editor class. Please unique, no spaces.
                           const VSTGUI::CPoint &topleft = VSTGUI::CPoint( 0, 0 ),
                           bool modalOverlay = true,
                           std::function<void()> onClose = [](){} );
+   void dismissEditorOverlay();
 
 
    std::string getDisplayForTag( long tag );
@@ -286,9 +318,17 @@ public:
          strncpy( synth->patchid_file, file.c_str(), FILENAME_MAX );
          synth->has_patchid_file = true;
       }
-   
+
+   void lfoShapeChanged(int prior, int curr);
+   void showMSEGEditor();
+   void closeMSEGEditor();
+   void toggleMSEGEditor();
+   MSEGEditor::State msegEditState[n_lfos];
+
+   void updateStateOnSynth();
+
 private:
-   SGEDropAdapter *dropAdapter;
+   SGEDropAdapter *dropAdapter = nullptr;
    friend class SGEDropAdapter;
    bool canDropTarget(const std::string& fname); // these come as const char* from vstgui
    bool onDrop( const std::string& fname);
@@ -317,7 +357,9 @@ private:
    
 private:
 #if TARGET_VST3
-   Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c, int ptag, int &eid); // just a noop if you aren't a vst3 of course
+   Steinberg::Vst::IContextMenu* addVst3MenuForParams(VSTGUI::COptionMenu *c,
+                                                      const SurgeSynthesizer::ID &,
+                                                      int &eid); // just a noop if you aren't a vst3 of course
 #endif
    
    std::function< void(SurgeGUIEditor *) > zoom_callback;
@@ -342,6 +384,7 @@ private:
    VSTGUI::CTextEdit* patchComment = nullptr;
    VSTGUI::CCheckBox* patchTuning = nullptr;
    VSTGUI::CTextLabel* patchTuningLabel = nullptr;
+   VSTGUI::CControl *msegEditSwitch = nullptr;
 #if BUILD_IS_DEBUG
    VSTGUI::CTextLabel* debugLabel = nullptr;
 #endif
@@ -362,6 +405,7 @@ private:
 
    VSTGUI::CViewContainer *editorOverlay = nullptr;
    std::function<void()> editorOverlayOnClose = [](){};
+   std::string editorOverlayTag;
 
    VSTGUI::CViewContainer *minieditOverlay = nullptr;
    VSTGUI::CTextEdit *minieditTypein = nullptr;
@@ -384,7 +428,7 @@ private:
    
    VSTGUI::CControl* polydisp = nullptr;
    VSTGUI::CControl* oscdisplay = nullptr;
-   VSTGUI::CControl* splitkeyControl = nullptr;
+   VSTGUI::CControl* splitpointControl = nullptr;
 
    static const int n_paramslots = 1024;
    VSTGUI::CControl* param[n_paramslots] = {};
@@ -401,7 +445,7 @@ private:
    float blinktimer = 0;
    bool blinkstate = false;
    bool useDevMenu = false;
-   void* _effect = nullptr;
+   PARENT_PLUGIN_TYPE* _effect = nullptr;
    void* _userdata = nullptr;
    VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;
    int firstIdleCountdown = 0;
@@ -411,6 +455,13 @@ private:
    */
    VSTGUI::CCommandMenuItem*
    addCallbackMenu(VSTGUI::COptionMenu* toThis, std::string label, std::function<void()> op);
+
+   VSTGUI::COptionMenu*
+   makeSmoothMenu(VSTGUI::CRect& menuRect,
+                  const std::string& key,
+                  int defaultValue,
+                  std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
+
    VSTGUI::COptionMenu* makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);
    VSTGUI::COptionMenu* makeTuningMenu(VSTGUI::CRect& rect, bool showhelp);
    VSTGUI::COptionMenu* makeZoomMenu(VSTGUI::CRect& rect, bool showhelp);
@@ -419,9 +470,11 @@ private:
    VSTGUI::COptionMenu* makeDataMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeMidiMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeLfoMenu(VSTGUI::CRect &rect);
    bool scannedForMidiPresets = false;
 
    void resetSmoothing( ControllerModulationSource::SmoothingMode t );
+   void resetPitchSmoothing(ControllerModulationSource::SmoothingMode t);
 
 public:
    std::string helpURLFor( Parameter *p );

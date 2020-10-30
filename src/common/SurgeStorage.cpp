@@ -389,9 +389,9 @@ bailOnPortable:
                          "Surge failed to initialize");
    }
 #else
-   string snapshotmenupath = datapath + "configuration.xml";
+   const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
 
-   if (!snapshotloader.LoadFile(snapshotmenupath.c_str())) // load snapshots (& config-stuff)
+   if (!snapshotloader.LoadFile(snapshotmenupath)) // load snapshots (& config-stuff)
    {
       Surge::Error exc("Cannot find 'configuration.xml' in path '" + datapath + "'. Please reinstall surge.",
                        "Surge is not properly installed.");
@@ -446,7 +446,7 @@ bailOnPortable:
    // Load the XML DocStrings if we are loading startup data
    if( loadWtAndPatch )
    {
-      auto dsf = datapath + "paramdocumentation.xml";
+      auto dsf = string_to_path(datapath + "paramdocumentation.xml");
       TiXmlDocument doc;
       if( ! doc.LoadFile(dsf) || doc.Error() )
       {
@@ -534,6 +534,7 @@ bailOnPortable:
          ms->segments[3].duration = 0.5;
          ms->segments[3].type = MSEGStorage::segment::SCURVE;
          ms->segments[3].v0 = -0.7;
+         ms->segments[3].nv1 = 0; // Have to set this now due to endpoint mode
          ms->segments[3].cpduration = 0.4;
          ms->segments[3].cpv = -0.3;
          Surge::MSEG::rebuildCache( ms );
@@ -1204,6 +1205,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
          getPatch().param_ptr[pid]->porta_gliss = p.porta_gliss;
          getPatch().param_ptr[pid]->porta_retrigger = p.porta_retrigger;
          getPatch().param_ptr[pid]->porta_curve = p.porta_curve;
+         getPatch().param_ptr[pid]->deform_type = p.deform_type;
       }
 
       switch (type)
@@ -1645,21 +1647,22 @@ bool SurgeStorage::skipLoadWtAndPatch = false;
 void SurgeStorage::rescanUserMidiMappings()
 {
    userMidiMappingsXMLByName.clear();
-   if( fs::is_directory( fs::path( userMidiMappingsPath ) ) ) {
-      for( auto &d : fs::directory_iterator( fs::path( userMidiMappingsPath ) ) )
+   std::error_code ec;
+   const auto extension{fs::path{".srgmid"}.native()};
+   for (const fs::path& d : fs::directory_iterator{string_to_path(userMidiMappingsPath), ec})
+   {
+      if (d.extension().native() == extension)
       {
-         auto fn = path_to_string(d.path());
-         std::string ending = ".srgmid";
-         if( fn.length() >= ending.length() && ( 0 == fn.compare( fn.length() - ending.length(), ending.length(), ending ) ) )
-         {
-            TiXmlDocument doc;
-            if( ! doc.LoadFile( fn.c_str() ) ) continue;
-            auto r = TINYXML_SAFE_TO_ELEMENT( doc.FirstChild( "surge-midi" ) );
-            if( !r ) continue;
-            if( !r->Attribute( "name" ) ) continue;
-            
-            userMidiMappingsXMLByName[r->Attribute("name")] = doc;
-         }
+         TiXmlDocument doc;
+         if (!doc.LoadFile(d))
+            continue;
+         const auto r{TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-midi"))};
+         if (!r)
+            continue;
+         const auto a{r->Attribute("name")};
+         if (!a)
+            continue;
+         userMidiMappingsXMLByName.emplace(a, std::move(doc));
       }
    }
 }
@@ -1766,7 +1769,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
    fs::create_directories(string_to_path(userMidiMappingsPath));
    std::string fn = Surge::Storage::appendDirectory(userMidiMappingsPath, name + ".srgmid");
 
-   if( ! doc.SaveFile( fn.c_str() ) )
+   if (!doc.SaveFile(string_to_path(fn)))
    {
       std::ostringstream oss;
       oss << "Unable to save MIDI settings to '" << fn << "'!";

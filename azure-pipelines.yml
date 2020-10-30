@@ -23,8 +23,8 @@ jobs:
         isWindows: True
         cmakeArguments: "-A x64"
         cmakeTarget: "Surge-VST3-Packaged"
-      windows-x86:
-        imageName: 'windows-2019'
+      windows-x86-vs2017:
+        imageName: 'vs2017-win2016'
         isWindows: True
         cmakeArguments: "-A Win32"
         cmakeTarget: "Surge-VST3-Packaged"
@@ -34,18 +34,18 @@ jobs:
         isWindowsUnitTest: True
         cmakeArguments: "-A x64"
         cmakeTarget: "surge-headless"
-      linux-lv2:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        aptGetExtras: ""
-        cmakeArguments: "-GNinja"
-        cmakeTarget: "Surge-LV2-Packaged"
       linux-vst3:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: ""
         cmakeArguments: "-GNinja"
         cmakeTarget: "Surge-VST3-Packaged"
+      linux-lv2-ubuntu18:
+        imageName: 'ubuntu-18.04'
+        isLinux: True
+        aptGetExtras: ""
+        cmakeArguments: "-GNinja"
+        cmakeTarget: "Surge-LV2-Packaged"
       linux-clang:
         imageName: 'ubuntu-20.04'
         isLinux: True

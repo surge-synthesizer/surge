@@ -459,6 +459,19 @@ TEST_CASE( "Check FastMath Functions", "[dsp]" )
       }
    }
 
+   SECTION( "fastTan" )
+   {
+      // need to bump start point slightly, fasttan is only valid just after -PI/2
+      for( float x=-M_PI/2.0 + 0.001; x < M_PI/2.0; x += 0.02 )
+      {
+         INFO( "Testing fasttan at " << x );
+         auto rn = tanf( x );
+         auto rd = Surge::DSP::fasttan( x );
+         REQUIRE( rd == Approx( rn ).epsilon( 1e-4 ) );
+      }
+   }
+
+
    SECTION( "fastexp and fastexpSSE" )
    {
       for( float x=-3.9; x < 2.9; x += 0.02 )

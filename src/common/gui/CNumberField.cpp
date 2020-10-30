@@ -78,7 +78,8 @@ CNumberField::CNumberField(const CRect& size,
                            long tag,
                            CBitmap* pBackground,
                            SurgeStorage* storage)
-    : CControl(size, listener, tag, pBackground)
+    : CControl(size, listener, tag, pBackground),
+      Surge::UI::CursorControlAdapter<CNumberField>( storage )
 {
    i_value = 60;
    controlmode = cm_integer;
@@ -237,6 +238,15 @@ void CNumberField::setControlMode(int mode)
       setIntMax(1);
       setIntDefaultValue(0);
       break;
+   case cm_mseg_snap_h:
+   case cm_mseg_snap_v:
+      setIntMin(1);
+      setIntMax(100);
+      if (mode == cm_mseg_snap_h)
+         setIntDefaultValue(10);
+      else
+         setIntDefaultValue(4);
+      break;
    default:
       setFloatMin(0.f);
       setFloatMax(1.f);
@@ -257,18 +267,14 @@ void CNumberField::setValue(float val)
 //------------------------------------------------------------------------
 void CNumberField::draw(CDrawContext* pContext)
 {
-   auto colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::DefaultText.name );
-   auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::DefaultHoverText.name );
+   auto colorName = skin->propertyValue(skinControl, "text_color", Colors::NumberField::Text.name);
+   auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::TextHover.name );
 
    auto fontColor = kRedCColor;
    if( hovered )
-   {
       fontColor = skin->getColor(hoverColorName );
-   }
    else
-   {
       fontColor = skin->getColor(colorName );
-   }
 
    // cache this of course
    if( ! triedToLoadBg )
@@ -483,6 +489,10 @@ void CNumberField::draw(CDrawContext* pContext)
       else
          sprintf(the_text, "no");
       break;
+   case cm_mseg_snap_h:
+   case cm_mseg_snap_v:
+      sprintf( the_text, "%i", i_value );
+      break;
    case cm_none:
       sprintf(the_text, "-");
       break;
@@ -566,7 +576,7 @@ CMouseEventResult CNumberField::onMouseDown(CPoint& where, const CButtonState& b
    if (buttons & kDoubleClick)
    {
       if (listener)
-         listener->controlModifierClicked(this, kControl);
+         listener->controlModifierClicked(this, buttons);
       {
          setDirty();
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
@@ -575,8 +585,10 @@ CMouseEventResult CNumberField::onMouseDown(CPoint& where, const CButtonState& b
 
    if ((buttons & kLButton) && (drawsize.pointInside(where)))
    {
+      startCursorHide(where);
       controlstate = cs_drag;
       lastmousepos = where;
+      startmousepos = where;
       f_min = 0.f;
       f_max = 1.f;
       value = ((float)(i_value - i_min)) / ((float)(i_max - i_min));
@@ -591,6 +603,7 @@ CMouseEventResult CNumberField::onMouseUp(CPoint& where, const CButtonState& but
    if (controlstate)
    {
       endEdit();
+      endCursorHide();
       controlstate = cs_null;
    }
    return kMouseEventHandled;
@@ -603,8 +616,22 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
       float dy = where.y - lastmousepos.y;
       
       float delta = dx - dy; // for now lets try this. Remenber y 'up' in logical space is 'down' in pixel space
-      
-      lastmousepos = where;
+
+      float odx = where.x - startmousepos.x;
+      float ody = where.y - startmousepos.y;
+      float odelt = sqrt( odx * odx + ody * ody );
+
+      if( odelt > 10 )
+      {
+         if (resetToShowLocation())
+            lastmousepos = startmousepos;
+         else
+            lastmousepos = where;
+      }
+      else
+      {
+         lastmousepos = where;
+      }
 
       if (buttons & kShift)
          delta *= 0.1;
@@ -623,9 +650,8 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
 
       
       bounceValue();
-      // invalid();
-      // setDirty();
-      if (isDirty() && listener)
+      invalid();
+      if (listener)
          listener->valueChanged(this);
    }
    return kMouseEventHandled;

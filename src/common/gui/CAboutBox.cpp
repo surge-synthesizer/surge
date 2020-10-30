@@ -194,9 +194,11 @@ CAboutBox::onMouseDown(CPoint& where,
              where.y <= (skin->getWindowSizeY() - 50))
       Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
    else if( copyBox.pointInside(where) ){
-
-      auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
-      getFrame()->setClipboard(a);
+     #if WINDOWS
+         identifierLine = identifierLine + " ";
+     #endif
+         auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
+         getFrame()->setClipboard(a);
    }
    else
       boxHide();

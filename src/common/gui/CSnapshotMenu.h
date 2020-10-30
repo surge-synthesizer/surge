@@ -20,6 +20,7 @@
 #include "SkinSupport.h"
 #include <unordered_map>
 #include <vector>
+#include <map>
 
 class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumingComponent
 {
@@ -27,23 +28,35 @@ public:
    CSnapshotMenu(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage);
    virtual ~CSnapshotMenu();
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-   // virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual void populate();
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx){};
    virtual bool loadSnapshotByIndex(int idx);
 
    virtual void saveSnapshot(TiXmlElement* e, const char* name){};
    virtual bool canSave();
+   
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
 
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorHand );
+      isHovered = true;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
    virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorDefault );
+      isHovered = false;
+      invalid();
       return VSTGUI::kMouseEventHandled;
    }
 
+   bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override
+   {
+      // TODO - mousehweel support when these things can jog and maintain state
+      return true;
+   }
+
+   bool isHovered = false;
    int selectedIdx = -1;
    std::string selectedName = "";
 protected:
@@ -51,6 +64,9 @@ protected:
    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu, int &idx) { }
    SurgeStorage* storage = nullptr;
    char mtype[16] = {0};
+   std::map<int,int> firstSnapshotByType;
+   std::vector<std::pair<int , TiXmlElement *>> loadArgsByIndex;
+   int maxIdx;
 
    // The parent class is too chatty with the listener, calling a value changed every time I close which means non-swapping
    // menus like copy and paste do the wrong thing
@@ -69,9 +85,14 @@ public:
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx) override;
 
+   virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
+
 protected:
    OscillatorStorage* osc = nullptr;
-   VSTGUI::CBitmap* bmp = nullptr;
+   VSTGUI::CBitmap* bmp = nullptr, *hoverBmp = nullptr;
+   bool attemptedHoverLoad = false;
+   int currentIdx;
+   float accumWheel = 0;
 
    CLASS_METHODS(COscMenu, VSTGUI::CControl)
 };
@@ -128,6 +149,9 @@ public:
 protected:
    void rescanUserPresets();
    void loadUserPreset( const UserPreset &p );
+
+   bool triedToLoadBmp = false;
+   CScalableBitmap *pBackground, *pBackgroundHover;
    
    CLASS_METHODS(CFxMenu, VSTGUI::CControl)
 };

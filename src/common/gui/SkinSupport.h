@@ -71,6 +71,7 @@ private:
 namespace UI
 {
 
+extern const std::string NoneClassName;
 class SkinDB;
 
 class Skin
@@ -126,6 +127,8 @@ public:
       std::string classname;
       std::string ultimateparentclassname;
       props_t allprops;
+
+      bool parentResolved = false;
 
       std::string toString() const {
          std::ostringstream oss;
@@ -213,7 +216,7 @@ public:
       {
          res = std::make_shared<Surge::UI::Skin::Control>();
          res->copyFromConnector(c);
-         resolveBaseParentOffsets( res );
+         // resolveBaseParentOffsets( res );
          controls.push_back(res);
       }
       return res;

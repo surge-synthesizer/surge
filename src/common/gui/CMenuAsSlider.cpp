@@ -30,7 +30,8 @@ CMenuAsSlider::CMenuAsSlider(const VSTGUI::CPoint& loc,
                              long tag,
                              std::shared_ptr<SurgeBitmaps> bitmapStore,
                              SurgeStorage* storage) :
-   CCursorHidingControl(CRect( loc, sz ), listener, tag, nullptr )
+   CControl(CRect( loc, sz ), listener, tag, nullptr ),
+      Surge::UI::CursorControlAdapter<CMenuAsSlider>(storage)
 {
    // this->storage = storage;
    auto size = CRect( 0, 0, sz.x, sz.y );
@@ -126,7 +127,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       if( ! filtermode )
       {
          auto l = d;
-         l.left += 5;
+         l.left += 6;
          l.right = d.left + splitPoint;
          auto tl = label;
          trunc = false;
@@ -179,7 +180,7 @@ CMouseEventResult CMenuAsSlider::onMouseDown( CPoint &w, const CButtonState &but
       }
       else
       {
-         detachCursor(w);
+         startCursorHide(w);
          isDragRegionDrag = true;
          dragStart = w;
          dragDir = unk;
@@ -213,13 +214,14 @@ CMouseEventResult CMenuAsSlider::onMouseMoved( CPoint &w, const CButtonState &bu
       if( dist > 1 )
       {
          inc = 1;
-         dragStart = w;
+         if( ! resetToShowLocation() ) dragStart = w;
       }
       if( dist < -1 )
       {
          inc = -1;
-         dragStart = w;
+         if( ! resetToShowLocation() ) dragStart = w;
       }
+
       if( inc != 0 )
       {
          int iv = floor( getValue() * ( iMax - iMin ) + 0.5 );
@@ -241,7 +243,7 @@ CMouseEventResult CMenuAsSlider::onMouseMoved( CPoint &w, const CButtonState &bu
 CMouseEventResult CMenuAsSlider::onMouseUp( CPoint &w, const CButtonState &buttons ) {
    if( isDragRegionDrag )
    {
-      attachCursor();
+      endCursorHide();
       isDragRegionDrag = false;
    }
    return kMouseEventHandled;

@@ -61,12 +61,19 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
    /*
    ** If we have two mousedowns without an up, skip stuff. This means pressing left/right on
    ** win doesn't confuse us. BUT if we return kMouseDownEventHandledButDontNeedMovedOrUpEvents
-   ** we won't ever get the up so this counter will be in trouble. This the --s scattered
+   ** we won't ever get the up so this counter will be in trouble. That's why we have --s scattered
    ** throughout this code
    */
    mouseDowns++;
    if (mouseDowns > 1)
       return kMouseEventHandled;
+
+   if (listener && (buttons & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, buttons);
+      mouseDowns--;
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
 
    if (listener && buttons & (kAlt | kShift | kRButton | kControl | kApple))
    {

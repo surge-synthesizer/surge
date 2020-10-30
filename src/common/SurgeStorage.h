@@ -24,12 +24,9 @@
 #include <atomic>
 #include <stdint.h>
 
-#ifndef TIXML_USE_STL
-#define TIXML_USE_STL
-#endif
-#include <tinyxml.h>
+#include "tinyxml/tinyxml.h"
 
-#include "ImportFilesystem.h"
+#include "filesystem/import.h"
 
 #include <fstream>
 #include <iterator>
@@ -149,6 +146,14 @@ enum porta_curve
     porta_exp = 1,
 };
 
+enum deform_type
+{
+    type_1,
+    type_2,
+    type_3,
+    n_types,
+};
+
 enum lfo_mode
 {
    lm_freerun = 0,
@@ -225,6 +230,19 @@ inline bool uses_wavetabledata(int i)
    }
    return false;
 }
+
+const char fxslot_names[8][NAMECHARS] =
+{
+   "A Insert FX 1",
+   "A Insert FX 2",
+   "B Insert FX 1",
+   "B Insert FX 2",
+   "Send FX 1",
+   "Send FX 2",
+   "Master FX 1",
+   "Master FX 2",
+};
+
 
 enum fx_types
 {
@@ -331,14 +349,14 @@ enum lfoshapes
    ls_ramp,
    ls_noise,
    ls_snh,
-   ls_constant1,
+   ls_envelope,
    ls_stepseq,
    ls_mseg,
-   // ls_formula,
+   ls_function,
    n_lfoshapes
 };
 
-const char ls_names[n_lfoshapes][16] =
+const char ls_names[n_lfoshapes][32] =
 {
    "Sine",
    "Triangle",
@@ -349,6 +367,7 @@ const char ls_names[n_lfoshapes][16] =
    "Envelope",
    "Step Sequencer",
    "MSEG",
+   "Function (coming in 1.9!)",
 };
 
 enum fu_type
@@ -366,6 +385,9 @@ enum fu_type
    fut_vintageladder,
    fut_obxd_2pole,
    fut_obxd_4pole,
+   fut_k35_lp,
+   fut_k35_hp,
+   fut_diode,
    n_fu_type,
 };
 const char fut_names[n_fu_type][32] =
@@ -383,6 +405,9 @@ const char fut_names[n_fu_type][32] =
    "Vintage Ladder",
    "OB-Xd 12 dB/oct",
    "OB-Xd 24 dB/oct",
+   "Sallen-Key Lowpass",
+   "Sallen-Key Highpass",
+   "Diode Ladder",
 };
 
 const char fut_bp_subtypes[6][32] =
@@ -436,7 +461,25 @@ const char fut_vintageladder_subtypes[6][32] =
 const char fut_obxd_2p_subtypes[1][32] = {"12 dB/oct"};
 const char fut_obxd_4p_subtypes[1][32] = {"24 dB/oct"};
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0 };
+const char fut_k35_subtypes[5][32] = {
+   "No Saturation",
+   "Mild Saturation",
+   "Moderate Saturation",
+   "Heavy Saturation",
+   "Extreme Saturation"
+};
+
+const float fut_k35_saturations[5] = {
+   0.0f,
+   1.0f,
+   2.0f,
+   3.0f,
+   4.0f
+};
+
+const char fut_diode_subtypes[1][32] = {"24 dB/oct"};
+
+const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 5, 5, 0 };
 
 enum fu_subtype
 {
@@ -528,7 +571,7 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
 struct FilterStorage
 {
    Parameter type;
-   Parameter subtype;
+   Parameter subtype; // NOTE: In SurgeSynthesizer we assume that type and subtype are adjacent in param space. See comment there.
    Parameter cutoff;
    Parameter resonance;
    Parameter envmod;
@@ -614,17 +657,48 @@ struct MSEGStorage {
       float v0;
       float dragv0; // in snap mode, this is the location we are dragged to. It is just convenience storage.
       float nv1; // this is the v0 of the neighbor and is here just for convenience. MSEGModulationHelper::rebuildCache will set it
-      float cpduration, cpv, dragcpv;
+      float dragv1; // only used in the endpoint
+      float cpduration, cpv, dragcpv, dragcpratio = 0.5;
+      bool  useDeform = true;
+      bool  invertDeform = false;
       enum Type {
          LINEAR = 1,
          QUAD_BEZIER,
          SCURVE,
          SINE,
-         STEPS,
+         STAIRS,
          BROWNIAN,
          SQUARE,
+         TRIANGLE,
+         HOLD,
+         SAWTOOTH,
+         RESERVED,  // used to be Spike, but it broke some MSEG model constraints, so we ditched it - can add a different curve type later on!
+         BUMP,
+         SMOOTH_STAIRS,
       } type;
    };
+
+   // These values are streamed so please don't change the integer values
+   enum EndpointMode {
+      LOCKED = 1,
+      FREE = 2
+   } endpointMode = FREE;
+
+   // These values are streamed so please don't change the integer values
+   enum EditMode {
+       ENVELOPE = 0,    // no constraints on horizontal time axis
+       LFO = 1,         // MSEG editing is constrained to just one phase unit (0 ... 1), useful for single cycle waveform editing
+   } editMode = ENVELOPE;
+
+   // These values are streamed so please don't change the integer values
+   enum LoopMode {
+      ONESHOT = 1,      // Play the MSEG front to back and then output the final value
+      LOOP = 2,         // Play the MSEG front to loop end and then return to loop start
+      GATED_LOOP = 3    // Play the MSEG front to loop end, then return to loop start, but if at any time
+                        // a note off is generated, jump to loop end at current value and progress to end once
+   } loopMode = LOOP;
+
+   int loop_start = -1, loop_end = -1; // -1 signifies the entire MSEG in this context
 
    int n_activeSegments = 0;
    std::array<segment, max_msegs> segments;
@@ -633,11 +707,10 @@ struct MSEGStorage {
    // If you edit the segments then MSEGModulationHelper::rebuildCache can rebuild them
    float totalDuration;
    std::array<float, max_msegs> segmentStart, segmentEnd;
+   float durationToLoopEnd;
+   float durationLoopStartToLoopEnd;
 
-   // These are values used by the editor which are per mseg but not persisted
-   float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.1;
-
-   static constexpr float minimumDuration = 0.001;
+   static constexpr float minimumDuration = 0.0;
 };
 
 struct FormulaModulatorStorage { // Currently an unused placeholder
@@ -652,7 +725,29 @@ struct DAWExtraStateStorage
 {
    bool isPopulated = false;
 
-   int instanceZoomFactor = -1;
+   /*
+    * Here's the prescription to add something to the editor state
+    *
+    * 1. Add it here with a reasonable default.
+    * 2. In the SurgeGUIEditor Constructor, read off the value
+    * 3. In SurgeGUIEditor::populateDawExtraState write it
+    * 4. In SurgeGUIEditor::loadDawExtraState read it (this will probably be pretty similar to
+    *    the constructor code in step 4, but this is the step when restoring, as opposed to creating
+    *    an object).
+    * 5. In SurgePatch load/save XML write and read it
+    *
+    * Then the state will survive create/destroy and save/restore
+    */
+   struct EditorState
+   {
+      int instanceZoomFactor = -1;
+      int current_scene = 0;
+      int current_fx = 0;
+      int current_osc[n_scenes] = {0};
+      modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
+   } editor;
+
+
    bool mpeEnabled = false;
    int mpePitchBendRange = -1;
 
@@ -702,7 +797,7 @@ public:
    FxStorage fx[n_fx_slots];
    // char name[NAMECHARS];
    int scene_start[2], scene_size;
-   Parameter scene_active, scenemode, scenemorph, splitkey;
+   Parameter scene_active, scenemode, scenemorph, splitpoint;  // streaming name for splitpoint is splitkey (due to legacy)
    Parameter volume;
    Parameter polylimit;
    Parameter fx_bypass, fx_disable;
@@ -858,7 +953,8 @@ public:
    void storeMidiMappingToName( std::string name );
 
    // float table_sin[512],table_sin_offset[512];
-   std::mutex waveTableDataMutex, modRoutingMutex;
+   std::mutex waveTableDataMutex;
+   std::recursive_mutex modRoutingMutex;
    Wavetable WindowWT;
 
    float note_to_pitch(float x);
@@ -892,6 +988,11 @@ public:
    Tunings::KeyboardMapping currentMapping;
    bool isStandardMapping = true;
    float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
+
+   ControllerModulationSource::SmoothingMode smoothingMode = ControllerModulationSource::SmoothingMode::LEGACY;
+   ControllerModulationSource::SmoothingMode pitchSmoothingMode =
+       ControllerModulationSource::SmoothingMode::LEGACY;
+   float mpePitchBendRange = -1.0f;
 
    std::atomic<int> otherscene_clients;
 

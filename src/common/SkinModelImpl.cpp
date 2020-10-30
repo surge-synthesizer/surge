@@ -161,6 +161,19 @@ Connector Connector::connectorByNonParameterConnection(NonParameterConnection n)
    return c;
 }
 
+
+std::vector<Connector> Connector::connectorsByComponentType( Connector::Component c )
+{
+   auto res = std::vector<Connector>();
+   guaranteeMap();
+   for( auto it : *idmap )
+   {
+      if (it.second->defaultComponent == c)
+         res.push_back(Connector(it.second));
+   }
+   return res;
+}
+
 Color::Color( std::string name, int r, int g, int b ) : name(name), r(r), g(g), b(b), a(255) {
    guaranteeMap();
    colMap->insert( std::make_pair(name, *this ));

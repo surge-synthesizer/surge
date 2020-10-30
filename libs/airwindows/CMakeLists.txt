@@ -1,103 +1,160 @@
-# 1. Copy the source
-# 2. Add it here
+project(airwindows VERSION 0.0.0 LANGUAGES CXX)
 
-set( AIRWINDOWS_FX_SOURCES
-src/ADClip7.cpp
-src/ADClip7Proc.cpp
-src/Air.cpp
-src/AirProc.cpp
-src/Apicolypse.cpp
-src/ApicolypseProc.cpp
-src/BassDrive.cpp
-src/BassDriveProc.cpp
-src/BitGlitter.cpp
-src/BitGlitterProc.cpp
-src/BlockParty.cpp
-src/BlockPartyProc.cpp
-src/BrightAmbience2.cpp
-src/BrightAmbience2Proc.cpp
-src/BussColors4.cpp
-src/BussColors4Proc.cpp
-src/ButterComp2.cpp
-src/ButterComp2Proc.cpp
-src/Capacitor.cpp
-src/CapacitorProc.cpp
-src/Cojones.cpp
-src/CojonesProc.cpp
-src/Compresaturator.cpp
-src/CompresaturatorProc.cpp
-src/CrunchyGrooveWear.cpp
-src/CrunchyGrooveWearProc.cpp
-src/DeBess.cpp
-src/DeBessProc.cpp
-src/DeEss.cpp
-src/DeEssProc.cpp
-src/DeRez2.cpp
-src/DeRez2Proc.cpp
-src/DeckWrecka.cpp
-src/DeckWreckaProc.cpp
-src/Density.cpp
-src/DensityProc.cpp
-src/Drive.cpp
-src/DriveProc.cpp
-src/DrumSlam.cpp
-src/DrumSlamProc.cpp
-src/DustBunny.cpp
-src/DustBunnyProc.cpp
-src/Focus.cpp
-src/FocusProc.cpp
-src/Fracture.cpp
-src/FractureProc.cpp
-src/GrooveWear.cpp
-src/GrooveWearProc.cpp
-src/HardVacuum.cpp
-src/HardVacuumProc.cpp
-src/Hombre.cpp
-src/HombreProc.cpp
-src/IronOxide5.cpp
-src/IronOxide5Proc.cpp
-src/Logical4.cpp
-src/Logical4Proc.cpp
-src/Loud.cpp
-src/LoudProc.cpp
-src/Melt.cpp
-src/MeltProc.cpp
-src/Mojo.cpp
-src/MojoProc.cpp
-src/NCSeventeen.cpp
-src/NCSeventeenProc.cpp
-src/Noise.cpp
-src/NoiseProc.cpp
-src/OneCornerClip.cpp
-src/OneCornerClipProc.cpp
-src/PocketVerbs.cpp
-src/PocketVerbsProc.cpp
-src/Point.cpp
-src/PointProc.cpp
-src/Pop.cpp
-src/PopProc.cpp
-src/Pressure4.cpp
-src/Pressure4Proc.cpp
-src/PyeWacket.cpp
-src/PyeWacketProc.cpp
-src/SingleEndedTriode.cpp
-src/SingleEndedTriodeProc.cpp
-src/Slew.cpp
-src/SlewProc.cpp
-src/Slew2.cpp
-src/Slew2Proc.cpp
-src/Spiral2.cpp
-src/Spiral2Proc.cpp
-src/StarChild.cpp
-src/StarChildProc.cpp
-src/Surge.cpp
-src/SurgeProc.cpp
-src/ToTape6.cpp
-src/ToTape6Proc.cpp
-src/UnBox.cpp
-src/UnBoxProc.cpp
-src/VariMu.cpp
-src/VariMuProc.cpp
-src/VoiceOfTheStarship.cpp
-src/VoiceOfTheStarshipProc.cpp
-  )
+add_library(${PROJECT_NAME}
+  src/ADClip7.cpp
+  src/ADClip7.h
+  src/ADClip7Proc.cpp
+  src/Air.cpp
+  src/Air.h
+  src/AirProc.cpp
+  src/Apicolypse.cpp
+  src/Apicolypse.h
+  src/ApicolypseProc.cpp
+  src/BassDrive.cpp
+  src/BassDrive.h
+  src/BassDriveProc.cpp
+  src/BitGlitter.cpp
+  src/BitGlitter.h
+  src/BitGlitterProc.cpp
+  src/BlockParty.cpp
+  src/BlockParty.h
+  src/BlockPartyProc.cpp
+  src/BrightAmbience2.cpp
+  src/BrightAmbience2.h
+  src/BrightAmbience2Proc.cpp
+  src/BussColors4.cpp
+  src/BussColors4.h
+  src/BussColors4Proc.cpp
+  src/ButterComp2.cpp
+  src/ButterComp2.h
+  src/ButterComp2Proc.cpp
+  src/Capacitor.cpp
+  src/Capacitor.h
+  src/CapacitorProc.cpp
+  src/Cojones.cpp
+  src/Cojones.h
+  src/CojonesProc.cpp
+  src/Compresaturator.cpp
+  src/Compresaturator.h
+  src/CompresaturatorProc.cpp
+  src/CrunchyGrooveWear.cpp
+  src/CrunchyGrooveWear.h
+  src/CrunchyGrooveWearProc.cpp
+  src/DeBess.cpp
+  src/DeBess.h
+  src/DeBessProc.cpp
+  src/DeEss.cpp
+  src/DeEss.h
+  src/DeEssProc.cpp
+  src/DeRez2.cpp
+  src/DeRez2.h
+  src/DeRez2Proc.cpp
+  src/DeckWrecka.cpp
+  src/DeckWrecka.h
+  src/DeckWreckaProc.cpp
+  src/Density.cpp
+  src/Density.h
+  src/DensityProc.cpp
+  src/Drive.cpp
+  src/Drive.h
+  src/DriveProc.cpp
+  src/DrumSlam.cpp
+  src/DrumSlam.h
+  src/DrumSlamProc.cpp
+  src/DustBunny.cpp
+  src/DustBunny.h
+  src/DustBunnyProc.cpp
+  src/Focus.cpp
+  src/Focus.h
+  src/FocusProc.cpp
+  src/Fracture.cpp
+  src/Fracture.h
+  src/FractureProc.cpp
+  src/GrooveWear.cpp
+  src/GrooveWear.h
+  src/GrooveWearProc.cpp
+  src/HardVacuum.cpp
+  src/HardVacuum.h
+  src/HardVacuumProc.cpp
+  src/Hombre.cpp
+  src/Hombre.h
+  src/HombreProc.cpp
+  src/IronOxide5.cpp
+  src/IronOxide5.h
+  src/IronOxide5Proc.cpp
+  src/Logical4.cpp
+  src/Logical4.h
+  src/Logical4Proc.cpp
+  src/Loud.cpp
+  src/Loud.h
+  src/LoudProc.cpp
+  src/Melt.cpp
+  src/Melt.h
+  src/MeltProc.cpp
+  src/Mojo.cpp
+  src/Mojo.h
+  src/MojoProc.cpp
+  src/NCSeventeen.cpp
+  src/NCSeventeen.h
+  src/NCSeventeenProc.cpp
+  src/Noise.cpp
+  src/Noise.h
+  src/NoiseProc.cpp
+  src/OneCornerClip.cpp
+  src/OneCornerClip.h
+  src/OneCornerClipProc.cpp
+  src/PocketVerbs.cpp
+  src/PocketVerbs.h
+  src/PocketVerbsProc.cpp
+  src/Point.cpp
+  src/Point.h
+  src/PointProc.cpp
+  src/Pop.cpp
+  src/Pop.h
+  src/PopProc.cpp
+  src/Pressure4.cpp
+  src/Pressure4.h
+  src/Pressure4Proc.cpp
+  src/PyeWacket.cpp
+  src/PyeWacket.h
+  src/PyeWacketProc.cpp
+  src/SingleEndedTriode.cpp
+  src/SingleEndedTriode.h
+  src/SingleEndedTriodeProc.cpp
+  src/Slew.cpp
+  src/Slew.h
+  src/Slew2.cpp
+  src/Slew2.h
+  src/Slew2Proc.cpp
+  src/SlewProc.cpp
+  src/Spiral2.cpp
+  src/Spiral2.h
+  src/Spiral2Proc.cpp
+  src/StarChild.cpp
+  src/StarChild.h
+  src/StarChildProc.cpp
+  src/Surge.cpp
+  src/Surge.h
+  src/SurgeProc.cpp
+  src/ToTape6.cpp
+  src/ToTape6.h
+  src/ToTape6Proc.cpp
+  src/UnBox.cpp
+  src/UnBox.h
+  src/UnBoxProc.cpp
+  src/VariMu.cpp
+  src/VariMu.h
+  src/VariMuProc.cpp
+  src/VoiceOfTheStarship.cpp
+  src/VoiceOfTheStarship.h
+  src/VoiceOfTheStarshipProc.cpp
+  src/AirWinBaseClass_pluginRegistry.cpp
+  include/${PROJECT_NAME}/AirWinBaseClass.h
+)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+  AudioEffectX=AirWinBaseClass
+  VstPlugCategory=long
+  _USE_MATH_DEFINES
+)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

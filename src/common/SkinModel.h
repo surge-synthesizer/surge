@@ -147,6 +147,9 @@ namespace Surge
 
             MAIN_VU_METER,
 
+            MSEG_EDIT,
+            LFO_MENU,
+
             N_NONCONNECTED
          };
 
@@ -161,6 +164,7 @@ namespace Surge
 
          static Connector connectorByID(const std::string &id);
          static Connector connectorByNonParameterConnection( NonParameterConnection n );
+         static std::vector<Connector> connectorsByComponentType( Component c );
 
          Connector & withControlStyle(unsigned int flags ) noexcept
          {
@@ -232,6 +236,8 @@ namespace Surge
             std::unordered_map<Properties,std::string> properties; // since we are base for XML where it's all strings
          };
          std::shared_ptr<Payload> payload;
+         Connector(std::shared_ptr<Payload> p) : payload(p) {}
+
       };
 
       namespace AEG {
@@ -249,10 +255,11 @@ namespace Surge
           keytrack_1, keytrack_2, resonance_1, resonance_2, subtype_1, subtype_2, type_1, type_2, waveshaper_drive, waveshaper_type;
       }
       namespace Global {
-         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, polylimit, scene_mode, splitkey;
+         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, polylimit, scene_mode, splitpoint;
       }
       namespace LFO {
          extern Surge::Skin::Connector amplitude, attack, decay, deform, delay, hold, phase, rate, release, shape, sustain, triggermode, unipolar;
+         extern Surge::Skin::Connector lfoMenuButton, msegEditButton, lfoLabel;
       }
       namespace Mix {
          extern Surge::Skin::Connector level_noise, level_o1, level_o2, level_o3, level_prefiltergain, level_ring12, level_ring23,
@@ -284,7 +291,6 @@ namespace Surge
          extern Surge::Skin::Connector mainVUMeter;
 
          // These active labels are actually controls
-         extern Surge::Skin::Connector lfoLabel;
 
          extern Surge::Skin::Connector patchBrowser;
 

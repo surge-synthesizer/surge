@@ -310,6 +310,15 @@ bool Parameter::has_portaoptions()
       return false;
 }
 
+bool Parameter::has_deformoptions()
+{
+   if (ctrltype == ct_lfodeform)
+      return true;
+   else
+      return false;
+
+}
+
 void Parameter::set_user_data(ParamUserData* ud)
 {
    switch (ctrltype)
@@ -680,7 +689,7 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_min.i = 2;
       val_max.i = 64;
-      val_default.i = 8;
+      val_default.i = 16;
       break;
    case ct_scenesel:
       valtype = vt_int;
@@ -706,7 +715,14 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
+   case ct_lfodeform:
+      val_min.f = -1;
+      val_max.f = 1;
+      valtype = vt_float;
+      val_default.f = 0;
+      break;
    case ct_amplitude:
+   case ct_amplitude_clipper:
    case ct_lfoamplitude:
       val_min.f = 0;
       val_max.f = 1;
@@ -882,6 +898,7 @@ void Parameter::set_type(int ctrltype)
    case ct_percent:
    case ct_percent200:
    case ct_percent_bidirectional:
+   case ct_lfodeform:
    case ct_rotarydrive:
    case ct_countedset_percent:
    case ct_lfoamplitude:
@@ -889,7 +906,6 @@ void Parameter::set_type(int ctrltype)
       sprintf(displayInfo.unit, "%%" );
       displayInfo.scale = 100;
       break;
-
    case ct_percent_bidirectional_stereo:
       displayType = LinearWithScale;
       displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
@@ -1028,6 +1044,7 @@ void Parameter::set_type(int ctrltype)
       break;
 
    case ct_amplitude:
+   case ct_amplitude_clipper:
    case ct_sendlevel:
       displayType = Decibel;
       sprintf( displayInfo.unit, "dB" );
@@ -1089,6 +1106,7 @@ void Parameter::bound_value(bool force_integer)
          val.f = floor(val.f * 100) / 100.0;
          break;
       }
+      case ct_lfodeform:
       case ct_pitch:
       case ct_pitch_semi7bp:
       case ct_syncpitch:
@@ -1136,6 +1154,7 @@ void Parameter::bound_value(bool force_integer)
          break;
       }
       case ct_amplitude:
+      case ct_amplitude_clipper:
       case ct_sendlevel:
       {
          if (val.f != 0)
@@ -1787,7 +1806,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                   else
                      sprintf( dtxt, "C : %.*f", dp, dnval );
                   iw->valminus = dtxt;
-                  
+
                   sprintf( dtxt, "%.*f", dp, -( qq * 32 ) );
                   iw->dvalminus = dtxt;
                }
@@ -2143,8 +2162,11 @@ void Parameter::get_display(char* txt, bool external, float ef)
                if (id == patch.scene[scene].filterunit[unit].subtype.id)
                {
                   int type = patch.scene[scene].filterunit[unit].type.val.i;
-
-                  switch (type)
+                  if (i >= fut_subcount[type])
+                  {
+                     sprintf( txt, "None" );
+                  }
+                  else switch (type)
                   {
                   case fut_lpmoog:
                      sprintf(txt, "%s", fut_ldr_subtypes[i]);
@@ -2167,8 +2189,15 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_obxd_4pole:
                      sprintf( txt, "%s", fut_obxd_4p_subtypes[i]);
                      break;
+                  case fut_k35_lp:
+                  case fut_k35_hp:
+                     sprintf( txt, "%s", fut_k35_subtypes[i]);
+                     break;
+                  case fut_diode:
+                     sprintf( txt, "%s", fut_diode_subtypes[i]);
+                     break;
 #if SURGE_EXTRA_FILTERS
-#endif                     
+#endif
                   default:
                      sprintf(txt, "%s", fut_def_subtypes[i]);
                      break;
@@ -2270,7 +2299,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       case ct_sinefmlegacy:
          if (i == 0)
-             sprintf( txt, "Legacy (before v1.6.2)");
+             sprintf( txt, "Legacy (< v1.6.2)");
          else
              sprintf( txt, "Consistent with FM2/3" );
          break;
@@ -2324,16 +2353,16 @@ void Parameter::get_display(char* txt, bool external, float ef)
          switch( mode )
          {
          case 0:
-            types = "Dry Signal + Combs";
+            types = "Dry + Combs";
             break;
          case 1:
             types = "Combs Only";
             break;
          case 2:
-            types = "Dry Signal + Arpeggiated Combs";
+            types = "Dry + Arp Combs";
             break;
          case 3:
-            types = "Arpeggiated Combs Only";
+            types = "Arp Combs Only";
             break;
          }
          sprintf( txt, "%s", types.c_str() );
@@ -2364,7 +2393,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
               switch(i)
               {
               case 0:
-                 type = "Mono Sum";
+                 type = "Monosum";
                  break;
               case 1:
                  type = "Left Only";
@@ -2596,6 +2625,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_fmratio:
    case ct_syncpitch:
    case ct_amplitude:
+   case ct_amplitude_clipper:
    case ct_decibel:
    case ct_decibel_narrow:
    case ct_decibel_narrow_extendable:
@@ -2621,6 +2651,7 @@ bool Parameter::can_setvalue_from_string()
    case ct_lforate:
    case ct_lforate_deactivatable:
    case ct_lfoamplitude:
+   case ct_lfodeform:
    case ct_detuning:
    case ct_oscspread:
    case ct_countedset_percent:

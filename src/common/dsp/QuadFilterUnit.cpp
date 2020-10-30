@@ -5,6 +5,8 @@
 
 #include "filters/VintageLadders.h"
 #include "filters/Obxd.h"
+#include "filters/K35.h"
+#include "filters/DiodeLadder.h"
 
 __m128 SVFLP12Aquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
@@ -799,6 +801,15 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       break;
    case fut_obxd_4pole:
       return ObxdFilter::process_4_pole;
+      break;
+   case fut_k35_lp:
+      return K35Filter::process_lp;
+      break;
+   case fut_k35_hp:
+      return K35Filter::process_hp;
+      break;
+   case fut_diode:
+      return DiodeLadderFilter::process;
       break;
    default:
       // SOFTWARE ERROR

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <fstream>
 
-#include "ImportFilesystem.h"
+#include "filesystem/import.h"
 
 namespace Surge
 {
@@ -48,7 +48,7 @@ void readDefaultsFile(std::string fn, bool forceRead=false)
         defaultsFileContents.clear();
 
         TiXmlDocument defaultsLoader;
-        defaultsLoader.LoadFile(fn.c_str());
+        defaultsLoader.LoadFile(string_to_path(fn));
         TiXmlElement *e = TINYXML_SAFE_TO_ELEMENT(defaultsLoader.FirstChild("defaults"));
         if(e)
         {
