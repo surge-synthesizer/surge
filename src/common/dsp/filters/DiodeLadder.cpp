@@ -15,7 +15,7 @@
 static float clampedFrequency( float pitch, SurgeStorage *storage )
 {
    auto freq = storage->note_to_pitch_ignoring_tuning( pitch + 69 ) * Tunings::MIDI_0_FREQ;
-   freq = limit_range( (float)freq, 5.f, (float)( dsamplerate_os * 0.25f ) );
+   freq = limit_range( (float)freq, 5.f, (float)( dsamplerate_os * 0.3f ) );
    return freq;
 }
 
@@ -58,7 +58,7 @@ namespace DiodeLadderFilter
    // can't fit all the coefficients in the 8-coefficient limit, so we have to compute a lot of
    // stuff per sample q_q
    enum dlf_coeffs { 
-      dlf_alpha = 0, // aka
+      dlf_alpha = 0,
       dlf_gamma,
       dlf_g,
       dlf_G4,
@@ -137,7 +137,7 @@ namespace DiodeLadderFilter
       const __m128 hg = M(f->C[dlf_g], half);
       
       // 1.0 / (gp1 - g * G2)
-      const __m128 beta1 = reci(S(gp1, M(g, f->C[dlf_G2])));
+      const __m128 beta1 = reci(S(gp1, M( g, f->C[dlf_G2])));
       // 1.0 / (gp1 - g * 0.5 * G3
       const __m128 beta2 = reci(S(gp1, M(hg, f->C[dlf_G3])));
       // 1.0 / (gp1 - g * 0.5 * G4
@@ -158,9 +158,9 @@ namespace DiodeLadderFilter
       // nothing to compute for epsilons or ma0, inline them
       
       // feedback4 is always zero, inline it
-      const __m128 feedback3 = getFO(beta4, zero, zero, f->R[dlf_z4]);
-      const __m128 feedback2 = getFO(beta3, hg, f->R[dlf_feedback3], f->R[dlf_z3]);
-      const __m128 feedback1 = getFO(beta2, hg, f->R[dlf_feedback2], f->R[dlf_z2]);
+      const __m128 feedback3 = getFO(beta4, zero,                zero, f->R[dlf_z4]);
+      const __m128 feedback2 = getFO(beta3,   hg, f->R[dlf_feedback3], f->R[dlf_z3]);
+      const __m128 feedback1 = getFO(beta2,   hg, f->R[dlf_feedback2], f->R[dlf_z2]);
 
       const __m128 sigma =
          A(A(A(
@@ -190,11 +190,4 @@ namespace DiodeLadderFilter
 
       return result;
    }
-
-#undef overdrive
-#undef F
-#undef M
-#undef D
-#undef A
-#undef S
 }
