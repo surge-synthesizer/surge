@@ -380,8 +380,11 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
 CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonState& button)
 {
-   if (!((button & kLButton) || (button & kRButton)))
+   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, button);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
 
    assert(oscdata);
 

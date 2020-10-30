@@ -21,7 +21,7 @@
 class CSurgeVuMeter : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
-   CSurgeVuMeter(const VSTGUI::CRect& size);
+   CSurgeVuMeter(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener);
    virtual void draw(VSTGUI::CDrawContext* dc) override;
    void setType(int vutype);
    // void setSecondaryValue(float v);
@@ -31,6 +31,8 @@ public:
       return valueR;
    }
    bool stereo;
+
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
 
 private:
    float valueR;

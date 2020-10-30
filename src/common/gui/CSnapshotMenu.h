@@ -28,13 +28,14 @@ public:
    CSnapshotMenu(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, SurgeStorage* storage);
    virtual ~CSnapshotMenu();
    virtual void draw(VSTGUI::CDrawContext* dc) override;
-   // virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
    virtual void populate();
    virtual void loadSnapshot(int type, TiXmlElement* e, int idx){};
    virtual bool loadSnapshotByIndex(int idx);
 
    virtual void saveSnapshot(TiXmlElement* e, const char* name){};
    virtual bool canSave();
+   
+   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& button) override;
 
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorHand );

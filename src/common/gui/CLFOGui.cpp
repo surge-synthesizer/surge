@@ -1092,6 +1092,12 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
 CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   if (listener && (buttons & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, buttons);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+
    if( ( buttons & kDoubleClick ) && lfodata->shape.val.i == ls_mseg )
    {
       auto sge = dynamic_cast<SurgeGUIEditor *>(listener);

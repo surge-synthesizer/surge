@@ -61,8 +61,11 @@ void CPatchBrowser::draw(CDrawContext* dc)
 
 CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& button)
 {
-   if (!(button & kLButton || button & kRButton))
+   if (listener && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, button);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
 
    CRect menurect(0, 0, 0, 0);
    menurect.offset(where.x, where.y);

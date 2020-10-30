@@ -85,6 +85,12 @@ void CEffectSettings::draw(CDrawContext* dc)
 
 CMouseEventResult CEffectSettings::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   if (listener && (buttons & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, buttons);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+
    mouseActionMode = click;
    dragStart = where;
    for (int i = 0; i < 8; i++)

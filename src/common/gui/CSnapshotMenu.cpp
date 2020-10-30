@@ -32,6 +32,16 @@ CSnapshotMenu::CSnapshotMenu(const CRect& size,
 CSnapshotMenu::~CSnapshotMenu()
 {}
 
+CMouseEventResult CSnapshotMenu::onMouseDown(CPoint& where, const CButtonState& button)
+{
+   if (listenerNotForParent && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listenerNotForParent->controlModifierClicked(this, button);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+   return COptionMenu::onMouseDown(where, button);
+}
+
 void CSnapshotMenu::draw(CDrawContext* dc)
 {
    setDirty(false);
@@ -326,9 +336,6 @@ j;
 
 // CFxMenu
 
-const char fxslot_names[8][NAMECHARS] = {"A Insert FX 1", "A Insert FX 2", "B Insert FX 1", "B Insert FX 2",
-                                         "Send FX 1",  "Send FX 2",  "Master FX 1",   "Master FX 2"};
-
 std::vector<float> CFxMenu::fxCopyPaste;
 
 CFxMenu::CFxMenu(const CRect& size,
@@ -347,6 +354,7 @@ CFxMenu::CFxMenu(const CRect& size,
    selectedName = "";
    populate();
 }
+
 
 void CFxMenu::draw(CDrawContext* dc)
 {
