@@ -6,7 +6,7 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h" // for TINYXML macro
-#include "ImportFilesystem.h"
+#include "filesystem/import.h"
 #include "SkinColors.h"
 #include "guihelpers.h"
 
@@ -31,6 +31,16 @@ CSnapshotMenu::CSnapshotMenu(const CRect& size,
 }
 CSnapshotMenu::~CSnapshotMenu()
 {}
+
+CMouseEventResult CSnapshotMenu::onMouseDown(CPoint& where, const CButtonState& button)
+{
+   if (listenerNotForParent && (button & (kMButton | kButton4 | kButton5)))
+   {
+      listenerNotForParent->controlModifierClicked(this, button);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+   return COptionMenu::onMouseDown(where, button);
+}
 
 void CSnapshotMenu::draw(CDrawContext* dc)
 {
@@ -69,6 +79,7 @@ void CSnapshotMenu::populate()
             break;
       }
    }
+   maxIdx = idx;
 }
 
 bool CSnapshotMenu::loadSnapshotByIndex( int idx )
@@ -152,6 +163,8 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
            snapshotTypeID = tmpI;
         }
 
+        if( firstSnapshotByType.find(snapshotTypeID) == firstSnapshotByType.end() )
+           firstSnapshotByType[snapshotTypeID] = idx;
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
         auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem* item) {
                          this->selectedIdx = idx;
@@ -159,6 +172,7 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
                          if( this->listenerNotForParent )
                             this->listenerNotForParent->valueChanged( this );
         };
+        loadArgsByIndex.push_back(std::make_pair(snapshotTypeID, snapshot));
         idx++;
 
         actionItem->setActions(action, nullptr);
@@ -198,13 +212,19 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     else
     {
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
-        auto action = [this, type_id](CCommandMenuItem* item) {
+
+       if( firstSnapshotByType.find(type_id) == firstSnapshotByType.end() )
+          firstSnapshotByType[type_id] = idx;
+
+        auto action = [this, type_id, idx](CCommandMenuItem* item) {
                          this->selectedIdx = 0;
-                         this->loadSnapshot(type_id, nullptr, 0);
+                         this->loadSnapshot(type_id, nullptr, idx);
                          if( this->listenerNotForParent )
                             this->listenerNotForParent->valueChanged(this);
         };
 
+        loadArgsByIndex.push_back(std::make_pair(type_id, nullptr));
+        idx++;
         actionItem->setActions(action, nullptr);
         parent->addEntry(actionItem);
     }
@@ -228,16 +248,29 @@ COscMenu::COscMenu(const CRect& size,
 {
    strcpy(mtype, "osc");
    this->osc = osc;
-   bmp = bitmapStore->getBitmap(IDB_OSCMENU);
+   auto tb = bitmapStore->getBitmap(IDB_OSCMENU);
+   bmp = tb;
    populate();
+
+   currentIdx = 0;
+   if( firstSnapshotByType.find(osc->type.val.i ) != firstSnapshotByType.end() )
+      currentIdx = firstSnapshotByType[osc->type.val.i];
 }
 
 void COscMenu::draw(CDrawContext* dc)
 {
+   if( ! attemptedHoverLoad )
+   {
+      hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl,dynamic_cast<CScalableBitmap*>(bmp),
+                                                             associatedBitmapStore, Surge::UI::Skin::HOVER);
+      attemptedHoverLoad = true;
+   }
    CRect size = getViewSize();
    int i = osc->type.val.i;
    int y = i * size.getHeight();
-   if (bmp)
+   if( isHovered && hoverBmp )
+      hoverBmp->draw(dc,size,CPoint(0,y), 0xff);
+   else if (bmp)
       bmp->draw(dc, size, CPoint(0, y), 0xff);
 
    setDirty(false);
@@ -248,6 +281,30 @@ void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
    assert(within_range(0, type, num_osctypes));
    osc->queue_type = type;
    osc->queue_xmldata = e;
+}
+
+bool COscMenu::onWheel( const VSTGUI::CPoint &where, const float &distance, const VSTGUI::CButtonState &buttons )
+{
+   accumWheel += distance;
+#if WINDOWS // rough hack but it still takes too many mousewheel clicks to get outside of Classic osc subfolder onto other osc types!
+   accumWheel += distance;
+#endif
+
+   if( accumWheel < -1 )
+   {
+      currentIdx = std::min( maxIdx - 1, currentIdx + 1 );
+      accumWheel = 0;
+      auto args = loadArgsByIndex[currentIdx];
+      loadSnapshot( args.first, args.second, currentIdx );
+   }
+   else if( accumWheel > 1 )
+   {
+      currentIdx = std::max( 0, currentIdx - 1 );
+      accumWheel = 0;
+      auto args = loadArgsByIndex[currentIdx];
+      loadSnapshot( args.first, args.second, currentIdx );
+   }
+   return true;
 }
 
 /*void COscMenu::load_snapshot(int type, TiXmlElement *e)
@@ -279,9 +336,6 @@ j;
 
 // CFxMenu
 
-const char fxslot_names[8][NAMECHARS] = {"A Insert FX 1", "A Insert FX 2", "B Insert FX 1", "B Insert FX 2",
-                                         "Send FX 1",  "Send FX 2",  "Master FX 1",   "Master FX 2"};
-
 std::vector<float> CFxMenu::fxCopyPaste;
 
 CFxMenu::CFxMenu(const CRect& size,
@@ -301,26 +355,49 @@ CFxMenu::CFxMenu(const CRect& size,
    populate();
 }
 
+
 void CFxMenu::draw(CDrawContext* dc)
 {
    CRect lbox = getViewSize();
    lbox.right--;
    lbox.bottom--;
 
+   if( ! triedToLoadBmp )
+   {
+      triedToLoadBmp = true;
+      pBackground = associatedBitmapStore->getBitmap(IDB_MENU_IN_SLIDER_BG);
+      pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
+          skinControl, dynamic_cast<CScalableBitmap*>(pBackground), associatedBitmapStore,
+          Surge::UI::Skin::HoverType::HOVER);
+   }
+
+   if( isHovered && pBackgroundHover )
+   {
+      pBackgroundHover->draw(dc, getViewSize(), CPoint(0,0), 0xff );
+   }
+   else if( pBackground )
+   {
+      pBackground->draw(dc, getViewSize(), CPoint(0,0), 0xff );
+   }
+
    auto fgc = skin->getColor(Colors::Effect::Menu::Text);
+   if( isHovered )
+      fgc = skin->getColor( Colors::Effect::Menu::TextHover);
+   // hover color and position
+
    dc->setFontColor(fgc);
    dc->setFont(displayFont);
-   CRect txtbox(lbox);
-   txtbox.inset(2, 2);
-   txtbox.inset(3, 0);
-   txtbox.right -= 6;
-   txtbox.top--;
-   txtbox.bottom += 2;
+   CRect txtbox(getViewSize());
+   txtbox.inset( 2, 2 );
+   txtbox.left += 4;
+   txtbox.right -= 12;
    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
    char fxname[NAMECHARS];
    sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);
    dc->drawString(fxname, txtbox, kRightText, true);
 
+   /*
+    * pre-graphics triangle code
    CPoint d(txtbox.right + 2, txtbox.top + 5);
    dc->drawPoint(d, fgc);
    d.x++;
@@ -330,6 +407,7 @@ void CFxMenu::draw(CDrawContext* dc)
    d.y--;
    d.x++;
    dc->drawPoint(d, fgc);
+   */
 
    setDirty(false);
 }
@@ -474,17 +552,15 @@ void CFxMenu::rescanUserPresets()
       }
    }
 
-   for( auto f : sfxfiles )
+   for(const auto& f : sfxfiles)
    {
-      auto fn = path_to_string(f);
-
       {
          UserPreset preset;
-         preset.file = fn;
+         preset.file = path_to_string(f);
          TiXmlDocument d;
          int t;
          
-         if( ! d.LoadFile( fn ) ) goto badPreset;
+         if( ! d.LoadFile( f ) ) goto badPreset;
          
          auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild( "single-fx" ) );
          if( ! r ) goto badPreset;

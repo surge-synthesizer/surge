@@ -51,7 +51,7 @@
 #include "SurgeParamConfig.h"
 
 #include "UserDefaults.h"
-#include "ImportFilesystem.h"
+#include "filesystem/import.h"
 
 using namespace std;
 
@@ -114,7 +114,11 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
 
    SurgePatch& patch = storage.getPatch();
 
-   smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue( &storage, "smoothingMode", (int)( ControllerModulationSource::SmoothingMode::LEGACY ));
+   storage.smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue( &storage, "smoothingMode", (int)( ControllerModulationSource::SmoothingMode::LEGACY ));
+   storage.pitchSmoothingMode =
+       (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
+           &storage, "pitchSmoothingMode",
+           (int)(ControllerModulationSource::SmoothingMode::DIRECT));
 
    patch.polylimit.val.i = 16;
    for (int sc = 0; sc < 2; sc++)
@@ -123,15 +127,15 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       scene.modsources.resize(n_modsources);
       for (int i = 0; i < n_modsources; i++)
          scene.modsources[i] = 0;
-      scene.modsources[ms_modwheel] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_breath] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_expression] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_sustain] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_aftertouch] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_pitchbend] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_lowest_key] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_highest_key] = new ControllerModulationSource(smoothingMode);
-      scene.modsources[ms_latest_key] = new ControllerModulationSource(smoothingMode);
+      scene.modsources[ms_modwheel] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_breath] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_expression] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_sustain] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_aftertouch] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_pitchbend] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_lowest_key] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_highest_key] = new ControllerModulationSource(storage.smoothingMode);
+      scene.modsources[ms_latest_key] = new ControllerModulationSource(storage.smoothingMode);
 
       scene.modsources[ms_random_bipolar] = new RandomModulationSource( true );
       scene.modsources[ms_random_unipolar] = new RandomModulationSource( false );
@@ -152,7 +156,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    }
    for (int i = 0; i < n_customcontrollers; i++)
    {
-      patch.scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource(smoothingMode);
+      patch.scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource(storage.smoothingMode);
       patch.scene[1].modsources[ms_ctrl1 + i] =
          patch.scene[0].modsources[ms_ctrl1 + i];
    }
@@ -206,7 +210,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
 
    mpeEnabled = false;
    mpeVoices = 0;
-   mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+   storage.mpePitchBendRange = (float)Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
    mpeGlobalPitchBendRange = 0;
 
 #if TARGET_VST3 || TARGET_VST2 || TARGET_AUDIOUNIT 
@@ -284,13 +288,13 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
          channelmask = 3;
          break;
       case sm_split:
-         if (key < storage.getPatch().splitkey.val.i)
+         if (key < storage.getPatch().splitpoint.val.i)
             channelmask = 1;
          else
             channelmask = 2;
          break;
       case sm_chsplit:
-         if( channel < ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
+         if( channel < ( (int)( storage.getPatch().splitpoint.val.i / 8 ) + 1 ) )
             channelmask = 1;
          else
             channelmask = 2;
@@ -682,9 +686,9 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
          if (storage.getPatch().scenemode.val.i == sm_split)
          {
             if (v->state.scene_id == 0)
-               hikey = storage.getPatch().splitkey.val.i - 1;
+               hikey = storage.getPatch().splitpoint.val.i - 1;
             else
-               lowkey = storage.getPatch().splitkey.val.i;
+               lowkey = storage.getPatch().splitpoint.val.i;
          }
 
          switch (storage.getPatch().scene[v->state.scene_id].polymode.val.i)
@@ -883,19 +887,20 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
 
 void SurgeSynthesizer::pitchBend(char channel, int value)
 {
-   if (mpeEnabled)
+   if (mpeEnabled && channel != 0)
    {
-      float bendNormalized = value / 8192.f;
       channelState[channel].pitchBend = value;
 
-      if (channel == 0)
-      {
-         channelState[channel].pitchBendInSemitones = bendNormalized * mpeGlobalPitchBendRange;
-      }
-      else
-      {
-         channelState[channel].pitchBendInSemitones = bendNormalized * mpePitchBendRange;
-      }
+      /*
+      ** todo: handling of channel 0 and mpeGlobalPitchBendRange were broken with the addition
+      ** of smoothing. we should probably add that back in if it turns out someone actually uses it
+      *:)
+      ** currently channelState[].pitchBendInSemitones is now unused, but it hasn't been removed
+      *from
+      ** the code yet for this reason.
+      ** For now, we ignore channel zero here so it functions like the old code did in practice when
+      ** mpeGlobalPitchBendRange remained at zero.
+      */
    }
 
    /*
@@ -945,33 +950,26 @@ void SurgeSynthesizer::programChange(char channel, int value)
 
 void SurgeSynthesizer::updateDisplay()
 {
-#if ! TARGET_AUDIOUNIT
-   getParent()->updateDisplay();
-#endif
+   // This used to (in VSt2) call udpateDisplay but that did an Audio -> UI thread cross. Just mark
+   // the flag as true.
    refresh_editor = true;
 }
 
 void SurgeSynthesizer::sendParameterAutomation(long index, float value)
 {
-   int externalparam = remapInternalToExternalApiId(index);
+   ID eid;
+   if( ! fromSynthSideId(index, eid ) )
+      return;
 
-#if TARGET_VST3 || TARGET_AUDIOUNIT
-   if( index >= metaparam_offset )
-      externalparam = index;
-#endif
-
-   if (externalparam >= 0)
-   {
 #if TARGET_AUDIOUNIT
-      getParent()->ParameterUpdate(externalparam);
+   getParent()->ParameterUpdate(eid.getDawSideIndex());
 #elif TARGET_VST3
-      getParent()->setParameterAutomated(externalparam, value);
+   getParent()->setParameterAutomated(index, value);
 #elif TARGET_HEADLESS || TARGET_APP
-      // NO OP
+   // NO OP
 #else
-      getParent()->setParameterAutomated(externalparam, value);
+   getParent()->setParameterAutomated(eid.getDawSideIndex(), value);
 #endif
-   }
 }
 
 void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int msbValue)
@@ -1010,7 +1008,7 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
    {
       if (channel == 1)
       {
-         mpePitchBendRange = msbValue;
+         storage.mpePitchBendRange = msbValue;
       }
       else if (channel == 0)
       {
@@ -1021,8 +1019,8 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
    {
       mpeEnabled = msbValue > 0;
       mpeVoices = msbValue & 0xF;
-      if( mpePitchBendRange < 0 )
-         mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+      if( storage.mpePitchBendRange < 0.0f )
+         storage.mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
       mpeGlobalPitchBendRange = 0;
       return;
    }
@@ -1153,7 +1151,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
          }
          else
          {
-            if( channel < ( (int)( storage.getPatch().splitkey.val.i / 8 ) + 1 ) )
+            if( channel < ( (int)( storage.getPatch().splitpoint.val.i / 8 ) + 1 ) )
                purgeHoldbuffer(0);
             else
                purgeHoldbuffer(1);
@@ -1456,7 +1454,7 @@ ControllerModulationSource* SurgeSynthesizer::AddControlInterpolator(int Id, boo
       mControlInterpolator[Index].id = Id;
       mControlInterpolatorUsed[Index] = true;
 
-      mControlInterpolator[Index].smoothingMode = smoothingMode; // IMPLEMENT THIS HERE
+      mControlInterpolator[Index].smoothingMode = storage.smoothingMode; // IMPLEMENT THIS HERE
       return &mControlInterpolator[Index];
    }
 
@@ -1545,6 +1543,8 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       case ct_filtertype:
          switch_toggled_queued = true;
          {
+            // Oh my goodness this is deeply sketchy code to not document! It assumes that subtype
+            // is right after type in ID space without documenting it. So now documented!
             switch (storage.getPatch().param_ptr[index]->val.i)
             {
             case fut_lpmoog:
@@ -1585,8 +1585,17 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       case ct_bool_fm:
       case ct_fbconfig:
       case ct_filtersubtype:
-         switch_toggled_queued = true;
-         break;
+         // See above: We know the filter type for this subtype is at index - 1. Cap max to be the fut-subtype
+         {
+            auto filterType = storage.getPatch().param_ptr[index-1]->val.i;
+            auto maxIVal = fut_subcount[filterType];
+            if( maxIVal == 0 )
+               storage.getPatch().param_ptr[index]->val.i = 0;
+            else
+               storage.getPatch().param_ptr[index]->val.i = std::min( maxIVal-1,
+                                                                     storage.getPatch().param_ptr[index]->val.i );
+            break;
+         }
       case ct_fxtype:
          switch_toggled_queued = true;
          load_fx_needed = true;
@@ -1652,14 +1661,18 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
    }
    if (external && !need_refresh)
    {
+      bool got = false;
       for (int i = 0; i < 8; i++)
       {
          if (refresh_parameter_queue[i] < 0)
          {
             refresh_parameter_queue[i] = index;
+            got = true;
             break;
          }
       }
+      if( ! got )
+         refresh_overflow = true;
    }
    return need_refresh;
 }
@@ -1925,7 +1938,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
    if (tms >= ms_lfo1 && tms <= ms_slfo6)
    {
       bool isup = storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].unipolar.val.i ||
-         storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].shape.val.i == ls_constant1;
+         storage.getPatch().scene[scene_ms].lfo[tms-ms_lfo1].shape.val.i == ls_envelope;
       
       // For now
       return !isup;
@@ -1939,7 +1952,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
       else
          return false;
    }
-   if (tms == ms_keytrack || tms == ms_lowest_key || tms == ms_highest_key || tms == ms_latest_key || tms == ms_pitchbend || tms == ms_random_bipolar || tms == ms_alternate_bipolar )
+   if (tms == ms_keytrack || tms == ms_lowest_key || tms == ms_highest_key || tms == ms_latest_key || tms == ms_pitchbend || tms == ms_random_bipolar || tms == ms_alternate_bipolar || tms == ms_timbre )
       return true;
    else
       return false;
@@ -2210,6 +2223,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
    return true;
 }
 
+#if 0
 int SurgeSynthesizer::remapExternalApiToInternalId(unsigned int x)
 {
    if (x < n_customcontrollers)
@@ -2227,6 +2241,7 @@ int SurgeSynthesizer::remapInternalToExternalApiId(unsigned int x)
       return x + n_total_params;
    return x;
 }
+#endif
 
 float SurgeSynthesizer::getParameter01(long index)
 {
@@ -2913,15 +2928,19 @@ void SurgeSynthesizer::process()
 
    if (play_scene[0])
    {
-      hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-      hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+      if (hardclipEnabled){ 
+         hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+         hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+      }
       halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1]);
    }
 
    if (play_scene[1])
    {
-      hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-      hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+      if (hardclipEnabled){
+         hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+         hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+      }
       halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
    }
 
@@ -3032,7 +3051,7 @@ PluginLayer* SurgeSynthesizer::getParent()
 void SurgeSynthesizer::populateDawExtraState() {
    storage.getPatch().dawExtraState.isPopulated = true;
    storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
-   storage.getPatch().dawExtraState.mpePitchBendRange = mpePitchBendRange;
+   storage.getPatch().dawExtraState.mpePitchBendRange = storage.mpePitchBendRange;
    
    storage.getPatch().dawExtraState.hasTuning = !storage.isStandardTuning;
    if( ! storage.isStandardTuning )
@@ -3068,7 +3087,7 @@ void SurgeSynthesizer::loadFromDawExtraState() {
       return;
    mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
    if( storage.getPatch().dawExtraState.mpePitchBendRange > 0 )
-      mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
+      storage.mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
    
    if( storage.getPatch().dawExtraState.hasTuning )
    {
@@ -3204,7 +3223,7 @@ void SurgeSynthesizer::swapMetaControllers( int c1, int c2 )
 
 void SurgeSynthesizer::changeModulatorSmoothing( ControllerModulationSource::SmoothingMode m )
 {
-   smoothingMode = m;
+   storage.smoothingMode = m;
    for (int sc = 0; sc < n_scenes; ++sc)
    {
       for( int q = 0; q<n_modsources; ++q )

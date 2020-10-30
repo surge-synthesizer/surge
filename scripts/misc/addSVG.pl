@@ -78,4 +78,4 @@ close( IN );
 close( OUT );
 system( "mv hacktmp4.h src/windows/scalableresource.h" );
 
-system( "cat src/common/resource.h | perl scripts/misc/idmap.pl > src/common/gui/SkimImageMaps.h" );
+system( "cat src/common/resource.h | perl scripts/misc/idmap.pl > src/common/gui/SkinImageMaps.h" );

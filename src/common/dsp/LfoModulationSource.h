@@ -19,6 +19,7 @@
 #include "SurgeStorage.h"
 #include "SurgeVoiceState.h"
 #include "ModulationSource.h"
+#include "MSEGModulationHelper.h" // We need this for the MSEGEvalatorState member
 
 enum lfoenv_state
 {
@@ -28,6 +29,7 @@ enum lfoenv_state
    lenv_hold,
    lenv_decay,
    lenv_release,
+   lenv_msegrelease,
    lenv_stuck,
 };
 
@@ -74,8 +76,7 @@ private:
    SurgeStorage* storage;
    StepSequencerStorage* ss;
    MSEGStorage* ms;
-   float msegEvaluationState[5];
-   int msegLastEvaluated;
+   Surge::MSEG::EvaluatorState msegstate;
    FormulaModulatorStorage *fs;
    pdata* localcopy;
    bool phaseInitialized;

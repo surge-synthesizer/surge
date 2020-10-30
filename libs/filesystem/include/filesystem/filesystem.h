@@ -1,83 +1,44 @@
-//
-//  Filesystem.h
-//  surge-vst2
-//
-//  Created by Keith Zantow on 10/2/18.
-//
+/*
+** Surge Synthesizer is Free and Open Source Software
+**
+** Surge is made available under the Gnu General Public License, v3.0
+** https://www.gnu.org/licenses/gpl-3.0.en.html
+**
+** Copyright 2004-2020 by various individuals as described by the Git transaction log
+**
+** All source at: https://github.com/surge-synthesizer/surge.git
+**
+** Surge was a commercial product from 2004-2018, with Copyright and ownership
+** in that period held by Claes Johanson at Vember Audio. Claes made Surge
+** open source in September 2018.
+*/
 
 #pragma once
 
-#include <functional>
-#include <string>
-#include <vector>
+#include "filesystem/filesystem_error.h"
+#include "filesystem/path.h"
+#include "filesystem/directory_iterator.h"
+#include "filesystem/recursive_directory_iterator.h"
+
+#include <cstdint>
 
 namespace Surge { namespace filesystem {
-    class path {
-    public:
-        static constexpr char preferred_separator = '/';
-        std::string p;
-        
-        path();
 
-        explicit path(std::string filePath); // Hint: Did you mean to use string_to_path()?
-        
-        operator std::string();
-        
-        void append(std::string s);
-        path& operator /=(const path& path) { append(path.p); return *this; }
-        
-        const char* c_str();
-        
-        std::string generic_string() const;
-        
-        path filename() const;
-        path stem() const;
-       
-        path extension() const;
-    };
-    
-    class file {
-    public:
-        path p;
-        
-        file(std::string filePath);
-        
-        operator path();
-        
-        path path() const;
-    };
-    
-    class directory_entry {
-    public:
-        path p;
+// path factory functions                                                          [fs.path.factory]
+template<class Source>
+inline path u8path(const Source& source) { return path{source}; }
 
-        directory_entry(path p);
+// filesystem operations                                                               [fs.op.funcs]
+bool create_directories(const path& p);
+bool create_directory(const path& p);
+bool exists(const path& p);
+std::uintmax_t file_size(const path& p);
+std::uintmax_t file_size(const path& p, std::error_code& ec) noexcept;
+bool is_directory(const path& p);
+bool is_regular_file(const path& p);
+bool remove(const path& p);
+std::uintmax_t remove_all(const path& p);
 
-        path path() const;
-    };
-    
-    bool exists(path p);
-
-    void create_directories(path p);
-    
-    bool is_directory(path p);
-    
-    std::vector<file> directory_iterator(path p);
-    
-    std::vector<directory_entry> recursive_directory_iterator(const path& src);
-    
-    path relative(const path& p, const path& root);
-    
-    enum copy_options {
-        overwrite_existing = 1
-    };
-    
-    void copy(const path& src, const path& dst, const copy_options options);
-
-    // Exras:
-    void copy_recursive(const path& src, const path& target, const std::function<bool(path)>& predicate) noexcept;
-
-    void copy_recursive(const path& src, const path& target) noexcept;
 } // namespace filesystem
 
 } // namespace Surge

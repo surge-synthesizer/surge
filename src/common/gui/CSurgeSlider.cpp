@@ -48,7 +48,7 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
                            bool is_mod,
                            std::shared_ptr<SurgeBitmaps> bitmapStore,
                            SurgeStorage* storage)
-    : CCursorHidingControl(CRect(loc, CPoint(1, 1)), listener, tag, 0)
+    : CControl(CRect(loc, CPoint(1, 1)), listener, tag, 0), Surge::UI::CursorControlAdapterWithMouseDelta<CSurgeSlider>(storage)
 {
    this->style = stylee;
    this->is_mod = is_mod;
@@ -506,11 +506,14 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
    if (pHandle && showHandle && (modmode != 2) && (!deactivated || !disabled))
    {
+      draghandlecenter = hrect.getCenter();
+
       if (style & CSlider::kHorizontal)
       {
          pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
          if( pHandleHover && in_hover )
             pHandleHover->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
+
 
          if( is_temposync )
          {
@@ -622,6 +625,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          if( pHandleHover && in_hover )
             pHandleHover->draw(dc, hrect, CPoint(24, 28 * typehy), slider_alpha);
       }
+      draghandlecenter = hrect.getCenter();
    }
 
    setDirty(false);
@@ -681,23 +685,20 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
       while( editing )
          endEdit();
    wheelInitiatedEdit = false;
-   
-   CCursorHidingControl::onMouseDown(where, buttons);
 
-   if (controlstate)
-   {
-#if MAC
-      if (buttons & kRButton)
-         statezoom = 0.1f;
-#endif
-      return kMouseEventHandled;
-   }
 
    if (listener &&
        buttons & (kAlt | kRButton | kMButton | kButton4 | kButton5 | kShift | kControl | kApple | kDoubleClick))
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
-         return kMouseEventHandled;
+         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+
+   onMouseDownCursorHelper(where);
+
+   if (controlstate)
+   {
+      return kMouseEventHandled;
    }
 
    if ((buttons & kLButton) && !controlstate)
@@ -705,7 +706,6 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
       beginEdit();
       controlstate = cs_drag;
       // getFrame()->setCursor( VSTGUI::kCursorHand );
-      statezoom = 1.f;
 
       edit_value = modmode ? &modval : &value;
       oldVal = *edit_value;
@@ -718,7 +718,8 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
       if( listener )
          listener->valueChanged( this );
       
-      detachCursor(where);
+      // detachCursor(where);
+      startCursorHide(where);
       return kMouseEventHandled;
    }
    return kMouseEventHandled;
@@ -726,6 +727,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 
 CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+
    {
       auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
       if( sge )
@@ -734,12 +736,13 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       }
    }
 
-   CCursorHidingControl::onMouseUp(where, buttons);
+   bool resetPosition = hasBeenDraggedDuringMouseGesture;
 
    // "elastic edit" - resets to the value before the drag started if Alt is held
    if (buttons & kAlt)
    {
       hasBeenDraggedDuringMouseGesture = false;
+      resetPosition = false;
       *edit_value = oldVal;
       setDirty();
       if (isDirty() && listener)
@@ -762,7 +765,11 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       edit_value = nullptr;
 
 
-      attachCursor();
+      if( resetPosition )
+         endCursorHide(draghandlecenter);
+      else
+         endCursorHide();
+      //attachCursor();
    }
 
    return kMouseEventHandled;
@@ -804,7 +811,7 @@ VSTGUI::CMouseEventResult CSurgeSlider::onMouseExited(VSTGUI::CPoint& where, con
    return kMouseEventHandled;
 }
 
-double CSurgeSlider::getMouseDeltaScaling(CPoint& where, const CButtonState& buttons)
+double CSurgeSlider::getMouseDeltaScaling(const CPoint& where, const CButtonState& buttons)
 {
    double rate;
 
@@ -836,7 +843,7 @@ double CSurgeSlider::getMouseDeltaScaling(CPoint& where, const CButtonState& but
    return rate;
 }
 
-void CSurgeSlider::onMouseMoveDelta(CPoint& where,
+void CSurgeSlider::onMouseMoveDelta(const CPoint& where,
                                     const CButtonState& buttons,
                                     double dx,
                                     double dy)

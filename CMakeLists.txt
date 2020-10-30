@@ -95,10 +95,19 @@ endif()
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
-add_subdirectory(libs/catch2)
-
 add_library(surge-shared INTERFACE)
 add_library(surge-tests INTERFACE)
+
+add_subdirectory(libs/airwindows)
+add_subdirectory(libs/catch2)
+add_subdirectory(libs/filesystem)
+add_subdirectory(libs/tinyxml)
+
+target_link_libraries(surge-shared INTERFACE
+  surge::airwindows
+  surge::filesystem
+  surge::tinyxml
+)
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
@@ -156,57 +165,6 @@ else()
   set( BUILD_LV2 false )
 endif()
 
-function(use_fallback_fs)
-  add_subdirectory(libs/filesystem)
-  target_link_libraries(surge-shared INTERFACE surge::filesystem)
-  target_compile_definitions(surge-shared INTERFACE USE_FALLBACK_FILESYSTEM=1)
-  message(STATUS "Using fallback filesystem")
-endfunction()
-
-set(SURGE_DEVEL_FORCE_FALLBACK_FS OFF CACHE BOOL "Force fallback std::filesystem impl (development only)")
-mark_as_advanced(FORCE SURGE_DEVEL_FORCE_FALLBACK_FS)
-if (${SURGE_DEVEL_FORCE_FALLBACK_FS})
-  use_fallback_fs()
-else()
-  include(CheckCXXSymbolExists)
-  CHECK_CXX_SYMBOL_EXISTS(std::filesystem::path::preferred_separator "filesystem" CXX_STD_FS)
-  if( CXX_STD_FS )
-    # This is not strictly necessary but since we build with 17 on unix lets check with 17 here
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "-std=c++17")
-    endif()
-    target_compile_definitions(surge-shared INTERFACE USE_STD_FILESYSTEM=1)
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "")
-    endif()
-    message( STATUS "Using std::filesystem" )
-  else()
-    # if that check failed we are on one of the wonky gccs in te 7 and 5 family which need to check this with 11 and link stdc++fs
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "-std=c++11")
-      set (CMAKE_REQUIRED_LIBRARIES "stdc++fs")
-    endif()
-    CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "experimental/filesystem" CXX_EXP_STD_FS)
-    if( UNIX AND NOT APPLE )
-      set (CMAKE_REQUIRED_FLAGS "")
-      set (CMAKE_REQUIRED_LIBRARIES "")
-    endif()
-
-    if( CXX_EXP_STD_FS )
-      target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM=1)
-      message( STATUS "Using std::experimental::filesystem" )
-    else()
-      CHECK_CXX_SYMBOL_EXISTS(std::experimental::filesystem::path::preferred_separator "filesystem" CXX_EXP_STD_FS_FS_HDR)
-      if( CXX_EXP_STD_FS_FS_HDR )
-        target_compile_definitions(surge-shared INTERFACE USE_STD_EXPERIMENTAL_FILESYSTEM_FROM_FILESYSTEM=1)
-        message( STATUS "Using std::experimental::filesystem but from <filesystem> header" )
-      else()
-        use_fallback_fs()
-      endif()
-    endif()
-  endif()
-endif()
-
 # Surge features at compile time
 if( NOT DEFINED SURGE_EXTRA_FILTERS )
   set( SURGE_EXTRA_FILTERS False )
@@ -216,21 +174,6 @@ else()
   set( SURGE_EXTRA_FILTERS True )
   set( SURGE_EXTRA_FILTERS_DEFINITIONS SURGE_EXTRA_FILTERS=1 )
 endif()
-
-### Set up the AirWindows integration
-include( libs/airwindows/CMakeLists.txt )
-list( TRANSFORM AIRWINDOWS_FX_SOURCES PREPEND "libs/airwindows/" )
-set( AIRWINDOWS_SOURCES
-  ${AIRWINDOWS_FX_SOURCES}
-  src/common/dsp/effect/airwindows/airwindows_adapter.cpp
-  src/common/dsp/effect/airwindows/airwindows_register.cpp
-  src/common/dsp/effect/airwindows/audioeffect_airwinstub.cpp
-  )
-set( AIRWINDOWS_INCLUDES
-  src/common/dsp/effect/airwindows
-  libs/airwindows/src
-  )
-
 
 # Enumerate the sources into groups
 #    SURGE_COMMON_SOURCES
@@ -254,8 +197,13 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/effect/RingModulatorEffect.cpp
   src/common/dsp/effect/RotarySpeakerEffect.cpp
   src/common/dsp/effect/VocoderEffect.cpp
+  src/common/dsp/effect/airwindows/AirWinBaseClass.cpp
+  src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
+  src/common/dsp/effect/airwindows/AirWindowsEffect.h
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/filters/Obxd.cpp
+  src/common/dsp/filters/K35.cpp
+  src/common/dsp/filters/DiodeLadder.cpp
   src/common/dsp/AdsrEnvelope.cpp
   src/common/dsp/AudioInputOscillator.cpp
   src/common/dsp/BiquadFilter.cpp
@@ -289,15 +237,11 @@ set(SURGE_COMMON_SOURCES
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/SurgeSynthesizer.cpp
+        src/common/SurgeSynthesizerIDManagement.cpp
   src/common/SurgeSynthesizerIO.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp
-  libs/xml/tinyxml.cpp
-  libs/xml/tinyxmlerror.cpp
-  libs/xml/tinyxmlparser.cpp
   libs/strnatcmp/strnatcmp.cpp
-
-  ${AIRWINDOWS_SOURCES}
 
   src/common/SkinModel.cpp
   src/common/SkinModelImpl.cpp
@@ -311,7 +255,6 @@ set( SURGE_GENERATED_SOURCES
 
 set(SURGE_GUI_SOURCES
   src/common/gui/CAboutBox.cpp
-  src/common/gui/CCursorHidingControl.cpp
   src/common/gui/CDIBitmap.cpp
   src/common/gui/CEffectSettings.cpp
   src/common/gui/CHSwitch2.cpp
@@ -333,7 +276,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/common/gui/UIInstrumentation.cpp
   src/common/gui/guihelpers.cpp
-        src/common/gui/CVerticalLabel.cpp)
+        src/common/gui/CVerticalLabel.cpp src/common/gui/CursorControlGuard.h src/common/gui/CursorControlGuard.cpp)
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp
@@ -427,14 +370,12 @@ set( SURGE_LV2_SOURCES
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
   libs/
-  libs/xml
   libs/strnatcmp
   libs/tuning-library/include
   src/common
   src/common/dsp
   src/common/thread
   src/common/vt_dsp
-  ${AIRWINDOWS_INCLUDES}
   )
 
 set(SURGE_GUI_INCLUDES
@@ -565,9 +506,6 @@ elseif( UNIX AND NOT APPLE )
 
   set(OS_LINK_LIBRARIES_NOGUI
     pthread
-    stdc++fs
-    gcc_s
-    gcc
     dl
     -Wl,--no-undefined
     )
@@ -584,6 +522,10 @@ elseif( UNIX AND NOT APPLE )
     ${XKBCOMMON_LDFLAGS}
     ${XKBX11COMMON_LDFLAGS}
     )
+
+    if (CMAKE_SYSTEM_NAME MATCHES "BSD")
+      set(OS_LINK_LIBRARIES ${OS_LINK_LIBRARIES} execinfo)
+    endif()
 
 elseif( WIN32 )
 
@@ -607,7 +549,6 @@ elseif( WIN32 )
     _WIN32_WINNT=0x0601
     _USRDLL
     VA_SUBTRACTIVE_EXPORTS
-    TIXML_USE_STL
     USE_LIBPNG
     _CRT_SECURE_NO_WARNINGS=1
     UNICODE
@@ -975,6 +916,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsIO.cpp
     src/headless/UnitTestsMIDI.cpp
     src/headless/UnitTestsMOD.cpp
+    src/headless/UnitTestsMSEG.cpp
     src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
     )
@@ -1025,9 +967,12 @@ if( BUILD_HEADLESS )
     endif()
     target_link_libraries(surge-headless
       PRIVATE
-      stdc++fs
       Threads::Threads
       )
+
+    if (CMAKE_SYSTEM_NAME MATCHES "BSD")
+      target_link_libraries(surge-headless PRIVATE execinfo)
+    endif()
   endif()
 endif()
 

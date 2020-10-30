@@ -19,6 +19,10 @@
 #include "SkinSupport.h"
 
 struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent {
-   MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
+   struct State {
+      float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.125;
+      int timeEditMode = 0;
+   };
+   MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
    ~MSEGEditor();
 };

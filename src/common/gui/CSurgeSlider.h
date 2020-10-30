@@ -18,8 +18,9 @@
 #include "SurgeBitmaps.h"
 #include "SurgeParamConfig.h"
 #include "SkinSupport.h"
+#include "CursorControlGuard.h"
 
-class CSurgeSlider : public CCursorHidingControl, public Surge::UI::SkinConsumingComponent
+class CSurgeSlider : public VSTGUI::CControl, public Surge::UI::CursorControlAdapterWithMouseDelta<CSurgeSlider>, public Surge::UI::SkinConsumingComponent
 {
 public:
    CSurgeSlider(const VSTGUI::CPoint& loc,
@@ -48,8 +49,13 @@ public:
    virtual VSTGUI::CMouseEventResult
    onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
    
-   virtual double getMouseDeltaScaling(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual void onMouseMoveDelta(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy) override;
+   virtual double getMouseDeltaScaling(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
+   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
+   {
+      return onMouseMovedCursorHelper(where, buttons);
+   }
+
+   virtual void onMouseMoveDelta(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
 
    virtual void setLabel(const char* txt);
    virtual void setModValue(float val);
@@ -123,16 +129,14 @@ private:
    float modval, qdvalue;
    char label[256], leftlabel[256];
    int modmode;
-   float moverate, statezoom;
+   float moverate;
    int typex, typey;
    int typehx, typehy;
    bool has_modulation, has_modulation_current, modulation_is_bipolar = false;
    bool is_temposync = false;
-   VSTGUI::CPoint lastpoint, sourcepoint;
+   VSTGUI::CPoint lastpoint, sourcepoint, draghandlecenter;
    float oldVal, *edit_value;
    int drawcount_debug;
-   
-   
 
    float restvalue, restmodval;
    bool wheelInitiatedEdit = false;

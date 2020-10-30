@@ -8,7 +8,7 @@
 #define __Loud_H
 
 #ifndef __audioeffect__
-#include "audioeffect_airwinstub.h"
+#include "airwindows/AirWinBaseClass.h"
 #endif
 
 #include <set>

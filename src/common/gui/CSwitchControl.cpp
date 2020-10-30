@@ -63,7 +63,13 @@ void CSwitchControl::setValue(float f)
 
 CMouseEventResult CSwitchControl::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
-   if (listener && buttons & (kAlt | kShift | kControl | kApple))
+   if (listener && (buttons & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, buttons);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+
+   if (listener && ( buttons & (kAlt | kShift | kControl | kApple) || unValueClickable ))
    {
       if (listener->controlModifierClicked(this, buttons) != 0)
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
@@ -71,6 +77,9 @@ CMouseEventResult CSwitchControl::onMouseDown(CPoint& where, const CButtonState&
 
    if (!(buttons & kLButton))
       return kMouseEventNotHandled;
+
+   if( unValueClickable )
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 
    beginEdit();
 

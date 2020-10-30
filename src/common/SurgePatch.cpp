@@ -22,6 +22,8 @@
 #include "MSEGModulationHelper.h"
 #include "DebugHelpers.h"
 #include "SkinModel.h"
+#include "UserInteractions.h"
+#include "version.h"
 
 using namespace std;
 
@@ -44,7 +46,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                     Surge::ParamConfig::kHorizontal));
       // TODO don't store in the patch ?
       param_ptr.push_back(volume.assign(
-          p_id.next(), 0, "volume", "Master Volume", ct_decibel_attenuation,
+          p_id.next(), 0, "volume", "Global Volume", ct_decibel_attenuation,
           Surge::Skin::Global::master_volume,
           0, cg_GLOBAL, 0, true, Surge::ParamConfig::kHorizontal | kEasy));
    }
@@ -56,10 +58,10 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                         Surge::Skin::Global::scene_mode,
                                         0, cg_GLOBAL, 0, false,
                                         Surge::ParamConfig::kHorizontal | kNoPopup));
-   // param_ptr.push_back(scenemorph.assign(p_id.next(),0,"scenemorph","scenemorph",ct_percent,hmargin+gui_sec_width,gui_mid_topbar_y,0,0,0,false,Surge::ParamConfig::kHorizontal));
+   //param_ptr.push_back(scenemorph.assign(p_id.next(),0,"scenemorph","scenemorph",ct_percent,hmargin+gui_sec_width,gui_mid_topbar_y,0,0,0,false,Surge::ParamConfig::kHorizontal));
 
-   param_ptr.push_back(splitkey.assign(p_id.next(), 0, "splitkey", "Split Key", ct_midikey_or_channel,
-                                       Surge::Skin::Global::splitkey,
+   param_ptr.push_back(splitpoint.assign(p_id.next(), 0, "splitkey", "Split Point", ct_midikey_or_channel,
+                                       Surge::Skin::Global::splitpoint,
                                         0, cg_GLOBAL, 0, false,
                                        Surge::ParamConfig::kHorizontal | kNoPopup));
    
@@ -78,7 +80,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                         Surge::ParamConfig::kHorizontal | kNoPopup));
 
    polylimit.val.i = 16;
-   splitkey.val.i = 60;
+   splitpoint.val.i = 60;
    volume.val.f = 0;
 
    for (int fx = 0; fx < 8; fx++)
@@ -88,7 +90,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                    0, cg_FX, fx, false, Surge::ParamConfig::kHorizontal));
       for (int p = 0; p < n_fx_params; p++)
       {
-         auto conn = Surge::Skin::Connector::connectorByID("FX.param_" + std::to_string(p+1) );
+         auto conn = Surge::Skin::Connector::connectorByID("fx.param_" + std::to_string(p+1) );
 
          char label[16];
          sprintf(label, "p%i", p);
@@ -198,7 +200,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       // ct_midikey
       // drift,keytrack_root
 
-      a->push_back(scene[sc].volume.assign(p_id.next(), id_s++, "volume", "Volume", ct_amplitude,
+      a->push_back(scene[sc].volume.assign(p_id.next(), id_s++, "volume", "Volume", ct_amplitude_clipper,
                                            Surge::Skin::Scene::volume,
                                            sc_id, cg_GLOBAL, 0, true,
                                             sceasy));
@@ -407,9 +409,9 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       // scene[sc].filterunit[0].type.val.i = 1;
       for (int e = 0; e < 2; e++)
       {
-         std::string envs = "AEG.";
+         std::string envs = "aeg.";
          if( e == 1 )
-            envs = "FEG.";
+            envs = "feg.";
 
          /*
           * Since the connectors are in a namespace and here we have a loop over two
@@ -475,7 +477,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                         sceasy));
          sprintf(label, "lfo%i_deform", l);
          a->push_back(scene[sc].lfo[l].deform.assign(p_id.next(), id_s++, label, "Deform",
-                                                     ct_percent_bidirectional,
+                                                     ct_lfodeform,
                                                      Surge::Skin::LFO::deform, sc_id,
                                                      cg_LFO, ms_lfo1 + l, true));
 
@@ -1082,6 +1084,17 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    patch->QueryIntAttribute("revision", &revision);
    streamingRevision = revision;
    currentSynthStreamingRevision = ff_revision;
+
+   if( revision > ff_revision )
+   {
+      std::ostringstream oss;
+      oss << "The version of Surge you are running is older than the version with which this patch "
+          << "was created. Your version of surge (" << Surge::Build::FullVersionStr << ") has a "
+          << "streaming revision of " << ff_revision << ", whereas the patch you are loading was "
+          << "created with " << revision << ". Features of the patch will not be available in your "
+          << "session. You can always find the latest Surge at https://surge-synthesizer.github.io/";
+      Surge::UserInteractions::promptError( oss.str(), "Surge Version is Older than Patch" );
+   }
    
    TiXmlElement* meta =  TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));
    if (meta)
@@ -1216,6 +1229,16 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             if (param_ptr[i]->has_portaoptions())
                param_ptr[i]->porta_curve = porta_lin;
          }
+
+
+         if ((p->QueryIntAttribute("deform_type", &j) == TIXML_SUCCESS))
+            param_ptr[i]->deform_type = j;
+         else
+         {
+            if (param_ptr[i]->has_deformoptions())
+               param_ptr[i]->deform_type = type_1;
+         }
+
 
          if ((p->QueryIntAttribute("deactivated", &j) == TIXML_SUCCESS))
          {
@@ -1569,6 +1592,25 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       auto *ms = &( msegs[sc][mi] );
       ms->n_activeSegments = 0;
       if( p->QueryIntAttribute( "activeSegments", &v ) == TIXML_SUCCESS ) ms->n_activeSegments = v;
+      if( p->QueryIntAttribute("endpointMode", &v) == TIXML_SUCCESS )
+         ms->endpointMode = (MSEGStorage::EndpointMode)v;
+      else
+         ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+      if( p->QueryIntAttribute( "loopMode", &v ) == TIXML_SUCCESS )
+         ms->loopMode = (MSEGStorage::LoopMode)v;
+      else
+         ms->loopMode = MSEGStorage::LoopMode::LOOP;
+      if( p->QueryIntAttribute( "loopStart", &v ) == TIXML_SUCCESS )
+         ms->loop_start = v;
+      else
+         ms->loop_start = -1;
+
+      if( p->QueryIntAttribute( "loopEnd", &v ) == TIXML_SUCCESS )
+         ms->loop_end = v;
+      else
+         ms->loop_end = -1;
+
+
       auto segs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "segments" ));
       if( segs )
       {
@@ -1582,11 +1624,22 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             MSGF( v0 );
             MSGF( cpduration );
             MSGF( cpv );
+            MSGF( nv1 );
             
             int t = 0;
             if( seg->QueryIntAttribute( "type", &v ) == TIXML_SUCCESS ) t = v;
             ms->segments[idx].type = (MSEGStorage::segment::Type)t;
-            
+
+            if( seg->QueryIntAttribute( "useDeform", &v) == TIXML_SUCCESS )
+               ms->segments[idx].useDeform = v;
+            else
+               ms->segments[idx].useDeform = true;
+
+            if( seg->QueryIntAttribute( "invertDeform", &v) == TIXML_SUCCESS )
+               ms->segments[idx].invertDeform = v;
+            else
+               ms->segments[idx].invertDeform = false;
+
             seg = TINYXML_SAFE_TO_ELEMENT( seg->NextSibling( "segment" ) );
             
             idx++;
@@ -1674,10 +1727,38 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
        {
            int ival;
            TiXmlElement *p;
+
+           // This has a lecacy name since it was from before we moved into the editor object
            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("instanceZoomFactor"));
            if( p &&
                p->QueryIntAttribute("v",&ival) == TIXML_SUCCESS)
-               dawExtraState.instanceZoomFactor = ival;
+               dawExtraState.editor.instanceZoomFactor = ival;
+
+           // This is the non-legacy way to save editor state
+           p = TINYXML_SAFE_TO_ELEMENT( de->FirstChild( "editor" ) );
+           if( p )
+           {
+              if( p->QueryIntAttribute( "current_scene", &ival ) == TIXML_SUCCESS )
+                 dawExtraState.editor.current_scene = ival;
+
+              if( p->QueryIntAttribute( "current_fx", &ival ) == TIXML_SUCCESS )
+                 dawExtraState.editor.current_fx = ival;
+
+              if( p->QueryIntAttribute( "modsource", &ival ) == TIXML_SUCCESS )
+                 dawExtraState.editor.modsource = (modsources)ival;
+
+              for( int sc=0; sc<n_scenes; sc++ )
+              {
+                 std::string con = "current_osc_" + std::to_string( sc );
+                 if( p->QueryIntAttribute( con.c_str(), &ival ) == TIXML_SUCCESS )
+                    dawExtraState.editor.current_osc[sc] = ival;
+                 con = "modsource_editor_" + std::to_string( sc );
+                 if( p->QueryIntAttribute( con.c_str(), &ival ) == TIXML_SUCCESS )
+                    dawExtraState.editor.modsource_editor[sc] = (modsources)ival;
+              }
+
+           }
+
 
            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpeEnabled"));
            if( p &&
@@ -1882,6 +1963,8 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("porta_retrigger", param_ptr[i]->porta_retrigger ? "1" : "0");
             p.SetAttribute("porta_curve", param_ptr[i]->porta_curve);
          }
+         if (param_ptr[i]->has_deformoptions())
+            p.SetAttribute("deform_type", param_ptr[i]->deform_type);
 
          // param_ptr[i]->val.i;
          parameters.InsertEndChild(p);
@@ -1964,6 +2047,10 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
 
             auto *ms = &(msegs[sc][l]);
             p.SetAttribute( "activeSegments", ms->n_activeSegments );
+            p.SetAttribute( "endpointMode", ms->endpointMode );
+            p.SetAttribute( "loopMode", ms->loopMode );
+            p.SetAttribute( "loopStart", ms->loop_start);
+            p.SetAttribute( "loopEnd", ms->loop_end );
 
             TiXmlElement segs( "segments" );
             for( int s=0; s<ms->n_activeSegments; ++s )
@@ -1971,9 +2058,12 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
                TiXmlElement seg( "segment" );
                seg.SetDoubleAttribute( "duration", ms->segments[s].duration );
                seg.SetDoubleAttribute( "v0", ms->segments[s].v0 );
+               seg.SetDoubleAttribute( "nv1", ms->segments[s].nv1 );
                seg.SetDoubleAttribute( "cpduration", ms->segments[s].cpduration );
                seg.SetDoubleAttribute( "cpv", ms->segments[s].cpv );
                seg.SetAttribute( "type", (int)( ms->segments[s].type ));
+               seg.SetAttribute( "useDeform", (int)(ms->segments[s].useDeform));
+               seg.SetAttribute( "invertDeform", (int)(ms->segments[s].invertDeform));
                segs.InsertEndChild( seg );
             }
             p.InsertEndChild(segs);
@@ -2029,9 +2119,24 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    
    if( dawExtraState.isPopulated )
    {
+      // This has a lecacy name since it was from before we moved into the editor object
        TiXmlElement izf("instanceZoomFactor");
-       izf.SetAttribute( "v", dawExtraState.instanceZoomFactor );
+       izf.SetAttribute( "v", dawExtraState.editor.instanceZoomFactor );
        dawExtraXML.InsertEndChild(izf);
+
+       TiXmlElement eds( "editor" );
+       eds.SetAttribute( "current_scene", dawExtraState.editor.current_scene );
+       eds.SetAttribute( "current_fx", dawExtraState.editor.current_fx );
+       eds.SetAttribute( "modsource", dawExtraState.editor.modsource );
+       for( int sc=0; sc<n_scenes; sc++ )
+       {
+          std::string con = "current_osc_" + std::to_string( sc );
+          eds.SetAttribute( con.c_str(), dawExtraState.editor.current_osc[sc]);
+          con = "modsource_editor_" + std::to_string( sc );
+          eds.SetAttribute( con.c_str(), dawExtraState.editor.modsource_editor[sc]);
+       }
+
+       dawExtraXML.InsertEndChild(eds);
 
        TiXmlElement mpe("mpeEnabled");
        mpe.SetAttribute("v", dawExtraState.mpeEnabled ? 1 : 0 );

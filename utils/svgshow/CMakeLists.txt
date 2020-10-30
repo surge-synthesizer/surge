@@ -21,7 +21,7 @@ if( WIN32 )
   list( FILTER OS_LINK_LIBRARIES EXCLUDE REGEX "libpng" )
 endif()
 
-target_link_libraries(svgshow ${OS_LINK_LIBRARIES} surge-shared)
+target_link_libraries(svgshow ${OS_LINK_LIBRARIES})
 
 if( APPLE )
   # macOS

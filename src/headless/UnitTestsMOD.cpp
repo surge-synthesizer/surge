@@ -625,10 +625,11 @@ TEST_CASE( "Pitch Bend and Tuning", "[mod][tun]" )
 TEST_CASE( "MPE pitch bend", "[mod]" )
 {
    SECTION( "Channel 0 bends should be a correct global bend" )
-   {
+   { // note that this test actually checks if channel 0 bends behave like non-MPE bends
       auto surge = surgeOnSine();
       surge->mpeEnabled = true;
-      surge->mpePitchBendRange = 48;
+      surge->storage.mpePitchBendRange = 48;
+
       surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
       surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
       
@@ -653,7 +654,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       auto pbr = 48;
       auto sbs = 8192 * 1.f / pbr;
       
-      surge->mpePitchBendRange = pbr;
+      surge->storage.mpePitchBendRange = pbr;
+      
       surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
       surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
 
@@ -673,8 +675,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
                                  on.data1 = n;
                                  on.data2 = 100;
                                  on.atSample = 100;
-                                 
-                                 off.type = Surge::Headless::Event::NOTE_ON;
+
+                                 off.type = Surge::Headless::Event::NOTE_OFF;
                                  off.channel = 1;
                                  off.data1 = n;
                                  off.data2 = 100;
@@ -690,8 +692,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
                                  events.push_back( bend );
                                  events.push_back( off );
 
-                                 return frequencyForEvents( surge, events, 0,
-                                                            2000, 44100 * 2 - 8000 );
+                                 return frequencyForEvents(surge, events, 0, 4000,
+                                                           44100 * 2 - 8000);
                               };
 
 
@@ -719,7 +721,9 @@ TEST_CASE( "LfoTempoSync Latch Drift", "[mod]" )
       auto ss = std::make_unique<StepSequencerStorage>();
       auto lfostorage = &(surge->storage.getPatch().scene[0].lfo[0]);
       lfostorage->rate.temposync = true;
-      surge->setParameter01( lfostorage->rate.id, 0.455068, false, false );
+      SurgeSynthesizer::ID rid;
+      surge->fromSynthSideId(lfostorage->rate.id, rid );
+      surge->setParameter01( rid, 0.455068, false, false );
       lfostorage->shape.val.i = ls_square;
 
       surge->storage.getPatch().copy_scenedata(surge->storage.getPatch().scenedata[0], 0 );

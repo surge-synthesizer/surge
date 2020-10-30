@@ -66,14 +66,16 @@ void lv2_generate_ttl(const char* baseName)
          if (portIndex > 0)
             osDsp << " ,";
 
-         unsigned index = defaultSynth->remapExternalApiToInternalId(pNth);
+         SurgeSynthesizer::ID did;
+         defaultSynth->fromDAWSideIndex(pNth, did );
          parametermeta pMeta;
-         defaultSynth->getParameterMeta(index, pMeta);
+         defaultSynth->getParameterMeta(did, pMeta);
 
          char pName[256];
-         defaultSynth->getParameterName(index, pName);
+         defaultSynth->getParameterName(did, pName);
 
          std::string pSymbol;
+         int index = did.getSynthSideId();
          if( index >= metaparam_offset )
          {
             pSymbol = "meta_cc" + std::to_string( index - metaparam_offset + 1 );
@@ -89,7 +91,7 @@ void lv2_generate_ttl(const char* baseName)
                   "        lv2:index " << portIndex << " ;\n"
                   "        lv2:symbol \"" << pSymbol << "\" ;\n"
                   "        lv2:name \"" << pName << "\" ;\n"
-                  "        lv2:default " << std::fixed << std::setw(10) << std::setprecision(8) << defaultSynth->getParameter01(index) << " ;\n"
+                  "        lv2:default " << std::fixed << std::setw(10) << std::setprecision(8) << defaultSynth->getParameter01(did) << " ;\n"
                   "        lv2:minimum " << std::fixed << std::setw(10) <<  std::setprecision(8) << pMeta.fmin << " ;\n"
                   "        lv2:maximum " << std::fixed << std::setw(10) << std::setprecision(8) << pMeta.fmax << " ;\n"
                   "    ]";

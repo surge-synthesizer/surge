@@ -21,7 +21,6 @@
 #include "DebugHelpers.h"
 #include "guihelpers.h"
 #include "SkinColors.h"
-#include "MSEGEditor.h"
 #include <cstdint>
 
 using namespace VSTGUI;
@@ -350,6 +349,9 @@ void CLFOGui::draw(CDrawContext* dc)
                tf.transform(vruleS);
                tf.transform(vruleE);
                // major beat divisions on the LFO waveform bg
+#if LINUX
+               dc->setLineWidth(1);
+#endif
                dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Ruler::ExtendedTicks));
                // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
                dc->drawLine(vruleS, vruleE);
@@ -372,7 +374,10 @@ void CLFOGui::draw(CDrawContext* dc)
       }
 
       // LFO waveform itself
+      CRect cr;
+      auto axesbox = CRect( top0.x, top0.y, bot1.x, bot1.y );
       dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Wave));
+      dc->setLineStyle(CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath );
 
       // top ruler
@@ -478,22 +483,6 @@ void CLFOGui::draw(CDrawContext* dc)
       edpath->forget();
    }
 
-   if( lfodata->shape.val.i == ls_mseg )
-   {
-      auto size = getViewSize();
-      
-      auto shiftTranslate = CGraphicsTransform().translate( size.left, size.top ).translate( splitpoint, 0 );
-      CDrawContext::Transform shiftTranslatetransform( *dc, shiftTranslate );
-      
-      dc->setFillColor( kRedCColor );
-      // FIXME 30x10 here and in onmousedown
-      dc->drawRect( CRect( 0, 0, 30, 10 ), kDrawFilled );
-      dc->setFontColor( kWhiteCColor );
-      dc->setFont( displayFont );
-      dc->drawString( "Edit", CRect( 0, 0, 30, 10 ) );
-
-   }
-      
    CColor cshadow = {0x5d, 0x5d, 0x5d, 0xff};
    CColor cselected = skin->getColor(Colors::LFO::Type::SelectedBackground);
 
@@ -1106,34 +1095,28 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
 CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   if (listener && (buttons & (kMButton | kButton4 | kButton5)))
+   {
+      listener->controlModifierClicked(this, buttons);
+      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+   }
+
+   if( ( buttons & kDoubleClick ) && lfodata->shape.val.i == ls_mseg )
+   {
+      auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+      if( sge )
+         sge->toggleMSEGEditor();
+   }
    if (1) //(buttons & kLButton))
    {
-      if( lfodata->shape.val.i == ls_mseg )
-      {
-         auto size = getViewSize();
-
-         int wx = where.x - size.left - splitpoint;
-         int wy = where.y - size.top;
-         if( wx > 0 && wx < 30 && wy > 0 && wy < 10 )
-         {
-            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-            if( sge )
-            {
-               // FIXME - press this button twice and you end up hosed
-               auto mse = new MSEGEditor(lfodata, ms, skin, associatedBitmapStore);
-               auto vs = mse->getViewSize().getWidth();
-               float xp = (skin->getWindowSizeX() - (vs + 8)) * 0.5;
-               sge->setEditorOverlay( mse, "MSEG Editor", CPoint( xp, 57 ), false, []() { std::cout << "MSE Closed" << std::endl; } );
-               return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-            }
-         }
-      }
-         
       if (ss && lfodata->shape.val.i == ls_stepseq)
       {
          if (rect_steps.pointInside(where))
          {
-            detachCursor(where);
+            if (storage)
+               this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+
+            startCursorHide(where);
             if( buttons.isRightButton() )
             {
                rmStepStart = where;
@@ -1267,7 +1250,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
    if( controlstate == cs_linedrag )
    {
-      attachCursor();
+      endCursorHide(rmStepCurr);
       int startStep = -1;
       int endStep = -1;
 
@@ -1347,7 +1330,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
    if( controlstate == cs_steps )
    {
-      attachCursor();
+      endCursorHide(barDragTop);
    }
    
    if (controlstate)
@@ -1400,6 +1383,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    {
       for (int i = 0; i < n_lfoshapes; i++)
       {
+         auto prior = lfodata->shape.val.i;
          if (shaperect[i].pointInside(where))
          {
             if (lfodata->shape.val.i != i)
@@ -1414,6 +1398,9 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
                   sge->refresh_mod();
                   sge->forceautomationchangefor(&(lfodata->shape));
                }
+
+               // this is less of a hack.
+               sge->lfoShapeChanged( prior, i );
 
             }
          }
@@ -1446,6 +1433,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
          if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
          {
             draggedStep = i;
+            barDragTop = where;
 
             float f = (float)(steprect[i].bottom - where.y) / steprect[i].getHeight();
 

@@ -145,22 +145,22 @@ TEST_CASE( "DAW Streaming and Unstreaming", "[io][mpe][tun]" )
       auto v2 = 13;
 
       // Test from defaulted dest
-      surgeSrc->mpePitchBendRange = v2;
+      surgeSrc->storage.mpePitchBendRange = v2;
       fromto( surgeSrc, surgeDest );
-      REQUIRE( surgeDest->mpePitchBendRange == v2 );
+      REQUIRE( surgeDest->storage.mpePitchBendRange == v2 );
 
       // Test from set dest
-      surgeSrc->mpePitchBendRange = v1;
-      surgeDest->mpePitchBendRange = v1;
-      REQUIRE( surgeSrc->mpePitchBendRange == v1 );
-      REQUIRE( surgeDest->mpePitchBendRange == v1 );
+      surgeSrc->storage.mpePitchBendRange = v1;
+      surgeDest->storage.mpePitchBendRange = v1;
+      REQUIRE( surgeSrc->storage.mpePitchBendRange == v1 );
+      REQUIRE( surgeDest->storage.mpePitchBendRange == v1 );
       
-      surgeSrc->mpePitchBendRange = v2;
-      REQUIRE( surgeSrc->mpePitchBendRange == v2 );
-      REQUIRE( surgeDest->mpePitchBendRange == v1 );
+      surgeSrc->storage.mpePitchBendRange = v2;
+      REQUIRE( surgeSrc->storage.mpePitchBendRange == v2 );
+      REQUIRE( surgeDest->storage.mpePitchBendRange == v1 );
 
       fromto( surgeSrc, surgeDest );
-      REQUIRE( surgeDest->mpePitchBendRange == v2 );
+      REQUIRE( surgeDest->storage.mpePitchBendRange == v2 );
    }
    
    SECTION( "Everything Standard Stays Standard" )
