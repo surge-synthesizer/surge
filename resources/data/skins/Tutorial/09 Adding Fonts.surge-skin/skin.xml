@@ -1,0 +1,25 @@
+<!--[doc]
+Adding Fonts is under active development. Currently it only works on a limited set of controls and only
+on macOS. We will update this as that changes.
+
+Controls take a font-family name as an argument generally. (As of this writing, only sliders do!). That
+font-family sets the font family and so if there is a widely used font, like, say, comic-sans, you can choose
+that and the system font resolution will resolve the family name.
+
+If you want to add custom fonts and have appropriate license to distribute the ttf files, you can create a
+subdirectory of your skin called "fonts" which contains ttf files, and Surge will make those families available to
+you. This skin demonstrates that.
+
+This is clearly a work in progress and the design and specifications be updated as we approach 1.8.0. Please don't use
+it yet unless you are working with the dev team.
+[doc]-->
+<surge-skin name="09 Adding Fonts" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+  <globals>
+  </globals>
+  <component-classes>
+  </component-classes>
+  <controls>
+    <control ui_identifier="osc.param_1" font-family="UglyTypist"/>
+    <control ui_identifier="osc.param_2" font-family="Mrs Beasley"/>
+  </controls>
+</surge-skin>

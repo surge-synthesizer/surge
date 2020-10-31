@@ -6664,6 +6664,12 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       else
          hs->deactivated = false;
 
+      auto ff = currentSkin->propertyValue(skinCtrl, "font-family", "" );
+      if( ff.size() > 0 )
+      {
+         hs->setFont(new CFontDesc(ff.c_str(), 9 ));
+      }
+
       if (p->valtype == vt_int || p->valtype == vt_bool)
       {
          hs->isStepped = true;
