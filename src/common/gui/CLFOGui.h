@@ -99,13 +99,7 @@ public:
       return rect_shapes.pointInside(where);
    }
          
-
-   virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      ss_shift_hover = 0;
-      lfo_type_hover = -1;
-      invalid();
-      return VSTGUI::kMouseEventHandled;
-   }
+   virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
 
 protected:
    LFOStorage* lfodata;

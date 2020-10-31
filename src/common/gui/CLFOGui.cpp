@@ -66,7 +66,7 @@ void CLFOGui::draw(CDrawContext* dc)
    CRect leftpanel(outer);
    CRect maindisp(outer);
    leftpanel.right = lpsize + leftpanel.left;
-   maindisp.left = leftpanel.right + 4 + 15;
+   maindisp.left = leftpanel.right + 19;
    maindisp.top += 1;
    maindisp.bottom -= 1;
 
@@ -1095,21 +1095,29 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
 CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   // fake a pass-through of extra mouse buttons (middle, prev/next buttons) to arm modulation
    if (listener && (buttons & (kMButton | kButton4 | kButton5)))
    {
       listener->controlModifierClicked(this, buttons);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if( ( buttons & kDoubleClick ) && lfodata->shape.val.i == ls_mseg )
+   // open MSEG editor when clicking on waveform
+   if (lfodata->shape.val.i == ls_mseg)
    {
-      auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-      if( sge )
-         sge->toggleMSEGEditor();
+      if (buttons & kLButton)
+      {
+         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+
+         if (sge)
+            sge->toggleMSEGEditor();
+      }
    }
-   if (1) //(buttons & kLButton))
+
+   // handle step sequencer mouse events
+   if (ss && lfodata->shape.val.i == ls_stepseq)
    {
-      if (ss && lfodata->shape.val.i == ls_stepseq)
+      if (buttons & (kLButton | kRButton))
       {
          if (rect_steps.pointInside(where))
          {
@@ -1196,6 +1204,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
          return kMouseEventHandled;
       }
    }
+
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
@@ -1343,8 +1352,31 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
    return kMouseEventHandled;
 }
 
+CMouseEventResult CLFOGui::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
+{
+   if (lfodata->shape.val.i == ls_mseg)
+      getFrame()->setCursor(VSTGUI::kCursorDefault);
+
+   ss_shift_hover = 0;
+   lfo_type_hover = -1;
+   invalid();
+
+   return VSTGUI::kMouseEventHandled;
+}
+
 CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   if (lfodata->shape.val.i == ls_mseg)
+   {
+      auto displayrect = getViewSize();
+      displayrect.left += lpsize + 19;
+
+      if (displayrect.pointInside(where))
+         getFrame()->setCursor(VSTGUI::kCursorHand);
+      else
+         getFrame()->setCursor(VSTGUI::kCursorDefault);
+   }
+
    int plt = lfo_type_hover;
    lfo_type_hover = -1;
    for( int i=0; i<n_lfoshapes; ++i )
