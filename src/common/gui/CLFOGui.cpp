@@ -1093,7 +1093,61 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 }
 
 
-CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& buttons)
+void CLFOGui::openPopup(CPoint &where)
+{
+   CPoint w = where;
+
+   printf("%.2f %.2f\n", w.x, w.y);
+
+   COptionMenu* contextMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
+                                              VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   auto addCb = [] (COptionMenu *p, const std::string &l, std::function<void()> op ) -> CCommandMenuItem *
+                   {
+                      auto m = new CCommandMenuItem( CCommandMenuItem::Desc( l.c_str() ) );
+                      m->setActions([op](CCommandMenuItem* m) { op(); });
+                      p->addEntry( m );
+                      return m;
+                   };
+
+   contextMenu->addEntry("[?] MSEG Editor");
+
+   contextMenu->addSeparator();
+
+
+   auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+   std::string openname = (sge->editorOverlayTag != "msegEditor") ? "Open MSEG Editor" : "Close MSEG Editor";
+   addCb(contextMenu, Surge::UI::toOSCaseForMenu(openname), [this, sge]()
+                                 {
+                                    if (sge)
+                                       sge->toggleMSEGEditor();
+                                 });
+
+   contextMenu->addSeparator();
+
+   auto lpoff = addCb(contextMenu, Surge::UI::toOSCaseForMenu("No Looping"), [this]()
+                                   {
+                                      ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
+                                   });
+   lpoff->setChecked(ms->loopMode == MSEGStorage::LoopMode::ONESHOT);
+
+   auto lpon = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Always"), [this]()
+                                   {
+                                      ms->loopMode = MSEGStorage::LoopMode::LOOP;
+                                   });
+   lpon->setChecked(ms->loopMode == MSEGStorage::LoopMode::LOOP);
+
+   auto lpgate = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Until Release"), [this]()
+                                   {
+                                      ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+                                   });
+   lpgate->setChecked(ms->loopMode == MSEGStorage::LoopMode::GATED_LOOP);
+
+   getFrame()->addView(contextMenu);
+   contextMenu->popup();
+}
+
+CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
    // fake a pass-through of extra mouse buttons (middle, prev/next buttons) to arm modulation
    if (listener && (buttons & (kMButton | kButton4 | kButton5)))
@@ -1102,17 +1156,26 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& button
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   // open MSEG editor when clicking on waveform
    if (lfodata->shape.val.i == ls_mseg)
    {
+      // only the LFO waveform area
+      auto displayrect = getViewSize();
+      displayrect.left += lpsize + 19;
+  
+      // open MSEG editor when clicking on waveform
       if (buttons & kLButton)
       {
          auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-         auto displayrect = getViewSize();
-         displayrect.left += lpsize + 19;
 
          if (sge && displayrect.pointInside(where))
             sge->toggleMSEGEditor();
+      }
+
+      // open context menu with various MSEG related options
+      if ((buttons & kRButton) && displayrect.pointInside(where))
+      {
+         openPopup(where);
+         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
       }
    }
 

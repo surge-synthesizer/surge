@@ -2967,7 +2967,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                case ls_ramp:
                    contextMenu->addSeparator(eid++);
 
-                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Type 1"), [this, p]() {
+                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Deform Type 1"), [this, p]() {
                        p->deform_type = 0;
                        if (frame)
                            frame->invalid();
@@ -2977,7 +2977,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                
 
 
-                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Type 2"), [this, p]() {
+                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Deform Type 2"), [this, p]() {
                     
                        p->deform_type = 1;
                        if (frame)
@@ -2987,7 +2987,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                    eid++;
 
 
-                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Type 3"), [this, p]() { 
+                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Deform Type 3"), [this, p]() { 
                        p->deform_type = 2; 
                        if (frame)
                            frame->invalid();
