@@ -479,7 +479,24 @@ const float fut_k35_saturations[5] = {
 
 const char fut_diode_subtypes[1][32] = {"24 dB/oct"};
 
-const int fut_subcount[n_fu_type] = {0, 3, 3, 4, 3, 3, 6, 4, 4, 0, 4, 0, 0, 5, 5, 0 };
+const int fut_subcount[n_fu_type] = {
+   0, // fut_none
+   3, // fut_lp12
+   3, // fut_lp24
+   4, // fut_lpmoog
+   3, // fut_hp12
+   3, // fut_hp24
+   6, // fut_bp12
+   4, // fut_br12
+   4, // fut_comb
+   0, // fut_SNH
+   4, // fut_vintageladder
+   0, // fut_obxd_2pole
+   0, // fut_obxd_4pole
+   5, // fut_k35_lp
+   5, // fut_k35_hp
+   0  // fut_diode
+};
 
 enum fu_subtype
 {
