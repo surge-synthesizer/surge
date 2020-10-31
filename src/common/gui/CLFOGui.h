@@ -95,6 +95,8 @@ public:
       tsDen = d;
    }
 
+   void openPopup(VSTGUI::CPoint &where);
+
    bool insideTypeSelector( const VSTGUI::CPoint &where ) {
       return rect_shapes.pointInside(where);
    }

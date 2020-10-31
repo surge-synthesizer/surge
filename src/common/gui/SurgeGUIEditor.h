@@ -384,7 +384,6 @@ private:
    VSTGUI::CTextEdit* patchComment = nullptr;
    VSTGUI::CCheckBox* patchTuning = nullptr;
    VSTGUI::CTextLabel* patchTuningLabel = nullptr;
-   VSTGUI::CControl *msegEditSwitch = nullptr;
 #if BUILD_IS_DEBUG
    VSTGUI::CTextLabel* debugLabel = nullptr;
 #endif
@@ -394,6 +393,7 @@ private:
    VSTGUI::CTextLabel* typeinLabel = nullptr;
    VSTGUI::CTextLabel* typeinPriorValueLabel = nullptr;
    VSTGUI::CControl* typeinEditControl = nullptr;
+   VSTGUI::CControl *msegEditSwitch = nullptr;
    enum TypeInMode {
       Inactive,
       Param,
@@ -405,12 +405,12 @@ private:
 
    VSTGUI::CViewContainer *editorOverlay = nullptr;
    std::function<void()> editorOverlayOnClose = [](){};
-   std::string editorOverlayTag;
 
    VSTGUI::CViewContainer *minieditOverlay = nullptr;
    VSTGUI::CTextEdit *minieditTypein = nullptr;
    std::function<void( const char* )> minieditOverlayDone = [](const char *){};
 public:
+   std::string editorOverlayTag;
    void promptForMiniEdit(const std::string& value,
                           const std::string& prompt,
                           const std::string& title,

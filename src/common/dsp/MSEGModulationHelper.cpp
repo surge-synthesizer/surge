@@ -907,7 +907,7 @@ void mirrorMSEG(MSEGStorage *ms)
    };
 
    // special case when we have an odd number of nodes
-   if (h = t)
+   if (h == t)
       ms->segments[h].v0 = ms->segments[h].nv1;
 
    // special case end node in start/end unlinked mode
