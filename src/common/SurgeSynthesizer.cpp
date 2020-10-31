@@ -1584,6 +1584,8 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       case ct_bool_mute:
       case ct_bool_fm:
       case ct_fbconfig:
+         switch_toggled_queued = true;
+         break;
       case ct_filtersubtype:
          // See above: We know the filter type for this subtype is at index - 1. Cap max to be the fut-subtype
          {
