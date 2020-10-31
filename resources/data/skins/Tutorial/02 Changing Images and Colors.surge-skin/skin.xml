@@ -1,4 +1,9 @@
 <!--[doc]
+One of the basic features of a skin file is to allow you to change images and colors in the skin preserving layouts.
+There's a variety of ways to do this which are covered in the tutorials, depending whether you want to do it
+system wide or on a per-control basis. This second tutorail covers the simple replacement of global colors
+and images, which results in a simple 're-skin' of the default surge skin with identical placement, size, and
+behavior of all controls.
 [doc]-->
 <surge-skin name="02 Changing Images and Colors" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
