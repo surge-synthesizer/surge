@@ -66,7 +66,7 @@ void CLFOGui::draw(CDrawContext* dc)
    CRect leftpanel(outer);
    CRect maindisp(outer);
    leftpanel.right = lpsize + leftpanel.left;
-   maindisp.left = leftpanel.right + 4 + 15;
+   maindisp.left = leftpanel.right + 19;
    maindisp.top += 1;
    maindisp.bottom -= 1;
 
@@ -1095,107 +1095,116 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
 CMouseEventResult CLFOGui::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   // fake a pass-through of extra mouse buttons (middle, prev/next buttons) to arm modulation
    if (listener && (buttons & (kMButton | kButton4 | kButton5)))
    {
       listener->controlModifierClicked(this, buttons);
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if( ( buttons & kDoubleClick ) && lfodata->shape.val.i == ls_mseg )
+   // open MSEG editor when clicking on waveform
+   if (lfodata->shape.val.i == ls_mseg)
    {
-      auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-      if( sge )
-         sge->toggleMSEGEditor();
-   }
-   if (1) //(buttons & kLButton))
-   {
-      if (ss && lfodata->shape.val.i == ls_stepseq)
+      if (buttons & kLButton)
       {
-         if (rect_steps.pointInside(where))
-         {
-            if (storage)
-               this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+         auto displayrect = getViewSize();
+         displayrect.left += lpsize + 19;
 
-            startCursorHide(where);
-            if( buttons.isRightButton() )
-            {
-               rmStepStart = where;
-               controlstate = cs_linedrag;
-            }
-            else
-            {
-               controlstate = cs_steps;
-            }
-            onMouseMoved(where, buttons);
-            return kMouseEventHandled;
-         }
-         else if (rect_steps_retrig.pointInside(where))
-         {
-            controlstate = cs_trigtray_toggle;
-
-            for (int i = 0; i < n_stepseqsteps; i++)
-            {
-               draggedIntoTrigTray[i] = false;
-               if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
-               {
-                  selectedSSrow = i;
-                  mouseDownTrigTray = i;
-                  trigTrayButtonState = buttons;
-                  draggedIntoTrigTray[i] = true;
-               }
-            }
-            invalid();
-            return kMouseEventHandled;
-         }
-         else if (ss_shift_left.pointInside(where))
-         {
-            float t = ss->steps[0];
-            for (int i = 0; i < (n_stepseqsteps - 1); i++)
-            {
-               ss->steps[i] = ss->steps[i + 1];
-               assert((i >= 0) && (i < n_stepseqsteps));
-            }
-            ss->steps[n_stepseqsteps - 1] = t;
-            ss->trigmask = ( ((ss->trigmask & 0x000000000000fffe) >> 1) | (((ss->trigmask & 1) << 15) & 0xffff)) |
-               ( ((ss->trigmask & 0x00000000fffe0000) >> 1) | (((ss->trigmask & 0x10000) << 15) & 0xffff0000 )) |
-               ( ((ss->trigmask & 0x0000fffe00000000) >> 1) | (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000 ));
-
-            invalid();
-            return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-         }
-         else if (ss_shift_right.pointInside(where))
-         {
-            float t = ss->steps[n_stepseqsteps - 1];
-            for (int i = (n_stepseqsteps - 2); i >= 0; i--)
-            {
-               ss->steps[i + 1] = ss->steps[i];
-               assert((i >= 0) && (i < n_stepseqsteps));
-            }
-            ss->steps[0] = t;
-            ss->trigmask = ( ((ss->trigmask & 0x0000000000007fff) << 1) | (((ss->trigmask & 0x0000000000008000) >> 15) & 0xffff )) |
-               ( ((ss->trigmask & 0x000000007fff0000) << 1) | (((ss->trigmask & 0x0000000080000000) >> 15) & 0xffff0000 ))|
-               ( ((ss->trigmask & 0x00007fff00000000) << 1) | (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000 ));
-            invalid();
-            return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-         }
-      }
-      if (rect_ls.pointInside(where))
-      {
-         controlstate = cs_loopstart;
-         return kMouseEventHandled;
-      }
-      else if (rect_le.pointInside(where))
-      {
-         controlstate = cs_loopend;
-         return kMouseEventHandled;
-      }
-      else if (rect_shapes.pointInside(where))
-      {
-         controlstate = cs_shape;
-         onMouseMoved(where, buttons);
-         return kMouseEventHandled;
+         if (sge && displayrect.pointInside(where))
+            sge->toggleMSEGEditor();
       }
    }
+
+   // handle step sequencer mouse events
+   if (ss && lfodata->shape.val.i == ls_stepseq)
+   {
+       if (rect_steps.pointInside(where))
+       {
+       if (storage)
+           this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+
+       startCursorHide(where);
+       if( buttons.isRightButton() )
+       {
+           rmStepStart = where;
+           controlstate = cs_linedrag;
+       }
+       else
+       {
+           controlstate = cs_steps;
+       }
+       onMouseMoved(where, buttons);
+       return kMouseEventHandled;
+       }
+       else if (rect_steps_retrig.pointInside(where))
+       {
+       controlstate = cs_trigtray_toggle;
+
+       for (int i = 0; i < n_stepseqsteps; i++)
+       {
+           draggedIntoTrigTray[i] = false;
+           if ((where.x > gaterect[i].left) && (where.x < gaterect[i].right))
+           {
+               selectedSSrow = i;
+               mouseDownTrigTray = i;
+               trigTrayButtonState = buttons;
+               draggedIntoTrigTray[i] = true;
+           }
+       }
+       invalid();
+       return kMouseEventHandled;
+       }
+       else if (ss_shift_left.pointInside(where))
+       {
+       float t = ss->steps[0];
+       for (int i = 0; i < (n_stepseqsteps - 1); i++)
+       {
+           ss->steps[i] = ss->steps[i + 1];
+           assert((i >= 0) && (i < n_stepseqsteps));
+       }
+       ss->steps[n_stepseqsteps - 1] = t;
+       ss->trigmask = ( ((ss->trigmask & 0x000000000000fffe) >> 1) | (((ss->trigmask & 1) << 15) & 0xffff)) |
+           ( ((ss->trigmask & 0x00000000fffe0000) >> 1) | (((ss->trigmask & 0x10000) << 15) & 0xffff0000 )) |
+           ( ((ss->trigmask & 0x0000fffe00000000) >> 1) | (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000 ));
+
+       invalid();
+       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+       }
+       else if (ss_shift_right.pointInside(where))
+       {
+       float t = ss->steps[n_stepseqsteps - 1];
+       for (int i = (n_stepseqsteps - 2); i >= 0; i--)
+       {
+           ss->steps[i + 1] = ss->steps[i];
+           assert((i >= 0) && (i < n_stepseqsteps));
+       }
+       ss->steps[0] = t;
+       ss->trigmask = ( ((ss->trigmask & 0x0000000000007fff) << 1) | (((ss->trigmask & 0x0000000000008000) >> 15) & 0xffff )) |
+           ( ((ss->trigmask & 0x000000007fff0000) << 1) | (((ss->trigmask & 0x0000000080000000) >> 15) & 0xffff0000 ))|
+           ( ((ss->trigmask & 0x00007fff00000000) << 1) | (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000 ));
+       invalid();
+       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+       }
+   }
+
+   if (rect_ls.pointInside(where))
+   {
+       controlstate = cs_loopstart;
+       return kMouseEventHandled;
+   }
+   else if (rect_le.pointInside(where))
+   {
+       controlstate = cs_loopend;
+       return kMouseEventHandled;
+   }
+   else if (rect_shapes.pointInside(where))
+   {
+       controlstate = cs_shape;
+       onMouseMoved(where, buttons);
+       return kMouseEventHandled;
+   }
+
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
@@ -1343,8 +1352,31 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
    return kMouseEventHandled;
 }
 
+CMouseEventResult CLFOGui::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
+{
+   if (lfodata->shape.val.i == ls_mseg)
+      getFrame()->setCursor(VSTGUI::kCursorDefault);
+
+   ss_shift_hover = 0;
+   lfo_type_hover = -1;
+   invalid();
+
+   return VSTGUI::kMouseEventHandled;
+}
+
 CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   if (lfodata->shape.val.i == ls_mseg)
+   {
+      auto displayrect = getViewSize();
+      displayrect.left += lpsize + 19;
+
+      if (displayrect.pointInside(where))
+         getFrame()->setCursor(VSTGUI::kCursorHand);
+      else
+         getFrame()->setCursor(VSTGUI::kCursorDefault);
+   }
+
    int plt = lfo_type_hover;
    lfo_type_hover = -1;
    for( int i=0; i<n_lfoshapes; ++i )

@@ -624,18 +624,21 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
 
       // draw loop markers
-      int ls = ( ms->loop_start >= 0 ? ms->loop_start : 0 );
-      int le = ( ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 );
-      float pxs = tpx( ms->segmentStart[ls] );
-      float pxe = tpx(ms->segmentEnd[le]);
+      if (ms->loopMode > 1)
+      {
+         int ls = ( ms->loop_start >= 0 ? ms->loop_start : 0 );
+         int le = ( ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 );
+         float pxs = tpx( ms->segmentStart[ls] );
+         float pxe = tpx(ms->segmentEnd[le]);
       
-      auto r = VSTGUI::CRect( CPoint( pxs, haxisArea.top + 1), CPoint( 10, 10 ));
-      dc->setFillColor(CColor(0, 255, 0, 128));
-      dc->drawRect( r, kDrawFilled );
+         auto r = VSTGUI::CRect( CPoint( pxs, haxisArea.top + 1), CPoint( 10, 10 ));
+         dc->setFillColor(CColor(0, 255, 0, 128));
+         dc->drawRect( r, kDrawFilled );
 
-      r = VSTGUI::CRect( CPoint( pxe - 8, haxisArea.top + 1), CPoint( 10, 10 ));
-      dc->setFillColor(CColor(255, 0, 0, 128));
-      dc->drawRect( r, kDrawFilled );
+         r = VSTGUI::CRect( CPoint( pxe - 8, haxisArea.top + 1), CPoint( 10, 10 ));
+         dc->setFillColor(CColor(255, 0, 0, 128));
+         dc->drawRect( r, kDrawFilled );
+      }
 
       // vertical axis
       auto vaxisArea = getVAxisArea();
