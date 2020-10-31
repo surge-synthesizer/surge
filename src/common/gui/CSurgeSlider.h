@@ -92,6 +92,13 @@ public:
    
    void SetQuantitizedDispValue(float f);
 
+   void setFont( VSTGUI::CFontRef f ) {
+      if( labfont ) labfont->forget();
+      labfont = f;
+      labfont->remember();
+   }
+   VSTGUI::CFontRef labfont = nullptr;
+
    CLASS_METHODS(CSurgeSlider, CControl)
 
    bool in_hover = false;

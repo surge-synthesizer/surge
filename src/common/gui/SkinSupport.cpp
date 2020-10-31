@@ -300,6 +300,15 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    }
 
    /*
+    * We have a reasonably valid skin so try and add fonts
+    */
+   auto fontPath = string_to_path( resourceName("fonts"));
+   if( fs::is_directory(fontPath ))
+   {
+      addFontSearchPathToSystem(fontPath);
+   }
+
+   /*
    ** Parse the globals section
    */
    globals.clear();

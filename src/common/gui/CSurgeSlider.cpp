@@ -55,6 +55,9 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
    
    this->storage = storage;
 
+   labfont = displayFont;
+   labfont->remember();
+
    modmode = 0;
    disabled = false;
    deactivated = false;
@@ -124,7 +127,9 @@ void CSurgeSlider::setModValue(float val)
 }
 
 CSurgeSlider::~CSurgeSlider()
-{}
+{
+   labfont->forget();
+}
 
 void CSurgeSlider::setLabel(const char* txt)
 {
@@ -238,7 +243,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
          dc->setFontColor(skin->getColor(Colors::Slider::Label::Light));
       else
          dc->setFontColor(skin->getColor(Colors::Slider::Label::Dark));
-      dc->setFont(displayFont);
+      dc->setFont(labfont);
 
       //		int a = 'a' + (rand()&31);
       //		label[1] = a;
@@ -523,7 +528,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
             }
             else
             {
-               dc->setFont(displayFont);
+               dc->setFont(labfont);
                dc->setFontColor(CColor(80,80,100));
                auto newRect = hrect;
                newRect.top += 1;
@@ -563,7 +568,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                newRect.bottom = newRect.top + 20;
                newRect.right = newRect.left + 16;
                
-               dc->setFont(displayFont);
+               dc->setFont(labfont);
                dc->setFontColor(CColor(80,80,100));
                
                auto tRect = newRect;

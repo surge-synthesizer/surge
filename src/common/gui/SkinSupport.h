@@ -19,6 +19,7 @@
 #include "vstgui/lib/cpoint.h"
 #include "SkinModel.h"
 #include "SkinColors.h"
+#include "filesystem/import.h"
 
 /*
 ** Support for rudimentary skinning in Surge
@@ -70,6 +71,11 @@ private:
 
 namespace UI
 {
+
+/*
+ * This function is defined in SkinFontLoader.cpp
+ */
+void addFontSearchPathToSystem( const fs::path &p );
 
 extern const std::string NoneClassName;
 class SkinDB;
