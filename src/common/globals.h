@@ -15,7 +15,6 @@
 
 #pragma once
 
-#define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
@@ -51,7 +50,7 @@ static inline int _stricmp(const char *s1, const char *s2)
 }
 #endif
 
-#if WINDOWS && !TARGET_RACK
+#if WINDOWS
 FILE* surge_win_fopen_utf8(const char* pathname, const char* mode);
 #define fopen(pathname, mode) surge_win_fopen_utf8((pathname), (mode))
 #endif

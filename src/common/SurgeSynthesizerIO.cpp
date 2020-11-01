@@ -387,12 +387,7 @@ void SurgeSynthesizer::savePatch()
            return;
    }
 
-#if WINDOWS && TARGET_RACK
-   std::ofstream f(filename.c_str(), std::ios::out | std::ios::binary);
-#else
    std::ofstream f(filename, std::ios::out | std::ios::binary);
-#endif
-
    if (!f)
       return;
 

@@ -116,6 +116,7 @@ execute_process(
   COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}  -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
                            -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
                            -D AZURE_PIPELINE=${AZURE_PIPELINE}
+                           -D WIN32=${WIN32}
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
@@ -123,6 +124,7 @@ add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cp
   COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}  -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
                            -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
                            -D AZURE_PIPELINE=${AZURE_PIPELINE}
+                           -D WIN32=${WIN32}
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_dependencies( surge-shared git-info )
@@ -551,6 +553,7 @@ elseif( WIN32 )
     WINDOWS=1
     NOMINMAX=1
     WIN32
+    _USE_MATH_DEFINES
     _WIN32_WINNT=0x0601
     _USRDLL
     VA_SUBTRACTIVE_EXPORTS
@@ -582,13 +585,24 @@ elseif( WIN32 )
     )
   set(OS_LINK_LIBRARIES
     ${OS_LINK_LIBRARIES_NOGUI}
-    Winmm
+    winmm
     gdi32
     gdiplus
-    ComDlg32
-    ComCtl32
+    comdlg32
+    comctl32
     ${CMAKE_SOURCE_DIR}/${PNG_LINK_DIR}/libpng16_static.lib
   )
+
+  if(MINGW)
+    list(APPEND OS_LINK_LIBRARIES
+      d2d1
+      dwmapi
+      dwrite
+      opengl32
+      shlwapi
+      windowscodecs
+    )
+  endif()
 
   if( ${BUILD_DLLCHECK} )
     add_executable( dllcheck
@@ -680,6 +694,18 @@ if( BUILD_VST3 )
     list(REMOVE_ITEM SURGE_VST3_LIBRARY_SOURCES "${full_path_test_cpp}")
   endif()
 
+  if(MINGW)
+    # make Steinberg::FUnknownPrivate::atomicAdd() compile when Steinberg::int32 is int instead of long
+    set(funknown_path vst3sdk/pluginterfaces/base/funknown.cpp)
+    get_filename_component(funknown "${CMAKE_CURRENT_SOURCE_DIR}/${funknown_path}" ABSOLUTE)
+    list(REMOVE_ITEM SURGE_VST3_LIBRARY_SOURCES "${funknown}")
+    file(STRINGS "${funknown_path}" funknown NEWLINE_CONSUME NO_HEX_CONVERSION)
+    string(REPLACE "InterlockedExchangeAdd" "__sync_fetch_and_add" funknown "${funknown}")
+    string(REPLACE "#include \"" "#include \"pluginterfaces/base/" funknown "${funknown}")
+    file(WRITE "${CMAKE_BINARY_DIR}/${funknown_path}" ${funknown})
+    list(APPEND SURGE_VST3_LIBRARY_SOURCES "${CMAKE_BINARY_DIR}/${funknown_path}")
+  endif()
+
   add_library(surge-vst3-dll
     SHARED
     ${SURGE_COMMON_SOURCES}
@@ -698,8 +724,7 @@ if( BUILD_VST3 )
          vst3sdk/public.sdk/source/main/linuxmain.cpp
          src/linux/LinuxVST3Helpers.cpp)
   elseif( WIN32 )
-    target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/dllmain.cpp)
-    target_link_options(surge-vst3-dll PUBLIC "/DEF:${CMAKE_SOURCE_DIR}\\resources\\windows-vst3\\surge.def")
+    target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/dllmain.cpp resources/windows-vst3/surge.def)
   endif()
 
   target_compile_definitions(surge-vst3-dll
@@ -710,6 +735,10 @@ if( BUILD_VST3 )
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
     DEBUG=$<CONFIG:DEBUG>
     )
+
+  if(MINGW)
+    target_compile_definitions(surge-vst3-dll PRIVATE _NATIVE_WCHAR_T_DEFINED __wchar_t=wchar_t)
+  endif()
 
   target_include_directories(surge-vst3-dll
     PRIVATE
@@ -783,7 +812,7 @@ if( BUILD_VST2 )
     target_compile_definitions( surge-vst2-dll PRIVATE "__cdecl=" )
   endif()
   if( WIN32 )
-    target_link_options(surge-vst2-dll PUBLIC "/DEF:${CMAKE_SOURCE_DIR}\\resources\\windows-vst2\\surge.def")
+    target_sources(surge-vst2-dll PRIVATE resources/windows-vst2/surge.def)
   endif()
 
   target_compile_definitions(surge-vst2-dll
