@@ -20,6 +20,7 @@
 #include "SurgeVoiceState.h"
 #include "ModulationSource.h"
 #include "MSEGModulationHelper.h" // We need this for the MSEGEvalatorState member
+#include <functional>
 
 enum lfoenv_state
 {
@@ -92,5 +93,6 @@ private:
    bool is_display;
    int step, shuffle_id;
    int magn, rate, iattack, idecay, idelay, ihold, isustain, irelease, startphase, ideform;
+   std::function<float()> urng;
    quadr_osc sinus;
 };

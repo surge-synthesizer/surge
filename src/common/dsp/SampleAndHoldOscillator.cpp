@@ -67,7 +67,17 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
    if (is_display)
    {
       n_unison = 1;
-      srand(2);
+
+      auto gen = std::minstd_rand(2);
+      std::uniform_real_distribution<float> distro(-1.f,1.f);
+      urng = std::bind(distro, gen);
+   }
+   else
+   {
+      std::random_device rd;
+      auto gen = std::minstd_rand(rd());
+      std::uniform_real_distribution<float> distro(-1.f,1.f);
+      urng = std::bind(distro, gen);
    }
    prepare_unison(n_unison);
 
@@ -198,7 +208,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    float wf = l_shape.v * 0.8 * invertcorrelation;
    float wfabs = fabs(wf);
    float smooth = l_smooth.v;
-   float rand11 = (((float)rand() * rcp((float)RAND_MAX)) * 2.f - 1.f);
+   float rand11 = urng();
    float randt = rand11 * (1 - wfabs) - wf * last_level[voice];
 
    randt = randt * rcp(1.0f - wfabs);

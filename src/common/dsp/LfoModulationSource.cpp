@@ -51,17 +51,30 @@ void LfoModulationSource::assign(SurgeStorage* storage,
 
    phaseInitialized = false;
 
+
+
    if (is_display)
    {
-      srand(17);
+      auto gen = std::minstd_rand(17);
+      std::uniform_real_distribution<float> distro(-1.f,1.f);
+      urng = std::bind(distro, gen);
+
       msegstate.seed( 2112 ); // this number is different than the one in the canvas on purpose
                // so since they are random the displays differ
+   }
+   else
+   {
+      std::random_device rd;
+      auto gen = std::minstd_rand(rd());
+      std::uniform_real_distribution<float> distro(-1.f,1.f);
+      urng = std::bind(distro, gen);
    }
    noise = 0.f;
    noised1 = 0.f;
    target = 0.f;
    for (int i = 0; i < 4; i++)
       wf_history[i] = 0.f; //((float) rand()/(float)RAND_MAX)*2.f - 1.f;
+
 }
 
 float LfoModulationSource::bend1(float x)
@@ -220,7 +233,7 @@ void LfoModulationSource::attack()
       noise = 0.f;
       noised1 = 0.f;
       target = 0.f;
-      iout = correlated_noise_o2mk2(target, noised1, limit_range(localcopy[ideform].f,-1.f,1.f));
+      iout = correlated_noise_o2mk2_suppliedrng(target, noised1, limit_range(localcopy[ideform].f,-1.f,1.f), urng);
       break;
    case ls_stepseq:
    {
@@ -256,10 +269,10 @@ void LfoModulationSource::attack()
       noised1 = 0.f;
       target = 0.f;
       auto lid = limit_range(localcopy[ideform].f,-1.f,1.f);
-      wf_history[3] = correlated_noise_o2mk2(target, noised1, lid) * phase;
-      wf_history[2] = correlated_noise_o2mk2(target, noised1, lid) * phase;
-      wf_history[1] = correlated_noise_o2mk2(target, noised1, lid) * phase;
-      wf_history[0] = correlated_noise_o2mk2(target, noised1, lid) * phase;
+      wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+      wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+      wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+      wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
       /*wf_history[0] = 0.f;
       wf_history[1] = 0.f;
       wf_history[2] = 0.f;
@@ -491,7 +504,7 @@ void LfoModulationSource::process_block()
       {
       case ls_snh:
       {
-         iout = correlated_noise_o2mk2(target, noised1, limit_range(localcopy[ideform].f,-1.f,1.f));
+         iout = correlated_noise_o2mk2_suppliedrng(target, noised1, limit_range(localcopy[ideform].f,-1.f,1.f), urng);
       }
       break;
       case ls_noise:
@@ -500,7 +513,7 @@ void LfoModulationSource::process_block()
          wf_history[2] = wf_history[1];
          wf_history[1] = wf_history[0];
 
-         wf_history[0] = correlated_noise_o2mk2(target, noised1, limit_range( localcopy[ideform].f, -1.f, 1.f ) ); 
+         wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, limit_range( localcopy[ideform].f, -1.f, 1.f ), urng );
          // target = ((float) rand()/RAND_MAX)*2.f - 1.f;
       }
       break;
