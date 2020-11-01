@@ -51,10 +51,14 @@ std::wstring utf8ToWide(const std::string& utf8)
 void browseFolder(const std::string& initialDirectory,
                   const std::function<void(std::string)>& callbackOnOpen)
 {
-   static auto browseCallbackProc = [](HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData) {
-      if (uMsg == BFFM_INITIALIZED)
-         SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
-      return 0;
+   struct BrowseCallback
+   {
+      static int CALLBACK proc(HWND hwnd, UINT uMsg, LPARAM, LPARAM lpData)
+      {
+         if (uMsg == BFFM_INITIALIZED)
+            SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+         return 0;
+      }
    };
 
    auto path_param = utf8ToWide(initialDirectory);
@@ -62,7 +66,7 @@ void browseFolder(const std::string& initialDirectory,
    BROWSEINFO bi{};
    bi.lpszTitle = L"Browse for folder...";
    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-   bi.lpfn = browseCallbackProc;
+   bi.lpfn = BrowseCallback::proc;
    bi.lParam = LPARAM(path_param.c_str());
 
    if (auto pidl = SHBrowseForFolder(&bi))

@@ -1,4 +1,3 @@
-#define _USE_MATH_DEFINES
 #if 0
 #include <math.h>
 #include "BiquadFilter.h"

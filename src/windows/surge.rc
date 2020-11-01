@@ -8,7 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 //#include "afxres.h"
-#include "WinResrc.h"
+#include "winresrc.h"
 #define IDC_STATIC -1
 
 /////////////////////////////////////////////////////////////////////////////

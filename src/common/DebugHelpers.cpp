@@ -1,7 +1,7 @@
 #include "DebugHelpers.h"
 
 #if WINDOWS
-#include "Windows.h"
+#include "windows.h"
 #endif
 
 #if MAC || LINUX
