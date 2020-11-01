@@ -1596,6 +1596,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             else
                storage.getPatch().param_ptr[index]->val.i = std::min( maxIVal-1,
                                                                      storage.getPatch().param_ptr[index]->val.i );
+            switch_toggled_queued = true;
             break;
          }
       case ct_fxtype:
