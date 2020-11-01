@@ -7,35 +7,17 @@
 
 #include "UserInteractions.h"
 #include "SkinColors.h"
+#include "CSurgeHyperlink.h"
+#include "SurgeGUIEditor.h"
+#include "CScalableBitmap.h"
+
 
 using namespace VSTGUI;
 
-SharedPointer<CFontDesc> CAboutBox::infoFont;
 
-//------------------------------------------------------------------------
-// CAboutBox
-//------------------------------------------------------------------------
-// one click draw its pixmap, an another click redraw its parent
-CAboutBox::CAboutBox(const CRect& size,
-                     IControlListener* listener,
-                     long tag,
-                     CBitmap* background,
-                     CRect& toDisplay,
-                     CPoint& offset,
-                     CBitmap* aboutBitmap)
-    : CControl(size, listener, tag, background), toDisplay(toDisplay), offset(offset)
-{
-   _aboutBitmap = aboutBitmap;
-   boxHide(false);
-   if (infoFont == NULL)
-   {
-       infoFont = aboutFont;
-   }
-}
+#if 0
 
-//------------------------------------------------------------------------
-CAboutBox::~CAboutBox()
-{}
+// Here's the old draw code just for reference
 
 //------------------------------------------------------------------------
 void CAboutBox::draw(CDrawContext* pContext)
@@ -151,75 +133,142 @@ void CAboutBox::draw(CDrawContext* pContext)
    setDirty(false);
 }
 
-//------------------------------------------------------------------------
-bool CAboutBox::hitTest(const CPoint& where, const CButtonState& buttons)
+
+#endif
+
+enum abouttags
 {
-   bool result = CView::hitTest(where, buttons);
-   if (result && !(buttons & kLButton))
-      return false;
-   return result;
+   tag_copy = 70000
+};
+CAboutBox::CAboutBox(const VSTGUI::CRect& size, SurgeGUIEditor* editor, Surge::UI::Skin::ptr_t skin,
+                     std::shared_ptr<SurgeBitmaps> bitmapStore) : VSTGUI::CViewContainer(size)
+{
+   setTransparency(true);
+   this->editor = editor;
+
+   /*
+    * So lay out the container
+    */
+   auto logo = bitmapStore->getBitmap(IDB_ABOUT);
+   auto logol = new VSTGUI::CTextLabel( VSTGUI::CRect( 0, 0, 904, 542 ), nullptr, logo );
+   logol->setMouseableArea(VSTGUI::CRect(0,0,0,0)); // Make sure I don't get clicked on
+   addView( logol );
+
+   CRect infobg(0, skin->getWindowSizeY() - 167, skin->getWindowSizeX(), skin->getWindowSizeY());
+   CRect skininfobg(0, 0, BASE_WINDOW_SIZE_X, 80);
+   auto toph = new CTextLabel( infobg );
+   toph->setTransparency(false);
+   toph->setBackColor(CColor(0, 0, 0, 255));
+   toph->setMouseableArea(CRect());
+   addView(toph);
+   toph = new CTextLabel( skininfobg );
+   toph->setTransparency(false);
+   toph->setBackColor(CColor(0, 0, 0, 255));
+   toph->setMouseableArea(CRect());
+   addView(toph);
+
+   // Here's a temporary thing o trigger a copy. Fix this widget
+   auto copy = new CTextButton(CRect( CPoint( 10, 400 ), CPoint( 200, 18 )), this, tag_copy, "Copy Version Info" );
+   copy->setFont( aboutFont );
+   addView( copy );
+
+   // Do some basic version info
+   float yp = 420;
+   auto lpp = [this, &yp](std::string title, std::string val ) {
+      float labelW = 80;
+      auto l1 = new VSTGUI::CTextLabel( VSTGUI::CRect( VSTGUI::CPoint( 10, yp ), VSTGUI::CPoint( labelW, 18 )), title.c_str() );
+      l1->setFont( aboutFont );
+      l1->setFontColor( VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
+      l1->setMouseableArea(VSTGUI::CRect());
+      l1->setTransparency(true);
+      l1->setHoriAlign(VSTGUI::kLeftText );
+      addView(l1);
+
+      auto l2 = new VSTGUI::CTextLabel( VSTGUI::CRect( VSTGUI::CPoint( labelW + 12, yp ), VSTGUI::CPoint( 200, 18 )), val.c_str() );
+      l2->setFont( aboutFont );
+      l2->setFontColor( VSTGUI::kWhiteCColor );
+      l2->setTransparency(true);
+      l2->setHoriAlign(VSTGUI::kLeftText );
+      l2->setMouseableArea(VSTGUI::CRect());
+      addView(l2);
+
+      yp += 20;
+   };
+   lpp( "Version", Surge::Build::FullVersionStr );
+
+   std::string chipmanu = Surge::Build::BuildArch;
+
+#if TARGET_AUDIOUNIT
+   std::string flavor = "AU";
+#elif TARGET_VST3
+   std::string flavor = "VST3";
+#elif TARGET_VST2
+      std::string flavor = "VST2 (unsupported)";
+#elif TARGET_LV2
+      std::string flavor = "LV2 (experimental)";
+#else
+      std::string flavor = "Non-Plugin"; // for linux app
+#endif
+
+#if MAC
+   std::string platform = "macOS";
+#elif WINDOWS
+   std::string platform = "Windows";
+#elif LINUX
+   std::string platform = "Linux";
+#else
+   std::string platform = "Orac, Skynet or something";
+#endif
+   lpp( "Architecture", chipmanu + " " + platform + " " + flavor );
+
+   // Stick the github link in the top
+   auto ghub = new CSurgeHyperlink(CRect( CPoint( 800, 20 ), CPoint( 24, 24 )));
+   ghub->setURL( "https://github.com/surge-synthesizer/surge/");
+   ghub->setBitmap(bitmapStore->getBitmap(IDB_GITHUB_LOGO));
+   // Critically, leave the mousable area intact here
+   addView(ghub);
+
+   auto regularLink = new CSurgeHyperlink( CRect( CPoint( 10, 20 ), CPoint( 70, 20 ) ) );
+   regularLink->setURL( "https://google.com" );
+   regularLink->setLabel( "Google Stuff" );
+   regularLink->setLabelColor( VSTGUI::CColor( 255, 220, 220 ) );
+   regularLink->setHoverColor( VSTGUI::CColor( 255, 250, 250 ));
+   regularLink->setFont( aboutFont );
+   addView( regularLink );
 }
 
-//------------------------------------------------------------------------
-
-void CAboutBox::boxShow(std::string dataPath, std::string userPath, std::string host)
+VSTGUI::CMouseEventResult CAboutBox::onMouseDown(VSTGUI::CPoint& where,
+                                                 const VSTGUI::CButtonState& buttons)
 {
-   this->dataPath = dataPath;
-   this->userPath = userPath;
-   this->host = host;
-   setViewSize(toDisplay);
-   setMouseableArea(toDisplay);
-   value = 1.f;
-   getFrame()->invalid();
-}
-void CAboutBox::boxHide(bool invalidateframe)
-{
-   CRect nilrect(0, 0, 0, 0);
-   setViewSize(nilrect);
-   setMouseableArea(nilrect);
-   value = 0.f;
-   if (invalidateframe)
-      getFrame()->invalid();
-}
 
-// void CAboutBox::mouse (CDrawContext *pContext, CPoint &where, long button)
-CMouseEventResult
-CAboutBox::onMouseDown(CPoint& where,
-                       const CButtonState& button) ///< called when a mouse down event occurs
-{
-   if (!(button & kLButton))
-      return kMouseEventHandled;
-
-   if (where.x >= 252 && where.x <= 480 && (where.y >= skin->getWindowSizeY() - 66) &&
-             where.y <= (skin->getWindowSizeY() - 50))
-      Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge");
-   else if( copyBox.pointInside(where) ){
-     #if WINDOWS
-         identifierLine = identifierLine + " ";
-     #endif
-         auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
-         getFrame()->setClipboard(a);
-   }
-   else
-      boxHide();
-
-   return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-}
-
-//------------------------------------------------------------------------
-void CAboutBox::unSplash()
-{
-   setDirty();
-   value = 0.f;
-
-   setViewSize(keepSize);
-   if (getFrame())
+   auto res = CViewContainer::onMouseDown(where, buttons);
+   std::cout << "onMouseDown " << res << std::endl;
+   if( res == VSTGUI::kMouseEventNotHandled && this->editor )
    {
-      if (getFrame()->getModalView() == this)
-      {
-          // the modal view is never set anywhere. Replace this with the new vstgui
-          // modal view session eventually
-          // getFrame()->setModalView(NULL);
-      }
+      // OK I want that mouse up!
+      return VSTGUI::kMouseEventHandled;
+   }
+   return res;
+}
+VSTGUI::CMouseEventResult CAboutBox::onMouseUp(VSTGUI::CPoint& where,
+                                               const VSTGUI::CButtonState& buttons)
+{
+   auto res = CViewContainer::onMouseUp(where, buttons);
+   if( res == VSTGUI::kMouseEventNotHandled && this->editor )
+   {
+      this->editor->hideAboutBox();
+      return VSTGUI::kMouseEventHandled;
+   }
+   return res;
+}
+
+void CAboutBox::valueChanged(CControl* pControl)
+{
+   std::cout << pControl->getTag() << std::endl;
+   if( pControl->getTag() == tag_copy )
+   {
+      std::string identifierLine = "This is what we copy "; // don't forget the space at the end
+      auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
+      getFrame()->setClipboard(a);
    }
 }
