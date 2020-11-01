@@ -21,6 +21,7 @@
 #include "unitconversion.h"
 #include <vt_dsp/basic_dsp.h>
 #include <vt_dsp/halfratefilter.h>
+#include <functional>
 
 #define setzero(x) memset(x, 0, sizeof(*x))
 
@@ -347,6 +348,8 @@ float correlated_noise_mk2(float& lastval, float correlation);
 float drift_noise(float& lastval);
 float correlated_noise_o2(float lastval, float& lastval2, float correlation);
 float correlated_noise_o2mk2(float& lastval, float& lastval2, float correlation);
+// An alternate version where you supply a uniform RNG on -1,1 externally
+float correlated_noise_o2mk2_suppliedrng(float& lastval, float& lastval2, float correlation, std::function<float()> &urng);
 
 inline double hanning(int i, int n)
 {

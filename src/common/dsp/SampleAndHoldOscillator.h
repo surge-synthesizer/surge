@@ -51,4 +51,5 @@ private:
    int id_pw, id_shape, id_smooth, id_sub, id_sync, id_detune;
    int FMdelay;
    float FMmul_inv;
+   std::function<float()> urng; // A uniform -1,1 RNG
 };

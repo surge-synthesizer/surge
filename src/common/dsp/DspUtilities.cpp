@@ -66,3 +66,30 @@ float correlated_noise_o2mk2(float& lastval, float& lastval2, float correlation)
    lastval = lastval2 * (1 - wfabs) - wf * lastval;
    return lastval * m;
 }
+
+float correlated_noise_o2mk2_suppliedrng(float& lastval, float& lastval2, float correlation,
+                                         std::function<float()> &urng
+    )
+{
+   float wf = correlation;
+   float wfabs = fabs(wf) * 0.8f;
+   // wfabs = 1.f - (1.f-wfabs)*(1.f-wfabs);
+   wfabs = (2.f * wfabs - wfabs * wfabs);
+   if (wf > 0.f)
+      wf = wfabs;
+   else
+      wf = -wfabs;
+#if MAC
+   float m = 1.f / sqrt(1.f - wfabs);
+#else
+   float m = 1.f - wfabs;
+   // float m = 1.f/sqrt(1.f-wfabs);
+   __m128 m1 = _mm_rsqrt_ss(_mm_load_ss(&m));
+   _mm_store_ss(&m, m1);
+   // if (wf>0.f) m *= 1 + wf*8;
+#endif
+   float rand11 = urng();
+   lastval2 = rand11 * (1 - wfabs) - wf * lastval2;
+   lastval = lastval2 * (1 - wfabs) - wf * lastval;
+   return lastval * m;
+}
