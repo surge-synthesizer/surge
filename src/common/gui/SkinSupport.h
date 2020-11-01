@@ -257,7 +257,7 @@ public:
          }
          else
             return Maybe<std::string>();
-      } while( true );
+      } while( cl );
 
       return Maybe<std::string>();
    }
