@@ -6664,11 +6664,14 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       else
          hs->deactivated = false;
 
+      // we had crashes on Win/Lin because of this, so until mvf does font loading on those two platforms, compile-time if this bugger!
+#if MAC
       auto ff = currentSkin->propertyValue(skinCtrl, "font-family", "" );
       if( ff.size() > 0 )
       {
          hs->setFont(new CFontDesc(ff.c_str(), 9 ));
       }
+#endif
 
       if (p->valtype == vt_int || p->valtype == vt_bool)
       {
