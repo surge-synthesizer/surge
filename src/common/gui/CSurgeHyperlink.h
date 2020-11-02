@@ -69,7 +69,7 @@ private:
    std::string label;
    VSTGUI::CBitmap *bmp = nullptr;
    bool isHovered = false;
-   VSTGUI::CCoord xoffset;
+   VSTGUI::CCoord xoffset = 0;
    VSTGUI::CHoriTxtAlign textalign = VSTGUI::kLeftText;
 
    VSTGUI::CColor labelColor, hoverColor;
