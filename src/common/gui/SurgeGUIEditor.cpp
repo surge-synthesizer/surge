@@ -7018,9 +7018,7 @@ bool SurgeGUIEditor::onDrop( const std::string& fname)
 
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
 {
-   std::cout << "Swapping " << source << " and " << target << " mode=" << m << std::endl;
-   // synth->enqueuReorderFx(source, target, m );
-   Surge::UserInteractions::promptError( "Drag and Drop FX coming in Surge 1.8", "Not quite done yet" );
+   synth->reorderFx(source, target, m );
 }
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)

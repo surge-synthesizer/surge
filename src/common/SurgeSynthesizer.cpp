@@ -52,6 +52,8 @@
 
 #include "UserDefaults.h"
 #include "filesystem/import.h"
+#include "effect/Effect.h"
+
 
 using namespace std;
 
@@ -85,8 +87,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    memset(storage.getPatch().scenedata[1], 0, sizeof(pdata) * n_scene_params);
    memset(storage.getPatch().globaldata, 0, sizeof(pdata) * n_global_params);
    memset(mControlInterpolatorUsed, 0, sizeof(bool) * num_controlinterpolators);
-   memset((void*)fxsync, 0, sizeof(FxStorage) * 8);
-   for (int i = 0; i < 8; i++)
+   memset((void*)fxsync, 0, sizeof(FxStorage) * n_fx_slots);
+   for (int i = 0; i < n_fx_slots; i++)
    {
       memcpy((void*)&fxsync[i], (void*)&storage.getPatch().fx[i], sizeof(FxStorage));
       fx_reload[i] = false;
@@ -1697,7 +1699,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 {
    load_fx_needed = false;
    bool something_changed = false;
-   for (int s = 0; s < 8; s++)
+   for (int s = 0; s < n_fx_slots; s++)
    {
       if ((fxsync[s].type.val.i != storage.getPatch().fx[s].type.val.i) || force_reload_all)
       {
@@ -1720,6 +1722,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
          if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
             memcpy((void*)&storage.getPatch().fx[s].p, (void*)&fxsync[s].p, sizeof(Parameter) * n_fx_params);
 
+         // std::cout << "About to call reset with " << _D(initp) << " at " << s << " to " << fxsync[s].type.val.i << std::endl;
          fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
                               &storage.getPatch().fx[s], storage.getPatch().globaldata));
 
@@ -1733,15 +1736,29 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                for(int j=0; j<n_fx_params; j++)
                {
                   auto p = &( storage.getPatch().fx[s].p[j] );
-                  if( p->valtype == vt_float )
+                  if( p->ctrltype != ct_none )
                   {
-                     if( p->val.f < p->val_min.f )
+                     if (p->valtype == vt_float)
                      {
-                        p->val.f = p->val_min.f;
+                        if (p->val.f < p->val_min.f)
+                        {
+                           p->val.f = p->val_min.f;
+                        }
+                        if (p->val.f > p->val_max.f)
+                        {
+                           p->val.f = p->val_max.f;
+                        }
                      }
-                     if( p->val.f > p->val_max.f )
+                     else if (p->valtype == vt_int)
                      {
-                        p->val.f = p->val_max.f;
+                        if (p->val.i < p->val_min.i)
+                        {
+                           p->val.i = p->val_min.i;
+                        }
+                        if (p->val.i > p->val_max.i)
+                        {
+                           p->val.i = p->val_max.i;
+                        }
                      }
                   }
                }
@@ -1776,6 +1793,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
       }
       else if (fx_reload[s])
       {
+         // std::cout << "Reloading FX " << _D(s) << " " << fxsync[s].type.val.i << std::endl;
          memcpy((void*)&storage.getPatch().fx[s].p, (void*)&fxsync[s].p, sizeof(Parameter) * n_fx_params);
          if (fx[s])
          {
@@ -2701,9 +2719,6 @@ void SurgeSynthesizer::processControl()
       switch_toggled_queued = false;
    }
 
-   if( reorderFxQueue.m != FXReorderMode::NONE )
-      reorderFx();
-
    if (load_fx_needed)
       loadFx(false, false);
 
@@ -3240,32 +3255,51 @@ void SurgeSynthesizer::changeModulatorSmoothing( ControllerModulationSource::Smo
    }
 }
 
-void SurgeSynthesizer::reorderFx()
+void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
 {
-#if 0
-   if( reorderFxQueue.m == FXReorderMode::NONE ) return;
-   auto source = reorderFxQueue.s;
-   auto target = reorderFxQueue.t;
-   auto m = reorderFxQueue.m;
-   reorderFxQueue.m = FXReorderMode::NONE;
+   FxStorage so, to;
+   memcpy((void*)&so, (void*)(&fxsync[source]), sizeof(FxStorage));
+   memcpy((void*)&to, (void*)(&fxsync[target]), sizeof(FxStorage));
 
-   auto os = &(fxsync[source].type);
-   auto ot = &(fxsync[target].type);
-
-   while( true )
+   fxsync[target].type.val.i = so.type.val.i;
+   Effect* t_fx = spawn_effect(fxsync[target].type.val.i, &storage, &fxsync[target], 0);
+   if (t_fx)
    {
-      Parameter tmp = *ot;
-      *ot = *os;
-      if( m == FXReorderMode::SWAP )
-         *os = tmp;
-
-      if( os == &(fxsync[source].p[n_fx_params-1])) break;
-      os++;
-      ot++;
+      t_fx->init_ctrltypes();
+      t_fx->init_default_values();
+      delete t_fx;
    }
-   if( m == FXReorderMode::MOVE )
-      fxsync[source].type.val.i = fxt_off;
+
+   if (m == FXReorderMode::MOVE)
+   {
+      fxsync[source].type.val.i = 0;
+   }
+   else if(m == FXReorderMode::SWAP)
+   {
+      fxsync[source].type.val.i = to.type.val.i;
+      Effect* t_fx = spawn_effect(fxsync[source].type.val.i, &storage, &fxsync[source], 0);
+      if (t_fx)
+      {
+         t_fx->init_ctrltypes();
+         t_fx->init_default_values();
+         delete t_fx;
+      }
+   }
+   // else leave the source alone
+
+   /*
+    * OK we can't copy the params - they contain things like id in scene - we need to copy the
+    * values
+    */
+   for (int i = 0; i < n_fx_params; ++i)
+   {
+      if( m == FXReorderMode::SWAP )
+         fxsync[source].p[i].val = to.p[i].val;
+      fxsync[target].p[i].val = so.p[i].val;
+   }
+
    load_fx_needed = true;
+   fx_reload[source] = true;
+   fx_reload[target] = true;
    refresh_editor = true;
-#endif
 }

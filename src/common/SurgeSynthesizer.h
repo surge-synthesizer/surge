@@ -126,14 +126,7 @@ public:
 
    // We have to push this onto the audio thread so have an enqueue and so on
    enum FXReorderMode { NONE, SWAP, COPY, MOVE };
-   struct { int s; int t; FXReorderMode m; } reorderFxQueue;
-   void enqueuReorderFx( int source, int target, FXReorderMode m )
-   {
-      reorderFxQueue.s = source;
-      reorderFxQueue.t = target;
-      reorderFxQueue.m = m;
-   }
-   void reorderFx();
+   void reorderFx( int source, int target, FXReorderMode m  ); // This is safe to call from the UI thread since it just edits the sync
 
    void playVoice(int scene, char channel, char key, char velocity, char detune);
    void releaseScene(int s);

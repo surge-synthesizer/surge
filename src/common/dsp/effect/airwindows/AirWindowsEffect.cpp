@@ -1,5 +1,6 @@
 #include "AirWindowsEffect.h"
 #include "UserDefaults.h"
+#include "DebugHelpers.h"
 
 AirWindowsEffect::AirWindowsEffect( SurgeStorage *storage, FxStorage *fxdata, pdata *pd ) :
    Effect( storage, fxdata, pd )
@@ -18,7 +19,14 @@ AirWindowsEffect::~AirWindowsEffect()
 {
 }
 
-void AirWindowsEffect::init() {
+void AirWindowsEffect::init()
+{
+
+   //std::cout << "AirWindows init " << std::endl;
+   //for( int i=1;i<n_fx_params;++i)
+   //   if( fxdata->p[i].ctrltype != ct_none )
+   //      std::cout << _D(i) << _D(fxdata->p[i].val.f) << std::endl;
+
 }
 
 const char* AirWindowsEffect::group_label(int id)

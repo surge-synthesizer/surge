@@ -61,14 +61,15 @@ bool Surge::Debug::toggleConsole()
 #endif
 }
 
-void Surge::Debug::stackTraceToStdout()
+void Surge::Debug::stackTraceToStdout( int depth )
 {
 #if MAC || LINUX
     void* callstack[128];
     int i, frames = backtrace(callstack, 128);
     char** strs = backtrace_symbols(callstack, frames);
-    printf( "-------- StackTrace (%d frames deep) --------\n", frames );
-    for (i = 1; i < frames; ++i) {
+   if( depth < 0 ) depth = frames;
+   printf( "-------- StackTrace (%d frames of %d depth showing) --------\n", depth, frames );
+    for (i = 1; i < frames && i < depth; ++i) {
         printf( "  [%3d]: %s\n", i, strs[i] );
     }
     free(strs);
