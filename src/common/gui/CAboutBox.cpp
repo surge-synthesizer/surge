@@ -21,7 +21,11 @@ enum abouttags
 };
 
 
-CAboutBox::CAboutBox(const CRect& size, SurgeGUIEditor* editor, SurgeStorage *storage, Surge::UI::Skin::ptr_t skin,
+CAboutBox::CAboutBox(const CRect& size,
+                     SurgeGUIEditor* editor,
+                     SurgeStorage *storage,
+                     const std::string &host,
+                     Surge::UI::Skin::ptr_t skin,
                      std::shared_ptr<SurgeBitmaps> bitmapStore) : CViewContainer(size)
 {
    this->editor = editor;
@@ -63,7 +67,8 @@ CAboutBox::CAboutBox(const CRect& size, SurgeGUIEditor* editor, SurgeStorage *st
    };
 
    auto addTwoColumnLabel = [this, &xp, &yp, &boldFont, skin](std::string title, std::string val, bool isURL,
-                                                              std::string URL, int col1width, int col2width)
+                                                              std::string URL, int col1width, int col2width,
+                                                              bool addToInfoString = false)
    {
       auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(col1width, 16)), title.c_str());
       l1->setFont(boldFont);
@@ -95,6 +100,8 @@ CAboutBox::CAboutBox(const CRect& size, SurgeGUIEditor* editor, SurgeStorage *st
          addView(l2);
       }
 
+      if( addToInfoString )
+         this->infoStringForClipboard += title + "\t" + val + "\n";
       yp += 15;
    };
 
@@ -141,14 +148,14 @@ CAboutBox::CAboutBox(const CRect& size, SurgeGUIEditor* editor, SurgeStorage *st
 #endif
 
    std::string bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
-   std::string system = (std::string)Surge::Build::BuildArch + " CPU, " + platform + " " + flavor + ", " + bitness;
-   std::string host = "";
+   std::string system = (std::string)Surge::Build::BuildArch + " CPU, " + platform + " " + flavor + ", " + bitness;;
 
-   addTwoColumnLabel("Version:", version, false, "", 76, 500);
-   addTwoColumnLabel("Build Info:", buildinfo, false, "", 76, 500);
-   addTwoColumnLabel("System:", system, false, "", 76, 500);
-#if TARGET_VST2 || TARGET_VST3 || TARGET_AUDIOUNIT
-   addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500);   // TODO: needs to somehow get name of host/DAW here
+   infoStringForClipboard = "Surge Synthesizer\n";
+   addTwoColumnLabel("Version:", version, false, "", 76, 500, true);
+   addTwoColumnLabel("Build Info:", buildinfo, false, "", 76, 500, true);
+   addTwoColumnLabel("System:", system, false, "", 76, 500, true);
+#if TARGET_VST2 || TARGET_VST3
+   addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true);   // TODO: needs to somehow get name of host/DAW here
 #endif
 
    yp += 15;
@@ -242,7 +249,7 @@ void CAboutBox::valueChanged(CControl* pControl)
 {
    if( pControl->getTag() == tag_copy )
    {
-      std::string identifierLine = "This is what we copy "; // don't forget the space at the end
+      std::string identifierLine = infoStringForClipboard;  // don't forget the space at the end
       auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
       getFrame()->setClipboard(a);
    }

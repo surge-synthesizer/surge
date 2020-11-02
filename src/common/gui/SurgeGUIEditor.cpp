@@ -7068,7 +7068,7 @@ void SurgeGUIEditor::showAboutBox()
    std::cout << "Show About Box" << std::endl;
 
    CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
-   aboutbox = new CAboutBox(wsize, this, &(synth->storage), currentSkin, bitmapStore );
+   aboutbox = new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram, currentSkin, bitmapStore );
    aboutbox->setVisible( true );
    getFrame()->addView( aboutbox );
 }
