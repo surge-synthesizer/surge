@@ -295,6 +295,8 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
 CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   hasMovedBar = false;
+
    if (storage)
       this->hideCursor = Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
@@ -426,7 +428,7 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButto
    {
       endEdit();
 
-      if( event_is_drag )
+      if( hasMovedBar )
          endCursorHide(lastBarDraw);
       else
          endCursorHide();
@@ -506,6 +508,8 @@ void CModulationSourceButton::onMouseMoveDelta(const CPoint& where,
 {
    if ((controlstate == cs_drag) && (buttons & kLButton))
    {
+      hasMovedBar = true;
+
       value += dx / (double)(getWidth());
       value = limit_range(value, 0.f, 1.f);
       event_is_drag = true;
