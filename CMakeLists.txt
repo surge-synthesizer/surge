@@ -237,7 +237,7 @@ set(SURGE_COMMON_SOURCES
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/SurgeSynthesizer.cpp
-        src/common/SurgeSynthesizerIDManagement.cpp
+  src/common/SurgeSynthesizerIDManagement.cpp
   src/common/SurgeSynthesizerIO.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp
@@ -276,7 +276,10 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/common/gui/UIInstrumentation.cpp
   src/common/gui/guihelpers.cpp
-        src/common/gui/CVerticalLabel.cpp src/common/gui/CursorControlGuard.h src/common/gui/CursorControlGuard.cpp src/common/gui/SkinFontLoader.cpp)
+  src/common/gui/CVerticalLabel.cpp
+  src/common/gui/CursorControlGuard.cpp
+  src/common/gui/SkinFontLoader.cpp
+  src/common/gui/CSurgeHyperlink.cpp)
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp
