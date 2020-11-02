@@ -102,6 +102,7 @@ CAboutBox::CAboutBox(const CRect& size,
 
       if( addToInfoString )
          this->infoStringForClipboard += title + "\t" + val + "\n";
+
       yp += 15;
    };
 
@@ -155,7 +156,7 @@ CAboutBox::CAboutBox(const CRect& size,
    addTwoColumnLabel("Build Info:", buildinfo, false, "", 76, 500, true);
    addTwoColumnLabel("System:", system, false, "", 76, 500, true);
 #if TARGET_VST2 || TARGET_VST3
-   addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true);   // TODO: needs to somehow get name of host/DAW here
+   addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true);
 #endif
 
    yp += 15;
@@ -166,44 +167,45 @@ CAboutBox::CAboutBox(const CRect& size,
 
    /* bottom right skin info */
 
-   xp = 680;
+   xp = 623;
    yp -= 30;
 
-   addTwoColumnLabel("Current Skin:", skin->displayName, false, "", 76, 125);
-   addTwoColumnLabel("Skin Author:", skin->author, (skin->authorURL != nullptr), skin->authorURL, 76, 125);
+   addTwoColumnLabel("Current Skin:", skin->displayName, true, skin->root + skin->name, 76, 175);
+   addTwoColumnLabel("Skin Author:", skin->author, (skin->authorURL != nullptr), skin->authorURL, 76, 185);
 
 
    /* top right various iconized links */
 
-   auto iconsize = CPoint(24, 24);
+   auto iconsize = CPoint(36, 36);
 
-   auto gh = new CSurgeHyperlink(CRect(CPoint(680, 20), iconsize));
+   auto gh = new CSurgeHyperlink(CRect(CPoint(624, 20), iconsize));
    gh->setURL("https://github.com/surge-synthesizer/surge/");
    gh->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   gh->setHorizOffset(CCoord(0));
    addView(gh);
 
-   auto vst3 = new CSurgeHyperlink(CRect(CPoint(725, 20), iconsize));
+   auto vst3 = new CSurgeHyperlink(CRect(CPoint(680, 20), iconsize));
    vst3->setURL("https://www.steinberg.net/en/company/technologies/vst3.html");
    vst3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   vst3->setHorizOffset(CCoord(24));
+   vst3->setHorizOffset(CCoord(36));
    addView(vst3);
 
-   auto au = new CSurgeHyperlink(CRect(CPoint(770, 20), iconsize));
+   auto au = new CSurgeHyperlink(CRect(CPoint(736, 20), iconsize));
    au->setURL("https://developer.apple.com/documentation/audiounit");
    au->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   au->setHorizOffset(CCoord(48));
+   au->setHorizOffset(CCoord(72));
    addView(au);
 
-   auto gplv3 = new CSurgeHyperlink(CRect(CPoint(815, 20), iconsize));
+   auto gplv3 = new CSurgeHyperlink(CRect(CPoint(792, 20), iconsize));
    gplv3->setURL("https://www.gnu.org/licenses/gpl-3.0-standalone.html");
    gplv3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   gplv3->setHorizOffset(CCoord(72));
+   gplv3->setHorizOffset(CCoord(108));
    addView(gplv3);
 
-   auto discord = new CSurgeHyperlink(CRect(CPoint(860, 20), iconsize));
+   auto discord = new CSurgeHyperlink(CRect(CPoint(848, 20), iconsize));
    discord->setURL("https://discord.gg/aFQDdMV");
    discord->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   discord->setHorizOffset(CCoord(96));
+   discord->setHorizOffset(CCoord(144));
    addView(discord);
 
 
@@ -216,10 +218,14 @@ CAboutBox::CAboutBox(const CRect& size,
    yp = 35;
    addLabel("Released under the GNU General Public License, v3", 500);
    yp = 50;
-   addLabel("Airwindows open source effects by Chris Johnson, licensed under MIT license", 500);
+   addLabel("VST is a trademark of Steinberg Media Technologies GmbH", 500);
    yp = 65;
-   addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 500);
+   addLabel("Audio Units is a trademark of Apple Inc.", 500);
    yp = 80;
+   addLabel("Airwindows open source effects by Chris Johnson, licensed under MIT license", 500);
+   yp = 95;
+   addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 500);
+   yp = 110;
    addLabel("Sallen-Key and Diode Ladder filters by TheWaveWarden, licensed under GNU GPL v3 license", 500);
 }
 
