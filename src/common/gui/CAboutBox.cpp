@@ -15,199 +15,119 @@
 using namespace VSTGUI;
 
 
-#if 0
-
-// Here's the old draw code just for reference
-
-//------------------------------------------------------------------------
-void CAboutBox::draw(CDrawContext* pContext)
-{
-   if (value)
-   {
-      _aboutBitmap->draw(pContext, getViewSize(), CPoint(0, 0), 0xff);
-      CRect infobg(0, skin->getWindowSizeY() - 167, skin->getWindowSizeX(), skin->getWindowSizeY());
-      CRect skininfobg(0, 0, BASE_WINDOW_SIZE_X, 80);
-#if BUILD_IS_DEBUG
-      /*
-       * This code is here JUST because baconpaul keeps developing surge and then swapping
-       * to make music and wondering why LPX is stuttering. Please don't remove it!
-       */
-      pContext->setFillColor(CColor(120, 80, 80, 255));
-#else
-      pContext->setFillColor(CColor(0, 0, 0, 255));
-#endif
-      pContext->drawRect(infobg, CDrawStyle::kDrawFilled);
-      pContext->drawRect(skininfobg, CDrawStyle::kDrawFilled);
-
-      int strHeight = infoFont->getSize(); // There should really be a better API for this in VSTGUI
-      std::string bitness = (sizeof(size_t)==4? std::string("32") : std::string("64")) + "-bit";
-
-      std::string chipmanu = Surge::Build::BuildArch;
-      
-#if TARGET_AUDIOUNIT      
-      std::string flavor = "AU";
-#elif TARGET_VST3
-      std::string flavor = "VST3";
-#elif TARGET_VST2
-      std::string flavor = "VST2 (unsupported)";
-#elif TARGET_LV2
-      std::string flavor = "LV2 (experimental)";
-#else
-      std::string flavor = "Non-Plugin"; // for linux app
-#endif      
-
-#if MAC
-      std::string platform = "macOS";
-#elif WINDOWS
-      std::string platform = "Windows";
-#elif LINUX
-      std::string platform = "Linux";
-#else
-      std::string platform = "Orac, Skynet or something";
-#endif      
-
-      {
-         std::vector< std::string > msgs = { {
-               std::string() + "Version " + Surge::Build::FullVersionStr + " (" + chipmanu + " " + bitness + " " + platform + " " + flavor
-#if TARGET_VST2 || TARGET_VST3               
-               + " in " + host
-#endif
-#if BUILD_IS_DEBUG
-                 + " - DEBUG BUILD"
-#endif
-               + ". Built " +
-               Surge::Build::BuildDate + " at " + Surge::Build::BuildTime + " on " + Surge::Build::BuildLocation + " host '" + Surge::Build::BuildHost + "')",
-               "Factory Data Path: " + dataPath,
-               "User Data Path: " + userPath,
-               "Released under the GNU General Public License, v3",
-               "Copyright 2005-2020 by Vember Audio and individual contributors",
-               "Source, contributors and other information at",
-               "VST plugin technology by Steinberg Media Technologies GmbH, AU plugin technology by Apple Inc.",
-               "Airwindows open source effects by Chris Johnson, licensed under MIT license",
-            } };
-         identifierLine = msgs[0];
-         int yMargin = 6;
-         int yPos = toDisplay.getHeight() - msgs.size() * (strHeight + yMargin); // one for the last; one for the margin
-         int iyPos = yPos;
-         int xPos = strHeight;
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text));
-         pContext->setFont(infoFont);
-         for (auto s : msgs)
-         {
-            pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
-            yPos += strHeight + yMargin;
-         }
-
-         // link to Surge github repo in another color because VSTGUI -_-
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Link));
-         pContext->drawString( "Copy", CPoint( toDisplay.getWidth() - 50, iyPos ) );
-         copyBox = CRect( CPoint( toDisplay.getWidth() - 50, iyPos - strHeight  ), CPoint( 48, 2 * strHeight ) );
-         std::cout << _DUMPR( copyBox ) << std::endl;
-         pContext->drawString("https://github.com/surge-synthesizer/surge",
-                              CPoint(253, skin->getWindowSizeY() - 36 - strHeight - yMargin));
-      }
-      {
-         std::vector< std::string > msgs;
-         msgs.push_back( std::string( ) + "Current Skin: " + skin->displayName );
-         msgs.push_back( std::string( ) + "Skin Author: " + skin->author + " " + skin->authorURL );
-         std::string skin_path = "Skin Root Folder: " + skin->resourceName("");
-         skin_path.pop_back();
-         msgs.push_back(skin_path);
-         
-         int yMargin = 6;
-         int yPos = strHeight * 2;
-         int xPos = strHeight;
-         pContext->setFontColor(skin->getColor(Colors::AboutBox::Text));
-         pContext->setFont(infoFont);
-         for (auto s : msgs)
-         {
-            pContext->drawString(s.c_str(), CPoint( xPos, yPos ));
-            yPos += strHeight + yMargin;
-         }
-      }      
-   }
-   else
-   {
-   }
-
-   setDirty(false);
-}
-
-
-#endif
-
 enum abouttags
 {
    tag_copy = 70000
 };
-CAboutBox::CAboutBox(const VSTGUI::CRect& size, SurgeGUIEditor* editor, Surge::UI::Skin::ptr_t skin,
-                     std::shared_ptr<SurgeBitmaps> bitmapStore) : VSTGUI::CViewContainer(size)
+
+
+CAboutBox::CAboutBox(const CRect& size, SurgeGUIEditor* editor, SurgeStorage *storage, Surge::UI::Skin::ptr_t skin,
+                     std::shared_ptr<SurgeBitmaps> bitmapStore) : CViewContainer(size)
 {
-   setTransparency(true);
    this->editor = editor;
+   this->storage = storage;
 
-   /*
-    * So lay out the container
-    */
+   setTransparency(true);
+   auto boldFont = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
+
+   
+   /* dark semitransparent background */
+
+   auto bg = new CTextLabel(CRect(CPoint(0, 0), CPoint(skin->getWindowSizeX(), skin->getWindowSizeY())), nullptr, nullptr);
+   bg->setMouseableArea(CRect()); // Make sure I don't get clicked on
+   bg->setBackColor(CColor(0, 0, 0, 212));
+   addView(bg);
+
+
+   /* big centered Surge logo */
+
    auto logo = bitmapStore->getBitmap(IDB_ABOUT);
-   auto logol = new VSTGUI::CTextLabel( VSTGUI::CRect( 0, 0, 904, 542 ), nullptr, logo );
-   logol->setMouseableArea(VSTGUI::CRect(0,0,0,0)); // Make sure I don't get clicked on
-   addView( logol );
+   auto logol = new CTextLabel(CRect(CPoint(174, 195), CPoint(555, 179)), nullptr, logo);
+   logol->setMouseableArea(CRect());
+   addView(logol);
 
-   CRect infobg(0, skin->getWindowSizeY() - 167, skin->getWindowSizeX(), skin->getWindowSizeY());
-   CRect skininfobg(0, 0, BASE_WINDOW_SIZE_X, 80);
-   auto toph = new CTextLabel( infobg );
-   toph->setTransparency(false);
-   toph->setBackColor(CColor(0, 0, 0, 255));
-   toph->setMouseableArea(CRect());
-   addView(toph);
-   toph = new CTextLabel( skininfobg );
-   toph->setTransparency(false);
-   toph->setBackColor(CColor(0, 0, 0, 255));
-   toph->setMouseableArea(CRect());
-   addView(toph);
+   float xp = 20;
+   float yp = 445;
+   
+   /* text label construction lambda */
 
-   // Here's a temporary thing o trigger a copy. Fix this widget
-   auto copy = new CTextButton(CRect( CPoint( 10, 400 ), CPoint( 200, 18 )), this, tag_copy, "Copy Version Info" );
-   copy->setFont( aboutFont );
-   addView( copy );
-
-   // Do some basic version info
-   float yp = 420;
-   auto lpp = [this, &yp](std::string title, std::string val ) {
-      float labelW = 80;
-      auto l1 = new VSTGUI::CTextLabel( VSTGUI::CRect( VSTGUI::CPoint( 10, yp ), VSTGUI::CPoint( labelW, 18 )), title.c_str() );
-      l1->setFont( aboutFont );
-      l1->setFontColor( VSTGUI::CColor( 0xFF, 0x90, 0x00 ) );
-      l1->setMouseableArea(VSTGUI::CRect());
+   auto addLabel = [this, &xp, &yp](std::string text, int width)
+   {
+      auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(width, 16)), text.c_str());
+      l1->setFont(aboutFont);
+      l1->setFontColor(kWhiteCColor);
+      l1->setMouseableArea(CRect());
       l1->setTransparency(true);
-      l1->setHoriAlign(VSTGUI::kLeftText );
+      l1->setHoriAlign(kLeftText);
+      addView(l1);
+   };
+
+   auto addTwoColumnLabel = [this, &xp, &yp, &boldFont, skin](std::string title, std::string val, bool isURL,
+                                                              std::string URL, int col1width, int col2width)
+   {
+      auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(col1width, 16)), title.c_str());
+      l1->setFont(boldFont);
+      l1->setFontColor(CColor(255, 144, 0));
+      l1->setMouseableArea(CRect());
+      l1->setTransparency(true);
+      l1->setHoriAlign(kLeftText);
       addView(l1);
 
-      auto l2 = new VSTGUI::CTextLabel( VSTGUI::CRect( VSTGUI::CPoint( labelW + 12, yp ), VSTGUI::CPoint( 200, 18 )), val.c_str() );
-      l2->setFont( aboutFont );
-      l2->setFontColor( VSTGUI::kWhiteCColor );
-      l2->setTransparency(true);
-      l2->setHoriAlign(VSTGUI::kLeftText );
-      l2->setMouseableArea(VSTGUI::CRect());
-      addView(l2);
+      if (isURL)
+      {
+         auto l2 = new CSurgeHyperlink(CRect(CPoint(xp + col1width, yp), CPoint(col2width, 16)));
+         l2->setFont(aboutFont);
+         l2->setURL(URL);
+         l2->setLabel(val.c_str());
+         l2->setLabelColor(CColor(45, 134, 254));
+         l2->setHoverColor(CColor(96, 196, 255));
+         addView(l2);
+      }
+      else
+      {
+         auto l2 =
+             new CTextLabel(CRect(CPoint(xp + col1width, yp), CPoint(col2width, 16)), val.c_str());
+         l2->setFont(aboutFont);
+         l2->setFontColor(kWhiteCColor);
+         l2->setTransparency(true);
+         l2->setHoriAlign(kLeftText);
+         l2->setMouseableArea(CRect());
+         addView(l2);
+      }
 
-      yp += 20;
+      yp += 15;
    };
-   lpp( "Version", Surge::Build::FullVersionStr );
 
-   std::string chipmanu = Surge::Build::BuildArch;
+
+   /* bottom left version info */
+
+   auto copy = new CTextButton(CRect(CPoint(19, 426), CPoint(88, 18)), this, tag_copy, "Copy Version Info");   // here's a temporary thing to trigger a copy. fix this widget
+   copy->setFont(boldFont);
+   copy->setFrameColor(CColor(0, 0, 0, 0));
+   copy->setFrameColorHighlighted(CColor(0, 0, 0, 0));
+   copy->setGradient(nullptr);
+   copy->setGradientHighlighted(nullptr);
+   copy->setTextColor(CColor(45, 134, 254));
+   copy->setTextColorHighlighted(CColor(96, 196, 255));
+   copy->setTextAlignment(kLeftText);
+   addView(copy);
+
+   std::string version = Surge::Build::FullVersionStr;
+   std::string buildinfo = "Built on " + (std::string)Surge::Build::BuildDate + " at " +
+                                         (std::string)Surge::Build::BuildTime + ", using " +
+                                         (std::string)Surge::Build::BuildLocation + " host '" +
+                                         (std::string)Surge::Build::BuildHost + "'";
 
 #if TARGET_AUDIOUNIT
    std::string flavor = "AU";
 #elif TARGET_VST3
    std::string flavor = "VST3";
 #elif TARGET_VST2
-      std::string flavor = "VST2 (unsupported)";
+   std::string flavor = "VST2 (unsupported)";
 #elif TARGET_LV2
-      std::string flavor = "LV2 (experimental)";
+   std::string flavor = "LV2 (experimental)";
 #else
-      std::string flavor = "Non-Plugin"; // for linux app
+   std::string flavor = "Standalone";
 #endif
 
 #if MAC
@@ -217,54 +137,109 @@ CAboutBox::CAboutBox(const VSTGUI::CRect& size, SurgeGUIEditor* editor, Surge::U
 #elif LINUX
    std::string platform = "Linux";
 #else
-   std::string platform = "Orac, Skynet or something";
+   std::string platform = "GLaDOS, Orac or Skynet";
 #endif
-   lpp( "Architecture", chipmanu + " " + platform + " " + flavor );
 
-   // Stick the github link in the top
-   auto ghub = new CSurgeHyperlink(CRect( CPoint( 800, 20 ), CPoint( 24, 24 )));
-   ghub->setURL( "https://github.com/surge-synthesizer/surge/");
-   ghub->setBitmap(bitmapStore->getBitmap(IDB_GITHUB_LOGO));
-   // Critically, leave the mousable area intact here
-   addView(ghub);
+   std::string bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
+   std::string system = (std::string)Surge::Build::BuildArch + " CPU, " + platform + " " + flavor + ", " + bitness;
+   std::string host = "";
 
-   auto regularLink = new CSurgeHyperlink( CRect( CPoint( 10, 20 ), CPoint( 70, 20 ) ) );
-   regularLink->setURL( "https://google.com" );
-   regularLink->setLabel( "Google Stuff" );
-   regularLink->setLabelColor( VSTGUI::CColor( 255, 220, 220 ) );
-   regularLink->setHoverColor( VSTGUI::CColor( 255, 250, 250 ));
-   regularLink->setFont( aboutFont );
-   addView( regularLink );
+   addTwoColumnLabel("Version:", version, false, "", 76, 500);
+   addTwoColumnLabel("Build Info:", buildinfo, false, "", 76, 500);
+   addTwoColumnLabel("System:", system, false, "", 76, 500);
+#if TARGET_VST2 || TARGET_VST3 || TARGET_AUDIOUNIT
+   addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500);   // TODO: needs to somehow get name of host/DAW here
+#endif
+
+   yp += 15;
+   
+   addTwoColumnLabel("Factory Data:", storage->datapath, true, storage->datapath, 76, 500);
+   addTwoColumnLabel("User Data:", storage->userDataPath, true, storage->userDataPath, 76, 500);
+
+
+   /* bottom right skin info */
+
+   xp = 680;
+   yp -= 30;
+
+   addTwoColumnLabel("Current Skin:", skin->displayName, false, "", 76, 125);
+   addTwoColumnLabel("Skin Author:", skin->author, (skin->authorURL != nullptr), skin->authorURL, 76, 125);
+
+
+   /* top right various iconized links */
+
+   auto iconsize = CPoint(24, 24);
+
+   auto gh = new CSurgeHyperlink(CRect(CPoint(680, 20), iconsize));
+   gh->setURL("https://github.com/surge-synthesizer/surge/");
+   gh->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   addView(gh);
+
+   auto vst3 = new CSurgeHyperlink(CRect(CPoint(725, 20), iconsize));
+   vst3->setURL("https://www.steinberg.net/en/company/technologies/vst3.html");
+   vst3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   vst3->setHorizOffset(CCoord(24));
+   addView(vst3);
+
+   auto au = new CSurgeHyperlink(CRect(CPoint(770, 20), iconsize));
+   au->setURL("https://developer.apple.com/documentation/audiounit");
+   au->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   au->setHorizOffset(CCoord(48));
+   addView(au);
+
+   auto gplv3 = new CSurgeHyperlink(CRect(CPoint(815, 20), iconsize));
+   gplv3->setURL("https://www.gnu.org/licenses/gpl-3.0-standalone.html");
+   gplv3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   gplv3->setHorizOffset(CCoord(72));
+   addView(gplv3);
+
+   auto discord = new CSurgeHyperlink(CRect(CPoint(860, 20), iconsize));
+   discord->setURL("https://discord.gg/aFQDdMV");
+   discord->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   discord->setHorizOffset(CCoord(96));
+   addView(discord);
+
+
+   /* top left copyright and credits */
+
+   xp = 20;
+
+   yp = 20;
+   addLabel("Copyright 2005-2020 by Vember Audio and individual contributors", 500);
+   yp = 35;
+   addLabel("Released under the GNU General Public License, v3", 500);
+   yp = 50;
+   addLabel("Airwindows open source effects by Chris Johnson, licensed under MIT license", 500);
+   yp = 65;
+   addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 500);
+   yp = 80;
+   addLabel("Sallen-Key and Diode Ladder filters by TheWaveWarden, licensed under GNU GPL v3 license", 500);
 }
 
-VSTGUI::CMouseEventResult CAboutBox::onMouseDown(VSTGUI::CPoint& where,
-                                                 const VSTGUI::CButtonState& buttons)
+CMouseEventResult CAboutBox::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
 
    auto res = CViewContainer::onMouseDown(where, buttons);
-   std::cout << "onMouseDown " << res << std::endl;
-   if( res == VSTGUI::kMouseEventNotHandled && this->editor )
+   if( res == kMouseEventNotHandled && this->editor )
    {
       // OK I want that mouse up!
-      return VSTGUI::kMouseEventHandled;
+      return kMouseEventHandled;
    }
    return res;
 }
-VSTGUI::CMouseEventResult CAboutBox::onMouseUp(VSTGUI::CPoint& where,
-                                               const VSTGUI::CButtonState& buttons)
+CMouseEventResult CAboutBox::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
    auto res = CViewContainer::onMouseUp(where, buttons);
-   if( res == VSTGUI::kMouseEventNotHandled && this->editor )
+   if( res == kMouseEventNotHandled && this->editor )
    {
       this->editor->hideAboutBox();
-      return VSTGUI::kMouseEventHandled;
+      return kMouseEventHandled;
    }
    return res;
 }
 
 void CAboutBox::valueChanged(CControl* pControl)
 {
-   std::cout << pControl->getTag() << std::endl;
    if( pControl->getTag() == tag_copy )
    {
       std::string identifierLine = "This is what we copy "; // don't forget the space at the end

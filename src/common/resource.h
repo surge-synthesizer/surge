@@ -80,7 +80,7 @@
 #define IDB_MSEG_NUMBERFIELDBG 306
 #define IDB_MODSRC_SHOW_LFO 179
 #define IDB_MSEG_EDIT_MODE 307
-#define IDB_GITHUB_LOGO 180
+#define IDB_ABOUT_LOGOS 180
 // == /SVG == Do not remove this comment
 
 

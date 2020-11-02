@@ -70,7 +70,7 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    res["MSEG_NUMBERFIELDBG"] = 306;
    res["MODSRC_SHOW_LFO"] = 179;
    res["MSEG_EDIT_MODE"] = 307;
-   res["GITHUB_LOGO"] = 180;
+   res["ABOUT_LOGOS"] = 180;
    return res;
 }
 

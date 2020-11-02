@@ -23,7 +23,7 @@ class SurgeGUIEditor;
 class CAboutBox : public VSTGUI::CViewContainer, public VSTGUI::IControlListener
 {
 public:
-   CAboutBox( const VSTGUI::CRect &size, SurgeGUIEditor *editor,
+   CAboutBox( const VSTGUI::CRect &size, SurgeGUIEditor *editor, SurgeStorage *storage,
              Surge::UI::Skin::ptr_t skin,
              std::shared_ptr<SurgeBitmaps> bitmapStore );
    VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where,
@@ -33,44 +33,5 @@ public:
    void valueChanged(VSTGUI::CControl* pControl) override;
 
    SurgeGUIEditor *editor;
+   SurgeStorage *storage;
 };
-
-#if 0
-class CAboutBoxBG : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
-{
-public:
-   CAboutBox(const VSTGUI::CRect& size,
-             VSTGUI::IControlListener* listener,
-             long tag,
-             VSTGUI::CBitmap* background,
-             VSTGUI::CRect& toDisplay,
-             VSTGUI::CPoint& offset,
-             VSTGUI::CBitmap* aboutBitmap);
-   virtual ~CAboutBox();
-
-   virtual void draw(VSTGUI::CDrawContext*) override;
-   virtual bool hitTest(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons = -1) override;
-   // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
-   virtual VSTGUI::CMouseEventResult
-   onMouseDown(VSTGUI::CPoint& where,
-               const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
-   virtual void unSplash();
-
-   void boxShow(std::string dataPath, std::string userPath, std::string host);
-   void boxHide(bool invalidateframe = true);
-
-   CLASS_METHODS(CAboutBox, VSTGUI::CControl)
-
-protected:
-   VSTGUI::CRect toDisplay;
-   VSTGUI::CRect keepSize;
-   VSTGUI::CRect copyBox;
-   std::string identifierLine;
-   VSTGUI::CPoint offset;
-   VSTGUI::SharedPointer<VSTGUI::CBitmap> _aboutBitmap;
-   bool bvalue;
-   std::string dataPath, userPath, host;
-
-   static VSTGUI::SharedPointer<VSTGUI::CFontDesc> infoFont;
-};
-#endif

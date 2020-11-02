@@ -22,12 +22,13 @@
 
 class CSurgeHyperlink : public VSTGUI::CControl {
 public:
-   CSurgeHyperlink( const VSTGUI::CRect &r ) : VSTGUI::CControl( r, nullptr ) {
-   }
+   CSurgeHyperlink( const VSTGUI::CRect &r ) : VSTGUI::CControl( r, nullptr ) {}
 
    void setURL( const std::string &iurl ) { this->url = iurl; }
    void setLabel( const std::string &lab ) {this->label = lab; }
    void setBitmap( VSTGUI::CBitmap *ibmp ) { this->bmp = ibmp; }
+   void setHorizOffset( VSTGUI::CCoord xoffset) { this->xoffset = xoffset; }
+   void setTextAlignment( VSTGUI::CHoriTxtAlign textalign) { this->textalign = textalign; }
 
    void setLabelColor( VSTGUI::CColor col ) { labelColor = col; }
    void setHoverColor( VSTGUI::CColor col ) { hoverColor= col; }
@@ -35,27 +36,25 @@ public:
    // void setMultiLabel();
 
 public:
-   VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where,
-                                         const VSTGUI::CButtonState& buttons) override
+   VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
    {
       return VSTGUI::kMouseEventHandled;
    }
-   VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where,
-                                       const VSTGUI::CButtonState& buttons) override
+
+   VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
    {
       Surge::UserInteractions::openURL(url);
       return VSTGUI::kMouseEventHandled;
    }
 
-   VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint& where,
-                                            const VSTGUI::CButtonState& buttons) override
+   VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
    {
       isHovered = true;
       invalid();
       return VSTGUI::kMouseEventHandled;
    }
-   VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where,
-                                           const VSTGUI::CButtonState& buttons) override
+
+   VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
    {
       isHovered = false;
       invalid();
@@ -70,6 +69,8 @@ private:
    std::string label;
    VSTGUI::CBitmap *bmp = nullptr;
    bool isHovered = false;
+   VSTGUI::CCoord xoffset;
+   VSTGUI::CHoriTxtAlign textalign = VSTGUI::kLeftText;
 
    VSTGUI::CColor labelColor, hoverColor;
    VSTGUI::CFontRef font;

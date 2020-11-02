@@ -10,7 +10,7 @@ namespace Surge
 {
 namespace GUI
 {
-    
+
 void initializeRuntimeFont()
 {
     /*
@@ -18,7 +18,7 @@ void initializeRuntimeFont()
     */
     if (displayFont != NULL || patchNameFont != NULL)
         return;
-    
+
     /*
     ** MacFonts use the CoreText registry so we can just find them in the bundle
     ** and register them using the CoreText Font Manager API
@@ -38,7 +38,7 @@ void initializeRuntimeFont()
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> minifont = new VSTGUI::CFontDesc("Lato", 9);
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> patchfont = new VSTGUI::CFontDesc("Lato", 14);
     VSTGUI::SharedPointer<VSTGUI::CFontDesc> lfofont = new VSTGUI::CFontDesc("Lato", 8);
-    VSTGUI::SharedPointer<VSTGUI::CFontDesc> aboutfont = new VSTGUI::CFontDesc("Lato", 12);
+    VSTGUI::SharedPointer<VSTGUI::CFontDesc> aboutfont = new VSTGUI::CFontDesc("Lato", 10);
     displayFont = minifont;
     patchNameFont = patchfont;
     lfoTypeFont = lfofont;

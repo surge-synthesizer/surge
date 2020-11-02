@@ -20,18 +20,18 @@
 using namespace VSTGUI;
 void CSurgeHyperlink::draw(VSTGUI::CDrawContext* dc)
 {
-   if( bmp )
+   if (bmp)
    {
       CPoint off;
+      off.x += xoffset;
       if( isHovered )
          off.y += getViewSize().getHeight();
-      bmp->draw( dc, getViewSize(), off );
-      // bmp->draw( dc, VSTGUI::CPoint( 0, 0 ));
+      bmp->draw(dc, getViewSize(), off);
    }
    else
    {
-      dc->setFont(font );
-      dc->setFontColor( isHovered ? hoverColor : labelColor );
-      dc->drawString( label.c_str(), getViewSize() );
+      dc->setFont(font);
+      dc->setFontColor(isHovered ? hoverColor : labelColor);
+      dc->drawString(label.c_str(), getViewSize(), textalign);
    }
 }
