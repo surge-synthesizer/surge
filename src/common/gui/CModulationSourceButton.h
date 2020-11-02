@@ -109,6 +109,7 @@ public:
 
    VSTGUI::CControl *dragLabel = nullptr;
    VSTGUI::CPoint dragOffset, dragStart, lastBarDraw;
+   bool hasMovedBar = false;
    
    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };
