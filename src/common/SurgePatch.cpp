@@ -1527,45 +1527,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
           (p->QueryIntAttribute("i", &lfo) == TIXML_SUCCESS) && within_range(0, sc, 1) &&
           within_range(0, lfo, n_lfos - 1))
       {
-         if (p->QueryDoubleAttribute("shuffle", &d) == TIXML_SUCCESS)
-            stepsequences[sc][lfo].shuffle = (float)d;
-         if (p->QueryIntAttribute("loop_start", &j) == TIXML_SUCCESS)
-            stepsequences[sc][lfo].loop_start = j;
-         if (p->QueryIntAttribute("loop_end", &j) == TIXML_SUCCESS)
-            stepsequences[sc][lfo].loop_end = j;
-         if (p->QueryIntAttribute("trigmask", &j) == TIXML_SUCCESS)
-            stepsequences[sc][lfo].trigmask = j;
+         stepSeqFromXmlElement(&(stepsequences[sc][lfo]), p );
 
-         if (p->QueryIntAttribute("trigmask_0to15", &j ) == TIXML_SUCCESS )
-         {
-            stepsequences[sc][lfo].trigmask &= 0xFFFFFFFFFFFF0000;
-            j &= 0xFFFF;
-            stepsequences[sc][lfo].trigmask |= j;
-         };
-         if (p->QueryIntAttribute("trigmask_16to31", &j ) == TIXML_SUCCESS )
-         {
-            stepsequences[sc][lfo].trigmask &= 0xFFFFFFFF0000FFFF;
-            j &= 0xFFFF;
-            uint64_t jl = (uint64_t)j;
-            stepsequences[sc][lfo].trigmask |= jl << 16;
-         };
-         if (p->QueryIntAttribute("trigmask_32to47", &j ) == TIXML_SUCCESS )
-         {
-            stepsequences[sc][lfo].trigmask &= 0xFFFF0000FFFFFFFF;
-            j &= 0xFFFF;
-            uint64_t jl = (uint64_t)j;
-            stepsequences[sc][lfo].trigmask |= jl << 32;
-         };
-         
-         for (int s = 0; s < n_stepseqsteps; s++)
-         {
-            char txt[256];
-            sprintf(txt, "s%i", s);
-            if (p->QueryDoubleAttribute(txt, &d) == TIXML_SUCCESS)
-               stepsequences[sc][lfo].steps[s] = (float)d;
-            else
-               stepsequences[sc][lfo].steps[s] = 0.f;
-         }
       }
       p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("sequence"));
    }
@@ -1590,67 +1553,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       auto mi = 0;
       if( p->QueryIntAttribute( "i", &v ) == TIXML_SUCCESS ) mi = v;
       auto *ms = &( msegs[sc][mi] );
-      ms->n_activeSegments = 0;
-      if( p->QueryIntAttribute( "activeSegments", &v ) == TIXML_SUCCESS ) ms->n_activeSegments = v;
-      if( p->QueryIntAttribute("endpointMode", &v) == TIXML_SUCCESS )
-         ms->endpointMode = (MSEGStorage::EndpointMode)v;
-      else
-         ms->endpointMode = MSEGStorage::EndpointMode::FREE;
-      if( p->QueryIntAttribute( "loopMode", &v ) == TIXML_SUCCESS )
-         ms->loopMode = (MSEGStorage::LoopMode)v;
-      else
-         ms->loopMode = MSEGStorage::LoopMode::LOOP;
-      if( p->QueryIntAttribute( "loopStart", &v ) == TIXML_SUCCESS )
-         ms->loop_start = v;
-      else
-         ms->loop_start = -1;
 
-      if( p->QueryIntAttribute( "loopEnd", &v ) == TIXML_SUCCESS )
-         ms->loop_end = v;
-      else
-         ms->loop_end = -1;
-
-
-      auto segs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "segments" ));
-      if( segs )
-      {
-         auto seg = TINYXML_SAFE_TO_ELEMENT(segs->FirstChild( "segment" ) );
-         int idx = 0;
-         while( seg )
-         {
-            double d;
-#define MSGF(x) if( seg->QueryDoubleAttribute( #x, &d ) == TIXML_SUCCESS ) ms->segments[idx].x = d;
-            MSGF( duration );
-            MSGF( v0 );
-            MSGF( cpduration );
-            MSGF( cpv );
-            MSGF( nv1 );
-            
-            int t = 0;
-            if( seg->QueryIntAttribute( "type", &v ) == TIXML_SUCCESS ) t = v;
-            ms->segments[idx].type = (MSEGStorage::segment::Type)t;
-
-            if( seg->QueryIntAttribute( "useDeform", &v) == TIXML_SUCCESS )
-               ms->segments[idx].useDeform = v;
-            else
-               ms->segments[idx].useDeform = true;
-
-            if( seg->QueryIntAttribute( "invertDeform", &v) == TIXML_SUCCESS )
-               ms->segments[idx].invertDeform = v;
-            else
-               ms->segments[idx].invertDeform = false;
-
-            seg = TINYXML_SAFE_TO_ELEMENT( seg->NextSibling( "segment" ) );
-            
-            idx++;
-         }
-         if( idx != ms->n_activeSegments )
-         {
-            std::cout << "BAD RESTORE " << _D(idx) << _D(ms->n_activeSegments) << std::endl;
-         }
-      }
-      // Rebuild cache
-      Surge::MSEG::rebuildCache(ms);
+      msegFromXMLElement(ms, p );
       p = TINYXML_SAFE_TO_ELEMENT( p->NextSibling( "mseg" ) );
    }
 
@@ -2003,31 +1907,8 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("scene", sc);
             p.SetAttribute("i", l);
 
-            for (int s = 0; s < n_stepseqsteps; s++)
-            {
-               sprintf(txt, "s%i", s);
-               if (stepsequences[sc][l].steps[s] != 0.f)
-                  p.SetAttribute(txt, float_to_str(stepsequences[sc][l].steps[s], txt2));
-            }
+            stepSeqToXmlElement(&(stepsequences[sc][l]), p, l < n_lfos_voice );
 
-            p.SetAttribute("loop_start", stepsequences[sc][l].loop_start);
-            p.SetAttribute("loop_end", stepsequences[sc][l].loop_end);
-            p.SetAttribute("shuffle", float_to_str(stepsequences[sc][l].shuffle, txt2));
-            if (l < n_lfos_voice )
-            {
-               uint64_t ttm = stepsequences[sc][l].trigmask;
-
-               // collapse in case an old surge loads this
-               uint64_t old_ttm = ( ttm & 0xFFFF ) | ( ( ttm >> 16 ) & 0xFFFF ) | ( ( ttm >> 32 ) & 0xFFFF );
-               
-               p.SetAttribute("trigmask", old_ttm);
-
-               p.SetAttribute("trigmask_0to15", ttm & 0xFFFF );
-               ttm = ttm >> 16;
-               p.SetAttribute("trigmask_16to31", ttm & 0xFFFF );
-               ttm = ttm >> 16;
-               p.SetAttribute("trigmask_32to47", ttm & 0xFFFF );
-            }
             ss.InsertEndChild(p);
          }
       }
@@ -2046,28 +1927,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
             p.SetAttribute("i", l);
 
             auto *ms = &(msegs[sc][l]);
-            p.SetAttribute( "activeSegments", ms->n_activeSegments );
-            p.SetAttribute( "endpointMode", ms->endpointMode );
-            p.SetAttribute( "loopMode", ms->loopMode );
-            p.SetAttribute( "loopStart", ms->loop_start);
-            p.SetAttribute( "loopEnd", ms->loop_end );
-
-            TiXmlElement segs( "segments" );
-            for( int s=0; s<ms->n_activeSegments; ++s )
-            {
-               TiXmlElement seg( "segment" );
-               seg.SetDoubleAttribute( "duration", ms->segments[s].duration );
-               seg.SetDoubleAttribute( "v0", ms->segments[s].v0 );
-               seg.SetDoubleAttribute( "nv1", ms->segments[s].nv1 );
-               seg.SetDoubleAttribute( "cpduration", ms->segments[s].cpduration );
-               seg.SetDoubleAttribute( "cpv", ms->segments[s].cpv );
-               seg.SetAttribute( "type", (int)( ms->segments[s].type ));
-               seg.SetAttribute( "useDeform", (int)(ms->segments[s].useDeform));
-               seg.SetAttribute( "invertDeform", (int)(ms->segments[s].invertDeform));
-               segs.InsertEndChild( seg );
-            }
-            p.InsertEndChild(segs);
-            
+            msegToXMLElement(ms, p );
             mseg.InsertEndChild( p );
          }
       }
@@ -2209,4 +2069,171 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    memcpy(d, s.data(), s.size());
    *data = d;
    return s.size();
+}
+
+void SurgePatch::msegToXMLElement(MSEGStorage* ms, TiXmlElement& p) const
+{
+   p.SetAttribute( "activeSegments", ms->n_activeSegments );
+   p.SetAttribute( "endpointMode", ms->endpointMode );
+   p.SetAttribute( "loopMode", ms->loopMode );
+   p.SetAttribute( "loopStart", ms->loop_start);
+   p.SetAttribute( "loopEnd", ms->loop_end );
+
+   TiXmlElement segs( "segments" );
+   for( int s=0; s<ms->n_activeSegments; ++s )
+   {
+      TiXmlElement seg( "segment" );
+      seg.SetDoubleAttribute( "duration", ms->segments[s].duration );
+      seg.SetDoubleAttribute( "v0", ms->segments[s].v0 );
+      seg.SetDoubleAttribute( "nv1", ms->segments[s].nv1 );
+      seg.SetDoubleAttribute( "cpduration", ms->segments[s].cpduration );
+      seg.SetDoubleAttribute( "cpv", ms->segments[s].cpv );
+      seg.SetAttribute( "type", (int)( ms->segments[s].type ));
+      seg.SetAttribute( "useDeform", (int)(ms->segments[s].useDeform));
+      seg.SetAttribute( "invertDeform", (int)(ms->segments[s].invertDeform));
+      segs.InsertEndChild( seg );
+   }
+   p.InsertEndChild(segs);
+}
+
+void SurgePatch::msegFromXMLElement(MSEGStorage* ms, TiXmlElement* p) const
+{
+   int v;
+   ms->n_activeSegments = 0;
+   if( p->QueryIntAttribute( "activeSegments", &v ) == TIXML_SUCCESS ) ms->n_activeSegments = v;
+   if( p->QueryIntAttribute("endpointMode", &v) == TIXML_SUCCESS )
+      ms->endpointMode = (MSEGStorage::EndpointMode)v;
+   else
+      ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+   if( p->QueryIntAttribute( "loopMode", &v ) == TIXML_SUCCESS )
+      ms->loopMode = (MSEGStorage::LoopMode)v;
+   else
+      ms->loopMode = MSEGStorage::LoopMode::LOOP;
+   if( p->QueryIntAttribute( "loopStart", &v ) == TIXML_SUCCESS )
+      ms->loop_start = v;
+   else
+      ms->loop_start = -1;
+
+   if( p->QueryIntAttribute( "loopEnd", &v ) == TIXML_SUCCESS )
+      ms->loop_end = v;
+   else
+      ms->loop_end = -1;
+
+
+   auto segs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "segments" ));
+   if( segs )
+   {
+      auto seg = TINYXML_SAFE_TO_ELEMENT(segs->FirstChild( "segment" ) );
+      int idx = 0;
+      while( seg )
+      {
+         double d;
+#define MSGF(x) if( seg->QueryDoubleAttribute( #x, &d ) == TIXML_SUCCESS ) ms->segments[idx].x = d;
+         MSGF( duration );
+         MSGF( v0 );
+         MSGF( cpduration );
+         MSGF( cpv );
+         MSGF( nv1 );
+
+         int t = 0;
+         if( seg->QueryIntAttribute( "type", &v ) == TIXML_SUCCESS ) t = v;
+         ms->segments[idx].type = (MSEGStorage::segment::Type)t;
+
+         if( seg->QueryIntAttribute( "useDeform", &v) == TIXML_SUCCESS )
+            ms->segments[idx].useDeform = v;
+         else
+            ms->segments[idx].useDeform = true;
+
+         if( seg->QueryIntAttribute( "invertDeform", &v) == TIXML_SUCCESS )
+            ms->segments[idx].invertDeform = v;
+         else
+            ms->segments[idx].invertDeform = false;
+
+         seg = TINYXML_SAFE_TO_ELEMENT( seg->NextSibling( "segment" ) );
+
+         idx++;
+      }
+      if( idx != ms->n_activeSegments )
+      {
+         std::cout << "BAD RESTORE " << _D(idx) << _D(ms->n_activeSegments) << std::endl;
+      }
+   }
+   // Rebuild cache
+   Surge::MSEG::rebuildCache(ms);
+
+}
+
+void SurgePatch::stepSeqToXmlElement(StepSequencerStorage* ss, TiXmlElement& p, bool streamMask) const
+{
+   char txt[256], txt2[256];
+   for (int s = 0; s < n_stepseqsteps; s++)
+   {
+      sprintf(txt, "s%i", s);
+      if (ss->steps[s] != 0.f)
+         p.SetAttribute(txt, float_to_str(ss->steps[s], txt2));
+   }
+
+   p.SetAttribute("loop_start", ss->loop_start);
+   p.SetAttribute("loop_end", ss->loop_end);
+   p.SetAttribute("shuffle", float_to_str(ss->shuffle, txt2));
+   if(streamMask)
+   {
+      uint64_t ttm = ss->trigmask;
+
+      // collapse in case an old surge loads this
+      uint64_t old_ttm = ( ttm & 0xFFFF ) | ( ( ttm >> 16 ) & 0xFFFF ) | ( ( ttm >> 32 ) & 0xFFFF );
+
+      p.SetAttribute("trigmask", old_ttm);
+
+      p.SetAttribute("trigmask_0to15", ttm & 0xFFFF );
+      ttm = ttm >> 16;
+      p.SetAttribute("trigmask_16to31", ttm & 0xFFFF );
+      ttm = ttm >> 16;
+      p.SetAttribute("trigmask_32to47", ttm & 0xFFFF );
+   }
+}
+
+void SurgePatch::stepSeqFromXmlElement(StepSequencerStorage* ss, TiXmlElement* p) const
+{
+   double d;
+   int j;
+   if (p->QueryDoubleAttribute("shuffle", &d) == TIXML_SUCCESS)
+      ss->shuffle = (float)d;
+   if (p->QueryIntAttribute("loop_start", &j) == TIXML_SUCCESS)
+      ss->loop_start = j;
+   if (p->QueryIntAttribute("loop_end", &j) == TIXML_SUCCESS)
+      ss->loop_end = j;
+   if (p->QueryIntAttribute("trigmask", &j) == TIXML_SUCCESS)
+      ss->trigmask = j;
+
+   if (p->QueryIntAttribute("trigmask_0to15", &j ) == TIXML_SUCCESS )
+   {
+      ss->trigmask &= 0xFFFFFFFFFFFF0000;
+      j &= 0xFFFF;
+      ss->trigmask |= j;
+   };
+   if (p->QueryIntAttribute("trigmask_16to31", &j ) == TIXML_SUCCESS )
+   {
+      ss->trigmask &= 0xFFFFFFFF0000FFFF;
+      j &= 0xFFFF;
+      uint64_t jl = (uint64_t)j;
+      ss->trigmask |= jl << 16;
+   };
+   if (p->QueryIntAttribute("trigmask_32to47", &j ) == TIXML_SUCCESS )
+   {
+      ss->trigmask &= 0xFFFF0000FFFFFFFF;
+      j &= 0xFFFF;
+      uint64_t jl = (uint64_t)j;
+      ss->trigmask |= jl << 32;
+   };
+
+   for (int s = 0; s < n_stepseqsteps; s++)
+   {
+      char txt[256];
+      sprintf(txt, "s%i", s);
+      if (p->QueryDoubleAttribute(txt, &d) == TIXML_SUCCESS)
+         ss->steps[s] = (float)d;
+      else
+         ss->steps[s] = 0.f;
+   }
 }

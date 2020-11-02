@@ -806,6 +806,12 @@ public:
    unsigned int save_xml(void** data);
    unsigned int save_RIFF(void** data);
 
+   // Factor these so the LFO Preset Mechanism can use them also
+   void msegToXMLElement( MSEGStorage *ms, TiXmlElement &parent ) const;
+   void msegFromXMLElement( MSEGStorage *ms, TiXmlElement *parent ) const;
+   void stepSeqToXmlElement( StepSequencerStorage *ss, TiXmlElement &parent, bool streamMask ) const;
+   void stepSeqFromXmlElement( StepSequencerStorage *ss, TiXmlElement *parent ) const;
+
    void load_patch(const void* data, int size, bool preset);
    unsigned int save_patch(void** data);
 
