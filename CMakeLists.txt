@@ -402,6 +402,7 @@ if( APPLE )
 
   set(OS_INCLUDE_DIRECTORIES
     src/mac
+    libs/simde
     )
   set(OS_COMPILE_DEFINITIONS
     MAC=1
@@ -430,6 +431,7 @@ if( APPLE )
     "-framework OpenGL"
     "-framework QuartzCore"
     )
+
 elseif( UNIX AND NOT APPLE )
   file(GLOB PIGGY_INPUTS ${CMAKE_SOURCE_DIR}/assets/SurgeClassic/exported/*svg)
   add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
@@ -940,7 +942,8 @@ if( BUILD_HEADLESS )
     src/headless
     )
 
-  find_package(LibSndFile ${PACKAGE_OPTION})
+  # Temporarily disable libsndfile which we don't use anyway, but we don't have a link for on arm
+  # find_package(LibSndFile ${PACKAGE_OPTION})
   if(NOT LIBSNDFILE_FOUND)
     message("-- LibSndFile not installed; building without wav support")
     message("-- You can 'brew install libsndfile' or 'apt-get install libsndfile1-dev'")

@@ -23,7 +23,15 @@
 
 #if MAC
 #include "vt_dsp/macspecific.h"
+
+#if defined(__x86_64__)
+#else
+#define ARM_NEON 1
+#define MAC_ARM 1
 #endif
+
+#endif
+
 #if ARM_NEON
 #define SIMDE_ENABLE_NATIVE_ALIASES
 #include "simde/x86/sse2.h"
