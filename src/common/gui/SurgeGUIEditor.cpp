@@ -43,6 +43,7 @@
 #include "UIInstrumentation.h"
 #include "guihelpers.h"
 #include "DebugHelpers.h"
+#include "ModulatorPresetManager.h"
 
 #include <iostream>
 #include <iomanip>
@@ -4724,13 +4725,50 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
 VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 {
+   int currentLfoId = modsource_editor[current_scene] - ms_lfo1;
+
+   int shapev = synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
+   std::string what = "Lfo";
+   if( ls_mseg == shapev )
+      what = "MSEG";
+   if( ls_stepseq == shapev)
+      what = "StepSeq";
+
    COptionMenu* lfoSubMenu =
        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-   addCallbackMenu(lfoSubMenu, "[?] LFO Presets", [](){} );
+   addCallbackMenu(lfoSubMenu, "[?] Modulator Presets", [](){} ); // FIXME - help needed
    lfoSubMenu->addSeparator();
-   addCallbackMenu(lfoSubMenu, "Menu", [](){} );
-   addCallbackMenu(lfoSubMenu, "Coming", [](){} );
-   addCallbackMenu(lfoSubMenu, "Soon", [](){} );
+   addCallbackMenu( lfoSubMenu,
+                   Surge::UI::toOSCaseForMenu("Save " + what + " As..."),
+                   [this, currentLfoId, what](){
+                      // Prompt for a name
+                      promptForMiniEdit("preset", "Enter " + what + " Preset Name", "Please Name Preset",
+                                        CPoint( -1, -1 ),
+                                        [this, currentLfoId](const std::string &s ) {
+                                           Surge::ModulatorPreset::savePresetToUser(string_to_path(s),
+                                                                                  &(this->synth->storage),
+                                                                                  current_scene,
+                                                                                  currentLfoId );
+                                        });
+                      // and save
+                   }
+                   );
+
+   lfoSubMenu->addSeparator();
+   auto presetCategories = Surge::ModulatorPreset::getPresets(&(synth->storage));
+   for( auto const &cat : presetCategories )
+   {
+      COptionMenu *catSubMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+      for( auto const &p : cat.presets )
+         addCallbackMenu(catSubMenu,
+                         Surge::UI::toOSCaseForMenu(p.name),
+                         [this, p, currentLfoId](){
+                            Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage), current_scene, currentLfoId );
+                            this->synth->refresh_editor = true;
+                         });
+      lfoSubMenu->addEntry(catSubMenu, cat.name.c_str());
+      catSubMenu->forget();
+   }
    return lfoSubMenu;
 }
 
