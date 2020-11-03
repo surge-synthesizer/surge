@@ -4728,11 +4728,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
    int currentLfoId = modsource_editor[current_scene] - ms_lfo1;
 
    int shapev = synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
-   std::string what = "Lfo";
+   std::string what = "LFO";
    if( ls_mseg == shapev )
       what = "MSEG";
    if( ls_stepseq == shapev)
-      what = "StepSeq";
+      what = "Step Seq";
 
    COptionMenu* lfoSubMenu =
        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
@@ -4753,9 +4753,12 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
                       // and save
                    }
                    );
-
-   lfoSubMenu->addSeparator();
+   
    auto presetCategories = Surge::ModulatorPreset::getPresets(&(synth->storage));
+
+   if (!presetCategories.empty())
+      lfoSubMenu->addSeparator();
+
    for( auto const &cat : presetCategories )
    {
       COptionMenu *catSubMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
