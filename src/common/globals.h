@@ -27,7 +27,6 @@
 #if defined(__x86_64__)
 #else
 #define ARM_NEON 1
-#define MAC_ARM 1
 #endif
 
 #endif

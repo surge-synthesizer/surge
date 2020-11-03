@@ -16,12 +16,18 @@
 #include "WindowOscillator.h"
 #include "DspUtilities.h"
 
-#if !MAC && !LINUX
-#include <intrin.h>
-#endif
+#include <cstdint>
 
-#if LINUX
-#include <stdint.h>
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+namespace {
+inline bool _BitScanReverse(unsigned long* result, unsigned long bits)
+{
+   *result = __builtin_ctz(bits);
+   return true;
+}
+} // anonymous namespace
 #endif
 
 /* wt2 osc */
@@ -129,36 +135,13 @@ void WindowOscillator::init_default_values()
 inline unsigned int BigMULr16(unsigned int a, unsigned int b)
 {
    // 64-bit unsigned multiply with right shift by 16 bits
-#if _M_X64 && ! TARGET_RACK
-   unsigned __int64 c = __emulu(a, b);
-   return c >> 16;
-#elif LINUX || TARGET_RACK  || MAC_ARM
-   uint64_t c = (uint64_t)a * (uint64_t)b;
-   return c >> 16;
+#ifdef _MSC_VER
+   const auto c{__emulu(a, b)};
 #else
-   unsigned int result;
-   __asm
-   {
-		mov eax,a
-		mov ecx,b
-		mul ecx
-		shl edx, 16
-		shr eax, 16
-		or eax,edx
-         // TODO: Fix return for GCC ASM
-		mov result, eax
-   }
-   return result;
+   const auto c{std::uint64_t{a} * std::uint64_t{b}};
 #endif
+   return c >> 16u;
 }
-
-#if MAC || LINUX
-inline bool _BitScanReverse(unsigned long* result, unsigned long bits)
-{
-   *result = __builtin_ctz(bits);
-   return true;
-}
-#endif
 
 void WindowOscillator::ProcessSubOscs(bool stereo, bool FM)
 {
