@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="18px" height="270px" viewBox="0 0 18 270" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+<svg width="18px" height="288px" viewBox="0 0 18 288" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
   <desc>Created with Lunacy</desc>
   <defs>
-    <rect width="18" height="270" id="artboard_1" />
+    <rect width="18" height="288" id="artboard_1" />
     <clipPath id="clip_1">
       <use xlink:href="#artboard_1" clip-rule="evenodd" />
     </clipPath>
   </defs>
   <g id="bmp00169" clip-path="url(#clip_1)">
+    <g id="Diode-Ladder" transform="translate(2.5 271.8)">
+      <path d="M0 10.2354L3.93477 0L0 10.2354L0 10.2354Z" transform="translate(6.565216 2.9451904)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 10.2354L3.93477 0" transform="translate(6.565216 2.9451904)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 10.2555L3.88224 0L0 10.2555L0 10.2555Z" transform="translate(2.5 1.1199951)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 10.2555L3.88224 0" transform="translate(2.5 1.1199951)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50928 1.87944L0 0L0 0Z" transform="translate(5.8884277 3.1391602)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50928 1.87944" transform="translate(5.8884277 3.1391602)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50924 1.87944L0 0L0 0Z" transform="translate(5.059265 4.9733887)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50924 1.87944" transform="translate(5.059265 4.9733887)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50924 1.87945L0 0L0 0Z" transform="translate(4.3176575 7.1000366)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50924 1.87945" transform="translate(4.3176575 7.1000366)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50925 1.87944L0 0L0 0Z" transform="translate(3.594452 9.139282)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50925 1.87944" transform="translate(3.594452 9.139282)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <g id="D" fill="#FFFFFF">
+        <path d="M2.89 2.5Q2.89 2.818 2.784 3.084Q2.678 3.35 2.486 3.542Q2.294 3.734 2.024 3.84Q1.754 3.946 1.424 3.946L0.322 3.946L0.322 1.054L1.424 1.054Q1.754 1.054 2.024 1.161Q2.294 1.268 2.486 1.459Q2.678 1.65 2.784 1.916Q2.89 2.182 2.89 2.5ZM2.338 2.5Q2.338 2.262 2.275 2.073Q2.212 1.884 2.093 1.753Q1.974 1.622 1.805 1.552Q1.636 1.482 1.424 1.482L0.862 1.482L0.862 3.518L1.424 3.518Q1.636 3.518 1.805 3.448Q1.974 3.378 2.093 3.247Q2.212 3.116 2.275 2.927Q2.338 2.738 2.338 2.5Z" />
+      </g>
+    </g>
     <g id="Sallen-Key-Highpass" transform="matrix(-1 0 0 1 14 254)">
       <path d="M0 1L3.75 1L3.75 0L0 0L0 1L0 1Z" transform="translate(0 6)" id="Shape-Copy-2" fill="#FFFFFF" fill-rule="evenodd" stroke="none" />
       <path d="M0 0.00299889C4.41917 -0.118492 5.99694 3.48319 6 5.01712" transform="translate(3.5 6.4980774)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" />
@@ -39,19 +56,22 @@
         <path d="M12.066 3.946L12.066 0.974L11.572 0.974L11.572 2.056Q11.476 1.964 11.354 1.91Q11.232 1.856 11.06 1.856Q10.858 1.856 10.696 1.937Q10.534 2.018 10.418 2.162Q10.302 2.306 10.24 2.502Q10.178 2.698 10.178 2.926Q10.178 3.178 10.233 3.374Q10.288 3.57 10.389 3.703Q10.49 3.836 10.63 3.906Q10.77 3.976 10.938 3.976Q11.152 3.976 11.313 3.888Q11.474 3.8 11.598 3.658L11.64 3.856Q11.666 3.946 11.764 3.946L12.066 3.946ZM3.08 2.5Q3.08 2.818 2.975 3.089Q2.87 3.36 2.678 3.558Q2.486 3.756 2.216 3.867Q1.946 3.978 1.616 3.978Q1.288 3.978 1.018 3.867Q0.748 3.756 0.555 3.558Q0.362 3.36 0.256 3.089Q0.15 2.818 0.15 2.5Q0.15 2.182 0.256 1.911Q0.362 1.64 0.555 1.442Q0.748 1.244 1.018 1.133Q1.288 1.022 1.616 1.022Q1.836 1.022 2.03 1.073Q2.224 1.124 2.386 1.217Q2.548 1.31 2.677 1.443Q2.806 1.576 2.896 1.74Q2.986 1.904 3.033 2.096Q3.08 2.288 3.08 2.5ZM4.55 1.054Q4.834 1.054 5.036 1.108Q5.238 1.162 5.367 1.262Q5.496 1.362 5.556 1.504Q5.616 1.646 5.616 1.824Q5.616 1.926 5.586 2.019Q5.556 2.112 5.493 2.193Q5.43 2.274 5.333 2.34Q5.236 2.406 5.102 2.452Q5.698 2.586 5.698 3.096Q5.698 3.28 5.628 3.436Q5.558 3.592 5.424 3.705Q5.29 3.818 5.094 3.882Q4.898 3.946 4.646 3.946L3.554 3.946L3.554 1.054L4.55 1.054ZM10.03 3.946L9.494 3.946C9.45667 3.946 9.427 3.93667 9.405 3.918Q9.372 3.89 9.352 3.854L8.682 2.744Q8.666 2.794 8.644 2.83L8.002 3.854Q7.978 3.888 7.947 3.917C7.92633 3.93633 7.89933 3.946 7.866 3.946L7.364 3.946L8.324 2.458L7.402 1.054L7.938 1.054Q7.994 1.054 8.019 1.069Q8.044 1.084 8.066 1.118L8.724 2.178Q8.744 2.128 8.772 2.078L9.376 1.128Q9.398 1.09 9.424 1.072Q9.45 1.054 9.49 1.054L10.004 1.054L9.074 2.436L10.03 3.946ZM4.092 1.47L4.092 2.306L4.52 2.306Q4.796 2.306 4.937 2.206Q5.078 2.106 5.078 1.888Q5.078 1.662 4.95 1.566Q4.822 1.47 4.55 1.47L4.092 1.47ZM2.53 2.5Q2.53 2.262 2.466 2.073Q2.402 1.884 2.284 1.752Q2.166 1.62 1.997 1.55Q1.828 1.48 1.616 1.48Q1.404 1.48 1.235 1.55Q1.066 1.62 0.947 1.752Q0.828 1.884 0.764 2.073Q0.7 2.262 0.7 2.5Q0.7 2.738 0.764 2.927Q0.828 3.116 0.947 3.247Q1.066 3.378 1.235 3.448Q1.404 3.518 1.616 3.518Q1.828 3.518 1.997 3.448Q2.166 3.378 2.284 3.247Q2.402 3.116 2.466 2.927Q2.53 2.738 2.53 2.5ZM11.389 2.274Q11.488 2.316 11.572 2.418L11.572 3.338Q11.476 3.456 11.368 3.52Q11.26 3.584 11.106 3.584Q11.01 3.584 10.932 3.549Q10.854 3.514 10.8 3.435Q10.746 3.356 10.717 3.231Q10.688 3.106 10.688 2.926Q10.688 2.748 10.722 2.617Q10.756 2.486 10.82 2.401Q10.884 2.316 10.974 2.274Q11.064 2.232 11.176 2.232Q11.29 2.232 11.389 2.274ZM7.13 2.532L6.094 2.532L6.094 2.944L7.13 2.944L7.13 2.532ZM4.636 3.526Q4.786 3.526 4.888 3.49Q4.99 3.454 5.051 3.394Q5.112 3.334 5.139 3.254Q5.166 3.174 5.166 3.084Q5.166 2.99 5.136 2.915Q5.106 2.84 5.042 2.787Q4.978 2.734 4.877 2.706Q4.776 2.678 4.634 2.678L4.092 2.678L4.092 3.526L4.636 3.526Z" />
       </g>
     </g>
-    <g id="Vintage-Ladder" transform="translate(5 182.92)">
-      <path d="M0 10.2354L3.93477 0L0 10.2354L0 10.2354Z" transform="translate(4.065216 1.8251648)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
-      <path d="M0 10.2354L3.93477 0" transform="translate(4.065216 1.8251648)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
-      <path d="M0 10.2555L3.88224 0L0 10.2555L0 10.2555Z" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
-      <path d="M0 10.2555L3.88224 0" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
-      <path d="M0 0L3.50928 1.87944L0 0L0 0Z" transform="translate(3.3884277 2.0191495)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L3.50928 1.87944" transform="translate(3.3884277 2.0191495)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
-      <path d="M0 0L3.50924 1.87944L0 0L0 0Z" transform="translate(2.5592651 3.8533638)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L3.50924 1.87944" transform="translate(2.5592651 3.8533638)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
-      <path d="M0 0L3.50924 1.87945L0 0L0 0Z" transform="translate(1.8176575 5.9800415)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L3.50924 1.87945" transform="translate(1.8176575 5.9800415)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
-      <path d="M0 0L3.50925 1.87944L0 0L0 0Z" transform="translate(1.0944519 8.019303)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
-      <path d="M0 0L3.50925 1.87944" transform="translate(1.0944519 8.019303)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+    <g id="Vintage-Ladder" transform="translate(2.5 181.8)">
+      <path d="M0 10.2354L3.93477 0L0 10.2354L0 10.2354Z" transform="translate(6.565216 2.94516)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 10.2354L3.93477 0" transform="translate(6.565216 2.94516)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 10.2555L3.88224 0L0 10.2555L0 10.2555Z" transform="translate(2.5 1.1199951)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 10.2555L3.88224 0" transform="translate(2.5 1.1199951)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50928 1.87944L0 0L0 0Z" transform="translate(5.8884277 3.139145)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50928 1.87944" transform="translate(5.8884277 3.139145)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50924 1.87944L0 0L0 0Z" transform="translate(5.059265 4.973358)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50924 1.87944" transform="translate(5.059265 4.973358)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50924 1.87945L0 0L0 0Z" transform="translate(4.3176575 7.1000366)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50924 1.87945" transform="translate(4.3176575 7.1000366)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <path d="M0 0L3.50925 1.87944L0 0L0 0Z" transform="translate(3.594452 9.1392975)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L3.50925 1.87944" transform="translate(3.594452 9.1392975)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round" />
+      <g id="V" fill="#FFFFFF">
+        <path d="M2.8 1.054L1.632 3.946L1.146 3.946L-0.022 1.054L0.41 1.054Q0.48 1.054 0.524 1.088Q0.568 1.122 0.59 1.176L1.272 2.94Q1.306 3.026 1.337 3.129Q1.368 3.232 1.396 3.344Q1.42 3.232 1.448 3.129Q1.476 3.026 1.51 2.94L2.188 1.176Q2.204 1.13 2.251 1.092Q2.298 1.054 2.366 1.054L2.8 1.054Z" />
+      </g>
     </g>
     <g id="S&amp;H" transform="translate(4.5599976 167)">
       <path d="M1 2.01009L2 2.01009L2 0L3 0L3 5.02522L2 5.02522L2 3.01513L1 3.01513L1 5.02522L0 5.02522L0 0L1 0L1 2.01009L1 2.01009Z" transform="translate(6 4.020233)" id="Shape" fill="#FFFFFF" fill-rule="evenodd" stroke="none" />
