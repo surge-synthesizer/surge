@@ -20,4 +20,5 @@ paul:~/dev/music/surge$ lipo -archs build_fat/Debug/surge-headless
 x86_64 arm64
 ```
 
-Right now full AU doesn't build because of the objc compat layer in vstgui.
+Similarly you can build the AU or VST3 and get a fat binary in the distro
+
