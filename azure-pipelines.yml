@@ -18,6 +18,13 @@ jobs:
         isMacUnitTest: True
         cmakeArguments: "-GXcode"
         cmakeTarget: "all-components"
+      macOS-fat:
+        imageName: 'macos-10.15'
+        isMac: True
+        isMacFat: True
+        cmakeArguments: "-GXcode -D\"CMAKE_OSX_ARCHITECTURES=arm64;x86_64\""
+        cmakeTarget: "Surge-AU-Packaged"
+        xcodePath: "/Applications/Xcode_12.2.app"
       windows-x64:
         imageName: 'windows-2019'
         isWindows: True
@@ -109,6 +116,13 @@ jobs:
     condition: variables.isLinux
     displayName: linux - run apt-get
 
+
+  - bash: |
+      set -e
+      sudo xcode-select -s $(xcodePath)
+    displayName: Run xcode-select
+    condition: variables.isMacFat
+    
   - bash: |
       set -e
       cmake -Bbuild $(cmakeArguments)
@@ -118,6 +132,13 @@ jobs:
       set -e
       cmake --build build --config Release --target $(cmakeTarget)
     displayName: all - build with cmake 
+
+  - bash: |
+      set -e
+      echo "Surge.component"
+      lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
+    displayName: mac - lipo the AU
+    condition: variables.isMacFat
 
   - bash: | 
       set -e
