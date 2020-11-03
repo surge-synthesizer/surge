@@ -36,11 +36,11 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
    auto containingPath = fs::path{ string_to_path( s->userDataPath ) / fs::path{ PresetDir }};
 
    if( shapev == ls_mseg )
-      containingPath = containingPath / fs::path{ "MSEGs" };
+      containingPath = containingPath / fs::path{ "MSEG" };
    else if( shapev == ls_stepseq )
-      containingPath = containingPath / fs::path{ "StepSequences" };
+      containingPath = containingPath / fs::path{ "Step Seq" };
    else
-      containingPath = containingPath / fs::path{ "Lfos" };
+      containingPath = containingPath / fs::path{ "LFO" };
 
    fs::create_directories(containingPath);
    auto fullLocation = fs::path( { containingPath / location }).replace_extension( fs::path{ PresetXtn } );
