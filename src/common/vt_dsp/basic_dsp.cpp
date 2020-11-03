@@ -1,39 +1,15 @@
 #include "basic_dsp.h"
-#include <assert.h>
-#include <math.h>
-#if MAC || LINUX
-#include <algorithm>
-#endif
 
-using namespace std;
+#include <algorithm>
+#include <cmath>
 
 int Min(int a, int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
-   return min(a, b);
-#else
-   __asm
-   {
-		mov		eax, a
-		mov		ecx, b
-		cmp		eax, ecx
-		cmovg	eax, ecx
-   }
-#endif
+   return std::min(a, b);
 }
 int Max(int a, int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
-   return max(a, b);
-#else
-   __asm
-   {
-		mov		eax, a
-		mov		ecx, b
-		cmp		eax, ecx
-		cmovl	eax, ecx
-   }
-#endif
+   return std::max(a, b);
 }
 
 double Max(double a, double b)
@@ -50,84 +26,27 @@ double Max(double a, double b)
 
 unsigned int Min(unsigned int a, unsigned int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
-   return min(a, b);
-#else
-   __asm
-   {
-		mov		eax, a
-		mov		ecx, b
-		cmp		eax, ecx
-		cmova	eax, ecx
-   }
-#endif
+   return std::min(a, b);
 }
 unsigned int Max(unsigned int a, unsigned int b)
 {
-#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
-   return max(a, b);
-#else
-   __asm
-   {
-		mov		eax, a
-		mov		ecx, b
-		cmp		eax, ecx
-		cmovb	eax, ecx
-   }
-#endif
+   return std::max(a, b);
 }
 
 int limit_range(int x, int l, int h)
 {
-#if _M_X64 || LINUX || MAC || ARM_NEON
    return std::max(std::min(x, h), l);
-#else
-   __asm
-   {
-		mov		eax, x
-		mov		edx, l
-		cmp		eax, edx
-		cmovl	eax, edx
-		mov		edx, h
-		cmp		eax, edx
-		cmovg	eax, edx
-   }
-#endif
 }
 
 
 int Sign(int x)
 {
-#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
    return (x < 0) ? -1 : 1;
-#else
-   __asm
-       {		
-		mov eax, 1
-		mov edx, -1		
-		cmp x, 0
-		cmovle eax, edx
-       }
-   ;
-#endif
 }
 
 unsigned int limit_range(unsigned int x, unsigned int l, unsigned int h)
 {
-#if _M_X64 || LINUX || TARGET_RACK || ARM_NEON
-   return max(min(x, h), l);
-#else
-   __asm
-   {
-		mov		eax, x		
-		mov		ecx, l	; load min
-		cmp		eax, ecx
-		cmovb	eax, ecx	; move if below
-		mov		ecx, h	; load max
-		cmp		eax, ecx
-		cmova	eax, ecx	; move if above
-   }
-#endif
+   return std::max(std::min(x, h), l);
 }
 /*
 float limit_range(float x, float min, float max)
