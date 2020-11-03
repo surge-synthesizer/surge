@@ -1,3 +1,4 @@
+#include "globals.h"
 #include "FpuState.h"
 #ifndef ARM_NEON
 #include <emmintrin.h>
