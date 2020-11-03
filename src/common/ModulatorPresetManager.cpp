@@ -76,6 +76,7 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
          pn.SetAttribute( "i", curr->val.i );
       pn.SetAttribute( "temposync", curr->temposync );
       pn.SetAttribute( "deform_type", curr->deform_type );
+      pn.SetAttribute( "extend_range", curr->extend_range );
 
       params.InsertEndChild(pn);
    }
@@ -170,8 +171,16 @@ void loadPresetFrom( const fs::path &location, SurgeStorage *s, int scene, int l
 
          if (valNode->QueryIntAttribute("temposync", &q) == TIXML_SUCCESS)
             curr->temposync = q;
+         else
+            curr->temposync = false;
          if (valNode->QueryIntAttribute("deform_type", &q) == TIXML_SUCCESS)
             curr->deform_type = q;
+         else
+            curr->deform_type = 0;
+         if (valNode->QueryIntAttribute("extend_range", &q ) == TIXML_SUCCESS)
+            curr->extend_range = q;
+         else
+            curr->extend_range = false;
       }
    }
 
