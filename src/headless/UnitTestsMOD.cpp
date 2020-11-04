@@ -851,3 +851,26 @@ TEST_CASE( "CModulationSources", "[mod]" )
       }
    }
 }
+
+TEST_CASE( "Keytrack Morph", "[mod]" )
+{
+   INFO( "See issue 3046");
+   SECTION( "Run High Key" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+      surge->loadPatchByPath("test-data/patches/Keytrack-Morph-3046.fxp", -1, "Test" );
+      for( int i=0; i<100; ++i ) surge->process();
+
+      surge->playNote( 0, 100, 127, 0 );
+      for( int i=0; i<10; ++i )
+      {
+         surge->process();
+         /*
+          * FIXME: Make this an assertive test. What we are really checking is is l_shape 3.33 inside
+          * the oscillator but there's no easy way to assert that so just leave the test here
+          * as a debugging harness around issue 3046
+          */
+      }
+   }
+}

@@ -315,6 +315,23 @@ void SurgeVoice::switch_toggled()
 
    modsources[ms_keytrack]->output = (state.pitch - (float)scene->keytrack_root.val.i) * (1.0f / 12.0f);
 
+   /*
+    * Since we have updated the keytrack output here we need to re-update the localcopy modulators
+    */
+   vector<ModulationRouting>::iterator iter;
+   iter = scene->modulation_voice.begin();
+   while (iter != scene->modulation_voice.end())
+   {
+      int src_id = iter->source_id;
+      int dst_id = iter->destination_id;
+      float depth = iter->depth;
+      if (modsources[src_id] && src_id == ms_keytrack )
+      {
+         localcopy[dst_id].f += depth * modsources[ms_keytrack]->output;
+      }
+      iter++;
+   }
+
    for (int i = 0; i < n_oscs; i++)
    {
       if (osctype[i] != scene->osc[i].type.val.i)
