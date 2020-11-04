@@ -111,14 +111,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       enum Type
       {
          MOUSABLE_NODE,
-         INACTIVE_NODE // To keep the array the same size add dummies when you supress controls
+         INACTIVE_NODE, // To keep the array the same size add dummies when you supress controls
+         LOOPMARKER
       } type;
 
-      enum SegmentMousableType
+      enum ZoneSubType
       {
          SEGMENT_ENDPOINT,
-         SEGMENT_CONTROL
-      } mousableNodeType = SEGMENT_CONTROL;
+         SEGMENT_CONTROL,
+         LOOP_START,
+         LOOP_END
+      } zoneSubType = SEGMENT_CONTROL;
 
       enum SegmentControlDirection
       {
@@ -282,7 +285,32 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       float vscale = drawArea.getHeight();
       auto valpx = valToPx();
       auto tpx = timeToPx();
-         
+
+      // Put in the loop marker boxes
+      if( ms->loopMode != 0 ){
+         int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
+         int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
+         float pxs = tpx(ms->segmentStart[ls]);
+         float pxe = tpx(ms->segmentEnd[le]);
+         auto hs = hotzone();
+         hs.type = hotzone::Type::LOOPMARKER;
+         hs.segmentDirection = hotzone::HORIZONTAL_ONLY;
+
+         auto he = hs;
+
+         auto haxisArea = getHAxisArea();
+
+         int lmSize = 10;
+         hs.rect = VSTGUI::CRect( CPoint( pxs, haxisArea.top + 1), CPoint( lmSize, lmSize ));
+         hs.zoneSubType = hotzone::LOOP_START;
+
+         he.rect = VSTGUI::CRect( CPoint( pxe - lmSize, haxisArea.top + 1), CPoint( lmSize, lmSize ));
+         he.zoneSubType = hotzone::LOOP_END;
+
+         hotzones.push_back( hs );
+         hotzones.push_back( he );
+      }
+
       for( int i=0; i<ms->n_activeSegments; ++i )
       {
          auto t0 = tpx(ms->segmentStart[i]);
@@ -292,7 +320,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          // Now add the mousable zones
          auto& s = ms->segments[i];
-         auto rectForPoint = [&](float t, float v, hotzone::SegmentMousableType mt,
+         auto rectForPoint = [&](float t, float v, hotzone::ZoneSubType mt,
                                  std::function<void(float, float, const CPoint&)> onDrag) {
             auto h = hotzone();
             h.rect = CRect(t - handleRadius, valpx(v) - handleRadius, t + handleRadius,
@@ -302,7 +330,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                h.active = true;
             h.onDrag = onDrag;
             h.associatedSegment = i;
-            h.mousableNodeType = mt;
+            h.zoneSubType = mt;
             hotzones.push_back(h);
          };
 
@@ -499,7 +527,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                modelChanged();
             };
             h.associatedSegment = i;
-            h.mousableNodeType = hotzone::SEGMENT_CONTROL;
+            h.zoneSubType = hotzone::SEGMENT_CONTROL;
             if( verticalMotion && horizontalMotion )
                h.segmentDirection = hotzone::BOTH_DIRECTIONS;
             else if( horizontalMotion )
@@ -624,7 +652,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
 
       // draw loop markers
-      if (ms->loopMode > 1)
+      if (0 && ms->loopMode > 1)
       {
          int ls = ( ms->loop_start >= 0 ? ms->loop_start : 0 );
          int le = ( ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 );
@@ -724,6 +752,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       float pathFirstY, pathLastX, pathLastY, pathLastDef;
 
       bool drawnLast = false; // this slightly odd construct means we always draw beyond the last point
+      int priorEval = 0;
       for( int i=0; i<drawArea.getWidth(); ++i )
       {
          float up = pxt( i + drawArea.left );
@@ -739,6 +768,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             // Brownian doesn't deform and the second display is confusing since it is indepdently random
             if( es.lastEval >= 0 && es.lastEval <= ms->n_activeSegments - 1 && ms->segments[es.lastEval].type == MSEGStorage::segment::Type::BROWNIAN )
                vdef = v;
+
+            if( es.lastEval != priorEval )
+            {
+               // OK so make sure that priorEval nv1 is in there
+               path->addLine(i, valpx(ms->segments[priorEval].nv1));
+               for( int ns=priorEval + 1; ns <= es.lastEval; ns++ )
+                  path->addLine( i, valpx( ms->segments[ns].v0));
+               priorEval = es.lastEval;
+            }
 
             if( es.lastEval == hoveredSegment )
             {
@@ -879,6 +917,44 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       for( const auto &h : hotzones )
       {
+         if( h.type == hotzone::LOOPMARKER )
+         {
+            // OK so we draw |< or >| depending
+            if( h.active )
+            {
+               dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker)); // not we just hover the outline
+               dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerHover));
+            }
+            else
+            {
+               dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
+               dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
+            }
+            dc->setLineWidth(1);
+            dc->setLineStyle(kLineSolid);
+            if( h.zoneSubType == hotzone::LOOP_START )
+            {
+               // line on left side arrow pointing over
+               dc->drawLine(h.rect.getTopLeft(), h.rect.getBottomLeft());
+               CDrawContext::PointList l;
+               l.push_back( h.rect.getTopRight());
+               l.push_back( h.rect.getBottomRight());
+               l.push_back( CPoint( h.rect.left, ( h.rect.top + h.rect.bottom ) * 0.5 ));
+               l.push_back( h.rect.getTopRight());
+               dc->drawPolygon(l, kDrawFilledAndStroked);
+            }
+            else
+            {
+               dc->drawLine(h.rect.getTopRight(), h.rect.getBottomRight());
+               CDrawContext::PointList l;
+               l.push_back( h.rect.getTopLeft());
+               l.push_back( h.rect.getBottomLeft());
+               l.push_back( CPoint( h.rect.right, ( h.rect.top + h.rect.bottom ) * 0.5 ));
+               l.push_back( h.rect.getTopLeft() );
+               dc->drawPolygon(l, kDrawFilledAndStroked);
+
+            }
+         }
          if( h.type == hotzone::MOUSABLE_NODE )
          {
             int sz = 12;
@@ -892,13 +968,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( h.dragging )
                offy = 2;
 
-            if( h.mousableNodeType == hotzone::SEGMENT_CONTROL )
+            if( h.zoneSubType == hotzone::SEGMENT_CONTROL )
                offx = 1;
 
             if( h.active || h.dragging )
             {
 
-               if (h.mousableNodeType == hotzone::SEGMENT_CONTROL)
+               if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                {
                   auto nextCursor = VSTGUI::kCursorDefault;
                   if (h.active || h.dragging)
@@ -919,7 +995,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                      getFrame()->setCursor(nextCursor);
                   }
                }
-               if (h.mousableNodeType == hotzone::SEGMENT_ENDPOINT)
+               if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
                   getFrame()->setCursor(kCursorSizeAll);
             }
 
@@ -943,7 +1019,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          openPopup( where );
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
       }
-      if( buttons & kDoubleClick )
+      if( buttons & kDoubleClick || ((buttons & kLButton) && (buttons & kControl )))
       {
          auto tf = pxToTime( );
          auto t = tf( where.x );
@@ -955,7 +1031,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
             {
-               switch( h.mousableNodeType )
+               switch( h.zoneSubType)
                {
                case hotzone::SEGMENT_ENDPOINT:
                {
@@ -1046,11 +1122,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             if( h.type == hotzone::MOUSABLE_NODE )
             {
-               if( h.mousableNodeType == hotzone::SEGMENT_ENDPOINT )
+               if( h.zoneSubType == hotzone::SEGMENT_ENDPOINT )
                {
                   setCursorLocation(h.rect.getCenter());
                }
-               if( h.mousableNodeType == hotzone::SEGMENT_CONTROL && !h.useDrawRect )
+               if( h.zoneSubType == hotzone::SEGMENT_CONTROL && !h.useDrawRect )
                {
                   setCursorLocation(h.rect.getCenter());
                }

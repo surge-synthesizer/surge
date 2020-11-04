@@ -772,11 +772,13 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
 }
 
 
-void unsplitSegment( MSEGStorage *ms, float t ) {
+void unsplitSegment( MSEGStorage *ms, float t, bool wrapTime ) {
    // Can't unsplit a single segment
    if( ms->n_activeSegments - 1 == 0 ) return;
 
    int idx = timeToSegment( ms, t );
+   if( ! wrapTime && t >= ms->totalDuration )
+      idx = ms->n_activeSegments - 1;
    if( idx < 0 ) idx = 0;
    if( idx >= ms->n_activeSegments - 1 ) idx = ms->n_activeSegments - 1;
    int prior = idx;;
@@ -785,7 +787,7 @@ void unsplitSegment( MSEGStorage *ms, float t ) {
       if( idx == ms->n_activeSegments - 1 )
       {
          // We are just deleting the last segment
-         deleteSegment( ms, t );
+         deleteSegment( ms, idx );
          return;
       }
       idx++;
@@ -811,7 +813,6 @@ void unsplitSegment( MSEGStorage *ms, float t ) {
    ms->segments[prior].cpduration = cpdratio * ms->segments[prior].duration;
    ms->segments[prior].cpv = (ms->segments[prior].nv1 - ms->segments[prior].v0 ) * cpvratio + ms->segments[prior].v0;
 
-   
    for( int i=idx; i<ms->n_activeSegments - 1; ++i )
    {
       ms->segments[i] = ms->segments[i+1];
@@ -827,7 +828,11 @@ void deleteSegment( MSEGStorage *ms, float t ) {
    if( ms->n_activeSegments <= 1 ) return;
 
    auto idx = timeToSegment( ms, t );
-   
+   deleteSegment( ms, idx );
+}
+
+void deleteSegment( MSEGStorage *ms, int idx )
+{
    for( int i=idx; i<ms->n_activeSegments - 1; ++i )
    {
       ms->segments[i] = ms->segments[i+1];
