@@ -243,7 +243,9 @@ namespace Colors
       }
       namespace Loop
       {
-         const Surge::Skin::Color Line("msegeditor.loop.line", 255, 144, 0);
+         const Surge::Skin::Color Line("msegeditor.loop.line", 255, 144, 0),
+          Marker( "msegeditor.loop.marker", 255, 144, 0 ),
+          MarkerHover( "msegeditor.loop.marker.hover", 255, 255, 255 );
       }
       namespace NumberField
       {

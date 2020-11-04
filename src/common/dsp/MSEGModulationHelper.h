@@ -48,8 +48,9 @@ namespace Surge
 
       void extendTo( MSEGStorage *s, float t, float mv );
       void splitSegment( MSEGStorage *s, float t, float nv );
-      void unsplitSegment( MSEGStorage *s, float t );
+      void unsplitSegment( MSEGStorage *s, float t, bool wrapTime = false ); // for unsplit we often want past-end-is-last
       void deleteSegment( MSEGStorage *s, float t );
+      void deleteSegment( MSEGStorage *s, int idx );
 
       void resetControlPoint( MSEGStorage *s, float t );
       void resetControlPoint( MSEGStorage *s, int idx );
