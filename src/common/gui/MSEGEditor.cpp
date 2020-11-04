@@ -287,7 +287,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto tpx = timeToPx();
 
       // Put in the loop marker boxes
-      if( ms->loopMode != 0 ){
+      if( ms->loopMode != MSEGStorage::LoopMode::ONESHOT ){
          int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
          int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
          float pxs = tpx(ms->segmentStart[ls]);
@@ -892,15 +892,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       dc->setLineStyle(CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
 
       // draw segment curve
-      dc->setLineWidth(1.0);
+      dc->setLineWidth(0.75);
       dc->setFrameColor(skin->getColor( Colors::MSEGEditor::DeformCurve));
       dc->drawGraphicsPath(defpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
-      dc->setLineWidth(1.5);
+      dc->setLineWidth(1.0);
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
-      //dc->setLineWidth(3.0);
+      // hovered segment curve is slightly thicker
+      dc->setLineWidth(1.5);
+
       if( hlpathUsed )
       {
          dc->setFrameColor(skin->getColor(Colors::MSEGEditor::CurveHighlight));
@@ -955,6 +957,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
             }
          }
+
          if( h.type == hotzone::MOUSABLE_NODE )
          {
             int sz = 12;
