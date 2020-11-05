@@ -114,3 +114,7 @@ Question: is bypass from CEG different than global bypass?
 
 ## A non-airwindow becomes an airwindow in deactivated state
 
+## The DAW AUtomation Path
+
+The DAW Automation Path comes in through `synth::setParameter01` and handles the `ct_fxtype` to do the spawn-and-replace.
+See the comments there for more.

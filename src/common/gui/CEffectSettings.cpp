@@ -73,7 +73,20 @@ void CEffectSettings::draw(CDrawContext* dc)
 
    if( mouseActionMode == drag )
    {
+      auto vs = getViewSize();
+      vs = vs.inset(1,1);
       auto r = CRect( dragCurrent - dragCornerOff, CPoint( 17, 9 ) );
+      // r = vs.bound(r); this just pushes it inside; we need to keep constant size so
+      float dx = 0, dy=0;
+      if( r.top < vs.top ) { dy = vs.top - r.top; }
+      if( r.bottom > vs.bottom ) { dy = vs.bottom - r.bottom; }
+      if( r.left < vs.left ) { dx = vs.left - r.left; }
+      if( r.right > vs.right ) { dx = vs.right - r.right; }
+      r.top += dy;
+      r.bottom += dy;
+      r.right += dx;
+      r.left += dx;
+
       auto q = r;
       q = q.extend(1,1);
       dc->setFillColor(skin->getColor( Colors::Effect::Grid::Border));
