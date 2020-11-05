@@ -110,6 +110,11 @@ void Vst2PluginInstance::inputConnected(VstInt32 index, bool state)
 
 Vst2PluginInstance::~Vst2PluginInstance()
 {
+   if( editor )
+   {
+      delete editor;
+      editor = nullptr;
+   }
    delete _instance;
 }
 
