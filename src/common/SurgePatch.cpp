@@ -107,7 +107,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    ParameterIDCounter::promise_t globparams_promise = p_id.tail;
    ParameterIDCounter::promise_t scene_start_promise[2];
 
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       int sceasy =
           (sc == 0) ? kEasy
@@ -116,7 +116,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       vector<Parameter*>* a;
       a = &param_ptr;
 
-      int sc_id = (sc & 1) + 1;
+      int sc_id = (sc & 1) + 1; // probably needs to change in case we want to add more scenes?
 
       scene_start_promise[sc] = p_id.tail;
 
@@ -366,7 +366,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
           Surge::Skin::Filter::waveshaper_drive, sc_id, cg_GLOBAL, 0, true,
           sceasy));
 
-      for (int f = 0; f < 2; f++)
+      for (int f = 0; f < n_filterunits_per_scene; f++)
       {
          a->push_back(scene[sc].filterunit[f].type.assign(p_id.next(), id_s++, "type", "Type",
                                                           ct_filtertype,
@@ -407,7 +407,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       }
 
       // scene[sc].filterunit[0].type.val.i = 1;
-      for (int e = 0; e < 2; e++)
+      for (int e = 0; e < 2; e++)   // 2 = we have two envelopes, filter and amplifier
       {
          std::string envs = "aeg.";
          if( e == 1 )
@@ -613,7 +613,7 @@ void SurgePatch::init_default_values()
 
    character.val.i = 1;
 
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       for (auto& osc : scene[sc].osc)
       {
@@ -920,7 +920,7 @@ void SurgePatch::load_patch(const void* data, int datasize, bool preset)
       load_xml(dr, ph->xmlsize, preset);
       dr += ph->xmlsize;
 
-      for (int sc = 0; sc < 2; sc++)
+      for (int sc = 0; sc < n_scenes; sc++)
       {
          for (int osc = 0; osc < n_oscs; osc++)
          {
@@ -974,7 +974,7 @@ unsigned int SurgePatch::save_patch(void** data)
    size_t xmlsize = save_xml(&xmldata);
    header.xmlsize = vt_write_int32LE(xmlsize);
    wt_header wth[2][n_oscs];
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       for (int osc = 0; osc < n_oscs; osc++)
       {
@@ -1006,7 +1006,7 @@ unsigned int SurgePatch::save_patch(void** data)
    dw += xmlsize;
    free(xmldata);
 
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       for (int osc = 0; osc < n_oscs; osc++)
       {
@@ -1067,10 +1067,11 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    }
 
    // clear old routings
-   scene[0].modulation_scene.clear();
-   scene[0].modulation_voice.clear();
-   scene[1].modulation_scene.clear();
-   scene[1].modulation_voice.clear();
+   for (int sc = 0; sc < n_scenes; sc++)
+   {
+      scene[sc].modulation_scene.clear();
+      scene[sc].modulation_voice.clear();
+   }
    modulation_global.clear();
 
    for (auto& i : fx)
@@ -1316,6 +1317,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       }
    }
 
+   // TODO: FIX SCENE ASSUMPTION
    if (scene[0].pbrange_up.val.i & 0xffffff00) // is outside range, it must have been save
    {
       scene[0].pbrange_up.val.i = (int)scene[0].pbrange_up.val.f;
@@ -1459,7 +1461,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    // ensure that filtersubtype is a valid value
    for (auto& sc : scene)
    {
-      for (int u = 0; u < 2; u++)
+      for (int u = 0; u < n_filterunits_per_scene; u++)
       {
          sc.filterunit[0].subtype.val.i =
              limit_range(sc.filterunit[0].subtype.val.i, 0,
@@ -1472,7 +1474,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    */
 
    // Blank out the display names
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       for (int osc = 0; osc < n_oscs; osc++)
       {
@@ -1750,6 +1752,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       TiXmlElement* mw = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("modwheel"));
       if (mw)
       {
+        // TODO: FIX SCENE ASSUMPTION
          if (mw->QueryDoubleAttribute("s0", &d) == TIXML_SUCCESS)
             ((ControllerModulationSource*)scene[0].modsources[ms_modwheel])->set_target(d);
          if (mw->QueryDoubleAttribute("s1", &d) == TIXML_SUCCESS)
@@ -1877,7 +1880,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    patch.InsertEndChild(parameters);
 
    TiXmlElement eod( "extraoscdata" );
-   for( int sc=0; sc<2; ++sc )
+   for (int sc = 0; sc < n_scenes; ++sc)
    {
       for( int os=0; os<n_oscs; ++os )
       {
@@ -1896,7 +1899,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
      
    
    TiXmlElement ss("stepsequences");
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       for (int l = 0; l < n_lfos; l++)
       {
@@ -1916,7 +1919,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    patch.InsertEndChild(ss);
 
    TiXmlElement mseg( "msegs" );
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       for (int l = 0; l < n_lfos; l++)
       {
@@ -1952,6 +1955,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
 
    {
       char txt[256];
+      // TODO: FIX SCENE ASSUMPTION
       TiXmlElement mw("modwheel");
       mw.SetAttribute(
           "s0", float_to_str(

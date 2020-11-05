@@ -280,7 +280,7 @@ void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
 {
    halt_engine = true;
    allNotesOff();
-   for (int s = 0; s < 2; s++)
+   for (int s = 0; s < n_scenes; s++)
       for (int i = 0; i < n_customcontrollers; i++)
          storage.getPatch().scene[s].modsources[ms_ctrl1 + i]->reset();
 
@@ -295,10 +295,10 @@ void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
 
    loadFx(false, true);
 
-   setParameter01(storage.getPatch().scene[0].f2_cutoff_is_offset.id,
-                  storage.getPatch().scene[0].f2_cutoff_is_offset.get_value_f01());
-   setParameter01(storage.getPatch().scene[1].f2_cutoff_is_offset.id,
-                  storage.getPatch().scene[1].f2_cutoff_is_offset.get_value_f01());
+   for (int sc = 0; sc < n_scenes; sc++)
+   {
+      setParameter01(storage.getPatch().scene[sc].f2_cutoff_is_offset.id, storage.getPatch().scene[sc].f2_cutoff_is_offset.get_value_f01());
+   }
 
    halt_engine = false;
    patch_loaded = true;

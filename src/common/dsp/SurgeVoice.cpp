@@ -407,7 +407,7 @@ void SurgeVoice::switch_toggled()
    }
 
    // check the filtertype
-   for (int u = 0; u < 2; u++)
+   for (int u = 0; u < n_filterunits_per_scene; u++)
    {
       if ((scene->filterunit[u].type.val.i != FBP.FU[u].type) ||
           (scene->filterunit[u].subtype.val.i != FBP.FU[u].subtype))
@@ -1011,7 +1011,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
           cutoffB, scene->f2_link_resonance.val.b ? localcopy[id_resoa].f : localcopy[id_resob].f,
           scene->filterunit[1].type.val.i, scene->filterunit[1].subtype.val.i, storage);
 
-      for (int u = 0; u < 2; u++)
+      for (int u = 0; u < n_filterunits_per_scene; u++)
       {
          if (scene->filterunit[u].type.val.i != 0)
          {
@@ -1058,7 +1058,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
 
 void SurgeVoice::GetQFB()
 {
-   for (int u = 0; u < 2; u++)
+   for (int u = 0; u < n_filterunits_per_scene; u++)
    {
       if (scene->filterunit[u].type.val.i != 0)
       {

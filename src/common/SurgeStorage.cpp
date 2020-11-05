@@ -124,7 +124,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
            }
    }*/
 
-   for (int s = 0; s < 2; s++)
+   for (int s = 0; s < n_scenes; s++)
       for (int o = 0; o < n_oscs; o++)
          for (int i = 0; i < max_mipmap_levels; i++)
             for (int j = 0; j < max_subtables; j++)
@@ -148,7 +148,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    for (int i = 0; i < n_modsources; i++)
       modsource_vu[i] = 0.f; // remove?
 
-   for (int s = 0; s < 2; s++)
+   for (int s = 0; s < n_scenes; s++)
       for (int cc = 0; cc < 128; cc++)
          poly_aftertouch[s][cc] = 0.f;
 
@@ -882,7 +882,7 @@ void SurgeStorage::refresh_wtlistAddDir(bool userDir, std::string subdir)
 void SurgeStorage::perform_queued_wtloads()
 {
    SurgePatch& patch = getPatch();  //Change here is for performance and ease of debugging, simply not calling getPatch so many times. Code should behave identically.
-   for (int sc = 0; sc < 2; sc++)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
       for (int o = 0; o < n_oscs; o++)
       {
@@ -1143,7 +1143,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
 
 void SurgeStorage::clipboard_paste(int type, int scene, int entry)
 {
-   assert(scene < 2);
+   assert(scene < n_scenes);
    if (type != clipboard_type)
       return;
 

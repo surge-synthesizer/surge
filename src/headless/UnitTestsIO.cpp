@@ -367,7 +367,7 @@ TEST_CASE( "Stream WaveTable Names", "[io]" )
          std::vector<bool> iswts;
          std::vector<std::string> names;
          
-         for( int s = 0; s < 2; ++s )
+         for (int s = 0; s < n_scenes; ++s)
             for( int o = 0; o < n_oscs; ++o )
             {
                bool isWT = 1.0 * rand() / RAND_MAX > 0.7;
@@ -400,7 +400,7 @@ TEST_CASE( "Stream WaveTable Names", "[io]" )
          auto patchD = &(surgeD->storage.getPatch());
 
          int idx = 0;
-         for( int s = 0; s < 2; ++s )
+         for (int s = 0; s < n_scenes; ++s)
             for( int o = 0; o < n_oscs; ++o )
             {
                if( iswts[idx] )

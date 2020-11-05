@@ -501,7 +501,7 @@ void COscillatorDisplay::populateMenu(COptionMenu* contextMenu, int selectedItem
           // FIXME - we need to find the scene and osc by iterating (gross).
           int oscNum = -1;
           int scene = -1;
-          for( int sc=0;sc<2;sc++ )
+          for (int sc = 0; sc < n_scenes; sc++)
           {
              auto s = &(storage->getPatch().scene[sc]);
              for( int o=0;o<n_oscs; ++o )
