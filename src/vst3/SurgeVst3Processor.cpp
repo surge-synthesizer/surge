@@ -507,18 +507,18 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
          float** outB = data.outputs[2].channelBuffers32;
          if (surgeInstance->activateExtraOutputs)
          {
-            for (int c = 0; c < 2; ++c) // c = channel, we have 2 (left, right)
+            for (int ch = 0; ch < 2; ++ch)
             {
-               outA[c][i] = (float)surgeInstance->sceneout[0][c][blockpos];
-               outB[c][i] = (float)surgeInstance->sceneout[1][c][blockpos];
+               outA[ch][i] = (float)surgeInstance->sceneout[0][ch][blockpos];
+               outB[ch][i] = (float)surgeInstance->sceneout[1][ch][blockpos];
             }
          }
          else
          {
-            for (int c = 0; c < n_scenes; ++c)
+            for (int ch = 0; ch < 2; ++ch)
             {
-               outA[c][i] = 0.f;
-               outB[c][i] = 0.f;
+               outA[ch][i] = 0.f;
+               outB[ch][i] = 0.f;
             }
          }
       }
