@@ -7018,6 +7018,13 @@ bool SurgeGUIEditor::onDrop( const std::string& fname)
 
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
 {
+   auto t = fxPresetName[target];
+   fxPresetName[target] = fxPresetName[source];
+   if( m == SurgeSynthesizer::SWAP )
+      fxPresetName[source] = t;
+   if( m == SurgeSynthesizer::MOVE )
+      fxPresetName[source] = "";
+
    synth->reorderFx(source, target, m );
 }
 

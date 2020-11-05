@@ -1560,27 +1560,28 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             }
          }
          break;
-      case ct_osctype:
-      {
-          int s = storage.getPatch().param_ptr[index]->scene - 1;
+      case ct_osctype: {
+         int s = storage.getPatch().param_ptr[index]->scene - 1;
 
-          if( storage.getPatch().param_ptr[index]->val.i != oldval.i )
-          {
-              /*
+         if (storage.getPatch().param_ptr[index]->val.i != oldval.i)
+         {
+            /*
               ** Wish there was a better way to figure out my osc but thsi works
-              */
-              for( auto oi = 0; s >=0 && s <= 1 && oi < n_oscs; oi++ )
-              {
-                  if( storage.getPatch().scene[s].osc[oi].type.id == storage.getPatch().param_ptr[index]->id )
-                  {
-                      storage.getPatch().scene[s].osc[oi].queue_type = storage.getPatch().param_ptr[index]->val.i;
-                  }
-              }
-          }
-          switch_toggled_queued = true;
-          need_refresh = true;
-          refresh_editor = true;
-          break;
+            */
+            for (auto oi = 0; s >= 0 && s <= 1 && oi < n_oscs; oi++)
+            {
+               if (storage.getPatch().scene[s].osc[oi].type.id ==
+                   storage.getPatch().param_ptr[index]->id)
+               {
+                  storage.getPatch().scene[s].osc[oi].queue_type =
+                      storage.getPatch().param_ptr[index]->val.i;
+               }
+            }
+         }
+         switch_toggled_queued = true;
+         need_refresh = true;
+         refresh_editor = true;
+         break;
       }
       case ct_wstype:
       case ct_bool_mute:
@@ -1591,20 +1592,39 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       case ct_filtersubtype:
          // See above: We know the filter type for this subtype is at index - 1. Cap max to be the fut-subtype
          {
-            auto filterType = storage.getPatch().param_ptr[index-1]->val.i;
+            auto filterType = storage.getPatch().param_ptr[index - 1]->val.i;
             auto maxIVal = fut_subcount[filterType];
-            if( maxIVal == 0 )
+            if (maxIVal == 0)
                storage.getPatch().param_ptr[index]->val.i = 0;
             else
-               storage.getPatch().param_ptr[index]->val.i = std::min( maxIVal-1,
-                                                                     storage.getPatch().param_ptr[index]->val.i );
+               storage.getPatch().param_ptr[index]->val.i =
+                   std::min(maxIVal - 1, storage.getPatch().param_ptr[index]->val.i);
             switch_toggled_queued = true;
             break;
          }
-      case ct_fxtype:
-         switch_toggled_queued = true;
-         load_fx_needed = true;
+      case ct_fxtype: {
+         // OK so this would work you would think but remember that FXSync is primary not the patch so
+         auto p = storage.getPatch().param_ptr[index];
+         if (p->val.i != oldval.i )
+         {
+            int cge = p->ctrlgroup_entry;
+
+            fxsync[cge].type.val.i = p->val.i;
+            p->val.i = oldval.i; // so funnily we want to set the value *back* so the loadFX picks up the change in fxsync
+            Effect* t_fx = spawn_effect(fxsync[cge].type.val.i, &storage, &fxsync[cge], 0);
+            if (t_fx)
+            {
+               t_fx->init_ctrltypes();
+               t_fx->init_default_values();
+               delete t_fx;
+            }
+
+            switch_toggled_queued = true;
+            load_fx_needed = true;
+            fx_reload[cge] = true;
+         }
          break;
+      }
       case ct_bool_relative_switch:
       {
          int s = storage.getPatch().param_ptr[index]->scene - 1;
@@ -3258,8 +3278,8 @@ void SurgeSynthesizer::changeModulatorSmoothing( ControllerModulationSource::Smo
 void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
 {
    FxStorage so, to;
-   memcpy((void*)&so, (void*)(&fxsync[source]), sizeof(FxStorage));
-   memcpy((void*)&to, (void*)(&fxsync[target]), sizeof(FxStorage));
+   memcpy((void*)&so, (void*)(&storage.getPatch().fx[source]), sizeof(FxStorage));
+   memcpy((void*)&to, (void*)(&storage.getPatch().fx[target]), sizeof(FxStorage));
 
    fxsync[target].type.val.i = so.type.val.i;
    Effect* t_fx = spawn_effect(fxsync[target].type.val.i, &storage, &fxsync[target], 0);
@@ -3291,11 +3311,19 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
     * OK we can't copy the params - they contain things like id in scene - we need to copy the
     * values
     */
+   auto cp = [](Parameter &to, const Parameter &from )
+   {
+      to.val = from.val;
+      to.temposync = from.temposync;
+      to.extend_range = from.extend_range;
+      to.deactivated = from.deactivated;
+      to.absolute = from.absolute;
+   };
    for (int i = 0; i < n_fx_params; ++i)
    {
       if( m == FXReorderMode::SWAP )
-         fxsync[source].p[i].val = to.p[i].val;
-      fxsync[target].p[i].val = so.p[i].val;
+         cp( fxsync[source].p[i], to.p[i] );
+      cp( fxsync[target].p[i], so.p[i] );
    }
 
    load_fx_needed = true;
