@@ -531,7 +531,7 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
             for (int i = 0; i < ngrad->nstops; ++i)
             {
                auto stop = ngrad->stops[i];
-               cg->addColorStop(stop.offset, svgColorToCColor(stop.color));
+               cg->addColorStop(stop.offset, svgColorToCColor(stop.color, shape->opacity));
             }
             VSTGUI::CPoint s0(0, 0), s1(0, 1);
             VSTGUI::CPoint p0 = gradXform.inverse().transform(s0);
@@ -554,7 +554,7 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
             for( int i=0; i<ngrad->nstops; ++i )
             {
                auto stop = ngrad->stops[i];
-               cg->addColorStop(stop.offset, svgColorToCColor(stop.color));
+               cg->addColorStop(stop.offset, svgColorToCColor(stop.color, shape->opacity));
             }
 
             VSTGUI::CPoint s0(0, 0), s1(0.5,0); // the box has size -0.5, 0.5 so the radius is 0.5
