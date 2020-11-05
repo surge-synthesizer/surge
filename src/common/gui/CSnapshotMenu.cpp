@@ -416,6 +416,7 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
 {
    if (!type)
       fxbuffer->type.val.i = type;
+
    if (e)
    {
       fxbuffer->type.val.i = type;

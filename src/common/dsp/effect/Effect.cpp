@@ -12,11 +12,14 @@
 #include "FlangerEffect.h"
 #include "RingModulatorEffect.h"
 #include "airwindows/AirWindowsEffect.h"
+#include "DebugHelpers.h"
 
 using namespace std;
 
 Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
 {
+   // std::cout << "Spawn Effect " << _D(id) << std::endl;
+   // Surge::Debug::stackTraceToStdout(7);
    switch (id)
    {
    case fxt_delay:
