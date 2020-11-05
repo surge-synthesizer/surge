@@ -4767,6 +4767,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
                          Surge::UI::toOSCaseForMenu(p.name),
                          [this, p, currentLfoId](){
                             Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage), current_scene, currentLfoId );
+                            auto newshape = this->synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
+
+                            if( editorOverlay && editorOverlayTag == "msegEditor" )
+                            {
+                               closeMSEGEditor();
+                               if( newshape == ls_mseg )
+                                  showMSEGEditor();
+                            }
+
                             this->synth->refresh_editor = true;
                          });
       lfoSubMenu->addEntry(catSubMenu, cat.name.c_str());
