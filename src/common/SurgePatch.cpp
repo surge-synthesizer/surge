@@ -1463,9 +1463,9 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    {
       for (int u = 0; u < n_filterunits_per_scene; u++)
       {
-         sc.filterunit[0].subtype.val.i =
-             limit_range(sc.filterunit[0].subtype.val.i, 0,
-                         max(0, fut_subcount[sc.filterunit[0].type.val.i] - 1));
+         sc.filterunit[u].subtype.val.i =
+             limit_range(sc.filterunit[u].subtype.val.i, 0,
+                         max(0, fut_subcount[sc.filterunit[u].type.val.i] - 1));
       }
    }
 
