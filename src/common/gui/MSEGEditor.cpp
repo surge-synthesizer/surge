@@ -1677,6 +1677,9 @@ void MSEGControlRegion::rebuild()
        */
       auto cnfSkinCtrl = std::make_shared<Surge::UI::Skin::Control>();
       cnfSkinCtrl->allprops["bg_id"] = std::to_string( IDB_MSEG_NUMBERFIELDBG );
+      cnfSkinCtrl->allprops["text_color"] = Colors::MSEGEditor::NumberField::Text.name;
+      cnfSkinCtrl->allprops["text_color.hover"] = Colors::MSEGEditor::NumberField::TextHover.name;
+
       auto* hnf = new CNumberField(hsrect, this, tag_horizontal_value, nullptr /*, ref to storage?*/);
       hnf->setControlMode(cm_mseg_snap_h);
       hnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
