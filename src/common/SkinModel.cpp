@@ -76,12 +76,12 @@ namespace Surge
       }
 
       namespace FX { // DONE except VU but still with the terrible API
-         Connector fxJog = Connector( "fx.preset.prevnext", 854, 201, Connector::JOG_FX ).asJogPlusMinus();
-         Connector fxPreset = Connector( "fx.preset.name", 761, 201, 91, 12, Connector::CUSTOM, Connector::FXPRESET_LABEL );
-         Connector fxSelector = Connector( "fx.selector", 767, 71, 123, 51, Connector::CUSTOM, Connector::FX_SELECTOR );
-         Connector fxtype = Connector( "fx.type", 761, 181, 133, 18, Connector::FXMENU );
+         Connector fxJog = Connector( "fx.preset.prevnext", 855, 212, Connector::JOG_FX ).asJogPlusMinus();
+         Connector fxPreset = Connector( "fx.preset.name", 762, 212, 91, 12, Connector::CUSTOM, Connector::FXPRESET_LABEL );
+         Connector fxSelector = Connector( "fx.selector", 767, 79, 123, 51, Connector::CUSTOM, Connector::FX_SELECTOR );
+         Connector fxtype = Connector( "fx.type", 761, 193, 133, 18, Connector::FXMENU );
 
-         Connector fxParamPanel = Connector( "fx.param.panel", 759, 214, Connector::GROUP );
+         Connector fxParamPanel = Connector( "fx.param.panel", 759, 224, Connector::GROUP );
          Connector param_1 = Connector( "fx.param_1", 0, 0 ).inParent( "fx.param.panel" );
          Connector param_2 = Connector( "fx.param_2", 0, 20 ).inParent( "fx.param.panel" );
          Connector param_3 = Connector( "fx.param_3", 0, 40 ).inParent( "fx.param.panel" );
@@ -133,8 +133,8 @@ namespace Surge
                   .withHSwitch2Properties(IDB_SCENESWITCH, 2, 1, 2 );
          Connector character = Connector( "global.character", 607, 41, 135, 12, Connector::HSWITCH2 )
              .withHSwitch2Properties(IDB_CHARACTER, 3, 1, 3 );
-         Connector fx1_return = Connector( "global.fx1_return", 759, 124 ); // check
-         Connector fx2_return = Connector( "global.fx2_return", 759, 145 ); // check
+         Connector fx1_return = Connector( "global.fx1_return", 759, 141 ); // check
+         Connector fx2_return = Connector( "global.fx2_return", 759, 162 ); // check
          Connector fx_bypass = Connector( "global.fx_bypass", 607, 12, 135, 27, Connector::HSWITCH2 )
              .withHSwitch2Properties( IDB_FXBYPASS, 4, 1, 4 );
          Connector fx_disable = Connector( "global.fx_disable", 0, 0 );
