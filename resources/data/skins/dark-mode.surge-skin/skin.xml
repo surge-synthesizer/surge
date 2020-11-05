@@ -1,4 +1,4 @@
-<surge-skin name="Surge Dark" author="Decoded Enterprises, EvilDragon, Jon Spruyt" version="1">
+<surge-skin name="Surge Dark" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
     <defaultimage directory="SVG/"/>
 
@@ -20,7 +20,12 @@
     <color id="buttonbg" value="#151515"/>
     <color id="modblue" value="#2E86FE"/>
 
+
     <color id="lfo.title.text" value="#B4B4B490"/>
+
+    <color id="lfo.type.selected.background" value="surgeblue"/>
+    <color id="lfo.type.selected.text" value="#E5E5E5"/>
+    <color id="lfo.type.unselected.text" value="lightgray"/>
 
     <color id="lfo.waveform.background" value="bggray"/>
     <color id="lfo.waveform.ruler.text" value="lightgray"/>
@@ -32,10 +37,6 @@
     <color id="lfo.waveform.envelope" value="surgebluetrans"/>
     <color id="lfo.waveform.wave" value="modblue"/>
     <color id="lfo.waveform.wave.deactivated" value="#2E86FE90"/>
-
-    <color id="lfo.type.selected.background" value="surgeblue"/>
-    <color id="lfo.type.selected.text" value="#E5E5E5"/>
-    <color id="lfo.type.unselected.text" value="lightgray"/>
 
     <color id="lfo.stepseq.background" value="darkergray"/>
     <color id="lfo.stepseq.column.shadow" value="almostblack"/>
@@ -51,17 +52,13 @@
     <color id="lfo.stepseq.drag.line" value="lightgray"/>
     <color id="lfo.stepseq.envelope" value="surgebluetrans"/>
     <color id="lfo.stepseq.wave" value="modblue"/>
-
     <color id="lfo.stepseq.button.background" value="darkergray"/>
     <color id="lfo.stepseq.button.border" value="buttonbg"/>
     <color id="lfo.stepseq.button.hover" value="darkgray"/>
     <color id="lfo.stepseq.button.arrow" value="lightgray"/>
-
     <color id="lfo.stepseq.popup.background" value="white"/>
     <color id="lfo.stepseq.popup.border" value="darkestgray"/>
     <color id="lfo.stepseq.popup.text" value="darkestgray"/>
-
-    <color id="overlay.background" value="#000000C0"/>
 
     <color id="msegeditor.background" value="#202020"/>
     <color id="msegeditor.curve" value="modblue"/>
@@ -69,12 +66,12 @@
     <color id="msegeditor.curve.highlight" value="#40ADFF"/>
     <color id="msegeditor.panel" value="#2D2D2D"/>
     <color id="msegeditor.panel.text" value="lightgray"/>
-    <color id="msegeditor.axis.text" value="lightgray"/>
-    <color id="msegeditor.axis.text.secondary" value="#B4B4B4C0"/>
     <color id="msegeditor.fill.gradient.start" value="#2E86FE80"/>
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
     <color id="msegeditor.numberfield.text.hover" value="white"/>
+
+    <color id="overlay.background" value="#000000C0"/>
 
     <color id="dialog.background" value="bggray"/>
     <color id="dialog.border" value="bordergray"/>
@@ -84,21 +81,18 @@
     <color id="dialog.button.background" value="#404040"/>
     <color id="dialog.button.border" value="bordergray"/>
     <color id="dialog.button.text" value="lightgray"/>
-
     <color id="dialog.textfield.focus" value="red"/>
     <color id="dialog.textfield.border" value="bordergray"/>
     <color id="dialog.textfield.background" value="#2E2E2E"/>
     <color id="dialog.textfield.text" value="lightgray"/>
-    <color id="dialog.label.text" value="lightgray"/>
-
     <color id="dialog.checkbox.background" value="white"/>
     <color id="dialog.checkbox.border" value="lightgray"/>
     <color id="dialog.checkbox.tick" value="darkergray"/>
+    <color id="dialog.label.text" value="lightgray"/>
 
     <color id="effect.label.separator" value="#5E5E5E"/>
     <color id="effect.label.text" value="lightgray"/>
     <color id="effect.label.presetname" value="lightgray"/>
-
     <color id="effect.menu.text" value="lightgray"/>
     <color id="effect.menu.text.hover" value="white"/>
 
@@ -120,12 +114,13 @@
     <color id="slider.modulation.positive" value="#82BF50"/>
     <color id="slider.modulation.negative" value="gray"/>
 
-    <color id="global.split_poly.text" value="lightgray"/>
-    <color id="global.split_poly.text.hover" value="white"/>
     <color id="scene.pbrange.text" value="lightgray"/>
     <color id="scene.pbrange.text.hover" value="white"/>
     <color id="scene.keytrackroot.text" value="lightgray"/>
     <color id="scene.keytrackroot.text.hover" value="white"/>
+
+    <color id="global.split_poly.text" value="lightgray"/>
+    <color id="global.split_poly.text.hover" value="white"/>
 
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="red"/>
@@ -201,8 +196,9 @@
     <control ui_identifier="lfo.presets" y="478"/>
     <control ui_identifier="lfo.msegedit" y="478"/>
 
-    <control ui_identifier="FX.jog" x="855"/>
-    <control ui_identifier="FX.presetlabel" x="762"/>
+    <control ui_identifier="fx.type" y="194"/>
+    <control ui_identifier="fx.preset.prevnext" x="855" y="213"/>
+    <control ui_identifier="fx.preset.name" x="762" y="213"/>
 
  	<control ui_identifier="global.polylimit" x="100" y="32" w="44"/>
  	<control ui_identifier="global.splitpoint" x="100" y="11" w="44"/>
