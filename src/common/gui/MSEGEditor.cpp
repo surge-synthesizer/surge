@@ -36,8 +36,9 @@
 ** 303 - IDB_MSEG_VERTICAL_SNAP 80x40 2 rows (off, on)
 ** 304 - IDB_MSEG_HORIZONTAL_SNAP 80x40 2 rows (off, on)
 ** 305 - IDB_MSEG_LOOP_MODES 120x60 3 rows (off, on, gate) x 3 columns (the states)
+** 306 - IDB_MSEG_NUMBERFIELDBG 32x12
+** 307 - IDB_MSEG_EDIT_MODE 91x24 2 rows (envelope, LFO) x 2 columns (the states)
 */
-
 
 using namespace VSTGUI;
 

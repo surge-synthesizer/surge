@@ -26,6 +26,7 @@ limiter?
 AudioInputOscillator::AudioInputOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {
+   // in case of more scenes being added, design a solution for audio in oscillator extra input!
    isInSceneB = false;
    if( storage )
    {

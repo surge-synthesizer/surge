@@ -2343,7 +2343,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                eid++;
             }
          }
-         int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, 1);
+         int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, n_scenes - 1);
 #if TARGET_VST3
          Steinberg::Vst::IContextMenu *hostMenu = nullptr;
 #endif
