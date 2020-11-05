@@ -579,7 +579,7 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
       {
          if (shape->stroke.type == NSVG_PAINT_COLOR)
          {
-            dc->setFrameColor(svgColorToCColor(shape->stroke.color));
+            dc->setFrameColor(svgColorToCColor(shape->stroke.color, shape->opacity));
          }
          else
          {
