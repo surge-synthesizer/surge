@@ -1,5 +1,8 @@
 # Surge
 
+CI: [![CI Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.surge?branchName=main)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=2&branchName=main)
+Release: [![Release Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1&branchName=master)
+
 Surge is an open source digital synthesizer, originally written and sold as a commercial product
 by @kurasu/Claes Johanson at [vember audio](http://vemberaudio.se). In September of 2018,
 Claes chose to release a partially completed version of Surge 1.6 under GPL3, and a group
