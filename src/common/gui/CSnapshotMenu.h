@@ -91,7 +91,6 @@ protected:
    OscillatorStorage* osc = nullptr;
    VSTGUI::CBitmap* bmp = nullptr, *hoverBmp = nullptr;
    bool attemptedHoverLoad = false;
-   int currentIdx;
    float accumWheel = 0;
 
    CLASS_METHODS(COscMenu, VSTGUI::CControl)

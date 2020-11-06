@@ -251,10 +251,6 @@ COscMenu::COscMenu(const CRect& size,
    auto tb = bitmapStore->getBitmap(IDB_OSCMENU);
    bmp = tb;
    populate();
-
-   currentIdx = 0;
-   if( firstSnapshotByType.find(osc->type.val.i ) != firstSnapshotByType.end() )
-      currentIdx = firstSnapshotByType[osc->type.val.i];
 }
 
 void COscMenu::draw(CDrawContext* dc)
@@ -279,6 +275,9 @@ void COscMenu::draw(CDrawContext* dc)
 void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
 {
    assert(within_range(0, type, num_osctypes));
+   auto sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+   if( sge )
+      sge->oscilatorMenuIndex = idx;
    osc->queue_type = type;
    osc->queue_xmldata = e;
 }
@@ -290,19 +289,28 @@ bool COscMenu::onWheel( const VSTGUI::CPoint &where, const float &distance, cons
    accumWheel += distance;
 #endif
 
-   if( accumWheel < -1 )
+   auto *sge = dynamic_cast<SurgeGUIEditor*>(listenerNotForParent);
+   if( sge )
    {
-      currentIdx = std::min( maxIdx - 1, currentIdx + 1 );
-      accumWheel = 0;
-      auto args = loadArgsByIndex[currentIdx];
-      loadSnapshot( args.first, args.second, currentIdx );
-   }
-   else if( accumWheel > 1 )
-   {
-      currentIdx = std::max( 0, currentIdx - 1 );
-      accumWheel = 0;
-      auto args = loadArgsByIndex[currentIdx];
-      loadSnapshot( args.first, args.second, currentIdx );
+      int currentIdx = sge->oscilatorMenuIndex;
+      if (accumWheel < -1)
+      {
+         currentIdx = currentIdx + 1;
+         if( currentIdx >= maxIdx )
+            currentIdx = 0;
+         accumWheel = 0;
+         auto args = loadArgsByIndex[currentIdx];
+         loadSnapshot(args.first, args.second, currentIdx);
+      }
+      else if (accumWheel > 1)
+      {
+         currentIdx = currentIdx - 1;
+         if( currentIdx < 0 )
+            currentIdx = maxIdx - 1;
+         accumWheel = 0;
+         auto args = loadArgsByIndex[currentIdx];
+         loadSnapshot(args.first, args.second, currentIdx);
+      }
    }
    return true;
 }
