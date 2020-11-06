@@ -1576,9 +1576,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ((CParameterTooltip *)infowindow)->setSkin( currentSkin );
    frame->addView(infowindow);
 
-
-   setupSaveDialog();
-
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
       CSurgeSlider::sliderMoveRateState =
@@ -3740,18 +3737,78 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             p.comments += " (Original patch by " + oldAuthor + ")";
       }
 
+      showStorePatchDialog();
+
       patchName->setText(p.name.c_str());
       patchCategory->setText(p.category.c_str());
       patchCreator->setText(p.author.c_str());
       patchComment->setText(p.comments.c_str());
+   }
+   break;
+   case tag_store_ok:
+   {
+      closeStorePatchDialog();
+      // saveDialog->setVisible(false);
+      // frame->setModalView(nullptr);
+      frame->setDirty();
 
-      showPatchStoreDialog(&p, &synth->storage.patch_category,
-                           synth->storage.firstUserCategory);
+      /*
+      ** Don't allow a blank patch
+      */
+      std::string whatIsBlank = "";
+      bool haveBlanks = false;
+
+      if (!Surge::Storage::isValidName(patchName->getText().getString()))
+      {
+         whatIsBlank = "name";
+         haveBlanks = true;
+      }
+      if (!Surge::Storage::isValidName(patchCategory->getText().getString()))
+      {
+         whatIsBlank = whatIsBlank + (haveBlanks ? " and category" : "category");
+         haveBlanks = true;
+      }
+      if (haveBlanks)
+      {
+         Surge::UserInteractions::promptError(
+             std::string("Unable to store a patch due to invalid ") + whatIsBlank +
+                 ". Please save again and provide a complete " + whatIsBlank + ".",
+             "Patch Saving Error");
+      }
+      else
+      {
+         synth->storage.getPatch().name = patchName->getText();
+         synth->storage.getPatch().author = patchCreator->getText();
+         synth->storage.getPatch().category = patchCategory->getText();
+         synth->storage.getPatch().comment = patchComment->getText();
+
+         synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
+         if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
+         {
+            synth->storage.getPatch().patchTuning.tuningContents =
+                synth->storage.currentScale.rawText;
+            if (synth->storage.isStandardMapping)
+            {
+               synth->storage.getPatch().patchTuning.mappingContents = "";
+            }
+            else
+            {
+               synth->storage.getPatch().patchTuning.mappingContents =
+                   synth->storage.currentMapping.rawText;
+            }
+         }
+
+         synth->storage.getPatch().dawExtraState.isPopulated =
+             false; // Ignore whatever comes from the DAW
+
+         synth->savePatch();
+      }
    }
    break;
    case tag_store_cancel:
    {
-      saveDialog->setVisible(false);
+      closeStorePatchDialog();
+      //saveDialog->setVisible(false);
       // frame->setModalView(nullptr);
       frame->setDirty();
    }
@@ -3864,60 +3921,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
             typeinLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Error));
          }
 
-      }
-   }
-   break;
-   case tag_store_ok:
-   {
-      saveDialog->setVisible(false);
-      // frame->setModalView(nullptr);
-      frame->setDirty();
-
-      /*
-      ** Don't allow a blank patch
-      */
-      std::string whatIsBlank = "";
-      bool haveBlanks = false;
-
-      if (! Surge::Storage::isValidName(patchName->getText().getString()))
-      {
-         whatIsBlank = "name"; haveBlanks = true;
-      }
-      if (! Surge::Storage::isValidName(patchCategory->getText().getString()))
-      {
-         whatIsBlank = whatIsBlank + (haveBlanks? " and category" : "category"); haveBlanks = true;
-      }
-      if (haveBlanks)
-      {
-         Surge::UserInteractions::promptError(std::string("Unable to store a patch due to invalid ") +
-                                              whatIsBlank + ". Please save again and provide a complete " +
-                                              whatIsBlank + ".",
-                                              "Patch Saving Error");
-      }
-      else
-      {
-         synth->storage.getPatch().name = patchName->getText();
-         synth->storage.getPatch().author = patchCreator->getText();
-         synth->storage.getPatch().category = patchCategory->getText();
-         synth->storage.getPatch().comment = patchComment->getText();
-
-         synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
-         if( synth->storage.getPatch().patchTuning.tuningStoredInPatch )
-         {
-            synth->storage.getPatch().patchTuning.tuningContents = synth->storage.currentScale.rawText;
-            if( synth->storage.isStandardMapping )
-            {
-               synth->storage.getPatch().patchTuning.mappingContents = "";
-            }
-            else
-            {
-               synth->storage.getPatch().patchTuning.mappingContents = synth->storage.currentMapping.rawText;
-            }
-         }
-
-         synth->storage.getPatch().dawExtraState.isPopulated = false; // Ignore whatever comes from the DAW
-
-         synth->savePatch();
       }
    }
    break;
@@ -4372,10 +4375,10 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    }
 }
 
-bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
-                                          std::vector<PatchCategory>* patch_category,
-                                          int startcategory)
+void SurgeGUIEditor::showPatchStoreDialog()
 {
+   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(150, 57), false, false, [this]() {});
+
    if( synth->storage.isStandardTuning )
    {
       patchTuningLabel->setVisible(false);
@@ -4393,10 +4396,9 @@ bool SurgeGUIEditor::showPatchStoreDialog(patchdata* p,
       patchTuning->setVisible(true);
    }
 
-   saveDialog->setVisible(true);
-   // frame->setModalView(saveDialog);
+   //saveDialog->setVisible(true);
 
-   return false;
+   // frame->setModalView(saveDialog);
 }
 
 long SurgeGUIEditor::applyParameterOffset(long id)
@@ -6298,14 +6300,14 @@ void SurgeGUIEditor::dismissEditorOverlay()
 }
 
 void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::string editorTag,
-                                      const VSTGUI::CPoint &topLeft, bool modalOverlay, std::function<void ()> onClose)
+                                      const VSTGUI::CPoint &topLeft, bool modalOverlay, bool hasCloseButton, std::function<void ()> onClose)
 {
    dismissEditorOverlay();
 
    const int header = 18;
    const int buttonwidth = 40;
    
-   if( ! c )
+   if (!c)
       return;
 
    auto vs = c->getViewSize();
@@ -6314,12 +6316,12 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    auto containerSize = vs;
    containerSize.top -= header;
 
-   if( ! modalOverlay )
+   if (!modalOverlay)
       containerSize.offset(-containerSize.left + topLeft.x, -containerSize.top + topLeft.y);
    
    auto fs = CRect(0, 0, getWindowSizeX(), getWindowSizeY());
 
-   if( ! modalOverlay )
+   if (!modalOverlay)
       fs = containerSize;
 
    // add a screen size transparent thing into the editorOverlay
@@ -6328,7 +6330,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    editorOverlay->setVisible(true);
    frame->addView(editorOverlay);
 
-   if( modalOverlay )
+   if (modalOverlay)
       containerSize = containerSize.centerInside(fs);
    else
       containerSize.moveTo(CPoint(0, 0));
@@ -6375,23 +6377,26 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
    hovcg->addColorStop(0, hovbtnbg);
 
-   csz.left = csz.right - buttonwidth;
-   csz.inset(3, 3);
-   csz.bottom++;
-   auto b = new CTextButton(csz, this, tag_editor_overlay_close, "Close");
-   b->setVisible(true);
-   b->setFont(btnFont);
-   b->setGradient(cg);
-   b->setFrameColor(btnborder);
-   b->setTextColor(btntext);
-   b->setGradientHighlighted(hovcg);
-   b->setFrameColorHighlighted(hovbtnborder);
-   b->setTextColorHighlighted(hovbtntext);
-   b->setRoundRadius(CCoord(3.f));
-   innerc->addView(b);
+   if (hasCloseButton)
+   {
+      csz.left = csz.right - buttonwidth;
+      csz.inset(3, 3);
+      csz.bottom++;
+      auto b = new CTextButton(csz, this, tag_editor_overlay_close, "Close");
+      b->setVisible(true);
+      b->setFont(btnFont);
+      b->setGradient(cg);
+      b->setFrameColor(btnborder);
+      b->setTextColor(btntext);
+      b->setGradientHighlighted(hovcg);
+      b->setFrameColorHighlighted(hovbtnborder);
+      b->setTextColorHighlighted(hovbtntext);
+      b->setRoundRadius(CCoord(3.f));
+      innerc->addView(b);
+   }
  
    // add the control inside that in an outline
-   if( modalOverlay )
+   if (modalOverlay)
    {
       containerSize = vs;
       containerSize.top -= header;
@@ -6605,37 +6610,83 @@ void SurgeGUIEditor::resetPitchSmoothing(ControllerModulationSource::SmoothingMo
 
 void SurgeGUIEditor::setupSaveDialog()
 {
-   CRect dialogSize(148, 53, 598, 53 + 182);
+   CRect dialogSize(CPoint(0, 0), CPoint(450, 182));
    auto nopoint = CPoint(0,0);
-   saveDialog = new CViewContainer(dialogSize);
-   saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
-   saveDialog->setVisible(false);
-   frame->addView(saveDialog);
 
-   CHSwitch2* cancelButton = new CHSwitch2(CRect(CPoint(305, 147), CPoint(62, 25)), this,
-                                           tag_store_cancel, 1, 25, 1, 1, nullptr, nopoint, false);
-   saveDialog->addView(cancelButton);
-   CHSwitch2* okButton = new CHSwitch2(CRect(CPoint(373, 147), CPoint(62, 25)), this, tag_store_ok,
-                                       1, 25, 1, 1, nullptr, nopoint, false);
-   saveDialog->addView(okButton);
+   saveDialog = new CViewContainer(dialogSize);
+   saveDialog->setBackgroundColor(kRedCColor /*currentSkin->getColor(Colors::Dialog::Background)*/);
+   saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
+   //saveDialog->setVisible(false);
+   //frame->addView(saveDialog);
+
+   auto b1r = CRect(CPoint(305, 147), CPoint(62, 14));
+   auto b2r = CRect(CPoint(373, 147), CPoint(62, 14));
+
+   auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
+   auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
+   auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
+
+   auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
+   auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
+   auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
+
+   VSTGUI::CGradient::ColorStopMap csm;
+   VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
+   cg->addColorStop(0, btnbg);
+
+   VSTGUI::CGradient::ColorStopMap hovcsm;
+   VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
+   hovcg->addColorStop(0, hovbtnbg);
+
+   auto cb = new CTextButton(b1r, this, tag_store_cancel, "Cancel");
+   cb->setVisible(true);
+   cb->setFont(displayFont);
+   cb->setGradient(cg);
+   cb->setFrameColor(btnborder);
+   cb->setTextColor(btntext);
+   cb->setGradientHighlighted(hovcg);
+   cb->setFrameColorHighlighted(hovbtnborder);
+   cb->setTextColorHighlighted(hovbtntext);
+   cb->setRoundRadius(CCoord(3.f));
+   saveDialog->addView(cb);
+
+   auto kb = new CTextButton(b2r, this, tag_store_ok, "OK");
+   kb->setVisible(true);
+   kb->setFont(displayFont);
+   kb->setGradient(cg);
+   kb->setFrameColor(btnborder);
+   kb->setTextColor(btntext);
+   kb->setGradientHighlighted(cg);
+   kb->setFrameColorHighlighted(btnborder);
+   kb->setTextColorHighlighted(btntext);
+   kb->setRoundRadius(CCoord(3.f));
+   saveDialog->addView(kb);
+
+   //auto msgrect = CRect(CPoint(10, 21), CPoint(wd, 14));
+   //msgrect.inset(5, 0);
+   //auto msgtxt = new CTextLabel(msgrect, prompt.c_str());
+   //msgtxt->setTransparency(true);
+   //msgtxt->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
+   //msgtxt->setFont(fnts);
+   //msgtxt->setHoriAlign(kLeftText);
+   //saveDialog->addView(msgtxt);
 
    patchName = new CTextEdit(CRect(CPoint(96, 31), CPoint(340, 21)), this, tag_store_name);
    patchCategory = new CTextEdit(CRect(CPoint(96, 58), CPoint(340, 21)), this, tag_store_category);
    patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
    patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
-   patchTuning = new CCheckBox(CRect(CPoint(96, 112 + (112-85) ), CPoint( 21, 21 )), this, tag_store_tuning);
-   patchTuningLabel = new CTextLabel(CRect(CPoint(96 + 22, 112 + (112-85) ), CPoint( 200, 21 )));
-   patchTuningLabel->setText( "Save With Tuning" );
+   patchTuning = new CCheckBox(CRect(CPoint(96, 139), CPoint(21, 21)), this, tag_store_tuning);
+   patchTuningLabel = new CTextLabel(CRect(CPoint(118, 139), CPoint(200, 21)));
+   patchTuningLabel->setText("Save With Tuning");
    patchTuningLabel->sizeToFit();
 
    // fix the text selection rectangle background overhanging the borders on Windows
 #if WINDOWS
    patchName->setTextInset(CPoint(3, 0));
-      patchCategory->setTextInset(CPoint(3, 0));
-      patchCreator->setTextInset(CPoint(3, 0));
-      patchComment->setTextInset(CPoint(3, 0));
+   patchCategory->setTextInset(CPoint(3, 0));
+   patchCreator->setTextInset(CPoint(3, 0));
+   patchComment->setTextInset(CPoint(3, 0));
 #endif
-
 
    /*
     * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac hosts.
@@ -6646,10 +6697,10 @@ void SurgeGUIEditor::setupSaveDialog()
     *
     * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan 2019.
     */
-   patchName->setImmediateTextChange( true );
-   patchCategory->setImmediateTextChange( true );
-   patchCreator->setImmediateTextChange( true );
-   patchComment->setImmediateTextChange( true );
+   patchName->setImmediateTextChange(true);
+   patchCategory->setImmediateTextChange(true);
+   patchCreator->setImmediateTextChange(true);
+   patchComment->setImmediateTextChange(true);
 
    patchName->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
    patchCategory->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
@@ -6677,7 +6728,24 @@ void SurgeGUIEditor::setupSaveDialog()
    saveDialog->addView(patchTuning);
    saveDialog->addView(patchTuningLabel);
 
+   if (synth->storage.isStandardTuning)
+   {
+      patchTuningLabel->setVisible(false);
+      patchTuning->setVisible(false);
+   }
+   else
+   {
+      patchTuningLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
+      patchTuningLabel->setVisible(true);
+      patchTuning->setBoxFrameColor(currentSkin->getColor(Colors::Dialog::Checkbox::Border));
+      patchTuning->setBoxFillColor(currentSkin->getColor(Colors::Dialog::Checkbox::Background));
+      patchTuning->setCheckMarkColor(currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
+      patchTuning->setValue(0);
+      patchTuning->setMouseEnabled(true);
+      patchTuning->setVisible(true);
+   }
 }
+
 VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
                                             long tag,
                                             int paramIndex,
@@ -7111,6 +7179,26 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
    lfoNameLabel->invalid();
 }
 
+void SurgeGUIEditor::closeStorePatchDialog()
+{
+   if (editorOverlayTag == "storePatch")
+   {
+      dismissEditorOverlay();
+   }
+}
+
+void SurgeGUIEditor::showStorePatchDialog()
+{
+   if (editorOverlayTag == "msegEditor")
+   {
+      dismissEditorOverlay();
+   }
+
+   setupSaveDialog();
+
+   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(148, 57), false, false, [this]() {});
+}
+
 void SurgeGUIEditor::closeMSEGEditor()
 {
    if( editorOverlayTag == "msegEditor" ) {
@@ -7142,7 +7230,7 @@ void SurgeGUIEditor::showMSEGEditor()
    title += " Editor";
    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
-   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false,
+   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false, true,
                     [this]() { /* don't rebuild UI here, it screws up dragging the LFO type control */; });
 
    if( msegEditSwitch )
