@@ -30,7 +30,7 @@ bool Surge::Debug::openConsole()
         AllocConsole();
         freopen_s(&confp, "CONOUT$", "w", stdout);
         std::cout << "SURGE DEBUG CONSOLE\n\n"
-                  << "Displays standard text output from Surge, for debugging purposes. If you close this window, Surge will crash!\n"
+                  << "This is where we show stdout from Surge, for debugging purposes. If you close this window, Surge will crash!\n"
                   << "Version: " << Build::FullVersionStr << ", built on " << Build::BuildDate << " at " << Build::BuildTime
                   << "\n\n" << std::endl;
     }
