@@ -105,7 +105,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    }
 
    ParameterIDCounter::promise_t globparams_promise = p_id.tail;
-   ParameterIDCounter::promise_t scene_start_promise[2];
+   ParameterIDCounter::promise_t scene_start_promise[n_scenes];
 
    for (int sc = 0; sc < n_scenes; sc++)
    {
@@ -749,7 +749,7 @@ void SurgePatch::copy_globaldata(pdata* d)
       d[i].i = param_ptr[i]->val.i; // int is safer (no exceptions or anything)
    }
 }
-// pdata scenedata[2][n_scene_params];
+// pdata scenedata[n_scenes][n_scene_params];
 
 void SurgePatch::update_controls(bool init,
                                  void* init_osc, // init_osc is the pointer to the data structure of a particular osc to init
@@ -810,7 +810,7 @@ void SurgePatch::do_morph()
 struct patch_header
 {
    char tag[4];
-   unsigned int xmlsize, wtsize[2][3];
+   unsigned int xmlsize, wtsize[n_scenes][n_oscs];
 };
 #pragma pack(pop)
 
@@ -973,7 +973,7 @@ unsigned int SurgePatch::save_patch(void** data)
    memcpy(header.tag, "sub3", 4);
    size_t xmlsize = save_xml(&xmldata);
    header.xmlsize = vt_write_int32LE(xmlsize);
-   wt_header wth[2][n_oscs];
+   wt_header wth[n_scenes][n_oscs];
    for (int sc = 0; sc < n_scenes; sc++)
    {
       for (int osc = 0; osc < n_oscs; osc++)
@@ -1317,22 +1317,22 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       }
    }
 
-   // TODO: FIX SCENE ASSUMPTION
    if (scene[0].pbrange_up.val.i & 0xffffff00) // is outside range, it must have been save
    {
-      scene[0].pbrange_up.val.i = (int)scene[0].pbrange_up.val.f;
-      scene[0].pbrange_dn.val.i = (int)scene[0].pbrange_dn.val.f;
-      scene[1].pbrange_up.val.i = (int)scene[1].pbrange_up.val.f;
-      scene[1].pbrange_dn.val.i = (int)scene[1].pbrange_dn.val.f;
+      for (int sc; sc < n_scenes; sc++)
+      {
+         scene[sc].pbrange_up.val.i = (int)scene[sc].pbrange_up.val.f;
+         scene[sc].pbrange_dn.val.i = (int)scene[sc].pbrange_dn.val.f;
+      }
    }
 
    if (revision < 1)
    {
-
-      scene[0].adsr[0].a_s.val.i = limit_range(scene[0].adsr[0].a_s.val.i + 1, 0, 2);
-      scene[0].adsr[1].a_s.val.i = limit_range(scene[0].adsr[1].a_s.val.i + 1, 0, 2);
-      scene[1].adsr[0].a_s.val.i = limit_range(scene[1].adsr[0].a_s.val.i + 1, 0, 2);
-      scene[1].adsr[1].a_s.val.i = limit_range(scene[1].adsr[1].a_s.val.i + 1, 0, 2);
+      for (int sc; sc < n_scenes; sc++)
+      {
+         scene[sc].adsr[0].a_s.val.i = limit_range(scene[sc].adsr[0].a_s.val.i + 1, 0, 2);
+         scene[sc].adsr[1].a_s.val.i = limit_range(scene[sc].adsr[1].a_s.val.i + 1, 0, 2);
+      }
    }
 
    if (revision < 2)
@@ -1752,11 +1752,15 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       TiXmlElement* mw = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("modwheel"));
       if (mw)
       {
-        // TODO: FIX SCENE ASSUMPTION
-         if (mw->QueryDoubleAttribute("s0", &d) == TIXML_SUCCESS)
-            ((ControllerModulationSource*)scene[0].modsources[ms_modwheel])->set_target(d);
-         if (mw->QueryDoubleAttribute("s1", &d) == TIXML_SUCCESS)
-            ((ControllerModulationSource*)scene[1].modsources[ms_modwheel])->set_target(d);
+         for (int sc = 0; sc < n_scenes; sc++)
+         {
+            char str[32];
+            sprintf(str, "s%d", sc);
+            if (mw->QueryDoubleAttribute(str, &d) == TIXML_SUCCESS)
+            {
+               ((ControllerModulationSource*)scene[sc].modsources[ms_modwheel])->set_target(d);
+            }
+         }
       }
    }
 }
@@ -1944,9 +1948,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
       TiXmlElement p("entry");
       p.SetAttribute("i", l);
       p.SetAttribute("bipolar", scene[0].modsources[ms_ctrl1 + l]->is_bipolar() ? 1 : 0);
-      p.SetAttribute(
-          "v", float_to_str(
-                   ((ControllerModulationSource*)scene[0].modsources[ms_ctrl1 + l])->target, txt2));
+      p.SetAttribute("v", float_to_str(((ControllerModulationSource*)scene[0].modsources[ms_ctrl1 + l])->target, txt2));
       p.SetAttribute("label", CustomControllerLabel[l]);
 
       cc.InsertEndChild(p);
@@ -1955,25 +1957,22 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
 
    {
       char txt[256];
-      // TODO: FIX SCENE ASSUMPTION
       TiXmlElement mw("modwheel");
-      mw.SetAttribute(
-          "s0", float_to_str(
-                    ((ControllerModulationSource*)scene[0].modsources[ms_modwheel])->target, txt));
-      mw.SetAttribute(
-          "s1", float_to_str(
-                    ((ControllerModulationSource*)scene[1].modsources[ms_modwheel])->target, txt));
+      for (int sc = 0; sc < n_scenes; sc++)
+      {
+         char str[32];
+         sprintf(str, "s%d", sc);
+         mw.SetAttribute(str, float_to_str(((ControllerModulationSource*)scene[sc].modsources[ms_modwheel])->target, txt));
+      }
       patch.InsertEndChild(mw);
    }
 
    if( patchTuning.tuningStoredInPatch )
    {
        TiXmlElement pt( "patchTuning" );
-       pt.SetAttribute("v", base64_encode( (unsigned const char *)patchTuning.tuningContents.c_str(),
-                                            patchTuning.tuningContents.size() ).c_str() );
+       pt.SetAttribute("v", base64_encode( (unsigned const char *)patchTuning.tuningContents.c_str(), patchTuning.tuningContents.size() ).c_str() );
        if( patchTuning.mappingContents.size() > 0 )
-          pt.SetAttribute("m", base64_encode( (unsigned const char *)patchTuning.mappingContents.c_str(),
-                                              patchTuning.mappingContents.size() ).c_str() );
+          pt.SetAttribute("m", base64_encode( (unsigned const char *)patchTuning.mappingContents.c_str(), patchTuning.mappingContents.size() ).c_str() );
        
        patch.InsertEndChild(pt);
    }

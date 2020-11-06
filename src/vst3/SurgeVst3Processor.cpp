@@ -501,6 +501,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
       {
          out[outp][i] = (float)surgeInstance->output[outp][blockpos];
       }
+      // TODO: FIX SCENE ASSUMPTION, if we have more scenes, each should get its own additional output eventually!
       if( numOutputs == 3 )
       {
          float** outA = data.outputs[1].channelBuffers32;
@@ -535,6 +536,7 @@ tresult PLUGIN_API SurgeVst3Processor::process(ProcessData& data)
 
    // mark as not silent
    data.outputs[0].silenceFlags = 0;
+   // TODO: FIX SCENE ASSUMPTION
    if( numOutputs == 3 )
    {
       data.outputs[1].silenceFlags = 0;

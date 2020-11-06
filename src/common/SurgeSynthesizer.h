@@ -66,7 +66,7 @@ class alignas(16) SurgeSynthesizer
 {
 public:
    float output alignas(16)[N_OUTPUTS][BLOCK_SIZE];
-   float sceneout alignas(16)[2][N_OUTPUTS][BLOCK_SIZE_OS]; // this is blocksize_os but has been downsampled by the end of process into block_size
+   float sceneout alignas(16)[n_scenes][N_OUTPUTS][BLOCK_SIZE_OS]; // this is blocksize_os but has been downsampled by the end of process into block_size
 
    float input alignas(16)[N_INPUTS][BLOCK_SIZE];
    timedata time_data;
@@ -74,8 +74,8 @@ public:
 
    // aligned stuff
    SurgeStorage storage alignas(16);
-   lipol_ps FX1 alignas(16),
-            FX2 alignas(16),
+   lipol_ps FX1 alignas(16),   // TODO: FIX SCENE ASSUMPTION
+            FX2 alignas(16),   // TODO: FIX SCENE ASSUMPTION
             amp alignas(16),
             amp_mute alignas(16),
             send alignas(16)[2][2];
@@ -139,7 +139,7 @@ public:
    SurgeVoice* getUnusedVoice(int scene);
    void freeVoice(SurgeVoice*);
    std::array<std::array<SurgeVoice, MAX_VOICES>, 2> voices_array;
-   unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A & 2 is scene B
+   unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A & 2 is scene B   // TODO: FIX SCENE ASSUMPTION!
 
 public:
 
@@ -343,9 +343,9 @@ public:
 public:
    int CC0, CC32, PCH, patchid;
    float masterfade = 0;
-   HalfRateFilter halfbandA, halfbandB, halfbandIN;
-   std::list<SurgeVoice*> voices[2];
-   std::unique_ptr<Effect> fx[8];
+   HalfRateFilter halfbandA, halfbandB, halfbandIN; // TODO: FIX SCENE ASSUMPTION (for halfbandA/B - use std::array)
+   std::list<SurgeVoice*> voices[n_scenes];
+   std::unique_ptr<Effect> fx[n_fx_slots];
    bool halt_engine = false;
    MidiChannelState channelState[16];
    bool mpeEnabled = false;
@@ -358,22 +358,22 @@ public:
    bool modsourceused[n_modsources];
    bool midiprogramshavechanged = false;
 
-   bool switch_toggled_queued, release_if_latched[2], release_anyway[2];
+   bool switch_toggled_queued, release_if_latched[n_scenes], release_anyway[n_scenes];
    void setParameterSmoothed(long index, float value);
-   BiquadFilter hpA, hpB;
+   BiquadFilter hpA, hpB; // TODO: FIX SCENE ASSUMPTION (use std::array)
 
-   bool fx_reload[8];   // if true, reload new effect parameters from fxsync
-   FxStorage fxsync[8]; // used for synchronisation of parameter init
+   bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
+   FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
    int fx_suspend_bitmask;
 
    // hold pedal stuff
 
-   std::list<std::pair<int,int>> holdbuffer[2];
+   std::list<std::pair<int,int>> holdbuffer[n_scenes];
    void purgeHoldbuffer(int scene);
    quadr_osc sinus;
    int demo_counter = 0;
 
-   QuadFilterChainState* FBQ[2];
+   QuadFilterChainState* FBQ[2];  // TODO: FIX SCENE ASSUMPTION? (mkruselj asks: unsure if this 2 relates to 2 filters or 2 scenes?)
 
    std::string hostProgram = "Unknown Host";
    bool activateExtraOutputs = true;

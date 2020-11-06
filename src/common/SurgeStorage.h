@@ -88,7 +88,7 @@ extern float table_envrate_lpf alignas(16)[512],
              table_envrate_linear alignas(16)[512],
              table_glide_exp alignas(16)[512],
              table_glide_log alignas(16)[512];
-extern float table_note_omega alignas(16)[2][512];
+extern float table_note_omega alignas(16)[2][512];  // TODO: FIX SCENE ASSUMPTION?
 extern float waveshapers alignas(16)[8][1024];
 extern float samplerate, samplerate_inv;
 extern double dsamplerate, dsamplerate_inv;
@@ -291,11 +291,11 @@ enum fx_bypass
    n_fx_bypass,
 };
 
-const char fxbypass_names[n_fx_bypass][16] =
+const char fxbypass_names[n_fx_bypass][32] =
 {
    "All FX",
    "No Send FX",
-   "Scene FX Only",
+   "No Send And Global FX",
    "All FX Off",
 };
 
@@ -556,7 +556,7 @@ struct MidiKeyState
 struct MidiChannelState
 {
    MidiKeyState keyState[128];
-   int nrpn[2], nrpn_v[2];
+   int nrpn[2], nrpn_v[2];    // question for baconpaul: does this 2 here mean per scene, or?
    int rpn[2], rpn_v[2];
    int pitchBend;
    bool nrpn_last;
@@ -816,19 +816,19 @@ public:
    unsigned int save_patch(void** data);
 
    // data
-   SurgeSceneStorage scene[2], morphscene;
+   SurgeSceneStorage scene[n_scenes], morphscene;
    FxStorage fx[n_fx_slots];
    // char name[NAMECHARS];
-   int scene_start[2], scene_size;
+   int scene_start[n_scenes], scene_size;
    Parameter scene_active, scenemode, scenemorph, splitpoint;  // streaming name for splitpoint is splitkey (due to legacy)
    Parameter volume;
    Parameter polylimit;
    Parameter fx_bypass, fx_disable;
    Parameter character;
 
-   StepSequencerStorage stepsequences[2][n_lfos];
-   MSEGStorage msegs[2][n_lfos];
-   FormulaModulatorStorage formulamods[2][n_lfos];
+   StepSequencerStorage stepsequences[n_scenes][n_lfos];
+   MSEGStorage msegs[n_scenes][n_lfos];
+   FormulaModulatorStorage formulamods[n_scenes][n_lfos];
 
    PatchTuningStorage patchTuning;
    DAWExtraStateStorage dawExtraState;
@@ -837,7 +837,7 @@ public:
    std::vector<int> easy_params_id;
 
    std::vector<ModulationRouting> modulation_global;
-   pdata scenedata[2][n_scene_params];
+   pdata scenedata[n_scenes][n_scene_params];
    pdata globaldata[n_global_params];
    void* patchptr;
    SurgeStorage* storage;
@@ -896,10 +896,10 @@ public:
    SurgeStorage(std::string suppliedDataPath="");
    float table_pitch alignas(16)[512];
    float table_pitch_inv alignas(16)[512];
-   float table_note_omega alignas(16)[2][512];
+   float table_note_omega alignas(16)[2][512];  // TODO: FIX SCENE ASSUMPTION?
    float table_pitch_ignoring_tuning alignas(16)[512];
    float table_pitch_inv_ignoring_tuning alignas(16)[512];
-   float table_note_omega_ignoring_tuning alignas(16)[2][512];
+   float table_note_omega_ignoring_tuning alignas(16)[2][512];  // TODO: FIX SCENE ASSUMPTION?
 
    ~SurgeStorage();
 
@@ -914,13 +914,13 @@ public:
    double songpos;
    void init_tables();
    float nyquist_pitch;
-   int last_key[2];
+   int last_key[2]; // TODO: FIX SCENE ASSUMPTION?
    TiXmlElement* getSnapshotSection(const char* name);
    void load_midi_controllers();
    void save_midi_controllers();
    void save_snapshots();
    int controllers[n_customcontrollers];
-   float poly_aftertouch[2][128];
+   float poly_aftertouch[2][128];  // TODO: FIX SCENE ASSUMPTION?
    float modsource_vu[n_modsources];
    void refresh_wtlist();
    void refresh_wtlistAddDir(bool userDir, std::string subdir);

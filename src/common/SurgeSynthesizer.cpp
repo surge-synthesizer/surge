@@ -61,11 +61,11 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
     //: halfband_AL(false),halfband_AR(false),halfband_BL(false),halfband_BR(false),
     : storage(suppliedDataPath)
     , hpA(&storage)
-   , hpB(&storage)
-   , _parent(parent)
-   , halfbandA(6, true)
-   , halfbandB(6, true)
-   , halfbandIN(6, true)
+    , hpB(&storage)
+    , _parent(parent)
+    , halfbandA(6, true)
+    , halfbandB(6, true)
+    , halfbandIN(6, true)
 {
    switch_toggled_queued = false;
    audio_processing_active = false;
@@ -81,13 +81,16 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
 
    demo_counter = 10;
 
+   // TODO: FIX NUMBER OF FX ASSUMPTION
    memset(fx, 0, sizeof(void*) * 8);
    srand((unsigned)time(nullptr));
-   memset(storage.getPatch().scenedata[0], 0, sizeof(pdata) * n_scene_params);
+   // TODO: FIX SCENE ASSUMPTION
+   memset(storage.getPatch().scenedata[0], 0, sizeof(pdata) * n_scene_params);  
    memset(storage.getPatch().scenedata[1], 0, sizeof(pdata) * n_scene_params);
    memset(storage.getPatch().globaldata, 0, sizeof(pdata) * n_global_params);
    memset(mControlInterpolatorUsed, 0, sizeof(bool) * num_controlinterpolators);
    memset((void*)fxsync, 0, sizeof(FxStorage) * n_fx_slots);
+
    for (int i = 0; i < n_fx_slots; i++)
    {
       memcpy((void*)&fxsync[i], (void*)&storage.getPatch().fx[i], sizeof(FxStorage));
@@ -102,33 +105,35 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       voices_usedby[1][i] = 0;
    }
 
-   FBQ[0] =
-       (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
-   FBQ[1] =
-       (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
+   // TODO: FIX SCENE ASSUMPTION
+   FBQ[0] = (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
+   FBQ[1] = (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
 
+   // TODO: FIX SCENE ASSUMPTION
    for(int i=0; i<(MAX_VOICES >> 2); ++i)
    {
        InitQuadFilterChainStateToZero(&(FBQ[0][i]));
        InitQuadFilterChainStateToZero(&(FBQ[1][i]));
    }
 
-
    SurgePatch& patch = storage.getPatch();
 
-   storage.smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue( &storage, "smoothingMode", (int)( ControllerModulationSource::SmoothingMode::LEGACY ));
-   storage.pitchSmoothingMode =
-       (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
-           &storage, "pitchSmoothingMode",
-           (int)(ControllerModulationSource::SmoothingMode::DIRECT));
+   storage.smoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(&storage,
+                                                                                           "smoothingMode", (int)(ControllerModulationSource::SmoothingMode::LEGACY));
+   storage.pitchSmoothingMode = (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(&storage,
+                                                                                                "pitchSmoothingMode", (int)(ControllerModulationSource::SmoothingMode::DIRECT));
 
    patch.polylimit.val.i = 16;
+
    for (int sc = 0; sc < n_scenes; sc++)
    {
       SurgeSceneStorage& scene = patch.scene[sc];
       scene.modsources.resize(n_modsources);
+
       for (int i = 0; i < n_modsources; i++)
+      {
          scene.modsources[i] = 0;
+      }
       scene.modsources[ms_modwheel] = new ControllerModulationSource(storage.smoothingMode);
       scene.modsources[ms_breath] = new ControllerModulationSource(storage.smoothingMode);
       scene.modsources[ms_expression] = new ControllerModulationSource(storage.smoothingMode);
@@ -147,24 +152,27 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       for (int l = 0; l < n_lfos_scene; l++)
       {
          scene.modsources[ms_slfo1 + l] = new LfoModulationSource();
-         ((LfoModulationSource*)scene.modsources[ms_slfo1 + l])
-            ->assign(&storage, &scene.lfo[n_lfos_voice + l],
-            storage.getPatch().scenedata[sc], 0,
-            &patch.stepsequences[sc][n_lfos_voice + l],
-            &patch.msegs[sc][n_lfos_voice + l],
-            &patch.formulamods[sc][n_lfos_voice + l]
-               );
+         ((LfoModulationSource*)scene.modsources[ms_slfo1 + l])->assign(&storage, &scene.lfo[n_lfos_voice + l],
+                                                                                  storage.getPatch().scenedata[sc], 0,
+                                                                                  &patch.stepsequences[sc][n_lfos_voice + l],
+                                                                                  &patch.msegs[sc][n_lfos_voice + l],
+                                                                                  &patch.formulamods[sc][n_lfos_voice + l]
+                                                                                  );
       }
    }
    
    for (int i = 0; i < n_customcontrollers; i++)
    {
-      // TODO: FIX SCENE ASSUMPTION
       patch.scene[0].modsources[ms_ctrl1 + i] = new ControllerModulationSource(storage.smoothingMode);
-      patch.scene[1].modsources[ms_ctrl1 + i] = patch.scene[0].modsources[ms_ctrl1 + i];
+
+      for (int j = 1; j < n_scenes; j++)
+      {
+         patch.scene[j].modsources[ms_ctrl1 + i] = patch.scene[0].modsources[ms_ctrl1 + i];
+      }
    }
 
    amp.set_blocksize(BLOCK_SIZE);
+   // TODO: FIX SCENE ASSUMPTION
    FX1.set_blocksize(BLOCK_SIZE);
    FX2.set_blocksize(BLOCK_SIZE);
    send[0][0].set_blocksize(BLOCK_SIZE);
@@ -196,13 +204,18 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    CC0 = 0;
    CC32 = 0;
    PCH = 0;
+
    for (int i = 0; i < 8; i++)
    {
       refresh_ctrl_queue[i] = -1;
       refresh_parameter_queue[i] = -1;
    }
+
    for (int i = 0; i < 8; i++)
+   {
       vu_peak[i] = 0.f;
+   }
+
    learn_param = -1;
    learn_custom = -1;
 
@@ -217,7 +230,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    mpeGlobalPitchBendRange = 0;
 
 #if TARGET_VST3 || TARGET_VST2 || TARGET_AUDIOUNIT 
-   // If we are in a daw hosted environment, choose a preset from the preset library
+   // If we are in a DAW hosted environment, choose a preset from the preset library
    // Skip LV2 until we sort out the patch change dynamics there
    int pid = 0;
    for (auto p : storage.patch_list)
@@ -240,6 +253,7 @@ SurgeSynthesizer::~SurgeSynthesizer()
 {
    allNotesOff();
 
+   // TODO: FIX SCENE ASSUMPTION
    _aligned_free(FBQ[0]);
    _aligned_free(FBQ[1]);
 
@@ -333,6 +347,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
 
    int channelmask = calculateChannelMask(channel, key);
 
+   // TODO: FIX SCENE ASSUMPTION
    if (channelmask & 1)
    {
       playVoice(0, channel, key, velocity, detune);
@@ -415,10 +430,10 @@ void SurgeSynthesizer::softkillVoice(int s)
 void SurgeSynthesizer::enforcePolyphonyLimit(int s, int margin)
 {
    list<SurgeVoice*>::iterator iter;
+
    if (voices[s].size() > (storage.getPatch().polylimit.val.i + margin))
    {
-      int excess_voices =
-          max(0, (int)voices[s].size() - (storage.getPatch().polylimit.val.i + margin));
+      int excess_voices = max(0, (int)voices[s].size() - (storage.getPatch().polylimit.val.i + margin));
       iter = voices[s].begin();
 
       while (iter != voices[s].end())
@@ -519,16 +534,17 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
    if (getNonReleasedVoices(scene) == 0)
    {
       for (int l = 0; l < n_lfos_scene; l++)
+      {
          storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->attack();
+      }
    }
    
-   for( int i=ms_random_bipolar; i <= ms_alternate_unipolar; ++i )
+   for (int i = ms_random_bipolar; i <= ms_alternate_unipolar; ++i)
    {
       storage.getPatch().scene[scene].modsources[i]->attack();
    }
 
-   int excessVoices =
-       max(0, (int)getNonUltrareleaseVoices(scene) - storage.getPatch().polylimit.val.i + 1);
+   int excessVoices = max(0, (int)getNonUltrareleaseVoices(scene) - storage.getPatch().polylimit.val.i + 1);
 
    for (int i = 0; i < excessVoices; i++)
    {
@@ -540,7 +556,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
    {
    case pm_poly:
    {
-      // sub3_voice *nvoice = (sub3_voice*) _aligned_malloc(sizeof(sub3_voice),16);
       SurgeVoice* nvoice = getUnusedVoice(scene);
       if (nvoice)
       {
@@ -573,7 +588,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             v->uber_release();
          }
       }
-      // sub3_voice *nvoice = (sub3_voice*) _aligned_malloc(sizeof(sub3_voice),16);
       SurgeVoice* nvoice = getUnusedVoice(scene);
       if (nvoice)
       {
@@ -623,7 +637,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
       {
          int mpeMainChannel = getMpeMainChannel(channel, key);
 
-         // sub3_voice *nvoice = (sub3_voice*) _aligned_malloc(sizeof(sub3_voice),16);
          SurgeVoice* nvoice = getUnusedVoice(scene);
          if (nvoice)
          {
@@ -646,7 +659,6 @@ void SurgeSynthesizer::releaseScene(int s)
    list<SurgeVoice*>::const_iterator iter;
    for (iter = voices[s].begin(); iter != voices[s].end(); iter++)
    {
-      //_aligned_free(*iter);
       freeVoice(*iter);
    }
    voices[s].clear();
@@ -672,9 +684,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
       if (noHold)
          releaseNotePostHoldCheck(sc, channel, key, velocity);
       else
-      {
          holdbuffer[sc].push_back(std::make_pair(channel,key)); // hold pedal is down, add to bufffer
-      }
    }
 }
 
@@ -888,9 +898,6 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( (newKey - ktRoot) * twelfth );
    else
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( 0.f );
-
-   // if( lowest && highest )
-   // printf("Lowest: %.2f | Highest: %.2f | Latest: %.2f\n", (lowest->state.pkey - ktRoot), (highest->state.pkey - ktRoot), (newKey - ktRoot));
 }
 
 void SurgeSynthesizer::pitchBend(char channel, int value)
@@ -900,11 +907,9 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
       channelState[channel].pitchBend = value;
 
       /*
-      ** todo: handling of channel 0 and mpeGlobalPitchBendRange were broken with the addition
-      ** of smoothing. we should probably add that back in if it turns out someone actually uses it
-      *:)
-      ** currently channelState[].pitchBendInSemitones is now unused, but it hasn't been removed
-      *from
+      ** TODO: handling of channel 0 and mpeGlobalPitchBendRange was broken with the addition
+      ** of smoothing. we should probably add that back in if it turns out someone actually uses it :)
+      ** currently channelState[].pitchBendInSemitones is now unused, but it hasn't been removed from
       ** the code yet for this reason.
       ** For now, we ignore channel zero here so it functions like the old code did in practice when
       ** mpeGlobalPitchBendRange remained at zero.
@@ -913,7 +918,7 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
 
    /*
    ** So here's the thing. We want global pitch bend modulation to work for other things in MPE mode.
-   ** This code has beenhere forever. But that means we need to ignore the channel[0] mpe pitchbend
+   ** This code has been here forever. But that means we need to ignore the channel[0] MPE pitchbend
    ** elsewhere, especially since the range was hardwired to 2 (but is now 0). As far as I know the
    ** main MPE devices don't have a global pitch bend anyway so this just screws up regular keyboards
    ** sending channel 0 pitch bend in MPE mode.
@@ -959,8 +964,7 @@ void SurgeSynthesizer::programChange(char channel, int value)
 
 void SurgeSynthesizer::updateDisplay()
 {
-   // This used to (in VSt2) call udpateDisplay but that did an Audio -> UI thread cross. Just mark
-   // the flag as true.
+   // This used to (in VST2) call updateDisplay but that did an Audio -> UI thread cross. Just mark the flag as true
    refresh_editor = true;
 }
 
@@ -2361,6 +2365,7 @@ void SurgeSynthesizer::getParameterName(long index, char* text)
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
       int scn = storage.getPatch().param_ptr[index]->scene;
+      // TODO: FIX SCENE ASSUMPTION
       string sn[3] = {"", "A ", "B "};
 
       sprintf(text, "%s%s", sn[scn].c_str(), storage.getPatch().param_ptr[index]->get_full_name());
@@ -2379,6 +2384,7 @@ void SurgeSynthesizer::getParameterNameW(long index, wchar_t* ptr)
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
       int scn = storage.getPatch().param_ptr[index]->scene;
+      // TODO: FIX SCENE ASSUMPTION
       char sn[3][3] = {"", "A ", "B "};
       char pname[256];
       
@@ -2415,6 +2421,7 @@ void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t* ptr)
    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
    {
       int scn = storage.getPatch().param_ptr[index]->scene;
+      // TODO: FIX SCENE ASSUMPTION
       string sn[3] = {"", "A ", "B "};
 
       swprintf(ptr, 128, L"%s%s", sn[scn].c_str(), storage.getPatch().param_ptr[index]->get_name());
@@ -2614,6 +2621,7 @@ void SurgeSynthesizer::processControl()
    // TODO: FIX SCENE ASSUMPTION
    bool playA = (sm == sm_split) || (sm == sm_dual) || (sm == sm_chsplit) || (storage.getPatch().scene_active.val.i == 0);
    bool playB = (sm == sm_split) || (sm == sm_dual) || (sm == sm_chsplit) || (storage.getPatch().scene_active.val.i == 1);
+
    storage.songpos = time_data.ppqPos;
    storage.temposyncratio = time_data.tempo / 120.f;
    storage.temposyncratio_inv = 1.f / storage.temposyncratio;
@@ -2633,16 +2641,6 @@ void SurgeSynthesizer::processControl()
       release_if_latched[1] = false;
       release_anyway[1] = false;
    }
-
-   /*if(playA && (storage.getPatch().scene[0].polymode.val.i == pm_latch))
-   {
-           if(voices[0].empty())
-           {
-                   play_note(0,60,100,0);
-                   release_note(0,60,100);
-           }
-   }
-   else if(!hold[0]) purge_holdbuffer();*/
 
    // TODO: FIX SCENE ASSUMPTION
    if (playA && (storage.getPatch().scene[0].polymode.val.i == pm_latch) && voices[0].empty())
@@ -2667,6 +2665,8 @@ void SurgeSynthesizer::processControl()
    }
 
    storage.getPatch().copy_globaldata(storage.getPatch().globaldata); // Drains a great deal of CPU while in Debug mode.. optimize?
+
+   // TODO: FIX SCENE ASSUMPTION
    if (playA)
       storage.getPatch().copy_scenedata(storage.getPatch().scenedata[0], 0); // -""-
    if (playB)
@@ -2773,11 +2773,6 @@ void SurgeSynthesizer::process()
 
    if (halt_engine)
    {
-      /*for(int k=0; k<BLOCK_SIZE; k++)
-      {
-              output[0][k] = 0;
-              output[1][k] = 0;
-      }*/
       clear_block(output[0], BLOCK_SIZE_QUAD);
       clear_block(output[1], BLOCK_SIZE_QUAD);
       return;
@@ -2845,8 +2840,9 @@ void SurgeSynthesizer::process()
       clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
    }
 
+   // TODO: FIX SCENE ASSUMPTION
    float fxsendout alignas(16)[2][2][BLOCK_SIZE];
-   bool play_scene[2];
+   bool play_scene[n_scenes];
 
    {
       clear_block_antidenormalnoise(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
@@ -2868,16 +2864,15 @@ void SurgeSynthesizer::process()
 
    int fx_bypass = storage.getPatch().fx_bypass.val.i;
 
-   // TODO: FIX SCENE ASSUMPTION
    if (fx_bypass == fxb_all_fx)
    {
-      if (fx[4])
+      if (fx[4]) // send FX 1?
       {
          FX1.set_target_smoothed(amp_to_linear(storage.getPatch().globaldata[storage.getPatch().fx[4].return_level.id].f));
          send[0][0].set_target_smoothed(amp_to_linear(storage.getPatch().scenedata[0][storage.getPatch().scene[0].send_level[0].param_id_in_scene].f));
          send[0][1].set_target_smoothed(amp_to_linear(storage.getPatch().scenedata[1][storage.getPatch().scene[1].send_level[0].param_id_in_scene].f));
       }
-      if (fx[5])
+      if (fx[5]) // send FX 2?
       {
          FX2.set_target_smoothed(amp_to_linear(storage.getPatch().globaldata[storage.getPatch().fx[5].return_level.id].f));
          send[1][0].set_target_smoothed(amp_to_linear(storage.getPatch().scenedata[0][storage.getPatch().scene[0].send_level[1].param_id_in_scene].f));
@@ -2886,11 +2881,15 @@ void SurgeSynthesizer::process()
    }
 
    list<SurgeVoice*>::iterator iter;
-   play_scene[0] = (!voices[0].empty());
-   play_scene[1] = (!voices[1].empty());
+   
+   for (int sc = 0; sc < n_scenes; sc++)
+   {
+      play_scene[sc] = (!voices[sc].empty());
+   }
 
-   int FBentry[2];
+   int FBentry[n_scenes];
    int vcount = 0;
+
    for (int s = 0; s < n_scenes; s++)
    {
       FBentry[s] = 0;
@@ -2917,15 +2916,11 @@ void SurgeSynthesizer::process()
       storage.modRoutingMutex.unlock();
 
       fbq_global g;
-      g.FU1ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[0].type.val.i,
-                                    storage.getPatch().scene[s].filterunit[0].subtype.val.i);
-      g.FU2ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[1].type.val.i,
-                                    storage.getPatch().scene[s].filterunit[1].subtype.val.i);
+      g.FU1ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[0].type.val.i, storage.getPatch().scene[s].filterunit[0].subtype.val.i);
+      g.FU2ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[1].type.val.i, storage.getPatch().scene[s].filterunit[1].subtype.val.i);
       g.WSptr = GetQFPtrWaveshaper(storage.getPatch().scene[s].wsunit.type.val.i);
 
-      FBQFPtr ProcessQuadFB =
-          GetFBQPointer(storage.getPatch().scene[s].filterblock_configuration.val.i, g.FU1ptr != 0,
-                        g.WSptr != 0, g.FU2ptr != 0);
+      FBQFPtr ProcessQuadFB = GetFBQPointer(storage.getPatch().scene[s].filterblock_configuration.val.i, g.FU1ptr != 0, g.WSptr != 0, g.FU2ptr != 0);
 
       for (int e = 0; e < FBentry[s]; e += 4)
       {
@@ -2942,7 +2937,7 @@ void SurgeSynthesizer::process()
 
       if (s == 0 && storage.otherscene_clients > 0)
       {
-         // Make available for scene b
+         // Make available for scene B
          copy_block(sceneout[0][0], storage.audio_otherscene[0], BLOCK_SIZE_OS_QUAD);
          copy_block(sceneout[0][1], storage.audio_otherscene[1], BLOCK_SIZE_OS_QUAD);
       }
@@ -2961,6 +2956,7 @@ void SurgeSynthesizer::process()
    storage.modRoutingMutex.unlock();
    polydisplay = vcount;
 
+   // TODO: FIX SCENE ASSUMPTION
    if (play_scene[0])
    {
       if (hardclipEnabled){ 
@@ -2992,20 +2988,24 @@ void SurgeSynthesizer::process()
    }
 
    // TODO: FIX SCENE ASSUMPTION
-   bool sc_a = play_scene[0];
-   bool sc_b = play_scene[1];
+   bool sc_state[n_scenes];
+   
+   for (int i = 0; i < n_scenes; i++)
+   {
+      sc_state[i] = play_scene[i];
+   }
 
    // apply insert effects
    if (fx_bypass != fxb_no_fx)
    {
       if (fx[0] && !(storage.getPatch().fx_disable.val.i & (1 << 0)))
-         sc_a = fx[0]->process_ringout(sceneout[0][0], sceneout[0][1], sc_a);
+         sc_state[0] = fx[0]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
       if (fx[1] && !(storage.getPatch().fx_disable.val.i & (1 << 1)))
-         sc_a = fx[1]->process_ringout(sceneout[0][0], sceneout[0][1], sc_a);
+         sc_state[0] = fx[1]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
       if (fx[2] && !(storage.getPatch().fx_disable.val.i & (1 << 2)))
-         sc_b = fx[2]->process_ringout(sceneout[1][0], sceneout[1][1], sc_b);
+         sc_state[1] = fx[2]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
       if (fx[3] && !(storage.getPatch().fx_disable.val.i & (1 << 3)))
-         sc_b = fx[3]->process_ringout(sceneout[1][0], sceneout[1][1], sc_b);
+         sc_state[1] = fx[3]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
    }
 
    // sum scenes
@@ -3026,7 +3026,7 @@ void SurgeSynthesizer::process()
                                     fxsendout[0][1], BLOCK_SIZE_QUAD);
          send[0][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[0][0],
                                     fxsendout[0][1], BLOCK_SIZE_QUAD);
-         send1 = fx[4]->process_ringout(fxsendout[0][0], fxsendout[0][1], sc_a || sc_b);
+         send1 = fx[4]->process_ringout(fxsendout[0][0], fxsendout[0][1], sc_state[0] || sc_state[1]);
          FX1.MAC_2_blocks_to(fxsendout[0][0], fxsendout[0][1], output[0], output[1],
                              BLOCK_SIZE_QUAD);
       }
@@ -3036,7 +3036,7 @@ void SurgeSynthesizer::process()
                                     fxsendout[1][1], BLOCK_SIZE_QUAD);
          send[1][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[1][0],
                                     fxsendout[1][1], BLOCK_SIZE_QUAD);
-         send2 = fx[5]->process_ringout(fxsendout[1][0], fxsendout[1][1], sc_a || sc_b);
+         send2 = fx[5]->process_ringout(fxsendout[1][0], fxsendout[1][1], sc_state[0] || sc_state[1]);
          FX2.MAC_2_blocks_to(fxsendout[1][0], fxsendout[1][1], output[0], output[1],
                              BLOCK_SIZE_QUAD);
       }
@@ -3045,7 +3045,7 @@ void SurgeSynthesizer::process()
    // apply global effects
    if ((fx_bypass == fxb_all_fx) || (fx_bypass == fxb_no_sends))
    {
-      bool glob = sc_a || sc_b || send1 || send2;
+      bool glob = sc_state[0] || sc_state[1] || send1 || send2;
       if (fx[6] && !(storage.getPatch().fx_disable.val.i & (1 << 6)))
          glob = fx[6]->process_ringout(output[0], output[1], glob);
       if (fx[7] && !(storage.getPatch().fx_disable.val.i & (1 << 7)))
@@ -3060,11 +3060,6 @@ void SurgeSynthesizer::process()
    float a = storage.vu_falloff;
    vu_peak[0] = min(2.f, a * vu_peak[0]);
    vu_peak[1] = min(2.f, a * vu_peak[1]);
-   /*for(int i=0; i<BLOCK_SIZE; i++)
-   {
-           vu_peak[0] = max(vu_peak[0], output[0][i]);
-           vu_peak[1] = max(vu_peak[1], output[1][i]);
-   }*/
    vu_peak[0] = max(vu_peak[0], get_absmax(output[0], BLOCK_SIZE_QUAD));
    vu_peak[1] = max(vu_peak[1], get_absmax(output[1], BLOCK_SIZE_QUAD));
 
