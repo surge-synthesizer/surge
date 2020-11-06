@@ -138,6 +138,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
    for (int c = 1; c >= 0; --c ) // backwards so we draw blue first
    {
+      bool use_display = false;
       Oscillator* osc = osces[c];
       CGraphicsPath* path = dc->createGraphicsPath();
       if (osc)
@@ -169,7 +170,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                // What the hell type of scale is this folks! But this is just UI code so just punt
             }
          }
-         bool use_display = osc->allow_display();
+         use_display = osc->allow_display();
 
          // Mis-install check #2
          if (uses_wavetabledata(oscdata->type.val.i) && storage->wt_list.size() == 0)
@@ -287,7 +288,8 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       else
          dc->setFrameColor(skin->getColor(Colors::Osc::Display::Wave));
 
-      dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
+      if( use_display )
+         dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
       dc->restoreGlobalState();
 
       path->forget();
