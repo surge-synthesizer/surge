@@ -1812,12 +1812,26 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                }
             
          }
+         else
+         {
+            // We have re-loaded to NULL; so we want to clear modulation that points at us
+            // no matter what
+            for(int j=0; j<n_fx_params; j++)
+            {
+               auto p = &( storage.getPatch().fx[s].p[j] );
+               for( int ms=1; ms<n_modsources; ms++ )
+               {
+                  clearModulation(p->id, (modsources)ms, true );
+               }
+            }
+         }
+
          something_changed = true;
          refresh_editor = true;
       }
       else if (fx_reload[s])
       {
-         // std::cout << "Reloading FX " << _D(s) << " " << fxsync[s].type.val.i << std::endl;
+         // This branch will happen when we change a preset for an FX; or when we turn an fx to OFF
          memcpy((void*)&storage.getPatch().fx[s].p, (void*)&fxsync[s].p, sizeof(Parameter) * n_fx_params);
          if (fx[s])
          {
