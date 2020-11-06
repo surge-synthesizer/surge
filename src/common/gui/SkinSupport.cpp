@@ -312,6 +312,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
    ** Parse the globals section
    */
    globals.clear();
+   zooms.clear();
    for (auto gchild = globalsxml->FirstChild(); gchild; gchild = gchild->NextSibling())
    {
       auto lkid = TINYXML_SAFE_TO_ELEMENT(gchild);
@@ -518,6 +519,18 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                FIXMEERROR << "invalid multi-image for some reason";
             }
          }
+      }
+      if( g.first == "zoom-levels" )
+      {
+         for( auto k : g.second.children )
+         {
+            if( k.second.find("zoom") != k.second.end() )
+            {
+               zooms.push_back( std::atoi( k.second["zoom"].c_str()));
+            }
+         }
+         // Store the zooms in sorted order
+         std::sort( zooms.begin(), zooms.end() );
       }
       if (g.first == "color")
       {
