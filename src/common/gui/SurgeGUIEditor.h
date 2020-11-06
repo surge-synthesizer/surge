@@ -328,6 +328,8 @@ public:
 
    void updateStateOnSynth();
 
+   int oscilatorMenuIndex = 0;
+
 private:
    SGEDropAdapter *dropAdapter = nullptr;
    friend class SGEDropAdapter;
