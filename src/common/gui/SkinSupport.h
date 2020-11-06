@@ -277,6 +277,8 @@ public:
    int getWindowSizeX() const { return szx; }
    int getWindowSizeY() const { return szy; }
 
+   bool hasFixedZooms() const { return zooms.size() != 0; }
+   std::vector<int> getFixedZooms() const { return zooms; }
    CScalableBitmap *backgroundBitmapForControl( Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> bitmapStore );
 
    typedef enum {
@@ -333,7 +335,7 @@ private:
    ControlGroup::ptr_t rootControl;
    std::vector<Control::ptr_t> controls;
    std::unordered_map<std::string, ComponentClass::ptr_t> componentClasses;
-
+   std::vector<int> zooms;
    bool recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *groupList, std::string pfx="" );
 };
 

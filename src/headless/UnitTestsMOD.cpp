@@ -441,7 +441,7 @@ TEST_CASE( "ADSR Envelope Behaviour", "[mod]" )
                                   for( auto i=0; i<sz; ++i )
                                   {
                                      if( replA[i].second > 1e-5 ) // CI pipelines bounce around zero badly
-                                        REQUIRE( replA[i].second == Approx( surgeA[i].second ).margin( 1e-3 ) );
+                                        REQUIRE( replA[i].second == Approx( surgeA[i].second ).margin( 1e-2 ) );
                                   }
                                };
 
