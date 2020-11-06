@@ -517,8 +517,8 @@ TEST_CASE( "Non-MPE pitch bend", "[mod]" )
    {
       auto surge = surgeOnSine();
       surge->mpeEnabled = false;
-      surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
-      surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
+      surge->storage.getPatch().scene[0].pbrange_up.val.f = 2.f;
+      surge->storage.getPatch().scene[0].pbrange_dn.val.f = 2.f;
 
       auto f60 = frequencyForNote( surge, 60 );
       auto f62 = frequencyForNote( surge, 62 );
@@ -543,8 +543,8 @@ TEST_CASE( "Non-MPE pitch bend", "[mod]" )
          int bUp = rand() % 24 + 1;
          int bDn = rand() % 24 + 1;
 
-         surge->storage.getPatch().scene[0].pbrange_up.val.i = bUp;
-         surge->storage.getPatch().scene[0].pbrange_dn.val.i = bDn;
+         surge->storage.getPatch().scene[0].pbrange_up.val.f = (float)bUp;
+         surge->storage.getPatch().scene[0].pbrange_dn.val.f = (float)bDn;
          auto fUpD = frequencyForNote( surge, 60 + bUp );
          auto fDnD = frequencyForNote( surge, 60 - bDn );
 
@@ -589,8 +589,8 @@ TEST_CASE( "Pitch Bend and Tuning", "[mod][tun]" )
             int bUp = rand() % 24 + 1;
             int bDn = rand() % 24 + 1;
             
-            surge->storage.getPatch().scene[0].pbrange_up.val.i = bUp;
-            surge->storage.getPatch().scene[0].pbrange_dn.val.i = bDn;
+            surge->storage.getPatch().scene[0].pbrange_up.val.f = (float)bUp;
+            surge->storage.getPatch().scene[0].pbrange_dn.val.f = (float)bDn;
             auto fUpD = frequencyForNote( surge, 60 + bUp );
             auto fDnD = frequencyForNote( surge, 60 - bDn );
             
@@ -630,8 +630,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       surge->mpeEnabled = true;
       surge->storage.mpePitchBendRange = 48;
 
-      surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
-      surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
+      surge->storage.getPatch().scene[0].pbrange_up.val.f = 2.f;
+      surge->storage.getPatch().scene[0].pbrange_dn.val.f = 2.f;
       
       auto f60 = frequencyForNote( surge, 60 );
       auto f62 = frequencyForNote( surge, 62 );
@@ -656,8 +656,8 @@ TEST_CASE( "MPE pitch bend", "[mod]" )
       
       surge->storage.mpePitchBendRange = pbr;
       
-      surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
-      surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
+      surge->storage.getPatch().scene[0].pbrange_up.val.f = 2.f;
+      surge->storage.getPatch().scene[0].pbrange_dn.val.f = 2.f;
 
       // Play on channel 1 which is now an MPE bend channel and send bends on that chan
       auto f60 = frequencyForNote( surge, 60, 2, 0, 1 );

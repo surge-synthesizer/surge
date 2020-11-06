@@ -303,10 +303,11 @@ void SurgeVoice::switch_toggled()
 {
    update_portamento();
    float pb = modsources[ms_pitchbend]->output;
+   printf("%.3f\n", scene->pbrange_up.val.f);
    if (pb > 0)
-      pb *= (float)scene->pbrange_up.val.i;
+      pb *= scene->pbrange_up.val.f;
    else
-      pb *= (float)scene->pbrange_dn.val.i;
+      pb *= scene->pbrange_dn.val.f;
 
    // scenepbpitch is pitch state but without state.pkey, so that it can be used to add
    // scene pitch/octave, pitch bend and associated modulations to non-keytracked oscillators
@@ -611,10 +612,11 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
    }
 
    float pb = modsources[ms_pitchbend]->output;
+   printf("%.3f\n", scene->pbrange_up.val.f);
    if (pb > 0)
-      pb *= (float)scene->pbrange_up.val.i;
+      pb *= scene->pbrange_up.val.f;
    else
-      pb *= (float)scene->pbrange_dn.val.i;
+      pb *= scene->pbrange_dn.val.f;
 
    octaveSize = 12.0f;
    if( ! storage->isStandardTuning )

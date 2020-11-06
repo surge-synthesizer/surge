@@ -402,10 +402,10 @@ void Parameter::set_type(int ctrltype)
       val_default.i = 1;
       break;
    case ct_pbdepth:
-      valtype = vt_int;
-      val_min.i = 0;
-      val_max.i = 24;
-      val_default.i = 2;
+      valtype = vt_float;
+      val_min.f = 0.f;
+      val_max.f = 24.f;
+      val_default.f = 2.f;
       break;
    case ct_pitch_semi7bp:
    case ct_pitch_semi7bp_absolutable:
@@ -895,6 +895,10 @@ void Parameter::set_type(int ctrltype)
 
    switch( ctrltype )
    {
+   case ct_pbdepth:
+      displayType = LinearWithScale;
+      displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
+      break;
    case ct_percent:
    case ct_percent200:
    case ct_percent_bidirectional:

@@ -213,9 +213,9 @@ void CNumberField::setControlMode(int mode)
       setDefaultValue(8);
       break;
    case cm_pbdepth:
-      setIntMin(0);
-      setIntMax(24);
-      setDefaultValue(2);
+      setFloatMin(0);
+      setFloatMax(24);
+      setDefaultValue(1);
       break;
    case cm_envshape:
       setFloatMin(-10.f);
@@ -311,7 +311,7 @@ void CNumberField::draw(CDrawContext* pContext)
       sprintf(the_text, "%i", max(1, min(16, (int)value)));
       break;
    case cm_pbdepth:
-      sprintf(the_text, "%i", i_value);
+      sprintf(the_text, "%.2f", value * 24);
       break;
    case cm_count4:
       sprintf(the_text, "%i", max(1, min(4, (int)value)));

@@ -646,8 +646,8 @@ void SurgePatch::init_default_values()
       scene[sc].route_ring_12.val.i = 1;
       scene[sc].route_ring_23.val.i = 1;
       scene[sc].route_noise.val.i = 1;
-      scene[sc].pbrange_up.val.i = 2.f;
-      scene[sc].pbrange_dn.val.i = 2.f;
+      scene[sc].pbrange_up.val.f = 2.f;
+      scene[sc].pbrange_dn.val.f = 2.f;
       scene[sc].lowcut.val.f = scene[sc].lowcut.val_min.f;
       scene[sc].lowcut.deactivated = false;
       scene[sc].lowcut.per_voice_processing = false;
@@ -1319,7 +1319,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (scene[0].pbrange_up.val.i & 0xffffff00) // is outside range, it must have been save
    {
-      for (int sc; sc < n_scenes; sc++)
+      for (int sc = 0; sc < n_scenes; sc++)
       {
          scene[sc].pbrange_up.val.i = (int)scene[sc].pbrange_up.val.f;
          scene[sc].pbrange_dn.val.i = (int)scene[sc].pbrange_dn.val.f;
@@ -1328,7 +1328,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (revision < 1)
    {
-      for (int sc; sc < n_scenes; sc++)
+      for (int sc = 0; sc < n_scenes; sc++)
       {
          scene[sc].adsr[0].a_s.val.i = limit_range(scene[sc].adsr[0].a_s.val.i + 1, 0, 2);
          scene[sc].adsr[1].a_s.val.i = limit_range(scene[sc].adsr[1].a_s.val.i + 1, 0, 2);
