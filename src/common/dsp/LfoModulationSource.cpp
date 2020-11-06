@@ -55,7 +55,7 @@ void LfoModulationSource::assign(SurgeStorage* storage,
 
    if (is_display)
    {
-      auto gen = std::minstd_rand(17);
+      auto gen = std::minstd_rand(46);
       std::uniform_real_distribution<float> distro(-1.f,1.f);
       urng = std::bind(distro, gen);
 
