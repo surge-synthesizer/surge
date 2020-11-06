@@ -105,15 +105,14 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       voices_usedby[1][i] = 0;
    }
 
-   // TODO: FIX SCENE ASSUMPTION
-   FBQ[0] = (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
-   FBQ[1] = (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
-
-   // TODO: FIX SCENE ASSUMPTION
-   for(int i=0; i<(MAX_VOICES >> 2); ++i)
+   for (int sc = 0; sc < n_scenes; sc++)
    {
-       InitQuadFilterChainStateToZero(&(FBQ[0][i]));
-       InitQuadFilterChainStateToZero(&(FBQ[1][i]));
+      FBQ[sc] = (QuadFilterChainState*)_aligned_malloc((MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
+
+      for (int i = 0; i < (MAX_VOICES >> 2); ++i)
+      {
+          InitQuadFilterChainStateToZero(&(FBQ[sc][i]));
+      }
    }
 
    SurgePatch& patch = storage.getPatch();
@@ -253,9 +252,10 @@ SurgeSynthesizer::~SurgeSynthesizer()
 {
    allNotesOff();
 
-   // TODO: FIX SCENE ASSUMPTION
-   _aligned_free(FBQ[0]);
-   _aligned_free(FBQ[1]);
+   for (int sc = 0; sc < n_scenes; sc++)
+   {
+      _aligned_free(FBQ[sc]);
+   }
 
    for (int sc = 0; sc < n_scenes; sc++)
    {

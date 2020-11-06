@@ -373,7 +373,7 @@ public:
    quadr_osc sinus;
    int demo_counter = 0;
 
-   QuadFilterChainState* FBQ[2];  // TODO: FIX SCENE ASSUMPTION? (mkruselj asks: unsure if this 2 relates to 2 filters or 2 scenes?)
+   QuadFilterChainState* FBQ[n_scenes];
 
    std::string hostProgram = "Unknown Host";
    bool activateExtraOutputs = true;

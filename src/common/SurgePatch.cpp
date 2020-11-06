@@ -810,7 +810,7 @@ void SurgePatch::do_morph()
 struct patch_header
 {
    char tag[4];
-   unsigned int xmlsize, wtsize[n_scenes][n_oscs];
+   unsigned int xmlsize, wtsize[2][3];  // TODO: FIX SCENE AND OSC COUNT ASSUMPTION (but also since it's used in streaming, do it with care!)
 };
 #pragma pack(pop)
 
@@ -1755,7 +1755,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          for (int sc = 0; sc < n_scenes; sc++)
          {
             char str[32];
-            sprintf(str, "s%d", sc);
+            snprintf(str, 32, "s%d", sc);
             if (mw->QueryDoubleAttribute(str, &d) == TIXML_SUCCESS)
             {
                ((ControllerModulationSource*)scene[sc].modsources[ms_modwheel])->set_target(d);

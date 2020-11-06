@@ -88,7 +88,7 @@ extern float table_envrate_lpf alignas(16)[512],
              table_envrate_linear alignas(16)[512],
              table_glide_exp alignas(16)[512],
              table_glide_log alignas(16)[512];
-extern float table_note_omega alignas(16)[2][512];  // TODO: FIX SCENE ASSUMPTION?
+extern float table_note_omega alignas(16)[2][512];
 extern float waveshapers alignas(16)[8][1024];
 extern float samplerate, samplerate_inv;
 extern double dsamplerate, dsamplerate_inv;
@@ -458,7 +458,9 @@ const char fut_vintageladder_subtypes[6][32] =
    "Dampened",
    "Dampened Compensated",
 };
+
 const char fut_obxd_2p_subtypes[1][32] = {"12 dB/oct"};
+
 const char fut_obxd_4p_subtypes[1][32] = {"24 dB/oct"};
 
 const char fut_k35_subtypes[5][32] = {
@@ -556,7 +558,7 @@ struct MidiKeyState
 struct MidiChannelState
 {
    MidiKeyState keyState[128];
-   int nrpn[2], nrpn_v[2];    // question for baconpaul: does this 2 here mean per scene, or?
+   int nrpn[2], nrpn_v[2];
    int rpn[2], rpn_v[2];
    int pitchBend;
    bool nrpn_last;
@@ -896,10 +898,10 @@ public:
    SurgeStorage(std::string suppliedDataPath="");
    float table_pitch alignas(16)[512];
    float table_pitch_inv alignas(16)[512];
-   float table_note_omega alignas(16)[2][512];  // TODO: FIX SCENE ASSUMPTION?
+   float table_note_omega alignas(16)[2][512];
    float table_pitch_ignoring_tuning alignas(16)[512];
    float table_pitch_inv_ignoring_tuning alignas(16)[512];
-   float table_note_omega_ignoring_tuning alignas(16)[2][512];  // TODO: FIX SCENE ASSUMPTION?
+   float table_note_omega_ignoring_tuning alignas(16)[2][512];
 
    ~SurgeStorage();
 
