@@ -29,9 +29,9 @@ bool Surge::Debug::openConsole()
         winconinitialized = true;
         AllocConsole();
         freopen_s(&confp, "CONOUT$", "w", stdout);
-        std::cout << "Surge Debugging Console\n"
-                  << "This console shows stdout from the surge plugin. If you close it with X you might crash.\n"
-                  << "Version: " << Build::FullVersionStr << " built at " << Build::BuildDate << " " << Build::BuildTime
+        std::cout << "SURGE DEBUG CONSOLE\n\n"
+                  << "Displays standard text output from Surge, for debugging purposes. If you close this window, Surge will crash!\n"
+                  << "Version: " << Build::FullVersionStr << ", built on " << Build::BuildDate << " at " << Build::BuildTime
                   << "\n\n" << std::endl;
     }
     return winconinitialized;
@@ -68,7 +68,7 @@ void Surge::Debug::stackTraceToStdout( int depth )
     int i, frames = backtrace(callstack, 128);
     char** strs = backtrace_symbols(callstack, frames);
    if( depth < 0 ) depth = frames;
-   printf( "-------- StackTrace (%d frames of %d depth showing) --------\n", depth, frames );
+   printf( "-------- Stack Trace (%d frames of %d depth showing) --------\n", depth, frames );
     for (i = 1; i < frames && i < depth; ++i) {
         printf( "  [%3d]: %s\n", i, strs[i] );
     }
