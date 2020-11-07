@@ -119,12 +119,6 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       dc->setDrawMode(kAntiAliasing | kNonIntegralMode);
    #endif
 
-   const CColor ColHover = CColor(103, 167, 253, 255);
-   const CColor ColEdge = CColor(46, 134, 254, 255);
-   const CColor ColTint = CColor(46, 134, 254, 255);
-   const CColor ColSemiTint = CColor(32, 93, 176, 255);
-   const CColor ColBlink = CColor(173, 255, 107, 255);
-
    /*
         state
         0 - nothing
@@ -232,7 +226,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       dc->drawRect(MCRect, kDrawFilled);
       CRect brect(MCRect);
       brect.inset(1, 1);
-      dc->setFillColor(ColSemiTint);
+      dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
       dc->drawRect(brect, kDrawFilled);
 
       int midx = brect.left + ((brect.getWidth() - 1) * 0.5);
@@ -242,7 +236,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
       if (bipolar)
       {
-         dc->setFillColor(ColTint);
+         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Fill));
          CRect bar(brect);
 
          if (barx >= midx)
@@ -263,7 +257,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
          CRect vr(brect);
          vr.right = barx + 1;
          vr.bound(brect);
-         dc->setFillColor(ColTint);
+         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Fill));
          if (vr.right > vr.left)
             dc->drawRect(vr, kDrawFilled);
       }
@@ -464,7 +458,6 @@ CMouseEventResult CModulationSourceButton::onMouseMoved( CPoint &where, const CB
          l->setTransparency(false);
 
          CColor FrameCol, FillCol, FontCol;
-         const CColor ColEdge = CColor(46, 134, 254, 255);
 
          FillCol = skin->getColor(Colors::ModSource::Used::Background);
          FrameCol = skin->getColor( Colors::ModSource::Used::Border );
