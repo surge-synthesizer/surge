@@ -213,6 +213,12 @@ namespace Colors
                                   TextHover("modbutton.armed.text.hover", 208, 255, 255),
                                   UsedModHover("modbutton.armed.text.usedmod.hover", 46, 134, 254);
       }
+      namespace Macro
+      {
+         const Surge::Skin::Color Background("modbutton.macro.background", 46, 134, 254),
+                                  Fill("modbutton.macro.fill", 32, 93, 176);
+
+      }
    }
 
    namespace MSEGEditor
