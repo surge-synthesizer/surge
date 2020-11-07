@@ -5648,6 +5648,28 @@ void SurgeGUIEditor::reloadFromSkin()
 
 
    setZoomFactor( getZoomFactor() );
+
+   // update MSEG editor if opened
+   if (editorOverlay && editorOverlayTag == "msegEditor")
+   {
+      showMSEGEditor();
+   }
+
+   // update Store Patch dialog if opened
+   if (editorOverlay && editorOverlayTag == "storePatch")
+   {
+      auto pname = patchName->getText();
+      auto pcat = patchCategory->getText();
+      auto pauth = patchCreator->getText();
+      auto pcom = patchComment->getText();
+
+      showStorePatchDialog();
+
+      patchName->setText(pname);
+      patchCategory->setText(pcat);
+      patchCreator->setText(pauth);
+      patchComment->setText(pcom);
+   }
 }
 
 /*
