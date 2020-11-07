@@ -4375,32 +4375,6 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    }
 }
 
-void SurgeGUIEditor::showPatchStoreDialog()
-{
-   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(150, 57), false, false, [this]() {});
-
-   if( synth->storage.isStandardTuning )
-   {
-      patchTuningLabel->setVisible(false);
-      patchTuning->setVisible(false);
-   }
-   else
-   {
-      patchTuningLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-      patchTuningLabel->setVisible(true);
-      patchTuning->setBoxFrameColor(currentSkin->getColor(Colors::Dialog::Checkbox::Border));
-      patchTuning->setBoxFillColor(currentSkin->getColor(Colors::Dialog::Checkbox::Background));
-      patchTuning->setCheckMarkColor(currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
-      patchTuning->setValue(0);
-      patchTuning->setMouseEnabled(true);
-      patchTuning->setVisible(true);
-   }
-
-   //saveDialog->setVisible(true);
-
-   // frame->setModalView(saveDialog);
-}
-
 long SurgeGUIEditor::applyParameterOffset(long id)
 {
    return id-start_paramtags;
@@ -6631,7 +6605,7 @@ void SurgeGUIEditor::setupSaveDialog()
    VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
    hovcg->addColorStop(0, hovbtnbg);
 
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11);
 
    auto label = CRect(CPoint(10, 10), CPoint(47, 19));
    auto pnamelbl = new CTextLabel(label, "Name");
@@ -6715,7 +6689,7 @@ void SurgeGUIEditor::setupSaveDialog()
 
    auto b1r = CRect(CPoint(266, 111), CPoint(50, 20));
    auto cb = new CTextButton(b1r, this, tag_store_cancel, "Cancel");
-   cb->setFont(fnt);
+   cb->setFont(aboutFont);
    cb->setGradient(cg);
    cb->setFrameColor(btnborder);
    cb->setTextColor(btntext);
@@ -6726,7 +6700,7 @@ void SurgeGUIEditor::setupSaveDialog()
 
    auto b2r = CRect(CPoint(326, 111), CPoint(50, 20));
    auto kb = new CTextButton(b2r, this, tag_store_ok, "OK");
-   kb->setFont(fnt);
+   kb->setFont(aboutFont);
    kb->setGradient(cg);
    kb->setFrameColor(btnborder);
    kb->setTextColor(btntext);

@@ -190,7 +190,6 @@ private:
       std::string author;
    };
 
-   void showPatchStoreDialog();
    void showSettingsMenu(VSTGUI::CRect &menuRect);
 
    /*
