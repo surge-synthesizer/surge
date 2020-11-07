@@ -215,8 +215,8 @@ namespace Colors
       }
       namespace Macro
       {
-         const Surge::Skin::Color Background("modbutton.macro.slider.background", 46, 134, 254),
-                                  Fill("modbutton.macro.slider.fill", 32, 93, 176);
+         const Surge::Skin::Color Background("modbutton.macro.slider.background", 32, 93, 176),
+                                  Fill("modbutton.macro.slider.fill", 46, 134, 254);
 
       }
    }
