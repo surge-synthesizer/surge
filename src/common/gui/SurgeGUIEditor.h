@@ -190,11 +190,6 @@ private:
       std::string author;
    };
 
-   bool showPatchStoreDialog(patchdata* p,
-                             std::vector<PatchCategory>* patch_category,
-                             int startcategory);
-
-
    void showSettingsMenu(VSTGUI::CRect &menuRect);
 
    /*
@@ -308,6 +303,7 @@ public:
                           std::string editorTag, // A tag by editor class. Please unique, no spaces.
                           const VSTGUI::CPoint &topleft = VSTGUI::CPoint( 0, 0 ),
                           bool modalOverlay = true,
+                          bool hasCloseButton = true,
                           std::function<void()> onClose = [](){} );
    void dismissEditorOverlay();
 
@@ -319,6 +315,9 @@ public:
          strncpy( synth->patchid_file, file.c_str(), FILENAME_MAX );
          synth->has_patchid_file = true;
       }
+
+   void closeStorePatchDialog();
+   void showStorePatchDialog();
 
    void lfoShapeChanged(int prior, int curr);
    void showMSEGEditor();
@@ -380,26 +379,26 @@ private:
 
    bool modsource_is_alternate[n_modsources];
 
-   VSTGUI::CControl* vu[16];
+   VSTGUI::CControl *vu[16];
    VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
    VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;
    CAboutBox* aboutbox = nullptr;
-   VSTGUI::CViewContainer* saveDialog = nullptr;
-   VSTGUI::CTextEdit* patchName = nullptr;
-   VSTGUI::CTextEdit* patchCategory = nullptr;
-   VSTGUI::CTextEdit* patchCreator = nullptr;
-   VSTGUI::CTextEdit* patchComment = nullptr;
-   VSTGUI::CCheckBox* patchTuning = nullptr;
-   VSTGUI::CTextLabel* patchTuningLabel = nullptr;
+   VSTGUI::CViewContainer *saveDialog = nullptr;
+   VSTGUI::CTextEdit *patchName = nullptr;
+   VSTGUI::CTextEdit *patchCategory = nullptr;
+   VSTGUI::CTextEdit *patchCreator = nullptr;
+   VSTGUI::CTextEdit *patchComment = nullptr;
+   VSTGUI::CCheckBox *patchTuning = nullptr;
+   VSTGUI::CTextLabel *patchTuningLabel = nullptr;
 #if BUILD_IS_DEBUG
-   VSTGUI::CTextLabel* debugLabel = nullptr;
+   VSTGUI::CTextLabel *debugLabel = nullptr;
 #endif
 
-   VSTGUI::CViewContainer* typeinDialog = nullptr;
-   VSTGUI::CTextEdit* typeinValue = nullptr;
-   VSTGUI::CTextLabel* typeinLabel = nullptr;
-   VSTGUI::CTextLabel* typeinPriorValueLabel = nullptr;
-   VSTGUI::CControl* typeinEditControl = nullptr;
+   VSTGUI::CViewContainer *typeinDialog = nullptr;
+   VSTGUI::CTextEdit *typeinValue = nullptr;
+   VSTGUI::CTextLabel *typeinLabel = nullptr;
+   VSTGUI::CTextLabel *typeinPriorValueLabel = nullptr;
+   VSTGUI::CControl *typeinEditControl = nullptr;
    VSTGUI::CControl *msegEditSwitch = nullptr;
    enum TypeInMode {
       Inactive,
