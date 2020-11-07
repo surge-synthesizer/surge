@@ -187,7 +187,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto drawArea = getDrawArea();
       float maxt = drawDuration();
       float tscale = 1.f * drawArea.getWidth() / maxt;
-      return [tscale, drawArea](float t) { return t * tscale + drawArea.left; };
+      return [tscale, drawArea, this](float t) { return ( t - axisStart ) * tscale + drawArea.left; };
    }
    std::function<float(float)> pxToTime() { // INVESTIGATE
       auto drawArea = getDrawArea();
@@ -196,8 +196,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       // So px = t * tscale + drawarea;
       // So t = ( px - drawarea ) / tscale;
-      return [tscale, drawArea](float px) {
-                return (px - drawArea.left) / tscale;
+      return [tscale, drawArea, this ](float px) {
+                return (px - drawArea.left) / tscale + axisStart;
              };
    }
 
@@ -608,6 +608,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       skips = std::max( 1, skips );
 
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->setLineWidth( 1 );
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
 
@@ -672,6 +673,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       // vertical axis
       auto vaxisArea = getVAxisArea();
       auto valpx = valToPx();
+
+
+      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
+      dc->setLineWidth( 1 );
+      dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
 
       dc->setFont(primaryFont);
       dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
@@ -754,9 +760,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       bool drawnLast = false; // this slightly odd construct means we always draw beyond the last point
       int priorEval = 0;
-      for( int i=0; i<drawArea.getWidth(); ++i )
+      for( int q=0; q<drawArea.getWidth(); ++q )
       {
-         float up = pxt( i + drawArea.left );
+         float up = pxt( q + drawArea.left );
+         int i = q;
          if( ! drawnLast )
          {
             float iup = (int)up;
@@ -1005,16 +1012,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
             if( handleBmp )
             {
+               auto r = h.rect;
                if( h.useDrawRect )
-                  handleBmp->draw( dc, h.drawRect, CPoint( offx * sz, offy * sz ), 0xFF );
-               else
-                  handleBmp->draw( dc, h.rect, CPoint( offx * sz, offy * sz ), 0xFF );
+                  r = h.drawRect;
+               if( drawArea.rectOverlap( r ))
+                  handleBmp->draw( dc, r, CPoint( offx * sz, offy * sz ), 0xFF );
             }
          }
       }
    }
 
-   CPoint mouseDownOrigin;
+   CPoint mouseDownOrigin, lastPanZoomMousePos;
    bool inDrag = false;
    bool inDrawDrag = false;
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
@@ -1084,11 +1092,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       else
       {
          mouseDownOrigin = where;
+         lastPanZoomMousePos = where;
          inDrag = true;
+         bool foundHZ = false;
          for( auto &h : hotzones )
          {
             if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
             {
+               foundHZ = true;
                startCursorHide(where);
                h.active = true;
                h.dragging = true;
@@ -1113,6 +1124,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          return kMouseEventHandled;
       }
+
    }
 
    virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons ) override {
@@ -1250,6 +1262,30 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             hotzones[idx].dragging = true;
             invalid();
          }
+         else
+         {
+            // This means we are a pan or zoom gesture
+            float x = where.x - mouseDownOrigin.x;
+            float y = where.y - mouseDownOrigin.y;
+            float r = sqrt(x * x + y * y);
+            if (r > 3)
+            {
+               if (fabs(x) > fabs(y))
+               {
+                  float dx = where.x - lastPanZoomMousePos.x;
+                  float panScale = axisWidth / getDrawArea().getWidth();
+                  pan(where, -dx * panScale, buttons );
+               }
+               else
+               {
+                  float dy = where.y - lastPanZoomMousePos.y;
+                  float zoomScale = 2. / getDrawArea().getHeight();
+                  zoom( where, dy * zoomScale, buttons );
+               }
+               lastPanZoomMousePos = where;
+            }
+         }
+
          /*
           * Activate temporary snap. Note this is also checked in onMouseDown
           * so if you change shift/ctrl whatever here change it there too
@@ -1272,6 +1308,74 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       return kMouseEventHandled;
    }
 
+   int wheelAxisCount = 0;
+   bool onWheel(const CPoint& where,
+                const CMouseWheelAxis& axis,
+                const float& distance,
+                const CButtonState& buttons) override
+   {
+      // fixmes - most recent
+      if( axis == CMouseWheelAxis::kMouseWheelAxisY )
+      {
+         wheelAxisCount++;
+      }
+      else
+      {
+         wheelAxisCount--;
+      }
+      wheelAxisCount = limit_range(wheelAxisCount, -3, 3 );
+      if(wheelAxisCount <= -2 )
+      {
+         panWheel( where, distance, buttons );
+      }
+      else
+      {
+         zoomWheel( where, distance, buttons );
+      }
+      return true;
+   }
+
+   float axisStart = 0.0;
+   float axisWidth = 1.0;
+
+   float lastZoomDir = 0;
+   void zoomWheel( const CPoint &where, float amount, const CButtonState &buttons  )
+   {
+#if MAC
+      if ((lastZoomDir < 0 && amount > 0) || (lastZoomDir > 0 && amount < 0))
+      {
+         lastZoomDir = amount;
+         return;
+      }
+      lastZoomDir = amount;
+#endif
+      zoom(where, amount * 0.1, buttons );
+   }
+   void zoom( const CPoint &where, float amount, const CButtonState &buttons )
+   {
+      std::cout << "ZOOM by " << amount << std::endl;
+   }
+
+   // On the mac I get occasional jutters where you get ---+--- or what not
+   float lastPanDir = 0;
+   void panWheel( const CPoint &where, float amount, const CButtonState &buttons  )
+   {
+#if MAC
+      if ((lastPanDir < 0 && amount > 0) || (lastPanDir > 0 && amount < 0))
+      {
+         lastPanDir = amount;
+         return;
+      }
+      lastPanDir = amount;
+#endif
+      pan(where, amount * 0.1, buttons);
+   }
+   void pan( const CPoint &where, float amount, const CButtonState &buttons ) {
+      axisStart += axisWidth * amount;
+      axisStart = std::max( axisStart, 0.f );
+      recalcHotZones(where);
+      invalid();
+   }
 
    void openPopup(const VSTGUI::CPoint &iw) {
       CPoint w = iw;
