@@ -459,11 +459,28 @@ const char fut_vintageladder_subtypes[6][32] =
    "Dampened Compensated",
 };
 
-const char fut_obxd_2p_subtypes[1][32] = {"12 dB/oct"};
+const char fut_obxd_2p_subtypes[8][32] =
+{
+   "Lowpass",
+   "Bandpass",
+   "Highpass",
+   "Notch",
+   "Lowpass Pushed",
+   "Bandpass Pushed",
+   "Highpass Pushed",
+   "Notch Pushed",
+};
 
-const char fut_obxd_4p_subtypes[1][32] = {"24 dB/oct"};
+const char fut_obxd_4p_subtypes[4][32] =
+{
+   "6 dB/oct",
+   "12 dB/oct",
+   "18 dB/oct",
+   "24 dB/oct",
+};
 
-const char fut_k35_subtypes[5][32] = {
+const char fut_k35_subtypes[5][32] =
+{
    "No Saturation",
    "Mild Saturation",
    "Moderate Saturation",
@@ -471,7 +488,8 @@ const char fut_k35_subtypes[5][32] = {
    "Extreme Saturation"
 };
 
-const float fut_k35_saturations[5] = {
+const float fut_k35_saturations[5] =
+{
    0.0f,
    1.0f,
    2.0f,
@@ -479,7 +497,10 @@ const float fut_k35_saturations[5] = {
    4.0f
 };
 
-const char fut_diode_subtypes[1][32] = {"24 dB/oct"};
+const char fut_diode_subtypes[1][32] =
+{
+   "24 dB/oct"
+};
 
 const int fut_subcount[n_fu_type] = {
    0, // fut_none
@@ -493,8 +514,8 @@ const int fut_subcount[n_fu_type] = {
    4, // fut_comb
    0, // fut_SNH
    4, // fut_vintageladder
-   0, // fut_obxd_2pole
-   0, // fut_obxd_4pole
+   8, // fut_obxd_2pole
+   4, // fut_obxd_4pole
    5, // fut_k35_lp
    5, // fut_k35_hp
    0  // fut_diode

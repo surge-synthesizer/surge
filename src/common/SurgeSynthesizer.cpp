@@ -1558,6 +1558,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             switch (storage.getPatch().param_ptr[index]->val.i)
             {
             case fut_lpmoog:
+            case fut_obxd_4pole:
                storage.getPatch().param_ptr[index + 1]->val.i = 3;
                break;
             case fut_comb:
