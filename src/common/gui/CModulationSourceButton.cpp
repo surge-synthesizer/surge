@@ -226,7 +226,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
       dc->drawRect(MCRect, kDrawFilled);
       CRect brect(MCRect);
       brect.inset(1, 1);
-      dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Fill));
+      dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
       dc->drawRect(brect, kDrawFilled);
 
       int midx = brect.left + ((brect.getWidth() - 1) * 0.5);
@@ -236,7 +236,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
 
       if (bipolar)
       {
-         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
+         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Fill));
          CRect bar(brect);
 
          if (barx >= midx)
@@ -257,7 +257,7 @@ void CModulationSourceButton::draw(CDrawContext* dc)
          CRect vr(brect);
          vr.right = barx + 1;
          vr.bound(brect);
-         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
+         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Fill));
          if (vr.right > vr.left)
             dc->drawRect(vr, kDrawFilled);
       }
