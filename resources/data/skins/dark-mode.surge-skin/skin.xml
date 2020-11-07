@@ -20,7 +20,6 @@
     <color id="buttonbg" value="#151515"/>
     <color id="modblue" value="#2E86FE"/>
 
-
     <color id="lfo.title.text" value="#B4B4B490"/>
 
     <color id="lfo.type.selected.background" value="surgeblue"/>
@@ -85,9 +84,9 @@
     <color id="dialog.textfield.border" value="bordergray"/>
     <color id="dialog.textfield.background" value="#2E2E2E"/>
     <color id="dialog.textfield.text" value="lightgray"/>
-    <color id="dialog.checkbox.background" value="white"/>
-    <color id="dialog.checkbox.border" value="lightgray"/>
-    <color id="dialog.checkbox.tick" value="darkergray"/>
+    <color id="dialog.checkbox.background" value="#2E2E2E"/>
+    <color id="dialog.checkbox.border" value="bordergray"/>
+    <color id="dialog.checkbox.tick" value="lightgray"/>
     <color id="dialog.label.text" value="lightgray"/>
 
     <color id="effect.label.separator" value="#5E5E5E"/>

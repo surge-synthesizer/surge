@@ -6610,17 +6610,10 @@ void SurgeGUIEditor::resetPitchSmoothing(ControllerModulationSource::SmoothingMo
 
 void SurgeGUIEditor::setupSaveDialog()
 {
-   CRect dialogSize(CPoint(0, 0), CPoint(450, 182));
-   auto nopoint = CPoint(0,0);
+   CRect dialogSize(CPoint(0, 0), CPoint(390, 143));
 
    saveDialog = new CViewContainer(dialogSize);
-   saveDialog->setBackgroundColor(kRedCColor /*currentSkin->getColor(Colors::Dialog::Background)*/);
-   saveDialog->setBackground(bitmapStore->getBitmap(IDB_STOREPATCH));
-   //saveDialog->setVisible(false);
-   //frame->addView(saveDialog);
-
-   auto b1r = CRect(CPoint(305, 147), CPoint(62, 14));
-   auto b2r = CRect(CPoint(373, 147), CPoint(62, 14));
+   saveDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Background));
 
    auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
    auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
@@ -6638,47 +6631,50 @@ void SurgeGUIEditor::setupSaveDialog()
    VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
    hovcg->addColorStop(0, hovbtnbg);
 
-   auto cb = new CTextButton(b1r, this, tag_store_cancel, "Cancel");
-   cb->setVisible(true);
-   cb->setFont(displayFont);
-   cb->setGradient(cg);
-   cb->setFrameColor(btnborder);
-   cb->setTextColor(btntext);
-   cb->setGradientHighlighted(hovcg);
-   cb->setFrameColorHighlighted(hovbtnborder);
-   cb->setTextColorHighlighted(hovbtntext);
-   cb->setRoundRadius(CCoord(3.f));
-   saveDialog->addView(cb);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
 
-   auto kb = new CTextButton(b2r, this, tag_store_ok, "OK");
-   kb->setVisible(true);
-   kb->setFont(displayFont);
-   kb->setGradient(cg);
-   kb->setFrameColor(btnborder);
-   kb->setTextColor(btntext);
-   kb->setGradientHighlighted(cg);
-   kb->setFrameColorHighlighted(btnborder);
-   kb->setTextColorHighlighted(btntext);
-   kb->setRoundRadius(CCoord(3.f));
-   saveDialog->addView(kb);
+   auto label = CRect(CPoint(10, 10), CPoint(47, 19));
+   auto pnamelbl = new CTextLabel(label, "Name");
+   pnamelbl->setTransparency(true);
+   pnamelbl->setFont(fnt);
+   pnamelbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
+   pnamelbl->setHoriAlign(kRightText);
 
-   //auto msgrect = CRect(CPoint(10, 21), CPoint(wd, 14));
-   //msgrect.inset(5, 0);
-   //auto msgtxt = new CTextLabel(msgrect, prompt.c_str());
-   //msgtxt->setTransparency(true);
-   //msgtxt->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-   //msgtxt->setFont(fnts);
-   //msgtxt->setHoriAlign(kLeftText);
-   //saveDialog->addView(msgtxt);
+   label.offset(0, 24);
+   auto pcatlbl = new CTextLabel(label, "Category");
+   pcatlbl->setTransparency(true);
+   pcatlbl->setFont(fnt);
+   pcatlbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
+   pcatlbl->setHoriAlign(kRightText);
 
-   patchName = new CTextEdit(CRect(CPoint(96, 31), CPoint(340, 21)), this, tag_store_name);
-   patchCategory = new CTextEdit(CRect(CPoint(96, 58), CPoint(340, 21)), this, tag_store_category);
-   patchCreator = new CTextEdit(CRect(CPoint(96, 85), CPoint(340, 21)), this, tag_store_creator);
-   patchComment = new CTextEdit(CRect(CPoint(96, 112), CPoint(340, 21)), this, tag_store_comments);
-   patchTuning = new CCheckBox(CRect(CPoint(96, 139), CPoint(21, 21)), this, tag_store_tuning);
-   patchTuningLabel = new CTextLabel(CRect(CPoint(118, 139), CPoint(200, 21)));
-   patchTuningLabel->setText("Save With Tuning");
-   patchTuningLabel->sizeToFit();
+   label.offset(0, 24);
+   auto pauthlbl = new CTextLabel(label, "Author");
+   pauthlbl->setTransparency(true);
+   pauthlbl->setFont(fnt);
+   pauthlbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
+   pauthlbl->setHoriAlign(kRightText);
+
+   label.offset(0, 24);
+   auto pcomlbl = new CTextLabel(label, "Comment");
+   pcomlbl->setTransparency(true);
+   pcomlbl->setFont(fnt);
+   pcomlbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
+   pcomlbl->setHoriAlign(kRightText);
+
+   patchName = new CTextEdit(CRect(CPoint(67, 10), CPoint(309, 19)), this, tag_store_name);
+   patchCategory = new CTextEdit(CRect(CPoint(67, 34), CPoint(309, 19)), this, tag_store_category);
+   patchCreator = new CTextEdit(CRect(CPoint(67, 58), CPoint(309, 19)), this, tag_store_creator);
+   patchComment = new CTextEdit(CRect(CPoint(67, 82), CPoint(309, 19)), this, tag_store_comments);
+   patchTuning = new CCheckBox(CRect(CPoint(67, 111), CPoint(200, 20)), this, tag_store_tuning, "Save With Tuning");
+   patchTuning->setFont(fnt);
+   patchTuning->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
+   patchTuning->setBoxFrameColor(currentSkin->getColor(Colors::Dialog::Checkbox::Border));
+   patchTuning->setBoxFillColor(currentSkin->getColor(Colors::Dialog::Checkbox::Background));
+   patchTuning->setCheckMarkColor(currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
+   patchTuning->sizeToFit();
+   patchTuning->setValue(0);
+   patchTuning->setMouseEnabled(true);
+   patchTuning->setVisible(!synth->storage.isStandardTuning);
 
    // fix the text selection rectangle background overhanging the borders on Windows
 #if WINDOWS
@@ -6717,33 +6713,40 @@ void SurgeGUIEditor::setupSaveDialog()
    patchCreator->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
    patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
 
-   CColor bggr = currentSkin->getColor(Colors::Dialog::Background);
-   patchTuningLabel->setBackColor(bggr);
-   patchTuningLabel->setFrameColor(bggr);
+   auto b1r = CRect(CPoint(266, 111), CPoint(50, 20));
+   auto cb = new CTextButton(b1r, this, tag_store_cancel, "Cancel");
+   cb->setFont(fnt);
+   cb->setGradient(cg);
+   cb->setFrameColor(btnborder);
+   cb->setTextColor(btntext);
+   cb->setGradientHighlighted(hovcg);
+   cb->setFrameColorHighlighted(hovbtnborder);
+   cb->setTextColorHighlighted(hovbtntext);
+   cb->setRoundRadius(CCoord(3.f));
 
+   auto b2r = CRect(CPoint(326, 111), CPoint(50, 20));
+   auto kb = new CTextButton(b2r, this, tag_store_ok, "OK");
+   kb->setFont(fnt);
+   kb->setGradient(cg);
+   kb->setFrameColor(btnborder);
+   kb->setTextColor(btntext);
+   kb->setGradientHighlighted(cg);
+   kb->setFrameColorHighlighted(btnborder);
+   kb->setTextColorHighlighted(btntext);
+   kb->setRoundRadius(CCoord(3.f));
+
+   saveDialog->addView(pnamelbl);
+   saveDialog->addView(pcatlbl);
+   saveDialog->addView(pauthlbl);
+   saveDialog->addView(pcomlbl);
    saveDialog->addView(patchName);
    saveDialog->addView(patchCategory);
    saveDialog->addView(patchCreator);
    saveDialog->addView(patchComment);
    saveDialog->addView(patchTuning);
    saveDialog->addView(patchTuningLabel);
-
-   if (synth->storage.isStandardTuning)
-   {
-      patchTuningLabel->setVisible(false);
-      patchTuning->setVisible(false);
-   }
-   else
-   {
-      patchTuningLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-      patchTuningLabel->setVisible(true);
-      patchTuning->setBoxFrameColor(currentSkin->getColor(Colors::Dialog::Checkbox::Border));
-      patchTuning->setBoxFillColor(currentSkin->getColor(Colors::Dialog::Checkbox::Background));
-      patchTuning->setCheckMarkColor(currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
-      patchTuning->setValue(0);
-      patchTuning->setMouseEnabled(true);
-      patchTuning->setVisible(true);
-   }
+   saveDialog->addView(cb);
+   saveDialog->addView(kb);
 }
 
 VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
@@ -7196,7 +7199,7 @@ void SurgeGUIEditor::showStorePatchDialog()
 
    setupSaveDialog();
 
-   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(148, 57), false, false, [this]() {});
+   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(157, 57), false, false, [this]() {});
 }
 
 void SurgeGUIEditor::closeMSEGEditor()
