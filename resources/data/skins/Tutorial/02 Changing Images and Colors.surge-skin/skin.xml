@@ -1,15 +1,75 @@
 <!--[doc]
-One of the basic features of a skin file is to allow you to change images and colors in the skin preserving layouts.
+One of the basic features of a skin file is to allow you to change images and colors in the skin
+while still preserving layouts.
 There's a variety of ways to do this which are covered in the tutorials, depending whether you want to do it
-system wide or on a per-control basis. This second tutorail covers the simple replacement of global colors
+system wide or on a per-control basis. This second tutorial covers the simple replacement of global colors
 and images, which results in a simple 're-skin' of the default surge skin with identical placement, size, and
 behavior of all controls.
+
+There are a couple of key concepts needed to reskin in this simplest fashion
+
+1. All of the controls respond either to colors which are defaulted to the classic skin and can be replaced in this file, or
+2. The control has an SVG representation of itself, usually with multiple states
+
+In the first case, Surge has colors with heirarchical names ('lfo.waveform.background', say) which
+are queried by our components at runtime. You can find out each of the names available in the
+skin inspector.
+
+In the second case, usually the states are vertically stacked, but this changes based on control type.
+For instance, the playmode button (poly, mono, mono st, etc...) has 6 states, so the image actually has
+6 copies of the button; and can have two additional images, on which specifies an overlay when hovering
+over the button in an off state and one which specifies the overlay when hovering in an on state. This may
+sound a bit confusing, but it's really just simple sprite maps and if you look at the images it should be clear.
+
+The images also have well defined names of the form 'bmpDDDDD.svg' where DDDDD is a 5 digit number. These numbers
+specify default images for particular controls. The easiest approach to replacing an image for a control is to
+add a new instance of bmpDDDD.svg in your skin with the exact same pixel size and layout, but a different look and
+feel.
+
+
 [doc]-->
 <surge-skin name="02 Changing Images and Colors" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
-    <color id="hotpink" value="#FF69B4"/>
+    <!--[doc]
+    We can pick an arbitrary element and just recolor it with a hex code. Here we recolor the oscillator
+    waveform green. We can find this colorname in the skin inspector
+    [doc]-->
+    <color id="osc.waveform" value="#00FF00"/>
 
+    <!--[doc]
+    We can also define our own colors for re-use and assignment later. For instance, here we define
+    a color called `hotpink` which we then use on the lfo background and the patchbrowser text
+    [doc]-->
+    <color id="hotpink" value="#FF69B4"/>
     <color id="lfo.waveform.background" value="hotpink"/>
+    <color id="patchbrowser.text" value="hotpink"/>
+
+    <!--[doc]
+    There are lots and  lots of ways to replace images, and we will cover them in these tutorials.
+    In this tutorial, though, we show the two most common ways. Either create a defaultiamge directory
+    which contains files with the same name as default skin, or find the name of a skin-wide image
+    and replace the default image for it with a newly named image. So lets take these one by one.
+
+    In the first case, we make an image directory and declare it here. This will force the surge
+    skin engine to check for images there before it checks in the internal image repository.
+    From looking in the skin inspector we see the scene switch has image ID 113, so if we create
+    this directory then make a `bmp00113.svg` that will be loaded as the scene switch image.
+    Since the scene switch is a two state button, we will need to provide both states in the SVG
+    which is most easily done by copying the original and editing it without adjusting sizes.
+    But in the skin file, all we have to do is advertise the relative directory for SVGs and
+    populate it.
+    [doc]-->
+    <defaultimage directory="SVG/"/>
+
+    <!--[doc]
+    The other available approach is to replace an image by its ID with a new image
+    with a different filename. The string IDs are available in the skin inspector.
+    Here we replace the horizontal fader handle but ratner than overriding bmp00153.svg
+    we instead create an image with id FADERH_HANDLE
+    [doc]-->
+    <image id="FADERH_HANDLE" resource="SVG/NewHorizHandle.svg"/>
+
+
   </globals>
   <component-classes>
   </component-classes>
