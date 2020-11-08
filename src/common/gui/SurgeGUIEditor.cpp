@@ -5429,7 +5429,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                     []() {
                        Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );
                     });
-    tid++;
+
+    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Inspector..."),
+                   [this]()
+                   {
+                     Surge::UserInteractions::showHTML( skinInspectorHtml() );
+                   }
+   );
+
+   tid++;
 
     return skinSubMenu;
 }
