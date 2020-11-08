@@ -19,6 +19,8 @@ public:
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
 
+   virtual void updateAfterReload() override;
+
    void resetCtrlTypes( bool useStreamedValues );
    
    virtual void process( float *dataL, float *dataR ) override;
