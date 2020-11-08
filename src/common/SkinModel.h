@@ -255,7 +255,7 @@ namespace Surge
           keytrack_1, keytrack_2, resonance_1, resonance_2, subtype_1, subtype_2, type_1, type_2, waveshaper_drive, waveshaper_type;
       }
       namespace Global {
-         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, polylimit, scene_mode, splitpoint;
+         extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass, fx_disable, master_volume, scene_mode;
       }
       namespace LFO {
          extern Surge::Skin::Connector amplitude, attack, decay, deform, delay, hold, phase, rate, release, shape, sustain, triggermode, unipolar;
@@ -273,8 +273,8 @@ namespace Surge
          extern Surge::Skin::Connector keytrack, octave, osctype, param_1, param_2, param_3, param_4, param_5, param_6, param_7, pitch, retrigger;
       }
       namespace Scene {
-         extern Surge::Skin::Connector drift, fmdepth, fmrouting, gain, keytrack_root, noise_color, octave, pan, pbrange_dn, pbrange_up, pitch, playmode,
-          portatime, send_fx_1, send_fx_2, velocity_sensitivity, volume, width;
+         extern Surge::Skin::Connector polylimit, splitpoint, drift, fmdepth, fmrouting, gain, keytrack_root, noise_color, octave, pan, pbrange_dn, pbrange_up,
+          pitch, playmode, portatime, send_fx_1, send_fx_2, velocity_sensitivity, volume, width;
       }
 
       namespace ModSources {

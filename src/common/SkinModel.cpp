@@ -139,18 +139,8 @@ namespace Surge
              .withHSwitch2Properties( IDB_FXBYPASS, 4, 1, 4 );
          Connector fx_disable = Connector( "global.fx_disable", 0, 0 );
          Connector master_volume = Connector( "global.master_volume", 756, 29 ); //check
-         Connector polylimit = Connector( "global.polylimit", 99, 32, 42, 14, Connector::NUMBERFIELD )
-             .withProperty( Connector::NUMBERFIELD_CONTROLMODE, cm_polyphony )
-             .withBackground(IDB_POLYSPLIT_NUM_BG)
-             .withProperty(Connector::TEXT_COLOR, "global.split_poly.text")
-             .withProperty(Connector::TEXT_HOVER_COLOR, "global.split_poly.text.hover");
          Connector scene_mode = Connector( "global.scene_mode", 62, 12, 36, 33, Connector::HSWITCH2 )
              .withHSwitch2Properties(IDB_SCENEMODE, 4, 4, 1 );
-         Connector splitpoint = Connector( "global.splitpoint", 99, 11, 43, 14, Connector::NUMBERFIELD )
-             .withBackground(IDB_POLYSPLIT_NUM_BG)
-             .withProperty(Connector::TEXT_COLOR, "global.split_poly.text")
-             .withProperty(Connector::TEXT_HOVER_COLOR, "global.split_poly.text.hover");
-            // this doesn't have a cm since it is special
       }
 
       namespace LFO { // DONE
@@ -243,6 +233,16 @@ namespace Surge
       }
 
       namespace Scene {
+         Connector polylimit = Connector( "scene.polylimit", 99, 32, 42, 14, Connector::NUMBERFIELD )
+             .withProperty( Connector::NUMBERFIELD_CONTROLMODE, cm_polyphony )
+             .withBackground(IDB_POLYSPLIT_NUM_BG)
+             .withProperty(Connector::TEXT_COLOR, "scene.split_poly.text")
+             .withProperty(Connector::TEXT_HOVER_COLOR, "scene.split_poly.text.hover");
+         Connector splitpoint = Connector( "scene.splitpoint", 99, 11, 43, 14, Connector::NUMBERFIELD )
+             .withBackground(IDB_POLYSPLIT_NUM_BG)
+             .withProperty(Connector::TEXT_COLOR, "scene.split_poly.text")
+             .withProperty(Connector::TEXT_HOVER_COLOR, "scene.split_poly.text.hover");
+            // this doesn't have a cm since it is special
          Connector drift = Connector( "scene.drift", 156, 141 ).asHorizontal().asWhite();
          Connector fmdepth = Connector( "scene.fmdepth", 306, 162 ).asHorizontal().asWhite();
          Connector fmrouting = Connector( "scene.fmrouting", 309, 89, 134, 52, Connector::HSWITCH2 )

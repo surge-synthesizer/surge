@@ -5422,15 +5422,19 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
                     [this]() {
-                       Surge::UserInteractions::openFolderInFileBrowser(this->currentSkin->root + this->currentSkin->name);
+                       Surge::UserInteractions::openFolderInFileBrowser(this->currentSkin->root +
+                                                                        this->currentSkin->name);
                     });
     tid++;
+
+    skinSubMenu->addSeparator();
+
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
                     []() {
                        Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );
                     });
 
-    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Inspector..."),
+    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Show Skin Inspector..."),
                    [this]()
                    {
                      Surge::UserInteractions::showHTML( skinInspectorHtml() );
@@ -5680,11 +5684,6 @@ void SurgeGUIEditor::reloadFromSkin()
    }
 }
 
-/*
-** The DEV menu is almost always off. @baconpaul just activates it above when he wants
-** to do stuff in the gui. We keep this code kicking around though in case we need it
-** even though it isn't callable in the production UI
-*/
 VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 {
     int tid = 0;
@@ -5698,7 +5697,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 
     static bool consoleState;
 
-    conItem = addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Debug Console"),
+    conItem = addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Debug Console..."),
         []() {
                 consoleState = Surge::Debug::toggleConsole();
              });
@@ -5707,21 +5706,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 #endif
 
 #ifdef INSTRUMENT_UI
-    addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show UI Instrumentation"),
+    addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show UI Instrumentation..."),
                     []() {
                        Surge::Debug::report();
                     }
        );
     tid++;
 #endif
-
-    addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Skin Inspector"),
-                    [this]()
-                       {
-                          Surge::UserInteractions::showHTML( skinInspectorHtml() );
-                       }
-       );
-    tid++;
 
     return devSubMenu;
 }

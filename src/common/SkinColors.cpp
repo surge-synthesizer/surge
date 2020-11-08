@@ -250,8 +250,8 @@ namespace Colors
       namespace Loop
       {
          const Surge::Skin::Color Line("msegeditor.loop.line", 255, 144, 0),
-          Marker( "msegeditor.loop.marker", 255, 144, 0 ),
-          MarkerHover( "msegeditor.loop.marker.hover", 255, 255, 255 );
+                                  Marker("msegeditor.loop.marker", 255, 144, 0),
+                                  MarkerHover("msegeditor.loop.marker.hover", 255, 255, 255);
       }
       namespace NumberField
       {
@@ -263,7 +263,7 @@ namespace Colors
    namespace NumberField
    {
       const Surge::Skin::Color Text("numberfield.text", 15, 15, 15),
-                               TextHover( "numberfield.text.hover", 90, 60, 30 );
+                               TextHover("numberfield.text.hover", 90, 60, 30);
    }
 
    namespace Osc
@@ -284,7 +284,7 @@ namespace Colors
 
    namespace Overlay
    {
-      const Surge::Skin::Color Background("overlay.background", 0, 0, 0, 204);
+      const Surge::Skin::Color Background("editor.overlay.background", 0, 0, 0, 204);
    }
 
    namespace PatchBrowser
@@ -302,8 +302,8 @@ namespace Colors
       }
       namespace SplitPoint
       {
-         const Surge::Skin::Color Text("global.split_poly.text", 0, 0, 0),
-                                  TextHover("global.split_poly.text.hover", 0, 0, 0);
+         const Surge::Skin::Color Text("scene.split_poly.text", 0, 0, 0),
+                                  TextHover("scene.split_poly.text.hover", 0, 0, 0);
       }
       namespace KeytrackRoot
       {
