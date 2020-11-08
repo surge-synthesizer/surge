@@ -118,8 +118,8 @@
     <color id="scene.keytrackroot.text" value="lightgray"/>
     <color id="scene.keytrackroot.text.hover" value="white"/>
 
-    <color id="global.split_poly.text" value="lightgray"/>
-    <color id="global.split_poly.text.hover" value="white"/>
+    <color id="scene.split_poly.text" value="lightgray"/>
+    <color id="scene.split_poly.text.hover" value="white"/>
 
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="red"/>
@@ -151,8 +151,19 @@
   <controls>
     <control ui_identifier="global.master_volume" class="def-hslider"/>
 
+ 	<control ui_identifier="scene.splitpoint" x="100" y="11" w="44"/>
+ 	<control ui_identifier="scene.polylimit" x="100" y="32" w="44"/>
+
+    <control ui_identifier="scene.pbrange_dn" x="162" w="26" h="12"/>
+    <control ui_identifier="scene.pbrange_up" x="186" w="25" h="12"/>
+
+    <control ui_identifier="scene.keytrack_root" x="308"/>
+
     <control ui_identifier="scene.drift" class="def-hslider"/>
     <control ui_identifier="scene.noise_color" class="def-hslider"/>
+
+    <control ui_identifier="scene.portatime" class="def-hslider"/>
+    <control ui_identifier="scene.pitch" class="def-hslider"/>
 
     <control ui_identifier="scene.fmdepth" class="def-hslider"/>
 
@@ -161,9 +172,6 @@
     <control ui_identifier="scene.width" class="def-hslider"/>
     <control ui_identifier="scene.send_fx_1" class="def-hslider"/>
     <control ui_identifier="scene.send_fx_2" class="def-hslider"/>
-
-    <control ui_identifier="scene.portatime" class="def-hslider"/>
-    <control ui_identifier="scene.pitch" class="def-hslider"/>
 
     <control ui_identifier="filter.cutoff_1" class="def-hslider"/>
     <control ui_identifier="filter.resonance_1" class="def-hslider"/>
@@ -198,12 +206,5 @@
     <control ui_identifier="fx.type" y="194"/>
     <control ui_identifier="fx.preset.prevnext" x="855" y="213"/>
     <control ui_identifier="fx.preset.name" x="762" y="213"/>
-
- 	<control ui_identifier="global.polylimit" x="100" y="32" w="44"/>
- 	<control ui_identifier="global.splitpoint" x="100" y="11" w="44"/>
-    <control ui_identifier="scene.pbrange_dn" x="162" w="26" h="12"/>
-    <control ui_identifier="scene.pbrange_up" x="186" w="25" h="12"/>
-    <control ui_identifier="scene.keytrack_root" x="308"/>
-
   </controls>
 </surge-skin>
