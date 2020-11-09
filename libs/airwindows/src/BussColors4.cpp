@@ -194,7 +194,20 @@ bool BussColors4::getProductString(char* text) {
 bool BussColors4::getVendorString(char* text) {
   	vst_strncpy (text, "airwindows", kVstMaxVendorStrLen); return true;
 }
-
+void BussColors4::getIntegralDisplayForValue(VstInt32 index, float value, char* text)
+{
+   switch((VstInt32)( value * 7.999 )) //0 to almost edge of # of params
+   {case 0: vst_strncpy (text, "Dark", kVstMaxParamStrLen); break;
+   case 1: vst_strncpy (text, "Rock", kVstMaxParamStrLen); break;
+   case 2: vst_strncpy (text, "Lush", kVstMaxParamStrLen); break;
+   case 3: vst_strncpy (text, "Vibe", kVstMaxParamStrLen); break;
+   case 4: vst_strncpy (text, "Holo", kVstMaxParamStrLen); break;
+   case 5: vst_strncpy (text, "Punch", kVstMaxParamStrLen); break;
+   case 6: vst_strncpy (text, "Steel", kVstMaxParamStrLen); break;
+   case 7: vst_strncpy (text, "Tube", kVstMaxParamStrLen); break;
+   default: break; // unknown parameter, shouldn't happen!
+   }
+}
 
 } // end namespace BussColors4
 

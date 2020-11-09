@@ -73,10 +73,18 @@ public:
          if( fx && fx->airwin )
          {
             char lab[256], dis[256];
-            if( fx->fxdata->p[0].deactivated )
-               fx->airwin->setParameter( idx, value );
-            fx->airwin->getParameterLabel( idx, lab );
-            fx->airwin->getParameterDisplay( idx, dis );
+            if( fx->airwin->isParameterIntegral(idx))
+            {
+               fx->airwin->getIntegralDisplayForValue(idx, value, dis );
+               lab[0] = 0;
+            }
+            else
+            {
+               if( fx->fxdata->p[0].deactivated )
+                  fx->airwin->setParameter( idx, value );
+               fx->airwin->getParameterLabel(idx, lab);
+               fx->airwin->getParameterDisplay(idx, dis);
+            }
             sprintf( txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " " ), lab );
          }
          else
