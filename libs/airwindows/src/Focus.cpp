@@ -133,6 +133,43 @@ void Focus::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool Focus::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   if( index == kParamA )
+   {
+      f = v / 12.f;
+   }
+   else
+   {
+      f = v;
+   }
+   return true;
+}
+
+bool Focus::isParameterIntegral(VstInt32 index)
+{
+   return index == kParamC;
+}
+
+int Focus::parameterIntegralUpperBound(VstInt32 index)
+{
+   return 4;
+}
+
+void Focus::getIntegralDisplayForValue(VstInt32 index, float value, char* text)
+{
+   switch((VstInt32)( value * 4.999 )) //0 to almost edge of # of params
+   {
+   case 0: vst_strncpy (text, "Density", kVstMaxParamStrLen); break;
+   case 1: vst_strncpy (text, "Drive", kVstMaxParamStrLen); break;
+   case 2: vst_strncpy (text, "Spiral", kVstMaxParamStrLen); break;
+   case 3: vst_strncpy (text, "Mojo", kVstMaxParamStrLen); break;
+   case 4: vst_strncpy (text, "Dyno", kVstMaxParamStrLen); break;
+   default: break; // unknown parameter, shouldn't happen!
+   }
+}
+
 void Focus::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;

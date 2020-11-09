@@ -133,6 +133,20 @@ void OneCornerClip::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool OneCornerClip::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamA: f = ( v + 12.0 ) / 36.0; break;
+   case kParamB:
+   case kParamC:
+      f = pow( 10.0, ( v / 20.0 ) ); break;
+   default:
+      f = v;
+   }
+   return true;
+}
 void OneCornerClip::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;

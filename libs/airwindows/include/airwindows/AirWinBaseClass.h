@@ -45,7 +45,7 @@ struct AirWinBaseClass {
    virtual int parameterIntegralUpperBound( VstInt32 index ) { return -1; }
    virtual void getIntegralDisplayForValue( VstInt32 index, float value, char *txt )
    {
-      sprintf( txt, "Impl getIntegralDisplayForValue" );
+      sprintf( txt, "%d", (int)( value * ( parameterIntegralUpperBound(index) + 0.99 )) );
    }
    
    virtual void processReplacing( float **in, float **out, VstInt32 sampleFrames ) = 0;
