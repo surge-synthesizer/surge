@@ -43,6 +43,10 @@ struct AirWinBaseClass {
    virtual bool isParameterBipolar( VstInt32 index ) { return false; }
    virtual bool isParameterIntegral( VstInt32 index ) { return false; }
    virtual int parameterIntegralUpperBound( VstInt32 index ) { return -1; }
+   virtual void getIntegralDisplayForValue( VstInt32 index, float value, char *txt )
+   {
+      sprintf( txt, "%d", (int)( value * ( parameterIntegralUpperBound(index) + 0.99 )) );
+   }
    
    virtual void processReplacing( float **in, float **out, VstInt32 sampleFrames ) = 0;
 

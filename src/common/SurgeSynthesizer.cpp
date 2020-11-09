@@ -1558,6 +1558,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             switch (storage.getPatch().param_ptr[index]->val.i)
             {
             case fut_lpmoog:
+            case fut_obxd_4pole:
                storage.getPatch().param_ptr[index + 1]->val.i = 3;
                break;
             case fut_comb:
@@ -1726,9 +1727,9 @@ void SurgeSynthesizer::switch_toggled()
 bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 {
    load_fx_needed = false;
-   bool something_changed = false;
    for (int s = 0; s < n_fx_slots; s++)
    {
+      bool something_changed = false;
       if ((fxsync[s].type.val.i != storage.getPatch().fx[s].type.val.i) || force_reload_all)
       {
          fx_reload[s] = false;
@@ -1844,6 +1845,12 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
          }
          fx_reload[s] = false;
          refresh_editor = true;
+         something_changed = true;
+      }
+
+      if( fx[s] && something_changed )
+      {
+         fx[s]->updateAfterReload();
       }
    }
 

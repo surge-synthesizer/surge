@@ -128,7 +128,21 @@ void Pressure4::getParameterDisplay(VstInt32 index, char *text) {
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
+bool Pressure4::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamC: f = ( v + 1.0 ) / 2.0; break;
+   default: f = v;
+   }
+   return true;
+}
 
+bool Pressure4::isParameterBipolar(VstInt32 index)
+{
+   return ( index == kParamC );
+}
 void Pressure4::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;

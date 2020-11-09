@@ -300,6 +300,30 @@ void PocketVerbs::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool PocketVerbs::isParameterIntegral(VstInt32 index)
+{
+   return index == kParamA;
+}
+
+int PocketVerbs::parameterIntegralUpperBound(VstInt32 index)
+{
+   return 5;
+}
+
+void PocketVerbs::getIntegralDisplayForValue(VstInt32 index, float value, char* text)
+{
+   switch((VstInt32)( value * 5.999 )) //0 to almost edge of # of params
+   {
+   case 0: vst_strncpy (text, "Chamber", kVstMaxParamStrLen); break;
+   case 1: vst_strncpy (text, "Spring", kVstMaxParamStrLen); break;
+   case 2: vst_strncpy (text, "Tiled", kVstMaxParamStrLen); break;
+   case 3: vst_strncpy (text, "Room", kVstMaxParamStrLen); break;
+   case 4: vst_strncpy (text, "Stretch", kVstMaxParamStrLen); break;
+   case 5: vst_strncpy (text, "Zarathu", kVstMaxParamStrLen); break;
+   default: break; // unknown parameter, shouldn't happen!
+   }
+}
+
 void PocketVerbs::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;

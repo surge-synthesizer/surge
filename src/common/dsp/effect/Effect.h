@@ -43,6 +43,10 @@ public:
    virtual void init(){};
    virtual void init_ctrltypes();
    virtual void init_default_values(){};
+
+   // No matter what path is used to reload (whether created anew or what not) this is called after
+   // the loading state of an item has changed
+   virtual void updateAfterReload(){};
    virtual int vu_type(int id)
    {
       return 0;

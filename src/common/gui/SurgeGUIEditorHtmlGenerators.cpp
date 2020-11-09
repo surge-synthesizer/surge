@@ -1,6 +1,13 @@
 #include "SurgeGUIEditor.h"
 #include "UserDefaults.h"
 
+namespace Surge
+{
+namespace UI
+{
+#include "SkinImageMaps.h"
+}
+}
 
 std::string SurgeGUIEditor::tuningToHtml()
 {
@@ -411,8 +418,28 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
    }
    htmls << "</table>";
 
+   // Image IDs
    htmls << R"HTML(
-      </div>
+         </div>
+         </div>
+       <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+          <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+   )HTML";
+
+   {
+      auto q = Surge::UI::createIdNameMap();
+      std::vector<std::pair<std::string, int>> asV(q.begin(), q.end());
+      std::sort( asV.begin(), asV.end(), [](auto a, auto b ) { return a.second < b.second; });
+      htmls << "<table><tr><th>Resource Number</th><th>Resource ID</th></tr>\n";
+      for( auto v : asV )
+      {
+         htmls << "<tr><td>" << v.second << "</td><td>" << v.first << "</td></tr>\n";
+      }
+      htmls << "</table>\n";
+
+   }
+
+   htmls <<  R"HTML(</div>
     </div>
   </body>
 </html>

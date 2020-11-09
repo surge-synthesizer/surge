@@ -121,6 +121,23 @@ void Point::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool Point::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamA: f = ( v + 12.0 ) / 24.0; break;
+   case kParamB: f = ( v + 1.0 ) / 2.0; break;
+   default: f = v; break;
+   }
+   return true;
+}
+
+bool Point::isParameterBipolar(VstInt32 index)
+{
+   return  ( index == kParamA || index == kParamB );
+}
+
 void Point::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;

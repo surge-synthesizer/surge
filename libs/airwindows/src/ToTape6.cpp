@@ -156,6 +156,26 @@ void ToTape6::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool ToTape6::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamA:
+   case kParamE:
+      f = ( v / 24.0 ) + 0.5;
+      break;
+   default:
+      f = v;
+      break;
+   }
+   return true;
+}
+
+bool ToTape6::isParameterBipolar(VstInt32 index)
+{
+   return ( index == kParamA || index == kParamE );
+}
 void ToTape6::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;

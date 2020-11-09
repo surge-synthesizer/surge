@@ -17,6 +17,7 @@ There's lots of cases. Lets enumerate all of them
         * synth::processThreadunsafeOperations if `load_fx_needed` is true with false/false
         * synth::processControl if `load_fx_needed` with false/false
         * synth::loadRaw in all cases with false/true (namely, force a full reload on patch load)
+    * If a reload of either form has changed, the `updateAfterReload()` virtual method is called on the FX
 * `load_fx_needed` is a bool on SurgeSynth
     * triggers a call to loadFx in processControlEV
     * set to true in the constructor of synth

@@ -186,6 +186,25 @@ void Logical4::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool Logical4::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamA: f = ( v + 20 ) / 40.0; break;
+   case kParamB: f = v < 0 ? 0 : sqrt( ( v - 1 ) / 15.0 ); break;
+   case kParamC: f = v < 0 ? 0 : sqrt( ( v - 1 ) / 99.0 ); break;
+   case kParamD: f = ( v + 20 ) / 40.0; break;
+   case kParamE: f = v;
+   }
+   return true;
+}
+
+bool Logical4::isParameterBipolar(VstInt32 index)
+{
+   return( index == kParamA || index == kParamD );
+}
+
 void Logical4::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;

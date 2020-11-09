@@ -2181,20 +2181,20 @@ void Parameter::get_display(char* txt, bool external, float ef)
                      sprintf(txt, "%s", fut_comb_subtypes[i]);
                      break;
                   case fut_vintageladder:
-                     sprintf( txt, "%s", fut_vintageladder_subtypes[i]);
+                     sprintf(txt, "%s", fut_vintageladder_subtypes[i]);
                      break;
                   case fut_obxd_2pole:
-                     sprintf( txt, "%s", fut_obxd_2p_subtypes[i]);
+                     sprintf(txt, "%s", fut_obxd_2p_subtypes[i]);
                      break;
                   case fut_obxd_4pole:
-                     sprintf( txt, "%s", fut_obxd_4p_subtypes[i]);
+                     sprintf(txt, "%s", fut_obxd_4p_subtypes[i]);
                      break;
                   case fut_k35_lp:
                   case fut_k35_hp:
-                     sprintf( txt, "%s", fut_k35_subtypes[i]);
+                     sprintf(txt, "%s", fut_k35_subtypes[i]);
                      break;
                   case fut_diode:
-                     sprintf( txt, "%s", fut_diode_subtypes[i]);
+                     sprintf(txt, "%s", fut_diode_subtypes[i]);
                      break;
 #if SURGE_EXTRA_FILTERS
 #endif

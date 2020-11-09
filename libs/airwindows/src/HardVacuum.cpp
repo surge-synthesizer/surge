@@ -128,6 +128,19 @@ void HardVacuum::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool HardVacuum::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   if( index == kParamA )
+   {
+      f = v / 2.0;
+   }
+   else
+   {
+      f = v;
+   }
+   return true;
+}
 void HardVacuum::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;

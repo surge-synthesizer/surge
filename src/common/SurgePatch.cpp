@@ -61,7 +61,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    //param_ptr.push_back(scenemorph.assign(p_id.next(),0,"scenemorph","scenemorph",ct_percent,hmargin+gui_sec_width,gui_mid_topbar_y,0,0,0,false,Surge::ParamConfig::kHorizontal));
 
    param_ptr.push_back(splitpoint.assign(p_id.next(), 0, "splitkey", "Split Point", ct_midikey_or_channel,
-                                       Surge::Skin::Global::splitpoint,
+                                       Surge::Skin::Scene::splitpoint,
                                         0, cg_GLOBAL, 0, false,
                                        Surge::ParamConfig::kHorizontal | kNoPopup));
    
@@ -71,7 +71,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
 
    // shouldnt't be stored in the patch
    param_ptr.push_back(polylimit.assign(p_id.next(), 0, "polylimit", "Polyphony Limit", ct_polylimit,
-                                        Surge::Skin::Global::polylimit,
+                                        Surge::Skin::Scene::polylimit,
                                         0, cg_GLOBAL, 0, false,
                                         Surge::ParamConfig::kHorizontal | kNoPopup));
    param_ptr.push_back(fx_bypass.assign(p_id.next(), 0, "fx_bypass", "FX Bypass", ct_fxbypass,
@@ -1653,6 +1653,11 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
               if( p->QueryIntAttribute( "modsource", &ival ) == TIXML_SUCCESS )
                  dawExtraState.editor.modsource = (modsources)ival;
 
+              if( p->QueryIntAttribute( "isMSEGOpen", &ival) == TIXML_SUCCESS )
+                 dawExtraState.editor.isMSEGOpen = ival;
+              else
+                 dawExtraState.editor.isMSEGOpen = false;
+
               for( int sc=0; sc<n_scenes; sc++ )
               {
                  std::string con = "current_osc_" + std::to_string( sc );
@@ -1991,6 +1996,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
        eds.SetAttribute( "current_scene", dawExtraState.editor.current_scene );
        eds.SetAttribute( "current_fx", dawExtraState.editor.current_fx );
        eds.SetAttribute( "modsource", dawExtraState.editor.modsource );
+       eds.SetAttribute( "isMSEGOpen", dawExtraState.editor.isMSEGOpen );
        for( int sc=0; sc<n_scenes; sc++ )
        {
           std::string con = "current_osc_" + std::to_string( sc );

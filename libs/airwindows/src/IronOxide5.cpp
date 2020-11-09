@@ -164,7 +164,26 @@ void IronOxide5::getParameterDisplay(VstInt32 index, char *text) {
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
+bool IronOxide5::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   float v = std::atof( str );
+   switch( index )
+   {
+   case kParamA: f = ( v + 18.0 ) / 36.0; break;
+   case kParamB: f = pow( ( v - 1.5 ) / 148.5, 0.25 ); break;
+   case kParamC: f = pow( ( v - 1.5 ) / 148.5, 0.25 ); break;
+   case kParamD: f = v; break;
+   case kParamE: f = v; break;
+   case kParamF: f = ( v + 18.0 ) / 36.0; break;
+   case kParamG: f = ( v + 1.0 ) / 2.0; break;
+   }
+   return true;
+}
 
+bool IronOxide5::isParameterBipolar(VstInt32 index)
+{
+   return (index == kParamA || index == kParamF || index == kParamG );
+}
 void IronOxide5::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;

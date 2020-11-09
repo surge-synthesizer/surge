@@ -89,7 +89,7 @@ void AirWindowsEffect::init_ctrltypes() {
 
    for( int i=0; i<n_fx_params - 1; ++i )
    {
-      fxdata->p[i+1].set_type( ct_none );
+      fxdata->p[i+1].set_type( ct_percent ); // setting to ct_none means we don't stream onto this
       std::string w = "Airwindow " + std::to_string(i);
       fxdata->p[i+1].set_name( w.c_str() );
 
@@ -107,7 +107,6 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
    fxdata->p[0].val_max.i = fxreg.size() - 1;
 
    fxdata->p[0].set_user_data( mapper.get() );
-   
    if( airwin )
    {
       for( int i=0; i<airwin->paramCount && i < n_fx_params - 1; ++i )
@@ -138,7 +137,9 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
          fxdata->p[i+1].posy_offset = 3;
 
          if( useStreamedValues )
-            fxdata->p[i+1].val.f = priorVal;
+         {
+            fxdata->p[i + 1].val.f = priorVal;
+         }
          else
             fxdata->p[i+1].val.f = airwin->getParameter( i );
       }
@@ -228,4 +229,10 @@ void AirWindowsEffect::setupSubFX( int sfx, bool useStreamedValues )
    airwin->getEffectName(fxname);
    lastSelected = sfx;
    resetCtrlTypes( useStreamedValues );
+}
+
+void AirWindowsEffect::updateAfterReload()
+{
+   fxdata->p[0].deactivated = true; // assume I'm suspended unless I run
+   setupSubFX(fxdata->p[0].val.i, true );
 }

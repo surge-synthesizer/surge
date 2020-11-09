@@ -160,6 +160,10 @@ namespace Colors
       {
           extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
       }
+      namespace Macro
+      {
+          extern const Surge::Skin::Color Background, Fill;
+      }
    }
 
    namespace MSEGEditor
