@@ -137,6 +137,36 @@ void ADClip7::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+void ADClip7::getIntegralDisplayForValue( VstInt32 index, float value, char *text )
+{
+   int iv = (int)(value * 2.999 );
+   switch((VstInt32)( value * 2.999 )) //0 to almost edge of # of params
+   {
+   case 0: vst_strncpy (text, "Normal", kVstMaxParamStrLen); break;
+   case 1: vst_strncpy (text, "Atten", kVstMaxParamStrLen); break;
+   case 2: vst_strncpy (text, "Clips", kVstMaxParamStrLen); break;
+   default: break; // unknown parameter, shouldn't happen!
+   }
+}
+bool ADClip7::parseParameterValueFromString(VstInt32 index, const char* txt, float& f)
+{
+   float v = std::atof( txt );
+   switch( index )
+   {
+   case kParamA: f = v / 18.0; break;
+   default: f = v; break;
+   }
+   return true;
+}
+bool ADClip7::isParameterIntegral(VstInt32 index)
+{
+   return( index == 3 );
+}
+int ADClip7::parameterIntegralUpperBound(VstInt32 index)
+{
+   return 2;
+}
+
 void ADClip7::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;

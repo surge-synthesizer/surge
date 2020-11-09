@@ -146,7 +146,21 @@ bool Apicolypse::getProductString(char* text) {
 bool Apicolypse::getVendorString(char* text) {
   	vst_strncpy (text, "airwindows", kVstMaxVendorStrLen); return true;
 }
-
+bool Apicolypse::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   float v = std::atof(str);
+   switch (index)
+   {
+   case kParamB:
+   case kParamC:
+      f = v / 3.0;
+      break;
+   default:
+      f = v;
+      break;
+   }
+   return true;
+}
 
 } // end namespace Apicolypse
 
