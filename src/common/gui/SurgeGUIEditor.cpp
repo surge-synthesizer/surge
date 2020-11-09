@@ -2518,7 +2518,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             eid++;
 
 #if TARGET_VST3
-            // hostMenu = addVst3MenuForParams( contextMenu, modsource - ms_ctrl1 + metaparam_offset, eid);
+            SurgeSynthesizer::ID mid;
+            if( synth->fromSynthSideId(modsource - ms_ctrl1 + metaparam_offset, mid ) )
+               hostMenu = addVst3MenuForParams( contextMenu, mid, eid);
 #endif
 
             midiSub->forget();
