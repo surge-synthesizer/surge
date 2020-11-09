@@ -95,7 +95,19 @@ void Mojo::getParameterDisplay(VstInt32 index, char *text) {
 		default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
-
+bool Mojo::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   if( index == kParamA )
+   {
+      f = (v + 12.0 ) / 24.0;
+   }
+   return true;
+}
+bool Mojo::isParameterBipolar(VstInt32 index)
+{
+   return ( index == kParamA );
+}
 void Mojo::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
