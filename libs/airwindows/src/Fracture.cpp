@@ -118,6 +118,29 @@ void Fracture::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool Fracture::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamA: f = v / 4.0; break;
+   case kParamC: f = pow( 10.0, ( v / 20.0 ) ); break;
+   case kParamD: f = v; break;
+   default: f = v;
+   }
+   return true;
+}
+
+bool Fracture::isParameterIntegral(VstInt32 index)
+{
+   return index==kParamB;
+}
+
+int Fracture::parameterIntegralUpperBound(VstInt32 index)
+{
+   return 3;
+}
+
 void Fracture::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;

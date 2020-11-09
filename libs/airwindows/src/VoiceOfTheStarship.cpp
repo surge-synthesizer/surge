@@ -118,6 +118,15 @@ void VoiceOfTheStarship::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool VoiceOfTheStarship::isParameterIntegral(VstInt32 index)
+{
+   return (index == kParamB);
+}
+
+int VoiceOfTheStarship::parameterIntegralUpperBound(VstInt32 index)
+{
+   return 16;
+}
 void VoiceOfTheStarship::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
