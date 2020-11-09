@@ -131,7 +131,23 @@ void Compresaturator::getParameterDisplay(VstInt32 index, char *text) {
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
+bool Compresaturator::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamA: f = ( v + 12 ) / 24.0; break;
+   case kParamB: f = v / 100.0; break;
+   case kParamC: f = sqrt( v / 5000.0 ); break;
+   default: f = v;  break;
+   }
+   return true;
+}
 
+bool Compresaturator::isParameterBipolar(VstInt32 index)
+{
+   return( index == kParamA );
+}
 void Compresaturator::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;

@@ -132,6 +132,22 @@ void Cojones::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool Cojones::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof( str );
+   switch( index )
+   {
+   case kParamA:
+   case kParamB:
+   case kParamC:
+      f = v / 2.0;
+      break;
+   default:
+      f = v;
+      break;
+   }
+   return true;
+}
 void Cojones::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;

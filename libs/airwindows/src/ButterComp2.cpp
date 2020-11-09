@@ -128,6 +128,21 @@ void ButterComp2::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+bool ButterComp2::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atoi(str);
+   if (index == kParamB)
+   {
+      v = 0.5 * v;
+   }
+   if (v >= 0 && v <= 1)
+   {
+      f = v;
+      return true;
+   }
+   return false;
+}
+
 void ButterComp2::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
