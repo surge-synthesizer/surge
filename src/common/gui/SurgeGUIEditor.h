@@ -221,6 +221,7 @@ public:
          des->editor.current_osc[i] = current_osc[i];
          des->editor.modsource_editor[i] = modsource_editor[i];
       }
+      des->editor.isMSEGOpen = ( editorOverlayTagAtClose == "msegEditor" );
    }
    void loadFromDAWExtraState(SurgeSynthesizer *synth) {
       auto des = &(synth->storage.getPatch().dawExtraState);
@@ -236,6 +237,10 @@ public:
            {
               current_osc[i] = des->editor.current_osc[i];
               modsource_editor[i] = des->editor.modsource_editor[i];
+           }
+           if( des->editor.isMSEGOpen )
+           {
+              showMSEGEditor();
            }
        }
    }
@@ -416,7 +421,7 @@ private:
    VSTGUI::CTextEdit *minieditTypein = nullptr;
    std::function<void( const char* )> minieditOverlayDone = [](const char *){};
 public:
-   std::string editorOverlayTag;
+   std::string editorOverlayTag, editorOverlayTagAtClose;
    void promptForMiniEdit(const std::string& value,
                           const std::string& prompt,
                           const std::string& title,

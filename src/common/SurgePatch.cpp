@@ -1653,6 +1653,11 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
               if( p->QueryIntAttribute( "modsource", &ival ) == TIXML_SUCCESS )
                  dawExtraState.editor.modsource = (modsources)ival;
 
+              if( p->QueryIntAttribute( "isMSEGOpen", &ival) == TIXML_SUCCESS )
+                 dawExtraState.editor.isMSEGOpen = ival;
+              else
+                 dawExtraState.editor.isMSEGOpen = false;
+
               for( int sc=0; sc<n_scenes; sc++ )
               {
                  std::string con = "current_osc_" + std::to_string( sc );
@@ -1991,6 +1996,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
        eds.SetAttribute( "current_scene", dawExtraState.editor.current_scene );
        eds.SetAttribute( "current_fx", dawExtraState.editor.current_fx );
        eds.SetAttribute( "modsource", dawExtraState.editor.modsource );
+       eds.SetAttribute( "isMSEGOpen", dawExtraState.editor.isMSEGOpen );
        for( int sc=0; sc<n_scenes; sc++ )
        {
           std::string con = "current_osc_" + std::to_string( sc );

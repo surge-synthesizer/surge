@@ -1152,12 +1152,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    removeFromFrame.clear();
 
+   editorOverlayTagAtClose = "";
    if (editor_open)
    {
       if( editorOverlay != nullptr )
       {
          editorOverlay->remember();
          frame->removeView( editorOverlay );
+         editorOverlayTagAtClose = editorOverlayTag;
       }
    
       close_editor();
@@ -1782,6 +1784,12 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
       zoomInvalid = true;
    }
 
+   //HEREHERE
+   auto *des = &(synth->storage.getPatch().dawExtraState);
+
+   if( des->isPopulated && des->editor.isMSEGOpen )
+      showMSEGEditor();
+
    return true;
 }
 
@@ -1791,6 +1799,7 @@ void SurgeGUIEditor::close()
    {
       frame->removeView( editorOverlay );
       editorOverlayOnClose();
+      editorOverlayTagAtClose = editorOverlayTag;
       editorOverlayTag = "";
       editorOverlay = nullptr;
    }
@@ -3822,6 +3831,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          editorOverlayOnClose();
          editorOverlay = nullptr;
          editorOverlayTag = "";
+         editorOverlayTagAtClose = "";
       }
    }
    break;
@@ -6291,6 +6301,7 @@ void SurgeGUIEditor::dismissEditorOverlay()
       removeFromFrame.push_back( editorOverlay );
       editorOverlay = nullptr;
       editorOverlayTag = "";
+      editorOverlayTagAtClose = "";
    }
 }
 
@@ -6412,6 +6423,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    // save the onClose function
    editorOverlayOnClose = onClose;
    editorOverlayTag = editorTag;
+   editorOverlayTagAtClose = editorTag;
 }
 
 std::string SurgeGUIEditor::getDisplayForTag( long tag )
