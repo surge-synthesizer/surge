@@ -69,6 +69,7 @@
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
     <color id="msegeditor.numberfield.text.hover" value="white"/>
+    <color id="msegeditor.loop.marker" value="modblue"/>
 
     <color id="overlay.background" value="#000000C0"/>
 

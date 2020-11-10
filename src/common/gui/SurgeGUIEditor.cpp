@@ -7242,8 +7242,13 @@ void SurgeGUIEditor::showMSEGEditor()
    title += " Editor";
    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
-   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false, true,
-                    [this]() { /* don't rebuild UI here, it screws up dragging the LFO type control */; });
+   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false, true, [this]() {
+      if (msegEditSwitch)
+      {
+         msegEditSwitch->setValue(0.0);
+         msegEditSwitch->invalid();
+      }
+   });
 
    if( msegEditSwitch )
    {
