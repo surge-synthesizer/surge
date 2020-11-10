@@ -3670,6 +3670,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       return;
    }
+   break;
    case tag_osc_menu:
    {
       synth->switch_toggled_queued = true;
@@ -3699,6 +3700,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       return;
    }
+   break;
    case tag_store:
    {
       patchdata p;
@@ -3758,69 +3760,67 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_store_ok:
    {
-      closeStorePatchDialog();
-      // saveDialog->setVisible(false);
-      // frame->setModalView(nullptr);
-      frame->setDirty();
-
-      /*
-      ** Don't allow a blank patch
-      */
-      std::string whatIsBlank = "";
-      bool haveBlanks = false;
-
-      if (!Surge::Storage::isValidName(patchName->getText().getString()))
+      // prevent duplicate execution of savePatch() by detecting if the Store Patch dialog is displayed or not
+      // FIXME: baconpaul will know a better and more correct way to fix this
+      if (editorOverlay && editorOverlayTag == "storePatch")
       {
-         whatIsBlank = "name";
-         haveBlanks = true;
-      }
-      if (!Surge::Storage::isValidName(patchCategory->getText().getString()))
-      {
-         whatIsBlank = whatIsBlank + (haveBlanks ? " and category" : "category");
-         haveBlanks = true;
-      }
-      if (haveBlanks)
-      {
-         Surge::UserInteractions::promptError(
-             std::string("Unable to store a patch due to invalid ") + whatIsBlank +
-                 ". Please save again and provide a complete " + whatIsBlank + ".",
-             "Patch Saving Error");
-      }
-      else
-      {
-         synth->storage.getPatch().name = patchName->getText();
-         synth->storage.getPatch().author = patchCreator->getText();
-         synth->storage.getPatch().category = patchCategory->getText();
-         synth->storage.getPatch().comment = patchComment->getText();
-
-         synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
-         if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
+         closeStorePatchDialog();
+         frame->setDirty();
+       
+         /*
+         ** Don't allow a blank patch
+         */
+         std::string whatIsBlank = "";
+         bool haveBlanks = false;
+       
+         if (!Surge::Storage::isValidName(patchName->getText().getString()))
          {
-            synth->storage.getPatch().patchTuning.tuningContents =
-                synth->storage.currentScale.rawText;
-            if (synth->storage.isStandardMapping)
-            {
-               synth->storage.getPatch().patchTuning.mappingContents = "";
-            }
-            else
-            {
-               synth->storage.getPatch().patchTuning.mappingContents =
-                   synth->storage.currentMapping.rawText;
-            }
+            whatIsBlank = "name";
+            haveBlanks = true;
          }
-
-         synth->storage.getPatch().dawExtraState.isPopulated =
-             false; // Ignore whatever comes from the DAW
-
-         synth->savePatch();
+         if (!Surge::Storage::isValidName(patchCategory->getText().getString()))
+         {
+            whatIsBlank = whatIsBlank + (haveBlanks ? " and category" : "category");
+            haveBlanks = true;
+         }
+         if (haveBlanks)
+         {
+            Surge::UserInteractions::promptError(
+                std::string("Unable to store a patch due to invalid ") + whatIsBlank +
+                            ". Please save again and provide a complete " + whatIsBlank + ".",
+                            "Patch Saving Error");
+         }
+         else
+         {
+            synth->storage.getPatch().name = patchName->getText();
+            synth->storage.getPatch().author = patchCreator->getText();
+            synth->storage.getPatch().category = patchCategory->getText();
+            synth->storage.getPatch().comment = patchComment->getText();
+       
+            synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
+            if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
+            {
+               synth->storage.getPatch().patchTuning.tuningContents = synth->storage.currentScale.rawText;
+               if (synth->storage.isStandardMapping)
+               {
+                  synth->storage.getPatch().patchTuning.mappingContents = "";
+               }
+               else
+               {
+                  synth->storage.getPatch().patchTuning.mappingContents = synth->storage.currentMapping.rawText;
+               }
+            }
+       
+            synth->storage.getPatch().dawExtraState.isPopulated = false; // Ignore whatever comes from the DAW
+       
+            synth->savePatch();
+         }
       }
    }
    break;
    case tag_store_cancel:
    {
       closeStorePatchDialog();
-      //saveDialog->setVisible(false);
-      // frame->setModalView(nullptr);
       frame->setDirty();
    }
    break;
@@ -6617,7 +6617,7 @@ void SurgeGUIEditor::resetPitchSmoothing(ControllerModulationSource::SmoothingMo
    synth->storage.pitchSmoothingMode = t;
 }
 
-void SurgeGUIEditor::setupSaveDialog()
+void SurgeGUIEditor::makeStorePatchDialog()
 {
    CRect dialogSize(CPoint(0, 0), CPoint(390, 143));
 
@@ -6756,6 +6756,8 @@ void SurgeGUIEditor::setupSaveDialog()
    saveDialog->addView(patchTuningLabel);
    saveDialog->addView(cb);
    saveDialog->addView(kb);
+
+   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(157, 57), false, false, [this]() {});
 }
 
 VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
@@ -7206,9 +7208,7 @@ void SurgeGUIEditor::showStorePatchDialog()
       dismissEditorOverlay();
    }
 
-   setupSaveDialog();
-
-   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(157, 57), false, false, [this]() {});
+   makeStorePatchDialog();
 }
 
 void SurgeGUIEditor::closeMSEGEditor()
