@@ -1026,12 +1026,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    bool inDrag = false;
    bool inDrawDrag = false;
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
-      if( buttons & kRButton )
+      if (buttons & kRButton)
       {
          openPopup( where );
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
       }
-      if( buttons & kDoubleClick || ((buttons & kLButton) && (buttons & kControl )))
+      if (buttons & kDoubleClick)
       {
          auto tf = pxToTime( );
          auto t = tf( where.x );
