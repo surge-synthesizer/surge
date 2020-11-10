@@ -1292,11 +1292,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
           */
          bool s = buttons & kShift;
          bool c = buttons & kControl;
-         if( ( s || c ) && ! snapGuard )
+         if( ( s || c )  )
          {
-            snapGuard = std::make_shared<SnapGuard>(eds, this);
+            bool wasSnapGuard = true;
+            if( ! snapGuard )
+            {
+               wasSnapGuard = false;
+               snapGuard = std::make_shared<SnapGuard>(eds, this);
+            }
             if( s ) eds->hSnap = eds->hSnapDefault;
+            else if( wasSnapGuard ) eds->hSnap = snapGuard->hSnapO;
+
             if( c ) eds->vSnap = eds->vSnapDefault;
+            else if( wasSnapGuard ) eds->vSnap = snapGuard->vSnapO;
          }
          else if( ! ( s || c ) && snapGuard )
          {
