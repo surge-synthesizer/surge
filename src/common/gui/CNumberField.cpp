@@ -271,27 +271,30 @@ void CNumberField::draw(CDrawContext* pContext)
    auto hoverColorName = skin->propertyValue(skinControl, "text_color.hover", Colors::NumberField::TextHover.name );
 
    auto fontColor = kRedCColor;
-   if( hovered )
+   if (hovered)
       fontColor = skin->getColor(hoverColorName );
    else
       fontColor = skin->getColor(colorName );
 
    // cache this of course
-   if( ! triedToLoadBg )
+   if (!triedToLoadBg)
    {
       bg = skin->backgroundBitmapForControl(skinControl, associatedBitmapStore);
       hoverBg = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl, bg, associatedBitmapStore, Surge::UI::Skin::HOVER );
       triedToLoadBg = true;
    }
-   if( hovered && hoverBg )
-   {
-      hoverBg->draw( pContext, getViewSize(), CPoint(), 0xff );
-   }
-   else if( bg )
+
+   if (bg)
    {
       bg->draw( pContext, getViewSize(), CPoint(), 0xff );
    }
-   else
+   
+   if (hovered && hoverBg)
+   {
+      hoverBg->draw( pContext, getViewSize(), CPoint(), 0xff );
+   }
+
+   if (!(bg || hoverBg))
    {
       pContext->setFrameColor(kRedCColor);
       pContext->setFillColor(VSTGUI::CColor(100, 100, 200));
