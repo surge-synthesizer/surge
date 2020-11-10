@@ -1102,6 +1102,8 @@ void Parameter::bound_value(bool force_integer)
       case ct_osc_feedback_negative:
       case ct_detuning:
       case ct_lfoamplitude:
+      case ct_airwindow_param:
+      case ct_airwindow_param_bipolar:
       {
          val.f = floor(val.f * 100) / 100.0;
          break;
