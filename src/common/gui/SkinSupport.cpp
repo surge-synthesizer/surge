@@ -540,26 +540,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
          auto r = VSTGUI::CColor();
          if (val[0] == '#')
          {
-            uint32_t rgb;
-            sscanf(val.c_str() + 1, "%x", &rgb);
-
-            auto l = strlen( val.c_str() + 1 );
-            int a = 255;
-            if( l > 6 )
-            {
-               a = rgb % 256;
-               rgb = rgb >> 8;
-            }
-            
-            int b = rgb % 256;
-            rgb = rgb >> 8;
-
-            int g = rgb % 256;
-            rgb = rgb >> 8;
-
-            int r = rgb % 256;
-            
-            colors[id] = ColorStore( VSTGUI::CColor(r, g, b, a) );
+            colors[id] = ColorStore( colorFromHexString(val));
          }
          else if( val[0] == '$' )
          {
@@ -784,6 +765,30 @@ bool Skin::recursiveGroupParse( ControlGroup::ptr_t parent, TiXmlElement *contro
    return true;
 }
 
+VSTGUI::CColor Skin::colorFromHexString(const std::string& val) const
+{
+   uint32_t rgb;
+   sscanf(val.c_str() + 1, "%x", &rgb);
+
+   auto l = strlen( val.c_str() + 1 );
+   int a = 255;
+   if( l > 6 )
+   {
+      a = rgb % 256;
+      rgb = rgb >> 8;
+   }
+
+   int b = rgb % 256;
+   rgb = rgb >> 8;
+
+   int g = rgb % 256;
+   rgb = rgb >> 8;
+
+   int r = rgb % 256;
+
+   return VSTGUI::CColor(r, g, b, a);
+}
+
 bool Skin::hasColor(const std::string &iid) const
 {
    auto id = iid;
@@ -821,6 +826,11 @@ VSTGUI::CColor Skin::getColor(const std::string &iid, const VSTGUI::CColor& def,
       case ColorStore::UNRESOLVED_ALIAS: // This should never occur
          return VSTGUI::kRedCColor;
       }
+   }
+
+   if( id[0] == '#' )
+   {
+      return colorFromHexString(id);
    }
    return def;
 }
