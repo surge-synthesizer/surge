@@ -1590,24 +1590,66 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ** Skin Labels
    */
    auto labels = currentSkin->getLabels();
-   for( auto &l : labels )
+
+   for (auto &l : labels)
    {
-      auto mtext = currentSkin->propertyValue( l, "text" );
-      if( mtext.isJust() )
+      auto mtext = currentSkin->propertyValue(l, "text");
+
+      if (mtext.isJust())
       {
-         auto fss = currentSkin->propertyValue( l, "font-size", "12" );
-         auto fs = std::atof( fss.c_str() );
+         auto ta = currentSkin->propertyValue(l, "text-align", "left");
+         // make text align value not case sensitive
+         std::transform(ta.begin(), ta.end(), ta.begin(),[](unsigned char c) { return std::tolower(c); });
 
-         auto coln = currentSkin->propertyValue( l, "color", "#00FF00" );
-         auto col = currentSkin->getColor( coln, kBlackCColor );
+         VSTGUI::CHoriTxtAlign txtalign;
 
-         auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), mtext.fromJust().c_str() );
-         lb->setHoriAlign(VSTGUI::kLeftText);
-         lb->setTransparency(true);
+         if (ta == "left")
+            txtalign = kLeftText;
+         else if (ta == "center")
+            txtalign = kCenterText;
+         else if (ta == "right")
+            txtalign = kRightText;
+
+         auto fs = currentSkin->propertyValue(l, "font-size", "12");
+         auto fsize = std::atof(fs.c_str());
+
+         auto fst = currentSkin->propertyValue(l, "font-style", "normal");
+         // make font style value not case sensitive
+         std::transform(fst.begin(), fst.end(), fst.begin(),[](unsigned char c) { return std::tolower(c); });
+         
+         VSTGUI::CTxtFace fstyle;
+
+         if (fst == "normal")
+            fstyle = kNormalFace;
+         else if (fst == "bold")
+            fstyle = kBoldFace;
+         else if (fst == "italic")
+            fstyle = kItalicFace;
+         else if (fst == "underline")
+            fstyle = kUnderlineFace;
+         else if (fst == "strikethrough")
+            fstyle = kStrikethroughFace;
+
+         auto coln = currentSkin->propertyValue(l, "color", "#FF0000");
+         auto col = currentSkin->getColor(coln, kRedCColor);
+
+         auto bgcoln = currentSkin->propertyValue(l, "bg-color", "#FFFFFF00");
+         auto bgcol = currentSkin->getColor(bgcoln, kTransparentCColor);
+
+         auto frcoln = currentSkin->propertyValue(l, "frame-color", "#FFFFFF00");
+         auto frcol = currentSkin->getColor(frcoln, kTransparentCColor);
+
+         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fsize, fstyle);
+
+         auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), mtext.fromJust().c_str());
+         lb->setTransparency((bgcol == kTransparentCColor && frcol == kTransparentCColor));
+         lb->setAntialias(true);
+         lb->setHoriAlign(txtalign);
+         lb->setFont(fnt);
          lb->setFontColor(col);
-         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fs);
-         lb->setFont( fnt );
-         lb->setAntialias( true );
+         lb->setBackColor(bgcol);
+         lb->setFrameColor(frcol);
+
          frame->addView(lb);
       }
    }
