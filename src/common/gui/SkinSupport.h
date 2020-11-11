@@ -181,6 +181,9 @@ public:
    {
       return getColor( id, Surge::Skin::Color::colorByName(id));
    }
+
+   VSTGUI::CColor colorFromHexString( const std::string &hex ) const;
+
    private:
       VSTGUI::CColor getColor(const Surge::Skin::Color &id, const VSTGUI::CColor &def, std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
       {
