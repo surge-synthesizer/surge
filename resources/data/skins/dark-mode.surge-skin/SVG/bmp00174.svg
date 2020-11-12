@@ -1,13 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="43px" height="14px" viewBox="0 0 43 14" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <desc>Created with Lunacy</desc>
-  <defs>
-    <rect width="43" height="14" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-  </defs>
-  <g id="bmp00176" clip-path="url(#clip_1)">
-    <path d="M0 4.4L0 2.2C0 1.59249 0.195251 1.07395 0.585785 0.644363C0.976318 0.214776 1.44772 0 2 0L40 0C40.5523 0 41.0237 0.214776 41.4142 0.644363C41.8047 1.07395 42 1.59249 42 2.2L42 8.8C42 9.40751 41.8047 9.92605 41.4142 10.3556C41.0237 10.7852 40.5523 11 40 11L2 11C1.44772 11 0.976318 10.7852 0.585785 10.3556C0.195251 9.92605 0 9.40751 0 8.8L0 4.4L0 4.4L0 4.4L0 4.4L0 4.4L0 4.4Z" transform="translate(0.5 1.5)" id="Background" fill="#242424" fill-rule="evenodd" stroke="#0F0F0F" stroke-width="1" />
-  </g>
+<svg width="43" height="14" viewBox="0 0 43 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1.5 3.5C1.5 2.39543 2.39543 1.5 3.5 1.5H39.5C40.6046 1.5 41.5 2.39543 41.5 3.5V10.5C41.5 11.6046 40.6046 12.5 39.5 12.5H3.5C2.39543 12.5 1.5 11.6046 1.5 10.5V3.5Z" fill="#242424"/>
+<path d="M3.5 2H39.5V1H3.5V2ZM41 3.5V10.5H42V3.5H41ZM39.5 12H3.5V13H39.5V12ZM2 10.5V3.5H1V10.5H2ZM3.5 12C2.67157 12 2 11.3284 2 10.5H1C1 11.8807 2.11929 13 3.5 13V12ZM41 10.5C41 11.3284 40.3284 12 39.5 12V13C40.8807 13 42 11.8807 42 10.5H41ZM39.5 2C40.3284 2 41 2.67157 41 3.5H42C42 2.11929 40.8807 1 39.5 1V2ZM3.5 1C2.11929 1 1 2.11929 1 3.5H2C2 2.67157 2.67157 2 3.5 2V1Z" fill="black"/>
 </svg>

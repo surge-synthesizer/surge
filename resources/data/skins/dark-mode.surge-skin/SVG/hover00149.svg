@@ -1,38 +1,40 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="37px" height="24px" viewBox="0 0 37 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>hover00149</title>
-    <g id="hover00149" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="button/smallButton" transform="translate(1.000000, 1.000000)" fill="#399DFF">
-            <path d="M1,0 L17,0 L17,0 L17,10 L1,10 C0.44771525,10 6.76353751e-17,9.55228475 0,9 L0,1 C-6.76353751e-17,0.44771525 0.44771525,1.01453063e-16 1,0 Z" id="Rectangle"></path>
-        </g>
-        <g id="Group-2" transform="translate(6.000000, 3.000000)">
-            <g id="button/smallButton" transform="translate(13.000000, 10.000000)" fill="#399DFF">
-                <path d="M0,0 L16,0 C16.5522847,-1.01453063e-16 17,0.44771525 17,1 L17,9 C17,9.55228475 16.5522847,10 16,10 L0,10 L0,10 L0,0 Z" id="Rectangle"></path>
-            </g>
-            <g id="Group-3" fill="#FFFFFF">
-                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
-                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
-            </g>
-            <g id="Group-3" transform="translate(21.000000, 3.000000) scale(-1, 1) translate(-21.000000, -3.000000) translate(17.000000, 0.000000)" fill="#FFFFFF">
-                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
-                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
-            </g>
-            <g id="Group" transform="translate(1.000000, 0.000000)" fill="#0F0F0F">
-                <rect id="Rectangle" x="11" y="0" width="1" height="6"></rect>
-            </g>
-        </g>
-        <g id="Group-2" transform="translate(6.000000, 15.000000)">
-            <g id="Group-3" fill="#FFFFFF">
-                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
-                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
-            </g>
-            <g id="Group-3" transform="translate(21.000000, 3.000000) scale(-1, 1) translate(-21.000000, -3.000000) translate(17.000000, 0.000000)" fill="#FFFFFF">
-                <rect id="Rectangle" x="3" y="2" width="5" height="2"></rect>
-                <polygon id="Triangle" transform="translate(2.000000, 3.000000) rotate(-90.000000) translate(-2.000000, -3.000000) " points="2 1 5 5 -1 5"></polygon>
-            </g>
-            <g id="Group" transform="translate(1.000000, 0.000000)" fill="#0F0F0F">
-                <rect id="Rectangle" x="11" y="0" width="1" height="6"></rect>
-            </g>
-        </g>
-    </g>
+<svg width="32" height="24" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<clipPath id="clip0">
+<path d="M17.5 10L27.5 10C28.6046 10 29.5 9.10457 29.5 8L29.5 4C29.5 2.89543 28.6046 2 27.5 2L17.5 2L17.5 10Z" fill="white"/>
+</clipPath>
+<clipPath id="clip1">
+<path d="M14.5 10L4.5 10C3.39543 10 2.5 9.10457 2.5 8L2.5 4C2.5 2.89543 3.39543 2 4.5 2L14.5 2L14.5 10Z" fill="white"/>
+</clipPath>
+<clipPath id="clip2">
+<path d="M14.5 22L4.5 22C3.39543 22 2.5 21.1046 2.5 20L2.5 16C2.5 14.8954 3.39543 14 4.5 14L14.5 14L14.5 22Z" fill="white"/>
+</clipPath>
+<clipPath id="clip3">
+<path d="M17.5 22L27.5 22C28.6046 22 29.5 21.1046 29.5 20L29.5 16C29.5 14.8954 28.6046 14 27.5 14L17.5 14L17.5 22Z" fill="white"/>
+</clipPath>
+</defs>
+<path d="M31.5 9.5C31.5 10.6046 30.6046 11.5 29.5 11.5L2.5 11.5C1.39543 11.5 0.5 10.6046 0.5 9.5L0.500001 2.5C0.500001 1.39543 1.39543 0.499997 2.5 0.499997L29.5 0.5C30.6046 0.5 31.5 1.39543 31.5 2.5L31.5 9.5Z" fill="#242424"/>
+<path d="M29.5 11L2.5 11L2.5 12L29.5 12L29.5 11ZM1 9.5L1 2.5L7.86805e-07 2.5L1.74846e-07 9.5L1 9.5ZM2.5 0.999997L29.5 1L29.5 -1.74846e-07L2.5 -2.53526e-06L2.5 0.999997ZM31 2.5L31 9.5L32 9.5L32 2.5L31 2.5ZM29.5 1C30.3284 1 31 1.67157 31 2.5L32 2.5C32 1.11929 30.8807 -5.41399e-08 29.5 -1.74846e-07L29.5 1ZM1 2.5C1 1.67157 1.67157 0.999997 2.5 0.999997L2.5 -2.53526e-06C1.11929 -2.65597e-06 9.07511e-07 1.11929 7.86805e-07 2.5L1 2.5ZM2.5 11C1.67157 11 1 10.3284 1 9.5L1.74846e-07 9.5C5.41399e-08 10.8807 1.11929 12 2.5 12L2.5 11ZM29.5 12C30.8807 12 32 10.8807 32 9.5L31 9.5C31 10.3284 30.3284 11 29.5 11L29.5 12Z" fill="black"/>
+<g clip-path="url(#clip0)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M23.5 9L27.5 6L23.5 3L23.5 5L19.5 5L19.5 7L23.5 7L23.5 9Z" fill="#B4B4B4"/>
+</g>
+<g opacity="0.75">
+<rect x="16.5" y="2" width="8" height="1" transform="rotate(90 16.5 2)" fill="black"/>
+</g>
+<path d="M2.5 8C2.5 9.10457 3.39543 10 4.5 10L14.5 10L14.5 2L4.5 2C3.39543 2 2.5 2.89543 2.5 4L2.5 8Z" fill="#399DFF"/>
+<g clip-path="url(#clip1)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 9L4.5 6L8.5 3L8.5 5L12.5 5L12.5 7L8.5 7L8.5 9Z" fill="white"/>
+</g>
+<path d="M0.5 21.5C0.5 22.6046 1.39543 23.5 2.5 23.5L29.5 23.5C30.6046 23.5 31.5 22.6046 31.5 21.5L31.5 14.5C31.5 13.3954 30.6046 12.5 29.5 12.5L2.5 12.5C1.39543 12.5 0.500002 13.3954 0.500002 14.5L0.5 21.5Z" fill="#242424"/>
+<path d="M2.5 23L29.5 23L29.5 24L2.5 24L2.5 23ZM31 21.5L31 14.5L32 14.5L32 21.5L31 21.5ZM29.5 13L2.5 13L2.5 12L29.5 12L29.5 13ZM1 14.5L1 21.5L3.49691e-07 21.5L1.57361e-06 14.5L1 14.5ZM2.5 13C1.67157 13 1 13.6716 1 14.5L1.57361e-06 14.5C1.81502e-06 13.1193 1.11929 12 2.5 12L2.5 13ZM31 14.5C31 13.6716 30.3284 13 29.5 13L29.5 12C30.8807 12 32 13.1193 32 14.5L31 14.5ZM29.5 23C30.3284 23 31 22.3284 31 21.5L32 21.5C32 22.8807 30.8807 24 29.5 24L29.5 23ZM2.5 24C1.11929 24 1.0828e-07 22.8807 3.49691e-07 21.5L1 21.5C1 22.3284 1.67157 23 2.5 23L2.5 24Z" fill="black"/>
+<g clip-path="url(#clip2)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 21L4.5 18L8.5 15L8.5 17L12.5 17L12.5 19L8.5 19L8.5 21Z" fill="#B4B4B4"/>
+</g>
+<g opacity="0.75">
+<rect width="8" height="1" transform="matrix(-2.18557e-07 1 1 2.18557e-07 15.5 14)" fill="black"/>
+</g>
+<path d="M29.5 20C29.5 21.1046 28.6046 22 27.5 22L17.5 22L17.5 14L27.5 14C28.6046 14 29.5 14.8954 29.5 16L29.5 20Z" fill="#399DFF"/>
+<g clip-path="url(#clip3)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M23.5 21L27.5 18L23.5 15L23.5 17L19.5 17L19.5 19L23.5 19L23.5 21Z" fill="white"/>
+</g>
 </svg>

@@ -22,10 +22,6 @@
 
     <color id="lfo.title.text" value="#B4B4B490"/>
 
-    <color id="lfo.type.selected.background" value="surgeblue"/>
-    <color id="lfo.type.selected.text" value="#E5E5E5"/>
-    <color id="lfo.type.unselected.text" value="lightgray"/>
-
     <color id="lfo.waveform.background" value="bggray"/>
     <color id="lfo.waveform.ruler.text" value="lightgray"/>
     <color id="lfo.waveform.ruler.ticks" value="buttonbg"/>
@@ -36,6 +32,10 @@
     <color id="lfo.waveform.envelope" value="surgebluetrans"/>
     <color id="lfo.waveform.wave" value="modblue"/>
     <color id="lfo.waveform.wave.deactivated" value="#2E86FE90"/>
+
+    <color id="lfo.type.selected.background" value="surgeblue"/>
+    <color id="lfo.type.selected.text" value="#E5E5E5"/>
+    <color id="lfo.type.unselected.text" value="lightgray"/>
 
     <color id="lfo.stepseq.background" value="darkergray"/>
     <color id="lfo.stepseq.column.shadow" value="almostblack"/>
@@ -51,13 +51,17 @@
     <color id="lfo.stepseq.drag.line" value="lightgray"/>
     <color id="lfo.stepseq.envelope" value="surgebluetrans"/>
     <color id="lfo.stepseq.wave" value="modblue"/>
+
     <color id="lfo.stepseq.button.background" value="darkergray"/>
     <color id="lfo.stepseq.button.border" value="buttonbg"/>
     <color id="lfo.stepseq.button.hover" value="darkgray"/>
     <color id="lfo.stepseq.button.arrow" value="lightgray"/>
+
     <color id="lfo.stepseq.popup.background" value="white"/>
     <color id="lfo.stepseq.popup.border" value="darkestgray"/>
     <color id="lfo.stepseq.popup.text" value="darkestgray"/>
+
+    <color id="overlay.background" value="#000000C0"/>
 
     <color id="msegeditor.background" value="#202020"/>
     <color id="msegeditor.curve" value="modblue"/>
@@ -65,13 +69,13 @@
     <color id="msegeditor.curve.highlight" value="#40ADFF"/>
     <color id="msegeditor.panel" value="#2D2D2D"/>
     <color id="msegeditor.panel.text" value="lightgray"/>
+    <color id="msegeditor.axis.text" value="lightgray"/>
+    <color id="msegeditor.axis.text.secondary" value="#B4B4B4C0"/>
     <color id="msegeditor.fill.gradient.start" value="#2E86FE80"/>
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
     <color id="msegeditor.numberfield.text.hover" value="white"/>
     <color id="msegeditor.loop.marker" value="modblue"/>
-
-    <color id="overlay.background" value="#000000C0"/>
 
     <color id="dialog.background" value="bggray"/>
     <color id="dialog.border" value="bordergray"/>
@@ -81,18 +85,21 @@
     <color id="dialog.button.background" value="#404040"/>
     <color id="dialog.button.border" value="bordergray"/>
     <color id="dialog.button.text" value="lightgray"/>
+
     <color id="dialog.textfield.focus" value="red"/>
     <color id="dialog.textfield.border" value="bordergray"/>
     <color id="dialog.textfield.background" value="#2E2E2E"/>
     <color id="dialog.textfield.text" value="lightgray"/>
-    <color id="dialog.checkbox.background" value="#2E2E2E"/>
-    <color id="dialog.checkbox.border" value="bordergray"/>
-    <color id="dialog.checkbox.tick" value="lightgray"/>
     <color id="dialog.label.text" value="lightgray"/>
+
+    <color id="dialog.checkbox.background" value="white"/>
+    <color id="dialog.checkbox.border" value="lightgray"/>
+    <color id="dialog.checkbox.tick" value="darkergray"/>
 
     <color id="effect.label.separator" value="#5E5E5E"/>
     <color id="effect.label.text" value="lightgray"/>
     <color id="effect.label.presetname" value="lightgray"/>
+
     <color id="effect.menu.text" value="lightgray"/>
     <color id="effect.menu.text.hover" value="white"/>
 
@@ -114,13 +121,12 @@
     <color id="slider.modulation.positive" value="#82BF50"/>
     <color id="slider.modulation.negative" value="gray"/>
 
+    <color id="scene.split_poly.text" value="lightgray"/>
+    <color id="scene.split_poly.text.hover" value="white"/>
     <color id="scene.pbrange.text" value="lightgray"/>
     <color id="scene.pbrange.text.hover" value="white"/>
     <color id="scene.keytrackroot.text" value="lightgray"/>
     <color id="scene.keytrackroot.text.hover" value="white"/>
-
-    <color id="scene.split_poly.text" value="lightgray"/>
-    <color id="scene.split_poly.text.hover" value="white"/>
 
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.highlevel" value="red"/>
@@ -150,21 +156,11 @@
   </component-classes>
 
   <controls>
+    <!-- Global & Scene -->
     <control ui_identifier="global.master_volume" class="def-hslider"/>
-
- 	<control ui_identifier="scene.splitpoint" x="100" y="11" w="44"/>
- 	<control ui_identifier="scene.polylimit" x="100" y="32" w="44"/>
-
-    <control ui_identifier="scene.pbrange_dn" x="162" w="26" h="12"/>
-    <control ui_identifier="scene.pbrange_up" x="186" w="25" h="12"/>
-
-    <control ui_identifier="scene.keytrack_root" x="308"/>
 
     <control ui_identifier="scene.drift" class="def-hslider"/>
     <control ui_identifier="scene.noise_color" class="def-hslider"/>
-
-    <control ui_identifier="scene.portatime" class="def-hslider"/>
-    <control ui_identifier="scene.pitch" class="def-hslider"/>
 
     <control ui_identifier="scene.fmdepth" class="def-hslider"/>
 
@@ -174,12 +170,24 @@
     <control ui_identifier="scene.send_fx_1" class="def-hslider"/>
     <control ui_identifier="scene.send_fx_2" class="def-hslider"/>
 
-    <control ui_identifier="filter.cutoff_1" class="def-hslider"/>
-    <control ui_identifier="filter.resonance_1" class="def-hslider"/>
-    <control ui_identifier="filter.cutoff_2" class="def-hslider"/>
-    <control ui_identifier="filter.resonance_2" class="def-hslider"/>
-    <control ui_identifier="filter.balance" class="def-hslider"/>
-    <control ui_identifier="filter.feedback" class="def-hslider"/>
+    <control ui_identifier="scene.portatime" class="def-hslider"/>
+    <control ui_identifier="scene.pitch" class="def-hslider"/>
+
+    <control ui_identifier="scene.gain" y="301"/>
+    <control ui_identifier="scene.velocity_sensitivity" y="301"/>
+
+    <!-- Bend Depth & Play Mode -->
+    <control ui_identifier="scene.pbrange_dn" x="157" y="112" w="30" h="13"/>
+    <control ui_identifier="scene.pbrange_up" x="188" y="112" w="30" h="13"/>
+    <control ui_identifier="scene.octave" x="202" y="194" w="96" h="18"/>
+
+    <!-- OSC -->
+    <control ui_identifier="osc.display" x="4" y="81" w="141" h="99"/>
+    <control ui_identifier="osc.keytrack" x="4" y="183" w="45" h="9"/>
+    <control ui_identifier="osc.retrigger" x="51" y="183" w="45" h="9"/>
+    <control ui_identifier="osc.octave" x="0" y="194" w="96" h="18"/>
+    <control ui_identifier="osc.type" x="96" y="194" w="49" h="18"/>
+    <control ui_identifier="osc.select" x="66" y="61" w="75" h="13"/>
 
     <control ui_identifier="osc.pitch" class="def-hslider"/>
     <control ui_identifier="osc.param_1" class="def-hslider"/>
@@ -190,10 +198,68 @@
     <control ui_identifier="osc.param_6" class="def-hslider"/>
     <control ui_identifier="osc.param_7" class="def-hslider"/>
 
+    <!-- Filter -->
+    <control ui_identifier="filter.type_1" x="305" y="191"/>
+    <control ui_identifier="filter.subtype_1" x="432" y="194"/>
+    <control ui_identifier="filter.type_2" x="605" y="191"/>
+    <control ui_identifier="filter.subtype_2" x="732" y="194"/>
+
+    <control ui_identifier="filter.cutoff_1" class="def-hslider"/>
+    <control ui_identifier="filter.resonance_1" class="def-hslider"/>
+    <control ui_identifier="filter.cutoff_2" class="def-hslider"/>
+    <control ui_identifier="filter.resonance_2" class="def-hslider"/>
+    <control ui_identifier="filter.balance" class="def-hslider"/>
+    <control ui_identifier="filter.feedback" class="def-hslider"/>
+
+    <!-- Mixer -->
+    <control ui_identifier="mixer.level_o1" y="37"/>
+    <control ui_identifier="mixer.level_o2" y="37"/>
+    <control ui_identifier="mixer.level_o3" y="37"/>
+    <control ui_identifier="mixer.level_ring12" y="37"/>
+    <control ui_identifier="mixer.level_ring23" y="37"/>
+    <control ui_identifier="mixer.level_noise" y="37"/>
+    <control ui_identifier="mixer.level_prefiltergain" y="37"/>
+
+    <!-- Keytrack & Waveshaper -->
+    <control ui_identifier="scene.keytrack_root" x="311" y="265"/>
+    <control ui_identifier="filter.keytrack_1" y="301"/>
+    <control ui_identifier="filter.keytrack_2" y="301"/>
+    <control ui_identifier="filter.highpass" y="301"/>
+    <control ui_identifier="filter.waveshaper_drive" y="301"/>
+    <control ui_identifier="filter.waveshaper_type" x="388" y="311"/>
+
+    <!-- FEG -->
+    <control ui_identifier="feg.panel" y="266"/>
+    <control ui_identifier="feg.attack_shape" x="1"/>
+    <control ui_identifier="feg.decay_shape" x="21"/>
+    <control ui_identifier="feg.release_shape" x="61"/>
+    <control ui_identifier="feg.attack" y="35"/>
+    <control ui_identifier="feg.decay" y="35"/>
+    <control ui_identifier="feg.sustain" y="35"/>
+    <control ui_identifier="feg.release" y="35"/>
+
+    <control ui_identifier="feg.envmod_1" y="301"/>
+    <control ui_identifier="feg.envmod_2" y="301"/>
+
+    <!-- AEG -->
+    <control ui_identifier="aeg.panel" y="266"/>
+    <control ui_identifier="aeg.attack_shape" x="1"/>
+    <control ui_identifier="aeg.decay_shape" x="21"/>
+    <control ui_identifier="aeg.release_shape" x="61"/>
+    <control ui_identifier="aeg.attack" y="35"/>
+    <control ui_identifier="aeg.decay" y="35"/>
+    <control ui_identifier="aeg.sustain" y="35"/>
+    <control ui_identifier="aeg.release" y="35"/>
+
+    <!-- Modulation Panel -->
+    <control ui_identifier="controls.modulation.panel" x="2" y="401"/>
+
+    <!-- LFO -->
     <control ui_identifier="lfo.rate" class="mod-hslider"/>
     <control ui_identifier="lfo.phase" class="mod-hslider"/>
-    <control ui_identifier="lfo.amplitude" class="mod-hslider"/>
     <control ui_identifier="lfo.deform" class="mod-hslider"/>
+    <control ui_identifier="lfo.amplitude" class="mod-hslider"/>
+
     <control ui_identifier="lfo.delay" class="mod-vslider"/>
     <control ui_identifier="lfo.attack" class="mod-vslider"/>
     <control ui_identifier="lfo.hold" class="mod-vslider"/>
@@ -201,11 +267,21 @@
     <control ui_identifier="lfo.sustain" class="mod-vslider"/>
     <control ui_identifier="lfo.release" class="mod-vslider"/>
 
-    <control ui_identifier="lfo.presets" y="478"/>
-    <control ui_identifier="lfo.msegedit" y="478"/>
+    <control ui_identifier="lfo.main.panel" y="477"/>
 
-    <control ui_identifier="fx.type" y="194"/>
-    <control ui_identifier="fx.preset.prevnext" x="855" y="213"/>
-    <control ui_identifier="fx.preset.name" x="762" y="213"/>
+    <control ui_identifier="lfo.name" x="6"/>
+    <control ui_identifier="lfo.presets" x="6" y="477"/>
+
+    <control ui_identifier="lfo.triggermode" y="483"/>
+    <control ui_identifier="lfo.unipolar" x="170" y="545" w="51" h="14"/>
+
+    <control ui_identifier="lfo.shape" y="479"/>
+    <control ui_identifier="lfo.msegedit" y="477"/>
+
+    <control ui_identifier="lfo.envelope.panel" x="614.5" y="492"/>
+
+    <!-- FX Section -->
+    <control ui_identifier="fx.preset.prevnext" y="213"/>
+    <control ui_identifier="fx.preset.name" y="213"/>
   </controls>
 </surge-skin>

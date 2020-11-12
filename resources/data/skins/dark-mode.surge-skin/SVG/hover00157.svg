@@ -1,55 +1,72 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="48px" height="56px" viewBox="0 0 48 56" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>hover00157</title>
-    <defs>
-        <linearGradient x1="50%" y1="50%" x2="50%" y2="100%" id="linearGradient-1">
-            <stop stop-color="#000000" offset="0%"></stop>
-            <stop stop-color="#000000" stop-opacity="0.0876311189" offset="100%"></stop>
-        </linearGradient>
-        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
-            <stop stop-color="#FFBF00" offset="0%"></stop>
-            <stop stop-color="#FF9000" offset="100%"></stop>
-        </linearGradient>
-        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-3">
-            <stop stop-color="#9ce560" offset="0%"></stop>
-            <stop stop-color="#71a646" offset="100%"></stop>
-        </linearGradient>
-        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-4">
-            <stop stop-color="#0171D8" offset="0%"></stop>
-            <stop stop-color="#006BCC" offset="100%"></stop>
-        </linearGradient>
-    </defs>
-    <g id="hover00157" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <ellipse id="Oval-Copy-3" fill="url(#linearGradient-1)" cx="32.5" cy="14" rx="5.5" ry="6"></ellipse>
-        <ellipse id="Oval-Copy-2" fill="url(#linearGradient-1)" cx="32.5" cy="42" rx="5.5" ry="6"></ellipse>
-        <ellipse id="Oval-Copy-5" fill="url(#linearGradient-1)" cx="8.5" cy="14" rx="5.5" ry="6"></ellipse>
-        <ellipse id="Oval-Copy-4" fill="url(#linearGradient-1)" cx="8.5" cy="42" rx="5.5" ry="6"></ellipse>
-
-        <circle id="Oval" fill-opacity="0.35" fill="#FF9000" cx="8.5" cy="11.5" r="8.5"></circle>
-        <circle id="Oval" fill-opacity="0.35" fill="#FF9000" cx="8.5" cy="39.5" r="8.5"></circle>
-        <circle id="Oval" fill-opacity="0.35" fill="#9ce560" cx="32.5" cy="11.5" r="8.5"></circle>
-        <circle id="Oval" fill-opacity="0.35" fill="#9ce560" cx="32.5" cy="39.5" r="8.5"></circle>
-
-        <circle id="Oval" fill="url(#linearGradient-2)" cx="8.5" cy="11.5" r="5.5"></circle>
-        <circle id="Oval" fill="url(#linearGradient-2)" cx="8.5" cy="39.5" r="5.5"></circle>
-        <circle id="Oval" fill="url(#linearGradient-3)" cx="32.5" cy="11.5" r="5.5"></circle>
-        <circle id="Oval" fill="url(#linearGradient-3)" cx="32.5" cy="39.5" r="5.5"></circle>
-
-        <g id="Group-3" transform="translate(7.000000, 11.000000)">
-            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
-            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
-        </g>
-        <g id="Group-3" transform="translate(7.000000, 39.000000)">
-            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
-            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
-        </g>
-        <g id="Group-3-Copy-2" transform="translate(31.000000, 11.000000)">
-            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
-            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
-        </g>
-        <g id="Group-3-Copy" transform="translate(31.000000, 39.000000)">
-            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
-            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
-        </g>
-    </g>
+<svg width="48" height="56" viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="paint0_linear" x1="8.5" y1="14" x2="8.5" y2="20" gradientUnits="userSpaceOnUse">
+<stop offset="0.520833"/>
+<stop offset="1" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint1_linear" x1="8.5" y1="3" x2="8.5" y2="20" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFBF00"/>
+<stop offset="1" stop-color="#FF9000"/>
+</linearGradient>
+<linearGradient id="paint2_linear" x1="8.5" y1="6" x2="8.5" y2="17" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFBF00"/>
+<stop offset="1" stop-color="#FF9000"/>
+</linearGradient>
+<linearGradient id="paint3_linear" x1="32.5" y1="14" x2="32.5" y2="20" gradientUnits="userSpaceOnUse">
+<stop offset="0.520833"/>
+<stop offset="1" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint4_linear" x1="32.5" y1="3" x2="32.5" y2="20" gradientUnits="userSpaceOnUse">
+<stop stop-color="#8BCC56"/>
+<stop offset="1" stop-color="#71A646"/>
+</linearGradient>
+<linearGradient id="paint5_linear" x1="32.5" y1="6" x2="32.5" y2="17" gradientUnits="userSpaceOnUse">
+<stop stop-color="#8BCC56"/>
+<stop offset="1" stop-color="#71A646"/>
+</linearGradient>
+<linearGradient id="paint6_linear" x1="8.5" y1="42" x2="8.5" y2="48" gradientUnits="userSpaceOnUse">
+<stop offset="0.520833"/>
+<stop offset="1" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint7_linear" x1="8.5" y1="31" x2="8.5" y2="48" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFBF00"/>
+<stop offset="1" stop-color="#FF9000"/>
+</linearGradient>
+<linearGradient id="paint8_linear" x1="8.5" y1="34" x2="8.5" y2="45" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFBF00"/>
+<stop offset="1" stop-color="#FF9000"/>
+</linearGradient>
+<linearGradient id="paint9_linear" x1="32.5" y1="42" x2="32.5" y2="48" gradientUnits="userSpaceOnUse">
+<stop offset="0.520833"/>
+<stop offset="1" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint10_linear" x1="32.5" y1="31" x2="32.5" y2="48" gradientUnits="userSpaceOnUse">
+<stop stop-color="#8BCC56"/>
+<stop offset="1" stop-color="#71A646"/>
+</linearGradient>
+<linearGradient id="paint11_linear" x1="32.5" y1="34" x2="32.5" y2="45" gradientUnits="userSpaceOnUse">
+<stop stop-color="#8BCC56"/>
+<stop offset="1" stop-color="#71A646"/>
+</linearGradient>
+</defs>
+<path d="M8.5 20C11.5376 20 14 17.3137 14 14C14 10.6863 11.5376 8 8.5 8C5.46243 8 3 10.6863 3 14C3 17.3137 5.46244 20 8.5 20Z" fill="url(#paint0_linear)"/>
+<path opacity="0.3" d="M8.5 20C13.1944 20 17 16.1944 17 11.5C17 6.80558 13.1944 3 8.5 3C3.80558 3 4.5366e-07 6.80558 1.01328e-06 11.5C1.5729e-06 16.1944 3.80558 20 8.5 20Z" fill="url(#paint1_linear)"/>
+<path d="M8.5 17C11.5376 17 14 14.5376 14 11.5C14 8.46243 11.5376 6 8.5 6C5.46243 6 3 8.46243 3 11.5C3 14.5376 5.46244 17 8.5 17Z" fill="url(#paint2_linear)"/>
+<path opacity="0.5" d="M9.5 11.25L7.5 11.25C7.22386 11.25 7 11.4739 7 11.75C7 12.0261 7.22386 12.25 7.5 12.25L9.5 12.25C9.77614 12.25 10 12.0261 10 11.75C10 11.4739 9.77614 11.25 9.5 11.25Z" fill="#EEEEEE"/>
+<path d="M9.5 11L7.5 11C7.22386 11 7 11.2239 7 11.5C7 11.7761 7.22386 12 7.5 12L9.5 12C9.77614 12 10 11.7761 10 11.5C10 11.2239 9.77614 11 9.5 11Z" fill="#1F1F1F"/>
+<path d="M32.5 20C35.5376 20 38 17.3137 38 14C38 10.6863 35.5376 8 32.5 8C29.4624 8 27 10.6863 27 14C27 17.3137 29.4624 20 32.5 20Z" fill="url(#paint3_linear)"/>
+<path opacity="0.3" d="M32.5 20C37.1944 20 41 16.1944 41 11.5C41 6.80558 37.1944 3 32.5 3C27.8056 3 24 6.80558 24 11.5C24 16.1944 27.8056 20 32.5 20Z" fill="url(#paint4_linear)"/>
+<path d="M32.5 17C35.5376 17 38 14.5376 38 11.5C38 8.46243 35.5376 6 32.5 6C29.4624 6 27 8.46243 27 11.5C27 14.5376 29.4624 17 32.5 17Z" fill="url(#paint5_linear)"/>
+<path opacity="0.5" d="M33.5 11.25L31.5 11.25C31.2239 11.25 31 11.4739 31 11.75C31 12.0261 31.2239 12.25 31.5 12.25L33.5 12.25C33.7761 12.25 34 12.0261 34 11.75C34 11.4739 33.7761 11.25 33.5 11.25Z" fill="#EEEEEE"/>
+<path d="M33.5 11L31.5 11C31.2239 11 31 11.2239 31 11.5C31 11.7761 31.2239 12 31.5 12L33.5 12C33.7761 12 34 11.7761 34 11.5C34 11.2239 33.7761 11 33.5 11Z" fill="#1F1F1F"/>
+<path d="M8.5 48C11.5376 48 14 45.3137 14 42C14 38.6863 11.5376 36 8.5 36C5.46243 36 3 38.6863 3 42C3 45.3137 5.46244 48 8.5 48Z" fill="url(#paint6_linear)"/>
+<path opacity="0.3" d="M8.5 48C13.1944 48 17 44.1944 17 39.5C17 34.8056 13.1944 31 8.5 31C3.80558 31 4.5366e-07 34.8056 1.01328e-06 39.5C1.5729e-06 44.1944 3.80558 48 8.5 48Z" fill="url(#paint7_linear)"/>
+<path d="M8.5 45C11.5376 45 14 42.5376 14 39.5C14 36.4624 11.5376 34 8.5 34C5.46243 34 3 36.4624 3 39.5C3 42.5376 5.46244 45 8.5 45Z" fill="url(#paint8_linear)"/>
+<path opacity="0.5" d="M9.5 39.25L7.5 39.25C7.22386 39.25 7 39.4739 7 39.75C7 40.0261 7.22386 40.25 7.5 40.25L9.5 40.25C9.77614 40.25 10 40.0261 10 39.75C10 39.4739 9.77614 39.25 9.5 39.25Z" fill="#EEEEEE"/>
+<path d="M9.5 39L7.5 39C7.22386 39 7 39.2239 7 39.5C7 39.7761 7.22386 40 7.5 40L9.5 40C9.77614 40 10 39.7761 10 39.5C10 39.2239 9.77614 39 9.5 39Z" fill="#1F1F1F"/>
+<path d="M32.5 48C35.5376 48 38 45.3137 38 42C38 38.6863 35.5376 36 32.5 36C29.4624 36 27 38.6863 27 42C27 45.3137 29.4624 48 32.5 48Z" fill="url(#paint9_linear)"/>
+<path opacity="0.3" d="M32.5 48C37.1944 48 41 44.1944 41 39.5C41 34.8056 37.1944 31 32.5 31C27.8056 31 24 34.8056 24 39.5C24 44.1944 27.8056 48 32.5 48Z" fill="url(#paint10_linear)"/>
+<path d="M32.5 45C35.5376 45 38 42.5376 38 39.5C38 36.4624 35.5376 34 32.5 34C29.4624 34 27 36.4624 27 39.5C27 42.5376 29.4624 45 32.5 45Z" fill="url(#paint11_linear)"/>
+<path opacity="0.5" d="M33.5 39.25L31.5 39.25C31.2239 39.25 31 39.4739 31 39.75C31 40.0261 31.2239 40.25 31.5 40.25L33.5 40.25C33.7761 40.25 34 40.0261 34 39.75C34 39.4739 33.7761 39.25 33.5 39.25Z" fill="#EEEEEE"/>
+<path d="M33.5 39L31.5 39C31.2239 39 31 39.2239 31 39.5C31 39.7761 31.2239 40 31.5 40L33.5 40C33.7761 40 34 39.7761 34 39.5C34 39.2239 33.7761 39 33.5 39Z" fill="#1F1F1F"/>
 </svg>
