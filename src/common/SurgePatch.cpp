@@ -223,102 +223,102 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                                   sc_id, cg_GLOBAL, 0, true,
                                                    sceasy));
       a->push_back(scene[sc].level_o1.assign(p_id.next(), id_s++, "level_o1", "Osc 1 Level", ct_amplitude,
-                                             Surge::Skin::Mix::level_o1,
+                                             Surge::Skin::Mixer::level_o1,
                                              sc_id, cg_MIX, 0, true,
                                              sceasy));
       a->push_back(scene[sc].mute_o1.assign(p_id.next(), id_s++, "mute_o1", "Osc 1 Mute", ct_bool_mute,
-                                            Surge::Skin::Mix::mute_o1,
+                                            Surge::Skin::Mixer::mute_o1,
                                             sc_id, cg_MIX, 0, false));
       a->push_back(scene[sc].solo_o1.assign(p_id.next(), id_s++, "solo_o1", "Osc 1 Solo", ct_bool_solo,
-                                            Surge::Skin::Mix::solo_o1,
+                                            Surge::Skin::Mixer::solo_o1,
                                             sc_id, cg_MIX, 0, false, kMeta));
       a->push_back(scene[sc].route_o1.assign(p_id.next(), id_s++, "route_o1", "Osc 1 Route", ct_oscroute,
-                                             Surge::Skin::Mix::route_o1,
+                                             Surge::Skin::Mixer::route_o1,
                                              sc_id, cg_MIX, 0, false));
       a->push_back(scene[sc].level_o2.assign(p_id.next(), id_s++, "level_o2", "Osc 2 Level", ct_amplitude,
-                                             Surge::Skin::Mix::level_o2,
+                                             Surge::Skin::Mixer::level_o2,
                                              sc_id, cg_MIX, 0, true,
                                              sceasy));
       a->push_back(scene[sc].mute_o2.assign(p_id.next(), id_s++, "mute_o2", "Osc 2 Mute", ct_bool_mute,
-                                            Surge::Skin::Mix::mute_o2,
+                                            Surge::Skin::Mixer::mute_o2,
                                             sc_id, cg_MIX, 0, false));
       a->push_back(scene[sc].solo_o2.assign(p_id.next(), id_s++, "solo_o2", "Osc 2 Solo", ct_bool_solo,
-                                            Surge::Skin::Mix::solo_o2,
+                                            Surge::Skin::Mixer::solo_o2,
                                             sc_id, cg_MIX, 0, false, kMeta));
       a->push_back(scene[sc].route_o2.assign(p_id.next(), id_s++, "route_o2", "Osc 2 Route", ct_oscroute,
-                                            Surge::Skin::Mix::route_o2,
+                                            Surge::Skin::Mixer::route_o2,
                                              sc_id, cg_MIX, 0, false));
       a->push_back(scene[sc].level_o3.assign(p_id.next(), id_s++, "level_o3", "Osc 3 Level", ct_amplitude,
-                                             Surge::Skin::Mix::level_o3,
+                                             Surge::Skin::Mixer::level_o3,
                                              sc_id, cg_MIX, 0, true,
                                              sceasy));
       a->push_back(scene[sc].mute_o3.assign(p_id.next(), id_s++, "mute_o3", "Osc 3 Mute", ct_bool_mute,
-                                            Surge::Skin::Mix::mute_o3,
+                                            Surge::Skin::Mixer::mute_o3,
                                               sc_id, cg_MIX, 0, false));
       a->push_back(scene[sc].solo_o3.assign(p_id.next(), id_s++, "solo_o3", "Osc 3 Solo", ct_bool_solo,
-                                            Surge::Skin::Mix::solo_o3,
+                                            Surge::Skin::Mixer::solo_o3,
                                             sc_id, cg_MIX, 0, false, kMeta));
       a->push_back(scene[sc].route_o3.assign(p_id.next(), id_s++, "route_o3", "Osc 3 Route", ct_oscroute,
-                                             Surge::Skin::Mix::route_o3,
+                                             Surge::Skin::Mixer::route_o3,
                                              sc_id, cg_MIX, 0, false));
       a->push_back(scene[sc].level_ring_12.assign(p_id.next(), id_s++, "level_ring12", "Ring Modulation 1x2 Level",
                                                   ct_amplitude,
-                                                  Surge::Skin::Mix::level_ring12,
+                                                  Surge::Skin::Mixer::level_ring12,
                                                   sc_id, cg_MIX, 0, true,
                                                    sceasy));
       a->push_back(scene[sc].mute_ring_12.assign(p_id.next(), id_s++, "mute_ring12", "Ring Modulation 1x2 Mute",
                                                  ct_bool_mute,
-                                                 Surge::Skin::Mix::mute_ring12,
+                                                 Surge::Skin::Mixer::mute_ring12,
                                                  sc_id, cg_MIX, 0,
                                                  false));
       a->push_back(scene[sc].solo_ring_12.assign(p_id.next(), id_s++, "solo_ring12", "Ring Modulation 1x2 Solo",
                                                  ct_bool_solo,
-                                                 Surge::Skin::Mix::solo_ring12,
+                                                 Surge::Skin::Mixer::solo_ring12,
                                                  sc_id, cg_MIX, 0,
                                                  false, kMeta));
       a->push_back(scene[sc].route_ring_12.assign(p_id.next(), id_s++, "route_ring12", "Ring Modulation 1x2 Route",
                                                   ct_oscroute,
-                                                  Surge::Skin::Mix::route_ring12, sc_id, cg_MIX, 0,
+                                                  Surge::Skin::Mixer::route_ring12, sc_id, cg_MIX, 0,
                                                   false));
       a->push_back(scene[sc].level_ring_23.assign(p_id.next(), id_s++, "level_ring23", "Ring Modulation 2x3 Level",
                                                   ct_amplitude,
-                                                  Surge::Skin::Mix::level_ring23,
+                                                  Surge::Skin::Mixer::level_ring23,
                                                   sc_id, cg_MIX, 0, true,
                                                   sceasy));
       a->push_back(scene[sc].mute_ring_23.assign(p_id.next(), id_s++, "mute_ring23", "Ring Modulation 2x3 Mute",
                                                  ct_bool_mute,
-                                                 Surge::Skin::Mix::mute_ring23,
+                                                 Surge::Skin::Mixer::mute_ring23,
                                                  sc_id, cg_MIX, 0,
                                                  false));
       a->push_back(scene[sc].solo_ring_23.assign(p_id.next(), id_s++, "solo_ring23", "Ring Modulation 2x3 Solo",
                                                  ct_bool_solo,
-                                                 Surge::Skin::Mix::solo_ring23,
+                                                 Surge::Skin::Mixer::solo_ring23,
                                                  sc_id, cg_MIX, 0,
                                                  false, kMeta));
       a->push_back(scene[sc].route_ring_23.assign(p_id.next(), id_s++, "route_ring23", "Ring Modulation 2x3 Route",
                                                   ct_oscroute,
-                                                  Surge::Skin::Mix::route_ring23, sc_id, cg_MIX, 0,
+                                                  Surge::Skin::Mixer::route_ring23, sc_id, cg_MIX, 0,
                                                   false));
       a->push_back(scene[sc].level_noise.assign(p_id.next(), id_s++, "level_noise", "Noise Level",
                                                 ct_amplitude,
-                                                Surge::Skin::Mix::level_noise,
+                                                Surge::Skin::Mixer::level_noise,
                                                 sc_id, cg_MIX, 0, true,
                                                  sceasy));
       a->push_back(scene[sc].mute_noise.assign(p_id.next(), id_s++, "mute_noise", "Noise Mute",
                                                ct_bool_mute,
-                                               Surge::Skin::Mix::mute_noise, sc_id, cg_MIX, 0,
+                                               Surge::Skin::Mixer::mute_noise, sc_id, cg_MIX, 0,
                                                false));
       a->push_back(scene[sc].solo_noise.assign(p_id.next(), id_s++, "solo_noise", "Noise Solo",
                                                ct_bool_solo,
-                                               Surge::Skin::Mix::solo_noise, sc_id, cg_MIX, 0, false,
+                                               Surge::Skin::Mixer::solo_noise, sc_id, cg_MIX, 0, false,
                                                kMeta));
       a->push_back(scene[sc].route_noise.assign(p_id.next(), id_s++, "route_noise", "Noise Route",
                                                 ct_oscroute,
-                                                Surge::Skin::Mix::route_noise, sc_id, cg_MIX, 0,
+                                                Surge::Skin::Mixer::route_noise, sc_id, cg_MIX, 0,
                                                 false));
       a->push_back(scene[sc].level_pfg.assign(p_id.next(), id_s++, "level_pfg", "Pre-Filter Gain",
                                               ct_decibel,
-                                              Surge::Skin::Mix::level_prefiltergain, sc_id, cg_MIX, 0, true,
+                                              Surge::Skin::Mixer::level_prefiltergain, sc_id, cg_MIX, 0, true,
                                               sceasy));
 
       int pbx = 164, pby = 112;
