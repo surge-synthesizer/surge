@@ -1,14 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="106px" height="18px" viewBox="0 0 106 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <desc>Created with Lunacy</desc>
-  <defs>
-    <rect width="106" height="18" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-  </defs>
-  <g id="hover00168" clip-path="url(#clip_1)">
-    <path d="M0 4L0 2C0 1.44772 0.155599 0.976311 0.466798 0.585786C0.777998 0.195262 1.15365 0 1.59375 0L100.406 0C100.847 0 101.222 0.195262 101.533 0.585786C101.844 0.976311 102 1.44772 102 2L102 12C102 12.5523 101.844 13.0237 101.533 13.4142C101.222 13.8047 100.847 14 100.406 14L1.59375 14C1.15365 14 0.777998 13.8047 0.466798 13.4142C0.155599 13.0237 0 12.5523 0 12L0 4L0 4L0 4L0 4L0 4Z" transform="translate(1.9998779 2)" id="Rectangle#45" fill="#399DFF" stroke="#FFFFFF" stroke-width="1" />
-    <path d="M2.25091 0L4.501 3.761L0 3.761L2.25091 0L2.25091 0L2.25091 0L2.25091 0Z" transform="matrix(0.507388 -0.8617177 0.8617177 0.507388 94.361694 9.091736)" id="Shape" fill="#FFFFFF" stroke="none" />
-  </g>
+<svg width="106" height="18" viewBox="0 0 106 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 5C3 3.89543 3.89543 3 5 3H99C100.105 3 101 3.89543 101 5V12C101 13.1046 100.105 14 99 14H5C3.89543 14 3 13.1046 3 12V5Z" fill="#399DFF"/>
+<rect x="3" y="3" width="98" height="11" rx="2" fill="#399DFF"/>
+<rect x="3" y="3" width="98" height="11" rx="2" stroke="#399DFF"/>
+<path d="M5 4H99V2H5V4ZM100 5V12H102V5H100ZM99 13H5V15H99V13ZM4 12V5H2V12H4ZM5 13C4.44772 13 4 12.5523 4 12H2C2 13.6569 3.34314 15 5 15V13ZM100 12C100 12.5523 99.5523 13 99 13V15C100.657 15 102 13.6569 102 12H100ZM99 4C99.5523 4 100 4.44771 100 5H102C102 3.34315 100.657 2 99 2V4ZM5 2C3.34315 2 2 3.34315 2 5H4C4 4.44772 4.44772 4 5 4V2Z" fill="#399DFF"/>
+<path d="M96 10.5L93.5 7.5L98.5 7.5L96 10.5Z" fill="white"/>
 </svg>

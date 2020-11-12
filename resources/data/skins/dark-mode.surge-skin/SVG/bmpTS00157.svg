@@ -1,23 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="24px" height="28px" viewBox="0 0 24 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>bmpTS00157</title>
-    <defs>
-        <linearGradient x1="50%" y1="50%" x2="50%" y2="100%" id="linearGradient-1">
-            <stop stop-color="#000000" offset="0%"></stop>
-            <stop stop-color="#000000" stop-opacity="0.0876311189" offset="100%"></stop>
-        </linearGradient>
-        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
-            <stop stop-color="#FFBF00" offset="0%"></stop>
-            <stop stop-color="#FF9000" offset="100%"></stop>
-        </linearGradient>
-    </defs>
-    <g id="bmpTS00157" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <ellipse id="Oval-Copy" fill="url(#linearGradient-1)" cx="8.5" cy="14" rx="5.5" ry="6"></ellipse>
-        <circle id="Oval" fill="url(#linearGradient-2)" cx="8.5" cy="11.5" r="5.5"></circle>
-        <circle id="Oval" stroke="#999999" fill="#FFFFFF" cx="8.5" cy="11.5" r="3"></circle>
-        <g id="Group-3" transform="translate(7.000000, 11.000000)">
-            <rect id="Rectangle" fill-opacity="0.2" fill="#FFFFFF" x="0" y="0.25" width="3" height="1" rx="0.5"></rect>
-            <rect id="Rectangle-Copy" fill="#1F1F1F" x="0" y="0" width="3" height="1" rx="0.5"></rect>
-        </g>
-    </g>
+<svg width="28" height="24" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="paint0_linear" x1="11.5" y1="11" x2="11.5" y2="17" gradientUnits="userSpaceOnUse">
+<stop offset="0.520833"/>
+<stop offset="1" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint1_linear" x1="11.5" y1="3" x2="11.5" y2="14" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFBF00"/>
+<stop offset="1" stop-color="#FF9000"/>
+</linearGradient>
+</defs>
+<path d="M11.5 17C14.5376 17 17 14.3137 17 11C17 7.68629 14.5376 5 11.5 5C8.46243 5 6 7.68629 6 11C6 14.3137 8.46243 17 11.5 17Z" fill="url(#paint0_linear)"/>
+<path d="M11.5 14C14.5376 14 17 11.5376 17 8.5C17 5.46243 14.5376 3 11.5 3C8.46243 3 6 5.46243 6 8.5C6 11.5376 8.46243 14 11.5 14Z" fill="url(#paint1_linear)"/>
+<path d="M14.5 8.5C14.5 10.1569 13.1569 11.5 11.5 11.5C9.84315 11.5 8.5 10.1569 8.5 8.5C8.5 6.84315 9.84315 5.5 11.5 5.5C13.1569 5.5 14.5 6.84315 14.5 8.5Z" fill="#EEEEEE" stroke="#979797"/>
+<path opacity="0.2" d="M12.5 8.25L10.5 8.25C10.2239 8.25 10 8.47386 10 8.75C10 9.02614 10.2239 9.25 10.5 9.25L12.5 9.25C12.7761 9.25 13 9.02614 13 8.75C13 8.47386 12.7761 8.25 12.5 8.25Z" fill="#EEEEEE"/>
+<path d="M12.5 8L10.5 8C10.2239 8 10 8.22386 10 8.5C10 8.77614 10.2239 9 10.5 9L12.5 9C12.7761 9 13 8.77614 13 8.5C13 8.22386 12.7761 8 12.5 8Z" fill="#1F1F1F"/>
 </svg>

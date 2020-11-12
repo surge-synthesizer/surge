@@ -1,0 +1,81 @@
+<svg width="48" height="282" viewBox="0 0 48 282" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path opacity="0.33" d="M9 276L9 232L15 232L9 276Z" fill="#FF9300"/>
+<path d="M1 276L1 277L15 277L15 276L1 276Z" fill="#FF9300"/>
+<path d="M1 231L1 232L15 232L15 231L1 231Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M9 226L9 282L7 282L7 226L9 226Z" fill="#FF9300"/>
+<path d="M8 282L8 226" stroke="#FF9300" stroke-width="2"/>
+<path opacity="0.33" d="M25 276L25 232L31 232L25 276Z" fill="#FF9300"/>
+<path d="M17 276L17 277L31 277L31 276L17 276Z" fill="#FF9300"/>
+<path d="M17 231L17 232L31 232L31 231L17 231Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M25 226L25 282L23 282L23 226L25 226Z" fill="#FF9300"/>
+<path d="M24 282L24 226" stroke="#9DAADD" stroke-width="2"/>
+<path opacity="0.33" d="M41 276L41 232L47 232L41 276Z" fill="#1437B8"/>
+<path d="M33 276L33 277L47 277L47 276L33 276Z" fill="#1437B8"/>
+<path d="M33 231L33 232L47 232L47 231L33 231Z" fill="#1437B8"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M41 226L41 282L39 282L39 226L41 226Z" fill="#1437B8"/>
+<path d="M40 282L40 226" stroke="#1437B8" stroke-width="2"/>
+<path opacity="0.33" d="M9 201L9 157L15 157L9 201Z" fill="#FF9300"/>
+<path d="M1 201L1 202L15 202L15 201L1 201Z" fill="#FF9300"/>
+<path d="M1 156L1 157L15 157L15 156L1 156Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M9 151L9 207L7 207L7 151L9 151Z" fill="#FF9300"/>
+<path d="M8 207L8 151" stroke="#FF9300" stroke-width="2"/>
+<path opacity="0.33" d="M25 201L25 157L31 157L25 201Z" fill="#FF9300"/>
+<path d="M17 201L17 202L31 202L31 201L17 201Z" fill="#FF9300"/>
+<path d="M17 156L17 157L31 157L31 156L17 156Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M25 151L25 207L23 207L23 151L25 151Z" fill="#FF9300"/>
+<path d="M24 207L24 151" stroke="#9DAADD" stroke-width="2"/>
+<path opacity="0.8" d="M41 201L41 157L47 157L41 201Z" fill="#1437B8"/>
+<path d="M33 201L33 202L47 202L47 201L33 201Z" fill="#1437B8"/>
+<path d="M33 156L33 157L47 157L47 156L33 156Z" fill="#1437B8"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M41 151L41 207L39 207L39 151L41 151Z" fill="#1437B8"/>
+<path d="M40 207L40 151" stroke="#1437B8" stroke-width="2"/>
+<path opacity="0.33" d="M9 68L9 7L15 7L9 68Z" fill="#FF9300"/>
+<path d="M1 68L1 69L15 69L15 68L1 68Z" fill="#FF9300"/>
+<path d="M1 6L1 7L15 7L15 6L1 6Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M9 1L9 74L7 74L7 1L9 1Z" fill="#FF9300"/>
+<path d="M8 74L8 1" stroke="#FF9300" stroke-width="2"/>
+<path opacity="0.33" d="M25 68L25 7L31 7L25 68Z" fill="#FF9300"/>
+<path d="M17 68L17 69L31 69L31 68L17 68Z" fill="#FF9300"/>
+<path d="M17 6L17 7L31 7L31 6L17 6Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M25 1L25 74L23 74L23 1L25 1Z" fill="#FF9300"/>
+<path d="M24 74L24 1" stroke="#9DAADD" stroke-width="2"/>
+<path opacity="0.33" d="M46.4484 7.5L41.5 57.8088L41.5 7.5L46.4484 7.5Z" fill="#FF9300" stroke="#FF9300"/>
+<mask id="path-42-inside-1" fill="white">
+<path d="M33 68L33 69L47 69L47 68L33 68Z"/>
+</mask>
+<path d="M33 68L33 69L47 69L47 68L33 68Z" fill="#FF9300"/>
+<path d="M33 69L32 69L32 70L33 70L33 69ZM33 68L33 67L32 67L32 68L33 68ZM47 68L48 68L48 67L47 67L47 68ZM47 69L47 70L48 70L48 69L47 69ZM34 69L34 68L32 68L32 69L34 69ZM33 69L47 69L47 67L33 67L33 69ZM46 68L46 69L48 69L48 68L46 68ZM47 68L33 68L33 70L47 70L47 68Z" fill="#FF9300" mask="url(#path-42-inside-1)"/>
+<mask id="path-44-inside-2" fill="white">
+<path d="M33 6L33 7L47 7L47 6L33 6Z"/>
+</mask>
+<path d="M33 6L33 7L47 7L47 6L33 6Z" fill="#FF9300"/>
+<path d="M33 7L32 7L32 8L33 8L33 7ZM33 6L33 5L32 5L32 6L33 6ZM47 6L48 6L48 5L47 5L47 6ZM47 7L47 8L48 8L48 7L47 7ZM34 7L34 6L32 6L32 7L34 7ZM33 7L47 7L47 5L33 5L33 7ZM46 6L46 7L48 7L48 6L46 6ZM47 6L33 6L33 8L47 8L47 6Z" fill="#FF9300" mask="url(#path-44-inside-2)"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M41 1L41 74L39 74L39 1L41 1Z" fill="#FF9300" stroke="#FF9300" stroke-width="2"/>
+<path d="M40 74L40 1" stroke="#FF9300" stroke-width="2"/>
+<path opacity="0.33" d="M9 115.523L9.00001 82L15 82L9 115.523Z" fill="#FF9300"/>
+<path opacity="0.33" d="M7 109.477L6.99999 143L0.999999 143L7 109.477Z" fill="#FF9300"/>
+<path d="M15 143L15 144L1 144L1 143L15 143Z" fill="#FF9300"/>
+<path d="M15 81L15 82L1 82L1 81L15 81Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M7 76L7 149L9 149L9 76L7 76Z" fill="#FF9300"/>
+<path d="M8 149L8 76" stroke="#FF9300" stroke-width="2"/>
+<path opacity="0.33" d="M25 115.523L25 82L31 82L25 115.523Z" fill="#FF9300"/>
+<path opacity="0.33" d="M23 109.477L23 143L17 143L23 109.477Z" fill="#FF9300"/>
+<path d="M31 143L31 144L17 144L17 143L31 143Z" fill="#FF9300"/>
+<path d="M31 81L31 82L17 82L17 81L31 81Z" fill="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M23 76L23 149L25 149L25 76L23 76Z" fill="#FF9300"/>
+<path d="M24 149L24 76" stroke="#9DAADD" stroke-width="2"/>
+<path opacity="0.33" d="M46.4026 82.5L41.5 109.891L41.5 82.5L46.4026 82.5Z" fill="#FF9300" stroke="#FF9300"/>
+<path opacity="0.33" d="M33.5974 142.5L38.5 115.109L38.5 142.5L33.5974 142.5Z" fill="#FF9300" stroke="#FF9300"/>
+<mask id="path-62-inside-3" fill="white">
+<path d="M47 143L47 144L33 144L33 143L47 143Z"/>
+</mask>
+<path d="M47 143L47 144L33 144L33 143L47 143Z" fill="#FF9300"/>
+<path d="M47 144L48 144L48 145L47 145L47 144ZM47 143L47 142L48 142L48 143L47 143ZM33 143L32 143L32 142L33 142L33 143ZM33 144L33 145L32 145L32 144L33 144ZM46 144L46 143L48 143L48 144L46 144ZM47 144L33 144L33 142L47 142L47 144ZM34 143L34 144L32 144L32 143L34 143ZM33 143L47 143L47 145L33 145L33 143Z" fill="#FF9300" mask="url(#path-62-inside-3)"/>
+<mask id="path-64-inside-4" fill="white">
+<path d="M47 81L47 82L33 82L33 81L47 81Z"/>
+</mask>
+<path d="M47 81L47 82L33 82L33 81L47 81Z" fill="#FF9300"/>
+<path d="M47 82L48 82L48 83L47 83L47 82ZM47 81L47 80L48 80L48 81L47 81ZM33 81L32 81L32 80L33 80L33 81ZM33 82L33 83L32 83L32 82L33 82ZM46 82L46 81L48 81L48 82L46 82ZM47 82L33 82L33 80L47 80L47 82ZM34 81L34 82L32 82L32 81L34 81ZM33 81L47 81L47 83L33 83L33 81Z" fill="#FF9300" mask="url(#path-64-inside-4)"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M39 76L39 149L41 149L41 76L39 76Z" fill="#FF9300" stroke="#FF9300" stroke-width="2"/>
+<path d="M40 149L40 76" stroke="#FF9300" stroke-width="2"/>
+</svg>

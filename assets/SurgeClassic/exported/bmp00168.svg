@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="106px" height="18px" viewBox="0 0 106 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <desc>Created with Lunacy</desc>
+<svg width="106px" height="18px" viewbox="0 0 106 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <path d="M0 0L106 0L106 18L0 18L0 0Z" transform="translate(0 3.9339066E-05)" id="path_1" />
     <rect width="106" height="18" id="artboard_1" />
     <clipPath id="clip_1">
       <use xlink:href="#artboard_1" clip-rule="evenodd" />
     </clipPath>
+    <clipPath id="mask_1">
+      <use xlink:href="#path_1" />
+    </clipPath>
   </defs>
   <g id="bmp00168" clip-path="url(#clip_1)">
-    <path d="M2.75098 0L5.501 4.761L0 4.76097L2.75098 0L2.75098 0L2.75098 0Z" transform="matrix(0.433516 -0.86216646 0.7362716 0.5066261 93.90796 9.118927)" id="Shape" fill="#FF9A16" stroke="none" />
-    <path d="M0 6.197C0 4.486 0.487515 3.025 1.46442 1.815C2.44039 0.605 3.6198 0 5.00078 0L115 0C116.381 0 117.56 0.605 118.537 1.815C119.512 3.025 120 4.486 120 6.197C120 7.908 119.512 9.369 118.537 10.579C117.56 11.789 116.381 12.394 115 12.394L5.00078 12.394C3.6198 12.394 2.44039 11.789 1.46442 10.579C0.487515 9.369 0 7.908 0 6.197L0 6.197L0 6.197L0 6.197L0 6.197Z" transform="matrix(0.854419 -0.000876 0 1 1.5906982 2.713562)" id="Rectangle#32" fill="#F4F4F5" fill-opacity="0" stroke="#5C5C5C" stroke-width="1" />
+    <path d="M0 0L106 0L106 18L0 18L0 0Z" transform="translate(0 3.9339066E-05)" id="Background" fill="none" fill-rule="evenodd" stroke="none" />
+    <g clip-path="url(#mask_1)">
+      <path d="M3.5 1L99.5 1L99.5 0L3.5 0L3.5 1L3.5 1ZM102 3.5L102 11.5L103 11.5L103 3.5L102 3.5L102 3.5ZM99.5 14L3.5 14L3.5 15L99.5 15L99.5 14L99.5 14ZM1 11.5L1 3.5L0 3.5L0 11.5L1 11.5L1 11.5ZM3.5 14C2.11929 14 1 12.8807 1 11.5L0 11.5C0 13.433 1.56701 15 3.5 15L3.5 14L3.5 14ZM102 11.5C102 12.8807 100.881 14 99.5 14L99.5 15C101.433 15 103 13.433 103 11.5L102 11.5L102 11.5ZM99.5 1C100.881 1 102 2.11929 102 3.5L103 3.5C103 1.567 101.433 0 99.5 0L99.5 1L99.5 1ZM3.5 0C1.567 0 0 1.567 0 3.5L1 3.5C1 2.11929 2.11929 1 3.5 1L3.5 0L3.5 0Z" transform="translate(0.5 1.5000393)" id="Shape" fill="#4B515D" fill-rule="evenodd" stroke="none" />
+      <path d="M2.5 4.05841L0 0L5 0L2.5 4.05841L2.5 4.05841Z" transform="translate(94.5 7.0454597)" id="Shape" fill="#FF9300" fill-rule="evenodd" stroke="none" />
+    </g>
   </g>
 </svg>

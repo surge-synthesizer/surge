@@ -12,11 +12,11 @@ namespace Colors
    namespace Dialog
    {
       const Surge::Skin::Color Background("dialog.background", 205, 206, 212),
-                               Border("dialog.border", 160, 164, 183);
+                               Border("dialog.border", 151, 151, 151);
 
       namespace Titlebar
       {
-         const Surge::Skin::Color Background("dialog.titlebar.background", 160, 164, 183),
+         const Surge::Skin::Color Background("dialog.titlebar.background", 151, 151, 151),
                                   Text("dialog.titlebar.text", 255, 255, 255);
       }
       namespace Button

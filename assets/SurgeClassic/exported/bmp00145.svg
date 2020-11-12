@@ -1,39 +1,32 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="20px" height="140px" version="1.1" viewBox="0 0 20 140" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
- <metadata>
-  <rdf:RDF>
-   <cc:Work rdf:about="">
-    <dc:format>image/svg+xml</dc:format>
-    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:title/>
-   </cc:Work>
-  </rdf:RDF>
- </metadata>
- <g fill="none" fill-rule="evenodd">
-  <rect id="Rectangle" width="20" height="140" fill="#C4C5C8"/>
-  <rect width="20" height="133" fill="#52565E"/>
-  <rect width="20" height="133"/>
-  <g fill="#FF9A10" fill-opacity=".25">
-   <rect x="13" y="112" width="6" height="14"/>
-   <rect x="7" y="98" width="6" height="14"/>
-   <rect x="1" y="84" width="6" height="14"/>
-   <rect x="13" y="70" width="6" height="14"/>
-   <rect x="7" y="56" width="6" height="14"/>
-   <rect x="1" y="42" width="6" height="14"/>
-   <rect x="13" y="28" width="6" height="14"/>
-   <rect x="7" y="14" width="6" height="14"/>
-   <rect x="1" width="6" height="14"/>
-  </g>
-  <g fill="#fff" fill-opacity=".7">
-   <path d="m20 14h-20c4.4795-9.3333 11.146-14 20-14v14z"/>
-   <path d="m20 42h-20c8 0 14.667-4.6667 20-14v14z"/>
-   <polygon points="0 28 20 14 20 28"/>
-   <polygon points="0 42 0 56 20 56 20 49"/>
-   <path d="m-3.5527e-15 56v14h20v-7c-6 0-12.667-2.3333-20-7z"/>
-   <path d="m-2.8422e-14 70v14h20v-7c-10.667 0-17.333-2.3333-20-7z"/>
-   <polygon points="0 91 0 98 20 98"/>
-   <path d="m0 105v7h20c-10.718-2.0815-16.667-4.1625-20-7z"/>
-   <path d="m0 119v7h20c-10.667-1.1667-17.333-3.5-20-7z"/>
-  </g>
- </g>
+<svg width="20" height="160" viewBox="0 0 20 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="20" height="160" fill="#393B45"/>
+<rect width="20" height="16" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 16H0C4.4795 5.33337 11.146 0 20 0V16Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M7 0H1V16H7V0Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 16)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 32L20 16V32H0Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M13 16H7V32H13V16Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 32)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 48H0C8 48 14.667 42.6666 20 32V48Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M19 32H13V48H19V32Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 48)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 48V64H20V56L0 48Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M7 48H1V64H7V48Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 64)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 64V80H20V72C14 72 7.333 69.3334 0 64H0Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M13 64H7V80H13V64Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 80)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 80V96H20V88C9.333 88 2.667 85.3334 0 80H0Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M19 80H13V96H19V80Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 96)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 104V112H20L0 104Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M7 96H1V112H7V96Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 112)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 120V128H20C9.282 125.621 3.333 123.243 0 120Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M13 112H7V128H13V112Z" fill="#FF9300"/>
+<rect width="20" height="16" transform="translate(0 128)" fill="white" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 136V144H20C9.333 142.667 2.667 140 0 136Z" fill="#E3E3E3"/>
+<path opacity="0.35" d="M19 128H13V144H19V128Z" fill="#FF9300"/>
+<rect y="144" width="20" height="16" fill="white" fill-opacity="0.2"/>
+<rect y="152" width="20" height="8" fill="#E3E3E3"/>
 </svg>

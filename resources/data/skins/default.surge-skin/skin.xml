@@ -1,10 +1,13 @@
+<!-- This skin exists to make sure we can fall back on defaults with no assets and an empty XML. The defaults are built into the DLL -->
 <surge-skin name="Surge Classic" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
-  <!-- This skin exists to make sure we can fall back on defaults with no assets and an empty XML. The defaults are built into the DLL -->
+
   <globals>
     <defaultimage directory="SVG/"/>
   </globals>
+
   <component-classes>
   </component-classes>
+
   <controls>
   </controls>
 </surge-skin>

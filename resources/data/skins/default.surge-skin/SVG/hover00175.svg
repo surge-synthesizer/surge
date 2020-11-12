@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="0 0 24 10" width="24" height="10" xmlns="http://www.w3.org/2000/svg">
-  <path d="M0 0L24 0L24 10L0 10L0 0L0 0L0 0L0 0Z" id="Rectangle#77" fill="#824E0A" fill-rule="evenodd" stroke="none"/>
+<svg width="24" height="10" viewBox="0 0 24 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 0H24V10H0V0Z" fill="#FF9A11" fill-opacity="0.5"/>
 </svg>

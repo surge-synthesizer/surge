@@ -1,8 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="22px" height="45px" viewBox="0 0 22 45" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <g id="bmp00143" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-    <rect id="Rectangle" fill="#AAFFCC" x="4" y="4" width="4" height="7"/>
-    <rect id="Rectangle" fill="#AAFFCC" x="9" y="19" width="4" height="7"/>
-    <rect id="Rectangle" fill="#AAFFCC" x="14" y="34" width="4" height="7"/>
-  </g>
+<svg width="22" height="45" viewBox="0 0 22 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 4H4V11H8V4Z" fill="#40FF60"/>
+<path d="M13 19H9V26H13V19Z" fill="#40FF60"/>
+<path d="M18 34H14V41H18V34Z" fill="#40FF60"/>
 </svg>

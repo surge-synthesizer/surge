@@ -1,14 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="14px" height="32px" viewBox="0 0 14 32" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <desc>Created with Lunacy</desc>
-  <defs>
-    <rect width="14" height="32" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-  </defs>
-  <g id="bmp00179" clip-path="url(#clip_1)">
-    <path d="M4.56708 0L2.56708 0L2.56708 2.99925L0 3.00053L3.56708 7.28102L7.1346 3L4.56708 3L4.56708 0L4.56708 0L4.56708 0Z" transform="translate(3.5 20)" id="Combined-Shape#1" fill="#113363" fill-rule="evenodd" stroke="#FF8F02" stroke-width="1" />
-    <path d="M4.56708 0L2.56708 0L2.56708 2.99925L0 3.00053L3.56708 7.28103L7.1346 3L4.56708 3L4.56708 0L4.56708 0L4.56708 0Z" transform="translate(3.5 4)" id="Combined-Shape" fill="#2E86FE" fill-rule="evenodd" stroke="#123462" stroke-width="1" />
-  </g>
+<svg width="14" height="32" viewBox="0 0 14 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8.06708 4H6.06708V6.99925L3.5 7.00053L7.06708 11.281L10.6346 7H8.06708V4Z" fill="#4487F6" stroke="#1A3460"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8.06708 20H6.06708V22.9992L3.5 23.0005L7.06708 27.281L10.6346 23H8.06708V20Z" fill="#1A3460" stroke="#FF9000"/>
 </svg>

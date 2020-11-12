@@ -138,7 +138,7 @@ Connector & Connector::asMixerRoute() noexcept
 Connector & Connector::asJogPlusMinus() noexcept
 {
    payload->defaultComponent = Connector::HSWITCH2;
-   payload->w = 37;
+   payload->w = 32;
    payload->h = 12;
    return withHSwitch2Properties(IDB_BUTTON_MINUSPLUS, 2, 1, 2);
 }
