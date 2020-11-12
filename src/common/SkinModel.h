@@ -261,7 +261,7 @@ namespace Surge
          extern Surge::Skin::Connector amplitude, attack, decay, deform, delay, hold, phase, rate, release, shape, sustain, triggermode, unipolar;
          extern Surge::Skin::Connector lfoMenuButton, msegEditButton, lfoLabel;
       }
-      namespace Mix {
+      namespace Mixer {
          extern Surge::Skin::Connector level_noise, level_o1, level_o2, level_o3, level_prefiltergain, level_ring12, level_ring23,
           mute_noise, mute_o1, mute_o2, mute_o3, mute_ring12, mute_ring23, route_noise, route_o1, route_o2, route_o3, route_ring12,
           route_ring23, solo_noise, solo_o1, solo_o2, solo_o3, solo_ring12, solo_ring23;

@@ -171,7 +171,7 @@ namespace Surge
                .withBackground(IDB_LFO_PRESETS);
       }
 
-      namespace Mix { // Done
+      namespace Mixer { // Done
          Connector mixerPanel = Connector( "mixer.panel", 154, 264, Connector::GROUP );
 
          Connector mute_o1 = Connector( "mixer.mute_o1", 0, 0 ).asMixerMute().inParent( "mixer.panel" );
