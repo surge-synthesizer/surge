@@ -143,13 +143,13 @@ namespace Surge
       }
 
       namespace LFO { // DONE
-         Connector lfoRatePanel = Connector( "lfo.main.panel", 23, 478, Connector::GROUP );
+         Connector lfoRatePanel = Connector( "lfo.main.panel", 28, 478, Connector::GROUP );
          Connector rate = Connector( "lfo.rate", 0, 0 ).asHorizontal().inParent("lfo.main.panel");
          Connector phase = Connector( "lfo.phase", 0, 21 ).asHorizontal().inParent("lfo.main.panel");
          Connector deform = Connector( "lfo.deform", 0, 42 ).asHorizontal().inParent("lfo.main.panel");
          Connector amplitude = Connector( "lfo.amplitude", 0, 63 ).asHorizontal().inParent("lfo.main.panel");
 
-         Connector lfoEnvelopePanel = Connector( "lfo.envelope.panel", 613, 494, Connector::GROUP );
+         Connector lfoEnvelopePanel = Connector( "lfo.envelope.panel", 616, 494, Connector::GROUP );
          Connector delay = Connector( "lfo.delay", 0, 0 ).inParent( "lfo.envelope.panel" );
          Connector attack = Connector( "lfo.attack", 20, 0 ).inParent( "lfo.envelope.panel" );
          Connector hold = Connector( "lfo.hold", 40, 0 ).inParent( "lfo.envelope.panel" );

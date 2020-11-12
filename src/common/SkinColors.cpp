@@ -262,8 +262,8 @@ namespace Colors
 
    namespace NumberField
    {
-      const Surge::Skin::Color Text("numberfield.text", 15, 15, 15),
-                               TextHover("numberfield.text.hover", 90, 60, 30);
+      const Surge::Skin::Color Text("numberfield.text", 0, 0, 0),
+                               TextHover("numberfield.text.hover", 0, 0, 0);
    }
 
    namespace Osc
@@ -297,7 +297,7 @@ namespace Colors
    {
       namespace PitchBendRange
       {
-         const Surge::Skin::Color Text("scene.pbrange.text", 255, 153, 21),
+         const Surge::Skin::Color Text("scene.pbrange.text", 255, 147, 0),
                                   TextHover("scene.pbrange.text.hover", 255, 255, 255);
       }
       namespace SplitPoint
@@ -308,7 +308,7 @@ namespace Colors
       namespace KeytrackRoot
       {
          const Surge::Skin::Color Text("scene.keytrackroot.text", 0, 0, 0),
-                                  TextHover("scene.keytrackroot.text.hover", 255, 255, 255);
+                                  TextHover("scene.keytrackroot.text.hover", 0, 0, 0);
       }
    }
 
