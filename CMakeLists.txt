@@ -947,6 +947,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTests.cpp
     src/headless/UnitTestUtilities.cpp
     src/headless/UnitTestsDSP.cpp
+    src/headless/UnitTestsFLT.cpp
     src/headless/UnitTestsFX.cpp
     src/headless/UnitTestsIO.cpp
     src/headless/UnitTestsMIDI.cpp
