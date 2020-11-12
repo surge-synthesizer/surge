@@ -231,3 +231,22 @@ and then in a fourth keyboard start `jack-keyboard`. The connect-to option shoul
 Surge as an endpoint. Pick it and you can play the GUI keyboard and hear and watch the
 stdout go by.
 
+To run valgrind:
+
+```
+./build-linux.sh build --project=headless
+valgrind --leak-check=yes build/surge-headless
+```
+
+and remember
+
+```
+#include <valgrind/memcheck.h>
+#include <iostream>
+ 
+...
+
+  int notDef;
+  if( auto v = VALGRIND_CHECK_MEM_IS_DEFINED(notDef) )
+    std::cout << "Memory notDef is not defined at " << v << std::cout
+```
