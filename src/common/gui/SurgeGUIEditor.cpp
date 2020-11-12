@@ -4785,6 +4785,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
       what = "MSEG";
    if( ls_stepseq == shapev)
       what = "Step Seq";
+   if (ls_envelope == shapev)
+      what = "Env";
+   if (ls_function == shapev) 
+      what = "Env"; //Change this later
 
    COptionMenu* lfoSubMenu =
        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
