@@ -228,13 +228,16 @@ namespace ObxdFilter {
       // damping
       // f->R[s1] =atan(s1*rcor24)*rcor24inv;
       __m128 s1_rcor24 = _mm_mul_ps(f->R[s1], f->C[rcor24]);
-      
+
       float s1_rcor24_arr[ssew];
       _mm_store_ps(s1_rcor24_arr, s1_rcor24);
       
       for (int i = 0; i < ssew; i++)
       {
-         s1_rcor24_arr[i] = atan(s1_rcor24_arr[i]);
+         if( f->active[i] )
+            s1_rcor24_arr[i] = atan(s1_rcor24_arr[i]);
+         else
+            s1_rcor24_arr[i] = 0.f;
       }
       
       s1_rcor24 = _mm_load_ps(s1_rcor24_arr);
