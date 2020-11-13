@@ -3333,7 +3333,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             ((CSurgeSlider*)control)->setModCurrent(synth->isActiveModulation(p->id, thisms), synth->isBipolarModulation(thisms));
             // control->setGhostValue(p->get_value_f01());
             oscdisplay->invalid();
-            return 1;
+            return 0;
          }
          else
          {
