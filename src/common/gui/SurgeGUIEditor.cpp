@@ -316,7 +316,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
    for( int i=0; i<8; ++i )
    {
       selectedFX[i] = -1;
-      fxPresetName[i] = "Off";
+      fxPresetName[i] = "";
    }
 
    _effect = effect;
