@@ -454,7 +454,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
       {
          char label[32];
 
-         sprintf(label, "lfo%i_type", l);
+         sprintf(label, "lfo%i_shape", l);
          a->push_back(scene[sc].lfo[l].shape.assign(p_id.next(), id_s++, label, "Type", ct_lfotype,
                                                     Surge::Skin::LFO::shape, sc_id, cg_LFO, ms_lfo1 + l));
 
