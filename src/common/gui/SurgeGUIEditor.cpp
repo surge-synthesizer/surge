@@ -1687,10 +1687,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
     */
    CPoint tr;
    frame->getCurrentMouseLocation(tr);
-   frame->getTransform().transform( tr );
-   auto v = frame->getViewAt(tr);
+
+   // OK to *find* the component we need to look in transformed coordinates
+   CPoint ttr = tr;
+   frame->getTransform().transform( ttr );
+   auto v = frame->getViewAt(ttr);
+
    if( v )
    {
+      // but to *hover* the component we need to do it in 100-scale coordinates
       v->onMouseEntered(tr, 0);
    }
 
