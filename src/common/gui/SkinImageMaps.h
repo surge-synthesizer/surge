@@ -40,7 +40,6 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    res["FADERH_HANDLE"] = 153;
    res["FADERH_BG"] = 154;
    res["FADERV_HANDLE"] = 157;
-   res["ABOUT"] = 158;
    res["FILTERSUBTYPE"] = 160;
    res["CHARACTER"] = 161;
    res["ENVMODE"] = 162;
@@ -67,6 +66,7 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    res["MODSRC_SHOW_LFO"] = 179;
    res["MSEG_EDIT_MODE"] = 307;
    res["ABOUT_LOGOS"] = 180;
+   res["ABOUT"] = 158;
    return res;
 }
 
@@ -111,7 +111,6 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert( 153 );
    allowed.insert( 154 );
    allowed.insert( 157 );
-   allowed.insert( 158 );
    allowed.insert( 160 );
    allowed.insert( 161 );
    allowed.insert( 162 );
@@ -138,6 +137,7 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert( 179 );
    allowed.insert( 307 );
    allowed.insert( 180 );
+   allowed.insert( 158 );
 
    return allowed;
 }

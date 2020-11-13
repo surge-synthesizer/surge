@@ -69,3 +69,4 @@ IDB_MSEG_NUMBERFIELDBG_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00306.svg
 IDB_MODSRC_SHOW_LFO_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00179.svg"
 IDB_MSEG_EDIT_MODE_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00307.svg"
 IDB_ABOUT_LOGOS_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00180.svg"
+IDB_ABOUT_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00158.svg"

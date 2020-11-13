@@ -11,9 +11,9 @@ open( IN, "< src/common/resource.h" );
 open( OUT , " > hacktmp.h" );
 
 while( <IN>) {
-    if( m:\#define\s+$id: )
+    if( m:\#define\s+$id\s+: )
     {
-        die "You already added this one\n";
+        die "You already added this one (resource)\n";
     }
     if( m:== /SVG: )
     {
@@ -30,9 +30,9 @@ open( IN, "< src/common/gui/SurgeBitmaps.cpp" );
 open( OUT , " > hacktmp2.h" );
 
 while( <IN>) {
-    if( m:addEntry\($id: )
+    if( m:addEntry\($id[\s,]: )
     {
-        die "You already added this one\n";
+        die "You already added this one (entry)\n";
     }
     if( m:== /SVG: )
     {
@@ -49,9 +49,9 @@ open( IN, "< src/windows/svgresources.rc" );
 open( OUT , " > hacktmp3.h" );
 
 while( <IN>) {
-    if( m:$id: )
+    if( m:${id}_SCALE_SVG: )
     {
-        die "You already added this one\n";
+        die "You already added this one (svg)\n";
     }
     print OUT;
 }
@@ -65,9 +65,9 @@ open( IN, "< src/windows/scalableresource.h" );
 open( OUT , " > hacktmp4.h" );
 
 while( <IN>) {
-    if( m:\#define $id: )
+    if( m:\#define ${id}_SCALE_SVG: )
     {
-        die "You already added this one\n";
+        die "You already added this one (scalable)\n";
     }
     print OUT;
 }

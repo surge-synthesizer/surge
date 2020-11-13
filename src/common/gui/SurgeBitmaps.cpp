@@ -46,7 +46,6 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
 {
    frame = f;
    addEntry(IDB_BG, f);
-   addEntry(IDB_ABOUT, f);
    addEntry(IDB_FILTERSUBTYPE, f);
    addEntry(IDB_RELATIVE_TOGGLE, f);
    addEntry(IDB_OSCSELECT, f);
@@ -105,6 +104,7 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_MODSRC_SHOW_LFO, f);
    addEntry(IDB_MSEG_EDIT_MODE, f);
    addEntry(IDB_ABOUT_LOGOS, f);
+   addEntry(IDB_ABOUT, f);
    // == /SVG == Do not remove this comment
 
 }
