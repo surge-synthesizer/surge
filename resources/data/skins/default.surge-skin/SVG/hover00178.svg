@@ -1,16 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="13px" height="11px" viewBox="0 0 13 11" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <desc>Created with Lunacy</desc>
-  <defs>
-    <rect width="13" height="11" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-  </defs>
-  <g id="hover00178" clip-path="url(#clip_1)">
-    <g id="LFO-Presets" transform="translate(2.500122 2.5)">
-      <path d="M0 0L8 0L8 6L0 6L0 0Z" id="Fill" fill="#FFCCAA" fill-rule="evenodd" stroke="none" />
-      <path d="M2.00001 0L6.97904 0.0115654L7.00001 1L2.02098 0.988435L2.00001 0L2.00001 0ZM0 3.05176e-05L1 3.05176e-05L1 1.00003L0 1.00003L0 3.05176e-05L0 3.05176e-05ZM6.97904 2.01157L2.00001 2L2.02099 2.98843L7.00001 3L6.97904 2.01157L6.97904 2.01157ZM0 2.00003L1 2.00003L1 3.00003L0 3.00003L0 2.00003L0 2.00003ZM2.00001 4L6.97904 4.01157L7.00001 5L2.02099 4.98843L2.00001 4L2.00001 4ZM1 4.00003L0 4.00003L0 5.00003L1 5.00003L1 4.00003L1 4.00003Z" transform="translate(0.49987793 0.49996948)" id="Hamburger" fill="#000000" fill-rule="evenodd" stroke="none" />
-    </g>
-  </g>
+<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1 4C1 2.34315 2.34315 1 4 1H9C10.6569 1 12 2.34315 12 4V9C12 10.6569 10.6569 12 9 12H4C2.34315 12 1 10.6569 1 9V4Z" fill="#E3E3E3"/>
+<path d="M2.5 4.5C2.5 3.39543 3.39543 2.5 4.5 2.5H8.5C9.60457 2.5 10.5 3.39543 10.5 4.5V8.5C10.5 9.60457 9.60457 10.5 8.5 10.5H4.5C3.39543 10.5 2.5 9.60457 2.5 8.5V4.5Z" fill="#F1BB72"/>
+<path d="M4 1.5H9V0.5H4V1.5ZM11.5 4V9H12.5V4H11.5ZM9 11.5H4V12.5H9V11.5ZM1.5 9V4H0.5V9H1.5ZM4 11.5C2.61929 11.5 1.5 10.3807 1.5 9H0.5C0.5 10.933 2.067 12.5 4 12.5V11.5ZM11.5 9C11.5 10.3807 10.3807 11.5 9 11.5V12.5C10.933 12.5 12.5 10.933 12.5 9H11.5ZM9 1.5C10.3807 1.5 11.5 2.61929 11.5 4H12.5C12.5 2.067 10.933 0.5 9 0.5V1.5ZM4 0.5C2.067 0.5 0.5 2.067 0.5 4H1.5C1.5 2.61929 2.61929 1.5 4 1.5V0.5Z" fill="#979797"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M4 4L8.97903 4.01157L9 5L4.02097 4.98843L4 4ZM8.97903 6.01157L4 6L4.02098 6.98843L9 7L8.97903 6.01157ZM4 8L8.97903 8.01157L9 9L4.02098 8.98843L4 8Z" fill="black"/>
 </svg>

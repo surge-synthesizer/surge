@@ -1,18 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="133px" height="18px" viewBox="0 0 133 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <desc>Created with Lunacy</desc>
-  <defs>
-    <linearGradient x1="0.5" y1="0" x2="0.5" y2="1" id="gradient_1">
-      <stop offset="0" stop-color="#434343" />
-      <stop offset="1" stop-color="#303030" />
-    </linearGradient>
-    <rect width="133" height="18" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-  </defs>
-  <g id="bmp00167" clip-path="url(#clip_1)">
-    <path d="M0 4L0 2C0 1.44772 0.195262 0.976311 0.585786 0.585786C0.976311 0.195262 1.44772 0 2 0L126 0C126.552 0 127.024 0.195262 127.414 0.585786C127.805 0.976311 128 1.44772 128 2L128 12C128 12.5523 127.805 13.0237 127.414 13.4142C127.024 13.8047 126.552 14 126 14L2 14C1.44772 14 0.976311 13.8047 0.585786 13.4142C0.195262 13.0237 0 12.5523 0 12L0 4L0 4L0 4Z" transform="translate(2.499939 2)" id="Rectangle#45" fill="url(#gradient_1)" stroke="#0F0F0F" stroke-width="1" />
-    <path d="M2.25091 0L4.501 3.761L0 3.761L2.25091 0L2.25091 0Z" transform="matrix(0.507381 -0.861722 0.861722 0.507381 120.86177 9.091766)" id="Shape" fill="#B4B4B4" stroke="none" />
-  </g>
+<svg width="133" height="18" viewBox="0 0 133 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="paint0_linear" x1="66" y1="2" x2="66" y2="16" gradientUnits="userSpaceOnUse">
+<stop stop-color="#434343"/>
+<stop offset="1" stop-color="#303030"/>
+</linearGradient>
+</defs>
+<path d="M2 4C2 2.89543 2.89543 2 4 2H128C129.105 2 130 2.89543 130 4V14C130 15.1046 129.105 16 128 16H4C2.89543 16 2 15.1046 2 14V4Z" fill="url(#paint0_linear)"/>
+<path d="M4 2.5H128V1.5H4V2.5ZM129.5 4V14H130.5V4H129.5ZM128 15.5H4V16.5H128V15.5ZM2.5 14V4H1.5V14H2.5ZM4 15.5C3.17157 15.5 2.5 14.8284 2.5 14H1.5C1.5 15.3807 2.61929 16.5 4 16.5V15.5ZM129.5 14C129.5 14.8284 128.828 15.5 128 15.5V16.5C129.381 16.5 130.5 15.3807 130.5 14H129.5ZM128 2.5C128.828 2.5 129.5 3.17157 129.5 4H130.5C130.5 2.61929 129.381 1.5 128 1.5V2.5ZM4 1.5C2.61929 1.5 1.5 2.61929 1.5 4H2.5C2.5 3.17157 3.17157 2.5 4 2.5V1.5Z" fill="black"/>
+<path d="M123.5 11L121 8L126 8L123.5 11Z" fill="#E3E3E3"/>
 </svg>

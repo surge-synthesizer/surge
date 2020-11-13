@@ -40,7 +40,15 @@ const char* AirWindowsEffect::group_label(int id)
       if( airwin )
       {
          static char txt[1024];
-         airwin->getEffectName(txt);
+
+         if( mapper )
+         {
+            strncpy( txt, mapper->nameAtStreamedIndex(fxdata->p[0].val.i).c_str(), 1023);
+         }
+         else
+         {
+            airwin->getEffectName(txt);
+         }
          return (const char*)txt;
       }
       else

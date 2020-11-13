@@ -1026,12 +1026,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    bool inDrag = false;
    bool inDrawDrag = false;
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
-      if( buttons & kRButton )
+      if (buttons & kRButton)
       {
          openPopup( where );
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
       }
-      if( buttons & kDoubleClick || ((buttons & kLButton) && (buttons & kControl )))
+      if (buttons & kDoubleClick)
       {
          auto tf = pxToTime( );
          auto t = tf( where.x );
@@ -1292,11 +1292,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
           */
          bool s = buttons & kShift;
          bool c = buttons & kControl;
-         if( ( s || c ) && ! snapGuard )
+         if( ( s || c )  )
          {
-            snapGuard = std::make_shared<SnapGuard>(eds, this);
+            bool wasSnapGuard = true;
+            if( ! snapGuard )
+            {
+               wasSnapGuard = false;
+               snapGuard = std::make_shared<SnapGuard>(eds, this);
+            }
             if( s ) eds->hSnap = eds->hSnapDefault;
+            else if( wasSnapGuard ) eds->hSnap = snapGuard->hSnapO;
+
             if( c ) eds->vSnap = eds->vSnapDefault;
+            else if( wasSnapGuard ) eds->vSnap = snapGuard->vSnapO;
          }
          else if( ! ( s || c ) && snapGuard )
          {
@@ -1660,7 +1668,8 @@ void MSEGControlRegion::rebuild()
    int height = getViewSize().getHeight();
    int margin = 2;
    int labelHeight = 12;
-   int controlHeight = 12;
+   int buttonHeight = 14;
+   int numfieldHeight = 12;
    int xpos = 10;
 
    // movement modes
@@ -1668,7 +1677,7 @@ void MSEGControlRegion::rebuild()
       int segWidth = 110;
       int marginPos = xpos + margin;
       int btnWidth = 94;
-      int ypos = 2;
+      int ypos = 1;
 
       // label
       auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(btnWidth, labelHeight)), "Movement Mode");
@@ -1681,9 +1690,9 @@ void MSEGControlRegion::rebuild()
       ypos += margin + labelHeight;
 
       // button
-      auto btnrect = CRect(CPoint(marginPos, ypos), CPoint(btnWidth, controlHeight));
+      auto btnrect = CRect(CPoint(marginPos, ypos - 1), CPoint(btnWidth, buttonHeight));
       auto mw =
-          new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, controlHeight, 1, 3,
+          new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, buttonHeight, 1, 3,
                         associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT), CPoint(0, 0), true);
       mw->setSkin(skin, associatedBitmapStore);
       addView(mw);
@@ -1697,8 +1706,8 @@ void MSEGControlRegion::rebuild()
    // edit mode
    {
       int segWidth = 107;
-      int btnWidth = 91;
-      int ypos = 2;
+      int btnWidth = 90;
+      int ypos = 1;
 
       auto eml = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Edit Mode");
       eml->setFont(labelFont);
@@ -1710,8 +1719,8 @@ void MSEGControlRegion::rebuild()
       ypos += margin + labelHeight;
 
       // button
-      auto btnrect = CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight));
-      auto ew = new CHSwitch2(btnrect, this, tag_edit_mode, 2, controlHeight, 1, 2,
+      auto btnrect = CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight));
+      auto ew = new CHSwitch2(btnrect, this, tag_edit_mode, 2, buttonHeight, 1, 2,
                         associatedBitmapStore->getBitmap(IDB_MSEG_EDIT_MODE), CPoint(0, 0), true);
       ew->setSkin(skin, associatedBitmapStore);
       addView(ew);
@@ -1724,7 +1733,7 @@ void MSEGControlRegion::rebuild()
    {
       int segWidth = 110;
       int btnWidth = 94;
-      int ypos = 2;
+      int ypos = 1;
 
       auto lpl = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Loop Mode");
       lpl->setFont(labelFont);
@@ -1736,8 +1745,8 @@ void MSEGControlRegion::rebuild()
       ypos += margin + labelHeight;
 
       // button
-      auto btnrect = CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight));
-      auto lw = new CHSwitch2(btnrect, this, tag_loop_mode, 3, controlHeight, 1, 3,
+      auto btnrect = CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight));
+      auto lw = new CHSwitch2(btnrect, this, tag_loop_mode, 3, buttonHeight, 1, 3,
                         associatedBitmapStore->getBitmap(IDB_MSEG_LOOP_MODES), CPoint(0, 0), true);
       lw->setSkin(skin, associatedBitmapStore);
       addView(lw);
@@ -1751,7 +1760,7 @@ void MSEGControlRegion::rebuild()
       int btnWidth = 49, editWidth = 32;
       int margin = 2;
       int segWidth = btnWidth + editWidth + 10;
-      int ypos = 2;
+      int ypos = 1;
       char svt[256];
 
       auto snapC = new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth * 2 - 5, labelHeight)), "Snap To Grid");
@@ -1763,7 +1772,7 @@ void MSEGControlRegion::rebuild()
 
       ypos += margin + labelHeight;
 
-      auto hbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_horizontal_snap,
+      auto hbut = new CSwitchControl(CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight)), this, tag_horizontal_snap,
                                      associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
       hbut->setSkin(skin, associatedBitmapStore);
       addView(hbut);
@@ -1771,14 +1780,14 @@ void MSEGControlRegion::rebuild()
 
       snprintf(svt, 255, "%d", (int)round(1.f / eds->hSnapDefault));
       
-      auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
 
       /*
-       * CNF responds to skih objects and we are not skin driven here. We could to two things
+       * CNF responds to skin objects and we are not skin driven here. We could do two things
        * 1. Add a lot of ifs to CNF
-       * 2. Make a proxky skin control
+       * 2. Make a proxy skin control
        * I choose 2.
        */
+      auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
       auto cnfSkinCtrl = std::make_shared<Surge::UI::Skin::Control>();
       cnfSkinCtrl->allprops["bg_id"] = std::to_string( IDB_MSEG_NUMBERFIELDBG );
       cnfSkinCtrl->allprops["text_color"] = Colors::MSEGEditor::NumberField::Text.name;
@@ -1794,7 +1803,7 @@ void MSEGControlRegion::rebuild()
 
       xpos += segWidth;
 
-      auto vbut = new CSwitchControl(CRect(CPoint(xpos, ypos), CPoint(btnWidth, controlHeight)), this, tag_vertical_snap,
+      auto vbut = new CSwitchControl(CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight)), this, tag_vertical_snap,
                                      associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP));
       vbut->setSkin(skin, associatedBitmapStore);
       addView( vbut );
@@ -1802,7 +1811,7 @@ void MSEGControlRegion::rebuild()
 
       snprintf(svt, 255, "%d", (int)round( 1.f / eds->vSnapDefault));
 
-      auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, controlHeight));
+      auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
       auto* vnf = new CNumberField(vsrect, this, tag_vertical_value, nullptr /*, ref to storage?*/);
       vnf->setControlMode(cm_mseg_snap_v);
       vnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);

@@ -1,29 +1,40 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="37px" height="24px" viewBox="0 0 37 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <title>bmp00149</title>
-  <desc>Created with Sketch.</desc>
-  <g id="bmp00149" stroke="#ffccaa" stroke-width="1" fill="none" fill-rule="evenodd">
-    <g id="Group-3" transform="translate(5.000000, 2.000000)" fill="#000000">
-      <g id="Group-2" transform="translate(4.500000, 4.000000) scale(-1, 1) translate(-4.500000, -4.000000) translate(0.000000, 0.500000)">
-        <path d="M4,4.5 L0,4.5 L0,2.5 L4,2.5 L4,0.5 L9,3.5 L4,6.5 L4,4.5 Z" id="Combined-Shape"/>
-      </g>
-    </g>
-    <g id="Group-3" transform="translate(5.000000, 14.000000)" fill="#000000">
-      <g id="Group-2" transform="translate(18.000000, 0.500000)">
-        <path d="M4,4.5 L0,4.5 L0,2.5 L4,2.5 L4,0.5 L8.73684211,3.5 L4,6.5 L4,4.5 Z" id="Combined-Shape"/>
-      </g>
-    </g>
-  </g>
-  <g id="g-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" transform="">
-    <g id="g-2" transform="translate(5.000000, 2.000000)" fill="#000000">
-      <g id="g-3" transform="translate(4.500000, 4.000000) scale(-1, 1) translate(-4.500000, -4.000000) translate(0.000000, 0.500000)">
-        <path d="M4,4.5 L0,4.5 L0,2.5 L4,2.5 L4,0.5 L9,3.5 L4,6.5 L4,4.5 Z" id="path-1"/>
-      </g>
-    </g>
-    <g id="g-2" transform="translate(5.000000, 14.000000)" fill="#000000">
-      <g id="g-3" transform="translate(18.000000, 0.500000)">
-        <path d="M4,4.5 L0,4.5 L0,2.5 L4,2.5 L4,0.5 L8.73684211,3.5 L4,6.5 L4,4.5 Z" id="path-1"/>
-      </g>
-    </g>
-  </g>
+<svg width="32" height="24" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<clipPath id="clip0">
+<path d="M17.5 10L27.5 10C28.6046 10 29.5 9.10457 29.5 8L29.5 4C29.5 2.89543 28.6046 2 27.5 2L17.5 2L17.5 10Z" fill="white"/>
+</clipPath>
+<clipPath id="clip1">
+<path d="M14.5 10L4.5 10C3.39543 10 2.5 9.10457 2.5 8L2.5 4C2.5 2.89543 3.39543 2 4.5 2L14.5 2L14.5 10Z" fill="white"/>
+</clipPath>
+<clipPath id="clip2">
+<path d="M14.5 22L4.5 22C3.39543 22 2.5 21.1046 2.5 20L2.5 16C2.5 14.8954 3.39543 14 4.5 14L14.5 14L14.5 22Z" fill="white"/>
+</clipPath>
+<clipPath id="clip3">
+<path d="M17.5 22L27.5 22C28.6046 22 29.5 21.1046 29.5 20L29.5 16C29.5 14.8954 28.6046 14 27.5 14L17.5 14L17.5 22Z" fill="white"/>
+</clipPath>
+</defs>
+<path d="M31.5 8.5C31.5 10.1569 30.1569 11.5 28.5 11.5L3.5 11.5C1.84315 11.5 0.5 10.1569 0.5 8.5L0.500001 3.5C0.500001 1.84314 1.84315 0.499997 3.5 0.499998L28.5 0.5C30.1569 0.5 31.5 1.84315 31.5 3.5L31.5 8.5Z" fill="#E3E3E3"/>
+<path d="M28.5 11L3.5 11L3.5 12L28.5 12L28.5 11ZM1 8.5L1 3.5L6.99382e-07 3.5L2.62268e-07 8.5L1 8.5ZM3.5 0.999998L28.5 1L28.5 -2.62268e-07L3.5 -2.44784e-06L3.5 0.999998ZM31 3.5L31 8.5L32 8.5L32 3.5L31 3.5ZM28.5 1C29.8807 1 31 2.11929 31 3.5L32 3.5C32 1.567 30.433 -9.32805e-08 28.5 -2.62268e-07L28.5 1ZM1 3.5C1 2.11929 2.11929 0.999997 3.5 0.999998L3.5 -2.44784e-06C1.567 -2.61683e-06 8.6837e-07 1.567 6.99382e-07 3.5L1 3.5ZM3.5 11C2.11929 11 1 9.88071 1 8.5L2.62268e-07 8.5C9.32804e-08 10.433 1.56701 12 3.5 12L3.5 11ZM28.5 12C30.433 12 32 10.433 32 8.5L31 8.5C31 9.88071 29.8807 11 28.5 11L28.5 12Z" fill="#979797"/>
+<g clip-path="url(#clip0)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M23.5 9L27.5 6L23.5 3L23.5 5L19.5 5L19.5 7L23.5 7L23.5 9Z" fill="black"/>
+</g>
+<g opacity="0.75">
+<rect x="16.5" y="2" width="8" height="1" transform="rotate(90 16.5 2)" fill="#979797"/>
+</g>
+<path d="M2.5 8C2.5 9.10457 3.39543 10 4.5 10L14.5 10L14.5 2L4.5 2C3.39543 2 2.5 2.89543 2.5 4L2.5 8Z" fill="#FF9A11" fill-opacity="0.5"/>
+<g clip-path="url(#clip1)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 9L4.5 6L8.5 3L8.5 5L12.5 5L12.5 7L8.5 7L8.5 9Z" fill="black"/>
+</g>
+<path d="M0.500001 20.5C0.5 22.1569 1.84315 23.5 3.5 23.5L28.5 23.5C30.1569 23.5 31.5 22.1569 31.5 20.5L31.5 15.5C31.5 13.8432 30.1569 12.5 28.5 12.5L3.5 12.5C1.84315 12.5 0.500002 13.8431 0.500001 15.5L0.500001 20.5Z" fill="#E3E3E3"/>
+<path d="M3.5 23L28.5 23L28.5 24L3.5 24L3.5 23ZM31 20.5L31 15.5L32 15.5L32 20.5L31 20.5ZM28.5 13L3.5 13L3.5 12L28.5 12L28.5 13ZM1 15.5L1 20.5L5.24537e-07 20.5L1.39876e-06 15.5L1 15.5ZM3.5 13C2.11929 13 1 14.1193 1 15.5L1.39876e-06 15.5C1.73674e-06 13.567 1.56701 12 3.5 12L3.5 13ZM31 15.5C31 14.1193 29.8807 13 28.5 13L28.5 12C30.433 12 32 13.567 32 15.5L31 15.5ZM28.5 23C29.8807 23 31 21.8807 31 20.5L32 20.5C32 22.433 30.433 24 28.5 24L28.5 23ZM3.5 24C1.567 24 1.86561e-07 22.433 5.24537e-07 20.5L1 20.5C1 21.8807 2.11929 23 3.5 23L3.5 24Z" fill="#979797"/>
+<g clip-path="url(#clip2)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 21L4.5 18L8.5 15L8.5 17L12.5 17L12.5 19L8.5 19L8.5 21Z" fill="black"/>
+</g>
+<g opacity="0.75">
+<rect width="8" height="1" transform="matrix(-2.18557e-07 1 1 2.18557e-07 15.5 14)" fill="#979797"/>
+</g>
+<path d="M29.5 20C29.5 21.1046 28.6046 22 27.5 22L17.5 22L17.5 14L27.5 14C28.6046 14 29.5 14.8954 29.5 16L29.5 20Z" fill="#FF9A11" fill-opacity="0.5"/>
+<g clip-path="url(#clip3)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M23.5 21L27.5 18L23.5 15L23.5 17L19.5 17L19.5 19L23.5 19L23.5 21Z" fill="black"/>
+</g>
 </svg>

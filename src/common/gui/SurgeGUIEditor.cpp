@@ -1489,6 +1489,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       case ct_percent_bidirectional_stereo:
       case ct_freq_shift:
       case ct_osc_feedback_negative:
+      case ct_lfodeform:
       case ct_airwindow_param_bipolar:
          style |= kBipolar;
          break;
@@ -1590,24 +1591,66 @@ void SurgeGUIEditor::openOrRecreateEditor()
    ** Skin Labels
    */
    auto labels = currentSkin->getLabels();
-   for( auto &l : labels )
+
+   for (auto &l : labels)
    {
-      auto mtext = currentSkin->propertyValue( l, "text" );
-      if( mtext.isJust() )
+      auto mtext = currentSkin->propertyValue(l, "text");
+
+      if (mtext.isJust())
       {
-         auto fss = currentSkin->propertyValue( l, "font-size", "12" );
-         auto fs = std::atof( fss.c_str() );
+         auto ta = currentSkin->propertyValue(l, "text-align", "left");
+         // make text align value not case sensitive
+         std::transform(ta.begin(), ta.end(), ta.begin(),[](unsigned char c) { return std::tolower(c); });
 
-         auto coln = currentSkin->propertyValue( l, "color", "#00FF00" );
-         auto col = currentSkin->getColor( coln, kBlackCColor );
+         VSTGUI::CHoriTxtAlign txtalign;
 
-         auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), mtext.fromJust().c_str() );
-         lb->setHoriAlign(VSTGUI::kLeftText);
-         lb->setTransparency(true);
+         if (ta == "left")
+            txtalign = kLeftText;
+         else if (ta == "center")
+            txtalign = kCenterText;
+         else if (ta == "right")
+            txtalign = kRightText;
+
+         auto fs = currentSkin->propertyValue(l, "font-size", "12");
+         auto fsize = std::atof(fs.c_str());
+
+         auto fst = currentSkin->propertyValue(l, "font-style", "normal");
+         // make font style value not case sensitive
+         std::transform(fst.begin(), fst.end(), fst.begin(),[](unsigned char c) { return std::tolower(c); });
+         
+         VSTGUI::CTxtFace fstyle;
+
+         if (fst == "normal")
+            fstyle = kNormalFace;
+         else if (fst == "bold")
+            fstyle = kBoldFace;
+         else if (fst == "italic")
+            fstyle = kItalicFace;
+         else if (fst == "underline")
+            fstyle = kUnderlineFace;
+         else if (fst == "strikethrough")
+            fstyle = kStrikethroughFace;
+
+         auto coln = currentSkin->propertyValue(l, "color", "#FF0000");
+         auto col = currentSkin->getColor(coln, kRedCColor);
+
+         auto bgcoln = currentSkin->propertyValue(l, "bg-color", "#FFFFFF00");
+         auto bgcol = currentSkin->getColor(bgcoln, kTransparentCColor);
+
+         auto frcoln = currentSkin->propertyValue(l, "frame-color", "#FFFFFF00");
+         auto frcol = currentSkin->getColor(frcoln, kTransparentCColor);
+
+         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fsize, fstyle);
+
+         auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), mtext.fromJust().c_str());
+         lb->setTransparency((bgcol == kTransparentCColor && frcol == kTransparentCColor));
+         lb->setAntialias(true);
+         lb->setHoriAlign(txtalign);
+         lb->setFont(fnt);
          lb->setFontColor(col);
-         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fs);
-         lb->setFont( fnt );
-         lb->setAntialias( true );
+         lb->setBackColor(bgcol);
+         lb->setFrameColor(frcol);
+
          frame->addView(lb);
       }
    }
@@ -3670,6 +3713,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       return;
    }
+   break;
    case tag_osc_menu:
    {
       synth->switch_toggled_queued = true;
@@ -3699,6 +3743,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
 
       return;
    }
+   break;
    case tag_store:
    {
       patchdata p;
@@ -3758,69 +3803,67 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_store_ok:
    {
-      closeStorePatchDialog();
-      // saveDialog->setVisible(false);
-      // frame->setModalView(nullptr);
-      frame->setDirty();
-
-      /*
-      ** Don't allow a blank patch
-      */
-      std::string whatIsBlank = "";
-      bool haveBlanks = false;
-
-      if (!Surge::Storage::isValidName(patchName->getText().getString()))
+      // prevent duplicate execution of savePatch() by detecting if the Store Patch dialog is displayed or not
+      // FIXME: baconpaul will know a better and more correct way to fix this
+      if (editorOverlay && editorOverlayTag == "storePatch")
       {
-         whatIsBlank = "name";
-         haveBlanks = true;
-      }
-      if (!Surge::Storage::isValidName(patchCategory->getText().getString()))
-      {
-         whatIsBlank = whatIsBlank + (haveBlanks ? " and category" : "category");
-         haveBlanks = true;
-      }
-      if (haveBlanks)
-      {
-         Surge::UserInteractions::promptError(
-             std::string("Unable to store a patch due to invalid ") + whatIsBlank +
-                 ". Please save again and provide a complete " + whatIsBlank + ".",
-             "Patch Saving Error");
-      }
-      else
-      {
-         synth->storage.getPatch().name = patchName->getText();
-         synth->storage.getPatch().author = patchCreator->getText();
-         synth->storage.getPatch().category = patchCategory->getText();
-         synth->storage.getPatch().comment = patchComment->getText();
-
-         synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
-         if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
+         closeStorePatchDialog();
+         frame->setDirty();
+       
+         /*
+         ** Don't allow a blank patch
+         */
+         std::string whatIsBlank = "";
+         bool haveBlanks = false;
+       
+         if (!Surge::Storage::isValidName(patchName->getText().getString()))
          {
-            synth->storage.getPatch().patchTuning.tuningContents =
-                synth->storage.currentScale.rawText;
-            if (synth->storage.isStandardMapping)
-            {
-               synth->storage.getPatch().patchTuning.mappingContents = "";
-            }
-            else
-            {
-               synth->storage.getPatch().patchTuning.mappingContents =
-                   synth->storage.currentMapping.rawText;
-            }
+            whatIsBlank = "name";
+            haveBlanks = true;
          }
-
-         synth->storage.getPatch().dawExtraState.isPopulated =
-             false; // Ignore whatever comes from the DAW
-
-         synth->savePatch();
+         if (!Surge::Storage::isValidName(patchCategory->getText().getString()))
+         {
+            whatIsBlank = whatIsBlank + (haveBlanks ? " and category" : "category");
+            haveBlanks = true;
+         }
+         if (haveBlanks)
+         {
+            Surge::UserInteractions::promptError(
+                std::string("Unable to store a patch due to invalid ") + whatIsBlank +
+                            ". Please save again and provide a complete " + whatIsBlank + ".",
+                            "Patch Saving Error");
+         }
+         else
+         {
+            synth->storage.getPatch().name = patchName->getText();
+            synth->storage.getPatch().author = patchCreator->getText();
+            synth->storage.getPatch().category = patchCategory->getText();
+            synth->storage.getPatch().comment = patchComment->getText();
+       
+            synth->storage.getPatch().patchTuning.tuningStoredInPatch = patchTuning->getValue() > 0.5;
+            if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
+            {
+               synth->storage.getPatch().patchTuning.tuningContents = synth->storage.currentScale.rawText;
+               if (synth->storage.isStandardMapping)
+               {
+                  synth->storage.getPatch().patchTuning.mappingContents = "";
+               }
+               else
+               {
+                  synth->storage.getPatch().patchTuning.mappingContents = synth->storage.currentMapping.rawText;
+               }
+            }
+       
+            synth->storage.getPatch().dawExtraState.isPopulated = false; // Ignore whatever comes from the DAW
+       
+            synth->savePatch();
+         }
       }
    }
    break;
    case tag_store_cancel:
    {
       closeStorePatchDialog();
-      //saveDialog->setVisible(false);
-      // frame->setModalView(nullptr);
       frame->setDirty();
    }
    break;
@@ -4743,6 +4786,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
       what = "MSEG";
    if( ls_stepseq == shapev)
       what = "Step Seq";
+   if (ls_envelope == shapev)
+      what = "Env";
+   if (ls_function == shapev) 
+      what = "Env"; //Change this later
 
    COptionMenu* lfoSubMenu =
        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
@@ -6617,7 +6664,7 @@ void SurgeGUIEditor::resetPitchSmoothing(ControllerModulationSource::SmoothingMo
    synth->storage.pitchSmoothingMode = t;
 }
 
-void SurgeGUIEditor::setupSaveDialog()
+void SurgeGUIEditor::makeStorePatchDialog()
 {
    CRect dialogSize(CPoint(0, 0), CPoint(390, 143));
 
@@ -6756,6 +6803,8 @@ void SurgeGUIEditor::setupSaveDialog()
    saveDialog->addView(patchTuningLabel);
    saveDialog->addView(cb);
    saveDialog->addView(kb);
+
+   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(157, 57), false, false, [this]() {});
 }
 
 VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
@@ -7206,9 +7255,7 @@ void SurgeGUIEditor::showStorePatchDialog()
       dismissEditorOverlay();
    }
 
-   setupSaveDialog();
-
-   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(157, 57), false, false, [this]() {});
+   makeStorePatchDialog();
 }
 
 void SurgeGUIEditor::closeMSEGEditor()
@@ -7242,8 +7289,13 @@ void SurgeGUIEditor::showMSEGEditor()
    title += " Editor";
    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
-   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false, true,
-                    [this]() { /* don't rebuild UI here, it screws up dragging the LFO type control */; });
+   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false, true, [this]() {
+      if (msegEditSwitch)
+      {
+         msegEditSwitch->setValue(0.0);
+         msegEditSwitch->invalid();
+      }
+   });
 
    if( msegEditSwitch )
    {

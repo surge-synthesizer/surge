@@ -1837,7 +1837,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
       else if (fx_reload[s])
       {
          // This branch will happen when we change a preset for an FX; or when we turn an fx to OFF
-         memcpy((void*)&storage.getPatch().fx[s].p, (void*)&fxsync[s].p, sizeof(Parameter) * n_fx_params);
+         if( storage.getPatch().fx[s].type.val.i != fxt_off )
+            memcpy((void*)&storage.getPatch().fx[s].p, (void*)&fxsync[s].p, sizeof(Parameter) * n_fx_params);
          if (fx[s])
          {
             fx[s]->suspend();

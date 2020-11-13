@@ -61,6 +61,7 @@ enum ctrltypes
    ct_decibel_attenuation_large,
    ct_decibel_fmdepth,
    ct_decibel_extendable,
+   ct_decibel_deactivatable,
    ct_freq_audible,
    ct_freq_audible_deactivatable,
    ct_freq_mod,

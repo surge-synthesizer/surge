@@ -167,7 +167,7 @@ public:
 
 private:
    void openOrRecreateEditor();
-   void setupSaveDialog();
+   void makeStorePatchDialog();
    void close_editor();
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
    void repushAutomationFor( Parameter *p );

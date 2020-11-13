@@ -1,67 +1,57 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="48px" height="56px" viewBox="0 0 48 56" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <title>bmp00157</title>
-  <desc>Created with Sketch.</desc>
-  <defs>
-    <linearGradient x1="100%" y1="50%" x2="0.551625845%" y2="50%" id="linearGradient-1">
-      <stop stop-color="#656565" offset="0"/>
-      <stop stop-color="#A2A2A2" offset="0.1539"/>
-      <stop stop-color="#AEAEAE" offset="0.841"/>
-      <stop stop-color="#D9D9D9" offset="1"/>
-    </linearGradient>
-    <linearGradient x1="99.2688978%" y1="50%" x2="0%" y2="50%" id="linearGradient-2">
-      <stop stop-color="#606C8E" offset="0"/>
-      <stop stop-color="#8E9FCE" offset="0.1573"/>
-      <stop stop-color="#8E9FCE" offset="0.8423"/>
-      <stop stop-color="#BFCAE8" offset="1"/>
-    </linearGradient>
-    <linearGradient x1="100%" y1="50%" x2="0%" y2="50%" id="linearGradient-3">
-      <stop stop-color="#606C8E" offset="0.0073"/>
-      <stop stop-color="#8E9FCE" offset="0.1573"/>
-      <stop stop-color="#8E9FCE" offset="0.8423"/>
-      <stop stop-color="#BFCAE8" offset="1"/>
-    </linearGradient>
-  </defs>
-  <g id="bmp00157" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-    <rect id="Rectangle" transform="translate(33.500000, 12.000000) rotate(-270.000000) translate(-33.500000, -12.000000) " x="23.5" y="4.5" width="20" height="15" rx="5"/>
-    <rect id="Rectangle" transform="translate(9.500000, 12.000000) rotate(-270.000000) translate(-9.500000, -12.000000) " x="-0.5" y="4.5" width="20" height="15" rx="5"/>
-    <rect id="Rectangle" transform="translate(33.500000, 40.000000) rotate(-270.000000) translate(-33.500000, -40.000000) " x="23.5" y="32.5" width="20" height="15" rx="5"/>
-    <rect id="Rectangle" transform="translate(9.500000, 40.000000) rotate(-270.000000) translate(-9.500000, -40.000000) " x="-0.5" y="32.5" width="20" height="15" rx="5"/>
-    <g id="Group-2" transform="translate(9.000000, 11.500000) rotate(-270.000000) translate(-9.000000, -11.500000) translate(-1.000000, 4.000000)" fill="url(#linearGradient-1)" stroke="#464646">
-      <rect id="Rectangle" x="1" y="1" width="18" height="13" rx="5"/>
-    </g>
-    <g id="Group-2" transform="translate(9.000000, 39.500000) rotate(-270.000000) translate(-9.000000, -39.500000) translate(-1.000000, 32.000000)" fill="url(#linearGradient-1)" stroke="#464646">
-      <rect id="Rectangle" x="1" y="1" width="18" height="13" rx="5"/>
-    </g>
-    <g id="Group-4" transform="translate(33.000000, 11.500000) rotate(-270.000000) translate(-33.000000, -11.500000) translate(23.500000, 4.500000)" fill="url(#linearGradient-2)" stroke="#141D39">
-      <rect id="Rectangle" x="0.5" y="0.5" width="18" height="13" rx="5"/>
-    </g>
-    <g id="Group-4" transform="translate(33.000000, 39.500000) rotate(-270.000000) translate(-33.000000, -39.500000) translate(23.500000, 32.500000)" fill="url(#linearGradient-3)" stroke="#141D39">
-      <rect id="Rectangle" x="0.5" y="0.5" width="18" height="13" rx="5"/>
-    </g>
-    <g id="Group" transform="translate(21.000000, 25.500000) scale(-1, 1) translate(-21.000000, -25.500000) translate(3.500000, 4.000000)">
-      <path d="M35.5,4 C30.1666667,4 26.8333333,4 25.5,4 C23.5,4 22.5,6 22.5,7 C22.5,7.66666667 22.5,9.66666667 22.5,13" id="Path-12" stroke-opacity="0.05" stroke="#000000" stroke-width="2" transform="translate(29.000000, 8.500000) rotate(-90.000000) translate(-29.000000, -8.500000) "/>
-      <path d="M37,2.5 C31.6666667,2.5 28.3333333,2.5 27,2.5 C25,2.5 24,4.5 24,5.5 C24,6.16666667 24,7.83333333 24,10.5" id="Path-12" stroke-opacity="0.15" stroke="#FFFFFF" stroke-width="2" transform="translate(30.500000, 6.500000) rotate(-270.000000) translate(-30.500000, -6.500000) "/>
-      <path d="M35.5,32 C30.1666667,32 26.8333333,32 25.5,32 C23.5,32 22.5,34 22.5,35 C22.5,35.6666667 22.5,37.6666667 22.5,41" id="Path-12" stroke-opacity="0.05" stroke="#000000" stroke-width="2" transform="translate(29.000000, 36.500000) rotate(-90.000000) translate(-29.000000, -36.500000) "/>
-      <path d="M37,30.5 C31.6666667,30.5 28.3333333,30.5 27,30.5 C25,30.5 24,32.5 24,33.5 C24,34.1666667 24,35.8333333 24,38.5" id="Path-12" stroke-opacity="0.15" stroke="#FFFFFF" stroke-width="2" transform="translate(30.500000, 34.500000) rotate(-270.000000) translate(-30.500000, -34.500000) "/>
-      <path d="M11.5,32 C6.16666667,32 2.83333333,32 1.5,32 C-0.5,32 -1.5,34 -1.5,35 C-1.5,35.6666667 -1.5,37.6666667 -1.5,41" id="Path-12" stroke-opacity="0.05" stroke="#000000" stroke-width="2" transform="translate(5.000000, 36.500000) rotate(-90.000000) translate(-5.000000, -36.500000) "/>
-      <path d="M13,30.5 C7.66666667,30.5 4.33333333,30.5 3,30.5 C1,30.5 -9.16600129e-13,32.5 -9.16600129e-13,33.5 C-9.16600129e-13,34.1666667 -9.16600129e-13,35.8333333 -9.16600129e-13,38.5" id="Path-12" stroke-opacity="0.15" stroke="#FFFFFF" stroke-width="2" transform="translate(6.500000, 34.500000) rotate(-270.000000) translate(-6.500000, -34.500000) "/>
-      <path d="M11.5,4 C6.16666667,4 2.83333333,4 1.5,4 C-0.5,4 -1.5,6 -1.5,7 C-1.5,7.66666667 -1.5,9.66666667 -1.5,13" id="Path-12" stroke-opacity="0.05" stroke="#000000" stroke-width="2" transform="translate(5.000000, 8.500000) rotate(-90.000000) translate(-5.000000, -8.500000) "/>
-      <path d="M13,2.5 C7.66666667,2.5 4.33333333,2.5 3,2.5 C1,2.5 -4.54747351e-13,4.5 -4.54747351e-13,5.5 C-4.54747351e-13,6.16666667 -4.54747351e-13,7.83333333 -4.54747351e-13,10.5" id="Path-12" stroke-opacity="0.15" stroke="#FFFFFF" stroke-width="2" transform="translate(6.500000, 6.500000) rotate(-270.000000) translate(-6.500000, -6.500000) "/>
-      <rect id="Rectangle" fill-opacity="0.1" fill="#FFFFFF" transform="translate(29.500000, 8.500000) rotate(-270.000000) translate(-29.500000, -8.500000) " x="29" y="4.5" width="1" height="8"/>
-    </g>
-    <g id="Group" transform="translate(33.000000, 12.500000) scale(-1, 1) translate(-33.000000, -12.500000) translate(28.500000, 12.000000)" fill="#FFFFFF" fill-opacity="0.1">
-      <rect id="Rectangle" transform="translate(4.500000, 0.500000) rotate(-270.000000) translate(-4.500000, -0.500000) " x="4" y="-3.5" width="1" height="8"/>
-    </g>
-    <g id="Group" transform="translate(9.000000, 40.500000) scale(-1, 1) translate(-9.000000, -40.500000) translate(4.500000, 40.000000)" fill="#FFFFFF" fill-opacity="0.1">
-      <rect id="Rectangle" transform="translate(4.500000, 0.500000) rotate(-270.000000) translate(-4.500000, -0.500000) " x="4" y="-3.5" width="1" height="8"/>
-    </g>
-    <g id="Group" transform="translate(33.000000, 40.500000) scale(-1, 1) translate(-33.000000, -40.500000) translate(28.500000, 40.000000)" fill="#FFFFFF" fill-opacity="0.1">
-      <rect id="Rectangle" transform="translate(4.500000, 0.500000) rotate(-270.000000) translate(-4.500000, -0.500000) " x="4" y="-3.5" width="1" height="8"/>
-    </g>
-    <rect id="Rectangle" fill="#CC7000" transform="translate(9.000000, 11.500000) rotate(-270.000000) translate(-9.000000, -11.500000) " x="8.5" y="6.5" width="1" height="10"/>
-    <rect id="Rectangle" fill="#CC7000" transform="translate(9.000000, 39.500000) rotate(-270.000000) translate(-9.000000, -39.500000) " x="8.5" y="34.5" width="1" height="10"/>
-    <rect id="Rectangle" fill="#CC7000" transform="translate(33.000000, 11.500000) rotate(-270.000000) translate(-33.000000, -11.500000) " x="32.5" y="6.5" width="1" height="10"/>
-    <rect id="Rectangle" fill="#CC7000" transform="translate(33.000000, 39.500000) rotate(-270.000000) translate(-33.000000, -39.500000) " x="32.5" y="34.5" width="1" height="10"/>
-  </g>
+<svg width="48" height="56" viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="paint0_linear" x1="6.5" y1="18" x2="6.5" y2="4.17234e-07" gradientUnits="userSpaceOnUse">
+<stop stop-color="#535353"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.806335" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#F5F5F5"/>
+</linearGradient>
+<linearGradient id="paint1_linear" x1="6.5" y1="18" x2="6.5" y2="4.17234e-07" gradientUnits="userSpaceOnUse">
+<stop stop-color="#535353"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.806335" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#F5F5F5"/>
+</linearGradient>
+<linearGradient id="paint2_linear" x1="33" y1="20" x2="33" y2="2" gradientUnits="userSpaceOnUse">
+<stop stop-color="#656565"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.840975" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#D9D9D9"/>
+</linearGradient>
+<linearGradient id="paint3_linear" x1="6.5" y1="18" x2="6.5" y2="4.17234e-07" gradientUnits="userSpaceOnUse">
+<stop stop-color="#535353"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.806335" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#F5F5F5"/>
+</linearGradient>
+<linearGradient id="paint4_linear" x1="6.5" y1="18" x2="6.5" y2="4.17234e-07" gradientUnits="userSpaceOnUse">
+<stop stop-color="#535353"/>
+<stop offset="0.153901" stop-color="#A2A2A2"/>
+<stop offset="0.806335" stop-color="#AEAEAE"/>
+<stop offset="1" stop-color="#F5F5F5"/>
+</linearGradient>
+</defs>
+<rect width="13" height="18" rx="5" transform="matrix(-1 8.74228e-08 8.74228e-08 1 15.5 2)" fill="url(#paint0_linear)"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M13.4997 18.5309C14.3032 17.8881 15 16.8717 15 15.5L15 5L13 2.5L13 15.5C13 16.1283 12.6968 16.6119 12.2503 16.9691C11.7721 17.3517 11.2368 17.5 11 17.5L3.5 17.5L5.5 19.5L11 19.5C11.7632 19.5 12.7278 19.1483 13.4997 18.5309Z" fill="black"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M4.50031 3.46913C3.69679 4.11195 3 5.12826 3 6.5L3 17.5L5 19.5L5 6.5C5 5.87174 5.30321 5.38805 5.7497 5.03087C6.22785 4.64834 6.76324 4.5 7 4.5L15 4.5L13.5 2.5L7 2.5C6.23676 2.5 5.27215 2.85166 4.50031 3.46913Z" fill="#EEEEEE"/>
+<rect x="15.5" y="2" width="18" height="13" rx="5" transform="rotate(90 15.5 2)" stroke="black"/>
+<path d="M14 11.5L14 10.5L4 10.5L4 11.5L14 11.5Z" fill="#FF9300"/>
+<rect width="13" height="18" rx="5" transform="matrix(-1 -8.74228e-08 -8.74228e-08 1 15.5 30)" fill="url(#paint1_linear)"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M13.4997 46.5309C14.3032 45.8881 15 44.8717 15 43.5L15 33L13 30.5L13 43.5C13 44.1283 12.6968 44.6119 12.2503 44.9691C11.7721 45.3517 11.2368 45.5 11 45.5L3.5 45.5L5.5 47.5L11 47.5C11.7632 47.5 12.7278 47.1483 13.4997 46.5309Z" fill="black"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M4.5003 31.4691C3.69679 32.1119 3 33.1283 3 34.5L3 45.5L5 47.5L5 34.5C5 33.8717 5.30321 33.3881 5.7497 33.0309C6.22785 32.6483 6.76324 32.5 7 32.5L15 32.5L13.5 30.5L7 30.5C6.23676 30.5 5.27215 30.8517 4.5003 31.4691Z" fill="#EEEEEE"/>
+<rect x="15.5" y="30" width="18" height="13" rx="5" transform="rotate(90 15.5 30)" stroke="black"/>
+<path d="M14 39.5L14 38.5L4 38.5L4 39.5L14 39.5Z" fill="#FF9300"/>
+<rect x="26.5" y="2" width="13" height="18" rx="5" fill="url(#paint2_linear)"/>
+<rect width="13" height="18" rx="5" transform="matrix(-1 0 0 1 39.5 2)" fill="url(#paint3_linear)"/>
+<rect x="39.5" y="2" width="18" height="13" rx="5" transform="rotate(90 39.5 2)" fill="#8E9FCE" stroke="black"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M37.4997 18.5309C38.3032 17.8881 39 16.8717 39 15.5L39 5L37 2.5L37 15.5C37 16.1283 36.6968 16.6119 36.2503 16.9691C35.7721 17.3517 35.2368 17.5 35 17.5L27.5 17.5L29.5 19.5L35 19.5C35.7632 19.5 36.7278 19.1483 37.4997 18.5309Z" fill="black"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M28.5003 3.46913C27.6968 4.11195 27 5.12826 27 6.5L27 17.5L29 19.5L29 6.5C29 5.87174 29.3032 5.38805 29.7497 5.03087C30.2279 4.64834 30.7632 4.5 31 4.5L39 4.5L37.5 2.5L31 2.5C30.2368 2.5 29.2721 2.85166 28.5003 3.46913Z" fill="#EEEEEE"/>
+<rect x="39.5" y="2" width="18" height="13" rx="5" transform="rotate(90 39.5 2)" stroke="black"/>
+<path d="M38 11.5L38 10.5L28 10.5L28 11.5L38 11.5Z" fill="#FF9300"/>
+<rect width="13" height="18" rx="5" transform="matrix(-1 0 0 1 39.5 30)" fill="url(#paint4_linear)"/>
+<rect x="39.5" y="30" width="18" height="13" rx="5" transform="rotate(90 39.5 30)" fill="#8E9FCE" stroke="black"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M37.4997 46.5309C38.3032 45.8881 39 44.8717 39 43.5L39 33L37 30.5L37 43.5C37 44.1283 36.6968 44.6119 36.2503 44.9691C35.7721 45.3517 35.2368 45.5 35 45.5L27.5 45.5L29.5 47.5L35 47.5C35.7632 47.5 36.7278 47.1483 37.4997 46.5309Z" fill="black"/>
+<path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M28.5003 31.4691C27.6968 32.1119 27 33.1283 27 34.5L27 45.5L29 47.5L29 34.5C29 33.8717 29.3032 33.3881 29.7497 33.0309C30.2279 32.6483 30.7632 32.5 31 32.5L39 32.5L37.5 30.5L31 30.5C30.2368 30.5 29.2721 30.8517 28.5003 31.4691Z" fill="#EEEEEE"/>
+<rect x="39.5" y="30" width="18" height="13" rx="5" transform="rotate(90 39.5 30)" stroke="black"/>
+<path d="M38 39.5L38 38.5L28 38.5L28 39.5L38 39.5Z" fill="#FF9300"/>
 </svg>

@@ -55,19 +55,19 @@ void LfoModulationSource::assign(SurgeStorage* storage,
 
    if (is_display)
    {
-      auto gen = std::minstd_rand(46);
-      std::uniform_real_distribution<float> distro(-1.f,1.f);
-      urng = std::bind(distro, gen);
+      gen = std::default_random_engine();
+      gen.seed(46);
+      distro = std::uniform_real_distribution<float>(-1.f,1.f);
+      urng = [this]() -> float { return distro(gen); };
 
       msegstate.seed( 2112 ); // this number is different than the one in the canvas on purpose
                // so since they are random the displays differ
    }
    else
    {
-      std::random_device rd;
-      auto gen = std::minstd_rand(rd());
-      std::uniform_real_distribution<float> distro(-1.f,1.f);
-      urng = std::bind(distro, gen);
+      gen = std::default_random_engine();
+      distro = std::uniform_real_distribution<float>(-1.f,1.f);
+      urng = [this]() -> float { return distro(gen); };
    }
    noise = 0.f;
    noised1 = 0.f;

@@ -1,15 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="22px" height="45px" viewBox="0 0 22 45" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>bmp00143</title>
-    <g id="bmp00143" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect id="Rectangle" fill="#FF9000" x="4" y="4" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="9" y="4" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="14" y="4" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" x="9" y="19" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" x="14" y="34" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="4" y="19" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="14" y="19" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="4" y="34" width="4" height="7"></rect>
-        <rect id="Rectangle" fill="#FF9000" fill-opacity="0.5" x="9" y="34" width="4" height="7"></rect>
-    </g>
+<svg width="22" height="45" viewBox="0 0 22 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g opacity="0.5">
+<path d="M11.5 4H7.5V11H11.5V4Z" fill="#FF9000"/>
+</g>
+<g opacity="0.5">
+<path d="M16.5 4H12.5V11H16.5V4Z" fill="#FF9000"/>
+</g>
+<path d="M6.5 4H2.5V11H6.5V4Z" fill="#FF9000"/>
+<path d="M11.5 19H7.5V26H11.5V19Z" fill="#FF9000"/>
+<g opacity="0.5">
+<path d="M16.5 19H12.5V26H16.5V19Z" fill="#FF9000"/>
+</g>
+<g opacity="0.5">
+<path d="M6.5 19H2.5V26H6.5V19Z" fill="#FF9000"/>
+</g>
+<g opacity="0.5">
+<path d="M11.5 34H7.5V41H11.5V34Z" fill="#FF9000"/>
+</g>
+<path d="M16.5 34H12.5V41H16.5V34Z" fill="#FF9000"/>
+<g opacity="0.5">
+<path d="M6.5 34H2.5V41H6.5V34Z" fill="#FF9000"/>
+</g>
 </svg>

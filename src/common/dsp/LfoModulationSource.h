@@ -93,6 +93,9 @@ private:
    bool is_display;
    int step, shuffle_id;
    int magn, rate, iattack, idecay, idelay, ihold, isustain, irelease, startphase, ideform;
+
+   std::default_random_engine gen;
+   std::uniform_real_distribution<float> distro;
    std::function<float()> urng;
    quadr_osc sinus;
 };

@@ -1,32 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="20px" height="140px" viewBox="0 0 20 140" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background: #242424;">
-    <title>bmp00145</title>
-    <g id="bmp00145" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect fill="#242424" x="0" y="0" width="20" height="140"></rect>
-        <path d="M20,14 L-7.10542736e-15,14 C4.47949219,4.66666667 11.1461589,0 20,0 C20,0 20,4.66666667 20,14 Z" id="Path-5" fill="#005CB6"></path>
-        <path d="M20,42 C6.66666667,42 -1.77635684e-15,42 -1.77635684e-15,42 C8,42 14.6666667,37.3333333 20,28 L20,42 Z" id="Path-5" fill="#005CB6"></path>
-        <polygon id="Path-4" fill="#005CB6" points="0 28 20 14 20 28"></polygon>
-        <polygon id="Path-6" fill="#005CB6" points="0 42 0 56 20 56 20 49"></polygon>
-        <path d="M-3.55271368e-15,56 L-3.55271368e-15,70 L20,70 C20,65.3333333 20,63 20,63 C14,63 7.33333333,60.6666667 -3.55271368e-15,56 Z" id="Path-7" fill="#005CB6"></path>
-        <path d="M-2.84217094e-14,70 L-2.84217094e-14,84 L20,84 C20,79.3333333 20,77 20,77 C9.33333333,77 2.66666667,74.6666667 -2.84217094e-14,70 Z" id="Path-9" fill="#005CB6"></path>
-        <polygon id="Path-10" fill="#005CB6" points="0 91 0 98 20 98"></polygon>
-        <g id="Group-66" transform="translate(0.000000, 84.000000)">
-            <path d="M0,35 L0,42 L20,42 C9.333,40.8333 2.667,38.5 0,35 Z" id="Path" fill="#005CB6" fill-rule="nonzero"></path>
-            <rect id="Rectangle" fill-opacity="0.5" fill="#FF9A10" x="13" y="28" width="6" height="14"></rect>
-            <rect id="Rectangle" fill-opacity="0.5" fill="#FF9A10" x="1" y="0" width="6" height="14"></rect>
-            <path d="M0,21 L0,28 L20,28 C9.282,25.9185 3.333,23.8375 0,21 Z" id="Path" fill="#005CB6" fill-rule="nonzero"></path>
-            <rect id="Rectangle" fill-opacity="0.5" fill="#FF9A10" x="7" y="14" width="6" height="14"></rect>
-        </g>
-        <g id="Group-66" transform="translate(1.000000, 42.000000)" fill="#FF9A10" fill-opacity="0.5">
-            <rect id="Rectangle" x="12" y="28" width="6" height="14"></rect>
-            <rect id="Rectangle" x="6" y="14" width="6" height="14"></rect>
-            <rect id="Rectangle" x="0" y="0" width="6" height="14"></rect>
-        </g>
-        <g id="Group-66" transform="translate(1.000000, 0.000000)" fill="#FF9A10" fill-opacity="0.5">
-            <rect id="Rectangle" x="12" y="28" width="6" height="14"></rect>
-            <rect id="Rectangle" x="6" y="14" width="6" height="14"></rect>
-            <rect id="Rectangle" x="0" y="0" width="6" height="14"></rect>
-        </g>
-        <rect id="Rectangle" fill="#005CB6" x="0" y="133" width="20" height="7"></rect>
-    </g>
+<svg width="20" height="160" viewBox="0 0 20 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="20" height="160" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 16H0C4.4795 5.33337 11.146 0 20 0V16Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M7 0H1V16H7V0Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 32L20 16V32H0Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M13 16H7V32H13V16Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 48H0C8 48 14.667 42.6666 20 32V48Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M19 32H13V48H19V32Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 48V64H20V56L0 48Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M7 48H1V64H7V48Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 64V80H20V72C14 72 7.333 69.3334 0 64H0Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M13 64H7V80H13V64Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 80V96H20V88C9.333 88 2.667 85.3334 0 80H0Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M19 80H13V96H19V80Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 104V112H20L0 104Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M7 96H1V112H7V96Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 120V128H20C9.282 125.621 3.333 123.243 0 120Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M13 112H7V128H13V112Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 136V144H20C9.333 142.667 2.667 140 0 136Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M19 128H13V144H19V128Z" fill="#FF9000"/>
+<rect y="152" width="20" height="8" fill="#0B5FB3"/>
 </svg>
