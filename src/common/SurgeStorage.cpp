@@ -1060,10 +1060,10 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       cgroup = 6;
       cgroup_e = entry + ms_lfo1;
       id = getPatch().scene[scene].lfo[entry].shape.id;
-      if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_stepseq)
+      if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
          memcpy(&clipboard_stepsequences[0], &getPatch().stepsequences[scene][entry],
                 sizeof(StepSequencerStorage));
-      if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_mseg)
+      if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
          clipboard_msegs[0] = getPatch().msegs[scene][entry];
       break;
    case cp_scene:
@@ -1239,10 +1239,10 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
       }
       break;
       case cp_lfo:
-         if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_stepseq)
+         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
             memcpy(&getPatch().stepsequences[scene][entry], &clipboard_stepsequences[0],
                    sizeof(StepSequencerStorage));
-         if (getPatch().scene[scene].lfo[entry].shape.val.i == ls_mseg)
+         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
             getPatch().msegs[scene][entry] = clipboard_msegs[0];
 
          break;

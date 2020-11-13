@@ -619,10 +619,10 @@ void Parameter::set_type(int ctrltype)
       val_max.f = 120;
       val_default.f = 90;
       break;
-   case ct_lfoshape:
+   case ct_lfotype:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_lfoshapes - 1;
+      val_max.i = n_lfotypes - 1;
       val_default.i = 0;
       break;
    case ct_fbconfig:
@@ -2223,8 +2223,8 @@ void Parameter::get_display(char* txt, bool external, float ef)
       case ct_fmconfig:
          sprintf(txt, "%s", fmc_names[limit_range(i, 0, (int)n_fm_configuration - 1)]);
          break;
-      case ct_lfoshape:
-         sprintf(txt, "%s", ls_names[limit_range(i, 0, (int)n_lfoshapes - 1)]);
+      case ct_lfotype:
+         sprintf(txt, "%s", lt_names[limit_range(i, 0, (int)n_lfotypes - 1)]);
          break;
       case ct_scenemode:
          sprintf(txt, "%s", scene_mode_names[limit_range(i, 0, (int)n_scenemodes - 1)]);

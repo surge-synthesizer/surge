@@ -1382,7 +1382,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          if( ( q >= ms_lfo1 && q <= ms_lfo6  ) || ( q >= ms_slfo1 && q <= ms_slfo6 ) )
          {
             auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ q - ms_lfo1 ] );
-            if( lfodata->shape.val.i == ls_mseg )
+            if( lfodata->shape.val.i == lt_mseg )
                msegEditSwitch->setVisible( true );
          }
          break;
@@ -2625,7 +2625,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          return 1;
 
       bool blockForLFO = false;
-      if( p->ctrltype == ct_lfoshape )
+      if( p->ctrltype == ct_lfotype )
       {
          blockForLFO = true;
          auto *clfo = dynamic_cast<CLFOGui*>(control);
@@ -3007,9 +3007,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                auto* lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
 
                switch (lfodata->shape.val.i) {
-               case ls_sine:
-               case ls_tri:
-               case ls_ramp:
+               case lt_sine:
+               case lt_tri:
+               case lt_ramp:
                    contextMenu->addSeparator(eid++);
 
                    addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Deform Type 1"), [this, p]() {
@@ -3343,7 +3343,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             ** control click on step sequencer, say, you go back to sin and lose your
             ** edits. So supress
             */
-            if (p->ctrltype != ct_lfoshape)
+            if (p->ctrltype != ct_lfotype)
             {
                p->set_value_f01(p->get_default_value_f01());
                control->setValue(p->get_value_f01());
@@ -3534,7 +3534,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                if(editorOverlay && editorOverlayTag == "msegEditor" )
                {
                   auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[newsource-ms_lfo1]);
-                  if( ld->shape.val.i == ls_mseg )
+                  if( ld->shape.val.i == lt_mseg )
                   {
                      showMSEGEditor();
                   }
@@ -3583,7 +3583,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if (editorOverlay && editorOverlayTag == "msegEditor")
       {
          auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[modsource_editor[current_scene] - ms_lfo1]);
-         if (ld->shape.val.i == ls_mseg)
+         if (ld->shape.val.i == lt_mseg)
          {
             showMSEGEditor();
          }
@@ -3991,7 +3991,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          bool modulate = false;
 
          // This allows us to turn on and off the editor. FIXME mseg check it
-         if( p->ctrltype == ct_lfoshape )
+         if( p->ctrltype == ct_lfotype )
             synth->refresh_editor = true;
 
          if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
@@ -4118,7 +4118,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   modulate = true;
             }
 
-            if( p->ctrltype == ct_bool_unipolar || p->ctrltype == ct_lfoshape )
+            if( p->ctrltype == ct_bool_unipolar || p->ctrltype == ct_lfotype )
             {
                // The green line might change so...
                refresh_mod();
@@ -4782,13 +4782,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 
    int shapev = synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
    std::string what = "LFO";
-   if( ls_mseg == shapev )
+   if( lt_mseg == shapev )
       what = "MSEG";
-   if( ls_stepseq == shapev)
+   if( lt_stepseq == shapev)
       what = "Step Seq";
-   if (ls_envelope == shapev)
+   if (lt_envelope == shapev)
       what = "Env";
-   if (ls_function == shapev) 
+   if (lt_function == shapev) 
       what = "Env"; //Change this later
 
    COptionMenu* lfoSubMenu =
@@ -4829,7 +4829,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
                             if( editorOverlay && editorOverlayTag == "msegEditor" )
                             {
                                closeMSEGEditor();
-                               if( newshape == ls_mseg )
+                               if( newshape == lt_mseg )
                                   showMSEGEditor();
                             }
 
@@ -6032,7 +6032,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       int fnum = idx % 6;
       auto *lfodata = &( synth->storage.getPatch().scene[current_scene].lfo[ i - ms_lfo1 ] );
 
-      if( lfodata->shape.val.i == ls_envelope )
+      if( lfodata->shape.val.i == lt_envelope )
       {
          char txt[64];
          if( button )
@@ -6041,7 +6041,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
             sprintf( txt, "%s Envelope %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
-      else if( lfodata->shape.val.i == ls_stepseq )
+      else if( lfodata->shape.val.i == lt_stepseq )
       {
          char txt[64];
          if( button )
@@ -6050,7 +6050,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
             sprintf( txt, "%s Step Sequencer %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
-      else if( lfodata->shape.val.i == ls_mseg )
+      else if( lfodata->shape.val.i == lt_mseg )
       {
          char txt[64];
          if( button )
@@ -6059,7 +6059,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
             sprintf( txt, "%s MSEG %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
          return std::string( txt );
       }
-      else if( lfodata->shape.val.i == ls_function)
+      else if( lfodata->shape.val.i == lt_function)
       {
          char txt[64];
          if( button )
@@ -7015,7 +7015,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
    {
       if( ! p )
          return nullptr;
-      if (p->ctrltype != ct_lfoshape)
+      if (p->ctrltype != ct_lfotype)
       {
          // FIXME - warning?
       }
@@ -7215,20 +7215,20 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
-   if( prior != curr || prior == ls_mseg || curr == ls_mseg )
+   if( prior != curr || prior == lt_mseg || curr == lt_mseg )
    {
       if( msegEditSwitch )
       {
-         msegEditSwitch->setVisible( curr == ls_mseg );
+         msegEditSwitch->setVisible( curr == lt_mseg );
       }
    }
 
-   if( curr == ls_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   if( curr == lt_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
    {
       // We have the MSEGEditor open and have swapped to the MSEG here
       showMSEGEditor();
    }
-   else if( prior == ls_mseg && curr != ls_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   else if( prior == lt_mseg && curr != lt_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
    {
       // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
       closeMSEGEditor();

@@ -724,7 +724,7 @@ TEST_CASE( "LfoTempoSync Latch Drift", "[mod]" )
       SurgeSynthesizer::ID rid;
       surge->fromSynthSideId(lfostorage->rate.id, rid );
       surge->setParameter01( rid, 0.455068, false, false );
-      lfostorage->shape.val.i = ls_square;
+      lfostorage->shape.val.i = lt_square;
 
       surge->storage.getPatch().copy_scenedata(surge->storage.getPatch().scenedata[0], 0 );
       

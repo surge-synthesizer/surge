@@ -455,7 +455,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          char label[32];
 
          sprintf(label, "lfo%i_shape", l);
-         a->push_back(scene[sc].lfo[l].shape.assign(p_id.next(), id_s++, label, "Shape", ct_lfoshape,
+         a->push_back(scene[sc].lfo[l].shape.assign(p_id.next(), id_s++, label, "Type", ct_lfotype,
                                                     Surge::Skin::LFO::shape, sc_id, cg_LFO, ms_lfo1 + l));
 
          sprintf(label, "lfo%i_rate", l);
@@ -1912,7 +1912,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    {
       for (int l = 0; l < n_lfos; l++)
       {
-         if (scene[sc].lfo[l].shape.val.i == ls_stepseq)
+         if (scene[sc].lfo[l].shape.val.i == lt_stepseq)
          {
             char txt[256], txt2[256];
             TiXmlElement p("sequence");
@@ -1932,7 +1932,7 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
    {
       for (int l = 0; l < n_lfos; l++)
       {
-         if (scene[sc].lfo[l].shape.val.i == ls_mseg)
+         if (scene[sc].lfo[l].shape.val.i == lt_mseg)
          {
             TiXmlElement p("mseg");
             p.SetAttribute("scene", sc);
