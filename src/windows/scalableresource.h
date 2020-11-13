@@ -14,14 +14,8 @@
 */
 
 
-// Offset IDB_ABOUT by SCALABLE_100_OFFSET value and so on
-#define IDB_ABOUT_SCALE_SVG 80158
-
 // Offset IDB_BG by SCALABLE_100_OFFSET value and so on
 #define IDB_BG_SCALE_SVG 80102
-
-// Offset IDB_BUTTON_ABOUT by SCALABLE_100_OFFSET value and so on
-#define IDB_BUTTON_ABOUT_SCALE_SVG 80159
 
 // Offset IDB_BUTTON_CHECK by SCALABLE_100_OFFSET value and so on
 #define IDB_BUTTON_CHECK_SCALE_SVG 80150
@@ -37,9 +31,6 @@
 
 // Offset IDB_CHARACTER by SCALABLE_100_OFFSET value and so on
 #define IDB_CHARACTER_SCALE_SVG 80161
-
-// Offset IDB_CONF by SCALABLE_100_OFFSET value and so on
-#define IDB_CONF_SCALE_SVG 80135
 
 // Offset IDB_ENVMODE by SCALABLE_100_OFFSET value and so on
 #define IDB_ENVMODE_SCALE_SVG 80162
@@ -154,9 +145,6 @@
 
 // Offset IDB_SCENESWITCH by SCALABLE_100_OFFSET value and so on
 #define IDB_SCENESWITCH_SCALE_SVG 80113
-
-// Offset IDB_STOREPATCH by SCALABLE_100_OFFSET value and so on
-#define IDB_STOREPATCH_SCALE_SVG 80163
 
 // Offset IDB_SWITCH_FM by SCALABLE_100_OFFSET value and so on
 #define IDB_SWITCH_FM_SCALE_SVG 80133
