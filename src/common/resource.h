@@ -45,7 +45,6 @@
 #define IDB_FADERH_HANDLE 153
 #define IDB_FADERH_BG 154
 #define IDB_FADERV_HANDLE 157
-#define IDB_ABOUT 158
 #define IDB_FILTERSUBTYPE 160
 #define IDI_ICON1 164
 #define IDI_SURGE 164
@@ -77,6 +76,7 @@
 #define IDB_MODSRC_SHOW_LFO 179
 #define IDB_MSEG_EDIT_MODE 307
 #define IDB_ABOUT_LOGOS 180
+#define IDB_ABOUT 158
 // == /SVG == Do not remove this comment
 
 
