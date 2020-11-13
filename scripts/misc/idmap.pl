@@ -9,7 +9,7 @@ while( <> )
 {
     if( m/define IDB_(\S+) (\d+)/ )
     {
-        $all .= "   allowed.insert( $2 );\n";
+        $all .= "   allowed.insert($2);\n";
         print "   res[\"" . $1 . "\"] = " . $2 . ";\n";
     }
 }

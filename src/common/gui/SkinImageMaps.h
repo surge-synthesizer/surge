@@ -120,24 +120,24 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert(167);
    allowed.insert(168);
    allowed.insert(169);
+   allowed.insert(301);
+   allowed.insert(302);
    allowed.insert(170);
+   allowed.insert(303);
+   allowed.insert(304);
    allowed.insert(171);
    allowed.insert(172);
    allowed.insert(173);
    allowed.insert(174);
    allowed.insert(175);
    allowed.insert(176);
+   allowed.insert(305);
    allowed.insert(177);
    allowed.insert(178);
-   allowed.insert(179);
-   allowed.insert(180);
-   allowed.insert(301);
-   allowed.insert(302);
-   allowed.insert(303);
-   allowed.insert(304);
-   allowed.insert(305);
    allowed.insert(306);
+   allowed.insert(179);
    allowed.insert(307);
+   allowed.insert(180);
 
    return allowed;
 }
