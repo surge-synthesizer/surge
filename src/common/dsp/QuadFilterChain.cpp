@@ -41,12 +41,13 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
       {
          __m128 input = d.DL[k];
          __m128 x = input, y = d.DR[k];
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
 
          if (A)
             x = g.FU1ptr(&d.FU[0], x);
          if (WS)
          {
-            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
+            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask,x)));
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
             x = g.WSptr(d.wsLPF, d.Drive);
          }
@@ -65,7 +66,6 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
          x = _mm_add_ps(_mm_mul_ps(x, _mm_sub_ps(one, d.Mix2)), _mm_mul_ps(y, d.Mix2));
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
 
          // output stage
@@ -78,13 +78,14 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          d.FB = _mm_add_ps(d.FB, d.dFB);
          __m128 input = vMul(d.FB, d.FBlineL);
          input = vAdd(d.DL[k], softclip_ps(input));
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          __m128 x = input, y = d.DR[k];
 
          if (A)
             x = g.FU1ptr(&d.FU[0], x);
          if (WS)
          {
-            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
+            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask,x)));
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
             x = g.WSptr(d.wsLPF, d.Drive);
          }
@@ -103,7 +104,6 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
          x = _mm_add_ps(_mm_mul_ps(x, _mm_sub_ps(one, d.Mix2)), _mm_mul_ps(y, d.Mix2));
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          d.FBlineL = out;
 
@@ -119,12 +119,13 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          __m128 input = vMul(d.FB, d.FBlineL);
          input = vAdd(d.DL[k], softclip_ps(input));
          __m128 x = input, y = d.DR[k];
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
 
          if (A)
             x = g.FU1ptr(&d.FU[0], x);
          if (WS)
          {
-            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
+            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps( mask,x)));
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
             x = g.WSptr(d.wsLPF, d.Drive);
          }
@@ -137,7 +138,6 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
 
          // output stage
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          x = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
 
          MWriteOutputs(x)
@@ -161,6 +161,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          fb = softclip_ps(fb);
          __m128 x = _mm_add_ps(d.DL[k], fb);
          __m128 y = _mm_add_ps(d.DR[k], fb);
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
 
          if (A)
             x = g.FU1ptr(&d.FU[0], x);
@@ -173,13 +174,12 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
 
          if (WS)
          {
-            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
+            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask,x)));
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
             x = g.WSptr(d.wsLPF, d.Drive);
          }
 
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          d.FBlineL = out;
          // output stage
@@ -194,12 +194,13 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          fb = softclip_ps(fb);
          __m128 x = _mm_add_ps(d.DL[k], fb);
          __m128 y = _mm_add_ps(d.DR[k], fb);
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
 
          if (A)
             x = g.FU1ptr(&d.FU[0], x);
          if (WS)
          {
-            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
+            d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask,x)));
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
             x = g.WSptr(d.wsLPF, d.Drive);
          }
@@ -212,7 +213,6 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          x = _mm_add_ps(_mm_mul_ps(x, d.Mix1), _mm_mul_ps(y, d.Mix2));
 
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          d.FBlineL = out;
          // output stage
@@ -227,6 +227,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          fb = softclip_ps(fb);
          __m128 x = _mm_add_ps(d.DL[k], fb);
          __m128 y = _mm_add_ps(d.DR[k], fb);
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
 
          if (A)
             x = g.FU1ptr(&d.FU[0], x);
@@ -243,11 +244,10 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          {
             d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-            x = g.WSptr(d.wsLPF, d.Drive);
+            x = g.WSptr(_mm_and_ps(mask,d.wsLPF), d.Drive);
          }
 
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          d.FBlineL = out;
          // output stage
@@ -262,6 +262,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          fb = softclip_ps(fb);
          __m128 x = _mm_add_ps(d.DL[k], fb);
          __m128 y = _mm_add_ps(d.DR[k], fb);
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
 
          if (A)
             x = g.FU1ptr(&d.FU[0], x);
@@ -271,8 +272,8 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          if (WS)
          {
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-            x = g.WSptr(x, d.Drive);
-            y = g.WSptr(y, d.Drive);
+            x = g.WSptr(_mm_and_ps(mask,x), d.Drive);
+            y = g.WSptr(_mm_and_ps(mask,y), d.Drive);
          }
 
          d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
@@ -281,7 +282,6 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          y = _mm_mul_ps(y, d.Mix2);
 
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          x = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          y = _mm_and_ps(mask, _mm_mul_ps(y, d.Gain));
          d.FBlineL = _mm_add_ps(x, y);
@@ -302,6 +302,8 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          __m128 x = xin;
          __m128 y = yin;
 
+         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
+
          if (A)
          {
             x = g.FU1ptr(&d.FU[0], x);
@@ -311,8 +313,8 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          if (WS)
          {
             d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-            x = g.WSptr(x, d.Drive);
-            y = g.WSptr(y, d.Drive);
+            x = g.WSptr(_mm_and_ps(mask, x), d.Drive);
+            y = g.WSptr(_mm_and_ps(mask, y), d.Drive);
          }
 
          if (A || WS)
@@ -335,7 +337,6 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          }
 
          d.Gain = _mm_add_ps(d.Gain, d.dGain);
-         __m128 mask = _mm_load_ps((float*)&d.FU[0].active);
          x = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
          y = _mm_and_ps(mask, _mm_mul_ps(y, d.Gain));
          d.FBlineL = x;

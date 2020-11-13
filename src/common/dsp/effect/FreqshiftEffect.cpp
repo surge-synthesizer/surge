@@ -34,15 +34,11 @@ void FreqshiftEffect::init()
    fr.reset();
    fi.reset();
    ringout = 10000000;
-   setvars(true);
 
-   inithadtempo = true;
    // See issue #1444 and the fix for this stuff
-   if( storage->temposyncratio_inv == 0 )
-   {
-      inithadtempo = false;
-   }
-
+   inithadtempo = (storage->temposyncratio_inv != 0);
+   setvars(true);
+   inithadtempo = (storage->temposyncratio_inv != 0);
 }
 
 void FreqshiftEffect::setvars(bool init)

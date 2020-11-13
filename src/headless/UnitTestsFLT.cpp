@@ -14,6 +14,7 @@
 
 using namespace Surge::Test;
 
+// These first two are mostly useful targets for valgrind runs
 TEST_CASE( "Run Every Filter", "[flt]" )
 {
    for( int fn = 0; fn < n_fu_type; fn ++ )
@@ -23,12 +24,44 @@ TEST_CASE( "Run Every Filter", "[flt]" )
       {
          DYNAMIC_SECTION( "Test Filter " << fut_names[fn] << " st: " <<  fs )
          {
-            std::cout << "Testing " << fut_names[fn] << " with subtypes " << fs << std::endl;
             auto surge = Surge::Headless::createSurge(44100);
             REQUIRE(surge);
 
             surge->storage.getPatch().scene[0].filterunit[0].type.val.i = fn;
             surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = fs;
+
+            int len = 4410 * 5;
+            Surge::Headless::playerEvents_t heldC = Surge::Headless::makeHoldMiddleC(len);
+            REQUIRE(heldC.size() == 2);
+
+            float* data = NULL;
+            int nSamples, nChannels;
+
+            Surge::Headless::playAsConfigured(surge, heldC, &data, &nSamples, &nChannels);
+            REQUIRE(data);
+            REQUIRE(std::abs(nSamples - len) <= BLOCK_SIZE);
+            REQUIRE(nChannels == 2);
+
+            if (data)
+               delete[] data;
+         }
+      }
+   }
+}
+
+TEST_CASE( "Run Every Waveshaper", "[flt]" )
+{
+   for( int wt = 0; wt < n_ws_type; wt ++ )
+   {
+      for( int q = 0; q < n_fb_configuration; ++q )
+      {
+         DYNAMIC_SECTION("Test WaveShaper " << wst_names[wt] << " " << fbc_names[q] )
+         {
+            auto surge = Surge::Headless::createSurge(44100);
+            REQUIRE(surge);
+
+            surge->storage.getPatch().scene[0].wsunit.type.val.i = wt;
+            surge->storage.getPatch().scene[0].wsunit.drive.set_value_f01(0.8);
 
             int len = 4410 * 5;
             Surge::Headless::playerEvents_t heldC = Surge::Headless::makeHoldMiddleC(len);

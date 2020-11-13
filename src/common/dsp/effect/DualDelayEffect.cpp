@@ -28,13 +28,10 @@ void DualDelayEffect::init()
    LFOdirection = true;
    lp.suspend();
    hp.suspend();
-   setvars(true);
-   inithadtempo = true;
    // See issue #1444 and the fix for this stuff
-   if( storage->temposyncratio_inv == 0 )
-   {
-      inithadtempo = false;
-   }
+   inithadtempo = (storage->temposyncratio_inv != 0);
+   setvars(true);
+   inithadtempo = (storage->temposyncratio_inv != 0);
 }
 
 void DualDelayEffect::setvars(bool init)
