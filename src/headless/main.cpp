@@ -96,13 +96,15 @@ void playSomeBach()
 */
 int main(int argc, char** argv)
 {
+#define RUN_REGTEST 1
+#if RUN_REGTEST
    std::cout << "\n\n"
              << "surge-headless is our regtest engine for the synth engine excluding the UI\n"
              << "Run 'surge-headless --help' for options.\n\n";
    extern int runAllTests(int, char**);
    return runAllTests(argc, argv);
 
-#if 0
+#else
    std::cout << "Hi! HEADLESS is a development tool the SurgeDevs use to run parts of the synth\n"
               << "without a UI or a DAW. It explicitly is NOT a standalone version of surge or a\n"
               << "user targeted application. If you are running it and are not a dev you will\n"
@@ -110,11 +112,10 @@ int main(int argc, char** argv)
    try 
    {
       // simpleOscillatorToStdOut();
-      //statsFromPlayingEveryPatch();
+      statsFromPlayingEveryPatch();
       //playSomeBach();
       //Surge::Headless::createAndDestroyWithScaleAndRandomPatch(20000);
       // Surge::Headless::pullInitSamplesWithNoNotes(1000);
-      testTuning();
       //portableWt();
    }
    catch( Surge::Error &e )
