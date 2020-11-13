@@ -81,7 +81,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
              auto freq = powf(2.0f, frate );
 
              smt = sin(M_PI * freq * mod_time);
-             if( lfo->shape.val.i == ls_square )
+             if( lfo->shape.val.i == lt_square )
                  smt = ( smt > 0 ? 1 : -1 );
 
              if( lfo->unipolar.val.i )

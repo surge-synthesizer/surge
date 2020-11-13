@@ -126,7 +126,7 @@ void LfoModulationSource::initPhaseFromStartPhase()
 {
    phase = localcopy[startphase].f;
    phaseInitialized = true;
-   if( lfo->shape.val.i == ls_tri && lfo->rate.deactivated && ! lfo->unipolar.val.b )
+   if( lfo->shape.val.i == lt_tri && lfo->rate.deactivated && ! lfo->unipolar.val.b )
       phase += 0.25;
    while( phase < 0.f )
       phase += 1.f;
@@ -161,14 +161,14 @@ void LfoModulationSource::attack()
    if (is_display)
    {
       phase = lfo->start_phase.val.f;
-      if (lfo->shape.val.i == ls_stepseq )
+      if (lfo->shape.val.i == lt_stepseq )
          phase = 0.f;
       step = 0;
    }
    else
    {
       float phaseslider;
-      if (lfo->shape.val.i == ls_stepseq)
+      if (lfo->shape.val.i == lt_stepseq)
          phaseslider = 0.f; // Use Phase as shuffle-parameter instead
       // else if(state) phaseslider = lfo->start_phase.val.f;
       else
@@ -229,13 +229,13 @@ void LfoModulationSource::attack()
 
    switch (lfo->shape.val.i)
    {
-   case ls_snh:
+   case lt_snh:
       noise = 0.f;
       noised1 = 0.f;
       target = 0.f;
       iout = correlated_noise_o2mk2_suppliedrng(target, noised1, limit_range(localcopy[ideform].f,-1.f,1.f), urng);
       break;
-   case ls_stepseq:
+   case lt_stepseq:
    {
       // fire up the engines
       wf_history[1] = ss->steps[step & (n_stepseqsteps - 1)];
@@ -263,7 +263,7 @@ void LfoModulationSource::attack()
       wf_history[0] = ss->steps[step & (n_stepseqsteps - 1)];
    }
    break;
-   case ls_noise:
+   case lt_noise:
    {
       noise = 0.f;
       noised1 = 0.f;
@@ -280,7 +280,7 @@ void LfoModulationSource::attack()
       phase = 0.f;
    }
    break;
-   case ls_tri:
+   case lt_tri:
    {
       if (!lfo->unipolar.val.b)
       {
@@ -293,7 +293,7 @@ void LfoModulationSource::attack()
       }
    }
    break;
-   case ls_sine:
+   case lt_sine:
    {
       if (lfo->unipolar.val.b)
       {
@@ -317,7 +317,7 @@ void LfoModulationSource::release()
       env_releasestart = env_val;
       env_phase = 0;
    }
-   else if( lfo->shape.val.i == ls_mseg )
+   else if( lfo->shape.val.i == lt_mseg )
    {
       env_state = lenv_msegrelease;
    }
@@ -364,7 +364,7 @@ void LfoModulationSource::process_block()
    phase += frate * ratemult;
    //if( lfo->rate.temposync )
    //std::cout << _D(phase) << _D(frate) << _D(ratemult) << _D(storage->temposyncratio) << std::endl;
-   if( frate == 0 && phase == 0 && s == ls_stepseq )
+   if( frate == 0 && phase == 0 && s == lt_stepseq )
    {
       phase = 0.001; // step forward a smidge
    }
@@ -414,8 +414,8 @@ void LfoModulationSource::process_block()
       // sustainlevel = sustainlevel*(1.f + localcopy[ideform].f) -
       // sustainlevel*sustainlevel*localcopy[ideform].f; sustainlevel = sustainlevel /
       // (sustainlevel*localcopy[ideform].f + 1 - localcopy[ideform].f); float dd =
-      // (localcopy[ideform].f - 1); if (s == ls_envelope) sustainlevel = 0.5f *
-      // (sqrt(4.f*sustainlevel + dd*dd) + dd); if (s == ls_envelope) sustainlevel = 1.f / (1.f +
+      // (localcopy[ideform].f - 1); if (s == lt_envelope) sustainlevel = 0.5f *
+      // (sqrt(4.f*sustainlevel + dd*dd) + dd); if (s == lt_envelope) sustainlevel = 1.f / (1.f +
       // localcopy[ideform].f); a = (1.f-localcopy[ideform].f) + localcopy[ideform].f*env_val;
       // u = e*a;
 
@@ -502,12 +502,12 @@ void LfoModulationSource::process_block()
 
       switch (s)
       {
-      case ls_snh:
+      case lt_snh:
       {
          iout = correlated_noise_o2mk2_suppliedrng(target, noised1, limit_range(localcopy[ideform].f,-1.f,1.f), urng);
       }
       break;
-      case ls_noise:
+      case lt_noise:
       {
          wf_history[3] = wf_history[2];
          wf_history[2] = wf_history[1];
@@ -517,7 +517,7 @@ void LfoModulationSource::process_block()
          // target = ((float) rand()/RAND_MAX)*2.f - 1.f;
       }
       break;
-      case ls_stepseq:
+      case lt_stepseq:
          /*
          ** You might thing we don't need this and technically we don't
          ** but I wanted to keep it here to retain compatability with 
@@ -563,8 +563,8 @@ void LfoModulationSource::process_block()
 
    switch (s)
    {
-   case ls_envelope:
-   case ls_function:
+   case lt_envelope:
+   case lt_function:
       switch (lfo->deform.deform_type)
       {
       case type_1:
@@ -577,7 +577,7 @@ void LfoModulationSource::process_block()
       }
       break;
 
-   case ls_sine:
+   case lt_sine:
       switch (lfo->deform.deform_type)
       {
       case type_1:
@@ -597,7 +597,7 @@ void LfoModulationSource::process_block()
       }               
    break;
    
-   case ls_tri:
+   case lt_tri:
       switch (lfo->deform.deform_type)
       {
       case type_1:
@@ -617,7 +617,7 @@ void LfoModulationSource::process_block()
       }
    break;
    
-   case ls_ramp:
+   case lt_ramp:
       switch (lfo->deform.deform_type)
       {
       case type_1:
@@ -639,19 +639,19 @@ void LfoModulationSource::process_block()
        
       break;
    
-   case ls_square:
+   case lt_square:
 
       iout = (phase > (0.5f + 0.5f * localcopy[ideform].f)) ? -1.f : 1.f;
       break;
    
-   case ls_noise:
+   case lt_noise:
    {
       // iout = noise*(1-phase) + phase*target;
       iout = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
    }
    break;
    
-   case ls_stepseq:
+   case lt_stepseq:
       // iout = wf_history[0];
       {
          // Support 0 rate scrubbing across all 16 steps
@@ -732,7 +732,7 @@ void LfoModulationSource::process_block()
       }
       break;
    
-   case ls_mseg:
+   case lt_mseg:
       msegstate.released =  ( env_state == lenv_release || env_state == lenv_msegrelease );
       iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms, &msegstate );
       break;
@@ -742,7 +742,7 @@ void LfoModulationSource::process_block()
 
    if (lfo->unipolar.val.b)
    {
-      if (s != ls_stepseq)
+      if (s != lt_stepseq)
       {
          io2 = 0.5f + 0.5f * io2;
       }

@@ -31,13 +31,13 @@ const static std::string PresetXtn = ".modpreset";
 void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, int lfoid )
 {
    auto lfo = &(s->getPatch().scene[scene].lfo[lfoid]);
-   int shapev = lfo->shape.val.i;
+   int lfotype = lfo->shape.val.i;
 
    auto containingPath = fs::path{ string_to_path( s->userDataPath ) / fs::path{ PresetDir }};
 
-   if( shapev == ls_mseg )
+   if( lfotype == lt_mseg )
       containingPath = containingPath / fs::path{ "MSEG" };
-   else if( shapev == ls_stepseq )
+   else if( lfotype == lt_stepseq )
       containingPath = containingPath / fs::path{ "Step Seq" };
    else
       containingPath = containingPath / fs::path{ "LFO" };
@@ -51,7 +51,7 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
    doc.InsertEndChild(decl);
 
    TiXmlElement lfox( "lfo" );
-   lfox.SetAttribute("shape", shapev );
+   lfox.SetAttribute("shape", lfotype );
 
    TiXmlElement params( "params" );
    for( auto curr = &(lfo->rate); curr <= &(lfo->release); ++curr )
@@ -82,13 +82,13 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
    }
    lfox.InsertEndChild(params);
 
-   if( shapev == ls_mseg )
+   if( lfotype == lt_mseg )
    {
       TiXmlElement ms( "mseg" );
       s->getPatch().msegToXMLElement(&(s->getPatch().msegs[scene][lfoid]), ms );
       lfox.InsertEndChild( ms );
    }
-   if( shapev == ls_stepseq )
+   if( lfotype == lt_stepseq )
    {
       TiXmlElement ss( "sequence" );
       s->getPatch().stepSeqToXmlElement(&(s->getPatch().stepsequences[scene][lfoid]), ss, true );
@@ -120,13 +120,13 @@ void loadPresetFrom( const fs::path &location, SurgeStorage *s, int scene, int l
       return;
    }
 
-   int shapev = 0;
-   if( lfox->QueryIntAttribute("shape", &shapev) != TIXML_SUCCESS )
+   int lfotype = 0;
+   if( lfox->QueryIntAttribute("shape", &lfotype) != TIXML_SUCCESS )
    {
       std::cout << "Bad shape" << std::endl;
       return;
    }
-   lfo->shape.val.i = shapev;
+   lfo->shape.val.i = lfotype;
 
    auto params = TINYXML_SAFE_TO_ELEMENT(lfox->FirstChildElement("params"));
    if (!params)
@@ -184,14 +184,14 @@ void loadPresetFrom( const fs::path &location, SurgeStorage *s, int scene, int l
       }
    }
 
-   if (shapev == ls_mseg)
+   if (lfotype == lt_mseg)
    {
       auto msn = lfox->FirstChildElement("mseg");
       if( msn )
          s->getPatch().msegFromXMLElement(&(s->getPatch().msegs[scene][lfoid]), msn);
    }
 
-   if( shapev == ls_stepseq )
+   if( lfotype == lt_stepseq )
    {
       auto msn = lfox->FirstChildElement("sequence");
       if( msn )

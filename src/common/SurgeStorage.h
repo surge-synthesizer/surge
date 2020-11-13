@@ -341,22 +341,22 @@ const char fmc_names[n_fm_configuration][16] =
    "2 > 1 < 3",
 };
 
-enum lfoshapes
+enum lfotypes
 {
-   ls_sine = 0,
-   ls_tri,
-   ls_square,
-   ls_ramp,
-   ls_noise,
-   ls_snh,
-   ls_envelope,
-   ls_stepseq,
-   ls_mseg,
-   ls_function,
-   n_lfoshapes
+   lt_sine = 0,
+   lt_tri,
+   lt_square,
+   lt_ramp,
+   lt_noise,
+   lt_snh,
+   lt_envelope,
+   lt_stepseq,
+   lt_mseg,
+   lt_function,
+   n_lfotypes
 };
 
-const char ls_names[n_lfoshapes][32] =
+const char lt_names[n_lfotypes][32] =
 {
    "Sine",
    "Triangle",

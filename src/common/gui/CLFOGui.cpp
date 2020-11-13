@@ -70,7 +70,7 @@ void CLFOGui::draw(CDrawContext* dc)
    maindisp.top += 1;
    maindisp.bottom -= 1;
 
-   if (ss && lfodata->shape.val.i == ls_stepseq)
+   if (ss && lfodata->shape.val.i == lt_stepseq)
    {
       drawStepSeq(dc, maindisp, leftpanel);
    }
@@ -503,7 +503,7 @@ void CLFOGui::draw(CDrawContext* dc)
       auto off = lfodata->shape.val.i * 76;
       typeImg->draw( dc, CRect( CPoint( leftpanel.left, leftpanel.top + 2), CPoint( 51, 76 ) ), CPoint( 0, off ), 0xff );
 
-      for( int i=0; i<n_lfoshapes; ++i )
+      for( int i=0; i<n_lfotypes; ++i )
       {
          int xp = ( i % 2 ) * 25 + leftpanel.left;
          int yp = ( i / 2 ) * 15 + leftpanel.top;
@@ -528,7 +528,7 @@ void CLFOGui::draw(CDrawContext* dc)
    }
    else
    {
-      for (int i = 0; i < n_lfoshapes; i++)
+      for (int i = 0; i < n_lfotypes; i++)
       {
          CRect tb(leftpanel);
          tb.top = leftpanel.top + 10 * i;
@@ -555,7 +555,7 @@ void CLFOGui::draw(CDrawContext* dc)
          shaperect[i] = tb;
          // tb.offset(0,-1);
          tb.top += 1.6; // now the font is smaller and the box is square, smidge down the text
-         dc->drawString(ls_names[i], tb);
+         dc->drawString(lt_names[i], tb);
       }
    }
 
@@ -1156,7 +1156,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
       return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
    }
 
-   if (lfodata->shape.val.i == ls_mseg)
+   if (lfodata->shape.val.i == lt_mseg)
    {
       // only the LFO waveform area
       auto displayrect = getViewSize();
@@ -1180,7 +1180,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
    }
 
    // handle step sequencer mouse events
-   if (ss && lfodata->shape.val.i == ls_stepseq)
+   if (ss && lfodata->shape.val.i == lt_stepseq)
    {
        if (rect_steps.pointInside(where))
        {
@@ -1409,7 +1409,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
    {
       // onMouseMoved(where,buttons);
       controlstate = cs_null;
-      if( lfodata->shape.val.i == ls_stepseq )
+      if( lfodata->shape.val.i == lt_stepseq )
          invalid();
    }
    return kMouseEventHandled;
@@ -1417,7 +1417,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 
 CMouseEventResult CLFOGui::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons)
 {
-   if (lfodata->shape.val.i == ls_mseg)
+   if (lfodata->shape.val.i == lt_mseg)
       getFrame()->setCursor(VSTGUI::kCursorDefault);
 
    ss_shift_hover = 0;
@@ -1429,7 +1429,7 @@ CMouseEventResult CLFOGui::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CB
 
 CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
-   if (lfodata->shape.val.i == ls_mseg)
+   if (lfodata->shape.val.i == lt_mseg)
    {
       auto displayrect = getViewSize();
       displayrect.left += lpsize + 19;
@@ -1442,7 +1442,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
    int plt = lfo_type_hover;
    lfo_type_hover = -1;
-   for( int i=0; i<n_lfoshapes; ++i )
+   for( int i=0; i<n_lfotypes; ++i )
    {
       if( shaperect[i].pointInside(where) )
          lfo_type_hover = i;
@@ -1458,7 +1458,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
    {
       // getFrame()->setCursor( VSTGUI::kCursorHand );
    }
-   else if (ss && lfodata->shape.val.i == ls_stepseq && (
+   else if (ss && lfodata->shape.val.i == lt_stepseq && (
                ss_shift_left.pointInside(where) ||
                ss_shift_right.pointInside(where)
                ))
@@ -1476,7 +1476,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
    if (controlstate == cs_shape)
    {
-      for (int i = 0; i < n_lfoshapes; i++)
+      for (int i = 0; i < n_lfotypes; i++)
       {
          auto prior = lfodata->shape.val.i;
          if (shaperect[i].pointInside(where))
@@ -1676,7 +1676,7 @@ void CLFOGui::invalidateIfAnythingIsTemposynced()
 
 bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const CButtonState &buttons )
 {
-   if (ss && lfodata->shape.val.i == ls_stepseq && rect_steps.pointInside(where) ) {
+   if (ss && lfodata->shape.val.i == lt_stepseq && rect_steps.pointInside(where) ) {
       for (int i = 0; i < n_stepseqsteps; i++)
       {
          if ((where.x > steprect[i].left) && (where.x < steprect[i].right))
@@ -1704,8 +1704,8 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
                     auto ns = ps + d;
                     if( ns < 0 )
                        ns = 0;
-                    if( ns >= n_lfoshapes )
-                       ns = n_lfoshapes - 1;
+                    if( ns >= n_lfotypes )
+                       ns = n_lfotypes - 1;
 
                     if( ns != this->lfodata->shape.val.i )
                     {

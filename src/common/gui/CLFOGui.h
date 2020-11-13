@@ -113,7 +113,7 @@ protected:
    int tsNum = 4, tsDen = 4;
    
    
-   VSTGUI::CRect shaperect[n_lfoshapes];
+   VSTGUI::CRect shaperect[n_lfotypes];
    VSTGUI::CRect steprect[n_stepseqsteps];
    VSTGUI::CRect gaterect[n_stepseqsteps];
    VSTGUI::CRect rect_ls, rect_le, rect_shapes, rect_steps, rect_steps_retrig;

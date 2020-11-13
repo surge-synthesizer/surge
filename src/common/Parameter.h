@@ -82,7 +82,7 @@ enum ctrltypes
    ct_lforate,
    ct_lforate_deactivatable,
    ct_lfodeform,
-   ct_lfoshape,
+   ct_lfotype,
    ct_lfotrigmode,
    ct_detuning,
    ct_osctype,
