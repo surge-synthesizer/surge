@@ -4,6 +4,7 @@
 #include "vstgui/vstgui.h"
 #include <map>
 #include <atomic>
+#include <algorithm>
 
 class CScalableBitmap;
 
@@ -30,6 +31,14 @@ protected:
    void addEntry(int id, VSTGUI::CFrame* f);
    std::map<int, CScalableBitmap*> bitmap_registry;
    std::map<std::string, CScalableBitmap*> bitmap_file_registry;
-   std::map<std::string, CScalableBitmap*> bitmap_stringid_registry;
+
+   struct cicomp {
+      bool operator() (const std::string& a, const std::string& b) const {
+         std::string al = a; std::transform(al.begin(), al.end(), al.begin(), [](unsigned char c ) { return std::tolower(c); } );
+         std::string bl = b; std::transform(bl.begin(), bl.end(), bl.begin(), [](unsigned char c ) { return std::tolower(c); } );
+         return al < bl;
+      }
+   };
+   std::map<std::string, CScalableBitmap*, cicomp> bitmap_stringid_registry;
    VSTGUI::CFrame *frame;
 };
