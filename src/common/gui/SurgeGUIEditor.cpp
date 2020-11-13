@@ -1011,7 +1011,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
       switch (code.virt)
       {
       case VKEY_TAB:
-         if ( (saveDialog && saveDialog->isVisible()) || (typeinDialog && typeinDialog->isVisible() ) )
+         if ( (editorOverlay && editorOverlayTag == "storePatch" ) || (typeinDialog && typeinDialog->isVisible() ) )
          {
             /*
             ** SaveDialog gets access to the tab key to switch between fields if it is open
@@ -3609,6 +3609,11 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_mp_category:
    {
+      if( editorOverlay && editorOverlayTag == "storePatch" )
+      {
+         closeStorePatchDialog();
+      }
+
       if (control->getValue() > 0.5f)
          synth->incrementCategory(true);
       else
@@ -3618,6 +3623,11 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_mp_patch:
    {
+      if( editorOverlay && editorOverlayTag == "storePatch" )
+      {
+         closeStorePatchDialog();
+      }
+
       if (control->getValue() > 0.5f)
          synth->incrementPatch(true);
       else
@@ -3807,9 +3817,6 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       // FIXME: baconpaul will know a better and more correct way to fix this
       if (editorOverlay && editorOverlayTag == "storePatch")
       {
-         closeStorePatchDialog();
-         frame->setDirty();
-       
          /*
          ** Don't allow a blank patch
          */
@@ -3858,6 +3865,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
        
             synth->savePatch();
          }
+
+         closeStorePatchDialog();
+         frame->setDirty();
       }
    }
    break;
@@ -6668,7 +6678,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
 {
    CRect dialogSize(CPoint(0, 0), CPoint(390, 143));
 
-   saveDialog = new CViewContainer(dialogSize);
+   auto saveDialog = new CViewContainer(dialogSize);
    saveDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Background));
 
    auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
@@ -7246,6 +7256,12 @@ void SurgeGUIEditor::closeStorePatchDialog()
    {
       dismissEditorOverlay();
    }
+   // Have to update all that state too for the newly orphaned items
+   patchName = nullptr;
+   patchCategory = nullptr;
+   patchCreator = nullptr;
+   patchComment = nullptr;
+
 }
 
 void SurgeGUIEditor::showStorePatchDialog()

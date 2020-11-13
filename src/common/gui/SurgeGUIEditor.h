@@ -388,7 +388,6 @@ private:
    VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
    VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;
    CAboutBox* aboutbox = nullptr;
-   VSTGUI::CViewContainer *saveDialog = nullptr;
    VSTGUI::CTextEdit *patchName = nullptr;
    VSTGUI::CTextEdit *patchCategory = nullptr;
    VSTGUI::CTextEdit *patchCreator = nullptr;
