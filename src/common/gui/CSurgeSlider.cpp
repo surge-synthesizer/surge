@@ -522,7 +522,11 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
          if( is_temposync )
          {
-            if( pTempoSyncHandle )
+            if( in_hover && pTempoSyncHoverHandle )
+            {
+               pTempoSyncHoverHandle->draw( dc, hrect, CPoint( 0, 0 ), slider_alpha );
+            }
+            else if( pTempoSyncHandle )
             {
                pTempoSyncHandle->draw(dc, hrect, CPoint(0, 0), slider_alpha);
             }
@@ -556,7 +560,11 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
          if( is_temposync )
          {
-            if( pTempoSyncHandle )
+            if( in_hover && pTempoSyncHoverHandle )
+            {
+               pTempoSyncHoverHandle->draw( dc, hrect, CPoint( 0, 0 ), slider_alpha );
+            }
+            else if( pTempoSyncHandle )
             {
                pTempoSyncHandle->draw(dc, hrect, CPoint(0, 0), slider_alpha);
             }
@@ -1006,12 +1014,14 @@ void CSurgeSlider::onSkinChanged()
       pTray = associatedBitmapStore->getBitmap(IDB_FADERH_BG);
       pHandle = associatedBitmapStore->getBitmap(IDB_FADERH_HANDLE);
       pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_OVERLAY" );
+      pTempoSyncHoverHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_HOVER_OVERLAY" );
    }
    else
    {
       pTray = associatedBitmapStore->getBitmap(IDB_FADERV_BG);
       pHandle = associatedBitmapStore->getBitmap(IDB_FADERV_HANDLE);
       pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_VERTICAL_OVERLAY" );
+      pTempoSyncHoverHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_VERTICAL_HOVER_OVERLAY" );
    }
 
    if( skinControl.get() )
@@ -1030,6 +1040,12 @@ void CSurgeSlider::onSkinChanged()
       if( ht.isJust() )
       {
          pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID(ht.fromJust());
+      }
+
+      auto hth = skin->propertyValue( skinControl, "handle_temposync_hover_image" );
+      if( hth.isJust() )
+      {
+         pTempoSyncHoverHandle = associatedBitmapStore->getBitmapByStringID(hth.fromJust());
       }
    }
    
