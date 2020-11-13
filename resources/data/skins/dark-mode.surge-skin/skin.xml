@@ -269,16 +269,16 @@
 
     <control ui_identifier="lfo.main.panel" y="477"/>
 
-    <control ui_identifier="lfo.name" x="6"/>
+    <control ui_identifier="lfo.title" x="6"/>
     <control ui_identifier="lfo.presets" x="6" y="477"/>
 
-    <control ui_identifier="lfo.triggermode" y="483"/>
+    <control ui_identifier="lfo.trigger_mode" y="483"/>
     <control ui_identifier="lfo.unipolar" x="170" y="545" w="51" h="14"/>
 
     <control ui_identifier="lfo.shape" y="479"/>
-    <control ui_identifier="lfo.msegedit" y="477"/>
+    <control ui_identifier="lfo.mseg_editor" y="477"/>
 
-    <control ui_identifier="lfo.envelope.panel" x="614.5" y="492"/>
+    <control ui_identifier="lfo.envelope.panel" x="614" y="492"/>
 
     <!-- FX Section -->
     <control ui_identifier="fx.preset.prevnext" y="213"/>
