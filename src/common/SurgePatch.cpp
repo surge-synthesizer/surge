@@ -86,7 +86,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    for (int fx = 0; fx < 8; fx++)
    {
       param_ptr.push_back(this->fx[fx].type.assign(p_id.next(), 0, "type", "FX Type", ct_fxtype,
-                                                   Surge::Skin::FX::fxtype,
+                                                   Surge::Skin::FX::fx_type,
                                                    0, cg_FX, fx, false, Surge::ParamConfig::kHorizontal));
       for (int p = 0; p < n_fx_params; p++)
       {
@@ -139,7 +139,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          scene[sc].osc[osc].wavetable_display_name[0] = '\0';
          
          a->push_back(scene[sc].osc[osc].type.assign(p_id.next(), id_s++, "type", "Type", ct_osctype,
-                                                     Surge::Skin::Osc::osctype,
+                                                     Surge::Skin::Osc::osc_type,
                                                      sc_id, cg_OSC, osc, false));
          a->push_back(scene[sc].osc[osc].octave.assign(p_id.next(), id_s++, "octave", "Octave",
                                                        ct_pitch_octave,
@@ -336,7 +336,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
                                               sceasy));
       a->push_back(scene[sc].vca_velsense.assign(p_id.next(), id_s++, "vca_velsense", "Velocity > VCA Gain",
                                                  ct_decibel_attenuation,
-                                                 Surge::Skin::Scene::velocity_sensitivity, sc_id, cg_GLOBAL,
+                                                 Surge::Skin::Scene::vel_sensitivity, sc_id, cg_GLOBAL,
                                                  0, false));
 
       a->push_back(scene[sc].feedback.assign(p_id.next(), id_s++, "feedback", "Feedback",
@@ -484,7 +484,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
          sprintf(label, "lfo%i_trigmode", l);
          a->push_back(scene[sc].lfo[l].trigmode.assign(p_id.next(), id_s++, label, "Trigger Mode",
                                                        ct_lfotrigmode,
-                                                       Surge::Skin::LFO::triggermode, sc_id,
+                                                       Surge::Skin::LFO::trigger_mode, sc_id,
                                                        cg_LFO, ms_lfo1 + l, false,
                                                        kNoPopup));
          sprintf(label, "lfo%i_unipolar", l);
