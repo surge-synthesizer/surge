@@ -127,7 +127,7 @@ public:
 
 private:
    VSTGUI::CBitmap *pHandle = nullptr, *pTray = nullptr,
-      *pModHandle = nullptr, *pTempoSyncHandle = nullptr, *pHandleHover = nullptr;
+      *pModHandle = nullptr, *pTempoSyncHandle = nullptr, *pHandleHover = nullptr, *pTempoSyncHoverHandle = nullptr;
    VSTGUI::CRect handle_rect, handle_rect_orig;
    VSTGUI::CPoint offsetHandle;
    int range;
