@@ -24,10 +24,10 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={cf}\VST3\Surge Synth Team\
+DefaultDirName={cf}\VST3\
 DefaultGroupName=Surge
 DisableProgramGroupPage=yes
-DisableDirPage=yes
+DisableDirPage=no
 LicenseFile=..\LICENSE
 OutputBaseFilename="{#MyAppName}-{#MyAppVersion}-Setup-x86"
 SetupIconFile=surge.ico
@@ -57,8 +57,8 @@ Source: ..\resources\data\*; DestDir: {commonappdata}\Surge; Components: Data; F
 Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
 
 ;; these two lines are used by Azure pipelines - if you want to build the installer locally, comment them out!
-Source: ..\build\surge_products\Surge_x86.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion
-Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+Source: ..\build\surge_products\Surge_x86.vst3; DestDir: {app}\Surge Synth Team\; Components: VST3; Flags: ignoreversion
+Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3; DestDir: {app}\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 
 ;; these two lines are used when building the installer locally - uncomment them if you want to do that!
 ;;Source: ..\build32\surge_products\Surge_x86.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion
@@ -73,5 +73,5 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 [Run]
 Filename: "{cmd}"; \
     WorkingDir: "{cf}\VST3"; \
-    Parameters: "/C mklink /D /J  ""{cf}\VST3\Surge Synth Team\SurgeData"" ""{commonappdata}\Surge"""; \
+    Parameters: "/C mklink /D /J  ""{app}\Surge Synth Team\SurgeData"" ""{commonappdata}\Surge"""; \
     Flags: runascurrentuser

@@ -26,10 +26,10 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={cf}\VST3\Surge Synth Team\
+DefaultDirName={cf}\VST3\
 DefaultGroupName=Surge
 DisableProgramGroupPage=yes
-DisableDirPage=yes
+DisableDirPage=no
 LicenseFile=..\LICENSE
 OutputBaseFilename="{#MyAppName}-{#MyAppVersion}-Setup"
 SetupIconFile=surge.ico
@@ -57,8 +57,8 @@ Name: EffectsVST3; Description: SurgeEffectsBank VST3 (64-bit); Types: full comp
 [Files]
 Source: ..\resources\data\*; DestDir: {commonappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
 Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: ..\build\surge_products\Surge.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion
-Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+Source: ..\build\surge_products\Surge.vst3; DestDir: {app}\Surge Synth Team\; Components: VST3; Flags: ignoreversion
+Source: ..\surge-fx\build\product\SurgeEffectsBank.vst3; DestDir: {app}\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -68,6 +68,6 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Run]
 Filename: "{cmd}"; \
-    WorkingDir: "{cf}\VST3"; \
-    Parameters: "/C mklink /D /J  ""{cf}\VST3\Surge Synth Team\SurgeData"" ""{commonappdata}\Surge"""; \
+    WorkingDir: "{app}"; \
+    Parameters: "/C mklink /D /J  ""{app}\Surge Synth Team\SurgeData"" ""{commonappdata}\Surge"""; \
     Flags: runascurrentuser
