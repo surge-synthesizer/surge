@@ -30,6 +30,7 @@ DefaultDirName={cf}\VST3\Surge Synth Team\
 DefaultGroupName=Surge
 DisableProgramGroupPage=yes
 DisableDirPage=yes
+DisableReadyPage=no
 LicenseFile=..\LICENSE
 OutputBaseFilename="{#MyAppName}-{#MyAppVersion}-Setup"
 SetupIconFile=surge.ico
@@ -71,3 +72,23 @@ Filename: "{cmd}"; \
     WorkingDir: "{cf}\VST3"; \
     Parameters: "/C mklink /D /J  ""{cf}\VST3\Surge Synth Team\SurgeData"" ""{commonappdata}\Surge"""; \
     Flags: runascurrentuser
+
+[Code]
+procedure AddToReadyMemo(var Memo: string; Info, NewLine: string);
+begin
+  if Info <> '' then Memo := Memo + Info + Newline + NewLine;
+end;
+
+function UpdateReadyMemo(
+  Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo, MemoComponentsInfo,
+  MemoGroupInfo, MemoTasksInfo: String): String;
+begin
+  AddToReadyMemo(Result, MemoComponentsInfo, NewLine);
+
+  Result := Result + 'Installation Locations:' + NewLine
+  Result := Result + Space + 'Data Files: ' + ExpandConstant( '{commonappdata}' ) + '\Surge' + NewLine
+  Result := Result + Space + 'VST3: ' + ExpandConstant( '{cf}' ) + '\VST3\Surge Synth Team' + NewLine
+  Result := Result + Space + 'Portable Junction: ' + ExpandConstant( '{cf}' ) + '\VST3\Surge Synth Team\SurgeData' + NewLine
+  
+end;
+
