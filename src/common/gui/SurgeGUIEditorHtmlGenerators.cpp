@@ -356,6 +356,18 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
 {
    std::ostringstream htmls;
 
+   auto startSection = [&htmls]( std::string secname, std::string seclabel ) {
+      htmls << R"HTML(
+     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+                <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+
+          )HTML" << "<a name=\"" << secname << "\"><h2>" << seclabel << "</h2></a>\n";
+   };
+   auto endSection = [&htmls]() {
+     htmls << R"HTML(
+        </div></div>
+          )HTML";
+   };
    htmls << R"HTML(
    <html>
    <head>
@@ -389,10 +401,10 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
                    </div>
                      </div>
 
-                       <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-                                  <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+
    )HTML";
 
+   startSection("colors", "Color Database" );
    htmls << "<table><tr><th>Color Name</th><th colspan=2>Default Color</th><th colspan=2>Current Color</th></tr>\n";
    auto cols = Surge::Skin::Color::getAllColors();
 
@@ -417,17 +429,13 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
       htmls << "<tr><td>" << c.name << "</td>" << htmlBlob( c.r, c.g, c.b, c.a )  << htmlBlob( skincol.red, skincol.green, skincol.blue, skincol.alpha ) << "</tr>\n";
    }
    htmls << "</table>";
+   endSection();
 
-   // Image IDs
-   htmls << R"HTML(
-         </div>
-         </div>
-       <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-          <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
-   )HTML";
+   startSection( "imageid", "Image IDs" );
 
    {
       auto q = Surge::UI::createIdNameMap();
+
       std::vector<std::pair<std::string, int>> asV(q.begin(), q.end());
       std::sort( asV.begin(), asV.end(), [](auto a, auto b ) { return a.second < b.second; });
       htmls << "<table><tr><th>Resource Number</th><th>Resource ID</th></tr>\n";
@@ -438,11 +446,80 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
       htmls << "</table>\n";
 
    }
+   endSection();
 
-   htmls <<  R"HTML(</div>
-    </div>
+   htmls <<  R"HTML(
   </body>
 </html>
       )HTML";
+
+   // Skin Connectors
+   startSection( "skinConectors", "Skin Connectors for Components" );
+   {
+      auto imgid = Surge::UI::createIdNameMap();
+
+      auto co = Surge::Skin::Connector::allConnectorIDs();
+      htmls << "<table><tr><th>Name</th><th>Geometry (XxY+WxH)</th><th>Class</th><th>Properties</th></tr>\n";
+      for( auto c : co )
+      {
+         htmls << "<tr><td>" << c << "</td><td>";
+         auto comp = currentSkin->getOrCreateControlForConnector(Surge::Skin::Connector::connectorByID(c));
+         if( comp )
+         {
+            htmls << comp->x << "x" << comp->y;
+            if (comp->w > 0 || comp->h > 0)
+               htmls << "+" << comp->w << "x" << comp->h;
+         }
+
+         htmls << "</td><td>";
+         if( comp )
+         {
+            if( comp->classname == comp->ultimateparentclassname )
+               htmls << comp->classname;
+            else
+               htmls << comp->classname << " : " << comp->ultimateparentclassname;
+         }
+
+         htmls << "</td><td>";
+         if( comp )
+            for( auto p: comp->allprops )
+            {
+               if( p.first != "x" && p.first != "y" && p.first != "w" && p.first != "h" )
+               {
+                  htmls << p.first << ": " << p.second;
+                  if( p.first == "bg_id" )
+                  {
+                     int id = std::atoi(p.second.c_str());
+                     // Linear search kinda sucks but this is debugging code for UI generation on small list
+                     for( auto q : imgid )
+                        if( q.second == id )
+                           htmls << " (" << q.first << ")\n";
+                  }
+                  htmls << "<br>\n";
+               }
+            }
+         htmls << "</td></tr>\n";
+      }
+      htmls << "</table>\n";
+   }
+   endSection();
+
+   // Loaded Images
+   startSection( "loadedImages", "Runtime Non-ID Images in Current Skin" );
+   {
+      htmls << "<ul>\n";
+      auto r1 = bitmapStore->nonResourceBitmapIDs(SurgeBitmaps::STRINGID);
+      for( auto v : r1 )
+      {
+         htmls << "<li>" << v << "</li>\n";
+      }
+      auto r2 = bitmapStore->nonResourceBitmapIDs(SurgeBitmaps::PATH);
+      for( auto v : r2 )
+      {
+         htmls << "<li>" << v << "</li>\n";
+      }
+      htmls << "</ul>\n";
+   }
+   endSection();
    return htmls.str();
 }

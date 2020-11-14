@@ -166,6 +166,8 @@ namespace Surge
          static Connector connectorByNonParameterConnection( NonParameterConnection n );
          static std::vector<Connector> connectorsByComponentType( Component c );
 
+         static std::vector<std::string> allConnectorIDs();
+
          Connector & withControlStyle(unsigned int flags ) noexcept
          {
             payload->controlStyleFlags |= flags;

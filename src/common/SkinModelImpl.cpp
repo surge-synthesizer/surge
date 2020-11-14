@@ -200,6 +200,17 @@ std::vector<Color> Color::getAllColors()
    std::sort( res.begin(), res.end(), [](const Color &a, const Color &b ) { return strcmp( a.name.c_str(), b.name.c_str() ) < 0;});
    return res;
 }
+
+
+std::vector<std::string> Connector::allConnectorIDs()
+{
+   guaranteeMap();
+   auto res = std::vector<std::string>();
+   for( auto c : * idmap )
+      res.push_back(c.first );
+   std::sort( res.begin(), res.end() );
+   return res;
+}
 }
 }
 

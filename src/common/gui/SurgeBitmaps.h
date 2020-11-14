@@ -24,7 +24,22 @@ public:
    CScalableBitmap* loadBitmapByPath(std::string filename);
    CScalableBitmap* loadBitmapByPathForID(std::string filename, int id);
    CScalableBitmap* loadBitmapByPathForStringID(std::string filename, std::string id);
-   
+
+   enum StringResourceType { PATH, STRINGID } ;
+   std::vector<std::string> nonResourceBitmapIDs( StringResourceType t )
+   {
+      std::vector<std::string> res;
+      switch( t )
+      {
+      case PATH:
+         for( auto &c : bitmap_file_registry )
+            res.push_back( c.first );
+      case STRINGID:
+         for( auto &c : bitmap_stringid_registry )
+            res.push_back( c.first );
+      }
+      return res;
+   }
 protected:
    static std::atomic<int> instances;
    
