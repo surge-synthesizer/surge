@@ -264,10 +264,12 @@ void COscMenu::draw(CDrawContext* dc)
    CRect size = getViewSize();
    int i = osc->type.val.i;
    int y = i * size.getHeight();
+
+   if (bmp)
+      bmp->draw(dc, size, CPoint(0, y), 0xff);
+
    if( isHovered && hoverBmp )
       hoverBmp->draw(dc,size,CPoint(0,y), 0xff);
-   else if (bmp)
-      bmp->draw(dc, size, CPoint(0, y), 0xff);
 
    setDirty(false);
 }
@@ -379,43 +381,34 @@ void CFxMenu::draw(CDrawContext* dc)
           Surge::UI::Skin::HoverType::HOVER);
    }
 
-   if( isHovered && pBackgroundHover )
-   {
-      pBackgroundHover->draw(dc, getViewSize(), CPoint(0,0), 0xff );
-   }
-   else if( pBackground )
+   if( pBackground )
    {
       pBackground->draw(dc, getViewSize(), CPoint(0,0), 0xff );
    }
 
+   if( isHovered && pBackgroundHover )
+   {
+      pBackgroundHover->draw(dc, getViewSize(), CPoint(0,0), 0xff );
+   }
+
+   // hover color and position
    auto fgc = skin->getColor(Colors::Effect::Menu::Text);
+
    if( isHovered )
       fgc = skin->getColor( Colors::Effect::Menu::TextHover);
-   // hover color and position
 
    dc->setFontColor(fgc);
    dc->setFont(displayFont);
+
    CRect txtbox(getViewSize());
    txtbox.inset( 2, 2 );
    txtbox.left += 4;
    txtbox.right -= 12;
    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
+   
    char fxname[NAMECHARS];
    sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);
    dc->drawString(fxname, txtbox, kRightText, true);
-
-   /*
-    * pre-graphics triangle code
-   CPoint d(txtbox.right + 2, txtbox.top + 5);
-   dc->drawPoint(d, fgc);
-   d.x++;
-   dc->drawPoint(d, fgc);
-   d.y++;
-   dc->drawPoint(d, fgc);
-   d.y--;
-   d.x++;
-   dc->drawPoint(d, fgc);
-   */
 
    setDirty(false);
 }
