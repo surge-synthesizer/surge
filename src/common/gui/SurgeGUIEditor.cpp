@@ -1578,11 +1578,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
-      CSurgeSlider::sliderMoveRateState =
-          (CSurgeSlider::MoveRateState)Surge::Storage::getUserDefaultValue(
-              &(synth->storage), "sliderMoveRateState", (int)CSurgeSlider::kClassic);
-
-
+      CSurgeSlider::sliderMoveRateState = (CSurgeSlider::MoveRateState)Surge::Storage::getUserDefaultValue(&(synth->storage), "sliderMoveRateState", (int)CSurgeSlider::kClassic);
 
    /*
    ** Skin Labels
@@ -1595,7 +1591,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
       if (mtext.isJust())
       {
-         auto ta = currentSkin->propertyValue(l, "text-align", "left");
+         auto ta = currentSkin->propertyValue(l, "text_align", "left");
          // make text align value not case sensitive
          std::transform(ta.begin(), ta.end(), ta.begin(),[](unsigned char c) { return std::tolower(c); });
 
@@ -1608,10 +1604,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
          else if (ta == "right")
             txtalign = kRightText;
 
-         auto fs = currentSkin->propertyValue(l, "font-size", "12");
+         auto fs = currentSkin->propertyValue(l, "font_size", "12");
          auto fsize = std::atof(fs.c_str());
 
-         auto fst = currentSkin->propertyValue(l, "font-style", "normal");
+         auto fst = currentSkin->propertyValue(l, "font_style", "normal");
          // make font style value not case sensitive
          std::transform(fst.begin(), fst.end(), fst.begin(),[](unsigned char c) { return std::tolower(c); });
          
@@ -1631,10 +1627,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
          auto coln = currentSkin->propertyValue(l, "color", "#FF0000");
          auto col = currentSkin->getColor(coln, kRedCColor);
 
-         auto bgcoln = currentSkin->propertyValue(l, "bg-color", "#FFFFFF00");
+         auto bgcoln = currentSkin->propertyValue(l, "bg_color", "#FFFFFF00");
          auto bgcol = currentSkin->getColor(bgcoln, kTransparentCColor);
 
-         auto frcoln = currentSkin->propertyValue(l, "frame-color", "#FFFFFF00");
+         auto frcoln = currentSkin->propertyValue(l, "frame_color", "#FFFFFF00");
          auto frcol = currentSkin->getColor(frcoln, kTransparentCColor);
 
          VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fsize, fstyle);
@@ -5500,19 +5496,19 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     skinSubMenu->addSeparator();
 
-    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
-                    []() {
-                       Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );
-                    });
-
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Show Skin Inspector..."),
                    [this]()
                    {
                      Surge::UserInteractions::showHTML( skinInspectorHtml() );
-                   }
-   );
+                   });
 
-   tid++;
+    tid++;
+    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
+                   []() {
+                      Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );
+                   });
+
+    tid++;
 
     return skinSubMenu;
 }
@@ -6949,12 +6945,12 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
          if( p && p->ctrltype == ct_scenesel )
             tag = tag_scene_select;
 
-         auto subpixmaps = currentSkin->propertyValue(skinCtrl, "subpixmaps", "1");
+         auto frames = currentSkin->propertyValue(skinCtrl, "frames", "1");
          auto rows = currentSkin->propertyValue(skinCtrl, "rows", "1");
          auto cols = currentSkin->propertyValue(skinCtrl, "columns", "1");
-         auto imgoff = currentSkin->propertyValue(skinCtrl, "imgoffset", "0" );
-         auto drgb = currentSkin->propertyValue( skinCtrl, "dragable", "1" );
-         auto hsw = new CHSwitch2(rect, this, tag, std::atoi(subpixmaps.c_str()), skinCtrl->h,
+         auto frameoffset = currentSkin->propertyValue(skinCtrl, "frame_offset", "0" );
+         auto drgb = currentSkin->propertyValue( skinCtrl, "draggable", "1" );
+         auto hsw = new CHSwitch2(rect, this, tag, std::atoi(frames.c_str()), skinCtrl->h,
                                   std::atoi(rows.c_str()), std::atoi(cols.c_str()), bmp, CPoint(0,0),
                                   std::atoi( drgb.c_str() ) );
          if( p )
@@ -6981,7 +6977,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
          }
          hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
          hsw->setMouseableArea(rect);
-         hsw->imgoffset = std::atoi(imgoff.c_str());
+         hsw->frameOffset = std::atoi(frameoffset.c_str());
 
          frame->addView(hsw);
          if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;

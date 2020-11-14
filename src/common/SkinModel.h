@@ -110,10 +110,10 @@ namespace Surge
             BACKGROUND=1001,
             ROWS,
             COLUMNS,
-            SUBPIXMAPS,
-            IMGOFFSET,
+            FRAMES,
+            FRAME_OFFSET,
             NUMBERFIELD_CONTROLMODE,
-            DRAGABLE_HSWITCH,
+            DRAGGABLE_HSWITCH,
             TEXT_COLOR,
             TEXT_HOVER_COLOR
          };
@@ -201,10 +201,10 @@ namespace Surge
             return withProperty(p, std::to_string(v));
          }
 
-         Connector & withHSwitch2Properties( int bgid, int subpix, int rows, int cols )
+         Connector & withHSwitch2Properties( int bgid, int frames, int rows, int cols )
          {
             return withProperty( Connector::BACKGROUND, bgid )
-                     .withProperty( Connector::SUBPIXMAPS, subpix )
+                     .withProperty( Connector::FRAMES, frames )
                      .withProperty( Connector::ROWS, rows )
                      .withProperty( Connector::COLUMNS, cols );
          }

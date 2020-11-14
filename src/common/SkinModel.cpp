@@ -208,9 +208,9 @@ namespace Surge
             Connector attack_shape = Connector("feg.attack_shape", 3, 1, 20, 16, Connector::HSWITCH2)
                       .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).inParent("feg.panel");
             Connector decay_shape = Connector("feg.decay_shape", 23, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::IMGOFFSET, 3).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("feg.panel");
             Connector release_shape = Connector("feg.release_shape", 63, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::IMGOFFSET, 6).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("feg.panel");
    
             Connector attack  = Connector("feg.attack", 0, 33).asVertical().asWhite().inParent("feg.panel");
             Connector decay   = Connector("feg.decay", 20, 33).asVertical().asWhite().inParent("feg.panel");
@@ -227,9 +227,9 @@ namespace Surge
             Connector attack_shape = Connector("aeg.attack_shape", 3, 1, 20, 16, Connector::HSWITCH2)
                       .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).inParent("aeg.panel");;
             Connector decay_shape = Connector("aeg.decay_shape", 23, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::IMGOFFSET, 3).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("aeg.panel");;
             Connector release_shape = Connector("aeg.release_shape", 63, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::IMGOFFSET, 6).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("aeg.panel");;
    
             Connector attack  = Connector("aeg.attack", 0, 33).asVertical().asWhite().inParent("aeg.panel");;
             Connector decay   = Connector("aeg.decay", 20, 33).asVertical().asWhite().inParent("aeg.panel");;
@@ -303,14 +303,14 @@ namespace Surge
       {
          Connector surge_menu = Connector("controls.surge_menu", 844, 550, 50, 15, Connector::HSWITCH2, Connector::SURGE_MENU)
                    .withProperty(Connector::BACKGROUND, IDB_BUTTON_MENU)
-                   .withProperty(Connector::DRAGABLE_HSWITCH, false);
+                   .withProperty(Connector::DRAGGABLE_HSWITCH, false);
 
          Connector patch_browser = Connector("controls.patch_browser", 156, 11, 547-156, 28, Connector::CUSTOM, Connector::PATCH_BROWSER);
          Connector patch_category_jog = Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
          Connector patch_jog = Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH).asJogPlusMinus();
          Connector patch_store = Connector("controls.patch.store", 510, 42, 37, 12, Connector::HSWITCH2, Connector::STORE_PATCH)
                    .withHSwitch2Properties(IDB_BUTTON_STORE, 1, 1, 1)
-                   .withProperty(Connector::DRAGABLE_HSWITCH, false);
+                   .withProperty(Connector::DRAGGABLE_HSWITCH, false);
 
          Connector status_panel = Connector("controls.status.panel", 562, 12, Connector::GROUP);
          Connector status_mpe = Connector("controls.status.mpe", 0, 0, 31, 12, Connector::SWITCH, Connector::STATUS_MPE)
