@@ -269,11 +269,11 @@
 
     <control ui_identifier="lfo.main.panel" y="477"/>
 
-    <control ui_identifier="lfo.title" x="6"/>
+    <control ui_identifier="lfo.title" x="6" y="486"/>
     <control ui_identifier="lfo.presets" x="6" y="477"/>
 
     <control ui_identifier="lfo.trigger_mode" y="483"/>
-    <control ui_identifier="lfo.unipolar" x="170" y="545" w="51" h="14"/>
+    <control ui_identifier="lfo.unipolar" y="545" w="51" h="14"/>
 
     <control ui_identifier="lfo.shape" y="479"/>
     <control ui_identifier="lfo.mseg_editor" y="477"/>

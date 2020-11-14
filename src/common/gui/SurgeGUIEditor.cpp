@@ -1514,18 +1514,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
          // Case: Analog envelopes have no shapers
          if( p->ctrltype == ct_envshape || p->ctrltype == ct_envshape_attack )
          {
-            addControl = synth->storage.getPatch()
-                                .scene[current_scene]
-                                .adsr[p->ctrlgroup_entry]
-                                .mode.val.i == emt_digital;
+            addControl = (synth->storage.getPatch().scene[current_scene].adsr[p->ctrlgroup_entry].mode.val.i == emt_digital);
          }
 
          if( addControl )
          {
             auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
             currentSkin->resolveBaseParentOffsets(skinCtrl);
-            layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
-                                   style | conn.payload->controlStyleFlags);
+            layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p, style | conn.payload->controlStyleFlags);
          }
       }
       i++;

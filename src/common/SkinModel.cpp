@@ -58,12 +58,12 @@ namespace Surge
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.split_poly.text.hover");
                    // this doesn't have a cm since it is special
 
-         Connector pbrange_dn = Connector("scene.pbrange_dn", 164, 112, 24, 10, Connector::NUMBERFIELD)
+         Connector pbrange_dn = Connector("scene.pbrange_dn", 161, 112, 30, 13, Connector::NUMBERFIELD)
                    .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth)
                    .withBackground(IDB_PITCHBEND_NUM_BG)
                    .withProperty(Connector::TEXT_COLOR, "scene.pbrange.text")
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.pbrange.text.hover");
-         Connector pbrange_up = Connector("scene.pbrange_up", 189, 112, 24, 10, Connector::NUMBERFIELD)
+         Connector pbrange_up = Connector("scene.pbrange_up", 189, 112, 30, 13, Connector::NUMBERFIELD)
                    .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth)
                    .withBackground(IDB_PITCHBEND_NUM_BG)
                    .withProperty(Connector::TEXT_COLOR, "scene.pbrange.text")
@@ -101,18 +101,18 @@ namespace Surge
 
       namespace Osc
       {
-         Connector osc_select = Connector("osc.select", 104-36, 69, 75, 13, Connector::HSWITCH2, Connector::OSCILLATOR_SELECT)
+         Connector osc_select = Connector("osc.select", 66, 69, 75, 13, Connector::HSWITCH2, Connector::OSCILLATOR_SELECT)
                    .withHSwitch2Properties(IDB_OSCSELECT, 3, 1, 3);
-         Connector osc_display = Connector("osc.display", 6, 81, 136, 99, Connector::CUSTOM, Connector::OSCILLATOR_DISPLAY);
+         Connector osc_display = Connector("osc.display", 4, 81, 141, 99, Connector::CUSTOM, Connector::OSCILLATOR_DISPLAY);
 
-         Connector keytrack = Connector("osc.keytrack", 6, 185, 43, 7, Connector::SWITCH)
+         Connector keytrack = Connector("osc.keytrack", 4, 183, 45, 9, Connector::SWITCH)
                    .withBackground(IDB_SWITCH_KTRK);
-         Connector retrigger = Connector("osc.retrigger", 53, 185, 43, 7, Connector::SWITCH)
+         Connector retrigger = Connector("osc.retrigger", 51, 183, 45, 9, Connector::SWITCH)
                    .withBackground(IDB_SWITCH_RETRIGGER);
          
-         Connector octave = Connector("osc.octave", 2, 194, 96, 18, Connector::HSWITCH2)
+         Connector octave = Connector("osc.octave", 0, 194, 96, 18, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_OCTAVES_OSC, 7, 1, 7);
-         Connector osc_type = Connector("osc.type", 98, 194, 45, 18, Connector::OSCMENU);
+         Connector osc_type = Connector("osc.type", 96, 194, 49, 18, Connector::OSCMENU);
 
          Connector osc_param_panel = Connector("osc.param.panel", 6, 212, Connector::GROUP);
             Connector pitch   = Connector("osc.pitch", 0, 0).asHorizontal().inParent("osc.param.panel");
@@ -127,34 +127,34 @@ namespace Surge
 
       namespace Mixer
       {
-         Connector mixer_panel = Connector("mixer.panel", 154, 264, Connector::GROUP);
-            Connector mute_o1 = Connector("mixer.mute_o1", 0, 0).asMixerMute().inParent("mixer.panel");
-            Connector mute_o2 = Connector("mixer.mute_o2", 20, 0).asMixerMute().inParent("mixer.panel");
-            Connector mute_o3 = Connector("mixer.mute_o3", 40, 0).asMixerMute().inParent("mixer.panel");
-            Connector mute_ring12 = Connector("mixer.mute_ring12", 60, 0).asMixerMute().inParent("mixer.panel");
-            Connector mute_ring23 = Connector("mixer.mute_ring23", 80, 0).asMixerMute().inParent("mixer.panel");
-            Connector mute_noise = Connector("mixer.mute_noise", 100, 0).asMixerMute().inParent("mixer.panel");
+         Connector mixer_panel = Connector("mixer.panel", 154, 263, Connector::GROUP);
+            Connector mute_o1 = Connector("mixer.mute_o1", 1, 0).asMixerMute().inParent("mixer.panel");
+            Connector mute_o2 = Connector("mixer.mute_o2", 21, 0).asMixerMute().inParent("mixer.panel");
+            Connector mute_o3 = Connector("mixer.mute_o3", 41, 0).asMixerMute().inParent("mixer.panel");
+            Connector mute_ring12 = Connector("mixer.mute_ring12", 61, 0).asMixerMute().inParent("mixer.panel");
+            Connector mute_ring23 = Connector("mixer.mute_ring23", 81, 0).asMixerMute().inParent("mixer.panel");
+            Connector mute_noise = Connector("mixer.mute_noise", 101, 0).asMixerMute().inParent("mixer.panel");
    
-            Connector solo_o1 = Connector("mixer.solo_o1", 0, 10).asMixerSolo().inParent("mixer.panel");
-            Connector solo_o2 = Connector("mixer.solo_o2", 20, 10).asMixerSolo().inParent("mixer.panel");
-            Connector solo_o3 = Connector("mixer.solo_o3", 40, 10).asMixerSolo().inParent("mixer.panel");
-            Connector solo_ring12 = Connector("mixer.solo_ring12", 60, 10).asMixerSolo().inParent("mixer.panel");
-            Connector solo_ring23 = Connector("mixer.solo_ring23", 80, 10).asMixerSolo().inParent("mixer.panel");
-            Connector solo_noise = Connector("mixer.solo_noise", 100, 10).asMixerSolo().inParent("mixer.panel");
+            Connector solo_o1 = Connector("mixer.solo_o1", 1, 11).asMixerSolo().inParent("mixer.panel");
+            Connector solo_o2 = Connector("mixer.solo_o2", 21, 11).asMixerSolo().inParent("mixer.panel");
+            Connector solo_o3 = Connector("mixer.solo_o3", 41, 11).asMixerSolo().inParent("mixer.panel");
+            Connector solo_ring12 = Connector("mixer.solo_ring12", 61, 11).asMixerSolo().inParent("mixer.panel");
+            Connector solo_ring23 = Connector("mixer.solo_ring23", 81, 11).asMixerSolo().inParent("mixer.panel");
+            Connector solo_noise = Connector("mixer.solo_noise", 101, 11).asMixerSolo().inParent("mixer.panel");
    
-            Connector route_o1 = Connector("mixer.route_o1", 0, 20).asMixerRoute().inParent("mixer.panel");
-            Connector route_o2 = Connector("mixer.route_o2", 20, 20).asMixerRoute().inParent("mixer.panel");
-            Connector route_o3 = Connector("mixer.route_o3", 40, 20).asMixerRoute().inParent("mixer.panel");
-            Connector route_ring12 = Connector("mixer.route_ring12", 60, 20).asMixerRoute().inParent("mixer.panel");
-            Connector route_ring23 = Connector("mixer.route_ring23", 80, 20).asMixerRoute().inParent("mixer.panel");
-            Connector route_noise = Connector("mixer.route_noise", 100, 20).asMixerRoute().inParent("mixer.panel");
+            Connector route_o1 = Connector("mixer.route_o1", 1, 22).asMixerRoute().inParent("mixer.panel");
+            Connector route_o2 = Connector("mixer.route_o2", 21, 22).asMixerRoute().inParent("mixer.panel");
+            Connector route_o3 = Connector("mixer.route_o3", 41, 22).asMixerRoute().inParent("mixer.panel");
+            Connector route_ring12 = Connector("mixer.route_ring12", 61, 22).asMixerRoute().inParent("mixer.panel");
+            Connector route_ring23 = Connector("mixer.route_ring23", 81, 22).asMixerRoute().inParent("mixer.panel");
+            Connector route_noise = Connector("mixer.route_noise", 101, 22).asMixerRoute().inParent("mixer.panel");
    
-            Connector level_o1 = Connector("mixer.level_o1", 0, 36).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_o2 = Connector("mixer.level_o2", 20, 36).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_o3 = Connector("mixer.level_o3", 40, 36).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_ring12 = Connector("mixer.level_ring12", 60, 36).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_ring23 = Connector("mixer.level_ring23", 80, 36).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_noise = Connector("mixer.level_noise", 100, 36).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_o1 = Connector("mixer.level_o1", 0, 37).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_o2 = Connector("mixer.level_o2", 20, 37).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_o3 = Connector("mixer.level_o3", 40, 37).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_ring12 = Connector("mixer.level_ring12", 60, 37).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_ring23 = Connector("mixer.level_ring23", 80, 37).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_noise = Connector("mixer.level_noise", 100, 37).asVertical().asWhite().inParent("mixer.panel");
    
             Connector level_prefiltergain = Connector("mixer.level_prefiltergain", 120, 36).asVertical().asWhite().inParent("mixer.panel");
       }
@@ -263,8 +263,8 @@ namespace Surge
       namespace LFO
       {
          // For now these two have component 'CUSTOM' and we hadn't pick a component in the code
-         Connector lfo_title_label = Connector("lfo.title", 5, 485, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL);
-         Connector lfo_presets = Connector("lfo.presets", 5, 481, 13, 11, Connector::SWITCH, Connector::LFO_MENU)
+         Connector lfo_title_label = Connector("lfo.title", 5, 489, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL);
+         Connector lfo_presets = Connector("lfo.presets", 5, 484, 13, 11, Connector::SWITCH, Connector::LFO_MENU)
                    .withBackground(IDB_LFO_PRESETS);
 
          Connector lfo_main_panel = Connector("lfo.main.panel", 28, 478, Connector::GROUP);
@@ -273,18 +273,18 @@ namespace Surge
             Connector deform = Connector("lfo.deform", 0, 42).asHorizontal().inParent("lfo.main.panel");
             Connector amplitude = Connector("lfo.amplitude", 0, 63).asHorizontal().inParent("lfo.main.panel");
 
-         Connector trigger_mode = Connector("lfo.trigger_mode", 170, 485, 51, 39, Connector::HSWITCH2)
+         Connector trigger_mode = Connector("lfo.trigger_mode", 172, 484, 51, 39, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_LFOTRIGGER, 3, 3, 1);
-         Connector unipolar = Connector("lfo.unipolar", 170, 546, 51, 15, Connector::SWITCH)
+         Connector unipolar = Connector("lfo.unipolar", 172, 546, 51, 14, Connector::SWITCH)
                    .withBackground(IDB_UNIPOLAR);
 
          // combined LFO shape AND LFO display - TODO: split them to individual connectors for 1.9!
-         Connector shape = Connector("lfo.shape", 235, 481, 359, 84, Connector::LFO);
+         Connector shape = Connector("lfo.shape", 235, 480, 359, 84, Connector::LFO);
 
-         Connector mseg_editor = Connector("lfo.mseg_editor", 597, 483, 11, 11, Connector::SWITCH, Connector::MSEG_EDIT)
+         Connector mseg_editor = Connector("lfo.mseg_editor", 597, 484, 11, 11, Connector::SWITCH, Connector::MSEG_EDIT)
                    .withBackground(IDB_LFO_MSEG_EDIT);
 
-         Connector lfo_eg_panel = Connector("lfo.envelope.panel", 616, 494, Connector::GROUP);
+         Connector lfo_eg_panel = Connector("lfo.envelope.panel", 616, 493, Connector::GROUP);
             Connector delay = Connector("lfo.delay", 0, 0).inParent("lfo.envelope.panel");
             Connector attack = Connector("lfo.attack", 20, 0).inParent("lfo.envelope.panel");
             Connector hold = Connector("lfo.hold", 40, 0).inParent("lfo.envelope.panel");
