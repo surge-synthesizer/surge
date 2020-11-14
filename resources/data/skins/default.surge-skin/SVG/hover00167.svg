@@ -1,15 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="133px" height="18px" viewbox="0 0 133 18" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <rect width="133" height="18" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-  </defs>
-  <g id="hover00167" clip-path="url(#clip_1)">
-    <path d="M0 3C0 1.34315 1.34315 0 3 0L125 0C126.657 0 128 1.34315 128 3L128 10C128 11.6569 126.657 13 125 13L3 13C1.34315 13 0 11.6569 0 10L0 3L0 3Z" transform="translate(2 2)" id="Shape" fill="#E3E3E3" fill-rule="evenodd" stroke="none" />
-    <path d="M0 2.30769C0 1.03319 1.31167 0 2.92969 0L122.07 0C123.688 0 125 1.03319 125 2.30769L125 7.69231C125 8.96685 123.688 10 122.07 10L2.92969 10C1.31167 10 0 8.96685 0 7.69231L0 2.30769L0 2.30769Z" transform="translate(3.5 3.5)" id="Shape-Copy" fill="#FF9300" fill-opacity="0.49803922" fill-rule="evenodd" stroke="none" />
-    <path d="M3.5 1L125.5 1L125.5 0L3.5 0L3.5 1L3.5 1ZM128 3.5L128 10.5L129 10.5L129 3.5L128 3.5L128 3.5ZM125.5 13L3.5 13L3.5 14L125.5 14L125.5 13L125.5 13ZM1 10.5L1 3.5L0 3.5L0 10.5L1 10.5L1 10.5ZM3.5 13C2.11929 13 1 11.8807 1 10.5L0 10.5C0 12.433 1.567 14 3.5 14L3.5 13L3.5 13ZM128 10.5C128 11.8807 126.881 13 125.5 13L125.5 14C127.433 14 129 12.433 129 10.5L128 10.5L128 10.5ZM125.5 1C126.881 1 128 2.11929 128 3.5L129 3.5C129 1.567 127.433 0 125.5 0L125.5 1L125.5 1ZM3.5 0C1.567 0 0 1.567 0 3.5L1 3.5C1 2.11929 2.11929 1 3.5 1L3.5 0L3.5 0Z" transform="translate(1.5 1.5)" id="Shape" fill="#4B515D" fill-rule="evenodd" stroke="none" />
-    <path d="M2.5 3.57143L0 0L5 0L2.5 3.57143L2.5 3.57143Z" transform="translate(122 7)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
-  </g>
+<svg width="133" height="18" viewBox="0 0 133 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="4" y="4" width="124" height="10" rx="1" fill="#F1BB72"/>
+<rect x="4" y="4" width="124" height="10" rx="1" stroke="#F1BB72"/>
+<path d="M123.5 11L121 8L126 8L123.5 11Z" fill="black"/>
 </svg>

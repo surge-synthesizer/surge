@@ -1,212 +1,228 @@
-<svg width="48" height="282" viewBox="0 0 48 282" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g opacity="0.1">
-<path d="M10.5 273.25L10.5 274.25L8.5 274.25L8.5 273.25L10.5 273.25Z" fill="#EEEEEE"/>
-<path d="M5.5 273.25L5.5 274.25L3.5 274.25L3.5 273.25L5.5 273.25Z" fill="#EEEEEE"/>
-<path d="M10.5 234.25L10.5 235.25L8.5 235.25L8.5 234.25L10.5 234.25Z" fill="#EEEEEE"/>
-<path d="M5.5 234.25L5.5 235.25L3.5 235.25L3.5 234.25L5.5 234.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M7 226.5C6.72386 226.5 6.5 226.724 6.5 227L6.5 280C6.5 280.276 6.72386 280.5 7 280.5C7.27614 280.5 7.5 280.276 7.5 280L7.5 227C7.5 226.724 7.27614 226.5 7 226.5Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M7 226C6.44772 226 6 226.448 6 227L6 280C6 280.552 6.44772 281 7 281V281C7.55228 281 8 280.552 8 280L8 227C8 226.448 7.55229 226 7 226V226Z" stroke="#EEEEEE"/>
-</g>
-<path d="M11 273L11 274L9 274L9 273L11 273Z" fill="black"/>
-<path d="M6 273L6 274L4 274L4 273L6 273Z" fill="black"/>
-<path d="M11 234L11 235L9 235L9 234L11 234Z" fill="black"/>
-<path d="M6 234L6 235L4 235L4 234L6 234Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M7 279.5C7 279.776 7.22386 280 7.5 280C7.77614 280 8 279.776 8 279.5L8 226.5C8 226.224 7.77614 226 7.5 226C7.22386 226 7 226.224 7 226.5L7 279.5Z" fill="#1F1F1F"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 279.5C6.5 280.052 6.94772 280.5 7.5 280.5V280.5C8.05229 280.5 8.5 280.052 8.5 279.5L8.5 226.5C8.5 225.948 8.05228 225.5 7.5 225.5V225.5C6.94772 225.5 6.5 225.948 6.5 226.5L6.5 279.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M26.5 273.25L26.5 274.25L24.5 274.25L24.5 273.25L26.5 273.25Z" fill="#EEEEEE"/>
-<path d="M21.5 273.25L21.5 274.25L19.5 274.25L19.5 273.25L21.5 273.25Z" fill="#EEEEEE"/>
-<path d="M26.5 234.25L26.5 235.25L24.5 235.25L24.5 234.25L26.5 234.25Z" fill="#EEEEEE"/>
-<path d="M21.5 234.25L21.5 235.25L19.5 235.25L19.5 234.25L21.5 234.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M23 226.5C22.7239 226.5 22.5 226.724 22.5 227L22.5 280C22.5 280.276 22.7239 280.5 23 280.5C23.2761 280.5 23.5 280.276 23.5 280L23.5 227C23.5 226.724 23.2761 226.5 23 226.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M23 226C22.4477 226 22 226.448 22 227L22 280C22 280.552 22.4477 281 23 281V281C23.5523 281 24 280.552 24 280L24 227C24 226.448 23.5523 226 23 226V226Z" stroke="#EEEEEE"/>
-</g>
-<path d="M27 273L27 274L25 274L25 273L27 273Z" fill="black"/>
-<path d="M22 273L22 274L20 274L20 273L22 273Z" fill="black"/>
-<path d="M27 234L27 235L25 235L25 234L27 234Z" fill="black"/>
-<path d="M22 234L22 235L20 235L20 234L22 234Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M23 279.5C23 279.776 23.2239 280 23.5 280C23.7761 280 24 279.776 24 279.5L24 226.5C24 226.224 23.7761 226 23.5 226C23.2239 226 23 226.224 23 226.5L23 279.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M22.5 279.5C22.5 280.052 22.9477 280.5 23.5 280.5V280.5C24.0523 280.5 24.5 280.052 24.5 279.5L24.5 226.5C24.5 225.948 24.0523 225.5 23.5 225.5V225.5C22.9477 225.5 22.5 225.948 22.5 226.5L22.5 279.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M43 273.25L43 274.25L41 274.25L41 273.25L43 273.25Z" fill="#EEEEEE"/>
-<path d="M38 273.25L38 274.25L36 274.25L36 273.25L38 273.25Z" fill="#EEEEEE"/>
-<path d="M43 234.25L43 235.25L41 235.25L41 234.25L43 234.25Z" fill="#EEEEEE"/>
-<path d="M38 234.25L38 235.25L36 235.25L36 234.25L38 234.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39.5 226.5C39.2239 226.5 39 226.724 39 227L39 280C39 280.276 39.2239 280.5 39.5 280.5C39.7761 280.5 40 280.276 40 280L40 227C40 226.724 39.7761 226.5 39.5 226.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39.5 226C38.9477 226 38.5 226.448 38.5 227L38.5 280C38.5 280.552 38.9477 281 39.5 281V281C40.0523 281 40.5 280.552 40.5 280L40.5 227C40.5 226.448 40.0523 226 39.5 226V226Z" stroke="#EEEEEE"/>
-</g>
-<path d="M43.5 273L43.5 274L41.5 274L41.5 273L43.5 273Z" fill="black"/>
-<path d="M38.5 273L38.5 274L36.5 274L36.5 273L38.5 273Z" fill="black"/>
-<path d="M43.5 234L43.5 235L41.5 235L41.5 234L43.5 234Z" fill="black"/>
-<path d="M38.5 234L38.5 235L36.5 235L36.5 234L38.5 234Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39.5 279.5C39.5 279.776 39.7239 280 40 280C40.2761 280 40.5 279.776 40.5 279.5L40.5 226.5C40.5 226.224 40.2761 226 40 226C39.7239 226 39.5 226.224 39.5 226.5L39.5 279.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39 279.5C39 280.052 39.4477 280.5 40 280.5V280.5C40.5523 280.5 41 280.052 41 279.5L41 226.5C41 225.948 40.5523 225.5 40 225.5V225.5C39.4477 225.5 39 225.948 39 226.5L39 279.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M10.5 198.25L10.5 199.25L8.5 199.25L8.5 198.25L10.5 198.25Z" fill="#EEEEEE"/>
-<path d="M5.5 198.25L5.5 199.25L3.5 199.25L3.5 198.25L5.5 198.25Z" fill="#EEEEEE"/>
-<path d="M10.5 159.25L10.5 160.25L8.5 160.25L8.5 159.25L10.5 159.25Z" fill="#EEEEEE"/>
-<path d="M5.5 159.25L5.5 160.25L3.5 160.25L3.5 159.25L5.5 159.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M7 151.5C6.72386 151.5 6.5 151.724 6.5 152L6.5 205C6.5 205.276 6.72386 205.5 7 205.5C7.27614 205.5 7.5 205.276 7.5 205L7.5 152C7.5 151.724 7.27614 151.5 7 151.5Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M7 151C6.44772 151 6 151.448 6 152L6 205C6 205.552 6.44772 206 7 206V206C7.55228 206 8 205.552 8 205L8 152C8 151.448 7.55229 151 7 151V151Z" stroke="#EEEEEE"/>
-</g>
-<path d="M11 198L11 199L9 199L9 198L11 198Z" fill="black"/>
-<path d="M6 198L6 199L4 199L4 198L6 198Z" fill="black"/>
-<path d="M11 159L11 160L9 160L9 159L11 159Z" fill="black"/>
-<path d="M6 159L6 160L4 160L4 159L6 159Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M7 204.5C7 204.776 7.22386 205 7.5 205C7.77614 205 8 204.776 8 204.5L8 151.5C8 151.224 7.77614 151 7.5 151C7.22386 151 7 151.224 7 151.5L7 204.5Z" fill="#1F1F1F"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 204.5C6.5 205.052 6.94772 205.5 7.5 205.5V205.5C8.05229 205.5 8.5 205.052 8.5 204.5L8.5 151.5C8.5 150.948 8.05228 150.5 7.5 150.5V150.5C6.94772 150.5 6.5 150.948 6.5 151.5L6.5 204.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M26.5 198.25L26.5 199.25L24.5 199.25L24.5 198.25L26.5 198.25Z" fill="#EEEEEE"/>
-<path d="M21.5 198.25L21.5 199.25L19.5 199.25L19.5 198.25L21.5 198.25Z" fill="#EEEEEE"/>
-<path d="M26.5 159.25L26.5 160.25L24.5 160.25L24.5 159.25L26.5 159.25Z" fill="#EEEEEE"/>
-<path d="M21.5 159.25L21.5 160.25L19.5 160.25L19.5 159.25L21.5 159.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M23 151.5C22.7239 151.5 22.5 151.724 22.5 152L22.5 205C22.5 205.276 22.7239 205.5 23 205.5C23.2761 205.5 23.5 205.276 23.5 205L23.5 152C23.5 151.724 23.2761 151.5 23 151.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M23 151C22.4477 151 22 151.448 22 152L22 205C22 205.552 22.4477 206 23 206V206C23.5523 206 24 205.552 24 205L24 152C24 151.448 23.5523 151 23 151V151Z" stroke="#EEEEEE"/>
-</g>
-<path d="M27 198L27 199L25 199L25 198L27 198Z" fill="black"/>
-<path d="M22 198L22 199L20 199L20 198L22 198Z" fill="black"/>
-<path d="M27 159L27 160L25 160L25 159L27 159Z" fill="black"/>
-<path d="M22 159L22 160L20 160L20 159L22 159Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M23 204.5C23 204.776 23.2239 205 23.5 205C23.7761 205 24 204.776 24 204.5L24 151.5C24 151.224 23.7761 151 23.5 151C23.2239 151 23 151.224 23 151.5L23 204.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M22.5 204.5C22.5 205.052 22.9477 205.5 23.5 205.5V205.5C24.0523 205.5 24.5 205.052 24.5 204.5L24.5 151.5C24.5 150.948 24.0523 150.5 23.5 150.5V150.5C22.9477 150.5 22.5 150.948 22.5 151.5L22.5 204.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M43 198.25L43 199.25L41 199.25L41 198.25L43 198.25Z" fill="#EEEEEE"/>
-<path d="M38 198.25L38 199.25L36 199.25L36 198.25L38 198.25Z" fill="#EEEEEE"/>
-<path d="M43 159.25L43 160.25L41 160.25L41 159.25L43 159.25Z" fill="#EEEEEE"/>
-<path d="M38 159.25L38 160.25L36 160.25L36 159.25L38 159.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39.5 151.5C39.2239 151.5 39 151.724 39 152L39 205C39 205.276 39.2239 205.5 39.5 205.5C39.7761 205.5 40 205.276 40 205L40 152C40 151.724 39.7761 151.5 39.5 151.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39.5 151C38.9477 151 38.5 151.448 38.5 152L38.5 205C38.5 205.552 38.9477 206 39.5 206V206C40.0523 206 40.5 205.552 40.5 205L40.5 152C40.5 151.448 40.0523 151 39.5 151V151Z" stroke="#EEEEEE"/>
-</g>
-<path d="M43.5 198L43.5 199L41.5 199L41.5 198L43.5 198Z" fill="black"/>
-<path d="M38.5 198L38.5 199L36.5 199L36.5 198L38.5 198Z" fill="black"/>
-<path d="M43.5 159L43.5 160L41.5 160L41.5 159L43.5 159Z" fill="black"/>
-<path d="M38.5 159L38.5 160L36.5 160L36.5 159L38.5 159Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39.5 204.5C39.5 204.776 39.7239 205 40 205C40.2761 205 40.5 204.776 40.5 204.5L40.5 151.5C40.5 151.224 40.2761 151 40 151C39.7239 151 39.5 151.224 39.5 151.5L39.5 204.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M39 204.5C39 205.052 39.4477 205.5 40 205.5V205.5C40.5523 205.5 41 205.052 41 204.5L41 151.5C41 150.948 40.5523 150.5 40 150.5V150.5C39.4477 150.5 39 150.948 39 151.5L39 204.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M4.5 65.25L4.5 66.25L6.5 66.25L6.5 65.25L4.5 65.25Z" fill="#EEEEEE"/>
-<path d="M9.5 65.25L9.5 66.25L11.5 66.25L11.5 65.25L9.5 65.25Z" fill="#EEEEEE"/>
-<path d="M4.5 9.25L4.5 10.25L6.5 10.25L6.5 9.25L4.5 9.25Z" fill="#EEEEEE"/>
-<path d="M9.5 9.25L9.5 10.25L11.5 10.25L11.5 9.25L9.5 9.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8 1.5C8.27614 1.5 8.5 1.72385 8.5 2L8.5 72C8.5 72.2761 8.27614 72.5 8 72.5C7.72386 72.5 7.5 72.2761 7.5 72L7.5 2C7.5 1.72386 7.72385 1.5 8 1.5Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8 1C8.55228 1 9 1.44772 9 2L9 72C9 72.5523 8.55228 73 8 73V73C7.44772 73 7 72.5523 7 72L7 2C7 1.44772 7.44771 1 8 1V1Z" stroke="#EEEEEE"/>
-</g>
-<path d="M4 65L4 66L6 66L6 65L4 65Z" fill="black"/>
-<path d="M9 65L9 66L11 66L11 65L9 65Z" fill="black"/>
-<path d="M4 9L4 10L6 10L6 9L4 9Z" fill="black"/>
-<path d="M9 9L9 10L11 10L11 9L9 9Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8 71.5C8 71.7761 7.77614 72 7.5 72C7.22386 72 7 71.7761 7 71.5L7 1.5C7 1.22386 7.22386 1 7.5 1C7.77614 1 8 1.22386 8 1.5L8 71.5Z" fill="#1F1F1F"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 71.5C8.5 72.0523 8.05228 72.5 7.5 72.5V72.5C6.94772 72.5 6.5 72.0523 6.5 71.5L6.5 1.5C6.5 0.947715 6.94772 0.5 7.5 0.5V0.5C8.05228 0.5 8.5 0.947716 8.5 1.5L8.5 71.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M20.5 65.25L20.5 66.25L22.5 66.25L22.5 65.25L20.5 65.25Z" fill="#EEEEEE"/>
-<path d="M25.5 65.25L25.5 66.25L27.5 66.25L27.5 65.25L25.5 65.25Z" fill="#EEEEEE"/>
-<path d="M20.5 9.25L20.5 10.25L22.5 10.25L22.5 9.25L20.5 9.25Z" fill="#EEEEEE"/>
-<path d="M25.5 9.25L25.5 10.25L27.5 10.25L27.5 9.25L25.5 9.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24 1.5C24.2761 1.5 24.5 1.72385 24.5 2L24.5 72C24.5 72.2761 24.2761 72.5 24 72.5C23.7239 72.5 23.5 72.2761 23.5 72L23.5 2C23.5 1.72386 23.7239 1.5 24 1.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24 1C24.5523 1 25 1.44772 25 2L25 72C25 72.5523 24.5523 73 24 73V73C23.4477 73 23 72.5523 23 72L23 2C23 1.44772 23.4477 1 24 1V1Z" stroke="#EEEEEE"/>
-</g>
-<path d="M20 65L20 66L22 66L22 65L20 65Z" fill="black"/>
-<path d="M25 65L25 66L27 66L27 65L25 65Z" fill="black"/>
-<path d="M20 9L20 10L22 10L22 9L20 9Z" fill="black"/>
-<path d="M25 9L25 10L27 10L27 9L25 9Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24 71.5C24 71.7761 23.7761 72 23.5 72C23.2239 72 23 71.7761 23 71.5L23 1.5C23 1.22386 23.2239 1 23.5 1C23.7761 1 24 1.22386 24 1.5L24 71.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24.5 71.5C24.5 72.0523 24.0523 72.5 23.5 72.5V72.5C22.9477 72.5 22.5 72.0523 22.5 71.5L22.5 1.5C22.5 0.947715 22.9477 0.5 23.5 0.5V0.5C24.0523 0.5 24.5 0.947716 24.5 1.5L24.5 71.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M36.5 65.25L36.5 66.25L38.5 66.25L38.5 65.25L36.5 65.25Z" fill="#EEEEEE"/>
-<path d="M41.5 65.25L41.5 66.25L43.5 66.25L43.5 65.25L41.5 65.25Z" fill="#EEEEEE"/>
-<path d="M36.5 9.25L36.5 10.25L38.5 10.25L38.5 9.25L36.5 9.25Z" fill="#EEEEEE"/>
-<path d="M41.5 9.25L41.5 10.25L43.5 10.25L43.5 9.25L41.5 9.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40 1.5C40.2761 1.5 40.5 1.72385 40.5 2L40.5 72C40.5 72.2761 40.2761 72.5 40 72.5C39.7239 72.5 39.5 72.2761 39.5 72L39.5 2C39.5 1.72386 39.7239 1.5 40 1.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40 1C40.5523 1 41 1.44772 41 2L41 72C41 72.5523 40.5523 73 40 73V73C39.4477 73 39 72.5523 39 72L39 2C39 1.44772 39.4477 1 40 1V1Z" stroke="#EEEEEE"/>
-</g>
-<path d="M36 65L36 66L38 66L38 65L36 65Z" fill="black"/>
-<path d="M41 65L41 66L43 66L43 65L41 65Z" fill="black"/>
-<path d="M36 9L36 10L38 10L38 9L36 9Z" fill="black"/>
-<path d="M41 9L41 10L43 10L43 9L41 9Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40 71.5C40 71.7761 39.7761 72 39.5 72C39.2239 72 39 71.7761 39 71.5L39 1.5C39 1.22386 39.2239 1 39.5 1C39.7761 1 40 1.22386 40 1.5L40 71.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40.5 71.5C40.5 72.0523 40.0523 72.5 39.5 72.5V72.5C38.9477 72.5 38.5 72.0523 38.5 71.5L38.5 1.5C38.5 0.947715 38.9477 0.5 39.5 0.5V0.5C40.0523 0.5 40.5 0.947716 40.5 1.5L40.5 71.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M4.5 140.25L4.5 141.25L6.5 141.25L6.5 140.25L4.5 140.25Z" fill="#EEEEEE"/>
-<path d="M9.5 140.25L9.5 141.25L11.5 141.25L11.5 140.25L9.5 140.25Z" fill="#EEEEEE"/>
-<path d="M4.5 84.25L4.5 85.25L6.5 85.25L6.5 84.25L4.5 84.25Z" fill="#EEEEEE"/>
-<path d="M9.5 84.25L9.5 85.25L11.5 85.25L11.5 84.25L9.5 84.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8 76.5C8.27614 76.5 8.5 76.7239 8.5 77L8.5 147C8.5 147.276 8.27614 147.5 8 147.5C7.72386 147.5 7.5 147.276 7.5 147L7.5 77C7.5 76.7239 7.72385 76.5 8 76.5Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8 76C8.55228 76 9 76.4477 9 77L9 147C9 147.552 8.55228 148 8 148V148C7.44772 148 7 147.552 7 147L7 77C7 76.4477 7.44771 76 8 76V76Z" stroke="#EEEEEE"/>
-</g>
-<path d="M4 140L4 141L6 141L6 140L4 140Z" fill="black"/>
-<path d="M9 140L9 141L11 141L11 140L9 140Z" fill="black"/>
-<path d="M4 84L4 85L6 85L6 84L4 84Z" fill="black"/>
-<path d="M9 84L9 85L11 85L11 84L9 84Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8 146.5C8 146.776 7.77614 147 7.5 147C7.22386 147 7 146.776 7 146.5L7 76.5C7 76.2239 7.22386 76 7.5 76C7.77614 76 8 76.2239 8 76.5L8 146.5Z" fill="#1F1F1F"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 146.5C8.5 147.052 8.05228 147.5 7.5 147.5V147.5C6.94772 147.5 6.5 147.052 6.5 146.5L6.5 76.5C6.5 75.9477 6.94772 75.5 7.5 75.5V75.5C8.05228 75.5 8.5 75.9477 8.5 76.5L8.5 146.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M3 112.25L3 113.25L6 113.25L6 112.25L3 112.25Z" fill="#EEEEEE"/>
-<path d="M9 112.25L9 113.25L12 113.25L12 112.25L9 112.25Z" fill="#EEEEEE"/>
-<path d="M2 140.25L2 141.25L4 141.25L4 140.25L2 140.25Z" fill="#EEEEEE"/>
-<path d="M11 140.25L11 141.25L13 141.25L13 140.25L11 140.25Z" fill="#EEEEEE"/>
-<path d="M2 84.25L2 85.25L4 85.25L4 84.25L2 84.25Z" fill="#EEEEEE"/>
-<path d="M11 84.25L11 85.25L13 85.25L13 84.25L11 84.25Z" fill="#EEEEEE"/>
-</g>
-<path d="M3 112L3 113L6 113L6 112L3 112Z" fill="black"/>
-<path d="M9 112L9 113L12 113L12 112L9 112Z" fill="black"/>
-<path d="M2 140L2 141L4 141L4 140L2 140Z" fill="black"/>
-<path d="M11 140L11 141L13 141L13 140L11 140Z" fill="black"/>
-<path d="M2 84L2 85L4 85L4 84L2 84Z" fill="black"/>
-<path d="M11 84L11 85L13 85L13 84L11 84Z" fill="black"/>
-<g opacity="0.1">
-<path d="M20.5 140.25L20.5 141.25L22.5 141.25L22.5 140.25L20.5 140.25Z" fill="#EEEEEE"/>
-<path d="M25.5 140.25L25.5 141.25L27.5 141.25L27.5 140.25L25.5 140.25Z" fill="#EEEEEE"/>
-<path d="M20.5 84.25L20.5 85.25L22.5 85.25L22.5 84.25L20.5 84.25Z" fill="#EEEEEE"/>
-<path d="M25.5 84.25L25.5 85.25L27.5 85.25L27.5 84.25L25.5 84.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24 76.5C24.2761 76.5 24.5 76.7239 24.5 77L24.5 147C24.5 147.276 24.2761 147.5 24 147.5C23.7239 147.5 23.5 147.276 23.5 147L23.5 77C23.5 76.7239 23.7239 76.5 24 76.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24 76C24.5523 76 25 76.4477 25 77L25 147C25 147.552 24.5523 148 24 148V148C23.4477 148 23 147.552 23 147L23 77C23 76.4477 23.4477 76 24 76V76Z" stroke="#EEEEEE"/>
-</g>
-<path d="M20 140L20 141L22 141L22 140L20 140Z" fill="black"/>
-<path d="M25 140L25 141L27 141L27 140L25 140Z" fill="black"/>
-<path d="M20 84L20 85L22 85L22 84L20 84Z" fill="black"/>
-<path d="M25 84L25 85L27 85L27 84L25 84Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24 146.5C24 146.776 23.7761 147 23.5 147C23.2239 147 23 146.776 23 146.5L23 76.5C23 76.2239 23.2239 76 23.5 76C23.7761 76 24 76.2239 24 76.5L24 146.5Z" fill="#737373"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M24.5 146.5C24.5 147.052 24.0523 147.5 23.5 147.5V147.5C22.9477 147.5 22.5 147.052 22.5 146.5L22.5 76.5C22.5 75.9477 22.9477 75.5 23.5 75.5V75.5C24.0523 75.5 24.5 75.9477 24.5 76.5L24.5 146.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M19 112.25L19 113.25L22 113.25L22 112.25L19 112.25Z" fill="#EEEEEE"/>
-<path d="M25 112.25L25 113.25L28 113.25L28 112.25L25 112.25Z" fill="#EEEEEE"/>
-<path d="M18 140.25L18 141.25L20 141.25L20 140.25L18 140.25Z" fill="#EEEEEE"/>
-<path d="M27 140.25L27 141.25L29 141.25L29 140.25L27 140.25Z" fill="#EEEEEE"/>
-<path d="M18 84.25L18 85.25L20 85.25L20 84.25L18 84.25Z" fill="#EEEEEE"/>
-<path d="M27 84.25L27 85.25L29 85.25L29 84.25L27 84.25Z" fill="#EEEEEE"/>
-</g>
-<path d="M19 112L19 113L22 113L22 112L19 112Z" fill="black"/>
-<path d="M25 112L25 113L28 113L28 112L25 112Z" fill="black"/>
-<path d="M18 140L18 141L20 141L20 140L18 140Z" fill="black"/>
-<path d="M27 140L27 141L29 141L29 140L27 140Z" fill="black"/>
-<path d="M18 84L18 85L20 85L20 84L18 84Z" fill="black"/>
-<path d="M27 84L27 85L29 85L29 84L27 84Z" fill="black"/>
-<g opacity="0.1">
-<path d="M36.5 140.25L36.5 141.25L38.5 141.25L38.5 140.25L36.5 140.25Z" fill="#EEEEEE"/>
-<path d="M41.5 140.25L41.5 141.25L43.5 141.25L43.5 140.25L41.5 140.25Z" fill="#EEEEEE"/>
-<path d="M36.5 84.25L36.5 85.25L38.5 85.25L38.5 84.25L36.5 84.25Z" fill="#EEEEEE"/>
-<path d="M41.5 84.25L41.5 85.25L43.5 85.25L43.5 84.25L41.5 84.25Z" fill="#EEEEEE"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40 76.5C40.2761 76.5 40.5 76.7239 40.5 77L40.5 147C40.5 147.276 40.2761 147.5 40 147.5C39.7239 147.5 39.5 147.276 39.5 147L39.5 77C39.5 76.7239 39.7239 76.5 40 76.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40 76C40.5523 76 41 76.4477 41 77L41 147C41 147.552 40.5523 148 40 148V148C39.4477 148 39 147.552 39 147L39 77C39 76.4477 39.4477 76 40 76V76Z" stroke="#EEEEEE"/>
-</g>
-<path d="M36 140L36 141L38 141L38 140L36 140Z" fill="black"/>
-<path d="M41 140L41 141L43 141L43 140L41 140Z" fill="black"/>
-<path d="M36 84L36 85L38 85L38 84L36 84Z" fill="black"/>
-<path d="M41 84L41 85L43 85L43 84L41 84Z" fill="black"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40 146.5C40 146.776 39.7761 147 39.5 147C39.2239 147 39 146.776 39 146.5L39 76.5C39 76.2239 39.2239 76 39.5 76C39.7761 76 40 76.2239 40 76.5L40 146.5Z" fill="#2471DB"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M40.5 146.5C40.5 147.052 40.0523 147.5 39.5 147.5V147.5C38.9477 147.5 38.5 147.052 38.5 146.5L38.5 76.5C38.5 75.9477 38.9477 75.5 39.5 75.5V75.5C40.0523 75.5 40.5 75.9477 40.5 76.5L40.5 146.5Z" stroke="black"/>
-<g opacity="0.1">
-<path d="M35 112.25L35 113.25L38 113.25L38 112.25L35 112.25Z" fill="#EEEEEE"/>
-<path d="M41 112.25L41 113.25L44 113.25L44 112.25L41 112.25Z" fill="#EEEEEE"/>
-<path d="M34 140.25L34 141.25L36 141.25L36 140.25L34 140.25Z" fill="#EEEEEE"/>
-<path d="M43 140.25L43 141.25L45 141.25L45 140.25L43 140.25Z" fill="#EEEEEE"/>
-<path d="M34 84.25L34 85.25L36 85.25L36 84.25L34 84.25Z" fill="#EEEEEE"/>
-<path d="M43 84.25L43 85.25L45 85.25L45 84.25L43 84.25Z" fill="#EEEEEE"/>
-</g>
-<path d="M35 112L35 113L38 113L38 112L35 112Z" fill="black"/>
-<path d="M41 112L41 113L44 113L44 112L41 112Z" fill="black"/>
-<path d="M34 140L34 141L36 141L36 140L34 140Z" fill="black"/>
-<path d="M43 140L43 141L45 141L45 140L43 140Z" fill="black"/>
-<path d="M34 84L34 85L36 85L36 84L34 84Z" fill="black"/>
-<path d="M43 84L43 85L45 85L45 84L43 84Z" fill="black"/>
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="48px" height="282px" viewbox="0 0 48 282" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <path d="M0 0L48 0L48 282L0 282L0 0Z" transform="translate(-1.5258789E-05 0)" id="path_1" />
+    <rect width="48" height="282" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+    <clipPath id="mask_1">
+      <use xlink:href="#path_1" />
+    </clipPath>
+  </defs>
+  <g id="bmp00105" clip-path="url(#clip_1)">
+    <path d="M0 0L48 0L48 282L0 282L0 0Z" transform="translate(-1.5258789E-05 0)" id="Background" fill="none" fill-rule="evenodd" stroke="none" />
+    <g clip-path="url(#mask_1)">
+      <g id="Group" transform="translate(3.4999847 226)" opacity="0.1">
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.22386 0 0 0.223999 0 0.5L0 53.5C0 53.776 0.22386 54 0.5 54C0.77614 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.77614 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C0.44772 0 0 0.447998 0 1L0 54C0 54.552 0.44772 55 1 55L1 55C1.55228 55 2 54.552 2 54L2 1C2 0.447998 1.55229 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(8.999985 273)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(3.9999847 273)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(8.999985 234)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(3.9999847 234)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 53.5C0 53.776 0.22386 54 0.5 54C0.77614 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.77614 0 0.5 0C0.22386 0 0 0.223999 0 0.5L0 53.5L0 53.5Z" transform="translate(6.9999847 226)" id="Shape" fill="#1F1F1F" fill-rule="evenodd" stroke="none" />
+      <path d="M0 54C0 54.552 0.44772 55 1 55L1 55C1.55229 55 2 54.552 2 54L2 1C2 0.447998 1.55228 0 1 0L1 0C0.44772 0 0 0.447998 0 1L0 54L0 54Z" transform="translate(6.4999847 225.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(19.499985 226)" opacity="0.1">
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C0.447701 0 0 0.447998 0 1L0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(24.999985 273)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(19.999985 273)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(24.999985 234)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(19.999985 234)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5L0 53.5Z" transform="translate(22.999985 226)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+      <path d="M0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0C0.447701 0 0 0.447998 0 1L0 54L0 54Z" transform="translate(22.499985 225.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(35.999985 226)" opacity="0.1">
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C0.447701 0 0 0.447998 0 1L0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(41.499985 273)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(36.499985 273)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(41.499985 234)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(36.499985 234)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5L0 53.5Z" transform="translate(39.499985 226)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+      <path d="M0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0C0.447701 0 0 0.447998 0 1L0 54L0 54Z" transform="translate(38.999985 225.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(3.4999847 151)" opacity="0.1">
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.22386 0 0 0.223999 0 0.5L0 53.5C0 53.776 0.22386 54 0.5 54C0.77614 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.77614 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C0.44772 0 0 0.447998 0 1L0 54C0 54.552 0.44772 55 1 55L1 55C1.55228 55 2 54.552 2 54L2 1C2 0.447998 1.55229 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(8.999985 198)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(3.9999847 198)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(8.999985 159)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(3.9999847 159)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 53.5C0 53.776 0.22386 54 0.5 54C0.77614 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.77614 0 0.5 0C0.22386 0 0 0.223999 0 0.5L0 53.5L0 53.5Z" transform="translate(6.9999847 151)" id="Shape" fill="#1F1F1F" fill-rule="evenodd" stroke="none" />
+      <path d="M0 54C0 54.552 0.44772 55 1 55L1 55C1.55229 55 2 54.552 2 54L2 1C2 0.447998 1.55228 0 1 0L1 0C0.44772 0 0 0.447998 0 1L0 54L0 54Z" transform="translate(6.4999847 150.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(19.499985 151)" opacity="0.1">
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C0.447701 0 0 0.447998 0 1L0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(24.999985 198)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(19.999985 198)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(24.999985 159)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(19.999985 159)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5L0 53.5Z" transform="translate(22.999985 151)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+      <path d="M0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0C0.447701 0 0 0.447998 0 1L0 54L0 54Z" transform="translate(22.499985 150.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(35.999985 151)" opacity="0.1">
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 47.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C0.447701 0 0 0.447998 0 1L0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(41.499985 198)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(36.499985 198)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(41.499985 159)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M2 0L2 1L0 1L0 0L2 0L2 0Z" transform="translate(36.499985 159)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 53.5C0 53.776 0.2239 54 0.5 54C0.7761 54 1 53.776 1 53.5L1 0.5C1 0.223999 0.7761 0 0.5 0C0.2239 0 0 0.223999 0 0.5L0 53.5L0 53.5Z" transform="translate(39.499985 151)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+      <path d="M0 54C0 54.552 0.447701 55 1 55L1 55C1.5523 55 2 54.552 2 54L2 1C2 0.447998 1.5523 0 1 0L1 0C0.447701 0 0 0.447998 0 1L0 54L0 54Z" transform="translate(38.999985 150.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(4.4999847 1)" opacity="0.1">
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.77614 0 1 0.22385 1 0.5L1 70.5C1 70.7761 0.77614 71 0.5 71C0.22386 71 0 70.7761 0 70.5L0 0.5C0 0.22386 0.22385 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C1.55228 0 2 0.44772 2 1L2 71C2 71.5523 1.55228 72 1 72L1 72C0.44772 72 0 71.5523 0 71L0 1C0 0.44772 0.44771 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(3.9999847 65)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(8.999985 65)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(3.9999847 9)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(8.999985 9)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 70.5C1 70.7761 0.77614 71 0.5 71C0.22386 71 0 70.7761 0 70.5L0 0.5C0 0.22386 0.22386 0 0.5 0C0.77614 0 1 0.22386 1 0.5L1 70.5L1 70.5Z" transform="translate(6.9999847 1)" id="Shape" fill="#1F1F1F" fill-rule="evenodd" stroke="none" />
+      <path d="M2 71C2 71.5523 1.55228 72 1 72L1 72C0.44772 72 0 71.5523 0 71L0 1C0 0.447715 0.44772 0 1 0L1 0C1.55228 0 2 0.447716 2 1L2 71L2 71Z" transform="translate(6.4999847 0.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(20.499985 1)" opacity="0.1">
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.7761 0 1 0.22385 1 0.5L1 70.5C1 70.7761 0.7761 71 0.5 71C0.2239 71 0 70.7761 0 70.5L0 0.5C0 0.22386 0.2239 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C1.5523 0 2 0.44772 2 1L2 71C2 71.5523 1.5523 72 1 72L1 72C0.447701 72 0 71.5523 0 71L0 1C0 0.44772 0.447701 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(19.999985 65)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(24.999985 65)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(19.999985 9)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(24.999985 9)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 70.5C1 70.7761 0.7761 71 0.5 71C0.2239 71 0 70.7761 0 70.5L0 0.5C0 0.22386 0.2239 0 0.5 0C0.7761 0 1 0.22386 1 0.5L1 70.5L1 70.5Z" transform="translate(22.999985 1)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+      <path d="M2 71C2 71.5523 1.5523 72 1 72L1 72C0.447701 72 0 71.5523 0 71L0 1C0 0.447715 0.447701 0 1 0L1 0C1.5523 0 2 0.447716 2 1L2 71L2 71Z" transform="translate(22.499985 0.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(36.499985 1)" opacity="0.1">
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.7761 0 1 0.22385 1 0.5L1 70.5C1 70.7761 0.7761 71 0.5 71C0.2239 71 0 70.7761 0 70.5L0 0.5C0 0.22386 0.2239 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C1.5523 0 2 0.44772 2 1L2 71C2 71.5523 1.5523 72 1 72L1 72C0.447701 72 0 71.5523 0 71L0 1C0 0.44772 0.447701 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(35.999985 65)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(40.999985 65)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(35.999985 9)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(40.999985 9)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 70.5C1 70.7761 0.7761 71 0.5 71C0.2239 71 0 70.7761 0 70.5L0 0.5C0 0.22386 0.2239 0 0.5 0C0.7761 0 1 0.22386 1 0.5L1 70.5L1 70.5Z" transform="translate(38.999985 1)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+      <path d="M2 71C2 71.5523 1.5523 72 1 72L1 72C0.447701 72 0 71.5523 0 71L0 1C0 0.447715 0.447701 0 1 0L1 0C1.5523 0 2 0.447716 2 1L2 71L2 71Z" transform="translate(38.499985 0.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(4.4999847 76)" opacity="0.1">
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.77614 0 1 0.2239 1 0.5L1 70.5C1 70.776 0.77614 71 0.5 71C0.22386 71 0 70.776 0 70.5L0 0.5C0 0.2239 0.22385 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C1.55228 0 2 0.447701 2 1L2 71C2 71.552 1.55228 72 1 72L1 72C0.44772 72 0 71.552 0 71L0 1C0 0.447701 0.44771 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(3.9999847 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(8.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(3.9999847 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(8.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 70.5C1 70.776 0.77614 71 0.5 71C0.22386 71 0 70.776 0 70.5L0 0.5C0 0.2239 0.22386 0 0.5 0C0.77614 0 1 0.2239 1 0.5L1 70.5L1 70.5Z" transform="translate(6.9999847 76)" id="Shape" fill="#1F1F1F" fill-rule="evenodd" stroke="none" />
+      <path d="M2 71C2 71.552 1.55228 72 1 72L1 72C0.44772 72 0 71.552 0 71L0 1C0 0.447701 0.44772 0 1 0L1 0C1.55228 0 2 0.447701 2 1L2 71L2 71Z" transform="translate(6.4999847 75.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(1.9999847 84.25)" opacity="0.1">
+        <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(2.5 28)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(7 28)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 56)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(9 56)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(9 0)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+      </g>
+      <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(4.4999847 112)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(8.999985 112)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(1.9999847 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(10.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(1.9999847 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(10.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <g id="Group" transform="translate(20.499985 76)" opacity="0.1">
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.7761 0 1 0.2239 1 0.5L1 70.5C1 70.776 0.7761 71 0.5 71C0.2239 71 0 70.776 0 70.5L0 0.5C0 0.2239 0.2239 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C1.5523 0 2 0.447701 2 1L2 71C2 71.552 1.5523 72 1 72L1 72C0.447701 72 0 71.552 0 71L0 1C0 0.447701 0.447701 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(19.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(24.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(19.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(24.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 70.5C1 70.776 0.7761 71 0.5 71C0.2239 71 0 70.776 0 70.5L0 0.5C0 0.2239 0.2239 0 0.5 0C0.7761 0 1 0.2239 1 0.5L1 70.5L1 70.5Z" transform="translate(22.999985 76)" id="Shape" fill="#737373" fill-rule="evenodd" stroke="none" />
+      <path d="M2 71C2 71.552 1.5523 72 1 72L1 72C0.447701 72 0 71.552 0 71L0 1C0 0.447701 0.447701 0 1 0L1 0C1.5523 0 2 0.447701 2 1L2 71L2 71Z" transform="translate(22.499985 75.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(17.999985 84.25)" opacity="0.1">
+        <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(2.5 28)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(7 28)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 56)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(9 56)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(9 0)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+      </g>
+      <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(20.499985 112)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(24.999985 112)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(17.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(26.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(17.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(26.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <g id="Group" transform="translate(36.499985 76)" opacity="0.1">
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 64.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(5 8.25)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0.5 0C0.7761 0 1 0.2239 1 0.5L1 70.5C1 70.776 0.7761 71 0.5 71C0.2239 71 0 70.776 0 70.5L0 0.5C0 0.2239 0.2239 0 0.5 0L0.5 0Z" transform="translate(3 0.5)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+        <path d="M1 0C1.5523 0 2 0.447701 2 1L2 71C2 71.552 1.5523 72 1 72L1 72C0.447701 72 0 71.552 0 71L0 1C0 0.447701 0.447701 0 1 0L1 0L1 0Z" transform="translate(2.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+      </g>
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(35.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(40.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(35.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(40.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 70.5C1 70.776 0.7761 71 0.5 71C0.2239 71 0 70.776 0 70.5L0 0.5C0 0.2239 0.2239 0 0.5 0C0.7761 0 1 0.2239 1 0.5L1 70.5L1 70.5Z" transform="translate(38.999985 76)" id="Shape" fill="#2471DB" fill-rule="evenodd" stroke="none" />
+      <path d="M2 71C2 71.552 1.5523 72 1 72L1 72C0.447701 72 0 71.552 0 71L0 1C0 0.447701 0.447701 0 1 0L1 0C1.5523 0 2 0.447701 2 1L2 71L2 71Z" transform="translate(38.499985 75.5)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+      <g id="Group" transform="translate(33.999985 84.25)" opacity="0.1">
+        <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(2.5 28)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(7 28)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(0 56)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(9 56)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+        <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(9 0)" id="Shape" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+      </g>
+      <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(36.499985 112)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L1.5 1L1.5 0L0 0L0 0Z" transform="translate(40.999985 112)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(33.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(42.999985 140)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(33.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L0 1L2 1L2 0L0 0L0 0Z" transform="translate(42.999985 84)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+    </g>
+  </g>
 </svg>

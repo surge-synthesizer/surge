@@ -1,164 +1,186 @@
-<svg width="399" height="84" viewBox="0 0 399 84" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M144 -8.74228e-08L143 0L143 14L144 14L144 -8.74228e-08Z" fill="#2B3E80"/>
-<path d="M256 -8.74228e-08L255 0L255 14L256 14L256 -8.74228e-08Z" fill="#2B3E80"/>
-<path d="M138 7H261" stroke="#2B3E80" stroke-width="2"/>
-<path d="M144 6H255V0L144 6Z" fill="#7B8ECE"/>
-<path d="M144 14H143V28H144V14Z" fill="#2B3E80"/>
-<path d="M256 14H255V28H256V14Z" fill="#2B3E80"/>
-<path d="M138 21L261 21" stroke="#2B3E80" stroke-width="2"/>
-<path d="M194 20L255 20L255 14L194 20Z" fill="#7B8ECE"/>
-<path d="M205 22L144 22L144 28L205 22Z" fill="#7B8ECE"/>
-<path d="M138 35H261" stroke="#2B3E80" stroke-width="2"/>
-<path d="M194 34.2856L255 34.2856L255 29.9999L194 34.2856Z" fill="#7B8ECE"/>
-<path d="M205 35.7144L144 35.7144L144 40.0001L205 35.7144Z" fill="#7B8ECE"/>
-<path d="M144 36H143V40H144V36Z" fill="#2B3E80"/>
-<path d="M152 36H151V39.5H152V36Z" fill="#2B3E80"/>
-<path d="M160 36H159V39H160V36Z" fill="#2B3E80"/>
-<path d="M168 36H167V38.5H168V36Z" fill="#2B3E80"/>
-<path d="M176 36H175V38H176V36Z" fill="#2B3E80"/>
-<path d="M184 36H183V37H184V36Z" fill="#2B3E80"/>
-<path d="M192 36H191V36.5H192V36Z" fill="#2B3E80"/>
-<path d="M255 34L256 34L256 30L255 30L255 34Z" fill="#2B3E80"/>
-<path d="M247 34L248 34L248 30.5L247 30.5L247 34Z" fill="#2B3E80"/>
-<path d="M239 34L240 34L240 31L239 31L239 34Z" fill="#2B3E80"/>
-<path d="M231 34L232 34L232 31.5L231 31.5L231 34Z" fill="#2B3E80"/>
-<path d="M223 34L224 34L224 32L223 32L223 34Z" fill="#2B3E80"/>
-<path d="M215 34L216 34L216 33L215 33L215 34Z" fill="#2B3E80"/>
-<path d="M207 34L208 34L208 33.5L207 33.5L207 34Z" fill="#2B3E80"/>
-<path d="M201.024 28H198V42H201.024V28Z" fill="#2B3E80"/>
-<path d="M277 -8.74228e-08L276 0L276 14L277 14L277 -8.74228e-08Z" fill="#1437B8"/>
-<path d="M389 -8.74228e-08L388 0L388 14L389 14L389 -8.74228e-08Z" fill="#1437B8"/>
-<path d="M271 7H394" stroke="#1437B8" stroke-width="2"/>
-<path d="M277 6H388V0L277 6Z" fill="#3C8DFC"/>
-<path d="M277 14H276V28H277V14Z" fill="#1437B8"/>
-<path d="M389 14H388V28H389V14Z" fill="#1437B8"/>
-<path d="M271 21L394 21" stroke="#1437B8" stroke-width="2"/>
-<path d="M327 20L388 20L388 14L327 20Z" fill="#3C8DFC"/>
-<path d="M338 22L277 22L277 28L338 22Z" fill="#3C8DFC"/>
-<path d="M271 35H394" stroke="#1437B8" stroke-width="2"/>
-<path d="M327 34.2856L388 34.2856L388 29.9999L327 34.2856Z" fill="#3C8DFC"/>
-<path d="M338 35.7144L277 35.7144L277 40.0001L338 35.7144Z" fill="#3C8DFC"/>
-<path d="M277 36H276V40H277V36Z" fill="#1437B8"/>
-<path d="M285 36H284V39.5H285V36Z" fill="#1437B8"/>
-<path d="M293 36H292V39H293V36Z" fill="#1437B8"/>
-<path d="M301 36H300V38.5H301V36Z" fill="#1437B8"/>
-<path d="M309 36H308V38H309V36Z" fill="#1437B8"/>
-<path d="M317 36H316V37H317V36Z" fill="#1437B8"/>
-<path d="M325 36H324V36.5H325V36Z" fill="#1437B8"/>
-<path d="M388 34L389 34L389 30L388 30L388 34Z" fill="#1437B8"/>
-<path d="M380 34L381 34L381 30.5L380 30.5L380 34Z" fill="#1437B8"/>
-<path d="M372 34L373 34L373 31L372 31L372 34Z" fill="#1437B8"/>
-<path d="M364 34L365 34L365 31.5L364 31.5L364 34Z" fill="#1437B8"/>
-<path d="M356 34L357 34L357 32L356 32L356 34Z" fill="#1437B8"/>
-<path d="M348 34L349 34L349 33L348 33L348 34Z" fill="#1437B8"/>
-<path d="M340 34L341 34L341 33.5L340 33.5L340 34Z" fill="#1437B8"/>
-<path d="M334.024 28H331V42H334.024V28Z" fill="#1437B8"/>
-<path d="M11 42L10 42L10 56L11 56L11 42Z" fill="#F5F5F6"/>
-<path d="M123 42L122 42L122 56L123 56L123 42Z" fill="#F5F5F6"/>
-<path d="M5 49H128" stroke="#F5F5F6" stroke-width="2"/>
-<path d="M11 48H122V42L11 48Z" fill="#B6B6BA"/>
-<path d="M11 56H10V70H11V56Z" fill="#F5F5F6"/>
-<path d="M123 56H122V70H123V56Z" fill="#F5F5F6"/>
-<path d="M5 63L128 63" stroke="#F5F5F6" stroke-width="2"/>
-<path d="M61 62L122 62L122 56L61 62Z" fill="#B6B6BA"/>
-<path d="M72 64L11 64L11 70L72 64Z" fill="#B6B6BA"/>
-<path d="M5 77H128" stroke="#F5F5F6" stroke-width="2"/>
-<path d="M61 76.2856L122 76.2856L122 71.9999L61 76.2856Z" fill="#B6B6BA"/>
-<path d="M72 77.7144L11 77.7144L11 82.0001L72 77.7144Z" fill="#B6B6BA"/>
-<path d="M11 78H10V82H11V78Z" fill="#F5F5F6"/>
-<path d="M19 78H18V81.5H19V78Z" fill="#F5F5F6"/>
-<path d="M27 78H26V81H27V78Z" fill="#F5F5F6"/>
-<path d="M35 78H34V80.5H35V78Z" fill="#F5F5F6"/>
-<path d="M43 78H42V80H43V78Z" fill="#F5F5F6"/>
-<path d="M51 78H50V79H51V78Z" fill="#F5F5F6"/>
-<path d="M59 78H58V78.5H59V78Z" fill="#F5F5F6"/>
-<path d="M122 76L123 76L123 72L122 72L122 76Z" fill="#F5F5F6"/>
-<path d="M114 76L115 76L115 72.5L114 72.5L114 76Z" fill="#F5F5F6"/>
-<path d="M106 76L107 76L107 73L106 73L106 76Z" fill="#F5F5F6"/>
-<path d="M98 76L99 76L99 73.5L98 73.5L98 76Z" fill="#F5F5F6"/>
-<path d="M90 76L91 76L91 74L90 74L90 76Z" fill="#F5F5F6"/>
-<path d="M82 76L83 76L83 75L82 75L82 76Z" fill="#F5F5F6"/>
-<path d="M74 76L75 76L75 75.5L74 75.5L74 76Z" fill="#F5F5F6"/>
-<path d="M68.0244 70H65V84H68.0244V70Z" fill="#F5F5F6"/>
-<path d="M145 42L144 42L144 56L145 56L145 42Z" fill="#9DAADD"/>
-<path d="M257 42L256 42L256 56L257 56L257 42Z" fill="#9DAADD"/>
-<path d="M139 49H262" stroke="#9DAADD" stroke-width="2"/>
-<path d="M145 48H256V42L145 48Z" fill="#A5ABC2"/>
-<path d="M145 56H144V70H145V56Z" fill="#9DAADD"/>
-<path d="M257 56H256V70H257V56Z" fill="#9DAADD"/>
-<path d="M139 63L262 63" stroke="#9DAADD" stroke-width="2"/>
-<path d="M195 62L256 62L256 56L195 62Z" fill="#A5ABC2"/>
-<path d="M206 64L145 64L145 70L206 64Z" fill="#A5ABC2"/>
-<path d="M139 77H262" stroke="#9DAADD" stroke-width="2"/>
-<path d="M195 76.2856L256 76.2856L256 71.9999L195 76.2856Z" fill="#A5ABC2"/>
-<path d="M206 77.7144L145 77.7144L145 82.0001L206 77.7144Z" fill="#A5ABC2"/>
-<path d="M145 78H144V82H145V78Z" fill="#9DAADD"/>
-<path d="M153 78H152V81.5H153V78Z" fill="#9DAADD"/>
-<path d="M161 78H160V81H161V78Z" fill="#9DAADD"/>
-<path d="M169 78H168V80.5H169V78Z" fill="#9DAADD"/>
-<path d="M177 78H176V80H177V78Z" fill="#9DAADD"/>
-<path d="M185 78H184V79H185V78Z" fill="#9DAADD"/>
-<path d="M193 78H192V78.5H193V78Z" fill="#9DAADD"/>
-<path d="M256 76L257 76L257 72L256 72L256 76Z" fill="#9DAADD"/>
-<path d="M248 76L249 76L249 72.5L248 72.5L248 76Z" fill="#9DAADD"/>
-<path d="M240 76L241 76L241 73L240 73L240 76Z" fill="#9DAADD"/>
-<path d="M232 76L233 76L233 73.5L232 73.5L232 76Z" fill="#9DAADD"/>
-<path d="M224 76L225 76L225 74L224 74L224 76Z" fill="#9DAADD"/>
-<path d="M216 76L217 76L217 75L216 75L216 76Z" fill="#9DAADD"/>
-<path d="M208 76L209 76L209 75.5L208 75.5L208 76Z" fill="#9DAADD"/>
-<path d="M202.024 70H199V84H202.024V70Z" fill="#9DAADD"/>
-<path d="M278 42L277 42L277 56L278 56L278 42Z" fill="#74AEFE"/>
-<path d="M390 42L389 42L389 56L390 56L390 42Z" fill="#74AEFE"/>
-<path d="M272 49H395" stroke="#74AEFE" stroke-width="2"/>
-<path d="M278 48H389V42L278 48Z" fill="#2E86FE"/>
-<path d="M278 56H277V70H278V56Z" fill="#74AEFE"/>
-<path d="M390 56H389V70H390V56Z" fill="#74AEFE"/>
-<path d="M272 63L395 63" stroke="#74AEFE" stroke-width="2"/>
-<path d="M328 62L389 62L389 56L328 62Z" fill="#2E86FE"/>
-<path d="M339 64L278 64L278 70L339 64Z" fill="#2E86FE"/>
-<path d="M272 77H395" stroke="#74AEFE" stroke-width="2"/>
-<path d="M328 76.2856L389 76.2856L389 71.9999L328 76.2856Z" fill="#2E86FE"/>
-<path d="M339 77.7144L278 77.7144L278 82.0001L339 77.7144Z" fill="#2E86FE"/>
-<path d="M278 78H277V82H278V78Z" fill="#74AEFE"/>
-<path d="M286 78H285V81.5H286V78Z" fill="#74AEFE"/>
-<path d="M294 78H293V81H294V78Z" fill="#74AEFE"/>
-<path d="M302 78H301V80.5H302V78Z" fill="#74AEFE"/>
-<path d="M310 78H309V80H310V78Z" fill="#74AEFE"/>
-<path d="M318 78H317V79H318V78Z" fill="#74AEFE"/>
-<path d="M326 78H325V78.5H326V78Z" fill="#74AEFE"/>
-<path d="M389 76L390 76L390 72L389 72L389 76Z" fill="#74AEFE"/>
-<path d="M381 76L382 76L382 72.5L381 72.5L381 76Z" fill="#74AEFE"/>
-<path d="M373 76L374 76L374 73L373 73L373 76Z" fill="#74AEFE"/>
-<path d="M365 76L366 76L366 73.5L365 73.5L365 76Z" fill="#74AEFE"/>
-<path d="M357 76L358 76L358 74L357 74L357 76Z" fill="#74AEFE"/>
-<path d="M349 76L350 76L350 75L349 75L349 76Z" fill="#74AEFE"/>
-<path d="M341 76L342 76L342 75.5L341 75.5L341 76Z" fill="#74AEFE"/>
-<path d="M335.024 70H332V84H335.024V70Z" fill="#74AEFE"/>
-<path d="M11 -8.74228e-08L10 0L10 14L11 14L11 -8.74228e-08Z" fill="black"/>
-<path d="M123 -8.74228e-08L122 0L122 14L123 14L123 -8.74228e-08Z" fill="black"/>
-<path d="M5 7H128" stroke="black" stroke-width="2"/>
-<path d="M11 6H122V0L11 6Z" fill="#98999B"/>
-<path d="M11 14H10V28H11V14Z" fill="black"/>
-<path d="M123 14H122V28H123V14Z" fill="black"/>
-<path d="M5 21L128 21" stroke="black" stroke-width="2"/>
-<path d="M61 20L122 20L122 14L61 20Z" fill="#98999B"/>
-<path d="M72 22L11 22L11 28L72 22Z" fill="#98999B"/>
-<path d="M5 35H128" stroke="black" stroke-width="2"/>
-<path d="M61 34.2856L122 34.2856L122 29.9999L61 34.2856Z" fill="#98999B"/>
-<path d="M72 35.7144L11 35.7144L11 40.0001L72 35.7144Z" fill="#98999B"/>
-<path d="M11 36H10V40H11V36Z" fill="black"/>
-<path d="M19 36H18V39.5H19V36Z" fill="black"/>
-<path d="M27 36H26V39H27V36Z" fill="black"/>
-<path d="M35 36H34V38.5H35V36Z" fill="black"/>
-<path d="M43 36H42V38H43V36Z" fill="black"/>
-<path d="M51 36H50V37H51V36Z" fill="black"/>
-<path d="M59 36H58V36.5H59V36Z" fill="black"/>
-<path d="M122 34L123 34L123 30L122 30L122 34Z" fill="black"/>
-<path d="M114 34L115 34L115 30.5L114 30.5L114 34Z" fill="black"/>
-<path d="M106 34L107 34L107 31L106 31L106 34Z" fill="black"/>
-<path d="M98 34L99 34L99 31.5L98 31.5L98 34Z" fill="black"/>
-<path d="M90 34L91 34L91 32L90 32L90 34Z" fill="black"/>
-<path d="M82 34L83 34L83 33L82 33L82 34Z" fill="black"/>
-<path d="M74 34L75 34L75 33.5L74 33.5L74 34Z" fill="black"/>
-<path d="M68.0244 28H65V42H68.0244V28Z" fill="black"/>
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="399px" height="84px" viewbox="0 0 399 84" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <path d="M0 0L399 0L399 84L0 84L0 0Z" id="path_1" />
+    <rect width="399" height="84" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+    <clipPath id="mask_1">
+      <use xlink:href="#path_1" />
+    </clipPath>
+  </defs>
+  <g id="bmp00154" clip-path="url(#clip_1)">
+    <path d="M0 0L399 0L399 84L0 84L0 0Z" id="Background" fill="none" fill-rule="evenodd" stroke="none" />
+    <g clip-path="url(#mask_1)">
+      <path d="M1 0L0 8.74228e-08L0 14L1 14L1 0L1 0Z" transform="translate(143 0)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 8.74228e-08L0 14L1 14L1 0L1 0Z" transform="translate(255 0)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(138 7)" id="Shape" fill="none" fill-rule="evenodd" stroke="#2B3E80" stroke-width="2" />
+      <path d="M0 6L111 6L111 0L0 6L0 6Z" transform="translate(144 0)" id="Shape" fill="#7B8ECE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(143 14)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(255 14)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(138 21)" id="Shape" fill="none" fill-rule="evenodd" stroke="#2B3E80" stroke-width="2" />
+      <path d="M0 6L61 6L61 0L0 6L0 6Z" transform="translate(194 14)" id="Shape" fill="#7B8ECE" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 6L61 0L61 0Z" transform="translate(144 22)" id="Shape" fill="#7B8ECE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(199 17)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(138 35)" id="Shape" fill="none" fill-rule="evenodd" stroke="#2B3E80" stroke-width="2" />
+      <path d="M0 4L61 4L61 0L0 4L0 4Z" transform="translate(194 30)" id="Shape" fill="#7B8ECE" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 4L61 0L61 0Z" transform="translate(144 36)" id="Shape" fill="#7B8ECE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 4L1 4L1 0L1 0Z" transform="translate(143 36)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3.5L1 3.5L1 0L1 0Z" transform="translate(151 36)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3L1 3L1 0L1 0Z" transform="translate(159 36)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2.5L1 2.5L1 0L1 0Z" transform="translate(167 36)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2L1 2L1 0L1 0Z" transform="translate(175 36)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(183 36)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(191 36)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 4L1 4L1 0L0 0L0 4L0 4Z" transform="translate(255 30)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3.5L1 3.5L1 0L0 0L0 3.5L0 3.5Z" transform="translate(247 30.5)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3L1 3L1 0L0 0L0 3L0 3Z" transform="translate(239 31)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2.5L1 2.5L1 0L0 0L0 2.5L0 2.5Z" transform="translate(231 31.5)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2L1 2L1 0L0 0L0 2L0 2Z" transform="translate(223 32)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(215 33)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(207 33.5)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(199 31)" id="Shape" fill="#2B3E80" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 8.74228e-08L0 14L1 14L1 0L1 0Z" transform="translate(276 0)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 8.74228e-08L0 14L1 14L1 0L1 0Z" transform="translate(388 0)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(271 7)" id="Shape" fill="none" fill-rule="evenodd" stroke="#1437B8" stroke-width="2" />
+      <path d="M0 6L111 6L111 0L0 6L0 6Z" transform="translate(277 0)" id="Shape" fill="#3C8DFC" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(276 14)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(388 14)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(271 21)" id="Shape" fill="none" fill-rule="evenodd" stroke="#1437B8" stroke-width="2" />
+      <path d="M0 6L61 6L61 0L0 6L0 6Z" transform="translate(327 14)" id="Shape" fill="#3C8DFC" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 6L61 0L61 0Z" transform="translate(277 22)" id="Shape" fill="#3C8DFC" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(332 17)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(271 35)" id="Shape" fill="none" fill-rule="evenodd" stroke="#1437B8" stroke-width="2" />
+      <path d="M0 4L61 4L61 0L0 4L0 4Z" transform="translate(327 30)" id="Shape" fill="#3C8DFC" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 4L61 0L61 0Z" transform="translate(277 36)" id="Shape" fill="#3C8DFC" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 4L1 4L1 0L1 0Z" transform="translate(276 36)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3.5L1 3.5L1 0L1 0Z" transform="translate(284 36)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3L1 3L1 0L1 0Z" transform="translate(292 36)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2.5L1 2.5L1 0L1 0Z" transform="translate(300 36)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2L1 2L1 0L1 0Z" transform="translate(308 36)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(316 36)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(324 36)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 4L1 4L1 0L0 0L0 4L0 4Z" transform="translate(388 30)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3.5L1 3.5L1 0L0 0L0 3.5L0 3.5Z" transform="translate(380 30.5)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3L1 3L1 0L0 0L0 3L0 3Z" transform="translate(372 31)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2.5L1 2.5L1 0L0 0L0 2.5L0 2.5Z" transform="translate(364 31.5)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2L1 2L1 0L0 0L0 2L0 2Z" transform="translate(356 32)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(348 33)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(340 33.5)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(332 31)" id="Shape" fill="#1437B8" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(10 42)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(122 42)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(5 49)" id="Shape" fill="none" fill-rule="evenodd" stroke="#F5F5F6" stroke-width="2" />
+      <path d="M0 6L111 6L111 0L0 6L0 6Z" transform="translate(11 42)" id="Shape" fill="#B6B6BA" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(10 56)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(122 56)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(5 63)" id="Shape" fill="none" fill-rule="evenodd" stroke="#F5F5F6" stroke-width="2" />
+      <path d="M0 6L61 6L61 0L0 6L0 6Z" transform="translate(61 56)" id="Shape" fill="#B6B6BA" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 6L61 0L61 0Z" transform="translate(11 64)" id="Shape" fill="#B6B6BA" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(66 59)" id="Shape" fill="#FFFFFF" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(5 77)" id="Shape" fill="none" fill-rule="evenodd" stroke="#F5F5F6" stroke-width="2" />
+      <path d="M0 4L61 4L61 0L0 4L0 4Z" transform="translate(61 72)" id="Shape" fill="#B6B6BA" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 4L61 0L61 0Z" transform="translate(11 78)" id="Shape" fill="#B6B6BA" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 4L1 4L1 0L1 0Z" transform="translate(10 78)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3.5L1 3.5L1 0L1 0Z" transform="translate(18 78)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3L1 3L1 0L1 0Z" transform="translate(26 78)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2.5L1 2.5L1 0L1 0Z" transform="translate(34 78)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2L1 2L1 0L1 0Z" transform="translate(42 78)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(50 78)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(58 78)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 4L1 4L1 0L0 0L0 4L0 4Z" transform="translate(122 72)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3.5L1 3.5L1 0L0 0L0 3.5L0 3.5Z" transform="translate(114 72.5)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3L1 3L1 0L0 0L0 3L0 3Z" transform="translate(106 73)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2.5L1 2.5L1 0L0 0L0 2.5L0 2.5Z" transform="translate(98 73.5)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2L1 2L1 0L0 0L0 2L0 2Z" transform="translate(90 74)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(82 75)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(74 75.5)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(66 73)" id="Shape" fill="#F5F5F6" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(144 42)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(256 42)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(139 49)" id="Shape" fill="none" fill-rule="evenodd" stroke="#9DAADD" stroke-width="2" />
+      <path d="M0 6L111 6L111 0L0 6L0 6Z" transform="translate(145 42)" id="Shape" fill="#A5ABC2" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(144 56)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(256 56)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(139 63)" id="Shape" fill="none" fill-rule="evenodd" stroke="#9DAADD" stroke-width="2" />
+      <path d="M0 6L61 6L61 0L0 6L0 6Z" transform="translate(195 56)" id="Shape" fill="#A5ABC2" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 6L61 0L61 0Z" transform="translate(145 64)" id="Shape" fill="#A5ABC2" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(200 59)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(139 77)" id="Shape" fill="none" fill-rule="evenodd" stroke="#9DAADD" stroke-width="2" />
+      <path d="M0 4L61 4L61 0L0 4L0 4Z" transform="translate(195 72)" id="Shape" fill="#A5ABC2" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 4L61 0L61 0Z" transform="translate(145 78)" id="Shape" fill="#A5ABC2" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 4L1 4L1 0L1 0Z" transform="translate(144 78)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3.5L1 3.5L1 0L1 0Z" transform="translate(152 78)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3L1 3L1 0L1 0Z" transform="translate(160 78)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2.5L1 2.5L1 0L1 0Z" transform="translate(168 78)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2L1 2L1 0L1 0Z" transform="translate(176 78)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(184 78)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(192 78)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 4L1 4L1 0L0 0L0 4L0 4Z" transform="translate(256 72)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3.5L1 3.5L1 0L0 0L0 3.5L0 3.5Z" transform="translate(248 72.5)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3L1 3L1 0L0 0L0 3L0 3Z" transform="translate(240 73)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2.5L1 2.5L1 0L0 0L0 2.5L0 2.5Z" transform="translate(232 73.5)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2L1 2L1 0L0 0L0 2L0 2Z" transform="translate(224 74)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(216 75)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(208 75.5)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(200 73)" id="Shape" fill="#9DAADD" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(277 42)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(389 42)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(272 49)" id="Shape" fill="none" fill-rule="evenodd" stroke="#74AEFE" stroke-width="2" />
+      <path d="M0 6L111 6L111 0L0 6L0 6Z" transform="translate(278 42)" id="Shape" fill="#2E86FE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(277 56)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(389 56)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(272 63)" id="Shape" fill="none" fill-rule="evenodd" stroke="#74AEFE" stroke-width="2" />
+      <path d="M0 6L61 6L61 0L0 6L0 6Z" transform="translate(328 56)" id="Shape" fill="#2E86FE" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 6L61 0L61 0Z" transform="translate(278 64)" id="Shape" fill="#2E86FE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(333 59)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(272 77)" id="Shape" fill="none" fill-rule="evenodd" stroke="#74AEFE" stroke-width="2" />
+      <path d="M0 4L61 4L61 0L0 4L0 4Z" transform="translate(328 72)" id="Shape" fill="#2E86FE" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 4L61 0L61 0Z" transform="translate(278 78)" id="Shape" fill="#2E86FE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 4L1 4L1 0L1 0Z" transform="translate(277 78)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3.5L1 3.5L1 0L1 0Z" transform="translate(285 78)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3L1 3L1 0L1 0Z" transform="translate(293 78)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2.5L1 2.5L1 0L1 0Z" transform="translate(301 78)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2L1 2L1 0L1 0Z" transform="translate(309 78)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(317 78)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(325 78)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 4L1 4L1 0L0 0L0 4L0 4Z" transform="translate(389 72)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3.5L1 3.5L1 0L0 0L0 3.5L0 3.5Z" transform="translate(381 72.5)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3L1 3L1 0L0 0L0 3L0 3Z" transform="translate(373 73)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2.5L1 2.5L1 0L0 0L0 2.5L0 2.5Z" transform="translate(365 73.5)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2L1 2L1 0L0 0L0 2L0 2Z" transform="translate(357 74)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(349 75)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(341 75.5)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(333 73)" id="Shape" fill="#74AEFE" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 8.74228e-08L0 14L1 14L1 0L1 0Z" transform="translate(10 0)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 8.74228e-08L0 14L1 14L1 0L1 0Z" transform="translate(122 0)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(5 7)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="2" />
+      <path d="M0 6L111 6L111 0L0 6L0 6Z" transform="translate(11 0)" id="Shape" fill="#98999B" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(10 14)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 14L1 14L1 0L1 0Z" transform="translate(122 14)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(5 21)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="2" />
+      <path d="M0 6L61 6L61 0L0 6L0 6Z" transform="translate(61 14)" id="Shape" fill="#98999B" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 6L61 0L61 0Z" transform="translate(11 22)" id="Shape" fill="#98999B" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(66 17)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 0L123 0" transform="translate(5 35)" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="2" />
+      <path d="M0 4L61 4L61 0L0 4L0 4Z" transform="translate(61 30)" id="Shape" fill="#98999B" fill-rule="evenodd" stroke="none" />
+      <path d="M61 0L0 0L0 4L61 0L61 0Z" transform="translate(11 36)" id="Shape" fill="#98999B" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 4L1 4L1 0L1 0Z" transform="translate(10 36)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3.5L1 3.5L1 0L1 0Z" transform="translate(18 36)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 3L1 3L1 0L1 0Z" transform="translate(26 36)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2.5L1 2.5L1 0L1 0Z" transform="translate(34 36)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 2L1 2L1 0L1 0Z" transform="translate(42 36)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(50 36)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 1L1 1L1 0L1 0Z" transform="translate(58 36)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 4L1 4L1 0L0 0L0 4L0 4Z" transform="translate(122 30)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3.5L1 3.5L1 0L0 0L0 3.5L0 3.5Z" transform="translate(114 30.5)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 3L1 3L1 0L0 0L0 3L0 3Z" transform="translate(106 31)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2.5L1 2.5L1 0L0 0L0 2.5L0 2.5Z" transform="translate(98 31.5)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 2L1 2L1 0L0 0L0 2L0 2Z" transform="translate(90 32)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(82 33)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M0 1L1 1L1 0L0 0L0 1L0 1Z" transform="translate(74 33.5)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+      <path d="M1 0L0 0L0 8L1 8L1 0L1 0Z" transform="translate(66 31)" id="Shape" fill="#000000" fill-rule="evenodd" stroke="none" />
+    </g>
+  </g>
 </svg>

@@ -173,6 +173,8 @@
     <control ui_identifier="scene.portatime" class="def-hslider"/>
     <control ui_identifier="scene.pitch" class="def-hslider"/>
 
+    <control ui_identifier="controls.surge_menu" x="850"/>
+
     <control ui_identifier="scene.gain" y="301"/>
     <control ui_identifier="scene.velocity_sensitivity" y="301"/>
 
@@ -212,13 +214,34 @@
     <control ui_identifier="filter.feedback" class="def-hslider"/>
 
     <!-- Mixer -->
-    <control ui_identifier="mixer.level_o1" y="37"/>
-    <control ui_identifier="mixer.level_o2" y="37"/>
-    <control ui_identifier="mixer.level_o3" y="37"/>
-    <control ui_identifier="mixer.level_ring12" y="37"/>
-    <control ui_identifier="mixer.level_ring23" y="37"/>
-    <control ui_identifier="mixer.level_noise" y="37"/>
-    <control ui_identifier="mixer.level_prefiltergain" y="37"/>
+    <control ui_identifier="mixer.mute_o1" x="0"/>
+    <control ui_identifier="mixer.mute_o2" x="20"/>
+    <control ui_identifier="mixer.mute_o3" x="40"/>
+    <control ui_identifier="mixer.mute_ring12" x="60"/>
+    <control ui_identifier="mixer.mute_ring23" x="80"/>
+    <control ui_identifier="mixer.mute_noise" x="100"/>
+
+    <control ui_identifier="mixer.solo_o1" x="0"/>
+    <control ui_identifier="mixer.solo_o2" x="20"/>
+    <control ui_identifier="mixer.solo_o3" x="40"/>
+    <control ui_identifier="mixer.solo_ring12" x="60"/>
+    <control ui_identifier="mixer.solo_ring23" x="80"/>
+    <control ui_identifier="mixer.solo_noise" x="100"/>
+
+    <control ui_identifier="mixer.route_o1" x="0"/>
+    <control ui_identifier="mixer.route_o2" x="20"/>
+    <control ui_identifier="mixer.route_o3" x="40"/>
+    <control ui_identifier="mixer.route_ring12" x="60"/>
+    <control ui_identifier="mixer.route_ring23" x="80"/>
+    <control ui_identifier="mixer.route_noise" x="100"/>
+
+    <control ui_identifier="mixer.level_o1" y="38"/>
+    <control ui_identifier="mixer.level_o2" y="38"/>
+    <control ui_identifier="mixer.level_o3" y="38"/>
+    <control ui_identifier="mixer.level_ring12" y="38"/>
+    <control ui_identifier="mixer.level_ring23" y="38"/>
+    <control ui_identifier="mixer.level_noise" y="38"/>
+    <control ui_identifier="mixer.level_prefiltergain" y="38"/>
 
     <!-- Keytrack & Waveshaper -->
     <control ui_identifier="scene.keytrack_root" x="311" y="265"/>
@@ -269,11 +292,11 @@
 
     <control ui_identifier="lfo.main.panel" y="477"/>
 
-    <control ui_identifier="lfo.title" x="6"/>
+    <control ui_identifier="lfo.title" x="6" y="486"/>
     <control ui_identifier="lfo.presets" x="6" y="477"/>
 
     <control ui_identifier="lfo.trigger_mode" y="483"/>
-    <control ui_identifier="lfo.unipolar" x="170" y="545" w="51" h="14"/>
+    <control ui_identifier="lfo.unipolar" y="545" w="51" h="14"/>
 
     <control ui_identifier="lfo.shape" y="479"/>
     <control ui_identifier="lfo.mseg_editor" y="477"/>

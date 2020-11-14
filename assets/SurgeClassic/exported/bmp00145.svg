@@ -1,32 +1,22 @@
 <svg width="20" height="160" viewBox="0 0 20 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="20" height="160" fill="#393B45"/>
-<rect width="20" height="16" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M20 16H0C4.4795 5.33337 11.146 0 20 0V16Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M7 0H1V16H7V0Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 16)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 32L20 16V32H0Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M13 16H7V32H13V16Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 32)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M20 48H0C8 48 14.667 42.6666 20 32V48Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M19 32H13V48H19V32Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 48)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 48V64H20V56L0 48Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M7 48H1V64H7V48Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 64)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 64V80H20V72C14 72 7.333 69.3334 0 64H0Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M13 64H7V80H13V64Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 80)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 80V96H20V88C9.333 88 2.667 85.3334 0 80H0Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M19 80H13V96H19V80Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 96)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 104V112H20L0 104Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M7 96H1V112H7V96Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 112)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 120V128H20C9.282 125.621 3.333 123.243 0 120Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M13 112H7V128H13V112Z" fill="#FF9300"/>
-<rect width="20" height="16" transform="translate(0 128)" fill="white" fill-opacity="0.2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 136V144H20C9.333 142.667 2.667 140 0 136Z" fill="#E3E3E3"/>
-<path opacity="0.35" d="M19 128H13V144H19V128Z" fill="#FF9300"/>
-<rect y="144" width="20" height="16" fill="white" fill-opacity="0.2"/>
-<rect y="152" width="20" height="8" fill="#E3E3E3"/>
+<rect width="20" height="160" fill="#555861"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 16H0C4.4795 5.33337 11.146 0 20 0V16Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M7 0H1V16H7V0Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 32L20 16V32H0Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M13 16H7V32H13V16Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 48H0C8 48 14.667 42.6666 20 32V48Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M19 32H13V48H19V32Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 48V64H20V56L0 48Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M7 48H1V64H7V48Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 64V80H20V72C14 72 7.333 69.3334 0 64H0Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M13 64H7V80H13V64Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 80V96H20V88C9.333 88 2.667 85.3334 0 80H0Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M19 80H13V96H19V80Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 104V112H20L0 104Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M7 96H1V112H7V96Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 120V128H20C9.282 125.621 3.333 123.243 0 120Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M13 112H7V128H13V112Z" fill="#FF9000"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 136V144H20C9.333 142.667 2.667 140 0 136Z" fill="#D8D8D8"/>
+<path opacity="0.35" d="M19 128H13V144H19V128Z" fill="#FF9000"/>
+<rect y="152" width="20" height="8" fill="#D8D8D8"/>
 </svg>
