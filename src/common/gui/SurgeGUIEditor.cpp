@@ -50,6 +50,7 @@
 #include <sstream>
 #include <stack>
 #include <unordered_map>
+#include <codecvt>
 #include "MSEGEditor.h"
 
 #if TARGET_VST3
@@ -6140,15 +6141,17 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
 
          hostMenu->getItem(i, item, &target );
 
-         char nm[1024];
-         Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
+         //char nm[1024];
+         //Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
+         std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> conversion;
+         std::string nm = conversion.to_bytes( (char16_t*)( item.name ) );
+
          if( nm[0] == '-' ) // FL sends us this as a separator with no VST indication so just strip the '-'
          {
             int pos = 1;
             while( nm[pos] == ' ' && nm[pos] != 0 )
                pos++;
-            std::string truncName( nm + pos );
-            strcpy( nm, truncName.c_str() );
+            nm = nm.substr(pos);
          }
 
          auto itag = item.tag;
@@ -6161,7 +6164,8 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
          << ( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) == Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) << " "
          << std::endl;
          */
-         if( item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator )
+         if( item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator &&
+             ! item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart )
          {
             menuStack.top()->addSeparator(eidStack.top()++);
          }
@@ -6169,7 +6173,7 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
          {
             COptionMenu *subMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle |
                                                     VSTGUI::COptionMenu::kMultipleCheckStyle );
-            menuStack.top()->addEntry(subMenu, nm );
+            menuStack.top()->addEntry(subMenu, nm.c_str() );
             menuStack.push(subMenu);
             subMenu->forget();
             eidStack.push(0);
