@@ -6144,17 +6144,13 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
          //char nm[1024];
          //Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
 #if WINDOWS
-#if _MSC_VER > 1911
          // https://stackoverflow.com/questions/32055357/visual-studio-c-2015-stdcodecvt-with-char16-t-or-char32-t
-         std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> conversion;
-#else
          std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t> conversion;
-#endif
+         std::string nm = conversion.to_bytes( (wchar_t*)( item.name ) );
 #else
          std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> conversion;
-#endif
-
          std::string nm = conversion.to_bytes( (char16_t*)( item.name ) );
+#endif
 
          if( nm[0] == '-' ) // FL sends us this as a separator with no VST indication so just strip the '-'
          {
