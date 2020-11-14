@@ -68,13 +68,14 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       d.left += dragRegion.getWidth();
    }
 
+   if( pBackground )
+   {
+      pBackground->draw( dc, d );
+   }
+
    if( isHover && pBackgroundHover )
    {
       pBackgroundHover->draw( dc, d );
-   }
-   else if( pBackground )
-   {
-      pBackground->draw( dc, d );
    }
 
    auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
@@ -85,6 +86,7 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
    {
       std::string dt = sge->getDisplayForTag( getTag() );
       auto valcol = skin->getColor(Colors::Menu::Value);
+
       if( isHover )
          valcol = skin->getColor(Colors::Menu::ValueHover);
 
@@ -131,13 +133,16 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
          l.right = d.left + splitPoint;
          auto tl = label;
          trunc = false;
+
          while( dc->getStringWidth( tl.c_str() ) > l.getWidth() && tl.length() > 4 )
          {
             tl = tl.substr( 0, tl.length() - 3 );
             trunc = true;
          }
+
          if( trunc ) tl += "...";
          auto labcol = skin->getColor(Colors::Menu::Name);
+
          if (isHover)
             labcol = skin->getColor(Colors::Menu::NameHover);
          
@@ -157,13 +162,15 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
          dbox.top += dw;
          dbox.bottom -= dw;
          VSTGUI::CPoint p( 0, iv * dglyphsize );
+
+         if( pGlyph )
+         {
+            pGlyph->draw( dc, dbox, p, 0xff );
+         }
+
          if( isHover && pGlyphHover )
          {
             pGlyphHover->draw( dc, dbox, p, 0xff );
-         }
-         else if( pGlyph )
-         {
-            pGlyph->draw( dc, dbox, p, 0xff );
          }
       }
    }
