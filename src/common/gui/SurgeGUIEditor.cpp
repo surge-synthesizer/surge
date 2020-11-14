@@ -6143,7 +6143,7 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
 
          //char nm[1024];
          //Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
-#if _MSC_VER >= 1911
+#if _MSC_VER > 1911
          std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> conversion;
 #else
          std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t> conversion;
