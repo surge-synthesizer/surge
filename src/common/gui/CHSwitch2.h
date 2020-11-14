@@ -24,22 +24,21 @@ public:
    CHSwitch2(const VSTGUI::CRect& size,
              VSTGUI::IControlListener* listener,
              long tag,
-             long subPixmaps,       // number of subPixmaps
-             long heightOfOneImage, // pixel
+             long frames,
+             long heightOfOneImage, // in pixels
              long rows,
              long columns,
              VSTGUI::CBitmap* background,
              const VSTGUI::CPoint& offset,
-             bool dragable = false)
-       : CHorizontalSwitch(
-             size, listener, tag, subPixmaps, heightOfOneImage, subPixmaps, background, offset)
+             bool draggable = false)
+       : CHorizontalSwitch(size, listener, tag, frames, heightOfOneImage, frames, background, offset)
    {
       this->rows = rows;
       this->columns = columns;
-      this->dragable = dragable;
+      this->draggable = draggable;
 
       mouseDowns = 0;
-      imgoffset = 0;
+      frameOffset = 0;
       usesMouseWheel = true; // use mousewheel by default
    }
 
@@ -48,8 +47,8 @@ public:
    virtual int getIValue() { return (int)(value * (float)(rows * columns - 1) + 0.5f); }
    
    int mouseDowns;
-   int imgoffset;
-   bool dragable;
+   int frameOffset;
+   bool draggable;
    bool usesMouseWheel;
 
    bool lookedForHover = false;

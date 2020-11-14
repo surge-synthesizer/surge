@@ -26,7 +26,7 @@ void CHSwitch2::draw(CDrawContext* dc)
    {
       // source position in bitmap
       CPoint where(0, heightOfOneImage *
-                          (long)(imgoffset + ((value * (float)(rows * columns - 1) + 0.5f))));
+                          (long)(frameOffset + ((value * (float)(rows * columns - 1) + 0.5f))));
       getBackground()->draw(dc, getViewSize(), where, 0xff);
 
       if( ! lookedForHover && skin.get() )
@@ -36,19 +36,19 @@ void CHSwitch2::draw(CDrawContext* dc)
          hoverOnBmp = skin->hoverBitmapOverlayForBackgroundBitmap( skinControl, dynamic_cast<CScalableBitmap*>( getBackground() ), associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER_OVER_ON );
       }
 
-      long vv = (long)(imgoffset + ((value * (float)(rows * columns - 1) + 0.5f)));
-      long hv = (long)(imgoffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f)));
+      long vv = (long)(frameOffset + ((value * (float)(rows * columns - 1) + 0.5f)));
+      long hv = (long)(frameOffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f)));
       if( doingHover && hoverOnBmp && vv == hv )
       {
          CPoint hwhere(0, heightOfOneImage *
-                       (long)(imgoffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));
+                       (long)(frameOffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));
          
          hoverOnBmp->draw(dc, getViewSize(), hwhere, 0xff);
       }
       else if( hoverBmp && doingHover )
       {
          CPoint hwhere(0, heightOfOneImage *
-                      (long)(imgoffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));
+                      (long)(frameOffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));
          
          hoverBmp->draw(dc, getViewSize(), hwhere, 0xff);
       }
@@ -87,7 +87,7 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
    if (!(buttons & kLButton))
       return kMouseEventNotHandled;
 
-   if (!dragable)
+   if (!draggable)
    {
       auto mouseableArea = getMouseableArea();
       beginEdit();
@@ -129,7 +129,7 @@ CMouseEventResult CHSwitch2::onMouseUp(CPoint& where, const CButtonState& button
 {
    mouseDowns--;
 
-   if (dragable)
+   if (draggable)
    {
       endEdit();
       return kMouseEventHandled;
@@ -143,7 +143,7 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
       calculateHoverValue( where );
    }
 
-   if (dragable && ( buttons.getButtonState() ))
+   if (draggable && ( buttons.getButtonState() ))
    {
       auto mouseableArea = getMouseableArea();
       double coefX, coefY;
