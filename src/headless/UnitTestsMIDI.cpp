@@ -53,4 +53,92 @@ TEST_CASE( "Channel Split Routes on Channel", "[midi]" )
    }
 }
 
+TEST_CASE( "Duplicate Note Channel Management Issue 3084", "[midi]" )
+{
+   SECTION( "MPE Notes quickly off" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+      surge->mpeEnabled = true;
+      for( int i=0; i<5; ++i ) surge->process();
+      surge->playNote(1, 60, 127, 0 );
+      surge->process();
+      int ct = 0;
+      for( auto v : surge->voices[0] )
+      {
+         REQUIRE( ct == 0 );
+         REQUIRE( v->state.channel == 1 );
+         REQUIRE( v->state.key == 60 );
+         REQUIRE( v->state.gate );
+         ct++;
+      }
 
+      surge->playNote(2, 60, 127, 0 );
+      surge->process();
+
+      REQUIRE( surge->voices->size() == 2 );
+      int ch = 1;
+      for( auto v : surge->voices[0] )
+      {
+         REQUIRE( v->state.channel == ch );
+         REQUIRE( v->state.key == 60 );
+         REQUIRE( v->state.gate );
+         ch++;
+      }
+
+      surge->releaseNote(2, 60, 0 );
+      surge->process();
+      REQUIRE( surge->voices->size() == 2 );
+      ch = 1;
+      for( auto v : surge->voices[0] )
+      {
+         REQUIRE( v->state.channel == ch );
+         REQUIRE( v->state.key == 60 );
+         REQUIRE( v->state.gate == ( ch == 1 ) );
+         ch++;
+      }
+   }
+
+   SECTION( "MPE Notes absent process" )
+   {
+      // Basically the same test just without a call to process between key modifications
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+      surge->mpeEnabled = true;
+      for( int i=0; i<5; ++i ) surge->process();
+
+      surge->playNote(1, 60, 127, 0 );
+      int ct = 0;
+      for( auto v : surge->voices[0] )
+      {
+         REQUIRE( ct == 0 );
+         REQUIRE( v->state.channel == 1 );
+         REQUIRE( v->state.key == 60 );
+         REQUIRE( v->state.gate );
+         ct++;
+      }
+
+      surge->playNote(2, 60, 127, 0 );
+
+      REQUIRE( surge->voices->size() == 2 );
+      int ch = 1;
+      for( auto v : surge->voices[0] )
+      {
+         REQUIRE( v->state.channel == ch );
+         REQUIRE( v->state.key == 60 );
+         REQUIRE( v->state.gate );
+         ch++;
+      }
+
+      surge->releaseNote(2, 60, 0 );
+      REQUIRE( surge->voices->size() == 2 );
+      ch = 1;
+      for( auto v : surge->voices[0] )
+      {
+         REQUIRE( v->state.channel == ch );
+         REQUIRE( v->state.key == 60 );
+         REQUIRE( v->state.gate == ( ch == 1 ) );
+         ch++;
+      }
+   }
+}
