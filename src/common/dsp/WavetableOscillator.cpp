@@ -24,9 +24,7 @@ WavetableOscillator::WavetableOscillator(SurgeStorage* storage,
                                          OscillatorStorage* oscdata,
                                          pdata* localcopy)
     : AbstractBlitOscillator(storage, oscdata, localcopy)
-{
-   // FMfilter.storage = storage;
-}
+{}
 
 WavetableOscillator::~WavetableOscillator()
 {}
@@ -93,14 +91,14 @@ void WavetableOscillator::init(float pitch, bool is_display)
          float s = 0.f;
          oscstate[i] = 0;
          if (oscdata->retrigger.val.b)
-            s = 0.f; //(oscdata->startphase.val.f) * (float)oscdata->wt.size;
+            s = 0.f;
          else if (!is_display)
          {
             float drand = (float)rand() / (float)RAND_MAX;
-            oscstate[i] = drand; // * (float)oscdata->wt.size;
+            oscstate[i] = drand;
          }
 
-         state[i] = 0; //((int)s) & (oscdata->wt.size-1);
+         state[i] = 0;
       }
       last_level[i] = 0.0;
       mipmap[i] = 0;
@@ -147,7 +145,6 @@ float WavetableOscillator::distort_level(float x)
 
    x = x - a * x * x + a;
 
-   // x = limit_range(x*(1+3*clip),-1,1);
    x = limit_range(x * (1 - clip) + clip * x * x * x, -1.f, 1.f);
 
    return x;
@@ -161,9 +158,9 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
    if (n_unison > 1)
       detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(voice) + detune_offset);
 
-   // int ipos = (large+oscstate[voice])>>16;
    const float p24 = (1 << 24);
    unsigned int ipos;
+
    if (FM)
       ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv * FMmul_inv));
    else
@@ -216,7 +213,6 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
       else if ((a < 0.5 * wtbias) && (ts >= 4))
          mipmap[voice] = 1;
 
-      // wt_inc = (1<<mipmap[i]);
       mipmap_ofs[voice] = 0;
       for (int i = 0; i < mipmap[voice]; i++)
          mipmap_ofs[voice] += (ts >> i);
@@ -234,7 +230,6 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
    float g, gR;
    int wt_inc = (1 << mipmap[voice]);
-   // int wt_ofs = mipmap_ofs[voice];
    float dt = (oscdata->wt.dt) * wt_inc;
 
    // add time until next statechange
@@ -265,7 +260,6 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
    float formant = storage->note_to_pitch_tuningctr(-ft);
    dt *= formant * xt;
 
-   // if(state[voice] >= (oscdata->wt.size-wt_inc)) dt += (1-formant);
    int wtsize = oscdata->wt.size >> mipmap[voice];
    if (state[voice] >= (wtsize - 1))
       dt += (1 - formant);
@@ -273,9 +267,6 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
    state[voice] = state[voice] & (wtsize - 1);
    float tblip_ipol = (1 - block_pos) * last_tableipol + block_pos * tableipol;
-   // float newlevel = distort_level(
-   // oscdata->wt.table[tableid][wt_ofs+state[voice]]*(1.f-tblip_ipol) +
-   // oscdata->wt.table[tableid+1][wt_ofs+state[voice]]*tblip_ipol );
    float newlevel = distort_level(
        oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] * (1.f - tblip_ipol) +
        oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] * tblip_ipol);
@@ -337,7 +328,6 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
    oscstate[voice] += rate[voice];
    oscstate[voice] = max(0.f, oscstate[voice]);
-   // state[voice] = (state[voice]+wt_inc)&(oscdata->wt.size-wt_inc);
    state[voice] = (state[voice] + 1) & ((oscdata->wt.size >> mipmap[voice]) - 1);
 }
 
@@ -378,8 +368,7 @@ void WavetableOscillator::process_block(
    pitch_t = min(148.f, pitch0);
    pitchmult_inv =
        max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
-   pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal-approximation is not
-                                    // precise enough
+   pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal-approximation is not precise enough
    this->drift = drift;
    int k, l;
 
@@ -389,9 +378,7 @@ void WavetableOscillator::process_block(
    l_hskew.process();
    l_clip.process();
 
-   if ((oscdata->wt.n_tables == 1) ||
-       (tableid >=
-        oscdata->wt.n_tables)) // TableID-range may have changed in the meantime, check it!
+   if ((oscdata->wt.n_tables == 1) || (tableid >= oscdata->wt.n_tables)) // TableID-range may have changed in the meantime, check it!
    {
       tableipol = 0.f;
       tableid = 0;
@@ -436,18 +423,8 @@ void WavetableOscillator::process_block(
       }
    }
 
-   /*wt_inc = 1;
-   float a = oscdata->wt.dt * pitchmult_inv;
-   if(a < 0.125) wt_inc = 8;
-   else if(a < 0.25) wt_inc = 4;
-   else if(a < 0.5) wt_inc = 2;*/
-
    if (FM)
    {
-      /*FMfilter.coeff_HP(FMfilter.calc_omega(pitch_t - 24.f - 48.f *
-      oscdata->p[id_detune].val.f),0.707); FMfilter.process_block(&master_osc[0]);
-      FMfilter.process_block(&master_osc[BLOCK_SIZE]);*/
-
       for (l = 0; l < n_unison; l++)
          driftlfo[l] = drift_noise(driftlfo2[l]);
       for (int s = 0; s < BLOCK_SIZE_OS; s++)
@@ -478,7 +455,6 @@ void WavetableOscillator::process_block(
             convolute(l, false, stereo);
          oscstate[l] -= a;
       }
-      // li_DC.set_target(dc);
    }
 
    float hpfblock alignas(16)[BLOCK_SIZE_OS];
