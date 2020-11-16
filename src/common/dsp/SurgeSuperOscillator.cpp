@@ -343,12 +343,11 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    float detune = drift * driftlfo[voice];
    if (n_unison > 1)
       detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * (float)voice + detune_offset);
-
    
    float wf = l_shape.v;
    float sub = l_sub.v;
-
    const float p24 = (1 << 24);
+
    /*
    ** ipos is a value between 0 and 2^24 indicating how far along in oscstate (phase space for
    ** our state) we are
@@ -361,12 +360,11 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
       else
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
-      // double t = max(0.5,dsamplerate_os * (1/8.175798915) * storage->note_to_pitch_inv(pitch +
-      // detune) * 2);
+
       float t;
-      // See the extensive comment below
       
-      if (! oscdata->p[5].absolute)
+      // See the extensive comment below
+      if (! oscdata->p[5].absolute) 
          t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
       else
          // Copy the mysterious *2 and drop the +sync

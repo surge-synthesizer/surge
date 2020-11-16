@@ -165,21 +165,31 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 
    const float p24 = (1 << 24);
    unsigned int ipos;
-   if (FM)
-      ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv * FMmul_inv));
-   else
-      ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv));
-
    float invertcorrelation = 1.f;
+
+   if (FM)
+       ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv * FMmul_inv));
+   else
+       ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv));
+
    if (syncstate[voice] < oscstate[voice])
    {
-      ipos = (unsigned int)((float)p24 * (syncstate[voice] * pitchmult_inv));
-      float t = storage->note_to_pitch_inv_tuningctr(detune);
+      ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
+
+      float t;
+
+      if (!oscdata->p[5].absolute)
+         t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
+      else
+         t = storage->note_to_pitch_inv_ignoring_tuning(detune * storage->note_to_pitch_inv_ignoring_tuning(pitch) * 16 / 0.9443) * 2;
+
       if (state[voice] == 1)
          invertcorrelation = -1.f;
+
       state[voice] = 0;
       oscstate[voice] = syncstate[voice];
       syncstate[voice] += t;
+      syncstate[voice] = max(0.f, syncstate[voice]);
    }
 
    unsigned int delay = ((ipos >> 24) & 0x3f);
@@ -197,7 +207,8 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    if (oscdata->p[5].absolute)
    {
       // see the comment in SurgeSuperOscillator in the absolute branch
-      t = storage->note_to_pitch_inv_ignoring_tuning( (detune + l_sync.v) * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 );
+      t = storage->note_to_pitch_inv_ignoring_tuning(detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 + l_sync.v);
+
       if( t < 0.1 ) t = 0.1;
    }
    else
@@ -343,27 +354,30 @@ void SampleAndHoldOscillator::process_block(
    {
       for (l = 0; l < n_unison; l++)
          driftlfo[l] = drift_noise(driftlfo2[l]);
-      for (int s = 0; s < BLOCK_SIZE_OS; s++)
-      {
-         float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
-         float a = pitchmult * fmmul;
-         FMdelay = s;
 
-         for (l = 0; l < n_unison; l++)
+         for (int s = 0; s < BLOCK_SIZE_OS; s++)
          {
-            while (oscstate[l] < a)
-            {
-               FMmul_inv = rcp(fmmul);
-               convolute(l, true, stereo);
-            }
+            float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
+            float a = pitchmult * fmmul;
+      
+            FMdelay = s;
 
-            oscstate[l] -= a;
+            for (l = 0; l < n_unison; l++)
+            {
+               while (oscstate[l] < a)
+               {
+                  FMmul_inv = rcp(fmmul);
+                  convolute(l, true, stereo);
+               }
+
+               oscstate[l] -= a;
+            }
          }
-      }
    }
    else
    {
       float a = (float)BLOCK_SIZE_OS * pitchmult;
+
       for (l = 0; l < n_unison; l++)
       {
          driftlfo[l] = drift_noise(driftlfo2[l]);
@@ -374,7 +388,8 @@ void SampleAndHoldOscillator::process_block(
          }
 
          oscstate[l] -= a;
-         syncstate[l] -= a;
+         //if (l_sync.v > 0)
+            syncstate[l] -= a;
       }
    }
 
