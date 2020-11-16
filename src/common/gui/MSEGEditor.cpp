@@ -1022,7 +1022,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
    }
 
-   CPoint mouseDownOrigin, lastPanZoomMousePos;
+   CPoint mouseDownOrigin, cursorHideOrigin, lastPanZoomMousePos;
    bool inDrag = false;
    bool inDrawDrag = false;
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
@@ -1101,6 +1101,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
                foundHZ = true;
                startCursorHide(where);
+               cursorHideOrigin = where;
                h.active = true;
                h.dragging = true;
                invalid();
@@ -1250,8 +1251,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
                gotOne = true;
                h.onDrag( where.x - mouseDownOrigin.x, where.y - mouseDownOrigin.y, where );
+               float dx = where.x - cursorHideOrigin.x;
+               float dy = where.y - cursorHideOrigin.y;
+               if( dx * dx + dy * dy > 100 )
+               {
+                  resetToShowLocation();
+                  mouseDownOrigin = cursorHideOrigin;
+               }
+               else
+               {
+                  mouseDownOrigin = where;
+               }
                modelChanged(); // HACK FIXME
-               mouseDownOrigin = where;
                break;
             }
             idx++;
@@ -1421,9 +1432,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          modelChanged();
       });
 
-      addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts]() {
-        ms->loop_end = tts;
-        modelChanged();
+      addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts, t]() {
+         auto along = t - ms->segmentStart[tts];
+         if( ms->segments[tts].duration == 0 )
+            along = 0;
+         else
+            along = along / ms->segments[tts].duration;
+
+         int target = tts;
+         if( along < 0.1 && tts > 0 ) target = tts - 1;
+
+         ms->loop_end = target;
+         modelChanged();
       });
 
       contextMenu->addSeparator();
