@@ -825,12 +825,25 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
 
    tp[lfodata->magnitude.param_id_in_scene].i = lfodata->magnitude.val.i;
 
-   // Min out the rate
+   // Min out the rate. Be careful with temposync.
+   float floorrate = -3.5; // can't be const - we mod it
    float displayRate = lfodata->rate.val.f;
-   if( lfodata->rate.val.f < -3.5 )
+   const float twotofloor = powf( 2.0, -3.5 ); // so copy value here
+   if( lfodata->rate.temposync )
    {
-      tp[lfodata->rate.param_id_in_scene].f = - 3.5;
-      displayRate = -3.5;
+      /*
+       * So frequency = temposyncration * 2^rate
+       * We want floor of frequency to be 2^-3.5 (that's the check below)
+       * So 2^rate = temposyncratioinb 2^-3.5;
+       * rate = log2( 2^-3.5 * tsratioinb )
+       */
+      floorrate = std::max( floorrate, log2( twotofloor * storage->temposyncratio_inv ) );
+   }
+
+   if( lfodata->rate.val.f < floorrate )
+   {
+      tp[lfodata->rate.param_id_in_scene].f = floorrate;
+      displayRate = floorrate;
    }
    else
    {
