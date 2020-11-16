@@ -826,9 +826,9 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VST
    tp[lfodata->magnitude.param_id_in_scene].i = lfodata->magnitude.val.i;
 
    // Min out the rate. Be careful with temposync.
-   float floorrate = -3.5; // can't be const - we mod it
+   float floorrate = -1.2; // can't be const - we mod it
    float displayRate = lfodata->rate.val.f;
-   const float twotofloor = powf( 2.0, -3.5 ); // so copy value here
+   const float twotofloor = powf( 2.0, -1.2 ); // so copy value here
    if( lfodata->rate.temposync )
    {
       /*
