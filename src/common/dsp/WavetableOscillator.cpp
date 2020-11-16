@@ -261,15 +261,17 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
    dt *= formant * xt;
 
    int wtsize = oscdata->wt.size >> mipmap[voice];
+
    if (state[voice] >= (wtsize - 1))
       dt += (1 - formant);
    t = dt * tempt;
 
    state[voice] = state[voice] & (wtsize - 1);
+
    float tblip_ipol = (1 - block_pos) * last_tableipol + block_pos * tableipol;
    float newlevel = distort_level(
-       oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] * (1.f - tblip_ipol) +
-       oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] * tblip_ipol);
+         oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] * (1.f - tblip_ipol) +
+         oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] * tblip_ipol);
 
    g = newlevel - last_level[voice];
    last_level[voice] = newlevel;
@@ -312,7 +314,6 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
       for (k = 0; k < FIRipol_N; k += 4)
       {
          float* obf = &oscbuffer[bufpos + k + delay];
-         //		assert((void*)obf < (void*)(storage-3));
          __m128 ob = _mm_loadu_ps(obf);
          __m128 st = _mm_load_ps(&sinctable[m + k]);
          __m128 so = _mm_load_ps(&sinctable[m + k + FIRipol_N]);
