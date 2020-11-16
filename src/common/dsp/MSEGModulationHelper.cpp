@@ -83,9 +83,10 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    double up = (double)ip + fup;
 
    // If a oneshot is done, it is done
-   if( up >= ms->totalDuration && ( ms->loopMode == MSEGStorage::LoopMode::ONESHOT || forceOneShot ) )
+   if( up >= ms->totalDuration &&
+       ( ms->loopMode == MSEGStorage::LoopMode::ONESHOT || forceOneShot ) &&
+       ( ms->editMode != MSEGStorage::LFO ) )
       return ms->segments[ms->n_activeSegments - 1].nv1;
-
 
    df = limit_range( df, -1.f, 1.f );
 
@@ -101,7 +102,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    int idx = -1;
    if( es->loopState == EvaluatorState::PLAYING || ms->loopMode != MSEGStorage::LoopMode::GATED_LOOP )
    {
-      idx = timeToSegment(ms, up, forceOneShot || ms->loopMode == MSEGStorage::LoopMode::ONESHOT, timeAlongSegment);
+      idx = timeToSegment(ms, up, forceOneShot || ms->loopMode == MSEGStorage::ONESHOT || ms->editMode == MSEGStorage::LFO, timeAlongSegment);
       if( idx < 0 || idx >= ms->n_activeSegments ) return 0;
    }
    else

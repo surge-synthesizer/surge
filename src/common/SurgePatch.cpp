@@ -2084,6 +2084,7 @@ void SurgePatch::msegToXMLElement(MSEGStorage* ms, TiXmlElement& p) const
 {
    p.SetAttribute( "activeSegments", ms->n_activeSegments );
    p.SetAttribute( "endpointMode", ms->endpointMode );
+   p.SetAttribute( "editMode", ms->editMode );
    p.SetAttribute( "loopMode", ms->loopMode );
    p.SetAttribute( "loopStart", ms->loop_start);
    p.SetAttribute( "loopEnd", ms->loop_end );
@@ -2114,6 +2115,11 @@ void SurgePatch::msegFromXMLElement(MSEGStorage* ms, TiXmlElement* p) const
       ms->endpointMode = (MSEGStorage::EndpointMode)v;
    else
       ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+   if( p->QueryIntAttribute( "editMode", &v ) == TIXML_SUCCESS )
+      ms->editMode = (MSEGStorage::EditMode)v;
+   else
+      ms->editMode = MSEGStorage::ENVELOPE;
+
    if( p->QueryIntAttribute( "loopMode", &v ) == TIXML_SUCCESS )
       ms->loopMode = (MSEGStorage::LoopMode)v;
    else
