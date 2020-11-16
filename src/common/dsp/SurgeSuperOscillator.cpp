@@ -272,7 +272,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
    {
       if (oscdata->retrigger.val.b || is_display)
       {
-         oscstate[i] = 0; //(float)i / (float)n_unison;
+         oscstate[i] = 0;
          syncstate[i] = 0;
          last_level[i] = -0.4;
       }
@@ -280,13 +280,8 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
       {
          double drand = (double)rand() / RAND_MAX;
          double detune = oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
-         // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
-         // pow((double)1.05946309435,(double)pitch)));
-         // used to be 0.25 * detune - 12
          double st = 0.5 * drand * storage->note_to_pitch_inv_tuningctr(detune);
          drand = (double)rand() / RAND_MAX;
-         // double ot = 0.25 * drand * storage->note_to_pitch_inv(detune + l_sync.v);
-         // HACK test 0.2*
          oscstate[i] = st;
          syncstate[i] = st;
          last_level[i] = 0.0;
@@ -360,7 +355,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    */
    unsigned int ipos;
 
-   if ((l_sync.v > 0) && (syncstate[voice] < oscstate[voice]))
+   if (syncstate[voice] < oscstate[voice])
    {
       if (FM)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
@@ -660,8 +655,7 @@ void SurgeSuperOscillator::process_block(
             }
 
             oscstate[l] -= a;
-            if (l_sync.v > 0)
-               syncstate[l] -= a;
+            syncstate[l] -= a;
          }
       }
    }
@@ -692,8 +686,7 @@ void SurgeSuperOscillator::process_block(
          ** oscillator and sync state
          */
          oscstate[l] -= a;
-         if (l_sync.v > 0)
-            syncstate[l] -= a;
+         syncstate[l] -= a;
 
          /*
          ** At this point we are guaranteed that the oscbuffer contains enough

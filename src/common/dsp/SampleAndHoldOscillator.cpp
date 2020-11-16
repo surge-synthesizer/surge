@@ -312,8 +312,6 @@ template <bool is_init> void SampleAndHoldOscillator::update_lagvals()
 
    if (is_init)
    {
-      hpf_coeff.instantize();
-      integrator_mult.instantize();
       l_pw.instantize();
       l_shape.instantize();
       l_smooth.instantize();
@@ -340,9 +338,6 @@ void SampleAndHoldOscillator::process_block(
    l_smooth.process();
    l_sub.process();
    l_sync.process();
-
-   // hpf_coeff.process();
-   // integrator_mult.process();
 
    if (FM)
    {
@@ -377,8 +372,7 @@ void SampleAndHoldOscillator::process_block(
             convolute(l, false, stereo);
 
          oscstate[l] -= a;
-         if (l_sync.v > 0)
-            syncstate[l] -= a;
+         syncstate[l] -= a;
       }
    }
 

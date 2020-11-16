@@ -47,7 +47,7 @@ private:
    float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON],
        last_level2[MAX_UNISON], pwidth[MAX_UNISON];
    float pitch;
-   lag<double> FMdepth, hpf_coeff, integrator_mult, l_pw, l_shape, l_smooth, l_sub, l_sync;
+   lag<double> FMdepth, l_pw, l_shape, l_smooth, l_sub, l_sync;
    int id_pw, id_shape, id_smooth, id_sub, id_sync, id_detune;
    int FMdelay;
    float FMmul_inv;
