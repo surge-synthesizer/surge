@@ -3004,43 +3004,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                auto q = modsource_editor[current_scene];
                auto* lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
 
-               switch (lfodata->shape.val.i) {
-               case lt_sine:
-               case lt_tri:
-               case lt_ramp:
-                   contextMenu->addSeparator(eid++);
+               if (lt_num_deforms[lfodata->shape.val.i] > 1)
+               {
+                  contextMenu->addSeparator(eid++);
 
-                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Deform Type 1"), [this, p]() {
-                       p->deform_type = 0;
-                       if (frame)
-                           frame->invalid();
-                   });
-                   contextMenu->checkEntry(eid, (p->deform_type == 0));
-                   eid++;
-               
+                  for (int i; i < lt_num_deforms[lfodata->shape.val.i]; i++)
+                  {
+                     char title[32];
+                     sprintf(title, "Deform Type %d", (i + 1));
 
-
-                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Deform Type 2"), [this, p]() {
-                    
-                       p->deform_type = 1;
-                       if (frame)
-                           frame->invalid();
-                   });
-                   contextMenu->checkEntry(eid, (p->deform_type == 1));
-                   eid++;
-
-
-                   addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Deform Type 3"), [this, p]() { 
-                       p->deform_type = 2; 
-                       if (frame)
-                           frame->invalid();
-                       });
-
-                   contextMenu->checkEntry(eid, (p->deform_type == 2));
-                   eid++;
+                     addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(title), [this, p, i]() {
+                         p->deform_type = i;
+                         if (frame)
+                            frame->invalid();
+                     });
+                     contextMenu->checkEntry(eid, (p->deform_type == i));
+                     eid++;
+                  }
                }
             }
-
 
             if (p->can_extend_range())
             {
@@ -4797,7 +4779,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
    if (lt_envelope == shapev)
       what = "Env";
    if (lt_function == shapev) 
-      what = "Env"; //Change this later
+      what = "Env";     // TODO FIXME: When function LFO type is added, remove it from this condition!
 
    COptionMenu* lfoSubMenu =
        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
@@ -6043,7 +6025,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       if( lfodata->shape.val.i == lt_envelope )
       {
          char txt[64];
-         if( button )
+         if (button)
             sprintf( txt, "%sENV %d", (isS ? "S-" : "" ), fnum + 1 );
          else
             sprintf( txt, "%s Envelope %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
@@ -6052,7 +6034,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       else if( lfodata->shape.val.i == lt_stepseq )
       {
          char txt[64];
-         if( button )
+         if (button)
             sprintf( txt, "%sSEQ %d", (isS ? "S-" : "" ), fnum + 1 );
          else
             sprintf( txt, "%s Step Sequencer %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
@@ -6061,7 +6043,7 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       else if( lfodata->shape.val.i == lt_mseg )
       {
          char txt[64];
-         if( button )
+         if (button)
             sprintf( txt, "%sMSEG %d", (isS ? "S-" : "" ), fnum + 1 );
          else
             sprintf( txt, "%s MSEG %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
@@ -6070,7 +6052,9 @@ std::string SurgeGUIEditor::modulatorName( int i, bool button )
       else if( lfodata->shape.val.i == lt_function)
       {
          char txt[64];
-         if( button )
+
+         // TODO FIXME: When function LFO type is added, uncomment the second sprintf and remove the first one!
+         if (button)
             sprintf( txt, "%sENV %d", (isS ? "S-" : "" ), fnum + 1 );
             //sprintf( txt, "%sFUN %d", (isS ? "S-" : "" ), fnum + 1 );
          else

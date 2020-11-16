@@ -91,8 +91,8 @@ void DistortionEffect::process(float* dataL, float* dataR)
          L = Lin + fb * L;
          R = Rin + fb * R;
          lp1.process_sample_nolag(L, R);
-         L = lookup_waveshape(ws, L);
-         R = lookup_waveshape(ws, R);
+         L = lookup_waveshape(wst_soft + ws, L);
+         R = lookup_waveshape(wst_soft + ws, R);
          L += a;
          R += a; // denormal
          lp2.process_sample_nolag(L, R);

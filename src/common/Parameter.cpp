@@ -2313,29 +2313,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%d bands", i);
          break;
       case ct_distortion_waveshape:
-         // FIXME - do better than this of course
-         switch( i + 1 )
-         {
-         case wst_tanh:
-            sprintf(txt,"Soft");
-            break;
-         case wst_hard:
-            sprintf(txt,"Hard");
-            break;
-         case wst_asym:
-            sprintf(txt,"Asymmetric");
-            break;
-         case wst_sinus:
-            sprintf(txt,"Sine");
-            break;
-         case wst_digi:
-            sprintf(txt,"Digital");
-            break;
-         default:
-         case wst_none:
-            sprintf(txt,"None");
-            break;
-         }
+         sprintf(txt, wst_names[wst_soft + i]);
          break;
       case ct_oscroute:
          switch (i)
