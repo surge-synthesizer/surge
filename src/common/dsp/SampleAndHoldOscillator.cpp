@@ -368,7 +368,7 @@ void SampleAndHoldOscillator::process_block(
       {
          driftlfo[l] = drift_noise(driftlfo2[l]);
 
-         while (((l_sync.v > 0) && (syncstate[l] < a)) || (oscstate[l] < a))
+         while ((syncstate[l] < a) || (oscstate[l] < a))
          {
             convolute(l, false, stereo);
          }
