@@ -289,8 +289,8 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
       dc_uni[i] = 0;
       state[i] = 0;
       pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
-      driftlfo2[i] = 0.f;
       driftlfo[i] = 0.f;
+      driftlfo2[i] = 0.f;
    }
 }
 
@@ -391,11 +391,11 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    ** Basically the 'integer part' of the position.
    */
    unsigned int delay;
+
    if (FM)
       delay = FMdelay;
    else
       delay = ((ipos >> 24) & 0x3f);
-
 
    /*
    ** m and lipol128 are the integer and fractional part of the number of 256ths
@@ -631,11 +631,15 @@ void SurgeSuperOscillator::process_block(
       ** FIXME - document the FM branch
       */
       for (l = 0; l < n_unison; l++)
+      {
          driftlfo[l] = drift_noise(driftlfo2[l]);
+      }
+
       for (int s = 0; s < BLOCK_SIZE_OS; s++)
       {
          float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
          float a = pitchmult * fmmul;
+
          FMdelay = s;
 
          for (l = 0; l < n_unison; l++)
@@ -659,6 +663,7 @@ void SurgeSuperOscillator::process_block(
       ** The amount of phase space we need to cover is the oversample block size * the wavelength 
       */
       float a = (float)BLOCK_SIZE_OS * pitchmult;
+
       for (l = 0; l < n_unison; l++)
       {
          driftlfo[l] = drift_noise(driftlfo2[l]);

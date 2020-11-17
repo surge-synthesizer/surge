@@ -102,8 +102,6 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
       {
          double drand = (double)rand() / RAND_MAX;
          double detune = oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
-         // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
-         // pow((double)1.05946309435,(double)pitch)));
          double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
          drand = (double)rand() / RAND_MAX;
          double ot = drand * storage->note_to_pitch_tuningctr(detune);
@@ -113,8 +111,8 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
       state[i] = 0;
       last_level[i] = 0.0;
       pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
-      driftlfo2[i] = 0.f;
       driftlfo[i] = 0.f;
+      driftlfo2[i] = 0.f;
    }
 
    hp.coeff_instantize();
@@ -164,17 +162,15 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    float sub = l_sub.v;
 
    const float p24 = (1 << 24);
-   unsigned int ipos;
    float invertcorrelation = 1.f;
-
-   if (FM)
-       ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv * FMmul_inv));
-   else
-       ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv));
-
+   unsigned int ipos;
+  
    if (syncstate[voice] < oscstate[voice])
    {
-      ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
+      if (FM)
+         ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
+      else
+         ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
 
       float t;
 
@@ -191,10 +187,21 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
       syncstate[voice] += t;
       syncstate[voice] = max(0.f, syncstate[voice]);
    }
+   else
+   {
+      if (FM)
+         ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv * FMmul_inv));
+      else
+         ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv));
+   }
 
-   unsigned int delay = ((ipos >> 24) & 0x3f);
+   unsigned int delay;
+   
    if (FM)
       delay = FMdelay;
+   else
+      delay = ((ipos >> 24) & 0x3f);
+
    unsigned int m = ((ipos >> 16) & 0xff) * (FIRipol_N << 1);
    unsigned int lipolui16 = (ipos & 0xffff);
    __m128 lipol128 = _mm_cvtsi32_ss(lipol128, lipolui16);
@@ -341,7 +348,6 @@ void SampleAndHoldOscillator::process_block(
    // This must be a real division, reciprocal-approximation is not precise enough
    int k, l;
 
-   // if (FM) FMdepth.newValue(depth);
    update_lagvals<false>();
 
    l_pw.process();
@@ -353,26 +359,29 @@ void SampleAndHoldOscillator::process_block(
    if (FM)
    {
       for (l = 0; l < n_unison; l++)
+      {
          driftlfo[l] = drift_noise(driftlfo2[l]);
+      }
 
-         for (int s = 0; s < BLOCK_SIZE_OS; s++)
+      for (int s = 0; s < BLOCK_SIZE_OS; s++)
+      {
+         float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
+         float a = pitchmult * fmmul;
+   
+         FMdelay = s;
+
+         for (l = 0; l < n_unison; l++)
          {
-            float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
-            float a = pitchmult * fmmul;
-      
-            FMdelay = s;
-
-            for (l = 0; l < n_unison; l++)
+            while (oscstate[l] < a)
             {
-               while (oscstate[l] < a)
-               {
-                  FMmul_inv = rcp(fmmul);
-                  convolute(l, true, stereo);
-               }
-
-               oscstate[l] -= a;
+               FMmul_inv = rcp(fmmul);
+               convolute(l, true, stereo);
             }
+
+            oscstate[l] -= a;
+            syncstate[l] -= a;
          }
+      }
    }
    else
    {
@@ -382,14 +391,13 @@ void SampleAndHoldOscillator::process_block(
       {
          driftlfo[l] = drift_noise(driftlfo2[l]);
 
-         while ((syncstate[l] < a) || (oscstate[l] < a))
+         while (((l_sync.v > 0) && (syncstate[l] < a)) || (oscstate[l] < a))
          {
             convolute(l, false, stereo);
          }
 
          oscstate[l] -= a;
-         //if (l_sync.v > 0)
-            syncstate[l] -= a;
+         syncstate[l] -= a;
       }
    }
 
