@@ -244,7 +244,7 @@
     <control ui_identifier="mixer.level_prefiltergain" y="38"/>
 
     <!-- Keytrack & Waveshaper -->
-    <control ui_identifier="scene.keytrack_root" x="311" y="265"/>
+    <control ui_identifier="scene.keytrack_root" x="310" y="265"/>
     <control ui_identifier="filter.keytrack_1" y="301"/>
     <control ui_identifier="filter.keytrack_2" y="301"/>
     <control ui_identifier="filter.highpass" y="301"/>
