@@ -272,7 +272,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
    {
       if (oscdata->retrigger.val.b || is_display)
       {
-         oscstate[i] = 0; //(float)i / (float)n_unison;
+         oscstate[i] = 0;
          syncstate[i] = 0;
          last_level[i] = -0.4;
       }
@@ -280,13 +280,8 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
       {
          double drand = (double)rand() / RAND_MAX;
          double detune = oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
-         // double t = drand * max(2.0,dsamplerate_os / (16.35159783 *
-         // pow((double)1.05946309435,(double)pitch)));
-         // used to be 0.25 * detune - 12
          double st = 0.5 * drand * storage->note_to_pitch_inv_tuningctr(detune);
          drand = (double)rand() / RAND_MAX;
-         // double ot = 0.25 * drand * storage->note_to_pitch_inv(detune + l_sync.v);
-         // HACK test 0.2*
          oscstate[i] = st;
          syncstate[i] = st;
          last_level[i] = 0.0;
@@ -348,30 +343,28 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    float detune = drift * driftlfo[voice];
    if (n_unison > 1)
       detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * (float)voice + detune_offset);
-
    
    float wf = l_shape.v;
    float sub = l_sub.v;
-
    const float p24 = (1 << 24);
+
    /*
    ** ipos is a value between 0 and 2^24 indicating how far along in oscstate (phase space for
    ** our state) we are
    */
    unsigned int ipos;
 
-   if ((l_sync.v > 0) && (syncstate[voice] < oscstate[voice]))
+   if (syncstate[voice] < oscstate[voice])
    {
       if (FM)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
       else
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
-      // double t = max(0.5,dsamplerate_os * (1/8.175798915) * storage->note_to_pitch_inv(pitch +
-      // detune) * 2);
+
       float t;
-      // See the extensive comment below
       
-      if (! oscdata->p[5].absolute)
+      // See the extensive comment below
+      if (! oscdata->p[5].absolute) 
          t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
       else
          // Copy the mysterious *2 and drop the +sync
@@ -473,16 +466,12 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    {
       pwidth[voice] = l_pw.v;
       pwidth2[voice] = 2.f * l_pw2.v;
-      float tg =
-          ((1 + wf) * 0.5f + (1 - pwidth[voice]) * (-wf)) * (1 - sub) +
-          0.5f * sub *
-              (2.f - pwidth2[voice]); // calculate the height of the first impulse of the cycle
+      float tg = ((1 + wf) * 0.5f + (1 - pwidth[voice]) * (-wf)) * (1 - sub) + 0.5f * sub * (2.f - pwidth2[voice]); // calculate the height of the first impulse of the cycle
       g = tg - last_level[voice];
       last_level[voice] = tg;
       if (!NODC)
-         last_level[voice] -= (pwidth[voice]) * (pwidth2[voice]) * (1.f + wf) *
-                              (1.f - sub); // calculate the level the sub-cycle will have at the end
-                                           // of it's duration taking DC into account
+         last_level[voice] -= (pwidth[voice]) * (pwidth2[voice]) * (1.f + wf) * (1.f - sub); // calculate the level the sub-cycle will have at the end
+                                                                                             // of its duration taking DC into account
       break;
    }
    case 1:
@@ -660,8 +649,7 @@ void SurgeSuperOscillator::process_block(
             }
 
             oscstate[l] -= a;
-            if (l_sync.v > 0)
-               syncstate[l] -= a;
+            syncstate[l] -= a;
          }
       }
    }
@@ -692,8 +680,7 @@ void SurgeSuperOscillator::process_block(
          ** oscillator and sync state
          */
          oscstate[l] -= a;
-         if (l_sync.v > 0)
-            syncstate[l] -= a;
+         syncstate[l] -= a;
 
          /*
          ** At this point we are guaranteed that the oscbuffer contains enough
