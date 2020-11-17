@@ -649,22 +649,21 @@ __m128 SINUS_SSE2(__m128 in, __m128 drive)
    _mm_store_si128((__m128i*)&e4, e);
 #endif
 
-   __m128 ws1 = _mm_load_ss(&waveshapers[3][e4[0] & 0x3ff]);
-   __m128 ws2 = _mm_load_ss(&waveshapers[3][e4[1] & 0x3ff]);
-   __m128 ws3 = _mm_load_ss(&waveshapers[3][e4[2] & 0x3ff]);
-   __m128 ws4 = _mm_load_ss(&waveshapers[3][e4[3] & 0x3ff]);
+   __m128 ws1 = _mm_load_ss(&waveshapers[wst_sine][e4[0] & 0x3ff]);
+   __m128 ws2 = _mm_load_ss(&waveshapers[wst_sine][e4[1] & 0x3ff]);
+   __m128 ws3 = _mm_load_ss(&waveshapers[wst_sine][e4[2] & 0x3ff]);
+   __m128 ws4 = _mm_load_ss(&waveshapers[wst_sine][e4[3] & 0x3ff]);
    __m128 ws = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
-   ws1 = _mm_load_ss(&waveshapers[3][(e4[0] + 1) & 0x3ff]);
-   ws2 = _mm_load_ss(&waveshapers[3][(e4[1] + 1) & 0x3ff]);
-   ws3 = _mm_load_ss(&waveshapers[3][(e4[2] + 1) & 0x3ff]);
-   ws4 = _mm_load_ss(&waveshapers[3][(e4[3] + 1) & 0x3ff]);
+   ws1 = _mm_load_ss(&waveshapers[wst_sine][(e4[0] + 1) & 0x3ff]);
+   ws2 = _mm_load_ss(&waveshapers[wst_sine][(e4[1] + 1) & 0x3ff]);
+   ws3 = _mm_load_ss(&waveshapers[wst_sine][(e4[2] + 1) & 0x3ff]);
+   ws4 = _mm_load_ss(&waveshapers[wst_sine][(e4[3] + 1) & 0x3ff]);
    __m128 wsn = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
 
    x = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, a), ws), _mm_mul_ps(a, wsn));
 
    return x;
 }
-
 
 __m128 ASYM_SSE2(__m128 in, __m128 drive)
 {
@@ -695,15 +694,15 @@ __m128 ASYM_SSE2(__m128 in, __m128 drive)
    _mm_store_si128((__m128i*)&e4, e);
 #endif
 
-   __m128 ws1 = _mm_load_ss(&waveshapers[2][e4[0] & 0x3ff]);
-   __m128 ws2 = _mm_load_ss(&waveshapers[2][e4[1] & 0x3ff]);
-   __m128 ws3 = _mm_load_ss(&waveshapers[2][e4[2] & 0x3ff]);
-   __m128 ws4 = _mm_load_ss(&waveshapers[2][e4[3] & 0x3ff]);
+   __m128 ws1 = _mm_load_ss(&waveshapers[wst_asym][e4[0] & 0x3ff]);
+   __m128 ws2 = _mm_load_ss(&waveshapers[wst_asym][e4[1] & 0x3ff]);
+   __m128 ws3 = _mm_load_ss(&waveshapers[wst_asym][e4[2] & 0x3ff]);
+   __m128 ws4 = _mm_load_ss(&waveshapers[wst_asym][e4[3] & 0x3ff]);
    __m128 ws = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
-   ws1 = _mm_load_ss(&waveshapers[2][(e4[0] + 1) & 0x3ff]);
-   ws2 = _mm_load_ss(&waveshapers[2][(e4[1] + 1) & 0x3ff]);
-   ws3 = _mm_load_ss(&waveshapers[2][(e4[2] + 1) & 0x3ff]);
-   ws4 = _mm_load_ss(&waveshapers[2][(e4[3] + 1) & 0x3ff]);
+   ws1 = _mm_load_ss(&waveshapers[wst_asym][(e4[0] + 1) & 0x3ff]);
+   ws2 = _mm_load_ss(&waveshapers[wst_asym][(e4[1] + 1) & 0x3ff]);
+   ws3 = _mm_load_ss(&waveshapers[wst_asym][(e4[2] + 1) & 0x3ff]);
+   ws4 = _mm_load_ss(&waveshapers[wst_asym][(e4[3] + 1) & 0x3ff]);
    __m128 wsn = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
 
    x = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, a), ws), _mm_mul_ps(a, wsn));
@@ -826,16 +825,16 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
 {
    switch (type)
    {
-   case wst_digi:
-      return DIGI_SSE2;
+   case wst_soft:
+      return TANH;
    case wst_hard:
       return CLIP;
-   case wst_sinus:
-      return SINUS_SSE2;
    case wst_asym:
       return ASYM_SSE2;
-   case wst_tanh:
-      return TANH;
+   case wst_sine:
+      return SINUS_SSE2;
+   case wst_digital:
+      return DIGI_SSE2;
    }
    return 0;
 }

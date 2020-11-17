@@ -273,10 +273,6 @@ void LfoModulationSource::attack()
       wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
       wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
       wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
-      /*wf_history[0] = 0.f;
-      wf_history[1] = 0.f;
-      wf_history[2] = 0.f;
-      wf_history[3] = 0.f;*/
       phase = 0.f;
    }
    break;
@@ -353,8 +349,6 @@ void LfoModulationSource::process_block()
    }
 
 
-   //if( lfo->rate.temposync )
-   //std::cout << _D(localcopy[rate].f) << _D(frate) << _D(fratea);
    if (lfo->rate.deactivated)
       frate = 0.0;
 
@@ -362,20 +356,11 @@ void LfoModulationSource::process_block()
       frate *= storage->temposyncratio;
 
    phase += frate * ratemult;
-   //if( lfo->rate.temposync )
-   //std::cout << _D(phase) << _D(frate) << _D(ratemult) << _D(storage->temposyncratio) << std::endl;
    if( frate == 0 && phase == 0 && s == lt_stepseq )
    {
       phase = 0.001; // step forward a smidge
    }
    
-   /*if (lfo->trigmode.val.i == lm_freerun)
-   {
-   double ipart; //,tsrate = localcopy[rate].f;
-   phase = (float)modf(0.5f*storage->songpos*pow(2.0,(double)localcopy[rate].f),&ipart);
-   //phase = storage->songpos?
-   }*/
-
    if (env_state != lenv_stuck && env_state != lenv_msegrelease )
    {
       float envrate = 0;
@@ -411,13 +396,6 @@ void LfoModulationSource::process_block()
       env_phase += envrate;
 
       float sustainlevel = localcopy[isustain].f;
-      // sustainlevel = sustainlevel*(1.f + localcopy[ideform].f) -
-      // sustainlevel*sustainlevel*localcopy[ideform].f; sustainlevel = sustainlevel /
-      // (sustainlevel*localcopy[ideform].f + 1 - localcopy[ideform].f); float dd =
-      // (localcopy[ideform].f - 1); if (s == lt_envelope) sustainlevel = 0.5f *
-      // (sqrt(4.f*sustainlevel + dd*dd) + dd); if (s == lt_envelope) sustainlevel = 1.f / (1.f +
-      // localcopy[ideform].f); a = (1.f-localcopy[ideform].f) + localcopy[ideform].f*env_val;
-      // u = e*a;
 
       if (env_phase > 1.f)
       {
@@ -425,21 +403,15 @@ void LfoModulationSource::process_block()
          {
          case lenv_delay:
             env_state = lenv_attack;
-            env_phase = 0.f; // min(1.f, env_phase-1.f);
+            env_phase = 0.f;
             break;
          case lenv_attack:
             env_state = lenv_hold;
-            env_phase = 0.f; // min(1.f, env_phase-1.f);
+            env_phase = 0.f;
             break;
          case lenv_hold:
             env_state = lenv_decay;
-            env_phase = 0.f; // min(1.f, env_phase-1.f);
-            /*if (localcopy[idecay].f == lfo->decay.val_max.f)
-            {
-            env_state = lenv_stuck;
-            env_val = 1.f;
-            env_phase = 0;
-            }*/
+            env_phase = 0.f;
             break;
          case lenv_decay:
             env_state = lenv_stuck;
@@ -564,7 +536,7 @@ void LfoModulationSource::process_block()
    switch (s)
    {
    case lt_envelope:
-   case lt_function:
+   case lt_function:    // TODO FIXME: When function LFO type is added, remove it from this case!
       switch (lfo->deform.deform_type)
       {
       case type_1:
@@ -572,7 +544,34 @@ void LfoModulationSource::process_block()
          break;
 
       case type_2:
-         iout = pow(env_val, 1 / localcopy[ideform].f);
+         if (localcopy[ideform].f > 0.f)
+            iout = pow(env_val, 1.f + (9.0 * localcopy[ideform].f));
+         else
+            iout = pow(env_val, 1.f / (1.f + (4.0 * fabs(localcopy[ideform].f))));
+
+         if (env_val != 0.f)
+            iout /= env_val;
+
+         break;
+      case type_3:
+
+         if (localcopy[ideform].f < 0.f)
+         {
+            iout = env_val + (correlated_noise_o2mk2_suppliedrng(target, noised1, 1.f - fabs(localcopy[ideform].f), urng) * 0.2);
+         }
+         else
+         {
+            auto quant = localcopy[ideform].f * 24.f;
+
+            if (quant > 1.f)
+               iout = (float)(round(env_val * quant) / quant);
+            else
+               iout = env_val;
+         }
+
+         if (env_val != 0.f)
+            iout /= env_val;
+
          break;
       }
       break;
@@ -581,21 +580,21 @@ void LfoModulationSource::process_block()
       switch (lfo->deform.deform_type)
       {
       case type_1:
-         iout = bend1(lookup_waveshape_warp(3, 2.f - 4.f * phase));
+         iout = bend1(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
          break;
       case type_2:
          if (localcopy[ideform].f >= -1 / 4.5)
-            iout = bend2(lookup_waveshape_warp(3, 2.f - 4.f * phase));
+            iout = bend2(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
          else
-            iout = bend2(lookup_waveshape_warp(3, 2.f - 4.f * phase)) / (1 -
+            iout = bend2(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) / (1 -
                    ((localcopy[ideform].f + (1 / 4.5)) / 1.6 ));    
          break;
       case type_3:
-         iout = ( bend3(lookup_waveshape_warp(3, 2.f - 4.f * phase)) / 
+         iout = ( bend3(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) / 
              (1.f + 0.5 * abs(localcopy[ideform].f)) - (0.06 * localcopy[ideform].f) );
          break;
       }               
-   break;
+      break;
    
    case lt_tri:
       switch (lfo->deform.deform_type)
@@ -615,7 +614,7 @@ void LfoModulationSource::process_block()
              (1.f + 0.5 * abs(localcopy[ideform].f)) - (0.06 * localcopy[ideform].f) ); 
          break;
       }
-   break;
+      break;
    
    case lt_ramp:
       switch (lfo->deform.deform_type)
@@ -635,10 +634,8 @@ void LfoModulationSource::process_block()
              - (0.06 * localcopy[ideform].f) );
          break;
       }
-       
-       
       break;
-   
+         
    case lt_square:
 
       iout = (phase > (0.5f + 0.5f * localcopy[ideform].f)) ? -1.f : 1.f;

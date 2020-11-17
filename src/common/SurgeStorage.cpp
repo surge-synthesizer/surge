@@ -64,7 +64,7 @@ float table_dB alignas(16)[512],
       table_envrate_linear alignas(16)[512],
       table_glide_exp alignas(16)[512],
       table_glide_log alignas(16)[512];
-float waveshapers alignas(16)[8][1024];
+float waveshapers alignas(16)[n_ws_type][1024];
 float samplerate = 0, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
 double dsamplerate_os, dsamplerate_os_inv;
@@ -1402,29 +1402,22 @@ void SurgeStorage::init_tables()
    for (int i = 0; i < 1024; i++)
    {
       double x = ((double)i - 512.0) * mult;
-      waveshapers[0][i] = (float)tanh(x);                            // wst_tanh,
-      waveshapers[1][i] = (float)pow(tanh(pow(::abs(x), 5.0)), 0.2); // wst_hard
+
+      waveshapers[wst_soft][i] = (float)tanh(x);
+      waveshapers[wst_hard][i] = (float)pow(tanh(pow(::abs(x), 5.0)), 0.2);
       if (x < 0)
-         waveshapers[1][i] = -waveshapers[1][i];
-      waveshapers[2][i] = (float)shafted_tanh(x + 0.5) - shafted_tanh(0.5);       // wst_assym
-      waveshapers[3][i] = (float)sin((double)((double)i - 512.0) * M_PI / 512.0); // wst_sinus
-      waveshapers[4][i] = (float)tanh((double)((double)i - 512.0) * mult);        // wst_digi
+         waveshapers[wst_hard][i] = -waveshapers[1][i];
+      waveshapers[wst_asym][i] = (float)shafted_tanh(x + 0.5) - shafted_tanh(0.5);
+      waveshapers[wst_sine][i] = (float)sin((double)((double)i - 512.0) * M_PI / 512.0);
+      waveshapers[wst_digital][i] = (float)tanh(x);
    }
-   /*for(int i=0; i<512; i++)
-   {
-           double x = 2.0*M_PI*((double)i)/512.0;
-           table_sin[i] = sin(x);
-           table_sin_offset[i] = sin(x+(2.0*M_PI/512.0))-sin(x);
-   }*/
+
    // from 1.2.2
-   // nyquist_pitch = (float)12.f*log((0.49999*M_PI) / (dsamplerate_os_inv *
-   // 2*M_PI*440.0))/log(2.0);	// include some margin for error (and to avoid denormals in IIR
+   // nyquist_pitch = (float)12.f*log((0.49999*M_PI) / (dsamplerate_os_inv */ 2*M_PI*440.0))/log(2.0);	// include some margin for error (and to avoid denormals in IIR
    // filter clamping)
    // 1.3
-   nyquist_pitch =
-       (float)12.f * log((0.75 * M_PI) / (dsamplerate_os_inv * 2 * M_PI * 440.0)) /
-       log(2.0); // include some margin for error (and to avoid denormals in IIR filter clamping)
-   vu_falloff = 0.997f; // TODO should be samplerate-dependent (this is per 32-sample block at 44.1)
+   nyquist_pitch = (float)12.f * log((0.75 * M_PI) / (dsamplerate_os_inv * 2 * M_PI * 440.0)) / log(2.0); // include some margin for error (and to avoid denormals in IIR filter clamping)
+   vu_falloff = 0.997f; // TODO should be sample rate-dependent (this is per 32-sample block at 44.1k)
 }
 
 float SurgeStorage::note_to_pitch(float x)

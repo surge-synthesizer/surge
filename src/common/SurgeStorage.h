@@ -89,7 +89,6 @@ extern float table_envrate_lpf alignas(16)[512],
              table_glide_exp alignas(16)[512],
              table_glide_log alignas(16)[512];
 extern float table_note_omega alignas(16)[2][512];
-extern float waveshapers alignas(16)[8][1024];
 extern float samplerate, samplerate_inv;
 extern double dsamplerate, dsamplerate_inv;
 extern double dsamplerate_os, dsamplerate_os_inv;
@@ -370,6 +369,20 @@ const char lt_names[n_lfotypes][32] =
    "Function (coming in 1.9!)",
 };
 
+const int lt_num_deforms[n_lfotypes] =
+{
+   3,   // lt_sine
+   3,   // lt_tri
+   0,   // lt_square
+   3,   // lt_ramp
+   0,   // lt_noise
+   0,   // lt_snh
+   3,   // lt_envelope
+   0,   // lt_stepseq
+   0,   // lt_mseg
+   3,   // lt_function
+};
+
 enum fu_type
 {
    fut_none = 0,
@@ -502,7 +515,8 @@ const char fut_diode_subtypes[1][32] =
    "24 dB/oct"
 };
 
-const int fut_subcount[n_fu_type] = {
+const int fut_subcount[n_fu_type] =
+{
    0, // fut_none
    3, // fut_lp12
    3, // fut_lp24
@@ -539,11 +553,11 @@ enum fu_subtype
 enum ws_type
 {
    wst_none = 0,
-   wst_tanh,
+   wst_soft,
    wst_hard,
    wst_asym,
-   wst_sinus,
-   wst_digi,
+   wst_sine,
+   wst_digital,
    n_ws_type,
 };
 
@@ -556,6 +570,8 @@ const char wst_names[n_ws_type][16] =
    "Sine",
    "Digital",
 };
+
+extern float waveshapers alignas(16)[n_ws_type][1024];
 
 enum env_mode_type
 {

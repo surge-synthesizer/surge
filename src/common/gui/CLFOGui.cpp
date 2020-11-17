@@ -223,7 +223,8 @@ void CLFOGui::draw(CDrawContext* dc)
          {
              path->beginSubpath(xc, val );
              eupath->beginSubpath(xc, euval);
-             if( ! lfodata->unipolar.val.b )
+             if ((lfodata->unipolar.val.b == false) && (lfodata->shape.val.i != lt_envelope) &&
+                 (lfodata->shape.val.i != lt_function)) // TODO FIXME: When function LFO type is added, remove it from this condition!
                 edpath->beginSubpath(xc, edval);
              if( tFullWave ) deactPath->beginSubpath(xc, wval );
              priorval = val;

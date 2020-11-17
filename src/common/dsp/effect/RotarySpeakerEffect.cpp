@@ -226,7 +226,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
       compensateStartsAt = 0.05;
       break;
    }
-   case wst_sinus:
+   case wst_sine:
    {
       gain_tweak = 4.4;
       compensate = 10.f;
@@ -234,7 +234,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
       square_drive_comp = true;
       break;
    }
-   case wst_digi:
+   case wst_digital:
    {
       gain_tweak = 1.f;
       compensate = 4.f;
@@ -266,7 +266,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
 
       if (!fxdata->p[rsp_drive].deactivated)
       {
-          input = lookup_waveshape(ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;
+          input = lookup_waveshape(wst_soft + ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;   // ws + 1 to start on wst_soft
           input /= gain_comp_factor;
 
           drive.process();
