@@ -6145,13 +6145,16 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
          << ( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart ) == Steinberg::Vst::IContextMenuItem::kIsGroupStart ) << " IGE="
          << ( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) == Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) << " "
          << std::endl;
-         */
-         if( item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator &&
-             ! item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart )
-         {
-            menuStack.top()->addSeparator(eidStack.top()++);
-         }
-         else if( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart ) == Steinberg::Vst::IContextMenuItem::kIsGroupStart )
+
+         if( item.flags != 0 )
+            printf( "FLAG %d IGS %d IGE %d SEP %d\n",
+                   item.flags,
+                   item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart,
+                   item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd,
+                   item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator
+                   );
+                   */
+         if( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart ) == Steinberg::Vst::IContextMenuItem::kIsGroupStart )
          {
             COptionMenu *subMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle |
                                                     VSTGUI::COptionMenu::kMultipleCheckStyle );
@@ -6173,28 +6176,31 @@ Steinberg::Vst::IContextMenu* SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COpti
             */
 
          }
+         else if( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) == Steinberg::Vst::IContextMenuItem::kIsGroupEnd )
+         {
+            menuStack.pop();
+            eidStack.pop();
+         }
+         else if( item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator )
+            // separator not group end. Thanks for the insane definition of these constants VST3! (See #3090)
+         {
+            menuStack.top()->addSeparator();
+         }
          else
          {
             RememberForgetGuard<Steinberg::Vst::IContextMenuTarget> tg(target);
             RememberForgetGuard<Steinberg::Vst::IContextMenu> hm(hostMenu);
 
-            auto menu = addCallbackMenu(menuStack.top(), nm, [this, hm, tg, itag]() {
-                                                                tg.t->executeMenuItem(itag);
-                                                             });
+            auto menu = addCallbackMenu(menuStack.top(), nm,
+                                        [this, hm, tg, itag]() { tg.t->executeMenuItem(itag); });
             eidStack.top()++;
-            if( item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled )
+            if (item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled)
             {
                menu->setEnabled(false);
             }
-            if( item.flags & Steinberg::Vst::IContextMenuItem::kIsChecked )
+            if (item.flags & Steinberg::Vst::IContextMenuItem::kIsChecked)
             {
                menu->setChecked(true);
-            }
-
-            if( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) == Steinberg::Vst::IContextMenuItem::kIsGroupEnd )
-            {
-               menuStack.pop();
-               eidStack.pop();
             }
          }
          // hostMenu->addItem(item, &target);
