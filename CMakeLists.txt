@@ -281,7 +281,9 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CVerticalLabel.cpp
   src/common/gui/CursorControlGuard.cpp
   src/common/gui/SkinFontLoader.cpp
-  src/common/gui/CSurgeHyperlink.cpp src/common/ModulatorPresetManager.cpp src/common/ModulatorPresetManager.h)
+  src/common/gui/CSurgeHyperlink.cpp
+  src/common/ModulatorPresetManager.cpp
+  src/common/ModulatorPresetManager.h)
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp

@@ -76,7 +76,7 @@ void AirWindowsEffect::init_ctrltypes() {
    ** This looks odd right? Why not just call resetCtrlTypes?
    ** Well: When we load if we are set to ct_none then we don't
    ** stream values on. So what we do is we transiently make
-   ** every 1..n_fx a ct_airwindow_param so the unstream
+   ** every 1..n_fx a ct_airwindows_param so the unstream
    ** can set values, then when we process later, resetCtrlTypes
    ** will take those prior values and assign them as new (and that's
    ** what is called if the value is changed). Also since the load
@@ -89,7 +89,7 @@ void AirWindowsEffect::init_ctrltypes() {
    fxreg = AirWinBaseClass::pluginRegistry();
 
    fxdata->p[0].set_name( "FX" );
-   fxdata->p[0].set_type( ct_airwindow_fx );
+   fxdata->p[0].set_type( ct_airwindows_fx );
    fxdata->p[0].posy_offset = 1;
    fxdata->p[0].val_max.i = fxreg.size() - 1;
    fxdata->p[0].set_user_data( nullptr );
@@ -97,9 +97,9 @@ void AirWindowsEffect::init_ctrltypes() {
 
    for( int i=0; i<n_fx_params - 1; ++i )
    {
-      fxdata->p[i+1].set_type( ct_percent ); // setting to ct_none means we don't stream onto this
-      std::string w = "Airwindow " + std::to_string(i);
-      fxdata->p[i+1].set_name( w.c_str() );
+      fxdata->p[i + 1].set_type( ct_percent ); // setting to ct_none means we don't stream onto this
+      std::string w = "Param " + std::to_string(i);
+      fxdata->p[i + 1].set_name( w.c_str() );
 
       if( ! fxFormatters[i] )
          fxFormatters[i] = std::make_unique<AWFxParamFormatter>(this,i);
@@ -110,7 +110,7 @@ void AirWindowsEffect::init_ctrltypes() {
 
 void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
    fxdata->p[0].set_name( "FX" );
-   fxdata->p[0].set_type( ct_airwindow_fx );
+   fxdata->p[0].set_type( ct_airwindows_fx );
    fxdata->p[0].posy_offset = 1;
    fxdata->p[0].val_max.i = fxreg.size() - 1;
 
@@ -125,7 +125,7 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
          fxdata->p[i+1].set_name( txt );
          if( airwin->isParameterIntegral( i ) )
          {
-            fxdata->p[i+1].set_type( ct_airwindow_param_integral );
+            fxdata->p[i+1].set_type( ct_airwindows_param_integral );
             fxdata->p[i+1].val_min.i = 0;
             fxdata->p[i+1].val_max.i = airwin->parameterIntegralUpperBound( i );
 
@@ -135,11 +135,11 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
                fxdata->p[i+1].val.i = (int)( airwin->getParameter( i ) * (airwin->parameterIntegralUpperBound(i) + 0.999) );
          } else if( airwin->isParameterBipolar( i ) )
          {
-            fxdata->p[i+1].set_type( ct_airwindow_param_bipolar );
+            fxdata->p[i+1].set_type( ct_airwindows_param_bipolar );
          }
          else
          {
-            fxdata->p[i+1].set_type( ct_airwindow_param );
+            fxdata->p[i+1].set_type( ct_airwindows_param );
          }
          fxdata->p[i+1].set_user_data( fxFormatters[i].get() );
          fxdata->p[i+1].posy_offset = 3;
@@ -151,9 +151,13 @@ void AirWindowsEffect::resetCtrlTypes( bool useStreamedValues ) {
          else
             fxdata->p[i+1].val.f = airwin->getParameter( i );
       }
+
+      // set any FX parameters current Airwindows effect isn't using to none/generic param name
       for( int i=airwin->paramCount; i < n_fx_params - 1; ++i ) // -1 since we have +1 in the indexing since 0 is type
       {
-         fxdata->p[i+1].set_type( ct_none );
+         fxdata->p[i + 1].set_type( ct_none );
+         std::string w = "Param " + std::to_string(i);
+         fxdata->p[i + 1].set_name(w.c_str());
       }
    }
 
@@ -178,15 +182,15 @@ void AirWindowsEffect::process( float *dataL, float *dataR )
    if( !airwin || fxdata->p[0].val.i != lastSelected || fxdata->p[0].user_data == nullptr )
    {
       /*
-      ** So do we want to let airwindows set params as defaults or do we want 
+      ** So do we want to let Airwindows set params as defaults or do we want 
       ** to use the values on our params if we recreate? Well we have two cases.
-      ** If the userdata on p0 is null it means we have unstreamed somethign but
-      ** we have not set up airwindows. So this means we are loading an FXP, 
-      ** a config xml snapshot, or similar.
+      ** If the userdata on p0 is null it means we have unstreamed something but
+      ** we have not set up Airwindows. So this means we are loading an FXP, 
+      ** a config XML snapshot, or similar.
       **
       ** If the userdata is set up and the last selected is changed then that
       ** means we have used a UI or automation gesture to re-modify a current
-      ** running airwindow, so apply the defaults
+      ** running Airwindows effect, so apply the defaults
       */
       bool useStreamedValues = false; 
       if( fxdata->p[0].user_data == nullptr )
@@ -201,7 +205,7 @@ void AirWindowsEffect::process( float *dataL, float *dataR )
    for( int i=0; i<airwin->paramCount && i < n_fx_params - 1; ++i )
    {
       param_lags[i].newValue( limit_range( *f[i+1], 0.f, 1.f ) );
-      if( fxdata->p[i+1].ctrltype == ct_airwindow_param_integral )
+      if( fxdata->p[i+1].ctrltype == ct_airwindows_param_integral )
       {
          airwin->setParameter( i, fxdata->p[i+1].get_value_f01() );
       }
