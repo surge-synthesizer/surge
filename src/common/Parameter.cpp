@@ -296,7 +296,7 @@ bool Parameter::can_deactivate()
    case ct_freq_audible_deactivatable:
    case ct_lforate_deactivatable:
    case ct_rotarydrive:
-   case ct_airwindow_fx:
+   case ct_airwindows_fx:
    case ct_decibel_deactivatable:
       return true;
    }
@@ -334,7 +334,7 @@ void Parameter::set_user_data(ParamUserData* ud)
          user_data = nullptr;
       }
       break;
-   case ct_airwindow_fx:
+   case ct_airwindows_fx:
       if( dynamic_cast<ParameterDiscreteIndexRemapper*>(ud))
       {
          user_data = ud;
@@ -344,9 +344,9 @@ void Parameter::set_user_data(ParamUserData* ud)
          user_data = nullptr;
       }
       break;
-   case ct_airwindow_param:
-   case ct_airwindow_param_bipolar:
-   case ct_airwindow_param_integral:
+   case ct_airwindows_param:
+   case ct_airwindows_param_bipolar:
+   case ct_airwindows_param_integral:
       if( dynamic_cast<ParameterExternalFormatter*>(ud))
       {
          user_data = ud;
@@ -845,21 +845,21 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_default.f = 0;
       break;
-   case ct_airwindow_fx:
+   case ct_airwindows_fx:
       val_min.i = 0;
       val_max.i = 10;
       valtype = vt_int;
       val_default.i = 0;
       break;
-   case ct_airwindow_param:
-   case ct_airwindow_param_bipolar: // it's still 0,1; this is just a display thing
+   case ct_airwindows_param:
+   case ct_airwindows_param_bipolar: // it's still 0,1; this is just a display thing
       val_min.f = 0;
       val_max.f = 1;
       valtype = vt_float;
       val_default.f = 0;
       break;
 
-   case ct_airwindow_param_integral:
+   case ct_airwindows_param_integral:
       val_min.i = 0;
       val_max.i = 1;
       valtype = vt_int;
@@ -1053,9 +1053,9 @@ void Parameter::set_type(int ctrltype)
       sprintf( displayInfo.unit, "dB" );
       break;
 
-   case ct_airwindow_param:
-   case ct_airwindow_param_bipolar:
-   case ct_airwindow_param_integral:
+   case ct_airwindows_param:
+   case ct_airwindows_param_bipolar:
+   case ct_airwindows_param_integral:
       displayType = DelegatedToFormatter;
       displayInfo.scale = 1.0;
       displayInfo.unit[0] = 0;
@@ -1105,8 +1105,8 @@ void Parameter::bound_value(bool force_integer)
       case ct_osc_feedback_negative:
       case ct_detuning:
       case ct_lfoamplitude:
-      case ct_airwindow_param:
-      case ct_airwindow_param_bipolar:
+      case ct_airwindows_param:
+      case ct_airwindows_param_bipolar:
       {
          val.f = floor(val.f * 100) / 100.0;
          break;
@@ -2393,7 +2393,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
            }
          break;
 
-      case ct_airwindow_fx:
+      case ct_airwindows_fx:
       {
          // These are all the ones with a ParameterDiscreteIndexRemapper
          auto pd = dynamic_cast<ParameterDiscreteIndexRemapper*>(user_data);
@@ -2655,8 +2655,8 @@ bool Parameter::can_setvalue_from_string()
    case ct_rotarydrive:
    case ct_sendlevel:
    case ct_freq_mod:
-   case ct_airwindow_param:
-   case ct_airwindow_param_bipolar:
+   case ct_airwindows_param:
+   case ct_airwindows_param_bipolar:
    {
       return true;
       break;

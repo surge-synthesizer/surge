@@ -19,18 +19,15 @@
 using std::min;
 using std::max;
 
-/* FM osc 2 */
-// 2 modulators
-
-enum fm2param
+enum fm2_params
 {
-   fm2_m1amt = 0,
+   fm2_m1amount = 0,
    fm2_m1ratio,
-   fm2_m2amt,
+   fm2_m2amount,
    fm2_m2ratio,
-   fm2_m12ofs,
-   fm2_m12ph,
-   fm2_fb,
+   fm2_m12offset,
+   fm2_m12phase,
+   fm2_feedback,
 };
 
 FM2Oscillator::FM2Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
@@ -49,11 +46,11 @@ void FM2Oscillator::init(float pitch, bool is_display)
    driftlfo = 0;
    driftlfo2 = 0;
    fb_val = 0.0;
-   double ph = localcopy[oscdata->p[fm2_m12ph].param_id_in_scene].f * 2.0 * M_PI;
+   double ph = localcopy[oscdata->p[fm2_m12phase].param_id_in_scene].f * 2.0 * M_PI;
    RM1.set_phase(ph);
    RM2.set_phase(ph);
-   phase = -sin(ph) * (calcmd(localcopy[oscdata->p[fm2_m1amt].param_id_in_scene].f) +
-                       calcmd(localcopy[oscdata->p[fm2_m2amt].param_id_in_scene].f)) -
+   phase = -sin(ph) * (calcmd(localcopy[oscdata->p[fm2_m1amount].param_id_in_scene].f) +
+                       calcmd(localcopy[oscdata->p[fm2_m2amount].param_id_in_scene].f)) -
            ph;
 }
 
@@ -63,18 +60,18 @@ FM2Oscillator::~FM2Oscillator()
 void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
    driftlfo = drift_noise(driftlfo2) * drift;
-   fb_val = oscdata->p[fm2_fb].get_extended(localcopy[oscdata->p[fm2_fb].param_id_in_scene].f);
+   fb_val = oscdata->p[fm2_feedback].get_extended(localcopy[oscdata->p[fm2_feedback].param_id_in_scene].f);
 
    double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
-   double shift = localcopy[oscdata->p[fm2_m12ofs].param_id_in_scene].f * dsamplerate_inv;
+   double shift = localcopy[oscdata->p[fm2_m12offset].param_id_in_scene].f * dsamplerate_inv;
 
    RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
                                   (double)localcopy[oscdata->p[fm2_m1ratio].param_id_in_scene].i + shift));
    RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
                                   (double)localcopy[oscdata->p[fm2_m2ratio].param_id_in_scene].i - shift));
 
-   double d1 = localcopy[oscdata->p[fm2_m1amt].param_id_in_scene].f;
-   double d2 = localcopy[oscdata->p[fm2_m2amt].param_id_in_scene].f;
+   double d1 = localcopy[oscdata->p[fm2_m1amount].param_id_in_scene].f;
+   double d2 = localcopy[oscdata->p[fm2_m2amount].param_id_in_scene].f;
 
    RelModDepth1.newValue(calcmd(d1));
    RelModDepth2.newValue(calcmd(d2));
@@ -83,7 +80,7 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
       FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
 
    FeedbackDepth.newValue(abs(fb_val));
-   PhaseOffset.newValue(2.0 * M_PI * localcopy[oscdata->p[fm2_m12ph].param_id_in_scene].f);
+   PhaseOffset.newValue(2.0 * M_PI * localcopy[oscdata->p[fm2_m12phase].param_id_in_scene].f);
 
    for (int k = 0; k < BLOCK_SIZE_OS; k++)
    {
@@ -114,36 +111,36 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
 }
 void FM2Oscillator::init_ctrltypes()
 {
-   oscdata->p[fm2_m1amt].set_name("M1 Amount");
-   oscdata->p[fm2_m1amt].set_type(ct_percent);
+   oscdata->p[fm2_m1amount].set_name("M1 Amount");
+   oscdata->p[fm2_m1amount].set_type(ct_percent);
    oscdata->p[fm2_m1ratio].set_name("M1 Ratio");
    oscdata->p[fm2_m1ratio].set_type(ct_fmratio_int);
-   oscdata->p[fm2_m2amt].set_name("M2 Amount");
-   oscdata->p[fm2_m2amt].set_type(ct_percent);
+   oscdata->p[fm2_m2amount].set_name("M2 Amount");
+   oscdata->p[fm2_m2amount].set_type(ct_percent);
    oscdata->p[fm2_m2ratio].set_name("M2 Ratio");
    oscdata->p[fm2_m2ratio].set_type(ct_fmratio_int);
-   oscdata->p[fm2_m12ofs].set_name("M1/2 Offset");
-   oscdata->p[fm2_m12ofs].set_type(ct_freq_shift);
-   oscdata->p[fm2_m12ph].set_name("M1/2 Phase");
-   oscdata->p[fm2_m12ph].set_type(ct_percent);
-   oscdata->p[fm2_fb].set_name("Feedback");
-   oscdata->p[fm2_fb].set_type(ct_osc_feedback_negative);
+   oscdata->p[fm2_m12offset].set_name("M1/2 Offset");
+   oscdata->p[fm2_m12offset].set_type(ct_freq_shift);
+   oscdata->p[fm2_m12phase].set_name("M1/2 Phase");
+   oscdata->p[fm2_m12phase].set_type(ct_percent);
+   oscdata->p[fm2_feedback].set_name("Feedback");
+   oscdata->p[fm2_feedback].set_type(ct_osc_feedback_negative);
 }
 void FM2Oscillator::init_default_values()
 {
-   oscdata->p[fm2_m1amt].val.f = 0.0f;
+   oscdata->p[fm2_m1amount].val.f = 0.0f;
    oscdata->p[fm2_m1ratio].val.i = 1;
-   oscdata->p[fm2_m2amt].val.f = 0.0f;
+   oscdata->p[fm2_m2amount].val.f = 0.0f;
    oscdata->p[fm2_m2ratio].val.i = 1;
-   oscdata->p[fm2_m12ofs].val.f = 0.0f;
-   oscdata->p[fm2_m12ph].val.f = 0.0f;
-   oscdata->p[fm2_fb].val.f = 0.0f;
+   oscdata->p[fm2_m12offset].val.f = 0.0f;
+   oscdata->p[fm2_m12phase].val.f = 0.0f;
+   oscdata->p[fm2_feedback].val.f = 0.0f;
 }
 
 void FM2Oscillator::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
 {
    if (streamingRevision <= 12)
    {
-      oscdata->p[fm2_fb].set_type(ct_osc_feedback);
+      oscdata->p[fm2_feedback].set_type(ct_osc_feedback);
    }
 }

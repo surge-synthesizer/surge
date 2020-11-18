@@ -30,6 +30,17 @@ const float integrator_hpf = 0.999f;
 // pow(ln(0.5)/(samplerate/50hz)
 const float hpf_cycle_loss = 0.995f;
 
+enum shnoise_params
+{
+   shn_correlation = 0,
+   shn_width,
+   shn_lowcut,
+   shn_highcut,
+   shn_sync,
+   shn_unison_detune,
+   shn_unison_voices,
+};
+
 SampleAndHoldOscillator::SampleAndHoldOscillator(SurgeStorage* storage,
                                                  OscillatorStorage* oscdata,
                                                  pdata* localcopy)
@@ -49,12 +60,12 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
    dc = 0;
 
    // init here
-   id_shape = oscdata->p[0].param_id_in_scene;
-   id_pw = oscdata->p[1].param_id_in_scene;
-   id_smooth = oscdata->p[2].param_id_in_scene;
-   id_sub = oscdata->p[3].param_id_in_scene;
-   id_sync = oscdata->p[4].param_id_in_scene;
-   id_detune = oscdata->p[5].param_id_in_scene;
+   id_shape = oscdata->p[shn_correlation].param_id_in_scene;
+   id_pw = oscdata->p[shn_width].param_id_in_scene;
+   id_smooth = oscdata->p[shn_lowcut].param_id_in_scene;
+   id_sub = oscdata->p[shn_highcut].param_id_in_scene;
+   id_sync = oscdata->p[shn_sync].param_id_in_scene;
+   id_detune = oscdata->p[shn_unison_detune].param_id_in_scene;
 
    float rate = 0.05;
    l_pw.setRate(rate);
@@ -63,20 +74,20 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
    l_sub.setRate(rate);
    l_sync.setRate(rate);
 
-   n_unison = limit_range(oscdata->p[6].val.i, 1, MAX_UNISON);
+   n_unison = limit_range(oscdata->p[shn_unison_voices].val.i, 1, MAX_UNISON);
    if (is_display)
    {
       n_unison = 1;
 
       auto gen = std::minstd_rand(2);
-      std::uniform_real_distribution<float> distro(-1.f,1.f);
+      std::uniform_real_distribution<float> distro(-1.f, 1.f);
       urng = std::bind(distro, gen);
    }
    else
    {
       std::random_device rd;
       auto gen = std::minstd_rand(rd());
-      std::uniform_real_distribution<float> distro(-1.f,1.f);
+      std::uniform_real_distribution<float> distro(-1.f, 1.f);
       urng = std::bind(distro, gen);
    }
    prepare_unison(n_unison);
@@ -101,7 +112,8 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
       else
       {
          double drand = (double)rand() / RAND_MAX;
-         double detune = oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
+         double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
+                         (detune_bias * float(i) + detune_offset);
          double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
          drand = (double)rand() / RAND_MAX;
          double ot = drand * storage->note_to_pitch_tuningctr(detune);
@@ -118,46 +130,46 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
    hp.coeff_instantize();
    lp.coeff_instantize();
 
-   hp.coeff_HP(hp.calc_omega(oscdata->p[2].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
-   lp.coeff_LP2B(lp.calc_omega(oscdata->p[3].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   hp.coeff_HP(hp.calc_omega(oscdata->p[shn_lowcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[shn_highcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 }
 
 void SampleAndHoldOscillator::init_ctrltypes()
 {
-   oscdata->p[0].set_name("Correlation");
-   oscdata->p[0].set_type(ct_percent_bidirectional);
-   oscdata->p[1].set_name("Width");
-   oscdata->p[1].set_type(ct_percent);
-   oscdata->p[1].val_default.f = 0.5f;
-   oscdata->p[2].set_name("Low Cut");
-   oscdata->p[2].set_type(ct_freq_audible_deactivatable);
-   oscdata->p[3].set_name("High Cut");
-   oscdata->p[3].set_type(ct_freq_audible_deactivatable);
-   oscdata->p[4].set_name("Sync");
-   oscdata->p[4].set_type(ct_syncpitch);
-   oscdata->p[5].set_name("Unison Detune");
-   oscdata->p[5].set_type(ct_oscspread);
-   oscdata->p[6].set_name("Unison Voices");
-   oscdata->p[6].set_type(ct_osccount);
+   oscdata->p[shn_correlation].set_name("Correlation");
+   oscdata->p[shn_correlation].set_type(ct_percent_bidirectional);
+   oscdata->p[shn_width].set_name("Width");
+   oscdata->p[shn_width].set_type(ct_percent);
+   oscdata->p[shn_width].val_default.f = 0.5f;
+   oscdata->p[shn_lowcut].set_name("Low Cut");
+   oscdata->p[shn_lowcut].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[shn_highcut].set_name("High Cut");
+   oscdata->p[shn_highcut].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[shn_sync].set_name("Sync");
+   oscdata->p[shn_sync].set_type(ct_syncpitch);
+   oscdata->p[shn_unison_detune].set_name("Unison Detune");
+   oscdata->p[shn_unison_detune].set_type(ct_oscspread);
+   oscdata->p[shn_unison_voices].set_name("Unison Voices");
+   oscdata->p[shn_unison_voices].set_type(ct_osccount);
 }
 void SampleAndHoldOscillator::init_default_values()
 {
-   oscdata->p[0].val.f = 0.f;
-   oscdata->p[1].val.f = 0.5f;
-   oscdata->p[2].val.f = oscdata->p[2].val_min.f; // high cut at the bottom
-   oscdata->p[2].deactivated = true;
-   oscdata->p[3].val.f = oscdata->p[3].val_max.f; // low cut at the top
-   oscdata->p[4].deactivated = true;
-   oscdata->p[4].val.f = 0.f;
-   oscdata->p[5].val.f = 0.2f;
-   oscdata->p[6].val.i = 1;
+   oscdata->p[shn_correlation].val.f = 0.f;
+   oscdata->p[shn_width].val.f = 0.5f;
+   oscdata->p[shn_lowcut].val.f = oscdata->p[shn_lowcut].val_min.f; // high cut at the bottom
+   oscdata->p[shn_lowcut].deactivated = true;
+   oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f; // low cut at the top
+   oscdata->p[shn_sync].deactivated = true;
+   oscdata->p[shn_sync].val.f = 0.f;
+   oscdata->p[shn_unison_detune].val.f = 0.2f;
+   oscdata->p[shn_unison_voices].val.i = 1;
 }
 
 void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 {
    float detune = drift * driftlfo[voice];
    if (n_unison > 1)
-      detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(voice) + detune_offset);
+      detune += oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) * (detune_bias * float(voice) + detune_offset);
 
    float sub = l_sub.v;
 
@@ -174,7 +186,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 
       float t;
 
-      if (!oscdata->p[5].absolute)
+      if (!oscdata->p[shn_unison_detune].absolute)
          t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
       else
          t = storage->note_to_pitch_inv_ignoring_tuning(detune * storage->note_to_pitch_inv_ignoring_tuning(pitch) * 16 / 0.9443) * 2;
@@ -211,7 +223,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
    const float s = 0.99952f;
    // add time until next statechange
    float t;
-   if (oscdata->p[5].absolute)
+   if (oscdata->p[shn_unison_detune].absolute)
    {
       // see the comment in SurgeSuperOscillator in the absolute branch
       t = storage->note_to_pitch_inv_ignoring_tuning(detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 + l_sync.v);
@@ -299,16 +311,16 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 
 void SampleAndHoldOscillator::applyFilter()
 {
-   if (!oscdata->p[2].deactivated)
-      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[2].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
-   if (!oscdata->p[3].deactivated)
-      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[3].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[shn_lowcut].deactivated)
+      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[shn_lowcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[shn_highcut].deactivated)
+      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[shn_highcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
 
    for (int k = 0; k < BLOCK_SIZE_OS; k += BLOCK_SIZE)
    {
-      if (!oscdata->p[2].deactivated)
+      if (!oscdata->p[shn_lowcut].deactivated)
          hp.process_block(&(output[k]), &(outputR[k]));
-      if (!oscdata->p[3].deactivated)
+      if (!oscdata->p[shn_highcut].deactivated)
          lp.process_block(&(output[k]), &(outputR[k]));
    }
 }
@@ -464,9 +476,9 @@ void SampleAndHoldOscillator::handleStreamingMismatches(int streamingRevision, i
 {
    if( streamingRevision <= 12 )
    {
-      oscdata->p[2].val.f = oscdata->p[2].val_min.f; // high cut at the bottom
-      oscdata->p[2].deactivated = true;
-      oscdata->p[3].val.f = oscdata->p[3].val_max.f; // low cut at the top
-      oscdata->p[4].deactivated = true;
+      oscdata->p[shn_lowcut].val.f = oscdata->p[shn_lowcut].val_min.f; // high cut at the bottom
+      oscdata->p[shn_lowcut].deactivated = true;
+      oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f; // low cut at the top
+      oscdata->p[shn_sync].deactivated = true;
    }
 }

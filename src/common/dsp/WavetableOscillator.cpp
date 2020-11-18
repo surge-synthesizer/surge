@@ -20,6 +20,17 @@ using namespace std;
 
 const float hpf_cycle_loss = 0.99f;
 
+enum wt_params
+{
+   wt_morph = 0,
+   wt_skewv,
+   wt_saturate,
+   wt_formant,
+   wt_skewh,
+   wt_unison_detune,
+   wt_unison_voices,
+};
+
 WavetableOscillator::WavetableOscillator(SurgeStorage* storage,
                                          OscillatorStorage* oscdata,
                                          pdata* localcopy)
@@ -37,12 +48,12 @@ void WavetableOscillator::init(float pitch, bool is_display)
    osc_outR = _mm_set1_ps(0.f);
    bufpos = 0;
 
-   id_shape = oscdata->p[0].param_id_in_scene;
-   id_vskew = oscdata->p[1].param_id_in_scene;
-   id_clip = oscdata->p[2].param_id_in_scene;
-   id_formant = oscdata->p[3].param_id_in_scene;
-   id_hskew = oscdata->p[4].param_id_in_scene;
-   id_detune = oscdata->p[5].param_id_in_scene;
+   id_shape = oscdata->p[wt_morph].param_id_in_scene;
+   id_vskew = oscdata->p[wt_skewv].param_id_in_scene;
+   id_clip = oscdata->p[wt_saturate].param_id_in_scene;
+   id_formant = oscdata->p[wt_formant].param_id_in_scene;
+   id_hskew = oscdata->p[wt_skewh].param_id_in_scene;
+   id_detune = oscdata->p[wt_unison_detune].param_id_in_scene;
 
    float rate = 0.05;
    l_shape.setRate(rate);
@@ -50,7 +61,7 @@ void WavetableOscillator::init(float pitch, bool is_display)
    l_vskew.setRate(rate);
    l_hskew.setRate(rate);
 
-   n_unison = limit_range(oscdata->p[6].val.i, 1, MAX_UNISON);
+   n_unison = limit_range(oscdata->p[wt_unison_voices].val.i, 1, MAX_UNISON);
    if (oscdata->wt.flags & wtf_is_sample)
    {
       sampleloop = n_unison;
@@ -69,7 +80,7 @@ void WavetableOscillator::init(float pitch, bool is_display)
    pitch_t = pitch;
    update_lagvals<true>();
 
-   float shape = oscdata->p[0].val.f;
+   float shape = oscdata->p[wt_morph].val.f;
    float intpart;
    shape *= ((float)oscdata->wt.n_tables - 1.f) * 0.99999f;
    tableipol = modff(shape, &intpart);
@@ -110,32 +121,32 @@ void WavetableOscillator::init(float pitch, bool is_display)
 
 void WavetableOscillator::init_ctrltypes()
 {
-   oscdata->p[0].set_name("Morph");
-   oscdata->p[0].set_type(ct_countedset_percent);
-   oscdata->p[0].set_user_data(oscdata);
+   oscdata->p[wt_morph].set_name("Morph");
+   oscdata->p[wt_morph].set_type(ct_countedset_percent);
+   oscdata->p[wt_morph].set_user_data(oscdata);
 
-   oscdata->p[1].set_name("Skew Vertical");
-   oscdata->p[1].set_type(ct_percent_bidirectional);
-   oscdata->p[2].set_name("Saturate");
-   oscdata->p[2].set_type(ct_percent);
-   oscdata->p[3].set_name("Formant");
-   oscdata->p[3].set_type(ct_syncpitch);
-   oscdata->p[4].set_name("Skew Horizontal");
-   oscdata->p[4].set_type(ct_percent_bidirectional);
-   oscdata->p[5].set_name("Unison Detune");
-   oscdata->p[5].set_type(ct_oscspread);
-   oscdata->p[6].set_name("Unison Voices");
-   oscdata->p[6].set_type(ct_osccountWT);
+   oscdata->p[wt_skewv].set_name("Skew Vertical");
+   oscdata->p[wt_skewv].set_type(ct_percent_bidirectional);
+   oscdata->p[wt_saturate].set_name("Saturate");
+   oscdata->p[wt_saturate].set_type(ct_percent);
+   oscdata->p[wt_formant].set_name("Formant");
+   oscdata->p[wt_formant].set_type(ct_syncpitch);
+   oscdata->p[wt_skewh].set_name("Skew Horizontal");
+   oscdata->p[wt_skewh].set_type(ct_percent_bidirectional);
+   oscdata->p[wt_unison_detune].set_name("Unison Detune");
+   oscdata->p[wt_unison_detune].set_type(ct_oscspread);
+   oscdata->p[wt_unison_voices].set_name("Unison Voices");
+   oscdata->p[wt_unison_voices].set_type(ct_osccountWT);
 }
 void WavetableOscillator::init_default_values()
 {
-   oscdata->p[0].val.f = 0.0f;
-   oscdata->p[1].val.f = 0.0f;
-   oscdata->p[2].val.f = 0.f;
-   oscdata->p[3].val.f = 0.f;
-   oscdata->p[4].val.f = 0.f;
-   oscdata->p[5].val.f = 0.2f;
-   oscdata->p[6].val.i = 1;
+   oscdata->p[wt_morph].val.f = 0.0f;
+   oscdata->p[wt_skewv].val.f = 0.0f;
+   oscdata->p[wt_saturate].val.f = 0.f;
+   oscdata->p[wt_formant].val.f = 0.f;
+   oscdata->p[wt_skewh].val.f = 0.f;
+   oscdata->p[wt_unison_detune].val.f = 0.2f;
+   oscdata->p[wt_unison_voices].val.i = 1;
 }
 
 float WavetableOscillator::distort_level(float x)
@@ -156,7 +167,8 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
    double detune = drift * driftlfo[voice];
    if (n_unison > 1)
-      detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(voice) + detune_offset);
+      detune += oscdata->p[wt_unison_detune].get_extended(localcopy[id_detune].f) *
+                (detune_bias * float(voice) + detune_offset);
 
    const float p24 = (1 << 24);
    unsigned int ipos;
@@ -234,7 +246,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
    // add time until next statechange
    float tempt;
-   if (oscdata->p[5].absolute)
+   if (oscdata->p[wt_unison_detune].absolute)
    {
       // See the comment in SurgeSuperOscillator.cpp at the absolute treatment
       tempt = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch_t ) * 16 / 0.9443 );

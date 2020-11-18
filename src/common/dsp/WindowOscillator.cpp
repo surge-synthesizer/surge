@@ -30,7 +30,16 @@ inline bool _BitScanReverse(unsigned long* result, unsigned long bits)
 } // anonymous namespace
 #endif
 
-/* wt2 osc */
+enum window_params
+{
+   win_morph = 0,
+   win_formant,
+   win_window,
+   win_lowcut,
+   win_highcut,
+   win_unison_detune,
+   win_unison_voices,
+};
 
 WindowOscillator::WindowOscillator(SurgeStorage* storage,
                                    OscillatorStorage* oscdata,
@@ -40,57 +49,57 @@ WindowOscillator::WindowOscillator(SurgeStorage* storage,
 
 void WindowOscillator::init(float pitch, bool is_display)
 {
-   memset(&Sub, 0, sizeof(Sub));
+   memset(&Window, 0, sizeof(Window));
 
-   ActiveSubOscs = limit_range(oscdata->p[6].val.i, 1, wt2_suboscs - 1);
+   NumUnison = limit_range(oscdata->p[win_unison_voices].val.i, 1, MAX_UNISON - 1);
    if (is_display)
-      ActiveSubOscs = 1;
+      NumUnison = 1;
 
-   float out_attenuation_inv = sqrt((float)ActiveSubOscs);
+   float out_attenuation_inv = sqrt((float)NumUnison);
    OutAttenuation = 1.0f / (out_attenuation_inv * 16777216.f);
 
-   if (ActiveSubOscs == 1)
+   if (NumUnison == 1)
    {
       DetuneBias = 1;
       DetuneOffset = 0;
 
-      Sub.Gain[0][0] = 128;
-      Sub.Gain[0][1] = 128; // unity gain
-      Sub.Pos[0] = (storage->WindowWT.size << 16);
+      Window.Gain[0][0] = 128;
+      Window.Gain[0][1] = 128; // unity gain
+      Window.Pos[0] = (storage->WindowWT.size << 16);
    }
    else
    {
-      DetuneBias = (float)2.f / ((float)ActiveSubOscs - 1.f);
+      DetuneBias = (float)2.f / ((float)NumUnison - 1.f);
       DetuneOffset = -1.f;
 
-      bool odd = ActiveSubOscs & 1;
-      float mid = ActiveSubOscs * 0.5 - 0.5;
-      int half = ActiveSubOscs >> 1;
-      for (int i = 0; i < ActiveSubOscs; i++)
+      bool odd = NumUnison & 1;
+      float mid = NumUnison * 0.5 - 0.5;
+      int half = NumUnison >> 1;
+
+      for (int i = 0; i < NumUnison; i++)
       {
          float d = fabs((float)i - mid) / mid;
+
          if (odd && (i >= half))
             d = -d;
          if (i & 1)
             d = -d;
 
-         Sub.Gain[i][0] = limit_range((int)(float)(128.f * megapanL(d)), 0, 255);
-         Sub.Gain[i][1] = limit_range((int)(float)(128.f * megapanR(d)), 0, 255);
+         Window.Gain[i][0] = limit_range((int)(float)(128.f * megapanL(d)), 0, 255);
+         Window.Gain[i][1] = limit_range((int)(float)(128.f * megapanR(d)), 0, 255);
 
          if (oscdata->retrigger.val.b)
-            Sub.Pos[i] = (storage->WindowWT.size + ((storage->WindowWT.size * i) / ActiveSubOscs))
-                         << 16;
+            Window.Pos[i] = (storage->WindowWT.size + ((storage->WindowWT.size * i) / NumUnison)) << 16;
          else
-            Sub.Pos[i] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1))) << 16;
+            Window.Pos[i] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1))) << 16;
       }
    }
 
    hp.coeff_instantize();
    lp.coeff_instantize();
 
-   hp.coeff_HP(hp.calc_omega(oscdata->p[3].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
-   lp.coeff_LP2B(lp.calc_omega(oscdata->p[4].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
-
+   hp.coeff_HP(hp.calc_omega(oscdata->p[win_lowcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[win_highcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 }
 
 WindowOscillator::~WindowOscillator()
@@ -98,38 +107,39 @@ WindowOscillator::~WindowOscillator()
 
 void WindowOscillator::init_ctrltypes()
 {
-   oscdata->p[0].set_name("Morph");
-   oscdata->p[0].set_type(ct_countedset_percent);
-   oscdata->p[0].set_user_data(oscdata);
+   oscdata->p[win_morph].set_name("Morph");
+   oscdata->p[win_morph].set_type(ct_countedset_percent);
+   oscdata->p[win_morph].set_user_data(oscdata);
 
-   oscdata->p[1].set_name("Formant");
-   oscdata->p[1].set_type(ct_pitch);
-   oscdata->p[2].set_name("Window");
-   oscdata->p[2].set_type(ct_wt2window);
+   oscdata->p[win_formant].set_name("Formant");
+   oscdata->p[win_formant].set_type(ct_pitch);
+   oscdata->p[win_window].set_name("Window");
+   oscdata->p[win_window].set_type(ct_wt2window);
 
-   oscdata->p[3].set_name("Low Cut");
-   oscdata->p[3].set_type(ct_freq_audible_deactivatable);
-   oscdata->p[4].set_name("High Cut");
-   oscdata->p[4].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[win_lowcut].set_name("Low Cut");
+   oscdata->p[win_lowcut].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[win_highcut].set_name("High Cut");
+   oscdata->p[win_highcut].set_type(ct_freq_audible_deactivatable);
 
-   oscdata->p[5].set_name("Unison Detune");
-   oscdata->p[5].set_type(ct_oscspread);
-   oscdata->p[6].set_name("Unison Voices");
-   oscdata->p[6].set_type(ct_osccountWT);
+   oscdata->p[win_unison_detune].set_name("Unison Detune");
+   oscdata->p[win_unison_detune].set_type(ct_oscspread);
+   oscdata->p[win_unison_voices].set_name("Unison Voices");
+   oscdata->p[win_unison_voices].set_type(ct_osccountWT);
 }
+
 void WindowOscillator::init_default_values()
 {
-   oscdata->p[0].val.f = 0.0f;
-   oscdata->p[1].val.f = 0.0f;
-   oscdata->p[2].val.i = 0;
+   oscdata->p[win_morph].val.f = 0.0f;
+   oscdata->p[win_formant].val.f = 0.0f;
+   oscdata->p[win_window].val.i = 0;
 
-   oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
-   oscdata->p[3].deactivated = true;
-   oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
-   oscdata->p[4].deactivated = true;
+   oscdata->p[win_lowcut].val.f = oscdata->p[win_lowcut].val_min.f; // high cut at the bottom
+   oscdata->p[win_lowcut].deactivated = true;
+   oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f; // low cut at the top
+   oscdata->p[win_highcut].deactivated = true;
 
-   oscdata->p[5].val.f = 0.2f;
-   oscdata->p[6].val.i = 1;
+   oscdata->p[win_unison_detune].val.f = 0.2f;
+   oscdata->p[win_unison_voices].val.i = 1;
 }
 
 inline unsigned int BigMULr16(unsigned int a, unsigned int b)
@@ -143,72 +153,73 @@ inline unsigned int BigMULr16(unsigned int a, unsigned int b)
    return c >> 16u;
 }
 
-void WindowOscillator::ProcessSubOscs(bool stereo, bool FM)
+void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
 {
    const unsigned int M0Mask = 0x07f8;
    unsigned int SizeMask = (oscdata->wt.size << 16) - 1;
    unsigned int SizeMaskWin = (storage->WindowWT.size << 16) - 1;
 
-   
-   unsigned char Window = limit_range(oscdata->p[2].val.i, 0, 8);
+   unsigned char SelWindow = limit_range(oscdata->p[win_window].val.i, 0, 8);
 
-   int Table = limit_range(
-       (int)(float)(oscdata->wt.n_tables * localcopy[oscdata->p[0].param_id_in_scene].f), 0,
-       (int)oscdata->wt.n_tables - 1);
-   int FormantMul =
-       (int)(float)(65536.f * storage->note_to_pitch_tuningctr(localcopy[oscdata->p[1].param_id_in_scene].f));
+   int Table = limit_range((int)(float)(oscdata->wt.n_tables * localcopy[oscdata->p[win_morph].param_id_in_scene].f), 0, (int)oscdata->wt.n_tables - 1);
+   int FormantMul = (int)(float)(65536.f * storage->note_to_pitch_tuningctr(localcopy[oscdata->p[win_formant].param_id_in_scene].f));
 
    // We can actually get input tables bigger than the convolution table
    int WindowVsWavePO2 = storage->WindowWT.size_po2 - oscdata->wt.size_po2;
-   if( WindowVsWavePO2 < 0 )
+
+   if (WindowVsWavePO2 < 0)
    {
-       FormantMul = std::max(FormantMul << -WindowVsWavePO2, 1);
+      FormantMul = std::max(FormantMul << -WindowVsWavePO2, 1);
    }
    else
    {
-       FormantMul = std::max(FormantMul >> WindowVsWavePO2, 1);
+      FormantMul = std::max(FormantMul >> WindowVsWavePO2, 1);
    }
 
    {
       // SSE2 path
-      for (int so = 0; so < ActiveSubOscs; so++)
+      for (int so = 0; so < NumUnison; so++)
       {
-         unsigned int Pos = Sub.Pos[so];
-         unsigned int RatioA = Sub.Ratio[so];
-         if( FM )
-            RatioA = Sub.FMRatio[so][0];
-         
+         unsigned int Pos = Window.Pos[so];
+         unsigned int RatioA = Window.Ratio[so];
+
+         if (FM)
+            RatioA = Window.FMRatio[so][0];
+
          unsigned int MipMapA = 0;
          unsigned int MipMapB = 0;
-         if (Sub.Table[so] >= oscdata->wt.n_tables)
-            Sub.Table[so] = Table;
+
+         if (Window.Table[so] >= oscdata->wt.n_tables)
+            Window.Table[so] = Table;
          // TableID may not be valid anymore if a new wavetable is loaded
 
          unsigned long MSBpos;
          unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
+
          if (_BitScanReverse(&MSBpos, bs))
             MipMapB = limit_range((int)MSBpos - 17, 0, oscdata->wt.size_po2 - 1);
 
          if (_BitScanReverse(&MSBpos, 3 * RatioA))
             MipMapA = limit_range((int)MSBpos - 17, 0, storage->WindowWT.size_po2 - 1);
 
-         short* WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Sub.Table[so]];
-         short* WinAdr = storage->WindowWT.TableI16WeakPointers[MipMapA][Window];
+         short* WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Window.Table[so]];
+         short* WinAdr = storage->WindowWT.TableI16WeakPointers[MipMapA][SelWindow];
 
          for (int i = 0; i < BLOCK_SIZE_OS; i++)
          {
-            if( FM )
+            if (FM)
             {
-               Pos += Sub.FMRatio[so][i];
+               Pos += Window.FMRatio[so][i];
             }
             else
             {
                Pos += RatioA;
             }
+
             if (Pos & ~SizeMaskWin)
             {
-               Sub.FormantMul[so] = FormantMul;
-               Sub.Table[so] = Table;
+               Window.FormantMul[so] = FormantMul;
+               Window.Table[so] = Table;
                WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Table];
                Pos = Pos & SizeMaskWin;
             }
@@ -216,20 +227,17 @@ void WindowOscillator::ProcessSubOscs(bool stereo, bool FM)
             unsigned int WinPos = Pos >> (16 + MipMapA);
             unsigned int WinSPos = (Pos >> (8 + MipMapA)) & 0xFF;
 
-            unsigned int FPos = BigMULr16(Sub.FormantMul[so], Pos) & SizeMask;
+            unsigned int FPos = BigMULr16(Window.FormantMul[so], Pos) & SizeMask;
 
             unsigned int MPos = FPos >> (16 + MipMapB);
             unsigned int MSPos = ((FPos >> (8 + MipMapB)) & 0xFF);
 
-            __m128i Wave = _mm_madd_epi16(_mm_load_si128(((__m128i*)sinctableI16 + MSPos)),
-                                          _mm_loadu_si128((__m128i*)&WaveAdr[MPos]));
+            __m128i Wave = _mm_madd_epi16(_mm_load_si128(((__m128i*)sinctableI16 + MSPos)), _mm_loadu_si128((__m128i*)&WaveAdr[MPos]));
 
-            __m128i Win = _mm_madd_epi16(_mm_load_si128(((__m128i*)sinctableI16 + WinSPos)),
-                                         _mm_loadu_si128((__m128i*)&WinAdr[WinPos]));
+            __m128i Win = _mm_madd_epi16(_mm_load_si128(((__m128i*)sinctableI16 + WinSPos)), _mm_loadu_si128((__m128i*)&WinAdr[WinPos]));
 
             // Sum
-            int iWin alignas(16)[4],
-                iWave alignas(16)[4];
+            int iWin alignas(16)[4], iWave alignas(16)[4];
 #if MAC
             // this should be very fast on C2D/C1D (and there are no macs with K8's)
             iWin[0] = _mm_cvtsi128_si32(Win);
@@ -247,16 +255,18 @@ void WindowOscillator::ProcessSubOscs(bool stereo, bool FM)
 
             iWin[0] = (iWin[0] + iWin[1] + iWin[2] + iWin[3]) >> 13;
             iWave[0] = (iWave[0] + iWave[1] + iWave[2] + iWave[3]) >> 13;
+
             if (stereo)
             {
                int Out = (iWin[0] * iWave[0]) >> 7;
-               IOutputL[i] += (Out * (int)Sub.Gain[so][0]) >> 6;
-               IOutputR[i] += (Out * (int)Sub.Gain[so][1]) >> 6;
+               IOutputL[i] += (Out * (int)Window.Gain[so][0]) >> 6;
+               IOutputR[i] += (Out * (int)Window.Gain[so][1]) >> 6;
             }
             else
                IOutputL[i] += (iWin[0] * iWave[0]) >> 6;
          }
-         Sub.Pos[so] = Pos;
+
+         Window.Pos[so] = Pos;
       }
    }
 }
@@ -268,47 +278,49 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
       memset(IOutputR, 0, BLOCK_SIZE_OS * sizeof(int));
 
    float Detune;
-   if( oscdata->p[5].absolute )
+
+   if (oscdata->p[win_unison_detune].absolute)
    {
       // See comment in SurgeSuperOscillator
-      Detune = oscdata->p[5].get_extended(localcopy[oscdata->p[5].param_id_in_scene].f)
-         * storage->note_to_pitch_inv_ignoring_tuning( std::min( 148.f, pitch ) ) * 16 / 0.9443;
+      Detune = oscdata->p[win_unison_detune].get_extended(localcopy[oscdata->p[win_unison_detune].param_id_in_scene].f) *
+               storage->note_to_pitch_inv_ignoring_tuning(std::min(148.f, pitch)) * 16 / 0.9443;
    }
    else
    {
-      Detune = oscdata->p[5].get_extended(localcopy[oscdata->p[5].param_id_in_scene].f);
+      Detune = oscdata->p[win_unison_detune].get_extended(localcopy[oscdata->p[win_unison_detune].param_id_in_scene].f);
    }
+
    float fmstrength = 32 * M_PI * fmdepth * fmdepth * fmdepth;
-   for (int l = 0; l < ActiveSubOscs; l++)
+
+   for (int l = 0; l < NumUnison; l++)
    {
-      Sub.DriftLFO[l][0] = drift_noise(Sub.DriftLFO[l][1]);
+      Window.DriftLFO[l][0] = drift_noise(Window.DriftLFO[l][1]);
       /*
       ** This original code uses note 57 as a center point with a frequency of 220.
       */
-      
-      float f = storage->note_to_pitch(pitch + drift * Sub.DriftLFO[l][0] +
-                                       Detune * (DetuneOffset + DetuneBias * (float)l));
-      int Ratio = Float2Int(8.175798915f * 32768.f * f * (float)(storage->WindowWT.size) *
-                            samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
 
-      Sub.Ratio[l] = Ratio;
-      if( FM )
+      float f = storage->note_to_pitch(pitch + drift * Window.DriftLFO[l][0] + Detune * (DetuneOffset + DetuneBias * (float)l));
+      int Ratio = Float2Int(8.175798915f * 32768.f * f * (float)(storage->WindowWT.size) * samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
+
+      Window.Ratio[l] = Ratio;
+
+      if (FM)
       {
-         FMdepth[l].newValue( fmstrength );
-         for( int i=0; i<BLOCK_SIZE_OS; ++i )
+         FMdepth[l].newValue(fmstrength);
+
+         for (int i = 0; i < BLOCK_SIZE_OS; ++i)
          {
-            float fmadj = ( 1.0 + FMdepth[l].v * master_osc[i] );
-            float f = storage->note_to_pitch(pitch + drift * Sub.DriftLFO[l][0] +
-                                             Detune * (DetuneOffset + DetuneBias * (float)l));
-            int Ratio = Float2Int(8.175798915f * 32768.f * f * fmadj * (float)(storage->WindowWT.size) *
-                                  samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
-            Sub.FMRatio[l][i] = Ratio;
+            float fmadj = (1.0 + FMdepth[l].v * master_osc[i]);
+            float f = storage->note_to_pitch(pitch + drift * Window.DriftLFO[l][0] + Detune * (DetuneOffset + DetuneBias * (float)l));
+            int Ratio = Float2Int(8.175798915f * 32768.f * f * fmadj * (float)(storage->WindowWT.size) * samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
+
+            Window.FMRatio[l][i] = Ratio;
             FMdepth[l].process();
          }
       }
    }
 
-   ProcessSubOscs(stereo, FM);
+   ProcessWindowOscs(stereo, FM);
 
    // int32 -> float conversion
    __m128 scale = _mm_load1_ps(&OutAttenuation);
@@ -336,29 +348,28 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
 
 void WindowOscillator::applyFilter()
 {
-   if( ! oscdata->p[3].deactivated )
-      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[3].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING , 0.707);
-   if( ! oscdata->p[4].deactivated )
-      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[4].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[win_lowcut].deactivated)
+      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[win_lowcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[win_highcut].deactivated)
+      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[win_highcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
 
-   for (int k = 0; k < BLOCK_SIZE_OS; k+= BLOCK_SIZE )
+   for (int k = 0; k < BLOCK_SIZE_OS; k += BLOCK_SIZE)
    {
-      if( ! oscdata->p[3].deactivated )
-         hp.process_block( &(output[k]), &(outputR[k]) );
-      if( ! oscdata->p[4].deactivated )
-         lp.process_block( &(output[k]), &(outputR[k]) );
+      if (!oscdata->p[win_lowcut].deactivated)
+         hp.process_block(&(output[k]), &(outputR[k]));
+      if (!oscdata->p[win_highcut].deactivated)
+         lp.process_block(&(output[k]), &(outputR[k]));
    }
 }
 
-
 void WindowOscillator::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
 {
-   if( streamingRevision <= 12 )
+   if (streamingRevision <= 12)
    {
-      oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
-      oscdata->p[3].deactivated = true;
-      oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
-      oscdata->p[4].deactivated = true;
-      oscdata->p[1].set_type(ct_osc_feedback);
+      oscdata->p[win_lowcut].val.f = oscdata->p[win_lowcut].val_min.f; // high cut at the bottom
+      oscdata->p[win_lowcut].deactivated = true;
+      oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f; // low cut at the top
+      oscdata->p[win_highcut].deactivated = true;
+      oscdata->p[win_formant].set_type(ct_osc_feedback);
    }
 }

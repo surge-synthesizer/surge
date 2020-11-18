@@ -17,7 +17,16 @@
 #include "FastMath.h"
 #include <algorithm>
 
-/* sine osc */
+enum sine_params
+{
+   sin_shape,
+   sin_feedback,
+   sin_FMmode,
+   sin_lowcut,
+   sin_highcut,
+   sin_unison_detune,
+   sin_unison_voices,
+};
 
 SinOscillator::SinOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
    : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
@@ -64,7 +73,7 @@ void SinOscillator::prepare_unison(int voices)
 
 void SinOscillator::init(float pitch, bool is_display)
 {
-   n_unison = limit_range(oscdata->p[6].val.i, 1, MAX_UNISON);
+   n_unison = limit_range(oscdata->p[sin_unison_voices].val.i, 1, MAX_UNISON);
    if (is_display)
       n_unison = 1;
    prepare_unison(n_unison);
@@ -83,16 +92,16 @@ void SinOscillator::init(float pitch, bool is_display)
 
    fb_val = 0.f;
 
-   id_mode = oscdata->p[0].param_id_in_scene;
-   id_fb = oscdata->p[1].param_id_in_scene;
-   id_fmlegacy = oscdata->p[2].param_id_in_scene;
-   id_detune = oscdata->p[5].param_id_in_scene;
+   id_mode = oscdata->p[sin_shape].param_id_in_scene;
+   id_fb = oscdata->p[sin_feedback].param_id_in_scene;
+   id_fmlegacy = oscdata->p[sin_FMmode].param_id_in_scene;
+   id_detune = oscdata->p[sin_unison_detune].param_id_in_scene;
 
    hp.coeff_instantize();
    lp.coeff_instantize();
 
-   hp.coeff_HP(hp.calc_omega(oscdata->p[3].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
-   lp.coeff_LP2B(lp.calc_omega(oscdata->p[4].val.f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
+   hp.coeff_HP(hp.calc_omega(oscdata->p[sin_lowcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   lp.coeff_LP2B(lp.calc_omega(oscdata->p[sin_highcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 }
 
 SinOscillator::~SinOscillator()
@@ -100,14 +109,14 @@ SinOscillator::~SinOscillator()
 
 void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
-   if( localcopy[id_fmlegacy].i == 0 )
+   if (localcopy[id_fmlegacy].i == 0)
    {
-       process_block_legacy(pitch, drift, stereo, FM, fmdepth );
-       applyFilter();
-       return;
+      process_block_legacy(pitch, drift, stereo, FM, fmdepth);
+      applyFilter();
+      return;
    }
-   
-   fb_val = oscdata->p[1].get_extended(localcopy[id_fb].f);
+
+   fb_val = oscdata->p[sin_feedback].get_extended(localcopy[id_fb].f);
 
    double detune;
    double omega[MAX_UNISON];
@@ -119,14 +128,14 @@ void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
       if (n_unison > 1)
       {
-         if( oscdata->p[5].absolute )
+         if (oscdata->p[sin_unison_detune].absolute)
          {
-            detune += oscdata->p[5].get_extended(localcopy[oscdata->p[5].param_id_in_scene].f)
-               * storage->note_to_pitch_inv_ignoring_tuning( std::min( 148.f, pitch ) ) * 16 / 0.9443  * (detune_bias * float(l) + detune_offset);;
+            detune += oscdata->p[sin_unison_detune].get_extended(localcopy[oscdata->p[sin_unison_detune].param_id_in_scene].f) *
+                      storage->note_to_pitch_inv_ignoring_tuning(std::min(148.f, pitch)) * 16 / 0.9443 * (detune_bias * float(l) + detune_offset);
          }
          else
          {
-            detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
+            detune += oscdata->p[sin_unison_detune].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
          }
       }
 
@@ -140,8 +149,8 @@ void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM
    ** need phase to be in -Pi,Pi, that means if fv / Pi > 1e5 or so
    ** we have float precision problems. So lets clamp fv.
    */
-   fv = limit_range( fv, -1.0e6f, 1.0e6f );
-   
+   fv = limit_range(fv, -1.0e6f, 1.0e6f);
+
    FMdepth.newValue(fv);
    FB.newValue(abs(fb_val));
 
@@ -151,33 +160,33 @@ void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
       for (int u = 0; u < n_unison; u++)
       {
-          // Replicate FM2 exactly
-          float p = phase[u] + lastvalue[u];
-            
-          if (FM)
-             p += FMdepth.v * master_osc[k];
+         // Replicate FM2 exactly
+         float p = phase[u] + lastvalue[u];
 
-          // Unlike ::sin and ::cos we are limited in accurate range
-          p = Surge::DSP::clampToPiRange(p);
+         if (FM)
+            p += FMdepth.v * master_osc[k];
 
-          float out_local = valueFromSinAndCos(Surge::DSP::fastsin(p), Surge::DSP::fastcos(p));
+         // Unlike ::sin and ::cos we are limited in accurate range
+         p = Surge::DSP::clampToPiRange(p);
 
-          outL += (panL[u] * out_local) * playingramp[u] * out_attenuation;
-          outR += (panR[u] * out_local) * playingramp[u] * out_attenuation;
+         float out_local = valueFromSinAndCos(Surge::DSP::fastsin(p), Surge::DSP::fastcos(p));
 
-          if( playingramp[u] < 1 )
-             playingramp[u] += dplaying;
-          if( playingramp[u] > 1 )
-             playingramp[u] = 1;
-          
-          phase[u] += omega[u];
-          // phase in range -PI to PI
-          while ( phase[u] > M_PI )
-          {
-             phase[u] -= 2.0 * M_PI;
-          }
+         outL += (panL[u] * out_local) * playingramp[u] * out_attenuation;
+         outR += (panR[u] * out_local) * playingramp[u] * out_attenuation;
 
-          lastvalue[u] = (fb_val < 0) ? out_local * out_local * FB.v : out_local * FB.v;
+         if (playingramp[u] < 1)
+            playingramp[u] += dplaying;
+         if (playingramp[u] > 1)
+            playingramp[u] = 1;
+
+         phase[u] += omega[u];
+         // phase in range -PI to PI
+         while (phase[u] > M_PI)
+         {
+            phase[u] -= 2.0 * M_PI;
+         }
+
+         lastvalue[u] = (fb_val < 0) ? out_local * out_local * FB.v : out_local * FB.v;
       }
 
       FMdepth.process();
@@ -186,7 +195,7 @@ void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM
       if (stereo)
       {
          output[k] = outL;
-         outputR[k]= outR;
+         outputR[k] = outR;
       }
       else
          output[k] = (outL + outR) / 2;
@@ -196,24 +205,25 @@ void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
 void SinOscillator::applyFilter()
 {
-   if( ! oscdata->p[3].deactivated )
-      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[3].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING , 0.707);
-   if( ! oscdata->p[4].deactivated )
-      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[4].param_id_in_scene].f / 12.0 ) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[sin_lowcut].deactivated)
+      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[sin_lowcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   if (!oscdata->p[sin_highcut].deactivated)
+      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[sin_highcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
 
-   for (int k = 0; k < BLOCK_SIZE_OS; k+= BLOCK_SIZE )
+   for (int k = 0; k < BLOCK_SIZE_OS; k += BLOCK_SIZE)
    {
-      if( ! oscdata->p[3].deactivated )
-         hp.process_block( &(output[k]), &(outputR[k]) );
-      if( ! oscdata->p[4].deactivated )
-         lp.process_block( &(output[k]), &(outputR[k]) );
+      if (!oscdata->p[sin_lowcut].deactivated)
+         hp.process_block(&(output[k]), &(outputR[k]));
+      if (!oscdata->p[sin_highcut].deactivated)
+         lp.process_block(&(output[k]), &(outputR[k]));
    }
 }
 
-void SinOscillator::process_block_legacy(float pitch, float drift, bool stereo, bool FM, float fmdepth)
+void SinOscillator::process_block_legacy(
+    float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
-  double detune;
-  double omega[MAX_UNISON];
+   double detune;
+   double omega[MAX_UNISON];
 
    if (FM)
    {
@@ -224,14 +234,14 @@ void SinOscillator::process_block_legacy(float pitch, float drift, bool stereo, 
 
          if (n_unison > 1)
          {
-            if( oscdata->p[5].absolute )
+            if (oscdata->p[sin_unison_detune].absolute)
             {
-               detune += oscdata->p[5].get_extended(localcopy[oscdata->p[5].param_id_in_scene].f)
-                  * storage->note_to_pitch_inv_ignoring_tuning( std::min( 148.f, pitch ) ) * 16 / 0.9443  * (detune_bias * float(l) + detune_offset);;
+               detune += oscdata->p[sin_unison_detune].get_extended(localcopy[oscdata->p[sin_unison_detune].param_id_in_scene].f) *
+                         storage->note_to_pitch_inv_ignoring_tuning(std::min(148.f, pitch)) * 16 / 0.9443 * (detune_bias * float(l) + detune_offset);
             }
             else
             {
-               detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
+               detune += oscdata->p[sin_unison_detune].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
             }
          }
 
@@ -246,19 +256,19 @@ void SinOscillator::process_block_legacy(float pitch, float drift, bool stereo, 
 
          for (int u = 0; u < n_unison; u++)
          {
-             float out_local = valueFromSinAndCos(Surge::DSP::fastsin(phase[u]), Surge::DSP::fastcos(phase[u]));
+            float out_local =
+                valueFromSinAndCos(Surge::DSP::fastsin(phase[u]), Surge::DSP::fastcos(phase[u]));
 
-             outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
-             outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
+            outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
+            outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
 
+            if (playingramp[u] < 1)
+               playingramp[u] += dplaying;
+            if (playingramp[u] > 1)
+               playingramp[u] = 1;
 
-             if( playingramp[u] < 1 )
-                playingramp[u] += dplaying;
-             if( playingramp[u] > 1 )
-                playingramp[u] = 1;
-
-             phase[u] += omega[u] + master_osc[k] * FMdepth.v;
-             phase[u] = Surge::DSP::clampToPiRange(phase[u]);
+            phase[u] += omega[u] + master_osc[k] * FMdepth.v;
+            phase[u] = Surge::DSP::clampToPiRange(phase[u]);
          }
 
          FMdepth.process();
@@ -281,7 +291,7 @@ void SinOscillator::process_block_legacy(float pitch, float drift, bool stereo, 
          detune = drift * driftlfo[l];
 
          if (n_unison > 1)
-            detune += oscdata->p[5].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
+            detune += oscdata->p[sin_unison_detune].get_extended(localcopy[id_detune].f) * (detune_bias * float(l) + detune_offset);
 
          omega[l] = std::min(M_PI, (double)pitch_to_omega(pitch + detune));
          sinus[l].set_rate(omega[l]);
@@ -293,22 +303,20 @@ void SinOscillator::process_block_legacy(float pitch, float drift, bool stereo, 
 
          for (int u = 0; u < n_unison; u++)
          {
-             sinus[u].process();
+            sinus[u].process();
 
-             float sinx = sinus[u].r;
-             float cosx = sinus[u].i;
+            float sinx = sinus[u].r;
+            float cosx = sinus[u].i;
 
-             float out_local = valueFromSinAndCos(sinx, cosx);
+            float out_local = valueFromSinAndCos(sinx, cosx);
 
-             outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
-             outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
+            outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
+            outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
 
-             
-             if( playingramp[u] < 1 )
-                playingramp[u] += dplaying;
-             if( playingramp[u] > 1 )
-                playingramp[u] = 1;
-
+            if (playingramp[u] < 1)
+               playingramp[u] += dplaying;
+            if (playingramp[u] > 1)
+               playingramp[u] = 1;
          }
 
          if (stereo)
@@ -341,8 +349,6 @@ float SinOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
       quadrant = 3;
    else
       quadrant = 4;
-
-   //   0, 4, 9, 10, 6, 11, 12, 13,  1, 2,  3,  5,  7,  8, 14, 15, 16, 17, 18, 19
 
    switch (wfMode)
    {
@@ -608,73 +614,74 @@ float SinOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
    return pvalue;
 }
 
-void SinOscillator::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
+void SinOscillator::handleStreamingMismatches(int streamingRevision,
+                                              int currentSynthStreamingRevision)
 {
-   if( streamingRevision <= 9 )
+   if (streamingRevision <= 9)
    {
-      oscdata->p[0].val.i = oscdata->p[0].val_min.i;
+      oscdata->p[sin_shape].val.i = oscdata->p[sin_shape].val_min.i;
    }
-   if( streamingRevision <= 10 )
+   if (streamingRevision <= 10)
    {
-      oscdata->p[1].val.f = 0;
-      oscdata->p[2].val.i = 0;
+      oscdata->p[sin_feedback].val.f = 0;
+      oscdata->p[sin_FMmode].val.i = 0;
    }
-   if( streamingRevision <= 12 )
+   if (streamingRevision <= 12)
    {
-      oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
-      oscdata->p[3].deactivated = true;
-      oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
-      oscdata->p[4].deactivated = true;
-      oscdata->p[1].set_type(ct_osc_feedback);
+      oscdata->p[sin_lowcut].val.f = oscdata->p[sin_lowcut].val_min.f; // high cut at the bottom
+      oscdata->p[sin_lowcut].deactivated = true;
+      oscdata->p[sin_highcut].val.f = oscdata->p[sin_highcut].val_max.f; // low cut at the top
+      oscdata->p[sin_highcut].deactivated = true;
+      oscdata->p[sin_feedback].set_type(ct_osc_feedback);
 
       int wave_remap[] = {0, 8, 9, 10, 1, 11, 4, 12, 13, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18, 19};
 
       // range checking for garbage data
-      if (oscdata->p[0].val.i < 0 || (oscdata->p[0].val.i >= (sizeof wave_remap) / sizeof *wave_remap))
-         oscdata->p[0].val.i = oscdata->p[0].val_min.i;
+      if (oscdata->p[sin_shape].val.i < 0 || (oscdata->p[sin_shape].val.i >= (sizeof wave_remap) / sizeof *wave_remap))
+         oscdata->p[sin_shape].val.i = oscdata->p[sin_shape].val_min.i;
       else
       {
          // make sure old patches still point to the correct waveforms
-         oscdata->p[0].val.i = wave_remap[oscdata->p[0].val.i];
+         oscdata->p[sin_shape].val.i = wave_remap[oscdata->p[sin_shape].val.i];
       }
    }
 }
 
 void SinOscillator::init_ctrltypes()
 {
-   oscdata->p[0].set_name("Shape");
-   oscdata->p[0].set_type(ct_sineoscmode);
+   oscdata->p[sin_shape].set_name("Shape");
+   oscdata->p[sin_shape].set_type(ct_sineoscmode);
 
-   oscdata->p[1].set_name("Feedback");
-   oscdata->p[1].set_type(ct_osc_feedback_negative);
+   oscdata->p[sin_feedback].set_name("Feedback");
+   oscdata->p[sin_feedback].set_type(ct_osc_feedback_negative);
 
-   oscdata->p[2].set_name("FM Behaviour");
-   oscdata->p[2].set_type(ct_sinefmlegacy);
+   oscdata->p[sin_FMmode].set_name("FM Behaviour");
+   oscdata->p[sin_FMmode].set_type(ct_sinefmlegacy);
 
-   oscdata->p[3].set_name("Low Cut");
-   oscdata->p[3].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[sin_lowcut].set_name("Low Cut");
+   oscdata->p[sin_lowcut].set_type(ct_freq_audible_deactivatable);
 
-   oscdata->p[4].set_name("High Cut");
-   oscdata->p[4].set_type(ct_freq_audible_deactivatable);
+   oscdata->p[sin_highcut].set_name("High Cut");
+   oscdata->p[sin_highcut].set_type(ct_freq_audible_deactivatable);
 
-   oscdata->p[5].set_name("Unison Detune");
-   oscdata->p[5].set_type(ct_oscspread);
+   oscdata->p[sin_unison_detune].set_name("Unison Detune");
+   oscdata->p[sin_unison_detune].set_type(ct_oscspread);
 
-   oscdata->p[6].set_name("Unison Voices");
-   oscdata->p[6].set_type(ct_osccount);
+   oscdata->p[sin_unison_voices].set_name("Unison Voices");
+   oscdata->p[sin_unison_voices].set_type(ct_osccount);
 }
 
 void SinOscillator::init_default_values()
 {
-   oscdata->p[0].val.i = 0;
-   oscdata->p[1].val.f = 0;
-   oscdata->p[2].val.i = 1;
+   oscdata->p[sin_shape].val.i = 0;
+   oscdata->p[sin_feedback].val.f = 0;
+   oscdata->p[sin_FMmode].val.i = 1;
+
+   oscdata->p[sin_lowcut].val.f = oscdata->p[sin_lowcut].val_min.f; // high cut at the bottom
+   oscdata->p[sin_lowcut].deactivated = true;
+   oscdata->p[sin_highcut].val.f = oscdata->p[sin_highcut].val_max.f; // low cut at the top
+   oscdata->p[sin_highcut].deactivated = true;
    
-   oscdata->p[3].val.f = oscdata->p[3].val_min.f; // high cut at the bottom
-   oscdata->p[3].deactivated = true;
-   oscdata->p[4].val.f = oscdata->p[4].val_max.f; // low cut at the top
-   oscdata->p[4].deactivated = true;
-   
-   oscdata->p[5].val.f = 0.2;
-   oscdata->p[6].val.i = 1;
+   oscdata->p[sin_unison_detune].val.f = 0.2;
+   oscdata->p[sin_unison_voices].val.i = 1;
 }

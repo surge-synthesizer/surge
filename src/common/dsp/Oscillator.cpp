@@ -39,10 +39,10 @@ spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata*
       return new SurgeSuperOscillator(storage, oscdata, localcopy);
    case ot_wavetable:
       return new WavetableOscillator(storage, oscdata, localcopy);
-   case ot_WT2:
+   case ot_window:
    {
-      // In the event we are misconfigured, window will segv. If you still play
-      // after clicking through 100 warnings, lets jsut give youa sin
+      // In the event we are misconfigured, window oscillator will segfault. If you still play
+      // after clicking through 100 warnings, let's just give you a sine
       if( storage && storage->WindowWT.size == 0 )
          return new SinOscillator( storage, oscdata, localcopy );
  
@@ -56,7 +56,7 @@ spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata*
       return new FM3Oscillator(storage, oscdata, localcopy);
    case ot_FM2:
       return new FM2Oscillator(storage, oscdata, localcopy);
-   case ot_sinus:
+   case ot_sine:
    default:
       return new SinOscillator(storage, oscdata, localcopy);
    }

@@ -20,8 +20,6 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-const int wt2_suboscs = 16;
-
 class WindowOscillator : public Oscillator
 {
 private:
@@ -29,18 +27,17 @@ private:
    int IOutputR alignas(16)[BLOCK_SIZE_OS];
    struct
    {
-      unsigned int Pos[wt2_suboscs];
-      unsigned int SubPos[wt2_suboscs];
-      unsigned int Ratio[wt2_suboscs];
-      unsigned int Table[wt2_suboscs];
-      unsigned int FormantMul[wt2_suboscs];
-      unsigned int DispatchDelay[wt2_suboscs]; // samples until playback should start (for
-                                               // per-sample scheduling)
-      unsigned char Gain[wt2_suboscs][2];
-      float DriftLFO[wt2_suboscs][2];
+      unsigned int Pos[MAX_UNISON];
+      unsigned int SubPos[MAX_UNISON];
+      unsigned int Ratio[MAX_UNISON];
+      unsigned int Table[MAX_UNISON];
+      unsigned int FormantMul[MAX_UNISON];
+      unsigned int DispatchDelay[MAX_UNISON]; // samples until playback should start (for per-sample scheduling)
+      unsigned char Gain[MAX_UNISON][2];
+      float DriftLFO[MAX_UNISON][2];
 
-      int FMRatio[wt2_suboscs][BLOCK_SIZE_OS];
-   } Sub alignas(16);
+      int FMRatio[MAX_UNISON][BLOCK_SIZE_OS];
+   } Window alignas(16);
 
 public:
    WindowOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
@@ -56,10 +53,10 @@ private:
    BiquadFilter lp, hp;
    void applyFilter();
 
-   void ProcessSubOscs(bool stereo, bool FM);
-   lag<double> FMdepth[wt2_suboscs];
+   void ProcessWindowOscs(bool stereo, bool FM);
+   lag<double> FMdepth[MAX_UNISON];
 
    float OutAttenuation;
    float DetuneBias, DetuneOffset;
-   int ActiveSubOscs;
+   int NumUnison;
 };

@@ -1491,7 +1491,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       case ct_freq_shift:
       case ct_osc_feedback_negative:
       case ct_lfodeform:
-      case ct_airwindow_param_bipolar:
+      case ct_airwindows_param_bipolar:
          style |= kBipolar;
          break;
       case ct_lfoamplitude:
@@ -6845,7 +6845,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       CPoint loc(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs );
 
       // This is still a bit of a special case
-      if( p->ctrltype == ct_airwindow_fx ||
+      if( p->ctrltype == ct_airwindows_fx ||
           p->ctrltype == ct_flangermode ||
           p->ctrltype == ct_flangerwave ||
           p->ctrltype == ct_distortion_waveshape )
