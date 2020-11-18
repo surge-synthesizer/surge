@@ -185,13 +185,13 @@ const char character_names[n_charactermodes][16] =
 enum osc_types
 {
    ot_classic = 0,
-   ot_sinus,
+   ot_sine,
    ot_wavetable,
    ot_shnoise,
    ot_audioinput,
-   ot_FM3, // it used to just FM, then the UI called it FM3, so name it this way but this order has to stick
+   ot_FM3, // it used to be just FM, then the UI called it FM3, so name it like this, but the order of enums has to stick
    ot_FM2,
-   ot_WT2,
+   ot_window,
    num_osctypes,
 };
 const char osc_type_names[num_osctypes][16] =
@@ -224,7 +224,7 @@ inline bool uses_wavetabledata(int i)
    switch (i)
    {
    case ot_wavetable:
-   case ot_WT2:
+   case ot_window:
       return true;
    }
    return false;

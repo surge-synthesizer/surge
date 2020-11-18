@@ -18,7 +18,7 @@ TEST_CASE( "Simple Single Oscillator is Constant", "[dsp]" )
 {
    auto surge = Surge::Headless::createSurge(44100);
    REQUIRE( surge );
-   // surge->storage.getPatch().scene[0].osc[0].type.val.i = ot_sinus;
+   // surge->storage.getPatch().scene[0].osc[0].type.val.i = ot_sine;
 
    int len = 4410 * 5;
    //int len = BLOCK_SIZE * 20;

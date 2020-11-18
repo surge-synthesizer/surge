@@ -391,7 +391,7 @@ TEST_CASE( "Stream WaveTable Names", "[io]" )
                }
                else
                {
-                  patch->scene[s].osc[o].type.val.i = ot_sinus;
+                  patch->scene[s].osc[o].type.val.i = ot_sine;
                   names.push_back( "" );
                }
             }
