@@ -1,30 +1,10 @@
 <svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-<mask id="path-1-inside-1" fill="white">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 6C2.5 4.06701 4.06701 2.5 6 2.5C7.93299 2.5 9.5 4.06701 9.5 6C9.5 7.93299 7.93299 9.5 6 9.5C4.06701 9.5 2.5 7.93299 2.5 6Z"/>
-</mask>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 6C2.5 4.06701 4.06701 2.5 6 2.5C7.93299 2.5 9.5 4.06701 9.5 6C9.5 7.93299 7.93299 9.5 6 9.5C4.06701 9.5 2.5 7.93299 2.5 6Z" fill="#FF9300" stroke="#FF9300" stroke-width="2" mask="url(#path-1-inside-1)"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 18C0.5 14.9624 2.96243 12.5 6 12.5C9.03757 12.5 11.5 14.9624 11.5 18C11.5 21.0376 9.03757 23.5 6 23.5C2.96243 23.5 0.5 21.0376 0.5 18Z" fill="#FF9915"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 18C0.5 14.9624 2.96243 12.5 6 12.5C9.03757 12.5 11.5 14.9624 11.5 18C11.5 21.0376 9.03757 23.5 6 23.5C2.96243 23.5 0.5 21.0376 0.5 18Z" fill="#2F1C04"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 18C0.5 14.9624 2.96243 12.5 6 12.5C9.03757 12.5 11.5 14.9624 11.5 18C11.5 21.0376 9.03757 23.5 6 23.5C2.96243 23.5 0.5 21.0376 0.5 18Z" stroke="white"/>
-<mask id="path-3-inside-2" fill="white">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 18C2.5 16.067 4.06701 14.5 6 14.5C7.93299 14.5 9.5 16.067 9.5 18C9.5 19.933 7.93299 21.5 6 21.5C4.06701 21.5 2.5 19.933 2.5 18Z"/>
-</mask>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 18C2.5 16.067 4.06701 14.5 6 14.5C7.93299 14.5 9.5 16.067 9.5 18C9.5 19.933 7.93299 21.5 6 21.5C4.06701 21.5 2.5 19.933 2.5 18Z" fill="white" stroke="white" stroke-width="2" mask="url(#path-3-inside-2)"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 30C0.5 26.9624 2.96243 24.5 6 24.5C9.03757 24.5 11.5 26.9624 11.5 30C11.5 33.0376 9.03757 35.5 6 35.5C2.96243 35.5 0.5 33.0376 0.5 30Z" fill="#FF9300"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 30C0.5 26.9624 2.96243 24.5 6 24.5C9.03757 24.5 11.5 26.9624 11.5 30C11.5 33.0376 9.03757 35.5 6 35.5C2.96243 35.5 0.5 33.0376 0.5 30Z" stroke="#FF9915"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 30C0.5 26.9624 2.96243 24.5 6 24.5C9.03757 24.5 11.5 26.9624 11.5 30C11.5 33.0376 9.03757 35.5 6 35.5C2.96243 35.5 0.5 33.0376 0.5 30Z" stroke="#2F1C04"/>
-<mask id="path-5-inside-3" fill="white">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 30C2.5 28.067 4.06701 26.5 6 26.5C7.93299 26.5 9.5 28.067 9.5 30C9.5 31.933 7.93299 33.5 6 33.5C4.06701 33.5 2.5 31.933 2.5 30Z"/>
-</mask>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 30C2.5 28.067 4.06701 26.5 6 26.5C7.93299 26.5 9.5 28.067 9.5 30C9.5 31.933 7.93299 33.5 6 33.5C4.06701 33.5 2.5 31.933 2.5 30Z" fill="#FF9915"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 30C2.5 28.067 4.06701 26.5 6 26.5C7.93299 26.5 9.5 28.067 9.5 30C9.5 31.933 7.93299 33.5 6 33.5C4.06701 33.5 2.5 31.933 2.5 30Z" fill="#2F1C04"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 30C2.5 28.067 4.06701 26.5 6 26.5C7.93299 26.5 9.5 28.067 9.5 30C9.5 31.933 7.93299 33.5 6 33.5C4.06701 33.5 2.5 31.933 2.5 30Z" stroke="#FF9915" stroke-width="2" mask="url(#path-5-inside-3)"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 30C2.5 28.067 4.06701 26.5 6 26.5C7.93299 26.5 9.5 28.067 9.5 30C9.5 31.933 7.93299 33.5 6 33.5C4.06701 33.5 2.5 31.933 2.5 30Z" stroke="#2F1C04" stroke-width="2" mask="url(#path-5-inside-3)"/>
+<path d="M3 6C3 4.34315 4.34315 3 6 3C7.65685 3 9 4.34315 9 6C9 7.65685 7.65685 9 6 9C4.34315 9 3 7.65685 3 6Z" fill="#FF9300" stroke="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 18C0.5 14.9624 2.96243 12.5 6 12.5C9.03757 12.5 11.5 14.9624 11.5 18C11.5 21.0376 9.03757 23.5 6 23.5C2.96243 23.5 0.5 21.0376 0.5 18Z" fill="#2F1C04" stroke="white"/>
+<path d="M3 18C3 16.3432 4.34315 15 6 15C7.65685 15 9 16.3432 9 18C9 19.6568 7.65685 21 6 21C4.34315 21 3 19.6568 3 18Z" fill="white" stroke="white"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 30C0.5 26.9624 2.96243 24.5 6 24.5C9.03757 24.5 11.5 26.9624 11.5 30C11.5 33.0376 9.03757 35.5 6 35.5C2.96243 35.5 0.5 33.0376 0.5 30Z" fill="#FF9000" stroke="#2F1C04"/>
+<path d="M3 30C3 28.3432 4.34315 27 6 27C7.65685 27 9 28.3432 9 30C9 31.6568 7.65685 33 6 33C4.34315 33 3 31.6568 3 30Z" fill="#2F1C04" stroke="#2F1C04"/>
 <rect x="18" y="2.99994" width="4" height="4" transform="rotate(45 18 2.99994)" stroke="#FF9300"/>
-<rect x="18" y="14.9999" width="4" height="4" transform="rotate(45 18 14.9999)" fill="#FF9915"/>
-<rect x="18" y="14.9999" width="4" height="4" transform="rotate(45 18 14.9999)" fill="#2F1C04"/>
-<rect x="18" y="14.9999" width="4" height="4" transform="rotate(45 18 14.9999)" stroke="white"/>
-<rect x="18" y="26.9999" width="4" height="4" transform="rotate(45 18 26.9999)" fill="#FF9300"/>
-<rect x="18" y="26.9999" width="4" height="4" transform="rotate(45 18 26.9999)" stroke="#FF9915"/>
-<rect x="18" y="26.9999" width="4" height="4" transform="rotate(45 18 26.9999)" stroke="#2F1C04"/>
+<rect x="18" y="14.9999" width="4" height="4" transform="rotate(45 18 14.9999)" fill="#2F1C04" stroke="white"/>
+<rect x="18" y="26.9999" width="4" height="4" transform="rotate(45 18 26.9999)" fill="#FF9000" stroke="#2F1C04"/>
 </svg>
