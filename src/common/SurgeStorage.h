@@ -42,14 +42,21 @@
 #define PATH_SEPARATOR '/'
 #endif
 
-// patch layer
-
+const int n_scenes = 2;
+const int n_scene_params = 271;
 const int n_oscs = 3;
+const int n_osc_params = 7;
+const int n_filterunits_per_scene = 2;
 const int n_lfos_voice = 6;
 const int n_lfos_scene = 6;
 const int n_lfos = n_lfos_voice + n_lfos_scene;
-const int n_osc_params = 7;
 const int n_fx_params = 12;
+const int n_fx_slots = 8;
+const int n_global_params = 113;
+const int n_global_postparams = 1;
+const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
+const int metaparam_offset = 20480; // has to be bigger than total + (16 * 130) for fake VST3 mapping
+
 const int FIRipol_M = 256;
 const int FIRipol_M_bits = 8;
 const int FIRipol_N = 12;
@@ -57,25 +64,23 @@ const int FIRoffset = FIRipol_N >> 1;
 const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
-const int n_fx_slots=8;
-
-// XML storage fileformat revision
-// 0 -> 1 new EG attack shapes (0>1, 1>2, 2>2)
-// 1 -> 2 new LFO EG stages (if (decay == max) sustain = max else sustain = min
-// 2 -> 3 filter subtypes added comb should default to 1 and moog to 3
-// 3 -> 4 comb+/- combined into 1 filtertype (subtype 0,0->0 0,1->1 1,0->2 1,1->3 )
-// 4 -> 5 stereo filterconf now have seperate pan controls
-// 5 -> 6 new filter sound in v1.2 (same parameters, but different sound & changed resonance response)
-// 6 -> 7 custom controller state now stored (in seq. recall)
-// 7 -> 8 larger resonance range (old filters are set to subtype 1), pan2 -> width
-// 8 -> 9 now 8 macros (offset IDs larger than ctrl7 by +1), macros have names (guess for pre-rev9 patches)
-// 9 -> 10 added character parameter
-// 10 -> 11 (1.6.2 release) added DAW extra state
-// 11 -> 12 (1.6.3 release) added new parameters to Distortion effect
-// 12 -> 13 (1.7.0 release) parameter deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
-// 13 -> 14 (1.8.0 release) add phaser stages parameter, add vocoder modulator input channel parameter, osc retrigger actually works for window/sine/FM2/FM3
-
 const int ff_revision = 14;
+
+// XML storage file format revisions
+//  0 ->  1: new EG attack shapes (0>1, 1>2, 2>2)
+//  1 ->  2: new LFO EG stages (if (decay == max) sustain = max else sustain = min
+//  2 ->  3: filter subtypes added - comb should default to 1 and ladder to 3
+//  3 ->  4: comb +/- combined into one filter type (subtype 0,0->0 0,1->1 1,0->2 1,1->3 )
+//  4 ->  5: stereo filter configuration now has seperate pan controls
+//  5 ->  6: new filter sound in v1.2 (same parameters, but different sound and changed resonance response)
+//  6 ->  7: macro state now stored (in DAW recall)
+//  7 ->  8: larger resonance range (old filters are set to subtype 1), pan2 -> width
+//  8 ->  9: now 8 macros (offset IDs larger than ctrl7 by +1), macros have names (guess for pre-rev9 patches)
+//  9 -> 10: added Character parameter
+// 10 -> 11: (1.6.2 release) added DAW extra state
+// 11 -> 12: (1.6.3 release) added new parameters to Distortion effect
+// 12 -> 13: (1.7.0 release) parameter deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
+// 13 -> 14: (1.8.0 release) add phaser stages parameter, add vocoder modulator input channel parameter, osc retrigger actually works for window/sine/FM2/FM3
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -88,14 +93,6 @@ extern float table_note_omega alignas(16)[2][512];
 extern float samplerate, samplerate_inv;
 extern double dsamplerate, dsamplerate_inv;
 extern double dsamplerate_os, dsamplerate_os_inv;
-
-const int n_scene_params = 271;
-const int n_global_params = 113;
-const int n_global_postparams = 1;
-const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
-const int metaparam_offset = 20480; // has to be bigger than total + 16 * 130 for fake VST3 mapping
-const int n_scenes = 2;
-const int n_filterunits_per_scene = 2;
 
 enum scene_mode
 {
@@ -506,11 +503,6 @@ const float fut_k35_saturations[5] =
    4.0f
 };
 
-const char fut_diode_subtypes[1][32] =
-{
-   "24 dB/oct"
-};
-
 const int fut_subcount[n_fu_type] =
 {
    0, // fut_none
@@ -602,8 +594,8 @@ struct MidiChannelState
    float timbre;
 };
 
-// I have used the ordering here in SurgeGUIEditor to iterate. Be careful if tyoe or retrigger move from first/last position.
-struct OscillatorStorage : public CountedSetUserData // The counted set is the wt tables
+// I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move from first/last position.
+struct OscillatorStorage : public CountedSetUserData // The counted set is the wavetables
 {
    Parameter type;
    Parameter pitch, octave;
@@ -653,7 +645,7 @@ struct LFOStorage
 
 struct FxStorage
 {
-   // Just a heads up if you change this please go look at fx_reorder in SurgeSorage too
+   // Just a heads up: if you change this, please go look at fx_reorder in SurgeSorage too
    Parameter type;
    Parameter return_level;
    Parameter p[n_fx_params];
@@ -769,7 +761,7 @@ struct FormulaModulatorStorage { // Currently an unused placeholder
 };
 
 /*
-** There are a collection of things we want your DAW to save about your particular instance
+** There is a collection of things we want your DAW to save about your particular instance
 ** but don't want saved in your patch. So have this extra structure in the patch which we
 ** can activate/populate from the DAW hosts. See #915
 */
@@ -918,7 +910,8 @@ enum surge_copysource
    n_copysources,
 };
 
-/* STORAGE layer			*/
+
+
 
 class alignas(16) SurgeStorage
 {
@@ -926,7 +919,6 @@ public:
    float audio_in alignas(16)[2][BLOCK_SIZE_OS];
    float audio_in_nonOS alignas(16)[2][BLOCK_SIZE];
    float audio_otherscene alignas(16)[2][BLOCK_SIZE_OS]; // this will be a pointer to an aligned 2 x BLOCK_SIZE_OS array
-   //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
 
    SurgeStorage(std::string suppliedDataPath="");
@@ -974,7 +966,6 @@ public:
    void load_wt(int id, Wavetable* wt, OscillatorStorage *);
    void load_wt(std::string filename, Wavetable* wt, OscillatorStorage *);
    bool load_wt_wt(std::string filename, Wavetable* wt);
-   // void load_wt_wav(std::string filename, Wavetable* wt);
    void load_wt_wav_portable(std::string filename, Wavetable *wt);
    void export_wt_wav_portable(std::string fbase, Wavetable *wt);
    void clipboard_copy(int type, int scene, int entry);
@@ -1011,7 +1002,6 @@ public:
    void loadMidiMappingByName( std::string name );
    void storeMidiMappingToName( std::string name );
 
-   // float table_sin[512],table_sin_offset[512];
    std::mutex waveTableDataMutex;
    std::recursive_mutex modRoutingMutex;
    Wavetable WindowWT;
@@ -1058,7 +1048,7 @@ public:
    std::unordered_map<int, std::string> helpURL_controlgroup;
    std::unordered_map<std::string, std::string> helpURL_paramidentifier;
    std::unordered_map<std::string, std::string> helpURL_specials;
-   // Alterhately make this unordered and provide a hash
+   // Alternately make this unordered and provide a hash
    std::map<std::pair<std::string,int>, std::string> helpURL_paramidentifier_typespecialized;
 
 private:
@@ -1104,8 +1094,8 @@ std::string appendDirectory( const std::string &root, const std::string &path1, 
 }
 
 /*
-** ToElement does a this && check to check nulls. (As does ToDocument and so on).
-** gcc -O3 on linux optimizes that away giving crashes. So do this instead
-** See github issue #469
+** ToElement does this && check to check nulls. (As does ToDocument and so on).
+** gcc -O3 on Linux optimizes that away giving crashes. So do this instead
+** See GitHub issue #469
 */
 #define TINYXML_SAFE_TO_ELEMENT(expr) ((expr)?(expr)->ToElement():NULL)
