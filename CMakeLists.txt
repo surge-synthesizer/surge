@@ -220,7 +220,7 @@ set(SURGE_COMMON_SOURCES
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp
   src/common/dsp/SampleAndHoldOscillator.cpp
-  src/common/dsp/SinOscillator.cpp
+  src/common/dsp/SineOscillator.cpp
   src/common/dsp/SurgeSuperOscillator.cpp
   src/common/dsp/SurgeVoice.cpp
   src/common/dsp/VectorizedSvfFilter.cpp

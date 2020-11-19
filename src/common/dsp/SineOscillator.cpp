@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "SinOscillator.h"
+#include "SineOscillator.h"
 #include "FastMath.h"
 #include <algorithm>
 
@@ -28,11 +28,11 @@ enum sine_params
    sin_unison_voices,
 };
 
-SinOscillator::SinOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
+SineOscillator::SineOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
    : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {}
 
-void SinOscillator::prepare_unison(int voices)
+void SineOscillator::prepare_unison(int voices)
 {
    out_attenuation_inv = sqrt((float)voices);
    out_attenuation = 0.8 / out_attenuation_inv + 0.2 / voices;
@@ -71,7 +71,7 @@ void SinOscillator::prepare_unison(int voices)
    }
 }
 
-void SinOscillator::init(float pitch, bool is_display)
+void SineOscillator::init(float pitch, bool is_display)
 {
    n_unison = limit_range(oscdata->p[sin_unison_voices].val.i, 1, MAX_UNISON);
    if (is_display)
@@ -104,10 +104,10 @@ void SinOscillator::init(float pitch, bool is_display)
    lp.coeff_LP2B(lp.calc_omega(oscdata->p[sin_highcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 }
 
-SinOscillator::~SinOscillator()
+SineOscillator::~SineOscillator()
 {}
 
-void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
+void SineOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
    if (localcopy[id_fmlegacy].i == 0)
    {
@@ -203,7 +203,7 @@ void SinOscillator::process_block(float pitch, float drift, bool stereo, bool FM
    applyFilter();
 }
 
-void SinOscillator::applyFilter()
+void SineOscillator::applyFilter()
 {
    if (!oscdata->p[sin_lowcut].deactivated)
       hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[sin_lowcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
@@ -219,7 +219,7 @@ void SinOscillator::applyFilter()
    }
 }
 
-void SinOscillator::process_block_legacy(
+void SineOscillator::process_block_legacy(
     float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
    double detune;
@@ -330,7 +330,7 @@ void SinOscillator::process_block_legacy(
    }
 }
 
-float SinOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
+float SineOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
 {
    float pvalue = sinx;
 
@@ -614,7 +614,7 @@ float SinOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
    return pvalue;
 }
 
-void SinOscillator::handleStreamingMismatches(int streamingRevision,
+void SineOscillator::handleStreamingMismatches(int streamingRevision,
                                               int currentSynthStreamingRevision)
 {
    if (streamingRevision <= 9)
@@ -647,7 +647,7 @@ void SinOscillator::handleStreamingMismatches(int streamingRevision,
    }
 }
 
-void SinOscillator::init_ctrltypes()
+void SineOscillator::init_ctrltypes()
 {
    oscdata->p[sin_shape].set_name("Shape");
    oscdata->p[sin_shape].set_type(ct_sineoscmode);
@@ -671,7 +671,7 @@ void SinOscillator::init_ctrltypes()
    oscdata->p[sin_unison_voices].set_type(ct_osccount);
 }
 
-void SinOscillator::init_default_values()
+void SineOscillator::init_default_values()
 {
    oscdata->p[sin_shape].val.i = 0;
    oscdata->p[sin_feedback].val.f = 0;

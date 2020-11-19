@@ -20,16 +20,16 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-class SinOscillator : public Oscillator
+class SineOscillator : public Oscillator
 {
 public:
-   SinOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
+   SineOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
    virtual void process_block(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
    virtual void process_block_legacy(
        float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f);
-   virtual ~SinOscillator();
+   virtual ~SineOscillator();
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
 
