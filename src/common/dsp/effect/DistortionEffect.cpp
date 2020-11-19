@@ -1,16 +1,13 @@
 #include "DistortionEffect.h"
 #include <vt_dsp/halfratefilter.h>
 
-/* distortion			*/
-
-// feedback kan bli knepigt med sse-packed
+// feedback can get tricky with packed SSE
 
 const int dist_OS_bits = 2;
 const int distortion_OS = 1 << dist_OS_bits;
 
 DistortionEffect::DistortionEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
-    : Effect(storage, fxdata, pd), band1(storage), band2(storage), lp1(storage), lp2(storage),
-      hr_a(3, false), hr_b(3, true)
+    : Effect(storage, fxdata, pd), band1(storage), band2(storage), lp1(storage), lp2(storage), hr_a(3, false), hr_b(3, true)
 {
    lp1.setBlockSize(BLOCK_SIZE * distortion_OS);
    lp2.setBlockSize(BLOCK_SIZE * distortion_OS);
@@ -28,9 +25,9 @@ void DistortionEffect::init()
    band2.suspend();
    lp1.suspend();
    lp2.suspend();
-   bi = 0;
-   L = 0;
-   R = 0;
+   bi = 0.f;
+   L = 0.f;
+   R = 0.f;
 }
 
 void DistortionEffect::setvars(bool init)
@@ -38,23 +35,21 @@ void DistortionEffect::setvars(bool init)
 
    if (init)
    {
-      float pregain = fxdata->p[0].get_extended(fxdata->p[0].val.f);
-      float postgain = fxdata->p[6].get_extended(fxdata->p[6].val.f);
-      band1.coeff_peakEQ(band1.calc_omega(fxdata->p[1].val.f / 12.f), fxdata->p[2].val.f,
-                         pregain);
-      band2.coeff_peakEQ(band2.calc_omega(fxdata->p[7].val.f / 12.f), fxdata->p[8].val.f,
-                         postgain);
+      float pregain = fxdata->p[dist_preeq_gain].get_extended(fxdata->p[dist_preeq_gain].val.f);
+      float postgain = fxdata->p[dist_posteq_gain].get_extended(fxdata->p[dist_posteq_gain].val.f);
+      band1.coeff_peakEQ(band1.calc_omega(fxdata->p[dist_preeq_freq].val.f / 12.f), fxdata->p[dist_preeq_bw].val.f, pregain);
+      band2.coeff_peakEQ(band2.calc_omega(fxdata->p[dist_posteq_freq].val.f / 12.f), fxdata->p[dist_posteq_bw].val.f, postgain);
       drive.set_target(0.f);
       outgain.set_target(0.f);
    }
    else
    {
-      float pregain = fxdata->p[0].get_extended(*f[0]);
-      float postgain = fxdata->p[6].get_extended(*f[6]);
-      band1.coeff_peakEQ(band1.calc_omega(*f[1] / 12.f), *f[2], pregain);
-      band2.coeff_peakEQ(band2.calc_omega(*f[7] / 12.f), *f[8], postgain);
-      lp1.coeff_LP2B(lp1.calc_omega((*f[3] / 12.0) - 2.f), 0.707);
-      lp2.coeff_LP2B(lp2.calc_omega((*f[9] / 12.0) - 2.f), 0.707);
+      float pregain = fxdata->p[dist_preeq_gain].get_extended(*f[dist_preeq_gain]);
+      float postgain = fxdata->p[dist_posteq_gain].get_extended(*f[dist_posteq_gain]);
+      band1.coeff_peakEQ(band1.calc_omega(*f[dist_preeq_freq] / 12.f), *f[dist_preeq_bw], pregain);
+      band2.coeff_peakEQ(band2.calc_omega(*f[dist_posteq_freq] / 12.f), *f[dist_posteq_bw], postgain);
+      lp1.coeff_LP2B(lp1.calc_omega((*f[dist_preeq_highcut] / 12.0) - 2.f), 0.707);
+      lp2.coeff_LP2B(lp2.calc_omega((*f[dist_posteq_highcut] / 12.0) - 2.f), 0.707);
       lp1.coeff_instantize();
       lp2.coeff_instantize();
    }
@@ -68,13 +63,13 @@ void DistortionEffect::process(float* dataL, float* dataR)
    bi = (bi + 1) & slowrate_m1;
 
    band1.process_block(dataL, dataR);
-   drive.set_target_smoothed(db_to_linear(fxdata->p[4].get_extended(*f[4])));
-   outgain.set_target_smoothed(db_to_linear(*f[10]));
-   float fb = *f[5];
-   int ws = *pdata_ival[11];
-   if( ws < 0 || ws >= n_ws_type )
+   drive.set_target_smoothed(db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive])));
+   outgain.set_target_smoothed(db_to_linear(*f[dist_gain]));
+   float fb = *f[dist_feedback];
+   int ws = *pdata_ival[dist_model];
+   if (ws < 0 || ws >= n_ws_type)
       ws = 0;
-   
+
    float bL alignas(16)[BLOCK_SIZE << dist_OS_bits];
    float bR alignas(16)[BLOCK_SIZE << dist_OS_bits];
    assert(dist_OS_bits == 2);
@@ -99,34 +94,12 @@ void DistortionEffect::process(float* dataL, float* dataR)
          bL[s + (k << dist_OS_bits)] = L;
          bR[s + (k << dist_OS_bits)] = R;
       }
-      // dataL[k] = L*outgain;
-      // dataR[k] = R*outgain;
    }
-
-   /*for(int k=0; k<BLOCK_SIZE; k++)
-   {
-           int kOS = k<<dist_OS_bits;
-           //dataL[k] *= drive;
-           //dataR[k] *= drive;
-           lp1.process_sample_nolag(dataL[k],dataR[k],L[kOS],R[kOS]);
-           lp1.process_sample_nolag_noinput(L[kOS+1],R[kOS+1]);
-           lp1.process_sample_nolag_noinput(L[kOS+2],R[kOS+2]);
-           lp1.process_sample_nolag_noinput(L[kOS+3],R[kOS+3]);
-           //lp1.process_sample_nolag_noinput(L[kOS+4],R[kOS+4]);
-           //lp1.process_sample_nolag_noinput(L[kOS+5],R[kOS+5]);
-           //lp1.process_sample_nolag_noinput(L[kOS+6],R[kOS+6]);
-           //lp1.process_sample_nolag_noinput(L[kOS+7],R[kOS+7]);
-   }
-
-   tanh7_block(L,BLOCK_SIZE_QUAD << dist_OS_bits);
-   tanh7_block(R,BLOCK_SIZE_QUAD << dist_OS_bits);*/
 
    hr_a.process_block_D2(bL, bR, 128);
    hr_b.process_block_D2(bL, bR, 64);
 
    outgain.multiply_2_blocks_to(bL, bR, dataL, dataR, BLOCK_SIZE_QUAD);
-
-   // lp2.process_block(dataL,dataR);
 
    band2.process_block(dataL, dataR);
 }
@@ -171,70 +144,70 @@ void DistortionEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[0].set_name("Gain");
-   fxdata->p[0].set_type(ct_decibel_extendable);
-   fxdata->p[1].set_name("Frequency");
-   fxdata->p[1].set_type(ct_freq_audible);
-   fxdata->p[2].set_name("Bandwidth");
-   fxdata->p[2].set_type(ct_bandwidth);
-   fxdata->p[3].set_name("High Cut");
-   fxdata->p[3].set_type(ct_freq_audible);
+   fxdata->p[dist_preeq_gain].set_name("Gain");
+   fxdata->p[dist_preeq_gain].set_type(ct_decibel_extendable);
+   fxdata->p[dist_preeq_freq].set_name("Frequency");
+   fxdata->p[dist_preeq_freq].set_type(ct_freq_audible);
+   fxdata->p[dist_preeq_bw].set_name("Bandwidth");
+   fxdata->p[dist_preeq_bw].set_type(ct_bandwidth);
+   fxdata->p[dist_preeq_highcut].set_name("High Cut");
+   fxdata->p[dist_preeq_highcut].set_type(ct_freq_audible);
 
-   fxdata->p[4].set_name("Drive");
-   fxdata->p[4].set_type(ct_decibel_narrow_extendable);
-   fxdata->p[5].set_name("Feedback");
-   fxdata->p[5].set_type(ct_percent_bidirectional);
-   fxdata->p[11].set_name("Model");
-   fxdata->p[11].set_type(ct_distortion_waveshape);
+   fxdata->p[dist_drive].set_name("Drive");
+   fxdata->p[dist_drive].set_type(ct_decibel_narrow_extendable);
+   fxdata->p[dist_feedback].set_name("Feedback");
+   fxdata->p[dist_feedback].set_type(ct_percent_bidirectional);
+   fxdata->p[dist_model].set_name("Model");
+   fxdata->p[dist_model].set_type(ct_distortion_waveshape);
 
-   fxdata->p[6].set_name("Gain");
-   fxdata->p[6].set_type(ct_decibel_extendable);
-   fxdata->p[7].set_name("Frequency");
-   fxdata->p[7].set_type(ct_freq_audible);
-   fxdata->p[8].set_name("Bandwidth");
-   fxdata->p[8].set_type(ct_bandwidth);
-   fxdata->p[9].set_name("High Cut");
-   fxdata->p[9].set_type(ct_freq_audible);
+   fxdata->p[dist_posteq_gain].set_name("Gain");
+   fxdata->p[dist_posteq_gain].set_type(ct_decibel_extendable);
+   fxdata->p[dist_posteq_freq].set_name("Frequency");
+   fxdata->p[dist_posteq_freq].set_type(ct_freq_audible);
+   fxdata->p[dist_posteq_bw].set_name("Bandwidth");
+   fxdata->p[dist_posteq_bw].set_type(ct_bandwidth);
+   fxdata->p[dist_posteq_highcut].set_name("High Cut");
+   fxdata->p[dist_posteq_highcut].set_type(ct_freq_audible);
 
-   fxdata->p[10].set_name("Gain");
-   fxdata->p[10].set_type(ct_decibel_narrow);
+   fxdata->p[dist_gain].set_name("Gain");
+   fxdata->p[dist_gain].set_type(ct_decibel_narrow);
 
-   fxdata->p[0].posy_offset = 1;
-   fxdata->p[1].posy_offset = 1;
-   fxdata->p[2].posy_offset = 1;
-   fxdata->p[3].posy_offset = 1;
+   fxdata->p[dist_preeq_gain].posy_offset = 1;
+   fxdata->p[dist_preeq_freq].posy_offset = 1;
+   fxdata->p[dist_preeq_bw].posy_offset = 1;
+   fxdata->p[dist_preeq_highcut].posy_offset = 1;
 
-   fxdata->p[4].posy_offset = 3;
-   fxdata->p[5].posy_offset = 3;
-   fxdata->p[11].posy_offset = -7;
+   fxdata->p[dist_drive].posy_offset = 3;
+   fxdata->p[dist_feedback].posy_offset = 3;
+   fxdata->p[dist_model].posy_offset = -7;
 
-   fxdata->p[6].posy_offset = 7;
-   fxdata->p[7].posy_offset = 7;
-   fxdata->p[8].posy_offset = 7;
-   fxdata->p[9].posy_offset = 7;
+   fxdata->p[dist_posteq_gain].posy_offset = 7;
+   fxdata->p[dist_posteq_freq].posy_offset = 7;
+   fxdata->p[dist_posteq_bw].posy_offset = 7;
+   fxdata->p[dist_posteq_highcut].posy_offset = 7;
 
-   fxdata->p[10].posy_offset = 9;
+   fxdata->p[dist_gain].posy_offset = 9;
 }
 void DistortionEffect::init_default_values()
 {
-   fxdata->p[0].val.f = 0.f;
-   fxdata->p[1].val.f = 0.f;
-   fxdata->p[2].val.f = 2.f;
+   fxdata->p[dist_preeq_gain].val.f = 0.f;
+   fxdata->p[dist_preeq_freq].val.f = 0.f;
+   fxdata->p[dist_preeq_bw].val.f = 2.f;
 
-   fxdata->p[6].val.f = 0.f;
-   fxdata->p[7].val.f = 0.f;
-   fxdata->p[8].val.f = 2.f;
-   fxdata->p[10].val.f = 0.f;
+   fxdata->p[dist_posteq_gain].val.f = 0.f;
+   fxdata->p[dist_posteq_freq].val.f = 0.f;
+   fxdata->p[dist_posteq_bw].val.f = 2.f;
+   fxdata->p[dist_gain].val.f = 0.f;
 
-   fxdata->p[11].val.f = 0.f;
+   fxdata->p[dist_model].val.f = 0.f;
 }
 
 void DistortionEffect::handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
 {
-    if( streamingRevision <= 11 )
-    {
-       fxdata->p[11].val.i = 0;
-       fxdata->p[0].extend_range = false;
-       fxdata->p[6].extend_range = false;
-    }
+   if (streamingRevision <= 11)
+   {
+      fxdata->p[dist_model].val.i = 0;
+      fxdata->p[dist_preeq_gain].extend_range = false;
+      fxdata->p[dist_posteq_gain].extend_range = false;
+   }
 }

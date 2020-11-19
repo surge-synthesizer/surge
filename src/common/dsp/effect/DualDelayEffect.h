@@ -55,6 +55,22 @@ public:
       return ringout_time;
    }
 
+   enum delay_params
+   {
+      dly_time_left = 0,
+      dly_time_right,
+      dly_feedback,
+      dly_crossfeed,
+      dly_lowcut,
+      dly_highcut,
+      dly_mod_rate,
+      dly_mod_depth,
+      dly_input_channel,
+      dly_reserved, // looks like this one got removed at one point
+      dly_mix,
+      dly_width,
+   };
+
 private:
    lag<float, true> timeL, timeR;
    bool inithadtempo;

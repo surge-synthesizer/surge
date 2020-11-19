@@ -34,7 +34,7 @@ class Eq3BandEffect : public Effect
          R alignas(16)[BLOCK_SIZE];
 
 public:
-   enum Params
+   enum eq3_params
    {
        eq3_gain1 = 0,
        eq3_freq1,

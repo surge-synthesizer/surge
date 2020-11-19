@@ -24,7 +24,6 @@
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>
 
-/*	rotary_speaker			*/
 class RotarySpeakerEffect : public Effect
 {
 public:
@@ -51,6 +50,20 @@ public:
    virtual int group_label_ypos(int id) override;
 
    virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+
+   enum rotary_params
+   {
+      rot_horn_rate = 0,
+      rot_doppler,
+      rot_tremolo,
+      rot_rotor_rate,
+      rot_drive,
+      rot_waveshape,
+      rot_width,
+      rot_mix,
+
+      rot_num_params,
+   };
 
 protected:
    float buffer[max_delay_length];

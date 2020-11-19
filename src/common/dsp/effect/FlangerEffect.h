@@ -27,17 +27,40 @@
 
 class FlangerEffect : public Effect
 {
-   enum Modes {
-      classic,
-      doppler,
-      arp_mix,
-      arp_solo
+   enum fl_modes {
+      flm_classic = 0,
+      flm_doppler,
+      flm_arp_mix,
+      flm_arp_solo,
    };
-   enum Waves {
-      sinw,
-      triw,
-      saww,
-      sandhw
+
+   enum fl_waves {
+      flw_sine = 0,
+      flw_tri,
+      flw_saw,
+      flw_snh,
+   };
+
+   enum fl_params
+   {
+      // Basic Control
+      fl_mode = 0, // flange, phase-inverse-flange, arepeggio, vibrato
+      fl_wave, // what's the wave shape
+      fl_rate, // How quickly the oscillations happen
+      fl_depth, // How extreme the modulation of the delay is
+  
+      // Voices
+      fl_voices, // how many delay lines
+      fl_voice_basepitch, // tune the first max delay line to this (M = sr / f)
+      fl_voice_spacing, // How far apart are the combs in pitch space
+
+      // Feedback and EQ
+      fl_feedback, // how much the output feeds back into the filters
+      fl_damping, // how much low pass damping in the feedback mechanism
+      fl_width, // how much to pan the delay lines ( 0 -> all even; 1 -> full spread)
+      fl_mix, // how much we add the comb into the mix
+  
+      fl_num_params,
    };
    
    static const int COMBS_PER_CHANNEL = 4;

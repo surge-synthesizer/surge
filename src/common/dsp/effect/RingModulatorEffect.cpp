@@ -6,29 +6,8 @@
 
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 
-enum ringmodparam
-{
-   // Basic Control
-   rm_carriershape = 0, // carrier shape
-   rm_carrierfreq,
-   rm_unison_detune,
-   rm_unison_voices,
-
-   rm_diode_vb,
-   rm_diode_vl,
-   
-   rm_lowcut,
-   rm_highcut,
-   
-   rm_mix,
-   
-   rm_num_params,
-};
-
 RingModulatorEffect::RingModulatorEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
-   : Effect(storage, fxdata, pd),
-     halfbandIN(6,true), halfbandOUT(6,true),
-     lp(storage), hp(storage)
+   : Effect(storage, fxdata, pd), halfbandIN(6,true), halfbandOUT(6,true), lp(storage), hp(storage)
 {
 }
 
@@ -60,12 +39,11 @@ void RingModulatorEffect::setvars(bool init)
    }
 }
 
-
 #define OVERSAMPLE 1
 
 void RingModulatorEffect::process(float* dataL, float* dataR)
 {
-   float  dphase[MAX_UNISON];
+   float dphase[MAX_UNISON];
    auto mix = *f[ rm_mix ];
    auto uni = std::max( 1, *pdata_ival[rm_unison_voices] );
 
@@ -92,11 +70,10 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
             panL[u] = u / (uni - 1.f );
             panR[u] = (uni - 1.f - u ) / (uni - 1.f);
          }
-
       }
    }
 
-   // Gain Scale based on unison
+   // gain scale based on unison
    float gscale = 0.4 +  0.6 * ( 1.f / sqrtf( uni ) );
 
 #if OVERSAMPLE
@@ -115,8 +92,8 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
 #endif   
    for( int u=0; u<uni; ++u )
    {
-      // need to calc this every time since carierfreq could change
-      dphase[u] = storage->note_to_pitch( *f[ rm_carrierfreq ] + fxdata->p[rm_unison_detune].get_extended(fxdata->p[rm_unison_detune].val.f * detune_offset[u]) ) *
+      // need to calc this every time since carier freq could change
+      dphase[u] = storage->note_to_pitch( *f[ rm_carrier_freq ] + fxdata->p[rm_unison_detune].get_extended(fxdata->p[rm_unison_detune].val.f * detune_offset[u]) ) *
          Tunings::MIDI_0_FREQ * sri;
    }
 
@@ -133,7 +110,7 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
          // TODO efficiency of course
          auto vc = SinOscillator::valueFromSinAndCos( Surge::DSP::fastsin( 2.0 * M_PI * ( phase[u] - 0.5 ) ),
                                                       Surge::DSP::fastcos( 2.0 * M_PI * ( phase[u] - 0.5 ) ),
-                                                      *pdata_ival[rm_carriershape] );
+                                                      *pdata_ival[rm_carrier_shape] );
          phase[u] += dphase[u];
          if( phase[u] > 1 )
          {
@@ -155,7 +132,6 @@ void RingModulatorEffect::process(float* dataL, float* dataR)
             float res = dPA + dMA - dPB - dMB;
             resL += res * panL[u];
             resR += res * panR[u];
-            // std::cout << "RES " << _D(res) << _D(resL) << _D(resR) << _D(panL[u]) << _D(panR[u]) << _D(u) << _D(uni) << std::endl;
          }
       }
       auto outl = gscale * ( mix * resL + ( 1.f - mix ) * dataOS[0][i] );
@@ -223,32 +199,32 @@ void RingModulatorEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[rm_carriershape].set_name( "Shape" );
-   fxdata->p[rm_carriershape].set_type( ct_sineoscmode );
-   fxdata->p[rm_carrierfreq].set_name( "Pitch" );
-   fxdata->p[rm_carrierfreq].set_type( ct_flangerpitch );
-   fxdata->p[rm_unison_detune].set_name( "Unison Detune" );
-   fxdata->p[rm_unison_detune].set_type( ct_oscspread );
-   fxdata->p[rm_unison_voices].set_name( "Unison Voices" );
-   fxdata->p[rm_unison_voices].set_type( ct_osccount );
+   fxdata->p[rm_carrier_shape].set_name("Shape");
+   fxdata->p[rm_carrier_shape].set_type(ct_sineoscmode);
+   fxdata->p[rm_carrier_freq].set_name("Pitch");
+   fxdata->p[rm_carrier_freq].set_type(ct_flangerpitch);
+   fxdata->p[rm_unison_detune].set_name("Unison Detune");
+   fxdata->p[rm_unison_detune].set_type(ct_oscspread);
+   fxdata->p[rm_unison_voices].set_name("Unison Voices");
+   fxdata->p[rm_unison_voices].set_type(ct_osccount);
 
-   fxdata->p[rm_diode_vb].set_name( "Forward Bias" );
-   fxdata->p[rm_diode_vb].set_type( ct_percent );
-   fxdata->p[rm_diode_vl].set_name( "Linear Region" );
-   fxdata->p[rm_diode_vl].set_type( ct_percent );
+   fxdata->p[rm_diode_fwdbias].set_name("Forward Bias");
+   fxdata->p[rm_diode_fwdbias].set_type(ct_percent);
+   fxdata->p[rm_diode_linregion].set_name("Linear Region");
+   fxdata->p[rm_diode_linregion].set_type(ct_percent);
 
-   fxdata->p[rm_lowcut].set_name( "Low Cut" );
-   fxdata->p[rm_lowcut].set_type( ct_freq_audible );
-   fxdata->p[rm_highcut].set_name( "High Cut" );
-   fxdata->p[rm_highcut].set_type( ct_freq_audible );
+   fxdata->p[rm_lowcut].set_name("Low Cut");
+   fxdata->p[rm_lowcut].set_type(ct_freq_audible);
+   fxdata->p[rm_highcut].set_name("High Cut");
+   fxdata->p[rm_highcut].set_type(ct_freq_audible);
 
-   fxdata->p[rm_mix].set_name( "Mix" );
-   fxdata->p[rm_mix].set_type( ct_percent );
+   fxdata->p[rm_mix].set_name("Mix");
+   fxdata->p[rm_mix].set_type(ct_percent);
 
-   for( int i = rm_carriershape; i < rm_num_params; ++i )
+   for( int i = rm_carrier_shape; i < rm_num_params; ++i )
    {
       auto a = 1;
-      if( i >= rm_diode_vb ) a += 2;
+      if( i >= rm_diode_fwdbias ) a += 2;
       if( i >= rm_lowcut ) a += 2;
       if( i >= rm_mix ) a += 2;
       fxdata->p[i].posy_offset = a;
@@ -259,10 +235,10 @@ void RingModulatorEffect::init_ctrltypes()
 
 void RingModulatorEffect::init_default_values()
 {
-   fxdata->p[rm_carrierfreq].val.f = 60;
-   fxdata->p[rm_carriershape].val.i = 0;
-   fxdata->p[rm_diode_vb].val.f = 0.3;
-   fxdata->p[rm_diode_vl].val.f = 0.7;
+   fxdata->p[rm_carrier_freq].val.f = 60;
+   fxdata->p[rm_carrier_shape].val.i = 0;
+   fxdata->p[rm_diode_fwdbias].val.f = 0.3;
+   fxdata->p[rm_diode_linregion].val.f = 0.7;
    fxdata->p[rm_unison_detune].val.f = 0.2;
    fxdata->p[rm_unison_voices].val.i = 1;
 
@@ -274,8 +250,8 @@ void RingModulatorEffect::init_default_values()
 
 float RingModulatorEffect::diode_sim(float v)
 {
-   auto vb = *(f[rm_diode_vb]);
-   auto vl = *(f[rm_diode_vl]);
+   auto vb = *(f[rm_diode_fwdbias]);
+   auto vl = *(f[rm_diode_linregion]);
    auto h = 1.f;
    vl = std::max( vl, vb + 0.02f );
    if( v < vb )

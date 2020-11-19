@@ -15,8 +15,6 @@
 
 #include "Eq3BandEffect.h"
 
-/* eq3band */
-
 Eq3BandEffect::Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), band3(storage)
 {

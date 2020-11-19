@@ -4,8 +4,6 @@
 
 using namespace std;
 
-/* conditioner */
-
 using namespace vt_dsp;
 
 ConditionerEffect::ConditionerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
@@ -44,8 +42,8 @@ void ConditionerEffect::init()
 
 void ConditionerEffect::setvars(bool init)
 {
-   band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[0]);
-   band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[1]);
+   band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[cond_bass]);
+   band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[cond_treble]);
    if (init)
    {
    }
@@ -53,8 +51,8 @@ void ConditionerEffect::setvars(bool init)
 
 void ConditionerEffect::process_only_control()
 {
-   float am = 1.0f + 0.9f * *f[5];
-   float rm = 1.0f + 0.9f * *f[6];
+   float am = 1.0f + 0.9f * *f[cond_attack];
+   float rm = 1.0f + 0.9f * *f[cond_release];
    float attack = 0.001f * am * am;
    float release = 0.0001f * rm * rm;
 
@@ -79,8 +77,8 @@ void ConditionerEffect::process_only_control()
 
 void ConditionerEffect::process(float* dataL, float* dataR)
 {
-   float am = 1.0f + 0.9f * *f[5];
-   float rm = 1.0f + 0.9f * *f[6];
+   float am = 1.0f + 0.9f * *f[cond_attack];
+   float rm = 1.0f + 0.9f * *f[cond_release];
    float attack = 0.001f * am * am;
    float release = 0.0001f * rm * rm;
 
@@ -93,11 +91,11 @@ void ConditionerEffect::process(float* dataL, float* dataR)
    setvars(false);
    band1.process_block(dataL, dataR);
    band2.process_block(dataL, dataR);
-   float pregain = db_to_linear(-*f[4]);
-   ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *f[3]));
-   ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *f[3]));
-   width.set_target_smoothed(clamp1bp(*f[2]));
-   postamp.set_target_smoothed(db_to_linear(*f[7]));
+   float pregain = db_to_linear(-*f[cond_threshold]);
+   ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *f[cond_balance]));
+   ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *f[cond_balance]));
+   width.set_target_smoothed(clamp1bp(*f[cond_width]));
+   postamp.set_target_smoothed(db_to_linear(*f[cond_gain]));
 
    float M alignas(16)[BLOCK_SIZE],
          S alignas(16)[BLOCK_SIZE]; // wb = write-buffer
@@ -222,35 +220,35 @@ void ConditionerEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[0].set_name("Bass");
-   fxdata->p[0].set_type(ct_decibel_extra_narrow);
-   fxdata->p[1].set_name("Treble");
-   fxdata->p[1].set_type(ct_decibel_extra_narrow);
+   fxdata->p[cond_bass].set_name("Bass");
+   fxdata->p[cond_bass].set_type(ct_decibel_extra_narrow);
+   fxdata->p[cond_treble].set_name("Treble");
+   fxdata->p[cond_treble].set_type(ct_decibel_extra_narrow);
 
-   fxdata->p[2].set_name("Width");
-   fxdata->p[2].set_type(ct_percent_bidirectional);
-   fxdata->p[3].set_name("Balance");
-   fxdata->p[3].set_type(ct_percent_bidirectional);
+   fxdata->p[cond_width].set_name("Width");
+   fxdata->p[cond_width].set_type(ct_percent_bidirectional);
+   fxdata->p[cond_balance].set_name("Balance");
+   fxdata->p[cond_balance].set_type(ct_percent_bidirectional);
 
-   fxdata->p[4].set_name("Threshold");
-   fxdata->p[4].set_type(ct_decibel_attenuation);
-   fxdata->p[5].set_name("Attack Rate");
-   fxdata->p[5].set_type(ct_percent_bidirectional);
-   fxdata->p[6].set_name("Release Rate");
-   fxdata->p[6].set_type(ct_percent_bidirectional);
-   fxdata->p[7].set_name("Gain");
-   fxdata->p[7].set_type(ct_decibel_attenuation);
+   fxdata->p[cond_threshold].set_name("Threshold");
+   fxdata->p[cond_threshold].set_type(ct_decibel_attenuation);
+   fxdata->p[cond_attack].set_name("Attack Rate");
+   fxdata->p[cond_attack].set_type(ct_percent_bidirectional);
+   fxdata->p[cond_release].set_name("Release Rate");
+   fxdata->p[cond_release].set_type(ct_percent_bidirectional);
+   fxdata->p[cond_gain].set_name("Gain");
+   fxdata->p[cond_gain].set_type(ct_decibel_attenuation);
 
-   fxdata->p[0].posy_offset = 1;
-   fxdata->p[1].posy_offset = 1;
+   fxdata->p[cond_bass].posy_offset = 1;
+   fxdata->p[cond_treble].posy_offset = 1;
 
-   fxdata->p[2].posy_offset = 3;
-   fxdata->p[3].posy_offset = 3;
+   fxdata->p[cond_width].posy_offset = 3;
+   fxdata->p[cond_balance].posy_offset = 3;
 
-   fxdata->p[4].posy_offset = 11;
-   fxdata->p[5].posy_offset = 11;
-   fxdata->p[6].posy_offset = 11;
-   fxdata->p[7].posy_offset = 13;
+   fxdata->p[cond_threshold].posy_offset = 11;
+   fxdata->p[cond_attack].posy_offset = 11;
+   fxdata->p[cond_release].posy_offset = 11;
+   fxdata->p[cond_gain].posy_offset = 13;
 }
 void ConditionerEffect::init_default_values()
 {}
