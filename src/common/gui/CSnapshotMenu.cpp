@@ -248,6 +248,7 @@ COscMenu::COscMenu(const CRect& size,
 {
    strcpy(mtype, "osc");
    this->osc = osc;
+   this->storage = storage;
    auto tb = bitmapStore->getBitmap(IDB_OSCMENU);
    bmp = tb;
    populate();
@@ -278,8 +279,11 @@ void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
 {
    assert(within_range(0, type, num_osctypes));
    auto sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-   if( sge )
-      sge->oscilatorMenuIndex = idx;
+   if (sge)
+   {
+      auto sc = sge->current_scene;
+      sge->oscilatorMenuIndex[sc][sge->current_osc[sc]] = idx;
+   }
    osc->queue_type = type;
    osc->queue_xmldata = e;
 }
@@ -292,9 +296,10 @@ bool COscMenu::onWheel( const VSTGUI::CPoint &where, const float &distance, cons
 #endif
 
    auto *sge = dynamic_cast<SurgeGUIEditor*>(listenerNotForParent);
-   if( sge )
+   if (sge)
    {
-      int currentIdx = sge->oscilatorMenuIndex;
+      auto sc = sge->current_scene;
+      int currentIdx = sge->oscilatorMenuIndex[sc][sge->current_osc[sc]];
       if (accumWheel < -1)
       {
          currentIdx = currentIdx + 1;

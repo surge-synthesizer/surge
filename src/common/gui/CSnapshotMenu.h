@@ -89,7 +89,8 @@ public:
 
 protected:
    OscillatorStorage* osc = nullptr;
-   VSTGUI::CBitmap* bmp = nullptr, *hoverBmp = nullptr;
+   SurgeStorage* storage = nullptr;
+   VSTGUI::CBitmap *bmp = nullptr, *hoverBmp = nullptr;
    bool attemptedHoverLoad = false;
    float accumWheel = 0;
 
