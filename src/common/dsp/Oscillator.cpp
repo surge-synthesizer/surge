@@ -24,7 +24,7 @@ using namespace std;
 #include "FM2Oscillator.h"
 #include "FM3Oscillator.h"
 #include "SampleAndHoldOscillator.h"
-#include "SinOscillator.h"
+#include "SineOscillator.h"
 #include "SurgeSuperOscillator.h"
 #include "WavetableOscillator.h"
 #include "WindowOscillator.h"
@@ -44,7 +44,7 @@ spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata*
       // In the event we are misconfigured, window oscillator will segfault. If you still play
       // after clicking through 100 warnings, let's just give you a sine
       if( storage && storage->WindowWT.size == 0 )
-         return new SinOscillator( storage, oscdata, localcopy );
+         return new SineOscillator( storage, oscdata, localcopy );
  
       return new WindowOscillator(storage, oscdata, localcopy);
    }
@@ -58,7 +58,7 @@ spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata*
       return new FM2Oscillator(storage, oscdata, localcopy);
    case ot_sine:
    default:
-      return new SinOscillator(storage, oscdata, localcopy);
+      return new SineOscillator(storage, oscdata, localcopy);
    }
    return osc;
 }
