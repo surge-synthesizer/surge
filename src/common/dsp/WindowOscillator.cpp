@@ -379,4 +379,11 @@ void WindowOscillator::handleStreamingMismatches(int streamingRevision, int curr
       oscdata->p[win_highcut].deactivated = true;
       oscdata->p[win_formant].set_type(ct_osc_feedback);
    }
+   if (streamingRevision < 14)
+   {
+      if (oscdata->p[win_unison_voices].val.i == 1)
+      {
+         oscdata->retrigger.val.b = true;
+      }
+   }
 }
