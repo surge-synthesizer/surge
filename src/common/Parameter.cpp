@@ -1729,7 +1729,6 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
          float bpu = ( f + modulationDepth - 16.0 ) / 16.0;
          float bpd = ( f - modulationDepth - 16.0 ) / 16.0;
          float mul = 69;
-         if( extend_range ) mul = 150;
          float note = 69 + mul * bpv;
          float noteup = 69 + mul * bpu;
          float notedn = 60 + mul * bpd;
@@ -2129,8 +2128,6 @@ void Parameter::get_display(char* txt, bool external, float ef)
              */
             float bpv = (f - 16.0) / 16.0;
             auto note = 69 + 69 * bpv;
-            if (extend_range)
-               note = 69 + 150 * bpv;
             auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
             sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), freq);
          }
@@ -2928,8 +2925,6 @@ bool Parameter::set_value_from_string( std::string s )
          float uv = std::atof( c ) / 440.f;
          float n = log2( uv ) * 12 + 69;
          float bpv = ( n - 69 ) / 69.f;
-         if( extend_range )
-            bpv = ( n - 69 ) / 150.f;
          val.f = bpv * 16 + 16;
       }
       else
@@ -3090,7 +3085,6 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
 
          float bpv = (val.f - 16.0) / 16.0;
          float mul = 69;
-         if( extend_range ) mul = 150;
          float note = 69 + mul * bpv;
          auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
          auto tgfreq = freq + dfreq;

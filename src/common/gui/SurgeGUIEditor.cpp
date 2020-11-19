@@ -1499,8 +1499,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
             style |= kBipolar;
          break;
       case ct_fmratio:
-         if (p->extend_range && ! p->absolute)
+         if (p->extend_range && !p->absolute)
             style |= kBipolar;
+         if (p->extend_range || p->absolute)
+            p->val_default.f = 16.f;
+         else
+            p->val_default.f = 1.f;
+
          break;
       };
 
@@ -3026,10 +3031,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             if (p->can_extend_range())
             {
-               addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Extend Range"),
-                               [this, p]() { p->extend_range = !p->extend_range; this->synth->refresh_editor=true;});
-               contextMenu->checkEntry(eid, p->extend_range);
-               eid++;
+               if (!(p->ctrltype == ct_fmratio && p->can_be_absolute() && p->absolute))
+               {
+                  addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Extend Range"),
+                                  [this, p]() { p->extend_range = !p->extend_range; this->synth->refresh_editor=true;});
+                  contextMenu->checkEntry(eid, p->extend_range);
+                  eid++;
+               }
             }
             if (p->can_be_absolute())
             {
