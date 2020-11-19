@@ -281,7 +281,6 @@ void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
    auto sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
    if (sge)
    {
-      auto des = storage->getPatch().dawExtraState;
       auto sc = sge->current_scene;
       sge->oscilatorMenuIndex[sc][sge->current_osc[sc]] = idx;
    }
