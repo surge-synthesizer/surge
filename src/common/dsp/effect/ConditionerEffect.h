@@ -57,6 +57,18 @@ public:
    virtual const char* group_label(int id) override;
    virtual int group_label_ypos(int id) override;
 
+   enum cond_params
+   {
+      cond_bass = 0,
+      cond_treble,
+      cond_width,
+      cond_balance,
+      cond_threshold,
+      cond_attack,
+      cond_release,
+      cond_gain,
+   };
+
 private:
    BiquadFilter band1, band2;
    float ef;

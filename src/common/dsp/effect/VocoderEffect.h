@@ -25,39 +25,42 @@
 #include <vt_dsp/lipol.h>
 
 const int n_vocoder_bands = 20;
-const int NVocoderVec = n_vocoder_bands >> 2;
+const int voc_vector_size = n_vocoder_bands >> 2;
 
-enum VocoderModInput
- {
-    VOCODER_MODULATOR_MONO,
-    VOCODER_MODULATOR_L,
-    VOCODER_MODULATOR_R,
-    VOCODER_MODULATOR_STEREO
- };
 
 class VocoderEffect : public Effect
 {
 public:
- 
-
-   enum Params
+   enum vocoder_input_modes
    {
-      KGain,
-      KGateLevel,
-      KRate,
-      KQuality,
-      KShift,
+      vim_mono,
+      vim_left,
+      vim_right,
+      vim_stereo,
+   };
 
-      kNumBands,
-      kFreqLo,
-      kFreqHi,
-      kModulatorMode,
-      kModExpand,
-      kModCenter,
-      kMix,
-      kNumParams
-      
-      // KUnvoicedThreshold,
+   enum vocoder_params
+   {
+      voc_input_gain,
+      voc_input_gate,
+
+      voc_envfollow,
+      voc_q,
+      voc_shift,
+
+      voc_num_bands,
+      voc_minfreq,
+      voc_maxfreq,
+
+      voc_mod_input,
+      voc_mod_range,
+      voc_mod_center,
+
+      voc_mix,
+
+      // voc_unvoiced_threshold,
+
+      voc_num_params,
    };
 
    VocoderEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -82,12 +85,12 @@ public:
    virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
 private:
-   VectorizedSvfFilter mCarrierL alignas(16)[NVocoderVec];
-   VectorizedSvfFilter mCarrierR alignas(16)[NVocoderVec];
-   VectorizedSvfFilter mModulator alignas(16)[NVocoderVec];
-   VectorizedSvfFilter mModulatorR alignas(16)[NVocoderVec];
-   vFloat mEnvF alignas(16)[NVocoderVec];
-   vFloat mEnvFR alignas(16)[NVocoderVec];
+   VectorizedSvfFilter mCarrierL alignas(16)[voc_vector_size];
+   VectorizedSvfFilter mCarrierR alignas(16)[voc_vector_size];
+   VectorizedSvfFilter mModulator alignas(16)[voc_vector_size];
+   VectorizedSvfFilter mModulatorR alignas(16)[voc_vector_size];
+   vFloat mEnvF alignas(16)[voc_vector_size];
+   vFloat mEnvFR alignas(16)[voc_vector_size];
    lipol_ps mGain alignas(16);
    lipol_ps mGainR alignas(16);
    int modulator_mode;

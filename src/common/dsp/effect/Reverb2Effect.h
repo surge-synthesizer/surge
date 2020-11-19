@@ -116,6 +116,24 @@ public:
       return ringout_time;
    }
 
+   enum rev2_params
+   {
+      rev2_predelay = 0,
+
+      rev2_room_size,
+      rev2_decay_time,
+      rev2_diffusion,
+      rev2_buildup,
+      rev2_modulation,
+
+      rev2_lf_damping,
+      rev2_hf_damping,
+
+      rev2_width,
+      rev2_mix,
+
+      rev2_num_params,
+   };
 
 private:
    void update_rtime();

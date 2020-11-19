@@ -52,6 +52,24 @@ public:
 
    float diode_sim( float x );
 
+   enum ringmod_params
+   {
+      rm_carrier_shape = 0,
+      rm_carrier_freq,
+      rm_unison_detune,
+      rm_unison_voices,
+
+      rm_diode_fwdbias,
+      rm_diode_linregion,
+
+      rm_lowcut,
+      rm_highcut,
+
+      rm_mix,
+
+      rm_num_params,
+   };
+
 private:
    int ringout_value = -1;
    float phase[MAX_UNISON], detune_offset[MAX_UNISON], panL[MAX_UNISON], panR[MAX_UNISON];

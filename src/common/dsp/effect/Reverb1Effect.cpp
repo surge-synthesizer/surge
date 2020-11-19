@@ -2,27 +2,7 @@
 
 using namespace std;
 
-/* reverb			*/
-
 const float db60 = powf(10.f, 0.05f * -60.f);
-
-enum revparam
-{
-   rp_predelay = 0,
-   rp_shape,
-   rp_roomsize,
-   rp_decaytime,
-   // rp_modrate,
-   // rp_moddepth,
-   rp_damping,
-   // rp_variation,
-   rp_locut,
-   rp_freq1,
-   rp_gain1,
-   rp_hicut,
-   rp_mix,
-   rp_width,
-};
 
 Reverb1Effect::Reverb1Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd), band1(storage), locut(storage), hicut(storage)
@@ -37,10 +17,9 @@ void Reverb1Effect::init()
 {
    setvars(true);
 
-   band1.coeff_peakEQ(band1.calc_omega(fxdata->p[rp_freq1].val.f / 12.f), 2,
-                      fxdata->p[rp_gain1].val.f);
-   locut.coeff_HP(locut.calc_omega(fxdata->p[rp_locut].val.f / 12.f), 0.5);
-   hicut.coeff_LP2B(hicut.calc_omega(fxdata->p[rp_hicut].val.f / 12.f), 0.5);
+   band1.coeff_peakEQ(band1.calc_omega(fxdata->p[rev1_freq1].val.f / 12.f), 2, fxdata->p[rev1_gain1].val.f);
+   locut.coeff_HP(locut.calc_omega(fxdata->p[rev1_lowcut].val.f / 12.f), 0.5);
+   hicut.coeff_LP2B(hicut.calc_omega(fxdata->p[rev1_highcut].val.f / 12.f), 0.5);
    band1.coeff_instantize();
    locut.coeff_instantize();
    hicut.coeff_instantize();
@@ -54,7 +33,6 @@ void Reverb1Effect::init()
    loadpreset(0);
    modphase = 0;
    update_rsize();
-   // mix.set_target(fxdata->p[rp_mix].val.f);
    mix.set_target(1.f); // Should be the smoothest
    mix.instantize();
 
@@ -166,14 +144,13 @@ void Reverb1Effect::loadpreset(int id)
 
    for (int t = 0; t < rev_taps; t++)
    {
-      /*float r = (float)(rand()/RAND_MAX);
-      float rbp = (((float) rand()/RAND_MAX)*2.f - 1.f);
-      float a = 256.f*(3000.f * (1.f + rbp*rbp * *f[rp_variation]))*(1.f + 1.f* *f[rp_roomsize]);
-      delay_time[t] = (int)a;
-      delay_time_mod[t] = delay_time[t];		*/
-      delay_time[t] = (int)((float)(2.f * *f[rp_roomsize]) * delay_time[t]);
+      //float r = (float)(rand() / RAND_MAX);
+      //float rbp = (((float) rand() / RAND_MAX) * 2.f - 1.f);
+      //float a = 256.f * (3000.f * (1.f + rbp * rbp * *f[rev1_variation]))*(1.f + 1.f * *f[rev1_roomsize]);
+      //delay_time[t] = (int)a;
+      delay_time[t] = (int)((float)(2.f * *f[rev1_roomsize]) * delay_time[t]);
    }
-   lastf[rp_roomsize] = *f[rp_roomsize];
+   lastf[rev1_roomsize] = *f[rev1_roomsize];
    update_rtime();
 }
 
@@ -182,21 +159,21 @@ void Reverb1Effect::update_rtime()
    int max_dt = 0;
    for (int t = 0; t < rev_taps; t++)
    {
-      delay_fb[t] = powf(db60, delay_time[t] / (256.f * samplerate * powf(2.f, *f[rp_decaytime])));
+      delay_fb[t] = powf(db60, delay_time[t] / (256.f * samplerate * powf(2.f, *f[rev1_decaytime])));
       max_dt = max(max_dt, delay_time[t]);
    }
-   lastf[rp_decaytime] = *f[rp_decaytime];
-   float t = BLOCK_SIZE_INV * ((float)(max_dt >> 8) + samplerate * powf(2.f, *f[rp_decaytime]) *
-                                                          2.f); // *2 is to get the db120 time
+   lastf[rev1_decaytime] = *f[rev1_decaytime];
+   float t = BLOCK_SIZE_INV * ((float)(max_dt >> 8) + samplerate * powf(2.f, *f[rev1_decaytime]) * 2.f); // * 2.f is to get the db120 time
    ringout_time = (int)t;
 }
+
 void Reverb1Effect::update_rsize()
 {
    // memset(delay,0,rev_taps*max_rev_dly*sizeof(float));
 
    loadpreset(shape);
 
-   //	lastf[rp_variation] = *f[rp_variation];
+   // lastf[rev1_variation] = *f[rev1_variation];
    // update_rtime();
 }
 
@@ -205,32 +182,33 @@ void Reverb1Effect::process(float* dataL, float* dataR)
    float wetL alignas(16)[BLOCK_SIZE],
          wetR alignas(16)[BLOCK_SIZE];
 
-   if (fxdata->p[rp_shape].val.i != shape)
-      loadpreset(fxdata->p[rp_shape].val.i);
-   if ((b == 0) && (fabs(*f[rp_roomsize] - lastf[rp_roomsize]) > 0.001f))
+   if (fxdata->p[rev1_shape].val.i != shape)
+      loadpreset(fxdata->p[rev1_shape].val.i);
+   if ((b == 0) && (fabs(*f[rev1_roomsize] - lastf[rev1_roomsize]) > 0.001f))
       loadpreset(shape);
-   //	if(fabs(*f[rp_variation] - lastf[rp_variation]) > 0.001f) update_rsize();
-   if (fabs(*f[rp_decaytime] - lastf[rp_decaytime]) > 0.001f)
+   //	if(fabs(*f[rev1_variation] - lastf[rev1_variation]) > 0.001f) update_rsize();
+   if (fabs(*f[rev1_decaytime] - lastf[rev1_decaytime]) > 0.001f)
       update_rtime();
 
    // do more seldom
    if (b == 0)
    {
-      band1.coeff_peakEQ(band1.calc_omega(*f[rp_freq1] * (1.f / 12.f)), 2, *f[rp_gain1]);
-      locut.coeff_HP(locut.calc_omega(*f[rp_locut] * (1.f / 12.f)), 0.5);
-      hicut.coeff_LP2B(hicut.calc_omega(*f[rp_hicut] * (1.f / 12.f)), 0.5);
+      band1.coeff_peakEQ(band1.calc_omega(*f[rev1_freq1] * (1.f / 12.f)), 2, *f[rev1_gain1]);
+      locut.coeff_HP(locut.calc_omega(*f[rev1_lowcut] * (1.f / 12.f)), 0.5);
+      hicut.coeff_LP2B(hicut.calc_omega(*f[rev1_highcut] * (1.f / 12.f)), 0.5);
    }
    b = (b + 1) & 31;
 
-   mix.set_target_smoothed(*f[rp_mix]);
-   width.set_target_smoothed(db_to_linear(*f[rp_width]));
+   mix.set_target_smoothed(*f[rev1_mix]);
+   width.set_target_smoothed(db_to_linear(*f[rev1_width]));
 
-   int pdtime = (int)(float)samplerate * storage->note_to_pitch_ignoring_tuning(12 * *f[rp_predelay]) *
-                (fxdata->p[rp_predelay].temposync ? storage->temposyncratio_inv : 1.f);
+   int pdtime = (int)(float)samplerate * storage->note_to_pitch_ignoring_tuning(12 * *f[rev1_predelay]) *
+                (fxdata->p[rev1_predelay].temposync ? storage->temposyncratio_inv : 1.f);
 
    const __m128 one4 = _mm_set1_ps(1.f);
-   float dv = *(f[rp_damping]);
-   dv = limit_range( dv, 0.01f, 0.99f ); // this is a simple onepole damper, w * y[n] + ( 1-w ) y[n-1] so to be stable has to stay in range
+   float dv = *(f[rev1_damping]);
+
+   dv = limit_range( dv, 0.01f, 0.99f ); // this is a simple one-pole damper, w * y[n] + ( 1-w ) y[n-1] so to be stable has to stay in range
    __m128 damp4 = _mm_load1_ps(&dv);
    __m128 damp4m1 = _mm_sub_ps(one4, damp4);
 
@@ -254,7 +232,7 @@ void Reverb1Effect::process(float* dataL, float* dataR)
          __m128 out_tap4 = _mm_load_ps(&out_tap[t]);
          out_tap4 = _mm_add_ps(_mm_mul_ps(out_tap4, damp4), _mm_mul_ps(new4, damp4m1));
          _mm_store_ps(&out_tap[t], out_tap4);
-         // out_tap[t] = *f[rp_damping]*out_tap[t] + (1- *f[rp_damping])*newa;
+         // out_tap[t] = *f[rev1_damping]*out_tap[t] + (1- *f[rev1_damping])*newa;
       }
 
       __m128 fb = _mm_add_ps(_mm_add_ps(_mm_load_ps(out_tap), _mm_load_ps(out_tap + 4)),
@@ -345,75 +323,67 @@ void Reverb1Effect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[rp_predelay].set_name("Pre-Delay");
-   fxdata->p[rp_predelay].set_type(ct_envtime);
-   fxdata->p[rp_predelay].modulateable = false;
+   fxdata->p[rev1_predelay].set_name("Pre-Delay");
+   fxdata->p[rev1_predelay].set_type(ct_envtime);
+   fxdata->p[rev1_predelay].modulateable = false;
 
-   fxdata->p[rp_shape].set_name("Room Shape");
-   fxdata->p[rp_shape].set_type(ct_reverbshape);
-   fxdata->p[rp_shape].modulateable = false;
-   fxdata->p[rp_roomsize].set_name("Size");
-   fxdata->p[rp_roomsize].set_type(ct_percent);
-   fxdata->p[rp_roomsize].modulateable = false;
-   fxdata->p[rp_decaytime].set_name("Decay Time");
-   fxdata->p[rp_decaytime].set_type(ct_reverbtime);
-   fxdata->p[rp_damping].set_name("HF Damping");
-   fxdata->p[rp_damping].set_type(ct_percent);
+   fxdata->p[rev1_shape].set_name("Room Shape");
+   fxdata->p[rev1_shape].set_type(ct_reverbshape);
+   fxdata->p[rev1_shape].modulateable = false;
+   fxdata->p[rev1_roomsize].set_name("Size");
+   fxdata->p[rev1_roomsize].set_type(ct_percent);
+   fxdata->p[rev1_roomsize].modulateable = false;
+   fxdata->p[rev1_decaytime].set_name("Decay Time");
+   fxdata->p[rev1_decaytime].set_type(ct_reverbtime);
+   fxdata->p[rev1_damping].set_name("HF Damping");
+   fxdata->p[rev1_damping].set_type(ct_percent);
 
-   fxdata->p[rp_locut].set_name("Low Cut");
-   fxdata->p[rp_locut].set_type(ct_freq_audible);
-   fxdata->p[rp_freq1].set_name("Peak Freq");
-   fxdata->p[rp_freq1].set_type(ct_freq_audible);
-   fxdata->p[rp_gain1].set_name("Peak Gain");
-   fxdata->p[rp_gain1].set_type(ct_decibel);
-   fxdata->p[rp_hicut].set_name("High Cut");
-   fxdata->p[rp_hicut].set_type(ct_freq_audible);
+   fxdata->p[rev1_lowcut].set_name("Low Cut");
+   fxdata->p[rev1_lowcut].set_type(ct_freq_audible);
+   fxdata->p[rev1_freq1].set_name("Peak Freq");
+   fxdata->p[rev1_freq1].set_type(ct_freq_audible);
+   fxdata->p[rev1_gain1].set_name("Peak Gain");
+   fxdata->p[rev1_gain1].set_type(ct_decibel);
+   fxdata->p[rev1_highcut].set_name("High Cut");
+   fxdata->p[rev1_highcut].set_type(ct_freq_audible);
 
-   fxdata->p[rp_mix].set_name("Mix");
-   fxdata->p[rp_mix].set_type(ct_percent);
-   fxdata->p[rp_width].set_name("Width");
-   fxdata->p[rp_width].set_type(ct_decibel_narrow);
+   fxdata->p[rev1_mix].set_name("Mix");
+   fxdata->p[rev1_mix].set_type(ct_percent);
+   fxdata->p[rev1_width].set_name("Width");
+   fxdata->p[rev1_width].set_type(ct_decibel_narrow);
 
-   // fxdata->p[rp_moddepth].set_name("mod depth");	fxdata->p[rp_moddepth].set_type(ct_percent);
-   // //fxdata->p[rp_modrate].set_name("mod rate");
-   // fxdata->p[rp_modrate].set_type(ct_lforate); fxdata->p[rp_variation].set_name("irregularity");
-   // fxdata->p[rp_variation].set_type(ct_percent);
+   // fxdata->p[rev1_variation].set_name("Irregularity");
+   // fxdata->p[rev1_variation].set_type(ct_percent);
 
-   fxdata->p[rp_predelay].posy_offset = 1;
+   fxdata->p[rev1_predelay].posy_offset = 1;
 
-   fxdata->p[rp_shape].posy_offset = 3;
-   fxdata->p[rp_decaytime].posy_offset = 3;
-   fxdata->p[rp_roomsize].posy_offset = 3;
-   fxdata->p[rp_damping].posy_offset = 3;
+   fxdata->p[rev1_shape].posy_offset = 3;
+   fxdata->p[rev1_decaytime].posy_offset = 3;
+   fxdata->p[rev1_roomsize].posy_offset = 3;
+   fxdata->p[rev1_damping].posy_offset = 3;
 
-   fxdata->p[rp_locut].posy_offset = 5;
-   fxdata->p[rp_freq1].posy_offset = 5;
-   fxdata->p[rp_gain1].posy_offset = 5;
-   fxdata->p[rp_hicut].posy_offset = 5;
+   fxdata->p[rev1_lowcut].posy_offset = 5;
+   fxdata->p[rev1_freq1].posy_offset = 5;
+   fxdata->p[rev1_gain1].posy_offset = 5;
+   fxdata->p[rev1_highcut].posy_offset = 5;
 
-   fxdata->p[rp_mix].posy_offset = 9;
-   fxdata->p[rp_width].posy_offset = 5;
-
-   // sections
-   // pre-delay
-   // early reflections
-   // tail
+   fxdata->p[rev1_mix].posy_offset = 9;
+   fxdata->p[rev1_width].posy_offset = 5;
 }
+
 void Reverb1Effect::init_default_values()
 {
-   fxdata->p[rp_predelay].val.f = -4.f;
-   fxdata->p[rp_shape].val.i = 0;
-   fxdata->p[rp_decaytime].val.f = 1.f;
-   fxdata->p[rp_roomsize].val.f = 0.5f;
-   fxdata->p[rp_damping].val.f = 0.2f;
-   fxdata->p[rp_freq1].val.f = 0.0f;
-   fxdata->p[rp_gain1].val.f = 0.0f;
-   fxdata->p[rp_locut].val.f = -24.0f;
-   fxdata->p[rp_hicut].val.f = 72.0f;
-   fxdata->p[rp_mix].val.f = 1.0f;
-   fxdata->p[rp_width].val.f = 0.0f;
+   fxdata->p[rev1_predelay].val.f = -4.f;
+   fxdata->p[rev1_shape].val.i = 0;
+   fxdata->p[rev1_decaytime].val.f = 1.f;
+   fxdata->p[rev1_roomsize].val.f = 0.5f;
+   fxdata->p[rev1_damping].val.f = 0.2f;
+   fxdata->p[rev1_freq1].val.f = 0.0f;
+   fxdata->p[rev1_gain1].val.f = 0.0f;
+   fxdata->p[rev1_lowcut].val.f = -24.0f;
+   fxdata->p[rev1_highcut].val.f = 72.0f;
+   fxdata->p[rev1_mix].val.f = 1.0f;
+   fxdata->p[rev1_width].val.f = 0.0f;
 
-   // fxdata->p[rp_moddepth].val.f = 0.02f;
-   // fxdata->p[rp_modrate].val.f = -2.5f;
-   // fxdata->p[rp_variation].val.f = 0.5f;
+   // fxdata->p[rev1_variation].val.f = 0.f;
 }

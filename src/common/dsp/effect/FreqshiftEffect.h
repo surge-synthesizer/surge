@@ -49,6 +49,17 @@ public:
       return ringout_time;
    }
 
+   enum freqshift_params
+   {
+      freq_shift = 0,
+      freq_rmult,
+      freq_delay,
+      freq_feedback,
+      freq_mix,
+
+      freq_num_params,
+   };
+
 private:
    lipol<float, true> feedback;
    lag<float, true> time, shiftL, shiftR;

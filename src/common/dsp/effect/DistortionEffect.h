@@ -55,6 +55,22 @@ public:
 
    virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
+   enum dist_params
+   {
+      dist_preeq_gain = 0,
+      dist_preeq_freq,
+      dist_preeq_bw,
+      dist_preeq_highcut,
+      dist_drive,
+      dist_feedback,
+      dist_posteq_gain,
+      dist_posteq_freq,
+      dist_posteq_bw,
+      dist_posteq_highcut,
+      dist_gain,
+      dist_model,
+   };
+
 private:
    BiquadFilter band1, band2, lp1, lp2;
    int bi; // block increment (to keep track of events not occurring every n blocks)

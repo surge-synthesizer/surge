@@ -2,19 +2,6 @@
 
 using namespace std;
 
-enum rsparams
-{
-   rsp_horn_rate = 0,
-   rsp_doppler,
-   rsp_tremolo,
-   rsp_rotor_rate,
-   rsp_drive,
-   rsp_waveshape,
-   rsp_width,
-   rsp_mix,
-   rsp_numparams
-};
-
 RotarySpeakerEffect::RotarySpeakerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
     : Effect(storage, fxdata, pd), xover(storage), lowbass(storage)
 {
@@ -42,9 +29,9 @@ void RotarySpeakerEffect::init()
 
 void RotarySpeakerEffect::setvars(bool init)
 {
-   drive.newValue(*f[rsp_drive]);
-   width.set_target_smoothed(db_to_linear(*f[rsp_width]));
-   mix.set_target_smoothed(*f[rsp_mix]);
+   drive.newValue(*f[rot_drive]);
+   width.set_target_smoothed(db_to_linear(*f[rot_width]));
+   mix.set_target_smoothed(*f[rot_mix]);
 
    if (init)
    {
@@ -64,14 +51,14 @@ void RotarySpeakerEffect::suspend()
 
 void RotarySpeakerEffect::init_default_values()
 {
-   fxdata->p[rsp_horn_rate].val.f = 1.f;
-   fxdata->p[rsp_rotor_rate].val.f = 0.7;
-   fxdata->p[rsp_drive].val.f = 0.f;
-   fxdata->p[rsp_waveshape].val.i = 0;
-   fxdata->p[rsp_doppler].val.f = 0.25f;
-   fxdata->p[rsp_tremolo].val.f = 0.5f;
-   fxdata->p[rsp_width].val.f = 1.0f;
-   fxdata->p[rsp_mix].val.f = 1.0f;
+   fxdata->p[rot_horn_rate].val.f = 1.f;
+   fxdata->p[rot_rotor_rate].val.f = 0.7;
+   fxdata->p[rot_drive].val.f = 0.f;
+   fxdata->p[rot_waveshape].val.i = 0;
+   fxdata->p[rot_doppler].val.f = 0.25f;
+   fxdata->p[rot_tremolo].val.f = 0.5f;
+   fxdata->p[rot_width].val.f = 1.0f;
+   fxdata->p[rot_mix].val.f = 1.0f;
 }
 
 const char* RotarySpeakerEffect::group_label(int id)
@@ -109,44 +96,44 @@ void RotarySpeakerEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[rsp_horn_rate].set_name("Horn Rate");
-   fxdata->p[rsp_horn_rate].set_type(ct_lforate);
-   fxdata->p[rsp_rotor_rate].set_name("Rotor Rate");
-   fxdata->p[rsp_rotor_rate].set_type(ct_percent200);
-   fxdata->p[rsp_drive].set_name("Drive");
-   fxdata->p[rsp_drive].set_type(ct_rotarydrive);
-   fxdata->p[rsp_waveshape].set_name("Model");
-   fxdata->p[rsp_waveshape].set_type(ct_distortion_waveshape);
-   fxdata->p[rsp_doppler].set_name("Doppler");
-   fxdata->p[rsp_doppler].set_type(ct_percent);
-   fxdata->p[rsp_tremolo].set_name("Tremolo");
-   fxdata->p[rsp_tremolo].set_type(ct_percent);
-   fxdata->p[rsp_width].set_name("Width");
-   fxdata->p[rsp_width].set_type(ct_decibel_narrow);
-   fxdata->p[rsp_mix].set_name("Mix");
-   fxdata->p[rsp_mix].set_type(ct_percent);
+   fxdata->p[rot_horn_rate].set_name("Horn Rate");
+   fxdata->p[rot_horn_rate].set_type(ct_lforate);
+   fxdata->p[rot_rotor_rate].set_name("Rotor Rate");
+   fxdata->p[rot_rotor_rate].set_type(ct_percent200);
+   fxdata->p[rot_drive].set_name("Drive");
+   fxdata->p[rot_drive].set_type(ct_rotarydrive);
+   fxdata->p[rot_waveshape].set_name("Model");
+   fxdata->p[rot_waveshape].set_type(ct_distortion_waveshape);
+   fxdata->p[rot_doppler].set_name("Doppler");
+   fxdata->p[rot_doppler].set_type(ct_percent);
+   fxdata->p[rot_tremolo].set_name("Tremolo");
+   fxdata->p[rot_tremolo].set_type(ct_percent);
+   fxdata->p[rot_width].set_name("Width");
+   fxdata->p[rot_width].set_type(ct_decibel_narrow);
+   fxdata->p[rot_mix].set_name("Mix");
+   fxdata->p[rot_mix].set_type(ct_percent);
 
-   fxdata->p[rsp_rotor_rate].val_default.f = 0.7;
+   fxdata->p[rot_rotor_rate].val_default.f = 0.7;
 
-   fxdata->p[rsp_horn_rate].posy_offset = 1;
-   fxdata->p[rsp_rotor_rate].posy_offset = -3;
+   fxdata->p[rot_horn_rate].posy_offset = 1;
+   fxdata->p[rot_rotor_rate].posy_offset = -3;
 
-   fxdata->p[rsp_drive].posy_offset = -1;
-   fxdata->p[rsp_waveshape].posy_offset = -1;
+   fxdata->p[rot_drive].posy_offset = -1;
+   fxdata->p[rot_waveshape].posy_offset = -1;
 
-   fxdata->p[rsp_doppler].posy_offset = 11;
-   fxdata->p[rsp_tremolo].posy_offset = 11;
+   fxdata->p[rot_doppler].posy_offset = 11;
+   fxdata->p[rot_tremolo].posy_offset = 11;
    
-   fxdata->p[rsp_width].posy_offset = 7;
-   fxdata->p[rsp_mix].posy_offset = 7;
+   fxdata->p[rot_width].posy_offset = 7;
+   fxdata->p[rot_mix].posy_offset = 7;
 }
 
 void RotarySpeakerEffect::process_only_control()
 {
-   float frate = *f[rsp_horn_rate] * (fxdata->p[rsp_horn_rate].temposync ? storage->temposyncratio : 1.f);
+   float frate = *f[rot_horn_rate] * (fxdata->p[rot_horn_rate].temposync ? storage->temposyncratio : 1.f);
 
    lfo.set_rate(2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
-   lf_lfo.set_rate(*f[rsp_rotor_rate] * 2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
+   lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
 
    lfo.process();
    lf_lfo.process();
@@ -156,7 +143,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
 {
    setvars(false);
 
-   float frate = *f[rsp_horn_rate] * (fxdata->p[rsp_horn_rate].temposync ? storage->temposyncratio : 1.f);
+   float frate = *f[rot_horn_rate] * (fxdata->p[rot_horn_rate].temposync ? storage->temposyncratio : 1.f);
 
    /*
     ** lf_lfo.process drives the sub-frequency and processes inside the iteration over samples>
@@ -165,7 +152,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
     ** hence the lack of BLOCK_SIZE here
     */
    lfo.set_rate(2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
-   lf_lfo.set_rate(*f[rsp_rotor_rate] * 2 * M_PI * powf(2, frate) * dsamplerate_inv);
+   lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * dsamplerate_inv);
 
    float precalc0 = (-2 - (float)lfo.i);
    float precalc1 = (-1 - (float)lfo.r);
@@ -173,7 +160,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    float lenL = sqrt(precalc0 * precalc0 + precalc1 * precalc1);
    float lenR = sqrt(precalc0 * precalc0 + precalc2 * precalc2);
 
-   float delay = samplerate * 0.0018f * *f[rsp_doppler];
+   float delay = samplerate * 0.0018f * *f[rot_doppler];
 
    dL.newValue(delay * lenL);
    dR.newValue(delay * lenR);
@@ -181,7 +168,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    float dotp_L = (precalc1 * (float)lfo.r + precalc0 * (float)lfo.i) / lenL;
    float dotp_R = (precalc2 * (float)lfo.r + precalc0 * (float)lfo.i) / lenR;
 
-   float a = *f[rsp_tremolo] * 0.6f;
+   float a = *f[rot_tremolo] * 0.6f;
 
    hornamp[0].newValue((1.f - a) + a * dotp_L);
    hornamp[1].newValue((1.f - a) + a * dotp_R);
@@ -198,9 +185,9 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
 
    int k;
 
-   drive.newValue(*f[rsp_drive]);
+   drive.newValue(*f[rot_drive]);
 
-   int ws = *pdata_ival[rsp_waveshape];
+   int ws = *pdata_ival[rot_waveshape];
    if (ws < 0 || ws >= n_ws_type)
       ws = 0;
 
@@ -249,7 +236,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    }
    }
 
-   if (!fxdata->p[rsp_drive].deactivated)
+   if (!fxdata->p[rot_drive].deactivated)
    {
       drive_factor = 1.f + (drive.v * drive.v * 15.f);
       if (drive.v < compensateStartsAt)
@@ -264,7 +251,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    {
       float input;
 
-      if (!fxdata->p[rsp_drive].deactivated)
+      if (!fxdata->p[rot_drive].deactivated)
       {
           input = lookup_waveshape(wst_soft + ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;   // ws + 1 to start on wst_soft
           input /= gain_comp_factor;
@@ -348,11 +335,11 @@ void RotarySpeakerEffect::handleStreamingMismatches(int streamingRevision, int c
 {
    if (streamingRevision <= 12)
    {
-      fxdata->p[rsp_rotor_rate].val.f = 0.7;
-      fxdata->p[rsp_drive].val.f = 0.f;
-      fxdata->p[rsp_drive].deactivated = true;
-      fxdata->p[rsp_waveshape].val.i = 0;
-      fxdata->p[rsp_width].val.f = 1.f;
-      fxdata->p[rsp_mix].val.f = 1.f;
+      fxdata->p[rot_rotor_rate].val.f = 0.7;
+      fxdata->p[rot_drive].val.f = 0.f;
+      fxdata->p[rot_drive].deactivated = true;
+      fxdata->p[rot_waveshape].val.i = 0;
+      fxdata->p[rot_width].val.f = 1.f;
+      fxdata->p[rot_mix].val.f = 1.f;
    }
 }

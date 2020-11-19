@@ -62,6 +62,22 @@ public:
       return ringout_time;
    }
 
+   enum rev1_params
+   {
+      rev1_predelay = 0,
+      rev1_shape,
+      rev1_roomsize,
+      rev1_decaytime,
+      rev1_damping,
+      rev1_lowcut,
+      rev1_freq1,
+      rev1_gain1,
+      rev1_highcut,
+      rev1_mix,
+      rev1_width,
+      // rev1_variation,
+   };
+
 private:
    void update_rtime();
    void update_rsize();

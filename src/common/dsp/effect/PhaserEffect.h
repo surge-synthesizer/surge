@@ -49,6 +49,22 @@ public:
    virtual int group_label_ypos(int id) override;
    virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
+   enum phaser_params
+   {
+      ph_basefreq = 0,
+      ph_feedback,
+      ph_q,
+      ph_mod_rate,
+      ph_mod_depth,
+      ph_stereo,
+      ph_mix,
+      ph_width,
+      ph_stages,
+      ph_spread,
+
+      ph_num_params,
+   };
+
 private:
    lipol<float, true> feedback;
    static const int max_stages = 16;
