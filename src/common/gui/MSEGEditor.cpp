@@ -94,6 +94,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
+      setMouseableArea(getViewSize());
    };
 
    /*
@@ -1156,6 +1157,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       endCursorHide();
 
       return kMouseEventHandled;
+   }
+   bool magnify(CPoint& where, float amount) override
+   {
+      std::cout << "MSEG EDITOR Magnify " << amount << std::endl;
+      return true;
    }
 
    virtual CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons ) override {

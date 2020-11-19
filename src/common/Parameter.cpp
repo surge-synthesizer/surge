@@ -283,6 +283,7 @@ bool Parameter::can_be_absolute()
    {
    case ct_oscspread:
    case ct_pitch_semi7bp_absolutable:
+   case ct_fmratio:
       return true;
    }
    return false;
@@ -1722,6 +1723,48 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    {
    case ct_fmratio:
    {
+      if( absolute )
+      {
+         float bpv = (f - 16.0) / 16.0;
+         float bpu = ( f + modulationDepth - 16.0 ) / 16.0;
+         float bpd = ( f - modulationDepth - 16.0 ) / 16.0;
+         float mul = 69;
+         if( extend_range ) mul = 150;
+         float note = 69 + mul * bpv;
+         float noteup = 69 + mul * bpu;
+         float notedn = 60 + mul * bpd;
+
+         auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
+         auto frequp = 440.0 * pow( 2.0, (noteup - 69.0) / 12 );
+         auto freqdn = 440.0 * pow( 2.0, (notedn - 69.0 ) / 12);
+         int dp = (detailedMode ? 6 : 2);
+
+         switch( displaymode )
+         {
+         case TypeIn:
+         case Menu:
+            sprintf( txt, "%.*f Hz", dp, frequp - freq );
+            break;
+         case InfoWindow:
+            if( iw )
+            {
+               auto put = [dp](std::string &tg, float val) {
+                  char txt[256];
+                  sprintf( txt, "%.*f Hz", dp, val );
+                  tg = txt;
+               };
+               put( iw->val, freq );
+               put( iw->valplus, frequp );
+               put( iw->valminus, freqdn );
+               put( iw->dvalplus, frequp - freq);
+               put( iw->dvalminus, freq - freqdn );
+               sprintf( txt, "%.*f Hz %.*f Hz %.*f Hz", dp, freqdn, dp, freq, dp, frequp);
+               break;
+            }
+
+         }
+         return;
+      }
       float mf = modulationDepth;
       // OK so this is already handed to us extended and this one is wierd so
       auto qq = mf;
@@ -2079,14 +2122,30 @@ void Parameter::get_display(char* txt, bool external, float ef)
       {
       case ct_fmratio:
       {
-         auto q = get_extended(f);
-         if( extend_range && q < 0 )
+         if( absolute )
          {
-            sprintf(txt, "C : 1 / %.*f", (detailedMode ? 6 : 2), -get_extended(f));
+            /*
+             * OK so I am 0 to 32. So lets define a note
+             */
+            float bpv = (f - 16.0) / 16.0;
+            auto note = 69 + 69 * bpv;
+            if (extend_range)
+               note = 69 + 150 * bpv;
+            auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
+            sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), freq);
          }
          else
          {
-            sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), get_extended(f));
+            auto q = get_extended(f);
+
+            if (extend_range && q < 0)
+            {
+               sprintf(txt, "C : 1 / %.*f", (detailedMode ? 6 : 2), -get_extended(f));
+            }
+            else
+            {
+               sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), get_extended(f));
+            }
          }
          break;
       }
@@ -2313,7 +2372,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%d bands", i);
          break;
       case ct_distortion_waveshape:
-         sprintf(txt, wst_names[wst_soft + i]);
+         sprintf(txt, "%s", wst_names[wst_soft + i]);
          break;
       case ct_oscroute:
          switch (i)
@@ -2864,44 +2923,57 @@ bool Parameter::set_value_from_string( std::string s )
    {
    case ct_fmratio:
    {
-      // In this case we have to set nv differently
-      const char *strip = &(c[0]);
-      while( *strip != '\0' && ! std::isdigit( *strip ) && *strip != '.' ) ++strip;
-
-      // OK so do we contain a /?
-      const char *slp;
-      if( (slp = strstr( strip, "/" )) != nullptr )
+      if( absolute )
       {
-         float num = std::atof( strip );
-         float den = std::atof( slp + 1 );
-         if( den == 0 )
-            nv = 1;
-         else
-            nv = num / den;
+         float uv = std::atof( c ) / 440.f;
+         float n = log2( uv ) * 12 + 69;
+         float bpv = ( n - 69 ) / 69.f;
+         if( extend_range )
+            bpv = ( n - 69 ) / 150.f;
+         val.f = bpv * 16 + 16;
       }
       else
       {
-         nv = std::atof( strip );
-      }
-      if( extend_range )
-      {
-         if( nv < 1 )
+         // In this case we have to set nv differently
+         const char* strip = &(c[0]);
+         while (*strip != '\0' && !std::isdigit(*strip) && *strip != '.')
+            ++strip;
+
+         // OK so do we contain a /?
+         const char* slp;
+         if ((slp = strstr(strip, "/")) != nullptr)
          {
-            float oonv = -1.0 / nv;
-            // oonv = - ( ( 16 - f ) * 2 + 1)
-            // -oonv-1 = (16-f)*2
-            // (1+oonv)/2 = f - 16;
-            // (1+oonv)/2 + 16 = f;
-            nv = 0.5 * ( 1 + oonv ) + 16;
+            float num = std::atof(strip);
+            float den = std::atof(slp + 1);
+            if (den == 0)
+               nv = 1;
+            else
+               nv = num / den;
          }
          else
          {
-            // nv = ( f - 16 ) * 2 + 1
-            // (nv - 1)/2 + 16 = f
-            nv = ( nv - 1 ) / 2 + 16;
+            nv = std::atof(strip);
          }
+         if (extend_range)
+         {
+            if (nv < 1)
+            {
+               float oonv = -1.0 / nv;
+               // oonv = - ( ( 16 - f ) * 2 + 1)
+               // -oonv-1 = (16-f)*2
+               // (1+oonv)/2 = f - 16;
+               // (1+oonv)/2 + 16 = f;
+               nv = 0.5 * (1 + oonv) + 16;
+            }
+            else
+            {
+               // nv = ( f - 16 ) * 2 + 1
+               // (nv - 1)/2 + 16 = f
+               nv = (nv - 1) / 2 + 16;
+            }
+         }
+         val.f = nv;
       }
-      val.f = nv;
    }
    break;
 
@@ -3012,6 +3084,21 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
    switch( ctrltype )
    {
    case ct_fmratio:
+      if( absolute )
+      {
+         auto dfreq = std::atof( s.c_str() );
+
+         float bpv = (val.f - 16.0) / 16.0;
+         float mul = 69;
+         if( extend_range ) mul = 150;
+         float note = 69 + mul * bpv;
+         auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
+         auto tgfreq = freq + dfreq;
+         auto tgnote = log2( tgfreq / 440.0 ) * 12 + 69;
+         auto tgbpv = ( tgnote - 69 ) / mul;
+         auto dbpv = ( tgbpv - bpv ) / 2.0;
+         return dbpv;
+      }
       if( extend_range )
       {
          auto mv = (float) std::atof( s.c_str() );

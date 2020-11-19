@@ -1499,7 +1499,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             style |= kBipolar;
          break;
       case ct_fmratio:
-         if (p->extend_range)
+         if (p->extend_range && ! p->absolute)
             style |= kBipolar;
          break;
       };
@@ -3033,7 +3033,27 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             }
             if (p->can_be_absolute())
             {
-               addCallbackMenu(contextMenu, "Absolute", [this, p]() { p->absolute = !p->absolute; });
+               addCallbackMenu(contextMenu, "Absolute", [this, p]() {
+                  p->absolute = !p->absolute;
+
+                  // FIXME : What's a better aprpoach?
+                  if( p->ctrltype == ct_fmratio )
+                  {
+                     char txt[256], ntxt[256];
+                     memset( txt, 0, 256 );
+                     strncpy( txt, p->get_name(), 256 );
+                     if( p->absolute )
+                     {
+                        snprintf( ntxt, 256, "M%c Frequency", txt[1] );
+                     }
+                     else
+                     {
+                        snprintf( ntxt, 256, "M%c Ratio", txt[1] ); // Ladies and gentlemen, MC Ratio!
+                     }
+                     p->set_name( ntxt );
+                     synth->refresh_editor = true;
+                  }
+               });
                contextMenu->checkEntry(eid, p->absolute);
                eid++;
             }
