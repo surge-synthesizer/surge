@@ -82,13 +82,13 @@
   <param id="osc.param_7" type="0" help_url="#classic"/>
 
   <!-- special case oscillator params for Sine (1) -->
-  <param id="osc.param_1" type="1" help_url="#sinus"/>
-  <param id="osc.param_2" type="1" help_url="#sinus"/>
-  <param id="osc.param_3" type="1" help_url="#sinus"/>
-  <param id="osc.param_4" type="1" help_url="#sinus"/>
-  <param id="osc.param_5" type="1" help_url="#sinus"/>
-  <param id="osc.param_6" type="1" help_url="#sinus"/>
-  <param id="osc.param_7" type="1" help_url="#sinus"/>
+  <param id="osc.param_1" type="1" help_url="#sine"/>
+  <param id="osc.param_2" type="1" help_url="#sine"/>
+  <param id="osc.param_3" type="1" help_url="#sine"/>
+  <param id="osc.param_4" type="1" help_url="#sine"/>
+  <param id="osc.param_5" type="1" help_url="#sine"/>
+  <param id="osc.param_6" type="1" help_url="#sine"/>
+  <param id="osc.param_7" type="1" help_url="#sine"/>
 
   <!-- special case oscillator params for Wavetable (2) -->
   <param id="osc.param_1" type="2" help_url="#wavetable"/>
