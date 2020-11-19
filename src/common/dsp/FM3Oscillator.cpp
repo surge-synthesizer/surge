@@ -61,11 +61,36 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
    auto m1 = oscdata->p[fm3_m1ratio].get_extended(localcopy[oscdata->p[fm3_m1ratio].param_id_in_scene].f);
    if( m1 < 0 ) m1 = 1.0 / m1;
-   RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m1 ) );
+   if( oscdata->p[fm3_m1ratio].absolute )
+   {
+      float f = localcopy[oscdata->p[fm3_m1ratio].param_id_in_scene].f;
+      float bpv = (f - 16.0) / 16.0;
+      auto note = 69 + 69 * bpv;
+      if (oscdata->p[fm3_m1ratio].extend_range)
+         note = 69 + 150 * bpv;
+      RM1.set_rate( min( M_PI, (double) pitch_to_omega( note ) ) );
+   }
+   else
+   {
+      RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m1));
+   }
 
    auto m2 = oscdata->p[fm3_m2ratio].get_extended(localcopy[oscdata->p[fm3_m2ratio].param_id_in_scene].f);
    if( m2 < 0 ) m2 = 1.0 / m2;
-   RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m2 ) );
+   if( oscdata->p[fm3_m2ratio].absolute )
+   {
+      float f = localcopy[oscdata->p[fm3_m2ratio].param_id_in_scene].f;
+      float bpv = (f - 16.0) / 16.0;
+      auto note = 69 + 69 * bpv;
+      if (oscdata->p[fm3_m2ratio].extend_range)
+         note = 69 + 150 * bpv;
+      RM2.set_rate( min( M_PI, (double) pitch_to_omega( note ) ) );
+   }
+   else
+   {
+      RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m2));
+   }
+
    AM.set_rate(min(
        M_PI, (double)pitch_to_omega(60.0 + localcopy[oscdata->p[fm3_m3freq].param_id_in_scene].f)));
 
@@ -118,12 +143,18 @@ void FM3Oscillator::init_ctrltypes()
 {
    oscdata->p[fm3_m1amount].set_name("M1 Amount");
    oscdata->p[fm3_m1amount].set_type(ct_percent);
-   oscdata->p[fm3_m1ratio].set_name("M1 Ratio");
+   if( oscdata->p[fm3_m1ratio].absolute )
+      oscdata->p[fm3_m1ratio].set_name("M1 Frequency");
+   else
+      oscdata->p[fm3_m1ratio].set_name("M1 Ratio");
    oscdata->p[fm3_m1ratio].set_type(ct_fmratio);
 
    oscdata->p[fm3_m2amount].set_name("M2 Amount");
    oscdata->p[fm3_m2amount].set_type(ct_percent);
-   oscdata->p[fm3_m2ratio].set_name("M2 Ratio");
+   if( oscdata->p[fm3_m2ratio].absolute )
+      oscdata->p[fm3_m2ratio].set_name("M2 Frequency");
+   else
+      oscdata->p[fm3_m2ratio].set_name("M2 Ratio");
    oscdata->p[fm3_m2ratio].set_type(ct_fmratio);
 
    oscdata->p[fm3_m3amount].set_name("M3 Amount");
@@ -150,6 +181,11 @@ void FM3Oscillator::handleStreamingMismatches(int streamingRevision, int current
    if (streamingRevision <= 12)
    {
       oscdata->p[fm3_feedback].set_type(ct_osc_feedback);
+   }
+   if( streamingRevision < 14 ) // 1.8.0
+   {
+      oscdata->p[fm3_m1ratio].absolute = false;
+      oscdata->p[fm3_m2ratio].absolute = false;
    }
 }
 
