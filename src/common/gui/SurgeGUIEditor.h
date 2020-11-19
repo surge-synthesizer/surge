@@ -164,6 +164,7 @@ public:
    void setDisabledForParameter(Parameter* p, CSurgeSlider* s);
 
    static bool fromSynthGUITag( SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q );
+   int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
 
 private:
    void openOrRecreateEditor();
@@ -172,7 +173,6 @@ private:
    bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
    void repushAutomationFor( Parameter *p );
    SurgeSynthesizer* synth = nullptr;
-   int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
    bool editor_open = false;
    bool mod_editor = false;
    modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1};
@@ -332,7 +332,7 @@ public:
 
    void updateStateOnSynth();
 
-   int oscilatorMenuIndex = 0;
+   int oscilatorMenuIndex[n_scenes][n_oscs] = {0};
 
 private:
    SGEDropAdapter *dropAdapter = nullptr;
