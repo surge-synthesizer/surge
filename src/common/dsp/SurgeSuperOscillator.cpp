@@ -145,18 +145,8 @@ using namespace std;
 // 202 samples (American)
 // const float integrator_hpf = 0.999f;
 // pow(ln(0.5)/(samplerate/50hz)
-const float hpf_cycle_loss = 0.995f;
 
-enum sso_params
-{
-   sso_shape = 0,
-   sso_width1,
-   sso_width2,
-   sso_mainsubmix,
-   sso_sync,
-   sso_unison_detune,
-   sso_unison_voices,
-};
+const float hpf_cycle_loss = 0.995f;
 
 AbstractBlitOscillator::AbstractBlitOscillator(SurgeStorage* storage,
                                                OscillatorStorage* oscdata,
@@ -285,24 +275,22 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
       {
          oscstate[i] = 0.f;
          syncstate[i] = 0.f;
-         last_level[i] = 0.f;
       }
       else
       {
          double drand = (double)rand() / RAND_MAX;
-         double detune = oscdata->p[sso_unison_detune].get_extended(localcopy[id_detune].f) *
-                         (detune_bias * float(i) + detune_offset);
+         double detune = oscdata->p[sso_unison_detune].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
          double st = 0.5 * drand * storage->note_to_pitch_inv_tuningctr(detune);
          drand = (double)rand() / RAND_MAX;
          oscstate[i] = st;
          syncstate[i] = st;
-         last_level[i] = 0.0;
       }
       dc_uni[i] = 0.f;
-      state[i] = 0.f;
-      pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
       driftlfo[i] = 0.f;
       driftlfo2[i] = 0.f;
+      last_level[i] = 0.f;
+      state[i] = 0.f;
+      pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
    }
 }
 

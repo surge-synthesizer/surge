@@ -27,6 +27,17 @@ private:
    float FMphase alignas(16)[BLOCK_SIZE_OS + 4];
 
 public:
+   enum sso_params
+   {
+      sso_shape = 0,
+      sso_width1,
+      sso_width2,
+      sso_mainsubmix,
+      sso_sync,
+      sso_unison_detune,
+      sso_unison_voices,
+   };
+
    SurgeSuperOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
    virtual void init_ctrltypes() override;

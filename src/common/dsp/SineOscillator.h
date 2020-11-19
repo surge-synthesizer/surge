@@ -33,7 +33,7 @@ public:
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
 
-   quadr_osc sinus[MAX_UNISON];
+   quadr_osc sine[MAX_UNISON];
    double phase[MAX_UNISON];
    float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
    float fb_val;

@@ -19,34 +19,23 @@
 
 using namespace std;
 
-/* FM osc */
-
-enum fm3_params
-{
-   fm3_m1amount = 0,
-   fm3_m1ratio,
-   fm3_m2amount,
-   fm3_m2ratio,
-   fm3_m3amount,
-   fm3_m3freq,
-   fm3_feedback,
-};
-
 FM3Oscillator::FM3Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {}
 
 void FM3Oscillator::init(float pitch, bool is_display)
 {
-   // phase = oscdata->retrigger.val.b ? ((oscdata->startphase.val.f) * M_PI * 2) : 0.f;
-   phase = 0.0;
+   if (is_display)
+      phase = 0.0;
+   else
+      phase = oscdata->retrigger.val.b ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
    lastoutput = 0.0;
    driftlfo = 0;
    driftlfo2 = 0;
    fb_val = 0.0;
-   AM.set_phase(0.0);
-   RM1.set_phase(0.0);
-   RM2.set_phase(0.0);
+   AM.set_phase(phase);
+   RM1.set_phase(phase);
+   RM2.set_phase(phase);
 }
 
 FM3Oscillator::~FM3Oscillator()
@@ -60,14 +49,15 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
    double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
 
    auto m1 = oscdata->p[fm3_m1ratio].get_extended(localcopy[oscdata->p[fm3_m1ratio].param_id_in_scene].f);
-   if( m1 < 0 ) m1 = 1.0 / m1;
-   RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m1 ) );
+   if (m1 < 0)
+      m1 = 1.0 / m1;
+   RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m1));
 
    auto m2 = oscdata->p[fm3_m2ratio].get_extended(localcopy[oscdata->p[fm3_m2ratio].param_id_in_scene].f);
-   if( m2 < 0 ) m2 = 1.0 / m2;
-   RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m2 ) );
-   AM.set_rate(min(
-       M_PI, (double)pitch_to_omega(60.0 + localcopy[oscdata->p[fm3_m3freq].param_id_in_scene].f)));
+   if (m2 < 0)
+      m2 = 1.0 / m2;
+   RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) * m2));
+   AM.set_rate(min(M_PI, (double)pitch_to_omega(60.0 + localcopy[oscdata->p[fm3_m3freq].param_id_in_scene].f)));
 
    double d1 = localcopy[oscdata->p[fm3_m1amount].param_id_in_scene].f;
    double d2 = localcopy[oscdata->p[fm3_m2amount].param_id_in_scene].f;
@@ -88,8 +78,7 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
       RM2.process();
       AM.process();
 
-      output[k] = phase + RelModDepth1.v * RM1.r + RelModDepth2.v * RM2.r + AbsModDepth.v * AM.r +
-                  lastoutput;
+      output[k] = phase + RelModDepth1.v * RM1.r + RelModDepth2.v * RM2.r + AbsModDepth.v * AM.r + lastoutput;
 
       if (FM)
          output[k] += FMdepth.v * master_osc[k];
@@ -151,5 +140,8 @@ void FM3Oscillator::handleStreamingMismatches(int streamingRevision, int current
    {
       oscdata->p[fm3_feedback].set_type(ct_osc_feedback);
    }
+   if (streamingRevision < 14)
+   {
+      oscdata->retrigger.val.b = true;
+   }
 }
-

@@ -23,6 +23,17 @@
 class FM3Oscillator : public Oscillator
 {
 public:
+   enum fm3_params
+   {
+      fm3_m1amount = 0,
+      fm3_m1ratio,
+      fm3_m2amount,
+      fm3_m2ratio,
+      fm3_m3amount,
+      fm3_m3freq,
+      fm3_feedback,
+   };
+
    FM3Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
    virtual void process_block(
@@ -37,5 +48,3 @@ public:
    lag<double> FMdepth, AbsModDepth, RelModDepth1, RelModDepth2, FeedbackDepth;
    virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 };
-
-

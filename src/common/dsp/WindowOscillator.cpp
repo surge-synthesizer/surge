@@ -58,7 +58,11 @@ void WindowOscillator::init(float pitch, bool is_display)
    float out_attenuation_inv = sqrt((float)NumUnison);
    OutAttenuation = 1.0f / (out_attenuation_inv * 16777216.f);
 
-   if (NumUnison == 1)
+   bool odd;
+   float mid;
+   int half; 
+
+   if (NumUnison == 1 || is_display)
    {
       DetuneBias = 1;
       DetuneOffset = 0;
@@ -72,22 +76,25 @@ void WindowOscillator::init(float pitch, bool is_display)
       DetuneBias = (float)2.f / ((float)NumUnison - 1.f);
       DetuneOffset = -1.f;
 
-      bool odd = NumUnison & 1;
-      float mid = NumUnison * 0.5 - 0.5;
-      int half = NumUnison >> 1;
+      odd = NumUnison & 1;
+      mid = NumUnison * 0.5 - 0.5;
+      half = NumUnison >> 1;
+   }
 
+   if (!is_display)
+   {
       for (int i = 0; i < NumUnison; i++)
       {
          float d = fabs((float)i - mid) / mid;
-
+     
          if (odd && (i >= half))
             d = -d;
          if (i & 1)
             d = -d;
-
+     
          Window.Gain[i][0] = limit_range((int)(float)(128.f * megapanL(d)), 0, 255);
          Window.Gain[i][1] = limit_range((int)(float)(128.f * megapanR(d)), 0, 255);
-
+     
          if (oscdata->retrigger.val.b)
             Window.Pos[i] = (storage->WindowWT.size + ((storage->WindowWT.size * i) / NumUnison)) << 16;
          else

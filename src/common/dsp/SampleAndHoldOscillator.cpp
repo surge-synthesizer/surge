@@ -112,8 +112,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
       else
       {
          double drand = (double)rand() / RAND_MAX;
-         double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
-                         (detune_bias * float(i) + detune_offset);
+         double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
          double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
          drand = (double)rand() / RAND_MAX;
          double ot = drand * storage->note_to_pitch_tuningctr(detune);
