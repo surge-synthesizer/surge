@@ -283,9 +283,9 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
    {
       if (oscdata->retrigger.val.b || is_display)
       {
-         oscstate[i] = 0;
-         syncstate[i] = 0;
-         last_level[i] = -0.4;
+         oscstate[i] = 0.f;
+         syncstate[i] = 0.f;
+         last_level[i] = 0.f;
       }
       else
       {
@@ -298,8 +298,8 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
          syncstate[i] = st;
          last_level[i] = 0.0;
       }
-      dc_uni[i] = 0;
-      state[i] = 0;
+      dc_uni[i] = 0.f;
+      state[i] = 0.f;
       pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
       driftlfo[i] = 0.f;
       driftlfo2[i] = 0.f;
