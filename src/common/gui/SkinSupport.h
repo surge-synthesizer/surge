@@ -348,6 +348,13 @@ public:
    static SkinDB& get();
 
    struct Entry {
+
+      enum RootType {
+         UNKNOWN,
+         FACTORY,
+         USER
+      } rootType = UNKNOWN;
+
       std::string root;
       std::string name;
       std::string displayName;

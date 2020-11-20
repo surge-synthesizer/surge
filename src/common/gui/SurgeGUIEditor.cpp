@@ -5442,6 +5442,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
              this->synth->refresh_editor = true;
              Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkin",
                                                     entry.name);
+             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultSkinRootType", entry.rootType );
           });
           cb->setChecked(entry.matchesSkin(currentSkin));
           tid++;
