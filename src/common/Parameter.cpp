@@ -1366,9 +1366,9 @@ float Parameter::get_extended(float f)
    case ct_fmratio:
    {
       if( f > 16 )
-         return ( ( f - 16 ) * 2  + 1 );
+         return ( ( f - 16 ) * 31.f / 16.f  + 1 );
       else
-         return -( ( 16 - f ) * 2 + 1 );
+         return -( ( 16 - f ) * 31.f / 16.f + 1 );
    }
    default:
       return f;
@@ -1776,7 +1776,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
          else {
             qq = mf - 1;
          }
-         qq = ( qq + 32 ) / 64;
+         qq = ( qq + 31 ) / 64;
       }
       float exmf = qq;
       int dp = (detailedMode ? 6 : 2);
@@ -2958,13 +2958,13 @@ bool Parameter::set_value_from_string( std::string s )
                // -oonv-1 = (16-f)*2
                // (1+oonv)/2 = f - 16;
                // (1+oonv)/2 + 16 = f;
-               nv = 0.5 * (1 + oonv) + 16;
+               nv = 16.f / 31.f * (1 + oonv) + 16;
             }
             else
             {
                // nv = ( f - 16 ) * 2 + 1
                // (nv - 1)/2 + 16 = f
-               nv = (nv - 1) / 2 + 16;
+               nv = (nv - 1) * 16.f / 31.f + 16;
             }
          }
          val.f = nv;
@@ -3096,7 +3096,8 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
       if( extend_range )
       {
          auto mv = (float) std::atof( s.c_str() );
-         mv = mv / 32;
+         std::cout << "MV desired is " << mv << std::endl;
+         mv = mv / 31;
          return mv;
       }
    default:
