@@ -265,35 +265,9 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
     Surge::Debug::record( "CScalableBitmap::draw" );
 #endif
     /*
-    ** CViewContainer, in the ::drawRect method, no matter what invalidates, calls a drawBackground
-    ** on the entire background with a clip rectangle applied. This is not normally a problem when
-    ** you invalidate infrequently or just have a constant color background. But in Surge we have
-    ** a drawn background on our frame and we invalidate part of our UI every frame because of the
-    ** vu meter. So every cycle we redraw our entire background into a vu meter sized clip rectangle
-    ** which is immediately overwritten by a vu meter which fills its entire space.
-    **
-    ** There's no good way out of this. We can't subclass CFrame since it is final (yuch).
-    ** We cant have the vu meter not invalidate. So we make the bitmap smart.
-    **
-    ** Well, smart. We make it so that if we are redrawing a rectangle which is positioned relative
-    ** to the background at the same point as the VU Meter. That is, a draw at 763+14 on a background
-    ** of size 904x542 (ratioed for scaling) gets background supressed. Also turns out you need to
-    ** make sure the size is OK since the entire effect panel draws BG starting at the same point
-    ** just with bigger clip, causing #716.
-    **
-    ** Am I particularly proud of this? No. But it does supress all those draws.
-    */
-    VSTGUI::CRect cl;
-    context->getClipRect(cl);
-    float p1 = cl.getTopLeft().x / rect.getWidth();
-    float p2 = cl.getTopLeft().y / rect.getHeight();
-    float d1 = cl.getWidth() / rect.getWidth();
-    float d2 = cl.getHeight() / rect.getHeight();
-    if (fabs(p1 - 763.0 / 904.0) < 0.01 && fabs(p2 - 14.0 / 542.0) < 0.01 && // this is the x-y position
-        fabs(d1 - 123.0 / 904.0) < 0.01 && fabs(d2 - 13.0 / 542.0) < 0.01) // this makes sure I am just in the vu-only clip rect 
-    {
-       return;
-    }
+     * From 1.6 beta 9 until aeb45a38 we used to have a VUMeter optimization here which we don't need now CScalableBitmap
+     * uses an offscreen cache (which it did after 1.6.3 or so I think?). Just FYI!
+     */
 
     if (svgImage || (pngZooms.find(100) != pngZooms.end() ) )
     {
