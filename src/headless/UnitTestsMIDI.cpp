@@ -142,3 +142,180 @@ TEST_CASE( "Duplicate Note Channel Management Issue 3084", "[midi]" )
       }
    }
 }
+
+TEST_CASE( "Sustain Pedal and Mono", "[midi]" ) // #1459
+{
+   auto playingNoteCount = [](std::shared_ptr<SurgeSynthesizer> surge ) {
+      int ct =0;
+      for (auto v : surge->voices[0])
+      {
+         if( v->state.gate ) ct ++;
+      }
+      return ct;
+   };
+   auto solePlayingNote = [](std::shared_ptr<SurgeSynthesizer> surge) {
+      int ct = 0;
+      int res = -1;
+      for( auto v : surge->voices[0] )
+      {
+         if( v->state.gate )
+         {
+            ct++;
+            res = v->state.key;
+         }
+      }
+      REQUIRE( ct == 1 );
+      return res;
+   };
+   SECTION( "No Pedal Mono" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+      surge->storage.getPatch().scene[0].polymode.val.i = pm_mono;
+      auto step = [surge]() { for( int i=0; i<25; ++i ) surge->process(); };
+      step();
+
+      // Press 4 chromatic keys down
+      for( int n=60; n<64; ++n )
+      {
+         surge->playNote(0, n, 120, 0); step();
+         REQUIRE(solePlayingNote(surge) == n );
+
+         for( int i=0; i<128; ++i )
+         {
+            int xp = ( i >= 60 && i <= n ) ? 120 : 0;
+            REQUIRE( surge->channelState[0].keyState[i].keystate == xp );
+         }
+      }
+
+      // And remove them in reverse order
+      for( int n=63; n>=60; --n )
+      {
+         surge->releaseNote(0, n, 120); step();
+
+         if( n == 60 )
+            REQUIRE( playingNoteCount(surge) == 0 );
+         else
+            REQUIRE( solePlayingNote(surge) == n-1);
+
+         for( int i=0; i<128; ++i )
+         {
+            int xp = ( i >= 60 && i < n ) ? 120 : 0;
+            REQUIRE( surge->channelState[0].keyState[i].keystate == xp );
+         }
+      }
+   }
+
+   SECTION( "Release to Highest by Default" )
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE( surge );
+      surge->storage.getPatch().scene[0].polymode.val.i = pm_mono;
+      auto step = [surge]() { for( int i=0; i<25; ++i ) surge->process(); };
+      step();
+
+      // In order play 60 66 64 65 62
+      surge->playNote(0, 60, 120, 0); step();
+      surge->playNote(0, 66, 120, 0); step();
+      surge->playNote(0, 64, 120, 0); step();
+      surge->playNote(0, 65, 120, 0); step();
+      surge->playNote(0, 62, 120, 0); step();
+
+      // So note 62 should be playing
+      REQUIRE(solePlayingNote( surge ) == 62 );
+
+      // Now release 64 and that should be unch
+      surge->releaseNote( 0, 64, 0 ); step();
+      REQUIRE(solePlayingNote( surge ) == 62 );
+
+      // And release 62 and 66 should play because we have highest note semantics
+      surge->releaseNote( 0, 62, 0 ); step();
+      REQUIRE(solePlayingNote( surge ) == 66 );
+   }
+
+   SECTION( "Pedal Holds Last Played" )
+   {
+      auto step = [](auto surge) { for( int i=0; i<25; ++i ) surge->process(); };
+      auto testInSurge = [](auto kernel) {
+         auto surge = Surge::Headless::createSurge(44100);
+         REQUIRE( surge );
+         surge->storage.getPatch().scene[0].polymode.val.i = pm_mono;
+         kernel(surge);
+      };
+
+      int susp = 64;
+      testInSurge( [&]( auto surge ) {
+         // Case one - no pedal play and release
+         INFO( "Single Note On and Off" );
+         surge->playNote(0, 60, 120, 0); step(surge);
+         surge->releaseNote( 0, 60, 0 ); step(surge);
+         REQUIRE( playingNoteCount(surge) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Single Pedal Before Note On and Off" );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 60, 0 ); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - use pedal play and release
+        INFO( "Single Pedal After Note On" );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->releaseNote( 0, 60, 0 ); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Note Release with note held. This is the one Evil wants changed." );
+        surge->playNote( 0, 48, 127, 0 ); step( surge );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 60, 0); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 ); // We want a mode where this is 48
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( solePlayingNote( surge ) == 48 );
+        surge->releaseNote( 0, 48, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Under-Note Release with note held. This is the one Evil wants changed." );
+        surge->playNote( 0, 48, 127, 0 ); step( surge );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 60, 0); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 ); // We want a mode where this is 48
+        surge->releaseNote( 0, 48, 0 ); step( surge );
+        REQUIRE( solePlayingNote( surge ) == 60 ); // and in that mode this would stay 48
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Under-Note Release with pedan on." );
+        surge->playNote( 0, 48, 127, 0 ); step( surge );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 48, 0); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->releaseNote( 0, 60, 0 ); step( surge );
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+
+   }
+}
