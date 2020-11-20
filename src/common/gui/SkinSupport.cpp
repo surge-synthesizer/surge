@@ -57,9 +57,11 @@ std::shared_ptr<Skin> SkinDB::defaultSkin(SurgeStorage *storage)
       return getSkin(defaultSkinEntry);
    else
    {
+      auto st = (Entry::RootType)(Surge::Storage::getUserDefaultValue(storage, "defaultSkinRootType", Entry::UNKNOWN ));
+
       for( auto e : availableSkins )
       {
-         if( e.name == uds )
+         if( e.name == uds && ( e.rootType == st || st == Entry::UNKNOWN ))
             return getSkin(e);
       }
       return getSkin(defaultSkinEntry);
@@ -87,6 +89,10 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
 
    for (auto& source : paths)
    {
+      Entry::RootType rt = Entry::UNKNOWN;
+      if( path_to_string(source) == path_to_string(paths[0]) ) rt = Entry::FACTORY;
+      if( path_to_string(source) == path_to_string(paths[1]) ) rt = Entry::USER;
+
       std::vector<fs::path> alldirs;
       std::deque<fs::path> workStack;
       workStack.push_back(source);
@@ -130,9 +136,11 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
                auto path = name.substr(0, sp + 1);
                auto lo = name.substr(sp + 1);
                Entry e;
+               e.rootType = rt;
                e.root = path;
                e.name = lo + sep;
                if (e.name.find("default.surge-skin") != std::string::npos &&
+                   rt == Entry::FACTORY &&
                    defaultSkinEntry.name == "")
                {
                   defaultSkinEntry = e;
