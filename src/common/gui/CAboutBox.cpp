@@ -138,8 +138,12 @@ CAboutBox::CAboutBox(const CRect& size,
    std::string flavor = "Standalone";
 #endif
 
+   std::string arch = Surge::Build::BuildArch;
 #if MAC
    std::string platform = "macOS";
+#if ARM_NEON
+   arch = "Apple Silicon";
+#endif
 #elif WINDOWS
    std::string platform = "Windows";
 #elif LINUX
@@ -149,7 +153,7 @@ CAboutBox::CAboutBox(const CRect& size,
 #endif
 
    std::string bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
-   std::string system = (std::string)Surge::Build::BuildArch + " CPU, " + platform + " " + flavor + ", " + bitness;;
+   std::string system = arch + " CPU, " + platform + " " + flavor + ", " + bitness;;
 
    infoStringForClipboard = "Surge Synthesizer\n";
    addTwoColumnLabel("Version:", version, false, "", 76, 500, true);
