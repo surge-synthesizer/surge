@@ -419,6 +419,13 @@ public:
    ** if( storage && storage->isStandardTuning ) { }
    */
    SurgeStorage *storage = nullptr;
+
+   static inline float intScaledToFloat( int v, int vmax, int vmin = 0 ) {
+      return 0.005 + 0.99 * ((float)(v - vmin)) / ((float)(vmax - vmin));
+   }
+   static inline int intUnscaledFromFloat( float f, int vmax, int vmin = 0 ) {
+      return (int)((1 / 0.99) * (f - 0.005) * (float)(vmax - vmin) + 0.5) + vmin;
+   }
 };
 
 // I don't make this a member since param needs to be copyable with memcpy.

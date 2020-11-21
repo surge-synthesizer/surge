@@ -22,7 +22,7 @@ void DualDelayEffect::init()
    lfophase = 0.0;
    ringout_time = 100000;
    envf = 0.f;
-   LFOval = 0,f;
+   LFOval = 0.f;
    LFOdirection = true;
    lp.suspend();
    hp.suspend();

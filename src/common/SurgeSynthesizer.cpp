@@ -1698,7 +1698,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       bool got = false;
       for (int i = 0; i < 8; i++)
       {
-         if (refresh_parameter_queue[i] < 0)
+         if (refresh_parameter_queue[i] < 0 || refresh_parameter_queue[i] == index )
          {
             refresh_parameter_queue[i] = index;
             got = true;
