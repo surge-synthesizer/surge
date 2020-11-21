@@ -49,6 +49,7 @@
 #include <iomanip>
 #include <sstream>
 #include <stack>
+#include <numeric>
 #include <unordered_map>
 #include <codecvt>
 #include "MSEGEditor.h"
@@ -704,181 +705,167 @@ void SurgeGUIEditor::idle()
          }
       }
 
+      std::vector<int> refreshIndices;
       if( synth->refresh_overflow )
       {
-         // Basicall yreset everything and repaint.
-         synth->refresh_overflow = false;
-         for( int i=0; i<8; ++i )
-            synth->refresh_parameter_queue[i] = -1;
-         for( int i=0; i<n_total_params; ++i )
-         {
-            auto p = param[i];
-            if( ! p ) p = nonmod_param[i];
-            if( p )
-            {
-               SurgeSynthesizer::ID jid;
-               if( synth->fromSynthSideId(i, jid ))
-                  if( synth->getParameter01(jid) != p->getValue() )
-                     p->setValue(synth->getParameter01(jid));
-            }
-
-         }
-         for( int i=0; i<n_customcontrollers; ++i )
-         {
-            gui_modsrc[ms_ctrl1 + i]->setValue(
-                ((ControllerModulationSource*)synth->storage.getPatch()
-                    .scene[current_scene].modsources[ms_ctrl1 + i])->get_target01());
-
-         }
+         refreshIndices.resize( n_total_params );
+         std::iota (std::begin(refreshIndices), std::end(refreshIndices), 0);
          frame->invalid();
       }
-      else for (int i = 0; i < 8; i++)
+      else
       {
-         if (synth->refresh_parameter_queue[i] >= 0)
+         for( int i=0; i<8; ++i )
+            if( synth->refresh_parameter_queue[i] >= 0 )
+               refreshIndices.push_back(synth->refresh_parameter_queue[i]);
+      }
+
+      synth->refresh_overflow = false;
+      for( int i=0; i<8; ++i )
+         synth->refresh_parameter_queue[i] = -1;
+
+
+      for( auto j : refreshIndices )
+      {
+         if ((j < n_total_params) && param[j])
          {
-            int j = synth->refresh_parameter_queue[i];
-            synth->refresh_parameter_queue[i] = -1;
-            if ((j < n_total_params) && param[j])
-            {
-               SurgeSynthesizer::ID jid;
-               if( synth->fromSynthSideId(j, jid ))
-                  param[j]->setValue(synth->getParameter01(jid));
-               frame->invalidRect(param[j]->getViewSize());
+            SurgeSynthesizer::ID jid;
+            if( synth->fromSynthSideId(j, jid ))
+               param[j]->setValue(synth->getParameter01(jid));
+            frame->invalidRect(param[j]->getViewSize());
 
-               if( oscdisplay )
+            if( oscdisplay )
+            {
+               ((COscillatorDisplay*)oscdisplay)->invalidateIfIdIsInRange(j);
+            }
+
+            if( lfodisplay )
+            {
+               ((CLFOGui*)lfodisplay)->invalidateIfIdIsInRange(j);
+            }
+
+         }
+         else if ((j >= metaparam_offset) && (j < (metaparam_offset + n_customcontrollers)))
+         {
+            int cc = j - metaparam_offset;
+            gui_modsrc[ms_ctrl1 + cc]->setValue(
+               ((ControllerModulationSource*)synth->storage.getPatch()
+                .scene[current_scene].modsources[ms_ctrl1 + cc])->get_target01());
+         }
+         else if((j>=0) && (j < n_total_params) && nonmod_param[j])
+         {
+            /*
+            ** What the heck is this NONMOD_PARAM thing?
+            **
+            ** There are a set of params - like discrete things like
+            ** octave and filter type - which are not LFO modulatable
+            ** and aren't in the params[] array. But they are exposed
+            ** properties, so you can control them from a DAW. The
+            ** DAW control works - everything up to this path (as described
+            ** in #160) works fine and sets the value but since there's
+            ** no CControl in param the above bails out. But ading
+            ** all these controls to param[] would have the unintended
+            ** side effect of giving them all the other param[] behaviours.
+            ** So have a second array and drop select items in here so we
+            ** can actually get them redrawing when an external param set occurs.
+            */
+            CControl *cc = nonmod_param[ j ];
+
+            /*
+            ** Some state changes enable and disable sliders. If this is one of those state changes and a value has changed, then
+            ** we need to invalidate them. See #2056.
+            */
+            auto tag = cc->getTag();
+            SurgeSynthesizer::ID jid;
+
+            auto sv = 0.f;
+            if( synth->fromSynthSideId(j, jid ))
+               sv = synth->getParameter01(jid);
+            auto cv = cc->getValue();
+
+            if ((sv != cv) && ((tag == fmconfig_tag || tag == filterblock_tag)))
+            {
+               std::unordered_map<int, bool> resetMap;
+
+               if (tag == fmconfig_tag)
                {
-                  ((COscillatorDisplay*)oscdisplay)->invalidateIfIdIsInRange(j);
+                  auto targetTag = synth->storage.getPatch().scene[current_scene].fm_depth.id + start_paramtags;
+                  auto targetState = (Parameter::intUnscaledFromFloat(sv , n_fm_configuration - 1) == fm_off);
+                  resetMap[targetTag] = targetState;
                }
 
-               if( lfodisplay )
+               if (tag == filterblock_tag)
                {
-                  ((CLFOGui*)lfodisplay)->invalidateIfIdIsInRange(j);
+                  auto pval = Parameter::intUnscaledFromFloat(sv, n_fb_configuration - 1 );
+
+                  auto targetTag = synth->storage.getPatch().scene[current_scene].feedback.id + start_paramtags;
+                  auto targetState = (pval == fb_serial);
+                  resetMap[targetTag] = targetState;
+
+                  targetTag = synth->storage.getPatch().scene[current_scene].width.id + start_paramtags;
+                  targetState = (pval != fb_stereo && pval != fb_wide);
+                  resetMap[targetTag] = targetState;
                }
 
-            }
-            else if ((j >= metaparam_offset) && (j < (metaparam_offset + n_customcontrollers)))
-            {
-               int cc = j - metaparam_offset;
-               gui_modsrc[ms_ctrl1 + cc]->setValue(
-                  ((ControllerModulationSource*)synth->storage.getPatch()
-                   .scene[current_scene].modsources[ms_ctrl1 + i])->get_target01());
-            }
-            else if((j>=0) && (j < n_total_params) && nonmod_param[j])
-            {
-               /*
-               ** What the heck is this NONMOD_PARAM thing?
-               **
-               ** There are a set of params - like discrete things like
-               ** octave and filter type - which are not LFO modulatable
-               ** and aren't in the params[] array. But they are exposed
-               ** properties, so you can control them from a DAW. The
-               ** DAW control works - everything up to this path (as described
-               ** in #160) works fine and sets the value but since there's
-               ** no CControl in param the above bails out. But ading
-               ** all these controls to param[] would have the unintended
-               ** side effect of giving them all the other param[] behaviours.
-               ** So have a second array and drop select items in here so we
-               ** can actually get them redrawing when an external param set occurs.
-               */
-               CControl *cc = nonmod_param[ j ];
-
-               /*
-               ** Some state changes enable and disable sliders. If this is one of those state changes and a value has changed, then
-               ** we need to invalidate them. See #2056.
-               */
-               auto tag = cc->getTag();
-               SurgeSynthesizer::ID jid;
-
-               auto sv = 0.f;
-               if( synth->fromSynthSideId(j, jid ))
-                  sv = synth->getParameter01(jid);
-               auto cv = cc->getValue();
-
-               if ((sv != cv) && ((tag == fmconfig_tag || tag == filterblock_tag)))
+               for (int i = 0; i < n_paramslots; i++)
                {
-                  std::unordered_map<int, bool> resetMap;
-
-                  if (tag == fmconfig_tag)
+                  if (param[i] && (resetMap.find(param[i]->getTag()) != resetMap.end()))
                   {
-                     auto targetTag = synth->storage.getPatch().scene[current_scene].fm_depth.id + start_paramtags;
-                     auto targetState = (round(sv * n_fm_configuration) == fm_off);
-                     resetMap[targetTag] = targetState;
-                  }
+                     auto css = dynamic_cast<CSurgeSlider*>(param[i]);
 
-                  if (tag == filterblock_tag)
-                  {
-                     auto pval = round(sv * n_fb_configuration);
-
-                     auto targetTag = synth->storage.getPatch().scene[current_scene].feedback.id + start_paramtags;
-                     auto targetState = (pval == fb_serial);
-                     resetMap[targetTag] = targetState;
-
-                     targetTag = synth->storage.getPatch().scene[current_scene].width.id + start_paramtags;
-                     targetState = (pval != fb_stereo && pval != fb_wide);
-                     resetMap[targetTag] = targetState;
-                  }
-
-                  for (int i = 0; i < n_paramslots; i++)
-                  {
-                     if (param[i] && (resetMap.find(param[i]->getTag()) != resetMap.end()))
+                     if (css)
                      {
-                        auto css = dynamic_cast<CSurgeSlider*>(param[i]);
-
-                        if (css)
-                        {
-                           css->disabled = resetMap[param[i]->getTag()];
-                           css->invalid();
-                        }
+                        css->disabled = resetMap[param[i]->getTag()];
+                        css->invalid();
                      }
                   }
                }
+            }
 
 #if TARGET_VST2
-               /*
-               ** This is a gross hack. The right thing is to have a remapper lambda on the control.
-               ** But for now we have this. The VST2 calls back into here when you setvalue to (basically)
-               ** double set value. But for the scenemod this means that the transformation doesn't occur
-               ** so you get a dance. Since we don't really care if scenemode is automatable for now we just do
-               */
-               if( synth->storage.getPatch().param_ptr[j]->ctrltype != ct_scenemode )
-                  cc->setValue(synth->getParameter01(jid));
-#else
-               cc->setValue(synth->getParameter01(jid));
-#endif
-
-               // Integer switches also work differently
-               auto assw = dynamic_cast<CSwitchControl *>(cc);
-               if( assw )
-               {
-                  if( assw->is_itype )
-                  {
-                     assw->ivalue = synth->storage.getPatch().param_ptr[j]->val.i + 1;
-                  }
-               }
-
-               cc->setDirty();
-               cc->invalid();
-            }
-#if 0
             /*
-            ** A set of special things which invalidate the entire UI.
-            ** See #2226 for why this is currently off.
+            ** This is a gross hack. The right thing is to have a remapper lambda on the control.
+            ** But for now we have this. The VST2 calls back into here when you setvalue to (basically)
+            ** double set value. But for the scenemod this means that the transformation doesn't occur
+            ** so you get a dance. Since we don't really care if scenemode is automatable for now we just do
             */
-            else if( j == synth->storage.getPatch().scene_active.id )
-            {
-               if( current_scene != synth->storage.getPatch().scene_active.val.i )
-               {
-                  synth->refresh_editor = true;
-                  current_scene = synth->storage.getPatch().scene_active.val.i;
-               }
-
-            }
+            if( synth->storage.getPatch().param_ptr[j]->ctrltype != ct_scenemode )
+               cc->setValue(synth->getParameter01(jid));
+#else
+            cc->setValue(synth->getParameter01(jid));
 #endif
-            else
+
+            // Integer switches also work differently
+            auto assw = dynamic_cast<CSwitchControl *>(cc);
+            if( assw )
             {
-               // printf( "Bailing out of all possible refreshes on %d\n", j );
-               // This is not really a problem
+               if( assw->is_itype )
+               {
+                  assw->ivalue = synth->storage.getPatch().param_ptr[j]->val.i + 1;
+               }
             }
+
+            cc->setDirty();
+            cc->invalid();
+         }
+#if 0
+         /*
+         ** A set of special things which invalidate the entire UI.
+         ** See #2226 for why this is currently off.
+         */
+         else if( j == synth->storage.getPatch().scene_active.id )
+         {
+            if( current_scene != synth->storage.getPatch().scene_active.val.i )
+            {
+               synth->refresh_editor = true;
+               current_scene = synth->storage.getPatch().scene_active.val.i;
+            }
+
+         }
+#endif
+         else
+         {
+            // printf( "Bailing out of all possible refreshes on %d\n", j );
+            // This is not really a problem
          }
       }
       for (int i = 0; i < n_customcontrollers; i++)
