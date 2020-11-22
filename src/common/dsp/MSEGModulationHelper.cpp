@@ -555,6 +555,9 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
       
       break;
    }
+   case MSEGStorage::segment::RESERVED:
+      // Should never occur
+      break;
    }
 
    //std::cout << _D(timeAlongSegment) << _D(r.type) << _D(r.duration) << _D(lv0) << std::endl;
@@ -930,6 +933,9 @@ void mirrorMSEG(MSEGStorage *ms)
          break;
       case MSEGStorage::segment::Type::QUAD_BEZIER:
          ms->segments[i].cpduration = 1.f - ms->segments[i].cpduration;
+         break;
+      default:
+         // No need to adjust anyone else
          break;
       }
    }

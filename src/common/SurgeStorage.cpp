@@ -404,10 +404,8 @@ bailOnPortable:
    bool loadWtAndPatch = true;
 
 #if !TARGET_RACK   
-#if TARGET_LV2
-   // skip loading during export, it pops up an irrelevant error dialog
+   // skip loading during export, it pops up an irrelevant error dialog. Only used by LV2
    loadWtAndPatch = !skipLoadWtAndPatch;
-#endif
    if (loadWtAndPatch)
    {
       refresh_wtlist();
@@ -1633,9 +1631,7 @@ bool SurgeStorage::remapToKeyboard(const Tunings::KeyboardMapping& k)
    return true;
 }
 
-#if TARGET_LV2
 bool SurgeStorage::skipLoadWtAndPatch = false;
-#endif
 
 void SurgeStorage::rescanUserMidiMappings()
 {
