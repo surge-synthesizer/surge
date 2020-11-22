@@ -5,6 +5,8 @@
 
 using namespace std;
 
+int LfoModulationSource::urngSeed = 1234;
+
 LfoModulationSource::LfoModulationSource()
 {}
 
@@ -66,6 +68,7 @@ void LfoModulationSource::assign(SurgeStorage* storage,
    else
    {
       gen = std::default_random_engine();
+      gen.seed( urngSeed ++ );
       distro = std::uniform_real_distribution<float>(-1.f,1.f);
       urng = [this]() -> float { return distro(gen); };
    }
