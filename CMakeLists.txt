@@ -468,11 +468,11 @@ elseif( UNIX AND NOT APPLE )
   set_source_files_properties(${SURGE_VST3_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
   set_source_files_properties(${LINUX_VSTGUI_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
 
+  set(SURGE_OS_SHARED_SOURCES ${cxml} )
 
   set(SURGE_OS_GUI_SOURCES
     ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
     ${LINUX_VSTGUI_GLOB}
-    ${cxml}
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
     src/linux/UserInteractionsLinux.cpp
@@ -650,10 +650,11 @@ source_group( "VSTGUI" REGULAR_EXPRESSION "vstgui.surge" )
 #
 # SURGE Core
 #
-target_sources(surge-shared PRIVATE ${SURGE_SHARED_SOURCES})
+target_sources(surge-shared PRIVATE ${SURGE_SHARED_SOURCES}  ${SURGE_OS_SHARED_SOURCES})
 target_include_directories(surge-shared
         PRIVATE
         ${SURGE_COMMON_INCLUDES}
+        ${OS_INCLUDE_DIRECTORIES}
         )
 target_compile_definitions(surge-shared PRIVATE ${OS_COMPILE_DEFINITIONS} )
 
@@ -1285,4 +1286,5 @@ if(MSVC)
       target_compile_options(${target} PRIVATE /FIprecompiled.h)
     endif()
   endforeach()
+  target_compile_options( surge-core PRIVATE /FIprecompiled.h )
 endif()
