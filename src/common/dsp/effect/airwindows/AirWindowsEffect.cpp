@@ -234,7 +234,14 @@ void AirWindowsEffect::process( float *dataL, float *dataR )
 void AirWindowsEffect::setupSubFX( int sfx, bool useStreamedValues )
 {
    const auto& r = fxreg[sfx];
-   airwin = r.create(r.id);
+
+   bool detailedMode = false;
+   if (storage)
+      detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+
+   int dp = (detailedMode ? 6 : 2);
+
+   airwin = r.create(r.id, dsamplerate, dp); // FIXME
    airwin->storage = storage;
    
    char fxname[1024];

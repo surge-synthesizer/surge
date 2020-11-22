@@ -104,7 +104,7 @@ endif()
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
-add_library(surge-shared INTERFACE)
+add_library(surge-shared)
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
@@ -112,7 +112,7 @@ add_subdirectory(libs/catch2)
 add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 
-target_link_libraries(surge-shared INTERFACE
+target_link_libraries(surge-shared PUBLIC
   surge::airwindows
   surge::filesystem
   surge::tinyxml
@@ -187,72 +187,75 @@ else()
 endif()
 
 # Enumerate the sources into groups
-#    SURGE_COMMON_SOURCES
+#    SURGE_SHARED_SOURCES - these are used to make the synth-free ui-free dsp and param lib
+#    SURGE_SYNTH_SOURCES - these are the synth classes which are target type dependant
 #    SURGE_GUI_SOURCES
 #    SURGE_GUI_LIBRARY_SOURCES
 #    SURGE_(target)_SOURCES  e.g. SURGE_HEADLESS_SOURCES
 #    SURGE_(target)_LIBRARY_SOURCES  e.g. SURGE_VST3_LIBRARY_SOURCES
 #    SURGE_(os)_SOURCES
 
-set(SURGE_COMMON_SOURCES
-  src/common/dsp/effect/ConditionerEffect.cpp
-  src/common/dsp/effect/DistortionEffect.cpp
-  src/common/dsp/effect/DualDelayEffect.cpp
-  src/common/dsp/effect/Effect.cpp
-  src/common/dsp/effect/Eq3BandEffect.cpp
-  src/common/dsp/effect/FreqshiftEffect.cpp
-  src/common/dsp/effect/FlangerEffect.cpp
-  src/common/dsp/effect/PhaserEffect.cpp
-  src/common/dsp/effect/Reverb1Effect.cpp
-  src/common/dsp/effect/Reverb2Effect.cpp
-  src/common/dsp/effect/RingModulatorEffect.cpp
-  src/common/dsp/effect/RotarySpeakerEffect.cpp
-  src/common/dsp/effect/VocoderEffect.cpp
-  src/common/dsp/effect/airwindows/AirWinBaseClass.cpp
-  src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
-  src/common/dsp/effect/airwindows/AirWindowsEffect.h
-  src/common/dsp/filters/VintageLadders.cpp
-  src/common/dsp/filters/Obxd.cpp
-  src/common/dsp/filters/K35.cpp
-  src/common/dsp/filters/DiodeLadder.cpp
-  src/common/dsp/AdsrEnvelope.cpp
-  src/common/dsp/AudioInputOscillator.cpp
-  src/common/dsp/BiquadFilter.cpp
-  src/common/dsp/BiquadFilterSSE2.cpp
-  src/common/dsp/DspUtilities.cpp
-  src/common/dsp/FilterCoefficientMaker.cpp
-  src/common/dsp/FM2Oscillator.cpp
-  src/common/dsp/FM3Oscillator.cpp
-  src/common/dsp/LfoModulationSource.cpp
-  src/common/dsp/MSEGModulationHelper.cpp
-  src/common/dsp/Oscillator.cpp
-  src/common/dsp/QuadFilterChain.cpp
-  src/common/dsp/QuadFilterUnit.cpp
-  src/common/dsp/SampleAndHoldOscillator.cpp
-  src/common/dsp/SineOscillator.cpp
-  src/common/dsp/SurgeSuperOscillator.cpp
-  src/common/dsp/SurgeVoice.cpp
-  src/common/dsp/VectorizedSvfFilter.cpp
-  src/common/dsp/Wavetable.cpp
-  src/common/dsp/WavetableOscillator.cpp
-  src/common/dsp/WindowOscillator.cpp
-  src/common/util/FpuState.cpp
-  src/common/vt_dsp/basic_dsp.cpp
-  src/common/vt_dsp/halfratefilter.cpp
-  src/common/vt_dsp/lipol.cpp
-  src/common/vt_dsp/macspecific.cpp
-  src/common/DebugHelpers.cpp
-  src/common/Parameter.cpp
-  src/common/precompiled.cpp
-  src/common/SurgeError.cpp
-  src/common/SurgePatch.cpp
-  src/common/SurgeStorage.cpp
+set(SURGE_SHARED_SOURCES
+        src/common/dsp/effect/ConditionerEffect.cpp
+        src/common/dsp/effect/DistortionEffect.cpp
+        src/common/dsp/effect/DualDelayEffect.cpp
+        src/common/dsp/effect/Effect.cpp
+        src/common/dsp/effect/Eq3BandEffect.cpp
+        src/common/dsp/effect/FreqshiftEffect.cpp
+        src/common/dsp/effect/FlangerEffect.cpp
+        src/common/dsp/effect/PhaserEffect.cpp
+        src/common/dsp/effect/Reverb1Effect.cpp
+        src/common/dsp/effect/Reverb2Effect.cpp
+        src/common/dsp/effect/RingModulatorEffect.cpp
+        src/common/dsp/effect/RotarySpeakerEffect.cpp
+        src/common/dsp/effect/VocoderEffect.cpp
+        src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
+        src/common/dsp/effect/airwindows/AirWindowsEffect.h
+        src/common/dsp/filters/VintageLadders.cpp
+        src/common/dsp/filters/Obxd.cpp
+        src/common/dsp/filters/K35.cpp
+        src/common/dsp/filters/DiodeLadder.cpp
+        src/common/dsp/AdsrEnvelope.cpp
+        src/common/dsp/AudioInputOscillator.cpp
+        src/common/dsp/BiquadFilter.cpp
+        src/common/dsp/BiquadFilterSSE2.cpp
+        src/common/dsp/DspUtilities.cpp
+        src/common/dsp/FilterCoefficientMaker.cpp
+        src/common/dsp/FM2Oscillator.cpp
+        src/common/dsp/FM3Oscillator.cpp
+        src/common/dsp/LfoModulationSource.cpp
+        src/common/dsp/MSEGModulationHelper.cpp
+        src/common/dsp/Oscillator.cpp
+        src/common/dsp/QuadFilterChain.cpp
+        src/common/dsp/QuadFilterUnit.cpp
+        src/common/dsp/SampleAndHoldOscillator.cpp
+        src/common/dsp/SineOscillator.cpp
+        src/common/dsp/SurgeSuperOscillator.cpp
+        src/common/dsp/SurgeVoice.cpp
+        src/common/dsp/VectorizedSvfFilter.cpp
+        src/common/dsp/Wavetable.cpp
+        src/common/dsp/WavetableOscillator.cpp
+        src/common/dsp/WindowOscillator.cpp
+        src/common/util/FpuState.cpp
+        src/common/vt_dsp/basic_dsp.cpp
+        src/common/vt_dsp/halfratefilter.cpp
+        src/common/vt_dsp/lipol.cpp
+        src/common/vt_dsp/macspecific.cpp
+        src/common/DebugHelpers.cpp
+        src/common/Parameter.cpp
+        src/common/precompiled.cpp
+        src/common/SurgeError.cpp
+        src/common/SurgePatch.cpp
+        src/common/SurgeStorage.cpp
+        src/common/UserDefaults.cpp
+        src/common/WavSupport.cpp
+        libs/strnatcmp/strnatcmp.cpp
+        )
+
+set(SURGE_SYNTH_SOURCES
   src/common/SurgeSynthesizer.cpp
   src/common/SurgeSynthesizerIDManagement.cpp
   src/common/SurgeSynthesizerIO.cpp
-  src/common/UserDefaults.cpp
-  src/common/WavSupport.cpp
-  libs/strnatcmp/strnatcmp.cpp
 
   src/common/SkinModel.cpp
   src/common/SkinModelImpl.cpp
@@ -400,8 +403,6 @@ set(SURGE_GUI_INCLUDES
   libs/nanosvg/src
   )
 
-
-
 ### OS SPECIFIC SECTION
 if( APPLE )
   set(SURGE_OS_GUI_SOURCES
@@ -466,11 +467,11 @@ elseif( UNIX AND NOT APPLE )
   set_source_files_properties(${SURGE_VST3_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
   set_source_files_properties(${LINUX_VSTGUI_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
 
+  set(SURGE_OS_SHARED_SOURCES ${cxml} )
 
   set(SURGE_OS_GUI_SOURCES
     ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
     ${LINUX_VSTGUI_GLOB}
-    ${cxml}
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
     src/linux/UserInteractionsLinux.cpp
@@ -646,12 +647,23 @@ source_group( "VST3 SDK" REGULAR_EXPRESSION "vst3sdk" )
 source_group( "VSTGUI" REGULAR_EXPRESSION "vstgui.surge" )
 
 #
+# SURGE Core
+#
+target_sources(surge-shared PRIVATE ${SURGE_SHARED_SOURCES}  ${SURGE_OS_SHARED_SOURCES})
+target_include_directories(surge-shared
+        PRIVATE
+        ${SURGE_COMMON_INCLUDES}
+        ${OS_INCLUDE_DIRECTORIES}
+        )
+target_compile_definitions(surge-shared PRIVATE ${OS_COMPILE_DEFINITIONS} )
+
+#
 # AUDIO UNIT
 #
 if( BUILD_AU )
   add_library(surge-au-dll
     SHARED
-    ${SURGE_COMMON_SOURCES}
+    ${SURGE_SYNTH_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
@@ -719,7 +731,7 @@ if( BUILD_VST3 )
 
   add_library(surge-vst3-dll
     SHARED
-    ${SURGE_COMMON_SOURCES}
+    ${SURGE_SYNTH_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
@@ -802,7 +814,7 @@ endif()
 if( BUILD_VST2 )
   add_library(surge-vst2-dll
     SHARED
-    ${SURGE_COMMON_SOURCES}
+    ${SURGE_SYNTH_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
@@ -886,7 +898,7 @@ endif()
 if( BUILD_LV2 )
   add_library(surge-lv2-dll
     SHARED
-    ${SURGE_COMMON_SOURCES}
+    ${SURGE_SYNTH_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     ${SURGE_GUI_SOURCES}
     ${SURGE_OS_SOURCES}
@@ -946,7 +958,7 @@ endif()
 
 if( BUILD_HEADLESS )
   add_executable(surge-headless
-    ${SURGE_COMMON_SOURCES}
+    ${SURGE_SYNTH_SOURCES}
     ${SURGE_OS_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     ${LIB_MIDIFILE_SOURCES}
@@ -1273,4 +1285,5 @@ if(MSVC)
       target_compile_options(${target} PRIVATE /FIprecompiled.h)
     endif()
   endforeach()
+  target_compile_options( surge-shared PRIVATE /FIprecompiled.h )
 endif()

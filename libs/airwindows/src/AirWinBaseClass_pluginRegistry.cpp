@@ -50,9 +50,12 @@
 
 namespace {
 template<typename T>
-std::unique_ptr<AirWinBaseClass> create(int id)
+std::unique_ptr<AirWinBaseClass> create(int id, double sr, int dp)
 {
-   return std::make_unique<T>(id);
+   auto res = std::make_unique<T>(id);
+   res->sr = sr;
+   res->displayPrecision = dp;
+   return res;
 }
 } // anonymous namespace
 

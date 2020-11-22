@@ -53,8 +53,9 @@ struct AirWinBaseClass {
    virtual void getParameterName(VstInt32 index, char *text) = 0;    // name of the parameter
    virtual void getParameterLabel(VstInt32 index, char *txt) = 0;
    virtual void getParameterDisplay(VstInt32 index, char *txt) = 0;
-   
-   double getSampleRate();
+
+   double sr = 0;
+   double getSampleRate() { return sr; }
 
    int paramCount = 0;
    
@@ -66,8 +67,9 @@ struct AirWinBaseClass {
    static constexpr int kPlugCategEffect = 0;
 
    SurgeStorage *storage = nullptr;
-   
-   int airwindowsSurgeDisplayPrecision();
+
+   int displayPrecision = 2;
+   int airwindowsSurgeDisplayPrecision() { return displayPrecision; }
 
    inline char *vst_strncpy ( char * destination, const char * source, size_t num ) { return strncpy( destination, source, num ); }
    inline void  float2string( float f, char* t, size_t num ) {
@@ -84,10 +86,10 @@ struct AirWinBaseClass {
          float2string ((float)(20. * log10 (value)), t, num);
    }
    struct Registration {
-      std::unique_ptr<AirWinBaseClass> (* const create)(int);
+      std::unique_ptr<AirWinBaseClass> (* const create)(int id, double sr, int displayPrecision );
       const int id, displayOrder;
       const std::string groupName, name;
-      Registration(std::unique_ptr<AirWinBaseClass> (*create)(int),
+      Registration(std::unique_ptr<AirWinBaseClass> (*create)(int, double, int),
                    int id,
                    int displayOrder,
                    std::string groupName,
