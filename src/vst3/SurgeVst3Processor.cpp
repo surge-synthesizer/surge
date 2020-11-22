@@ -996,7 +996,7 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
         frame->setSize(newW, newH);
         /*
         ** rather than calling setSize on myself as in vst2, I have to
-        ** inform the plugin frame that I have resized wiht a reference
+        ** inform the plugin frame that I have resized with a reference
         ** to a view (which is the editor). This collaborates with
         ** the host to resize once the content is scaled
         */
@@ -1007,12 +1007,13 @@ void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
             Steinberg::tresult res = ipf->resizeView(e, &vr);
             if (res != Steinberg::kResultTrue)
             {
-               std::ostringstream oss;
+			   // Leaving this here for debug purposes. resizeView() can fail in non-fatal way and zoom reset is just too harsh.
+               /*std::ostringstream oss;
                oss << "Your host failed to zoom VST3 to " << e->getZoomFactor() << " scale. "
                    << "Surge will now attempt to reset the zoom level to 100%. You may see several "
                    << "other error messages in the course of this being resolved.";
                Surge::UserInteractions::promptError(oss.str(), "VST3 Host Zoom Error" );
-               e->setZoomFactor(100);
+               e->setZoomFactor(100);*/
             }
         }
             
