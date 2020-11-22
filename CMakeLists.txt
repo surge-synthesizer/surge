@@ -209,7 +209,6 @@ set(SURGE_SHARED_SOURCES
         src/common/dsp/effect/RingModulatorEffect.cpp
         src/common/dsp/effect/RotarySpeakerEffect.cpp
         src/common/dsp/effect/VocoderEffect.cpp
-        src/common/dsp/effect/airwindows/AirWinBaseClass.cpp
         src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
         src/common/dsp/effect/airwindows/AirWindowsEffect.h
         src/common/dsp/filters/VintageLadders.cpp
@@ -1286,5 +1285,5 @@ if(MSVC)
       target_compile_options(${target} PRIVATE /FIprecompiled.h)
     endif()
   endforeach()
-  target_compile_options( surge-core PRIVATE /FIprecompiled.h )
+  target_compile_options( surge-shared PRIVATE /FIprecompiled.h )
 endif()
