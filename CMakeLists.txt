@@ -33,13 +33,20 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility-inlines-hidden>
   )
-  # FIXME: Find a proper way or move to i686 toolchain file
-  if(NOT DEFINED LINUX_ON_ARM)
-    add_compile_options(-msse2)
+  if( APPLE )
+    # add_compile_options($<$<STREQUAL:${CMAKE_LIBRARY_ARCHITECTURE},x86_64>:-msse2>) This doesn't work so
+    # keep the flag on and supress the arm-side warning
+    add_compile_options( -msse2 -Wno-unused-command-line-argument)
+  else()
+    # FIXME: Find a proper way or move to i686 toolchain file
+    if(NOT DEFINED LINUX_ON_ARM)
+      add_compile_options(-msse2)
+    endif()
   endif()
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Any Clang
     add_compile_options(
+      -Werror
       -Wno-deprecated-declarations
       -Werror=inconsistent-missing-override
       -Werror=logical-op-parentheses

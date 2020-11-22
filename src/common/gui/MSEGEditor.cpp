@@ -1059,6 +1059,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   modelChanged();
                   return kMouseEventHandled;
                }
+               case hotzone::LOOP_START:
+               case hotzone::LOOP_END:
+                  // FIXME : Implement this
+                  break;
                }
             }
          }

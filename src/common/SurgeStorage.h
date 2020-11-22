@@ -1074,11 +1074,9 @@ private:
    std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice;
    Wavetable clipboard_wt[n_oscs];
 
-#if TARGET_LV2
 public:
-   // whether to skip loading, desired while exporting manifests
+   // whether to skip loading, desired while exporting manifests. Only used by LV2 currently.
    static bool skipLoadWtAndPatch;
-#endif
 };
 
 float db_to_linear(float);
