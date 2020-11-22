@@ -127,9 +127,9 @@ protected:
    std::unique_ptr<SurgeSynthesizer> surgeInstance;
    std::set<SurgeGUIEditor*> viewsSet;
    std::map<int, int> beginEditGuard;
-   int blockpos;
+   int blockpos = 0;
 
-   bool disableZoom;
+   bool disableZoom = false;
    bool haveZoomed = false;
    int lastZoom = -1;
    void handleZoom(SurgeGUIEditor *e);

@@ -34,9 +34,8 @@ using namespace Steinberg::Vst;
       return 0;                                                                                    \
    }
 
-SurgeVst3Processor::SurgeVst3Processor() : blockpos(0), surgeInstance()
+SurgeVst3Processor::SurgeVst3Processor() : surgeInstance()
 {
-   checkNamesEvery = 0;
 }
 
 SurgeVst3Processor::~SurgeVst3Processor()
