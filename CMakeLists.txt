@@ -62,6 +62,8 @@ endif()
 if(MSVC)
   # MSVC and pretenders
   add_compile_options(
+    -WX       # treat all warnings as errors
+
     # MSVC-only warnings, Clang-cl silently ignores these
     /wd4244   # float to double
     /wd4305   # truncation of variable
