@@ -19,6 +19,7 @@
 #include <iostream>
 #include "SkinColors.h"
 #include "DebugHelpers.h"
+#include "Parameter.h"
 
 using namespace VSTGUI;
 
@@ -236,8 +237,7 @@ CMouseEventResult CMenuAsSlider::onMouseMoved( CPoint &w, const CButtonState &bu
          iv = iv + inc;
          if( iv < 0 ) iv = iMax;
          if( iv > iMax ) iv = 0;
-         // This is the get_value_f01 code
-         float r = 0.005 + 0.99 * ( iv - iMin ) / ( float) ( iMax - iMin );
+         float r = Parameter::intScaledToFloat(iv, iMax, iMin );
          setValue( r );
          if( listener )
             listener->valueChanged(this);
@@ -293,7 +293,7 @@ bool CMenuAsSlider::onWheel( const VSTGUI::CPoint &where, const float &distance,
                    if( iv < 0 ) iv = iMax;
                    if( iv > iMax ) iv = 0;
                    // This is the get_value_f01 code
-                   float r = 0.005 + 0.99 * ( iv - iMin ) / ( float) ( iMax - iMin );
+                   float r = Parameter::intScaledToFloat(iv, iMax, iMin );
                    return r;
                 };
 

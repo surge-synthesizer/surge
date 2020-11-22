@@ -420,6 +420,12 @@ public:
    */
    SurgeStorage *storage = nullptr;
 
+   /*
+    * These are definitions which surge has used since time immemorial. If you
+    * change them you will break saved automation states in projects, so we stuck
+    * with the somewhat odd 99 and 005 but put them all in one place and used the
+    * consistently.
+    */
    static inline float intScaledToFloat( int v, int vmax, int vmin = 0 ) {
       return 0.005 + 0.99 * ((float)(v - vmin)) / ((float)(vmax - vmin));
    }
