@@ -23,6 +23,7 @@
 typedef VSTGUI::PluginGUIEditor EditorType;
 #elif TARGET_VST3
 #include "public.sdk/source/vst/vstguieditor.h"
+#include "pluginterfaces/gui/iplugviewcontentscalesupport.h"
 typedef Steinberg::Vst::VSTGUIEditor EditorType;
 #define PARENT_PLUGIN_TYPE SurgeVst3Processor
 #elif TARGET_VST2
@@ -73,6 +74,9 @@ struct SGEDropAdapter;
 class SurgeGUIEditor : public EditorType,
                        public VSTGUI::IControlListener,
                        public VSTGUI::IKeyboardHook
+#if TARGET_VST3
+                     , public Steinberg::IPlugViewContentScaleSupport
+#endif
 {
 private:
    using super = EditorType;
@@ -126,6 +130,12 @@ public:
 
    virtual Steinberg::tresult PLUGIN_API onSize(Steinberg::ViewRect* newSize) override;
    virtual Steinberg::tresult PLUGIN_API checkSizeConstraint(Steinberg::ViewRect* newSize) override;
+   virtual Steinberg::tresult PLUGIN_API setContentScaleFactor(ScaleFactor factor) override
+   {
+      scaleFactor = factor;
+      return Steinberg::kResultTrue;
+   }
+
 #endif
 
 
@@ -201,7 +211,8 @@ private:
    ** and double size is "200"
    */
    
-   int zoomFactor;
+   int zoomFactor = 100;
+   float scaleFactor = 1;
    bool zoomEnabled = true;
 
    int patchCountdown = -1;
@@ -213,6 +224,7 @@ public:
 
       des->isPopulated = true;
       des->editor.instanceZoomFactor = zoomFactor;
+      des->editor.scaleFactorOnClose = scaleFactor;
       des->editor.current_scene = current_scene;
       des->editor.current_fx = current_fx;
       des->editor.modsource = modsource;
@@ -492,6 +504,15 @@ public:
    std::string fullyResolvedHelpURL( std::string helpurl );
 
 private:
+
+#if TARGET_VST3 
+OBJ_METHODS(SurgeGUIEditor, EditorType) 
+DEFINE_INTERFACES
+DEF_INTERFACE(Steinberg::IPlugViewContentScaleSupport) 
+END_DEFINE_INTERFACES(EditorType)
+REFCOUNT_METHODS(EditorType) 
+#endif
+
    void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c, int modulationSource = -1);
    
    /*

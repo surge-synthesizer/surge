@@ -95,6 +95,8 @@ struct RememberForgetGuard {
    T *t = nullptr;
 };
 
+DEF_CLASS_IID(IPlugViewContentScaleSupport);
+
 #endif
 
 #if TARGET_AUDIOUNIT
@@ -5828,8 +5830,19 @@ VSTGUI::CCommandMenuItem* SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* t
 #if TARGET_VST3
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
 {
-   float izfx = newSize->getWidth() * 1.0 / getWindowSizeX() * 100.0;
-   float izfy = newSize->getHeight() * 1.0 / getWindowSizeY() * 100.0;
+   Steinberg::ViewRect currentSize = *newSize;
+
+   // Cubase sets wrong newSize when reopening editor. See #1460
+   auto scaleFactorOnClose = synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose;
+   if (scaleFactorOnClose > 1)
+   {
+      currentSize.bottom *= scaleFactorOnClose;
+      currentSize.right *= scaleFactorOnClose;
+      synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose = 1; // Don't rescale infinitely
+   }
+
+   float izfx = currentSize.getWidth() * 1.0 / getWindowSizeX() * 100.0;
+   float izfy = currentSize.getHeight() * 1.0 / getWindowSizeY() * 100.0;
    float izf = std::min(izfx, izfy);
    izf = std::max(izf, 1.0f*minimumZoom);
 

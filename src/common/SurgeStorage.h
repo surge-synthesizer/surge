@@ -802,6 +802,7 @@ struct DAWExtraStateStorage
       int current_osc[n_scenes] = {0};
       modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
       bool isMSEGOpen = false;
+      float scaleFactorOnClose = 1;
    } editor;
 
 
