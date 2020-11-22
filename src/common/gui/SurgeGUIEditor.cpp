@@ -4373,7 +4373,8 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    CRect r(0, 0, iff, 18);
    if (modulate)
    {
-      r.bottom += ( ((CParameterTooltip*)infowindow)->hasMDIWS() & modValues ? 36 : 18 );
+      int hasMDIWS = ((CParameterTooltip*)infowindow)->hasMDIWS();
+      r.bottom += (hasMDIWS & modValues ? 36 : 18);
       if( modValues ) r.right += 20;
    }
 
