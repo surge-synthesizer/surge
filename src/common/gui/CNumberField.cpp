@@ -23,6 +23,7 @@
 #include <iostream>
 #include "SkinColors.h"
 #include "CScalableBitmap.h"
+#include "Parameter.h"
 
 using namespace VSTGUI;
 
@@ -260,7 +261,7 @@ void CNumberField::setControlMode(int mode)
 void CNumberField::setValue(float val)
 {
    CControl::setValue(val);
-   i_value = (int)((1 / 0.99) * (val - 0.005) * (float)(i_max - i_min) + 0.5) + i_min;
+   i_value = Parameter::intUnscaledFromFloat(val, i_max, i_min );
    setDirty();
 }
 
@@ -648,10 +649,8 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
       }
       
       value += delta * 0.01;
-      // i_value = i_min + (int)(value*((float)(i_max - i_min)));
-      i_value = (int)((1.f / 0.99f) * (value - 0.005f) * (float)(i_max - i_min) + 0.5) + i_min;
+      i_value = Parameter::intUnscaledFromFloat(value, i_max, i_min );
 
-      
       bounceValue();
       invalid();
       if (listener)
@@ -674,7 +673,7 @@ bool CNumberField::onWheel(const CPoint& where, const float& distance, const CBu
       value += distance / (i_max - i_min) * mouseFactor;
    
 
-   i_value = (int)((1.f / 0.99f) * (value - 0.005f) * (float)(i_max - i_min) + 0.5) + i_min;
+   i_value = Parameter::intUnscaledFromFloat(value, i_max, i_min );
    bounceValue();
    invalid();
    setDirty();

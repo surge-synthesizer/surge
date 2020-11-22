@@ -2154,13 +2154,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
    case vt_int:
    {
       if (external)
-         i = (int)((1 / 0.99) * (ef - 0.005) * (float)(val_max.i - val_min.i) + 0.5) + val_min.i;
+         i = Parameter::intUnscaledFromFloat(ef, val_max.i, val_min.i );
       else
          i = val.i;
 
       if( displayType == DelegatedToFormatter )
       {
-         float fv = 0.005 + 0.99 * ((float)(i - val_min.i)) / ((float)(val_max.i - val_min.i));
+         float fv = Parameter::intScaledToFloat(i, val_max.i, val_min.i );
 
          char vt[64];
 
@@ -2492,7 +2492,7 @@ float Parameter::get_value_f01()
       return (val.f - val_min.f) / (val_max.f - val_min.f);
       break;
    case vt_int:
-      return 0.005 + 0.99 * ((float)(val.i - val_min.i)) / ((float)(val_max.i - val_min.i));
+      return Parameter::intScaledToFloat(val.i, val_max.i, val_min.i );
       break;
    case vt_bool:
       return val.b ? 1.f : 0.f;
@@ -2550,8 +2550,7 @@ float Parameter::get_default_value_f01()
       return (val_default.f - val_min.f) / (val_max.f - val_min.f);
       break;
    case vt_int:
-      return 0.005 + 0.99 * ((float)(val_default.i - val_min.i)) / ((float)(val_max.i - val_min.i));
-      // return ((float)(val_default.i-val_min.i))/((float)(val_max.i - val_min.i));
+      return Parameter::intScaledToFloat(val_default.i, val_max.i, val_min.i );
       break;
    case vt_bool:
       return val_default.b ? 1.f : 0.f;
@@ -2568,7 +2567,7 @@ void Parameter::set_value_f01(float v, bool force_integer)
       val.f = v * (val_max.f - val_min.f) + val_min.f;
       break;
    case vt_int:
-      val.i = (int)((1 / 0.99) * (v - 0.005) * (float)(val_max.i - val_min.i) + 0.5) + val_min.i;
+      val.i = Parameter::intUnscaledFromFloat(v, val_max.i, val_min.i );
       break;
    case vt_bool:
       val.b = (v > 0.5f);

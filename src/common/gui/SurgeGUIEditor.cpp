@@ -4074,7 +4074,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   im = cs2->getIValue();
                   if( im == 3 ) im = 2;
                   else if( im == 2 ) im = 3;
-                  val = 0.005 + 0.99 * ( (float)( im ) / (n_scenemodes-1) );
+                  val = Parameter::intScaledToFloat(im, n_scenemodes-1);
                }
 
                /*
@@ -6981,7 +6981,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
                   guiscenemode = 2;
                else if (guiscenemode == 2)
                   guiscenemode = 3;
-               fval = 0.005 + 0.99 * ((float)(guiscenemode) / (n_scenemodes - 1));
+               fval = Parameter::intScaledToFloat(guiscenemode, n_scenemodes-1);
             }
             hsw->setValue( fval );
          }
