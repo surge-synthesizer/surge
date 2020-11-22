@@ -821,18 +821,22 @@ void SurgeGUIEditor::idle()
                }
             }
 
-#if TARGET_VST2
-            /*
-            ** This is a gross hack. The right thing is to have a remapper lambda on the control.
-            ** But for now we have this. The VST2 calls back into here when you setvalue to (basically)
-            ** double set value. But for the scenemod this means that the transformation doesn't occur
-            ** so you get a dance. Since we don't really care if scenemode is automatable for now we just do
-            */
-            if( synth->storage.getPatch().param_ptr[j]->ctrltype != ct_scenemode )
-               cc->setValue(synth->getParameter01(jid));
-#else
-            cc->setValue(synth->getParameter01(jid));
-#endif
+            if (synth->storage.getPatch().param_ptr[j]->ctrltype == ct_scenemode)
+            {
+               /*
+                * This is gross hack for our reordering of scenemode. Basically take the
+                * automation value and turn it into the UI value
+                */
+               auto pval = Parameter::intUnscaledFromFloat(sv, n_scenemodes - 1 );
+               if( pval == sm_dual ) pval = sm_chsplit;
+               else if( pval == sm_chsplit ) pval = sm_dual;
+               sv = Parameter::intScaledToFloat(pval, n_scenemodes - 1 );
+            }
+
+            if( sv != cv )
+            {
+               cc->setValue(sv );
+            }
 
             // Integer switches also work differently
             auto assw = dynamic_cast<CSwitchControl *>(cc);
