@@ -3004,7 +3004,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                {
                   contextMenu->addSeparator(eid++);
 
-                  for (int i; i < lt_num_deforms[lfodata->shape.val.i]; i++)
+                  for (int i = 0; i < lt_num_deforms[lfodata->shape.val.i]; i++)
                   {
                      char title[32];
                      sprintf(title, "Deform Type %d", (i + 1));

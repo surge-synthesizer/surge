@@ -1319,7 +1319,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (scene[0].pbrange_up.val.i & 0xffffff00) // is outside range, it must have been save
    {
-      for (int sc; sc < n_scenes; sc++)
+      for (int sc = 0; sc < n_scenes; sc++)
       {
          scene[sc].pbrange_up.val.i = (int)scene[sc].pbrange_up.val.f;
          scene[sc].pbrange_dn.val.i = (int)scene[sc].pbrange_dn.val.f;
@@ -1328,7 +1328,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
    if (revision < 1)
    {
-      for (int sc; sc < n_scenes; sc++)
+      for (int sc = 0; sc < n_scenes; sc++)
       {
          scene[sc].adsr[0].a_s.val.i = limit_range(scene[sc].adsr[0].a_s.val.i + 1, 0, 2);
          scene[sc].adsr[1].a_s.val.i = limit_range(scene[sc].adsr[1].a_s.val.i + 1, 0, 2);
