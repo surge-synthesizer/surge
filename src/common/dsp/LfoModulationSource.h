@@ -97,5 +97,6 @@ private:
    std::default_random_engine gen;
    std::uniform_real_distribution<float> distro;
    std::function<float()> urng;
+   static int urngSeed;
    quadr_osc sinus;
 };
