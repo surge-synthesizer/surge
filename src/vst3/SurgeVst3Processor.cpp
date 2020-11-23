@@ -1011,7 +1011,6 @@ void SurgeVst3Processor::redraw(SurgeGUIEditor *e, bool resizeWindow)
 
         frame->setZoom(fzf);
         frame->setSize(width, heigth);
-        
 
 		if (resizeWindow)
 		{

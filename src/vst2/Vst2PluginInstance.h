@@ -21,6 +21,11 @@
 
 class SurgeGUIEditor;
 
+namespace VSTGUI
+{
+	class CBitmap;
+}
+
 //-------------------------------------------------------------------------------------------------------
 class Vst2PluginInstance : public AudioEffectX
 {
@@ -102,7 +107,8 @@ protected:
    int oldblokkosize;
    int blockpos;
 
-   void handleZoom(SurgeGUIEditor *e);
+   void redraw(SurgeGUIEditor *e, bool resizeWindow);
+   void setExtraScaleFactor(VSTGUI::CBitmap *bg, float zf);
    
 public:
    enum State {
