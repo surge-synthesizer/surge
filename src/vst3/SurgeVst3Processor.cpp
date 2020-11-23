@@ -53,9 +53,6 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown* context)
       return result;
    }
 
-   disableZoom = false;
-
-
    //---create Audio In/Out busses------
    // we want a SideChain Input and a Stereo Output
    addAudioInput(STR16("SideChain In"), SpeakerArr::kStereo, kAux );
@@ -588,15 +585,11 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
    if (ConstString(name) == ViewType::kEditor)
    {
       SurgeGUIEditor* editor = new SurgeGUIEditor(this, surgeInstance.get());
+      editor->setZoomCallback( [this](SurgeGUIEditor *e, bool resizeWindow) { redraw(e, resizeWindow); } );
 
-      if (disableZoom)
-         editor->disableZoom();
+      if(lastZoom > 0)
+          editor->setZoomFactor(lastZoom); // Kingston todo, with window resize or not?
 
-      editor->setZoomCallback( [this](SurgeGUIEditor *e) { handleZoom(e); } );
-
-      if( haveZoomed )
-          editor->setZoomFactor(lastZoom);
-      
       return editor;
    }
    return nullptr;
@@ -981,63 +974,73 @@ void SurgeVst3Processor::setParameterAutomated(int inputParam, float value)
    }
 }
 
-void SurgeVst3Processor::handleZoom(SurgeGUIEditor *e)
+void SurgeVst3Processor::resize(SurgeGUIEditor *e, int width, int heigth)
 {
-    float fzf = e->getZoomFactor() / 100.0;
-    int newW = e->getWindowSizeX() * fzf;
-    int newH = e->getWindowSizeY() * fzf;
+	/*
+	** rather than calling setSize on myself as in vst2, I have to
+	** inform the plugin frame that I have resized with a reference
+	** to a view (which is the editor). This collaborates with
+	** the host to resize once the content is scaled
+	*/
+	Steinberg::IPlugFrame *ipf = e->getIPlugFrame();
+	if (ipf)
+	{
+		Steinberg::ViewRect vr(0, 0, width, heigth);
+		Steinberg::tresult res = ipf->resizeView(e, &vr);
+		if (res != Steinberg::kResultTrue)
+		{
+			// Leaving this here for debug purposes. resizeView() can fail in non-fatal way and zoom reset is just too harsh.
+			/*std::ostringstream oss;
+			oss << "Your host failed to zoom VST3 to " << e->getZoomFactor() << " scale. "
+				<< "Surge will now attempt to reset the zoom level to 100%. You may see several "
+				<< "other error messages in the course of this being resolved.";
+			Surge::UserInteractions::promptError(oss.str(), "VST3 Host Zoom Error" );
+			e->setZoomFactor(100);*/
+		}
+	}
+}
 
-
+void SurgeVst3Processor::redraw(SurgeGUIEditor *e, bool resizeWindow)
+{
     VSTGUI::CFrame *frame = e->getFrame();
     if(frame)
     {
-        frame->setZoom( e->getZoomFactor() / 100.0 );
-        frame->setSize(newW, newH);
-        /*
-        ** rather than calling setSize on myself as in vst2, I have to
-        ** inform the plugin frame that I have resized with a reference
-        ** to a view (which is the editor). This collaborates with
-        ** the host to resize once the content is scaled
-        */
-        Steinberg::IPlugFrame *ipf = e->getIPlugFrame();
-        if (ipf)
-        {
-            Steinberg::ViewRect vr( 0, 0, newW, newH );
-            Steinberg::tresult res = ipf->resizeView(e, &vr);
-            if (res != Steinberg::kResultTrue)
-            {
-			   // Leaving this here for debug purposes. resizeView() can fail in non-fatal way and zoom reset is just too harsh.
-               /*std::ostringstream oss;
-               oss << "Your host failed to zoom VST3 to " << e->getZoomFactor() << " scale. "
-                   << "Surge will now attempt to reset the zoom level to 100%. You may see several "
-                   << "other error messages in the course of this being resolved.";
-               Surge::UserInteractions::promptError(oss.str(), "VST3 Host Zoom Error" );
-               e->setZoomFactor(100);*/
-            }
-        }
-            
-        /*
-        ** VSTGUI has an error which is that the background bitmap doesn't get the frame transform
-        ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
-        ** scale up using a backdoor API.
-        */
+		float fzf = e->getZoomFactor() / 100.0;
+		int width = e->getWindowSizeX() * fzf;
+		int heigth = e->getWindowSizeY() * fzf;
+
+        frame->setZoom(fzf);
+        frame->setSize(width, heigth);
         
-        VSTGUI::CBitmap *bg = frame->getBackground();
-        if(bg != NULL)
-        {
-            CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
-            if (sbm)
-            {
-                sbm->setExtraScaleFactor( e->getZoomFactor() );
-            }
-        }
-        
+
+		if (resizeWindow)
+		{
+			resize(e, width, heigth);
+		}
+
+		setExtraScaleFactor(frame->getBackground(), e->getZoomFactor());
+
         frame->setDirty( true );
         frame->invalid();
-
-        haveZoomed = true;
         lastZoom = e->getZoomFactor();
     }
+}
+
+void SurgeVst3Processor::setExtraScaleFactor(VSTGUI::CBitmap *bg, float zf)
+{
+	if (bg != NULL)
+	{
+		auto sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+		if (sbm)
+		{
+			/*
+			** VSTGUI has an error which is that the background bitmap doesn't get the frame transform
+			** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
+			** scale up using a backdoor API.
+			*/
+			sbm->setExtraScaleFactor(zf);
+		}
+	}
 }
 
 void SurgeVst3Processor::uithreadIdleActivity()

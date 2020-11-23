@@ -796,7 +796,7 @@ struct DAWExtraStateStorage
     */
    struct EditorState
    {
-      int instanceZoomFactor = -1;
+      int instanceZoomFactor = 100;
       int current_scene = 0;
       int current_fx = 0;
       int current_osc[n_scenes] = {0};

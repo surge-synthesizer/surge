@@ -201,6 +201,9 @@ private:
    };
 
    void showSettingsMenu(VSTGUI::CRect &menuRect);
+   void setBitmapZoomFactor(float zf);
+   void showTooLargeZoomError(double width, double height, float zf) const;
+   void showMinimumZoomError() const;
 
    /*
    ** Zoom Implementation 
@@ -211,9 +214,8 @@ private:
    ** and double size is "200"
    */
    
-   int zoomFactor = 100;
+   float zoomFactor = 100;
    float scaleFactor = 1;
-   bool zoomEnabled = true;
 
    int patchCountdown = -1;
    
@@ -235,6 +237,7 @@ public:
       }
       des->editor.isMSEGOpen = ( editorOverlayTagAtClose == "msegEditor" );
    }
+
    void loadFromDAWExtraState(SurgeSynthesizer *synth) {
       auto des = &(synth->storage.getPatch().dawExtraState);
       if( des->isPopulated )
@@ -257,19 +260,15 @@ public:
        }
    }
    
-   void setZoomCallback(std::function< void(SurgeGUIEditor *) > f) {
+   void setZoomCallback(std::function< void(SurgeGUIEditor *, bool resizeWindow) > f) {
        zoom_callback = f;
        setZoomFactor(getZoomFactor()); // notify the new callback
    }
-   int  getZoomFactor() { return zoomFactor; }
-   void setZoomFactor(int zf);
-   int zoomFactorRecursionGuard = 0;
-   bool doesZoomFitToScreen(int zf, int &correctedZf); // returns true if it fits; false if not; sets correctedZF to right size in either case
-   void disableZoom()
-   {
-      zoomEnabled = false;
-      setZoomFactor(100);
-   }
+   float getZoomFactor() const { return zoomFactor; }
+   void setZoomFactor(float zf);
+   void setZoomFactor(float zf, bool resizeWindow);
+   void resizeWindow(float zf);
+   bool doesZoomFitToScreen(float zf, float &correctedZf); // returns true if it fits; false if not; sets correctedZF to right size in either case
 
    void swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m );
 
@@ -312,8 +311,8 @@ public:
    void sliderHoverStart( int tag );
    void sliderHoverEnd( int tag );
 
-   int getWindowSizeX() { return wsx; }
-   int getWindowSizeY() { return wsy; }
+   int getWindowSizeX() const { return wsx; }
+   int getWindowSizeY() const { return wsy; }
 
    void setEditorOverlay( VSTGUI::CView *c,
                           std::string editorTitle, // A window display title - whatever you want
@@ -385,9 +384,9 @@ private:
                                                       int &eid); // just a noop if you aren't a vst3 of course
 #endif
    
-   std::function< void(SurgeGUIEditor *) > zoom_callback;
-   bool zoomInvalid;
-   int minimumZoom;
+   std::function< void(SurgeGUIEditor *, bool resizeWindow) > zoom_callback;
+   bool zoomInvalid = false;
+   int minimumZoom = 100;
 
    int selectedFX[8];
    std::string fxPresetName[8];
