@@ -983,7 +983,7 @@ void adjustDurationInternal( MSEGStorage *ms, int idx, float d, float snapResolu
    }
    else
    {
-      ms->segments[idx].dragDuration = std::min( 0.f, ms->segments[idx].dragDuration + d );
+      ms->segments[idx].dragDuration = std::max( 0.f, ms->segments[idx].dragDuration + d );
       auto target = (float)(round( ( ms->segmentStart[idx] + ms->segments[idx].dragDuration ) / snapResolution ) * snapResolution ) - ms->segmentStart[idx];
       if( upperBound > 0 && target > upperBound )
          target = ms->segments[idx].duration;
@@ -1005,17 +1005,22 @@ void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float 
          dx = -ms->segments[idx].duration;
    }
 
+   float durationChange = dx;
    if (idx >= 0)
    {
       auto rcv = 0.5;
       if( ms->segments[idx].duration > 0 )
           rcv = ms->segments[idx].cpduration / ms->segments[idx].duration;
+      float prior = ms->segments[idx].duration;
       adjustDurationInternal(ms, idx, dx, snap);
+      float after = ms->segments[idx].duration;
+      durationChange = after - prior;
       ms->segments[idx].cpduration = ms->segments[idx].duration * rcv;
    }
 
    if( ms->editMode == MSEGStorage::LFO )
    {
+      dx = durationChange;
       if( dx > 0 )
       {
          /*
