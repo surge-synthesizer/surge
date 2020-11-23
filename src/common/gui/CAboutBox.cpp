@@ -260,7 +260,18 @@ void CAboutBox::valueChanged(CControl* pControl)
    if( pControl->getTag() == tag_copy )
    {
       std::string identifierLine = infoStringForClipboard;  // don't forget the space at the end
+#if LINUX
+      auto xc = popen( "xclip -selection c", "w" );
+      if( ! xc )
+      {
+         std::cout << "Unable to open xclip for writing to clipboard. About is:\n" << identifierLine << std::endl;
+         return;
+      }
+      fprintf( xc, "%s", identifierLine.c_str() );
+      pclose( xc );
+#else
       auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
       getFrame()->setClipboard(a);
+#endif
    }
 }
