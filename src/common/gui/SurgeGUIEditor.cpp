@@ -281,7 +281,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
    if( synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor > 0 )
    {
        // If I restore state before I am constructed I need to do this
-       zf = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor / 100.0;
+       zf = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor * 0.01;
    }
 
    rect.left = 0;
@@ -4576,15 +4576,15 @@ bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
 
    /*
    ** Window decoration takes up some of the screen so don't zoom to full screen dimensions.
-   ** This heuristic seems to work on windows 10 and macos 10.14 weel enough.
-   ** Keep these as integers to be consistent wiht the other zoom factors, and to make
+   ** This heuristic seems to work on Windows 10 and macOS 10.14 well enough.
+   ** Keep these as integers to be consistent with the other zoom factors, and to make
    ** the error message cleaner.
    */
    int maxScreenUsage = 90;
 
    /*
    ** In the startup path we may not have a clean window yet to give us a trustworthy
-   ** screen dimension; so allow callers to supress this check with an optional
+   ** screen dimension; so allow callers to suppress this check with an optional
    ** variable and set it only in the constructor of SurgeGUIEditor
    */
    if (zf != 100.0 && zf > 100 &&
@@ -4614,7 +4614,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       oss << "Surge has recursed into setZoomFactor too many times. This indicates an error in the interaction between "
           << "Surge, your host's zoom implementation, and your screen size. Please report this error to the "
           << "Surge Synth Team on GitHub, since we think it should never happen. But it seems it has!";
-      // Choose to not show this error.  It only ever happens in Studio one. See issue 2397.
+      // Choose to not show this error.  It only ever happens in Studio One. See issue 2397.
       // Surge::UserInteractions::promptError( oss.str(), "Surge Software Zoom Error" );
       zoomFactorRecursionGuard--;
       return;
@@ -4636,7 +4636,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
    /*
-   ** If getScreenDimensions() can't determine a size on all paltforms it now
+   ** If getScreenDimensions() can't determine a size on all platforms it now
    ** returns a size 0 screen. In that case we will skip the min check but
    ** need to remember the zoom is invalid
    */
@@ -4684,6 +4684,9 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       }
       zoomFactor = nzf;
    }
+
+   // update zoom level stored in DAW extra state
+   synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor = zoomFactor * 0.01;
 
    zoom_callback(this);
 
