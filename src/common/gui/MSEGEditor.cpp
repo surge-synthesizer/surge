@@ -553,7 +553,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       int skips = round( 1.f / eds->hSnapDefault );
       auto tpx = timeToPx();
 
-      while( maxt * skips > gridMaxHSteps )
+      // This thinning still has to land on snap steps
+      while (maxt * skips > gridMaxHSteps)
          skips = skips >> 1;
 
       skips = std::max( 1, skips );
@@ -635,23 +636,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       skips = round(1.f / eds->vSnapDefault);
 
-      while (skips > (gridMaxVSteps * (1 + uni)))
-         skips = skips >> 1;
-
-      skips = std::max( 1, skips );
-
-      float step = (1.f / skips);
-
-      if (uni)
-         step *= 2;
-
-      for( float i=-1; i<=1.001 /* for things like "3" rounding*/; i += step )
+      updateVTicks();
+      for( auto vp : vTicks )
       {
-         float p = valpx(i);
+         float p = valpx(vp.first);
 
          float off = vaxisArea.getWidth() / 2;
 
-         if (i == -1 || fabs(i - 1) < 1e-3 || (fabs(i) < 1e-3 && !uni))
+         if (vp.second)
             off = 0;
 
          if( off == 0 )
@@ -664,7 +656,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          if( off == 0 )
          {
             char txt[16];
-            auto value = uni ? (i + 1.f) * 0.5 : round(i);
+            auto value = vp.first;
 
             if (value == 0.f && std::signbit(value))
                 value = -value;
@@ -674,7 +666,62 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          }
       }
    }
-   
+
+   std::vector<std::pair<float,bool>> vTicks;
+   float vTickAsOf = -1;
+   void updateVTicks()
+   {
+      auto uni = lfodata->unipolar.val.b;
+
+      if( eds->vSnapDefault != vTickAsOf )
+      {
+         vTicks.clear();
+         float dStep = eds->vSnapDefault;
+         while (dStep < 1.0 / (gridMaxVSteps * (1 + uni)))
+            dStep *= 2;
+
+         int steps = ceil(1.0 / dStep);
+         int start, end;
+         if (uni)
+         {
+            start = 0;
+            end = steps + 1;
+         }
+         else
+         {
+            start = -steps - 1;
+            end = steps + 1;
+         }
+
+         for (int vi = start; vi < end; vi++)
+         {
+            float val = vi * dStep;
+            auto doDraw = true;
+
+            if (val > 1)
+            {
+               val = 1.0;
+               if (vi != end - 1)
+                  doDraw = false;
+            }
+            if (val < -1)
+            {
+               val = -1.0;
+               if (vi != start)
+                  doDraw = false;
+            }
+            if (uni && val < 0)
+            {
+               val = 0;
+               if (vi != start)
+                  doDraw = false;
+            }
+            if( doDraw )
+               vTicks.push_back( std::make_pair(val, vi == 0 || vi == start || vi == end - 1 ) );
+         }
+      }
+   }
+
    virtual void draw( CDrawContext *dc) override {
       auto uni = lfodata->unipolar.val.b;
       auto vs = getViewSize();
@@ -823,32 +870,26 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
       }
 
-      skips = round( 1.f / eds->vSnapDefault );
-
-      while( skips > (gridMaxVSteps * (1 + uni)) )
-         skips = skips >> 1;
-
-      skips = std::max( skips, 1 );
-
-      auto uniskips = skips / (1.f + uni);
-
-      for (int vi = 0; vi < 2 * skips + 1; vi++)
+      updateVTicks();
+      for( auto vp : vTicks )
       {
-         float v = valpx(1.f * vi / uniskips - 1.f);
+         float val = vp.first;
+         float v = valpx(val);
 
-         if (vi % skips == 0)
+         if ( vp.second )
          {
-            dc->setFrameColor( primaryGridColor );
+            dc->setFrameColor(primaryGridColor);
             dc->setLineStyle(kLineSolid);
          }
          else
          {
             dc->setFrameColor(secondaryHGridColor);
             CCoord dashes[] = {2, 5};
-            dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
+            dc->setLineStyle(
+                CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
          }
 
-         dc->drawLine( CPoint( drawArea.left, v ), CPoint( drawArea.right, v ) );
+         dc->drawLine(CPoint(drawArea.left, v), CPoint(drawArea.right, v));
       }
 
       // Draw the axes here after the gradient fill and gridlines
