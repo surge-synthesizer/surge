@@ -1264,6 +1264,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   dragY *= 0.05;
                }
                h.onDrag( dragX, dragY, where );
+#if ! LINUX
                float dx = where.x - cursorHideOrigin.x;
                float dy = where.y - cursorHideOrigin.y;
                if( dx * dx + dy * dy > 100 )
@@ -1275,6 +1276,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                {
                   mouseDownOrigin = where;
                }
+#else
+               mouseDownOrigin = where;
+#endif
                modelChanged(); // HACK FIXME
                break;
             }
