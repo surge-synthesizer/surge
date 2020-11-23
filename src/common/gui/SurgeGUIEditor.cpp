@@ -5867,7 +5867,6 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
 
    if(windowDragResize)
    {
-	  printf("SurgeGUIEditor::onSize setZoomFactor %f\n", currentZoomFactor);
       setZoomFactor(currentZoomFactor);
    }
 
