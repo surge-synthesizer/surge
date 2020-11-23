@@ -41,7 +41,7 @@ void rebuildCache( MSEGStorage *ms )
 
       if (nextseg >= ms->n_activeSegments)
       {
-         if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
+         if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED || ms->editMode == MSEGStorage::LFO)
             ms->segments[i].nv1 = ms->segments[0].v0;
       }
       else
@@ -56,6 +56,19 @@ void rebuildCache( MSEGStorage *ms )
    }
 
    ms->totalDuration = totald;
+   if( ms->editMode == MSEGStorage::ENVELOPE )
+      ms->envelopeModeDuration = totald;
+
+   if( ms->editMode == MSEGStorage::LFO && totald != 1.0 )
+   {
+      if( fabs( totald - 1.0 ) > 1e-5 )
+      {
+         // FIXME: Should never happen but WHAT TO DO HERE!
+         // std::cout << "SOFTWARE ERROR" << std::endl;
+      }
+      ms->totalDuration = 1.0;
+      ms->segmentEnd[ms->n_activeSegments-1] = 1.0;
+   }
 
    for (int i = 0; i < ms->n_activeSegments; ++i)
    {
@@ -704,7 +717,9 @@ void insertBefore( MSEGStorage *ms, float t ) {
 }
 
 void extendTo( MSEGStorage *ms, float t, float nv ) {
+   if( ms->editMode == MSEGStorage::LFO ) return;
    if( t < ms->totalDuration ) return;
+
    nv = limit_range( nv, -1.f, 1.f );
 
    // This will extend the loop end if it is on the last point; but we want that
@@ -724,7 +739,7 @@ void extendTo( MSEGStorage *ms, float t, float nv ) {
    ms->segments[sn].cpv = 0;
    ms->segments[sn].nv1 = nv;
 
-   if( ms->endpointMode == MSEGStorage::EndpointMode::LOCKED )
+   if( ms->endpointMode == MSEGStorage::EndpointMode::LOCKED || ms->editMode == MSEGStorage::LFO )
    {
       // The first point has to match where I just clicked. Adjust it and its control point
       float cpdratio = 0.5;
@@ -884,7 +899,7 @@ void scaleValues(MSEGStorage *ms, float factor)
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].v0 *= factor;
 
-   if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
+   if (ms->endpointMode == MSEGStorage::EndpointMode::FREE && ms->editMode != MSEGStorage::LFO)
       ms->segments[ms->n_activeSegments - 1].nv1 *= factor;
 
    Surge::MSEG::rebuildCache(ms);
@@ -920,7 +935,7 @@ void mirrorMSEG(MSEGStorage *ms)
       ms->segments[h].v0 = ms->segments[h].nv1;
 
    // special case end node in start/end unlinked mode
-   if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
+   if (ms->endpointMode == MSEGStorage::EndpointMode::FREE && ms->editMode != MSEGStorage::LFO)
       ms->segments[ms->n_activeSegments - 1].nv1 = v0;
 
    // adjust curvature to flip it the other way around for curve types that need this
@@ -943,5 +958,136 @@ void mirrorMSEG(MSEGStorage *ms)
    Surge::MSEG::rebuildCache(ms);
 }
 
+void modifyEditMode(MSEGStorage *ms, MSEGStorage::EditMode em )
+{
+   if( em == ms->editMode ) return;
+   float targetDuration = 1.0;
+   if( ms->editMode == MSEGStorage::LFO && em == MSEGStorage::ENVELOPE )
+   {
+      if( ms->envelopeModeDuration > 0 )
+         targetDuration = ms->envelopeModeDuration;
+   }
+
+   float durRatio = targetDuration / ms->totalDuration;
+   for( auto &s : ms->segments )
+      s.duration *= durRatio;
+   ms->editMode = em;
+   rebuildCache(ms);
+}
+
+void adjustDurationInternal( MSEGStorage *ms, int idx, float d, float snapResolution, float upperBound = 0)
+{
+   if( snapResolution <= 0 )
+   {
+      ms->segments[idx].duration = std::max( 0.f, ms->segments[idx].duration + d );
+   }
+   else
+   {
+      ms->segments[idx].dragDuration = std::min( 0.f, ms->segments[idx].dragDuration + d );
+      auto target = (float)(round( ( ms->segmentStart[idx] + ms->segments[idx].dragDuration ) / snapResolution ) * snapResolution ) - ms->segmentStart[idx];
+      if( upperBound > 0 && target > upperBound )
+         target = ms->segments[idx].duration;
+      if( target < MSEGStorage::minimumDuration )
+         target = ms->segments[idx].duration;
+      ms->segments[idx].duration = target;
+   }
+}
+
+void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float snap)
+{
+   if( ms->editMode == MSEGStorage::LFO )
+   {
+      if( ms->segmentEnd[idx] + dx > 1.0 )
+         dx = 1.0 - ms->segmentEnd[idx];
+      if( ms->segmentEnd[idx] + dx < 0.0 )
+         dx = ms->segmentEnd[idx];
+      if( -dx > ms->segments[idx].duration )
+         dx = -ms->segments[idx].duration;
+   }
+
+   if (idx >= 0)
+   {
+      auto rcv = 0.5;
+      if( ms->segments[idx].duration > 0 )
+          rcv = ms->segments[idx].cpduration / ms->segments[idx].duration;
+      adjustDurationInternal(ms, idx, dx, snap);
+      ms->segments[idx].cpduration = ms->segments[idx].duration * rcv;
+   }
+
+   if( ms->editMode == MSEGStorage::LFO )
+   {
+      if( dx > 0 )
+      {
+         /*
+          * Collapse the subsequent by 0 to squash me in
+          */
+         float toConsume = dx;
+         for (int i = ms->n_activeSegments - 1; i > idx && toConsume > 0; --i)
+         {
+            if (ms->segments[i].duration >= toConsume)
+            {
+               ms->segments[i].duration -= toConsume;
+               toConsume = 0;
+            }
+            else
+            {
+               toConsume -= ms->segments[i].duration;
+               ms->segments[i].duration = 0;
+            }
+         }
+      }
+      else
+      {
+         /*
+          * Need to expand the back
+          */
+         ms->segments[ms->n_activeSegments-1].duration -= dx;
+      }
+   }
+
+   rebuildCache(ms);
+}
+
+void adjustDurationConstantTotalDuration( MSEGStorage *ms, int idx, float dx, float snap )
+{
+   int prior = idx, next = idx + 1;
+
+   if (prior >= 0 &&
+       (ms->segments[prior].duration + dx) <= MSEGStorage::minimumDuration &&
+       dx < 0)
+      dx = 0;
+   if (next < ms->n_activeSegments &&
+       (ms->segments[next].duration - dx) <= MSEGStorage::minimumDuration &&
+       dx > 0)
+      dx = 0;
+
+   auto csum = 0.f, pd = 0.f;
+   if (prior >= 0)
+   {
+      csum += ms->segments[prior].duration;
+      pd = ms->segments[prior].duration;
+   }
+   if (next < ms->n_activeSegments)
+      csum += ms->segments[next].duration;
+   if (prior >= 0)
+   {
+      auto rcv = 0.5;
+      if( ms->segments[prior].duration > 0 )
+          rcv = ms->segments[prior].cpduration / ms->segments[prior].duration;
+      adjustDurationInternal(ms, prior, dx, snap, csum);
+      ms->segments[prior].cpduration = ms->segments[prior].duration * rcv;
+      pd = ms->segments[prior].duration;
+   }
+   if (next < ms->n_activeSegments)
+   {
+      auto rcv =
+          ms->segments[next].cpduration / ms->segments[next].duration;
+
+      // offsetDuration( ms->segments[next].duration, -dx );
+      ms->segments[next].duration = csum - pd;
+      ms->segments[next].cpduration = ms->segments[next].duration * rcv;
+   }
+   rebuildCache(ms);
+}
 }
 }

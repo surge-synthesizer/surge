@@ -52,6 +52,9 @@ namespace Surge
       void deleteSegment( MSEGStorage *s, float t );
       void deleteSegment( MSEGStorage *s, int idx );
 
+      void adjustDurationShiftingSubsequent( MSEGStorage *s, int idx, float dx, float snap = 0);
+      void adjustDurationConstantTotalDuration( MSEGStorage *s, int idx, float dx, float snap = 0);
+
       void resetControlPoint( MSEGStorage *s, float t );
       void resetControlPoint( MSEGStorage *s, int idx );
       void constrainControlPointAt( MSEGStorage *s, int idx );
@@ -60,5 +63,7 @@ namespace Surge
       void scaleValues(MSEGStorage* s, float factor);
       void setAllDurationsTo(MSEGStorage* s, float value);
       void mirrorMSEG(MSEGStorage* s);
+
+      void modifyEditMode( MSEGStorage *s, MSEGStorage::EditMode mode );
    }
 }
