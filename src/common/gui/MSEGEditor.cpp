@@ -69,6 +69,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
    
    void rebuild();
    virtual void valueChanged( CControl *p ) override;
+   virtual int32_t controlModifierClicked (CControl* pControl, CButtonState button) override;
 
    virtual void draw( CDrawContext *dc) override {
       auto r = getViewSize();
@@ -1070,8 +1071,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                 * onMouseMove so if you change shift/ctrl here or what not change it
                 * there too.
                 */
-               bool s = buttons & kShift;
-               bool c = buttons & kControl;
+               bool s = buttons & kControl;
+               bool c = buttons & kAlt;
                if( s || c  )
                {
                   snapGuard = std::make_shared<SnapGuard>(eds, this);
@@ -1214,7 +1215,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( h.dragging )
             {
                gotOne = true;
-               h.onDrag( where.x - mouseDownOrigin.x, where.y - mouseDownOrigin.y, where );
+               float dragX = where.x - mouseDownOrigin.x;
+               float dragY = where.y - mouseDownOrigin.y;
+               if( buttons & kShift )
+               {
+                  dragX *= 0.05;
+                  dragY *= 0.05;
+               }
+               h.onDrag( dragX, dragY, where );
                float dx = where.x - cursorHideOrigin.x;
                float dy = where.y - cursorHideOrigin.y;
                if( dx * dx + dy * dy > 100 )
@@ -1265,8 +1273,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
           * Activate temporary snap. Note this is also checked in onMouseDown
           * so if you change shift/ctrl whatever here change it there too
           */
-         bool s = buttons & kShift;
-         bool c = buttons & kControl;
+         bool s = buttons & kControl;
+         bool c = buttons & kAlt;
          if( ( s || c )  )
          {
             bool wasSnapGuard = true;
@@ -1648,6 +1656,13 @@ void MSEGControlRegion::valueChanged( CControl *p )
       break;
    }
 }
+
+int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonState button)
+{
+   std::cout << "CM Clicked" << std::endl;
+   return 0;
+}
+
 void MSEGControlRegion::rebuild()
 {
    auto labelFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
