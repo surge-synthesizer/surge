@@ -202,26 +202,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
              };
    }
 
-   void offsetDuration( float &v, float d ) {
-      v = std::max( MSEGStorage::minimumDuration, v + d );
-   }
-   void adjustDuration( int idx, float d, float snapResolution, float upperBound)
-   {
-      if( snapResolution <= 0 )
-      {
-         offsetDuration(ms->segments[idx].duration, d);
-      }
-      else
-      {
-         offsetDuration( ms->segments[idx].dragDuration, d );
-         auto target = (float)(round( ( ms->segmentStart[idx] + ms->segments[idx].dragDuration ) / snapResolution ) * snapResolution ) - ms->segmentStart[idx];
-         if( upperBound > 0 && target > upperBound )
-            target = ms->segments[idx].duration;
-         if( target < MSEGStorage::minimumDuration )
-            target = ms->segments[idx].duration;
-         ms->segments[idx].duration = target;
-      }
-   }
    void offsetValue( float &v, float d ) {
       v = limit_range( v + d, -1.f, 1.f );
    }
@@ -302,15 +282,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          auto haxisArea = getHAxisArea();
 
-         int lmSize = 10;
-         hs.rect = VSTGUI::CRect( CPoint( pxs, haxisArea.top + 1), CPoint( lmSize, lmSize ));
-         hs.zoneSubType = hotzone::LOOP_START;
+         if( this->ms->editMode != MSEGStorage::LFO )
+         {
+            int lmSize = 10;
+            hs.rect = VSTGUI::CRect(CPoint(pxs, haxisArea.top + 1), CPoint(lmSize, lmSize));
+            hs.zoneSubType = hotzone::LOOP_START;
 
-         he.rect = VSTGUI::CRect( CPoint( pxe - lmSize, haxisArea.top + 1), CPoint( lmSize, lmSize ));
-         he.zoneSubType = hotzone::LOOP_END;
+            he.rect =
+                VSTGUI::CRect(CPoint(pxe - lmSize, haxisArea.top + 1), CPoint(lmSize, lmSize));
+            he.zoneSubType = hotzone::LOOP_END;
 
-         hotzones.push_back( hs );
-         hotzones.push_back( he );
+            hotzones.push_back(hs);
+            hotzones.push_back(he);
+         }
       }
 
       for( int i=0; i<ms->n_activeSegments; ++i )
@@ -336,56 +320,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             hotzones.push_back(h);
          };
 
-         auto timeConstraint = [&](int prior, int next, float dx) {
+         auto timeConstraint = [&](int prior, float dx) {
             switch (this->timeEditMode)
             {
             case DRAW:
                break;
             case SHIFT:
-               if (prior >= 0)
-               {
-                  auto rcv =
-                      this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
-                  adjustDuration(prior, dx, eds->hSnap, 0);
-                  this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
-               }
+               Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx, eds->hSnap);
                break;
             case SINGLE:
-               if (prior >= 0 &&
-                   (this->ms->segments[prior].duration + dx) <= MSEGStorage::minimumDuration &&
-                   dx < 0)
-                  dx = 0;
-               if (next < ms->n_activeSegments &&
-                   (this->ms->segments[next].duration - dx) <= MSEGStorage::minimumDuration &&
-                   dx > 0)
-                  dx = 0;
-
-               auto csum = 0.f, pd = 0.f;
-               if (prior >= 0)
-               {
-                  csum += ms->segments[prior].duration;
-                  pd = ms->segments[prior].duration;
-               }
-               if (next < ms->n_activeSegments)
-                  csum += ms->segments[next].duration;
-               if (prior >= 0)
-               {
-                  auto rcv =
-                      this->ms->segments[prior].cpduration / this->ms->segments[prior].duration;
-                  adjustDuration(prior, dx, eds->hSnap, csum);
-                  this->ms->segments[prior].cpduration = this->ms->segments[prior].duration * rcv;
-                  pd = ms->segments[prior].duration;
-               }
-               if (next < ms->n_activeSegments)
-               {
-                  auto rcv =
-                      this->ms->segments[next].cpduration / this->ms->segments[next].duration;
-
-                  // offsetDuration( this->ms->segments[next].duration, -dx );
-                  this->ms->segments[next].duration = csum - pd;
-                  this->ms->segments[next].cpduration = this->ms->segments[next].duration * rcv;
-               }
-
+               Surge::MSEG::adjustDurationConstantTotalDuration(this->ms, prior, dx, eds->hSnap);
                break;
             }
          };
@@ -400,7 +344,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
                 if (i != 0)
                 {
-                   timeConstraint(i - 1, i, dx / tscale);
+                   timeConstraint(i - 1, dx / tscale);
                 }
              });
 
@@ -552,7 +496,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             rectForPoint( tpx(ms->totalDuration), ms->segments[ms->n_activeSegments-1].nv1, /* which is [0].v0 in lock mode only */
                          hotzone::SEGMENT_ENDPOINT,
                           [this, vscale, tscale, unipolarFactor](float dx, float dy, const CPoint &where) {
-                             if( ms->endpointMode == MSEGStorage::EndpointMode::FREE )
+                             if( ms->endpointMode == MSEGStorage::EndpointMode::FREE && ms->editMode != MSEGStorage::LFO )
                              {
                                 float d = -2 * dy / vscale;
                                 float snapResolution = eds->vSnap * unipolarFactor;
@@ -575,15 +519,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                              // We need to deal with the cpduration also
                              auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
 
-                             if( !this->getViewSize().pointInside(where))
+                             // Don't allow endpoint time adjust in LFO mode
+                             if( this->ms->editMode == MSEGStorage::ENVELOPE )
                              {
-                                auto howFar = where.x - this->getViewSize().right;
-                                if( howFar > 0 )
-                                   dx *= howFar * 0.1; // this is really just a speedup as our axes shrinks. Just a fudge
-                             }
+                                if (!this->getViewSize().pointInside(where))
+                                {
+                                   auto howFar = where.x - this->getViewSize().right;
+                                   if (howFar > 0)
+                                      dx *= howFar * 0.1; // this is really just a speedup as our axes shrinks. Just a fudge
+                                }
 
-                             adjustDuration(ms->n_activeSegments-1, dx/tscale, eds->hSnap, 0 );
-                             this->ms->segments[ms->n_activeSegments-1].cpduration = this->ms->segments[ms->n_activeSegments-1].duration * cpv;
+                                Surge::MSEG::adjustDurationShiftingSubsequent(
+                                    ms, ms->n_activeSegments - 1, dx / tscale, eds->hSnap);
+                             }
                           } );
          }
       }
@@ -778,12 +726,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( es.lastEval >= 0 && es.lastEval <= ms->n_activeSegments - 1 && ms->segments[es.lastEval].type == MSEGStorage::segment::Type::BROWNIAN )
                vdef = v;
 
-            if( es.lastEval != priorEval )
+            int compareWith = es.lastEval;
+            if( up > ms->totalDuration )
+               compareWith = ms->n_activeSegments - 1;
+
+            if( compareWith != priorEval )
             {
                // OK so make sure that priorEval nv1 is in there
                path->addLine(i, valpx(ms->segments[priorEval].nv1));
-               for( int ns=priorEval + 1; ns <= es.lastEval; ns++ )
-                  path->addLine( i, valpx( ms->segments[ns].v0));
+               for( int ns=priorEval + 1; ns <= compareWith; ns++ )
+               {
+                  path->addLine(i, valpx(ms->segments[ns].v0));
+               }
                priorEval = es.lastEval;
             }
 
@@ -1434,15 +1388,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       contextMenu->addSeparator();
 
-      addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop Start"), [this, tts]() {
+      auto cbStart = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop Start"), [this, tts]() {
          if (ms->loop_end == -1)
             ms->loop_start = tts;
          else
             ms->loop_start = std::min(ms->loop_end + 1, tts);
          modelChanged();
       });
+      cbStart->setEnabled(ms->editMode != MSEGStorage::LFO );
 
-      addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts, t]() {
+      auto cbEnd = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts, t]() {
          auto along = t - ms->segmentStart[tts];
          if( ms->segments[tts].duration == 0 )
             along = 0;
@@ -1455,6 +1410,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          ms->loop_end = target;
          modelChanged();
       });
+      cbEnd->setEnabled( ms->editMode != MSEGStorage::LFO );
 
       contextMenu->addSeparator();
 
@@ -1545,7 +1501,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                  this->modelChanged();
                              }
                          });
-         cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED );
+         cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED || this->ms->editMode == MSEGStorage::LFO);
+         cm->setEnabled( this->ms->editMode != MSEGStorage::LFO );
  
          settingsMenu->addSeparator();
  
@@ -1627,7 +1584,8 @@ void MSEGControlRegion::valueChanged( CControl *p )
    case tag_edit_mode:
    {
       int m = val > 0.5 ? 1 : 0;
-      ms->editMode = (MSEGStorage::EditMode)m;
+      auto editMode = (MSEGStorage::EditMode)m;
+      Surge::MSEG::modifyEditMode(this->ms, editMode );
       canvas->modelChanged();
 
       break;
