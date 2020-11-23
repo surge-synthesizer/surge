@@ -4406,12 +4406,14 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
       r.offset(ao, 0);
    }
 
-   if( r.left < 0 ) {
+   if( r.left < 0 )
+   {
       int ao = 2 - r.left;
       r.offset( ao, 0 );
    }
 
-   if( r.top < 0 ) {
+   if( r.top < 0 )
+   {
       int ao = 2 - r.top;
       r.offset( 0, ao );
    }
@@ -4507,7 +4509,8 @@ void SurgeGUIEditor::toggleTuning()
          this->synth->storage.retuneToScale(Tunings::parseSCLData(tuningCacheForToggle));
          if( mappingCacheForToggle.size() > 0 )
             this->synth->storage.remapToKeyboard(Tunings::parseKBMData(mappingCacheForToggle));
-      } catch( Tunings::TuningError &e )
+      }
+      catch( Tunings::TuningError &e )
       {
          Surge::UserInteractions::promptError( e.what(), "Microtuning Error" );
       }
@@ -4529,6 +4532,7 @@ void SurgeGUIEditor::toggleTuning()
 
    this->synth->refresh_editor = true;
 }
+
 void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint& where)
 {
    CRect menuRect;
@@ -4549,7 +4553,7 @@ void SurgeGUIEditor::tuningFileDropped(std::string fn)
       this->synth->storage.retuneToScale(Tunings::readSCLFile(fn));
       this->synth->refresh_editor = true;
    }
-   catch( Tunings::TuningError &e )
+   catch (Tunings::TuningError &e)
    {
       Surge::UserInteractions::promptError( e.what(), "SCL Error" );
    }
@@ -4557,11 +4561,12 @@ void SurgeGUIEditor::tuningFileDropped(std::string fn)
 
 void SurgeGUIEditor::mappingFileDropped(std::string fn)
 {
-   try {
+   try
+   {
       this->synth->storage.remapToKeyboard(Tunings::readKBMFile(fn));
       this->synth->refresh_editor = true;
    }
-   catch( Tunings::TuningError &e )
+   catch (Tunings::TuningError &e)
    {
       Surge::UserInteractions::promptError( e.what(), "KBM Error" );
    }
@@ -4587,8 +4592,8 @@ bool SurgeGUIEditor::doesZoomFitToScreen(int zf, int &correctedZf)
    ** screen dimension; so allow callers to supress this check with an optional
    ** variable and set it only in the constructor of SurgeGUIEditor
    */
-   if (zf != 100.0 && zf > 100 &&
-       screenDim.getHeight() > 0 && screenDim.getWidth() > 0 && (
+   if (zf != 100.0 && zf > 100 && screenDim.getHeight() > 0 && screenDim.getWidth() > 0 &&
+           (
            (baseW * zf / 100.0) > maxScreenUsage * screenDim.getWidth() / 100.0 ||
            (baseH * zf / 100.0) > maxScreenUsage * screenDim.getHeight() / 100.0
            )
@@ -4636,7 +4641,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
    /*
-   ** If getScreenDimensions() can't determine a size on all paltforms it now
+   ** If getScreenDimensions() can't determine a size on all platforms it now
    ** returns a size 0 screen. In that case we will skip the min check but
    ** need to remember the zoom is invalid
    */
@@ -4646,6 +4651,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
    }
 
    int newZf;
+
    if( doesZoomFitToScreen(zf, newZf) )
    {
       zoomFactor = zf;
@@ -4667,12 +4673,11 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       {
          msg << "Surge chose the largest fitting zoom level of " << zoomFactor << "%.";
       }
-      Surge::UserInteractions::promptError(msg.str(),
-                                           "Zoom Level Adjusted");
+      Surge::UserInteractions::promptError(msg.str(), "Zoom Level Adjusted");
    }
 
    /*
-    * Fixed zoom zoom factor constraint
+    * Fixed zoom factor constraint
     */
    if( currentSkin && currentSkin->hasFixedZooms() )
    {
@@ -4685,10 +4690,14 @@ void SurgeGUIEditor::setZoomFactor(int zf)
       zoomFactor = nzf;
    }
 
+   // update zoom level stored in DAW extra state
+   synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor = zoomFactor / 100.0;
+
    zoom_callback(this);
 
    float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
    int fullPhysicalZoomFactor = (int)(zf * dbs);
+
    if (bitmapStore != nullptr)
       bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
 
@@ -4697,8 +4706,7 @@ void SurgeGUIEditor::setZoomFactor(int zf)
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 {
-    COptionMenu* settingsMenu =
-    new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+    COptionMenu* settingsMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
 
     int eid = 0;
 
@@ -5083,131 +5091,151 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
 
 VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool showhelp)
 {
-    COptionMenu* zoomSubMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+   COptionMenu* zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
 
-    int zid = 0;
+   int zid = 0;
+   auto hu = helpURLForSpecial("zoom-menu");
 
-    auto hu = helpURLForSpecial("zoom-menu");
-    if (hu != "" && showhelp)
-    {
-       auto lurl = fullyResolvedHelpURL(hu);
-       addCallbackMenu(zoomSubMenu, "[?] Zoom",
-                       [lurl]() { Surge::UserInteractions::openURL(lurl); });
-       zid++;
+   if (hu != "" && showhelp)
+   {
+      auto lurl = fullyResolvedHelpURL(hu);
 
-       zoomSubMenu->addSeparator(zid++);
-    }
+      addCallbackMenu(zoomSubMenu, "[?] Zoom", [lurl]()
+      {
+         Surge::UserInteractions::openURL(lurl);
+      });
 
-    std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
-    bool isFixed = false;
-    if( currentSkin->hasFixedZooms() )
-    {
-       isFixed = true;
-       zoomTos = currentSkin->getFixedZooms();
-    }
+      zid++;
 
-    for (auto s : zoomTos ) // These are somewhat arbitrary reasonable defaults
-    {
-        std::ostringstream lab;
-        lab << "Zoom to " << s << "%";
-        CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-        zcmd->setActions([this, s](CCommandMenuItem* m) { setZoomFactor(s); });
-        zoomSubMenu->addEntry(zcmd);
-        if( s == zoomFactor )
-           zcmd->setChecked( true );
-        zid++;
-    }
-    zoomSubMenu->addSeparator(zid++);
+      zoomSubMenu->addSeparator(zid++);
+   }
 
-    if( isFixed )
-    {
-       /*
-        * DO WE WANT SOMETHING LIKE THIS?
-       addCallbackMenu( zoomSubMenu, Surge::UI::toOSCaseForMenu( "About fixed zoom skins..." ),
-                        [](){});
-                        */
-    }
-    else
-    {
-       for (auto jog : {-25, -10, 10, 25}) // These are somewhat arbitrary reasonable defaults also
+   std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
+   bool isFixed = false;
+
+   if (currentSkin->hasFixedZooms())
+   {
+      isFixed = true;
+      zoomTos = currentSkin->getFixedZooms();
+   }
+
+   for (auto s : zoomTos ) // These are somewhat arbitrary reasonable defaults
+   {
+       std::ostringstream lab;
+       lab << "Zoom to " << s << "%";
+
+       CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+       zcmd->setActions([this, s](CCommandMenuItem* m)
        {
-          std::ostringstream lab;
-          if (jog > 0)
-             lab << "Grow by " << jog << "%";
-          else
-             lab << "Shrink by " << -jog << "%";
-
-          CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
-          zcmd->setActions(
-              [this, jog](CCommandMenuItem* m) { setZoomFactor(getZoomFactor() + jog); });
-          zoomSubMenu->addEntry(zcmd);
-          zid++;
-       }
-
-       zoomSubMenu->addSeparator(zid++);
-
-       CCommandMenuItem* biggestZ = new CCommandMenuItem(
-           CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Largest")));
-       biggestZ->setActions([this](CCommandMenuItem* m) {
-          int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
-                                                    90, // See comment in setZoomFactor
-                                                    getWindowSizeX(), getWindowSizeY());
-          setZoomFactor(newZF);
+          setZoomFactor(s);
        });
-       zoomSubMenu->addEntry(biggestZ);
+       
+       zoomSubMenu->addEntry(zcmd);
+       
+       if( s == zoomFactor )
+          zcmd->setChecked( true );
+       
        zid++;
+   }
+   
+   zoomSubMenu->addSeparator(zid++);
 
-       CCommandMenuItem* smallestZ = new CCommandMenuItem(
-           CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Smallest")));
-       smallestZ->setActions([this](CCommandMenuItem* m) { setZoomFactor(minimumZoom); });
-       zoomSubMenu->addEntry(smallestZ);
-       zid++;
+   if( isFixed )
+   {
+      /*
+       * DO WE WANT SOMETHING LIKE THIS?
+      addCallbackMenu( zoomSubMenu, Surge::UI::toOSCaseForMenu( "About fixed zoom skins..." ),
+                       [](){});
+                       */
+   }
+   else
+   {
+      for (auto jog : {-25, -10, 10, 25}) // These are somewhat arbitrary reasonable defaults also
+      {
+         std::ostringstream lab;
+         if (jog > 0)
+            lab << "Grow by " << jog << "%";
+         else
+            lab << "Shrink by " << -jog << "%";
 
-       zoomSubMenu->addSeparator(zid++);
+         CCommandMenuItem* zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+         zcmd->setActions([this, jog](CCommandMenuItem* m)
+         {
+            setZoomFactor(getZoomFactor() + jog);
+         });
+         
+         zoomSubMenu->addEntry(zcmd);
+         zid++;
+      }
 
-       auto dzf = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultZoom",
-                                                      this->zoomFactor);
-       std::ostringstream dss;
-       dss << "Zoom to Default (" << dzf << "%)";
-       CCommandMenuItem* todefaultZ = new CCommandMenuItem(
-           CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(dss.str().c_str())));
-       todefaultZ->setActions([this, dzf](CCommandMenuItem* m) { this->setZoomFactor(dzf); });
-       zoomSubMenu->addEntry(todefaultZ);
-       zid++;
-    }
+      zoomSubMenu->addSeparator(zid++);
 
-    std::ostringstream zss;
-    zss << "Set " << zoomFactor << "% as Default";
-    CCommandMenuItem* defaultZ = new CCommandMenuItem(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(zss.str().c_str())));
-    defaultZ->setActions([this](CCommandMenuItem* m) {
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom",
-                                            this->zoomFactor);
-    });
-    zoomSubMenu->addEntry(defaultZ);
-    zid++;
+      CCommandMenuItem* biggestZ = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Largest")));
+      biggestZ->setActions([this](CCommandMenuItem* m)
+      {
+         int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5, 90 /* See comment in setZoomFactor */,  getWindowSizeX(), getWindowSizeY());
+         setZoomFactor(newZF);
+      });
 
-    if( ! isFixed )
-    {
-       addCallbackMenu(zoomSubMenu, Surge::UI::toOSCaseForMenu("Set Default Zoom Level to..."),
-                       [this, menuRect]() {
-                          // FIXME! This won't work on linux
-                          char c[256];
-                          snprintf(c, 256, "%d", this->zoomFactor);
-                          promptForMiniEdit(
-                              c, "Enter a default zoom level value:", "Set Default Zoom Level",
-                              menuRect.getTopLeft(), [this](const std::string& s) {
-                                 int newVal = ::atoi(s.c_str());
-                                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                                        "defaultZoom", newVal);
-                                 this->setZoomFactor(newVal);
-                              });
-                       });
-       zid++;
-    }
+      zoomSubMenu->addEntry(biggestZ);
+      zid++;
 
-    return zoomSubMenu;
+      CCommandMenuItem* smallestZ = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Smallest")));
+      smallestZ->setActions([this](CCommandMenuItem* m)
+      {
+         setZoomFactor(minimumZoom);
+      });
+
+      zoomSubMenu->addEntry(smallestZ);
+      zid++;
+
+      zoomSubMenu->addSeparator(zid++);
+
+      auto dzf = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "defaultZoom", this->zoomFactor);
+      std::ostringstream dss;
+      dss << "Zoom to Default (" << dzf << "%)";
+
+      CCommandMenuItem* todefaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(dss.str().c_str())));
+      todefaultZ->setActions([this, dzf](CCommandMenuItem* m)
+      {
+         this->setZoomFactor(dzf);
+      });
+      
+      zoomSubMenu->addEntry(todefaultZ);
+      zid++;
+   }
+
+   std::ostringstream zss;
+   zss << "Set " << zoomFactor << "% as Default";
+
+   CCommandMenuItem* defaultZ = new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(zss.str().c_str())));
+   defaultZ->setActions([this](CCommandMenuItem* m)
+   {
+      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", this->zoomFactor);
+   });
+
+   zoomSubMenu->addEntry(defaultZ);
+   zid++;
+
+   if (! isFixed)
+   {
+      addCallbackMenu(zoomSubMenu, Surge::UI::toOSCaseForMenu("Set Default Zoom Level to..."), [this, menuRect]()
+      {
+         // FIXME! This won't work on linux
+         char c[256];
+         snprintf(c, 256, "%d", this->zoomFactor);
+         promptForMiniEdit(c, "Enter a default zoom level value:", "Set Default Zoom Level", menuRect.getTopLeft(), [this](const std::string& s)
+         {
+            int newVal = ::atoi(s.c_str());
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "defaultZoom", newVal);
+            this->setZoomFactor(newVal);
+         });
+      });
+
+      zid++;
+   }
+
+   return zoomSubMenu;
 }
 
 VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRect)
