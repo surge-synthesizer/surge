@@ -6018,7 +6018,7 @@ void SurgeGUIEditor::promptForUserValueEntry( Parameter *p, CControl *c, int ms 
 
    if( ismod )
    {
-      auto sl = new CTextLabel( CRect( 2, 29 + 11, 116, 36 + 11 ), ptext2 );
+      auto sl = new CTextLabel( CRect( 2, 29 + 9, 116, 36 + 13 ), ptext2 );
       sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
       sl->setTransparency(true);
       sl->setFont( displayFont );
