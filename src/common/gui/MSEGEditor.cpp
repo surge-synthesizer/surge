@@ -1260,8 +1260,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                float dragY = where.y - mouseDownOrigin.y;
                if( buttons & kShift )
                {
-                  dragX *= 0.05;
-                  dragY *= 0.05;
+                  dragX *= 0.2;
+                  dragY *= 0.2;
                }
                h.onDrag( dragX, dragY, where );
 #if ! LINUX
