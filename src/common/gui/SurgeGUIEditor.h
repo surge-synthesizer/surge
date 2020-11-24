@@ -499,9 +499,11 @@ private:
    void resetPitchSmoothing(ControllerModulationSource::SmoothingMode t);
 
 public:
-   std::string helpURLFor( Parameter *p );
-   std::string helpURLForSpecial( std::string special );
-   std::string fullyResolvedHelpURL( std::string helpurl );
+   std::string helpURLFor( Parameter *p ); // this requires internal state so doesn't have statics
+   std::string helpURLForSpecial( std::string special ); // these can be either this way or static
+
+   static std::string helpURLForSpecial( SurgeStorage *, std::string special );
+   static std::string fullyResolvedHelpURL( std::string helpurl );
 
 private:
 

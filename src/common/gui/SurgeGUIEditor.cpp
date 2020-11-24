@@ -6315,6 +6315,11 @@ std::string SurgeGUIEditor::helpURLFor( Parameter *p )
 std::string SurgeGUIEditor::helpURLForSpecial( std::string key )
 {
    auto storage = &(synth->storage);
+   return helpURLForSpecial( storage, key );
+}
+
+std::string SurgeGUIEditor::helpURLForSpecial( SurgeStorage *storage, std::string key )
+{
    if( storage->helpURL_specials.find(key) != storage->helpURL_specials.end() )
    {
       auto r = storage->helpURL_specials[key];
@@ -6323,7 +6328,6 @@ std::string SurgeGUIEditor::helpURLForSpecial( std::string key )
    }
    return "";
 }
-
 std::string SurgeGUIEditor::fullyResolvedHelpURL( std::string helpurl )
 {
    std::string lurl = helpurl;
@@ -7331,7 +7335,7 @@ void SurgeGUIEditor::showMSEGEditor()
    auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
    auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
    auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
-   auto mse = new MSEGEditor(lfodata, ms, &msegEditState[lfo_id], currentSkin, bitmapStore);
+   auto mse = new MSEGEditor(&(synth->storage), lfodata, ms, &msegEditState[lfo_id], currentSkin, bitmapStore);
    auto vs = mse->getViewSize().getWidth();
    float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 
