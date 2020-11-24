@@ -1139,21 +1139,39 @@ void CLFOGui::openPopup(CPoint &where)
 
    contextMenu->addSeparator();
 
-   auto lpoff = addCb(contextMenu, Surge::UI::toOSCaseForMenu("No Looping"), [this]()
+   auto lpoff = addCb(contextMenu, Surge::UI::toOSCaseForMenu("No Looping"), [this, sge]()
                                    {
                                       ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
+                                      if (sge->editorOverlayTag == "msegEditor")
+                                      {
+                                         sge->closeMSEGEditor();
+                                         sge->showMSEGEditor();
+                                      }
+                                      invalid();
                                    });
    lpoff->setChecked(ms->loopMode == MSEGStorage::LoopMode::ONESHOT);
 
-   auto lpon = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Always"), [this]()
+   auto lpon = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Always"), [this, sge]()
                                    {
                                       ms->loopMode = MSEGStorage::LoopMode::LOOP;
+                                      if (sge->editorOverlayTag == "msegEditor")
+                                      {
+                                         sge->closeMSEGEditor();
+                                         sge->showMSEGEditor();
+                                      }
+                                      invalid();
                                    });
    lpon->setChecked(ms->loopMode == MSEGStorage::LoopMode::LOOP);
 
-   auto lpgate = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Until Release"), [this]()
+   auto lpgate = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Until Release"), [this, sge]()
                                    {
                                       ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+                                      if (sge->editorOverlayTag == "msegEditor")
+                                      {
+                                         sge->closeMSEGEditor();
+                                         sge->showMSEGEditor();
+                                      }
+                                      invalid();
                                    });
    lpgate->setChecked(ms->loopMode == MSEGStorage::LoopMode::GATED_LOOP);
 
