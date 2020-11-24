@@ -7,6 +7,11 @@ class SurgeLv2Wrapper;
 class SurgeGUIEditor;
 class Lv2IdleRunLoop;
 
+namespace VSTGUI
+{
+   class CBitmap;
+}
+
 class SurgeLv2Ui
 {
 public:
