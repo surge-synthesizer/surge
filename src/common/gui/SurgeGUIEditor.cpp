@@ -2406,7 +2406,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
             contextMenu->addSeparator(eid++);
             char vtxt[1024];
-            sprintf( vtxt, "Edit Value: %.*f %%", (detailedMode ? 6 : 2 ), 100 * cms->get_output() );
+            sprintf(vtxt, "%s: %.*f %%", Surge::UI::toOSCaseForMenu("Edit Value").c_str(), (detailedMode ? 6 : 2), 100 * cms->get_output());
             addCallbackMenu( contextMenu, vtxt, [this, control, modsource]()
                                                    {
                                                       promptForUserValueEntry( nullptr, control, modsource );
@@ -2677,7 +2677,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          contextMenu->addSeparator(eid++);
          char txt[256], txt2[512];
          p->get_display(txt);
-         sprintf(txt2, "Edit Value: %s", txt);
+         sprintf(txt2, "%s: %s", Surge::UI::toOSCaseForMenu("Edit Value").c_str(), txt);
          if( p->valtype == vt_float )
          {
             if( p->can_temposync() && p->temposync )
