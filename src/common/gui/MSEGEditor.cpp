@@ -1731,12 +1731,12 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
       menuName = "Loop Mode";
       options.push_back( std::make_pair( "Off", 0 ) );
       options.push_back( std::make_pair( "Loop", 0.5 ) );
-      options.push_back( std::make_pair( "Gate", 1.0 ) );
+      options.push_back(std::make_pair( Surge::UI::toOSCaseForMenu("Gate (Loop Until Release)").c_str(), 1.0));
       break;
 
    case tag_edit_mode:
       menuName = "Edit Mode";
-      options.push_back( std::make_pair( "Envelop", 0 ) );
+      options.push_back( std::make_pair( "Envelope", 0 ) );
       options.push_back( std::make_pair( "LFO", 1.0 ) );
       break;
 
@@ -1752,10 +1752,19 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
       menuName = "Vertical Snap Value";
    case tag_horizontal_value:
       if( menuName == "" ) menuName = "Horizontal Snap Value";
-      options.push_back( std::make_pair( "2", .02 ));
-      options.push_back( std::make_pair( "4", .04 ));
-      options.push_back( std::make_pair( "8", .08 ));
-      options.push_back( std::make_pair( "16", .16 ));
+      options.push_back( std::make_pair( "2", 2 ));
+      options.push_back( std::make_pair( "3", 3 ));
+      options.push_back( std::make_pair( "4", 4 ));
+      options.push_back( std::make_pair( "5", 5 ));
+      options.push_back( std::make_pair( "6", 6 ));
+      options.push_back( std::make_pair( "7", 7 ));
+      options.push_back( std::make_pair( "8", 8 ));
+      options.push_back( std::make_pair( "9", 9 ));
+      options.push_back( std::make_pair( "10", 10 ));
+      options.push_back( std::make_pair( "12", 12 ));
+      options.push_back( std::make_pair( "16", 16 ));
+      options.push_back( std::make_pair( "24", 24 ));
+      options.push_back( std::make_pair( "32", 32 ));
       break;
    default:
       break;
@@ -1779,18 +1788,20 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
       {
          if( pControl->getValue() > 0.5 )
          {
-            addcb( "Toggle Off", [pControl, this]() {
+            addcb(Surge::UI::toOSCaseForMenu("Edit Value") + ": Off", [pControl, this]() {
                pControl->setValue( 0 );
+               pControl->valueChanged();
                canvas->invalid();
                invalid();
             });
          }
          else
          {
-            addcb( "Toggle On", [pControl, this]() {
-              pControl->setValue( 1 );
-              canvas->invalid();
-              invalid();
+            addcb(Surge::UI::toOSCaseForMenu("Edit Value") + ": On", [pControl, this]() {
+               pControl->setValue( 1 );
+               pControl->valueChanged();
+               canvas->invalid();
+               invalid();
             });
          }
       }
@@ -1800,9 +1811,8 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
          {
             auto val = op.second;
             auto men = addcb(op.first, [val, pControl, this]() {
-               pControl->setValue(val);
-               canvas->invalid();
-               invalid();
+               pControl->setValue(Parameter::intScaledToFloat(val, 100, 1));
+               pControl->valueChanged();
             });
             if (val == pControl->getValue())
                men->setChecked(true);
