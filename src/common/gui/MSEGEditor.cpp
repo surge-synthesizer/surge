@@ -784,6 +784,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                path->addLine(i, valpx(ms->segments[priorEval].nv1));
                for( int ns=priorEval + 1; ns <= compareWith; ns++ )
                {
+                  // Special case - hold draws endpoint
+                  if (ns > 0 && ms->segments[ns-1].type == MSEGStorage::segment::HOLD )
+                     path->addLine( i, valpx( ms->segments[ns-1].v0));
                   path->addLine(i, valpx(ms->segments[ns].v0));
                }
                priorEval = es.lastEval;
@@ -1713,34 +1716,42 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
        tag_edit_mode,
        */
 
+   bool isOnOff = false;
+   std::string menuName = "";
    switch( tag )
    {
    case tag_segment_movement_mode:
+      menuName = "Movement Mode";
       options.push_back( std::make_pair( "Single", 0 ) );
       options.push_back( std::make_pair( "Shift", 0.5 ) );
       options.push_back( std::make_pair( "Draw", 1.0 ) );
       break;
 
    case tag_loop_mode:
+      menuName = "Loop Mode";
       options.push_back( std::make_pair( "Off", 0 ) );
       options.push_back( std::make_pair( "Loop", 0.5 ) );
       options.push_back( std::make_pair( "Gate", 1.0 ) );
       break;
 
    case tag_edit_mode:
+      menuName = "Edit Mode";
       options.push_back( std::make_pair( "Envelop", 0 ) );
       options.push_back( std::make_pair( "LFO", 1.0 ) );
       break;
 
 
    case tag_vertical_snap:
+      menuName = "Vertical Snap";
    case tag_horizontal_snap:
-      options.push_back( std::make_pair( "On", 1 ) );
-      options.push_back( std::make_pair( "Off", 0 ) );
+      if( menuName == "" ) menuName = "Horizontal Snap";
+      isOnOff = true;
       break;
 
    case tag_vertical_value:
+      menuName = "Vertical Snap Value";
    case tag_horizontal_value:
+      if( menuName == "" ) menuName = "Horizontal Snap Value";
       options.push_back( std::make_pair( "2", .02 ));
       options.push_back( std::make_pair( "4", .04 ));
       options.push_back( std::make_pair( "8", .08 ));
@@ -1750,7 +1761,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
       break;
    }
 
-   if( options.size() )
+   if( options.size() || isOnOff )
    {
       VSTGUI::CPoint where;
       getFrame()->getCurrentMouseLocation(where);
@@ -1762,18 +1773,40 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
          com->addEntry(menu);
          return menu;
       };
-      addcb( "[?] MSEG", [](){} );
+      addcb( "[?] " + menuName, [](){} );
       com->addSeparator();
-      for( auto op : options )
+      if( isOnOff )
       {
-         auto val = op.second;
-         auto men = addcb( op.first, [val, pControl, this](){
-            pControl->setValue(val);
-            canvas->invalid();
-            invalid();
-         });
-         if( val == pControl->getValue())
-            men->setChecked(true);
+         if( pControl->getValue() > 0.5 )
+         {
+            addcb( "Toggle Off", [pControl, this]() {
+               pControl->setValue( 0 );
+               canvas->invalid();
+               invalid();
+            });
+         }
+         else
+         {
+            addcb( "Toggle On", [pControl, this]() {
+              pControl->setValue( 1 );
+              canvas->invalid();
+              invalid();
+            });
+         }
+      }
+      else
+      {
+         for (auto op : options)
+         {
+            auto val = op.second;
+            auto men = addcb(op.first, [val, pControl, this]() {
+               pControl->setValue(val);
+               canvas->invalid();
+               invalid();
+            });
+            if (val == pControl->getValue())
+               men->setChecked(true);
+         }
       }
       getFrame()->addView(com);
       com->popup();
