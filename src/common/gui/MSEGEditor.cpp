@@ -46,12 +46,13 @@ struct MSEGCanvas;
 
 // This is 720 x 120
 struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
-   MSEGControlRegion(const CRect &size, MSEGCanvas *c, LFOStorage *lfos, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
+   MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
       setSkin( skin, b );
       this->ms = ms;
       this->eds = eds;
       this->lfodata = lfos;
       this->canvas = c;
+      this->storage = storage;
       setBackgroundColor(skin->getColor(Colors::MSEGEditor::Panel));
       rebuild();
    };
@@ -81,6 +82,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
    MSEGEditor::State *eds = nullptr;
    MSEGCanvas *canvas = nullptr;
    LFOStorage *lfodata = nullptr;
+   SurgeStorage *storage = nullptr;
 };
 
 
@@ -1773,7 +1775,13 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
          com->addEntry(menu);
          return menu;
       };
-      addcb( "[?] " + menuName, [](){} );
+      auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor" );
+      auto hurl = SurgeGUIEditor::fullyResolvedHelpURL( msurl );
+
+      addcb( "[?] " + menuName, [hurl](){
+         std::cout << "OPENING " << hurl << std::endl;
+         Surge::UserInteractions::openURL(hurl);
+      } );
       com->addSeparator();
       if( isOnOff )
       {
@@ -1980,7 +1988,7 @@ void MSEGControlRegion::rebuild()
 
 struct MSEGMainEd : public CViewContainer {
 
-   MSEGMainEd(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bmp) : CViewContainer(size) {
+   MSEGMainEd(const CRect &size, SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bmp) : CViewContainer(size) {
       this->ms = ms;
       this->skin = skin;
 
@@ -1989,7 +1997,7 @@ struct MSEGMainEd : public CViewContainer {
       auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, eds, skin, bmp );
             
       auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,
-                                               lfodata, ms, eds, skin, bmp );
+                                               storage, lfodata, ms, eds, skin, bmp );
 
 
       msegCanv->controlregion = msegControl;
@@ -2004,12 +2012,12 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 750, 365) )
+MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 750, 365) )
 {
    // Leave these in for now
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );
-   addView( new MSEGMainEd( getViewSize(), lfodata, ms, eds, skin, b ) );
+   addView( new MSEGMainEd( getViewSize(), storage, lfodata, ms, eds, skin, b ) );
 }
 
 MSEGEditor::~MSEGEditor() {

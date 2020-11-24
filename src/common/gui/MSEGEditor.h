@@ -23,6 +23,6 @@ struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumi
       float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.125;
       int timeEditMode = 0;
    };
-   MSEGEditor(LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
+   MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
    ~MSEGEditor();
 };
