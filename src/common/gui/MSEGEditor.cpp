@@ -1292,25 +1292,29 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          }
          else
          {
-            // This means we are a pan or zoom gesture
-            float x = where.x - mouseDownOrigin.x;
-            float y = where.y - mouseDownOrigin.y;
-            float r = sqrt(x * x + y * y);
-            if (r > 3)
+            // only allow panning and zooming in Envelope mode
+            if (this->ms->editMode == MSEGStorage::ENVELOPE)
             {
-               if (fabs(x) > fabs(y))
+               // This means we are a pan or zoom gesture
+               float x = where.x - mouseDownOrigin.x;
+               float y = where.y - mouseDownOrigin.y;
+               float r = sqrt(x * x + y * y);
+               if (r > 3)
                {
-                  float dx = where.x - lastPanZoomMousePos.x;
-                  float panScale = axisWidth / getDrawArea().getWidth();
-                  pan(where, -dx * panScale, buttons );
+                  if (fabs(x) > fabs(y))
+                  {
+                     float dx = where.x - lastPanZoomMousePos.x;
+                     float panScale = axisWidth / getDrawArea().getWidth();
+                     pan(where, -dx * panScale, buttons );
+                  }
+                  else
+                  {
+                     float dy = where.y - lastPanZoomMousePos.y;
+                     float zoomScale = 2. / getDrawArea().getHeight();
+                     zoom( where, dy * zoomScale, buttons );
+                  }
+                  lastPanZoomMousePos = where;
                }
-               else
-               {
-                  float dy = where.y - lastPanZoomMousePos.y;
-                  float zoomScale = 2. / getDrawArea().getHeight();
-                  zoom( where, dy * zoomScale, buttons );
-               }
-               lastPanZoomMousePos = where;
             }
          }
 
@@ -1350,24 +1354,31 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                 const float& distance,
                 const CButtonState& buttons) override
    {
-      // fixmes - most recent
-      if( axis == CMouseWheelAxis::kMouseWheelAxisY )
+      // only allow panning and zooming in Envelope mode
+      if (this->ms->editMode == MSEGStorage::ENVELOPE)
       {
-         wheelAxisCount++;
+         // fixmes - most recent
+         if( axis == CMouseWheelAxis::kMouseWheelAxisY )
+         {
+            wheelAxisCount++;
+         }
+         else
+         {
+            wheelAxisCount--;
+         }
+         
+         wheelAxisCount = limit_range(wheelAxisCount, -3, 3 );
+         
+         if(wheelAxisCount <= -2 )
+         {
+            panWheel( where, distance, buttons );
+         }
+         else
+         {
+            zoomWheel( where, distance, buttons );
+         }
       }
-      else
-      {
-         wheelAxisCount--;
-      }
-      wheelAxisCount = limit_range(wheelAxisCount, -3, 3 );
-      if(wheelAxisCount <= -2 )
-      {
-         panWheel( where, distance, buttons );
-      }
-      else
-      {
-         zoomWheel( where, distance, buttons );
-      }
+
       return true;
    }
 
