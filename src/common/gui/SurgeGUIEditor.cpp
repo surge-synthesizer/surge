@@ -275,21 +275,19 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
    mod_editor = false;
 
    // init the size of the plugin
-   int userDefaultZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
-   float zf = userDefaultZoomFactor * 0.01;
-
-   auto izf = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor;
-   if(izf != 100)
+   initialZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
+   auto instanceZoomFactor = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor;
+   if(instanceZoomFactor != 100)
    {
-       // If I restore state before I am constructed I need to do this
-       zf = izf * 0.01;
+	   // dawExtraState zoomFactor wins defaultZoom
+	   initialZoomFactor = instanceZoomFactor;
    }
 
    rect.left = 0;
    rect.top = 0;
 #if TARGET_VST2 || TARGET_VST3
-   rect.right = getWindowSizeX() * zf;
-   rect.bottom = getWindowSizeY() * zf;
+   rect.right = getWindowSizeX() * initialZoomFactor * 0.01;
+   rect.bottom = getWindowSizeY() * initialZoomFactor * 0.01;
 #else
    rect.right = getWindowSizeX();
    rect.bottom = getWindowSizeY();
@@ -334,8 +332,8 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
 #endif
 
    zoom_callback = [](SurgeGUIEditor* f, bool) {};
-   setZoomFactor(userDefaultZoomFactor);
-   zoomInvalid = (userDefaultZoomFactor != 100);
+   setZoomFactor(initialZoomFactor);
+   zoomInvalid = (initialZoomFactor != 100);
 
    /*
    ** As documented in RuntimeFonts.h, the contract of this function is to side-effect
@@ -5833,54 +5831,51 @@ VSTGUI::CCommandMenuItem* SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* t
 }
 
 #if TARGET_VST3
-void SurgeGUIEditor::adjustSize(float &width, float &height) const
+bool SurgeGUIEditor::initialZoom()
 {
-	// Cubase sets wrong newSize when reopening editor. See #1460
-	if (synth->hostProgram.find("ubase") != std::string::npos ||
-		synth->hostProgram.find("uendo") != std::string::npos)
-	{
-		auto scaleFactorOnClose = synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose;
-		if (scaleFactorOnClose > 1)
-		{
-			width *= scaleFactorOnClose;
-			height *= scaleFactorOnClose;
-			synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose = 1; // Don't rescale infinitely
-		}
-	}
+    if (initialZoomFactor != 100)
+    {
+        // Daw does not necessarily have any idea what size to draw on init. We need to tell it.
+        setZoomFactor(initialZoomFactor);
+        initialZoomFactor = 100;
+        zoom_callback(this, true);
+        return true; 
+    }
+    return false;
 }
-
 
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
 {
-   float width = newSize->getWidth();
-   float height = newSize->getHeight();
+    if ( !initialZoom() )
+    {
+        float width = newSize->getWidth();
+        float height = newSize->getHeight();
 
-   adjustSize(width, height);
+        // resolve current zoomFactor
+        float izfx = ceil(width / getWindowSizeX() * 100.0);
+        float izfy = ceil(height / getWindowSizeY() * 100.0);
+        float currentZoomFactor = std::min(izfx, izfy);
+        currentZoomFactor = std::max(currentZoomFactor, 1.0f * minimumZoom);
 
-   // resolve current zoomFactor
-   float izfx = ceil(width / getWindowSizeX() * 100.0);
-   float izfy = ceil(height / getWindowSizeY() * 100.0);
-   float currentZoomFactor = std::min(izfx, izfy);
-   currentZoomFactor = std::max(currentZoomFactor, 1.0f * minimumZoom);
+        // Don't allow me to set a zoom which will pop a dialog from this drag event. See #1212
+        float correctedZoomFactor;
+        if (!doesZoomFitToScreen(currentZoomFactor, correctedZoomFactor))
+        {
+            currentZoomFactor = correctedZoomFactor;
+        }
 
-   // Don't allow me to set a zoom which will pop a dialog from this drag event. See #1212
-   float correctedZoomFactor;
-   if( ! doesZoomFitToScreen(currentZoomFactor, correctedZoomFactor) )
-   {
-	   currentZoomFactor = correctedZoomFactor;
-   }
+        // If the resolved currentZoomFactor changes size by more than a pixel, store new size
+        auto zfdx = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeX()) / 100.0;
+        auto zfdy = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeY()) / 100.0;
+        bool windowDragResize = std::max(zfdx, zfdy) > 1;
 
-   // If the resolved currentZoomFactor changes size by more than a pixel, store new size
-   auto zfdx = std::fabs( (currentZoomFactor - zoomFactor) * getWindowSizeX() ) / 100.0;
-   auto zfdy = std::fabs( (currentZoomFactor - zoomFactor) * getWindowSizeY() ) / 100.0;
-   bool windowDragResize = std::max( zfdx, zfdy ) > 1;
+        if (windowDragResize)
+        {
+            setZoomFactor(currentZoomFactor);
+        }
+    }
 
-   if(windowDragResize)
-   {
-      setZoomFactor(currentZoomFactor);
-   }
-
-   return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
+    return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
 }
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect* newSize)
 {

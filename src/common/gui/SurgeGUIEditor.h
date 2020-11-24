@@ -128,11 +128,12 @@ public:
       return Steinberg::kResultTrue;
    }
 
+   bool initialZoom();
    virtual Steinberg::tresult PLUGIN_API onSize(Steinberg::ViewRect* newSize) override;
    virtual Steinberg::tresult PLUGIN_API checkSizeConstraint(Steinberg::ViewRect* newSize) override;
    virtual Steinberg::tresult PLUGIN_API setContentScaleFactor(ScaleFactor factor) override
    {
-      scaleFactor = factor;
+      // Unused for now. Consider removing this callback since not all hosts use it
       return Steinberg::kResultTrue;
    }
 
@@ -216,7 +217,7 @@ private:
    */
    
    float zoomFactor = 100;
-   float scaleFactor = 1;
+   float initialZoomFactor = 100;
 
    int patchCountdown = -1;
    
@@ -227,7 +228,6 @@ public:
 
       des->isPopulated = true;
       des->editor.instanceZoomFactor = zoomFactor;
-      des->editor.scaleFactorOnClose = scaleFactor;
       des->editor.current_scene = current_scene;
       des->editor.current_fx = current_fx;
       des->editor.modsource = modsource;
