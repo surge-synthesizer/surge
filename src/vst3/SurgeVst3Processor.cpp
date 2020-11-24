@@ -588,7 +588,7 @@ IPlugView* PLUGIN_API SurgeVst3Processor::createView(const char* name)
       editor->setZoomCallback( [this](SurgeGUIEditor *e, bool resizeWindow) { redraw(e, resizeWindow); } );
 
       if(lastZoom > 0)
-          editor->setZoomFactor(lastZoom); // Kingston todo, with window resize or not?
+          editor->setZoomFactor(lastZoom);
 
       return editor;
    }

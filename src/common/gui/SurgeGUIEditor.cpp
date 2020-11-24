@@ -5833,19 +5833,29 @@ VSTGUI::CCommandMenuItem* SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu* t
 }
 
 #if TARGET_VST3
+void SurgeGUIEditor::adjustSize(float &width, float &height) const
+{
+	// Cubase sets wrong newSize when reopening editor. See #1460
+	if (synth->hostProgram.find("ubase") != std::string::npos ||
+		synth->hostProgram.find("uendo") != std::string::npos)
+	{
+		auto scaleFactorOnClose = synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose;
+		if (scaleFactorOnClose > 1)
+		{
+			width *= scaleFactorOnClose;
+			height *= scaleFactorOnClose;
+			synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose = 1; // Don't rescale infinitely
+		}
+	}
+}
+
+
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
 {
    float width = newSize->getWidth();
    float height = newSize->getHeight();
 
-   // Cubase sets wrong newSize when reopening editor. See #1460
-   auto scaleFactorOnClose = synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose;
-   if (scaleFactorOnClose > 1)
-   {
-	  width *= scaleFactorOnClose;
-	  height *= scaleFactorOnClose;
-      synth->storage.getPatch().dawExtraState.editor.scaleFactorOnClose = 1; // Don't rescale infinitely
-   }
+   adjustSize(width, height);
 
    // resolve current zoomFactor
    float izfx = ceil(width / getWindowSizeX() * 100.0);

@@ -191,6 +191,7 @@ private:
    double lastTempo = 0;
    int lastTSNum = 0, lastTSDen = 0;
    void draw_infowindow(int ptag, VSTGUI::CControl* control, bool modulate, bool forceMB = false);
+   void adjustSize(float &width, float &height) const;
 
    struct patchdata
    {
