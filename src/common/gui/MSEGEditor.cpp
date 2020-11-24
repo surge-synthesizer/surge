@@ -1704,8 +1704,83 @@ void MSEGControlRegion::valueChanged( CControl *p )
 
 int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonState button)
 {
-   std::cout << "CM Clicked" << std::endl;
-   return 0;
+   int tag = pControl->getTag();
+
+   // Basically all the menus are a list of options with values
+   std::vector<std::pair<std::string,float>> options;
+
+   /*  tag_loop_mode,
+       tag_edit_mode,
+       */
+
+   switch( tag )
+   {
+   case tag_segment_movement_mode:
+      options.push_back( std::make_pair( "Single", 0 ) );
+      options.push_back( std::make_pair( "Shift", 0.5 ) );
+      options.push_back( std::make_pair( "Draw", 1.0 ) );
+      break;
+
+   case tag_loop_mode:
+      options.push_back( std::make_pair( "Off", 0 ) );
+      options.push_back( std::make_pair( "Loop", 0.5 ) );
+      options.push_back( std::make_pair( "Gate", 1.0 ) );
+      break;
+
+   case tag_edit_mode:
+      options.push_back( std::make_pair( "Envelop", 0 ) );
+      options.push_back( std::make_pair( "LFO", 1.0 ) );
+      break;
+
+
+   case tag_vertical_snap:
+   case tag_horizontal_snap:
+      options.push_back( std::make_pair( "On", 1 ) );
+      options.push_back( std::make_pair( "Off", 0 ) );
+      break;
+
+   case tag_vertical_value:
+   case tag_horizontal_value:
+      options.push_back( std::make_pair( "2", .02 ));
+      options.push_back( std::make_pair( "4", .04 ));
+      options.push_back( std::make_pair( "8", .08 ));
+      options.push_back( std::make_pair( "16", .16 ));
+      break;
+   default:
+      break;
+   }
+
+   if( options.size() )
+   {
+      VSTGUI::CPoint where;
+      getFrame()->getCurrentMouseLocation(where);
+      auto *com = new COptionMenu(CRect(where,CPoint()), nullptr, 0, 0,
+                                  0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+      auto addcb = [com](std::string label, auto action){
+         CCommandMenuItem* menu = new CCommandMenuItem(CCommandMenuItem::Desc(label.c_str()));
+         menu->setActions([action](CCommandMenuItem* m) { action(); });
+         com->addEntry(menu);
+         return menu;
+      };
+      addcb( "[?] MSEG", [](){} );
+      com->addSeparator();
+      for( auto op : options )
+      {
+         auto val = op.second;
+         auto men = addcb( op.first, [val, pControl, this](){
+            pControl->setValue(val);
+            canvas->invalid();
+            invalid();
+         });
+         if( val == pControl->getValue())
+            men->setChecked(true);
+      }
+      getFrame()->addView(com);
+      com->popup();
+      getFrame()->removeView(com, true);
+
+   }
+   return 1;
 }
 
 void MSEGControlRegion::rebuild()
