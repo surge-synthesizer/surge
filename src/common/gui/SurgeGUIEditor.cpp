@@ -5838,6 +5838,8 @@ bool SurgeGUIEditor::initialZoom()
         // Daw does not necessarily have any idea what size to draw on init. We need to tell it.
         setZoomFactor(initialZoomFactor);
         initialZoomFactor = 100;
+
+        // Important: this is the one and only window resize operation allowed inside onSize. Infinite recursion warning!
         zoom_callback(this, true);
         return true; 
     }
