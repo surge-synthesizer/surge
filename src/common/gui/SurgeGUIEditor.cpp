@@ -5156,7 +5156,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
           int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
                                                     90, // See comment in setZoomFactor
                                                     getWindowSizeX(), getWindowSizeY());
-		  resizeWindow(newZF);
+          resizeWindow(newZF);
        });
        zoomSubMenu->addEntry(biggestZ);
        zid++;
@@ -5204,7 +5204,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
                                  int newVal = ::atoi(s.c_str());
                                  Surge::Storage::updateUserDefaultValue(&(synth->storage),
                                                                         "defaultZoom", newVal);
-								 resizeWindow(newVal);
+                                 resizeWindow(newVal);
                               });
                        });
        zid++;

@@ -718,10 +718,10 @@ void Vst2PluginInstance::redraw(SurgeGUIEditor *e, bool resizeWindow)
     int width = e->getWindowSizeX() * fzf;
     int heigth = e->getWindowSizeY() * fzf;
 
-	if (resizeWindow)
-	{
-		sizeWindow(width, heigth);
-	}
+    if (resizeWindow)
+    {
+        sizeWindow(width, heigth);
+    }
 
     VSTGUI::CFrame *frame = e->getFrame();
     if(frame)
