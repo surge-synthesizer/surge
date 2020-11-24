@@ -44,8 +44,9 @@ private:
    static const void* extensionData(const char* uri);
    static int uiIdle(LV2UI_Handle ui);
 
-    // callback from the editor
-    void handleZoom(SurgeGUIEditor* e, const LV2UI_Resize* resizer);
+   // callback from the editor
+   void handleZoom(SurgeGUIEditor* e, const LV2UI_Resize* resizer, bool resizeWindow);
+   void setExtraScaleFactor(VSTGUI::CBitmap *bg, float zf);
 
 private:
    std::unique_ptr<SurgeGUIEditor> _editor;

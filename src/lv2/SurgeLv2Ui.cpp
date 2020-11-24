@@ -25,7 +25,7 @@ SurgeLv2Ui::SurgeLv2Ui(SurgeLv2Wrapper* instance,
    {
       _editor->setZoomFactor(uiScaleFactor * 100);
       _editor->setZoomCallback(
-         [this, uiResizer](SurgeGUIEditor* editor) { handleZoom(editor, uiResizer); });
+         [this, uiResizer](SurgeGUIEditor* editor, bool resizeWindow) { handleZoom(editor, uiResizer, resizeWindow); });
    }
 
    _editor->open(parentWindow);
@@ -178,7 +178,7 @@ int SurgeLv2Ui::uiIdle(LV2UI_Handle ui)
    return 0;
 }
 
-void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer)
+void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer, bool resizeWindow)
 {
    assert(e == _editor.get());
 
@@ -187,7 +187,7 @@ void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer)
     int newH = e->getWindowSizeY() * fzf;
 
     // identical implementation to VST2, except for here
-    if (_uiInitialized)
+    if (resizer && resizeWindow && _uiInitialized)
         resizer->ui_resize(resizer->handle, newW, newH);
 
     VSTGUI::CFrame *frame = e->getFrame();
@@ -201,25 +201,28 @@ void SurgeLv2Ui::handleZoom(SurgeGUIEditor *e, const LV2UI_Resize* resizer)
         */
         frame->setSize(newW, newH);
 
-        /*
-        ** VST2 has an error which is that the background bitmap doesn't get the frame transform
-        ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
-        ** scale up using a backdoor API.
-        */
-
-        VSTGUI::CBitmap *bg = frame->getBackground();
-        if(bg != NULL)
-        {
-            CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
-            if (sbm)
-            {
-               sbm->setExtraScaleFactor(e->getZoomFactor());
-            }
-        }
+        setExtraScaleFactor(frame->getBackground(), e->getZoomFactor());
 
         frame->setDirty(true);
         frame->invalid();
     }
+}
+
+void SurgeLv2Ui::setExtraScaleFactor(VSTGUI::CBitmap *bg, float zf)
+{
+  if (bg != NULL)
+  {
+    auto sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+    if (sbm)
+    {
+      /*
+      ** VSTGUI has an error which is that the background bitmap doesn't get the frame transform
+      ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
+      ** scale up using a backdoor API.
+      */
+      sbm->setExtraScaleFactor(zf);
+    }
+  }
 }
 
 ///
