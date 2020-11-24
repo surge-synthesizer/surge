@@ -1718,54 +1718,65 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
 
    bool isOnOff = false;
    std::string menuName = "";
-   switch( tag )
+   switch (tag)
    {
    case tag_segment_movement_mode:
       menuName = "Movement Mode";
-      options.push_back( std::make_pair( "Single", 0 ) );
-      options.push_back( std::make_pair( "Shift", 0.5 ) );
-      options.push_back( std::make_pair( "Draw", 1.0 ) );
+      options.push_back(std::make_pair("Single", 0));
+      options.push_back(std::make_pair("Shift", 0.5));
+      options.push_back(std::make_pair("Draw", 1.0));
       break;
 
    case tag_loop_mode:
       menuName = "Loop Mode";
-      options.push_back( std::make_pair( "Off", 0 ) );
-      options.push_back( std::make_pair( "Loop", 0.5 ) );
-      options.push_back(std::make_pair( Surge::UI::toOSCaseForMenu("Gate (Loop Until Release)").c_str(), 1.0));
+      options.push_back(std::make_pair("Off", 0));
+      options.push_back(std::make_pair("Loop", 0.5));
+      options.push_back(
+          std::make_pair(Surge::UI::toOSCaseForMenu("Gate (Loop Until Release)").c_str(), 1.0));
       break;
 
    case tag_edit_mode:
       menuName = "Edit Mode";
-      options.push_back( std::make_pair( "Envelope", 0 ) );
-      options.push_back( std::make_pair( "LFO", 1.0 ) );
+      options.push_back(std::make_pair("Envelope", 0));
+      options.push_back(std::make_pair("LFO", 1.0));
       break;
-
 
    case tag_vertical_snap:
       menuName = "Vertical Snap";
    case tag_horizontal_snap:
-      if( menuName == "" ) menuName = "Horizontal Snap";
+      if (menuName == "")
+         menuName = "Horizontal Snap";
       isOnOff = true;
       break;
 
    case tag_vertical_value:
       menuName = "Vertical Snap Value";
    case tag_horizontal_value:
-      if( menuName == "" ) menuName = "Horizontal Snap Value";
-      options.push_back( std::make_pair( "2", 2 ));
-      options.push_back( std::make_pair( "3", 3 ));
-      options.push_back( std::make_pair( "4", 4 ));
-      options.push_back( std::make_pair( "5", 5 ));
-      options.push_back( std::make_pair( "6", 6 ));
-      options.push_back( std::make_pair( "7", 7 ));
-      options.push_back( std::make_pair( "8", 8 ));
-      options.push_back( std::make_pair( "9", 9 ));
-      options.push_back( std::make_pair( "10", 10 ));
-      options.push_back( std::make_pair( "12", 12 ));
-      options.push_back( std::make_pair( "16", 16 ));
-      options.push_back( std::make_pair( "24", 24 ));
-      options.push_back( std::make_pair( "32", 32 ));
+   {
+       if (menuName == "")
+         menuName = "Horizontal Snap Value";
+
+      auto addStop = [&options](int v) {
+         options.push_back(
+             std::make_pair(std::to_string(v), Parameter::intScaledToFloat(v, 100, 1)));
+      };
+
+      addStop(2);
+      addStop(3);
+      addStop(4);
+      addStop(5);
+      addStop(6);
+      addStop(7);
+      addStop(8);
+      addStop(9);
+      addStop(10);
+      addStop(12);
+      addStop(16);
+      addStop(24);
+      addStop(32);
+
       break;
+   }
    default:
       break;
    }
@@ -1811,7 +1822,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
          {
             auto val = op.second;
             auto men = addcb(op.first, [val, pControl, this]() {
-               pControl->setValue(Parameter::intScaledToFloat(val, 100, 1));
+               pControl->setValue(val);
                pControl->valueChanged();
             });
             if (val == pControl->getValue())
