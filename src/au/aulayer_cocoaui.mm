@@ -97,7 +97,7 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
 @implementation SurgeNSView
 - (id) initWithSurge: (SurgeGUIEditor *) cont preferredSize: (NSSize) size
 {
-    cont->setZoomCallback( []( SurgeGUIEditor *ed ) {} );
+    cont->setZoomCallback( []( SurgeGUIEditor *ed, bool ) {} );
     self = [super initWithFrame: NSMakeRect (0, 0, size.width / 2, size.height / 2)];
 
     idleTimer = nil;
@@ -126,54 +126,46 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
             if(frame)
             {
                frame->setZoom( zf );
-               VSTGUI::CBitmap *bg = frame->getBackground();
-               if(bg != NULL)
-               {
-                  CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
-                  if (sbm)
-                  {
-                     sbm->setExtraScaleFactor(cont->getZoomFactor());
-                  }
-               }
+                
+               [self.class setExtraScaleFactorForFrame:frame->getBackground() withZoomFactor:cont->getZoomFactor()];
+               
                frame->setDirty(true);
                frame->invalid();
             }
         }
 
-        cont->setZoomCallback( [self]( SurgeGUIEditor *ed ) {
+        cont->setZoomCallback( [self]( SurgeGUIEditor *ed, bool resizeWindow ) {
             ERect *vr;
-            float zf = ed->getZoomFactor() / 100.0;
             if (ed->getRect(&vr))
             {
-                int newW = (int)( (vr->right - vr->left) * zf );
-                int newH = (int)( (vr->bottom - vr->top) * zf );
-                NSRect newSize = NSMakeRect (0, 0, newW, newH );
+                float zf = ed->getZoomFactor() / 100.0;
+                int width = (int)( (vr->right - vr->left) * zf );
+                int heigth = (int)( (vr->bottom - vr->top) * zf );
+                
                 lastScale = zf;
 
                 setSizeByZoom = true;
-                [self setFrame:newSize];
+                
+                if (resizeWindow)
+                {
+                    NSRect newSize = NSMakeRect (0, 0, width, heigth );
+                    [self setFrame:newSize];
+                }
+                
                 setSizeByZoom = false;
 
                 VSTGUI::CFrame *frame = ed->getFrame();
                 if(frame)
                 {
                    frame->setZoom( zf );
-                   frame->setSize(newW, newH);
-                   VSTGUI::CBitmap *bg = frame->getBackground();
-                   if(bg != NULL)
-                   {
-                      CScalableBitmap *sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
-                      if (sbm)
-                      {
-                         sbm->setExtraScaleFactor(ed->getZoomFactor());
-                      }
-                   }
+                   frame->setSize(width, heigth);
+                    
+                   [self.class setExtraScaleFactorForFrame:frame->getBackground() withZoomFactor:ed->getZoomFactor()];
+
                    frame->setDirty(true);
                    frame->invalid();
                 }
-
             }
-            
         }
                               );
 
@@ -191,6 +183,24 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
     }
     
     return self;
+}
+
++ (void)setExtraScaleFactorForFrame:(VSTGUI::CBitmap *)bg
+                     withZoomFactor:(float) zf
+{
+    if (bg != NULL)
+    {
+        auto sbm = dynamic_cast<CScalableBitmap *>(bg); // dynamic casts are gross but better safe
+        if (sbm)
+        {
+            /*
+            ** VSTGUI has an error which is that the background bitmap doesn't get the frame transform
+            ** applied. Simply look at cviewcontainer::drawBackgroundRect. So we have to force the background
+            ** scale up using a backdoor API.
+            */
+            sbm->setExtraScaleFactor(zf);
+        }
+    }
 }
 
 - (void) doIdle
