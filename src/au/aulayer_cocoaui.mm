@@ -134,7 +134,7 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
             }
         }
 
-        cont->setZoomCallback( [self]( SurgeGUIEditor *ed, bool resizeWindow ) {
+        cont->setZoomCallback( [self]( SurgeGUIEditor *ed, bool) {
             ERect *vr;
             if (ed->getRect(&vr))
             {
@@ -146,11 +146,8 @@ void timerCallback( CFRunLoopTimerRef timer, void *info )
 
                 setSizeByZoom = true;
                 
-                if (resizeWindow)
-                {
-                    NSRect newSize = NSMakeRect (0, 0, width, heigth );
-                    [self setFrame:newSize];
-                }
+                NSRect newSize = NSMakeRect (0, 0, width, heigth );
+                [self setFrame:newSize];
                 
                 setSizeByZoom = false;
 
