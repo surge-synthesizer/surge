@@ -221,9 +221,9 @@ git submodule update --init --recursive
 
 `build-linux.sh` is a wrapper on the various CMake and make commands needed to build Surge. As with
 macOS, it is getting smaller every day as we move more things direclty into CMake.
-As of Surge 1.7.1, `build-linux.sh` only works on intel platforms. If you are building on
-ARM, please use the ARM specific instructions below or use the head of the codebase, where
-we are continuing to improve the ARM experience and build-linux is ARM aware.
+As of Surge 1.7.1, `build-linux.sh` only works on x86 platforms. If you are building 1.7.1 on
+ARM, please use the ARM specific instructions below. This is fixed at the head of the code base, so 
+ARM builds can use build linux in the nightlies or the upcoming 1.8 release. 
 
 You can build with the command:
 
