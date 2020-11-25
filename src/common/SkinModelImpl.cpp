@@ -21,6 +21,7 @@
 #include <cstring>
 #include "resource.h"
 #include "SkinColors.h"
+#include "strnatcmp.h"
 
 /*
  * This file implements the innards of the Connector class and the SkinColor class
@@ -208,7 +209,10 @@ std::vector<std::string> Connector::allConnectorIDs()
    auto res = std::vector<std::string>();
    for( auto c : * idmap )
       res.push_back(c.first );
-   std::sort( res.begin(), res.end() );
+   std::sort( res.begin(), res.end(), []( auto a, auto b ) {
+      auto q = strnatcasecmp( a.c_str(), b.c_str() );
+      return q < 0;
+   } );
    return res;
 }
 }
