@@ -62,11 +62,13 @@ void WavetableOscillator::init(float pitch, bool is_display)
    l_hskew.setRate(rate);
 
    n_unison = limit_range(oscdata->p[wt_unison_voices].val.i, 1, MAX_UNISON);
+
    if (oscdata->wt.flags & wtf_is_sample)
    {
       sampleloop = n_unison;
       n_unison = 1;
    }
+
    if (is_display)
       n_unison = 1;
 
@@ -89,21 +91,21 @@ void WavetableOscillator::init(float pitch, bool is_display)
    last_tableid = tableid;
    hskew = 0.f;
    last_hskew = 0.f;
+
    if (oscdata->wt.flags & wtf_is_sample)
    {
       tableipol = 0.f;
       tableid -= 1;
    }
 
-   int i;
-   for (i = 0; i < n_unison; i++)
+   for (int i = 0; i < n_unison; i++)
    {
       {
-         float s = 0.f;
-         oscstate[i] = 0;
-         if (oscdata->retrigger.val.b)
-            s = 0.f;
-         else if (!is_display)
+         if (oscdata->retrigger.val.b || is_display)
+         {
+            oscstate[i] = 0.f;
+         }
+         else
          {
             float drand = (float)rand() / (float)RAND_MAX;
             oscstate[i] = drand;
@@ -111,11 +113,12 @@ void WavetableOscillator::init(float pitch, bool is_display)
 
          state[i] = 0;
       }
+
       last_level[i] = 0.0;
       mipmap[i] = 0;
       mipmap_ofs[i] = 0;
-      driftlfo2[i] = 0.f;
       driftlfo[i] = 0.f;
+      driftlfo2[i] = 0.f;
    }
 }
 
