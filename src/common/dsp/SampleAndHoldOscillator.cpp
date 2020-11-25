@@ -112,8 +112,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
       else
       {
          double drand = (double)rand() / RAND_MAX;
-         double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
-                         (detune_bias * float(i) + detune_offset);
+         double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) * (detune_bias * float(i) + detune_offset);
          double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
          drand = (double)rand() / RAND_MAX;
          double ot = drand * storage->note_to_pitch_tuningctr(detune);
@@ -391,7 +390,8 @@ void SampleAndHoldOscillator::process_block(
             }
 
             oscstate[l] -= a;
-            syncstate[l] -= a;
+            if (l_sync.v > 0)
+               syncstate[l] -= a;
          }
       }
    }
@@ -403,13 +403,14 @@ void SampleAndHoldOscillator::process_block(
       {
          driftlfo[l] = drift_noise(driftlfo2[l]);
 
-         while (((l_sync.v > 0) && (syncstate[l] < a)) || (oscstate[l] < a))
+         while ((syncstate[l] < a) || (oscstate[l] < a))
          {
             convolute(l, false, stereo);
          }
 
          oscstate[l] -= a;
-         syncstate[l] -= a;
+         if (l_sync.v > 0)
+            syncstate[l] -= a;
       }
    }
 
