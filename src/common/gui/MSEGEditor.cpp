@@ -94,6 +94,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       this->ms = ms;
       this->eds = eds;
       this->lfodata = lfodata;
+      this->axisWidth = ms->totalDuration;
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
@@ -141,9 +142,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    static constexpr int drawInsertX = 10, drawInsertY = 10, axisSpaceX = 18, axisSpaceY = 8;
 
    inline float drawDuration() {
+      /*
       if( ms->n_activeSegments == 0 )
          return 1.0;
       return std::max( 1.0f, ms->totalDuration );
+       */
+      return axisWidth;
    }
    
    inline CRect getDrawArea() {
@@ -1163,7 +1167,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       return kMouseEventHandled;
    }
-   bool magnify(CPoint& where, float amount) override
+   virtual bool magnify(CPoint& where, float amount) override
    {
       std::cout << "MSEG EDITOR Magnify " << amount << std::endl;
       return true;
@@ -1306,14 +1310,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                if (fabs(x) > fabs(y))
                {
                   float dx = where.x - lastPanZoomMousePos.x;
-                  float panScale = axisWidth / getDrawArea().getWidth();
+                  float panScale = 1.0 / getDrawArea().getWidth();
                   pan(where, -dx * panScale, buttons );
                }
                else
                {
                   float dy = where.y - lastPanZoomMousePos.y;
                   float zoomScale = 2. / getDrawArea().getHeight();
-                  zoom( where, dy * zoomScale, buttons );
+                  zoom( where, -dy * zoomScale, buttons );
                }
                lastPanZoomMousePos = where;
             }
@@ -1394,7 +1398,44 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    }
    void zoom( const CPoint &where, float amount, const CButtonState &buttons )
    {
-      std::cout << "ZOOM by " << amount << std::endl;
+      if( fabs(amount) < 1e-4 ) return;
+      float dWidth = amount * axisWidth;
+      auto pxt = pxToTime();
+      float t = pxt(where.x);
+
+      axisWidth = axisWidth - dWidth;
+
+      /*
+       * OK so we want to adjust pan so the mouse position is basically the same
+       * - this is pxToTime
+         auto drawArea = getDrawArea();
+         float maxt = drawDuration();
+         float tscale = 1.f * drawArea.getWidth() / maxt;
+
+         // So px = t * tscale + drawarea;
+         // So t = ( px - drawarea ) / tscale;
+         return [tscale, drawArea, this ](float px) {
+           return (px - drawArea.left) / tscale + axisStart;
+         };
+
+       * so we want axisStart to mean that (where.x - drawArea.left ) * drawDuration() / drawArea.width + as to be constant
+       *
+       * t = (WX-DAL) * DD / DAW + AS
+       * AS = t - (WX_DAL) * DD / DAW
+       *
+       */
+      auto DD = drawDuration();
+      auto DA = getDrawArea();
+      auto DAW = DA.getWidth();
+      auto DAL = DA.left;
+      auto WX = where.x;
+      axisStart = std::max( t - ( WX - DAL ) * DD / DAW, 0. );
+      applyZoomPanConstraints();
+
+      // BOOKMARK
+      recalcHotZones(where);
+      invalid();
+      // std::cout << "ZOOM by " << amount <<  " AT " << where.x << " " << t << std::endl;
    }
 
    // On the mac I get occasional jutters where you get ---+--- or what not
@@ -1412,8 +1453,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       pan(where, amount * 0.1, buttons);
    }
    void pan( const CPoint &where, float amount, const CButtonState &buttons ) {
+      // std::cout << "PAN " << axisStart << " " << axisWidth << std::endl;
       axisStart += axisWidth * amount;
       axisStart = std::max( axisStart, 0.f );
+      applyZoomPanConstraints();
+
       recalcHotZones(where);
       invalid();
    }
@@ -1613,10 +1657,32 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    void modelChanged()
    {
       Surge::MSEG::rebuildCache( ms );
+      applyZoomPanConstraints();
       recalcHotZones(mouseDownOrigin); // FIXME
       // Do this more heavy handed version
       getFrame()->invalid();
       // invalid();
+   }
+
+   void applyZoomPanConstraints()
+   {
+      if( ms->editMode == MSEGStorage::LFO )
+      {
+         // Reset axis bounds
+         if( axisWidth > 1 )
+            axisWidth = 1;
+         if( axisStart + axisWidth > 1 )
+            axisStart = 1.0 - axisWidth;
+         if( axisStart < 0 )
+            axisStart = 0;
+      }
+      else
+      {
+         auto bd = std::max( ms->totalDuration, 1.f );
+         auto longest = bd * 2;
+         if( axisWidth > longest )
+            axisWidth = longest;
+      }
    }
 
    int hoveredSegment = -1;
@@ -1799,7 +1865,6 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
       auto hurl = SurgeGUIEditor::fullyResolvedHelpURL( msurl );
 
       addcb( "[?] " + menuName, [hurl](){
-         std::cout << "OPENING " << hurl << std::endl;
          Surge::UserInteractions::openURL(hurl);
       } );
       com->addSeparator();
