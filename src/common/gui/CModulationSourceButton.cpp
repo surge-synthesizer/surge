@@ -1,6 +1,5 @@
 #include "CModulationSourceButton.h"
 #include "CSurgeSlider.h"
-#include "Colors.h"
 #include "MouseCursorControl.h"
 #include "globals.h"
 #include "ModulationSource.h"

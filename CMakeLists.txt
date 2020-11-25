@@ -196,61 +196,64 @@ endif()
 #    SURGE_(os)_SOURCES
 
 set(SURGE_SHARED_SOURCES
-        src/common/dsp/effect/ConditionerEffect.cpp
-        src/common/dsp/effect/DistortionEffect.cpp
-        src/common/dsp/effect/DualDelayEffect.cpp
-        src/common/dsp/effect/Effect.cpp
-        src/common/dsp/effect/Eq3BandEffect.cpp
-        src/common/dsp/effect/FreqshiftEffect.cpp
-        src/common/dsp/effect/FlangerEffect.cpp
-        src/common/dsp/effect/PhaserEffect.cpp
-        src/common/dsp/effect/Reverb1Effect.cpp
-        src/common/dsp/effect/Reverb2Effect.cpp
-        src/common/dsp/effect/RingModulatorEffect.cpp
-        src/common/dsp/effect/RotarySpeakerEffect.cpp
-        src/common/dsp/effect/VocoderEffect.cpp
-        src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
-        src/common/dsp/effect/airwindows/AirWindowsEffect.h
-        src/common/dsp/filters/VintageLadders.cpp
-        src/common/dsp/filters/Obxd.cpp
-        src/common/dsp/filters/K35.cpp
-        src/common/dsp/filters/DiodeLadder.cpp
-        src/common/dsp/AdsrEnvelope.cpp
-        src/common/dsp/AudioInputOscillator.cpp
-        src/common/dsp/BiquadFilter.cpp
-        src/common/dsp/BiquadFilterSSE2.cpp
-        src/common/dsp/DspUtilities.cpp
-        src/common/dsp/FilterCoefficientMaker.cpp
-        src/common/dsp/FM2Oscillator.cpp
-        src/common/dsp/FM3Oscillator.cpp
-        src/common/dsp/LfoModulationSource.cpp
-        src/common/dsp/MSEGModulationHelper.cpp
-        src/common/dsp/Oscillator.cpp
-        src/common/dsp/QuadFilterChain.cpp
-        src/common/dsp/QuadFilterUnit.cpp
-        src/common/dsp/SampleAndHoldOscillator.cpp
-        src/common/dsp/SineOscillator.cpp
-        src/common/dsp/SurgeSuperOscillator.cpp
-        src/common/dsp/SurgeVoice.cpp
-        src/common/dsp/VectorizedSvfFilter.cpp
-        src/common/dsp/Wavetable.cpp
-        src/common/dsp/WavetableOscillator.cpp
-        src/common/dsp/WindowOscillator.cpp
-        src/common/util/FpuState.cpp
-        src/common/vt_dsp/basic_dsp.cpp
-        src/common/vt_dsp/halfratefilter.cpp
-        src/common/vt_dsp/lipol.cpp
-        src/common/vt_dsp/macspecific.cpp
-        src/common/DebugHelpers.cpp
-        src/common/Parameter.cpp
-        src/common/precompiled.cpp
-        src/common/SurgeError.cpp
-        src/common/SurgePatch.cpp
-        src/common/SurgeStorage.cpp
-        src/common/UserDefaults.cpp
-        src/common/WavSupport.cpp
-        libs/strnatcmp/strnatcmp.cpp
-        )
+  src/common/dsp/effect/ConditionerEffect.cpp
+  src/common/dsp/effect/DistortionEffect.cpp
+  src/common/dsp/effect/DualDelayEffect.cpp
+  src/common/dsp/effect/Effect.cpp
+  src/common/dsp/effect/Eq3BandEffect.cpp
+  src/common/dsp/effect/FreqshiftEffect.cpp
+  src/common/dsp/effect/FlangerEffect.cpp
+  src/common/dsp/effect/PhaserEffect.cpp
+  src/common/dsp/effect/Reverb1Effect.cpp
+  src/common/dsp/effect/Reverb2Effect.cpp
+  src/common/dsp/effect/RingModulatorEffect.cpp
+  src/common/dsp/effect/RotarySpeakerEffect.cpp
+  src/common/dsp/effect/VocoderEffect.cpp
+  src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
+  src/common/dsp/effect/airwindows/AirWindowsEffect.h
+  src/common/dsp/filters/VintageLadders.cpp
+  src/common/dsp/filters/Obxd.cpp
+  src/common/dsp/filters/K35.cpp
+  src/common/dsp/filters/DiodeLadder.cpp
+  src/common/dsp/AudioInputOscillator.cpp
+  src/common/dsp/BiquadFilter.cpp
+  src/common/dsp/BiquadFilterSSE2.cpp
+  src/common/dsp/DspUtilities.cpp
+  src/common/dsp/FilterCoefficientMaker.cpp
+  src/common/dsp/FM2Oscillator.cpp
+  src/common/dsp/FM3Oscillator.cpp
+  src/common/dsp/LfoModulationSource.cpp
+  src/common/dsp/MSEGModulationHelper.cpp
+  src/common/dsp/Oscillator.cpp
+  src/common/dsp/QuadFilterChain.cpp
+  src/common/dsp/QuadFilterUnit.cpp
+  src/common/dsp/SampleAndHoldOscillator.cpp
+  src/common/dsp/SineOscillator.cpp
+  src/common/dsp/SurgeSuperOscillator.cpp
+  src/common/dsp/SurgeVoice.cpp
+  src/common/dsp/VectorizedSvfFilter.cpp
+  src/common/dsp/Wavetable.cpp
+  src/common/dsp/WavetableOscillator.cpp
+  src/common/dsp/WindowOscillator.cpp
+  src/common/util/FpuState.cpp
+  src/common/vt_dsp/basic_dsp.cpp
+  src/common/vt_dsp/halfratefilter.cpp
+  src/common/vt_dsp/lipol.cpp
+  src/common/vt_dsp/macspecific.cpp
+  src/common/DebugHelpers.cpp
+  src/common/Parameter.cpp
+  src/common/precompiled.cpp
+  src/common/SurgeError.cpp
+  src/common/SurgePatch.cpp
+  src/common/SurgeStorage.cpp
+  src/common/UserDefaults.cpp
+  src/common/WavSupport.cpp
+  libs/strnatcmp/strnatcmp.cpp
+  src/common/dsp/FastMath.h
+  src/common/dsp/AdsrEnvelope.h
+  src/common/dsp/OscillatorBase.h
+  src/common/dsp/SurgeVoiceState.h
+  )
 
 set(SURGE_SYNTH_SOURCES
   src/common/SurgeSynthesizer.cpp
@@ -259,17 +262,17 @@ set(SURGE_SYNTH_SOURCES
 
   src/common/SkinModel.cpp
   src/common/SkinModelImpl.cpp
-  src/common/SkinColors.cpp)
+  src/common/SkinColors.cpp
+  )
 
-
-
-set( SURGE_GENERATED_SOURCES
+set(SURGE_GENERATED_SOURCES
   ${CMAKE_BINARY_DIR}/geninclude/version.cpp
   )
 
 set(SURGE_GUI_SOURCES
   src/common/gui/CAboutBox.cpp
   src/common/gui/CDIBitmap.cpp
+  src/common/gui/CEffectLabel.h
   src/common/gui/CEffectSettings.cpp
   src/common/gui/CHSwitch2.cpp
   src/common/gui/CLFOGui.cpp
@@ -293,9 +296,10 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CVerticalLabel.cpp
   src/common/gui/CursorControlGuard.cpp
   src/common/gui/SkinFontLoader.cpp
+  src/common/gui/SkinImageMaps.h
   src/common/gui/CSurgeHyperlink.cpp
   src/common/ModulatorPresetManager.cpp
-  src/common/ModulatorPresetManager.h)
+  )
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp
@@ -366,25 +370,25 @@ set(SURGE_AU_LIBRARY_SOURCES
   vstgui.surge/vstgui/plugin-bindings/plugguieditor.cpp
   )
 
-set( SURGE_VST2_SOURCES
+set(SURGE_VST2_SOURCES
   src/vst2/Vst2PluginInstance.cpp
   )
 
-set( SURGE_VST2_LIBRARY_SOURCES
+set(SURGE_VST2_LIBRARY_SOURCES
   ${VST2SDK_DIR}/public.sdk/source/vst2.x/audioeffect.cpp
   ${VST2SDK_DIR}/public.sdk/source/vst2.x/audioeffectx.cpp
   ${VST2SDK_DIR}/public.sdk/source/vst2.x/vstplugmain.cpp
   vstgui.surge/vstgui/plugin-bindings/aeffguieditor.cpp
   )
 
-set( SURGE_LV2_SOURCES
+set(SURGE_LV2_SOURCES
   src/lv2/SurgeLv2Export.cpp
   src/lv2/SurgeLv2Ui.cpp
   src/lv2/SurgeLv2Util.cpp
   src/lv2/SurgeLv2Vstgui.cpp
   src/lv2/SurgeLv2Wrapper.cpp
   vstgui.surge/vstgui/plugin-bindings/plugguieditor.cpp
-)
+  )
 
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
@@ -556,7 +560,9 @@ elseif( WIN32 )
     src/windows/DisplayInfoWin.cpp
     src/windows/RuntimeFontWin.cpp
     src/windows/UserInteractionsWin.cpp
+    src/windows/scalableresource.h
     src/windows/surge.rc
+    src/windows/svgresources.rc
     vstgui.surge/vstgui/vstgui_win32.cpp
     vstgui.surge/vstgui/vstgui_uidescription_win32.cpp
   )
