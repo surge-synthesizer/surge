@@ -556,27 +556,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto uni = lfodata->unipolar.val.b;
       auto haxisArea = getHAxisArea();
       float maxt = drawDuration();
-      int skips = round( 1.f / eds->hSnapDefault );
       auto tpx = timeToPx();
-
-      // This thinning still has to land on snap steps
-      while (maxt * skips > gridMaxHSteps)
-         skips = skips >> 1;
-
-      skips = std::max( 1, skips );
 
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->setLineWidth( 1 );
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
 
-      for( int gi = 0; gi < maxt * skips + 1; ++gi )
+      updateHTicks();
+      for( auto hp : hTicks )
       {
-         float t = 1.0f * gi / skips;
+         float t = hp.first;
+         auto c = hp.second;
          float px = tpx(t);
          float off = haxisArea.getHeight() / 2;
          int xoff = 0;
 
-         if( gi % skips == 0 )
+         if( c & TickDrawStyle::kHighlight )
          {
             off = 0;
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
@@ -588,26 +583,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          char txt[16];
 
-         if (floor(t) == t)
-         {
-            dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
-            dc->setFont(primaryFont);
-            snprintf( txt, 16, "%d", (int)t );
-
-            if (gi != 0)
-               xoff = 0;
-
-            if( maxt < 1.1 && t > 0.99 )
-               xoff = -13;
-         }
-         else
+         if ( ! ( c & TickDrawStyle::kNoLabel ) )
          {
             dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             dc->setFont(secondaryFont);
             snprintf( txt, 16, "%5.2f", t );
             xoff = -7;
+            dc->drawString( txt, CRect( CPoint( px + xoff, haxisArea.top + 5), CPoint( 15, 10 )));
          }
-         dc->drawString( txt, CRect( CPoint( px + xoff, haxisArea.top + 5), CPoint( 15, 10 )));
       }
 
       // draw loop markers
@@ -640,8 +623,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
       dc->setLineWidth( 1 );
 
-      skips = round(1.f / eds->vSnapDefault);
-
       updateVTicks();
       for( auto vp : vTicks )
       {
@@ -671,6 +652,63 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
          }
       }
+   }
+
+   enum TickDrawStyle {
+      kNoLabel = 1<<0,
+      kHighlight = 1<<1
+   };
+   std::vector<std::pair<float,int>> hTicks;
+   float hTicksAsOf[3] = {-1,-1,-1};
+   void updateHTicks()
+   {
+      if( hTicksAsOf[0] == eds->hSnapDefault &&
+          hTicksAsOf[1] == axisStart &&
+          hTicksAsOf[2] == axisWidth
+          )
+         return;
+
+      hTicksAsOf[0] = eds->hSnapDefault;
+      hTicksAsOf[1] = axisStart;
+      hTicksAsOf[2] = axisWidth;
+
+      hTicks.clear();
+
+      float dStep = eds->hSnapDefault;
+      /*
+       * OK two cases - step makes a squillion white lines, or step makes too few lines. Both of
+       * these depend on this ratio
+       */
+      float widthByStep = axisWidth / dStep;
+
+      if( widthByStep < 4 )
+      {
+         while( widthByStep < 4 )
+         {
+            dStep /= 2;
+            widthByStep = axisWidth / dStep;
+         }
+      }
+      else if( widthByStep > 20 )
+      {
+         while( widthByStep > 20 )
+         {
+            dStep *= 2;
+            widthByStep = axisWidth / dStep;
+         }
+      }
+
+      // OK so what's our zero point.
+      int startPoint = ceil(axisStart/dStep);
+      int endPoint = ceil( (axisStart + axisWidth ) / dStep );
+
+      for( int i=startPoint; i<=endPoint; ++i )
+      {
+         float f = i * dStep;
+
+         hTicks.push_back( std::make_pair( f, 0 ) );
+      }
+
    }
 
    std::vector<std::pair<float,bool>> vTicks;
@@ -861,18 +899,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto secondaryHGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal);
       auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
-      int skips = round( 1.f / eds->hSnapDefault );
-
-      while( maxt * skips > gridMaxHSteps )
-         skips = skips >> 1;
-
-      skips = std::max( skips, 1 );
-
-      for( int gi = 0; gi < maxt * skips + 1; ++gi )
+      updateHTicks();
+      for( auto hp : hTicks )
       {
-         float t = 1.0f * gi / skips;
-         float px = tpx( t );
-         if( gi % skips == 0 )
+         auto t = hp.first;
+         auto c = hp.second;
+         auto px = tpx( t );
+         if( c & TickDrawStyle::kHighlight )
             dc->setFrameColor( primaryGridColor );
          else
             dc->setFrameColor(secondaryVGridColor);
@@ -1021,7 +1054,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                auto r = h.rect;
                if( h.useDrawRect )
                   r = h.drawRect;
-               if( drawArea.rectOverlap( r ))
+               int cx = r.getCenter().x;
+               if( cx >= drawArea.left && cx <= drawArea.right )
                   handleBmp->draw( dc, r, CPoint( offx * sz, offy * sz ), 0xFF );
             }
          }
