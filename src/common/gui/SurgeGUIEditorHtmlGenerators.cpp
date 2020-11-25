@@ -19,27 +19,35 @@ std::string SurgeGUIEditor::tuningToHtml()
   <head>
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
     <style>
-table {
-  border-collapse: collapse;
-}
-
-td {
-  border: 1px solid #CDCED4;
-  padding: 2pt;
-}
-
-th {
-  padding: 4pt;
-  color: #123463;
-  background: #CDCED4;
-  border: 1px solid #123463;
-}
-</style>
+      table
+      {
+        border-collapse: collapse;
+      }
+      
+      td, tr
+      {
+        border: 1px solid #123463;
+        padding: 4pt 2pt;
+      }
+      
+      th
+      {
+        padding: 5pt;
+        color: #123463;
+        background: #CDCED4;
+        border: 1px solid #123463;
+      }
+      
+      .cnt
+      {
+         text-align: center;
+      }
+    </style>
   </head>
   <body style="margin: 0pt; background: #CDCED4;">
     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
       <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-        Surge Tuning
+        Surge Tuning Information
       </div>
       <div style="font-size: 12pt; font-family: Lato; padding: 2pt;">
     )HTML"
@@ -50,40 +58,56 @@ th {
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
-        Tuning Information
-     )HTML";
+         )HTML";
 
-    if( ! synth->storage.isStandardMapping )
-    {
-       htmls << "<ul>\n"
-             << "<li><a href=\"#rawscl\">Jump to raw SCL</a>.\n"
-             << "<li><a href=\"#rawkbm\">Jump to raw KBM</a>.\n"
-             << "<li><a href=\"#matrices\">Jump to Interval Matrices</a>.\n"
-             << "<li>Scale position 0 maps to key "
-             << synth->storage.currentMapping.middleNote << "\n<li> MIDI note " << synth->storage.currentMapping.tuningConstantNote << " is set to frequency "
-             << synth->storage.currentMapping.tuningFrequency << "Hz.\n</ul> ";
-    }
-    else
-    {
-       htmls << "\n<div>Tuning uses standard keyboard mapping.\n"
-             << "<ul>\n"
-             << "<li><a href=\"#rawscl\">Jump to raw SCL</a>.\n"
-             << "<li><a href=\"#matrices\">Jump to Interval Matrices</a>.\n"
-             << "</ul>\n";
-    }
+        if( ! synth->storage.isStandardMapping )
+        {
+           htmls << "<ul>\n"
+                 << "<li><a href=\"#rawscl\">Raw Scala Tuning (.SCL)</a>\n"
+                 << "<li><a href=\"#rawkbm\">Raw Keyboard Mapping (.KBM)</a>\n"
+                 << "<li><a href=\"#matrices\">Interval Matrices</a>\n"
+                 << "</ul>";
+        }
+        else
+        {
+           htmls << "<ul>\n"
+                 << "<li><a href=\"#rawscl\">Raw Scala Tuning (.SCL)</a>\n"
+                 << "<li><a href=\"#matrices\">Interval Matrices</a>\n"
+                 << "</ul>\n";
+        }
 
     htmls << R"HTML(
       </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+
       <div style="font-size: 12pt; font-family: Lato;">
         <div style="padding-bottom: 10pt;">
-        )HTML" << synth->storage.currentScale.count << " tones" <<
+    )HTML";
+
+        if (!synth->storage.isStandardMapping)
+        {
+           htmls << "Scale position 0 maps to MIDI note "
+                 << synth->storage.currentMapping.middleNote << "\n</br>"
+                 << "MIDI note " << synth->storage.currentMapping.tuningConstantNote << " is set to a frequency of "
+                 << synth->storage.currentMapping.tuningFrequency << " Hz.\n</div> ";
+        }
+        else
+        {
+           htmls << "\nTuning uses standard keyboard mapping.\n</div>";
+        }
+
+
+        htmls << synth->storage.currentScale.count << " tones\n</p>" <<
 R"HTML(
     </div>
         <table>
           <tr>
             <th>#</th><th>Datum</th><th>Float</th><th>Cents</th><th>Cents Interval</th>
           </tr>
-          <tr>
+          <tr class="cnt">
             <td>0</td><td>1</td><td>1</td><td>0</td><td>-</td>
           </tr>
     )HTML";
@@ -92,7 +116,7 @@ R"HTML(
     float priorCents = 0;
     for( auto & t : synth->storage.currentScale.tones )
     {
-       htmls << "<tr><td> " << ct++ << "</td><td>";
+       htmls << "<tr class=\"cnt\"><td> " << ct++ << "</td><td>";
        if (t.type == Tunings::Tone::kToneCents)
           htmls << t.cents;
        else
@@ -143,7 +167,7 @@ R"HTML(
           while( tn < 0 ) tn += synth->storage.currentScale.count;
 
           auto p = synth->storage.note_to_pitch(i);
-          htmls << "<td>" << (tn % synth->storage.currentScale.count + 1) << "</td><td>" << 8.175798915 * p << " Hz</td>";
+          htmls << "<td class=\"cnt\">" << (tn % synth->storage.currentScale.count + 1) << "</td><td class=\"cnt\">" << 8.175798915 * p << " Hz</td>";
           htmls << "</tr>\n";
        }
 
@@ -152,11 +176,12 @@ R"HTML(
       </div>
 
     </div>
+    </div>
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+      <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawscl">Tuning Raw File</a>:
-           )HTML" << synth->storage.currentScale.name << "</div>\n<pre>\n" << synth->storage.currentScale.rawText << R"HTML(
+           )HTML" << synth->storage.currentScale.name << "</div></br>\n<pre>\n" << synth->storage.currentScale.rawText << R"HTML(
       </pre>
     </div>
 )HTML";
@@ -165,9 +190,9 @@ R"HTML(
        {
           htmls << R"HTML(
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+      <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawkbm">Keyboard Mapping Raw File</a>:
-           )HTML" << synth->storage.currentMapping.name << "</div>\n<pre>\n" << synth->storage.currentMapping.rawText << R"HTML(
+           )HTML" << synth->storage.currentMapping.name << "</div></br>\n<pre>\n" << synth->storage.currentMapping.rawText << R"HTML(
       </pre>
     </div>
 )HTML";
@@ -177,13 +202,13 @@ R"HTML(
        // Interval matrices
        htmls << R"HTML(
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-        <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+        <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="matrices">Interval Matrices</a>:
-           )HTML" << synth->storage.currentScale.name << "</div>\n";
+           )HTML" << synth->storage.currentScale.name << "</div></br>\n";
 
        if( synth->storage.currentMapping.count > 48 )
        {
-          htmls << "Surge only display matrices for scales size <= 48 in length" << std::endl;
+          htmls << "Surge only displays inverval matrices for scales lower than 48 in length" << std::endl;
        }
        else
        {
@@ -195,7 +220,7 @@ R"HTML(
           }
           htmls << "</tr></td>";
 
-          // DO a trick of rotating by double filling cents so we don't ahve to index wrap
+          // Do a trick of rotating by double filling cents so we don't have to index wrap
           std::vector<float> cents;
           float lastc = 0;
           cents.push_back( 0 );
@@ -215,7 +240,7 @@ R"HTML(
 
           for( int rd=0; rd<w; ++rd )
           {
-             htmls << "<tr><th>" << rd << "</th>";
+             htmls << "<tr class=\"cnt\"><th>" << rd << "</th>";
 
              for( int p = 1; p <= w; ++p )
              {
@@ -229,7 +254,7 @@ R"HTML(
 
           for( int rd=0; rd<w; ++rd )
           {
-             htmls << "<tr><th>" << rd << "</th>";
+             htmls << "<tr class=\"cnt\"><th>" << rd << "</th>";
 
              for( int p = 1; p <= w; ++p )
              {
@@ -402,6 +427,17 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
                      </div>
 
 
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+        <ul>
+          <li><a href="#colors">Color Database</a>
+          <li><a href="#imageid">Image IDs</a>
+          <li><a href="#skinConectors">Skin Component Connectors</a>
+          <li><a href="#loadedImages">Runtime Loaded Images</a>
+        </ul>
+      </div>
+    </div>
+
    )HTML";
 
    startSection("colors", "Color Database" );
@@ -454,7 +490,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
       )HTML";
 
    // Skin Connectors
-   startSection( "skinConectors", "Skin Connectors for Components" );
+   startSection( "skinConectors", "Skin Component Connectors" );
    {
       auto imgid = Surge::UI::createIdNameMap();
 
@@ -505,7 +541,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
    endSection();
 
    // Loaded Images
-   startSection( "loadedImages", "Runtime Non-ID Images in Current Skin" );
+   startSection( "loadedImages", "Runtime Loaded Images" );
    {
       htmls << "<ul>\n";
       auto r1 = bitmapStore->nonResourceBitmapIDs(SurgeBitmaps::STRINGID);

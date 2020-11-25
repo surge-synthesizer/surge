@@ -5064,7 +5064,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, boo
 
     tuningSubMenu->addSeparator();
     tid++;
-    auto *sct = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Show Current Tuning..."),
+    auto *sct = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Show Current Tuning Information..."),
                     [this]()
                     {
                        Surge::UserInteractions::showHTML( this->tuningToHtml() );
