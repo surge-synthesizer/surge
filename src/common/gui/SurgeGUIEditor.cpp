@@ -276,8 +276,8 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
 
    // init the size of the plugin
    initialZoomFactor = Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", 100);
-   auto instanceZoomFactor = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor;
-   if(instanceZoomFactor != 100)
+   int instanceZoomFactor = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor;
+   if(instanceZoomFactor > 0)
    {
 	   // dawExtraState zoomFactor wins defaultZoom
 	   initialZoomFactor = instanceZoomFactor;
