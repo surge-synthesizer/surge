@@ -6417,7 +6417,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    dismissEditorOverlay();
 
    const int header = 18;
-   const int buttonwidth = 40;
+   const int buttonwidth = 18;
    
    if (!c)
       return;
@@ -6448,7 +6448,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
       containerSize.moveTo(CPoint(0, 0));
 
    VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> btnFont = new VSTGUI::CFontDesc("Lato", 9);
+   VSTGUI::SharedPointer<VSTGUI::CFontDesc> btnFont = new VSTGUI::CFontDesc("Lato", 8);
    
    auto outerc = new CViewContainer(containerSize);
    outerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
@@ -6473,28 +6473,29 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    icon->setVisible(true);
    innerc->addView(icon);
 
-   auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
-   auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
-   auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
-
-   auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
-   auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
-   auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
-
-   VSTGUI::CGradient::ColorStopMap csm;
-   VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
-   cg->addColorStop(0, btnbg);
-
-   VSTGUI::CGradient::ColorStopMap hovcsm;
-   VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
-   hovcg->addColorStop(0, hovbtnbg);
-
    if (hasCloseButton)
    {
+      auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
+      auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
+      auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
+
+      auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
+      auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
+      auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
+
+      VSTGUI::CGradient::ColorStopMap csm;
+      VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
+      cg->addColorStop(0, btnbg);
+
+      VSTGUI::CGradient::ColorStopMap hovcsm;
+      VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
+      hovcg->addColorStop(0, hovbtnbg);
+
       csz.left = csz.right - buttonwidth;
-      csz.inset(3, 3);
-      csz.bottom++;
-      auto b = new CTextButton(csz, this, tag_editor_overlay_close, "Close");
+      csz.inset(2, 3);
+      csz.top--;
+      csz.bottom += 1;
+      auto b = new CTextButton(csz, this, tag_editor_overlay_close, "X");
       b->setVisible(true);
       b->setFont(btnFont);
       b->setGradient(cg);
