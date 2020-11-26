@@ -82,7 +82,7 @@ set VST2SDK_DIR=c:\path\to\vst2
 * Now, run CMake to create a build directory:
 
 ```
-cmake . -Bbuild
+cmake . -Bbuild -A x64
 ```
 
 * Choose to build in Visual Studio or the command line
@@ -99,7 +99,7 @@ cmake --build build --config Release --target Surge-VST3-Packaged
 
 ### Your first 32-bit build
 
-* 32-bit build is done exactly like 64-bit build, just with a couple of extra arguments. When you run CMake, add the `-A Win32` argument and choose a different target:
+* 32-bit build is done exactly like 64-bit build. But when you run CMake, choose a different target:
 
 ```
 cmake . -Bbuild32 -A Win32
