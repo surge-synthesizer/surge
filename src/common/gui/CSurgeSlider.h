@@ -141,7 +141,9 @@ private:
    int typehx, typehy;
    bool has_modulation, has_modulation_current, modulation_is_bipolar = false;
    bool is_temposync = false;
-   VSTGUI::CPoint lastpoint, sourcepoint, draghandlecenter;
+   VSTGUI::CPoint draghandlecenter;
+   VSTGUI::CPoint startPosition;
+   VSTGUI::CPoint currentPosition;
    float oldVal, *edit_value;
    int drawcount_debug;
 

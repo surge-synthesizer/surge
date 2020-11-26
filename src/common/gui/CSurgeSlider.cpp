@@ -683,6 +683,9 @@ bool CSurgeSlider::isInMouseInteraction()
 
 CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
+   startPosition = where;
+   currentPosition = where;
+
    {
       auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
       if( sge )
@@ -777,11 +780,16 @@ CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& but
       
       edit_value = nullptr;
 
-
-      if( resetPosition )
+      if (resetPosition &&
+          startPosition != currentPosition)
+      {
          endCursorHide(draghandlecenter);
+      }
       else
+      {
          endCursorHide();
+      }
+
       //attachCursor();
    }
 
@@ -861,6 +869,7 @@ void CSurgeSlider::onMouseMoveDelta(const CPoint& where,
                                     double dx,
                                     double dy)
 {
+   currentPosition = where;
    if( controlstate != cs_drag )
    {
       // FIXME - deal with modulation
