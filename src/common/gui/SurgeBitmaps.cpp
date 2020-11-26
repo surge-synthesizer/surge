@@ -63,7 +63,7 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
    addEntry(IDB_OSC_FM_ROUTING, f);
    addEntry(IDB_FILTER2_RESONANCE_LINK, f);
    addEntry(IDB_MIXER_OSC_ROUTING, f);
-   addEntry(IDB_ENV_SHAPES, f);
+   addEntry(IDB_ENV_SHAPE, f);
    addEntry(IDB_FX_GLOBAL_BYPASS, f);
    addEntry(IDB_LFO_TRIGGER_MODE, f);
    addEntry(IDB_PREVNEXT_JOG, f);

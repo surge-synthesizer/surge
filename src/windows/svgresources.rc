@@ -32,7 +32,7 @@ IDB_FILTER2_RESONANCE_LINK_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00140
 IDB_FILTER_MENU_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00168.svg"
 IDB_FILTER_ICONS_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00169.svg"
 IDB_OSC_FM_ROUTING_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00151.svg"
-IDB_ENV_SHAPES_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00145.svg"
+IDB_ENV_SHAPE_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00145.svg"
 IDB_FX_GLOBAL_BYPASS_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00144.svg"
 IDB_LFO_TRIGGER_MODE_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00146.svg"
 IDB_LFO_UNIPOLAR_SCALE_SVG DATA "assets/SurgeClassic/exported/bmp00152.svg"

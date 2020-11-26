@@ -206,11 +206,11 @@ namespace Surge
                       .withHSwitch2Properties(IDB_ENV_MODE, 2, 2, 1).inParent("feg.panel");
    
             Connector attack_shape = Connector("feg.attack_shape", 4, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENV_SHAPES, 3, 1, 3).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).inParent("feg.panel");
             Connector decay_shape = Connector("feg.decay_shape", 24, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENV_SHAPES, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("feg.panel");
             Connector release_shape = Connector("feg.release_shape", 65, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENV_SHAPES, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("feg.panel");
    
             Connector attack  = Connector("feg.attack", 0, 33).asVertical().asWhite().inParent("feg.panel");
             Connector decay   = Connector("feg.decay", 20, 33).asVertical().asWhite().inParent("feg.panel");
@@ -225,11 +225,11 @@ namespace Surge
                       .withHSwitch2Properties(IDB_ENV_MODE, 2, 2, 1).inParent("aeg.panel");
    
             Connector attack_shape = Connector("aeg.attack_shape", 4, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENV_SHAPES, 3, 1, 3).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).inParent("aeg.panel");;
             Connector decay_shape = Connector("aeg.decay_shape", 24, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENV_SHAPES, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("aeg.panel");;
             Connector release_shape = Connector("aeg.release_shape", 65, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENV_SHAPES, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("aeg.panel");;
    
             Connector attack  = Connector("aeg.attack", 0, 33).asVertical().asWhite().inParent("aeg.panel");;
             Connector decay   = Connector("aeg.decay", 20, 33).asVertical().asWhite().inParent("aeg.panel");;
