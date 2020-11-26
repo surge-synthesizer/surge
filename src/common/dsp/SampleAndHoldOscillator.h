@@ -27,6 +27,17 @@ private:
    lipol_ps li_hpf, li_DC, li_integratormult;
 
 public:
+   enum shnoise_params
+   {
+      shn_correlation = 0,
+      shn_width,
+      shn_lowcut,
+      shn_highcut,
+      shn_sync,
+      shn_unison_detune,
+      shn_unison_voices,
+   };
+
    SampleAndHoldOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
    virtual void init_ctrltypes() override;

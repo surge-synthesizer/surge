@@ -16,7 +16,6 @@
 #include "SurgeSuperOscillator.h"
 #include "DspUtilities.h"
 
-
 /*
 **
 ** ## Overview
@@ -147,20 +146,7 @@ using namespace std;
 // pow(ln(0.5)/(samplerate/50hz)
 const float hpf_cycle_loss = 0.995f;
 
-enum sso_params
-{
-   sso_shape = 0,
-   sso_width1,
-   sso_width2,
-   sso_mainsubmix,
-   sso_sync,
-   sso_unison_detune,
-   sso_unison_voices,
-};
-
-AbstractBlitOscillator::AbstractBlitOscillator(SurgeStorage* storage,
-                                               OscillatorStorage* oscdata,
-                                               pdata* localcopy)
+AbstractBlitOscillator::AbstractBlitOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {
    integrator_hpf = (1.f - 2.f * 20.f * samplerate_inv);

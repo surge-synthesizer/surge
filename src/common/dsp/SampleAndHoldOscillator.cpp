@@ -16,7 +16,6 @@
 #include "SampleAndHoldOscillator.h"
 #include "DspUtilities.h"
 
-
 using namespace std;
 
 // const float integrator_hpf = 0.99999999f;
@@ -30,20 +29,7 @@ const float integrator_hpf = 0.999f;
 // pow(ln(0.5)/(samplerate/50hz)
 const float hpf_cycle_loss = 0.995f;
 
-enum shnoise_params
-{
-   shn_correlation = 0,
-   shn_width,
-   shn_lowcut,
-   shn_highcut,
-   shn_sync,
-   shn_unison_detune,
-   shn_unison_voices,
-};
-
-SampleAndHoldOscillator::SampleAndHoldOscillator(SurgeStorage* storage,
-                                                 OscillatorStorage* oscdata,
-                                                 pdata* localcopy)
+SampleAndHoldOscillator::SampleAndHoldOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : AbstractBlitOscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {}
 
@@ -311,9 +297,18 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 void SampleAndHoldOscillator::applyFilter()
 {
    if (!oscdata->p[shn_lowcut].deactivated)
-      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[shn_lowcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   {
+      auto par = &(oscdata->p[shn_lowcut]);
+      auto pv = limit_range(localcopy[par->param_id_in_scene].f, par->val_min.f, par->val_max.f);
+      hp.coeff_HP(hp.calc_omega(pv / 12.0) / OSC_OVERSAMPLING, 0.707);
+   }
+
    if (!oscdata->p[shn_highcut].deactivated)
-      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[shn_highcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   {
+      auto par = &(oscdata->p[shn_highcut]);
+      auto pv = limit_range(localcopy[par->param_id_in_scene].f, par->val_min.f, par->val_max.f);
+      lp.coeff_LP2B(lp.calc_omega(pv / 12.0) / OSC_OVERSAMPLING, 0.707);
+   }
 
    for (int k = 0; k < BLOCK_SIZE_OS; k += BLOCK_SIZE)
    {

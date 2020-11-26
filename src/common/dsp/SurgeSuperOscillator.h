@@ -22,11 +22,18 @@
 
 class SurgeSuperOscillator : public AbstractBlitOscillator
 {
-private:
-   lipol_ps li_hpf, li_DC, li_integratormult;
-   float FMphase alignas(16)[BLOCK_SIZE_OS + 4];
-
 public:
+   enum sso_params
+   {
+      sso_shape = 0,
+      sso_width1,
+      sso_width2,
+      sso_mainsubmix,
+      sso_sync,
+      sso_unison_detune,
+      sso_unison_voices,
+   };
+
    SurgeSuperOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
    virtual void init_ctrltypes() override;
@@ -38,13 +45,14 @@ public:
 
 private:
    bool first_run;
-   float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON],
-       pwidth[MAX_UNISON], pwidth2[MAX_UNISON];
+   float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON], pwidth[MAX_UNISON], pwidth2[MAX_UNISON];
    template <bool is_init> void update_lagvals();
    float pitch;
+   lipol_ps li_hpf, li_DC, li_integratormult;
    lag<float> FMdepth, integrator_mult, l_pw, l_pw2, l_shape, l_sub, l_sync;
    int id_pw, id_pw2, id_shape, id_smooth, id_sub, id_sync, id_detune;
    int FMdelay;
    float FMmul_inv;
+   float FMphase alignas(16)[BLOCK_SIZE_OS + 4];
    float CoefB0, CoefB1, CoefA1;
 };

@@ -19,17 +19,6 @@
 using std::min;
 using std::max;
 
-enum fm2_params
-{
-   fm2_m1amount = 0,
-   fm2_m1ratio,
-   fm2_m2amount,
-   fm2_m2ratio,
-   fm2_m12offset,
-   fm2_m12phase,
-   fm2_feedback,
-};
-
 FM2Oscillator::FM2Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {}

@@ -19,19 +19,6 @@
 
 using namespace std;
 
-/* FM osc */
-
-enum fm3_params
-{
-   fm3_m1amount = 0,
-   fm3_m1ratio,
-   fm3_m2amount,
-   fm3_m2ratio,
-   fm3_m3amount,
-   fm3_m3freq,
-   fm3_feedback,
-};
-
 FM3Oscillator::FM3Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {}
