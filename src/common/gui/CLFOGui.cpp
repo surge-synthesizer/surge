@@ -1295,9 +1295,15 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
    }
    else if (rect_shapes.pointInside(where))
    {
-       controlstate = cs_shape;
-       onMouseMoved(where, buttons);
-       return kMouseEventHandled;
+      if( buttons & kDoubleClick && lfodata->shape.val.i == lt_mseg )
+      {
+         auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+         if( sge )
+            sge->toggleMSEGEditor();
+      }
+      controlstate = cs_shape;
+      onMouseMoved(where, buttons);
+      return kMouseEventHandled;
    }
 
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
