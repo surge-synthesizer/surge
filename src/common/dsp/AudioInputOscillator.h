@@ -24,6 +24,21 @@
 class AudioInputOscillator : public Oscillator
 {
 public:
+   enum audioin_params
+   {
+      audioin_channel = 0,
+      audioin_gain,
+      audioin_sceneAchan,
+      audioin_sceneAgain,
+      audioin_sceneAmix,
+      audioin_lowcut,
+      audioin_highcut,
+   };
+
+   /* add controls:
+   limiter?
+   */
+
    AudioInputOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
    virtual void process_block(

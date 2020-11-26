@@ -23,6 +23,17 @@
 class SineOscillator : public Oscillator
 {
 public:
+   enum sine_params
+   {
+      sin_shape,
+      sin_feedback,
+      sin_FMmode,
+      sin_lowcut,
+      sin_highcut,
+      sin_unison_detune,
+      sin_unison_voices,
+   };
+
    SineOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
    virtual void process_block(

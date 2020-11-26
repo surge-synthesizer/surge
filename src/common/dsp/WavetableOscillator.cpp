@@ -20,20 +20,7 @@ using namespace std;
 
 const float hpf_cycle_loss = 0.99f;
 
-enum wt_params
-{
-   wt_morph = 0,
-   wt_skewv,
-   wt_saturate,
-   wt_formant,
-   wt_skewh,
-   wt_unison_detune,
-   wt_unison_voices,
-};
-
-WavetableOscillator::WavetableOscillator(SurgeStorage* storage,
-                                         OscillatorStorage* oscdata,
-                                         pdata* localcopy)
+WavetableOscillator::WavetableOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : AbstractBlitOscillator(storage, oscdata, localcopy)
 {}
 
@@ -127,7 +114,6 @@ void WavetableOscillator::init_ctrltypes()
    oscdata->p[wt_morph].set_name("Morph");
    oscdata->p[wt_morph].set_type(ct_countedset_percent);
    oscdata->p[wt_morph].set_user_data(oscdata);
-
    oscdata->p[wt_skewv].set_name("Skew Vertical");
    oscdata->p[wt_skewv].set_type(ct_percent_bidirectional);
    oscdata->p[wt_saturate].set_name("Saturate");
@@ -141,6 +127,7 @@ void WavetableOscillator::init_ctrltypes()
    oscdata->p[wt_unison_voices].set_name("Unison Voices");
    oscdata->p[wt_unison_voices].set_type(ct_osccountWT);
 }
+
 void WavetableOscillator::init_default_values()
 {
    oscdata->p[wt_morph].val.f = 0.0f;
@@ -235,13 +222,14 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
    // generate pulse
    unsigned int delay = ((ipos >> 24) & 0x3f);
+
    if (FM)
       delay = FMdelay;
+
    unsigned int m = ((ipos >> 16) & 0xff) * (FIRipol_N << 1);
    unsigned int lipolui16 = (ipos & 0xffff);
    __m128 lipol128 = _mm_cvtsi32_ss(lipol128, lipolui16);
    lipol128 = _mm_shuffle_ps(lipol128, lipol128, _MM_SHUFFLE(0, 0, 0, 0));
-   int k;
 
    float g, gR;
    int wt_inc = (1 << mipmap[voice]);
@@ -256,7 +244,10 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
       if( tempt < 0.1 ) tempt = 0.1;
    }
    else
+   {
       tempt = storage->note_to_pitch_inv_tuningctr(detune);
+   }
+
    float t;
    float xt = ((float)state[voice] + 0.5f) * dt;
    // xt = (1 - hskew + 2*hskew*xt);
@@ -305,7 +296,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
       __m128 g128R = _mm_load_ss(&gR);
       g128R = _mm_shuffle_ps(g128R, g128R, _MM_SHUFFLE(0, 0, 0, 0));
 
-      for (k = 0; k < FIRipol_N; k += 4)
+      for (int k = 0; k < FIRipol_N; k += 4)
       {
          float* obfL = &oscbuffer[bufpos + k + delay];
          float* obfR = &oscbufferR[bufpos + k + delay];
@@ -326,7 +317,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
       __m128 g128 = _mm_load_ss(&g);
       g128 = _mm_shuffle_ps(g128, g128, _MM_SHUFFLE(0, 0, 0, 0));
 
-      for (k = 0; k < FIRipol_N; k += 4)
+      for (int k = 0; k < FIRipol_N; k += 4)
       {
          float* obf = &oscbuffer[bufpos + k + delay];
          __m128 ob = _mm_loadu_ps(obf);
@@ -382,11 +373,9 @@ void WavetableOscillator::process_block(
 {
    pitch_last = pitch_t;
    pitch_t = min(148.f, pitch0);
-   pitchmult_inv =
-       max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
+   pitchmult_inv = max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
    pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal-approximation is not precise enough
    this->drift = drift;
-   int k, l;
 
    update_lagvals<false>();
    l_shape.process();
@@ -441,15 +430,16 @@ void WavetableOscillator::process_block(
 
    if (FM)
    {
-      for (l = 0; l < n_unison; l++)
+      for (int l = 0; l < n_unison; l++)
          driftlfo[l] = drift_noise(driftlfo2[l]);
+
       for (int s = 0; s < BLOCK_SIZE_OS; s++)
       {
          float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
          float a = pitchmult * fmmul;
          FMdelay = s;
 
-         for (l = 0; l < n_unison; l++)
+         for (int l = 0; l < n_unison; l++)
          {
             while (oscstate[l] < a)
             {
@@ -464,7 +454,7 @@ void WavetableOscillator::process_block(
    else
    {
       float a = (float)BLOCK_SIZE_OS * pitchmult;
-      for (l = 0; l < n_unison; l++)
+      for (int l = 0; l < n_unison; l++)
       {
          driftlfo[l] = drift_noise(driftlfo2[l]);
          while (oscstate[l] < a)
@@ -476,13 +466,14 @@ void WavetableOscillator::process_block(
    float hpfblock alignas(16)[BLOCK_SIZE_OS];
    li_hpf.store_block(hpfblock, BLOCK_SIZE_OS_QUAD);
 
-   for (k = 0; k < BLOCK_SIZE_OS; k++)
+   for (int k = 0; k < BLOCK_SIZE_OS; k++)
    {
       __m128 hpf = _mm_load_ss(&hpfblock[k]);
       __m128 ob = _mm_load_ss(&oscbuffer[bufpos + k]);
       __m128 a = _mm_mul_ss(osc_out, hpf);
       osc_out = _mm_add_ss(a, ob);
       _mm_store_ss(&output[k], osc_out);
+
       if (stereo)
       {
          __m128 ob = _mm_load_ss(&oscbufferR[bufpos + k]);
@@ -505,7 +496,7 @@ void WavetableOscillator::process_block(
    {
       __m128 overlap[FIRipol_N >> 2], overlapR[FIRipol_N >> 2];
       const __m128 zero = _mm_setzero_ps();
-      for (k = 0; k < (FIRipol_N); k += 4)
+      for (int k = 0; k < (FIRipol_N); k += 4)
       {
          overlap[k >> 2] = _mm_load_ps(&oscbuffer[OB_LENGTH + k]);
          _mm_store_ps(&oscbuffer[k], overlap[k >> 2]);

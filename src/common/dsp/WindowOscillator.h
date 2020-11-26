@@ -22,6 +22,26 @@
 
 class WindowOscillator : public Oscillator
 {
+public:
+   enum window_params
+   {
+      win_morph = 0,
+      win_formant,
+      win_window,
+      win_lowcut,
+      win_highcut,
+      win_unison_detune,
+      win_unison_voices,
+   };
+
+   WindowOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
+   virtual void init(float pitch, bool is_display = false) override;
+   virtual void init_ctrltypes() override;
+   virtual void init_default_values() override;
+   virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
+   virtual ~WindowOscillator();
+   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+
 private:
    int IOutputL alignas(16)[BLOCK_SIZE_OS];
    int IOutputR alignas(16)[BLOCK_SIZE_OS];
@@ -32,24 +52,14 @@ private:
       unsigned int Ratio[MAX_UNISON];
       unsigned int Table[MAX_UNISON];
       unsigned int FormantMul[MAX_UNISON];
-      unsigned int DispatchDelay[MAX_UNISON]; // samples until playback should start (for per-sample scheduling)
+      unsigned int DispatchDelay[MAX_UNISON]; // samples until playback should start (for per-sample
+                                              // scheduling)
       unsigned char Gain[MAX_UNISON][2];
       float DriftLFO[MAX_UNISON][2];
 
       int FMRatio[MAX_UNISON][BLOCK_SIZE_OS];
    } Window alignas(16);
 
-public:
-   WindowOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
-   virtual void init(float pitch, bool is_display = false) override;
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual void process_block(
-       float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
-   virtual ~WindowOscillator();
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
-
-private:
    BiquadFilter lp, hp;
    void applyFilter();
 

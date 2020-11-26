@@ -24,6 +24,17 @@
 class WavetableOscillator : public AbstractBlitOscillator
 {
 public:
+   enum wt_params
+   {
+      wt_morph = 0,
+      wt_skewv,
+      wt_saturate,
+      wt_formant,
+      wt_skewh,
+      wt_unison_detune,
+      wt_unison_voices,
+   };
+
    lipol_ps li_hpf, li_DC, li_integratormult;
    WavetableOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
    virtual void init(float pitch, bool is_display = false) override;
@@ -50,7 +61,5 @@ private:
    int FMdelay;
    float FMmul_inv;
    int sampleloop;
-   // biquadunit FMfilter;
-   // float wavetable[wavetable_steps];
 };
 

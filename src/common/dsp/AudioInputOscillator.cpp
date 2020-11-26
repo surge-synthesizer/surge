@@ -15,21 +15,6 @@
 
 #include "AudioInputOscillator.h"
 
-enum audioin_params
-{
-   audioin_channel = 0,
-   audioin_gain,
-   audioin_sceneAchan,
-   audioin_sceneAgain,
-   audioin_sceneAmix,
-   audioin_lowcut,
-   audioin_highcut,
-};
-
-/* add controls:
-limiter?
-*/
-
 AudioInputOscillator::AudioInputOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
     : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {
@@ -109,11 +94,9 @@ void AudioInputOscillator::process_block(
    }
 
    float inGain = db_to_linear(localcopy[oscdata->p[audioin_gain].param_id_in_scene].f);
-   float inChMix =
-       limit_range(localcopy[oscdata->p[audioin_channel].param_id_in_scene].f, -1.f, 1.f);
+   float inChMix = limit_range(localcopy[oscdata->p[audioin_channel].param_id_in_scene].f, -1.f, 1.f);
    float sceneGain = db_to_linear(localcopy[oscdata->p[audioin_sceneAgain].param_id_in_scene].f);
-   float sceneChMix =
-       limit_range(localcopy[oscdata->p[audioin_sceneAchan].param_id_in_scene].f, -1.f, 1.f);
+   float sceneChMix = limit_range(localcopy[oscdata->p[audioin_sceneAchan].param_id_in_scene].f, -1.f, 1.f);
    float sceneMix = localcopy[oscdata->p[audioin_sceneAmix].param_id_in_scene].f;
    float inverseMix = 1.f - sceneMix;
 
@@ -162,9 +145,18 @@ void AudioInputOscillator::process_block(
 void AudioInputOscillator::applyFilter()
 {
    if (!oscdata->p[audioin_lowcut].deactivated)
-      hp.coeff_HP(hp.calc_omega(localcopy[oscdata->p[audioin_lowcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   {
+      auto par = &(oscdata->p[audioin_lowcut]);
+      auto pv = limit_range(localcopy[par->param_id_in_scene].f, par->val_min.f, par->val_max.f);
+      hp.coeff_HP(hp.calc_omega(pv / 12.0) / OSC_OVERSAMPLING, 0.707);
+   }
+
    if (!oscdata->p[audioin_highcut].deactivated)
-      lp.coeff_LP2B(lp.calc_omega(localcopy[oscdata->p[audioin_highcut].param_id_in_scene].f / 12.0) / OSC_OVERSAMPLING, 0.707);
+   {
+      auto par = &(oscdata->p[audioin_highcut]);
+      auto pv = limit_range(localcopy[par->param_id_in_scene].f, par->val_min.f, par->val_max.f);
+      lp.coeff_LP2B(lp.calc_omega(pv / 12.0) / OSC_OVERSAMPLING, 0.707);
+   }
 
    for (int k = 0; k < BLOCK_SIZE_OS; k += BLOCK_SIZE)
    {
