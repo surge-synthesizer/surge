@@ -31,7 +31,7 @@ LANGUAGE LANG_NEUTRAL,
     // Dialog
     //
 
-    IDD_EVALUE DIALOGEX 0, 0, 150, 28
+    IDB_ENTER_VALUE_LEGACY DIALOGEX 0, 0, 150, 28
     STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTERMOUSE | WS_POPUP | WS_CAPTION | WS_SYSMENU
     EXSTYLE WS_EX_TOPMOST | WS_EX_TOOLWINDOW
     CAPTION "Surge Synthesizer"
@@ -50,7 +50,7 @@ LANGUAGE LANG_NEUTRAL,
 #ifdef APSTUDIO_INVOKED
     GUIDELINES DESIGNINFO
     BEGIN
-    IDD_EVALUE,
+    IDB_ENTER_VALUE_LEGACY,
       DIALOG BEGIN LEFTMARGIN, 3 RIGHTMARGIN, 131 TOPMARGIN, 3 BOTTOMMARGIN, 15
     END
     END
@@ -70,7 +70,7 @@ LANGUAGE LANG_NEUTRAL,
 
         // Icon with lowest ID value placed first to ensure application icon
         // remains consistent on all systems.
-        IDI_SURGE ICON "resources/windows-vst2/surge.ico"
+        IDI_MAIN_MENU ICON "resources/windows-vst2/surge.ico"
 #endif // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 

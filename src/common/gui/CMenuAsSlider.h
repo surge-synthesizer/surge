@@ -74,7 +74,7 @@ public:
    bool in_hover = false;
    SurgeStorage* storage = nullptr;
 
-   int bgid = IDB_MENU_IN_SLIDER_BG;
+   int bgid = IDB_MENU_AS_SLIDER;
    void setBackgroundID(int q) { bgid = q; onSkinChanged(); }
 
    bool filtermode = false;

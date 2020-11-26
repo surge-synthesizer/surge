@@ -31,14 +31,14 @@ namespace Surge
       namespace Global
       {
          Connector active_scene = Connector("global.active_scene", 7, 12, 40, 42, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_SCENESWITCH, 2, 2, 1);
+                   .withHSwitch2Properties(IDB_SCENE_SELECT, 2, 2, 1);
          Connector scene_mode = Connector("global.scene_mode", 54, 12, 40, 42, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_SCENEMODE, 4, 4, 1);
+                   .withHSwitch2Properties(IDB_SCENE_MODE, 4, 4, 1);
          Connector fx_disable = Connector("global.fx_disable", 0, 0);
          Connector fx_bypass = Connector("global.fx_bypass", 607, 12, 135, 27, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_FXBYPASS, 4, 1, 4);
+                   .withHSwitch2Properties(IDB_FX_GLOBAL_BYPASS, 4, 1, 4);
          Connector character = Connector("global.character", 607, 42, 135, 12, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_CHARACTER, 3, 1, 3);
+                   .withHSwitch2Properties(IDB_OSC_CHARACTER, 3, 1, 3);
          Connector master_volume = Connector("global.master_volume", 756, 29);
 
          Connector fx1_return = Connector("global.fx1_return", 759, 141);
@@ -48,42 +48,42 @@ namespace Surge
       namespace Scene
       {
          Connector polylimit = Connector("scene.polylimit", 100, 41, 43, 14, Connector::NUMBERFIELD)
-                   .withBackground(IDB_POLYSPLIT_NUM_BG)
+                   .withBackground(IDB_NUMFIELD_POLY_SPLIT)
                    .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_polyphony)
                    .withProperty(Connector::TEXT_COLOR, "scene.split_poly.text")
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.split_poly.text.hover");
          Connector splitpoint = Connector("scene.splitpoint", 100, 11, 43, 14, Connector::NUMBERFIELD)
-                   .withBackground(IDB_POLYSPLIT_NUM_BG)
+                   .withBackground(IDB_NUMFIELD_POLY_SPLIT)
                    .withProperty(Connector::TEXT_COLOR, "scene.split_poly.text")
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.split_poly.text.hover");
                    // this doesn't have a cm since it is special
 
          Connector pbrange_dn = Connector("scene.pbrange_dn", 161, 112, 30, 13, Connector::NUMBERFIELD)
                    .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth)
-                   .withBackground(IDB_PITCHBEND_NUM_BG)
+                   .withBackground(IDB_NUMFIELD_PITCHBEND)
                    .withProperty(Connector::TEXT_COLOR, "scene.pbrange.text")
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.pbrange.text.hover");
          Connector pbrange_up = Connector("scene.pbrange_up", 189, 112, 30, 13, Connector::NUMBERFIELD)
                    .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth)
-                   .withBackground(IDB_PITCHBEND_NUM_BG)
+                   .withBackground(IDB_NUMFIELD_PITCHBEND)
                    .withProperty(Connector::TEXT_COLOR, "scene.pbrange.text")
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.pbrange.text.hover");
          Connector playmode = Connector("scene.playmode", 239, 87, 50, 47, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_POLYMODE,6,6,1);
+                   .withHSwitch2Properties(IDB_PLAY_MODE,6,6,1);
          Connector drift = Connector("scene.drift", 156, 141).asHorizontal().asWhite();
          Connector noise_color = Connector("scene.noise_color", 156, 162).asHorizontal().asWhite();
 
          Connector fmrouting = Connector("scene.fmrouting", 309, 89, 134, 52, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_FMCONFIG, 4, 1, 4);
+                   .withHSwitch2Properties(IDB_OSC_FM_ROUTING, 4, 1, 4);
          Connector fmdepth = Connector("scene.fmdepth", 306, 162).asHorizontal().asWhite();
 
          Connector octave = Connector("scene.octave", 202, 194, 96, 18, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_OCTAVES, 7, 1, 7);
+                   .withHSwitch2Properties(IDB_SCENE_OCTAVE, 7, 1, 7);
          Connector pitch = Connector("scene.pitch", 156, 212).asHorizontal();
          Connector portatime = Connector("scene.portatime", 156, 234).asHorizontal();
 
          Connector keytrack_root = Connector("scene.keytrack_root", 311, 266, 43, 14, Connector::NUMBERFIELD)
-                  .withBackground(IDB_KEYTRACKROOT_BG)
+                  .withBackground(IDB_NUMFIELD_KEYTRACK_ROOT)
                   .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_notename)
                   .withProperty(Connector::TEXT_COLOR, "scene.keytrackroot.text")
                   .withProperty(Connector::TEXT_HOVER_COLOR, "scene.keytrackroot.text.hover");
@@ -102,16 +102,16 @@ namespace Surge
       namespace Osc
       {
          Connector osc_select = Connector("osc.select", 66, 69, 75, 13, Connector::HSWITCH2, Connector::OSCILLATOR_SELECT)
-                   .withHSwitch2Properties(IDB_OSCSELECT, 3, 1, 3);
+                   .withHSwitch2Properties(IDB_OSC_SELECT, 3, 1, 3);
          Connector osc_display = Connector("osc.display", 4, 81, 141, 99, Connector::CUSTOM, Connector::OSCILLATOR_DISPLAY);
 
          Connector keytrack = Connector("osc.keytrack", 4, 183, 45, 9, Connector::SWITCH)
-                   .withBackground(IDB_SWITCH_KTRK);
+                   .withBackground(IDB_OSC_KEYTRACK);
          Connector retrigger = Connector("osc.retrigger", 51, 183, 45, 9, Connector::SWITCH)
-                   .withBackground(IDB_SWITCH_RETRIGGER);
+                   .withBackground(IDB_OSC_RETRIGGER);
          
          Connector octave = Connector("osc.octave", 0, 194, 96, 18, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_OCTAVES_OSC, 7, 1, 7);
+                   .withHSwitch2Properties(IDB_OSC_OCTAVE, 7, 1, 7);
          Connector osc_type = Connector("osc.type", 96, 194, 49, 18, Connector::OSCMENU);
 
          Connector osc_param_panel = Connector("osc.param.panel", 6, 212, Connector::GROUP);
@@ -162,13 +162,13 @@ namespace Surge
       namespace Filter
       {
          Connector config = Connector("filter.config", 455, 89, 134, 52, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_FBCONFIG, 8, 1, 8);
+                   .withHSwitch2Properties(IDB_FILTER_CONFIG, 8, 1, 8);
          Connector feedback = Connector("filter.feedback", 457, 162).asHorizontal().asWhite();
 
          // FIXME - we should really expose the menu slider fully but for now make a composite FILTERSELECTOR
          Connector type_1 = Connector("filter.type_1", 305, 191, 124, 21, Connector::FILTERSELECTOR);
          Connector subtype_1 = Connector("filter.subtype_1", 432, 194, 12, 18, Connector::SWITCH)
-                   .withBackground(IDB_FILTERSUBTYPE);
+                   .withBackground(IDB_FILTER_SUBTYPE);
          Connector cutoff_1 = Connector("filter.cutoff_1", 306, 212).asHorizontal();
          Connector resonance_1 = Connector("filter.resonance_1", 306, 234).asHorizontal();
 
@@ -176,14 +176,14 @@ namespace Surge
 
          Connector type_2 = Connector("filter.type_2", 605, 191, 124, 21, Connector::FILTERSELECTOR);
          Connector subtype_2 = Connector("filter.subtype_2", 732, 194, 12, 18, Connector::SWITCH)
-                   .withBackground(IDB_FILTERSUBTYPE);
+                   .withBackground(IDB_FILTER_SUBTYPE);
          Connector cutoff_2 = Connector("filter.cutoff_2", 600, 212).asHorizontal();
          Connector resonance_2 = Connector("filter.resonance_2", 600, 234).asHorizontal();
 
          Connector f2_offset_mode = Connector("filter.f2_offset_mode", 734, 217, 12, 18, Connector::SWITCH)
-                   .withBackground(IDB_RELATIVE_TOGGLE);
+                   .withBackground(IDB_FILTER2_OFFSET);
          Connector f2_link_resonance = Connector("filter.f2_link_resonance", 734, 239, 12, 18, Connector::SWITCH)
-                   .withBackground(IDB_SWITCH_LINK);
+                   .withBackground(IDB_FILTER2_RESONANCE_LINK);
 
          Connector keytrack_1 = Connector("filter.keytrack_1", 309, 300).asVertical().asWhite();
          Connector keytrack_2 = Connector("filter.keytrack_2", 329, 300).asVertical().asWhite();
@@ -193,7 +193,7 @@ namespace Surge
 
          Connector waveshaper_drive = Connector("filter.waveshaper_drive", 419, 300).asVertical().asWhite();
          Connector waveshaper_type = Connector("filter.waveshaper_type", 388, 311, 28, 51, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_WAVESHAPER, 6, 6, 1);
+                   .withHSwitch2Properties(IDB_WAVESHAPER_MODE, 6, 6, 1);
 
          Connector highpass = Connector("filter.highpass", 354, 300).asVertical().asWhite();
       }
@@ -203,14 +203,14 @@ namespace Surge
          // If we never refer to it by type we can just construct it and don't need it in extern list
          Connector feg_panel = Connector("feg.panel", 459, 267, Connector::GROUP);
             Connector mode = Connector("feg.mode", 93, 0, 34, 18, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVMODE, 2, 2, 1).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENV_MODE, 2, 2, 1).inParent("feg.panel");
    
             Connector attack_shape = Connector("feg.attack_shape", 4, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).inParent("feg.panel");
             Connector decay_shape = Connector("feg.decay_shape", 24, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("feg.panel");
             Connector release_shape = Connector("feg.release_shape", 65, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("feg.panel");
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("feg.panel");
    
             Connector attack  = Connector("feg.attack", 0, 33).asVertical().asWhite().inParent("feg.panel");
             Connector decay   = Connector("feg.decay", 20, 33).asVertical().asWhite().inParent("feg.panel");
@@ -222,14 +222,14 @@ namespace Surge
       {
          Connector aeg_panel = Connector("aeg.panel", 609, 267, Connector::GROUP);
             Connector mode = Connector("aeg.mode", 93, 0, 34, 18, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVMODE, 2, 2, 1).inParent("aeg.panel");
+                      .withHSwitch2Properties(IDB_ENV_MODE, 2, 2, 1).inParent("aeg.panel");
    
             Connector attack_shape = Connector("aeg.attack_shape", 4, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).inParent("aeg.panel");;
             Connector decay_shape = Connector("aeg.decay_shape", 24, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 3).inParent("aeg.panel");;
             Connector release_shape = Connector("aeg.release_shape", 65, 1, 20, 16, Connector::HSWITCH2)
-                      .withHSwitch2Properties(IDB_ENVSHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("aeg.panel");;
+                      .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("aeg.panel");;
    
             Connector attack  = Connector("aeg.attack", 0, 33).asVertical().asWhite().inParent("aeg.panel");;
             Connector decay   = Connector("aeg.decay", 20, 33).asVertical().asWhite().inParent("aeg.panel");;
@@ -265,7 +265,7 @@ namespace Surge
          // For now these two have component 'CUSTOM' and we hadn't pick a component in the code
          Connector lfo_title_label = Connector("lfo.title", 5, 489, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL);
          Connector lfo_presets = Connector("lfo.presets", 5, 484, 13, 11, Connector::SWITCH, Connector::LFO_MENU)
-                   .withBackground(IDB_LFO_PRESETS);
+                   .withBackground(IDB_LFO_PRESET_MENU);
 
          Connector lfo_main_panel = Connector("lfo.main.panel", 28, 478, Connector::GROUP);
             Connector rate = Connector("lfo.rate", 0, 0).asHorizontal().inParent("lfo.main.panel");
@@ -274,9 +274,9 @@ namespace Surge
             Connector amplitude = Connector("lfo.amplitude", 0, 63).asHorizontal().inParent("lfo.main.panel");
 
          Connector trigger_mode = Connector("lfo.trigger_mode", 172, 484, 51, 39, Connector::HSWITCH2)
-                   .withHSwitch2Properties(IDB_LFOTRIGGER, 3, 3, 1);
+                   .withHSwitch2Properties(IDB_LFO_TRIGGER_MODE, 3, 3, 1);
          Connector unipolar = Connector("lfo.unipolar", 172, 546, 51, 14, Connector::SWITCH)
-                   .withBackground(IDB_UNIPOLAR);
+                   .withBackground(IDB_LFO_UNIPOLAR);
 
          // combined LFO shape AND LFO display - TODO: split them to individual connectors for 1.9!
          Connector shape = Connector("lfo.shape", 235, 480, 359, 84, Connector::LFO);
@@ -302,14 +302,14 @@ namespace Surge
       namespace OtherControls
       {
          Connector surge_menu = Connector("controls.surge_menu", 844, 550, 50, 15, Connector::HSWITCH2, Connector::SURGE_MENU)
-                   .withProperty(Connector::BACKGROUND, IDB_BUTTON_MENU)
+                   .withProperty(Connector::BACKGROUND, IDB_MAIN_MENU)
                    .withProperty(Connector::DRAGGABLE_HSWITCH, false);
 
          Connector patch_browser = Connector("controls.patch_browser", 156, 11, 547-156, 28, Connector::CUSTOM, Connector::PATCH_BROWSER);
          Connector patch_category_jog = Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
          Connector patch_jog = Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH).asJogPlusMinus();
          Connector patch_store = Connector("controls.patch.store", 510, 42, 37, 12, Connector::HSWITCH2, Connector::STORE_PATCH)
-                   .withHSwitch2Properties(IDB_BUTTON_STORE, 1, 1, 1)
+                   .withHSwitch2Properties(IDB_STORE_PATCH, 1, 1, 1)
                    .withProperty(Connector::DRAGGABLE_HSWITCH, false);
 
          Connector status_panel = Connector("controls.status.panel", 562, 12, Connector::GROUP);

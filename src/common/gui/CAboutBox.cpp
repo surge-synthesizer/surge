@@ -45,7 +45,7 @@ CAboutBox::CAboutBox(const CRect& size,
 
    /* big centered Surge logo */
 
-   auto logo = bitmapStore->getBitmap(IDB_ABOUT);
+   auto logo = bitmapStore->getBitmap(IDB_ABOUT_BG);
    auto logol = new CTextLabel(CRect(CPoint(174, 195), CPoint(555, 179)), nullptr, logo);
    logol->setMouseableArea(CRect());
    addView(logol);

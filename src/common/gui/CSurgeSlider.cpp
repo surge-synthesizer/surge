@@ -1011,15 +1011,15 @@ void CSurgeSlider::onSkinChanged()
 {
    if (style & CSlider::kHorizontal)
    {
-      pTray = associatedBitmapStore->getBitmap(IDB_FADERH_BG);
-      pHandle = associatedBitmapStore->getBitmap(IDB_FADERH_HANDLE);
+      pTray = associatedBitmapStore->getBitmap(IDB_SLIDER_HORIZ_BG);
+      pHandle = associatedBitmapStore->getBitmap(IDB_SLIDER_HORIZ_HANDLE);
       pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_OVERLAY" );
       pTempoSyncHoverHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_HORIZONTAL_HOVER_OVERLAY" );
    }
    else
    {
-      pTray = associatedBitmapStore->getBitmap(IDB_FADERV_BG);
-      pHandle = associatedBitmapStore->getBitmap(IDB_FADERV_HANDLE);
+      pTray = associatedBitmapStore->getBitmap(IDB_SLIDER_VERT_BG);
+      pHandle = associatedBitmapStore->getBitmap(IDB_SLIDER_VERT_HANDLE);
       pTempoSyncHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_VERTICAL_OVERLAY" );
       pTempoSyncHoverHandle = associatedBitmapStore->getBitmapByStringID( "TEMPOSYNC_VERTICAL_HOVER_OVERLAY" );
    }

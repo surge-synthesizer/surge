@@ -28,18 +28,6 @@
 #include "RuntimeFont.h"
 #include "CursorControlGuard.h"
 
-/*
-** MSEG SVG IDs
-**
-** 301 - IDB_MSEG_SEGMENT_HANDLES 24x36, 3 rows (normal, hover, pressed) x 2 columns (segment node, control point) for the MSEG handles
-** 302 - IDB_MSEG_MOVEMENT 120x60 3 rows (ripple, bound, draw) x 3 columns (the states)
-** 303 - IDB_MSEG_VERTICAL_SNAP 80x40 2 rows (off, on)
-** 304 - IDB_MSEG_HORIZONTAL_SNAP 80x40 2 rows (off, on)
-** 305 - IDB_MSEG_LOOP_MODES 120x60 3 rows (off, on, gate) x 3 columns (the states)
-** 306 - IDB_MSEG_NUMBERFIELDBG 32x12
-** 307 - IDB_MSEG_EDIT_MODE 91x24 2 rows (envelope, LFO) x 2 columns (the states)
-*/
-
 using namespace VSTGUI;
 
 struct MSEGCanvas;
@@ -96,7 +84,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       this->lfodata = lfodata;
       this->axisWidth = ms->totalDuration;
       Surge::MSEG::rebuildCache( ms );
-      handleBmp = b->getBitmap( IDB_MSEG_SEGMENT_HANDLES );
+      handleBmp = b->getBitmap( IDB_MSEG_NODES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
       setMouseableArea(getViewSize());
    };
@@ -2012,7 +2000,7 @@ void MSEGControlRegion::rebuild()
       auto btnrect = CRect(CPoint(marginPos, ypos - 1), CPoint(btnWidth, buttonHeight));
       auto mw =
           new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, buttonHeight, 1, 3,
-                        associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT), CPoint(0, 0), true);
+                        associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT_MODE), CPoint(0, 0), true);
       mw->setSkin(skin, associatedBitmapStore);
       addView(mw);
       mw->setValue(canvas->timeEditMode / 2.f);
@@ -2066,7 +2054,7 @@ void MSEGControlRegion::rebuild()
       // button
       auto btnrect = CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight));
       auto lw = new CHSwitch2(btnrect, this, tag_loop_mode, 3, buttonHeight, 1, 3,
-                        associatedBitmapStore->getBitmap(IDB_MSEG_LOOP_MODES), CPoint(0, 0), true);
+                        associatedBitmapStore->getBitmap(IDB_MSEG_LOOP_MODE), CPoint(0, 0), true);
       lw->setSkin(skin, associatedBitmapStore);
       addView(lw);
       lw->setValue((ms->loopMode - 1) / 2.f);
@@ -2108,7 +2096,7 @@ void MSEGControlRegion::rebuild()
        */
       auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
       auto cnfSkinCtrl = std::make_shared<Surge::UI::Skin::Control>();
-      cnfSkinCtrl->allprops["bg_id"] = std::to_string( IDB_MSEG_NUMBERFIELDBG );
+      cnfSkinCtrl->allprops["bg_id"] = std::to_string( IDB_MSEG_SNAPVALUE_NUMFIELD );
       cnfSkinCtrl->allprops["text_color"] = Colors::MSEGEditor::NumberField::Text.name;
       cnfSkinCtrl->allprops["text_color.hover"] = Colors::MSEGEditor::NumberField::TextHover.name;
 

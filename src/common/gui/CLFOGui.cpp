@@ -493,7 +493,7 @@ void CLFOGui::draw(CDrawContext* dc)
    rect_shapes = leftpanel;
    if( ! typeImg )
    {
-      typeImg = bitmapStore->getBitmap( IDB_LFOTYPE );
+      typeImg = bitmapStore->getBitmap( IDB_LFO_TYPE );
       typeImgHover = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl, typeImg, bitmapStore, Surge::UI::Skin::HOVER );
       typeImgHoverOn = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl, typeImg, bitmapStore, Surge::UI::Skin::HOVER_OVER_ON );
    }
