@@ -110,6 +110,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       CRect drawRect;
       bool useDrawRect = false;
       int associatedSegment;
+      bool specialEndpoint = false; // For pan and zoom we need to treat the endpoint of the last segment specially
       bool active = false;
       bool dragging = false;
       
@@ -477,7 +478,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                if( horizontalMotion )
                   ms->segments[i].cpduration += dx / tscale / segdt;
                Surge::MSEG::constrainControlPointAt(ms, i);
-               modelChanged();
+               modelChanged(i);
             };
             h.associatedSegment = i;
             h.zoneSubType = hotzone::SEGMENT_CONTROL;
@@ -540,6 +541,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                     ms, ms->n_activeSegments - 1, dx / tscale, eds->hSnap);
                              }
                           } );
+            hotzones.back().specialEndpoint = true;
          }
       }
                 
@@ -1252,7 +1254,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                ch = true;
             }
             if( ch )
-               modelChanged();
+            {
+               modelChanged(seg);
+            }
          }
 
          
@@ -1322,7 +1326,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 #else
                mouseDownOrigin = where;
 #endif
-               modelChanged(); // HACK FIXME
+               modelChanged(h.associatedSegment, h.specialEndpoint); // HACK FIXME
                break;
             }
             idx++;
@@ -1688,17 +1692,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
    }
 
-   void modelChanged()
+   void modelChanged(int activeSegment = -1, bool specialEndpoint = false)
    {
       Surge::MSEG::rebuildCache( ms );
-      applyZoomPanConstraints();
+      applyZoomPanConstraints(activeSegment, specialEndpoint);
       recalcHotZones(mouseDownOrigin); // FIXME
       // Do this more heavy handed version
       getFrame()->invalid();
       // invalid();
    }
 
-   void applyZoomPanConstraints()
+   void applyZoomPanConstraints(int activeSegment = -1, bool specialEndpoint = false)
    {
       if( ms->editMode == MSEGStorage::LFO )
       {
@@ -1715,7 +1719,38 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto bd = std::max( ms->totalDuration, 1.f );
          auto longest = bd * 2;
          if( axisWidth > longest )
+         {
             axisWidth = longest;
+         }
+         else if( axisStart + axisWidth > longest )
+         {
+            axisStart = longest - axisWidth;
+         }
+
+         // This is how we pan as we stretch
+         if( activeSegment >= 0 )
+         {
+            if( specialEndpoint )
+            {
+               if (ms->segmentEnd[activeSegment] >= axisStart + axisWidth)
+               {
+                  // In this case we are dragging the endpoint
+                  axisStart = ms->segmentEnd[activeSegment] - axisWidth;
+               }
+               else if( ms->segmentEnd[activeSegment] <= axisStart )
+               {
+                  axisStart = ms->segmentEnd[activeSegment];
+               }
+            }
+            else if( ms->segmentStart[activeSegment] >= axisStart + axisWidth  )
+            {
+               axisStart = ms->segmentStart[activeSegment] - axisWidth;
+            }
+            else if( ms->segmentStart[activeSegment] <= axisStart )
+            {
+               axisStart = ms->segmentStart[activeSegment];
+            }
+         }
       }
    }
 
