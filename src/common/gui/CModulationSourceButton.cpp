@@ -53,8 +53,8 @@ CModulationSourceButton::CModulationSourceButton(const CRect& size,
    controlstate = cs_none;
    label[0] = 0;
    blink = 0;
-   bmp = bitmapStore->getBitmap(IDB_MODSRC_BG);
-   arrow = bitmapStore->getBitmap(IDB_MODSRC_SHOW_LFO);
+   bmp = bitmapStore->getBitmap(IDB_MODSOURCE_BG);
+   arrow = bitmapStore->getBitmap(IDB_MODSOURCE_SHOW_LFO);
    this->storage = nullptr;
 }
 

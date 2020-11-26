@@ -5709,7 +5709,7 @@ void SurgeGUIEditor::reloadFromSkin()
    }
    else
    {
-      CScalableBitmap *cbm = bitmapStore->getBitmap( IDB_BG );
+      CScalableBitmap *cbm = bitmapStore->getBitmap( IDB_MAIN_BG );
       cbm->setExtraScaleFactor(getZoomFactor());
       frame->setBackground( cbm );
    }
@@ -6469,7 +6469,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    auto iconrect = CRect(CPoint(3, 2), CPoint(15, 15));
    auto icon = new CViewContainer(iconrect);
-   icon->setBackground(bitmapStore->getBitmap(IDB_MINIEDIT_ICON));
+   icon->setBackground(bitmapStore->getBitmap(IDB_SURGE_ICON));
    icon->setVisible(true);
    innerc->addView(icon);
 
@@ -6614,7 +6614,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
    
    auto iconrect = CRect(CPoint(3, 2), CPoint(15, 15));
    auto icon = new CViewContainer(iconrect);
-   icon->setBackground(bitmapStore->getBitmap(IDB_MINIEDIT_ICON));
+   icon->setBackground(bitmapStore->getBitmap(IDB_SURGE_ICON));
    icon->setVisible(true);
    titlebar->addView(icon);
 
@@ -7190,14 +7190,14 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       hsw->setMouseableArea(rect);
       hsw->setLabel(p->get_name());
       hsw->setDeactivated(false);
-      hsw->setBackgroundID(IDB_MENU_IN_FILTER_BG);
+      hsw->setBackgroundID(IDB_FILTER_MENU);
       hsw->setFilterMode(true);
       p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
       auto drr = rect;
       drr.right = drr.left + 18;
       hsw->setDragRegion(drr);
-      hsw->setDragGlyph(IDB_FILTER_GLYPHS, 18);
+      hsw->setDragGlyph(IDB_FILTER_ICONS, 18);
 
       hsw->setValue(p->get_value_f01());
       hsw->setSkin(currentSkin, bitmapStore);

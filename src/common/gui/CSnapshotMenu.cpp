@@ -249,7 +249,7 @@ COscMenu::COscMenu(const CRect& size,
    strcpy(mtype, "osc");
    this->osc = osc;
    this->storage = storage;
-   auto tb = bitmapStore->getBitmap(IDB_OSCMENU);
+   auto tb = bitmapStore->getBitmap(IDB_OSC_MENU);
    bmp = tb;
    populate();
 }
@@ -380,7 +380,7 @@ void CFxMenu::draw(CDrawContext* dc)
    if( ! triedToLoadBmp )
    {
       triedToLoadBmp = true;
-      pBackground = associatedBitmapStore->getBitmap(IDB_MENU_IN_SLIDER_BG);
+      pBackground = associatedBitmapStore->getBitmap(IDB_MENU_AS_SLIDER);
       pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
           skinControl, dynamic_cast<CScalableBitmap*>(pBackground), associatedBitmapStore,
           Surge::UI::Skin::HoverType::HOVER);

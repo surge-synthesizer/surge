@@ -119,21 +119,21 @@ Connector & Connector::asMixerSolo() noexcept
    payload->defaultComponent = Connector::SWITCH;
    payload->w = 22;
    payload->h = 15;
-   return withBackground(IDB_SWITCH_SOLO);
+   return withBackground(IDB_MIXER_SOLO);
 }
 Connector & Connector::asMixerMute() noexcept
 {
    payload->defaultComponent = Connector::SWITCH;
    payload->w = 22;
    payload->h = 15;
-   return withBackground(IDB_SWITCH_MUTE);
+   return withBackground(IDB_MIXER_MUTE);
 }
 Connector & Connector::asMixerRoute() noexcept
 {
    payload->defaultComponent = Connector::HSWITCH2;
    payload->w = 22;
    payload->h = 15;
-   return withHSwitch2Properties(IDB_OSCROUTE, 3, 1, 3);
+   return withHSwitch2Properties(IDB_MIXER_OSC_ROUTING, 3, 1, 3);
 }
 
 Connector & Connector::asJogPlusMinus() noexcept
@@ -141,7 +141,7 @@ Connector & Connector::asJogPlusMinus() noexcept
    payload->defaultComponent = Connector::HSWITCH2;
    payload->w = 32;
    payload->h = 12;
-   return withHSwitch2Properties(IDB_BUTTON_MINUSPLUS, 2, 1, 2);
+   return withHSwitch2Properties(IDB_PREVNEXT_JOG, 2, 1, 2);
 }
 
 

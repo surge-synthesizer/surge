@@ -25,8 +25,8 @@ CEffectSettings::CEffectSettings(const CRect& size,
     : CControl(size, listener, tag, 0)
 {
    this->current = current;
-   bg = bitmapStore->getBitmap(IDB_FXCONF);
-   labels = bitmapStore->getBitmap(IDB_FXCONF_SYMBOLS);
+   bg = bitmapStore->getBitmap(IDB_FX_GRID);
+   labels = bitmapStore->getBitmap(IDB_FX_TYPE_ICONS);
    disabled = 0;
 }
 
