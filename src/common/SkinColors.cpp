@@ -22,10 +22,10 @@ namespace Colors
       namespace Button
       {
          const Surge::Skin::Color Background("dialog.button.background", 227, 227, 227),
-                                  Border("dialog.button.border", 160, 160, 160),
+                                  Border("dialog.button.border", 151, 151, 151),
                                   Text("dialog.button.text", 0, 0, 0),
                                   BackgroundHover("dialog.button.hover.background", 255, 144, 0),
-                                  BorderHover("dialog.button.hover.border", 160, 160, 160),
+                                  BorderHover("dialog.button.hover.border", 151, 151, 151),
                                   TextHover("dialog.button.hover.text", 255, 255, 255);
       }
       namespace Checkbox
