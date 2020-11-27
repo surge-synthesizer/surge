@@ -422,8 +422,7 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_float;
       val_min.f = -60;
       val_max.f = 70;
-      val_default.f = 3;
-      // val_max.f = 76;
+      val_default.f = 3.0246;   // C an octave above middle C
       break;
    case ct_freq_hpf:
       valtype = vt_float;
