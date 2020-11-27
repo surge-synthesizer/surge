@@ -2255,6 +2255,9 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_k35_hp:
                      sprintf(txt, "%s", fut_k35_subtypes[i]);
                      break;
+                  case fut_nonlinearfb:
+                     sprintf(txt, "%s", fut_nlf_subtypes[i]);
+                     break;
 #if SURGE_EXTRA_FILTERS
 #endif
                   default:
