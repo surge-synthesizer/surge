@@ -41,7 +41,7 @@ static inline __m128 doLpf(
    noexcept
 {
    // out = z1 + b0 * input
-   const __m128 out = z1 + M(b0, input);
+   const __m128 out = A(z1, M(b0, input));
    // nonlinear feedback = tanh(out)
    const __m128 nf  = Surge::DSP::fasttanhSSEclamped(out);
    // z1 = z2 + b1 * input - a1 * nf
