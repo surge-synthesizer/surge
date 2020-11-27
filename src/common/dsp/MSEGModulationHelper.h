@@ -6,7 +6,7 @@
 namespace Surge
 {
    namespace MSEG {
-      void rebuildCache(MSEGStorage *s);
+      void rebuildCache(MSEGStorage* ms);
 
       struct EvaluatorState {
          EvaluatorState()
@@ -33,37 +33,41 @@ namespace Surge
             gen = std::minstd_rand(l);
          }
       };
-      float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *s,
+      float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage* ms,
                     EvaluatorState *state, bool forceOneShot = false);
 
       /*
       ** Edit and Utility functions. After the call to all of these you will want to rebuild cache
       */
-      int timeToSegment( MSEGStorage *s, double t ); // these are double to deal with very long phases
-      int timeToSegment( MSEGStorage *s, double t, bool ignoreLoops, float &timeAlongSegment );
-      void changeTypeAt( MSEGStorage *s, float t, MSEGStorage::segment::Type type );
-      void insertAfter( MSEGStorage *s, float t );
-      void insertBefore( MSEGStorage *s, float t );
-      void insertAtIndex( MSEGStorage *s, int idx );
+      int timeToSegment( MSEGStorage* ms, double t ); // these are double to deal with very long phases
+      int timeToSegment( MSEGStorage* ms, double t, bool ignoreLoops, float &timeAlongSegment );
+      void changeTypeAt( MSEGStorage* ms, float t, MSEGStorage::segment::Type type );
+      void insertAfter( MSEGStorage* ms, float t );
+      void insertBefore( MSEGStorage* ms, float t );
+      void insertAtIndex( MSEGStorage* ms, int idx );
 
-      void extendTo( MSEGStorage *s, float t, float mv );
-      void splitSegment( MSEGStorage *s, float t, float nv );
-      void unsplitSegment( MSEGStorage *s, float t, bool wrapTime = false ); // for unsplit we often want past-end-is-last
-      void deleteSegment( MSEGStorage *s, float t );
-      void deleteSegment( MSEGStorage *s, int idx );
+      void extendTo( MSEGStorage* ms, float t, float mv );
+      void splitSegment( MSEGStorage* ms, float t, float nv );
+      void unsplitSegment( MSEGStorage* ms, float t, bool wrapTime = false ); // for unsplit we often want past-end-is-last
+      void deleteSegment( MSEGStorage* ms, float t );
+      void deleteSegment( MSEGStorage* ms, int idx );
 
-      void adjustDurationShiftingSubsequent( MSEGStorage *s, int idx, float dx, float snap = 0);
-      void adjustDurationConstantTotalDuration( MSEGStorage *s, int idx, float dx, float snap = 0);
+      void adjustDurationShiftingSubsequent( MSEGStorage* ms, int idx, float dx, float snap = 0);
+      void adjustDurationConstantTotalDuration( MSEGStorage* ms, int idx, float dx, float snap = 0);
 
-      void resetControlPoint( MSEGStorage *s, float t );
-      void resetControlPoint( MSEGStorage *s, int idx );
-      void constrainControlPointAt( MSEGStorage *s, int idx );
+      void resetControlPoint( MSEGStorage* ms, float t );
+      void resetControlPoint( MSEGStorage* ms, int idx );
+      void constrainControlPointAt( MSEGStorage* ms, int idx );
 
-      void scaleDurations(MSEGStorage* s, float factor);
-      void scaleValues(MSEGStorage* s, float factor);
-      void setAllDurationsTo(MSEGStorage* s, float value);
-      void mirrorMSEG(MSEGStorage* s);
+      void scaleDurations(MSEGStorage* ms, float factor);
+      void scaleValues(MSEGStorage* ms, float factor);
+      void setAllDurationsTo(MSEGStorage* ms, float value);
+      void mirrorMSEG(MSEGStorage* ms);
+      
+      void createInitMSEG(MSEGStorage* ms);
+      void createStepseqMSEG(MSEGStorage* ms, int numSegments);
+      void createSawMSEG(MSEGStorage* ms, int numSegments, float curve);
 
-      void modifyEditMode( MSEGStorage *s, MSEGStorage::EditMode mode );
+      void modifyEditMode( MSEGStorage* ms, MSEGStorage::EditMode mode );
    }
 }

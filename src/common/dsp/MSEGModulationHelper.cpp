@@ -23,7 +23,7 @@
 namespace Surge {
 namespace MSEG {
 
-void rebuildCache( MSEGStorage *ms )
+void rebuildCache( MSEGStorage* ms )
 {
    if (ms->loop_start > ms->n_activeSegments - 1)
       ms->loop_start = -1;
@@ -88,7 +88,7 @@ void rebuildCache( MSEGStorage *ms )
    }
 }
 
-float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, bool forceOneShot )
+float valueAt(int ip, float fup, float df, MSEGStorage* ms, EvaluatorState *es, bool forceOneShot )
 {
    if( ms->n_activeSegments <= 0 ) return df;
 
@@ -579,13 +579,13 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
    return res;
 }
 
-int timeToSegment( MSEGStorage *ms, double t )
+int timeToSegment( MSEGStorage* ms, double t )
 {
    float x;
    return timeToSegment(ms, t, true, x);
 }
 
-int timeToSegment( MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlongSegment )
+int timeToSegment( MSEGStorage* ms, double t, bool ignoreLoops, float &amountAlongSegment )
 {
    if( ms->totalDuration < MSEGStorage::minimumDuration ) return -1;
 
@@ -659,7 +659,7 @@ int timeToSegment( MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlo
    }
 }
 
-void changeTypeAt( MSEGStorage *ms, float t, MSEGStorage::segment::Type type ) {
+void changeTypeAt( MSEGStorage* ms, float t, MSEGStorage::segment::Type type ) {
    auto idx = timeToSegment( ms, t );
    if( idx < ms->n_activeSegments )
    {
@@ -667,7 +667,7 @@ void changeTypeAt( MSEGStorage *ms, float t, MSEGStorage::segment::Type type ) {
    }
 }
 
-void insertAtIndex( MSEGStorage *ms, int insertIndex ) {
+void insertAtIndex( MSEGStorage* ms, int insertIndex ) {
    for( int i=std::max( ms->n_activeSegments + 1, max_msegs - 1 ); i > insertIndex; --i )
    {
       ms->segments[i] = ms->segments[i-1];
@@ -703,20 +703,20 @@ void insertAtIndex( MSEGStorage *ms, int insertIndex ) {
 }
    
 
-void insertAfter( MSEGStorage *ms, float t ) {
+void insertAfter( MSEGStorage* ms, float t ) {
    auto idx = timeToSegment( ms, t );
    if( idx < 0 ) idx = 0;
    idx++;
    insertAtIndex( ms, idx );
 }
 
-void insertBefore( MSEGStorage *ms, float t ) {
+void insertBefore( MSEGStorage* ms, float t ) {
    auto idx = timeToSegment( ms, t );
    if( idx < 0 ) idx = 0;
    insertAtIndex( ms, idx );
 }
 
-void extendTo( MSEGStorage *ms, float t, float nv ) {
+void extendTo( MSEGStorage* ms, float t, float nv ) {
    if( ms->editMode == MSEGStorage::LFO ) return;
    if( t < ms->totalDuration ) return;
 
@@ -758,7 +758,7 @@ void extendTo( MSEGStorage *ms, float t, float nv ) {
    }
 }
 
-void splitSegment( MSEGStorage *ms, float t, float nv ) {
+void splitSegment( MSEGStorage* ms, float t, float nv ) {
    int idx = timeToSegment( ms, t );
    nv = limit_range( nv, -1.f, 1.f );
    if( idx >= 0 )
@@ -791,7 +791,7 @@ void splitSegment( MSEGStorage *ms, float t, float nv ) {
 }
 
 
-void unsplitSegment( MSEGStorage *ms, float t, bool wrapTime ) {
+void unsplitSegment( MSEGStorage* ms, float t, bool wrapTime ) {
    // Can't unsplit a single segment
    if( ms->n_activeSegments - 1 == 0 ) return;
 
@@ -842,7 +842,7 @@ void unsplitSegment( MSEGStorage *ms, float t, bool wrapTime ) {
    if( ms->loop_end >= idx ) ms->loop_end --;
 }
    
-void deleteSegment( MSEGStorage *ms, float t ) {
+void deleteSegment( MSEGStorage* ms, float t ) {
    // Can't delete the last segment
    if( ms->n_activeSegments <= 1 ) return;
 
@@ -850,7 +850,7 @@ void deleteSegment( MSEGStorage *ms, float t ) {
    deleteSegment( ms, idx );
 }
 
-void deleteSegment( MSEGStorage *ms, int idx )
+void deleteSegment( MSEGStorage* ms, int idx )
 {
    for( int i=idx; i<ms->n_activeSegments - 1; ++i )
    {
@@ -862,7 +862,7 @@ void deleteSegment( MSEGStorage *ms, int idx )
    if( ms->loop_end >= idx ) ms->loop_end --;
 }
 
-void resetControlPoint( MSEGStorage *ms, float t )
+void resetControlPoint( MSEGStorage* ms, float t )
 {
    auto idx = timeToSegment( ms, t );
    if( idx >= 0 && idx < ms->n_activeSegments )
@@ -871,7 +871,7 @@ void resetControlPoint( MSEGStorage *ms, float t )
    }
 }
 
-void resetControlPoint( MSEGStorage *ms, int idx )
+void resetControlPoint( MSEGStorage* ms, int idx )
 {
    ms->segments[idx].cpduration = 0.5;
    ms->segments[idx].cpv = 0.0;
@@ -879,14 +879,14 @@ void resetControlPoint( MSEGStorage *ms, int idx )
       ms->segments[idx].cpv = 0.5 * ( ms->segments[idx].v0 + ms->segments[idx].nv1 );
 }
 
-void constrainControlPointAt( MSEGStorage *ms, int idx )
+void constrainControlPointAt( MSEGStorage* ms, int idx )
 {
    // With the new model this is way easier
    ms->segments[idx].cpduration = limit_range( ms->segments[idx].cpduration, 0.f, 1.f );
    ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
 }
 
-void scaleDurations(MSEGStorage *ms, float factor)
+void scaleDurations(MSEGStorage* ms, float factor)
 {
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].duration *= factor;
@@ -894,7 +894,7 @@ void scaleDurations(MSEGStorage *ms, float factor)
    Surge::MSEG::rebuildCache(ms);
 }
    
-void scaleValues(MSEGStorage *ms, float factor)
+void scaleValues(MSEGStorage* ms, float factor)
 {
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].v0 *= factor;
@@ -905,7 +905,7 @@ void scaleValues(MSEGStorage *ms, float factor)
    Surge::MSEG::rebuildCache(ms);
 }
 
-void setAllDurationsTo(MSEGStorage *ms, float value)
+void setAllDurationsTo(MSEGStorage* ms, float value)
 {
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].duration = value;
@@ -913,7 +913,7 @@ void setAllDurationsTo(MSEGStorage *ms, float value)
    Surge::MSEG::rebuildCache(ms);
 }
 
-void mirrorMSEG(MSEGStorage *ms)
+void mirrorMSEG(MSEGStorage* ms)
 {
    int h = 0, t = ms->n_activeSegments - 1;
    auto v0 = ms->segments[0].v0;
@@ -958,7 +958,72 @@ void mirrorMSEG(MSEGStorage *ms)
    Surge::MSEG::rebuildCache(ms);
 }
 
-void modifyEditMode(MSEGStorage *ms, MSEGStorage::EditMode em )
+void createInitMSEG(MSEGStorage* ms)
+{
+   ms->n_activeSegments = 1;
+   ms->segments[0].duration = 1.f;
+   ms->segments[0].type = MSEGStorage::segment::LINEAR;
+   ms->segments[0].cpv = 0.f;
+   ms->segments[0].cpduration = 0.5;
+   ms->segments[0].v0 = 1.f;
+   ms->segments[0].nv1 = 0.f;
+   ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+
+   Surge::MSEG::rebuildCache(ms);
+}
+
+void createStepseqMSEG(MSEGStorage* ms, int numSegments)
+{
+   ms->n_activeSegments = numSegments;
+
+   auto stepLen = (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? 1.f : (1.f / numSegments);
+
+   for (int i = 0; i < numSegments; i++)
+   {
+      ms->segments[i].duration = stepLen;
+      ms->segments[i].type = MSEGStorage::segment::HOLD;
+      ms->segments[i].v0 = (1.f / (numSegments - 1)) * i;
+   }
+   ms->segments[numSegments - 1].nv1 = ms->segments[0].v0;
+   ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
+
+   Surge::MSEG::rebuildCache(ms);
+}
+
+void createSawMSEG(MSEGStorage* ms, int numSegments, float curve)
+{
+   bool isEnvMode = (ms->editMode == MSEGStorage::EditMode::ENVELOPE);
+
+   ms->n_activeSegments = (numSegments * 2) - isEnvMode;
+
+   auto stepLen = isEnvMode ? 1.f : (1.f / numSegments);
+
+   for (int i = 0; i < numSegments; i++)
+   {
+      ms->segments[i * 2].duration = stepLen;
+      ms->segments[i * 2].type = MSEGStorage::segment::LINEAR;
+      ms->segments[i * 2].cpduration = 0.5;
+      ms->segments[i * 2].cpv = curve;
+      ms->segments[i * 2].v0 = 1.f;
+
+      ms->segments[(i * 2) + 1].duration = 0.f;
+      ms->segments[(i * 2) + 1].type = MSEGStorage::segment::LINEAR;
+      ms->segments[i * 2].cpduration = 0.5;
+      ms->segments[(i * 2) + 1].cpv = 0.f;
+      ms->segments[(i * 2) + 1].v0 = -1.f;
+   }
+   ms->segments[ms->n_activeSegments - 1].nv1 = -1.f;
+
+   if (isEnvMode)
+   {
+      ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+   }
+
+   Surge::MSEG::rebuildCache(ms);
+}
+
+
+void modifyEditMode(MSEGStorage* ms, MSEGStorage::EditMode em )
 {
    if( em == ms->editMode ) return;
    float targetDuration = 1.0;
@@ -975,7 +1040,7 @@ void modifyEditMode(MSEGStorage *ms, MSEGStorage::EditMode em )
    rebuildCache(ms);
 }
 
-void adjustDurationInternal( MSEGStorage *ms, int idx, float d, float snapResolution, float upperBound = 0)
+void adjustDurationInternal( MSEGStorage* ms, int idx, float d, float snapResolution, float upperBound = 0)
 {
    if( snapResolution <= 0 )
    {
@@ -1053,7 +1118,7 @@ void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float 
    rebuildCache(ms);
 }
 
-void adjustDurationConstantTotalDuration( MSEGStorage *ms, int idx, float dx, float snap )
+void adjustDurationConstantTotalDuration( MSEGStorage* ms, int idx, float dx, float snap )
 {
    int prior = idx, next = idx + 1;
 
