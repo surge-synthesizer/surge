@@ -8,6 +8,7 @@
 #include "filters/Obxd.h"
 #include "filters/K35.h"
 #include "filters/DiodeLadder.h"
+#include "filters/NonlinearFeedback.h"
 
 __m128 SVFLP12Aquad(QuadFilterUnitState* __restrict f, __m128 in)
 {
@@ -811,6 +812,8 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
    case fut_diode:
       return DiodeLadderFilter::process;
       break;
+   case fut_nonlinearfb:
+      return NonlinearFeedbackFilter::process;
    default:
       // SOFTWARE ERROR
       break;

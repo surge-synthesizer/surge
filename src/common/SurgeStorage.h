@@ -413,6 +413,7 @@ enum fu_type
    fut_k35_lp,
    fut_k35_hp,
    fut_diode,
+   fut_nonlinearfb,
 
    n_fu_types,
 };
@@ -434,6 +435,7 @@ const char fut_names[n_fu_types][32] =
    "K35 Lowpass",
    "K35 Highpass",
    "Diode Ladder",
+   "Nonlinear Feedback"
 };
 
 const char fut_bp_subtypes[6][32] =
@@ -523,6 +525,12 @@ const float fut_k35_saturations[5] =
    4.0f
 };
 
+const char fut_nlf_subtypes[2][32] =
+{
+   "12 dB/oct",
+   "24 dB/oct",
+};
+
 const int fut_subcount[n_fu_types] =
 {
    0, // fut_none
@@ -540,7 +548,8 @@ const int fut_subcount[n_fu_types] =
    4, // fut_obxd_4pole
    5, // fut_k35_lp
    5, // fut_k35_hp
-   4  // fut_diode
+   4, // fut_diode
+   2  // fut_nonlinearfb
 };
 
 enum fu_subtype

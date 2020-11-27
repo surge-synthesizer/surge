@@ -6,6 +6,7 @@
 #include "filters/Obxd.h"
 #include "filters/K35.h"
 #include "filters/DiodeLadder.h"
+#include "filters/NonlinearFeedback.h"
 
 using namespace std;
 
@@ -96,6 +97,9 @@ void FilterCoefficientMaker::MakeCoeffs(
       break;
    case fut_diode:
       DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
+      break;
+   case fut_nonlinearfb:
+      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, storageI);
       break;
 #if SURGE_EXTRA_FILTERS
 #endif      

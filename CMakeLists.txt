@@ -215,6 +215,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/filters/Obxd.cpp
   src/common/dsp/filters/K35.cpp
   src/common/dsp/filters/DiodeLadder.cpp
+  src/common/dsp/filters/NonlinearFeedback.cpp
   src/common/dsp/AudioInputOscillator.cpp
   src/common/dsp/BiquadFilter.cpp
   src/common/dsp/BiquadFilterSSE2.cpp
