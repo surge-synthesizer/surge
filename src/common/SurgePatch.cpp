@@ -1768,6 +1768,21 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          }
       }
    }
+
+   TiXmlElement *compat = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("compatability"));
+   correctlyTuneCombFilter = streamingRevision >= 14; // Tune correctly for all releases 18 and later
+   if( compat )
+   {
+      auto comb = TINYXML_SAFE_TO_ELEMENT(compat->FirstChild("correctlyTuneCombFilter"));
+      if (comb)
+      {
+         int i;
+         if( comb->QueryIntAttribute( "v", &i ) == TIXML_SUCCESS )
+         {
+            correctlyTuneCombFilter = i != 0;
+         }
+      }
+   }
 }
 
 struct srge_header
@@ -1970,6 +1985,16 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
          mw.SetAttribute(str, float_to_str(((ControllerModulationSource*)scene[sc].modsources[ms_modwheel])->target, txt));
       }
       patch.InsertEndChild(mw);
+   }
+
+   {
+      TiXmlElement compat("compatability");
+
+      TiXmlElement comb( "correctlyTunedCombFilter" );
+      comb.SetAttribute( "v", correctlyTuneCombFilter ? 1 : 0 );
+      compat.InsertEndChild( comb );
+
+      patch.InsertEndChild(compat);
    }
 
    if( patchTuning.tuningStoredInPatch )

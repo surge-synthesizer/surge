@@ -2781,8 +2781,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                // currently we only have this case with filter subtypes - different filter types have a different number of them
                // so let's do this!
+               bool isCombOnSubtype = false;
                if (p->ctrltype == ct_filtersubtype)
-                  max = fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i] - 1;
+               {
+                  if( synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i == fut_comb )
+                     isCombOnSubtype = true;
+                  max = fut_subcount[synth->storage.getPatch()
+                                         .scene[current_scene]
+                                         .filterunit[p->ctrlgroup_entry]
+                                         .type.val.i] - 1;
+               }
 
                auto dm = dynamic_cast<ParameterDiscreteIndexRemapper*>( p->user_data );
 
@@ -2860,6 +2868,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      eid++;
                      if( i == p->val.i )
                         b->setChecked(true);
+                  }
+                  if( isCombOnSubtype )
+                  {
+                     contextMenu->addSeparator();
+                     auto m = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Correctly Tune Comb Filter" ),
+                                              [this]() {
+                                                 synth->storage.getPatch().correctlyTuneCombFilter = ! synth->storage.getPatch().correctlyTuneCombFilter;
+                                              });
+                     m->setChecked( synth->storage.getPatch().correctlyTuneCombFilter);
                   }
                }
             }

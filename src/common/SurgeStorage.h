@@ -76,8 +76,9 @@ const int n_fx_slots=8;
 // 10 -> 11 (1.6.2 release) added DAW Extra State
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
 // 12 -> 13 (1.7.0 release) deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
-// 13 -> 14 add phaser number of stages parameter
-// 13 -> 14 add ability to configure vocoder modulator mono/sterao/L/R
+// 13 -> 14 (1.8.0 release) add phaser number of stages parameter
+//                          add ability to configure vocoder modulator mono/sterao/L/R
+//                          add comb filter tuning and compat block
 
 const int ff_revision = 14;
 
@@ -899,6 +900,17 @@ public:
 
    int streamingRevision;
    int currentSynthStreamingRevision;
+
+   /*
+   * This parameter exists for the very special reason of maintaing compatability with
+   * comb filter tuning for streaming versions which are older than the 1.8 vingate surge.
+   * Prior to that the comb filter had a calculation error in the time and was out of tume
+   * but that lead toa unique sound in some classic patches. So we introduce this parameter
+   * which allows us to leave old patchs mis-tuned in FilterCoefficientMaker and is handled
+   * properly at stream time and so on.
+   */
+   bool correctlyTuneCombFilter = true;
+
 };
 
 struct Patch
