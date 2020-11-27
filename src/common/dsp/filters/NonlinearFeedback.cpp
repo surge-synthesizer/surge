@@ -61,10 +61,14 @@ namespace NonlinearFeedbackFilter
    };
 
    enum dlf_state {
-      nlf_z1, // 1st z-1 state for first stage
-      nlf_z2, // 2nd z-1 state for first stage
+      nlf_z1, // 1st z-1 state for first  stage
+      nlf_z2, // 2nd z-1 state for first  stage
       nlf_z3, // 1st z-1 state for second stage
-      nlf_z4  // 2nd z-1 state for second stage
+      nlf_z4, // 2nd z-1 state for second stage
+      nlf_z5, // 1st z-1 state for third  stage
+      nlf_z6, // 2nd z-1 state for third  stage
+      nlf_z7, // 1st z-1 state for fourth stage
+      nlf_z8  // 2nd z-1 state for fourth stage
    };
 
    void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
@@ -104,7 +108,7 @@ namespace NonlinearFeedbackFilter
                f->R[nlf_z1],
                f->R[nlf_z2]);
 
-      if(f->WP[0] == 0){ // if 12dB/oct
+      if(f->WP[0] == 0){ // if 1-stage
          // then we're done, return result1
          return result1;
       }
@@ -118,7 +122,34 @@ namespace NonlinearFeedbackFilter
                f->C[nlf_b1],
                f->R[nlf_z3],
                f->R[nlf_z4]);
+      // and so on
 
-      return result2;
+      if(f->WP[0] == 1){
+         return result2;
+      }
+
+      const __m128 result3 =
+         doLpf(result2,
+               f->C[nlf_a1],
+               f->C[nlf_a2],
+               f->C[nlf_b0],
+               f->C[nlf_b1],
+               f->R[nlf_z5],
+               f->R[nlf_z6]);
+
+      if(f->WP[0] == 2){
+         return result3;
+      }
+
+      const __m128 result4 =
+         doLpf(result3,
+               f->C[nlf_a1],
+               f->C[nlf_a2],
+               f->C[nlf_b0],
+               f->C[nlf_b1],
+               f->R[nlf_z7],
+               f->R[nlf_z8]);
+
+      return result4;
    }
 }

@@ -525,10 +525,12 @@ const float fut_k35_saturations[5] =
    4.0f
 };
 
-const char fut_nlf_subtypes[2][32] =
+const char fut_nlf_subtypes[4][32] =
 {
-   "12 dB/oct",
-   "24 dB/oct",
+   "1 stage (12dB/oct)",
+   "2 stages",
+   "3 stages",
+   "4 stages",
 };
 
 const int fut_subcount[n_fu_types] =
@@ -549,7 +551,7 @@ const int fut_subcount[n_fu_types] =
    5, // fut_k35_lp
    5, // fut_k35_hp
    4, // fut_diode
-   2  // fut_nonlinearfb
+   4  // fut_nonlinearfb
 };
 
 enum fu_subtype
