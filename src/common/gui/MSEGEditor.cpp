@@ -1410,6 +1410,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    float axisWidth = 1.0;
 
    float lastZoomDir = 0;
+
    void zoomWheel( const CPoint &where, float amount, const CButtonState &buttons  )
    {
 #if MAC
@@ -1422,6 +1423,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 #endif
       zoom(where, amount * 0.1, buttons );
    }
+
    void zoom( const CPoint &where, float amount, const CButtonState &buttons )
    {
       if( fabs(amount) < 1e-4 ) return;
@@ -1464,8 +1466,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       // std::cout << "ZOOM by " << amount <<  " AT " << where.x << " " << t << std::endl;
    }
 
+   void zoomOutTo(float duration)
+   {
+      axisStart = 0.f;
+      axisWidth = (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? std::max(0.1f, duration) : 1.f;
+      modelChanged(0, false);
+   }
+
    // On the mac I get occasional jutters where you get ---+--- or what not
    float lastPanDir = 0;
+
    void panWheel( const CPoint &where, float amount, const CButtonState &buttons  )
    {
 #if MAC
@@ -1478,6 +1488,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 #endif
       pan(where, amount * 0.1, buttons);
    }
+
    void pan( const CPoint &where, float amount, const CButtonState &buttons ) {
       // std::cout << "PAN " << axisStart << " " << axisWidth << std::endl;
       axisStart += axisWidth * amount;
@@ -1614,6 +1625,44 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          contextMenu->addEntry(actionsMenu, "Actions");
 
+
+         COptionMenu* createMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
+                                                   VSTGUI::COptionMenu::kNoDrawStyle |
+                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+
+         contextMenu->addEntry(createMenu, "Create");
+         
+         addCb(createMenu, Surge::UI::toOSCaseForMenu("Default MSEG"), [this]()
+                           {
+                              Surge::MSEG::createInitMSEG(this->ms);
+                              zoomOutTo(1.f);
+                           });
+
+         createMenu->addSeparator();
+
+         int stepCounts[3] = {8, 16, 32};
+
+         for (int i : stepCounts)
+         {
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"), [this, stepCounts, i]()
+                {
+                   Surge::MSEG::createStepseqMSEG(this->ms, i);
+                   this->zoomOutTo(i);    
+                });
+         }
+
+         createMenu->addSeparator();
+
+         for (int i : stepCounts)
+         {
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"), [this, stepCounts, i]()
+                {
+                   Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
+                   this->zoomOutTo(i);    
+                });
+         }
+
          COptionMenu* settingsMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
                                                      VSTGUI::COptionMenu::kNoDrawStyle |
                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
@@ -1626,7 +1675,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                              {
                                  this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
                                  this->ms->segments[ms->n_activeSegments-1].nv1 = this->ms->segments[0].v0;
-                                 this->modelChanged();
+                                 modelChanged();
                              }
                          });
          cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED || this->ms->editMode == MSEGStorage::LFO);
@@ -1767,7 +1816,12 @@ void MSEGControlRegion::valueChanged( CControl *p )
       int m = val > 0.5 ? 1 : 0;
       auto editMode = (MSEGStorage::EditMode)m;
       Surge::MSEG::modifyEditMode(this->ms, editMode );
-      canvas->modelChanged();
+
+      // zoom to fit
+      canvas->axisStart = 0.f;
+      canvas->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
+
+      canvas->modelChanged(0, false);
 
       break;
    }
