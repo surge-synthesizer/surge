@@ -64,7 +64,7 @@ float table_dB alignas(16)[512],
       table_envrate_linear alignas(16)[512],
       table_glide_exp alignas(16)[512],
       table_glide_log alignas(16)[512];
-float waveshapers alignas(16)[n_ws_type][1024];
+float waveshapers alignas(16)[n_ws_types][1024];
 float samplerate = 0, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
 double dsamplerate_os, dsamplerate_os_inv;

@@ -36,7 +36,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
 
    switch (config)
    {
-   case fb_serial: // no feedback at all  (saves CPU)
+   case fc_serial1: // no feedback at all  (saves CPU)
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          __m128 input = d.DL[k];
@@ -72,7 +72,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          MWriteOutputs(out)
       }
       break;
-   case fb_serial2:
+   case fc_serial2:
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
@@ -111,7 +111,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          MWriteOutputs(out)
       }
       break;
-   case fb_serial3: // filter 2 is only heard in the feedback path, good for physical modelling with
+   case fc_serial3: // filter 2 is only heard in the feedback path, good for physical modelling with
                     // comb as f2
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
@@ -153,7 +153,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          d.FBlineL = y;
       }
       break;
-   case fb_dual:
+   case fc_dual1:
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
@@ -186,7 +186,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          MWriteOutputs(out)
       }
       break;
-   case fb_dual2:
+   case fc_dual2:
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
@@ -219,7 +219,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          MWriteOutputs(out)
       }
       break;
-   case fb_ring:
+   case fc_ring:
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
@@ -254,7 +254,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          MWriteOutputs(out)
       }
       break;
-   case fb_stereo:
+   case fc_stereo:
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
@@ -291,7 +291,7 @@ void ProcessFBQuad(QuadFilterChainState& d, fbq_global& g, float* OutL, float* O
          AssertReasonableAudioFloat(OutR[k]);
       }
       break;
-   case fb_wide:
+   case fc_wide:
       for (int k = 0; k < BLOCK_SIZE_OS; k++)
       {
          d.FB = _mm_add_ps(d.FB, d.dFB);
@@ -393,22 +393,22 @@ FBQFPtr GetFBQPointer(int config, bool A, bool WS, bool B)
 {
    switch (config)
    {
-   case fb_serial:
-      return GetFBQPointer2<fb_serial>(A, WS, B);
-   case fb_serial2:
-      return GetFBQPointer2<fb_serial2>(A, WS, B);
-   case fb_serial3:
-      return GetFBQPointer2<fb_serial3>(A, WS, B);
-   case fb_dual:
-      return GetFBQPointer2<fb_dual>(A, WS, B);
-   case fb_dual2:
-      return GetFBQPointer2<fb_dual2>(A, WS, B);
-   case fb_ring:
-      return GetFBQPointer2<fb_ring>(A, WS, B);
-   case fb_stereo:
-      return GetFBQPointer2<fb_stereo>(A, WS, B);
-   case fb_wide:
-      return GetFBQPointer2<fb_wide>(A, WS, B);
+   case fc_serial1:
+      return GetFBQPointer2<fc_serial1>(A, WS, B);
+   case fc_serial2:
+      return GetFBQPointer2<fc_serial2>(A, WS, B);
+   case fc_serial3:
+      return GetFBQPointer2<fc_serial3>(A, WS, B);
+   case fc_dual1:
+      return GetFBQPointer2<fc_dual1>(A, WS, B);
+   case fc_dual2:
+      return GetFBQPointer2<fc_dual2>(A, WS, B);
+   case fc_ring:
+      return GetFBQPointer2<fc_ring>(A, WS, B);
+   case fc_stereo:
+      return GetFBQPointer2<fc_stereo>(A, WS, B);
+   case fc_wide:
+      return GetFBQPointer2<fc_wide>(A, WS, B);
    }
    return 0;
 }

@@ -416,7 +416,7 @@ void SurgeVoice::switch_toggled()
          FBP.FU[u].type = scene->filterunit[u].type.val.i;
          FBP.FU[u].subtype = scene->filterunit[u].subtype.val.i;
 
-         if (scene->filterblock_configuration.val.i == fb_wide)
+         if (scene->filterblock_configuration.val.i == fc_wide)
          {
             memset(&FBP.FU[u + 2], 0, sizeof(FBP.FU[u + 2]));
             FBP.FU[u + 2].type = scene->filterunit[u].type.val.i;
@@ -500,9 +500,9 @@ int SurgeVoice::routefilter(int r)
 {
    switch (scene->filterblock_configuration.val.i)
    {
-   case fb_serial:
-   case fb_serial2:
-   case fb_serial3:
+   case fc_serial1:
+   case fc_serial2:
+   case fc_serial3:
       if (r == 1)
          r = 0;
       break;
@@ -663,14 +663,14 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState* Q, in
        0.5f * amp_to_linear(localcopy[volume_id].f); // the *0.5 multiplication will be eliminated
                                                      // by the 2x gain of the halfband filter
 
-   // Volume correcting/correction (fb_stereo updated since v1.2.2)
-   if (scene->filterblock_configuration.val.i == fb_wide)
+   // Volume correcting/correction (fc_stereo updated since v1.2.2)
+   if (scene->filterblock_configuration.val.i == fc_wide)
       amp *= 0.6666666f;
-   else if (scene->filterblock_configuration.val.i == fb_stereo)
+   else if (scene->filterblock_configuration.val.i == fc_stereo)
       amp *= 1.3333333f;
 
-   if ((scene->filterblock_configuration.val.i == fb_stereo) ||
-       (scene->filterblock_configuration.val.i == fb_wide))
+   if ((scene->filterblock_configuration.val.i == fc_stereo) ||
+       (scene->filterblock_configuration.val.i == fc_wide))
    {
       pan1 -= localcopy[width_id].f;
       float pan2 = localcopy[pan_id].f + localcopy[width_id].f;
@@ -706,7 +706,7 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
 {
    calc_ctrldata<0>(&Q, Qe);
 
-   bool is_wide = scene->filterblock_configuration.val.i == fb_wide;
+   bool is_wide = scene->filterblock_configuration.val.i == fc_wide;
    float tblock alignas(16)[BLOCK_SIZE_OS],
          tblock2 alignas(16)[BLOCK_SIZE_OS];
    float* tblockR = is_wide ? tblock2 : tblock;
@@ -944,11 +944,11 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
    float FMix1, FMix2;
    switch (scene->filterblock_configuration.val.i)
    {
-   case fb_serial:
-   case fb_serial2:
-   case fb_serial3:
-   case fb_ring:
-   case fb_wide:
+   case fc_serial1:
+   case fc_serial2:
+   case fc_serial3:
+   case fc_ring:
+   case fc_wide:
       FMix1 = min(1.f, 1.f - localcopy[id_fbalance].f);
       FMix2 = min(1.f, 1.f + localcopy[id_fbalance].f);
       break;
@@ -1033,7 +1033,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
                    scene->filterunit[u].subtype.val.i; // LPMoog's output stage index is stored in
                                                        // WP[0] for the entire quad
 
-            if (scene->filterblock_configuration.val.i == fb_wide)
+            if (scene->filterblock_configuration.val.i == fc_wide)
             {
                for (int i = 0; i < n_cm_coeffs; i++)
                {
@@ -1073,7 +1073,7 @@ void SurgeVoice::GetQFB()
          }
          FBP.FU[u].WP = fbq->FU[u].WP[fbqi];
 
-         if (scene->filterblock_configuration.val.i == fb_wide)
+         if (scene->filterblock_configuration.val.i == fc_wide)
          {
             for (int i = 0; i < n_filter_registers; i++)
             {

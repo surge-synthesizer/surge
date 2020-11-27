@@ -188,7 +188,7 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
    drive.newValue(*f[rot_drive]);
 
    int ws = *pdata_ival[rot_waveshape];
-   if (ws < 0 || ws >= n_ws_type)
+   if (ws < 0 || ws >= n_ws_types)
       ws = 0;
 
    /*

@@ -790,20 +790,20 @@ void SurgeGUIEditor::idle()
                if (tag == fmconfig_tag)
                {
                   auto targetTag = synth->storage.getPatch().scene[current_scene].fm_depth.id + start_paramtags;
-                  auto targetState = (Parameter::intUnscaledFromFloat(sv , n_fm_configuration - 1) == fm_off);
+                  auto targetState = (Parameter::intUnscaledFromFloat(sv , n_fm_routings - 1) == fm_off);
                   resetMap[targetTag] = targetState;
                }
 
                if (tag == filterblock_tag)
                {
-                  auto pval = Parameter::intUnscaledFromFloat(sv, n_fb_configuration - 1 );
+                  auto pval = Parameter::intUnscaledFromFloat(sv, n_filter_configs - 1 );
 
                   auto targetTag = synth->storage.getPatch().scene[current_scene].feedback.id + start_paramtags;
-                  auto targetState = (pval == fb_serial);
+                  auto targetState = (pval == fc_serial1);
                   resetMap[targetTag] = targetState;
 
                   targetTag = synth->storage.getPatch().scene[current_scene].width.id + start_paramtags;
-                  targetState = (pval != fb_stereo && pval != fb_wide);
+                  targetState = (pval != fc_stereo && pval != fc_wide);
                   resetMap[targetTag] = targetState;
                }
 
@@ -828,10 +828,10 @@ void SurgeGUIEditor::idle()
                 * This is gross hack for our reordering of scenemode. Basically take the
                 * automation value and turn it into the UI value
                 */
-               auto pval = Parameter::intUnscaledFromFloat(sv, n_scenemodes - 1 );
+               auto pval = Parameter::intUnscaledFromFloat(sv, n_scene_modes - 1 );
                if( pval == sm_dual ) pval = sm_chsplit;
                else if( pval == sm_chsplit ) pval = sm_dual;
-               sv = Parameter::intScaledToFloat(pval, n_scenemodes - 1 );
+               sv = Parameter::intScaledToFloat(pval, n_scene_modes - 1 );
             }
 
             if( sv != cv )
@@ -1533,7 +1533,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    }
 
    // feedback control
-   if (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i == fb_serial)
+   if (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i == fc_serial1)
    {
       i = synth->storage.getPatch().scene[current_scene].feedback.id;
       if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
@@ -1550,8 +1550,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    // pan2 control
    if ((synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
-        fb_stereo) &&
-       (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i != fb_wide))
+        fc_stereo) &&
+       (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i != fc_wide))
    {
       i = synth->storage.getPatch().scene[current_scene].width.id;
       if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
@@ -4075,7 +4075,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   im = cs2->getIValue();
                   if( im == 3 ) im = 2;
                   else if( im == 2 ) im = 3;
-                  val = Parameter::intScaledToFloat(im, n_scenemodes-1);
+                  val = Parameter::intScaledToFloat(im, n_scene_modes-1);
                }
 
                /*
@@ -4200,9 +4200,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
          ((CSurgeSlider*)param[i])->disabled =
             (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
-             fb_stereo) &&
+             fc_stereo) &&
             (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
-             fb_wide);
+             fc_wide);
 
       param[i]->setDirty();
       param[i]->invalid();
@@ -4212,7 +4212,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if (param[i] && dynamic_cast<CSurgeSlider*>(param[i]) != nullptr)
          ((CSurgeSlider*)param[i])->disabled =
             (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i ==
-             fb_serial);
+             fc_serial1);
 
       param[i]->setDirty();
       param[i]->invalid();
@@ -7012,7 +7012,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
                   guiscenemode = 2;
                else if (guiscenemode == 2)
                   guiscenemode = 3;
-               fval = Parameter::intScaledToFloat(guiscenemode, n_scenemodes-1);
+               fval = Parameter::intScaledToFloat(guiscenemode, n_scene_modes-1);
             }
             hsw->setValue( fval );
          }
@@ -7186,7 +7186,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       auto rect = skinCtrl->getRect();
       auto hsw = new CMenuAsSlider(rect.getTopLeft(), CPoint(124, 21), this,
                                    p->id + start_paramtags, bitmapStore, &(synth->storage));
-      hsw->setMinMax(0, n_fu_type - 1);
+      hsw->setMinMax(0, n_fu_types - 1);
       hsw->setMouseableArea(rect);
       hsw->setLabel(p->get_name());
       hsw->setDeactivated(false);

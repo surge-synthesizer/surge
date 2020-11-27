@@ -17,7 +17,7 @@ using namespace Surge::Test;
 // These first two are mostly useful targets for valgrind runs
 TEST_CASE( "Run Every Filter", "[flt]" )
 {
-   for( int fn = 0; fn < n_fu_type; fn ++ )
+   for( int fn = 0; fn < n_fu_types; fn ++ )
    {
       auto nst = std::max( 1, fut_subcount[fn] );
       for( int fs=0; fs<nst; ++fs )
@@ -51,9 +51,9 @@ TEST_CASE( "Run Every Filter", "[flt]" )
 
 TEST_CASE( "Run Every Waveshaper", "[flt]" )
 {
-   for( int wt = 0; wt < n_ws_type; wt ++ )
+   for( int wt = 0; wt < n_ws_types; wt ++ )
    {
-      for( int q = 0; q < n_fb_configuration; ++q )
+      for( int q = 0; q < n_filter_configs; ++q )
       {
          DYNAMIC_SECTION("Test WaveShaper " << wst_names[wt] << " " << fbc_names[q] )
          {

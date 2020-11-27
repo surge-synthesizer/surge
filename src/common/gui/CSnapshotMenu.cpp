@@ -277,7 +277,7 @@ void COscMenu::draw(CDrawContext* dc)
 
 void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
 {
-   assert(within_range(0, type, num_osctypes));
+   assert(within_range(0, type, n_osc_types));
    auto sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
    if (sge)
    {
@@ -324,7 +324,7 @@ bool COscMenu::onWheel( const VSTGUI::CPoint &where, const float &distance, cons
 
 /*void COscMenu::load_snapshot(int type, TiXmlElement *e)
 {
-        assert(within_range(0,type,num_osctypes));
+        assert(within_range(0,type,n_osc_types));
         osc->type.val.i = type;
         //osc->retrigger.val.i =
         storage->patch.update_controls(false, osc);
