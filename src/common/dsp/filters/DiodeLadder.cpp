@@ -192,13 +192,13 @@ namespace DiodeLadderFilter
       // Means that the whole quad will return the same subtype... but apparently This Is Fine.
       switch(f->WP[0] & 3){
          case 0:
-            return result1; // 6dB/oct
+            return M(result1, F(0.125)); // 6dB/oct
          case 1:
-            return result2; // 12dB/oct
+            return M(result2, F(0.3)); // 12dB/oct
          case 2:
-            return result3; // 18dB/oct
+            return M(result3, F(0.6)); // 18dB/oct
          default:
-            return result4;  // 24dB/oct
+            return M(result4, F(1.2));  // 24dB/oct
       }
    }
 }
