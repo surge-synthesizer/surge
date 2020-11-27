@@ -1028,10 +1028,12 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
 
             Q->FU[u].DB[e] = FBP.Delay[u];
             Q->FU[u].WP[e] = FBP.FU[u].WP;
-            if (scene->filterunit[u].type.val.i == fut_lpmoog)
+            if (scene->filterunit[u].type.val.i == fut_lpmoog || scene->filterunit[u].type.val.i == fut_diode)
+            {
                Q->FU[u].WP[0] =
                    scene->filterunit[u].subtype.val.i; // LPMoog's output stage index is stored in
                                                        // WP[0] for the entire quad
+            }
 
             if (scene->filterblock_configuration.val.i == fc_wide)
             {
@@ -1048,8 +1050,10 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
 
                Q->FU[u + 2].DB[e] = FBP.Delay[u + 2];
                Q->FU[u + 2].WP[e] = FBP.FU[u].WP;
-               if (scene->filterunit[u].type.val.i == fut_lpmoog)
+               if (scene->filterunit[u].type.val.i == fut_lpmoog || scene->filterunit[u].type.val.i == fut_diode)
+               {
                   Q->FU[u + 2].WP[0] = scene->filterunit[u].subtype.val.i;
+               }
             }
          }
       }

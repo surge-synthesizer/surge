@@ -2231,6 +2231,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   else switch (type)
                   {
                   case fut_lpmoog:
+                  case fut_diode:
                      sprintf(txt, "%s", fut_ldr_subtypes[i]);
                      break;
                   case fut_bp12:
@@ -2254,9 +2255,6 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_k35_lp:
                   case fut_k35_hp:
                      sprintf(txt, "%s", fut_k35_subtypes[i]);
-                     break;
-                  case fut_diode:
-                     sprintf(txt, "%s", fut_diode_subtypes[i]);
                      break;
 #if SURGE_EXTRA_FILTERS
 #endif
