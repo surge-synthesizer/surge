@@ -107,10 +107,11 @@ enum scene_mode
    sm_split,
    sm_dual,
    sm_chsplit,
-   n_scenemodes,
+
+   n_scene_modes,
 };
 
-const char scene_mode_names[n_scenemodes][16] =
+const char scene_mode_names[n_scene_modes][16] =
 {
    "Single",
    "Key Split",
@@ -126,9 +127,10 @@ enum play_mode
    pm_mono_fp,
    pm_mono_st_fp,
    pm_latch,
-   n_polymodes,
+
+   n_play_modes,
 };
-const char play_mode_names[n_polymodes][64] =
+const char play_mode_names[n_play_modes][64] =
 {
    "Poly",
    "Mono",
@@ -150,18 +152,20 @@ enum deform_type
     type_1,
     type_2,
     type_3,
-    n_types,
+
+    n_deform_types,
 };
 
-enum lfo_mode
+enum lfo_trigger_mode
 {
    lm_freerun = 0,
    lm_keytrigger,
    lm_random,
-   n_lfomodes,
+
+   n_lfo_trigger_modes,
 };
 
-const char lfo_mode_names[n_lfomodes][16] =
+const char lfo_trigger_mode_names[n_lfo_trigger_modes][16] =
 {
    "Freerun",
    "Keytrigger",
@@ -173,16 +177,17 @@ enum character_mode
    cm_warm = 0,
    cm_neutral,
    cm_bright,
-   n_charactermodes,
+
+   n_character_modes,
 };
-const char character_names[n_charactermodes][16] =
+const char character_names[n_character_modes][16] =
 {
    "Warm",
    "Neutral",
    "Bright",
 };
 
-enum osc_types
+enum osc_type
 {
    ot_classic = 0,
    ot_sine,
@@ -192,9 +197,10 @@ enum osc_types
    ot_FM3, // it used to be just FM, then the UI called it FM3, so name it like this, but the order of enums has to stick
    ot_FM2,
    ot_window,
-   num_osctypes,
+
+   n_osc_types,
 };
-const char osc_type_names[num_osctypes][16] =
+const char osc_type_names[n_osc_types][16] =
 {
    "Classic",
    "Sine",
@@ -243,7 +249,7 @@ const char fxslot_names[8][NAMECHARS] =
 };
 
 
-enum fx_types
+enum fx_type
 {
    fxt_off = 0,
    fxt_delay,
@@ -260,9 +266,10 @@ enum fx_types
    fxt_flanger,
    fxt_ringmod,
    fxt_airwindows,
-   num_fxtypes,
+
+   n_fx_types,
 };
-const char fx_type_names[num_fxtypes][16] =
+const char fx_type_names[n_fx_types][16] =
 {
    "Off",
    "Delay",
@@ -287,6 +294,7 @@ enum fx_bypass
    fxb_no_sends,
    fxb_scene_fx_only,
    fxb_no_fx,
+
    n_fx_bypass,
 };
 
@@ -298,20 +306,21 @@ const char fxbypass_names[n_fx_bypass][32] =
    "All FX Off",
 };
 
-enum fb_configuration
+enum filter_config
 {
-   fb_serial = 0,
-   fb_serial2,
-   fb_serial3,
-   fb_dual,
-   fb_dual2,
-   fb_stereo,
-   fb_ring,
-   fb_wide,
-   n_fb_configuration,
+   fc_serial1 = 0,
+   fc_serial2,
+   fc_serial3,
+   fc_dual1,
+   fc_dual2,
+   fc_stereo,
+   fc_ring,
+   fc_wide,
+
+   n_filter_configs,
 };
 
-const char fbc_names[n_fb_configuration][16] =
+const char fbc_names[n_filter_configs][16] =
 {
    "Serial 1",
    "Serial 2",
@@ -323,16 +332,17 @@ const char fbc_names[n_fb_configuration][16] =
    "Wide",
 };
 
-enum fm_configuration
+enum fm_routing
 {
    fm_off = 0,
    fm_2to1,
    fm_3to2to1,
    fm_2and3to1,
-   n_fm_configuration,
+
+   n_fm_routings,
 };
 
-const char fmc_names[n_fm_configuration][16] =
+const char fmr_names[n_fm_routings][16] =
 {
    "Off",
    "2 > 1",
@@ -340,7 +350,7 @@ const char fmc_names[n_fm_configuration][16] =
    "2 > 1 < 3",
 };
 
-enum lfotypes
+enum lfo_type
 {
    lt_sine = 0,
    lt_tri,
@@ -352,10 +362,11 @@ enum lfotypes
    lt_stepseq,
    lt_mseg,
    lt_function,
-   n_lfotypes
+
+   n_lfo_types,
 };
 
-const char lt_names[n_lfotypes][32] =
+const char lt_names[n_lfo_types][32] =
 {
    "Sine",
    "Triangle",
@@ -369,7 +380,7 @@ const char lt_names[n_lfotypes][32] =
    "Function (coming in 1.9!)",
 };
 
-const int lt_num_deforms[n_lfotypes] =
+const int lt_num_deforms[n_lfo_types] =
 {
    3,   // lt_sine
    3,   // lt_tri
@@ -401,9 +412,10 @@ enum fu_type
    fut_k35_lp,
    fut_k35_hp,
    fut_diode,
-   n_fu_type,
+
+   n_fu_types,
 };
-const char fut_names[n_fu_type][32] =
+const char fut_names[n_fu_types][32] =
 {
    "Off",
    "Lowpass 12 dB/oct",
@@ -418,8 +430,8 @@ const char fut_names[n_fu_type][32] =
    "Vintage Ladder",
    "OB-Xd 12 dB/oct",
    "OB-Xd 24 dB/oct",
-   "Sallen-Key Lowpass",
-   "Sallen-Key Highpass",
+   "K35 Lowpass",
+   "K35 Highpass",
    "Diode Ladder",
 };
 
@@ -515,7 +527,7 @@ const char fut_diode_subtypes[1][32] =
    "24 dB/oct"
 };
 
-const int fut_subcount[n_fu_type] =
+const int fut_subcount[n_fu_types] =
 {
    0, // fut_none
    3, // fut_lp12
@@ -558,10 +570,11 @@ enum ws_type
    wst_asym,
    wst_sine,
    wst_digital,
-   n_ws_type,
+
+   n_ws_types,
 };
 
-const char wst_names[n_ws_type][16] =
+const char wst_names[n_ws_types][16] =
 {
    "Off",
    "Soft",
@@ -571,16 +584,17 @@ const char wst_names[n_ws_type][16] =
    "Digital",
 };
 
-extern float waveshapers alignas(16)[n_ws_type][1024];
+extern float waveshapers alignas(16)[n_ws_types][1024];
 
-enum env_mode_type
+enum env_mode
 {
    emt_digital = 0,
    emt_analog,
-   n_em_type,
+
+   n_env_modes,
 };
 
-const char em_names[n_em_type][16] =
+const char em_names[n_env_modes][16] =
 {
    "Digital",
    "Analog",
@@ -920,6 +934,7 @@ enum surge_copysource
    cp_osc,
    cp_lfo,
    cp_oscmod,
+
    n_copysources,
 };
 

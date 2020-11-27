@@ -516,13 +516,13 @@ void CSurgeSlider::draw(CDrawContext* dc)
       if (style & CSlider::kHorizontal)
       {
          pHandle->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
-         if( pHandleHover && in_hover )
+         if( pHandleHover && in_hover && (!modmode) )
             pHandleHover->draw(dc, hrect, CPoint(0, 24 * typehy), modmode ? slider_alpha : slider_alpha);
 
 
          if( is_temposync )
          {
-            if( in_hover && pTempoSyncHoverHandle )
+            if (in_hover && pTempoSyncHoverHandle && (!modmode))
             {
                pTempoSyncHoverHandle->draw( dc, hrect, CPoint( 0, 0 ), slider_alpha );
             }
@@ -555,12 +555,12 @@ void CSurgeSlider::draw(CDrawContext* dc)
       else if ((!deactivated || !disabled))
       {
          pHandle->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? slider_alpha : slider_alpha); // used to be 0x80 which was solid - lets keep taht for now
-         if( pHandleHover && in_hover )
+         if (pHandleHover && in_hover && (!modmode))
             pHandleHover->draw(dc, hrect, CPoint(0, 28 * typehy), modmode ? slider_alpha : slider_alpha); // used to be 0x80 which was solid - lets keep taht for now
 
          if( is_temposync )
          {
-            if( in_hover && pTempoSyncHoverHandle )
+            if (in_hover && pTempoSyncHoverHandle && (!modmode))
             {
                pTempoSyncHoverHandle->draw( dc, hrect, CPoint( 0, 0 ), slider_alpha );
             }
@@ -591,9 +591,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                dc->drawString("S", sRect, kCenterText, true);
             }
          }
-                  
       }
-
    }
 
    // draw mod-fader

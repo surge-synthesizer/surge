@@ -545,7 +545,7 @@ void Parameter::set_type(int ctrltype)
    case ct_lfotrigmode:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_lfomodes - 1;
+      val_max.i = n_lfo_trigger_modes - 1;
       val_default.i = 0;
       break;
    case ct_pitch_octave:
@@ -572,7 +572,7 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_min.i = 0;
       val_default.i = 0;
-      val_max.i = num_osctypes - 1;
+      val_max.i = n_osc_types - 1;
       affect_other_parameters = true;
       break;
    case ct_reverbshape:
@@ -585,7 +585,7 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_min.i = 0;
       val_default.i = 0;
-      val_max.i = num_fxtypes - 1;
+      val_max.i = n_fx_types - 1;
       // affect_other_parameters = true;	// Can not be added, before it has a custom
       // controltype
       break;
@@ -623,25 +623,25 @@ void Parameter::set_type(int ctrltype)
    case ct_lfotype:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_lfotypes - 1;
+      val_max.i = n_lfo_types - 1;
       val_default.i = 0;
       break;
    case ct_fbconfig:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_fb_configuration - 1;
+      val_max.i = n_filter_configs - 1;
       val_default.i = 0;
       break;
    case ct_fmconfig:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_fm_configuration - 1;
+      val_max.i = n_fm_routings - 1;
       val_default.i = 0;
       break;
    case ct_filtertype:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_fu_type - 1;
+      val_max.i = n_fu_types - 1;
       val_default.i = 0;
       break;
    case ct_filtersubtype:
@@ -653,7 +653,7 @@ void Parameter::set_type(int ctrltype)
    case ct_wstype:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_ws_type - 1;
+      val_max.i = n_ws_types - 1;
       val_default.i = 0;
       break;
    case ct_midikey_or_channel:
@@ -679,13 +679,13 @@ void Parameter::set_type(int ctrltype)
    case ct_scenemode:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_scenemodes - 1;
+      val_max.i = n_scene_modes - 1;
       val_default.i = 0;
       break;
    case ct_polymode:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = n_polymodes - 1;
+      val_max.i = n_play_modes - 1;
       val_default.i = 0;
       break;
    case ct_polylimit:
@@ -771,7 +771,7 @@ void Parameter::set_type(int ctrltype)
       break;
    case ct_distortion_waveshape:
       val_min.i = 0;
-      val_max.i = n_ws_type - 2; // we want to skip none also
+      val_max.i = n_ws_types - 2; // we want to skip none also
       valtype = vt_int;
       val_default.i = 0;
       break;
@@ -2194,7 +2194,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       }
       case ct_osctype:
-         sprintf(txt, "%s", osc_type_names[limit_range(i, 0, (int)num_osctypes - 1)]);
+         sprintf(txt, "%s", osc_type_names[limit_range(i, 0, (int)n_osc_types - 1)]);
          break;
       case ct_wt2window:
          sprintf(txt, "%s", window_names[limit_range(i, 0, 8)]);
@@ -2204,7 +2204,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%d voice%s", i, (i > 1 ? "s" : ""));
          break;
       case ct_fxtype:
-         sprintf(txt, "%s", fx_type_names[limit_range(i, 0, (int)num_fxtypes - 1)]);
+         sprintf(txt, "%s", fx_type_names[limit_range(i, 0, (int)n_fx_types - 1)]);
          break;
       case ct_reverbshape:
          sprintf(txt, "Type %d", i + 1);
@@ -2213,7 +2213,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
          sprintf(txt, "%s", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
          break;
       case ct_filtertype:
-         sprintf(txt, "%s", fut_names[limit_range(i, 0, (int)n_fu_type - 1)]);
+         sprintf(txt, "%s", fut_names[limit_range(i, 0, (int)n_fu_types - 1)]);
          break;
       case ct_filtersubtype:
       {
@@ -2268,31 +2268,31 @@ void Parameter::get_display(char* txt, bool external, float ef)
          break;
       }
       case ct_wstype:
-         sprintf(txt, "%s", wst_names[limit_range(i, 0, (int)n_ws_type - 1)]);
+         sprintf(txt, "%s", wst_names[limit_range(i, 0, (int)n_ws_types - 1)]);
          break;
       case ct_envmode:
-         sprintf(txt, "%s", em_names[limit_range(i, 0, (int)n_em_type - 1)]);
+         sprintf(txt, "%s", em_names[limit_range(i, 0, (int)n_env_modes - 1)]);
          break;
       case ct_fbconfig:
-         sprintf(txt, "%s", fbc_names[limit_range(i, 0, (int)n_fb_configuration - 1)]);
+         sprintf(txt, "%s", fbc_names[limit_range(i, 0, (int)n_filter_configs - 1)]);
          break;
       case ct_fmconfig:
-         sprintf(txt, "%s", fmc_names[limit_range(i, 0, (int)n_fm_configuration - 1)]);
+         sprintf(txt, "%s", fmr_names[limit_range(i, 0, (int)n_fm_routings - 1)]);
          break;
       case ct_lfotype:
-         sprintf(txt, "%s", lt_names[limit_range(i, 0, (int)n_lfotypes - 1)]);
+         sprintf(txt, "%s", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
          break;
       case ct_scenemode:
-         sprintf(txt, "%s", scene_mode_names[limit_range(i, 0, (int)n_scenemodes - 1)]);
+         sprintf(txt, "%s", scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
          break;
       case ct_polymode:
-         sprintf(txt, "%s", play_mode_names[limit_range(i, 0, (int)n_polymodes - 1)]);
+         sprintf(txt, "%s", play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
          break;
       case ct_lfotrigmode:
-         sprintf(txt, "%s", lfo_mode_names[limit_range(i, 0, (int)n_lfomodes - 1)]);
+         sprintf(txt, "%s", lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)]);
          break;
       case ct_character:
-         sprintf(txt, "%s", character_names[limit_range(i, 0, (int)n_charactermodes - 1)]);
+         sprintf(txt, "%s", character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
          break;
       case ct_fmratio_int:
          sprintf(txt, "C : %d", i);

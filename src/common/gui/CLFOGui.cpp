@@ -504,7 +504,7 @@ void CLFOGui::draw(CDrawContext* dc)
       auto off = lfodata->shape.val.i * 76;
       typeImg->draw( dc, CRect( CPoint( leftpanel.left, leftpanel.top + 2), CPoint( 51, 76 ) ), CPoint( 0, off ), 0xff );
 
-      for( int i=0; i<n_lfotypes; ++i )
+      for( int i=0; i<n_lfo_types; ++i )
       {
          int xp = ( i % 2 ) * 25 + leftpanel.left;
          int yp = ( i / 2 ) * 15 + leftpanel.top;
@@ -529,7 +529,7 @@ void CLFOGui::draw(CDrawContext* dc)
    }
    else
    {
-      for (int i = 0; i < n_lfotypes; i++)
+      for (int i = 0; i < n_lfo_types; i++)
       {
          CRect tb(leftpanel);
          tb.top = leftpanel.top + 10 * i;
@@ -1480,7 +1480,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
    int plt = lfo_type_hover;
    lfo_type_hover = -1;
-   for( int i=0; i<n_lfotypes; ++i )
+   for( int i=0; i<n_lfo_types; ++i )
    {
       if( shaperect[i].pointInside(where) )
          lfo_type_hover = i;
@@ -1514,7 +1514,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
 
    if (controlstate == cs_shape)
    {
-      for (int i = 0; i < n_lfotypes; i++)
+      for (int i = 0; i < n_lfo_types; i++)
       {
          auto prior = lfodata->shape.val.i;
          if (shaperect[i].pointInside(where))
@@ -1742,8 +1742,8 @@ bool CLFOGui::onWheel( const VSTGUI::CPoint &where, const float &distance, const
                     auto ns = ps + d;
                     if( ns < 0 )
                        ns = 0;
-                    if( ns >= n_lfotypes )
-                       ns = n_lfotypes - 1;
+                    if( ns >= n_lfo_types )
+                       ns = n_lfo_types - 1;
 
                     if( ns != this->lfodata->shape.val.i )
                     {

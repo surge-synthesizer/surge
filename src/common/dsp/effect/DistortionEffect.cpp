@@ -67,7 +67,7 @@ void DistortionEffect::process(float* dataL, float* dataR)
    outgain.set_target_smoothed(db_to_linear(*f[dist_gain]));
    float fb = *f[dist_feedback];
    int ws = *pdata_ival[dist_model];
-   if (ws < 0 || ws >= n_ws_type)
+   if (ws < 0 || ws >= n_ws_types)
       ws = 0;
 
    float bL alignas(16)[BLOCK_SIZE << dist_OS_bits];

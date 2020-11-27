@@ -1392,7 +1392,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    {
       for (auto& sc : scene)
       {
-         if (sc.filterblock_configuration.val.i == fb_stereo)
+         if (sc.filterblock_configuration.val.i == fc_stereo)
          {
             sc.pan.val.f = -1.f;
             sc.width.val.f = 1.f;
@@ -1439,7 +1439,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          }
 
          // convert pan2 to width
-         if (sc.filterblock_configuration.val.i == fb_stereo)
+         if (sc.filterblock_configuration.val.i == fc_stereo)
          {
             float pan1 = sc.pan.val.f;
             float pan2 = sc.width.val.f;
