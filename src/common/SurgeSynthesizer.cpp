@@ -1564,7 +1564,6 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             case fut_comb:
             default:
                storage.getPatch().param_ptr[index + 1]->val.i = 0;
-               storage.getPatch().param_ptr[index + 1]->val.i = 0;
                break;
             }
          }

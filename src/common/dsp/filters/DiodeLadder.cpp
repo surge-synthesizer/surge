@@ -185,9 +185,20 @@ namespace DiodeLadderFilter
             getFO(beta2,   hg, feedback2, f->R[dlf_z2]), f->R[dlf_z2]);
       const __m128 result3 = doLpf(result2, f->C[dlf_alpha], beta3, gamma3,   hg, f->C[dlf_G4], half, feedback3,
             getFO(beta3,   hg, feedback3, f->R[dlf_z3]), f->R[dlf_z3]);
-      const __m128 result  = doLpf(result3, f->C[dlf_alpha], beta4,    one, zero,         zero, half, zero,
+      const __m128 result4 = doLpf(result3, f->C[dlf_alpha], beta4,    one, zero,         zero, half, zero,
             getFO(beta4, zero,      zero, f->R[dlf_z4]), f->R[dlf_z4]);
 
-      return result;
+      // copying the QuadFilterUnit.cpp/LPMOOGquad implementation here.
+      // Means that the whole quad will return the same subtype... but apparently This Is Fine.
+      switch(f->WP[0] & 3){
+         case 0:
+            return result1; // 6dB/oct
+         case 1:
+            return result2; // 12dB/oct
+         case 2:
+            return result3; // 18dB/oct
+         default:
+            return result4;  // 24dB/oct
+      }
    }
 }
