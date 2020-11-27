@@ -2872,7 +2872,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   if( isCombOnSubtype )
                   {
                      contextMenu->addSeparator();
-                     auto m = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Correctly Tune Comb Filter" ),
+                     auto m = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Precise Tuning" ),
                                               [this]() {
                                                  synth->storage.getPatch().correctlyTuneCombFilter = ! synth->storage.getPatch().correctlyTuneCombFilter;
                                               });

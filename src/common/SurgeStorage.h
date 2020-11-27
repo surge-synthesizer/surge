@@ -902,11 +902,11 @@ public:
    int currentSynthStreamingRevision;
 
    /*
-   * This parameter exists for the very special reason of maintaing compatability with
-   * comb filter tuning for streaming versions which are older than the 1.8 vingate surge.
-   * Prior to that the comb filter had a calculation error in the time and was out of tume
-   * but that lead toa unique sound in some classic patches. So we introduce this parameter
-   * which allows us to leave old patchs mis-tuned in FilterCoefficientMaker and is handled
+   * This parameter exists for the very special reason of maintaing compatibility with
+   * comb filter tuning for streaming versions which are older than Surge v1.8.
+   * Prior to that, the comb filter had a calculation error in the time and was out of tune,
+   * but that lead to a unique sound in existing patches. So we introduce this parameter
+   * which allows us to leave old patches mis-tuned in FilterCoefficientMaker and is handled
    * properly at stream time and so on.
    */
    bool correctlyTuneCombFilter = true;
