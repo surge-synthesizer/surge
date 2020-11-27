@@ -434,9 +434,13 @@ void FilterCoefficientMaker::Coeff_LP4L(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
 {
-   float dtime = (1.f / 440.f) * storage->note_to_pitch_ignoring_tuning(-freq);
-   dtime = dtime * dsamplerate_os -
-           FIRoffset; // 1 sample for feedback, 1 sample for the IIR-filter without resonance
+   float dtime = (1.f / 440.f) * storage->note_to_pitch_inv_ignoring_tuning(freq);
+   dtime = dtime * dsamplerate_os;
+
+   // See comment in SurgeStorage and issue #3248
+   if( ! storage->_patch->correctlyTuneCombFilter)
+      dtime -= FIRoffset;
+
    dtime = limit_range(dtime, (float)FIRipol_N, (float)MAX_FB_COMB - FIRipol_N);
    reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
 
