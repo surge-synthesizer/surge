@@ -378,7 +378,12 @@ void SurgeSynthesizer::savePatch()
    fs::path filename = savepath;
    filename /= string_to_path(legalname + ".fxp");
 
-   if (fs::exists(filename))
+   bool checkExists = true;
+#if LINUX
+    // Overwrite prompt hangs UI in Bitwig 3.3
+   checkExists = (hostProgram.find( "bitwig" ) != std::string::npos );
+#endif
+   if( checkExists && fs::exists( filename ) )
    {
        if( Surge::UserInteractions::promptOKCancel(std::string( "The patch '" + storage.getPatch().name + "' already exists in '" + storage.getPatch().category
                                                                 + "'. Are you sure you want to overwrite it?" ),
