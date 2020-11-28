@@ -16,14 +16,14 @@ static std::vector<std::string> fxnm =
   "chorus", "flanger", "phaser", "rotary",
   "delay", "reverb1", "reverb2",
 
-  "eq", "dist", "cond", "freq", "ring", "voco",
+  "eq", "dist", "cond", "freq", "ring", "voco", "airwin"
 };
 static std::vector<int> fxt =
 { 
   fxt_chorus4, fxt_flanger, fxt_phaser, fxt_rotaryspeaker,
   fxt_delay, fxt_reverb, fxt_reverb2,
 
-  fxt_eq, fxt_distortion, fxt_conditioner, fxt_freqshift, fxt_ringmod, fxt_vocoder,
+  fxt_eq, fxt_distortion, fxt_conditioner, fxt_freqshift, fxt_ringmod, fxt_vocoder, fxt_airwindows
 };
 
 //==============================================================================
@@ -37,7 +37,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor (SurgefxAudioProcessor&
     setSize (500, 55 * 6 + 150);
     setResizable(false, false); // For now
 
-    for( int i=0; i<n_fx_params; ++i )
+    for( int i=0; i<n_fx_params; ++ i )
     {
         fxParamSliders[i].setRange(0.0, 1.0, 0.001 );
         fxParamSliders[i].setValue(processor.getFXStorageValue01(i), NotificationType::dontSendNotification);
