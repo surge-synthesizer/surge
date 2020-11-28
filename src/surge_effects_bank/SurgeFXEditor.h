@@ -44,7 +44,7 @@ private:
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
 
-    constexpr static int n_fx = 13;
+    constexpr static int n_fx = 14;
     TextButton selectType[n_fx]; // this had better match the list of fxnames in the constructor
     Slider fxTypeSlider;
 

@@ -208,6 +208,7 @@ public:
     void updateJuceParamsFromStorage();
     
     void resetFxType(int t, bool updateJuceParams = true);
+    void resetFxParams( bool updateJuceParams = true );
     
 private:
     //==============================================================================

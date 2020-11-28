@@ -10,11 +10,7 @@
 
 #include "SurgeFXProcessor.h"
 #include "SurgeFXEditor.h"
-
-#if LINUX
-extern unsigned char configurationXmlStart[];
-
-#endif
+#include "DebugHelpers.h"
 
 //==============================================================================
 SurgefxAudioProcessor::SurgefxAudioProcessor()
@@ -42,7 +38,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         addParameter(fxParams[i] = new AudioParameterFloat(lb, nm, 0.f, 1.f, fxstorage->p[fx_param_remap[i]].get_value_f01() ) );
         fxBaseParams[i] = fxParams[i];
     }
-    addParameter(fxType = new AudioParameterInt("fxtype", "FX Type", fxt_delay, fxt_ringmod, effectNum ));
+    addParameter(fxType = new AudioParameterInt("fxtype", "FX Type", fxt_delay, fxt_airwindows, effectNum ));
     fxBaseParams[n_fx_params] = fxType;
 
     for( int i=0; i<n_fx_params; ++i )
@@ -162,6 +158,11 @@ void SurgefxAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer
     if( resettingFx ) return;
     
     ScopedNoDenormals noDenormals;
+
+    if( surge_effect->checkHasInvalidatedUI() )
+    {
+       resetFxParams(true);
+    }
 
     float thisBPM = 120.0;
     auto playhead = getPlayHead();
@@ -329,39 +330,45 @@ void SurgefxAudioProcessor::reorderSurgeParams() {
     
     // I hate having to use this API so much...
     for (auto i = 0; i < n_fx_params; ++i) {
-        int fpos = fxstorage->p[fx_param_remap[i]].posy +
-            10 * fxstorage->p[fx_param_remap[i]].posy_offset;
-        for (auto j = 0; j < n_fx_params; ++j) {
-            if (surge_effect->group_label(j) &&
-                162 + 8 + 10 * surge_effect->group_label_ypos(j) <
-                fpos // constants for SurgeGUIEditor. Sigh.
-                ) {
+       if( fxstorage->p[fx_param_remap[i]].ctrltype == ct_none )
+       {
+          group_names[i] = "-";
+       }
+       else
+       {
+          int fpos = i + fxstorage->p[fx_param_remap[i]].posy / 10 + fxstorage->p[fx_param_remap[i]].posy_offset;
+          for (auto j = 0; j < n_fx_params; ++j)
+          {
+             if (surge_effect->group_label(j) &&
+                 surge_effect->group_label_ypos(j) <= fpos // constants for SurgeGUIEditor. Sigh.
+             )
+             {
                 group_names[i] = surge_effect->group_label(j);
-            }
-        }
+             }
+          }
+       }
     }
-
-    for( auto i=0; i<n_fx_params; ++i)
-        if( fxstorage->p[fx_param_remap[i]].ctrltype == ct_none )
-            group_names[i] = "-";
 }
 
 void SurgefxAudioProcessor::resetFxType(int type, bool updateJuceParams)
 {
-    resettingFx = true;
-    effectNum = type;
-    fxstorage->type.val.i = effectNum;
+   resettingFx = true;
+   effectNum = type;
+   fxstorage->type.val.i = effectNum;
 
-    for( int i=0; i<n_fx_params; ++i )
-        fxstorage->p[i].set_type(ct_none);
-    
-    surge_effect.reset(spawn_effect(effectNum, storage.get(),
-                                    &(storage->getPatch().fx[0]),
-                                    storage->getPatch().globaldata));
-    surge_effect->init();
-    surge_effect->init_ctrltypes();
-    surge_effect->init_default_values();
+   for (int i = 0; i < n_fx_params; ++i)
+      fxstorage->p[i].set_type(ct_none);
 
+   surge_effect.reset(spawn_effect(effectNum, storage.get(), &(storage->getPatch().fx[0]),
+                                   storage->getPatch().globaldata));
+   surge_effect->init();
+   surge_effect->init_ctrltypes();
+   surge_effect->init_default_values();
+   resetFxParams(updateJuceParams);
+}
+
+void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
+{
     reorderSurgeParams();
 
     /*
