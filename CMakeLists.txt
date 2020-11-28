@@ -1332,10 +1332,14 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
           TARGET_HEADLESS=1
           )
 
+  # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
+  # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
+  add_library(surge-fx-userint src/surge_effects_bank/UserInteractionsJUCE.cpp )
+  target_include_directories(surge-fx-userint PRIVATE ${SURGE_COMMON_INCLUDES})
+
   target_sources(surge-fx PRIVATE
           src/surge_effects_bank/SurgeFXEditor.cpp
           src/surge_effects_bank/SurgeFXProcessor.cpp
-          src/surge_effects_bank/UserInteractionsJUCE.cpp
           ${SURGE_GENERATED_SOURCES}
           ${SURGE_OS_SOURCES}
           )
@@ -1346,6 +1350,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
           surge::tinyxml
 
           surge-shared
+          surge-fx-userint
           surge-fx-binary
 
           juce::juce_audio_utils
