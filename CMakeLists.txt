@@ -249,6 +249,11 @@ set(SURGE_SHARED_SOURCES
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp
+
+  src/common/SkinModel.cpp
+  src/common/SkinModelImpl.cpp
+  src/common/SkinColors.cpp
+
   libs/strnatcmp/strnatcmp.cpp
   src/common/dsp/FastMath.h
   src/common/dsp/AdsrEnvelope.h
@@ -260,10 +265,6 @@ set(SURGE_SYNTH_SOURCES
   src/common/SurgeSynthesizer.cpp
   src/common/SurgeSynthesizerIDManagement.cpp
   src/common/SurgeSynthesizerIO.cpp
-
-  src/common/SkinModel.cpp
-  src/common/SkinModelImpl.cpp
-  src/common/SkinColors.cpp
   )
 
 set(SURGE_GENERATED_SOURCES
@@ -1006,8 +1007,8 @@ if( BUILD_HEADLESS )
   # Temporarily disable libsndfile which we don't use anyway, but we don't have a link for on arm
   # find_package(LibSndFile ${PACKAGE_OPTION})
   if(NOT LIBSNDFILE_FOUND)
-    message("-- LibSndFile not installed; building without wav support")
-    message("-- You can 'brew install libsndfile' or 'apt-get install libsndfile1-dev'")
+    #message("-- LibSndFile not installed; building without wav support")
+    #message("-- You can 'brew install libsndfile' or 'apt-get install libsndfile1-dev'")
   else()
     target_compile_definitions(surge-headless
       PRIVATE
@@ -1276,10 +1277,118 @@ if( ${BUILD_SVGSHOW} )
   add_subdirectory( utils/svgshow )
 endif()
 
+#
+# Various JUCE targets we build in the shared source environment
+#
 if( ${BUILD_SURGE_JUCE_PLUGINS} )
   include( cmake/get-juce.cmake )
+
+  message( STATUS "Building JUCE targets with ${JUCE_LIB_DIR}" )
   add_subdirectory( ${JUCE_LIB_DIR} )
-  add_subdirectory( src/juce_adapter )
+
+  juce_add_plugin(surge-fx
+          PRODUCT_NAME "SurgeEffectsBank"
+          COMPANY_NAME "Surge Synth Team"
+          BUNDLE_ID "org.surge-synth-team.surge-fx"
+          PLUGIN_MANUFACTURER_CODE VmbA
+          PLUGIN_CODE SFXB
+
+          IS_SYNTH FALSE
+          NEEDS_MIDI_INPUT FALSE
+          NEEDS_MIDI_OUTPUT FALSE
+          IS_MIDI_EFFECT FALSE
+
+          FORMATS AU VST3 Standalone
+          )
+
+  juce_generate_juce_header( surge-fx )
+
+  file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
+          resources/surge_effects_bank/*.svg
+          )
+
+  juce_add_binary_data( surge-fx-binary
+          SOURCES ${SURGE_FX_BANK_RESOURCES_GLOB}
+          )
+  set_target_properties(surge-fx-binary PROPERTIES
+          POSITION_INDEPENDENT_CODE TRUE
+          )
+
+  target_compile_definitions(surge-fx PUBLIC
+          JUCE_ALLOW_STATIC_NULL_VARIABLES=0
+          JUCE_STRICT_REFCOUNTEDPOINTER=1
+
+          JUCE_VST3_CAN_REPLACE_VST2=0
+          JUCE_USE_CURL=0
+          JUCE_WEB_BROWSER=0
+          JUCE_USE_CAMERA=disabled
+
+          JUCE_DISPLAY_SPLASH_SCREEN=0
+          JUCE_REPORT_APP_USAGE=0
+
+          JUCE_ALSA=1
+          JUCE_JACK=1
+
+          TARGET_HEADLESS=1
+          )
+
+  target_sources(surge-fx PRIVATE
+          src/surge_effects_bank/SurgeFXEditor.cpp
+          src/surge_effects_bank/SurgeFXProcessor.cpp
+          src/surge_effects_bank/UserInteractionsJUCE.cpp
+          ${SURGE_GENERATED_SOURCES}
+          ${SURGE_OS_SOURCES}
+          )
+
+  target_link_libraries(surge-fx PRIVATE
+          surge::airwindows
+          surge::filesystem
+          surge::tinyxml
+
+          surge-shared
+          surge-fx-binary
+
+          juce::juce_audio_utils
+          juce::juce_audio_processors
+          )
+
+  target_include_directories(surge-fx PRIVATE
+          src/surge_effects_bank
+          ${SURGE_COMMON_INCLUDES}
+          ${OS_INCLUDE_DIRECTORIES}
+          )
+
+  target_compile_definitions(surge-fx PRIVATE ${OS_COMPILE_DEFINITIONS} )
+
+  get_target_property( SURGE_FX_OUTPUT_DIR surge-fx RUNTIME_OUTPUT_DIRECTORY )
+
+  add_custom_target( Surge-Effects-Bank-Packaged ALL )
+  add_dependencies( Surge-Effects-Bank-Packaged surge-fx_All )
+  add_dependencies( Surge-Effects-Bank-Packaged surge-fx_VST3 )
+  add_dependencies( Surge-Effects-Bank-Packaged surge-fx_Standalone )
+
+  add_custom_command(
+          TARGET Surge-Effects-Bank-Packaged
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Re-locating VST3 and Standalone components"
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/VST3 ${SURGE_PRODUCT_DIR}/
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/Standalone ${SURGE_PRODUCT_DIR}/
+  )
+
+  if( APPLE )
+    add_dependencies( Surge-Effects-Bank-Packaged surge-fx_AU )
+
+    add_custom_command(
+          TARGET Surge-Effects-Bank-Packaged
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Re-locating AU components"
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/AU ${SURGE_PRODUCT_DIR}/
+    )
+  endif()
+
+
 endif()
 
 # Hack: For now, native Windows binaries need implicit globals.h.
