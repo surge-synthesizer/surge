@@ -5904,10 +5904,16 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::Vie
    // we want cratio == tration by adjusting height so
    // WSX / WSY = gW / gH
    // gH = gW * WSY / WSX
-
-   float newHeight = 1.0 * newSize->getWidth() * getWindowSizeY() / getWindowSizeX();
-   newSize->bottom = newSize->top + std::ceil(newHeight);
-   return Steinberg::kResultTrue;
+   if( synth->hostProgram.find( "Fruit" ) != std::string::npos ) // see #2466
+   {
+       return EditorType::checkSizeConstraint(newSize);
+   }
+   else
+   {
+      float newHeight = 1.0 * newSize->getWidth() * getWindowSizeY() / getWindowSizeX();
+      newSize->bottom = newSize->top + std::ceil(newHeight);
+      return Steinberg::kResultTrue;
+   }
 }
 
 #endif
