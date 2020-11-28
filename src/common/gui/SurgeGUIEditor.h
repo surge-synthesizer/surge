@@ -128,6 +128,8 @@ public:
       return Steinberg::kResultTrue;
    }
 
+   void resizeFromIdleSentinel();
+
    bool initialZoom();
    virtual Steinberg::tresult PLUGIN_API onSize(Steinberg::ViewRect* newSize) override;
    virtual Steinberg::tresult PLUGIN_API checkSizeConstraint(Steinberg::ViewRect* newSize) override;
@@ -346,6 +348,9 @@ public:
 
    int oscilatorMenuIndex[n_scenes][n_oscs] = {0};
 
+   bool hasIdleRun = false;
+   VSTGUI::CPoint resizeToOnIdle = VSTGUI::CPoint(-1,-1);
+
 private:
    SGEDropAdapter *dropAdapter = nullptr;
    friend class SGEDropAdapter;
@@ -356,6 +361,7 @@ private:
 
    int wsx = BASE_WINDOW_SIZE_X;
    int wsy = BASE_WINDOW_SIZE_Y;
+
 
    /**
     * findLargestFittingZoomBetween
