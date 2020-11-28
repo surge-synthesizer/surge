@@ -273,6 +273,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto hs = hotzone();
          hs.type = hotzone::Type::LOOPMARKER;
          hs.segmentDirection = hotzone::HORIZONTAL_ONLY;
+         hs.associatedSegment = -1;
 
          auto he = hs;
 
@@ -616,11 +617,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       updateVTicks();
       for( auto vp : vTicks )
       {
-         float p = valpx(vp.first);
+         float p = valpx(std::get<0>(vp));
 
          float off = vaxisArea.getWidth() / 2;
 
-         if (vp.second)
+         if (std::get<2>(vp))
             off = 0;
 
          if( off == 0 )
@@ -633,7 +634,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          if( off == 0 )
          {
             char txt[16];
-            auto value = vp.first;
+            auto value = std::get<1>(vp);
 
             if (value == 0.f && std::signbit(value))
                 value = -value;
@@ -695,13 +696,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       for( int i=startPoint; i<=endPoint; ++i )
       {
          float f = i * dStep;
+         bool isInt = fabs( f - round( f ) ) < 1e-4;
 
-         hTicks.push_back( std::make_pair( f, 0 ) );
+         hTicks.push_back( std::make_pair( f, isInt ? kHighlight : 0 ) );
       }
 
    }
 
-   std::vector<std::pair<float,bool>> vTicks;
+   std::vector<std::tuple<float,float,bool>> vTicks; // position, display, is highlight
    float vTickAsOf = -1;
    void updateVTicks()
    {
@@ -751,7 +753,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   doDraw = false;
             }
             if( doDraw )
-               vTicks.push_back( std::make_pair(val, vi == 0 || vi == start || vi == end - 1 ) );
+            {
+               // Little secret: Unipolar is just a relabeled Bipolars
+               float pval = val;
+               if( uni )
+               {
+                  pval = val * 2 - 1;
+               }
+               vTicks.push_back(std::make_tuple(pval, val, vi == 0 || vi == start || vi == end - 1));
+            }
          }
       }
    }
@@ -905,10 +915,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       updateVTicks();
       for( auto vp : vTicks )
       {
-         float val = vp.first;
+         float val = std::get<0>( vp );
          float v = valpx(val);
 
-         if ( vp.second )
+         if ( std::get<2>(vp) )
          {
             dc->setFrameColor(primaryGridColor);
             dc->setLineStyle(kLineSolid);
@@ -1058,11 +1068,23 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
       if (buttons & kRButton)
       {
-         openPopup( where );
+         auto da = getDrawArea();
+         if( da.pointInside( where ) )
+         {
+            openPopup(where);
+         }
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
       }
       if (buttons & kDoubleClick)
       {
+         auto ha = getHAxisArea();
+         if( ha.pointInside( where ) )
+         {
+            zoomToFull();
+            return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+         }
+
+         auto da = getDrawArea();
          auto tf = pxToTime( );
          auto t = tf( where.x );
          auto pv = pxToVal();
@@ -1200,10 +1222,26 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    virtual CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons ) override {
       auto tf = pxToTime( );
       auto t = tf( where.x );
-      auto ohs = hoveredSegment;
-      hoveredSegment = Surge::MSEG::timeToSegment(ms, t);
-      if( hoveredSegment != ohs )
-         invalid();
+      auto da = getDrawArea();
+
+      if( da.pointInside( where ) )
+      {
+         auto ohs = hoveredSegment;
+         if (t < 0)
+         {
+            hoveredSegment = 0;
+         }
+         else if (t >= ms->totalDuration)
+         {
+            hoveredSegment = std::max(0, ms->n_activeSegments - 1);
+         }
+         else
+         {
+            hoveredSegment = Surge::MSEG::timeToSegment(ms, t);
+         }
+         if (hoveredSegment != ohs)
+            invalid();
+      }
 
       if( inDrawDrag )
       {
@@ -1255,7 +1293,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       for( auto &h : hotzones )
       {
          if( h.dragging ) {
-            hoveredSegment = h.associatedSegment;
+            if( h.associatedSegment >= 0 )
+               hoveredSegment = h.associatedSegment;
             continue;
          }
          
@@ -1267,7 +1306,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                flip = true;
             }
 
-            hoveredSegment = h.associatedSegment;
+            if( h.associatedSegment >= 0 )
+               hoveredSegment = h.associatedSegment;
          }
          else
          {
@@ -1466,10 +1506,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       // std::cout << "ZOOM by " << amount <<  " AT " << where.x << " " << t << std::endl;
    }
 
+   void zoomToFull()
+   {
+      zoomOutTo( ms->totalDuration );
+   }
+
    void zoomOutTo(float duration)
    {
       axisStart = 0.f;
-      axisWidth = (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? std::max(0.1f, duration) : 1.f;
+      axisWidth = (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? std::max(1.0f, duration) : 1.f;
       modelChanged(0, false);
    }
 
@@ -1987,6 +2032,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
             addcb(Surge::UI::toOSCaseForMenu("Edit Value") + ": Off", [pControl, this]() {
                pControl->setValue( 0 );
                pControl->valueChanged();
+               pControl->invalid();
                canvas->invalid();
                invalid();
             });
@@ -1996,6 +2042,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
             addcb(Surge::UI::toOSCaseForMenu("Edit Value") + ": On", [pControl, this]() {
                pControl->setValue( 1 );
                pControl->valueChanged();
+               pControl->invalid();
                canvas->invalid();
                invalid();
             });
@@ -2008,6 +2055,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
             auto val = op.second;
             auto men = addcb(op.first, [val, pControl, this]() {
                pControl->setValue(val);
+               pControl->invalid();
                pControl->valueChanged();
             });
             if (val == pControl->getValue())
@@ -2213,6 +2261,10 @@ struct MSEGMainEd : public CViewContainer {
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 750, 365) )
 {
    // Leave these in for now
+   if( ms->n_activeSegments <= 0 ) // This is an error state! Compensate
+   {
+      Surge::MSEG::createInitMSEG(ms);
+   }
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );
    addView( new MSEGMainEd( getViewSize(), storage, lfodata, ms, eds, skin, b ) );
