@@ -1,5 +1,4 @@
 #include "globals.h"
-#include "K35.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 #include "DebugHelpers.h"
@@ -8,7 +7,7 @@
 #include "FastMath.h"
 
 /*
-** This contains various adaptations of the models found at
+** This contains an adaptation of the filter from
 ** https://github.com/TheWaveWarden/odin2/blob/master/Source/audio/Filters/Korg35Filter.cpp
 */
 
@@ -144,7 +143,6 @@ namespace K35Filter
 
       return result;
    }
-#undef overdrive
 #undef F
 #undef M
 #undef D

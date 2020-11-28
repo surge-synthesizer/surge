@@ -1,5 +1,4 @@
 #include "globals.h"
-#include "K35.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 #include "DebugHelpers.h"
@@ -8,7 +7,7 @@
 #include "FastMath.h"
 
 /*
-** This contains various adaptations of the models found at
+** This contains an adaptation of the filter from
 ** https://github.com/TheWaveWarden/odin2/blob/master/Source/audio/Filters/DiodeFilter.cpp
 */
 
@@ -110,14 +109,11 @@ namespace DiodeLadderFilter
       cm->FromDirect(C);
    }
 
-#define process_coeffs() \
-   for(int i=0; i < n_cm_coeffs; ++i){ \
-      f->C[i] = A(f->C[i], f->dC[i]); \
-   }
-
    __m128 process( QuadFilterUnitState * __restrict f, __m128 input )
    {
-      process_coeffs();
+      for(int i=0; i < n_cm_coeffs; ++i){ \
+         f->C[i] = A(f->C[i], f->dC[i]); \
+      }
 
       // hopefully the optimiser will take care of the duplicatey bits
       
@@ -188,17 +184,18 @@ namespace DiodeLadderFilter
       const __m128 result4 = doLpf(result3, f->C[dlf_alpha], beta4,    one, zero,         zero, half, zero,
             getFO(beta4, zero,      zero, f->R[dlf_z4]), f->R[dlf_z4]);
 
-      // copying the QuadFilterUnit.cpp/LPMOOGquad implementation here.
-      // Means that the whole quad will return the same subtype... but apparently This Is Fine.
+      // Just like in QuadFilterUnit.cpp/LPMOOGquad, it's fine for the whole quad to return the same subtype
+      // because integer parameters like f->WP are not modulatable and QuadFilterUnit is only parallel across
+      // voices, so it would have been the same for each part of the quad anyway.
       switch(f->WP[0] & 3){
          case 0:
             return M(result1, F(0.125)); // 6dB/oct
          case 1:
-            return M(result2, F(0.3)); // 12dB/oct
+            return M(result2, F(0.3));   // 12dB/oct
          case 2:
-            return M(result3, F(0.6)); // 18dB/oct
+            return M(result3, F(0.6));   // 18dB/oct
          default:
-            return M(result4, F(1.2));  // 24dB/oct
+            return M(result4, F(1.2));   // 24dB/oct
       }
    }
 }
