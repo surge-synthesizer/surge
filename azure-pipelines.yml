@@ -138,7 +138,6 @@ jobs:
         sudo apt-get install -y alsa
         sudo apt-get install -y alsa-tools
         sudo apt-get install -y libasound2-dev
-        sudo apt-get install -y jack
         sudo apt-get install -y libjack-dev
         sudo apt-get install -y libfreetype6-dev
         sudo apt-get install -y libxinerama-dev
