@@ -75,7 +75,7 @@ void promptFileOpenDialog(const std::string& initialDirectory,
 			  bool od, bool cd,
                           SurgeGUIEditor* guiEditor)
 {
-   UserInteractions::promptError("OpenFileDialog is unimplemented in this version of Surge. Sorry!",
+   UserInteractions::promptError("Open file dialog is not implemented in this version of Surge. Sorry!",
                                  "Unimplemented Function", guiEditor);
 }
 };
