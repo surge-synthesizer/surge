@@ -966,7 +966,7 @@ void createInitMSEG(MSEGStorage* ms)
    ms->segments[0].cpv = 0.f;
    ms->segments[0].cpduration = 0.5;
    ms->segments[0].v0 = 1.f;
-   ms->segments[0].nv1 = 0.f;
+   ms->segments[0].nv1 = -1.f;
    ms->endpointMode = MSEGStorage::EndpointMode::FREE;
 
    Surge::MSEG::rebuildCache(ms);
