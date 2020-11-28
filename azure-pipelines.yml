@@ -25,6 +25,11 @@ jobs:
         cmakeArguments: "-GXcode -D\"CMAKE_OSX_ARCHITECTURES=arm64;x86_64\""
         cmakeTarget: "Surge-AU-Packaged"
         xcodePath: "/Applications/Xcode_12.2.app"
+      macOS-fxbank:
+        imageName: 'macos-10.15'
+        isWindows: True
+        cmakeArguments: "-GXcode -DBUILD_SURGE_JUCE_PLUGINS=True"
+        cmakeTarget: "Surge-Effects-Bank-Packaged"
       windows-x64:
         imageName: 'windows-2019'
         isWindows: True
@@ -41,6 +46,11 @@ jobs:
         isWindowsUnitTest: True
         cmakeArguments: "-A x64"
         cmakeTarget: "surge-headless"
+      windows-fxbank:
+        imageName: 'windows-2019'
+        isWindows: True
+        cmakeArguments: "-A x64 -DBUILD_SURGE_JUCE_PLUGINS=True"
+        cmakeTarget: "Surge-Effects-Bank-Packaged"
       linux-vst3:
         imageName: 'ubuntu-20.04'
         isLinux: True
@@ -53,6 +63,11 @@ jobs:
         aptGetExtras: ""
         cmakeArguments: "-GNinja"
         cmakeTarget: "Surge-LV2-Packaged"
+      linux-fxbank:
+        imageName: 'ubuntu-20.04'
+        isWindows: True
+        cmakeArguments: "-GNinja -DBUILD_SURGE_JUCE_PLUGINS=True"
+        cmakeTarget: "Surge-Effects-Bank-Packaged"
       linux-clang:
         imageName: 'ubuntu-20.04'
         isLinux: True
