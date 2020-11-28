@@ -1536,10 +1536,11 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
    }
 
    // restore msegs
-   for (auto& ms : msegs )
-      for (auto& l : ms )
+   for (int s=0;s<n_scenes;++s)
+      for (int m=0; m<n_lfos; ++m )
       {
-         ms->n_activeSegments = 0;
+         auto *ms = &( msegs[s][m] );
+         Surge::MSEG::createInitMSEG(ms);
          Surge::MSEG::rebuildCache(ms);
       }
 
