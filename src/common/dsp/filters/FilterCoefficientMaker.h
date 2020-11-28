@@ -1,3 +1,7 @@
+/*
+ * For documentation see QuadFilterChain.h
+ */
+
 #pragma once
 #include "SurgeStorage.h"
 

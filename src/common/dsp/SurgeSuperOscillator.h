@@ -18,7 +18,7 @@
 #include "OscillatorBase.h"
 #include "DspUtilities.h"
 #include <vt_dsp/lipol.h>
-#include "BiquadFilter.h"
+#include "dsp/filters/BiquadFilter.h"
 
 class SurgeSuperOscillator : public AbstractBlitOscillator
 {

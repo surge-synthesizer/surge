@@ -15,7 +15,7 @@
 
 #include "SurgeVoice.h"
 #include "DspUtilities.h"
-#include "QuadFilterChain.h"
+#include "dsp/filters/QuadFilterChain.h"
 #include <math.h>
 
 using namespace std;

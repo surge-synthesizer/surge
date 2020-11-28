@@ -3,7 +3,7 @@
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
 #include <vt_dsp/lipol.h>
-#include "BiquadFilter.h"
+#include "dsp/filters/BiquadFilter.h"
 
 #include "OscillatorBase.h"
 

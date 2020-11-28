@@ -17,7 +17,7 @@
 #include "SurgeStorage.h"
 #include "SurgeVoice.h"
 #include "effect/Effect.h"
-#include "BiquadFilter.h"
+#include "dsp/filters/BiquadFilter.h"
 #include "UserInteractions.h"
 
 struct QuadFilterChainState;

@@ -15,11 +15,11 @@
 
 #pragma once
 #include "Effect.h"
-#include "BiquadFilter.h"
+#include "dsp/filters/BiquadFilter.h"
 #include "DspUtilities.h"
-#include "AllpassFilter.h"
+#include "dsp/filters/AllpassFilter.h"
 
-#include "VectorizedSvfFilter.h"
+#include "dsp/filters/VectorizedSvfFilter.h"
 
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>

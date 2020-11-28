@@ -20,8 +20,8 @@
 #include "AdsrEnvelope.h"
 #include "LfoModulationSource.h"
 #include <vt_dsp/lipol.h>
-#include "FilterCoefficientMaker.h"
-#include "QuadFilterChain.h"
+#include "dsp/filters/FilterCoefficientMaker.h"
+#include "dsp/filters/QuadFilterChain.h"
 #include <array>
 
 struct QuadFilterChainState;

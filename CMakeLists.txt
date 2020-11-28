@@ -217,22 +217,22 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/filters/DiodeLadder.cpp
   src/common/dsp/filters/NonlinearFeedback.cpp
   src/common/dsp/AudioInputOscillator.cpp
-  src/common/dsp/BiquadFilter.cpp
-  src/common/dsp/BiquadFilterSSE2.cpp
+        src/common/dsp/filters/BiquadFilter.cpp
+        src/common/dsp/filters/BiquadFilterSSE2.cpp
   src/common/dsp/DspUtilities.cpp
-  src/common/dsp/FilterCoefficientMaker.cpp
+        src/common/dsp/filters/FilterCoefficientMaker.cpp
   src/common/dsp/FM2Oscillator.cpp
   src/common/dsp/FM3Oscillator.cpp
   src/common/dsp/LfoModulationSource.cpp
   src/common/dsp/MSEGModulationHelper.cpp
   src/common/dsp/Oscillator.cpp
-  src/common/dsp/QuadFilterChain.cpp
-  src/common/dsp/QuadFilterUnit.cpp
+        src/common/dsp/filters/QuadFilterChain.cpp
+        src/common/dsp/filters/QuadFilterUnit.cpp
   src/common/dsp/SampleAndHoldOscillator.cpp
   src/common/dsp/SineOscillator.cpp
   src/common/dsp/SurgeSuperOscillator.cpp
   src/common/dsp/SurgeVoice.cpp
-  src/common/dsp/VectorizedSvfFilter.cpp
+        src/common/dsp/filters/VectorizedSvfFilter.cpp
   src/common/dsp/Wavetable.cpp
   src/common/dsp/WavetableOscillator.cpp
   src/common/dsp/WindowOscillator.cpp

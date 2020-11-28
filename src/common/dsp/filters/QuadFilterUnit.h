@@ -1,4 +1,7 @@
-#include "FilterCoefficientMaker.h"
+/*
+ * For documentation see QuadFilterChain.h
+ */
+#include "dsp/filters/FilterCoefficientMaker.h"
 #pragma once
 #include "globals.h"
 
