@@ -1,5 +1,3 @@
-#include "globals.h"
-#include "K35.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 #include "DebugHelpers.h"
@@ -90,14 +88,11 @@ namespace NonlinearFeedbackFilter
       cm->FromDirect(C);
    }
 
-#define process_coeffs() \
-   for(int i=0; i < n_cm_coeffs; ++i){ \
-      f->C[i] = A(f->C[i], f->dC[i]); \
-   }
-
    __m128 process( QuadFilterUnitState * __restrict f, __m128 input )
    {
-      process_coeffs();
+      for(int i=0; i < n_cm_coeffs; ++i){ \
+         f->C[i] = A(f->C[i], f->dC[i]); \
+      }
 
       const __m128 result1 =
          doLpf(input,
