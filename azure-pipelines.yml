@@ -27,7 +27,7 @@ jobs:
         xcodePath: "/Applications/Xcode_12.2.app"
       macOS-fxbank:
         imageName: 'macos-10.15'
-        isWindows: True
+        isMac: True
         cmakeArguments: "-GXcode -DBUILD_SURGE_JUCE_PLUGINS=True"
         cmakeTarget: "Surge-Effects-Bank-Packaged"
       windows-x64:
@@ -65,7 +65,7 @@ jobs:
         cmakeTarget: "Surge-LV2-Packaged"
       linux-fxbank:
         imageName: 'ubuntu-20.04'
-        isWindows: True
+        isLinux: True
         cmakeArguments: "-GNinja -DBUILD_SURGE_JUCE_PLUGINS=True"
         cmakeTarget: "Surge-Effects-Bank-Packaged"
       linux-clang:
