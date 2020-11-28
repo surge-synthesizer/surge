@@ -1,4 +1,4 @@
-set( JUCE_LIB_VERSION 6.0.1 )
+set( JUCE_LIB_VERSION 6.0.4 )
 set( JUCE_REPO https://github.com/juce-framework/JUCE )
 set( JUCE_LIB_DIR ${CMAKE_SOURCE_DIR}/libs/juce-${JUCE_LIB_VERSION}/juce )
 
