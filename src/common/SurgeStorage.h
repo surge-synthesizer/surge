@@ -533,25 +533,32 @@ const char fut_nlf_subtypes[4][32] =
    "4 stages",
 };
 
+const char fut_nlf_passbands[3][3] =
+{
+   "LP",
+   "HP",
+   "N"
+};
+
 const int fut_subcount[n_fu_types] =
 {
-   0, // fut_none
-   3, // fut_lp12
-   3, // fut_lp24
-   4, // fut_lpmoog
-   3, // fut_hp12
-   3, // fut_hp24
-   6, // fut_bp12
-   4, // fut_br12
-   4, // fut_comb
-   0, // fut_SNH
-   4, // fut_vintageladder
-   8, // fut_obxd_2pole
-   4, // fut_obxd_4pole
-   5, // fut_k35_lp
-   5, // fut_k35_hp
-   4, // fut_diode
-   4  // fut_nonlinearfb
+   0,  // fut_none
+   3,  // fut_lp12
+   3,  // fut_lp24
+   4,  // fut_lpmoog
+   3,  // fut_hp12
+   3,  // fut_hp24
+   6,  // fut_bp12
+   4,  // fut_br12
+   4,  // fut_comb
+   0,  // fut_SNH
+   4,  // fut_vintageladder
+   8,  // fut_obxd_2pole
+   4,  // fut_obxd_4pole
+   5,  // fut_k35_lp
+   5,  // fut_k35_hp
+   4,  // fut_diode
+   12, // fut_nonlinearfb
 };
 
 enum fu_subtype
