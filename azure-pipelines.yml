@@ -63,11 +63,11 @@ jobs:
         aptGetExtras: ""
         cmakeArguments: "-GNinja"
         cmakeTarget: "Surge-LV2-Packaged"
-      #linux-fxbank:
-      #  imageName: 'ubuntu-20.04'
-      #  isLinux: True
-      #  cmakeArguments: "-GNinja -DBUILD_SURGE_JUCE_PLUGINS=True"
-      #  cmakeTarget: "Surge-Effects-Bank-Packaged"
+      linux-fxbank:
+        imageName: 'ubuntu-20.04'
+        isLinux: True
+        cmakeArguments: "-GNinja -DBUILD_SURGE_JUCE_PLUGINS=True"
+        cmakeTarget: "Surge-Effects-Bank-Packaged"
       linux-clang:
         imageName: 'ubuntu-20.04'
         isLinux: True
