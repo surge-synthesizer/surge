@@ -1007,14 +1007,21 @@ void SurgeVst3Processor::redraw(SurgeGUIEditor *e, bool resizeWindow)
     {
 		float fzf = e->getZoomFactor() / 100.0;
 		int width = e->getWindowSizeX() * fzf;
-		int heigth = e->getWindowSizeY() * fzf;
+		int height = e->getWindowSizeY() * fzf;
 
         frame->setZoom(fzf);
-        frame->setSize(width, heigth);
+        frame->setSize(width, height);
 
 		if (resizeWindow)
 		{
-			resize(e, width, heigth);
+                   if( ! e->hasIdleRun )
+                   {
+                      e->resizeToOnIdle = VSTGUI::CPoint( width, height );
+                   }
+                   else
+                   {
+                      resize(e, width, height);
+                   }
 		}
 
 		setExtraScaleFactor(frame->getBackground(), e->getZoomFactor());

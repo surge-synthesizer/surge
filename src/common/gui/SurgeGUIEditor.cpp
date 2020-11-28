@@ -435,6 +435,7 @@ void SurgeGUIEditor::idle()
 
    if (editor_open && frame && !synth->halt_engine)
    {
+      hasIdleRun = true;
       if( firstIdleCountdown )
       {
          // Linux VST3 in JUCE Hosts (maybe others?) sets up the run loop out of order, it seems
@@ -474,6 +475,10 @@ void SurgeGUIEditor::idle()
          setZoomFactor(getZoomFactor());
          zoomInvalid = false;
       }
+
+#if TARGET_VST3
+      resizeFromIdleSentinel();
+#endif
 
       /*static CDrawContext drawContext
         (frame, NULL, systemWindow);*/
@@ -1867,6 +1872,7 @@ void SurgeGUIEditor::close()
    _idleTimer->stop();
    _idleTimer = nullptr;
 #endif
+   hasIdleRun = false;
    firstIdleCountdown = 0;
 
 #if TARGET_VST3
@@ -5861,6 +5867,20 @@ bool SurgeGUIEditor::initialZoom()
         return true; 
     }
     return false;
+}
+
+void SurgeGUIEditor::resizeFromIdleSentinel()
+{
+   if (resizeToOnIdle.x > 10 && resizeToOnIdle.y > 10)
+   {
+      Steinberg::IPlugFrame* ipf = getIPlugFrame();
+      if (ipf)
+      {
+         Steinberg::ViewRect vr(0, 0, resizeToOnIdle.x, resizeToOnIdle.y);
+         Steinberg::tresult res = ipf->resizeView(this, &vr);
+         resizeToOnIdle = VSTGUI::CPoint(-1, -1);
+      }
+   }
 }
 
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
