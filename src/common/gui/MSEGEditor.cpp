@@ -82,7 +82,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       this->ms = ms;
       this->eds = eds;
       this->lfodata = lfodata;
-      this->axisWidth = ms->totalDuration;
+      this->axisWidth = std::max( 1.f, ms->totalDuration );
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_NODES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
@@ -1789,6 +1789,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
          }
       }
+      axisWidth = std::max( axisWidth, 0.05f );
    }
 
    int hoveredSegment = -1;
