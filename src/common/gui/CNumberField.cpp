@@ -588,7 +588,7 @@ CMouseEventResult CNumberField::onMouseDown(CPoint& where, const CButtonState& b
 
    if ((buttons & kLButton) && (drawsize.pointInside(where)))
    {
-      startCursorHide(where);
+      enqueueCursorHide = true;
       controlstate = cs_drag;
       lastmousepos = where;
       startmousepos = where;
@@ -603,6 +603,7 @@ CMouseEventResult CNumberField::onMouseDown(CPoint& where, const CButtonState& b
 }
 CMouseEventResult CNumberField::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+   enqueueCursorHide = false;
    if (controlstate)
    {
       endEdit();
@@ -615,6 +616,11 @@ CMouseEventResult CNumberField::onMouseMoved(CPoint& where, const CButtonState& 
 {
    if ((controlstate == cs_drag) && (buttons & kLButton))
    {
+      if( enqueueCursorHide )
+      {
+         startCursorHide(where);
+         enqueueCursorHide = false;
+      }
       float dx = where.x - lastmousepos.x;
       float dy = where.y - lastmousepos.y;
       

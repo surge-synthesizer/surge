@@ -189,6 +189,7 @@ private:
    int i_default;
    int i_poly;
    int labelplacement;
+   bool enqueueCursorHide = false;
    VSTGUI::CRect drawsize;
    VSTGUI::CPoint lastmousepos, startmousepos;
 

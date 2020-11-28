@@ -133,6 +133,8 @@ protected:
    VSTGUI::CPoint rmStepStart, rmStepCurr;
    VSTGUI::CPoint barDragTop;
 
+   bool enqueueCursorHide = false;
+
    int ss_shift_hover = 0;
    int lfo_type_hover = -1;
    CScalableBitmap *typeImg, *typeImgHover, *typeImgHoverOn;

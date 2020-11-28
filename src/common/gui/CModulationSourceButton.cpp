@@ -337,7 +337,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
       beginEdit();
       controlstate = cs_drag;
 
-      startCursorHide(where);
+      enqueueCursorHideIfMoved(where);
 
       return kMouseEventHandled;
    }
@@ -362,6 +362,8 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint& where, const CBut
 
 CMouseEventResult CModulationSourceButton::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+   unenqueueCursorHideIfMoved();
+
    if( controlstate == cs_swap && dragLabel )
    {
       dragLabel->setVisible( false );
