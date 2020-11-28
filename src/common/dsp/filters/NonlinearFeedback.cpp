@@ -1,4 +1,3 @@
-#include "globals.h"
 #include "QuadFilterUnit.h"
 #include "FilterCoefficientMaker.h"
 #include "DebugHelpers.h"

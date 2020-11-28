@@ -19,13 +19,10 @@
 */
 
 #include <math.h>
-#include "globals.h"
 #include "QuadFilterUnit.h"
 #include "SurgeStorage.h"
 #include "DebugHelpers.h"
 #include "FilterCoefficientMaker.h"
-#include "globals.h"
-
 
 namespace ObxdFilter {
 
