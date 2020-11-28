@@ -124,6 +124,7 @@ protected:
 
    int draggedStep = -1;
    int keyModMult = 0;
+   bool forcedCursorToMSEGHand = false;
 
 
    bool draggedIntoTrigTray[16];

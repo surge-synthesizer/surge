@@ -60,6 +60,11 @@ void CLFOGui::draw(CDrawContext* dc)
    assert(storage);
    assert(ss);
 
+   if( forcedCursorToMSEGHand && lfodata->shape.val.i != lt_mseg )
+   {
+      getFrame()->setCursor(kCursorDefault);
+   }
+
    auto size = getViewSize();
    CRect outer(size);
    outer.inset(margin, margin);
@@ -1467,15 +1472,19 @@ CMouseEventResult CLFOGui::onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CB
 
 CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
+   forcedCursorToMSEGHand = false;
    if (lfodata->shape.val.i == lt_mseg)
    {
       auto displayrect = getViewSize();
       displayrect.left += lpsize + 19;
 
       if (displayrect.pointInside(where))
+      {
+         forcedCursorToMSEGHand = true;
          getFrame()->setCursor(VSTGUI::kCursorHand);
-      else
+      } else {
          getFrame()->setCursor(VSTGUI::kCursorDefault);
+      }
    }
 
    int plt = lfo_type_hover;
