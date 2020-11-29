@@ -646,7 +646,7 @@ void Parameter::set_type(int ctrltype)
    case ct_filtersubtype:
       valtype = vt_int;
       val_min.i = 0;
-      val_max.i = 5;
+      val_max.i = n_max_filter_subtypes - 1;
       val_default.i = 0;
       break;
    case ct_wstype:
