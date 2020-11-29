@@ -88,10 +88,7 @@ cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
 
 # Copy the VST3 bundld 
 cp -r ../build/surge_products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
-
-if [[ -d ../surge-fx/build/product/ ]]; then
-    cp -r ../surge-fx/build/product/*vst3 ${PACKAGE_NAME}/usr/lib/vst3/
-fi
+cp -r ../build/surge_products/SurgeEffectsBank.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
 
 # copy the lv2 bundle
 # cp -r ../build/surge_products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/

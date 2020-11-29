@@ -1393,6 +1393,8 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
     )
   endif()
 
+  add_dependencies( pipeline-components Surge-Effects-Bank-Packaged )
+
 
 endif()
 
