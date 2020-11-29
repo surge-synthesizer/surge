@@ -218,7 +218,7 @@ CAboutBox::CAboutBox(const CRect& size,
    xp = 20;
 
    yp = 20;
-   addLabel("Copyright 2005-2020 by Vember Audio and individual contributors", 500);
+   addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear + " by Vember Audio and individual contributors", 500);
    yp = 35;
    addLabel("Released under the GNU General Public License, v3", 500);
    yp = 50;
