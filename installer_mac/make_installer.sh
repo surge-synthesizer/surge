@@ -26,7 +26,7 @@ fi
 # locations
 
 PRODUCTS="../build/surge_products/"
-FXPRODUCTS="../surge-fx/build/product/"
+FXPRODUCTS="../build/surge_products/"
 
 VST3="Surge.vst3"
 AU="Surge.component"
