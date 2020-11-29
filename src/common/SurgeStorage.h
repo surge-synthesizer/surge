@@ -50,6 +50,7 @@ const int n_lfos_scene = 6;
 const int n_lfos = n_lfos_voice + n_lfos_scene;
 const int n_osc_params = 7;
 const int n_fx_params = 12;
+const int n_fx_slots = 8;
 const int FIRipol_M = 256;
 const int FIRipol_M_bits = 8;
 const int FIRipol_N = 12;
@@ -57,28 +58,27 @@ const int FIRoffset = FIRipol_N >> 1;
 const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
-const int n_fx_slots=8;
-
 // XML storage fileformat revision
 // 0 -> 1 new EG attack shapes (0>1, 1>2, 2>2)
 // 1 -> 2 new LFO EG stages (if (decay == max) sustain = max else sustain = min
-// 2 -> 3 filter subtypes added comb should default to 1 and moog to 3
-// 3 -> 4 comb+/- combined into 1 filtertype (subtype 0,0->0 0,1->1 1,0->2 1,1->3 )
-// 4 -> 5 stereo filterconf now have seperate pan controls
-// 5 -> 6 new filter sound in v1.2 (same parameters, but different sound & changed resonance
-// response).
-// 6 -> 7 custom controller state now stored (in seq. recall)
-// 7 -> 8 larger resonance
-// range (old filters are set to subtype 1), pan2 -> width
-// 8 -> 9 now 8 controls (offset ids larger
-// than ctrl7 by +1), custom controllers have names (guess for pre-rev9 patches)
-// 9 -> 10 added character parameter
-// 10 -> 11 (1.6.2 release) added DAW Extra State
+// 2 -> 3 filter subtypes added: comb defaults to 1 and legacy ladder to 3
+// 3 -> 4 comb +/- combined into one filtertype (subtype 0,0->0 0,1->1 1,0->2 1,1->3 )
+// 4 -> 5 stereo filter configuration got seperate pan controls
+// 5 -> 6 new filter sound in v1.2 (same parameters, but different sound and changed resonance response)
+// 6 -> 7 custom controller state now stored (in DAW recall)
+// 7 -> 8 larger resonance range (old filters are set to subtype 1)
+//        pan2 -> width
+// 8 -> 9 macros extended to 8 (offset IDs larger than ctrl7 by +1)
+//        macros can have names (guess for pre-rev9 patches)
+// 9 -> 10 added Character parameter
+// 10 -> 11 (1.6.2 release) added DAW extra state
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
-// 12 -> 13 (1.7.0 release) deactivation; sine LP/HP, sine/FM2/3 feedback extension/bipolar
-// 13 -> 14 (1.8.0 release) add phaser number of stages parameter
-//                          add ability to configure vocoder modulator mono/sterao/L/R
-//                          add comb filter tuning and compat block
+// 12 -> 13 (1.7.0 release) slider deactivation
+//                          sine LP/HP filters
+//                          sine/FM2/FM3 feedback extension/bipolar
+// 13 -> 14 (1.8.0 nightlies) add phaser number of stages parameter
+//                            add ability to configure vocoder modulator mono/sterao/L/R
+//                            add comb filter tuning and compatibility block
 
 const int ff_revision = 14;
 
@@ -101,6 +101,7 @@ const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postp
 const int metaparam_offset = 20480; // has to be bigger than total + 16 * 130 for fake VST3 mapping
 const int n_scenes = 2;
 const int n_filterunits_per_scene = 2;
+const int n_max_filter_subtypes = 16;
 
 enum scene_mode
 {
