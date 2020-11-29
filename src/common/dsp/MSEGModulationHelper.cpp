@@ -830,7 +830,6 @@ void unsplitSegment( MSEGStorage* ms, float t, bool wrapTime ) {
    ms->segments[prior].nv1 = ms->segments[idx].nv1;
 
    ms->segments[prior].cpduration = cpdratio * ms->segments[prior].duration;
-   ms->segments[prior].cpv = (ms->segments[prior].nv1 - ms->segments[prior].v0 ) * cpvratio + ms->segments[prior].v0;
 
    for( int i=idx; i<ms->n_activeSegments - 1; ++i )
    {

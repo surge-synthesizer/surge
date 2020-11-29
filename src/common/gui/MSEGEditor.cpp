@@ -1086,50 +1086,52 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          }
 
          auto da = getDrawArea();
-         auto tf = pxToTime( );
-         auto t = tf( where.x );
-         auto pv = pxToVal();
-         auto v = pv( where.y );
 
-         // Check if I'm on a hotzoneo
-         for( auto &h : hotzones )
+         if( da.pointInside( where ) )
          {
-            if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+            auto tf = pxToTime();
+            auto t = tf(where.x);
+            auto pv = pxToVal();
+            auto v = pv(where.y);
+
+            // Check if I'm on a hotzoneo
+            for (auto& h : hotzones)
             {
-               switch( h.zoneSubType)
+               if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE)
                {
-               case hotzone::SEGMENT_ENDPOINT:
-               {
-                  Surge::MSEG::unsplitSegment( ms, t );
-                  modelChanged();
-                  return kMouseEventHandled;
-               }
-               case hotzone::SEGMENT_CONTROL:
-               {
-                  // Reset the controlpoint to duration half value middle
-                  Surge::MSEG::resetControlPoint( ms, t );
-                  modelChanged();
-                  return kMouseEventHandled;
-               }
-               case hotzone::LOOP_START:
-               case hotzone::LOOP_END:
-                  // FIXME : Implement this
-                  break;
+                  switch (h.zoneSubType)
+                  {
+                  case hotzone::SEGMENT_ENDPOINT: {
+                     Surge::MSEG::unsplitSegment(ms, t);
+                     modelChanged();
+                     return kMouseEventHandled;
+                  }
+                  case hotzone::SEGMENT_CONTROL: {
+                     // Reset the controlpoint to duration half value middle
+                     Surge::MSEG::resetControlPoint(ms, t);
+                     modelChanged();
+                     return kMouseEventHandled;
+                  }
+                  case hotzone::LOOP_START:
+                  case hotzone::LOOP_END:
+                     // FIXME : Implement this
+                     break;
+                  }
                }
             }
-         }
-         
-         if( t < ms->totalDuration )
-         {
-            Surge::MSEG::splitSegment( ms, t, v );
-            modelChanged();
-            return kMouseEventHandled;
-         }
-         else
-         {
-            Surge::MSEG::extendTo( ms, t, v );
-            modelChanged();
-            return kMouseEventHandled;
+
+            if (t < ms->totalDuration)
+            {
+               Surge::MSEG::splitSegment(ms, t, v);
+               modelChanged();
+               return kMouseEventHandled;
+            }
+            else
+            {
+               Surge::MSEG::extendTo(ms, t, v);
+               modelChanged();
+               return kMouseEventHandled;
+            }
          }
       }
 
