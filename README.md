@@ -373,22 +373,25 @@ and a clean build on all platforms is an obvious pre-requisite. If you have ques
 our CI tools, please ask on our Discord server. We are grateful to Microsoft for providing
 Azure pipelines for free to the open source community!
 
-# What about JUCE?
+# Juce and the SurgeEffectsBank
 
-The Surge team is considering moving Surge to JUCE in 2021. To begin that experiment we have
-started in-tree JUCE builds of Surge-related plugins. For now, this is a developer-only feature
-and does not result in a distributable executable.
+Since Nov 28, 2020, the formerly separate SurgeEffectsBank plugin is part of the main
+surge code base, built with the master CMakeLists.txt file. The SFX bank uses Juce and we
+have adapted our environment to do Juce or hand-crafted VST3SDK builds.
 
-If you want to try to build the JUCE plugs though it's simple enough.
+By default for developers the Juce builds are off, but they are on in our CI
+and pipeline environments. 
+
+If you want to use the JUCE builds you should add the `-DBUILD_SURGE_JUCE_PLUGINS=TRUE` command
+to your first `cmake` command. This will download and activate JUCE and add additional targets
+to your project. For instance, on windows
 
 ```
-cmake -B(dir) (-G or -A as your platform requires) -DBUILD_JUCE_SURGE_PLUGS=True
-cmake --build build --config Release --target well-named-juce-assets
+cmake -Bbuild -A x64 -DBUILD_SURGE_JUCE_PLUGINS=TRUE
 ```
 
-will deposit JUCE assets into your `(build)/surge_products` directory. 
-
-More here as 2021 progresses.
+will make a Surge solution file in build which contains the standard Surge assets (like Surge-VST3-Packaged) 
+and also the FX bank assets (Surge-Effects-Bank-Packaged).
 
 # References
 
