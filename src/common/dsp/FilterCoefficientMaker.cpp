@@ -99,7 +99,7 @@ void FilterCoefficientMaker::MakeCoeffs(
       DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
       break;
    case fut_nonlinearfb:
-      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, storageI);
+      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, SubType, storageI);
       break;
 #if SURGE_EXTRA_FILTERS
 #endif      

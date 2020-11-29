@@ -27,13 +27,13 @@ static float clampedFrequency( float pitch, SurgeStorage *storage )
 // reciprocal
 #define reci(a) _mm_rcp_ps( a )
 
-// n.b. b2 was always equal to b0, so it has been optimised out
 static inline __m128 doLpf(
       const __m128 input,
       const __m128 a1,
       const __m128 a2,
       const __m128 b0,
       const __m128 b1,
+      const __m128 b2,
       __m128 &z1,
       __m128 &z2)
    noexcept
@@ -45,7 +45,7 @@ static inline __m128 doLpf(
    // z1 = z2 + b1 * input - a1 * nf
    z1 = A(z2, S(M(b1, input), M(a1, nf)));
    // z2 = b2 * input - a2 * nf
-   z2 = S(M(b0, input), M(a2, nf));
+   z2 = S(M(b2, input), M(a2, nf));
    return out;
 }
 
@@ -55,7 +55,8 @@ namespace NonlinearFeedbackFilter
       nlf_a1 = 0,
       nlf_a2,
       nlf_b0,
-      nlf_b1
+      nlf_b1,
+      nlf_b2
    };
 
    enum dlf_state {
@@ -69,21 +70,50 @@ namespace NonlinearFeedbackFilter
       nlf_z8  // 2nd z-1 state for fourth stage
    };
 
-   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, SurgeStorage *storage )
+   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int subtype, SurgeStorage *storage )
    {
       float C[n_cm_coeffs];
 
-      const float  wc = M_PI * clampedFrequency(freq, storage) / dsamplerate_os;
-      const float   c = 1.0 / Surge::DSP::fasttan(wc);
-      const float phi = c * c;
-      const float   K = c / (reso * 10.0 + 0.1);
+      const float q = ((reso * reso * reso) * 10.0f + 0.1f);
 
-      const float  a0 = phi + K + 1.0;
+      const float  wc = M_PI * clampedFrequency(freq, storage) / dsamplerate_os;
+      const float   c = 1.0f / Surge::DSP::fasttan(wc);
+      const float phi = c * c;
+      const float   K = c / q;
       
-      C[nlf_a1] = 2.0 * (1.0 - phi) / a0;
-      C[nlf_a2] = (phi - K + 1.0) / a0;
-      C[nlf_b0] = 1.0 / a0;
-      C[nlf_b1] = 2.0 / a0;
+      const float wsin  = Surge::DSP::fastsin(wc);
+      const float wcos  = Surge::DSP::fastcos(wc);
+      const float alpha = wsin / (2.0f * q);
+
+      // a0 for lowpass and highpass
+      const float a0lh = phi + K + 1.0f;
+      // a0 for notch
+      const float a0n  = 1.0f + alpha;
+
+      // We have 4 stage options for each passband type. So dividing subtype by 4 yields the passband type.
+      switch(subtype / 4){
+         case 0: // lowpass
+            C[nlf_a1] = 2.0f * (1.0f - phi) / a0lh;
+            C[nlf_a2] = (phi - K + 1.0f) / a0lh;
+            C[nlf_b0] = 1.0f / a0lh;
+            C[nlf_b1] = 2.0f * C[nlf_b0];
+            C[nlf_b2] = C[nlf_b0];
+            break;
+         case 1: // highpass
+            C[nlf_a1] = 2.0f * (1.0f - phi) / a0lh;
+            C[nlf_a2] = (phi - K + 1.0f) / a0lh;
+            C[nlf_b0] = phi / a0lh;
+            C[nlf_b1] = -2.0f * C[nlf_b0];
+            C[nlf_b2] = C[nlf_b0];
+            break;
+         default: // notch
+            C[nlf_a1] = -2.0f * wcos / a0n;
+            C[nlf_a2] = (1.0f - alpha) / a0n;
+            C[nlf_b0] = 1.0f / a0n;
+            C[nlf_b1] = -2.0f * wcos / a0n;
+            C[nlf_b2] = C[nlf_b0];
+            break;
+      }
 
       cm->FromDirect(C);
    }
@@ -94,16 +124,19 @@ namespace NonlinearFeedbackFilter
          f->C[i] = A(f->C[i], f->dC[i]); \
       }
 
+      const int stages = f->WP[0] & 3; // lower 2 bits of subtype is the stage count
+
       const __m128 result1 =
          doLpf(input,
                f->C[nlf_a1],
                f->C[nlf_a2],
                f->C[nlf_b0],
                f->C[nlf_b1],
+               f->C[nlf_b2],
                f->R[nlf_z1],
                f->R[nlf_z2]);
 
-      if(f->WP[0] == 0){ // if 1-stage
+      if(stages == 0){ // if 1-stage
          // then we're done, return result1
          return result1;
       }
@@ -115,11 +148,12 @@ namespace NonlinearFeedbackFilter
                f->C[nlf_a2],
                f->C[nlf_b0],
                f->C[nlf_b1],
+               f->C[nlf_b2],
                f->R[nlf_z3],
                f->R[nlf_z4]);
       // and so on
 
-      if(f->WP[0] == 1){
+      if(stages == 1){
          return result2;
       }
 
@@ -129,10 +163,11 @@ namespace NonlinearFeedbackFilter
                f->C[nlf_a2],
                f->C[nlf_b0],
                f->C[nlf_b1],
+               f->C[nlf_b2],
                f->R[nlf_z5],
                f->R[nlf_z6]);
 
-      if(f->WP[0] == 2){
+      if(stages == 2){
          return result3;
       }
 
@@ -142,6 +177,7 @@ namespace NonlinearFeedbackFilter
                f->C[nlf_a2],
                f->C[nlf_b0],
                f->C[nlf_b1],
+               f->C[nlf_b2],
                f->R[nlf_z7],
                f->R[nlf_z8]);
 

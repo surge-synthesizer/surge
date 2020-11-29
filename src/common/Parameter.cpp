@@ -2256,7 +2256,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
                      sprintf(txt, "%s", fut_k35_subtypes[i]);
                      break;
                   case fut_nonlinearfb:
-                     sprintf(txt, "%s", fut_nlf_subtypes[i]);
+                     snprintf(txt, 32, "%s %s", fut_nlf_subtypes[i % 4], fut_nlf_passbands[i / 4]);
                      break;
 #if SURGE_EXTRA_FILTERS
 #endif
