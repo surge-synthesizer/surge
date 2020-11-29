@@ -704,8 +704,12 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
    if (listener &&
        buttons & (kAlt | kRButton | kMButton | kButton4 | kButton5 | kShift | kControl | kApple | kDoubleClick))
    {
+      unenqueueCursorHideIfMoved();
+
       if (listener->controlModifierClicked(this, buttons) != 0)
+      {
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+      }
    }
 
    onMouseDownCursorHelper(where);
@@ -733,7 +737,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
          listener->valueChanged( this );
       
       // detachCursor(where);
-      startCursorHide(where);
+      enqueueCursorHideIfMoved(where);
       return kMouseEventHandled;
    }
    return kMouseEventHandled;
@@ -741,7 +745,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint& where, const CButtonState& b
 
 CMouseEventResult CSurgeSlider::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
-
+   unenqueueCursorHideIfMoved();
    {
       auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
       if( sge )

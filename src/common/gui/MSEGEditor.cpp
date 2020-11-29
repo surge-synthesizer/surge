@@ -1065,6 +1065,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    CPoint mouseDownOrigin, cursorHideOrigin, lastPanZoomMousePos;
    bool inDrag = false;
    bool inDrawDrag = false;
+   bool cursorHideEnqueued = false;
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
       if (buttons & kRButton)
       {
@@ -1156,7 +1157,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
             {
                foundHZ = true;
-               startCursorHide(where);
+               cursorHideEnqueued = true;
                cursorHideOrigin = where;
                h.active = true;
                h.dragging = true;
@@ -1210,6 +1211,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
       snapGuard = nullptr;
       endCursorHide();
+      cursorHideEnqueued = false;
 
       return kMouseEventHandled;
    }
@@ -1330,6 +1332,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             if( h.dragging )
             {
+               if( cursorHideEnqueued )
+               {
+                  startCursorHide(cursorHideOrigin);
+                  cursorHideEnqueued = false;
+               }
                gotOne = true;
                float dragX = where.x - mouseDownOrigin.x;
                float dragY = where.y - mouseDownOrigin.y;

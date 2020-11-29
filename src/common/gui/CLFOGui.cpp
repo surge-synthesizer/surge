@@ -1224,7 +1224,6 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
        if (storage)
            this->hideCursor = !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
 
-       startCursorHide(where);
        if( buttons.isRightButton() )
        {
            rmStepStart = where;
@@ -1235,6 +1234,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
            controlstate = cs_steps;
        }
        onMouseMoved(where, buttons);
+       enqueueCursorHide = true;
        return kMouseEventHandled;
        }
        else if (rect_steps_retrig.pointInside(where))
@@ -1315,6 +1315,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
 }
 CMouseEventResult CLFOGui::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
+   enqueueCursorHide = false;
    lfo_type_hover = -1;
    if (controlstate == cs_trigtray_toggle)
    {
@@ -1487,6 +1488,11 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint& where, const CButtonState& butto
       }
    }
 
+   if( enqueueCursorHide )
+   {
+      startCursorHide(where);
+      enqueueCursorHide = false;
+   }
    int plt = lfo_type_hover;
    lfo_type_hover = -1;
    for( int i=0; i<n_lfo_types; ++i )

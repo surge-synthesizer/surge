@@ -131,13 +131,31 @@ struct CursorControlAdapterWithMouseDelta : public CursorControlAdapter<T>
 {
    CursorControlAdapterWithMouseDelta(SurgeStorage *s) : CursorControlAdapter<T>(s) {}
 
+   bool hideIsEnqueued = false;
+   VSTGUI::CPoint enqueuedLocation;
    void onMouseDownCursorHelper( const VSTGUI::CPoint &where )
    {
+      hideIsEnqueued = false;
       deltapoint = where;
       origdeltapoint = where;
    }
+
+   void enqueueCursorHideIfMoved( const VSTGUI::CPoint &where )
+   {
+      hideIsEnqueued = true;
+      enqueuedLocation = where;
+   }
+   void unenqueueCursorHideIfMoved()
+   {
+      hideIsEnqueued = false;
+   }
    VSTGUI::CMouseEventResult onMouseMovedCursorHelper( const VSTGUI::CPoint &where, const VSTGUI::CButtonState &buttons )
    {
+      if( hideIsEnqueued )
+      {
+         CursorControlAdapter<T>::startCursorHide(enqueuedLocation);
+         hideIsEnqueued = false;
+      }
       auto scale = CursorControlAdapter<T>::asT()->getMouseDeltaScaling(where, buttons);
       float dx = (where.x -deltapoint.x);
       float dy = (where.y - deltapoint.y);
