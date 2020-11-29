@@ -1107,17 +1107,18 @@ void Parameter::bound_value(bool force_integer)
       case ct_lfoamplitude:
       case ct_airwindows_param:
       case ct_airwindows_param_bipolar:
+      case ct_lfodeform:
       {
          val.f = floor(val.f * 100) / 100.0;
          break;
       }
-      case ct_lfodeform:
       case ct_pitch:
       case ct_pitch_semi7bp:
       case ct_syncpitch:
       {
          if (!extend_range) {
-            val.f = floor(val.f + 0.5f); }
+            val.f = floor(val.f + 0.5f);
+         }
 
          break;
       }
