@@ -4859,7 +4859,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
       COptionMenu *catSubMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
       for( auto const &p : cat.presets )
          addCallbackMenu(catSubMenu,
-                         Surge::UI::toOSCaseForMenu(p.name),
+                         p.name,
                          [this, p, currentLfoId](){
                             Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage), current_scene, currentLfoId );
                             auto newshape = this->synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
