@@ -554,7 +554,7 @@ const char fut_nlf_saturators[4][6] =
 {
    "tanh",
    "soft",
-   "hard",
+   "sine",
    "asinh",
 };
 
