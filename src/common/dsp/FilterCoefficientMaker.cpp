@@ -100,8 +100,10 @@ void FilterCoefficientMaker::MakeCoeffs(
       break;
    case fut_nonlinearfb_lp:
    case fut_nonlinearfb_hp:
+      NonlinearFeedbackFilter::makeCoefficientsLPHP(this, Freq, Reso, Type, storageI);
    case fut_nonlinearfb_n:
-      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
+   case fut_nonlinearfb_bp:
+      NonlinearFeedbackFilter::makeCoefficientsNBP(this, Freq, Reso, Type, storageI);
       break;
 #if SURGE_EXTRA_FILTERS
 #endif      

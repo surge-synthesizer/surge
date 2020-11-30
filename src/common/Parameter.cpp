@@ -2259,6 +2259,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_nonlinearfb_lp:
                   case fut_nonlinearfb_hp:
                   case fut_nonlinearfb_n:
+                  case fut_nonlinearfb_bp:
                      // why "i & 3"? because briefly in nightly builds there were more than 4 subtypes.
                      // this is defensive coding so we don't crash loading patches from then.
                      // (this bitmask is equivalent to i % 4, i.e. limits the range to 0..3)
