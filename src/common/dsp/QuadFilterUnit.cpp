@@ -817,6 +817,13 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
    case fut_nonlinearfb_n:
    case fut_nonlinearfb_bp:
       return NonlinearFeedbackFilter::process;
+      break;
+   case fut_nonlinearfb_lp_os:
+   case fut_nonlinearfb_hp_os:
+   case fut_nonlinearfb_n_os:
+   case fut_nonlinearfb_bp_os:
+      return NonlinearFeedbackFilter::process_oversampled;
+      break;
    default:
       // SOFTWARE ERROR
       break;

@@ -2260,10 +2260,15 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_nonlinearfb_hp:
                   case fut_nonlinearfb_n:
                   case fut_nonlinearfb_bp:
-                     // why "i & 3"? because briefly in nightly builds there were more than 4 subtypes.
-                     // this is defensive coding so we don't crash loading patches from then.
-                     // (this bitmask is equivalent to i % 4, i.e. limits the range to 0..3)
-                     snprintf(txt, 32, "%s", fut_nlf_subtypes[i & 3]);
+                  case fut_nonlinearfb_lp_os:
+                  case fut_nonlinearfb_hp_os:
+                  case fut_nonlinearfb_n_os:
+                  case fut_nonlinearfb_bp_os:
+                     // "i & 3" selects the lower two bits that represent the stage count.
+                     // "(i >> 2) & 3" selects the next two bits that represent the saturator.
+                     snprintf(txt, 32, "%s %s",
+                        fut_nlf_subtypes[i & 3],
+                        fut_nlf_saturators[(i >> 2) & 3]);
                      break;
 #if SURGE_EXTRA_FILTERS
 #endif

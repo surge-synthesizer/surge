@@ -1031,7 +1031,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
             if (scene->filterunit[u].type.val.i == fut_lpmoog ||
                 scene->filterunit[u].type.val.i == fut_diode  ||
                 (scene->filterunit[u].type.val.i >= fut_nonlinearfb_lp &&
-                 scene->filterunit[u].type.val.i <= fut_nonlinearfb_bp))
+                 scene->filterunit[u].type.val.i <= fut_nonlinearfb_bp_os))
             {
                Q->FU[u].WP[0] =
                    scene->filterunit[u].subtype.val.i; // LPMoog's output stage index is stored in
@@ -1056,7 +1056,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
                if (scene->filterunit[u].type.val.i == fut_lpmoog ||
                    scene->filterunit[u].type.val.i == fut_diode  ||
                    (scene->filterunit[u].type.val.i >= fut_nonlinearfb_lp &&
-                    scene->filterunit[u].type.val.i <= fut_nonlinearfb_bp))
+                    scene->filterunit[u].type.val.i <= fut_nonlinearfb_bp_os))
                {
                   Q->FU[u + 2].WP[0] = scene->filterunit[u].subtype.val.i;
                }
