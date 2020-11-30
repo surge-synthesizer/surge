@@ -77,6 +77,7 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
       pn.SetAttribute( "temposync", curr->temposync );
       pn.SetAttribute( "deform_type", curr->deform_type );
       pn.SetAttribute( "extend_range", curr->extend_range );
+      pn.SetAttribute( "deactivated", curr->deactivated );
 
       params.InsertEndChild(pn);
    }
@@ -181,6 +182,8 @@ void loadPresetFrom( const fs::path &location, SurgeStorage *s, int scene, int l
             curr->extend_range = q;
          else
             curr->extend_range = false;
+         if( valNode->QueryIntAttribute( "deactivated", &q ) == TIXML_SUCCESS && curr->can_deactivate() )
+            curr->deactivated = q;
       }
    }
 
