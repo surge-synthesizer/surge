@@ -380,18 +380,23 @@ void SurgeSynthesizer::savePatch()
 
    bool checkExists = true;
 #if LINUX
-    // Overwrite prompt hangs UI in Bitwig 3.3
-   checkExists = (hostProgram.find( "bitwig" ) != std::string::npos );
+   // Overwrite prompt hangs UI in Bitwig 3.3
+   checkExists = (hostProgram.find("bitwig") != std::string::npos);
 #endif
-   if( checkExists && fs::exists( filename ) )
+   if (checkExists && fs::exists(filename))
    {
-       if( Surge::UserInteractions::promptOKCancel(std::string( "The patch '" + storage.getPatch().name + "' already exists in '" + storage.getPatch().category
-                                                                + "'. Are you sure you want to overwrite it?" ),
-                                                   std::string( "Overwrite patch" )) ==
-           Surge::UserInteractions::CANCEL )
-           return;
+      if (Surge::UserInteractions::promptOKCancel(
+              std::string("The patch '" + storage.getPatch().name + "' already exists in '" +
+                          storage.getPatch().category +
+                          "'. Are you sure you want to overwrite it?"),
+              std::string("Overwrite patch")) == Surge::UserInteractions::CANCEL)
+         return;
    }
+   savePatchToPath(filename);
+}
 
+void SurgeSynthesizer::savePatchToPath(fs::path filename)
+{
    std::ofstream f(filename, std::ios::out | std::ios::binary);
    if (!f)
       return;
