@@ -103,7 +103,7 @@ static inline __m128 doNLFilter(
       case SAT_SOFT:
          nf = softclip_ps(out); // note, this is a bit different to Jatin's softclipper
          break;
-      case SAT_FASTSIN:
+      case SAT_SINE:
          nf = fastsin_ps(out);
          break;
       default: // SAT_ASINH
