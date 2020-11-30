@@ -86,16 +86,16 @@
 <path d="M144 42L143 42L143 56L144 56L144 42Z" fill="#9DAADD"/>
 <path d="M256 42L255 42L255 56L256 56L256 42Z" fill="#9DAADD"/>
 <path d="M138 49H261" stroke="#9DAADD" stroke-width="2"/>
-<path d="M144 48H255V42L144 48Z" fill="#A5ABC2"/>
+<path d="M144 48H255V42L144 48Z" fill="#D0D6ED"/>
 <path d="M144 56H143V70H144V56Z" fill="#9DAADD"/>
 <path d="M256 56H255V70H256V56Z" fill="#9DAADD"/>
 <path d="M138 63L261 63" stroke="#9DAADD" stroke-width="2"/>
-<path d="M194 62L255 62L255 56L194 62Z" fill="#A5ABC2"/>
-<path d="M205 64L144 64L144 70L205 64Z" fill="#A5ABC2"/>
+<path d="M194 62L255 62L255 56L194 62Z" fill="#D0D6ED"/>
+<path d="M205 64L144 64L144 70L205 64Z" fill="#D0D6ED"/>
 <path d="M200 59H199V67H200V59Z" fill="#9DAADD"/>
 <path d="M138 77H261" stroke="#9DAADD" stroke-width="2"/>
-<path d="M194 76L255 76L255 72L194 76Z" fill="#A5ABC2"/>
-<path d="M205 78L144 78L144 82L205 78Z" fill="#A5ABC2"/>
+<path d="M194 76L255 76L255 72L194 76Z" fill="#D0D6ED"/>
+<path d="M205 78L144 78L144 82L205 78Z" fill="#D0D6ED"/>
 <path d="M144 78H143V82H144V78Z" fill="#9DAADD"/>
 <path d="M152 78H151V81.5H152V78Z" fill="#9DAADD"/>
 <path d="M160 78H159V81H160V78Z" fill="#9DAADD"/>
