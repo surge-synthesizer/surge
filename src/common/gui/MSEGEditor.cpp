@@ -795,6 +795,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       CGraphicsPath *highlightPath = dc->createGraphicsPath();
       CGraphicsPath *defpath = dc->createGraphicsPath();
       CGraphicsPath *fillpath = dc->createGraphicsPath();
+
+      float pathScale = 1.0;
+
+      auto xdisp = drawArea;
+      float yOff = drawArea.top;
+
+      auto beginP = [yOff, pathScale](CGraphicsPath *p, CCoord x, CCoord y )
+      {
+         p->beginSubpath(pathScale * x,pathScale * (y-yOff));
+      };
+
+      auto addP = [yOff, pathScale](CGraphicsPath *p, CCoord x, CCoord y )
+      {
+        p->addLine(pathScale * x,pathScale * (y-yOff));
+      };
+
       bool hlpathUsed = false;
 
       float pathFirstY, pathLastX, pathLastY, pathLastDef;
@@ -825,13 +841,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( compareWith != priorEval )
             {
                // OK so make sure that priorEval nv1 is in there
-               path->addLine(i, valpx(ms->segments[priorEval].nv1));
+               addP( path, i, valpx(ms->segments[priorEval].nv1));
                for( int ns=priorEval + 1; ns <= compareWith; ns++ )
                {
                   // Special case - hold draws endpoint
                   if (ns > 0 && ms->segments[ns-1].type == MSEGStorage::segment::HOLD )
-                     path->addLine( i, valpx( ms->segments[ns-1].v0));
-                  path->addLine(i, valpx(ms->segments[ns].v0));
+                     addP( path, i, valpx( ms->segments[ns-1].v0));
+                  addP( path, i, valpx(ms->segments[ns].v0));
                }
                priorEval = es.lastEval;
             }
@@ -840,27 +856,27 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
                if( !hlpathUsed )
                {
-                  highlightPath->beginSubpath(i, v);
+                  beginP(highlightPath, i, v);
                   hlpathUsed = true;
                }
                else
                {
-                  highlightPath->addLine( i, v );
+                  addP( highlightPath, i, v );
                }
             }
 
             if( i == 0 )
             {
-               path->beginSubpath( i, v  );
-               defpath->beginSubpath( i, vdef );
-               fillpath->beginSubpath( i, v );
+               beginP( path, i, v  );
+               beginP( defpath, i, vdef );
+               beginP( fillpath, i, v );
                pathFirstY = v;
             }
             else
             {
-               path->addLine( i, v );
-               defpath->addLine( i, vdef );
-               fillpath->addLine( i, v );
+               addP( path, i, v );
+               addP( defpath, i, vdef );
+               addP( fillpath, i, v );
             }
             pathLastX = i; pathLastY = v; pathLastDef = vdef;
          }
@@ -868,7 +884,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
 
       int uniLimit = 0;
-      auto tfpath = CGraphicsTransform().translate(drawArea.left, 0);
+#if LINUX
+      // Linux has a bug that it ignores the zoom
+      auto tfpath = CGraphicsTransform()
+                        .scale(1.0/pathScale, 1.0/pathScale)
+                        .translate(getFrame()->getZoom() * drawArea.left, getFrame()->getZoom() * drawArea.top);
+#else
+      auto tfpath = CGraphicsTransform()
+                        .scale(1.0/pathScale, 1.0/pathScale)
+                        .translate(drawArea.left, drawArea.top);
+#endif
 
       VSTGUI::CGradient::ColorStopMap csm;
       VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
@@ -885,9 +910,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
       }
 
-      fillpath->addLine(pathLastX, valpx(uniLimit));
-      fillpath->addLine(uniLimit, valpx(uniLimit));
-      fillpath->addLine(uniLimit, pathFirstY);
+      addP( fillpath, pathLastX, valpx(uniLimit));
+      addP( fillpath, uniLimit, valpx(uniLimit));
+      addP( fillpath, uniLimit, pathFirstY);
+
+      // Make sure to restore this
+      auto drawMode = dc->getDrawMode();
+      dc->setDrawMode(kAntiAliasing|kNonIntegralMode);
+
       dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
       fillpath->forget();
       cg->forget();
@@ -939,16 +969,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       dc->setLineStyle(CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
 
       // draw segment curve
-      dc->setLineWidth(0.75);
+      dc->setLineWidth(0.75 * pathScale);
       dc->setFrameColor(skin->getColor( Colors::MSEGEditor::DeformCurve));
       dc->drawGraphicsPath(defpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
-      dc->setLineWidth(1.0);
+      dc->setLineWidth(1.0 * pathScale);
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
       dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
       // hovered segment curve is slightly thicker
-      dc->setLineWidth(1.5);
+      dc->setLineWidth(1.5 * pathScale);
 
       if( hlpathUsed )
       {
@@ -1060,6 +1090,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
          }
       }
+      dc->setDrawMode( drawMode );
    }
 
    CPoint mouseDownOrigin, cursorHideOrigin, lastPanZoomMousePos;
