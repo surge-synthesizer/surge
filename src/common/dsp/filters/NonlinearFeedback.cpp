@@ -214,7 +214,7 @@ namespace NonlinearFeedbackFilter
 
          outputOS[osi] = input;
 
-         // Zero stuffing
+         // Zero stuffing ... hang on, I don't think this can work for things other than lowpass!
          input = _mm_setzero_ps();
       }
 
