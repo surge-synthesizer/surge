@@ -306,5 +306,8 @@
     <!-- FX Section -->
     <control ui_identifier="fx.preset.prevnext" y="213"/>
     <control ui_identifier="fx.preset.name" y="213"/>
+
+    <!-- Misc -->
+    <control ui_identifier="msegeditor.window" w="748"/>
   </controls>
 </surge-skin>

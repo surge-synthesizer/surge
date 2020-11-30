@@ -322,7 +322,7 @@ namespace Surge
 
          Connector vu_meter = Connector("controls.vu_meter", 763, 14, 123, 13, Connector::VU_METER, Connector::MAIN_VU_METER);
 
-         Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Connector::NONE, Connector::MSEG_EDITOR_WINDOW);
+         Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Connector::CUSTOM, Connector::MSEG_EDITOR_WINDOW);
 
          // modulation panel is special, so it shows up as 'CUSTOM' with no connector and is special-cased in SurgeGUIEditor
          Connector modulation_panel = Connector("controls.modulation.panel", 2, 402, Connector::CUSTOM);

@@ -1445,8 +1445,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          frame->addView(vu[0]);
          break;
       }
-      case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
       case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
+      case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
+      case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
          break;
       }
 
@@ -7399,7 +7400,6 @@ void SurgeGUIEditor::showMSEGEditor()
    auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-   currentSkin->resolveBaseParentOffsets(skinCtrl);
 
    setEditorOverlay(mse, title, "msegEditor", CPoint(skinCtrl->x, skinCtrl->y), false, true, [this]() {
       if (msegEditSwitch)   

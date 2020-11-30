@@ -2331,7 +2331,7 @@ MSEGEditor::MSEGEditor(SurgeStorage* storage, LFOStorage* lfodata, MSEGStorage* 
    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
    auto skinCtrl = skin->getOrCreateControlForConnector(conn);
 
-   setViewSize(CRect(CPoint(0, 0), CPoint(skinCtrl->x, skinCtrl->y)));
+   setViewSize(CRect(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h)));
 
    // Leave these in for now
    if( ms->n_activeSegments <= 0 ) // This is an error state! Compensate
