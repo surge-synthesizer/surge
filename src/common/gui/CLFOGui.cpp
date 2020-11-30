@@ -172,11 +172,7 @@ void CLFOGui::draw(CDrawContext* dc)
       // OK so let's assume we want about 1000 pixels worth tops in
       int averagingWindow = (int)(totalSamples/1000.0) + 1;
 
-#if LINUX
-      float valScale = 10000.0;
-#else
       float valScale = 100.0;
-#endif
       int susCountdown = -1;
 
       float priorval = 0.f;
@@ -297,7 +293,7 @@ void CLFOGui::draw(CDrawContext* dc)
       tf.transform(top1);
       tf.transform(bot0);
       tf.transform(bot1);
-      dc->setDrawMode(VSTGUI::kAntiAliasing);
+      dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
 
       dc->setLineWidth(1.0);
       // LFO bg center line
@@ -312,7 +308,7 @@ void CLFOGui::draw(CDrawContext* dc)
 
 
 #if LINUX
-      dc->setLineWidth(40.0);
+      dc->setLineWidth(0.7);
 #else
       dc->setLineWidth(1.0);
 #endif
@@ -355,9 +351,6 @@ void CLFOGui::draw(CDrawContext* dc)
                tf.transform(vruleS);
                tf.transform(vruleE);
                // major beat divisions on the LFO waveform bg
-#if LINUX
-               dc->setLineWidth(1);
-#endif
                dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Ruler::ExtendedTicks));
                // dc->drawLine(mps,mp); // this draws the hat on the bar which I decided to skip
                dc->drawLine(vruleS, vruleE);
@@ -366,7 +359,7 @@ void CLFOGui::draw(CDrawContext* dc)
       }
 
 #if LINUX
-      dc->setLineWidth(50.0);
+      dc->setLineWidth(0.7);
 #elif WINDOWS
       dc->setLineWidth(1.0);
 #else
@@ -458,9 +451,6 @@ void CLFOGui::draw(CDrawContext* dc)
          float xp = dx * l;
          float yp = valScale * 0.9;
          float typ = yp;
-#if LINUX
-         typ = valScale * 0.95;
-#endif
          CRect tp(CPoint(xp + 0.5, typ + 0.5), CPoint(10, 10));
          tf.transform(tp);
          dc->setFontColor(skin->getColor(Colors::LFO::Waveform::Ruler::Text));
@@ -581,7 +571,7 @@ enum
 
 void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel)
 {
-   dc->setDrawMode(VSTGUI::kAntiAliasing);
+   dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
 
    auto size = getViewSize();
 
