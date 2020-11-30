@@ -5885,7 +5885,7 @@ void SurgeGUIEditor::resizeFromIdleSentinel()
 
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSize)
 {
-    if ( !initialZoom() )
+   if ( !initialZoom() )
     {
         float width = newSize->getWidth();
         float height = newSize->getHeight();
@@ -5918,9 +5918,6 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
 }
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect* newSize)
 {
-   // float tratio = 1.0 * getWindowSizeX() / getWindowSizeY();
-   // float cratio = 1.0 * newSize->getWidth() / newSize->getHeight();
-
    // we want cratio == tration by adjusting height so
    // WSX / WSY = gW / gH
    // gH = gW * WSY / WSX
@@ -5930,8 +5927,19 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::Vie
    }
    else
    {
-      float newHeight = 1.0 * newSize->getWidth() * getWindowSizeY() / getWindowSizeX();
-      newSize->bottom = newSize->top + std::ceil(newHeight);
+      float tratio = 1.0 * getWindowSizeX() / getWindowSizeY();
+      float cratio = 1.0 * newSize->getWidth() / newSize->getHeight();
+      if( cratio < tratio )
+      {
+         float newHeight = newSize->getWidth()/tratio;
+         newSize->bottom = newSize->top + std::ceil(newHeight);
+      }
+      else
+      {
+         float newWidth = newSize->getHeight() * tratio;
+         newSize->right = newSize->left + std::ceil(newWidth);
+      }
+
       return Steinberg::kResultTrue;
    }
 }
