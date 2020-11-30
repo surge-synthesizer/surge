@@ -414,7 +414,9 @@ enum fu_type
    fut_k35_lp,
    fut_k35_hp,
    fut_diode,
-   fut_nonlinearfb,
+   fut_nonlinearfb_lp,
+   fut_nonlinearfb_hp,
+   fut_nonlinearfb_n,
 
    n_fu_types,
 };
@@ -436,7 +438,12 @@ const char fut_names[n_fu_types][32] =
    "K35 Lowpass",
    "K35 Highpass",
    "Diode Ladder",
-   "Nonlinear Feedback"
+   "Nonlinear Feedback Lowpass",
+   "Nonlinear Feedback Highpass",
+   "Nonlinear Feedback Notch",
+   /* this is a ruler to ensure names do not exceed 31 characters
+    0123456789012345678901234567890
+   */
 };
 
 const char fut_bp_subtypes[6][32] =
@@ -534,32 +541,27 @@ const char fut_nlf_subtypes[4][32] =
    "4 stages",
 };
 
-const char fut_nlf_passbands[3][3] =
-{
-   "LP",
-   "HP",
-   "N"
-};
-
 const int fut_subcount[n_fu_types] =
 {
-   0,  // fut_none
-   3,  // fut_lp12
-   3,  // fut_lp24
-   4,  // fut_lpmoog
-   3,  // fut_hp12
-   3,  // fut_hp24
-   6,  // fut_bp12
-   4,  // fut_br12
-   4,  // fut_comb
-   0,  // fut_SNH
-   4,  // fut_vintageladder
-   8,  // fut_obxd_2pole
-   4,  // fut_obxd_4pole
-   5,  // fut_k35_lp
-   5,  // fut_k35_hp
-   4,  // fut_diode
-   12, // fut_nonlinearfb
+   0, // fut_none
+   3, // fut_lp12
+   3, // fut_lp24
+   4, // fut_lpmoog
+   3, // fut_hp12
+   3, // fut_hp24
+   6, // fut_bp12
+   4, // fut_br12
+   4, // fut_comb
+   0, // fut_SNH
+   4, // fut_vintageladder
+   8, // fut_obxd_2pole
+   4, // fut_obxd_4pole
+   5, // fut_k35_lp
+   5, // fut_k35_hp
+   4, // fut_diode
+   4, // fut_nonlinearfb_lp
+   4, // fut_nonlinearfb_hp
+   4, // fut_nonlinearfb_n
 };
 
 enum fu_subtype

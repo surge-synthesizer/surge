@@ -70,7 +70,7 @@ namespace NonlinearFeedbackFilter
       nlf_z8  // 2nd z-1 state for fourth stage
    };
 
-   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int subtype, SurgeStorage *storage )
+   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int type, SurgeStorage *storage )
    {
       float C[n_cm_coeffs];
 
@@ -90,16 +90,15 @@ namespace NonlinearFeedbackFilter
       // a0 for notch
       const float a0n  = 1.0f + alpha;
 
-      // We have 4 stage options for each passband type. So dividing subtype by 4 yields the passband type.
-      switch(subtype / 4){
-         case 0: // lowpass
+      switch(type){
+         case fut_nonlinearfb_lp: // lowpass
             C[nlf_a1] = 2.0f * (1.0f - phi) / a0lh;
             C[nlf_a2] = (phi - K + 1.0f) / a0lh;
             C[nlf_b0] = 1.0f / a0lh;
             C[nlf_b1] = 2.0f * C[nlf_b0];
             C[nlf_b2] = C[nlf_b0];
             break;
-         case 1: // highpass
+         case fut_nonlinearfb_hp: // highpass
             C[nlf_a1] = 2.0f * (1.0f - phi) / a0lh;
             C[nlf_a2] = (phi - K + 1.0f) / a0lh;
             C[nlf_b0] = phi / a0lh;

@@ -98,8 +98,10 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_diode:
       DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
       break;
-   case fut_nonlinearfb:
-      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, SubType, storageI);
+   case fut_nonlinearfb_lp:
+   case fut_nonlinearfb_hp:
+   case fut_nonlinearfb_n:
+      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
       break;
 #if SURGE_EXTRA_FILTERS
 #endif      

@@ -812,7 +812,9 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
    case fut_diode:
       return DiodeLadderFilter::process;
       break;
-   case fut_nonlinearfb:
+   case fut_nonlinearfb_lp:
+   case fut_nonlinearfb_hp:
+   case fut_nonlinearfb_n:
       return NonlinearFeedbackFilter::process;
    default:
       // SOFTWARE ERROR

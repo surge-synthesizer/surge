@@ -2256,8 +2256,13 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_k35_hp:
                      sprintf(txt, "%s", fut_k35_subtypes[i]);
                      break;
-                  case fut_nonlinearfb:
-                     snprintf(txt, 32, "%s %s", fut_nlf_subtypes[i % 4], fut_nlf_passbands[i / 4]);
+                  case fut_nonlinearfb_lp:
+                  case fut_nonlinearfb_hp:
+                  case fut_nonlinearfb_n:
+                     // why "i & 3"? because briefly in nightly builds there were more than 4 subtypes.
+                     // this is defensive coding so we don't crash loading patches from then.
+                     // (this bitmask is equivalent to i % 4, i.e. limits the range to 0..3)
+                     snprintf(txt, 32, "%s", fut_nlf_subtypes[i & 3]);
                      break;
 #if SURGE_EXTRA_FILTERS
 #endif
