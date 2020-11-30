@@ -23,6 +23,7 @@
 #include "SkinColors.h"
 
 #include "filesystem/import.h"
+#include "guihelpers.h"
 
 using namespace VSTGUI;
 
@@ -129,10 +130,10 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be an integer multiple of it
 
 #if LINUX
-   float valScale = 10000.0f;
-#else
-   float valScale = 100.0f;
+   Surge::UI::NonIntegralAntiAliasGuard naag(dc);
 #endif
+
+   float valScale = 100.0f;
 
    auto size = getViewSize();
 
@@ -277,12 +278,12 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          }
       }
 
-#if LINUX
-      dc->setLineWidth(130);
-#else
       dc->setLineWidth(1.3);
-#endif
+#if LINUX
+      dc->setDrawMode(VSTGUI::kAntiAliasing| VSTGUI::kNonIntegralMode);
+#else
       dc->setDrawMode(VSTGUI::kAntiAliasing);
+#endif
       if (c == 1)
          dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
       else
