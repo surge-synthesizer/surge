@@ -550,7 +550,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto tpx = timeToPx();
 
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-      dc->setLineWidth( 1 );
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
 
       updateHTicks();
@@ -566,9 +565,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             off = 0;
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
+            dc->setLineWidth(1.5);
          }
          else
+         {
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+            dc->setLineWidth(1.f);
+         }
 
          dc->drawLine( CPoint( px, haxisArea.top), CPoint( px, haxisArea.bottom - off ) );
 
@@ -576,10 +579,20 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          if ( ! ( c & TickDrawStyle::kNoLabel ) )
          {
-            dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
-            dc->setFont(secondaryFont);
-            snprintf( txt, 16, "%5.2f", t );
-            xoff = -7;
+            if (fmod(t, 1.f) == 0.f)
+            {
+               dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
+               dc->setFont(primaryFont);
+               xoff = 0;
+               snprintf( txt, 16, "%d", int(t) );
+            }
+            else
+            {
+               dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
+               dc->setFont(secondaryFont);
+               xoff = -7;
+               snprintf( txt, 16, "%5.2f", t );
+            }
             dc->drawString( txt, CRect( CPoint( px + xoff, haxisArea.top + 5), CPoint( 15, 10 )));
          }
       }
@@ -605,16 +618,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto vaxisArea = getVAxisArea();
       auto valpx = valToPx();
 
+      dc->setLineWidth( 1.5 );
 
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-      dc->setLineWidth( 1 );
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
 
       dc->setFont(primaryFont);
       dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
-      dc->setLineWidth( 1 );
 
       updateVTicks();
+
       for( auto vp : vTicks )
       {
          float p = valpx(std::get<0>(vp));
@@ -649,6 +662,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       kNoLabel = 1<<0,
       kHighlight = 1<<1
    };
+
    std::vector<std::pair<float,int>> hTicks;
    float hTicksAsOf[3] = {-1,-1,-1};
    void updateHTicks()
@@ -935,14 +949,26 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto t = hp.first;
          auto c = hp.second;
          auto px = tpx( t );
-         if( c & TickDrawStyle::kHighlight )
+
+         if (c & TickDrawStyle::kHighlight)
+         {
             dc->setFrameColor( primaryGridColor );
+            dc->setLineWidth(1.5);
+         }
          else
+         {
             dc->setFrameColor(secondaryVGridColor);
-         dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
+            dc->setLineWidth(1);
+         }
+
+         if (t > 0.1)
+            dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
       }
 
+      dc->setLineWidth(1);
+
       updateVTicks();
+
       for( auto vp : vTicks )
       {
          float val = std::get<0>( vp );
@@ -957,8 +983,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             dc->setFrameColor(secondaryHGridColor);
             CCoord dashes[] = {2, 5};
-            dc->setLineStyle(
-                CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
+            dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
          }
 
          dc->drawLine(CPoint(drawArea.left, v), CPoint(drawArea.right, v));
@@ -983,8 +1008,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       if( hlpathUsed )
       {
          dc->setFrameColor(skin->getColor(Colors::MSEGEditor::CurveHighlight));
-         dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
-                              &tfpath);
+         dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
       }
 
       path->forget();
@@ -1198,16 +1222,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
                /*
                 * Activate temporary snap. Note this is also handled similarly in
-                * onMouseMove so if you change shift/ctrl here or what not change it
-                * there too.
+                * onMouseMoved so if you change ctrl/alt here change it there too
                 */
-               bool s = buttons & kControl;
-               bool c = buttons & kAlt;
-               if( s || c  )
+               bool c = buttons & kControl;
+               bool a = buttons & kAlt;
+               if( c || a  )
                {
                   snapGuard = std::make_shared<SnapGuard>(eds, this);
-                  if( s ) eds->hSnap = eds->hSnapDefault;
-                  if( c ) eds->vSnap = eds->vSnapDefault;
+                  if( c ) eds->hSnap = eds->hSnapDefault;
+                  if( a ) eds->vSnap = eds->vSnapDefault;
                }
                break;
             }
@@ -1399,13 +1422,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
             idx++;
          }
-         if( gotOne ) {
+         if (gotOne)
+         {
             Surge::MSEG::rebuildCache(ms);
             recalcHotZones(where);
             hotzones[idx].dragging = true;
             invalid();
          }
-         else
+         else if (buttons & kLButton || buttons & kMButton)
          {
             // This means we are a pan or zoom gesture
             float x = where.x - mouseDownOrigin.x;
@@ -1425,17 +1449,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   float zoomScale = 2. / getDrawArea().getHeight();
                   zoom( where, -dy * zoomScale, buttons );
                }
+
                lastPanZoomMousePos = where;
             }
          }
 
          /*
           * Activate temporary snap. Note this is also checked in onMouseDown
-          * so if you change shift/ctrl whatever here change it there too
+          * so if you change ctrl/alt here change it there too
           */
-         bool s = buttons & kControl;
-         bool c = buttons & kAlt;
-         if( ( s || c )  )
+         bool c = buttons & kControl;
+         bool a = buttons & kAlt;
+         if( ( c || a ) )
          {
             bool wasSnapGuard = true;
             if( ! snapGuard )
@@ -1443,13 +1468,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                wasSnapGuard = false;
                snapGuard = std::make_shared<SnapGuard>(eds, this);
             }
-            if( s ) eds->hSnap = eds->hSnapDefault;
+            if( c ) eds->hSnap = eds->hSnapDefault;
             else if( wasSnapGuard ) eds->hSnap = snapGuard->hSnapO;
 
-            if( c ) eds->vSnap = eds->vSnapDefault;
+            if( a ) eds->vSnap = eds->vSnapDefault;
             else if( wasSnapGuard ) eds->vSnap = snapGuard->vSnapO;
          }
-         else if( ! ( s || c ) && snapGuard )
+         else if( ! ( c || a ) && snapGuard )
          {
             snapGuard = nullptr;
          }
