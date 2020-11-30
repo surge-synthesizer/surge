@@ -293,7 +293,7 @@ void CLFOGui::draw(CDrawContext* dc)
       tf.transform(top1);
       tf.transform(bot0);
       tf.transform(bot1);
-      dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
+      Surge::UI::NonIntegralAntiAliasGuard niaag(dc);
 
       dc->setLineWidth(1.0);
       // LFO bg center line
@@ -571,7 +571,7 @@ enum
 
 void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel)
 {
-   dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
+   Surge::UI::NonIntegralAntiAliasGuard naag(dc);
 
    auto size = getViewSize();
 

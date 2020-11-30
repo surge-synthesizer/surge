@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "guihelpers.h"
 #include "CScalableBitmap.h"
 #include "SurgeError.h"
 #include "UserInteractions.h"
@@ -442,6 +443,10 @@ void CScalableBitmap::drawSVG(CDrawContext* dc,
            .translate(viewS.getTopLeft().x - offset.x, viewS.getTopLeft().y - offset.y)
            .scale(extraScaleFactor / 100.0, extraScaleFactor / 100.0);
    VSTGUI::CDrawContext::Transform t(*dc, tf);
+
+#if LINUX
+   Surge::UI::NonIntegralAntiAliasGuard naag(dc);
+#endif
 
    for (auto shape = svgImage->shapes; shape != NULL; shape = shape->next)
    {

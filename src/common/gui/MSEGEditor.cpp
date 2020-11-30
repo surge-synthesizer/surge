@@ -27,6 +27,7 @@
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include "CursorControlGuard.h"
+#include "guihelpers.h"
 
 using namespace VSTGUI;
 
@@ -929,8 +930,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       addP( fillpath, uniLimit, pathFirstY);
 
       // Make sure to restore this
-      auto drawMode = dc->getDrawMode();
-      dc->setDrawMode(kAntiAliasing|kNonIntegralMode);
+#if LINIX
+      Surge::UI::NonIntegralAntiAliasGuard naig(dc);
+#endif
 
       dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
       fillpath->forget();
@@ -1114,7 +1116,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
          }
       }
-      dc->setDrawMode( drawMode );
    }
 
    CPoint mouseDownOrigin, cursorHideOrigin, lastPanZoomMousePos;
