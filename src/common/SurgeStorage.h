@@ -417,6 +417,7 @@ enum fu_type
    fut_nonlinearfb_lp,
    fut_nonlinearfb_hp,
    fut_nonlinearfb_n,
+   fut_nonlinearfb_bp,
 
    n_fu_types,
 };
@@ -441,6 +442,7 @@ const char fut_names[n_fu_types][32] =
    "Nonlinear Feedback Lowpass",
    "Nonlinear Feedback Highpass",
    "Nonlinear Feedback Notch",
+   "Nonlinear Feedback Bandpass",
    /* this is a ruler to ensure names do not exceed 31 characters
     0123456789012345678901234567890
    */
@@ -562,6 +564,7 @@ const int fut_subcount[n_fu_types] =
    4, // fut_nonlinearfb_lp
    4, // fut_nonlinearfb_hp
    4, // fut_nonlinearfb_n
+   4, // fut_nonlinearfb_bp
 };
 
 enum fu_subtype

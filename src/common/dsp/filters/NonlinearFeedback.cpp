@@ -19,15 +19,11 @@ static float clampedFrequency( float pitch, SurgeStorage *storage )
    return freq;
 }
 
-#define F(a) _mm_set_ps1( a )         
 #define M(a,b) _mm_mul_ps( a, b )
-#define D(a,b) _mm_div_ps( a, b )
 #define A(a,b) _mm_add_ps( a, b )
 #define S(a,b) _mm_sub_ps( a, b )
-// reciprocal
-#define reci(a) _mm_rcp_ps( a )
 
-static inline __m128 doLpf(
+static inline __m128 doFilter(
       const __m128 input,
       const __m128 a1,
       const __m128 a2,
@@ -70,7 +66,7 @@ namespace NonlinearFeedbackFilter
       nlf_z8  // 2nd z-1 state for fourth stage
    };
 
-   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int type, SurgeStorage *storage )
+   void makeCoefficientsLPHP( FilterCoefficientMaker *cm, float freq, float reso, int type, SurgeStorage *storage )
    {
       float C[n_cm_coeffs];
 
@@ -81,52 +77,73 @@ namespace NonlinearFeedbackFilter
       const float phi = c * c;
       const float   K = c / q;
       
-      const float wsin  = Surge::DSP::fastsin(wc);
-      const float wcos  = Surge::DSP::fastcos(wc);
-      const float alpha = wsin / (2.0f * q);
+      // note we actually calculate the reciprocal of a0 because we only use a0 to normalize the
+      // other coefficients, and multiplication by reciprocal is cheaper than dividing.
+      const float a0r = 1.0f / (phi + K + 1.0f);
 
-      // a0 for lowpass and highpass
-      const float a0lh = phi + K + 1.0f;
-      // a0 for notch
-      const float a0n  = 1.0f + alpha;
-
-      switch(type){
-         case fut_nonlinearfb_lp: // lowpass
-            C[nlf_a1] = 2.0f * (1.0f - phi) / a0lh;
-            C[nlf_a2] = (phi - K + 1.0f) / a0lh;
-            C[nlf_b0] = 1.0f / a0lh;
-            C[nlf_b1] = 2.0f * C[nlf_b0];
-            C[nlf_b2] = C[nlf_b0];
-            break;
-         case fut_nonlinearfb_hp: // highpass
-            C[nlf_a1] = 2.0f * (1.0f - phi) / a0lh;
-            C[nlf_a2] = (phi - K + 1.0f) / a0lh;
-            C[nlf_b0] = phi / a0lh;
-            C[nlf_b1] = -2.0f * C[nlf_b0];
-            C[nlf_b2] = C[nlf_b0];
-            break;
-         default: // notch
-            C[nlf_a1] = -2.0f * wcos / a0n;
-            C[nlf_a2] = (1.0f - alpha) / a0n;
-            C[nlf_b0] = 1.0f / a0n;
-            C[nlf_b1] = -2.0f * wcos / a0n;
-            C[nlf_b2] = C[nlf_b0];
-            break;
+      if(type == fut_nonlinearfb_lp){ // lowpass
+         C[nlf_a1] = 2.0f * (1.0f - phi) * a0r;
+         C[nlf_a2] = (phi - K + 1.0f)    * a0r;
+         C[nlf_b0] = a0r;
+         C[nlf_b1] = 2.0f * C[nlf_b0];
+         C[nlf_b2] = C[nlf_b0];
+      }
+      else{ // highpass
+         C[nlf_a1] = 2.0f * (1.0f - phi) * a0r;
+         C[nlf_a2] = (phi - K + 1.0f)    * a0r;
+         C[nlf_b0] = phi                 * a0r;
+         C[nlf_b1] = -2.0f * C[nlf_b0];
+         C[nlf_b2] = C[nlf_b0];
       }
 
       cm->FromDirect(C);
    }
 
+   void makeCoefficientsNBP( FilterCoefficientMaker *cm, float freq, float reso, int type, SurgeStorage *storage )
+   {
+      float C[n_cm_coeffs];
+
+      const float q = ((reso * reso * reso) * 10.0f + 0.1f);
+
+      const float wc = M_PI * clampedFrequency(freq, storage) / dsamplerate_os;
+
+      const float wsin  = Surge::DSP::fastsin(wc);
+      const float wcos  = Surge::DSP::fastcos(wc);
+      const float alpha = wsin / (2.0f * q);
+
+      // note we actually calculate the reciprocal of a0 because we only use a0 to normalize the
+      // other coefficients, and multiplication by reciprocal is cheaper than dividing.
+      const float a0r  = 1.0f / (1.0f + alpha);
+
+      if(type == fut_nonlinearfb_n){ // notch
+         C[nlf_a1] = -2.0f * wcos   * a0r;
+         C[nlf_a2] = (1.0f - alpha) * a0r;
+         C[nlf_b0] = a0r;
+         C[nlf_b1] = -2.0f * wcos   * a0r;
+         C[nlf_b2] = C[nlf_b0];
+      }
+      else{ // bandpass
+         C[nlf_a1] = -2.0f * wcos   * a0r;
+         C[nlf_a2] = (1.0f - alpha) * a0r;
+         C[nlf_b0] = wsin * 0.5f    * a0r;
+         C[nlf_b1] = 0.0f;
+         C[nlf_b2] = -C[nlf_b0];
+      }
+
+      cm->FromDirect(C);
+   }
+
+
    __m128 process( QuadFilterUnitState * __restrict f, __m128 input )
    {
-      for(int i=0; i < n_cm_coeffs; ++i){ \
+      for(int i=0; i <= nlf_b2; ++i){ \
          f->C[i] = A(f->C[i], f->dC[i]); \
       }
 
       const int stages = f->WP[0] & 3; // lower 2 bits of subtype is the stage count
 
       const __m128 result1 =
-         doLpf(input,
+         doFilter(input,
                f->C[nlf_a1],
                f->C[nlf_a2],
                f->C[nlf_b0],
@@ -142,7 +159,7 @@ namespace NonlinearFeedbackFilter
 
       // otherwise we calculate and return the second stage
       const __m128 result2 =
-         doLpf(result1,
+         doFilter(result1,
                f->C[nlf_a1],
                f->C[nlf_a2],
                f->C[nlf_b0],
@@ -157,7 +174,7 @@ namespace NonlinearFeedbackFilter
       }
 
       const __m128 result3 =
-         doLpf(result2,
+         doFilter(result2,
                f->C[nlf_a1],
                f->C[nlf_a2],
                f->C[nlf_b0],
@@ -171,7 +188,7 @@ namespace NonlinearFeedbackFilter
       }
 
       const __m128 result4 =
-         doLpf(result3,
+         doFilter(result3,
                f->C[nlf_a1],
                f->C[nlf_a2],
                f->C[nlf_b0],
