@@ -33,7 +33,6 @@ using namespace VSTGUI;
 
 struct MSEGCanvas;
 
-// This is 720 x 120
 struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
    MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
       setSkin( skin, b );
@@ -2324,8 +2323,16 @@ struct MSEGMainEd : public CViewContainer {
 
 };
 
-MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b) : CViewContainer( CRect( 0, 0, 750, 365) )
+
+MSEGEditor::MSEGEditor(SurgeStorage* storage, LFOStorage* lfodata, MSEGStorage* ms, State* eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b)
+    : CViewContainer(CRect(0, 0, 1, 1))
 {
+   auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
+   auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+   auto skinCtrl = skin->getOrCreateControlForConnector(conn);
+
+   setViewSize(CRect(CPoint(0, 0), CPoint(skinCtrl->x, skinCtrl->y)));
+
    // Leave these in for now
    if( ms->n_activeSegments <= 0 ) // This is an error state! Compensate
    {
