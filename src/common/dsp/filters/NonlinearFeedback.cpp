@@ -230,6 +230,6 @@ namespace NonlinearFeedbackFilter
          ov = A(ov, M(outputOS[i], windowFactors[i]));
       }
 
-      return M(F(1.5f), ov);
+      return M(F(2.0f), ov);
    }
 }
