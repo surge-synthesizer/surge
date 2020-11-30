@@ -418,7 +418,10 @@ enum fu_type
    fut_nonlinearfb_hp,
    fut_nonlinearfb_n,
    fut_nonlinearfb_bp,
-
+   fut_nonlinearfb_lp_os,
+   fut_nonlinearfb_hp_os,
+   fut_nonlinearfb_n_os,
+   fut_nonlinearfb_bp_os,
    n_fu_types,
 };
 const char fut_names[n_fu_types][32] =
@@ -439,10 +442,14 @@ const char fut_names[n_fu_types][32] =
    "K35 Lowpass",
    "K35 Highpass",
    "Diode Ladder",
-   "Nonlinear Feedback Lowpass",
-   "Nonlinear Feedback Highpass",
-   "Nonlinear Feedback Notch",
-   "Nonlinear Feedback Bandpass",
+   "Lowpass NL Feedback",
+   "Highpass NL Feedback",
+   "Notch NL Feedback",
+   "Bandpass NL Feedback",
+   "Lowpass OS NL Feedback",
+   "Highpass OS NL Feedback",
+   "Notch OS NL Feedback",
+   "Bandpass OS NL Feedback",
    /* this is a ruler to ensure names do not exceed 31 characters
     0123456789012345678901234567890
    */
@@ -537,10 +544,18 @@ const float fut_k35_saturations[5] =
 
 const char fut_nlf_subtypes[4][32] =
 {
-   "1 stage (12dB/oct)",
+   "1 stage ",
    "2 stages",
    "3 stages",
    "4 stages",
+};
+
+const char fut_nlf_saturators[4][6] =
+{
+   "tanh",
+   "soft",
+   "hard",
+   "asinh",
 };
 
 const int fut_subcount[n_fu_types] =
@@ -561,10 +576,14 @@ const int fut_subcount[n_fu_types] =
    5, // fut_k35_lp
    5, // fut_k35_hp
    4, // fut_diode
-   4, // fut_nonlinearfb_lp
-   4, // fut_nonlinearfb_hp
-   4, // fut_nonlinearfb_n
-   4, // fut_nonlinearfb_bp
+   16, // fut_nonlinearfb_lp
+   16, // fut_nonlinearfb_hp
+   16, // fut_nonlinearfb_n
+   16, // fut_nonlinearfb_bp
+   16, // fut_nonlinearfb_lp_os
+   16, // fut_nonlinearfb_hp_os
+   16, // fut_nonlinearfb_n_os
+   16, // fut_nonlinearfb_bp_os
 };
 
 enum fu_subtype

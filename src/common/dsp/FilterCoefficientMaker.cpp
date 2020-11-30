@@ -100,11 +100,18 @@ void FilterCoefficientMaker::MakeCoeffs(
       break;
    case fut_nonlinearfb_lp:
    case fut_nonlinearfb_hp:
-      NonlinearFeedbackFilter::makeCoefficientsLPHP(this, Freq, Reso, Type, storageI);
    case fut_nonlinearfb_n:
    case fut_nonlinearfb_bp:
-      NonlinearFeedbackFilter::makeCoefficientsNBP(this, Freq, Reso, Type, storageI);
+      // false for no oversampling
+      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, false, storageI);
       break;
+   case fut_nonlinearfb_lp_os:
+   case fut_nonlinearfb_hp_os:
+   case fut_nonlinearfb_n_os:
+   case fut_nonlinearfb_bp_os:
+      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, true, storageI);
+      break;
+
 #if SURGE_EXTRA_FILTERS
 #endif      
    };
