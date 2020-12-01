@@ -147,7 +147,9 @@ namespace Surge
 
             MAIN_VU_METER,
 
-            MSEG_EDIT,
+            MSEG_EDITOR_WINDOW,
+            MSEG_EDITOR_OPEN,
+
             LFO_MENU,
 
             N_NONCONNECTED
@@ -295,6 +297,8 @@ namespace Surge
          // These active labels are actually controls
 
          extern Surge::Skin::Connector patch_browser;
+
+         extern Surge::Skin::Connector mseg_editor;
 
          // In surge 1.8, the modulation panel is moveable en-masse but individual modulators
          // are not relocatable. This item gives you the location of the modulators

@@ -281,7 +281,7 @@ namespace Surge
          // combined LFO shape AND LFO display - TODO: split them to individual connectors for 1.9!
          Connector shape = Connector("lfo.shape", 235, 480, 359, 84, Connector::LFO);
 
-         Connector mseg_editor = Connector("lfo.mseg_editor", 597, 484, 11, 11, Connector::SWITCH, Connector::MSEG_EDIT)
+         Connector mseg_editor = Connector("lfo.mseg_editor", 597, 484, 11, 11, Connector::SWITCH, Connector::MSEG_EDITOR_OPEN)
                    .withBackground(IDB_LFO_MSEG_EDIT);
 
          Connector lfo_eg_panel = Connector("lfo.envelope.panel", 616, 493, Connector::GROUP);
@@ -321,6 +321,8 @@ namespace Surge
                    .withBackground(IDB_ZOOM_BUTTON).inParent("controls.status.panel");
 
          Connector vu_meter = Connector("controls.vu_meter", 763, 14, 123, 13, Connector::VU_METER, Connector::MAIN_VU_METER);
+
+         Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Connector::CUSTOM, Connector::MSEG_EDITOR_WINDOW);
 
          // modulation panel is special, so it shows up as 'CUSTOM' with no connector and is special-cased in SurgeGUIEditor
          Connector modulation_panel = Connector("controls.modulation.panel", 2, 402, Connector::CUSTOM);

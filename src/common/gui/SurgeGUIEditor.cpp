@@ -1372,7 +1372,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          layoutComponentForSkin( skinCtrl, tag_store );
          break;
       }
-      case Surge::Skin::Connector::NonParameterConnection::MSEG_EDIT: {
+      case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN: {
          msegEditSwitch = layoutComponentForSkin( skinCtrl, tag_mseg_edit );
          msegEditSwitch->setVisible( false );
          msegEditSwitch->setValue( editorOverlay != nullptr && editorOverlayTag == "msegEditor" );
@@ -1445,8 +1445,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          frame->addView(vu[0]);
          break;
       }
-      case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
       case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
+      case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
+      case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
          break;
       }
 
@@ -7404,8 +7405,12 @@ void SurgeGUIEditor::showMSEGEditor()
    title += " Editor";
    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
-   setEditorOverlay(mse, title, "msegEditor", CPoint(0, 57), false, true, [this]() {
-      if (msegEditSwitch)
+   auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
+   auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+   auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
+   setEditorOverlay(mse, title, "msegEditor", CPoint(skinCtrl->x, skinCtrl->y), false, true, [this]() {
+      if (msegEditSwitch)   
       {
          msegEditSwitch->setValue(0.0);
          msegEditSwitch->invalid();
