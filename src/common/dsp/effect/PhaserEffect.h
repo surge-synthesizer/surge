@@ -51,9 +51,9 @@ public:
 
    enum phaser_params
    {
-      ph_basefreq = 0,
+      ph_center = 0,
       ph_feedback,
-      ph_q,
+      ph_sharpness,
       ph_mod_rate,
       ph_mod_depth,
       ph_stereo,

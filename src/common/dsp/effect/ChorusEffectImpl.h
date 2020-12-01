@@ -4,10 +4,9 @@
 
 #include "ChorusEffect.h"
 #include <algorithm>
+
 using std::min;
 using std::max;
-
-/* chorus */
 
 template <int v>
 ChorusEffect<v>::ChorusEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
@@ -47,33 +46,34 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
 {
    if (init)
    {
-      feedback.set_target(0.5f * amp_to_linear(fxdata->p[3].val.f));
-      hp.coeff_HP(hp.calc_omega(fxdata->p[4].val.f / 12.0), 0.707);
-      lp.coeff_LP2B(lp.calc_omega(fxdata->p[5].val.f / 12.0), 0.707);
-      mix.set_target(fxdata->p[6].val.f);
-      width.set_target(db_to_linear(fxdata->p[7].val.f));
+      feedback.set_target(0.5f * amp_to_linear(fxdata->p[ch_feedback].val.f));
+      hp.coeff_HP(hp.calc_omega(fxdata->p[ch_lowcut].val.f / 12.0), 0.707);
+      lp.coeff_LP2B(lp.calc_omega(fxdata->p[ch_highcut].val.f / 12.0), 0.707);
+      mix.set_target(fxdata->p[ch_mix].val.f);
+      width.set_target(db_to_linear(fxdata->p[ch_width].val.f));
    }
    else
    {
-      feedback.set_target_smoothed(0.5f * amp_to_linear(*f[3]));
-      float rate =
-          envelope_rate_linear(-*f[1]) * (fxdata->p[1].temposync ? storage->temposyncratio : 1.f);
+      feedback.set_target_smoothed(0.5f * amp_to_linear(*f[ch_feedback]));
+      float rate = envelope_rate_linear(-*f[1]) *
+                   (fxdata->p[ch_rate].temposync ? storage->temposyncratio : 1.f);
       float tm = storage->note_to_pitch_ignoring_tuning(12 * *f[0]) *
-                 (fxdata->p[0].temposync ? storage->temposyncratio_inv : 1.f);
+                 (fxdata->p[ch_time].temposync ? storage->temposyncratio_inv : 1.f);
       for (int i = 0; i < v; i++)
       {
          lfophase[i] += rate;
+
          if (lfophase[i] > 1)
             lfophase[i] -= 1;
-         // float lfoout = 0.5*lookup_waveshape_warp(3,4.f*lfophase[i]-2.f) * *f[2];
-         float lfoout = (2.f * fabs(2.f * lfophase[i] - 1.f) - 1.f) * *f[2];
+
+         float lfoout = (2.f * fabs(2.f * lfophase[i] - 1.f) - 1.f) * *f[ch_depth];
          time[i].newValue(samplerate * tm * (1 + lfoout));
       }
 
-      hp.coeff_HP(hp.calc_omega(*f[4] * (1.f / 12.f)), 0.707);
-      lp.coeff_LP2B(lp.calc_omega(*f[5] * (1.f / 12.f)), 0.707);
-      mix.set_target_smoothed(*f[6]);
-      width.set_target_smoothed(db_to_linear(*f[7]));
+      hp.coeff_HP(hp.calc_omega(*f[ch_lowcut] * (1.f / 12.f)), 0.707);
+      lp.coeff_LP2B(lp.calc_omega(*f[ch_highcut] * (1.f / 12.f)), 0.707);
+      mix.set_target_smoothed(*f[ch_mix]);
+      width.set_target_smoothed(db_to_linear(*f[ch_width]));
    }
 }
 
@@ -84,11 +84,11 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
    float tbufferL alignas(16)[BLOCK_SIZE];
    float tbufferR alignas(16)[BLOCK_SIZE];
    float fbblock alignas(16)[BLOCK_SIZE];
-   int k;
 
    clear_block(tbufferL, BLOCK_SIZE_QUAD);
    clear_block(tbufferR, BLOCK_SIZE_QUAD);
-   for (k = 0; k < BLOCK_SIZE; k++)
+
+   for (int k = 0; k < BLOCK_SIZE; k++)
    {
       __m128 L = _mm_setzero_ps(), R = _mm_setzero_ps();
 
@@ -127,27 +127,22 @@ template <int v> void ChorusEffect<v>::process(float* dataL, float* dataR)
 
    if (wpos + BLOCK_SIZE >= max_delay_length)
    {
-      for (k = 0; k < BLOCK_SIZE; k++)
+      for (int k = 0; k < BLOCK_SIZE; k++)
       {
          buffer[(wpos + k) & (max_delay_length - 1)] = fbblock[k];
       }
    }
    else
    {
-      /*for(k=0; k<BLOCK_SIZE; k++)
-      {
-              buffer[wpos+k] = fbblock[k];
-      }*/
       copy_block(fbblock, &buffer[wpos], BLOCK_SIZE_QUAD);
    }
 
    if (wpos == 0)
-      for (k = 0; k < FIRipol_N; k++)
+      for (int k = 0; k < FIRipol_N; k++)
          buffer[k + max_delay_length] = buffer[k]; // copy buffer so FIR-core doesn't have to wrap
 
    // scale width
-   float M alignas(16)[BLOCK_SIZE],
-         S alignas(16)[BLOCK_SIZE];
+   float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
    encodeMS(tbufferL, tbufferR, M, S, BLOCK_SIZE_QUAD);
    width.multiply_block(S, BLOCK_SIZE_QUAD);
    decodeMS(M, S, tbufferL, tbufferR, BLOCK_SIZE_QUAD);
@@ -167,45 +162,49 @@ template <int v> void ChorusEffect<v>::init_ctrltypes()
 {
    Effect::init_ctrltypes();
 
-   fxdata->p[0].set_name("Time");
-   fxdata->p[0].set_type(ct_chorusmodtime);
-   fxdata->p[1].set_name("Rate");
-   fxdata->p[1].set_type(ct_lforate);
-   fxdata->p[2].set_name("Depth");
-   fxdata->p[2].set_type(ct_percent);
-   fxdata->p[3].set_name("Feedback");
-   fxdata->p[3].set_type(ct_percent);
-   fxdata->p[4].set_name("Low Cut");
-   fxdata->p[4].set_type(ct_freq_audible);
-   fxdata->p[5].set_name("High Cut");
-   fxdata->p[5].set_type(ct_freq_audible);
-   fxdata->p[6].set_name("Mix");
-   fxdata->p[6].set_type(ct_percent);
-   fxdata->p[7].set_name("Width");
-   fxdata->p[7].set_type(ct_decibel_narrow);
+   fxdata->p[ch_rate].set_name("Rate");
+   fxdata->p[ch_rate].set_type(ct_lforate);
+   fxdata->p[ch_depth].set_name("Depth");
+   fxdata->p[ch_depth].set_type(ct_percent);
 
-   fxdata->p[0].posy_offset = 1;
-   fxdata->p[1].posy_offset = 3;
-   fxdata->p[2].posy_offset = 3;
-   fxdata->p[3].posy_offset = 5;
-   fxdata->p[4].posy_offset = 7;
-   fxdata->p[5].posy_offset = 7;
-   fxdata->p[6].posy_offset = 11;
-   fxdata->p[7].posy_offset = 7;
+   fxdata->p[ch_time].set_name("Time");
+   fxdata->p[ch_time].set_type(ct_chorusmodtime);
+   fxdata->p[ch_feedback].set_name("Feedback");
+   fxdata->p[ch_feedback].set_type(ct_percent);
+
+   fxdata->p[ch_lowcut].set_name("Low Cut");
+   fxdata->p[ch_lowcut].set_type(ct_freq_audible);
+   fxdata->p[ch_highcut].set_name("High Cut");
+   fxdata->p[ch_highcut].set_type(ct_freq_audible);
+
+   fxdata->p[ch_mix].set_name("Mix");
+   fxdata->p[ch_mix].set_type(ct_percent);
+   fxdata->p[ch_width].set_name("Width");
+   fxdata->p[ch_width].set_type(ct_decibel_narrow);
+
+   fxdata->p[ch_rate].posy_offset = -1;
+   fxdata->p[ch_depth].posy_offset = -1;
+
+   fxdata->p[ch_time].posy_offset = 7;
+   fxdata->p[ch_feedback].posy_offset = 3;
+
+   fxdata->p[ch_lowcut].posy_offset = 5;
+   fxdata->p[ch_highcut].posy_offset = 5;
+
+   fxdata->p[ch_mix].posy_offset = 9;
+   fxdata->p[ch_width].posy_offset = 5;
 }
 template <int v> const char* ChorusEffect<v>::group_label(int id)
 {
    switch (id)
    {
    case 0:
-      return "Delay";
-   case 1:
       return "Modulation";
+   case 1:
+      return "Delay";
    case 2:
-      return "Feedback";
-   case 3:
       return "EQ";
-   case 4:
+   case 3:
       return "Output";
    }
    return 0;
@@ -217,26 +216,24 @@ template <int v> int ChorusEffect<v>::group_label_ypos(int id)
    case 0:
       return 1;
    case 1:
-      return 5;
+      return 7;
    case 2:
-      return 11;
+      return 13;
    case 3:
-      return 15;
-   case 4:
-      return 21;
+      return 19;
    }
    return 0;
 }
 
 template <int v> void ChorusEffect<v>::init_default_values()
 {
-   fxdata->p[0].val.f = -6.f;
-   fxdata->p[1].val.f = -2.f;
-   fxdata->p[2].val.f = 0.3f;
-   fxdata->p[3].val.f = 0.5f;
-   fxdata->p[4].val.f = -3.f * 12.f;
-   fxdata->p[5].val.f = 3.f * 12.f;
-   fxdata->p[6].val.f = 1.f;
-   fxdata->p[7].val.f = 0.f;
+   fxdata->p[ch_time].val.f = -6.f;
+   fxdata->p[ch_rate].val.f = -2.f;
+   fxdata->p[ch_depth].val.f = 0.3f;
+   fxdata->p[ch_feedback].val.f = 0.5f;
+   fxdata->p[ch_lowcut].val.f = -3.f * 12.f;
+   fxdata->p[ch_highcut].val.f = 3.f * 12.f;
+   fxdata->p[ch_mix].val.f = 1.f;
+   fxdata->p[ch_width].val.f = 0.f;
 }
 
