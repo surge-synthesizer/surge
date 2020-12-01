@@ -2079,7 +2079,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          frame->localToFrame(where);
 
 
-         int a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, 2);
+         // Assume vertical alignment of the scene buttons
+         int a = limit_range((int)((2 * (where.y - r.top)) / r.getHeight()), 0, n_scenes);
+
+         if( auto aschsw = dynamic_cast<CHSwitch2*>(control))
+         {
+            if( aschsw->columns == n_scenes )
+            {
+               // We are horizontal due to skins or whatever so
+               a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, n_scenes);
+            }
+         }
+
          menuRect.offset(where.x, where.y);
 
          COptionMenu* contextMenu = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
