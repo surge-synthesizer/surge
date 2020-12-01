@@ -120,10 +120,10 @@ void PhaserEffect::setvars()
       // 4 stages in original phaser mode
       for (int i = 0; i < 2; i++)
       {
-         double omega = biquad[2 * i]->calc_omega(2 * *f[ph_basefreq] + legacy_freq[i] + legacy_span[i] * lfoout * *f[ph_mod_depth]);
-         biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_q]);
-         omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_basefreq] + legacy_freq[i] + legacy_span[i] * lfooutR * *f[ph_mod_depth]);
-         biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_q]);
+         double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + legacy_freq[i] + legacy_span[i] * lfoout * *f[ph_mod_depth]);
+         biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
+         omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + legacy_freq[i] + legacy_span[i] * lfooutR * *f[ph_mod_depth]);
+         biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
       }
    }
    else
@@ -131,10 +131,10 @@ void PhaserEffect::setvars()
       for (int i = 0; i < n_stages; i++)
        {
           double centre = powf(2, (i + 1.0) * 2  / n_stages);
-          double omega = biquad[2 * i]->calc_omega(2 * *f[ph_basefreq] + *f[ph_spread] * centre + 2.0 / (i + 1) * lfoout * *f[ph_mod_depth]);
-          biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_q]);
-          omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_basefreq] + *f[ph_spread] * centre * (2.0 / (i + 1) * lfooutR * *f[ph_mod_depth]));
-          biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_q]);
+          double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * centre + 2.0 / (i + 1) * lfoout * *f[ph_mod_depth]);
+          biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
+          omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * centre * (2.0 / (i + 1) * lfooutR * *f[ph_mod_depth]));
+          biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
        }
    }
    
@@ -185,7 +185,7 @@ const char* PhaserEffect::group_label(int id)
    switch (id)
    {
    case 0:
-      return "Phaser";
+      return "Stages";
    case 1:
       return "Modulation";
    case 2:
@@ -200,7 +200,7 @@ int PhaserEffect::group_label_ypos(int id)
    case 0:
       return 1;
    case 1:
-      return 11;
+      return 13;
    case 2:
       return 21;
    }
@@ -210,16 +210,16 @@ int PhaserEffect::group_label_ypos(int id)
 void PhaserEffect::init_ctrltypes()
 {
    Effect::init_ctrltypes();
-   fxdata->p[ph_stages].set_name("Stages");
+   fxdata->p[ph_stages].set_name("Count");
    fxdata->p[ph_stages].set_type(ct_phaser_stages);
-   fxdata->p[ph_basefreq].set_name("Base Frequency");
-   fxdata->p[ph_basefreq].set_type(ct_percent_bidirectional);
+   fxdata->p[ph_center].set_name("Center");
+   fxdata->p[ph_center].set_type(ct_percent_bidirectional);
    fxdata->p[ph_spread].set_name("Spread");
    fxdata->p[ph_spread].set_type(ct_percent);
+   fxdata->p[ph_sharpness].set_name("Sharpness");
+   fxdata->p[ph_sharpness].set_type(ct_percent_bidirectional);
    fxdata->p[ph_feedback].set_name("Feedback");
    fxdata->p[ph_feedback].set_type(ct_percent_bidirectional);
-   fxdata->p[ph_q].set_name("Q");
-   fxdata->p[ph_q].set_type(ct_percent_bidirectional);
 
    fxdata->p[ph_mod_rate].set_name("Rate");
    fxdata->p[ph_mod_rate].set_type(ct_lforate);
@@ -234,13 +234,15 @@ void PhaserEffect::init_ctrltypes()
    fxdata->p[ph_mix].set_type(ct_percent);
 
    fxdata->p[ph_stages].posy_offset = -15;
+   fxdata->p[ph_center].posy_offset = 3;
    fxdata->p[ph_spread].posy_offset = -13;
-   fxdata->p[ph_feedback].posy_offset = 15;
-   fxdata->p[ph_q].posy_offset = 3;
-   fxdata->p[ph_basefreq].posy_offset = 3;
-   fxdata->p[ph_mod_rate].posy_offset = 5;
-   fxdata->p[ph_mod_depth].posy_offset = 5;
-   fxdata->p[ph_stereo].posy_offset = 5;
+   fxdata->p[ph_sharpness].posy_offset = 3;
+   fxdata->p[ph_feedback].posy_offset = 7;
+
+   fxdata->p[ph_mod_rate].posy_offset = 7;
+   fxdata->p[ph_mod_depth].posy_offset = 7;
+   fxdata->p[ph_stereo].posy_offset = 7;
+
    fxdata->p[ph_width].posy_offset = 7;
    fxdata->p[ph_mix].posy_offset = 11;
 

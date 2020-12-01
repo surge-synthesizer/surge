@@ -16,7 +16,7 @@ Fracture::Fracture(audioMasterCallback audioMaster) :
     AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
 	A = 0.25; //1 from 0 to 4: A*4
-	B = 0.5; //2 from 1 to 3: (B*2.999)+1
+	B = 0.0;
 	C = 1.0;
 	D = 1.0;
 	fpNShapeL = 0.0;

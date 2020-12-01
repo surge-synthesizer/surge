@@ -196,6 +196,7 @@ endif()
 #    SURGE_(os)_SOURCES
 
 set(SURGE_SHARED_SOURCES
+  src/common/dsp/effect/ChorusEffectImpl.h
   src/common/dsp/effect/ConditionerEffect.cpp
   src/common/dsp/effect/DistortionEffect.cpp
   src/common/dsp/effect/DualDelayEffect.cpp

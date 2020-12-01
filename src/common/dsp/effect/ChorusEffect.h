@@ -32,9 +32,23 @@ template <int v> class ChorusEffect : public Effect
             width alignas(16);
    __m128 voicepanL4 alignas(16)[v],
           voicepanR4 alignas(16)[v];
-   float buffer alignas(16)[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE
-                                                           // interpolation without wrapping
+   float buffer alignas(16)[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE interpolation without wrapping
+
 public:
+   enum chorus_params
+   {
+      ch_time,
+      ch_rate,
+      ch_depth,
+      ch_feedback,
+      ch_lowcut,
+      ch_highcut,
+      ch_mix,
+      ch_width,
+
+      ch_num_params,
+   };
+
    ChorusEffect<v>(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
    virtual ~ChorusEffect();
    virtual const char* get_effectname() override
