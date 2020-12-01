@@ -102,14 +102,7 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_nonlinearfb_hp:
    case fut_nonlinearfb_n:
    case fut_nonlinearfb_bp:
-      // false for no oversampling
-      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, false, storageI);
-      break;
-   case fut_nonlinearfb_lp_os:
-   case fut_nonlinearfb_hp_os:
-   case fut_nonlinearfb_n_os:
-   case fut_nonlinearfb_bp_os:
-      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, true, storageI);
+      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
       break;
 
 #if SURGE_EXTRA_FILTERS
