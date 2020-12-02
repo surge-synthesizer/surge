@@ -110,6 +110,39 @@ CMouseEventResult CSwitchControl::onMouseMoved(CPoint& where, const CButtonState
 {
    return kMouseEventHandled;
 }
+bool CSwitchControl::onWheel(const CPoint& where,
+                             const float& distance,
+                             const CButtonState& buttons)
+{
+   if( ! is_itype ) return false;
+   if( imax == 0 ) return false;
+
+   wheelDistance += distance;
+
+   float threshold = 1;
+#if WINDOWS
+   threshold = 0.333333;
+#endif
+
+   if( wheelDistance > threshold )
+   {
+      ivalue ++;
+      if( ivalue >= imax )
+         ivalue = 0;
+      if (listener)
+         listener->valueChanged(this);
+
+   }
+   else if( wheelDistance < -threshold )
+   {
+      ivalue--;
+      if( ivalue < 0 )
+         ivalue = imax;
+      if (listener)
+         listener->valueChanged(this);
+   }
+   return true;
+}
 /*
 void gui_switch::mouse (CPoint &where, long button)
 {
