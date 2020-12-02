@@ -162,7 +162,7 @@
     <control ui_identifier="scene.drift" class="def-hslider"/>
     <control ui_identifier="scene.noise_color" class="def-hslider"/>
 
-    <control ui_identifier="scene.fmdepth" class="def-hslider"/>
+    <control ui_identifier="scene.fmdepth" class="def-hslider" y="162"/>
 
     <control ui_identifier="scene.volume" class="def-hslider"/>
     <control ui_identifier="scene.pan" class="def-hslider"/>
@@ -174,7 +174,6 @@
     <control ui_identifier="scene.pitch" class="def-hslider"/>
 
     <control ui_identifier="scene.fmrouting" y="88"/>
-    <control ui_identifier="scene.fmdepth" y="162"/>
 
     <control ui_identifier="controls.surge_menu" x="850"/>
 
@@ -213,14 +212,13 @@
     <control ui_identifier="filter.subtype_1" x="432" y="194"/>
     <control ui_identifier="filter.type_2" x="605" y="191"/>
     <control ui_identifier="filter.subtype_2" x="732" y="194"/>
-    <control ui_identifier="filter.feedback" y="162"/>
 
     <control ui_identifier="filter.cutoff_1" class="def-hslider"/>
     <control ui_identifier="filter.resonance_1" class="def-hslider"/>
     <control ui_identifier="filter.cutoff_2" class="def-hslider"/>
     <control ui_identifier="filter.resonance_2" class="def-hslider"/>
     <control ui_identifier="filter.balance" class="def-hslider"/>
-    <control ui_identifier="filter.feedback" class="def-hslider"/>
+    <control ui_identifier="filter.feedback" class="def-hslider" y="162"/>
 
     <!-- Mixer -->
     <control ui_identifier="mixer.mute_o1" x="0" y="1"/>
