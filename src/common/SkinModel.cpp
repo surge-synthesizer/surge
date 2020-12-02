@@ -58,12 +58,12 @@ namespace Surge
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.split_poly.text.hover");
                    // this doesn't have a cm since it is special
 
-         Connector pbrange_dn = Connector("scene.pbrange_dn", 161, 112, 30, 13, Connector::NUMBERFIELD)
+         Connector pbrange_dn = Connector("scene.pbrange_dn", 159, 110, 30, 13, Connector::NUMBERFIELD)
                    .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth)
                    .withBackground(IDB_NUMFIELD_PITCHBEND)
                    .withProperty(Connector::TEXT_COLOR, "scene.pbrange.text")
                    .withProperty(Connector::TEXT_HOVER_COLOR, "scene.pbrange.text.hover");
-         Connector pbrange_up = Connector("scene.pbrange_up", 189, 112, 30, 13, Connector::NUMBERFIELD)
+         Connector pbrange_up = Connector("scene.pbrange_up", 187, 110, 30, 13, Connector::NUMBERFIELD)
                    .withProperty(Connector::NUMBERFIELD_CONTROLMODE, cm_pbdepth)
                    .withBackground(IDB_NUMFIELD_PITCHBEND)
                    .withProperty(Connector::TEXT_COLOR, "scene.pbrange.text")
@@ -73,9 +73,9 @@ namespace Surge
          Connector drift = Connector("scene.drift", 156, 141).asHorizontal().asWhite();
          Connector noise_color = Connector("scene.noise_color", 156, 162).asHorizontal().asWhite();
 
-         Connector fmrouting = Connector("scene.fmrouting", 309, 89, 134, 52, Connector::HSWITCH2)
+         Connector fmrouting = Connector("scene.fmrouting", 309, 83, 134, 52, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_OSC_FM_ROUTING, 4, 1, 4);
-         Connector fmdepth = Connector("scene.fmdepth", 306, 162).asHorizontal().asWhite();
+         Connector fmdepth = Connector("scene.fmdepth", 306, 152).asHorizontal().asWhite();
 
          Connector octave = Connector("scene.octave", 202, 194, 96, 18, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_SCENE_OCTAVE, 7, 1, 7);
@@ -161,9 +161,9 @@ namespace Surge
 
       namespace Filter
       {
-         Connector config = Connector("filter.config", 455, 89, 134, 52, Connector::HSWITCH2)
+         Connector config = Connector("filter.config", 455, 83, 134, 52, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_FILTER_CONFIG, 8, 1, 8);
-         Connector feedback = Connector("filter.feedback", 457, 162).asHorizontal().asWhite();
+         Connector feedback = Connector("filter.feedback", 457, 152).asHorizontal().asWhite();
 
          // FIXME - we should really expose the menu slider fully but for now make a composite FILTERSELECTOR
          Connector type_1 = Connector("filter.type_1", 305, 191, 124, 21, Connector::FILTERSELECTOR);
