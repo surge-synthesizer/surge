@@ -173,6 +173,9 @@
     <control ui_identifier="scene.portatime" class="def-hslider"/>
     <control ui_identifier="scene.pitch" class="def-hslider"/>
 
+    <control ui_identifier="scene.fmrouting" y="88"/>
+    <control ui_identifier="scene.fmdepth" y="162"/>
+
     <control ui_identifier="controls.surge_menu" x="850"/>
 
     <control ui_identifier="scene.gain" y="301"/>
@@ -181,6 +184,9 @@
     <!-- Bend Depth & Play Mode -->
     <control ui_identifier="scene.pbrange_dn" x="157" y="112" w="30" h="13"/>
     <control ui_identifier="scene.pbrange_up" x="188" y="112" w="30" h="13"/>
+
+    <control ui_identifier="scene.playmode" y="92"/>
+
     <control ui_identifier="scene.octave" x="202" y="194" w="96" h="18"/>
 
     <!-- OSC -->
@@ -201,10 +207,13 @@
     <control ui_identifier="osc.param_7" class="def-hslider"/>
 
     <!-- Filter -->
+    <control ui_identifier="filter.config" y="88"/>
+
     <control ui_identifier="filter.type_1" x="305" y="191"/>
     <control ui_identifier="filter.subtype_1" x="432" y="194"/>
     <control ui_identifier="filter.type_2" x="605" y="191"/>
     <control ui_identifier="filter.subtype_2" x="732" y="194"/>
+    <control ui_identifier="filter.feedback" y="162"/>
 
     <control ui_identifier="filter.cutoff_1" class="def-hslider"/>
     <control ui_identifier="filter.resonance_1" class="def-hslider"/>
@@ -214,26 +223,26 @@
     <control ui_identifier="filter.feedback" class="def-hslider"/>
 
     <!-- Mixer -->
-    <control ui_identifier="mixer.mute_o1" x="0"/>
-    <control ui_identifier="mixer.mute_o2" x="20"/>
-    <control ui_identifier="mixer.mute_o3" x="40"/>
-    <control ui_identifier="mixer.mute_ring12" x="60"/>
-    <control ui_identifier="mixer.mute_ring23" x="80"/>
-    <control ui_identifier="mixer.mute_noise" x="100"/>
+    <control ui_identifier="mixer.mute_o1" x="0" y="1"/>
+    <control ui_identifier="mixer.mute_o2" x="20" y="1"/>
+    <control ui_identifier="mixer.mute_o3" x="40" y="1"/>
+    <control ui_identifier="mixer.mute_ring12" x="60" y="1"/>
+    <control ui_identifier="mixer.mute_ring23" x="80" y="1"/>
+    <control ui_identifier="mixer.mute_noise" x="100" y="1"/>
 
-    <control ui_identifier="mixer.solo_o1" x="0"/>
-    <control ui_identifier="mixer.solo_o2" x="20"/>
-    <control ui_identifier="mixer.solo_o3" x="40"/>
-    <control ui_identifier="mixer.solo_ring12" x="60"/>
-    <control ui_identifier="mixer.solo_ring23" x="80"/>
-    <control ui_identifier="mixer.solo_noise" x="100"/>
+    <control ui_identifier="mixer.solo_o1" x="0" y="12"/>
+    <control ui_identifier="mixer.solo_o2" x="20" y="12"/>
+    <control ui_identifier="mixer.solo_o3" x="40" y="12"/>
+    <control ui_identifier="mixer.solo_ring12" x="60" y="12"/>
+    <control ui_identifier="mixer.solo_ring23" x="80" y="12"/>
+    <control ui_identifier="mixer.solo_noise" x="100" y="12"/>
 
-    <control ui_identifier="mixer.route_o1" x="0"/>
-    <control ui_identifier="mixer.route_o2" x="20"/>
-    <control ui_identifier="mixer.route_o3" x="40"/>
-    <control ui_identifier="mixer.route_ring12" x="60"/>
-    <control ui_identifier="mixer.route_ring23" x="80"/>
-    <control ui_identifier="mixer.route_noise" x="100"/>
+    <control ui_identifier="mixer.route_o1" x="0" y="23"/>
+    <control ui_identifier="mixer.route_o2" x="20" y="23"/>
+    <control ui_identifier="mixer.route_o3" x="40" y="23"/>
+    <control ui_identifier="mixer.route_ring12" x="60" y="23"/>
+    <control ui_identifier="mixer.route_ring23" x="80" y="23"/>
+    <control ui_identifier="mixer.route_noise" x="100" y="23"/>
 
     <control ui_identifier="mixer.level_o1" y="38"/>
     <control ui_identifier="mixer.level_o2" y="38"/>
