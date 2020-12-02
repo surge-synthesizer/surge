@@ -317,6 +317,7 @@ public:
    std::string getUserPatchDirectory();
    std::string getLegacyUserPatchDirectory();
 
+   void savePatchToPath(fs::path p);
    void savePatch();
    void updateUsedState();
    void prepareModsourceDoProcess(int scenemask);

@@ -529,3 +529,72 @@ TEST_CASE( "IDs are Stable", "[io]" )
       }
    }
 }
+
+/*
+ * This test is here just so I have a place to hang code that builds patches
+ */
+TEST_CASE( "Patch Version Builder", "[io]")
+{
+#if BUILD_PATCHES_SV14
+   SECTION( "Build All 14 Filters" )
+   {
+      REQUIRE( ff_revision == 14 );
+      for( int i=0; i<n_fu_types; ++i )
+      {
+         std::cout << fut_names[i] << std::endl;
+         for( int j=0; j<fut_subcount[i]; ++j )
+         {
+            auto surge = Surge::Headless::createSurge(44100);
+
+            for( int s = 0; s<n_scenes; ++s )
+            {
+               for( int fu=0; fu<n_filterunits_per_scene; ++fu )
+               {
+                  surge->storage.getPatch().scene[s].filterunit[fu].type.val.i = i;
+                  surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i = j;
+               }
+            }
+            std::ostringstream oss;
+            oss << "test-data/patches/all-filters/s14/filt_" << i << "_" << j << ".fxp";
+            auto p = string_to_path(oss.str());
+            surge->savePatchToPath(p);
+         }
+      }
+   }
+#endif
+
+   SECTION( "Test all SV14 Filters" )
+   {
+      auto p = string_to_path( "test-data/patches/all-filters/s14" );
+      for( auto ent : fs::directory_iterator(p))
+      {
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->loadPatchByPath( path_to_string(ent).c_str(), -1, "TEST" );
+         surge->process();
+         auto ft = surge->storage.getPatch().scene[0].filterunit[0].type.val.i;
+         auto st = surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i;
+         for( int s = 0; s<n_scenes; ++s )
+         {
+            for( int fu=0; fu<n_filterunits_per_scene; ++fu )
+            {
+               INFO( path_to_string( ent ) << " " << ft << " " << st << " " << s << " " << fu )
+               REQUIRE( surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == ft );
+               REQUIRE( surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == st );
+            }
+         }
+
+         if( ff_revision == 14 )
+         {
+            std::ostringstream cand_fn;
+            cand_fn << "filt_" << ft << "_" << st << ".fxp";
+            auto entfn = path_to_string(ent.path().filename());
+            REQUIRE(entfn == cand_fn.str());
+         }
+         else if( ff_revision > 14 )
+         {
+            // Coming soon!
+            REQUIRE( 1 == 2 );
+         }
+      }
+   }
+}
