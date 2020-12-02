@@ -713,7 +713,10 @@ __m128 ASYM_SSE2(__m128 in, __m128 drive)
 
 FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
 {
-   switch (type)
+   // Force compiler to error out if I miss one
+   fu_type fType = (fu_type)type;
+
+   switch (fType)
    {
    case fut_lp12:
    {
@@ -735,8 +738,7 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       //				return IIR12CFLquad;
       return IIR12Bquad;
    }
-   case fut_bp12:
-   {
+   case fut_bp12: {
       switch (subtype)
       {
       case st_SVF:
@@ -748,22 +750,27 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       case st_Smooth:
          return IIR12Bquad;
          break;
-      case st_SVFBP24:
+      }
+      break;
+   }
+   case fut_bp24:{
+      switch( subtype )
+      {
+      case st_SVF:
          return SVFBP24Aquad;
          break;
-      case st_RoughBP24:
+      case st_Rough:
          return IIR24CFCquad;
          break;
-      case st_SmoothBP24:
+      case st_Smooth:
          return IIR24Bquad;
          break;
       }
    }
-   case fut_br12:
-      if (subtype == st_BR12 || subtype == st_BR12Mild)
-         return IIR12Bquad;
-      else
-         return IIR24Bquad;
+   case fut_notch12:
+      return IIR12Bquad;
+   case fut_notch24:
+      return IIR24Bquad;
    case fut_lp24:
       if (subtype == st_SVF)
          return SVFLP24Aquad;
@@ -784,7 +791,8 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       return LPMOOGquad;
    case fut_SNH:
       return SNHquad;
-   case fut_comb:
+   case fut_comb_pos:
+   case fut_comb_neg:
       return COMBquad_SSE2;
    case fut_vintageladder:
       switch( subtype )
@@ -797,7 +805,11 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
          return VintageLadder::Huov::process;
       }
       break;
-   case fut_obxd_2pole:
+   case fut_obxd_2pole_lp:
+   case fut_obxd_2pole_hp:
+   case fut_obxd_2pole_bp:
+   case fut_obxd_2pole_n:
+      // All the differences are in subtype wrangling int he coefficnent maker
       return ObxdFilter::process_2_pole;
       break;
    case fut_obxd_4pole:
@@ -818,12 +830,9 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
    case fut_nonlinearfb_bp:
       return NonlinearFeedbackFilter::process;
       break;
-   default:
-      // SOFTWARE ERROR
-      break;
-         
-#if SURGE_EXTRA_FILTERS      
-#endif      
+   case fut_none:
+   case n_fu_types:
+      return 0;
    }
    return 0;
 }

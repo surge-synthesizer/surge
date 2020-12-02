@@ -2802,47 +2802,57 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                bool isCombOnSubtype = false;
                if (p->ctrltype == ct_filtersubtype)
                {
-                  if( synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i == fut_comb )
+                  auto ftype = synth->storage.getPatch().scene[current_scene].filterunit[p->ctrlgroup_entry].type.val.i;
+                  if( ftype == fut_comb_pos || ftype == fut_comb_neg )
                      isCombOnSubtype = true;
-                  max = fut_subcount[synth->storage.getPatch()
-                                         .scene[current_scene]
-                                         .filterunit[p->ctrlgroup_entry]
-                                         .type.val.i] - 1;
+                  max = fut_subcount[ftype] - 1;
                }
 
                auto dm = dynamic_cast<ParameterDiscreteIndexRemapper*>( p->user_data );
-
                if( dm )
                {
-                  std::map<std::string, std::map<int,int>> reorderMap;
+                  std::unordered_map<std::string, std::map<int,int>> reorderMap;
+                  std::vector<std::string> groupAppearanceOrder;
                   for( int i=p->val_min.i; i<= max; i += incr )
                   {
                      int idx = dm->remapStreamedIndexToDisplayIndex( i );
                      auto gn = dm->groupNameAtStreamedIndex(i);
+                     if( reorderMap.find( gn ) == reorderMap.end() )
+                     {
+                        groupAppearanceOrder.push_back(gn);
+                     }
                      
                      reorderMap[gn][idx] = i;
                   }
+
+                  if( dm->sortGroupNames() )
+                     std::sort( groupAppearanceOrder.begin(), groupAppearanceOrder.end() );
+
                   bool useSubMenus = dm->hasGroupNames();
                   COptionMenu *sub = nullptr;
-                  for( auto grp : reorderMap )
+                  for( auto grpN : groupAppearanceOrder )
                   {
+                     auto grp = reorderMap[grpN];
                      bool checkSub = false;
                      if( useSubMenus )
                      {
                         sub = new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
                      }
-                     for( auto rp : grp.second )
+                     for( auto rp : grp )
                      {
                         int i = rp.second;
                         std::string displaytxt = dm->nameAtStreamedIndex(i);
+                        auto addTo = useSubMenus ? sub : contextMenu;
+                        if( useSubMenus && grpN == "" )
+                           addTo = contextMenu;
                      
 #if WINDOWS
                            Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"), std::string("&&"));
 #endif
                         
-                        auto b = addCallbackMenu( useSubMenus ? sub : contextMenu, displaytxt.c_str(),
+                        auto b = addCallbackMenu( addTo, displaytxt.c_str(),
                                                   [this,p,i, tag]() {
-                                                     float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
+                                                     float ef = Parameter::intScaledToFloat(i,p->val_max.i, p->val_min.i );
                                                      synth->setParameter01(synth->idForParameter(p), ef, false,
                                                                               false);
                                                      repushAutomationFor(p);
@@ -2855,9 +2865,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                            checkSub = true;
                         }
                      }
-                     if( useSubMenus )
+                     if( useSubMenus && grpN != "" )
                      {
-                        auto e = contextMenu->addEntry( sub, grp.first.c_str() ); sub->forget(); sub = nullptr;
+                        auto e = contextMenu->addEntry( sub, grpN.c_str() ); sub->forget(); sub = nullptr;
                         e->setChecked( checkSub );
                      }
                   }
@@ -7268,6 +7278,7 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       hsw->setDeactivated(false);
       hsw->setBackgroundID(IDB_FILTER_MENU);
       hsw->setFilterMode(true);
+      hsw->glyphIndexMap = (const int*)fut_glyph_index;
       p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
       auto drr = rect;

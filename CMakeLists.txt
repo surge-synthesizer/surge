@@ -104,7 +104,7 @@ endif()
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
-add_library(surge-shared)
+add_library(surge-shared src/common/FilterConfiguration.h)
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)

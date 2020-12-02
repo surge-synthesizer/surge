@@ -21,7 +21,9 @@ void FilterCoefficientMaker::MakeCoeffs(
     float Freq, float Reso, int Type, int SubType, SurgeStorage* storageI)
 {
    storage = storageI;
-   switch (Type)
+   // Force compiler to error out if I miss one
+   fu_type fType = (fu_type)Type;
+   switch (fType)
    {
    case fut_lp12:
       if (SubType == st_SVF)
@@ -36,15 +38,21 @@ void FilterCoefficientMaker::MakeCoeffs(
          Coeff_HP12(Freq, Reso, SubType);
       break;
    case fut_bp12:
-      if ((SubType == st_SVF) || (SubType == st_SVFBP24))
-         Coeff_SVF(Freq, Reso, false);
-      else if (SubType == st_Rough || SubType == st_Smooth)
-         Coeff_BP12(Freq, Reso, SubType);
-      else if (SubType == st_RoughBP24 || SubType == st_SmoothBP24)
-         Coeff_BP24(Freq, Reso, SubType);
+      if( SubType == st_SVF )
+         Coeff_SVF(Freq, Reso, false );
+      else
+         Coeff_BP12( Freq, Reso, SubType );
+   case fut_bp24:
+      if( SubType == st_SVF )
+         Coeff_SVF(Freq, Reso, false ); // WHY FALSE? It was this way before #3006 tho
+      else
+         Coeff_BP24( Freq, Reso, SubType );
       break;
-   case fut_br12:
-      Coeff_BR(Freq, Reso, SubType);
+   case fut_notch12:
+      Coeff_Notch(Freq, Reso, SubType);
+      break;
+   case fut_notch24:
+      Coeff_Notch(Freq, Reso, SubType + 2);
       break;
    case fut_lp24:
       if (SubType == st_SVF)
@@ -61,8 +69,11 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_lpmoog:
       Coeff_LP4L(Freq, Reso, SubType);
       break;
-   case fut_comb:
+   case fut_comb_pos:
       Coeff_COMB(Freq, Reso, SubType);
+      break;
+   case fut_comb_neg:
+      Coeff_COMB(Freq, Reso, SubType + 2); // -ve feedback is the next 2 subtypes
       break;
    case fut_SNH:
       Coeff_SNH(Freq, Reso, SubType);
@@ -83,8 +94,21 @@ void FilterCoefficientMaker::MakeCoeffs(
          break;
       }
       break;
-   case fut_obxd_2pole:
-      ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType, storageI);
+      /* When we split OBXD we went from one filter with 8 settings (L,B,H,N L+, B+, H+, N+) to
+       * two subtypes (regunlar and +). So what used to be Highpass (value 2 and 6) is now 1 and 2 on
+       * a new type. But don't rewrite the filter for now. Just reconstruct the subtypes
+       * */
+   case fut_obxd_2pole_lp:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4, storageI);
+      break;
+   case fut_obxd_2pole_bp:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4 + 1, storageI);
+      break;
+   case fut_obxd_2pole_hp:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4 + 2, storageI);
+      break;
+   case fut_obxd_2pole_n:
+      ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4 + 3, storageI);
       break;
    case fut_obxd_4pole:
       ObxdFilter::makeCoefficients(this, ObxdFilter::FOUR_POLE, Freq, Reso, SubType, storageI);
@@ -105,8 +129,10 @@ void FilterCoefficientMaker::MakeCoeffs(
       NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
       break;
 
-#if SURGE_EXTRA_FILTERS
-#endif      
+   case n_fu_types:
+      // This should really be an error condition of course
+   case fut_none:
+      break;
    };
 }
 
@@ -115,10 +141,8 @@ float clipscale(float freq, int subtype)
    switch (subtype)
    {
    case st_Rough:
-   case st_RoughBP24:
       return (1.0f / 64.0f) * db_to_linear(freq * 0.55f);
    case st_Smooth:
-   case st_SmoothBP24:
       return (1.0f / 1024.0f); // * db_to_linear(freq*0.55f);
    };
    return 0;
@@ -165,12 +189,10 @@ double Map4PoleResonance(double reso, double freq, int subtype)
       reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
       return 0.99 - 0.9949 * limit_range((double)reso, 0.0, 1.0); // sqrt(1.01) = 1.004987562
    case st_Rough:
-   case st_RoughBP24:
       reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
       return (1.0 - 1.05 * limit_range((double)reso, 0.001, 1.0));
    default:
    case st_Smooth:
-   case st_SmoothBP24:
       return (2.5 - 2.3 * limit_range((double)reso, 0.0, 1.0));
    }
 }
@@ -197,10 +219,8 @@ double resoscale4Pole(double reso, int subtype)
    case st_Medium:
       return (1.0 - 0.75 * reso);
    case st_Rough:
-   case st_RoughBP24:
       return (1.0 - 0.5 * reso * reso);
    case st_Smooth:
-   case st_SmoothBP24:
       return (1.0 - 0.5 * reso);
    }
 
@@ -375,7 +395,7 @@ void FilterCoefficientMaker::Coeff_BP12(float freq, float reso, int subtype)
 void FilterCoefficientMaker::Coeff_BP24(float freq, float reso, int subtype)
 {
    float gain = resoscale(reso, subtype);
-   if (subtype == st_RoughBP24)
+   if (subtype == st_Rough)
       gain *= 2.f;
 
    boundfreq(freq)
@@ -396,26 +416,26 @@ void FilterCoefficientMaker::Coeff_BP24(float freq, float reso, int subtype)
       b2 = -Q * alpha;
    }
 
-   if (subtype == st_SmoothBP24)
+   if (subtype == st_Smooth)
       ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
    else
       ToCoupledForm(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
 }
 
-void FilterCoefficientMaker::Coeff_BR(float freq, float reso, int subtype)
+void FilterCoefficientMaker::Coeff_Notch(float Freq, float Reso, int SubType)
 {
-   boundfreq(freq)
+   boundfreq(Freq)
 
        // double Q2inv = (2.5-2.45*limit_range((double)(1-(1-reso)*(1-reso)),0.0,1.0));
        double Q2inv;
 
-   if (subtype == st_BR12Mild || subtype == st_BR24Mild)
-      Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+   if (SubType == st_NotchMild)
+      Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
    else
-      Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - reso) * (1 - reso)), 0.0, 1.0));
+      Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
 
    float cosi, sinu;
-   storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
+   storage->note_to_omega_ignoring_tuning(Freq, sinu, cosi);
 
    double alpha = sinu * Q2inv, b0 = 1, b1 = -2 * cosi, b2 = 1, a0 = 1 + alpha, a1 = -2 * cosi,
           a2 = 1 - alpha, a0inv = 1 / a0;

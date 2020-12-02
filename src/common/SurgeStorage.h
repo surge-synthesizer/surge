@@ -79,8 +79,9 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 13 -> 14 (1.8.0 nightlies) add phaser number of stages parameter
 //                            add ability to configure vocoder modulator mono/sterao/L/R
 //                            add comb filter tuning and compatibility block
+// 14 -> 15 (1.8.0 release) apply the great filter remap of #3006
 
-const int ff_revision = 14;
+const int ff_revision = 15;
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -396,198 +397,10 @@ const int lt_num_deforms[n_lfo_types] =
    3,   // lt_function
 };
 
-enum fu_type
-{
-   fut_none = 0,
-   fut_lp12,
-   fut_lp24,
-   fut_lpmoog,
-   fut_hp12,
-   fut_hp24,
-   fut_bp12,
-   fut_br12,
-   fut_comb,
-   fut_SNH,
-   fut_vintageladder,
-   fut_obxd_2pole,
-   fut_obxd_4pole,
-   fut_k35_lp,
-   fut_k35_hp,
-   fut_diode,
-   fut_nonlinearfb_lp,
-   fut_nonlinearfb_hp,
-   fut_nonlinearfb_n,
-   fut_nonlinearfb_bp,
-   n_fu_types,
-};
-const char fut_names[n_fu_types][32] =
-{
-   "Off",
-   "Lowpass 12 dB/oct",
-   "Lowpass 24 dB/oct",
-   "Legacy Ladder",
-   "Highpass 12 dB/oct",
-   "Highpass 24 dB/oct",
-   "Bandpass",
-   "Notch",
-   "Comb",
-   "Sample & Hold",
-   "Vintage Ladder",
-   "OB-Xd 12 dB/oct",
-   "OB-Xd 24 dB/oct",
-   "K35 Lowpass",
-   "K35 Highpass",
-   "Diode Ladder",
-   "Lowpass NL Feedback",
-   "Highpass NL Feedback",
-   "Notch NL Feedback",
-   "Bandpass NL Feedback",
-   /* this is a ruler to ensure names do not exceed 31 characters
-    0123456789012345678901234567890
-   */
-};
-
-const char fut_bp_subtypes[6][32] =
-{
-   "Clean 12 dB/oct",
-   "Driven 12 dB/oct",
-   "Smooth 12 dB/oct",
-   "Clean 24 dB/oct",
-   "Driven 24 dB/oct",
-   "Smooth 24 dB/oct",
-};
-
-const char fut_br_subtypes[4][32] =
-{
-   "12 dB/oct",
-   "12 dB/oct Mild",
-   "24 dB/oct",
-   "24 dB/oct Mild",
-};
-
-const char fut_comb_subtypes[4][64] =
-{
-   "Positive, 50% Wet",
-   "Positive, 100% Wet",
-   "Negative, 50% Wet",
-   "Negative, 100% Wet",
-};
-
-const char fut_def_subtypes[3][32] =
-{
-   "Clean",
-   "Driven",
-   "Smooth",
-};
-
-const char fut_ldr_subtypes[4][32] =
-{
-   "6 dB/oct",
-   "12 dB/oct",
-   "18 dB/oct",
-   "24 dB/oct",
-};
-
-const char fut_vintageladder_subtypes[6][32] =
-{
-   "Strong",
-   "Strong Compensated",
-   "Dampened",
-   "Dampened Compensated",
-};
-
-const char fut_obxd_2p_subtypes[8][32] =
-{
-   "Lowpass",
-   "Bandpass",
-   "Highpass",
-   "Notch",
-   "Lowpass Pushed",
-   "Bandpass Pushed",
-   "Highpass Pushed",
-   "Notch Pushed",
-};
-
-const char fut_obxd_4p_subtypes[4][32] =
-{
-   "6 dB/oct",
-   "12 dB/oct",
-   "18 dB/oct",
-   "24 dB/oct",
-};
-
-const char fut_k35_subtypes[5][32] =
-{
-   "No Saturation",
-   "Mild Saturation",
-   "Moderate Saturation",
-   "Heavy Saturation",
-   "Extreme Saturation"
-};
-
-const float fut_k35_saturations[5] =
-{
-   0.0f,
-   1.0f,
-   2.0f,
-   3.0f,
-   4.0f
-};
-
-const char fut_nlf_subtypes[4][32] =
-{
-   "1 stage ",
-   "2 stages",
-   "3 stages",
-   "4 stages",
-};
-
-const char fut_nlf_saturators[4][6] =
-{
-   "tanh",
-   "soft",
-   "sine",
-   "OJD",
-};
-
-const int fut_subcount[n_fu_types] =
-{
-   0, // fut_none
-   3, // fut_lp12
-   3, // fut_lp24
-   4, // fut_lpmoog
-   3, // fut_hp12
-   3, // fut_hp24
-   6, // fut_bp12
-   4, // fut_br12
-   4, // fut_comb
-   0, // fut_SNH
-   4, // fut_vintageladder
-   8, // fut_obxd_2pole
-   4, // fut_obxd_4pole
-   5, // fut_k35_lp
-   5, // fut_k35_hp
-   4, // fut_diode
-   16, // fut_nonlinearfb_lp
-   16, // fut_nonlinearfb_hp
-   16, // fut_nonlinearfb_n
-   16  // fut_nonlinearfb_bp
-};
-
-enum fu_subtype
-{
-   st_SVF = 0,
-   st_Rough = 1,
-   st_Smooth = 2,
-   st_Medium = 3, // disabled
-   st_SVFBP24 = 3,
-   st_RoughBP24 = 4,
-   st_SmoothBP24 = 5,
-   st_BR12 = 0,
-   st_BR12Mild = 1,
-   st_BR24 = 2,
-   st_BR24Mild = 3,
-};
+/*
+ * With 1.8 for compactness all the filter names and stuff went to a separate header
+ */
+#include "FilterConfiguration.h"
 
 enum ws_type
 {
@@ -941,6 +754,8 @@ public:
    * properly at stream time and so on.
    */
    bool correctlyTuneCombFilter = true;
+
+   FilterSelectorMapper patchFilterSelectorMapper;
 
 };
 

@@ -563,6 +563,35 @@ TEST_CASE( "Patch Version Builder", "[io]")
    }
 #endif
 
+
+#if BUILD_PATCHES_SV15
+   SECTION( "Build All 15 Filters" )
+   {
+      REQUIRE( ff_revision == 15 );
+      for( int i=0; i<n_fu_types; ++i )
+      {
+         std::cout << fut_names[i] << std::endl;
+         for( int j=0; j<fut_subcount[i]; ++j )
+         {
+            auto surge = Surge::Headless::createSurge(44100);
+
+            for( int s = 0; s<n_scenes; ++s )
+            {
+               for( int fu=0; fu<n_filterunits_per_scene; ++fu )
+               {
+                  surge->storage.getPatch().scene[s].filterunit[fu].type.val.i = i;
+                  surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i = j;
+               }
+            }
+            std::ostringstream oss;
+            oss << "test-data/patches/all-filters/s15/filt_" << i << "_" << j << ".fxp";
+            auto p = string_to_path(oss.str());
+            surge->savePatchToPath(p);
+         }
+      }
+   }
+#endif
+
    SECTION( "Test all SV14 Filters" )
    {
       auto p = string_to_path( "test-data/patches/all-filters/s14" );
@@ -583,6 +612,7 @@ TEST_CASE( "Patch Version Builder", "[io]")
             }
          }
 
+         INFO( "Patch for filter " << fut_names[ft] );
          if( ff_revision == 14 )
          {
             std::ostringstream cand_fn;
@@ -592,9 +622,108 @@ TEST_CASE( "Patch Version Builder", "[io]")
          }
          else if( ff_revision > 14 )
          {
-            // Coming soon!
-            REQUIRE( 1 == 2 );
+            fu_type fft = (fu_type)ft;
+            int fnft = ft;
+            int fnst = st;
+            switch(fft)
+            {
+            case fut_none:
+            case fut_lp12:
+            case fut_lp24:
+            case fut_lpmoog:
+            case fut_hp12:
+            case fut_hp24:
+            case fut_SNH:
+            case fut_vintageladder:
+            case fut_obxd_4pole:
+            case fut_k35_lp:
+            case fut_k35_hp:
+            case fut_diode:
+            case fut_nonlinearfb_lp:
+            case fut_nonlinearfb_hp:
+            case fut_nonlinearfb_n:
+            case fut_nonlinearfb_bp:
+            case n_fu_types:
+               // These types were unchanged
+               break;
+               // These are the types which changed 14 -> 15
+            case fut_comb_pos:
+               fnft = fut_14_comb;
+               fnst = st;
+               break;
+            case fut_comb_neg:
+               fnft = fut_14_comb;
+               fnst = st + 2;
+               break;
+            case fut_obxd_2pole_lp:
+               fnft = fut_14_obxd_2pole;
+               fnst = st * 4 + 0;
+               break;
+            case fut_obxd_2pole_hp:
+               fnft = fut_14_obxd_2pole;
+               fnst = st * 4 + 1;
+               break;
+            case fut_obxd_2pole_n:
+               fnft = fut_14_obxd_2pole;
+               fnst = st * 4 + 2;
+               break;
+            case fut_obxd_2pole_bp:
+               fnft = fut_14_obxd_2pole;
+               fnst = st * 4 + 3;
+               break;
+            case fut_notch12:
+               fnft = fut_14_notch12;
+               fnst = st;
+               break;
+            case fut_notch24:
+               fnft = fut_14_notch12;
+               fnst = st + 2;
+               break;
+            case fut_bp12:
+               fnft = fut_14_bp12;
+               fnst = st;
+               break;
+            case fut_bp24:
+               fnft = fut_14_bp12;
+               fnst = st + 3;
+               break;
+            default:
+               break;
+            }
+            std::ostringstream cand_fn;
+            cand_fn << "filt_" << fnft << "_" << fnst << ".fxp";
+            auto entfn = path_to_string(ent.path().filename());
+            REQUIRE(entfn == cand_fn.str());
          }
+      }
+   }
+
+
+   SECTION( "Test all SV15 Filters" )
+   {
+      REQUIRE( ff_revision >= 15 );
+      auto p = string_to_path( "test-data/patches/all-filters/s15" );
+      for( auto ent : fs::directory_iterator(p))
+      {
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->loadPatchByPath( path_to_string(ent).c_str(), -1, "TEST" );
+         surge->process();
+         auto ft = surge->storage.getPatch().scene[0].filterunit[0].type.val.i;
+         auto st = surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i;
+         for( int s = 0; s<n_scenes; ++s )
+         {
+            for( int fu=0; fu<n_filterunits_per_scene; ++fu )
+            {
+               INFO( path_to_string( ent ) << " " << ft << " " << st << " " << s << " " << fu )
+               REQUIRE( surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == ft );
+               REQUIRE( surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == st );
+            }
+         }
+
+         std::ostringstream cand_fn;
+         cand_fn << "filt_" << ft << "_" << st << ".fxp";
+         auto entfn = path_to_string(ent.path().filename());
+         REQUIRE(entfn == cand_fn.str());
       }
    }
 }

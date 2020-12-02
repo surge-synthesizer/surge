@@ -1361,11 +1361,11 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             case fut_lpmoog:
                u.subtype.val.i = 3;
                break;
-            case fut_comb:
+            case fut_14_comb:
                u.subtype.val.i = 1;
                break;
             case fut_SNH: // SNH replaced comb_neg in rev 4
-               u.type.val.i = fut_comb;
+               u.type.val.i = fut_14_comb;
                u.subtype.val.i = 3;
                break;
             }
@@ -1381,7 +1381,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          {
             if (u.type.val.i == fut_SNH) // misc replaced comb_neg in rev 4
             {
-               u.type.val.i = fut_comb;
+               u.type.val.i = fut_14_comb;
                u.subtype.val.i += 2;
             }
          }
@@ -1432,7 +1432,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             {
                u.subtype.val.i = (revision < 6) ? st_SVF : st_Rough;
             }
-            else if (u.type.val.i == fut_br12)
+            else if (u.type.val.i == fut_notch12)
             {
                u.subtype.val.i = 1;
             }
@@ -1458,6 +1458,101 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       character.val.i = 0;
    }
 
+   if( revision < 15 )
+   {
+      // The Great Filter Remap of issue #3006
+      for (auto& sc : scene)
+      {
+         for (int u = 0; u < n_filterunits_per_scene; u++)
+         {
+            auto* fu = &(sc.filterunit[u]);
+            fu_type_sv14 futy = (fu_type_sv14)(fu->type.val.i);
+            auto subtype = fu->subtype.val.i;
+
+            switch (futy)
+            {
+            case fut_14_none:
+            case fut_14_lp12:
+            case fut_14_lp24:
+            case fut_14_lpmoog:
+            case fut_14_hp12:
+            case fut_14_hp24:
+            case fut_14_SNH:
+            case fut_14_vintageladder:
+            case fut_14_obxd_4pole:
+            case fut_14_k35_lp:
+            case fut_14_k35_hp:
+            case fut_14_diode:
+            case fut_14_nonlinearfb_lp:
+            case fut_14_nonlinearfb_hp:
+            case fut_14_nonlinearfb_n:
+            case fut_14_nonlinearfb_bp:
+            case n_fu_14_types:
+               // These types were unchanged
+               break;
+            case fut_14_obxd_2pole: {
+               int newtype = subtype % 4;
+               int newsub = (subtype < 4 ? 0 : 1);
+               fu->subtype.val.i = newsub;
+               switch (newtype)
+               {
+               case 0:
+                  fu->type.val.i = fut_obxd_2pole_lp;
+                  break;
+               case 1:
+                  fu->type.val.i = fut_obxd_2pole_hp;
+                  break;
+               case 2:
+                  fu->type.val.i = fut_obxd_2pole_n;
+                  break;
+               case 3:
+                  fu->type.val.i = fut_obxd_2pole_bp;
+                  break;
+               }
+               break;
+            }
+            case fut_14_bp12:
+               if (subtype < 3)
+               {
+                  fu->type.val.i = fut_bp12;
+                  fu->subtype.val.i = subtype;
+               }
+               else if (subtype >= 3 && subtype < 6)
+               {
+                  fu->type.val.i = fut_bp24;
+                  fu->subtype.val.i = subtype - 3;
+               }
+               break;
+            case fut_14_notch12:
+               if (subtype < 2)
+               {
+                  fu->type.val.i = fut_notch12;
+                  fu->subtype.val.i = subtype;
+               }
+               else if (subtype >= 2 && subtype < 4)
+               {
+                  fu->type.val.i = fut_notch24;
+                  fu->subtype.val.i = subtype - 2;
+               }
+
+               break;
+            case fut_14_comb:
+               // subtypes 1 and 2 become positive, subtypes 3 and 4 become negative
+               if (subtype == 0 || subtype == 1)
+               {
+                  fu->type.val.i = fut_comb_pos;
+                  fu->subtype.val.i = subtype;
+               }
+               else if (subtype == 2 || subtype == 3)
+               {
+                  fu->type.val.i = fut_comb_neg;
+                  fu->subtype.val.i = subtype - 2;
+               }
+               break;
+            }
+         }
+      }
+   }
    // ensure that filtersubtype is a valid value
    for (auto& sc : scene)
    {
@@ -1466,6 +1561,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
          sc.filterunit[u].subtype.val.i =
              limit_range(sc.filterunit[u].subtype.val.i, 0,
                          max(0, fut_subcount[sc.filterunit[u].type.val.i] - 1));
+         sc.filterunit[u].type.set_user_data(&patchFilterSelectorMapper );
       }
    }
 

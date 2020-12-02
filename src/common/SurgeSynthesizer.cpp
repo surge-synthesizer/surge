@@ -1562,7 +1562,6 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             case fut_diode:
                storage.getPatch().param_ptr[index + 1]->val.i = 3;
                break;
-            case fut_comb:
             default:
                storage.getPatch().param_ptr[index + 1]->val.i = 0;
                break;
