@@ -36,6 +36,7 @@ public:
    virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
       // getFrame()->setCursor( VSTGUI::kCursorHand );
       doingHover = true;
+      wheelDistance = 0.f;
       invalid();
       return VSTGUI::kMouseEventHandled;
    }
@@ -46,9 +47,12 @@ public:
       return VSTGUI::kMouseEventHandled;
    }
 
+   bool onWheel(const VSTGUI::CPoint& where,
+                const float& distance,
+                const VSTGUI::CButtonState& buttons) override;
 
-   int ivalue, imax;
-   bool is_itype;
+   int ivalue = 0, imax = 0;
+   bool is_itype = false;
    bool lookedForHover = false;
    bool doingHover = false;
    CScalableBitmap *hoverBmp = nullptr;
@@ -57,8 +61,9 @@ public:
    bool unValueClickable = false;
 
 private:
-   bool down;
+   bool down = false;
    float heightOfSingleImage;
+   float wheelDistance = 0;
 
    CLASS_METHODS(CSwitchControl, VSTGUI::CControl)
 };

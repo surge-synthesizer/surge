@@ -4191,7 +4191,18 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                editorOverlay->invalid();
             }
          }
+         if( p->ctrltype == ct_filtertype )
+         {
+            auto *subsw = dynamic_cast<CSwitchControl*>(filtersubtype[p->ctrlgroup_entry]);
+            if( subsw )
+            {
+               int sc = fut_subcount[p->val.i];
+
+               subsw->imax = sc;
+            }
+         }
       }
+
       break;
    }
    }
@@ -7108,13 +7119,15 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
             // Carry over this filter type special case from the default control path
             if (p->ctrltype == ct_filtersubtype)
             {
+               auto filttype = synth->storage.getPatch()
+                   .scene[current_scene]
+                   .filterunit[p->ctrlgroup_entry]
+                   .type.val.i;
+               auto stc = fut_subcount[filttype];
                hsw->is_itype = true;
-               hsw->imax = 3;
-               hsw->ivalue = p->val.i + 1;
-               if (fut_subcount[synth->storage.getPatch()
-                                    .scene[current_scene]
-                                    .filterunit[p->ctrlgroup_entry]
-                                    .type.val.i] == 0)
+               hsw->imax = stc;
+               hsw->ivalue = std::min( p->val.i + 1, stc );
+               if (fut_subcount[filttype] == 0)
                   hsw->ivalue = 0;
 
                if (p->ctrlgroup_entry == 1)
