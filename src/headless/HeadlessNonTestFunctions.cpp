@@ -11,6 +11,38 @@ namespace Headless
 namespace NonTest
 {
 
+void restreamTemplatesWithModifications()
+{
+   auto templatesDir = string_to_path("resources/data/patches_factory/Templates" );
+   for( auto d : fs::directory_iterator(templatesDir))
+   {
+      std::cout << "ReStream " << path_to_string(d) << std::endl;
+      auto surge = Surge::Headless::createSurge( 44100 );
+      surge->loadPatchByPath(path_to_string(d).c_str(), -1, "Templates" );
+      for( int i=0; i<10; ++i ) surge->process();
+
+      auto oR = surge->storage.getPatch().streamingRevision;
+      std::cout << "  Stream Revision : " << oR << " vs " << ff_revision << std::endl;
+      if( oR < 15 )
+      {
+         std::cout << "  Fixing Comb Filter" << std::endl;
+         surge->storage.getPatch().correctlyTuneCombFilter = true;
+      }
+
+      if( oR == ff_revision )
+      {
+         std::cout << "  Patch is streamed at latest; skipping" << std::endl;
+      }
+      else
+      {
+         for (int i = 0; i < 10; ++i)
+            surge->process();
+
+         surge->savePatchToPath(d);
+      }
+   }
+}
+
 void statsFromPlayingEveryPatch()
 {
    /*
