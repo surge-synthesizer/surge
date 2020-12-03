@@ -2,6 +2,8 @@
 #include "UserDefaults.h"
 #include "DebugHelpers.h"
 
+constexpr int subblock_factor = 3; // divide block by 2^this
+
 AirWindowsEffect::AirWindowsEffect( SurgeStorage *storage, FxStorage *fxdata, pdata *pd ) :
    Effect( storage, fxdata, pd )
 {
@@ -9,7 +11,7 @@ AirWindowsEffect::AirWindowsEffect( SurgeStorage *storage, FxStorage *fxdata, pd
    {
       param_lags[i].newValue(0);
       param_lags[i].instantize();
-      param_lags[i].setRate( 0.004 * BLOCK_SIZE );
+      param_lags[i].setRate( 0.004 * ( BLOCK_SIZE >> subblock_factor ) );
    }
 
    mapper = std::make_unique<AWFxSelectorMapper>(this);
@@ -201,31 +203,36 @@ void AirWindowsEffect::process( float *dataL, float *dataR )
    }
 
    if( ! airwin ) return;
-   
-   for( int i=0; i<airwin->paramCount && i < n_fx_params - 1; ++i )
-   {
-      param_lags[i].newValue( limit_range( *f[i+1], 0.f, 1.f ) );
-      if( fxdata->p[i+1].ctrltype == ct_airwindows_param_integral )
-      {
-         airwin->setParameter( i, fxdata->p[i+1].get_value_f01() );
-      }
-      else
-      {
-         airwin->setParameter( i, param_lags[i].v );
-      }
-      param_lags[i].process();
-   }
 
+   constexpr int QBLOCK = BLOCK_SIZE >> subblock_factor;
    float outL alignas(16)[BLOCK_SIZE], outR alignas(16)[BLOCK_SIZE];
-   float* in[2];
-   in[0] = dataL;
-   in[1] = dataR;
 
-   float *out[2];
-   out[0] = &( outL[ 0 ] );
-   out[1] = &( outR[ 0 ] );
+   for( int subb = 0; subb < 1 << subblock_factor; ++subb )
+   {
+      for( int i=0; i<airwin->paramCount && i < n_fx_params - 1; ++i )
+      {
+         param_lags[i].newValue( limit_range( *f[i+1], 0.f, 1.f ) );
+         if( fxdata->p[i+1].ctrltype == ct_airwindows_param_integral )
+         {
+            airwin->setParameter( i, fxdata->p[i+1].get_value_f01() );
+         }
+         else
+         {
+            airwin->setParameter( i, param_lags[i].v );
+         }
+         param_lags[i].process();
+      }
 
-   airwin->processReplacing( in, out, BLOCK_SIZE );
+      float* in[2];
+      in[0] = dataL + subb * QBLOCK;
+      in[1] = dataR + subb * QBLOCK;
+
+      float* out[2];
+      out[0] = &(outL[0]) + subb * QBLOCK;
+      out[1] = &(outR[0]) + subb * QBLOCK;
+
+      airwin->processReplacing(in, out, QBLOCK);
+   }
 
    copy_block( outL, dataL, BLOCK_SIZE_QUAD );
    copy_block( outR, dataR, BLOCK_SIZE_QUAD );
