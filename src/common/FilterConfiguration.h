@@ -120,8 +120,8 @@ const char fut_names[n_fu_types][32] =
         "HP 24 dB",
         "BP 12 dB",
         "N 12 dB",
-        "SPEC Comb +",
-        "SPEC Sample & Hold",
+        "FX Comb +",
+        "FX Sample & Hold",
         "LP Vintage Ladder",
         "LP OB-Xd 12 dB",
         "LP OB-Xd 24 dB",
@@ -137,8 +137,8 @@ const char fut_names[n_fu_types][32] =
         "BP OB-Xd 12 dB",
         "BP 24 dB",
         "N 24 dB",
-        "SPEC Comb -",
-        "SPEC Allpass",
+        "FX Comb -",
+        "FX Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
         0123456789012345678901234567890
           */
@@ -343,10 +343,10 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
       p(fut_obxd_2pole_n, "Notch" );
       p(fut_nonlinearfb_n, "Notch" );
 
-      p(fut_apf, "Special" );
-      p(fut_comb_pos, "Special" );
-      p(fut_comb_neg, "Special" );
-      p(fut_SNH, "Special" );
+      p(fut_apf, "Effect" );
+      p(fut_comb_pos, "Effect" );
+      p(fut_comb_neg, "Effect" );
+      p(fut_SNH, "Effect" );
 
       int c = 0;
       for( auto e : mapping )
