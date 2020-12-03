@@ -2242,6 +2242,7 @@ void Parameter::get_display(char* txt, bool external, float ef)
                      break;
                   case fut_notch12:
                   case fut_notch24:
+                  case fut_apf:
                      sprintf(txt, "%s", fut_notch_subtypes[i]);
                      break;
                   case fut_comb_pos:
@@ -2276,8 +2277,18 @@ void Parameter::get_display(char* txt, bool external, float ef)
                      break;
 #if SURGE_EXTRA_FILTERS
 #endif
-                  default:
+                     // don't default any more so compiler catches new ones we add
+                  case fut_none:
+                  case fut_lp12:
+                  case fut_lp24:
+                  case fut_hp12:
+                  case fut_hp24:
+                  case fut_SNH:
                      sprintf(txt, "%s", fut_def_subtypes[i]);
+                     break;
+
+                  case n_fu_types:
+                     sprintf(txt, "ERROR" );
                      break;
                   }
                }

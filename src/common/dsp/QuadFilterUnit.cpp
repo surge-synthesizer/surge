@@ -771,6 +771,8 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
       return IIR12Bquad;
    case fut_notch24:
       return IIR24Bquad;
+   case fut_apf:
+      return IIR12Bquad;
    case fut_lp24:
       if (subtype == st_SVF)
          return SVFLP24Aquad;
