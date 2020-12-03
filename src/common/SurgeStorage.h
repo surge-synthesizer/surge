@@ -619,7 +619,7 @@ struct MSEGStorage {
    std::array<float, max_msegs> segmentStart, segmentEnd;
    float durationToLoopEnd;
    float durationLoopStartToLoopEnd;
-   float envelopeModeDuration = -1;
+   float envelopeModeDuration = -1, envelopeModeNV1 = -2; // -2 as sentinel since NV1 is -1/1
 
    static constexpr float minimumDuration = 0.0;
 };

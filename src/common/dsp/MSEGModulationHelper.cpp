@@ -57,7 +57,10 @@ void rebuildCache( MSEGStorage* ms )
 
    ms->totalDuration = totald;
    if( ms->editMode == MSEGStorage::ENVELOPE )
+   {
       ms->envelopeModeDuration = totald;
+      ms->envelopeModeNV1 = ms->segments[ms->n_activeSegments-1].nv1;
+   }
 
    if( ms->editMode == MSEGStorage::LFO && totald != 1.0 )
    {
@@ -1030,6 +1033,8 @@ void modifyEditMode(MSEGStorage* ms, MSEGStorage::EditMode em )
    {
       if( ms->envelopeModeDuration > 0 )
          targetDuration = ms->envelopeModeDuration;
+      if( ms->envelopeModeNV1 >= -1 )
+         ms->segments[ms->n_activeSegments-1].nv1 = ms->envelopeModeNV1;
    }
 
    float durRatio = targetDuration / ms->totalDuration;
