@@ -21,8 +21,10 @@ void FilterCoefficientMaker::MakeCoeffs(
     float Freq, float Reso, int Type, int SubType, SurgeStorage* storageI)
 {
    storage = storageI;
+
    // Force compiler to error out if I miss one
    fu_type fType = (fu_type)Type;
+
    switch (fType)
    {
    case fut_lp12:
@@ -95,8 +97,8 @@ void FilterCoefficientMaker::MakeCoeffs(
          break;
       }
       break;
-      /* When we split OBXD we went from one filter with 8 settings (L,B,H,N L+, B+, H+, N+) to
-       * two subtypes (regunlar and +). So what used to be Highpass (value 2 and 6) is now 1 and 2 on
+      /* When we split OBXD we went from one filter with 8 settings (L, B, H, N, L+, B+, H+, N+) to
+       * two subtypes (regular and +). So what used to be Highpass (value 2 and 6) is now 1 and 2 on
        * a new type. But don't rewrite the filter for now. Just reconstruct the subtypes
        * */
    case fut_obxd_2pole_lp:
@@ -144,18 +146,18 @@ float clipscale(float freq, int subtype)
    case st_Rough:
       return (1.0f / 64.0f) * db_to_linear(freq * 0.55f);
    case st_Smooth:
-      return (1.0f / 1024.0f); // * db_to_linear(freq*0.55f);
+      return (1.0f / 1024.0f);
    };
    return 0;
 }
 
-#define boundfreq(freq)                                                                            \
-   {                                                                                               \
-      if (freq > 75)                                                                               \
-         freq = 75;                                                                                \
-      if (freq < -55)                                                                              \
-         freq = -55;                                                                               \
-   }
+#define boundfreq(freq)  \
+{                        \
+   if (freq > 75)        \
+      freq = 75;         \
+   if (freq < -55)       \
+      freq = -55;        \
+}                        \
 
 double Map2PoleResonance(double reso, double freq, int subtype)
 {
@@ -188,7 +190,7 @@ double Map4PoleResonance(double reso, double freq, int subtype)
    {
    case st_Medium:
       reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
-      return 0.99 - 0.9949 * limit_range((double)reso, 0.0, 1.0); // sqrt(1.01) = 1.004987562
+      return 0.99 - 0.9949 * limit_range((double)reso, 0.0, 1.0);
    case st_Rough:
       reso *= max(0.0, 1.0 - max(0.0, (freq - 58) * 0.05));
       return (1.0 - 1.05 * limit_range((double)reso, 0.001, 1.0));
@@ -232,20 +234,16 @@ void FilterCoefficientMaker::Coeff_SVF(float Freq, float Reso, bool FourPole)
 {
    double f = 440.f * storage->note_to_pitch_ignoring_tuning(Freq);
    double F1 = 2.0 * sin(M_PI * min(0.11, f * (0.25 * samplerate_inv))); // 4x oversampling
-   // double Q1 = 2.0 - Reso*2.0;
 
    Reso = sqrt(limit_range(Reso, 0.f, 1.f));
 
-   // double Q1 = min(2.0*(1.0 - pow(Reso, 0.25f)), min(2.0, 2.0/F1 - F1*0.5));
    double overshoot = FourPole ? 0.1 : 0.15;
    double Q1 = 2.0 - Reso * (2.0 + overshoot) + F1 * F1 * overshoot * 0.9;
-   // Q1 = min(Q1, min(2.00, 1.99/F1 - F1*0.51));
    Q1 = min(Q1, min(2.00, 2.00 - 1.52 * F1));
 
    double ClipDamp = 0.1 * Reso * F1;
 
    const double a = 0.65;
-   // double Gain = a + Q1 * 0.5 * (1-a);
    double Gain = 1 - a * Reso;
 
    float c[n_cm_coeffs];
@@ -259,20 +257,26 @@ void FilterCoefficientMaker::Coeff_SVF(float Freq, float Reso, bool FourPole)
 
 void FilterCoefficientMaker::Coeff_LP12(float freq, float reso, int subtype)
 {
+   float cosi, sinu;
    float gain = resoscale(reso, subtype);
 
    boundfreq(freq)
-
-       float cosi,
-       sinu;
    storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
 
    double alpha = sinu * Map2PoleResonance(reso, freq, subtype);
-   if (subtype != st_Smooth)
-      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
 
-   double b0 = (1 - cosi) * 0.5, b1 = 1 - cosi, b2 = (1 - cosi) * 0.5, a0 = 1 + alpha,
-          a1 = -2 * cosi, a2 = 1 - alpha, a0inv = 1 / a0;
+   if (subtype != st_Smooth)
+   {
+      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
+   }
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          b0 = (1 - cosi) * 0.5,
+          b1 = 1 - cosi,
+          b2 = (1 - cosi) * 0.5;
 
    // double sq = a1*a1 - 4.0*a2;
    // must be negative
@@ -296,20 +300,27 @@ void FilterCoefficientMaker::Coeff_LP12(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_LP24(float freq, float reso, int subtype)
 {
+   float cosi, sinu;
    float gain = resoscale(reso, subtype);
 
    boundfreq(freq)
-
-       double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
-   float cosi, sinu;
    storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
 
+   double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
    double alpha = sinu * Q2inv;
-   if (subtype != st_Smooth)
-      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
 
-   double a0 = 1 + alpha, b0 = (1 - cosi) * 0.5, b1 = 1 - cosi, b2 = (1 - cosi) * 0.5,
-          a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha;
+   if (subtype != st_Smooth)
+   {
+      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
+   }
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          b0 = (1 - cosi) * 0.5,
+          b1 = 1 - cosi,
+          b2 = (1 - cosi) * 0.5;
 
    if (subtype == st_Smooth)
       ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
@@ -319,20 +330,27 @@ void FilterCoefficientMaker::Coeff_LP24(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_HP12(float freq, float reso, int subtype)
 {
+   float cosi, sinu;
    float gain = resoscale(reso, subtype);
 
    boundfreq(freq)
-
-       double Q2inv = Map2PoleResonance(reso, freq, subtype);
-   float cosi, sinu;
    storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
 
+   double Q2inv = Map2PoleResonance(reso, freq, subtype);
    double alpha = sinu * Q2inv;
-   if (subtype != 0)
-      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
 
-   double a0 = 1 + alpha, b0 = (1 + cosi) * 0.5, b1 = -(1 + cosi), b2 = (1 + cosi) * 0.5,
-          a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha;
+   if (subtype != 0)
+   {
+      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
+   }
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          b0 = (1 + cosi) * 0.5,
+          b1 = -(1 + cosi),
+          b2 = (1 + cosi) * 0.5;
 
    if (subtype == st_Smooth)
       ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
@@ -342,20 +360,27 @@ void FilterCoefficientMaker::Coeff_HP12(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_HP24(float freq, float reso, int subtype)
 {
+   float cosi, sinu;
    float gain = resoscale(reso, subtype);
 
    boundfreq(freq)
-
-       double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
-   float cosi, sinu;
    storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
 
+   double Q2inv = Map4PoleResonance((double)reso, (double)freq, subtype);
    double alpha = sinu * Q2inv;
-   if (subtype != 0)
-      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
 
-   double a0 = 1 + alpha, b0 = (1 + cosi) * 0.5, b1 = -(1 + cosi), b2 = (1 + cosi) * 0.5,
-          a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha;
+   if (subtype != 0)
+   {
+      alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
+   }
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          b0 = (1 + cosi) * 0.5,
+          b1 = -(1 + cosi),
+          b2 = (1 + cosi) * 0.5;
 
    if (subtype == st_Smooth)
       ToNormalizedLattice(a0inv, a1, a2, b0 * gain, b1 * gain, b2 * gain, clipscale(freq, subtype));
@@ -365,21 +390,33 @@ void FilterCoefficientMaker::Coeff_HP24(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_BP12(float freq, float reso, int subtype)
 {
+   float cosi, sinu;
    float gain = resoscale(reso, subtype);
+   
    if (subtype == st_Rough)
+   {
       gain *= 2.f;
+   }
 
    boundfreq(freq)
-
-       double Q2inv = Map2PoleResonance(reso, freq, subtype);
-   double Q = 0.5 / Q2inv;
-   float cosi, sinu;
    storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
 
+   double Q2inv = Map2PoleResonance(reso, freq, subtype);
+   double Q = 0.5 / Q2inv;
    double alpha = sinu * Q2inv;
+
    if (subtype != 0)
+   {
       alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
-   double a0 = 1 + alpha, b0, b1, b2, a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha;
+   }
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          b0,
+          b1,
+          b2;
 
    {
       b0 = Q * alpha;
@@ -395,21 +432,33 @@ void FilterCoefficientMaker::Coeff_BP12(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_BP24(float freq, float reso, int subtype)
 {
+   float cosi, sinu;
    float gain = resoscale(reso, subtype);
+
    if (subtype == st_Rough)
+   {
       gain *= 2.f;
+   }
 
    boundfreq(freq)
-
-       double Q2inv = Map4PoleResonance(reso, freq, subtype);
-   double Q = 0.5 / Q2inv;
-   float cosi, sinu;
    storage->note_to_omega_ignoring_tuning(freq, sinu, cosi);
 
+   double Q2inv = Map4PoleResonance(reso, freq, subtype);
+   double Q = 0.5 / Q2inv;
    double alpha = sinu * Q2inv;
+
    if (subtype != 0)
+   {
       alpha = min(alpha, sqrt(1.0 - cosi * cosi) - 0.0001);
-   double a0 = 1 + alpha, b0, b1, b2, a0inv = 1 / a0, a1 = -2 * cosi, a2 = 1 - alpha;
+   }
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          b0,
+          b1,
+          b2;
 
    {
       b0 = Q * alpha;
@@ -425,48 +474,53 @@ void FilterCoefficientMaker::Coeff_BP24(float freq, float reso, int subtype)
 
 void FilterCoefficientMaker::Coeff_Notch(float Freq, float Reso, int SubType)
 {
-   boundfreq(Freq)
-
-       // double Q2inv = (2.5-2.45*limit_range((double)(1-(1-reso)*(1-reso)),0.0,1.0));
-       double Q2inv;
-
-   if (SubType == st_NotchMild)
-      Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
-   else
-      Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
-
    float cosi, sinu;
+   double Q2inv;
+
+   boundfreq(Freq)
    storage->note_to_omega_ignoring_tuning(Freq, sinu, cosi);
 
-   double alpha = sinu * Q2inv, b0 = 1, b1 = -2 * cosi, b2 = 1, a0 = 1 + alpha, a1 = -2 * cosi,
-          a2 = 1 - alpha, a0inv = 1 / a0;
+   if (SubType == st_NotchMild)
+   {
+      Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+   }
+   else
+   {
+      Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+   }
+   
+   double alpha = sinu * Q2inv;
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          b0 = 1,
+          b1 = -2 * cosi,
+          b2 = 1;
 
    ToNormalizedLattice(a0inv, a1, a2, b0, b1, b2, 0.005);
 }
 
 void FilterCoefficientMaker::Coeff_APF(float Freq, float Reso, int SubType)
 {
-   boundfreq(Freq)
-
-   // double Q2inv = (2.5-2.45*limit_range((double)(1-(1-reso)*(1-reso)),0.0,1.0));
+   float cosi, sinu;
    double Q2inv;
 
-   if (SubType == st_NotchMild)
-      Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
-   else
-      Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
-
-   float cosi, sinu;
+   boundfreq(Freq)
    storage->note_to_omega_ignoring_tuning(Freq, sinu, cosi);
 
-   double alpha = sinu * Q2inv,
-          b0 = 1 - alpha,
-          b1 = -2 * cosi,
-          b2 = 1 + alpha,
-          a0 = 1 + alpha,
+   Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+
+   double alpha = sinu * Q2inv;
+
+   double a0 = 1 + alpha,
+          a0inv = 1 / a0,
           a1 = -2 * cosi,
           a2 = 1 - alpha,
-          a0inv = 1 / a0;
+          b0 = 1 - alpha,
+          b1 = -2 * cosi,
+          b2 = 1 + alpha;
 
    ToNormalizedLattice(a0inv, a1, a2, b0, b1, b2, 0.005);
 }
@@ -494,8 +548,10 @@ void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
    dtime = dtime * dsamplerate_os;
 
    // See comment in SurgeStorage and issue #3248
-   if( ! storage->_patch->correctlyTuneCombFilter)
+   if (!storage->_patch->correctlyTuneCombFilter)
+   {
       dtime -= FIRoffset;
+   }
 
    dtime = limit_range(dtime, (float)FIRipol_N, (float)MAX_FB_COMB - FIRipol_N);
    reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
@@ -541,8 +597,7 @@ void FilterCoefficientMaker::FromDirect(float N[n_cm_coeffs])
    }
 }
 
-void FilterCoefficientMaker::ToNormalizedLattice(
-    double a0inv, double a1, double a2, double b0, double b1, double b2, double g)
+void FilterCoefficientMaker::ToNormalizedLattice(double a0inv, double a1, double a2, double b0, double b1, double b2, double g)
 {
    b0 *= a0inv;
    b1 *= a0inv;
@@ -576,8 +631,7 @@ void FilterCoefficientMaker::ToNormalizedLattice(
 
    FromDirect(N);
 }
-void FilterCoefficientMaker::ToCoupledForm(
-    double a0inv, double a1, double a2, double b0, double b1, double b2, double g)
+void FilterCoefficientMaker::ToCoupledForm(double a0inv, double a1, double a2, double b0, double b1, double b2, double g)
 {
    b0 *= a0inv;
    b1 *= a0inv;
@@ -625,4 +679,3 @@ void FilterCoefficientMaker::Reset()
 
    storage = nullptr;
 }
-

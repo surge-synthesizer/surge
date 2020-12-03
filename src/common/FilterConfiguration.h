@@ -112,18 +112,18 @@ enum fu_type
 const char fut_names[n_fu_types][32] =
     {
         "Off",
-        "LP 12 dB/oct",
-        "LP 24 dB/oct",
+        "LP 12 dB",
+        "LP 24 dB",
         "Legacy Ladder",
-        "HP 12 dB/oct",
-        "HP 24 dB/oct",
-        "BP 12 dB/oct",
-        "N 12 dB/oct",
-        "Comb +ve fb",
+        "HP 12 dB",
+        "HP 24 dB",
+        "BP 12 dB",
+        "N 12 dB",
+        "Comb +",
         "Sample & Hold",
         "Vintage Ladder",
-        "LP OB-Xd 12 dB/o", // o to avoid truncation
-        "OB-Xd 24 dB/oct",
+        "LP OB-Xd 12 dB", // o to avoid truncation
+        "OB-Xd 24 dB",
         "LP K35",
         "HP K35",
         "Diode Ladder",
@@ -131,13 +131,13 @@ const char fut_names[n_fu_types][32] =
         "HP NL Feedback",
         "N NL Feedback",
         "BP NL Feedback",
-        "HP OB-Xd 12 dB/o", // o to avoid truncation
-        "N OB-Xd 12 dB/o",
-        "BP OB-Xd 12 dB/o",
-        "BP 24 dB/oct",
-        "N 24 dB/oct",
-        "Comb -ve fb",
-        "AllPass",
+        "HP OB-Xd 12 dB", // o to avoid truncation
+        "N OB-Xd 12 dB",
+        "BP OB-Xd 12 dB",
+        "BP 24 dB",
+        "N 24 dB",
+        "Comb -",
+        "Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
         0123456789012345678901234567890
           */
@@ -146,18 +146,18 @@ const char fut_names[n_fu_types][32] =
 const char fut_menu_names[n_fu_types][32] =
     {
         "Off",
-        "12 dB/oct", // LP
-        "24 dB/oct", // LP
+        "12 dB", // LP
+        "24 dB", // LP
         "Legacy Ladder",
-        "12 dB/oct", // HP
-        "24 dB/oct", // HP
-        "12 dB/oct", // BP
-        "12 dB/oct", // N
-        "Comb +ve fb",
+        "12 dB", // HP
+        "24 dB", // HP
+        "12 dB", // BP
+        "12 dB", // N
+        "Comb +",
         "Sample & Hold",
         "Vintage Ladder",
-        "OB-Xd 12 dB/oct", // LP
-        "OB-Xd 24 dB/oct",
+        "OB-Xd 12 dB", // LP
+        "OB-Xd 24 dB",
         "K35", // LP
         "K35", // HP
         "Diode Ladder",
@@ -165,13 +165,13 @@ const char fut_menu_names[n_fu_types][32] =
         "NL Feedback", // LP
         "NL Feedback", // LP
         "NL Feedback", // LP
-        "OB-Xd 12 dB/oct", // HP
-        "OB-Xd 12 dB/oct", // N
-        "OB-Xd 12 dB/oct", // BP
-        "24 dB/oct", // BP
-        "24 dB/oct", // N
-        "Comb -ve fb",
-        "AllPass",
+        "OB-Xd 12 dB", // HP
+        "OB-Xd 12 dB", // N
+        "OB-Xd 12 dB", // BP
+        "24 dB", // BP
+        "24 dB", // N
+        "Comb -",
+        "Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
         0123456789012345678901234567890
           */
@@ -205,10 +205,10 @@ const char fut_def_subtypes[3][32] =
 
 const char fut_ldr_subtypes[4][32] =
     {
-        "6 dB/oct",
-        "12 dB/oct",
-        "18 dB/oct",
-        "24 dB/oct",
+        "6 dB",
+        "12 dB",
+        "18 dB",
+        "24 dB",
     };
 
 const char fut_vintageladder_subtypes[6][32] =
@@ -226,10 +226,10 @@ const char fut_obxd_2p_subtypes[2][32] =
 
 const char fut_obxd_4p_subtypes[4][32] =
     {
-        "6 dB/oct",
-        "12 dB/oct",
-        "18 dB/oct",
-        "24 dB/oct",
+        "6 dB",
+        "12 dB",
+        "18 dB",
+        "24 dB",
     };
 
 const char fut_k35_subtypes[5][32] =
@@ -252,7 +252,7 @@ const float fut_k35_saturations[5] =
 
 const char fut_nlf_subtypes[4][32] =
     {
-        "1 stage ",
+        "1 stage",
         "2 stages",
         "3 stages",
         "4 stages",
@@ -294,7 +294,7 @@ const int fut_subcount[n_fu_types] =
         3, // fut_bp24,
         2, // fut_notch24,
         2, // fut_comb_neg,
-        2, // fut_apf
+        0, // fut_apf
     };
 
 enum fu_subtype
@@ -316,36 +316,36 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
    {
       p(fut_none, "" );
 
-      p(fut_lp12, "Low Pass" );
-      p(fut_lp24, "Low Pass" );
-      p(fut_lpmoog, "Low Pass" );
-      p(fut_vintageladder, "Low Pass" );
-      p(fut_k35_lp, "Low Pass" );
-      p(fut_diode, "Low Pass" );
-      p(fut_obxd_2pole_lp, "Low Pass" ); // ADJ
-      p(fut_obxd_4pole, "Low Pass" );
-      p(fut_nonlinearfb_lp, "Low Pass" );
+      p(fut_lp12, "Lowpass" );
+      p(fut_lp24, "Lowpass" );
+      p(fut_lpmoog, "Lowpass" );
+      p(fut_vintageladder, "Lowpass" );
+      p(fut_k35_lp, "Lowpass" );
+      p(fut_diode, "Lowpass" );
+      p(fut_obxd_2pole_lp, "Lowpass" ); // ADJ
+      p(fut_obxd_4pole, "Lowpass" );
+      p(fut_nonlinearfb_lp, "Lowpass" );
 
-      p(fut_bp12, "Band Pass" );
-      p(fut_bp24, "Band Pass" );
-      p(fut_obxd_2pole_bp, "Band Pass" );
-      p(fut_nonlinearfb_bp, "Band Pass" );
+      p(fut_bp12, "Bandpass" );
+      p(fut_bp24, "Bandpass" );
+      p(fut_obxd_2pole_bp, "Bandpass" );
+      p(fut_nonlinearfb_bp, "Bandpass" );
 
-      p(fut_hp12, "High Pass" );
-      p(fut_hp24, "High Pass" );
-      p(fut_k35_hp, "High Pass" );
-      p(fut_obxd_2pole_hp, "High Pass" );
-      p(fut_nonlinearfb_hp, "High Pass" );
+      p(fut_hp12, "Highpass" );
+      p(fut_hp24, "Highpass" );
+      p(fut_k35_hp, "Highpass" );
+      p(fut_obxd_2pole_hp, "Highpass" );
+      p(fut_nonlinearfb_hp, "Highpass" );
 
       p(fut_notch12, "Notch" );
       p(fut_notch24, "Notch" );
       p(fut_obxd_2pole_n, "Notch" );
       p(fut_nonlinearfb_n, "Notch" );
 
+      p(fut_apf, "Special" );
       p(fut_comb_pos, "Special" );
       p(fut_comb_neg, "Special" );
       p(fut_SNH, "Special" );
-      p( fut_apf, "Special" );
 
       int c = 0;
       for( auto e : mapping )
