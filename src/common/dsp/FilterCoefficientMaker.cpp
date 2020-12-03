@@ -49,10 +49,11 @@ void FilterCoefficientMaker::MakeCoeffs(
          Coeff_BP24( Freq, Reso, SubType );
       break;
    case fut_notch12:
+   case fut_notch24:
       Coeff_Notch(Freq, Reso, SubType);
       break;
-   case fut_notch24:
-      Coeff_Notch(Freq, Reso, SubType + 2);
+   case fut_apf:
+      Coeff_APF(Freq, Reso, SubType);
       break;
    case fut_lp24:
       if (SubType == st_SVF)
@@ -439,6 +440,33 @@ void FilterCoefficientMaker::Coeff_Notch(float Freq, float Reso, int SubType)
 
    double alpha = sinu * Q2inv, b0 = 1, b1 = -2 * cosi, b2 = 1, a0 = 1 + alpha, a1 = -2 * cosi,
           a2 = 1 - alpha, a0inv = 1 / a0;
+
+   ToNormalizedLattice(a0inv, a1, a2, b0, b1, b2, 0.005);
+}
+
+void FilterCoefficientMaker::Coeff_APF(float Freq, float Reso, int SubType)
+{
+   boundfreq(Freq)
+
+   // double Q2inv = (2.5-2.45*limit_range((double)(1-(1-reso)*(1-reso)),0.0,1.0));
+   double Q2inv;
+
+   if (SubType == st_NotchMild)
+      Q2inv = (1.00 - 0.99 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+   else
+      Q2inv = (2.5 - 2.49 * limit_range((double)(1 - (1 - Reso) * (1 - Reso)), 0.0, 1.0));
+
+   float cosi, sinu;
+   storage->note_to_omega_ignoring_tuning(Freq, sinu, cosi);
+
+   double alpha = sinu * Q2inv,
+          b0 = 1 - alpha,
+          b1 = -2 * cosi,
+          b2 = 1 + alpha,
+          a0 = 1 + alpha,
+          a1 = -2 * cosi,
+          a2 = 1 - alpha,
+          a0inv = 1 / a0;
 
    ToNormalizedLattice(a0inv, a1, a2, b0, b1, b2, 0.005);
 }

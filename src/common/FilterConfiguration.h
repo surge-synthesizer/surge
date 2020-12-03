@@ -99,6 +99,7 @@ enum fu_type
    fut_bp24,
    fut_notch24,
    fut_comb_neg,
+   fut_apf,
    n_fu_types,
 };
 
@@ -136,6 +137,7 @@ const char fut_names[n_fu_types][32] =
         "BP 24 dB/oct",
         "N 24 dB/oct",
         "Comb -ve fb",
+        "AllPass",
         /* this is a ruler to ensure names do not exceed 31 characters
         0123456789012345678901234567890
           */
@@ -169,6 +171,7 @@ const char fut_menu_names[n_fu_types][32] =
         "24 dB/oct", // BP
         "24 dB/oct", // N
         "Comb -ve fb",
+        "AllPass",
         /* this is a ruler to ensure names do not exceed 31 characters
         0123456789012345678901234567890
           */
@@ -290,7 +293,8 @@ const int fut_subcount[n_fu_types] =
         2, // fut_obxd_2pole_bp,
         3, // fut_bp24,
         2, // fut_notch24,
-        2  // fut_comb_neg,
+        2, // fut_comb_neg,
+        2, // fut_apf
     };
 
 enum fu_subtype
@@ -341,6 +345,7 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
       p(fut_comb_pos, "Special" );
       p(fut_comb_neg, "Special" );
       p(fut_SNH, "Special" );
+      p( fut_apf, "Special" );
 
       int c = 0;
       for( auto e : mapping )
