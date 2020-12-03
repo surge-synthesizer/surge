@@ -17,35 +17,36 @@
 #pragma once
 
 /*
- * OK so what the heck is happening here you may ask? Well let me explain. Grab a cup of tea.
+ * OK so what the heck is happening here, you may ask? Well, let me explain. Grab a cup of tea.
  *
- * As we approached Surge 18 with new filters, we realized our filter list was getting
- * long. So we decided to use submenus. But when doing that we realized that the
- * natural grouping of filters (LP, BP, HP, Notch, Special) didn't work with the way
- * our filter models had worked. We had things like "bandpass doesn't split 12/24" and
- * "obxd is kinda all sorts of filters". So, over in issue #3006, we decided that some filters
- * needed splitting, kinda like Luna had done in the nlfb set. But splitting means that
- * subtype counts change and streaming breaks. And we wanted to split filters which weren't
- * in sv14 (17->18) either.
+ * As we approached Surge 1.8 with new filters, we realized our filter list was getting
+ * long. So we decided to use submenus. But when doing that, we realized that the
+ * natural grouping of filters (LP, BP, HP, Notch, Special...) didn't work with the way
+ * our filter models had worked. We had things like "bandpass doesn't split 12 dB/24 dB" into
+ * separate types, and "OB-Xd is kinda all sorts of filters". So, over in issue #3006,
+ * we decided that some filters needed splitting, kinda like what Luna had done in the non-linear
+ * feedback set. But splitting means that subtype counts change and streaming breaks.
+ * And we wanted to split filters which weren't in streaming version 14 (1.7->1.8) either.
  *
  * So what we did was add in streaming version 15 a "post patch streaming fixup" operation
  * which allows you to see the prior version, the current version, and adjust. That way we can
- * do things like "OBXD subtype 7 in streaming version 14 is actually OBXD HighPass Subtype 3
- * in streaming version 14 and above". Or whatever.
+ * do things like "OB-Xd subtype 7 in streaming version 14 is actually OB-Xd highpass subtype 3
+ * in streaming version 15 and above". Or whatever.
  *
- * But to do *that* we need to keep the old enums around so we can write that code. So these
+ * But to do *that*, we need to keep the old enums around so we can write that code. So these
  * are the old enums.
  *
- * Then the only question left is how to split. I chose the 'add at end for splits' method. That
- * is, fut_14_bp12 split into fut_bp12 and fut_bp24 but I added fut_bp24 at the end of the list.
- * Pros and cons. If I added it adjacent the names in the name array would line up, but the remapping
- * code would be wildly more complicated. I chose simple remapping code (that is SNH and vintage ladder
- * are no-ops in remap) at the cost of an oddly ordered filter name list. That's the right choice
- * but when you curse me for the odd name list, you can come back and read this cumment and feel
- * slightly better. Finally, items which split and changed meaning got a new name (so fut_comb is now fut_comp_pos
- * and fut_comb_neg, say) which requires us to go and fix up any code which refered to the
+ * Then the only question left is - how to split? I chose the 'add at end for splits' method. That
+ * is, fut_14_bp12 splits into fut_bp12 and fut_bp24, but I added fut_bp24 at the end of the list.
+ * Pros and cons: if I added it adjacent, the names in the name array would line up, but the remapping
+ * code would be wildly more complicated. I chose simple remapping code (that is S&H and vintage ladder
+ * are no-ops in remap) at the cost of an oddly ordered filter name list. That's the right choice,
+ * but when you curse me for the odd name list, you can come back and read this comment and feel
+ * slightly better. Finally, items which split and changed meaning got a new name (so fut_comb is now
+ * fut_comp_pos and fut_comb_neg, say), which requires us to go and fix up any code which refered to the
  * old values.
  */
+
 enum fu_type_sv14
 {
    fut_14_none = 0,
@@ -106,38 +107,38 @@ enum fu_type
 /*
  * Each filter needs w names (alas). there's the name we show in the automation parameter and
  * so on (the value for get_display_name) which is in 'fut_names'. There's the value we put
- * in the menu which generally strips out LowPass and HighPass and stuff since they are already
- * groupsed which is fut_menu
+ * in the menu which generally strips out Lowpass and Highpass and stuff, since they are already
+ * grouped in submenus, and this is in fut_menu array
  */
 const char fut_names[n_fu_types][32] =
     {
         "Off",
         "LP 12 dB",
         "LP 24 dB",
-        "Legacy Ladder",
+        "LP Legacy Ladder",
         "HP 12 dB",
         "HP 24 dB",
         "BP 12 dB",
         "N 12 dB",
-        "Comb +",
-        "Sample & Hold",
-        "Vintage Ladder",
-        "LP OB-Xd 12 dB", // o to avoid truncation
-        "OB-Xd 24 dB",
+        "SPEC Comb +",
+        "SPEC Sample & Hold",
+        "LP Vintage Ladder",
+        "LP OB-Xd 12 dB",
+        "LP OB-Xd 24 dB",
         "LP K35",
         "HP K35",
-        "Diode Ladder",
+        "LP Diode Ladder",
         "LP NL Feedback",
         "HP NL Feedback",
         "N NL Feedback",
         "BP NL Feedback",
-        "HP OB-Xd 12 dB", // o to avoid truncation
+        "HP OB-Xd 12 dB",
         "N OB-Xd 12 dB",
         "BP OB-Xd 12 dB",
         "BP 24 dB",
         "N 24 dB",
-        "Comb -",
-        "Allpass",
+        "SPEC Comb -",
+        "SPEC Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
         0123456789012345678901234567890
           */
@@ -157,7 +158,7 @@ const char fut_menu_names[n_fu_types][32] =
         "Sample & Hold",
         "Vintage Ladder",
         "OB-Xd 12 dB", // LP
-        "OB-Xd 24 dB",
+        "OB-Xd 24 dB", // LP
         "K35", // LP
         "K35", // HP
         "Diode Ladder",
