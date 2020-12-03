@@ -137,7 +137,7 @@ const char fut_names[n_fu_types][32] =
         "BP 24 dB",
         "N 24 dB",
         "Comb -",
-        "AllPass",
+        "Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
         0123456789012345678901234567890
           */
