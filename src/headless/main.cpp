@@ -28,6 +28,10 @@ int main(int argc, char** argv)
          {
             Surge::Headless::NonTest::statsFromPlayingEveryPatch();
          }
+         if( strcmp( argv[2], "--restream-templates" ) == 0 )
+         {
+            Surge::Headless::NonTest::restreamTemplatesWithModifications();
+         }
          if( strcmp( argv[2], "--filter-analyzer" ) == 0 )
          {
             if( argc < 4 )
