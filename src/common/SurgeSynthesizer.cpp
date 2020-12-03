@@ -148,6 +148,11 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       scene.modsources[ms_alternate_bipolar] = new AlternateModulationSource( true );
       scene.modsources[ms_alternate_unipolar] = new AlternateModulationSource( false );
       
+      for (int i = 0; i < n_filterunits_per_scene; i++)
+      {
+         scene.filterunit[i].type.set_user_data(&patch.patchFilterSelectorMapper);
+      }
+
       for (int l = 0; l < n_lfos_scene; l++)
       {
          scene.modsources[ms_slfo1 + l] = new LfoModulationSource();
