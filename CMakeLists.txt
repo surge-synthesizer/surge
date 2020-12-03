@@ -987,7 +987,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsMSEG.cpp
     src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
-    )
+          src/headless/HeadlessNonTestFunctions.cpp src/headless/HeadlessNonTestFunctions.h)
 
   target_compile_definitions(surge-headless
     PRIVATE
