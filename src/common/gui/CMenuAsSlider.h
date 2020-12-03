@@ -94,7 +94,7 @@ public:
    void setDragGlyph( int id, int size = 18 ) {
       dglphyid = id; dglyphsize = size; onSkinChanged();
    }
-      
+   const int* glyphIndexMap = nullptr;
    
 private:
    VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr, *pGlyph = nullptr, *pGlyphHover = nullptr;

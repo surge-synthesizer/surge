@@ -336,6 +336,7 @@ void Parameter::set_user_data(ParamUserData* ud)
       }
       break;
    case ct_airwindows_fx:
+   case ct_filtertype:
       if( dynamic_cast<ParameterDiscreteIndexRemapper*>(ud))
       {
          user_data = ud;
@@ -358,7 +359,7 @@ void Parameter::set_user_data(ParamUserData* ud)
       }
       break;
    default:
-      std::cerr << "Setting userdata on a non-supporting param ignored" << std::endl;
+      std::cout << "Setting userdata on a non-supporting param ignored" << std::endl;
       user_data = nullptr;
       break;
    }
@@ -2224,29 +2225,36 @@ void Parameter::get_display(char* txt, bool external, float ef)
                if (id == patch.scene[scene].filterunit[unit].subtype.id)
                {
                   int type = patch.scene[scene].filterunit[unit].type.val.i;
+                  fu_type fType = (fu_type)type;
                   if (i >= fut_subcount[type])
                   {
                      sprintf( txt, "None" );
                   }
-                  else switch (type)
+                  else switch (fType)
                   {
                   case fut_lpmoog:
                   case fut_diode:
                      sprintf(txt, "%s", fut_ldr_subtypes[i]);
                      break;
                   case fut_bp12:
+                  case fut_bp24:
                      sprintf(txt, "%s", fut_bp_subtypes[i]);
                      break;
-                  case fut_br12:
-                     sprintf(txt, "%s", fut_br_subtypes[i]);
+                  case fut_notch12:
+                  case fut_notch24:
+                     sprintf(txt, "%s", fut_notch_subtypes[i]);
                      break;
-                  case fut_comb:
+                  case fut_comb_pos:
+                  case fut_comb_neg:
                      sprintf(txt, "%s", fut_comb_subtypes[i]);
                      break;
                   case fut_vintageladder:
                      sprintf(txt, "%s", fut_vintageladder_subtypes[i]);
                      break;
-                  case fut_obxd_2pole:
+                  case fut_obxd_2pole_lp:
+                  case fut_obxd_2pole_hp:
+                  case fut_obxd_2pole_n:
+                  case fut_obxd_2pole_bp:
                      sprintf(txt, "%s", fut_obxd_2p_subtypes[i]);
                      break;
                   case fut_obxd_4pole:
