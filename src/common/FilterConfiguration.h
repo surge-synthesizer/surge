@@ -405,5 +405,6 @@ const int fut_glyph_index[n_fu_types] =
         11, // fut_obxd_2pole_bp,
         6, // fut_bp24,
         7, // fut_notch24,
-        8  // fut_comb_neg,
+        8,  // fut_comb_neg,
+        0   // fut_apf
     };
