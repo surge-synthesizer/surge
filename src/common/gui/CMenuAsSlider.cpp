@@ -157,15 +157,22 @@ void CMenuAsSlider::draw( VSTGUI::CDrawContext *dc )
       if( hasDragRegion )
       {
          int iv = floor( getValue() * ( iMax - iMin ) + 0.5 );
-         if( glyphIndexMap )
-            iv = glyphIndexMap[iv];
+
+         int yv = iv;
+         int xv = 0;
+         if( !glyphIndexMap.empty() )
+         {
+            auto gim = glyphIndexMap[iv];
+            xv = gim.first;
+            yv = gim.second;
+         }
 
          auto dbox = getViewSize();
          dbox.right = dbox.left + dglyphsize;
          float dw = (dbox.getHeight() - dglyphsize) / 2.0;
          dbox.top += dw;
          dbox.bottom -= dw;
-         VSTGUI::CPoint p( 0, iv * dglyphsize );
+         VSTGUI::CPoint p( xv * dglyphsize, yv * dglyphsize );
 
          if( pGlyph )
          {

@@ -387,33 +387,38 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
  * together is useful. In the far distant future perhaps we customize this by skin.
  */
 
-const int fut_glyph_index[n_fu_types] =
+const int lprow = 1;
+const int bprow = 2;
+const int hprow = 3;
+const int nrow = 4;
+const int fxrow = 5;
+const int fut_glyph_index[n_fu_types][2] =
     {
-        0, // fut_none
-        1, // fut_lp12
-        2, // fut_lp24
-        3, // fut_lpmoog
-        4, // fut_hp12
-        5, // fut_hp24
-        6, // fut_bp12
-        7, // fut_notch12
-        8, // fut_comb_pos
-        9, // fut_SNH
-        10, // fut_vintageladder
-        11, // fut_obxd_2pole
-        12, // fut_obxd_4pole
-        13, // fut_k35_lp
-        14, // fut_k35_hp
-        15, // fut_diode
-        2, // fut_nonlinearfb_lp
-        5, // fut_nonlinearfb_hp
-        7, // fut_nonlinearfb_n
-        6,  // fut_nonlinearfb_bp
-        11, // fut_obxd_2pole_hp,
-        11, // fut_obxd_2pole_n,
-        11, // fut_obxd_2pole_bp,
-        6, // fut_bp24,
-        7, // fut_notch24,
-        8,  // fut_comb_neg,
-        0   // fut_apf
+        { 0, 0 }, // fut_none
+        { 0, lprow }, // fut_lp12
+        { 1, lprow }, // fut_lp24
+        { 3, lprow }, // fut_lpmoog
+        { 0, hprow }, // fut_hp12
+        { 1, hprow }, // fut_hp24
+        { 0, bprow }, // fut_bp12
+        { 0, nrow }, // fut_notch12
+        { 1, fxrow }, // fut_comb_pos
+        { 3, fxrow }, // fut_SNH
+        { 4, lprow }, // fut_vintageladder
+        { 6, lprow }, // fut_obxd_2pole
+        { 7, lprow }, // fut_obxd_4pole
+        { 3, lprow }, // fut_k35_lp
+        { 3, hprow }, // fut_k35_hp
+        { 5, lprow }, // fut_diode
+        { 8, lprow }, // fut_nonlinearfb_lp
+        { 4, hprow }, // fut_nonlinearfb_hp
+        { 3, nrow }, // fut_nonlinearfb_n
+        { 3, bprow },  // fut_nonlinearfb_bp
+        { 3, hprow }, // fut_obxd_2pole_hp,
+        { 2, nrow }, // fut_obxd_2pole_n,
+        { 2, bprow }, // fut_obxd_2pole_bp,
+        { 1, bprow }, // fut_bp24,
+        { 1, nrow }, // fut_notch24,
+        { 2, fxrow },  // fut_comb_neg,
+        { 0, fxrow }   // fut_apf
     };

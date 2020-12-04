@@ -7299,7 +7299,8 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       hsw->setDeactivated(false);
       hsw->setBackgroundID(IDB_FILTER_MENU);
       hsw->setFilterMode(true);
-      hsw->glyphIndexMap = (const int*)fut_glyph_index;
+      for( int i=0; i<n_fu_types; i++ )
+         hsw->glyphIndexMap.push_back( std::make_pair( fut_glyph_index[i][0], fut_glyph_index[i][1] ) );
       p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
       auto drr = rect;
