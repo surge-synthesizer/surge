@@ -1,15 +1,15 @@
 <svg width="28" height="24" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M8.5 20C11.5376 20 14 17.3137 14 14C14 10.6863 11.5376 8 8.5 8C5.46243 8 3 10.6863 3 14C3 17.3137 5.46243 20 8.5 20Z" fill="url(#paint0_linear)"/>
-<path d="M8.5 17C11.5376 17 14 14.5376 14 11.5C14 8.46243 11.5376 6 8.5 6C5.46243 6 3 8.46243 3 11.5C3 14.5376 5.46243 17 8.5 17Z" fill="url(#paint1_linear)"/>
-<path d="M11.5 11.5C11.5 13.1569 10.1569 14.5 8.5 14.5C6.84315 14.5 5.5 13.1569 5.5 11.5C5.5 9.84315 6.84315 8.5 8.5 8.5C10.1569 8.5 11.5 9.84315 11.5 11.5Z" fill="#EEEEEE" stroke="#979797"/>
-<path opacity="0.2" d="M9.5 11.25L7.5 11.25C7.22386 11.25 7 11.4739 7 11.75C7 12.0261 7.22386 12.25 7.5 12.25L9.5 12.25C9.77614 12.25 10 12.0261 10 11.75C10 11.4739 9.77614 11.25 9.5 11.25Z" fill="#EEEEEE"/>
-<path d="M9.5 11L7.5 11C7.22386 11 7 11.2239 7 11.5C7 11.7761 7.22386 12 7.5 12L9.5 12C9.77614 12 10 11.7761 10 11.5C10 11.2239 9.77614 11 9.5 11Z" fill="#1F1F1F"/>
+<path d="M9 20C12.0376 20 14.5 17.3137 14.5 14C14.5 10.6863 12.0376 8 9 8C5.96243 8 3.5 10.6863 3.5 14C3.5 17.3137 5.96243 20 9 20Z" fill="url(#paint0_linear)"/>
+<path d="M9 17C12.0376 17 14.5 14.5376 14.5 11.5C14.5 8.46243 12.0376 6 9 6C5.96243 6 3.5 8.46243 3.5 11.5C3.5 14.5376 5.96243 17 9 17Z" fill="url(#paint1_linear)"/>
+<path d="M12 11.5C12 13.1569 10.6569 14.5 9 14.5C7.34315 14.5 6 13.1569 6 11.5C6 9.84315 7.34315 8.5 9 8.5C10.6569 8.5 12 9.84315 12 11.5Z" fill="#EEEEEE" stroke="#979797"/>
+<path opacity="0.2" d="M10 11.25L8 11.25C7.72386 11.25 7.5 11.4739 7.5 11.75C7.5 12.0261 7.72386 12.25 8 12.25L10 12.25C10.2761 12.25 10.5 12.0261 10.5 11.75C10.5 11.4739 10.2761 11.25 10 11.25Z" fill="#EEEEEE"/>
+<path d="M10 11L8 11C7.72386 11 7.5 11.2239 7.5 11.5C7.5 11.7761 7.72386 12 8 12L10 12C10.2761 12 10.5 11.7761 10.5 11.5C10.5 11.2239 10.2761 11 10 11Z" fill="#1F1F1F"/>
 <defs>
-<linearGradient id="paint0_linear" x1="8.5" y1="14" x2="8.5" y2="20" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint0_linear" x1="9" y1="14" x2="9" y2="20" gradientUnits="userSpaceOnUse">
 <stop offset="0.520833"/>
 <stop offset="1" stop-opacity="0"/>
 </linearGradient>
-<linearGradient id="paint1_linear" x1="8.5" y1="6" x2="8.5" y2="17" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint1_linear" x1="9" y1="6" x2="9" y2="17" gradientUnits="userSpaceOnUse">
 <stop stop-color="#FFBF00"/>
 <stop offset="1" stop-color="#FF9000"/>
 </linearGradient>

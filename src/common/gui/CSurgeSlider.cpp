@@ -286,8 +286,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
       ColBar.alpha = (int)(slider_alpha * 255.f);
       ColBarNeg.alpha = (int)(slider_alpha * 255.f);
 
-      // float moddist = modval * range;
-      // We want modval + value to be bould by -1 and 1. So
+      // We want modval + value to be bound by -1 and 1. So:
       float modup = modval;
       float moddn = modval;
       bool overtop = false;
@@ -316,19 +315,10 @@ void CSurgeSlider::draw(CDrawContext* dc)
          overotherside = true;
          moddn = value - 1.f;
       }
-      // at some point in the future draw something special with overtop and overbot
 
+      // at some point in the future draw something special with overtop and overbot
       modup *= range;
       moddn *= range;
-
-      /*
-      if( modval != 0 )
-         std::cout << "mv=" << modval
-                   << " val=" << value
-                   << " rn=" << range
-                   << " mu=" << modup
-                   << " md=" << moddn << std::endl;
-      */
 
       std::vector<CRect> drawThese;
       std::vector<CRect> drawTheseToo;
@@ -353,6 +343,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
             
             trect2.right -= 17;
             trect2.left = trect2.right - moddn;
+            if (!overotherside && overbot)
+               trect2.left += 1;
          }
 
          if (trect.left > trect.right)
@@ -373,7 +365,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                topr.top = trect2.top;
                topr.bottom = trect2.bottom;
                topr.left = trect2.right + 1;
-               topr.right = topr.left + 3;
+               topr.right = topr.left + 4;
 
                drawTheseToo.push_back(topr);
             }
@@ -382,7 +374,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                topr.top = trect.top;
                topr.bottom = trect.bottom;
                topr.left = trect.right + 1;
-               topr.right = topr.left + 3;
+               topr.right = topr.left + 4;
 
                drawThese.push_back(topr);
             }
@@ -396,8 +388,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
             {
                topr.top = trect.top;
                topr.bottom = trect.bottom;
-               topr.left = trect.left - 4;
-               topr.right = topr.left + 3;
+               topr.left = trect.left - 3;
+               topr.right = topr.left + 1;
 
                drawThese.push_back(topr);
             }
@@ -405,8 +397,8 @@ void CSurgeSlider::draw(CDrawContext* dc)
             {
                topr.top = trect2.top;
                topr.bottom = trect2.bottom;
-               topr.left = trect2.left - 4;
-               topr.right = topr.left + 3;
+               topr.left = trect2.left - 5;
+               topr.right = topr.left + 4;
 
                drawTheseToo.push_back(topr);
             }
@@ -432,6 +424,9 @@ void CSurgeSlider::draw(CDrawContext* dc)
 
             trect2.bottom -= 17;
             trect2.top = trect2.bottom + moddn;
+            if (overotherside && overtop)
+               trect2.top += 1;
+
          }
 
          if (trect.top < trect.bottom)
@@ -449,7 +444,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                topr.left = trect.left;
                topr.right = trect.right;
                topr.bottom = trect.top + 1;
-               topr.top = topr.bottom + 3;
+               topr.top = topr.bottom + 4;
 
                drawThese.push_back(topr);
             }
@@ -458,7 +453,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                topr.left = trect2.left;
                topr.right = trect2.right;
                topr.bottom = trect2.top + 1;
-               topr.top = topr.bottom + 3;
+               topr.top = topr.bottom + 4;
 
                drawTheseToo.push_back(topr);
             }
@@ -473,7 +468,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                topr.left = trect2.left;
                topr.right = trect2.right;
                topr.bottom = trect2.bottom - 1;
-               topr.top = topr.bottom - 3;
+               topr.top = topr.bottom - 4;
 
                drawTheseToo.push_back(topr);
             }
@@ -482,7 +477,7 @@ void CSurgeSlider::draw(CDrawContext* dc)
                topr.left = trect.left;
                topr.right = trect.right;
                topr.bottom = trect.bottom - 1;
-               topr.top = topr.bottom - 3;
+               topr.top = topr.bottom - 4;
 
                drawThese.push_back(topr);
             }
