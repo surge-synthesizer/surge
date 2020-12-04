@@ -93,6 +93,7 @@ CMouseEventResult CSwitchControl::onMouseDown(CPoint& where, const CButtonState&
       value = down ? 1 : 0;
    }
 
+   value_direction = 1;
    if (listener)
       listener->valueChanged(this);
 
@@ -126,18 +127,22 @@ bool CSwitchControl::onWheel(const CPoint& where,
 
    if( wheelDistance > threshold )
    {
+      wheelDistance = 0;
       ivalue ++;
       if( ivalue >= imax )
          ivalue = 0;
+      value_direction = +1;
       if (listener)
          listener->valueChanged(this);
 
    }
    else if( wheelDistance < -threshold )
    {
+      wheelDistance = 0;
       ivalue--;
       if( ivalue < 0 )
          ivalue = imax;
+      value_direction = -1;
       if (listener)
          listener->valueChanged(this);
    }
