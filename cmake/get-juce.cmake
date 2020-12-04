@@ -1,5 +1,6 @@
-set( JUCE_LIB_VERSION 6.0.4 )
-set( JUCE_REPO https://github.com/juce-framework/JUCE )
+set( JUCE_LIB_VERSION 6.0.4 )  # If you mod this, change it in scripts/misc/defensive-submodule.sh also:wq
+
+set( JUCE_REPO git://github.com/juce-framework/JUCE )
 set( JUCE_LIB_DIR ${CMAKE_SOURCE_DIR}/libs/juce-${JUCE_LIB_VERSION}/juce )
 
 find_package(Git)
