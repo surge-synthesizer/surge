@@ -105,8 +105,10 @@ jobs:
     
   - bash: |
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
+
       git config --global http.postBuffer 524288000
-      git submodule update --init --recursive --depth=1 --jobs=10
+      git config --global core.compression 0
+      GIT_TRACE=1 GIT_CURL_VERBOSE=1 git submodule update --init --recursive --depth=1 --jobs=10
 
       export SURGE_VERSION=$(cat VERSION)
       echo "SURGE_VERSION=$SURGE_VERSION"
