@@ -95,7 +95,9 @@ public:
       dglphyid = id; dglyphsize = size; onSkinChanged();
    }
    const int* glyphIndexMap = nullptr;
-   
+
+   std::vector<int> intOrdering;
+
 private:
    VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr, *pGlyph = nullptr, *pGlyphHover = nullptr;
    std::string label = "";

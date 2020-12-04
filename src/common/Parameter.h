@@ -183,6 +183,9 @@ struct ParameterDiscreteIndexRemapper : public ParamUserData
    virtual bool hasGroupNames() { return false; }
    virtual std::string groupNameAtStreamedIndex( int i ) { return ""; } // If you want menu grouping
    virtual bool sortGroupNames() { return true; }
+
+   virtual bool supportsTotalIndexOrdering() { return false; }
+   virtual const std::vector<int> totalIndexOrdering() { return std::vector<int>(); }
 };
 
 /*

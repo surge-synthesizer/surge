@@ -47,6 +47,7 @@
 #include "UnBox.h"
 #include "VariMu.h"
 #include "VoiceOfTheStarship.h"
+#include <map>
 
 namespace {
 template<typename T>
@@ -61,7 +62,14 @@ std::unique_ptr<AirWinBaseClass> create(int id, double sr, int dp)
 
 std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
 {
-   std::vector<AirWinBaseClass::Registration> reg;
+   /*
+    * Static function, only called from audio thread, safe to have a static member here to avoid
+    * rebuild too often.
+    */
+   static std::vector<AirWinBaseClass::Registration> reg;
+
+   if( ! reg.empty() )
+      return reg;
 
    /* 
    ** Register here with streaming ID (which must be increasing and can never change) and display order ID (which can be
@@ -143,4 +151,28 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<Slew2::Slew2>, id++, 114, gnClipping, "Slew 2");
 
    return reg;
+}
+
+std::vector<int> AirWinBaseClass::pluginRegistryOrdering()
+{
+   // See above on static
+   static auto res = std::vector<int>();
+   if( ! res.empty() )
+      return res;
+
+   auto r = pluginRegistry();
+   auto q = std::map<std::string, std::map<int, int>>();
+
+   for( auto const &el : r )
+   {
+      q[el.groupName][el.displayOrder] = el.id;
+   }
+   for( auto const &sm : q )
+   {
+      for( auto const &tm : sm.second )
+      {
+         res.push_back( tm.second );
+      }
+   }
+   return res;
 }

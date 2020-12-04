@@ -49,9 +49,12 @@ public:
    int lastSelected = -1;
    
    std::vector<AirWinBaseClass::Registration> fxreg;
+   std::vector<int> fxregOrdering;
 
    struct AWFxSelectorMapper : public ParameterDiscreteIndexRemapper {
-      AWFxSelectorMapper( AirWindowsEffect *fx ) { this->fx = fx; };
+      AWFxSelectorMapper( AirWindowsEffect *fx ) {
+         this->fx = fx;
+      };
 
       virtual int remapStreamedIndexToDisplayIndex( int i ) override {
          return fx->fxreg[i].displayOrder;
@@ -63,6 +66,16 @@ public:
       
       virtual std::string groupNameAtStreamedIndex( int i ) override {
          return fx->fxreg[i].groupName;
+      }
+
+      bool supportsTotalIndexOrdering() override
+      {
+         return true;
+      }
+
+      const std::vector<int> totalIndexOrdering() override
+      {
+         return fx->fxregOrdering;
       }
       AirWindowsEffect *fx;
    };
