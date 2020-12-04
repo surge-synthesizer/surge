@@ -89,6 +89,7 @@ void AirWindowsEffect::init_ctrltypes() {
    */
    Effect::init_ctrltypes();
    fxreg = AirWinBaseClass::pluginRegistry();
+   fxregOrdering = AirWinBaseClass::pluginRegistryOrdering();
 
    fxdata->p[0].set_name( "FX" );
    fxdata->p[0].set_type( ct_airwindows_fx );

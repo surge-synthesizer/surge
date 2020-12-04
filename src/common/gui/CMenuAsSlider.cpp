@@ -291,10 +291,30 @@ bool CMenuAsSlider::onWheel( const VSTGUI::CPoint &where, const float &distance,
 
    auto fv = [this](float v, int inc)
                 {
-                   int iv = floor( getValue() * ( iMax - iMin ) + 0.5 );
-                   iv = iv + inc;
-                   if( iv < 0 ) iv = iMax;
-                   if( iv > iMax ) iv = 0;
+                   int iv = Parameter::intUnscaledFromFloat(v, iMax, iMin );
+                   if( intOrdering.size() > 0 && iMax == intOrdering.size() - 1 )
+                   {
+                      int pidx = 0;
+                      for( int idx=0; idx<intOrdering.size(); idx++ )
+                         if( intOrdering[idx] == iv )
+                         {
+                            pidx = idx;
+                            break;
+                         }
+                      int nidx = pidx + inc;
+                      if( nidx < 0 ) nidx = intOrdering.size() - 1;
+                      else if( nidx >= intOrdering.size() ) nidx = 0;
+
+                      iv = intOrdering[nidx];
+                   }
+                   else
+                   {
+                      iv = iv + inc;
+                      if (iv < 0)
+                         iv = iMax;
+                      if (iv > iMax)
+                         iv = 0;
+                   }
                    // This is the get_value_f01 code
                    float r = Parameter::intScaledToFloat(iv, iMax, iMin );
                    return r;

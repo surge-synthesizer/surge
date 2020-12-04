@@ -7000,6 +7000,11 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
                                      p->id + start_paramtags,
                                      bitmapStore,
                                      &(synth->storage));
+
+         auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper*>(p->user_data);
+         if( parm && parm->supportsTotalIndexOrdering() )
+            hs->intOrdering = parm->totalIndexOrdering();
+
          hs->setSkin( currentSkin, bitmapStore );
          hs->setValue( p->get_value_f01() );
          hs->setMinMax( p->val_min.i, p->val_max.i );
@@ -7281,6 +7286,11 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       auto rect = skinCtrl->getRect();
       auto hsw = new CMenuAsSlider(rect.getTopLeft(), CPoint(124, 21), this,
                                    p->id + start_paramtags, bitmapStore, &(synth->storage));
+
+      auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper*>(p->user_data);
+      if( parm && parm->supportsTotalIndexOrdering() )
+         hsw->intOrdering = parm->totalIndexOrdering();
+
       hsw->setMinMax(0, n_fu_types - 1);
       hsw->setMouseableArea(rect);
       hsw->setLabel(p->get_name());
