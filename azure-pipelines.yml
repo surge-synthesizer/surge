@@ -105,7 +105,11 @@ jobs:
     
   - bash: |
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
-      git submodule update --init --recursive --depth=1
+
+      # Pipelines be timin out. Try this thrice. Should be cheap if it works.
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
 
       export SURGE_VERSION=$(cat VERSION)
       echo "SURGE_VERSION=$SURGE_VERSION"
