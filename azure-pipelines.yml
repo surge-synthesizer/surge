@@ -107,10 +107,10 @@ jobs:
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
 
       git config --global http.postBuffer 524288000
-      #git config --global core.compression 0
-      #GIT_TRACE=1 GIT_CURL_VERBOSE=1 git submodule update --init --recursive --depth=1 --jobs=10
       grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule init
-      grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --recursive --init
+      grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --depth=1
+      cd vst3sdk && ( grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --init --depth=1 )
+      grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --recursive --init --depth=1
 
       export SURGE_VERSION=$(cat VERSION)
       echo "SURGE_VERSION=$SURGE_VERSION"
