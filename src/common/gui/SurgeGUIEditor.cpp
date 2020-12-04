@@ -3601,16 +3601,25 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    if ((tag == f1subtypetag) || (tag == f2subtypetag))
    {
       int idx = (tag == f2subtypetag) ? 1 : 0;
-      int a = synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i + 1;
+      auto csc = dynamic_cast<CSwitchControl*>(control);
+      int valdir = csc->value_direction;
+      csc->value_direction = 0;
+
+      int a = synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i + valdir;
       int nn =
          fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
       if (a >= nn)
          a = 0;
+      if( a < 0 )
+         a = nn-1;
       synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i = a;
-      if (!nn)
-         ((CSwitchControl*)control)->ivalue = 0;
-      else
-         ((CSwitchControl*)control)->ivalue = a + 1;
+      if( csc )
+      {
+         if (nn == 0)
+            csc->ivalue = 0;
+         else
+            csc->ivalue = a + 1;
+      }
       control->invalid();
       synth->switch_toggled_queued = true;
       return;

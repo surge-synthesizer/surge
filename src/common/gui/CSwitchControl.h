@@ -51,7 +51,7 @@ public:
                 const float& distance,
                 const VSTGUI::CButtonState& buttons) override;
 
-   int ivalue = 0, imax = 0;
+   int ivalue = 0, imax = 0, value_direction = 0;
    bool is_itype = false;
    bool lookedForHover = false;
    bool doingHover = false;
