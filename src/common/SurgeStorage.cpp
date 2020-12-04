@@ -132,6 +132,24 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
                getPatch().scene[s].osc[o].wt.TableF32WeakPointers[i][j] = 0;
                getPatch().scene[s].osc[o].wt.TableI16WeakPointers[i][j] = 0;
             }
+
+   for( int s = 0; s < n_scenes; ++s)
+      for( int fu=0; fu<n_filterunits_per_scene; ++fu )
+         for( int t=0; t<n_fu_types; ++t )
+         {
+            switch( t )
+            {
+            case fut_lpmoog:
+            case fut_obxd_4pole:
+            case fut_diode:
+               subtypeMemory[s][fu][t] = 3;
+               break;
+            default:
+               subtypeMemory[s][fu][t] = 0;
+               break;
+            }
+         }
+
    init_tables();
    pitch_bend = 0;
    last_key[0] = 60;

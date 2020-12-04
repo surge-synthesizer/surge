@@ -3606,6 +3606,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       csc->value_direction = 0;
 
       int a = synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i + valdir;
+      int t = synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i;
       int nn =
          fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
       if (a >= nn)
@@ -3613,6 +3614,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       if( a < 0 )
          a = nn-1;
       synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i = a;
+      synth->storage.subtypeMemory[current_scene][idx][t] = a;
       if( csc )
       {
          if (nn == 0)

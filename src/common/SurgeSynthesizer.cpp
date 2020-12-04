@@ -1560,17 +1560,11 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
          {
             // Oh my goodness this is deeply sketchy code to not document! It assumes that subtype
             // is right after type in ID space without documenting it. So now documented!
-            switch (storage.getPatch().param_ptr[index]->val.i)
-            {
-            case fut_lpmoog:
-            case fut_obxd_4pole:
-            case fut_diode:
-               storage.getPatch().param_ptr[index + 1]->val.i = 3;
-               break;
-            default:
-               storage.getPatch().param_ptr[index + 1]->val.i = 0;
-               break;
-            }
+            auto typep = ( storage.getPatch().param_ptr[index]);
+            auto subtypep = storage.getPatch().param_ptr[index+1];
+
+            /* Used to be an lpmoog -> 3 type thing in here but that moved to the SurgeStorage ctor */
+            subtypep->val.i = storage.subtypeMemory[typep->scene-1][typep->ctrlgroup_entry][typep->val.i];
          }
          break;
       case ct_osctype: {
@@ -1605,13 +1599,15 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
       case ct_filtersubtype:
          // See above: We know the filter type for this subtype is at index - 1. Cap max to be the fut-subtype
          {
+            auto subp = storage.getPatch().param_ptr[index];
             auto filterType = storage.getPatch().param_ptr[index - 1]->val.i;
             auto maxIVal = fut_subcount[filterType];
             if (maxIVal == 0)
-               storage.getPatch().param_ptr[index]->val.i = 0;
+               subp->val.i = 0;
             else
-               storage.getPatch().param_ptr[index]->val.i =
-                   std::min(maxIVal - 1, storage.getPatch().param_ptr[index]->val.i);
+               subp->val.i = std::min(maxIVal - 1, subp->val.i);
+            storage.subtypeMemory[subp->scene-1][subp->ctrlgroup_entry][subp->val.i] = subp->val.i;
+
             switch_toggled_queued = true;
             break;
          }
