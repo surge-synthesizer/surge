@@ -934,6 +934,8 @@ public:
    // Alterhately make this unordered and provide a hash
    std::map<std::pair<std::string,int>, std::string> helpURL_paramidentifier_typespecialized;
 
+   int subtypeMemory[n_scenes][n_filterunits_per_scene][n_fu_types];
+
 private:
    TiXmlDocument snapshotloader;
    std::vector<Parameter> clipboard_p;
