@@ -15,11 +15,7 @@ if( NOT EXISTS ${JUCE_LIB_DIR}/README.md )
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} clone ${JUCE_REPO} ${JUCE_LIB_DIR}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    )
-  execute_process(
-    COMMAND cd ${JUCE_LIB_DIR} && git checkout ${JUCE_LIB_VERSION}
+    COMMAND ${GIT_EXECUTABLE} clone ${JUCE_REPO} ${JUCE_LIB_DIR} --depth=1 -b ${JUCE_LIB_VERSION}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 else()
