@@ -106,15 +106,10 @@ jobs:
   - bash: |
       # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
 
-      git config --global http.postBuffer 524288000
-      grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule init
-      grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --depth=1
-
-      pushd vst3sdk 
-      grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --init --depth=1 
-      popd
-
-      grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --recursive --init --depth=1
+      # Pipelines be timin out. Try this thrice. Should be cheap if it works.
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
+      . ./scripts/misc/defensive-submodule.sh
 
       export SURGE_VERSION=$(cat VERSION)
       echo "SURGE_VERSION=$SURGE_VERSION"
