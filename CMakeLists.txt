@@ -302,7 +302,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SkinImageMaps.h
   src/common/gui/CSurgeHyperlink.cpp
   src/common/ModulatorPresetManager.cpp
-  )
+        src/common/gui/CTextButtonWithHover.cpp src/common/gui/CTextButtonWithHover.h)
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp

@@ -10,6 +10,7 @@
 #include "CSurgeHyperlink.h"
 #include "SurgeGUIEditor.h"
 #include "CScalableBitmap.h"
+#include "CTextButtonWithHover.h"
 
 
 using namespace VSTGUI;
@@ -109,10 +110,11 @@ CAboutBox::CAboutBox(const CRect& size,
 
    /* bottom left version info */
 
-   auto copy = new CTextButton(CRect(CPoint(19, 426), CPoint(100, 18)), this, tag_copy, "Copy Version Info");   // here's a temporary thing to trigger a copy. fix this widget
+   auto copy = new CTextButtonWithHover(CRect(CPoint(19, 426), CPoint(100, 18)), this, tag_copy, "Copy Version Info");   // here's a temporary thing to trigger a copy. fix this widget
    copy->setFont(boldFont);
    copy->setFrameColor(CColor(0, 0, 0, 0));
    copy->setFrameColorHighlighted(CColor(0, 0, 0, 0));
+   copy->setHoverTextColor(CColor(96, 196, 255));
    copy->setGradient(nullptr);
    copy->setGradientHighlighted(nullptr);
    copy->setTextColor(CColor(45, 134, 254));
