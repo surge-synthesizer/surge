@@ -1032,6 +1032,11 @@ void CSurgeSlider::onSkinChanged()
 
    if( skinControl.get() )
    {
+      auto htr = skin->propertyValue( skinControl, "handle_tray" );
+      if( htr.isJust() )
+      {
+         pTray = associatedBitmapStore->getBitmapByStringID(htr.fromJust());
+      }
       auto hi = skin->propertyValue( skinControl, "handle_image" );
       if( hi.isJust() )
       {

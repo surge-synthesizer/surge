@@ -1,10 +1,61 @@
 <!--[doc]
+A core concept for a ui control is that it has a component-class. Surge's C++ engine has a collection of built
+in classes with names like "CSurgeSlider" or "CHSwitch2". You can pick other classes for controls though.
+
+In surge 1.8 you really don't want to swap a control's base class (the CSurgeSlider or whatever). As we approach
+1.9 and add knobs and other such controls, you may have reason to do so. But for now, you may want groups of
+items which are of the same base C++ type to have different properties. The most common use case for this is
+defining a group of sliders to all have a different handle.
+
+You could do this by overriding a parameter on a particular control over and over, which we show here, but you
+can also do it by defining a user defined control class which allows you to set a bunch of properties then
+apply that bundle to a control. This is very very loosely similar to CSS in web design, but don't let that
+analogy lead you astray, especially in your optimism for how much we ahve implemented.
+
 [doc]-->
 <surge-skin name="04 Control Classes and User Controls" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
+    <defaultimage directory="SVG/"/>
+
+    <!--[doc]
+    As discussed in tutorial 02, we load a couple of images by ID into our image database. We can use
+    that to replace the handle image on a particula slider, as we show below and in Tutorial 2.
+    [doc]-->
+    <image id="horiz_pastel" resource="SVG/NewHorizHandle.svg"/>
+    <image id="animal_handle" resource="SVG/AnotherHorizHandle.svg"/>
+    <image id="fun_tray" resource="SVG/FunTray.svg"/>
   </globals>
   <component-classes>
+    <!--[doc]
+    But if we want to replace a collection of sliders and modify several features we don't want
+    to have to repeat all the configuration. Instead we define a user component class. This class has
+    a name and a parent class but also advertises properties. Much like CSS these properties cascade
+    so a control can ovveride them, or a user class can have a user class as a parent. Here we take
+    the simplest approach though of just defining a new slider class which we intend to use for the
+    LFO H Sliders. We share the parent, CSurgeSlider, and modify the handle_image and the handle_tray
+    (backdrop) with a custom image.
+
+
+    [doc]-->
+    <class name="lfo-hslider" parent="CSurgeSlider" handle_image="animal_handle" handle_tray="fun_tray"/>
+
   </component-classes>
   <controls>
+    <!--[doc]
+    We can change a single parameter of a single control however we want. Here we change the filterbalance
+    handle image. This is just like Tutorial 02
+    [doc]-->
+    <control ui_identifier="filter.balance" handle_image="horiz_pastel"/>
+
+    <!--[doc]
+    But rather than changing the images on these lfo sliders, we change their class. This picks up all
+    the properties on the class hierarchy back to the base class (in this case, still, CSurgeSlider)
+    and overrides them appropriately
+    [doc]-->
+    <control ui_identifier="lfo.rate" class="lfo-hslider"/>
+    <control ui_identifier="lfo.phase" class="lfo-hslider"/>
+    <control ui_identifier="lfo.deform" class="lfo-hslider"/>
+    <control ui_identifier="lfo.amplitude" class="lfo-hslider"/>
+
   </controls>
 </surge-skin>

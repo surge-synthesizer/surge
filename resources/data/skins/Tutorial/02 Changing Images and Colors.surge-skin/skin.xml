@@ -65,14 +65,29 @@ feel.
     The other available approach is to replace an image by its ID with a new image
     with a different filename. The string IDs are available in the skin inspector.
     Here we replace the horizontal fader handle but ratner than overriding bmp00153.svg
-    we instead create an image with id FADERH_HANDLE
+    we instead create an image with id SLIDER_HORIZ_HANDLE and all the horizontal handles
+    will use it for their handle graphic
     [doc]-->
-    <image id="FADERH_HANDLE" resource="SVG/NewHorizHandle.svg"/>
+    <image id="SLIDER_HORIZ_HANDLE" resource="SVG/NewHorizHandle.svg"/>
 
+    <!--[doc]
+    Surge has a collection of built in image ids like `SLIDER_HORIZ_HANDLE` which the
+    skin inspector will show you, and components will refer to them. But we can load
+    any other image we want into the image database with an ID. To do so, we create
+    an image here with an id and a resource reference. We will use it below
+    [doc]-->
+    <image id="another_handle_by_user" resource="SVG/AnotherHorizHandle.svg"/>
 
   </globals>
   <component-classes>
   </component-classes>
   <controls>
+    <!--[doc]
+    The default image 'bmp00113' wil be loaded by the scene browser. The `SLIDER_HORIZ_HANDLE`
+    will be loaded by all the sliders. But we need to pick an item to attach the other
+    image to. We do that here by picking a particular control and replacing the
+    handle image. This is covered more in Tutorial 04.
+    [doc]-->
+    <control ui_identifier="filter.balance" handle_image="another_handle_by_user"/>
   </controls>
 </surge-skin>

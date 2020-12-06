@@ -1,4 +1,10 @@
 <!--[doc]
+Changing layout is a critical feature of the skin engine. If you run the skin inspector you can see
+that each control has been advertised with a name and has a location. Some controls are grouped in
+panels by default, allowing you to move groups of items.
+
+Moving an item in the skin engine is as simple as finding its ID and then re-setting the X and Y
+location in the skin XML document. We show a few examples here.
 [doc]-->
 <surge-skin name="03 Moving your First Control" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
@@ -6,6 +12,20 @@
   <component-classes>
   </component-classes>
   <controls>
+    <!-- [doc]
+    The first most simple example is to just move a single slider. In the 18 UI the filter balance control
+    is positioned in the middle of a block. Lets move it. In the skin inspector in classic we see that
+    the control `filter.balance` has location `456x224`. Lets move it 10 pixels
+    [doc]-->
+    <control ui_identifier="filter.balance" x="446" y="214"/>
+
+    <!--[doc]
+    The skin inspector also shows that some items are in parent groups. For instance, the oscillator parameters
+    are all parented in a component named `osc.param.panel`. You should be able to see this in the Skin Inspector.
+
+    This means we can relocate all the parameters at once. Here we're just going to give them a little jump
+    to the right.
+    [doc]-->
     <control ui_identifier="osc.param.panel" x="15"/>
   </controls>
 </surge-skin>
