@@ -12,7 +12,7 @@ location in the skin XML document. We show a few examples here.
   <component-classes>
   </component-classes>
   <controls>
-    <!-- [doc]
+    <!--[doc]
     The first most simple example is to just move a single slider. In the 18 UI the filter balance control
     is positioned in the middle of a block. Lets move it. In the skin inspector in classic we see that
     the control `filter.balance` has location `456x224`. Lets move it 10 pixels
