@@ -70,7 +70,8 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
                        MidiKeyState* keyState,
                        MidiChannelState* mainChannelState,
                        MidiChannelState* voiceChannelState,
-                       bool mpeEnabled
+                       bool mpeEnabled,
+                       int64_t voiceOrder
     )
 //: fb(storage,oscene)
 {
@@ -83,6 +84,9 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    assert(oscene);
 
    memcpy(localcopy, paramptr, sizeof(localcopy));
+
+   // We want this on the keystate so it survives the voice for mono mode
+   keyState->voiceOrder = voiceOrder;
 
    age = 0;
    age_release = 0;
@@ -112,7 +116,7 @@ SurgeVoice::SurgeVoice(SurgeStorage* storage,
    else
       state.portasrc_key = storage->last_key[scene_id];
    state.priorpkey = state.portasrc_key;
-   
+
    storage->last_key[scene_id] = key;
    state.portaphase = 0;
    noisegenL[0] = 0.f;

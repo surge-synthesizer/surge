@@ -48,7 +48,8 @@ public:
               MidiKeyState* keyState,
               MidiChannelState* mainChannelState,
               MidiChannelState* voiceChannelState,
-              bool mpeEnabled
+              bool mpeEnabled,
+              int64_t voiceOrder
        );
    ~SurgeVoice();
 

@@ -727,3 +727,39 @@ TEST_CASE( "Patch Version Builder", "[io]")
       }
    }
 }
+
+TEST_CASE( "MonoVoicePriority Streams", "[io]" )
+{
+   auto fromto = [](std::shared_ptr<SurgeSynthesizer> src,
+                    std::shared_ptr<SurgeSynthesizer> dest)
+   {
+     void *d = nullptr;
+     auto sz = src->saveRaw( &d );
+
+     dest->loadRaw( d, sz, false );
+   };
+   SECTION( "MVP Streams Properly" )
+   {
+      int mvp = ALWAYS_LOWEST;
+      for( int i=0; i<20; ++i )
+      {
+         int r1 = rand() % (mvp + 1);
+         int r2 = rand() % (mvp + 1);
+         INFO( "Checking type " << r1 << " " << r2 );
+         auto ssrc = Surge::Headless::createSurge(44100);
+         ssrc->storage.getPatch().scene[0].monoVoicePriorityMode = (MonoVoicePriorityMode)r1;
+         ssrc->storage.getPatch().scene[1].monoVoicePriorityMode = (MonoVoicePriorityMode)r2;
+         auto sdst = Surge::Headless::createSurge(44100);
+
+         REQUIRE( sdst->storage.getPatch().scene[0].monoVoicePriorityMode == ALWAYS_LATEST );
+         REQUIRE( sdst->storage.getPatch().scene[1].monoVoicePriorityMode == ALWAYS_LATEST );
+
+         fromto( ssrc, sdst );
+
+         REQUIRE( sdst->storage.getPatch().scene[0].monoVoicePriorityMode == (MonoVoicePriorityMode)r1);
+         REQUIRE( sdst->storage.getPatch().scene[1].monoVoicePriorityMode == (MonoVoicePriorityMode)r2);
+
+      }
+   }
+
+}
