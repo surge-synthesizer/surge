@@ -1,4 +1,13 @@
 <!--[doc]
+Surge skins to date have rendered the labels in SVGs as paths. Surge does install the Lato font with
+an installation, though, and in Surge 1.8, you can use that font to draw labels anywhere on the UI.
+This would allow you, in theory, to have text-free graphical assets for the background and render
+labels as strings. Button assets would still require text-in-SVGs for now.
+
+In Surge 1.8, there is minimal control over the positiong of the modulation section in the UI.
+You can adjust the x and y position of the entire panel, or the color of an individual element
+using the mechanism described in Tutorial 02 and 03 and the labels from the skin inspector.
+In Surge 1.9, we expect to expand the ability to reponsition modulation source controls.
 [doc]-->
 <surge-skin name="05 Labels And Modulators" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
   <globals>
@@ -6,6 +15,9 @@
   <component-classes>
   </component-classes>
   <controls>
+    <!--[doc]
+    Adding a label is simple, though. Simply add a label control at a position with text and properties. Here is a full example
+    [doc]-->
     <label x="10" y="30" w="150" h="30" font-size="24" font-style="bold" color="#004400" bg-color="#AAFFAA488" frame-color="#FFFFFF" text="I Am Green"/>
   </controls>
 </surge-skin>
