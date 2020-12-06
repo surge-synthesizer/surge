@@ -2915,7 +2915,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   {
                      contextMenu->addSeparator();
                      contextMenu->addEntry(makeMonoModeOptionsMenu(menuRect, false ),
-                                           Surge::UI::toOSCaseForMenu("Mono Mode Voice Options (This Session)"));
+                                           Surge::UI::toOSCaseForMenu("Mono Mode Options (Current Instance)"));
                   }
                }
             }
@@ -5006,7 +5006,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect& menu
                                                                 (int)HOLD_ALL_NOTES );
 
    auto cb = addCallbackMenu(monoSubMenu,
-                             Surge::UI::toOSCaseForMenu("Pedal Holds All Notes"),
+                             Surge::UI::toOSCaseForMenu("Sustain Pedal Holds All Notes (No Note Off Retrigger)"),
                    [this, updateDefaults]() {
                       this->synth->storage.monoPedalMode = HOLD_ALL_NOTES;
                       if( updateDefaults )
@@ -5018,7 +5018,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect& menu
       cb->setChecked( true );
 
    cb = addCallbackMenu(monoSubMenu,
-                             Surge::UI::toOSCaseForMenu("Pedal Releases if Other Notes Held"),
+                             Surge::UI::toOSCaseForMenu("Sustain Pedal Allows Note Off Retrigger"),
                              [this, updateDefaults]() {
                                this->synth->storage.monoPedalMode = RELEASE_IF_OTHERS_HELD;
                                if( updateDefaults )
@@ -5748,7 +5748,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
                          Surge::UI::toOSCaseForMenu("Controller Smoothing"));
 
    midiSubMenu->addEntry( makeMonoModeOptionsMenu( menuRect, true ),
-                         Surge::UI::toOSCaseForMenu( "Mono Mode Voice Options (Defaults)" ) );
+                         Surge::UI::toOSCaseForMenu( "Mono Mode Options" ) );
 
    midiSubMenu->addSeparator();
 
