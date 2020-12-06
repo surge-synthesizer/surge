@@ -671,6 +671,8 @@ struct DAWExtraStateStorage
 
    std::unordered_map<int, int> midictrl_map; // param -> midictrl
    std::unordered_map<int, int> customcontrol_map; // custom controller number -> midicontrol
+
+   int monoPedalMode = 0;
 };
 
 
@@ -790,6 +792,22 @@ enum surge_copysource
 
    n_copysources,
 };
+
+/*
+ * How does the sustain pedal work in mono mode? Current modes for this are
+ *
+ * HOLD_ALL_NOTES (the default). If you release a note with the pedal down
+ * it does not release
+ *
+ * RELEASE_IF_OTHERS_HELD. If you release a note, and no other notes are down,
+ * do not release. But if you release and another note is down, return to that
+ * note (basically allow sustain pedal trills).
+ */
+enum MonoPedalMode {
+   HOLD_ALL_NOTES,
+   RELEASE_IF_OTHERS_HELD
+};
+
 
 /* STORAGE layer			*/
 
@@ -935,6 +953,7 @@ public:
    std::map<std::pair<std::string,int>, std::string> helpURL_paramidentifier_typespecialized;
 
    int subtypeMemory[n_scenes][n_filterunits_per_scene][n_fu_types];
+   MonoPedalMode monoPedalMode = HOLD_ALL_NOTES;
 
 private:
    TiXmlDocument snapshotloader;

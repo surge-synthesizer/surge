@@ -499,6 +499,7 @@ private:
    VSTGUI::COptionMenu* makeMidiMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeDevMenu(VSTGUI::CRect &rect);
    VSTGUI::COptionMenu* makeLfoMenu(VSTGUI::CRect &rect);
+   VSTGUI::COptionMenu* makeMonoModeOptionsMenu(VSTGUI::CRect &rect, bool updateDefaults );
    bool scannedForMidiPresets = false;
 
    void resetSmoothing( ControllerModulationSource::SmoothingMode t );

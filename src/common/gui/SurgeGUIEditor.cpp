@@ -2906,6 +2906,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                                               });
                      m->setChecked( synth->storage.getPatch().correctlyTuneCombFilter);
                   }
+
+                  if( p->ctrltype == ct_polymode &&
+                      (p->val.i == pm_mono ||
+                       p->val.i == pm_mono_st ||
+                       p->val.i == pm_mono_fp ||
+                       p->val.i == pm_mono_st_fp ))
+                  {
+                     contextMenu->addSeparator();
+                     contextMenu->addEntry(makeMonoModeOptionsMenu(menuRect, false ),
+                                           Surge::UI::toOSCaseForMenu("Mono Mode Voice Options (This Session)"));
+                  }
                }
             }
          }
@@ -4981,6 +4992,46 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     return mpeSubMenu;
 }
 
+VSTGUI::COptionMenu *SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect& menuRect, bool updateDefaults)
+{
+   COptionMenu* monoSubMenu =
+       new COptionMenu(menuRect,
+                       0, 0, 0, 0,
+                       VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   auto mode = synth->storage.monoPedalMode;
+   if( updateDefaults )
+      mode = (MonoPedalMode)Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                                "monoPedalMode",
+                                                                (int)HOLD_ALL_NOTES );
+
+   auto cb = addCallbackMenu(monoSubMenu,
+                             Surge::UI::toOSCaseForMenu("Pedal Holds All Notes"),
+                   [this, updateDefaults]() {
+                      this->synth->storage.monoPedalMode = HOLD_ALL_NOTES;
+                      if( updateDefaults )
+                         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                "monoPedalMode",
+                                                                (int)HOLD_ALL_NOTES);
+                   });
+   if( mode == HOLD_ALL_NOTES )
+      cb->setChecked( true );
+
+   cb = addCallbackMenu(monoSubMenu,
+                             Surge::UI::toOSCaseForMenu("Pedal Releases if Other Notes Held"),
+                             [this, updateDefaults]() {
+                               this->synth->storage.monoPedalMode = RELEASE_IF_OTHERS_HELD;
+                               if( updateDefaults )
+                                  Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                         "monoPedalMode",
+                                                                         (int)RELEASE_IF_OTHERS_HELD);
+                             });
+   if( mode == RELEASE_IF_OTHERS_HELD )
+      cb->setChecked( true );
+
+   return monoSubMenu;
+}
+
 VSTGUI::COptionMenu* SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect& menuRect, bool showhelp)
 {
     int tid=0;
@@ -5695,6 +5746,9 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
                                         (int)ControllerModulationSource::SmoothingMode::LEGACY,
                                         [this](auto md) { this->resetSmoothing(md); }),
                          Surge::UI::toOSCaseForMenu("Controller Smoothing"));
+
+   midiSubMenu->addEntry( makeMonoModeOptionsMenu( menuRect, true ),
+                         Surge::UI::toOSCaseForMenu( "Mono Mode Voice Options (Defaults)" ) );
 
    midiSubMenu->addSeparator();
 
