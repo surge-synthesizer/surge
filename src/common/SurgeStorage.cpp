@@ -23,6 +23,7 @@
 #include <map>
 #include <queue>
 #include <vt_dsp/vt_dsp_endian.h>
+#include "UserDefaults.h"
 #if MAC
 #include <cstdlib>
 #include <sys/stat.h>
@@ -538,6 +539,10 @@ bailOnPortable:
          Surge::MSEG::rebuildCache( ms );
       }
    }
+
+   monoPedalMode = (MonoPedalMode)Surge::Storage::getUserDefaultValue(this,
+                                                                      "monoPedalMode",
+                                                                      MonoPedalMode::HOLD_ALL_NOTES );
 }
 
 SurgePatch& SurgeStorage::getPatch()

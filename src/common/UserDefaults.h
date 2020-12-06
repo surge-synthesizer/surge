@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include "SurgeStorage.h"
 
 /*
 ** Surge has a variety of settings which users can update and save across
@@ -12,6 +11,8 @@
 ** persist this information.
 */
 
+
+class SurgeStorage;
 
 namespace Surge
 {

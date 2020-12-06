@@ -318,4 +318,93 @@ TEST_CASE( "Sustain Pedal and Mono", "[midi]" ) // #1459
 
 
    }
+
+
+   SECTION( "Pedal Mode Release" )
+   {
+      auto step = [](auto surge) { for( int i=0; i<25; ++i ) surge->process(); };
+      auto testInSurge = [](auto kernel) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE( surge );
+        surge->storage.monoPedalMode = RELEASE_IF_OTHERS_HELD;
+        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono;
+        kernel(surge);
+      };
+
+      int susp = 64;
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Single Note On and Off" );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 60, 0 ); step(surge);
+        REQUIRE( playingNoteCount(surge) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Single Pedal Before Note On and Off" );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 60, 0 ); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - use pedal play and release
+        INFO( "Single Pedal After Note On" );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->releaseNote( 0, 60, 0 ); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Note Release with note held. This is the one Evil wants changed." );
+        surge->playNote( 0, 48, 127, 0 ); step( surge );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 60, 0); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 48 ); // This is the difference in modes
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( solePlayingNote( surge ) == 48 );
+        surge->releaseNote( 0, 48, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Under-Note Release with note held. This is the one Evil wants changed." );
+        surge->playNote( 0, 48, 127, 0 ); step( surge );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 60, 0); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 48 ); // We want a mode where this is 48
+        surge->releaseNote( 0, 48, 0 ); step( surge );
+        REQUIRE( solePlayingNote( surge ) == 48 ); // and in that mode this would stay 48
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+      testInSurge( [&]( auto surge ) {
+        // Case one - no pedal play and release
+        INFO( "Under-Note Release with pedan on." );
+        surge->playNote( 0, 48, 127, 0 ); step( surge );
+        surge->channelController( 0, 64, 127 ); step( surge );
+        surge->playNote(0, 60, 120, 0); step(surge);
+        surge->releaseNote( 0, 48, 0); step(surge);
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->releaseNote( 0, 60, 0 ); step( surge );
+        REQUIRE( solePlayingNote( surge ) == 60 );
+        surge->channelController( 0, 64, 0 ); step( surge );
+        REQUIRE( playingNoteCount( surge ) == 0 );
+      });
+
+   }
+   // add it to user prefs menu
+   // add it for patch to play meny rmb
 }

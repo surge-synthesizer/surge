@@ -683,10 +683,29 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
    bool noHold = ! channelState[channel].hold;
    if( mpeEnabled )
       noHold = noHold && ! channelState[0].hold;
-   
+
    for (int sc = 0; sc < n_scenes; ++sc)
    {
-      if (noHold)
+      bool sceneNoHold = noHold;
+      auto pm = storage.getPatch().scene[sc].polymode.val.i;
+      if( !sceneNoHold && !mpeEnabled &&  storage.monoPedalMode == RELEASE_IF_OTHERS_HELD &&
+          ( pm == pm_mono || pm == pm_mono_fp || pm==pm_mono_st || pm==pm_mono_st_fp ) )
+      {
+         /*
+          * OK so we have a key we are about to put in the hold buffer. BUT in the
+          * RELEASE_IF_OTHERS_HELD mode we dont' want to hold it if we have other keys
+          * down. So do we?
+          */
+         for (auto k = 127; k >=0; k-- ) // search downwards
+         {
+            if (k != key && channelState[channel].keyState[k].keystate)
+            {
+               sceneNoHold = true; // This effects a release of current key because another key is down
+            }
+         }
+      }
+
+      if (sceneNoHold)
          releaseNotePostHoldCheck(sc, channel, key, velocity);
       else
          holdbuffer[sc].push_back(std::make_pair(channel,key)); // hold pedal is down, add to bufffer
@@ -3122,6 +3141,7 @@ void SurgeSynthesizer::populateDawExtraState() {
       storage.getPatch().dawExtraState.customcontrol_map[i] = storage.controllers[i];
    }
 
+   storage.getPatch().dawExtraState.monoPedalMode = storage.monoPedalMode;
 }
 
 void SurgeSynthesizer::loadFromDawExtraState() {
@@ -3130,7 +3150,9 @@ void SurgeSynthesizer::loadFromDawExtraState() {
    mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
    if( storage.getPatch().dawExtraState.mpePitchBendRange > 0 )
       storage.mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
-   
+
+   storage.monoPedalMode = (MonoPedalMode)storage.getPatch().dawExtraState.monoPedalMode;
+
    if( storage.getPatch().dawExtraState.hasTuning )
    {
       try {
