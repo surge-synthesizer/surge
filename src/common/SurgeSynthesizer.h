@@ -140,6 +140,7 @@ public:
    void freeVoice(SurgeVoice*);
    std::array<std::array<SurgeVoice, MAX_VOICES>, 2> voices_array;
    unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A & 2 is scene B   // TODO: FIX SCENE ASSUMPTION!
+   int64_t voiceCounter = 1L;
 
 public:
 

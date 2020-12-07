@@ -570,7 +570,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
          new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
                                  storage.getPatch().scenedata[scene], key, velocity, channel, scene,
                                  detune, &channelState[channel].keyState[key],
-                                 &channelState[mpeMainChannel], &channelState[channel], mpeEnabled);
+                                 &channelState[mpeMainChannel], &channelState[channel],
+                                 mpeEnabled, voiceCounter++ );
       }
       break;
    }
@@ -581,30 +582,76 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
       list<SurgeVoice*>::const_iterator iter;
       bool glide = false;
 
-      for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
+      int primode = storage.getPatch().scene[scene].monoVoicePriorityMode;
+      bool createVoice = true;
+      if( primode == ALWAYS_HIGHEST || primode == ALWAYS_LOWEST )
       {
-         SurgeVoice* v = *iter;
-         if (v->state.scene_id == scene)
+         /*
+          * There is a chance we don't want to make a voice
+          */
+         if( mpeEnabled )
          {
-            if (v->state.gate)
+            for( int k=0; k<128; ++k )
             {
-               glide = true;
+               for( int mpeChan=0; mpeChan < 16; ++mpeChan )
+               {
+                  if (channelState[mpeChan].keyState[k].keystate)
+                  {
+                     if (primode == ALWAYS_HIGHEST && k > key)
+                        createVoice = false;
+                     if (primode == ALWAYS_LOWEST && k < key)
+                        createVoice = false;
+                  }
+               }
             }
-            v->uber_release();
+         }
+         else
+         {
+            for( int k=0; k<128; ++k )
+            {
+               if( channelState[channel].keyState[k].keystate )
+               {
+                  if( primode == ALWAYS_HIGHEST && k > key ) createVoice = false;
+                  if( primode == ALWAYS_LOWEST && k < key ) createVoice = false;
+               }
+            }
          }
       }
-      SurgeVoice* nvoice = getUnusedVoice(scene);
-      if (nvoice)
-      {
-         int mpeMainChannel = getMpeMainChannel(channel, key);
 
-         voices[scene].push_back(nvoice);
-         if ((storage.getPatch().scene[scene].polymode.val.i == pm_mono_fp) && !glide)
-            storage.last_key[scene] = key;
-         new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
-                                 storage.getPatch().scenedata[scene], key, velocity, channel, scene,
-                                 detune, &channelState[channel].keyState[key],
-                                 &channelState[mpeMainChannel], &channelState[channel], mpeEnabled);
+      if( createVoice )
+      {
+         for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
+         {
+            SurgeVoice* v = *iter;
+            if (v->state.scene_id == scene)
+            {
+               if (v->state.gate)
+               {
+                  glide = true;
+               }
+               v->uber_release();
+            }
+         }
+         SurgeVoice* nvoice = getUnusedVoice(scene);
+         if (nvoice)
+         {
+            int mpeMainChannel = getMpeMainChannel(channel, key);
+
+            voices[scene].push_back(nvoice);
+            if ((storage.getPatch().scene[scene].polymode.val.i == pm_mono_fp) && !glide)
+               storage.last_key[scene] = key;
+            new (nvoice) SurgeVoice(
+                &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
+                key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
+                &channelState[mpeMainChannel], &channelState[channel], mpeEnabled, voiceCounter++);
+         }
+      }
+      else
+      {
+         /*
+          * We still need to indicate that this is an ordered voice even though we don't create it
+          */
+         channelState[channel].keyState[key].voiceOrder = voiceCounter++;
       }
    }
    break;
@@ -612,45 +659,104 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
    case pm_mono_st_fp:
    {
       bool found_one = false;
-      list<SurgeVoice*>::const_iterator iter;
-      for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
+      int primode = storage.getPatch().scene[scene].monoVoicePriorityMode;
+      bool createVoice = true;
+      if( primode == ALWAYS_HIGHEST || primode == ALWAYS_LOWEST )
       {
-         SurgeVoice* v = *iter;
-         if ((v->state.scene_id == scene) && (v->state.gate))
+         /*
+          * There is a chance we don't want to make a voice
+          */
+         if( mpeEnabled )
          {
-            v->legato(key, velocity, detune);
-            found_one = true;
-            if (mpeEnabled)
+            for( int k=0; k<128; ++k )
             {
-               /*
-               ** This voice was created on a channel but is being legato held to another channel
-               ** so it needs to borrow the channel and channelState. Obviously this can only
-               ** happen in MPE mode.
-               */
-               v->state.channel = channel;
-               v->state.voiceChannelState = &channelState[channel];
+               for( int mpeChan=0; mpeChan < 16; ++mpeChan )
+               {
+                  if (channelState[mpeChan].keyState[k].keystate)
+                  {
+                     if (primode == ALWAYS_HIGHEST && k > key)
+                        createVoice = false;
+                     if (primode == ALWAYS_LOWEST && k < key)
+                        createVoice = false;
+                  }
+               }
             }
-            break;
          }
          else
          {
-            if (v->state.scene_id == scene)
-               v->uber_release(); // make this optional for poly legato
+            for( int k=0; k<128; ++k )
+            {
+               if( channelState[channel].keyState[k].keystate )
+               {
+                  if( primode == ALWAYS_HIGHEST && k > key ) createVoice = false;
+                  if( primode == ALWAYS_LOWEST && k < key ) createVoice = false;
+               }
+            }
          }
       }
-      if (!found_one)
-      {
-         int mpeMainChannel = getMpeMainChannel(channel, key);
 
-         SurgeVoice* nvoice = getUnusedVoice(scene);
-         if (nvoice)
+      if( createVoice )
+      {
+         list<SurgeVoice*>::const_iterator iter;
+         for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
          {
-            voices[scene].push_back(nvoice);
-            new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
-                                    storage.getPatch().scenedata[scene], key, velocity, channel,
-                                    scene, detune, &channelState[channel].keyState[key],
-                                    &channelState[mpeMainChannel], &channelState[channel], mpeEnabled);
+            SurgeVoice* v = *iter;
+            if ((v->state.scene_id == scene) && (v->state.gate))
+            {
+               v->legato(key, velocity, detune);
+               found_one = true;
+               if (mpeEnabled)
+               {
+                  /*
+                  ** This voice was created on a channel but is being legato held to another channel
+                  ** so it needs to borrow the channel and channelState. Obviously this can only
+                  ** happen in MPE mode.
+                  */
+                  v->state.channel = channel;
+                  v->state.voiceChannelState = &channelState[channel];
+               }
+               break;
+            }
+            else
+            {
+               if (v->state.scene_id == scene)
+                  v->uber_release(); // make this optional for poly legato
+            }
          }
+         if (!found_one)
+         {
+            int mpeMainChannel = getMpeMainChannel(channel, key);
+
+            SurgeVoice* nvoice = getUnusedVoice(scene);
+            if (nvoice)
+            {
+               voices[scene].push_back(nvoice);
+               new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
+                                       storage.getPatch().scenedata[scene], key, velocity, channel,
+                                       scene, detune, &channelState[channel].keyState[key],
+                                       &channelState[mpeMainChannel], &channelState[channel],
+                                       mpeEnabled, voiceCounter++);
+            }
+         }
+         else
+         {
+            /*
+             * Here we are legato sliding a voice which is fine but it means we
+             * don't create a new voice. That will screw up the voice counters
+             * - basically all voices will have the same count - so a concept of
+             * latest doesn't work. Thus update the channel state making this key
+             * 'newer' than the prior voice (as is normally done in the SurgeVoice
+             * constructor call).
+             */
+            channelState[channel].keyState[key].voiceOrder = voiceCounter++;
+         }
+      }
+      else
+      {
+         /*
+          * Still need to update the counter if we don't create in hilow mode
+          */
+         channelState[channel].keyState[key].voiceOrder = voiceCounter++;
       }
    }
    break;
@@ -753,40 +859,114 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
             ** In MPE mode, where each note is per channel, that means
             ** scanning all non-main channels rather than ourself for the
             ** highest note
+             *
+             * But with the introduction of voice modes finding the next one
+             * is trickier so add these two little lambdas
             */
+
             if ((v->state.key == key) && (v->state.channel == channel))
             {
 	       int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overriden
+               auto priorityMode = storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode;
 
                // v->release();
                if (!mpeEnabled)
                {
+                  int highest=-1, lowest=128, latest=-1;
+                  int64_t lt = 0;
                   for (k = hikey; k >= lowkey && !do_switch; k--) // search downwards
                   {
-                     if (channelState[channel].keyState[k].keystate)
+                     if( channelState[channel].keyState[k].keystate)
                      {
-                        do_switch = true;
-                        activateVoiceKey = k;
-                        activateVoiceChannel = channel;
-                        break;
+                        if( k >= highest ) highest = k;
+                        if( k <= lowest ) lowest = k;
+                        if( channelState[channel].keyState[k].voiceOrder >= lt )
+                        {
+                           latest = k;
+                           lt = channelState[channel].keyState[k].voiceOrder;
+                        }
                      }
+                  }
+
+                  switch( storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                  {
+                  case ALWAYS_HIGHEST:
+                  case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                     k = highest >= 0 ? highest : -1;
+                     break;
+                  case ALWAYS_LATEST:
+                     k = latest >= 0 ? latest : -1;
+                     break;
+                  case ALWAYS_LOWEST:
+                     k = lowest <= 127 ? lowest : -1;
+                     break;
+                  }
+
+                  if( k >= 0 )
+                  {
+                     do_switch = true;
+                     activateVoiceKey = k;
+                     activateVoiceChannel = channel;
                   }
                }
                else
                {
+                  int highest=-1, lowest=128, latest=-1;
+                  int hichan, lowchan, latechan;
+                  int64_t lt = 0;
+
                   for (k = hikey; k >= lowkey && !do_switch; k--)
                   {
                      for (int mpeChan = 1; mpeChan < 16; ++mpeChan)
                      {
                         if (mpeChan != channel && channelState[mpeChan].keyState[k].keystate)
                         {
-                           do_switch = true;
-                           activateVoiceChannel = mpeChan;
-                           activateVoiceKey = k;
-                           break;
+                           if (k >= highest)
+                           {
+                              highest = k;
+                              hichan = mpeChan;
+                           }
+                           if (k <= lowest)
+                           {
+                              lowest = k;
+                              lowchan = mpeChan;
+                           }
+                           if (channelState[mpeChan].keyState[k].voiceOrder >= lt)
+                           {
+                              lt = channelState[mpeChan].keyState[k].voiceOrder;
+                              latest = k;
+                              latechan = mpeChan;
+                           }
                         }
                      }
                   }
+                  k = -1;
+                  int kchan;
+
+                  switch( storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                  {
+                  case ALWAYS_HIGHEST:
+                  case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                     k = highest >= 0 ? highest : -1;
+                     kchan = hichan;
+                     break;
+                  case ALWAYS_LATEST:
+                     k = latest >= 0 ? latest : -1;
+                     kchan = latechan;
+                     break;
+                  case ALWAYS_LOWEST:
+                     k = lowest <= 127 ? lowest : -1;
+                     kchan = lowchan;
+                     break;
+                  }
+
+                  if( k >= 0 )
+                  {
+                     do_switch = true;
+                     activateVoiceChannel = kchan;
+                     activateVoiceKey = k;
+                  }
+
                }
                if (!do_switch)
                {
@@ -824,32 +1004,100 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                */
                if (!mpeEnabled)
                {
-                  for (k = hikey; k >= lowkey && do_release; k--) // search downwards
+                  int highest=-1, lowest=128, latest=-1;
+                  int64_t lt = 0;
+                  for (k = hikey; k >= lowkey; k--) // search downwards
                   {
-                     if (channelState[channel].keyState[k].keystate)
+                     if( k != key && channelState[channel].keyState[k].keystate)
                      {
-                        v->legato(k, velocity, channelState[channel].keyState[k].lastdetune);
-                        do_release = false;
-                        break;
+                        if( k >= highest ) highest = k;
+                        if( k <= lowest ) lowest = k;
+                        if( channelState[channel].keyState[k].voiceOrder >= lt )
+                        {
+                           latest = k;
+                           lt = channelState[channel].keyState[k].voiceOrder;
+                        }
                      }
+                  }
+
+                  switch( storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                  {
+                  case ALWAYS_HIGHEST:
+                  case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                     k = highest >= 0 ? highest : -1;
+                     break;
+                  case ALWAYS_LATEST:
+                     k = latest >= 0 ? latest : -1;
+                     break;
+                  case ALWAYS_LOWEST:
+                     k = lowest <= 127 ? lowest : -1;
+                     break;
+                  }
+
+                  if( k >= 0 )
+                  {
+                     v->legato(k, velocity, channelState[channel].keyState[k].lastdetune);
+                     do_release = false;
                   }
                }
                else
                {
-                  for (k = hikey; k >= lowkey && do_release; k--) // search downwards
+                  int highest=-1, lowest=128, latest=-1;
+                  int hichan, lowchan, latechan;
+                  int64_t lt = 0;
+
+                  for (k = hikey; k >= lowkey && !do_switch; k--)
                   {
                      for (int mpeChan = 1; mpeChan < 16; ++mpeChan)
                      {
                         if (mpeChan != channel && channelState[mpeChan].keyState[k].keystate)
                         {
-                           v->legato(k, velocity, channelState[mpeChan].keyState[k].lastdetune);
-                           do_release = false;
-                           // See the comment above at the other _st legato spot
-                           v->state.channel = mpeChan;
-                           v->state.voiceChannelState = &channelState[mpeChan];
-                           break;
+                           if (k >= highest)
+                           {
+                              highest = k;
+                              hichan = mpeChan;
+                           }
+                           if (k <= lowest)
+                           {
+                              lowest = k;
+                              lowchan = mpeChan;
+                           }
+                           if (channelState[mpeChan].keyState[k].voiceOrder >= lt)
+                           {
+                              lt = channelState[mpeChan].keyState[k].voiceOrder;
+                              latest = k;
+                              latechan = mpeChan;
+                           }
                         }
                      }
+                  }
+                  k = -1;
+                  int kchan;
+
+                  switch( storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                  {
+                  case ALWAYS_HIGHEST:
+                  case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                     k = highest >= 0 ? highest : -1;
+                     kchan = hichan;
+                     break;
+                  case ALWAYS_LATEST:
+                     k = latest >= 0 ? latest : -1;
+                     kchan = latechan;
+                     break;
+                  case ALWAYS_LOWEST:
+                     k = lowest <= 127 ? lowest : -1;
+                     kchan = lowchan;
+                     break;
+                  }
+
+                  if( k >= 0 )
+                  {
+                     v->legato(k, velocity, channelState[kchan].keyState[k].lastdetune);
+                     do_release = false;
+                     // See the comment above at the other _st legato spot
+                     v->state.channel = kchan;
+                     v->state.voiceChannelState = &channelState[kchan];
                   }
                }
 
@@ -3323,7 +3571,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
    else if(m == FXReorderMode::SWAP)
    {
       fxsync[source].type.val.i = to.type.val.i;
-      Effect* t_fx = spawn_effect(fxsync[source].type.val.i, &storage, &fxsync[source], 0);
+      t_fx = spawn_effect(fxsync[source].type.val.i, &storage, &fxsync[source], 0);
       if (t_fx)
       {
          t_fx->init_ctrltypes();

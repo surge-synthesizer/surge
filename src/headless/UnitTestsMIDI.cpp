@@ -211,6 +211,7 @@ TEST_CASE( "Sustain Pedal and Mono", "[midi]" ) // #1459
       auto surge = Surge::Headless::createSurge(44100);
       REQUIRE( surge );
       surge->storage.getPatch().scene[0].polymode.val.i = pm_mono;
+      surge->storage.getPatch().scene[0].monoVoicePriorityMode = NOTE_ON_LATEST_RETRIGGER_HIGHEST; // Legacy mode
       auto step = [surge]() { for( int i=0; i<25; ++i ) surge->process(); };
       step();
 
@@ -403,8 +404,389 @@ TEST_CASE( "Sustain Pedal and Mono", "[midi]" ) // #1459
         surge->channelController( 0, 64, 0 ); step( surge );
         REQUIRE( playingNoteCount( surge ) == 0 );
       });
-
    }
-   // add it to user prefs menu
-   // add it for patch to play meny rmb
+}
+
+TEST_CASE( "Mono Voice Priority Modes", "[midi]" )
+{
+   struct TestCase
+   {
+      TestCase(std::string lab, int pm, bool mp, MonoVoicePriorityMode m)
+          : name(lab), polymode(pm), mpe(mp), mode(m)
+      {}
+      std::vector<std::pair<int, bool>> onoffs;
+      int polymode = pm_mono;
+      bool mpe = false;
+      std::string name = "";
+      MonoVoicePriorityMode mode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
+      void on(int n)
+      {
+         onoffs.push_back(std::make_pair(n, true));
+      }
+      void off(int n)
+      {
+         onoffs.push_back(std::make_pair(n, false));
+      }
+   };
+
+   auto step = [](auto surge) {
+      for (int i = 0; i < 25; ++i)
+         surge->process();
+   };
+   auto testInSurge = [](TestCase& c) {
+      auto surge = Surge::Headless::createSurge(44100);
+      REQUIRE(surge);
+      surge->storage.getPatch().scene[0].monoVoicePriorityMode = c.mode;
+      surge->mpeEnabled = c.mpe;
+
+      std::map<int, int> channelAssignments;
+      int nxtch = 1;
+
+      surge->storage.getPatch().scene[0].polymode.val.i = c.polymode;
+      for (auto n : c.onoffs)
+      {
+         int channel = 0;
+         // Implement a simple channel increase strategy
+         if (c.mpe)
+         {
+            if (n.second)
+            {
+               channelAssignments[n.first] = nxtch++;
+            }
+            channel = channelAssignments[n.first];
+            if (nxtch > 16)
+               nxtch = 1;
+            if (!n.second)
+            {
+               channelAssignments[n.first] = -1;
+            }
+         }
+         if (n.second)
+         {
+            surge->playNote(channel, n.first, 127, 0);
+         }
+         else
+         {
+            surge->releaseNote(channel, n.first, 0);
+         }
+      }
+      return surge;
+   };
+
+   auto playingNoteCount = [](std::shared_ptr<SurgeSynthesizer> surge) {
+      int ct = 0;
+      for (auto v : surge->voices[0])
+      {
+         if (v->state.gate)
+            ct++;
+      }
+      return ct;
+   };
+
+   auto solePlayingNote = [](std::shared_ptr<SurgeSynthesizer> surge) {
+      int ct = 0;
+      int res = -1;
+      for (auto v : surge->voices[0])
+      {
+         if (v->state.gate)
+         {
+            ct++;
+            res = v->state.key;
+         }
+      }
+      REQUIRE(ct == 1);
+      return res;
+   };
+
+   // With no second argument, confirms no note; with a second argument confirms that note
+   auto confirmResult = [&](TestCase& c, int which = -1) {
+      INFO("Running " << c.name);
+      auto s = testInSurge(c);
+      REQUIRE(playingNoteCount(s) == (which >= 0 ? 1 : 0));
+      if (which >= 0)
+         REQUIRE(solePlayingNote(s) == which);
+   };
+
+   auto modes = {pm_mono, pm_mono_st, pm_mono_fp, pm_mono_st_fp};
+   auto mpe = {false, true};
+   for (auto mp : mpe)
+   {
+      for (auto m : modes)
+      {
+         DYNAMIC_SECTION("Legacy in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+         {
+            {
+               TestCase c("No Notes", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               auto s = testInSurge(c);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("One Note", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(60);
+               confirmResult(c, 60);
+            }
+
+            {
+               TestCase c("On Off", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(60);
+               c.off(60);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("Three Notes", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(60);
+               c.on(61);
+               c.on(59);
+               confirmResult(c, 59);
+            }
+
+            {
+               TestCase c("Three On and an Off", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(60);
+               c.on(61);
+               c.on(59);
+               c.off(59);
+               confirmResult(c, 61);
+            }
+
+            {
+               TestCase c("Second Three On", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(59);
+               confirmResult(c, 61);
+            }
+
+            {
+               TestCase c("Third Three On", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(60);
+               confirmResult(c, 59);
+            }
+
+            {
+               TestCase c("All Backs Off", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(61);
+               c.off(60);
+               confirmResult(c, 59);
+            }
+
+            {
+               TestCase c("Toggle 59", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(59);
+               c.on(59);
+               confirmResult(c, 59);
+            }
+         }
+
+         DYNAMIC_SECTION("Latest in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+         {
+            {
+               TestCase c("No Notes", m, mp, ALWAYS_LATEST);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("One One", m, mp, ALWAYS_LATEST);
+               c.on(60);
+               confirmResult(c, 60);
+            }
+
+            {
+               TestCase c("On Off", m, mp, ALWAYS_LATEST);
+               c.on(60);
+               c.off(60);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("Three Ons", m, mp, ALWAYS_LATEST);
+               c.on(60);
+               c.on(61);
+               c.on(59);
+               confirmResult(c, 59);
+            }
+
+            {
+               TestCase c("Three On and an Off AW", m, mp, ALWAYS_LATEST);
+               c.on(60);
+               c.on(61);
+               c.on(59);
+               c.off(59);
+               confirmResult(c, 61);
+            }
+
+            {
+               TestCase c("Three On and an Off Two", m, mp, ALWAYS_LATEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(59);
+               confirmResult(c, 60); // First difference
+            }
+
+            {
+               TestCase c("Three On and Back Off", m, mp, ALWAYS_LATEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(60);
+               confirmResult(c, 59);
+            }
+
+            {
+               TestCase c("Three On and Under Off", m, mp, ALWAYS_LATEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(61);
+               c.off(60);
+               confirmResult(c, 59);
+            }
+
+            {
+               TestCase c("Three On and Trill", m, mp, ALWAYS_LATEST);
+               c.on(61);
+               c.on(60);
+               c.on(59);
+               c.off(59);
+               c.on(59);
+               confirmResult(c, 59);
+            }
+         }
+
+         DYNAMIC_SECTION("Highest in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+         {
+            {
+               TestCase c("No Notes", m, mp, ALWAYS_HIGHEST);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("One One", m, mp, ALWAYS_HIGHEST);
+               c.on(60);
+               confirmResult(c, 60);
+            }
+
+            {
+               TestCase c("On Off", m, mp, ALWAYS_HIGHEST);
+               c.on(60);
+               c.off(60);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("Three Ons", m, mp, ALWAYS_HIGHEST);
+               c.on(60);
+               c.on(61);
+               c.on(59);
+               confirmResult(c, 61);
+            }
+
+            {
+               TestCase c("Release to Highest", m, mp, ALWAYS_HIGHEST);
+               c.on(60);
+               c.on(61);
+               c.on(62);
+               c.off(62);
+               confirmResult(c, 61);
+            }
+
+
+            {
+               TestCase c("Release to Highest Two", m, mp, ALWAYS_HIGHEST);
+               c.on(61);
+               c.on(60);
+               c.on(62);
+               c.off(62);
+               confirmResult(c, 61);
+            }
+
+            {
+               TestCase c("Release Underneath Me", m, mp, ALWAYS_HIGHEST);
+               c.on(61);
+               c.on(60);
+               c.on(62);
+               c.off(61);
+               c.off(62);
+               confirmResult(c, 60);
+            }
+         }
+         DYNAMIC_SECTION("Lowest in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+         {
+            {
+               TestCase c("No Notes", m, mp, ALWAYS_LOWEST);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("One One", m, mp, ALWAYS_LOWEST);
+               c.on(60);
+               confirmResult(c, 60);
+            }
+
+            {
+               TestCase c("On Off", m, mp, ALWAYS_LOWEST);
+               c.on(60);
+               c.off(60);
+               confirmResult(c);
+            }
+
+            {
+               TestCase c("Three Ons", m, mp, ALWAYS_LOWEST);
+               c.on(60);
+               c.on(59);
+               c.on(61);
+               confirmResult(c, 59);
+            }
+
+            {
+               TestCase c("Release to Lowest", m, mp, ALWAYS_LOWEST);
+               c.on(60);
+               c.on(59);
+               c.on(58);
+               c.off(58);
+               confirmResult(c, 59);
+            }
+
+
+            {
+               TestCase c("Release to Lowest Two", m, mp, ALWAYS_LOWEST);
+               c.on(60);
+               c.on(61);
+               c.on(59);
+               c.off(59);
+               confirmResult(c, 60);
+            }
+
+            {
+               TestCase c("Release Above Me", m, mp, ALWAYS_HIGHEST);
+               c.on(61);
+               c.on(62);
+               c.on(60);
+               c.off(62);
+               c.off(61);
+               confirmResult(c, 60);
+            }
+         }
+      }
+   }
+   /*
+    * TODO:
+    * - Stream the Scene variable
+    * - Implement
+    * - Add UI
+    * - Test streaming
+    */
 }

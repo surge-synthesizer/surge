@@ -440,10 +440,35 @@ const char em_names[n_env_modes][16] =
    "Analog",
 };
 
+
+/*
+ * How does the sustain pedal work in mono mode? Current modes for this are
+ *
+ * HOLD_ALL_NOTES (the default). If you release a note with the pedal down
+ * it does not release
+ *
+ * RELEASE_IF_OTHERS_HELD. If you release a note, and no other notes are down,
+ * do not release. But if you release and another note is down, return to that
+ * note (basically allow sustain pedal trills).
+ */
+enum MonoPedalMode {
+   HOLD_ALL_NOTES,
+   RELEASE_IF_OTHERS_HELD
+};
+
+enum MonoVoicePriorityMode {
+   NOTE_ON_LATEST_RETRIGGER_HIGHEST, // The legacy mode for 1.7.1 and earlier
+   ALWAYS_LATEST, // Could also be called "NOTE_ON_LATEST_RETRIGGER_LATEST"
+   ALWAYS_HIGHEST,
+   ALWAYS_LOWEST,
+};
+
+
 struct MidiKeyState
 {
    int keystate;
    char lastdetune;
+   int64_t voiceOrder;
 };
 
 struct MidiChannelState
@@ -548,6 +573,8 @@ struct SurgeSceneStorage
    std::vector<ModulationSource*> modsources;
 
    bool modsource_doprocess[n_modsources];
+
+   MonoVoicePriorityMode monoVoicePriorityMode = ALWAYS_LATEST;
 };
 
 const int n_stepseqsteps = 16;
@@ -626,6 +653,8 @@ struct MSEGStorage {
 
 struct FormulaModulatorStorage { // Currently an unused placeholder
 };
+
+
 
 /*
 ** There are a collection of things we want your DAW to save about your particular instance
@@ -791,21 +820,6 @@ enum surge_copysource
    cp_oscmod,
 
    n_copysources,
-};
-
-/*
- * How does the sustain pedal work in mono mode? Current modes for this are
- *
- * HOLD_ALL_NOTES (the default). If you release a note with the pedal down
- * it does not release
- *
- * RELEASE_IF_OTHERS_HELD. If you release a note, and no other notes are down,
- * do not release. But if you release and another note is down, return to that
- * note (basically allow sustain pedal trills).
- */
-enum MonoPedalMode {
-   HOLD_ALL_NOTES,
-   RELEASE_IF_OTHERS_HELD
 };
 
 

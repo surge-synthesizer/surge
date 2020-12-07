@@ -2913,6 +2913,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                        p->val.i == pm_mono_fp ||
                        p->val.i == pm_mono_st_fp ))
                   {
+                     std::vector<std::string> labels = { "Latest", "Highest", "Lowest", "Latest On, Highest Off (Legacy)" };
+                     std::vector<MonoVoicePriorityMode> vals = { ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST, NOTE_ON_LATEST_RETRIGGER_HIGHEST };
+                     contextMenu->addSeparator();
+                     for( int i=0; i<4; ++i )
+                     {
+                        auto m = addCallbackMenu(contextMenu,
+                                                 Surge::UI::toOSCaseForMenu("Priority: " + labels[i]),
+                                                 [this,vals,i] ()
+                                                 {
+                                                    synth->storage.getPatch().scene[current_scene].monoVoicePriorityMode =
+                                                    vals[i];
+                                                 }
+                        );
+                        if( vals[i] == synth->storage.getPatch().scene[current_scene].monoVoicePriorityMode )
+                           m->setChecked( true );
+                     }
                      contextMenu->addSeparator();
                      contextMenu->addEntry(makeMonoModeOptionsMenu(menuRect, false ),
                                            Surge::UI::toOSCaseForMenu("Mono Mode Options (Current Instance)"));

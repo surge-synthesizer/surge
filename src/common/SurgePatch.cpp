@@ -1326,6 +1326,26 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       }
    }
 
+   TiXmlElement* nonparamconfig =  TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("nonparamconfig"));
+   if( nonparamconfig )
+   {
+      for( int sc=0; sc < n_scenes; ++sc )
+      {
+         std::string mvname = "monoVoicePrority_" + std::to_string(sc);
+         auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild( mvname.c_str() ));
+         storage->getPatch().scene[sc].monoVoicePriorityMode = ALWAYS_LATEST;
+         if( mv1 )
+         {
+            // Get value
+            int mvv;
+            if( mv1->QueryIntAttribute("v", &mvv ) == TIXML_SUCCESS )
+            {
+               storage->getPatch().scene[sc].monoVoicePriorityMode = (MonoVoicePriorityMode)mvv;
+            }
+         }
+      }
+   }
+
    if (revision < 1)
    {
       for (int sc = 0; sc < n_scenes; sc++)
@@ -1463,6 +1483,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       // The Great Filter Remap of issue #3006
       for (auto& sc : scene)
       {
+         sc.monoVoicePriorityMode = NOTE_ON_LATEST_RETRIGGER_HIGHEST; // Older patches use Legacy mode
          for (int u = 0; u < n_filterunits_per_scene; u++)
          {
             auto* fu = &(sc.filterunit[u]);
@@ -2004,6 +2025,17 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
       }
    }
    patch.InsertEndChild(parameters);
+
+   // TODO: Stream that priority mode here
+   TiXmlElement nonparamconfig( "nonparamconfig" );
+   for( int sc=0; sc < n_scenes; ++sc )
+   {
+      std::string mvname = "monoVoicePrority_" + std::to_string(sc);
+      TiXmlElement mvv(mvname.c_str());
+      mvv.SetAttribute("v", storage->getPatch().scene[sc].monoVoicePriorityMode);
+      nonparamconfig.InsertEndChild(mvv);
+   }
+   patch.InsertEndChild(nonparamconfig);
 
    TiXmlElement eod( "extraoscdata" );
    for (int sc = 0; sc < n_scenes; ++sc)
