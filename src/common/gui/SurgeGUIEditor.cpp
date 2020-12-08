@@ -1581,7 +1581,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
    // Mouse behavior
    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
-      CSurgeSlider::sliderMoveRateState = (CSurgeSlider::MoveRateState)Surge::Storage::getUserDefaultValue(&(synth->storage), "sliderMoveRateState", (int)CSurgeSlider::kClassic);
+      CSurgeSlider::sliderMoveRateState = (CSurgeSlider::MoveRateState)Surge::Storage::getUserDefaultValue(&(synth->storage), "sliderMoveRateState", (int)CSurgeSlider::kLegacy);
 
    /*
    ** Skin Labels
@@ -2913,13 +2913,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                        p->val.i == pm_mono_fp ||
                        p->val.i == pm_mono_st_fp ))
                   {
-                     std::vector<std::string> labels = { "Latest", "Highest", "Lowest", "Latest On, Highest Off (Legacy)" };
+                     std::vector<std::string> labels = { "Last", "High", "Low", "Legacy" };
                      std::vector<MonoVoicePriorityMode> vals = { ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST, NOTE_ON_LATEST_RETRIGGER_HIGHEST };
                      contextMenu->addSeparator();
                      for( int i=0; i<4; ++i )
                      {
                         auto m = addCallbackMenu(contextMenu,
-                                                 Surge::UI::toOSCaseForMenu("Priority: " + labels[i]),
+                                                 Surge::UI::toOSCaseForMenu(labels[i] + " Note Priority"),
                                                  [this,vals,i] ()
                                                  {
                                                     synth->storage.getPatch().scene[current_scene].monoVoicePriorityMode =
@@ -2931,7 +2931,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                      }
                      contextMenu->addSeparator();
                      contextMenu->addEntry(makeMonoModeOptionsMenu(menuRect, false ),
-                                           Surge::UI::toOSCaseForMenu("Mono Mode Options (Current Instance)"));
+                                           Surge::UI::toOSCaseForMenu("Sustain Pedal In Mono Mode"));
                   }
                }
             }
@@ -5359,19 +5359,19 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
                                                VSTGUI::COptionMenu::kNoDrawStyle |
                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-   std::string mouseClassic = "Classic";
+   std::string mouseLegacy = "Legacy";
    std::string mouseSlow = "Slow";
    std::string mouseMedium = "Medium";
    std::string mouseExact = "Exact";
 
    VSTGUI::CCommandMenuItem* menuItem = nullptr;
 
-   menuItem = addCallbackMenu(mouseSubMenu, mouseClassic.c_str(), [this]() {
-      CSurgeSlider::sliderMoveRateState = CSurgeSlider::kClassic;
+   menuItem = addCallbackMenu(mouseSubMenu, mouseLegacy.c_str(), [this]() {
+      CSurgeSlider::sliderMoveRateState = CSurgeSlider::kLegacy;
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
                                              CSurgeSlider::sliderMoveRateState);
    });
-   menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kClassic));
+   menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kLegacy));
    mid++;
 
    menuItem = addCallbackMenu(mouseSubMenu, mouseSlow.c_str(), [this]() {
@@ -5764,7 +5764,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect& menuRect)
                          Surge::UI::toOSCaseForMenu("Controller Smoothing"));
 
    midiSubMenu->addEntry( makeMonoModeOptionsMenu( menuRect, true ),
-                         Surge::UI::toOSCaseForMenu( "Mono Mode Options" ) );
+                         Surge::UI::toOSCaseForMenu( "Sustain Pedal In Mono Mode" ) );
 
    midiSubMenu->addSeparator();
 

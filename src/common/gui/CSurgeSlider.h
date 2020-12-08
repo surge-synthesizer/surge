@@ -115,7 +115,7 @@ public:
    enum MoveRateState
    {
       kUnInitialized = 0,
-      kClassic,
+      kLegacy,
       kSlow,
       kMedium,
       kExact
