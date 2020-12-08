@@ -782,11 +782,295 @@ TEST_CASE( "Mono Voice Priority Modes", "[midi]" )
          }
       }
    }
-   /*
-    * TODO:
-    * - Stream the Scene variable
-    * - Implement
-    * - Add UI
-    * - Test streaming
-    */
 }
+
+TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]" )
+{
+
+   auto playingNoteCount = [](std::shared_ptr<SurgeSynthesizer> surge, int sc) {
+      int ct = 0;
+      for (auto v : surge->voices[sc])
+      {
+         if (v->state.gate)
+            ct++;
+      }
+      return ct;
+   };
+
+   auto soloPlayingNote = [](std::shared_ptr<SurgeSynthesizer> surge, int sc) {
+      int ct = 0;
+      for (auto v : surge->voices[sc])
+      {
+         if (v->state.gate)
+            return v->state.key;
+      }
+      return -1;
+   };
+
+   SECTION("Simple Two Note Split")
+   {
+      /*
+       * Set up a surge in channel split mode and send MPE data
+       */
+      auto surge = Surge::Headless::createSurge(44100);
+      surge->storage.getPatch().scenemode.val.i = sm_chsplit;
+      surge->storage.getPatch().splitpoint.val.i = 64;
+      surge->mpeEnabled = true;
+      REQUIRE(surge);
+
+      /*
+       * OK so does note on note off give us voices in the right scene
+       */
+      surge->playNote(1, 50, 127, 0);
+      surge->playNote(10, 70, 127, 0);
+      surge->process();
+      int ct = 0;
+      for (auto v : surge->voices[0])
+      {
+         REQUIRE(ct++ == 0);
+         REQUIRE(v->state.key == 50);
+         REQUIRE(v->state.scene_id == 0);
+      }
+      REQUIRE(ct == 1);
+      ct = 0;
+      for (auto v : surge->voices[1])
+      {
+         REQUIRE(ct++ == 0);
+         REQUIRE(v->state.key == 70);
+         REQUIRE(v->state.scene_id == 1);
+      }
+      surge->releaseNote(1, 50, 0);
+      surge->process();
+      REQUIRE(playingNoteCount(surge, 0) == 0);
+      REQUIRE(playingNoteCount(surge, 1) == 1);
+
+      surge->releaseNote(10, 70, 0);
+      surge->process();
+      REQUIRE(playingNoteCount(surge, 0) == 0);
+      REQUIRE(playingNoteCount(surge, 1) == 0);
+   }
+
+   auto modes = {pm_mono, pm_mono_st, pm_mono_fp, pm_mono_st_fp};
+   for (auto m : modes)
+   {
+      DYNAMIC_SECTION("Single Note ChSplit Mono mode=" << m)
+      {
+         /*
+          * Set up a surge in channel split mode and send MPE data
+          */
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->storage.getPatch().scenemode.val.i = sm_chsplit;
+         surge->storage.getPatch().splitpoint.val.i = 64;
+         surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
+         surge->storage.getPatch().scene[0].polymode.val.i = m;
+
+         surge->storage.getPatch().scene[1].monoVoicePriorityMode = ALWAYS_HIGHEST;
+         surge->storage.getPatch().scene[1].polymode.val.i = m;
+
+         surge->mpeEnabled = true;
+         REQUIRE(surge);
+
+         /*
+          * OK so does note on note off give us voices in the right scene
+          */
+         surge->playNote(1, 50, 127, 0);
+         surge->playNote(10, 70, 127, 0);
+         surge->process();
+         int ct = 0;
+         for (auto v : surge->voices[0])
+         {
+            REQUIRE(ct++ == 0);
+            REQUIRE(v->state.key == 50);
+            REQUIRE(v->state.scene_id == 0);
+         }
+         REQUIRE(ct == 1);
+         ct = 0;
+         for (auto v : surge->voices[1])
+         {
+            REQUIRE(ct++ == 0);
+            REQUIRE(v->state.key == 70);
+            REQUIRE(v->state.scene_id == 1);
+         }
+         surge->releaseNote(1, 50, 0);
+         surge->process();
+         REQUIRE(playingNoteCount(surge, 0) == 0);
+         REQUIRE(playingNoteCount(surge, 1) == 1);
+
+         surge->releaseNote(10, 70, 0);
+         surge->process();
+         REQUIRE(playingNoteCount(surge, 0) == 0);
+         REQUIRE(playingNoteCount(surge, 1) == 0);
+      }
+
+      DYNAMIC_SECTION("Two Note ChSplit Mono mode=" << m)
+      {
+         /*
+          * Set up a surge in channel split mode and send MPE data
+          */
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->storage.getPatch().scenemode.val.i = sm_chsplit;
+         surge->storage.getPatch().splitpoint.val.i = 9 * 8; // split at channel 9
+         surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
+         surge->storage.getPatch().scene[0].polymode.val.i = m;
+
+         surge->storage.getPatch().scene[1].monoVoicePriorityMode = ALWAYS_HIGHEST;
+         surge->storage.getPatch().scene[1].polymode.val.i = m;
+
+         surge->mpeEnabled = true;
+         REQUIRE(surge);
+
+         /*
+          * OK so does note on note off give us voices in the right scene
+          */
+         surge->playNote(1, 50, 127, 0);
+         surge->playNote(2, 55, 127, 0);
+         surge->playNote(10, 70, 127, 0);
+         for( int i=0; i<100; ++i ) surge->process();
+
+         REQUIRE(playingNoteCount(surge, 0) == 1);
+         REQUIRE(playingNoteCount(surge, 1) == 1);
+         REQUIRE(soloPlayingNote(surge, 0) == 55);
+         REQUIRE(soloPlayingNote(surge, 1) == 70);
+
+         surge->releaseNote(2, 55, 0);
+         surge->process();
+         REQUIRE(playingNoteCount(surge, 0) == 1);
+         REQUIRE(playingNoteCount(surge, 1) == 1);
+         REQUIRE(soloPlayingNote(surge, 0) == 50);
+         REQUIRE(soloPlayingNote(surge, 1) == 70);
+
+         surge->releaseNote(1, 50, 0);
+         surge->process();
+         REQUIRE(playingNoteCount(surge, 0) == 0);
+         REQUIRE(playingNoteCount(surge, 1) == 1);
+         REQUIRE(soloPlayingNote(surge, 1) == 70);
+
+         surge->releaseNote(10, 70, 0);
+         surge->process();
+         REQUIRE(playingNoteCount(surge, 0) == 0);
+         REQUIRE(playingNoteCount(surge, 1) == 0);
+      }
+
+      DYNAMIC_SECTION("Split Works @ Highest mode=" << m)
+      {
+         int splitChannel = 8;
+         auto surge = Surge::Headless::createSurge(44100);
+         surge->storage.getPatch().scenemode.val.i = sm_chsplit;
+         surge->storage.getPatch().splitpoint.val.i = splitChannel * 8; // split at channel 9
+         surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
+         surge->storage.getPatch().scene[0].polymode.val.i = m;
+
+         surge->storage.getPatch().scene[1].monoVoicePriorityMode = ALWAYS_HIGHEST;
+         surge->storage.getPatch().scene[1].polymode.val.i = m;
+
+         surge->mpeEnabled = true;
+         REQUIRE(surge);
+         for (int i = 1; i < 16; ++i)
+         {
+            INFO("Playing note " << 50 + i << " on channel " << i);
+            surge->playNote(i, 50 + i, 127, 0);
+            for( int q=0; q<20; ++q ) surge->process();
+
+            if (i <= splitChannel)
+            {
+               REQUIRE(playingNoteCount(surge, 0) == 1);
+               REQUIRE(soloPlayingNote(surge, 0) == 50 + i);
+               REQUIRE(playingNoteCount(surge, 1) == 0);
+            }
+            else
+            {
+               REQUIRE(playingNoteCount(surge, 0) == 1);
+               REQUIRE(soloPlayingNote(surge, 0) == 50 + splitChannel);
+               REQUIRE(playingNoteCount(surge, 1) == 1);
+               REQUIRE(soloPlayingNote(surge, 1) == 50 + i);
+            }
+         }
+
+         for (int i = 15; i > 0; --i)
+         {
+            INFO("Releasing note " << 50 + i << " on channel " << i);
+
+            surge->releaseNote(i, 50 + i, 0);
+            for( int q=0; q<20; ++q ) surge->process();
+
+            if (i <= splitChannel)
+            {
+               if( i == 1 )
+               {
+                  REQUIRE( playingNoteCount( surge, 0 ) == 0 );
+               }
+               else
+               {
+                  REQUIRE(playingNoteCount(surge, 0) == 1);
+                  REQUIRE(soloPlayingNote(surge, 0) == 50 + i - 1);
+               }
+               REQUIRE(playingNoteCount(surge, 1) == 0);
+            }
+            else
+            {
+               REQUIRE(playingNoteCount(surge, 0) == 1);
+               REQUIRE(soloPlayingNote(surge, 0) == 50 + splitChannel);
+               if(i == splitChannel + 1 )
+               {
+                  // We released last note
+                  REQUIRE( playingNoteCount( surge, 1 ) == 0 );
+               }
+               else
+               {
+                  REQUIRE(playingNoteCount(surge, 1) == 1);
+                  REQUIRE(soloPlayingNote(surge, 1) == 50 + i - 1);
+               }
+            }
+         }
+      }
+   }
+
+   SECTION( "Ch Split Occurs Coherently in Poly" )
+   {
+      int splitChannel = 8;
+      auto surge = Surge::Headless::createSurge(44100);
+      surge->storage.getPatch().scenemode.val.i = sm_chsplit;
+      surge->storage.getPatch().splitpoint.val.i = splitChannel * 8; // split at channel 9
+      surge->storage.getPatch().scene[0].polymode.val.i = pm_poly;
+
+      surge->storage.getPatch().scene[1].polymode.val.i = pm_poly;
+
+      surge->mpeEnabled = true;
+      REQUIRE(surge);
+      for (int i = 1; i < 16; ++i)
+      {
+         INFO("Plaing note " << 50 + i << " on channel " << i);
+         surge->playNote(i, 50 + i, 127, 0);
+         if (i <= splitChannel)
+         {
+            REQUIRE(playingNoteCount(surge, 0) == i);
+            REQUIRE(playingNoteCount(surge, 1) == 0);
+         }
+         else
+         {
+            REQUIRE(playingNoteCount(surge, 0) == splitChannel);
+            REQUIRE(playingNoteCount(surge, 1) == i - splitChannel);
+         }
+      }
+
+      for (int i = 15; i > 0; --i)
+      {
+         INFO("Releasing note " << 50 + i << " on channel " << i);
+         surge->releaseNote(i, 50 + i, 0);
+         if (i <= splitChannel)
+         {
+            REQUIRE(playingNoteCount(surge, 0) == i - 1);
+            REQUIRE(playingNoteCount(surge, 1) == 0);
+         }
+         else
+         {
+            REQUIRE(playingNoteCount(surge, 0) == splitChannel);
+            REQUIRE(playingNoteCount(surge, 1) == i - splitChannel - 1);
+         }
+      }
+   }
+}
+
+/*
+ * Test keysplit highest
+ */
