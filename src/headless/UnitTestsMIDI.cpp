@@ -1071,6 +1071,224 @@ TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]" )
    }
 }
 
-/*
- * Test keysplit highest
- */
+TEST_CASE( "Priority Modes with Keysplit", "[midi]" )
+{
+   // These tests could be more complete
+   auto playingNoteCount = [](std::shared_ptr<SurgeSynthesizer> surge, int sc) {
+     int ct = 0;
+     for (auto v : surge->voices[sc])
+     {
+        if (v->state.gate)
+           ct++;
+     }
+     return ct;
+   };
+
+   auto solePlayingNote = [](std::shared_ptr<SurgeSynthesizer> surge, int sc) {
+     int ct = 0;
+     int res = -1;
+     for (auto v : surge->voices[sc])
+     {
+        if (v->state.gate)
+        {
+           ct++;
+           res = v->state.key;
+        }
+     }
+     REQUIRE(ct == 1);
+     return res;
+   };
+
+   auto playSequence = [](std::shared_ptr<SurgeSynthesizer> surge, std::vector<int> notes,
+                          bool mpe) {
+      std::unordered_map<int,int> noteToChan;
+      int cmpe = 1;
+      for ( auto n : notes)
+      {
+         int chan = 0;
+         if( mpe )
+         {
+            if( n < 0 )
+            {
+               chan = noteToChan[-n];
+            }
+            else
+            {
+               cmpe++;
+               if( cmpe > 15 ) cmpe = 1;
+               noteToChan[n] = cmpe;
+               chan = cmpe;
+            }
+         }
+         if( n > 0 )
+         {
+            surge->playNote( chan, n, 127, 0 );
+         }
+         else
+         {
+            surge->releaseNote( chan, -n, 0 );
+         }
+         for( int i=0; i<10; ++i ) surge->process();
+      }
+   };
+
+   auto modes = {pm_mono, pm_mono_st, pm_mono_fp, pm_mono_st_fp};
+   auto mpe = {false, true};
+   for (auto mp : mpe)
+   {
+      for (auto m : modes)
+      {
+         auto setupSurge = [m, mp](auto vm) {
+            auto surge = Surge::Headless::createSurge(44100);
+            surge->storage.getPatch().scenemode.val.i = sm_split;
+            surge->storage.getPatch().splitpoint.val.i = 60; // split at channel 9
+            surge->storage.getPatch().scene[0].polymode.val.i = m;
+            surge->storage.getPatch().scene[0].monoVoicePriorityMode = vm;
+            surge->storage.getPatch().scene[1].polymode.val.i = m;
+            surge->storage.getPatch().scene[1].monoVoicePriorityMode = vm;
+            surge->mpeEnabled = mp;
+            return surge;
+         };
+         DYNAMIC_SECTION( "KeySplit Highest mode=" << m << " mpe=" << mp )
+         {
+            {
+               auto surge = setupSurge(ALWAYS_HIGHEST);
+               playSequence( surge, {40, 70 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 40);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+
+            {
+               auto surge = setupSurge(ALWAYS_HIGHEST);
+               playSequence( surge, {40, 70, -40 }, mp );
+               REQUIRE( playingNoteCount(surge,0) == 0);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_HIGHEST);
+               playSequence( surge, {40, 70, -70 }, mp );
+               REQUIRE( playingNoteCount(surge,1) == 0);
+               REQUIRE( solePlayingNote(surge,0) == 40);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_HIGHEST);
+               playSequence( surge, {40, 41 }, mp );
+               REQUIRE( playingNoteCount(surge,1) == 0);
+               REQUIRE( solePlayingNote(surge,0) == 41);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_HIGHEST);
+               playSequence( surge, {40, 70 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 40);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_HIGHEST);
+               playSequence( surge, {40, 70, 41 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 41);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_HIGHEST);
+               playSequence( surge, {40, 70, -40 }, mp );
+               REQUIRE( playingNoteCount(surge,0) == 0);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+         }
+
+         DYNAMIC_SECTION( "KeySplit Lowest mode=" << m << " mpe=" << mp )
+         {
+            {
+               auto surge = setupSurge(ALWAYS_LOWEST);
+               playSequence( surge, {40, 70 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 40);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+
+            {
+               auto surge = setupSurge(ALWAYS_LOWEST);
+               playSequence( surge, {40, 70, -40 }, mp );
+               REQUIRE( playingNoteCount(surge,0) == 0);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LOWEST);
+               playSequence( surge, {40, 70, -70 }, mp );
+               REQUIRE( playingNoteCount(surge,1) == 0);
+               REQUIRE( solePlayingNote(surge,0) == 40);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LOWEST);
+               playSequence( surge, {40, 41 }, mp );
+               REQUIRE( playingNoteCount(surge,1) == 0);
+               REQUIRE( solePlayingNote(surge,0) == 40);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LOWEST);
+               playSequence( surge, {40, 70 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 40);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LOWEST);
+               playSequence( surge, {40, 70, 41 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 40);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LOWEST);
+               playSequence( surge, {40, 70, -40 }, mp );
+               REQUIRE( playingNoteCount(surge,0) == 0);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+         }
+
+         DYNAMIC_SECTION( "KeySplit Latesr mode=" << m << " mpe=" << mp )
+         {
+            {
+               auto surge = setupSurge(ALWAYS_LATEST);
+               playSequence( surge, {40, 70 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 40);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+
+            {
+               auto surge = setupSurge(ALWAYS_LATEST);
+               playSequence( surge, {40, 70, -40 }, mp );
+               REQUIRE( playingNoteCount(surge,0) == 0);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LATEST);
+               playSequence( surge, {40, 70, -70 }, mp );
+               REQUIRE( playingNoteCount(surge,1) == 0);
+               REQUIRE( solePlayingNote(surge,0) == 40);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LATEST);
+               playSequence( surge, {40, 41 }, mp );
+               REQUIRE( playingNoteCount(surge,1) == 0);
+               REQUIRE( solePlayingNote(surge,0) == 41);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LATEST);
+               playSequence( surge, {40, 70 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 40);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LATEST);
+               playSequence( surge, {40, 70, 41 }, mp );
+               REQUIRE( solePlayingNote(surge,0) == 41);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+            {
+               auto surge = setupSurge(ALWAYS_LATEST);
+               playSequence( surge, {40, 70, -40 }, mp );
+               REQUIRE( playingNoteCount(surge,0) == 0);
+               REQUIRE( solePlayingNote(surge,1) == 70);
+            }
+         }
+      }
+   }
+}
