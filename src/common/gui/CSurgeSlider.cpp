@@ -844,7 +844,7 @@ double CSurgeSlider::getMouseDeltaScaling(const CPoint& where, const CButtonStat
    case kExact:
       rate = 1.0;
       break;
-   case kClassic:
+   case kLegacy:
    default:
       rate = 0.3 * moverate;
       break;
