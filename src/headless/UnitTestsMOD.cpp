@@ -874,3 +874,97 @@ TEST_CASE( "Keytrack Morph", "[mod]" )
       }
    }
 }
+
+TEST_CASE( "KeyTrack in Play Modes", "[mod]" )
+{
+   /*
+    * See issue 2892. In mono mode keytrack needs to follow held keys not just soloe playing voice
+    */
+   auto playSequence = [](std::shared_ptr<SurgeSynthesizer> surge, std::vector<int> notes,
+                          bool mpe) {
+     std::unordered_map<int,int> noteToChan;
+     int cmpe = 1;
+     for ( auto n : notes)
+     {
+        int chan = 0;
+        if( mpe )
+        {
+           if( n < 0 )
+           {
+              chan = noteToChan[-n];
+           }
+           else
+           {
+              cmpe++;
+              if( cmpe > 15 ) cmpe = 1;
+              noteToChan[n] = cmpe;
+              chan = cmpe;
+           }
+        }
+        if( n > 0 )
+        {
+           surge->playNote( chan, n, 127, 0 );
+        }
+        else
+        {
+           surge->releaseNote( chan, -n, 0 );
+        }
+        for( int i=0; i<10; ++i ) surge->process();
+     }
+   };
+
+   auto modes = {pm_poly, pm_mono, pm_mono_st, pm_mono_fp, pm_mono_st_fp};
+   auto mpe = {false, true};
+   for (auto mp : mpe)
+   {
+      for (auto m : modes)
+      {
+         auto cs = [m,mp]() {
+            auto surge = Surge::Headless::createSurge(44100 );
+            surge->mpeEnabled = mp;
+            surge->storage.getPatch().scene[0].polymode.val.i = m;
+            surge->storage.getPatch().scene[0].keytrack_root.val.i = 60;
+            return surge;
+         };
+         auto checkModes = []( std::shared_ptr<SurgeSynthesizer> surge, float low, float high, float latest )
+         {
+            REQUIRE( surge->storage.getPatch().scene[0].modsources[ms_lowest_key]->output == low );
+            REQUIRE( surge->storage.getPatch().scene[0].modsources[ms_highest_key]->output == high );
+            REQUIRE( surge->storage.getPatch().scene[0].modsources[ms_latest_key]->output == latest );
+            return true;
+         };
+         DYNAMIC_SECTION("KeyTrack Test mode=" << m << " mpe=" << mp )
+         {
+            {
+               auto surge = cs();
+               REQUIRE( checkModes( surge, 0, 0, 0 ));
+            }
+            {
+               auto surge = cs();
+               playSequence(surge, {48}, mp );
+               checkModes( surge, -1, -1, -1 );
+            }
+            {
+               auto surge = cs();
+               playSequence(surge, {48, -48}, mp );
+               checkModes( surge, 0, 0, 0 );
+            }
+            auto surge = cs();
+            {
+                auto surge = cs();
+                playSequence( surge, {48,84,36,72,-36}, mp);
+                checkModes( surge, -1, 2, 1 );
+            }
+
+            {
+               /*
+                * This is the one which fails in mono mode with the naive just-voices implementation
+                */
+               auto surge = cs();
+               playSequence(surge, {48, 84, 72}, mp );
+               checkModes( surge, -1, 2, 1 );
+            }
+         }
+      }
+   }
+}
