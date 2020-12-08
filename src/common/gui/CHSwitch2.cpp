@@ -118,7 +118,6 @@ CMouseEventResult CHSwitch2::onMouseDown(CPoint& where, const CButtonState& butt
    }
    else
    {
-      beginEdit();
       auto res = onMouseMoved(where, buttons);
       if( res == kMouseDownEventHandledButDontNeedMovedOrUpEvents )
          mouseDowns --;
@@ -131,7 +130,6 @@ CMouseEventResult CHSwitch2::onMouseUp(CPoint& where, const CButtonState& button
 
    if (draggable)
    {
-      endEdit();
       return kMouseEventHandled;
    }
    return kMouseEventNotHandled;
@@ -167,13 +165,13 @@ CMouseEventResult CHSwitch2::onMouseMoved(CPoint& where, const CButtonState& but
       }
 
       invalid();
+      beginEdit();
       if (listener)
          listener->valueChanged(this);
-
+      endEdit();
       return kMouseEventHandled;
    }
 
-   
    return kMouseEventNotHandled;
 }
 
