@@ -1163,10 +1163,12 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
 void SurgeSynthesizer::updateHighLowKeys(int scene)
 {
-   SurgeVoice *lowest = nullptr, *highest = nullptr, *newest = nullptr;
+   // SurgeVoice *lowest = nullptr, *highest = nullptr, *newest = nullptr;
+   bool hasLowest = false, hasHighest = false, hasLatest = false;
+   float newKey, lowKey = 1000.f, highKey = -1000.f;
+   int64_t voiceLatest = 0;
 
-   float newKey, lowKey = 1000.f, highKey = -1000.f, maxAge = 10000000;
-
+   int polymode = storage.getPatch().scene[scene].polymode.val.i;
    for (const auto& v : voices[scene])
    {
       if (v->state.gate)
@@ -1174,38 +1176,99 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
          if (v->state.pkey < lowKey)
          {
             lowKey = v->state.pkey;
-            lowest = v;
+            hasLowest = true;
          }
 
          if (v->state.pkey > highKey)
          {
             highKey = v->state.pkey;
-            highest = v;
+            hasHighest = true;
          }
 
-         if (v->age < maxAge)
+         if (v->state.keyState->voiceOrder >= voiceLatest )
          {
-            newKey = v->state.pkey;
-            maxAge = v->age;
-            newest = v;
+            voiceLatest = v->state.keyState->voiceOrder;
+            /*
+             * In these modes we re-use voices and reset the key and retain
+             * the portamento key, so I need to read off key for latest, not pkey
+             */
+            if( polymode == pm_mono_st || polymode == pm_mono_st_fp )
+            {
+               newKey = v->state.key;
+            }
+            else
+            {
+               newKey = v->state.pkey;
+            }
+            hasLatest = true;
          }
       }
    }
 
+   if(  polymode != pm_poly )
+   {
+      /*
+       * OK here we need to know depressed keys not playing voices.
+       * See issue #2892 for more. Latest is fine but highest and
+       * lowest will be wrong
+       */
+      int lowkey = 0, hikey = 127;
+      if (storage.getPatch().scenemode.val.i == sm_split)
+      {
+         if (scene == 0)
+            hikey = storage.getPatch().splitpoint.val.i - 1;
+         else
+            lowkey = storage.getPatch().splitpoint.val.i;
+      }
+
+      int lowMpeChan = mpeEnabled ? 1 : 0; // skip control chan
+      int highMpeChan = 16;
+      if (storage.getPatch().scenemode.val.i == sm_chsplit)
+      {
+         if (scene == 0)
+         {
+            highMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
+         }
+         else
+         {
+            lowMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
+         }
+      }
+
+      for (int ch = lowMpeChan; ch < highMpeChan; ++ch)
+      {
+         for (int k = lowkey; k < hikey; ++k)
+         {
+            if (channelState[ch].keyState[k].keystate)
+            {
+               if (k < lowKey)
+               {
+                  lowKey = k;
+                  hasLowest = true;
+               }
+               if (k > highKey)
+               {
+                  highKey = k;
+                  hasHighest = true;
+               }
+            }
+         }
+      }
+   }
    float ktRoot = (float)storage.getPatch().scene[scene].keytrack_root.val.i;
    float twelfth = 1.f / 12.f;
 
-   if (lowest)
-      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init((lowest->state.pkey - ktRoot) * twelfth );
+   if (hasLowest)
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init((lowKey - ktRoot) * twelfth );
    else
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init( 0.f );
 
-   if (highest)
-      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( (highest->state.pkey - ktRoot) * twelfth );
+   if (hasHighest)
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( (highKey - ktRoot) * twelfth );
    else
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( 0.f );
 
-   if (newest)
+   if (hasLatest)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( (newKey - ktRoot) * twelfth );
    else
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( 0.f );
