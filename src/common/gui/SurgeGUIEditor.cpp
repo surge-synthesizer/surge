@@ -4403,6 +4403,27 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl* control)
    }
 
 #endif
+
+#if TARGET_VST3
+   /*
+    * I am sure this is us doing something wrong, but the first time through
+    * of an edit of a discrete value (the digital/analog for instance) the
+    * beignEdit starts sending me the old value over and over which isn't what
+    * I want, and that old value is gotten when beginEdit is called, not when
+    * endEdit is called. So this code, in LIve, establishes the value as correct
+    * at the beginning of beginEdit. Which is odd but fixes issue #3283.
+    */
+   if( synth->hostProgram.find( "Ableton" ) != string::npos )
+   {
+      long tag = control->getTag();
+      int ptag = tag - start_paramtags;
+      if( ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
+      {
+         auto id = synth->idForParameter(synth->storage.getPatch().param_ptr[ptag]);
+         synth->setParameter01(id, control->getValue(), false);
+      }
+   }
+#endif
 }
 
 //------------------------------------------------------------------------------------------------
