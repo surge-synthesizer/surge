@@ -557,6 +557,29 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
    }
    enforcePolyphonyLimit(scene, 3);
 
+   int lowkey = 0, hikey = 127;
+   if (storage.getPatch().scenemode.val.i == sm_split)
+   {
+      if (scene == 0)
+         hikey = storage.getPatch().splitpoint.val.i - 1;
+      else
+         lowkey = storage.getPatch().splitpoint.val.i;
+   }
+
+   int lowMpeChan = 1; // skip control chan
+   int highMpeChan = 16;
+   if( storage.getPatch().scenemode.val.i == sm_chsplit )
+   {
+      if( scene == 0 )
+      {
+         highMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
+      }
+      else
+      {
+         lowMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
+      }
+   }
+
    switch (storage.getPatch().scene[scene].polymode.val.i)
    {
    case pm_poly:
@@ -591,9 +614,9 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
           */
          if( mpeEnabled )
          {
-            for( int k=0; k<128; ++k )
+            for( int k=lowkey; k<hikey; ++k )
             {
-               for( int mpeChan=0; mpeChan < 16; ++mpeChan )
+               for( int mpeChan=lowMpeChan; mpeChan < highMpeChan; ++mpeChan )
                {
                   if (channelState[mpeChan].keyState[k].keystate)
                   {
@@ -607,7 +630,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
          }
          else
          {
-            for( int k=0; k<128; ++k )
+            for( int k=lowkey; k<hikey; ++k )
             {
                if( channelState[channel].keyState[k].keystate )
                {
@@ -668,9 +691,9 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
           */
          if( mpeEnabled )
          {
-            for( int k=0; k<128; ++k )
+            for( int k=lowkey; k<hikey; ++k )
             {
-               for( int mpeChan=0; mpeChan < 16; ++mpeChan )
+               for( int mpeChan=lowMpeChan; mpeChan < highMpeChan; ++mpeChan )
                {
                   if (channelState[mpeChan].keyState[k].keystate)
                   {
@@ -684,7 +707,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
          }
          else
          {
-            for( int k=0; k<128; ++k )
+            for( int k=lowkey; k<hikey; ++k )
             {
                if( channelState[channel].keyState[k].keystate )
                {
@@ -839,6 +862,20 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                lowkey = storage.getPatch().splitpoint.val.i;
          }
 
+         int lowMpeChan = 1; // Control chan gets skipped
+         int highMpeChan = 16;
+         if( storage.getPatch().scenemode.val.i == sm_chsplit )
+         {
+            if( v->state.scene_id == 0 )
+            {
+               highMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
+            }
+            else
+            {
+               lowMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
+            }
+         }
+
          switch (storage.getPatch().scene[v->state.scene_id].polymode.val.i)
          {
          case pm_poly:
@@ -849,6 +886,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
          case pm_mono_fp:
          case pm_latch:
          {
+
             /*
             ** In these modes, our job when we release a note is to see if
             ** any other note is held.
@@ -917,7 +955,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                   for (k = hikey; k >= lowkey && !do_switch; k--)
                   {
-                     for (int mpeChan = 1; mpeChan < 16; ++mpeChan)
+                     for (int mpeChan = lowMpeChan; mpeChan < highMpeChan; ++mpeChan)
                      {
                         if (mpeChan != channel && channelState[mpeChan].keyState[k].keystate)
                         {
@@ -1048,7 +1086,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                   for (k = hikey; k >= lowkey && !do_switch; k--)
                   {
-                     for (int mpeChan = 1; mpeChan < 16; ++mpeChan)
+                     for (int mpeChan = lowMpeChan; mpeChan < highMpeChan; ++mpeChan)
                      {
                         if (mpeChan != channel && channelState[mpeChan].keyState[k].keystate)
                         {
@@ -1098,6 +1136,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                      // See the comment above at the other _st legato spot
                      v->state.channel = kchan;
                      v->state.voiceChannelState = &channelState[kchan];
+                     //std::cout << _D(v->state.gate) << _D(v->state.key) << _D(v->state.scene_id ) << std::endl;
                   }
                }
 
