@@ -44,7 +44,7 @@ namespace Colors
       }
       namespace Button
       {
-         extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, BorderHover, TextHover;
+         extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, BorderHover, TextHover, BackgroundPressed, BorderPressed, TextPressed;
       }
       namespace Checkbox
       {

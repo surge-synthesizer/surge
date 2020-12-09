@@ -82,9 +82,17 @@
 
     <color id="dialog.titlebar.background" value="bordergray"/>
     <color id="dialog.titlebar.text" value="white"/>
-    <color id="dialog.button.background" value="#404040"/>
-    <color id="dialog.button.border" value="bordergray"/>
+
+    <color id="dialog.button.background" value="bggray"/>
+    <color id="dialog.button.border" value="black"/>
     <color id="dialog.button.text" value="lightgray"/>
+
+    <color id="dialog.button.hover.background" value="#399DFF"/>
+    <color id="dialog.button.hover.border" value="black"/>
+    <color id="dialog.button.hover.text" value="white"/>
+
+    <color id="dialog.button.pressed.border" value="black"/>
+    <color id="dialog.button.pressed.text" value="black"/>
 
     <color id="dialog.textfield.focus" value="red"/>
     <color id="dialog.textfield.border" value="bordergray"/>
