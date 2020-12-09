@@ -659,15 +659,15 @@ TEST_CASE( "Patch Version Builder", "[io]")
                fnft = fut_14_obxd_2pole;
                fnst = st * 4 + 0;
                break;
-            case fut_obxd_2pole_hp:
+            case fut_obxd_2pole_bp:
                fnft = fut_14_obxd_2pole;
                fnst = st * 4 + 1;
                break;
-            case fut_obxd_2pole_n:
+            case fut_obxd_2pole_hp:
                fnft = fut_14_obxd_2pole;
                fnst = st * 4 + 2;
                break;
-            case fut_obxd_2pole_bp:
+            case fut_obxd_2pole_n:
                fnft = fut_14_obxd_2pole;
                fnst = st * 4 + 3;
                break;
