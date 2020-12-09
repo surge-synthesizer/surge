@@ -1521,13 +1521,13 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                   fu->type.val.i = fut_obxd_2pole_lp;
                   break;
                case 1:
-                  fu->type.val.i = fut_obxd_2pole_hp;
+                  fu->type.val.i = fut_obxd_2pole_bp;
                   break;
                case 2:
-                  fu->type.val.i = fut_obxd_2pole_n;
+                  fu->type.val.i = fut_obxd_2pole_hp;
                   break;
                case 3:
-                  fu->type.val.i = fut_obxd_2pole_bp;
+                  fu->type.val.i = fut_obxd_2pole_n;
                   break;
                }
                break;
