@@ -367,6 +367,20 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
       SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
       SharedPointer<CFontDesc> aboutfont = new CFontDesc("sans-serif", 10);
 #else
+      /*
+       * Choose to only warn on windows since (1) mac includes Lato in the bundle so this
+       * never happens there and (2) linux has all sorts of font noise
+       */
+      static bool warnedAboutLato = false;
+      if( ! warnedAboutLato )
+      {
+         Surge::UserInteractions::promptError(
+             std::string("Surge was unable to resolve the Lato font. ") +
+             "Install Lato or re-run the Surge installer to resolve this. " +
+             "Surge will run anwyay, but some of your labels may clip or be mis-rendered.",
+             "Unable to resolve Lato Font");
+         warnedAboutLato = true;
+      }
       SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
       SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
       SharedPointer<CFontDesc> lfofont = new CFontDesc("Microsoft Sans Serif", 8 );
