@@ -176,16 +176,6 @@ else()
   set( BUILD_LV2 false )
 endif()
 
-# Surge features at compile time
-if( NOT DEFINED SURGE_EXTRA_FILTERS )
-  set( SURGE_EXTRA_FILTERS False )
-  set( SURGE_EXTRA_FILTERS_DEFINITIONS SURGE_EXTRA_FILTERS=0 )
-else()
-  message( STATUS "Including Surge Extra Filters" )
-  set( SURGE_EXTRA_FILTERS True )
-  set( SURGE_EXTRA_FILTERS_DEFINITIONS SURGE_EXTRA_FILTERS=1 )
-endif()
-
 # Enumerate the sources into groups
 #    SURGE_SHARED_SOURCES - these are used to make the synth-free ui-free dsp and param lib
 #    SURGE_SYNTH_SOURCES - these are the synth classes which are target type dependant
@@ -430,7 +420,6 @@ if( APPLE )
     MAC_COCOA=1
     COCOA=1
     OBJC_OLD_DISPATCH_PROTOTYPES=1
-    ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
   set(OS_LINK_LIBRARIES_NOGUI
     "-framework CoreServices"
@@ -508,7 +497,6 @@ elseif( UNIX AND NOT APPLE )
   set(OS_COMPILE_DEFINITIONS
     ${ARCH_COMPILE_DEFINITIONS}
     LINUX=1
-    ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -582,7 +570,6 @@ elseif( WIN32 )
     _CRT_SECURE_NO_WARNINGS=1
     UNICODE
     _UNICODE
-    ${SURGE_EXTRA_FILTERS_DEFINITIONS}
     )
 
   if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )

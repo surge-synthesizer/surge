@@ -2269,15 +2269,14 @@ void Parameter::get_display(char* txt, bool external, float ef)
                   case fut_nonlinearfb_hp:
                   case fut_nonlinearfb_n:
                   case fut_nonlinearfb_bp:
+                  case fut_nonlinearfb_ap:
                      // "i & 3" selects the lower two bits that represent the stage count.
                      // "(i >> 2) & 3" selects the next two bits that represent the saturator.
                      snprintf(txt, 32, "%s %s",
                         fut_nlf_subtypes[i & 3],
                         fut_nlf_saturators[(i >> 2) & 3]);
                      break;
-#if SURGE_EXTRA_FILTERS
-#endif
-                     // don't default any more so compiler catches new ones we add
+                  // don't default any more so compiler catches new ones we add
                   case fut_none:
                   case fut_lp12:
                   case fut_lp24:
