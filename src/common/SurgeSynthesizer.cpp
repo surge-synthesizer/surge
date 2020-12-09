@@ -1975,7 +1975,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                subp->val.i = 0;
             else
                subp->val.i = std::min(maxIVal - 1, subp->val.i);
-            storage.subtypeMemory[subp->scene-1][subp->ctrlgroup_entry][subp->val.i] = subp->val.i;
+            storage.subtypeMemory[subp->scene-1][subp->ctrlgroup_entry][filterType] = subp->val.i;
 
             switch_toggled_queued = true;
             break;
