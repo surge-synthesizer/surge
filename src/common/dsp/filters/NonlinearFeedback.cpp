@@ -170,10 +170,15 @@ namespace NonlinearFeedbackFilter
             C[nlf_b1] = -2.0f * wcos   * a0r;
             C[nlf_b2] = C[nlf_b0];
             break;
-         default: // bandpass
+         case fut_nonlinearfb_bp: // bandpass
             C[nlf_b0] = wsin * 0.5f    * a0r;
             C[nlf_b1] = 0.0f;
             C[nlf_b2] = -C[nlf_b0];
+            break;
+         default: // allpass
+            C[nlf_b0] = C[nlf_a2];
+            C[nlf_b1] = C[nlf_a1];
+            C[nlf_b2] = 1.0f; // (1+a) / (1+a) = 1 (from normalising by a0)
             break;
       }
 

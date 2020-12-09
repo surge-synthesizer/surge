@@ -101,6 +101,7 @@ enum fu_type
    fut_notch24,
    fut_comb_neg,
    fut_apf,
+   fut_nonlinearfb_ap,
    n_fu_types,
 };
 
@@ -112,36 +113,37 @@ enum fu_type
  */
 const char fut_names[n_fu_types][32] =
     {
-        "Off",
-        "LP 12 dB",
-        "LP 24 dB",
-        "LP Legacy Ladder",
-        "HP 12 dB",
-        "HP 24 dB",
-        "BP 12 dB",
-        "N 12 dB",
-        "FX Comb +",
-        "FX Sample & Hold",
-        "LP Vintage Ladder",
-        "LP OB-Xd 12 dB",
-        "LP OB-Xd 24 dB",
-        "LP K35",
-        "HP K35",
-        "LP Diode Ladder",
-        "LP NL Feedback",
-        "HP NL Feedback",
-        "N NL Feedback",
-        "BP NL Feedback",
-        "HP OB-Xd 12 dB",
-        "N OB-Xd 12 dB",
-        "BP OB-Xd 12 dB",
-        "BP 24 dB",
-        "N 24 dB",
-        "FX Comb -",
-        "FX Allpass",
+        "Off",              // fut_none
+        "LP 12 dB",         // fut_lp12
+        "LP 24 dB",         // fut_lp24
+        "LP Legacy Ladder", // fut_lpmoog
+        "HP 12 dB",         // fut_hp12
+        "HP 24 dB",         // fut_hp24
+        "BP 12 dB",         // fut_bp12
+        "N 12 dB",          // fut_notch12
+        "FX Comb +",        // fut_comb_pos
+        "FX Sample & Hold", // fut_SNH
+        "LP Vintage Ladder",// fut_vintageladder
+        "LP OB-Xd 12 dB",   // fut_obxd_2pole_lp
+        "LP OB-Xd 24 dB",   // fut_obxd_4pole
+        "LP K35",           // fut_k35_lp
+        "HP K35",           // fut_k35_hp
+        "LP Diode Ladder",  // fut_diode
+        "LP NL Feedback",   // fut_nonlinearfb_lp
+        "HP NL Feedback",   // fut_nonlinearfb_hp
+        "N NL Feedback",    // fut_nonlinearfb_n
+        "BP NL Feedback",   // fut_nonlinearfb_bp
+        "HP OB-Xd 12 dB",   // fut_obxd_2pole_hp
+        "N OB-Xd 12 dB",    // fut_obxd_2pole_n
+        "BP OB-Xd 12 dB",   // fut_obxd_2pole_bp
+        "BP 24 dB",         // fut_bp24
+        "N 24 dB",          // fut_notch24
+        "FX Comb -",        // fut_comb_neg
+        "FX Allpass",       // fut_apf
+        "FX NL Allpass",    // fut_nonlinearfb_ap
         /* this is a ruler to ensure names do not exceed 31 characters
-        0123456789012345678901234567890
-          */
+         0123456789012345678901234567890
+        */
     };
 
 const char fut_menu_names[n_fu_types][32] =
@@ -173,9 +175,10 @@ const char fut_menu_names[n_fu_types][32] =
         "24 dB", // N
         "Comb -",
         "Allpass",
+        "NL Feedback Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
-        0123456789012345678901234567890
-          */
+         0123456789012345678901234567890
+        */
     };
 
 const char fut_bp_subtypes[3][32] =
@@ -269,33 +272,34 @@ const char fut_nlf_saturators[4][6] =
 
 const int fut_subcount[n_fu_types] =
     {
-        0, // fut_none
-        3, // fut_lp12
-        3, // fut_lp24
-        4, // fut_lpmoog
-        3, // fut_hp12
-        3, // fut_hp24
-        3, // fut_bp12
-        2, // fut_notch12
-        2, // fut_comb_pos
-        0, // fut_SNH
-        4, // fut_vintageladder
-        2, // fut_obxd_2pole
-        4, // fut_obxd_4pole
-        5, // fut_k35_lp
-        5, // fut_k35_hp
-        4, // fut_diode
+        0,  // fut_none
+        3,  // fut_lp12
+        3,  // fut_lp24
+        4,  // fut_lpmoog
+        3,  // fut_hp12
+        3,  // fut_hp24
+        3,  // fut_bp12
+        2,  // fut_notch12
+        2,  // fut_comb_pos
+        0,  // fut_SNH
+        4,  // fut_vintageladder
+        2,  // fut_obxd_2pole
+        4,  // fut_obxd_4pole
+        5,  // fut_k35_lp
+        5,  // fut_k35_hp
+        4,  // fut_diode
         16, // fut_nonlinearfb_lp
         16, // fut_nonlinearfb_hp
         16, // fut_nonlinearfb_n
-        16,  // fut_nonlinearfb_bp
-        2, // fut_obxd_2pole_hp,
-        2, // fut_obxd_2pole_n,
-        2, // fut_obxd_2pole_bp,
-        3, // fut_bp24,
-        2, // fut_notch24,
-        2, // fut_comb_neg,
-        0, // fut_apf
+        16, // fut_nonlinearfb_bp
+        2,  // fut_obxd_2pole_hp,
+        2,  // fut_obxd_2pole_n,
+        2,  // fut_obxd_2pole_bp,
+        3,  // fut_bp24,
+        2,  // fut_notch24,
+        2,  // fut_comb_neg,
+        0,  // fut_apf
+        16, // fut_nonlinearfb_ap
     };
 
 enum fu_subtype
@@ -344,6 +348,7 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
       p(fut_nonlinearfb_n, "Notch" );
 
       p(fut_apf, "Effect" );
+      p(fut_nonlinearfb_ap, "Effect" );
       p(fut_comb_pos, "Effect" );
       p(fut_comb_neg, "Effect" );
       p(fut_SNH, "Effect" );
@@ -390,18 +395,18 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
 const int lprow = 1;
 const int bprow = 2;
 const int hprow = 3;
-const int nrow = 4;
+const int nrow  = 4;
 const int fxrow = 5;
 const int fut_glyph_index[n_fu_types][2] =
     {
-        { 0, 0 }, // fut_none
+        { 0,     0 }, // fut_none
         { 0, lprow }, // fut_lp12
         { 1, lprow }, // fut_lp24
         { 3, lprow }, // fut_lpmoog
         { 0, hprow }, // fut_hp12
         { 1, hprow }, // fut_hp24
         { 0, bprow }, // fut_bp12
-        { 0, nrow }, // fut_notch12
+        { 0,  nrow }, // fut_notch12
         { 1, fxrow }, // fut_comb_pos
         { 3, fxrow }, // fut_SNH
         { 4, lprow }, // fut_vintageladder
@@ -412,13 +417,14 @@ const int fut_glyph_index[n_fu_types][2] =
         { 5, lprow }, // fut_diode
         { 8, lprow }, // fut_nonlinearfb_lp
         { 4, hprow }, // fut_nonlinearfb_hp
-        { 3, nrow }, // fut_nonlinearfb_n
-        { 3, bprow },  // fut_nonlinearfb_bp
+        { 3,  nrow }, // fut_nonlinearfb_n
+        { 3, bprow }, // fut_nonlinearfb_bp
         { 3, hprow }, // fut_obxd_2pole_hp,
-        { 2, nrow }, // fut_obxd_2pole_n,
+        { 2,  nrow }, // fut_obxd_2pole_n,
         { 2, bprow }, // fut_obxd_2pole_bp,
         { 1, bprow }, // fut_bp24,
-        { 1, nrow }, // fut_notch24,
-        { 2, fxrow },  // fut_comb_neg,
-        { 0, fxrow }   // fut_apf
+        { 1,  nrow }, // fut_notch24,
+        { 2, fxrow }, // fut_comb_neg,
+        { 0, fxrow }, // fut_apf
+        { 0, fxrow }  // fut_nonlinearfb_ap (this is temporarily set to just use the regular AP glyph)
     };
