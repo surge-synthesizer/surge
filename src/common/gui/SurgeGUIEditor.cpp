@@ -30,6 +30,7 @@
 #include "CSurgeVuMeter.h"
 #include "CMenuAsSlider.h"
 #include "CEffectLabel.h"
+#include "CTextButtonWithHover.h"
 #include "CAboutBox.h"
 #include "vstcontrols.h"
 #include "SurgeBitmaps.h"
@@ -6867,6 +6868,10 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
    auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
    auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
 
+   auto pressbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundPressed);
+   auto pressbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderPressed);
+   auto pressbtntext = currentSkin->getColor(Colors::Dialog::Button::TextPressed);
+
    VSTGUI::CGradient::ColorStopMap csm;
    VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
    cg->addColorStop(0, btnbg);
@@ -6875,27 +6880,37 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
    VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
    hovcg->addColorStop(0, hovbtnbg);
 
-   auto cb = new CTextButton(b1r, this, tag_miniedit_cancel, "Cancel");
+   VSTGUI::CGradient::ColorStopMap presscsm;
+   VSTGUI::CGradient* presscg = VSTGUI::CGradient::create(presscsm);
+   presscg->addColorStop(0, pressbtnbg);
+
+   auto cb = new CTextButtonWithHover(b1r, this, tag_miniedit_cancel, "Cancel");
    cb->setVisible(true);
    cb->setFont(fnts);
    cb->setGradient(cg);
    cb->setFrameColor(btnborder);
    cb->setTextColor(btntext);
-   cb->setGradientHighlighted(hovcg);
-   cb->setFrameColorHighlighted(hovbtnborder);
-   cb->setTextColorHighlighted(hovbtntext);
+   cb->setHoverGradient(hovcg);
+   cb->setHoverFrameColor(hovbtnborder);
+   cb->setHoverTextColor(hovbtntext);
+   cb->setGradientHighlighted(presscg);
+   cb->setFrameColorHighlighted(pressbtnborder);
+   cb->setTextColorHighlighted(pressbtntext);
    cb->setRoundRadius(CCoord(3.f));
    bg->addView(cb);
 
-   auto kb = new CTextButton(b2r, this, tag_miniedit_ok, "OK");
+   auto kb = new CTextButtonWithHover(b2r, this, tag_miniedit_ok, "OK");
    kb->setVisible(true);
    kb->setFont(fnts);
    kb->setGradient(cg);
    kb->setFrameColor(btnborder);
    kb->setTextColor(btntext);
-   kb->setGradientHighlighted(cg);
-   kb->setFrameColorHighlighted(btnborder);
-   kb->setTextColorHighlighted(btntext);
+   kb->setHoverGradient(hovcg);
+   kb->setHoverFrameColor(hovbtnborder);
+   kb->setHoverTextColor(hovbtntext);
+   kb->setGradientHighlighted(presscg);
+   kb->setFrameColorHighlighted(pressbtnborder);
+   kb->setTextColorHighlighted(pressbtntext);
    kb->setRoundRadius(CCoord(3.f));
    bg->addView(kb);
 }
@@ -6944,6 +6959,10 @@ void SurgeGUIEditor::makeStorePatchDialog()
    auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
    auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
 
+   auto pressbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundPressed);
+   auto pressbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderPressed);
+   auto pressbtntext = currentSkin->getColor(Colors::Dialog::Button::TextPressed);
+
    VSTGUI::CGradient::ColorStopMap csm;
    VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
    cg->addColorStop(0, btnbg);
@@ -6951,6 +6970,10 @@ void SurgeGUIEditor::makeStorePatchDialog()
    VSTGUI::CGradient::ColorStopMap hovcsm;
    VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
    hovcg->addColorStop(0, hovbtnbg);
+
+   VSTGUI::CGradient::ColorStopMap presscsm;
+   VSTGUI::CGradient* presscg = VSTGUI::CGradient::create(presscsm);
+   presscg->addColorStop(0, pressbtnbg);
 
    VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11);
 
@@ -7035,25 +7058,31 @@ void SurgeGUIEditor::makeStorePatchDialog()
    patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
 
    auto b1r = CRect(CPoint(266, 111), CPoint(50, 20));
-   auto cb = new CTextButton(b1r, this, tag_store_cancel, "Cancel");
+   auto cb = new CTextButtonWithHover(b1r, this, tag_store_cancel, "Cancel");
    cb->setFont(aboutFont);
    cb->setGradient(cg);
    cb->setFrameColor(btnborder);
    cb->setTextColor(btntext);
-   cb->setGradientHighlighted(hovcg);
-   cb->setFrameColorHighlighted(hovbtnborder);
-   cb->setTextColorHighlighted(hovbtntext);
+   cb->setHoverGradient(hovcg);
+   cb->setHoverFrameColor(hovbtnborder);
+   cb->setHoverTextColor(hovbtntext);
+   cb->setGradientHighlighted(presscg);
+   cb->setFrameColorHighlighted(pressbtnborder);
+   cb->setTextColorHighlighted(pressbtntext);
    cb->setRoundRadius(CCoord(3.f));
 
    auto b2r = CRect(CPoint(326, 111), CPoint(50, 20));
-   auto kb = new CTextButton(b2r, this, tag_store_ok, "OK");
+   auto kb = new CTextButtonWithHover(b2r, this, tag_store_ok, "OK");
    kb->setFont(aboutFont);
    kb->setGradient(cg);
    kb->setFrameColor(btnborder);
    kb->setTextColor(btntext);
-   kb->setGradientHighlighted(cg);
-   kb->setFrameColorHighlighted(btnborder);
-   kb->setTextColorHighlighted(btntext);
+   kb->setHoverGradient(hovcg);
+   kb->setHoverFrameColor(hovbtnborder);
+   kb->setHoverTextColor(hovbtntext);
+   kb->setGradientHighlighted(presscg);
+   kb->setFrameColorHighlighted(pressbtnborder);
+   kb->setTextColorHighlighted(pressbtntext);
    kb->setRoundRadius(CCoord(3.f));
 
    saveDialog->addView(pnamelbl);

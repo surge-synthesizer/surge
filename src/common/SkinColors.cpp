@@ -24,9 +24,12 @@ namespace Colors
          const Surge::Skin::Color Background("dialog.button.background", 227, 227, 227),
                                   Border("dialog.button.border", 151, 151, 151),
                                   Text("dialog.button.text", 0, 0, 0),
-                                  BackgroundHover("dialog.button.hover.background", 255, 144, 0),
+                                  BackgroundHover("dialog.button.hover.background", 241, 187, 114),
                                   BorderHover("dialog.button.hover.border", 151, 151, 151),
-                                  TextHover("dialog.button.hover.text", 255, 255, 255);
+                                  TextHover("dialog.button.hover.text", 0, 0, 0),
+                                  BackgroundPressed("dialog.button.pressed.background", 128, 73, 0),
+                                  BorderPressed("dialog.button.pressed.border", 151, 151, 151),
+                                  TextPressed("dialog.button.pressed.text", 255, 147, 0);
       }
       namespace Checkbox
       {
