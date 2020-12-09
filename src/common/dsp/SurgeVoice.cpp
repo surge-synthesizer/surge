@@ -1040,6 +1040,11 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
                case fut_nonlinearfb_n:
                case fut_nonlinearfb_bp:
                case fut_nonlinearfb_ap:
+               case fut_nonlinearst_lp:
+               case fut_nonlinearst_hp:
+               case fut_nonlinearst_n:
+               case fut_nonlinearst_bp:
+               case fut_nonlinearst_ap:
                   // subtype is stored in WP[0] for the entire quad.
                   // this is fine because integer parameters like this are not modulatable, and
                   // quads are only parallel across voices, so the quad would have identical
@@ -1074,6 +1079,11 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
                   case fut_nonlinearfb_n:
                   case fut_nonlinearfb_bp:
                   case fut_nonlinearfb_ap:
+                  case fut_nonlinearst_lp:
+                  case fut_nonlinearst_hp:
+                  case fut_nonlinearst_n:
+                  case fut_nonlinearst_bp:
+                  case fut_nonlinearst_ap:
                      Q->FU[u + 2].WP[0] = scene->filterunit[u].subtype.val.i;
                      break;
                   default:
