@@ -102,6 +102,11 @@ enum fu_type
    fut_comb_neg,
    fut_apf,
    fut_nonlinearfb_ap,
+   fut_nonlinearst_lp,
+   fut_nonlinearst_hp,
+   fut_nonlinearst_n,
+   fut_nonlinearst_bp,
+   fut_nonlinearst_ap,
    n_fu_types,
 };
 
@@ -140,7 +145,12 @@ const char fut_names[n_fu_types][32] =
         "N 24 dB",          // fut_notch24
         "FX Comb -",        // fut_comb_neg
         "FX Allpass",       // fut_apf
-        "FX NL Allpass",    // fut_nonlinearfb_ap
+        "FX NLFB Allpass",  // fut_nonlinearfb_ap
+        "LP NL States",     // fut_nonlinearst_lp
+        "HP NL States",     // fut_nonlinearst_hp
+        "N NL States",      // fut_nonlinearst_n
+        "BP NL States",     // fut_nonlinearst_bp
+        "FX NLST Allpass",  // fut_nonlinearst_ap
         /* this is a ruler to ensure names do not exceed 31 characters
          0123456789012345678901234567890
         */
@@ -165,9 +175,9 @@ const char fut_menu_names[n_fu_types][32] =
         "K35", // HP
         "Diode Ladder",
         "NL Feedback", // LP
-        "NL Feedback", // LP
-        "NL Feedback", // LP
-        "NL Feedback", // LP
+        "NL Feedback", // HP
+        "NL Feedback", // N
+        "NL Feedback", // BP
         "OB-Xd 12 dB", // HP
         "OB-Xd 12 dB", // N
         "OB-Xd 12 dB", // BP
@@ -176,6 +186,11 @@ const char fut_menu_names[n_fu_types][32] =
         "Comb -",
         "Allpass",
         "NL Feedback Allpass",
+        "NL States", // LP
+        "NL States", // HP
+        "NL States", // N
+        "NL States", // BP
+        "NL States Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
          0123456789012345678901234567890
         */
@@ -300,6 +315,11 @@ const int fut_subcount[n_fu_types] =
         2,  // fut_comb_neg,
         0,  // fut_apf
         16, // fut_nonlinearfb_ap
+        16, // fut_nonlinearst_lp
+        16, // fut_nonlinearst_hp
+        16, // fut_nonlinearst_n
+        16, // fut_nonlinearst_bp
+        16, // fut_nonlinearst_ap
     };
 
 enum fu_subtype
@@ -330,25 +350,30 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
       p(fut_obxd_2pole_lp, "Lowpass" ); // ADJ
       p(fut_obxd_4pole, "Lowpass" );
       p(fut_nonlinearfb_lp, "Lowpass" );
+      p(fut_nonlinearst_lp, "Lowpass" );
 
       p(fut_bp12, "Bandpass" );
       p(fut_bp24, "Bandpass" );
       p(fut_obxd_2pole_bp, "Bandpass" );
       p(fut_nonlinearfb_bp, "Bandpass" );
+      p(fut_nonlinearst_bp, "Bandpass" );
 
       p(fut_hp12, "Highpass" );
       p(fut_hp24, "Highpass" );
       p(fut_k35_hp, "Highpass" );
       p(fut_obxd_2pole_hp, "Highpass" );
       p(fut_nonlinearfb_hp, "Highpass" );
+      p(fut_nonlinearst_hp, "Highpass" );
 
       p(fut_notch12, "Notch" );
       p(fut_notch24, "Notch" );
       p(fut_obxd_2pole_n, "Notch" );
       p(fut_nonlinearfb_n, "Notch" );
+      p(fut_nonlinearst_n, "Notch" );
 
       p(fut_apf, "Effect" );
       p(fut_nonlinearfb_ap, "Effect" );
+      p(fut_nonlinearst_ap, "Effect" );
       p(fut_comb_pos, "Effect" );
       p(fut_comb_neg, "Effect" );
       p(fut_SNH, "Effect" );
@@ -426,5 +451,10 @@ const int fut_glyph_index[n_fu_types][2] =
         { 1,  nrow }, // fut_notch24,
         { 2, fxrow }, // fut_comb_neg,
         { 0, fxrow }, // fut_apf
-        { 0, fxrow }  // fut_nonlinearfb_ap (this is temporarily set to just use the regular AP glyph)
+        { 0, fxrow }, // fut_nonlinearfb_ap (this is temporarily set to just use the regular AP glyph)
+        { 8, lprow }, // fut_nonlinearst_lp
+        { 4, hprow }, // fut_nonlinearst_hp
+        { 3,  nrow }, // fut_nonlinearst_n
+        { 3, bprow }, // fut_nonlinearst_bp
+        { 0, fxrow }, // fut_nonlinearst_ap (also temporarily set to just use the regular AP glyph)
     };

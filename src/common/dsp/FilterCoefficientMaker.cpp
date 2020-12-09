@@ -7,6 +7,7 @@
 #include "filters/K35.h"
 #include "filters/DiodeLadder.h"
 #include "filters/NonlinearFeedback.h"
+#include "filters/NonlinearStates.h"
 
 using namespace std;
 
@@ -131,6 +132,13 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_nonlinearfb_bp:
    case fut_nonlinearfb_ap:
       NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
+      break;
+   case fut_nonlinearst_lp:
+   case fut_nonlinearst_hp:
+   case fut_nonlinearst_n:
+   case fut_nonlinearst_bp:
+   case fut_nonlinearst_ap:
+      NonlinearStatesFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
       break;
 
    case n_fu_types:
