@@ -4101,6 +4101,13 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          if( p->ctrltype == ct_lfotype )
             synth->refresh_editor = true;
 
+         if ((p->ctrlstyle & kNoPopup))
+         {
+            auto iw = dynamic_cast<CParameterTooltip*>(infowindow);
+            if( iw && iw->isVisible() )
+               iw->Hide();
+         }
+
          if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
              dynamic_cast<CSurgeSlider*>(control) != nullptr)
          {
