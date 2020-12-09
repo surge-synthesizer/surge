@@ -27,8 +27,8 @@ static float clampedFrequency( float pitch, SurgeStorage *storage )
 enum Saturator {
     SAT_TANH = 0,
     SAT_SOFT,
-    SAT_SINE,
-    SAT_OJD
+    SAT_OJD,
+    SAT_SINE
 };
 
 // sine each element of a __m128 by breaking it into floats then reassembling
@@ -98,11 +98,11 @@ static inline __m128 doNLFilter(
       case SAT_SOFT:
          nf = softclip_ps(out); // note, this is a bit different to Jatin's softclipper
          break;
-      case SAT_SINE:
-         nf = fastsin_ps(out);
-         break;
-      default: // SAT_OJD
+      case SAT_OJD:
          nf = ojd_waveshaper_ps(out);
+         break;
+      default: // SAT_SINE
+         nf = fastsin_ps(out);
          break;
    }
 
