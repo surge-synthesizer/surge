@@ -281,8 +281,8 @@ const char fut_nlf_saturators[4][6] =
     {
         "tanh",
         "soft",
-        "sine",
         "OJD",
+        "sine",
     };
 
 const int fut_subcount[n_fu_types] =
@@ -315,11 +315,11 @@ const int fut_subcount[n_fu_types] =
         2,  // fut_comb_neg,
         0,  // fut_apf
         16, // fut_nonlinearfb_ap
-        16, // fut_nonlinearst_lp
-        16, // fut_nonlinearst_hp
-        16, // fut_nonlinearst_n
-        16, // fut_nonlinearst_bp
-        16, // fut_nonlinearst_ap
+        8, // fut_nonlinearst_lp
+        8, // fut_nonlinearst_hp
+        8, // fut_nonlinearst_n
+        8, // fut_nonlinearst_bp
+        8, // fut_nonlinearst_ap
     };
 
 enum fu_subtype

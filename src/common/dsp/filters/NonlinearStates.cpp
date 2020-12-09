@@ -29,53 +29,8 @@ static float clampedFrequency( float pitch, SurgeStorage *storage )
 
 enum Saturator {
     SAT_TANH = 0,
-    SAT_SOFT,
-    SAT_SINE,
-    SAT_OJD
+    SAT_SOFT
 };
-
-// sine each element of a __m128 by breaking it into floats then reassembling
-static inline __m128 fastsin_ps(const __m128 in) noexcept {
-   float f[4];
-   _mm_storeu_ps(f, in);
-   f[0] = Surge::DSP::fastsin(f[0]);
-   f[1] = Surge::DSP::fastsin(f[1]);
-   f[2] = Surge::DSP::fastsin(f[2]);
-   f[3] = Surge::DSP::fastsin(f[3]);
-   return _mm_load_ps(f);
-}
-
-// waveshaper from https://github.com/JanosGit/Schrammel_OJD/blob/master/Source/Waveshaper.h
-static inline float ojd_waveshaper(float in) noexcept {
-   if (in <= -1.7f){
-      return -1.0f;
-   }
-   else if ((in > -1.7f) && (in < -0.3f)){
-      in += 0.3f;
-      return in + (in * in) / (4.0f * (1.0f - 0.3f)) - 0.3f;
-   }
-   else if ((in > 0.9f) && (in < 1.1f))
-   {
-      in -= 0.9f;
-      return in - (in * in) / (4.0f * (1.0f - 0.9f)) + 0.9f;
-   }
-   else if (in > 1.1f){
-      return 1.0f;
-   }
-
-   return in;
-};
-
-// asinh each element of a __m128 by breaking it into floats then reassembling
-static inline __m128 ojd_waveshaper_ps(const __m128 in) noexcept {
-   float f[4];
-   _mm_storeu_ps(f, in);
-   f[0] = ojd_waveshaper(f[0]);
-   f[1] = ojd_waveshaper(f[1]);
-   f[2] = ojd_waveshaper(f[2]);
-   f[3] = ojd_waveshaper(f[3]);
-   return _mm_load_ps(f);
-}
 
 static inline __m128 doNLFilter(
       const __m128 input,
@@ -103,17 +58,9 @@ static inline __m128 doNLFilter(
          z1 = Surge::DSP::fasttanhSSEclamped(z1);
          z2 = Surge::DSP::fasttanhSSEclamped(z2);
          break;
-      case SAT_SOFT:
+      default:
          z1 = softclip_ps(z1); // note, this is a bit different to Jatin's softclipper
          z2 = softclip_ps(z2);
-         break;
-      case SAT_SINE:
-         z1 = fastsin_ps(z1);
-         z2 = fastsin_ps(z2);
-         break;
-      default: // SAT_OJD
-         z1 = ojd_waveshaper_ps(z1);
-         z2 = ojd_waveshaper_ps(z2);
          break;
    }
    return out;
