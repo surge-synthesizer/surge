@@ -60,96 +60,160 @@ void CSurgeVuMeter::setValueR(float f)
 
 void CSurgeVuMeter::draw(CDrawContext* dc)
 {
-   CColor vugreen = skin->getColor(Colors::VuMeter::Level);
+   auto vugreen = skin->getColor(Colors::VuMeter::Level);
+   auto vugreenNotch = skin->getColor(Colors::VuMeter::LevelNotch);
+
+   auto vuamber = skin->getColor(Colors::VuMeter::MidLevel);
+   auto vuamberNotch = skin->getColor(Colors::VuMeter::MidLevelNotch);
+
    auto vured = skin->getColor(Colors::VuMeter::HighLevel);
-   CRect size = getViewSize();
-   CRect lbox(size);
+   auto vuredNotch = skin->getColor(Colors::VuMeter::HighLevelNotch);
+
+   auto vugr = skin->getColor(Colors::VuMeter::GainReductionLevel);
+   auto vugrNotch = skin->getColor(Colors::VuMeter::GainReductionLevelNotch);
+
+   auto notchDistance = 2;
+
+   auto borderCol = skin->getColor(Colors::VuMeter::Border);
+
+
+   CRect componentSize = getViewSize();
 
    VSTGUI::CDrawMode origMode = dc->getDrawMode();
-   VSTGUI::CDrawMode newMode(VSTGUI::kAntiAliasing);
+   VSTGUI::CDrawMode newMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode );
    dc->setDrawMode(newMode);
 
    dc->setFillColor(skin->getColor(Colors::VuMeter::Background));
-   dc->drawRect(size, VSTGUI::kDrawFilled);
+   dc->drawRect(componentSize, VSTGUI::kDrawFilled);
 
-   CRect rectBox = lbox;
-   rectBox.inset(1, 1);
-   VSTGUI::CGraphicsPath* path = dc->createRoundRectGraphicsPath(rectBox, 2);
+   CRect borderRoundedRectBox = componentSize;
+   borderRoundedRectBox.inset(1, 1);
+   VSTGUI::CGraphicsPath* borderRoundedRectPath = dc->createRoundRectGraphicsPath(borderRoundedRectBox, 2);
 
-   auto border = skin->getColor(Colors::VuMeter::Border);
-   dc->setFillColor(border);
-   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathFilled);
+   dc->setFillColor(borderCol);
+   dc->drawGraphicsPath(borderRoundedRectPath, VSTGUI::CDrawContext::kPathFilled);
 
-   CRect bar(lbox);
-   bar.inset(2, 2);
-   if (stereo)
-      bar.bottom -= 3;
-   CRect barblack(bar);
+   CRect vuBarRegion(componentSize);
+   vuBarRegion.inset(2, 2);
 
-   float w = bar.getWidth();
+   float w = vuBarRegion.getWidth();
+   /*
+    * Where does this constant come from?
+    * Well in 'scale' we map x -> x^3 to compress the range
+    * cuberoot(2) = 1.26 and change
+    * 1 / cuberoot(2) = 0.793
+    * so this scales it so the zerodb point is 1/cuberoot(2) along
+    * still not entirely sure why but there you go
+    */
    int zerodb = (0.7937f * w);
-
-   dc->drawPoint(CPoint(bar.left + zerodb, size.top), border);
-   dc->drawPoint(CPoint(bar.left + zerodb, size.bottom - 1), border);
+   /*
+    * but if we are doing that, make 3 the amber point
+    * 1/cuberoot(3) = .69336
+    */
+   int amberdb = (0.69336f * w);
 
    if (type == vut_gain_reduction)
    {
-      CRect bb2(bar);
-      bar.left++;
-      bar.top++;
-      bar.right = bar.left + zerodb + 1;
-      bar.left = bar.left + (scale(value) * w) - 1;
-      barblack.right = bar.left + 1;
-      barblack.left--;
-      bb2.left = bar.right - 1;
-      bb2.right++;
-      dc->setFillColor(border);
-      dc->drawRect(barblack, kDrawFilled);
-      dc->drawRect(bb2, kDrawFilled);
-      dc->setFillColor(vured);
-      dc->drawRect(bar, kDrawFilled);
+      // OK we need to draw from zerodb to the value
+      int yMargin = 1;
+      auto zeroDbPoint = CPoint( vuBarRegion.left + zerodb, vuBarRegion.top + yMargin );
+      auto displayRect = CRect( zeroDbPoint,
+                               CPoint( (scale(value)*w) - zerodb, vuBarRegion.getHeight() - yMargin ));
+
+      // The displayRect ends up correctly sized but a bit heavy handed so
+      displayRect.top += 0.5;
+      displayRect.bottom -= 0.5;
+
+      dc->setFillColor(vugr);
+      dc->drawRect( displayRect, kDrawFilled);
+
+      // Draw over the notches
+      auto start = displayRect.left;
+      auto end = displayRect.right;
+      if( displayRect.getWidth() < 0 )
+      {
+         auto notches = ceil( displayRect.getWidth() / notchDistance );
+         start = start + notches * notchDistance;
+         end = displayRect.left;
+      }
+
+      dc->setFillColor(vugrNotch);
+      for( auto pos = start; pos <= end; pos += notchDistance )
+      {
+         auto notch = CRect(CPoint(pos,displayRect.top),CPoint(1,displayRect.getHeight()));
+         dc->drawRect( notch, kDrawFilled );
+      }
+
    }
    else
    {
-      bar.left++;
-      bar.top++;
-      bar.right = bar.left + (scale(value) * w);
-      dc->setFillColor(vugreen);
-      if (value > 1.0f)
-         dc->setFillColor(vured);
-      dc->drawRect(bar, kDrawFilled);
+      auto vuBarLeft = vuBarRegion;
+      auto vuBarRight = vuBarRegion;
 
-      barblack.left = bar.right - 1;
-      barblack.right++;
+      vuBarLeft.right = vuBarLeft.left + scale(value) * w;
 
       if (stereo)
       {
-         CRect midline(lbox);
-         midline.inset(0, 4);
-         midline.left+=2;
-         midline.right-=2;
-         midline.top+=2;
-         midline.bottom --;
-         // midline.bottom = midline.top+2;
-         bar.offset(0, 3);
-         barblack.offset(0, 3);
-         bar.right = bar.left + (scale(valueR) * w);
-         dc->setFillColor(vugreen);
-         if (valueR > 1.0f)
-            dc->setFillColor(vured);
-         dc->drawRect(bar, kDrawFilled);
+         auto center = vuBarLeft.top + vuBarLeft.getHeight() / 2;
+         vuBarLeft.bottom = center;
+         vuBarRight.top = center;
+         vuBarRight.offset(0,1); // jog down one pixel to make a gap
+         vuBarRight.right = vuBarRight.left + scale(valueR) * w;
+      }
 
-         barblack.left = bar.right - 1;
-         dc->setFillColor(border);
-         dc->drawRect(midline, kDrawFilled);
+      auto drawMultiNotchedBar = [&](const CRect &targetBar )
+      {
+         auto drawThis = targetBar;
+         auto zp = vuBarLeft.left + zerodb;
+         auto ap = vuBarLeft.left + amberdb;
+         if( drawThis.right > zp )
+         {
+            dc->setFillColor(vured);
+            dc->drawRect(drawThis,kDrawFilled);
+            dc->setFillColor(vuredNotch);
+            for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
+            {
+               auto notch = CRect(CPoint(pos,drawThis.top),CPoint(1,drawThis.getHeight()));
+               dc->drawRect( notch, kDrawFilled );
+            }
+            drawThis.right = zp;
+
+         }
+         if( drawThis.right >= zp )
+         {
+            dc->setFillColor(vuamber);
+            dc->drawRect(drawThis,kDrawFilled);
+            dc->setFillColor(vuamberNotch);
+            for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
+            {
+               auto notch = CRect(CPoint(pos,drawThis.top),CPoint(1,drawThis.getHeight()));
+               dc->drawRect( notch, kDrawFilled );
+            }
+            drawThis.right = ap;
+         }
+         dc->setFillColor( vugreen );
+
+         dc->drawRect( drawThis, kDrawFilled );
+         dc->setFillColor(vugreenNotch);
+         for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
+         {
+           auto notch = CRect(CPoint(pos,drawThis.top),CPoint(1,drawThis.getHeight()));
+           dc->drawRect( notch, kDrawFilled );
+         }
+      };
+
+      drawMultiNotchedBar(vuBarLeft);
+      if( stereo )
+      {
+         drawMultiNotchedBar(vuBarRight);
       }
    }
 
    dc->setFrameColor(skin->getColor(Colors::VuMeter::Background)); // the dark gray from original vector skin
    dc->setLineWidth(1);
-   dc->drawGraphicsPath(path, VSTGUI::CDrawContext::kPathStroked);
+   dc->drawGraphicsPath(borderRoundedRectPath, VSTGUI::CDrawContext::kPathStroked);
 
-   path->forget();
+   borderRoundedRectPath->forget();
    dc->setDrawMode(origMode);
 
    setDirty(false);
