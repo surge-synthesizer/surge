@@ -1200,45 +1200,55 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       if( timeEditMode == DRAW )
       {
-         inDrawDrag = true;
-         return kMouseEventHandled;
-      }
-      else
-      {
-         mouseDownOrigin = where;
-         lastPanZoomMousePos = where;
-         inDrag = true;
-         bool foundHZ = false;
-         for( auto &h : hotzones )
+         // Allow us to initiate drags on control points in draw mode
+         bool amOverControl = false;
+         for (auto& h : hotzones)
          {
-            if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+            if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE &&
+                h.zoneSubType == hotzone::SEGMENT_CONTROL)
             {
-               foundHZ = true;
-               cursorHideEnqueued = true;
-               cursorHideOrigin = where;
-               h.active = true;
-               h.dragging = true;
-               invalid();
-
-               /*
-                * Activate temporary snap. Note this is also handled similarly in
-                * onMouseMoved so if you change ctrl/alt here change it there too
-                */
-               bool c = buttons & kControl;
-               bool a = buttons & kAlt;
-               if( c || a  )
-               {
-                  snapGuard = std::make_shared<SnapGuard>(eds, this);
-                  if( c ) eds->hSnap = eds->hSnapDefault;
-                  if( a ) eds->vSnap = eds->vSnapDefault;
-               }
-               break;
+               amOverControl = true;
             }
          }
-
-         return kMouseEventHandled;
+         if( ! amOverControl )
+         {
+            inDrawDrag = true;
+            return kMouseEventHandled;
+         }
       }
 
+      mouseDownOrigin = where;
+      lastPanZoomMousePos = where;
+      inDrag = true;
+      bool foundHZ = false;
+      for( auto &h : hotzones )
+      {
+         if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
+         {
+            foundHZ = true;
+            cursorHideEnqueued = true;
+            cursorHideOrigin = where;
+            h.active = true;
+            h.dragging = true;
+            invalid();
+
+            /*
+             * Activate temporary snap. Note this is also handled similarly in
+             * onMouseMoved so if you change ctrl/alt here change it there too
+             */
+            bool c = buttons & kControl;
+            bool a = buttons & kAlt;
+            if( c || a  )
+            {
+               snapGuard = std::make_shared<SnapGuard>(eds, this);
+               if( c ) eds->hSnap = eds->hSnapDefault;
+               if( a ) eds->vSnap = eds->vSnapDefault;
+            }
+            break;
+         }
+      }
+
+      return kMouseEventHandled;
    }
 
    virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons ) override {
@@ -1273,7 +1283,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    }
    virtual bool magnify(CPoint& where, float amount) override
    {
-      std::cout << "MSEG EDITOR Magnify " << amount << std::endl;
+      zoom(where, amount, 0);
       return true;
    }
 
@@ -1769,8 +1779,19 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"), [this, stepCounts, i]()
                 {
                    Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
-                   this->zoomOutTo(i);    
+                   this->zoomOutTo(i);
                 });
+         }
+
+         createMenu->addSeparator();
+         for (int i : stepCounts)
+         {
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Lines On Sin"),
+                  [this, stepCounts, i] {
+                     Surge::MSEG::createSinLineMSEG(this->ms, i);
+                     this->zoomToFull();
+                     modelChanged();
+                  });
          }
 
          COptionMenu* settingsMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
@@ -1865,6 +1886,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          auto bd = std::max( ms->totalDuration, 1.f );
          auto longest = bd * 2;
+         if( longest > 128 ) longest = 128;
+         if( longest < 32 ) longest = 32;
          if( axisWidth > longest )
          {
             axisWidth = longest;

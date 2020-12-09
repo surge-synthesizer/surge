@@ -67,6 +67,7 @@ namespace Surge
       void createInitMSEG(MSEGStorage* ms);
       void createStepseqMSEG(MSEGStorage* ms, int numSegments);
       void createSawMSEG(MSEGStorage* ms, int numSegments, float curve);
+      void createSinLineMSEG(MSEGStorage* ms, int numSegments);
 
       void modifyEditMode( MSEGStorage* ms, MSEGStorage::EditMode mode );
    }

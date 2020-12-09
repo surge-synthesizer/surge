@@ -725,8 +725,19 @@ void extendTo( MSEGStorage* ms, float t, float nv ) {
 
    nv = limit_range( nv, -1.f, 1.f );
 
-   // This will extend the loop end if it is on the last point; but we want that
+
+   // We want to keep the loop end at the same spot when we extend
+   bool fixupLoopEnd = false;
+   if( ms->loop_end < 0 || ms->loop_end == ms->n_activeSegments - 1 )
+     fixupLoopEnd = true;
+
    insertAtIndex( ms, ms->n_activeSegments );
+
+   if( fixupLoopEnd )
+   {
+      if( ms->n_activeSegments > 1 )
+         ms->loop_end = ms->n_activeSegments - 2;
+   }
 
    auto sn = ms->n_activeSegments - 1;
    ms->segments[sn].type = MSEGStorage::segment::LINEAR;
@@ -1024,6 +1035,22 @@ void createSawMSEG(MSEGStorage* ms, int numSegments, float curve)
    Surge::MSEG::rebuildCache(ms);
 }
 
+void createSinLineMSEG(MSEGStorage* ms, int numSegments)
+{
+   float dp = 2.0 * M_PI / numSegments;
+   float dt = 1.0 / numSegments;
+   ms->n_activeSegments = numSegments;
+   for( int i=0; i<numSegments; ++i )
+   {
+      ms->segments[i].duration = dt;
+      ms->segments[i].v0 = sin(i * dp );
+      ms->segments[i].nv1 = sin( ( i + 1 ) * dp );
+      ms->segments[i].cpduration = 0.5;
+      ms->segments[i].cpv = 0.0;
+      ms->segments[i].type = MSEGStorage::segment::LINEAR;
+   }
+   Surge::MSEG::rebuildCache(ms);
+}
 
 void modifyEditMode(MSEGStorage* ms, MSEGStorage::EditMode em )
 {
