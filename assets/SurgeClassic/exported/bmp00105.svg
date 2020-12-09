@@ -27,14 +27,14 @@
 <path d="M17 85L17 84L31 84L31 85L17 85Z" fill="#9DAADD"/>
 <path d="M17 141L17 140L31 140L31 141L17 141Z" fill="#9DAADD"/>
 <path d="M24 80L24 145" stroke="#9DAADD" stroke-width="2"/>
-<path d="M25 198L25 160L31 160L25 198Z" fill="#D0D6ED"/>
-<path d="M17 160L17 159L31 159L31 160L17 160Z" fill="#9DAADD"/>
-<path d="M17 199L17 198L31 198L31 199L17 199Z" fill="#9DAADD"/>
-<path d="M24 155L24 203" stroke="#9DAADD" stroke-width="2"/>
-<path d="M25 273L25 235L31 235L25 273Z" fill="#D0D6ED"/>
-<path d="M17 235L17 234L31 234L31 235L17 235Z" fill="#9DAADD"/>
-<path d="M17 274L17 273L31 273L31 274L17 274Z" fill="#9DAADD"/>
-<path d="M24 230L24 278" stroke="#9DAADD" stroke-width="2"/>
+<path d="M25 198L25 160L31 160L25 198Z" fill="#8795CA"/>
+<path d="M17 160L17 159L31 159L31 160L17 160Z" fill="#5E72BA"/>
+<path d="M17 199L17 198L31 198L31 199L17 199Z" fill="#5E72BA"/>
+<path d="M24 155L24 203" stroke="#5E72BA" stroke-width="2"/>
+<path d="M25 273L25 235L31 235L25 273Z" fill="#8795CA"/>
+<path d="M17 235L17 234L31 234L31 235L17 235Z" fill="#5E72BA"/>
+<path d="M17 274L17 273L31 273L31 274L17 274Z" fill="#5E72BA"/>
+<path d="M24 230L24 278" stroke="#5E72BA" stroke-width="2"/>
 <path d="M41 65L41 10L47 10L41 65Z" fill="#2E86FE"/>
 <path d="M33 10L33 9L47 9L47 10L33 10Z" fill="#74AEFE"/>
 <path d="M33 66L33 65L47 65L47 66L33 66Z" fill="#74AEFE"/>
