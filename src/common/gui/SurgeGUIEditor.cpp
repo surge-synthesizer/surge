@@ -317,7 +317,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
    vu[15] = 0;
    lfodisplay = 0;
    fxmenu = 0;
-   for( int i=0; i<8; ++i )
+   for (int i = 0; i < n_fx_slots; ++i)
    {
       selectedFX[i] = -1;
       fxPresetName[i] = "";
@@ -601,7 +601,7 @@ void SurgeGUIEditor::idle()
 #if TARGET_AUDIOUNIT
         synth-> getParent()->setPresetByID(synth->patchid);
 #endif
-        for( int i=0; i<8; ++i )
+        for (int i = 0; i < n_fx_slots; ++i)
         {
            fxPresetName[i] = "";
         }
@@ -645,7 +645,7 @@ void SurgeGUIEditor::idle()
       if (vuInvalid)
          vu[0]->invalid();
 
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          assert(i + 1 < Effect::KNumVuSlots);
          if (vu[i + 1] && synth->fx[current_fx])
@@ -668,7 +668,7 @@ void SurgeGUIEditor::idle()
          }
       }
 
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          if (synth->refresh_ctrl_queue[i] >= 0)
          {
@@ -1268,7 +1268,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    {
       auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
       CRect fxRect = CRect( CPoint( fxpp->x, fxpp->y ), CPoint( 123, 13 ) );
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          int t = synth->fx[current_fx]->vu_type(i);
          if (t)
@@ -1444,7 +1444,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
          CEffectSettings* fc = new CEffectSettings(skinCtrl->getRect(), this, tag_fx_select, current_fx, bitmapStore);
          fc->setSkin(currentSkin, bitmapStore);
          ccfxconf = fc;
-         for (int i = 0; i < 8; i++)
+         for (int i = 0; i < n_fx_slots; i++)
          {
             fc->set_type(i, synth->storage.getPatch().fx[i].type.val.i);
          }

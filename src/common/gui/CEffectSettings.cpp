@@ -43,7 +43,7 @@ void CEffectSettings::draw(CDrawContext* dc)
    }
    if (labels)
    {
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          CRect r(0, 0, 17, 9);
          r.offset(size.left, size.top);
@@ -106,7 +106,7 @@ CMouseEventResult CEffectSettings::onMouseDown(CPoint& where, const CButtonState
 
    mouseActionMode = click;
    dragStart = where;
-   for (int i = 0; i < 8; i++)
+   for (int i = 0; i < n_fx_slots; i++)
    {
       CRect size = getViewSize();
       CRect r(0, 0, 17, 9);
@@ -126,7 +126,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint& where, const CButtonState& 
    if( mouseActionMode == drag )
    {
       int droppedOn = -1;
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          CRect size = getViewSize();
          CRect r(0, 0, 17, 9);
@@ -160,7 +160,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint& where, const CButtonState& 
       if( ! ( ( buttons.getButtonState() & kLButton ) || ( buttons.getButtonState() & kRButton ) ) )
          return kMouseEventHandled;
 
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < n_fx_slots; i++)
       {
          CRect size = getViewSize();
          CRect r(0, 0, 17, 9);
