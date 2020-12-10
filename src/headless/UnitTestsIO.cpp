@@ -592,10 +592,10 @@ TEST_CASE( "Patch Version Builder", "[io]")
    }
 #endif
 
-   SECTION( "Test all SV14 Filters" )
+   auto p14 = string_to_path( "test-data/patches/all-filters/s14" );
+   for( auto ent : fs::directory_iterator(p14))
    {
-      auto p = string_to_path( "test-data/patches/all-filters/s14" );
-      for( auto ent : fs::directory_iterator(p))
+      DYNAMIC_SECTION( "Test SV14 Filter " << path_to_string(ent) )
       {
          auto surge = Surge::Headless::createSurge(44100);
          surge->loadPatchByPath( path_to_string(ent).c_str(), -1, "TEST" );
@@ -699,12 +699,12 @@ TEST_CASE( "Patch Version Builder", "[io]")
    }
 
 
-   SECTION( "Test all SV15 Filters" )
+   auto p15 = string_to_path( "test-data/patches/all-filters/s15" );
+   for( auto ent : fs::directory_iterator(p15))
    {
-      REQUIRE( ff_revision >= 15 );
-      auto p = string_to_path( "test-data/patches/all-filters/s15" );
-      for( auto ent : fs::directory_iterator(p))
+      DYNAMIC_SECTION( "Test SV15 Filters " << path_to_string(ent) )
       {
+         REQUIRE( ff_revision >= 15 );
          auto surge = Surge::Headless::createSurge(44100);
          surge->loadPatchByPath( path_to_string(ent).c_str(), -1, "TEST" );
          surge->process();
