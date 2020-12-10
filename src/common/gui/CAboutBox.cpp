@@ -232,7 +232,11 @@ CAboutBox::CAboutBox(const CRect& size,
    yp = 95;
    addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 500);
    yp = 110;
-   addLabel("Sallen-Key and Diode Ladder filters by TheWaveWarden, licensed under GNU GPL v3 license", 500);
+   addLabel("Sallen-Key and Diode Ladder filters by Will Pirkle (implementation by TheWaveWarden), licensed under GNU GPL v3 license", 550);
+   yp = 125;
+   addLabel("Non-linear Feedback and Non-linear States filters by Jatin Chowdhury, licensed under GNU GPL v3 license", 500);
+   yp = 140;
+   addLabel("OJD waveshaper by Janos Buttgereit, licensed under GNU GPL v3 license", 500);
 }
 
 CMouseEventResult CAboutBox::onMouseDown(CPoint& where, const CButtonState& buttons)
