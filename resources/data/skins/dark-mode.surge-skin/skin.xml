@@ -139,13 +139,13 @@
     <color id="vumeter.background" value="bordergray"/>
     <color id="vumeter.border" value="darkergray"/>
     <color id="vumeter.level.low" value="surgeblue"/>
-    <color id="vumeter.level.low.notch" value="surgeblue"/>
+    <color id="vumeter.level.low.notch" value="darkergray"/>
     <color id="vumeter.level.mid" value="surgeorange"/>
-    <color id="vumeter.level.mid.notch" value="surgeorange"/>
+    <color id="vumeter.level.mid.notch" value="darkergray"/>
     <color id="vumeter.level.high" value="red"/>
-    <color id="vumeter.level.high.notch" value="red"/>
+    <color id="vumeter.level.high.notch" value="darkergray"/>
     <color id="vumeter.level.gr" value="surgeorange"/>
-    <color id="vumeter.level.gr.notch" value="surgeorange"/>
+    <color id="vumeter.level.gr.notch" value="darkergray"/>
 
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
     <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
