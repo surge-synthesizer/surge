@@ -38,20 +38,20 @@ namespace VintageLadder
       ** 
       ** Useful references:
       ** 
-      **  Tim Stilson
+      ** Tim Stilson
       ** "Analyzing the Moog VCF with Considerations for Digital Implementation"
-		** Sections 1 and 2 are a reasonably good introduction but the 
-		** model they use is highly idealized.
+      ** Sections 1 and 2 are a reasonably good introduction but the 
+      ** model they use is highly idealized.
       **
       ** Timothy E. Stinchcombe
       ** "Analysis of the Moog Transistor Ladder and Derivative Filters"
-		** Long, but a very thorough description of how the filter works including
-      ** 		its nonlinearities
+      ** Long, but a very thorough description of how the filter works including
+      ** its nonlinearities
       **
-      **	Antti Huovilainen
+      ** Antti Huovilainen
       ** "Non-linear digital implementation of the moog ladder filter"
-		** Comes close to giving a differential equation for a reasonably realistic
-		** model of the filter
+      ** Comes close to giving a differential equation for a reasonably realistic
+      ** model of the filter
       ** 
       ** The differential equations are:
       **
@@ -87,8 +87,14 @@ namespace VintageLadder
       **
       */
 
-
-      enum rkm_coeffs { rkm_cutoff = 0, rkm_reso, rkm_gComp, n_rkcoeff };
+      enum rkm_coeffs
+      {
+         rkm_cutoff = 0,
+         rkm_reso,
+         rkm_gComp,
+      
+         n_rkcoeff,
+      };
 
       static constexpr int extraOversample = 4;
       static constexpr float extraOversampleInv = 0.25;
@@ -99,11 +105,11 @@ namespace VintageLadder
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, bool applyGainCompensation, SurgeStorage *storage )
       {
-         // COnsideration: Do we want tuning aware or not?
+         // Consideration: Do we want tuning aware or not?
          float lc[n_cm_coeffs];
          auto pitch = VintageLadder::Common::clampedFrequency( freq, storage );
          lc[rkm_cutoff] = pitch * 2.0 * M_PI;
-         lc[rkm_reso] = limit_range( reso, 0.f, 1.f ) * 4.5; // code says 0-10 is value but above 4 it is just out of tune self-oscillation
+         lc[rkm_reso] = limit_range( reso, 0.f, 1.f ) * 4.5; // code says 0-10 is value but above 4 or so it's just out of tune self-oscillation
          lc[rkm_gComp] = 0.0;
          if( applyGainCompensation )
             lc[rkm_gComp] = gainCompensation;
@@ -203,8 +209,12 @@ namespace VintageLadder
          windowFactors[1] = _mm_setzero_ps();
          windowFactors[2] = F(0.57315917 );
          windowFactors[3] = F(1);
-         for( int i=0; i< extraOversample; ++i )
+         
+         for (int i = 0; i < extraOversample; ++i)
+         {
             ov = A( ov, M( outputOS[i], windowFactors[i]) );
+         }
+
          return M( F( 1.5 ), ov );
       }
 
@@ -239,8 +249,22 @@ namespace VintageLadder
       ** http://www.synthmaker.co.uk/dokuwiki/doku.php?id=tutorials:oversampling
       */ 
 
-      enum huov_coeffs { h_cutoff = 0, h_res, h_fc, h_gComp, n_hcoeffs };
-      enum huov_regoffsets { h_stage = 0, h_stageTanh = 4, h_delay = 7 };
+      enum huov_coeffs
+      {
+         h_cutoff = 0,
+         h_res,
+         h_fc,
+         h_gComp,
+         
+         n_hcoeffs,
+      };
+
+      enum huov_regoffsets
+      {
+         h_stage = 0,
+         h_stageTanh = 4,
+         h_delay = 7,
+      };
 
       static constexpr int extraOversample = 2;
       static constexpr float extraOversampleInv = 0.5;
@@ -252,7 +276,7 @@ namespace VintageLadder
          auto cutoff = VintageLadder::Common::clampedFrequency( freq, storage );
          lC[h_cutoff] = cutoff;
 
-         // Heueristically at higher cutoffs the resonance becomes less stable. This is purely ear tuned at 49khz with noise input
+         // Heuristically, at higher cutoffs the resonance becomes less stable. This is purely ear tuned at 48kHz with noise input
          float co = std::max( cutoff - samplerate * 0.33333, 0.0 ) * 0.1 * dsamplerate_os_inv;
          float gctrim = applyGainCompensation ? 0.05 : 0.0;
 
@@ -305,7 +329,7 @@ namespace VintageLadder
             
             // double fcr = 1.8730 * fc3 + 0.4955 * fc2 - 0.6490 * fc + 0.9988;
             auto fcr = A( M( m18730, fc3 ), A( M( m04955, fc2 ), A( M( mneg06490, fc ), m09988 ) ) );
-            //auto acr = -3.9364 * fc2 + 1.8409 * fc + 0.9968;
+            // auto acr = -3.9364 * fc2 + 1.8409 * fc + 0.9968;
             auto acr = A( M( mneg39364, fc2 ), A( M( m18409, fc ), m09968 ) );
             
             // auto tune = (1.0 - exp(-((2 * M_PI) * f * fcr))) / thermal;
@@ -317,7 +341,7 @@ namespace VintageLadder
                f->C[k] = _mm_add_ps(f->C[k], _mm_mul_ps( dFac, f->dC[k]));
 
             
-				// float input = in - resQuad * delay[5]. Model as an impulse stream
+            // float input = in - resQuad * delay[5]. Model as an impulse stream
             // float input = in - resQuad * ( delay[5] - gComp * in ). Model as an impulse stream
             auto input = _mm_sub_ps( in,  _mm_mul_ps( resquad, S( f->R[h_delay + 5], M( f->C[h_gComp], in ) ) ) );
 
@@ -329,37 +353,40 @@ namespace VintageLadder
             f->R[h_delay + 0 ] = f->R[h_stage + 0 ];
             
             for (int k = 1; k < 4; k++) 
-				{
-					// input = stage[k-1];
+            {
+               // input = stage[k-1];
                input = f->R[h_stage + k - 1 ];
                
-					// stage[k] = delay[k] + tune * ((stageTanh[k-1] = tanh(input * thermal)) - (k != 3 ? stageTanh[k] : tanh(delay[k] * thermal)));
+               // stage[k] = delay[k] + tune * ((stageTanh[k-1] = tanh(input * thermal)) - (k != 3 ? stageTanh[k] : tanh(delay[k] * thermal)));
                f->R[h_stageTanh + k - 1 ] = Surge::DSP::fasttanhSSEclamped( M( input, thermal ) );
                f->R[h_stage + k ] = A( f->R[ h_delay + k ],
                                        M( tune, S(
                                              f->R[h_stageTanh + k - 1 ],
                                              ( k != 3 ? f->R[h_stageTanh + k ] : Surge::DSP::fasttanhSSEclamped( M( f->R[h_delay + k ], thermal ) ) )
                                              )
-                                          )
-                  );
+                                         )
+                                      );
 
-					// delay[k] = stage[k];
+               // delay[k] = stage[k];
                f->R[h_delay + k ] = f->R[h_stage + k];
-				}
-				// 0.5 sample delay for phase compensation
-				// delay[5] = (stage[3] + delay[4]) * 0.5;
+            }
+
+            // 0.5 sample delay for phase compensation
+            // delay[5] = (stage[3] + delay[4]) * 0.5;
             f->R[h_delay + 5] = M( _mm_set_ps1( 0.5 ), A( f->R[h_stage +3], f->R[h_delay + 4]) );
-				// delay[4] = stage[3];
-				f->R[h_delay +4] = f->R[h_stage +3];
+
+            // delay[4] = stage[3];
+            f->R[h_delay +4] = f->R[h_stage +3];
+
             outputOS[j] = f->R[h_delay + 5];
          }
 
          __m128 ov = _mm_setzero_ps();
 
          /*
-         ** OK this is a bit of a hack but... these are then lanczos factors
-         ** sinc( x ) sinc (x / 2 ) backwards only. Really we should do a proper little 
-         ** fir around the whole thing but this at least gives us a reconstruction with
+         ** OK this is a bit of a hack but... these are the Lanczos factors
+         ** sinc( x ) sinc (x / 2), only backwards. Really we should do a proper little 
+         ** FIR around the whole thing, but this at least gives us a reconstruction with
          ** some aliasing supression.
          **
          ** Not entirely valid but...
@@ -372,14 +399,18 @@ namespace VintageLadder
          windowFactors[1] = _mm_setzero_ps();
          windowFactors[2] = F(0.57315917 );
          windowFactors[3] = F(1);
-         for( int i=0; i<2 * extraOversample; ++i )
+
+         for (int i = 0; i < 2 * extraOversample; ++i)
+         {
             ov = A( ov, M( outputOS[i], windowFactors[i]) );
+         }
+
          return M( F( 1.5 ), ov );
 
 #undef M
 #undef A
 #undef S
-#undef F                            
+#undef F
       }
    }
 }
