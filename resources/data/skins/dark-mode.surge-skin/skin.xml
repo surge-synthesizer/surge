@@ -138,6 +138,8 @@
 
     <color id="vumeter.level" value="#0055B0"/>
     <color id="vumeter.level.notch" value="#002280"/>
+    <color id="vumeter.midlevel" value="#AAAAEE"/>
+    <color id="vumeter.midlevel.notch" value="#222277"/>
     <color id="vumeter.highlevel" value="red"/>
     <color id="vumeter.background" value="darkergray"/>
     <color id="vumeter.border" value="bordergray"/>
