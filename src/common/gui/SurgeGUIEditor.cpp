@@ -6691,6 +6691,10 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
       auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
       auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
 
+      auto pressbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundPressed);
+      auto pressbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderPressed);
+      auto pressbtntext = currentSkin->getColor(Colors::Dialog::Button::TextPressed);
+
       VSTGUI::CGradient::ColorStopMap csm;
       VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
       cg->addColorStop(0, btnbg);
@@ -6699,19 +6703,26 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
       VSTGUI::CGradient* hovcg = VSTGUI::CGradient::create(hovcsm);
       hovcg->addColorStop(0, hovbtnbg);
 
+      VSTGUI::CGradient::ColorStopMap presscsm;
+      VSTGUI::CGradient* presscg = VSTGUI::CGradient::create(presscsm);
+      presscg->addColorStop(0, pressbtnbg);
+
       csz.left = csz.right - buttonwidth;
       csz.inset(2, 3);
       csz.top--;
       csz.bottom += 1;
-      auto b = new CTextButton(csz, this, tag_editor_overlay_close, "X");
+      auto b = new CTextButtonWithHover(csz, this, tag_editor_overlay_close, "X");
       b->setVisible(true);
       b->setFont(btnFont);
       b->setGradient(cg);
       b->setFrameColor(btnborder);
       b->setTextColor(btntext);
-      b->setGradientHighlighted(hovcg);
-      b->setFrameColorHighlighted(hovbtnborder);
-      b->setTextColorHighlighted(hovbtntext);
+      b->setHoverGradient(hovcg);
+      b->setHoverFrameColor(hovbtnborder);
+      b->setHoverTextColor(hovbtntext);
+      b->setGradientHighlighted(presscg);
+      b->setFrameColorHighlighted(pressbtnborder);
+      b->setTextColorHighlighted(pressbtntext);
       b->setRoundRadius(CCoord(3.f));
       innerc->addView(b);
    }
