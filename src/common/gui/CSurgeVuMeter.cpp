@@ -87,7 +87,7 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
 
    CRect borderRoundedRectBox = componentSize;
    borderRoundedRectBox.inset(1, 1);
-   VSTGUI::CGraphicsPath* borderRoundedRectPath = dc->createRoundRectGraphicsPath(borderRoundedRectBox, 2);
+   VSTGUI::CGraphicsPath* borderRoundedRectPath = dc->createRoundRectGraphicsPath(borderRoundedRectBox, 1);
 
    dc->setFillColor(bgCol);
    dc->drawGraphicsPath(borderRoundedRectPath, VSTGUI::CDrawContext::kPathFilled);
