@@ -320,7 +320,7 @@ namespace Surge
          Connector status_zoom = Connector("controls.status.zoom", 0, 30, 31, 12, Connector::SWITCH, Connector::STATUS_ZOOM)
                    .withBackground(IDB_ZOOM_BUTTON).inParent("controls.status.panel");
 
-         Connector vu_meter = Connector("controls.vu_meter", 763, 14, 123, 13, Connector::VU_METER, Connector::MAIN_VU_METER);
+         Connector vu_meter = Connector("controls.vu_meter", 763, 15, 123, 13, Connector::VU_METER, Connector::MAIN_VU_METER);
 
          Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Connector::CUSTOM, Connector::MSEG_EDITOR_WINDOW);
 

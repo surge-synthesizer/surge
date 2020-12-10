@@ -334,13 +334,13 @@ namespace Colors
       const Surge::Skin::Color Background("vumeter.background", 205, 206, 212),
                                Border("vumeter.border", 0, 0, 0),
                                LowLevel("vumeter.level.low", 35, 181, 43),
-                               LowLevelNotch( "vumeter.level.low.notch", 2, 120, 8 ),
+                               LowLevelNotch( "vumeter.level.low.notch", 0, 0, 8 ),
                                MidLevel( "vumeter.level.mid", 220, 220, 33 ),
-                               MidLevelNotch( "vumeter.level.mid.notch", 100, 100, 8 ),
+                               MidLevelNotch( "vumeter.level.mid.notch", 0, 0, 8 ),
                                HighLevel("vumeter.level.high", 255, 0, 0),
-                               HighLevelNotch( "vumeter.level.high.notch", 150, 0, 0 ),
+                               HighLevelNotch( "vumeter.level.high.notch", 0, 0, 0 ),
                                GRLevel( "vumeter.level.gr", 255, 0, 0 ),
-                               GRLevelNotch( "vumeter.level.gr.notch", 150, 0, 0 );
+                               GRLevelNotch( "vumeter.level.gr.notch", 0, 0, 0 );
                                
    }
 }

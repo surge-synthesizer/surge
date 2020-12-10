@@ -16,7 +16,7 @@
     <color id="darkergray" value="#202020"/>
     <color id="surgeblue" value="#005CB6"/>
     <color id="surgebluetrans" value="#005CB680"/>
-    <color id="surgeorange" value="#ff9000"/>
+    <color id="surgeorange" value="#ff9300"/>
     <color id="buttonbg" value="#151515"/>
     <color id="modblue" value="#2E86FE"/>
 
@@ -136,16 +136,16 @@
     <color id="scene.keytrackroot.text" value="lightgray"/>
     <color id="scene.keytrackroot.text.hover" value="white"/>
 
-    <color id="vumeter.background" value="darkergray"/>
-    <color id="vumeter.border" value="bordergray"/>
+    <color id="vumeter.background" value="bordergray"/>
+    <color id="vumeter.border" value="darkergray"/>
     <color id="vumeter.level.low" value="surgeblue"/>
-    <color id="vumeter.level.low.notch" value="black"/>
-    <color id="vumeter.level.mid" value="white"/>
-    <color id="vumeter.level.mid.notch" value="black"/>
+    <color id="vumeter.level.low.notch" value="surgeblue"/>
+    <color id="vumeter.level.mid" value="surgeorange"/>
+    <color id="vumeter.level.mid.notch" value="surgeorange"/>
     <color id="vumeter.level.high" value="red"/>
-    <color id="vumeter.level.high.notch" value="black"/>
-    <color id="vumeter.level.gr" value="red"/>
-    <color id="vumeter.level.gr.notch" value="black"/>
+    <color id="vumeter.level.high.notch" value="red"/>
+    <color id="vumeter.level.gr" value="surgeorange"/>
+    <color id="vumeter.level.gr.notch" value="surgeorange"/>
 
     <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
     <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
