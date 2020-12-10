@@ -331,8 +331,8 @@ namespace Colors
 
    namespace VuMeter
    {
-      const Surge::Skin::Color Background("vumeter.background", 205, 206, 212),
-                               Border("vumeter.border", 21, 21, 21),
+      const Surge::Skin::Color Background("vumeter.background", 21, 21, 21),
+                               Border("vumeter.border", 205, 206, 212),
                                LowLevel("vumeter.level.low", 35, 201, 43),
                                LowLevelNotch( "vumeter.level.low.notch", 0, 50, 12 ),
                                MidLevel( "vumeter.level.mid", 220, 220, 33 ),

@@ -74,7 +74,7 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
 
    auto notchDistance = 2;
 
-   auto borderCol = skin->getColor(Colors::VuMeter::Border);
+   auto bgCol = skin->getColor(Colors::VuMeter::Background);
 
    CRect componentSize = getViewSize();
 
@@ -82,14 +82,14 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
    VSTGUI::CDrawMode newMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode );
    dc->setDrawMode(newMode);
 
-   dc->setFillColor(skin->getColor(Colors::VuMeter::Background));
+   dc->setFillColor(skin->getColor(Colors::VuMeter::Border));
    dc->drawRect(componentSize, VSTGUI::kDrawFilled);
 
    CRect borderRoundedRectBox = componentSize;
    borderRoundedRectBox.inset(1, 1);
    VSTGUI::CGraphicsPath* borderRoundedRectPath = dc->createRoundRectGraphicsPath(borderRoundedRectBox, 2);
 
-   dc->setFillColor(borderCol);
+   dc->setFillColor(bgCol);
    dc->drawGraphicsPath(borderRoundedRectPath, VSTGUI::CDrawContext::kPathFilled);
 
    CRect vuBarRegion(componentSize);
