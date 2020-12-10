@@ -106,11 +106,9 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
     * still not entirely sure why but there you go
     */
    int zerodb = (0.7937f * w);
-   /*
-    * but if we are doing that, make 3 the amber point
-    * 1/cuberoot(3) = .69336
-    */
-   int amberdb = (0.69336f * w);
+
+   // since the amber draws as a gradient start it at 2/3 of the zerodb
+   int amberdb = 0.66666 * zerodb;
 
    if (type == vut_gain_reduction)
    {
@@ -179,18 +177,37 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
             drawThis.right = zp;
 
          }
-         if( drawThis.right >= zp )
+         if( drawThis.right >= ap )
          {
-            dc->setFillColor(vuamber);
-            dc->drawRect(drawThis,kDrawFilled);
-            dc->setFillColor(vuamberNotch);
+            float dpx = 1.0 / ( zp - ap );
             for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
             {
-               auto notch = CRect(CPoint(pos,drawThis.top),CPoint(1,drawThis.getHeight()));
-               dc->drawRect( notch, kDrawFilled );
+               // a hand drawn gradient, but we need to gradient the notch markers so this calculation is
+               // kinda what we need.
+               if( pos + notchDistance > ap )
+               {
+                  auto r = CRect( CPoint( pos, drawThis.top), CPoint( notchDistance, drawThis.getHeight()));
+                  float frac = limit_range( (float)( pos - ap ) * dpx, 0.f, 1.f);
+                  auto c = VSTGUI::CColor(vugreen.red * (1-frac) + vuamber.red * ( frac ),
+                                          vugreen.green * (1-frac) + vuamber.green * ( frac ),
+                                          vugreen.blue * (1-frac) + vuamber.blue * ( frac )
+                  );
+                  dc->setFillColor(c);
+                  dc->drawRect(r, kDrawFilled);
+
+                  auto cN = VSTGUI::CColor(vugreenNotch.red * (1-frac) + vuamberNotch.red * ( frac ),
+                                          vugreenNotch.green * (1-frac) + vuamberNotch.green * ( frac ),
+                                          vugreenNotch.blue * (1-frac) + vuamberNotch.blue * ( frac )
+                  );
+                  dc->setFillColor(cN);
+                  auto notch = CRect(CPoint(pos,drawThis.top),CPoint(1,drawThis.getHeight()));
+                  dc->drawRect( notch, kDrawFilled );
+               }
             }
             drawThis.right = ap;
          }
+
+         // return;
          dc->setFillColor( vugreen );
 
          dc->drawRect( drawThis, kDrawFilled );
