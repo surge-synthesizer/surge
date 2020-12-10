@@ -155,6 +155,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       drawArea.left += axisSpaceX;
       return drawArea;
    }
+   // Stretch all the way to the bottom
+   inline CRect getHAxisDoubleClickArea() {
+      auto r = getHAxisArea();
+      auto v = getViewSize();
+      r.bottom = v.bottom;
+      return r;
+   }
    inline CRect getVAxisArea() {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
@@ -1023,6 +1030,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          if( h.type == hotzone::LOOPMARKER )
          {
+            if( h.rect.left < drawArea.left || h.rect.right > drawArea.right )
+               continue;
             // OK so we draw |< or >| depending
             if( h.active )
             {
@@ -1133,7 +1142,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       }
       if (buttons & kDoubleClick)
       {
-         auto ha = getHAxisArea();
+         auto ha = getHAxisDoubleClickArea();
          if( ha.pointInside( where ) )
          {
             zoomToFull();
@@ -1279,6 +1288,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       endCursorHide();
       cursorHideEnqueued = false;
 
+      return kMouseEventHandled;
+   }
+
+   CMouseEventResult onMouseExited(CPoint& where, const CButtonState& buttons) override
+   {
+      hoveredSegment = -1;
+      invalid();
       return kMouseEventHandled;
    }
    virtual bool magnify(CPoint& where, float amount) override
