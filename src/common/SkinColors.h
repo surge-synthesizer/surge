@@ -249,6 +249,9 @@ namespace Colors
 
    namespace VuMeter
    {
-      extern const Surge::Skin::Color Level, HighLevel, Border, Background;
+      extern const Surge::Skin::Color Level, LevelNotch,
+       MidLevel, MidLevelNotch,
+       HighLevel, HighLevelNotch,
+       GainReductionLevel, GainReductionLevelNotch, Border, Background;
    }
 }
