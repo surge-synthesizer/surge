@@ -668,7 +668,7 @@ void SurgeGUIEditor::idle()
          }
       }
 
-      for (int i = 0; i < n_fx_slots; i++)
+      for (int i = 0; i < 8; i++)
       {
          if (synth->refresh_ctrl_queue[i] >= 0)
          {
@@ -1268,7 +1268,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
    {
       auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
       CRect fxRect = CRect( CPoint( fxpp->x, fxpp->y ), CPoint( 123, 13 ) );
-      for (int i = 0; i < n_fx_slots; i++)
+      for (int i = 0; i < 15; i++)
       {
          int t = synth->fx[current_fx]->vu_type(i);
          if (t)
@@ -1282,7 +1282,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             frame->addView(vu[i + 1]);
          }
          else
+         {
             vu[i + 1] = 0;
+         }
 
          const char* label = synth->fx[current_fx]->group_label(i);
 
