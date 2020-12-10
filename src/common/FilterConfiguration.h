@@ -174,10 +174,10 @@ const char fut_menu_names[n_fu_types][32] =
         "K35", // LP
         "K35", // HP
         "Diode Ladder",
-        "NL Feedback", // LP
-        "NL Feedback", // HP
-        "NL Feedback", // N
-        "NL Feedback", // BP
+        "Non-linear Feedback", // LP
+        "Non-linear Feedback", // HP
+        "Non-linear Feedback", // N
+        "Non-linear Feedback", // BP
         "OB-Xd 12 dB", // HP
         "OB-Xd 12 dB", // N
         "OB-Xd 12 dB", // BP
@@ -185,12 +185,12 @@ const char fut_menu_names[n_fu_types][32] =
         "24 dB", // N
         "Comb -",
         "Allpass",
-        "NL Feedback Allpass",
-        "NL States", // LP
-        "NL States", // HP
-        "NL States", // N
-        "NL States", // BP
-        "NL States Allpass",
+        "Non-linear Feedback Allpass",
+        "Non-linear States", // LP
+        "Non-linear States", // HP
+        "Non-linear States", // N
+        "Non-linear States", // BP
+        "Non-linear States Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
          0123456789012345678901234567890
         */
@@ -271,18 +271,18 @@ const float fut_k35_saturations[5] =
 
 const char fut_nlf_subtypes[4][32] =
     {
-        "1 stage",
-        "2 stages",
-        "3 stages",
-        "4 stages",
+        "1 Stage",
+        "2 Stages",
+        "3 Stages",
+        "4 Stages",
     };
 
-const char fut_nlf_saturators[4][6] =
+const char fut_nlf_saturators[4][16] =
     {
         "tanh",
-        "soft",
+        "Soft Clip",
         "OJD",
-        "sine",
+        "Sine",
     };
 
 const int fut_subcount[n_fu_types] =
@@ -303,10 +303,10 @@ const int fut_subcount[n_fu_types] =
         5,  // fut_k35_lp
         5,  // fut_k35_hp
         4,  // fut_diode
-        16, // fut_nonlinearfb_lp
-        16, // fut_nonlinearfb_hp
-        16, // fut_nonlinearfb_n
-        16, // fut_nonlinearfb_bp
+        12, // fut_nonlinearfb_lp
+        12, // fut_nonlinearfb_hp
+        12, // fut_nonlinearfb_n
+        12, // fut_nonlinearfb_bp
         2,  // fut_obxd_2pole_hp,
         2,  // fut_obxd_2pole_n,
         2,  // fut_obxd_2pole_bp,
@@ -314,7 +314,7 @@ const int fut_subcount[n_fu_types] =
         2,  // fut_notch24,
         2,  // fut_comb_neg,
         0,  // fut_apf
-        16, // fut_nonlinearfb_ap
+        12, // fut_nonlinearfb_ap
         8, // fut_nonlinearst_lp
         8, // fut_nonlinearst_hp
         8, // fut_nonlinearst_n
