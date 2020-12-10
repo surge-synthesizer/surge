@@ -47,8 +47,6 @@ void CSurgeVuMeter::setType(int vutype)
    }
 }
 
-// void setSecondaryValue(float v);
-
 void CSurgeVuMeter::setValueR(float f)
 {
    if (f != valueR)
@@ -60,17 +58,19 @@ void CSurgeVuMeter::setValueR(float f)
 
 void CSurgeVuMeter::draw(CDrawContext* dc)
 {
-   auto vugreen = skin->getColor(Colors::VuMeter::LowLevel);
-   auto vugreenNotch = skin->getColor(Colors::VuMeter::LowLevelNotch);
+   auto vulow = skin->getColor(Colors::VuMeter::LowLevel);
+   auto vulowNotch = skin->getColor(Colors::VuMeter::LowLevelNotch);
 
-   auto vuamber = skin->getColor(Colors::VuMeter::MidLevel);
-   auto vuamberNotch = skin->getColor(Colors::VuMeter::MidLevelNotch);
+   auto vumid = skin->getColor(Colors::VuMeter::MidLevel);
+   auto vumidNotch = skin->getColor(Colors::VuMeter::MidLevelNotch);
 
-   auto vured = skin->getColor(Colors::VuMeter::HighLevel);
-   auto vuredNotch = skin->getColor(Colors::VuMeter::HighLevelNotch);
+   auto vuhigh = skin->getColor(Colors::VuMeter::HighLevel);
+   auto vuhighNotch = skin->getColor(Colors::VuMeter::HighLevelNotch);
 
    auto vugr = skin->getColor(Colors::VuMeter::GRLevel);
    auto vugrNotch = skin->getColor(Colors::VuMeter::GRLevelNotch);
+
+   auto isNotched = (vulow != vulowNotch);
 
    auto notchDistance = 2;
 
@@ -93,51 +93,65 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
    dc->drawGraphicsPath(borderRoundedRectPath, VSTGUI::CDrawContext::kPathFilled);
 
    CRect vuBarRegion(componentSize);
-   vuBarRegion.inset(2, 3);
-   vuBarRegion.top -= 0.5;
-   vuBarRegion.top -= 0.5;
+
+   if (stereo)
+   {
+      vuBarRegion.inset(3, 3);
+   }
+   else
+   {
+      vuBarRegion.inset(3, 2);
+   }
+   vuBarRegion.bottom -= 1;
 
    float w = vuBarRegion.getWidth();
    /*
     * Where does this constant come from?
     * Well in 'scale' we map x -> x^3 to compress the range
     * cuberoot(2) = 1.26 and change
-    * 1 / cuberoot(2) = 0.793
+    * 1 / cuberoot(2) = 0.7937
     * so this scales it so the zerodb point is 1/cuberoot(2) along
-    * still not entirely sure why but there you go
+    * still not entirely sure why, but there you go
     */
    int zerodb = (0.7937f * w);
 
-   // since the amber draws as a gradient start it at half of the zerodb
-   int amberdb = 0.5 * zerodb;
+   // since the mid levels draw as a gradient, start it earlier
+   int midleveldb = zerodb * 0.25;
 
    if (type == vut_gain_reduction)
    {
       // OK we need to draw from zerodb to the value
       int yMargin = 1;
-      auto zeroDbPoint = CPoint( vuBarRegion.left + zerodb, vuBarRegion.top + yMargin );
-      auto displayRect = CRect( zeroDbPoint, CPoint( (scale(value) * w) - zerodb, vuBarRegion.getHeight() - yMargin ));
+      auto startingFromPoint = CPoint( vuBarRegion.right, vuBarRegion.top + yMargin );
+      auto displayRect = CRect(startingFromPoint,
+                               CPoint((scale(value) * (w - 1)) - zerodb, vuBarRegion.getHeight() - yMargin));
+                                                      // this -1 somehow aligns the right edge of GR meter nicely with regular meter's right edge
+                                                      // there's probably a better way but I don't know it
 
       dc->setFillColor(vugr);
       dc->drawRect( displayRect, kDrawFilled);
 
       // Draw over the notches
-      auto start = displayRect.left;
-      auto end = displayRect.right;
-      if( displayRect.getWidth() < 0 )
+      if (isNotched)
       {
-         auto notches = ceil( displayRect.getWidth() / notchDistance );
-         start = start + notches * notchDistance;
-         end = displayRect.left;
+         auto start = displayRect.left;
+         auto end = displayRect.right;
+   
+         if( displayRect.getWidth() < 0 )
+         {
+            auto notches = ceil( displayRect.getWidth() / notchDistance );
+            start = start + notches * notchDistance;
+            end = displayRect.left;
+         }
+   
+         dc->setFillColor(vugrNotch);
+   
+         for( auto pos = start; pos <= end; pos += notchDistance )
+         {
+            auto notch = CRect(CPoint(pos, displayRect.top),CPoint(1, displayRect.getHeight()));
+            dc->drawRect( notch, kDrawFilled );
+         }
       }
-
-      dc->setFillColor(vugrNotch);
-      for( auto pos = start; pos <= end; pos += notchDistance )
-      {
-         auto notch = CRect(CPoint(pos, displayRect.top),CPoint(1, displayRect.getHeight()));
-         dc->drawRect( notch, kDrawFilled );
-      }
-
    }
    else
    {
@@ -149,6 +163,7 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
       if (stereo)
       {
          auto center = vuBarLeft.top + vuBarLeft.getHeight() / 2;
+
          vuBarLeft.bottom = center;
          vuBarRight.top = center;
          vuBarRight.offset(0, 1); // jog down one pixel to make a gap
@@ -159,18 +174,30 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
       {
          auto drawThis = targetBar;
          auto zp = vuBarLeft.left + zerodb;
-         auto ap = vuBarLeft.left + amberdb;
-         if( drawThis.right > zp )
-         {
-            dc->setFillColor(vured);
-            dc->drawRect(drawThis,kDrawFilled);
-            dc->setFillColor(vuredNotch);
+         auto ap = vuBarLeft.left + midleveldb;
 
-            for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
+         if (drawThis.right > zp)
+         {
+            auto highArea = drawThis;
+            highArea.left = zp;
+
+            dc->setFillColor(vuhigh);
+            dc->drawRect(highArea, kDrawFilled);
+
+            if (isNotched)
             {
-               auto notch = CRect(CPoint(pos, drawThis.top),CPoint(1, drawThis.getHeight()));
-               dc->drawRect( notch, kDrawFilled );
+               dc->setFillColor(vuhighNotch);
+               
+               for (auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance)
+               {
+                  if (pos >= zp)
+                  {
+                     auto notch = CRect(CPoint(pos, drawThis.top), CPoint(1, drawThis.getHeight()));
+                     dc->drawRect(notch, kDrawFilled);
+                  }
+               }
             }
+
             drawThis.right = zp;
          }
 
@@ -180,40 +207,49 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
 
             for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
             {
-               // a hand drawn gradient, but we need to gradient the notch markers so this calculation is
-               // kinda what we need.
+               // a hand-drawn gradient, but we need to gradient the notch markers so this calculation is kinda what we need
                if( pos + notchDistance > ap )
                {
                   auto r = CRect( CPoint( pos, drawThis.top), CPoint( notchDistance, drawThis.getHeight()));
                   float frac = limit_range( (float)( pos - ap ) * dpx, 0.f, 1.f);
-                  auto c = VSTGUI::CColor(vugreen.red * (1 - frac) + vuamber.red * ( frac ),
-                                          vugreen.green * (1 - frac) + vuamber.green * ( frac ),
-                                          vugreen.blue * (1 - frac) + vuamber.blue * ( frac )
+                  auto c = VSTGUI::CColor(vulow.red * (1 - frac) + vumid.red * ( frac ),
+                                          vulow.green * (1 - frac) + vumid.green * ( frac ),
+                                          vulow.blue * (1 - frac) + vumid.blue * ( frac )
                   );
+
                   dc->setFillColor(c);
                   dc->drawRect(r, kDrawFilled);
 
-                  auto cN = VSTGUI::CColor(vugreenNotch.red * (1 - frac) + vuamberNotch.red * ( frac ),
-                                          vugreenNotch.green * (1 - frac) + vuamberNotch.green * ( frac ),
-                                          vugreenNotch.blue * (1 - frac) + vuamberNotch.blue * ( frac )
-                  );
-                  dc->setFillColor(cN);
-                  auto notch = CRect(CPoint(pos, drawThis.top),CPoint(1, drawThis.getHeight()));
-                  dc->drawRect( notch, kDrawFilled );
+                  if (isNotched)
+                  {
+                     auto cN = VSTGUI::CColor(vulowNotch.red * (1 - frac) + vumidNotch.red * ( frac ),
+                                             vulowNotch.green * (1 - frac) + vumidNotch.green * ( frac ),
+                                             vulowNotch.blue * (1 - frac) + vumidNotch.blue * ( frac )
+                     );
+                     
+                     dc->setFillColor(cN);
+                     
+                     auto notch = CRect(CPoint(pos, drawThis.top),CPoint(1, drawThis.getHeight()));
+                     dc->drawRect( notch, kDrawFilled );
+                  }
                }
             }
+
             drawThis.right = ap;
          }
 
-         // return;
-         dc->setFillColor( vugreen );
-
+         dc->setFillColor( vulow );
          dc->drawRect( drawThis, kDrawFilled );
-         dc->setFillColor(vugreenNotch);
-         for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
+
+         if (isNotched)
          {
-           auto notch = CRect(CPoint(pos, drawThis.top),CPoint(1, drawThis.getHeight()));
-           dc->drawRect( notch, kDrawFilled );
+            dc->setFillColor(vulowNotch);
+            
+            for( auto pos = drawThis.left; pos <= drawThis.right; pos += notchDistance )
+            {
+              auto notch = CRect(CPoint(pos, drawThis.top),CPoint(1, drawThis.getHeight()));
+              dc->drawRect( notch, kDrawFilled );
+            }
          }
       };
 
@@ -224,7 +260,7 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
       }
    }
 
-   dc->setFrameColor(skin->getColor(Colors::VuMeter::Background)); // the dark gray from original vector skin
+   dc->setFrameColor(skin->getColor(Colors::VuMeter::Background));
    dc->setLineWidth(1);
    dc->drawGraphicsPath(borderRoundedRectPath, VSTGUI::CDrawContext::kPathStroked);
 
