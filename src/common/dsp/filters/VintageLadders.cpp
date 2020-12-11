@@ -13,9 +13,9 @@
 ** https://github.com/ddiakopoulos/MoogLadders/blob/master/src/RKSimulationModel.h
 **
 ** Modifications include
-** 1. Modifying to make surge compatible with state mamagenemt
-** 2. SSe and so on
-** 3. Model specici changes per model
+** 1. Modifying to make Surge compatible with state mamagenemt
+** 2. SSE and so on
+** 3. Model specific changes
 */
 
 namespace VintageLadder
