@@ -266,9 +266,6 @@ namespace VintageLadder
          h_delay = 7,
       };
 
-      static constexpr int extraOversample = 2;
-      static constexpr float extraOversampleInv = 0.5;
-
       float gainCompensation = 0.5;
       
       void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso,  bool applyGainCompensation, SurgeStorage *storage ) {
@@ -283,7 +280,7 @@ namespace VintageLadder
          reso = limit_range( limit_range( reso, 0.0f, 0.9925f ), 0.0f, 0.994f - co - gctrim );
          lC[h_res] = reso;
          
-         double fc =  cutoff * dsamplerate_os_inv * extraOversampleInv;
+         double fc =  cutoff * dsamplerate_os_inv;
          lC[h_fc] = fc;
 
          lC[h_gComp] = 0.0;
@@ -300,7 +297,7 @@ namespace VintageLadder
 #define A(a,b) _mm_add_ps( a, b )
 #define S(a,b) _mm_sub_ps( a, b )
          
-         static const __m128 dFac = M( F( 0.5 ), F( extraOversampleInv ) ),
+         static const __m128 dFac = F( 0.5 ),
             half = F(0.5),
             one = F(1.0),
             four = F(4.0),
@@ -316,8 +313,8 @@ namespace VintageLadder
             neg2pi = F( -2.0 * M_PI );
 
 
-         __m128 outputOS[ 2 * extraOversample ];
-         for( int j=0; j<2 * extraOversample; ++j )
+         __m128 outputOS[ 2 ];
+         for( int j=0; j<2; ++j )
          {
 
             auto fc = f->C[h_fc];
@@ -345,8 +342,6 @@ namespace VintageLadder
             // float input = in - resQuad * ( delay[5] - gComp * in ). Model as an impulse stream
             auto input = _mm_sub_ps( in,  _mm_mul_ps( resquad, S( f->R[h_delay + 5], M( f->C[h_gComp], in ) ) ) );
 
-            // single sample in
-            in = _mm_setzero_ps();
 
             // delay[0] = stage[0] = delay[0] + tune * (tanh(input * thermal) - stageTanh[0]);
             f->R[h_stage + 0] = A( f->R[h_delay + 0], M( tune, S( Surge::DSP::fasttanhSSEclamped( M( input, thermal ) ), f->R[h_stageTanh + 0] ) ) );
@@ -381,32 +376,7 @@ namespace VintageLadder
             outputOS[j] = f->R[h_delay + 5];
          }
 
-         __m128 ov = _mm_setzero_ps();
-
-         /*
-         ** OK this is a bit of a hack but... these are the Lanczos factors
-         ** sinc( x ) sinc (x / 2), only backwards. Really we should do a proper little 
-         ** FIR around the whole thing, but this at least gives us a reconstruction with
-         ** some aliasing supression.
-         **
-         ** Not entirely valid but...
-         **
-         ** Anyway 2 sin( pi x ) sin ( pi x / 2 ) / ( pi^2 x^2 ) for points -1.5, -1, 0.5, and 0.
-         **
-         */ 
-         __m128 windowFactors[4];
-         windowFactors[0] = F(-0.0636844 );
-         windowFactors[1] = _mm_setzero_ps();
-         windowFactors[2] = F(0.57315917 );
-         windowFactors[3] = F(1);
-
-         for (int i = 0; i < 2 * extraOversample; ++i)
-         {
-            ov = A( ov, M( outputOS[i], windowFactors[i]) );
-         }
-
-         return M( F( 1.5 ), ov );
-
+         return outputOS[1];
 #undef M
 #undef A
 #undef S
