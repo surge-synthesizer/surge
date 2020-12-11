@@ -83,7 +83,7 @@ SurgePatch::SurgePatch(SurgeStorage* storage)
    splitpoint.val.i = 60;
    volume.val.f = 0;
 
-   for (int fx = 0; fx < 8; fx++)
+   for (int fx = 0; fx < n_fx_slots; fx++)
    {
       param_ptr.push_back(this->fx[fx].type.assign(p_id.next(), 0, "type", "FX Type", ct_fxtype,
                                                    Surge::Skin::FX::fx_type,
@@ -782,7 +782,7 @@ void SurgePatch::update_controls(bool init,
 
    if( from_streaming )
    {
-       for( int i=0; i<8; ++i )
+      for (int i = 0; i < n_fx_slots; ++i)
        {
            if(fx[i].type.val.i != fxt_off)
            {
