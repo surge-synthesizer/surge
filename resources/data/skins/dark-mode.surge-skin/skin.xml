@@ -91,6 +91,7 @@
     <color id="dialog.button.hover.border" value="black"/>
     <color id="dialog.button.hover.text" value="white"/>
 
+    <color id="dialog.button.pressed.background" value="surgeorange"/>
     <color id="dialog.button.pressed.border" value="black"/>
     <color id="dialog.button.pressed.text" value="black"/>
 
