@@ -232,10 +232,10 @@ const char fut_ldr_subtypes[4][32] =
 
 const char fut_vintageladder_subtypes[6][32] =
     {
-        "Strong",
-        "Strong Compensated",
-        "Dampened",
-        "Dampened Compensated",
+        "Type 1",
+        "Type 1 Compensated",
+        "Type 2",
+        "Type 2 Compensated",
     };
 
 const char fut_obxd_2p_subtypes[2][32] =
