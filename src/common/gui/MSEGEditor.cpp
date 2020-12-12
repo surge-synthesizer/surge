@@ -85,6 +85,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       this->axisWidth = std::max( 1.f, ms->totalDuration );
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_NODES );
+      loopMarkerBmp = b->getBitmap( IDB_MSEG_LOOP_MARKERS );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
       setMouseableArea(getViewSize());
    };
@@ -263,7 +264,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       auto drawArea = getDrawArea();
       
-      int handleRadius = 6;
+      auto handleRadius = 6.5;
 
       float maxt = drawDuration();
       float tscale = 1.f * drawArea.getWidth() / maxt;
@@ -1032,62 +1033,86 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             if( h.rect.left < drawArea.left || h.rect.right > drawArea.right )
                continue;
-            // OK so we draw |< or >| depending
-            if( h.active )
-            {
-               dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker)); // not we just hover the outline
-               dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerHover));
-            }
-            else
-            {
-               dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
-               dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
-            }
-            dc->setLineWidth(1);
-            dc->setLineStyle(kLineSolid);
-            if( h.zoneSubType == hotzone::LOOP_START )
-            {
-               // line on left side arrow pointing over
-               dc->drawLine(h.rect.getTopLeft(), h.rect.getBottomLeft());
-               CDrawContext::PointList l;
-               l.push_back( h.rect.getTopRight());
-               l.push_back( h.rect.getBottomRight());
-               l.push_back( CPoint( h.rect.left, ( h.rect.top + h.rect.bottom ) * 0.5 ));
-               l.push_back( h.rect.getTopRight());
-               dc->drawPolygon(l, kDrawFilledAndStroked);
-            }
-            else
-            {
-               dc->drawLine(h.rect.getTopRight(), h.rect.getBottomRight());
-               CDrawContext::PointList l;
-               l.push_back( h.rect.getTopLeft());
-               l.push_back( h.rect.getBottomLeft());
-               l.push_back( CPoint( h.rect.right, ( h.rect.top + h.rect.bottom ) * 0.5 ));
-               l.push_back( h.rect.getTopLeft() );
-               dc->drawPolygon(l, kDrawFilledAndStroked);
 
+            int sz = 10;
+            int offx = 0, offy = 0;
+
+            if (h.active || h.dragging)
+               offy = 1;
+
+            if (h.zoneSubType == hotzone::LOOP_END)
+               offx = 1;
+
+            if (loopMarkerBmp)
+            {
+               auto r = h.rect;
+
+               if (h.useDrawRect)
+                  r = h.drawRect;
+
+               int cx = r.getCenter().x;
+
+               if (cx >= drawArea.left && cx <= drawArea.right)
+                  loopMarkerBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
             }
+            else
+            {
+               // OK so we draw |< or >| if the skin doesn't have bmp00308
+               if( h.active )
+               {
+                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker)); // now we just hover the outline
+                  dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerHover));
+               }
+               else
+               {
+                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
+                  dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
+               }
+
+               dc->setLineWidth(1);
+               dc->setLineStyle(kLineSolid);
+
+               if( h.zoneSubType == hotzone::LOOP_START )
+               {
+                  // line on left side arrow pointing over
+                  dc->drawLine(h.rect.getTopLeft(), h.rect.getBottomLeft());
+                  CDrawContext::PointList l;
+                  l.push_back( h.rect.getTopRight());
+                  l.push_back( h.rect.getBottomRight());
+                  l.push_back( CPoint( h.rect.left, ( h.rect.top + h.rect.bottom ) * 0.5 ));
+                  l.push_back( h.rect.getTopRight());
+                  dc->drawPolygon(l, kDrawFilledAndStroked);
+               }
+               else
+               {
+                  dc->drawLine(h.rect.getTopRight(), h.rect.getBottomRight());
+                  CDrawContext::PointList l;
+                  l.push_back( h.rect.getTopLeft());
+                  l.push_back( h.rect.getBottomLeft());
+                  l.push_back( CPoint( h.rect.right, ( h.rect.top + h.rect.bottom ) * 0.5 ));
+                  l.push_back( h.rect.getTopLeft() );
+                  dc->drawPolygon(l, kDrawFilledAndStroked);
+               }
+            }
+
          }
 
          if( h.type == hotzone::MOUSABLE_NODE )
          {
-            int sz = 12;
-            int offx = 0;
+            int sz = 13;
+            int offx = 0, offy = 0;
 
-            int offy = 0;
-
-            if( h.active )
+            if (h.active)
                offy = 1;
 
-            if( h.dragging )
+            if (h.dragging)
                offy = 2;
 
-            if( h.zoneSubType == hotzone::SEGMENT_CONTROL )
+            if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                offx = 1;
 
-            if( h.active || h.dragging )
+            if (h.active || h.dragging)
             {
-
                if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                {
                   auto nextCursor = VSTGUI::kCursorDefault;
@@ -1109,16 +1134,20 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                      getFrame()->setCursor(nextCursor);
                   }
                }
+
                if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
                   getFrame()->setCursor(kCursorSizeAll);
             }
 
-            if( handleBmp )
+            if (handleBmp)
             {
                auto r = h.rect;
+
                if( h.useDrawRect )
                   r = h.drawRect;
+
                int cx = r.getCenter().x;
+
                if( cx >= drawArea.left && cx <= drawArea.right )
                   handleBmp->draw( dc, r, CPoint( offx * sz, offy * sz ), 0xFF );
             }
@@ -1948,6 +1977,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    MSEGControlRegion *controlregion = nullptr;
 
    CScalableBitmap *handleBmp;
+   CScalableBitmap *loopMarkerBmp;
    
    CLASS_METHODS( MSEGCanvas, CControl );
 };

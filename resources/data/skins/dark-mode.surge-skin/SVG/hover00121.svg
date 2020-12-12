@@ -2,7 +2,7 @@
 <rect x="2.5" y="20.5" width="7" height="10" rx="1" fill="#FF9300"/>
 <rect x="2.5" y="20.5" width="7" height="10" rx="1" stroke="white"/>
 <path d="M6.5 28H5.5V26H3.5V25H5.5V23H6.5V25H8.5V26H6.5V28Z" fill="black"/>
-<rect x="3.5" y="3.5" width="5" height="8" rx="1" fill="#399DFF"/>
-<rect x="3.5" y="3.5" width="5" height="8" rx="1" stroke="#399DFF"/>
+<rect x="3.5" y="3.5" width="5" height="8" rx="0.5" fill="#399DFF"/>
+<rect x="3.5" y="3.5" width="5" height="8" rx="0.5" stroke="#399DFF"/>
 <path d="M6.5 10H5.5V8H3.5V7H5.5V5H6.5V7H8.5V8H6.5V10Z" fill="white"/>
 </svg>
