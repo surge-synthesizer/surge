@@ -184,7 +184,7 @@ namespace Colors
       }
       namespace Loop
       {
-          extern const Surge::Skin::Color Line, Marker, MarkerHover;
+          extern const Surge::Skin::Color Line, Marker, MarkerHover, RegionFill, RegionBorder;
       }
       namespace NumberField
       {
