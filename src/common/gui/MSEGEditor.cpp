@@ -1136,7 +1136,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                if (h.zoneSubType == hotzone::LOOP_END)
                   cx = r.right;
 
-               if (cx >= drawArea.left || cx <= drawArea.right)
+               if (cx >= drawArea.left && cx <= drawArea.right)
                   loopMarkerBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
             }
             else
