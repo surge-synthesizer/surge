@@ -290,11 +290,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          if( this->ms->editMode != MSEGStorage::LFO )
          {
             int lmSize = 10;
+
             hs.rect = VSTGUI::CRect(CPoint(pxs, haxisArea.top + 1), CPoint(lmSize, lmSize));
             hs.zoneSubType = hotzone::LOOP_START;
 
-            he.rect =
-                VSTGUI::CRect(CPoint(pxe - lmSize, haxisArea.top + 1), CPoint(lmSize, lmSize));
+            he.rect = VSTGUI::CRect(CPoint(pxe - lmSize + 1, haxisArea.top + 1), CPoint(lmSize, lmSize));
             he.zoneSubType = hotzone::LOOP_END;
 
             hotzones.push_back(hs);
@@ -566,17 +566,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          float t = hp.first;
          auto c = hp.second;
          float px = tpx(t);
-         float off = haxisArea.getHeight() / 2;
-         int xoff = 0;
+         float off = (haxisArea.getHeight() / 2) - 1;
 
          if( c & TickDrawStyle::kHighlight )
          {
-            off = 0;
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
             dc->setLineWidth(1.5);
          }
          else
          {
+            off += 2;
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
             dc->setLineWidth(1.f);
          }
@@ -591,17 +590,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
                dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
                dc->setFont(primaryFont);
-               xoff = 0;
                snprintf( txt, 16, "%d", int(t) );
             }
             else
             {
                dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
                dc->setFont(secondaryFont);
-               xoff = -7;
                snprintf( txt, 16, "%5.2f", t );
             }
-            dc->drawString( txt, CRect( CPoint( px + xoff, haxisArea.top + 5), CPoint( 15, 10 )));
+            dc->drawString( txt, CRect( CPoint( px - 7, haxisArea.top + 5), CPoint( 15, 10 )));
          }
       }
 
@@ -1038,10 +1035,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             int offx = 0, offy = 0;
 
             if (h.active || h.dragging)
-               offy = 1;
+               offx = 1;
 
             if (h.zoneSubType == hotzone::LOOP_END)
-               offx = 1;
+               offy = 1;
 
             if (loopMarkerBmp)
             {
@@ -1051,6 +1048,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   r = h.drawRect;
 
                int cx = r.getCenter().x;
+
+               /*dc->setLineWidth(1);
+               dc->setFrameColor(kRedCColor);
+               dc->drawRect(r, kDrawStroked);*/
 
                if (cx >= drawArea.left && cx <= drawArea.right)
                   loopMarkerBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
@@ -1810,7 +1811,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          for (int i : stepCounts)
          {
-            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"), [this, stepCounts, i]()
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequence"), [this, stepCounts, i]()
                 {
                    Surge::MSEG::createStepseqMSEG(this->ms, i);
                    this->zoomOutTo(i);    
@@ -1831,7 +1832,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          createMenu->addSeparator();
          for (int i : stepCounts)
          {
-            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Lines On Sin"),
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Lines Sine"),
                   [this, stepCounts, i] {
                      Surge::MSEG::createSinLineMSEG(this->ms, i);
                      this->zoomToFull();
