@@ -1,10 +1,10 @@
-<svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M3 6C3 4.34315 4.34315 3 6 3C7.65685 3 9 4.34315 9 6C9 7.65685 7.65685 9 6 9C4.34315 9 3 7.65685 3 6Z" fill="#FF9300" stroke="#FF9300"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 18C0.5 14.9624 2.96243 12.5 6 12.5C9.03757 12.5 11.5 14.9624 11.5 18C11.5 21.0376 9.03757 23.5 6 23.5C2.96243 23.5 0.5 21.0376 0.5 18Z" fill="#2F1C04" stroke="white"/>
-<path d="M3 18C3 16.3432 4.34315 15 6 15C7.65685 15 9 16.3432 9 18C9 19.6568 7.65685 21 6 21C4.34315 21 3 19.6568 3 18Z" fill="white" stroke="white"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 30C0.5 26.9624 2.96243 24.5 6 24.5C9.03757 24.5 11.5 26.9624 11.5 30C11.5 33.0376 9.03757 35.5 6 35.5C2.96243 35.5 0.5 33.0376 0.5 30Z" fill="#FF9000" stroke="#2F1C04"/>
-<path d="M3 30C3 28.3432 4.34315 27 6 27C7.65685 27 9 28.3432 9 30C9 31.6568 7.65685 33 6 33C4.34315 33 3 31.6568 3 30Z" fill="#2F1C04" stroke="#2F1C04"/>
-<rect x="18" y="2.99994" width="4" height="4" transform="rotate(45 18 2.99994)" stroke="#FF9300"/>
-<rect x="18" y="14.9999" width="4" height="4" transform="rotate(45 18 14.9999)" fill="#2F1C04" stroke="white"/>
-<rect x="18" y="26.9999" width="4" height="4" transform="rotate(45 18 26.9999)" fill="#FF9000" stroke="#2F1C04"/>
+<svg width="26" height="39" viewBox="0 0 26 39" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 6.5C3 4.56701 4.56701 3 6.5 3C8.43299 3 10 4.56701 10 6.5C10 8.43299 8.43299 10 6.5 10C4.56701 10 3 8.43299 3 6.5Z" fill="#FF9300" stroke="#FF9300"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 19.5C0.5 16.1863 3.18629 13.5 6.5 13.5C9.81371 13.5 12.5 16.1863 12.5 19.5C12.5 22.8137 9.81371 25.5 6.5 25.5C3.18629 25.5 0.5 22.8137 0.5 19.5Z" fill="#2F1C04" stroke="white"/>
+<path d="M3 19.5C3 17.567 4.56701 16 6.5 16C8.43299 16 10 17.567 10 19.5C10 21.433 8.43299 23 6.5 23C4.56701 23 3 21.433 3 19.5Z" fill="white" stroke="white"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 32.5C0.5 29.1863 3.18629 26.5 6.5 26.5C9.81371 26.5 12.5 29.1863 12.5 32.5C12.5 35.8137 9.81371 38.5 6.5 38.5C3.18629 38.5 0.5 35.8137 0.5 32.5Z" fill="#FF9000" stroke="#2F1C04"/>
+<path d="M3 32.5C3 30.567 4.56701 29 6.5 29C8.43299 29 10 30.567 10 32.5C10 34.433 8.43299 36 6.5 36C4.56701 36 3 34.433 3 32.5Z" fill="#2F1C04" stroke="#2F1C04"/>
+<rect x="19.5" y="2.99994" width="4.70711" height="4.70711" transform="rotate(45 19.5 2.99994)" stroke="#FF9300"/>
+<rect x="19.5" y="15.9999" width="4.70711" height="4.70711" transform="rotate(45 19.5 15.9999)" fill="#2F1C04" stroke="white"/>
+<rect x="19.5" y="28.9999" width="4.70711" height="4.70711" transform="rotate(45 19.5 28.9999)" fill="#FF9000" stroke="#2F1C04"/>
 </svg>

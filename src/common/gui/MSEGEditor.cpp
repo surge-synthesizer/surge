@@ -33,8 +33,11 @@ using namespace VSTGUI;
 
 struct MSEGCanvas;
 
-struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener {
-   MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ): CViewContainer( size ) {
+struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumingComponent, public VSTGUI::IControlListener
+{
+   MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos, MSEGStorage *ms,
+                     MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ) : CViewContainer( size )
+   {
       setSkin( skin, b );
       this->ms = ms;
       this->eds = eds;
@@ -45,7 +48,8 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
       rebuild();
    };
 
-   enum {
+   enum
+   {
       tag_segment_nodeedit_mode = metaparam_offset + 1000, // Just to push outside any ID range
       tag_segment_movement_mode,
       tag_vertical_snap,
@@ -60,7 +64,8 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
    virtual void valueChanged( CControl *p ) override;
    virtual int32_t controlModifierClicked (CControl* pControl, CButtonState button) override;
 
-   virtual void draw( CDrawContext *dc) override {
+   virtual void draw( CDrawContext *dc) override
+   {
       auto r = getViewSize();
       dc->setFillColor(skin->getColor(Colors::MSEGEditor::Panel));
       dc->drawRect( r, kDrawFilled );
@@ -75,9 +80,11 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
 
 
 
-struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, public Surge::UI::CursorControlAdapter<MSEGCanvas> {
+struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, public Surge::UI::CursorControlAdapter<MSEGCanvas>
+{
    MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ):
-         CControl( size ), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr) {
+         CControl( size ), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr)
+   {
       setSkin( skin, b );
       this->ms = ms;
       this->eds = eds;
@@ -85,6 +92,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       this->axisWidth = std::max( 1.f, ms->totalDuration );
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_NODES );
+      loopMarkerBmp = b->getBitmap( IDB_MSEG_LOOP_MARKERS );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
       setMouseableArea(getViewSize());
    };
@@ -93,7 +101,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    ** We make a list of hotzones when we draw so we don't have to recalculate the 
    ** mouse locations in drag and so on events
    */
-   struct hotzone {
+   struct hotzone
+   {
       CRect rect;
       CRect drawRect;
       bool useDrawRect = false;
@@ -126,11 +135,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       } segmentDirection = VERTICAL_ONLY;
       std::function<void(float,float, const CPoint &)> onDrag;
    };
+
    std::vector<hotzone> hotzones;
 
    static constexpr int drawInsertX = 10, drawInsertY = 10, axisSpaceX = 18, axisSpaceY = 8;
 
-   inline float drawDuration() {
+   inline float drawDuration()
+   {
       /*
       if( ms->n_activeSegments == 0 )
          return 1.0;
@@ -139,7 +150,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       return axisWidth;
    }
    
-   inline CRect getDrawArea() {
+   inline CRect getDrawArea()
+   {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
       drawArea.bottom -= axisSpaceY;
@@ -148,21 +160,26 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       return drawArea;
    }
 
-   inline CRect getHAxisArea() {
+   inline CRect getHAxisArea()
+   {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
       drawArea.top = drawArea.bottom - axisSpaceY;
       drawArea.left += axisSpaceX;
       return drawArea;
    }
+
    // Stretch all the way to the bottom
-   inline CRect getHAxisDoubleClickArea() {
+   inline CRect getHAxisDoubleClickArea()
+   {
       auto r = getHAxisArea();
       auto v = getViewSize();
       r.bottom = v.bottom;
       return r;
    }
-   inline CRect getVAxisArea() {
+
+   inline CRect getVAxisArea()
+   {
       auto vs = getViewSize();
       auto drawArea = vs.inset( drawInsertX, drawInsertY );
       drawArea.right = drawArea.left + axisSpaceX;
@@ -170,44 +187,59 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       return drawArea;
    }
 
-   std::function<float(float)> valToPx() {
+   std::function<float(float)> valToPx()
+   {
       auto drawArea = getDrawArea();
       float vscale = drawArea.getHeight();
-      return [vscale, drawArea](float vp) {
-                auto v = 1 - ( vp + 1 ) * 0.5;
-                return v * vscale + drawArea.top;
-             };
+      return [vscale, drawArea](float vp)
+      {
+         auto v = 1 - ( vp + 1 ) * 0.5;
+         return v * vscale + drawArea.top;
+      };
    }
-   std::function<float(float)> pxToVal() {
+
+   std::function<float(float)> pxToVal()
+   {
       auto drawArea = getDrawArea();
       float vscale = drawArea.getHeight();
-      return [vscale, drawArea](float vx) {
-                auto v = ( vx - drawArea.top ) / vscale;
-                auto vp = ( 1 - v ) * 2 - 1;
-                return vp;
-             };
+      return [vscale, drawArea](float vx)
+      {
+         auto v = ( vx - drawArea.top ) / vscale;
+         auto vp = ( 1 - v ) * 2 - 1;
+         return vp;
+      };
    }
-   std::function<float(float)> timeToPx() {
+
+   std::function<float(float)> timeToPx()
+   {
       auto drawArea = getDrawArea();
       float maxt = drawDuration();
       float tscale = 1.f * drawArea.getWidth() / maxt;
-      return [tscale, drawArea, this](float t) { return ( t - axisStart ) * tscale + drawArea.left; };
+      return [tscale, drawArea, this](float t)
+      {
+         return ( t - axisStart ) * tscale + drawArea.left;
+      };
    }
-   std::function<float(float)> pxToTime() { // INVESTIGATE
+
+   std::function<float(float)> pxToTime() // INVESTIGATE
+   {
       auto drawArea = getDrawArea();
       float maxt = drawDuration();
       float tscale = 1.f * drawArea.getWidth() / maxt;
 
       // So px = t * tscale + drawarea;
       // So t = ( px - drawarea ) / tscale;
-      return [tscale, drawArea, this ](float px) {
-                return (px - drawArea.left) / tscale + axisStart;
-             };
+      return [tscale, drawArea, this ](float px)
+      {
+         return (px - drawArea.left) / tscale + axisStart;
+      };
    }
 
-   void offsetValue( float &v, float d ) {
+   void offsetValue( float &v, float d )
+   {
       v = limit_range( v + d, -1.f, 1.f );
    }
+
    void adjustValue( int idx, bool cpvNotV0, float d, float snapResolution )
    {
       if( cpvNotV0 )
@@ -233,7 +265,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
     * This little struct acts as a SmapGuard so that shift drags can reset snap and
     * unreset snap
     */
-   struct SnapGuard {
+   struct SnapGuard
+   {
       SnapGuard( MSEGEditor::State *eds, MSEGCanvas *c ) : eds(eds), c(c) {
          hSnapO = eds->hSnap;
          vSnapO = eds->vSnap;
@@ -263,7 +296,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       auto drawArea = getDrawArea();
       
-      int handleRadius = 6;
+      auto handleRadius = 6.5;
 
       float maxt = drawDuration();
       float tscale = 1.f * drawArea.getWidth() / maxt;
@@ -272,7 +305,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto tpx = timeToPx();
 
       // Put in the loop marker boxes
-      if( ms->loopMode != MSEGStorage::LoopMode::ONESHOT ){
+      if( ms->loopMode != MSEGStorage::LoopMode::ONESHOT )
+      {
          int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
          int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
          float pxs = tpx(ms->segmentStart[ls]);
@@ -289,11 +323,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          if( this->ms->editMode != MSEGStorage::LFO )
          {
             int lmSize = 10;
+
             hs.rect = VSTGUI::CRect(CPoint(pxs, haxisArea.top + 1), CPoint(lmSize, lmSize));
             hs.zoneSubType = hotzone::LOOP_START;
 
-            he.rect =
-                VSTGUI::CRect(CPoint(pxe - lmSize, haxisArea.top + 1), CPoint(lmSize, lmSize));
+            he.rect = VSTGUI::CRect(CPoint(pxe - lmSize + 1, haxisArea.top + 1), CPoint(lmSize, lmSize));
             he.zoneSubType = hotzone::LOOP_END;
 
             hotzones.push_back(hs);
@@ -565,17 +599,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          float t = hp.first;
          auto c = hp.second;
          float px = tpx(t);
-         float off = haxisArea.getHeight() / 2;
-         int xoff = 0;
+         float off = (haxisArea.getHeight() / 2) - 1;
 
          if( c & TickDrawStyle::kHighlight )
          {
-            off = 0;
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
             dc->setLineWidth(1.5);
          }
          else
          {
+            off += 2;
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
             dc->setLineWidth(1.f);
          }
@@ -590,17 +623,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
                dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
                dc->setFont(primaryFont);
-               xoff = 0;
                snprintf( txt, 16, "%d", int(t) );
             }
             else
             {
                dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
                dc->setFont(secondaryFont);
-               xoff = -7;
                snprintf( txt, 16, "%5.2f", t );
             }
-            dc->drawString( txt, CRect( CPoint( px + xoff, haxisArea.top + 5), CPoint( 15, 10 )));
+            dc->drawString( txt, CRect( CPoint( px - 7, haxisArea.top + 5), CPoint( 15, 10 )));
          }
       }
 
@@ -1032,62 +1063,90 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             if( h.rect.left < drawArea.left || h.rect.right > drawArea.right )
                continue;
-            // OK so we draw |< or >| depending
-            if( h.active )
-            {
-               dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker)); // not we just hover the outline
-               dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerHover));
-            }
-            else
-            {
-               dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
-               dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
-            }
-            dc->setLineWidth(1);
-            dc->setLineStyle(kLineSolid);
-            if( h.zoneSubType == hotzone::LOOP_START )
-            {
-               // line on left side arrow pointing over
-               dc->drawLine(h.rect.getTopLeft(), h.rect.getBottomLeft());
-               CDrawContext::PointList l;
-               l.push_back( h.rect.getTopRight());
-               l.push_back( h.rect.getBottomRight());
-               l.push_back( CPoint( h.rect.left, ( h.rect.top + h.rect.bottom ) * 0.5 ));
-               l.push_back( h.rect.getTopRight());
-               dc->drawPolygon(l, kDrawFilledAndStroked);
-            }
-            else
-            {
-               dc->drawLine(h.rect.getTopRight(), h.rect.getBottomRight());
-               CDrawContext::PointList l;
-               l.push_back( h.rect.getTopLeft());
-               l.push_back( h.rect.getBottomLeft());
-               l.push_back( CPoint( h.rect.right, ( h.rect.top + h.rect.bottom ) * 0.5 ));
-               l.push_back( h.rect.getTopLeft() );
-               dc->drawPolygon(l, kDrawFilledAndStroked);
 
+            int sz = 10;
+            int offx = 0, offy = 0;
+
+            if (h.active || h.dragging)
+               offx = 1;
+
+            if (h.zoneSubType == hotzone::LOOP_END)
+               offy = 1;
+
+            if (loopMarkerBmp)
+            {
+               auto r = h.rect;
+
+               if (h.useDrawRect)
+                  r = h.drawRect;
+
+               int cx = r.getCenter().x;
+
+               /*dc->setLineWidth(1);
+               dc->setFrameColor(kRedCColor);
+               dc->drawRect(r, kDrawStroked);*/
+
+               if (cx >= drawArea.left && cx <= drawArea.right)
+                  loopMarkerBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
             }
+            else
+            {
+               // OK so we draw |< or >| if the skin doesn't have bmp00308
+               if( h.active )
+               {
+                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker)); // now we just hover the outline
+                  dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerHover));
+               }
+               else
+               {
+                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
+                  dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Loop::Marker));
+               }
+
+               dc->setLineWidth(1);
+               dc->setLineStyle(kLineSolid);
+
+               if( h.zoneSubType == hotzone::LOOP_START )
+               {
+                  // line on left side arrow pointing over
+                  dc->drawLine(h.rect.getTopLeft(), h.rect.getBottomLeft());
+                  CDrawContext::PointList l;
+                  l.push_back( h.rect.getTopRight());
+                  l.push_back( h.rect.getBottomRight());
+                  l.push_back( CPoint( h.rect.left, ( h.rect.top + h.rect.bottom ) * 0.5 ));
+                  l.push_back( h.rect.getTopRight());
+                  dc->drawPolygon(l, kDrawFilledAndStroked);
+               }
+               else
+               {
+                  dc->drawLine(h.rect.getTopRight(), h.rect.getBottomRight());
+                  CDrawContext::PointList l;
+                  l.push_back( h.rect.getTopLeft());
+                  l.push_back( h.rect.getBottomLeft());
+                  l.push_back( CPoint( h.rect.right, ( h.rect.top + h.rect.bottom ) * 0.5 ));
+                  l.push_back( h.rect.getTopLeft() );
+                  dc->drawPolygon(l, kDrawFilledAndStroked);
+               }
+            }
+
          }
 
          if( h.type == hotzone::MOUSABLE_NODE )
          {
-            int sz = 12;
-            int offx = 0;
+            int sz = 13;
+            int offx = 0, offy = 0;
 
-            int offy = 0;
-
-            if( h.active )
+            if (h.active)
                offy = 1;
 
-            if( h.dragging )
+            if (h.dragging)
                offy = 2;
 
-            if( h.zoneSubType == hotzone::SEGMENT_CONTROL )
+            if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                offx = 1;
 
-            if( h.active || h.dragging )
+            if (h.active || h.dragging)
             {
-
                if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                {
                   auto nextCursor = VSTGUI::kCursorDefault;
@@ -1109,16 +1168,20 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                      getFrame()->setCursor(nextCursor);
                   }
                }
+
                if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
                   getFrame()->setCursor(kCursorSizeAll);
             }
 
-            if( handleBmp )
+            if (handleBmp)
             {
                auto r = h.rect;
+
                if( h.useDrawRect )
                   r = h.drawRect;
+
                int cx = r.getCenter().x;
+
                if( cx >= drawArea.left && cx <= drawArea.right )
                   handleBmp->draw( dc, r, CPoint( offx * sz, offy * sz ), 0xFF );
             }
@@ -1781,7 +1844,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          for (int i : stepCounts)
          {
-            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"), [this, stepCounts, i]()
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequence"), [this, stepCounts, i]()
                 {
                    Surge::MSEG::createStepseqMSEG(this->ms, i);
                    this->zoomOutTo(i);    
@@ -1802,7 +1865,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          createMenu->addSeparator();
          for (int i : stepCounts)
          {
-            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Lines On Sin"),
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Lines Sine"),
                   [this, stepCounts, i] {
                      Surge::MSEG::createSinLineMSEG(this->ms, i);
                      this->zoomToFull();
@@ -1948,6 +2011,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    MSEGControlRegion *controlregion = nullptr;
 
    CScalableBitmap *handleBmp;
+   CScalableBitmap *loopMarkerBmp;
    
    CLASS_METHODS( MSEGCanvas, CControl );
 };
