@@ -48,8 +48,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
       rebuild();
    };
 
-   enum
-   {
+   enum ControlTags {
       tag_segment_nodeedit_mode = metaparam_offset + 1000, // Just to push outside any ID range
       tag_segment_movement_mode,
       tag_vertical_snap,
@@ -58,8 +57,8 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
       tag_horizontal_value,
       tag_loop_mode,
       tag_edit_mode,
-   } tags;
-   
+   };
+
    void rebuild();
    virtual void valueChanged( CControl *p ) override;
    virtual int32_t controlModifierClicked (CControl* pControl, CButtonState button) override;
@@ -70,7 +69,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
       dc->setFillColor(skin->getColor(Colors::MSEGEditor::Panel));
       dc->drawRect( r, kDrawFilled );
    }
-   
+
    MSEGStorage *ms = nullptr;
    MSEGEditor::State *eds = nullptr;
    MSEGCanvas *canvas = nullptr;
@@ -98,7 +97,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    };
 
    /*
-   ** We make a list of hotzones when we draw so we don't have to recalculate the 
+   ** We make a list of hotzones when we draw so we don't have to recalculate the
    ** mouse locations in drag and so on events
    */
    struct hotzone
@@ -110,7 +109,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       bool specialEndpoint = false; // For pan and zoom we need to treat the endpoint of the last segment specially
       bool active = false;
       bool dragging = false;
-      
+
       // More coming soon
       enum Type
       {
@@ -149,7 +148,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
        */
       return axisWidth;
    }
-   
+
    inline CRect getDrawArea()
    {
       auto vs = getViewSize();
@@ -295,7 +294,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       hotzones.clear();
 
       auto drawArea = getDrawArea();
-      
+
       auto handleRadius = 6.5;
 
       float maxt = drawDuration();
@@ -574,7 +573,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             hotzones.back().specialEndpoint = true;
          }
       }
-                
+
    }
 
    // grid thinning
@@ -642,7 +641,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          int le = ( ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1 );
          float pxs = tpx( ms->segmentStart[ls] );
          float pxe = tpx(ms->segmentEnd[le]);
-      
+
          auto r = VSTGUI::CRect( CPoint( pxs, haxisArea.top + 1), CPoint( 10, 10 ));
          dc->setFillColor(CColor(0, 255, 0, 128));
          dc->drawRect( r, kDrawFilled );
@@ -827,18 +826,57 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       dc->setFillColor(skin->getColor(Colors::MSEGEditor::Background));
       dc->drawRect( vs, kDrawFilled );
-      
+
+
+
       // we want to draw the background rectangle always filling the area without smearing
       // so draw the rect first then set AA drawing mode
-      dc->setDrawMode(kAntiAliasing);
-      
-      auto valpx = valToPx();
-      auto tpx = timeToPx();
-      auto pxt = pxToTime();
+      dc->setDrawMode(kAntiAliasing | kNonIntegralMode);
 
       auto drawArea = getDrawArea();
       float maxt = drawDuration();
 
+      auto valpx = valToPx();
+      auto tpx = timeToPx();
+      auto pxt = pxToTime();
+
+      /*
+       * Now draw the loop region
+       */
+      if( ms->loopMode != MSEGStorage::LoopMode::ONESHOT )
+      {
+         int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
+         int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
+
+         float pxs = tpx(ms->segmentStart[ls]);
+         float pxe = tpx(ms->segmentEnd[le]);
+         if( pxs > drawArea.right || pxe < drawArea.left || pxs == pxe )
+         {
+            // Nothin to do
+         }
+         else
+         {
+            pxe = std::min( drawArea.right, (double)pxe );
+            pxs = std::max( drawArea.left, (double)pxs );
+
+            auto loopRect = CRect( pxs, drawArea.top, pxe, drawArea.bottom );
+            auto cf = skin->getColor( Colors::MSEGEditor::Loop::RegionFill );
+            dc->setFillColor( cf );
+            dc->setFrameColor( cf );
+            dc->drawRect( loopRect, kDrawFilledAndStroked );
+            auto cb = skin->getColor( Colors::MSEGEditor::Loop::RegionBorder );
+            dc->setFrameColor( cb );
+            dc->setLineWidth(1);
+            if( pxe > drawArea.left && pxe < drawArea.right )
+            {
+               dc->drawLine( CPoint( pxe, drawArea.top), CPoint( pxe, drawArea.bottom ));
+            }
+            if( pxs > drawArea.left && pxs < drawArea.right )
+            {
+               dc->drawLine( CPoint( pxs, drawArea.top), CPoint( pxs, drawArea.bottom ));
+            }
+         }
+      }
       Surge::MSEG::EvaluatorState es, esdf;
       es.seed( 8675309 ); // This is different from the number in LFOMS::assign in draw mode on purpose
       esdf.seed( 8675309 );
@@ -949,7 +987,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       VSTGUI::CGradient::ColorStopMap csm;
       VSTGUI::CGradient* cg = VSTGUI::CGradient::create(csm);
-      
+
       cg->addColorStop(0, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
       if (uni)
       {
@@ -974,7 +1012,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
       fillpath->forget();
       cg->forget();
-      
+
       dc->setLineWidth(1);
 
       // draw vertical grid
@@ -1432,7 +1470,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
          }
 
-         
+
          return kMouseEventHandled;
       }
 
@@ -1444,7 +1482,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                hoveredSegment = h.associatedSegment;
             continue;
          }
-         
+
          if( h.rect.pointInside(where) )
          {
             if( ! h.active )
@@ -1465,7 +1503,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
          }
       }
-      
+
       if( flip )
          invalid();
 
@@ -1569,7 +1607,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          }
 
       }
-      
+
       return kMouseEventHandled;
    }
 
@@ -1760,20 +1798,20 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          auto pv = pxToVal();
          auto v = pv( iw.y );
-         
+
          addCb(actionsMenu, "Split",
                             [this, t, v](){
                                              Surge::MSEG::splitSegment( this->ms, t, v );
                                              modelChanged();
                                           });
-         auto deleteMenu = addCb(actionsMenu, "Delete", 
+         auto deleteMenu = addCb(actionsMenu, "Delete",
                                               [this, t](){
                                                             Surge::MSEG::deleteSegment( this->ms, t );
                                                             modelChanged();
                                                          });
          if (ms->n_activeSegments <= 1)
             deleteMenu->setEnabled(false);
-         
+
          actionsMenu->addSeparator();
 
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Double Size"),
@@ -1786,7 +1824,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                        Surge::MSEG::scaleDurations(this->ms, 0.5);
                                        modelChanged();
                                     });
-         
+
          actionsMenu->addSeparator();
 
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Vertically"),
@@ -1813,7 +1851,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                        modelChanged();
                                     });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"),
-                            [this](){  
+                            [this](){
                                        auto totalLen = 0.f;
                                        for (int i = 0; i < this->ms->n_activeSegments; i++)
                                           totalLen += this->ms->segments[i].duration;
@@ -1831,7 +1869,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
 
          contextMenu->addEntry(createMenu, "Create");
-         
+
          addCb(createMenu, Surge::UI::toOSCaseForMenu("Default MSEG"), [this]()
                            {
                               Surge::MSEG::createInitMSEG(this->ms);
@@ -1844,10 +1882,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          for (int i : stepCounts)
          {
-            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequence"), [this, stepCounts, i]()
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"), [this, i]()
                 {
                    Surge::MSEG::createStepseqMSEG(this->ms, i);
-                   this->zoomOutTo(i);    
+                   this->zoomOutTo(i);
                 });
          }
 
@@ -1855,7 +1893,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          for (int i : stepCounts)
          {
-            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"), [this, stepCounts, i]()
+            addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"), [this, i]()
                 {
                    Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
                    this->zoomOutTo(i);
@@ -1866,7 +1904,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          for (int i : stepCounts)
          {
             addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Lines Sine"),
-                  [this, stepCounts, i] {
+                  [this, i] {
                      Surge::MSEG::createSinLineMSEG(this->ms, i);
                      this->zoomToFull();
                      modelChanged();
@@ -1890,9 +1928,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                          });
          cm->setChecked( this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED || this->ms->editMode == MSEGStorage::LFO);
          cm->setEnabled( this->ms->editMode != MSEGStorage::LFO );
- 
+
          settingsMenu->addSeparator();
- 
+
          auto def = ms->segments[tts].useDeform;
          auto dm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"), [this, tts]() {
             this->ms->segments[tts].useDeform = ! this->ms->segments[tts].useDeform;
@@ -1931,7 +1969,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Smooth Stairs"), MSEGStorage::segment::Type::SMOOTH_STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
-        
+
          getFrame()->addView( contextMenu );
          contextMenu->setDirty();
          contextMenu->popup();
@@ -2012,7 +2050,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
    CScalableBitmap *handleBmp;
    CScalableBitmap *loopMarkerBmp;
-   
+
    CLASS_METHODS( MSEGCanvas, CControl );
 };
 
@@ -2050,7 +2088,7 @@ void MSEGControlRegion::valueChanged( CControl *p )
    case tag_segment_movement_mode:
    {
       int m = floor((val * 2) + 0.5);
-      
+
       eds->timeEditMode = m;
 
       canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
@@ -2221,7 +2259,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
          for (auto op : options)
          {
             auto val = op.second;
-            auto men = addcb(op.first, [val, pControl, this]() {
+            auto men = addcb(op.first, [val, pControl]() {
                pControl->setValue(val);
                pControl->invalid();
                pControl->valueChanged();
