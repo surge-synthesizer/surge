@@ -323,10 +323,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             int lmSize = 10;
 
-            hs.rect = VSTGUI::CRect(CPoint(pxs, haxisArea.top + 1), CPoint(lmSize, lmSize));
+            hs.rect = VSTGUI::CRect(CPoint(pxs - 0.5, haxisArea.top + 1), CPoint(lmSize, lmSize));
             hs.zoneSubType = hotzone::LOOP_START;
 
-            he.rect = VSTGUI::CRect(CPoint(pxe - lmSize + 1, haxisArea.top + 1), CPoint(lmSize, lmSize));
+            he.rect = VSTGUI::CRect(CPoint(pxe - lmSize + 0.5, haxisArea.top + 1), CPoint(lmSize, lmSize));
             he.zoneSubType = hotzone::LOOP_END;
 
             hotzones.push_back(hs);
@@ -599,20 +599,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto c = hp.second;
          float px = tpx(t);
          float off = (haxisArea.getHeight() / 2) - 1;
+         float lw = 1.f;
 
          if( c & TickDrawStyle::kHighlight )
          {
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-            dc->setLineWidth(1.5);
+            lw = 1.5;
          }
          else
          {
             off += 2;
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
-            dc->setLineWidth(1.f);
          }
 
-         dc->drawLine( CPoint( px, haxisArea.top), CPoint( px, haxisArea.bottom - off ) );
+         dc->setLineWidth(lw);
+         dc->drawLine(CPoint(px - (lw * 0.5), haxisArea.top),
+                      CPoint(px - (lw * 0.5), haxisArea.bottom - off));
 
          char txt[16];
 
@@ -630,7 +632,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                dc->setFont(secondaryFont);
                snprintf( txt, 16, "%5.2f", t );
             }
-            dc->drawString( txt, CRect( CPoint( px - 7, haxisArea.top + 5), CPoint( 15, 10 )));
+            dc->drawString( txt, CRect( CPoint( px - 8, haxisArea.top + 5), CPoint( 15, 10 )));
          }
       }
 
@@ -656,6 +658,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto valpx = valToPx();
 
       dc->setLineWidth( 1.5 );
+
+      vaxisArea.offset(CPoint(-0.5, 0));
 
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
@@ -850,30 +854,35 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          float pxs = tpx(ms->segmentStart[ls]);
          float pxe = tpx(ms->segmentEnd[le]);
+
          if( pxs > drawArea.right || pxe < drawArea.left || pxs == pxe )
          {
             // Nothin to do
          }
          else
          {
-            pxe = std::min( drawArea.right, (double)pxe );
             pxs = std::max( drawArea.left, (double)pxs );
+            pxe = std::min( drawArea.right, (double)pxe );
 
-            auto loopRect = CRect( pxs, drawArea.top, pxe, drawArea.bottom );
+            auto loopRect = CRect( pxs - 0.5, drawArea.top, pxe, drawArea.bottom );
             auto cf = skin->getColor( Colors::MSEGEditor::Loop::RegionFill );
+
             dc->setFillColor( cf );
             dc->setFrameColor( cf );
-            dc->drawRect( loopRect, kDrawFilledAndStroked );
+            dc->drawRect( loopRect, kDrawFilled);
+
             auto cb = skin->getColor( Colors::MSEGEditor::Loop::RegionBorder );
+
             dc->setFrameColor( cb );
             dc->setLineWidth(1);
+
             if( pxe > drawArea.left && pxe < drawArea.right )
             {
-               dc->drawLine( CPoint( pxe, drawArea.top), CPoint( pxe, drawArea.bottom ));
+               dc->drawLine( CPoint( pxe , drawArea.top), CPoint( pxe , drawArea.bottom ));
             }
             if( pxs > drawArea.left && pxs < drawArea.right )
             {
-               dc->drawLine( CPoint( pxs, drawArea.top), CPoint( pxs, drawArea.bottom ));
+               dc->drawLine( CPoint( pxs - 0.5, drawArea.top), CPoint( pxs - 0.5, drawArea.bottom ));
             }
          }
       }
@@ -1026,20 +1035,24 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto t = hp.first;
          auto c = hp.second;
          auto px = tpx( t );
+         auto lw = 1.f;
 
          if (c & TickDrawStyle::kHighlight)
          {
             dc->setFrameColor( primaryGridColor );
-            dc->setLineWidth(1.5);
+            lw = 1.5;
          }
          else
          {
             dc->setFrameColor(secondaryVGridColor);
-            dc->setLineWidth(1);
          }
 
          if (t > 0.1)
-            dc->drawLine( CPoint( px, drawArea.top ), CPoint( px, drawArea.bottom ) );
+         {
+            dc->setLineWidth(lw);
+            dc->drawLine(CPoint(px - (lw * 0.5), drawArea.top),
+                         CPoint(px - (lw * 0.5), drawArea.bottom));
+         }
       }
 
       dc->setLineWidth(1);
@@ -1099,7 +1112,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          if( h.type == hotzone::LOOPMARKER )
          {
-            if( h.rect.left < drawArea.left || h.rect.right > drawArea.right )
+            if (h.rect.left < drawArea.left - 1 || h.rect.right > drawArea.right + 1)
                continue;
 
             int sz = 10;
@@ -1118,11 +1131,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                if (h.useDrawRect)
                   r = h.drawRect;
 
-               int cx = r.getCenter().x;
+               auto cx = r.left;
 
-               /*dc->setLineWidth(1);
-               dc->setFrameColor(kRedCColor);
-               dc->drawRect(r, kDrawStroked);*/
+               if (h.zoneSubType == hotzone::LOOP_END)
+                  cx = r.right;
 
                if (cx >= drawArea.left && cx <= drawArea.right)
                   loopMarkerBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
