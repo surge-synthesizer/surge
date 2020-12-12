@@ -75,7 +75,8 @@
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
     <color id="msegeditor.numberfield.text.hover" value="white"/>
-    <color id="msegeditor.loop.marker" value="modblue"/>
+    <color id="msegeditor.loop.region.border" value="#00000000"/>
+    <color id="msegeditor.loop.region.fill" value="#FFFFFF0C"/>
 
     <color id="dialog.background" value="bggray"/>
     <color id="dialog.border" value="bordergray"/>
