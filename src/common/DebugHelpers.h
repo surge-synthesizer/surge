@@ -11,9 +11,9 @@
 
 #define _D(x) " " << (#x) << "=" << x
 #define _R(x,y) Surge::Debug::LifeCycleToConsole y(x);
-#define _DUMPR(r)                                                       \
-   " " << (#r) << "=(x=" << r.getTopLeft().x << ",y=" << r.getTopLeft().y << ")+(w=" << r.getWidth() \
-         << ",h=" << r.getHeight() << ")"
+#define _DUMPR(r)                                                                                  \
+   " " << (#r) << "=(L/X=" << r.left << ",T/Y=" << r.top << ")+(W=" << r.getWidth()                \
+       << ",H=" << r.getHeight() << ")+(R=" << r.right << ",B=" << r.bottom << ")"
 
 namespace Surge {
 namespace Debug {

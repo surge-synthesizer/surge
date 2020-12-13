@@ -3,6 +3,7 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    std::unordered_map<std::string, int> res;
    res["MAIN_BG"] = 102;
    res["SLIDER_VERT_BG"] = 105;
+   res["ENTER_VALUE_LEGACY"] = 107;
    res["FILTER_CONFIG"] = 112;
    res["SCENE_SELECT"] = 113;
    res["SCENE_MODE"] = 114;
@@ -32,7 +33,6 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    res["SLIDER_HORIZ_HANDLE"] = 153;
    res["SLIDER_HORIZ_BG"] = 154;
    res["SLIDER_VERT_HANDLE"] = 157;
-   res["ABOUT_BG"] = 158;
    res["FILTER_SUBTYPE"] = 160;
    res["OSC_CHARACTER"] = 161;
    res["ENV_MODE"] = 162;
@@ -41,25 +41,27 @@ inline std::unordered_map<std::string, int> createIdNameMap() {
    res["MENU_AS_SLIDER"] = 167;
    res["FILTER_MENU"] = 168;
    res["FILTER_ICONS"] = 169;
+   res["MSEG_NODES"] = 301;
+   res["MSEG_MOVEMENT_MODE"] = 302;
    res["SURGE_ICON"] = 170;
+   res["MSEG_VERTICAL_SNAP"] = 303;
+   res["MSEG_HORIZONTAL_SNAP"] = 304;
    res["MPE_BUTTON"] = 171;
    res["ZOOM_BUTTON"] = 172;
    res["TUNE_BUTTON"] = 173;
    res["NUMFIELD_POLY_SPLIT"] = 174;
    res["NUMFIELD_PITCHBEND"] = 175;
    res["NUMFIELD_KEYTRACK_ROOT"] = 176;
+   res["MSEG_LOOP_MODE"] = 305;
    res["LFO_MSEG_EDIT"] = 177;
    res["LFO_PRESET_MENU"] = 178;
-   res["MODSOURCE_SHOW_LFO"] = 179;
-   res["ABOUT_LOGOS"] = 180;
-   res["MSEG_NODES"] = 301;
-   res["MSEG_MOVEMENT_MODE"] = 302;
-   res["MSEG_VERTICAL_SNAP"] = 303;
-   res["MSEG_HORIZONTAL_SNAP"] = 304;
-   res["MSEG_LOOP_MODE"] = 305;
    res["MSEG_SNAPVALUE_NUMFIELD"] = 306;
+   res["MODSOURCE_SHOW_LFO"] = 179;
    res["MSEG_EDIT_MODE"] = 307;
+   res["ABOUT_LOGOS"] = 180;
+   res["ABOUT_BG"] = 158;
    res["MSEG_LOOP_MARKERS"] = 308;
+   res["VUMETER_BARS"] = 181;
    return res;
 }
 
@@ -67,6 +69,7 @@ inline std::unordered_set<int> allowedImageIds() {
    std::unordered_set<int> allowed;
    allowed.insert( 102 );
    allowed.insert( 105 );
+   allowed.insert(107);
    allowed.insert( 112 );
    allowed.insert( 113 );
    allowed.insert( 114 );
@@ -85,7 +88,6 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert( 136 );
    allowed.insert( 137 );
    allowed.insert( 140 );
-   allowed.insert( 140 );
    allowed.insert( 143 );
    allowed.insert( 144 );
    allowed.insert( 145 );
@@ -97,7 +99,6 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert( 153 );
    allowed.insert( 154 );
    allowed.insert( 157 );
-   allowed.insert( 158 );
    allowed.insert( 160 );
    allowed.insert( 161 );
    allowed.insert( 162 );
@@ -106,25 +107,27 @@ inline std::unordered_set<int> allowedImageIds() {
    allowed.insert( 167 );
    allowed.insert( 168 );
    allowed.insert( 169 );
+   allowed.insert(301);
+   allowed.insert(302);
    allowed.insert( 170 );
+   allowed.insert(303);
+   allowed.insert(304);
    allowed.insert( 171 );
    allowed.insert( 172 );
    allowed.insert( 173 );
    allowed.insert( 174 );
    allowed.insert( 175 );
    allowed.insert( 176 );
+   allowed.insert(305);
    allowed.insert( 177 );
    allowed.insert( 178 );
-   allowed.insert( 179 );
-   allowed.insert( 180 );
-   allowed.insert( 301 );
-   allowed.insert( 302 );
-   allowed.insert( 303 );
-   allowed.insert( 304 );
-   allowed.insert( 305 );
    allowed.insert( 306 );
+   allowed.insert(179);
    allowed.insert( 307 );
+   allowed.insert(180);
+   allowed.insert(158);
    allowed.insert( 308 );
+   allowed.insert(181);
 
    return allowed;
 }

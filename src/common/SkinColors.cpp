@@ -334,15 +334,7 @@ namespace Colors
    namespace VuMeter
    {
       const Surge::Skin::Color Background("vumeter.background", 21, 21, 21),
-                               Border("vumeter.border", 205, 206, 212),
-                               LowLevel("vumeter.level.low", 35, 201, 43),
-                               LowLevelNotch( "vumeter.level.low.notch", 0, 50, 12 ),
-                               MidLevel( "vumeter.level.mid", 220, 220, 33 ),
-                               MidLevelNotch( "vumeter.level.mid.notch", 60, 60, 8 ),
-                               HighLevel("vumeter.level.high", 255, 0, 0),
-                               HighLevelNotch( "vumeter.level.high.notch", 80, 0, 0 ),
-                               GRLevel( "vumeter.level.gr", 255, 0, 0 ),
-                               GRLevelNotch( "vumeter.level.gr.notch", 80, 0, 0 );
-                               
+                               Border("vumeter.border", 205, 206, 212);
+
    }
 }
