@@ -432,6 +432,8 @@ private:
    std::string typeinResetLabel = "";
 
    VSTGUI::CViewContainer *editorOverlay = nullptr;
+   VSTGUI::CView* editorOverlayContentsWeakReference =
+       nullptr; // Use this very very carefully. It may hold a dangling ref until #3223
    std::function<void()> editorOverlayOnClose = [](){};
 
    VSTGUI::CViewContainer *minieditOverlay = nullptr;

@@ -1687,6 +1687,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
    if( editorOverlay )
    {
       frame->addView( editorOverlay );
+      /*
+       * This is a hack for 1.8 which we have to clean up in 1.9 when we do #3223
+       */
+      auto mse = dynamic_cast<MSEGEditor*>(editorOverlayContentsWeakReference);
+      if (mse)
+      {
+         mse->forceRefresh();
+      }
    }
    
    refresh_mod();
@@ -1863,6 +1871,7 @@ void SurgeGUIEditor::close()
       editorOverlayTagAtClose = editorOverlayTag;
       editorOverlayTag = "";
       editorOverlay = nullptr;
+      editorOverlayContentsWeakReference = nullptr;
    }
 #if TARGET_VST2 // && WINDOWS
    // We may need this in other hosts also; but for now
@@ -3987,6 +3996,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
          editorOverlay = nullptr;
          editorOverlayTag = "";
          editorOverlayTagAtClose = "";
+         editorOverlayContentsWeakReference = nullptr;
       }
    }
    break;
@@ -6618,6 +6628,7 @@ void SurgeGUIEditor::dismissEditorOverlay()
       editorOverlay = nullptr;
       editorOverlayTag = "";
       editorOverlayTagAtClose = "";
+      editorOverlayContentsWeakReference = nullptr;
    }
 }
 
@@ -6752,6 +6763,7 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    editorOverlayOnClose = onClose;
    editorOverlayTag = editorTag;
    editorOverlayTagAtClose = editorTag;
+   editorOverlayContentsWeakReference = c;
 }
 
 std::string SurgeGUIEditor::getDisplayForTag( long tag )

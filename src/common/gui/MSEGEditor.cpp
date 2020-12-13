@@ -612,9 +612,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
          }
 
+         auto pxa = px - lw * 0.5;
+         if (pxa < haxisArea.left || pxa > haxisArea.right)
+            continue;
+
          dc->setLineWidth(lw);
-         dc->drawLine(CPoint(px - (lw * 0.5), haxisArea.top),
-                      CPoint(px - (lw * 0.5), haxisArea.bottom - off));
+         dc->drawLine(CPoint(pxa, haxisArea.top), CPoint(pxa, haxisArea.bottom - off));
 
          char txt[16];
 
@@ -1047,6 +1050,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             dc->setFrameColor(secondaryVGridColor);
          }
 
+         float pxa = px - lw * 0.5;
+         if (pxa < drawArea.left || pxa > drawArea.right)
+            continue;
+
          if (t > 0.1)
          {
             dc->setLineWidth(lw);
@@ -1251,6 +1258,20 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             openPopup(where);
          }
+         else
+         {
+            /*
+             * Edge case: Hotzones can span the axis and we want the entire node
+             * to be right mouse clickable
+             */
+            for (auto h : hotzones)
+            {
+               if (h.rect.pointInside(where))
+               {
+                  openPopup(where);
+               }
+            }
+         }
          return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
       }
       if (buttons & kDoubleClick)
@@ -1334,8 +1355,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          }
          if( ! amOverControl )
          {
-            inDrawDrag = true;
-            return kMouseEventHandled;
+            auto da = getDrawArea();
+            /*
+             * Only initiate draws in the draw area allowing the axis to still pan and zoom
+             */
+            if (da.pointInside(where))
+            {
+               inDrawDrag = true;
+               return kMouseEventHandled;
+            }
          }
       }
 
@@ -2471,6 +2499,16 @@ struct MSEGMainEd : public CViewContainer {
       addView( msegControl );
    }
 
+   void forceRefresh()
+   {
+      for (auto i = 0; i < getNbViews(); ++i)
+      {
+         auto cv = dynamic_cast<MSEGCanvas*>(getView(i));
+         if (cv)
+            cv->modelChanged();
+      }
+   }
+
    Surge::UI::Skin::ptr_t skin;
    MSEGStorage *ms;
 
@@ -2496,5 +2534,14 @@ MSEGEditor::MSEGEditor(SurgeStorage* storage, LFOStorage* lfodata, MSEGStorage* 
    addView( new MSEGMainEd( getViewSize(), storage, lfodata, ms, eds, skin, b ) );
 }
 
-MSEGEditor::~MSEGEditor() {
+MSEGEditor::~MSEGEditor() = default;
+
+void MSEGEditor::forceRefresh()
+{
+   for (auto i = 0; i < getNbViews(); ++i)
+   {
+      auto ed = dynamic_cast<MSEGMainEd*>(getView(i));
+      if (ed)
+         ed->forceRefresh();
+   }
 }
