@@ -117,12 +117,27 @@ void CLFOGui::draw(CDrawContext* dc)
 
 
       float susTime = 0.5;
-      float totalEnvTime =  pow(2.0f,lfodata->delay.val.f) +
-          pow(2.0f,lfodata->attack.val.f) +
-          pow(2.0f,lfodata->hold.val.f) +
-          pow(2.0f,lfodata->decay.val.f) +
-          std::min(pow(2.0f,lfodata->release.val.f), 4.f) +
-          susTime;
+      bool msegRelease = false;
+      float msegReleaseAt = 0;
+      float lfoEnvelopeDAHDTime = pow(2.0f, lfodata->delay.val.f) +
+                                  pow(2.0f, lfodata->attack.val.f) +
+                                  pow(2.0f, lfodata->hold.val.f) + pow(2.0f, lfodata->decay.val.f);
+
+      if (lfodata->shape.val.i == lt_mseg)
+      {
+         // We want the sus time to get us through at least one loop
+         if (ms->loopMode == MSEGStorage::GATED_LOOP && ms->editMode == MSEGStorage::ENVELOPE &&
+             ms->loop_end >= 0)
+         {
+            float loopEndsAt = ms->segmentEnd[ms->loop_end];
+            susTime = std::max(0.5f, loopEndsAt - lfoEnvelopeDAHDTime);
+            msegReleaseAt = lfoEnvelopeDAHDTime + susTime;
+            msegRelease = true;
+         }
+      }
+
+      float totalEnvTime = lfoEnvelopeDAHDTime + std::min(pow(2.0f, lfodata->release.val.f), 4.f) +
+                           0.5; // susTime; this is now 0.5 to keep the envelope fixed in gate mode
 
       LfoModulationSource* tlfo = new LfoModulationSource();
       LfoModulationSource* tFullWave = nullptr;
@@ -472,6 +487,20 @@ void CLFOGui::draw(CDrawContext* dc)
          dc->drawLine(sp, ep);
       }
 
+      /*
+       * In 1.8 I think we don't want to show the key release point in the simulated wave
+       * with the MSEG but I wrote it to debug and we may change our mid so keeping this code
+       * here
+       */
+      if (msegRelease && false)
+      {
+         float xp = msegReleaseAt / drawnTime * valScale;
+         CPoint sp(xp, valScale * 0.9), ep(xp, valScale * 0.1);
+         tf.transform(sp);
+         tf.transform(ep);
+         dc->setFrameColor(kRedCColor);
+         dc->drawLine(sp, ep);
+      }
       dc->restoreGlobalState();
       path->forget();
       deactPath->forget();
