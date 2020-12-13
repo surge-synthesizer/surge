@@ -18,6 +18,7 @@
 #include "SurgeParamConfig.h"
 #include "SkinSupport.h"
 
+class CScalableBitmap;
 class CSurgeVuMeter : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
 public:
@@ -37,5 +38,6 @@ public:
 private:
    float valueR;
    int type;
+   CScalableBitmap* hVuBars = nullptr;
    CLASS_METHODS(CSurgeVuMeter, VSTGUI::CControl)
 };
