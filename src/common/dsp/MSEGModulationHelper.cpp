@@ -973,13 +973,33 @@ void mirrorMSEG(MSEGStorage* ms)
 
 void createInitMSEG(MSEGStorage* ms)
 {
-   ms->n_activeSegments = 1;
+   ms->n_activeSegments = 4;
    ms->segments[0].duration = 1.f;
    ms->segments[0].type = MSEGStorage::segment::LINEAR;
-   ms->segments[0].cpv = 0.f;
+   ms->segments[0].cpv = 0.8;
    ms->segments[0].cpduration = 0.5;
-   ms->segments[0].v0 = 1.f;
-   ms->segments[0].nv1 = -1.f;
+   ms->segments[0].v0 = 0.f;
+   ms->segments[1].duration = 1.f;
+   ms->segments[1].type = MSEGStorage::segment::LINEAR;
+   ms->segments[1].cpv = 0.8;
+   ms->segments[1].cpduration = 0.5;
+   ms->segments[1].v0 = 1.f;
+   ms->segments[2].duration = 1.f;
+   ms->segments[2].type = MSEGStorage::segment::LINEAR;
+   ms->segments[2].cpv = 0.5;
+   ms->segments[2].cpduration = 0.8;
+   ms->segments[2].v0 = 0.5;
+   ms->segments[3].duration = 1.f;
+   ms->segments[3].type = MSEGStorage::segment::LINEAR;
+   ms->segments[3].cpv = 0.5;
+   ms->segments[3].cpduration = 0.8;
+   ms->segments[3].v0 = 0.5;
+   ms->segments[3].nv1 = 0.f;
+
+   ms->loop_start = 2;
+   ms->loop_end = 2;
+
+   ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
    ms->endpointMode = MSEGStorage::EndpointMode::FREE;
 
    Surge::MSEG::rebuildCache(ms);
