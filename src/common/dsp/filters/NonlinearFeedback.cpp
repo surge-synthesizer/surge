@@ -81,6 +81,7 @@ static inline __m128 doNLFilter(
       const __m128 b0,
       const __m128 b1,
       const __m128 b2,
+      const __m128 makeup,
       const int sat,
       __m128 &z1,
       __m128 &z2)
@@ -110,7 +111,7 @@ static inline __m128 doNLFilter(
    z1 = A(z2, S(M(b1, input), M(a1, nf)));
    // z2 = b2 * input - a2 * nf
    z2 = S(M(b2, input), M(a2, nf));
-   return out;
+   return M(out, makeup);
 }
 
 namespace NonlinearFeedbackFilter
@@ -121,6 +122,7 @@ namespace NonlinearFeedbackFilter
       nlf_b0,
       nlf_b1,
       nlf_b2,
+      nlf_makeup,
       n_nlf_coeff
    };
 
@@ -141,7 +143,8 @@ namespace NonlinearFeedbackFilter
 
       const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
-      const float wc = 2.0f * M_PI * clampedFrequency(freq, storage) / dsamplerate_os;
+      const float normalisedFreq = clampedFrequency(freq, storage) / dsamplerate_os;
+      const float wc = 2.0f * M_PI * normalisedFreq;
 
       const float wsin  = Surge::DSP::fastsin(wc);
       const float wcos  = Surge::DSP::fastcos(wc);
@@ -153,17 +156,20 @@ namespace NonlinearFeedbackFilter
 
       C[nlf_a1] = -2.0f * wcos    * a0r;
       C[nlf_a2] = (1.0f - alpha)  * a0r;
+      C[nlf_makeup] = 1.0f;
 
       switch(type){
          case fut_nonlinearfb_lp: // lowpass
             C[nlf_b1] =  (1.0f - wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] *  0.5f;
             C[nlf_b2] = C[nlf_b0];
+            C[nlf_makeup] = 1.0f / std::pow(std::max(normalisedFreq, 0.001f), 0.333f);
             break;
          case fut_nonlinearfb_hp: // highpass
             C[nlf_b1] = -(1.0f + wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] * -0.5f;
             C[nlf_b2] = C[nlf_b0];
+            C[nlf_makeup] = 1.0f / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.333f);
             break;
          case fut_nonlinearfb_n: // notch
             C[nlf_b0] = a0r;
@@ -201,6 +207,7 @@ namespace NonlinearFeedbackFilter
                   f->C[nlf_b0],
                   f->C[nlf_b1],
                   f->C[nlf_b2],
+                  f->C[nlf_makeup],
                   sat,
                   f->R[nlf_z1 + stage*2],
                   f->R[nlf_z2 + stage*2]);
