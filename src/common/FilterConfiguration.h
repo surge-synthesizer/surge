@@ -145,12 +145,12 @@ const char fut_names[n_fu_types][32] =
         "N 24 dB",          // fut_notch24
         "FX Comb -",        // fut_comb_neg
         "FX Allpass",       // fut_apf
-        "FX NLFB Allpass",  // fut_nonlinearfb_ap
+        "FX NL Feedback AP",  // fut_nonlinearfb_ap
         "LP NL States",     // fut_nonlinearst_lp
         "HP NL States",     // fut_nonlinearst_hp
         "N NL States",      // fut_nonlinearst_n
         "BP NL States",     // fut_nonlinearst_bp
-        "FX NLST Allpass",  // fut_nonlinearst_ap
+        "FX NL States AP",  // fut_nonlinearst_ap
         /* this is a ruler to ensure names do not exceed 31 characters
          0123456789012345678901234567890
         */
@@ -437,8 +437,8 @@ const int fut_glyph_index[n_fu_types][2] =
         { 4, lprow }, // fut_vintageladder
         { 6, lprow }, // fut_obxd_2pole
         { 7, lprow }, // fut_obxd_4pole
-        { 3, lprow }, // fut_k35_lp
-        { 3, hprow }, // fut_k35_hp
+        { 2, lprow }, // fut_k35_lp
+        { 2, hprow }, // fut_k35_hp
         { 5, lprow }, // fut_diode
         { 8, lprow }, // fut_nonlinearfb_lp
         { 4, hprow }, // fut_nonlinearfb_hp
