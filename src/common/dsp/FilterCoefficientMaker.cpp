@@ -131,7 +131,7 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_nonlinearfb_n:
    case fut_nonlinearfb_bp:
    case fut_nonlinearfb_ap:
-      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
+      NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, SubType, storageI);
       break;
    case fut_nonlinearst_lp:
    case fut_nonlinearst_hp:

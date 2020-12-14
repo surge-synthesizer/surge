@@ -10,6 +10,7 @@ void restreamTemplatesWithModifications();
 void statsFromPlayingEveryPatch();
 void playSomeBach();
 void filterAnalyzer( int ft, int fst, float cut = 12 /* in notes from note 69 */ );
+void generateNLFeedbackNorms();
 }
 }
 }

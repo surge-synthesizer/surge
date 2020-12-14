@@ -137,7 +137,7 @@ namespace NonlinearFeedbackFilter
       nlf_z8, // 2nd z-1 state for fourth stage
    };
 
-   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int type, SurgeStorage *storage )
+   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int type, int subtype, SurgeStorage *storage )
    {
       float C[n_cm_coeffs];
 
@@ -158,18 +158,55 @@ namespace NonlinearFeedbackFilter
       C[nlf_a2] = (1.0f - alpha)  * a0r;
       C[nlf_makeup] = 1.0f;
 
+      /*
+       * To see where this table comes from look in the HeadlessNonTestFunctions.
+       */
+      const bool useNormalization = true;
+      float normNumerator = 1.0f;
+      const float lpNormTable[12] = {
+          1.12215,
+          0.946168,
+          0.854176,
+          0.803073,
+          0.852984,
+          0.685058,
+          0.598567,
+          0.574069,
+          0.555141,
+          0.2764,
+          0.234219,
+          0.235227
+      };
+      const float hpNormTable[12] = {
+          4.18885,
+          3.11128,
+          2.69236,
+          2.06871,
+          3.16804,
+          2.36259,
+          2.1021,
+          1.64437,
+          1.44636,
+          1.3442,
+          1.19402,
+          1.07743
+      };
+
+
       switch(type){
          case fut_nonlinearfb_lp: // lowpass
+            if (useNormalization) normNumerator = lpNormTable[subtype];
             C[nlf_b1] =  (1.0f - wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] *  0.5f;
             C[nlf_b2] = C[nlf_b0];
-            C[nlf_makeup] = 1.0f / std::pow(std::max(normalisedFreq, 0.001f), 0.333f);
+            C[nlf_makeup] = normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.333f);
             break;
          case fut_nonlinearfb_hp: // highpass
+            if (useNormalization) normNumerator = hpNormTable[subtype];
             C[nlf_b1] = -(1.0f + wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] * -0.5f;
             C[nlf_b2] = C[nlf_b0];
-            C[nlf_makeup] = 1.0f / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.333f);
+            C[nlf_makeup] = normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.333f);
             break;
          case fut_nonlinearfb_n: // notch
             C[nlf_b0] = a0r;
