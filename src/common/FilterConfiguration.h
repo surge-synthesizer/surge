@@ -65,10 +65,10 @@ enum fu_type_sv14
    fut_14_k35_lp,
    fut_14_k35_hp,
    fut_14_diode,
-   fut_14_nonlinearfb_lp,
-   fut_14_nonlinearfb_hp,
-   fut_14_nonlinearfb_n,
-   fut_14_nonlinearfb_bp,
+   fut_14_cutoffwarp_lp,
+   fut_14_cutoffwarp_hp,
+   fut_14_cutoffwarp_n,
+   fut_14_cutoffwarp_bp,
    n_fu_14_types,
 };
 
@@ -90,10 +90,10 @@ enum fu_type
    fut_k35_lp,
    fut_k35_hp,
    fut_diode,
-   fut_nonlinearfb_lp,
-   fut_nonlinearfb_hp,
-   fut_nonlinearfb_n,
-   fut_nonlinearfb_bp,
+   fut_cutoffwarp_lp,
+   fut_cutoffwarp_hp,
+   fut_cutoffwarp_n,
+   fut_cutoffwarp_bp,
    fut_obxd_2pole_hp,
    fut_obxd_2pole_n,
    fut_obxd_2pole_bp,
@@ -101,12 +101,12 @@ enum fu_type
    fut_notch24,
    fut_comb_neg,
    fut_apf,
-   fut_nonlinearfb_ap,
-   fut_nonlinearst_lp,
-   fut_nonlinearst_hp,
-   fut_nonlinearst_n,
-   fut_nonlinearst_bp,
-   fut_nonlinearst_ap,
+   fut_cutoffwarp_ap,
+   fut_resonancewarp_lp,
+   fut_resonancewarp_hp,
+   fut_resonancewarp_n,
+   fut_resonancewarp_bp,
+   fut_resonancewarp_ap,
    n_fu_types,
 };
 
@@ -134,10 +134,10 @@ const char fut_names[n_fu_types][32] =
         "LP K35",           // fut_k35_lp
         "HP K35",           // fut_k35_hp
         "LP Diode Ladder",  // fut_diode
-        "LP NL Feedback",   // fut_nonlinearfb_lp
-        "HP NL Feedback",   // fut_nonlinearfb_hp
-        "N NL Feedback",    // fut_nonlinearfb_n
-        "BP NL Feedback",   // fut_nonlinearfb_bp
+        "LP Cutoff Warp",   // fut_cutoffwarp_lp
+        "HP Cutoff Warp",   // fut_cutoffwarp_hp
+        "N Cutoff Warp",    // fut_cutoffwarp_n
+        "BP Cutoff Warp",   // fut_cutoffwarp_bp
         "HP OB-Xd 12 dB",   // fut_obxd_2pole_hp
         "N OB-Xd 12 dB",    // fut_obxd_2pole_n
         "BP OB-Xd 12 dB",   // fut_obxd_2pole_bp
@@ -145,12 +145,12 @@ const char fut_names[n_fu_types][32] =
         "N 24 dB",          // fut_notch24
         "FX Comb -",        // fut_comb_neg
         "FX Allpass",       // fut_apf
-        "FX NL Feedback AP",  // fut_nonlinearfb_ap
-        "LP NL States",     // fut_nonlinearst_lp
-        "HP NL States",     // fut_nonlinearst_hp
-        "N NL States",      // fut_nonlinearst_n
-        "BP NL States",     // fut_nonlinearst_bp
-        "FX NL States AP",  // fut_nonlinearst_ap
+        "FX Cutoff Warp AP",  // fut_cutoffwarp_ap
+        "LP Res Warp",     // fut_resonancewarp_lp
+        "HP Res Warp",     // fut_resonancewarp_hp
+        "N Res Warp",      // fut_resonancewarp_n
+        "BP Res Warp",     // fut_resonancewarp_bp
+        "FX Res Warp AP",  // fut_resonancewarp_ap
         /* this is a ruler to ensure names do not exceed 31 characters
          0123456789012345678901234567890
         */
@@ -174,10 +174,10 @@ const char fut_menu_names[n_fu_types][32] =
         "K35", // LP
         "K35", // HP
         "Diode Ladder",
-        "Non-linear Feedback", // LP
-        "Non-linear Feedback", // HP
-        "Non-linear Feedback", // N
-        "Non-linear Feedback", // BP
+        "Cutoff Warp", // LP
+        "Cutoff Warp", // HP
+        "Cutoff Warp", // N
+        "Cutoff Warp", // BP
         "OB-Xd 12 dB", // HP
         "OB-Xd 12 dB", // N
         "OB-Xd 12 dB", // BP
@@ -185,12 +185,12 @@ const char fut_menu_names[n_fu_types][32] =
         "24 dB", // N
         "Comb -",
         "Allpass",
-        "Non-linear Feedback Allpass",
-        "Non-linear States", // LP
-        "Non-linear States", // HP
-        "Non-linear States", // N
-        "Non-linear States", // BP
-        "Non-linear States Allpass",
+        "Cutoff Warp Allpass",
+        "Resonance Warp", // LP
+        "Resonance Warp", // HP
+        "Resonance Warp", // N
+        "Resonance Warp", // BP
+        "Resonance Warp Allpass",
         /* this is a ruler to ensure names do not exceed 31 characters
          0123456789012345678901234567890
         */
@@ -303,10 +303,10 @@ const int fut_subcount[n_fu_types] =
         5,  // fut_k35_lp
         5,  // fut_k35_hp
         4,  // fut_diode
-        12, // fut_nonlinearfb_lp
-        12, // fut_nonlinearfb_hp
-        12, // fut_nonlinearfb_n
-        12, // fut_nonlinearfb_bp
+        12, // fut_cutoffwarp_lp
+        12, // fut_cutoffwarp_hp
+        12, // fut_cutoffwarp_n
+        12, // fut_cutoffwarp_bp
         2,  // fut_obxd_2pole_hp,
         2,  // fut_obxd_2pole_n,
         2,  // fut_obxd_2pole_bp,
@@ -314,12 +314,12 @@ const int fut_subcount[n_fu_types] =
         2,  // fut_notch24,
         2,  // fut_comb_neg,
         0,  // fut_apf
-        12, // fut_nonlinearfb_ap
-        8, // fut_nonlinearst_lp
-        8, // fut_nonlinearst_hp
-        8, // fut_nonlinearst_n
-        8, // fut_nonlinearst_bp
-        8, // fut_nonlinearst_ap
+        12, // fut_cutoffwarp_ap
+        8, // fut_resonancewarp_lp
+        8, // fut_resonancewarp_hp
+        8, // fut_resonancewarp_n
+        8, // fut_resonancewarp_bp
+        8, // fut_resonancewarp_ap
     };
 
 enum fu_subtype
@@ -349,31 +349,31 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper {
       p(fut_diode, "Lowpass" );
       p(fut_obxd_2pole_lp, "Lowpass" ); // ADJ
       p(fut_obxd_4pole, "Lowpass" );
-      p(fut_nonlinearfb_lp, "Lowpass" );
-      p(fut_nonlinearst_lp, "Lowpass" );
+      p(fut_cutoffwarp_lp, "Lowpass" );
+      p(fut_resonancewarp_lp, "Lowpass" );
 
       p(fut_bp12, "Bandpass" );
       p(fut_bp24, "Bandpass" );
       p(fut_obxd_2pole_bp, "Bandpass" );
-      p(fut_nonlinearfb_bp, "Bandpass" );
-      p(fut_nonlinearst_bp, "Bandpass" );
+      p(fut_cutoffwarp_bp, "Bandpass" );
+      p(fut_resonancewarp_bp, "Bandpass" );
 
       p(fut_hp12, "Highpass" );
       p(fut_hp24, "Highpass" );
       p(fut_k35_hp, "Highpass" );
       p(fut_obxd_2pole_hp, "Highpass" );
-      p(fut_nonlinearfb_hp, "Highpass" );
-      p(fut_nonlinearst_hp, "Highpass" );
+      p(fut_cutoffwarp_hp, "Highpass" );
+      p(fut_resonancewarp_hp, "Highpass" );
 
       p(fut_notch12, "Notch" );
       p(fut_notch24, "Notch" );
       p(fut_obxd_2pole_n, "Notch" );
-      p(fut_nonlinearfb_n, "Notch" );
-      p(fut_nonlinearst_n, "Notch" );
+      p(fut_cutoffwarp_n, "Notch" );
+      p(fut_resonancewarp_n, "Notch" );
 
       p(fut_apf, "Effect" );
-      p(fut_nonlinearfb_ap, "Effect" );
-      p(fut_nonlinearst_ap, "Effect" );
+      p(fut_cutoffwarp_ap, "Effect" );
+      p(fut_resonancewarp_ap, "Effect" );
       p(fut_comb_pos, "Effect" );
       p(fut_comb_neg, "Effect" );
       p(fut_SNH, "Effect" );
@@ -440,10 +440,10 @@ const int fut_glyph_index[n_fu_types][2] =
         { 2, lprow }, // fut_k35_lp
         { 2, hprow }, // fut_k35_hp
         { 5, lprow }, // fut_diode
-        { 8, lprow }, // fut_nonlinearfb_lp
-        { 4, hprow }, // fut_nonlinearfb_hp
-        { 3,  nrow }, // fut_nonlinearfb_n
-        { 3, bprow }, // fut_nonlinearfb_bp
+        { 8, lprow }, // fut_cutoffwarp_lp
+        { 4, hprow }, // fut_cutoffwarp_hp
+        { 3,  nrow }, // fut_cutoffwarp_n
+        { 3, bprow }, // fut_cutoffwarp_bp
         { 3, hprow }, // fut_obxd_2pole_hp,
         { 2,  nrow }, // fut_obxd_2pole_n,
         { 2, bprow }, // fut_obxd_2pole_bp,
@@ -451,10 +451,10 @@ const int fut_glyph_index[n_fu_types][2] =
         { 1,  nrow }, // fut_notch24,
         { 2, fxrow }, // fut_comb_neg,
         { 0, fxrow }, // fut_apf
-        { 0, fxrow }, // fut_nonlinearfb_ap (this is temporarily set to just use the regular AP glyph)
-        { 8, lprow }, // fut_nonlinearst_lp
-        { 4, hprow }, // fut_nonlinearst_hp
-        { 3,  nrow }, // fut_nonlinearst_n
-        { 3, bprow }, // fut_nonlinearst_bp
-        { 0, fxrow }, // fut_nonlinearst_ap (also temporarily set to just use the regular AP glyph)
+        { 0, fxrow }, // fut_cutoffwarp_ap (this is temporarily set to just use the regular AP glyph)
+        { 8, lprow }, // fut_resonancewarp_lp
+        { 4, hprow }, // fut_resonancewarp_hp
+        { 3,  nrow }, // fut_resonancewarp_n
+        { 3, bprow }, // fut_resonancewarp_bp
+        { 0, fxrow }, // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
     };

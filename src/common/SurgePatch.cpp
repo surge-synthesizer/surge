@@ -1504,10 +1504,10 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             case fut_14_k35_lp:
             case fut_14_k35_hp:
             case fut_14_diode:
-            case fut_14_nonlinearfb_lp:
-            case fut_14_nonlinearfb_hp:
-            case fut_14_nonlinearfb_n:
-            case fut_14_nonlinearfb_bp:
+            case fut_14_cutoffwarp_lp:
+            case fut_14_cutoffwarp_hp:
+            case fut_14_cutoffwarp_n:
+            case fut_14_cutoffwarp_bp:
             case n_fu_14_types:
                // These types were unchanged
                break;

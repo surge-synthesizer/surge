@@ -163,57 +163,68 @@ namespace NonlinearFeedbackFilter
        */
       const bool useNormalization = true;
       float normNumerator = 1.0f;
+
+      // tweaked these by hand/ear after the RMS measuring program did its thing... this world still needs humans! :) - EvilDragon
       const float lpNormTable[12] = {
-          1.12215,
-          0.946168,
+          1.0,
+          0.900168,
           0.854176,
-          0.803073,
-          0.852984,
-          0.685058,
-          0.598567,
-          0.574069,
-          0.555141,
-          0.2764,
-          0.234219,
-          0.235227
+          0.813073,
+          0.962984,
+          0.865058,
+          0.808567,
+          0.774069,
+          0.885141,
+          0.786042,
+          0.734219,
+          0.700227
       };
       const float hpNormTable[12] = {
-          4.18885,
-          3.11128,
-          2.69236,
-          2.06871,
-          3.16804,
-          2.36259,
-          2.1021,
-          1.64437,
-          1.44636,
-          1.3442,
-          1.19402,
-          1.07743
+          2.18885,
+          1.31128,
+          1.09236,
+          0.96871,
+          2.16804,
+          1.16259,
+          1.1021,
+          0.96437,
+          1.24636,
+          1.0442,
+          0.99402,
+          0.87743
       };
 
-
       switch(type){
-         case fut_nonlinearfb_lp: // lowpass
-            if (useNormalization) normNumerator = lpNormTable[subtype];
+         case fut_cutoffwarp_lp: // lowpass
             C[nlf_b1] =  (1.0f - wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] *  0.5f;
             C[nlf_b2] = C[nlf_b0];
+
+            if (useNormalization)
+            {
+               normNumerator = lpNormTable[subtype];
+            }
             C[nlf_makeup] = normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.333f);
+            
             break;
-         case fut_nonlinearfb_hp: // highpass
-            if (useNormalization) normNumerator = hpNormTable[subtype];
+         case fut_cutoffwarp_hp: // highpass
             C[nlf_b1] = -(1.0f + wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] * -0.5f;
             C[nlf_b2] = C[nlf_b0];
+
+            if (useNormalization)
+            {
+               normNumerator = hpNormTable[subtype];
+            }
             C[nlf_makeup] = normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.333f);
+
             break;
-         case fut_nonlinearfb_n: // notch
+         case fut_cutoffwarp_n: // notch
             C[nlf_b0] = a0r;
             C[nlf_b1] = -2.0f * wcos   * a0r;
             C[nlf_b2] = C[nlf_b0];
             break;
-         case fut_nonlinearfb_bp: // bandpass
+         case fut_cutoffwarp_bp: // bandpass
             C[nlf_b0] = wsin * 0.5f    * a0r;
             C[nlf_b1] = 0.0f;
             C[nlf_b2] = -C[nlf_b0];
@@ -235,7 +246,7 @@ namespace NonlinearFeedbackFilter
       // next two bits after that select the saturator
       const int sat = ((f->WP[0] >> 2) & 3);
 
-      // n.b. stages is zero-indexed so use <=
+      // n.b. stages are zero-indexed so use <=
       for(int stage = 0; stage <= stages; ++stage){
          input =
             doNLFilter(input,

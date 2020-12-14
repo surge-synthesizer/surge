@@ -108,22 +108,22 @@ namespace NonlinearStatesFilter
       C[nls_a2] = (1.0f - alpha)  * a0r;
 
       switch(type){
-         case fut_nonlinearst_lp: // lowpass
+         case fut_resonancewarp_lp: // lowpass
             C[nls_b1] =  (1.0f - wcos) * a0r;
             C[nls_b0] = C[nls_b1] *  0.5f;
             C[nls_b2] = C[nls_b0];
             break;
-         case fut_nonlinearst_hp: // highpass
+         case fut_resonancewarp_hp: // highpass
             C[nls_b1] = -(1.0f + wcos) * a0r;
             C[nls_b0] = C[nls_b1] * -0.5f;
             C[nls_b2] = C[nls_b0];
             break;
-         case fut_nonlinearst_n: // notch
+         case fut_resonancewarp_n: // notch
             C[nls_b0] = a0r;
             C[nls_b1] = -2.0f * wcos   * a0r;
             C[nls_b2] = C[nls_b0];
             break;
-         case fut_nonlinearst_bp: // bandpass
+         case fut_resonancewarp_bp: // bandpass
             C[nls_b0] = wsin * 0.5f    * a0r;
             C[nls_b1] = 0.0f;
             C[nls_b2] = -C[nls_b0];

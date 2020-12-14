@@ -316,8 +316,8 @@ void generateNLFeedbackNorms()
    std::vector<float> results;
    for( int nlfst = 0; nlfst < 12; nlfst++ )
    {
-      auto r = playRMS( setup( genLowpass ? fut_nonlinearfb_lp : fut_nonlinearfb_hp, nlfst ));
-      //auto r = playRMS( setup( fut_nonlinearfb_hp, nlfst));
+      auto r = playRMS( setup( genLowpass ? fut_cutoffwarp_lp : fut_cutoffwarp_hp, nlfst ));
+      //auto r = playRMS( setup( fut_cutoffwarp_hp, nlfst));
       std::cout << "// RMS=" << r << " Ratio=" << r / basecaseRMS << std::endl;
       results.push_back(r);
    }

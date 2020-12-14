@@ -1035,16 +1035,16 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
             switch(scene->filterunit[u].type.val.i){
                case fut_lpmoog:
                case fut_diode:
-               case fut_nonlinearfb_lp:
-               case fut_nonlinearfb_hp:
-               case fut_nonlinearfb_n:
-               case fut_nonlinearfb_bp:
-               case fut_nonlinearfb_ap:
-               case fut_nonlinearst_lp:
-               case fut_nonlinearst_hp:
-               case fut_nonlinearst_n:
-               case fut_nonlinearst_bp:
-               case fut_nonlinearst_ap:
+               case fut_cutoffwarp_lp:
+               case fut_cutoffwarp_hp:
+               case fut_cutoffwarp_n:
+               case fut_cutoffwarp_bp:
+               case fut_cutoffwarp_ap:
+               case fut_resonancewarp_lp:
+               case fut_resonancewarp_hp:
+               case fut_resonancewarp_n:
+               case fut_resonancewarp_bp:
+               case fut_resonancewarp_ap:
                   // subtype is stored in WP[0] for the entire quad.
                   // this is fine because integer parameters like this are not modulatable, and
                   // quads are only parallel across voices, so the quad would have identical
@@ -1074,16 +1074,16 @@ void SurgeVoice::SetQFB(QuadFilterChainState* Q, int e) // Q == 0 means init(ial
                switch(scene->filterunit[u].type.val.i){
                   case fut_lpmoog:
                   case fut_diode:
-                  case fut_nonlinearfb_lp:
-                  case fut_nonlinearfb_hp:
-                  case fut_nonlinearfb_n:
-                  case fut_nonlinearfb_bp:
-                  case fut_nonlinearfb_ap:
-                  case fut_nonlinearst_lp:
-                  case fut_nonlinearst_hp:
-                  case fut_nonlinearst_n:
-                  case fut_nonlinearst_bp:
-                  case fut_nonlinearst_ap:
+                  case fut_cutoffwarp_lp:
+                  case fut_cutoffwarp_hp:
+                  case fut_cutoffwarp_n:
+                  case fut_cutoffwarp_bp:
+                  case fut_cutoffwarp_ap:
+                  case fut_resonancewarp_lp:
+                  case fut_resonancewarp_hp:
+                  case fut_resonancewarp_n:
+                  case fut_resonancewarp_bp:
+                  case fut_resonancewarp_ap:
                      Q->FU[u + 2].WP[0] = scene->filterunit[u].subtype.val.i;
                      break;
                   default:
