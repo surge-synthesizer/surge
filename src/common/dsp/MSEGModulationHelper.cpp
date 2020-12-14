@@ -1020,6 +1020,11 @@ void createStepseqMSEG(MSEGStorage* ms, int numSegments)
    ms->segments[numSegments - 1].nv1 = ms->segments[0].v0;
    ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
 
+   ms->loop_start = 0;
+   ms->loop_end = numSegments - 1;
+   ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+   ms->loopMode = MSEGStorage::LOOP;
+
    Surge::MSEG::rebuildCache(ms);
 }
 
@@ -1052,6 +1057,10 @@ void createSawMSEG(MSEGStorage* ms, int numSegments, float curve)
       ms->endpointMode = MSEGStorage::EndpointMode::FREE;
    }
 
+   ms->loop_start = 0;
+   ms->loop_end = ms->n_activeSegments - 1;
+   ms->loopMode = MSEGStorage::LOOP;
+
    Surge::MSEG::rebuildCache(ms);
 }
 
@@ -1069,6 +1078,12 @@ void createSinLineMSEG(MSEGStorage* ms, int numSegments)
       ms->segments[i].cpv = 0.0;
       ms->segments[i].type = MSEGStorage::segment::LINEAR;
    }
+
+   ms->loop_start = 0;
+   ms->loop_end = ms->n_activeSegments - 1;
+   ms->loopMode = MSEGStorage::LOOP;
+   ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
+
    Surge::MSEG::rebuildCache(ms);
 }
 
