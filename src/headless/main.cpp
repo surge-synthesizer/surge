@@ -40,11 +40,12 @@ int main(int argc, char** argv)
          {
             if( argc < 4 )
             {
-               std::cout << "Usage: --filter-analyzer type subtype co res\n";
+               std::cout << "Usage: --filter-analyzer type subtype\n";
                return 1;
             }
             Surge::Headless::NonTest::filterAnalyzer(std::atoi(argv[3]),
-                                                     std::atoi(argv[4])
+                                                     std::atoi(argv[4]),
+                                                     std::cout
             );
          }
       }
