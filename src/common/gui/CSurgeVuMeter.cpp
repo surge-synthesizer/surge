@@ -133,8 +133,8 @@ void CSurgeVuMeter::draw(CDrawContext* dc)
       auto occludeFromR = scale(valueR) * w;
       if (stereo)
       {
-         drL.bottom = drL.top + 5.5;
-         drR.top = drL.bottom;
+         drL.bottom = drL.top + 6;
+         drR.top = drL.bottom - 1;
       }
       drL.left += occludeFromL;
       drR.left += occludeFromR;
