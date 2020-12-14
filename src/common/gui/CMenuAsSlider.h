@@ -97,6 +97,7 @@ public:
    std::vector<std::pair<int,int>> glyphIndexMap;
 
    std::vector<int> intOrdering;
+   float nextValueInOrder( float valueFrom, int inc );
 
 private:
    VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr, *pGlyph = nullptr, *pGlyphHover = nullptr;
