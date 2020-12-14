@@ -81,6 +81,7 @@ static inline __m128 doNLFilter(
       const __m128 b0,
       const __m128 b1,
       const __m128 b2,
+      const __m128 makeup,
       const int sat,
       __m128 &z1,
       __m128 &z2)
@@ -110,7 +111,7 @@ static inline __m128 doNLFilter(
    z1 = A(z2, S(M(b1, input), M(a1, nf)));
    // z2 = b2 * input - a2 * nf
    z2 = S(M(b2, input), M(a2, nf));
-   return out;
+   return M(out, makeup);
 }
 
 namespace NonlinearFeedbackFilter
@@ -121,6 +122,7 @@ namespace NonlinearFeedbackFilter
       nlf_b0,
       nlf_b1,
       nlf_b2,
+      nlf_makeup,
       n_nlf_coeff
    };
 
@@ -135,13 +137,14 @@ namespace NonlinearFeedbackFilter
       nlf_z8, // 2nd z-1 state for fourth stage
    };
 
-   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int type, SurgeStorage *storage )
+   void makeCoefficients( FilterCoefficientMaker *cm, float freq, float reso, int type, int subtype, SurgeStorage *storage )
    {
       float C[n_cm_coeffs];
 
       const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
-      const float wc = 2.0f * M_PI * clampedFrequency(freq, storage) / dsamplerate_os;
+      const float normalisedFreq = clampedFrequency(freq, storage) / dsamplerate_os;
+      const float wc = 2.0f * M_PI * normalisedFreq;
 
       const float wsin  = Surge::DSP::fastsin(wc);
       const float wcos  = Surge::DSP::fastcos(wc);
@@ -153,17 +156,57 @@ namespace NonlinearFeedbackFilter
 
       C[nlf_a1] = -2.0f * wcos    * a0r;
       C[nlf_a2] = (1.0f - alpha)  * a0r;
+      C[nlf_makeup] = 1.0f;
+
+      /*
+       * To see where this table comes from look in the HeadlessNonTestFunctions.
+       */
+      const bool useNormalization = true;
+      float normNumerator = 1.0f;
+      const float lpNormTable[12] = {
+          1.12215,
+          0.946168,
+          0.854176,
+          0.803073,
+          0.852984,
+          0.685058,
+          0.598567,
+          0.574069,
+          0.555141,
+          0.2764,
+          0.234219,
+          0.235227
+      };
+      const float hpNormTable[12] = {
+          4.18885,
+          3.11128,
+          2.69236,
+          2.06871,
+          3.16804,
+          2.36259,
+          2.1021,
+          1.64437,
+          1.44636,
+          1.3442,
+          1.19402,
+          1.07743
+      };
+
 
       switch(type){
          case fut_nonlinearfb_lp: // lowpass
+            if (useNormalization) normNumerator = lpNormTable[subtype];
             C[nlf_b1] =  (1.0f - wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] *  0.5f;
             C[nlf_b2] = C[nlf_b0];
+            C[nlf_makeup] = normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.333f);
             break;
          case fut_nonlinearfb_hp: // highpass
+            if (useNormalization) normNumerator = hpNormTable[subtype];
             C[nlf_b1] = -(1.0f + wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] * -0.5f;
             C[nlf_b2] = C[nlf_b0];
+            C[nlf_makeup] = normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.333f);
             break;
          case fut_nonlinearfb_n: // notch
             C[nlf_b0] = a0r;
@@ -201,6 +244,7 @@ namespace NonlinearFeedbackFilter
                   f->C[nlf_b0],
                   f->C[nlf_b1],
                   f->C[nlf_b2],
+                  f->C[nlf_makeup],
                   sat,
                   f->R[nlf_z1 + stage*2],
                   f->R[nlf_z2 + stage*2]);

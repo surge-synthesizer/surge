@@ -210,6 +210,128 @@ void filterAnalyzer( int ft, int sft, float cut )
    }
 }
 
+void generateNLFeedbackNorms()
+{
+   /*
+    * This generates a normalization for the NL feedback. Here's how you use it
+    *
+    * In filters/NonlinearFeedback.cpp if there's a normalization table there
+    * disable it and make sure the law is just 1/f^1/3
+    *
+    * Build and run this with surge-headless --non-test --generate-nlf-norms
+    *
+    * Copy and paste the resulting table back into NLFB.cpp
+    *
+    * What it does is: Play a C major chord on init into the OBXD-24 LP for 3 seconds
+    * with resonance at 1, calculate the RMS
+    *
+    * Then do that for every subtype of NLF and calculate the RMS
+    *
+    * Then print out ratio basically.
+    */
+
+   bool genLowpass = false; // if false generate highpass
+
+   auto setup = [](int type, int subtype) {
+      auto surge = Surge::Headless::createSurge(48000);
+      for (auto i = 0; i < 10; ++i)
+      {
+         surge->process();
+      }
+      surge->storage.getPatch().scene[0].filterunit[0].type.val.i = type;
+      surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = subtype;
+      surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = -9;
+      surge->storage.getPatch().scene[0].filterunit[0].resonance.val.f = 0.95;
+      for (auto i = 0; i < 10; ++i)
+      {
+         surge->process();
+      }
+      char td[256], sd[256], cd[256];
+
+      surge->storage.getPatch().scene[0].filterunit[0].type.get_display(td);
+      surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(sd);
+      surge->storage.getPatch().scene[0].filterunit[0].cutoff.get_display(cd);
+      std::cout << "// Created a filter: " << td << " / " << sd << " Cutoff=" << cd  << std::endl;
+      return surge;
+   };
+
+   auto singleRMS = [genLowpass](std::shared_ptr<SurgeSynthesizer> surge)
+   {
+      for (auto i=0;i<10; ++i ) {
+         surge->process();
+      }
+
+      std::vector<int> notes = {{ 48, 60, 65, 67 }};
+      int noff = -12;
+      if( ! genLowpass ) noff = +15;
+      for( auto n : notes )
+      {
+         surge->playNote( 0, n-noff, 127, 0 );
+         surge->process();
+      }
+
+      for( int i=0; i<100; ++i )
+         surge->process();
+
+      int blocks = (floor)( 2.0 * samplerate * BLOCK_SIZE_INV );
+      double rms = 0; // double to avoid so much overflow risk
+      for( int i=0; i<blocks; ++i )
+      {
+         surge->process();
+         for( int s=0; s<BLOCK_SIZE; ++s )
+         {
+            rms += surge->output[0][s] * surge->output[0][s] + surge->output[1][s] * surge->output[1][s];
+         }
+      }
+
+      for( auto n : notes )
+      {
+         surge->releaseNote(0,n-noff,0);
+         surge->process();
+      }
+      for( int i=0; i<100; ++i )
+         surge->process();
+
+      return sqrt(rms);
+   };
+
+   auto playRMS = [singleRMS](std::shared_ptr<SurgeSynthesizer> surge)
+   {
+      float ra = 0;
+      int nAvg = 20;
+
+      for( int i=0; i<nAvg; ++i )
+      {
+         float lra = singleRMS(surge);
+         std::cout << "LRA = " << lra << std::endl;
+         ra += lra;
+      }
+      return ra / nAvg;
+   };
+
+   // Remember if you don't set the normalization to FALSE in NLF.cpp this will be bad
+   auto basecaseRMS = playRMS(setup(genLowpass ? fut_obxd_4pole : fut_hp24,  genLowpass ? 3 : 0));
+   std::cout << "// no filter RMS is " << basecaseRMS << std::endl;
+
+   std::vector<float> results;
+   for( int nlfst = 0; nlfst < 12; nlfst++ )
+   {
+      auto r = playRMS( setup( genLowpass ? fut_nonlinearfb_lp : fut_nonlinearfb_hp, nlfst ));
+      //auto r = playRMS( setup( fut_nonlinearfb_hp, nlfst));
+      std::cout << "// RMS=" << r << " Ratio=" << r / basecaseRMS << std::endl;
+      results.push_back(r);
+   }
+   std::cout << "      bool useNormalization = true;\n"
+             << "      float normNumerator = 1.0f;\n"
+             << "      float " << ( genLowpass ? "lp" : "hp" ) << "NormTable[12] = {";
+   std::string pfx = "\n         ";
+   for( auto v : results ) {
+      std::cout << pfx << basecaseRMS / v;
+      pfx = ",\n         ";
+   }
+   std::cout << "\n       };\n"
+             << "       if (useNormalization) normNumerator = lpNormTable[subtype];\n";
+}
 
 }
 }

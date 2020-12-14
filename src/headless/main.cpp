@@ -32,6 +32,10 @@ int main(int argc, char** argv)
          {
             Surge::Headless::NonTest::restreamTemplatesWithModifications();
          }
+         if( strcmp( argv[2], "--generate-nlf-norms" ) == 0 )
+         {
+            Surge::Headless::NonTest::generateNLFeedbackNorms();
+         }
          if( strcmp( argv[2], "--filter-analyzer" ) == 0 )
          {
             if( argc < 4 )
