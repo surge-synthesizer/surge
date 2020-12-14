@@ -81,8 +81,13 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
 
 struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, public Surge::UI::CursorControlAdapter<MSEGCanvas>
 {
-   MSEGCanvas(const CRect &size, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b ):
-         CControl( size ), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr)
+   MSEGCanvas(const CRect& size,
+              LFOStorage* lfodata,
+              MSEGStorage* ms,
+              MSEGEditor::State* eds,
+              Surge::UI::Skin::ptr_t skin,
+              std::shared_ptr<SurgeBitmaps> b)
+       : CControl(size), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr)
    {
       setSkin( skin, b );
       this->ms = ms;
@@ -1913,7 +1918,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          addCb(createMenu, Surge::UI::toOSCaseForMenu("Default MSEG"), [this]()
                            {
                               Surge::MSEG::createInitMSEG(this->ms);
-                              zoomOutTo(1.f);
+                              this->zoomToFull();
+                              if (controlregion)
+                                 controlregion->rebuild();
+                              modelChanged();
                            });
 
          createMenu->addSeparator();
@@ -1925,7 +1933,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"), [this, i]()
                 {
                    Surge::MSEG::createStepseqMSEG(this->ms, i);
-                   this->zoomOutTo(i);
+                   this->zoomToFull();
+                   if (controlregion)
+                      controlregion->rebuild();
+                   modelChanged();
                 });
          }
 
@@ -1936,7 +1947,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"), [this, i]()
                 {
                    Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
-                   this->zoomOutTo(i);
+                   this->zoomToFull();
+                   if (controlregion)
+                      controlregion->rebuild();
+                   modelChanged();
                 });
          }
 
@@ -1947,6 +1961,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   [this, i] {
                      Surge::MSEG::createSinLineMSEG(this->ms, i);
                      this->zoomToFull();
+                     if (controlregion)
+                        controlregion->rebuild();
                      modelChanged();
                   });
          }
@@ -2318,6 +2334,8 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl* pControl, CButtonSta
 
 void MSEGControlRegion::rebuild()
 {
+   removeAll();
+
    auto labelFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
    auto editFont = new VSTGUI::CFontDesc("Lato", 9);
    
