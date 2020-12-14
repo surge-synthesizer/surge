@@ -19,6 +19,8 @@
 #include "DebugHelpers.h"
 #include "SurgeStorage.h"
 #include "tinyxml/tinyxml.h"
+#include "DebugHelpers.h"
+#include "strnatcmp.h"
 
 namespace Surge
 {
@@ -103,6 +105,8 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
       // uhh ... do somethign I guess?
       std::cout << "Could not save" << std::endl;
    }
+
+   forcePresetRescan();
 }
 
 /*
@@ -202,14 +206,19 @@ void loadPresetFrom( const fs::path &location, SurgeStorage *s, int scene, int l
    }
 }
 
+static std::vector<Category> scanedPresets;
+static bool haveScanedPresets = false;
 
 std::vector<Category> getPresets( SurgeStorage *s )
 {
+   if (haveScanedPresets)
+      return scanedPresets;
+
    // Do a dual directory traversal of factory and user data with the fs::directory_iterator stuff looking for .lfopreset
    auto factoryPath = fs::path( { string_to_path(s->datapath) / fs::path{ PresetDir } } );
    auto userPath = fs::path( { string_to_path(s->userDataPath) / fs::path{ PresetDir } } );
 
-   std::vector<Category> res;
+   std::map<std::string, Category> resMap; // handy it is sorted!
 
    for( int i=0; i<2; ++i )
    {
@@ -221,34 +230,38 @@ std::vector<Category> getPresets( SurgeStorage *s )
          Category currentCategory;
          for (auto& d : fs::recursive_directory_iterator(p))
          {
-            // blah
-            auto base = fs::path(d).stem();
-            auto fn = fs::path(d).filename();
-            if (path_to_string(base) == path_to_string(fn))
+            auto dp = fs::path(d);
+            auto base = dp.stem();
+            auto fn = dp.filename();
+            auto ext = dp.extension();
+            if (path_to_string(ext) != ".modpreset")
             {
-               if (currentCategory.presets.size() > 0)
-               {
-                  std::sort(currentCategory.presets.begin(), currentCategory.presets.end(),
-                            [](const Preset& a, const Preset& b) { return a.name < b.name; });
-                  res.push_back(currentCategory);
-               }
-               currentCategoryName = path_to_string(base);
-               currentCategory = Category();
-               currentCategory.name = currentCategoryName;
-               currentCategory.isUserCategory = isU;
                continue;
             }
+            auto rd = path_to_string(dp.replace_filename(fs::path()));
+            rd = rd.substr(path_to_string(p).length() + 1);
+            rd = rd.substr(0, rd.length() - 1);
 
-            Preset p;
-            p.name = path_to_string(base);
-            p.path = fs::path(d);
-            currentCategory.presets.push_back(p);
-         }
-         if (currentCategory.presets.size() > 0)
-         {
-            std::sort(currentCategory.presets.begin(), currentCategory.presets.end(),
-                      [](const Preset& a, const Preset& b) { return a.name < b.name; } );
-            res.push_back(currentCategory);
+            auto catName = rd;
+            auto ppos = rd.rfind(fs::path::preferred_separator);
+            auto pd = std::string();
+            if (ppos != std::string::npos)
+            {
+               pd = rd.substr(0, ppos);
+               catName = rd.substr(ppos + 1);
+            }
+            if (resMap.find(rd) == resMap.end())
+            {
+               resMap[rd] = Category();
+               resMap[rd].name = catName;
+               resMap[rd].parentPath = pd;
+               resMap[rd].path = rd;
+            }
+
+            Preset prs;
+            prs.name = path_to_string(base);
+            prs.path = fs::path(d);
+            resMap[rd].presets.push_back(prs);
          }
       }
       catch (const fs::filesystem_error& e)
@@ -256,14 +269,25 @@ std::vector<Category> getPresets( SurgeStorage *s )
          // That's OK!
       }
    }
-   std::sort( res.begin(), res.end(), [](const Category &a, const Category &b ) {
-               if (a.isUserCategory == b.isUserCategory)
-                  return a.name < b.name;
-               if (a.isUserCategory)
-                  return true;
-               return false;
-               });
-    return res;
+   std::vector<Category> res;
+   for (auto& m : resMap)
+   {
+      std::sort(m.second.presets.begin(), m.second.presets.end(),
+                [](const Preset& a, const Preset& b) {
+                   return strnatcasecmp(a.name.c_str(), b.name.c_str()) < 0;
+                });
+
+      res.push_back(m.second);
+   }
+   scanedPresets = res;
+   haveScanedPresets = true;
+   return res;
+}
+
+void forcePresetRescan()
+{
+   haveScanedPresets = false;
+   scanedPresets.clear();
 }
 }
 }

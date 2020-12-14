@@ -45,11 +45,12 @@ struct Preset {
 
 struct Category {
    std::string name;
-   bool isUserCategory;
+   std::string path;
+   std::string parentPath;
    std::vector<Preset> presets;
 };
 
 std::vector<Category> getPresets( SurgeStorage *s );
-
+void forcePresetRescan();
 }
 }

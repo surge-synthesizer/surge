@@ -4980,9 +4980,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
    if (!presetCategories.empty())
       lfoSubMenu->addSeparator();
 
+   std::unordered_map<std::string, std::pair<COptionMenu*, bool>> subMenuMaps;
+   subMenuMaps[""] = std::make_pair(lfoSubMenu, true);
    for( auto const &cat : presetCategories )
    {
       COptionMenu *catSubMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+      subMenuMaps[cat.path] = std::make_pair(catSubMenu, false);
+
       for( auto const &p : cat.presets )
          addCallbackMenu(catSubMenu,
                          p.name,
@@ -4999,9 +5003,24 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 
                             this->synth->refresh_editor = true;
                          });
-      lfoSubMenu->addEntry(catSubMenu, cat.name.c_str());
+      auto parentMenu = lfoSubMenu;
+      if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
+      {
+         parentMenu = subMenuMaps[cat.parentPath].first;
+         if (!subMenuMaps[cat.parentPath].second)
+         {
+            subMenuMaps[cat.parentPath].second = true;
+            if (parentMenu->getNbEntries() > 0)
+               parentMenu->addSeparator();
+         }
+      }
+      parentMenu->addEntry(catSubMenu, cat.name.c_str());
       catSubMenu->forget();
    }
+
+   lfoSubMenu->addSeparator();
+   addCallbackMenu(lfoSubMenu, Surge::UI::toOSCaseForMenu("Rescan Presets"),
+                   []() { Surge::ModulatorPreset::forcePresetRescan(); });
    return lfoSubMenu;
 }
 
