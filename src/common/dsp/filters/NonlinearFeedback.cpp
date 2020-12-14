@@ -163,10 +163,11 @@ namespace NonlinearFeedbackFilter
        */
       const bool useNormalization = true;
       float normNumerator = 1.0f;
+
+      // tweaked these by hand/ear after the RMS measuring program did its thing... this world still needs humans! :) - EvilDragon
       const float lpNormTable[12] = {
           1.12215,
           0.946168,
-          0.854176,
           0.803073,
           0.852984,
           0.685058,
@@ -192,28 +193,37 @@ namespace NonlinearFeedbackFilter
           1.07743
       };
 
-
       switch(type){
-         case fut_nonlinearfb_lp: // lowpass
-            if (useNormalization) normNumerator = lpNormTable[subtype];
+         case fut_cutoffwarp_lp: // lowpass
             C[nlf_b1] =  (1.0f - wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] *  0.5f;
             C[nlf_b2] = C[nlf_b0];
+
+            if (useNormalization)
+            {
+               normNumerator = lpNormTable[subtype];
+            }
             C[nlf_makeup] = normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.333f);
+            
             break;
-         case fut_nonlinearfb_hp: // highpass
-            if (useNormalization) normNumerator = hpNormTable[subtype];
+         case fut_cutoffwarp_hp: // highpass
             C[nlf_b1] = -(1.0f + wcos) * a0r;
             C[nlf_b0] = C[nlf_b1] * -0.5f;
             C[nlf_b2] = C[nlf_b0];
+
+            if (useNormalization)
+            {
+               normNumerator = hpNormTable[subtype];
+            }
             C[nlf_makeup] = normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.333f);
+
             break;
-         case fut_nonlinearfb_n: // notch
+         case fut_cutoffwarp_n: // notch
             C[nlf_b0] = a0r;
             C[nlf_b1] = -2.0f * wcos   * a0r;
             C[nlf_b2] = C[nlf_b0];
             break;
-         case fut_nonlinearfb_bp: // bandpass
+         case fut_cutoffwarp_bp: // bandpass
             C[nlf_b0] = wsin * 0.5f    * a0r;
             C[nlf_b1] = 0.0f;
             C[nlf_b2] = -C[nlf_b0];
@@ -235,7 +245,7 @@ namespace NonlinearFeedbackFilter
       // next two bits after that select the saturator
       const int sat = ((f->WP[0] >> 2) & 3);
 
-      // n.b. stages is zero-indexed so use <=
+      // n.b. stages are zero-indexed so use <=
       for(int stage = 0; stage <= stages; ++stage){
          input =
             doNLFilter(input,

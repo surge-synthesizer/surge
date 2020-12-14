@@ -639,10 +639,10 @@ TEST_CASE( "Patch Version Builder", "[io]")
             case fut_k35_lp:
             case fut_k35_hp:
             case fut_diode:
-            case fut_nonlinearfb_lp:
-            case fut_nonlinearfb_hp:
-            case fut_nonlinearfb_n:
-            case fut_nonlinearfb_bp:
+            case fut_cutoffwarp_lp:
+            case fut_cutoffwarp_hp:
+            case fut_cutoffwarp_n:
+            case fut_cutoffwarp_bp:
             case n_fu_types:
                // These types were unchanged
                break;

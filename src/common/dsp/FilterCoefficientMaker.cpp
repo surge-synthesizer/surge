@@ -126,18 +126,18 @@ void FilterCoefficientMaker::MakeCoeffs(
    case fut_diode:
       DiodeLadderFilter::makeCoefficients(this, Freq, Reso, storageI);
       break;
-   case fut_nonlinearfb_lp:
-   case fut_nonlinearfb_hp:
-   case fut_nonlinearfb_n:
-   case fut_nonlinearfb_bp:
-   case fut_nonlinearfb_ap:
+   case fut_cutoffwarp_lp:
+   case fut_cutoffwarp_hp:
+   case fut_cutoffwarp_n:
+   case fut_cutoffwarp_bp:
+   case fut_cutoffwarp_ap:
       NonlinearFeedbackFilter::makeCoefficients(this, Freq, Reso, Type, SubType, storageI);
       break;
-   case fut_nonlinearst_lp:
-   case fut_nonlinearst_hp:
-   case fut_nonlinearst_n:
-   case fut_nonlinearst_bp:
-   case fut_nonlinearst_ap:
+   case fut_resonancewarp_lp:
+   case fut_resonancewarp_hp:
+   case fut_resonancewarp_n:
+   case fut_resonancewarp_bp:
+   case fut_resonancewarp_ap:
       NonlinearStatesFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
       break;
 
