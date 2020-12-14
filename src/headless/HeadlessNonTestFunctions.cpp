@@ -124,18 +124,20 @@ void playSomeBach()
    Surge::Headless::renderMidiFileToWav(surge, fname, fname + ".wav");
 }
 
-void filterAnalyzer( int ft, int sft, float cut )
+void standardCutoffCurve( int ft, int sft, std::ostream &os )
 {
-   std::cout << "# Analyzing filter " << ft << " " << sft << " " << cut  << std::endl
-             << "# " << fut_names[ft] << std::endl;
-
+   /*
+    * This is the frequency response graph
+    */
    std::array<std::vector<float>,127> ampRatios;
    std::array<std::vector<float>,127> phases;
    std::vector<float> resonances;
+   bool firstTime = true;
+
+   std::string sectionheader = "";
    for( float res = 0; res <= 1.0; res += 0.2 )
    {
       res = limit_range( res, 0.f, 0.99f );
-      std::cout << "RES is " << res << std::endl;
       resonances.push_back(res);
       /*
        * Our strategy here is to use a sin oscilllator in both in dual mode
@@ -146,7 +148,7 @@ void filterAnalyzer( int ft, int sft, float cut )
       surge->storage.getPatch().scenemode.val.i = sm_dual;
       surge->storage.getPatch().scene[0].filterunit[0].type.val.i = ft;
       surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = sft;
-      surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = cut;
+      surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = 0;
       surge->storage.getPatch().scene[0].filterunit[0].resonance.val.f = res;
 
       surge->storage.getPatch().scene[0].osc[0].type.val.i = ot_sine;
@@ -160,10 +162,19 @@ void filterAnalyzer( int ft, int sft, float cut )
             surge->process();
       };
       proc(10);
-      char txt[256];
-      surge->storage.getPatch().scene[0].filterunit[0].cutoff.get_display(txt);
-      std::cout << "# CUTOFF = " << txt << std::endl;
 
+      if( firstTime )
+      {
+         firstTime = false;
+         char fn[256], st[256], con[256], ron[256];
+         surge->storage.getPatch().scene[0].filterunit[0].type.get_display(fn);
+         surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(st);
+         surge->storage.getPatch().scene[0].filterunit[0].cutoff.get_display(con);
+         surge->storage.getPatch().scene[0].filterunit[0].resonance.get_display(ron);
+         std::ostringstream oss;
+         oss << fn << " (" << st << ") @ cutoff=" << con;
+         sectionheader = oss.str();
+      }
       for (int i = 0; i < 127; ++i)
       {
          proc(50); // let silence reign
@@ -191,23 +202,204 @@ void filterAnalyzer( int ft, int sft, float cut )
             rmsb += bblock[s] * bblock[s];
          }
 
+         /*
+          * Lets estimate phase shift. This only works in az tighter range
+          */
+         float phaseShift = 0;
+         if( i > 0 && i < 127 )
+         {
+            int startAt = (int)(n_samples * 0.3);
+            int averageOver = (int)(n_samples * 0.3);
+            std::vector<float> startsA, startsB;
+            for (int s = startAt; s < startAt + averageOver; ++s)
+            {
+               if (ablock[s] < 0 && ablock[s + 1] > 0)
+               {
+                  auto pct = (0.f - ablock[s]) / (ablock[s + 1] - ablock[s]);
+                  startsA.push_back(s + pct);
+               }
+
+               if (bblock[s] < 0 && bblock[s + 1] > 0)
+               {
+                  auto pct = (0.f - bblock[s]) / (bblock[s + 1] - bblock[s]);
+                  startsB.push_back(s + pct);
+               }
+            }
+
+            auto phaseCuts = std::min(startsA.size(), startsB.size());
+            std::vector<float> dPhases;
+            for (auto s = 1; s < phaseCuts; ++s)
+            {
+               float dPhase = (startsA[s] - startsB[s]) / (startsB[s] - startsB[s - 1]);
+               if( dPhase > 1.0 ) dPhase -= 1;
+               else if( dPhase < 0 ) dPhase += 1;
+               dPhases.push_back(dPhase);
+            }
+
+            float mDP = 0;
+            for (auto v : dPhases)
+               mDP += v;
+            mDP /= dPhases.size();
+            float vDP = 0;
+            for (auto v : dPhases)
+               vDP += (v - mDP) * (v - mDP);
+            vDP = sqrt(vDP / dPhases.size());
+            if( vDP < .1 && mDP >= 0 && mDP <= 1.0)
+            {
+               phaseShift = mDP;
+            }
+            //std::cout << i << " Mean and Variance phase " << mDP << " " << vDP << std::endl;
+         }
+
          surge->releaseNote(0, i, 0);
          ampRatios[i].push_back(rmsa/rmsb);
+         phases[i].push_back( phaseShift );
+
       }
    }
 
-#define fstream std::cout
-                // auto fstream = std::cout;
-   fstream << "Note";
-   for( auto r : resonances ) fstream << ", res " << r;
-   fstream << std::endl;
+   os << "[BEGIN]" << std::endl;
+   os << "[SECTION]" << sectionheader << "[/SECTION]" << std::endl;
+   os << "[YLAB]RMS Filter / Signal[/YLAB]" << std::endl;
+   os << "[YLOG]True[/YLOG]" << std::endl;
+
+   os << "Note";
+   for( auto r : resonances ) os << ", res " << r;
+   os << std::endl;
 
    for( int i=0; i<127; ++i )
    {
-      fstream << i;
-      for( auto r : ampRatios[i] ) fstream << ", " << r;
-      fstream << std::endl;
+      os << i;
+      for( auto r : ampRatios[i] ) os << ", " << r;
+      os << std::endl;
    }
+   os << "[END]" << std::endl;
+
+   os << "[BEGIN]" << std::endl;
+   os << "[SECTION]" << sectionheader << "[/SECTION]" << std::endl;
+   os << "[YLAB]Phase Difference / 2 PI[/YLAB]" << std::endl;
+   os << "Note";
+   for( auto r : resonances ) os << ", res " << r;
+   os << std::endl;
+
+   for( int i=0; i<127; ++i )
+   {
+      os << i;
+      for( auto r : phases[i] ) os << ", " << r;
+      os << std::endl;
+   }
+   os << "[END]" << std::endl;
+
+}
+
+
+void middleCSawIntoFilter( int ft, int sft, std::ostream &os )
+{
+   /*
+    * This is the frequency response graph
+    */
+   const int nNotes = 40;
+   const int note0 = 20;
+   const int dNote = 2;
+   std::array<std::vector<float>,nNotes> ampRatios;
+   std::vector<float> resonances;
+   bool firstTime = true;
+
+   std::string sectionheader = "";
+   for( float res = 0; res <= 1.0; res += 0.2 )
+   {
+      res = limit_range( res, 0.f, 0.99f );
+      resonances.push_back(res);
+      /*
+       * Our strategy here is to use a sin oscilllator in both in dual mode
+       * read off the L chan audio from both scenes and then calculate the RMS
+       * and phase difference. I hope
+       */
+      auto surge = Surge::Headless::createSurge(48000);
+      surge->storage.getPatch().scenemode.val.i = sm_dual;
+      surge->storage.getPatch().scene[0].filterunit[0].type.val.i = ft;
+      surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = sft;
+      surge->storage.getPatch().scene[0].filterunit[0].resonance.val.f = res;
+
+
+      surge->storage.getPatch().scene[1].filterunit[0].type.val.i = fut_none;
+      surge->storage.getPatch().scene[1].filterunit[0].subtype.val.i = 0;
+
+      auto proc = [surge](int n) {
+        for (int i = 0; i < n; ++i)
+           surge->process();
+      };
+      proc(10);
+
+      if( firstTime )
+      {
+         firstTime = false;
+         char fn[256], st[256], con[256], ron[256];
+         surge->storage.getPatch().scene[0].filterunit[0].type.get_display(fn);
+         surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(st);
+         std::ostringstream oss;
+         oss << fn << " (" << st << ") Cutoff Sweep on Middle C" << con;
+         sectionheader = oss.str();
+      }
+      for (int n = 0; n < nNotes; ++n )
+      {
+         proc( 50 );
+         int note = n * dNote + note0;
+
+         surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = note - 69;
+
+         proc(50); // let silence reign
+         surge->playNote(0, 60, 127, 0);
+
+         // OK so we want probably 5000 samples or so
+         const int n_blocks = 1024;
+         const int n_samples = n_blocks * BLOCK_SIZE;
+         float ablock[n_samples];
+         float bblock[n_samples];
+
+         for (int b = 0; b < n_blocks; ++b)
+         {
+            surge->process();
+            memcpy(ablock + b * BLOCK_SIZE, (const void*)(&surge->sceneout[0][0][0]),
+                   BLOCK_SIZE * sizeof(float));
+            memcpy(bblock + b * BLOCK_SIZE, (const void*)(&surge->sceneout[1][0][0]),
+                   BLOCK_SIZE * sizeof(float));
+         }
+
+         float rmsa = 0, rmsb = 0;
+         for (int s = 0; s < n_samples; ++s)
+         {
+            rmsa += ablock[s] * ablock[s];
+            rmsb += bblock[s] * bblock[s];
+         }
+
+         surge->releaseNote(0, 60, 0);
+         ampRatios[n].push_back(rmsa/rmsb);
+      }
+   }
+
+   os << "[BEGIN]" << std::endl;
+   os << "[SECTION]" << sectionheader << "[/SECTION]" << std::endl;
+   os << "[YLAB]RMS Filter / Signal[/YLAB]" << std::endl;
+   os << "[YLOG]True[/YLOG]" << std::endl;
+
+   os << "Cutoff";
+   for( auto r : resonances ) os << ", res " << r;
+   os << std::endl;
+
+   for( int n = 0; n < nNotes; ++n )
+   {
+      os << n * dNote + note0;
+      for( auto r : ampRatios[n] ) os << ", " << r;
+      os << std::endl;
+   }
+   os << "[END]" << std::endl;
+}
+
+void filterAnalyzer( int ft, int sft, std::ostream &os )
+{
+   standardCutoffCurve(ft, sft, os );
+   middleCSawIntoFilter(ft,sft, os );
 }
 
 void generateNLFeedbackNorms()
