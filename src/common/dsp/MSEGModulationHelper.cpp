@@ -1225,5 +1225,18 @@ void adjustDurationConstantTotalDuration( MSEGStorage* ms, int idx, float dx, fl
    }
    rebuildCache(ms);
 }
+
+void setLoopStart(MSEGStorage* ms, int seg)
+{
+   ms->loop_start = seg;
+   if (ms->loop_end >= 0 && ms->loop_end < ms->loop_start)
+      ms->loop_end = std::max(0, seg - 1);
+}
+void setLoopEnd(MSEGStorage* ms, int seg)
+{
+   ms->loop_end = seg;
+   if (ms->loop_start >= 0 && ms->loop_start > ms->loop_end)
+      ms->loop_start = std::min(ms->n_activeSegments - 1, seg + 1);
+}
 }
 }
