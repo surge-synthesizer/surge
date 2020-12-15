@@ -49,17 +49,17 @@ AudioInputOscillator::~AudioInputOscillator()
 
 void AudioInputOscillator::init_ctrltypes(int scene, int osc)
 {
-   oscdata->p[audioin_channel].set_name("Audio In L/R Channel");
+   oscdata->p[audioin_channel].set_name("Audio In Channel");
    oscdata->p[audioin_channel].set_type(ct_percent_bidirectional_stereo);
    oscdata->p[audioin_gain].set_name("Audio In Gain");
    oscdata->p[audioin_gain].set_type(ct_decibel);
    if (scene == 1)
    {
-      oscdata->p[audioin_sceneAchan].set_name("Scene A L/R Channel");
+      oscdata->p[audioin_sceneAchan].set_name("Scene A Channel");
       oscdata->p[audioin_sceneAchan].set_type(ct_percent_bidirectional_stereo);
       oscdata->p[audioin_sceneAgain].set_name("Scene A Gain");
       oscdata->p[audioin_sceneAgain].set_type(ct_decibel);
-      oscdata->p[audioin_sceneAmix].set_name("Audio In<>Scene A Mix");
+      oscdata->p[audioin_sceneAmix].set_name("Scene A Mix");
       oscdata->p[audioin_sceneAmix].set_type(ct_percent);
    }
    oscdata->p[audioin_lowcut].set_name("Low Cut");

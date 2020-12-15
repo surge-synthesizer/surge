@@ -302,7 +302,7 @@ void SurgeSuperOscillator::init_ctrltypes()
    oscdata->p[sso_width2].set_name("Width 2");
    oscdata->p[sso_width2].set_type(ct_percent);
    oscdata->p[sso_width2].val_default.f = 0.5f;
-   oscdata->p[sso_mainsubmix].set_name("Main<>Sub Mix");
+   oscdata->p[sso_mainsubmix].set_name("Sub Mix");
    oscdata->p[sso_mainsubmix].set_type(ct_percent);
    oscdata->p[sso_sync].set_name("Sync");
    oscdata->p[sso_sync].set_type(ct_syncpitch);
