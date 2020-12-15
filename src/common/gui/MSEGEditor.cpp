@@ -1988,29 +1988,40 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       contextMenu->addSeparator();
 
-      auto cbStart =
-          addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop Start"), [this, tts]() {
-             Surge::MSEG::setLoopStart(ms, tts);
-             modelChanged();
-          });
-      cbStart->setEnabled(ms->editMode != MSEGStorage::LFO );
+      if (ms->editMode != MSEGStorage::LFO && ms->loopMode != MSEGStorage::LoopMode::ONESHOT)
+      {
+         if (tts <= ms->loop_end && tts != ms->loop_start)
+         {
+            auto cbStart = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop Start"), [this, tts]()
+               {
+                  Surge::MSEG::setLoopStart(ms, tts);
+                  modelChanged();
+               });
+         }
+   
+         if (tts >= ms->loop_start && tts != ms->loop_end)
+         {
+            auto cbEnd = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts, t]()
+               {
+                  auto along = t - ms->segmentStart[tts];
 
-      auto cbEnd = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts, t]() {
-         auto along = t - ms->segmentStart[tts];
-         if( ms->segments[tts].duration == 0 )
-            along = 0;
-         else
-            along = along / ms->segments[tts].duration;
+                  if( ms->segments[tts].duration == 0 )
+                     along = 0;
+                  else
+                     along = along / ms->segments[tts].duration;
+                  
+                  int target = tts;
 
-         int target = tts;
-         if( along < 0.1 && tts > 0 ) target = tts - 1;
+                  if (along < 0.1 && tts > 0)
+                     target = tts - 1;
+                  
+                  Surge::MSEG::setLoopEnd(ms, target);
+                  modelChanged();
+                });
+         }
 
-         Surge::MSEG::setLoopEnd(ms, target);
-         modelChanged();
-      });
-      cbEnd->setEnabled( ms->editMode != MSEGStorage::LFO );
-
-      contextMenu->addSeparator();
+         contextMenu->addSeparator();
+      }
 
       if( tts >= 0 )
       {
@@ -2202,6 +2213,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Smooth Stairs"), MSEGStorage::segment::Type::SMOOTH_STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
+
+         contextMenu->cleanupSeparators(false);
 
          getFrame()->addView( contextMenu );
          contextMenu->setDirty();
