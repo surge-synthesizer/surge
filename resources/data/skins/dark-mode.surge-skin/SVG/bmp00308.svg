@@ -1,14 +1,23 @@
-<svg width="30" height="20" viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M0 9L0 4L6 9L0 9Z" fill="#399DFF"/>
-<path d="M0.5 8L0.5 0" stroke="#399DFF"/>
-<path d="M10 19L10 14L4 19L10 19Z" fill="#399DFF"/>
-<path d="M9.5 18V10" stroke="#399DFF"/>
-<path d="M10 9L10 4L16 9L10 9Z" fill="#FF9000"/>
-<path d="M10.5 8V0" stroke="#FF9000"/>
-<path d="M20 19L20 14L14 19L20 19Z" fill="#FF9000"/>
-<path d="M19.5 18V10" stroke="#FF9000"/>
-<path d="M20 9L20 4L26 9L20 9Z" fill="white"/>
-<path d="M20.5 8V0" stroke="white"/>
-<path d="M30 19L30 14L24 19L30 19Z" fill="white"/>
-<path d="M29.5 18V10" stroke="white"/>
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="30px" height="20px" viewbox="0 0 30 20" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <rect width="30" height="20" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="bmp00308" clip-path="url(#clip_1)">
+    <path d="M0 8.33333L0 0L10 8.33333L0 8.33333L0 8.33333L0 8.33333Z" transform="translate(0 1.6666679)" id="Shape" fill="#40ADFF" fill-rule="evenodd" stroke="none" />
+    <path d="M0 8L0 0" transform="translate(0.5 0)" id="Shape#1" fill="none" fill-rule="evenodd" stroke="#40ADFF" stroke-width="1" />
+    <path d="M10 8.33333L10 0L0 8.33333L10 8.33333L10 8.33333L10 8.33333Z" transform="translate(0 11.666668)" id="Shape#2" fill="#40ADFF" fill-rule="evenodd" stroke="none" />
+    <path d="M0 8L0 0" transform="translate(9.5 10)" id="Shape#3" fill="none" fill-rule="evenodd" stroke="#40ADFF" stroke-width="1" />
+    <path d="M0 8.33333L0 0L10 8.33333L0 8.33333L0 8.33333L0 8.33333Z" transform="translate(10 1.6666679)" id="Shape#4" fill="#C0EBFF" fill-rule="evenodd" stroke="none" />
+    <path d="M0 8L0 0" transform="translate(10.5 0)" id="Shape#5" fill="none" fill-rule="evenodd" stroke="#C0EBFF" stroke-width="1" />
+    <path d="M10 8.33333L10 0L0 8.33333L10 8.33333L10 8.33333L10 8.33333Z" transform="translate(10 11.666668)" id="Shape#6" fill="#C0EBFF" fill-rule="evenodd" stroke="none" />
+    <path d="M0 8L0 0" transform="translate(19.5 10)" id="Shape#7" fill="none" fill-rule="evenodd" stroke="#C0EBFF" stroke-width="1" />
+    <path d="M0 8.33333L0 0L10 8.33333L0 8.33333L0 8.33333L0 8.33333Z" transform="translate(20 1.6666679)" id="Shape#4-Copy" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+    <path d="M0 8L0 0" transform="translate(20.5 0)" id="Shape#5-Copy" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+    <path d="M10 8.33333L10 0L0 8.33333L10 8.33333L10 8.33333L10 8.33333Z" transform="translate(20 11.666668)" id="Shape#6-Copy" fill="#EEEEEE" fill-rule="evenodd" stroke="none" />
+    <path d="M0 8L0 0" transform="translate(29.5 10)" id="Shape#7-Copy" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
+  </g>
 </svg>
