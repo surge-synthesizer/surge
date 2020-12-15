@@ -645,54 +645,34 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto primaryFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
       auto secondaryFont = new VSTGUI::CFontDesc("Lato", 7);
 
-      auto uni = lfodata->unipolar.val.b;
       auto haxisArea = getHAxisArea();
-      float maxt = drawDuration();
       auto tpx = timeToPx();
-
-      dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-      dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
+      float maxt = drawDuration();
 
       if( loopDragTime >= 0 )
       {
          auto p = tpx(loopDragTime);
          auto q = tpx(loopDragEnd);
-         dc->setLineWidth(1);
+         
          // We are still in frame color from above
-         dc->drawLine( CPoint( p, haxisArea.top + haxisArea.getHeight()/2 ),
-                      CPoint( q, haxisArea.top + haxisArea.getHeight()/2 ) ) ;
+         dc->setLineWidth(1);
+         dc->drawLine(CPoint(p, haxisArea.top + haxisArea.getHeight() / 2),
+                      CPoint(q, haxisArea.top + haxisArea.getHeight() / 2));
       }
 
       updateHTicks();
+
       for( auto hp : hTicks )
       {
          float t = hp.first;
          auto c = hp.second;
          float px = tpx(t);
-         float off = (haxisArea.getHeight() / 2) - 1;
-         float linewidth = 1.f;
-
-         if( c & TickDrawStyle::kHighlight )
-         {
-            dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-         }
-         else
-         {
-            off += 2;
-            dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
-         }
-
-         auto pxa = px - linewidth * 0.5;
-         if (pxa < haxisArea.left || pxa > haxisArea.right)
-            continue;
-
-         dc->setLineWidth(linewidth);
-         dc->drawLine(CPoint(pxa, haxisArea.top), CPoint(pxa, haxisArea.bottom - off));
-
+         int yofs = 13;
          char txt[16];
 
          if ( ! ( c & TickDrawStyle::kNoLabel ) )
          {
+
             if (fmod(t, 1.f) == 0.f)
             {
                dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
@@ -705,7 +685,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                dc->setFont(secondaryFont);
                snprintf( txt, 16, "%5.2f", t );
             }
-            dc->drawString( txt, CRect( CPoint( px - 8, haxisArea.top + 5), CPoint( 15, 10 )));
+
+            auto sw = dc->getStringWidth(txt);
+            dc->drawString(txt, CPoint(px - (sw / 2), haxisArea.top + yofs));
          }
       }
 
@@ -730,12 +712,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto vaxisArea = getVAxisArea();
       auto valpx = valToPx();
 
-      dc->setLineWidth( 1.5 );
+      dc->setLineWidth(1.5);
 
-      vaxisArea.offset(CPoint(-0.5, 0));
+      vaxisArea.offset(-1, 0);
 
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-      dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight() );
+      dc->drawLine( vaxisArea.getTopRight(), vaxisArea.getBottomRight().offset(0, 4));
 
       dc->setFont(primaryFont);
       dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
@@ -746,28 +728,51 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          float p = valpx(std::get<0>(vp));
 
-         float off = vaxisArea.getWidth() / 2;
+         float off = vaxisArea.getWidth() * 0.666;
 
          if (std::get<2>(vp))
+         {
             off = 0;
+         }
 
          if( off == 0 )
+         {
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
+         }
          else
+         {
+            dc->setLineWidth(1.f);
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
 
-         dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right, p ) );
+            if (std::get<0>(vp) != -1.f)    // don't draw the tick at -1 ever, this is covered in draw()
+            {
+               dc->drawLine( CPoint( vaxisArea.left + off, p ), CPoint( vaxisArea.right - 1.f, p ) );
+            }
+         }
 
          if( off == 0 )
          {
             char txt[16];
             auto value = std::get<1>(vp);
+            int ypos = 3;
 
             if (value == 0.f && std::signbit(value))
-                value = -value;
+            {
+               value = -value;
+            }
+
+            if (value == 1.f)
+            {
+               ypos = 10;
+            }
+
+            if (value == -1.f)
+            {
+               ypos = -3;
+            }
 
             snprintf(txt, 16, "%5.1f", value);
-            dc->drawString(txt, CRect( CPoint( vaxisArea.left, p - 10 ), CPoint( 10, 10 )));
+            dc->drawString(txt, CPoint(vaxisArea.left - 3, p + ypos));
          }
       }
    }
@@ -840,12 +845,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       if( eds->vSnapDefault != vTickAsOf )
       {
          vTicks.clear();
+
          float dStep = eds->vSnapDefault;
+
          while (dStep < 1.0 / (gridMaxVSteps * (1 + uni)))
+         {
             dStep *= 2;
+         }
 
          int steps = ceil(1.0 / dStep);
          int start, end;
+
          if (uni)
          {
             start = 0;
@@ -868,26 +878,31 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                if (vi != end - 1)
                   doDraw = false;
             }
+
             if (val < -1)
             {
                val = -1.0;
                if (vi != start)
                   doDraw = false;
             }
+
             if (uni && val < 0)
             {
                val = 0;
                if (vi != start)
                   doDraw = false;
             }
+
             if( doDraw )
             {
-               // Little secret: Unipolar is just a relabeled Bipolars
+               // Little secret: unipolar is just a relabeled bipolar
                float pval = val;
+
                if( uni )
                {
                   pval = val * 2 - 1;
                }
+
                vTicks.push_back(std::make_tuple(pval, val, vi == 0 || vi == start || vi == end - 1));
             }
          }
@@ -918,7 +933,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       /*
        * Now draw the loop region
        */
-      if( ms->loopMode != MSEGStorage::LoopMode::ONESHOT )
+      if( ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO )
       {
          int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
          int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
@@ -957,6 +972,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
          }
       }
+
       Surge::MSEG::EvaluatorState es, esdf;
       es.seed( 8675309 ); // This is different from the number in LFOMS::assign in draw mode on purpose
       esdf.seed( 8675309 );
@@ -987,6 +1003,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       bool drawnLast = false; // this slightly odd construct means we always draw beyond the last point
       int priorEval = 0;
+
       for( int q=0; q<drawArea.getWidth(); ++q )
       {
          float up = pxt( q + drawArea.left );
@@ -1101,16 +1118,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
       updateHTicks();
+
       for( auto hp : hTicks )
       {
          auto t = hp.first;
          auto c = hp.second;
          auto px = tpx( t );
          auto linewidth = 1.f;
+         int ticklen = 4;
 
          if (c & TickDrawStyle::kHighlight)
          {
-            dc->setFrameColor( primaryGridColor );
+            dc->setFrameColor(primaryGridColor);
          }
          else
          {
@@ -1125,8 +1144,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          if (t > 0.1)
          {
             dc->setLineWidth(linewidth);
-            dc->drawLine(CPoint(px - (linewidth * 0.5), drawArea.top),
-                         CPoint(px - (linewidth * 0.5), drawArea.bottom));
+            dc->drawLine(CPoint(pxa, drawArea.top), CPoint(pxa, drawArea.bottom + ticklen));
          }
       }
 
@@ -1138,20 +1156,27 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          float val = std::get<0>( vp );
          float v = valpx(val);
+         int ticklen = 0;
 
-         if ( std::get<2>(vp) )
+         if (std::get<2>(vp))
          {
-            dc->setFrameColor(primaryGridColor);
-            dc->setLineStyle(kLineSolid);
+             dc->setFrameColor(primaryGridColor);
+             dc->setLineStyle(kLineSolid);
+
+             if (val != 0.f && !uni)
+                ticklen = 20;
          }
          else
          {
-            dc->setFrameColor(secondaryHGridColor);
-            CCoord dashes[] = {2, 5};
-            dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
+             dc->setFrameColor(secondaryHGridColor);
+             CCoord dashes[] = {2, 5};
+             dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
          }
 
-         dc->drawLine(CPoint(drawArea.left, v), CPoint(drawArea.right, v));
+         if (!(val == -1.f && dc->getLineStyle() != kLineSolid))    // make sure never to draw a dashed line at the bottom
+         {
+            dc->drawLine(CPoint(drawArea.left - ticklen, v), CPoint(drawArea.right, v));
+         }
       }
 
       // Draw the axes here after the gradient fill and gridlines
