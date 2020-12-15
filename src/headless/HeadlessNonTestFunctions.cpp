@@ -432,7 +432,7 @@ void generateNLFeedbackNorms()
       }
       surge->storage.getPatch().scene[0].filterunit[0].type.val.i = type;
       surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = subtype;
-      surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = -9;
+      surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = 30;
       surge->storage.getPatch().scene[0].filterunit[0].resonance.val.f = 0.95;
       for (auto i = 0; i < 10; ++i)
       {
@@ -515,14 +515,14 @@ void generateNLFeedbackNorms()
    }
    std::cout << "      bool useNormalization = true;\n"
              << "      float normNumerator = 1.0f;\n"
-             << "      float " << ( genLowpass ? "lp" : "hp" ) << "NormTable[12] = {";
+             << "      constexpr float " << ( genLowpass ? "lp" : "hp" ) << "NormTable[12] = {";
    std::string pfx = "\n         ";
    for( auto v : results ) {
       std::cout << pfx << basecaseRMS / v;
       pfx = ",\n         ";
    }
-   std::cout << "\n       };\n"
-             << "       if (useNormalization) normNumerator = lpNormTable[subtype];\n";
+   std::cout << "\n      };\n"
+             << "      if (useNormalization) normNumerator = lpNormTable[subtype];\n";
 }
 
 }

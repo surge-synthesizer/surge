@@ -143,8 +143,8 @@ namespace NonlinearFeedbackFilter
 
       const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
-      const float normalisedFreq = clampedFrequency(freq, storage) / dsamplerate_os;
-      const float wc = 2.0f * M_PI * normalisedFreq;
+      const float normalisedFreq = 2.0f * clampedFrequency(freq, storage) / dsamplerate_os;
+      const float wc = M_PI * normalisedFreq;
 
       const float wsin  = Surge::DSP::fastsin(wc);
       const float wcos  = Surge::DSP::fastcos(wc);
@@ -161,36 +161,23 @@ namespace NonlinearFeedbackFilter
       /*
        * To see where this table comes from look in the HeadlessNonTestFunctions.
        */
-      const bool useNormalization = true;
+      constexpr bool useNormalization = true;
       float normNumerator = 1.0f;
 
       // tweaked these by hand/ear after the RMS measuring program did its thing... this world still needs humans! :) - EvilDragon
-      const float lpNormTable[12] = {
-          1.12215,
-          0.946168,
-          0.803073,
-          0.852984,
-          0.685058,
-          0.598567,
-          0.574069,
-          0.555141,
-          0.2764,
-          0.234219,
-          0.235227
-      };
-      const float hpNormTable[12] = {
-          4.18885,
-          3.11128,
-          2.69236,
-          2.06871,
-          3.16804,
-          2.36259,
-          2.1021,
-          1.64437,
-          1.44636,
-          1.3442,
-          1.19402,
-          1.07743
+      constexpr float lpNormTable[12] = {
+         1.53273,
+         1.33407,
+         1.08197,
+         0.958219,
+         1.27374,
+         0.932342,
+         0.761765,
+         0.665462,
+         0.776856,
+         0.597575,
+         0.496207,
+         0.471714
       };
 
       switch(type){
@@ -203,7 +190,7 @@ namespace NonlinearFeedbackFilter
             {
                normNumerator = lpNormTable[subtype];
             }
-            C[nlf_makeup] = normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.333f);
+            C[nlf_makeup] = normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.1f);
             
             break;
          case fut_cutoffwarp_hp: // highpass
@@ -213,9 +200,9 @@ namespace NonlinearFeedbackFilter
 
             if (useNormalization)
             {
-               normNumerator = hpNormTable[subtype];
+               normNumerator = lpNormTable[subtype];
             }
-            C[nlf_makeup] = normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.333f);
+            C[nlf_makeup] = normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.1f);
 
             break;
          case fut_cutoffwarp_n: // notch
