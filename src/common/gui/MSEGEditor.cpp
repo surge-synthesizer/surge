@@ -1510,7 +1510,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       if (!gotHZ)
       {
+#if ! LINUX
+         // Lin doesn't cursor hide so this hand is bad there
          getFrame()->setCursor(kCursorHand);
+#endif
          cursorHideEnqueued = true;
          cursorHideOrigin = where;
          cursorResetPosition = true;
@@ -1676,44 +1679,54 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          bool gotOne = false;
          int idx = 0;
+         bool foundDrag = false;
+         hotzone dragThis;
          for( auto &h : hotzones )
          {
-            if( h.dragging )
+            if (h.dragging)
             {
-               if( cursorHideEnqueued )
-               {
-                  startCursorHide(cursorHideOrigin);
-                  cursorHideEnqueued = false;
-               }
-               gotOne = true;
-               float dragX = where.x - mouseDownOrigin.x;
-               float dragY = where.y - mouseDownOrigin.y;
-               if( buttons & kShift )
-               {
-                  dragX *= 0.2;
-                  dragY *= 0.2;
-               }
-               h.onDrag( dragX, dragY, where );
-#if ! LINUX
-               float dx = where.x - cursorHideOrigin.x;
-               float dy = where.y - cursorHideOrigin.y;
-               if (dx * dx + dy * dy > 100 && cursorResetPosition )
-               {
-                  resetToShowLocation();
-                  mouseDownOrigin = cursorHideOrigin;
-               }
-               else
-               {
-                  mouseDownOrigin = where;
-               }
-#else
-               mouseDownOrigin = where;
-#endif
-               modelChanged(h.associatedSegment, h.specialEndpoint); // HACK FIXME
+               dragThis = h;
+               foundDrag = true;
                break;
             }
             idx++;
          }
+         if( foundDrag )
+         {
+            auto h = dragThis;
+
+            if( cursorHideEnqueued )
+            {
+               startCursorHide(cursorHideOrigin);
+               cursorHideEnqueued = false;
+            }
+            gotOne = true;
+            float dragX = where.x - mouseDownOrigin.x;
+            float dragY = where.y - mouseDownOrigin.y;
+            if( buttons & kShift )
+            {
+               dragX *= 0.2;
+               dragY *= 0.2;
+            }
+            h.onDrag( dragX, dragY, where );
+#if ! LINUX
+            float dx = where.x - cursorHideOrigin.x;
+            float dy = where.y - cursorHideOrigin.y;
+            if (dx * dx + dy * dy > 100 && cursorResetPosition )
+            {
+               resetToShowLocation();
+               mouseDownOrigin = cursorHideOrigin;
+            }
+            else
+            {
+               mouseDownOrigin = where;
+            }
+#else
+            mouseDownOrigin = where;
+#endif
+            modelChanged(h.associatedSegment, h.specialEndpoint); // HACK FIXME
+         }
+
          if (gotOne)
          {
             Surge::MSEG::rebuildCache(ms);
