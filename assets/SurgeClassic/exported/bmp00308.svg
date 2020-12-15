@@ -1,26 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="20px" height="20px" viewbox="0 0 20 20" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <path d="M0 0L20 0L20 20L0 20L0 0Z" id="path_1" />
-    <rect width="20" height="20" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-    <clipPath id="mask_1">
-      <use xlink:href="#path_1" />
-    </clipPath>
-  </defs>
-  <g id="bmp00308" clip-path="url(#clip_1)">
-    <path d="M0 0L20 0L20 20L0 20L0 0Z" id="Background" fill="none" fill-rule="evenodd" stroke="none" />
-    <g clip-path="url(#mask_1)">
-      <path d="M0 8.33333L0 0L10 8.33333L0 8.33333L0 8.33333Z" transform="translate(0 1.666667)" id="Shape" fill="#FF9300" fill-rule="evenodd" stroke="none" />
-      <path d="M0 8L0 0" transform="translate(0.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FF9300" stroke-width="1" />
-      <path d="M10 8.33333L10 0L0 8.33333L10 8.33333L10 8.33333Z" transform="translate(0 11.666668)" id="Shape" fill="#FF9300" fill-rule="evenodd" stroke="none" />
-      <path d="M0 8L0 0" transform="translate(9.5 10)" id="Shape" fill="none" fill-rule="evenodd" stroke="#FF9300" stroke-width="1" />
-      <path d="M0 8.33333L0 0L10 8.33333L0 8.33333L0 8.33333Z" transform="translate(10 1.666667)" id="Shape" fill="white" fill-rule="evenodd" stroke="none" />
-      <path d="M0 8L0 0" transform="translate(10.5 0)" id="Shape" fill="none" fill-rule="evenodd" stroke="white" stroke-width="1" />
-      <path d="M10 8.33333L10 0L0 8.33333L10 8.33333L10 8.33333Z" transform="translate(10 11.666668)" id="Shape" fill="white" fill-rule="evenodd" stroke="none" />
-      <path d="M0 8L0 0" transform="translate(19.5 10)" id="Shape" fill="none" fill-rule="evenodd" stroke="white" stroke-width="1" />
-    </g>
-  </g>
+<svg width="30" height="20" viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 9L0 4L6 9L0 9Z" fill="#FF9A10"/>
+<path d="M0.5 8L0.5 0" stroke="#FF9A10"/>
+<path d="M10 19L10 14L4 19L10 19Z" fill="#FF9A10"/>
+<path d="M9.5 18V10" stroke="#FF9A10"/>
+<path d="M10 9L10 4L16 9L10 9Z" fill="#F1BB72"/>
+<path d="M10.5 8V0" stroke="#F1BB72"/>
+<path d="M20 19L20 14L14 19L20 19Z" fill="#F1BB72"/>
+<path d="M19.5 18V10" stroke="#F1BB72"/>
+<path d="M20 9L20 4L26 9L20 9Z" fill="#804900"/>
+<path d="M20.5 8V0" stroke="#804900"/>
+<path d="M30 19L30 14L24 19L30 19Z" fill="#804900"/>
+<path d="M29.5 18V10" stroke="#804900"/>
 </svg>

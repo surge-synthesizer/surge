@@ -70,5 +70,8 @@ namespace Surge
       void createSinLineMSEG(MSEGStorage* ms, int numSegments);
 
       void modifyEditMode( MSEGStorage* ms, MSEGStorage::EditMode mode );
+
+      void setLoopStart(MSEGStorage* ms, int seg);
+      void setLoopEnd(MSEGStorage* ms, int seg);
    }
 }
