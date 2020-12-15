@@ -248,7 +248,7 @@ namespace Colors
       {
          const Surge::Skin::Color Primary("msegeditor.grid.primary", 255, 255, 255, 128),
                                   SecondaryHorizontal("msegeditor.grid.secondary.horizontal", 255, 255, 255, 32),
-                                  SecondaryVertical("msegeditor.grid.secondary.vertical", 255, 255, 255, 64);
+                                  SecondaryVertical("msegeditor.grid.secondary.vertical", 255, 255, 255, 24);
       }
       namespace Loop
       {

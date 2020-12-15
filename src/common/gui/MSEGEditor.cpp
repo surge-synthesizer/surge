@@ -670,12 +670,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto c = hp.second;
          float px = tpx(t);
          float off = (haxisArea.getHeight() / 2) - 1;
-         float lw = 1.f;
+         float linewidth = 1.f;
 
          if( c & TickDrawStyle::kHighlight )
          {
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-            lw = 1.5;
          }
          else
          {
@@ -683,11 +682,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
          }
 
-         auto pxa = px - lw * 0.5;
+         auto pxa = px - linewidth * 0.5;
          if (pxa < haxisArea.left || pxa > haxisArea.right)
             continue;
 
-         dc->setLineWidth(lw);
+         dc->setLineWidth(linewidth);
          dc->drawLine(CPoint(pxa, haxisArea.top), CPoint(pxa, haxisArea.bottom - off));
 
          char txt[16];
@@ -905,8 +904,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       dc->setFillColor(skin->getColor(Colors::MSEGEditor::Background));
       dc->drawRect( vs, kDrawFilled );
 
-
-
       // we want to draw the background rectangle always filling the area without smearing
       // so draw the rect first then set AA drawing mode
       dc->setDrawMode(kAntiAliasing | kNonIntegralMode);
@@ -1109,27 +1106,27 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto t = hp.first;
          auto c = hp.second;
          auto px = tpx( t );
-         auto lw = 1.f;
+         auto linewidth = 1.f;
 
          if (c & TickDrawStyle::kHighlight)
          {
             dc->setFrameColor( primaryGridColor );
-            lw = 1.5;
          }
          else
          {
             dc->setFrameColor(secondaryVGridColor);
          }
 
-         float pxa = px - lw * 0.5;
+         float pxa = px - linewidth * 0.5;
+
          if (pxa < drawArea.left || pxa > drawArea.right)
             continue;
 
          if (t > 0.1)
          {
-            dc->setLineWidth(lw);
-            dc->drawLine(CPoint(px - (lw * 0.5), drawArea.top),
-                         CPoint(px - (lw * 0.5), drawArea.bottom));
+            dc->setLineWidth(linewidth);
+            dc->drawLine(CPoint(px - (linewidth * 0.5), drawArea.top),
+                         CPoint(px - (linewidth * 0.5), drawArea.bottom));
          }
       }
 
