@@ -307,6 +307,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       float vscale = drawArea.getHeight();
       auto valpx = valToPx();
       auto tpx = timeToPx();
+      auto pxt = pxToTime();
 
       // Put in the loop marker boxes
       if( ms->loopMode != MSEGStorage::LoopMode::ONESHOT )
@@ -327,12 +328,67 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          if( this->ms->editMode != MSEGStorage::LFO )
          {
             int lmSize = 10;
+            hs.onDrag = [pxt, this](float x, float y, const CPoint &w)
+            {
+               auto t = pxt(w.x);
+
+               auto seg = Surge::MSEG::timeToSegment(this->ms, pxt(w.x));
+               float pct = 0;
+               if( this->ms->segments[seg].duration > 0 )
+               {
+                  pct = (t - this->ms->segmentStart[seg]) / this->ms->segments[seg].duration;
+               }
+               if( pct > 0.5 )
+               {
+                  seg++;
+               }
+               if( seg != ms->loop_start )
+               {
+                  ms->loop_start = seg;
+                  modelChanged();
+                  invalid();
+               }
+               loopDragTime = t;
+               if( ms->loop_start >= 0 )
+                  loopDragEnd = this->ms->segmentStart[ms->loop_start];
+               else
+                  loopDragEnd = 0;
+            };
 
             hs.rect = VSTGUI::CRect(CPoint(pxs - 0.5, haxisArea.top + 1), CPoint(lmSize, lmSize));
             hs.zoneSubType = hotzone::LOOP_START;
 
             he.rect = VSTGUI::CRect(CPoint(pxe - lmSize + 0.5, haxisArea.top + 1), CPoint(lmSize, lmSize));
             he.zoneSubType = hotzone::LOOP_END;
+
+            he.onDrag = [pxt, this](float x, float y, const CPoint &w)
+            {
+              auto t = pxt(w.x);
+
+              auto seg = Surge::MSEG::timeToSegment(this->ms, pxt(w.x));
+              if( seg > 0 ) seg--; // since this is the END marker
+              float pct = 0;
+              if( this->ms->segments[seg + 1].duration > 0 )
+              {
+                 pct = (t - this->ms->segmentEnd[seg]) / this->ms->segments[seg + 1].duration;
+              }
+              if( pct > 0.5 )
+              {
+                 seg++;
+              }
+              if( seg != ms->loop_end )
+              {
+                 ms->loop_end = seg;
+                 modelChanged();
+                 invalid();
+              }
+              loopDragTime = t;
+              if( ms->loop_end >= 0 )
+                 loopDragEnd = this->ms->segmentEnd[ms->loop_end];
+              else
+                 loopDragEnd = this->ms->totalDuration;
+
+            };
 
             hotzones.push_back(hs);
             hotzones.push_back(he);
@@ -596,6 +652,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
       dc->drawLine( haxisArea.getTopLeft(), haxisArea.getTopRight() );
+
+      if( loopDragTime >= 0 )
+      {
+         auto p = tpx(loopDragTime);
+         auto q = tpx(loopDragEnd);
+         dc->setLineWidth(1);
+         // We are still in frame color from above
+         dc->drawLine( CPoint( p, haxisArea.top + haxisArea.getHeight()/2 ),
+                      CPoint( q, haxisArea.top + haxisArea.getHeight()/2 ) ) ;
+      }
 
       updateHTicks();
       for( auto hp : hTicks )
@@ -1148,7 +1214,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                if (h.zoneSubType == hotzone::LOOP_END)
                   cx = r.right;
 
-               if (cx >= drawArea.left && cx <= drawArea.right)
+               if (cx >= drawArea.left - 1 && cx <= drawArea.right + 1)
                   loopMarkerBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
             }
             else
@@ -1252,6 +1318,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    }
 
    CPoint mouseDownOrigin, cursorHideOrigin, lastPanZoomMousePos;
+   bool cursorResetPosition = false;
    bool inDrag = false;
    bool inDrawDrag = false;
    bool cursorHideEnqueued = false;
@@ -1375,14 +1442,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       mouseDownOrigin = where;
       lastPanZoomMousePos = where;
       inDrag = true;
-      bool foundHZ = false;
       for( auto &h : hotzones )
       {
          if( h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE )
          {
-            foundHZ = true;
             cursorHideEnqueued = true;
             cursorHideOrigin = where;
+            cursorResetPosition = true;
             h.active = true;
             h.dragging = true;
             invalid();
@@ -1401,6 +1467,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
             break;
          }
+
+         if( h.rect.pointInside(where) && h.type == hotzone::LOOPMARKER )
+         {
+            cursorHideEnqueued = true;
+            cursorHideOrigin = where;
+            cursorResetPosition = false;
+            h.active = true;
+            h.dragging = true;
+            invalid();
+         }
       }
 
       return kMouseEventHandled;
@@ -1410,6 +1486,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       getFrame()->setCursor( kCursorDefault );
       inDrag = false;
       inDrawDrag = false;
+      if( loopDragTime >= 0 )
+      {
+         loopDragTime = -1;
+         invalid();
+      }
 
       for( auto &h : hotzones )
       {
@@ -1577,7 +1658,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 #if ! LINUX
                float dx = where.x - cursorHideOrigin.x;
                float dy = where.y - cursorHideOrigin.y;
-               if( dx * dx + dy * dy > 100 )
+               if (dx * dx + dy * dy > 100 && cursorResetPosition )
                {
                   resetToShowLocation();
                   mouseDownOrigin = cursorHideOrigin;
@@ -2103,6 +2184,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    MSEGEditor::State *eds;
    LFOStorage *lfodata;
    MSEGControlRegion *controlregion = nullptr;
+   float loopDragTime = -1, loopDragEnd = -1;
 
    CScalableBitmap *handleBmp;
    CScalableBitmap *loopMarkerBmp;
