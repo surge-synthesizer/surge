@@ -293,7 +293,7 @@ void standardCutoffCurve( int ft, int sft, std::ostream &os )
 }
 
 
-void middleCSawIntoFilter( int ft, int sft, std::ostream &os )
+void middleCSawIntoFilterVsCutoff( int ft, int sft, std::ostream &os )
 {
    /*
     * This is the frequency response graph
@@ -396,10 +396,117 @@ void middleCSawIntoFilter( int ft, int sft, std::ostream &os )
    os << "[END]" << std::endl;
 }
 
+
+void middleCSawIntoFilterVsReso( int ft, int sft, std::ostream &os )
+{
+   /*
+    * This is the frequency response graph
+    */
+   const int nR = 21;
+   float dr = 1.f / ( nR - 1);
+   std::array<std::vector<float>,nR> ampRatios;
+   std::vector<float> cutoffs;
+   bool firstTime = true;
+
+   std::string sectionheader = "";
+   for( int co = 0; co < 6; co++ )
+   {
+      int conote = co * 12 + 69 - 36;
+
+      cutoffs.push_back(440*pow(2, (conote-69.f)/12.f));
+      /*
+       * Our strategy here is to use a sin oscilllator in both in dual mode
+       * read off the L chan audio from both scenes and then calculate the RMS
+       * and phase difference. I hope
+       */
+      auto surge = Surge::Headless::createSurge(48000);
+      surge->storage.getPatch().scenemode.val.i = sm_dual;
+      surge->storage.getPatch().scene[0].filterunit[0].type.val.i = ft;
+      surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = sft;
+      surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = conote;
+
+
+      surge->storage.getPatch().scene[1].filterunit[0].type.val.i = fut_none;
+      surge->storage.getPatch().scene[1].filterunit[0].subtype.val.i = 0;
+
+      auto proc = [surge](int n) {
+        for (int i = 0; i < n; ++i)
+           surge->process();
+      };
+      proc(10);
+
+      if( firstTime )
+      {
+         firstTime = false;
+         char fn[256], st[256], con[256], ron[256];
+         surge->storage.getPatch().scene[0].filterunit[0].type.get_display(fn);
+         surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(st);
+         std::ostringstream oss;
+         oss << fn << " (" << st << ") Cutoff Sweep on Middle C" << con;
+         sectionheader = oss.str();
+      }
+      for (int r=0; r<nR; ++r )
+      {
+         float res = limit_range( r * dr, 0.f, 0.99f );
+
+         proc( 50 );
+
+         surge->storage.getPatch().scene[0].filterunit[0].resonance.val.f = res;
+
+         proc(50); // let silence reign
+         surge->playNote(0, 60, 127, 0);
+
+         // OK so we want probably 5000 samples or so
+         const int n_blocks = 1024;
+         const int n_samples = n_blocks * BLOCK_SIZE;
+         float ablock[n_samples];
+         float bblock[n_samples];
+
+         for (int b = 0; b < n_blocks; ++b)
+         {
+            surge->process();
+            memcpy(ablock + b * BLOCK_SIZE, (const void*)(&surge->sceneout[0][0][0]),
+                   BLOCK_SIZE * sizeof(float));
+            memcpy(bblock + b * BLOCK_SIZE, (const void*)(&surge->sceneout[1][0][0]),
+                   BLOCK_SIZE * sizeof(float));
+         }
+
+         float rmsa = 0, rmsb = 0;
+         for (int s = 0; s < n_samples; ++s)
+         {
+            rmsa += ablock[s] * ablock[s];
+            rmsb += bblock[s] * bblock[s];
+         }
+
+         surge->releaseNote(0, 60, 0);
+         ampRatios[r].push_back(rmsa/rmsb);
+      }
+   }
+
+   os << "[BEGIN]" << std::endl;
+   os << "[SECTION]" << sectionheader << "[/SECTION]" << std::endl;
+   os << "[YLAB]RMS Filter / Signal[/YLAB]" << std::endl;
+   os << "[YLOG]True[/YLOG]" << std::endl;
+
+   os << "Resonance";
+   for( auto r : cutoffs ) os << ", cut= " << r;
+   os << std::endl;
+
+   for( int n = 0; n < nR; ++n )
+   {
+      os <<  limit_range( n * dr, 0.f, 0.99f );
+      for( auto r : ampRatios[n] ) os << ", " << r;
+      os << std::endl;
+   }
+   os << "[END]" << std::endl;
+}
+
+
 void filterAnalyzer( int ft, int sft, std::ostream &os )
 {
    standardCutoffCurve(ft, sft, os );
-   middleCSawIntoFilter(ft,sft, os );
+   middleCSawIntoFilterVsCutoff(ft,sft, os );
+   middleCSawIntoFilterVsReso(ft, sft, os);
 }
 
 void generateNLFeedbackNorms()
