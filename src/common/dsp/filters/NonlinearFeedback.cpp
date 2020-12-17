@@ -180,6 +180,10 @@ namespace NonlinearFeedbackFilter
          0.471714
       };
 
+      // extra resonance makeup term for OJD subtypes
+      float expMin = type == fut_cutoffwarp_lp ? 0.1f : 0.35f;
+      float resMakeup = subtype < 8 ? 1.0f : 1.0f / std::pow(std::max(reso, expMin), 0.5f);
+
       switch(type){
          case fut_cutoffwarp_lp: // lowpass
             C[nlf_b1] =  (1.0f - wcos) * a0r;
@@ -190,7 +194,7 @@ namespace NonlinearFeedbackFilter
             {
                normNumerator = lpNormTable[subtype];
             }
-            C[nlf_makeup] = normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.1f);
+            C[nlf_makeup] = resMakeup * normNumerator / std::pow(std::max(normalisedFreq, 0.001f), 0.1f);
             
             break;
          case fut_cutoffwarp_hp: // highpass
@@ -202,7 +206,7 @@ namespace NonlinearFeedbackFilter
             {
                normNumerator = lpNormTable[subtype];
             }
-            C[nlf_makeup] = normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.1f);
+            C[nlf_makeup] = resMakeup * normNumerator / std::pow(std::max(1.0f - normalisedFreq, 0.001f), 0.1f);
 
             break;
          case fut_cutoffwarp_n: // notch
