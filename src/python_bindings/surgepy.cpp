@@ -334,6 +334,80 @@ public:
    {
       return getModulation(to.getID().getSynthSideId(), (modsources)from.getModSource() );
    }
+
+   py::array_t<float> createMultiBlock( int nBlocks )
+   {
+      auto res = py::array_t<float>({ 2, nBlocks * BLOCK_SIZE },
+                                { nBlocks * BLOCK_SIZE * sizeof(float), sizeof(float)} );
+      auto buf = res.request(true);
+      memset( buf.ptr, 0, 2 * BLOCK_SIZE * nBlocks * sizeof(float));
+      return res;
+   }
+   void processMultiBlock(py::array_t<float> arr,
+                          int startBlock = 0,
+                          int nBlocks = -1)
+   {
+      auto buf = arr.request(true);
+
+      /*
+       * Error condition checks
+       */
+      if( buf.itemsize != sizeof( float ))
+      {
+         std::ostringstream oss;
+         oss << "Input numpy array must have dtype float; you provided an array with " << buf.format << "/" << buf.size;
+         throw std::invalid_argument(oss.str().c_str());
+      }
+      if( buf.ndim != 2 )
+      {
+         std::ostringstream oss;
+         oss << "Input numpy array must have 2 dimensions (2, m*BLOCK_SIZE); you provided an array with "
+             << buf.ndim << " dimensions";
+         throw std::invalid_argument(oss.str().c_str());
+
+      }
+      if( buf.shape[0] != 2 || buf.shape[1] % BLOCK_SIZE != 0 )
+      {
+         std::ostringstream oss;
+         oss << "Input numpy array must have dimensions (2, m*BLOCK_SIZE); you provided an array with "
+             << buf.shape[0] << "x" << buf.shape[1];
+         throw std::invalid_argument(oss.str().c_str());
+      }
+
+      size_t maxBlockStorage = buf.shape[1] / BLOCK_SIZE;
+      if( startBlock >= maxBlockStorage )
+      {
+         std::ostringstream oss;
+         oss << "Start block of " << startBlock << " is beyond the end of input storage with " << maxBlockStorage << " blocks";
+         throw std::invalid_argument(oss.str().c_str());
+      }
+
+      int blockIterations = maxBlockStorage - startBlock;
+      if( nBlocks > 0 )
+      {
+         blockIterations = nBlocks;
+      }
+      if( startBlock + blockIterations > maxBlockStorage )
+      {
+         std::ostringstream oss;
+         oss << "Start block / nBlock combo " << startBlock << " " << nBlocks << " is beyond the end of input storage with " << maxBlockStorage << " blocks";
+         throw std::invalid_argument(oss.str().c_str());
+      }
+
+      auto ptr = static_cast<float*>(buf.ptr);
+      float *dL = ptr + startBlock * BLOCK_SIZE;
+      float *dR = ptr + buf.shape[1] + startBlock * BLOCK_SIZE;
+      
+      for( auto i=0; i<blockIterations; ++i )
+      {
+         process();
+         memcpy( (void*)dL, (void*)( output[0] ), BLOCK_SIZE * sizeof(float ));
+         memcpy( (void*)dR, (void*)( output[1] ), BLOCK_SIZE * sizeof(float ));
+
+         dL += BLOCK_SIZE;
+         dR += BLOCK_SIZE;
+      }
+   }
 };
 
 SurgeSynthesizer *createSurge( float sr )
@@ -362,6 +436,9 @@ PYBIND11_MODULE(surgepy, m) {
        .def( "__repr__", &SurgeSynthesizer::ID::toString );
 
    py::class_<SurgeSynthesizerWithPythonExtensions>(m, "SurgeSynthesizer" )
+       .def( "__repr__", [](SurgeSynthesizerWithPythonExtensions &s) {
+          return std::string("<SurgeSynthesizer samplerate=") + std::to_string((int)samplerate) + "Hz>";
+       })
        .def( "getControlGroup", &SurgeSynthesizerWithPythonExtensions::getControlGroup )
 
        .def( "getNumInputs", &SurgeSynthesizer::getNumInputs )
@@ -369,6 +446,7 @@ PYBIND11_MODULE(surgepy, m) {
        .def( "getBlockSize", &SurgeSynthesizer::getBlockSize )
        .def( "getFactoryDataPath", &SurgeSynthesizerWithPythonExtensions::factoryDataPath)
        .def( "getUserDataPath", &SurgeSynthesizerWithPythonExtensions::userDataPath)
+       .def( "getSampleRate", [](SurgeSynthesizerWithPythonExtensions &s) { return samplerate; })
 
        .def( "fromSynthSideId", &SurgeSynthesizer::fromSynthSideId )
        .def( "createSynthSideId", &SurgeSynthesizerWithPythonExtensions::createSynthSideId )
@@ -395,6 +473,12 @@ PYBIND11_MODULE(surgepy, m) {
 
        .def( "process", &SurgeSynthesizer::process )
        .def( "getOutput", &SurgeSynthesizerWithPythonExtensions::getOutput )
+
+       .def( "createMultiBlock", &SurgeSynthesizerWithPythonExtensions::createMultiBlock )
+       .def( "processMultiBlock", &SurgeSynthesizerWithPythonExtensions::processMultiBlock,
+            py::arg( "val" ),
+            py::arg("startBlock") = 0,
+            py::arg( "nBlocks") = -1)
        ;
 
    py::class_<SurgePyControlGroup>(m, "SurgeControlGroup" )
