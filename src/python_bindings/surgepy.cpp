@@ -3,6 +3,7 @@
 #include <pybind11/stl.h>
 
 #include <thread>
+#include <utility>
 
 #include "SurgeSynthesizer.h"
 #include "HeadlessPluginLayerProxy.h"
@@ -31,8 +32,8 @@ struct SurgePyNamedParam {
 struct SurgePyControlGroupEntry
 {
    std::vector<SurgePyNamedParam> params;
-   int entry;
-   int scene;
+   int entry = -1;
+   int scene = -1;
    std::string groupName;
 
    int getEntry() const { return entry; }
@@ -58,7 +59,6 @@ struct SurgePyControlGroupEntry
 
 };
 
-#define SCG(c) static SurgePyControlGroup ocg_ ## c ( c, #c )
 struct SurgePyControlGroup
 {
    std::vector<SurgePyControlGroupEntry> entries;
@@ -66,7 +66,7 @@ struct SurgePyControlGroup
    std::string name;
 
    SurgePyControlGroup() = default;
-   SurgePyControlGroup(ControlGroup id, std::string name) : id(id), name(name) {};
+   SurgePyControlGroup(ControlGroup id, std::string name) : id(id), name(std::move(name)) {};
 
    int getControlGroupId() const { return (int)id; }
    std::string getControlGroupName() const { return name; }
@@ -99,7 +99,7 @@ static std::unordered_map<modsources, SurgePyModSource> spysetup_msMap;
 class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 {
 public:
-   SurgeSynthesizerWithPythonExtensions( PluginLayer *sparent ) : SurgeSynthesizer( sparent ) {
+   explicit SurgeSynthesizerWithPythonExtensions( PluginLayer *sparent ) : SurgeSynthesizer( sparent ) {
       std::lock_guard<std::mutex> lg( spysetup_mutex );
       if( spysetup_cgMap.empty() )
       {
@@ -231,6 +231,22 @@ public:
    {
       playNote( ch, note, vel, detune );
    }
+   void pitchBendWithInts( int ch,  int bend )
+   {
+      pitchBend( ch, bend );
+   }
+   void polyAftertouchWithInts(int channel, int key, int value)
+   {
+      polyAftertouch(channel, key, value );
+   }
+   void channelAftertouchWithInts(int channel, int value)
+   {
+      channelAftertouch(channel, value );
+   }
+   void channelControllerWithInts(int channel, int cc, int value)
+   {
+      channelController(channel, cc, value );
+   }
 
    float getv( Parameter *p, const pdata &v )
    {
@@ -326,13 +342,25 @@ public:
                                  (const float*)( & output[0][0] ) );
    }
 
-   void setModulationPy( const SurgePyNamedParam& to, SurgePyModSource from, float amt )
+   void setModulationPy( const SurgePyNamedParam& to, SurgePyModSource const &from, float amt )
    {
       setModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), amt );
    }
-   float getModulationPy( const SurgePyNamedParam& to, SurgePyModSource from )
+   float getModulationPy( const SurgePyNamedParam& to, const SurgePyModSource &from )
    {
       return getModulation(to.getID().getSynthSideId(), (modsources)from.getModSource() );
+   }
+   bool isValidModulationPy(const SurgePyNamedParam& to, const SurgePyModSource &from)
+   {
+      return isValidModulation(to.getID().getSynthSideId(), (modsources)from.getModSource() );
+   }
+   bool isActiveModulationPy(const SurgePyNamedParam& to, const SurgePyModSource &from)
+   {
+      return isActiveModulation(to.getID().getSynthSideId(), (modsources)from.getModSource() );
+   }
+   bool isBipolarModulationPy(const SurgePyModSource &from)
+   {
+      return isBipolarModulation((modsources)from.getModSource() );
    }
 
    py::array_t<float> createMultiBlock( int nBlocks )
@@ -343,7 +371,7 @@ public:
       memset( buf.ptr, 0, 2 * BLOCK_SIZE * nBlocks * sizeof(float));
       return res;
    }
-   void processMultiBlock(py::array_t<float> arr,
+   void processMultiBlock(const py::array_t<float> &arr,
                           int startBlock = 0,
                           int nBlocks = -1)
    {
@@ -397,7 +425,7 @@ public:
       auto ptr = static_cast<float*>(buf.ptr);
       float *dL = ptr + startBlock * BLOCK_SIZE;
       float *dR = ptr + buf.shape[1] + startBlock * BLOCK_SIZE;
-      
+
       for( auto i=0; i<blockIterations; ++i )
       {
          process();
@@ -422,12 +450,12 @@ SurgeSynthesizer *createSurge( float sr )
 }
 
 
-#define C(x) m_const.attr( #x ) = py::int_((int)x);
+#define C(x) m_const.attr( #x ) = py::int_((int)(x));
 
 PYBIND11_MODULE(surgepy, m) {
    m.doc() = "Python bindings for Surge Synthesizer";
-   m.def( "createSurge", &createSurge, "Create a surge instance" );
-   m.def( "getVersion", []() { return Surge::Build::FullVersionStr; });
+   m.def( "createSurge", &createSurge, "Create a surge instance", py::arg( "sampleRate") );
+   m.def( "getVersion", []() { return Surge::Build::FullVersionStr; }, "Get the version of Surge");
    py::class_<SurgeSynthesizer::ID>(m, "SurgeSynthesizer_ID" )
        .def( py::init<>())
        .def( "getDawSideIndex", &SurgeSynthesizer::ID::getDawSideIndex )
@@ -439,7 +467,11 @@ PYBIND11_MODULE(surgepy, m) {
        .def( "__repr__", [](SurgeSynthesizerWithPythonExtensions &s) {
           return std::string("<SurgeSynthesizer samplerate=") + std::to_string((int)samplerate) + "Hz>";
        })
-       .def( "getControlGroup", &SurgeSynthesizerWithPythonExtensions::getControlGroup )
+       .def( "getControlGroup",
+            &SurgeSynthesizerWithPythonExtensions::getControlGroup,
+            "Gather the parameters groups for a surge.constants.cg_ control group",
+            py::arg( "entry" )
+        )
 
        .def( "getNumInputs", &SurgeSynthesizer::getNumInputs )
        .def( "getNumOutputs", &SurgeSynthesizer::getNumOutputs )
@@ -451,31 +483,94 @@ PYBIND11_MODULE(surgepy, m) {
        .def( "fromSynthSideId", &SurgeSynthesizer::fromSynthSideId )
        .def( "createSynthSideId", &SurgeSynthesizerWithPythonExtensions::createSynthSideId )
 
-       .def( "getParameterName", &SurgeSynthesizerWithPythonExtensions::getParameterName_py )
+       .def( "getParameterName", &SurgeSynthesizerWithPythonExtensions::getParameterName_py,
+            "Given a parameter, return its name as displayed by the Synth.")
 
-       .def( "playNote", &SurgeSynthesizerWithPythonExtensions::playNoteWithInts )
-       .def( "releaseNote", &SurgeSynthesizerWithPythonExtensions::releaseNoteWithInts )
+       .def( "playNote", &SurgeSynthesizerWithPythonExtensions::playNoteWithInts,
+            "Trigger a note on this Surge instance.",
+            py::arg( "channel" ),
+            py::arg( "midiNote" ),
+            py::arg( "velocity" ),
+            py::arg( "detune" ) = 0 )
+       .def( "releaseNote", &SurgeSynthesizerWithPythonExtensions::releaseNoteWithInts,
+            "Release a note on this Surge instance.",
+            py::arg( "channel" ),
+            py::arg( "midiNote" ),
+            py::arg( "releaseVelocity" ) = 0 )
+       .def( "pitchBend", &SurgeSynthesizerWithPythonExtensions::pitchBendWithInts,
+            "Set the pitch bend value on channel ch",
+            py::arg("channel"),
+            py::arg( "bend" ))
+       .def( "allNotesOff", &SurgeSynthesizer::allNotesOff, "Turn off all playing notes")
+       .def( "polyAftertouch", &SurgeSynthesizerWithPythonExtensions::polyAftertouchWithInts,
+            "Send the poly aftertouch midi message",
+            py::arg("channel" ), py::arg( "key" ), py::arg( "value" ) )
+       .def( "channelAftertouch", &SurgeSynthesizerWithPythonExtensions::channelAftertouchWithInts,
+            "Send the channel aftertouch midi message",
+            py::arg("channel"), py::arg( "value" ))
+       .def( "channelController", &SurgeSynthesizerWithPythonExtensions::channelControllerWithInts,
+            "Set midi controller on channel to value",
+            py::arg("channel"), py::arg( "cc" ), py::arg( "value" ) )
 
-       .def( "getParamMin", &SurgeSynthesizerWithPythonExtensions::getParamMin )
-       .def( "getParamMax", &SurgeSynthesizerWithPythonExtensions::getParamMax )
-       .def( "getParamDef", &SurgeSynthesizerWithPythonExtensions::getParamDef )
-       .def( "getParamVal", &SurgeSynthesizerWithPythonExtensions::getParamVal )
-       .def( "getParamValType", &SurgeSynthesizerWithPythonExtensions::getParamValType )
+       .def( "getParamMin", &SurgeSynthesizerWithPythonExtensions::getParamMin,
+            "Parameter minimum value, as a float.")
+       .def( "getParamMax", &SurgeSynthesizerWithPythonExtensions::getParamMax,
+            "Parameter maximum value, as a float")
+       .def( "getParamDef", &SurgeSynthesizerWithPythonExtensions::getParamDef,
+            "Parameter default value, as a float")
+       .def( "getParamVal", &SurgeSynthesizerWithPythonExtensions::getParamVal,
+            "Parameter current value in this Surge instance, as a float")
+       .def( "getParamValType", &SurgeSynthesizerWithPythonExtensions::getParamValType,
+            "Parameter type. float, int or bool are supported")
 
-       .def( "setParamVal", &SurgeSynthesizerWithPythonExtensions::setParamVal )
+       .def( "setParamVal", &SurgeSynthesizerWithPythonExtensions::setParamVal,
+            "Set a parameter value",
+            py::arg( "param" ),
+            py::arg( "toThis" ) )
 
-       .def( "loadPatch", &SurgeSynthesizerWithPythonExtensions::loadPatchPy )
-       .def( "savePatch", &SurgeSynthesizerWithPythonExtensions::savePatchPy )
+       .def( "loadPatch", &SurgeSynthesizerWithPythonExtensions::loadPatchPy,
+            "Load a Surge .fxp patch from the file system.",
+            py::arg( "path" )
+            )
+       .def( "savePatch", &SurgeSynthesizerWithPythonExtensions::savePatchPy,
+            "Save the current state of Surge to an .fxp file.",
+            py::arg( "path" ))
 
-       .def( "getModSource", &SurgeSynthesizerWithPythonExtensions::getModSource )
-       .def( "setModulation", &SurgeSynthesizerWithPythonExtensions::setModulationPy )
-       .def( "getModulation", &SurgeSynthesizerWithPythonExtensions::getModulationPy )
+       .def( "getModSource", &SurgeSynthesizerWithPythonExtensions::getModSource,
+            "Given a constant from surge.constants.ms_* provide a modulator object",
+            py::arg( "modId" ))
+       .def( "setModulation", &SurgeSynthesizerWithPythonExtensions::setModulationPy,
+            "Set a modulation to a given depth",
+            py::arg( "targetParameter" ),
+            py::arg( "modulationSource" ),
+            py::arg( "depth" ) )
+       .def( "getModulation", &SurgeSynthesizerWithPythonExtensions::getModulationPy,
+            "Get the modulation depth from a source to a parameter.",
+            py::arg( "targetParameter" ),
+            py::arg( "modulationSource" ) )
+       .def( "isValidModulation", &SurgeSynthesizerWithPythonExtensions::isValidModulationPy,
+            "Is it possible to modulate between target and source?",
+            py::arg( "targetParameter" ),
+            py::arg("modulationSource" ))
+       .def( "isActiveModulation", &SurgeSynthesizerWithPythonExtensions::isActiveModulationPy,
+             "Is there an established modulation between target and source?",
+             py::arg( "targetParameter" ),
+             py::arg("modulationSource" ))
+       .def( "isBipolarModulation", &SurgeSynthesizerWithPythonExtensions::isBipolarModulationPy,
+             "Is the given modulation source bipolar?",
+             py::arg("modulationSource" ))
 
-       .def( "process", &SurgeSynthesizer::process )
-       .def( "getOutput", &SurgeSynthesizerWithPythonExtensions::getOutput )
+       .def( "process", &SurgeSynthesizer::process,
+            "Run surge for one block and update the internal output buffer.")
+       .def( "getOutput", &SurgeSynthesizerWithPythonExtensions::getOutput,
+            "Retrieve the internal output buffer as a 2xBLOCK_SIZE numpy array.")
 
-       .def( "createMultiBlock", &SurgeSynthesizerWithPythonExtensions::createMultiBlock )
+       .def( "createMultiBlock", &SurgeSynthesizerWithPythonExtensions::createMultiBlock,
+            "Create a numpy array suitable to hold up to b blocks of Surge processing in processMultiBlock",
+            py::arg( "blockCapacity" ) )
        .def( "processMultiBlock", &SurgeSynthesizerWithPythonExtensions::processMultiBlock,
+            "Run the surge engine for multiple blocks, updating the value in the numpy array. Either populate the\n"
+            "entire array, or starting at startBlock position in the output, populate nBlocks.",
             py::arg( "val" ),
             py::arg("startBlock") = 0,
             py::arg( "nBlocks") = -1)
