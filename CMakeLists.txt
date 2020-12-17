@@ -1387,6 +1387,70 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
 
 endif()
 
+if( ${BUILD_SURGE_PYTHON_BINDINGS} )
+  message( STATUS "Building Surge Python bindings with pybind11" )
+  add_subdirectory(libs/pybind11)
+  set( PYSRCD src/python_bindings )
+  set( PYSRC )
+  pybind11_add_module(surgepy )
+
+  target_sources( surgepy PRIVATE
+          ${SURGE_SYNTH_SOURCES}
+          ${SURGE_OS_SOURCES}
+          ${SURGE_GENERATED_SOURCES}
+
+          ${PYSRCD}/surgepy.cpp
+          src/headless/HeadlessUtils.cpp
+          src/headless/UserInteractionsHeadless.cpp
+          )
+
+  target_compile_definitions(surgepy
+          PRIVATE
+          ${OS_COMPILE_DEFINITIONS}
+          TARGET_HEADLESS=1
+          LIBMIDIFILE=1
+          $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+          )
+
+  target_include_directories(surgepy
+          PRIVATE
+          ${SURGE_COMMON_INCLUDES}
+          ${LIB_MIDIFILE_INCLUDES}
+          ${OS_INCLUDE_DIRECTORIES}
+          src/headless
+          ${PYSRCD}
+          )
+
+  target_link_libraries(surgepy
+          PRIVATE
+          surge-shared
+          ${OS_LINK_LIBRARIES_NOGUI}
+          )
+
+  if( UNIX AND NOT APPLE )
+    message( STATUS "Manually adding python3.8 to link line on linux for now. Need help here!" )
+    find_package(Threads REQUIRED)
+    if( LINUX_ON_ARM )
+      target_sources( surgepy PRIVATE src/linux/ConfigurationXmlARM.S )
+    else()
+      target_sources( surgepy PRIVATE src/linux/ConfigurationXml.S )
+    endif()
+    target_link_libraries(surgepy
+            PRIVATE
+            Threads::Threads
+            python3.8  # That's the message above
+            )
+
+    if (CMAKE_SYSTEM_NAME MATCHES "BSD")
+      target_link_libraries(surgepy PRIVATE execinfo)
+    endif()
+  endif()
+else()
+  message( STATUS "Python bindings disabled" )
+endif()
+
+
+
 # Hack: For now, native Windows binaries need implicit globals.h.
 # This can't go into the global compile options, so tack it on here.
 if(MSVC)
