@@ -70,11 +70,14 @@
     <color id="msegeditor.panel" value="#2D2D2D"/>
     <color id="msegeditor.panel.text" value="lightgray"/>
     <color id="msegeditor.axis.text" value="lightgray"/>
-    <color id="msegeditor.axis.text.secondary" value="#B4B4B4C0"/>
+    <color id="msegeditor.axis.text.secondary" value="#B4B4B4A0"/>
     <color id="msegeditor.fill.gradient.start" value="#2E86FE80"/>
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
     <color id="msegeditor.numberfield.text.hover" value="white"/>
+    <color id="msegeditor.loop.marker.hover" value="#FFFFFF60"/>
+    <color id="msegeditor.loop.marker.ghost" value="#FFFFFF30"/>
+    <color id="msegeditor.loop.region.axis" value="#FFFFFF40"/>
     <color id="msegeditor.loop.region.border" value="#00000000"/>
     <color id="msegeditor.loop.region.fill" value="#FFFFFF0C"/>
 
