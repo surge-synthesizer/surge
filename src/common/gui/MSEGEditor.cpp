@@ -644,7 +644,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       glm_end,
    };
 
-   inline void drawLoopMarkersEqual(CDrawContext* dc, CColor loopStartColor, CColor loopEndColor, int ghost, CRect ghostRect)
+   inline void drawLoopMarkers(CDrawContext* dc, CColor loopStartColor, CColor loopEndColor, int ghost, CRect ghostRect)
    {
       auto tpx = timeToPx();
 
@@ -692,15 +692,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          if (ghost == glm_start)
          {
-            start = ghostRect.left;
-            end = ghostRect.right;
+            start = ghostRect.right;
+            end = ghostRect.left;
 
             dc->setFillColor(loopStartColor);
          }
          else
          {
-            start = ghostRect.right;
-            end = ghostRect.left;
+            start = ghostRect.left;
+            end = ghostRect.right;
 
             dc->setFillColor(loopEndColor);
          }
@@ -717,8 +717,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    const int gridMaxVSteps = 10;
 
    inline void drawAxis( CDrawContext *dc ) {
-
-
       auto primaryFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
       auto secondaryFont = new VSTGUI::CFontDesc("Lato", 7);
 
@@ -741,12 +739,37 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          if (! (ms->loop_start == ms->loop_end + 1))
          {
+            // loop region rectangle
             dc->setFillColor(rcolor);
             dc->drawRect(r, kDrawFilled);
+            
+            auto hcolor = skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost);
+
+            // loop marker triangles
+            for (auto& h : hotzones)
+            {
+               if (!h.dragging)
+               {
+                  auto hr = r;
+
+                  if (h.zoneSubType == hotzone::LOOP_START)
+                  {
+                     hr.right = hr.left + 6;
+                     drawLoopMarkers(dc, hcolor, hcolor, glm_start, hr);
+                  }
+
+                  if (h.zoneSubType == hotzone::LOOP_END)
+                  {
+                     hr.right = r.right;
+                     hr.left = hr.right - 6;
+                     drawLoopMarkers(dc, hcolor, hcolor, glm_end, hr);
+                  }
+               }
+            }
          }
          else
          {
-            drawLoopMarkersEqual(dc, rcolor, rcolor, glm_none, CRect());
+            drawLoopMarkers(dc, rcolor, rcolor, glm_none, CRect());
          }
 
          // This is the ghost loop marker drag
@@ -777,31 +800,23 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                r.left = p + poff; // I know - Y? but this is square and y is 1 for end
                r.right = p + sz + poff;
          
-               if (! (ms->loop_start == ms->loop_end + 1))
+               CColor lms, lme;
+               int glm;
+        
+               if (ht.zoneSubType == hotzone::LOOP_START)
                {
-                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost));
-                  dc->drawRect(r, kDrawFilled);
+                   lms = skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost);
+                   lme = kTransparentCColor;
+                   glm = glm_start;
                }
                else
-               {               
-                  CColor lms, lme;
-                  int glm;
-         
-                  if (ht.zoneSubType == hotzone::LOOP_START)
-                  {
-                     lms = skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost);
-                     lme = kTransparentCColor;
-                     glm = glm_start;
-                  }
-                  else
-                  {
-                     lms = kTransparentCColor;
-                     lme = skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost);
-                     glm = glm_end;
-                  }
-         
-                  drawLoopMarkersEqual(dc, lms, lme, glm, r);
+               {
+                   lms = kTransparentCColor;
+                   lme = skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost);
+                   glm = glm_end;
                }
+        
+               drawLoopMarkers(dc, lms, lme, glm, r);
             }
          }
       }
@@ -1072,7 +1087,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          if( pxs > drawArea.right || pxe < drawArea.left || pxs == pxe )
          {
-            // Nothin to do
+            // Nothing to do
          }
          else
          {
@@ -1358,7 +1373,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                // my right edge is off the right or left
                if (h.rect.right > drawArea.right + 1 || h.rect.right <= drawArea.left)
                   continue;
-
             }
 
             // OK so we draw hover handle
@@ -1366,8 +1380,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
                if (! (ms->loop_start == ms->loop_end + 1))
                {
-                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerHover));
-                  dc->drawRect(h.rect, kDrawFilled);
+                  auto rcolor = skin->getColor(Colors::MSEGEditor::Loop::MarkerHover);
+                  
+                  if (h.zoneSubType == hotzone::LOOP_START)
+                     drawLoopMarkers(dc, rcolor, rcolor, glm_start, h.rect);
+                  else
+                     drawLoopMarkers(dc, rcolor, rcolor, glm_end, h.rect);
                }
                else
                {               
@@ -1384,7 +1402,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                      lme = skin->getColor(Colors::MSEGEditor::Loop::MarkerHover);
                   }
 
-                  drawLoopMarkersEqual(dc, lms, lme, glm_none, CRect());
+                  drawLoopMarkers(dc, lms, lme, glm_none, CRect());
                }
             }
 
