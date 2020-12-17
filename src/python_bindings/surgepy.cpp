@@ -8,6 +8,8 @@
 #include "SurgeSynthesizer.h"
 #include "HeadlessPluginLayerProxy.h"
 #include "version.h"
+#include "filesystem/import.h"
+
 
 namespace py = pybind11;
 
@@ -324,6 +326,10 @@ public:
 
    void loadPatchPy( const std::string &s )
    {
+      if( ! fs::exists(string_to_path(s)))
+      {
+         throw std::invalid_argument((std::string( "File not found: ") + s ).c_str() );
+      }
       loadPatchByPath(s.c_str(), -1, "Python" );
    }
 

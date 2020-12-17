@@ -1428,7 +1428,7 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
           )
 
   if( UNIX AND NOT APPLE )
-    message( STATUS "Manually adding python3.8 to link line on linux for now. Need help here!" )
+    message( STATUS "Manually adding ${PYTHON_LIBRARIES} to surgepy target" )
     find_package(Threads REQUIRED)
     if( LINUX_ON_ARM )
       target_sources( surgepy PRIVATE src/linux/ConfigurationXmlARM.S )
@@ -1438,7 +1438,7 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
     target_link_libraries(surgepy
             PRIVATE
             Threads::Threads
-            python3.8  # That's the message above
+            ${PYTHON_LIBRARIES}
             )
 
     if (CMAKE_SYSTEM_NAME MATCHES "BSD")
