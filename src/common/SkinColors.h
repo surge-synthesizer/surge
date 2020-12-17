@@ -141,28 +141,28 @@ namespace Colors
    {
       namespace Unused
       {
-          extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover;
+         extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover;
       }
       namespace Used
       {
-          extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
+         extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
       }
       namespace Selected
       {
-          extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
+         extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
 
           namespace Used
           {
-              extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
+             extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
           }
       }
       namespace Armed
       {
-          extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
+         extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover, UsedModHover;
       }
       namespace Macro
       {
-          extern const Surge::Skin::Color Background, Fill;
+         extern const Surge::Skin::Color Background, Fill;
       }
    }
 
@@ -172,19 +172,19 @@ namespace Colors
 
       namespace Axis
       {
-          extern const Surge::Skin::Color Line, Text, SecondaryText;
+         extern const Surge::Skin::Color Line, Text, SecondaryText;
       }
       namespace GradientFill
       {
-          extern const Surge::Skin::Color StartColor, EndColor;
+         extern const Surge::Skin::Color StartColor, EndColor;
       }
       namespace Grid
       {
-          extern const Surge::Skin::Color Primary, SecondaryHorizontal, SecondaryVertical;
+         extern const Surge::Skin::Color Primary, SecondaryHorizontal, SecondaryVertical;
       }
       namespace Loop
       {
-          extern const Surge::Skin::Color Line, Marker, MarkerHover, RegionFill, RegionBorder;
+         extern const Surge::Skin::Color MarkerHover, MarkerGhost, RegionAxis, RegionFill, RegionBorder;
       }
       namespace NumberField
       {
