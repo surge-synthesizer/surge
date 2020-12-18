@@ -495,6 +495,12 @@ void SurgeGUIEditor::idle()
       resizeFromIdleSentinel();
 #endif
 
+      if( showMSEGEditorOnNextIdleOrOpen )
+      {
+         showMSEGEditor();
+         showMSEGEditorOnNextIdleOrOpen = false;
+      }
+
       /*static CDrawContext drawContext
         (frame, NULL, systemWindow);*/
       // CDrawContext *drawContext = frame->createDrawContext();
@@ -1695,6 +1701,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
       {
          mse->forceRefresh();
       }
+   }
+
+   if( showMSEGEditorOnNextIdleOrOpen )
+   {
+      showMSEGEditor();
+      showMSEGEditorOnNextIdleOrOpen = false;
    }
    
    refresh_mod();
