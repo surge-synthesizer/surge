@@ -899,8 +899,12 @@ void constrainControlPointAt( MSEGStorage* ms, int idx )
    ms->segments[idx].cpv = limit_range( ms->segments[idx].cpv, -1.f, 1.f );
 }
 
-void scaleDurations(MSEGStorage* ms, float factor)
+void scaleDurations(MSEGStorage* ms, float factor, float maxDuration)
 {
+   if( maxDuration > 0 && ms->totalDuration * factor > maxDuration)
+   {
+      factor = maxDuration / ms->totalDuration;
+   }
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].duration *= factor;
 
@@ -1124,7 +1128,7 @@ void adjustDurationInternal( MSEGStorage* ms, int idx, float d, float snapResolu
    }
 }
 
-void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float snap)
+void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float snap, float maxDuration)
 {
    if( ms->editMode == MSEGStorage::LFO )
    {
@@ -1134,6 +1138,11 @@ void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float 
          dx = ms->segmentEnd[idx];
       if( -dx > ms->segments[idx].duration )
          dx = -ms->segments[idx].duration;
+   }
+
+   if( maxDuration > 0 && dx > 0 && ms->totalDuration + dx > maxDuration )
+   {
+      dx = maxDuration - ms->totalDuration;
    }
 
    float durationChange = dx;
