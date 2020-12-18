@@ -294,6 +294,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       DRAW,     // only change amplitude of nodes as the cursor passes along the timeline
    } timeEditMode = SINGLE;
 
+   const int loopMarkerWidth = 7, loopMarkerHeight = 15;
+
    void recalcHotZones( const CPoint &where ) {
       hotzones.clear();
 
@@ -326,8 +328,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          if( this->ms->editMode != MSEGStorage::LFO )
          {
-            int lmWidth = 6, lmHeight = 14;
-
             hs.onDrag = [pxt, this](float x, float y, const CPoint &w)
             {
                auto t = pxt(w.x);
@@ -349,16 +349,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   invalid();
                }
                loopDragTime = t;
+               loopDragIsStart = true;
                if( ms->loop_start >= 0 )
                   loopDragEnd = this->ms->segmentStart[ms->loop_start];
                else
                   loopDragEnd = 0;
             };
 
-            hs.rect = VSTGUI::CRect(CPoint(pxs - 0.5, haxisArea.top + 1), CPoint(lmWidth, lmHeight));
+            hs.rect = VSTGUI::CRect(CPoint(pxs - 0.5, haxisArea.top + 1), CPoint(loopMarkerWidth, loopMarkerHeight));
             hs.zoneSubType = hotzone::LOOP_START;
 
-            he.rect = VSTGUI::CRect(CPoint(pxe - lmWidth + 0.5, haxisArea.top + 1), CPoint(lmWidth, lmHeight));
+            he.rect = VSTGUI::CRect(CPoint(pxe - loopMarkerWidth + 0.5, haxisArea.top + 1), CPoint(loopMarkerWidth, loopMarkerHeight));
             he.zoneSubType = hotzone::LOOP_END;
 
             he.onDrag = [pxt, this](float x, float y, const CPoint &w)
@@ -383,6 +384,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                  invalid();
               }
               loopDragTime = t;
+              loopDragIsStart = false;
               if( ms->loop_end >= 0 )
                  loopDragEnd = this->ms->segmentEnd[ms->loop_end];
               else
@@ -634,82 +636,61 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             hotzones.back().specialEndpoint = true;
          }
       }
-
    }
 
-   enum ghostLoopMarker
+   void drawLoopDragMarker( CDrawContext *dc, CColor markerColor, hotzone::ZoneSubType subtype, const CRect &rect )
    {
-      glm_none = 0,
-      glm_start,
-      glm_end,
-   };
+      auto ha = getHAxisArea();
+      auto height = rect.getHeight();
+      auto start = rect.right;
+      auto end = rect.left;
+      auto top = rect.top;
+      VSTGUI::CDrawContext::PointList pl;
 
-   inline void drawLoopMarkersEqual(CDrawContext* dc, CColor loopStartColor, CColor loopEndColor, int ghost, CRect ghostRect)
+      if (subtype == hotzone::LOOP_START)
+      {
+         std::swap(start,end);
+      }
+
+      pl.push_back(CPoint(start, top));
+      pl.push_back(CPoint(start, top + height));
+      pl.push_back(CPoint(end, top + height));
+
+      dc->setFillColor(markerColor);
+      dc->drawPolygon(pl, kDrawFilled);
+
+      dc->setFrameColor(markerColor);
+      dc->setLineWidth(1);
+      dc->drawLine(CPoint(start, top), CPoint(start, top + height));
+   }
+
+   void drawLoopDragMarker( CDrawContext *dc, CColor markerColor, hotzone::ZoneSubType subtype, float time )
    {
       auto tpx = timeToPx();
+      auto ha = getHAxisArea();
+      auto start = tpx(time) - 0.5;
+      bool hide = false;
 
-      if (ghost == glm_none)
+      if (subtype == hotzone::LOOP_END)
       {
-         for (auto& h : hotzones)
+         start -= loopMarkerWidth;
+
+         if (start < ha.left || start + loopMarkerWidth > ha.right)
          {
-            if (h.type == hotzone::LOOPMARKER)
-            {
-               CCoord start = tpx(ms->segmentStart[ms->loop_start]);
-               CCoord end;
-               auto top = h.rect.top;
-               auto height = h.rect.getHeight();
-   
-               VSTGUI::CDrawContext::PointList pl;
-   
-               if (h.zoneSubType == hotzone::LOOP_START)
-               {
-                  end = h.rect.right;
-
-                  dc->setFillColor(loopStartColor);
-               }
-               else
-               {
-                  end = h.rect.left;
-
-                  dc->setFillColor(loopEndColor);
-               }
-
-               pl.push_back(CPoint(start, top));
-               pl.push_back(CPoint(start, top + height));
-               pl.push_back(CPoint(end, top + height));
-
-               dc->drawPolygon(pl, kDrawFilled);
-            }
+            hide = true;
          }
       }
       else
       {
-         CCoord start, end;
-         auto top = ghostRect.top;
-         auto height = ghostRect.getHeight();
-
-         VSTGUI::CDrawContext::PointList pl;
-
-         if (ghost == glm_start)
+         if (start < ha.left || start + loopMarkerWidth > ha.right)
          {
-            start = ghostRect.left;
-            end = ghostRect.right;
-
-            dc->setFillColor(loopStartColor);
+            hide = true;
          }
-         else
-         {
-            start = ghostRect.right;
-            end = ghostRect.left;
+      }
 
-            dc->setFillColor(loopEndColor);
-         }
-
-         pl.push_back(CPoint(end, top));
-         pl.push_back(CPoint(end, top + height));
-         pl.push_back(CPoint(start, top + height));
-
-         dc->drawPolygon(pl, kDrawFilled);
+      if (!hide)
+      {
+         drawLoopDragMarker(dc, markerColor, subtype, CRect( CPoint( start, ha.top ), CPoint( loopMarkerWidth, loopMarkerHeight )));
       }
    }
 
@@ -717,8 +698,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    const int gridMaxVSteps = 10;
 
    inline void drawAxis( CDrawContext *dc ) {
-
-
       auto primaryFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
       auto secondaryFont = new VSTGUI::CFontDesc("Lato", 7);
 
@@ -737,72 +716,31 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                  (float)haxisArea.right);
 
          auto r = VSTGUI::CRect(pxs, haxisArea.top, pxe, haxisArea.top + 15);
-         auto rcolor = skin->getColor(Colors::MSEGEditor::Loop::RegionAxis);
 
+         // draw the loop region start to end
          if (! (ms->loop_start == ms->loop_end + 1))
          {
-            dc->setFillColor(rcolor);
+            dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::RegionAxis));
             dc->drawRect(r, kDrawFilled);
          }
-         else
+            
+         auto mcolor = skin->getColor(Colors::MSEGEditor::Loop::Marker);
+
+         // draw loop markers
+         if (loopDragTime < 0 || !loopDragIsStart)
          {
-            drawLoopMarkersEqual(dc, rcolor, rcolor, glm_none, CRect());
+             drawLoopDragMarker(dc, mcolor, hotzone::LOOP_START, ms->segmentStart[ms->loop_start]);
          }
 
-         // This is the ghost loop marker drag
+         if (loopDragTime < 0 || loopDragIsStart)
+         {
+             drawLoopDragMarker(dc, mcolor, hotzone::LOOP_END, ms->segmentEnd[ms->loop_end]);
+         }
+
+         // loop marker when dragged
          if (loopDragTime >= 0 )
          {
-            bool found = false;
-            hotzone ht;
-         
-            for (auto& h : hotzones)
-            {
-               if (h.dragging)
-               {
-                  ht = h;
-                  found = true;
-               }
-            }
-         
-            if (found)
-            {
-               auto r = ht.rect;
-               auto p = tpx(loopDragTime);
-               int poff = 0;
-               int sz = 6;
-         
-               if (ht.zoneSubType == hotzone::LOOP_END)
-                  poff = -sz;
-         
-               r.left = p + poff; // I know - Y? but this is square and y is 1 for end
-               r.right = p + sz + poff;
-         
-               if (! (ms->loop_start == ms->loop_end + 1))
-               {
-                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost));
-                  dc->drawRect(r, kDrawFilled);
-               }
-               else
-               {               
-                  CColor lms, lme;
-                  int glm;
-         
-                  if (ht.zoneSubType == hotzone::LOOP_START)
-                  {
-                     lms = skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost);
-                     lme = kTransparentCColor;
-                     glm = glm_start;
-                  }
-                  else
-                  {
-                     lms = kTransparentCColor;
-                     lme = skin->getColor(Colors::MSEGEditor::Loop::MarkerGhost);
-                     glm = glm_end;
-                  }
-         
-                  drawLoopMarkersEqual(dc, lms, lme, glm, r);
-               }
-            }
+            drawLoopDragMarker(dc, mcolor, (loopDragIsStart ? hotzone::LOOP_START : hotzone::LOOP_END ), loopDragTime );
          }
       }
 
@@ -1070,34 +1008,31 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          float pxs = tpx(ms->segmentStart[ls]);
          float pxe = tpx(ms->segmentEnd[le]);
 
-         if( pxs > drawArea.right || pxe < drawArea.left || pxs == pxe )
+         if (! (pxs > drawArea.right || pxe < drawArea.left))
          {
-            // Nothin to do
-         }
-         else
-         {
-            pxs = std::max( drawArea.left, (double)pxs );
-            pxe = std::min( drawArea.right, (double)pxe );
+            auto oldpxs = pxs, oldpxe = pxe;
+            pxs = std::max(drawArea.left, (double)pxs);
+            pxe = std::min(drawArea.right, (double)pxe);
 
             auto loopRect = CRect( pxs - 0.5, drawArea.top, pxe, drawArea.bottom );
-            auto cf = skin->getColor( Colors::MSEGEditor::Loop::RegionFill );
+            auto cf = skin->getColor(Colors::MSEGEditor::Loop::RegionFill);
 
-            dc->setFillColor( cf );
-            dc->setFrameColor( cf );
-            dc->drawRect( loopRect, kDrawFilled);
+            dc->setFillColor(cf);
+            dc->setFrameColor(cf);
+            dc->drawRect(loopRect, kDrawFilled);
 
-            auto cb = skin->getColor( Colors::MSEGEditor::Loop::RegionBorder );
+            auto cb = skin->getColor(Colors::MSEGEditor::Loop::RegionBorder);
 
-            dc->setFrameColor( cb );
-            dc->setLineWidth(1);
+            dc->setFrameColor(cb);
+            dc->setLineWidth(1.f);
 
-            if( pxe > drawArea.left && pxe < drawArea.right )
+            if (oldpxe > drawArea.left && oldpxe <= drawArea.right)
             {
-               dc->drawLine( CPoint( pxe , drawArea.top), CPoint( pxe , drawArea.bottom ));
+               dc->drawLine(CPoint(pxe - 0.5, drawArea.top), CPoint(pxe - 0.5, drawArea.bottom));
             }
-            if( pxs > drawArea.left && pxs < drawArea.right )
+            if (oldpxs >= drawArea.left && oldpxs < drawArea.right)
             {
-               dc->drawLine( CPoint( pxs - 0.5, drawArea.top), CPoint( pxs - 0.5, drawArea.bottom ));
+               dc->drawLine(CPoint(pxs - 0.5, drawArea.top), CPoint(pxs - 0.5, drawArea.bottom));
             }
          }
       }
@@ -1308,6 +1243,43 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          }
       }
 
+      // draw hover loop markers
+      for (const auto& h : hotzones)
+      {
+         if (h.type == hotzone::LOOPMARKER)
+         {
+            /*
+             * OK the loop marker supression is a wee bit complicated
+             * If the end is at 0, it draws over the axis; if the start is at end similar
+             * so handle the cases differently. Remeber this is because the 'marker'
+             * of the start graphic is the left edge |< and the right end is >|
+             */
+            if (h.zoneSubType == hotzone::LOOP_START)
+            {
+               // my left edge is off the right or my left edge is off the left
+               if (h.rect.left > drawArea.right + 1 || h.rect.left < drawArea.left - 1)
+                  continue;
+            }
+            else if (h.zoneSubType == hotzone::LOOP_END)
+            {
+               // my right edge is off the right or left
+               if (h.rect.right > drawArea.right + 1 || h.rect.right <= drawArea.left)
+                  continue;
+            }
+
+            // draw a hovered loop marker
+            if (h.active)
+            {
+               auto c = skin->getColor(Colors::MSEGEditor::Loop::Marker);
+
+               auto hr = h.rect;
+               hr.offset(0, -1);
+
+               drawLoopDragMarker(dc, c, h.zoneSubType, hr);
+            }
+         }
+      }
+
       // Draw the axes here after the gradient fill and gridlines
       drawAxis(dc);
       dc->setLineStyle(CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
@@ -1334,62 +1306,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       defpath->forget();
       highlightPath->forget();
 
-      if( ! inDrag )
-         getFrame()->setCursor(kCursorDefault);
-
-      for( const auto &h : hotzones )
+      if (!inDrag)
       {
-         if( h.type == hotzone::LOOPMARKER )
-         {
-            /*
-             * OK the loop marker supression is a wee bit complicated
-             * If the end is at 0, it draws over the axis; if the start is at end similar
-             * so handle the cases differently. Remeber this is because the 'marker'
-             * of the start graphic is the left edge |< and the right end is >|
-             */
-            if (h.zoneSubType == hotzone::LOOP_START)
-            {
-               // my left edge is off the right or my left edge is off the left
-               if (h.rect.left > drawArea.right + 1 || h.rect.left < drawArea.left - 1)
-                  continue;
-            }
-            else if (h.zoneSubType == hotzone::LOOP_END)
-            {
-               // my right edge is off the right or left
-               if (h.rect.right > drawArea.right + 1 || h.rect.right <= drawArea.left)
-                  continue;
+         getFrame()->setCursor(kCursorDefault);
+      }
 
-            }
-
-            // OK so we draw hover handle
-            if (h.active)
-            {
-               if (! (ms->loop_start == ms->loop_end + 1))
-               {
-                  dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::MarkerHover));
-                  dc->drawRect(h.rect, kDrawFilled);
-               }
-               else
-               {               
-                  CColor lms, lme;
-
-                  if (h.zoneSubType == hotzone::LOOP_START)
-                  {
-                     lms = skin->getColor(Colors::MSEGEditor::Loop::MarkerHover);
-                     lme = kTransparentCColor;
-                  }
-                  else
-                  {
-                     lms = kTransparentCColor;
-                     lme = skin->getColor(Colors::MSEGEditor::Loop::MarkerHover);
-                  }
-
-                  drawLoopMarkersEqual(dc, lms, lme, glm_none, CRect());
-               }
-            }
-
-         }
-
+      for (const auto &h : hotzones)
+      {
          if( h.type == hotzone::MOUSABLE_NODE )
          {
             int sz = 13;
@@ -2379,6 +2302,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    LFOStorage *lfodata;
    MSEGControlRegion *controlregion = nullptr;
    float loopDragTime = -1, loopDragEnd = -1;
+   bool loopDragIsStart = false;
 
    CScalableBitmap *handleBmp;
 
