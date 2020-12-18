@@ -7619,6 +7619,7 @@ void SurgeGUIEditor::showStorePatchDialog()
 void SurgeGUIEditor::closeMSEGEditor()
 {
    if( editorOverlayTag == "msegEditor" ) {
+      broadcastMSEGState();
       dismissEditorOverlay( );
    }
 }
@@ -7634,12 +7635,36 @@ void SurgeGUIEditor::toggleMSEGEditor()
    }
 }
 
+/*
+ * The edit state is independent per LFO. We want to sync some of ti as if it is not
+ * so this is called at the appropriate time.
+ */
+void SurgeGUIEditor::broadcastMSEGState()
+{
+   if( msegIsOpenFor >= 0 && msegIsOpenInScene >= 0 )
+   {
+      for( int s=0; s<n_scenes; ++s )
+      {
+         for( int lf=0; lf < n_lfos; ++lf )
+         {
+            msegEditState[s][lf].timeEditMode = msegEditState[msegIsOpenInScene][msegIsOpenFor].timeEditMode;
+         }
+      }
+   }
+   msegIsOpenFor = -1;
+   msegIsOpenInScene = -1;
+}
 void SurgeGUIEditor::showMSEGEditor()
 {
+   broadcastMSEGState();
+
    auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
+   msegIsOpenFor = lfo_id;
+   msegIsOpenInScene = current_scene;
+
    auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
    auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
-   auto mse = new MSEGEditor(&(synth->storage), lfodata, ms, &msegEditState[lfo_id], currentSkin, bitmapStore);
+   auto mse = new MSEGEditor(&(synth->storage), lfodata, ms, &msegEditState[current_scene][lfo_id], currentSkin, bitmapStore);
    auto vs = mse->getViewSize().getWidth();
    float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
 

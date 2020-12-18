@@ -331,8 +331,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             hs.onDrag = [pxt, this](float x, float y, const CPoint &w)
             {
                auto t = pxt(w.x);
+               t = limit_range( t, 0.f, ms->segmentStart[ms->n_activeSegments-1] );
 
-               auto seg = Surge::MSEG::timeToSegment(this->ms, pxt(w.x));
+               auto seg = Surge::MSEG::timeToSegment(this->ms, t);
+
                float pct = 0;
                if( this->ms->segments[seg].duration > 0 )
                {
@@ -365,8 +367,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             he.onDrag = [pxt, this](float x, float y, const CPoint &w)
             {
               auto t = pxt(w.x);
-
-              auto seg = Surge::MSEG::timeToSegment(this->ms, pxt(w.x));
+              t = limit_range( t, ms->segmentEnd[0], ms->totalDuration );
+              auto seg = Surge::MSEG::timeToSegment(this->ms, t);
+              if( t == ms->totalDuration ) seg = ms->n_activeSegments - 1;
               if( seg > 0 ) seg--; // since this is the END marker
               float pct = 0;
               if( this->ms->segments[seg + 1].duration > 0 )
@@ -426,7 +429,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             case DRAW:
                break;
             case SHIFT:
-               Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx, eds->hSnap);
+               Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx, eds->hSnap, longestMSEG);
                break;
             case SINGLE:
                Surge::MSEG::adjustDurationConstantTotalDuration(this->ms, prior, dx, eds->hSnap);
@@ -630,7 +633,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                 }
 
                                 Surge::MSEG::adjustDurationShiftingSubsequent(
-                                    ms, ms->n_activeSegments - 1, dx / tscale, eds->hSnap);
+                                    ms, ms->n_activeSegments - 1, dx / tscale, eds->hSnap, longestMSEG);
                              }
                           } );
             hotzones.back().specialEndpoint = true;
@@ -675,14 +678,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          start -= loopMarkerWidth;
 
-         if (start < ha.left || start + loopMarkerWidth > ha.right)
+         /* this -1 is because we offset half a px to the left in our rect */
+         if (start < ha.left - 1 || start + loopMarkerWidth > ha.right)
          {
             hide = true;
          }
       }
       else
       {
-         if (start < ha.left || start + loopMarkerWidth > ha.right)
+         /* this -1 is because we offset half a px to the left in our rect */
+         if (start < ha.left - 1 || start + loopMarkerWidth > ha.right)
          {
             hide = true;
          }
@@ -1100,6 +1105,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                      addP( path, i, valpx( ms->segments[ns-1].v0));
                   addP( path, i, valpx(ms->segments[ns].v0));
                }
+
+               if( priorEval == hoveredSegment && hlpathUsed )
+               {
+                  addP( highlightPath, i, valpx(ms->segments[priorEval].nv1) );
+               }
                priorEval = es.lastEval;
             }
 
@@ -1107,13 +1117,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             {
                if( !hlpathUsed )
                {
-                  beginP(highlightPath, i, v);
+                  // We always want to hit the start
+                  beginP(highlightPath, i, valpx( ms->segments[hoveredSegment].v0));
                   hlpathUsed = true;
                }
-               else
-               {
-                  addP( highlightPath, i, v );
-               }
+
+               addP( highlightPath, i, v );
             }
 
             if( i == 0 )
@@ -1375,8 +1384,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    bool cursorResetPosition = false;
    bool inDrag = false;
    bool inDrawDrag = false;
+   enum {
+      NOT_MOUSE_DOWN,
+      MOUSE_DOWN_IN_DRAW_AREA,
+      MOUSE_DOWN_OUTSIDE_DRAW_AREA
+   } mouseDownInitiation = NOT_MOUSE_DOWN;
    bool cursorHideEnqueued = false;
+
    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons ) override {
+      mouseDownInitiation = ( getDrawArea().pointInside(where) ? MOUSE_DOWN_IN_DRAW_AREA : MOUSE_DOWN_OUTSIDE_DRAW_AREA );
       if (buttons & kRButton)
       {
          auto da = getDrawArea();
@@ -1485,7 +1501,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             /*
              * Only initiate draws in the draw area allowing the axis to still pan and zoom
              */
-            if (da.pointInside(where))
+            if (da.pointInside(where) &&
+                !( ( buttons & kShift ) || ( buttons & kMButton ))
+                )
             {
                inDrawDrag = true;
                return kMouseEventHandled;
@@ -1550,6 +1568,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    }
 
    virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons ) override {
+      mouseDownInitiation = NOT_MOUSE_DOWN;
       getFrame()->setCursor( kCursorDefault );
       inDrag = false;
       inDrawDrag = false;
@@ -1605,7 +1624,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto t = tf( where.x );
       auto da = getDrawArea();
 
-      if( da.pointInside( where ) )
+      if( da.pointInside( where ) && mouseDownInitiation != MOUSE_DOWN_OUTSIDE_DRAW_AREA )
       {
          auto ohs = hoveredSegment;
          if (t < 0)
@@ -2055,15 +2074,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          actionsMenu->addSeparator();
 
-         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Double Size"),
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Double Duration"),
                             [this](){
-                                       Surge::MSEG::scaleDurations(this->ms, 2.0);
+                                       Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
                                        modelChanged();
+                                       zoomToFull();
                                     });
-         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Half Size"),
+         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Half Duration"),
                             [this](){
-                                       Surge::MSEG::scaleDurations(this->ms, 0.5);
+                                       Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
                                        modelChanged();
+                                       zoomToFull();
                                     });
 
          actionsMenu->addSeparator();
@@ -2241,6 +2262,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       // invalid();
    }
 
+   static constexpr int longestMSEG = 128;
+   static constexpr int longestSmallZoom = 32;
+
    void applyZoomPanConstraints(int activeSegment = -1, bool specialEndpoint = false)
    {
       if( ms->editMode == MSEGStorage::LFO )
@@ -2257,8 +2281,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       {
          auto bd = std::max( ms->totalDuration, 1.f );
          auto longest = bd * 2;
-         if( longest > 128 ) longest = 128;
-         if( longest < 32 ) longest = 32;
+         if( longest > longestMSEG ) longest = longestMSEG;
+         if( longest < longestSmallZoom ) longest = longestSmallZoom;
          if( axisWidth > longest )
          {
             axisWidth = longest;

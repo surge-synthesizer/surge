@@ -342,7 +342,9 @@ public:
    void showMSEGEditor();
    void closeMSEGEditor();
    void toggleMSEGEditor();
-   MSEGEditor::State msegEditState[n_lfos];
+   void broadcastMSEGState();
+   int msegIsOpenFor = -1, msegIsOpenInScene = -1;
+   MSEGEditor::State msegEditState[n_scenes][n_lfos];
 
    void updateStateOnSynth();
 
