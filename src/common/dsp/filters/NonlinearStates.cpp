@@ -92,6 +92,8 @@ namespace NonlinearStatesFilter
    {
       float C[n_cm_coeffs];
 
+      reso = limit_range(reso, 0.f, 1.f);
+
       const float q = ((reso * reso * reso) * 18.0f + 0.1f);
 
       const float wc = 2.0f * M_PI * clampedFrequency(freq, storage) / dsamplerate_os;
