@@ -258,7 +258,7 @@ public:
            }
            if( des->editor.isMSEGOpen )
            {
-              showMSEGEditor();
+              showMSEGEditorOnNextIdleOrOpen = true;
            }
        }
    }
@@ -344,6 +344,8 @@ public:
    void toggleMSEGEditor();
    void broadcastMSEGState();
    int msegIsOpenFor = -1, msegIsOpenInScene = -1;
+   bool showMSEGEditorOnNextIdleOrOpen = false;
+
    MSEGEditor::State msegEditState[n_scenes][n_lfos];
 
    void updateStateOnSynth();
