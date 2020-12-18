@@ -75,10 +75,9 @@
     <color id="msegeditor.fill.gradient.end" value="#2E86FE0F"/>
     <color id="msegeditor.numberfield.text" value="lightgray"/>
     <color id="msegeditor.numberfield.text.hover" value="white"/>
-    <color id="msegeditor.loop.marker.hover" value="#FFFFFF60"/>
-    <color id="msegeditor.loop.marker.ghost" value="#FFFFFF30"/>
-    <color id="msegeditor.loop.region.axis" value="#FFFFFF40"/>
-    <color id="msegeditor.loop.region.border" value="#00000000"/>
+    <color id="msegeditor.loop.marker" value="#40ADFF90"/>
+    <color id="msegeditor.loop.region.axis" value="#FFFFFF30"/>
+    <color id="msegeditor.loop.region.border" value="#40ADFF90"/>
     <color id="msegeditor.loop.region.fill" value="#FFFFFF0C"/>
 
     <color id="dialog.background" value="bggray"/>

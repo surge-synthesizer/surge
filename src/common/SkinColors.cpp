@@ -252,11 +252,10 @@ namespace Colors
       }
       namespace Loop
       {
-         const Surge::Skin::Color MarkerHover("msegeditor.loop.marker.hover", 255, 255, 255, 96),
-                                  MarkerGhost("msegeditor.loop.marker.ghost", 255, 255, 255, 48),
-                                  RegionAxis("msegeditor.loop.region.axis", 255, 255, 255, 64),
+         const Surge::Skin::Color Marker("msegeditor.loop.marker", 255, 147, 0, 144),
+                                  RegionAxis("msegeditor.loop.region.axis", 255, 255, 255, 48),
                                   RegionFill("msegeditor.loop.region.fill", 32, 32, 32),
-                                  RegionBorder("msegeditor.loop.region.border", 40, 40, 40);
+                                  RegionBorder("msegeditor.loop.region.border", 255, 144, 0, 144);
       }
       namespace NumberField
       {
