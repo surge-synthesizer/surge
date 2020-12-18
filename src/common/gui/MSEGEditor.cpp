@@ -658,13 +658,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       dc->setFillColor(markerColor);
       dc->drawPolygon(pl, kDrawFilled);
+
+      dc->setFrameColor(markerColor);
+      dc->setLineWidth(1);
+      dc->drawLine(CPoint(start, top), CPoint(start, top + height));
    }
 
    void drawLoopDragMarker( CDrawContext *dc, CColor markerColor, hotzone::ZoneSubType subtype, float time )
    {
       auto tpx = timeToPx();
       auto ha = getHAxisArea();
-      auto start = tpx(time);
+      auto start = tpx(time) - 0.5;
       bool hide = false;
 
       if (subtype == hotzone::LOOP_END)
