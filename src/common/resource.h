@@ -66,7 +66,6 @@
 #define IDB_MSEG_EDIT_MODE 307
 #define IDB_ABOUT_LOGOS 180
 #define IDB_ABOUT_BG 158
-#define IDB_MSEG_LOOP_MARKERS 308
 #define IDB_VUMETER_BARS 181
 // == /SVG == Do not remove this comment
 
