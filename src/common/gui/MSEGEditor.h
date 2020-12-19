@@ -19,6 +19,12 @@
 #include "SkinSupport.h"
 
 struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent {
+   /*
+    * Because this is 'late' in the build (in the gui) there is a copy of this structure in
+    * the DawExtraState. If you add something to this state, add it there too. Revisit that
+    * decision in 1.9 perhaps but #3316 is very late in the 18 cycle, which is why we
+    * needed the extra storage.
+    */
    struct State {
       float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.125;
       int timeEditMode = 0;

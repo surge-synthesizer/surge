@@ -256,22 +256,11 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
    // synth = ((SurgeProcessor*)effect)->getSurge();
 #endif
 
-
-   auto des = &(synth->storage.getPatch().dawExtraState);
    patchname = 0;
-   current_scene = des->editor.current_scene;
-   current_fx = des->editor.current_fx;
-   modsource = des->editor.modsource;
    blinktimer = 0.f;
    blinkstate = false;
    aboutbox = 0;
    patchCountdown = -1;
-
-   for (int i = 0; i < n_scenes; i++)
-   {
-      current_osc[i] = des->editor.current_osc[i];
-      modsource_editor[i] = des->editor.modsource_editor[i];
-   }
    
    mod_editor = false;
 
@@ -410,6 +399,10 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
 
    currentSkin = Surge::UI::SkinDB::get().defaultSkin(&(this->synth->storage));
    reloadFromSkin();
+
+   auto des = &(synth->storage.getPatch().dawExtraState);
+   if (des->isPopulated)
+      loadFromDAWExtraState(synth);
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -7718,8 +7711,6 @@ void SurgeGUIEditor::repushAutomationFor(Parameter* p)
 
 void SurgeGUIEditor::showAboutBox()
 {
-   std::cout << "Show About Box" << std::endl;
-
    CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
    aboutbox = new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram, currentSkin, bitmapStore );
    aboutbox->setVisible( true );
@@ -7728,7 +7719,6 @@ void SurgeGUIEditor::showAboutBox()
 
 void SurgeGUIEditor::hideAboutBox()
 {
-   std::cout << "Hide About box" << std::endl;
    if( aboutbox )
    {
       aboutbox->setVisible( false );

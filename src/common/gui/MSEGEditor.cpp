@@ -871,6 +871,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       hTicks.clear();
 
       float dStep = eds->hSnapDefault;
+      if (dStep <= 0)
+      {
+         /*
+          * This error condition should never occur, but once I screwed up streaming, it did
+          * and then this code runs forever so...
+          */
+         dStep = 0.01;
+      }
       /*
        * OK two cases - step makes a squillion white lines, or step makes too few lines. Both of
        * these depend on this ratio
@@ -919,6 +927,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          vTicks.clear();
 
          float dStep = eds->vSnapDefault;
+         // See comment above
+         if (dStep <= 0)
+         {
+            dStep = 0.01;
+         }
 
          while (dStep < 1.0 / (gridMaxVSteps * (1 + uni)))
          {
