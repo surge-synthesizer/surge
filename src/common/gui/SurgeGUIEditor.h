@@ -237,6 +237,16 @@ public:
       {
          des->editor.current_osc[i] = current_osc[i];
          des->editor.modsource_editor[i] = modsource_editor[i];
+
+         des->editor.msegStateIsPopulated = true;
+         for (int lf = 0; lf < n_lfos; ++lf)
+         {
+            des->editor.msegEditState[i][lf].hSnap = msegEditState[i][lf].hSnap;
+            des->editor.msegEditState[i][lf].hSnapDefault = msegEditState[i][lf].hSnapDefault;
+            des->editor.msegEditState[i][lf].vSnap = msegEditState[i][lf].vSnap;
+            des->editor.msegEditState[i][lf].vSnapDefault = msegEditState[i][lf].vSnapDefault;
+            des->editor.msegEditState[i][lf].timeEditMode = msegEditState[i][lf].timeEditMode;
+         }
       }
       des->editor.isMSEGOpen = ( editorOverlayTagAtClose == "msegEditor" );
    }
@@ -244,23 +254,35 @@ public:
    void loadFromDAWExtraState(SurgeSynthesizer *synth) {
       auto des = &(synth->storage.getPatch().dawExtraState);
       if( des->isPopulated )
-       {
-           auto sz = des->editor.instanceZoomFactor;
-           if( sz > 0 )
-               setZoomFactor(sz);
-           current_scene = des->editor.current_scene;
-           current_fx = des->editor.current_fx;
-           modsource = des->editor.modsource;
-           for( int i=0; i<n_scenes; ++i )
-           {
-              current_osc[i] = des->editor.current_osc[i];
-              modsource_editor[i] = des->editor.modsource_editor[i];
-           }
-           if( des->editor.isMSEGOpen )
-           {
-              showMSEGEditorOnNextIdleOrOpen = true;
-           }
-       }
+      {
+         auto sz = des->editor.instanceZoomFactor;
+         if (sz > 0)
+            setZoomFactor(sz);
+         current_scene = des->editor.current_scene;
+         current_fx = des->editor.current_fx;
+         modsource = des->editor.modsource;
+
+         for (int i = 0; i < n_scenes; ++i)
+         {
+            current_osc[i] = des->editor.current_osc[i];
+            modsource_editor[i] = des->editor.modsource_editor[i];
+            if (des->editor.msegStateIsPopulated)
+            {
+               for (int lf = 0; lf < n_lfos; ++lf)
+               {
+                  msegEditState[i][lf].hSnap = des->editor.msegEditState[i][lf].hSnap;
+                  msegEditState[i][lf].hSnapDefault = des->editor.msegEditState[i][lf].hSnapDefault;
+                  msegEditState[i][lf].vSnap = des->editor.msegEditState[i][lf].vSnap;
+                  msegEditState[i][lf].vSnapDefault = des->editor.msegEditState[i][lf].vSnapDefault;
+                  msegEditState[i][lf].timeEditMode = des->editor.msegEditState[i][lf].timeEditMode;
+               }
+            }
+         }
+         if (des->editor.isMSEGOpen)
+         {
+            showMSEGEditorOnNextIdleOrOpen = true;
+         }
+      }
    }
    
    void setZoomCallback(std::function< void(SurgeGUIEditor *, bool resizeWindow) > f) {

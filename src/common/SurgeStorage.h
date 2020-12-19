@@ -686,6 +686,13 @@ struct DAWExtraStateStorage
       int current_osc[n_scenes] = {0};
       modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
       bool isMSEGOpen = false;
+
+      bool msegStateIsPopulated = false;
+      struct
+      {
+         float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.125;
+         int timeEditMode = 0;
+      } msegEditState[n_scenes][n_lfos];
    } editor;
 
 

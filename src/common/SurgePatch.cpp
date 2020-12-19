@@ -1776,6 +1776,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
               else
                  dawExtraState.editor.isMSEGOpen = false;
 
+              // Just to be sure, even though constructor should do this
+              dawExtraState.editor.msegStateIsPopulated = false;
               for( int sc=0; sc<n_scenes; sc++ )
               {
                  std::string con = "current_osc_" + std::to_string( sc );
@@ -1784,8 +1786,32 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                  con = "modsource_editor_" + std::to_string( sc );
                  if( p->QueryIntAttribute( con.c_str(), &ival ) == TIXML_SUCCESS )
                     dawExtraState.editor.modsource_editor[sc] = (modsources)ival;
-              }
 
+                 for (int lf = 0; lf < n_lfos; ++lf)
+                 {
+                    std::string msns =
+                        "mseg_state_" + std::to_string(sc) + "_" + std::to_string(lf);
+                    auto mss = TINYXML_SAFE_TO_ELEMENT(p->FirstChild(msns));
+                    if (mss)
+                    {
+                       dawExtraState.editor.msegStateIsPopulated = true;
+                       auto q = &(dawExtraState.editor.msegEditState[sc][lf]);
+
+                       double dv;
+                       int vv;
+                       if (mss->QueryDoubleAttribute("hSnap", &dv) == TIXML_SUCCESS)
+                          q->hSnap = dv;
+                       if (mss->QueryDoubleAttribute("hSnapDefault", &dv) == TIXML_SUCCESS)
+                          q->hSnapDefault = dv;
+                       if (mss->QueryDoubleAttribute("vSnap", &dv) == TIXML_SUCCESS)
+                          q->vSnap = dv;
+                       if (mss->QueryDoubleAttribute("vSnapDefault", &dv) == TIXML_SUCCESS)
+                          q->vSnapDefault = dv;
+                       if (mss->QueryIntAttribute("timeEditMode", &vv) == TIXML_SUCCESS)
+                          q->timeEditMode = vv;
+                    }
+                 }
+              }
            }
 
 
@@ -2162,6 +2188,22 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
           eds.SetAttribute( con.c_str(), dawExtraState.editor.current_osc[sc]);
           con = "modsource_editor_" + std::to_string( sc );
           eds.SetAttribute( con.c_str(), dawExtraState.editor.modsource_editor[sc]);
+
+          if (dawExtraState.editor.msegStateIsPopulated)
+          {
+             for (int lf = 0; lf < n_lfos; ++lf)
+             {
+                auto q = &(dawExtraState.editor.msegEditState[sc][lf]);
+                std::string msns = "mseg_state_" + std::to_string(sc) + "_" + std::to_string(lf);
+                TiXmlElement mss(msns);
+                mss.SetDoubleAttribute("hSnap", q->hSnap);
+                mss.SetDoubleAttribute("hSnapDefault", q->hSnapDefault);
+                mss.SetDoubleAttribute("vSnap", q->vSnap);
+                mss.SetDoubleAttribute("vSnapDefault", q->vSnapDefault);
+                mss.SetAttribute("timeEditMode", q->timeEditMode);
+                eds.InsertEndChild(mss);
+             }
+          }
        }
 
        dawExtraXML.InsertEndChild(eds);
