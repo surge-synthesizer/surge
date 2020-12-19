@@ -1518,6 +1518,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                 !( ( buttons & kShift ) || ( buttons & kMButton ))
                 )
             {
+               /*
+                * Activate temporary snap but in draw mode, do vSnap only
+                */
+               bool a = buttons & kAlt;
+               if (a)
+               {
+                  snapGuard = std::make_shared<SnapGuard>(eds, this);
+                  if (a)
+                     eds->vSnap = eds->vSnapDefault;
+               }
                inDrawDrag = true;
                return kMouseEventHandled;
             }
@@ -1663,10 +1673,36 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       if( inDrawDrag )
       {
+         // Activate temporary snap in vdirection only
+         bool a = buttons & kAlt;
+         if (a)
+         {
+            bool wasSnapGuard = true;
+            if (!snapGuard)
+            {
+               wasSnapGuard = false;
+               snapGuard = std::make_shared<SnapGuard>(eds, this);
+            }
+
+            if (a)
+               eds->vSnap = eds->vSnapDefault;
+            else if (wasSnapGuard)
+               eds->vSnap = snapGuard->vSnapO;
+         }
+         else if (!a && snapGuard)
+         {
+            snapGuard = nullptr;
+         }
+
          auto tf = pxToTime( );
          auto t = tf( where.x );
          auto pv = pxToVal();
          auto v = limit_range( pv( where.y ), -1.f, 1.f );
+
+         if (eds->vSnap > 0)
+         {
+            v = limit_range(round(v / eds->vSnap) * eds->vSnap, -1.f, 1.f);
+         }
 
          int seg = Surge::MSEG::timeToSegment( this->ms, t );
 
