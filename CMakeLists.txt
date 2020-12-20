@@ -33,14 +33,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility-inlines-hidden>
   )
-  if( APPLE )
-    # add_compile_options($<$<STREQUAL:${CMAKE_LIBRARY_ARCHITECTURE},x86_64>:-msse2>) This doesn't work so
-    # keep the flag on and supress the arm-side warning
-    add_compile_options( -msse2 -Wno-unused-command-line-argument)
-  else()
-    # FIXME: Find a proper way or move to i686 toolchain file
-    if(NOT DEFINED LINUX_ON_ARM)
-      add_compile_options(-msse2)
+  # Enable SSE2 on x86-32 only. It's implied on x86-64 and N/A elsewhere.
+  if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+    include(CheckCXXSourceCompiles)
+    check_cxx_source_compiles("#ifndef __i386__
+    #error
+    #endif
+    int main() {}" SURGE_ARCH_I386)
+    if (SURGE_ARCH_I386)
+      add_compile_options(-msse2 -mfpmath=sse)
     endif()
   endif()
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
