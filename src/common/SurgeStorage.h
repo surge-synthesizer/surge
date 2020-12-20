@@ -648,6 +648,9 @@ struct MSEGStorage {
    float durationLoopStartToLoopEnd;
    float envelopeModeDuration = -1, envelopeModeNV1 = -2; // -2 as sentinel since NV1 is -1/1
 
+   static constexpr float defaultVSnapDefault = 0.25, defaultHSnapDefault = 0.125;
+
+   float vSnapDefault = defaultVSnapDefault, hSnapDefault = defaultHSnapDefault;
    static constexpr float minimumDuration = 0.0;
 };
 
@@ -690,8 +693,9 @@ struct DAWExtraStateStorage
       bool msegStateIsPopulated = false;
       struct
       {
-         float vSnap = 0, hSnap = 0, vSnapDefault = 0.25, hSnapDefault = 0.125;
+         float vSnap = 0, hSnap = 0;
          int timeEditMode = 0;
+         float axisStart = -1, axisWidth = -1;
       } msegEditState[n_scenes][n_lfos];
    } editor;
 

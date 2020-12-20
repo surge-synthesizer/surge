@@ -1802,13 +1802,30 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                        if (mss->QueryDoubleAttribute("hSnap", &dv) == TIXML_SUCCESS)
                           q->hSnap = dv;
                        if (mss->QueryDoubleAttribute("hSnapDefault", &dv) == TIXML_SUCCESS)
-                          q->hSnapDefault = dv;
+                       {
+                          // This is a case where we have the hSnapDefaul tin the DAW extra state
+                          // from the majority of the 18 run so at least try
+                          if (msegs[sc][lf].hSnapDefault == MSEGStorage::defaultHSnapDefault)
+                          {
+                             msegs[sc][lf].hSnapDefault = dv;
+                          }
+                       }
                        if (mss->QueryDoubleAttribute("vSnap", &dv) == TIXML_SUCCESS)
                           q->vSnap = dv;
                        if (mss->QueryDoubleAttribute("vSnapDefault", &dv) == TIXML_SUCCESS)
-                          q->vSnapDefault = dv;
+                       {
+                          if (msegs[sc][lf].vSnapDefault == MSEGStorage::defaultVSnapDefault)
+                          {
+                             msegs[sc][lf].vSnapDefault = dv;
+                          }
+                       }
                        if (mss->QueryIntAttribute("timeEditMode", &vv) == TIXML_SUCCESS)
                           q->timeEditMode = vv;
+
+                       if (mss->QueryDoubleAttribute("axisStart", &dv) == TIXML_SUCCESS)
+                          q->axisStart = dv;
+                       if (mss->QueryDoubleAttribute("axisWidth", &dv) == TIXML_SUCCESS)
+                          q->axisWidth = dv;
                     }
                  }
               }
@@ -2197,10 +2214,10 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
                 std::string msns = "mseg_state_" + std::to_string(sc) + "_" + std::to_string(lf);
                 TiXmlElement mss(msns);
                 mss.SetDoubleAttribute("hSnap", q->hSnap);
-                mss.SetDoubleAttribute("hSnapDefault", q->hSnapDefault);
                 mss.SetDoubleAttribute("vSnap", q->vSnap);
-                mss.SetDoubleAttribute("vSnapDefault", q->vSnapDefault);
                 mss.SetAttribute("timeEditMode", q->timeEditMode);
+                mss.SetDoubleAttribute("axisStart", q->axisStart);
+                mss.SetDoubleAttribute("axisWidth", q->axisWidth);
                 eds.InsertEndChild(mss);
              }
           }
@@ -2294,6 +2311,9 @@ void SurgePatch::msegToXMLElement(MSEGStorage* ms, TiXmlElement& p) const
    p.SetAttribute( "loopStart", ms->loop_start);
    p.SetAttribute( "loopEnd", ms->loop_end );
 
+   p.SetDoubleAttribute("hSnapDefault", ms->hSnapDefault);
+   p.SetDoubleAttribute("vSnapDefault", ms->vSnapDefault);
+
    TiXmlElement segs( "segments" );
    for( int s=0; s<ms->n_activeSegments; ++s )
    {
@@ -2339,6 +2359,16 @@ void SurgePatch::msegFromXMLElement(MSEGStorage* ms, TiXmlElement* p) const
    else
       ms->loop_end = -1;
 
+   double dv;
+   if (p->QueryDoubleAttribute("hSnapDefault", &dv) == TIXML_SUCCESS)
+      ms->hSnapDefault = dv;
+   else
+      ms->hSnapDefault = MSEGStorage::defaultHSnapDefault;
+
+   if (p->QueryDoubleAttribute("vSnapDefault", &dv) == TIXML_SUCCESS)
+      ms->vSnapDefault = dv;
+   else
+      ms->vSnapDefault = MSEGStorage::defaultVSnapDefault;
 
    auto segs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "segments" ));
    if( segs )

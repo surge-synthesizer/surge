@@ -98,6 +98,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       handleBmp = b->getBitmap( IDB_MSEG_NODES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
       setMouseableArea(getViewSize());
+
+      bool updatedAxis = false;
+      if (this->eds->axisWidth > 0)
+      {
+         this->axisWidth = eds->axisWidth;
+         updatedAxis = true;
+      }
+      if (this->eds->axisStart > 0)
+      {
+         this->axisStart = eds->axisStart;
+         updatedAxis = true;
+      }
+      if (updatedAxis)
+      {
+         applyZoomPanConstraints();
+      }
    };
 
    /*
@@ -858,19 +874,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    float hTicksAsOf[3] = {-1,-1,-1};
    void updateHTicks()
    {
-      if( hTicksAsOf[0] == eds->hSnapDefault &&
-          hTicksAsOf[1] == axisStart &&
-          hTicksAsOf[2] == axisWidth
-          )
+      if (hTicksAsOf[0] == ms->hSnapDefault && hTicksAsOf[1] == axisStart &&
+          hTicksAsOf[2] == axisWidth)
          return;
 
-      hTicksAsOf[0] = eds->hSnapDefault;
+      hTicksAsOf[0] = ms->hSnapDefault;
       hTicksAsOf[1] = axisStart;
       hTicksAsOf[2] = axisWidth;
 
       hTicks.clear();
 
-      float dStep = eds->hSnapDefault;
+      float dStep = ms->hSnapDefault;
       if (dStep <= 0)
       {
          /*
@@ -922,11 +936,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    {
       auto uni = lfodata->unipolar.val.b;
 
-      if( eds->vSnapDefault != vTickAsOf )
+      if (ms->vSnapDefault != vTickAsOf)
       {
          vTicks.clear();
 
-         float dStep = eds->vSnapDefault;
+         float dStep = ms->vSnapDefault;
          // See comment above
          if (dStep <= 0)
          {
@@ -1541,7 +1555,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                {
                   snapGuard = std::make_shared<SnapGuard>(eds, this);
                   if (a)
-                     eds->vSnap = eds->vSnapDefault;
+                     eds->vSnap = ms->vSnapDefault;
                }
                inDrawDrag = true;
                return kMouseEventHandled;
@@ -1574,8 +1588,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( c || a  )
             {
                snapGuard = std::make_shared<SnapGuard>(eds, this);
-               if( c ) eds->hSnap = eds->hSnapDefault;
-               if( a ) eds->vSnap = eds->vSnapDefault;
+               if (c)
+                  eds->hSnap = ms->hSnapDefault;
+               if (a)
+                  eds->vSnap = ms->vSnapDefault;
             }
             break;
          }
@@ -1700,7 +1716,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             }
 
             if (a)
-               eds->vSnap = eds->vSnapDefault;
+               eds->vSnap = ms->vSnapDefault;
             else if (wasSnapGuard)
                eds->vSnap = snapGuard->vSnapO;
          }
@@ -1910,10 +1926,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                wasSnapGuard = false;
                snapGuard = std::make_shared<SnapGuard>(eds, this);
             }
-            if( c ) eds->hSnap = eds->hSnapDefault;
+            if (c)
+               eds->hSnap = ms->hSnapDefault;
             else if( wasSnapGuard ) eds->hSnap = snapGuard->hSnapO;
 
-            if( a ) eds->vSnap = eds->vSnapDefault;
+            if (a)
+               eds->vSnap = ms->vSnapDefault;
             else if( wasSnapGuard ) eds->vSnap = snapGuard->vSnapO;
          }
          else if( ! ( c || a ) && snapGuard )
@@ -2167,10 +2185,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          actionsMenu->addSeparator();
 
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
-                            [this](){
-                                       Surge::MSEG::setAllDurationsTo(this->ms, eds->hSnapDefault);
-                                       modelChanged();
-                                    });
+               [this]() {
+                  Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
+                  modelChanged();
+               });
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"),
                             [this](){
                                        Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
@@ -2382,6 +2400,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          }
       }
       axisWidth = std::max( axisWidth, 0.05f );
+
+      // Update the edit state
+      eds->axisWidth = axisWidth;
+      eds->axisStart = axisStart;
    }
 
    int hoveredSegment = -1;
@@ -2442,14 +2464,14 @@ void MSEGControlRegion::valueChanged( CControl *p )
    }
    case tag_horizontal_snap:
    {
-      eds->hSnap = (val < 0.5) ? 0.f : eds->hSnap = eds->hSnapDefault;
+      eds->hSnap = (val < 0.5) ? 0.f : eds->hSnap = ms->hSnapDefault;
       canvas->invalid();
 
       break;
    }
    case tag_vertical_snap:
    {
-      eds->vSnap = (val < 0.5) ? 0.f : eds->vSnap = eds->vSnapDefault;
+      eds->vSnap = (val < 0.5) ? 0.f : eds->vSnap = ms->vSnapDefault;
       canvas->invalid();
 
       break;
@@ -2457,9 +2479,9 @@ void MSEGControlRegion::valueChanged( CControl *p )
    case tag_vertical_value:
    {
       auto fv = 1.f / std::max(1, static_cast<CNumberField*>(p)->getIntValue());
-      eds->vSnapDefault = fv;
+      ms->vSnapDefault = fv;
       if (eds->vSnap > 0)
-         eds->vSnap = eds->vSnapDefault;
+         eds->vSnap = ms->vSnapDefault;
       canvas->invalid();
 
       break;
@@ -2467,9 +2489,9 @@ void MSEGControlRegion::valueChanged( CControl *p )
    case tag_horizontal_value:
    {
       auto fv = 1.f / std::max(1, static_cast<CNumberField*>(p)->getIntValue());
-      eds->hSnapDefault = fv;
+      ms->hSnapDefault = fv;
       if (eds->hSnap > 0)
-         eds->hSnap = eds->hSnapDefault;
+         eds->hSnap = ms->hSnapDefault;
       canvas->invalid();
 
       break;
@@ -2739,8 +2761,7 @@ void MSEGControlRegion::rebuild()
       addView(hbut);
       hbut->setValue(eds->hSnap < 0.001 ? 0 : 1);
 
-      snprintf(svt, 255, "%d", (int)round(1.f / eds->hSnapDefault));
-      
+      snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
 
       /*
        * CNF responds to skin objects and we are not skin driven here. We could do two things
@@ -2758,7 +2779,7 @@ void MSEGControlRegion::rebuild()
       hnf->setControlMode(cm_mseg_snap_h);
       hnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
       hnf->setMouseableArea(hsrect);
-      hnf->setIntValue( round( 1.f / eds->hSnapDefault ) );
+      hnf->setIntValue(round(1.f / ms->hSnapDefault));
 
       addView(hnf);
 
@@ -2770,14 +2791,14 @@ void MSEGControlRegion::rebuild()
       addView( vbut );
       vbut->setValue( eds->vSnap < 0.001? 0 : 1 );
 
-      snprintf(svt, 255, "%d", (int)round( 1.f / eds->vSnapDefault));
+      snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));
 
       auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
       auto* vnf = new CNumberField(vsrect, this, tag_vertical_value, nullptr /*, ref to storage?*/);
       vnf->setControlMode(cm_mseg_snap_v);
       vnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
       vnf->setMouseableArea(vsrect);
-      vnf->setIntValue( round( 1.f / eds->vSnapDefault ));
+      vnf->setIntValue(round(1.f / ms->vSnapDefault));
 
       addView(vnf);
    }
