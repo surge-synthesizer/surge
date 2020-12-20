@@ -1869,6 +1869,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
 void SurgeGUIEditor::close()
 {
+   populateDawExtraState(synth);
    if( editorOverlay )
    {
       frame->removeView( editorOverlay );
