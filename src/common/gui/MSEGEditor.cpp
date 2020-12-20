@@ -1455,7 +1455,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                   switch (h.zoneSubType)
                   {
                   case hotzone::SEGMENT_ENDPOINT: {
-                     Surge::MSEG::unsplitSegment(ms, t);
+
+                     if( buttons & kShift && h.associatedSegment >= 0 )
+                     {
+                        Surge::MSEG::deleteSegment(ms, ms->segmentStart[h.associatedSegment]);
+                     }
+                     else
+                     {
+                        Surge::MSEG::unsplitSegment(ms, t);
+                     }
                      modelChanged();
                      return kMouseEventHandled;
                   }
@@ -1475,7 +1483,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
             if (t < ms->totalDuration)
             {
-               Surge::MSEG::splitSegment(ms, t, v);
+               if( buttons & kShift )
+               {
+                  Surge::MSEG::deleteSegment(ms, t);
+               }
+               else
+               {
+                  Surge::MSEG::splitSegment(ms, t, v);
+               }
                modelChanged();
                return kMouseEventHandled;
             }

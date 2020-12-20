@@ -369,8 +369,7 @@ public:
    bool showMSEGEditorOnNextIdleOrOpen = false;
 
    MSEGEditor::State msegEditState[n_scenes][n_lfos];
-
-   void updateStateOnSynth();
+   MSEGEditor::State mostRecentCopiedMSEGState;
 
    int oscilatorMenuIndex[n_scenes][n_oscs] = {0};
 

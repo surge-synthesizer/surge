@@ -2621,6 +2621,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
             addCallbackMenu(contextMenu, "Copy", [this, sc, lfo_id]() {
                                                     if (lfo_id >= 0)
                                                        synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
+                                                    mostRecentCopiedMSEGState = msegEditState[sc][lfo_id];
                                                  });
             eid++;
 
@@ -2629,6 +2630,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                addCallbackMenu(contextMenu, "Paste", [this, sc, lfo_id]() {
                                                         if (lfo_id >= 0)
                                                            synth->storage.clipboard_paste(cp_lfo, sc, lfo_id);
+                                                        msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
                                                         queue_refresh = true;
                                                      });
                eid++;
