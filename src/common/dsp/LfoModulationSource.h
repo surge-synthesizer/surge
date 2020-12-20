@@ -82,6 +82,7 @@ private:
    pdata* localcopy;
    bool phaseInitialized;
    void initPhaseFromStartPhase();
+   void msegEnvelopePhaseAdjustment();
 
    float phase, target, noise, noised1, env_phase, priorPhase;
    int unwrappedphase_intpart;

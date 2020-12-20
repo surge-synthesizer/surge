@@ -125,6 +125,24 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
    return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
 }
 
+void LfoModulationSource::msegEnvelopePhaseAdjustment()
+{
+   /*
+   * If we have an envelope MSEG length above 1 we want phase to span the duration
+   */
+   if( lfo->shape.val.i == lt_mseg &&
+       ms->editMode == MSEGStorage::ENVELOPE &&
+       ms->totalDuration > 1.0 )
+   {
+      // extend the phase
+      phase *= ms->totalDuration;
+      double epi, epd;
+      epd = modf( phase, &epi );
+      phase = epd;
+      unwrappedphase_intpart = epi;
+   }
+}
+
 void LfoModulationSource::initPhaseFromStartPhase()
 {
    phase = localcopy[startphase].f;
@@ -136,6 +154,8 @@ void LfoModulationSource::initPhaseFromStartPhase()
    while( phase > 1.f )
       phase -= 1.f;
    unwrappedphase_intpart = 0;
+
+   msegEnvelopePhaseAdjustment();
 }
 
 void LfoModulationSource::attack()
@@ -167,6 +187,7 @@ void LfoModulationSource::attack()
       if (lfo->shape.val.i == lt_stepseq )
          phase = 0.f;
       step = 0;
+      msegEnvelopePhaseAdjustment();
    }
    else
    {
@@ -188,9 +209,11 @@ void LfoModulationSource::attack()
       case lm_keytrigger:
          phase = phaseslider;
          step = 0;
+         msegEnvelopePhaseAdjustment();
          break;
       case lm_random:
          phase = (float)rand() / (float)RAND_MAX;
+         msegEnvelopePhaseAdjustment();
          if( ss->loop_end == 0 )
             step = 0;
          else
@@ -304,6 +327,7 @@ void LfoModulationSource::attack()
          }
       }
    }
+
    break;
    }
 }
