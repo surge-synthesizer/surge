@@ -242,10 +242,10 @@ public:
          for (int lf = 0; lf < n_lfos; ++lf)
          {
             des->editor.msegEditState[i][lf].hSnap = msegEditState[i][lf].hSnap;
-            des->editor.msegEditState[i][lf].hSnapDefault = msegEditState[i][lf].hSnapDefault;
             des->editor.msegEditState[i][lf].vSnap = msegEditState[i][lf].vSnap;
-            des->editor.msegEditState[i][lf].vSnapDefault = msegEditState[i][lf].vSnapDefault;
             des->editor.msegEditState[i][lf].timeEditMode = msegEditState[i][lf].timeEditMode;
+            des->editor.msegEditState[i][lf].axisStart = msegEditState[i][lf].axisStart;
+            des->editor.msegEditState[i][lf].axisWidth = msegEditState[i][lf].axisWidth;
          }
       }
       des->editor.isMSEGOpen = ( editorOverlayTagAtClose == "msegEditor" );
@@ -271,10 +271,11 @@ public:
                for (int lf = 0; lf < n_lfos; ++lf)
                {
                   msegEditState[i][lf].hSnap = des->editor.msegEditState[i][lf].hSnap;
-                  msegEditState[i][lf].hSnapDefault = des->editor.msegEditState[i][lf].hSnapDefault;
                   msegEditState[i][lf].vSnap = des->editor.msegEditState[i][lf].vSnap;
-                  msegEditState[i][lf].vSnapDefault = des->editor.msegEditState[i][lf].vSnapDefault;
                   msegEditState[i][lf].timeEditMode = des->editor.msegEditState[i][lf].timeEditMode;
+
+                  msegEditState[i][lf].axisStart = des->editor.msegEditState[i][lf].axisStart;
+                  msegEditState[i][lf].axisWidth = des->editor.msegEditState[i][lf].axisWidth;
                }
             }
          }
