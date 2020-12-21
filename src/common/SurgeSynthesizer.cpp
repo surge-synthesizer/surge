@@ -2121,9 +2121,10 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             memcpy((void*)&storage.getPatch().fx[s].p, (void*)&fxsync[s].p, sizeof(Parameter) * n_fx_params);
 
          // std::cout << "About to call reset with " << _D(initp) << " at " << s << " to " << fxsync[s].type.val.i << std::endl;
-         fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
-                              &storage.getPatch().fx[s], storage.getPatch().globaldata));
+         std::lock_guard<std::mutex> g(fxSpawnMutex);
 
+         fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
+                                  &storage.getPatch().fx[s], storage.getPatch().globaldata));
          if (fx[s])
          {
             fx[s]->init_ctrltypes();
@@ -2210,6 +2211,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             memcpy((void*)&storage.getPatch().fx[s].p, (void*)&fxsync[s].p, sizeof(Parameter) * n_fx_params);
          if (fx[s])
          {
+            std::lock_guard<std::mutex> g(fxSpawnMutex);
             fx[s]->suspend();
             fx[s]->init();
          }
