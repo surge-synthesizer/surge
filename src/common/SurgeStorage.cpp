@@ -535,7 +535,14 @@ bailOnPortable:
       for( int i = 0; i < n_lfos; ++i )
       {
          auto ms = &(_patch->msegs[s][i]);
-         Surge::MSEG::createInitMSEG(ms);
+         if( ms_lfo1 + i >= ms_slfo1 && ms_lfo1 + i <= ms_slfo6 )
+         {
+            Surge::MSEG::createInitSceneMSEG(ms);
+         }
+         else
+         {
+            Surge::MSEG::createInitVoiceMSEG(ms);
+         }
          Surge::MSEG::rebuildCache( ms );
       }
    }
