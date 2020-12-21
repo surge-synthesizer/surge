@@ -975,24 +975,55 @@ void mirrorMSEG(MSEGStorage* ms)
    Surge::MSEG::rebuildCache(ms);
 }
 
+void clearMSEG(MSEGStorage* ms)
+{
+   ms->editMode = MSEGStorage::EditMode::ENVELOPE;
+   ms->loopMode = MSEGStorage::LoopMode::LOOP;
+   ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+
+   ms->n_activeSegments = 1;
+
+   ms->segments[0].duration = 1.f;
+   ms->segments[0].type = MSEGStorage::segment::LINEAR;
+   ms->segments[0].cpv = 0.f;
+   ms->segments[0].cpduration = 0.5;
+   ms->segments[0].v0 = 1.f;
+   ms->segments[0].nv1 = 0.f;
+   ms->segments[0].invertDeform = false;
+   ms->segments[0].useDeform = true;
+
+   ms->loop_start = 0;
+   ms->loop_end = ms->n_activeSegments - 1;
+
+   Surge::MSEG::rebuildCache(ms);
+}
+
 void createInitVoiceMSEG(MSEGStorage* ms)
 {
+   ms->editMode = MSEGStorage::EditMode::ENVELOPE;
+   ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+   ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+ 
    ms->n_activeSegments = 4;
+
    ms->segments[0].duration = 1.f;
    ms->segments[0].type = MSEGStorage::segment::LINEAR;
    ms->segments[0].cpv = 0.8;
    ms->segments[0].cpduration = 0.5;
    ms->segments[0].v0 = 0.f;
+
    ms->segments[1].duration = 1.f;
    ms->segments[1].type = MSEGStorage::segment::LINEAR;
    ms->segments[1].cpv = 0.8;
    ms->segments[1].cpduration = 0.5;
    ms->segments[1].v0 = 1.f;
+
    ms->segments[2].duration = 1.f;
    ms->segments[2].type = MSEGStorage::segment::LINEAR;
    ms->segments[2].cpv = 0.5;
    ms->segments[2].cpduration = 0.8;
    ms->segments[2].v0 = 0.5;
+
    ms->segments[3].duration = 1.f;
    ms->segments[3].type = MSEGStorage::segment::LINEAR;
    ms->segments[3].cpv = 0.5;
@@ -1000,17 +1031,23 @@ void createInitVoiceMSEG(MSEGStorage* ms)
    ms->segments[3].v0 = 0.5;
    ms->segments[3].nv1 = 0.f;
 
+   for (int i = 0; i < ms->n_activeSegments; i++)
+   {
+      ms->segments[i].invertDeform = false;
+      ms->segments[i].useDeform = true;
+   }
+
    ms->loop_start = 2;
    ms->loop_end = 2;
-
-   ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
-   ms->endpointMode = MSEGStorage::EndpointMode::FREE;
 
    Surge::MSEG::rebuildCache(ms);
 }
 
 void createInitSceneMSEG(MSEGStorage* ms)
 {
+   ms->editMode = MSEGStorage::EditMode::LFO;
+   ms->loopMode = MSEGStorage::LoopMode::LOOP;
+
    ms->n_activeSegments = 4;
 
    ms->segments[0].duration = 0.25f;
@@ -1018,34 +1055,45 @@ void createInitSceneMSEG(MSEGStorage* ms)
    ms->segments[0].cpv = 0.f;
    ms->segments[0].cpduration = 0.5;
    ms->segments[0].v0 = 0.f;
+   ms->segments[0].invertDeform = false;
 
    ms->segments[1].duration = 0.25f;
    ms->segments[1].type = MSEGStorage::segment::LINEAR;
    ms->segments[1].cpv = 0.f;
    ms->segments[1].cpduration = 0.5;
    ms->segments[1].v0 = 1.f;
+   ms->segments[1].invertDeform = true;
 
    ms->segments[2].duration = 0.25f;
    ms->segments[2].type = MSEGStorage::segment::LINEAR;
    ms->segments[2].cpv = 0.f;
    ms->segments[2].cpduration = 0.5;
    ms->segments[2].v0 = 0.f;
+   ms->segments[2].invertDeform = false;
 
    ms->segments[3].duration = 0.25f;
    ms->segments[3].type = MSEGStorage::segment::LINEAR;
    ms->segments[3].cpv = 0.f;
    ms->segments[3].cpduration = 0.5;
    ms->segments[3].v0 = -1.f;
+   ms->segments[3].invertDeform = true;
 
+   ms->loop_start = 0;
+   ms->loop_end = ms->n_activeSegments - 1;
 
-   ms->editMode = MSEGStorage::LFO;
-   ms->loopMode = MSEGStorage::LoopMode::LOOP;
+   for (int i = 0; i < ms->n_activeSegments; i++)
+   {
+      ms->segments[i].useDeform = true;
+   }
 
    Surge::MSEG::rebuildCache(ms);
 }
 
 void createStepseqMSEG(MSEGStorage* ms, int numSegments)
 {
+   ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+   ms->loopMode = MSEGStorage::LOOP;
+
    ms->n_activeSegments = numSegments;
 
    auto stepLen = (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? 1.f : (1.f / numSegments);
@@ -1056,13 +1104,17 @@ void createStepseqMSEG(MSEGStorage* ms, int numSegments)
       ms->segments[i].type = MSEGStorage::segment::HOLD;
       ms->segments[i].v0 = (1.f / (numSegments - 1)) * i;
    }
+
    ms->segments[numSegments - 1].nv1 = ms->segments[0].v0;
-   ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
 
    ms->loop_start = 0;
    ms->loop_end = numSegments - 1;
-   ms->endpointMode = MSEGStorage::EndpointMode::FREE;
-   ms->loopMode = MSEGStorage::LOOP;
+
+   for (int i = 0; i < ms->n_activeSegments; i++)
+   {
+      ms->segments[i].invertDeform = false;
+      ms->segments[i].useDeform = true;
+   }
 
    Surge::MSEG::rebuildCache(ms);
 }
@@ -1070,10 +1122,16 @@ void createStepseqMSEG(MSEGStorage* ms, int numSegments)
 void createSawMSEG(MSEGStorage* ms, int numSegments, float curve)
 {
    bool isEnvMode = (ms->editMode == MSEGStorage::EditMode::ENVELOPE);
+   auto stepLen = isEnvMode ? 1.f : (1.f / numSegments);
+
+   if (isEnvMode)
+   {
+      ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+   }
+
+   ms->loopMode = MSEGStorage::LOOP;
 
    ms->n_activeSegments = (numSegments * 2) - isEnvMode;
-
-   auto stepLen = isEnvMode ? 1.f : (1.f / numSegments);
 
    for (int i = 0; i < numSegments; i++)
    {
@@ -1085,20 +1143,21 @@ void createSawMSEG(MSEGStorage* ms, int numSegments, float curve)
 
       ms->segments[(i * 2) + 1].duration = 0.f;
       ms->segments[(i * 2) + 1].type = MSEGStorage::segment::LINEAR;
-      ms->segments[i * 2].cpduration = 0.5;
+      ms->segments[(i * 2) + 1].cpduration = 0.5;
       ms->segments[(i * 2) + 1].cpv = 0.f;
       ms->segments[(i * 2) + 1].v0 = -1.f;
    }
-   ms->segments[ms->n_activeSegments - 1].nv1 = -1.f;
 
-   if (isEnvMode)
-   {
-      ms->endpointMode = MSEGStorage::EndpointMode::FREE;
-   }
+   ms->segments[ms->n_activeSegments - 1].nv1 = -1.f;
 
    ms->loop_start = 0;
    ms->loop_end = ms->n_activeSegments - 1;
-   ms->loopMode = MSEGStorage::LOOP;
+
+   for (int i = 0; i < ms->n_activeSegments; i++)
+   {
+      ms->segments[i].invertDeform = false;
+      ms->segments[i].useDeform = true;
+   }
 
    Surge::MSEG::rebuildCache(ms);
 }
@@ -1107,8 +1166,13 @@ void createSinLineMSEG(MSEGStorage* ms, int numSegments)
 {
    float dp = 2.0 * M_PI / numSegments;
    float dt = 1.0 / numSegments;
+
+   ms->loopMode = MSEGStorage::LOOP;
+   ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
+
    ms->n_activeSegments = numSegments;
-   for( int i=0; i<numSegments; ++i )
+
+   for (int i = 0; i < numSegments; ++i)
    {
       ms->segments[i].duration = dt;
       ms->segments[i].v0 = sin(i * dp );
@@ -1116,12 +1180,12 @@ void createSinLineMSEG(MSEGStorage* ms, int numSegments)
       ms->segments[i].cpduration = 0.5;
       ms->segments[i].cpv = 0.0;
       ms->segments[i].type = MSEGStorage::segment::LINEAR;
+      ms->segments[i].invertDeform = false;
+      ms->segments[i].useDeform = true;
    }
 
    ms->loop_start = 0;
    ms->loop_end = ms->n_activeSegments - 1;
-   ms->loopMode = MSEGStorage::LOOP;
-   ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
 
    Surge::MSEG::rebuildCache(ms);
 }
@@ -1175,27 +1239,37 @@ void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float 
          dx = -ms->segments[idx].duration;
    }
 
-   if( maxDuration > 0 && dx > 0 && ms->totalDuration + dx > maxDuration )
+   if (maxDuration > 0 && dx > 0 && ms->totalDuration + dx > maxDuration)
    {
       dx = maxDuration - ms->totalDuration;
    }
 
    float durationChange = dx;
+
    if (idx >= 0)
    {
       auto rcv = 0.5;
-      if( ms->segments[idx].duration > 0 )
+      
+      if (ms->segments[idx].duration > 0)
+      {
           rcv = ms->segments[idx].cpduration / ms->segments[idx].duration;
+      }
+      
       float prior = ms->segments[idx].duration;
+      
       adjustDurationInternal(ms, idx, dx, snap);
+      
       float after = ms->segments[idx].duration;
+      
       durationChange = after - prior;
+      
       ms->segments[idx].cpduration = ms->segments[idx].duration * rcv;
    }
 
-   if( ms->editMode == MSEGStorage::LFO )
+   if (ms->editMode == MSEGStorage::LFO)
    {
       dx = durationChange;
+
       if( dx > 0 )
       {
          /*
@@ -1221,7 +1295,7 @@ void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float 
          /*
           * Need to expand the back
           */
-         ms->segments[ms->n_activeSegments-1].duration -= dx;
+         ms->segments[ms->n_activeSegments - 1].duration -= dx;
       }
    }
 
@@ -1231,24 +1305,29 @@ void adjustDurationShiftingSubsequent(MSEGStorage* ms, int idx, float dx, float 
 void adjustDurationConstantTotalDuration( MSEGStorage* ms, int idx, float dx, float snap )
 {
    int prior = idx, next = idx + 1;
-
-   if (prior >= 0 &&
-       (ms->segments[prior].duration + dx) <= MSEGStorage::minimumDuration &&
-       dx < 0)
-      dx = 0;
-   if (next < ms->n_activeSegments &&
-       (ms->segments[next].duration - dx) <= MSEGStorage::minimumDuration &&
-       dx > 0)
-      dx = 0;
-
    auto csum = 0.f, pd = 0.f;
+
+   if (prior >= 0 && (ms->segments[prior].duration + dx) <= MSEGStorage::minimumDuration && dx < 0)
+   {
+      dx = 0;
+   }
+
+   if (next < ms->n_activeSegments && (ms->segments[next].duration - dx) <= MSEGStorage::minimumDuration && dx > 0)
+   {
+      dx = 0;
+   }
+
    if (prior >= 0)
    {
       csum += ms->segments[prior].duration;
       pd = ms->segments[prior].duration;
    }
+
    if (next < ms->n_activeSegments)
+   {
       csum += ms->segments[next].duration;
+   }
+
    if (prior >= 0)
    {
       auto rcv = 0.5;
@@ -1258,6 +1337,7 @@ void adjustDurationConstantTotalDuration( MSEGStorage* ms, int idx, float dx, fl
       ms->segments[prior].cpduration = ms->segments[prior].duration * rcv;
       pd = ms->segments[prior].duration;
    }
+
    if (next < ms->n_activeSegments)
    {
       auto rcv =
@@ -1267,20 +1347,27 @@ void adjustDurationConstantTotalDuration( MSEGStorage* ms, int idx, float dx, fl
       ms->segments[next].duration = csum - pd;
       ms->segments[next].cpduration = ms->segments[next].duration * rcv;
    }
+
    rebuildCache(ms);
 }
 
 void setLoopStart(MSEGStorage* ms, int seg)
 {
    ms->loop_start = seg;
+
    if (ms->loop_end >= 0 && ms->loop_end < ms->loop_start)
+   {
       ms->loop_end = std::max(0, seg - 1);
+   }
 }
 void setLoopEnd(MSEGStorage* ms, int seg)
 {
    ms->loop_end = seg;
+
    if (ms->loop_start >= 0 && ms->loop_start > ms->loop_end)
+   {
       ms->loop_start = std::min(ms->n_activeSegments - 1, seg + 1);
+   }
 }
 }
 }
