@@ -64,7 +64,8 @@ namespace Surge
       void setAllDurationsTo(MSEGStorage* ms, float value);
       void mirrorMSEG(MSEGStorage* ms);
       
-      void createInitMSEG(MSEGStorage* ms);
+      void createInitVoiceMSEG(MSEGStorage* ms);
+      void createInitSceneMSEG(MSEGStorage* ms);
       void createStepseqMSEG(MSEGStorage* ms, int numSegments);
       void createSawMSEG(MSEGStorage* ms, int numSegments, float curve);
       void createSinLineMSEG(MSEGStorage* ms, int numSegments);

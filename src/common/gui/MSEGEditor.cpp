@@ -2214,14 +2214,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          contextMenu->addEntry(createMenu, "Create");
 
-         addCb(createMenu, Surge::UI::toOSCaseForMenu("Default MSEG"), [this]()
-                           {
-                              Surge::MSEG::createInitMSEG(this->ms);
-                              this->zoomToFull();
-                              if (controlregion)
-                                 controlregion->rebuild();
-                              modelChanged();
-                           });
+         addCb(createMenu, Surge::UI::toOSCaseForMenu("Default Voice MSEG"), [this]() {
+            Surge::MSEG::createInitVoiceMSEG(this->ms);
+            this->zoomToFull();
+            if (controlregion)
+               controlregion->rebuild();
+            modelChanged();
+         });
+
+         addCb(createMenu, Surge::UI::toOSCaseForMenu("Default Scene MSEG"), [this]()
+         {
+           Surge::MSEG::createInitSceneMSEG(this->ms);
+           this->zoomToFull();
+           if (controlregion)
+              controlregion->rebuild();
+           modelChanged();
+         });
 
          createMenu->addSeparator();
 
@@ -2853,7 +2861,7 @@ MSEGEditor::MSEGEditor(SurgeStorage* storage, LFOStorage* lfodata, MSEGStorage* 
    // Leave these in for now
    if( ms->n_activeSegments <= 0 ) // This is an error state! Compensate
    {
-      Surge::MSEG::createInitMSEG(ms);
+      Surge::MSEG::createInitVoiceMSEG(ms);
    }
    setSkin( skin, b );
    setBackgroundColor( kRedCColor );
