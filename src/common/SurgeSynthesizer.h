@@ -124,7 +124,11 @@ public:
    bool loadOscalgos();
    bool load_fx_needed;
 
-   // We have to push this onto the audio thread so have an enqueue and so on
+   /*
+    * FX Lifecycle events happen on the audio thread but is read in the openOrRecreateEditor
+    * so if you swpan or init the fx[s] object lock this mutex
+    */
+   std::mutex fxSpawnMutex;
    enum FXReorderMode { NONE, SWAP, COPY, MOVE };
    void reorderFx( int source, int target, FXReorderMode m  ); // This is safe to call from the UI thread since it just edits the sync
 

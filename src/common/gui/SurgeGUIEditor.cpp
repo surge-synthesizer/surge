@@ -1263,41 +1263,45 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
 
    // fx vu-meters & labels. This is all a bit hacky still
-   if (synth->fx[current_fx])
    {
-      auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
-      CRect fxRect = CRect( CPoint( fxpp->x, fxpp->y ), CPoint( 123, 13 ) );
-      for (int i = 0; i < 15; i++)
+      std::lock_guard<std::mutex> g(synth->fxSpawnMutex);
+
+      if (synth->fx[current_fx])
       {
-         int t = synth->fx[current_fx]->vu_type(i);
-         if (t)
+         auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
+         CRect fxRect = CRect(CPoint(fxpp->x, fxpp->y), CPoint(123, 13));
+         for (int i = 0; i < 15; i++)
          {
-            CRect vr(fxRect); // FIXME (vurect);
-            vr.offset(6, yofs * synth->fx[current_fx]->vu_ypos(i));
-            vr.offset(0, -14);
-            vu[i + 1] = new CSurgeVuMeter(vr, this);
-            ((CSurgeVuMeter*)vu[i + 1])->setSkin(currentSkin,bitmapStore);
-            ((CSurgeVuMeter*)vu[i + 1])->setType(t);
-            frame->addView(vu[i + 1]);
-         }
-         else
-         {
-            vu[i + 1] = 0;
-         }
+            int t = synth->fx[current_fx]->vu_type(i);
+            if (t)
+            {
+               CRect vr(fxRect); // FIXME (vurect);
+               vr.offset(6, yofs * synth->fx[current_fx]->vu_ypos(i));
+               vr.offset(0, -14);
+               vu[i + 1] = new CSurgeVuMeter(vr, this);
+               ((CSurgeVuMeter*)vu[i + 1])->setSkin(currentSkin, bitmapStore);
+               ((CSurgeVuMeter*)vu[i + 1])->setType(t);
+               frame->addView(vu[i + 1]);
+            }
+            else
+            {
+               vu[i + 1] = 0;
+            }
 
-         const char* label = synth->fx[current_fx]->group_label(i);
+            const char* label = synth->fx[current_fx]->group_label(i);
 
-         if (label)
-         {
-            CRect vr(fxRect); // (vurect);
-            vr.top += 1;
-            vr.right += 5;
-            vr.offset(5, -12);
-            vr.offset(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
-            CEffectLabel* lb = new CEffectLabel(vr);
-            lb->setLabel(label);
-            lb->setSkin(currentSkin,bitmapStore);
-            frame->addView(lb);
+            if (label)
+            {
+               CRect vr(fxRect); // (vurect);
+               vr.top += 1;
+               vr.right += 5;
+               vr.offset(5, -12);
+               vr.offset(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
+               CEffectLabel* lb = new CEffectLabel(vr);
+               lb->setLabel(label);
+               lb->setSkin(currentSkin, bitmapStore);
+               frame->addView(lb);
+            }
          }
       }
    }
