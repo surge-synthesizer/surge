@@ -238,10 +238,20 @@ void LfoModulationSource::attack()
          /*
           * And so the total phase is timePassed * rate + phase0
           */
-         float totalPhase = phaseslider + timePassed * lrate;
+         auto startPhase = phaseslider;
+         if( lfo->shape.val.i == lt_mseg &&
+             ms->editMode == MSEGStorage::ENVELOPE &&
+             ms->totalDuration > 1.0 )
+         {
+            // extend the phase
+            startPhase *= ms->totalDuration;
+         }
+
+         float totalPhase = startPhase + timePassed * lrate;
 
          // Mod that for phase; and get the step also by step length
          phase = (float)modf( totalPhase, &ipart);
+         unwrappedphase_intpart = ipart;
          int i = (int)ipart;
          step = (i % max(1, (ss->loop_end - ss->loop_start + 1 ))) + ss->loop_start;
       }
