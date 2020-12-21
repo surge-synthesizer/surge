@@ -2214,6 +2214,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          contextMenu->addEntry(createMenu, "Create");
 
+         addCb(createMenu, Surge::UI::toOSCaseForMenu("Minimal MSEG"), [this]() {
+            Surge::MSEG::clearMSEG(this->ms);
+            this->zoomToFull();
+            if (controlregion)
+               controlregion->rebuild();
+            modelChanged();
+         });
+
+         createMenu->addSeparator();
+
          addCb(createMenu, Surge::UI::toOSCaseForMenu("Default Voice MSEG"), [this]() {
             Surge::MSEG::createInitVoiceMSEG(this->ms);
             this->zoomToFull();
