@@ -95,6 +95,234 @@ struct SurgePyModSource
    }
 };
 
+struct SurgePyModRouting
+{
+   SurgePyModSource source;
+   SurgePyNamedParam dest;
+   float depth;
+};
+
+class SurgePyPatchConverter
+{
+public:
+   explicit SurgePyPatchConverter(SurgeSynthesizer *synth) : synth(synth) {};
+   ~SurgePyPatchConverter() = default;
+
+   void addParam( py::dict &to, const std::string &at, const Parameter &from ) const
+   {
+      auto id = synth->idForParameter( &from );
+      char txt[256];
+      synth->getParameterName( id, txt );
+      auto newp = SurgePyNamedParam();
+      newp.name = txt;
+      newp.id = id;
+      to[at.c_str()] = newp;
+   }
+
+   void addParam( py::list &to, const Parameter &from ) const
+   {
+      auto id = synth->idForParameter( &from );
+      char txt[256];
+      synth->getParameterName( id, txt );
+      auto newp = SurgePyNamedParam();
+      newp.name = txt;
+      newp.id = id;
+      to.append( newp );
+   }
+   py::dict makeFX( const SurgePatch &patch, int s )
+   {
+      auto res = py::dict();
+      auto fxi = &(patch.fx[s]);
+#define ADD(x) addParam( res, #x,  fxi-> x );
+      ADD(type);
+      ADD(return_level);
+#undef ADD
+
+      auto pars = py::list();
+      for( int i=0; i<n_fx_params; ++i )
+         addParam( pars, fxi->p[i] );
+      res["p"] = pars;
+
+      return res;
+   }
+
+   py::dict makeFU( const SurgePatch &patch, int sc, int fuI )
+   {
+      auto fu = &(patch.scene[sc].filterunit[fuI]);
+      auto res = py::dict();
+#define ADD(x) addParam( res, #x,  fu-> x );
+      ADD(type);
+      ADD(subtype);
+      ADD(cutoff);
+      ADD(resonance);
+      ADD(envmod);
+      ADD(keytrack);
+#undef ADD
+      return res;
+   }
+   py::dict makeOsc( const SurgePatch &patch, int sc, int oscI )
+   {
+      auto osc = &(patch.scene[sc].osc[oscI]);
+      auto res = py::dict();
+#define ADD(x) addParam( res, #x,  osc-> x );
+      ADD(type);
+      ADD(pitch);
+      ADD(octave);
+      ADD(keytrack);
+      ADD(retrigger);
+#undef ADD
+
+      auto pars = py::list();
+      for( int i=0; i<n_osc_params; ++i )
+         addParam( pars, osc->p[i] );
+      res["p"] = pars;
+
+      return res;
+   }
+   py::dict makeScene( const SurgePatch& patch, int scI )
+   {
+      auto res = py::dict();
+
+      auto sc = &(patch.scene[scI]);
+
+      auto osc = py::list();
+      for( int i=0; i<n_oscs; ++i )
+         osc.append( makeOsc( patch, scI, i ));
+      res["osc"] = osc;
+
+      auto fu = py::list();
+      fu.append( makeFU( patch, scI, 0 ) );
+      fu.append( makeFU( patch, scI, 1 ));
+      res["filterunit"] = fu;
+
+      auto ws = py::dict();
+      addParam( ws, "type", sc->wsunit.type );
+      addParam( ws, "drive", sc->wsunit.drive );
+      res["wsunit"] = ws;
+
+      // ADSRSTORAGE
+      py::dict e0, e1;
+#define ADSRADD(x) addParam( e0, #x,  sc->adsr[0]. x ); addParam(e1, #x, sc->adsr[1]. x );
+
+      ADSRADD( a );
+      ADSRADD( d );
+      ADSRADD( s );
+      ADSRADD( r );
+
+      ADSRADD( a_s );
+      ADSRADD( d_s );
+      ADSRADD( r_s );
+      ADSRADD( mode );
+
+#undef ADSRADD
+      auto adsr = py::list();
+      adsr.append( e0 );
+      adsr.append( e1 );
+      res["adsr"] = adsr;
+
+      // LFOSTORAGE
+      auto lfos = py::list();
+      for( int i=0; i<n_lfos; ++i )
+      {
+         auto lfo = py::dict();
+#define ADD(x) addParam( lfo, #x,  sc->lfo[i]. x );
+
+         ADD( rate );
+         ADD( shape );
+         ADD( start_phase );
+         ADD( magnitude );
+         ADD( deform );
+         ADD( trigmode );
+         ADD( unipolar );
+         ADD( delay );
+         ADD( hold );
+         ADD( attack );
+         ADD( decay );
+         ADD( sustain );
+         ADD( release );
+#undef ADD
+         lfos.append(lfo);
+      }
+      res["lfo"] = lfos;
+
+#define ADD(x) addParam( res, #x,  sc-> x );
+      ADD(pitch);
+      ADD(octave);
+      ADD(fm_depth);
+      ADD(fm_switch);
+      ADD(drift);
+      ADD(noise_colour);
+      ADD(keytrack_root);
+
+#define ADDMIX(x) ADD( level_ ## x ); ADD( mute_ ## x ); \
+      ADD( solo_ ## x ); ADD( route_ ## x );
+
+
+      ADDMIX(o1);
+      ADDMIX(o2);
+      ADDMIX(o3);
+      ADDMIX( ring_12 );
+      ADDMIX( ring_23 );
+      ADDMIX( noise );
+#undef ADDMIX
+
+      ADD( level_pfg );
+      ADD( vca_level );
+      ADD( pbrange_dn );
+      ADD(pbrange_up);
+      ADD(vca_velsense);
+      ADD(polymode);
+      ADD(portamento);
+      ADD( volume );
+      ADD(pan);
+      ADD(width);
+
+      py::list sl;
+      addParam( sl, sc->send_level[0]);
+      addParam( sl, sc->send_level[1]);
+      res["send_level"] = sl;
+
+      ADD(f2_cutoff_is_offset);
+      ADD(f2_link_resonance);
+      ADD(feedback);
+      ADD(filterblock_configuration);
+      ADD(filter_balance);
+      ADD(lowcut);
+#undef ADD
+
+      return res;
+   }
+   py::dict asDict(const SurgePatch &patch )
+   {
+      auto res = py::dict();
+      auto scenes = py::list();
+      for( int i=0; i<n_scenes; ++i )
+         scenes.append( makeScene(patch, i) );
+      res["scene"] = scenes;
+
+      auto fxs = py::list();
+      for( int i=0; i<n_fx_slots; ++i )
+         fxs.append( makeFX(patch, i ) );
+      res["fx"] = fxs;
+
+#define ADD(x) addParam( res, #x,  patch. x );
+      ADD(scene_active);
+      ADD( scenemode );
+      //ADD( scenemorph );
+      ADD( splitpoint );
+      ADD( volume );
+      ADD( polylimit );
+      ADD( fx_bypass );
+      ADD( fx_disable );
+      ADD( character );
+#undef ADD
+
+      return res;
+   }
+
+   SurgeSynthesizer *synth = nullptr;
+};
+
 static std::unordered_map<ControlGroup, SurgePyControlGroup> spysetup_cgMap;
 static std::unordered_map<modsources, SurgePyModSource> spysetup_msMap;
 
@@ -442,6 +670,89 @@ public:
          dR += BLOCK_SIZE;
       }
    }
+
+
+   py::dict getPatchAsPy()
+   {
+      auto pc = SurgePyPatchConverter( this );
+      return pc.asDict( storage.getPatch() );
+   }
+
+   SurgePyNamedParam surgePyNamedParamById(int id)
+   {
+      auto s = SurgePyNamedParam();
+      SurgeSynthesizer::ID ido;
+      fromSynthSideId(id, ido);
+      s.id = ido;
+      char txt[256];
+      getParameterName(ido, txt);
+      s.name = txt;
+      return s;
+   }
+   py::dict getAllModRoutings()
+   {
+      auto res = py::dict();
+
+      auto sv = [](auto s)
+      {
+         auto r = s;
+         std::sort( r.begin(), r.end(),
+                [](const auto &a, const auto &b)
+                {
+                   if( a.source_id == b.source_id )
+                      return a.destination_id < b.destination_id;
+                   else
+                      return a.source_id < b.source_id;
+                });
+         return r;
+      };
+
+      auto gmr = py::list();
+      auto t = sv( storage.getPatch().modulation_global );
+      for( auto gm : t )
+      {
+         auto r = SurgePyModRouting();
+         r.source = SurgePyModSource((modsources)gm.source_id);
+         r.dest = surgePyNamedParamById(gm.destination_id);
+         r.depth = gm.depth;
+         gmr.append(r);
+      }
+
+      res["global"] = gmr;
+
+      auto scm = py::list();
+      for( int sc=0; sc<n_scenes; sc++ )
+      {
+         auto ts = py::dict();
+         auto sms = py::list();
+         auto st = sv( storage.getPatch().scene[sc].modulation_scene);
+         for( auto gm : st )
+         {
+            auto r = SurgePyModRouting();
+            r.source = SurgePyModSource((modsources)gm.source_id);
+            r.dest = surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
+            r.depth = gm.depth;
+            sms.append(r);
+         }
+         ts["scene"] = sms;
+
+         auto smv = py::list();
+         auto vt = sv( storage.getPatch().scene[sc].modulation_voice );
+         for( auto gm : vt )
+         {
+            auto r = SurgePyModRouting();
+            r.source = SurgePyModSource((modsources)gm.source_id);
+            r.dest = surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
+            r.depth = gm.depth;
+            smv.append( r );
+         }
+         ts["voice"] = smv;
+         scm.append( ts );
+      }
+      res["scene"] = scm;;
+
+      return res;
+   }
 };
 
 SurgeSynthesizer *createSurge( float sr )
@@ -566,6 +877,9 @@ PYBIND11_MODULE(surgepy, m) {
              "Is the given modulation source bipolar?",
              py::arg("modulationSource" ))
 
+       .def( "getAllModRoutings", &SurgeSynthesizerWithPythonExtensions::getAllModRoutings,
+            "Get the entire modulation matrix for this instance")
+
        .def( "process", &SurgeSynthesizer::process,
             "Run surge for one block and update the internal output buffer.")
        .def( "getOutput", &SurgeSynthesizerWithPythonExtensions::getOutput,
@@ -580,6 +894,9 @@ PYBIND11_MODULE(surgepy, m) {
             py::arg( "val" ),
             py::arg("startBlock") = 0,
             py::arg( "nBlocks") = -1)
+
+       .def( "getPatch", &SurgeSynthesizerWithPythonExtensions::getPatchAsPy,
+            "Get a python dictionary with the Surge parameters laid out in the logical patch format")
        ;
 
    py::class_<SurgePyControlGroup>(m, "SurgeControlGroup" )
@@ -603,6 +920,19 @@ PYBIND11_MODULE(surgepy, m) {
        .def( "getModSource", &SurgePyModSource::getModSource )
        .def( "getName", &SurgePyModSource::getName )
        .def( "__repr__", &SurgePyModSource::toString );
+
+   py::class_<SurgePyModRouting>(m, "SurgeModRouting" )
+       .def( "getSource", [](const SurgePyModRouting &r) { return r.source; })
+       .def( "getDest", [](const SurgePyModRouting &r) { return r.dest; })
+       .def( "getDepth", [](const SurgePyModRouting &r) { return r.depth; })
+       .def( "__repr__", [](const SurgePyModRouting &r ) {
+          std::ostringstream oss;
+          oss << "<SurgeModRouting src='" << r.source.name
+              << "' dst='" << r.dest.name
+              << "' dpth=" << r.depth << ">";
+          return oss.str();
+       });
+
 
    py::module m_const = m.def_submodule("constants", "Constants which are used to navigate Surge");
 
