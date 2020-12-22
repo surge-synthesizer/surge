@@ -208,7 +208,7 @@ public:
    bool fromSynthSideId( int i, ID &q );
    bool fromSynthSideIdWithGuiOffset( int i, int start_paramtags, int start_metacontrol_tag, ID &q );
 
-   const ID idForParameter( Parameter *p ) {
+   const ID idForParameter( const Parameter *p ) {
       // We know this will always work
       ID i;
       fromSynthSideId(p->id, i );
