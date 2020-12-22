@@ -95,6 +95,13 @@ struct SurgePyModSource
    }
 };
 
+struct SurgePyModRouting
+{
+   SurgePyModSource source;
+   SurgePyNamedParam dest;
+   float depth;
+};
+
 class SurgePyPatchConverter
 {
 public:
@@ -670,6 +677,82 @@ public:
       auto pc = SurgePyPatchConverter( this );
       return pc.asDict( storage.getPatch() );
    }
+
+   SurgePyNamedParam surgePyNamedParamById(int id)
+   {
+      auto s = SurgePyNamedParam();
+      SurgeSynthesizer::ID ido;
+      fromSynthSideId(id, ido);
+      s.id = ido;
+      char txt[256];
+      getParameterName(ido, txt);
+      s.name = txt;
+      return s;
+   }
+   py::dict getAllModRoutings()
+   {
+      auto res = py::dict();
+
+      auto sv = [](auto s)
+      {
+         auto r = s;
+         std::sort( r.begin(), r.end(),
+                [](const auto &a, const auto &b)
+                {
+                   if( a.source_id == b.source_id )
+                      return a.destination_id < b.destination_id;
+                   else
+                      return a.source_id < b.source_id;
+                });
+         return r;
+      };
+
+      auto gmr = py::list();
+      auto t = sv( storage.getPatch().modulation_global );
+      for( auto gm : t )
+      {
+         auto r = SurgePyModRouting();
+         r.source = SurgePyModSource((modsources)gm.source_id);
+         r.dest = surgePyNamedParamById(gm.destination_id);
+         r.depth = gm.depth;
+         gmr.append(r);
+      }
+
+      res["global"] = gmr;
+
+      auto scm = py::list();
+      for( int sc=0; sc<n_scenes; sc++ )
+      {
+         auto ts = py::dict();
+         auto sms = py::list();
+         auto st = sv( storage.getPatch().scene[sc].modulation_scene);
+         for( auto gm : st )
+         {
+            auto r = SurgePyModRouting();
+            r.source = SurgePyModSource((modsources)gm.source_id);
+            r.dest = surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
+            r.depth = gm.depth;
+            sms.append(r);
+         }
+         ts["scene"] = sms;
+
+         auto smv = py::list();
+         auto vt = sv( storage.getPatch().scene[sc].modulation_voice );
+         for( auto gm : vt )
+         {
+            auto r = SurgePyModRouting();
+            r.source = SurgePyModSource((modsources)gm.source_id);
+            r.dest = surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
+            r.depth = gm.depth;
+            smv.append( r );
+         }
+         ts["voice"] = smv;
+         scm.append( ts );
+      }
+      res["scene"] = scm;;
+
+      return res;
+   }
 };
 
 SurgeSynthesizer *createSurge( float sr )
@@ -794,6 +877,9 @@ PYBIND11_MODULE(surgepy, m) {
              "Is the given modulation source bipolar?",
              py::arg("modulationSource" ))
 
+       .def( "getAllModRoutings", &SurgeSynthesizerWithPythonExtensions::getAllModRoutings,
+            "Get the entire modulation matrix for this instance")
+
        .def( "process", &SurgeSynthesizer::process,
             "Run surge for one block and update the internal output buffer.")
        .def( "getOutput", &SurgeSynthesizerWithPythonExtensions::getOutput,
@@ -834,6 +920,19 @@ PYBIND11_MODULE(surgepy, m) {
        .def( "getModSource", &SurgePyModSource::getModSource )
        .def( "getName", &SurgePyModSource::getName )
        .def( "__repr__", &SurgePyModSource::toString );
+
+   py::class_<SurgePyModRouting>(m, "SurgeModRouting" )
+       .def( "getSource", [](const SurgePyModRouting &r) { return r.source; })
+       .def( "getDest", [](const SurgePyModRouting &r) { return r.dest; })
+       .def( "getDepth", [](const SurgePyModRouting &r) { return r.depth; })
+       .def( "__repr__", [](const SurgePyModRouting &r ) {
+          std::ostringstream oss;
+          oss << "<SurgeModRouting src='" << r.source.name
+              << "' dst='" << r.dest.name
+              << "' dpth=" << r.depth << ">";
+          return oss.str();
+       });
+
 
    py::module m_const = m.def_submodule("constants", "Constants which are used to navigate Surge");
 
