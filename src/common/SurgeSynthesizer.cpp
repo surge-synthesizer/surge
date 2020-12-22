@@ -2995,6 +2995,8 @@ void SurgeSynthesizer::resetStateFromTimeData()
 }
 void SurgeSynthesizer::processControl()
 {
+   processEnqueuedPatchIfNeeded();
+
    storage.perform_queued_wtloads();
    int sm = storage.getPatch().scenemode.val.i;
    // TODO: FIX SCENE ASSUMPTION

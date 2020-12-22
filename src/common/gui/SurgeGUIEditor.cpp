@@ -462,6 +462,15 @@ void SurgeGUIEditor::idle()
       }
       removeFromFrame.clear();
 
+      {
+         bool expected = true;
+         if (synth->rawLoadNeedsUIDawExtraState.compare_exchange_weak(expected, true) && expected)
+         {
+            std::lock_guard<std::mutex> g(synth->rawLoadQueueMutex);
+            synth->rawLoadNeedsUIDawExtraState = false;
+            loadFromDAWExtraState(synth);
+         }
+      }
 
       if( patchCountdown >= 0 )
       {

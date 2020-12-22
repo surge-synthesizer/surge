@@ -236,18 +236,24 @@ tresult PLUGIN_API SurgeVst3Processor::setState(IBStream* state)
 
       if( isSub3 )
       {
+         // This is the code which used to load on the VST thread. See #3494
+         /*
          surgeInstance->loadRaw(data, numBytes, false);
          surgeInstance->loadFromDawExtraState();
          for( auto e : viewsSet )
             e->loadFromDAWExtraState(surgeInstance.get());
+            */
+         surgeInstance->enqueuePatchForLoad(data, numBytes);
       }
       else
       {
-         //printf( "Skipping load where I was handed non-sub3 block\n" );
+         free(data);
       }
    }
-
-   free(data);
+   else
+   {
+      free(data);
+   }
 
    return (result == kResultOk) ? kResultOk : kInternalError;
 }
