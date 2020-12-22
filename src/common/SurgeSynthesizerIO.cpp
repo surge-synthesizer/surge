@@ -276,6 +276,39 @@ bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, con
    return true;
 }
 
+void SurgeSynthesizer::enqueuePatchForLoad(void* data, int size)
+{
+   {
+      std::lock_guard<std::mutex> g(rawLoadQueueMutex);
+
+      if( enqueuedLoadData ) // this means we missed one because we only free under the lock
+         free(enqueuedLoadData);
+
+      enqueuedLoadData = data;
+      enqueuedLoadSize = size;
+      rawLoadEnqueued = true;
+      rawLoadNeedsUIDawExtraState = false;
+   }
+}
+
+void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
+{
+   bool expected = true;
+   void *freeThis = nullptr;
+   if( rawLoadEnqueued.compare_exchange_weak(expected,true) && expected )
+   {
+      std::lock_guard<std::mutex> g(rawLoadQueueMutex);
+      rawLoadEnqueued = false;
+      loadRaw( enqueuedLoadData, enqueuedLoadSize );
+      freeThis = enqueuedLoadData;
+      enqueuedLoadData = nullptr;
+      rawLoadNeedsUIDawExtraState = true;
+   }
+   if( freeThis )
+      free( freeThis ); // do this outside the lock
+}
+
+
 void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
 {
    halt_engine = true;

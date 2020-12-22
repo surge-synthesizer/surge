@@ -311,6 +311,13 @@ public:
    void clear_osc_modulation(
        int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
 public:
+   std::atomic<bool> rawLoadEnqueued {false}, rawLoadNeedsUIDawExtraState {false};
+   std::mutex rawLoadQueueMutex;
+   void* enqueuedLoadData { nullptr }; // if this is set I need to free it
+   int   enqueuedLoadSize { 0 };
+   void  enqueuePatchForLoad( void* data, int size ); // safe from any thread
+   void  processEnqueuedPatchIfNeeded(); // only safe from audio thread
+
    void loadRaw(const void* data, int size, bool preset = false);
    void loadPatch(int id);
    bool loadPatchByPath(const char* fxpPath, int categoryId, const char* name );
