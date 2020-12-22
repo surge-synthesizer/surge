@@ -195,7 +195,7 @@ void loadPresetFrom( const fs::path &location, SurgeStorage *s, int scene, int l
    {
       auto msn = lfox->FirstChildElement("mseg");
       if( msn )
-         s->getPatch().msegFromXMLElement(&(s->getPatch().msegs[scene][lfoid]), msn);
+         s->getPatch().msegFromXMLElement(&(s->getPatch().msegs[scene][lfoid]), msn, true);
    }
 
    if( lfotype == lt_stepseq )

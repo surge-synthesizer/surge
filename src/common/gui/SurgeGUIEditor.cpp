@@ -5498,36 +5498,6 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
    mouseSubMenu->forget();
 
-   // Middle C submenu
-   COptionMenu* middleCSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-   VSTGUI::CCommandMenuItem* mcItem = nullptr;
-
-   auto mcValue = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
-
-   mcItem = addCallbackMenu(middleCSubMenu, "C3", [this]() {
-      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 2);
-      synth->refresh_editor = true;
-   });
-   mcItem->setChecked(mcValue == 2);
-
-   mcItem = addCallbackMenu(middleCSubMenu, "C4", [this]() {
-      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 1);
-      synth->refresh_editor = true;
-   });
-   mcItem->setChecked(mcValue == 1);
-
-   mcItem = addCallbackMenu(middleCSubMenu, "C5", [this]() {
-      Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 0);
-      synth->refresh_editor = true;
-   });
-   mcItem->setChecked(mcValue == 0);
-
-   uiOptionsMenu->addEntry(middleCSubMenu, "Middle C");
-   middleCSubMenu->forget();
-
    // patch defaults
    COptionMenu* patchDefMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
@@ -5564,10 +5534,14 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    uiOptionsMenu->addEntry(patchDefMenu, Surge::UI::toOSCaseForMenu("Patch Defaults"));
    patchDefMenu->forget();
 
+   auto* dispDefMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                         VSTGUI::COptionMenu::kNoDrawStyle |
+                                         VSTGUI::COptionMenu::kMultipleCheckStyle);
+
    // high precision value readouts
    auto precReadout = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
 
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
+   menuItem = addCallbackMenu(dispDefMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
        [this, precReadout]()
        {
           Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", precReadout ? 0 : 1);
@@ -5577,32 +5551,82 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
    // modulation value readout shows bounds
    auto modValues = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", 0);
 
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Modulation Value Readout Shows Bounds"),
+   menuItem = addCallbackMenu(dispDefMenu, Surge::UI::toOSCaseForMenu("Modulation Value Readout Shows Bounds"),
        [this, modValues]()
        {
           Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", modValues ? 0 : 1);
        });
    menuItem->setChecked(modValues);
 
+   // Middle C submenu
+   COptionMenu* middleCSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                                 VSTGUI::COptionMenu::kNoDrawStyle |
+                                                 VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+   VSTGUI::CCommandMenuItem* mcItem = nullptr;
+
+   auto mcValue = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
+
+   mcItem = addCallbackMenu(middleCSubMenu, "C3", [this]() {
+     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 2);
+     synth->refresh_editor = true;
+   });
+   mcItem->setChecked(mcValue == 2);
+
+   mcItem = addCallbackMenu(middleCSubMenu, "C4", [this]() {
+     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 1);
+     synth->refresh_editor = true;
+   });
+   mcItem->setChecked(mcValue == 1);
+
+   mcItem = addCallbackMenu(middleCSubMenu, "C5", [this]() {
+     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 0);
+     synth->refresh_editor = true;
+   });
+   mcItem->setChecked(mcValue == 0);
+
+   dispDefMenu->addEntry(middleCSubMenu, "Middle C");
+   middleCSubMenu->forget();
+
+   uiOptionsMenu->addEntry( dispDefMenu, Surge::UI::toOSCaseForMenu("Value Displays" ));
+   dispDefMenu->forget();
+
+   auto* wfMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                       VSTGUI::COptionMenu::kNoDrawStyle |
+                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+
+   // activate individual scene outputs
+   menuItem = addCallbackMenu(wfMenu, Surge::UI::toOSCaseForMenu("Activate Individual Scene Outputs"),
+                              [this]()
+                              {
+                                this->synth->activateExtraOutputs = ! this->synth->activateExtraOutputs;
+                                Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "activateExtraOutputs", this->synth->activateExtraOutputs ? 1 : 0 );
+                              }
+   );
+   menuItem->setChecked(synth->activateExtraOutputs);
+
+   auto msegSnapMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "restoreMSEGSnapFromPatch", true);
+
+   menuItem = addCallbackMenu(wfMenu, Surge::UI::toOSCaseForMenu("Load MSEG Snap State from Patch"),
+                              [this, msegSnapMem]()
+                              {
+                                Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "restoreMSEGSnapFromPatch", msegSnapMem ? 0 : 1);
+                              });
+   menuItem->setChecked(msegSnapMem);
+
    // remember tab positions per scene
    auto tabPosMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "rememberTabPositionsPerScene", 0);
 
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Remember Tab Positions Per Scene"),
+   menuItem = addCallbackMenu(wfMenu, Surge::UI::toOSCaseForMenu("Remember Tab Positions Per Scene"),
        [this, tabPosMem]()
        {
           Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "rememberTabPositionsPerScene", tabPosMem ? 0 : 1);
        });
    menuItem->setChecked(tabPosMem);
 
-   // activate individual scene outputs
-   menuItem = addCallbackMenu(uiOptionsMenu, Surge::UI::toOSCaseForMenu("Activate Individual Scene Outputs"),
-       [this]()
-       {
-          this->synth->activateExtraOutputs = ! this->synth->activateExtraOutputs;
-          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "activateExtraOutputs", this->synth->activateExtraOutputs ? 1 : 0 );
-       }
-      );
-   menuItem->setChecked(synth->activateExtraOutputs);
+   uiOptionsMenu->addEntry(wfMenu, Surge::UI::toOSCaseForMenu("Workflow" ));
+   wfMenu->forget();
 
    return uiOptionsMenu;
 }

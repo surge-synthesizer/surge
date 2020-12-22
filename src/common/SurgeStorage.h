@@ -648,9 +648,18 @@ struct MSEGStorage {
    float durationLoopStartToLoopEnd;
    float envelopeModeDuration = -1, envelopeModeNV1 = -2; // -2 as sentinel since NV1 is -1/1
 
+   /*
+    * These "UI" type things we decided, late in 18, are actually a critical part of
+    * the modelling experience, so even if they aren't required to actually evaluate
+    * the model, we decided to move them to the model and the patch, rather than the
+    * dawExtraState. Note that vSnap and hSnap are also streamed into the DES at write
+    * time and optionaly streamed out based on a user pref.
+    */
    static constexpr float defaultVSnapDefault = 0.25, defaultHSnapDefault = 0.125;
-
    float vSnapDefault = defaultVSnapDefault, hSnapDefault = defaultHSnapDefault;
+   float vSnap = 0, hSnap = 0;
+   float axisWidth = -1, axisStart = -1;
+
    static constexpr float minimumDuration = 0.0;
 };
 
@@ -693,9 +702,7 @@ struct DAWExtraStateStorage
       bool msegStateIsPopulated = false;
       struct
       {
-         float vSnap = 0, hSnap = 0;
          int timeEditMode = 0;
-         float axisStart = -1, axisWidth = -1;
       } msegEditState[n_scenes][n_lfos];
    } editor;
 
@@ -745,7 +752,7 @@ public:
 
    // Factor these so the LFO Preset Mechanism can use them also
    void msegToXMLElement( MSEGStorage *ms, TiXmlElement &parent ) const;
-   void msegFromXMLElement( MSEGStorage *ms, TiXmlElement *parent ) const;
+   void msegFromXMLElement( MSEGStorage *ms, TiXmlElement *parent, bool restoreSnaps ) const;
    void stepSeqToXmlElement( StepSequencerStorage *ss, TiXmlElement &parent, bool streamMask ) const;
    void stepSeqFromXmlElement( StepSequencerStorage *ss, TiXmlElement *parent ) const;
 

@@ -93,27 +93,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       this->ms = ms;
       this->eds = eds;
       this->lfodata = lfodata;
-      this->axisWidth = std::max( 1.f, ms->totalDuration );
       Surge::MSEG::rebuildCache( ms );
       handleBmp = b->getBitmap( IDB_MSEG_NODES );
       timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
       setMouseableArea(getViewSize());
-
-      bool updatedAxis = false;
-      if (this->eds->axisWidth > 0)
-      {
-         this->axisWidth = eds->axisWidth;
-         updatedAxis = true;
-      }
-      if (this->eds->axisStart > 0)
-      {
-         this->axisStart = eds->axisStart;
-         updatedAxis = true;
-      }
-      if (updatedAxis)
-      {
-         applyZoomPanConstraints();
-      }
    };
 
    /*
@@ -166,7 +149,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          return 1.0;
       return std::max( 1.0f, ms->totalDuration );
        */
-      return axisWidth;
+      return ms->axisWidth;
    }
 
    inline CRect getDrawArea()
@@ -236,7 +219,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       float tscale = 1.f * drawArea.getWidth() / maxt;
       return [tscale, drawArea, this](float t)
       {
-         return ( t - axisStart ) * tscale + drawArea.left;
+         return ( t - ms->axisStart ) * tscale + drawArea.left;
       };
    }
 
@@ -250,7 +233,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       // So t = ( px - drawarea ) / tscale;
       return [tscale, drawArea, this ](float px)
       {
-         return (px - drawArea.left) / tscale + axisStart;
+         return (px - drawArea.left) / tscale + ms->axisStart;
       };
    }
 
@@ -286,17 +269,16 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
     */
    struct SnapGuard
    {
-      SnapGuard( MSEGEditor::State *eds, MSEGCanvas *c ) : eds(eds), c(c) {
-         hSnapO = eds->hSnap;
-         vSnapO = eds->vSnap;
+      SnapGuard( MSEGCanvas *c ) : c(c) {
+         hSnapO = c->ms->hSnap;
+         vSnapO = c->ms->vSnap;
          c->invalid();
       }
       ~SnapGuard() {
-         eds->hSnap = hSnapO;
-         eds->vSnap = vSnapO;
+         c->ms->hSnap = hSnapO;
+         c->ms->vSnap = vSnapO;
          c->invalid();
       }
-      MSEGEditor::State *eds;
       MSEGCanvas *c;
       float hSnapO, vSnapO;
    };
@@ -445,10 +427,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             case DRAW:
                break;
             case SHIFT:
-               Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx, eds->hSnap, longestMSEG);
+               Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx, ms->hSnap, longestMSEG);
                break;
             case SINGLE:
-               Surge::MSEG::adjustDurationConstantTotalDuration(this->ms, prior, dx, eds->hSnap);
+               Surge::MSEG::adjustDurationConstantTotalDuration(this->ms, prior, dx, ms->hSnap);
                break;
             }
          };
@@ -459,7 +441,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          rectForPoint(
              t0, s.v0, hotzone::SEGMENT_ENDPOINT,
              [i, this, vscale, tscale, timeConstraint, unipolarFactor](float dx, float dy, const CPoint& where) {
-                adjustValue(i, false, -2 * dy / vscale, eds->vSnap * unipolarFactor);
+                adjustValue(i, false, -2 * dy / vscale, ms->vSnap * unipolarFactor);
 
                 if (i != 0)
                 {
@@ -618,7 +600,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                              if( ms->endpointMode == MSEGStorage::EndpointMode::FREE && ms->editMode != MSEGStorage::LFO )
                              {
                                 float d = -2 * dy / vscale;
-                                float snapResolution = eds->vSnap * unipolarFactor;
+                                float snapResolution = ms->vSnap * unipolarFactor;
                                 int idx = ms->n_activeSegments - 1;
                                 offsetValue( ms->segments[idx].dragv1, d );
                                 if( snapResolution <= 0 )
@@ -633,7 +615,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                              }
                              else
                              {
-                                adjustValue(0, false, -2 * dy / vscale, eds->vSnap);
+                                adjustValue(0, false, -2 * dy / vscale, ms->vSnap);
                              }
                              // We need to deal with the cpduration also
                              auto cpv = this->ms->segments[ms->n_activeSegments-1].cpduration / this->ms->segments[ms->n_activeSegments-1].duration;
@@ -649,7 +631,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                                 }
 
                                 Surge::MSEG::adjustDurationShiftingSubsequent(
-                                    ms, ms->n_activeSegments - 1, dx / tscale, eds->hSnap, longestMSEG);
+                                    ms, ms->n_activeSegments - 1, dx / tscale, ms->hSnap, longestMSEG);
                              }
                           } );
             hotzones.back().specialEndpoint = true;
@@ -874,13 +856,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    float hTicksAsOf[3] = {-1,-1,-1};
    void updateHTicks()
    {
-      if (hTicksAsOf[0] == ms->hSnapDefault && hTicksAsOf[1] == axisStart &&
-          hTicksAsOf[2] == axisWidth)
+      if (hTicksAsOf[0] == ms->hSnapDefault && hTicksAsOf[1] == ms->axisStart &&
+          hTicksAsOf[2] == ms->axisWidth)
          return;
 
       hTicksAsOf[0] = ms->hSnapDefault;
-      hTicksAsOf[1] = axisStart;
-      hTicksAsOf[2] = axisWidth;
+      hTicksAsOf[1] = ms->axisStart;
+      hTicksAsOf[2] = ms->axisWidth;
 
       hTicks.clear();
 
@@ -897,14 +879,14 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
        * OK two cases - step makes a squillion white lines, or step makes too few lines. Both of
        * these depend on this ratio
        */
-      float widthByStep = axisWidth / dStep;
+      float widthByStep = ms->axisWidth / dStep;
 
       if( widthByStep < 4 )
       {
          while( widthByStep < 4 )
          {
             dStep /= 2;
-            widthByStep = axisWidth / dStep;
+            widthByStep = ms->axisWidth / dStep;
          }
       }
       else if( widthByStep > 20 )
@@ -912,13 +894,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          while( widthByStep > 20 )
          {
             dStep *= 2;
-            widthByStep = axisWidth / dStep;
+            widthByStep = ms->axisWidth / dStep;
          }
       }
 
       // OK so what's our zero point.
-      int startPoint = ceil(axisStart/dStep);
-      int endPoint = ceil( (axisStart + axisWidth ) / dStep );
+      int startPoint = ceil(ms->axisStart/dStep);
+      int endPoint = ceil( (ms->axisStart + ms->axisWidth ) / dStep );
 
       for( int i=startPoint; i<=endPoint; ++i )
       {
@@ -1011,6 +993,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    virtual void draw( CDrawContext *dc) override {
       auto uni = lfodata->unipolar.val.b;
       auto vs = getViewSize();
+
+      if( ms->axisWidth < 0 || ms->axisStart < 0 )
+         zoomToFull();
 
       if (hotzones.empty())
          recalcHotZones( CPoint( vs.left, vs.top ) );
@@ -1553,9 +1538,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                bool a = buttons & kAlt;
                if (a)
                {
-                  snapGuard = std::make_shared<SnapGuard>(eds, this);
+                  snapGuard = std::make_shared<SnapGuard>(this);
                   if (a)
-                     eds->vSnap = ms->vSnapDefault;
+                     ms->vSnap = ms->vSnapDefault;
                }
                inDrawDrag = true;
                return kMouseEventHandled;
@@ -1587,11 +1572,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             bool a = buttons & kAlt;
             if( c || a  )
             {
-               snapGuard = std::make_shared<SnapGuard>(eds, this);
+               snapGuard = std::make_shared<SnapGuard>(this);
                if (c)
-                  eds->hSnap = ms->hSnapDefault;
+                  ms->hSnap = ms->hSnapDefault;
                if (a)
-                  eds->vSnap = ms->vSnapDefault;
+                  ms->vSnap = ms->vSnapDefault;
             }
             break;
          }
@@ -1712,13 +1697,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if (!snapGuard)
             {
                wasSnapGuard = false;
-               snapGuard = std::make_shared<SnapGuard>(eds, this);
+               snapGuard = std::make_shared<SnapGuard>(this);
             }
 
             if (a)
-               eds->vSnap = ms->vSnapDefault;
+               ms->vSnap = ms->vSnapDefault;
             else if (wasSnapGuard)
-               eds->vSnap = snapGuard->vSnapO;
+               ms->vSnap = snapGuard->vSnapO;
          }
          else if (!a && snapGuard)
          {
@@ -1730,9 +1715,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto pv = pxToVal();
          auto v = limit_range( pv( where.y ), -1.f, 1.f );
 
-         if (eds->vSnap > 0)
+         if (ms->vSnap > 0)
          {
-            v = limit_range(round(v / eds->vSnap) * eds->vSnap, -1.f, 1.f);
+            v = limit_range(round(v / ms->vSnap) * ms->vSnap, -1.f, 1.f);
          }
 
          int seg = Surge::MSEG::timeToSegment( this->ms, t );
@@ -1924,15 +1909,15 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
             if( ! snapGuard )
             {
                wasSnapGuard = false;
-               snapGuard = std::make_shared<SnapGuard>(eds, this);
+               snapGuard = std::make_shared<SnapGuard>(this);
             }
             if (c)
-               eds->hSnap = ms->hSnapDefault;
-            else if( wasSnapGuard ) eds->hSnap = snapGuard->hSnapO;
+               ms->hSnap = ms->hSnapDefault;
+            else if( wasSnapGuard ) ms->hSnap = snapGuard->hSnapO;
 
             if (a)
-               eds->vSnap = ms->vSnapDefault;
-            else if( wasSnapGuard ) eds->vSnap = snapGuard->vSnapO;
+               ms->vSnap = ms->vSnapDefault;
+            else if( wasSnapGuard ) ms->vSnap = snapGuard->vSnapO;
          }
          else if( ! ( c || a ) && snapGuard )
          {
@@ -1971,9 +1956,6 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       return true;
    }
 
-   float axisStart = 0.0;
-   float axisWidth = 1.0;
-
    float lastZoomDir = 0;
 
    void zoomWheel( const CPoint &where, float amount, const CButtonState &buttons  )
@@ -1992,11 +1974,11 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    void zoom( const CPoint &where, float amount, const CButtonState &buttons )
    {
       if( fabs(amount) < 1e-4 ) return;
-      float dWidth = amount * axisWidth;
+      float dWidth = amount * ms->axisWidth;
       auto pxt = pxToTime();
       float t = pxt(where.x);
 
-      axisWidth = axisWidth - dWidth;
+      ms->axisWidth = ms->axisWidth - dWidth;
 
       /*
        * OK so we want to adjust pan so the mouse position is basically the same
@@ -2008,10 +1990,10 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          // So px = t * tscale + drawarea;
          // So t = ( px - drawarea ) / tscale;
          return [tscale, drawArea, this ](float px) {
-           return (px - drawArea.left) / tscale + axisStart;
+           return (px - drawArea.left) / tscale + ms->axisStart;
          };
 
-       * so we want axisStart to mean that (where.x - drawArea.left ) * drawDuration() / drawArea.width + as to be constant
+       * so we want ms->axisStart to mean that (where.x - drawArea.left ) * drawDuration() / drawArea.width + as to be constant
        *
        * t = (WX-DAL) * DD / DAW + AS
        * AS = t - (WX_DAL) * DD / DAW
@@ -2022,7 +2004,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       auto DAW = DA.getWidth();
       auto DAL = DA.left;
       auto WX = where.x;
-      axisStart = std::max( t - ( WX - DAL ) * DD / DAW, 0. );
+      ms->axisStart = std::max( t - ( WX - DAL ) * DD / DAW, 0. );
       applyZoomPanConstraints();
 
       // BOOKMARK
@@ -2038,8 +2020,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
    void zoomOutTo(float duration)
    {
-      axisStart = 0.f;
-      axisWidth = (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? std::max(1.0f, duration) : 1.f;
+      ms->axisStart = 0.f;
+      ms->axisWidth = (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? std::max(1.0f, duration) : 1.f;
       modelChanged(0, false);
    }
 
@@ -2060,9 +2042,9 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    }
 
    void pan( const CPoint &where, float amount, const CButtonState &buttons ) {
-      // std::cout << "PAN " << axisStart << " " << axisWidth << std::endl;
-      axisStart += axisWidth * amount;
-      axisStart = std::max( axisStart, 0.f );
+      // std::cout << "PAN " << ms->axisStart << " " << ms->axisWidth << std::endl;
+      ms->axisStart += ms->axisWidth * amount;
+      ms->axisStart = std::max( ms->axisStart, 0.f );
       applyZoomPanConstraints();
 
       recalcHotZones(where);
@@ -2370,12 +2352,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
       if( ms->editMode == MSEGStorage::LFO )
       {
          // Reset axis bounds
-         if( axisWidth > 1 )
-            axisWidth = 1;
-         if( axisStart + axisWidth > 1 )
-            axisStart = 1.0 - axisWidth;
-         if( axisStart < 0 )
-            axisStart = 0;
+         if( ms->axisWidth > 1 )
+            ms->axisWidth = 1;
+         if( ms->axisStart + ms->axisWidth > 1 )
+            ms->axisStart = 1.0 - ms->axisWidth;
+         if( ms->axisStart < 0 )
+            ms->axisStart = 0;
       }
       else
       {
@@ -2383,13 +2365,13 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          auto longest = bd * 2;
          if( longest > longestMSEG ) longest = longestMSEG;
          if( longest < longestSmallZoom ) longest = longestSmallZoom;
-         if( axisWidth > longest )
+         if( ms->axisWidth > longest )
          {
-            axisWidth = longest;
+            ms->axisWidth = longest;
          }
-         else if( axisStart + axisWidth > longest )
+         else if( ms->axisStart + ms->axisWidth > longest )
          {
-            axisStart = longest - axisWidth;
+            ms->axisStart = longest - ms->axisWidth;
          }
 
          // This is how we pan as we stretch
@@ -2397,31 +2379,27 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          {
             if( specialEndpoint )
             {
-               if (ms->segmentEnd[activeSegment] >= axisStart + axisWidth)
+               if (ms->segmentEnd[activeSegment] >= ms->axisStart + ms->axisWidth)
                {
                   // In this case we are dragging the endpoint
-                  axisStart = ms->segmentEnd[activeSegment] - axisWidth;
+                  ms->axisStart = ms->segmentEnd[activeSegment] - ms->axisWidth;
                }
-               else if( ms->segmentEnd[activeSegment] <= axisStart )
+               else if( ms->segmentEnd[activeSegment] <= ms->axisStart )
                {
-                  axisStart = ms->segmentEnd[activeSegment];
+                  ms->axisStart = ms->segmentEnd[activeSegment];
                }
             }
-            else if( ms->segmentStart[activeSegment] >= axisStart + axisWidth  )
+            else if( ms->segmentStart[activeSegment] >= ms->axisStart + ms->axisWidth  )
             {
-               axisStart = ms->segmentStart[activeSegment] - axisWidth;
+               ms->axisStart = ms->segmentStart[activeSegment] - ms->axisWidth;
             }
-            else if( ms->segmentStart[activeSegment] <= axisStart )
+            else if( ms->segmentStart[activeSegment] <= ms->axisStart )
             {
-               axisStart = ms->segmentStart[activeSegment];
+               ms->axisStart = ms->segmentStart[activeSegment];
             }
          }
       }
-      axisWidth = std::max( axisWidth, 0.05f );
-
-      // Update the edit state
-      eds->axisWidth = axisWidth;
-      eds->axisStart = axisStart;
+      ms->axisWidth = std::max( ms->axisWidth, 0.05f );
    }
 
    int hoveredSegment = -1;
@@ -2453,8 +2431,8 @@ void MSEGControlRegion::valueChanged( CControl *p )
       Surge::MSEG::modifyEditMode(this->ms, editMode );
 
       // zoom to fit
-      canvas->axisStart = 0.f;
-      canvas->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
+      canvas->ms->axisStart = 0.f;
+      canvas->ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
 
       canvas->modelChanged(0, false);
 
@@ -2482,14 +2460,14 @@ void MSEGControlRegion::valueChanged( CControl *p )
    }
    case tag_horizontal_snap:
    {
-      eds->hSnap = (val < 0.5) ? 0.f : eds->hSnap = ms->hSnapDefault;
+      ms->hSnap = (val < 0.5) ? 0.f : ms->hSnap = ms->hSnapDefault;
       canvas->invalid();
 
       break;
    }
    case tag_vertical_snap:
    {
-      eds->vSnap = (val < 0.5) ? 0.f : eds->vSnap = ms->vSnapDefault;
+      ms->vSnap = (val < 0.5) ? 0.f : ms->vSnap = ms->vSnapDefault;
       canvas->invalid();
 
       break;
@@ -2498,8 +2476,8 @@ void MSEGControlRegion::valueChanged( CControl *p )
    {
       auto fv = 1.f / std::max(1, static_cast<CNumberField*>(p)->getIntValue());
       ms->vSnapDefault = fv;
-      if (eds->vSnap > 0)
-         eds->vSnap = ms->vSnapDefault;
+      if (ms->vSnap > 0)
+         ms->vSnap = ms->vSnapDefault;
       canvas->invalid();
 
       break;
@@ -2508,8 +2486,8 @@ void MSEGControlRegion::valueChanged( CControl *p )
    {
       auto fv = 1.f / std::max(1, static_cast<CNumberField*>(p)->getIntValue());
       ms->hSnapDefault = fv;
-      if (eds->hSnap > 0)
-         eds->hSnap = ms->hSnapDefault;
+      if (ms->hSnap > 0)
+         ms->hSnap = ms->hSnapDefault;
       canvas->invalid();
 
       break;
@@ -2777,7 +2755,7 @@ void MSEGControlRegion::rebuild()
                                      associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
       hbut->setSkin(skin, associatedBitmapStore);
       addView(hbut);
-      hbut->setValue(eds->hSnap < 0.001 ? 0 : 1);
+      hbut->setValue(ms->hSnap < 0.001 ? 0 : 1);
 
       snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
 
@@ -2807,7 +2785,7 @@ void MSEGControlRegion::rebuild()
                                      associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP));
       vbut->setSkin(skin, associatedBitmapStore);
       addView( vbut );
-      vbut->setValue( eds->vSnap < 0.001? 0 : 1 );
+      vbut->setValue( ms->vSnap < 0.001? 0 : 1 );
 
       snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));
 
