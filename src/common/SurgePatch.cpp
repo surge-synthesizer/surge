@@ -23,6 +23,7 @@
 #include "DebugHelpers.h"
 #include "SkinModel.h"
 #include "UserInteractions.h"
+#include "UserDefaults.h"
 #include "version.h"
 
 using namespace std;
@@ -1652,7 +1653,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("sequence"));
    }
 
-   // restore msegs
+   // restore msegs. We optionally don't restore the snap from patch
+   bool userPrefRestoreMSEGFromPatch = Surge::Storage::getUserDefaultValue(storage, "restoreMSEGSnapFromPatch", true );
    for (int s=0;s<n_scenes;++s)
       for (int m=0; m<n_lfos; ++m )
       {
@@ -1681,7 +1683,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
       if( p->QueryIntAttribute( "i", &v ) == TIXML_SUCCESS ) mi = v;
       auto *ms = &( msegs[sc][mi] );
 
-      msegFromXMLElement(ms, p );
+      msegFromXMLElement(ms, p, userPrefRestoreMSEGFromPatch );
       p = TINYXML_SAFE_TO_ELEMENT( p->NextSibling( "mseg" ) );
    }
 
@@ -1806,8 +1808,9 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
 
                        double dv;
                        int vv;
-                       if (mss->QueryDoubleAttribute("hSnap", &dv) == TIXML_SUCCESS)
-                          q->hSnap = dv;
+                       if (! userPrefRestoreMSEGFromPatch && mss->QueryDoubleAttribute("hSnap", &dv) == TIXML_SUCCESS)
+                          msegs[sc][lf].hSnap = dv;
+
                        if (mss->QueryDoubleAttribute("hSnapDefault", &dv) == TIXML_SUCCESS)
                        {
                           // This is a case where we have the hSnapDefaul tin the DAW extra state
@@ -1817,8 +1820,8 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                              msegs[sc][lf].hSnapDefault = dv;
                           }
                        }
-                       if (mss->QueryDoubleAttribute("vSnap", &dv) == TIXML_SUCCESS)
-                          q->vSnap = dv;
+                       if (! userPrefRestoreMSEGFromPatch && mss->QueryDoubleAttribute("vSnap", &dv) == TIXML_SUCCESS)
+                          msegs[sc][lf].vSnap = dv;
                        if (mss->QueryDoubleAttribute("vSnapDefault", &dv) == TIXML_SUCCESS)
                        {
                           if (msegs[sc][lf].vSnapDefault == MSEGStorage::defaultVSnapDefault)
@@ -1828,11 +1831,6 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
                        }
                        if (mss->QueryIntAttribute("timeEditMode", &vv) == TIXML_SUCCESS)
                           q->timeEditMode = vv;
-
-                       if (mss->QueryDoubleAttribute("axisStart", &dv) == TIXML_SUCCESS)
-                          q->axisStart = dv;
-                       if (mss->QueryDoubleAttribute("axisWidth", &dv) == TIXML_SUCCESS)
-                          q->axisWidth = dv;
                     }
                  }
               }
@@ -2220,11 +2218,13 @@ unsigned int SurgePatch::save_xml(void** data) // allocates mem, must be freed b
                 auto q = &(dawExtraState.editor.msegEditState[sc][lf]);
                 std::string msns = "mseg_state_" + std::to_string(sc) + "_" + std::to_string(lf);
                 TiXmlElement mss(msns);
-                mss.SetDoubleAttribute("hSnap", q->hSnap);
-                mss.SetDoubleAttribute("vSnap", q->vSnap);
+                /*
+                 * We still write this from model to DAS even though we don't read it unless
+                 * that one user option is set
+                 */
+                mss.SetDoubleAttribute("hSnap", msegs[sc][lf].hSnap);
+                mss.SetDoubleAttribute("vSnap", msegs[sc][lf].vSnap);
                 mss.SetAttribute("timeEditMode", q->timeEditMode);
-                mss.SetDoubleAttribute("axisStart", q->axisStart);
-                mss.SetDoubleAttribute("axisWidth", q->axisWidth);
                 eds.InsertEndChild(mss);
              }
           }
@@ -2321,6 +2321,12 @@ void SurgePatch::msegToXMLElement(MSEGStorage* ms, TiXmlElement& p) const
    p.SetDoubleAttribute("hSnapDefault", ms->hSnapDefault);
    p.SetDoubleAttribute("vSnapDefault", ms->vSnapDefault);
 
+   p.SetDoubleAttribute("hSnap", ms->hSnap);
+   p.SetDoubleAttribute("vSnap", ms->vSnap);
+
+   p.SetDoubleAttribute("axisWidth", ms->axisWidth);
+   p.SetDoubleAttribute("axisStart", ms->axisStart);
+
    TiXmlElement segs( "segments" );
    for( int s=0; s<ms->n_activeSegments; ++s )
    {
@@ -2338,7 +2344,7 @@ void SurgePatch::msegToXMLElement(MSEGStorage* ms, TiXmlElement& p) const
    p.InsertEndChild(segs);
 }
 
-void SurgePatch::msegFromXMLElement(MSEGStorage* ms, TiXmlElement* p) const
+void SurgePatch::msegFromXMLElement(MSEGStorage* ms, TiXmlElement* p, bool restoreMSEGSnap) const
 {
    int v;
    ms->n_activeSegments = 0;
@@ -2376,6 +2382,30 @@ void SurgePatch::msegFromXMLElement(MSEGStorage* ms, TiXmlElement* p) const
       ms->vSnapDefault = dv;
    else
       ms->vSnapDefault = MSEGStorage::defaultVSnapDefault;
+
+   if( restoreMSEGSnap )
+   {
+      if (p->QueryDoubleAttribute("hSnap", &dv) == TIXML_SUCCESS)
+         ms->hSnap = dv;
+      else
+         ms->hSnap = 0;
+
+      if (p->QueryDoubleAttribute("vSnap", &dv) == TIXML_SUCCESS)
+         ms->vSnap = dv;
+      else
+         ms->vSnap = 0;
+   }
+
+   if (p->QueryDoubleAttribute("axisStart", &dv) == TIXML_SUCCESS)
+      ms->axisStart = dv;
+   else
+      ms->axisStart = -1;
+
+   if (p->QueryDoubleAttribute("axisWidth", &dv) == TIXML_SUCCESS)
+      ms->axisWidth = dv;
+   else
+      ms->axisWidth = -1;
+
 
    auto segs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild( "segments" ));
    if( segs )

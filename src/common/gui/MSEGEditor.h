@@ -26,9 +26,7 @@ struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumi
     * needed the extra storage.
     */
    struct State {
-      float vSnap = 0, hSnap = 0;
       int timeEditMode = 0;
-      float axisWidth = -1, axisStart = -1;
    };
    MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
    ~MSEGEditor();
