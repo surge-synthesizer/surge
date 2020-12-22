@@ -177,7 +177,8 @@ public:
    void setDisabledForParameter(Parameter* p, CSurgeSlider* s);
 
    static bool fromSynthGUITag( SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q );
-   int current_scene = 0, current_osc[n_scenes] = {0}, current_fx = 0;
+   // If n_scenes > 2, then this initialization and the modsource_editor one below will need to adjust
+   int current_scene = 0, current_osc[n_scenes] = {0, 0}, current_fx = 0;
 
 private:
    void openOrRecreateEditor();
@@ -188,7 +189,7 @@ private:
    SurgeSynthesizer* synth = nullptr;
    bool editor_open = false;
    bool mod_editor = false;
-   modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1};
+   modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
    int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0,
        filterblock_tag = 0, fmconfig_tag = 0;
    double lastTempo = 0;
