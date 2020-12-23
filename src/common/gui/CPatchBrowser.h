@@ -60,7 +60,7 @@ public:
       {
          std::string s = l;
          // for (int i=0; i<s.length(); i++) s[i] = toupper(s[i]);
-         author = "Creator: " + s;
+         author = "Author: " + s;
       }
       else
          author = "";

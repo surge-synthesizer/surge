@@ -39,7 +39,7 @@ namespace Surge
                    .withHSwitch2Properties(IDB_FX_GLOBAL_BYPASS, 4, 1, 4);
          Connector character = Connector("global.character", 607, 42, 135, 12, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_OSC_CHARACTER, 3, 1, 3);
-         Connector master_volume = Connector("global.master_volume", 756, 29);
+         Connector master_volume = Connector("global.volume", 756, 29);
 
          Connector fx1_return = Connector("global.fx1_return", 759, 141);
          Connector fx2_return = Connector("global.fx2_return", 759, 162);
@@ -305,7 +305,7 @@ namespace Surge
                    .withProperty(Connector::BACKGROUND, IDB_MAIN_MENU)
                    .withProperty(Connector::DRAGGABLE_HSWITCH, false);
 
-         Connector patch_browser = Connector("controls.patch_browser", 156, 11, 547-156, 28, Connector::CUSTOM, Connector::PATCH_BROWSER);
+         Connector patch_browser = Connector("controls.patch_browser", 157, 12, 390, 28, Connector::CUSTOM, Connector::PATCH_BROWSER);
          Connector patch_category_jog = Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
          Connector patch_jog = Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH).asJogPlusMinus();
          Connector patch_store = Connector("controls.patch.store", 510, 42, 37, 12, Connector::HSWITCH2, Connector::STORE_PATCH)

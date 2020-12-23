@@ -216,7 +216,7 @@ namespace Colors
 
    namespace PatchBrowser
    {
-      extern const Surge::Skin::Color Background, Text;
+      extern const Surge::Skin::Color Text;
    }
 
    namespace Scene

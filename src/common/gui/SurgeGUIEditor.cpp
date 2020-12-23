@@ -1031,6 +1031,28 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
    {
       switch (code.virt)
       {
+      case VKEY_F5:
+         if (Surge::Storage::getUserDefaultValue(&(this->synth->storage), "skinReloadViaF5", 0))
+         {
+            bitmapStore.reset(new SurgeBitmaps());
+            bitmapStore->setupBitmapsForFrame(frame);
+            
+            if (!currentSkin->reloadSkin(bitmapStore))
+            {
+               auto& db = Surge::UI::SkinDB::get();
+               auto msg =
+                   std::string("Unable to load skin! Reverting the skin to Surge Classic.\n\nSkin error:\n") + db.getAndResetErrorString();
+               currentSkin = db.defaultSkin(&(synth->storage));
+               currentSkin->reloadSkin(bitmapStore);
+               Surge::UserInteractions::promptError(msg, "Skin Loading Error");
+            }
+            
+            reloadFromSkin();
+            synth->refresh_editor = true;
+         }
+
+         return 1;
+         break;
       case VKEY_TAB:
          if ( (editorOverlay && editorOverlayTag == "storePatch" ) || (typeinDialog && typeinDialog->isVisible() ) )
          {
@@ -5706,6 +5728,21 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     skinSubMenu->addSeparator();
 
+    if (useDevMenu)
+    {
+       auto f5Value = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "skinReloadViaF5", 0);
+       VSTGUI::CCommandMenuItem* valItem = nullptr;
+       
+       valItem = addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Use F5 To Reload Current Skin"),
+                                 [this, f5Value]()
+                                 {
+                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "skinReloadViaF5", f5Value ? 0 : 1);
+                                 });
+       valItem->setChecked(f5Value == 1);
+       
+       tid++;
+    }
+
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Reload Current Skin"),
                     [this]() {
                        this->bitmapStore.reset(new SurgeBitmaps());
@@ -5722,8 +5759,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
                        reloadFromSkin();
                        this->synth->refresh_editor = true;
-                    } );
+                    });
     tid++;
+
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Rescan Skins"),
                     [this]() {
                        auto r = this->currentSkin->root;
@@ -5745,7 +5783,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                        this->synth->refresh_editor = true;
                     }
        );
+
     tid++;
+
     skinSubMenu->addSeparator(tid++);
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
@@ -5764,6 +5804,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                    });
 
     tid++;
+
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
                    []() {
                       Surge::UserInteractions::openURL( "https://surge-synthesizer.github.io/skin-manual.html" );

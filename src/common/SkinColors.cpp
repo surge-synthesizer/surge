@@ -293,8 +293,7 @@ namespace Colors
 
    namespace PatchBrowser
    {
-      const Surge::Skin::Color Background("patchbrowser.background", 255, 255, 255),
-                               Text("patchbrowser.text", 0, 0, 0);
+      const Surge::Skin::Color Text("patchbrowser.text", 0, 0, 0);
    }
 
    namespace Scene

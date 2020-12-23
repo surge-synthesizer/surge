@@ -125,7 +125,6 @@
     <color id="filtermenu.value" value="white"/>
     <color id="filtermenu.value.hover" value="white"/>
 
-    <color id="patchbrowser.background" value="lightgray"/>
     <color id="patchbrowser.text" value="lightgray"/>
 
     <color id="slider.light.label" value="lightgray"/>
@@ -175,7 +174,7 @@
 
   <controls>
     <!-- Global & Scene -->
-    <control ui_identifier="global.master_volume" class="def-hslider"/>
+    <control ui_identifier="global.volume" class="def-hslider"/>
 
     <control ui_identifier="scene.drift" class="def-hslider"/>
     <control ui_identifier="scene.noise_color" class="def-hslider"/>
