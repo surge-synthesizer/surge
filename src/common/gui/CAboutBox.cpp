@@ -33,8 +33,12 @@ CAboutBox::CAboutBox(const CRect& size,
    this->storage = storage;
 
    setTransparency(true);
+   
+   auto vs = getViewSize();
+   auto center = vs.getCenter();
+   auto margin = 20;
+   auto lblh = 16, lblvs = 15;
    auto boldFont = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
-
    
    /* dark semitransparent background */
 
@@ -43,22 +47,21 @@ CAboutBox::CAboutBox(const CRect& size,
    bg->setBackColor(CColor(0, 0, 0, 212));
    addView(bg);
 
-
    /* big centered Surge logo */
-
    auto logo = bitmapStore->getBitmap(IDB_ABOUT_BG);
-   auto logol = new CTextLabel(CRect(CPoint(174, 195), CPoint(555, 179)), nullptr, logo);
+   auto logow = 555, logoh = 179;
+   auto logor = CRect(CPoint(0, 0), CPoint(logow, logoh));
+   logor.offset(center.x - (logow / 2), center.y - (logoh / 2));
+   auto logol = new CTextLabel(logor, nullptr, logo);
    logol->setMouseableArea(CRect());
    addView(logol);
 
-   float xp = 20;
-   float yp = 445;
-   
-   /* text label construction lambda */
+   auto xp = margin, yp = 20;
 
-   auto addLabel = [this, &xp, &yp](std::string text, int width)
+   /* text label construction lambdas */
+   auto addLabel = [this, &xp, &yp, &lblh](std::string text, int width)
    {
-      auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(width, 16)), text.c_str());
+      auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(width, lblh)), text.c_str());
       l1->setFont(aboutFont);
       l1->setFontColor(kWhiteCColor);
       l1->setMouseableArea(CRect());
@@ -67,11 +70,11 @@ CAboutBox::CAboutBox(const CRect& size,
       addView(l1);
    };
 
-   auto addTwoColumnLabel = [this, &xp, &yp, &boldFont, skin](std::string title, std::string val, bool isURL,
+   auto addTwoColumnLabel = [this, &xp, &yp, &lblh, &lblvs, &boldFont, skin](std::string title, std::string val, bool isURL,
                                                               std::string URL, int col1width, int col2width,
-                                                              bool addToInfoString = false)
+                                                              bool addToInfoString = false, bool subtractYoffset = false)
    {
-      auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(col1width, 16)), title.c_str());
+      auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(col1width, lblh)), title.c_str());
       l1->setFont(boldFont);
       l1->setFontColor(CColor(255, 144, 0));
       l1->setMouseableArea(CRect());
@@ -81,7 +84,7 @@ CAboutBox::CAboutBox(const CRect& size,
 
       if (isURL)
       {
-         auto l2 = new CSurgeHyperlink(CRect(CPoint(xp + col1width, yp), CPoint(col2width, 16)));
+         auto l2 = new CSurgeHyperlink(CRect(CPoint(xp + col1width, yp), CPoint(col2width, lblh)));
          l2->setFont(aboutFont);
          l2->setURL(URL);
          l2->setLabel(val.c_str());
@@ -91,8 +94,7 @@ CAboutBox::CAboutBox(const CRect& size,
       }
       else
       {
-         auto l2 =
-             new CTextLabel(CRect(CPoint(xp + col1width, yp), CPoint(col2width, 16)), val.c_str());
+         auto l2 = new CTextLabel(CRect(CPoint(xp + col1width, yp), CPoint(col2width, lblh)), val.c_str());
          l2->setFont(aboutFont);
          l2->setFontColor(kWhiteCColor);
          l2->setTransparency(true);
@@ -101,26 +103,29 @@ CAboutBox::CAboutBox(const CRect& size,
          addView(l2);
       }
 
-      if( addToInfoString )
+      if (addToInfoString)
+      {
          this->infoStringForClipboard += title + "\t" + val + "\n";
+      }
 
-      yp += 15;
+      if (subtractYoffset)
+      {
+         yp -= lblvs;
+      }
+      else
+      {
+         yp += lblvs;
+      }
    };
 
+   /* bottom left Surge folders info */
+
+   // start from bottom margin up, this is why we subtract label vertical spacing (lblvs) 
+   yp = vs.bottom - lblvs - margin;
+   addTwoColumnLabel("Factory Data:", storage->datapath, true, storage->datapath, 76, 500, true, true);
+   addTwoColumnLabel("User Data:", storage->userDataPath, true, storage->userDataPath, 76, 500, true, true);
 
    /* bottom left version info */
-
-   auto copy = new CTextButtonWithHover(CRect(CPoint(19, 426), CPoint(100, 18)), this, tag_copy, "Copy Version Info");   // here's a temporary thing to trigger a copy. fix this widget
-   copy->setFont(boldFont);
-   copy->setFrameColor(CColor(0, 0, 0, 0));
-   copy->setFrameColorHighlighted(CColor(0, 0, 0, 0));
-   copy->setHoverTextColor(CColor(96, 196, 255));
-   copy->setGradient(nullptr);
-   copy->setGradientHighlighted(nullptr);
-   copy->setTextColor(CColor(45, 134, 254));
-   copy->setTextColorHighlighted(CColor(96, 196, 255));
-   copy->setTextAlignment(kLeftText);
-   addView(copy);
 
    std::string version = Surge::Build::FullVersionStr;
    std::string buildinfo = "Built on " + (std::string)Surge::Build::BuildDate + " at " +
@@ -158,85 +163,99 @@ CAboutBox::CAboutBox(const CRect& size,
    std::string system = arch + " CPU, " + platform + " " + flavor + ", " + bitness;;
 
    infoStringForClipboard = "Surge Synthesizer\n";
-   addTwoColumnLabel("Version:", version, false, "", 76, 500, true);
-   addTwoColumnLabel("Build Info:", buildinfo, false, "", 76, 500, true);
-   addTwoColumnLabel("System:", system, false, "", 76, 500, true);
+
+   yp -= lblvs;
+
 #if TARGET_VST2 || TARGET_VST3
-   addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true);
+   addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true, true);
 #endif
 
-   yp += 15;
-   
-   addTwoColumnLabel("Factory Data:", storage->datapath, true, storage->datapath, 76, 500);
-   addTwoColumnLabel("User Data:", storage->userDataPath, true, storage->userDataPath, 76, 500);
+   addTwoColumnLabel("System:", system, false, "", 76, 500, true, true);
+   addTwoColumnLabel("Build Info:", buildinfo, false, "", 76, 500, true, true);
+   addTwoColumnLabel("Version:", version, false, "", 76, 500, true, true);
+   yp -= 2;
 
-
-   /* bottom right skin info */
-
-   xp = 623;
-   yp -= 30;
-
-   addTwoColumnLabel("Current Skin:", skin->displayName, true, skin->root + skin->name, 76, 175);
-   addTwoColumnLabel("Skin Author:", skin->author, (skin->authorURL != nullptr), skin->authorURL, 76, 185);
-
+   auto copy = new CTextButtonWithHover(CRect(CPoint(xp - 1, yp), CPoint(100, 18)), this, tag_copy, "Copy Version Info");   // here's a temporary thing to trigger a copy. fix this widget
+   copy->setFont(boldFont);
+   copy->setFrameColor(CColor(0, 0, 0, 0));
+   copy->setFrameColorHighlighted(CColor(0, 0, 0, 0));
+   copy->setHoverTextColor(CColor(96, 196, 255));
+   copy->setGradient(nullptr);
+   copy->setGradientHighlighted(nullptr);
+   copy->setTextColor(CColor(45, 134, 254));
+   copy->setTextColorHighlighted(CColor(96, 196, 255));
+   copy->setTextAlignment(kLeftText);
+   addView(copy);
 
    /* top right various iconized links */
 
    auto iconsize = CPoint(36, 36);
+   auto ranchor = vs.right - iconsize.x - margin;
+   auto spacing = 56;
 
-   auto gh = new CSurgeHyperlink(CRect(CPoint(624, 20), iconsize));
-   gh->setURL("https://github.com/surge-synthesizer/surge/");
-   gh->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   gh->setHorizOffset(CCoord(0));
-   addView(gh);
+   yp = margin;
 
-   auto vst3 = new CSurgeHyperlink(CRect(CPoint(680, 20), iconsize));
-   vst3->setURL("https://www.steinberg.net/en/company/technologies/vst3.html");
-   vst3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   vst3->setHorizOffset(CCoord(36));
-   addView(vst3);
-
-   auto au = new CSurgeHyperlink(CRect(CPoint(736, 20), iconsize));
-   au->setURL("https://developer.apple.com/documentation/audiounit");
-   au->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   au->setHorizOffset(CCoord(72));
-   addView(au);
-
-   auto gplv3 = new CSurgeHyperlink(CRect(CPoint(792, 20), iconsize));
-   gplv3->setURL("https://www.gnu.org/licenses/gpl-3.0-standalone.html");
-   gplv3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-   gplv3->setHorizOffset(CCoord(108));
-   addView(gplv3);
-
-   auto discord = new CSurgeHyperlink(CRect(CPoint(848, 20), iconsize));
+   // place these right to left respecting right anchor (ranchor) and icon spacing
+   auto discord = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 0), yp), iconsize));
    discord->setURL("https://discord.gg/aFQDdMV");
    discord->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
    discord->setHorizOffset(CCoord(144));
    addView(discord);
 
+   auto gplv3 = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 1), yp), iconsize));
+   gplv3->setURL("https://www.gnu.org/licenses/gpl-3.0-standalone.html");
+   gplv3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   gplv3->setHorizOffset(CCoord(108));
+   addView(gplv3);
+
+   auto au = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 2), yp), iconsize));
+   au->setURL("https://developer.apple.com/documentation/audiounit");
+   au->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   au->setHorizOffset(CCoord(72));
+   addView(au);
+
+   auto vst3 = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 3), yp), iconsize));
+   vst3->setURL("https://www.steinberg.net/en/company/technologies/vst3.html");
+   vst3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   vst3->setHorizOffset(CCoord(36));
+   addView(vst3);
+
+   auto gh = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 4), yp), iconsize));
+   gh->setURL("https://github.com/surge-synthesizer/surge/");
+   gh->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
+   gh->setHorizOffset(CCoord(0));
+   addView(gh);
+
+   /* bottom right skin info */
+
+   xp = ranchor - (spacing * 4);
+   yp = vs.bottom - lblvs - margin;
+
+   addTwoColumnLabel("Current Skin:", skin->displayName, true, skin->root + skin->name, 76, 175, false, true);
+   addTwoColumnLabel("Skin Author:", skin->author, (skin->authorURL != nullptr), skin->authorURL, 76, 175, false, true);
 
    /* top left copyright and credits */
 
-   xp = 20;
+   xp = margin;
+   yp = margin;
 
-   yp = 20;
-   addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear + " by Vember Audio and individual contributors", 500);
-   yp = 35;
-   addLabel("Released under the GNU General Public License, v3", 500);
-   yp = 50;
-   addLabel("VST is a trademark of Steinberg Media Technologies GmbH", 500);
-   yp = 65;
-   addLabel("Audio Units is a trademark of Apple Inc.", 500);
-   yp = 80;
-   addLabel("Airwindows open source effects by Chris Johnson, licensed under MIT license", 500);
-   yp = 95;
-   addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 500);
-   yp = 110;
-   addLabel("Sallen-Key and Diode Ladder filters by Will Pirkle (implementation by TheWaveWarden), licensed under GNU GPL v3 license", 550);
-   yp = 125;
-   addLabel("Non-linear Feedback and Non-linear States filters by Jatin Chowdhury, licensed under GNU GPL v3 license", 500);
-   yp = 140;
-   addLabel("OJD waveshaper by Janos Buttgereit, licensed under GNU GPL v3 license", 500);
+   addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear + " by Vember Audio and individual contributors", 600);
+   yp += lblvs;
+   addLabel("Released under the GNU General Public License, v3", 600);
+   yp += lblvs;
+   addLabel("VST is a trademark of Steinberg Media Technologies GmbH", 600);
+   yp += lblvs;
+   addLabel("Audio Units is a trademark of Apple Inc.", 600);
+   yp += lblvs;
+   addLabel("Airwindows open source effects by Chris Johnson, licensed under MIT license", 600);
+   yp += lblvs;
+   addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 600);
+   yp += lblvs;
+   addLabel("Sallen-Key and Diode Ladder filters by Will Pirkle (implementation by TheWaveWarden), licensed under GNU GPL v3 license", 600);
+   yp += lblvs;
+   addLabel("Cutoff Warp and Resonance Warp filters by Jatin Chowdhury, licensed under GNU GPL v3 license", 600);
+   yp += lblvs;
+   addLabel("OJD waveshaper by Janos Buttgereit, licensed under GNU GPL v3 license", 600);
 }
 
 CMouseEventResult CAboutBox::onMouseDown(CPoint& where, const CButtonState& buttons)

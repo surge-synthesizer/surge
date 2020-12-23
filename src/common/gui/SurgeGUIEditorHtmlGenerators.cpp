@@ -432,7 +432,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
         <ul>
           <li><a href="#colors">Color Database</a>
           <li><a href="#imageid">Image IDs</a>
-          <li><a href="#skinConectors">Skin Component Connectors</a>
+          <li><a href="#skinConnectors">Skin Component Connectors</a>
           <li><a href="#loadedImages">Runtime Loaded Images</a>
         </ul>
       </div>
@@ -490,7 +490,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
       )HTML";
 
    // Skin Connectors
-   startSection( "skinConectors", "Skin Component Connectors" );
+   startSection( "skinConnectors", "Skin Component Connectors" );
    {
       auto imgid = Surge::UI::createIdNameMap();
 

@@ -29,33 +29,36 @@ extern CFontRef patchNameFont;
 
 void CPatchBrowser::draw(CDrawContext* dc)
 {
-   CRect size = getViewSize();
-   CRect ar(size);
-   ar.inset(1, 0);
-   // dc->fillRect(ar);
-   ar = size;
-   ar.inset(0, 1);
-   // dc->fillRect(ar);
-   ar = size;
-   ar.inset(2, 2);
-   dc->setFillColor(skin->getColor(Colors::PatchBrowser::Background));
-   // dc->fillRect(ar);
-   // ar.top += 2;
-   CRect al(ar);
-   // ar.left += 68;
-   ar.left += 2;
-   al.right = al.left + 150;
-   al.left += 3;
-   // al.top += 2;
-   al.bottom = al.top + 12;
-   dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text));
-   dc->setFont(patchNameFont);
-   dc->drawString(pname.c_str(), ar, kCenterText, true);
+   CRect pbrowser = getViewSize();
+   CRect cat(pbrowser), auth(pbrowser);
+   
+   cat.left += 3;
+   cat.right = cat.left + 150;
+   cat.setHeight(pbrowser.getHeight() / 2);
 
+   auth = cat;
+   auth.offset(0, pbrowser.getHeight() / 2);
+
+   cat.offset(0, 1);
+   auth.offset(0, -1);
+
+   // debug draws
+   //dc->drawRect(pbrowser);
+   //dc->drawRect(cat);
+   //dc->drawRect(auth);
+
+   // patch browser text color
+   dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text));
+
+   // patch name
+   dc->setFont(patchNameFont);
+   dc->drawString(pname.c_str(), pbrowser, kCenterText, true);
+
+   // category/author name
    dc->setFont(displayFont);
-   dc->drawString(category.c_str(), al, kLeftText, true);
-   al.offset(0, 12);
-   dc->drawString(author.c_str(), al, kLeftText, true);
+   dc->drawString(category.c_str(), cat, kLeftText, true);
+   dc->drawString(author.c_str(), auth, kLeftText, true);
+
    setDirty(false);
 }
 
