@@ -5983,7 +5983,22 @@ void SurgeGUIEditor::reloadFromSkin()
    frame->setSize( wsx * sf, wsy * sf );
 
 #if TARGET_VST3
-   sf = getZoomFactor() / 100.0;
+   float uzf = getZoomFactor();
+   if( currentSkin->hasFixedZooms() )
+   {
+       for( auto z : currentSkin->getFixedZooms() )
+       {
+          if( z <= zoomFactor )
+          {
+             uzf = z;
+          }
+       }
+   }
+   if( uzf != getZoomFactor() )
+   {
+      resizeToOnIdle = VSTGUI::CPoint( wsx * uzf / 100.0, wsy * uzf / 100.0 );
+   }
+   sf = uzf / 100.0;
 #endif
 
    rect.right = wsx * sf;
