@@ -61,7 +61,7 @@ jobs:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: ""
-        cmakeArguments: "-GNinja -DBUILD_SURGE_PYTHON_BINDINGS"
+        cmakeArguments: "-GNinja -DBUILD_SURGE_PYTHON_BINDINGS=True"
         cmakeTarget: "surgepy"
       linux-lv2-ubuntu18:
         imageName: 'ubuntu-18.04'
