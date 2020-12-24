@@ -30,5 +30,7 @@ and resize examples shown in other tutorials, it gives an idea of how to generat
     hides all the components inside it.
     [doc]-->
     <control ui_identifier="mix.panel" class="none"/>
+
+    <control ui_identifier="lfo.title" class="none"/>
   </controls>
 </surge-skin>
