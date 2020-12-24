@@ -246,9 +246,9 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       if (c == 0)
       {
          // OK so draw the rules
-         CPoint mid0(0, valScale / 2.f), mid1(valScale, valScale / 2.f);
-         CPoint top0(0, valScale * 0.9), top1(valScale, valScale * 0.9);
-         CPoint bot0(0, valScale * 0.1), bot1(valScale, valScale * 0.1);
+         CPoint mid0(0.f, valScale / 2.f), mid1(valScale, valScale / 2.f);
+         CPoint top0(0.f, valScale * 0.9), top1(valScale, valScale * 0.9);
+         CPoint bot0(0.f, valScale * 0.1), bot1(valScale, valScale * 0.1);
          tf.transform(mid0);
          tf.transform(mid1);
          tf.transform(top0);
@@ -301,7 +301,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    if (uses_wavetabledata(oscdata->type.val.i))
    {
       CRect wtlbl(size);
-      wtlbl.right -= 1;
       wtlbl.top = wtlbl.bottom - wtbheight;
       rmenu = wtlbl;
       rmenu.inset(14, 0);
@@ -332,13 +331,11 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       char* r = strrchr(wttxt, '.');
       if (r)
          *r = 0;
-      // VSTGUI::CColor fgcol = cdisurf->int_to_ccol(coltable[255]);
       VSTGUI::CColor fgcol = skin->getColor(Colors::Osc::Filename::Background);
       dc->setFillColor(fgcol);
       dc->drawRect(rmenu, kDrawFilled);
       dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text));
       dc->setFont(displayFont);
-      // strupr(wttxt);
       dc->drawString(wttxt, rmenu, kCenterText, true);
 
       /*CRect wtlbl_status(size);
@@ -347,10 +344,10 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       if(oscdata->wt.flags & wtf_is_sample) dc->drawString("IS
       SAMPLE",wtlbl_status,false,kRightText);*/
 
-      rnext = wtlbl;
-      rnext.left = rmenu.right; //+ 1;
       rprev = wtlbl;
-      rprev.right = rmenu.left; //- 1;
+      rprev.right = rmenu.left; // -1;
+      rnext = wtlbl;
+      rnext.left = rmenu.right; // +1;
       dc->setFillColor(fgcol);
       dc->drawRect(rprev, kDrawFilled);
       dc->drawRect(rnext, kDrawFilled);
@@ -359,19 +356,25 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       dc->saveGlobalState();
 
       dc->setDrawMode(kAntiAliasing);
-      dc->setFillColor(kBlackCColor);
-      VSTGUI::CDrawContext::PointList trinext;
+      dc->setFillColor(skin->getColor(Colors::Osc::Filename::Text));
 
-      trinext.push_back(VSTGUI::CPoint(134, 170));
-      trinext.push_back(VSTGUI::CPoint(139, 174));
-      trinext.push_back(VSTGUI::CPoint(134, 178));
+      auto marginy = 2;
+      float triw = 6;
+      float trih = rprev.getHeight() - (marginy * 2);
+      float trianch = rprev.top + marginy;
+      float triprevstart = rprev.left + ((rprev.getWidth() - triw) / 2.f );
+      float trinextstart = rnext.right - ((rnext.getWidth() - triw) / 2.f );
+
+      VSTGUI::CDrawContext::PointList trinext;
+      trinext.push_back(VSTGUI::CPoint(trinextstart - triw, trianch));
+      trinext.push_back(VSTGUI::CPoint(trinextstart, trianch + (trih / 2.f)));
+      trinext.push_back(VSTGUI::CPoint(trinextstart - triw, trianch + trih));
       dc->drawPolygon(trinext, kDrawFilled);
 
       VSTGUI::CDrawContext::PointList triprev;
-
-      triprev.push_back(VSTGUI::CPoint(13, 170));
-      triprev.push_back(VSTGUI::CPoint(8, 174));
-      triprev.push_back(VSTGUI::CPoint(13, 178));
+      triprev.push_back(VSTGUI::CPoint(triprevstart + triw, trianch));
+      triprev.push_back(VSTGUI::CPoint(triprevstart, trianch + (trih / 2.f)));
+      triprev.push_back(VSTGUI::CPoint(triprevstart + triw, trianch + trih));
 
       dc->drawPolygon(triprev, kDrawFilled);
 
