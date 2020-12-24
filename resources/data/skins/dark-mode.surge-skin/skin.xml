@@ -187,7 +187,7 @@
     <control ui_identifier="scene.send_fx_1" class="def-hslider"/>
     <control ui_identifier="scene.send_fx_2" class="def-hslider"/>
 
-    <control ui_identifier="scene.portatime" class="def-hslider"/>
+    <control ui_identifier="scene.portamento" class="def-hslider"/>
     <control ui_identifier="scene.pitch" class="def-hslider"/>
 
     <control ui_identifier="scene.fmrouting" y="88"/>
