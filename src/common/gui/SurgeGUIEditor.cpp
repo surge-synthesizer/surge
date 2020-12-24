@@ -1736,7 +1736,21 @@ void SurgeGUIEditor::openOrRecreateEditor()
       showMSEGEditor();
       showMSEGEditorOnNextIdleOrOpen = false;
    }
-   
+
+   // We need this here in case we rebuild when opening a new patch.
+   // closeMSEGEditor does nothing if the mseg editor isn't open
+   auto lfoidx = modsource_editor[current_scene]-ms_lfo1;
+   if( lfoidx >= 0 && lfoidx <= n_lfos )
+   {
+      auto ld = &(synth->storage.getPatch()
+                      .scene[current_scene]
+                      .lfo[lfoidx]);
+      if (ld->shape.val.i != lt_mseg)
+      {
+         closeMSEGEditor();
+      }
+   }
+
    refresh_mod();
 
    editor_open = true;
