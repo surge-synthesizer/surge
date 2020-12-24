@@ -80,7 +80,7 @@ namespace Surge
          Connector octave = Connector("scene.octave", 202, 194, 96, 18, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_SCENE_OCTAVE, 7, 1, 7);
          Connector pitch = Connector("scene.pitch", 156, 212).asHorizontal();
-         Connector portatime = Connector("scene.portatime", 156, 234).asHorizontal();
+         Connector portatime = Connector("scene.portamento", 156, 234).asHorizontal();
 
          Connector keytrack_root = Connector("scene.keytrack_root", 311, 266, 43, 14, Connector::NUMBERFIELD)
                   .withBackground(IDB_NUMFIELD_KEYTRACK_ROOT)
