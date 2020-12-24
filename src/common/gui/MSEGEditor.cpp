@@ -2166,23 +2166,22 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
          actionsMenu->addSeparator();
 
-         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
+         auto q1 = addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
                [this]() {
                   Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
                   modelChanged();
                });
-         addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"),
+         q1->setEnabled(ms->editMode != MSEGStorage::LFO );
+
+         auto q2 = addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"),
                             [this](){
                                        Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
                                        modelChanged();
                                     });
+         q2->setEnabled(ms->editMode != MSEGStorage::LFO );
          addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"),
                             [this](){
-                                       auto totalLen = 0.f;
-                                       for (int i = 0; i < this->ms->n_activeSegments; i++)
-                                          totalLen += this->ms->segments[i].duration;
-
-                                       Surge::MSEG::setAllDurationsTo(this->ms, totalLen / this->ms->n_activeSegments);
+                                       Surge::MSEG::setAllDurationsTo(this->ms, ms->totalDuration / this->ms->n_activeSegments);
                                        modelChanged();
                                     });
 
