@@ -992,7 +992,7 @@ void SurgeGUIEditor::refresh_mod()
       if (i == modsource)
          state = mod_editor ? 2 : 1;
       
-      if (i == modsource_editor[current_scene])
+      if (i == modsource_editor[current_scene] && lfoNameLabel)
       {
          state |= 4;
 
@@ -1217,14 +1217,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
    /*
    ** There are a collection of member states we need to reset
    */
-   polydisp = 0;
-   lfodisplay = 0;
-   fxmenu = 0;
+   polydisp = nullptr;
+   lfodisplay = nullptr;
+   fxmenu = nullptr;
    typeinDialog = nullptr;
    minieditOverlay = nullptr;
    msegEditSwitch = nullptr;
+   lfoNameLabel = nullptr;
    
-   for( int i=0; i<16; ++i ) vu[i] = 0;
+   for( int i=0; i<16; ++i ) vu[i] = nullptr;
 
    current_scene = synth->storage.getPatch().scene_active.val.i;
 
