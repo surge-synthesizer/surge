@@ -239,6 +239,17 @@ inline bool uses_wavetabledata(int i)
    return false;
 }
 
+enum fxslot_positions {
+   fxslot_ains1,
+   fxslot_ains2,
+   fxslot_bins1,
+   fxslot_bins2,
+   fxslot_send1,
+   fxslot_send2,
+   fxslot_global1,
+   fxslot_global2
+};
+
 const char fxslot_names[8][NAMECHARS] =
 {
    "A Insert FX 1",
@@ -438,6 +449,11 @@ const char em_names[n_env_modes][16] =
 {
    "Digital",
    "Analog",
+};
+
+enum adsr_purpose {
+   adsr_ampeg = 0,
+   adsr_filteg
 };
 
 
