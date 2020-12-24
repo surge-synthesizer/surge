@@ -767,8 +767,6 @@ SurgeSynthesizer *createSurge( float sr )
 }
 
 
-#define C(x) m_const.attr( #x ) = py::int_((int)(x));
-
 PYBIND11_MODULE(surgepy, m) {
    m.doc() = "Python bindings for Surge Synthesizer";
    m.def( "createSurge", &createSurge, "Create a surge instance", py::arg( "sampleRate") );
@@ -936,6 +934,8 @@ PYBIND11_MODULE(surgepy, m) {
 
    py::module m_const = m.def_submodule("constants", "Constants which are used to navigate Surge");
 
+
+#define C(x) m_const.attr( #x ) = py::int_((int)(x));
    C(cg_GLOBAL);
    C(cg_OSC);
    C(cg_MIX);
@@ -984,4 +984,118 @@ PYBIND11_MODULE(surgepy, m) {
    C(ms_ctrl6);
    C(ms_ctrl7);
    C(ms_ctrl8);
+
+   C(ot_classic);
+   C(ot_sine);
+   C(ot_wavetable);
+   C(ot_shnoise);
+   C(ot_audioinput);
+   C(ot_FM3);
+   C(ot_FM2);
+   C(ot_window);
+
+   C(adsr_ampeg);
+   C(adsr_filteg);
+
+   C(fxt_off);
+   C(fxt_delay);
+   C(fxt_reverb);
+   C(fxt_phaser);
+   C(fxt_rotaryspeaker);
+   C(fxt_distortion);
+   C(fxt_eq);
+   C(fxt_freqshift);
+   C(fxt_conditioner);
+   C(fxt_chorus4);
+   C(fxt_vocoder);
+   C(fxt_reverb2);
+   C(fxt_flanger);
+   C(fxt_ringmod);
+   C(fxt_airwindows);
+
+   C(fxslot_ains1);
+   C(fxslot_ains2);
+   C(fxslot_bins1);
+   C(fxslot_bins2);
+   C(fxslot_send1);
+   C(fxslot_send2);
+   C(fxslot_global1);
+   C(fxslot_global2);
+
+   C(pm_poly);
+   C(pm_mono);
+   C(pm_mono_st);
+   C(pm_mono_fp);
+   C(pm_mono_st_fp);
+   C(pm_latch);
+
+   C(sm_single);
+   C(sm_split);
+   C(sm_dual);
+   C(sm_chsplit);
+
+   C(fc_serial1);
+   C(fc_serial2);
+   C(fc_serial3);
+   C(fc_dual1);
+   C(fc_dual2);
+   C(fc_stereo);
+   C(fc_ring);
+   C(fc_wide);
+
+   C(fm_off);
+   C(fm_2to1);
+   C(fm_3to2to1);
+   C(fm_2and3to1);
+
+   C(lt_sine);
+   C(lt_tri);
+   C(lt_square);
+   C(lt_ramp);
+   C(lt_noise);
+   C(lt_snh);
+   C(lt_envelope);
+   C(lt_mseg);
+   C(lt_function);
+
+   C(wst_none);
+   C(wst_soft);
+   C(wst_hard);
+   C(wst_asym);
+   C(wst_sine);
+   C(wst_digital);
+
+   C(fut_none);
+   C(fut_lp12);
+   C(fut_lp24);
+   C(fut_lpmoog);
+   C(fut_hp12);
+   C(fut_hp24);
+   C(fut_bp12);
+   C(fut_notch12);
+   C(fut_comb_pos);
+   C(fut_SNH);
+   C(fut_vintageladder);
+   C(fut_obxd_2pole_lp);
+   C(fut_obxd_4pole);
+   C(fut_k35_lp);
+   C(fut_k35_hp);
+   C(fut_diode);
+   C(fut_cutoffwarp_lp);
+   C(fut_cutoffwarp_hp);
+   C(fut_cutoffwarp_n);
+   C(fut_cutoffwarp_bp);
+   C(fut_obxd_2pole_hp);
+   C(fut_obxd_2pole_n);
+   C(fut_obxd_2pole_bp);
+   C(fut_bp24);
+   C(fut_notch24);
+   C(fut_comb_neg);
+   C(fut_apf);
+   C(fut_cutoffwarp_ap);
+   C(fut_resonancewarp_lp);
+   C(fut_resonancewarp_hp);
+   C(fut_resonancewarp_n);
+   C(fut_resonancewarp_bp);
+   C(fut_resonancewarp_ap);
 }
