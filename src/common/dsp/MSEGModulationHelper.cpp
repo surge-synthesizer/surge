@@ -924,6 +924,10 @@ void scaleValues(MSEGStorage* ms, float factor)
 
 void setAllDurationsTo(MSEGStorage* ms, float value)
 {
+   if( ms->editMode == MSEGStorage::LFO )
+   {
+      value = 1.f / ms->n_activeSegments;
+   }
    for (int i = 0; i < ms->n_activeSegments; i++)
       ms->segments[i].duration = value;
 
