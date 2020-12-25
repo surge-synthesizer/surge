@@ -6040,26 +6040,25 @@ void SurgeGUIEditor::reloadFromSkin()
 
 #if TARGET_VST3
    float uzf = getZoomFactor();
-   if( currentSkin->hasFixedZooms() )
+
+   if (currentSkin->hasFixedZooms())
    {
-       for( auto z : currentSkin->getFixedZooms() )
+       for (auto z : currentSkin->getFixedZooms())
        {
-          if( z <= zoomFactor )
+          if (z <= zoomFactor)
           {
              uzf = z;
           }
        }
    }
-   if( uzf != getZoomFactor() )
-   {
-      resizeToOnIdle = VSTGUI::CPoint( wsx * uzf / 100.0, wsy * uzf / 100.0 );
-   }
+
+   resizeToOnIdle = VSTGUI::CPoint(wsx * uzf / 100.0, wsy * uzf / 100.0);
+
    sf = uzf / 100.0;
 #endif
 
    rect.right = wsx * sf;
    rect.bottom = wsy * sf;
-
 
    setZoomFactor( getZoomFactor() );
 
