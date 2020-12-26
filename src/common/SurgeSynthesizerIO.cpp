@@ -300,6 +300,8 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
       std::lock_guard<std::mutex> g(rawLoadQueueMutex);
       rawLoadEnqueued = false;
       loadRaw( enqueuedLoadData, enqueuedLoadSize );
+      loadFromDawExtraState();
+
       freeThis = enqueuedLoadData;
       enqueuedLoadData = nullptr;
       rawLoadNeedsUIDawExtraState = true;
