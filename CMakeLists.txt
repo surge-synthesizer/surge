@@ -235,6 +235,7 @@ set(SURGE_SHARED_SOURCES
   src/common/vt_dsp/lipol.cpp
   src/common/vt_dsp/macspecific.cpp
   src/common/DebugHelpers.cpp
+  src/common/DeferredAssetLoader.cpp
   src/common/Parameter.cpp
   src/common/precompiled.cpp
   src/common/SurgeError.cpp
@@ -404,11 +405,14 @@ set(SURGE_GUI_INCLUDES
 
 ### OS SPECIFIC SECTION
 if( APPLE )
+  set(SURGE_OS_SOURCES
+      src/mac/objc_utils.mm
+      )
+
   set(SURGE_OS_GUI_SOURCES
     src/mac/DisplayInfoMac.mm
     src/mac/RuntimeFontMac.cpp
     src/mac/UserInteractionsMac.mm
-    src/mac/cocoa_utils.mm
     vstgui.surge/vstgui/vstgui_mac.mm
     vstgui.surge/vstgui/vstgui_uidescription_mac.mm
     )
@@ -424,8 +428,9 @@ if( APPLE )
     OBJC_OLD_DISPATCH_PROTOTYPES=1
     )
   set(OS_LINK_LIBRARIES_NOGUI
-    "-framework CoreServices"
-    "-framework CoreFoundation"
+      "-framework CoreServices"
+      "-framework CoreFoundation"
+      "-framework Foundation"
     )
   set(OS_LINK_LIBRARIES
     ${OS_LINK_LIBRARIES_NOGUI}
@@ -480,6 +485,9 @@ elseif( UNIX AND NOT APPLE )
     )
 
   find_package(PkgConfig REQUIRED)
+  if( NOT LINUX_ON_ARM )
+    pkg_check_modules(CURL REQUIRED libcurl)
+  endif()
   pkg_check_modules(CAIRO REQUIRED cairo)
   pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
   pkg_check_modules(X11 REQUIRED x11)
@@ -492,7 +500,7 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
 
   if( LINUX_ON_ARM )
-    set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1)
+    set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1 NOCURL=1)
     set(ARCH_INCLUDE_DIRECTORIES libs/simde)
   endif()
 
@@ -503,7 +511,7 @@ elseif( UNIX AND NOT APPLE )
 
   set(OS_INCLUDE_DIRECTORIES
     src/linux
-
+          
     ${CAIRO_INCLUDE_DIRS}
     ${FONTCONFIG_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
@@ -514,6 +522,7 @@ elseif( UNIX AND NOT APPLE )
     ${XCBXKB_INCLUDE_DIRS}
     ${XKBCOMMON_INCLUDE_DIRS}
     ${XKBX11COMMON_INCLUDE_DIRS}
+    ${CURL_INCLUDE_DIRS}
 
     ${CMAKE_BINARY_DIR}/lintemp
 
@@ -524,6 +533,7 @@ elseif( UNIX AND NOT APPLE )
     pthread
     dl
     -Wl,--no-undefined
+    ${CURL_LDFLAGS}
     )
   set(OS_LINK_LIBRARIES
     ${OS_LINK_LIBRARIES_NOGUI}
@@ -592,6 +602,7 @@ elseif( WIN32 )
   set(OS_LINK_LIBRARIES_NOGUI
     shell32
     user32
+    winhttp
     )
   set(OS_LINK_LIBRARIES
     ${OS_LINK_LIBRARIES_NOGUI}

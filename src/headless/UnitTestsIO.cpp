@@ -10,11 +10,14 @@
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
+#include "DeferredAssetLoader.h"
+#include <chrono>
+#include <thread>
 
 #include <unordered_map>
 
 using namespace Surge::Test;
-
+using namespace std::chrono_literals;
 
 TEST_CASE( "We can read a collection of wavetables", "[io]" )
 {
@@ -763,6 +766,83 @@ TEST_CASE( "MonoVoicePriority Streams", "[io]" )
    }
 }
 
-/*
- * TODO Test Keysplit Mono
- */
+TEST_CASE("Deferred Asset Loader", "[io]")
+{
+   SECTION("Retrieve a single image")
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+
+      auto dal = Surge::Storage::DeferredAssetLoader(&(surge->storage));
+      REQUIRE(surge);
+
+      std::string testUrl = "https://surge-synthesizer.github.io/assets/images/test/Music.png";
+      // In the event we have a documents cache already make the name random. Add time later
+      testUrl += "?rand=" + std::to_string(rand());
+
+      auto n = std::chrono::system_clock::now();
+      auto es = std::chrono::duration_cast<std::chrono::seconds>(n.time_since_epoch());
+      testUrl += "&time=" + std::to_string(es.count());
+
+      INFO("Trying test URL " << testUrl)
+      REQUIRE(!dal.hasCachedCopyOf(testUrl));
+
+      INFO("Retrieving " << testUrl);
+      std::atomic<bool> got(false);
+      dal.retrieveSingleAsset(
+          testUrl, [&got](const Surge::Storage::DeferredAssetLoader::url_t&) { got = true; },
+          [](auto& u, const std::string& msg) { REQUIRE(false); });
+
+      int tries = 2; // make this longer before I commit
+      while (tries > 0 && !got)
+      {
+         INFO("Try " << tries)
+         std::this_thread::sleep_for(1000ms);
+         tries--;
+      }
+
+      REQUIRE(got);
+      REQUIRE(dal.hasCachedCopyOf(testUrl));
+      REQUIRE(fs::exists(dal.pathOfCachedCopy(testUrl)));
+   }
+
+   SECTION("Retrieve a missing image")
+   {
+      auto surge = Surge::Headless::createSurge(44100);
+
+      auto dal = Surge::Storage::DeferredAssetLoader(&(surge->storage));
+      REQUIRE(surge);
+
+      std::string testUrl =
+          "https://surge-synthesizer.github.io/assets/images/test/NOT_THERE_AT_ALL.png";
+      // In the event we have a documents cache already make the name random. Add time later
+      testUrl += "?rand=" + std::to_string(rand());
+
+      auto n = std::chrono::system_clock::now();
+      auto es = std::chrono::duration_cast<std::chrono::seconds>(n.time_since_epoch());
+      testUrl += "&time=" + std::to_string(es.count());
+
+      INFO("Trying test URL " << testUrl)
+      REQUIRE(!dal.hasCachedCopyOf(testUrl));
+
+      INFO("Retrieving " << testUrl);
+      std::atomic<bool> got(false), erred(false);
+      std::string msg;
+      dal.retrieveSingleAsset(
+          testUrl, [&got](const Surge::Storage::DeferredAssetLoader::url_t&) { got = true; },
+          [&erred, &msg](auto& u, const std::string& em) {
+             msg = em;
+             erred = true;
+          });
+
+      int tries = 20;
+      while (tries > 0 && !(got || erred))
+      {
+         std::this_thread::sleep_for(1000ms);
+         tries--;
+      }
+
+      REQUIRE(!got);
+      REQUIRE(erred);
+      REQUIRE(!dal.hasCachedCopyOf(testUrl));
+   }
+}
