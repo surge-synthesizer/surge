@@ -2284,6 +2284,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                contextMenu, offLab, [this, modsource, cms]() {
                                        cms->setUseAlternate( ! cms->useAlternate );
                                        modsource_is_alternate[modsource] = cms->useAlternate;
+                                       this->refresh_mod();
                                     }
                );
             if( activeMod )
