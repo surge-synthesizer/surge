@@ -244,6 +244,12 @@ tresult PLUGIN_API SurgeVst3Processor::setState(IBStream* state)
             e->loadFromDAWExtraState(surgeInstance.get());
             */
          surgeInstance->enqueuePatchForLoad(data, numBytes);
+         if( isFirstLoad || ! surgeInstance->audio_processing_active )
+         {
+            // We are just getting started or don't have audio so force this load to resolve off thread
+            surgeInstance->processEnqueuedPatchIfNeeded();
+            isFirstLoad = false;
+         }
       }
       else
       {
@@ -355,11 +361,11 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                int cont = chancont >> 4;
                
 
-               for (int i = 0; i < numPoints; ++i)
+               for (int iPoint = 0; iPoint < numPoints; ++iPoint)
                {
-                  paramQueue->getPoint(i, offsetSamples, value);
+                  paramQueue->getPoint(iPoint, offsetSamples, value);
                   /*
-                  if( i == 0 ) 
+                  if( iPoint == 0 )
                   {
                      std::cout << "MIDI id=" << id << " chancont=" << chancont << " channel=" << channel << " controller=" << cont << " value=" << value << std::endl;
                   }
@@ -400,10 +406,10 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
             }
             else
             {
-               int id = paramQueue->getParameterId();
+               int idE = paramQueue->getParameterId();
                // In theory the return false should be all we need here
                SurgeSynthesizer::ID did;
-               if( surgeInstance->fromDAWSideId( id, did ) )
+               if( surgeInstance->fromDAWSideId(idE, did ) )
                {
                   paramQueue->getPoint(numPoints - 1, offsetSamples, value);
 
@@ -413,7 +419,7 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                }
                else
                {
-                  // std::cout << "SKIPPING SETPARM on " << id << " - probably a midi cc" << std::endl;
+                  // std::cout << "SKIPPING SETPARM on " << idE << " - probably a midi cc" << std::endl;
                }
             }
          }

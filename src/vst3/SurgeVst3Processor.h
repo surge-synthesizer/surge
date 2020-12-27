@@ -121,6 +121,7 @@ public:
    void uithreadIdleActivity();
 
 protected:
+   bool isFirstLoad = true;
    void setExtraScaleFactor(VSTGUI::CBitmap *bg, float zf);
 
    void createSurge();
