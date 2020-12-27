@@ -349,7 +349,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    */
    unsigned int ipos;
 
-   if (syncstate[voice] < oscstate[voice])
+   if ((l_sync.v > 0) && syncstate[voice] < oscstate[voice])
    {
       if (FM)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
