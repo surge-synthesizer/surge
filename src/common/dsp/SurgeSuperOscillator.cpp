@@ -37,7 +37,7 @@
 ** that waveform at different speeds, take the implied impulses for the moment in time
 ** and simulate a DAC outputting that. The common form of that waveform is that it is
 ** digital - namely it is represented as a set of impulse values at a set of times -
-    ** but those times do not align with the sample points.
+** but those times do not align with the sample points.
 **
 ** In code that looks as follows
 **
