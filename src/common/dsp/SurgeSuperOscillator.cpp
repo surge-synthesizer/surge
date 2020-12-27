@@ -365,7 +365,6 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
          // Copy the mysterious *2 and drop the +sync
          t = storage->note_to_pitch_inv_ignoring_tuning( detune * storage->note_to_pitch_inv_ignoring_tuning( pitch ) * 16 / 0.9443 ) * 2;
 
-      
       state[voice] = 0;
       last_level[voice] += dc_uni[voice] * (oscstate[voice] - syncstate[voice]);
 
@@ -639,6 +638,14 @@ void SurgeSuperOscillator::process_block(
               // this becomes unsafe, don't fuck with the oscstate but make a division within the convolute instead.
                convolute<true>(l, stereo);
             }
+            if( l_sync.v == 0 && syncstate[l] < oscstate[l] )
+            {
+               /*
+                * Something (probably a detune drift lfo) has made syncstate run ahead
+                * which will be a problem at the next cycle so clamp it back.
+                */
+               syncstate[l] = oscstate[l];
+            }
 
             oscstate[l] -= a;
             syncstate[l] -= a;
@@ -666,6 +673,14 @@ void SurgeSuperOscillator::process_block(
             ** Fill the buffer for the voice
             */
             convolute<false>(l, stereo);
+         }
+         if( l_sync.v == 0 && syncstate[l] < oscstate[l]  )
+         {
+            /*
+             * Something (probably a detune drift lfo) has made syncstate run ahead
+             * which will be a problem at the next cycle so clamp it back.
+             */
+            syncstate[l] = oscstate[l];
          }
 
          /*
