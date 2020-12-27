@@ -349,7 +349,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
    */
    unsigned int ipos;
 
-   if (syncstate[voice] < oscstate[voice])
+   if ((l_sync.v > 0) && syncstate[voice] < oscstate[voice])
    {
       if (FM)
          ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
@@ -594,12 +594,9 @@ void SurgeSuperOscillator::process_block(
    */
    this->pitch = min(148.f, pitch0);
    this->drift = drift;
-   pitchmult_inv =
-       Max(1.0, dsamplerate_os * (1.f / 8.175798915f) * storage->note_to_pitch_inv(pitch));
+   pitchmult_inv = Max(1.0, dsamplerate_os * (1.f / 8.175798915f) * storage->note_to_pitch_inv(pitch));
 
-   pitchmult =
-       1.f /
-       pitchmult_inv; // This must be a real division, reciprocal approximation is not precise enough
+   pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal approximation is not precise enough
 
    int k, l;
 
@@ -641,7 +638,10 @@ void SurgeSuperOscillator::process_block(
             }
 
             oscstate[l] -= a;
-            syncstate[l] -= a;
+            if (l_sync.v > 0)
+            {
+               syncstate[l] -= a;
+            }
          }
       }
    }
@@ -673,7 +673,10 @@ void SurgeSuperOscillator::process_block(
          ** oscillator and sync state
          */
          oscstate[l] -= a;
-         syncstate[l] -= a;
+         if (l_sync.v > 0)
+         {
+            syncstate[l] -= a;
+         }
 
          /*
          ** At this point we are guaranteed that the oscbuffer contains enough
@@ -695,7 +698,7 @@ void SurgeSuperOscillator::process_block(
    */
    __m128 mdc = _mm_load_ss(&dc);
    __m128 oa = _mm_load_ss(&out_attenuation);
-   oa = _mm_mul_ss(oa, _mm_load_ss(&pitchmult));
+       oa = _mm_mul_ss(oa, _mm_load_ss(&pitchmult));
 
    /*
    ** The Coefs here are from the character filter, and are set in ::init
