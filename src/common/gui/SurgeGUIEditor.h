@@ -175,6 +175,7 @@ public:
    Steinberg::IPlugFrame *getIPlugFrame() { return plugFrame; }
 #endif
    void setDisabledForParameter(Parameter* p, CSurgeSlider* s);
+   void showSettingsMenu(VSTGUI::CRect& menuRect);
 
    static bool fromSynthGUITag( SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q );
    // If n_scenes > 2, then this initialization and the modsource_editor one below will need to adjust
@@ -205,7 +206,6 @@ private:
       std::string author;
    };
 
-   void showSettingsMenu(VSTGUI::CRect &menuRect);
    void setBitmapZoomFactor(float zf);
    void showTooLargeZoomError(double width, double height, float zf) const;
    void showMinimumZoomError() const;
@@ -489,10 +489,10 @@ private:
    int clear_infoview_countdown = 0;
 public:
    int clear_infoview_peridle = -1;
+   bool useDevMenu = false;
 private:
    float blinktimer = 0;
    bool blinkstate = false;
-   bool useDevMenu = false;
    PARENT_PLUGIN_TYPE* _effect = nullptr;
    void* _userdata = nullptr;
    VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;
