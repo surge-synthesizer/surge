@@ -452,9 +452,9 @@ const int fut_glyph_index[n_fu_types][2] =
         { 2, fxrow }, // fut_comb_neg,
         { 0, fxrow }, // fut_apf
         { 0, fxrow }, // fut_cutoffwarp_ap (this is temporarily set to just use the regular AP glyph)
-        { 8, lprow }, // fut_resonancewarp_lp
-        { 4, hprow }, // fut_resonancewarp_hp
-        { 3,  nrow }, // fut_resonancewarp_n
-        { 3, bprow }, // fut_resonancewarp_bp
+        { 9, lprow }, // fut_resonancewarp_lp
+        { 5, hprow }, // fut_resonancewarp_hp
+        { 4,  nrow }, // fut_resonancewarp_n
+        { 4, bprow }, // fut_resonancewarp_bp
         { 0, fxrow }, // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
     };
