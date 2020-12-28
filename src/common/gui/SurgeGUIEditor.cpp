@@ -7671,6 +7671,9 @@ bool SurgeGUIEditor::onDrop( const std::string& fname)
 
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
 {
+   if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
+      return;
+
    auto t = fxPresetName[target];
    fxPresetName[target] = fxPresetName[source];
    if( m == SurgeSynthesizer::SWAP )
