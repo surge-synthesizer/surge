@@ -1173,9 +1173,28 @@ public:
    {
       if (buttons & (kMButton | kButton4 | kButton5))
       {
-         if( editor) editor->toggle_mod_editing();
+         if (editor)
+         {
+            editor->toggle_mod_editing();
+         }
+         
          return kMouseEventHandled;
       }
+
+      if (buttons & kRButton)
+      {
+         if (editor)
+         {
+            CRect menuRect;          
+            menuRect.offset(where.x, where.y);
+            
+            editor->useDevMenu = false;
+            editor->showSettingsMenu(menuRect);
+         }
+
+         return kMouseEventHandled;
+      }
+
       return kMouseEventNotHandled;
    }
 
