@@ -100,6 +100,7 @@ struct SurgePyModRouting
    SurgePyModSource source;
    SurgePyNamedParam dest;
    float depth;
+   float normalizedDepth;
 };
 
 class SurgePyPatchConverter
@@ -543,18 +544,8 @@ public:
    {
       auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
       if( ! p ) return;
-      switch( p->valtype )
-      {
-      case vt_float:
-         p->val.f = f;
-         break;
-      case vt_int:
-         p->val.i = round(f);
-         break;
-      case vt_bool:
-         p->val.b = f > 0.5;
-         break;
-      }
+
+      setParameter01(id.getID(), p->value_to_normalized(f));
    }
 
 
@@ -726,6 +717,7 @@ public:
          r.source = SurgePyModSource((modsources)gm.source_id);
          r.dest = surgePyNamedParamById(gm.destination_id);
          r.depth = gm.depth;
+         r.normalizedDepth = getModulation(gm.destination_id, (modsources)gm.source_id);
          gmr.append(r);
       }
 
@@ -743,6 +735,7 @@ public:
             r.source = SurgePyModSource((modsources)gm.source_id);
             r.dest = surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
             r.depth = gm.depth;
+            r.normalizedDepth = getModulation(gm.destination_id + storage.getPatch().scene_start[sc], (modsources)gm.source_id);
             sms.append(r);
          }
          ts["scene"] = sms;
@@ -755,6 +748,7 @@ public:
             r.source = SurgePyModSource((modsources)gm.source_id);
             r.dest = surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
             r.depth = gm.depth;
+            r.normalizedDepth = getModulation(gm.destination_id + storage.getPatch().scene_start[sc], (modsources)gm.source_id);
             smv.append( r );
          }
          ts["voice"] = smv;
@@ -959,11 +953,12 @@ PYBIND11_MODULE(surgepy, m) {
        .def( "getSource", [](const SurgePyModRouting &r) { return r.source; })
        .def( "getDest", [](const SurgePyModRouting &r) { return r.dest; })
        .def( "getDepth", [](const SurgePyModRouting &r) { return r.depth; })
+       .def( "getNormalizedDepth", [](const SurgePyModRouting &r) { return r.normalizedDepth; })
        .def( "__repr__", [](const SurgePyModRouting &r ) {
           std::ostringstream oss;
           oss << "<SurgeModRouting src='" << r.source.name
-              << "' dst='" << r.dest.name
-              << "' dpth=" << r.depth << ">";
+              << "' dest='" << r.dest.name
+              << "' depth=" << r.depth << " normdepth=" << r.normalizedDepth << ">";
           return oss.str();
        });
 
