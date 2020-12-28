@@ -123,8 +123,13 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    }
 
    int h = getHeight();
+   float extraYTranslate = 0;
    if (uses_wavetabledata(oscdata->type.val.i))
+   {
       h -= wtbheight;
+      extraYTranslate = 0.1 * wtbheight;
+   }
+
 
    int totalSamples = ( 1 << 4 ) * (int)getWidth();
    int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be an integer multiple of it
@@ -230,7 +235,8 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       // to our coords. So scale then position
       VSTGUI::CGraphicsTransform tf = VSTGUI::CGraphicsTransform()
                                           .scale(getWidth() / valScale, h / valScale)
-                                          .translate(size.getTopLeft().x, size.getTopLeft().y);
+                                          .translate(size.getTopLeft().x, size.getTopLeft().y)
+                                          .translate(0,extraYTranslate);
 #if LINUX
       auto tmps = size;
       dc->getCurrentTransform().transform(tmps);
