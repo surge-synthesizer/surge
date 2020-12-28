@@ -71,7 +71,7 @@ void CEffectSettings::draw(CDrawContext* dc)
       }
    }
 
-   if( mouseActionMode == drag )
+   if (mouseActionMode == drag && dragSource >= 0 && dragSource < n_fx_slots)
    {
       auto vs = getViewSize();
       vs = vs.inset(1,1);
@@ -106,6 +106,7 @@ CMouseEventResult CEffectSettings::onMouseDown(CPoint& where, const CButtonState
 
    mouseActionMode = click;
    dragStart = where;
+   dragSource = -1;
    for (int i = 0; i < n_fx_slots; i++)
    {
       CRect size = getViewSize();
@@ -123,7 +124,7 @@ CMouseEventResult CEffectSettings::onMouseDown(CPoint& where, const CButtonState
 
 CMouseEventResult CEffectSettings::onMouseUp(CPoint& where, const CButtonState& buttons)
 {
-   if( mouseActionMode == drag )
+   if (mouseActionMode == drag && dragSource >= 0 && dragSource < n_fx_slots)
    {
       int droppedOn = -1;
       for (int i = 0; i < n_fx_slots; i++)
@@ -190,7 +191,8 @@ CMouseEventResult CEffectSettings::onMouseMoved(CPoint& where, const CButtonStat
       float dy = dragStart.y - where.y;
       float dist = sqrt( dx * dx + dy * dy );
 
-      if( dist > 3 ) {
+      if (dist > 3 && dragSource >= 0 && dragSource < n_fx_slots)
+      {
          mouseActionMode = drag;
       }
    }

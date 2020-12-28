@@ -3657,6 +3657,9 @@ void SurgeSynthesizer::changeModulatorSmoothing( ControllerModulationSource::Smo
 
 void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
 {
+   if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
+      return;
+
    FxStorage so, to;
    memcpy((void*)&so, (void*)(&storage.getPatch().fx[source]), sizeof(FxStorage));
    memcpy((void*)&to, (void*)(&storage.getPatch().fx[target]), sizeof(FxStorage));
