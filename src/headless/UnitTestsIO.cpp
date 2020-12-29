@@ -768,6 +768,16 @@ TEST_CASE( "MonoVoicePriority Streams", "[io]" )
 
 TEST_CASE("Deferred Asset Loader", "[io]")
 {
+   auto skipThisTest = ( getenv("SURGE_DISABLE_NETWORK_TESTS") != nullptr );
+   if( skipThisTest )
+   {
+      SECTION( "Skipping Network Tests" )
+      {
+         REQUIRE(skipThisTest);
+      }
+      return;
+   }
+
    SECTION("Retrieve a single image")
    {
       auto surge = Surge::Headless::createSurge(44100);
