@@ -102,3 +102,26 @@ struct AirWinBaseClass {
    static std::vector<Registration> pluginRegistry();
    static std::vector<int> pluginRegistryOrdering();
 };
+
+/*
+ * We use this as a placeholder if we decide to retire an AW
+ */
+struct AirWindowsNoOp : AirWinBaseClass {
+   AirWindowsNoOp( audioMasterCallback amc ) : AirWinBaseClass( amc, 0, 0 ) { }
+
+   virtual bool getEffectName( char *name ) {
+       strncpy(name, "NoOp", 5 );
+       return true;
+   };
+
+   virtual float getParameter( VstInt32 index ) { return 0; };
+   virtual void setParameter( VstInt32 index, float value ) {};
+   virtual void processReplacing( float **in, float **out, VstInt32 sampleFrames ) {
+       memset(out[0],0,sampleFrames * sizeof(float));
+       memset(out[1],0,sampleFrames * sizeof(float));
+   };
+
+   virtual void getParameterName(VstInt32 index, char *text) {};    // name of the parameter
+   virtual void getParameterLabel(VstInt32 index, char *txt) {};
+   virtual void getParameterDisplay(VstInt32 index, char *txt) {};
+};
