@@ -34,7 +34,7 @@ public:
    // constructors and destructor                                           [fs.rec.dir.itr.members]
    recursive_directory_iterator() = default;
    explicit recursive_directory_iterator(const path& p);
-   recursive_directory_iterator(const path& p, std::error_code& ec) noexcept;
+   recursive_directory_iterator(const path& p, std::error_code& ec);
 
    // observers
    const value_type& operator*() const noexcept;

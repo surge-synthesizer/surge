@@ -26,7 +26,7 @@ public:
    : system_error(ec, std::string{"filesystem error: "} + what_arg) {}
 
    filesystem_error(int errnum, const std::string& what_arg) // non-standard convenience overload
-   : filesystem_error(what_arg, std::error_code(errnum, std::generic_category()))
+   : filesystem_error(what_arg, std::error_code{errnum, std::generic_category()})
    {}
 };
 

@@ -31,7 +31,7 @@ struct slice
 
    bool empty() const noexcept { return !len; }
 
-   path as_path() const
+   path to_path() const
    {
       if (empty())
          return path{};
@@ -73,7 +73,7 @@ const path::value_type* extension_internal(const path& p) noexcept
       return nullptr;
    if (is_dot_or_dotdot(filename))
       return nullptr;
-   while (period[1] && period[1] == '.')
+   while (period[1] == '.')
       ++period;
    return period;
 }
@@ -128,23 +128,14 @@ path path::filename() const
 
 path path::stem() const
 {
-   return stem_internal(*this).as_path();
+   return stem_internal(*this).to_path();
 }
 
 path path::extension() const
 {
-   const auto* filename = filename_internal(*this);
-   auto period_idx = pth.find_last_of('.');
-   if (period_idx == string_type::npos)
-      return path{};
-   const auto* period = pth.c_str() + period_idx;
-   if (period <= filename)
-      return path{};
-   if (is_dot_or_dotdot(filename))
-      return path{};
-   while (period[1] && period[1] == '.')
-      ++period;
-   return path{period};
+   if (auto* const pext = extension_internal(*this))
+      return path{pext};
+   return path{};
 }
 
 bool path::has_stem() const noexcept

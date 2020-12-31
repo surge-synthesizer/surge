@@ -36,7 +36,7 @@ public:
    // member functions                                                          [fs.dir.itr.members]
    directory_iterator() = default;
    explicit directory_iterator(const path& p);
-   directory_iterator(const path& p, std::error_code& ec) noexcept;
+   directory_iterator(const path& p, std::error_code& ec);
 
    const value_type& operator*() const noexcept;
    const value_type* operator->() const noexcept { return &**this; }
