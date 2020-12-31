@@ -56,7 +56,7 @@ recursive_directory_iterator::recursive_directory_iterator(const path& p)
       d = std::make_shared<Impl>(std::move(it));
 }
 
-recursive_directory_iterator::recursive_directory_iterator(const path& p, std::error_code& ec) noexcept
+recursive_directory_iterator::recursive_directory_iterator(const path& p, std::error_code& ec)
 {
    directory_iterator it{p, ec};
    if (!ec && it != directory_iterator{})
@@ -72,7 +72,7 @@ recursive_directory_iterator& recursive_directory_iterator::operator++()
 {
    auto& stack = d->stack;
 
-   if (stack.top() != directory_iterator())
+   if (stack.top() != directory_iterator{})
    {
       if (d->descend(stack.top()->path()))
          return *this;

@@ -73,13 +73,13 @@ directory_iterator::directory_iterator(const path& p)
    ++*this;
 }
 
-directory_iterator::directory_iterator(const path& p, std::error_code& ec) noexcept
+directory_iterator::directory_iterator(const path& p, std::error_code& ec)
 : directory_iterator{p.native()}
 {
    if (d)
       ++*this;
    else
-      ec = std::error_code(errno, std::system_category());
+      ec = std::error_code{errno, std::system_category()};
 }
 
 const directory_iterator::value_type& directory_iterator::operator*() const noexcept
