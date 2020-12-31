@@ -2920,13 +2920,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   for( int i=p->val_min.i; i<= max; i += incr )
                   {
                      int idx = dm->remapStreamedIndexToDisplayIndex( i );
-                     auto gn = dm->groupNameAtStreamedIndex(i);
-                     if( reorderMap.find( gn ) == reorderMap.end() )
+                     if( idx >= 0 )
                      {
-                        groupAppearanceOrder.push_back(gn);
+                        auto gn = dm->groupNameAtStreamedIndex(i);
+                        if (reorderMap.find(gn) == reorderMap.end())
+                        {
+                           groupAppearanceOrder.push_back(gn);
+                        }
+
+                        reorderMap[gn][idx] = i;
                      }
-                     
-                     reorderMap[gn][idx] = i;
                   }
 
                   if( dm->sortGroupNames() )

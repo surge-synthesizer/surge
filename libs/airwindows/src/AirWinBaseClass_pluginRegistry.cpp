@@ -115,7 +115,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<VoiceOfTheStarship::VoiceOfTheStarship>, id++, 210, gnNoise, "Voice Of The Starship");
 
    reg.emplace_back(create<BrightAmbience2::BrightAmbience2>, id++, 220, gnAmbience, "Bright Ambience");
-   reg.emplace_back(create<Hombre::Hombre>, id++, 230, gnFilter, "Hombre");
+   reg.emplace_back(create<Hombre::Hombre>, id++, 425, gnFilter, "Hombre");
    reg.emplace_back(create<Melt::Melt>, id++, 240, gnAmbience, "Melt");
    reg.emplace_back(create<PocketVerbs::PocketVerbs>, id++, 250, gnAmbience, "Pocket Verbs");
    reg.emplace_back(create<StarChild::StarChild>, id++, 260, gnAmbience, "Star Child");
@@ -134,7 +134,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<UnBox::UnBox>, id++, 400, gnSaturation, "Unbox");
 
    reg.emplace_back(create<DeBess::DeBess>, id++, 420, gnFilter, "De-Bess");
-   reg.emplace_back(create<DeEss::DeEss>, id++, 430, gnFilter, "De-Ess");
+   reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnFilter, "NoOp (Was: DeEss)");
 
    reg.emplace_back(create<SingleEndedTriode::SingleEndedTriode>, id++, 440, gnSaturation, "Single-Ended Triode");
 
@@ -165,7 +165,10 @@ std::vector<int> AirWinBaseClass::pluginRegistryOrdering()
 
    for( auto const &el : r )
    {
-      q[el.groupName][el.displayOrder] = el.id;
+      if( el.displayOrder >= 0 )
+         q[el.groupName][el.displayOrder] = el.id;
+      else
+         q[el.groupName][100000000] = -1;
    }
    for( auto const &sm : q )
    {

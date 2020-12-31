@@ -6,6 +6,7 @@
 #include "airwindows/AirWinBaseClass.h"
 
 #include <vector>
+#include "UserDefaults.h"
 
 class alignas(16) AirWindowsEffect : public Effect
 {
@@ -95,6 +96,13 @@ public:
             {
                if( fx->fxdata->p[0].deactivated )
                   fx->airwin->setParameter( idx, value );
+               if (fx->storage)
+               {
+                  auto detailedMode =
+                      Surge::Storage::getUserDefaultValue(fx->storage, "highPrecisionReadouts", 0);
+
+                  fx->airwin->displayPrecision = (detailedMode ? 6 : 2);
+               }
                fx->airwin->getParameterLabel(idx, lab);
                fx->airwin->getParameterDisplay(idx, dis);
             }

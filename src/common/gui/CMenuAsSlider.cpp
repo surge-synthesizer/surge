@@ -322,6 +322,12 @@ float CMenuAsSlider::nextValueInOrder(float v, int inc)
       if( nidx < 0 ) nidx = intOrdering.size() - 1;
       else if( nidx >= intOrdering.size() ) nidx = 0;
 
+      while( intOrdering[nidx] < 0 )
+      {
+         nidx += inc;
+         if( nidx < 0 ) nidx = intOrdering.size() - 1;
+         if( nidx >= intOrdering.size() ) nidx = 0;
+      }
       iv = intOrdering[nidx];
    }
    else
