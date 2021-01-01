@@ -129,9 +129,9 @@ float BussColors4::getParameter(VstInt32 index) {
 void BussColors4::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Color", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Input Trim", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Output Trim", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Input Gain", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Makeup Gain", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
@@ -149,9 +149,9 @@ void BussColors4::getParameterDisplay(VstInt32 index, char *text) {
 			case 7: vst_strncpy (text, "Tube", kVstMaxParamStrLen); break;
 			default: break; // unknown parameter, shouldn't happen!
 		} break; //completed A 'popup' parameter, exit
-        case kParamB: float2string ((B * 36.0)-18.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string ((C * 36.0)-18.0, text, kVstMaxParamStrLen); break;
-		case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string ((B * 36.0) - 18.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string ((C * 36.0) - 18.0, text, kVstMaxParamStrLen); break;
+		case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
@@ -161,7 +161,7 @@ void BussColors4::getParameterLabel(VstInt32 index, char *text) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
         case kParamB: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
         case kParamC: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     }
 }
@@ -176,6 +176,28 @@ int BussColors4::parameterIntegralUpperBound( VstInt32 index )
 {
    if( index == kParamA ) return 7;
    return -1;
+}
+
+bool BussColors4::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   float v = std::atof(str);
+
+   switch (index)
+   {
+   case kParamB:
+   case kParamC:
+   {
+      f = (v + 18.0) / 36.0;
+      break;
+   }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
+   return true;
 }
 
 VstInt32 BussColors4::canDo(char *text) 

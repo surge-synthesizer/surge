@@ -56,7 +56,7 @@ public:
     bool isParameterIntegral(VstInt32 index);
     int parameterIntegralUpperBound(VstInt32 index);
     void getIntegralDisplayForValue(VstInt32 index, float value, char* txt);
-
+    bool parseParameterValueFromString(VstInt32 index, const char* str, float& f);
  private:
     char _programName[kVstMaxProgNameLen + 1];
     std::set< std::string > _canDo;

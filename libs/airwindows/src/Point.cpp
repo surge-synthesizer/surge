@@ -105,8 +105,8 @@ float Point::getParameter(VstInt32 index) {
 
 void Point::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Input Trim", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Point", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Input Gain", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Transient Shape", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Reaction Speed", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
@@ -114,36 +114,40 @@ void Point::getParameterName(VstInt32 index, char *text) {
 
 void Point::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*24.0)-12.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string ((B*2.0)-1.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A * 24.0) - 12.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string ((B * 200.0) - 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 bool Point::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
+   auto v = std::atof(str);
+
+   switch (index)
    {
    case kParamA: f = ( v + 12.0 ) / 24.0; break;
-   case kParamB: f = ( v + 1.0 ) / 2.0; break;
-   default: f = v; break;
+   case kParamB: f = ( v + 100.0 ) / 200.0; break;
+   default: f = v / 100.0; break;
    }
    return true;
 }
 
 bool Point::isParameterBipolar(VstInt32 index)
 {
-   return  ( index == kParamA || index == kParamB );
+   return (index != kParamC);
 }
 
-void Point::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        default: break; // unknown parameter, shouldn't happen!
+void Point::getParameterLabel(VstInt32 index, char *text)
+{
+    if (index == kParamA)
+	{
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
+    }
+    else
+    {
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
     }
 }
 

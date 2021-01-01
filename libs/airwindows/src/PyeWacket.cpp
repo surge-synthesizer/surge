@@ -107,23 +107,27 @@ void Pyewacket::getParameterName(VstInt32 index, char *text) {
 
 void Pyewacket::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*24.0)-12.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string ((C*24.0)-12.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A * 24.0) - 12.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string ((C * 24.0) - 12.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 bool Pyewacket::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
-   {
-   case kParamA: f = ( v + 12.0 ) / 24.0 ; break;
-   case kParamB: f = v;
-   case kParamC: f = ( v + 12.0 ) / 24.0; break;
-   }
-   return true;
+   auto v = std::atof(str);
+
+    if (index == kParamB)
+    {
+        f = v / 100.0;
+    }
+    else
+    {
+        f = (v + 12.0) / 24.0;
+    }
+
+    return true;
 }
 
 bool Pyewacket::isParameterBipolar(VstInt32 index)
@@ -133,7 +137,7 @@ bool Pyewacket::isParameterBipolar(VstInt32 index)
 void Pyewacket::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the percent
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break; //the percent
         case kParamC: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     }

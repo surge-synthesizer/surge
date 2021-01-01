@@ -124,13 +124,13 @@ void ADClip7::getParameterName(VstInt32 index, char *text) {
 
 void ADClip7::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A*18.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 18.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
         case kParamD: switch((VstInt32)( D * 2.999 )) //0 to almost edge of # of params
 		{case 0: vst_strncpy (text, "Normal", kVstMaxParamStrLen); break;
-		 case 1: vst_strncpy (text, "Atten", kVstMaxParamStrLen); break;
-		 case 2: vst_strncpy (text, "Clips", kVstMaxParamStrLen); break;
+		 case 1: vst_strncpy (text, "Gain Matched", kVstMaxParamStrLen); break;
+		 case 2: vst_strncpy (text, "Clipped Only", kVstMaxParamStrLen); break;
 		 default: break; // unknown parameter, shouldn't happen!
 		} break;
         default: break; // unknown parameter, shouldn't happen!
@@ -143,19 +143,29 @@ void ADClip7::getIntegralDisplayForValue( VstInt32 index, float value, char *tex
    switch((VstInt32)( value * 2.999 )) //0 to almost edge of # of params
    {
    case 0: vst_strncpy (text, "Normal", kVstMaxParamStrLen); break;
-   case 1: vst_strncpy (text, "Atten", kVstMaxParamStrLen); break;
-   case 2: vst_strncpy (text, "Clips", kVstMaxParamStrLen); break;
+   case 1: vst_strncpy (text, "Gain Matched", kVstMaxParamStrLen); break;
+   case 2: vst_strncpy (text, "Clipped Only", kVstMaxParamStrLen); break;
    default: break; // unknown parameter, shouldn't happen!
    }
 }
 bool ADClip7::parseParameterValueFromString(VstInt32 index, const char* txt, float& f)
 {
-   float v = std::atof( txt );
-   switch( index )
+   float v = std::atof(txt);
+
+   switch (index)
    {
-   case kParamA: f = v / 18.0; break;
-   default: f = v; break;
+   case kParamA:
+   {
+	  f = v / 18.0;
+	  break;
    }
+   default:
+   {
+	  f = v / 100.0;
+	  break;
+   }
+   }
+
    return true;
 }
 bool ADClip7::isParameterIntegral(VstInt32 index)
@@ -170,8 +180,8 @@ int ADClip7::parameterIntegralUpperBound(VstInt32 index)
 void ADClip7::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
         case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }

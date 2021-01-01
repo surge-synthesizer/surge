@@ -143,7 +143,7 @@ float BassDrive::getParameter(VstInt32 index) {
 
 void BassDrive::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Presnce", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Presence", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "High", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Mid", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Low", kVstMaxParamStrLen); break;
@@ -154,24 +154,26 @@ void BassDrive::getParameterName(VstInt32 index, char *text) {
 
 void BassDrive::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void BassDrive::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+    vst_strncpy (text, "%", kVstMaxParamStrLen);
+}
+
+bool BassDrive::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   float v = std::atof(str);
+
+   f = v / 100.0;
+
+   return true;
 }
 
 VstInt32 BassDrive::canDo(char *text) 

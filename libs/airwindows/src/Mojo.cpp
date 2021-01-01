@@ -82,37 +82,33 @@ float Mojo::getParameter(VstInt32 index) {
     } return 0.0; //we only need to update the relevant name, this is simple to manage
 }
 
-void Mojo::getParameterName(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "Input", kVstMaxParamStrLen); break;
-        default: break; // unknown parameter, shouldn't happen!
-    } //this is our labels for displaying in the VST host
+void Mojo::getParameterName(VstInt32 index, char *text)
+{
+    vst_strncpy(text, "Input Gain", kVstMaxParamStrLen);
 }
 
-void Mojo::getParameterDisplay(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: float2string ((A*24.0)-12.0, text, kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-	} //this displays the values and handles 'popups' where it's discrete choices
+void Mojo::getParameterDisplay(VstInt32 index, char *text)
+{
+    float2string((A * 24.0) - 12.0, text, kVstMaxParamStrLen);
 }
+
 bool Mojo::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
    auto v = std::atof( str );
-   if( index == kParamA )
-   {
-      f = (v + 12.0 ) / 24.0;
-   }
+
+   f = (v + 12.0 ) / 24.0;
+
    return true;
 }
+
 bool Mojo::isParameterBipolar(VstInt32 index)
 {
    return ( index == kParamA );
 }
-void Mojo::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+
+void Mojo::getParameterLabel(VstInt32 index, char *text)
+{
+    vst_strncpy(text, "dB", kVstMaxParamStrLen);
 }
 
 VstInt32 Mojo::canDo(char *text) 

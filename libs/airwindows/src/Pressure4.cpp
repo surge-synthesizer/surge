@@ -111,31 +111,34 @@ float Pressure4::getParameter(VstInt32 index) {
 
 void Pressure4::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Pressure", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Speed", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Amount", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Reaction Speed", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Mewiness", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Output Gain", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Pressure4::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break; //also display 0-1 as percent
-        case kParamC: float2string ((C*2.0)-1.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break; //also display 0-1 as percent
+        case kParamC: float2string ((C * 200.0) - 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: dB2string (D, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 bool Pressure4::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
+   auto v = std::atof(str);
+
    switch( index )
    {
-   case kParamC: f = ( v + 1.0 ) / 2.0; break;
-   default: f = v;
+   case kParamC: f = (v + 100.0) / 200.0; break;
+   case kParamD: f = string2dB(str, v); break;
+   default: f = v / 100.0;
    }
+
    return true;
 }
 
@@ -143,13 +146,15 @@ bool Pressure4::isParameterBipolar(VstInt32 index)
 {
    return ( index == kParamC );
 }
+
 void Pressure4::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the percent
-        case kParamC: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamD)
+    {
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
+    }
+    else
+    {
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
     }
 }
 

@@ -153,38 +153,67 @@ float Air::getParameter(VstInt32 index) {
 
 void Air::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "22K tap", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "15K tap", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "11K tap", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "filters Q", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Output Level", kVstMaxParamStrLen); break;
-		case kParamF: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "22 kHz", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "15 kHz", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "11 kHz", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Resonance", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
+		case kParamF: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Air::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*2.0)-1.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string ((B*2.0)-1.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string ((C*2.0)-1.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;		
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;		
-        case kParamF: float2string (F, text, kVstMaxParamStrLen); break;		
+        case kParamA: float2string (((A * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (((B * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (((C * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: dB2string (E, text, kVstMaxParamStrLen); break;
+        case kParamF: float2string (F * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void Air::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamF: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamE: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamF: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     }
+}
+
+bool Air::parseParameterValueFromString(VstInt32 index, const char* txt, float& f)
+{
+   float v = std::atof(txt);
+
+   switch (index)
+   {
+   case kParamA:
+   case kParamB:
+   case kParamC:
+   {
+      f = (v + 100.0) / 200.0;
+      break;
+   }
+   case kParamE:
+   {
+      f = string2dB(txt, v);
+
+      break;
+   }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
+   return true;
 }
 
 VstInt32 Air::canDo(char *text) 

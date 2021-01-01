@@ -123,29 +123,47 @@ float Pop::getParameter(VstInt32 index) {
 
 void Pop::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Intenst", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Amount", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Pop::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: dB2string (B, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void Pop::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamB)
+    {
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
     }
+    else
+    {
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
+    }
+}
+
+bool Pop::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+    auto v = std::atof(str);
+
+    if (index == kParamB)
+    {
+        f = string2dB(str, v);
+    }
+    else
+    {
+        f = v / 100.0;
+    }
+
+	return true;
 }
 
 VstInt32 Pop::canDo(char *text) 

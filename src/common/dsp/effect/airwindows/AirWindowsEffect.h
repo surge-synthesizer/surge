@@ -118,8 +118,14 @@ public:
          if( fx && fx->airwin )
          {
             float v;
-            if( fx->airwin->parseParameterValueFromString( idx, txt, v ) )
+
+            if (fx->airwin->parseParameterValueFromString(idx, txt, v))
             {
+               if (v < 0.f || v > 1.f)
+               {
+                  return false;
+               }
+
                outVal = v;
                return true;
             }

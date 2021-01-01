@@ -103,24 +103,24 @@ float Slew2::getParameter(VstInt32 index) {
 }
 
 void Slew2::getParameterName(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "Clamping", kVstMaxParamStrLen); break;
-        default: break; // unknown parameter, shouldn't happen!
-    } //this is our labels for displaying in the VST host
+	vst_strncpy(text, "Clamping", kVstMaxParamStrLen);
 }
 
 void Slew2::getParameterDisplay(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        default: break; // unknown parameter, shouldn't happen!
-	} //this displays the values and handles 'popups' where it's discrete choices
+    float2string (A * 100.0, text, kVstMaxParamStrLen);
 }
 
 void Slew2::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        default: break; // unknown parameter, shouldn't happen!
-    }
+    vst_strncpy (text, "%", kVstMaxParamStrLen);
+}
+
+bool Slew2::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof(str);
+
+   f = v / 100.0;
+
+   return true;
 }
 
 VstInt32 Slew2::canDo(char *text) 

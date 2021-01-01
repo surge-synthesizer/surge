@@ -54,7 +54,7 @@ public:
     virtual void getParameterDisplay(VstInt32 index, char *text); // text description of the current value    
     virtual VstInt32 canDo(char *text);
 
-    bool parseParameterValueFromString(VstInt32 index, const char* str, float& f);
+    bool parseParameterValueFromString(VstInt32 index, const char* txt, float& f);
 
  private:
     char _programName[kVstMaxProgNameLen + 1];

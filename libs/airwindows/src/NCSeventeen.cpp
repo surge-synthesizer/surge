@@ -107,7 +107,7 @@ float NCSeventeen::getParameter(VstInt32 index) {
 
 void NCSeventeen::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "LOUDER", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Louder", kVstMaxParamStrLen); break;
         case kParamB: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
@@ -115,28 +115,30 @@ void NCSeventeen::getParameterName(VstInt32 index, char *text) {
 
 void NCSeventeen::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A*24.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 24.0, text, kVstMaxParamStrLen); break;
+        case kParamB: dB2string (B, text, kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 bool NCSeventeen::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
+   auto v = std::atof(str);
+
+   if (index == kParamA)
    {
-   case kParamA: f = v / 24.0; break;
-   default: f = v;
+      f = v / 24.0;
    }
+   else
+   {
+      f = string2dB(str, v);
+   }
+
    return true;
 }
-void NCSeventeen::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+void NCSeventeen::getParameterLabel(VstInt32 index, char *text)
+{
+   vst_strncpy(text, "dB", kVstMaxParamStrLen);
 }
 
 VstInt32 NCSeventeen::canDo(char *text) 
