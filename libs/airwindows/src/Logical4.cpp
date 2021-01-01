@@ -168,20 +168,20 @@ void Logical4::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Threshold", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Ratio", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Speed", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "MakeupGn", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Attack", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Makeup Gain", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Logical4::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ( (A*40.0)-20.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string ( ((B*B)*15.0)+1.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string ( ((C*C)*99.0)+1.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string ( (D*40.0)-20.0, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A * 40.0) - 20.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (((B * B) * 15.0) + 1.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (((C * C) * 99.0) + 1.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string ((D * 40.0) - 20.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
@@ -195,7 +195,7 @@ bool Logical4::parseParameterValueFromString(VstInt32 index, const char* str, fl
    case kParamB: f = v < 0 ? 0 : sqrt( ( v - 1 ) / 15.0 ); break;
    case kParamC: f = v < 0 ? 0 : sqrt( ( v - 1 ) / 99.0 ); break;
    case kParamD: f = ( v + 20 ) / 40.0; break;
-   case kParamE: f = v;
+   case kParamE: f = v / 100.0; break;
    }
    return true;
 }
@@ -208,10 +208,10 @@ bool Logical4::isParameterBipolar(VstInt32 index)
 void Logical4::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "/1", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, ": 1", kVstMaxParamStrLen); break;
         case kParamC: vst_strncpy (text, "ms", kVstMaxParamStrLen); break;
         case kParamD: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
+        case kParamE: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     }
 }

@@ -116,38 +116,68 @@ float DeBess::getParameter(VstInt32 index) {
 
 void DeBess::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Intense", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Sharp", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Intensity", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Sharpness", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Depth", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Filter", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Sense", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Monitor", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void DeBess::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: switch((VstInt32)(E * 1.999 )) //0 to almost edge of # of params
+		{case 0: vst_strncpy (text, "Normal", kVstMaxParamStrLen); break;
+		 case 1: vst_strncpy (text, "Esses Only", kVstMaxParamStrLen); break;
+		 default: break; // unknown parameter, shouldn't happen!
+		} break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void DeBess::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: 
-			if (E > 0.499999) vst_strncpy (text, "Vox", kVstMaxParamStrLen);
-			else vst_strncpy (text, "Ess", kVstMaxParamStrLen);
-			break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+    vst_strncpy (text, "%", kVstMaxParamStrLen);
+}
+
+void DeBess::getIntegralDisplayForValue(VstInt32 index, float value, char* text)
+{
+   int iv = (int)(value * 1.999);
+
+   switch ((VstInt32)(value * 1.999)) // 0 to almost edge of # of params
+   {
+   case 0:
+      vst_strncpy(text, "Normal", kVstMaxParamStrLen);
+      break;
+   case 1:
+      vst_strncpy(text, "Esses Only", kVstMaxParamStrLen);
+      break;
+   default:
+      break; // unknown parameter, shouldn't happen!
+   }
+}
+
+bool DeBess::isParameterIntegral(VstInt32 index)
+{
+   return (index == 4);
+}
+
+int DeBess::parameterIntegralUpperBound(VstInt32 index)
+{
+   return 1;
+}
+
+bool DeBess::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof(str);
+
+   f = v / 100.0;
+
+   return true;
 }
 
 VstInt32 DeBess::canDo(char *text) 

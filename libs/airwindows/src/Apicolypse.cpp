@@ -102,8 +102,8 @@ float Apicolypse::getParameter(VstInt32 index) {
 
 void Apicolypse::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Hardns", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Persnlty", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Hardness", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Personality", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Drive", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
@@ -112,21 +112,22 @@ void Apicolypse::getParameterName(VstInt32 index, char *text) {
 
 void Apicolypse::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B*3.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C*3.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: dB2string (D, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void Apicolypse::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamD)
+    {
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
+    }
+    else
+    {
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
     }
 }
 
@@ -146,19 +147,19 @@ bool Apicolypse::getProductString(char* text) {
 bool Apicolypse::getVendorString(char* text) {
   	vst_strncpy (text, "airwindows", kVstMaxVendorStrLen); return true;
 }
-bool Apicolypse::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+bool Apicolypse::parseParameterValueFromString(VstInt32 index, const char* txt, float& f)
 {
-   float v = std::atof(str);
-   switch (index)
+   float v = std::atof(txt);
+
+   if (index == kParamD)
    {
-   case kParamB:
-   case kParamC:
-      f = v / 3.0;
-      break;
-   default:
-      f = v;
-      break;
+      string2dB(txt, v);
    }
+   else
+   {
+      f = v / 100.0;
+   }
+
    return true;
 }
 

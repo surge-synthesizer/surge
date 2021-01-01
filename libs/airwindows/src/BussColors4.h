@@ -54,6 +54,8 @@ public:
     virtual void getParameterDisplay(VstInt32 index, char *text); // text description of the current value    
     virtual VstInt32 canDo(char *text);
 
+    // Surge extensions
+    bool parseParameterValueFromString(VstInt32 index, const char* str, float& f);
     void getIntegralDisplayForValue(VstInt32 index, float value, char* txt);
     virtual bool isParameterIntegral(VstInt32 index);
    virtual int parameterIntegralUpperBound( VstInt32 index );

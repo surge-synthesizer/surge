@@ -118,27 +118,66 @@ void DrumSlam::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Drive", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void DrumSlam::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*3.0)+1.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
+        case kParamA:
+        {
+            // let's not show 12.04 dB but clamp it at 12.00 dB just for display
+            float v = (A * 3.0) + 1.0;
+		 
+            if (v > 3.983)
+            {
+               v = 3.983;
+            }
+		 
+            dB2string (v, text, kVstMaxParamStrLen); break;
+        }
+        case kParamB: dB2string (B, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void DrumSlam::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamC)
+	{
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
     }
+    else
+    {
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
+    }
+}
+
+bool DrumSlam::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof(str);
+
+   switch (index)
+   {
+   case kParamA:
+   {
+      f = (string2dB(str, v) - 1.0) / 3.0;
+	  break;
+   }
+   case kParamB:
+   {
+      f = string2dB(str, v);
+	  break;
+   }
+   default:
+   {
+      f = v / 100.0;
+	  break;
+   }
+   }
+
+   return true;
 }
 
 VstInt32 DrumSlam::canDo(char *text) 

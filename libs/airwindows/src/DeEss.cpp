@@ -112,18 +112,18 @@ float DeEss::getParameter(VstInt32 index) {
 
 void DeEss::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Intense", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Max DS", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Freq", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Intensity", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Ducking", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Frequency", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void DeEss::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string ((B-1.0)*48.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string ((B - 1.0) * 48.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
@@ -134,17 +134,26 @@ bool DeEss::parseParameterValueFromString(VstInt32 index, const char* str, float
    auto v = std::atof( str );
    switch( index )
    {
-   case kParamB: f = ( v / 48.f ) + 1; break;
-   default: f = v;
+   case kParamB:
+   {
+      f = ( v / 48.f ) + 1.0;
+      break;
    }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
    return true;
 }
 
 void DeEss::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }
 }

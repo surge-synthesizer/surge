@@ -276,8 +276,8 @@ void PocketVerbs::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Type", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Size", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Gating", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Gate", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
@@ -290,12 +290,12 @@ void PocketVerbs::getParameterDisplay(VstInt32 index, char *text) {
 			case 2: vst_strncpy (text, "Tiled", kVstMaxParamStrLen); break;
 			case 3: vst_strncpy (text, "Room", kVstMaxParamStrLen); break;
 			case 4: vst_strncpy (text, "Stretch", kVstMaxParamStrLen); break;
-			case 5: vst_strncpy (text, "Zarathu", kVstMaxParamStrLen); break;
+			case 5: vst_strncpy (text, "Zarathustra", kVstMaxParamStrLen); break;
 			default: break; // unknown parameter, shouldn't happen!
 		} break;			
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
@@ -319,7 +319,7 @@ void PocketVerbs::getIntegralDisplayForValue(VstInt32 index, float value, char* 
    case 2: vst_strncpy (text, "Tiled", kVstMaxParamStrLen); break;
    case 3: vst_strncpy (text, "Room", kVstMaxParamStrLen); break;
    case 4: vst_strncpy (text, "Stretch", kVstMaxParamStrLen); break;
-   case 5: vst_strncpy (text, "Zarathu", kVstMaxParamStrLen); break;
+   case 5: vst_strncpy (text, "Zarathustra", kVstMaxParamStrLen); break;
    default: break; // unknown parameter, shouldn't happen!
    }
 }
@@ -327,11 +327,20 @@ void PocketVerbs::getIntegralDisplayForValue(VstInt32 index, float value, char* 
 void PocketVerbs::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }
+}
+
+bool PocketVerbs::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+    auto v = std::atof(str);
+
+    f = v / 100.0;
+
+    return true;
 }
 
 VstInt32 PocketVerbs::canDo(char *text) 

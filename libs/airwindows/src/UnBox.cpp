@@ -104,42 +104,55 @@ float UnBox::getParameter(VstInt32 index) {
 void UnBox::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Input", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "UnBox", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Amount", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void UnBox::getParameterDisplay(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: float2string (A*2.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C*2.0, text, kVstMaxParamStrLen); break;
-        default: break; // unknown parameter, shouldn't happen!
-	} //this displays the values and handles 'popups' where it's discrete choices
+    if (index == kParamB)
+    {
+        float2string (B * 100.0, text, kVstMaxParamStrLen);
+    }
+    else
+    {
+        // let's not show 6.02 dB but clamp it at 6.00 dB just for display
+        float v = (index == kParamA ? A : C) * 2.0;
+         
+        if (v > 1.996)
+        {
+            v = 1.996;
+        }
+         
+        dB2string(v, text, kVstMaxParamStrLen);
+    }
 }
 
 bool UnBox::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   switch( index ){
-   case kParamA:
-   case kParamC:
-      f = v / 2.0;
-      break;
-   default:
-      f = v;
-      break;
+   auto v = std::atof(str);
+
+   if (index == kParamB)
+   {
+      f = v / 100.0;
    }
+   else
+   {
+      f = string2dB(str, v) * 0.5;
+   }
+
    return true;
 }
 
 void UnBox::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamB)
+    {
+        vst_strncpy(text, "%", kVstMaxParamStrLen);
+    }
+    else
+    {
+        vst_strncpy(text, "dB", kVstMaxParamStrLen);
     }
 }
 

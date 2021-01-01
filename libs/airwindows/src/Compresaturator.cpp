@@ -116,31 +116,50 @@ void Compresaturator::getParameterName(VstInt32 index, char *text) {
 		case kParamB: vst_strncpy (text, "Clamp", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Expand", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Compresaturator::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*24.0)-12.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B*100, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string ((C*C*5000), text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A * 24.0) - 12.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: int2string (round(C * C * C * 5000.0), text, kVstMaxParamStrLen); break;
+        case kParamD: dB2string (D, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
-bool Compresaturator::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+
+bool Compresaturator::parseParameterValueFromString(VstInt32 index, const char* txt, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
+   auto v = std::atof(txt);
+
+   switch (index)
    {
-   case kParamA: f = ( v + 12 ) / 24.0; break;
-   case kParamB: f = v / 100.0; break;
-   case kParamC: f = sqrt( v / 5000.0 ); break;
-   default: f = v;  break;
+   case kParamA:
+   {
+	  f = (v + 12.0) / 24.0;
+	  break;
    }
+   case kParamC:
+   {
+	  f = cbrt(v / 5000.0);
+	  break;
+   }
+   case kParamD:
+   {
+      f = string2dB(txt, v);
+	  break;
+   }
+   default:
+   {
+      f = v / 100.0;
+	  break;
+   }
+   }
+
    return true;
 }
 
@@ -152,9 +171,9 @@ void Compresaturator::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
         case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "sa", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "samples", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamE: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }
 }

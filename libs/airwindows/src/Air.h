@@ -55,7 +55,11 @@ public:
     virtual void getParameterName(VstInt32 index, char *text);    // name of the parameter
     virtual void getParameterDisplay(VstInt32 index, char *text); // text description of the current value    
     virtual VstInt32 canDo(char *text);
-private:
+
+    // Surge Extensions
+    virtual bool parseParameterValueFromString(VstInt32 index, const char* txt, float& f);
+
+ private:
     char _programName[kVstMaxProgNameLen + 1];
     std::set< std::string > _canDo;
 	

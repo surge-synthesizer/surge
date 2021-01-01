@@ -141,42 +141,68 @@ float IronOxide5::getParameter(VstInt32 index) {
 
 void IronOxide5::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Input Trim", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Input Gain", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Tape High", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Tape Low", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Flutter", kVstMaxParamStrLen); break;
 		case kParamE: vst_strncpy (text, "Noise", kVstMaxParamStrLen); break;
-		case kParamF: vst_strncpy (text, "Output Trim", kVstMaxParamStrLen); break;
-		case kParamG: vst_strncpy (text, "Inv/Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamF: vst_strncpy (text, "Output Gain", kVstMaxParamStrLen); break;
+		case kParamG: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void IronOxide5::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (((A*36.0)-18.0), text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (((B*B)*(B*B)*148.5)+1.5, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (((C*C)*(C*C)*148.5)+1.5, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
-        case kParamF: float2string (((F*36.0)-18.0), text, kVstMaxParamStrLen); break;
-        case kParamG: float2string (((G*2.0)-1.0), text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (((A * 36.0) - 18.0), text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (((B * B) * (B * B) * 148.5) + 1.5, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (((C * C) * (C * C) * 148.5) + 1.5, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamF: float2string (((F * 36.0) - 18.0), text, kVstMaxParamStrLen); break;
+        case kParamG: float2string (((G * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 bool IronOxide5::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   float v = std::atof( str );
-   switch( index )
+   float v = std::atof(str);
+
+   switch (index)
    {
-   case kParamA: f = ( v + 18.0 ) / 36.0; break;
-   case kParamB: f = pow( ( v - 1.5 ) / 148.5, 0.25 ); break;
-   case kParamC: f = pow( ( v - 1.5 ) / 148.5, 0.25 ); break;
-   case kParamD: f = v; break;
-   case kParamE: f = v; break;
-   case kParamF: f = ( v + 18.0 ) / 36.0; break;
-   case kParamG: f = ( v + 1.0 ) / 2.0; break;
+   case kParamA:
+   {
+	   f = (v + 18.0) / 36.0;
+       break;
    }
+   case kParamB:
+   {
+	   f = pow((v - 1.5) / 148.5, 0.25);
+       break;
+   }
+   case kParamC:
+   {
+	   f = pow((v - 1.5) / 148.5, 0.25);
+       break;
+   }
+   case kParamD:
+   case kParamE:
+   {
+	   f = v / 100.0;
+	   break;
+   }
+   case kParamF:
+   {
+	   f = (v + 18.0) / 36.0;
+	   break;
+   }
+   case kParamG:
+   {
+	   f = (v + 100.0) / 200.0;
+	   break;
+   }
+   }
+
    return true;
 }
 
@@ -189,10 +215,10 @@ void IronOxide5::getParameterLabel(VstInt32 index, char *text) {
         case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
         case kParamB: vst_strncpy (text, "ips", kVstMaxParamStrLen); break;
         case kParamC: vst_strncpy (text, "ips", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamE: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
         case kParamF: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamG: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamG: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     }
 }

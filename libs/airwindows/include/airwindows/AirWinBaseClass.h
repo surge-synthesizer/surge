@@ -80,10 +80,21 @@ struct AirWinBaseClass {
       snprintf( t, num, "%d", i );
    }
    inline void dB2string( float value, char *t, size_t num ) {
-      if (value <= 0)
+      if (value <= 0.00001) // -100 dB, show -inf from that point onwards
          vst_strncpy (t, "-inf", num);
       else
-         float2string ((float)(20. * log10 (value)), t, num);
+         float2string ((float)(20.0 * log10 (value)), t, num);
+   }
+   inline float string2dB(const char *t, float value)
+   {
+      if (strcmp(t, "-inf") == 0)
+      {
+         return 0.0;
+      }
+      else
+      {
+         return pow(10.0, value / 20.0);
+      }
    }
    struct Registration {
       std::unique_ptr<AirWinBaseClass> (* const create)(int id, double sr, int displayPrecision );

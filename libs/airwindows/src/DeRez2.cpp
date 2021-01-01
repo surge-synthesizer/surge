@@ -112,32 +112,37 @@ float DeRez2::getParameter(VstInt32 index) {
 
 void DeRez2::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Rate", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Rez", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Hard", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Sample Rate", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Resolution", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Hardness", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
-void DeRez2::getParameterDisplay(VstInt32 index, char *text) {
+void DeRez2::getParameterDisplay(VstInt32 index, char *text)
+{
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
-void DeRez2::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+void DeRez2::getParameterLabel(VstInt32 index, char *text)
+{
+    vst_strncpy (text, "%", kVstMaxParamStrLen);
+}
+
+bool DeRez2::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof(str);
+
+   f = v / 100.0;
+
+   return true;
 }
 
 VstInt32 DeRez2::canDo(char *text) 

@@ -102,32 +102,70 @@ void Fracture::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Drive", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Fracture", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Out Lvl", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Fracture::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*4), text, kVstMaxParamStrLen); break;
-        case kParamB: int2string ((VstInt32)floor(B * 2.999)+1, text, kVstMaxParamStrLen); break;
+        case kParamA:
+        {
+            // let's not show 12.04 dB but clamp it at 12.00 dB just for display
+            float v = A * 4.0;
+            
+            if (v > 3.983)
+            {
+               v = 3.983;
+            }
+
+            dB2string (v, text, kVstMaxParamStrLen);
+            break;
+        }
+        case kParamB:
+        {
+            std::string txt = std::to_string((int)floor(1.0 + (B * 3.999))).append("x");
+
+            vst_strncpy (text, txt.c_str(), kVstMaxParamStrLen);
+
+            break;
+        }
         case kParamC: dB2string (C, text, kVstMaxParamStrLen); break;
         case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
+void Fracture::getIntegralDisplayForValue(VstInt32 index, float value, char* text)
+{
+   std::string txt = std::to_string((int)floor(1.0 + (value * 3.999))).append("x");
+   vst_strncpy(text, txt.c_str(), kVstMaxParamStrLen);
+}
+
 bool Fracture::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
+   auto v = std::atof(str);
+   
+   switch (index)
    {
-   case kParamA: f = v / 4.0; break;
-   case kParamC: f = pow( 10.0, ( v / 20.0 ) ); break;
-   case kParamD: f = v; break;
-   default: f = v;
+   case kParamA:
+   {
+       f = string2dB(str, v) * 0.25;
+       break;
    }
+   case kParamC:
+   {
+       f = string2dB(str, v);
+       break;
+   }
+   default:
+   {
+       f = v / 100.0;
+      break;
+   }
+   }
+
    return true;
 }
 
@@ -143,10 +181,10 @@ int Fracture::parameterIntegralUpperBound(VstInt32 index)
 
 void Fracture::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the percent
+        case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
         case kParamC: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the popup
+        case kParamD: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     }
 }

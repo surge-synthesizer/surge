@@ -105,15 +105,23 @@ float VoiceOfTheStarship::getParameter(VstInt32 index) {
 void VoiceOfTheStarship::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Filter", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Algrthm", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Algorithm", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void VoiceOfTheStarship::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (floor(B*16.9), text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB:
+        {
+            auto type = std::to_string((int)floor(1.0 + (B * 16.0)));
+            std::string txt = "Type " + type;
+
+		    vst_strncpy (text, txt.c_str(), kVstMaxParamStrLen);
+
+            break;
+        }
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
@@ -127,11 +135,23 @@ int VoiceOfTheStarship::parameterIntegralUpperBound(VstInt32 index)
 {
    return 16;
 }
+
+void VoiceOfTheStarship::getIntegralDisplayForValue(VstInt32 index, float value, char* text)
+{
+   auto type = std::to_string((int)floor(1.0 + (value * 16.0)));
+   std::string txt = "Type " + type;
+
+   vst_strncpy(text, txt.c_str(), kVstMaxParamStrLen);
+}
+
 void VoiceOfTheStarship::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamA)
+    {
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
+    }
+    else
+    {
+        vst_strncpy (text, "", kVstMaxParamStrLen);
     }
 }
 

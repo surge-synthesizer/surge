@@ -111,18 +111,18 @@ void HardVacuum::getParameterName(VstInt32 index, char *text) {
 		case kParamB: vst_strncpy (text, "Warmth", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Aura", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void HardVacuum::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A*2.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
+        case kParamA: dB2string (A * 2.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: dB2string (D, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
 			
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
@@ -130,24 +130,37 @@ void HardVacuum::getParameterDisplay(VstInt32 index, char *text) {
 
 bool HardVacuum::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   if( index == kParamA )
+   auto v = std::atof(str);
+
+   switch (index)
    {
-      f = v / 2.0;
-   }
-   else
+   case kParamA:
    {
-      f = v;
+      f = string2dB(str, v) * 0.5;
+      break;
    }
+   case kParamD:
+   {
+      f = string2dB(str, v);
+      break;
+   }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
    return true;
 }
+
 void HardVacuum::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamE: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }
 }

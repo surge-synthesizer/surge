@@ -117,31 +117,62 @@ void Spiral2::getParameterName(VstInt32 index, char *text) {
 		case kParamB: vst_strncpy (text, "Highpass", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Presence", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Spiral2::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;			
+        {
+            // let's not show 6.02 dB but clamp it at 6.00 dB just for display
+            float v = A * 2.0;
+         
+            if (v > 1.996)
+            {
+                v = 1.996;
+            }
+         
+            dB2string(v, text, kVstMaxParamStrLen);
+            break;
+        }
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: dB2string (D, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void Spiral2::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamA || index == kParamD)
+    {
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
     }
+    else
+    {
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
+    }
+}
+
+bool Spiral2::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof(str);
+
+    if (index == kParamA)
+    {
+        f = string2dB(str, v) * 0.5;
+    }
+    else if (index == kParamD)
+    {
+        f = string2dB(str, v);
+    }
+    else
+    {
+        f = v / 100.0;
+    }
+
+   return true;
 }
 
 VstInt32 Spiral2::canDo(char *text) 

@@ -15,9 +15,9 @@ namespace Cojones {
 Cojones::Cojones(audioMasterCallback audioMaster) :
     AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
-	A = 0.5; //0-2
-	B = 0.5; //0-2
-	C = 0.5; //0-2
+	A = 0.5;
+	B = 0.5;
+	C = 0.5;
 	D = 1.0;
 	E = 1.0;
 	
@@ -116,45 +116,55 @@ void Cojones::getParameterName(VstInt32 index, char *text) {
 		case kParamB: vst_strncpy (text, "Cojones", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Body", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Cojones::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A*2.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B*2.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C*2.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;			
+        case kParamA: float2string (((A * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (((B * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (((C * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: dB2string (D, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;			
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
-bool Cojones::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+bool Cojones::parseParameterValueFromString(VstInt32 index, const char* txt, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
+   auto v = std::atof(txt);
+
+   switch (index)
    {
    case kParamA:
    case kParamB:
    case kParamC:
-      f = v / 2.0;
+      f = (v + 100.0) / 200.0;
       break;
-   default:
-      f = v;
+   case kParamD:
+   {
+      f = string2dB(txt, v);
       break;
    }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
    return true;
 }
+
 void Cojones::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamE: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }
 }

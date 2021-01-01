@@ -114,47 +114,59 @@ float OneCornerClip::getParameter(VstInt32 index) {
 void OneCornerClip::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Input", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Pos Thr", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Neg Thr", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "+ Threshold", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "- Threshold", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Voicing", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void OneCornerClip::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*36.0)-12.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A * 36.0) - 12.0, text, kVstMaxParamStrLen); break;
         case kParamB: dB2string (B, text, kVstMaxParamStrLen); break;
         case kParamC: dB2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 bool OneCornerClip::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
+   auto v = std::atof(str);
+
+   switch (index)
    {
-   case kParamA: f = ( v + 12.0 ) / 36.0; break;
+   case kParamA:
+   {
+      f = (v + 12.0) / 36.0;
+      break;
+   }
    case kParamB:
    case kParamC:
-      f = pow( 10.0, ( v / 20.0 ) ); break;
-   default:
-      f = v;
+   {
+      f = string2dB(str, v);
+      break;
    }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
    return true;
 }
 void OneCornerClip::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index <= kParamC)
+    {
+        vst_strncpy(text, "dB", kVstMaxParamStrLen);
+    }
+    else
+    {
+        vst_strncpy(text, "%", kVstMaxParamStrLen);
     }
 }
 

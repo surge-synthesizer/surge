@@ -73,6 +73,7 @@ void Noise::processReplacing(float **inputs, float **outputs, VstInt32 sampleFra
 	
 	double decay = 0.001 - ((1.0-pow(1.0-D,3))*0.001);
 	if (decay == 0.001) decay = 0.1;
+        printf("%.15f\n", decay);
 	double wet = F;
 	double dry = 1.0 - wet;
 	wet *= 0.01; //correct large gain issue

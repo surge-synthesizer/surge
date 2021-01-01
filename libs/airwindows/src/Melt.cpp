@@ -113,29 +113,46 @@ void Melt::getParameterName(VstInt32 index, char *text) {
         case kParamA: vst_strncpy (text, "Depth", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Range", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Melt::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break; //also display 0-1 as percent
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break; //also display 0-1 as percent
+        case kParamC: dB2string (C, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void Melt::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the percent
-        case kParamC: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the popup
-        default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamC)
+	{
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
     }
+	else
+	{
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
+    }
+}
+
+bool Melt::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
+{
+   auto v = std::atof(str);
+    
+    if (index == kParamC)
+	{
+        f = string2dB(str, v);
+    }
+	else
+	{
+        f = v / 100.0;
+    }
+
+	return true;
 }
 
 VstInt32 Melt::canDo(char *text) 

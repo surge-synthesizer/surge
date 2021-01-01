@@ -107,18 +107,18 @@ void Density::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Density", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Highpass", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Out Level", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Density::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A*5.0)-1.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A * 5.0) - 1.0, text, kVstMaxParamStrLen); strcat(text, "x"); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: dB2string (C, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
@@ -126,22 +126,35 @@ void Density::getParameterDisplay(VstInt32 index, char *text) {
 bool Density::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
    auto v = std::atof(str);
-   if (index == kParamA)
+
+   switch (index)
    {
-      f = ( v + 1.0 ) / 5.0;
-   }
-   else
+   case kParamA:
    {
-      f = v;
+      f = (v + 1.0) / 5.0;
+      break;
    }
+   case kParamC:
+   {
+      f = string2dB(str, v);
+      break;
+   }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
    return true;
 }
+
 void Density::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the percent
-        case kParamC: vst_strncpy (text, " ", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, " ", kVstMaxParamStrLen); break; //the popup
+        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break; //the percent
+        case kParamC: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "%", kVstMaxParamStrLen); break; //the popup
         default: break; // unknown parameter, shouldn't happen!
     }
 }

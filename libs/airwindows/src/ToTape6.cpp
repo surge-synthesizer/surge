@@ -134,39 +134,40 @@ float ToTape6::getParameter(VstInt32 index) {
 
 void ToTape6::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Input", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Input Gain", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Soften", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Head B", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Head Bump", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Flutter", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamF: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Output Gain", kVstMaxParamStrLen); break;
+		case kParamF: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void ToTape6::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A-0.5)*24.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string ((E-0.5)*24.0, text, kVstMaxParamStrLen); break;
-        case kParamF: float2string (F, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A - 0.5) * 24.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string ((E - 0.5) * 24.0, text, kVstMaxParamStrLen); break;
+        case kParamF: float2string (F * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 bool ToTape6::parseParameterValueFromString(VstInt32 index, const char* str, float& f)
 {
-   auto v = std::atof( str );
-   switch( index )
+   auto v = std::atof(str);
+
+   switch (index)
    {
    case kParamA:
    case kParamE:
-      f = ( v / 24.0 ) + 0.5;
+      f = (v / 24.0) + 0.5;
       break;
    default:
-      f = v;
+      f = v / 100.0;
       break;
    }
    return true;
@@ -176,15 +177,15 @@ bool ToTape6::isParameterBipolar(VstInt32 index)
 {
    return ( index == kParamA || index == kParamE );
 }
+
 void ToTape6::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
-        case kParamF: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
+    if (index == kParamA || index == kParamE)
+    {
+        vst_strncpy (text, "dB", kVstMaxParamStrLen);
+    }
+    else
+    {
+        vst_strncpy (text, "%", kVstMaxParamStrLen);
     }
 }
 

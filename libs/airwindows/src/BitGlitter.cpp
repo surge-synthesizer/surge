@@ -119,51 +119,62 @@ float BitGlitter::getParameter(VstInt32 index) {
 
 void BitGlitter::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Input", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Input Gain", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Glitter", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Makeup Gain", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void BitGlitter::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: float2string ((A * 36.0)-18.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string ((C * 36.0)-18.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((A * 36.0) - 18.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string ((C * 36.0) - 18.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
-bool BitGlitter::parseParameterValueFromString( VstInt32 index, const char* txt, float &tf)
+bool BitGlitter::parseParameterValueFromString( VstInt32 index, const char* txt, float &f)
 {
-   float f = std::atof( txt );
-   switch( index ) {
+   float v = std::atof(txt);
+
+   switch (index)
+   {
    case kParamA:
    case kParamC:
-      tf = (f + 18.0)/36.0;
-      break;
-   default:
-      tf = f;
+   {
+      f = (v + 18.0) / 36.0;
       break;
    }
+   default:
+   {
+      f = v / 100.0;
+      break;
+   }
+   }
+
    return true;
 }
 
 bool BitGlitter::isParameterBipolar( VstInt32 index )
 {
-   if( index == kParamA || index == kParamC ) return true;
+   if (index == kParamA || index == kParamC)
+   {
+      return true;
+   }
+
    return false;
 }
    
 void BitGlitter::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamB: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
+        case kParamC: vst_strncpy (text, "dB", kVstMaxParamStrLen); break;
+        case kParamD: vst_strncpy (text, "%", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }
 }
