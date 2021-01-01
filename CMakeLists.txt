@@ -485,10 +485,8 @@ elseif( UNIX AND NOT APPLE )
     )
 
   find_package(PkgConfig REQUIRED)
-  if( NOT LINUX_ON_ARM )
-    pkg_check_modules(CURL REQUIRED libcurl)
-  endif()
   pkg_check_modules(CAIRO REQUIRED cairo)
+  pkg_check_modules(CURL libcurl)
   pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
   pkg_check_modules(X11 REQUIRED x11)
   pkg_check_modules(XCB REQUIRED xcb)
@@ -499,8 +497,10 @@ elseif( UNIX AND NOT APPLE )
   pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
   pkg_check_modules(XKBX11COMMON REQUIRED xkbcommon-x11)
 
+  target_compile_definitions(surge-shared PRIVATE GET_WITH_CURL=$<BOOL:${CURL_FOUND}>)
+
   if( LINUX_ON_ARM )
-    set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1 NOCURL=1)
+    set(ARCH_COMPILE_DEFINITIONS ARM_NEON=1)
     set(ARCH_INCLUDE_DIRECTORIES libs/simde)
   endif()
 

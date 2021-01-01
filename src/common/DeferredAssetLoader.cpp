@@ -30,12 +30,6 @@
 #include <winhttp.h>
 #endif
 
-#if LINUX
-#if !NOCURL
-#define GET_WITH_CURL 1
-#endif
-#endif
-
 #if GET_WITH_CURL
 #include <curl/curl.h>
 #endif
