@@ -13,6 +13,8 @@
 ** open source in September 2018.
 */
 
+#if BUILD_DEFERRED_ASSET_LOADER
+
 #include <string>
 #include <sstream>
 #include <thread>
@@ -353,3 +355,5 @@ void DeferredAssetLoader::retrieveSingleAsset(
 
 } // namespace Storage
 } // namespace Surge
+
+#endif

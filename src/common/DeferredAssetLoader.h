@@ -25,7 +25,7 @@ namespace Surge
 {
 namespace Storage
 {
-
+#if BUILD_DEFERRED_ASSET_LOADER
 class DeferredAssetLoader
 {
 public:
@@ -50,6 +50,7 @@ public:
 private:
    fs::path cacheDir;
 };
+#endif
 
 } // namespace Storage
 } // namespace Surge
