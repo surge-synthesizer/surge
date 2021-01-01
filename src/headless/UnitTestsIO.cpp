@@ -766,6 +766,7 @@ TEST_CASE( "MonoVoicePriority Streams", "[io]" )
    }
 }
 
+#if BUILD_DEFERRED_ASSET_LOADER
 TEST_CASE("Deferred Asset Loader", "[io]")
 {
    auto skipThisTest = ( getenv("SURGE_DISABLE_NETWORK_TESTS") != nullptr );
@@ -856,3 +857,4 @@ TEST_CASE("Deferred Asset Loader", "[io]")
       REQUIRE(!dal.hasCachedCopyOf(testUrl));
    }
 }
+#endif
