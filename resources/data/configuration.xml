@@ -139,7 +139,7 @@
     </type>
     <separator/>
     <type i="14" name="Airwindows">
-      <snapshot name="Init"  p0="0" p1="0" p2="0.5" p3="0.5" p4="0"/>
+        <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000"/>
     </type>
 </fx>
 <customctrl>
