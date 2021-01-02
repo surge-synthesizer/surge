@@ -140,6 +140,70 @@
     <separator/>
     <type i="14" name="Airwindows">
         <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000"/>
+        <type i="14" name="Ambience">
+            <snapshot name="Bright Ambience" p0="21" p1="0.2" p2="0.2" p3="0" p4="0.5"/>
+            <snapshot name="Melt" p0="23" p1="0.25" p2="0.75" p3="1" p4="1"/>
+            <snapshot name="Pocket Verbs" p0="24" p1="0" p2="0.5" p3="0" p4="0.5"/>
+            <snapshot name="Star Child" p0="25" p1="1" p2="0.7" p3="0.2"/>
+        </type>
+        <type i="14" name="Clipping">
+            <snapshot name="AD Clip" p0="0" p1="0" p2="0.5" p3="0.5" p4="0"/>
+            <snapshot name="One Corner Clip" p0="6" p1="0.333333" p2="0.966" p3="0.966" p4="0.618" p5="1"/>
+            <snapshot name="Slew 1" p0="47" p1="0"/>
+            <snapshot name="Slew 2" p0="48" p1="0"/>
+        </type>
+         <type i="14" name="Dynamics">
+            <snapshot name="Block Party" p0="1" p1="0" p2="1"/>
+            <snapshot name="Butter Comp" p0="2" p1="0" p2="0.5" p3="1"/>
+            <snapshot name="Compresaturator" p0="3" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="1"/>
+            <snapshot name="Drum Slam" p0="45" p1="0" p2="1" p3="1"/>
+            <snapshot name="Logical" p0="4" p1="0.5" p2="0.2" p3="0.19202" p4="0.5" p5="1"/>
+            <snapshot name="Point" p0="7" p1="0.5" p2="0.5" p3="0.5"/>
+            <snapshot name="Pop" p0="8" p1="0.3" p2="1" p3="1"/>
+            <snapshot name="Pressure" p0="9" p1="0" p2="0.2" p3="1" p4="1"/>
+            <snapshot name="Pye Wacket" p0="10" p1="0.5" p2="0.5" p3="0.5"/>
+            <snapshot name="Surge" p0="11" p1="0" p2="1"/>
+            <snapshot name="Vari-Mu" p0="12" p1="0" p2="0.5" p3="1" p4="1"/>
+        </type>
+        <type i="14" name="Filter">
+            <snapshot name="Air" p0="43" p1="0.5" p2="0.5" p3="0.5" p4="0" p5="1" p6="1"/>
+            <snapshot name="Capacitor" p0="46" p1="1" p2="0" p3="1"/>
+            <snapshot name="De-Bess" p0="38" p1="0" p2="0.5" p3="0.5" p4="0.5" p5="0"/>
+            <snapshot name="Hombre" p0="22" p1="0.421" p2="0.5"/>
+        </type>
+        <type i="14" name="Lo-Fi">
+            <snapshot name="Bit Glitter" p0="13" p1="0.5" p2="0" p3="0.5" p4="1"/>
+            <snapshot name="Crunchy Groove Wear" p0="14" p1="0.064" p2="1"/>
+            <snapshot name="Deck Wrecka" p0="16" p1="0"/>
+            <snapshot name="DeRez" p0="15" p1="1" p2="1" p3="1" p4="1"/>
+            <snapshot name="Groove Wear" p0="18" p1="0.064" p2="1"/>
+        </type>
+        <type i="14" name="Noise">
+            <snapshot name="Dust Bunny" p0="17" p1="0"/>
+            <snapshot name="Noise" p0="19" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="0" p6="1"/>
+            <snapshot name="Voice Of The Starship" p0="20" p1="0.5" p2="0"/>
+        </type>
+       <type i="14" name="Saturation">
+            <snapshot name="Apicolypse" p0="26" p1="0.7" p2="0.333333" p3="0.333333" p4="1"/>
+            <snapshot name="Bass Drive" p0="27" p1="0.5" p2="0.5" p3="0.5" p4="0.5" p5="0.5"/>
+            <snapshot name="Buss Colors" p0="44" p1="0" p2="0.5" p3="0.5" p4="1"/>
+            <snapshot name="Cojones" p0="28" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="1"/>
+            <snapshot name="Density" p0="29" p1="0.2" p2="0" p3="1" p4="1"/>
+            <snapshot name="Drive" p0="30" p1="0" p2="0" p3="1" p4="1"/>
+            <snapshot name="Focus" p0="31" p1="0" p2="0.5" p3="0" p4="1" p5="1"/>
+            <snapshot name="Fracture" p0="32" p1="0.25" p2="0" p3="1" p4="1"/>
+            <snapshot name="Hard Vacuum" p0="33" p1="0" p2="0" p3="0" p4="1" p5="1"/>
+            <snapshot name="Loud" p0="34" p1="0" p2="1" p3="1"/>
+            <snapshot name="Mojo" p0="5" p1="0.5"/>
+            <snapshot name="NC-17" p0="35" p1="0" p2="1"/>
+            <snapshot name="Singgle-Ended Triode" p0="40" p1="0" p2="0" p3="0" p4="1"/>
+            <snapshot name="Spiral" p0="36" p1="0.5" p2="0" p3="0.5" p4="1" p5="1"/>
+            <snapshot name="Unbox" p0="37" p1="0.5" p2="0" p3="0.5"/>
+        </type>
+        <type i="14" name="Tape">
+            <snapshot name="Iron Oxide" p0="41" p1="0.5" p2="0.562341" p3="0.562341" p4="0.5" p5="0.5" p6="0.5" p7="1"/>
+            <snapshot name="To Tape" p0="42" p1="0.5" p2="0.5" p3="0.5" p4="0.5" p5="0.5" p6="1"/>
+        </type>
     </type>
 </fx>
 <customctrl>
