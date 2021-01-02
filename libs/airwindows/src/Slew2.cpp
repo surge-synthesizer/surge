@@ -106,8 +106,8 @@ void Slew2::getParameterName(VstInt32 index, char *text) {
 	vst_strncpy(text, "Clamping", kVstMaxParamStrLen);
 }
 
-void Slew2::getParameterDisplay(VstInt32 index, char *text) {
-    float2string (A * 100.0, text, kVstMaxParamStrLen);
+void Slew2::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
+    float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen);
 }
 
 void Slew2::getParameterLabel(VstInt32 index, char *text) {

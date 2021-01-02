@@ -119,11 +119,11 @@ void DeEss::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void DeEss::getParameterDisplay(VstInt32 index, char *text) {
+void DeEss::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string ((B - 1.0) * 48.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string ((EXTV(B) - 1.0) * 48.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

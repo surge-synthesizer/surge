@@ -28,7 +28,7 @@ void Slew::processReplacing(float **inputs, float **outputs, VstInt32 sampleFram
 	double outputSampleR;
 	
 	double clamp;
-	double threshold = pow((1-gain),4)/overallscale;
+	double threshold = pow((1-A),4)/overallscale;
 
 
     
@@ -118,7 +118,7 @@ void Slew::processDoubleReplacing(double **inputs, double **outputs, VstInt32 sa
 	double outputSampleR;
 
 	double clamp;
-	double threshold = pow((1-gain),4)/overallscale;
+	double threshold = pow((1-A),4)/overallscale;
 
 
     while (--sampleFrames >= 0)

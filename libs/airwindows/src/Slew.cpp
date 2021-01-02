@@ -61,7 +61,7 @@ static float pinParameter(float data)
 VstInt32 Slew::getChunk (void** data, bool isPreset)
 {
 	float *chunkData = (float *)calloc(kNumParameters, sizeof(float));
-	chunkData[0] = gain;
+	chunkData[0] = A;
 	/* Note: The way this is set up, it will break if you manage to save settings on an Intel
 	 machine and load them on a PPC Mac. However, it's fine if you stick to the machine you 
 	 started with. */
@@ -73,7 +73,7 @@ VstInt32 Slew::getChunk (void** data, bool isPreset)
 VstInt32 Slew::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 {	
 	float *chunkData = (float *)data;
-	gain = pinParameter(chunkData[0]);
+	A = pinParameter(chunkData[0]);
 	/* We're ignoring byteSize as we found it to be a filthy liar */
 	
 	/* calculate any other fields you need here - you could copy in 
@@ -84,7 +84,7 @@ VstInt32 Slew::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 void Slew::setParameter(VstInt32 index, float value) {
     switch (index) {
         case kSlewParam:
-            gain = value;
+            A = value;
             break;
         default: // unknown parameter, shouldn't happen!
             throw;
@@ -94,7 +94,7 @@ void Slew::setParameter(VstInt32 index, float value) {
 float Slew::getParameter(VstInt32 index) {
     switch (index) {
         case kSlewParam:
-            return gain;
+            return A;
             break;
         default: // unknown parameter, shouldn't happen!
             break;
@@ -106,8 +106,8 @@ void Slew::getParameterName(VstInt32 index, char *text) {
     vst_strncpy (text, "Clamping", kVstMaxParamStrLen);
 }
 
-void Slew::getParameterDisplay(VstInt32 index, char *text) {
-    float2string (gain * 100.0, text, kVstMaxParamStrLen);
+void Slew::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
+    float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen);
 }
 
 void Slew::getParameterLabel(VstInt32 index, char *text) {

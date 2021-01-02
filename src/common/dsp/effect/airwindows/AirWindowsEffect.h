@@ -84,27 +84,30 @@ public:
    struct AWFxParamFormatter : public ParameterExternalFormatter {
       AWFxParamFormatter( AirWindowsEffect *fx, int i ) : fx( fx ), idx( i ) { }
       virtual void formatValue( float value, char *txt, int txtlen ) override {
-         if( fx && fx->airwin )
+         if (fx && fx->airwin)
          {
             char lab[256], dis[256];
-            if( fx->airwin->isParameterIntegral(idx))
+            if (fx->airwin->isParameterIntegral(idx))
             {
                fx->airwin->getIntegralDisplayForValue(idx, value, dis );
                lab[0] = 0;
             }
             else
             {
-               if( fx->fxdata->p[0].deactivated )
-                  fx->airwin->setParameter( idx, value );
+               if (fx->fxdata->p[0].deactivated)
+               {
+                  fx->airwin->setParameter(idx, value);
+               }
+
                if (fx->storage)
                {
-                  auto detailedMode =
-                      Surge::Storage::getUserDefaultValue(fx->storage, "highPrecisionReadouts", 0);
+                  auto detailedMode = Surge::Storage::getUserDefaultValue(fx->storage, "highPrecisionReadouts", 0);
 
                   fx->airwin->displayPrecision = (detailedMode ? 6 : 2);
                }
+
                fx->airwin->getParameterLabel(idx, lab);
-               fx->airwin->getParameterDisplay(idx, dis);
+               fx->airwin->getParameterDisplay(idx, dis, value, true);
             }
             sprintf( txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " " ), lab );
          }

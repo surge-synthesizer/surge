@@ -87,9 +87,9 @@ void Mojo::getParameterName(VstInt32 index, char *text)
     vst_strncpy(text, "Input Gain", kVstMaxParamStrLen);
 }
 
-void Mojo::getParameterDisplay(VstInt32 index, char *text)
+void Mojo::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal)
 {
-    float2string((A * 24.0) - 12.0, text, kVstMaxParamStrLen);
+    float2string((EXTV(A) * 24.0) - 12.0, text, kVstMaxParamStrLen);
 }
 
 bool Mojo::parseParameterValueFromString(VstInt32 index, const char* str, float& f)

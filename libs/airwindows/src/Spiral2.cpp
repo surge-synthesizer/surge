@@ -122,11 +122,11 @@ void Spiral2::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void Spiral2::getParameterDisplay(VstInt32 index, char *text) {
+void Spiral2::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
         {
             // let's not show 6.02 dB but clamp it at 6.00 dB just for display
-            float v = A * 2.0;
+            float v = EXTV(A) * 2.0;
          
             if (v > 1.996)
             {
@@ -136,10 +136,10 @@ void Spiral2::getParameterDisplay(VstInt32 index, char *text) {
             dB2string(v, text, kVstMaxParamStrLen);
             break;
         }
-        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamD: dB2string (D, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: dB2string (EXTV(D), text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (EXTV(E) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

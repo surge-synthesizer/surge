@@ -119,13 +119,13 @@ void ButterComp2::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void ButterComp2::getParameterDisplay(VstInt32 index, char *text) {
+void ButterComp2::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen); break;
         case kParamB:
 		{
 		   // let's not show 6.02 dB but clamp it at 6.00 dB just for display
-           float v = B * 2.0;
+           float v = EXTV(B) * 2.0;
            
 		   if (v > 1.996)
            {
@@ -135,7 +135,7 @@ void ButterComp2::getParameterDisplay(VstInt32 index, char *text) {
            dB2string(v, text, kVstMaxParamStrLen);
            break;
         }
-        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
