@@ -235,7 +235,7 @@ set(SURGE_SHARED_SOURCES
   src/common/vt_dsp/lipol.cpp
   src/common/vt_dsp/macspecific.cpp
   src/common/DebugHelpers.cpp
-  src/common/DeferredAssetLoader.cpp
+  # src/common/DeferredAssetLoader.cpp
   src/common/Parameter.cpp
   src/common/precompiled.cpp
   src/common/SurgeError.cpp
@@ -486,7 +486,7 @@ elseif( UNIX AND NOT APPLE )
 
   find_package(PkgConfig REQUIRED)
   if( NOT LINUX_ON_ARM )
-    pkg_check_modules(CURL REQUIRED libcurl)
+    # pkg_check_modules(CURL REQUIRED libcurl)
   endif()
   pkg_check_modules(CAIRO REQUIRED cairo)
   pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
@@ -602,8 +602,8 @@ elseif( WIN32 )
   set(OS_LINK_LIBRARIES_NOGUI
     shell32
     user32
-    winhttp
-    )
+    )   # winhttp
+
   set(OS_LINK_LIBRARIES
     ${OS_LINK_LIBRARIES_NOGUI}
     winmm
