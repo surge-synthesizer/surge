@@ -189,7 +189,7 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     ** Next see if we have any subordinate types
     */
     TiXmlElement* subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
-    if (subType)
+    while (subType)
     {
         populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub, idx);
         subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
