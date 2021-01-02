@@ -87,6 +87,9 @@ public:
          if (fx && fx->airwin)
          {
             char lab[256], dis[256];
+            // In case we aren't initialized by the AW
+            lab[0] = 0;
+            dis[0] = 0;
             if (fx->airwin->isParameterIntegral(idx))
             {
                fx->airwin->getIntegralDisplayForValue(idx, value, dis );

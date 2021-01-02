@@ -29,7 +29,9 @@ Slew::Slew(audioMasterCallback audioMaster) :
     canProcessReplacing();     // supports output replacing
     canDoubleReplacing();      // supports double precision processing
     programsAreChunks(true);
-   
+
+    A = 0;
+
     vst_strncpy (_programName, "Default", kVstMaxProgNameLen); // default program name
 }
 
