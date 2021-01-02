@@ -95,7 +95,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<ButterComp2::ButterComp2>, id++, 30, gnDynamics, "Butter Comp");
    reg.emplace_back(create<Compresaturator::Compresaturator>, id++, 40, gnDynamics, "Compresaturator");
    reg.emplace_back(create<Logical4::Logical4>, id++, 50, gnDynamics, "Logical");
-   reg.emplace_back(create<Mojo::Mojo>, id++, 60, gnDynamics, "Mojo");
+   reg.emplace_back(create<Mojo::Mojo>, id++, 355, gnSaturation, "Mojo");
    reg.emplace_back(create<OneCornerClip::OneCornerClip>, id++, 70, gnClipping, "One Corner Clip");
    reg.emplace_back(create<Point::Point>, id++, 80, gnDynamics, "Point");
    reg.emplace_back(create<Pop::Pop>, id++, 90, gnDynamics, "Pop");
@@ -136,14 +136,14 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<DeBess::DeBess>, id++, 420, gnFilter, "De-Bess");
    reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnFilter, "NoOp (Was: DeEss)");
 
-   reg.emplace_back(create<SingleEndedTriode::SingleEndedTriode>, id++, 440, gnSaturation, "Single-Ended Triode");
+   reg.emplace_back(create<SingleEndedTriode::SingleEndedTriode>, id++, 380, gnSaturation, "Single-Ended Triode");
 
    reg.emplace_back(create<IronOxide5::IronOxide5>, id++, 450, gnTape, "Iron Oxide");
    reg.emplace_back(create<ToTape6::ToTape6>, id++, 460, gnTape, "To Tape");
 
    reg.emplace_back(create<Air::Air>, id++, 400, gnFilter, "Air");
 
-   reg.emplace_back(create<BussColors4::BussColors4>, id++, 25, gnSaturation, "Buss Colors");
+   reg.emplace_back(create<BussColors4::BussColors4>, id++, 285, gnSaturation, "Buss Colors");
    reg.emplace_back(create<DrumSlam::DrumSlam>, id++, 46, gnDynamics, "Drum Slam");
 
    reg.emplace_back(create<Capacitor::Capacitor>, id++, 415, gnFilter, "Capacitor");

@@ -15,6 +15,8 @@ namespace Slew {
 Slew::Slew(audioMasterCallback audioMaster) :
     AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
+    A = 0.0;
+
 	lastSampleL = 0.0;
 	lastSampleR = 0.0;
 
