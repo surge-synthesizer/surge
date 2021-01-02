@@ -137,10 +137,10 @@ void BlockParty::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void BlockParty::getParameterDisplay(VstInt32 index, char *text) {
+void BlockParty::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

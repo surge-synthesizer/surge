@@ -110,15 +110,15 @@ void UnBox::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void UnBox::getParameterDisplay(VstInt32 index, char *text) {
+void UnBox::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     if (index == kParamB)
     {
-        float2string (B * 100.0, text, kVstMaxParamStrLen);
+        float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen);
     }
     else
     {
         // let's not show 6.02 dB but clamp it at 6.00 dB just for display
-        float v = (index == kParamA ? A : C) * 2.0;
+        float v = (index == kParamA ? EXTV(A) : EXTV(C)) * 2.0;
          
         if (v > 1.996)
         {

@@ -125,13 +125,13 @@ void DeBess::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void DeBess::getParameterDisplay(VstInt32 index, char *text) {
+void DeBess::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamE: switch((VstInt32)(E * 1.999 )) //0 to almost edge of # of params
+        case kParamA: float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: switch((VstInt32)(EXTV(E) * 1.999 )) //0 to almost edge of # of params
 		{case 0: vst_strncpy (text, "Normal", kVstMaxParamStrLen); break;
 		 case 1: vst_strncpy (text, "Esses Only", kVstMaxParamStrLen); break;
 		 default: break; // unknown parameter, shouldn't happen!

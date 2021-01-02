@@ -122,12 +122,12 @@ void ADClip7::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void ADClip7::getParameterDisplay(VstInt32 index, char *text) {
+void ADClip7::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (A * 18.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamD: switch((VstInt32)( D * 2.999 )) //0 to almost edge of # of params
+        case kParamA: float2string (EXTV(A) * 18.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: switch((VstInt32)(EXTV(D) * 2.999)) //0 to almost edge of # of params
 		{case 0: vst_strncpy (text, "Normal", kVstMaxParamStrLen); break;
 		 case 1: vst_strncpy (text, "Gain Matched", kVstMaxParamStrLen); break;
 		 case 2: vst_strncpy (text, "Clipped Only", kVstMaxParamStrLen); break;

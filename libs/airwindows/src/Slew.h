@@ -65,7 +65,7 @@ public:
 
     virtual void getParameterLabel(VstInt32 index, char *text);  // label for the parameter (eg dB)
     virtual void getParameterName(VstInt32 index, char *text);    // name of the parameter
-    virtual void getParameterDisplay(VstInt32 index, char *text); // text description of the current value    
+    virtual void getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal); // text description of the current value    
 
     // Capabilities
     virtual VstInt32 canDo(char *text);
@@ -75,7 +75,7 @@ private:
     char _programName[kVstMaxProgNameLen + 1];
     std::set< std::string > _canDo;
     
-	float gain;
+	float A;
 	double lastSampleL;
 	double lastSampleR;
 };

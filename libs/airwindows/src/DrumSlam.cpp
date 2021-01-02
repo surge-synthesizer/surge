@@ -123,12 +123,12 @@ void DrumSlam::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void DrumSlam::getParameterDisplay(VstInt32 index, char *text) {
+void DrumSlam::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
         case kParamA:
         {
             // let's not show 12.04 dB but clamp it at 12.00 dB just for display
-            float v = (A * 3.0) + 1.0;
+            float v = (EXTV(A) * 3.0) + 1.0;
 		 
             if (v > 3.983)
             {
@@ -137,8 +137,8 @@ void DrumSlam::getParameterDisplay(VstInt32 index, char *text) {
 		 
             dB2string (v, text, kVstMaxParamStrLen); break;
         }
-        case kParamB: dB2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: dB2string (EXTV(B), text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

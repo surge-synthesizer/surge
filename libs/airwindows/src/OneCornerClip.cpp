@@ -122,13 +122,13 @@ void OneCornerClip::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void OneCornerClip::getParameterDisplay(VstInt32 index, char *text) {
+void OneCornerClip::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string ((A * 36.0) - 12.0, text, kVstMaxParamStrLen); break;
-        case kParamB: dB2string (B, text, kVstMaxParamStrLen); break;
-        case kParamC: dB2string (C, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((EXTV(A) * 36.0) - 12.0, text, kVstMaxParamStrLen); break;
+        case kParamB: dB2string (EXTV(B), text, kVstMaxParamStrLen); break;
+        case kParamC: dB2string (EXTV(C), text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (EXTV(E) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

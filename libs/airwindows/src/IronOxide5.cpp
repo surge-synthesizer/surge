@@ -152,15 +152,25 @@ void IronOxide5::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void IronOxide5::getParameterDisplay(VstInt32 index, char *text) {
+void IronOxide5::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (((A * 36.0) - 18.0), text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (((B * B) * (B * B) * 148.5) + 1.5, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (((C * C) * (C * C) * 148.5) + 1.5, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (E * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamF: float2string (((F * 36.0) - 18.0), text, kVstMaxParamStrLen); break;
-        case kParamG: float2string (((G * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (((EXTV(A) * 36.0) - 18.0), text, kVstMaxParamStrLen); break;
+        case kParamB:
+        {
+            float val = EXTV(B);
+            float2string (((val * val) * (val * val) * 148.5) + 1.5, text, kVstMaxParamStrLen);
+            break;
+        }
+        case kParamC:
+        {
+            float val = EXTV(C);
+            float2string (((val * val) * (val * val) * 148.5) + 1.5, text, kVstMaxParamStrLen);
+            break;
+        }
+        case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (EXTV(E) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamF: float2string (((EXTV(F) * 36.0) - 18.0), text, kVstMaxParamStrLen); break;
+        case kParamG: float2string (((EXTV(G) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

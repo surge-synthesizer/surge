@@ -113,10 +113,10 @@ void NCSeventeen::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void NCSeventeen::getParameterDisplay(VstInt32 index, char *text) {
+void NCSeventeen::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (A * 24.0, text, kVstMaxParamStrLen); break;
-        case kParamB: dB2string (B, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (EXTV(A) * 24.0, text, kVstMaxParamStrLen); break;
+        case kParamB: dB2string (EXTV(B), text, kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#define EXTV(a) (isExternal ? extVal : a)
+
 typedef int32_t VstInt32;
 typedef int audioMasterCallback;
 
@@ -52,7 +54,7 @@ struct AirWinBaseClass {
 
    virtual void getParameterName(VstInt32 index, char *text) = 0;    // name of the parameter
    virtual void getParameterLabel(VstInt32 index, char *txt) = 0;
-   virtual void getParameterDisplay(VstInt32 index, char *txt) = 0;
+   virtual void getParameterDisplay(VstInt32 index, char *txt, float extVal = 0, bool isExternal = false) = 0;
 
    double sr = 0;
    double getSampleRate() { return sr; }
@@ -134,5 +136,5 @@ struct AirWindowsNoOp : AirWinBaseClass {
 
    virtual void getParameterName(VstInt32 index, char *text) {};    // name of the parameter
    virtual void getParameterLabel(VstInt32 index, char *txt) {};
-   virtual void getParameterDisplay(VstInt32 index, char *txt) {};
+   virtual void getParameterDisplay(VstInt32 index, char *txt, float extVal = 0, bool isExternal = false) {};
 };

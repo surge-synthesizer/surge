@@ -110,12 +110,12 @@ void VoiceOfTheStarship::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void VoiceOfTheStarship::getParameterDisplay(VstInt32 index, char *text) {
+void VoiceOfTheStarship::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (A * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen); break;
         case kParamB:
         {
-            auto type = std::to_string((int)floor(1.0 + (B * 16.0)));
+            auto type = std::to_string((int)floor(1.0 + (EXTV(B) * 16.0)));
             std::string txt = "Type " + type;
 
 		    vst_strncpy (text, txt.c_str(), kVstMaxParamStrLen);

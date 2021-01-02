@@ -163,14 +163,14 @@ void Air::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void Air::getParameterDisplay(VstInt32 index, char *text) {
+void Air::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (((A * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (((B * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (((C * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamE: dB2string (E, text, kVstMaxParamStrLen); break;
-        case kParamF: float2string (F * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (((EXTV(A) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (((EXTV(B) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (((EXTV(C) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: dB2string (EXTV(E), text, kVstMaxParamStrLen); break;
+        case kParamF: float2string (EXTV(F) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }

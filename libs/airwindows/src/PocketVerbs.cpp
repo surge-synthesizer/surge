@@ -282,9 +282,9 @@ void PocketVerbs::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void PocketVerbs::getParameterDisplay(VstInt32 index, char *text) {
+void PocketVerbs::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: switch((VstInt32)( A * 5.999 )) //0 to almost edge of # of params
+        case kParamA: switch((VstInt32)(EXTV(A) * 5.999 )) //0 to almost edge of # of params
 		{	case 0: vst_strncpy (text, "Chamber", kVstMaxParamStrLen); break;
 			case 1: vst_strncpy (text, "Spring", kVstMaxParamStrLen); break;
 			case 2: vst_strncpy (text, "Tiled", kVstMaxParamStrLen); break;
@@ -293,9 +293,9 @@ void PocketVerbs::getParameterDisplay(VstInt32 index, char *text) {
 			case 5: vst_strncpy (text, "Zarathustra", kVstMaxParamStrLen); break;
 			default: break; // unknown parameter, shouldn't happen!
 		} break;			
-        case kParamB: float2string (B * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (C * 100.0, text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (D * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
