@@ -17,7 +17,7 @@ Focus::Focus(audioMasterCallback audioMaster) :
 {
 	A = 0.0;
 	B = 0.5;
-	C = 0.5;
+	C = 0.0;
 	D = 1.0;
 	E = 1.0;
 	for (int x = 0; x < 9; x++) {figureL[x] = 0.0;figureR[x] = 0.0;}
@@ -125,7 +125,7 @@ void Focus::getParameterDisplay(VstInt32 index, char *text, float extVal, bool i
 			case 2: vst_strncpy (text, "Spiral", kVstMaxParamStrLen); break;
 			case 3: vst_strncpy (text, "Mojo", kVstMaxParamStrLen); break;
 			case 4: vst_strncpy (text, "Dyno", kVstMaxParamStrLen); break;
-			default: break; // unknown parameter, shouldn't happen!
+			default: text[0] = 0; break; // unknown parameter, shouldn't happen!
 		} break;
         case kParamD: dB2string (EXTV(D), text, kVstMaxParamStrLen); break;
         case kParamE: float2string (EXTV(E) * 100.0, text, kVstMaxParamStrLen); break;
@@ -177,7 +177,7 @@ void Focus::getIntegralDisplayForValue(VstInt32 index, float value, char* text)
    case 2: vst_strncpy (text, "Spiral", kVstMaxParamStrLen); break;
    case 3: vst_strncpy (text, "Mojo", kVstMaxParamStrLen); break;
    case 4: vst_strncpy (text, "Dyno", kVstMaxParamStrLen); break;
-   default: break; // unknown parameter, shouldn't happen!
+   default: text[0] = 0; break; // unknown parameter, shouldn't happen!
    }
 }
 
