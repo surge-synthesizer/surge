@@ -1708,7 +1708,7 @@ void SurgePatch::load_xml(const void* data, int datasize, bool is_preset)
             scene[0].modsources[ms_ctrl1 + cont]->set_bipolar(j);
          if (p->QueryDoubleAttribute("v", &d) == TIXML_SUCCESS)
          {
-            ((ControllerModulationSource*)scene[0].modsources[ms_ctrl1 + cont])->set_target(d);
+            ((ControllerModulationSource*)scene[0].modsources[ms_ctrl1 + cont])->init(d);
          }
 
          const char* lbl = p->Attribute("label");
