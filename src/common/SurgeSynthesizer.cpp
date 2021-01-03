@@ -3714,3 +3714,17 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
    fx_reload[target] = true;
    refresh_editor = true;
 }
+
+bool SurgeSynthesizer::getParameterIsBoolean(const ID& id)
+{
+   auto index = id.getSynthSideId();
+
+   if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
+   {
+      auto t = storage.getPatch().param_ptr[index]->valtype;
+      if (t == vt_bool)
+         return true;
+   }
+
+   return false;
+}

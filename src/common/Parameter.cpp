@@ -2560,7 +2560,7 @@ float Parameter::value_to_normalized(float value)
       return ((float)value - (float)val_min.i) / ((float)val_max.i - (float)val_min.i);
       break;
    case vt_bool:
-      return val.b ? 1.f : 0.f;
+      return ( value > 0.5 ) ? 1.f : 0.f;
       break;
    };
    return 0;

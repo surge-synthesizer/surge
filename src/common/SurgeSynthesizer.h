@@ -260,6 +260,8 @@ public:
       return setParameter01( index.getSynthSideId(), value, external, force_integer );
    }
 
+   bool getParameterIsBoolean(const ID &index);
+
    float normalizedToValue( const ID &index, float val )
    {
       return normalizedToValue( index.getSynthSideId(), val );
