@@ -943,6 +943,7 @@ public:
    std::string userDataPath;
    std::string userDefaultFilePath;
    std::string userFXPath;
+   std::string installedPath;
 
    std::string userMidiMappingsPath;
    std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
