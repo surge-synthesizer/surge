@@ -391,7 +391,7 @@ const char lt_names[n_lfo_types][32] =
    "Envelope",
    "Step Sequencer",
    "MSEG",
-   "Function (coming in 1.9!)",
+   "Function (work in progress!)",
 };
 
 const int lt_num_deforms[n_lfo_types] =
