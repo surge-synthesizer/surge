@@ -143,6 +143,7 @@ namespace Colors
          const Surge::Skin::Color Background("lfo.waveform.background", 255, 144, 0),
                                   Bounds("lfo.waveform.bounds", 224, 128, 0),
                                   Center("lfo.waveform.center", 224, 128, 0),
+                                  Dots( "lfo.waveform.dots", 240, 135, 0 ),
                                   Envelope("lfo.waveform.envelope", 176, 96, 0),
                                   Wave("lfo.waveform.wave", 0, 0, 0),
                                   DeactivatedWave("lfo.waveform.wave.deactivated", 0, 0, 0, 144);
@@ -277,7 +278,8 @@ namespace Colors
          const Surge::Skin::Color Bounds("osc.line.bounds", 70, 70, 70),
                                   Center("osc.line.center", 90, 90, 90),
                                   AnimatedWave("osc.waveform.animated", 255, 255, 255),
-                                  Wave("osc.waveform", 255, 144, 0);
+                                  Wave("osc.waveform", 255, 144, 0),
+                                  Dots("osc.line.dots", 50, 50, 50 );
       }
       namespace Filename
       {

@@ -29,6 +29,7 @@
     <color id="lfo.waveform.ruler.ticks.extended" value="buttonbg"/>
     <color id="lfo.waveform.bounds" value="buttonbg"/>
     <color id="lfo.waveform.center" value="buttonbg"/>
+    <color id="lfo.waveform.dots" value="buttonbg"/>
     <color id="lfo.waveform.envelope" value="surgebluetrans"/>
     <color id="lfo.waveform.wave" value="modblue"/>
     <color id="lfo.waveform.wave.deactivated" value="#2E86FE90"/>

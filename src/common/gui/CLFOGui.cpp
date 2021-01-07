@@ -321,6 +321,30 @@ void CLFOGui::draw(CDrawContext* dc)
       dc->drawLine(top0, top1);
       dc->drawLine(bot0, bot1);
 
+      auto pointColor = skin->getColor(Colors::LFO::Waveform::Dots);
+      int nxd = 61, nyd=9;
+      for(int xd=0; xd<nxd; xd++ )
+      {
+         float normx = 1.f * xd / ( nxd - 1 ) * 0.99;
+         for( int yd=1; yd < nyd-1; yd++ )
+         {
+            if( yd == (nyd-1)/2) continue;
+
+            float normy = 1.f * yd / ( nyd - 1 );
+            auto dotPoint = CPoint( normx * valScale, ( 0.8 * normy + 0.1 ) * valScale  );
+            tf.transform( dotPoint );
+            float esize = 0.5;
+            float xoff = (xd == 0 ? esize : 0 );
+            auto er = CRect(dotPoint.x-esize + xoff, dotPoint.y-esize, dotPoint.x+esize + xoff, dotPoint.y+esize);
+#if LINUX
+            dc->drawPoint(dotPoint, pointColor );
+#else
+            dc->setFillColor(pointColor);
+            dc->drawEllipse(er, VSTGUI::kDrawFilled);
+#endif
+         }
+      }
+
 
 #if LINUX
       dc->setLineWidth(0.7);

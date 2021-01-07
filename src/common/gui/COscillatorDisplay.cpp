@@ -122,11 +122,11 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       osces[c] = spawn_osc(oscdata->type.val.i, storage, oscdata, tp[c]);
    }
 
-   int h = getHeight();
+   float h = getHeight();
    float extraYTranslate = 0;
    if (uses_wavetabledata(oscdata->type.val.i))
    {
-      h -= wtbheight;
+      h -= wtbheight + 2.5;
       extraYTranslate = 0.1 * wtbheight;
    }
 
@@ -261,7 +261,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          tf.transform(top1);
          tf.transform(bot0);
          tf.transform(bot1);
-         dc->setDrawMode(VSTGUI::kAntiAliasing);
+         dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
 
          dc->setLineWidth(1.0);
          dc->setFrameColor(skin->getColor(Colors::Osc::Display::Center));
@@ -271,6 +271,31 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          dc->setFrameColor(skin->getColor(Colors::Osc::Display::Bounds));
          dc->drawLine(top0, top1);
          dc->drawLine(bot0, bot1);
+
+         // Now draw dots
+         auto pointColor = skin->getColor(Colors::Osc::Display::Dots);
+         int nxd = 21, nyd=13;
+         for(int xd=0; xd<nxd; xd++ )
+         {
+            float normx = 1.f * xd / ( nxd - 1 ) * 0.99;
+            for( int yd=1; yd < nyd-1; yd++ )
+            {
+               if( yd == (nyd-1)/2) continue;
+
+               float normy = 1.f * yd / ( nyd - 1 );
+               auto dotPoint = CPoint( normx * valScale, ( 0.8 * normy + 0.1 ) * valScale  );
+               tf.transform( dotPoint );
+               float esize = 0.5;
+               float xoff = (xd == 0 ? esize : 0 );
+               auto er = CRect(dotPoint.x-esize + xoff, dotPoint.y-esize, dotPoint.x+esize + xoff, dotPoint.y+esize);
+#if LINUX
+               dc->drawPoint(dotPoint, pointColor );
+#else
+               dc->setFillColor(pointColor);
+               dc->drawEllipse(er, VSTGUI::kDrawFilled);
+#endif
+            }
+         }
 
          // OK so now the label
          if( osces[1] )
@@ -308,6 +333,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
    {
       CRect wtlbl(size);
       wtlbl.top = wtlbl.bottom - wtbheight;
+      wtlbl.offset(0,-4);
       rmenu = wtlbl;
       rmenu.inset(14, 0);
       char wttxt[256];
