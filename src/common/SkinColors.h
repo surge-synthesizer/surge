@@ -123,7 +123,7 @@ namespace Colors
       }
       namespace Waveform
       {
-         extern const Surge::Skin::Color Background, Bounds, Center, Envelope, Wave, DeactivatedWave;
+         extern const Surge::Skin::Color Background, Bounds, Center, Envelope, Wave, DeactivatedWave, Dots;
 
          namespace Ruler
          {
@@ -201,7 +201,7 @@ namespace Colors
    {
       namespace Display
       {
-         extern const Surge::Skin::Color Bounds, Center, AnimatedWave, Wave;
+         extern const Surge::Skin::Color Bounds, Center, AnimatedWave, Wave, Dots;
       }
       namespace Filename
       {
