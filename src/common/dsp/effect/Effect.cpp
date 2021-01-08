@@ -12,6 +12,7 @@
 #include "FlangerEffect.h"
 #include "RingModulatorEffect.h"
 #include "airwindows/AirWindowsEffect.h"
+#include "chowdsp/Neuron.h"
 #include "DebugHelpers.h"
 
 using namespace std;
@@ -50,6 +51,8 @@ Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd
       return new RingModulatorEffect(storage, fxdata, pd);
    case fxt_airwindows:
       return new AirWindowsEffect( storage, fxdata, pd );
+   case fxt_neuron:
+      return new chowdsp::Neuron(storage, fxdata, pd);
    default:
       return 0;
    };

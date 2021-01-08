@@ -412,6 +412,21 @@ void mul_block(float* __restrict src1,
    }
 }
 
+void mul_block(float* __restrict src1,
+               float scalar,
+               float* __restrict dst,
+               unsigned int nquads)
+{
+    auto scalar_mm = _mm_set1_ps(scalar);
+   for (unsigned int i = 0; i < nquads; i += 4)
+   {
+      ((__m128*)dst)[i] = _mm_mul_ps(((__m128*)src1)[i], scalar_mm);
+      ((__m128*)dst)[i + 1] = _mm_mul_ps(((__m128*)src1)[i + 1], scalar_mm);
+      ((__m128*)dst)[i + 2] = _mm_mul_ps(((__m128*)src1)[i + 2], scalar_mm);
+      ((__m128*)dst)[i + 3] = _mm_mul_ps(((__m128*)src1)[i + 3], scalar_mm);
+   }
+}
+
 void encodeMS(float* __restrict L,
               float* __restrict R,
               float* __restrict M,

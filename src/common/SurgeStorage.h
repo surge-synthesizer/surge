@@ -280,6 +280,7 @@ enum fx_type
    fxt_flanger,
    fxt_ringmod,
    fxt_airwindows,
+   fxt_neuron,
 
    n_fx_types,
 };
@@ -300,6 +301,7 @@ const char fx_type_names[n_fx_types][16] =
    "Flanger",
    "Ring Mod",
    "Airwindows",
+   "Neuron",
 };
 
 enum fx_bypass
