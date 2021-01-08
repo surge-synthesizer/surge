@@ -175,7 +175,7 @@
             <snapshot name="Noise" p0="19" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="0" p6="1" />
             <snapshot name="Voice Of The Starship" p0="20" p1="0.5" p2="0" />
         </type>
-        <type i="14" name="Saturation &amp; More">
+        <type i="14" name="Saturation And More">
             <snapshot name="Apicolypse" p0="26" p1="0.7" p2="0.333333" p3="0.333333" p4="1" />
             <snapshot name="Bass Drive" p0="27" p1="0.5" p2="0.5" p3="0.5" p4="0.5" p5="0.5" />
             <snapshot name="Buss Colors" p0="44" p1="0" p2="0.5" p3="0.5" p4="1" />
