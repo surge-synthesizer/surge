@@ -180,8 +180,10 @@ private:
 
    std::unique_ptr<Oscillator> osc[3];
 
+public: // this is public, but only for the regtests
    std::array<ModulationSource*, n_modsources> modsources;
 
+private:
    ModulationSource velocitySource, releaseVelocitySource;
    ModulationSource keytrackSource;
    ControllerModulationSource polyAftertouchSource;

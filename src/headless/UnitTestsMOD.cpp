@@ -968,3 +968,324 @@ TEST_CASE( "KeyTrack in Play Modes", "[mod]" )
       }
    }
 }
+
+TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
+{
+   // See issue #3597
+   auto setup = [](MonoVoicePriorityMode priomode, play_mode polymode) {
+      auto surge = Surge::Headless::createSurge(44100);
+
+      // Set synth to mono and low note priority
+      surge->storage.getPatch().scene[0].polymode.val.i = polymode;
+      surge->storage.getPatch().scene[0].monoVoicePriorityMode = priomode;
+
+      // Assign highest note keytrack to any parameter. Lets do this with highest latest and lowest
+      surge->setModulation(surge->storage.getPatch().scene[0].osc[0].pitch.id, ms_highest_key, 0.2);
+      surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[0].id, ms_latest_key, 0.2);
+      surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[1].id, ms_lowest_key, 0.2);
+      return surge;
+   };
+
+   auto rcmp = [](std::shared_ptr<SurgeSynthesizer> surge, int ch, int key, int vel, int low,
+                  int high, int latest) {
+      if (vel == 0)
+         surge->releaseNote(ch, key, vel);
+      else
+         surge->playNote(ch, key, vel, 0);
+      for (int i = 0; i < 50; ++i)
+         surge->process();
+      for (auto v : surge->voices[0])
+         if (v->state.gate)
+         {
+            REQUIRE(v->modsources[ms_highest_key]->output * 12 + 60 == high);
+            REQUIRE(v->modsources[ms_latest_key]->output * 12 + 60 == latest);
+            REQUIRE(v->modsources[ms_lowest_key]->output * 12 + 60 == low);
+         }
+   };
+
+   std::map<MonoVoicePriorityMode, std::string> lab;
+   lab[NOTE_ON_LATEST_RETRIGGER_HIGHEST] = "legacy";
+   lab[ALWAYS_HIGHEST] = "always highest";
+   lab[ALWAYS_LATEST] = "always latest";
+   lab[ALWAYS_LOWEST] = "always lowest";
+
+   for (auto mpemode : {true, false})
+      for (auto polymode : {pm_mono_st, pm_poly, pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
+         for (auto priomode :
+              {NOTE_ON_LATEST_RETRIGGER_HIGHEST, ALWAYS_LOWEST, ALWAYS_HIGHEST, ALWAYS_LATEST})
+         {
+            DYNAMIC_SECTION("Play Up Test " << lab[priomode] << " mpe=" << mpemode
+                                            << " poly=" << polymode)
+            {
+               // From the issue: Steps to reproduce the behavior:
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               // press and hold three increasing notes
+               int ch = 0;
+
+               if (mpemode)
+                  ch = 1;
+               rcmp(surge, ch, 60, 127, 60, 60, 60);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 66, 127, 60, 66, 66);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 72, 127, 60, 72, 72);
+            }
+            DYNAMIC_SECTION("Play Down Test " << lab[priomode] << " mpe=" << mpemode
+                                              << " polymode=" << polymode)
+            {
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               // press and hold three decreasing notes
+               int ch = 0;
+
+               if (mpemode)
+                  ch = 1;
+               rcmp(surge, ch, 60, 127, 60, 60, 60);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 54, 127, 54, 60, 54);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 48, 127, 48, 60, 48);
+            }
+
+            DYNAMIC_SECTION("Play V Test " << lab[priomode] << " mpe=" << mpemode
+                                           << " polymode=" << polymode)
+            {
+               // From the issue: Steps to reproduce the behavior:
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               // press and hold three intersecting notes
+               int ch = 0;
+
+               if (mpemode)
+                  ch = 1;
+               rcmp(surge, ch, 60, 127, 60, 60, 60);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 72, 127, 60, 72, 72);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 66, 127, 60, 72, 66);
+            }
+
+            DYNAMIC_SECTION("Releases one " << lab[priomode] << " mpe=" << mpemode
+                                            << " polymode=" << polymode)
+            {
+               // From the issue: Steps to reproduce the behavior:
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               // press and hold three intersecting notes
+               int ch = 0;
+
+               if (mpemode)
+                  ch = 1;
+               rcmp(surge, ch, 60, 127, 60, 60, 60);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 72, 127, 60, 72, 72);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 66, 127, 60, 72, 66);
+
+               if (mpemode)
+                  ch--;
+               rcmp(surge, ch, 72, 0, 60, 66, 66);
+            }
+
+            DYNAMIC_SECTION("Releases one " << lab[priomode] << " mpe=" << mpemode
+                                            << " polymode=" << polymode)
+            {
+               // From the issue: Steps to reproduce the behavior:
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               // press and hold three intersecting notes
+               int ch = 0;
+
+               if (mpemode)
+                  ch = 1;
+               rcmp(surge, ch, 60, 127, 60, 60, 60);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 72, 127, 60, 72, 72);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 66, 127, 60, 72, 66);
+
+               // and unwind them
+               ch = 0;
+
+               if (mpemode)
+                  ch = 1;
+               rcmp(surge, ch, 60, 0, 66, 72, 66);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 72, 0, 66, 66, 66);
+
+               if (mpemode)
+                  ch++;
+               rcmp(surge, ch, 66, 0, 60, 60, 60); // 60 maps to 0
+            }
+         }
+}
+
+TEST_CASE("High Low Latest with splits", "[mod]")
+{
+   auto setup = [](MonoVoicePriorityMode priomode, play_mode polymode) {
+      auto surge = Surge::Headless::createSurge(44100);
+
+      // Set synth to mono and low note priority
+      surge->storage.getPatch().scene[0].polymode.val.i = polymode;
+      surge->storage.getPatch().scene[0].monoVoicePriorityMode = priomode;
+
+      // Assign highest note keytrack to any parameter. Lets do this with highest latest and lowest
+      surge->setModulation(surge->storage.getPatch().scene[0].osc[0].pitch.id, ms_highest_key, 0.2);
+      surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[0].id, ms_latest_key, 0.2);
+      surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[1].id, ms_lowest_key, 0.2);
+
+      surge->setModulation(surge->storage.getPatch().scene[1].osc[0].pitch.id, ms_highest_key, 0.2);
+      surge->setModulation(surge->storage.getPatch().scene[1].osc[0].p[0].id, ms_latest_key, 0.2);
+      surge->setModulation(surge->storage.getPatch().scene[1].osc[0].p[1].id, ms_lowest_key, 0.2);
+
+      return surge;
+   };
+
+   auto play = [](std::shared_ptr<SurgeSynthesizer> surge, int ch, int key, int vel) {
+      if (vel == 0)
+         surge->releaseNote(ch, key, vel);
+      else
+         surge->playNote(ch, key, vel, 0);
+      for (int i = 0; i < 50; ++i)
+         surge->process();
+   };
+   auto compval = [](std::shared_ptr<SurgeSynthesizer> surge, int sc, int low, int high,
+                     int latest) {
+      for (auto v : surge->voices[sc])
+         if (v->state.gate)
+         {
+            REQUIRE(v->modsources[ms_highest_key]->output * 12 + 60 == high);
+            REQUIRE(v->modsources[ms_latest_key]->output * 12 + 60 == latest);
+            REQUIRE(v->modsources[ms_lowest_key]->output * 12 + 60 == low);
+         }
+   };
+   for (auto mpemode : {true, false})
+      for (auto polymode : {pm_mono_st, pm_poly, pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
+         for (auto priomode :
+              {NOTE_ON_LATEST_RETRIGGER_HIGHEST, ALWAYS_LOWEST, ALWAYS_HIGHEST, ALWAYS_LATEST})
+         {
+            DYNAMIC_SECTION("DUAL " << priomode << " mpe=" << mpemode << " poly=" << polymode)
+
+            {
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               surge->storage.getPatch().scenemode.val.i = sm_dual;
+
+               int ch = 0;
+               if (mpemode)
+                  ch = 1;
+
+               play(surge, ch, 60, 127);
+               compval(surge, 0, 60, 60, 60);
+               compval(surge, 1, 60, 60, 60);
+
+               if (mpemode)
+                  ch++;
+               play(surge, ch, 70, 127);
+               compval(surge, 0, 60, 70, 70);
+               compval(surge, 1, 60, 70, 70);
+
+               if (mpemode)
+                  ch++;
+               play(surge, ch, 65, 127);
+               compval(surge, 0, 60, 70, 65);
+               compval(surge, 1, 60, 70, 65);
+            }
+
+            DYNAMIC_SECTION("KeySplit " << priomode << " mpe=" << mpemode << " poly=" << polymode)
+
+            {
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               surge->storage.getPatch().scenemode.val.i = sm_split;
+               surge->storage.getPatch().splitpoint.val.i = 70;
+
+               int ch = 0;
+               if (mpemode)
+                  ch = 1;
+
+               play(surge, ch, 50, 127);
+               compval(surge, 0, 50, 50, 50);
+               compval(surge, 1, 60, 60, 60);
+
+               if (mpemode)
+                  ch++;
+               play(surge, ch, 90, 127);
+               compval(surge, 0, 50, 50, 50);
+               compval(surge, 1, 90, 90, 90);
+
+               if (mpemode)
+                  ch++;
+               play(surge, ch, 69, 127);
+               compval(surge, 0, 50, 69, 69);
+               compval(surge, 1, 90, 90, 90);
+
+               if (mpemode)
+                  ch++;
+               play(surge, ch, 70, 127);
+               compval(surge, 0, 50, 69, 69);
+               compval(surge, 1, 70, 90, 70);
+            }
+
+            DYNAMIC_SECTION("ChSplit " << priomode << " mpe=" << mpemode << " poly=" << polymode)
+
+            {
+               auto surge = setup(priomode, polymode);
+               surge->mpeEnabled = mpemode;
+
+               surge->storage.getPatch().scenemode.val.i = sm_chsplit;
+               surge->storage.getPatch().splitpoint.val.i = 64;
+
+               int cha = 0;
+               int chb = 10;
+               if (mpemode)
+                  cha = 1;
+
+               play(surge, cha, 50, 127);
+               compval(surge, 0, 50, 50, 50);
+               compval(surge, 1, 60, 60, 60);
+
+               play(surge, chb, 90, 127);
+               compval(surge, 0, 50, 50, 50);
+               compval(surge, 1, 90, 90, 90);
+
+               play(surge, cha + (mpemode ? 1 : 0), 69, 127);
+               compval(surge, 0, 50, 69, 69);
+               compval(surge, 1, 90, 90, 90);
+
+               play(surge, chb + (mpemode ? 1 : 0), 70, 127);
+               compval(surge, 0, 50, 69, 69);
+               compval(surge, 1, 70, 90, 70);
+            }
+         }
+}
