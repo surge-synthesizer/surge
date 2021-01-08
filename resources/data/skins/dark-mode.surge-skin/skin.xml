@@ -4,16 +4,16 @@
 
     <color id="white" value="#FFFFFF"/>
     <color id="black" value="#000000"/>
-    <color id="red" value="#FF0000"/>
-    <color id="lightgray" value="#B4B4B4"/>
-    <color id="gray" value="#808080"/>
     <color id="almostblack" value="#050505"/>
+    <color id="red" value="#FF0000"/>
     <color id="bggray" value="#242424"/>
     <color id="bordergray" value="#0F0F0F"/>
-    <color id="darkestgray" value="#131313"/>
+    <color id="gray" value="#808080"/>
+    <color id="lightgray" value="#B4B4B4"/>
     <color id="moregray" value="#4f4f4f"/>
     <color id="darkgray" value="#3c3c3c"/>
     <color id="darkergray" value="#202020"/>
+    <color id="darkestgray" value="#131313"/>
     <color id="surgeblue" value="#005CB6"/>
     <color id="surgebluetrans" value="#005CB680"/>
     <color id="surgeorange" value="#ff9300"/>
@@ -23,13 +23,13 @@
     <color id="lfo.title.text" value="#B4B4B490"/>
 
     <color id="lfo.waveform.background" value="bggray"/>
+    <color id="lfo.waveform.dots" value="almostblack"/>
     <color id="lfo.waveform.ruler.text" value="lightgray"/>
     <color id="lfo.waveform.ruler.ticks" value="buttonbg"/>
     <color id="lfo.waveform.ruler.ticks.small" value="surgebluetrans"/>
     <color id="lfo.waveform.ruler.ticks.extended" value="buttonbg"/>
     <color id="lfo.waveform.bounds" value="buttonbg"/>
     <color id="lfo.waveform.center" value="buttonbg"/>
-    <color id="lfo.waveform.dots" value="buttonbg"/>
     <color id="lfo.waveform.envelope" value="surgebluetrans"/>
     <color id="lfo.waveform.wave" value="modblue"/>
     <color id="lfo.waveform.wave.deactivated" value="#2E86FE90"/>
@@ -208,8 +208,8 @@
 
     <!-- OSC -->
     <control ui_identifier="osc.display" x="4" y="81" w="141" h="99"/>
-    <control ui_identifier="osc.keytrack" x="4" y="183" w="45" h="9"/>
-    <control ui_identifier="osc.retrigger" x="51" y="183" w="45" h="9"/>
+    <control ui_identifier="osc.keytrack" x="4" y="181" w="45" h="9"/>
+    <control ui_identifier="osc.retrigger" x="51" y="181" w="45" h="9"/>
     <control ui_identifier="osc.octave" x="0" y="194" w="96" h="18"/>
     <control ui_identifier="osc.type" x="96" y="194" w="49" h="18"/>
     <control ui_identifier="osc.select" x="66" y="61" w="75" h="13"/>

@@ -105,9 +105,9 @@ namespace Surge
                    .withHSwitch2Properties(IDB_OSC_SELECT, 3, 1, 3);
          Connector osc_display = Connector("osc.display", 4, 81, 141, 99, Connector::CUSTOM, Connector::OSCILLATOR_DISPLAY);
 
-         Connector keytrack = Connector("osc.keytrack", 4, 183, 45, 9, Connector::SWITCH)
+         Connector keytrack = Connector("osc.keytrack", 4, 180, 45, 9, Connector::SWITCH)
                    .withBackground(IDB_OSC_KEYTRACK);
-         Connector retrigger = Connector("osc.retrigger", 51, 183, 45, 9, Connector::SWITCH)
+         Connector retrigger = Connector("osc.retrigger", 51, 180, 45, 9, Connector::SWITCH)
                    .withBackground(IDB_OSC_RETRIGGER);
          
          Connector octave = Connector("osc.octave", 0, 194, 96, 18, Connector::HSWITCH2)
