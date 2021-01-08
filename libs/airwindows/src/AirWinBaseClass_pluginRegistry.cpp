@@ -85,7 +85,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    std::string gnLoFi = "Lo-Fi";
    std::string gnNoise = "Noise";
    std::string gnAmbience = "Ambience";
-   std::string gnSaturation = "Saturation";
+   std::string gnSaturation = "Saturation & More";
    std::string gnTape = "Tape";
 
    int id = 0; // add new effects only at the end of this list!
