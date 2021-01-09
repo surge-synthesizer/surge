@@ -105,6 +105,8 @@ endif()
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
+include(cmake/stage-extra-content.cmake)
+
 add_library(surge-shared src/common/FilterConfiguration.h)
 add_library(surge-tests INTERFACE)
 
@@ -1475,3 +1477,16 @@ if(MSVC)
   endforeach()
   target_compile_options( surge-shared PRIVATE /FIprecompiled.h )
 endif()
+
+
+# We have a special target here which the PR pipeline uses to make sure things
+# are of the appropriate code quality. This allows us to write CMAKE rules which
+# become linters and stuff. The code will run on macos in the pipeline. I suppose
+# you could run it locally to, but really, you should know what you are doing if you
+# do that. And I'll document it so you can know that when I use it earnest in 1.9
+add_custom_target(code-quality-pipeline-checks)
+
+# Check 1: The extra content is properly specified.
+add_dependencies(code-quality-pipeline-checks download-extra-content)
+
+# Coming in 1.9: CLang Format checks and others

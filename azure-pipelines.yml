@@ -30,6 +30,11 @@ jobs:
         isMac: True
         cmakeArguments: "-GXcode -DBUILD_SURGE_JUCE_PLUGINS=True"
         cmakeTarget: "Surge-Effects-Bank-Packaged"
+      macOS-codequality:
+        imageName: 'macos-10.15'
+        isMac: True
+        cmakeArguments: ""
+        cmakeTarget: "code-quality-pipeline-checks"
       windows-x64:
         imageName: 'windows-2019'
         isWindows: True
