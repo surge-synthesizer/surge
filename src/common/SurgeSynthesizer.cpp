@@ -163,6 +163,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
                                                                                   &patch.formulamods[sc][n_lfos_voice + l]
                                                                                   );
       }
+
+      for (int k = 0; k < 128; ++k)
+         midiKeyPressedForScene[sc][k] = 0;
    }
    
    for (int i = 0; i < n_customcontrollers; i++)
@@ -355,10 +358,12 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
    // TODO: FIX SCENE ASSUMPTION
    if (channelmask & 1)
    {
+      midiKeyPressedForScene[0][key] = ++orderedMidiKey;
       playVoice(0, channel, key, velocity, detune);
    }
    if (channelmask & 2)
    {
+      midiKeyPressedForScene[1][key] = ++orderedMidiKey;
       playVoice(1, channel, key, velocity, detune);
    }
 
@@ -800,13 +805,61 @@ void SurgeSynthesizer::releaseScene(int s)
 
 void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
 {
+   bool foundVoice[n_scenes];
    for (int sc = 0; sc < n_scenes; ++sc)
    {
+      foundVoice[sc] = false;
       for( auto *v : voices[sc] )
       {
+         foundVoice[sc] = true;
          if ((v->state.key == key) && (v->state.channel == channel))
             v->state.releasevelocity = velocity;
       }
+   }
+
+   /*
+    * Update the midi key for scene
+    */
+   auto scmd = (scene_mode)storage.getPatch().scenemode.val.i;
+   switch (scmd)
+   {
+   case sm_single: {
+      auto sc = storage.getPatch().scene_active.val.i;
+      midiKeyPressedForScene[sc][key] = 0;
+      break;
+   }
+   case sm_dual: {
+      for (int i = 0; i < n_scenes; ++i)
+         midiKeyPressedForScene[i][key] = 0;
+      break;
+   }
+   case sm_split: {
+      auto splitkey = storage.getPatch().splitpoint.val.i;
+      if (key < splitkey)
+      {
+         midiKeyPressedForScene[0][key] = 0;
+      }
+      else
+      {
+         midiKeyPressedForScene[1][key] = 0;
+      }
+
+      break;
+   }
+   case sm_chsplit: {
+      auto splitChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
+      if (channel < splitChan)
+      {
+         midiKeyPressedForScene[0][key] = 0;
+      }
+      else
+      {
+         midiKeyPressedForScene[1][key] = 0;
+      }
+      break;
+   }
+   default:
+      break;
    }
 
    bool noHold = ! channelState[channel].hold;
@@ -1163,113 +1216,39 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
 void SurgeSynthesizer::updateHighLowKeys(int scene)
 {
-   // SurgeVoice *lowest = nullptr, *highest = nullptr, *newest = nullptr;
-   bool hasLowest = false, hasHighest = false, hasLatest = false;
-   float newKey, lowKey = 1000.f, highKey = -1000.f;
-   int64_t voiceLatest = 0;
-
-   int polymode = storage.getPatch().scene[scene].polymode.val.i;
-   for (const auto& v : voices[scene])
-   {
-      if (v->state.gate)
-      {
-         if (v->state.pkey < lowKey)
-         {
-            lowKey = v->state.pkey;
-            hasLowest = true;
-         }
-
-         if (v->state.pkey > highKey)
-         {
-            highKey = v->state.pkey;
-            hasHighest = true;
-         }
-
-         if (v->state.keyState->voiceOrder >= voiceLatest )
-         {
-            voiceLatest = v->state.keyState->voiceOrder;
-            /*
-             * In these modes we re-use voices and reset the key and retain
-             * the portamento key, so I need to read off key for latest, not pkey
-             */
-            if( polymode == pm_mono_st || polymode == pm_mono_st_fp )
-            {
-               newKey = v->state.key;
-            }
-            else
-            {
-               newKey = v->state.pkey;
-            }
-            hasLatest = true;
-         }
-      }
-   }
-
-   if(  polymode != pm_poly )
-   {
-      /*
-       * OK here we need to know depressed keys not playing voices.
-       * See issue #2892 for more. Latest is fine but highest and
-       * lowest will be wrong
-       */
-      int lowkey = 0, hikey = 127;
-      if (storage.getPatch().scenemode.val.i == sm_split)
-      {
-         if (scene == 0)
-            hikey = storage.getPatch().splitpoint.val.i - 1;
-         else
-            lowkey = storage.getPatch().splitpoint.val.i;
-      }
-
-      int lowMpeChan = mpeEnabled ? 1 : 0; // skip control chan
-      int highMpeChan = 16;
-      if (storage.getPatch().scenemode.val.i == sm_chsplit)
-      {
-         if (scene == 0)
-         {
-            highMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
-         }
-         else
-         {
-            lowMpeChan = (int)(storage.getPatch().splitpoint.val.i / 8 + 1);
-         }
-      }
-
-      for (int ch = lowMpeChan; ch < highMpeChan; ++ch)
-      {
-         for (int k = lowkey; k < hikey; ++k)
-         {
-            if (channelState[ch].keyState[k].keystate)
-            {
-               if (k < lowKey)
-               {
-                  lowKey = k;
-                  hasLowest = true;
-               }
-               if (k > highKey)
-               {
-                  highKey = k;
-                  hasHighest = true;
-               }
-            }
-         }
-      }
-   }
    float ktRoot = (float)storage.getPatch().scene[scene].keytrack_root.val.i;
    float twelfth = 1.f / 12.f;
 
-   if (hasLowest)
-      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init((lowKey - ktRoot) * twelfth );
+   int highest = -1, lowest = 129, latest = -1, latestC = 0;
+   for (int k = 0; k < 128; ++k)
+   {
+      if (midiKeyPressedForScene[scene][k] > 0)
+      {
+         highest = std::max(k, highest);
+         lowest = std::min(k, lowest);
+      }
+      if (midiKeyPressedForScene[scene][k] > latestC)
+      {
+         latestC = midiKeyPressedForScene[scene][k];
+         latest = k;
+      }
+   }
+
+   if (lowest < 129)
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])
+          ->init((lowest - ktRoot) * twelfth);
    else
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init( 0.f );
 
-   if (hasHighest)
-      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( (highKey - ktRoot) * twelfth );
+   if (highest >= 0)
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])
+          ->init((highest - ktRoot) * twelfth);
    else
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( 0.f );
 
-   if (hasLatest)
-      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( (newKey - ktRoot) * twelfth );
+   if (latest >= 0)
+      ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])
+          ->init((latest - ktRoot) * twelfth);
    else
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( 0.f );
 }

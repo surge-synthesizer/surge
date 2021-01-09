@@ -367,6 +367,9 @@ public:
    int mpeVoices = 0;
    int mpeGlobalPitchBendRange = 0;
 
+   std::array<uint64_t, 128> midiKeyPressedForScene[n_scenes];
+   uint64_t orderedMidiKey = 0;
+
    bool hardclipEnabled = true;
 
    int current_category_id = 0;
