@@ -60,17 +60,17 @@ void GEQ11Effect::setvars(bool init)
    if (init)
    {
       // Set the bands to 0dB so the EQ fades in init
-      band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.333333, 1.f);
-      band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.333333, 1.f);
-      band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.333333, 1.f);
-      band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.333333, 1.f);
-      band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.333333, 1.f);
-      band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.333333, 1.f);
-      band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.333333, 1.f);
-      band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.333333, 1.f);
-      band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.333333, 1.f);
-      band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.333333, 1.f);
-      band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.333333, 1.f);
+      band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, 1.f);
+      band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, 1.f);
+      band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, 1.f);
+      band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, 1.f);
+      band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, 1.f);
+      band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, 1.f);
+      band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, 1.f);
+      band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, 1.f);
+      band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, 1.f);
+      band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, 1.f);
+      band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, 1.f);
 
       band1.coeff_instantize();
       band2.coeff_instantize();
@@ -90,17 +90,17 @@ void GEQ11Effect::setvars(bool init)
    }
    else
    {
-      band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.333333, *f[geq11_30]);
-      band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.333333, *f[geq11_60]);
-      band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.333333, *f[geq11_120]);
-      band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.333333, *f[geq11_250]);
-      band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.333333, *f[geq11_500]);
-      band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.333333, *f[geq11_1k]);
-      band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.333333, *f[geq11_2k]);
-      band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.333333, *f[geq11_4k]);
-      band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.333333, *f[geq11_8k]);
-      band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.333333, *f[geq11_12k]);
-      band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.333333, *f[geq11_16k]);
+      band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, *f[geq11_30]);
+      band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, *f[geq11_60]);
+      band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, *f[geq11_120]);
+      band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, *f[geq11_250]);
+      band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, *f[geq11_500]);
+      band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, *f[geq11_1k]);
+      band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, *f[geq11_2k]);
+      band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, *f[geq11_4k]);
+      band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, *f[geq11_8k]);
+      band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, *f[geq11_12k]);
+      band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, *f[geq11_16k]);
    }
 }
 
