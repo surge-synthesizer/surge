@@ -268,8 +268,8 @@
     <control ui_identifier="filter.balance" class="def-hslider"/>
     <control ui_identifier="filter.feedback" class="def-hslider" y="162"/>
 
-    <control ui_identifier="filter.envmod_1" y="301"/>
-    <control ui_identifier="filter.envmod_2" y="301"/>
+    <control ui_identifier="filter.envmod_1" x="551" y="301"/>
+    <control ui_identifier="filter.envmod_2" x="571" y="301"/>
 
     <!-- Keytrack & Waveshaper -->
     <control ui_identifier="scene.keytrack_root" x="310" y="265"/>
@@ -281,23 +281,24 @@
 
     <!-- FEG -->
     <control ui_identifier="feg.panel" y="266"/>
+    <control ui_identifier="feg.mode" x="95"/>
     <control ui_identifier="feg.attack_shape" x="1"/>
     <control ui_identifier="feg.decay_shape" x="21"/>
     <control ui_identifier="feg.release_shape" x="61"/>
-    <control ui_identifier="feg.attack" y="35"/>
-    <control ui_identifier="feg.decay" y="35"/>
-    <control ui_identifier="feg.sustain" y="35"/>
-    <control ui_identifier="feg.release" y="35"/>
+    <control ui_identifier="feg.attack" x="-3" y="35"/>
+    <control ui_identifier="feg.decay" x="17" y="35"/>
+    <control ui_identifier="feg.sustain" x="37" y="35"/>
+    <control ui_identifier="feg.release" x="57" y="35"/>
 
     <!-- AEG -->
     <control ui_identifier="aeg.panel" y="266"/>
     <control ui_identifier="aeg.attack_shape" x="1"/>
     <control ui_identifier="aeg.decay_shape" x="21"/>
     <control ui_identifier="aeg.release_shape" x="61"/>
-    <control ui_identifier="aeg.attack" y="35"/>
-    <control ui_identifier="aeg.decay" y="35"/>
-    <control ui_identifier="aeg.sustain" y="35"/>
-    <control ui_identifier="aeg.release" y="35"/>
+    <control ui_identifier="aeg.attack" x="-3" y="35"/>
+    <control ui_identifier="aeg.decay" x="17" y="35"/>
+    <control ui_identifier="aeg.sustain" x="37" y="35"/>
+    <control ui_identifier="aeg.release" x="57" y="35"/>
 
     <!-- Modulation Panel -->
     <control ui_identifier="controls.modulation.panel" x="2" y="401"/>

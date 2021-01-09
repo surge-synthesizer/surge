@@ -95,8 +95,8 @@ namespace Surge
             Connector send_fx_1 = Connector("scene.send_fx_1", 0, 63).asHorizontal().asWhite().inParent("scene.output.panel");
             Connector send_fx_2 = Connector("scene.send_fx_2", 0, 84).asHorizontal().asWhite().inParent("scene.output.panel");
 
-         Connector vel_sensitivity = Connector("scene.velocity_sensitivity", 719, 300).asVertical().asWhite();
-         Connector gain = Connector("scene.gain", 699, 300).asVertical().asWhite();
+         Connector vel_sensitivity = Connector("scene.velocity_sensitivity", 699, 301).asVertical().asWhite();
+         Connector gain = Connector("scene.gain", 719, 301).asVertical().asWhite();
       }
 
       namespace Osc
@@ -149,12 +149,12 @@ namespace Surge
             Connector route_ring23 = Connector("mixer.route_ring23", 81, 22).asMixerRoute().inParent("mixer.panel");
             Connector route_noise = Connector("mixer.route_noise", 101, 22).asMixerRoute().inParent("mixer.panel");
    
-            Connector level_o1 = Connector("mixer.level_o1", 0, 37).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_o2 = Connector("mixer.level_o2", 20, 37).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_o3 = Connector("mixer.level_o3", 40, 37).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_ring12 = Connector("mixer.level_ring12", 60, 37).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_ring23 = Connector("mixer.level_ring23", 80, 37).asVertical().asWhite().inParent("mixer.panel");
-            Connector level_noise = Connector("mixer.level_noise", 100, 37).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_o1 = Connector("mixer.level_o1", 0, 38).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_o2 = Connector("mixer.level_o2", 20, 38).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_o3 = Connector("mixer.level_o3", 40, 38).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_ring12 = Connector("mixer.level_ring12", 60, 38).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_ring23 = Connector("mixer.level_ring23", 80, 38).asVertical().asWhite().inParent("mixer.panel");
+            Connector level_noise = Connector("mixer.level_noise", 100, 38).asVertical().asWhite().inParent("mixer.panel");
    
             Connector level_prefiltergain = Connector("mixer.level_prefiltergain", 120, 37).asVertical().asWhite().inParent("mixer.panel");
       }
@@ -185,17 +185,17 @@ namespace Surge
          Connector f2_link_resonance = Connector("filter.f2_link_resonance", 734, 239, 12, 18, Connector::SWITCH)
                    .withBackground(IDB_FILTER2_RESONANCE_LINK);
 
-         Connector keytrack_1 = Connector("filter.keytrack_1", 309, 300).asVertical().asWhite();
-         Connector keytrack_2 = Connector("filter.keytrack_2", 329, 300).asVertical().asWhite();
+         Connector keytrack_1 = Connector("filter.keytrack_1", 309, 301).asVertical().asWhite();
+         Connector keytrack_2 = Connector("filter.keytrack_2", 329, 301).asVertical().asWhite();
 
-         Connector envmod_1 = Connector("filter.envmod_1", 549, 300).asVertical().asWhite();
-         Connector envmod_2 = Connector("filter.envmod_2", 569, 300).asVertical().asWhite();
+         Connector envmod_1 = Connector("filter.envmod_1", 549, 301).asVertical().asWhite();
+         Connector envmod_2 = Connector("filter.envmod_2", 569, 301).asVertical().asWhite();
 
-         Connector waveshaper_drive = Connector("filter.waveshaper_drive", 419, 300).asVertical().asWhite();
+         Connector waveshaper_drive = Connector("filter.waveshaper_drive", 419, 301).asVertical().asWhite();
          Connector waveshaper_type = Connector("filter.waveshaper_type", 388, 311, 28, 51, Connector::HSWITCH2)
                    .withHSwitch2Properties(IDB_WAVESHAPER_MODE, 6, 6, 1);
 
-         Connector highpass = Connector("filter.highpass", 354, 300).asVertical().asWhite();
+         Connector highpass = Connector("filter.highpass", 354, 301).asVertical().asWhite();
       }
 
       namespace FEG
@@ -212,10 +212,10 @@ namespace Surge
             Connector release_shape = Connector("feg.release_shape", 65, 1, 20, 16, Connector::HSWITCH2)
                       .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("feg.panel");
    
-            Connector attack  = Connector("feg.attack", 0, 33).asVertical().asWhite().inParent("feg.panel");
-            Connector decay   = Connector("feg.decay", 20, 33).asVertical().asWhite().inParent("feg.panel");
-            Connector sustain = Connector("feg.sustain", 40, 33).asVertical().asWhite().inParent("feg.panel");
-            Connector release = Connector("feg.release", 60, 33).asVertical().asWhite().inParent("feg.panel");
+            Connector attack  = Connector("feg.attack", 0, 34).asVertical().asWhite().inParent("feg.panel");
+            Connector decay   = Connector("feg.decay", 20, 34).asVertical().asWhite().inParent("feg.panel");
+            Connector sustain = Connector("feg.sustain", 40, 34).asVertical().asWhite().inParent("feg.panel");
+            Connector release = Connector("feg.release", 60, 34).asVertical().asWhite().inParent("feg.panel");
       }
 
       namespace AEG
@@ -231,10 +231,10 @@ namespace Surge
             Connector release_shape = Connector("aeg.release_shape", 65, 1, 20, 16, Connector::HSWITCH2)
                       .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3).withProperty(Connector::FRAME_OFFSET, 6).inParent("aeg.panel");;
    
-            Connector attack  = Connector("aeg.attack", 0, 33).asVertical().asWhite().inParent("aeg.panel");;
-            Connector decay   = Connector("aeg.decay", 20, 33).asVertical().asWhite().inParent("aeg.panel");;
-            Connector sustain = Connector("aeg.sustain", 40, 33).asVertical().asWhite().inParent("aeg.panel");;
-            Connector release = Connector("aeg.release", 60, 33).asVertical().asWhite().inParent("aeg.panel");;
+            Connector attack  = Connector("aeg.attack", 0, 34).asVertical().asWhite().inParent("aeg.panel");;
+            Connector decay   = Connector("aeg.decay", 20, 34).asVertical().asWhite().inParent("aeg.panel");;
+            Connector sustain = Connector("aeg.sustain", 40, 34).asVertical().asWhite().inParent("aeg.panel");;
+            Connector release = Connector("aeg.release", 60, 34).asVertical().asWhite().inParent("aeg.panel");;
       }
 
       namespace FX
