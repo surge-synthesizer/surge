@@ -1091,6 +1091,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       {
          clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
       }
+      clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
    }
    break;
    default:
@@ -1194,6 +1195,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
       {
          getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
       }
+      getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
    }
    break;
    default:
