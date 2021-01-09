@@ -143,6 +143,12 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
       scene.modsources[ms_highest_key] = new ControllerModulationSource(storage.smoothingMode);
       scene.modsources[ms_latest_key] = new ControllerModulationSource(storage.smoothingMode);
 
+      ((ControllerModulationSource*)scene.modsources[ms_lowest_key])->init(0.f);
+      ((ControllerModulationSource*)scene.modsources[ms_highest_key])->init(0.f);
+      ((ControllerModulationSource*)scene.modsources[ms_latest_key])->init(0.f);
+
+
+
       scene.modsources[ms_random_bipolar] = new RandomModulationSource( true );
       scene.modsources[ms_random_unipolar] = new RandomModulationSource( false );
       scene.modsources[ms_alternate_bipolar] = new AlternateModulationSource( true );
@@ -1216,6 +1222,8 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
 void SurgeSynthesizer::updateHighLowKeys(int scene)
 {
+   static constexpr bool resetToZeroOnLastRelease = false;
+
    float ktRoot = (float)storage.getPatch().scene[scene].keytrack_root.val.i;
    float twelfth = 1.f / 12.f;
 
@@ -1237,19 +1245,19 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
    if (lowest < 129)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])
           ->init((lowest - ktRoot) * twelfth);
-   else
+   else if(resetToZeroOnLastRelease)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init( 0.f );
 
    if (highest >= 0)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])
           ->init((highest - ktRoot) * twelfth);
-   else
+   else if(resetToZeroOnLastRelease)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_highest_key])->init( 0.f );
 
    if (latest >= 0)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])
           ->init((latest - ktRoot) * twelfth);
-   else
+   else if(resetToZeroOnLastRelease)
       ((ControllerModulationSource*)storage.getPatch().scene[scene].modsources[ms_latest_key])->init( 0.f );
 }
 

@@ -947,7 +947,7 @@ TEST_CASE( "KeyTrack in Play Modes", "[mod]" )
             {
                auto surge = cs();
                playSequence(surge, {48, -48}, mp );
-               checkModes( surge, 0, 0, 0 );
+               checkModes( surge, -1, -1, -1 ); // This is the change in #3600 - keys are sticky
             }
             auto surge = cs();
             {
