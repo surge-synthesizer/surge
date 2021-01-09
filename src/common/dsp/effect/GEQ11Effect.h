@@ -61,10 +61,6 @@ public:
    }
    virtual void init() override;
    virtual void process(float* dataL, float* dataR) override;
-   virtual int get_ringout_decay() override
-   {
-      return 500;
-   }
    virtual void suspend() override;
    void setvars(bool init);
    virtual void init_ctrltypes() override;
