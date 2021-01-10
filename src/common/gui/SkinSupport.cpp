@@ -605,14 +605,6 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
       while( componentClasses.find( c->ultimateparentclassname ) != componentClasses.end() )
       {
          auto comp = componentClasses[c->ultimateparentclassname];
-
-         for (auto p : comp->allprops)
-         {
-            if (p.first != "parent")
-            {
-               c->allprops[p.first] = p.second;
-            }
-         }
          if( comp->allprops.find( "parent" ) != comp->allprops.end() )
          {
             c->ultimateparentclassname = componentClasses[c->ultimateparentclassname]->allprops["parent"];
@@ -623,25 +615,6 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             return false;
             break;
          }
-      }
-
-      /*
-       * This is a super-late-in-1.8 semi-hack I need to unwind in 1.9
-       */
-      if (c->ultimateparentclassname == "CHSwitch2" &&
-          c->allprops.find("image") != c->allprops.end() &&
-          c->allprops.find("bg_resource") == c->allprops.end())
-      {
-         c->allprops["bg_resource"] = c->allprops["image"];
-      }
-
-      /*
-       * Also handle the bg_id / bg_resource special case here
-       */
-      if (c->allprops.find("bg_resource") != c->allprops.end() &&
-          c->allprops.find("bg_id") != c->allprops.end())
-      {
-         c->allprops.erase("bg_id");
       }
    }
    return true;

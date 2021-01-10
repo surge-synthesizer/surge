@@ -17,7 +17,6 @@
 #include <vt_dsp/basic_dsp.h>
 #include "CScalableBitmap.h"
 #include "DebugHelpers.h"
-#include "SurgeBitmaps.h"
 
 using namespace VSTGUI;
 
@@ -33,33 +32,8 @@ void CHSwitch2::draw(CDrawContext* dc)
       if( ! lookedForHover && skin.get() )
       {
          lookedForHover = true;
-         auto hoverprop = ((skin && skinControl) ? skin->propertyValue(skinControl, "hover_image")
-                                                 : Surge::Maybe<std::string>());
-         auto hoveronprop =
-             ((skin && skinControl) ? skin->propertyValue(skinControl, "hover_on_image")
-                                    : Surge::Maybe<std::string>());
-
-         if (hoverprop.isNothing())
-         {
-            hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
-                skinControl, dynamic_cast<CScalableBitmap*>(getBackground()), associatedBitmapStore,
-                Surge::UI::Skin::HoverType::HOVER);
-         }
-         else
-         {
-            hoverBmp = associatedBitmapStore->getBitmapByStringID(hoverprop.fromJust());
-         }
-
-         if (hoveronprop.isNothing())
-         {
-            hoverOnBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
-                skinControl, dynamic_cast<CScalableBitmap*>(getBackground()), associatedBitmapStore,
-                Surge::UI::Skin::HoverType::HOVER_OVER_ON);
-         }
-         else
-         {
-            hoverOnBmp = associatedBitmapStore->getBitmapByStringID(hoveronprop.fromJust());
-         }
+         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap( skinControl, dynamic_cast<CScalableBitmap*>( getBackground() ), associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER );
+         hoverOnBmp = skin->hoverBitmapOverlayForBackgroundBitmap( skinControl, dynamic_cast<CScalableBitmap*>( getBackground() ), associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER_OVER_ON );
       }
 
       long vv = (long)(frameOffset + ((value * (float)(rows * columns - 1) + 0.5f)));
