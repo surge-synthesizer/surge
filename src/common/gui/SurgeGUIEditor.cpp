@@ -1549,6 +1549,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       switch (p->ctrltype)
       {
       case ct_decibel:
+      case ct_decibel_deactivatable:
       case ct_decibel_narrow:
       case ct_decibel_narrow_extendable:
       case ct_decibel_narrow_short_extendable:
