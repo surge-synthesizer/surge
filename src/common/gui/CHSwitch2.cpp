@@ -33,8 +33,11 @@ void CHSwitch2::draw(CDrawContext* dc)
       if( ! lookedForHover && skin.get() )
       {
          lookedForHover = true;
-         auto hoverprop = skin->propertyValue(skinControl, "hover_image");
-         auto hoveronprop = skin->propertyValue(skinControl, "hover_on_image");
+         auto hoverprop = ((skin && skinControl) ? skin->propertyValue(skinControl, "hover_image")
+                                                 : Surge::Maybe<std::string>());
+         auto hoveronprop =
+             ((skin && skinControl) ? skin->propertyValue(skinControl, "hover_on_image")
+                                    : Surge::Maybe<std::string>());
 
          if (hoverprop.isNothing())
          {
