@@ -29,6 +29,7 @@ public:
     * CSBMs can pick PNGs at different zoom levels
     */
    virtual void addPNGForZoomLevel( std::string fname, int zoomLevel );
+   virtual void resolvePNGForZoomLevel(int zoomLevel);
 
    /*
    ** The 'zoom factor' is set statically across all bitmaps since it is a
@@ -89,7 +90,7 @@ private:
     * The zoom 100 bitmap and optional higher resolution bitmaps for zooms
     * map vs unordered is on purpose here - we need this ordered for our zoom search
     */
-   std::map<int, std::unique_ptr<VSTGUI::CBitmap>> pngZooms;
+   std::map<int, std::pair<std::string, std::unique_ptr<VSTGUI::CBitmap>>> pngZooms;
 
    int currentPhysicalZoomFactor;
 };
