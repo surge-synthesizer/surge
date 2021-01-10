@@ -263,8 +263,8 @@ namespace Surge
       namespace LFO
       {
          // For now these two have component 'CUSTOM' and we hadn't pick a component in the code
-         Connector lfo_title_label = Connector("lfo.title", 5, 489, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL);
-         Connector lfo_presets = Connector("lfo.presets", 5, 484, 13, 11, Connector::SWITCH, Connector::LFO_MENU)
+         Connector lfo_title_label = Connector("lfo.title", 6, 489, 11, 83, Connector::CUSTOM, Connector::LFO_LABEL);
+         Connector lfo_presets = Connector("lfo.presets", 6, 484, 13, 11, Connector::SWITCH, Connector::LFO_MENU)
                    .withBackground(IDB_LFO_PRESET_MENU);
 
          Connector lfo_main_panel = Connector("lfo.main.panel", 28, 478, Connector::GROUP);
