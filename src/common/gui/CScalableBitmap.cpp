@@ -230,7 +230,7 @@ CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame* f)
 
     if( _stricmp( extension.c_str(), "png" ) == 0 )
     {
-       pngZooms[100] = std::make_unique<VSTGUI::CBitmap>(fname.c_str());
+       pngZooms[100] = std::make_pair(fname, std::make_unique<VSTGUI::CBitmap>(fname.c_str()));
     }
     
     extraScaleFactor = 100;
@@ -353,7 +353,10 @@ void CScalableBitmap::draw (CDrawContext* context, const CRect& rect, const CPoi
                 ztf.inverse().transform( newRect );
                 auto offs = offset;
                 ztf.inverse().transform( offs );
-                pngZooms[zoomScan]->draw(offscreen, newRect, offs, 1.0);
+                if (!pngZooms[zoomScan].second)
+                   resolvePNGForZoomLevel(zoomScan);
+                if (pngZooms[zoomScan].second)
+                   pngZooms[zoomScan].second->draw(offscreen, newRect, offs, 1.0);
              }
              offscreen->endDraw();
              CBitmap* tmp = offscreen->getBitmap();
@@ -590,7 +593,16 @@ VSTGUI::CColor CScalableBitmap::svgColorToCColor(int svgColor, float opacity)
 
 void CScalableBitmap::addPNGForZoomLevel(std::string fname, int zoomLevel)
 {
-   auto p = std::make_unique<VSTGUI::CBitmap>(fname.c_str());
-   if( p )
-      pngZooms[zoomLevel] = std::move(p);
+   pngZooms[zoomLevel] = std::make_pair(fname, nullptr);
+}
+
+void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel)
+{
+   if (pngZooms.find(zoomLevel) == pngZooms.end())
+      return;
+   if (pngZooms[zoomLevel].second)
+      return;
+
+   pngZooms[zoomLevel].second =
+       std::move(std::make_unique<VSTGUI::CBitmap>(pngZooms[zoomLevel].first.c_str()));
 }
