@@ -42,6 +42,22 @@ SurgeBitmaps::~SurgeBitmaps()
    // std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
+void SurgeBitmaps::clearAllBitmapOffscreenCaches()
+{
+   for (auto pair : bitmap_registry)
+   {
+      pair.second->clearOffscreenCaches();
+   }
+   for (auto pair : bitmap_file_registry)
+   {
+      pair.second->clearOffscreenCaches();
+   }
+   for (auto pair : bitmap_stringid_registry)
+   {
+      pair.second->clearOffscreenCaches();
+   }
+}
+
 void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame* f)
 {
    frame = f;

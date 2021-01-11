@@ -56,6 +56,17 @@ public:
       extraScaleFactor = a;
    }
 
+   void clearOffscreenCaches()
+   {
+      for (auto const& pair : offscreenCache)
+      {
+         auto val = pair.second;
+         if (val)
+            val->forget();
+      }
+      offscreenCache.clear();
+   }
+
    int resourceID;
    std::string fname;
 
