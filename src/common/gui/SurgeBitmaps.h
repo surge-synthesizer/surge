@@ -16,6 +16,7 @@ public:
 
    void setupBitmapsForFrame(VSTGUI::CFrame* f);
    void setPhysicalZoomFactor(int pzf);
+   void clearAllBitmapOffscreenCaches();
 
    CScalableBitmap* getBitmap(int id);
    CScalableBitmap* getBitmapByPath(std::string filename);

@@ -462,6 +462,16 @@ void SurgeGUIEditor::idle()
       }
       removeFromFrame.clear();
 
+      if (clearOffscreenCachesAtZero == 0)
+      {
+         bitmapStore->clearAllBitmapOffscreenCaches();
+         frame->invalid();
+      }
+      if (clearOffscreenCachesAtZero >= 0)
+      {
+         clearOffscreenCachesAtZero--;
+      }
+
       {
          bool expected = true;
          if (synth->rawLoadNeedsUIDawExtraState.compare_exchange_weak(expected, true) && expected)
@@ -6086,6 +6096,7 @@ void SurgeGUIEditor::reloadFromSkin()
    rect.bottom = wsy * sf;
 
    setZoomFactor( getZoomFactor() );
+   clearOffscreenCachesAtZero = 1;
 
    // update MSEG editor if opened
    if (editorOverlay && editorOverlayTag == "msegEditor")
