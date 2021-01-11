@@ -723,7 +723,8 @@ bool SurgeVoice::process_block(QuadFilterChainState& Q, int Qe)
    clear_block(output[0], BLOCK_SIZE_OS_QUAD);
    clear_block(output[1], BLOCK_SIZE_OS_QUAD);
 
-   if (osc3 || ring23 || ((osc1 || osc2) && (FMmode == fm_3to2to1)) || (osc1 && (FMmode == fm_2and3to1)))
+   if (osc3 || ring23 || ((osc1 || osc2 || ring12) && (FMmode == fm_3to2to1)) ||
+       ((osc1 || ring12) && (FMmode == fm_2and3to1)))
    {
        osc[2]->process_block(noteShiftFromPitchParam((scene->osc[2].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
                                                       octaveSize * scene->osc[2].octave.val.i, 2), drift, is_wide);
