@@ -22,3 +22,6 @@
 [submodule "libs/JUCE"]
 	path = libs/JUCE
 	url = https://github.com/juce-framework/JUCE
+[submodule "libs/LuaJitLib/LuaJIT"]
+	path = libs/LuaJitLib/LuaJIT
+	url = https://github.com/LuaJIT/LuaJIT.git

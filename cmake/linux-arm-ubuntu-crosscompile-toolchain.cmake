@@ -10,6 +10,7 @@ set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
 set(LINUX_ON_ARM True)
+set(LINUX_ARM_CROSSCOMPILE True)
 set(FLAGS
   -march=armv7-a
   -marm

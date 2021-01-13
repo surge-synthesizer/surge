@@ -179,6 +179,11 @@ target_link_libraries(surge-shared PUBLIC
   surge-shared-binary
 )
 
+if( NOT LINUX_ARM_CROSSCOMPILE )
+  add_subdirectory(libs/LuaJitLib)
+  target_link_libraries(surge-shared PUBLIC luajit-5.1)
+endif()
+
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
 set(SURGE_COMPILER_INFO "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
@@ -553,6 +558,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsMSEG.cpp
     src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
+    src/headless/UnitTestsLUA.cpp
     src/headless/HeadlessNonTestFunctions.cpp
     src/headless/HeadlessNonTestFunctions.h)
 
