@@ -116,10 +116,15 @@ add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 
 target_link_libraries(surge-shared PUBLIC
-  surge::airwindows
-  surge::filesystem
-  surge::tinyxml
+        surge::airwindows
+        surge::filesystem
+        surge::tinyxml
 )
+
+if( NOT LINUX_ARM_CROSSCOMPILE )
+  add_subdirectory(libs/LuaJitLib)
+  target_link_libraries(surge-shared PUBLIC luajit-5.1)
+endif()
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
@@ -989,7 +994,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsMSEG.cpp
     src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
-          src/headless/HeadlessNonTestFunctions.cpp src/headless/HeadlessNonTestFunctions.h)
+          src/headless/HeadlessNonTestFunctions.cpp src/headless/HeadlessNonTestFunctions.h src/headless/UnitTestsLUA.cpp)
 
   target_compile_definitions(surge-headless
     PRIVATE
@@ -1022,11 +1027,11 @@ if( BUILD_HEADLESS )
   endif()
 
   target_link_libraries(surge-headless
-    PRIVATE
-    surge-shared
-    surge-tests
-    surge::catch2
-    ${OS_LINK_LIBRARIES_NOGUI}
+          PRIVATE
+      surge-shared
+      surge-tests
+      surge::catch2
+      ${OS_LINK_LIBRARIES_NOGUI}
     )
 
   if( UNIX AND NOT APPLE )
@@ -1347,7 +1352,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
           ${SURGE_OS_SOURCES}
           )
 
-  target_link_libraries(surge-fx PRIVATE
+  target_link_libraries(surge-fx PUBLIC
           surge::airwindows
           surge::filesystem
           surge::tinyxml

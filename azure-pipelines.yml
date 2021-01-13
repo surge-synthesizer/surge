@@ -13,11 +13,12 @@ jobs:
   strategy:
     matrix:
       macOS:
-        imageName: 'macos-10.14'
+        imageName: 'macos-10.15'
         isMac: True
         isMacUnitTest: True
         cmakeArguments: "-GXcode"
         cmakeTarget: "all-components"
+        xcodePath: "/Applications/Xcode_12.2.app"
       macOS-fat:
         imageName: 'macos-10.15'
         isMac: True
@@ -30,11 +31,13 @@ jobs:
         isMac: True
         cmakeArguments: "-GXcode -DBUILD_SURGE_JUCE_PLUGINS=True"
         cmakeTarget: "Surge-Effects-Bank-Packaged"
+        xcodePath: "/Applications/Xcode_12.2.app"
       macOS-codequality:
         imageName: 'macos-10.15'
         isMac: True
         cmakeArguments: ""
         cmakeTarget: "code-quality-pipeline-checks"
+        xcodePath: "/Applications/Xcode_12.2.app"
       windows-x64:
         imageName: 'windows-2019'
         isWindows: True
@@ -175,7 +178,7 @@ jobs:
       set -e
       sudo xcode-select -s $(xcodePath)
     displayName: mac - run xcode-select
-    condition: variables.isMacFat
+    condition: variables.isMac
     
   - bash: |
       set -e
