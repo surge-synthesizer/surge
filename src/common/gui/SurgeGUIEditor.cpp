@@ -4810,6 +4810,9 @@ void SurgeGUIEditor::mappingFileDropped(std::string fn)
 
 bool SurgeGUIEditor::doesZoomFitToScreen(float zf, float &correctedZf)
 {
+   correctedZf = zf;
+   return true;
+
    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
    float baseW = getWindowSizeX();
@@ -4883,7 +4886,7 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
    else
    {
       zoomFactor = newZf;
-	  showTooLargeZoomError(screenDim.getWidth(), screenDim.getHeight(), zoomFactor);
+      showTooLargeZoomError(screenDim.getWidth(), screenDim.getHeight(), zoomFactor);
    }
 
    /*
@@ -6237,6 +6240,7 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect* newSiz
 
         // Don't allow me to set a zoom which will pop a dialog from this drag event. See #1212
         float correctedZoomFactor;
+
         if (!doesZoomFitToScreen(currentZoomFactor, correctedZoomFactor))
         {
             currentZoomFactor = correctedZoomFactor;
