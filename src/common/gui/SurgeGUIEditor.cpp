@@ -5501,7 +5501,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect& menuRect, bool 
                        [this, menuRect]() {
                           // FIXME! This won't work on linux
                           char c[256];
-                          snprintf(c, 256, "%f", zoomFactor);
+                          snprintf(c, 256, "%d", (int)zoomFactor);
                           promptForMiniEdit(
                               c, "Enter a default zoom level value:", "Set Default Zoom Level",
                               menuRect.getTopLeft(), [this](const std::string& s) {
