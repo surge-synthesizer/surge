@@ -1083,7 +1083,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
          return 1;
          break;
       case VKEY_TAB:
-         if ( (editorOverlay && editorOverlayTag == "storePatch" ) || (typeinDialog && typeinDialog->isVisible() ) )
+         if ( (topmostEditorTag() == STORE_PATCH) || (typeinDialog && typeinDialog->isVisible() ) )
          {
             /*
             ** SaveDialog gets access to the tab key to switch between fields if it is open
@@ -1246,12 +1246,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
    editorOverlayTagAtClose = "";
    if (editor_open)
    {
-      if( editorOverlay != nullptr )
+      editorOverlayTagAtClose = topmostEditorTag();
+      for(auto el : editorOverlay)
       {
-         editorOverlay->remember();
-         frame->removeView( editorOverlay );
-         editorOverlayTagAtClose = editorOverlayTag;
-      }
+         el.second->remember();
+         frame->removeView( el.second );
+     }
    
       close_editor();
    }
@@ -1475,7 +1475,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
       case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN: {
          msegEditSwitch = layoutComponentForSkin( skinCtrl, tag_mseg_edit );
          msegEditSwitch->setVisible( false );
-         msegEditSwitch->setValue( editorOverlay != nullptr && editorOverlayTag == "msegEditor" );
+         msegEditSwitch->setValue( isAnyOverlayPresent(MSEG_EDITOR) );
          auto q = modsource_editor[current_scene];
          if( ( q >= ms_lfo1 && q <= ms_lfo6  ) || ( q >= ms_slfo1 && q <= ms_slfo6 ) )
          {
@@ -1768,13 +1768,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
    frame->addView(lb);
    debugLabel = lb;
 #endif
-   if( editorOverlay )
+   for( auto el : editorOverlay )
    {
-      frame->addView( editorOverlay );
+      frame->addView( el.second );
+      auto contents = editorOverlayContentsWeakReference[el.second];
+
       /*
        * This is a hack for 1.8 which we have to clean up in 1.9 when we do #3223
        */
-      auto mse = dynamic_cast<MSEGEditor*>(editorOverlayContentsWeakReference);
+      auto mse = dynamic_cast<RefreshableOverlay*>(contents);
       if (mse)
       {
          mse->forceRefresh();
@@ -1969,14 +1971,12 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 void SurgeGUIEditor::close()
 {
    populateDawExtraState(synth);
-   if( editorOverlay )
+   for (auto el: editorOverlay)
    {
-      frame->removeView( editorOverlay );
-      editorOverlayOnClose();
-      editorOverlayTagAtClose = editorOverlayTag;
-      editorOverlayTag = "";
-      editorOverlay = nullptr;
-      editorOverlayContentsWeakReference = nullptr;
+      frame->removeView( el.second );
+      auto f = editorOverlayOnClose[el.second];
+      f();
+      editorOverlayTagAtClose = el.first;
    }
 #if TARGET_VST2 // && WINDOWS
    // We may need this in other hosts also; but for now
@@ -3748,7 +3748,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                   }
                }
 
-               if(editorOverlay && editorOverlayTag == "msegEditor" )
+               if(isAnyOverlayPresent(MSEG_EDITOR))
                {
                   auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[newsource-ms_lfo1]);
                   if( ld->shape.val.i == lt_mseg )
@@ -3808,7 +3808,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       synth->storage.getPatch().scene_active.val.i = current_scene;
       // synth->storage.getPatch().param_ptr[scene_select_pid]->set_value_f01(control->getValue());
 
-      if (editorOverlay && editorOverlayTag == "msegEditor")
+      if (isAnyOverlayPresent(MSEG_EDITOR))
       {
          auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[modsource_editor[current_scene] - ms_lfo1]);
          if (ld->shape.val.i == lt_mseg)
@@ -3840,7 +3840,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_mp_category:
    {
-      if( editorOverlay && editorOverlayTag == "storePatch" )
+      if( isAnyOverlayPresent(STORE_PATCH))
       {
          closeStorePatchDialog();
       }
@@ -3854,7 +3854,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_mp_patch:
    {
-      if( editorOverlay && editorOverlayTag == "storePatch" )
+      if( isAnyOverlayPresent(STORE_PATCH) )
       {
          closeStorePatchDialog();
       }
@@ -4046,7 +4046,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       // prevent duplicate execution of savePatch() by detecting if the Store Patch dialog is displayed or not
       // FIXME: baconpaul will know a better and more correct way to fix this
-      if (editorOverlay && editorOverlayTag == "storePatch")
+      if (isAnyOverlayPresent(STORE_PATCH))
       {
          /*
          ** Don't allow a blank patch
@@ -4110,15 +4110,25 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    break;
    case tag_editor_overlay_close:
    {
-      if( editorOverlay != nullptr )
+      // So can I find an editor overlay parent
+      VSTGUI::CView *p = control;
+      auto tagToNuke = NO_EDITOR;
+      while( p )
       {
-         editorOverlay->setVisible(false);
-         removeFromFrame.push_back(editorOverlay);
-         editorOverlayOnClose();
-         editorOverlay = nullptr;
-         editorOverlayTag = "";
-         editorOverlayTagAtClose = "";
-         editorOverlayContentsWeakReference = nullptr;
+         p = p->getParentView();
+         for( auto el : editorOverlay )
+         {
+            if( el.second == p )
+            {
+               tagToNuke = el.first;
+               p = nullptr;
+               break;
+            }
+         }
+      }
+      if( tagToNuke != NO_EDITOR )
+      {
+         dismissEditorOfType(tagToNuke);
       }
    }
    break;
@@ -4390,9 +4400,9 @@ void SurgeGUIEditor::valueChanged(CControl* control)
                lfodisplay->setDirty();
                lfodisplay->invalid();
             }
-            if( editorOverlay )
+            for(auto el: editorOverlay)
             {
-               editorOverlay->invalid();
+               el.second->invalid();
             }
          }
          if( p->ctrltype == ct_filtertype )
@@ -5130,6 +5140,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
          continue;
       }
       auto catSubMenu = subMenuMaps[cat.path].first;
+
       auto parentMenu = lfoSubMenu;
       if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
       {
@@ -5178,17 +5189,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
             Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage), current_scene, currentLfoId);
 
             auto newshape = this->synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
-            
-            if (editorOverlay && editorOverlayTag == "msegEditor")
+
+            if( isAnyOverlayPresent(MSEG_EDITOR) )
             {
                closeMSEGEditor();
-
-               if (newshape == lt_mseg)
-               {
+               if( newshape == lt_mseg )
                   showMSEGEditor();
-               }
             }
-            
+
             this->synth->refresh_editor = true;
          });
       }
@@ -6217,13 +6225,13 @@ void SurgeGUIEditor::reloadFromSkin()
    clearOffscreenCachesAtZero = 1;
 
    // update MSEG editor if opened
-   if (editorOverlay && editorOverlayTag == "msegEditor")
+   if (isAnyOverlayPresent(MSEG_EDITOR))
    {
       showMSEGEditor();
    }
 
    // update Store Patch dialog if opened
-   if (editorOverlay && editorOverlayTag == "storePatch")
+   if (isAnyOverlayPresent(STORE_PATCH))
    {
       auto pname = patchName->getText();
       auto pcat = patchCategory->getText();
@@ -6907,24 +6915,35 @@ void SurgeGUIEditor::sliderHoverEnd( int tag )
 
 }
 
-void SurgeGUIEditor::dismissEditorOverlay()
+void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
 {
-   if( editorOverlay != nullptr )
+   if( editorOverlay.size() == 0 ) return;
+
+   auto newO = editorOverlay;
+   newO.clear();
+   for( auto el : editorOverlay )
    {
-      editorOverlay->setVisible(false);
-      editorOverlayOnClose();
-      removeFromFrame.push_back( editorOverlay );
-      editorOverlay = nullptr;
-      editorOverlayTag = "";
-      editorOverlayTagAtClose = "";
-      editorOverlayContentsWeakReference = nullptr;
+      if( el.first == ofType )
+      {
+         el.second->setVisible(false);
+         auto f = editorOverlayOnClose[el.second];
+         f();
+
+         editorOverlayOnClose.erase(el.second);
+         editorOverlayContentsWeakReference.erase(el.second);
+      }
+      else
+      {
+         newO.push_back(el);
+      }
    }
+   editorOverlay = newO;
 }
 
-void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle, std::string editorTag,
+void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle, OverlayTags editorTag,
                                       const VSTGUI::CPoint &topLeft, bool modalOverlay, bool hasCloseButton, std::function<void ()> onClose)
 {
-   dismissEditorOverlay();
+   dismissEditorOfType(editorTag);
 
    const int header = 18;
    const int buttonwidth = 18;
@@ -6947,10 +6966,10 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
       fs = containerSize;
 
    // add a screen size transparent thing into the editorOverlay
-   editorOverlay = new CViewContainer(fs);
-   editorOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background));
-   editorOverlay->setVisible(true);
-   frame->addView(editorOverlay);
+   auto editorOverlayC = new CViewContainer(fs);
+   editorOverlayC->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background));
+   editorOverlayC->setVisible(true);
+   frame->addView(editorOverlayC);
 
    if (modalOverlay)
       containerSize = containerSize.centerInside(fs);
@@ -6962,13 +6981,13 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    
    auto outerc = new CViewContainer(containerSize);
    outerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
-   editorOverlay->addView(outerc);
+   editorOverlayC->addView(outerc);
 
    auto csz = containerSize;
    csz.bottom = csz.top + header;
    auto innerc = new CViewContainer(csz);
    innerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
-   editorOverlay->addView(innerc);
+   editorOverlayC->addView(innerc);
 
    auto tl = new CTextLabel(csz, editorTitle.c_str());
    tl->setBackColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
@@ -7046,13 +7065,12 @@ void SurgeGUIEditor::setEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
 
    c->setViewSize(containerSize);
    c->setMouseableArea(containerSize); // sigh
-   editorOverlay->addView(c);
+   editorOverlayC->addView(c);
 
    // save the onClose function
-   editorOverlayOnClose = onClose;
-   editorOverlayTag = editorTag;
-   editorOverlayTagAtClose = editorTag;
-   editorOverlayContentsWeakReference = c;
+   editorOverlay.push_back(std::make_pair(editorTag, editorOverlayC));
+   editorOverlayOnClose[editorOverlayC] = onClose;
+   editorOverlayContentsWeakReference[editorOverlayC] = c;
 }
 
 std::string SurgeGUIEditor::getDisplayForTag( long tag )
@@ -7412,7 +7430,8 @@ void SurgeGUIEditor::makeStorePatchDialog()
    saveDialog->addView(cb);
    saveDialog->addView(kb);
 
-   setEditorOverlay(saveDialog, "Store Patch", "storePatch", CPoint(157, 57), false, false, [this]() {});
+   addEditorOverlay(saveDialog, "Store Patch", STORE_PATCH, CPoint(157, 57), false, false,
+                    [this]() {});
 }
 
 VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
@@ -7847,12 +7866,12 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
       }
    }
 
-   if( curr == lt_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   if( curr == lt_mseg && isAnyOverlayPresent(MSEG_EDITOR) )
    {
       // We have the MSEGEditor open and have swapped to the MSEG here
       showMSEGEditor();
    }
-   else if( prior == lt_mseg && curr != lt_mseg && editorOverlay && editorOverlayTag == "msegEditor" )
+   else if( prior == lt_mseg && curr != lt_mseg && isAnyOverlayPresent(MSEG_EDITOR) )
    {
       // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
       closeMSEGEditor();
@@ -7866,10 +7885,8 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 
 void SurgeGUIEditor::closeStorePatchDialog()
 {
-   if (editorOverlayTag == "storePatch")
-   {
-      dismissEditorOverlay();
-   }
+   dismissEditorOfType(STORE_PATCH);
+
    // Have to update all that state too for the newly orphaned items
    patchName = nullptr;
    patchCategory = nullptr;
@@ -7880,24 +7897,19 @@ void SurgeGUIEditor::closeStorePatchDialog()
 
 void SurgeGUIEditor::showStorePatchDialog()
 {
-   if (editorOverlayTag == "msegEditor")
-   {
-      dismissEditorOverlay();
-   }
-
    makeStorePatchDialog();
 }
 
 void SurgeGUIEditor::closeMSEGEditor()
 {
-   if( editorOverlayTag == "msegEditor" ) {
+   if( isAnyOverlayPresent(MSEG_EDITOR) ) {
       broadcastMSEGState();
-      dismissEditorOverlay( );
+      dismissEditorOfType(MSEG_EDITOR);
    }
 }
 void SurgeGUIEditor::toggleMSEGEditor()
 {
-   if( editorOverlayTag == "msegEditor" )
+   if( isAnyOverlayPresent(MSEG_EDITOR) )
    {
       closeMSEGEditor();
    }
@@ -7948,13 +7960,14 @@ void SurgeGUIEditor::showMSEGEditor()
    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
-   setEditorOverlay(mse, title, "msegEditor", CPoint(skinCtrl->x, skinCtrl->y), false, true, [this]() {
-      if (msegEditSwitch)   
-      {
-         msegEditSwitch->setValue(0.0);
-         msegEditSwitch->invalid();
-      }
-   });
+   addEditorOverlay(mse, title, MSEG_EDITOR, CPoint(skinCtrl->x, skinCtrl->y), false, true,
+                    [this]() {
+                       if (msegEditSwitch)
+                       {
+                          msegEditSwitch->setValue(0.0);
+                          msegEditSwitch->invalid();
+                       }
+                    });
 
    if( msegEditSwitch )
    {
