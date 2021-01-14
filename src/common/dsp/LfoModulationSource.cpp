@@ -160,6 +160,9 @@ void LfoModulationSource::initPhaseFromStartPhase()
 
 void LfoModulationSource::attack()
 {
+   // For VLFO you don't need this but SLFO get recycled, so you do
+   msegstate = Surge::MSEG::EvaluatorState();
+
    if( ! phaseInitialized )
    {
       initPhaseFromStartPhase();
