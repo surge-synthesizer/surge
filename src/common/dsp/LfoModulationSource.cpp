@@ -208,11 +208,15 @@ void LfoModulationSource::attack()
       {
       case lm_keytrigger:
          phase = phaseslider;
+         unwrappedphase_intpart = 0;
+
          step = 0;
          msegEnvelopePhaseAdjustment();
          break;
       case lm_random:
          phase = (float)rand() / (float)RAND_MAX;
+         unwrappedphase_intpart = 0;
+
          msegEnvelopePhaseAdjustment();
          if( ss->loop_end == 0 )
             step = 0;
@@ -259,6 +263,8 @@ void LfoModulationSource::attack()
       default:
          step = 0;
          phase = 0;
+         unwrappedphase_intpart = 0;
+
          break;
       };
    }
@@ -768,6 +774,7 @@ void LfoModulationSource::process_block()
    
    case lt_mseg:
       msegstate.released =  ( env_state == lenv_release || env_state == lenv_msegrelease );
+
       iout = Surge::MSEG::valueAt( unwrappedphase_intpart, phase, localcopy[ideform].f, ms, &msegstate );
       break;
    };
