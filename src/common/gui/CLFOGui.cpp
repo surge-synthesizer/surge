@@ -1172,10 +1172,15 @@ void CLFOGui::openPopup(CPoint &where)
                       return m;
                    };
 
-   contextMenu->addEntry("[?] MSEG Editor");
+   auto msurl = storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor" ) : std::string();
+   auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+   addCb(contextMenu, "[?] MSEG Segment", [hurl]()
+        {
+           Surge::UserInteractions::openURL(hurl);
+        });
 
    contextMenu->addSeparator();
-
 
    auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
    std::string openname = (sge->editorOverlayTag != "msegEditor") ? "Open MSEG Editor" : "Close MSEG Editor";
