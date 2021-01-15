@@ -1209,6 +1209,7 @@ elseif( UNIX AND NOT APPLE )
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND echo "Installing local resources into ${CMAKE_INSTALL_PREFIX}/share/surge"
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/share/surge
     COMMAND rsync -r --delete "resources/data/" "${CMAKE_INSTALL_PREFIX}/share/surge/"
     )
 
